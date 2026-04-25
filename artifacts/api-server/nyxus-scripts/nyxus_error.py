@@ -9,7 +9,6 @@ import os
 import sys
 import time
 import random
-import shutil
 import threading
 import signal
 
@@ -39,8 +38,11 @@ BG_BLACK   = "\033[40m"
 BG_RED_DIM = "\033[48;5;52m"
 
 def get_size():
-    size = shutil.get_terminal_size((120, 40))
-    return size.columns, size.lines
+    try:
+        size = os.get_terminal_size()
+        return size.columns, size.lines
+    except OSError:
+        return 120, 40
 
 def clear():
     sys.stdout.write("\033[2J\033[H")

@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "I7jH3PnwgE8xELBRJPrZu"
+uri = "file://artifacts/nyxus-web/public/nyxus-bg.png"
+type = "image"
+title = "nyxus hacker ascii background"
