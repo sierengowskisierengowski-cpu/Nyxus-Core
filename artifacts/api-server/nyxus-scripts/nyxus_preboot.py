@@ -1,239 +1,309 @@
 #!/usr/bin/env python3
 """
-NYXUS — Pre-Boot Flicker Effect
-The moment before something powerful turns on.
-Silent. Dark. Then it wakes up.
+NYXUS — Pre-Boot Flicker Sequence
+Five phases. Cinematic. Unforgettable.
 © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 
+import os
 import sys
 import time
 import random
-import shutil
-import os
 
-RESET = "\033[0m"
-DIM   = "\033[2m"
+# ── ANSI ─────────────────────────────────────────────────────────────────────────
+RESET      = "\033[0m"
+BOLD       = "\033[1m"
+FG_WHITE   = "\033[97m"        # phase 1 flashes
+PURPLE_EL  = "\033[38;5;135m"  # electric purple — fragment bleed
+PINK_EL    = "\033[38;5;213m"  # neon pink      — overload mix
+PURPLE_DIM = "\033[38;5;97m"   # dim purple     — awakening cursor
 
-def fg256(n):
-    return f"\033[38;5;{n}m"
+# ── TERMINAL ─────────────────────────────────────────────────────────────────────
+def term_size():
+    try:
+        sz = os.get_terminal_size()
+        return sz.columns, sz.lines
+    except OSError:
+        return 120, 40
 
-# Purple / white shades — dim only, no color chaos
-PURPLE_FAINT  = fg256(54)   # darkest purple
-PURPLE_DIM    = fg256(93)   # dim purple
-PURPLE_MED    = fg256(135)  # medium purple
-WHITE_FAINT   = fg256(236)  # barely visible white
-WHITE_DIM     = fg256(242)  # dim white
-
-BG_BLACK = "\033[40m"
-
-def get_size():
-    s = shutil.get_terminal_size((120, 40))
-    return s.columns, s.lines
+def flush():
+    sys.stdout.flush()
 
 def clear():
     sys.stdout.write("\033[2J\033[H")
-    sys.stdout.flush()
+    flush()
 
 def hide_cursor():
     sys.stdout.write("\033[?25l")
-    sys.stdout.flush()
+    flush()
 
 def show_cursor():
     sys.stdout.write("\033[?25h")
-    sys.stdout.flush()
+    flush()
 
-# Fragments that bleed through — just pieces, never fully legible
-FRAGMENTS = [
-    "NYXUS",    "NYX",      "_NYX_",    "YXU",      "NX",
-    "n y x",    "nyxus",    "N·Y·X",    "XUS",      "NYX_",
-    "INIT",     "BOOT",     "KERNEL",   "NYX::INIT","_CORE",
-    "SILENT",   "DARK",     "0x4E5958", "NYX-J5W",  "2026",
-    "PURELY",   "▓NYX▓",    "[ NYX ]",  "::NYX::",  "SIERENGOWSKI",
-    "LOADING",  "STANDBY",  "ARMED",    "ENGAGE",   "nyx_boot",
-    "\\x4e\\x59","4E 59 58", "NYX_LOCK", "CORE OK",  "STAGE_0",
+
+# ── FRAME RENDERERS ───────────────────────────────────────────────────────────────
+
+def frame_black(cols, rows):
+    """Absolute black — not a single photon."""
+    out  = "\033[H\033[40m"
+    line = " " * cols
+    for _ in range(rows):
+        out += line
+    sys.stdout.write(out + RESET)
+    flush()
+
+
+def frame_white(cols, rows):
+    """Blinding white flash — fills every cell."""
+    # Bright white background + bright white block char = total white
+    line = "\033[107m" + "█" * cols
+    out  = "\033[H"
+    for _ in range(rows):
+        out += line
+    sys.stdout.write(out + RESET)
+    flush()
+
+
+# Fragments that bleed through in Phase 2 — never full words, just pieces
+FRAG_POOL = [
+    "NYX", "◆", "★", "彡", "INIT", "SYS", "_",
+    "N", "Y", "X", "U", "S", "◆★", "★彡", "NYX_",
+    "BOOT", "CORE", ":::", ">>>", "---",
+    "██", "▓▓", "░░", "■", "▪",
+    "KERNEL", "STAGE", "ARM", "NYX::",
+    "彡★", "◆★彡", "★◆",
 ]
 
-NOISE_CHARS = list("|-+/\\:.*")
+# Noise chars to pad out the white base in Phase 2
+_NOISE = "█░▓▒"
 
-
-def render_black(cols: int, rows: int):
-    """Pure black — nothing visible."""
-    out = "\033[H\033[40m"
-    blank = " " * cols
-    for _ in range(rows - 1):
-        out += blank + "\r\n"
-    sys.stdout.write(out + RESET)
-    sys.stdout.flush()
-
-
-def render_flash(cols: int, rows: int, intensity: float):
+def frame_fragment(cols, rows, density):
     """
-    Brief flash frame: dim NYXUS fragments scattered on black.
-    intensity 0.0 to 1.0 controls brightness, density, fragment count.
-    Colors stay in purple/dim-white only — never bright, never rainbow.
+    Phase 2 frame: white base with electric purple fragments scattered across it.
+    density 0.0 → 1.0 controls how many fragments appear and how boldly.
     """
-    screen_ch    = [[" "]  * cols for _ in range(rows - 1)]
-    screen_color = [[None] * cols for _ in range(rows - 1)]
+    # Build cell buffers
+    ch_buf    = [["█"] * cols for _ in range(rows)]
+    color_buf = [["w"]  * cols for _ in range(rows)]  # 'w'=white, 'p'=purple
 
-    def pick_color():
-        if intensity < 0.25:
-            return PURPLE_FAINT
-        elif intensity < 0.55:
-            return random.choice([PURPLE_FAINT, PURPLE_DIM])
-        elif intensity < 0.80:
-            return random.choice([PURPLE_DIM, PURPLE_MED, WHITE_FAINT])
-        else:
-            return random.choice([PURPLE_DIM, PURPLE_MED, WHITE_FAINT, WHITE_DIM])
+    # Scatter fragments — count and length grow with density
+    n_frags = max(2, int(density * rows * 1.8) + random.randint(0, 3))
+    for _ in range(n_frags):
+        frag = random.choice(FRAG_POOL)
+        # At low density, only show a slice of each fragment
+        if density < 0.4:
+            sl = random.randint(1, max(1, len(frag) // 2))
+            frag = frag[:sl]
 
-    # Scatter text fragments — broken signal, not readable
-    n_fragments = max(1, int(intensity * 9) + random.randint(0, 2))
-    for _ in range(n_fragments):
-        frag = random.choice(FRAGMENTS)
-
-        # At low intensity, only show a slice of the fragment
-        if intensity < 0.4:
-            start = random.randint(0, max(0, len(frag) - 2))
-            end   = start + random.randint(1, max(1, len(frag) // 2))
-            frag  = frag[start:end]
-
-        r   = random.randint(0, rows - 3)
-        c   = random.randint(0, max(0, cols - len(frag) - 1))
-        col = pick_color()
-
+        r = random.randint(0, rows - 1)
+        c = random.randint(0, max(0, cols - len(frag)))
         for j, ch in enumerate(frag):
             tc = c + j
-            if tc >= cols:
-                break
-            # Random character drop — harder to read at low intensity
-            drop_chance = 0.45 - intensity * 0.35
-            if random.random() > drop_chance and ch.isprintable():
-                screen_ch[r][tc]    = ch
-                screen_color[r][tc] = col
+            if tc < cols and ch.isprintable():
+                # Random dropout — lower at higher density
+                if random.random() > (0.35 - density * 0.30):
+                    ch_buf[r][tc]    = ch
+                    color_buf[r][tc] = "p"
 
-    # Sparse noise dots
-    n_noise = int(intensity * cols * 0.025 * random.random())
-    for _ in range(n_noise):
-        r = random.randint(0, rows - 3)
-        c = random.randint(0, cols - 1)
-        screen_ch[r][c]    = random.choice(NOISE_CHARS)
-        screen_color[r][c] = PURPLE_FAINT
-
-    # Render
-    out = "\033[H\033[40m"
-    for r in range(rows - 1):
-        line      = "\033[40m"
-        prev_col  = None
+    # Render — minimize escapes by tracking prev color
+    out = "\033[H\033[40m"   # black background throughout
+    for r in range(rows):
+        line     = ""
+        prev_col = None
         for c in range(cols):
-            ch  = screen_ch[r][c]
-            col = screen_color[r][c]
-            if col and ch != " ":
-                if col != prev_col:
-                    line    += col
-                    prev_col = col
-                line += ch
-            else:
-                if prev_col is not None:
-                    line    += "\033[40m"
-                    prev_col = None
-                line += " "
-        line += RESET
-        out += line + "\r\n"
+            col = color_buf[r][c]
+            ch  = ch_buf[r][c]
+            if col != prev_col:
+                if col == "p":
+                    line += f"{PURPLE_EL}{BOLD}"
+                else:
+                    line += FG_WHITE
+                prev_col = col
+            line += ch
+        out += line + RESET + "\n"
 
     sys.stdout.write(out)
-    sys.stdout.flush()
+    flush()
 
 
-def render_preboot(next_command=None):
+_OVERLOAD_CHARS = list(
+    "NYXUSnyxus◆★彡█▓░▒│─┼╪╬╋╳×+*#@!$%^&|<>{}[]()_=~`"
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+)
+
+def frame_overload(cols, rows):
     """
-    Flicker animation:
-      0.0 – 3.0s  : flickers, slow start → accelerating → peak
-      3.0 – 3.45s : total black silence
-      3.45 – 4.3s : 'initializing...' types in dim purple, cursor blinks
-      4.3s+       : snap to black, exec next command
+    Phase 3: every single cell filled with random purple/pink char — total overload.
     """
+    out = "\033[H\033[40m"
+    for r in range(rows):
+        line     = ""
+        prev_col = None
+        for c in range(cols):
+            ch  = random.choice(_OVERLOAD_CHARS)
+            col = random.choice(("p", "k"))   # purple or pink
+            if col != prev_col:
+                if col == "p":
+                    line += f"{PURPLE_EL}{BOLD}"
+                else:
+                    line += f"{PINK_EL}{BOLD}"
+                prev_col = col
+            line += ch
+        out += line + RESET + "\n"
+
+    sys.stdout.write(out)
+    flush()
+
+
+# ── MAIN ──────────────────────────────────────────────────────────────────────────
+
+def run(next_command=None):
     hide_cursor()
-    cols, rows = get_size()
+    cols, rows = term_size()
     clear()
 
-    FLICKER_END   = 3.0
-    SILENCE_END   = 3.45
-    INIT_CHAR_DUR = 0.048   # seconds per character typed
-    INIT_HOLD     = 0.55
-
-    start       = time.time()
-    state       = "black"
-    state_start = start
+    start = time.perf_counter()
 
     try:
-        # ── Phase 1: Flicker ────────────────────────────────────────────────
-        while True:
-            now     = time.time()
-            elapsed = now - start
+        # ─────────────────────────────────────────────────────────────────────────
+        # PHASE 1 — Power struggling (1.0 s)
+        # Black / white only. No text. Gets faster.
+        # ─────────────────────────────────────────────────────────────────────────
+        P1_END = 1.0
 
-            if elapsed >= FLICKER_END:
+        state       = "black"
+        state_start = start
+
+        while True:
+            now     = time.perf_counter()
+            elapsed = now - start
+            if elapsed >= P1_END:
                 break
 
-            pct = elapsed / FLICKER_END  # 0.0 → 1.0
+            pct = elapsed / P1_END                          # 0 → 1
+            # Black gap: wide (0.28s) → very tight (0.013s)
+            black_dur = 0.28 * ((1.0 - pct) ** 1.9) + 0.013
+            # White flash: stays relatively constant, slight shrink
+            white_dur = 0.090 - 0.040 * pct
 
-            # Timing curves:
-            #   black_dur: 0.35s → 0.018s  (exponential decay — gaps shrink fast)
-            #   flash_dur: 0.030s → 0.075s (flash grows slightly — more revealed)
-            #   intensity: quick power ramp
-            black_dur = 0.35 * ((1.0 - pct) ** 1.6) + 0.018
-            flash_dur = 0.030 + 0.055 * (pct ** 0.6)
-            intensity = pct ** 0.65
-
-            state_elapsed = now - state_start
-
+            se = now - state_start
             if state == "black":
-                render_black(cols, rows)
-                if state_elapsed >= black_dur:
-                    state       = "flash"
+                frame_black(cols, rows)
+                if se >= black_dur:
+                    state       = "white"
                     state_start = now
                 else:
-                    time.sleep(min(0.010, black_dur - state_elapsed))
+                    time.sleep(min(0.008, black_dur - se))
             else:
-                render_flash(cols, rows, intensity)
-                if state_elapsed >= flash_dur:
+                frame_white(cols, rows)
+                if se >= white_dur:
                     state       = "black"
                     state_start = now
                 else:
-                    time.sleep(min(0.008, flash_dur - state_elapsed))
+                    time.sleep(min(0.008, white_dur - se))
 
-        # ── Phase 2: Pure black silence ─────────────────────────────────────
-        render_black(cols, rows)
-        silence_remaining = SILENCE_END - (time.time() - start)
-        if silence_remaining > 0:
-            time.sleep(silence_remaining)
+        # ─────────────────────────────────────────────────────────────────────────
+        # PHASE 2 — Something breaks through (1.5 s)
+        # White flashes with electric purple fragments. Gets more chaotic.
+        # ─────────────────────────────────────────────────────────────────────────
+        P2_START = P1_END
+        P2_END   = P1_END + 1.5
 
-        # ── Phase 3: "initializing..." types in dim purple ──────────────────
-        init_text  = "initializing..."
+        state       = "black"
+        state_start = time.perf_counter()
+
+        while True:
+            now     = time.perf_counter()
+            elapsed = now - start
+            if elapsed >= P2_END:
+                break
+
+            pct = (elapsed - P2_START) / 1.5               # 0 → 1
+
+            # Black gap continues shrinking — nearly gone by end
+            black_dur = 0.013 * (1.0 - pct * 0.75) + 0.005
+            # Fragment flash grows — fragments linger longer and longer
+            flash_dur = 0.038 + 0.140 * pct
+            # Fragment density builds
+            density   = 0.10 + 0.65 * (pct ** 0.7)
+
+            se = now - state_start
+            if state == "black":
+                frame_black(cols, rows)
+                if se >= black_dur:
+                    state       = "flash"
+                    state_start = now
+                else:
+                    time.sleep(min(0.005, black_dur - se))
+            else:
+                frame_fragment(cols, rows, density=density)
+                if se >= flash_dur:
+                    state       = "black"
+                    state_start = now
+                else:
+                    time.sleep(min(0.008, flash_dur - se))
+
+        # ─────────────────────────────────────────────────────────────────────────
+        # PHASE 3 — Overload (0.5 s)
+        # Every cell filled with purple + pink. Overwhelming. Then: nothing.
+        # ─────────────────────────────────────────────────────────────────────────
+        P3_END = P2_END + 0.5
+
+        while time.perf_counter() - start < P3_END:
+            frame_overload(cols, rows)
+            time.sleep(0.030)   # rapid redraw ~ 33fps
+
+        # Instant cut to black
+        frame_black(cols, rows)
+
+        # ─────────────────────────────────────────────────────────────────────────
+        # PHASE 4 — Silence (0.8 s)
+        # Pure black. Complete stillness. The calm after.
+        # ─────────────────────────────────────────────────────────────────────────
+        time.sleep(0.8)
+
+        # ─────────────────────────────────────────────────────────────────────────
+        # PHASE 5 — Awakening
+        # Cursor blinks 3x in dim purple.
+        # Then the awakening line types itself out.
+        # ─────────────────────────────────────────────────────────────────────────
         center_row = rows // 2
-        pad        = max(0, (cols - len(init_text)) // 2)
+        center_col = cols // 2
 
-        for i in range(len(init_text) + 1):
+        # Cursor blink: 3 on/off cycles
+        for blink in range(6):
+            char = "█" if blink % 2 == 0 else " "
             sys.stdout.write(
-                f"\033[{center_row};{pad + 1}H"
-                f"{PURPLE_DIM}{init_text[:i]}{RESET}"
+                f"\033[{center_row};{center_col}H{PURPLE_DIM}{char}{RESET}"
             )
-            sys.stdout.flush()
-            if i < len(init_text):
-                time.sleep(INIT_CHAR_DUR)
+            flush()
+            time.sleep(0.22)
 
-        # Blinking block cursor after text
-        for blink in range(4):
-            cursor = "█" if blink % 2 == 0 else " "
-            sys.stdout.write(
-                f"\033[{center_row};{pad + len(init_text) + 1}H"
-                f"{PURPLE_FAINT}{cursor}{RESET}"
-            )
-            sys.stdout.flush()
-            time.sleep(0.14)
+        # Clear cursor position
+        sys.stdout.write(f"\033[{center_row};{center_col}H {RESET}")
+        flush()
+        time.sleep(0.18)
 
-        time.sleep(INIT_HOLD)
+        # Type the awakening text character by character
+        awaken    = "◆★彡 NYXUS — INITIALIZING ★彡◆"
+        awaken_c  = max(1, (cols - len(awaken)) // 2 + 1)
 
-        # ── Phase 4: Snap to black, launch next stage ────────────────────────
+        sys.stdout.write(
+            f"\033[{center_row};{awaken_c}H{PURPLE_EL}{BOLD}"
+        )
+        flush()
+
+        for ch in awaken:
+            sys.stdout.write(ch)
+            flush()
+            time.sleep(0.052)
+
+        sys.stdout.write(RESET)
+        flush()
+        time.sleep(0.75)
+
+        # Snap to black — done
         clear()
         show_cursor()
 
@@ -241,22 +311,21 @@ def render_preboot(next_command=None):
             os.execvp(next_command[0], next_command)
 
     except KeyboardInterrupt:
-        clear()
+        frame_black(cols, rows)
         show_cursor()
         sys.exit(130)
 
 
-# ── CLI entrypoint ──────────────────────────────────────────────────────────────
+# ── ENTRY POINT ───────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import argparse
     import shlex
 
-    parser = argparse.ArgumentParser(description="NYXUS Pre-Boot Flicker Effect")
+    parser = argparse.ArgumentParser(description="NYXUS Pre-Boot Flicker Sequence")
     parser.add_argument(
         "--next", type=str, default=None,
-        help="Command to exec after animation (e.g. 'python3 nyxus_splash.py')"
+        help="Command to exec after the animation completes"
     )
     args = parser.parse_args()
-
-    next_cmd = shlex.split(args.next) if args.next else None
-    render_preboot(next_command=next_cmd)
+    nxt  = shlex.split(args.next) if args.next else None
+    run(next_command=nxt)
