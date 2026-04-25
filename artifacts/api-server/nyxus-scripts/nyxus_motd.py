@@ -6,10 +6,13 @@ Dense hacker aesthetic terminal banner.
 """
 
 import os
+import re
 import sys
 import time
 import random
 import shutil
+
+_ansi = re.compile(r'\x1b\[[0-9;]*m')
 
 # ANSI color codes
 RESET   = "\033[0m"
@@ -227,7 +230,28 @@ def render_motd():
         f"{DIM}{RED}MODE:   {BRED}OFFENSIVE{RESET}",
     ]
 
-    skull_colored = [f"{BWHITE}{DIM}{s}{RESET}" for s in SKULL_ART]
+    # ── X logo: per-arm color ──────────────────────────────────────────────────
+    HOT_PURPLE = "\033[1;38;5;135m"
+    NEON_PINK  = "\033[1;38;5;213m"
+    GOLD       = "\033[1;38;5;220m"
+    DIM_PURP   = "\033[2;38;5;93m"
+
+    def color_x_row(row_idx):
+        r = SKULL_ART[row_idx]
+        mid = len(r) // 2
+        if row_idx in (0, 9):                          # borders
+            return f"{DIM_PURP}{BOLD}{r}{RESET}"
+        elif row_idx in (1, 2):                        # top arms: L=purple R=pink
+            return f"{HOT_PURPLE}{r[:mid]}{NEON_PINK}{r[mid:]}{RESET}"
+        elif row_idx in (3, 4, 5):                     # center intersection: gold
+            return f"{GOLD}{BOLD}{r}{RESET}"
+        elif row_idx in (6, 7):                        # bottom arms: L=pink R=purple
+            return f"{NEON_PINK}{r[:mid]}{HOT_PURPLE}{r[mid:]}{RESET}"
+        elif row_idx == 8:                             # N·Y·X label: gold
+            return f"{GOLD}{BOLD}{r}{RESET}"
+        return f"{DIM_PURP}{r}{RESET}"
+
+    skull_colored = [color_x_row(i) for i in range(len(SKULL_ART))]
 
     max_block = max(len(warning_lines), len(skull_colored), len(stat_lines))
     third = cols // 3
@@ -238,11 +262,9 @@ def render_motd():
         right = stat_lines[i]    if i < len(stat_lines)    else ""
 
         # Strip ANSI to measure visible length
-        import re
-        ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
-        left_vis  = len(ansi_escape.sub('', left))
-        mid_vis   = len(ansi_escape.sub('', mid))
-        right_vis = len(ansi_escape.sub('', right))
+        left_vis  = len(_ansi.sub('', left))
+        mid_vis   = len(_ansi.sub('', mid))
+        right_vis = len(_ansi.sub('', right))
 
         left_pad  = third - left_vis
         mid_pad   = third - mid_vis
@@ -254,26 +276,59 @@ def render_motd():
     # ─── DIVIDER ───────────────────────────────────────────────────────────────
     lines_out.append(f"{DIM}{BCYAN}{'─' * cols}{RESET}")
 
-    # ─── EXTRA HACKER TEXT BLOCK ───────────────────────────────────────────────
-    hacker_phrases = [
-        (f"{BGREEN}{BOLD}EXPLOIT FRAMEWORK LOADED{RESET}",            f"{DIM}{GREEN}[OK]{RESET}"),
-        (f"{BCYAN}NETWORK INTERFACES INITIALIZED{RESET}",             f"{DIM}{CYAN}[READY]{RESET}"),
-        (f"{BYELLOW}ANONYMOUS ROUTING ENABLED{RESET}",                f"{DIM}{YELLOW}[TOR OK]{RESET}"),
-        (f"{BMAGENTA}PAYLOAD GENERATOR STANDING BY{RESET}",           f"{DIM}{MAGENTA}[ARMED]{RESET}"),
-        (f"{BRED}INTRUSION DETECTION BYPASS{RESET}",                  f"{DIM}{RED}[ACTIVE]{RESET}"),
-        (f"{BWHITE}CRYPTOGRAPHIC ENGINE INITIALIZED{RESET}",          f"{DIM}{WHITE}[AES OK]{RESET}"),
-        (f"{BGREEN}PASSWORD CRACKER READY{RESET}",                    f"{DIM}{GREEN}[LOADED]{RESET}"),
-        (f"{BCYAN}PACKET SNIFFER PASSIVE MODE{RESET}",                f"{DIM}{CYAN}[SILENT]{RESET}"),
+    # ─── TWO-COLUMN BLOCK: boot status LEFT | quick ref RIGHT ──────────────────
+    half = cols // 2
+
+    # Left column: boot status
+    boot_left = [
+        (f"{BGREEN}{BOLD}EXPLOIT FRAMEWORK LOADED{RESET}",   f"{DIM}{GREEN}[OK]{RESET}"),
+        (f"{BCYAN}NETWORK INTERFACES INIT{RESET}",            f"{DIM}{CYAN}[READY]{RESET}"),
+        (f"{BYELLOW}ANONYMOUS ROUTING ENABLED{RESET}",        f"{DIM}{YELLOW}[TOR]{RESET}"),
+        (f"{BMAGENTA}PAYLOAD GENERATOR{RESET}",               f"{DIM}{MAGENTA}[ARMED]{RESET}"),
+        (f"{BRED}IDS BYPASS MODULE{RESET}",                   f"{DIM}{RED}[ACTIVE]{RESET}"),
+        (f"{BWHITE}CRYPTO ENGINE AES-256{RESET}",             f"{DIM}{WHITE}[OK]{RESET}"),
+        (f"{BGREEN}HASHCRACK ENGINE{RESET}",                  f"{DIM}{GREEN}[LOADED]{RESET}"),
+        (f"{BCYAN}PACKET SNIFFER{RESET}",                     f"{DIM}{CYAN}[SILENT]{RESET}"),
+        (f"{BYELLOW}VPN TUNNEL LAYER{RESET}",                 f"{DIM}{YELLOW}[UP]{RESET}"),
+        (f"{BMAGENTA}ROOTKIT STEALTH LAYER{RESET}",           f"{DIM}{MAGENTA}[MASKED]{RESET}"),
     ]
 
-    col_mid = cols // 2
-    for phrase, status in hacker_phrases:
-        import re
-        ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
-        phrase_vis = len(ansi_escape.sub('', phrase))
-        status_vis = len(ansi_escape.sub('', status))
-        gap = max(4, col_mid - phrase_vis - status_vis)
-        lines_out.append(f"  {phrase}{' ' * gap}{status}")
+    # Right column: quick command reference
+    HC = "\033[1;38;5;135m"   # hot purple headers
+    CC = "\033[38;5;245m"     # dim comment
+    VC = "\033[38;5;213m"     # neon pink values
+    boot_right = [
+        f"{HC}── QUICK REFERENCE ─────────{RESET}",
+        f"{BGREEN}nmap -sV -O{RESET} {DIM}<ip>{RESET}            {CC}# svc+OS scan{RESET}",
+        f"{BGREEN}hydra -l root -P list{RESET} {DIM}<ip>{RESET}  {CC}# brute-force{RESET}",
+        f"{BGREEN}sqlmap -u{RESET} {DIM}<url>{RESET} {BGREEN}--dbs{RESET}     {CC}# dump DBs{RESET}",
+        f"{BGREEN}msfconsole{RESET}                    {CC}# metasploit{RESET}",
+        f"{BGREEN}airmon-ng start wlan0{RESET}         {CC}# monitor mode{RESET}",
+        f"{BGREEN}hashcat -m 0 h.txt wl{RESET}        {CC}# crack MD5{RESET}",
+        f"{BGREEN}gobuster dir -u{RESET} {DIM}<url>{RESET}       {CC}# dir fuzz{RESET}",
+        f"{BGREEN}volatility -f mem imageinfo{RESET}   {CC}# mem forensics{RESET}",
+        f"{HC}── NYX-J5W-2026 ─────────────{RESET}",
+    ]
+
+    n_rows = max(len(boot_left), len(boot_right))
+    for i in range(n_rows):
+        # Left side
+        if i < len(boot_left):
+            phrase, status = boot_left[i]
+            pv = len(_ansi.sub('', phrase))
+            sv = len(_ansi.sub('', status))
+            inner_gap = max(1, half - 2 - pv - sv - 1)
+            left_cell = f"  {phrase}{' ' * inner_gap}{status}"
+            lv = len(_ansi.sub('', left_cell))
+        else:
+            left_cell = ""
+            lv = 0
+
+        # Right side
+        right_cell = boot_right[i] if i < len(boot_right) else ""
+
+        pad = max(0, half - lv)
+        lines_out.append(f"{left_cell}{' ' * pad} {right_cell}")
 
     # ─── BOTTOM BORDER ─────────────────────────────────────────────────────────
     lines_out.append(f"{DIM}{BRED}{'─' * cols}{RESET}")
@@ -291,8 +346,6 @@ def render_motd():
         print(line)
 
     # Fill remaining rows if needed
-    import re
-    ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
     rendered_rows = len(lines_out)
     remaining = rows - rendered_rows - 2
     for _ in range(max(0, remaining)):
