@@ -262,6 +262,8 @@ function Ticker() {
   );
 }
 
+const BG_URL = `${import.meta.env.BASE_URL}nyxus-bg.png`;
+
 export default function App() {
   const [time, setTime] = useState(new Date().toISOString().replace("T", " ").slice(0, 19));
 
@@ -271,75 +273,98 @@ export default function App() {
   }, []);
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      backgroundImage: `url(${BG_URL})`,
+      backgroundSize: "cover",
+      backgroundPosition: "center top",
+      backgroundAttachment: "fixed",
+      backgroundRepeat: "no-repeat",
+      position: "relative",
+    }}>
+      {/* Dark vignette overlay — keeps text readable */}
+      <div style={{
+        position: "fixed",
+        inset: 0,
+        background: "radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.82) 60%, rgba(0,0,0,0.95) 100%)",
+        pointerEvents: "none",
+        zIndex: 0,
+      }} />
 
-      {/* Header */}
-      <header style={{ padding: "2rem 2rem 1rem", borderBottom: "1px solid #111" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
-            <div>
-              <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "0.4rem" }}>
-                NYX-J5W-2026-SIERENGOWSKI-LOCKED
+      {/* All content above overlay */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+
+        {/* Header */}
+        <header style={{ padding: "2rem 2rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.04)", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(2px)" }}>
+          <div style={{ maxWidth: 960, margin: "0 auto" }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
+              <div>
+                <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "0.4rem" }}>
+                  NYX-J5W-2026-SIERENGOWSKI-LOCKED
+                </div>
+                <h1 style={{ margin: 0, fontSize: "clamp(1.8rem, 5vw, 3rem)", fontWeight: 900, letterSpacing: "0.12em" }}>
+                  <span style={{ color: "#c084fc", textShadow: "0 0 24px rgba(192,132,252,0.6)" }}>NYX</span>
+                  <span style={{ color: "#555" }}>US</span>
+                </h1>
+                <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.25em", marginTop: "0.2rem" }}>
+                  SILENT · DARK · PURELY FUNCTIONAL
+                </div>
               </div>
-              <h1 style={{ margin: 0, fontSize: "clamp(1.8rem, 5vw, 3rem)", fontWeight: 900, letterSpacing: "0.12em" }}>
-                <span style={{ color: "#c084fc", textShadow: "0 0 24px rgba(192,132,252,0.6)" }}>NYX</span>
-                <span style={{ color: "#555" }}>US</span>
-              </h1>
-              <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.25em", marginTop: "0.2rem" }}>
-                SILENT · DARK · PURELY FUNCTIONAL
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: "0.6rem", color: "#2a2a2a", fontFamily: "monospace" }}>{time} UTC</div>
+                <div style={{ fontSize: "0.6rem", color: "#1e1e1e", marginTop: "0.2rem" }}>KERNEL 6.6.0-nyxus · x86_64</div>
+                <div style={{ fontSize: "0.6rem", color: "#1e1e1e" }}>STATUS: <span style={{ color: "#2d6a3f" }}>OPERATIONAL</span></div>
               </div>
             </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "0.6rem", color: "#2a2a2a", fontFamily: "monospace" }}>{time} UTC</div>
-              <div style={{ fontSize: "0.6rem", color: "#1e1e1e", marginTop: "0.2rem" }}>KERNEL 6.6.0-nyxus · x86_64</div>
-              <div style={{ fontSize: "0.6rem", color: "#1e1e1e" }}>STATUS: <span style={{ color: "#2d6a3f" }}>OPERATIONAL</span></div>
+          </div>
+        </header>
+
+        <Ticker />
+
+        {/* Body */}
+        <main style={{ flex: 1, padding: "2rem", maxWidth: 960, margin: "0 auto", width: "100%" }}>
+
+          <div style={{ marginBottom: "2rem" }}>
+            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "0.5rem" }}>
+              // VISUAL COMPONENTS · LIVE TTY ENVIRONMENT
             </div>
+            <p style={{ color: "#555", fontSize: "0.8rem", lineHeight: 1.8, maxWidth: 640 }}>
+              Four terminal components for the NYXUS live environment.
+              Drop them into <code style={{ color: "#c084fc" }}>/usr/local/lib/nyxus/</code> and run with Python 3.
+              Pure standard library. No external dependencies.
+            </p>
           </div>
-        </div>
-      </header>
 
-      <Ticker />
-
-      {/* Body */}
-      <main style={{ flex: 1, padding: "2rem", maxWidth: 960, margin: "0 auto", width: "100%" }}>
-
-        <div style={{ marginBottom: "2rem" }}>
-          <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "0.5rem" }}>
-            // VISUAL COMPONENTS · LIVE TTY ENVIRONMENT
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: "1.25rem" }}>
+            {SCRIPTS.map((s, i) => <ScriptCard key={s.id} s={s} idx={i} />)}
           </div>
-          <p style={{ color: "#555", fontSize: "0.8rem", lineHeight: 1.8, maxWidth: 640 }}>
-            Four terminal components for the NYXUS live environment.
-            Drop them into <code style={{ color: "#c084fc" }}>/usr/local/lib/nyxus/</code> and run with Python 3.
-            Pure standard library. No external dependencies.
-          </p>
-        </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))", gap: "1.25rem" }}>
-          {SCRIPTS.map((s, i) => <ScriptCard key={s.id} s={s} idx={i} />)}
-        </div>
-
-        {/* Batch curl block */}
-        <div style={{ marginTop: "2.5rem", border: "1px solid #1a1a1a", borderRadius: 4, padding: "1.25rem", background: "#070707" }}>
-          <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>
-            // BATCH INSTALL · COPY AND RUN
-          </div>
-          <pre style={{ margin: 0, fontSize: "0.72rem", color: "#555", lineHeight: 2, overflow: "auto" }}>
+          {/* Batch curl block */}
+          <div style={{ marginTop: "2.5rem", border: "1px solid #1a1a1a", borderRadius: 4, padding: "1.25rem", background: "rgba(7,7,7,0.9)" }}>
+            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>
+              // BATCH INSTALL · COPY AND RUN
+            </div>
+            <pre style={{ margin: 0, fontSize: "0.72rem", color: "#555", lineHeight: 2, overflow: "auto" }}>
 {`BASE="${window.location.origin}${BASE}"
 curl -fsSL -o "nyxus_motd.py"    "$BASE/nyxus_motd.py"    && echo "✅ motd"
 curl -fsSL -o "nyxus_error.py"   "$BASE/nyxus_error.py"   && echo "✅ error"
 curl -fsSL -o "nyxus_preboot.py" "$BASE/nyxus_preboot.py" && echo "✅ preboot"
 curl -fsSL -o "nyxus_splash.py"  "$BASE/nyxus_splash.py"  && echo "✅ splash"
 chmod +x *.py && echo "✅ all ready"`}
-          </pre>
-        </div>
-      </main>
+            </pre>
+          </div>
+        </main>
 
-      {/* Footer */}
-      <footer style={{ padding: "1rem 2rem", borderTop: "1px solid #0f0f0f", textAlign: "center" }}>
-        <div style={{ fontSize: "0.6rem", color: "#222", letterSpacing: "0.15em" }}>
-          © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
-        </div>
-      </footer>
+        {/* Footer */}
+        <footer style={{ padding: "1rem 2rem", borderTop: "1px solid rgba(255,255,255,0.03)", textAlign: "center", background: "rgba(0,0,0,0.7)" }}>
+          <div style={{ fontSize: "0.6rem", color: "#222", letterSpacing: "0.15em" }}>
+            © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+          </div>
+        </footer>
+
+      </div>
     </div>
   );
 }

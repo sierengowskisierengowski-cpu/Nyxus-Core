@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 NYXUS — Message of the Day (MOTD)
-Dense hacker aesthetic terminal banner.
+Loaded weapons terminal. Dense. Aggressive. Unforgettable.
 © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 
@@ -10,26 +10,48 @@ import re
 import sys
 import time
 import random
-import shutil
 
+# ── ANSI helpers ──────────────────────────────────────────────────────────────
 _ansi = re.compile(r'\x1b\[[0-9;]*m')
 
-# ANSI color codes
+def _vis_len(s):
+    return len(_ansi.sub('', s))
+
+def _vis_truncate(s, max_len):
+    if max_len <= 0:
+        return ""
+    visible = 0
+    result  = []
+    i = 0
+    while i < len(s):
+        if s[i] == '\033' and i + 1 < len(s) and s[i + 1] == '[':
+            j = i + 2
+            while j < len(s) and s[j] not in 'mABCDEFGHJKLMSTfn':
+                j += 1
+            result.append(s[i:j + 1])
+            i = j + 1
+        else:
+            if visible >= max_len:
+                break
+            result.append(s[i])
+            visible += 1
+            i += 1
+    return ''.join(result)
+
+# ── Color constants ───────────────────────────────────────────────────────────
 RESET   = "\033[0m"
 BOLD    = "\033[1m"
 DIM     = "\033[2m"
 
-# Foreground colors
-BLACK   = "\033[30m"
+# Standard
 RED     = "\033[31m"
 GREEN   = "\033[32m"
 YELLOW  = "\033[33m"
-BLUE    = "\033[34m"
-MAGENTA = "\033[35m"
 CYAN    = "\033[36m"
 WHITE   = "\033[37m"
+MAGENTA = "\033[35m"
 
-# Bright foreground
+# Bright
 BRED     = "\033[91m"
 BGREEN   = "\033[92m"
 BYELLOW  = "\033[93m"
@@ -38,20 +60,36 @@ BMAGENTA = "\033[95m"
 BCYAN    = "\033[96m"
 BWHITE   = "\033[97m"
 
-# Background
-BG_BLACK = "\033[40m"
-BG_RED   = "\033[41m"
+# 256-color palette
+def c256(n):   return f"\033[38;5;{n}m"
+def bg256(n):  return f"\033[48;5;{n}m"
 
+BG_BLACK = "\033[40m"
+
+# Named 256-color aliases
+_DPURPLE = c256(54)    # deep purple — far halo
+_HPURPLE = c256(93)    # hot purple
+_EPURPLE = c256(135)   # electric purple
+_NPINK   = c256(213)   # neon pink  — hottest core
+_GOLD    = c256(220)   # gold
+_AMBER   = c256(214)   # hot amber / orange
+_LIME    = c256(118)   # toxic lime green
+_DRED    = c256(88)    # deep red
+_MRED    = c256(160)   # medium red
+_BRTRED  = c256(196)   # bright red
+_TEAL    = c256(51)    # electric teal
+
+# ── Terminal size ─────────────────────────────────────────────────────────────
 def get_size():
-    size = shutil.get_terminal_size((120, 40))
-    return size.columns, size.lines
+    try:
+        s = os.get_terminal_size()
+        return s.columns, s.lines
+    except OSError:
+        return 120, 40
 
 def clear():
     sys.stdout.write("\033[2J\033[H")
     sys.stdout.flush()
-
-def move(row, col):
-    sys.stdout.write(f"\033[{row};{col}H")
 
 def hide_cursor():
     sys.stdout.write("\033[?25l")
@@ -61,84 +99,183 @@ def show_cursor():
     sys.stdout.write("\033[?25h")
     sys.stdout.flush()
 
-TOOL_NAMES = [
-    ("nmap",        BGREEN,   BOLD,   5),
-    ("metasploit",  BMAGENTA, BOLD,   8),
-    ("hashcat",     BYELLOW,  "",     6),
-    ("wireshark",   BCYAN,    BOLD,   9),
-    ("hydra",       BRED,     BOLD,   5),
-    ("sqlmap",      BGREEN,   "",     6),
-    ("aircrack",    BYELLOW,  BOLD,   8),
-    ("volatility",  BMAGENTA, "",     9),
-    ("ghidra",      BCYAN,    BOLD,   6),
-    ("john",        BRED,     "",     4),
-    ("burpsuite",   BWHITE,   BOLD,   8),
-    ("nikto",       BGREEN,   BOLD,   5),
-    ("gobuster",    BYELLOW,  "",     8),
-    ("bettercap",   BMAGENTA, BOLD,   9),
-    ("radare2",     BCYAN,    "",     7),
-    ("binwalk",     BRED,     BOLD,   7),
-    ("foremost",    BGREEN,   "",     8),
-    ("netcat",      BYELLOW,  BOLD,   7),
-    ("tcpdump",     BMAGENTA, "",     7),
-    ("mimikatz",    BWHITE,   BOLD,   8),
-    ("exploitdb",   BGREEN,   "",     9),
-    ("maltego",     BMAGENTA, BOLD,   7),
-    ("recon-ng",    BCYAN,    "",     8),
-    ("set",         BYELLOW,  BOLD,   3),
-    ("beef",        BRED,     "",     4),
-    ("w3af",        BGREEN,   BOLD,   4),
-    ("shodan",      BCYAN,    BOLD,   6),
-    ("wifite",      BYELLOW,  "",     6),
-    ("msfvenom",    BMAGENTA, BOLD,   8),
-    ("crunch",      BRED,     "",     6),
+# ── NYXUS block logo — solid █ letters ───────────────────────────────────────
+_N = ["██   ██", "███  ██", "██ █ ██", "██  ███", "██   ██"]
+_Y = ["██  ██ ", " █████ ", "  ███  ", "  ███  ", "  ███  "]
+_X = ["██   ██", " ██ ██ ", "  ███  ", " ██ ██ ", "██   ██"]
+_U = ["██   ██", "██   ██", "██   ██", "██   ██", " █████ "]
+_S = [" █████ ", "██     ", " █████ ", "     ██", " █████ "]
+NYXUS_BLOCK = ["  ".join([_N[i],_Y[i],_X[i],_U[i],_S[i]]) for i in range(5)]
+
+# Logo gradient: deep purple halo → hot → electric → neon pink core → back
+_LOGO_COLORS = [_HPURPLE, _EPURPLE, _NPINK, _EPURPLE, _HPURPLE]
+
+# ── Big X logo (center panel) — 26 wide × 18 rows ────────────────────────────
+# Colored dynamically in render; these are the raw shapes
+BIG_X_RAW = [
+    "████▓░              ░▓████",
+    " ████▓░            ░▓████ ",
+    "  ████▓░          ░▓████  ",
+    "   ████▓░        ░▓████   ",
+    "    ████▓░      ░▓████    ",
+    "     ████▓░    ░▓████     ",
+    "      ████▓░  ░▓████      ",
+    "       ████████████       ",
+    "        ░░██████░░        ",   # center
+    "       ████████████       ",
+    "      ████▓░  ░▓████      ",
+    "     ████▓░    ░▓████     ",
+    "    ████▓░      ░▓████    ",
+    "   ████▓░        ░▓████   ",
+    "  ████▓░          ░▓████  ",
+    " ████▓░            ░▓████ ",
+    "████▓░              ░▓████",
+    "────────  N · Y · X  ─────",
 ]
 
-# Solid block letters — each 7 chars wide, 5 rows tall
-_BL_N = ["██   ██", "███  ██", "██ █ ██", "██  ███", "██   ██"]
-_BL_Y = ["██  ██ ", " █████ ", "  ███  ", "  ███  ", "  ███  "]
-_BL_X = ["██   ██", " ██ ██ ", "  ███  ", " ██ ██ ", "██   ██"]
-_BL_U = ["██   ██", "██   ██", "██   ██", "██   ██", " █████ "]
-_BL_S = [" █████ ", "██     ", " █████ ", "     ██", " █████ "]
-
-# Combine with 2-space gap: N·Y·X·U·S
-NYXUS_BLOCK = [
-    "  ".join([_BL_N[i], _BL_Y[i], _BL_X[i], _BL_U[i], _BL_S[i]])
-    for i in range(5)
+# Per-row colors for the X (outer→center→outer gradient)
+_X_ROW_COLORS = [
+    _DPURPLE, _DPURPLE, _HPURPLE, _HPURPLE,
+    _EPURPLE, _EPURPLE, _NPINK,
+    _GOLD + BOLD,        # crossover
+    _GOLD + BOLD,        # center
+    _GOLD + BOLD,        # crossover
+    _NPINK, _EPURPLE,
+    _EPURPLE, _HPURPLE, _HPURPLE,
+    _DPURPLE, _DPURPLE,
+    _AMBER + DIM,        # label row
 ]
 
-# Glow gradient colors — outer dim → electric core → outer dim
-_GL_DEEP  = "\033[38;5;54m"    # deep purple  (halo shadow)
-_GL_OUTER = "\033[38;5;93m"    # hot purple   (outer letter rows)
-_GL_MID   = "\033[38;5;135m"   # electric     (mid rows)
-_GL_CORE  = "\033[38;5;213m"   # neon pink    (center core — brightest)
-_LOGO_ROW_COLORS = [_GL_OUTER, _GL_MID, _GL_CORE, _GL_MID, _GL_OUTER]
-
-SKULL_ART = [
-    r"  ░░░░░░░░░░░░░░░░░░  ",
-    r"  ▓▓▓▓▓▓░   ░▓▓▓▓▓▓  ",
-    r"   ░▓▓▓▓▓▓ ▓▓▓▓▓▓░   ",
-    r"     ░▓▓▓▓▓▓▓▓▓▓░    ",
-    r"       ░▓▓▓▓▓▓░       ",
-    r"     ░▓▓▓▓▓▓▓▓▓▓░    ",
-    r"   ░▓▓▓▓▓▓ ▓▓▓▓▓▓░   ",
-    r"  ▓▓▓▓▓▓░   ░▓▓▓▓▓▓  ",
-    r"  ░░── N · Y · X ──░░ ",
-    r"  ░░░░░░░░░░░░░░░░░░  ",
+# ── Tool names ────────────────────────────────────────────────────────────────
+TOOLS = [
+    ("nmap",        BGREEN,    BOLD),
+    ("metasploit",  _NPINK,    BOLD),
+    ("hashcat",     _AMBER,    BOLD),
+    ("wireshark",   _TEAL,     BOLD),
+    ("hydra",       BRED,      BOLD),
+    ("sqlmap",      BGREEN,    ""),
+    ("aircrack",    _AMBER,    BOLD),
+    ("volatility",  _NPINK,    ""),
+    ("ghidra",      _TEAL,     BOLD),
+    ("john",        BRED,      ""),
+    ("burpsuite",   BWHITE,    BOLD),
+    ("nikto",       BGREEN,    BOLD),
+    ("gobuster",    _AMBER,    ""),
+    ("bettercap",   _NPINK,    BOLD),
+    ("radare2",     _TEAL,     ""),
+    ("binwalk",     BRED,      BOLD),
+    ("foremost",    BGREEN,    ""),
+    ("netcat",      _AMBER,    BOLD),
+    ("tcpdump",     _NPINK,    ""),
+    ("mimikatz",    BWHITE,    BOLD),
+    ("exploitdb",   BGREEN,    ""),
+    ("maltego",     _NPINK,    BOLD),
+    ("recon-ng",    _TEAL,     ""),
+    ("SET",         _AMBER,    BOLD),
+    ("beef-xss",    BRED,      ""),
+    ("shodan",      _TEAL,     BOLD),
+    ("wifite",      _AMBER,    ""),
+    ("msfvenom",    _NPINK,    BOLD),
+    ("crunch",      BRED,      ""),
+    ("responder",   BGREEN,    BOLD),
+    ("impacket",    _TEAL,     BOLD),
+    ("bloodhound",  BWHITE,    ""),
+    ("powersploit", _NPINK,    ""),
+    ("cobalt",      _AMBER,    BOLD),
+    ("empire",      BRED,      BOLD),
+    ("yersinia",    BGREEN,    ""),
+    ("scapy",       _TEAL,     BOLD),
+    ("frida",       _NPINK,    ""),
+    ("angr",        _AMBER,    BOLD),
+    ("pwndbg",      BRED,      ""),
 ]
 
-GLITCH_CHARS = list("!@#$%^&*()_+-=[]{}|;:,.<>?/\\~`")
-BINARY_CHARS = list("01")
+GLITCH = list("!@#$%^&*()_+-=[]{}|;:,.<>?/\\~`")
 
-def glitch_line(text, intensity=0.15):
-    result = []
-    for ch in text:
-        if random.random() < intensity:
-            result.append(random.choice(GLITCH_CHARS))
+def _glitch(text, intensity=0.12):
+    return "".join(random.choice(GLITCH) if random.random() < intensity else c for c in text)
+
+# ── Binary stream generator ───────────────────────────────────────────────────
+_BIN_CHARS = list("01") * 6 + list("·░▒▓") + list("0123456789ABCDEF")
+
+def _binary_row(cols, hi_color, lo_color, hi_prob=0.18):
+    out = ""
+    for _ in range(cols):
+        ch = random.choice(_BIN_CHARS)
+        if random.random() < hi_prob:
+            out += f"{hi_color}{BOLD}{ch}"
         else:
-            result.append(ch)
-    return "".join(result)
+            out += f"{lo_color}{DIM}{ch}"
+    return out + RESET
 
+def _hex_row(cols, color):
+    chars = "0123456789ABCDEFabcdef :;.-><[]{}|"
+    out = ""
+    for _ in range(cols):
+        ch = random.choice(chars)
+        shade = BOLD if random.random() < 0.2 else DIM
+        out += f"{color}{shade}{ch}"
+    return out + RESET
+
+# ── Build tool cascade (chaotic 5 rows) ──────────────────────────────────────
+def _tool_cascade(cols):
+    prefixes  = ["//", ">>", "~~", "##", "{{", "[[", "--", "++", "::"]
+    suffixes  = ["//", "<<", "~~", "##", "}}", "]]", "--", "++", "::"]
+    separators = ["  ", "   ", "····", "   //   ", "  ·  ", "  |  "]
+
+    shuffled = TOOLS[:]
+    random.shuffle(shuffled)
+
+    # Distribute tools into 5 rows
+    rows_content = [[] for _ in range(5)]
+    for idx, tool_data in enumerate(shuffled):
+        rows_content[idx % 5].append(tool_data)
+
+    # Row-level color tints for variety
+    row_tints = [_BRTRED, BGREEN, _AMBER, _NPINK, _EPURPLE]
+    row_dim   = [_DRED,   DIM+GREEN, DIM+YELLOW, _DPURPLE, _HPURPLE]
+
+    lines = []
+    for row_idx, row_tools in enumerate(rows_content):
+        if not row_tools:
+            continue
+        parts = []
+        current_len = 0
+        for (name, color, style) in row_tools:
+            px  = random.choice(prefixes)
+            sx  = random.choice(suffixes)
+            sep = random.choice(separators)
+            display = f"{px}{name}{sx}"
+
+            # Glitch some names slightly
+            if random.random() < 0.2:
+                display = _glitch(display, 0.08)
+
+            chunk_vis = len(display)
+            if current_len + chunk_vis + len(_ansi.sub('', sep)) > cols - 2:
+                break
+            parts.append(f"{color}{style}{display}{RESET}")
+            current_len += chunk_vis + len(_ansi.sub('', sep))
+            parts.append(f"{row_dim[row_idx]}{sep}{RESET}")
+
+        # Pad remaining width with dim noise
+        line_vis  = sum(len(_ansi.sub('', p)) for p in parts)
+        remaining = cols - 2 - line_vis
+        if remaining > 0:
+            noise = ""
+            nc = row_tints[row_idx]
+            for _ in range(remaining):
+                if random.random() < 0.08:
+                    noise += f"{nc}{DIM}{random.choice(GLITCH)}{RESET}"
+                else:
+                    noise += " "
+            parts.append(noise)
+
+        lines.append(" " + "".join(parts))
+
+    return lines
+
+# ── Main render ───────────────────────────────────────────────────────────────
 def render_motd():
     hide_cursor()
     cols, rows = get_size()
@@ -148,248 +285,233 @@ def render_motd():
     lines_out = []
 
     # ─── TOP BORDER ────────────────────────────────────────────────────────────
-    border_char = "█"
-    top_border = f"{BRED}{BOLD}" + border_char * cols + RESET
-    lines_out.append(top_border)
+    lines_out.append(f"{_BRTRED}{BOLD}{'█' * cols}{RESET}")
+    lines_out.append(f"{_DRED}{'▓' * cols}{RESET}")
 
-    # ─── NYXUS BLOCK LOGO — solid letters, neon glow gradient ─────────────────
-    logo_w    = len(NYXUS_BLOCK[0])
-    logo_pad  = max(0, (cols - logo_w) // 2)
-    pad_str   = " " * logo_pad
+    # ─── NYXUS BLOCK LOGO ─────────────────────────────────────────────────────
+    logo_w   = len(NYXUS_BLOCK[0])
+    logo_pad = max(0, (cols - logo_w) // 2)
+    avail_w  = cols - logo_pad
+    ps       = " " * logo_pad
 
-    # Halo row — dim shadow of top letter row using ░ shade chars
-    halo = NYXUS_BLOCK[0].replace("█", "░")
-    lines_out.append(f"{pad_str}{_GL_DEEP}{DIM}{halo}{RESET}")
-
-    # Five solid letter rows — gradient from outer glow → neon pink core → outer
-    for i, (line, color) in enumerate(zip(NYXUS_BLOCK, _LOGO_ROW_COLORS)):
-        lines_out.append(f"{pad_str}{color}{BOLD}{line}{RESET}")
-
-    # Halo row below
-    lines_out.append(f"{pad_str}{_GL_DEEP}{DIM}{halo}{RESET}")
+    halo = NYXUS_BLOCK[0].replace("█", "░")[:avail_w]
+    lines_out.append(f"{ps}{_DPURPLE}{DIM}{halo}{RESET}")
+    for line, col_code in zip(NYXUS_BLOCK, _LOGO_COLORS):
+        lines_out.append(f"{ps}{col_code}{BOLD}{line[:avail_w]}{RESET}")
+    lines_out.append(f"{ps}{_DPURPLE}{DIM}{halo}{RESET}")
 
     # ─── TAGLINE ───────────────────────────────────────────────────────────────
-    tag = "[ S I L E N T . D A R K . P U R E L Y   F U N C T I O N A L ]"
-    pad = max(0, (cols - len(tag)) // 2)
-    lines_out.append(f"{' ' * pad}{DIM}{GREEN}{tag}{RESET}")
-    lines_out.append("")
+    tag = "[ S I L E N T  ·  D A R K  ·  P U R E L Y   F U N C T I O N A L ]"
+    tag = tag[:cols]
+    tp  = max(0, (cols - len(tag)) // 2)
+    lines_out.append(f"{' ' * tp}{DIM}{BGREEN}{tag}{RESET}")
 
     # ─── DIVIDER ───────────────────────────────────────────────────────────────
-    div = f"{DIM}{BRED}{'─' * cols}{RESET}"
-    lines_out.append(div)
+    lines_out.append(f"{_DRED}{DIM}{'═' * cols}{RESET}")
 
-    # ─── TOOL SCATTER ──────────────────────────────────────────────────────────
-    # Build a grid of tool name rows, filling width
-    tool_rows = []
-    current_row_parts = []
-    current_len = 0
+    # ─── TOOL CASCADE — 5 chaotic rows ────────────────────────────────────────
+    for tc_line in _tool_cascade(cols):
+        lines_out.append(tc_line)
 
-    shuffled = TOOL_NAMES[:]
-    random.shuffle(shuffled)
+    # ─── BINARY STREAMS — 3 rows ───────────────────────────────────────────────
+    lines_out.append(_binary_row(cols, _BRTRED,  _DRED,    hi_prob=0.22))
+    lines_out.append(_hex_row   (cols, BGREEN))
+    lines_out.append(_binary_row(cols, _AMBER,   DIM+YELLOW, hi_prob=0.15))
 
-    for (name, color, style, size) in shuffled:
-        # Random ASCII decoration
-        prefixes = ["[", "{", ">>", "//", "##", "~~"]
-        suffixes = ["]", "}", "<<", "//", "##", "~~"]
-        px = random.choice(prefixes)
-        sx = random.choice(suffixes)
-        display = f"{px}{name}{sx}"
-        chunk = f"{color}{style}{display}{RESET}"
-        chunk_len = len(display) + random.randint(2, 6)  # spacing
-        if current_len + chunk_len > cols - 2:
-            tool_rows.append("  ".join(current_row_parts))
-            current_row_parts = []
-            current_len = 0
-        current_row_parts.append(chunk)
-        current_len += chunk_len + 2
+    # ─── SECTION DIVIDER ──────────────────────────────────────────────────────
+    div_body = f"{'─' * 10}[ SYSTEM ARMED · PAYLOAD LIVE · STEALTH MODE ACTIVE ]{'─' * 10}"
+    div_body = div_body[:cols]
+    div_pad  = max(0, (cols - len(div_body)) // 2)
+    lines_out.append(f"{' ' * div_pad}{_NPINK}{BOLD}{div_body}{RESET}")
 
-    if current_row_parts:
-        tool_rows.append("  ".join(current_row_parts))
+    # ─── 3-COLUMN: WARNING | BIG X | STATS ────────────────────────────────────
+    x_w      = len(BIG_X_RAW[0])              # 26
+    third    = max(1, cols // 3)
+    x_col_w  = min(x_w + 2, third)            # center column budget
 
-    # Add some glitch/binary filler rows between tool rows
-    filler_colors = [BGREEN, BYELLOW, BMAGENTA, BBLUE, BRED]
-    for i, row in enumerate(tool_rows):
-        lines_out.append(f" {row}")
-        if i % 2 == 0 and i < len(tool_rows) - 1:
-            # mini binary filler
-            frow = ""
-            fc = random.choice(filler_colors)
-            for _ in range(cols):
-                frow += f"{DIM}{fc}" + random.choice(BINARY_CHARS + ["·", "░", "▒"])
-            lines_out.append(frow + RESET)
-
-    # ─── DIVIDER ───────────────────────────────────────────────────────────────
-    lines_out.append(f"{DIM}{BMAGENTA}{'═' * cols}{RESET}")
-
-    # ─── SKULL + SIDE TEXT LAYOUT ──────────────────────────────────────────────
-    # Left: warning block, Center: Skull, Right: stats
-    skull_col = max(0, (cols // 2) - 12)
-
-    warning_lines = [
-        f"{BRED}{BOLD}!! WARNING !!{RESET}",
-        f"{BYELLOW}UNAUTHORIZED ACCESS{RESET}",
-        f"{BYELLOW}IS STRICTLY PROHIBITED{RESET}",
-        f"{RED}ALL ACTIVITY MONITORED{RESET}",
-        f"{RED}AND LOGGED IN REAL-TIME{RESET}",
-        f"{DIM}{WHITE}violators will be{RESET}",
-        f"{DIM}{WHITE}prosecuted to the{RESET}",
-        f"{DIM}{WHITE}fullest extent of law{RESET}",
-        f"{BMAGENTA}NYX-J5W-2026{RESET}",
-        f"{BMAGENTA}SIERENGOWSKI-LOCKED{RESET}",
+    WARNING = [
+        f"{_BRTRED}{BOLD}!! WARNING !!!!{RESET}",
+        f"{_BRTRED}{BOLD}!! WARNING !!!!{RESET}",
+        f"{_MRED}{BOLD}UNAUTHORIZED ACCESS{RESET}",
+        f"{_MRED}{BOLD}IS  PROHIBITED{RESET}",
+        f"{_AMBER}{BOLD}ALL ACTIVITY IS{RESET}",
+        f"{_AMBER}{BOLD}MONITORED 24/7{RESET}",
+        f"{BRED}{BOLD}LOGGED REAL-TIME{RESET}",
+        f"{BRED}VIOLATIONS WILL BE{RESET}",
+        f"{BRED}PROSECUTED FULLY{RESET}",
+        f"{_DRED}{DIM}─────────────────{RESET}",
+        f"{_NPINK}{DIM}NYX-J5W-2026{RESET}",
+        f"{_NPINK}{DIM}SIERENGOWSKI{RESET}",
+        f"{_DPURPLE}{DIM}LOCKED·LOCKED{RESET}",
+        f"{_HPURPLE}{DIM}LOCKED·LOCKED{RESET}",
+        f"{_EPURPLE}{DIM}· · · · · · ·{RESET}",
+        f"{_NPINK}◆ SYSTEM ARMED ◆{RESET}",
+        f"{_AMBER}{DIM}BREACH LOGGED{RESET}",
+        f"{BRED}{DIM}YOU ARE WATCHED{RESET}",
     ]
 
-    stat_lines = [
-        f"{DIM}{GREEN}KERNEL: 6.6.0-nyxus{RESET}",
-        f"{DIM}{GREEN}ARCH:   x86_64{RESET}",
-        f"{DIM}{CYAN}TOOLS:  {BWHITE}200+{RESET}",
-        f"{DIM}{CYAN}PAYLD:  {BWHITE}LOADED{RESET}",
-        f"{DIM}{YELLOW}NET:    {BWHITE}STEALTH{RESET}",
-        f"{DIM}{YELLOW}PRIV:   {BWHITE}ROOT{RESET}",
-        f"{DIM}{MAGENTA}SIG:    {BWHITE}MASKED{RESET}",
-        f"{DIM}{MAGENTA}ENC:    {BWHITE}AES-256{RESET}",
-        f"{DIM}{RED}STATUS: {BGREEN}OPERATIONAL{RESET}",
-        f"{DIM}{RED}MODE:   {BRED}OFFENSIVE{RESET}",
+    STATS = [
+        f"{_EPURPLE}KERNEL {_NPINK}{BOLD}6.6.0-nyxus{RESET}",
+        f"{_EPURPLE}ARCH   {BWHITE}{BOLD}x86_64{RESET}",
+        f"{_EPURPLE}TOOLS  {_AMBER}{BOLD}200+{RESET}",
+        f"{_EPURPLE}PAYLD  {BGREEN}{BOLD}LOADED{RESET}",
+        f"{_EPURPLE}NET    {BGREEN}{BOLD}STEALTH{RESET}",
+        f"{_EPURPLE}PRIV   {BRED}{BOLD}ROOT{RESET}",
+        f"{_EPURPLE}SIG    {_AMBER}{BOLD}MASKED{RESET}",
+        f"{_EPURPLE}ENC    {BGREEN}{BOLD}AES-256{RESET}",
+        f"{_EPURPLE}STATUS {BGREEN}{BOLD}OPERATIONAL{RESET}",
+        f"{_EPURPLE}MODE   {BRED}{BOLD}OFFENSIVE{RESET}",
+        f"{_EPURPLE}IDS    {_AMBER}{BOLD}BYPASSED{RESET}",
+        f"{_EPURPLE}VPN    {BGREEN}{BOLD}ACTIVE{RESET}",
+        f"{_EPURPLE}TOR    {BGREEN}{BOLD}ROUTING{RESET}",
+        f"{_EPURPLE}CRYPT  {_NPINK}{BOLD}ARMED{RESET}",
+        f"{_EPURPLE}EXPL   {_AMBER}{BOLD}READY{RESET}",
+        f"{_EPURPLE}ANON   {BGREEN}{BOLD}MAXIMUM{RESET}",
+        f"{_EPURPLE}HASH   {BGREEN}{BOLD}CRACKING{RESET}",
+        f"{_EPURPLE}PKT    {_AMBER}{BOLD}SNIFFING{RESET}",
     ]
 
-    # ── X logo: per-arm color ──────────────────────────────────────────────────
-    HOT_PURPLE = "\033[1;38;5;135m"
-    NEON_PINK  = "\033[1;38;5;213m"
-    GOLD       = "\033[1;38;5;220m"
-    DIM_PURP   = "\033[2;38;5;93m"
+    max_rows_3col = max(len(WARNING), len(BIG_X_RAW), len(STATS))
+    left_w  = third
+    right_w = cols - left_w - x_col_w - 2
 
-    def color_x_row(row_idx):
-        r = SKULL_ART[row_idx]
-        mid = len(r) // 2
-        if row_idx in (0, 9):                          # borders
-            return f"{DIM_PURP}{BOLD}{r}{RESET}"
-        elif row_idx in (1, 2):                        # top arms: L=purple R=pink
-            return f"{HOT_PURPLE}{r[:mid]}{NEON_PINK}{r[mid:]}{RESET}"
-        elif row_idx in (3, 4, 5):                     # center intersection: gold
-            return f"{GOLD}{BOLD}{r}{RESET}"
-        elif row_idx in (6, 7):                        # bottom arms: L=pink R=purple
-            return f"{NEON_PINK}{r[:mid]}{HOT_PURPLE}{r[mid:]}{RESET}"
-        elif row_idx == 8:                             # N·Y·X label: gold
-            return f"{GOLD}{BOLD}{r}{RESET}"
-        return f"{DIM_PURP}{r}{RESET}"
+    for i in range(max_rows_3col):
+        # Left: warning
+        left = WARNING[i] if i < len(WARNING) else ""
+        left = _vis_truncate(left, left_w - 1)
+        lv   = _vis_len(left)
+        l_pad = max(0, left_w - lv)
 
-    skull_colored = [color_x_row(i) for i in range(len(SKULL_ART))]
+        # Center: X logo
+        if i < len(BIG_X_RAW):
+            x_raw = BIG_X_RAW[i][:x_col_w - 1]
+            col_c = _X_ROW_COLORS[i] if i < len(_X_ROW_COLORS) else _HPURPLE
+            mid   = f"{col_c}{BOLD}{x_raw}{RESET}"
+        else:
+            mid   = ""
+        mv = _vis_len(mid)
+        m_pad = max(0, x_col_w - mv)
 
-    max_block = max(len(warning_lines), len(skull_colored), len(stat_lines))
-    third = cols // 3
+        # Right: stats
+        right = STATS[i] if i < len(STATS) else ""
+        right = _vis_truncate(right, max(0, right_w - 1))
 
-    for i in range(max_block):
-        left  = warning_lines[i] if i < len(warning_lines) else ""
-        mid   = skull_colored[i] if i < len(skull_colored) else ""
-        right = stat_lines[i]    if i < len(stat_lines)    else ""
+        lines_out.append(f" {left}{' ' * l_pad}{mid}{' ' * m_pad}{right}")
 
-        # Strip ANSI to measure visible length
-        left_vis  = len(_ansi.sub('', left))
-        mid_vis   = len(_ansi.sub('', mid))
-        right_vis = len(_ansi.sub('', right))
+    # ─── BINARY STREAMS — 2 rows ───────────────────────────────────────────────
+    lines_out.append(_binary_row(cols, _NPINK,  _DPURPLE, hi_prob=0.20))
+    lines_out.append(_binary_row(cols, _TEAL,   DIM+CYAN, hi_prob=0.12))
 
-        left_pad  = third - left_vis
-        mid_pad   = third - mid_vis
-        right_pad = third - right_vis
+    # ─── SECTION DIVIDER ──────────────────────────────────────────────────────
+    div2 = f"{'─' * 8}[ EXPLOIT FRAMEWORK · TOOLS LOADED · WEAPONS HOT ]{'─' * 8}"
+    div2 = div2[:cols]
+    d2p  = max(0, (cols - len(div2)) // 2)
+    lines_out.append(f"{' ' * d2p}{_AMBER}{BOLD}{div2}{RESET}")
 
-        line = f" {left}{' ' * max(0, left_pad)}{mid}{' ' * max(0, mid_pad)}{right}"
-        lines_out.append(line)
-
-    # ─── DIVIDER ───────────────────────────────────────────────────────────────
-    lines_out.append(f"{DIM}{BCYAN}{'─' * cols}{RESET}")
-
-    # ─── TWO-COLUMN BLOCK: boot status LEFT | quick ref RIGHT ──────────────────
+    # ─── 2-COLUMN: BOOT STATUS | QUICK REFERENCE ──────────────────────────────
     half = cols // 2
 
-    # Left column: boot status
-    boot_left = [
-        (f"{BGREEN}{BOLD}EXPLOIT FRAMEWORK LOADED{RESET}",   f"{DIM}{GREEN}[OK]{RESET}"),
-        (f"{BCYAN}NETWORK INTERFACES INIT{RESET}",            f"{DIM}{CYAN}[READY]{RESET}"),
-        (f"{BYELLOW}ANONYMOUS ROUTING ENABLED{RESET}",        f"{DIM}{YELLOW}[TOR]{RESET}"),
-        (f"{BMAGENTA}PAYLOAD GENERATOR{RESET}",               f"{DIM}{MAGENTA}[ARMED]{RESET}"),
-        (f"{BRED}IDS BYPASS MODULE{RESET}",                   f"{DIM}{RED}[ACTIVE]{RESET}"),
-        (f"{BWHITE}CRYPTO ENGINE AES-256{RESET}",             f"{DIM}{WHITE}[OK]{RESET}"),
-        (f"{BGREEN}HASHCRACK ENGINE{RESET}",                  f"{DIM}{GREEN}[LOADED]{RESET}"),
-        (f"{BCYAN}PACKET SNIFFER{RESET}",                     f"{DIM}{CYAN}[SILENT]{RESET}"),
-        (f"{BYELLOW}VPN TUNNEL LAYER{RESET}",                 f"{DIM}{YELLOW}[UP]{RESET}"),
-        (f"{BMAGENTA}ROOTKIT STEALTH LAYER{RESET}",           f"{DIM}{MAGENTA}[MASKED]{RESET}"),
+    HC = _EPURPLE       # header color
+    CC = DIM + WHITE    # comment
+    VC = BGREEN         # value/command
+
+    BOOT_STATUS = [
+        (f"{BGREEN}{BOLD}EXPLOIT FRAMEWORK{RESET}",   f"{DIM}{BGREEN}[OK]{RESET}"),
+        (f"{_TEAL}NETWORK INTERFACES{RESET}",          f"{DIM}{_TEAL}[READY]{RESET}"),
+        (f"{_AMBER}ANONYMOUS ROUTING{RESET}",           f"{DIM}{_AMBER}[TOR]{RESET}"),
+        (f"{_NPINK}PAYLOAD GENERATOR{RESET}",           f"{DIM}{_NPINK}[ARMED]{RESET}"),
+        (f"{BRED}IDS BYPASS MODULE{RESET}",             f"{DIM}{BRED}[ACTIVE]{RESET}"),
+        (f"{BWHITE}CRYPTO ENGINE AES-256{RESET}",       f"{DIM}{BWHITE}[OK]{RESET}"),
+        (f"{BGREEN}HASHCRACK ENGINE{RESET}",             f"{DIM}{BGREEN}[LOADED]{RESET}"),
+        (f"{_TEAL}PACKET SNIFFER{RESET}",               f"{DIM}{_TEAL}[SILENT]{RESET}"),
+        (f"{_AMBER}VPN TUNNEL LAYER{RESET}",             f"{DIM}{_AMBER}[UP]{RESET}"),
+        (f"{_NPINK}ROOTKIT STEALTH LAYER{RESET}",        f"{DIM}{_NPINK}[MASKED]{RESET}"),
+        (f"{BGREEN}POST-EXPLOIT FRAMEWORK{RESET}",       f"{DIM}{BGREEN}[PRIMED]{RESET}"),
+        (f"{_TEAL}LATERAL MOVEMENT ENG{RESET}",          f"{DIM}{_TEAL}[READY]{RESET}"),
     ]
 
-    # Right column: quick command reference
-    HC = "\033[1;38;5;135m"   # hot purple headers
-    CC = "\033[38;5;245m"     # dim comment
-    VC = "\033[38;5;213m"     # neon pink values
-    boot_right = [
-        f"{HC}── QUICK REFERENCE ─────────{RESET}",
-        f"{BGREEN}nmap -sV -O{RESET} {DIM}<ip>{RESET}            {CC}# svc+OS scan{RESET}",
-        f"{BGREEN}hydra -l root -P list{RESET} {DIM}<ip>{RESET}  {CC}# brute-force{RESET}",
-        f"{BGREEN}sqlmap -u{RESET} {DIM}<url>{RESET} {BGREEN}--dbs{RESET}     {CC}# dump DBs{RESET}",
-        f"{BGREEN}msfconsole{RESET}                    {CC}# metasploit{RESET}",
-        f"{BGREEN}airmon-ng start wlan0{RESET}         {CC}# monitor mode{RESET}",
-        f"{BGREEN}hashcat -m 0 h.txt wl{RESET}        {CC}# crack MD5{RESET}",
-        f"{BGREEN}gobuster dir -u{RESET} {DIM}<url>{RESET}       {CC}# dir fuzz{RESET}",
-        f"{BGREEN}volatility -f mem imageinfo{RESET}   {CC}# mem forensics{RESET}",
-        f"{HC}── NYX-J5W-2026 ─────────────{RESET}",
+    QUICK_REF = [
+        f"{HC}{BOLD}── QUICK WEAPONS REFERENCE ──────{RESET}",
+        f"{VC}nmap -sV -sC -O -p-{RESET} {CC}<ip>   # full scan{RESET}",
+        f"{VC}hydra -l root -P wl{RESET}   {CC}<ip>   # brute ssh{RESET}",
+        f"{VC}sqlmap -u{RESET} {CC}<url>{VC} --dbs --dump{RESET}  {CC}# sql{RESET}",
+        f"{VC}msfconsole -q -r{RESET}      {CC}<rc>   # msf auto{RESET}",
+        f"{VC}airmon-ng start wlan0{RESET}          {CC}# monitor{RESET}",
+        f"{VC}hashcat -m 0 -a 0 h wl{RESET}         {CC}# crack{RESET}",
+        f"{VC}gobuster dir -u{RESET} {CC}<url>{VC} -w wl{RESET}   {CC}# fuzz{RESET}",
+        f"{VC}bloodhound-python -d{RESET}  {CC}<dom>  # ad map{RESET}",
+        f"{VC}volatility -f mem imageinfo{RESET}     {CC}# mem{RESET}",
+        f"{VC}frida-ps -Ua{RESET}                    {CC}# mobile{RESET}",
+        f"{HC}{BOLD}── NYX-J5W-2026 · SIERENGOWSKI ──{RESET}",
     ]
 
-    n_rows = max(len(boot_left), len(boot_right))
-    for i in range(n_rows):
-        # Left side
-        if i < len(boot_left):
-            phrase, status = boot_left[i]
-            pv = len(_ansi.sub('', phrase))
-            sv = len(_ansi.sub('', status))
-            inner_gap = max(1, half - 2 - pv - sv - 1)
+    STATUS_MAX = 9
+    PHRASE_MAX = half - 2 - STATUS_MAX - 1
+    n_rows2    = max(len(BOOT_STATUS), len(QUICK_REF))
+
+    for i in range(n_rows2):
+        if i < len(BOOT_STATUS):
+            phrase, status = BOOT_STATUS[i]
+            phrase    = _vis_truncate(phrase, max(1, PHRASE_MAX))
+            pv        = _vis_len(phrase)
+            sv        = _vis_len(status)
+            inner_gap = max(1, half - 2 - pv - sv)
             left_cell = f"  {phrase}{' ' * inner_gap}{status}"
-            lv = len(_ansi.sub('', left_cell))
+            lv        = _vis_len(left_cell)
         else:
             left_cell = ""
-            lv = 0
+            lv        = 0
 
-        # Right side
-        right_cell = boot_right[i] if i < len(boot_right) else ""
+        right_avail = cols - half - 1
+        if i < len(QUICK_REF):
+            right_cell = _vis_truncate(QUICK_REF[i], max(0, right_avail))
+        else:
+            right_cell = ""
 
         pad = max(0, half - lv)
         lines_out.append(f"{left_cell}{' ' * pad} {right_cell}")
 
-    # ─── BOTTOM BORDER ─────────────────────────────────────────────────────────
-    lines_out.append(f"{DIM}{BRED}{'─' * cols}{RESET}")
+    # ─── FINAL BINARY STREAM ──────────────────────────────────────────────────
+    lines_out.append(_binary_row(cols, _AMBER, _DRED, hi_prob=0.10))
 
-    # ─── COPYRIGHT ─────────────────────────────────────────────────────────────
+    # ─── BOTTOM DIVIDER ───────────────────────────────────────────────────────
+    lines_out.append(f"{DIM}{_BRTRED}{'─' * cols}{RESET}")
+
+    # ─── COPYRIGHT ────────────────────────────────────────────────────────────
     copyright_text = "© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
     cp_pad = max(0, (cols - len(copyright_text)) // 2)
     lines_out.append(f"{' ' * cp_pad}{DIM}{WHITE}{copyright_text}{RESET}")
 
-    # ─── BOTTOM BORDER ─────────────────────────────────────────────────────────
-    lines_out.append(f"{BRED}{BOLD}" + border_char * cols + RESET)
+    # ─── BOTTOM BORDER ────────────────────────────────────────────────────────
+    lines_out.append(f"{_DRED}{'▓' * cols}{RESET}")
+    lines_out.append(f"{_BRTRED}{BOLD}{'█' * cols}{RESET}")
 
-    # ─── RENDER ALL LINES ──────────────────────────────────────────────────────
+    # ─── RENDER ───────────────────────────────────────────────────────────────
     for line in lines_out:
         print(line)
 
-    # Fill remaining rows if needed
-    rendered_rows = len(lines_out)
-    remaining = rows - rendered_rows - 2
+    # Fill any remaining terminal rows with scrolling hex noise
+    rendered  = len(lines_out)
+    remaining = rows - rendered - 2
+    noise_colors = [DIM + _DRED, DIM + _DPURPLE, DIM + GREEN, DIM + YELLOW]
     for _ in range(max(0, remaining)):
-        # Random glitch filler rows at bottom
-        row_color = random.choice([DIM + GREEN, DIM + BMAGENTA, DIM + BCYAN, DIM + BYELLOW])
-        frow = row_color
-        for _ in range(cols):
-            frow += random.choice(BINARY_CHARS + ["·", "░", " ", " ", " "])
-        print(frow + RESET)
+        nc  = random.choice(noise_colors)
+        row = ""
+        for _c in range(cols):
+            row += nc + (random.choice(_BIN_CHARS) if random.random() < 0.4 else " ")
+        print(row + RESET)
 
-    # ─── PROMPT ────────────────────────────────────────────────────────────────
-    sys.stdout.write(f"\n{BG_BLACK}{BWHITE}{BOLD}")
-    sys.stdout.write("  ██ NYXUS OS ██  Press [ENTER] to continue into the void... ")
-    sys.stdout.write(RESET)
-    sys.stdout.flush()
+    # ─── HOLD ─────────────────────────────────────────────────────────────────
     show_cursor()
-
+    sys.stdout.write(f"\n{_NPINK}{BOLD}NYXUS > {RESET}")
+    sys.stdout.flush()
     try:
         input()
-    except (KeyboardInterrupt, EOFError):
+    except (EOFError, KeyboardInterrupt):
         pass
-
     clear()
 
+
+# ── CLI entrypoint ────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     render_motd()

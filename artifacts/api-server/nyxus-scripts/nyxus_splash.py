@@ -10,7 +10,6 @@ import os
 import sys
 import time
 import random
-import shutil
 import math
 
 # ── ANSI helpers ───────────────────────────────────────────────────────────────
@@ -35,8 +34,11 @@ def red_shade(brightness_0_1: float) -> str:
     return fg256(RED_RAMP[min(idx, len(RED_RAMP) - 1)])
 
 def get_size():
-    s = shutil.get_terminal_size((120, 40))
-    return s.columns, s.lines
+    try:
+        s = os.get_terminal_size()
+        return s.columns, s.lines
+    except OSError:
+        return 120, 40
 
 def clear():
     sys.stdout.write("\033[2J\033[H")
