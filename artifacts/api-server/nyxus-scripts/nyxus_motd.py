@@ -94,13 +94,25 @@ TOOL_NAMES = [
     ("crunch",      BRED,     "",     6),
 ]
 
-NYXUS_LOGO = [
-    r"  _   _  __   __ __  __  _   _  _____  ",
-    r" | \ | | \ \ / /|  \/  || | | ||  ___| ",
-    r" |  \| |  \ V / | |\/| || | | || |___  ",
-    r" | |\  |   | |  | |  | || |_| ||___ |  ",
-    r" |_| \_|   |_|  |_|  |_| \___/ |___/   ",
+# Solid block letters — each 7 chars wide, 5 rows tall
+_BL_N = ["██   ██", "███  ██", "██ █ ██", "██  ███", "██   ██"]
+_BL_Y = ["██  ██ ", " █████ ", "  ███  ", "  ███  ", "  ███  "]
+_BL_X = ["██   ██", " ██ ██ ", "  ███  ", " ██ ██ ", "██   ██"]
+_BL_U = ["██   ██", "██   ██", "██   ██", "██   ██", " █████ "]
+_BL_S = [" █████ ", "██     ", " █████ ", "     ██", " █████ "]
+
+# Combine with 2-space gap: N·Y·X·U·S
+NYXUS_BLOCK = [
+    "  ".join([_BL_N[i], _BL_Y[i], _BL_X[i], _BL_U[i], _BL_S[i]])
+    for i in range(5)
 ]
+
+# Glow gradient colors — outer dim → electric core → outer dim
+_GL_DEEP  = "\033[38;5;54m"    # deep purple  (halo shadow)
+_GL_OUTER = "\033[38;5;93m"    # hot purple   (outer letter rows)
+_GL_MID   = "\033[38;5;135m"   # electric     (mid rows)
+_GL_CORE  = "\033[38;5;213m"   # neon pink    (center core — brightest)
+_LOGO_ROW_COLORS = [_GL_OUTER, _GL_MID, _GL_CORE, _GL_MID, _GL_OUTER]
 
 SKULL_ART = [
     r"  ░░░░░░░░░░░░░░░░░░  ",
@@ -140,12 +152,21 @@ def render_motd():
     top_border = f"{BRED}{BOLD}" + border_char * cols + RESET
     lines_out.append(top_border)
 
-    # ─── NYXUS LOGO (centered, neon effect) ────────────────────────────────────
-    logo_colors = [BMAGENTA, BCYAN, BMAGENTA, BCYAN, BMAGENTA]
-    for i, line in enumerate(NYXUS_LOGO):
-        pad = max(0, (cols - len(line)) // 2)
-        color = logo_colors[i % len(logo_colors)]
-        lines_out.append(f"{BG_BLACK}{color}{BOLD}{' ' * pad}{line}{RESET}")
+    # ─── NYXUS BLOCK LOGO — solid letters, neon glow gradient ─────────────────
+    logo_w    = len(NYXUS_BLOCK[0])
+    logo_pad  = max(0, (cols - logo_w) // 2)
+    pad_str   = " " * logo_pad
+
+    # Halo row — dim shadow of top letter row using ░ shade chars
+    halo = NYXUS_BLOCK[0].replace("█", "░")
+    lines_out.append(f"{pad_str}{_GL_DEEP}{DIM}{halo}{RESET}")
+
+    # Five solid letter rows — gradient from outer glow → neon pink core → outer
+    for i, (line, color) in enumerate(zip(NYXUS_BLOCK, _LOGO_ROW_COLORS)):
+        lines_out.append(f"{pad_str}{color}{BOLD}{line}{RESET}")
+
+    # Halo row below
+    lines_out.append(f"{pad_str}{_GL_DEEP}{DIM}{halo}{RESET}")
 
     # ─── TAGLINE ───────────────────────────────────────────────────────────────
     tag = "[ S I L E N T . D A R K . P U R E L Y   F U N C T I O N A L ]"
