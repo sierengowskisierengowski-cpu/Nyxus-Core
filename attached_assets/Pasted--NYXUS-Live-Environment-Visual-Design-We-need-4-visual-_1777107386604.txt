@@ -1,0 +1,57 @@
+
+NYXUS — Live Environment Visual Design
+We need 4 visual components for the NYXUS live TTY environment:
+Component A — nyxus_motd.py
+Terminal welcome banner that displays when user logs into the NYXUS live environment. Style: dense hacker aesthetic ASCII art filling the entire terminal. Should include:- NYXUS branding large and prominent at top
+
+Tool names scattered across the screen in different sizes and colors — nmap, metasploit, hashcat, wireshark, hydra, sqlmap, aircrack, volatility, ghidra, john, burpsuite, nikto, gobuster, bettercap, radare2, binwalk, foremost — styled like the reference image with mixed fonts and sizes
+Skull ASCII art somewhere on screen
+Silent. Dark. Purely Functional. somewhere
+Copyright Joseph Sierengowski 2026
+Colors: pure black background, text in purple/pink/green/amber/red — chaotic but intentional
+Fills the entire terminal width and height
+Auto-fits any terminal size using os.get_terminal_size()
+Press Enter to continue at the bottom
+
+Component B — nyxus_error.py
+Full screen error takeover. Style: reference image 2 — red binary numbers cascading across entire screen with ERROR text glowing in the center. Should:
+
+Take over entire terminal instantly
+Red binary numbers (0s and 1s) scrolling/cascading across full screen
+Large glowing ERROR text centered
+Show error details below — command, exit code, location, message
+Options at bottom: [R] Retry [S] Shell [Q] Quit
+Pure red color scheme — different shades of red for depth effect
+Auto-fits any terminal size
+
+Component C — nyxus_preboot.py
+Pre-boot glitch animation. Style: reference image 3 — TV static/glitch effect. Should:
+
+Play for 2-3 seconds before NYXUS loads
+Fill entire terminal with glitch/static characters — random symbols, blocks, lines
+Chaotic color mix — white, cyan, magenta, green, random
+Then snap to black and launch NYXUS
+Pure chaos that resolves into order — sets the tone perfectly
+Auto-fits any terminal size
+
+Component D — nyxus_splash.py (replace existing)
+Boot splash with red glow scrolling code. Style: reference image 4 — code scrolling in deep red glow on black. Should:
+
+Fill entire terminal
+Scroll actual-looking code/hex/binary in deep red
+Red glow effect using color gradients from dark red to bright red
+NYXUS logo appears centered after 3-4 seconds of scrolling
+Silent. Dark. Purely Functional. fades in below logo
+Then transitions to NYXUS installer launch
+Auto-fits any terminal size
+
+Global rules:
+
+Pure black background on everything
+NYXUS copyright on everything: © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+Auto-fits any terminal size using os.get_terminal_size()
+All written in Python
+No external dependencies beyond standard library and what's already in the NYXUS package list
+Deliver via the existing API endpoint at /api/download/nyxus/
+
+Make all 4 unforgettable. This is the first thing people see when they boot NYXUS. 🦉You said: also put in to refrence the images sent so he knows what we are trying to achive herealso put in to refrence the images sent so he knows what we are trying to achive here4:55 AMAdd this to the message before sending:Visual References — 4 images attached/d
