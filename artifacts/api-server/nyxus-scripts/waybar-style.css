@@ -4,125 +4,141 @@
    ──────────────────────────────────────────────────────────────────────────── */
 
 * {
-    font-family: "JetBrains Mono", "Fira Code", monospace;
-    font-size:   11px;
-    border:       none;
+    font-family:   "JetBrains Mono", "Fira Code", monospace;
+    font-size:     11px;
+    border:        none;
     border-radius: 0;
-    padding:      0;
-    margin:       0;
-    min-height:   0;
-    color:        #aaaaaa;
+    padding:       0;
+    margin:        0;
+    min-height:    0;
+    color:         #888888;
 }
 
 /* ── Bar ─────────────────────────────────────────────────────────────────── */
 window#waybar {
-    background:    rgba(5, 5, 5, 0.92);
-    border-bottom: 1px solid rgba(192, 132, 252, 0.18);
-    color:         #aaaaaa;
+    background:    rgba(5, 5, 5, 0.94);
+    border-bottom: 1px solid rgba(192, 132, 252, 0.15);
+    color:         #888888;
+}
+
+/* ── Launcher button ─────────────────────────────────────────────────────── */
+#custom-launcher {
+    font-size:      16px;
+    color:          #c084fc;
+    padding:        0 14px;
+    margin:         0;
+    transition:     color 0.15s ease, background 0.15s ease;
+    border-right:   1px solid rgba(192, 132, 252, 0.12);
+}
+
+#custom-launcher:hover {
+    color:       #e0aaff;
+    background:  rgba(192, 132, 252, 0.1);
 }
 
 /* ── Workspaces ──────────────────────────────────────────────────────────── */
 #workspaces {
-    padding:    0 6px;
-    margin:     0;
+    padding: 0 6px;
+    margin:  0;
 }
 
 #workspaces button {
-    padding:         0 10px;
-    color:           #333333;
-    background:      transparent;
-    letter-spacing:  0.1em;
-    transition:      all 0.15s ease;
-    border-bottom:   2px solid transparent;
-    min-width:       28px;
+    padding:        0 10px;
+    color:          #2e2e2e;
+    background:     transparent;
+    letter-spacing: 0.08em;
+    transition:     all 0.15s ease;
+    border-bottom:  2px solid transparent;
+    min-width:      28px;
 }
 
 #workspaces button:hover {
     background: rgba(192, 132, 252, 0.08);
-    color:      #888888;
+    color:      #777777;
 }
 
 #workspaces button.active {
     color:         #c084fc;
-    background:    rgba(192, 132, 252, 0.12);
+    background:    rgba(192, 132, 252, 0.10);
     border-bottom: 2px solid #c084fc;
 }
 
 #workspaces button.urgent {
     color:      #f87171;
-    background: rgba(248, 113, 113, 0.12);
+    background: rgba(248, 113, 113, 0.10);
 }
 
 #workspaces button.empty {
-    color: #1e1e1e;
+    color: #1a1a1a;
 }
 
 /* ── Active window title ─────────────────────────────────────────────────── */
 #window {
     padding:        0 12px;
-    color:          #444444;
+    color:          #3a3a3a;
     font-size:      10px;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
 }
 
 /* ── Clock ───────────────────────────────────────────────────────────────── */
 #clock {
-    color:          #666666;
-    letter-spacing: 0.12em;
+    color:          #c084fc;
+    letter-spacing: 0.10em;
     font-size:      11px;
-    padding:        0 12px;
+    padding:        0 14px;
 }
 
-/* ── Right modules ───────────────────────────────────────────────────────── */
-#cpu,
-#memory,
+/* ── Right-side shared ───────────────────────────────────────────────────── */
+#bluetooth,
 #network,
 #pulseaudio,
 #battery,
 #tray {
-    padding:        0 10px;
-    color:          #444444;
-    letter-spacing: 0.06em;
-    font-size:      10px;
+    padding:        0 11px;
+    color:          #555555;
+    letter-spacing: 0.04em;
+    font-size:      11px;
     transition:     color 0.15s ease;
 }
 
-#cpu:hover,
-#memory:hover,
+#bluetooth:hover,
 #network:hover,
-#pulseaudio:hover {
-    color: #888888;
+#pulseaudio:hover,
+#battery:hover {
+    color: #aaaaaa;
 }
 
-/* ── Network states ──────────────────────────────────────────────────────── */
-#network.disconnected {
-    color: #f87171;
+/* ── Bluetooth ───────────────────────────────────────────────────────────── */
+#bluetooth.connected {
+    color: #818cf8;
 }
 
+#bluetooth.disabled {
+    color: #2a2a2a;
+}
+
+/* ── Network ─────────────────────────────────────────────────────────────── */
 #network.wifi {
-    color: #444444;
+    color: #555555;
 }
 
 #network.ethernet {
     color: #34d399;
 }
 
-/* ── Volume states ───────────────────────────────────────────────────────── */
+#network.disconnected {
+    color: #f87171;
+}
+
+/* ── Volume ──────────────────────────────────────────────────────────────── */
 #pulseaudio.muted {
-    color: #222222;
+    color: #2a2a2a;
 }
 
-/* ── Battery states ──────────────────────────────────────────────────────── */
-#battery {
-    color: #444444;
-}
-
-#battery.charging {
-    color: #34d399;
-}
-
-#battery.full,
-#battery.plugged {
+/* ── Battery ─────────────────────────────────────────────────────────────── */
+#battery.charging,
+#battery.plugged,
+#battery.full {
     color: #34d399;
 }
 
@@ -139,15 +155,30 @@ window#waybar {
     to { color: #7f1d1d; }
 }
 
+/* ── Tray ────────────────────────────────────────────────────────────────── */
+#tray {
+    padding:     0 10px;
+    border-left: 1px solid rgba(192, 132, 252, 0.08);
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+#tray > .needs-attention {
+    -gtk-icon-effect: highlight;
+    color: #f87171;
+}
+
 /* ── Tooltip ─────────────────────────────────────────────────────────────── */
 tooltip {
-    background:  rgba(10, 10, 10, 0.96);
-    border:      1px solid rgba(192, 132, 252, 0.2);
+    background:    rgba(8, 8, 8, 0.97);
+    border:        1px solid rgba(192, 132, 252, 0.18);
     border-radius: 3px;
-    color:       #aaaaaa;
-    font-family: "JetBrains Mono", monospace;
-    font-size:   10px;
-    padding:     6px 10px;
+    color:         #aaaaaa;
+    font-family:   "JetBrains Mono", monospace;
+    font-size:     10px;
+    padding:       6px 10px;
 }
 
 tooltip label {
