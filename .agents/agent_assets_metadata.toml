@@ -12,8 +12,44 @@ uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
 type = "image"
 title = "ACHII hacker neon collage wallpaper blacklight"
 
+[[generated]]
+id = "jJb9GT0sV5MxzqMwXnKl-"
+uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper-v2.png"
+type = "image"
+title = "ACHII city infrastructure hacker neon"
+
+[[generated]]
+id = "Y-DVaioF0wVhgJ_ixbLFC"
+uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper-v3.png"
+type = "image"
+title = "ACHII skull death hacker neon glow"
+
+[[generated]]
+id = "r_YrSHpiSzX5JFDCjVK9C"
+uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper-v4.png"
+type = "image"
+title = "ACHII space satellite hacking neon cosmic"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
 type = "image"
 title = "ACHII — nyxus-wallpaper.png"
+
+[[outputs]]
+id = "VWe9SS00V7xXtJTNl3Yp0"
+uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper-v2.png"
+type = "image"
+title = "V2 — ACHII City Takeover"
+
+[[outputs]]
+id = "7wz5F6aqHv-Tlv43adGPt"
+uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper-v3.png"
+type = "image"
+title = "V3 — ACHII Skull Death"
+
+[[outputs]]
+id = "QxC3C9F1LjrbkBt0vZAwI"
+uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper-v4.png"
+type = "image"
+title = "V4 — ACHII Global Hack"

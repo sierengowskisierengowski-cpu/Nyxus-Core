@@ -16,7 +16,10 @@ const ALLOWED_FILES: Record<string, string> = {
   "waybar-config.json":   "waybar-config.json",
   "waybar-style.css":     "waybar-style.css",
   "alacritty.toml":       "alacritty.toml",
-  "nyxus-wallpaper.png":  "nyxus-wallpaper.png",
+  "nyxus-wallpaper.png":   "nyxus-wallpaper.png",
+  "nyxus-wallpaper-v2.png": "nyxus-wallpaper-v2.png",
+  "nyxus-wallpaper-v3.png": "nyxus-wallpaper-v3.png",
+  "nyxus-wallpaper-v4.png": "nyxus-wallpaper-v4.png",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
