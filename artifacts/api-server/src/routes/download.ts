@@ -16,10 +16,11 @@ const ALLOWED_FILES: Record<string, string> = {
   "waybar-config.json":   "waybar-config.json",
   "waybar-style.css":     "waybar-style.css",
   "alacritty.toml":       "alacritty.toml",
-  "nyxus-wallpaper.png":   "nyxus-wallpaper.png",
+  "nyxus-wallpaper.png":    "nyxus-wallpaper.png",
   "nyxus-wallpaper-v2.png": "nyxus-wallpaper-v2.png",
   "nyxus-wallpaper-v3.png": "nyxus-wallpaper-v3.png",
   "nyxus-wallpaper-v4.png": "nyxus-wallpaper-v4.png",
+  "nyxus-sddm-theme.tar.gz": "nyxus-sddm-theme.tar.gz",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
@@ -38,11 +39,12 @@ router.get("/download/nyxus/:filename", (req, res) => {
   }
 
   const contentType =
-    filename.endsWith(".sh")   ? "text/x-sh" :
-    filename.endsWith(".py")   ? "text/x-python" :
-    filename.endsWith(".json") ? "application/json" :
-    filename.endsWith(".css")  ? "text/css" :
-    filename.endsWith(".png")  ? "image/png" :
+    filename.endsWith(".sh")     ? "text/x-sh" :
+    filename.endsWith(".py")     ? "text/x-python" :
+    filename.endsWith(".json")   ? "application/json" :
+    filename.endsWith(".css")    ? "text/css" :
+    filename.endsWith(".png")    ? "image/png" :
+    filename.endsWith(".tar.gz") ? "application/gzip" :
     "text/plain";
   res.setHeader("Content-Type", contentType);
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);

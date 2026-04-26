@@ -415,6 +415,124 @@ curl -fsSL -o ~/.config/hypr/nyxus-wallpaper.png "${window.location.origin}${BAS
             </div>
           </div>
 
+          {/* SDDM Theme section */}
+          <div style={{ marginTop: "3rem" }}>
+            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "1rem" }}>
+              // SDDM LOGIN THEME · HYPRLAND · GLASS PANEL UI
+            </div>
+
+            <div style={{
+              border: "1px solid rgba(192,132,252,0.25)",
+              borderRadius: 4,
+              overflow: "hidden",
+              background: "rgba(0,0,0,0.75)",
+              backdropFilter: "blur(8px)",
+              boxShadow: "0 0 60px rgba(192,132,252,0.08), inset 0 0 60px rgba(192,132,252,0.02)",
+            }}>
+              {/* Title bar — matches the theme's own panel chrome */}
+              <div style={{
+                padding: "0.6rem 1rem",
+                borderBottom: "1px solid rgba(192,132,252,0.12)",
+                background: "rgba(192,132,252,0.05)",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.6rem",
+              }}>
+                {["#f87171","#fb923c","#34d399"].map(c => (
+                  <span key={c} style={{ width: 8, height: 8, borderRadius: "50%", background: c, opacity: 0.7, display: "inline-block" }} />
+                ))}
+                <span style={{ fontSize: "0.65rem", color: "rgba(192,132,252,0.6)", letterSpacing: "0.2em", marginLeft: 4 }}>
+                  NYXUS · SECURE SESSION INIT
+                </span>
+              </div>
+
+              {/* Preview mockup — glass panel rendered in HTML */}
+              <div style={{ padding: "2rem", display: "flex", gap: "2rem", alignItems: "flex-start", flexWrap: "wrap" }}>
+
+                {/* Left: login form mockup */}
+                <div style={{ flex: "1 1 260px", minWidth: 240 }}>
+                  <div style={{ fontSize: "0.55rem", color: "rgba(52,211,153,0.7)", letterSpacing: "0.12em", lineHeight: 2 }}>
+                    {["[  0.001]  Initializing NYXUS security kernel...", "[  0.043]  Loading encrypted session modules...", "[  0.112]  Establishing secure handshake...", "[  0.198]  Awaiting operator credentials."].map((l,i) => (
+                      <div key={i}>{l}</div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: "1rem", borderTop: "1px solid rgba(192,132,252,0.1)", paddingTop: "1rem" }}>
+                    <div style={{ fontSize: "0.55rem", color: "rgba(192,132,252,0.45)", letterSpacing: "0.2em", marginBottom: 4 }}>OPERATOR ID</div>
+                    <div style={{ border: "1px solid rgba(192,132,252,0.3)", padding: "0.35rem 0.75rem", fontSize: "0.7rem", color: "#c084fc", fontFamily: "monospace", marginBottom: "0.75rem" }}>nyx</div>
+                    <div style={{ fontSize: "0.55rem", color: "rgba(192,132,252,0.45)", letterSpacing: "0.2em", marginBottom: 4 }}>PASSPHRASE</div>
+                    <div style={{ border: "1px solid #c084fc", padding: "0.35rem 0.75rem", fontSize: "0.9rem", color: "#c084fc", fontFamily: "monospace", letterSpacing: "0.35em", boxShadow: "0 0 10px rgba(192,132,252,0.2)" }}>████████</div>
+                    <div style={{ marginTop: "1rem", border: "1px solid rgba(192,132,252,0.4)", padding: "0.5rem", textAlign: "center", fontSize: "0.6rem", color: "#c084fc", letterSpacing: "0.2em", background: "rgba(192,132,252,0.08)" }}>
+                      AUTHENTICATE  →
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: features */}
+                <div style={{ flex: "1 1 220px" }}>
+                  <div style={{ fontSize: "0.8rem", color: "#c084fc", fontWeight: 700, letterSpacing: "0.08em", marginBottom: "0.75rem", textShadow: "0 0 12px rgba(192,132,252,0.5)" }}>
+                    nyxus-sddm-theme
+                  </div>
+                  <div style={{ fontSize: "0.6rem", color: "#444", lineHeight: 2 }}>
+                    {[
+                      { icon: "◈", c: "#c084fc", t: "Animated hex-grid canvas overlay" },
+                      { icon: "◈", c: "#c084fc", t: "Border traces itself on boot (QML Canvas)" },
+                      { icon: "◈", c: "#34d399", t: "Sequential terminal boot log reveal" },
+                      { icon: "◈", c: "#34d399", t: "Glassmorphism panel · FastBlur backdrop" },
+                      { icon: "◈", c: "#fb923c", t: "Neon glow on focus · shake on fail" },
+                      { icon: "◈", c: "#fb923c", t: "Session selector + reboot / shutdown" },
+                      { icon: "◈", c: "#f87171", t: "Caps lock warning · live system clock" },
+                      { icon: "◈", c: "#f87171", t: "Full Hyprland/Wayland compatible" },
+                    ].map((f, i) => (
+                      <div key={i} style={{ color: "#333" }}>
+                        <span style={{ color: f.c, marginRight: 8 }}>{f.icon}</span>{f.t}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ marginTop: "1.25rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <a
+                      href={`${BASE}/nyxus-sddm-theme.tar.gz`}
+                      download="nyxus-sddm-theme.tar.gz"
+                      style={{
+                        display: "block",
+                        textAlign: "center",
+                        padding: "0.55rem 1rem",
+                        background: "rgba(192,132,252,0.12)",
+                        border: "1px solid rgba(192,132,252,0.45)",
+                        borderTop: "2px solid #c084fc",
+                        color: "#c084fc",
+                        fontSize: "0.65rem",
+                        letterSpacing: "0.15em",
+                        textDecoration: "none",
+                        fontWeight: 700,
+                        textShadow: "0 0 8px rgba(192,132,252,0.5)",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(192,132,252,0.22)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "rgba(192,132,252,0.12)")}
+                    >
+                      ▼  DOWNLOAD  nyxus-sddm-theme.tar.gz
+                    </a>
+                    <div style={{ fontSize: "0.55rem", color: "#2a2a2a", textAlign: "center", letterSpacing: "0.1em" }}>
+                      QML · SDDM 0.20+ · Qt 5.15 · Hyprland/Wayland
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Install command */}
+              <div style={{ borderTop: "1px solid rgba(192,132,252,0.08)", padding: "0.75rem 1.25rem", background: "rgba(0,0,0,0.4)" }}>
+                <div style={{ fontSize: "0.55rem", color: "#2a2a2a", letterSpacing: "0.15em", marginBottom: 6 }}>// INSTALL</div>
+                <pre style={{ margin: 0, fontSize: "0.68rem", color: "#444", lineHeight: 1.8, overflow: "auto" }}>
+{`BASE="${window.location.origin}${BASE}"
+curl -fsSL -o nyxus-sddm-theme.tar.gz "$BASE/nyxus-sddm-theme.tar.gz"
+tar -xzf nyxus-sddm-theme.tar.gz
+sudo bash sddm-theme/install.sh`}
+                </pre>
+              </div>
+            </div>
+          </div>
+
           {/* Batch curl block */}
           <div style={{ marginTop: "2.5rem", border: "1px solid #1a1a1a", borderRadius: 4, padding: "1.25rem", background: "rgba(7,7,7,0.9)" }}>
             <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>
