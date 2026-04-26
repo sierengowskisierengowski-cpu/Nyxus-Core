@@ -1,0 +1,591 @@
+/* ============================================================
+   NyX.x.OS GTK3 Theme
+   ~/.themes/NyXxOS/gtk-3.0/gtk.css
+
+   Background: #080808  Text: #C8C0C0  Accent: #7B5EA7
+   Pink Hover: #C4607A  Font: JetBrains Mono Nerd Font
+
+   Silent. Dark. Purely Functional.
+   © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ============================================================ */
+
+/* ── Color variables ───────────────────────────────────────── */
+@define-color bg_color       #080808;
+@define-color bg_alt         #0d0a12;
+@define-color bg_hover       #13101a;
+@define-color bg_active      #1a1525;
+@define-color bg_selected    #7B5EA7;
+@define-color accent         #7B5EA7;
+@define-color accent_light   #9b7dc7;
+@define-color pink           #C4607A;
+@define-color pink_glow      rgba(196,96,122,0.15);
+@define-color accent_glow    rgba(123,94,167,0.18);
+@define-color text           #C8C0C0;
+@define-color text_dim       #7a7080;
+@define-color text_disabled  #3a3248;
+@define-color border         #1a1525;
+@define-color border_accent  #3a2a5a;
+@define-color red            #f87171;
+@define-color green          #34d399;
+@define-color yellow         #fb923c;
+@define-color cyan           #22d3ee;
+
+/* ── Reset & Base ──────────────────────────────────────────── */
+* {
+  font-family: "JetBrains Mono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 11px;
+  -gtk-outline-radius: 4px;
+  outline-color: transparent;
+  box-shadow: none;
+  text-shadow: none;
+  -gtk-icon-shadow: none;
+  transition: all 120ms ease;
+}
+
+/* ── Window & Base ─────────────────────────────────────────── */
+window,
+.background,
+.base {
+  background-color: @bg_color;
+  color: @text;
+}
+
+.window-frame {
+  border: 1px solid @border;
+  border-radius: 6px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.8);
+}
+
+/* ── Header Bar / Title Bar ────────────────────────────────── */
+headerbar,
+.titlebar {
+  background-color: @bg_alt;
+  color: @text;
+  border-bottom: 1px solid @border;
+  padding: 4px 8px;
+  min-height: 36px;
+}
+
+headerbar .title {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: @text;
+}
+
+headerbar .subtitle {
+  font-size: 10px;
+  color: @text_dim;
+}
+
+/* Headerbar window controls */
+headerbar button.titlebutton {
+  background: transparent;
+  border: 1px solid @border_accent;
+  border-radius: 50%;
+  padding: 4px;
+  min-width: 14px;
+  min-height: 14px;
+  color: @text_dim;
+}
+
+headerbar button.titlebutton:hover {
+  background-color: @pink;
+  border-color: @pink;
+  color: @bg_color;
+}
+
+headerbar button.titlebutton.close:hover {
+  background-color: @red;
+  border-color: @red;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+button {
+  background-color: @bg_alt;
+  color: @text;
+  border: 1px solid @border_accent;
+  border-radius: 4px;
+  padding: 5px 14px;
+  outline: none;
+}
+
+button:hover {
+  background-color: @bg_hover;
+  border-color: @pink;
+  color: @pink;
+}
+
+button:active,
+button:checked {
+  background-color: @bg_active;
+  border-color: @accent;
+  color: @accent_light;
+}
+
+button.suggested-action {
+  background-color: @accent;
+  border-color: @accent;
+  color: #ffffff;
+}
+
+button.suggested-action:hover {
+  background-color: @pink;
+  border-color: @pink;
+  color: #ffffff;
+}
+
+button.destructive-action {
+  background-color: rgba(248,113,113,0.12);
+  border-color: @red;
+  color: @red;
+}
+
+button.destructive-action:hover {
+  background-color: @red;
+  color: @bg_color;
+}
+
+button:disabled,
+button.flat:disabled {
+  background-color: transparent;
+  border-color: @border;
+  color: @text_disabled;
+}
+
+button.flat {
+  background-color: transparent;
+  border-color: transparent;
+  color: @text_dim;
+}
+
+button.flat:hover {
+  background-color: @bg_hover;
+  border-color: transparent;
+  color: @pink;
+}
+
+/* ── Text Entry ─────────────────────────────────────────────── */
+entry,
+spinbutton entry {
+  background-color: @bg_alt;
+  color: @text;
+  border: 1px solid @border_accent;
+  border-radius: 4px;
+  padding: 6px 10px;
+  caret-color: @accent;
+}
+
+entry:focus,
+entry:focus-within {
+  border-color: @accent;
+  box-shadow: 0 0 0 2px rgba(123,94,167,0.25);
+}
+
+entry:disabled {
+  background-color: @bg_color;
+  color: @text_disabled;
+  border-color: @border;
+}
+
+entry selection {
+  background-color: @bg_selected;
+  color: @bg_color;
+}
+
+entry.error {
+  border-color: @red;
+  box-shadow: 0 0 0 2px rgba(248,113,113,0.2);
+}
+
+/* ── Labels ─────────────────────────────────────────────────── */
+label {
+  color: @text;
+}
+
+label.dim-label,
+label.caption,
+.caption {
+  color: @text_dim;
+  font-size: 10px;
+}
+
+label:disabled {
+  color: @text_disabled;
+}
+
+/* ── Menus ──────────────────────────────────────────────────── */
+menu,
+.menu,
+.context-menu {
+  background-color: @bg_alt;
+  color: @text;
+  border: 1px solid @border_accent;
+  border-radius: 4px;
+  padding: 4px 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+}
+
+menuitem {
+  padding: 5px 14px;
+  color: @text;
+  border-radius: 0;
+}
+
+menuitem:hover {
+  background-color: @bg_hover;
+  color: @pink;
+}
+
+menuitem:disabled,
+menuitem label:disabled {
+  color: @text_disabled;
+}
+
+separator,
+menuitem separator {
+  background-color: @border;
+  min-height: 1px;
+  margin: 4px 0;
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────── */
+scrollbar {
+  background-color: transparent;
+  border: none;
+}
+
+scrollbar slider {
+  background-color: @border_accent;
+  border-radius: 8px;
+  min-width: 4px;
+  min-height: 4px;
+  margin: 2px;
+}
+
+scrollbar slider:hover {
+  background-color: @accent;
+}
+
+scrollbar slider:active {
+  background-color: @accent_light;
+}
+
+scrollbar.horizontal slider {
+  min-height: 4px;
+}
+
+scrollbar.vertical slider {
+  min-width: 4px;
+}
+
+/* ── Notebook / Tabs ────────────────────────────────────────── */
+notebook {
+  background-color: @bg_color;
+}
+
+notebook header,
+notebook tabs {
+  background-color: @bg_alt;
+  border-bottom: 1px solid @border;
+}
+
+notebook tab {
+  padding: 6px 16px;
+  color: @text_dim;
+  border-bottom: 2px solid transparent;
+}
+
+notebook tab:hover {
+  color: @pink;
+  background-color: @bg_hover;
+}
+
+notebook tab:checked {
+  color: @accent_light;
+  border-bottom: 2px solid @accent;
+  background-color: @bg_color;
+}
+
+/* ── Check & Radio ──────────────────────────────────────────── */
+checkbutton check,
+radiobutton radio {
+  background-color: @bg_alt;
+  border: 1px solid @border_accent;
+  border-radius: 3px;
+  min-width: 16px;
+  min-height: 16px;
+}
+
+checkbutton check:hover,
+radiobutton radio:hover {
+  border-color: @pink;
+}
+
+checkbutton check:checked,
+radiobutton radio:checked {
+  background-color: @accent;
+  border-color: @accent;
+  color: #ffffff;
+}
+
+checkbutton label,
+radiobutton label {
+  color: @text;
+  padding-left: 6px;
+}
+
+/* ── Switch ─────────────────────────────────────────────────── */
+switch {
+  background-color: @bg_active;
+  border: 1px solid @border_accent;
+  border-radius: 14px;
+  min-width: 40px;
+  min-height: 20px;
+}
+
+switch:checked {
+  background-color: @accent;
+  border-color: @accent;
+}
+
+switch:hover {
+  border-color: @pink;
+}
+
+switch slider {
+  background-color: @text_dim;
+  border-radius: 50%;
+  min-width: 14px;
+  min-height: 14px;
+  margin: 2px;
+}
+
+switch:checked slider {
+  background-color: #ffffff;
+}
+
+/* ── Progress & Scale ───────────────────────────────────────── */
+progressbar trough {
+  background-color: @bg_active;
+  border-radius: 4px;
+  min-height: 6px;
+}
+
+progressbar progress {
+  background-color: @accent;
+  border-radius: 4px;
+}
+
+progressbar progress.pulse {
+  background-color: @pink;
+}
+
+scale trough {
+  background-color: @bg_active;
+  border-radius: 6px;
+  min-height: 4px;
+}
+
+scale highlight {
+  background-color: @accent;
+  border-radius: 6px;
+}
+
+scale slider {
+  background-color: @accent_light;
+  border: 1px solid @accent;
+  border-radius: 50%;
+  min-width: 14px;
+  min-height: 14px;
+}
+
+scale slider:hover {
+  background-color: @pink;
+  border-color: @pink;
+}
+
+/* ── Listbox / Treeview ─────────────────────────────────────── */
+list,
+treeview,
+listview {
+  background-color: @bg_color;
+  color: @text;
+}
+
+list row,
+treeview row {
+  padding: 4px 6px;
+  border-radius: 0;
+}
+
+list row:hover,
+treeview row:hover {
+  background-color: @bg_hover;
+  color: @pink;
+}
+
+list row:selected,
+treeview row:selected,
+treeview:selected {
+  background-color: @bg_selected;
+  color: #ffffff;
+}
+
+treeview header button {
+  background-color: @bg_alt;
+  border: none;
+  border-right: 1px solid @border;
+  border-bottom: 1px solid @border;
+  border-radius: 0;
+  color: @text_dim;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* ── Tooltips ───────────────────────────────────────────────── */
+tooltip {
+  background-color: @bg_alt;
+  color: @text;
+  border: 1px solid @border_accent;
+  border-radius: 4px;
+  padding: 4px 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+}
+
+tooltip label {
+  color: @text;
+  font-size: 10px;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.sidebar {
+  background-color: @bg_alt;
+  border-right: 1px solid @border;
+}
+
+.sidebar row {
+  padding: 6px 12px;
+  color: @text_dim;
+}
+
+.sidebar row:hover {
+  background-color: @bg_hover;
+  color: @pink;
+}
+
+.sidebar row:selected,
+.sidebar row:checked {
+  background-color: rgba(123,94,167,0.18);
+  color: @accent_light;
+  border-left: 2px solid @accent;
+}
+
+/* ── Toolbar ────────────────────────────────────────────────── */
+toolbar {
+  background-color: @bg_alt;
+  border-bottom: 1px solid @border;
+  padding: 4px;
+}
+
+/* ── Popover ────────────────────────────────────────────────── */
+popover {
+  background-color: @bg_alt;
+  border: 1px solid @border_accent;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+}
+
+popover contents {
+  padding: 6px;
+}
+
+/* ── Expander ───────────────────────────────────────────────── */
+expander title {
+  color: @text_dim;
+  padding: 4px;
+}
+
+expander title:hover {
+  color: @pink;
+}
+
+expander title:checked {
+  color: @accent_light;
+}
+
+/* ── Info bars ──────────────────────────────────────────────── */
+infobar {
+  background-color: @bg_alt;
+  border-bottom: 1px solid @border;
+  color: @text;
+}
+
+infobar.info    { border-color: @cyan; }
+infobar.warning { border-color: @yellow; }
+infobar.error   { border-color: @red; }
+infobar.success { border-color: @green; }
+
+/* ── Spinner ────────────────────────────────────────────────── */
+spinner {
+  color: @accent;
+}
+
+/* ── Link buttons ───────────────────────────────────────────── */
+*:link {
+  color: @accent_light;
+}
+
+*:link:hover {
+  color: @pink;
+}
+
+*:visited {
+  color: @text_dim;
+}
+
+/* ── Frames & Borders ───────────────────────────────────────── */
+frame,
+.frame {
+  border: 1px solid @border;
+  border-radius: 4px;
+}
+
+/* ── Paned ──────────────────────────────────────────────────── */
+paned separator {
+  background-color: @border;
+  min-width: 1px;
+  min-height: 1px;
+}
+
+/* ── Statusbar ──────────────────────────────────────────────── */
+statusbar {
+  background-color: @bg_alt;
+  color: @text_dim;
+  border-top: 1px solid @border;
+  font-size: 10px;
+}
+
+/* ── File Chooser ───────────────────────────────────────────── */
+filechooser .sidebar-row,
+placessidebar row {
+  padding: 5px 10px;
+  color: @text_dim;
+}
+
+filechooser .sidebar-row:hover,
+placessidebar row:hover {
+  background-color: @bg_hover;
+  color: @pink;
+}
+
+filechooser .sidebar-row:selected,
+placessidebar row:selected {
+  background-color: rgba(123,94,167,0.18);
+  color: @accent_light;
+}
+
+/* ── Nautilus / FM specifics ────────────────────────────────── */
+.nautilus-window .sidebar { background-color: @bg_alt; }
+.nautilus-canvas-item label { color: @text; }
+.nautilus-canvas-item:hover label { color: @pink; }
+.nautilus-canvas-item:selected label { color: #ffffff; }

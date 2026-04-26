@@ -1,0 +1,440 @@
+/* ============================================================
+   NyX.x.OS GTK4 Theme
+   ~/.themes/NyXxOS/gtk-4.0/gtk.css
+
+   Background: #080808  Text: #C8C0C0  Accent: #7B5EA7
+   Pink Hover: #C4607A  Font: JetBrains Mono Nerd Font
+
+   Silent. Dark. Purely Functional.
+   © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ============================================================ */
+
+/* GTK4 uses custom properties */
+:root {
+  --bg:          #080808;
+  --bg-alt:      #0d0a12;
+  --bg-hover:    #13101a;
+  --bg-active:   #1a1525;
+  --accent:      #7B5EA7;
+  --accent-light:#9b7dc7;
+  --pink:        #C4607A;
+  --text:        #C8C0C0;
+  --text-dim:    #7a7080;
+  --text-off:    #3a3248;
+  --border:      #1a1525;
+  --border-a:    #3a2a5a;
+  --red:         #f87171;
+  --green:       #34d399;
+  --yellow:      #fb923c;
+  --cyan:        #22d3ee;
+}
+
+/* ── GTK4 color definitions ─────────────────────────────────── */
+@define-color accent_color          #7B5EA7;
+@define-color accent_bg_color       #7B5EA7;
+@define-color accent_fg_color       #ffffff;
+@define-color destructive_color     #f87171;
+@define-color destructive_bg_color  rgba(248,113,113,0.18);
+@define-color destructive_fg_color  #f87171;
+@define-color success_color         #34d399;
+@define-color success_bg_color      rgba(52,211,153,0.12);
+@define-color success_fg_color      #34d399;
+@define-color warning_color         #fb923c;
+@define-color warning_bg_color      rgba(251,146,60,0.12);
+@define-color warning_fg_color      #fb923c;
+@define-color error_color           #f87171;
+@define-color error_bg_color        rgba(248,113,113,0.12);
+@define-color error_fg_color        #f87171;
+@define-color window_bg_color       #080808;
+@define-color window_fg_color       #C8C0C0;
+@define-color view_bg_color         #080808;
+@define-color view_fg_color         #C8C0C0;
+@define-color headerbar_bg_color    #0d0a12;
+@define-color headerbar_fg_color    #C8C0C0;
+@define-color headerbar_border_color #1a1525;
+@define-color sidebar_bg_color      #0d0a12;
+@define-color sidebar_fg_color      #C8C0C0;
+@define-color card_bg_color         #0d0a12;
+@define-color card_fg_color         #C8C0C0;
+@define-color dialog_bg_color       #0f0c16;
+@define-color dialog_fg_color       #C8C0C0;
+@define-color popover_bg_color      #0d0a12;
+@define-color popover_fg_color      #C8C0C0;
+@define-color thumbnail_bg_color    #080808;
+@define-color thumbnail_fg_color    #C8C0C0;
+@define-color shade_color           rgba(0,0,0,0.5);
+@define-color scrollbar_outline_color transparent;
+
+/* ── Base ───────────────────────────────────────────────────── */
+* {
+  font-family: "JetBrains Mono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 11px;
+  -gtk-icon-shadow: none;
+  text-shadow: none;
+  transition: all 120ms ease;
+}
+
+window,
+.background {
+  background-color: @window_bg_color;
+  color: @window_fg_color;
+}
+
+/* ── Header Bar ─────────────────────────────────────────────── */
+headerbar {
+  background-color: @headerbar_bg_color;
+  color: @headerbar_fg_color;
+  border-bottom: 1px solid @headerbar_border_color;
+  padding: 4px 8px;
+  min-height: 40px;
+}
+
+headerbar .title {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* Window controls */
+headerbar windowcontrols button {
+  background: transparent;
+  border: 1px solid #3a2a5a;
+  border-radius: 50%;
+  padding: 4px;
+  min-width: 16px;
+  min-height: 16px;
+  color: #7a7080;
+}
+
+headerbar windowcontrols button:hover {
+  background-color: #C4607A;
+  border-color: #C4607A;
+  color: #ffffff;
+}
+
+headerbar windowcontrols button.close:hover {
+  background-color: #f87171;
+  border-color: #f87171;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+button {
+  background-color: @card_bg_color;
+  color: @window_fg_color;
+  border: 1px solid #3a2a5a;
+  border-radius: 4px;
+  padding: 6px 16px;
+}
+
+button:hover {
+  background-color: #13101a;
+  border-color: #C4607A;
+  color: #C4607A;
+}
+
+button:active {
+  background-color: #1a1525;
+  border-color: #7B5EA7;
+  color: #9b7dc7;
+}
+
+button.suggested-action {
+  background-color: #7B5EA7;
+  border-color: #7B5EA7;
+  color: #ffffff;
+}
+
+button.suggested-action:hover {
+  background-color: #C4607A;
+  border-color: #C4607A;
+}
+
+button.destructive-action {
+  background-color: rgba(248,113,113,0.12);
+  border-color: #f87171;
+  color: #f87171;
+}
+
+button.destructive-action:hover {
+  background-color: #f87171;
+  color: #080808;
+}
+
+button:disabled {
+  background-color: transparent;
+  border-color: #1a1525;
+  color: #3a3248;
+}
+
+button.flat,
+button.circular {
+  background-color: transparent;
+  border-color: transparent;
+  color: #7a7080;
+}
+
+button.flat:hover,
+button.circular:hover {
+  background-color: #13101a;
+  color: #C4607A;
+}
+
+/* ── Entry ──────────────────────────────────────────────────── */
+entry,
+searchentry,
+spinbutton {
+  background-color: @card_bg_color;
+  color: @window_fg_color;
+  border: 1px solid #3a2a5a;
+  border-radius: 4px;
+  padding: 6px 10px;
+  caret-color: #7B5EA7;
+}
+
+entry:focus,
+searchentry:focus {
+  border-color: #7B5EA7;
+  outline: 2px solid rgba(123,94,167,0.25);
+  outline-offset: -1px;
+}
+
+entry:disabled {
+  color: #3a3248;
+  border-color: #1a1525;
+}
+
+entry selection {
+  background-color: #7B5EA7;
+  color: #ffffff;
+}
+
+/* ── Lists & Rows ───────────────────────────────────────────── */
+listview,
+columnview,
+treeview {
+  background-color: @view_bg_color;
+  color: @view_fg_color;
+}
+
+listview > row,
+columnview > row {
+  padding: 4px 8px;
+}
+
+listview > row:hover,
+columnview > row:hover {
+  background-color: #13101a;
+  color: #C4607A;
+}
+
+listview > row:selected,
+columnview > row:selected {
+  background-color: #7B5EA7;
+  color: #ffffff;
+}
+
+/* ── Check & Radio ──────────────────────────────────────────── */
+checkbutton check,
+radiobutton radio {
+  background-color: #0d0a12;
+  border: 1px solid #3a2a5a;
+  border-radius: 3px;
+  min-width: 16px;
+  min-height: 16px;
+}
+
+checkbutton check:hover,
+radiobutton radio:hover { border-color: #C4607A; }
+
+checkbutton check:checked,
+radiobutton radio:checked {
+  background-color: #7B5EA7;
+  border-color: #7B5EA7;
+  color: #ffffff;
+}
+
+/* ── Switch ─────────────────────────────────────────────────── */
+switch {
+  background-color: #1a1525;
+  border-radius: 14px;
+  border: 1px solid #3a2a5a;
+  min-width: 44px;
+  min-height: 22px;
+}
+
+switch:checked {
+  background-color: #7B5EA7;
+  border-color: #7B5EA7;
+}
+
+switch > slider {
+  background-color: #7a7080;
+  border-radius: 50%;
+  min-width: 16px;
+  min-height: 16px;
+  margin: 2px;
+}
+
+switch:checked > slider {
+  background-color: #ffffff;
+}
+
+/* ── Scale ──────────────────────────────────────────────────── */
+scale trough {
+  background-color: #1a1525;
+  border-radius: 6px;
+  min-height: 4px;
+}
+
+scale trough highlight {
+  background-color: #7B5EA7;
+  border-radius: 6px;
+}
+
+scale slider {
+  background-color: #9b7dc7;
+  border: 1px solid #7B5EA7;
+  border-radius: 50%;
+  min-width: 14px;
+  min-height: 14px;
+}
+
+scale slider:hover {
+  background-color: #C4607A;
+  border-color: #C4607A;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+scrollbar {
+  background-color: transparent;
+}
+
+scrollbar slider {
+  background-color: #3a2a5a;
+  border-radius: 8px;
+  min-width: 4px;
+  min-height: 4px;
+  margin: 2px;
+}
+
+scrollbar slider:hover { background-color: #7B5EA7; }
+scrollbar slider:active { background-color: #9b7dc7; }
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.sidebar,
+stacksidebar,
+navigationview {
+  background-color: @sidebar_bg_color;
+  border-right: 1px solid #1a1525;
+}
+
+.sidebar row,
+stacksidebar row {
+  padding: 6px 12px;
+  color: #7a7080;
+}
+
+.sidebar row:hover,
+stacksidebar row:hover {
+  background-color: #13101a;
+  color: #C4607A;
+}
+
+.sidebar row:selected,
+stacksidebar row:selected {
+  background-color: rgba(123,94,167,0.15);
+  color: #9b7dc7;
+  border-left: 2px solid #7B5EA7;
+}
+
+/* ── Popover / Menu ─────────────────────────────────────────── */
+popover {
+  background-color: @popover_bg_color;
+  border: 1px solid #3a2a5a;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.75);
+  padding: 4px;
+}
+
+popover modelbutton {
+  padding: 5px 12px;
+  color: #C8C0C0;
+  border-radius: 4px;
+}
+
+popover modelbutton:hover {
+  background-color: #13101a;
+  color: #C4607A;
+}
+
+/* ── Tooltip ────────────────────────────────────────────────── */
+tooltip {
+  background-color: @popover_bg_color;
+  color: @window_fg_color;
+  border: 1px solid #3a2a5a;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+}
+
+/* ── Progress Bar ───────────────────────────────────────────── */
+progressbar trough {
+  background-color: #1a1525;
+  border-radius: 4px;
+  min-height: 6px;
+}
+
+progressbar progress {
+  background-color: #7B5EA7;
+  border-radius: 4px;
+}
+
+/* ── Card ───────────────────────────────────────────────────── */
+.card {
+  background-color: @card_bg_color;
+  border: 1px solid #1a1525;
+  border-radius: 6px;
+}
+
+/* ── Separator ──────────────────────────────────────────────── */
+separator {
+  background-color: #1a1525;
+  min-width: 1px;
+  min-height: 1px;
+}
+
+/* ── Link ───────────────────────────────────────────────────── */
+*:link { color: #9b7dc7; }
+*:link:hover { color: #C4607A; }
+*:visited { color: #7a7080; }
+
+/* ── GNOME Shell / Libadwaita overrides ─────────────────────── */
+.view,
+.content-view {
+  background-color: @view_bg_color;
+  color: @view_fg_color;
+}
+
+.dialog-content,
+dialog {
+  background-color: @dialog_bg_color;
+}
+
+.tag {
+  background-color: rgba(123,94,167,0.2);
+  color: #9b7dc7;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 10px;
+}
+
+.pill {
+  border-radius: 14px;
+}
+
+/* ── Toolbar View ───────────────────────────────────────────── */
+toolbarview > .top-bar,
+toolbarview > .bottom-bar {
+  background-color: @headerbar_bg_color;
+  border-color: #1a1525;
+}
