@@ -5,9 +5,9 @@ version = "1.0.0"
 id = "XegfDyZt7HqfW2Bb8Ghoy"
 
 [[services]]
-localPort = 8081
 name = "Component Preview Server"
 paths = ["/__mockup"]
+localPort = 8081
 
 [services.env]
 PORT = "8081"
