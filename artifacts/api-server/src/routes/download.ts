@@ -16,6 +16,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "waybar-config.json":   "waybar-config.json",
   "waybar-style.css":     "waybar-style.css",
   "alacritty.toml":       "alacritty.toml",
+  "nyxus-wallpaper.png":  "nyxus-wallpaper.png",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
@@ -38,6 +39,7 @@ router.get("/download/nyxus/:filename", (req, res) => {
     filename.endsWith(".py")   ? "text/x-python" :
     filename.endsWith(".json") ? "application/json" :
     filename.endsWith(".css")  ? "text/css" :
+    filename.endsWith(".png")  ? "image/png" :
     "text/plain";
   res.setHeader("Content-Type", contentType);
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);

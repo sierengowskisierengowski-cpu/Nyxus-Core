@@ -25,6 +25,9 @@ SCRIPTS=(
   "nyxus_error.py"
 )
 
+HYPR_DIR="$HOME/.config/hypr"
+WALLPAPER_FILE="nyxus-wallpaper.png"
+
 # ── COLORS ────────────────────────────────────────────────────────────────────
 R="\033[0m"
 B="\033[1m"
@@ -68,6 +71,22 @@ for script in "${SCRIPTS[@]}"; do
     failed=$((failed + 1))
   fi
 done
+
+echo ""
+printf "${DIM}──────────────────────────────────────────────────────────${R}\n"
+
+# ── WALLPAPER ─────────────────────────────────────────────────────────────────
+printf "  ${DIM}downloading${R} ${PURPLE}${WALLPAPER_FILE}${R} ... "
+mkdir -p "$HYPR_DIR"
+wp_url="${BASE_URL}${API_PATH}/${WALLPAPER_FILE}"
+wp_dest="${HYPR_DIR}/${WALLPAPER_FILE}"
+
+if curl -fsSL -o "$wp_dest" "$wp_url" 2>/dev/null; then
+  printf "${GREEN}${B}✓${R}  ${DIM}→ ${HYPR_DIR}/${WALLPAPER_FILE}${R}\n"
+else
+  printf "${RED}✗ FAILED (wallpaper)${R}\n"
+  failed=$((failed + 1))
+fi
 
 echo ""
 printf "${DIM}──────────────────────────────────────────────────────────${R}\n"

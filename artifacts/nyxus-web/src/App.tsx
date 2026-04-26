@@ -341,6 +341,80 @@ export default function App() {
             {SCRIPTS.map((s, i) => <ScriptCard key={s.id} s={s} idx={i} />)}
           </div>
 
+          {/* Wallpaper section */}
+          <div style={{ marginTop: "3rem" }}>
+            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "1rem" }}>
+              // NYXUS WALLPAPER · HYPRLAND DESKTOP BACKGROUND
+            </div>
+            <div style={{
+              position: "relative",
+              border: "1px solid rgba(192,132,252,0.3)",
+              borderRadius: 4,
+              overflow: "hidden",
+              background: "#000",
+              boxShadow: "0 0 60px rgba(192,132,252,0.15), 0 0 120px rgba(192,132,252,0.06)",
+            }}>
+              <img
+                src={`${import.meta.env.BASE_URL}nyxus-wallpaper.png`}
+                alt="NYXUS Wallpaper"
+                style={{ display: "block", width: "100%", height: "auto", maxHeight: 360, objectFit: "cover", opacity: 0.92 }}
+              />
+              <div style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                background: "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 60%, transparent 100%)",
+                padding: "1.5rem",
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                gap: "1rem",
+                flexWrap: "wrap",
+              }}>
+                <div>
+                  <div style={{ fontSize: "0.6rem", color: "#c084fc99", letterSpacing: "0.2em", marginBottom: "0.3rem" }}>WALLPAPER · 16:9 · PNG</div>
+                  <div style={{ fontSize: "0.85rem", color: "#c084fc", fontWeight: 700, letterSpacing: "0.1em", textShadow: "0 0 12px rgba(192,132,252,0.6)" }}>
+                    nyxus-wallpaper.png
+                  </div>
+                  <div style={{ fontSize: "0.65rem", color: "#555", marginTop: "0.3rem" }}>
+                    Crystal spire · volumetric neon glow · hex tile floor · NYXUS palette
+                  </div>
+                </div>
+                <a
+                  href={`${window.location.origin}${BASE}/nyxus-wallpaper.png`}
+                  download="nyxus-wallpaper.png"
+                  style={{
+                    display: "inline-block",
+                    padding: "0.5rem 1.25rem",
+                    background: "rgba(192,132,252,0.12)",
+                    border: "1px solid rgba(192,132,252,0.4)",
+                    borderRadius: 3,
+                    color: "#c084fc",
+                    fontSize: "0.65rem",
+                    letterSpacing: "0.15em",
+                    textDecoration: "none",
+                    fontWeight: 700,
+                    transition: "all 0.2s",
+                    textShadow: "0 0 8px rgba(192,132,252,0.5)",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(192,132,252,0.25)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(192,132,252,0.12)")}
+                >
+                  ▼  DOWNLOAD
+                </a>
+              </div>
+            </div>
+
+            {/* Wallpaper curl command */}
+            <div style={{ marginTop: "0.75rem", background: "rgba(7,7,7,0.9)", border: "1px solid #111", borderRadius: 3, padding: "0.75rem 1rem" }}>
+              <pre style={{ margin: 0, fontSize: "0.7rem", color: "#555", lineHeight: 1.6, overflow: "auto" }}>
+{`# Download to ~/.config/hypr/
+curl -fsSL -o ~/.config/hypr/nyxus-wallpaper.png "${window.location.origin}${BASE}/nyxus-wallpaper.png"`}
+              </pre>
+            </div>
+          </div>
+
           {/* Batch curl block */}
           <div style={{ marginTop: "2.5rem", border: "1px solid #1a1a1a", borderRadius: 4, padding: "1.25rem", background: "rgba(7,7,7,0.9)" }}>
             <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>
