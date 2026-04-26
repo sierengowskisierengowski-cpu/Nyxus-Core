@@ -1,0 +1,9 @@
+[SddmGreeterTheme]
+Name=NYXUS
+Description=NYXUS OS — Enterprise hacker login theme for Hyprland
+Author=Joseph Sierengowski
+License=Proprietary
+Version=2.0
+Website=https://jsierengowski-workspace.replit.app
+Screenshot=preview.png
+Type=sddm-theme
