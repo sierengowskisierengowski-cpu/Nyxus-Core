@@ -23,6 +23,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-sddm-theme.tar.gz":  "nyxus-sddm-theme.tar.gz",
   "hyprlock.conf":            "hyprlock.conf",
   "nyxus-wlogout.tar.gz":    "nyxus-wlogout.tar.gz",
+  "mako-config":              "mako-config",
+  "nyxus-ui-configs.tar.gz": "nyxus-ui-configs.tar.gz",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {

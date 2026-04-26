@@ -793,6 +793,175 @@ tar -xzf nyxus-wlogout.tar.gz && bash install.sh
             </div>
           </div>
 
+          {/* ── UI CONFIGS SECTION ────────────────────────────── */}
+          <div style={{ marginTop: "3rem" }}>
+            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "1rem" }}>
+              // UI CONFIGS · MAKO · ALACRITTY · GTK THEME
+            </div>
+
+            <div style={{
+              border: "1px solid rgba(192,132,252,0.22)",
+              borderRadius: 4,
+              overflow: "hidden",
+              background: "rgba(0,0,0,0.8)",
+              backdropFilter: "blur(8px)",
+              boxShadow: "0 0 48px rgba(192,132,252,0.07)",
+            }}>
+              <div style={{ padding: "2rem", display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+
+                {/* Left — visual mockups */}
+                <div style={{ flex: "0 0 240px", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+
+                  {/* Mako notification mockup */}
+                  <div style={{
+                    background: "rgba(8,8,8,0.96)",
+                    border: "1px solid rgba(123,94,167,0.2)",
+                    borderLeft: "3px solid #7B5EA7",
+                    borderRadius: 6,
+                    padding: "0.75rem 1rem",
+                    fontFamily: "monospace",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+                      <span style={{ fontSize: "0.9rem" }}>🔔</span>
+                      <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#f472b6", letterSpacing: "0.06em" }}>NyX.x.OS</span>
+                    </div>
+                    <div style={{ fontSize: "0.58rem", color: "rgba(200,192,192,0.65)", lineHeight: 1.5 }}>System initialized. All modules operational.</div>
+                  </div>
+
+                  {/* Mako error urgency */}
+                  <div style={{
+                    background: "rgba(15,8,10,0.96)",
+                    border: "1px solid rgba(248,113,113,0.2)",
+                    borderLeft: "3px solid #f87171",
+                    borderRadius: 6,
+                    padding: "0.75rem 1rem",
+                    fontFamily: "monospace",
+                  }}>
+                    <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "#f87171", marginBottom: "0.2rem" }}>CRITICAL</div>
+                    <div style={{ fontSize: "0.58rem", color: "rgba(248,165,165,0.65)", lineHeight: 1.5 }}>Anomaly detected — high urgency alert</div>
+                  </div>
+
+                  {/* Alacritty terminal mockup */}
+                  <div style={{
+                    background: "rgba(8,8,8,0.88)",
+                    border: "1px solid rgba(123,94,167,0.15)",
+                    borderRadius: 4,
+                    padding: "0.75rem 1rem",
+                    fontFamily: "monospace",
+                    fontSize: "0.55rem",
+                    lineHeight: 1.7,
+                  }}>
+                    <div style={{ color: "#7B5EA7" }}>nyx<span style={{ color: "#C4607A" }}>@</span><span style={{ color: "#c084fc" }}>arch</span><span style={{ color: "#555" }}> ~ </span><span style={{ color: "#34d399" }}>$</span></div>
+                    <div style={{ color: "#C8C0C0" }}>neofetch</div>
+                    <div style={{ color: "#c084fc" }}>NyX.x.OS</div>
+                    <div style={{ color: "#7a7080" }}>Silent. Dark. Purely Functional.</div>
+                    <div style={{ color: "#34d399" }}>Kernel: 6.6.0-nyxus</div>
+                    <div style={{ color: "#818cf8" }}>WM: Hyprland</div>
+                  </div>
+                </div>
+
+                {/* Right — config list + downloads */}
+                <div style={{ flex: "1 1 240px" }}>
+                  <div style={{ fontSize: "0.8rem", color: "#c084fc", fontWeight: 700, letterSpacing: "0.08em", marginBottom: "0.75rem", textShadow: "0 0 12px rgba(192,132,252,0.4)" }}>
+                    nyxus-ui-configs.tar.gz
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", marginBottom: "1.25rem" }}>
+                    {[
+                      {
+                        label: "MAKO NOTIFICATIONS",
+                        file: "mako-config",
+                        color: "#c084fc",
+                        desc: "Pure black bg · purple left border · pink title · dim body · per-urgency glow",
+                        dest: "~/.config/mako/config",
+                      },
+                      {
+                        label: "ALACRITTY TERMINAL",
+                        file: "alacritty.toml",
+                        color: "#34d399",
+                        desc: "JetBrains Mono Nerd Font · #080808 bg · #C8C0C0 text · 88% opacity · full NyX palette",
+                        dest: "~/.config/alacritty/alacritty.toml",
+                      },
+                      {
+                        label: "GTK 3/4 THEME",
+                        file: null,
+                        color: "#f472b6",
+                        desc: "#080808 windows · #7B5EA7 accent · #C4607A hover · full widget coverage · Libadwaita vars",
+                        dest: "~/.themes/NyXxOS/",
+                      },
+                    ].map((cfg, i) => (
+                      <div key={i} style={{ borderLeft: `2px solid ${cfg.color}33`, paddingLeft: "0.75rem" }}>
+                        <div style={{ fontSize: "0.6rem", color: cfg.color, letterSpacing: "0.15em", fontWeight: 700, marginBottom: "0.2rem" }}>{cfg.label}</div>
+                        <div style={{ fontSize: "0.58rem", color: "#555", lineHeight: 1.5, marginBottom: "0.2rem" }}>{cfg.desc}</div>
+                        <div style={{ fontSize: "0.52rem", color: "#333", fontFamily: "monospace" }}>{cfg.dest}</div>
+                        {cfg.file && (
+                          <a
+                            href={`${BASE}/${cfg.file}`}
+                            download={cfg.file}
+                            style={{
+                              display: "inline-block",
+                              marginTop: "0.4rem",
+                              padding: "2px 10px",
+                              border: `1px solid ${cfg.color}44`,
+                              color: cfg.color,
+                              fontSize: "0.55rem",
+                              letterSpacing: "0.12em",
+                              textDecoration: "none",
+                              transition: "all 0.2s",
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.borderColor = cfg.color)}
+                            onMouseLeave={e => (e.currentTarget.style.borderColor = cfg.color + "44")}
+                          >
+                            ▼ {cfg.file}
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <a
+                    href={`${BASE}/nyxus-ui-configs.tar.gz`}
+                    download="nyxus-ui-configs.tar.gz"
+                    style={{
+                      display: "block",
+                      textAlign: "center",
+                      padding: "0.55rem 1rem",
+                      background: "rgba(192,132,252,0.10)",
+                      border: "1px solid rgba(192,132,252,0.42)",
+                      borderTop: "2px solid #c084fc",
+                      color: "#c084fc",
+                      fontSize: "0.65rem",
+                      letterSpacing: "0.15em",
+                      textDecoration: "none",
+                      fontWeight: 700,
+                      textShadow: "0 0 8px rgba(192,132,252,0.4)",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(192,132,252,0.20)")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "rgba(192,132,252,0.10)")}
+                  >
+                    ▼  DOWNLOAD  nyxus-ui-configs.tar.gz
+                  </a>
+                  <div style={{ fontSize: "0.55rem", color: "#2a2a2a", textAlign: "center", letterSpacing: "0.1em", marginTop: "0.4rem" }}>
+                    Mako · Alacritty · GTK3 · GTK4 · install.sh
+                  </div>
+                </div>
+              </div>
+
+              {/* Install */}
+              <div style={{ borderTop: "1px solid rgba(192,132,252,0.08)", padding: "0.75rem 1.25rem", background: "rgba(0,0,0,0.4)" }}>
+                <div style={{ fontSize: "0.55rem", color: "#2a2a2a", letterSpacing: "0.15em", marginBottom: 6 }}>// INSTALL ALL</div>
+                <pre style={{ margin: 0, fontSize: "0.68rem", color: "#444", lineHeight: 1.8, overflow: "auto" }}>
+{`curl -fsSL -o nyxus-ui-configs.tar.gz "${window.location.origin}${BASE}/nyxus-ui-configs.tar.gz"
+tar -xzf nyxus-ui-configs.tar.gz && bash install.sh
+
+# Hyprland: add to hyprland.conf
+env = GTK_THEME,NyXxOS`}
+                </pre>
+              </div>
+            </div>
+          </div>
+
           {/* Batch curl block */}
           <div style={{ marginTop: "2.5rem", border: "1px solid #1a1a1a", borderRadius: 4, padding: "1.25rem", background: "rgba(7,7,7,0.9)" }}>
             <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>
