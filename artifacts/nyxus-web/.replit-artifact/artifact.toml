@@ -17,15 +17,6 @@ localPort = 18304
 [services.development]
 run = "pnpm --filter @workspace/nyxus-web run dev"
 
-[services.production]
-build = [ "pnpm", "--filter", "@workspace/nyxus-web", "run", "build" ]
-publicDir = "artifacts/nyxus-web/dist/public"
-serve = "static"
-
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
-
 [services.env]
 PORT = "18304"
 BASE_PATH = "/"
