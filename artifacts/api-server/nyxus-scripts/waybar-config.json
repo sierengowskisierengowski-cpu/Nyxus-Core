@@ -1,0 +1,75 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 30,
+    "spacing": 0,
+    "margin-top": 0,
+    "margin-left": 0,
+    "margin-right": 0,
+
+    "modules-left":   ["hyprland/workspaces", "hyprland/window"],
+    "modules-center": ["clock"],
+    "modules-right":  ["cpu", "memory", "network", "pulseaudio", "battery", "tray"],
+
+    "hyprland/workspaces": {
+        "format": "{id}",
+        "on-click": "activate",
+        "sort-by-number": true,
+        "active-only": false
+    },
+
+    "hyprland/window": {
+        "format": "{}",
+        "max-length": 48,
+        "separate-outputs": true
+    },
+
+    "clock": {
+        "format": "  {:%H:%M}",
+        "format-alt": "  {:%Y-%m-%d  %H:%M:%S}",
+        "tooltip-format": "{:%A, %B %d %Y\n%H:%M:%S}"
+    },
+
+    "cpu": {
+        "format": "CPU {usage:02}%",
+        "interval": 2,
+        "tooltip": false
+    },
+
+    "memory": {
+        "format": "MEM {percentage:02}%",
+        "interval": 2,
+        "tooltip-format": "{used:0.1f}G / {total:0.1f}G"
+    },
+
+    "network": {
+        "format-wifi":        "WIFI {signalStrength}%",
+        "format-ethernet":    "ETH",
+        "format-disconnected": "OFFLINE",
+        "format-linked":      "LINK",
+        "tooltip-format-wifi": "{essid}  {signalStrength}%\n{ipaddr}"
+    },
+
+    "pulseaudio": {
+        "format":       "VOL {volume:02}%",
+        "format-muted": "MUTED",
+        "on-click":     "pavucontrol",
+        "scroll-step":  5
+    },
+
+    "battery": {
+        "format":          "BAT {capacity:02}%",
+        "format-charging": "CHG {capacity:02}%",
+        "format-full":     "FULL",
+        "format-plugged":  "AC",
+        "states": {
+            "warning":  30,
+            "critical": 15
+        },
+        "tooltip-format": "{timeTo}\n{power:.1f}W"
+    },
+
+    "tray": {
+        "spacing": 8
+    }
+}

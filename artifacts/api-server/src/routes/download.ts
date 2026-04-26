@@ -7,11 +7,15 @@ const router: IRouter = Router();
 const SCRIPTS_DIR = path.resolve(__dirname, "../nyxus-scripts");
 
 const ALLOWED_FILES: Record<string, string> = {
-  "nyxus_motd.py":     "nyxus_motd.py",
-  "nyxus_error.py":    "nyxus_error.py",
-  "nyxus_preboot.py":  "nyxus_preboot.py",
-  "nyxus_splash.py":   "nyxus_splash.py",
-  "nyxus_install.sh":  "nyxus_install.sh",
+  "nyxus_motd.py":        "nyxus_motd.py",
+  "nyxus_error.py":       "nyxus_error.py",
+  "nyxus_preboot.py":     "nyxus_preboot.py",
+  "nyxus_splash.py":      "nyxus_splash.py",
+  "nyxus_install.sh":     "nyxus_install.sh",
+  "hyprland.conf":        "hyprland.conf",
+  "waybar-config.json":   "waybar-config.json",
+  "waybar-style.css":     "waybar-style.css",
+  "alacritty.toml":       "alacritty.toml",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
@@ -29,7 +33,12 @@ router.get("/download/nyxus/:filename", (req, res) => {
     return;
   }
 
-  const contentType = filename.endsWith(".sh") ? "text/x-sh" : "text/x-python";
+  const contentType =
+    filename.endsWith(".sh")   ? "text/x-sh" :
+    filename.endsWith(".py")   ? "text/x-python" :
+    filename.endsWith(".json") ? "application/json" :
+    filename.endsWith(".css")  ? "text/css" :
+    "text/plain";
   res.setHeader("Content-Type", contentType);
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
   res.sendFile(filePath);

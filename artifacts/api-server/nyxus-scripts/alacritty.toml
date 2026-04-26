@@ -1,0 +1,98 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# NYXUS Alacritty Theme
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ─────────────────────────────────────────────────────────────────────────────
+
+[window]
+opacity            = 0.90
+padding.x          = 14
+padding.y          = 10
+decorations        = "None"
+startup_mode       = "Windowed"
+dynamic_title      = true
+
+[scrolling]
+history    = 10000
+multiplier = 5
+
+[font]
+size = 11.5
+
+[font.normal]
+family = "JetBrains Mono"
+style  = "Regular"
+
+[font.bold]
+family = "JetBrains Mono"
+style  = "Bold"
+
+[font.italic]
+family = "JetBrains Mono"
+style  = "Italic"
+
+[cursor]
+style.shape    = "Block"
+style.blinking = "Always"
+blink_interval = 500
+unfocused_hollow = true
+
+[selection]
+save_to_clipboard = true
+
+# ── Color Scheme — NYXUS ─────────────────────────────────────────────────────
+[colors.primary]
+background = "#000000"
+foreground = "#aaaaaa"
+
+[colors.cursor]
+text   = "#000000"
+cursor = "#c084fc"
+
+[colors.vi_mode_cursor]
+text   = "#000000"
+cursor = "#c084fc"
+
+[colors.selection]
+text       = "#000000"
+background = "#c084fc"
+
+[colors.search.matches]
+foreground = "#000000"
+background = "#c084fc"
+
+[colors.search.focused_match]
+foreground = "#000000"
+background = "#e879f9"
+
+# Normal colors
+[colors.normal]
+black   = "#0a0a0a"
+red     = "#f87171"
+green   = "#34d399"
+yellow  = "#fb923c"
+blue    = "#818cf8"
+magenta = "#c084fc"
+cyan    = "#22d3ee"
+white   = "#aaaaaa"
+
+# Bright colors
+[colors.bright]
+black   = "#333333"
+red     = "#fca5a5"
+green   = "#6ee7b7"
+yellow  = "#fcd34d"
+blue    = "#a5b4fc"
+magenta = "#e879f9"
+cyan    = "#67e8f9"
+white   = "#dddddd"
+
+# Dim colors
+[colors.dim]
+black   = "#050505"
+red     = "#7f1d1d"
+green   = "#064e3b"
+yellow  = "#78350f"
+blue    = "#1e1b4b"
+magenta = "#581c87"
+cyan    = "#164e63"
+white   = "#555555"
