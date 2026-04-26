@@ -17,6 +17,21 @@ localPort = 18304
 [services.development]
 run = "pnpm --filter @workspace/nyxus-web run dev"
 
+[services.production]
+
+[services.production.build]
+args = ["pnpm", "--filter", "@workspace/nyxus-web", "run", "build"]
+
+[services.production.build.env]
+NODE_ENV = "production"
+
+[services.production.run]
+args = ["node", "artifacts/nyxus-web/serve.mjs"]
+
+[services.production.run.env]
+PORT = "18304"
+NODE_ENV = "production"
+
 [services.env]
 PORT = "18304"
 BASE_PATH = "/"
