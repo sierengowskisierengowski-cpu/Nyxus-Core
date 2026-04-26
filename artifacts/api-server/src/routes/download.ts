@@ -4,7 +4,7 @@ import fs from "fs";
 
 const router: IRouter = Router();
 
-const SCRIPTS_DIR = path.resolve(__dirname, "../nyxus-scripts");
+const SCRIPTS_DIR = path.resolve(__dirname, "nyxus-scripts");
 
 const ALLOWED_FILES: Record<string, string> = {
   "nyxus_motd.py":        "nyxus_motd.py",
