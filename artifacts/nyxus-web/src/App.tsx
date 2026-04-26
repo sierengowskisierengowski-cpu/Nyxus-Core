@@ -533,6 +533,266 @@ sudo bash sddm-theme/install.sh`}
             </div>
           </div>
 
+          {/* ── HYPRLOCK SECTION ──────────────────────────────── */}
+          <div style={{ marginTop: "3rem" }}>
+            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "1rem" }}>
+              // HYPRLOCK · LOCK SCREEN · PURE BLACK
+            </div>
+
+            <div style={{
+              border: "1px solid rgba(192,132,252,0.22)",
+              borderRadius: 4,
+              overflow: "hidden",
+              background: "rgba(0,0,0,0.8)",
+              backdropFilter: "blur(8px)",
+              boxShadow: "0 0 48px rgba(192,132,252,0.07)",
+            }}>
+              {/* Mockup preview */}
+              <div style={{ padding: "2rem", display: "flex", gap: "2rem", alignItems: "flex-start", flexWrap: "wrap" }}>
+
+                {/* Left — visual mockup */}
+                <div style={{
+                  flex: "0 0 220px",
+                  background: "#080808",
+                  border: "1px solid rgba(192,132,252,0.15)",
+                  padding: "1.5rem 1rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  fontFamily: "monospace",
+                }}>
+                  {/* Clock */}
+                  <div style={{ fontSize: "2rem", fontWeight: 900, color: "#c084fc", textShadow: "0 0 20px rgba(192,132,252,0.6)", letterSpacing: "0.08em" }}>23:59</div>
+                  <div style={{ fontSize: "0.55rem", color: "rgba(80,70,100,0.8)", letterSpacing: "0.15em" }}>Saturday · April 26 · 2026</div>
+
+                  <div style={{ width: "60%", height: "1px", background: "rgba(192,132,252,0.08)", margin: "0.4rem 0" }} />
+
+                  {/* Logo mark */}
+                  <div style={{ fontSize: "1.6rem", letterSpacing: "0.05em" }}>
+                    <span style={{ color: "#c084fc" }}>◤</span>
+                    <span style={{ color: "#f472b6", fontWeight: 900 }}> X </span>
+                    <span style={{ color: "#fbbf24" }}>◥</span>
+                  </div>
+
+                  {/* Wordmark */}
+                  <div style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.12em" }}>
+                    <span style={{ color: "#c084fc" }}>N</span>
+                    <span style={{ color: "#d8b4fe" }}>y</span>
+                    <span style={{ color: "#f472b6" }}>X</span>
+                    <span style={{ color: "#818cf8" }}>.</span>
+                    <span style={{ color: "#c084fc" }}>x</span>
+                    <span style={{ color: "#818cf8" }}>.</span>
+                    <span style={{ color: "#fbbf24" }}>O</span>
+                    <span style={{ color: "#f9a8d4" }}>S</span>
+                  </div>
+
+                  <div style={{ fontSize: "0.5rem", color: "rgba(60,55,80,0.8)", letterSpacing: "0.12em" }}>Silent. Dark. Purely Functional.</div>
+
+                  {/* Password field */}
+                  <div style={{
+                    marginTop: "0.5rem",
+                    width: "90%",
+                    border: "1px solid #c084fc",
+                    padding: "0.35rem 0.7rem",
+                    background: "rgba(8,8,8,0.97)",
+                    color: "#c084fc",
+                    fontSize: "0.85rem",
+                    letterSpacing: "0.4em",
+                    textAlign: "center",
+                    boxShadow: "0 0 14px rgba(192,132,252,0.35)",
+                  }}>
+                    ████████
+                  </div>
+                </div>
+
+                {/* Right — feature list */}
+                <div style={{ flex: "1 1 220px" }}>
+                  <div style={{ fontSize: "0.8rem", color: "#c084fc", fontWeight: 700, letterSpacing: "0.08em", marginBottom: "0.75rem", textShadow: "0 0 12px rgba(192,132,252,0.4)" }}>
+                    hyprlock.conf
+                  </div>
+                  <div style={{ fontSize: "0.6rem", color: "#333", lineHeight: 2.2 }}>
+                    {[
+                      { c: "#c084fc", t: "Pure #080808 black background" },
+                      { c: "#c084fc", t: "Large live clock, purple glow — HH:MM above logo" },
+                      { c: "#d8b4fe", t: "Dim date line below clock" },
+                      { c: "#f472b6", t: "NyX.x.OS X logo mark — purple/pink/gold" },
+                      { c: "#fbbf24", t: "NyX.x.OS wordmark + tagline" },
+                      { c: "#34d399", t: "Password field — dark BG, purple border glow" },
+                      { c: "#f87171", t: "Fail state — red glow + ACCESS DENIED" },
+                      { c: "#fb923c", t: "Caps lock warning — orange tint" },
+                    ].map((f, i) => (
+                      <div key={i}>
+                        <span style={{ color: f.c, marginRight: 8 }}>◈</span>{f.t}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ marginTop: "1.25rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <a
+                      href={`${BASE}/hyprlock.conf`}
+                      download="hyprlock.conf"
+                      style={{
+                        display: "block",
+                        textAlign: "center",
+                        padding: "0.55rem 1rem",
+                        background: "rgba(192,132,252,0.10)",
+                        border: "1px solid rgba(192,132,252,0.42)",
+                        borderTop: "2px solid #c084fc",
+                        color: "#c084fc",
+                        fontSize: "0.65rem",
+                        letterSpacing: "0.15em",
+                        textDecoration: "none",
+                        fontWeight: 700,
+                        textShadow: "0 0 8px rgba(192,132,252,0.4)",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(192,132,252,0.20)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "rgba(192,132,252,0.10)")}
+                    >
+                      ▼  DOWNLOAD  hyprlock.conf
+                    </a>
+                    <div style={{ fontSize: "0.55rem", color: "#2a2a2a", textAlign: "center", letterSpacing: "0.1em" }}>
+                      Hyprlock · JetBrains Mono · Wayland
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Install */}
+              <div style={{ borderTop: "1px solid rgba(192,132,252,0.08)", padding: "0.75rem 1.25rem", background: "rgba(0,0,0,0.4)" }}>
+                <div style={{ fontSize: "0.55rem", color: "#2a2a2a", letterSpacing: "0.15em", marginBottom: 6 }}>// INSTALL</div>
+                <pre style={{ margin: 0, fontSize: "0.68rem", color: "#444", lineHeight: 1.8, overflow: "auto" }}>
+{`mkdir -p ~/.config/hypr
+curl -fsSL -o ~/.config/hypr/hyprlock.conf "${window.location.origin}${BASE}/hyprlock.conf"
+# Run: hyprlock`}
+                </pre>
+              </div>
+            </div>
+          </div>
+
+          {/* ── WLOGOUT SECTION ───────────────────────────────── */}
+          <div style={{ marginTop: "3rem" }}>
+            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "1rem" }}>
+              // WLOGOUT · POWER MENU · 6 ACTIONS
+            </div>
+
+            <div style={{
+              border: "1px solid rgba(192,132,252,0.22)",
+              borderRadius: 4,
+              overflow: "hidden",
+              background: "rgba(0,0,0,0.8)",
+              backdropFilter: "blur(8px)",
+              boxShadow: "0 0 48px rgba(192,132,252,0.07)",
+            }}>
+              {/* Mockup */}
+              <div style={{ padding: "2rem", display: "flex", gap: "2rem", alignItems: "flex-start", flexWrap: "wrap" }}>
+
+                {/* Left — button grid mockup */}
+                <div style={{
+                  flex: "0 0 260px",
+                  background: "rgba(8,8,8,0.98)",
+                  border: "1px solid rgba(192,132,252,0.12)",
+                  padding: "1.25rem",
+                }}>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: "6px",
+                  }}>
+                    {[
+                      { label: "Lock",      icon: "⊘", color: "#c084fc" },
+                      { label: "Logout",    icon: "→",  color: "#c084fc" },
+                      { label: "Suspend",   icon: "☽",  color: "#c084fc" },
+                      { label: "Hibernate", icon: "⏸",  color: "#c084fc" },
+                      { label: "Reboot",    icon: "↺",  color: "#c084fc" },
+                      { label: "Shutdown",  icon: "⏻",  color: "#f87171" },
+                    ].map(({ label, icon, color }) => (
+                      <div key={label} style={{
+                        border: `1px solid ${color === "#f87171" ? "rgba(248,113,113,0.25)" : "rgba(192,132,252,0.28)"}`,
+                        padding: "0.6rem 0.25rem",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "0.3rem",
+                        background: "rgba(12,10,18,0.92)",
+                        fontFamily: "monospace",
+                      }}>
+                        <span style={{ fontSize: "1rem", color }}>{icon}</span>
+                        <span style={{ fontSize: "0.45rem", color: color === "#f87171" ? "rgba(248,113,113,0.7)" : "rgba(192,132,252,0.7)", letterSpacing: "0.1em" }}>{label.toUpperCase()}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: "0.75rem", textAlign: "center", fontSize: "0.45rem", color: "rgba(192,132,252,0.15)", letterSpacing: "0.15em", fontFamily: "monospace" }}>
+                    NyX.x.OS · POWER CONTROL
+                  </div>
+                </div>
+
+                {/* Right — features */}
+                <div style={{ flex: "1 1 220px" }}>
+                  <div style={{ fontSize: "0.8rem", color: "#c084fc", fontWeight: 700, letterSpacing: "0.08em", marginBottom: "0.75rem", textShadow: "0 0 12px rgba(192,132,252,0.4)" }}>
+                    nyxus-wlogout.tar.gz
+                  </div>
+                  <div style={{ fontSize: "0.6rem", color: "#333", lineHeight: 2.2 }}>
+                    {[
+                      { c: "#c084fc", t: "Full-screen #080808 black background" },
+                      { c: "#c084fc", t: "6 buttons — Lock, Logout, Suspend, Hibernate, Reboot, Shutdown" },
+                      { c: "#d8b4fe", t: "Dark panel, purple border — SVG line icons" },
+                      { c: "#f472b6", t: "Hover: transparent purple glow, border brightens" },
+                      { c: "#f87171", t: "Shutdown: red accent, separate glow color" },
+                      { c: "#34d399", t: "JetBrains Mono throughout, spaced caps labels" },
+                      { c: "#fb923c", t: "NyX.x.OS branding at bottom" },
+                      { c: "#818cf8", t: "layout + style.css + install.sh" },
+                    ].map((f, i) => (
+                      <div key={i}>
+                        <span style={{ color: f.c, marginRight: 8 }}>◈</span>{f.t}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ marginTop: "1.25rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <a
+                      href={`${BASE}/nyxus-wlogout.tar.gz`}
+                      download="nyxus-wlogout.tar.gz"
+                      style={{
+                        display: "block",
+                        textAlign: "center",
+                        padding: "0.55rem 1rem",
+                        background: "rgba(192,132,252,0.10)",
+                        border: "1px solid rgba(192,132,252,0.42)",
+                        borderTop: "2px solid #c084fc",
+                        color: "#c084fc",
+                        fontSize: "0.65rem",
+                        letterSpacing: "0.15em",
+                        textDecoration: "none",
+                        fontWeight: 700,
+                        textShadow: "0 0 8px rgba(192,132,252,0.4)",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(192,132,252,0.20)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "rgba(192,132,252,0.10)")}
+                    >
+                      ▼  DOWNLOAD  nyxus-wlogout.tar.gz
+                    </a>
+                    <div style={{ fontSize: "0.55rem", color: "#2a2a2a", textAlign: "center", letterSpacing: "0.1em" }}>
+                      GTK CSS · Wlogout · Wayland / Hyprland
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Install */}
+              <div style={{ borderTop: "1px solid rgba(192,132,252,0.08)", padding: "0.75rem 1.25rem", background: "rgba(0,0,0,0.4)" }}>
+                <div style={{ fontSize: "0.55rem", color: "#2a2a2a", letterSpacing: "0.15em", marginBottom: 6 }}>// INSTALL</div>
+                <pre style={{ margin: 0, fontSize: "0.68rem", color: "#444", lineHeight: 1.8, overflow: "auto" }}>
+{`curl -fsSL -o nyxus-wlogout.tar.gz "${window.location.origin}${BASE}/nyxus-wlogout.tar.gz"
+tar -xzf nyxus-wlogout.tar.gz && bash install.sh
+# Run: wlogout --protocol layer-shell -b 4 -c 0 -r 0 -L 0`}
+                </pre>
+              </div>
+            </div>
+          </div>
+
           {/* Batch curl block */}
           <div style={{ marginTop: "2.5rem", border: "1px solid #1a1a1a", borderRadius: 4, padding: "1.25rem", background: "rgba(7,7,7,0.9)" }}>
             <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>

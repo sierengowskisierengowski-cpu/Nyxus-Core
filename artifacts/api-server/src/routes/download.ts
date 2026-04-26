@@ -20,7 +20,9 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-wallpaper-v2.png": "nyxus-wallpaper-v2.png",
   "nyxus-wallpaper-v3.png": "nyxus-wallpaper-v3.png",
   "nyxus-wallpaper-v4.png": "nyxus-wallpaper-v4.png",
-  "nyxus-sddm-theme.tar.gz": "nyxus-sddm-theme.tar.gz",
+  "nyxus-sddm-theme.tar.gz":  "nyxus-sddm-theme.tar.gz",
+  "hyprlock.conf":            "hyprlock.conf",
+  "nyxus-wlogout.tar.gz":    "nyxus-wlogout.tar.gz",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
@@ -43,6 +45,8 @@ router.get("/download/nyxus/:filename", (req, res) => {
     filename.endsWith(".py")     ? "text/x-python" :
     filename.endsWith(".json")   ? "application/json" :
     filename.endsWith(".css")    ? "text/css" :
+    filename.endsWith(".conf")   ? "text/plain" :
+    filename.endsWith(".toml")   ? "text/plain" :
     filename.endsWith(".png")    ? "image/png" :
     filename.endsWith(".tar.gz") ? "application/gzip" :
     "text/plain";
