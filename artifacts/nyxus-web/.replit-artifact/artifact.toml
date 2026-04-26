@@ -20,3 +20,14 @@ run = "pnpm --filter @workspace/nyxus-web run dev"
 [services.env]
 PORT = "18304"
 BASE_PATH = "/"
+
+[services.production]
+serve = "static"
+publicDir = "dist/public"
+
+[services.production.build]
+args = ["pnpm", "--filter", "@workspace/nyxus-web", "run", "build"]
+
+[services.production.build.env]
+NODE_ENV = "production"
+BASE_PATH = "/"
