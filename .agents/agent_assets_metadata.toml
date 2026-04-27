@@ -282,6 +282,42 @@ uri = "file://attached_assets/nyxus-sierengowski.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "D5PqXjk8sEGC_AVLm71fy"
+uri = "file://attached_assets/nyxus-street-8mile.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "VJmx8G2QyKlkQv5BLYr7l"
+uri = "file://attached_assets/nyxus-street-7mile.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "q0QPeHI4oY2jphBseLUC4"
+uri = "file://attached_assets/nyxus-street-6mile.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "k2wq-uvGvN_NRrbE2Atu-"
+uri = "file://attached_assets/nyxus-street-gratiot.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "35wWUnwyqfsL9eu77pxis"
+uri = "file://attached_assets/nyxus-street-mack.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "W9rWSoyneis_o36yb-tKE"
+uri = "file://attached_assets/nyxus-street-woodward-jefferson.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -461,3 +497,39 @@ id = "hKhr4eumWRl3qtMmnOwtt"
 uri = "file://attached_assets/nyxus-sierengowski.png"
 type = "image"
 title = "SIERENGOWSKI"
+
+[[outputs]]
+id = "m6elKyO_gdYO3kPGD102l"
+uri = "file://attached_assets/nyxus-street-8mile.png"
+type = "image"
+title = "8 Mile Rd — Sign Only"
+
+[[outputs]]
+id = "lL1wd46p-2gz4YI8XD8yF"
+uri = "file://attached_assets/nyxus-street-7mile.png"
+type = "image"
+title = "7 Mile Rd — Sign Only"
+
+[[outputs]]
+id = "xPIXcrLvebZN2J-LQ-Ahu"
+uri = "file://attached_assets/nyxus-street-6mile.png"
+type = "image"
+title = "6 Mile Rd — Sign Only"
+
+[[outputs]]
+id = "1Z8JfDUwD0hX-r3CE8ol0"
+uri = "file://attached_assets/nyxus-street-gratiot.png"
+type = "image"
+title = "Gratiot Ave — Sign Only"
+
+[[outputs]]
+id = "bXg6o7t1OZkO_1ecWBUg1"
+uri = "file://attached_assets/nyxus-street-mack.png"
+type = "image"
+title = "Mack Ave — Sign Only"
+
+[[outputs]]
+id = "bXGmuEGZAg5AqkuUui3Ke"
+uri = "file://attached_assets/nyxus-street-woodward-jefferson.png"
+type = "image"
+title = "Woodward + Jefferson Corner"
