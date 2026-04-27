@@ -82,14 +82,16 @@ window#waybar.top {
 
 /* Ticker */
 #custom-ticker {
-    padding:        0 12px;
+    padding:        2px 16px;
     font-size:      10px;
-    letter-spacing: 0.05em;
-    color:          rgba(255,255,255,0.80);
-    font-style:     italic;
-    background:     rgba(0, 0, 0, 0.50);
-    border-radius:  5px;
-    border:         1px solid rgba(255,255,255,0.10);
+    font-weight:    bold;
+    letter-spacing: 0.10em;
+    color:          #f9a8d4;
+    background:     rgba(244,114,182,0.20);
+    border-radius:  8px;
+    border:         1px solid rgba(244,114,182,0.55);
+    box-shadow:     0 0 10px rgba(244,114,182,0.35);
+    text-shadow:    0 0 8px rgba(244,114,182,0.80);
     margin:         3px 4px;
 }
 
@@ -119,89 +121,99 @@ window#waybar.top #temperature,
 window#waybar.top #network,
 window#waybar.top #battery,
 window#waybar.top #clock {
-    background:    rgba(0, 0, 0, 0.62);
-    border-radius: 6px;
-    border:        2px solid rgba(255,255,255,0.20);
-    margin:        3px 2px;
-    padding:       2px 10px;
+    border-radius: 8px;
+    margin:        3px 3px;
+    padding:       3px 12px;
     font-size:     10px;
     font-weight:   bold;
+    letter-spacing: 0.04em;
 }
 
 /* CPU — purple */
 window#waybar.top #cpu {
-    color:        #c084fc;
-    border-color: rgba(192,132,252,0.55);
-    text-shadow:  0 0 10px rgba(192,132,252,0.80),
-                  0 0 22px rgba(192,132,252,0.35);
+    color:       #ffffff;
+    background:  rgba(192,132,252,0.38);
+    border:      2px solid #c084fc;
+    box-shadow:  0 0 14px rgba(192,132,252,0.65), 0 0 28px rgba(192,132,252,0.25);
+    text-shadow: 0 0 10px rgba(192,132,252,0.90);
 }
 
 /* RAM — indigo */
 window#waybar.top #memory {
-    color:        #818cf8;
-    border-color: rgba(129,140,248,0.55);
-    text-shadow:  0 0 10px rgba(129,140,248,0.80),
-                  0 0 22px rgba(129,140,248,0.35);
+    color:       #ffffff;
+    background:  rgba(129,140,248,0.38);
+    border:      2px solid #818cf8;
+    box-shadow:  0 0 14px rgba(129,140,248,0.65), 0 0 28px rgba(129,140,248,0.25);
+    text-shadow: 0 0 10px rgba(129,140,248,0.90);
 }
 
 /* Temp — green */
 window#waybar.top #temperature {
-    color:        #34d399;
-    border-color: rgba(52,211,153,0.55);
-    text-shadow:  0 0 10px rgba(52,211,153,0.80),
-                  0 0 22px rgba(52,211,153,0.35);
+    color:       #ffffff;
+    background:  rgba(52,211,153,0.38);
+    border:      2px solid #34d399;
+    box-shadow:  0 0 14px rgba(52,211,153,0.65), 0 0 28px rgba(52,211,153,0.25);
+    text-shadow: 0 0 10px rgba(52,211,153,0.90);
 }
 window#waybar.top #temperature.critical {
-    color:        #f87171;
-    border-color: rgba(248,113,113,0.70);
-    text-shadow:  0 0 14px #f87171, 0 0 28px rgba(248,113,113,0.55);
-    animation:    batt-crit 0.8s ease-in-out infinite alternate;
+    background:  rgba(248,113,113,0.40);
+    border:      2px solid #f87171;
+    box-shadow:  0 0 18px rgba(248,113,113,0.80);
+    text-shadow: 0 0 14px #f87171;
+    animation:   batt-crit 0.8s ease-in-out infinite alternate;
 }
 
 /* Network — gold */
 window#waybar.top #network {
-    color:        #fbbf24;
-    border-color: rgba(251,191,36,0.55);
-    text-shadow:  0 0 10px rgba(251,191,36,0.80),
-                  0 0 22px rgba(251,191,36,0.35);
+    color:       #ffffff;
+    background:  rgba(251,191,36,0.38);
+    border:      2px solid #fbbf24;
+    box-shadow:  0 0 14px rgba(251,191,36,0.65), 0 0 28px rgba(251,191,36,0.25);
+    text-shadow: 0 0 10px rgba(251,191,36,0.90);
 }
 window#waybar.top #network.disconnected {
-    color:        rgba(255,255,255,0.35);
-    border-color: rgba(255,255,255,0.15);
-    text-shadow:  none;
+    background:  rgba(255,255,255,0.08);
+    border:      2px solid rgba(255,255,255,0.20);
+    box-shadow:  none;
+    text-shadow: none;
 }
 
 /* Battery — pink */
 window#waybar.top #battery {
-    color:        #f472b6;
-    border-color: rgba(244,114,182,0.55);
-    text-shadow:  0 0 10px rgba(244,114,182,0.80),
-                  0 0 22px rgba(244,114,182,0.35);
+    color:       #ffffff;
+    background:  rgba(244,114,182,0.38);
+    border:      2px solid #f472b6;
+    box-shadow:  0 0 14px rgba(244,114,182,0.65), 0 0 28px rgba(244,114,182,0.25);
+    text-shadow: 0 0 10px rgba(244,114,182,0.90);
 }
 window#waybar.top #battery.charging,
 window#waybar.top #battery.plugged {
-    color:        #34d399;
-    border-color: rgba(52,211,153,0.55);
-    text-shadow:  0 0 12px #34d399, 0 0 24px rgba(52,211,153,0.45);
+    background:  rgba(52,211,153,0.38);
+    border:      2px solid #34d399;
+    box-shadow:  0 0 14px rgba(52,211,153,0.65);
+    text-shadow: 0 0 12px #34d399;
 }
 window#waybar.top #battery.warning {
-    color:        #fb923c;
-    border-color: rgba(251,146,60,0.55);
-    text-shadow:  0 0 10px #fb923c;
+    background:  rgba(251,146,60,0.38);
+    border:      2px solid #fb923c;
+    box-shadow:  0 0 14px rgba(251,146,60,0.65);
+    text-shadow: 0 0 10px #fb923c;
 }
 window#waybar.top #battery.critical {
-    color:        #f87171;
-    border-color: rgba(248,113,113,0.70);
-    text-shadow:  0 0 12px #f87171;
-    animation:    batt-crit 1s ease-in-out infinite alternate;
+    background:  rgba(248,113,113,0.40);
+    border:      2px solid #f87171;
+    box-shadow:  0 0 18px rgba(248,113,113,0.80);
+    text-shadow: 0 0 12px #f87171;
+    animation:   batt-crit 1s ease-in-out infinite alternate;
 }
 
 /* Clock — sky */
 window#waybar.top #clock {
-    color:          #38bdf8;
-    border-color:   rgba(56,189,248,0.55);
-    text-shadow:    0 0 10px rgba(56,189,248,0.80),
-                    0 0 22px rgba(56,189,248,0.35);
+    color:          #ffffff;
+    background:     rgba(56,189,248,0.38);
+    border:         2px solid #38bdf8;
+    box-shadow:     0 0 14px rgba(56,189,248,0.65), 0 0 28px rgba(56,189,248,0.25);
+    text-shadow:    0 0 10px rgba(56,189,248,0.90);
     letter-spacing: 0.08em;
 }
 
@@ -403,17 +415,18 @@ window#waybar.bottom #workspaces button.urgent {
     box-shadow:  0 0 24px rgba(248,113,113,0.70);
 }
 
-/* ── Window title — centered, bright white ── */
+/* ── Window title ── */
 window#waybar.bottom #window {
     color:          #ffffff;
     font-size:      11px;
     font-weight:    bold;
     letter-spacing: 0.06em;
-    padding:        2px 18px;
-    background:     rgba(0, 0, 0, 0.50);
-    border-radius:  6px;
-    border:         1px solid rgba(255,255,255,0.10);
-    text-shadow:    0 0 10px rgba(255,255,255,0.40);
+    padding:        3px 18px;
+    background:     rgba(249,115,22,0.22);
+    border-radius:  8px;
+    border:         2px solid rgba(249,115,22,0.70);
+    box-shadow:     0 0 12px rgba(249,115,22,0.45);
+    text-shadow:    0 0 10px rgba(249,115,22,0.80);
 }
 
 /* ── Clock ── */
@@ -422,13 +435,13 @@ window#waybar.bottom #clock {
     letter-spacing: 0.10em;
     font-size:      11px;
     font-weight:    bold;
-    padding:        2px 18px;
-    background:     rgba(0, 0, 0, 0.55);
-    border-radius:  6px;
-    border:         1px solid rgba(249,115,22,0.35);
+    padding:        3px 18px;
+    background:     rgba(56,189,248,0.32);
+    border-radius:  8px;
+    border:         2px solid #38bdf8;
+    box-shadow:     0 0 14px rgba(56,189,248,0.65), 0 0 28px rgba(56,189,248,0.25);
     margin:         3px 4px;
-    text-shadow:    0 0 12px rgba(249,115,22,0.90),
-                    0 0 26px rgba(249,115,22,0.45);
+    text-shadow:    0 0 10px rgba(56,189,248,0.90);
 }
 
 /* ── Bottom-right system modules — shared pill base ── */
@@ -441,101 +454,116 @@ window#waybar.bottom #pulseaudio,
 window#waybar.bottom #network,
 window#waybar.bottom #bluetooth,
 window#waybar.bottom #battery {
-    background:    rgba(0, 0, 0, 0.62);
-    border-radius: 6px;
-    border:        2px solid rgba(255,255,255,0.22);
-    margin:        3px 2px;
+    border-radius: 8px;
+    margin:        3px 3px;
 }
 
 window#waybar.bottom #pulseaudio {
-    padding:      0 13px;
-    font-size:    12px;
-    font-weight:  bold;
-    color:        #f9a8d4;
-    border-color: rgba(244,114,182,0.60);
-    text-shadow:  0 0 10px rgba(244,114,182,0.70);
-    transition:   all 0.15s ease;
+    padding:     3px 13px;
+    font-size:   12px;
+    font-weight: bold;
+    color:       #ffffff;
+    background:  rgba(244,114,182,0.32);
+    border:      2px solid #f472b6;
+    box-shadow:  0 0 12px rgba(244,114,182,0.60);
+    text-shadow: 0 0 10px rgba(244,114,182,0.90);
+    transition:  all 0.15s ease;
 }
 window#waybar.bottom #pulseaudio:hover {
-    color:       #ffffff;
-    background:  rgba(244,114,182,0.12);
-    text-shadow: 0 0 14px #f472b6;
+    background:  rgba(244,114,182,0.50);
+    box-shadow:  0 0 20px rgba(244,114,182,0.80);
 }
 window#waybar.bottom #pulseaudio.muted {
-    color:       rgba(255,255,255,0.20);
+    background:  rgba(255,255,255,0.08);
+    border:      2px solid rgba(255,255,255,0.20);
+    box-shadow:  none;
     text-shadow: none;
 }
 
 window#waybar.bottom #network {
-    padding:      0 13px;
-    font-size:    11px;
-    font-weight:  bold;
-    color:        #7dd3fc;
-    border-color: rgba(56,189,248,0.60);
-    text-shadow:  0 0 10px rgba(56,189,248,0.70);
-    transition:   all 0.15s ease;
+    padding:     3px 13px;
+    font-size:   11px;
+    font-weight: bold;
+    color:       #ffffff;
+    background:  rgba(56,189,248,0.32);
+    border:      2px solid #38bdf8;
+    box-shadow:  0 0 12px rgba(56,189,248,0.60);
+    text-shadow: 0 0 10px rgba(56,189,248,0.90);
+    transition:  all 0.15s ease;
 }
 window#waybar.bottom #network:hover {
-    color:      #ffffff;
-    background: rgba(56,189,248,0.10);
-    text-shadow: 0 0 14px #38bdf8;
+    background:  rgba(56,189,248,0.50);
+    box-shadow:  0 0 20px rgba(56,189,248,0.80);
 }
 window#waybar.bottom #network.ethernet {
-    color:       #86efac;
-    text-shadow: 0 0 8px rgba(52,211,153,0.50);
+    background:  rgba(52,211,153,0.32);
+    border:      2px solid #34d399;
+    box-shadow:  0 0 12px rgba(52,211,153,0.60);
+    text-shadow: 0 0 8px rgba(52,211,153,0.80);
 }
 window#waybar.bottom #network.disconnected {
-    color:       #fca5a5;
-    text-shadow: 0 0 8px rgba(248,113,113,0.40);
+    background:  rgba(248,113,113,0.25);
+    border:      2px solid #f87171;
+    box-shadow:  0 0 10px rgba(248,113,113,0.50);
+    text-shadow: 0 0 8px rgba(248,113,113,0.70);
 }
 
 window#waybar.bottom #bluetooth {
-    padding:      0 13px;
-    font-size:    11px;
-    font-weight:  bold;
-    color:        #a5b4fc;
-    border-color: rgba(129,140,248,0.60);
-    text-shadow:  0 0 10px rgba(129,140,248,0.70);
-    transition:   all 0.15s ease;
+    padding:     3px 13px;
+    font-size:   11px;
+    font-weight: bold;
+    color:       #ffffff;
+    background:  rgba(129,140,248,0.32);
+    border:      2px solid #818cf8;
+    box-shadow:  0 0 12px rgba(129,140,248,0.60);
+    text-shadow: 0 0 10px rgba(129,140,248,0.90);
+    transition:  all 0.15s ease;
 }
 window#waybar.bottom #bluetooth:hover {
-    color:      #ffffff;
-    background: rgba(129,140,248,0.10);
-    text-shadow: 0 0 14px #818cf8;
+    background:  rgba(129,140,248,0.50);
+    box-shadow:  0 0 20px rgba(129,140,248,0.80);
 }
 window#waybar.bottom #bluetooth.connected {
-    color:       #c7d2fe;
-    border-left: 3px solid rgba(129,140,248,0.60);
-    text-shadow: 0 0 10px #818cf8, 0 0 20px rgba(129,140,248,0.35);
+    background:  rgba(129,140,248,0.48);
+    border:      2px solid #818cf8;
+    box-shadow:  0 0 16px rgba(129,140,248,0.70);
+    text-shadow: 0 0 10px #818cf8, 0 0 20px rgba(129,140,248,0.45);
 }
 
 window#waybar.bottom #battery {
-    padding:      0 13px;
-    font-size:    11px;
-    font-weight:  bold;
-    color:        #6ee7b7;
-    border-color: rgba(52,211,153,0.60);
-    text-shadow:  0 0 10px rgba(52,211,153,0.70);
-    transition:   all 0.15s ease;
+    padding:     3px 13px;
+    font-size:   11px;
+    font-weight: bold;
+    color:       #ffffff;
+    background:  rgba(52,211,153,0.32);
+    border:      2px solid #34d399;
+    box-shadow:  0 0 12px rgba(52,211,153,0.60);
+    text-shadow: 0 0 10px rgba(52,211,153,0.90);
+    transition:  all 0.15s ease;
 }
 window#waybar.bottom #battery:hover {
-    color:      #ffffff;
-    background: rgba(52,211,153,0.10);
+    background:  rgba(52,211,153,0.50);
+    box-shadow:  0 0 20px rgba(52,211,153,0.80);
 }
 window#waybar.bottom #battery.charging,
 window#waybar.bottom #battery.plugged {
-    color:       #ffffff;
-    text-shadow: 0 0 12px #34d399, 0 0 24px rgba(52,211,153,0.45);
-    border-left: 3px solid #34d399;
+    background:  rgba(52,211,153,0.48);
+    border:      2px solid #34d399;
+    box-shadow:  0 0 16px rgba(52,211,153,0.70);
+    text-shadow: 0 0 12px #34d399;
 }
 window#waybar.bottom #battery.warning  {
-    color:       #fcd34d;
-    text-shadow: 0 0 8px rgba(251,191,36,0.55);
+    background:  rgba(251,191,36,0.32);
+    border:      2px solid #fbbf24;
+    box-shadow:  0 0 12px rgba(251,191,36,0.60);
+    text-shadow: 0 0 8px rgba(251,191,36,0.80);
 }
 window#waybar.bottom #battery.critical {
-    color: #ffffff;
+    background:  rgba(248,113,113,0.40);
+    border:      2px solid #f87171;
+    box-shadow:  0 0 18px rgba(248,113,113,0.80);
     text-shadow: 0 0 12px #f87171;
-    animation: batt-crit 1s ease-in-out infinite alternate;
+    animation:   batt-crit 1s ease-in-out infinite alternate;
 }
 
 
@@ -546,10 +574,10 @@ window#waybar.bottom #battery.critical {
 /* ⊞ Start button — compact icon, rainbow animated */
 window#waybar.bottom #custom-start {
     font-size:    16px;
-    padding:      0 18px;
-    background:   rgba(0, 0, 0, 0.60);
+    padding:      3px 18px;
+    background:   rgba(20, 8, 36, 0.88);
     border-radius: 8px;
-    border:       2px solid rgba(244,114,182,0.75);
+    border:       2px solid rgba(244,114,182,0.90);
     margin:       3px 6px 3px 8px;
     animation:    nyxus-rainbow 6s linear infinite;
     transition:   all 0.18s ease;
