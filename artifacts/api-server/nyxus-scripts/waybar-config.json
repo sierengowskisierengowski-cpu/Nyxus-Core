@@ -21,7 +21,7 @@
     },
 
     "custom/nyxus": {
-      "format":  "<span foreground='#f472b6' font_weight='bold'>N</span><span foreground='#fb923c' font_weight='bold'> Y</span><span foreground='#fbbf24' font_weight='bold'> X</span><span foreground='#34d399' font_weight='bold'> U</span><span foreground='#38bdf8' font_weight='bold'> S</span>",
+      "format":  "<span foreground='#ff00ff' font_weight='bold'>N</span><span foreground='#ff5500' font_weight='bold'> Y</span><span foreground='#ffff00' font_weight='bold'> X</span><span foreground='#39ff14' font_weight='bold'> U</span><span foreground='#0088ff' font_weight='bold'> S</span>",
       "tooltip": false,
       "escape":  false
     },
@@ -86,12 +86,12 @@
     "margin-left":   0,
     "margin-right":  0,
 
-    "modules-left":   ["custom/start", "hyprland/workspaces"],
-    "modules-center": ["hyprland/window"],
+    "modules-left":   ["custom/start"],
+    "modules-center": ["hyprland/workspaces"],
     "modules-right":  ["tray", "pulseaudio", "network#bottom", "bluetooth", "battery#bottom", "custom/quicksettings", "clock#bottom"],
 
     "custom/start": {
-      "format":   "<span foreground='#fbbf24' font_weight='bold' font_size='15pt'>⊞</span>",
+      "format":   "✕",
       "escape":   false,
       "tooltip":  false,
       "on-click": "rofi -show drun -theme ~/.config/rofi/startmenu.rasi"

@@ -89,8 +89,8 @@ dl "waybar-style.css"         "$WAYBAR_DIR/style.css"         || failed=$((faile
 # Inject real paths into CSS
 WALL_PATH="$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png"
 TASKBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-taskbar-bg.png"
-sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"       "$WAYBAR_DIR/style.css"
-sed -i "s|NYXUS_TASKBAR_BG|${TASKBAR_BG_PATH}|g" "$WAYBAR_DIR/style.css"
+sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"                "$WAYBAR_DIR/style.css"
+sed -i "s|NYXUS_TASKBAR_BG|file://${TASKBAR_BG_PATH}|g"  "$WAYBAR_DIR/style.css"
 dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
 dl "waybar-stats.sh"          "$WAYBAR_DIR/stats.sh"          || failed=$((failed+1))
 dl "nyxus_quicksettings.py"   "$WAYBAR_DIR/quicksettings.py"  || failed=$((failed+1))
