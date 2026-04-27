@@ -569,22 +569,33 @@ window#waybar.bottom #battery.critical {
 
 /* ✕ Start / launcher button — glowing X */
 window#waybar.bottom #custom-start {
-    font-size:     30px;
+    font-size:     22px;
     font-weight:   bold;
     color:         #ffffff;
-    padding:       0 22px;
-    min-width:     54px;
+    padding:       2px 14px;
+    min-width:     44px;
     background:    rgba(8, 2, 20, 0.92);
     border-radius: 10px;
     border:        3px solid #ff00ff;
     margin:        4px 8px;
     animation:     nyxus-rainbow 6s linear infinite;
-    text-shadow:   0 0 14px #ffffff, 0 0 30px #ff00ff, 0 0 60px #ff00ff;
+    text-shadow:   0 0 4px #ffffff,
+                   0 0 10px #ffffff,
+                   0 0 20px #ff00ff,
+                   0 0 40px #ff00ff,
+                   0 0 70px #ff00ff,
+                   0 0 100px rgba(255,0,255,0.60);
     box-shadow:    0 0 22px rgba(255,0,255,0.85), 0 0 50px rgba(255,0,255,0.40);
     transition:    all 0.18s ease;
 }
 window#waybar.bottom #custom-start:hover {
     background:  rgba(255,0,255,0.18);
+    text-shadow: 0 0 4px #ffffff,
+                 0 0 12px #ffffff,
+                 0 0 26px #ff00ff,
+                 0 0 55px #ff00ff,
+                 0 0 90px #ff00ff,
+                 0 0 130px rgba(255,0,255,0.70);
     box-shadow:  0 0 32px rgba(255,0,255,0.95), 0 0 70px rgba(255,0,255,0.55);
 }
 
