@@ -1,8 +1,8 @@
 # ============================================================
-#  NyX.x.OS — Mako Notification Daemon Config
+#  NYXUS — Mako Notification Daemon  |  SIGNATURE EDITION
 #  ~/.config/mako/config
 #
-#  Silent. Dark. Purely Functional.
+#  Glassmorphic. Dark. Neon-accented. Unmistakable.
 #  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================
 
@@ -10,21 +10,21 @@
 sort=-time
 layer=overlay
 anchor=top-right
-margin=14,14,0,0
-padding=14,16
-width=380
-height=130
+margin=16,16,0,0
+padding=16,18
+width=400
+height=140
 max-visible=5
-max-history=50
+max-history=100
 
 # ── Appearance ──────────────────────────────────────────────
-background-color=#06050Aee
-text-color=#c0b8d0
+background-color=#08051599
+text-color=#ddd8f0
 title-color=#c084fc
 border-color=#c084fc
 border-size=0
-border-left-size=3
-border-radius=6
+border-left-size=5
+border-radius=10
 
 # ── Typography ──────────────────────────────────────────────
 font=JetBrains Mono Nerd Font 11
@@ -32,7 +32,7 @@ font=JetBrains Mono Nerd Font 11
 # ── Icons ───────────────────────────────────────────────────
 icons=1
 icon-location=left
-max-icon-size=36
+max-icon-size=40
 
 # ── Timing ──────────────────────────────────────────────────
 default-timeout=5000
@@ -46,64 +46,91 @@ format=<b>%s</b>\n%b
 # ── Per-urgency overrides ────────────────────────────────────
 
 [urgency=low]
-background-color=#06050Add
-text-color=#5a5070
-title-color=#7a6e90
-border-color=#2e2845
-border-left-size=3
-default-timeout=3000
+background-color=#08051588
+text-color=#7a7090
+title-color=#9a8eb0
+border-color=#3e3060
+border-left-size=5
+default-timeout=2500
 
 [urgency=normal]
-background-color=#06050Aee
-text-color=#c0b8d0
+background-color=#08051599
+text-color=#ddd8f0
 title-color=#c084fc
 border-color=#c084fc
-border-left-size=3
+border-left-size=5
 default-timeout=5000
 
 [urgency=high]
-background-color=#100608f0
+background-color=#130509cc
 text-color=#fca5a5
 title-color=#f87171
 border-color=#f87171
-border-left-size=3
-border-radius=6
+border-left-size=5
+border-radius=10
 default-timeout=0
 
 # ── App-specific overrides ────────────────────────────────────
 
 [app-name=volume]
-background-color=#06050Aee
+background-color=#08051599
 border-color=#c084fc
 title-color=#c084fc
-default-timeout=2000
-
-[app-name=brightness]
-background-color=#06050Aee
-border-color=#fbbf24
-title-color=#fbbf24
+border-left-size=5
 default-timeout=1800
 
+[app-name=brightness]
+background-color=#08051599
+border-color=#fbbf24
+title-color=#fbbf24
+border-left-size=5
+default-timeout=1600
+
 [app-name=Spotify]
-background-color=#06050Aee
+background-color=#08051599
 border-color=#1db954
 title-color=#1db954
+border-left-size=5
 default-timeout=4000
 
 [app-name=discord]
-background-color=#06050Aee
+background-color=#08051599
 border-color=#5865f2
 title-color=#818cf8
+border-left-size=5
 default-timeout=4000
 
 [app-name=firefox]
-background-color=#06050Aee
+background-color=#08051599
 border-color=#818cf8
 title-color=#818cf8
+border-left-size=5
 default-timeout=4000
 
+[app-name=steam]
+background-color=#08051599
+border-color=#38bdf8
+title-color=#38bdf8
+border-left-size=5
+default-timeout=5000
+
 [app-name=networkmanager]
-background-color=#06050Aee
+background-color=#08051599
 border-color=#34d399
 title-color=#34d399
+border-left-size=5
+default-timeout=3000
+
+[app-name=Hyprshot]
+background-color=#08051599
+border-color=#fbbf24
+title-color=#fbbf24
+border-left-size=5
+default-timeout=2500
+
+[app-name=dunst]
+background-color=#08051599
+border-color=#f472b6
+title-color=#f472b6
+border-left-size=5
 default-timeout=3000
