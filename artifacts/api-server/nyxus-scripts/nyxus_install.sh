@@ -74,19 +74,11 @@ dl "hyprland.conf" "$HYPR_DIR/hyprland.conf" || failed=$((failed+1))
 dl "hyprlock.conf"  "$HYPR_DIR/hyprlock.conf"  || failed=$((failed+1))
 dl "hypridle.conf"  "$HYPR_DIR/hypridle.conf"  || failed=$((failed+1))
 
-# ── WALLPAPERS ────────────────────────────────────────────────────────────────
-hdr "Wallpapers (16 total — downloading...)"
+# ── WALLPAPER ─────────────────────────────────────────────────────────────────
+hdr "Wallpaper (SIERENGOWSKI)"
 WALLS_DIR="$HYPR_DIR/walls"
 mkdir -p "$WALLS_DIR"
-for i in $(seq -w 1 16); do
-  dl "nyxus-wall-${i}.png" "$WALLS_DIR/nyxus-wall-${i}.png" || failed=$((failed+1))
-done
-dl "nyxus-detroit-main.png"    "$HYPR_DIR/nyxus-detroit-main.png"         || failed=$((failed+1))
-for f in nyxus-detroit-v10 nyxus-sign-8mile nyxus-packard nyxus-bluewaterbridge nyxus-belleisle nyxus-mcs nyxus-foxtheatre nyxus-guardian nyxus-woodward nyxus-tigerstadium nyxus-easternmarket nyxus-sierengowski nyxus-street-8mile nyxus-street-7mile nyxus-street-6mile nyxus-street-gratiot nyxus-street-mack nyxus-street-woodward-jefferson nyxus-all-signs nyxus-sierengowski-v2 nyxus-sierengowski-v3 nyxus-sierengowski-clean; do
-  dl "${f}.png" "$WALLS_DIR/${f}.png" || failed=$((failed+1))
-done
-dl "wallpaper-rotate.sh" "$HYPR_DIR/wallpaper-rotate.sh" || failed=$((failed+1))
-chmod +x "$HYPR_DIR/wallpaper-rotate.sh" 2>/dev/null || true
+dl "nyxus-sierengowski-clean.png" "$WALLS_DIR/nyxus-sierengowski-clean.png" || failed=$((failed+1))
 
 # ── WAYBAR ────────────────────────────────────────────────────────────────────
 hdr "Waybar"
@@ -148,13 +140,11 @@ echo ""
 
 if [[ $failed -eq 0 ]]; then
   printf "  ${GREEN}${B}NYXUS fully installed.${R}\n\n"
-  printf "  ${GOLD}Wallpaper shortcuts (add to hyprland.conf):${R}\n"
-  printf "    ${DIM}Super+Alt+1  → wallpaper v1 (main)${R}\n"
-  printf "    ${DIM}Super+Alt+2  → wallpaper v2 (cyan/pink)${R}\n"
-  printf "    ${DIM}Super+Alt+3  → wallpaper v3 (gold/purple)${R}\n"
-  printf "    ${DIM}Super+Alt+4  → wallpaper v4 (red/green hacker)${R}\n\n"
+  printf "  ${GOLD}Wallpaper:${R} SIERENGOWSKI (permanent — set at boot)\n"
+  printf "    ${DIM}Super+Alt+W  → reload wallpaper if it ever clears${R}\n\n"
   printf "  ${PURPLE}${B}Lock your screen:${R}  ${DIM}Super+L${R}\n"
   printf "  ${PURPLE}${B}Open launcher:${R}    ${DIM}Super+D${R}\n"
+  printf "  ${PURPLE}${B}Screenshot:${R}       ${DIM}Super+Print  (region)${R}\n"
   printf "  ${PURPLE}${B}Logout menu:${R}      ${DIM}Super+Shift+E${R}\n\n"
   printf "  ${DIM}S I L E N T · D A R K · P U R E L Y   F U N C T I O N A L${R}\n"
 else
