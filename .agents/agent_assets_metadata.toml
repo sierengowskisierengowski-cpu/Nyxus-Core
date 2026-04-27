@@ -168,6 +168,12 @@ uri = "file://attached_assets/nyxus-detroit-v2.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "1IRMdXlHuRyr0ieNzFyHA"
+uri = "file://attached_assets/nyxus-detroit-v3.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -233,3 +239,9 @@ id = "gWM7YcN0DFf62ikirQZkk"
 uri = "file://attached_assets/nyxus-detroit-v2.png"
 type = "image"
 title = "Detroit Masterpiece v2 — Airbrushed"
+
+[[outputs]]
+id = "XhzhoOKLrvDibMcfxGI_J"
+uri = "file://attached_assets/nyxus-detroit-v3.png"
+type = "image"
+title = "Detroit Masterpiece v3 — Max Glow + Real Landmarks"
