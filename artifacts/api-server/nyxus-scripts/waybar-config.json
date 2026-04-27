@@ -119,14 +119,18 @@
 
     "clock#bottom": {
       "interval":   1,
-      "format":     "  {:%H:%M:%S}",
-      "format-alt": "  {:%a · %d %b %Y · %H:%M:%S}",
-      "tooltip-format": "<big>{:%A  %d %B  %Y}</big>\n<tt>{calendar}</tt>",
+      "format":     "  {:%a · %d %b %Y · %H:%M:%S}",
+      "format-alt": "  {:%H:%M:%S}",
+      "tooltip-format": "<span font='JetBrains Mono 13' foreground='#ff00ff'><b> {:%A}</b></span>\n<span font='JetBrains Mono 11' foreground='#ffffff'> {:%d %B %Y}</span>\n\n<span font='JetBrains Mono 10'><tt>{calendar}</tt></span>",
       "calendar": {
-        "mode": "month",
+        "mode":        "month",
+        "on-scroll":   1,
         "format": {
-          "today": "<span color='#f472b6'><b>{}</b></span>",
-          "weekdays": "<span color='#c084fc'>{}</span>"
+          "months":   "<span foreground='#ff00ff' font_weight='bold'>{}</span>",
+          "days":     "<span foreground='#ffffff'>{}</span>",
+          "weeks":    "<span foreground='#0088ff'><b>W{}</b></span>",
+          "weekdays": "<span foreground='#ffff00' font_weight='bold'>{}</span>",
+          "today":    "<span foreground='#39ff14' font_weight='bold'><u>{}</u></span>"
         }
       }
     },
