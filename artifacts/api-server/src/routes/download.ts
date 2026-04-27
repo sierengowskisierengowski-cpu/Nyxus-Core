@@ -30,6 +30,23 @@ const ALLOWED_FILES: Record<string, string> = {
   "rofi-nyxus.rasi":         "rofi-nyxus.rasi",
   "waybar-ticker.sh":        "waybar-ticker.sh",
   "waybar-stats.sh":         "waybar-stats.sh",
+  "wallpaper-rotate.sh":     "wallpaper-rotate.sh",
+  "nyxus-wall-01.png":       "nyxus-wall-01.png",
+  "nyxus-wall-02.png":       "nyxus-wall-02.png",
+  "nyxus-wall-03.png":       "nyxus-wall-03.png",
+  "nyxus-wall-04.png":       "nyxus-wall-04.png",
+  "nyxus-wall-05.png":       "nyxus-wall-05.png",
+  "nyxus-wall-06.png":       "nyxus-wall-06.png",
+  "nyxus-wall-07.png":       "nyxus-wall-07.png",
+  "nyxus-wall-08.png":       "nyxus-wall-08.png",
+  "nyxus-wall-09.png":       "nyxus-wall-09.png",
+  "nyxus-wall-10.png":       "nyxus-wall-10.png",
+  "nyxus-wall-11.png":       "nyxus-wall-11.png",
+  "nyxus-wall-12.png":       "nyxus-wall-12.png",
+  "nyxus-wall-13.png":       "nyxus-wall-13.png",
+  "nyxus-wall-14.png":       "nyxus-wall-14.png",
+  "nyxus-wall-15.png":       "nyxus-wall-15.png",
+  "nyxus-wall-16.png":       "nyxus-wall-16.png",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
