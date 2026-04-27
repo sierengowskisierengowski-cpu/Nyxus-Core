@@ -107,16 +107,6 @@ button {
     cursor:           pointer;
 }
 
-button selected {
-    background-color: rgba(192, 132, 252, 0.14);
-    text-color:       @accent;
-}
-
-button:hover {
-    background-color: @bg-hover;
-    text-color:       @fg1;
-}
-
 /* ── List view ───────────────────────────────────────────── */
 listview {
     background-color: transparent;
@@ -138,10 +128,6 @@ element {
     border-radius:    0;
     cursor:           pointer;
     orientation:      horizontal;
-}
-
-element:hover {
-    background-color: @bg-hover;
 }
 
 element selected.normal {
