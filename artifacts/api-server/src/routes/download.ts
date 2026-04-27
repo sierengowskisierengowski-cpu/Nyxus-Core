@@ -47,6 +47,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-wall-14.png":       "nyxus-wall-14.png",
   "nyxus-wall-15.png":       "nyxus-wall-15.png",
   "nyxus-wall-16.png":       "nyxus-wall-16.png",
+  "nyxus-detroit-main.png":  "nyxus-detroit-main.png",
+  "nyxus-detroit-v10.png":   "nyxus-detroit-v10.png",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
