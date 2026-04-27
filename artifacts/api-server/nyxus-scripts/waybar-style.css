@@ -1,5 +1,5 @@
 /* ────────────────────────────────────────────────────────────────────────────
-   NYXUS Waybar Theme
+   NYXUS Waybar Theme — Signature Edition
    © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ──────────────────────────────────────────────────────────────────────────── */
 
@@ -11,154 +11,191 @@
     padding:       0;
     margin:        0;
     min-height:    0;
-    color:         #888888;
 }
 
 /* ── Bar ─────────────────────────────────────────────────────────────────── */
 window#waybar {
-    background:    rgba(5, 5, 5, 0.94);
-    border-bottom: 1px solid rgba(192, 132, 252, 0.15);
+    background:    rgba(6, 5, 10, 0.96);
+    border-bottom: 1px solid rgba(192, 132, 252, 0.28);
+    box-shadow:    0 1px 18px rgba(192, 132, 252, 0.12);
     color:         #888888;
 }
 
 /* ── Launcher button ─────────────────────────────────────────────────────── */
 #custom-launcher {
-    font-size:      16px;
-    color:          #c084fc;
-    padding:        0 14px;
-    margin:         0;
-    transition:     color 0.15s ease, background 0.15s ease;
-    border-right:   1px solid rgba(192, 132, 252, 0.12);
+    font-size:    18px;
+    color:        #c084fc;
+    padding:      0 16px;
+    margin:       0;
+    background:   rgba(192, 132, 252, 0.06);
+    border-right: 1px solid rgba(192, 132, 252, 0.18);
+    text-shadow:  0 0 12px rgba(192, 132, 252, 0.8),
+                  0 0 28px rgba(192, 132, 252, 0.4);
+    transition:   all 0.18s ease;
 }
 
 #custom-launcher:hover {
-    color:       #e0aaff;
-    background:  rgba(192, 132, 252, 0.1);
+    color:        #e0aaff;
+    background:   rgba(192, 132, 252, 0.14);
+    text-shadow:  0 0 16px rgba(224, 170, 255, 1.0),
+                  0 0 36px rgba(192, 132, 252, 0.7);
 }
 
 /* ── Workspaces ──────────────────────────────────────────────────────────── */
 #workspaces {
-    padding: 0 6px;
-    margin:  0;
+    padding: 0 4px;
 }
 
 #workspaces button {
-    padding:        0 10px;
-    color:          #2e2e2e;
+    padding:        0 11px;
+    color:          #2d2636;
     background:     transparent;
     letter-spacing: 0.08em;
-    transition:     all 0.15s ease;
+    transition:     all 0.18s ease;
     border-bottom:  2px solid transparent;
-    min-width:      28px;
+    min-width:      30px;
+    font-weight:    bold;
 }
 
 #workspaces button:hover {
-    background: rgba(192, 132, 252, 0.08);
-    color:      #777777;
+    background:    rgba(192, 132, 252, 0.10);
+    color:         #9466cc;
+    border-bottom: 2px solid rgba(192, 132, 252, 0.4);
 }
 
 #workspaces button.active {
-    color:         #c084fc;
-    background:    rgba(192, 132, 252, 0.10);
+    color:         #e0aaff;
+    background:    rgba(192, 132, 252, 0.13);
     border-bottom: 2px solid #c084fc;
+    text-shadow:   0 0 10px rgba(192, 132, 252, 0.7);
 }
 
 #workspaces button.urgent {
-    color:      #f87171;
-    background: rgba(248, 113, 113, 0.10);
+    color:         #f87171;
+    background:    rgba(248, 113, 113, 0.10);
+    border-bottom: 2px solid #f87171;
 }
 
 #workspaces button.empty {
-    color: #1a1a1a;
+    color: #1c1624;
 }
 
 /* ── Active window title ─────────────────────────────────────────────────── */
 #window {
-    padding:        0 12px;
-    color:          #3a3a3a;
+    padding:        0 14px;
+    color:          #3a3050;
     font-size:      10px;
     letter-spacing: 0.04em;
 }
 
-/* ── Clock ───────────────────────────────────────────────────────────────── */
+/* ── Clock — center, signature glow ─────────────────────────────────────── */
 #clock {
-    color:          #c084fc;
-    letter-spacing: 0.10em;
-    font-size:      11px;
-    padding:        0 14px;
+    color:          #d8b4fe;
+    letter-spacing: 0.14em;
+    font-size:      12px;
+    font-weight:    bold;
+    padding:        0 16px;
+    text-shadow:    0 0 10px rgba(192, 132, 252, 0.7),
+                    0 0 24px rgba(192, 132, 252, 0.35);
 }
 
-/* ── Right-side shared ───────────────────────────────────────────────────── */
+/* ── Right-side modules shared ───────────────────────────────────────────── */
 #bluetooth,
 #network,
 #pulseaudio,
 #battery,
 #tray {
-    padding:        0 11px;
-    color:          #555555;
+    padding:        0 12px;
     letter-spacing: 0.04em;
     font-size:      11px;
-    transition:     color 0.15s ease;
+    transition:     all 0.18s ease;
+    color:          #4a4060;
+    border-left:    1px solid rgba(192, 132, 252, 0.07);
 }
 
 #bluetooth:hover,
 #network:hover,
 #pulseaudio:hover,
 #battery:hover {
-    color: #aaaaaa;
+    color:      #c084fc;
+    text-shadow: 0 0 8px rgba(192, 132, 252, 0.5);
+    background: rgba(192, 132, 252, 0.06);
 }
 
 /* ── Bluetooth ───────────────────────────────────────────────────────────── */
+#bluetooth {
+    color: #4a4878;
+}
+
 #bluetooth.connected {
-    color: #818cf8;
+    color:       #818cf8;
+    text-shadow: 0 0 8px rgba(129, 140, 248, 0.55);
 }
 
 #bluetooth.disabled {
-    color: #2a2a2a;
+    color: #1e1c2e;
 }
 
 /* ── Network ─────────────────────────────────────────────────────────────── */
 #network.wifi {
-    color: #555555;
+    color: #5a4d78;
 }
 
 #network.ethernet {
-    color: #34d399;
+    color:       #34d399;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
 }
 
 #network.disconnected {
-    color: #f87171;
+    color:       #f87171;
+    text-shadow: 0 0 8px rgba(248, 113, 113, 0.5);
 }
 
 /* ── Volume ──────────────────────────────────────────────────────────────── */
+#pulseaudio {
+    color: #5a4d78;
+}
+
 #pulseaudio.muted {
-    color: #2a2a2a;
+    color: #1e1c2e;
 }
 
 /* ── Battery ─────────────────────────────────────────────────────────────── */
-#battery.charging,
+#battery {
+    color: #5a4d78;
+}
+
+#battery.charging {
+    color:       #34d399;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+
 #battery.plugged,
 #battery.full {
-    color: #34d399;
+    color:       #34d399;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.45);
 }
 
 #battery.warning {
-    color: #fb923c;
+    color:       #fb923c;
+    text-shadow: 0 0 8px rgba(251, 146, 60, 0.5);
 }
 
 #battery.critical {
-    color:     #f87171;
-    animation: battery-pulse 1.2s linear infinite alternate;
+    color:       #f87171;
+    text-shadow: 0 0 10px rgba(248, 113, 113, 0.7);
+    animation:   battery-pulse 1.0s ease-in-out infinite alternate;
 }
 
 @keyframes battery-pulse {
-    to { color: #7f1d1d; }
+    from { color: #f87171; text-shadow: 0 0 10px rgba(248,113,113,0.7); }
+    to   { color: #7f1d1d; text-shadow: 0 0 4px rgba(248,113,113,0.2); }
 }
 
 /* ── Tray ────────────────────────────────────────────────────────────────── */
 #tray {
-    padding:     0 10px;
-    border-left: 1px solid rgba(192, 132, 252, 0.08);
+    padding:     0 12px;
+    border-left: 1px solid rgba(192, 132, 252, 0.12);
 }
 
 #tray > .passive {
@@ -167,20 +204,21 @@ window#waybar {
 
 #tray > .needs-attention {
     -gtk-icon-effect: highlight;
-    color: #f87171;
+    color:            #f87171;
 }
 
 /* ── Tooltip ─────────────────────────────────────────────────────────────── */
 tooltip {
-    background:    rgba(8, 8, 8, 0.97);
-    border:        1px solid rgba(192, 132, 252, 0.18);
-    border-radius: 3px;
-    color:         #aaaaaa;
+    background:    rgba(6, 5, 10, 0.98);
+    border:        1px solid rgba(192, 132, 252, 0.22);
+    border-radius: 4px;
+    color:         #c0b8d0;
     font-family:   "JetBrains Mono", monospace;
     font-size:     10px;
-    padding:       6px 10px;
+    padding:       7px 12px;
+    box-shadow:    0 4px 20px rgba(192, 132, 252, 0.15);
 }
 
 tooltip label {
-    color: #aaaaaa;
+    color: #c0b8d0;
 }
