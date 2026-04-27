@@ -28,6 +28,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "hypridle.conf":           "hypridle.conf",
   "rofi-config.rasi":        "rofi-config.rasi",
   "rofi-nyxus.rasi":         "rofi-nyxus.rasi",
+  "waybar-ticker.sh":        "waybar-ticker.sh",
+  "waybar-stats.sh":         "waybar-stats.sh",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {

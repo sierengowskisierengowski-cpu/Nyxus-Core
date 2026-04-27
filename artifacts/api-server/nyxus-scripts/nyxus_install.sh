@@ -83,8 +83,11 @@ done
 # ── WAYBAR ────────────────────────────────────────────────────────────────────
 hdr "Waybar"
 mkdir -p "$WAYBAR_DIR"
-dl "waybar-config.json" "$WAYBAR_DIR/config.json" || failed=$((failed+1))
-dl "waybar-style.css"   "$WAYBAR_DIR/style.css"   || failed=$((failed+1))
+dl "waybar-config.json" "$WAYBAR_DIR/config.json"    || failed=$((failed+1))
+dl "waybar-style.css"   "$WAYBAR_DIR/style.css"     || failed=$((failed+1))
+dl "waybar-ticker.sh"   "$WAYBAR_DIR/ticker.sh"     || failed=$((failed+1))
+dl "waybar-stats.sh"    "$WAYBAR_DIR/stats.sh"      || failed=$((failed+1))
+chmod +x "$WAYBAR_DIR/ticker.sh" "$WAYBAR_DIR/stats.sh" 2>/dev/null || true
 
 # ── ROFI ─────────────────────────────────────────────────────────────────────
 hdr "Rofi"

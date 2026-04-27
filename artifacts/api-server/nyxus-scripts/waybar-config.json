@@ -1,95 +1,160 @@
-{
-    "layer": "top",
-    "position": "top",
-    "height": 34,
-    "spacing": 0,
+[
+  {
+    "name":       "top",
+    "layer":      "top",
+    "position":   "top",
+    "height":     26,
+    "spacing":    0,
     "margin-top": 0,
     "margin-left": 0,
     "margin-right": 0,
 
-    "modules-left":   ["custom/launcher", "hyprland/workspaces", "hyprland/window"],
-    "modules-center": ["clock"],
-    "modules-right":  ["bluetooth", "network", "pulseaudio", "battery", "tray"],
+    "modules-left":   ["custom/ticker"],
+    "modules-center": ["custom/nyxus"],
+    "modules-right":  ["custom/stats"],
+
+    "custom/ticker": {
+      "exec":     "~/.config/waybar/ticker.sh",
+      "interval": 4,
+      "format":   "{}",
+      "tooltip":  false
+    },
+
+    "custom/nyxus": {
+      "format":  "N Y X U S",
+      "tooltip": false
+    },
+
+    "custom/stats": {
+      "exec":     "~/.config/waybar/stats.sh",
+      "interval": 2,
+      "format":   "{}",
+      "tooltip":  false
+    }
+  },
+
+  {
+    "name":          "bottom",
+    "layer":         "top",
+    "position":      "bottom",
+    "height":        44,
+    "spacing":       0,
+    "margin-bottom": 0,
+    "margin-left":   0,
+    "margin-right":  0,
+
+    "modules-left":   ["custom/launcher"],
+    "modules-center": ["hyprland/workspaces", "hyprland/window"],
+    "modules-right":  ["pulseaudio", "network", "bluetooth", "battery", "tray", "clock"],
 
     "custom/launcher": {
-        "format": "  ",
-        "tooltip": false,
-        "on-click": "rofi -show drun"
+      "format":   "⊞",
+      "tooltip":  false,
+      "on-click": "rofi -show drun"
     },
 
     "hyprland/workspaces": {
-        "format": "{id}",
-        "on-click": "activate",
-        "sort-by-number": true,
-        "active-only": false
+      "format":         "{id}",
+      "on-click":       "activate",
+      "sort-by-number": true,
+      "active-only":    false
     },
 
     "hyprland/window": {
-        "format": "{}",
-        "max-length": 48,
-        "separate-outputs": true
+      "format":           "{}",
+      "max-length":       52,
+      "separate-outputs": true
     },
 
     "clock": {
-        "format": "  {:%H:%M}",
-        "format-alt": "  {:%A, %B %d  ·   %H:%M:%S}",
-        "tooltip-format": "<big>{:%A}</big>\n<tt>{calendar}</tt>",
-        "calendar": {
-            "mode": "month",
-            "weeks-pos": "left",
-            "format": {
-                "today": "<span color='#c084fc'><b>{}</b></span>"
-            }
+      "format":     "  {:%H:%M}",
+      "format-alt": "  {:%a %b %d  ·  %H:%M:%S}",
+      "tooltip-format": "<big>{:%A}</big>\n<tt>{calendar}</tt>",
+      "calendar": {
+        "mode": "month",
+        "format": {
+          "today": "<span color='#c084fc'><b>{}</b></span>"
         }
+      }
     },
 
     "bluetooth": {
-        "format":           "  ",
-        "format-disabled":  "  ",
-        "format-connected": "  {num_connections}",
-        "tooltip-format":   "{controller_alias}\t{controller_address}",
-        "tooltip-format-connected": "{controller_alias}\n\n{device_enumerate}",
-        "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
-        "on-click": "blueman-manager"
+      "format":           "  ",
+      "format-disabled":  "",
+      "format-connected": "  {num_connections}",
+      "tooltip-format":   "{controller_alias}\n{device_enumerate}",
+      "on-click":         "blueman-manager"
     },
 
     "network": {
-        "format-wifi":         "  {signalStrength}%",
-        "format-ethernet":     "  ETH",
-        "format-disconnected": "  ",
-        "format-linked":       "  LINK",
-        "tooltip-format-wifi": "{essid}  {signalStrength}%\n{ipaddr}",
-        "tooltip-format-ethernet": "{ifname}  {ipaddr}",
-        "on-click": "nm-connection-editor"
+      "format-wifi":         "  {signalStrength}%",
+      "format-ethernet":     "  ETH",
+      "format-disconnected": "  ",
+      "tooltip-format-wifi": "{essid}  {signalStrength}%\n{ipaddr}",
+      "on-click":            "nm-connection-editor"
     },
 
     "pulseaudio": {
-        "format":        "  {volume}%",
-        "format-muted":  "  ",
-        "format-icons": {
-            "headphone": "  ",
-            "default":   ["  ", "  ", "  "]
-        },
-        "scroll-step": 5,
-        "on-click": "pavucontrol",
-        "tooltip-format": "{desc} · {volume}%"
+      "format":       "  {volume}%",
+      "format-muted": "  ",
+      "scroll-step":  5,
+      "on-click":     "pavucontrol"
     },
 
     "battery": {
-        "format":          "{icon}  {capacity}%",
-        "format-charging": "  {capacity}%",
-        "format-plugged":  "  {capacity}%",
-        "format-full":     "  Full",
-        "format-icons":    ["  ", "  ", "  ", "  ", "  "],
-        "states": {
-            "warning":  30,
-            "critical": 15
-        },
-        "tooltip-format": "{timeTo}  ·  {power:.1f} W"
+      "format":          "{icon}  {capacity}%",
+      "format-charging": "  {capacity}%",
+      "format-plugged":  "  {capacity}%",
+      "format-icons":    ["  ", "  ", "  ", "  ", "  "],
+      "states": { "warning": 30, "critical": 15 }
     },
 
     "tray": {
-        "icon-size": 14,
-        "spacing":   8
+      "icon-size": 14,
+      "spacing":   6
     }
-}
+  },
+
+  {
+    "name":       "left",
+    "layer":      "top",
+    "position":   "left",
+    "width":      30,
+    "spacing":    0,
+
+    "modules-center": ["hyprland/workspaces"],
+
+    "hyprland/workspaces": {
+      "format":         "{id}",
+      "on-click":       "activate",
+      "sort-by-number": true
+    }
+  },
+
+  {
+    "name":      "right",
+    "layer":     "top",
+    "position":  "right",
+    "width":     30,
+    "spacing":   0,
+
+    "modules-center": ["cpu", "memory", "battery#right"],
+
+    "cpu": {
+      "format":   "{usage}",
+      "interval": 2,
+      "tooltip":  false
+    },
+
+    "memory": {
+      "format":  "{percentage}",
+      "tooltip": false
+    },
+
+    "battery#right": {
+      "format":          "{capacity}",
+      "format-charging": "{capacity}+",
+      "tooltip":         false
+    }
+  }
+]
