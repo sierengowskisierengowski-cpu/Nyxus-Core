@@ -1,44 +1,42 @@
 /* ============================================================
-   NyX.x.OS — Rofi Theme
-   ~/.config/rofi/nyxus.rasi
-
-   Silent. Dark. Purely Functional.
+   NYXUS — Rofi List Launcher  (Super+D)
+   Pure White · Neon Glow · Paint Splatter
    © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ============================================================ */
 
 * {
-    bg0:        rgba(5,   4,   10,  0.97);
-    bg1:        rgba(14,  12,  24,  0.98);
-    bg2:        rgba(22,  18,  38,  0.99);
-    bg-sel:     rgba(192, 132, 252, 0.14);
+    /* Canvas — dead black */
+    canvas:     rgba(3,   2,   6,   0.96);
+    bg1:        rgba(8,   5,   14,  0.99);
+    bg2:        rgba(14,  9,   24,  0.99);
 
-    fg0:        #d8d0ee;
-    fg1:        #a090c0;
-    fg2:        #5a4d78;
+    /* Paint splatter palette */
+    splat-pink:   rgba(255, 0,   255, 1);
+    splat-purple: rgba(204, 0,   255, 1);
+    splat-blue:   rgba(0,   136, 255, 1);
+    splat-green:  rgba(57,  255, 20,  1);
+    splat-yellow: rgba(255, 255, 0,   1);
+    splat-orange: rgba(255, 85,  0,   1);
 
-    accent:     #c084fc;
-    pink:       #f472b6;
-    indigo:     #818cf8;
-    green:      #34d399;
-
-    border-dim: rgba(192, 132, 252, 0.28);
-    border-hot: rgba(192, 132, 252, 0.75);
+    /* Pure white text */
+    fg0:  #ffffff;
+    fg1:  rgba(255, 255, 255, 0.82);
+    fg2:  rgba(255, 255, 255, 0.30);
+    fg-dim: rgba(255, 255, 255, 0.18);
 
     background-color: transparent;
     text-color:       @fg0;
-    border-color:     @border-dim;
-    spacing:          0;
-    padding:          0;
-    margin:           0;
+    border-color:     rgba(255,255,255,0.12);
+    spacing: 0; padding: 0; margin: 0;
 }
 
-/* ── Window ──────────────────────────────────────────────── */
+/* ── Window — white glow border ─────────────────────────── */
 window {
-    width:            540px;
-    background-color: @bg0;
-    border:           1px;
-    border-color:     @border-dim;
-    border-radius:    6px;
+    width:            560px;
+    background-color: @canvas;
+    border:           2px;
+    border-color:     rgba(255, 255, 255, 0.80);
+    border-radius:    4px;
     padding:          0;
     location:         center;
     anchor:           center;
@@ -54,39 +52,40 @@ mainbox {
     children:         [ inputbar, message, mode-switcher, listview ];
 }
 
-/* ── Input bar ───────────────────────────────────────────── */
+/* ── Input bar — white frosted glass ─────────────────────── */
 inputbar {
-    background-color: @bg1;
-    border:           0 0 1px 0;
-    border-color:     rgba(192, 132, 252, 0.20);
-    border-radius:    6px 6px 0 0;
-    padding:          14px 16px;
-    spacing:          10px;
+    background-color: rgba(255, 255, 255, 0.10);
+    border:           0 0 2px 0;
+    border-color:     rgba(255, 255, 255, 0.55);
+    border-radius:    2px 2px 0 0;
+    padding:          14px 18px;
+    spacing:          12px;
     children:         [ prompt, entry ];
 }
 
 prompt {
     background-color: transparent;
-    text-color:       @accent;
-    font:             "JetBrains Mono Bold 12";
-    padding:          0 6px 0 0;
+    text-color:       #ffffff;
+    font:             "JetBrains Mono Bold 13";
+    padding:          0 8px 0 0;
     vertical-align:   0.5;
 }
 
 entry {
     background-color: transparent;
-    text-color:       @fg0;
+    text-color:       #ffffff;
     placeholder:      "type to search...";
     placeholder-color: @fg2;
+    font:             "JetBrains Mono 12";
     cursor:           text;
     vertical-align:   0.5;
 }
 
-/* ── Mode switcher ───────────────────────────────────────── */
+/* ── Mode switcher — splatter buttons ───────────────────── */
 mode-switcher {
-    background-color: @bg2;
+    background-color: rgba(255, 255, 255, 0.04);
     border:           0 0 1px 0;
-    border-color:     rgba(192, 132, 252, 0.10);
+    border-color:     rgba(255, 255, 255, 0.10);
     padding:          6px 12px;
     spacing:          4px;
 }
@@ -94,25 +93,26 @@ mode-switcher {
 button {
     background-color: transparent;
     text-color:       @fg2;
-    border:           0;
-    padding:          4px 12px;
-    border-radius:    3px;
-    font:             "JetBrains Mono 10";
+    border:           1px;
+    border-color:     rgba(255,255,255,0.12);
+    border-radius:    2px;
+    padding:          4px 14px;
+    font:             "JetBrains Mono Bold 10";
     cursor:           pointer;
 }
 
 button selected {
-    background-color: rgba(192, 132, 252, 0.12);
-    text-color:       @accent;
-    border:           0 0 2px 0;
-    border-color:     @accent;
+    background-color: rgba(255, 255, 255, 0.14);
+    text-color:       #ffffff;
+    border:           1px;
+    border-color:     #ffffff;
 }
 
 /* ── List view ───────────────────────────────────────────── */
 listview {
     background-color: transparent;
-    padding:          8px 0;
-    spacing:          0;
+    padding:          6px 0;
+    spacing:          1px;
     lines:            10;
     columns:          1;
     cycle:            true;
@@ -120,56 +120,71 @@ listview {
     scrollbar:        false;
 }
 
-/* ── List items — base ───────────────────────────────────── */
+/* ── Base element ────────────────────────────────────────── */
 element {
     background-color: transparent;
     text-color:       @fg1;
     border:           0;
-    padding:          9px 16px;
+    padding:          9px 18px;
     spacing:          12px;
     border-radius:    0;
     cursor:           pointer;
     orientation:      horizontal;
 }
 
+/* ── Normal / alternating ────────────────────────────────── */
 element.normal {
     background-color: transparent;
     text-color:       @fg1;
 }
 
+element.alternate.normal {
+    background-color: rgba(255, 255, 255, 0.025);
+    text-color:       @fg1;
+}
+
 element.urgent {
-    background-color: rgba(248, 113, 113, 0.06);
-    text-color:       #f87171;
+    background-color: rgba(255, 85, 0, 0.07);
+    text-color:       @splat-orange;
 }
 
 element.active {
-    background-color: rgba(192, 132, 252, 0.06);
-    text-color:       @accent;
+    background-color: rgba(255, 255, 255, 0.04);
+    text-color:       @fg0;
 }
 
-/* ── Selected states ─────────────────────────────────────── */
+/* ── SELECTED — white paint blob + neon left splatter ─────── */
 element selected.normal {
-    background-color: @bg-sel;
-    text-color:       #e0d0ff;
-    border:           0 0 0 2px;
-    border-color:     @accent;
+    background-color: rgba(255, 255, 255, 0.13);
+    text-color:       #ffffff;
+    border:           0 0 0 3px;
+    border-color:     #ff00ff;
+    border-radius:    0 3px 3px 0;
+}
+
+element selected.alternate.normal {
+    background-color: rgba(255, 255, 255, 0.13);
+    text-color:       #ffffff;
+    border:           0 0 0 3px;
+    border-color:     #cc00ff;
+    border-radius:    0 3px 3px 0;
 }
 
 element selected.urgent {
-    background-color: rgba(248, 113, 113, 0.12);
-    text-color:       #fca5a5;
-    border:           0 0 0 2px;
-    border-color:     #f87171;
+    background-color: rgba(255, 85, 0, 0.14);
+    text-color:       @splat-orange;
+    border:           0 0 0 3px;
+    border-color:     @splat-orange;
 }
 
 element selected.active {
-    background-color: rgba(192, 132, 252, 0.14);
-    text-color:       @accent;
-    border:           0 0 0 2px;
-    border-color:     @accent;
+    background-color: rgba(57, 255, 20, 0.10);
+    text-color:       @splat-green;
+    border:           0 0 0 3px;
+    border-color:     @splat-green;
 }
 
-/* ── Element icon + text ─────────────────────────────────── */
+/* ── Icon + text ─────────────────────────────────────────── */
 element-icon {
     background-color: transparent;
     size:             22px;
@@ -181,19 +196,19 @@ element-text {
     text-color:       inherit;
     vertical-align:   0.5;
     font:             "JetBrains Mono 11";
-    highlight:        bold #c084fc;
+    highlight:        bold #ffffff;
 }
 
 /* ── Message / error ─────────────────────────────────────── */
 message {
-    background-color: rgba(248, 113, 113, 0.08);
+    background-color: rgba(255, 85, 0, 0.07);
     border:           0 0 1px 0;
-    border-color:     rgba(248, 113, 113, 0.25);
-    padding:          8px 16px;
+    border-color:     rgba(255, 85, 0, 0.28);
+    padding:          8px 18px;
 }
 
 textbox {
     background-color: transparent;
-    text-color:       #f87171;
+    text-color:       @splat-orange;
     font:             "JetBrains Mono 10";
 }
