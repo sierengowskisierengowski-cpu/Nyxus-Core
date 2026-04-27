@@ -29,33 +29,33 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @keyframes nyxus-rainbow {
-    0%   { box-shadow: 0 0 22px rgba(244,114,182,0.85), inset 0 0 18px rgba(244,114,182,0.18); border-color: rgba(244,114,182,0.75); }
-    17%  { box-shadow: 0 0 22px rgba(251,146,60, 0.85), inset 0 0 18px rgba(251,146,60, 0.18); border-color: rgba(251,146,60, 0.75); }
-    33%  { box-shadow: 0 0 22px rgba(251,191,36, 0.85), inset 0 0 18px rgba(251,191,36, 0.18); border-color: rgba(251,191,36, 0.75); }
-    50%  { box-shadow: 0 0 22px rgba(52,211,153, 0.85), inset 0 0 18px rgba(52,211,153, 0.18); border-color: rgba(52,211,153, 0.75); }
-    67%  { box-shadow: 0 0 22px rgba(56,189,248, 0.85), inset 0 0 18px rgba(56,189,248, 0.18); border-color: rgba(56,189,248, 0.75); }
-    83%  { box-shadow: 0 0 22px rgba(192,132,252,0.85), inset 0 0 18px rgba(192,132,252,0.18); border-color: rgba(192,132,252,0.75); }
-    100% { box-shadow: 0 0 22px rgba(244,114,182,0.85), inset 0 0 18px rgba(244,114,182,0.18); border-color: rgba(244,114,182,0.75); }
+    0%   { opacity: 0.80; }
+    50%  { opacity: 1.00; }
+    100% { opacity: 0.80; }
 }
 
 @keyframes top-pulse {
-    0%, 100% { box-shadow: 0 4px 32px rgba(244,114,182,0.45), 0 -1px 14px rgba(244,114,182,0.25), inset 0 0 70px rgba(244,114,182,0.04); }
-    50%       { box-shadow: 0 4px 55px rgba(244,114,182,0.75), 0 -1px 24px rgba(244,114,182,0.50), inset 0 0 90px rgba(244,114,182,0.09); }
+    0%   { opacity: 0.88; }
+    50%  { opacity: 1.00; }
+    100% { opacity: 0.88; }
 }
 
 @keyframes bottom-pulse {
-    0%, 100% { box-shadow: 0 -4px 32px rgba(249,115,22,0.45), 0 2px 16px rgba(249,115,22,0.22), inset 0 0 80px rgba(249,115,22,0.06); }
-    50%       { box-shadow: 0 -4px 55px rgba(249,115,22,0.75), 0 2px 30px rgba(249,115,22,0.45), inset 0 0 100px rgba(249,115,22,0.12); }
+    0%   { opacity: 0.88; }
+    50%  { opacity: 1.00; }
+    100% { opacity: 0.88; }
 }
 
 @keyframes left-pulse {
-    0%, 100% { box-shadow: 4px 0 36px rgba(192,132,252,0.50), inset 0 0 40px rgba(192,132,252,0.06); }
-    50%       { box-shadow: 4px 0 55px rgba(192,132,252,0.80), inset 0 0 60px rgba(192,132,252,0.12); }
+    0%   { opacity: 0.85; }
+    50%  { opacity: 1.00; }
+    100% { opacity: 0.85; }
 }
 
 @keyframes right-pulse {
-    0%, 100% { box-shadow: -4px 0 36px rgba(251,191,36,0.48), inset 0 0 40px rgba(251,191,36,0.05); }
-    50%       { box-shadow: -4px 0 55px rgba(251,191,36,0.78), inset 0 0 60px rgba(251,191,36,0.10); }
+    0%   { opacity: 0.85; }
+    50%  { opacity: 1.00; }
+    100% { opacity: 0.85; }
 }
 
 @keyframes batt-crit {
@@ -706,12 +706,8 @@ window#waybar.right #battery.critical {
 
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SHARED — animations · tooltip
+   SHARED — tooltip
    ════════════════════════════════════════════════════════════════════════════ */
-@keyframes batt-crit {
-    from { opacity: 1.0; }
-    to   { opacity: 0.3; }
-}
 
 tooltip {
     background:    rgba(12, 8, 22, 0.98);
