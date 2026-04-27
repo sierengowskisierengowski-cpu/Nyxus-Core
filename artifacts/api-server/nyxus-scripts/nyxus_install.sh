@@ -85,6 +85,9 @@ hdr "Waybar"
 mkdir -p "$WAYBAR_DIR"
 dl "waybar-config.json"       "$WAYBAR_DIR/config"            || failed=$((failed+1))
 dl "waybar-style.css"         "$WAYBAR_DIR/style.css"         || failed=$((failed+1))
+# Inject real wallpaper path into CSS (replaces NYXUS_WALL_PATH placeholder)
+WALL_PATH="$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png"
+sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g" "$WAYBAR_DIR/style.css"
 dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
 dl "waybar-stats.sh"          "$WAYBAR_DIR/stats.sh"          || failed=$((failed+1))
 dl "nyxus_quicksettings.py"   "$WAYBAR_DIR/quicksettings.py"  || failed=$((failed+1))

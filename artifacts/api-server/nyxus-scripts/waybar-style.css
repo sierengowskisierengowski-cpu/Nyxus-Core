@@ -154,13 +154,17 @@ window#waybar.top #clock {
    BOTTOM BAR  ·  signature color: ORANGE #f97316
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.bottom {
-    background:    rgba(10, 6, 2, 0.97);
+    background-image:    url("NYXUS_WALL_PATH");
+    background-color:    rgba(6, 3, 1, 0.82);
+    background-size:     cover;
+    background-position: bottom center;
+    background-repeat:   no-repeat;
     color:         #ffffff;
     border-bottom: 4px solid #f97316;
     border-top:    2px solid rgba(249, 115, 22, 0.50);
-    box-shadow: 0 -4px 32px rgba(249, 115, 22, 0.45),
-                0  2px 16px rgba(249, 115, 22, 0.18),
-                inset 0 0 80px rgba(249, 115, 22, 0.04);
+    box-shadow: 0 -4px 32px rgba(249, 115, 22, 0.55),
+                0  2px 16px rgba(249, 115, 22, 0.22),
+                inset 0 0 80px rgba(249, 115, 22, 0.06);
 }
 
 /* ── Workspaces — each number gets its own neon identity ── */
