@@ -210,8 +210,8 @@ window#waybar.top #clock {
    BOTTOM BAR  ·  signature color: ORANGE #f97316
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.bottom {
-    background-image:    url("NYXUS_WALL_PATH");
-    background-color:    rgba(6, 3, 1, 0.92);
+    background-image:    url("NYXUS_TASKBAR_BG");
+    background-color:    rgba(0, 0, 0, 0.18);
     background-size:     cover;
     background-position: center center;
     background-repeat:   no-repeat;
