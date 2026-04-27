@@ -10,18 +10,18 @@
 sort=-time
 layer=overlay
 anchor=top-right
-margin=8
-padding=14
-width=360
+margin=14,14,0,0
+padding=14,16
+width=380
 height=130
 max-visible=5
 max-history=50
 
 # ── Appearance ──────────────────────────────────────────────
-background-color=#080808ee
-text-color=#C8C0C0
-title-color=#f472b6
-border-color=#7B5EA7
+background-color=#06050Aee
+text-color=#c0b8d0
+title-color=#c084fc
+border-color=#c084fc
 border-size=0
 border-left-size=3
 border-radius=6
@@ -46,38 +46,64 @@ format=<b>%s</b>\n%b
 # ── Per-urgency overrides ────────────────────────────────────
 
 [urgency=low]
-background-color=#080808dd
-text-color=#777090
-title-color=#9a7fbc
-border-color=#3a2a5a
+background-color=#06050Add
+text-color=#5a5070
+title-color=#7a6e90
+border-color=#2e2845
 border-left-size=3
 default-timeout=3000
 
 [urgency=normal]
-background-color=#080808ee
-text-color=#C8C0C0
-title-color=#f472b6
-border-color=#7B5EA7
+background-color=#06050Aee
+text-color=#c0b8d0
+title-color=#c084fc
+border-color=#c084fc
 border-left-size=3
 default-timeout=5000
 
 [urgency=high]
-background-color=#0f080a
-text-color=#f8a5a5
+background-color=#100608f0
+text-color=#fca5a5
 title-color=#f87171
 border-color=#f87171
 border-left-size=3
 border-radius=6
 default-timeout=0
 
+# ── App-specific overrides ────────────────────────────────────
+
 [app-name=volume]
-background-color=#080808ee
+background-color=#06050Aee
 border-color=#c084fc
 title-color=#c084fc
 default-timeout=2000
 
 [app-name=brightness]
-background-color=#080808ee
+background-color=#06050Aee
 border-color=#fbbf24
 title-color=#fbbf24
 default-timeout=1800
+
+[app-name=Spotify]
+background-color=#06050Aee
+border-color=#1db954
+title-color=#1db954
+default-timeout=4000
+
+[app-name=discord]
+background-color=#06050Aee
+border-color=#5865f2
+title-color=#818cf8
+default-timeout=4000
+
+[app-name=firefox]
+background-color=#06050Aee
+border-color=#818cf8
+title-color=#818cf8
+default-timeout=4000
+
+[app-name=networkmanager]
+background-color=#06050Aee
+border-color=#34d399
+title-color=#34d399
+default-timeout=3000

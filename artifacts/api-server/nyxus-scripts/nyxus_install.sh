@@ -1,32 +1,24 @@
 #!/usr/bin/env bash
-# ╔══════════════════════════════════════════════════════════╗
-# ║        NYXUS OS — One-Line Installer                     ║
-# ║  Downloads all 4 NYXUS terminal scripts in one shot      ║
-# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-LOCKED        ║
-# ╚══════════════════════════════════════════════════════════╝
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║          NYXUS OS — Full System Installer                            ║
+# ║  Downloads and deploys all NYXUS configs, scripts, and wallpapers    ║
+# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ╚══════════════════════════════════════════════════════════════════════╝
 #
 # Usage:
-#   curl -fsSL <BASE_URL>/api/download/nyxus/nyxus_install.sh | bash
-#
-# Or to a specific directory:
-#   curl -fsSL <BASE_URL>/api/download/nyxus/nyxus_install.sh | bash -s -- --dir ~/nyxus
+#   curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | bash
 
 set -euo pipefail
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
-BASE_URL="${NYXUS_BASE_URL:-https://nyxus-os.replit.app}"
-API_PATH="/api/download/nyxus"
-INSTALL_DIR="${1:-$HOME/.nyxus}"
+BASE_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}"
+API="${BASE_URL}/api/download/nyxus"
 
-SCRIPTS=(
-  "nyxus_preboot.py"
-  "nyxus_motd.py"
-  "nyxus_splash.py"
-  "nyxus_error.py"
-)
-
+SCRIPTS_DIR="$HOME/.nyxus"
 HYPR_DIR="$HOME/.config/hypr"
-WALLPAPER_FILE="nyxus-wallpaper.png"
+WAYBAR_DIR="$HOME/.config/waybar"
+ROFI_DIR="$HOME/.config/rofi"
+MAKO_DIR="$HOME/.config/mako"
 
 # ── COLORS ────────────────────────────────────────────────────────────────────
 R="\033[0m"
@@ -37,74 +29,121 @@ GOLD="\033[38;5;220m"
 DIM="\033[2m"
 GREEN="\033[92m"
 RED="\033[91m"
+CYAN="\033[96m"
+
+ok()   { printf "  ${GREEN}${B}✓${R}  ${DIM}%s${R}\n" "$1"; }
+fail() { printf "  ${RED}${B}✗${R}  ${DIM}%s — FAILED${R}\n" "$1"; }
+hdr()  { printf "\n${PURPLE}${B}── %s ${DIM}%s${R}\n" "$1" "────────────────────────────────────────────"; }
+
+dl() {
+  local name="$1" dest="$2"
+  if curl -fsSL -o "$dest" "${API}/${name}" 2>/dev/null; then
+    ok "$name → $dest"
+  else
+    fail "$name"
+    return 1
+  fi
+}
 
 # ── HEADER ────────────────────────────────────────────────────────────────────
+clear
 echo ""
-printf "${PURPLE}${B}██   ██  ██  ██   ██   ██  ██   ██   █████ ${R}\n"
-printf "${PINK}${B}███  ██   █████    ██ ██   ██   ██  ██     ${R}\n"
-printf "${GOLD}${B}██ █ ██    ███     ███    ██   ██   █████  ${R}\n"
-printf "${PINK}${B}██  ███    ███    ██ ██   ██   ██       ██ ${R}\n"
-printf "${PURPLE}${B}██   ██    ███   ██   ██   █████   █████  ${R}\n"
+printf "${PURPLE}${B}  ███   ██  ██  ██  ██  ██  ██  █████ ${R}\n"
+printf "${PINK}${B}  ████  ██   ████   ██  ██  ██  ██    ${R}\n"
+printf "${GOLD}${B}  ██ █  ██    ██    ██  ██  ██   ████ ${R}\n"
+printf "${PINK}${B}  ██  █ ██    ██     ████   ██      ██ ${R}\n"
+printf "${PURPLE}${B}  ██   ████   ██      ██    ██  █████ ${R}\n"
 echo ""
-printf "  ${DIM}S I L E N T · D A R K · P U R E L Y   F U N C T I O N A L${R}\n"
+printf "  ${DIM}S I L E N T  ·  D A R K  ·  P U R E L Y   F U N C T I O N A L${R}\n"
 printf "  ${DIM}© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED${R}\n"
 echo ""
-printf "${DIM}──────────────────────────────────────────────────────────${R}\n"
 
-# ── INSTALL DIR ───────────────────────────────────────────────────────────────
-mkdir -p "$INSTALL_DIR"
-printf "  ${DIM}Target: ${R}${GOLD}${INSTALL_DIR}${R}\n"
-echo ""
-
-# ── DOWNLOAD EACH SCRIPT ─────────────────────────────────────────────────────
 failed=0
-for script in "${SCRIPTS[@]}"; do
-  printf "  ${DIM}downloading${R} ${PURPLE}${script}${R} ... "
-  url="${BASE_URL}${API_PATH}/${script}"
-  dest="${INSTALL_DIR}/${script}"
 
-  if curl -fsSL -o "$dest" "$url" 2>/dev/null; then
-    chmod +x "$dest"
-    printf "${GREEN}${B}✓${R}\n"
-  else
-    printf "${RED}✗ FAILED${R}\n"
-    failed=$((failed + 1))
-  fi
+# ── PYTHON TERMINAL SCRIPTS ───────────────────────────────────────────────────
+hdr "Python Terminal Scripts"
+mkdir -p "$SCRIPTS_DIR"
+for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py; do
+  dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
-echo ""
-printf "${DIM}──────────────────────────────────────────────────────────${R}\n"
-
-# ── WALLPAPER ─────────────────────────────────────────────────────────────────
-printf "  ${DIM}downloading${R} ${PURPLE}${WALLPAPER_FILE}${R} ... "
+# ── HYPRLAND CONFIGS ──────────────────────────────────────────────────────────
+hdr "Hyprland"
 mkdir -p "$HYPR_DIR"
-wp_url="${BASE_URL}${API_PATH}/${WALLPAPER_FILE}"
-wp_dest="${HYPR_DIR}/${WALLPAPER_FILE}"
+dl "hyprland.conf" "$HYPR_DIR/hyprland.conf" || failed=$((failed+1))
+dl "hyprlock.conf"  "$HYPR_DIR/hyprlock.conf"  || failed=$((failed+1))
+dl "hypridle.conf"  "$HYPR_DIR/hypridle.conf"  || failed=$((failed+1))
 
-if curl -fsSL -o "$wp_dest" "$wp_url" 2>/dev/null; then
-  printf "${GREEN}${B}✓${R}  ${DIM}→ ${HYPR_DIR}/${WALLPAPER_FILE}${R}\n"
-else
-  printf "${RED}✗ FAILED (wallpaper)${R}\n"
-  failed=$((failed + 1))
+# ── WALLPAPERS ────────────────────────────────────────────────────────────────
+hdr "Wallpapers"
+for f in nyxus-wallpaper.png nyxus-wallpaper-v2.png nyxus-wallpaper-v3.png nyxus-wallpaper-v4.png; do
+  dl "$f" "$HYPR_DIR/$f" || failed=$((failed+1))
+done
+
+# ── WAYBAR ────────────────────────────────────────────────────────────────────
+hdr "Waybar"
+mkdir -p "$WAYBAR_DIR"
+dl "waybar-config.json" "$WAYBAR_DIR/config.json" || failed=$((failed+1))
+dl "waybar-style.css"   "$WAYBAR_DIR/style.css"   || failed=$((failed+1))
+
+# ── ROFI ─────────────────────────────────────────────────────────────────────
+hdr "Rofi"
+mkdir -p "$ROFI_DIR"
+dl "rofi-config.rasi" "$ROFI_DIR/config.rasi"  || failed=$((failed+1))
+dl "rofi-nyxus.rasi"  "$ROFI_DIR/nyxus.rasi"   || failed=$((failed+1))
+
+# ── MAKO ─────────────────────────────────────────────────────────────────────
+hdr "Mako Notifications"
+mkdir -p "$MAKO_DIR"
+dl "mako-config" "$MAKO_DIR/config" || failed=$((failed+1))
+
+# ── ALACRITTY ────────────────────────────────────────────────────────────────
+hdr "Alacritty"
+mkdir -p "$HOME/.config/alacritty"
+dl "alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" || failed=$((failed+1))
+
+# ── APPLY LIVE ───────────────────────────────────────────────────────────────
+hdr "Applying Changes"
+
+if command -v hyprctl &>/dev/null; then
+  hyprctl reload && ok "Hyprland config reloaded" || true
 fi
 
+if command -v killall &>/dev/null && pgrep waybar &>/dev/null; then
+  killall waybar; waybar &
+  disown
+  ok "Waybar restarted"
+fi
+
+if command -v swww &>/dev/null; then
+  swww img "$HYPR_DIR/nyxus-wallpaper.png" \
+    --transition-type fade --transition-duration 1.2 && \
+    ok "Wallpaper applied" || true
+fi
+
+if command -v makoctl &>/dev/null; then
+  makoctl reload && ok "Mako reloaded" || true
+fi
+
+# ── SUMMARY ───────────────────────────────────────────────────────────────────
 echo ""
-printf "${DIM}──────────────────────────────────────────────────────────${R}\n"
+printf "${DIM}──────────────────────────────────────────────────────────────────────${R}\n"
+echo ""
 
 if [[ $failed -eq 0 ]]; then
-  printf "  ${GREEN}${B}All scripts installed.${R}\n"
-  echo ""
-  printf "  ${GOLD}Quick start:${R}\n"
-  printf "    ${DIM}python3 ${INSTALL_DIR}/nyxus_preboot.py${R}\n"
-  printf "    ${DIM}python3 ${INSTALL_DIR}/nyxus_motd.py${R}\n"
-  printf "    ${DIM}python3 ${INSTALL_DIR}/nyxus_splash.py${R}\n"
-  printf "    ${DIM}python3 ${INSTALL_DIR}/nyxus_error.py${R}\n"
-  echo ""
-  printf "  ${PURPLE}${B}NYXUS OS is ready. Run the sequence:${R}\n"
-  printf "  ${DIM}python3 ${INSTALL_DIR}/nyxus_preboot.py --next 'python3 ${INSTALL_DIR}/nyxus_splash.py'${R}\n"
+  printf "  ${GREEN}${B}NYXUS fully installed.${R}\n\n"
+  printf "  ${GOLD}Wallpaper shortcuts (add to hyprland.conf):${R}\n"
+  printf "    ${DIM}Super+Alt+1  → wallpaper v1 (main)${R}\n"
+  printf "    ${DIM}Super+Alt+2  → wallpaper v2 (cyan/pink)${R}\n"
+  printf "    ${DIM}Super+Alt+3  → wallpaper v3 (gold/purple)${R}\n"
+  printf "    ${DIM}Super+Alt+4  → wallpaper v4 (red/green hacker)${R}\n\n"
+  printf "  ${PURPLE}${B}Lock your screen:${R}  ${DIM}Super+L${R}\n"
+  printf "  ${PURPLE}${B}Open launcher:${R}    ${DIM}Super+D${R}\n"
+  printf "  ${PURPLE}${B}Logout menu:${R}      ${DIM}Super+Shift+E${R}\n\n"
+  printf "  ${DIM}S I L E N T · D A R K · P U R E L Y   F U N C T I O N A L${R}\n"
 else
-  printf "  ${RED}${B}${failed} script(s) failed to download.${R}\n"
-  printf "  ${DIM}Check your connection or BASE_URL and try again.${R}\n"
+  printf "  ${RED}${B}${failed} item(s) failed.${R}\n"
+  printf "  ${DIM}Check your connection and re-run.${R}\n"
   exit 1
 fi
 
