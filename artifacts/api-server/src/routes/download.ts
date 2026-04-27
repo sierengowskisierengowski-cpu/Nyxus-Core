@@ -33,6 +33,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-sierengowski-clean.png": "nyxus-sierengowski-clean.png",
   "nyxus-taskbar-bg.png":         "nyxus-taskbar-bg.png",
   "nyxus-taskbar-bg2.png":        "nyxus-taskbar-bg2.png",
+  "nyxus_sysmon.py":              "nyxus_sysmon.py",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
