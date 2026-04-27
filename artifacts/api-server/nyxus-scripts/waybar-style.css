@@ -79,81 +79,89 @@ window#waybar.top #temperature,
 window#waybar.top #network,
 window#waybar.top #battery,
 window#waybar.top #clock {
-    background:    rgba(0, 0, 0, 0.55);
+    background:    rgba(0, 0, 0, 0.62);
     border-radius: 6px;
-    border:        1px solid rgba(255,255,255,0.12);
+    border:        2px solid rgba(255,255,255,0.20);
     margin:        3px 2px;
     padding:       2px 10px;
     font-size:     10px;
     font-weight:   bold;
-    color:         #ffffff;
 }
 
-/* CPU — purple glow */
+/* CPU — purple */
 window#waybar.top #cpu {
-    text-shadow: 0 0 10px rgba(192,132,252,0.90),
-                 0 0 22px rgba(192,132,252,0.45);
-    border-color: rgba(192,132,252,0.30);
+    color:        #c084fc;
+    border-color: rgba(192,132,252,0.55);
+    text-shadow:  0 0 10px rgba(192,132,252,0.80),
+                  0 0 22px rgba(192,132,252,0.35);
 }
 
-/* RAM — indigo glow */
+/* RAM — indigo */
 window#waybar.top #memory {
-    text-shadow: 0 0 10px rgba(129,140,248,0.90),
-                 0 0 22px rgba(129,140,248,0.45);
-    border-color: rgba(129,140,248,0.30);
+    color:        #818cf8;
+    border-color: rgba(129,140,248,0.55);
+    text-shadow:  0 0 10px rgba(129,140,248,0.80),
+                  0 0 22px rgba(129,140,248,0.35);
 }
 
-/* Temp — green glow */
+/* Temp — green */
 window#waybar.top #temperature {
-    text-shadow: 0 0 10px rgba(52,211,153,0.90),
-                 0 0 22px rgba(52,211,153,0.45);
-    border-color: rgba(52,211,153,0.30);
+    color:        #34d399;
+    border-color: rgba(52,211,153,0.55);
+    text-shadow:  0 0 10px rgba(52,211,153,0.80),
+                  0 0 22px rgba(52,211,153,0.35);
 }
 window#waybar.top #temperature.critical {
-    color:       #ffffff;
-    text-shadow: 0 0 14px #f87171, 0 0 28px rgba(248,113,113,0.55);
-    border-color: rgba(248,113,113,0.50);
-    animation:   batt-crit 0.8s ease-in-out infinite alternate;
+    color:        #f87171;
+    border-color: rgba(248,113,113,0.70);
+    text-shadow:  0 0 14px #f87171, 0 0 28px rgba(248,113,113,0.55);
+    animation:    batt-crit 0.8s ease-in-out infinite alternate;
 }
 
-/* Network — gold glow */
+/* Network — gold */
 window#waybar.top #network {
-    text-shadow: 0 0 10px rgba(251,191,36,0.90),
-                 0 0 22px rgba(251,191,36,0.45);
-    border-color: rgba(251,191,36,0.30);
+    color:        #fbbf24;
+    border-color: rgba(251,191,36,0.55);
+    text-shadow:  0 0 10px rgba(251,191,36,0.80),
+                  0 0 22px rgba(251,191,36,0.35);
 }
 window#waybar.top #network.disconnected {
-    color:       rgba(255,255,255,0.40);
-    text-shadow: none;
-    border-color: rgba(255,255,255,0.10);
+    color:        rgba(255,255,255,0.35);
+    border-color: rgba(255,255,255,0.15);
+    text-shadow:  none;
 }
 
-/* Battery — pink glow */
+/* Battery — pink */
 window#waybar.top #battery {
-    text-shadow: 0 0 10px rgba(244,114,182,0.90),
-                 0 0 22px rgba(244,114,182,0.45);
-    border-color: rgba(244,114,182,0.30);
+    color:        #f472b6;
+    border-color: rgba(244,114,182,0.55);
+    text-shadow:  0 0 10px rgba(244,114,182,0.80),
+                  0 0 22px rgba(244,114,182,0.35);
 }
 window#waybar.top #battery.charging,
 window#waybar.top #battery.plugged {
-    text-shadow: 0 0 12px #34d399, 0 0 24px rgba(52,211,153,0.45);
-    border-color: rgba(52,211,153,0.35);
+    color:        #34d399;
+    border-color: rgba(52,211,153,0.55);
+    text-shadow:  0 0 12px #34d399, 0 0 24px rgba(52,211,153,0.45);
 }
 window#waybar.top #battery.warning {
-    text-shadow: 0 0 10px #fb923c;
-    border-color: rgba(251,146,60,0.40);
+    color:        #fb923c;
+    border-color: rgba(251,146,60,0.55);
+    text-shadow:  0 0 10px #fb923c;
 }
 window#waybar.top #battery.critical {
-    text-shadow: 0 0 12px #f87171;
-    border-color: rgba(248,113,113,0.50);
-    animation: batt-crit 1s ease-in-out infinite alternate;
+    color:        #f87171;
+    border-color: rgba(248,113,113,0.70);
+    text-shadow:  0 0 12px #f87171;
+    animation:    batt-crit 1s ease-in-out infinite alternate;
 }
 
-/* Clock — sky glow */
+/* Clock — sky */
 window#waybar.top #clock {
-    text-shadow:    0 0 10px rgba(56,189,248,0.90),
-                    0 0 22px rgba(56,189,248,0.45);
-    border-color:   rgba(56,189,248,0.30);
+    color:          #38bdf8;
+    border-color:   rgba(56,189,248,0.55);
+    text-shadow:    0 0 10px rgba(56,189,248,0.80),
+                    0 0 22px rgba(56,189,248,0.35);
     letter-spacing: 0.08em;
 }
 
@@ -395,20 +403,20 @@ window#waybar.bottom #pulseaudio,
 window#waybar.bottom #network,
 window#waybar.bottom #bluetooth,
 window#waybar.bottom #battery {
-    background:    rgba(0, 0, 0, 0.52);
+    background:    rgba(0, 0, 0, 0.62);
     border-radius: 6px;
-    border:        1px solid rgba(255,255,255,0.12);
+    border:        2px solid rgba(255,255,255,0.22);
     margin:        3px 2px;
 }
 
 window#waybar.bottom #pulseaudio {
-    padding:     0 13px;
-    font-size:   12px;
-    font-weight: bold;
-    color:       #f9a8d4;
-    border-left: 3px solid rgba(244,114,182,0.30);
-    text-shadow: 0 0 8px rgba(244,114,182,0.50);
-    transition:  all 0.15s ease;
+    padding:      0 13px;
+    font-size:    12px;
+    font-weight:  bold;
+    color:        #f9a8d4;
+    border-color: rgba(244,114,182,0.60);
+    text-shadow:  0 0 10px rgba(244,114,182,0.70);
+    transition:   all 0.15s ease;
 }
 window#waybar.bottom #pulseaudio:hover {
     color:       #ffffff;
@@ -421,13 +429,13 @@ window#waybar.bottom #pulseaudio.muted {
 }
 
 window#waybar.bottom #network {
-    padding:     0 13px;
-    font-size:   11px;
-    font-weight: bold;
-    color:       #7dd3fc;
-    border-left: 3px solid rgba(56,189,248,0.30);
-    text-shadow: 0 0 8px rgba(56,189,248,0.50);
-    transition:  all 0.15s ease;
+    padding:      0 13px;
+    font-size:    11px;
+    font-weight:  bold;
+    color:        #7dd3fc;
+    border-color: rgba(56,189,248,0.60);
+    text-shadow:  0 0 10px rgba(56,189,248,0.70);
+    transition:   all 0.15s ease;
 }
 window#waybar.bottom #network:hover {
     color:      #ffffff;
@@ -444,13 +452,13 @@ window#waybar.bottom #network.disconnected {
 }
 
 window#waybar.bottom #bluetooth {
-    padding:     0 13px;
-    font-size:   11px;
-    font-weight: bold;
-    color:       #a5b4fc;
-    border-left: 3px solid rgba(129,140,248,0.30);
-    text-shadow: 0 0 8px rgba(129,140,248,0.45);
-    transition:  all 0.15s ease;
+    padding:      0 13px;
+    font-size:    11px;
+    font-weight:  bold;
+    color:        #a5b4fc;
+    border-color: rgba(129,140,248,0.60);
+    text-shadow:  0 0 10px rgba(129,140,248,0.70);
+    transition:   all 0.15s ease;
 }
 window#waybar.bottom #bluetooth:hover {
     color:      #ffffff;
@@ -464,13 +472,13 @@ window#waybar.bottom #bluetooth.connected {
 }
 
 window#waybar.bottom #battery {
-    padding:     0 13px;
-    font-size:   11px;
-    font-weight: bold;
-    color:       #6ee7b7;
-    border-left: 3px solid rgba(52,211,153,0.30);
-    text-shadow: 0 0 8px rgba(52,211,153,0.45);
-    transition:  all 0.15s ease;
+    padding:      0 13px;
+    font-size:    11px;
+    font-weight:  bold;
+    color:        #6ee7b7;
+    border-color: rgba(52,211,153,0.60);
+    text-shadow:  0 0 10px rgba(52,211,153,0.70);
+    transition:   all 0.15s ease;
 }
 window#waybar.bottom #battery:hover {
     color:      #ffffff;
