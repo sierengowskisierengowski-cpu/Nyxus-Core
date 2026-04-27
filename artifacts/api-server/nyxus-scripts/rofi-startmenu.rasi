@@ -150,7 +150,7 @@ element-text {
     horizontal-align: 0.5;
     vertical-align:   0.5;
     font:             "JetBrains Mono 9";
-    highlight:        bold @accent;
+    highlight:        bold #c084fc;
 }
 
 /* ── Mode switcher (All Apps / Run / Windows) ────────────── */
