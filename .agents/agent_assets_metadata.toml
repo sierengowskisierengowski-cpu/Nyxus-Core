@@ -330,6 +330,12 @@ uri = "file://attached_assets/nyxus-sierengowski-v2.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "Z9rcslKq6FA5vrWHbIr2_"
+uri = "file://attached_assets/nyxus-sierengowski-v3.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -557,3 +563,9 @@ id = "C7o1GKJVzV1Vs12vu06qb"
 uri = "file://attached_assets/nyxus-sierengowski-v2.png"
 type = "image"
 title = "SIERENGOWSKI v2 — Detroit Wall"
+
+[[outputs]]
+id = "F-MkbXnSnnK8ebPWjTMeI"
+uri = "file://attached_assets/nyxus-sierengowski-v3.png"
+type = "image"
+title = "SIERENGOWSKI v3 — Detroit Buildings"

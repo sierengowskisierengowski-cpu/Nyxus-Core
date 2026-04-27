@@ -82,7 +82,7 @@ for i in $(seq -w 1 16); do
   dl "nyxus-wall-${i}.png" "$WALLS_DIR/nyxus-wall-${i}.png" || failed=$((failed+1))
 done
 dl "nyxus-detroit-main.png"    "$HYPR_DIR/nyxus-detroit-main.png"         || failed=$((failed+1))
-for f in nyxus-detroit-v10 nyxus-sign-8mile nyxus-packard nyxus-bluewaterbridge nyxus-belleisle nyxus-mcs nyxus-foxtheatre nyxus-guardian nyxus-woodward nyxus-tigerstadium nyxus-easternmarket nyxus-sierengowski nyxus-street-8mile nyxus-street-7mile nyxus-street-6mile nyxus-street-gratiot nyxus-street-mack nyxus-street-woodward-jefferson nyxus-all-signs nyxus-sierengowski-v2; do
+for f in nyxus-detroit-v10 nyxus-sign-8mile nyxus-packard nyxus-bluewaterbridge nyxus-belleisle nyxus-mcs nyxus-foxtheatre nyxus-guardian nyxus-woodward nyxus-tigerstadium nyxus-easternmarket nyxus-sierengowski nyxus-street-8mile nyxus-street-7mile nyxus-street-6mile nyxus-street-gratiot nyxus-street-mack nyxus-street-woodward-jefferson nyxus-all-signs nyxus-sierengowski-v2 nyxus-sierengowski-v3; do
   dl "${f}.png" "$WALLS_DIR/${f}.png" || failed=$((failed+1))
 done
 dl "wallpaper-rotate.sh" "$HYPR_DIR/wallpaper-rotate.sh" || failed=$((failed+1))
