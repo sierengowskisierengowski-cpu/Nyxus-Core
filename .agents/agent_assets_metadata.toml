@@ -336,6 +336,12 @@ uri = "file://attached_assets/nyxus-sierengowski-v3.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "ecGhbHkBacV1rCag6oSVb"
+uri = "file://attached_assets/nyxus-sierengowski-clean.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -569,3 +575,9 @@ id = "F-MkbXnSnnK8ebPWjTMeI"
 uri = "file://attached_assets/nyxus-sierengowski-v3.png"
 type = "image"
 title = "SIERENGOWSKI v3 — Detroit Buildings"
+
+[[outputs]]
+id = "FFvENobry4nrSRe4g9hla"
+uri = "file://attached_assets/nyxus-sierengowski-clean.png"
+type = "image"
+title = "SIERENGOWSKI — Clean Neon Splatter"
