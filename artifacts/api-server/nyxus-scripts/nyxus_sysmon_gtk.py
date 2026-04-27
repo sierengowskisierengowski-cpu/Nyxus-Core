@@ -27,10 +27,10 @@ PALETTE = [
     (1.0,  0.33, 0.0 ),  # C_ORANGE
 ]
 C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE = PALETTE
-C_BG    = (0.012, 0.008, 0.024)
-C_PANEL = (0.027, 0.012, 0.059)
-C_TEXT  = (0.91,  0.88,  0.96 )
-C_DIM   = (0.44,  0.376, 0.627)
+C_BG    = (0.97,  0.97,  0.95 )   # graph paper white
+C_PANEL = (1.00,  1.00,  0.98 )   # card white
+C_TEXT  = (0.14,  0.10,  0.04 )   # dark ink
+C_DIM   = (0.50,  0.44,  0.32 )   # faded ink
 
 PAGES = [
     ("OVERVIEW",  C_PINK),
@@ -70,13 +70,34 @@ def fmt_uptime(secs):
     return f"{d}d {h:02d}:{m:02d}:{s:02d}" if d else f"{h:02d}:{m:02d}:{s:02d}"
 
 def glow_text(cr, x, y, txt, r, g, b, size=12, bold=False):
-    cr.select_font_face("JetBrains Mono", 0, 1 if bold else 0)
+    """Marker-pen style text — slight ink shadow, handwritten font."""
+    cr.select_font_face("Caveat", 0, 1 if bold else 0)
     cr.set_font_size(size)
-    for dx, dy, a in [(-1,-1,.22),(1,-1,.22),(-1,1,.22),(1,1,.22),
-                       (-2,0,.09),(2,0,.09),(0,-2,.09),(0,2,.09),
-                       (-4,0,.04),(4,0,.04),(0,-4,.04),(0,4,.04)]:
-        cr.set_source_rgba(r, g, b, a); cr.move_to(x+dx, y+dy); cr.show_text(txt)
-    cr.set_source_rgba(r, g, b, 1.0); cr.move_to(x, y); cr.show_text(txt)
+    cr.set_source_rgba(r, g, b, 0.18); cr.move_to(x+1.2, y+0.8); cr.show_text(txt)
+    cr.set_source_rgba(r, g, b, 0.92); cr.move_to(x, y); cr.show_text(txt)
+
+def draw_tilt_badge(cr, x, y, txt, color, angle=-4.5, size=9):
+    """Tilted section header badge — the wireframe structural label look."""
+    r, g, b = color
+    cr.save()
+    cr.translate(x, y); cr.rotate(math.radians(angle))
+    cr.select_font_face("JetBrains Mono", 0, 1); cr.set_font_size(size)
+    ext = cr.text_extents(txt)
+    bw = ext.width + 20; bh = size + 10
+    # Fill
+    cr.set_source_rgba(r, g, b, 0.16); cr.rectangle(-6, -(bh-3), bw, bh); cr.fill()
+    # Heavy glow border
+    cr.set_source_rgba(r, g, b, 0.30); cr.set_line_width(8)
+    cr.rectangle(-6, -(bh-3), bw, bh); cr.stroke()
+    # Solid border
+    cr.set_source_rgba(r, g, b, 1.00); cr.set_line_width(2)
+    cr.rectangle(-6, -(bh-3), bw, bh); cr.stroke()
+    # Left accent bar
+    cr.set_source_rgba(r, g, b, 1.0); cr.set_line_width(3)
+    cr.move_to(-6, -(bh-3)); cr.line_to(-6, 3); cr.stroke()
+    # Text
+    cr.set_source_rgba(r, g, b, 1.0); cr.move_to(0, 0); cr.show_text(txt)
+    cr.restore()
 
 def dim_text(cr, x, y, txt, size=9):
     cr.select_font_face("JetBrains Mono", 0, 0)
@@ -88,19 +109,53 @@ def rainbow_bar(cr, x, y, w, h=2):
     for i, (r, g, b) in enumerate(PALETTE):
         cr.set_source_rgba(r, g, b, 0.90); cr.rectangle(x+i*seg, y, seg, h); cr.fill()
 
+import random as _rand
+
+def _rng_seed(x, y, w=0, h=0):
+    return int(x*3 + y*7 + (w or 1)*11 + (h or 1)*13) % 65535
+
+def sketch_rect(cr, x, y, w, h, r, g, b, thick=2.2, jitter=2.8, fill_rgba=None):
+    rng = _rand.Random(_rng_seed(x,y,w,h))
+    j = lambda s=1.0: rng.uniform(-jitter*s, jitter*s)
+    def _path():
+        cr.move_to(x+j(.5),y+j(.5))
+        cr.curve_to(x+w*.33+j(),y+j(),x+w*.67+j(),y+j(),x+w+j(.5),y+j(.5))
+        cr.curve_to(x+w+j(),y+h*.33+j(),x+w+j(),y+h*.67+j(),x+w+j(.5),y+h+j(.5))
+        cr.curve_to(x+w*.67+j(),y+h+j(),x+w*.33+j(),y+h+j(),x+j(.5),y+h+j(.5))
+        cr.curve_to(x+j(),y+h*.67+j(),x+j(),y+h*.33+j(),x+j(.5),y+j(.5))
+        cr.close_path()
+    if fill_rgba:
+        _path(); cr.set_source_rgba(*fill_rgba); cr.fill()
+        rng2 = _rand.Random(_rng_seed(x,y,w,h)); j = lambda s=1.0: rng2.uniform(-jitter*s,jitter*s)
+    _path()
+    cr.set_source_rgba(r,g,b,0.88); cr.set_line_width(thick)
+    cr.set_line_cap(1); cr.set_line_join(1); cr.stroke()
+
 def dot_grid(cr, x, y, w, h, spacing=22):
-    cr.set_source_rgba(0.28, 0.07, 0.50, 0.09)
+    """Graph paper lines — light blue grid like engineering paper."""
+    cr.set_line_width(0.45)
+    # Minor grid lines
     for gx in range(int(x), int(x+w)+spacing, spacing):
-        for gy in range(int(y), int(y+h)+spacing, spacing):
-            cr.arc(gx, gy, 0.9, 0, math.pi*2); cr.fill()
+        cr.set_source_rgba(0.60, 0.72, 0.88, 0.22)
+        cr.move_to(gx, y); cr.line_to(gx, y+h); cr.stroke()
+    for gy in range(int(y), int(y+h)+spacing, spacing):
+        cr.set_source_rgba(0.60, 0.72, 0.88, 0.22)
+        cr.move_to(x, gy); cr.line_to(x+w, gy); cr.stroke()
 
 def neon_card(cr, x, y, w, h, color, tint=0.09):
     r, g, b = color
-    cr.set_source_rgba(*C_PANEL); cr.rectangle(x, y, w, h); cr.fill()
-    dot_grid(cr, x, y, w, h)
-    for lw, a in [(10, 0.12), (5, 0.28), (1.5, 0.90)]:
-        cr.set_source_rgba(r, g, b, a); cr.set_line_width(lw)
-        cr.rectangle(x+1, y+1, w-2, h-2); cr.stroke()
+    # Card paper background
+    cr.set_source_rgb(*C_PANEL); cr.rectangle(x, y, w, h); cr.fill()
+    # Very subtle graph grid inside
+    dot_grid(cr, x, y, w, h, spacing=20)
+    # Drop shadow
+    cr.set_source_rgba(0.22, 0.18, 0.10, 0.16)
+    cr.rectangle(x+4, y+5, w, h); cr.fill()
+    cr.set_source_rgb(*C_PANEL); cr.rectangle(x, y, w, h); cr.fill()
+    dot_grid(cr, x, y, w, h, spacing=20)
+    # Wobbly marker border
+    sketch_rect(cr, x+2, y+2, w-4, h-4, r, g, b, thick=2.5, jitter=2.5,
+                fill_rgba=(r, g, b, 0.05))
 
 def ring_chart(cr, cx, cy, R, pct, color):
     cr.set_source_rgba(*C_DIM, 0.20); cr.set_line_width(14)
@@ -313,41 +368,51 @@ def collect(st):
 # ── CSS ───────────────────────────────────────────────────────────────────────
 
 CSS = b"""
-* { font-family: 'JetBrains Mono', 'Monospace', monospace; }
-window { background-color: #030206; color: #e8e0f5; }
-.nav-bar { background-color: rgba(4,2,10,0.97); border-right: 1px solid rgba(255,0,255,0.18); min-width: 136px; }
+* { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
+window { background-color: #f2f2ee; color: #1a1408; }
+.nav-bar { background-color: rgba(245,242,230,0.98);
+           border-right: 2px solid rgba(140,120,60,0.28); min-width: 148px; }
 .nav-btn {
-    background-color: transparent; color: rgba(112,96,160,0.85);
-    border: none; border-left: 3px solid transparent; border-radius: 0;
-    padding: 10px 14px 10px 16px; font-size: 9px; font-weight: bold;
-    letter-spacing: 2px; min-height: 0;
+    background-color: transparent; color: rgba(80,65,30,0.80);
+    border: none; border-left: 4px solid transparent; border-radius: 0;
+    padding: 11px 14px 11px 16px; font-size: 13px; font-weight: bold;
+    letter-spacing: 1px; min-height: 0;
 }
-.nav-btn:hover { background-color: rgba(255,0,255,0.06); color: #e8e0f5; }
-.nav-active-pink   { background-color: rgba(255,0,255,0.10); color: #ff00ff; border-left: 3px solid #ff00ff; }
-.nav-active-orange { background-color: rgba(255,85,0,0.10);  color: #ff5500; border-left: 3px solid #ff5500; }
-.nav-active-purple { background-color: rgba(204,0,255,0.10); color: #cc00ff; border-left: 3px solid #cc00ff; }
-.nav-active-blue   { background-color: rgba(0,136,255,0.10); color: #0088ff; border-left: 3px solid #0088ff; }
-.nav-active-green  { background-color: rgba(57,255,20,0.10); color: #39ff14; border-left: 3px solid #39ff14; }
-.nav-active-yellow { background-color: rgba(255,255,0,0.10); color: #ffff00; border-left: 3px solid #ffff00; }
+.nav-btn:hover { background-color: rgba(255,0,255,0.06); color: #550070; }
+.nav-active-pink   { background-color: rgba(255,160,220,0.20); color: #880050;
+                     border-left: 4px solid #cc0066; }
+.nav-active-orange { background-color: rgba(255,180,120,0.22); color: #883300;
+                     border-left: 4px solid #cc5500; }
+.nav-active-purple { background-color: rgba(200,160,255,0.22); color: #550099;
+                     border-left: 4px solid #8800cc; }
+.nav-active-blue   { background-color: rgba(160,200,255,0.22); color: #003388;
+                     border-left: 4px solid #0055cc; }
+.nav-active-green  { background-color: rgba(160,255,160,0.22); color: #226600;
+                     border-left: 4px solid #339900; }
+.nav-active-yellow { background-color: rgba(255,250,160,0.30); color: #665500;
+                     border-left: 4px solid #aa8800; }
 .search-e {
-    background-color: rgba(7,3,15,0.85); color: #e8e0f5;
-    border: 1px solid rgba(255,255,0,0.35); border-radius: 2px;
-    padding: 5px 10px; font-size: 11px; box-shadow: none; caret-color: #ffff00;
+    background-color: rgba(255,255,250,0.92); color: #1a1408;
+    border: 2px solid rgba(140,110,40,0.40); border-radius: 4px;
+    padding: 5px 12px; font-size: 13px; box-shadow: none; caret-color: #553300;
 }
 .search-e text { background-color: transparent; }
-.kill-btn { background-color: rgba(255,85,0,0.10); color: #ff5500;
-            border: 1px solid rgba(255,85,0,0.5); border-radius: 2px;
-            padding: 4px 12px; font-size: 10px; font-weight: bold; }
-.kill-btn:hover { background-color: rgba(255,85,0,0.25); }
-.sort-btn { background-color: transparent; color: rgba(255,255,0,0.7);
-            border: 1px solid rgba(255,255,0,0.3); border-radius: 2px;
-            padding: 4px 8px; font-size: 9px; }
-.sort-btn:hover { background-color: rgba(255,255,0,0.08); }
-.sort-active { color: #ffff00; border-color: rgba(255,255,0,0.8); background-color: rgba(255,255,0,0.10); }
-treeview { background-color: #07030f; color: #e8e0f5; font-size: 11px; }
-treeview:selected { background-color: rgba(255,0,255,0.18); color: #ff00ff; }
-treeview header button { background-color: #07030f; color: #cc00ff; border: none;
-                         font-size: 10px; font-weight: bold; border-bottom: 1px solid rgba(204,0,255,0.3); }
+.kill-btn { background-color: rgba(255,200,185,0.75); color: #660000;
+            border: 2px solid rgba(180,60,40,0.45); border-radius: 4px;
+            padding: 5px 12px; font-size: 13px; font-weight: bold; }
+.kill-btn:hover { background-color: rgba(255,215,205,0.95); }
+.sort-btn { background-color: rgba(240,230,200,0.70); color: #665500;
+            border: 1px solid rgba(150,120,30,0.35); border-radius: 3px;
+            padding: 4px 10px; font-size: 12px; }
+.sort-btn:hover { background-color: rgba(255,250,200,0.90); }
+.sort-active { color: #553300; border-color: rgba(140,90,0,0.75);
+               background-color: rgba(255,240,180,0.55); }
+treeview { background-color: #fafaf5; color: #1a1408; font-size: 13px;
+           font-family: 'Caveat', 'Sans'; }
+treeview:selected { background-color: rgba(255,180,220,0.35); color: #550040; }
+treeview header button { background-color: #f0ead6; color: #553300; border: none;
+                         font-size: 12px; font-weight: bold;
+                         border-bottom: 2px solid rgba(140,100,30,0.28); }
 """
 
 COLOR_NAMES = {
@@ -411,27 +476,28 @@ class NyxusSysmonGtk(Gtk.Application):
     # ── Header ─────────────────────────────────────────────────────────────────
     def _draw_hdr(self,area,cr,w,h,_):
         cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
-        cr.set_source_rgba(*C_PURPLE,0.25); cr.set_line_width(1)
+        # Subtle bottom border in warm ink
+        cr.set_source_rgba(0.50,0.40,0.10,0.22); cr.set_line_width(1.5)
         cr.move_to(0,h-1); cr.line_to(w,h-1); cr.stroke()
-        glow_text(cr,14,h-12,"NYXUS_SYSMON",*C_PINK,size=14,bold=True)
-        cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(10)
+        glow_text(cr,14,h-10,"NYXUS  SysMon",*C_PINK[:3],size=16,bold=True)
+        cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
         items=[
             (f"  {self.st.hostname}", C_DIM),
-            (f"  ·  UP:{self.st.uptime}", C_DIM),
-            (f"  ·  {self.st.proc_count} PROCS", C_GREEN),
+            (f"  ·  up {self.st.uptime}", C_DIM),
+            (f"  ·  {self.st.proc_count} procs", C_GREEN),
         ]
-        xp=160
+        xp=200
         for txt,col in items:
-            cr.set_source_rgba(*col,0.85); cr.move_to(xp,h-12); cr.show_text(txt)
+            cr.set_source_rgba(*col,0.85); cr.move_to(xp,h-10); cr.show_text(txt)
             xp+=cr.text_extents(txt).width
         now=datetime.now()
         clk=now.strftime("%H:%M:%S")
-        cr.set_font_size(14); cr.select_font_face("JetBrains Mono",0,1)
+        cr.select_font_face("Caveat",0,1)
         ext=cr.text_extents(clk)
-        glow_text(cr,w-ext.width-16,h-10,clk,*C_YELLOW,size=14,bold=True)
+        glow_text(cr,w-ext.width-16,h-8,clk,*C_ORANGE[:3],size=15,bold=True)
         pulse=0.5+0.5*math.sin(self._anim_t*3)
         cr.set_source_rgba(*C_GREEN,pulse); cr.arc(w-ext.width-36,h//2,5,0,math.pi*2); cr.fill()
-        rainbow_bar(cr,0,h-2,w,2)
+        rainbow_bar(cr,0,h-3,w,3)
 
     # ── Nav sidebar ─────────────────────────────────────────────────────────────
     def _build_nav(self):
@@ -478,18 +544,23 @@ class NyxusSysmonGtk(Gtk.Application):
                ("MEMORY",self.st.ram_pct,C_PURPLE),
                ("NETWORK ↑",self.st.net_up/(1024*1024)*100 if self.st.net_up<100*1024*1024 else 99,C_BLUE),
                ("DISK USAGE",self.st.disks[0]["pct"] if self.st.disks else 0,C_GREEN)]
+        tilts = [-4.5, 3.0, -3.0, 4.5]
         for i,(title,pct,color) in enumerate(cards):
             x=p+i*(cw+p); y=p
+            cx2=x+cw//2; cy2=y+ch//2
+            angle=tilts[i]
+            # Draw entire card (bg + borders + content) in tilted space
+            cr.save()
+            cr.translate(cx2,cy2); cr.rotate(math.radians(angle)); cr.translate(-cx2,-cy2)
             neon_card(cr,x,y,cw,ch,color)
-            glow_text(cr,x+10,y+20,title,*color,size=9,bold=True)
-            cx2,cy2=x+cw//2,y+ch//2+10; R=min(cw,ch)//2-26
-            ring_chart(cr,cx2,cy2,R,pct,pct_color(pct))
+            draw_tilt_badge(cr,x+14,y+22,title,color,angle=0,size=9)
+            R=min(cw,ch)//2-26
+            ring_chart(cr,cx2,cy2+8,R,pct,pct_color(pct))
             txt=f"{pct:.0f}%"
             cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(18)
             ext=cr.text_extents(txt)
-            glow_text(cr,cx2-ext.width/2-ext.x_bearing,cy2-ext.height/2-ext.y_bearing+ext.height,
+            glow_text(cr,cx2-ext.width/2-ext.x_bearing,cy2+18,
                       txt,*pct_color(pct),size=18,bold=True)
-            # Sub-info
             cr.set_font_size(8); cr.select_font_face("JetBrains Mono",0,0)
             cr.set_source_rgba(*C_DIM,0.8)
             if title=="CPU USAGE":
@@ -506,6 +577,7 @@ class NyxusSysmonGtk(Gtk.Application):
             elif title=="DISK USAGE" and self.st.disks:
                 cr.move_to(x+8,y+ch-18); cr.show_text(f"FREE: {fmt_size(self.st.disks[0]['free'])}")
                 cr.move_to(x+8,y+ch-7); cr.show_text(self.st.disks[0]['mount'])
+            cr.restore()
 
         # 3 charts
         ch2=int((h-ch-p*4)//3); cy_off=ch+p*2
@@ -515,7 +587,7 @@ class NyxusSysmonGtk(Gtk.Application):
         for i,(title,hist,color,mx) in enumerate(charts):
             y=cy_off+i*(ch2+p)
             neon_card(cr,p,y,w-p*2,ch2,color or C_BLUE)
-            glow_text(cr,p+10,y+18,title,*(color or C_BLUE),size=9,bold=True)
+            draw_tilt_badge(cr,p+14,y+22,title,color or C_BLUE,angle=-3.5)
             if hist is not None:
                 sparkline(cr,p+8,y+28,w-p*2-16,ch2-36,hist,color,mx)
                 val=f"{list(hist)[-1]:.1f}%" if hist else "--"
@@ -542,7 +614,7 @@ class NyxusSysmonGtk(Gtk.Application):
         # Left: ring + info  Right: cores + history
         lw=min(360,w//2-p*2)
         neon_card(cr,p,p,lw,280,C_ORANGE)
-        glow_text(cr,p+10,p+22,"CPU DETAIL",*C_ORANGE,size=10,bold=True)
+        draw_tilt_badge(cr,p+14,p+26,"CPU DETAIL",C_ORANGE,angle=-4.0)
         ring_chart(cr,p+lw//2,p+120,80,self.st.cpu_pct,pct_color(self.st.cpu_pct))
         txt=f"{self.st.cpu_pct:.1f}%"
         cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(22)
@@ -566,7 +638,7 @@ class NyxusSysmonGtk(Gtk.Application):
         # Right side: per-core bars + history
         rx=p*2+lw; rw=w-rx-p
         neon_card(cr,rx,p,rw,200,C_PINK)
-        glow_text(cr,rx+10,p+22,"PER-CORE UTILIZATION",*C_PINK,size=9,bold=True)
+        draw_tilt_badge(cr,rx+14,p+26,"PER-CORE UTILIZATION",C_PINK,angle=-4.0)
         cores=self.st.cpu_cores
         if cores:
             n=len(cores); bw=max(4,(rw-24)/n)
@@ -584,7 +656,7 @@ class NyxusSysmonGtk(Gtk.Application):
         # History chart
         hch=min(180,h-p*4-210)
         neon_card(cr,rx,p*2+200,rw,hch,C_ORANGE)
-        glow_text(cr,rx+10,p*2+222,"CPU HISTORY (2 MIN)",*C_ORANGE,size=9,bold=True)
+        draw_tilt_badge(cr,rx+14,p*2+226,"CPU HISTORY (2 MIN)",C_ORANGE,angle=-3.5)
         sparkline(cr,rx+8,p*2+234,rw-16,hch-40,self.st.cpu_h,C_ORANGE,100.0)
         cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(10)
         cr.set_source_rgba(*C_ORANGE,0.9); cr.move_to(rx+rw-70,p*2+222)
@@ -602,7 +674,7 @@ class NyxusSysmonGtk(Gtk.Application):
         hw=(w-p*3)//2
         # RAM card
         neon_card(cr,p,p,hw,200,C_PURPLE)
-        glow_text(cr,p+10,p+22,"RAM (PHYSICAL)",*C_PURPLE,size=10,bold=True)
+        draw_tilt_badge(cr,p+14,p+26,"RAM (PHYSICAL)",C_PURPLE,angle=-4.0)
         glow_text(cr,p+12,p+70,f"{self.st.ram_pct:.1f}%",*C_PURPLE,size=44,bold=True)
         hbar(cr,p+12,p+90,hw-24,12,self.st.ram_pct,C_PURPLE)
         info=[("USED",fmt_size(self.st.ram_used)),("FREE",fmt_size(self.st.ram_avail)),
@@ -616,7 +688,7 @@ class NyxusSysmonGtk(Gtk.Application):
             iy+=16
         # Swap card
         neon_card(cr,p*2+hw,p,hw,200,C_BLUE)
-        glow_text(cr,p*2+hw+10,p+22,"SWAP",*C_BLUE,size=10,bold=True)
+        draw_tilt_badge(cr,p*2+hw+14,p+26,"SWAP",C_BLUE,angle=-4.0)
         glow_text(cr,p*2+hw+12,p+70,f"{self.st.swp_pct:.1f}%",*C_BLUE,size=44,bold=True)
         hbar(cr,p*2+hw+12,p+90,hw-24,12,self.st.swp_pct,C_BLUE)
         swinfo=[("USED",fmt_size(self.st.swp_used)),("FREE",fmt_size(max(0,self.st.swp_total-self.st.swp_used))),
@@ -629,11 +701,11 @@ class NyxusSysmonGtk(Gtk.Application):
             iy2+=16
         # RAM history chart
         neon_card(cr,p,p*2+200,w-p*2,200,C_PURPLE)
-        glow_text(cr,p+10,p*2+222,"RAM USAGE HISTORY (2 MIN)",*C_PURPLE,size=9,bold=True)
+        draw_tilt_badge(cr,p+14,p*2+226,"RAM USAGE HISTORY (2 MIN)",C_PURPLE,angle=-3.5)
         sparkline(cr,p+8,p*2+236,w-p*2-16,160,self.st.ram_h,C_PURPLE,100.0)
         # Top memory processes
         neon_card(cr,p,p*3+400,w-p*2,h-p*4-400,C_PURPLE)
-        glow_text(cr,p+10,p*3+422,"TOP MEMORY CONSUMERS",*C_PURPLE,size=9,bold=True)
+        draw_tilt_badge(cr,p+14,p*3+426,"TOP MEMORY CONSUMERS",C_PURPLE,angle=-4.0)
         iy3=p*3+442; bh=h-p*4-400-30
         top_mem=sorted(self.st.procs,key=lambda x:x[5],reverse=True)[:int(bh//14)]
         for pid,name,cpu,mem,status,rss,user in top_mem:
@@ -656,12 +728,12 @@ class NyxusSysmonGtk(Gtk.Application):
         dot_grid(cr,0,0,w,h); p=8
         # Top: total speeds
         neon_card(cr,p,p,w//2-p-4,110,C_ORANGE)
-        glow_text(cr,p+10,p+22,"UPLOAD",*C_ORANGE,size=9,bold=True)
+        draw_tilt_badge(cr,p+14,p+26,"UPLOAD",C_ORANGE,angle=-4.0)
         glow_text(cr,p+12,p+75,fmt_bytes(self.st.net_up),*C_ORANGE,size=22,bold=True)
         dim_text(cr,p+12,p+95,f"TOTAL: {fmt_size(self.st.net_total_sent)}")
 
         neon_card(cr,w//2+p,p,w//2-p-8,110,C_BLUE)
-        glow_text(cr,w//2+p+10,p+22,"DOWNLOAD",*C_BLUE,size=9,bold=True)
+        draw_tilt_badge(cr,w//2+p+14,p+26,"DOWNLOAD",C_BLUE,angle=-4.0)
         glow_text(cr,w//2+p+12,p+75,fmt_bytes(self.st.net_dn),*C_BLUE,size=22,bold=True)
         dim_text(cr,w//2+p+12,p+95,f"TOTAL: {fmt_size(self.st.net_total_recv)}")
 
@@ -689,7 +761,7 @@ class NyxusSysmonGtk(Gtk.Application):
         # History chart
         hcy=p*3+230
         neon_card(cr,p,hcy,w-p*2,160,C_BLUE)
-        glow_text(cr,p+10,hcy+20,"THROUGHPUT HISTORY (2 MIN)",*C_BLUE,size=9,bold=True)
+        draw_tilt_badge(cr,p+14,hcy+24,"THROUGHPUT HISTORY (2 MIN)",C_BLUE,angle=-3.5)
         all_v=list(self.st.up_h)+list(self.st.dn_h); mv=max(all_v) if any(v>0 for v in all_v) else 1.0
         sparkline(cr,p+8,hcy+32,w-p*2-16,116,self.st.up_h,C_ORANGE,mv,grid=False)
         sparkline(cr,p+8,hcy+32,w-p*2-16,116,self.st.dn_h,C_BLUE,mv,grid=False)
@@ -699,7 +771,7 @@ class NyxusSysmonGtk(Gtk.Application):
         # Connection states
         if self.st.net_conns_by_state:
             neon_card(cr,p,hcy+168,w-p*2,min(120,h-hcy-174),C_GREEN)
-            glow_text(cr,p+10,hcy+188,"CONNECTION STATES",*C_GREEN,size=9,bold=True)
+            draw_tilt_badge(cr,p+14,hcy+192,"CONNECTION STATES",C_GREEN,angle=-4.0)
             xc=p+12; yc=hcy+208
             for j,(state,count) in enumerate(sorted(self.st.net_conns_by_state.items(),key=lambda x:-x[1])[:8]):
                 col=C_GREEN if state=="ESTABLISHED" else (C_YELLOW if state=="TIME_WAIT" else C_DIM)
@@ -718,7 +790,7 @@ class NyxusSysmonGtk(Gtk.Application):
         cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
         dot_grid(cr,0,0,w,h); p=8
         neon_card(cr,p,p,w-p*2,min(300,h-p*2),C_GREEN)
-        glow_text(cr,p+10,p+22,"DISK PARTITIONS",*C_GREEN,size=10,bold=True)
+        draw_tilt_badge(cr,p+14,p+26,"DISK PARTITIONS",C_GREEN,angle=-4.0)
         iy=p+44
         for i,d in enumerate(self.st.disks[:8]):
             col=C_ORANGE if d["pct"]>85 else (C_YELLOW if d["pct"]>70 else C_GREEN)
@@ -734,7 +806,7 @@ class NyxusSysmonGtk(Gtk.Application):
         if self.st.disk_io:
             io_y=p*2+min(300,h-p*2)
             neon_card(cr,p,io_y,w-p*2,min(200,h-io_y-p),C_YELLOW)
-            glow_text(cr,p+10,io_y+22,"DISK I/O RATES",*C_YELLOW,size=10,bold=True)
+            draw_tilt_badge(cr,p+14,io_y+26,"DISK I/O RATES",C_YELLOW,angle=-4.0)
             iy2=io_y+44
             for dev,(iod) in list(self.st.disk_io.items())[:6]:
                 if iy2>io_y+190: break
@@ -832,7 +904,7 @@ class NyxusSysmonGtk(Gtk.Application):
         hw=(w-p*3)//2
         # Temperature sensors
         neon_card(cr,p,p,hw,min(300,h-p*2),C_ORANGE)
-        glow_text(cr,p+10,p+22,"TEMPERATURE SENSORS",*C_ORANGE,size=9,bold=True)
+        draw_tilt_badge(cr,p+14,p+26,"TEMPERATURE SENSORS",C_ORANGE,angle=-4.0)
         iy=p+42
         if self.st.temps:
             for chip,readings in self.st.temps.items():
@@ -852,7 +924,7 @@ class NyxusSysmonGtk(Gtk.Application):
         # Battery
         bw=hw; bx=p*2+hw
         neon_card(cr,bx,p,bw,120,C_GREEN)
-        glow_text(cr,bx+10,p+22,"BATTERY",*C_GREEN,size=9,bold=True)
+        draw_tilt_badge(cr,bx+14,p+26,"BATTERY",C_GREEN,angle=-4.0)
         if self.st.battery:
             b=self.st.battery; pct=b["pct"]
             col=C_GREEN if pct>40 else (C_YELLOW if pct>20 else C_ORANGE)
@@ -869,7 +941,7 @@ class NyxusSysmonGtk(Gtk.Application):
             cr.set_source_rgba(*C_DIM,0.5); cr.move_to(bx+12,p+60); cr.show_text("NO BATTERY DETECTED")
         # GPU
         neon_card(cr,bx,p+128,bw,120,C_BLUE)
-        glow_text(cr,bx+10,p+150,"GPU (NVIDIA)",*C_BLUE,size=9,bold=True)
+        draw_tilt_badge(cr,bx+14,p+154,"GPU (NVIDIA)",C_BLUE,angle=-4.0)
         if self.st.gpu_util is not None:
             glow_text(cr,bx+12,p+188,f"{self.st.gpu_util:.0f}%",*C_BLUE,size=32,bold=True)
             ring_chart(cr,bx+bw-60,p+188,35,self.st.gpu_util,C_BLUE)
@@ -884,7 +956,7 @@ class NyxusSysmonGtk(Gtk.Application):
         if self.st.fans:
             fy=p+128+128
             neon_card(cr,bx,fy,bw,min(120,h-fy-p),C_PURPLE)
-            glow_text(cr,bx+10,fy+22,"FANS",*C_PURPLE,size=9,bold=True)
+            draw_tilt_badge(cr,bx+14,fy+26,"FANS",C_PURPLE,angle=-4.0)
             ffy=fy+42
             for chip,readings in self.st.fans.items():
                 for r in readings:
@@ -936,7 +1008,7 @@ class NyxusSysmonGtk(Gtk.Application):
         # Live quick stats
         qy=p*2+min(360,h-p*2)
         neon_card(cr,p,qy,w-p*2,min(120,h-qy-p),C_PINK)
-        glow_text(cr,p+10,qy+22,"LIVE STATUS",*C_PINK,size=9,bold=True)
+        draw_tilt_badge(cr,p+14,qy+26,"LIVE STATUS",C_PINK,angle=-4.0)
         qs=[
             (f"CPU: {self.st.cpu_pct:.1f}%",   C_ORANGE),
             (f"RAM: {self.st.ram_pct:.1f}%",    C_PURPLE),
