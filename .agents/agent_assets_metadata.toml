@@ -30,6 +30,12 @@ uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper-v4.png"
 type = "image"
 title = "ACHII space satellite hacking neon cosmic"
 
+[[generated]]
+id = "fIl4Ak1T0o9NiXPyt2eFQ"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-wallpaper.png"
+type = "image"
+title = "nyxus neon graffiti masterpiece wallpaper"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
