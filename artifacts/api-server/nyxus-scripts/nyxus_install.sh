@@ -91,7 +91,7 @@ chmod +x "$HYPR_DIR/wallpaper-rotate.sh" 2>/dev/null || true
 # ── WAYBAR ────────────────────────────────────────────────────────────────────
 hdr "Waybar"
 mkdir -p "$WAYBAR_DIR"
-dl "waybar-config.json" "$WAYBAR_DIR/config.json"    || failed=$((failed+1))
+dl "waybar-config.json" "$WAYBAR_DIR/config"        || failed=$((failed+1))
 dl "waybar-style.css"   "$WAYBAR_DIR/style.css"     || failed=$((failed+1))
 dl "waybar-ticker.sh"   "$WAYBAR_DIR/ticker.sh"     || failed=$((failed+1))
 dl "waybar-stats.sh"    "$WAYBAR_DIR/stats.sh"      || failed=$((failed+1))
@@ -122,18 +122,19 @@ else
   printf "  ${DIM}Run ${PURPLE}hyprctl reload${DIM} to apply the new config${R}\n"
 fi
 
-if command -v killall &>/dev/null && pgrep waybar &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
-  killall waybar 2>/dev/null; waybar &>/dev/null &
+if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+  pkill waybar 2>/dev/null || true
+  sleep 0.5
+  waybar --config ~/.config/waybar/config --style ~/.config/waybar/style.css &>/dev/null &
   disown
-  ok "Waybar restarted"
+  ok "Waybar restarted — 4-bar NYXUS layout active"
 fi
 
 if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
-  pkill -f "wallpaper-rotate.sh" 2>/dev/null || true
   pkill swaybg 2>/dev/null || true
-  bash "$HYPR_DIR/wallpaper-rotate.sh" &>/dev/null &
+  swaybg -i "$WALLS_DIR/nyxus-sierengowski-clean.png" -m fill &
   disown
-  ok "Wallpaper auto-rotate started (16 walls, 5 min cycle)"
+  ok "Wallpaper set — nyxus-sierengowski-clean"
 fi
 
 if command -v makoctl &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then

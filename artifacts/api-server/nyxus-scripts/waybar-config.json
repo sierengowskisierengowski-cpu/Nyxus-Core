@@ -122,9 +122,9 @@
     "width":      30,
     "spacing":    0,
 
-    "modules-center": ["hyprland/workspaces"],
+    "modules-center": ["hyprland/workspaces#left"],
 
-    "hyprland/workspaces": {
+    "hyprland/workspaces#left": {
       "format":         "{id}",
       "on-click":       "activate",
       "sort-by-number": true
