@@ -63,9 +63,23 @@ failed=0
 # ── PYTHON TERMINAL SCRIPTS ───────────────────────────────────────────────────
 hdr "Python Terminal Scripts"
 mkdir -p "$SCRIPTS_DIR"
-for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py nyxus_sysmon.py; do
+for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
+         nyxus_sysmon.py nyxus_sysmon_gtk.py \
+         nyxus_stickies.py nyxus_notepad.py nyxus_weather.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
+
+# ── GTK4 Python dependencies ──────────────────────────────────────────────────
+hdr "Python GTK4 Dependencies"
+if command -v pacman &>/dev/null; then
+  pacman -S --noconfirm --needed python-gobject python-psutil python-cairo gtk4 2>/dev/null \
+    && ok "python-gobject gtk4 python-psutil python-cairo" \
+    || printf "  ${DIM}(pacman install failed — try: pip install PyGObject psutil pycairo)${R}\n"
+else
+  pip install PyGObject psutil pycairo 2>/dev/null \
+    && ok "PyGObject psutil pycairo (pip)" \
+    || printf "  ${DIM}pip install failed — install python-gobject manually${R}\n"
+fi
 
 # ── HYPRLAND CONFIGS ──────────────────────────────────────────────────────────
 hdr "Hyprland"
@@ -118,6 +132,80 @@ dl "mako-config" "$MAKO_DIR/config" || failed=$((failed+1))
 hdr "Alacritty"
 mkdir -p "$HOME/.config/alacritty"
 dl "alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" || failed=$((failed+1))
+
+# ── DESKTOP ENTRIES — show in Rofi / any app launcher ────────────────────────
+hdr "App Launcher Entries (Rofi / .desktop)"
+DESKTOP_DIR="$HOME/.local/share/applications"
+mkdir -p "$DESKTOP_DIR"
+
+NYXUS_URL="${BASE_URL}"
+
+cat > "$DESKTOP_DIR/nyxus-sysmon.desktop" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS SysMon
+GenericName=System Monitor
+Comment=NYXUS OS live system stats — CPU, RAM, Network, Disk, Processes
+Exec=chromium --app=${NYXUS_URL}/nyxus-sysmon/ --class=nyxus-sysmon
+Icon=$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png
+Terminal=false
+Categories=System;Monitor;
+Keywords=nyxus;sysmon;cpu;ram;network;monitor;stats;
+StartupWMClass=nyxus-sysmon
+EOF
+ok "nyxus-sysmon.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-stickies.desktop" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Stickies
+GenericName=Sticky Notes
+Comment=NYXUS OS neon sticky notes widget
+Exec=chromium --app=${NYXUS_URL}/nyxus-stickies/ --window-size=480,560 --class=nyxus-widget
+Icon=$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png
+Terminal=false
+Categories=Utility;
+Keywords=nyxus;stickies;notes;sticky;widget;
+StartupWMClass=nyxus-widget
+EOF
+ok "nyxus-stickies.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-weather.desktop" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Weather
+GenericName=Weather Widget
+Comment=NYXUS OS animated weather widget with live data
+Exec=chromium --app=${NYXUS_URL}/nyxus-widgets/ --window-size=380,560 --class=nyxus-widget
+Icon=$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png
+Terminal=false
+Categories=Utility;Weather;
+Keywords=nyxus;weather;widget;forecast;
+StartupWMClass=nyxus-widget
+EOF
+ok "nyxus-weather.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-notepad.desktop" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Notepad
+GenericName=Notepad
+Comment=NYXUS OS markdown notepad with auto-save
+Exec=chromium --app=${NYXUS_URL}/nyxus-notepad/ --class=nyxus-notepad
+Icon=$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png
+Terminal=false
+Categories=Utility;TextEditor;
+Keywords=nyxus;notepad;notes;markdown;editor;
+StartupWMClass=nyxus-notepad
+EOF
+ok "nyxus-notepad.desktop"
+
+# Refresh app launcher cache
+update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 
 # ── APPLY LIVE ───────────────────────────────────────────────────────────────
 hdr "Applying Changes"
