@@ -105,24 +105,26 @@ dl "alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" || failed=$((failed
 # ── APPLY LIVE ───────────────────────────────────────────────────────────────
 hdr "Applying Changes"
 
-if command -v hyprctl &>/dev/null; then
-  hyprctl reload && ok "Hyprland config reloaded" || true
+if command -v hyprctl &>/dev/null && [[ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]]; then
+  hyprctl reload &>/dev/null && ok "Hyprland config reloaded" || true
+else
+  printf "  ${DIM}Run ${PURPLE}hyprctl reload${DIM} to apply the new config${R}\n"
 fi
 
-if command -v killall &>/dev/null && pgrep waybar &>/dev/null; then
-  killall waybar; waybar &
+if command -v killall &>/dev/null && pgrep waybar &>/dev/null && [[ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]]; then
+  killall waybar 2>/dev/null; waybar &>/dev/null &
   disown
   ok "Waybar restarted"
 fi
 
-if command -v swww &>/dev/null; then
+if command -v swww &>/dev/null && [[ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]]; then
   swww img "$HYPR_DIR/nyxus-wallpaper.png" \
-    --transition-type fade --transition-duration 1.2 && \
+    --transition-type fade --transition-duration 1.2 &>/dev/null && \
     ok "Wallpaper applied" || true
 fi
 
-if command -v makoctl &>/dev/null; then
-  makoctl reload && ok "Mako reloaded" || true
+if command -v makoctl &>/dev/null && [[ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]]; then
+  makoctl reload 2>/dev/null && ok "Mako reloaded" || true
 fi
 
 # ── SUMMARY ───────────────────────────────────────────────────────────────────
