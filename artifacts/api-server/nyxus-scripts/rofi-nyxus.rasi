@@ -1,49 +1,47 @@
 /* ============================================================
    NYXUS — Rofi List Launcher  (Super+D)
-   Pure White · Neon Glow · Paint Splatter
+   Pure White Canvas · Neon Paint Splatter Palette
    © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ============================================================ */
 
 * {
-    /* Canvas — dead black */
-    canvas:     rgba(3,   2,   6,   0.96);
-    bg1:        rgba(8,   5,   14,  0.99);
-    bg2:        rgba(14,  9,   24,  0.99);
+    /* White canvas */
+    canvas:  rgba(255, 252, 255, 0.97);
+    bg1:     rgba(248, 243, 255, 0.99);
+    bg2:     rgba(238, 230, 252, 0.99);
 
-    /* Paint splatter palette */
-    splat-pink:   rgba(255, 0,   255, 1);
-    splat-purple: rgba(204, 0,   255, 1);
-    splat-blue:   rgba(0,   136, 255, 1);
-    splat-green:  rgba(57,  255, 20,  1);
-    splat-yellow: rgba(255, 255, 0,   1);
-    splat-orange: rgba(255, 85,  0,   1);
+    /* Dark ink text on white */
+    fg0:     #120820;
+    fg1:     #3b2060;
+    fg2:     rgba(80, 50, 130, 0.45);
 
-    /* Pure white text */
-    fg0:  #ffffff;
-    fg1:  rgba(255, 255, 255, 0.82);
-    fg2:  rgba(255, 255, 255, 0.30);
-    fg-dim: rgba(255, 255, 255, 0.18);
+    /* NYXUS paint splatter palette */
+    splat-pink:   #ff00ff;
+    splat-purple: #cc00ff;
+    splat-blue:   #0088ff;
+    splat-green:  #39ff14;
+    splat-yellow: #e6b800;
+    splat-orange: #ff5500;
 
     background-color: transparent;
     text-color:       @fg0;
-    border-color:     rgba(255,255,255,0.12);
+    border-color:     rgba(255, 0, 255, 0.40);
     spacing: 0; padding: 0; margin: 0;
 }
 
-/* ── Window — white glow border ─────────────────────────── */
+/* ── Window — pink paint splatter frame ─────────────────── */
 window {
     width:            560px;
     background-color: @canvas;
-    border:           2px;
-    border-color:     rgba(255, 255, 255, 0.80);
-    border-radius:    4px;
+    border:           3px;
+    border-color:     @splat-pink;
+    border-radius:    5px;
     padding:          0;
     location:         center;
     anchor:           center;
     fullscreen:       false;
 }
 
-/* ── Main box ────────────────────────────────────────────── */
 mainbox {
     background-color: transparent;
     border:           0;
@@ -52,11 +50,11 @@ mainbox {
     children:         [ inputbar, message, mode-switcher, listview ];
 }
 
-/* ── Input bar — white frosted glass ─────────────────────── */
+/* ── Input bar — white with pink splatter bottom ────────── */
 inputbar {
-    background-color: rgba(255, 255, 255, 0.10);
-    border:           0 0 2px 0;
-    border-color:     rgba(255, 255, 255, 0.55);
+    background-color: @bg1;
+    border:           0 0 3px 0;
+    border-color:     @splat-pink;
     border-radius:    2px 2px 0 0;
     padding:          14px 18px;
     spacing:          12px;
@@ -65,7 +63,7 @@ inputbar {
 
 prompt {
     background-color: transparent;
-    text-color:       #ffffff;
+    text-color:       @splat-pink;
     font:             "JetBrains Mono Bold 13";
     padding:          0 8px 0 0;
     vertical-align:   0.5;
@@ -73,7 +71,7 @@ prompt {
 
 entry {
     background-color: transparent;
-    text-color:       #ffffff;
+    text-color:       @fg0;
     placeholder:      "type to search...";
     placeholder-color: @fg2;
     font:             "JetBrains Mono 12";
@@ -81,37 +79,38 @@ entry {
     vertical-align:   0.5;
 }
 
-/* ── Mode switcher — splatter buttons ───────────────────── */
+/* ── Mode switcher — splatter tabs ──────────────────────── */
 mode-switcher {
-    background-color: rgba(255, 255, 255, 0.04);
+    background-color: @bg2;
     border:           0 0 1px 0;
-    border-color:     rgba(255, 255, 255, 0.10);
+    border-color:     rgba(204, 0, 255, 0.20);
     padding:          6px 12px;
     spacing:          4px;
 }
 
 button {
-    background-color: transparent;
+    background-color: @canvas;
     text-color:       @fg2;
     border:           1px;
-    border-color:     rgba(255,255,255,0.12);
-    border-radius:    2px;
+    border-color:     rgba(204, 0, 255, 0.25);
+    border-radius:    3px;
     padding:          4px 14px;
     font:             "JetBrains Mono Bold 10";
     cursor:           pointer;
 }
 
 button selected {
-    background-color: rgba(255, 255, 255, 0.14);
+    background-color: @splat-purple;
     text-color:       #ffffff;
     border:           1px;
-    border-color:     #ffffff;
+    border-color:     @splat-purple;
+    border-radius:    3px;
 }
 
-/* ── List view ───────────────────────────────────────────── */
+/* ── List ────────────────────────────────────────────────── */
 listview {
-    background-color: transparent;
-    padding:          6px 0;
+    background-color: @canvas;
+    padding:          5px 0;
     spacing:          1px;
     lines:            10;
     columns:          1;
@@ -120,7 +119,6 @@ listview {
     scrollbar:        false;
 }
 
-/* ── Base element ────────────────────────────────────────── */
 element {
     background-color: transparent;
     text-color:       @fg1;
@@ -132,56 +130,52 @@ element {
     orientation:      horizontal;
 }
 
-/* ── Normal / alternating ────────────────────────────────── */
 element.normal {
     background-color: transparent;
     text-color:       @fg1;
 }
 
+/* Alternating rows — very subtle purple wash */
 element.alternate.normal {
-    background-color: rgba(255, 255, 255, 0.025);
+    background-color: rgba(204, 0, 255, 0.04);
     text-color:       @fg1;
 }
 
 element.urgent {
-    background-color: rgba(255, 85, 0, 0.07);
+    background-color: rgba(255, 85, 0, 0.08);
     text-color:       @splat-orange;
 }
 
 element.active {
-    background-color: rgba(255, 255, 255, 0.04);
-    text-color:       @fg0;
+    background-color: rgba(255, 0, 255, 0.05);
+    text-color:       @splat-pink;
 }
 
-/* ── SELECTED — white paint blob + neon left splatter ─────── */
+/* ── Selected — paint blob: neon bg + white text ────────── */
 element selected.normal {
-    background-color: rgba(255, 255, 255, 0.13);
+    background-color: @splat-pink;
     text-color:       #ffffff;
-    border:           0 0 0 3px;
-    border-color:     #ff00ff;
-    border-radius:    0 3px 3px 0;
+    border:           0;
+    border-radius:    3px;
 }
 
 element selected.alternate.normal {
-    background-color: rgba(255, 255, 255, 0.13);
+    background-color: @splat-purple;
     text-color:       #ffffff;
-    border:           0 0 0 3px;
-    border-color:     #cc00ff;
-    border-radius:    0 3px 3px 0;
+    border:           0;
+    border-radius:    3px;
 }
 
 element selected.urgent {
-    background-color: rgba(255, 85, 0, 0.14);
-    text-color:       @splat-orange;
-    border:           0 0 0 3px;
-    border-color:     @splat-orange;
+    background-color: @splat-orange;
+    text-color:       #ffffff;
+    border-radius:    3px;
 }
 
 element selected.active {
-    background-color: rgba(57, 255, 20, 0.10);
-    text-color:       @splat-green;
-    border:           0 0 0 3px;
-    border-color:     @splat-green;
+    background-color: @splat-green;
+    text-color:       #120820;
+    border-radius:    3px;
 }
 
 /* ── Icon + text ─────────────────────────────────────────── */
@@ -196,14 +190,14 @@ element-text {
     text-color:       inherit;
     vertical-align:   0.5;
     font:             "JetBrains Mono 11";
-    highlight:        bold #ffffff;
+    highlight:        bold #ff00ff;
 }
 
-/* ── Message / error ─────────────────────────────────────── */
+/* ── Messages ────────────────────────────────────────────── */
 message {
     background-color: rgba(255, 85, 0, 0.07);
     border:           0 0 1px 0;
-    border-color:     rgba(255, 85, 0, 0.28);
+    border-color:     rgba(255, 85, 0, 0.30);
     padding:          8px 18px;
 }
 

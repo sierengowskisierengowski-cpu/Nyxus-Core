@@ -1,39 +1,38 @@
 /* ============================================================
-   NYXUS — Start Menu  (Taskbar button / grid launcher)
-   Pure White · Neon Glow · Paint Splatter Grid
+   NYXUS — Start Menu  (Taskbar grid launcher)
+   Pure White Canvas · Neon Paint Splatter Grid
    © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ============================================================ */
 
 * {
-    canvas:       rgba(3,   2,   6,   0.97);
-    bg1:          rgba(10,  6,   18,  0.99);
-    bg2:          rgba(16,  10,  28,  0.99);
+    canvas:  rgba(255, 252, 255, 0.97);
+    bg1:     rgba(248, 243, 255, 0.99);
+    bg2:     rgba(238, 230, 252, 0.99);
 
-    splat-pink:   rgba(255, 0,   255, 1);
-    splat-purple: rgba(204, 0,   255, 1);
-    splat-blue:   rgba(0,   136, 255, 1);
-    splat-green:  rgba(57,  255, 20,  1);
-    splat-yellow: rgba(255, 255, 0,   1);
-    splat-orange: rgba(255, 85,  0,   1);
+    fg0:     #120820;
+    fg1:     #3b2060;
+    fg2:     rgba(80, 50, 130, 0.45);
 
-    fg0:   #ffffff;
-    fg1:   rgba(255, 255, 255, 0.80);
-    fg2:   rgba(255, 255, 255, 0.28);
-    fg-dim: rgba(255, 255, 255, 0.14);
+    splat-pink:   #ff00ff;
+    splat-purple: #cc00ff;
+    splat-blue:   #0088ff;
+    splat-green:  #39ff14;
+    splat-yellow: #e6b800;
+    splat-orange: #ff5500;
 
     background-color: transparent;
     text-color:       @fg0;
-    border-color:     rgba(255,255,255,0.10);
+    border-color:     rgba(255, 0, 255, 0.40);
     spacing: 0; padding: 0; margin: 0;
 }
 
-/* ── Window — white double-glow border ──────────────────── */
+/* ── Window — white card, pink splatter border ──────────── */
 window {
     width:            720px;
     background-color: @canvas;
-    border:           2px;
-    border-color:     rgba(255, 255, 255, 0.75);
-    border-radius:    10px;
+    border:           3px;
+    border-color:     @splat-pink;
+    border-radius:    12px;
     padding:          0;
     location:         center;
     anchor:           center;
@@ -41,7 +40,6 @@ window {
     fullscreen:       false;
 }
 
-/* ── Main box ────────────────────────────────────────────── */
 mainbox {
     background-color: transparent;
     border:           0;
@@ -50,12 +48,12 @@ mainbox {
     children:         [ inputbar, message, listview, mode-switcher ];
 }
 
-/* ── Search bar — white frosted + pink splatter accent ──── */
+/* ── Search — white glass + pink accent ─────────────────── */
 inputbar {
-    background-color: rgba(255, 255, 255, 0.09);
-    border:           0 0 2px 0;
-    border-color:     rgba(255, 255, 255, 0.50);
-    border-radius:    8px 8px 0 0;
+    background-color: @bg1;
+    border:           0 0 3px 0;
+    border-color:     @splat-pink;
+    border-radius:    9px 9px 0 0;
     padding:          18px 22px;
     spacing:          14px;
     children:         [ prompt, entry ];
@@ -63,7 +61,7 @@ inputbar {
 
 prompt {
     background-color: transparent;
-    text-color:       #ffffff;
+    text-color:       @splat-pink;
     font:             "JetBrains Mono Bold 14";
     padding:          0 10px 0 0;
     vertical-align:   0.5;
@@ -71,7 +69,7 @@ prompt {
 
 entry {
     background-color: transparent;
-    text-color:       #ffffff;
+    text-color:       @fg0;
     placeholder:      "Search apps, files, settings...";
     placeholder-color: @fg2;
     font:             "JetBrains Mono 13";
@@ -79,7 +77,7 @@ entry {
     vertical-align:   0.5;
 }
 
-/* ── App grid — 4 columns paint splatter grid ───────────── */
+/* ── App grid — 4 columns ────────────────────────────────── */
 listview {
     background-color: @canvas;
     padding:          16px 14px;
@@ -92,74 +90,74 @@ listview {
     layout:           vertical;
 }
 
-/* ── App tile — paint canvas card ───────────────────────── */
+/* ── App tile — white card with subtle purple border ─────── */
 element {
-    background-color: transparent;
+    background-color: rgba(255, 255, 255, 0.96);
     text-color:       @fg1;
-    border:           1px;
-    border-color:     rgba(255, 255, 255, 0.07);
+    border:           2px;
+    border-color:     rgba(204, 0, 255, 0.15);
     padding:          12px 6px 10px;
     spacing:          5px;
-    border-radius:    8px;
+    border-radius:    10px;
     cursor:           pointer;
     orientation:      vertical;
 }
 
 element.normal {
-    background-color: rgba(255, 255, 255, 0.04);
+    background-color: rgba(255, 255, 255, 0.90);
     text-color:       @fg1;
-    border-color:     rgba(255, 255, 255, 0.06);
+    border-color:     rgba(204, 0, 255, 0.12);
 }
 
 element.alternate.normal {
-    background-color: rgba(255, 255, 255, 0.06);
+    background-color: rgba(248, 243, 255, 0.92);
     text-color:       @fg1;
-    border-color:     rgba(255, 255, 255, 0.08);
+    border-color:     rgba(255, 0, 255, 0.12);
 }
 
 element.urgent {
-    background-color: rgba(255, 85, 0, 0.08);
+    background-color: rgba(255, 85, 0, 0.06);
     text-color:       @splat-orange;
-    border-color:     rgba(255, 85, 0, 0.30);
+    border-color:     rgba(255, 85, 0, 0.35);
 }
 
 element.active {
-    background-color: rgba(255, 255, 255, 0.07);
-    text-color:       @fg0;
-    border-color:     rgba(255, 255, 255, 0.18);
+    background-color: rgba(255, 0, 255, 0.06);
+    text-color:       @splat-pink;
+    border-color:     rgba(255, 0, 255, 0.30);
 }
 
-/* ── SELECTED — white paint splatter blob ───────────────── */
+/* ── SELECTED — full neon paint splatter blob ────────────── */
 element selected.normal {
-    background-color: rgba(255, 255, 255, 0.16);
+    background-color: @splat-pink;
     text-color:       #ffffff;
     border:           2px;
-    border-color:     rgba(255, 255, 255, 0.90);
-    border-radius:    10px;
+    border-color:     @splat-pink;
+    border-radius:    12px;
 }
 
 element selected.alternate.normal {
-    background-color: rgba(255, 255, 255, 0.14);
+    background-color: @splat-purple;
     text-color:       #ffffff;
     border:           2px;
-    border-color:     rgba(255, 255, 255, 0.85);
-    border-radius:    10px;
+    border-color:     @splat-purple;
+    border-radius:    12px;
 }
 
 element selected.urgent {
-    background-color: rgba(255, 85, 0, 0.14);
-    text-color:       @splat-orange;
+    background-color: @splat-orange;
+    text-color:       #ffffff;
     border:           2px;
     border-color:     @splat-orange;
-    border-radius:    10px;
+    border-radius:    12px;
 }
 
 element selected.active {
-    background-color: rgba(57, 255, 20, 0.10);
-    text-color:       @splat-green;
+    background-color: @splat-blue;
+    text-color:       #ffffff;
     border:           2px;
-    border-color:     @splat-green;
-    border-radius:    10px;
+    border-color:     @splat-blue;
+    border-radius:    12px;
 }
 
 /* ── Icon ────────────────────────────────────────────────── */
@@ -170,51 +168,49 @@ element-icon {
     vertical-align:   0.5;
 }
 
-/* ── Label ───────────────────────────────────────────────── */
 element-text {
     background-color: transparent;
     text-color:       inherit;
     horizontal-align: 0.5;
     vertical-align:   0.5;
     font:             "JetBrains Mono 9";
-    highlight:        bold #ffffff;
+    highlight:        bold #ff00ff;
 }
 
-/* ── Mode bar (Apps · Run · Windows) — splatter buttons ─── */
+/* ── Mode bar — splatter pill buttons ───────────────────── */
 mode-switcher {
-    background-color: rgba(255, 255, 255, 0.05);
-    border:           2px 0 0 0;
-    border-color:     rgba(255, 255, 255, 0.18);
-    border-radius:    0 0 10px 10px;
+    background-color: @bg2;
+    border:           3px 0 0 0;
+    border-color:     rgba(255, 0, 255, 0.25);
+    border-radius:    0 0 12px 12px;
     padding:          10px 16px;
     spacing:          6px;
 }
 
 button {
-    background-color: rgba(255, 255, 255, 0.06);
+    background-color: rgba(255, 255, 255, 0.80);
     text-color:       @fg2;
-    border:           1px;
-    border-color:     rgba(255, 255, 255, 0.10);
-    border-radius:    5px;
+    border:           2px;
+    border-color:     rgba(204, 0, 255, 0.20);
+    border-radius:    6px;
     padding:          6px 20px;
     font:             "JetBrains Mono Bold 10";
     cursor:           pointer;
 }
 
-/* Each mode button selected gets a different splatter color */
 button selected {
-    background-color: rgba(255, 255, 255, 0.16);
+    background-color: @splat-pink;
     text-color:       #ffffff;
-    border:           1px;
-    border-color:     #ff00ff;
-    border-radius:    5px;
+    border:           2px;
+    border-color:     @splat-pink;
+    border-radius:    6px;
 }
 
 /* ── Message ─────────────────────────────────────────────── */
 message {
-    background-color: rgba(255, 85, 0, 0.07);
+    background-color: rgba(255, 85, 0, 0.06);
     border:           0 0 1px 0;
-    border-color:     rgba(255, 85, 0, 0.22);
+    border-color:     rgba(255, 85, 0, 0.25);
     padding:          8px 18px;
 }
 
