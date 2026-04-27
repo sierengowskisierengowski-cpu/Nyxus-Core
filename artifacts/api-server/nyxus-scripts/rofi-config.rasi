@@ -1,0 +1,32 @@
+/* ============================================================
+   NyX.x.OS — Rofi Config
+   ~/.config/rofi/config.rasi
+
+   Silent. Dark. Purely Functional.
+   © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ============================================================ */
+
+configuration {
+    modi:                   "drun,run,window";
+    show-icons:             true;
+    icon-theme:             "Papirus-Dark";
+    display-drun:           " Apps";
+    display-run:            " Run";
+    display-window:         " Windows";
+    drun-display-format:    "{name}";
+    window-format:          "{w} · {c} · {t}";
+    font:                   "JetBrains Mono 12";
+    terminal:               "alacritty";
+    ssh-client:             "ssh";
+    case-sensitive:         false;
+    cycle:                  true;
+    filter:                 "";
+    scroll-method:          0;
+    normalize-match:        true;
+    steal-focus:            false;
+
+    kb-primary-paste:       "Control+V,Shift+Insert";
+    kb-secondary-paste:     "Control+v";
+
+    @theme "nyxus"
+}

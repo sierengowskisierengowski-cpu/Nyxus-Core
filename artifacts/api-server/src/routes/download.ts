@@ -25,6 +25,9 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-wlogout.tar.gz":    "nyxus-wlogout.tar.gz",
   "mako-config":              "mako-config",
   "nyxus-ui-configs.tar.gz": "nyxus-ui-configs.tar.gz",
+  "hypridle.conf":           "hypridle.conf",
+  "rofi-config.rasi":        "rofi-config.rasi",
+  "rofi-nyxus.rasi":         "rofi-nyxus.rasi",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {

@@ -1,0 +1,193 @@
+/* ============================================================
+   NyX.x.OS — Rofi Theme
+   ~/.config/rofi/nyxus.rasi
+
+   Silent. Dark. Purely Functional.
+   © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ============================================================ */
+
+* {
+    /* ── Palette ─────────────────────────────────────────── */
+    bg0:        rgba(5,   4,   10,  0.97);
+    bg1:        rgba(14,  12,  24,  0.98);
+    bg2:        rgba(22,  18,  38,  0.99);
+    bg-sel:     rgba(192, 132, 252, 0.12);
+    bg-hover:   rgba(192, 132, 252, 0.07);
+
+    fg0:        #c0b8d0;
+    fg1:        #7a6e90;
+    fg2:        #3a3050;
+
+    accent:     #c084fc;
+    accent-dim: rgba(192, 132, 252, 0.55);
+    pink:       #f472b6;
+    indigo:     #818cf8;
+    green:      #34d399;
+
+    border:     rgba(192, 132, 252, 0.30);
+    border-sel: rgba(192, 132, 252, 0.75);
+
+    /* ── Reset ───────────────────────────────────────────── */
+    background-color: transparent;
+    text-color:       @fg0;
+    border-color:     @border;
+    spacing:          0;
+    padding:          0;
+    margin:           0;
+}
+
+/* ── Window ──────────────────────────────────────────────── */
+window {
+    width:            560px;
+    background-color: @bg0;
+    border:           1px;
+    border-color:     @border;
+    border-radius:    6px;
+    padding:          0;
+    x-offset:         0;
+    y-offset:         -120px;
+    location:         center;
+    anchor:           center;
+    fullscreen:       false;
+}
+
+/* ── Main box ────────────────────────────────────────────── */
+mainbox {
+    background-color: transparent;
+    border:           0;
+    padding:          0;
+    spacing:          0;
+    children:         [ inputbar, message, mode-switcher, listview ];
+}
+
+/* ── Input bar ───────────────────────────────────────────── */
+inputbar {
+    background-color: @bg1;
+    border:           0 0 1px 0;
+    border-color:     rgba(192, 132, 252, 0.18);
+    border-radius:    6px 6px 0 0;
+    padding:          14px 16px;
+    spacing:          10px;
+    children:         [ prompt, entry ];
+}
+
+prompt {
+    background-color: transparent;
+    text-color:       @accent;
+    font:             "JetBrains Mono Bold 12";
+    padding:          0 6px 0 0;
+    vertical-align:   0.5;
+}
+
+entry {
+    background-color: transparent;
+    text-color:       @fg0;
+    placeholder:      "type to search...";
+    placeholder-color: @fg2;
+    cursor:           text;
+    vertical-align:   0.5;
+}
+
+/* ── Mode switcher ───────────────────────────────────────── */
+mode-switcher {
+    background-color: @bg2;
+    border:           0 0 1px 0;
+    border-color:     rgba(192, 132, 252, 0.10);
+    padding:          6px 12px;
+    spacing:          4px;
+}
+
+button {
+    background-color: transparent;
+    text-color:       @fg2;
+    border:           0;
+    padding:          4px 12px;
+    border-radius:    3px;
+    font:             "JetBrains Mono 10";
+    cursor:           pointer;
+}
+
+button selected {
+    background-color: rgba(192, 132, 252, 0.14);
+    text-color:       @accent;
+}
+
+button:hover {
+    background-color: @bg-hover;
+    text-color:       @fg1;
+}
+
+/* ── List view ───────────────────────────────────────────── */
+listview {
+    background-color: transparent;
+    padding:          8px 0;
+    spacing:          0;
+    lines:            8;
+    columns:          1;
+    cycle:            true;
+    dynamic:          true;
+    scrollbar:        false;
+}
+
+/* ── List items ──────────────────────────────────────────── */
+element {
+    background-color: transparent;
+    border:           0;
+    padding:          9px 16px;
+    spacing:          12px;
+    border-radius:    0;
+    cursor:           pointer;
+    orientation:      horizontal;
+}
+
+element:hover {
+    background-color: @bg-hover;
+}
+
+element selected.normal {
+    background-color: @bg-sel;
+    border:           0 0 0 2px;
+    border-color:     @accent;
+}
+
+element selected.urgent {
+    background-color: rgba(248, 113, 113, 0.12);
+    border:           0 0 0 2px;
+    border-color:     #f87171;
+}
+
+element-icon {
+    background-color: transparent;
+    size:             22px;
+    vertical-align:   0.5;
+}
+
+element-text {
+    background-color: transparent;
+    text-color:       inherit;
+    vertical-align:   0.5;
+    font:             "JetBrains Mono 11";
+    highlight:        bold @accent;
+}
+
+element.urgent > element-text {
+    text-color: #f87171;
+}
+
+element selected > element-text {
+    text-color: @fg0;
+}
+
+/* ── Message / error ─────────────────────────────────────── */
+message {
+    background-color: rgba(248, 113, 113, 0.08);
+    border:           0 0 1px 0;
+    border-color:     rgba(248, 113, 113, 0.25);
+    padding:          8px 16px;
+}
+
+textbox {
+    background-color: transparent;
+    text-color:       #f87171;
+    font:             "JetBrains Mono 10";
+}
