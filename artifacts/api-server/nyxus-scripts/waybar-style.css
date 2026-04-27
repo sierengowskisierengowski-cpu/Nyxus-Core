@@ -4,12 +4,12 @@
    ──────────────────────────────────────────────────────────────────────────── */
 
 /* ── PALETTE
-   Hot Pink  : #f472b6   →  TOP    bar signature
+   Hot Pink  : #ff00ff   →  TOP    bar signature
    Cyan      : #22d3ee   →  BOTTOM bar signature
-   Purple    : #c084fc   →  LEFT   bar signature
-   Gold      : #fbbf24   →  RIGHT  bar signature
-   Indigo    : #818cf8
-   Green     : #34d399
+   Purple    : #cc00ff   →  LEFT   bar signature
+   Gold      : #ffff00   →  RIGHT  bar signature
+   Indigo    : #8800ff
+   Green     : #39ff14
    Text light: #e8e0f5   (readable on all bars)
    BG        : rgba(16, 12, 28, 0.91)
 */
@@ -64,7 +64,7 @@
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   TOP BAR  ·  signature color: HOT PINK #f472b6
+   TOP BAR  ·  signature color: HOT PINK #ff00ff
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.top {
     background-image:    url("NYXUS_WALL_PATH");
@@ -73,26 +73,22 @@ window#waybar.top {
     background-position: 50% 25%;
     background-repeat:   no-repeat;
     color:               #ffffff;
-    border-top:          5px solid #f472b6;
+    border-top:          5px solid #ff00ff;
     border-bottom:       3px solid rgba(244, 114, 182, 0.70);
-    box-shadow:          0 5px 45px rgba(244,114,182,0.75),
-                         0 -1px 20px rgba(244,114,182,0.40);
+    box-shadow:          0 5px 45px rgba(255,0,255,0.75),
+                         0 -1px 20px rgba(255,0,255,0.40);
     animation:           top-pulse 4s ease-in-out infinite;
 }
 
 /* Ticker */
 #custom-ticker {
-    padding:        2px 16px;
+    padding:        0 12px;
     font-size:      10px;
     font-weight:    bold;
-    letter-spacing: 0.10em;
-    color:          #f9a8d4;
-    background:     rgba(244,114,182,0.20);
-    border-radius:  8px;
-    border:         1px solid rgba(244,114,182,0.55);
-    box-shadow:     0 0 10px rgba(244,114,182,0.35);
-    text-shadow:    0 0 8px rgba(244,114,182,0.80);
-    margin:         3px 4px;
+    letter-spacing: 0.07em;
+    color:          #ffffff;
+    text-shadow:    0 0 8px rgba(255,0,255,0.90);
+    margin:         3px 2px;
 }
 
 /* NYXUS wordmark — per-letter colors via Pango, rainbow animated pill */
@@ -102,7 +98,7 @@ window#waybar.top {
     padding:        3px 22px;
     background:     rgba(0, 0, 0, 0.60);
     border-radius:  8px;
-    border:         2px solid rgba(244,114,182,0.75);
+    border:         2px solid rgba(255,0,255,0.75);
     margin:         3px 0;
     animation:      nyxus-rainbow 6s linear infinite;
 }
@@ -132,44 +128,44 @@ window#waybar.top #clock {
 /* CPU — purple */
 window#waybar.top #cpu {
     color:       #ffffff;
-    background:  rgba(192,132,252,0.38);
-    border:      2px solid #c084fc;
-    box-shadow:  0 0 14px rgba(192,132,252,0.65), 0 0 28px rgba(192,132,252,0.25);
-    text-shadow: 0 0 10px rgba(192,132,252,0.90);
+    background:  rgba(204,0,255,0.38);
+    border:      2px solid #cc00ff;
+    box-shadow:  0 0 14px rgba(204,0,255,0.65), 0 0 28px rgba(204,0,255,0.25);
+    text-shadow: 0 0 10px rgba(204,0,255,0.90);
 }
 
 /* RAM — indigo */
 window#waybar.top #memory {
     color:       #ffffff;
-    background:  rgba(129,140,248,0.38);
-    border:      2px solid #818cf8;
-    box-shadow:  0 0 14px rgba(129,140,248,0.65), 0 0 28px rgba(129,140,248,0.25);
-    text-shadow: 0 0 10px rgba(129,140,248,0.90);
+    background:  rgba(136,0,255,0.38);
+    border:      2px solid #8800ff;
+    box-shadow:  0 0 14px rgba(136,0,255,0.65), 0 0 28px rgba(136,0,255,0.25);
+    text-shadow: 0 0 10px rgba(136,0,255,0.90);
 }
 
 /* Temp — green */
 window#waybar.top #temperature {
     color:       #ffffff;
-    background:  rgba(52,211,153,0.38);
-    border:      2px solid #34d399;
-    box-shadow:  0 0 14px rgba(52,211,153,0.65), 0 0 28px rgba(52,211,153,0.25);
-    text-shadow: 0 0 10px rgba(52,211,153,0.90);
+    background:  rgba(57,255,20,0.38);
+    border:      2px solid #39ff14;
+    box-shadow:  0 0 14px rgba(57,255,20,0.65), 0 0 28px rgba(57,255,20,0.25);
+    text-shadow: 0 0 10px rgba(57,255,20,0.90);
 }
 window#waybar.top #temperature.critical {
-    background:  rgba(248,113,113,0.40);
-    border:      2px solid #f87171;
-    box-shadow:  0 0 18px rgba(248,113,113,0.80);
-    text-shadow: 0 0 14px #f87171;
+    background:  rgba(255,34,0,0.40);
+    border:      2px solid #ff2200;
+    box-shadow:  0 0 18px rgba(255,34,0,0.80);
+    text-shadow: 0 0 14px #ff2200;
     animation:   batt-crit 0.8s ease-in-out infinite alternate;
 }
 
 /* Network — gold */
 window#waybar.top #network {
     color:       #ffffff;
-    background:  rgba(251,191,36,0.38);
-    border:      2px solid #fbbf24;
-    box-shadow:  0 0 14px rgba(251,191,36,0.65), 0 0 28px rgba(251,191,36,0.25);
-    text-shadow: 0 0 10px rgba(251,191,36,0.90);
+    background:  rgba(255,255,0,0.38);
+    border:      2px solid #ffff00;
+    box-shadow:  0 0 14px rgba(255,255,0,0.65), 0 0 28px rgba(255,255,0,0.25);
+    text-shadow: 0 0 10px rgba(255,255,0,0.90);
 }
 window#waybar.top #network.disconnected {
     background:  rgba(255,255,255,0.08);
@@ -181,45 +177,45 @@ window#waybar.top #network.disconnected {
 /* Battery — pink */
 window#waybar.top #battery {
     color:       #ffffff;
-    background:  rgba(244,114,182,0.38);
-    border:      2px solid #f472b6;
-    box-shadow:  0 0 14px rgba(244,114,182,0.65), 0 0 28px rgba(244,114,182,0.25);
-    text-shadow: 0 0 10px rgba(244,114,182,0.90);
+    background:  rgba(255,0,255,0.38);
+    border:      2px solid #ff00ff;
+    box-shadow:  0 0 14px rgba(255,0,255,0.65), 0 0 28px rgba(255,0,255,0.25);
+    text-shadow: 0 0 10px rgba(255,0,255,0.90);
 }
 window#waybar.top #battery.charging,
 window#waybar.top #battery.plugged {
-    background:  rgba(52,211,153,0.38);
-    border:      2px solid #34d399;
-    box-shadow:  0 0 14px rgba(52,211,153,0.65);
-    text-shadow: 0 0 12px #34d399;
+    background:  rgba(57,255,20,0.38);
+    border:      2px solid #39ff14;
+    box-shadow:  0 0 14px rgba(57,255,20,0.65);
+    text-shadow: 0 0 12px #39ff14;
 }
 window#waybar.top #battery.warning {
-    background:  rgba(251,146,60,0.38);
-    border:      2px solid #fb923c;
-    box-shadow:  0 0 14px rgba(251,146,60,0.65);
-    text-shadow: 0 0 10px #fb923c;
+    background:  rgba(255,85,0,0.38);
+    border:      2px solid #ff5500;
+    box-shadow:  0 0 14px rgba(255,85,0,0.65);
+    text-shadow: 0 0 10px #ff5500;
 }
 window#waybar.top #battery.critical {
-    background:  rgba(248,113,113,0.40);
-    border:      2px solid #f87171;
-    box-shadow:  0 0 18px rgba(248,113,113,0.80);
-    text-shadow: 0 0 12px #f87171;
+    background:  rgba(255,34,0,0.40);
+    border:      2px solid #ff2200;
+    box-shadow:  0 0 18px rgba(255,34,0,0.80);
+    text-shadow: 0 0 12px #ff2200;
     animation:   batt-crit 1s ease-in-out infinite alternate;
 }
 
 /* Clock — sky */
 window#waybar.top #clock {
     color:          #ffffff;
-    background:     rgba(56,189,248,0.38);
-    border:         2px solid #38bdf8;
-    box-shadow:     0 0 14px rgba(56,189,248,0.65), 0 0 28px rgba(56,189,248,0.25);
-    text-shadow:    0 0 10px rgba(56,189,248,0.90);
+    background:     rgba(0,136,255,0.38);
+    border:         2px solid #0088ff;
+    box-shadow:     0 0 14px rgba(0,136,255,0.65), 0 0 28px rgba(0,136,255,0.25);
+    text-shadow:    0 0 10px rgba(0,136,255,0.90);
     letter-spacing: 0.08em;
 }
 
 
 /* ════════════════════════════════════════════════════════════════════════════
-   BOTTOM BAR  ·  signature color: ORANGE #f97316
+   BOTTOM BAR  ·  signature color: ORANGE #ff5500
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.bottom {
     background-image:    url("NYXUS_TASKBAR_BG");
@@ -228,10 +224,10 @@ window#waybar.bottom {
     background-position: center center;
     background-repeat:   no-repeat;
     color:               #ffffff;
-    border-bottom:       5px solid #f97316;
+    border-bottom:       5px solid #ff5500;
     border-top:          3px solid rgba(249, 115, 22, 0.75);
-    box-shadow:          0 -5px 45px rgba(249,115,22,0.75),
-                         0  2px 20px rgba(249,115,22,0.40);
+    box-shadow:          0 -5px 45px rgba(255,85,0,0.75),
+                         0  2px 20px rgba(255,85,0,0.40);
     animation:           bottom-pulse 4s ease-in-out infinite;
 }
 
@@ -253,166 +249,166 @@ window#waybar.bottom #workspaces button {
 /* 1 — Hot Pink */
 window#waybar.bottom #workspaces button:nth-child(1) {
     color:      #ffffff;
-    background: rgba(244,114,182,0.55);
-    border:     2px solid #f472b6;
-    text-shadow: 0 0 8px rgba(244,114,182,0.90);
-    box-shadow:  0 0 10px rgba(244,114,182,0.40);
+    background: rgba(255,0,255,0.55);
+    border:     2px solid #ff00ff;
+    text-shadow: 0 0 8px rgba(255,0,255,0.90);
+    box-shadow:  0 0 10px rgba(255,0,255,0.40);
 }
 window#waybar.bottom #workspaces button:nth-child(1):hover {
-    background: rgba(244,114,182,0.72);
-    border:     2px solid #f472b6;
-    box-shadow:  0 0 18px rgba(244,114,182,0.70);
+    background: rgba(255,0,255,0.72);
+    border:     2px solid #ff00ff;
+    box-shadow:  0 0 18px rgba(255,0,255,0.70);
 }
 window#waybar.bottom #workspaces button:nth-child(1).occupied {
-    background: rgba(244,114,182,0.68);
-    border:     2px solid #f472b6;
-    box-shadow:  0 0 14px rgba(244,114,182,0.55);
+    background: rgba(255,0,255,0.68);
+    border:     2px solid #ff00ff;
+    box-shadow:  0 0 14px rgba(255,0,255,0.55);
 }
 window#waybar.bottom #workspaces button:nth-child(1).active {
     color:      #ffffff;
-    background: rgba(244,114,182,0.85);
-    border:     3px solid #f472b6;
-    text-shadow: 0 0 16px #f472b6, 0 0 32px rgba(244,114,182,0.90);
-    box-shadow:  0 0 30px rgba(244,114,182,0.95), 0 0 60px rgba(244,114,182,0.55), 0 0 90px rgba(244,114,182,0.25);
+    background: rgba(255,0,255,0.85);
+    border:     3px solid #ff00ff;
+    text-shadow: 0 0 16px #ff00ff, 0 0 32px rgba(255,0,255,0.90);
+    box-shadow:  0 0 30px rgba(255,0,255,0.95), 0 0 60px rgba(255,0,255,0.55), 0 0 90px rgba(255,0,255,0.25);
 }
 
 /* 2 — Orange */
 window#waybar.bottom #workspaces button:nth-child(2) {
     color:      #ffffff;
-    background: rgba(251,146,60,0.55);
-    border:     2px solid #fb923c;
-    text-shadow: 0 0 8px rgba(251,146,60,0.90);
-    box-shadow:  0 0 10px rgba(251,146,60,0.40);
+    background: rgba(255,85,0,0.55);
+    border:     2px solid #ff5500;
+    text-shadow: 0 0 8px rgba(255,85,0,0.90);
+    box-shadow:  0 0 10px rgba(255,85,0,0.40);
 }
 window#waybar.bottom #workspaces button:nth-child(2):hover {
-    background: rgba(251,146,60,0.72);
-    border:     2px solid #fb923c;
-    box-shadow:  0 0 18px rgba(251,146,60,0.70);
+    background: rgba(255,85,0,0.72);
+    border:     2px solid #ff5500;
+    box-shadow:  0 0 18px rgba(255,85,0,0.70);
 }
 window#waybar.bottom #workspaces button:nth-child(2).occupied {
-    background: rgba(251,146,60,0.68);
-    border:     2px solid #fb923c;
-    box-shadow:  0 0 14px rgba(251,146,60,0.55);
+    background: rgba(255,85,0,0.68);
+    border:     2px solid #ff5500;
+    box-shadow:  0 0 14px rgba(255,85,0,0.55);
 }
 window#waybar.bottom #workspaces button:nth-child(2).active {
     color:      #ffffff;
-    background: rgba(251,146,60,0.85);
-    border:     3px solid #fb923c;
-    text-shadow: 0 0 16px #fb923c, 0 0 32px rgba(251,146,60,0.90);
-    box-shadow:  0 0 30px rgba(251,146,60,0.95), 0 0 60px rgba(251,146,60,0.55), 0 0 90px rgba(251,146,60,0.25);
+    background: rgba(255,85,0,0.85);
+    border:     3px solid #ff5500;
+    text-shadow: 0 0 16px #ff5500, 0 0 32px rgba(255,85,0,0.90);
+    box-shadow:  0 0 30px rgba(255,85,0,0.95), 0 0 60px rgba(255,85,0,0.55), 0 0 90px rgba(255,85,0,0.25);
 }
 
 /* 3 — Gold */
 window#waybar.bottom #workspaces button:nth-child(3) {
     color:      #ffffff;
-    background: rgba(251,191,36,0.55);
-    border:     2px solid #fbbf24;
-    text-shadow: 0 0 8px rgba(251,191,36,0.90);
-    box-shadow:  0 0 10px rgba(251,191,36,0.40);
+    background: rgba(255,255,0,0.55);
+    border:     2px solid #ffff00;
+    text-shadow: 0 0 8px rgba(255,255,0,0.90);
+    box-shadow:  0 0 10px rgba(255,255,0,0.40);
 }
 window#waybar.bottom #workspaces button:nth-child(3):hover {
-    background: rgba(251,191,36,0.72);
-    border:     2px solid #fbbf24;
-    box-shadow:  0 0 18px rgba(251,191,36,0.70);
+    background: rgba(255,255,0,0.72);
+    border:     2px solid #ffff00;
+    box-shadow:  0 0 18px rgba(255,255,0,0.70);
 }
 window#waybar.bottom #workspaces button:nth-child(3).occupied {
-    background: rgba(251,191,36,0.68);
-    border:     2px solid #fbbf24;
-    box-shadow:  0 0 14px rgba(251,191,36,0.55);
+    background: rgba(255,255,0,0.68);
+    border:     2px solid #ffff00;
+    box-shadow:  0 0 14px rgba(255,255,0,0.55);
 }
 window#waybar.bottom #workspaces button:nth-child(3).active {
     color:      #ffffff;
-    background: rgba(251,191,36,0.85);
-    border:     3px solid #fbbf24;
-    text-shadow: 0 0 16px #fbbf24, 0 0 32px rgba(251,191,36,0.90);
-    box-shadow:  0 0 30px rgba(251,191,36,0.95), 0 0 60px rgba(251,191,36,0.55), 0 0 90px rgba(251,191,36,0.25);
+    background: rgba(255,255,0,0.85);
+    border:     3px solid #ffff00;
+    text-shadow: 0 0 16px #ffff00, 0 0 32px rgba(255,255,0,0.90);
+    box-shadow:  0 0 30px rgba(255,255,0,0.95), 0 0 60px rgba(255,255,0,0.55), 0 0 90px rgba(255,255,0,0.25);
 }
 
 /* 4 — Mint Green */
 window#waybar.bottom #workspaces button:nth-child(4) {
     color:      #ffffff;
-    background: rgba(52,211,153,0.55);
-    border:     2px solid #34d399;
-    text-shadow: 0 0 8px rgba(52,211,153,0.90);
-    box-shadow:  0 0 10px rgba(52,211,153,0.40);
+    background: rgba(57,255,20,0.55);
+    border:     2px solid #39ff14;
+    text-shadow: 0 0 8px rgba(57,255,20,0.90);
+    box-shadow:  0 0 10px rgba(57,255,20,0.40);
 }
 window#waybar.bottom #workspaces button:nth-child(4):hover {
-    background: rgba(52,211,153,0.72);
-    border:     2px solid #34d399;
-    box-shadow:  0 0 18px rgba(52,211,153,0.70);
+    background: rgba(57,255,20,0.72);
+    border:     2px solid #39ff14;
+    box-shadow:  0 0 18px rgba(57,255,20,0.70);
 }
 window#waybar.bottom #workspaces button:nth-child(4).occupied {
-    background: rgba(52,211,153,0.68);
-    border:     2px solid #34d399;
-    box-shadow:  0 0 14px rgba(52,211,153,0.55);
+    background: rgba(57,255,20,0.68);
+    border:     2px solid #39ff14;
+    box-shadow:  0 0 14px rgba(57,255,20,0.55);
 }
 window#waybar.bottom #workspaces button:nth-child(4).active {
     color:      #ffffff;
-    background: rgba(52,211,153,0.85);
-    border:     3px solid #34d399;
-    text-shadow: 0 0 16px #34d399, 0 0 32px rgba(52,211,153,0.90);
-    box-shadow:  0 0 30px rgba(52,211,153,0.95), 0 0 60px rgba(52,211,153,0.55), 0 0 90px rgba(52,211,153,0.25);
+    background: rgba(57,255,20,0.85);
+    border:     3px solid #39ff14;
+    text-shadow: 0 0 16px #39ff14, 0 0 32px rgba(57,255,20,0.90);
+    box-shadow:  0 0 30px rgba(57,255,20,0.95), 0 0 60px rgba(57,255,20,0.55), 0 0 90px rgba(57,255,20,0.25);
 }
 
 /* 5 — Sky Blue */
 window#waybar.bottom #workspaces button:nth-child(5) {
     color:      #ffffff;
-    background: rgba(56,189,248,0.55);
-    border:     2px solid #38bdf8;
-    text-shadow: 0 0 8px rgba(56,189,248,0.90);
-    box-shadow:  0 0 10px rgba(56,189,248,0.40);
+    background: rgba(0,136,255,0.55);
+    border:     2px solid #0088ff;
+    text-shadow: 0 0 8px rgba(0,136,255,0.90);
+    box-shadow:  0 0 10px rgba(0,136,255,0.40);
 }
 window#waybar.bottom #workspaces button:nth-child(5):hover {
-    background: rgba(56,189,248,0.72);
-    border:     2px solid #38bdf8;
-    box-shadow:  0 0 18px rgba(56,189,248,0.70);
+    background: rgba(0,136,255,0.72);
+    border:     2px solid #0088ff;
+    box-shadow:  0 0 18px rgba(0,136,255,0.70);
 }
 window#waybar.bottom #workspaces button:nth-child(5).occupied {
-    background: rgba(56,189,248,0.68);
-    border:     2px solid #38bdf8;
-    box-shadow:  0 0 14px rgba(56,189,248,0.55);
+    background: rgba(0,136,255,0.68);
+    border:     2px solid #0088ff;
+    box-shadow:  0 0 14px rgba(0,136,255,0.55);
 }
 window#waybar.bottom #workspaces button:nth-child(5).active {
     color:      #ffffff;
-    background: rgba(56,189,248,0.85);
-    border:     3px solid #38bdf8;
-    text-shadow: 0 0 16px #38bdf8, 0 0 32px rgba(56,189,248,0.90);
-    box-shadow:  0 0 30px rgba(56,189,248,0.95), 0 0 60px rgba(56,189,248,0.55), 0 0 90px rgba(56,189,248,0.25);
+    background: rgba(0,136,255,0.85);
+    border:     3px solid #0088ff;
+    text-shadow: 0 0 16px #0088ff, 0 0 32px rgba(0,136,255,0.90);
+    box-shadow:  0 0 30px rgba(0,136,255,0.95), 0 0 60px rgba(0,136,255,0.55), 0 0 90px rgba(0,136,255,0.25);
 }
 
 /* 6 — Purple */
 window#waybar.bottom #workspaces button:nth-child(6) {
     color:      #ffffff;
-    background: rgba(192,132,252,0.55);
-    border:     2px solid #c084fc;
-    text-shadow: 0 0 8px rgba(192,132,252,0.90);
-    box-shadow:  0 0 10px rgba(192,132,252,0.40);
+    background: rgba(204,0,255,0.55);
+    border:     2px solid #cc00ff;
+    text-shadow: 0 0 8px rgba(204,0,255,0.90);
+    box-shadow:  0 0 10px rgba(204,0,255,0.40);
 }
 window#waybar.bottom #workspaces button:nth-child(6):hover {
-    background: rgba(192,132,252,0.72);
-    border:     2px solid #c084fc;
-    box-shadow:  0 0 18px rgba(192,132,252,0.70);
+    background: rgba(204,0,255,0.72);
+    border:     2px solid #cc00ff;
+    box-shadow:  0 0 18px rgba(204,0,255,0.70);
 }
 window#waybar.bottom #workspaces button:nth-child(6).occupied {
-    background: rgba(192,132,252,0.68);
-    border:     2px solid #c084fc;
-    box-shadow:  0 0 14px rgba(192,132,252,0.55);
+    background: rgba(204,0,255,0.68);
+    border:     2px solid #cc00ff;
+    box-shadow:  0 0 14px rgba(204,0,255,0.55);
 }
 window#waybar.bottom #workspaces button:nth-child(6).active {
     color:      #ffffff;
-    background: rgba(192,132,252,0.85);
-    border:     3px solid #c084fc;
-    text-shadow: 0 0 16px #c084fc, 0 0 32px rgba(192,132,252,0.90);
-    box-shadow:  0 0 30px rgba(192,132,252,0.95), 0 0 60px rgba(192,132,252,0.55), 0 0 90px rgba(192,132,252,0.25);
+    background: rgba(204,0,255,0.85);
+    border:     3px solid #cc00ff;
+    text-shadow: 0 0 16px #cc00ff, 0 0 32px rgba(204,0,255,0.90);
+    box-shadow:  0 0 30px rgba(204,0,255,0.95), 0 0 60px rgba(204,0,255,0.55), 0 0 90px rgba(204,0,255,0.25);
 }
 
 /* Urgent — always red */
 window#waybar.bottom #workspaces button.urgent {
     color:      #ffffff;
-    background: rgba(248,113,113,0.75);
-    border:     3px solid #f87171;
-    text-shadow: 0 0 14px #f87171;
-    box-shadow:  0 0 24px rgba(248,113,113,0.70);
+    background: rgba(255,34,0,0.75);
+    border:     3px solid #ff2200;
+    text-shadow: 0 0 14px #ff2200;
+    box-shadow:  0 0 24px rgba(255,34,0,0.70);
 }
 
 /* ── Window title ── */
@@ -422,11 +418,11 @@ window#waybar.bottom #window {
     font-weight:    bold;
     letter-spacing: 0.06em;
     padding:        3px 18px;
-    background:     rgba(249,115,22,0.22);
+    background:     rgba(255,85,0,0.22);
     border-radius:  8px;
-    border:         2px solid rgba(249,115,22,0.70);
-    box-shadow:     0 0 12px rgba(249,115,22,0.45);
-    text-shadow:    0 0 10px rgba(249,115,22,0.80);
+    border:         2px solid rgba(255,85,0,0.70);
+    box-shadow:     0 0 12px rgba(255,85,0,0.45);
+    text-shadow:    0 0 10px rgba(255,85,0,0.80);
 }
 
 /* ── Clock ── */
@@ -436,12 +432,12 @@ window#waybar.bottom #clock {
     font-size:      11px;
     font-weight:    bold;
     padding:        3px 18px;
-    background:     rgba(56,189,248,0.32);
+    background:     rgba(0,136,255,0.32);
     border-radius:  8px;
-    border:         2px solid #38bdf8;
-    box-shadow:     0 0 14px rgba(56,189,248,0.65), 0 0 28px rgba(56,189,248,0.25);
+    border:         2px solid #0088ff;
+    box-shadow:     0 0 14px rgba(0,136,255,0.65), 0 0 28px rgba(0,136,255,0.25);
     margin:         3px 4px;
-    text-shadow:    0 0 10px rgba(56,189,248,0.90);
+    text-shadow:    0 0 10px rgba(0,136,255,0.90);
 }
 
 /* ── Bottom-right system modules — shared pill base ── */
@@ -463,15 +459,15 @@ window#waybar.bottom #pulseaudio {
     font-size:   12px;
     font-weight: bold;
     color:       #ffffff;
-    background:  rgba(244,114,182,0.32);
-    border:      2px solid #f472b6;
-    box-shadow:  0 0 12px rgba(244,114,182,0.60);
-    text-shadow: 0 0 10px rgba(244,114,182,0.90);
+    background:  rgba(255,0,255,0.32);
+    border:      2px solid #ff00ff;
+    box-shadow:  0 0 12px rgba(255,0,255,0.60);
+    text-shadow: 0 0 10px rgba(255,0,255,0.90);
     transition:  all 0.15s ease;
 }
 window#waybar.bottom #pulseaudio:hover {
-    background:  rgba(244,114,182,0.50);
-    box-shadow:  0 0 20px rgba(244,114,182,0.80);
+    background:  rgba(255,0,255,0.50);
+    box-shadow:  0 0 20px rgba(255,0,255,0.80);
 }
 window#waybar.bottom #pulseaudio.muted {
     background:  rgba(255,255,255,0.08);
@@ -485,27 +481,27 @@ window#waybar.bottom #network {
     font-size:   11px;
     font-weight: bold;
     color:       #ffffff;
-    background:  rgba(56,189,248,0.32);
-    border:      2px solid #38bdf8;
-    box-shadow:  0 0 12px rgba(56,189,248,0.60);
-    text-shadow: 0 0 10px rgba(56,189,248,0.90);
+    background:  rgba(0,136,255,0.32);
+    border:      2px solid #0088ff;
+    box-shadow:  0 0 12px rgba(0,136,255,0.60);
+    text-shadow: 0 0 10px rgba(0,136,255,0.90);
     transition:  all 0.15s ease;
 }
 window#waybar.bottom #network:hover {
-    background:  rgba(56,189,248,0.50);
-    box-shadow:  0 0 20px rgba(56,189,248,0.80);
+    background:  rgba(0,136,255,0.50);
+    box-shadow:  0 0 20px rgba(0,136,255,0.80);
 }
 window#waybar.bottom #network.ethernet {
-    background:  rgba(52,211,153,0.32);
-    border:      2px solid #34d399;
-    box-shadow:  0 0 12px rgba(52,211,153,0.60);
-    text-shadow: 0 0 8px rgba(52,211,153,0.80);
+    background:  rgba(57,255,20,0.32);
+    border:      2px solid #39ff14;
+    box-shadow:  0 0 12px rgba(57,255,20,0.60);
+    text-shadow: 0 0 8px rgba(57,255,20,0.80);
 }
 window#waybar.bottom #network.disconnected {
-    background:  rgba(248,113,113,0.25);
-    border:      2px solid #f87171;
-    box-shadow:  0 0 10px rgba(248,113,113,0.50);
-    text-shadow: 0 0 8px rgba(248,113,113,0.70);
+    background:  rgba(255,34,0,0.25);
+    border:      2px solid #ff2200;
+    box-shadow:  0 0 10px rgba(255,34,0,0.50);
+    text-shadow: 0 0 8px rgba(255,34,0,0.70);
 }
 
 window#waybar.bottom #bluetooth {
@@ -513,21 +509,21 @@ window#waybar.bottom #bluetooth {
     font-size:   11px;
     font-weight: bold;
     color:       #ffffff;
-    background:  rgba(129,140,248,0.32);
-    border:      2px solid #818cf8;
-    box-shadow:  0 0 12px rgba(129,140,248,0.60);
-    text-shadow: 0 0 10px rgba(129,140,248,0.90);
+    background:  rgba(136,0,255,0.32);
+    border:      2px solid #8800ff;
+    box-shadow:  0 0 12px rgba(136,0,255,0.60);
+    text-shadow: 0 0 10px rgba(136,0,255,0.90);
     transition:  all 0.15s ease;
 }
 window#waybar.bottom #bluetooth:hover {
-    background:  rgba(129,140,248,0.50);
-    box-shadow:  0 0 20px rgba(129,140,248,0.80);
+    background:  rgba(136,0,255,0.50);
+    box-shadow:  0 0 20px rgba(136,0,255,0.80);
 }
 window#waybar.bottom #bluetooth.connected {
-    background:  rgba(129,140,248,0.48);
-    border:      2px solid #818cf8;
-    box-shadow:  0 0 16px rgba(129,140,248,0.70);
-    text-shadow: 0 0 10px #818cf8, 0 0 20px rgba(129,140,248,0.45);
+    background:  rgba(136,0,255,0.48);
+    border:      2px solid #8800ff;
+    box-shadow:  0 0 16px rgba(136,0,255,0.70);
+    text-shadow: 0 0 10px #8800ff, 0 0 20px rgba(136,0,255,0.45);
 }
 
 window#waybar.bottom #battery {
@@ -535,34 +531,34 @@ window#waybar.bottom #battery {
     font-size:   11px;
     font-weight: bold;
     color:       #ffffff;
-    background:  rgba(52,211,153,0.32);
-    border:      2px solid #34d399;
-    box-shadow:  0 0 12px rgba(52,211,153,0.60);
-    text-shadow: 0 0 10px rgba(52,211,153,0.90);
+    background:  rgba(57,255,20,0.32);
+    border:      2px solid #39ff14;
+    box-shadow:  0 0 12px rgba(57,255,20,0.60);
+    text-shadow: 0 0 10px rgba(57,255,20,0.90);
     transition:  all 0.15s ease;
 }
 window#waybar.bottom #battery:hover {
-    background:  rgba(52,211,153,0.50);
-    box-shadow:  0 0 20px rgba(52,211,153,0.80);
+    background:  rgba(57,255,20,0.50);
+    box-shadow:  0 0 20px rgba(57,255,20,0.80);
 }
 window#waybar.bottom #battery.charging,
 window#waybar.bottom #battery.plugged {
-    background:  rgba(52,211,153,0.48);
-    border:      2px solid #34d399;
-    box-shadow:  0 0 16px rgba(52,211,153,0.70);
-    text-shadow: 0 0 12px #34d399;
+    background:  rgba(57,255,20,0.48);
+    border:      2px solid #39ff14;
+    box-shadow:  0 0 16px rgba(57,255,20,0.70);
+    text-shadow: 0 0 12px #39ff14;
 }
 window#waybar.bottom #battery.warning  {
-    background:  rgba(251,191,36,0.32);
-    border:      2px solid #fbbf24;
-    box-shadow:  0 0 12px rgba(251,191,36,0.60);
-    text-shadow: 0 0 8px rgba(251,191,36,0.80);
+    background:  rgba(255,255,0,0.32);
+    border:      2px solid #ffff00;
+    box-shadow:  0 0 12px rgba(255,255,0,0.60);
+    text-shadow: 0 0 8px rgba(255,255,0,0.80);
 }
 window#waybar.bottom #battery.critical {
-    background:  rgba(248,113,113,0.40);
-    border:      2px solid #f87171;
-    box-shadow:  0 0 18px rgba(248,113,113,0.80);
-    text-shadow: 0 0 12px #f87171;
+    background:  rgba(255,34,0,0.40);
+    border:      2px solid #ff2200;
+    box-shadow:  0 0 18px rgba(255,34,0,0.80);
+    text-shadow: 0 0 12px #ff2200;
     animation:   batt-crit 1s ease-in-out infinite alternate;
 }
 
@@ -571,42 +567,48 @@ window#waybar.bottom #battery.critical {
    BOTTOM BAR EXTRAS — Start + Quick Settings
    ════════════════════════════════════════════════════════════════════════════ */
 
-/* ⊞ Start button — compact icon, rainbow animated */
+/* ✕ Start / launcher button — glowing X */
 window#waybar.bottom #custom-start {
-    font-size:    16px;
-    padding:      3px 18px;
-    background:   rgba(20, 8, 36, 0.88);
-    border-radius: 8px;
-    border:       2px solid rgba(244,114,182,0.90);
-    margin:       3px 6px 3px 8px;
-    animation:    nyxus-rainbow 6s linear infinite;
-    transition:   all 0.18s ease;
+    font-size:     30px;
+    font-weight:   bold;
+    color:         #ffffff;
+    padding:       0 22px;
+    min-width:     54px;
+    background:    rgba(8, 2, 20, 0.92);
+    border-radius: 10px;
+    border:        3px solid #ff00ff;
+    margin:        4px 8px;
+    animation:     nyxus-rainbow 6s linear infinite;
+    text-shadow:   0 0 14px #ffffff, 0 0 30px #ff00ff, 0 0 60px #ff00ff;
+    box-shadow:    0 0 22px rgba(255,0,255,0.85), 0 0 50px rgba(255,0,255,0.40);
+    transition:    all 0.18s ease;
 }
 window#waybar.bottom #custom-start:hover {
-    background:  rgba(255,255,255,0.12);
-    box-shadow:  0 0 18px rgba(251,191,36,0.55);
+    background:  rgba(255,0,255,0.18);
+    box-shadow:  0 0 32px rgba(255,0,255,0.95), 0 0 70px rgba(255,0,255,0.55);
 }
 
 /* ⊰ Quick Settings button */
 window#waybar.bottom #custom-quicksettings {
     font-size:   14px;
     color:       #ffffff;
-    padding:     0 18px;
-    background:  rgba(192, 132, 252, 0.08);
-    border-left: 3px solid rgba(192, 132, 252, 0.45);
-    text-shadow: 0 0 10px rgba(192, 132, 252, 0.70);
+    padding:     3px 18px;
+    background:  rgba(204,0,255,0.20);
+    border:      2px solid #cc00ff;
+    border-radius: 8px;
+    box-shadow:  0 0 12px rgba(204,0,255,0.55);
+    text-shadow: 0 0 10px rgba(204,0,255,0.90);
+    margin:      3px 4px;
     transition:  all 0.15s ease;
 }
 window#waybar.bottom #custom-quicksettings:hover {
-    background:  rgba(192, 132, 252, 0.20);
-    color:       #ffffff;
-    border-left-color: #c084fc;
-    text-shadow: 0 0 18px #c084fc, 0 0 36px rgba(192,132,252,0.45);
-    box-shadow:  -2px 0 18px rgba(192,132,252,0.25);
+    background:  rgba(204,0,255,0.40);
+    box-shadow:  0 0 22px rgba(204,0,255,0.85);
+    text-shadow: 0 0 18px #cc00ff;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   LEFT BAR  ·  signature color: PURPLE #c084fc  (70% height)
+   LEFT BAR  ·  signature color: PURPLE #cc00ff  (70% height)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.left {
     background-image:    url("NYXUS_WALL_PATH");
@@ -615,12 +617,12 @@ window#waybar.left {
     background-position: 18% 50%;
     background-repeat:   no-repeat;
     color:               #ffffff;
-    border-right:        5px solid #c084fc;
+    border-right:        5px solid #cc00ff;
     border-left:         4px solid rgba(192, 132, 252, 0.50);
-    border-top:          5px solid #c084fc;
-    border-bottom:       5px solid #c084fc;
-    box-shadow:          6px 0 50px rgba(192,132,252,0.80),
-                        -2px 0 20px rgba(192,132,252,0.35);
+    border-top:          5px solid #cc00ff;
+    border-bottom:       5px solid #cc00ff;
+    box-shadow:          6px 0 50px rgba(204,0,255,0.80),
+                        -2px 0 20px rgba(204,0,255,0.35);
     animation:           left-pulse 5s ease-in-out infinite;
 }
 
@@ -641,33 +643,33 @@ window#waybar.left #workspaces button {
 }
 
 /* Left bar: solid neon fills per workspace */
-window#waybar.left #workspaces button:nth-child(1) { color: #fff; background: rgba(244,114,182,0.55); border: 2px solid #f472b6; box-shadow: 0 0 10px rgba(244,114,182,0.45); }
-window#waybar.left #workspaces button:nth-child(2) { color: #fff; background: rgba(251,146,60,0.55);  border: 2px solid #fb923c; box-shadow: 0 0 10px rgba(251,146,60,0.45);  }
-window#waybar.left #workspaces button:nth-child(3) { color: #fff; background: rgba(251,191,36,0.55);  border: 2px solid #fbbf24; box-shadow: 0 0 10px rgba(251,191,36,0.45);  }
-window#waybar.left #workspaces button:nth-child(4) { color: #fff; background: rgba(52,211,153,0.55);  border: 2px solid #34d399; box-shadow: 0 0 10px rgba(52,211,153,0.45);  }
-window#waybar.left #workspaces button:nth-child(5) { color: #fff; background: rgba(56,189,248,0.55);  border: 2px solid #38bdf8; box-shadow: 0 0 10px rgba(56,189,248,0.45);  }
-window#waybar.left #workspaces button:nth-child(6) { color: #fff; background: rgba(192,132,252,0.55); border: 2px solid #c084fc; box-shadow: 0 0 10px rgba(192,132,252,0.45); }
+window#waybar.left #workspaces button:nth-child(1) { color: #fff; background: rgba(255,0,255,0.55); border: 2px solid #ff00ff; box-shadow: 0 0 10px rgba(255,0,255,0.45); }
+window#waybar.left #workspaces button:nth-child(2) { color: #fff; background: rgba(255,85,0,0.55);  border: 2px solid #ff5500; box-shadow: 0 0 10px rgba(255,85,0,0.45);  }
+window#waybar.left #workspaces button:nth-child(3) { color: #fff; background: rgba(255,255,0,0.55);  border: 2px solid #ffff00; box-shadow: 0 0 10px rgba(255,255,0,0.45);  }
+window#waybar.left #workspaces button:nth-child(4) { color: #fff; background: rgba(57,255,20,0.55);  border: 2px solid #39ff14; box-shadow: 0 0 10px rgba(57,255,20,0.45);  }
+window#waybar.left #workspaces button:nth-child(5) { color: #fff; background: rgba(0,136,255,0.55);  border: 2px solid #0088ff; box-shadow: 0 0 10px rgba(0,136,255,0.45);  }
+window#waybar.left #workspaces button:nth-child(6) { color: #fff; background: rgba(204,0,255,0.55); border: 2px solid #cc00ff; box-shadow: 0 0 10px rgba(204,0,255,0.45); }
 
 window#waybar.left #workspaces button:hover {
     color:      #ffffff;
-    background: rgba(192,132,252,0.75);
-    box-shadow: 0 0 20px rgba(192,132,252,0.70);
+    background: rgba(204,0,255,0.75);
+    box-shadow: 0 0 20px rgba(204,0,255,0.70);
 }
 window#waybar.left #workspaces button.occupied {
-    background: rgba(192,132,252,0.68);
-    box-shadow: 0 0 14px rgba(192,132,252,0.55);
+    background: rgba(204,0,255,0.68);
+    box-shadow: 0 0 14px rgba(204,0,255,0.55);
 }
 window#waybar.left #workspaces button.active {
     color:      #ffffff;
-    background: rgba(192,132,252,0.85);
-    border:     3px solid #c084fc;
-    text-shadow: 0 0 14px #c084fc, 0 0 28px rgba(192,132,252,0.90);
-    box-shadow:  0 0 30px rgba(192,132,252,0.95), 0 0 60px rgba(192,132,252,0.55), 0 0 90px rgba(192,132,252,0.25);
+    background: rgba(204,0,255,0.85);
+    border:     3px solid #cc00ff;
+    text-shadow: 0 0 14px #cc00ff, 0 0 28px rgba(204,0,255,0.90);
+    box-shadow:  0 0 30px rgba(204,0,255,0.95), 0 0 60px rgba(204,0,255,0.55), 0 0 90px rgba(204,0,255,0.25);
 }
 
 
 /* ════════════════════════════════════════════════════════════════════════════
-   RIGHT BAR  ·  signature color: GOLD #fbbf24  (70% height)
+   RIGHT BAR  ·  signature color: GOLD #ffff00  (70% height)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.right {
     background-image:    url("NYXUS_WALL_PATH");
@@ -676,12 +678,12 @@ window#waybar.right {
     background-position: 82% 50%;
     background-repeat:   no-repeat;
     color:               #ffffff;
-    border-left:         5px solid #fbbf24;
+    border-left:         5px solid #ffff00;
     border-right:        4px solid rgba(251, 191, 36, 0.50);
-    border-top:          5px solid #fbbf24;
-    border-bottom:       5px solid #fbbf24;
-    box-shadow:         -6px 0 50px rgba(251,191,36,0.78),
-                         2px 0 20px rgba(251,191,36,0.35);
+    border-top:          5px solid #ffff00;
+    border-bottom:       5px solid #ffff00;
+    box-shadow:         -6px 0 50px rgba(255,255,0,0.78),
+                         2px 0 20px rgba(255,255,0,0.35);
     animation:           right-pulse 5s ease-in-out infinite;
 }
 
@@ -698,18 +700,18 @@ window#waybar.right #battery {
 
 window#waybar.right #cpu {
     color:       #ffffff;
-    text-shadow: 0 0 10px rgba(251,191,36,0.80),
-                 0 0 22px rgba(251,191,36,0.35);
+    text-shadow: 0 0 10px rgba(255,255,0,0.80),
+                 0 0 22px rgba(255,255,0,0.35);
 }
 window#waybar.right #memory {
     color:       #ffffff;
-    text-shadow: 0 0 10px rgba(56,189,248,0.80),
-                 0 0 22px rgba(56,189,248,0.35);
+    text-shadow: 0 0 10px rgba(0,136,255,0.80),
+                 0 0 22px rgba(0,136,255,0.35);
 }
 window#waybar.right #battery {
     color:       #ffffff;
-    text-shadow: 0 0 10px rgba(52,211,153,0.80),
-                 0 0 22px rgba(52,211,153,0.35);
+    text-shadow: 0 0 10px rgba(57,255,20,0.80),
+                 0 0 22px rgba(57,255,20,0.35);
 }
 window#waybar.right #battery.charging {
     color:       #ffffff;
@@ -717,7 +719,7 @@ window#waybar.right #battery.charging {
 }
 window#waybar.right #battery.critical {
     color: #ffffff;
-    text-shadow: 0 0 12px #f87171;
+    text-shadow: 0 0 12px #ff2200;
     animation: batt-crit 1s ease-in-out infinite alternate;
 }
 

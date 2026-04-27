@@ -19,9 +19,9 @@ max-history=100
 
 # ── Appearance ──────────────────────────────────────────────
 background-color=#08051599
-text-color=#ddd8f0
-title-color=#c084fc
-border-color=#c084fc
+text-color=#ffffff
+title-color=#ff00ff
+border-color=#ff00ff
 border-size=0
 border-left-size=5
 border-radius=10
@@ -47,25 +47,25 @@ format=<b>%s</b>\n%b
 
 [urgency=low]
 background-color=#08051588
-text-color=#7a7090
-title-color=#9a8eb0
-border-color=#3e3060
+text-color=#aaaaaa
+title-color=#cc00ff
+border-color=#cc00ff
 border-left-size=5
 default-timeout=2500
 
 [urgency=normal]
 background-color=#08051599
-text-color=#ddd8f0
-title-color=#c084fc
-border-color=#c084fc
+text-color=#ffffff
+title-color=#ff00ff
+border-color=#ff00ff
 border-left-size=5
 default-timeout=5000
 
 [urgency=high]
 background-color=#130509cc
-text-color=#fca5a5
-title-color=#f87171
-border-color=#f87171
+text-color=#ffffff
+title-color=#ff2200
+border-color=#ff2200
 border-left-size=5
 border-radius=10
 default-timeout=0
@@ -74,63 +74,63 @@ default-timeout=0
 
 [app-name=volume]
 background-color=#08051599
-border-color=#c084fc
-title-color=#c084fc
+border-color=#ff00ff
+title-color=#ff00ff
 border-left-size=5
 default-timeout=1800
 
 [app-name=brightness]
 background-color=#08051599
-border-color=#fbbf24
-title-color=#fbbf24
+border-color=#ffff00
+title-color=#ffff00
 border-left-size=5
 default-timeout=1600
 
 [app-name=Spotify]
 background-color=#08051599
-border-color=#1db954
-title-color=#1db954
+border-color=#39ff14
+title-color=#39ff14
 border-left-size=5
 default-timeout=4000
 
 [app-name=discord]
 background-color=#08051599
-border-color=#5865f2
-title-color=#818cf8
+border-color=#0088ff
+title-color=#0088ff
 border-left-size=5
 default-timeout=4000
 
 [app-name=firefox]
 background-color=#08051599
-border-color=#818cf8
-title-color=#818cf8
+border-color=#ff5500
+title-color=#ff5500
 border-left-size=5
 default-timeout=4000
 
 [app-name=steam]
 background-color=#08051599
-border-color=#38bdf8
-title-color=#38bdf8
+border-color=#0088ff
+title-color=#0088ff
 border-left-size=5
 default-timeout=5000
 
 [app-name=networkmanager]
 background-color=#08051599
-border-color=#34d399
-title-color=#34d399
+border-color=#39ff14
+title-color=#39ff14
 border-left-size=5
 default-timeout=3000
 
 [app-name=Hyprshot]
 background-color=#08051599
-border-color=#fbbf24
-title-color=#fbbf24
+border-color=#ffff00
+title-color=#ffff00
 border-left-size=5
 default-timeout=2500
 
 [app-name=dunst]
 background-color=#08051599
-border-color=#f472b6
-title-color=#f472b6
+border-color=#ff00ff
+title-color=#ff00ff
 border-left-size=5
 default-timeout=3000
