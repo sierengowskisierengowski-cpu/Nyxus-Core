@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/nyxus-sysmon/"
+title = "NYXUS SysMon"
+version = "1.0.0"
+id = "artifacts/nyxus-sysmon"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/nyxus-sysmon/" ]
+localPort = 26053
+
+[services.development]
+run = "pnpm --filter @workspace/nyxus-sysmon run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nyxus-sysmon", "run", "build" ]
+publicDir = "artifacts/nyxus-sysmon/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26053"
+BASE_PATH = "/nyxus-sysmon/"

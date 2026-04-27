@@ -63,7 +63,7 @@ failed=0
 # ── PYTHON TERMINAL SCRIPTS ───────────────────────────────────────────────────
 hdr "Python Terminal Scripts"
 mkdir -p "$SCRIPTS_DIR"
-for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py; do
+for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py nyxus_sysmon.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
