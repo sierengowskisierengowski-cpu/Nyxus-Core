@@ -324,6 +324,12 @@ uri = "file://attached_assets/nyxus-all-signs.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "Hrdf_GOKX_TrDumEao8j_"
+uri = "file://attached_assets/nyxus-sierengowski-v2.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -545,3 +551,9 @@ id = "Dve0qY1x3HoeL1-9_jMi9"
 uri = "file://attached_assets/nyxus-all-signs.png"
 type = "image"
 title = "All Detroit Street Signs"
+
+[[outputs]]
+id = "C7o1GKJVzV1Vs12vu06qb"
+uri = "file://attached_assets/nyxus-sierengowski-v2.png"
+type = "image"
+title = "SIERENGOWSKI v2 — Detroit Wall"
