@@ -335,18 +335,18 @@ window#waybar.bottom #workspaces button:nth-child(6).active {
 
 /* Urgent — always red */
 window#waybar.bottom #workspaces button.urgent {
-    color:      #ffffff !important;
-    background: rgba(248,113,113,0.18) !important;
-    border:     3px solid #f87171 !important;
-    text-shadow: 0 0 14px #f87171 !important;
-    box-shadow:  0 0 16px rgba(248,113,113,0.45) !important;
+    color:      #ffffff;
+    background: rgba(248,113,113,0.18);
+    border:     3px solid #f87171;
+    text-shadow: 0 0 14px #f87171;
+    box-shadow:  0 0 16px rgba(248,113,113,0.45);
 }
 
 /* Empty workspace — barely visible */
 window#waybar.bottom #workspaces button.empty {
-    color:      rgba(255,255,255,0.12) !important;
-    background: rgba(255,255,255,0.02) !important;
-    border:     2px solid rgba(255,255,255,0.05) !important;
+    color:      rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.02);
+    border:     2px solid rgba(255,255,255,0.05);
 }
 
 /* ── Window title — centered, bright white ── */
@@ -570,9 +570,9 @@ window#waybar.left #workspaces button.active {
     box-shadow:  0 0 14px rgba(192,132,252,0.40), inset 0 0 12px rgba(192,132,252,0.10);
 }
 window#waybar.left #workspaces button.empty {
-    color:       rgba(255,255,255,0.10) !important;
-    background:  rgba(255,255,255,0.02) !important;
-    border:      2px solid rgba(255,255,255,0.04) !important;
+    color:       rgba(255,255,255,0.10);
+    background:  rgba(255,255,255,0.02);
+    border:      2px solid rgba(255,255,255,0.04);
 }
 
 
