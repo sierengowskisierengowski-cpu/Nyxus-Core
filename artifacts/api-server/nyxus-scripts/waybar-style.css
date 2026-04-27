@@ -155,16 +155,16 @@ window#waybar.top #clock {
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.bottom {
     background-image:    url("NYXUS_WALL_PATH");
-    background-color:    rgba(6, 3, 1, 0.82);
+    background-color:    rgba(6, 3, 1, 0.92);
     background-size:     cover;
-    background-position: bottom center;
+    background-position: center center;
     background-repeat:   no-repeat;
-    color:         #ffffff;
-    border-bottom: 4px solid #f97316;
-    border-top:    2px solid rgba(249, 115, 22, 0.50);
+    color:               #ffffff;
+    border-bottom:       4px solid #f97316;
+    border-top:          2px solid rgba(249, 115, 22, 0.60);
     box-shadow: 0 -4px 32px rgba(249, 115, 22, 0.55),
                 0  2px 16px rgba(249, 115, 22, 0.22),
-                inset 0 0 80px rgba(249, 115, 22, 0.06);
+                inset 0 0 80px rgba(249, 115, 22, 0.08);
 }
 
 /* ── Workspaces — each number gets its own neon identity ── */

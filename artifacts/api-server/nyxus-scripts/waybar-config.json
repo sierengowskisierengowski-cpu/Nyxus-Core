@@ -79,7 +79,7 @@
     "name":          "bottom",
     "layer":         "top",
     "position":      "bottom",
-    "height":        44,
+    "height":        60,
     "spacing":       0,
     "margin-bottom": 0,
     "margin-left":   0,
