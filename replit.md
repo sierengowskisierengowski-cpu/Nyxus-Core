@@ -4,6 +4,27 @@
 
 pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
 
+## GOLDEN RULE — ALL NYXUS Apps & Widgets
+
+**Every NYXUS app and widget MUST be native Python GTK4. No exceptions.**
+- No web/Chromium-based widgets or apps
+- No Electron, no WebView
+- All apps use `gi.require_version('Gtk', '4.0')` + `from gi.repository import Gtk, Gdk, GLib`
+- Cairo (`DrawingArea.set_draw_func`) for all custom drawing and animations
+- `GLib.timeout_add()` for timers, `GLib.idle_add()` for thread-safe UI updates
+- Styling via `Gtk.CssProvider` with JetBrains Mono + NYXUS neon palette
+- Data persisted to `~/.nyxus/<appname>.json`
+- App IDs: `io.nyxus.<name>` (stickies, notepad, weather, sysmon)
+- GTK deps: `python-gobject gtk4 python-psutil python-cairo` (Arch: pacman)
+
+### Current GTK4 Apps (in `artifacts/api-server/nyxus-scripts/`)
+| File | App ID | Launch |
+|---|---|---|
+| `nyxus_notepad.py`    | `io.nyxus.notepad`  | Hyprland keybind or rofi |
+| `nyxus_stickies.py`   | `io.nyxus.stickies` | float, pinned, move 1430 100 |
+| `nyxus_weather.py`    | `io.nyxus.weather`  | float, pinned, move 20 100 |
+| `nyxus_sysmon_gtk.py` | `io.nyxus.sysmon`   | workspace 6, fullscreen |
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
