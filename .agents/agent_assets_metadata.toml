@@ -162,6 +162,12 @@ uri = "file://attached_assets/nyxus-detroit.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "-FrrV3C3yhulHl1aHSoNq"
+uri = "file://attached_assets/nyxus-detroit-v2.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -221,3 +227,9 @@ id = "JfmfoiOLn_dANZlDmuZjA"
 uri = "file://attached_assets/nyxus-detroit.png"
 type = "image"
 title = "Detroit Masterpiece — NYXUS Wallpaper"
+
+[[outputs]]
+id = "gWM7YcN0DFf62ikirQZkk"
+uri = "file://attached_assets/nyxus-detroit-v2.png"
+type = "image"
+title = "Detroit Masterpiece v2 — Airbrushed"
