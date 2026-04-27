@@ -75,10 +75,14 @@ dl "hyprlock.conf"  "$HYPR_DIR/hyprlock.conf"  || failed=$((failed+1))
 dl "hypridle.conf"  "$HYPR_DIR/hypridle.conf"  || failed=$((failed+1))
 
 # ── WALLPAPERS ────────────────────────────────────────────────────────────────
-hdr "Wallpapers"
-for f in nyxus-wallpaper.png nyxus-wallpaper-v2.png nyxus-wallpaper-v3.png nyxus-wallpaper-v4.png; do
-  dl "$f" "$HYPR_DIR/$f" || failed=$((failed+1))
+hdr "Wallpapers (16 total — downloading...)"
+WALLS_DIR="$HYPR_DIR/walls"
+mkdir -p "$WALLS_DIR"
+for i in $(seq -w 1 16); do
+  dl "nyxus-wall-${i}.png" "$WALLS_DIR/nyxus-wall-${i}.png" || failed=$((failed+1))
 done
+dl "wallpaper-rotate.sh" "$HYPR_DIR/wallpaper-rotate.sh" || failed=$((failed+1))
+chmod +x "$HYPR_DIR/wallpaper-rotate.sh" 2>/dev/null || true
 
 # ── WAYBAR ────────────────────────────────────────────────────────────────────
 hdr "Waybar"
@@ -120,10 +124,12 @@ if command -v killall &>/dev/null && pgrep waybar &>/dev/null && [[ -n "${HYPRLA
   ok "Waybar restarted"
 fi
 
-if command -v swww &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
-  swww img "$HYPR_DIR/nyxus-wallpaper.png" \
-    --transition-type fade --transition-duration 1.2 &>/dev/null && \
-    ok "Wallpaper applied" || true
+if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+  pkill -f "wallpaper-rotate.sh" 2>/dev/null || true
+  pkill swaybg 2>/dev/null || true
+  bash "$HYPR_DIR/wallpaper-rotate.sh" &>/dev/null &
+  disown
+  ok "Wallpaper auto-rotate started (16 walls, 5 min cycle)"
 fi
 
 if command -v makoctl &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then

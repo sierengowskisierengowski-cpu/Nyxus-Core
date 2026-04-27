@@ -60,6 +60,102 @@ uri = "file://attached_assets/nyxus-hacker-wallpaper.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "nTiv1o3meHrUSzPfTbm7x"
+uri = "file://attached_assets/nyxus-wall-01.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "Y0A_QPwb6DNpu_EPdy3TS"
+uri = "file://attached_assets/nyxus-wall-02.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "DCfpUBGV3i0xWMQCyD4Iz"
+uri = "file://attached_assets/nyxus-wall-03.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "MDuHIKjDfLN-yHf40TG1s"
+uri = "file://attached_assets/nyxus-wall-04.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "y_LeAMuAR8y7-6JpHQs2N"
+uri = "file://attached_assets/nyxus-wall-05.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "8ekbLsFJcgXtX9QISFlli"
+uri = "file://attached_assets/nyxus-wall-06.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "JDJU0QGUsrt5XJihYVL1X"
+uri = "file://attached_assets/nyxus-wall-07.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "NV1iseSI06Xj1ZlUJY1VG"
+uri = "file://attached_assets/nyxus-wall-08.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "xc9hr5T4ap5XLiILK57QF"
+uri = "file://attached_assets/nyxus-wall-09.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "-Kis7SEu5Is6SAovjU6bk"
+uri = "file://attached_assets/nyxus-wall-10.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "BjDZW-0Ey0Ws5Bl_dX56a"
+uri = "file://attached_assets/nyxus-wall-11.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "YoFm8mS47sYBylccv-2Ry"
+uri = "file://attached_assets/nyxus-wall-12.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "e2I9CmOHBpEtAlBmol29z"
+uri = "file://attached_assets/nyxus-wall-13.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ltVora1pMOSxDXsDoQ7Up"
+uri = "file://attached_assets/nyxus-wall-14.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "zLFT6y9IA73Dg_3N7dNN-"
+uri = "file://attached_assets/nyxus-wall-15.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "5wwgbZwsPYT0h-xd9jTOP"
+uri = "file://attached_assets/nyxus-wall-16.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -89,3 +185,27 @@ id = "glzks35HW-kV5LLEaa7s4"
 uri = "file://attached_assets/nyxus-hacker-wallpaper.png"
 type = "image"
 title = "NYXUS Hacker Wallpaper"
+
+[[outputs]]
+id = "kEAWwlJmO9K20CrE2Q3Gm"
+uri = "file://attached_assets/nyxus-wall-13.png"
+type = "image"
+title = "Graffiti Wall 1 — Wildstyle Tags"
+
+[[outputs]]
+id = "YYpptWQyc8L2wL0Fg0Zge"
+uri = "file://attached_assets/nyxus-wall-14.png"
+type = "image"
+title = "Graffiti Wall 2 — Subway Car"
+
+[[outputs]]
+id = "QePdqTekKPMqy_4fOfs72"
+uri = "file://attached_assets/nyxus-wall-15.png"
+type = "image"
+title = "Graffiti Wall 3 — Alleyway Murals"
+
+[[outputs]]
+id = "ZaDKDqpX4x4LZBy_Dzc8n"
+uri = "file://attached_assets/nyxus-wall-16.png"
+type = "image"
+title = "Graffiti Wall 4 — Hall of Fame"
