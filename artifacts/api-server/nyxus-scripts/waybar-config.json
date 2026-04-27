@@ -1,21 +1,21 @@
 [
   {
-    "name":       "top",
-    "layer":      "top",
-    "position":   "top",
-    "height":     26,
-    "spacing":    0,
-    "margin-top": 0,
+    "name":        "top",
+    "layer":       "top",
+    "position":    "top",
+    "height":      28,
+    "spacing":     0,
+    "margin-top":  0,
     "margin-left": 0,
     "margin-right": 0,
 
     "modules-left":   ["custom/ticker"],
     "modules-center": ["custom/nyxus"],
-    "modules-right":  ["custom/stats"],
+    "modules-right":  ["cpu", "memory", "temperature", "custom/sep", "network", "custom/sep", "battery", "custom/sep", "clock"],
 
     "custom/ticker": {
       "exec":     "~/.config/waybar/ticker.sh",
-      "interval": 4,
+      "interval": 1,
       "format":   "{}",
       "tooltip":  false
     },
@@ -25,11 +25,53 @@
       "tooltip": false
     },
 
-    "custom/stats": {
-      "exec":     "~/.config/waybar/stats.sh",
+    "custom/sep": {
+      "format":  "◈",
+      "tooltip": false
+    },
+
+    "cpu": {
+      "format":   "  {usage}%",
       "interval": 2,
-      "format":   "{}",
       "tooltip":  false
+    },
+
+    "memory": {
+      "format":  "  {percentage}%",
+      "tooltip": false
+    },
+
+    "temperature": {
+      "hwmon-path-abs": "/sys/class/thermal/thermal_zone0/temp",
+      "input-filename": "temp",
+      "critical-threshold": 80,
+      "format":          "  {temperatureC}°C",
+      "format-critical": "  {temperatureC}°C",
+      "tooltip":         false
+    },
+
+    "network": {
+      "format-wifi":         "  {essid}  ↓{bandwidthDownBytes}  ↑{bandwidthUpBytes}",
+      "format-ethernet":     "  ETH  ↓{bandwidthDownBytes}  ↑{bandwidthUpBytes}",
+      "format-disconnected": "  NO NET",
+      "interval":            2,
+      "tooltip-format":      "{ipaddr}  ·  {ifname}"
+    },
+
+    "battery": {
+      "format":          "{icon}  {capacity}%",
+      "format-charging": "  {capacity}%",
+      "format-plugged":  "  {capacity}%",
+      "format-icons":    ["", "", "", "", ""],
+      "states":          { "warning": 30, "critical": 15 },
+      "tooltip":         false
+    },
+
+    "clock": {
+      "interval":       1,
+      "format":         "  {:%H:%M:%S}",
+      "format-alt":     "  {:%a %b %d  ·  %H:%M:%S}",
+      "tooltip-format": "<big>{:%A  %B %d  %Y}</big>"
     }
   },
 
@@ -45,7 +87,7 @@
 
     "modules-left":   ["custom/launcher"],
     "modules-center": ["hyprland/workspaces", "hyprland/window"],
-    "modules-right":  ["pulseaudio", "network", "bluetooth", "battery", "tray", "clock"],
+    "modules-right":  ["pulseaudio", "network#bottom", "bluetooth", "battery#bottom", "tray", "clock#bottom"],
 
     "custom/launcher": {
       "format":   "⊞",
@@ -66,7 +108,7 @@
       "separate-outputs": true
     },
 
-    "clock": {
+    "clock#bottom": {
       "format":     "  {:%H:%M}",
       "format-alt": "  {:%a %b %d  ·  %H:%M:%S}",
       "tooltip-format": "<big>{:%A}</big>\n<tt>{calendar}</tt>",
@@ -86,7 +128,7 @@
       "on-click":         "blueman-manager"
     },
 
-    "network": {
+    "network#bottom": {
       "format-wifi":         "  {signalStrength}%",
       "format-ethernet":     "  ETH",
       "format-disconnected": "  ",
@@ -101,12 +143,12 @@
       "on-click":     "pavucontrol"
     },
 
-    "battery": {
+    "battery#bottom": {
       "format":          "{icon}  {capacity}%",
       "format-charging": "  {capacity}%",
       "format-plugged":  "  {capacity}%",
-      "format-icons":    ["  ", "  ", "  ", "  ", "  "],
-      "states": { "warning": 30, "critical": 15 }
+      "format-icons":    ["", "", "", "", ""],
+      "states":          { "warning": 30, "critical": 15 }
     },
 
     "tray": {
@@ -116,11 +158,13 @@
   },
 
   {
-    "name":       "left",
-    "layer":      "top",
-    "position":   "left",
-    "width":      30,
-    "spacing":    0,
+    "name":          "left",
+    "layer":         "top",
+    "position":      "left",
+    "width":         30,
+    "spacing":       0,
+    "margin-top":    160,
+    "margin-bottom": 160,
 
     "modules-center": ["hyprland/workspaces#left"],
 
@@ -132,21 +176,23 @@
   },
 
   {
-    "name":      "right",
-    "layer":     "top",
-    "position":  "right",
-    "width":     30,
-    "spacing":   0,
+    "name":          "right",
+    "layer":         "top",
+    "position":      "right",
+    "width":         30,
+    "spacing":       0,
+    "margin-top":    160,
+    "margin-bottom": 160,
 
-    "modules-center": ["cpu", "memory", "battery#right"],
+    "modules-center": ["cpu#right", "memory#right", "battery#right"],
 
-    "cpu": {
+    "cpu#right": {
       "format":   "{usage}",
       "interval": 2,
       "tooltip":  false
     },
 
-    "memory": {
+    "memory#right": {
       "format":  "{percentage}",
       "tooltip": false
     },
