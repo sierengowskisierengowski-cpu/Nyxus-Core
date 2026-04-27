@@ -43,114 +43,118 @@ window#waybar.top {
 
 /* Ticker */
 #custom-ticker {
-    padding:        0 14px;
+    padding:        0 12px;
     font-size:      10px;
-    letter-spacing: 0.04em;
-    color:          rgba(255,255,255,0.65);
+    letter-spacing: 0.05em;
+    color:          rgba(255,255,255,0.80);
     font-style:     italic;
+    background:     rgba(0, 0, 0, 0.50);
+    border-radius:  5px;
+    border:         1px solid rgba(255,255,255,0.10);
+    margin:         3px 4px;
 }
 
-/* NYXUS wordmark */
+/* NYXUS wordmark — per-letter colors via Pango, pill bg */
 #custom-nyxus {
-    color:          #ffffff;
-    font-size:      11px;
-    font-weight:    bold;
-    letter-spacing: 0.6em;
-    padding:        0 24px;
-    text-shadow:    0 0 12px #f472b6,
-                    0 0 26px rgba(244,114,182,0.75),
-                    0 0 48px rgba(244,114,182,0.35);
+    font-size:      14px;
+    letter-spacing: 0.55em;
+    padding:        3px 22px;
+    background:     rgba(0, 0, 0, 0.55);
+    border-radius:  8px;
+    border:         1px solid rgba(255,255,255,0.12);
+    margin:         3px 0;
 }
 
 /* Separator */
 #custom-sep {
-    color:     rgba(244, 114, 182, 0.55);
-    padding:   0 2px;
-    font-size: 9px;
+    color:     rgba(255, 255, 255, 0.35);
+    padding:   0 3px;
+    font-size: 10px;
 }
 
-/* CPU — white + purple glow */
+/* ── shared pill base for all top-bar stat modules ── */
+window#waybar.top #cpu,
+window#waybar.top #memory,
+window#waybar.top #temperature,
+window#waybar.top #network,
+window#waybar.top #battery,
+window#waybar.top #clock {
+    background:    rgba(0, 0, 0, 0.55);
+    border-radius: 6px;
+    border:        1px solid rgba(255,255,255,0.12);
+    margin:        3px 2px;
+    padding:       2px 10px;
+    font-size:     10px;
+    font-weight:   bold;
+    color:         #ffffff;
+}
+
+/* CPU — purple glow */
 window#waybar.top #cpu {
-    color:       #ffffff;
-    padding:     0 8px;
-    font-size:   10px;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(192,132,252,0.80),
-                 0 0 22px rgba(192,132,252,0.35);
+    text-shadow: 0 0 10px rgba(192,132,252,0.90),
+                 0 0 22px rgba(192,132,252,0.45);
+    border-color: rgba(192,132,252,0.30);
 }
 
-/* RAM — white + indigo glow */
+/* RAM — indigo glow */
 window#waybar.top #memory {
-    color:       #ffffff;
-    padding:     0 8px;
-    font-size:   10px;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(129,140,248,0.80),
-                 0 0 22px rgba(129,140,248,0.35);
+    text-shadow: 0 0 10px rgba(129,140,248,0.90),
+                 0 0 22px rgba(129,140,248,0.45);
+    border-color: rgba(129,140,248,0.30);
 }
 
-/* Temp — white + green glow */
+/* Temp — green glow */
 window#waybar.top #temperature {
-    color:       #ffffff;
-    padding:     0 8px;
-    font-size:   10px;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(52,211,153,0.80),
-                 0 0 22px rgba(52,211,153,0.35);
+    text-shadow: 0 0 10px rgba(52,211,153,0.90),
+                 0 0 22px rgba(52,211,153,0.45);
+    border-color: rgba(52,211,153,0.30);
 }
 window#waybar.top #temperature.critical {
     color:       #ffffff;
     text-shadow: 0 0 14px #f87171, 0 0 28px rgba(248,113,113,0.55);
+    border-color: rgba(248,113,113,0.50);
     animation:   batt-crit 0.8s ease-in-out infinite alternate;
 }
 
-/* Network — white + gold glow */
+/* Network — gold glow */
 window#waybar.top #network {
-    color:       #ffffff;
-    padding:     0 8px;
-    font-size:   10px;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(251,191,36,0.80),
-                 0 0 22px rgba(251,191,36,0.35);
+    text-shadow: 0 0 10px rgba(251,191,36,0.90),
+                 0 0 22px rgba(251,191,36,0.45);
+    border-color: rgba(251,191,36,0.30);
 }
 window#waybar.top #network.disconnected {
-    color:       rgba(255,255,255,0.35);
+    color:       rgba(255,255,255,0.40);
     text-shadow: none;
+    border-color: rgba(255,255,255,0.10);
 }
 
-/* Battery — white + pink glow */
+/* Battery — pink glow */
 window#waybar.top #battery {
-    color:       #ffffff;
-    padding:     0 8px;
-    font-size:   10px;
-    font-weight: bold;
-    text-shadow: 0 0 10px rgba(244,114,182,0.80),
-                 0 0 22px rgba(244,114,182,0.35);
+    text-shadow: 0 0 10px rgba(244,114,182,0.90),
+                 0 0 22px rgba(244,114,182,0.45);
+    border-color: rgba(244,114,182,0.30);
 }
 window#waybar.top #battery.charging,
 window#waybar.top #battery.plugged {
-    color:       #ffffff;
     text-shadow: 0 0 12px #34d399, 0 0 24px rgba(52,211,153,0.45);
+    border-color: rgba(52,211,153,0.35);
 }
-window#waybar.top #battery.warning  {
-    color:       #ffffff;
+window#waybar.top #battery.warning {
     text-shadow: 0 0 10px #fb923c;
+    border-color: rgba(251,146,60,0.40);
 }
 window#waybar.top #battery.critical {
-    color: #ffffff;
     text-shadow: 0 0 12px #f87171;
+    border-color: rgba(248,113,113,0.50);
     animation: batt-crit 1s ease-in-out infinite alternate;
 }
 
-/* Clock */
+/* Clock — sky glow */
 window#waybar.top #clock {
-    color:          #ffffff;
-    font-size:      10px;
-    font-weight:    bold;
-    letter-spacing: 0.10em;
-    padding:        0 16px 0 10px;
-    text-shadow:    0 0 12px rgba(244,114,182,0.80),
-                    0 0 26px rgba(244,114,182,0.35);
+    text-shadow:    0 0 10px rgba(56,189,248,0.90),
+                    0 0 22px rgba(56,189,248,0.45);
+    border-color:   rgba(56,189,248,0.30);
+    letter-spacing: 0.08em;
 }
 
 
@@ -359,8 +363,11 @@ window#waybar.bottom #window {
     font-size:      11px;
     font-weight:    bold;
     letter-spacing: 0.06em;
-    padding:        0 20px;
-    text-shadow:    0 0 8px rgba(255,255,255,0.30);
+    padding:        2px 18px;
+    background:     rgba(0, 0, 0, 0.50);
+    border-radius:  6px;
+    border:         1px solid rgba(255,255,255,0.10);
+    text-shadow:    0 0 10px rgba(255,255,255,0.40);
 }
 
 /* ── Clock ── */
@@ -369,16 +376,29 @@ window#waybar.bottom #clock {
     letter-spacing: 0.10em;
     font-size:      11px;
     font-weight:    bold;
-    padding:        0 20px;
-    text-shadow:    0 0 12px rgba(249,115,22,0.80),
-                    0 0 26px rgba(249,115,22,0.35);
-    border-left:    3px solid rgba(249,115,22,0.45);
+    padding:        2px 18px;
+    background:     rgba(0, 0, 0, 0.55);
+    border-radius:  6px;
+    border:         1px solid rgba(249,115,22,0.35);
+    margin:         3px 4px;
+    text-shadow:    0 0 12px rgba(249,115,22,0.90),
+                    0 0 26px rgba(249,115,22,0.45);
 }
 
-/* ── Bottom-right system modules ── */
+/* ── Bottom-right system modules — shared pill base ── */
 window#waybar.bottom #tray {
     padding:      0 12px;
     border-left:  3px solid rgba(255,255,255,0.08);
+}
+
+window#waybar.bottom #pulseaudio,
+window#waybar.bottom #network,
+window#waybar.bottom #bluetooth,
+window#waybar.bottom #battery {
+    background:    rgba(0, 0, 0, 0.52);
+    border-radius: 6px;
+    border:        1px solid rgba(255,255,255,0.12);
+    margin:        3px 2px;
 }
 
 window#waybar.bottom #pulseaudio {

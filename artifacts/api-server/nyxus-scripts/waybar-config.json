@@ -21,8 +21,9 @@
     },
 
     "custom/nyxus": {
-      "format":  "N Y X U S",
-      "tooltip": false
+      "format":  "<span foreground='#f472b6' font_weight='bold'>N</span><span foreground='#fb923c' font_weight='bold'> Y</span><span foreground='#fbbf24' font_weight='bold'> X</span><span foreground='#34d399' font_weight='bold'> U</span><span foreground='#38bdf8' font_weight='bold'> S</span>",
+      "tooltip": false,
+      "escape":  false
     },
 
     "custom/sep": {
