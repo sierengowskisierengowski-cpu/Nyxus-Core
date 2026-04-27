@@ -318,6 +318,12 @@ uri = "file://attached_assets/nyxus-street-woodward-jefferson.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "nOINBtYhnrLPrr-fUqk03"
+uri = "file://attached_assets/nyxus-all-signs.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -533,3 +539,9 @@ id = "bXGmuEGZAg5AqkuUui3Ke"
 uri = "file://attached_assets/nyxus-street-woodward-jefferson.png"
 type = "image"
 title = "Woodward + Jefferson Corner"
+
+[[outputs]]
+id = "Dve0qY1x3HoeL1-9_jMi9"
+uri = "file://attached_assets/nyxus-all-signs.png"
+type = "image"
+title = "All Detroit Street Signs"
