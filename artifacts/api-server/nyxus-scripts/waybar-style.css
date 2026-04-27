@@ -14,6 +14,21 @@
    BG        : rgba(16, 12, 28, 0.91)
 */
 
+/* ── Calendar / tooltip popup ─────────────────────────────────────────────── */
+tooltip {
+    background:    rgba(4, 2, 14, 0.97);
+    border:        2px solid #ff00ff;
+    border-radius: 14px;
+    padding:       10px 14px;
+    box-shadow:    0 0 24px rgba(255,0,255,0.50);
+}
+tooltip label {
+    color:       #ffffff;
+    font-size:   12px;
+    font-family: "JetBrains Mono Nerd Font", "JetBrains Mono", monospace;
+    text-shadow: 0 0 6px rgba(255,0,255,0.40);
+}
+
 * {
     font-family:   "JetBrains Mono", "Fira Code", monospace;
     font-size:     11px;
