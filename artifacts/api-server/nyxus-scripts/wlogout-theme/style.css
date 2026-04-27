@@ -2,7 +2,7 @@
    NYXUS — Wlogout Power Menu  |  SIGNATURE EDITION
    ~/.config/wlogout/style.css
 
-   Electric neon drip & splatter. Dark. Unmistakable.
+   Electric neon. Dark. Unmistakable.
    © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ============================================================ */
 
@@ -12,32 +12,36 @@
     background-image: none;
 }
 
-/* ── FULLSCREEN DRIP/SPLATTER OVERLAY ─────────────────────── */
+/* ── FULLSCREEN NEON OVERLAY ──────────────────────────────── */
 window {
     background-color: #030206;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'><rect width='1920' height='1080' fill='%23030206'/><ellipse cx='180' cy='980' rx='320' ry='160' fill='%23ff00ff' opacity='0.07'/><ellipse cx='960' cy='860' rx='480' ry='200' fill='%23cc00ff' opacity='0.05'/><ellipse cx='1760' cy='950' rx='280' ry='140' fill='%230088ff' opacity='0.07'/><ellipse cx='500' cy='200' rx='180' ry='100' fill='%23ffff00' opacity='0.04'/><ellipse cx='1400' cy='300' rx='200' ry='110' fill='%2339ff14' opacity='0.04'/><path d='M152 0 L168 0 L166 480 Q165 510 160 530 Q155 510 154 480 Z' fill='%23ff00ff' opacity='0.88'/><ellipse cx='160' cy='542' rx='9' ry='16' fill='%23ff00ff' opacity='0.92'/><circle cx='138' cy='562' r='5' fill='%23ff00ff' opacity='0.72'/><circle cx='182' cy='558' r='4' fill='%23ff00ff' opacity='0.62'/><circle cx='150' cy='578' r='3' fill='%23ff00ff' opacity='0.50'/><circle cx='172' cy='574' r='2' fill='%23ff00ff' opacity='0.45'/><circle cx='128' cy='545' r='3' fill='%23ff00ff' opacity='0.55'/><circle cx='196' cy='548' r='2' fill='%23ff00ff' opacity='0.48'/><path d='M312 0 L322 0 L321 8 Q318 14 317 20 Z' fill='%23ff00ff' opacity='0.70'/><circle cx='295' cy='28' r='4' fill='%23ff00ff' opacity='0.60'/><circle cx='335' cy='22' r='3' fill='%23ff00ff' opacity='0.52'/><path d='M472 0 L486 0 L484 290 Q483 318 478 336 Q473 318 472 290 Z' fill='%23ff5500' opacity='0.85'/><ellipse cx='478' cy='347' rx='8' ry='14' fill='%23ff5500' opacity='0.90'/><circle cx='456' cy='365' r='4' fill='%23ff5500' opacity='0.68'/><circle cx='500' cy='360' r='5' fill='%23ff5500' opacity='0.60'/><circle cx='466' cy='380' r='2' fill='%23ff5500' opacity='0.48'/><circle cx='490' cy='376' r='3' fill='%23ff5500' opacity='0.44'/><circle cx='445' cy='350' r='3' fill='%23ff5500' opacity='0.52'/><path d='M610 0 L618 0 L617 12 Q614 18 613 26 Z' fill='%23ff5500' opacity='0.68'/><circle cx='595' cy='32' r='3' fill='%23ff5500' opacity='0.55'/><path d='M752 0 L766 0 L764 600 Q763 634 758 656 Q753 634 752 600 Z' fill='%23ffff00' opacity='0.82'/><ellipse cx='758' cy='668' rx='9' ry='16' fill='%23ffff00' opacity='0.90'/><circle cx='734' cy='688' r='5' fill='%23ffff00' opacity='0.70'/><circle cx='782' cy='683' r='4' fill='%23ffff00' opacity='0.62'/><circle cx='744' cy='706' r='3' fill='%23ffff00' opacity='0.50'/><circle cx='770' cy='702' r='2' fill='%23ffff00' opacity='0.44'/><circle cx='724' cy='672' r='3' fill='%23ffff00' opacity='0.55'/><circle cx='796' cy='668' r='2' fill='%23ffff00' opacity='0.48'/><path d='M882 0 L890 0 L889 10 Q886 16 885 24 Z' fill='%23ffff00' opacity='0.65'/><circle cx='866' cy='30' r='4' fill='%23ffff00' opacity='0.55'/><path d='M1042 0 L1056 0 L1054 360 Q1053 390 1048 410 Q1043 390 1042 360 Z' fill='%2339ff14' opacity='0.85'/><ellipse cx='1048' cy='422' rx='9' ry='15' fill='%2339ff14' opacity='0.92'/><circle cx='1026' cy='440' r='5' fill='%2339ff14' opacity='0.70'/><circle cx='1070' cy='435' r='4' fill='%2339ff14' opacity='0.62'/><circle cx='1036' cy='458' r='3' fill='%2339ff14' opacity='0.50'/><circle cx='1060' cy='454' r='2' fill='%2339ff14' opacity='0.45'/><circle cx='1016' cy='426' r='3' fill='%2339ff14' opacity='0.55'/><path d='M1160 0 L1168 0 L1167 9 Q1164 15 1163 22 Z' fill='%2339ff14' opacity='0.65'/><circle cx='1145' cy='28' r='3' fill='%2339ff14' opacity='0.55'/><path d='M1342 0 L1356 0 L1354 550 Q1353 582 1348 602 Q1343 582 1342 550 Z' fill='%230088ff' opacity='0.85'/><ellipse cx='1348' cy='614' rx='9' ry='16' fill='%230088ff' opacity='0.90'/><circle cx='1324' cy='634' r='5' fill='%230088ff' opacity='0.70'/><circle cx='1372' cy='629' r='4' fill='%230088ff' opacity='0.62'/><circle cx='1334' cy='652' r='3' fill='%230088ff' opacity='0.50'/><circle cx='1360' cy='648' r='2' fill='%230088ff' opacity='0.44'/><circle cx='1314' cy='618' r='3' fill='%230088ff' opacity='0.55'/><circle cx='1386' cy='614' r='2' fill='%230088ff' opacity='0.48'/><path d='M1462 0 L1470 0 L1469 11 Q1466 17 1465 25 Z' fill='%230088ff' opacity='0.65'/><circle cx='1448' cy='31' r='3' fill='%230088ff' opacity='0.55'/><path d='M1672 0 L1686 0 L1684 420 Q1683 452 1678 472 Q1673 452 1672 420 Z' fill='%23cc00ff' opacity='0.85'/><ellipse cx='1678' cy='484' rx='9' ry='15' fill='%23cc00ff' opacity='0.92'/><circle cx='1654' cy='502' r='5' fill='%23cc00ff' opacity='0.70'/><circle cx='1702' cy='497' r='4' fill='%23cc00ff' opacity='0.62'/><circle cx='1664' cy='520' r='3' fill='%23cc00ff' opacity='0.50'/><circle cx='1688' cy='516' r='2' fill='%23cc00ff' opacity='0.44'/><circle cx='1644' cy='488' r='3' fill='%23cc00ff' opacity='0.55'/><path d='M1790 0 L1798 0 L1797 10 Q1794 16 1793 23 Z' fill='%23cc00ff' opacity='0.66'/><circle cx='1776' cy='29' r='3' fill='%23cc00ff' opacity='0.55'/><circle cx='380' cy='820' r='28' fill='%23ff00ff' opacity='0.10'/><circle cx='440' cy='800' r='14' fill='%23ff00ff' opacity='0.07'/><circle cx='355' cy='840' r='10' fill='%23ff00ff' opacity='0.06'/><circle cx='700' cy='920' r='32' fill='%23ff5500' opacity='0.09'/><circle cx='660' cy='900' r='16' fill='%23ff5500' opacity='0.06'/><circle cx='920' cy='160' r='24' fill='%230088ff' opacity='0.09'/><circle cx='880' cy='180' r='12' fill='%230088ff' opacity='0.06'/><circle cx='1180' cy='880' r='36' fill='%2339ff14' opacity='0.08'/><circle cx='1220' cy='860' r='18' fill='%2339ff14' opacity='0.06'/><circle cx='1540' cy='780' r='28' fill='%23ffff00' opacity='0.07'/><circle cx='1580' cy='800' r='14' fill='%23ffff00' opacity='0.05'/><circle cx='1820' cy='860' r='30' fill='%23cc00ff' opacity='0.09'/><circle cx='1790' cy='840' r='15' fill='%23cc00ff' opacity='0.06'/><rect width='1920' height='6' fill='%23ff00ff' opacity='0.25'/><rect x='0' y='6' width='640' height='3' fill='%23ff5500' opacity='0.20'/><rect x='640' y='6' width='640' height='3' fill='%2339ff14' opacity='0.20'/><rect x='1280' y='6' width='640' height='3' fill='%230088ff' opacity='0.20'/></svg>");
-    background-size:     cover;
-    background-position: center top;
-    background-repeat:   no-repeat;
+    background-image: linear-gradient(180deg,
+        rgba(255,0,255,0.18) 0%,
+        rgba(255,0,255,0.04) 12%,
+        rgba(3,2,6,0)        30%,
+        rgba(3,2,6,0)        70%,
+        rgba(0,136,255,0.05) 88%,
+        rgba(0,136,255,0.14) 100%
+    );
 }
 
 /* ── BUTTON GRID ────────────────────────────────────────── */
 button {
-    background-color:    rgba(4, 2, 12, 0.82);
+    background-color:    rgba(4, 2, 12, 0.84);
     border-style:        solid;
     border-width:        3px;
     border-color:        rgba(255, 0, 255, 0.30);
-    border-radius:       16px;
-    margin:              18px;
+    border-radius:       18px;
+    margin:              20px;
     padding:             0px;
     color:               #ffffff;
-    font-size:           12px;
+    font-size:           13px;
     font-weight:         800;
     letter-spacing:      0.20em;
     text-transform:      uppercase;
     background-repeat:   no-repeat;
     background-position: center 32%;
-    background-size:     88px 88px;
+    background-size:     96px 96px;
     transition:          all 200ms ease;
 }
 
@@ -46,19 +50,19 @@ button {
     color:            #ffffff;
     background-color: rgba(0, 136, 255, 0.18);
     border-color:     #0088ff;
-    box-shadow:       0 0 22px rgba(0,136,255,0.55),
-                      inset 0 0 32px rgba(0,136,255,0.08);
-    text-shadow:      0 0 10px #0088ff, 0 0 22px rgba(0,136,255,0.60);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230088ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%230088ff' opacity='0.15'/><rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>");
+    text-shadow:      0 0 8px #0088ff, 0 0 20px rgba(0,136,255,0.60);
+    box-shadow:       0 0 24px rgba(0,136,255,0.60),
+                      inset 0 0 30px rgba(0,136,255,0.08);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230088ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>");
 }
 #lock:hover {
-    background-color: rgba(0, 136, 255, 0.35);
+    background-color: rgba(0, 136, 255, 0.36);
     border-color:     #0088ff;
-    box-shadow:       0 0 40px rgba(0,136,255,0.90),
-                      0 0 80px rgba(0,136,255,0.40),
-                      inset 0 0 40px rgba(0,136,255,0.15);
-    text-shadow:      0 0 16px #ffffff, 0 0 32px #0088ff;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%230088ff' opacity='0.30'/><rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>");
+    text-shadow:      0 0 10px #ffffff, 0 0 24px #0088ff;
+    box-shadow:       0 0 44px rgba(0,136,255,0.90),
+                      0 0 90px rgba(0,136,255,0.40),
+                      inset 0 0 40px rgba(0,136,255,0.14);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>");
 }
 
 /* ── LOGOUT — electric purple ──────────────────────────── */
@@ -66,19 +70,19 @@ button {
     color:            #ffffff;
     background-color: rgba(204, 0, 255, 0.18);
     border-color:     #cc00ff;
-    box-shadow:       0 0 22px rgba(204,0,255,0.55),
-                      inset 0 0 32px rgba(204,0,255,0.08);
-    text-shadow:      0 0 10px #cc00ff, 0 0 22px rgba(204,0,255,0.60);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cc00ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%23cc00ff' opacity='0.15'/><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>");
+    text-shadow:      0 0 8px #cc00ff, 0 0 20px rgba(204,0,255,0.60);
+    box-shadow:       0 0 24px rgba(204,0,255,0.60),
+                      inset 0 0 30px rgba(204,0,255,0.08);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cc00ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>");
 }
 #logout:hover {
-    background-color: rgba(204, 0, 255, 0.35);
+    background-color: rgba(204, 0, 255, 0.36);
     border-color:     #cc00ff;
-    box-shadow:       0 0 40px rgba(204,0,255,0.90),
-                      0 0 80px rgba(204,0,255,0.40),
-                      inset 0 0 40px rgba(204,0,255,0.15);
-    text-shadow:      0 0 16px #ffffff, 0 0 32px #cc00ff;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%23cc00ff' opacity='0.30'/><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>");
+    text-shadow:      0 0 10px #ffffff, 0 0 24px #cc00ff;
+    box-shadow:       0 0 44px rgba(204,0,255,0.90),
+                      0 0 90px rgba(204,0,255,0.40),
+                      inset 0 0 40px rgba(204,0,255,0.14);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>");
 }
 
 /* ── SUSPEND — neon green ──────────────────────────────── */
@@ -86,19 +90,19 @@ button {
     color:            #ffffff;
     background-color: rgba(57, 255, 20, 0.14);
     border-color:     #39ff14;
-    box-shadow:       0 0 22px rgba(57,255,20,0.55),
-                      inset 0 0 32px rgba(57,255,20,0.06);
-    text-shadow:      0 0 10px #39ff14, 0 0 22px rgba(57,255,20,0.60);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339ff14' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%2339ff14' opacity='0.15'/><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>");
+    text-shadow:      0 0 8px #39ff14, 0 0 20px rgba(57,255,20,0.60);
+    box-shadow:       0 0 24px rgba(57,255,20,0.55),
+                      inset 0 0 30px rgba(57,255,20,0.06);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2339ff14' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>");
 }
 #suspend:hover {
     background-color: rgba(57, 255, 20, 0.28);
     border-color:     #39ff14;
-    box-shadow:       0 0 40px rgba(57,255,20,0.90),
-                      0 0 80px rgba(57,255,20,0.40),
+    text-shadow:      0 0 10px #ffffff, 0 0 24px #39ff14;
+    box-shadow:       0 0 44px rgba(57,255,20,0.90),
+                      0 0 90px rgba(57,255,20,0.40),
                       inset 0 0 40px rgba(57,255,20,0.12);
-    text-shadow:      0 0 16px #ffffff, 0 0 32px #39ff14;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%2339ff14' opacity='0.30'/><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>");
 }
 
 /* ── HIBERNATE — electric yellow ──────────────────────── */
@@ -106,19 +110,19 @@ button {
     color:            #ffffff;
     background-color: rgba(255, 255, 0, 0.12);
     border-color:     #ffff00;
-    box-shadow:       0 0 22px rgba(255,255,0,0.55),
-                      inset 0 0 32px rgba(255,255,0,0.06);
-    text-shadow:      0 0 10px #ffff00, 0 0 22px rgba(255,255,0,0.60);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffff00' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%23ffff00' opacity='0.15'/><path d='M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12h-4M7 12H3m9 4v4m0-16v4'/></svg>");
+    text-shadow:      0 0 8px #ffff00, 0 0 20px rgba(255,255,0,0.60);
+    box-shadow:       0 0 24px rgba(255,255,0,0.55),
+                      inset 0 0 30px rgba(255,255,0,0.06);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffff00' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='5'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>");
 }
 #hibernate:hover {
     background-color: rgba(255, 255, 0, 0.24);
     border-color:     #ffff00;
-    box-shadow:       0 0 40px rgba(255,255,0,0.90),
-                      0 0 80px rgba(255,255,0,0.40),
+    text-shadow:      0 0 10px #ffffff, 0 0 24px #ffff00;
+    box-shadow:       0 0 44px rgba(255,255,0,0.90),
+                      0 0 90px rgba(255,255,0,0.40),
                       inset 0 0 40px rgba(255,255,0,0.10);
-    text-shadow:      0 0 16px #ffffff, 0 0 32px #ffff00;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%23ffff00' opacity='0.30'/><path d='M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12h-4M7 12H3m9 4v4m0-16v4'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='5'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>");
 }
 
 /* ── REBOOT — hot pink/magenta ─────────────────────────── */
@@ -126,44 +130,44 @@ button {
     color:            #ffffff;
     background-color: rgba(255, 0, 255, 0.18);
     border-color:     #ff00ff;
-    box-shadow:       0 0 22px rgba(255,0,255,0.55),
-                      inset 0 0 32px rgba(255,0,255,0.08);
-    text-shadow:      0 0 10px #ff00ff, 0 0 22px rgba(255,0,255,0.60);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff00ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%23ff00ff' opacity='0.15'/><polyline points='23 4 23 10 17 10'/><path d='M20.49 15a9 9 0 1 1-2.12-9.36L23 10'/></svg>");
+    text-shadow:      0 0 8px #ff00ff, 0 0 20px rgba(255,0,255,0.60);
+    box-shadow:       0 0 24px rgba(255,0,255,0.60),
+                      inset 0 0 30px rgba(255,0,255,0.08);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff00ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 4 23 10 17 10'/><path d='M20.49 15a9 9 0 1 1-2.12-9.36L23 10'/></svg>");
 }
 #reboot:hover {
-    background-color: rgba(255, 0, 255, 0.35);
+    background-color: rgba(255, 0, 255, 0.36);
     border-color:     #ff00ff;
-    box-shadow:       0 0 40px rgba(255,0,255,0.90),
-                      0 0 80px rgba(255,0,255,0.40),
-                      inset 0 0 40px rgba(255,0,255,0.15);
-    text-shadow:      0 0 16px #ffffff, 0 0 32px #ff00ff;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%23ff00ff' opacity='0.30'/><polyline points='23 4 23 10 17 10'/><path d='M20.49 15a9 9 0 1 1-2.12-9.36L23 10'/></svg>");
+    text-shadow:      0 0 10px #ffffff, 0 0 24px #ff00ff;
+    box-shadow:       0 0 44px rgba(255,0,255,0.90),
+                      0 0 90px rgba(255,0,255,0.40),
+                      inset 0 0 40px rgba(255,0,255,0.14);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 4 23 10 17 10'/><path d='M20.49 15a9 9 0 1 1-2.12-9.36L23 10'/></svg>");
 }
 
-/* ── SHUTDOWN — electric red/orange ────────────────────── */
+/* ── SHUTDOWN — electric red ───────────────────────────── */
 #shutdown {
     color:            #ffffff;
     background-color: rgba(255, 34, 0, 0.18);
     border-color:     #ff2200;
-    box-shadow:       0 0 22px rgba(255,34,0,0.55),
-                      inset 0 0 32px rgba(255,34,0,0.08);
-    text-shadow:      0 0 10px #ff2200, 0 0 22px rgba(255,34,0,0.60);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff2200' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%23ff2200' opacity='0.15'/><path d='M18.36 6.64a9 9 0 1 1-12.73 0'/><line x1='12' y1='2' x2='12' y2='12'/></svg>");
+    text-shadow:      0 0 8px #ff2200, 0 0 20px rgba(255,34,0,0.60);
+    box-shadow:       0 0 24px rgba(255,34,0,0.60),
+                      inset 0 0 30px rgba(255,34,0,0.08);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff2200' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M18.36 6.64a9 9 0 1 1-12.73 0'/><line x1='12' y1='2' x2='12' y2='12'/></svg>");
 }
 #shutdown:hover {
-    background-color: rgba(255, 34, 0, 0.35);
+    background-color: rgba(255, 34, 0, 0.36);
     border-color:     #ff2200;
-    box-shadow:       0 0 40px rgba(255,34,0,0.90),
-                      0 0 80px rgba(255,34,0,0.40),
-                      inset 0 0 40px rgba(255,34,0,0.15);
-    text-shadow:      0 0 16px #ffffff, 0 0 32px #ff2200;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' stroke='%23ff2200' opacity='0.30'/><path d='M18.36 6.64a9 9 0 1 1-12.73 0'/><line x1='12' y1='2' x2='12' y2='12'/></svg>");
+    text-shadow:      0 0 10px #ffffff, 0 0 24px #ff2200;
+    box-shadow:       0 0 44px rgba(255,34,0,0.90),
+                      0 0 90px rgba(255,34,0,0.40),
+                      inset 0 0 40px rgba(255,34,0,0.14);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M18.36 6.64a9 9 0 1 1-12.73 0'/><line x1='12' y1='2' x2='12' y2='12'/></svg>");
 }
 
 #shutdown:active,
 #shutdown:focus {
-    background-color: rgba(255, 34, 0, 0.50);
+    background-color: rgba(255, 34, 0, 0.55);
     border-color:     #ff2200;
     box-shadow:       0 0 60px rgba(255,34,0,0.95);
 }
