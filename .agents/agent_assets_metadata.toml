@@ -54,6 +54,12 @@ uri = "file://artifacts/api-server/nyxus-scripts/nyxus-wallpaper-v4.png"
 type = "image"
 title = "nyxus wallpaper v4 red green hacker"
 
+[[generated]]
+id = "k4xpXEIv-5LhSeriukvUw"
+uri = "file://attached_assets/nyxus-hacker-wallpaper.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -77,3 +83,9 @@ id = "QxC3C9F1LjrbkBt0vZAwI"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper-v4.png"
 type = "image"
 title = "V4 — ACHII Global Hack"
+
+[[outputs]]
+id = "glzks35HW-kV5LLEaa7s4"
+uri = "file://attached_assets/nyxus-hacker-wallpaper.png"
+type = "image"
+title = "NYXUS Hacker Wallpaper"
