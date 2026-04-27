@@ -19,6 +19,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-sddm-theme.tar.gz":  "nyxus-sddm-theme.tar.gz",
   "hyprlock.conf":            "hyprlock.conf",
   "nyxus-wlogout.tar.gz":    "nyxus-wlogout.tar.gz",
+  "wlogout-style.css":       "wlogout-theme/style.css",
+  "wlogout-layout":          "wlogout-theme/layout",
   "mako-config":              "mako-config",
   "nyxus-ui-configs.tar.gz": "nyxus-ui-configs.tar.gz",
   "hypridle.conf":           "hypridle.conf",

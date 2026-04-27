@@ -103,6 +103,12 @@ dl "rofi-config.rasi"    "$ROFI_DIR/config.rasi"     || failed=$((failed+1))
 dl "rofi-nyxus.rasi"     "$ROFI_DIR/nyxus.rasi"      || failed=$((failed+1))
 dl "rofi-startmenu.rasi" "$ROFI_DIR/startmenu.rasi"  || failed=$((failed+1))
 
+# ── WLOGOUT ──────────────────────────────────────────────────────────────────
+hdr "Wlogout Power Menu"
+mkdir -p "$HOME/.config/wlogout"
+dl "wlogout-style.css" "$HOME/.config/wlogout/style.css" || failed=$((failed+1))
+dl "wlogout-layout"    "$HOME/.config/wlogout/layout"    || failed=$((failed+1))
+
 # ── MAKO ─────────────────────────────────────────────────────────────────────
 hdr "Mako Notifications"
 mkdir -p "$MAKO_DIR"
