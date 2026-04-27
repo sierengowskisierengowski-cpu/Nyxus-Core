@@ -85,21 +85,28 @@
     "margin-left":   0,
     "margin-right":  0,
 
-    "modules-left":   ["custom/launcher"],
-    "modules-center": ["hyprland/workspaces", "hyprland/window"],
-    "modules-right":  ["pulseaudio", "network#bottom", "bluetooth", "battery#bottom", "tray", "clock#bottom"],
+    "modules-left":   ["custom/start", "hyprland/workspaces", "hyprland/window"],
+    "modules-center": [],
+    "modules-right":  ["tray", "pulseaudio", "network#bottom", "bluetooth", "battery#bottom", "custom/quicksettings", "clock#bottom"],
 
-    "custom/launcher": {
-      "format":   "⊞",
+    "custom/start": {
+      "format":   "  NYXUS",
       "tooltip":  false,
-      "on-click": "rofi -show drun"
+      "on-click": "rofi -show drun -theme ~/.config/rofi/startmenu.rasi"
+    },
+
+    "custom/quicksettings": {
+      "format":   "  ⊰",
+      "tooltip":  false,
+      "on-click": "python3 ~/.config/waybar/quicksettings.py"
     },
 
     "hyprland/workspaces": {
       "format":         "{id}",
       "on-click":       "activate",
       "sort-by-number": true,
-      "active-only":    false
+      "active-only":    false,
+      "persistent-workspaces": { "*": 6 }
     },
 
     "hyprland/window": {

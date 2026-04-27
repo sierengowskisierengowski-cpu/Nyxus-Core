@@ -263,6 +263,47 @@ window#waybar.bottom #battery.critical {
 
 
 /* ════════════════════════════════════════════════════════════════════════════
+   BOTTOM BAR EXTRAS — Start + Quick Settings
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ⊞ NYXUS — Start button */
+window#waybar.bottom #custom-start {
+    font-size:    13px;
+    font-weight:  bold;
+    letter-spacing: 0.20em;
+    color:        #f97316;
+    padding:      0 22px;
+    background:   rgba(249, 115, 22, 0.06);
+    border-right: 1px solid rgba(249, 115, 22, 0.20);
+    text-shadow:  0 0 14px rgba(249, 115, 22, 0.55),
+                  0 0 30px rgba(249, 115, 22, 0.25);
+    transition:   all 0.15s ease;
+}
+window#waybar.bottom #custom-start:hover {
+    background:  rgba(249, 115, 22, 0.16);
+    color:       #ffd0a0;
+    text-shadow: 0 0 20px rgba(249, 115, 22, 0.80),
+                 0 0 40px rgba(249, 115, 22, 0.40);
+}
+
+/* ⊰ Quick Settings button */
+window#waybar.bottom #custom-quicksettings {
+    font-size:   14px;
+    color:       #c084fc;
+    padding:     0 16px;
+    background:  rgba(192, 132, 252, 0.05);
+    border-left: 1px solid rgba(192, 132, 252, 0.12);
+    text-shadow: 0 0 10px rgba(192, 132, 252, 0.45);
+    transition:  all 0.15s ease;
+}
+window#waybar.bottom #custom-quicksettings:hover {
+    background:  rgba(192, 132, 252, 0.14);
+    color:       #e0c8ff;
+    text-shadow: 0 0 18px rgba(192, 132, 252, 0.80),
+                 0 0 36px rgba(192, 132, 252, 0.35);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
    LEFT BAR  ·  signature color: PURPLE #c084fc  (70% height)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.left {

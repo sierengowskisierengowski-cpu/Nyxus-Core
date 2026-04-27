@@ -26,6 +26,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "rofi-nyxus.rasi":         "rofi-nyxus.rasi",
   "waybar-ticker.sh":             "waybar-ticker.sh",
   "waybar-stats.sh":              "waybar-stats.sh",
+  "nyxus_quicksettings.py":       "nyxus_quicksettings.py",
+  "rofi-startmenu.rasi":          "rofi-startmenu.rasi",
   "nyxus-sierengowski-clean.png": "nyxus-sierengowski-clean.png",
 };
 

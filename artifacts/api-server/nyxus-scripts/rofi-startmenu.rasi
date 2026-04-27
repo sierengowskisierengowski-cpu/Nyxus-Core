@@ -1,0 +1,195 @@
+/* ============================================================
+   NyX.x.OS — Start Menu Theme  (Win11 style)
+   ~/.config/rofi/startmenu.rasi
+
+   Open with:  rofi -show drun -theme ~/.config/rofi/startmenu.rasi
+   © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ============================================================ */
+
+* {
+    bg0:        rgba(8,  6,  18,  0.97);
+    bg1:        rgba(14, 11, 28,  0.99);
+    bg2:        rgba(22, 17, 42,  0.99);
+    bg-sel:     rgba(192, 132, 252, 0.14);
+
+    fg0:        #e0d8f8;
+    fg1:        #a090c0;
+    fg2:        rgba(140, 120, 180, 0.45);
+
+    accent:     #c084fc;
+    border-dim: rgba(192, 132, 252, 0.25);
+    border-hot: rgba(192, 132, 252, 0.65);
+
+    background-color: transparent;
+    text-color:       @fg0;
+    border-color:     @border-dim;
+    spacing: 0; padding: 0; margin: 0;
+}
+
+/* ── Window ──────────────────────────────────────────────── */
+window {
+    width:            720px;
+    background-color: @bg0;
+    border:           1px;
+    border-color:     @border-dim;
+    border-radius:    14px;
+    padding:          0;
+    location:         center;
+    anchor:           center;
+    y-offset:         80px;
+    fullscreen:       false;
+}
+
+/* ── Main box ────────────────────────────────────────────── */
+mainbox {
+    background-color: transparent;
+    border:           0;
+    padding:          0;
+    spacing:          0;
+    children:         [ inputbar, message, listview, mode-switcher ];
+}
+
+/* ── Search / input ──────────────────────────────────────── */
+inputbar {
+    background-color: @bg1;
+    border:           0 0 1px 0;
+    border-color:     rgba(192, 132, 252, 0.18);
+    border-radius:    14px 14px 0 0;
+    padding:          18px 20px;
+    spacing:          12px;
+    children:         [ prompt, entry ];
+}
+
+prompt {
+    background-color: transparent;
+    text-color:       @accent;
+    font:             "JetBrains Mono Bold 14";
+    padding:          0 8px 0 0;
+    vertical-align:   0.5;
+}
+
+entry {
+    background-color: transparent;
+    text-color:       @fg0;
+    placeholder:      "Search apps, files, settings...";
+    placeholder-color: @fg2;
+    font:             "JetBrains Mono 13";
+    cursor:           text;
+    vertical-align:   0.5;
+}
+
+/* ── App grid (4 columns) ────────────────────────────────── */
+listview {
+    background-color: @bg0;
+    padding:          14px 12px;
+    spacing:          4px;
+    lines:            4;
+    columns:          4;
+    cycle:            true;
+    dynamic:          true;
+    scrollbar:        false;
+    layout:           vertical;
+}
+
+/* ── App entry ───────────────────────────────────────────── */
+element {
+    background-color: transparent;
+    text-color:       @fg1;
+    border:           1px;
+    border-color:     transparent;
+    padding:          10px 6px 8px;
+    spacing:          4px;
+    border-radius:    10px;
+    cursor:           pointer;
+    orientation:      vertical;
+}
+
+element.normal {
+    background-color: rgba(22, 17, 42, 0.50);
+    text-color:       @fg1;
+}
+
+element.urgent {
+    background-color: rgba(248, 113, 113, 0.08);
+    text-color:       #f87171;
+}
+
+element.active {
+    background-color: rgba(192, 132, 252, 0.08);
+    text-color:       @accent;
+}
+
+element selected.normal {
+    background-color: @bg-sel;
+    text-color:       @fg0;
+    border-color:     @border-hot;
+}
+
+element selected.urgent {
+    background-color: rgba(248, 113, 113, 0.14);
+    text-color:       #fca5a5;
+    border-color:     #f87171;
+}
+
+element selected.active {
+    background-color: rgba(192, 132, 252, 0.16);
+    text-color:       @accent;
+    border-color:     @accent;
+}
+
+element-icon {
+    background-color: transparent;
+    size:             42px;
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+}
+
+element-text {
+    background-color: transparent;
+    text-color:       inherit;
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+    font:             "JetBrains Mono 9";
+    highlight:        bold @accent;
+}
+
+/* ── Mode switcher (All Apps / Run / Windows) ────────────── */
+mode-switcher {
+    background-color: @bg1;
+    border:           1px 0 0 0;
+    border-color:     rgba(192, 132, 252, 0.10);
+    border-radius:    0 0 14px 14px;
+    padding:          10px 16px;
+    spacing:          6px;
+}
+
+button {
+    background-color: @bg2;
+    text-color:       @fg2;
+    border:           1px;
+    border-color:     rgba(192, 132, 252, 0.10);
+    border-radius:    6px;
+    padding:          6px 16px;
+    font:             "JetBrains Mono 10";
+    cursor:           pointer;
+}
+
+button selected {
+    background-color: @bg-sel;
+    text-color:       @accent;
+    border-color:     @border-hot;
+}
+
+/* ── Message ─────────────────────────────────────────────── */
+message {
+    background-color: rgba(248, 113, 113, 0.07);
+    border:           0 0 1px 0;
+    border-color:     rgba(248, 113, 113, 0.22);
+    padding:          8px 16px;
+}
+
+textbox {
+    background-color: transparent;
+    text-color:       #f87171;
+    font:             "JetBrains Mono 10";
+}

@@ -83,17 +83,19 @@ dl "nyxus-sierengowski-clean.png" "$WALLS_DIR/nyxus-sierengowski-clean.png" || f
 # ── WAYBAR ────────────────────────────────────────────────────────────────────
 hdr "Waybar"
 mkdir -p "$WAYBAR_DIR"
-dl "waybar-config.json" "$WAYBAR_DIR/config"        || failed=$((failed+1))
-dl "waybar-style.css"   "$WAYBAR_DIR/style.css"     || failed=$((failed+1))
-dl "waybar-ticker.sh"   "$WAYBAR_DIR/ticker.sh"     || failed=$((failed+1))
-dl "waybar-stats.sh"    "$WAYBAR_DIR/stats.sh"      || failed=$((failed+1))
-chmod +x "$WAYBAR_DIR/ticker.sh" "$WAYBAR_DIR/stats.sh" 2>/dev/null || true
+dl "waybar-config.json"       "$WAYBAR_DIR/config"            || failed=$((failed+1))
+dl "waybar-style.css"         "$WAYBAR_DIR/style.css"         || failed=$((failed+1))
+dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
+dl "waybar-stats.sh"          "$WAYBAR_DIR/stats.sh"          || failed=$((failed+1))
+dl "nyxus_quicksettings.py"   "$WAYBAR_DIR/quicksettings.py"  || failed=$((failed+1))
+chmod +x "$WAYBAR_DIR/ticker.sh" "$WAYBAR_DIR/stats.sh" "$WAYBAR_DIR/quicksettings.py" 2>/dev/null || true
 
 # ── ROFI ─────────────────────────────────────────────────────────────────────
 hdr "Rofi"
 mkdir -p "$ROFI_DIR"
-dl "rofi-config.rasi" "$ROFI_DIR/config.rasi"  || failed=$((failed+1))
-dl "rofi-nyxus.rasi"  "$ROFI_DIR/nyxus.rasi"   || failed=$((failed+1))
+dl "rofi-config.rasi"    "$ROFI_DIR/config.rasi"     || failed=$((failed+1))
+dl "rofi-nyxus.rasi"     "$ROFI_DIR/nyxus.rasi"      || failed=$((failed+1))
+dl "rofi-startmenu.rasi" "$ROFI_DIR/startmenu.rasi"  || failed=$((failed+1))
 
 # ── MAKO ─────────────────────────────────────────────────────────────────────
 hdr "Mako Notifications"
