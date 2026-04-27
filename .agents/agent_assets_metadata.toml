@@ -216,6 +216,72 @@ uri = "file://attached_assets/nyxus-detroit-v10.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "sBGb4RtN_bul8XM8imvE-"
+uri = "file://attached_assets/nyxus-sign-8mile.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "cMTlUOCNm8fxmT0q2VPci"
+uri = "file://attached_assets/nyxus-packard.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "bJb9FlzRdGu0mg1zKaXrr"
+uri = "file://attached_assets/nyxus-bluewaterbridge.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "Atgew7Z2S61yGhJnR5WCN"
+uri = "file://attached_assets/nyxus-belleisle.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "1Hx45S4ay40Im8yFRaCzX"
+uri = "file://attached_assets/nyxus-mcs.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "n9ksIxV8C_xgvcQ2EVKJI"
+uri = "file://attached_assets/nyxus-foxtheatre.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "9lq4xrS90AT1bvHOtUvRU"
+uri = "file://attached_assets/nyxus-guardian.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "6oncXFx763eUcj6Xe3Ofl"
+uri = "file://attached_assets/nyxus-woodward.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "P40UOenVbAPGtG-V7ZiJ_"
+uri = "file://attached_assets/nyxus-tigerstadium.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "vurHUJgIEWqV9jsZDVX2R"
+uri = "file://attached_assets/nyxus-easternmarket.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "QnTmcF3dPoAfgY8Qr9QjY"
+uri = "file://attached_assets/nyxus-sierengowski.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -329,3 +395,69 @@ id = "2S2dndR8LJfTMThkOmTby"
 uri = "file://attached_assets/nyxus-detroit-v10.png"
 type = "image"
 title = "Detroit Collage v10 — Second Piece"
+
+[[outputs]]
+id = "ZuoI96fV4uqdJcOr5JAUB"
+uri = "file://attached_assets/nyxus-sign-8mile.png"
+type = "image"
+title = "8 Mile Road Sign"
+
+[[outputs]]
+id = "LzfKLOGNyJNZa8IOAvx95"
+uri = "file://attached_assets/nyxus-packard.png"
+type = "image"
+title = "Packard Plant"
+
+[[outputs]]
+id = "n0Au0ElCTFyuxSulKJLQO"
+uri = "file://attached_assets/nyxus-bluewaterbridge.png"
+type = "image"
+title = "Blue Water Bridge"
+
+[[outputs]]
+id = "bpFbhQ_cHTYybm2y8badh"
+uri = "file://attached_assets/nyxus-belleisle.png"
+type = "image"
+title = "Belle Isle"
+
+[[outputs]]
+id = "sXwFyNh6r970MRo-_gt3A"
+uri = "file://attached_assets/nyxus-mcs.png"
+type = "image"
+title = "Michigan Central Station"
+
+[[outputs]]
+id = "K0pIxv_VtKaHlCmasXr7i"
+uri = "file://attached_assets/nyxus-foxtheatre.png"
+type = "image"
+title = "Fox Theatre"
+
+[[outputs]]
+id = "pLiBxHRkutSOU0xv-KkRR"
+uri = "file://attached_assets/nyxus-guardian.png"
+type = "image"
+title = "Guardian Building"
+
+[[outputs]]
+id = "GM5QE3B3Jbr-KPqaOxUB_"
+uri = "file://attached_assets/nyxus-woodward.png"
+type = "image"
+title = "Woodward Ave"
+
+[[outputs]]
+id = "t51fd6I1_bRTufUUqKsDg"
+uri = "file://attached_assets/nyxus-tigerstadium.png"
+type = "image"
+title = "Tiger Stadium Ghost"
+
+[[outputs]]
+id = "DXoLDkglxDqCb54BHmUf1"
+uri = "file://attached_assets/nyxus-easternmarket.png"
+type = "image"
+title = "Eastern Market"
+
+[[outputs]]
+id = "hKhr4eumWRl3qtMmnOwtt"
+uri = "file://attached_assets/nyxus-sierengowski.png"
+type = "image"
+title = "SIERENGOWSKI"

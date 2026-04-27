@@ -47,8 +47,19 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-wall-14.png":       "nyxus-wall-14.png",
   "nyxus-wall-15.png":       "nyxus-wall-15.png",
   "nyxus-wall-16.png":       "nyxus-wall-16.png",
-  "nyxus-detroit-main.png":  "nyxus-detroit-main.png",
-  "nyxus-detroit-v10.png":   "nyxus-detroit-v10.png",
+  "nyxus-detroit-main.png":      "nyxus-detroit-main.png",
+  "nyxus-detroit-v10.png":       "nyxus-detroit-v10.png",
+  "nyxus-sign-8mile.png":        "nyxus-sign-8mile.png",
+  "nyxus-packard.png":           "nyxus-packard.png",
+  "nyxus-bluewaterbridge.png":   "nyxus-bluewaterbridge.png",
+  "nyxus-belleisle.png":         "nyxus-belleisle.png",
+  "nyxus-mcs.png":               "nyxus-mcs.png",
+  "nyxus-foxtheatre.png":        "nyxus-foxtheatre.png",
+  "nyxus-guardian.png":          "nyxus-guardian.png",
+  "nyxus-woodward.png":          "nyxus-woodward.png",
+  "nyxus-tigerstadium.png":      "nyxus-tigerstadium.png",
+  "nyxus-easternmarket.png":     "nyxus-easternmarket.png",
+  "nyxus-sierengowski.png":      "nyxus-sierengowski.png",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
