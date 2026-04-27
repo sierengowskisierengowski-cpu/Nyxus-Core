@@ -121,9 +121,8 @@ fi
 
 if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   pkill waybar 2>/dev/null || true
-  sleep 0.5
-  waybar --config ~/.config/waybar/config --style ~/.config/waybar/style.css &>/dev/null &
-  disown
+  sleep 0.8
+  hyprctl dispatch exec "waybar --config $HOME/.config/waybar/config --style $HOME/.config/waybar/style.css"
   ok "Waybar restarted — 4-bar NYXUS layout active"
 fi
 
