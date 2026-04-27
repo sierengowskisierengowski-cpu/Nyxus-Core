@@ -180,6 +180,12 @@ uri = "file://attached_assets/nyxus-detroit-v4.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "W72swPw_J9NRVozPjhSh1"
+uri = "file://attached_assets/nyxus-detroit-v5.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -257,3 +263,9 @@ id = "vGquX10IXz_964XFrdrm2"
 uri = "file://attached_assets/nyxus-detroit-v4.png"
 type = "image"
 title = "Detroit Airbrush Collage v4"
+
+[[outputs]]
+id = "IG9rUtp9uH5vOmUc2QcVF"
+uri = "file://attached_assets/nyxus-detroit-v5.png"
+type = "image"
+title = "Detroit Airbrush Collage v5 — Helmet Style"
