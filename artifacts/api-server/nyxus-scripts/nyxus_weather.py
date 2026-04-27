@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ╔══════════════════════════════════════════════════════════════════════╗
-# ║  NYXUS Weather — Native GTK4 Animated Weather Widget                 ║
+# ║  NYXUS Weather — Full rainbow neon · cairo panels                    ║
 # ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 import gi
@@ -25,48 +25,61 @@ LABELS = {"CLEAR":"CLEAR","PARTLY_CLOUDY":"PARTLY CLOUDY","CLOUDY":"OVERCAST",
           "FOG":"FOG","RAIN":"RAIN","SNOW":"SNOW","STORM":"THUNDERSTORM"}
 ICONS  = {"CLEAR":"☀","PARTLY_CLOUDY":"⛅","CLOUDY":"☁","RAIN":"🌧","SNOW":"❄","STORM":"⛈","FOG":"🌫"}
 
-# Neon palette
-C_PINK   = (1.0, 0.0, 1.0)
-C_PURPLE = (0.8, 0.0, 1.0)
-C_BLUE   = (0.0, 0.53, 1.0)
-C_GREEN  = (0.22, 1.0, 0.08)
-C_YELLOW = (1.0, 1.0, 0.0)
-C_ORANGE = (1.0, 0.33, 0.0)
+# Full NYXUS rainbow palette
+PALETTE = [
+    (1.0,  0.0,  1.0 ),   # pink
+    (0.8,  0.0,  1.0 ),   # purple
+    (0.0,  0.53, 1.0 ),   # blue
+    (0.22, 1.0,  0.08),   # green
+    (1.0,  1.0,  0.0 ),   # yellow
+    (1.0,  0.33, 0.0 ),   # orange
+]
+C_PINK   = PALETTE[0]
+C_PURPLE = PALETTE[1]
+C_BLUE   = PALETTE[2]
+C_GREEN  = PALETTE[3]
+C_YELLOW = PALETTE[4]
+C_ORANGE = PALETTE[5]
+C_TEXT   = (0.91, 0.88, 0.96)
+C_DIM    = (0.44, 0.376, 0.627)
 
 
 def glow_text(cr, x, y, text, r, g, b, size=13, bold=True):
     cr.select_font_face("JetBrains Mono", 0, 1 if bold else 0)
     cr.set_font_size(size)
     for dx, dy, a in [(-1,-1,.22),(1,-1,.22),(-1,1,.22),(1,1,.22),
-                       (-2,0,.09),(2,0,.09),(0,-2,.09),(0,2,.09)]:
+                       (-3,0,.10),(3,0,.10),(0,-3,.10),(0,3,.10),
+                       (-5,0,.05),(5,0,.05),(0,-5,.05),(0,5,.05)]:
         cr.set_source_rgba(r, g, b, a)
         cr.move_to(x+dx, y+dy); cr.show_text(text)
     cr.set_source_rgba(r, g, b, 1.0)
     cr.move_to(x, y); cr.show_text(text)
 
 
-def draw_neon_card(cr, x, y, w, h, color, rotation=0.0, alpha=0.10):
-    """Draw a tilted neon card with glow at (x,y) centered."""
+def draw_neon_card(cr, x, y, w, h, color, rotation=0.0, tint=0.10):
     r, g, b = color
     cr.save()
-    cr.translate(x, y)
-    cr.rotate(math.radians(rotation))
+    cr.translate(x, y); cr.rotate(math.radians(rotation))
     hw, hh = w/2, h/2
-    # Glow
-    for gw, fa in [(18, 0.25), (10, 0.55), (5, 1.0)]:
+    for gw, fa in [(20, 0.20), (12, 0.45), (6, 0.85)]:
         cr.set_source_rgba(r, g, b, 0.07 * fa)
         cr.set_line_width(gw)
         cr.rectangle(-hw, -hh, w, h); cr.stroke()
-    # Fill
-    cr.set_source_rgba(r, g, b, alpha)
+    cr.set_source_rgba(r, g, b, tint)
     cr.rectangle(-hw, -hh, w, h); cr.fill()
-    cr.set_source_rgba(0, 0, 0, 0.55)
+    cr.set_source_rgba(0, 0, 0, 0.60)
     cr.rectangle(-hw, -hh, w, h); cr.fill()
-    # Border
-    cr.set_source_rgba(r, g, b, 0.9)
-    cr.set_line_width(1.4)
+    cr.set_source_rgba(r, g, b, 0.95)
+    cr.set_line_width(1.5)
     cr.rectangle(-hw, -hh, w, h); cr.stroke()
     cr.restore()
+
+
+def rainbow_bar(cr, x, y, w, h=2):
+    seg = w / len(PALETTE)
+    for i, (r, g, b) in enumerate(PALETTE):
+        cr.set_source_rgba(r, g, b, 0.85)
+        cr.rectangle(x + i*seg, y, seg, h); cr.fill()
 
 
 CSS = b"""
@@ -74,91 +87,80 @@ CSS = b"""
 window { background-color: #030206; color: #e8e0f5; }
 .search-entry {
     background-color: rgba(7,3,15,0.85);
-    border: 1px solid rgba(204,0,255,0.35);
-    color: #e8e0f5;
-    border-radius: 2px;
-    padding: 6px 12px;
-    font-size: 11px;
-    box-shadow: none;
+    border: 1px solid rgba(204,0,255,0.40);
+    color: #e8e0f5; border-radius: 2px;
+    padding: 6px 12px; font-size: 11px; box-shadow: none;
     caret-color: #cc00ff;
 }
 .search-entry text { background-color: transparent; }
 .go-btn {
-    background-color: rgba(255,0,255,0.08);
-    color: #ff00ff;
-    border: 1px solid #ff00ff;
-    border-radius: 2px;
-    padding: 5px 14px;
-    font-size: 11px;
-    font-weight: bold;
+    background-color: rgba(255,0,255,0.10);
+    color: #ff00ff; border: 1px solid #ff00ff;
+    border-radius: 2px; padding: 5px 14px;
+    font-size: 11px; font-weight: bold;
 }
-.go-btn:hover { background-color: rgba(255,0,255,0.22); }
+.go-btn:hover { background-color: rgba(255,0,255,0.25); }
 .err-lbl { color: #ff5500; font-size: 11px; }
 """
 
 
 class Particles:
     def __init__(self):
-        self.t = 0.0
-        self.condition = "CLEAR"
-        self.is_day    = True
-        self.sun_angle = 0.0
-        self.lightning_timer = random.uniform(4,8)
-        self.lightning_flash = 0.0
-        self.stars  = [{"x":random.uniform(0,380),"y":random.uniform(0,220),
-                         "r":random.uniform(0.8,2.0),"ph":random.uniform(0,math.pi*2)} for _ in range(80)]
-        self.rain   = [{"x":random.uniform(0,380),"y":random.uniform(-20,220),
-                         "spd":random.uniform(5,10),"len":random.uniform(8,18),
-                         "op":random.uniform(0.3,0.8)} for _ in range(110)]
-        self.snow   = [{"x":random.uniform(0,380),"y":random.uniform(-10,220),
-                         "vx":random.uniform(-0.3,0.3),"vy":random.uniform(0.4,1.2),
-                         "r":random.uniform(2,5),"op":random.uniform(0.5,1.0),
-                         "ph":random.uniform(0,math.pi*2)} for _ in range(65)]
-        self.clouds = [{"x":random.uniform(-80,380),"y":random.uniform(20,100),
-                         "w":random.uniform(90,160),"spd":random.uniform(0.08,0.25)} for _ in range(5)]
-        self.fog    = [{"x":0,"y":random.uniform(10,200),
-                         "op":random.uniform(0.05,0.12),"spd":random.uniform(0.05,0.18)} for _ in range(5)]
+        self.t=0.0; self.condition="CLEAR"; self.is_day=True
+        self.sun_angle=0.0; self.lightning_timer=random.uniform(4,8)
+        self.lightning_flash=0.0
+        self.stars  =[{"x":random.uniform(0,380),"y":random.uniform(0,220),
+                        "r":random.uniform(0.8,2.0),"ph":random.uniform(0,math.pi*2)} for _ in range(80)]
+        self.rain   =[{"x":random.uniform(0,380),"y":random.uniform(-20,220),
+                        "spd":random.uniform(5,10),"len":random.uniform(8,18),
+                        "op":random.uniform(0.3,0.8)} for _ in range(110)]
+        self.snow   =[{"x":random.uniform(0,380),"y":random.uniform(-10,220),
+                        "vx":random.uniform(-0.3,0.3),"vy":random.uniform(0.4,1.2),
+                        "r":random.uniform(2,5),"op":random.uniform(0.5,1.0),
+                        "ph":random.uniform(0,math.pi*2)} for _ in range(65)]
+        self.clouds =[{"x":random.uniform(-80,380),"y":random.uniform(20,100),
+                        "w":random.uniform(90,160),"spd":random.uniform(0.08,0.25)} for _ in range(5)]
+        self.fog    =[{"x":0,"y":random.uniform(10,200),
+                        "op":random.uniform(0.05,0.12),"spd":random.uniform(0.05,0.18)} for _ in range(5)]
 
-    def step(self, W, H, dt=0.05):
-        self.t += dt; c = self.condition
-        if c in ("RAIN","STORM"):
+    def step(self,W,H,dt=0.05):
+        self.t+=dt; c=self.condition
+        if c in("RAIN","STORM"):
             for p in self.rain:
-                p["y"] += p["spd"]; p["x"] -= p["spd"]*0.12
-                if p["y"] > H or p["x"] < -5:
-                    p["y"]=random.uniform(-20,0); p["x"]=random.uniform(0,W)
-        if c == "SNOW":
+                p["y"]+=p["spd"]; p["x"]-=p["spd"]*0.12
+                if p["y"]>H or p["x"]<-5: p["y"]=random.uniform(-20,0); p["x"]=random.uniform(0,W)
+        if c=="SNOW":
             for p in self.snow:
-                p["y"] += p["vy"]; p["x"] += p["vx"]+math.sin(self.t*0.6+p["ph"])*0.35
-                if p["y"] > H: p["y"]=-8; p["x"]=random.uniform(0,W)
-                if p["x"] < -5: p["x"]=W
-                if p["x"] > W+5: p["x"]=0
-        if c == "STORM":
-            self.lightning_timer -= dt
-            if self.lightning_flash > 0: self.lightning_flash = max(0,self.lightning_flash-dt*3)
-            elif self.lightning_timer <= 0: self.lightning_flash=1.0; self.lightning_timer=random.uniform(4,9)
-        if c in ("CLOUDY","PARTLY_CLOUDY"):
+                p["y"]+=p["vy"]; p["x"]+=p["vx"]+math.sin(self.t*0.6+p["ph"])*0.35
+                if p["y"]>H: p["y"]=-8; p["x"]=random.uniform(0,W)
+                if p["x"]<-5: p["x"]=W
+                if p["x"]>W+5: p["x"]=0
+        if c=="STORM":
+            self.lightning_timer-=dt
+            if self.lightning_flash>0: self.lightning_flash=max(0,self.lightning_flash-dt*3)
+            elif self.lightning_timer<=0: self.lightning_flash=1.0; self.lightning_timer=random.uniform(4,9)
+        if c in("CLOUDY","PARTLY_CLOUDY"):
             for cl in self.clouds:
-                cl["x"] += cl["spd"]
-                if cl["x"] > W+cl["w"]: cl["x"]=-cl["w"]
-        if c == "FOG":
+                cl["x"]+=cl["spd"]
+                if cl["x"]>W+cl["w"]: cl["x"]=-cl["w"]
+        if c=="FOG":
             for f in self.fog:
-                f["x"] += f["spd"]
-                if f["x"] > W+80: f["x"]=-80
-        self.sun_angle += dt*0.12
+                f["x"]+=f["spd"]
+                if f["x"]>W+80: f["x"]=-80
+        self.sun_angle+=dt*0.12
 
-    def draw(self, cr, W, H):
-        self._sky(cr, W, H); c=self.condition; day=self.is_day
-        if   c=="CLEAR":         (self._sun if day else self._moon_stars)(cr,W,H)
-        elif c=="PARTLY_CLOUDY": (self._sun if day else self._moon_stars)(cr,W,H); self._clouds(cr,W,H,2)
-        elif c=="CLOUDY":        self._clouds(cr,W,H,4)
-        elif c=="RAIN":          self._clouds(cr,W,H,3,dark=True); self._rain(cr,W,H)
-        elif c=="SNOW":          self._clouds(cr,W,H,2); self._snow_draw(cr,W,H)
+    def draw(self,cr,W,H):
+        self._sky(cr,W,H); c=self.condition; day=self.is_day
+        if   c=="CLEAR":          self._sun(cr,W,H) if day else (self._stars(cr,W,H),self._moon(cr,W,H))
+        elif c=="PARTLY_CLOUDY":  self._sun(cr,W,H) if day else (self._stars(cr,W,H),self._moon(cr,W,H)); self._clouds(cr,W,H,2)
+        elif c=="CLOUDY":         self._clouds(cr,W,H,4)
+        elif c=="RAIN":           self._clouds(cr,W,H,3,dark=True); self._rain(cr,W,H)
+        elif c=="SNOW":           self._clouds(cr,W,H,2); self._snow_draw(cr,W,H)
         elif c=="STORM":
             if self.lightning_flash>0:
-                cr.set_source_rgba(1,1,0.9,self.lightning_flash*0.35)
-                cr.rectangle(0,0,W,H); cr.fill()
+                cr.set_source_rgba(1,1,0.9,self.lightning_flash*0.35); cr.rectangle(0,0,W,H); cr.fill()
             self._clouds(cr,W,H,4,dark=True); self._rain(cr,W,H)
-        elif c=="FOG": self._fog_draw(cr,W,H)
+        elif c=="FOG":            self._fog_draw(cr,W,H)
 
     def _sky(self,cr,w,h):
         c=self.condition; day=self.is_day
@@ -185,23 +187,16 @@ class Particles:
             cr.line_to(cx+math.cos(a)*ro,cy+math.sin(a)*ro); cr.stroke()
         cr.set_source_rgba(1,0.88,0.3,1); cr.arc(cx,cy,22,0,math.pi*2); cr.fill()
 
-    def _moon_stars(self,cr,w,h):
-        for s in self.stars:
-            op=s["r"]/2*(0.5+0.5*math.sin(self.t*1.8+s["ph"]))
-            cr.set_source_rgba(0.9,0.85,1,op); cr.arc(s["x"],s["y"],s["r"]*0.6,0,math.pi*2); cr.fill()
+    def _moon(self,cr,w,h):
         cx,cy=w*0.72,h*0.2
         cr.set_source_rgba(0,0.5,1,0.07); cr.arc(cx,cy,26,0,math.pi*2); cr.fill()
         cr.set_source_rgba(0.85,0.9,1,0.92); cr.arc(cx,cy,17,0,math.pi*2); cr.fill()
         cr.set_source_rgb(0.02,0.01,0.07); cr.arc(cx+6,cy-4,13,0,math.pi*2); cr.fill()
 
-    def _moon_stars(self,cr,w,h): # consolidated
+    def _stars(self,cr,w,h):
         for s in self.stars:
             op=s["r"]/2*(0.5+0.5*math.sin(self.t*1.8+s["ph"]))
             cr.set_source_rgba(0.9,0.85,1,op); cr.arc(s["x"],s["y"],s["r"]*0.6,0,math.pi*2); cr.fill()
-        cx,cy=w*0.72,h*0.2
-        cr.set_source_rgba(0,0.5,1,0.07); cr.arc(cx,cy,26,0,math.pi*2); cr.fill()
-        cr.set_source_rgba(0.85,0.9,1,0.92); cr.arc(cx,cy,17,0,math.pi*2); cr.fill()
-        cr.set_source_rgb(0.02,0.01,0.07); cr.arc(cx+6,cy-4,13,0,math.pi*2); cr.fill()
 
     def _rain(self,cr,w,h):
         for p in self.rain:
@@ -230,56 +225,46 @@ class Particles:
 class NyxusWeather(Gtk.Application):
     def __init__(self):
         super().__init__(application_id="io.nyxus.weather")
-        self._particles = Particles()
-        self._city = "LOCATING..."; self._temp=None; self._feels=None
+        self._particles=Particles()
+        self._city="LOCATING..."; self._temp=None; self._feels=None
         self._cond="CLEAR"; self._is_day=True; self._wind=None
         self._humidity=None; self._forecast=[]; self._err=""
-        self._lat=None; self._lon=None
-        self._anim_t = 0.0
+        self._lat=None; self._lon=None; self._anim_t=0.0
 
     def do_activate(self):
         p=Gtk.CssProvider(); p.load_from_data(CSS)
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(),p,Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.win=Gtk.ApplicationWindow(application=self,title="NYXUS Weather")
-        self.win.set_default_size(380,580); self.win.set_resizable(False)
+        self.win.set_default_size(400,660); self.win.set_resizable(False)
         root=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.win.set_child(root)
 
-        # Animated scene
-        self._scene=Gtk.DrawingArea()
-        self._scene.set_size_request(380,220)
-        self._scene.set_draw_func(self._draw_scene,None)
-        root.append(self._scene)
+        # Scene
+        self._scene=Gtk.DrawingArea(); self._scene.set_size_request(400,200)
+        self._scene.set_draw_func(self._draw_scene,None); root.append(self._scene)
 
-        # Neon data panel (cairo-drawn)
-        self._panel=Gtk.DrawingArea()
-        self._panel.set_size_request(380,200)
-        self._panel.set_draw_func(self._draw_panel,None)
-        root.append(self._panel)
+        # Main data panel
+        self._panel=Gtk.DrawingArea(); self._panel.set_size_request(400,220)
+        self._panel.set_draw_func(self._draw_panel,None); root.append(self._panel)
 
-        # Search bar
+        # Search
         search=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=6)
-        search.set_margin_top(4);search.set_margin_start(14);search.set_margin_end(14)
+        search.set_margin_top(4); search.set_margin_start(14); search.set_margin_end(14)
         self._search=Gtk.Entry(); self._search.add_css_class("search-entry")
         self._search.set_placeholder_text("Enter city name...")
         self._search.set_hexpand(True)
         self._search.connect("activate",lambda *_:self._on_search())
         search.append(self._search)
         go=Gtk.Button(label="GO"); go.add_css_class("go-btn")
-        go.connect("clicked",lambda *_:self._on_search())
-        search.append(go)
+        go.connect("clicked",lambda *_:self._on_search()); search.append(go)
         root.append(search)
-        self._err_lbl=Gtk.Label(label="")
-        self._err_lbl.add_css_class("err-lbl")
-        self._err_lbl.set_halign(Gtk.Align.START)
-        self._err_lbl.set_margin_start(14)
+        self._err_lbl=Gtk.Label(); self._err_lbl.add_css_class("err-lbl")
+        self._err_lbl.set_halign(Gtk.Align.START); self._err_lbl.set_margin_start(14)
         root.append(self._err_lbl)
 
-        # Forecast panel (cairo)
-        self._fc_area=Gtk.DrawingArea()
-        self._fc_area.set_size_request(380,90)
-        self._fc_area.set_draw_func(self._draw_forecast,None)
-        root.append(self._fc_area)
+        # 5-day forecast
+        self._fc_area=Gtk.DrawingArea(); self._fc_area.set_size_request(400,110)
+        self._fc_area.set_draw_func(self._draw_forecast,None); root.append(self._fc_area)
 
         GLib.timeout_add(50,self._animate)
         GLib.timeout_add_seconds(600,self._refresh)
@@ -287,127 +272,158 @@ class NyxusWeather(Gtk.Application):
         self.win.present()
 
     def _animate(self):
-        self._anim_t += 0.04
-        W=self._scene.get_width() or 380
-        H=self._scene.get_height() or 220
+        self._anim_t+=0.04
+        W=self._scene.get_width() or 400; H=self._scene.get_height() or 200
         self._particles.step(W,H)
-        self._scene.queue_draw()
-        self._panel.queue_draw()
+        self._scene.queue_draw(); self._panel.queue_draw(); self._fc_area.queue_draw()
         return GLib.SOURCE_CONTINUE
 
+    # ── Scene ──────────────────────────────────────────────────────────────────
     def _draw_scene(self,area,cr,W,H,_):
         self._particles.draw(cr,W,H)
-        # Dot-grid overlay
-        cr.set_source_rgba(0.28,0.07,0.50,0.08)
+        # Dot grid overlay
+        cr.set_source_rgba(0.28,0.07,0.50,0.07)
         for gx in range(0,W+24,24):
             for gy in range(0,H+24,24):
                 cr.arc(gx,gy,0.9,0,math.pi*2); cr.fill()
-        # Location + system badge
-        glow_text(cr,14,H-36,self._city,*C_PINK,size=18,bold=True)
-        badge="[DAY]" if self._is_day else "[NIGHT]"
-        cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(10)
-        cr.set_source_rgba(*C_BLUE,0.7); cr.move_to(14,H-18); cr.show_text(f"{badge} SYS.ONLINE")
+        # City name with neon glow
+        glow_text(cr,14,H-42,self._city,*C_PINK,size=20,bold=True)
+        # Status line — multi-color
+        badge="DAY" if self._is_day else "NIGHT"
+        cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
+        items=[("SYS.ONLINE",C_GREEN),("·",C_DIM),(badge,C_YELLOW),("·",C_DIM),
+               (self._cond,C_PURPLE)]
+        xpos=14
+        for txt,col in items:
+            cr.set_source_rgba(*col,0.85)
+            cr.move_to(xpos,H-24); cr.show_text(txt)
+            xpos+=cr.text_extents(txt).width+6
+        # Rainbow bottom bar
+        rainbow_bar(cr,0,H-4,W,4)
 
+    # ── Main data panel ────────────────────────────────────────────────────────
     def _draw_panel(self,area,cr,W,H,_):
-        # Panel background
         cr.set_source_rgb(0.012,0.008,0.024); cr.rectangle(0,0,W,H); cr.fill()
         # Dot grid
-        cr.set_source_rgba(0.28,0.07,0.50,0.10)
+        cr.set_source_rgba(0.28,0.07,0.50,0.09)
         for gx in range(0,W+24,24):
             for gy in range(0,H+24,24):
                 cr.arc(gx,gy,0.9,0,math.pi*2); cr.fill()
 
         if self._temp is None:
-            glow_text(cr,W//2-60,H//2,"LOCATING...",*C_PURPLE,size=16,bold=True)
+            glow_text(cr,W//2-80,H//2,"LOCATING...",*C_PURPLE,size=18,bold=True)
             return
 
-        # Big temperature
+        # ── Big temperature (pink) ──
         temp_txt=f"{self._temp}°F"
-        cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(58)
+        cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(62)
         ext=cr.text_extents(temp_txt)
-        glow_text(cr,14,-ext.y_bearing+8,temp_txt,*C_PINK,size=58,bold=True)
+        glow_text(cr,14,-ext.y_bearing+6,temp_txt,*C_PINK,size=62,bold=True)
 
-        # Condition badge (tilted card)
-        draw_neon_card(cr,W-80,50,130,32,C_GREEN,-2.0,0.08)
-        cr.save(); cr.translate(W-80,50); cr.rotate(math.radians(-2.0))
+        # ── Condition badge (green, tilted) ──
         cond_lbl=LABELS.get(self._cond,self._cond)
-        cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(11)
+        draw_neon_card(cr,W-78,44,130,30,C_GREEN,-2.5,0.10)
+        cr.save(); cr.translate(W-78,44); cr.rotate(math.radians(-2.5))
+        cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(10)
         ext2=cr.text_extents(cond_lbl)
         cr.set_source_rgba(*C_GREEN,1.0)
-        cr.move_to(-ext2.width/2-ext2.x_bearing, -ext2.height/2-ext2.y_bearing+2)
-        cr.show_text(cond_lbl)
-        cr.restore()
+        cr.move_to(-ext2.width/2-ext2.x_bearing,-ext2.height/2-ext2.y_bearing+2)
+        cr.show_text(cond_lbl); cr.restore()
 
-        # Feels like
-        cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(11)
-        cr.set_source_rgba(0.91,0.88,0.96,0.6)
-        cr.move_to(14,80); cr.show_text(f"FEELS_LIKE: {self._feels}°F")
+        # ── Feels like (purple) ──
+        feels_txt=f"FEELS_LIKE: {self._feels}°F"
+        glow_text(cr,14,82,feels_txt,*C_PURPLE,size=11,bold=False)
 
-        # Stat cards (wind + humidity) — tilted neon cards
-        if self._wind is not None:
-            draw_neon_card(cr, 100, 128, 158, 52, C_ORANGE, -2.5, 0.09)
-            cr.save(); cr.translate(100,128); cr.rotate(math.radians(-2.5))
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
-            cr.set_source_rgba(0.91,0.88,0.96,0.5)
-            cr.move_to(-50,-14); cr.show_text("WIND_SPD")
-            glow_text(cr,-50,6,f"{self._wind} MPH",*C_ORANGE,size=16,bold=True)
+        # ── Rainbow separator ──
+        rainbow_bar(cr,0,94,W,2)
+
+        # ── 4 stat tiles (each different color, tilted alternating) ──
+        stats=[
+            ("WIND_SPD", f"{self._wind} MPH"   if self._wind     is not None else "--", C_ORANGE, -3.0),
+            ("HUMIDITY", f"{self._humidity}%"   if self._humidity is not None else "--", C_BLUE,    3.0),
+            ("CONDITION",cond_lbl[:9],                                                   C_GREEN,  -2.0),
+            ("SYS_TIME", datetime.now().strftime("%H:%M"),                               C_YELLOW,  2.0),
+        ]
+        tile_w, tile_h = 84, 62
+        tile_cx_start = tile_w//2 + 10
+        tile_cy = 100 + tile_h//2 + 8
+        for i,(label,value,color,tilt) in enumerate(stats):
+            cx = tile_cx_start + i*(tile_w+8)
+            draw_neon_card(cr,cx,tile_cy,tile_w,tile_h,color,tilt,0.10)
+            cr.save(); cr.translate(cx,tile_cy); cr.rotate(math.radians(tilt))
+            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(8)
+            cr.set_source_rgba(0.91,0.88,0.96,0.55)
+            ext3=cr.text_extents(label)
+            cr.move_to(-ext3.width/2-ext3.x_bearing,-18); cr.show_text(label)
+            cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(13)
+            cr.set_source_rgba(*color,1.0)
+            ext4=cr.text_extents(value)
+            cr.move_to(-ext4.width/2-ext4.x_bearing,10); cr.show_text(value)
+            # Small color dot
+            cr.set_source_rgba(*color,0.8)
+            cr.arc(0,22,3,0,math.pi*2); cr.fill()
             cr.restore()
 
-        if self._humidity is not None:
-            draw_neon_card(cr, 280, 128, 158, 52, C_BLUE, 2.5, 0.09)
-            cr.save(); cr.translate(280,128); cr.rotate(math.radians(2.5))
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
-            cr.set_source_rgba(0.91,0.88,0.96,0.5)
-            cr.move_to(-50,-14); cr.show_text("HUMIDITY")
-            glow_text(cr,-50,6,f"{self._humidity}%",*C_BLUE,size=16,bold=True)
-            cr.restore()
+        # ── Bottom rainbow bar ──
+        rainbow_bar(cr,0,H-3,W,3)
 
+    # ── 5-day forecast ─────────────────────────────────────────────────────────
     def _draw_forecast(self,area,cr,W,H,_):
-        # Forecast panel bg
-        cr.set_source_rgba(0.012,0.008,0.024,0.95)
-        cr.rectangle(0,0,W,H); cr.fill()
-        # Border top
-        cr.set_source_rgba(*C_PURPLE,0.25); cr.set_line_width(1)
-        cr.move_to(0,0); cr.line_to(W,0); cr.stroke()
+        cr.set_source_rgb(0.012,0.008,0.024); cr.rectangle(0,0,W,H); cr.fill()
         # Dot grid
         cr.set_source_rgba(0.28,0.07,0.50,0.08)
         for gx in range(0,W+24,24):
             for gy in range(0,H+24,24):
                 cr.arc(gx,gy,0.9,0,math.pi*2); cr.fill()
+        # Rainbow top border
+        rainbow_bar(cr,0,0,W,2)
         # Header
-        glow_text(cr,14,22,"FORECAST_5D",*C_PURPLE,size=10,bold=True)
-        cr.set_source_rgba(*C_PURPLE,0.25); cr.set_line_width(1)
-        cr.move_to(0,30); cr.line_to(W,30); cr.stroke()
+        glow_text(cr,14,20,"FORECAST_5D",*C_PURPLE,size=9,bold=True)
+        cr.set_source_rgba(*C_PURPLE,0.20); cr.set_line_width(1)
+        cr.move_to(0,28); cr.line_to(W,28); cr.stroke()
 
         if not self._forecast: return
-        n = len(self._forecast)
-        col_w = W / n
-        for i, fc in enumerate(self._forecast[:5]):
-            cx = col_w*i + col_w/2
-            # Day name
+        n=len(self._forecast); col_w=W/n
+        for i,fc in enumerate(self._forecast[:5]):
+            col=PALETTE[i % len(PALETTE)]   # each day gets a different neon color
+            cx=col_w*i+col_w/2
+            # Vertical divider
+            if i>0:
+                cr.set_source_rgba(*PALETTE[(i-1)%len(PALETTE)],0.15); cr.set_line_width(1)
+                cr.move_to(col_w*i,30); cr.line_to(col_w*i,H-2); cr.stroke()
+            # Background tint for this column
+            cr.set_source_rgba(*col,0.04)
+            cr.rectangle(col_w*i,30,col_w,H-30); cr.fill()
+            # Day name — colored
             cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(10)
-            cr.set_source_rgba(0.91,0.88,0.96,0.8)
+            cr.set_source_rgba(*col,0.95)
             ext=cr.text_extents(fc["day"])
             cr.move_to(cx-ext.width/2-ext.x_bearing,46); cr.show_text(fc["day"])
             # Icon
-            cr.select_font_face("",0,0); cr.set_font_size(16)
+            cr.select_font_face("",0,0); cr.set_font_size(18)
             icon=ICONS.get(fc["cond"],"—")
             ext2=cr.text_extents(icon)
-            cr.set_source_rgba(*C_GREEN,0.9)
-            cr.move_to(cx-ext2.width/2-ext2.x_bearing,64); cr.show_text(icon)
-            # Hi/lo
+            cr.set_source_rgba(*col,0.9)
+            cr.move_to(cx-ext2.width/2-ext2.x_bearing,68); cr.show_text(icon)
+            # Hi (pink glow)
             hi=f"{fc['hi']}°" if fc.get("hi") is not None else "—"
-            lo=f"{fc['lo']}°" if fc.get("lo") is not None else "—"
-            cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(10)
+            cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(11)
             ext3=cr.text_extents(hi)
-            cr.set_source_rgba(*C_PINK,0.9)
-            cr.move_to(cx-ext3.width/2-ext3.x_bearing,80); cr.show_text(hi)
+            for dx,dy,a in [(-1,-1,.25),(1,1,.25)]:
+                cr.set_source_rgba(*col,a)
+                cr.move_to(cx-ext3.width/2-ext3.x_bearing+dx,84+dy); cr.show_text(hi)
+            cr.set_source_rgba(*col,1.0)
+            cr.move_to(cx-ext3.width/2-ext3.x_bearing,84); cr.show_text(hi)
+            # Lo (dim)
+            lo=f"{fc['lo']}°" if fc.get("lo") is not None else "—"
             cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(10)
+            cr.set_source_rgba(*C_DIM,0.7)
             ext4=cr.text_extents(lo)
-            cr.set_source_rgba(*C_BLUE,0.8)
-            cr.move_to(cx-ext4.width/2-ext4.x_bearing,H-4); cr.show_text(lo)
+            cr.move_to(cx-ext4.width/2-ext4.x_bearing,H-8); cr.show_text(lo)
+            # Bottom dot
+            cr.set_source_rgba(*col,0.6); cr.arc(cx,H-22,2.5,0,math.pi*2); cr.fill()
 
-    # ── Fetch / update ──────────────────────────────────────────────────────────
+    # ── Data fetch ─────────────────────────────────────────────────────────────
     def _geoip_locate(self):
         try:
             with urlopen("http://ip-api.com/json/?fields=lat,lon,city,status",timeout=6) as r:
@@ -424,7 +440,7 @@ class NyxusWeather(Gtk.Application):
                 self._city=cfg.get("city","CONFIGURED").upper()
                 self._fetch_weather(); return
         except Exception: pass
-        GLib.idle_add(lambda:(self._panel.queue_draw(),self._scene.queue_draw(),None)[2])
+        GLib.idle_add(lambda:(self._panel.queue_draw(),None)[1])
 
     def _fetch_weather(self):
         url=(f"https://api.open-meteo.com/v1/forecast?latitude={self._lat}&longitude={self._lon}"
@@ -434,12 +450,12 @@ class NyxusWeather(Gtk.Application):
         try:
             with urlopen(url,timeout=10) as r: d=json.loads(r.read())
             cur=d.get("current",{}); daily=d.get("daily",{})
-            self._temp     = round(cur.get("temperature_2m",0))
-            self._feels    = round(cur.get("apparent_temperature",0))
-            self._is_day   = bool(cur.get("is_day",1))
-            self._wind     = round(cur.get("wind_speed_10m",0))
-            self._humidity = cur.get("relative_humidity_2m",0)
-            self._cond     = WMO.get(cur.get("weather_code",0),"CLEAR")
+            self._temp     =round(cur.get("temperature_2m",0))
+            self._feels    =round(cur.get("apparent_temperature",0))
+            self._is_day   =bool(cur.get("is_day",1))
+            self._wind     =round(cur.get("wind_speed_10m",0))
+            self._humidity =cur.get("relative_humidity_2m",0)
+            self._cond     =WMO.get(cur.get("weather_code",0),"CLEAR")
             times=daily.get("time",[])
             self._forecast=[{
                 "day":datetime.strptime(times[i],"%Y-%m-%d").strftime("%a").upper(),
@@ -482,11 +498,9 @@ class NyxusWeather(Gtk.Application):
         self._err_lbl.set_text(self._err)
         self._particles.condition=self._cond
         self._particles.is_day=self._is_day
-        self._panel.queue_draw()
-        self._fc_area.queue_draw()
-        self._scene.queue_draw()
+        self._panel.queue_draw(); self._fc_area.queue_draw(); self._scene.queue_draw()
         return GLib.SOURCE_REMOVE
 
 
-if __name__ == "__main__":
+if __name__=="__main__":
     NyxusWeather().run(None)
