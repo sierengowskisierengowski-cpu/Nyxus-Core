@@ -18,7 +18,7 @@ for i in $(seq -w 1 16); do
   fi
 done
 
-WALLS=("$WALL_DIR"/nyxus-wall-*.png "$WALL_DIR"/nyxus-detroit-v10.png)
+WALLS=("$WALL_DIR"/nyxus-wall-*.png "$WALL_DIR"/nyxus-detroit-v10.png "$WALL_DIR"/nyxus-sign-8mile.png "$WALL_DIR"/nyxus-packard.png "$WALL_DIR"/nyxus-bluewaterbridge.png "$WALL_DIR"/nyxus-belleisle.png "$WALL_DIR"/nyxus-mcs.png "$WALL_DIR"/nyxus-foxtheatre.png "$WALL_DIR"/nyxus-guardian.png "$WALL_DIR"/nyxus-woodward.png "$WALL_DIR"/nyxus-tigerstadium.png "$WALL_DIR"/nyxus-easternmarket.png "$WALL_DIR"/nyxus-sierengowski.png)
 TOTAL=${#WALLS[@]}
 
 if [ "$TOTAL" -eq 0 ]; then

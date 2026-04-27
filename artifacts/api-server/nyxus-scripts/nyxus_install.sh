@@ -81,8 +81,10 @@ mkdir -p "$WALLS_DIR"
 for i in $(seq -w 1 16); do
   dl "nyxus-wall-${i}.png" "$WALLS_DIR/nyxus-wall-${i}.png" || failed=$((failed+1))
 done
-dl "nyxus-detroit-main.png" "$HYPR_DIR/nyxus-detroit-main.png" || failed=$((failed+1))
-dl "nyxus-detroit-v10.png"  "$WALLS_DIR/nyxus-detroit-v10.png"  || failed=$((failed+1))
+dl "nyxus-detroit-main.png"    "$HYPR_DIR/nyxus-detroit-main.png"         || failed=$((failed+1))
+for f in nyxus-detroit-v10 nyxus-sign-8mile nyxus-packard nyxus-bluewaterbridge nyxus-belleisle nyxus-mcs nyxus-foxtheatre nyxus-guardian nyxus-woodward nyxus-tigerstadium nyxus-easternmarket nyxus-sierengowski; do
+  dl "${f}.png" "$WALLS_DIR/${f}.png" || failed=$((failed+1))
+done
 dl "wallpaper-rotate.sh" "$HYPR_DIR/wallpaper-rotate.sh" || failed=$((failed+1))
 chmod +x "$HYPR_DIR/wallpaper-rotate.sh" 2>/dev/null || true
 

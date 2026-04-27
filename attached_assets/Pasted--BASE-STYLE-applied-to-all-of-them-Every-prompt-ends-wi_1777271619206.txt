@@ -1,0 +1,83 @@
+🎨 BASE STYLE (applied to all of them)
+Every prompt ends with this:
+Airbrushed style like custom car paint or airbrush t-shirt art, graffiti mural aesthetic, 
+neon glow, hot colors — electric purple, neon orange, hot pink, acid green, chrome silver, 
+deep black background, fire red, flames, smoke, lightning. Wall to wall coverage, 
+every inch filled, no empty space, hyper detailed, ultra stylized. 
+Hyprland desktop wallpaper 2560x1440, seamless edge to edge.
+
+1. 🪧 8 Mile Road Street Sign
+Giant Detroit street sign reading "8 MILE RD" centered and massive, chrome and neon, 
+graffiti tags surrounding it, airbrush glow halos, Detroit skyline ghost behind it, 
+flames licking the edges, neon orange and hot pink lighting...
+[+ BASE STYLE]
+
+2. 🏚️ Packard Plant
+The abandoned Packard Plant Detroit, crumbling concrete walls covered in graffiti tags 
+and throw-ups, broken windows glowing neon purple from inside, vines growing through 
+rubble, "PACKARD" spray painted massive across the facade, dramatic neon underlighting...
+[+ BASE STYLE]
+
+3. 🌊 Blue Water Bridge
+Blue Water Bridge Port Huron Michigan spanning the St. Clair River, massive steel span 
+glowing electric blue and neon orange, reflection shimmering in the water below, 
+"BLUE WATER BRIDGE" labeled in chrome wild style lettering, fog and mist with neon glow...
+[+ BASE STYLE]
+
+4. 🏝️ Belle Isle
+Belle Isle Detroit island aerial view, Scott Fountain centered and erupting with 
+neon-lit water, Detroit River glowing electric around the island, 
+"BELLE ISLE" in massive chrome graffiti lettering across the sky, 
+palm-style trees silhouetted in neon purple and pink...
+[+ BASE STYLE]
+
+5. 🏛️ Michigan Central Station
+Michigan Central Station Detroit, restored grand facade dead center, 
+massive arched windows glowing warm gold and neon orange from within, 
+graffiti murals covering the base, "MICHIGAN CENTRAL" in chrome letters above the entrance, 
+dramatic storm clouds lit purple behind it...
+[+ BASE STYLE]
+
+6. 🎭 Fox Theatre Marquee
+Fox Theatre Detroit marquee sign dead center, massive glowing letters "FOX" 
+in vintage neon reds and golds, surrounded by airbrush halos and graffiti wild style, 
+Woodward Ave street sign visible, neon reflections on wet pavement below...
+[+ BASE STYLE]
+
+7. 🏢 Guardian Building
+Guardian Building Detroit art deco spire pointing into a neon sky, 
+intricate terra cotta detail in gold and orange, "GUARDIAN BUILDING" 
+labeled in chrome lettering, lightning striking around the spire, 
+electric purple and hot pink sky, airbrush clouds swirling...
+[+ BASE STYLE]
+
+8. 🪧 Woodward Ave Street Sign
+Giant Detroit street sign reading "WOODWARD AVE" massive and centered, 
+chrome neon finish, graffiti throw-ups and tags layered around it, 
+ghost of the Woodward Dream Cruise cars blurred in neon streaks behind it, 
+flames and smoke framing the sign...
+[+ BASE STYLE]
+
+9. 🏟️ Tiger Stadium Ghost
+Tiger Stadium Detroit demolished ghost image, faded structure glowing 
+like a spirit in neon blue and white, "TIGER STADIUM" in cracked chrome lettering, 
+baseball diamond outline glowing on the ground below, 
+memorial graffiti tags covering the ghost walls, mist and purple haze...
+[+ BASE STYLE]
+
+10. 🛒 Eastern Market
+Eastern Market Detroit shed facades dead center, massive "EASTERN MARKET" 
+sign in neon and chrome, graffiti murals covering every surface, 
+produce and hustle energy captured in swirling color and motion blur, 
+neon orange dawn light hitting the brick...
+[+ BASE STYLE]
+
+11. 🔥 SIERENGOWSKI
+The word "SIERENGOWSKI" in massive full-width wild style graffiti chrome lettering, 
+airbrush 3D depth with neon glow halos in electric purple, hot pink, neon orange, 
+flames erupting from each letter, lightning bolts, Detroit skyline ghost behind it, 
+smoke rising, deep black background, dripping paint accents, 
+chrome highlight reflections on every letter surface...
+[+ BASE STYLE]
+
+⚙️ Hyprland Auto-Rotate Setup
