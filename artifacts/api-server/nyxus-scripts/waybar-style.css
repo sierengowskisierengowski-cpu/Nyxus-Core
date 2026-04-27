@@ -14,52 +14,137 @@
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   TOP BAR — live ticker strip
+   TOP BAR — airport ticker + live stats
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.top {
-    background:   rgba(6, 5, 10, 0.98);
-    border-bottom: 1px solid rgba(192, 132, 252, 0.20);
-    color:        #3a3050;
+    background:    rgba(6, 5, 10, 0.97);
+    border-bottom: 1px solid rgba(192, 132, 252, 0.35);
+    box-shadow:    0 0 18px rgba(192, 132, 252, 0.18),
+                   inset 0 -1px 0 rgba(244, 114, 182, 0.12),
+                   inset 60px 0 80px rgba(192, 132, 252, 0.04),
+                   inset -60px 0 80px rgba(244, 114, 182, 0.04);
+    color:         #5a4d78;
 }
 
-/* Ticker — left scrolling readout */
+/* Edge accent lines — left hot pink, right purple glow */
+window#waybar.top > box {
+    border-left:  2px solid rgba(244, 114, 182, 0.6);
+    border-right: 2px solid rgba(192, 132, 252, 0.6);
+}
+
+/* Ticker — scrolling marquee */
 window#waybar.top #custom-ticker {
-    padding:        0 16px;
+    padding:        0 12px;
     font-size:      10px;
-    letter-spacing: 0.06em;
-    color:          #4a3d6a;
+    letter-spacing: 0.05em;
+    color:          #7a6a9a;
     font-style:     italic;
 }
 
 /* NYXUS wordmark — center */
 window#waybar.top #custom-nyxus {
     color:          #c084fc;
-    font-size:      10px;
+    font-size:      11px;
     font-weight:    bold;
-    letter-spacing: 0.5em;
-    text-shadow:    0 0 10px rgba(192, 132, 252, 0.6),
-                    0 0 22px rgba(192, 132, 252, 0.25);
+    letter-spacing: 0.55em;
+    padding:        0 20px;
+    text-shadow:    0 0 8px #c084fc,
+                    0 0 18px rgba(192, 132, 252, 0.7),
+                    0 0 35px rgba(192, 132, 252, 0.35);
 }
 
-/* Stats — right */
-window#waybar.top #custom-stats {
-    padding:        0 16px;
+/* Separator dot */
+window#waybar.top #custom-sep {
+    color:   rgba(192, 132, 252, 0.35);
+    padding: 0 2px;
+    font-size: 8px;
+}
+
+/* CPU */
+window#waybar.top #cpu {
+    color:      #c084fc;
+    padding:    0 8px;
+    font-size:  10px;
+    text-shadow: 0 0 8px rgba(192, 132, 252, 0.4);
+}
+
+/* RAM */
+window#waybar.top #memory {
+    color:     #818cf8;
+    padding:   0 8px;
+    font-size: 10px;
+    text-shadow: 0 0 8px rgba(129, 140, 248, 0.4);
+}
+
+/* Temp */
+window#waybar.top #temperature {
+    color:     #34d399;
+    padding:   0 8px;
+    font-size: 10px;
+}
+
+window#waybar.top #temperature.critical {
+    color:       #f87171;
+    text-shadow: 0 0 10px rgba(248, 113, 113, 0.6);
+}
+
+/* Network speed */
+window#waybar.top #network {
+    color:     #fbbf24;
+    padding:   0 8px;
+    font-size: 10px;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+}
+
+window#waybar.top #network.disconnected {
+    color: #f87171;
+}
+
+/* Battery */
+window#waybar.top #battery {
+    color:     #f472b6;
+    padding:   0 8px;
+    font-size: 10px;
+    text-shadow: 0 0 8px rgba(244, 114, 182, 0.35);
+}
+
+window#waybar.top #battery.charging,
+window#waybar.top #battery.plugged {
+    color:       #34d399;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.4);
+}
+
+window#waybar.top #battery.warning {
+    color: #fb923c;
+}
+
+window#waybar.top #battery.critical {
+    color:     #f87171;
+    animation: batt-crit 1s ease-in-out infinite alternate;
+}
+
+/* Clock — right edge */
+window#waybar.top #clock {
+    color:          #d8b4fe;
     font-size:      10px;
-    letter-spacing: 0.04em;
-    color:          #4a3d6a;
+    font-weight:    bold;
+    letter-spacing: 0.08em;
+    padding:        0 14px 0 10px;
+    text-shadow:    0 0 8px rgba(192, 132, 252, 0.5);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
    BOTTOM BAR — Windows 11 style taskbar
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.bottom {
-    background:    rgba(8, 7, 14, 0.97);
-    border-top:    1px solid rgba(192, 132, 252, 0.22);
-    box-shadow:    0 -1px 20px rgba(192, 132, 252, 0.10);
-    color:         #555070;
+    background: rgba(8, 7, 14, 0.97);
+    border-top: 1px solid rgba(192, 132, 252, 0.25);
+    box-shadow: 0 -2px 22px rgba(192, 132, 252, 0.12),
+                inset 0 1px 0 rgba(244, 114, 182, 0.08);
+    color:      #555070;
 }
 
-/* Start/launcher button — Win11 style */
+/* Start/launcher button */
 window#waybar.bottom #custom-launcher {
     font-size:    20px;
     color:        #c084fc;
@@ -77,7 +162,7 @@ window#waybar.bottom #custom-launcher:hover {
                  0 0 40px rgba(192, 132, 252, 0.5);
 }
 
-/* Workspaces — centered, icon-sized, Win11 feel */
+/* Workspaces */
 window#waybar.bottom #workspaces {
     padding: 0 8px;
 }
@@ -125,7 +210,7 @@ window#waybar.bottom #window {
     letter-spacing: 0.04em;
 }
 
-/* Clock */
+/* Clock — bottom bar */
 window#waybar.bottom #clock {
     color:          #d8b4fe;
     letter-spacing: 0.10em;
@@ -137,7 +222,7 @@ window#waybar.bottom #clock {
     border-left:    1px solid rgba(192, 132, 252, 0.10);
 }
 
-/* Right modules shared */
+/* Bottom right modules */
 window#waybar.bottom #bluetooth,
 window#waybar.bottom #network,
 window#waybar.bottom #pulseaudio,
@@ -163,22 +248,10 @@ window#waybar.bottom #bluetooth.connected {
     text-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
 }
 
-window#waybar.bottom #network.wifi {
-    color: #5a4d78;
-}
-
-window#waybar.bottom #network.ethernet {
-    color:       #34d399;
-    text-shadow: 0 0 8px rgba(52, 211, 153, 0.4);
-}
-
-window#waybar.bottom #network.disconnected {
-    color: #f87171;
-}
-
-window#waybar.bottom #pulseaudio.muted {
-    color: #1e1c2e;
-}
+window#waybar.bottom #network.wifi     { color: #5a4d78; }
+window#waybar.bottom #network.ethernet { color: #34d399; }
+window#waybar.bottom #network.disconnected { color: #f87171; }
+window#waybar.bottom #pulseaudio.muted { color: #1e1c2e; }
 
 window#waybar.bottom #battery.charging,
 window#waybar.bottom #battery.plugged {
@@ -186,32 +259,23 @@ window#waybar.bottom #battery.plugged {
     text-shadow: 0 0 8px rgba(52, 211, 153, 0.4);
 }
 
-window#waybar.bottom #battery.warning {
-    color: #fb923c;
-}
-
+window#waybar.bottom #battery.warning  { color: #fb923c; }
 window#waybar.bottom #battery.critical {
     color:     #f87171;
-    animation: batt-pulse 1s ease-in-out infinite alternate;
-}
-
-@keyframes batt-pulse {
-    from { color: #f87171; }
-    to   { color: #7f1d1d; }
+    animation: batt-crit 1s ease-in-out infinite alternate;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   LEFT BAR — vertical workspace switcher
+   LEFT BAR — vertical workspace switcher (70% height, centered)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.left {
-    background:  rgba(6, 5, 10, 0.95);
-    border-right: 1px solid rgba(192, 132, 252, 0.14);
+    background:   rgba(6, 5, 10, 0.92);
+    border-right: 1px solid rgba(192, 132, 252, 0.18);
+    box-shadow:   2px 0 12px rgba(192, 132, 252, 0.08);
     color:        #2d2636;
 }
 
-window#waybar.left #workspaces {
-    padding: 6px 0;
-}
+window#waybar.left #workspaces { padding: 6px 0; }
 
 window#waybar.left #workspaces button {
     padding:       8px 0;
@@ -228,8 +292,8 @@ window#waybar.left #workspaces button {
 }
 
 window#waybar.left #workspaces button:hover {
-    background:  rgba(192, 132, 252, 0.10);
-    color:       #9466cc;
+    background:   rgba(192, 132, 252, 0.10);
+    color:        #9466cc;
     border-right: 2px solid rgba(192, 132, 252, 0.5);
 }
 
@@ -240,17 +304,16 @@ window#waybar.left #workspaces button.active {
     text-shadow:  0 0 8px rgba(192, 132, 252, 0.7);
 }
 
-window#waybar.left #workspaces button.empty {
-    color: #1a1424;
-}
+window#waybar.left #workspaces button.empty { color: #1a1424; }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   RIGHT BAR — vertical system stats
+   RIGHT BAR — vertical system stats (70% height, centered)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.right {
-    background:   rgba(6, 5, 10, 0.95);
-    border-left:  1px solid rgba(192, 132, 252, 0.14);
-    color:        #3a3050;
+    background:  rgba(6, 5, 10, 0.92);
+    border-left: 1px solid rgba(192, 132, 252, 0.18);
+    box-shadow:  -2px 0 12px rgba(192, 132, 252, 0.08);
+    color:       #3a3050;
 }
 
 window#waybar.right #cpu,
@@ -258,30 +321,26 @@ window#waybar.right #memory,
 window#waybar.right #battery {
     font-size:      9px;
     font-weight:    bold;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.02em;
     padding:        10px 0;
-    color:          #3a3050;
     min-width:      30px;
 }
 
-window#waybar.right #cpu {
-    color: #c084fc;
-}
-
-window#waybar.right #memory {
-    color: #818cf8;
-}
-
-window#waybar.right #battery {
-    color: #34d399;
-}
+window#waybar.right #cpu    { color: #c084fc; text-shadow: 0 0 6px rgba(192,132,252,0.5); }
+window#waybar.right #memory { color: #818cf8; text-shadow: 0 0 6px rgba(129,140,248,0.5); }
+window#waybar.right #battery{ color: #34d399; text-shadow: 0 0 6px rgba(52,211,153,0.4); }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   SHARED — tooltip
+   SHARED — animations + tooltip
    ════════════════════════════════════════════════════════════════════════════ */
+@keyframes batt-crit {
+    from { color: #f87171; }
+    to   { color: #7f1d1d; }
+}
+
 tooltip {
     background:    rgba(6, 5, 10, 0.98);
-    border:        1px solid rgba(192, 132, 252, 0.22);
+    border:        1px solid rgba(192, 132, 252, 0.25);
     border-radius: 4px;
     color:         #c0b8d0;
     font-size:     10px;
