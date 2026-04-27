@@ -30,24 +30,62 @@ C_TEXT = (0.91, 0.88,  0.96 )
 
 TAG_COLORS = ["#ff00ff","#cc00ff","#0088ff","#39ff14","#ffff00","#ff5500"]
 
-def glow_text(cr, x, y, txt, r, g, b, size=12, bold=False):
-    cr.select_font_face("JetBrains Mono", 0, 1 if bold else 0)
-    cr.set_font_size(size)
-    for dx, dy, a in [(-1,-1,.20),(1,-1,.20),(-1,1,.20),(1,1,.20),
-                       (-2,0,.08),(2,0,.08),(0,-2,.08),(0,2,.08)]:
-        cr.set_source_rgba(r, g, b, a); cr.move_to(x+dx, y+dy); cr.show_text(txt)
-    cr.set_source_rgba(r, g, b, 1.0); cr.move_to(x, y); cr.show_text(txt)
+import random as _rand
 
-def rainbow_bar(cr, x, y, w, h=2):
+def _rng_seed(x, y, w=0, h=0):
+    return int(x*3 + y*7 + (w or 1)*11 + (h or 1)*13) % 65535
+
+def sketch_rect(cr, x, y, w, h, r, g, b, thick=2.2, jitter=2.8, fill_rgba=None):
+    rng = _rand.Random(_rng_seed(x,y,w,h))
+    j = lambda s=1.0: rng.uniform(-jitter*s, jitter*s)
+    def _path():
+        cr.move_to(x+j(.5),y+j(.5))
+        cr.curve_to(x+w*.33+j(),y+j(),x+w*.67+j(),y+j(),x+w+j(.5),y+j(.5))
+        cr.curve_to(x+w+j(),y+h*.33+j(),x+w+j(),y+h*.67+j(),x+w+j(.5),y+h+j(.5))
+        cr.curve_to(x+w*.67+j(),y+h+j(),x+w*.33+j(),y+h+j(),x+j(.5),y+h+j(.5))
+        cr.curve_to(x+j(),y+h*.67+j(),x+j(),y+h*.33+j(),x+j(.5),y+j(.5))
+        cr.close_path()
+    if fill_rgba:
+        _path(); cr.set_source_rgba(*fill_rgba); cr.fill()
+        rng2 = _rand.Random(_rng_seed(x,y,w,h)); j = lambda s=1.0: rng2.uniform(-jitter*s,jitter*s)
+    _path()
+    cr.set_source_rgba(r,g,b,0.88); cr.set_line_width(thick)
+    cr.set_line_cap(1); cr.set_line_join(1); cr.stroke()
+
+def marker_text(cr, x, y, txt, r, g, b, size=13, bold=False, alpha=0.90):
+    cr.select_font_face("Caveat", 0, 1 if bold else 0)
+    cr.set_font_size(size)
+    cr.set_source_rgba(r, g, b, alpha*0.15); cr.move_to(x+1.0, y+0.8); cr.show_text(txt)
+    cr.set_source_rgba(r, g, b, alpha);      cr.move_to(x, y);          cr.show_text(txt)
+
+def glow_text(cr, x, y, txt, r, g, b, size=12, bold=False):
+    marker_text(cr, x, y, txt, r, g, b, size=size, bold=bold)
+
+def sketch_badge(cr, x, y, txt, color, angle=-4.0, size=10):
+    r, g, b = color; cr.save()
+    cr.translate(x, y); cr.rotate(math.radians(angle))
+    cr.select_font_face("Caveat", 0, 1); cr.set_font_size(size)
+    ext = cr.text_extents(txt); bw = ext.width+18; bh = size+10
+    sketch_rect(cr,-6,-(bh-2),bw,bh,r,g,b,thick=2.0,jitter=2.0,fill_rgba=(r,g,b,0.12))
+    cr.set_source_rgba(r,g,b,0.92); cr.move_to(0,0); cr.show_text(txt); cr.restore()
+
+def rainbow_bar(cr, x, y, w, h=3):
     seg = w / len(PALETTE)
     for i,(r,g,b) in enumerate(PALETTE):
-        cr.set_source_rgba(r,g,b,0.88); cr.rectangle(x+i*seg,y,seg,h); cr.fill()
+        cr.set_source_rgba(r,g,b,0.75); cr.rectangle(x+i*seg,y,seg,h); cr.fill()
 
 def dot_grid(cr, x, y, w, h):
-    cr.set_source_rgba(0.28, 0.07, 0.50, 0.09)
-    for gx in range(int(x),int(x+w)+22,22):
-        for gy in range(int(y),int(y+h)+22,22):
-            cr.arc(gx,gy,0.9,0,math.pi*2); cr.fill()
+    pass  # replaced by paper lines
+
+def notebook_lines(cr, x, y, w, h, spacing=22):
+    """Faint ruled lines for the paper look."""
+    cr.set_line_width(0.5)
+    for ly in range(int(y)+spacing, int(y+h), spacing):
+        cr.set_source_rgba(0.60, 0.72, 0.85, 0.30)
+        cr.move_to(x, ly); cr.line_to(x+w, ly); cr.stroke()
+    # Red margin line
+    cr.set_source_rgba(0.85, 0.35, 0.35, 0.28); cr.set_line_width(1.0)
+    cr.move_to(x+48, y); cr.line_to(x+48, y+h); cr.stroke()
 
 def hex_to_rgb(h):
     h=h.lstrip('#'); return int(h[0:2],16)/255,int(h[2:4],16)/255,int(h[4:6],16)/255
@@ -58,102 +96,110 @@ def reading_time(text):
 
 
 CSS = b"""
-* { font-family: 'JetBrains Mono', 'Monospace', monospace; }
-window { background-color: #030206; color: #e8e0f5; }
+* { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
+window { background-color: #f0ead6; color: #2a1a06; }
 
 .hdr {
-    background-color: rgba(4,2,10,0.97);
-    border-bottom: 1px solid rgba(255,0,255,0.22);
-    padding: 5px 12px; min-height: 46px;
+    background-color: rgba(245, 238, 215, 0.98);
+    border-bottom: 2px solid rgba(140, 100, 30, 0.30);
+    padding: 5px 14px; min-height: 48px;
 }
-.hdr-title { color: #ff00ff; font-size: 14px; font-weight: bold; letter-spacing: 4px; }
+.hdr-title { color: #7a3010; font-size: 20px; font-weight: bold; letter-spacing: 2px; }
 .hdr-badge {
-    color: #0088ff; font-size: 9px;
-    border: 1px solid rgba(0,136,255,0.40);
-    padding: 2px 8px; border-radius: 2px; margin-left: 6px;
+    color: #0055cc; font-size: 11px;
+    border: 2px solid rgba(0,85,200,0.35);
+    padding: 2px 10px; border-radius: 3px; margin-left: 6px;
+    background-color: rgba(200,225,255,0.35);
 }
-.hdr-badge-green { color: #39ff14; border-color: rgba(57,255,20,0.40); }
-.hdr-badge-yellow { color: #ffff00; border-color: rgba(255,255,0,0.40); }
-.hdr-badge-orange { color: #ff5500; border-color: rgba(255,85,0,0.40); }
-.hdr-badge-purple { color: #cc00ff; border-color: rgba(204,0,255,0.40); }
+.hdr-badge-green { color: #226600; border-color: rgba(34,102,0,0.35);
+                   background-color: rgba(200,255,200,0.35); }
+.hdr-badge-yellow { color: #7a5a00; border-color: rgba(150,110,0,0.35);
+                    background-color: rgba(255,250,200,0.45); }
+.hdr-badge-orange { color: #883300; border-color: rgba(140,60,0,0.35);
+                    background-color: rgba(255,220,190,0.40); }
+.hdr-badge-purple { color: #550099; border-color: rgba(85,0,155,0.35);
+                    background-color: rgba(230,200,255,0.35); }
 
-.sidebar { background-color: rgba(7,3,15,0.97); border-right: 1px solid rgba(204,0,255,0.18); }
+.sidebar { background-color: rgba(255, 252, 220, 0.97);
+           border-right: 2px solid rgba(180, 140, 50, 0.30); }
 .sidebar-hdr {
-    color: #cc00ff; font-size: 9px; font-weight: bold;
-    letter-spacing: 3px; padding: 6px 10px 4px 10px;
-    border-bottom: 1px solid rgba(204,0,255,0.15);
+    color: #6a3500; font-size: 12px; font-weight: bold;
+    letter-spacing: 2px; padding: 7px 12px 5px 12px;
+    border-bottom: 1px solid rgba(180,140,50,0.25);
 }
 .new-btn {
-    background-color: rgba(255,0,255,0.08); color: #ff00ff;
-    border: 1px solid rgba(255,0,255,0.40); border-radius: 2px;
-    padding: 4px 14px; font-size: 10px; font-weight: bold; margin: 4px;
+    background-color: rgba(255,240,180,0.85); color: #5a2800;
+    border: 2px solid rgba(180,120,30,0.50); border-radius: 4px;
+    padding: 5px 14px; font-size: 13px; font-weight: bold; margin: 4px;
 }
-.new-btn:hover { background-color: rgba(255,0,255,0.22); }
+.new-btn:hover { background-color: rgba(255,250,200,0.98); }
 .del-btn {
-    background-color: rgba(255,85,0,0.06); color: #ff5500;
-    border: 1px solid rgba(255,85,0,0.35); border-radius: 2px;
-    padding: 4px 8px; font-size: 10px; font-weight: bold; margin: 4px 2px;
+    background-color: rgba(255,200,185,0.75); color: #660000;
+    border: 2px solid rgba(180,60,40,0.45); border-radius: 4px;
+    padding: 5px 10px; font-size: 13px; font-weight: bold; margin: 4px 2px;
 }
-.del-btn:hover { background-color: rgba(255,85,0,0.20); }
+.del-btn:hover { background-color: rgba(255,215,205,0.95); }
 .exp-btn {
-    background-color: rgba(57,255,20,0.06); color: #39ff14;
-    border: 1px solid rgba(57,255,20,0.35); border-radius: 2px;
-    padding: 4px 8px; font-size: 10px; font-weight: bold; margin: 4px 2px;
+    background-color: rgba(200,255,200,0.70); color: #1a5500;
+    border: 2px solid rgba(60,150,40,0.40); border-radius: 4px;
+    padding: 5px 10px; font-size: 13px; font-weight: bold; margin: 4px 2px;
 }
-.exp-btn:hover { background-color: rgba(57,255,20,0.18); }
+.exp-btn:hover { background-color: rgba(220,255,220,0.95); }
 .pin-btn {
-    background-color: rgba(255,255,0,0.06); color: #ffff00;
-    border: 1px solid rgba(255,255,0,0.35); border-radius: 2px;
-    padding: 4px 8px; font-size: 10px; font-weight: bold; margin: 4px 2px;
+    background-color: rgba(255,250,180,0.70); color: #665500;
+    border: 2px solid rgba(180,150,0,0.40); border-radius: 4px;
+    padding: 5px 10px; font-size: 13px; font-weight: bold; margin: 4px 2px;
 }
 .sort-btn {
-    background-color: transparent; color: rgba(112,96,160,0.8);
-    border: 1px solid rgba(112,96,160,0.25); border-radius: 2px;
-    padding: 3px 6px; font-size: 8px; margin: 2px 1px;
+    background-color: rgba(240,230,200,0.70); color: #6a4a18;
+    border: 1px solid rgba(140,100,30,0.30); border-radius: 3px;
+    padding: 3px 8px; font-size: 11px; margin: 2px 1px;
 }
-.sort-btn:hover { color: #cc00ff; border-color: rgba(204,0,255,0.5); }
-.sort-active { color: #cc00ff; border-color: rgba(204,0,255,0.7);
-               background-color: rgba(204,0,255,0.08); }
+.sort-btn:hover { color: #5a0090; border-color: rgba(90,0,145,0.55); }
+.sort-active { color: #5a0090; border-color: rgba(90,0,145,0.70);
+               background-color: rgba(220,190,255,0.30); }
 .search-e {
-    background-color: rgba(7,3,15,0.80); color: #e8e0f5;
-    border: 1px solid rgba(204,0,255,0.30); border-radius: 2px;
-    padding: 5px 10px; font-size: 10px; box-shadow: none;
-    caret-color: #cc00ff; margin: 4px;
+    background-color: rgba(255, 255, 248, 0.90); color: #2a1a06;
+    border: 2px solid rgba(140,100,30,0.35); border-radius: 4px;
+    padding: 5px 12px; font-size: 13px; box-shadow: none;
+    caret-color: #7a3010; margin: 4px;
 }
 .search-e text { background-color: transparent; }
 .tag-e {
-    background-color: rgba(7,3,15,0.80); color: #ffff00;
-    border: 1px solid rgba(255,255,0,0.30); border-radius: 2px;
-    padding: 4px 8px; font-size: 9px; box-shadow: none;
-    caret-color: #ffff00; margin: 0 4px;
+    background-color: rgba(255, 255, 235, 0.90); color: #665500;
+    border: 2px solid rgba(180,150,0,0.35); border-radius: 4px;
+    padding: 4px 10px; font-size: 12px; box-shadow: none;
+    caret-color: #665500; margin: 0 4px;
 }
 .tag-e text { background-color: transparent; }
 .editor-area {
-    background-color: rgba(4,2,12,0.90); color: #e8e0f5;
-    border: none; padding: 12px; font-size: 12px;
-    caret-color: #ff00ff;
+    background-color: rgba(255, 255, 252, 0.98); color: #1a0e02;
+    border: none; padding: 14px 14px 14px 60px; font-size: 15px;
+    caret-color: #5a0090;
+    font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans';
 }
-.editor-area text { background-color: transparent; color: #e8e0f5; }
-.editor-area text selection { background-color: rgba(255,0,255,0.25); }
+.editor-area text { background-color: transparent; color: #1a0e02; }
+.editor-area text selection { background-color: rgba(100,0,180,0.18); }
 .clip-hdr {
-    color: #0088ff; font-size: 9px; font-weight: bold;
-    letter-spacing: 3px; padding: 6px 10px 4px 10px;
-    border-bottom: 1px solid rgba(0,136,255,0.15);
+    color: #0055cc; font-size: 12px; font-weight: bold;
+    letter-spacing: 2px; padding: 7px 12px 5px 12px;
+    border-bottom: 1px solid rgba(0,85,200,0.18);
 }
 .clip-btn {
-    background-color: transparent; color: #e8e0f5;
-    border: none; border-bottom: 1px solid rgba(0,136,255,0.10);
-    border-radius: 0; padding: 5px 8px; font-size: 9px; text-align: left;
+    background-color: transparent; color: #2a1a06;
+    border: none; border-bottom: 1px solid rgba(140,100,30,0.15);
+    border-radius: 0; padding: 6px 10px; font-size: 12px; text-align: left;
     min-height: 0;
 }
-.clip-btn:hover { background-color: rgba(0,136,255,0.08); color: #0088ff; }
+.clip-btn:hover { background-color: rgba(200,220,255,0.20); color: #0055cc; }
 .title-e {
-    background-color: transparent; color: #ff00ff;
-    border: none; border-bottom: 1px solid rgba(255,0,255,0.25);
-    border-radius: 0; padding: 6px 12px; font-size: 14px; font-weight: bold;
-    letter-spacing: 2px; box-shadow: none; caret-color: #ff00ff;
+    background-color: transparent; color: #7a3010;
+    border: none; border-bottom: 2px solid rgba(140,80,20,0.35);
+    border-radius: 0; padding: 6px 14px; font-size: 18px; font-weight: bold;
+    letter-spacing: 1px; box-shadow: none; caret-color: #7a3010;
+    font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans';
 }
-.title-e text { background-color: transparent; color: #ff00ff; }
+.title-e text { background-color: transparent; color: #7a3010; }
 """
 
 
@@ -223,51 +269,56 @@ class NyxusNotepad(Gtk.Application):
 
     # ── Header ─────────────────────────────────────────────────────────────────
     def _draw_hdr(self, area, cr, w, h, _):
-        cr.set_source_rgb(0.016, 0.008, 0.035); cr.rectangle(0,0,w,h); cr.fill()
-        dot_grid(cr, 0, 0, w, 50)
-        glow_text(cr, 14, h-12, "NYXUS_NOTEPAD", *C_PINK, size=15, bold=True)
+        # Warm cream paper header
+        cr.set_source_rgb(0.96, 0.92, 0.82); cr.rectangle(0,0,w,h); cr.fill()
+        notebook_lines(cr, 0, 0, w, h, spacing=18)
+        # Sketchy title badge at a slight tilt
+        sketch_badge(cr, 16, h-10, "✏  NYXUS NOTEPAD", (0.48, 0.14, 0.02), angle=-2.0, size=15)
         n = len(self._notes)
-        cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
-        items = [
-            (f"  {n} NOTES", C_BLUE),
-            (f"  ·  {len(self._clipboard_history)} CLIPS", C_GREEN),
-            (f"  ·  {self._cur_words()} WORDS", C_YELLOW),
-            (f"  ·  {self._cur_read_time()}", C_PURPLE),
+        # Stat chips — hand-drawn boxes for each stat
+        stats = [
+            (f" {n} notes ", (0.05,0.30,0.70)),
+            (f" {len(self._clipboard_history)} clips ", (0.08,0.55,0.08)),
+            (f" {self._cur_words()} words ", (0.62,0.45,0.00)),
+            (f" {self._cur_read_time()} ", (0.45,0.05,0.78)),
         ]
-        xp = 200
-        for txt, col in items:
-            cr.set_source_rgba(*col, 0.85); cr.move_to(xp, h-12); cr.show_text(txt)
-            xp += cr.text_extents(txt).width + 4
-        rainbow_bar(cr, 0, h-2, w, 2)
+        xp = 260
+        for stxt, col in stats:
+            cr.select_font_face("Caveat", 0, 1); cr.set_font_size(11)
+            ew = cr.text_extents(stxt).width
+            sketch_rect(cr, xp, h-22, ew+10, 18, *col, thick=1.6, jitter=1.8, fill_rgba=(*col,0.10))
+            cr.set_source_rgba(*col, 0.90); cr.move_to(xp+5, h-8); cr.show_text(stxt)
+            xp += ew + 18
+        rainbow_bar(cr, 0, h-3, w, 3)
 
     def _draw_stat(self, area, cr, w, h, _):
-        cr.set_source_rgb(0.012,0.006,0.025); cr.rectangle(0,0,w,h); cr.fill()
-        rainbow_bar(cr, 0, 0, w, 2)
+        # Torn-note stats strip
+        cr.set_source_rgb(0.98, 0.96, 0.88); cr.rectangle(0,0,w,h); cr.fill()
+        rainbow_bar(cr, 0, 0, w, 3)
         note = self._cur_note()
         if note:
             txt = note.get("text","")
             chars = len(txt); words = len(txt.split()) if txt.strip() else 0
             sents = txt.count('.')+txt.count('!')+txt.count('?')
             parts = [
-                (f"CHARS: {chars}",  C_PINK),
-                ("  ·  ",            C_DIM),
-                (f"WORDS: {words}",  C_PURPLE),
-                ("  ·  ",            C_DIM),
-                (f"SENTENCES: {sents}", C_BLUE),
-                ("  ·  ",            C_DIM),
-                (f"{self._cur_read_time()}", C_GREEN),
-                ("  ·  ",            C_DIM),
-                (f"TAGS: {', '.join(note.get('tags',[])) or 'none'}", C_YELLOW),
+                (f" Chars: {chars} ",  (0.70, 0.05, 0.40)),
+                (f" Words: {words} ",  (0.40, 0.05, 0.75)),
+                (f" Sentences: {sents} ", (0.05, 0.28, 0.70)),
+                (f" {self._cur_read_time()} ", (0.08, 0.50, 0.08)),
+                (f" Tags: {', '.join(note.get('tags',[])) or 'none'} ", (0.62, 0.42, 0.00)),
             ]
             xp = 10
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
-            for txt2,col in parts:
-                cr.set_source_rgba(*col, 0.85); cr.move_to(xp, h-6); cr.show_text(txt2)
-                xp += cr.text_extents(txt2).width
+            for stxt, col in parts:
+                cr.select_font_face("Caveat", 0, 1); cr.set_font_size(10)
+                ew = cr.text_extents(stxt).width
+                sketch_rect(cr, xp, 3, ew+8, h-8, *col, thick=1.5, jitter=1.6, fill_rgba=(*col,0.08))
+                cr.set_source_rgba(*col, 0.90); cr.move_to(xp+4, h-7); cr.show_text(stxt)
+                xp += ew + 12
             mod = note.get("modified","")[:16]
-            cr.set_source_rgba(*C_DIM, 0.6)
-            ext = cr.text_extents(f"MOD: {mod}")
-            cr.move_to(w-ext.width-12, h-6); cr.show_text(f"MOD: {mod}")
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(10)
+            cr.set_source_rgba(0.50,0.38,0.18, 0.65)
+            ext = cr.text_extents(f"saved {mod}")
+            cr.move_to(w-ext.width-12, h-7); cr.show_text(f"saved {mod}")
 
     # ── Sidebar ─────────────────────────────────────────────────────────────────
     def _build_sidebar(self):
@@ -440,10 +491,10 @@ class NyxusNotepad(Gtk.Application):
         return box
 
     def _draw_clip_hdr(self,area,cr,w,h,_):
-        cr.set_source_rgb(0.012,0.006,0.025); cr.rectangle(0,0,w,h); cr.fill()
-        cr.set_source_rgba(*C_BLUE,0.18); cr.set_line_width(1)
+        cr.set_source_rgb(0.88, 0.94, 1.00); cr.rectangle(0,0,w,h); cr.fill()
+        cr.set_source_rgba(0.05,0.28,0.70,0.22); cr.set_line_width(1.5)
         cr.move_to(0,h-1); cr.line_to(w,h-1); cr.stroke()
-        glow_text(cr,10,h-8,"CLIPBOARD HISTORY",*C_BLUE,size=9,bold=True)
+        sketch_badge(cr,10,h-8,"✂  Clipboard",C_BLUE[:3],angle=-2.5,size=10)
 
     def _refresh_clip_ui(self):
         for ch in list(self._clip_box):

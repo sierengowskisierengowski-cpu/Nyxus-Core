@@ -1,470 +1,462 @@
 #!/usr/bin/env python3
 # ╔══════════════════════════════════════════════════════════════════════╗
-# ║  NYXUS Stickies — Cairo board · Drag-to-move · Full rainbow palette  ║
+# ║  NYXUS Stickies — Hand-drawn · Real sticky notes on cork board       ║
 # ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 import gi
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, Gdk, GLib
-import json, uuid, os, math, random
+import json, uuid, os, math, random as _rand
 from datetime import datetime
 
 DATA_FILE = os.path.expanduser("~/.nyxus/stickies.json")
 os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
 
-PALETTE = ["#ff00ff","#cc00ff","#0088ff","#39ff14","#ffff00","#ff5500"]
-NOTE_W, NOTE_H = 220, 168
-PAD = 24
+# Sticky note paper colors (warm, real Post-it feel)
+NOTE_PAPER = [
+    (1.00, 0.96, 0.52),   # classic yellow
+    (1.00, 0.70, 0.80),   # hot pink
+    (0.65, 0.87, 1.00),   # sky blue
+    (0.72, 1.00, 0.68),   # mint green
+    (0.90, 0.76, 1.00),   # lavender
+    (1.00, 0.80, 0.58),   # peach/orange
+]
+# Marker ink colors (darker, for text + borders on each sticky)
+NOTE_INK = [
+    (0.62, 0.50, 0.00),   # dark yellow ink
+    (0.75, 0.05, 0.35),   # dark pink ink
+    (0.05, 0.32, 0.72),   # dark blue ink
+    (0.08, 0.52, 0.08),   # dark green ink
+    (0.48, 0.12, 0.78),   # dark purple ink
+    (0.75, 0.28, 0.02),   # dark orange ink
+]
+PALETTE_HEX = ["#ff00ff","#cc00ff","#0088ff","#39ff14","#ffff00","#ff5500"]
+NOTE_W, NOTE_H = 230, 175
+PAD = 26
+
+
+# ── Sketch / paper helpers ──────────────────────────────────────────────────
+
+def _rng(x, y, w=0, h=0):
+    return _rand.Random(int(x*3 + y*7 + (w or 1)*11 + (h or 1)*13) % 65535)
+
+def sketch_rect(cr, x, y, w, h, r, g, b, thick=2.2, jitter=2.8, fill_rgba=None):
+    rng = _rng(x, y, w, h); j = lambda s=1.0: rng.uniform(-jitter*s, jitter*s)
+    def _path():
+        cr.move_to(x+j(.5),  y+j(.5))
+        cr.curve_to(x+w*.33+j(), y+j(),      x+w*.67+j(), y+j(),      x+w+j(.5), y+j(.5))
+        cr.curve_to(x+w+j(),     y+h*.33+j(), x+w+j(),    y+h*.67+j(), x+w+j(.5), y+h+j(.5))
+        cr.curve_to(x+w*.67+j(), y+h+j(),    x+w*.33+j(), y+h+j(),    x+j(.5),   y+h+j(.5))
+        cr.curve_to(x+j(),       y+h*.67+j(), x+j(),      y+h*.33+j(), x+j(.5),   y+j(.5))
+        cr.close_path()
+    if fill_rgba:
+        _path(); cr.set_source_rgba(*fill_rgba); cr.fill()
+        rng2 = _rng(x, y, w, h); j = lambda s=1.0: rng2.uniform(-jitter*s, jitter*s)
+    _path()
+    cr.set_source_rgba(r, g, b, 0.88)
+    cr.set_line_width(thick); cr.set_line_cap(1); cr.set_line_join(1)
+    cr.stroke()
+
+def paper_bg(cr, w, h):
+    """Cork-board background."""
+    # Cork base
+    cr.set_source_rgb(0.74, 0.56, 0.34); cr.rectangle(0, 0, w, h); cr.fill()
+    # Cork texture — random small blobs
+    rng = _rand.Random(99)
+    for _ in range(900):
+        bx = rng.uniform(0, w); by = rng.uniform(0, h)
+        br = rng.uniform(4, 22); ba = rng.uniform(0.04, 0.14)
+        cr.set_source_rgba(rng.uniform(0.5,0.9), rng.uniform(0.38,0.55), rng.uniform(0.18,0.35), ba)
+        cr.arc(bx, by, br, 0, math.pi*2); cr.fill()
+    # Subtle grain lines
+    cr.set_line_width(0.5)
+    for _ in range(120):
+        lx1=rng.uniform(0,w); ly1=rng.uniform(0,h)
+        cr.set_source_rgba(0.42,0.28,0.10, rng.uniform(0.04,0.10))
+        cr.move_to(lx1, ly1)
+        cr.line_to(lx1+rng.uniform(-60,60), ly1+rng.uniform(-4,4))
+        cr.stroke()
+
+def handwriting(cr, x, y, txt, r, g, b, size=13, bold=False, alpha=0.90):
+    cr.select_font_face("Caveat", 0, 1 if bold else 0)
+    cr.set_font_size(size)
+    cr.set_source_rgba(r, g, b, alpha*0.18)
+    cr.move_to(x+1.0, y+0.7); cr.show_text(txt)
+    cr.set_source_rgba(r, g, b, alpha)
+    cr.move_to(x, y); cr.show_text(txt)
+
+def wrap_text(cr, text, max_w, size=12):
+    cr.select_font_face("Caveat", 0, 0); cr.set_font_size(size)
+    if not text: return []
+    lines=[]; cur=""
+    for word in text.split(' '):
+        test = (cur+' '+word).strip()
+        if cr.text_extents(test).width > max_w and cur:
+            lines.append(cur); cur = word
+        else:
+            cur = test
+    if cur: lines.append(cur)
+    return lines
 
 def hex_rgb(h):
     h=h.lstrip('#'); return int(h[0:2],16)/255,int(h[2:4],16)/255,int(h[4:6],16)/255
 
-COLORS_RGB = [hex_rgb(c) for c in PALETTE]
+def color_index(hex_color):
+    try: return PALETTE_HEX.index(hex_color)
+    except ValueError: return 0
 
-def wrap_text(cr, text, max_w, size=10):
-    cr.set_font_size(size)
-    if not text: return []
-    lines=[]; cur=""
-    for word in text.split(' '):
-        test=(cur+' '+word).strip()
-        try:
-            if cr.text_extents(test).width>max_w and cur: lines.append(cur); cur=word
-            else: cur=test
-        except Exception: cur=test
-    if cur: lines.append(cur)
-    return lines
 
-def glow_text(cr, x, y, text, r, g, b, size=12, bold=False):
-    cr.select_font_face("JetBrains Mono",0,1 if bold else 0)
-    cr.set_font_size(size)
-    for dx,dy,a in [(-1,-1,.20),(1,-1,.20),(-1,1,.20),(1,1,.20),
-                     (-2,0,.08),(2,0,.08),(0,-2,.08),(0,2,.08),
-                     (-4,0,.04),(4,0,.04),(0,-4,.04),(0,4,.04)]:
-        cr.set_source_rgba(r,g,b,a); cr.move_to(x+dx,y+dy); cr.show_text(text)
-    cr.set_source_rgba(r,g,b,1.0); cr.move_to(x,y); cr.show_text(text)
+# ── Draw a single sticky note ───────────────────────────────────────────────
 
-def rainbow_bar(cr, x, y, w, h=2):
-    seg=w/len(PALETTE)
-    for i,c in enumerate(PALETTE):
-        r,g,b=hex_rgb(c); cr.set_source_rgba(r,g,b,0.88)
-        cr.rectangle(x+i*seg,y,seg,h); cr.fill()
+def draw_sticky(cr, nx, ny, nw, nh, cidx, title, body, angle, selected=False):
+    cidx = cidx % len(NOTE_PAPER)
+    pr, pg, pb = NOTE_PAPER[cidx]
+    ir, ig, ib = NOTE_INK[cidx]
 
-def dot_grid(cr, x, y, w, h, col_idx=None):
-    for i,gx in enumerate(range(int(x),int(x+w)+22,22)):
-        for j,gy in enumerate(range(int(y),int(y+h)+22,22)):
-            if col_idx is None:
-                r,g,b=hex_rgb(PALETTE[(i+j)%len(PALETTE)])
-                cr.set_source_rgba(r,g,b,0.06)
-            else:
-                r,g,b=COLORS_RGB[col_idx%len(COLORS_RGB)]
-                cr.set_source_rgba(r,g,b,0.08)
-            cr.arc(gx,gy,0.9,0,math.pi*2); cr.fill()
+    cr.save()
+    cx, cy = nx+nw/2, ny+nh/2
+    cr.translate(cx, cy); cr.rotate(math.radians(angle)); cr.translate(-nw/2, -nh/2)
 
+    # Drop shadow (offset, slightly fuzzy)
+    for sh, sa in [(10, 0.10), (6, 0.14), (3, 0.18)]:
+        cr.set_source_rgba(0.12, 0.06, 0.02, sa)
+        cr.rectangle(sh, sh+2, nw, nh); cr.fill()
+
+    # Main paper body
+    cr.set_source_rgb(pr, pg, pb)
+    cr.rectangle(0, 0, nw, nh); cr.fill()
+
+    # Glue strip at top (slightly darker, like the sticky adhesive band)
+    cr.set_source_rgba(ir, ig, ib, 0.10)
+    cr.rectangle(0, 0, nw, 32); cr.fill()
+    cr.set_source_rgba(ir, ig, ib, 0.20)
+    cr.rectangle(0, 30, nw, 2); cr.fill()
+
+    # Ruled lines (like a real notepad)
+    cr.set_line_width(0.55)
+    for ly in range(48, int(nh)-6, 19):
+        cr.set_source_rgba(ir, ig, ib, 0.12)
+        cr.move_to(10, ly); cr.line_to(nw-10, ly); cr.stroke()
+
+    # Wobbly border — hand-drawn feel
+    sketch_rect(cr, 1, 1, nw-2, nh-2, ir, ig, ib, thick=2.0, jitter=2.2)
+
+    # Selected highlight
+    if selected:
+        sketch_rect(cr, -3, -3, nw+6, nh+6, 0.08, 0.08, 0.80, thick=3.0, jitter=3.5)
+
+    # Folded corner (bottom-right — real sticky note fold)
+    corner = 18
+    cr.set_source_rgba(pr*0.72, pg*0.72, pb*0.72, 0.95)
+    cr.move_to(nw-corner, nh)
+    cr.line_to(nw, nh-corner)
+    cr.line_to(nw, nh)
+    cr.close_path(); cr.fill()
+    # Fold shadow line
+    cr.set_source_rgba(ir, ig, ib, 0.35)
+    cr.set_line_width(0.8)
+    cr.move_to(nw-corner, nh); cr.line_to(nw, nh-corner); cr.stroke()
+
+    # Pushpin / tack
+    pin_r = 5
+    cr.set_source_rgba(ir, ig, ib, 0.30)
+    cr.arc(nw//2+1.5, pin_r+3.5, pin_r, 0, math.pi*2); cr.fill()
+    cr.set_source_rgba(ir, ig, ib, 0.75)
+    cr.arc(nw//2, pin_r+2, pin_r, 0, math.pi*2)
+    cr.set_line_width(1.2); cr.stroke()
+    cr.set_source_rgba(1.0, 0.96, 0.90, 0.80)
+    cr.arc(nw//2-1.5, pin_r+1.5, 2.5, 0, math.pi*2); cr.fill()
+
+    # Title in header
+    cr.select_font_face("Caveat", 0, 1)
+    cr.set_font_size(12)
+    cr.set_source_rgba(ir, ig, ib, 0.82)
+    t = (title or "Note")[:22]
+    cr.move_to(10, 22); cr.show_text(t)
+
+    # Body text
+    cr.select_font_face("Caveat", 0, 0)
+    cr.set_font_size(13)
+    cr.set_source_rgba(ir, ig, ib, 0.80)
+    lines = wrap_text(cr, body or "", nw-22)
+    for i, line in enumerate(lines[:5]):
+        cr.move_to(11, 50 + i*19); cr.show_text(line)
+    if len(lines) > 5:
+        cr.set_source_rgba(ir, ig, ib, 0.40)
+        cr.set_font_size(10)
+        cr.move_to(11, 50+5*19); cr.show_text(f"+ {len(lines)-5} more lines…")
+
+    cr.restore()
+
+
+# ── CSS — warm paper toolbar ────────────────────────────────────────────────
 
 CSS = b"""
-* { font-family: 'JetBrains Mono', 'Monospace', monospace; }
-window { background-color: #030206; color: #e8e0f5; }
+* { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
+window { background-color: #b08040; color: #3a2010; }
 .hdr {
-    background-color: rgba(4,2,10,0.97);
-    border-bottom: 1px solid rgba(255,0,255,0.22);
-    padding: 5px 14px; min-height: 48px;
+    background-color: rgba(240, 225, 190, 0.96);
+    border-bottom: 2px solid rgba(120, 80, 20, 0.35);
+    padding: 6px 16px; min-height: 52px;
 }
-.hdr-title { color: #ff00ff; font-size: 14px; font-weight: bold; letter-spacing: 4px; }
+.hdr-title {
+    color: #7a3010;
+    font-size: 20px; font-weight: bold; letter-spacing: 2px;
+}
 .add-btn {
-    background-color: rgba(255,0,255,0.10); color: #ff00ff;
-    border: 1px solid rgba(255,0,255,0.50); border-radius: 2px;
-    padding: 5px 16px; font-size: 11px; font-weight: bold;
+    background-color: rgba(255, 210, 80, 0.80);
+    color: #5a2800;
+    border: 2px solid rgba(180, 110, 20, 0.60);
+    border-radius: 4px;
+    padding: 6px 18px; font-size: 14px; font-weight: bold;
 }
-.add-btn:hover { background-color: rgba(255,0,255,0.25); }
+.add-btn:hover { background-color: rgba(255, 230, 100, 0.95); }
+.del-btn {
+    background-color: rgba(255, 160, 140, 0.75);
+    color: #5a0000;
+    border: 2px solid rgba(180, 60, 40, 0.55);
+    border-radius: 4px;
+    padding: 6px 16px; font-size: 14px; font-weight: bold;
+}
+.del-btn:hover { background-color: rgba(255, 180, 160, 0.95); }
 .search-e {
-    background-color: rgba(7,3,15,0.85); color: #e8e0f5;
-    border: 1px solid rgba(204,0,255,0.35); border-radius: 2px;
-    padding: 4px 10px; font-size: 10px; box-shadow: none; caret-color: #cc00ff;
-    min-width: 200px;
+    background-color: rgba(255, 252, 240, 0.90);
+    border: 2px solid rgba(160, 110, 40, 0.50);
+    color: #3a2010; border-radius: 4px;
+    padding: 5px 12px; font-size: 13px; caret-color: #7a3010;
 }
 .search-e text { background-color: transparent; }
-.note-title-e {
-    background-color: transparent; color: #e8e0f5;
-    border: none; border-bottom: 1px solid rgba(255,255,255,0.15);
-    border-radius: 0; padding: 4px 8px; font-size: 11px; font-weight: bold;
-    box-shadow: none; caret-color: #ff00ff;
+.count-lbl { color: #7a5020; font-size: 12px; }
+.col-btn {
+    border-radius: 50%; min-width:22px; min-height:22px;
+    padding:0; border: 2px solid rgba(80,50,10,0.40);
 }
-.note-title-e text { background-color: transparent; color: #e8e0f5; }
-.note-body-e {
-    background-color: transparent; color: #e8e0f5;
-    border: none; padding: 6px 8px; font-size: 11px;
-    caret-color: #ff00ff;
-}
-.note-body-e text { background-color: transparent; color: #e8e0f5; }
+.col-btn:hover { border: 2px solid rgba(80,50,10,0.80); }
 """
 
 
-class NyxusStickies(Gtk.Application):
-    def __init__(self):
-        super().__init__(application_id="io.nyxus.stickies")
-        self._notes=[]; self._drag_id=None; self._drag_ox=0; self._drag_oy=0
-        self._drag_nx=0; self._drag_ny=0; self._search=""
-        self._load()
+# ── Data ────────────────────────────────────────────────────────────────────
 
-    def _load(self):
-        try:
-            with open(DATA_FILE) as f: self._notes=json.load(f)
-            for n in self._notes:
-                if "x" not in n: n["x"]=random.randint(PAD,600)
-                if "y" not in n: n["y"]=random.randint(PAD,400)
-                if "rotation" not in n: n["rotation"]=random.uniform(-4,4)
-                if "pinned" not in n: n["pinned"]=False
-        except Exception: self._notes=[]
+def load_notes():
+    try:
+        with open(DATA_FILE) as f: return json.load(f)
+    except Exception: return []
 
-    def _save(self):
-        try:
-            with open(DATA_FILE,"w") as f: json.dump(self._notes,f,indent=2)
-        except Exception: pass
+def save_notes(notes):
+    try:
+        with open(DATA_FILE,'w') as f: json.dump(notes, f, indent=2)
+    except Exception: pass
 
-    def do_activate(self):
-        prov=Gtk.CssProvider(); prov.load_from_data(CSS)
-        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(),prov,Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        self.win=Gtk.ApplicationWindow(application=self,title="NYXUS Stickies")
-        self.win.set_default_size(1200,800)
 
-        root=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.win.set_child(root)
+# ── Main window ─────────────────────────────────────────────────────────────
+
+class StickyApp(Gtk.ApplicationWindow):
+    def __init__(self, app):
+        super().__init__(application=app, title="NYXUS Stickies")
+        self.set_default_size(1100, 720)
+        self.notes = load_notes()
+        self.selected = None
+        self.drag_id = None
+        self.drag_dx = self.drag_dy = 0
+        self._build()
+
+    def _build(self):
+        css_p = Gtk.CssProvider(); css_p.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(), css_p,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.set_child(box)
 
         # Header
-        hdr=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=8)
+        hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         hdr.add_css_class("hdr")
-        title=Gtk.Label(label="NYXUS_STICKIES"); title.add_css_class("hdr-title")
-        title.set_halign(Gtk.Align.START); title.set_hexpand(True)
+        title = Gtk.Label(label="📌  NYXUS STICKIES"); title.add_css_class("hdr-title")
         hdr.append(title)
 
-        self._search_e=Gtk.Entry(); self._search_e.add_css_class("search-e")
-        self._search_e.set_placeholder_text("SEARCH NOTES...")
-        self._search_e.connect("changed",lambda e:setattr(self,'_search',e.get_text().lower()) or self._board.queue_draw())
-        hdr.append(self._search_e)
+        search = Gtk.Entry(); search.set_placeholder_text("search notes…")
+        search.add_css_class("search-e"); search.set_hexpand(True)
+        search.connect("changed", self._on_search); hdr.append(search)
 
-        # Color swatches
-        for i,col in enumerate(PALETTE):
-            swatch=self._make_swatch(col,i); hdr.append(swatch)
+        self.count_lbl = Gtk.Label(label=""); self.count_lbl.add_css_class("count-lbl")
+        hdr.append(self.count_lbl)
 
-        add=Gtk.Button(label="+ NEW NOTE"); add.add_css_class("add-btn")
-        add.connect("clicked",self._add_note); hdr.append(add)
+        add_btn = Gtk.Button(label="+ New Note"); add_btn.add_css_class("add-btn")
+        add_btn.connect("clicked", self._add_note); hdr.append(add_btn)
 
-        hdr_da=Gtk.DrawingArea(); hdr_da.set_size_request(-1,48)
-        hdr_da.set_draw_func(self._draw_hdr,None)
+        del_btn = Gtk.Button(label="✕ Delete"); del_btn.add_css_class("del-btn")
+        del_btn.connect("clicked", self._del_note); hdr.append(del_btn)
 
-        root.append(hdr)
+        # Color picker row
+        hdr2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        hdr2.add_css_class("hdr"); hdr2.set_margin_top(0)
+        for i, (pr, pg, pb) in enumerate(NOTE_PAPER):
+            btn = Gtk.Button(); btn.add_css_class("col-btn")
+            btn.set_size_request(22, 22)
+            r16=int(pr*255); g16=int(pg*255); b16=int(pb*255)
+            btn.get_style_context().add_provider(
+                self._color_provider(f"button{{background-color:rgb({r16},{g16},{b16});}}"),
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            btn.connect("clicked", self._set_color, i); hdr2.append(btn)
+        lbl = Gtk.Label(label="  Color:"); hdr2.prepend(lbl)
+        box.append(hdr); box.append(hdr2)
 
-        # Board
-        sc=Gtk.ScrolledWindow(); sc.set_vexpand(True)
-        sc.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
-        self._board=Gtk.DrawingArea(); self._board.set_size_request(1600,1100)
-        self._board.set_draw_func(self._draw_board,None)
+        # Canvas
+        self.da = Gtk.DrawingArea()
+        self.da.set_hexpand(True); self.da.set_vexpand(True)
+        self.da.set_draw_func(self._draw)
+        box.append(self.da)
 
-        # Drag gesture
-        drag=Gtk.GestureDrag()
+        # Gestures
+        click = Gtk.GestureClick()
+        click.connect("pressed", self._on_press)
+        click.connect("released", self._on_release)
+        self.da.add_controller(click)
+
+        drag = Gtk.GestureDrag()
         drag.connect("drag-begin",  self._drag_begin)
         drag.connect("drag-update", self._drag_update)
         drag.connect("drag-end",    self._drag_end)
-        self._board.add_controller(drag)
+        self.da.add_controller(drag)
 
-        # Double-click for edit
-        click=Gtk.GestureClick(); click.set_button(0)
-        click.connect("pressed",self._on_click)
-        self._board.add_controller(click)
+        self._update_count()
 
-        sc.set_child(self._board); root.append(sc)
+    def _color_provider(self, css):
+        p = Gtk.CssProvider(); p.load_from_data(css.encode()); return p
 
-        # Status bar
-        self._stat=Gtk.DrawingArea(); self._stat.set_size_request(-1,24)
-        self._stat.set_draw_func(self._draw_stat,None)
-        root.append(self._stat)
+    def _update_count(self):
+        n = len(self.notes)
+        self.count_lbl.set_label(f"{n} note{'s' if n!=1 else ''}")
 
-        GLib.timeout_add(5000,lambda:(self._save(),GLib.SOURCE_CONTINUE)[1])
-        self.win.present()
+    def _add_note(self, *_):
+        w,h = self.da.get_width(), self.da.get_height()
+        rng = _rand.Random()
+        self.notes.append({
+            "id": str(uuid.uuid4()),
+            "title": f"Note {len(self.notes)+1}",
+            "body": "",
+            "color": 0,
+            "x": max(20, min(w-NOTE_W-20, rng.randint(60, max(61,w-NOTE_W-60)))),
+            "y": max(20, min(h-NOTE_H-20, rng.randint(60, max(61,h-NOTE_H-60)))),
+            "angle": rng.uniform(-6, 6),
+            "created": datetime.now().isoformat(),
+        })
+        self.selected = self.notes[-1]["id"]
+        save_notes(self.notes); self._update_count(); self.da.queue_draw()
 
-    def _make_swatch(self,col,idx):
-        r,g,b=hex_rgb(col)
-        da=Gtk.DrawingArea(); da.set_size_request(24,24)
-        da.set_draw_func(lambda area,cr,w,h,c=(r,g,b):(
-            cr.set_source_rgba(*c,0.85),cr.arc(w/2,h/2,9,0,math.pi*2),cr.fill(),
-            cr.set_source_rgba(*c,1.0),cr.set_line_width(1.5),cr.arc(w/2,h/2,9,0,math.pi*2),cr.stroke()
-        )[0],None)
-        click=Gtk.GestureClick()
-        click.connect("pressed",lambda *_,c=col:self._add_note_color(c))
-        da.add_controller(click); return da
+    def _del_note(self, *_):
+        if not self.selected: return
+        self.notes = [n for n in self.notes if n["id"] != self.selected]
+        self.selected = None
+        save_notes(self.notes); self._update_count(); self.da.queue_draw()
 
-    # ── Drawing ──────────────────────────────────────────────────────────────────
-    def _draw_hdr(self,area,cr,w,h,_):
-        rainbow_bar(cr,0,h-2,w,2)
+    def _set_color(self, btn, idx):
+        if not self.selected: return
+        for n in self.notes:
+            if n["id"] == self.selected: n["color"] = idx
+        save_notes(self.notes); self.da.queue_draw()
 
-    def _draw_board(self,area,cr,w,h,_):
-        # Deep space background
-        cr.set_source_rgb(0.012,0.008,0.024); cr.rectangle(0,0,w,h); cr.fill()
-        # Multi-color dot grid (rainbow dots)
-        dot_grid(cr,0,0,w,h)
+    def _on_search(self, entry, *_):
+        self._filter = entry.get_text().lower()
+        self.da.queue_draw()
 
-        # Subtle grid lines for reference
-        cr.set_source_rgba(0.18,0.07,0.36,0.04); cr.set_line_width(1)
-        for gx in range(0,w,80):
-            cr.move_to(gx,0); cr.line_to(gx,h); cr.stroke()
-        for gy in range(0,h,80):
-            cr.move_to(0,gy); cr.line_to(w,gy); cr.stroke()
+    _filter = ""
 
-        q=self._search
-        visible=[n for n in self._notes if not q or q in n.get("title","").lower() or q in n.get("text","").lower()]
-        hidden_count=len(self._notes)-len(visible)
-        # Draw non-dragged first, then dragged on top
-        for n in visible:
-            if n["id"]!=self._drag_id: self._draw_note(cr,n)
-        for n in visible:
-            if n["id"]==self._drag_id: self._draw_note(cr,n,dragging=True)
-
-        # If searching, show faded hidden notes
-        if hidden_count>0:
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(10)
-            cr.set_source_rgba(0.44,0.376,0.627,0.5)
-            cr.move_to(w-200,h-16); cr.show_text(f"+{hidden_count} HIDDEN BY SEARCH")
-
-    def _draw_note(self, cr, n, dragging=False):
-        r,g,b=hex_rgb(n.get("color","#cc00ff"))
-        rot=math.radians(n.get("rotation",0))
-        nx=n["x"]; ny=n["y"]
-        if dragging:
-            nx=self._drag_nx; ny=self._drag_ny
-            cr.set_source_rgba(r,g,b,0.35); cr.set_line_width(4)  # Drop shadow hint
-            cr.rectangle(nx-NOTE_W//2+6,ny-NOTE_H//2+8,NOTE_W,NOTE_H); cr.fill()
-
-        cr.save()
-        cr.translate(nx,ny); cr.rotate(rot)
-        hw,hh=NOTE_W//2,NOTE_H//2
-
-        # Card background with tint
-        cr.set_source_rgba(0.02,0.01,0.05,0.96); cr.rectangle(-hw,-hh,NOTE_W,NOTE_H); cr.fill()
-
-        # Colored tint
-        cr.set_source_rgba(r,g,b,0.09); cr.rectangle(-hw,-hh,NOTE_W,NOTE_H); cr.fill()
-
-        # Dot grid inside the note (uses note's color)
-        idx=PALETTE.index(n.get("color","#cc00ff")) if n.get("color") in PALETTE else 1
-        cr.save()
-        cr.rectangle(-hw,-hh,NOTE_W,NOTE_H); cr.clip()
-        dot_grid(cr,-hw,-hh,NOTE_W,NOTE_H,idx)
-        cr.restore()
-
-        # Glow border layers
-        for lw,a in [(14,0.08),(7,0.20),(2,0.90)]:
-            cr.set_source_rgba(r,g,b,a); cr.set_line_width(lw)
-            cr.rectangle(-hw,-hh,NOTE_W,NOTE_H); cr.stroke()
-
-        # Top color bar
-        cr.set_source_rgba(r,g,b,0.55); cr.rectangle(-hw,-hh,NOTE_W,6); cr.fill()
-
-        # Rainbow corner dots
-        for cx2,cy2,ci in [(-hw+6,-hh+14,0),(hw-6,-hh+14,3),(-hw+6,hh-6,1),(hw-6,hh-6,4)]:
-            cr.set_source_rgba(*hex_rgb(PALETTE[ci]),0.7); cr.arc(cx2,cy2,3,0,math.pi*2); cr.fill()
-
-        # Pin indicator
-        if n.get("pinned"):
-            cr.set_source_rgba(1,1,0,0.9); cr.arc(hw-10,-hh+14,4,0,math.pi*2); cr.fill()
-
-        # Title
-        cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(10)
-        title=n.get("title","Untitled")[:24]
-        cr.set_source_rgba(*hex_rgb(n.get("color","#cc00ff")),0.9)
-        glow_text(cr,-hw+8,-hh+22,title,r,g,b,size=10,bold=True)
-
-        # Date
-        mod=n.get("modified","")[:10]
-        cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(7)
-        cr.set_source_rgba(r,g,b,0.40); ext=cr.text_extents(mod)
-        cr.move_to(hw-ext.width-6,-hh+22); cr.show_text(mod)
-
-        # Separator
-        cr.set_source_rgba(r,g,b,0.25); cr.set_line_width(1)
-        cr.move_to(-hw+6,-hh+28); cr.line_to(hw-6,-hh+28); cr.stroke()
-
-        # Body text
-        txt=n.get("text","")
-        lines=wrap_text(cr,txt,NOTE_W-20,size=9)
-        cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
-        cr.set_source_rgba(0.91,0.88,0.96,0.85)
-        ty=-hh+42
-        for line in lines[:8]:
-            if ty>hh-12: break
-            cr.move_to(-hw+8,ty); cr.show_text(line); ty+=13
-
-        # Word count
-        wc=len(txt.split()); wc_txt=f"{wc}W"
-        cr.set_font_size(7); cr.set_source_rgba(r,g,b,0.35)
-        cr.move_to(-hw+8,hh-6); cr.show_text(wc_txt)
-
-        cr.restore()
-
-    def _draw_stat(self, area, cr, w, h, _):
-        cr.set_source_rgb(0.012,0.006,0.025); cr.rectangle(0,0,w,h); cr.fill()
-        rainbow_bar(cr,0,0,w,2)
-        cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
-        parts=[
-            (f"NOTES: {len(self._notes)}", (1,0,1)),
-            ("  ·  ", (0.44,0.376,0.627)),
-            ("DRAG TO MOVE",  (0.22,1,0.08)),
-            ("  ·  ", (0.44,0.376,0.627)),
-            ("DOUBLE-CLICK TO EDIT", (0,0.53,1)),
-            ("  ·  ", (0.44,0.376,0.627)),
-            ("CLICK SWATCH TO SET COLOR", (1,1,0)),
-        ]
-        xp=10
-        for txt,col in parts:
-            cr.set_source_rgba(*col,0.80); cr.move_to(xp,h-5); cr.show_text(txt)
-            xp+=cr.text_extents(txt).width
-
-    # ── Interaction ──────────────────────────────────────────────────────────────
-    def _hit_note(self,x,y,notes=None):
-        if notes is None: notes=self._notes
-        for n in reversed(notes):
-            nx,ny=n["x"],n["y"]
-            if abs(x-nx)<NOTE_W//2+6 and abs(y-ny)<NOTE_H//2+6: return n
+    def _hit_test(self, mx, my):
+        for n in reversed(self.notes):
+            nx,ny = n["x"],n["y"]
+            # Approx hit (ignore rotation for simplicity)
+            if nx <= mx <= nx+NOTE_W and ny <= my <= ny+NOTE_H:
+                return n
         return None
 
-    def _drag_begin(self,gesture,sx,sy):
-        n=self._hit_note(sx,sy)
-        if n: self._drag_id=n["id"]; self._drag_ox=sx-n["x"]; self._drag_oy=sy-n["y"]
-        else: self._drag_id=None
-
-    def _drag_update(self,gesture,ox,oy):
-        if not self._drag_id: return
-        sx,sy=gesture.get_start_point()[1],gesture.get_start_point()[2]
-        self._drag_nx=sx+ox-self._drag_ox; self._drag_ny=sy+oy-self._drag_oy
-        self._board.queue_draw()
-
-    def _drag_end(self,gesture,ox,oy):
-        if not self._drag_id: return
-        n=next((x for x in self._notes if x["id"]==self._drag_id),None)
+    def _on_press(self, gesture, npress, mx, my):
+        n = self._hit_test(mx, my)
         if n:
-            n["x"]=self._drag_nx; n["y"]=self._drag_ny
-            n["x"]=max(NOTE_W//2,min(1560,n["x"]))
-            n["y"]=max(NOTE_H//2,min(1060,n["y"]))
-        self._drag_id=None; self._save(); self._board.queue_draw()
+            self.selected = n["id"]
+            if npress == 2: self._edit_note(n)
+        else:
+            self.selected = None
+        self.da.queue_draw()
 
-    def _on_click(self,gesture,n_press,x,y):
-        n=self._hit_note(x,y)
-        if not n: return
-        if n_press==2: self._open_editor(n)  # double-click
-        elif n_press==3: self._toggle_pin(n)  # triple-click = pin
+    def _on_release(self, *_): pass
 
-    def _toggle_pin(self,n):
-        n["pinned"]=not n.get("pinned",False); self._save(); self._board.queue_draw()
+    def _drag_begin(self, gesture, x, y):
+        n = self._hit_test(x, y)
+        if n:
+            self.drag_id = n["id"]
+            self.drag_sx, self.drag_sy = n["x"], n["y"]
+            self.drag_ox, self.drag_oy = x, y
+            # Move to top
+            self.notes.remove(n); self.notes.append(n)
 
-    # ── Editor dialog ─────────────────────────────────────────────────────────
-    def _open_editor(self,n):
-        r,g,b=hex_rgb(n.get("color","#cc00ff"))
-        dlg=Gtk.Dialog(transient_for=self.win,modal=True)
-        dlg.set_title("EDIT NOTE"); dlg.set_default_size(480,520)
+    def _drag_update(self, gesture, dx, dy):
+        if not self.drag_id: return
+        for n in self.notes:
+            if n["id"] == self.drag_id:
+                n["x"] = self.drag_sx + dx
+                n["y"] = self.drag_sy + dy
+        self.da.queue_draw()
 
-        content=dlg.get_content_area()
-        box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=4)
-        box.set_margin_top(8); box.set_margin_bottom(8)
-        box.set_margin_start(8); box.set_margin_end(8)
-        content.append(box)
+    def _drag_end(self, *_):
+        if self.drag_id:
+            save_notes(self.notes)
+        self.drag_id = None
 
-        # Color bar at top
-        da=Gtk.DrawingArea(); da.set_size_request(-1,8)
-        da.set_draw_func(lambda a,cr,w,h,c=(r,g,b):(
-            cr.set_source_rgba(*c,0.9),cr.rectangle(0,0,w,h),cr.fill()
-        )[0],None); box.append(da)
+    def _edit_note(self, note):
+        dlg = Gtk.Dialog(title="Edit Note", transient_for=self, modal=True)
+        dlg.set_default_size(360, 280)
+        box = dlg.get_content_area(); box.set_spacing(10); box.set_margin_start(16)
+        box.set_margin_end(16); box.set_margin_top(12); box.set_margin_bottom(12)
 
-        # Title
-        title_e=Gtk.Entry(); title_e.add_css_class("note-title-e")
-        title_e.set_text(n.get("title",""))
-        title_e.set_placeholder_text("NOTE TITLE..."); box.append(title_e)
+        title_e = Gtk.Entry(); title_e.set_text(note.get("title",""))
+        title_e.set_placeholder_text("Title…"); box.append(title_e)
 
-        # Color row
-        crow=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=8)
-        crow.set_margin_top(4); crow.set_margin_bottom(4)
-        clbl=Gtk.Label(label="COLOR:"); clbl.set_markup('<span font="9" foreground="#cc00ff" weight="bold">COLOR: </span>')
-        crow.append(clbl)
-        for ci,hexcol in enumerate(PALETTE):
-            cr2,cg2,cb2=hex_rgb(hexcol)
-            dot=Gtk.DrawingArea(); dot.set_size_request(22,22)
-            sel=(hexcol==n.get("color","#cc00ff"))
-            dot.set_draw_func(lambda a,cr,w,h,c=(cr2,cg2,cb2),s=sel:(
-                cr.set_source_rgba(*c,0.9),cr.arc(w/2,h/2,8,0,math.pi*2),cr.fill(),
-                cr.set_source_rgba(1,1,1,0.8 if s else 0),cr.set_line_width(2),cr.arc(w/2,h/2,9,0,math.pi*2),cr.stroke()
-            )[0],None)
-            clk=Gtk.GestureClick(); clk.connect("pressed",lambda *_,hc=hexcol,ne=n,d=dlg,te=title_e:
-                (setattr(ne,'__dict__',{**ne,'color':hc}),ne.update({'color':hc}),
-                 self._save(),self._board.queue_draw())[0])
-            dot.add_controller(clk); crow.append(dot)
-        box.append(crow)
+        scroll = Gtk.ScrolledWindow(); scroll.set_vexpand(True)
+        tv = Gtk.TextView(); tv.set_wrap_mode(Gtk.WrapMode.WORD)
+        tv.get_buffer().set_text(note.get("body",""))
+        scroll.set_child(tv); box.append(scroll)
 
-        # Tags
-        tag_row=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=4)
-        tlbl=Gtk.Label(); tlbl.set_markup('<span font="9" foreground="#ffff00" weight="bold">TAGS: </span>')
-        tag_row.append(tlbl)
-        tag_e=Gtk.Entry(); tag_e.add_css_class("tag-e") if hasattr(tag_e,'add_css_class') else None
-        tag_e.set_text(", ".join(n.get("tags",[])))
-        tag_e.set_placeholder_text("tag1, tag2, tag3"); tag_e.set_hexpand(True)
-        tag_row.append(tag_e); box.append(tag_row)
+        save_btn = Gtk.Button(label="Save"); save_btn.add_css_class("add-btn")
+        box.append(save_btn)
 
-        # Body
-        buf=Gtk.TextBuffer(); buf.set_text(n.get("text",""))
-        tv=Gtk.TextView(buffer=buf); tv.set_wrap_mode(Gtk.WrapMode.WORD)
-        tv.add_css_class("note-body-e")
-        sc=Gtk.ScrolledWindow(); sc.set_vexpand(True); sc.set_child(tv); box.append(sc)
+        def _save(*_):
+            note["title"] = title_e.get_text()
+            buf = tv.get_buffer()
+            note["body"] = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), False)
+            save_notes(self.notes); self.da.queue_draw(); dlg.close()
 
-        # Buttons
-        btnbox=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=6)
-        save_b=Gtk.Button(label="SAVE"); save_b.add_css_class("add-btn")
-        del_b=Gtk.Button(label="DELETE"); del_b.add_css_class("del-btn")
-        pin_b=Gtk.Button(label="📌 PIN" if not n.get("pinned") else "📌 UNPIN"); pin_b.add_css_class("pin-btn")
-        tilt_b=Gtk.Button(label="↻ TILT"); tilt_b.connect("clicked",lambda *_,ne=n:(
-            ne.update({"rotation":random.uniform(-6,6)}),
-            self._save(),self._board.queue_draw()))
+        save_btn.connect("clicked", _save)
+        dlg.present()
 
-        def _save_edit(*_):
-            n["title"]=title_e.get_text() or "Untitled"
-            n["text"]=buf.get_text(buf.get_start_iter(),buf.get_end_iter(),False)
-            n["modified"]=datetime.now().isoformat()[:19]
-            raw=tag_e.get_text().strip()
-            n["tags"]=[t.strip() for t in raw.split(",") if t.strip()][:5]
-            self._save(); self._board.queue_draw(); dlg.destroy()
+    def _draw(self, area, cr, w, h, _):
+        paper_bg(cr, w, h)
 
-        def _delete_note(*_):
-            self._notes=[x for x in self._notes if x["id"]!=n["id"]]
-            self._save(); self._board.queue_draw(); dlg.destroy()
+        filt = self._filter
+        for n in self.notes:
+            if filt and filt not in (n.get("title","") + n.get("body","")).lower():
+                continue
+            draw_sticky(cr,
+                n.get("x", 40), n.get("y", 40),
+                NOTE_W, NOTE_H,
+                n.get("color", 0),
+                n.get("title", "Note"),
+                n.get("body", ""),
+                n.get("angle", 0),
+                selected=(n["id"] == self.selected))
 
-        def _pin_note(*_):
-            n["pinned"]=not n.get("pinned",False)
-            self._save(); self._board.queue_draw()
-
-        save_b.connect("clicked",_save_edit)
-        del_b.connect("clicked",_delete_note)
-        pin_b.connect("clicked",_pin_note)
-        btnbox.append(save_b); btnbox.append(pin_b); btnbox.append(tilt_b)
-        btnbox.set_hexpand(True)
-        del_b.set_halign(Gtk.Align.END); btnbox.append(del_b)
-        box.append(btnbox)
-
-        GLib.idle_add(tv.grab_focus); dlg.present()
-
-    # ── Add notes ────────────────────────────────────────────────────────────────
-    def _add_note(self,*_):
-        self._add_note_color(PALETTE[len(self._notes)%len(PALETTE)])
-
-    def _add_note_color(self,col):
-        W=self._board.get_width() or 900; H=self._board.get_height() or 700
-        n={"id":str(uuid.uuid4()),"title":"New Note","text":"",
-           "color":col,"rotation":random.uniform(-5,5),
-           "x":random.randint(NOTE_W//2+PAD,max(NOTE_W,W-NOTE_W//2-PAD)),
-           "y":random.randint(NOTE_H//2+PAD,max(NOTE_H,H-NOTE_H//2-PAD)),
-           "created":datetime.now().isoformat()[:19],
-           "modified":datetime.now().isoformat()[:19],
-           "pinned":False,"tags":[]}
-        self._notes.append(n); self._save(); self._board.queue_draw()
-        GLib.idle_add(lambda:self._open_editor(n))
+        # Watermark at bottom
+        cr.select_font_face("Caveat", 0, 0); cr.set_font_size(11)
+        cr.set_source_rgba(0.42, 0.28, 0.10, 0.35)
+        cr.move_to(12, h-8); cr.show_text("NYXUS Stickies  ·  double-click to edit  ·  drag to move")
 
 
-class pin_btn(Gtk.Button): pass  # stub for CSS
+class App(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id="org.nyxus.stickies")
+    def do_activate(self):
+        win = StickyApp(self)
+        win.present()
 
-if __name__=="__main__":
-    NyxusStickies().run(None)
+App().run()

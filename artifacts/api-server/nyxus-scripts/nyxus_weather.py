@@ -40,67 +40,95 @@ C_BLUE   = PALETTE[2]
 C_GREEN  = PALETTE[3]
 C_YELLOW = PALETTE[4]
 C_ORANGE = PALETTE[5]
-C_TEXT   = (0.91, 0.88, 0.96)
-C_DIM    = (0.44, 0.376, 0.627)
+C_TEXT   = (0.14,  0.10,  0.04 )   # dark ink
+C_DIM    = (0.46,  0.40,  0.28 )   # faded ink
 
+
+import random as _rand
+
+def _rng_seed(x, y, w=0, h=0):
+    return int(x*3 + y*7 + (w or 1)*11 + (h or 1)*13) % 65535
+
+def sketch_rect_w(cr, x, y, w, h, r, g, b, thick=2.2, jitter=2.8, fill_rgba=None):
+    rng = _rand.Random(_rng_seed(x,y,w,h))
+    j = lambda s=1.0: rng.uniform(-jitter*s, jitter*s)
+    def _path():
+        cr.move_to(x+j(.5),y+j(.5))
+        cr.curve_to(x+w*.33+j(),y+j(),x+w*.67+j(),y+j(),x+w+j(.5),y+j(.5))
+        cr.curve_to(x+w+j(),y+h*.33+j(),x+w+j(),y+h*.67+j(),x+w+j(.5),y+h+j(.5))
+        cr.curve_to(x+w*.67+j(),y+h+j(),x+w*.33+j(),y+h+j(),x+j(.5),y+h+j(.5))
+        cr.curve_to(x+j(),y+h*.67+j(),x+j(),y+h*.33+j(),x+j(.5),y+j(.5))
+        cr.close_path()
+    if fill_rgba:
+        _path(); cr.set_source_rgba(*fill_rgba); cr.fill()
+        rng2 = _rand.Random(_rng_seed(x,y,w,h)); j = lambda s=1.0: rng2.uniform(-jitter*s,jitter*s)
+    _path()
+    cr.set_source_rgba(r,g,b,0.88); cr.set_line_width(thick)
+    cr.set_line_cap(1); cr.set_line_join(1); cr.stroke()
 
 def glow_text(cr, x, y, text, r, g, b, size=13, bold=True):
-    cr.select_font_face("JetBrains Mono", 0, 1 if bold else 0)
+    """Marker handwriting style text."""
+    cr.select_font_face("Caveat", 0, 1 if bold else 0)
     cr.set_font_size(size)
-    for dx, dy, a in [(-1,-1,.22),(1,-1,.22),(-1,1,.22),(1,1,.22),
-                       (-3,0,.10),(3,0,.10),(0,-3,.10),(0,3,.10),
-                       (-5,0,.05),(5,0,.05),(0,-5,.05),(0,5,.05)]:
-        cr.set_source_rgba(r, g, b, a)
-        cr.move_to(x+dx, y+dy); cr.show_text(text)
-    cr.set_source_rgba(r, g, b, 1.0)
-    cr.move_to(x, y); cr.show_text(text)
+    cr.set_source_rgba(r, g, b, 0.18); cr.move_to(x+1.2, y+0.8); cr.show_text(text)
+    cr.set_source_rgba(r, g, b, 0.92); cr.move_to(x, y); cr.show_text(text)
 
 
 def draw_neon_card(cr, x, y, w, h, color, rotation=0.0, tint=0.10):
+    """Hand-drawn index card — tilted, paper fill, wobbly border."""
     r, g, b = color
     cr.save()
     cr.translate(x, y); cr.rotate(math.radians(rotation))
     hw, hh = w/2, h/2
-    for gw, fa in [(20, 0.20), (12, 0.45), (6, 0.85)]:
-        cr.set_source_rgba(r, g, b, 0.07 * fa)
-        cr.set_line_width(gw)
-        cr.rectangle(-hw, -hh, w, h); cr.stroke()
-    cr.set_source_rgba(r, g, b, tint)
-    cr.rectangle(-hw, -hh, w, h); cr.fill()
-    cr.set_source_rgba(0, 0, 0, 0.60)
-    cr.rectangle(-hw, -hh, w, h); cr.fill()
-    cr.set_source_rgba(r, g, b, 0.95)
-    cr.set_line_width(1.5)
-    cr.rectangle(-hw, -hh, w, h); cr.stroke()
+
+    # Drop shadow
+    cr.set_source_rgba(0.22, 0.18, 0.10, 0.20)
+    cr.rectangle(-hw+5, -hh+6, w, h); cr.fill()
+
+    # Paper card fill
+    cr.set_source_rgb(0.99, 0.99, 0.97); cr.rectangle(-hw, -hh, w, h); cr.fill()
+
+    # Subtle color tint
+    cr.set_source_rgba(r, g, b, 0.08); cr.rectangle(-hw, -hh, w, h); cr.fill()
+
+    # Thin ruled lines inside
+    cr.set_line_width(0.45)
+    for ly in range(int(-hh)+18, int(hh), 18):
+        cr.set_source_rgba(0.60, 0.72, 0.88, 0.22)
+        cr.move_to(-hw+6, ly); cr.line_to(hw-6, ly); cr.stroke()
+
+    # Wobbly marker border (drawn in local card space)
+    sketch_rect_w(cr, -hw+2, -hh+2, w-4, h-4, r, g, b, thick=2.5, jitter=2.5)
+
     cr.restore()
 
 
-def rainbow_bar(cr, x, y, w, h=2):
+def rainbow_bar(cr, x, y, w, h=3):
     seg = w / len(PALETTE)
     for i, (r, g, b) in enumerate(PALETTE):
-        cr.set_source_rgba(r, g, b, 0.85)
+        cr.set_source_rgba(r, g, b, 0.75)
         cr.rectangle(x + i*seg, y, seg, h); cr.fill()
 
 
 CSS = b"""
-* { font-family: 'JetBrains Mono', 'Monospace', monospace; }
-window { background-color: #030206; color: #e8e0f5; }
+* { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
+window { background-color: #f5f4f0; color: #1a1408; }
 .search-entry {
-    background-color: rgba(7,3,15,0.85);
-    border: 1px solid rgba(204,0,255,0.40);
-    color: #e8e0f5; border-radius: 2px;
-    padding: 6px 12px; font-size: 11px; box-shadow: none;
-    caret-color: #cc00ff;
+    background-color: rgba(255,255,252,0.92);
+    border: 2px solid rgba(140,110,40,0.40);
+    color: #1a1408; border-radius: 4px;
+    padding: 6px 14px; font-size: 14px; box-shadow: none;
+    caret-color: #553300;
 }
 .search-entry text { background-color: transparent; }
 .go-btn {
-    background-color: rgba(255,0,255,0.10);
-    color: #ff00ff; border: 1px solid #ff00ff;
-    border-radius: 2px; padding: 5px 14px;
-    font-size: 11px; font-weight: bold;
+    background-color: rgba(255,190,100,0.75);
+    color: #5a2800; border: 2px solid rgba(180,110,20,0.55);
+    border-radius: 4px; padding: 6px 18px;
+    font-size: 14px; font-weight: bold;
 }
-.go-btn:hover { background-color: rgba(255,0,255,0.25); }
-.err-lbl { color: #ff5500; font-size: 11px; }
+.go-btn:hover { background-color: rgba(255,210,130,0.95); }
+.err-lbl { color: #880000; font-size: 13px; }
 """
 
 
@@ -163,15 +191,18 @@ class Particles:
         elif c=="FOG":            self._fog_draw(cr,W,H)
 
     def _sky(self,cr,w,h):
+        """Watercolour paper skies — pastel tones, bright and airy."""
         c=self.condition; day=self.is_day
-        skies={("CLEAR",True):((0.10,0.04,0.01),(0.01,0.01,0.02)),
-               ("CLEAR",False):((0.02,0.01,0.07),(0.01,0.01,0.02)),
-               ("RAIN",True):((0.02,0.03,0.07),(0.01,0.01,0.02)),
-               ("STORM",True):((0.01,0.01,0.05),(0.01,0.01,0.02)),
-               ("SNOW",True):((0.04,0.02,0.08),(0.01,0.01,0.02)),
-               ("FOG",True):((0.05,0.04,0.07),(0.02,0.01,0.03))}
+        skies={
+            ("CLEAR",True):   ((0.85,0.93,1.00),(0.97,0.98,0.95)),   # blue sky → cream horizon
+            ("CLEAR",False):  ((0.78,0.82,0.95),(0.88,0.90,0.98)),   # lavender dusk
+            ("RAIN",True):    ((0.72,0.80,0.90),(0.88,0.90,0.92)),   # slate overcast
+            ("STORM",True):   ((0.66,0.70,0.80),(0.80,0.82,0.86)),   # heavy grey
+            ("SNOW",True):    ((0.88,0.92,0.98),(0.96,0.97,1.00)),   # ice white
+            ("FOG",True):     ((0.90,0.91,0.92),(0.96,0.96,0.96)),   # cool mist
+        }
         key=(c if c in("RAIN","STORM","SNOW","FOG") else "CLEAR",day)
-        top,bot=skies.get(key,((0.03,0.02,0.06),(0.01,0.01,0.02)))
+        top,bot=skies.get(key,((0.88,0.91,0.96),(0.96,0.97,0.96)))
         for i in range(h):
             t=i/h; r=top[0]+(bot[0]-top[0])*t; g=top[1]+(bot[1]-top[1])*t; b=top[2]+(bot[2]-top[2])*t
             cr.set_source_rgb(r,g,b); cr.rectangle(0,i,w,1); cr.fill()
@@ -351,15 +382,14 @@ class NyxusWeather(Gtk.Application):
             cx = tile_cx_start + i*(tile_w+8)
             draw_neon_card(cr,cx,tile_cy,tile_w,tile_h,color,tilt,0.10)
             cr.save(); cr.translate(cx,tile_cy); cr.rotate(math.radians(tilt))
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(8)
-            cr.set_source_rgba(0.91,0.88,0.96,0.55)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(10)
+            cr.set_source_rgba(*C_DIM, 0.80)
             ext3=cr.text_extents(label)
             cr.move_to(-ext3.width/2-ext3.x_bearing,-18); cr.show_text(label)
-            cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(13)
-            cr.set_source_rgba(*color,1.0)
+            cr.select_font_face("Caveat",0,1); cr.set_font_size(15)
+            cr.set_source_rgba(*color,0.92)
             ext4=cr.text_extents(value)
             cr.move_to(-ext4.width/2-ext4.x_bearing,10); cr.show_text(value)
-            # Small color dot
             cr.set_source_rgba(*color,0.8)
             cr.arc(0,22,3,0,math.pi*2); cr.fill()
             cr.restore()
@@ -369,18 +399,21 @@ class NyxusWeather(Gtk.Application):
 
     # ── 5-day forecast ─────────────────────────────────────────────────────────
     def _draw_forecast(self,area,cr,W,H,_):
-        cr.set_source_rgb(0.012,0.008,0.024); cr.rectangle(0,0,W,H); cr.fill()
-        # Dot grid
-        cr.set_source_rgba(0.28,0.07,0.50,0.08)
-        for gx in range(0,W+24,24):
-            for gy in range(0,H+24,24):
-                cr.arc(gx,gy,0.9,0,math.pi*2); cr.fill()
+        cr.set_source_rgb(0.97,0.97,0.94); cr.rectangle(0,0,W,H); cr.fill()
+        # Graph paper lines
+        cr.set_line_width(0.40)
+        for gx in range(0,W+20,20):
+            cr.set_source_rgba(0.60,0.72,0.88,0.18)
+            cr.move_to(gx,0); cr.line_to(gx,H); cr.stroke()
+        for gy in range(0,H+20,20):
+            cr.set_source_rgba(0.60,0.72,0.88,0.18)
+            cr.move_to(0,gy); cr.line_to(W,gy); cr.stroke()
         # Rainbow top border
-        rainbow_bar(cr,0,0,W,2)
+        rainbow_bar(cr,0,0,W,3)
         # Header
-        glow_text(cr,14,20,"FORECAST_5D",*C_PURPLE,size=9,bold=True)
-        cr.set_source_rgba(*C_PURPLE,0.20); cr.set_line_width(1)
-        cr.move_to(0,28); cr.line_to(W,28); cr.stroke()
+        glow_text(cr,14,22,"5-Day Forecast",*C_PURPLE,size=13,bold=True)
+        cr.set_source_rgba(*C_PURPLE,0.22); cr.set_line_width(1.5)
+        cr.move_to(0,30); cr.line_to(W,30); cr.stroke()
 
         if not self._forecast: return
         n=len(self._forecast); col_w=W/n
@@ -394,34 +427,30 @@ class NyxusWeather(Gtk.Application):
             # Background tint for this column
             cr.set_source_rgba(*col,0.04)
             cr.rectangle(col_w*i,30,col_w,H-30); cr.fill()
-            # Day name — colored
-            cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(10)
-            cr.set_source_rgba(*col,0.95)
+            # Day name — colored Caveat header
+            cr.select_font_face("Caveat",0,1); cr.set_font_size(13)
+            cr.set_source_rgba(*col,0.92)
             ext=cr.text_extents(fc["day"])
-            cr.move_to(cx-ext.width/2-ext.x_bearing,46); cr.show_text(fc["day"])
+            cr.move_to(cx-ext.width/2-ext.x_bearing,48); cr.show_text(fc["day"])
             # Icon
-            cr.select_font_face("",0,0); cr.set_font_size(18)
+            cr.select_font_face("",0,0); cr.set_font_size(20)
             icon=ICONS.get(fc["cond"],"—")
             ext2=cr.text_extents(icon)
-            cr.set_source_rgba(*col,0.9)
-            cr.move_to(cx-ext2.width/2-ext2.x_bearing,68); cr.show_text(icon)
-            # Hi (pink glow)
+            cr.set_source_rgba(*col,0.88)
+            cr.move_to(cx-ext2.width/2-ext2.x_bearing,72); cr.show_text(icon)
+            # Hi
             hi=f"{fc['hi']}°" if fc.get("hi") is not None else "—"
-            cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(11)
+            cr.select_font_face("Caveat",0,1); cr.set_font_size(14)
             ext3=cr.text_extents(hi)
-            for dx,dy,a in [(-1,-1,.25),(1,1,.25)]:
-                cr.set_source_rgba(*col,a)
-                cr.move_to(cx-ext3.width/2-ext3.x_bearing+dx,84+dy); cr.show_text(hi)
-            cr.set_source_rgba(*col,1.0)
-            cr.move_to(cx-ext3.width/2-ext3.x_bearing,84); cr.show_text(hi)
-            # Lo (dim)
+            cr.set_source_rgba(*col,0.90)
+            cr.move_to(cx-ext3.width/2-ext3.x_bearing,88); cr.show_text(hi)
+            # Lo (faded ink)
             lo=f"{fc['lo']}°" if fc.get("lo") is not None else "—"
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(10)
-            cr.set_source_rgba(*C_DIM,0.7)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
+            cr.set_source_rgba(*C_DIM,0.75)
             ext4=cr.text_extents(lo)
             cr.move_to(cx-ext4.width/2-ext4.x_bearing,H-8); cr.show_text(lo)
-            # Bottom dot
-            cr.set_source_rgba(*col,0.6); cr.arc(cx,H-22,2.5,0,math.pi*2); cr.fill()
+            cr.set_source_rgba(*col,0.55); cr.arc(cx,H-22,2.5,0,math.pi*2); cr.fill()
 
     # ── Data fetch ─────────────────────────────────────────────────────────────
     def _geoip_locate(self):
