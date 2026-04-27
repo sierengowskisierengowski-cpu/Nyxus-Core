@@ -140,68 +140,68 @@ mkdir -p "$DESKTOP_DIR"
 
 NYXUS_URL="${BASE_URL}"
 
-cat > "$DESKTOP_DIR/nyxus-sysmon.desktop" <<EOF
+cat > "$DESKTOP_DIR/nyxus-sysmon.desktop" <<'DEOF'
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=NYXUS SysMon
 GenericName=System Monitor
 Comment=NYXUS OS live system stats — CPU, RAM, Network, Disk, Processes
-Exec=chromium --app=${NYXUS_URL}/nyxus-sysmon/ --class=nyxus-sysmon
-Icon=$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png
+Exec=python3 /home/nyx/.nyxus/nyxus_sysmon_gtk.py
+Icon=/home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png
 Terminal=false
 Categories=System;Monitor;
 Keywords=nyxus;sysmon;cpu;ram;network;monitor;stats;
-StartupWMClass=nyxus-sysmon
-EOF
+StartupWMClass=io.nyxus.sysmon
+DEOF
 ok "nyxus-sysmon.desktop"
 
-cat > "$DESKTOP_DIR/nyxus-stickies.desktop" <<EOF
+cat > "$DESKTOP_DIR/nyxus-stickies.desktop" <<'DEOF'
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=NYXUS Stickies
 GenericName=Sticky Notes
-Comment=NYXUS OS neon sticky notes widget
-Exec=chromium --app=${NYXUS_URL}/nyxus-stickies/ --window-size=480,560 --class=nyxus-widget
-Icon=$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png
+Comment=NYXUS OS neon sticky notes — native GTK4
+Exec=python3 /home/nyx/.nyxus/nyxus_stickies.py
+Icon=/home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png
 Terminal=false
 Categories=Utility;
 Keywords=nyxus;stickies;notes;sticky;widget;
-StartupWMClass=nyxus-widget
-EOF
+StartupWMClass=io.nyxus.stickies
+DEOF
 ok "nyxus-stickies.desktop"
 
-cat > "$DESKTOP_DIR/nyxus-weather.desktop" <<EOF
+cat > "$DESKTOP_DIR/nyxus-weather.desktop" <<'DEOF'
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=NYXUS Weather
 GenericName=Weather Widget
-Comment=NYXUS OS animated weather widget with live data
-Exec=chromium --app=${NYXUS_URL}/nyxus-widgets/ --window-size=380,560 --class=nyxus-widget
-Icon=$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png
+Comment=NYXUS OS animated weather widget — native GTK4
+Exec=python3 /home/nyx/.nyxus/nyxus_weather.py
+Icon=/home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png
 Terminal=false
 Categories=Utility;Weather;
 Keywords=nyxus;weather;widget;forecast;
-StartupWMClass=nyxus-widget
-EOF
+StartupWMClass=io.nyxus.weather
+DEOF
 ok "nyxus-weather.desktop"
 
-cat > "$DESKTOP_DIR/nyxus-notepad.desktop" <<EOF
+cat > "$DESKTOP_DIR/nyxus-notepad.desktop" <<'DEOF'
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=NYXUS Notepad
 GenericName=Notepad
-Comment=NYXUS OS markdown notepad with auto-save
-Exec=chromium --app=${NYXUS_URL}/nyxus-notepad/ --class=nyxus-notepad
-Icon=$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png
+Comment=NYXUS OS markdown notepad with auto-save — native GTK4
+Exec=python3 /home/nyx/.nyxus/nyxus_notepad.py
+Icon=/home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png
 Terminal=false
 Categories=Utility;TextEditor;
 Keywords=nyxus;notepad;notes;markdown;editor;
-StartupWMClass=nyxus-notepad
-EOF
+StartupWMClass=io.nyxus.notepad
+DEOF
 ok "nyxus-notepad.desktop"
 
 # Refresh app launcher cache
