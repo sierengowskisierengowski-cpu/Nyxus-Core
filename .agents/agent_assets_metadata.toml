@@ -36,6 +36,24 @@ uri = "file://artifacts/api-server/nyxus-scripts/nyxus-wallpaper.png"
 type = "image"
 title = "nyxus neon graffiti masterpiece wallpaper"
 
+[[generated]]
+id = "_TDutkekvhus8mmDNORgq"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-wallpaper-v2.png"
+type = "image"
+title = "nyxus wallpaper v2 cyan pink"
+
+[[generated]]
+id = "Ppkveleq8E6C7I0acU2UT"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-wallpaper-v3.png"
+type = "image"
+title = "nyxus wallpaper v3 gold purple"
+
+[[generated]]
+id = "UhiUuGGZDkFspmGmLbPNy"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-wallpaper-v4.png"
+type = "image"
+title = "nyxus wallpaper v4 red green hacker"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
