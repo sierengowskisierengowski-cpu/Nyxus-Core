@@ -91,7 +91,7 @@
     "modules-right":  ["tray", "pulseaudio", "network#bottom", "bluetooth", "battery#bottom", "custom/quicksettings", "clock#bottom"],
 
     "custom/start": {
-      "format":   "  <span foreground='#f472b6' font_weight='bold'>N</span><span foreground='#fb923c' font_weight='bold'>Y</span><span foreground='#fbbf24' font_weight='bold'>X</span><span foreground='#34d399' font_weight='bold'>U</span><span foreground='#38bdf8' font_weight='bold'>S</span>",
+      "format":   "<span foreground='#fbbf24' font_weight='bold' font_size='15pt'>⊞</span>",
       "escape":   false,
       "tooltip":  false,
       "on-click": "rofi -show drun -theme ~/.config/rofi/startmenu.rasi"
@@ -118,13 +118,15 @@
     },
 
     "clock#bottom": {
-      "format":     "  {:%H:%M}",
-      "format-alt": "  {:%a %b %d  ·  %H:%M:%S}",
-      "tooltip-format": "<big>{:%A}</big>\n<tt>{calendar}</tt>",
+      "interval":   1,
+      "format":     "  {:%H:%M:%S}",
+      "format-alt": "  {:%a · %d %b %Y · %H:%M:%S}",
+      "tooltip-format": "<big>{:%A  %d %B  %Y}</big>\n<tt>{calendar}</tt>",
       "calendar": {
         "mode": "month",
         "format": {
-          "today": "<span color='#c084fc'><b>{}</b></span>"
+          "today": "<span color='#f472b6'><b>{}</b></span>",
+          "weekdays": "<span color='#c084fc'>{}</span>"
         }
       }
     },
