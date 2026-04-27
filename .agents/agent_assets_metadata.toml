@@ -192,6 +192,12 @@ uri = "file://attached_assets/nyxus-detroit-v6.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "Zwk9CeGB8CFvqE1PGaB-q"
+uri = "file://attached_assets/nyxus-detroit-v7.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -281,3 +287,9 @@ id = "sg3AUQKa4qhtepDDWNWrk"
 uri = "file://attached_assets/nyxus-detroit-v6.png"
 type = "image"
 title = "Detroit Airbrush Collage v6 — Full City"
+
+[[outputs]]
+id = "hJa4ClNJtilgI5CoEOPfq"
+uri = "file://attached_assets/nyxus-detroit-v7.png"
+type = "image"
+title = "Detroit Packed Collage v7 — Wall to Wall"
