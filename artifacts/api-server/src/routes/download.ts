@@ -29,6 +29,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_quicksettings.py":       "nyxus_quicksettings.py",
   "rofi-startmenu.rasi":          "rofi-startmenu.rasi",
   "nyxus-sierengowski-clean.png": "nyxus-sierengowski-clean.png",
+  "nyxus-taskbar-bg.png":         "nyxus-taskbar-bg.png",
+  "nyxus-taskbar-bg2.png":        "nyxus-taskbar-bg2.png",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {

@@ -79,15 +79,18 @@ hdr "Wallpaper (SIERENGOWSKI)"
 WALLS_DIR="$HYPR_DIR/walls"
 mkdir -p "$WALLS_DIR"
 dl "nyxus-sierengowski-clean.png" "$WALLS_DIR/nyxus-sierengowski-clean.png" || failed=$((failed+1))
+dl "nyxus-taskbar-bg.png"         "$WALLS_DIR/nyxus-taskbar-bg.png"         || failed=$((failed+1))
 
 # ── WAYBAR ────────────────────────────────────────────────────────────────────
 hdr "Waybar"
 mkdir -p "$WAYBAR_DIR"
 dl "waybar-config.json"       "$WAYBAR_DIR/config"            || failed=$((failed+1))
 dl "waybar-style.css"         "$WAYBAR_DIR/style.css"         || failed=$((failed+1))
-# Inject real wallpaper path into CSS (replaces NYXUS_WALL_PATH placeholder)
+# Inject real paths into CSS
 WALL_PATH="$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png"
-sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g" "$WAYBAR_DIR/style.css"
+TASKBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-taskbar-bg.png"
+sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"       "$WAYBAR_DIR/style.css"
+sed -i "s|NYXUS_TASKBAR_BG|${TASKBAR_BG_PATH}|g" "$WAYBAR_DIR/style.css"
 dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
 dl "waybar-stats.sh"          "$WAYBAR_DIR/stats.sh"          || failed=$((failed+1))
 dl "nyxus_quicksettings.py"   "$WAYBAR_DIR/quicksettings.py"  || failed=$((failed+1))
