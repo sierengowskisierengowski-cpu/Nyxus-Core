@@ -41,6 +41,7 @@ dl() {
     ok "$name → $dest"
   else
     fail "$name"
+    failed_items+=("$name")
     return 1
   fi
 }
@@ -59,6 +60,8 @@ printf "  ${DIM}© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED$
 echo ""
 
 failed=0
+failed_items=()
+
 
 # ── PYTHON TERMINAL SCRIPTS ───────────────────────────────────────────────────
 hdr "Python Terminal Scripts"
@@ -234,10 +237,22 @@ else
 fi
 
 if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
-  pkill waybar 2>/dev/null || true
-  sleep 0.8
-  hyprctl dispatch exec "waybar --config $HOME/.config/waybar/config --style $HOME/.config/waybar/style.css"
-  ok "Waybar restarted — 4-bar NYXUS layout active"
+  pkill -x waybar 2>/dev/null || true
+  sleep 1.0
+  nohup waybar \
+    --config "$WAYBAR_DIR/config" \
+    --style  "$WAYBAR_DIR/style.css" \
+    > /tmp/nyxus-waybar.log 2>&1 &
+  disown
+  sleep 1.2
+  if pgrep -x waybar > /dev/null; then
+    ok "Waybar restarted — 4-bar NYXUS layout active"
+  else
+    printf "  ${RED}${B}✗${R}  ${DIM}Waybar failed to start — check /tmp/nyxus-waybar.log${R}\n"
+    printf "  ${DIM}Run:  cat /tmp/nyxus-waybar.log${R}\n"
+    failed=$((failed+1))
+    failed_items+=("waybar-start")
+  fi
 fi
 
 if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
@@ -266,8 +281,13 @@ if [[ $failed -eq 0 ]]; then
   printf "  ${PURPLE}${B}Logout menu:${R}      ${DIM}Super+Shift+E${R}\n\n"
   printf "  ${DIM}S I L E N T · D A R K · P U R E L Y   F U N C T I O N A L${R}\n"
 else
-  printf "  ${RED}${B}${failed} item(s) failed.${R}\n"
-  printf "  ${DIM}Check your connection and re-run.${R}\n"
+  printf "  ${RED}${B}${failed} item(s) failed:${R}\n"
+  for item in "${failed_items[@]}"; do
+    printf "    ${RED}✗${R}  ${DIM}${item}${R}\n"
+  done
+  echo ""
+  printf "  ${DIM}If waybar failed, run:  cat /tmp/nyxus-waybar.log${R}\n"
+  printf "  ${DIM}Otherwise re-run:  curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | bash${R}\n"
   exit 1
 fi
 
