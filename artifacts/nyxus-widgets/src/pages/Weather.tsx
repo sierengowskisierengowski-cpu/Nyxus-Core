@@ -201,7 +201,8 @@ export default function Weather() {
       () => {
         setNeedsLocation(true);
         setLoading(false);
-      }
+      },
+      { timeout: 4000, maximumAge: 60000 }
     );
   };
 
