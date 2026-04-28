@@ -760,10 +760,10 @@ window#waybar.right #battery.critical {
 
 /* Base overrides — square-enough buttons so the splatter looks round */
 window#waybar #workspaces button {
-    border-radius: 0 !important;
-    min-width:  42px !important;
-    min-height: 42px !important;
-    box-shadow:  none !important;
+    border-radius: 0;
+    min-width:  42px;
+    min-height: 42px;
+    box-shadow:  none;
 }
 window#waybar.bottom #workspaces button {
     padding: 6px 8px;
@@ -881,7 +881,7 @@ window#waybar #workspaces button:nth-child(6).active {
 window#waybar.right #cpu,
 window#waybar.right #memory,
 window#waybar.right #battery {
-    min-width: 44px !important;
+    min-width: 44px;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
