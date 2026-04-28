@@ -369,50 +369,79 @@ def collect(st):
 
 CSS = b"""
 * { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
-window { background-color: #f2f2ee; color: #1a1408; }
-.nav-bar { background-color: rgba(245,242,230,0.98);
-           border-right: 2px solid rgba(140,120,60,0.28); min-width: 148px; }
-.nav-btn {
-    background-color: transparent; color: rgba(80,65,30,0.80);
-    border: none; border-left: 4px solid transparent; border-radius: 0;
-    padding: 11px 14px 11px 16px; font-size: 13px; font-weight: bold;
-    letter-spacing: 1px; min-height: 0;
+window { background-color: #08080e; color: rgba(232,224,245,0.92); }
+
+/* ── Nav sidebar ─────────────────────────────────────────────────────── */
+.nav-bar {
+    background-color: #0d0d1a;
+    border-right: 2px solid rgba(255,0,255,0.18);
+    min-width: 152px;
 }
-.nav-btn:hover { background-color: rgba(255,0,255,0.06); color: #550070; }
-.nav-active-pink   { background-color: rgba(255,160,220,0.20); color: #880050;
-                     border-left: 4px solid #cc0066; }
-.nav-active-orange { background-color: rgba(255,180,120,0.22); color: #883300;
-                     border-left: 4px solid #cc5500; }
-.nav-active-purple { background-color: rgba(200,160,255,0.22); color: #550099;
-                     border-left: 4px solid #8800cc; }
-.nav-active-blue   { background-color: rgba(160,200,255,0.22); color: #003388;
-                     border-left: 4px solid #0055cc; }
-.nav-active-green  { background-color: rgba(160,255,160,0.22); color: #226600;
-                     border-left: 4px solid #339900; }
-.nav-active-yellow { background-color: rgba(255,250,160,0.30); color: #665500;
-                     border-left: 4px solid #aa8800; }
+.nav-btn {
+    background-color: transparent;
+    color: rgba(180,160,220,0.70);
+    border: none; border-left: 4px solid transparent; border-radius: 0;
+    padding: 11px 14px 11px 16px;
+    font-size: 16px; font-weight: bold; letter-spacing: 1px; min-height: 0;
+}
+.nav-btn:hover {
+    background-color: rgba(255,0,255,0.09);
+    color: rgba(255,180,255,0.92);
+}
+.nav-active-pink   { background: rgba(255,0,255,0.12); color: #ff88ff;
+                     border-left: 4px solid #ff00ff; }
+.nav-active-orange { background: rgba(255,85,0,0.12); color: #ff8855;
+                     border-left: 4px solid #ff5500; }
+.nav-active-purple { background: rgba(204,0,255,0.12); color: #dd88ff;
+                     border-left: 4px solid #cc00ff; }
+.nav-active-blue   { background: rgba(0,136,255,0.12); color: #66bbff;
+                     border-left: 4px solid #0088ff; }
+.nav-active-green  { background: rgba(57,255,20,0.10); color: #88ff55;
+                     border-left: 4px solid #39ff14; }
+.nav-active-yellow { background: rgba(255,255,0,0.10); color: #ffff88;
+                     border-left: 4px solid #ffff00; }
+
+/* ── Search input ────────────────────────────────────────────────────── */
 .search-e {
-    background-color: rgba(255,255,250,0.92); color: #1a1408;
-    border: 2px solid rgba(140,110,40,0.40); border-radius: 4px;
-    padding: 5px 12px; font-size: 13px; box-shadow: none; caret-color: #553300;
+    background-color: rgba(255,255,255,0.06);
+    color: rgba(232,224,245,0.88);
+    border: 2px solid rgba(255,0,255,0.30); border-radius: 5px;
+    padding: 5px 12px; font-size: 15px; box-shadow: none; caret-color: #ff00ff;
 }
 .search-e text { background-color: transparent; }
-.kill-btn { background-color: rgba(255,200,185,0.75); color: #660000;
-            border: 2px solid rgba(180,60,40,0.45); border-radius: 4px;
-            padding: 5px 12px; font-size: 13px; font-weight: bold; }
-.kill-btn:hover { background-color: rgba(255,215,205,0.95); }
-.sort-btn { background-color: rgba(240,230,200,0.70); color: #665500;
-            border: 1px solid rgba(150,120,30,0.35); border-radius: 3px;
-            padding: 4px 10px; font-size: 12px; }
-.sort-btn:hover { background-color: rgba(255,250,200,0.90); }
-.sort-active { color: #553300; border-color: rgba(140,90,0,0.75);
-               background-color: rgba(255,240,180,0.55); }
-treeview { background-color: #fafaf5; color: #1a1408; font-size: 13px;
-           font-family: 'Caveat', 'Sans'; }
-treeview:selected { background-color: rgba(255,180,220,0.35); color: #550040; }
-treeview header button { background-color: #f0ead6; color: #553300; border: none;
-                         font-size: 12px; font-weight: bold;
-                         border-bottom: 2px solid rgba(140,100,30,0.28); }
+.search-e:focus { border-color: #ff00ff; }
+
+/* ── Process action buttons ──────────────────────────────────────────── */
+.kill-btn {
+    background-color: rgba(255,50,30,0.18); color: #ff6655;
+    border: 2px solid rgba(255,80,50,0.45); border-radius: 5px;
+    padding: 5px 12px; font-size: 14px; font-weight: bold;
+}
+.kill-btn:hover { background-color: rgba(255,80,50,0.32); }
+.sort-btn {
+    background-color: rgba(255,255,255,0.06); color: rgba(200,180,240,0.80);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 4px;
+    padding: 4px 10px; font-size: 13px;
+}
+.sort-btn:hover { background-color: rgba(255,255,255,0.12); }
+.sort-active {
+    color: #ffff88; border-color: rgba(255,255,0,0.50);
+    background-color: rgba(255,255,0,0.10);
+}
+
+/* ── Process treeview ────────────────────────────────────────────────── */
+treeview {
+    background-color: #0a0a14; color: rgba(230,220,245,0.88);
+    font-size: 14px; font-family: 'Caveat', 'Sans';
+}
+treeview:selected {
+    background-color: rgba(255,0,255,0.18); color: #ffaaff;
+}
+treeview header button {
+    background-color: #0d0d1a; color: rgba(180,160,220,0.80);
+    border: none; font-size: 13px; font-weight: bold;
+    border-bottom: 2px solid rgba(255,0,255,0.18);
+}
 """
 
 COLOR_NAMES = {
