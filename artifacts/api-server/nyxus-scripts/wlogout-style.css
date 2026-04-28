@@ -6,20 +6,11 @@
 
 * {
     font-family: "Caveat", "JetBrains Mono", monospace;
-    box-shadow: none;
-    background-image: none;
 }
 
-/* ── FULLSCREEN WHITE CANVAS with corner neon paint spills ── */
+/* ── FULLSCREEN WHITE CANVAS ─────────────────────────────── */
 window {
-    background-color: #ffffff;
-    background-image:
-        radial-gradient(ellipse 38% 28% at 3%   4%,   rgba(255,0,255,0.45)  0%, rgba(255,0,255,0.10) 42%, transparent 70%),
-        radial-gradient(ellipse 34% 24% at 97%  3%,   rgba(0,136,255,0.42)  0%, rgba(0,136,255,0.09) 44%, transparent 70%),
-        radial-gradient(ellipse 30% 26% at 2%   97%,  rgba(57,255,20,0.38)  0%, rgba(57,255,20,0.08) 42%, transparent 68%),
-        radial-gradient(ellipse 36% 26% at 98%  97%,  rgba(255,85,0,0.42)   0%, rgba(255,85,0,0.09)  44%, transparent 68%),
-        radial-gradient(ellipse 22% 16% at 50%  0%,   rgba(204,0,255,0.32)  0%, rgba(204,0,255,0.05) 52%, transparent 72%),
-        radial-gradient(ellipse 20% 14% at 50%  100%, rgba(230,184,0,0.28)  0%, rgba(230,184,0,0.04) 52%, transparent 72%);
+    background-color: #f8f8f8;
 }
 
 /* ── BUTTON BASE ─────────────────────────────────────────── */
