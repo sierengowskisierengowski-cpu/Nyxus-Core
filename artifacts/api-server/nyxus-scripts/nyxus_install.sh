@@ -65,20 +65,21 @@ hdr "Python Terminal Scripts"
 mkdir -p "$SCRIPTS_DIR"
 for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
          nyxus_sysmon.py nyxus_sysmon_gtk.py \
-         nyxus_stickies.py nyxus_notepad.py nyxus_weather.py; do
+         nyxus_stickies.py nyxus_notepad.py nyxus_weather.py nyxus_terminal.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
 # ── GTK4 Python dependencies ──────────────────────────────────────────────────
 hdr "Python GTK4 Dependencies"
 if command -v pacman &>/dev/null; then
-  pacman -S --noconfirm --needed python-gobject python-psutil python-cairo gtk4 2>/dev/null \
-    && ok "python-gobject gtk4 python-psutil python-cairo" \
+  pacman -S --noconfirm --needed python-gobject python-psutil python-cairo gtk4 vte4 2>/dev/null \
+    && ok "python-gobject gtk4 python-psutil python-cairo vte4" \
     || printf "  ${DIM}(pacman install failed — try: pip install PyGObject psutil pycairo)${R}\n"
 else
   pip install PyGObject psutil pycairo 2>/dev/null \
     && ok "PyGObject psutil pycairo (pip)" \
     || printf "  ${DIM}pip install failed — install python-gobject manually${R}\n"
+  printf "  ${DIM}Note: also install vte4 / gir1.2-vte-2.91 for the NYXUS Terminal${R}\n"
 fi
 
 # ── HYPRLAND CONFIGS ──────────────────────────────────────────────────────────
@@ -203,6 +204,22 @@ Keywords=nyxus;notepad;notes;markdown;editor;
 StartupWMClass=io.nyxus.notepad
 DEOF
 ok "nyxus-notepad.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-terminal.desktop" << 'DEOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Terminal
+GenericName=Terminal
+Comment=NYXUS OS brick-wall graffiti terminal — native GTK4 + VTE
+Exec=python3 /home/nyx/.nyxus/nyxus_terminal.py
+Icon=/home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png
+Terminal=false
+Categories=System;TerminalEmulator;
+Keywords=nyxus;terminal;bash;graffiti;brick;
+StartupWMClass=io.nyxus.terminal
+DEOF
+ok "nyxus-terminal.desktop"
 
 # Refresh app launcher cache
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
