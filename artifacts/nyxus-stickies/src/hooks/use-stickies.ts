@@ -1,23 +1,37 @@
 import { useState, useEffect } from 'react';
 
-export type NoteColor = 
-  | '#ff00ff' // pink
-  | '#cc00ff' // purple
-  | '#0088ff' // blue
-  | '#39ff14' // green
-  | '#ffff00' // yellow
-  | '#ff5500'; // orange
+export type NoteColor =
+  | '#fef08a'
+  | '#fda4af'
+  | '#93c5fd'
+  | '#86efac'
+  | '#e9d5ff'
+  | '#fdba74';
 
 export const NYXUS_COLORS: NoteColor[] = [
-  '#ff00ff', '#cc00ff', '#0088ff', '#39ff14', '#ffff00', '#ff5500'
+  '#fef08a',
+  '#fda4af',
+  '#93c5fd',
+  '#86efac',
+  '#e9d5ff',
+  '#fdba74',
 ];
+
+export const COLOR_LABELS: Record<NoteColor, string> = {
+  '#fef08a': 'Lemon',
+  '#fda4af': 'Rose',
+  '#93c5fd': 'Sky',
+  '#86efac': 'Mint',
+  '#e9d5ff': 'Lavender',
+  '#fdba74': 'Peach',
+};
 
 export interface Note {
   id: string;
   title: string;
   content: string;
   color: NoteColor;
-  rotation: number; // degrees
+  rotation: number;
   isPinned: boolean;
   createdAt: number;
 }
@@ -30,68 +44,54 @@ export function useStickies() {
     const saved = localStorage.getItem('nyxus_stickies');
     if (saved) {
       try {
-        setNotes(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse stickies', e);
+        const parsed = JSON.parse(saved) as Note[];
+        const valid = parsed.map(n => ({
+          ...n,
+          color: NYXUS_COLORS.includes(n.color as NoteColor) ? n.color : NYXUS_COLORS[Math.floor(Math.random() * NYXUS_COLORS.length)],
+        }));
+        setNotes(valid);
+      } catch {
+        setNotes([]);
       }
     }
     setIsLoaded(true);
   }, []);
 
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('nyxus_stickies', JSON.stringify(notes));
-    }
+    if (isLoaded) localStorage.setItem('nyxus_stickies', JSON.stringify(notes));
   }, [notes, isLoaded]);
 
   const addNote = () => {
+    const color = NYXUS_COLORS[Math.floor(Math.random() * NYXUS_COLORS.length)];
+    const rotation = (Math.random() * 8) - 4;
     const newNote: Note = {
       id: crypto.randomUUID(),
-      title: 'NEW_NOTE',
+      title: '',
       content: '',
-      color: NYXUS_COLORS[Math.floor(Math.random() * NYXUS_COLORS.length)],
-      rotation: (Math.random() * 6) - 3, // -3 to +3
+      color,
+      rotation,
       isPinned: false,
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
-    setNotes([newNote, ...notes]);
+    setNotes(prev => [newNote, ...prev]);
   };
 
-  const updateNote = (id: string, updates: Partial<Note>) => {
-    setNotes(notes.map(n => n.id === id ? { ...n, ...updates } : n));
-  };
+  const updateNote = (id: string, updates: Partial<Note>) =>
+    setNotes(prev => prev.map(n => (n.id === id ? { ...n, ...updates } : n)));
 
-  const deleteNote = (id: string) => {
-    setNotes(notes.filter(n => n.id !== id));
-  };
+  const deleteNote = (id: string) =>
+    setNotes(prev => prev.filter(n => n.id !== id));
 
-  const clearAll = () => {
-    setNotes([]);
-  };
+  const clearAll = () => setNotes([]);
 
-  const togglePin = (id: string) => {
-    setNotes(notes.map(n => {
-      if (n.id === id) {
-        return { ...n, isPinned: !n.isPinned };
-      }
-      return n;
-    }));
-  };
+  const togglePin = (id: string) =>
+    setNotes(prev => prev.map(n => (n.id === id ? { ...n, isPinned: !n.isPinned } : n)));
 
-  // Sort notes: pinned first, then by createdAt desc
   const sortedNotes = [...notes].sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
     return b.createdAt - a.createdAt;
   });
 
-  return {
-    notes: sortedNotes,
-    addNote,
-    updateNote,
-    deleteNote,
-    clearAll,
-    togglePin,
-    isLoaded
-  };
+  return { notes: sortedNotes, addNote, updateNote, deleteNote, clearAll, togglePin, isLoaded };
 }
