@@ -776,105 +776,56 @@ window#waybar.left #workspaces button {
 
 /* ── Splatter 1 — Hot Pink (ws 1) ── */
 window#waybar #workspaces button:nth-child(1) {
-    clip-path: polygon(
-        50% 5%,  62% 20%, 78%  8%, 76% 26%,
-        95% 22%, 88% 40%, 100% 48%, 86% 56%,
-        95% 72%, 74% 70%, 82% 88%, 64% 78%,
-        65% 98%, 50% 84%, 35% 98%, 36% 78%,
-        18% 88%, 26% 70%,  5% 72%, 14% 56%,
-         0% 48%, 12% 40%,  5% 22%, 24% 26%,
-        22%  8%, 38% 20%
-    );
+    clip-path: polygon(50% 5%, 62% 20%, 78% 8%, 76% 26%, 95% 22%, 88% 40%, 100% 48%, 86% 56%, 95% 72%, 74% 70%, 82% 88%, 64% 78%, 65% 98%, 50% 84%, 35% 98%, 36% 78%, 18% 88%, 26% 70%, 5% 72%, 14% 56%, 0% 48%, 12% 40%, 5% 22%, 24% 26%, 22% 8%, 38% 20%);
 }
 window#waybar #workspaces button:nth-child(1):hover,
 window#waybar #workspaces button:nth-child(1).active {
-    filter: drop-shadow(0 0 8px #ff00ff) drop-shadow(0 0 18px rgba(255,0,255,0.70));
+    filter: drop-shadow(0 0 10px #ff00ff);
 }
 
 /* ── Splatter 2 — Orange (ws 2) ── */
 window#waybar #workspaces button:nth-child(2) {
-    clip-path: polygon(
-        54%  4%, 66% 18%, 82%  6%, 82% 24%,
-        100% 20%, 92% 36%, 100% 50%, 88% 58%,
-        98% 74%, 76% 72%, 82% 90%, 64% 80%,
-        62% 98%, 48% 86%, 36% 96%, 32% 78%,
-        16% 88%, 18% 68%,  2% 68%, 10% 52%,
-         2% 36%, 16% 34%, 10% 14%, 30% 24%,
-        28%  4%
-    );
+    clip-path: polygon(54% 4%, 66% 18%, 82% 6%, 82% 24%, 100% 20%, 92% 36%, 100% 50%, 88% 58%, 98% 74%, 76% 72%, 82% 90%, 64% 80%, 62% 98%, 48% 86%, 36% 96%, 32% 78%, 16% 88%, 18% 68%, 2% 68%, 10% 52%, 2% 36%, 16% 34%, 10% 14%, 30% 24%, 28% 4%);
 }
 window#waybar #workspaces button:nth-child(2):hover,
 window#waybar #workspaces button:nth-child(2).active {
-    filter: drop-shadow(0 0 8px #ff5500) drop-shadow(0 0 18px rgba(255,85,0,0.70));
+    filter: drop-shadow(0 0 10px #ff5500);
 }
 
 /* ── Splatter 3 — Yellow (ws 3) ── */
 window#waybar #workspaces button:nth-child(3) {
-    clip-path: polygon(
-        50%  2%, 58% 14%, 74%  4%, 76% 20%,
-        92% 14%, 90% 30%, 100% 38%, 88% 50%,
-        98% 62%, 80% 64%, 92% 78%, 74% 76%,
-        76% 94%, 60% 82%, 58% 100%, 50% 84%,
-        42% 100%, 40% 82%, 24% 94%, 26% 76%,
-         8% 78%, 20% 64%,  2% 62%, 12% 50%,
-         0% 38%, 10% 30%,  8% 14%, 24% 20%,
-        26%  4%, 42% 14%
-    );
+    clip-path: polygon(50% 2%, 58% 14%, 74% 4%, 76% 20%, 92% 14%, 90% 30%, 100% 38%, 88% 50%, 98% 62%, 80% 64%, 92% 78%, 74% 76%, 76% 94%, 60% 82%, 58% 100%, 50% 84%, 42% 100%, 40% 82%, 24% 94%, 26% 76%, 8% 78%, 20% 64%, 2% 62%, 12% 50%, 0% 38%, 10% 30%, 8% 14%, 24% 20%, 26% 4%, 42% 14%);
 }
 window#waybar #workspaces button:nth-child(3):hover,
 window#waybar #workspaces button:nth-child(3).active {
-    filter: drop-shadow(0 0 8px #ffff00) drop-shadow(0 0 18px rgba(255,255,0,0.70));
+    filter: drop-shadow(0 0 10px #ffff00);
 }
 
 /* ── Splatter 4 — Mint Green (ws 4) ── */
 window#waybar #workspaces button:nth-child(4) {
-    clip-path: polygon(
-        50%  8%, 60% 22%, 76% 12%, 80% 30%,
-        96% 26%, 90% 44%, 100% 52%, 86% 60%,
-        94% 76%, 74% 72%, 78% 90%, 60% 78%,
-        58% 96%, 50% 80%, 42% 96%, 40% 78%,
-        22% 90%, 26% 72%,  6% 76%, 14% 60%,
-         0% 52%, 10% 44%,  4% 26%, 20% 30%,
-        24% 12%, 40% 22%
-    );
+    clip-path: polygon(50% 8%, 60% 22%, 76% 12%, 80% 30%, 96% 26%, 90% 44%, 100% 52%, 86% 60%, 94% 76%, 74% 72%, 78% 90%, 60% 78%, 58% 96%, 50% 80%, 42% 96%, 40% 78%, 22% 90%, 26% 72%, 6% 76%, 14% 60%, 0% 52%, 10% 44%, 4% 26%, 20% 30%, 24% 12%, 40% 22%);
 }
 window#waybar #workspaces button:nth-child(4):hover,
 window#waybar #workspaces button:nth-child(4).active {
-    filter: drop-shadow(0 0 8px #39ff14) drop-shadow(0 0 18px rgba(57,255,20,0.70));
+    filter: drop-shadow(0 0 10px #39ff14);
 }
 
 /* ── Splatter 5 — Sky Blue (ws 5) ── */
 window#waybar #workspaces button:nth-child(5) {
-    clip-path: polygon(
-        48%  2%, 56% 18%, 72%  2%, 78% 22%,
-        96% 14%, 92% 34%, 100% 42%, 88% 54%,
-        96% 70%, 74% 66%, 80% 86%, 60% 76%,
-        60% 100%, 50% 82%, 40% 100%, 40% 82%,
-        20% 86%, 26% 66%,  4% 70%, 12% 54%,
-         0% 42%,  8% 34%,  4% 14%, 22% 22%,
-        28%  2%, 44% 18%
-    );
+    clip-path: polygon(48% 2%, 56% 18%, 72% 2%, 78% 22%, 96% 14%, 92% 34%, 100% 42%, 88% 54%, 96% 70%, 74% 66%, 80% 86%, 60% 76%, 60% 100%, 50% 82%, 40% 100%, 40% 82%, 20% 86%, 26% 66%, 4% 70%, 12% 54%, 0% 42%, 8% 34%, 4% 14%, 22% 22%, 28% 2%, 44% 18%);
 }
 window#waybar #workspaces button:nth-child(5):hover,
 window#waybar #workspaces button:nth-child(5).active {
-    filter: drop-shadow(0 0 8px #0088ff) drop-shadow(0 0 18px rgba(0,136,255,0.70));
+    filter: drop-shadow(0 0 10px #0088ff);
 }
 
 /* ── Splatter 6 — Purple (ws 6) ── */
 window#waybar #workspaces button:nth-child(6) {
-    clip-path: polygon(
-        50%  4%, 64% 16%, 82%  4%, 84% 24%,
-        100% 18%, 94% 36%, 100% 50%, 90% 62%,
-        98% 78%, 76% 74%, 80% 94%, 62% 80%,
-        60% 100%, 50% 84%, 40% 100%, 38% 80%,
-        20% 94%, 24% 74%,  2% 78%, 10% 62%,
-         0% 50%,  6% 36%,  0% 18%, 16% 24%,
-        18%  4%, 36% 16%
-    );
+    clip-path: polygon(50% 4%, 64% 16%, 82% 4%, 84% 24%, 100% 18%, 94% 36%, 100% 50%, 90% 62%, 98% 78%, 76% 74%, 80% 94%, 62% 80%, 60% 100%, 50% 84%, 40% 100%, 38% 80%, 20% 94%, 24% 74%, 2% 78%, 10% 62%, 0% 50%, 6% 36%, 0% 18%, 16% 24%, 18% 4%, 36% 16%);
 }
 window#waybar #workspaces button:nth-child(6):hover,
 window#waybar #workspaces button:nth-child(6).active {
-    filter: drop-shadow(0 0 8px #cc00ff) drop-shadow(0 0 18px rgba(204,0,255,0.70));
+    filter: drop-shadow(0 0 10px #cc00ff);
 }
 
 /* Right bar — widen modules so they match the left bar width */
