@@ -232,6 +232,7 @@ hdr "Applying Changes"
 
 if command -v hyprctl &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   hyprctl reload &>/dev/null && ok "Hyprland config reloaded" || true
+  hyprctl dismissnotify -1 &>/dev/null || true
 else
   printf "  ${DIM}Run ${PURPLE}hyprctl reload${DIM} to apply the new config${R}\n"
 fi
