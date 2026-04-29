@@ -196,10 +196,37 @@
     "position":      "right",
     "width":         52,
     "spacing":       0,
-    "margin-top":    160,
-    "margin-bottom": 160,
+    "margin-top":    100,
+    "margin-bottom": 100,
 
+    "modules-top":    ["custom/app-sysmon", "custom/app-stickies", "custom/app-weather", "custom/app-notepad", "custom/app-terminal"],
     "modules-center": ["cpu#right", "memory#right", "battery#right"],
+
+    "custom/app-sysmon": {
+      "format":   "",
+      "tooltip":  "NYXUS SysMon",
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_sysmon_gtk.py"
+    },
+    "custom/app-stickies": {
+      "format":   "",
+      "tooltip":  "NYXUS Stickies",
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_stickies.py"
+    },
+    "custom/app-weather": {
+      "format":   "",
+      "tooltip":  "NYXUS Weather",
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_weather.py"
+    },
+    "custom/app-notepad": {
+      "format":   "",
+      "tooltip":  "NYXUS Notepad",
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_notepad.py"
+    },
+    "custom/app-terminal": {
+      "format":   "",
+      "tooltip":  "NYXUS Terminal",
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_terminal.py"
+    },
 
     "cpu#right": {
       "format":   "{usage}",
