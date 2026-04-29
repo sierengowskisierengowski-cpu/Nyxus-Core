@@ -5,7 +5,7 @@
 # ╚══════════════════════════════════════════════════════════════════════╝
 import gi
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk, GLib, Gio
 import math, random, threading, json, os
 from urllib.request import urlopen, Request
 from urllib.parse import quote
