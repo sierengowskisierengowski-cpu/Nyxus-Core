@@ -68,7 +68,7 @@ def _monitors():
     except: return []
 
 # ── CSS ────────────────────────────────────────────────────────────────────────
-_CSS = b"""
+_CSS = """
 * { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; font-size: 15px; }
 
 window {
@@ -222,7 +222,7 @@ class QuickPanel(Gtk.Window):
         self.set_type_hint(Gdk.WindowTypeHint.POPUP_MENU)
 
         p = Gtk.CssProvider()
-        p.load_from_data(_CSS)
+        p.load_from_data(_CSS.encode("utf-8"))
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(), p,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)

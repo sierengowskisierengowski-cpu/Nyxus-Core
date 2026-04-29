@@ -157,25 +157,25 @@ def _wrap(cr, text, max_w, size=14):
 # ── Background ────────────────────────────────────────────────────────────────
 
 def draw_canvas_bg(cr, x, y, w, h):
-    """Neon splat image background for the sticky note canvas."""
+    """Pure Cairo neon splat background — no image dependency."""
     cr.set_source_rgb(*C_DARK); cr.rectangle(x, y, w, h); cr.fill()
-    if not draw_image_bg(cr, x, y, w, h, "nyxus-bg-11.png", alpha=0.28):
-        # Fallback: subtle neon scatter if image not available
-        rng = _rand.Random(77)
-        for _ in range(40):
-            cr.set_source_rgba(*_rand.Random(rng.random()).choice(NOTE_INK), rng.uniform(0.04, 0.11))
-            cr.arc(x + rng.uniform(0, w), y + rng.uniform(0, h), rng.uniform(4, 28), 0, math.pi*2)
-            cr.fill()
+    # Subtle neon scatter
+    rng = _rand.Random(77)
+    for _ in range(40):
+        cr.set_source_rgba(*_rand.Random(rng.random()).choice(NOTE_INK), rng.uniform(0.04, 0.11))
+        cr.arc(x + rng.uniform(0, w), y + rng.uniform(0, h), rng.uniform(4, 28), 0, math.pi*2)
+        cr.fill()
 
 
 # ── Toolbar ───────────────────────────────────────────────────────────────────
 
 def draw_toolbar(cr, w, note_count, selected_theme, search_txt, hovered_btn):
-    # Dark base then neon splat image — matches waybar aesthetic
-    cr.set_source_rgb(0.031, 0.031, 0.055)
+    # Dark purple band — pure Cairo, no image dependency
+    cr.set_source_rgb(0.10, 0.04, 0.18)
     cr.rectangle(0, 0, w, TOOLBAR_H); cr.fill()
-    draw_image_bg(cr, 0, 0, w, TOOLBAR_H, "nyxus-bg-07.png", alpha=0.92)
-
+    # Neon top edge line
+    cr.set_source_rgba(1, 0, 1, 0.70); cr.set_line_width(2.5)
+    cr.move_to(0, 1); cr.line_to(w, 1); cr.stroke()
     # Neon bottom edge line
     cr.set_source_rgba(1, 0, 1, 0.55); cr.set_line_width(2.0)
     cr.move_to(0, TOOLBAR_H-1); cr.line_to(w, TOOLBAR_H-1); cr.stroke()
@@ -214,9 +214,9 @@ def draw_toolbar(cr, w, note_count, selected_theme, search_txt, hovered_btn):
 
 
 def draw_colorbar(cr, w, selected_theme, hovered_color):
-    cr.set_source_rgba(0.031, 0.031, 0.055, 1.0)
+    # Dark band — pure Cairo, no image dependency
+    cr.set_source_rgba(0.06, 0.02, 0.12, 1.0)
     cr.rectangle(0, TOOLBAR_H, w, COLORBAR_H); cr.fill()
-    draw_image_bg(cr, 0, TOOLBAR_H, w, COLORBAR_H, "nyxus-bg-03.png", alpha=0.75)
     cr.set_source_rgba(0.5,0.2,0.7,0.18); cr.set_line_width(1.0)
     cr.move_to(0,TOOLBAR_H+COLORBAR_H); cr.line_to(w,TOOLBAR_H+COLORBAR_H); cr.stroke()
 

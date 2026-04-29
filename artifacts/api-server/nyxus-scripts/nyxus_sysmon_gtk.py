@@ -135,9 +135,15 @@ def draw_tilt_badge(cr, x, y, txt, color, angle=-4.5, size=14):
 
 
 def draw_nyxus_bg(cr, w, h):
-    """Neon splat image background — matches waybar aesthetic."""
+    """Dark base fill — pure Cairo, no image dependency."""
     cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
-    draw_image_bg(cr, 0, 0, w, h, "nyxus-bg-06.png", alpha=0.22)
+    # Subtle dot grid for texture
+    cr.set_source_rgba(0.55, 0.25, 0.85, 0.08)
+    step = 22
+    for gx in range(0, int(w) + step, step):
+        for gy in range(0, int(h) + step, step):
+            cr.arc(gx, gy, 1.0, 0, 6.2832)
+            cr.fill()
 
 def dim_text(cr, x, y, txt, size=11):
     cr.select_font_face("Caveat", 0, 0)
