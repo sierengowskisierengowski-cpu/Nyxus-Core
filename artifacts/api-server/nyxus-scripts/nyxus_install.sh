@@ -76,8 +76,9 @@ done
 # ── GTK4 Python dependencies ──────────────────────────────────────────────────
 hdr "Python GTK4 Dependencies"
 if command -v pacman &>/dev/null; then
-  pacman -S --noconfirm --needed python-gobject python-psutil python-cairo gtk4 vte4 chafa 2>/dev/null \
-    && ok "python-gobject gtk4 python-psutil python-cairo vte4 chafa" \
+  pacman -S --noconfirm --needed python-gobject python-psutil python-cairo gtk4 vte4 chafa \
+    python-cryptography python-reportlab python-markdown gtksourceview5 2>/dev/null \
+    && ok "python-gobject gtk4 python-psutil python-cairo vte4 chafa cryptography reportlab markdown gtksourceview5" \
     || printf "  ${DIM}(pacman install failed — try: pip install PyGObject psutil pycairo)${R}\n"
 else
   pip install PyGObject psutil pycairo 2>/dev/null \
