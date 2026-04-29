@@ -119,12 +119,35 @@ def rainbow_bar(cr, x, y, w, h):
     cr.rectangle(x,y,w,h); cr.set_source(pat); cr.fill()
 
 def dark_panel_bg(cr, w, h, rule_every=28):
-    """Dark #08080e background with subtle white horizontal rules."""
+    """Dark #08080e + icon-generator-style paint splatters + ruled lines."""
     cr.set_source_rgb(*C_DARK); cr.rectangle(0,0,w,h); cr.fill()
-    cr.set_line_width(0.5)
-    for y in range(rule_every, h, rule_every):
-        cr.set_source_rgba(1,1,1,0.045)
-        cr.move_to(0,y); cr.line_to(w,y); cr.stroke()
+    rng = random.Random(77)
+    neons = [C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE]
+    # Large paint blobs
+    for _ in range(14):
+        bx = rng.uniform(0, w); by = rng.uniform(0, h)
+        brad = rng.uniform(5, 20); nc = rng.choice(neons)
+        cr.set_source_rgba(*nc, rng.uniform(0.04, 0.12))
+        cr.arc(bx, by, brad, 0, math.pi * 2); cr.fill()
+    # Splatter streaks
+    for _ in range(18):
+        sx = rng.uniform(0, w); sy = rng.uniform(0, h)
+        ex = sx + rng.uniform(-80, 80); ey = sy + rng.uniform(-10, 10)
+        nc = rng.choice(neons)
+        cr.set_source_rgba(*nc, rng.uniform(0.05, 0.15))
+        cr.set_line_width(rng.uniform(0.6, 1.8))
+        cr.move_to(sx, sy); cr.line_to(ex, ey); cr.stroke()
+    # Dense small dots
+    for _ in range(60):
+        bx = rng.uniform(0, w); by = rng.uniform(0, h)
+        brad = rng.uniform(0.8, 3.0); nc = rng.choice(neons)
+        cr.set_source_rgba(*nc, rng.uniform(0.08, 0.22))
+        cr.arc(bx, by, brad, 0, math.pi * 2); cr.fill()
+    # Ruled notebook lines
+    cr.set_line_width(0.45)
+    for ry in range(rule_every, int(h), rule_every):
+        cr.set_source_rgba(1, 1, 1, 0.040)
+        cr.move_to(0, ry); cr.line_to(w, ry); cr.stroke()
 
 def arc_gauge(cr, cx, cy, radius, pct, color, thick=3.5, bg_alpha=0.15):
     """Draw a simple arc progress gauge."""
@@ -154,7 +177,7 @@ def wind_compass(cr, cx, cy, radius, deg, color):
         a = math.radians(i*90)
         lx = cx + math.sin(a)*(radius+10)
         ly = cy - math.cos(a)*(radius+10)
-        cr.select_font_face("Caveat",0,1); cr.set_font_size(9)
+        cr.select_font_face("Caveat",0,1); cr.set_font_size(13)
         ext = cr.text_extents(lbl)
         cr.set_source_rgba(*color, 0.55)
         cr.move_to(lx - ext.width/2 - ext.x_bearing, ly - ext.height/2 - ext.y_bearing + 4)
@@ -342,7 +365,7 @@ class Particles:
             cr.set_source_rgba(0.70, 0.65, 0.95, 0.22)
             cr.set_line_width(5); cr.arc(mx,my,R+2,0,math.pi*2); cr.stroke()
             # Phase name label
-            cr.select_font_face("Caveat", 0, 0); cr.set_font_size(9)
+            cr.select_font_face("Caveat", 0, 0); cr.set_font_size(13)
             cr.set_source_rgba(0.70, 0.65, 0.95, 0.70)
             ext = cr.text_extents(phase_name)
             cr.move_to(mx - ext.width/2, my + R + 13); cr.show_text(phase_name)

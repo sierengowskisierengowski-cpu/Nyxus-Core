@@ -77,28 +77,55 @@ def glow_text(cr, x, y, txt, r, g, b, size=12, bold=False):
     cr.set_source_rgba(r, g, b, 0.18); cr.move_to(x+1.2, y+0.8); cr.show_text(txt)
     cr.set_source_rgba(r, g, b, 0.92); cr.move_to(x, y); cr.show_text(txt)
 
-def draw_tilt_badge(cr, x, y, txt, color, angle=-4.5, size=9):
-    """Tilted section header badge — the wireframe structural label look."""
+def draw_tilt_badge(cr, x, y, txt, color, angle=-4.5, size=14):
+    """Tilted hand-drawn section badge — Caveat + sketch_rect border."""
     r, g, b = color
     cr.save()
     cr.translate(x, y); cr.rotate(math.radians(angle))
     cr.select_font_face("Caveat", 0, 1); cr.set_font_size(size)
     ext = cr.text_extents(txt)
-    bw = ext.width + 20; bh = size + 10
-    # Fill
-    cr.set_source_rgba(r, g, b, 0.16); cr.rectangle(-6, -(bh-3), bw, bh); cr.fill()
-    # Heavy glow border
-    cr.set_source_rgba(r, g, b, 0.30); cr.set_line_width(8)
-    cr.rectangle(-6, -(bh-3), bw, bh); cr.stroke()
-    # Solid border
-    cr.set_source_rgba(r, g, b, 1.00); cr.set_line_width(2)
-    cr.rectangle(-6, -(bh-3), bw, bh); cr.stroke()
-    # Left accent bar
-    cr.set_source_rgba(r, g, b, 1.0); cr.set_line_width(3)
-    cr.move_to(-6, -(bh-3)); cr.line_to(-6, 3); cr.stroke()
+    bw = ext.width + 18; bh = size + 10
+    # Sketchy wobbly border
+    sketch_rect(cr, -6, -(bh - 3), bw, bh, r, g, b,
+                thick=2.2, jitter=2.5, fill_rgba=(r, g, b, 0.14))
+    # Neon glow shadow on text
+    cr.set_source_rgba(r, g, b, 0.25); cr.move_to(1.5, 1.0); cr.show_text(txt)
     # Text
-    cr.set_source_rgba(r, g, b, 1.0); cr.move_to(0, 0); cr.show_text(txt)
+    cr.set_source_rgba(r, g, b, 0.96); cr.move_to(0, 0); cr.show_text(txt)
     cr.restore()
+
+
+def draw_nyxus_bg(cr, w, h):
+    """Shared NYXUS background — dark #08080e + paint splatters + ruled lines."""
+    import random as _r2
+    cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
+    rng = _r2.Random(42)
+    neons = [C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE]
+    # Large background paint blobs
+    for _ in range(14):
+        bx = rng.uniform(0, w); by = rng.uniform(0, h)
+        brad = rng.uniform(6, 22); nc = rng.choice(neons)
+        cr.set_source_rgba(*nc, rng.uniform(0.04, 0.13))
+        cr.arc(bx, by, brad, 0, math.pi * 2); cr.fill()
+    # Splatter streaks
+    for _ in range(18):
+        sx = rng.uniform(0, w); sy = rng.uniform(0, h)
+        ex = sx + rng.uniform(-80, 80); ey = sy + rng.uniform(-12, 12)
+        nc = rng.choice(neons)
+        cr.set_source_rgba(*nc, rng.uniform(0.05, 0.14))
+        cr.set_line_width(rng.uniform(0.6, 1.8))
+        cr.move_to(sx, sy); cr.line_to(ex, ey); cr.stroke()
+    # Dense small dots
+    for _ in range(60):
+        bx = rng.uniform(0, w); by = rng.uniform(0, h)
+        brad = rng.uniform(0.8, 3.2); nc = rng.choice(neons)
+        cr.set_source_rgba(*nc, rng.uniform(0.06, 0.20))
+        cr.arc(bx, by, brad, 0, math.pi * 2); cr.fill()
+    # Ruled notebook lines
+    cr.set_line_width(0.4)
+    for ry in range(28, int(h), 28):
+        cr.set_source_rgba(1, 1, 1, 0.038)
+        cr.move_to(0, ry); cr.line_to(w, ry); cr.stroke()
 
 def dim_text(cr, x, y, txt, size=11):
     cr.select_font_face("Caveat", 0, 0)
@@ -505,7 +532,7 @@ class NyxusSysmonGtk(Gtk.Application):
 
     # ── Header ─────────────────────────────────────────────────────────────────
     def _draw_hdr(self,area,cr,w,h,_):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         # Subtle bottom border in warm ink
         cr.set_source_rgba(0.50,0.40,0.10,0.22); cr.set_line_width(1.5)
         cr.move_to(0,h-1); cr.line_to(w,h-1); cr.stroke()
@@ -567,7 +594,7 @@ class NyxusSysmonGtk(Gtk.Application):
         self._das["OVERVIEW"]=da; return da
 
     def _draw_overview(self,area,cr,w,h,_):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr,0,0,w,h)
         p=4; cw=(w-p*5)//4; ch=160
         cards=[("CPU USAGE",self.st.cpu_pct,C_PINK),
@@ -587,11 +614,11 @@ class NyxusSysmonGtk(Gtk.Application):
             R=min(cw,ch)//2-26
             ring_chart(cr,cx2,cy2+8,R,pct,pct_color(pct))
             txt=f"{pct:.0f}%"
-            cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(18)
+            cr.select_font_face("Caveat",0,1); cr.set_font_size(18)
             ext=cr.text_extents(txt)
             glow_text(cr,cx2-ext.width/2-ext.x_bearing,cy2+18,
                       txt,*pct_color(pct),size=18,bold=True)
-            cr.set_font_size(8); cr.select_font_face("JetBrains Mono",0,0)
+            cr.set_font_size(11); cr.select_font_face("Caveat",0,0)
             cr.set_source_rgba(*C_DIM,0.8)
             if title=="CPU USAGE":
                 sub=f"FREQ: {self.st.cpu_freq/1000:.2f}GHz" if self.st.cpu_freq else "FREQ: --"
@@ -621,7 +648,7 @@ class NyxusSysmonGtk(Gtk.Application):
             if hist is not None:
                 sparkline(cr,p+8,y+28,w-p*2-16,ch2-36,hist,color,mx)
                 val=f"{list(hist)[-1]:.1f}%" if hist else "--"
-                cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(10)
+                cr.select_font_face("Caveat",0,1); cr.set_font_size(13)
                 cr.set_source_rgba(*color,0.9)
                 cr.move_to(w-p*2-60,y+18); cr.show_text(val)
             else:
@@ -639,7 +666,7 @@ class NyxusSysmonGtk(Gtk.Application):
         self._das["CPU"]=da; return da
 
     def _draw_cpu(self,area,cr,w,h,_):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr,0,0,w,h); p=8
         # Left: ring + info  Right: cores + history
         lw=min(360,w//2-p*2)
@@ -647,7 +674,7 @@ class NyxusSysmonGtk(Gtk.Application):
         draw_tilt_badge(cr,p+14,p+26,"CPU DETAIL",C_ORANGE,angle=-4.0)
         ring_chart(cr,p+lw//2,p+120,80,self.st.cpu_pct,pct_color(self.st.cpu_pct))
         txt=f"{self.st.cpu_pct:.1f}%"
-        cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(22)
+        cr.select_font_face("Caveat",0,1); cr.set_font_size(22)
         ext=cr.text_extents(txt)
         glow_text(cr,p+lw//2-ext.width/2-ext.x_bearing,p+130,txt,*pct_color(self.st.cpu_pct),size=22,bold=True)
         info=[
@@ -661,7 +688,7 @@ class NyxusSysmonGtk(Gtk.Application):
         ]
         iy=p+220
         for label,val in info:
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
             cr.set_source_rgba(*C_DIM,0.7); cr.move_to(p+12,iy); cr.show_text(f"{label}:")
             cr.set_source_rgba(*C_TEXT,0.9); cr.move_to(p+80,iy); cr.show_text(val)
             iy+=14
@@ -679,7 +706,7 @@ class NyxusSysmonGtk(Gtk.Application):
                 cr.set_source_rgba(*col,0.9); cr.rectangle(x2,p+34+140-fh,bw,fh); cr.fill()
                 cr.set_source_rgba(*col,0.22); cr.set_line_width(bw+4)
                 cr.move_to(x2+bw/2,p+34+140); cr.line_to(x2+bw/2,p+34+140-fh); cr.stroke()
-                cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(7)
+                cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
                 cr.set_source_rgba(*C_DIM,0.8)
                 lbl=f"{int(pct)}"; ext2=cr.text_extents(lbl)
                 cr.move_to(x2+bw/2-ext2.width/2,p+188); cr.show_text(lbl)
@@ -688,7 +715,7 @@ class NyxusSysmonGtk(Gtk.Application):
         neon_card(cr,rx,p*2+200,rw,hch,C_ORANGE)
         draw_tilt_badge(cr,rx+14,p*2+226,"CPU HISTORY (2 MIN)",C_ORANGE,angle=-3.5)
         sparkline(cr,rx+8,p*2+234,rw-16,hch-40,self.st.cpu_h,C_ORANGE,100.0)
-        cr.select_font_face("JetBrains Mono",0,1); cr.set_font_size(10)
+        cr.select_font_face("Caveat",0,1); cr.set_font_size(13)
         cr.set_source_rgba(*C_ORANGE,0.9); cr.move_to(rx+rw-70,p*2+222)
         cr.show_text(f"{self.st.cpu_pct:.1f}%")
         rainbow_bar(cr,0,h-3,w,3)
@@ -699,7 +726,7 @@ class NyxusSysmonGtk(Gtk.Application):
         self._das["MEMORY"]=da; return da
 
     def _draw_memory(self,area,cr,w,h,_):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr,0,0,w,h); p=8
         hw=(w-p*3)//2
         # RAM card
@@ -712,7 +739,7 @@ class NyxusSysmonGtk(Gtk.Application):
         iy=p+115
         for lbl,val in info:
             col=[C_PURPLE,C_GREEN,C_DIM,C_BLUE][info.index((lbl,val))]
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
             cr.set_source_rgba(*C_DIM,0.7); cr.move_to(p+12,iy); cr.show_text(f"{lbl}:")
             glow_text(cr,p+80,iy,val,*col,size=9,bold=False)
             iy+=16
@@ -725,7 +752,7 @@ class NyxusSysmonGtk(Gtk.Application):
                 ("TOTAL",fmt_size(self.st.swp_total))]
         iy2=p+115
         for lbl,val in swinfo:
-            cr.set_font_size(9); cr.set_source_rgba(*C_DIM,0.7)
+            cr.set_font_size(12); cr.set_source_rgba(*C_DIM,0.7)
             cr.move_to(p*2+hw+12,iy2); cr.show_text(f"{lbl}:")
             cr.set_source_rgba(*C_TEXT,0.9); cr.move_to(p*2+hw+80,iy2); cr.show_text(val)
             iy2+=16
@@ -740,7 +767,7 @@ class NyxusSysmonGtk(Gtk.Application):
         top_mem=sorted(self.st.procs,key=lambda x:x[5],reverse=True)[:int(bh//14)]
         for pid,name,cpu,mem,status,rss,user in top_mem:
             if iy3>h-p: break
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
             col=C_ORANGE if mem>5 else (C_YELLOW if mem>2 else C_TEXT)
             cr.set_source_rgba(*col,0.85); cr.move_to(p+12,iy3); cr.show_text(f"{name:<28}")
             glow_text(cr,p+240,iy3,f"{mem:.2f}%",*col,size=9); cr.set_source_rgba(*C_DIM,0.7)
@@ -754,7 +781,7 @@ class NyxusSysmonGtk(Gtk.Application):
         self._das["NETWORK"]=da; return da
 
     def _draw_network(self,area,cr,w,h,_):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr,0,0,w,h); p=8
         # Top: total speeds
         neon_card(cr,p,p,w//2-p-4,110,C_ORANGE)
@@ -780,10 +807,10 @@ class NyxusSysmonGtk(Gtk.Application):
                 neon_card(cr,nx,row_y,nw2,120,PALETTE[i%len(PALETTE)])
                 col=PALETTE[i%len(PALETTE)]
                 glow_text(cr,nx+10,row_y+22,nic.upper(),*col,size=9,bold=True)
-                cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
+                cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
                 glow_text(cr,nx+10,row_y+50,fmt_bytes(data["up"]),*C_ORANGE,size=10,bold=True)
                 glow_text(cr,nx+10,row_y+66,fmt_bytes(data["dn"]),*C_BLUE,  size=10,bold=True)
-                cr.set_source_rgba(*C_DIM,0.7); cr.set_font_size(8)
+                cr.set_source_rgba(*C_DIM,0.7); cr.set_font_size(11)
                 cr.move_to(nx+10,row_y+82); cr.show_text(f"IP: {data['ip'] or 'N/A'}")
                 cr.move_to(nx+10,row_y+94); cr.show_text(f"MAC: {data['mac'] or 'N/A'}")
                 cr.move_to(nx+10,row_y+106); cr.show_text(f"↑{fmt_size(data['total_sent'])} ↓{fmt_size(data['total_recv'])}")
@@ -805,7 +832,7 @@ class NyxusSysmonGtk(Gtk.Application):
             xc=p+12; yc=hcy+208
             for j,(state,count) in enumerate(sorted(self.st.net_conns_by_state.items(),key=lambda x:-x[1])[:8]):
                 col=C_GREEN if state=="ESTABLISHED" else (C_YELLOW if state=="TIME_WAIT" else C_DIM)
-                cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
+                cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
                 cr.set_source_rgba(*col,0.85); cr.move_to(xc,yc); cr.show_text(f"{state}: {count}")
                 xc+=180
                 if (j+1)%3==0: xc=p+12; yc+=14
@@ -817,7 +844,7 @@ class NyxusSysmonGtk(Gtk.Application):
         self._das["DISK"]=da; return da
 
     def _draw_disk(self,area,cr,w,h,_):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr,0,0,w,h); p=8
         neon_card(cr,p,p,w-p*2,min(300,h-p*2),C_GREEN)
         draw_tilt_badge(cr,p+14,p+26,"DISK PARTITIONS",C_GREEN,angle=-4.0)
@@ -825,11 +852,11 @@ class NyxusSysmonGtk(Gtk.Application):
         for i,d in enumerate(self.st.disks[:8]):
             col=C_ORANGE if d["pct"]>85 else (C_YELLOW if d["pct"]>70 else C_GREEN)
             glow_text(cr,p+12,iy,d["mount"],*col,size=10,bold=True)
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
             cr.set_source_rgba(*C_DIM,0.75); cr.move_to(p+170,iy); cr.show_text(f"[{d['fstype']}]  {d['dev']}")
             cr.set_source_rgba(*col,0.9); cr.move_to(w-p-80,iy); cr.show_text(f"{d['pct']:.1f}%")
             hbar(cr,p+12,iy+4,w-p*2-24,8,d["pct"],col)
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(8); cr.set_source_rgba(*C_DIM,0.7)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(11); cr.set_source_rgba(*C_DIM,0.7)
             cr.move_to(p+12,iy+20); cr.show_text(f"USED: {fmt_size(d['used'])}  FREE: {fmt_size(d['free'])}  TOTAL: {fmt_size(d['total'])}")
             iy+=38
         # Disk I/O
@@ -843,7 +870,7 @@ class NyxusSysmonGtk(Gtk.Application):
                 glow_text(cr,p+12,iy2,dev,*C_YELLOW,size=9,bold=True)
                 glow_text(cr,p+120,iy2,f"R: {fmt_bytes(iod['read_bps'],'')}/s",*C_GREEN,size=9)
                 glow_text(cr,p+260,iy2,f"W: {fmt_bytes(iod['write_bps'],'')}/s",*C_ORANGE,size=9)
-                cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(8); cr.set_source_rgba(*C_DIM,0.6)
+                cr.select_font_face("Caveat",0,0); cr.set_font_size(11); cr.set_source_rgba(*C_DIM,0.6)
                 cr.move_to(p+400,iy2); cr.show_text(f"Reads:{iod['reads']}  Writes:{iod['writes']}")
                 iy2+=16
         rainbow_bar(cr,0,h-3,w,3)
@@ -882,10 +909,10 @@ class NyxusSysmonGtk(Gtk.Application):
         return box
 
     def _draw_proc_header(self,area,cr,w,h,_):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         rainbow_bar(cr,0,0,w,2)
         info=f"PROCS: {self.st.proc_count}  RUNNING: {self.st.proc_run}  CPU: {self.st.cpu_pct:.1f}%  RAM: {self.st.ram_pct:.1f}%"
-        cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
+        cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
         cr.set_source_rgba(*C_DIM,0.85); cr.move_to(10,h-6); cr.show_text(info)
 
     def _on_proc_filter(self,entry):
@@ -929,7 +956,7 @@ class NyxusSysmonGtk(Gtk.Application):
         self._das["SENSORS"]=da; return da
 
     def _draw_sensors(self,area,cr,w,h,_):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr,0,0,w,h); p=8; col_y=p
         hw=(w-p*3)//2
         # Temperature sensors
@@ -943,13 +970,13 @@ class NyxusSysmonGtk(Gtk.Application):
                 for r in readings[:6]:
                     if iy>p+290: break
                     tc=temp_color(r.current); lbl=r.label or f"Sensor"
-                    cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
+                    cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
                     cr.set_source_rgba(*C_DIM,0.7); cr.move_to(p+20,iy); cr.show_text(f"  {lbl[:20]}")
                     glow_text(cr,p+180,iy,f"{r.current:.1f}°C",*tc,size=9,bold=True)
-                    if hasattr(r,'high') and r.high: cr.set_source_rgba(*C_DIM,0.5); cr.set_font_size(8); cr.move_to(p+240,iy); cr.show_text(f"(max {r.high:.0f}°C)")
+                    if hasattr(r,'high') and r.high: cr.set_source_rgba(*C_DIM,0.5); cr.set_font_size(11); cr.move_to(p+240,iy); cr.show_text(f"(max {r.high:.0f}°C)")
                     iy+=13
         else:
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(10)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
             cr.set_source_rgba(*C_DIM,0.5); cr.move_to(p+12,iy+30); cr.show_text("NO SENSORS DETECTED")
         # Battery
         bw=hw; bx=p*2+hw
@@ -960,14 +987,14 @@ class NyxusSysmonGtk(Gtk.Application):
             col=C_GREEN if pct>40 else (C_YELLOW if pct>20 else C_ORANGE)
             glow_text(cr,bx+12,p+68,f"{pct:.1f}%",*col,size=36,bold=True)
             status="⚡ CHARGING" if b["charging"] else "🔋 DISCHARGING"
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
             cr.set_source_rgba(*col,0.85); cr.move_to(bx+12,p+90)
             cr.show_text(status)
             if b["secs_left"]:
                 cr.set_source_rgba(*C_DIM,0.7); cr.move_to(bx+12,p+104)
                 cr.show_text(f"REMAINING: {fmt_uptime(b['secs_left'])}")
         else:
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
             cr.set_source_rgba(*C_DIM,0.5); cr.move_to(bx+12,p+60); cr.show_text("NO BATTERY DETECTED")
         # GPU
         neon_card(cr,bx,p+128,bw,120,C_BLUE)
@@ -975,11 +1002,11 @@ class NyxusSysmonGtk(Gtk.Application):
         if self.st.gpu_util is not None:
             glow_text(cr,bx+12,p+188,f"{self.st.gpu_util:.0f}%",*C_BLUE,size=32,bold=True)
             ring_chart(cr,bx+bw-60,p+188,35,self.st.gpu_util,C_BLUE)
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(9); cr.set_source_rgba(*C_DIM,0.7)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(12); cr.set_source_rgba(*C_DIM,0.7)
             cr.move_to(bx+12,p+218); cr.show_text(f"VRAM: {self.st.gpu_mem_used}MB / {self.st.gpu_mem_total}MB")
             cr.move_to(bx+12,p+232); cr.show_text(f"TEMP: {self.st.gpu_temp:.0f}°C")
         else:
-            cr.set_font_size(9); cr.set_source_rgba(*C_DIM,0.5)
+            cr.set_font_size(12); cr.set_source_rgba(*C_DIM,0.5)
             cr.move_to(bx+12,p+185); cr.show_text("nvidia-smi NOT AVAILABLE")
             cr.move_to(bx+12,p+200); cr.show_text("or no NVIDIA GPU found")
         # Fans
@@ -991,7 +1018,7 @@ class NyxusSysmonGtk(Gtk.Application):
             for chip,readings in self.st.fans.items():
                 for r in readings:
                     if ffy>fy+110: break
-                    cr.set_font_size(9); cr.set_source_rgba(*C_DIM,0.7)
+                    cr.set_font_size(12); cr.set_source_rgba(*C_DIM,0.7)
                     cr.move_to(bx+12,ffy); cr.show_text(f"{r.label or chip}: ")
                     glow_text(cr,bx+140,ffy,f"{r.current} RPM",*C_PURPLE,size=9)
                     ffy+=14
@@ -1003,7 +1030,7 @@ class NyxusSysmonGtk(Gtk.Application):
         self._das["SYSTEM"]=da; return da
 
     def _draw_system(self,area,cr,w,h,_):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr,0,0,w,h); p=8
         # Big system info card
         neon_card(cr,p,p,w-p*2,min(360,h-p*2),C_PINK)
@@ -1028,7 +1055,7 @@ class NyxusSysmonGtk(Gtk.Application):
         iy=p+54
         for lbl,val,col in rows:
             if iy>p+340: break
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(10)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
             cr.set_source_rgba(*C_DIM,0.65); cr.move_to(p+16,iy); cr.show_text(f"{lbl}:")
             glow_text(cr,p+200,iy,val[:52],*col,size=10,bold=False)
             # Dim separator

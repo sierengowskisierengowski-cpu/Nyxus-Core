@@ -96,90 +96,96 @@ def reading_time(text):
 
 
 CSS = """
-* { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
+* { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; font-size: 16px; }
 window { background-color: #08080e; color: rgba(232,224,245,0.92); }
 
 .hdr {
-    background-color: #0d0d1a;
-    border-bottom: 2px solid rgba(255,0,255,0.18);
-    padding: 5px 14px; min-height: 48px;
+    background-color: #0a0a16;
+    border-bottom: 3px solid rgba(255,0,255,0.28);
+    padding: 6px 14px; min-height: 52px;
 }
 .sidebar {
-    background-color: #0d0d1a;
-    border-right: 2px solid rgba(204,0,255,0.18);
+    background-color: #0a0a16;
+    border-right: 3px solid rgba(204,0,255,0.25);
 }
 .sidebar-hdr {
-    color: rgba(180,160,220,0.80); font-size: 12px; font-weight: bold;
-    letter-spacing: 2px; padding: 7px 12px 5px 12px;
-    border-bottom: 1px solid rgba(204,0,255,0.14);
+    color: #cc88ff; font-size: 17px; font-weight: bold;
+    letter-spacing: 2px; padding: 8px 12px 6px 12px;
+    border-bottom: 2px solid rgba(204,0,255,0.20);
 }
 .new-btn {
-    background-color: rgba(255,0,255,0.14); color: #ff88ff;
-    border: 2px solid rgba(255,0,255,0.45); border-radius: 4px;
-    padding: 5px 14px; font-size: 13px; font-weight: bold; margin: 4px;
+    background-color: rgba(255,0,255,0.16); color: #ff88ff;
+    border: 3px solid rgba(255,0,255,0.60); border-radius: 2px;
+    padding: 6px 16px; font-size: 16px; font-weight: bold; margin: 4px;
+    box-shadow: 0 0 10px rgba(255,0,255,0.20);
 }
-.new-btn:hover { background-color: rgba(255,0,255,0.28); }
+.new-btn:hover { background-color: rgba(255,0,255,0.32); color: #ffffff;
+    box-shadow: 0 0 18px rgba(255,0,255,0.45); }
 .del-btn {
     background-color: rgba(255,50,30,0.16); color: #ff6655;
-    border: 2px solid rgba(255,80,50,0.45); border-radius: 4px;
-    padding: 5px 10px; font-size: 13px; font-weight: bold; margin: 4px 2px;
+    border: 3px solid rgba(255,80,50,0.55); border-radius: 2px;
+    padding: 6px 12px; font-size: 16px; font-weight: bold; margin: 4px 2px;
+    box-shadow: 0 0 8px rgba(255,80,50,0.18);
 }
-.del-btn:hover { background-color: rgba(255,80,50,0.30); }
+.del-btn:hover { background-color: rgba(255,80,50,0.32); }
 .exp-btn {
-    background-color: rgba(57,255,20,0.10); color: #88ff55;
-    border: 2px solid rgba(57,255,20,0.40); border-radius: 4px;
-    padding: 5px 10px; font-size: 13px; font-weight: bold; margin: 4px 2px;
+    background-color: rgba(57,255,20,0.12); color: #88ff55;
+    border: 3px solid rgba(57,255,20,0.50); border-radius: 2px;
+    padding: 6px 12px; font-size: 16px; font-weight: bold; margin: 4px 2px;
+    box-shadow: 0 0 8px rgba(57,255,20,0.16);
 }
-.exp-btn:hover { background-color: rgba(57,255,20,0.22); }
+.exp-btn:hover { background-color: rgba(57,255,20,0.26); }
 .pin-btn {
-    background-color: rgba(255,255,0,0.10); color: #ffff88;
-    border: 2px solid rgba(255,255,0,0.40); border-radius: 4px;
-    padding: 5px 10px; font-size: 13px; font-weight: bold; margin: 4px 2px;
+    background-color: rgba(255,255,0,0.12); color: #ffff88;
+    border: 3px solid rgba(255,255,0,0.50); border-radius: 2px;
+    padding: 6px 12px; font-size: 16px; font-weight: bold; margin: 4px 2px;
+    box-shadow: 0 0 8px rgba(255,255,0,0.16);
 }
 .sort-btn {
-    background-color: rgba(255,255,255,0.06); color: rgba(200,180,240,0.80);
-    border: 1px solid rgba(255,255,255,0.12); border-radius: 3px;
-    padding: 3px 8px; font-size: 11px; margin: 2px 1px;
+    background-color: rgba(255,255,255,0.05); color: rgba(200,180,240,0.80);
+    border: 2px solid rgba(255,255,255,0.18); border-radius: 2px;
+    padding: 4px 10px; font-size: 14px; margin: 2px 1px;
 }
-.sort-btn:hover { background-color: rgba(255,255,255,0.12); }
+.sort-btn:hover { background-color: rgba(255,255,255,0.14); }
 .sort-active {
-    color: #ffff88; border-color: rgba(255,255,0,0.50);
-    background-color: rgba(255,255,0,0.10);
+    color: #ffff88; border-color: rgba(255,255,0,0.60);
+    background-color: rgba(255,255,0,0.12);
+    box-shadow: 0 0 8px rgba(255,255,0,0.22);
 }
 .search-e {
-    background-color: rgba(255,255,255,0.06); color: rgba(232,224,245,0.88);
-    border: 2px solid rgba(255,0,255,0.30); border-radius: 4px;
-    padding: 5px 12px; font-size: 13px; box-shadow: none;
+    background-color: rgba(255,255,255,0.05); color: rgba(232,224,245,0.90);
+    border: 3px solid rgba(255,0,255,0.38); border-radius: 2px;
+    padding: 6px 14px; font-size: 16px; box-shadow: none;
     caret-color: #ff00ff; margin: 4px;
 }
-.search-e:focus { border-color: #ff00ff; }
+.search-e:focus { border-color: #ff00ff; box-shadow: 0 0 14px rgba(255,0,255,0.28); }
 .search-e text { background-color: transparent; }
 .tag-e {
-    background-color: rgba(255,255,255,0.06); color: rgba(232,224,245,0.88);
-    border: 2px solid rgba(255,255,0,0.28); border-radius: 4px;
-    padding: 4px 10px; font-size: 12px; box-shadow: none;
+    background-color: rgba(255,255,255,0.05); color: rgba(232,224,245,0.90);
+    border: 3px solid rgba(255,255,0,0.35); border-radius: 2px;
+    padding: 5px 12px; font-size: 15px; box-shadow: none;
     caret-color: #ffff00; margin: 0 4px;
 }
 .tag-e text { background-color: transparent; }
 .editor-area {
     background-color: #08080e; color: rgba(232,224,245,0.92);
-    border: none; padding: 14px 14px 14px 60px; font-size: 15px;
+    border: none; padding: 14px 14px 14px 60px; font-size: 18px;
     caret-color: #ff00ff;
     font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans';
 }
 .editor-area text { background-color: transparent; color: rgba(232,224,245,0.92); }
-.editor-area text selection { background-color: rgba(255,0,255,0.22); }
+.editor-area text selection { background-color: rgba(255,0,255,0.25); }
 .clip-btn {
-    background-color: transparent; color: rgba(180,160,220,0.80);
-    border: none; border-bottom: 1px solid rgba(255,0,255,0.10);
-    border-radius: 0; padding: 6px 10px; font-size: 12px; text-align: left;
+    background-color: transparent; color: rgba(180,160,220,0.82);
+    border: none; border-bottom: 1px solid rgba(255,0,255,0.14);
+    border-radius: 0; padding: 7px 12px; font-size: 15px; text-align: left;
     min-height: 0;
 }
-.clip-btn:hover { background-color: rgba(0,136,255,0.10); color: #66bbff; }
+.clip-btn:hover { background-color: rgba(0,136,255,0.12); color: #66bbff; }
 .title-e {
     background-color: transparent; color: #ff88ff;
-    border: none; border-bottom: 2px solid rgba(255,0,255,0.35);
-    border-radius: 0; padding: 6px 14px; font-size: 18px; font-weight: bold;
+    border: none; border-bottom: 3px solid rgba(255,0,255,0.45);
+    border-radius: 0; padding: 7px 14px; font-size: 22px; font-weight: bold;
     letter-spacing: 1px;
     font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans';
 }
