@@ -9,47 +9,7 @@ from pathlib import Path
 from collections import deque
 from datetime import datetime, timedelta
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, Gdk, GLib, Gio, Pango, GdkPixbuf
-
-# ── Neon splat image backgrounds ───────────────────────────────────────────────
-_NYXUS_BG_DIR   = str(Path.home() / ".nyxus" / "backgrounds")
-_nyxus_bg_cache: dict = {}
-
-def _load_bg(name: str):
-    if name in _nyxus_bg_cache:
-        return _nyxus_bg_cache[name]
-    path = os.path.join(_NYXUS_BG_DIR, name)
-    if not os.path.exists(path):
-        _nyxus_bg_cache[name] = None
-        return None
-    try:
-        pb = GdkPixbuf.Pixbuf.new_from_file(path)
-        _nyxus_bg_cache[name] = pb
-        return pb
-    except Exception:
-        _nyxus_bg_cache[name] = None
-        return None
-
-def draw_image_bg(cr, x, y, w, h, name, alpha=1.0):
-    pb = _load_bg(name)
-    if pb is None:
-        return False
-    iw, ih = pb.get_width(), pb.get_height()
-    if iw <= 0 or ih <= 0:
-        return False
-    cr.save()
-    try:
-        cr.rectangle(x, y, w, h)
-        cr.clip()
-        cr.translate(x, y)
-        cr.scale(w / iw, h / ih)
-        Gdk.cairo_set_source_pixbuf(cr, pb, 0, 0)
-        cr.paint_with_alpha(alpha)
-    except Exception:
-        pass
-    finally:
-        cr.restore()
-    return True
+from gi.repository import Gtk, Gdk, GLib, Gio, Pango
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 HOME         = Path.home()

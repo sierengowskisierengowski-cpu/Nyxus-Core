@@ -5,51 +5,12 @@
 # ╚══════════════════════════════════════════════════════════════════════╝
 import gi
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, Gdk, GLib, Gio, Pango, GdkPixbuf
+from gi.repository import Gtk, Gdk, GLib, Gio, Pango
 import json, uuid, os, math, random as _rand
 from datetime import datetime
 
 DATA_FILE = os.path.expanduser("~/.nyxus/stickies.json")
 os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
-
-BG_DIR   = os.path.expanduser("~/.nyxus/backgrounds")
-_bg_cache: dict = {}
-
-def _load_bg(name: str):
-    if name in _bg_cache:
-        return _bg_cache[name]
-    path = os.path.join(BG_DIR, name)
-    if not os.path.exists(path):
-        _bg_cache[name] = None
-        return None
-    try:
-        pb = GdkPixbuf.Pixbuf.new_from_file(path)
-        _bg_cache[name] = pb
-        return pb
-    except Exception:
-        _bg_cache[name] = None
-        return None
-
-def draw_image_bg(cr, x, y, w, h, name, alpha=1.0):
-    pb = _load_bg(name)
-    if pb is None:
-        return False
-    iw, ih = pb.get_width(), pb.get_height()
-    if iw <= 0 or ih <= 0:
-        return False
-    cr.save()
-    try:
-        cr.rectangle(x, y, w, h)
-        cr.clip()
-        cr.translate(x, y)
-        cr.scale(w / iw, h / ih)
-        Gdk.cairo_set_source_pixbuf(cr, pb, 0, 0)
-        cr.paint_with_alpha(alpha)
-    except Exception:
-        pass
-    finally:
-        cr.restore()
-    return True
 
 WIN_W, WIN_H = 1100, 720
 TOOLBAR_H    = 68
@@ -666,11 +627,27 @@ class StickyApp(Gtk.ApplicationWindow):
         dlg.present()
 
 
+import traceback, sys
+
 class App(Gtk.Application):
     def __init__(self):
         super().__init__(application_id="io.nyxus.stickies",
                          flags=Gio.ApplicationFlags.NON_UNIQUE)
     def do_activate(self):
-        StickyApp(self).present()
+        try:
+            StickyApp(self).present()
+        except Exception:
+            log = "/tmp/nyxus-stickies.log"
+            with open(log, "a") as f:
+                f.write("do_activate crash:\n")
+                traceback.print_exc(file=f)
+            print(f"NYXUS Stickies crashed — see {log}")
 
-App().run()
+try:
+    App().run(sys.argv)
+except Exception:
+    log = "/tmp/nyxus-stickies.log"
+    with open(log, "a") as f:
+        traceback.print_exc(file=f)
+    print(f"NYXUS Stickies crashed — see {log}")
+    sys.exit(1)
