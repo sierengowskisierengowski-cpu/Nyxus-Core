@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export type NoteColor =
   | '#fef08a'
@@ -39,6 +39,9 @@ export interface Note {
 export function useStickies() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const colorIndexRef = useRef<number>(
+    parseInt(localStorage.getItem('nyxus_stickies_colorindex') || '0', 10)
+  );
 
   useEffect(() => {
     const saved = localStorage.getItem('nyxus_stickies');
@@ -62,7 +65,10 @@ export function useStickies() {
   }, [notes, isLoaded]);
 
   const addNote = () => {
-    const color = NYXUS_COLORS[Math.floor(Math.random() * NYXUS_COLORS.length)];
+    const idx = colorIndexRef.current % NYXUS_COLORS.length;
+    colorIndexRef.current += 1;
+    localStorage.setItem('nyxus_stickies_colorindex', String(colorIndexRef.current));
+    const color = NYXUS_COLORS[idx];
     const rotation = (Math.random() * 8) - 4;
     const newNote: Note = {
       id: crypto.randomUUID(),

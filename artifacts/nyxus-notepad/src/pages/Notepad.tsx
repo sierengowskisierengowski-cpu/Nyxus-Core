@@ -8,10 +8,11 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
 /* ── Design tokens ──────────────────────────────────────────────── */
-const BG       = '#08080e';
-const PANEL    = '#0d0d1a';
-const BORDER   = 'rgba(255,255,255,0.07)';
-const RULED    = 'rgba(255,255,255,0.05)';
+const BG       = '#0a0a0a';
+const PANEL    = '#0f0f0f';
+const BORDER   = 'rgba(255,255,255,0.08)';
+const RULED    = 'rgba(255,255,255,0.11)';
+const MARGIN   = 'rgba(255,60,80,0.22)';
 const PINK     = '#ff00ff';
 const PURPLE   = '#cc00ff';
 const BLUE     = '#0088ff';
@@ -23,6 +24,13 @@ const FONT     = "'Caveat', 'Patrick Hand', cursive";
 
 const ruledBg = {
   backgroundImage: `repeating-linear-gradient(transparent, transparent 27px, ${RULED} 27px, ${RULED} 28px)`,
+};
+
+const editorBg = {
+  backgroundImage: [
+    `linear-gradient(90deg, transparent 52px, ${MARGIN} 52px, ${MARGIN} 53.5px, transparent 53.5px)`,
+    `repeating-linear-gradient(transparent, transparent 27px, ${RULED} 27px, ${RULED} 28px)`,
+  ].join(','),
 };
 
 /* ── Types ──────────────────────────────────────────────────────── */
@@ -299,7 +307,7 @@ export default function Notepad() {
       </div>
 
       {/* ══ EDITOR ════════════════════════════════════════════════ */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: BG, ...ruledBg }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: BG, ...editorBg }}>
         {activeNote ? (<>
           {/* Editor toolbar */}
           <div style={{
