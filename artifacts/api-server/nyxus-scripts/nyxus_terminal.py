@@ -40,10 +40,16 @@ C_ORANGE = (1.00, 0.33, 0.00)
 PALETTE  = [C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE]
 C_DARK   = (0.031, 0.031, 0.055)  # #08080e
 
-# Spray-can button areas (cx, cy)
-CAN_CLOSE = {"cx": WIN_W - 44,  "cy": 32, "color": (0.95, 0.15, 0.15)}
-CAN_MIN   = {"cx": WIN_W - 96,  "cy": 32, "color": (1.00, 0.82, 0.00)}
-CAN_MAX   = {"cx": WIN_W - 148, "cy": 32, "color": (0.16, 0.85, 0.16)}
+# Spray-can button colors + fixed offsets from RIGHT edge + cy
+CAN_SPECS = [
+    ("close", 44,  32, (0.95, 0.15, 0.15)),
+    ("min",   96,  32, (1.00, 0.82, 0.00)),
+    ("max",   148, 32, (0.16, 0.85, 0.16)),
+]
+
+def _can_positions(w):
+    """Return [(key, cx, cy, color), ...] computed from actual window width."""
+    return [(key, w - off, cy, col) for key, off, cy, col in CAN_SPECS]
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
 CSS = b"""
@@ -298,24 +304,23 @@ def draw_spray_brick_wall(cr, x, y, w, h, seed=0):
                 by_clip = max(by, y + MORTAR // 2)
                 bh_clip = min(by + bh_draw, y + h - MORTAR // 2) - by_clip
                 if bh_clip > 0:
-                    # Each brick gets a random neon color from the palette
+                    # Each brick gets a random neon color — visibly bright
                     col = rng.choice(PALETTE)
                     r, g, b = col
-                    # Darken slightly so bricks read as painted, not glowing
-                    darkness = rng.uniform(0.28, 0.62)
+                    # Base coat — mid brightness so you can clearly see the color
+                    darkness = rng.uniform(0.55, 0.85)
                     cr.set_source_rgb(r * darkness, g * darkness, b * darkness)
                     cr.rectangle(bx, by_clip, bw_draw, bh_clip); cr.fill()
 
-                    # Spray paint coverage — uneven, slightly over-sprayed
-                    # Some bricks have brighter center patch (fresh spray)
-                    if rng.random() < 0.55:
-                        bright = rng.uniform(0.55, 0.85)
-                        cx_b = bx + bw_draw * rng.uniform(0.2, 0.8)
-                        cy_b = by_clip + bh_clip * rng.uniform(0.2, 0.8)
-                        pw = bw_draw * rng.uniform(0.3, 0.7)
-                        ph = bh_clip * rng.uniform(0.3, 0.7)
-                        cr.set_source_rgba(r * bright, g * bright, b * bright, 0.70)
-                        cr.arc(cx_b, cy_b, max(pw, ph) * 0.5, 0, math.pi * 2)
+                    # Spray paint coverage — brighter hot-spot in center
+                    if rng.random() < 0.65:
+                        bright = rng.uniform(0.82, 1.00)
+                        cx_b = bx + bw_draw * rng.uniform(0.25, 0.75)
+                        cy_b = by_clip + bh_clip * rng.uniform(0.25, 0.75)
+                        cr.set_source_rgba(r * bright, g * bright, b * bright, 0.75)
+                        cr.arc(cx_b, cy_b,
+                               max(bw_draw, bh_clip) * rng.uniform(0.25, 0.45),
+                               0, math.pi * 2)
                         cr.fill()
 
                     # Spray bleed over mortar lines — dots spilling past brick edge
@@ -365,33 +370,13 @@ def draw_graffiti_frame(cr, w, h, hovering_can=None):
     draw_spray_brick_wall(cr, w - BORDER_SIDE, h - BORDER_BOTTOM,
                           BORDER_SIDE, BORDER_BOTTOM, seed=8)
 
-    # ── Heavy paint splatter blobs on frame strips ──
-    frame_blobs = [
-        # Top bar blobs
-        (w * 0.08, BORDER_TOP * 0.5,   C_GREEN,  28),
-        (w * 0.20, BORDER_TOP * 0.6,   C_ORANGE, 22),
-        (w * 0.35, BORDER_TOP * 0.4,   C_BLUE,   20),
-        (w * 0.55, BORDER_TOP * 0.5,   C_PURPLE, 18),
-        (w * 0.68, BORDER_TOP * 0.6,   C_PINK,   24),
-        (w * 0.82, BORDER_TOP * 0.5,   C_YELLOW, 18),
-        # Bottom bar
-        (w * 0.15, h - BORDER_BOTTOM * 0.5, C_BLUE,   16),
-        (w * 0.42, h - BORDER_BOTTOM * 0.5, C_GREEN,  18),
-        (w * 0.70, h - BORDER_BOTTOM * 0.5, C_ORANGE, 14),
-        # Left strip
-        (BORDER_SIDE * 0.5, h * 0.22, C_PINK,   20),
-        (BORDER_SIDE * 0.5, h * 0.50, C_YELLOW, 18),
-        (BORDER_SIDE * 0.5, h * 0.78, C_PURPLE, 16),
-        # Right strip
-        (w - BORDER_SIDE * 0.5, h * 0.28, C_ORANGE, 20),
-        (w - BORDER_SIDE * 0.5, h * 0.55, C_GREEN,  18),
-        (w - BORDER_SIDE * 0.5, h * 0.78, C_BLUE,   16),
-    ]
-    for bx, by, col, brad in frame_blobs:
-        cr.set_source_rgba(*col, rng.uniform(0.30, 0.55))
-        cr.arc(bx, by, brad, 0, math.pi * 2); cr.fill()
-        spray_dots(cr, bx, by, col, n=55, spread=int(brad * 1.8),
-                   alpha_max=0.42, rng=rng)
+    # ── Light spray scatter on bricks — small dots only, don't cover brick color ──
+    for fx, fy, col in [
+        (0.08, 0.5, C_GREEN), (0.35, 0.4, C_BLUE), (0.68, 0.6, C_PINK),
+        (BORDER_SIDE / w, 0.5, C_YELLOW), (1 - BORDER_SIDE / w, 0.5, C_ORANGE),
+    ]:
+        spray_dots(cr, w * fx, BORDER_TOP * fy, col,
+                   n=18, spread=10, alpha_max=0.28, rng=rng)
 
     # ── Thick neon border edge lines (inner edge glow) ──
     neon_colors = [C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE]
@@ -507,20 +492,16 @@ def draw_graffiti_frame(cr, w, h, hovering_can=None):
     spray_dots(cr, 120, BORDER_TOP * 0.5, C_PINK,
                n=18, spread=22, alpha_max=0.22, rng=rng)
 
-    # ── Spray can buttons ──
-    cans = [(CAN_CLOSE, "close"), (CAN_MIN, "min"), (CAN_MAX, "max")]
-    for can, key in cans:
-        _draw_spray_can(cr, can["cx"], can["cy"], can["color"],
-                        hovered=(hovering_can == key))
-
-    # Can labels
-    labels = [("✕", CAN_CLOSE), ("▂", CAN_MIN), ("▣", CAN_MAX)]
-    for lbl, can in labels:
+    # ── Spray can buttons — positions computed from actual w ──
+    label_map = {"close": "✕", "min": "▂", "max": "▣"}
+    for key, cx, cy, color in _can_positions(w):
+        _draw_spray_can(cr, cx, cy, color, hovered=(hovering_can == key))
         cr.select_font_face("Caveat", 0, 0)
         cr.set_font_size(11)
+        lbl = label_map[key]
         ext2 = cr.text_extents(lbl)
         cr.set_source_rgba(1, 1, 1, 0.42)
-        cr.move_to(can["cx"] - ext2.width / 2 - ext2.x_bearing, BORDER_TOP - 6)
+        cr.move_to(cx - ext2.width / 2 - ext2.x_bearing, BORDER_TOP - 6)
         cr.show_text(lbl)
 
 
@@ -966,8 +947,9 @@ class NyxusTerminal(Gtk.Application):
     def _on_motion(self, ctrl, x, y):
         prev = self._hovering_can
         self._hovering_can = None
-        for key, can in [("close", CAN_CLOSE), ("min", CAN_MIN), ("max", CAN_MAX)]:
-            if abs(x - can["cx"]) < 18 and abs(y - can["cy"]) < 28:
+        cw = self.win.get_width() or WIN_W
+        for key, cx, cy, _ in _can_positions(cw):
+            if abs(x - cx) < 20 and abs(y - cy) < 30:
                 self._hovering_can = key
                 break
         if self._hovering_can != prev:
@@ -990,8 +972,9 @@ class NyxusTerminal(Gtk.Application):
 
     def _on_click_pressed(self, gesture, n, x, y):
         self._reset_idle()
-        for key, can in [("close", CAN_CLOSE), ("min", CAN_MIN), ("max", CAN_MAX)]:
-            if abs(x - can["cx"]) < 18 and abs(y - can["cy"]) < 28:
+        cw = self.win.get_width() or WIN_W
+        for key, cx, cy, _ in _can_positions(cw):
+            if abs(x - cx) < 20 and abs(y - cy) < 30:
                 if key == "close":
                     self.quit()
                 elif key == "min":
