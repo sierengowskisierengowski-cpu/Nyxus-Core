@@ -5,7 +5,7 @@
 # ╚══════════════════════════════════════════════════════════════════════╝
 import gi
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, Gdk, GLib, Pango
+from gi.repository import Gtk, Gdk, GLib, Pango, Gio
 import json, uuid, os, math, re
 from datetime import datetime
 
@@ -180,16 +180,31 @@ window { background-color: #08080e; color: rgba(232,224,245,0.92); }
     background-color: transparent; color: #ff88ff;
     border: none; border-bottom: 2px solid rgba(255,0,255,0.35);
     border-radius: 0; padding: 6px 14px; font-size: 18px; font-weight: bold;
-    letter-spacing: 1px; box-shadow: none; caret-color: #ff00ff;
+    letter-spacing: 1px;
     font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans';
 }
 .title-e text { background-color: transparent; color: #ff88ff; }
+
+textview { background-color: #08080e; color: rgba(232,224,245,0.92); }
+textview text { background-color: transparent; color: rgba(232,224,245,0.92); }
+textview text selection { background-color: rgba(255,0,255,0.22); }
+scrolledwindow { background-color: #08080e; }
+scrolledwindow undershoot.top, scrolledwindow undershoot.bottom,
+scrolledwindow overshoot.top, scrolledwindow overshoot.bottom {
+    background: none;
+}
+listbox { background-color: #0d0d1a; }
+listbox row { background-color: transparent; padding: 2px 0; }
+listbox row:selected { background-color: rgba(255,0,255,0.14); }
+entry { background-color: rgba(255,255,255,0.05); color: rgba(232,224,245,0.90); }
+entry text { background-color: transparent; color: rgba(232,224,245,0.90); }
 """
 
 
 class NyxusNotepad(Gtk.Application):
     def __init__(self):
-        super().__init__(application_id="io.nyxus.notepad")
+        super().__init__(application_id="io.nyxus.notepad",
+                         flags=Gio.ApplicationFlags.NON_UNIQUE)
         self._notes = []; self._sel_id = None; self._sort = "modified"
         self._filter_q = ""; self._filter_tag = ""
         self._clipboard_history = []

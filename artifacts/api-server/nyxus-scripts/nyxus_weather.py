@@ -246,8 +246,28 @@ class Particles:
             op=s["op"]*(0.5+0.5*math.sin(t+s["ph"]))
             cr.set_source_rgba(0.9,0.85,1,op); cr.arc(s["x"],s["y"],s["r"],0,math.pi*2); cr.fill()
 
+    @staticmethod
+    def _calc_moon_phase():
+        """Return (phase_fraction 0-1, phase_name, waxing). 0=new, 0.5=full."""
+        from datetime import date
+        today = date.today()
+        ref = date(2024, 1, 11)  # known new moon
+        days = (today - ref).days
+        cycle = 29.53058867
+        pos = (days % cycle) / cycle
+        waxing = pos < 0.5
+        illum = (1 - math.cos(pos * 2 * math.pi)) / 2
+        if pos < 0.04 or pos > 0.96:   name = "NEW MOON"
+        elif pos < 0.22:                name = "WAXING CRESCENT"
+        elif pos < 0.28:                name = "FIRST QUARTER"
+        elif pos < 0.47:                name = "WAXING GIBBOUS"
+        elif pos < 0.53:                name = "FULL MOON"
+        elif pos < 0.72:                name = "WANING GIBBOUS"
+        elif pos < 0.78:                name = "LAST QUARTER"
+        else:                           name = "WANING CRESCENT"
+        return illum, name, waxing
+
     def _draw_sun_moon(self,cr,W,H):
-        import cairo as _cairo
         if self.is_day:
             # Golden sun
             sx,sy=W*0.78,H*0.28
@@ -261,10 +281,71 @@ class Particles:
                 cr.move_to(sx+math.cos(a)*20,sy+math.sin(a)*20)
                 cr.line_to(sx+math.cos(a)*38,sy+math.sin(a)*38); cr.stroke()
         else:
-            # Moon
-            mx,my=W*0.78,H*0.28
-            cr.set_source_rgba(0.9,0.88,1.0,0.95); cr.arc(mx,my,16,0,math.pi*2); cr.fill()
-            cr.set_source_rgba(0.18,0.10,0.30,0.8); cr.arc(mx+9,my-4,13,0,math.pi*2); cr.fill()
+            # Real moon phase
+            illum, phase_name, waxing = self._calc_moon_phase()
+            mx,my = W*0.78, H*0.28
+            R = 18
+            # Full disk (dim base)
+            cr.set_source_rgba(0.75, 0.72, 0.90, 0.90)
+            cr.arc(mx, my, R, 0, math.pi*2); cr.fill()
+            # Draw shadow to show correct phase
+            if phase_name == "NEW MOON":
+                # All dark
+                cr.set_source_rgba(0.10, 0.06, 0.20, 0.92)
+                cr.arc(mx, my, R, 0, math.pi*2); cr.fill()
+            elif phase_name != "FULL MOON":
+                # Shadow ellipse method: cover dark portion
+                cr.save()
+                cr.arc(mx, my, R, -math.pi/2, math.pi/2)  # right half clip
+                cr.close_path(); cr.clip()
+                # Shadow X offset based on phase
+                if waxing:
+                    # Waxing: shadow on left → dark ellipse shifted left
+                    shadow_x = mx - R * (1 - 2*illum)
+                else:
+                    # Waning: shadow on right → dark ellipse shifted right
+                    shadow_x = mx + R * (1 - 2*illum)
+                cr.reset_clip()
+                cr.save()
+                # Dark shadow disk
+                cr.set_source_rgba(0.06, 0.03, 0.14, 0.94)
+                # For waxing: cover left side
+                if waxing:
+                    cr.arc(mx, my, R, math.pi/2, 3*math.pi/2)
+                    cr.close_path(); cr.fill()
+                    # Ellipse to trim correctly
+                    x_scale = abs(1 - 2*illum)
+                    cr.save()
+                    cr.translate(mx, my); cr.scale(x_scale, 1.0)
+                    cr.arc(0, 0, R, -math.pi/2, math.pi/2)
+                    cr.close_path()
+                    if illum < 0.5:
+                        cr.fill()
+                    else:
+                        cr.set_source_rgba(0.75, 0.72, 0.90, 0.90); cr.fill()
+                    cr.restore()
+                else:
+                    cr.arc(mx, my, R, -math.pi/2, math.pi/2)
+                    cr.close_path(); cr.fill()
+                    x_scale = abs(1 - 2*illum)
+                    cr.save()
+                    cr.translate(mx, my); cr.scale(x_scale, 1.0)
+                    cr.arc(0, 0, R, math.pi/2, 3*math.pi/2)
+                    cr.close_path()
+                    if illum < 0.5:
+                        cr.fill()
+                    else:
+                        cr.set_source_rgba(0.75, 0.72, 0.90, 0.90); cr.fill()
+                    cr.restore()
+                cr.restore()
+            # Soft glow ring
+            cr.set_source_rgba(0.70, 0.65, 0.95, 0.22)
+            cr.set_line_width(5); cr.arc(mx,my,R+2,0,math.pi*2); cr.stroke()
+            # Phase name label
+            cr.select_font_face("Caveat", 0, 0); cr.set_font_size(9)
+            cr.set_source_rgba(0.70, 0.65, 0.95, 0.70)
+            ext = cr.text_extents(phase_name)
+            cr.move_to(mx - ext.width/2, my + R + 13); cr.show_text(phase_name)
 
     def _draw_rain(self,cr,W,H):
         for p in self.rain:

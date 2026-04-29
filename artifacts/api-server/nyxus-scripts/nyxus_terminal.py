@@ -4,7 +4,7 @@
 # ║  Idle Blur · Graffiti Selection · Caveat font                            ║
 # ║  © 2026 JOSEPH SIERENGOWSKI · NYX-TERM-2026-SIERENGOWSKI-LOCKED          ║
 # ╚══════════════════════════════════════════════════════════════════════════╝
-import gi, sys, os, math, random, time
+import gi, sys, os, math, random, time, traceback
 gi.require_version("Gtk", "4.0")
 try:
     gi.require_version("Vte", "2.91")
@@ -13,7 +13,7 @@ try:
 except Exception:
     HAS_VTE = False
 
-from gi.repository import Gtk, Gdk, GLib, Pango
+from gi.repository import Gtk, Gdk, GLib, Pango, Gio
 
 # ── Dimensions ────────────────────────────────────────────────────────────────
 WIN_W, WIN_H   = 1100, 680
@@ -520,7 +520,8 @@ class SelSplatter:
 # ── Main Application ──────────────────────────────────────────────────────────
 class NyxusTerminal(Gtk.Application):
     def __init__(self):
-        super().__init__(application_id="io.nyxus.terminal")
+        super().__init__(application_id="io.nyxus.terminal",
+                         flags=Gio.ApplicationFlags.NON_UNIQUE)
         self._hovering_can = None
         self._drag_start = None
         self._win_start = None
@@ -827,7 +828,12 @@ class NyxusTerminal(Gtk.Application):
 
 if __name__ == "__main__":
     if not HAS_VTE:
-        print("ERROR: VTE not found. Install: sudo pacman -S vte4  OR  sudo apt install gir1.2-vte-2.91")
-        print("Then re-run this script.")
+        print("WARN: VTE not found — terminal will open with install instructions.")
+        print("To get the full terminal: sudo pacman -S vte4")
+    try:
+        NyxusTerminal().run(None)
+    except Exception:
+        log = "/tmp/nyxus-terminal.log"
+        with open(log, "w") as f: traceback.print_exc(file=f)
+        print(f"NYXUS Terminal crashed — see {log}")
         sys.exit(1)
-    NyxusTerminal().run(None)

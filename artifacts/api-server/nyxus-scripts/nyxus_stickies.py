@@ -5,7 +5,7 @@
 # ╚══════════════════════════════════════════════════════════════════════╝
 import gi
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk, GLib, Gio
 import json, uuid, os, math, random as _rand
 from datetime import datetime
 
@@ -192,43 +192,58 @@ def draw_sticky(cr, nx, ny, nw, nh, cidx, title, body, angle, selected=False):
 
 # ── CSS — warm paper toolbar ────────────────────────────────────────────────
 
+THEME_NAMES = ["PINK", "PURPLE", "BLUE", "GREEN", "YELLOW", "ORANGE"]
+
 CSS = """
 * { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
 window { background-color: #08080e; color: rgba(232,224,245,0.92); }
-.hdr {
+.toolbar {
     background-color: #0d0d1a;
-    border-bottom: 2px solid rgba(255,0,255,0.18);
-    padding: 6px 16px; min-height: 52px;
+    border-bottom: 2px solid rgba(255,0,255,0.22);
+    padding: 8px 14px; min-height: 56px;
 }
-.hdr-title {
-    color: #ff88ff;
-    font-size: 20px; font-weight: bold; letter-spacing: 2px;
+.theme-bar {
+    background-color: #0a0a18;
+    border-bottom: 2px solid rgba(180,80,255,0.18);
+    padding: 5px 14px; min-height: 36px;
+}
+.app-title {
+    color: #ff88ff; font-size: 22px; font-weight: bold; letter-spacing: 3px;
+    margin-right: 10px;
 }
 .add-btn {
-    background-color: rgba(255,0,255,0.14); color: #ff88ff;
-    border: 2px solid rgba(255,0,255,0.50); border-radius: 4px;
-    padding: 6px 18px; font-size: 14px; font-weight: bold;
+    background-color: rgba(255,0,255,0.16); color: #ff88ff;
+    border: 2px solid rgba(255,0,255,0.60); border-radius: 3px;
+    padding: 6px 16px; font-size: 15px; font-weight: bold; margin: 2px 3px;
 }
-.add-btn:hover { background-color: rgba(255,0,255,0.30); }
+.add-btn:hover { background-color: rgba(255,0,255,0.32); color: #ffffff; }
 .del-btn {
-    background-color: rgba(255,50,30,0.16); color: #ff6655;
-    border: 2px solid rgba(255,80,50,0.50); border-radius: 4px;
-    padding: 6px 16px; font-size: 14px; font-weight: bold;
+    background-color: rgba(255,50,30,0.14); color: #ff6655;
+    border: 2px solid rgba(255,80,50,0.55); border-radius: 3px;
+    padding: 6px 14px; font-size: 15px; font-weight: bold; margin: 2px 3px;
 }
-.del-btn:hover { background-color: rgba(255,80,50,0.30); }
+.del-btn:hover { background-color: rgba(255,80,50,0.28); }
 .search-e {
-    background-color: rgba(255,255,255,0.06);
-    border: 2px solid rgba(255,0,255,0.30);
-    color: rgba(232,224,245,0.88); border-radius: 4px;
-    padding: 5px 12px; font-size: 13px; caret-color: #ff00ff;
+    background-color: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,0,255,0.35);
+    color: rgba(232,224,245,0.90); border-radius: 3px;
+    padding: 5px 12px; font-size: 14px;
 }
 .search-e text { background-color: transparent; }
-.count-lbl { color: rgba(180,160,220,0.75); font-size: 12px; }
-.col-btn {
-    border-radius: 50%; min-width:22px; min-height:22px;
-    padding:0; border: 2px solid rgba(255,255,255,0.20);
-}
-.col-btn:hover { border: 2px solid rgba(255,255,255,0.65); }
+.count-lbl { color: rgba(200,170,240,0.80); font-size: 14px; margin: 0 6px; }
+.theme-lbl { color: rgba(180,140,220,0.70); font-size: 13px; margin-right: 8px; }
+.col-pink   { background-color: rgba(255,0,255,0.22);   color: #ff00ff; border: 2px solid #ff00ff;   border-radius: 3px; padding: 3px 10px; font-size: 12px; font-weight: bold; }
+.col-purple { background-color: rgba(204,0,255,0.22);   color: #cc00ff; border: 2px solid #cc00ff;   border-radius: 3px; padding: 3px 10px; font-size: 12px; font-weight: bold; }
+.col-blue   { background-color: rgba(0,136,255,0.22);   color: #0088ff; border: 2px solid #0088ff;   border-radius: 3px; padding: 3px 10px; font-size: 12px; font-weight: bold; }
+.col-green  { background-color: rgba(57,255,20,0.18);   color: #39ff14; border: 2px solid #39ff14;   border-radius: 3px; padding: 3px 10px; font-size: 12px; font-weight: bold; }
+.col-yellow { background-color: rgba(255,255,0,0.18);   color: #ffff00; border: 2px solid #ffff00;   border-radius: 3px; padding: 3px 10px; font-size: 12px; font-weight: bold; }
+.col-orange { background-color: rgba(255,85,0,0.22);    color: #ff5500; border: 2px solid #ff5500;   border-radius: 3px; padding: 3px 10px; font-size: 12px; font-weight: bold; }
+.col-pink:hover   { background-color: rgba(255,0,255,0.40);   color: #ffffff; }
+.col-purple:hover { background-color: rgba(204,0,255,0.40);   color: #ffffff; }
+.col-blue:hover   { background-color: rgba(0,136,255,0.40);   color: #ffffff; }
+.col-green:hover  { background-color: rgba(57,255,20,0.36);   color: #ffffff; }
+.col-yellow:hover { background-color: rgba(255,255,0,0.36);   color: #ffffff; }
+.col-orange:hover { background-color: rgba(255,85,0,0.40);    color: #ffffff; }
 """
 
 
@@ -268,38 +283,42 @@ class StickyApp(Gtk.ApplicationWindow):
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.set_child(box)
 
-        # Header
-        hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        hdr.add_css_class("hdr")
-        title = Gtk.Label(label="📌  NYXUS STICKIES"); title.add_css_class("hdr-title")
-        hdr.append(title)
+        # ── Main toolbar ──────────────────────────────────────────────────────
+        toolbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        toolbar.add_css_class("toolbar")
 
-        search = Gtk.Entry(); search.set_placeholder_text("search notes…")
-        search.add_css_class("search-e"); search.set_hexpand(True)
-        search.connect("changed", self._on_search); hdr.append(search)
+        title = Gtk.Label(label="NYXUS STICKIES"); title.add_css_class("app-title")
+        toolbar.append(title)
 
         self.count_lbl = Gtk.Label(label=""); self.count_lbl.add_css_class("count-lbl")
-        hdr.append(self.count_lbl)
+        toolbar.append(self.count_lbl)
 
-        add_btn = Gtk.Button(label="+ New Note"); add_btn.add_css_class("add-btn")
-        add_btn.connect("clicked", self._add_note); hdr.append(add_btn)
+        # Spacer
+        spacer = Gtk.Box(); spacer.set_hexpand(True); toolbar.append(spacer)
 
-        del_btn = Gtk.Button(label="✕ Delete"); del_btn.add_css_class("del-btn")
-        del_btn.connect("clicked", self._del_note); hdr.append(del_btn)
+        search = Gtk.Entry(); search.set_placeholder_text("search notes...")
+        search.add_css_class("search-e"); search.set_size_request(200, -1)
+        search.connect("changed", self._on_search); toolbar.append(search)
 
-        # Color picker row
-        hdr2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        hdr2.add_css_class("hdr"); hdr2.set_margin_top(0)
-        for i, (pr, pg, pb) in enumerate(NOTE_PAPER):
-            btn = Gtk.Button(); btn.add_css_class("col-btn")
-            btn.set_size_request(22, 22)
-            r16=int(pr*255); g16=int(pg*255); b16=int(pb*255)
-            btn.get_style_context().add_provider(
-                self._color_provider(f"button{{background-color:rgb({r16},{g16},{b16});}}"),
-                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-            btn.connect("clicked", self._set_color, i); hdr2.append(btn)
-        lbl = Gtk.Label(label="  Color:"); hdr2.prepend(lbl)
-        box.append(hdr); box.append(hdr2)
+        add_btn = Gtk.Button(label="+ NEW NOTE"); add_btn.add_css_class("add-btn")
+        add_btn.connect("clicked", self._add_note); toolbar.append(add_btn)
+
+        del_btn = Gtk.Button(label="X DELETE"); del_btn.add_css_class("del-btn")
+        del_btn.connect("clicked", self._del_note); toolbar.append(del_btn)
+
+        # ── Theme color row ───────────────────────────────────────────────────
+        theme_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        theme_bar.add_css_class("theme-bar")
+
+        theme_lbl = Gtk.Label(label="NOTE THEME:"); theme_lbl.add_css_class("theme-lbl")
+        theme_bar.append(theme_lbl)
+
+        css_classes = ["col-pink","col-purple","col-blue","col-green","col-yellow","col-orange"]
+        for i, (name, css_cls) in enumerate(zip(THEME_NAMES, css_classes)):
+            btn = Gtk.Button(label=name); btn.add_css_class(css_cls)
+            btn.connect("clicked", self._set_color, i); theme_bar.append(btn)
+
+        box.append(toolbar); box.append(theme_bar)
 
         # Canvas
         self.da = Gtk.DrawingArea()
@@ -320,9 +339,6 @@ class StickyApp(Gtk.ApplicationWindow):
         self.da.add_controller(drag)
 
         self._update_count()
-
-    def _color_provider(self, css):
-        p = Gtk.CssProvider(); p.load_from_data(css.encode()); return p
 
     def _update_count(self):
         n = len(self.notes)
@@ -454,7 +470,8 @@ class StickyApp(Gtk.ApplicationWindow):
 
 class App(Gtk.Application):
     def __init__(self):
-        super().__init__(application_id="org.nyxus.stickies")
+        super().__init__(application_id="io.nyxus.stickies",
+                         flags=Gio.ApplicationFlags.NON_UNIQUE)
     def do_activate(self):
         win = StickyApp(self)
         win.present()

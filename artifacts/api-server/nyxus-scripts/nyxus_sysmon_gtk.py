@@ -6,8 +6,8 @@
 # ╚══════════════════════════════════════════════════════════════════════╝
 import gi
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, Gdk, GLib
-import math, time, os, threading, socket, platform, signal, subprocess
+from gi.repository import Gtk, Gdk, GLib, Gio
+import math, time, os, threading, socket, platform, signal, subprocess, traceback, sys
 from collections import deque
 from datetime import datetime, timedelta
 
@@ -27,10 +27,10 @@ PALETTE = [
     (1.0,  0.33, 0.0 ),  # C_ORANGE
 ]
 C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE = PALETTE
-C_BG    = (0.97,  0.97,  0.95 )   # graph paper white
-C_PANEL = (1.00,  1.00,  0.98 )   # card white
-C_TEXT  = (0.14,  0.10,  0.04 )   # dark ink
-C_DIM   = (0.50,  0.44,  0.32 )   # faded ink
+C_BG    = (0.031, 0.031, 0.055)   # #08080e deep dark
+C_PANEL = (0.052, 0.052, 0.100)   # slightly lighter dark card
+C_TEXT  = (0.91,  0.88,  0.96 )   # light lavender text
+C_DIM   = (0.44,  0.376, 0.627)   # dim purple
 
 PAGES = [
     ("OVERVIEW",  C_PINK),
@@ -132,30 +132,27 @@ def sketch_rect(cr, x, y, w, h, r, g, b, thick=2.2, jitter=2.8, fill_rgba=None):
     cr.set_line_cap(1); cr.set_line_join(1); cr.stroke()
 
 def dot_grid(cr, x, y, w, h, spacing=22):
-    """Graph paper lines — light blue grid like engineering paper."""
-    cr.set_line_width(0.45)
-    # Minor grid lines
+    """Faint neon grid on dark background."""
+    cr.set_line_width(0.40)
     for gx in range(int(x), int(x+w)+spacing, spacing):
-        cr.set_source_rgba(0.60, 0.72, 0.88, 0.22)
+        cr.set_source_rgba(0.30, 0.20, 0.60, 0.13)
         cr.move_to(gx, y); cr.line_to(gx, y+h); cr.stroke()
     for gy in range(int(y), int(y+h)+spacing, spacing):
-        cr.set_source_rgba(0.60, 0.72, 0.88, 0.22)
+        cr.set_source_rgba(0.30, 0.20, 0.60, 0.13)
         cr.move_to(x, gy); cr.line_to(x+w, gy); cr.stroke()
 
 def neon_card(cr, x, y, w, h, color, tint=0.09):
     r, g, b = color
-    # Card paper background
+    # Neon glow shadow behind card
+    cr.set_source_rgba(r, g, b, 0.08)
+    cr.rectangle(x+5, y+6, w, h); cr.fill()
+    # Card dark background
     cr.set_source_rgb(*C_PANEL); cr.rectangle(x, y, w, h); cr.fill()
     # Very subtle graph grid inside
     dot_grid(cr, x, y, w, h, spacing=20)
-    # Drop shadow
-    cr.set_source_rgba(0.22, 0.18, 0.10, 0.16)
-    cr.rectangle(x+4, y+5, w, h); cr.fill()
-    cr.set_source_rgb(*C_PANEL); cr.rectangle(x, y, w, h); cr.fill()
-    dot_grid(cr, x, y, w, h, spacing=20)
     # Wobbly marker border
     sketch_rect(cr, x+2, y+2, w-4, h-4, r, g, b, thick=2.5, jitter=2.5,
-                fill_rgba=(r, g, b, 0.05))
+                fill_rgba=(r, g, b, 0.06))
 
 def ring_chart(cr, cx, cy, R, pct, color):
     cr.set_source_rgba(*C_DIM, 0.20); cr.set_line_width(14)
@@ -452,7 +449,8 @@ COLOR_NAMES = {
 
 class NyxusSysmonGtk(Gtk.Application):
     def __init__(self):
-        super().__init__(application_id="io.nyxus.sysmon")
+        super().__init__(application_id="io.nyxus.sysmon",
+                         flags=Gio.ApplicationFlags.NON_UNIQUE)
         self.st=State(); self._anim_t=0.0; self._cur_page="OVERVIEW"
         self._proc_sort="cpu"; self._proc_filter=""; self._proc_sel_pid=None
         psutil.cpu_percent(interval=0.1); psutil.cpu_percent(percpu=True,interval=None)
@@ -1085,4 +1083,10 @@ class NyxusSysmonGtk(Gtk.Application):
 
 
 if __name__=="__main__":
-    NyxusSysmonGtk().run(None)
+    try:
+        NyxusSysmonGtk().run(None)
+    except Exception:
+        log="/tmp/nyxus-sysmon.log"
+        with open(log,"w") as f: traceback.print_exc(file=f)
+        print(f"NYXUS SysMon crashed — see {log}")
+        sys.exit(1)
