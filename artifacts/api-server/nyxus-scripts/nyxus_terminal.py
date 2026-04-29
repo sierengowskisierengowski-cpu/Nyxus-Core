@@ -598,8 +598,8 @@ class SelSplatter:
     def __init__(self, x, y, color):
         self.x, self.y = x, y
         self.color = color
-        self.alpha = 0.75
-        self.size = random.uniform(10, 26)
+        self.alpha = 0.92
+        self.size = random.uniform(14, 32)
         self.born = time.monotonic()
 
     @property
@@ -617,11 +617,22 @@ class SelSplatter:
         op = self.opacity
         if op <= 0:
             return
+        r, g, b = self.color
         rng = random.Random()
+        # Solid filled ellipse base — this is the "paint hit"
+        cr.set_source_rgba(r, g, b, op * 0.72)
+        cr.save()
+        cr.translate(self.x, self.y)
+        cr.scale(self.size * 0.80, self.size * 0.55)
+        cr.arc(0, 0, 1, 0, math.pi * 2)
+        cr.restore()
+        cr.fill()
+        # Dense spray cloud on top
         spray_dots(cr, self.x, self.y, self.color,
-                   n=32, spread=self.size, alpha_max=op * 0.75, rng=rng)
-        cr.set_source_rgba(*self.color, op * 0.42)
-        cr.arc(self.x, self.y, self.size * 0.32, 0, math.pi * 2)
+                   n=55, spread=self.size, alpha_max=op * 0.90, rng=rng)
+        # Bright center hot-spot
+        cr.set_source_rgba(r, g, b, op * 0.55)
+        cr.arc(self.x, self.y, self.size * 0.22, 0, math.pi * 2)
         cr.fill()
 
 
@@ -722,8 +733,6 @@ class NyxusTerminal(Gtk.Application):
         self._btn_pressed = False
         self._sel_color_idx = 0
         self._anim_t = 0.0
-        self._bg_surface = None   # cached static bg surface
-        self._bg_size = (0, 0)
 
     def do_activate(self):
         prov = Gtk.CssProvider()
@@ -829,9 +838,9 @@ class NyxusTerminal(Gtk.Application):
         vte.set_color_background(bg)
         vte.set_color_foreground(fg)
 
-        # Spray-paint selection — neon orange blob
-        hl    = Gdk.RGBA(); hl.red=1.0; hl.green=0.34; hl.blue=0.0; hl.alpha=0.60
-        hl_fg = Gdk.RGBA(); hl_fg.red=1.0; hl_fg.green=1.0; hl_fg.blue=1.0; hl_fg.alpha=1.0
+        # Selection — solid neon orange so selected text is actually visible
+        hl    = Gdk.RGBA(); hl.red=1.0; hl.green=0.34; hl.blue=0.0; hl.alpha=1.0
+        hl_fg = Gdk.RGBA(); hl_fg.red=0.04; hl_fg.green=0.02; hl_fg.blue=0.10; hl_fg.alpha=1.0
         try:
             vte.set_color_highlight(hl)
             vte.set_color_highlight_foreground(hl_fg)
@@ -876,24 +885,12 @@ class NyxusTerminal(Gtk.Application):
         inner_w = w - BORDER_SIDE * 2
         inner_h = h - BORDER_TOP - BORDER_BOTTOM
 
-        # Cache the static terminal BG so we only redraw it on resize
-        if (self._bg_surface is None or self._bg_size != (w, h)):
-            import cairo as _cairo
-            surf = cr.get_target().create_similar(
-                _cairo.Content.COLOR_ALPHA, w, h)
-            bk = _cairo.Context(surf)
-            if inner_w > 0 and inner_h > 0:
-                draw_terminal_bg(bk, inner_x, inner_y, inner_w, inner_h)
-            self._bg_surface = surf
-            self._bg_size = (w, h)
+        # Draw bg fresh every tick — ensures NYXUS scales correctly on resize
+        if inner_w > 0 and inner_h > 0:
+            draw_terminal_bg(cr, inner_x, inner_y, inner_w, inner_h)
 
-        cr.set_source_surface(self._bg_surface, 0, 0)
-        cr.paint()
-
-        # Frame redraws every tick (spray can hover, drip animation, etc.)
         draw_graffiti_frame(cr, w, h, self._hovering_can)
 
-        # If VTE not available, draw the error card over the inner area
         if not HAS_VTE and inner_w > 0 and inner_h > 0:
             draw_no_vte(cr, inner_x, inner_y, inner_w, inner_h)
 
