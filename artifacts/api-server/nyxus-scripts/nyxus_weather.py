@@ -46,7 +46,7 @@ C_DIM    = (0.50, 0.44, 0.68)   # dim purple-grey — for dark panel
 C_DARK   = (0.031, 0.031, 0.055) # #08080e background
 
 # ── CSS ──────────────────────────────────────────────────────────────────────
-CSS = b"""
+CSS = """
 window {
   background-color: #08080e;
   font-family: 'Caveat', 'Patrick Hand', cursive;
@@ -407,7 +407,9 @@ class NyxusWeather(Gtk.Application):
         self._lat=None; self._lon=None; self._anim_t=0.0
 
     def do_activate(self):
-        p=Gtk.CssProvider(); p.load_from_data(CSS)
+        p=Gtk.CssProvider()
+        try: p.load_from_string(CSS)
+        except AttributeError: p.load_from_data(CSS.encode())
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(),p,Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.win=Gtk.ApplicationWindow(application=self,title="NYXUS Weather")
         self.win.set_default_size(400,720); self.win.set_resizable(False)
