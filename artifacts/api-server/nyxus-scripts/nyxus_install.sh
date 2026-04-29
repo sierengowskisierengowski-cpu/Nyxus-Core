@@ -87,6 +87,36 @@ else
   printf "  ${DIM}      install chafa for inline image display (chafa -f sixel image.jpg)${R}\n"
 fi
 
+# ── Caveat Font (REQUIRED for NYXUS hand-drawn aesthetic) ────────────────────
+hdr "Caveat Font (NYXUS hand-drawn design)"
+FONT_DIR="$HOME/.local/share/fonts"
+mkdir -p "$FONT_DIR"
+CAVEAT_URL="https://github.com/googlefonts/caveat/raw/main/fonts/ttf"
+CAVEAT_FILES=("Caveat-Regular.ttf" "Caveat-Bold.ttf" "Caveat-Medium.ttf" "Caveat-SemiBold.ttf")
+caveat_ok=0
+for f in "${CAVEAT_FILES[@]}"; do
+  if [ -f "$FONT_DIR/$f" ]; then
+    caveat_ok=$((caveat_ok+1))
+  else
+    if curl -fsSL "$CAVEAT_URL/$f" -o "$FONT_DIR/$f" 2>/dev/null; then
+      caveat_ok=$((caveat_ok+1))
+    elif wget -qO "$FONT_DIR/$f" "$CAVEAT_URL/$f" 2>/dev/null; then
+      caveat_ok=$((caveat_ok+1))
+    fi
+  fi
+done
+if [ $caveat_ok -ge 2 ]; then
+  fc-cache -f "$FONT_DIR" 2>/dev/null
+  ok "Caveat font installed ($caveat_ok files) → fc-cache updated"
+else
+  # Try pacman as fallback
+  if command -v pacman &>/dev/null; then
+    pacman -S --noconfirm --needed ttf-google-fonts-git 2>/dev/null || \
+    pacman -S --noconfirm --needed ttf-croscore 2>/dev/null || true
+  fi
+  printf "  ${DIM}Caveat font: $caveat_ok files found — if Caveat is missing, fonts fall back to Comic Sans${R}\n"
+fi
+
 # ── App Icons — paint-splatter neon icons via Cairo ───────────────────────────
 hdr "App Icons (NYXUS paint-splatter)"
 if python3 "$SCRIPTS_DIR/nyxus_gen_icons.py" 2>/dev/null; then

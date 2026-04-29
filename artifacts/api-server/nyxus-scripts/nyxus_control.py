@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # ╔══════════════════════════════════════════════════════════════════════════════╗
-# ║  NYXUS Control — Hardware Control Center                                    ║
+# ║  NYXUS Control — Hardware Control Center  v2                                ║
 # ║  Fan · Thermal · Profiles · RGB · Power · Processes                         ║
 # ║  © 2026 JOSEPH SIERENGOWSKI · NYX-CTL-2026-SIERENGOWSKI-LOCKED              ║
 # ╚══════════════════════════════════════════════════════════════════════════════╝
-import gi, sys, os, math, json, time, threading, subprocess, traceback, random, signal
+import gi, sys, os, math, json, time, threading, subprocess, random, signal
 from pathlib import Path
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timedelta
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Gdk, GLib, Gio, Pango
@@ -32,7 +32,7 @@ C_YELLOW = (1.00,  1.00,  0.00 )
 C_ORANGE = (1.00,  0.33,  0.00 )
 C_RED    = (1.00,  0.12,  0.12 )
 PALETTE  = [C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE]
-HIST     = 360  # 60 min @ 10 s
+HIST     = 360
 
 PAGES = [
     ("OVERVIEW",  C_PINK  ),
@@ -41,468 +41,435 @@ PAGES = [
     ("PROFILES",  C_PURPLE),
     ("RGB",       C_GREEN ),
     ("POWER",     C_YELLOW),
-    ("PROCESSES", C_ORANGE),
+    ("PROCESSES", C_RED   ),
 ]
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Hardware detection
 # ══════════════════════════════════════════════════════════════════════════════
+def _read(path, default=""):
+    try:   return Path(path).read_text().strip()
+    except: return default
 
-def _read(path: str, default: str = "") -> str:
-    try:
-        return Path(path).read_text().strip()
-    except Exception:
-        return default
-
-
-def _write_priv(path: str, value: str) -> tuple[bool, str]:
-    """Write value to sysfs path. Tries direct write then pkexec."""
+def _write_priv(path, value):
     try:
         Path(path).write_text(value + "\n")
         return True, ""
     except PermissionError:
         try:
-            r = subprocess.run(
-                ["pkexec", "tee", path],
-                input=(value + "\n").encode(),
-                capture_output=True, timeout=20
-            )
-            if r.returncode == 0:
-                return True, ""
-            return False, r.stderr.decode().strip()
-        except Exception as e:
-            return False, str(e)
-    except Exception as e:
-        return False, str(e)
+            r = subprocess.run(["pkexec","tee",path],
+                               input=(value+"\n").encode(),
+                               capture_output=True, timeout=20)
+            return (True,"") if r.returncode==0 else (False, r.stderr.decode().strip())
+        except Exception as e: return False, str(e)
+    except Exception as e: return False, str(e)
 
-
-def _detect_hwmon() -> list:
-    devices = []
-    hwmon_root = Path("/sys/class/hwmon")
-    if not hwmon_root.exists():
-        return devices
-    for hwmon in sorted(hwmon_root.iterdir()):
-        name = _read(str(hwmon / "name"), hwmon.name)
+def _detect_hwmon():
+    devs = []
+    root = Path("/sys/class/hwmon")
+    if not root.exists(): return devs
+    for hwmon in sorted(root.iterdir()):
+        name = _read(str(hwmon/"name"), hwmon.name)
         temps, fans, pwms = [], [], []
         for f in sorted(hwmon.iterdir()):
             fn = f.name
             if fn.startswith("temp") and fn.endswith("_input"):
                 idx = fn[4:-6]
-                label = _read(str(hwmon / f"temp{idx}_label"), f"Temp {idx}")
-                crit  = _read(str(hwmon / f"temp{idx}_crit"), "")
-                max_  = _read(str(hwmon / f"temp{idx}_max"), "")
-                temps.append({"idx": idx, "label": label,
-                               "path": str(f),
-                               "crit": int(crit)//1000 if crit.isdigit() else None,
-                               "max":  int(max_)//1000  if max_.isdigit()  else None})
+                lbl = _read(str(hwmon/f"temp{idx}_label"), f"Temp {idx}")
+                crit= _read(str(hwmon/f"temp{idx}_crit"), "")
+                mx  = _read(str(hwmon/f"temp{idx}_max"), "")
+                temps.append({"idx":idx,"label":lbl,"path":str(f),
+                              "crit":int(crit)//1000 if crit.isdigit() else None,
+                              "max": int(mx)//1000   if mx.isdigit()   else None})
             elif fn.startswith("fan") and fn.endswith("_input"):
-                idx   = fn[3:-6]
-                label = _read(str(hwmon / f"fan{idx}_label"), f"Fan {idx}")
-                min_  = _read(str(hwmon / f"fan{idx}_min"), "0")
-                fans.append({"idx": idx, "label": label,
-                              "path": str(f),
-                              "min_rpm": int(min_) if min_.isdigit() else 0})
+                idx = fn[3:-6]
+                lbl = _read(str(hwmon/f"fan{idx}_label"), f"Fan {idx}")
+                mn  = _read(str(hwmon/f"fan{idx}_min"), "0")
+                fans.append({"idx":idx,"label":lbl,"path":str(f),
+                             "min_rpm":int(mn) if mn.isdigit() else 0})
             elif fn.startswith("pwm") and "_" not in fn:
-                idx    = fn[3:]
-                pwms.append({"idx": idx,
-                              "path": str(f),
-                              "enable_path": str(hwmon / f"pwm{idx}_enable")})
+                idx = fn[3:]
+                pwms.append({"idx":idx,"path":str(f),
+                             "enable_path":str(hwmon/f"pwm{idx}_enable")})
         if temps or fans:
-            devices.append({"name": name, "path": str(hwmon),
-                             "temps": temps, "fans": fans, "pwms": pwms})
-    return devices
+            devs.append({"name":name,"path":str(hwmon),
+                         "temps":temps,"fans":fans,"pwms":pwms})
+    return devs
 
-
-def _detect_cpu() -> dict:
+def _detect_cpu():
     model = ""
     try:
         with open("/proc/cpuinfo") as f:
             for line in f:
                 if "model name" in line:
-                    model = line.split(":", 1)[1].strip(); break
-    except Exception:
-        pass
-    gov_path = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
-    governor  = _read(gov_path, "unknown")
-    governors = _read("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors", "").split()
-    boost_path = "/sys/devices/system/cpu/cpufreq/boost"
-    boost = _read(boost_path, "0") == "1"
+                    model = line.split(":",1)[1].strip(); break
+    except: pass
+    gov_p  = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+    boost_p= "/sys/devices/system/cpu/cpufreq/boost"
     import platform
     return {
         "model":    model or platform.processor() or "Unknown CPU",
         "cores":    os.cpu_count() or 1,
-        "governor": governor,
-        "governors": governors or ["powersave", "schedutil", "performance"],
-        "boost_path": boost_path,
-        "boost_supported": Path(boost_path).exists(),
-        "boost": boost,
+        "governor": _read(gov_p,"unknown"),
+        "governors": _read("/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors","").split()
+                     or ["powersave","schedutil","performance"],
+        "boost_path": boost_p,
+        "boost_supported": Path(boost_p).exists(),
+        "boost": _read(boost_p,"0") == "1",
     }
 
-
-def _detect_gpu() -> dict:
+def _detect_gpu():
     try:
         out = subprocess.check_output(
             ["nvidia-smi",
              "--query-gpu=name,utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw,power.limit",
              "--format=csv,noheader,nounits"],
-            timeout=3, stderr=subprocess.DEVNULL
-        ).decode().strip()
+            timeout=3, stderr=subprocess.DEVNULL).decode().strip()
         p = [x.strip() for x in out.split(",")]
         if len(p) >= 7:
-            return {"vendor": "nvidia", "name": p[0], "detected": True,
-                    "util": float(p[1]), "mem_used": int(p[2]),
-                    "mem_total": int(p[3]), "temp": float(p[4]),
-                    "power_draw": float(p[5]), "power_limit": float(p[6])}
-    except Exception:
-        pass
+            return {"vendor":"nvidia","name":p[0],"detected":True,
+                    "util":float(p[1]),"mem_used":int(p[2]),"mem_total":int(p[3]),
+                    "temp":float(p[4]),"power_draw":float(p[5]),"power_limit":float(p[6])}
+    except: pass
     for drm in Path("/sys/class/drm").glob("card*/device"):
-        if _read(str(drm / "vendor")) == "0x1002":
-            return {"vendor": "amd", "name": "AMD GPU", "detected": True}
-    return {"vendor": "none", "name": "No GPU", "detected": False}
+        if _read(str(drm/"vendor")) == "0x1002":
+            return {"vendor":"amd","name":"AMD GPU","detected":True}
+    return {"vendor":"none","name":"No GPU","detected":False}
 
-
-def _detect_battery() -> dict | None:
+def _detect_battery():
     ps = Path("/sys/class/power_supply")
-    if not ps.exists():
-        return None
+    if not ps.exists(): return None
     for p in ps.iterdir():
-        if _read(str(p / "type")) == "Battery":
-            pct    = _read(str(p / "capacity"), "0")
-            status = _read(str(p / "status"), "Unknown")
-            climit = str(p / "charge_control_end_threshold")
-            return {
-                "path": str(p),
-                "pct":  int(pct) if pct.isdigit() else 0,
-                "status": status,
-                "charge_limit_path": climit if Path(climit).exists() else None,
-            }
+        if _read(str(p/"type")) == "Battery":
+            pct   = _read(str(p/"capacity"),"0")
+            stat  = _read(str(p/"status"),"Unknown")
+            clim  = str(p/"charge_control_end_threshold")
+            return {"path":str(p),"pct":int(pct) if pct.isdigit() else 0,
+                    "status":stat,
+                    "charge_limit_path":clim if Path(clim).exists() else None}
     return None
 
-
-def build_hw_profile() -> dict:
-    dmi = Path("/sys/class/dmi/id")
-    board = (_read(str(dmi / "board_vendor"), "") + " " +
-             _read(str(dmi / "board_name"), "")).strip() or \
-            _read(str(dmi / "product_name"), "Unknown Board")
-    profile = {
-        "generated": datetime.now().isoformat(),
-        "board":     board,
-        "cpu":       _detect_cpu(),
-        "gpu":       _detect_gpu(),
-        "battery":   _detect_battery(),
-        "hwmon":     _detect_hwmon(),
-    }
-    HW_PROFILE.write_text(json.dumps(profile, indent=2))
+def build_hw_profile():
+    dmi   = Path("/sys/class/dmi/id")
+    board = (_read(str(dmi/"board_vendor"),"")+" "+_read(str(dmi/"board_name"),"")).strip() \
+            or _read(str(dmi/"product_name"),"Unknown Board")
+    profile = {"generated":datetime.now().isoformat(),
+               "board":board,"cpu":_detect_cpu(),"gpu":_detect_gpu(),
+               "battery":_detect_battery(),"hwmon":_detect_hwmon()}
+    HW_PROFILE.write_text(json.dumps(profile,indent=2))
     return profile
 
-
-def load_hw_profile() -> dict:
+def load_hw_profile():
     if HW_PROFILE.exists():
-        try:
-            return json.loads(HW_PROFILE.read_text())
-        except Exception:
-            pass
+        try: return json.loads(HW_PROFILE.read_text())
+        except: pass
     return build_hw_profile()
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Live data collector
 # ══════════════════════════════════════════════════════════════════════════════
-
 class LiveData:
-    def __init__(self, hw: dict):
-        self.hw         = hw
-        self.temps:     dict[str, float] = {}
-        self.fans:      dict[str, int]   = {}
-        self.pwms:      dict[str, int]   = {}
-        self.governor   = hw.get("cpu", {}).get("governor", "unknown")
-        self.boost      = hw.get("cpu", {}).get("boost", False)
-        self.cpu_freq   = 0.0
-        self.gpu:       dict = {}
-        self.battery:   dict = {}
-        self.procs:     list = []
-        self.temp_hist: dict[str, deque] = {}
-        self.fan_hist:  dict[str, deque] = {}
-        for dev in hw.get("hwmon", []):
+    def __init__(self, hw):
+        self.hw        = hw
+        self.temps:    dict = {}
+        self.fans:     dict = {}
+        self.pwms:     dict = {}
+        self.governor  = hw.get("cpu",{}).get("governor","unknown")
+        self.boost     = hw.get("cpu",{}).get("boost",False)
+        self.cpu_freq  = 0.0
+        self.cpu_pcts: list = []
+        self.mem_used  = 0.0
+        self.mem_total = 0.0
+        self.gpu:  dict = {}
+        self.battery:  dict = {}
+        self.procs:    list = []
+        self.uptime_s  = 0
+        self.temp_hist: dict = {}
+        self.fan_hist:  dict = {}
+        self.cpu_hist:  deque = deque(maxlen=HIST)
+        self.mem_hist:  deque = deque(maxlen=HIST)
+        for dev in hw.get("hwmon",[]):
             for t in dev["temps"]:
                 k = f"{dev['name']}:{t['label']}"
                 self.temp_hist[k] = deque(maxlen=HIST)
             for f in dev["fans"]:
                 k = f"{dev['name']}:{f['label']}"
-                self.fan_hist[k] = deque(maxlen=HIST)
+                self.fan_hist[k]  = deque(maxlen=HIST)
 
     def collect(self):
-        for dev in self.hw.get("hwmon", []):
+        # Hwmon temps + fans
+        for dev in self.hw.get("hwmon",[]):
             for t in dev["temps"]:
-                raw = _read(t["path"], "0")
+                raw = _read(t["path"],"0")
                 try:
-                    c = int(raw) / 1000.0
+                    c = int(raw)/1000.0
                     k = f"{dev['name']}:{t['label']}"
-                    self.temps[k] = c
-                    self.temp_hist[k].append((time.time(), c))
-                except Exception:
-                    pass
+                    self.temps[k] = c; self.temp_hist[k].append(c)
+                except: pass
             for f in dev["fans"]:
-                raw = _read(f["path"], "0")
+                raw = _read(f["path"],"0")
                 try:
                     rpm = int(raw)
-                    k = f"{dev['name']}:{f['label']}"
-                    self.fans[k] = rpm
-                    self.fan_hist[k].append((time.time(), rpm))
-                except Exception:
-                    pass
-            for p in dev.get("pwms", []):
-                raw = _read(p["path"], "128")
-                try:
-                    self.pwms[p["path"]] = int(raw)
-                except Exception:
-                    pass
+                    k   = f"{dev['name']}:{f['label']}"
+                    self.fans[k] = rpm; self.fan_hist[k].append(rpm)
+                except: pass
+            for p in dev.get("pwms",[]):
+                raw = _read(p["path"],"128")
+                try: self.pwms[p["path"]] = int(raw)
+                except: pass
 
-        self.governor = _read(
-            "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", self.governor)
-        self.boost = _read(
-            "/sys/devices/system/cpu/cpufreq/boost", "0") == "1"
+        # Governor / boost / freq
+        self.governor = _read("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",
+                               self.governor)
+        self.boost = _read("/sys/devices/system/cpu/cpufreq/boost","0") == "1"
         try:
             self.cpu_freq = int(_read(
-                "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq", "0")) / 1000.0
-        except Exception:
-            pass
+                "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq","0"))/1000.0
+        except: pass
 
-        if self.hw.get("gpu", {}).get("vendor") == "nvidia":
+        # Per-core CPU %
+        try:
+            import psutil
+            pcts = psutil.cpu_percent(percpu=True)
+            self.cpu_pcts = pcts
+            avg  = sum(pcts)/len(pcts) if pcts else 0
+            self.cpu_hist.append(avg)
+            vm   = psutil.virtual_memory()
+            self.mem_used  = vm.used  / 1024**3
+            self.mem_total = vm.total / 1024**3
+            self.mem_hist.append(vm.percent)
+            self.uptime_s  = int(time.time() - psutil.boot_time())
+        except: pass
+
+        # GPU
+        if self.hw.get("gpu",{}).get("vendor") == "nvidia":
             try:
                 out = subprocess.check_output(
                     ["nvidia-smi",
                      "--query-gpu=utilization.gpu,memory.used,temperature.gpu,power.draw",
                      "--format=csv,noheader,nounits"],
-                    timeout=2, stderr=subprocess.DEVNULL
-                ).decode().strip()
+                    timeout=2, stderr=subprocess.DEVNULL).decode().strip()
                 p = [x.strip() for x in out.split(",")]
                 if len(p) >= 4:
-                    self.gpu = {"util": float(p[0]), "mem_used": int(p[1]),
-                                "temp": float(p[2]), "power_draw": float(p[3])}
-            except Exception:
-                pass
+                    self.gpu = {"util":float(p[0]),"mem_used":int(p[1]),
+                                "temp":float(p[2]),"power_draw":float(p[3])}
+            except: pass
 
+        # Battery
         batt = self.hw.get("battery")
         if batt:
-            pct    = _read(str(Path(batt["path"]) / "capacity"), "0")
-            status = _read(str(Path(batt["path"]) / "status"), "Unknown")
-            try:
-                self.battery = {"pct": int(pct), "status": status}
-            except Exception:
-                pass
+            pct  = _read(str(Path(batt["path"])/"capacity"),"0")
+            stat = _read(str(Path(batt["path"])/"status"),"Unknown")
+            try: self.battery = {"pct":int(pct),"status":stat}
+            except: pass
 
+        # Processes
         try:
-            out = subprocess.check_output(
-                ["ps", "-eo", "pid,comm,pcpu,pmem,nice,stat", "--sort=-pcpu", "--no-headers"],
-                timeout=3, stderr=subprocess.DEVNULL
-            ).decode().strip()
+            import psutil
             procs = []
-            for line in out.splitlines()[:60]:
-                parts = line.split(None, 5)
-                if len(parts) >= 5:
-                    try:
-                        procs.append({
-                            "pid":  int(parts[0]),
-                            "name": parts[1][:28],
-                            "cpu":  float(parts[2]),
-                            "mem":  float(parts[3]),
-                            "nice": int(parts[4]),
-                            "stat": parts[5] if len(parts) > 5 else "",
-                        })
-                    except Exception:
-                        pass
+            for p in sorted(psutil.process_iter(
+                    ["pid","name","cpu_percent","memory_percent","nice","status","username"]),
+                    key=lambda x: x.info.get("cpu_percent",0) or 0, reverse=True)[:80]:
+                try:
+                    procs.append({"pid":p.info["pid"],
+                                  "name":(p.info["name"] or "")[:28],
+                                  "cpu": p.info.get("cpu_percent") or 0.0,
+                                  "mem": p.info.get("memory_percent") or 0.0,
+                                  "nice":p.info.get("nice") or 0,
+                                  "stat":p.info.get("status","")[:4],
+                                  "user":(p.info.get("username") or "")[:10]})
+                except: pass
             self.procs = procs
-        except Exception:
-            pass
-
+        except:
+            try:
+                out = subprocess.check_output(
+                    ["ps","-eo","pid,comm,pcpu,pmem,nice,stat,user",
+                     "--sort=-pcpu","--no-headers"],
+                    timeout=3, stderr=subprocess.DEVNULL).decode().strip()
+                procs = []
+                for line in out.splitlines()[:80]:
+                    parts = line.split(None, 6)
+                    if len(parts) >= 5:
+                        try:
+                            procs.append({"pid":int(parts[0]),"name":parts[1][:28],
+                                          "cpu":float(parts[2]),"mem":float(parts[3]),
+                                          "nice":int(parts[4]),
+                                          "stat":parts[5][:4] if len(parts)>5 else "",
+                                          "user":parts[6][:10] if len(parts)>6 else ""})
+                        except: pass
+                self.procs = procs
+            except: pass
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Profile management
 # ══════════════════════════════════════════════════════════════════════════════
-
-def _default_profiles() -> list:
+def _default_profiles():
     return [
-        {"name": "Silent",      "governor": "powersave",  "boost": False,
-         "fan_pwm_pct": 20, "description": "Quiet & cool — minimal fan noise"},
-        {"name": "Balanced",    "governor": "schedutil",  "boost": True,
-         "fan_pwm_pct": 50, "description": "Smart everyday performance"},
-        {"name": "Performance", "governor": "performance","boost": True,
-         "fan_pwm_pct": 80, "description": "Full speed for demanding tasks"},
-        {"name": "Beast Mode",  "governor": "performance","boost": True,
-         "fan_pwm_pct": 100,"description": "Maximum everything — hold on"},
+        {"name":"Silent",      "governor":"powersave",  "boost":False,
+         "fan_pwm_pct":20,"description":"Quiet & cool — minimal fan noise"},
+        {"name":"Balanced",    "governor":"schedutil",  "boost":True,
+         "fan_pwm_pct":50,"description":"Smart everyday performance"},
+        {"name":"Performance", "governor":"performance","boost":True,
+         "fan_pwm_pct":80,"description":"Full speed for demanding tasks"},
+        {"name":"Beast Mode",  "governor":"performance","boost":True,
+         "fan_pwm_pct":100,"description":"Maximum everything — hold on"},
     ]
 
-
-def load_profiles() -> list:
+def load_profiles():
     if SYS_PROFILES.exists():
-        try:
-            return json.loads(SYS_PROFILES.read_text())
-        except Exception:
-            pass
-    profiles = _default_profiles()
-    SYS_PROFILES.write_text(json.dumps(profiles, indent=2))
-    return profiles
+        try: return json.loads(SYS_PROFILES.read_text())
+        except: pass
+    ps = _default_profiles()
+    SYS_PROFILES.write_text(json.dumps(ps,indent=2))
+    return ps
 
+def save_profiles(ps):
+    SYS_PROFILES.write_text(json.dumps(ps,indent=2))
 
-def save_profiles(profiles: list):
-    SYS_PROFILES.write_text(json.dumps(profiles, indent=2))
-
-
-def apply_profile(profile: dict, hw: dict) -> list[str]:
+def apply_profile(profile, hw):
     msgs = []
-    gov = profile.get("governor", "schedutil")
+    gov = profile.get("governor","schedutil")
     for cpu in Path("/sys/devices/system/cpu").glob("cpu[0-9]*/cpufreq/scaling_governor"):
         ok, err = _write_priv(str(cpu), gov)
-        if not ok:
-            msgs.append(f"Governor failed: {err}")
-            break
-    else:
-        msgs.append(f"Governor → {gov}")
-
+        if not ok: msgs.append(f"Governor failed: {err}"); break
+    else: msgs.append(f"Governor → {gov}")
     boost_path = "/sys/devices/system/cpu/cpufreq/boost"
     if Path(boost_path).exists():
-        val = "1" if profile.get("boost", True) else "0"
+        val = "1" if profile.get("boost",True) else "0"
         ok, err = _write_priv(boost_path, val)
         msgs.append(f"Boost → {'on' if val=='1' else 'off'}" if ok else f"Boost failed: {err}")
-
-    fan_pct = profile.get("fan_pwm_pct", 50)
-    pwm_val = int(fan_pct / 100 * 255)
-    for dev in hw.get("hwmon", []):
-        for pwm in dev.get("pwms", []):
-            _write_priv(pwm["enable_path"], "1")
+    fan_pct = profile.get("fan_pwm_pct",50)
+    pwm_val = int(fan_pct/100*255)
+    for dev in hw.get("hwmon",[]):
+        for pwm in dev.get("pwms",[]):
+            _write_priv(pwm["enable_path"],"1")
             _write_priv(pwm["path"], str(pwm_val))
-    if any(dev.get("pwms") for dev in hw.get("hwmon", [])):
+    if any(dev.get("pwms") for dev in hw.get("hwmon",[])):
         msgs.append(f"Fans → {fan_pct}% ({pwm_val}/255 PWM)")
-
     return msgs
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  CSS
 # ══════════════════════════════════════════════════════════════════════════════
-
 CSS = """
 * { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
 window { background-color: #08080e; color: rgba(232,224,245,0.92); }
 
 .nav-bar {
-    background-color: #0d0d1a;
-    border-right: 2px solid rgba(255,0,255,0.18);
-    min-width: 152px;
+    background-color: #0a0a18;
+    border-right: 3px solid rgba(255,0,255,0.25);
+    min-width: 160px;
 }
 .nav-btn {
     background-color: transparent;
     color: rgba(180,160,220,0.70);
     border: none; border-left: 4px solid transparent; border-radius: 0;
-    padding: 11px 14px 11px 16px;
-    font-size: 16px; font-weight: bold; min-height: 0;
+    padding: 14px 14px 14px 18px;
+    font-size: 17px; font-weight: bold; min-height: 0; text-align: left;
 }
-.nav-btn:hover  { background-color: rgba(255,0,255,0.09); color: rgba(255,180,255,0.92); }
-.nav-active-pink   { background: rgba(255,0,255,0.12);  color: #ff88ff;
-                     border-left: 4px solid #ff00ff; }
-.nav-active-orange { background: rgba(255,85,0,0.12);  color: #ff8855;
+.nav-btn:hover { background-color: rgba(255,0,255,0.10); color: rgba(255,180,255,0.95); }
+.nav-active-pink   { background: rgba(255,0,255,0.14);  color: #ff88ff;
+                     border-left: 4px solid #ff00ff;
+                     box-shadow: inset 4px 0 16px rgba(255,0,255,0.14); }
+.nav-active-red    { background: rgba(255,30,30,0.14);  color: #ff6655;
+                     border-left: 4px solid #ff2020; }
+.nav-active-orange { background: rgba(255,85,0,0.14);  color: #ff8855;
                      border-left: 4px solid #ff5500; }
-.nav-active-purple { background: rgba(204,0,255,0.12); color: #dd88ff;
+.nav-active-purple { background: rgba(204,0,255,0.14); color: #dd88ff;
                      border-left: 4px solid #cc00ff; }
-.nav-active-blue   { background: rgba(0,136,255,0.12); color: #66bbff;
+.nav-active-blue   { background: rgba(0,136,255,0.14); color: #66bbff;
                      border-left: 4px solid #0088ff; }
-.nav-active-green  { background: rgba(57,255,20,0.10); color: #88ff55;
+.nav-active-green  { background: rgba(57,255,20,0.12); color: #88ff55;
                      border-left: 4px solid #39ff14; }
-.nav-active-yellow { background: rgba(255,255,0,0.10); color: #ffff88;
+.nav-active-yellow { background: rgba(255,255,0,0.12); color: #ffff88;
                      border-left: 4px solid #ffff00; }
 
-scale trough {
-    background-color: rgba(255,255,255,0.08);
-    border-radius: 6px; min-height: 8px;
-}
-scale highlight { border-radius: 6px; min-height: 8px; }
-scale.pink    highlight { background-color: #ff00ff; }
-scale.blue    highlight { background-color: #0088ff; }
-scale.green   highlight { background-color: #39ff14; }
-scale.yellow  highlight { background-color: #ffff00; }
-scale.orange  highlight { background-color: #ff5500; }
-scale.purple  highlight { background-color: #cc00ff; }
-scale slider  { min-width: 18px; min-height: 18px;
-                border-radius: 50%; background: white;
-                border: 2px solid rgba(255,255,255,0.50); }
+scale trough { background-color: rgba(255,255,255,0.08); border-radius: 2px; min-height: 8px; }
+scale highlight { border-radius: 2px; min-height: 8px; }
+scale.pink   highlight { background-color: #ff00ff; }
+scale.blue   highlight { background-color: #0088ff; }
+scale.green  highlight { background-color: #39ff14; }
+scale.yellow highlight { background-color: #ffff00; }
+scale.orange highlight { background-color: #ff5500; }
+scale.purple highlight { background-color: #cc00ff; }
+scale.red    highlight { background-color: #ff2020; }
+scale slider { min-width:18px; min-height:18px; border-radius:2px; background:white;
+               border:2px solid rgba(255,255,255,0.50); }
 
-.card {
-    background-color: rgba(14,14,28,0.85);
-    border-radius: 10px;
-    padding: 14px 18px;
-    margin: 6px;
-}
 .neon-btn {
-    background-color: rgba(255,0,255,0.12);
-    color: #ff88ff;
-    border: 2px solid rgba(255,0,255,0.40);
-    border-radius: 8px;
-    padding: 8px 18px; font-size: 15px; font-weight: bold;
+    background-color: rgba(255,0,255,0.14); color: #ff88ff;
+    border: 2px solid rgba(255,0,255,0.55); border-radius: 2px;
+    padding: 9px 20px; font-size: 16px; font-weight: bold;
+    box-shadow: 0 0 10px rgba(255,0,255,0.18);
 }
-.neon-btn:hover { background-color: rgba(255,0,255,0.22); border-color: #ff00ff; }
-.neon-btn-blue  { background-color: rgba(0,136,255,0.12); color:#66bbff;
-                  border-color: rgba(0,136,255,0.40); }
-.neon-btn-blue:hover { background-color: rgba(0,136,255,0.22); border-color:#0088ff; }
-.neon-btn-green { background-color: rgba(57,255,20,0.10); color:#88ff55;
-                  border-color: rgba(57,255,20,0.35); }
-.neon-btn-green:hover { background-color: rgba(57,255,20,0.20); border-color:#39ff14; }
-.neon-btn-red   { background-color: rgba(255,30,30,0.15); color:#ff6655;
-                  border-color: rgba(255,60,40,0.45); }
-.neon-btn-red:hover { background-color: rgba(255,60,40,0.28); }
-.neon-btn-yellow{ background-color: rgba(255,255,0,0.10); color:#ffff88;
-                  border-color: rgba(255,255,0,0.40); }
-.neon-btn-yellow:hover { background-color: rgba(255,255,0,0.20); border-color:#ffff00; }
-.neon-btn-orange{ background-color: rgba(255,85,0,0.12); color:#ff8855;
-                  border-color: rgba(255,85,0,0.40); }
-.neon-btn-orange:hover { background-color: rgba(255,85,0,0.22); border-color:#ff5500; }
+.neon-btn:hover { background-color: rgba(255,0,255,0.26); border-color:#ff00ff;
+                  box-shadow: 0 0 18px rgba(255,0,255,0.40); }
+.neon-btn-blue  { background-color:rgba(0,136,255,0.14); color:#66bbff;
+                  border:2px solid rgba(0,136,255,0.55); border-radius:2px;
+                  padding:9px 20px; font-size:16px; font-weight:bold; }
+.neon-btn-blue:hover  { background-color:rgba(0,136,255,0.26); border-color:#0088ff; }
+.neon-btn-green { background-color:rgba(57,255,20,0.12); color:#88ff55;
+                  border:2px solid rgba(57,255,20,0.55); border-radius:2px;
+                  padding:9px 20px; font-size:16px; font-weight:bold; }
+.neon-btn-green:hover { background-color:rgba(57,255,20,0.24); border-color:#39ff14; }
+.neon-btn-red   { background-color:rgba(255,30,30,0.14); color:#ff6655;
+                  border:2px solid rgba(255,60,40,0.55); border-radius:2px;
+                  padding:9px 20px; font-size:16px; font-weight:bold; }
+.neon-btn-red:hover { background-color:rgba(255,60,40,0.28); }
+.neon-btn-yellow{ background-color:rgba(255,255,0,0.12); color:#ffff88;
+                  border:2px solid rgba(255,255,0,0.55); border-radius:2px;
+                  padding:9px 20px; font-size:16px; font-weight:bold; }
+.neon-btn-yellow:hover { background-color:rgba(255,255,0,0.24); border-color:#ffff00; }
+.neon-btn-orange{ background-color:rgba(255,85,0,0.14); color:#ff8855;
+                  border:2px solid rgba(255,85,0,0.55); border-radius:2px;
+                  padding:9px 20px; font-size:16px; font-weight:bold; }
+.neon-btn-orange:hover { background-color:rgba(255,85,0,0.26); border-color:#ff5500; }
+.neon-btn-purple{ background-color:rgba(200,0,255,0.14); color:#dd88ff;
+                  border:2px solid rgba(200,0,255,0.55); border-radius:2px;
+                  padding:9px 20px; font-size:16px; font-weight:bold; }
+.neon-btn-purple:hover { background-color:rgba(200,0,255,0.26); border-color:#cc00ff; }
 
-.profile-row { background-color: transparent; border: none; }
-.profile-row:selected { background-color: rgba(255,0,255,0.12); }
-
-entry, .search-e {
-    background-color: rgba(255,255,255,0.05);
-    color: rgba(232,224,245,0.88);
-    border: 2px solid rgba(255,0,255,0.25); border-radius: 6px;
-    padding: 6px 12px; font-size: 15px;
+entry {
+    background-color: rgba(255,255,255,0.05); color: rgba(232,224,245,0.90);
+    border: 2px solid rgba(255,0,255,0.30); border-radius: 2px;
+    padding: 7px 14px; font-size: 16px; caret-color: #ff00ff;
 }
-entry:focus { border-color: #ff00ff; }
+entry:focus { border-color: #ff00ff; box-shadow: 0 0 12px rgba(255,0,255,0.25); }
+entry text { background-color: transparent; }
 
-treeview { background-color: #0a0a14; color: rgba(230,220,245,0.88); font-size: 14px; }
-treeview:selected { background-color: rgba(255,0,255,0.18); color: #ffaaff; }
-treeview header button {
-    background-color: #0d0d1a; color: rgba(180,160,220,0.80);
-    border: none; font-size: 13px; font-weight: bold;
-    border-bottom: 2px solid rgba(255,0,255,0.18);
-}
 scrollbar { background-color: transparent; }
-scrollbar slider { background-color: rgba(255,0,255,0.20); border-radius: 4px; min-width:6px; }
+scrollbar slider { background-color: rgba(255,0,255,0.22); border-radius: 2px; min-width:5px; }
 """
 
-
 # ══════════════════════════════════════════════════════════════════════════════
-#  Drawing helpers
+#  Drawing helpers  (NO cairo import needed — use cr.arc for all fills)
 # ══════════════════════════════════════════════════════════════════════════════
-
-import random as _rand
+_rng_inst = random.Random(0x4E5958)   # "NYX"
 
 def _rng(x, y=0, w=0, h=0):
-    return _rand.Random(int(abs(x*3+y*7+(w or 1)*11+(h or 1)*13)) % 65535)
+    return random.Random(int(abs(x*3+y*7+(w or 1)*11+(h or 1)*13)) % 65535)
 
 def glow_text(cr, x, y, txt, r, g, b, size=13, bold=False):
     cr.select_font_face("Caveat", 0, 1 if bold else 0)
     cr.set_font_size(size)
-    cr.set_source_rgba(r, g, b, 0.18); cr.move_to(x+1.2, y+0.8); cr.show_text(txt)
-    cr.set_source_rgba(r, g, b, 0.92); cr.move_to(x, y);        cr.show_text(txt)
+    cr.set_source_rgba(r, g, b, 0.22); cr.move_to(x+1.5,y+1.0); cr.show_text(txt)
+    cr.set_source_rgba(r, g, b, 0.94); cr.move_to(x, y);         cr.show_text(txt)
+
+def glow_text_c(cr, cx, y, txt, r, g, b, size=13, bold=False):
+    """Centered glow text."""
+    cr.select_font_face("Caveat", 0, 1 if bold else 0)
+    cr.set_font_size(size)
+    ext = cr.text_extents(txt)
+    x   = cx - ext.width/2 - ext.x_bearing
+    glow_text(cr, x, y, txt, r, g, b, size, bold)
 
 def rainbow_bar(cr, x, y, w, h=3):
     seg = w / len(PALETTE)
-    for i, (r, g, b) in enumerate(PALETTE):
-        cr.set_source_rgba(r, g, b, 0.90)
+    for i, (r,g,b) in enumerate(PALETTE):
+        cr.set_source_rgba(r,g,b,0.90)
         cr.rectangle(x+i*seg, y, seg, h); cr.fill()
 
-def sketch_rect(cr, x, y, w, h, r, g, b, thick=2.2, jitter=2.5, fill_rgba=None):
+def sketch_rect(cr, x, y, w, h, r, g, b, thick=2.5, jitter=3.0, fill_rgba=None):
     rng = _rng(x, y, w, h)
     j   = lambda s=1.0: rng.uniform(-jitter*s, jitter*s)
     def _path():
@@ -516,136 +483,135 @@ def sketch_rect(cr, x, y, w, h, r, g, b, thick=2.2, jitter=2.5, fill_rgba=None):
         _path(); cr.set_source_rgba(*fill_rgba); cr.fill()
         rng2 = _rng(x,y,w,h); j = lambda s=1.0: rng2.uniform(-jitter*s, jitter*s)
     _path()
-    cr.set_source_rgba(r, g, b, 0.88); cr.set_line_width(thick)
+    cr.set_source_rgba(r,g,b,0.90); cr.set_line_width(thick)
     cr.set_line_cap(1); cr.set_line_join(1); cr.stroke()
 
-def dot_grid(cr, x, y, w, h, spacing=22):
-    cr.set_line_width(0.35)
-    for gx in range(int(x), int(x+w)+spacing, spacing):
-        cr.set_source_rgba(0.28, 0.18, 0.55, 0.12)
-        cr.move_to(gx, y); cr.line_to(gx, y+h); cr.stroke()
-    for gy in range(int(y), int(y+h)+spacing, spacing):
-        cr.set_source_rgba(0.28, 0.18, 0.55, 0.12)
-        cr.move_to(x, gy); cr.line_to(x+w, gy); cr.stroke()
-
 def draw_nyxus_bg(cr, w, h):
-    """Dark #08080e base + icon-generator-style paint splatters + ruled lines."""
-    import math as _m
-    cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
-    rng = _rand.Random(0xBEEF)
-    blobs = [
-        (0.80, 0.00, 0.80), (0.55, 0.00, 1.00), (0.00, 0.53, 1.00),
-        (0.22, 1.00, 0.08), (1.00, 1.00, 0.00), (1.00, 0.40, 0.00),
-        (0.80, 0.00, 0.80), (0.55, 0.00, 1.00), (0.00, 0.53, 1.00),
-        (0.22, 1.00, 0.08), (1.00, 1.00, 0.00), (1.00, 0.40, 0.00),
-        (0.80, 0.00, 0.80), (0.55, 0.00, 1.00),
-    ]
-    for i, (r, g, b) in enumerate(blobs):
-        bx = rng.uniform(0, w); by = rng.uniform(0, h)
-        rr = rng.uniform(w*0.04, w*0.14); alpha = rng.uniform(0.05, 0.14)
-        pat = cairo.RadialGradient(bx, by, 0, bx, by, rr)
-        pat.add_color_stop_rgba(0, r, g, b, alpha)
-        pat.add_color_stop_rgba(1, r, g, b, 0)
-        cr.set_source(pat); cr.arc(bx, by, rr, 0, _m.pi*2); cr.fill()
-    for _ in range(18):
-        r, g, b = blobs[rng.randrange(len(blobs))]
-        sx = rng.uniform(0, w); sy = rng.uniform(0, h)
-        length = rng.uniform(w*0.04, w*0.22); angle = rng.uniform(0, _m.pi*2)
-        ex = sx + _m.cos(angle)*length; ey = sy + _m.sin(angle)*length
-        alpha = rng.uniform(0.06, 0.18)
-        cr.set_source_rgba(r, g, b, alpha)
-        cr.set_line_width(rng.uniform(1.5, 6.0))
-        cr.move_to(sx, sy); cr.line_to(ex, ey); cr.stroke()
-    for _ in range(80):
-        r, g, b = blobs[rng.randrange(len(blobs))]
-        dx = rng.uniform(0, w); dy = rng.uniform(0, h)
-        dr = rng.uniform(0.8, 4.0); alpha = rng.uniform(0.08, 0.24)
-        cr.set_source_rgba(r, g, b, alpha)
-        cr.arc(dx, dy, dr, 0, _m.pi*2); cr.fill()
-    cr.set_line_width(0.5)
-    spacing = h / 26
-    for i in range(27):
-        ly = i * spacing
-        cr.set_source_rgba(0.45, 0.25, 0.80, 0.06 + 0.02*(i%3==0))
-        cr.move_to(0, ly); cr.line_to(w, ly); cr.stroke()
+    """Dark base + paint splatters (no cairo module import needed)."""
+    cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+    rng = random.Random(0xBEEF)
+    blobs = [C_PINK,C_PURPLE,C_BLUE,C_GREEN,C_YELLOW,C_ORANGE,
+             C_PINK,C_PURPLE,C_BLUE,C_GREEN,C_YELLOW,C_ORANGE,C_PINK,C_PURPLE]
+    # Large soft blobs — layered arcs with decreasing alpha
+    for i,(r,g,b) in enumerate(blobs):
+        bx = rng.uniform(0,w); by = rng.uniform(0,h)
+        for layer in range(4):
+            rr    = rng.uniform(w*0.03, w*0.12) * (1.0 - layer*0.22)
+            alpha = rng.uniform(0.03, 0.10)    * (1.0 - layer*0.20)
+            cr.set_source_rgba(r,g,b,alpha)
+            cr.arc(bx, by, max(rr,1), 0, math.pi*2); cr.fill()
+    # Splatter streaks
+    for _ in range(20):
+        r,g,b = blobs[rng.randrange(len(blobs))]
+        sx = rng.uniform(0,w); sy = rng.uniform(0,h)
+        ln = rng.uniform(w*0.03, w*0.20); ang = rng.uniform(0, math.pi*2)
+        ex = sx+math.cos(ang)*ln; ey = sy+math.sin(ang)*ln
+        cr.set_source_rgba(r,g,b,rng.uniform(0.05,0.16))
+        cr.set_line_width(rng.uniform(1.2,5.0))
+        cr.move_to(sx,sy); cr.line_to(ex,ey); cr.stroke()
+    # Dense small dots
+    for _ in range(90):
+        r,g,b = blobs[rng.randrange(len(blobs))]
+        cr.set_source_rgba(r,g,b,rng.uniform(0.07,0.22))
+        cr.arc(rng.uniform(0,w), rng.uniform(0,h),
+               rng.uniform(0.6,3.5), 0, math.pi*2); cr.fill()
+    # Ruled notebook lines
+    cr.set_line_width(0.45)
+    sp = max(h/28, 18)
+    for i in range(int(h/sp)+2):
+        ly = i*sp
+        cr.set_source_rgba(0.45,0.25,0.80, 0.05+0.015*(i%3==0))
+        cr.move_to(0,ly); cr.line_to(w,ly); cr.stroke()
 
-def neon_card(cr, x, y, w, h, color, tint=0.08):
-    r, g, b = color
-    cr.set_source_rgba(r, g, b, 0.07); cr.rectangle(x+5, y+6, w, h); cr.fill()
-    cr.set_source_rgb(*C_PANEL);        cr.rectangle(x, y, w, h);     cr.fill()
-    dot_grid(cr, x, y, w, h, 20)
-    sketch_rect(cr, x+2, y+2, w-4, h-4, r, g, b, thick=2.4, jitter=2.4,
-                fill_rgba=(r, g, b, tint))
-
-def ring_chart(cr, cx, cy, R, pct, color):
-    cr.set_source_rgba(*C_DIM, 0.20); cr.set_line_width(14)
-    cr.arc(cx, cy, R, -math.pi/2, 3*math.pi/2); cr.stroke()
-    if pct > 0:
-        end = -math.pi/2 + (pct/100)*2*math.pi
-        cr.set_source_rgba(*color);      cr.set_line_width(14)
-        cr.arc(cx, cy, R, -math.pi/2, end); cr.stroke()
-        cr.set_source_rgba(*color, 0.20); cr.set_line_width(26)
-        cr.arc(cx, cy, R, -math.pi/2, end); cr.stroke()
+def neon_card(cr, x, y, w, h, color, tint=0.07, jitter=2.5):
+    r,g,b = color
+    # Shadow
+    cr.set_source_rgba(r,g,b,0.06); cr.rectangle(x+5,y+6,w,h); cr.fill()
+    # Body
+    cr.set_source_rgb(*C_PANEL); cr.rectangle(x,y,w,h); cr.fill()
+    # Inner dot grid
+    cr.set_line_width(0.3)
+    sp = 20
+    for gx in range(int(x),int(x+w),sp):
+        cr.set_source_rgba(r,g,b,0.04)
+        cr.move_to(gx,y); cr.line_to(gx,y+h); cr.stroke()
+    for gy in range(int(y),int(y+h),sp):
+        cr.set_source_rgba(r,g,b,0.04)
+        cr.move_to(x,gy); cr.line_to(x+w,gy); cr.stroke()
+    sketch_rect(cr,x+2,y+2,w-4,h-4,r,g,b,thick=2.5,jitter=jitter,
+                fill_rgba=(r,g,b,tint))
 
 def hbar(cr, x, y, w, h, pct, color):
-    cr.set_source_rgba(*C_DIM, 0.12); cr.rectangle(x, y, w, h); cr.fill()
+    cr.set_source_rgba(*C_DIM,0.12); cr.rectangle(x,y,w,h); cr.fill()
     if pct > 0:
-        fw = max(0, min(pct/100, 1.0)) * w
-        cr.set_source_rgba(*color, 0.90); cr.rectangle(x, y, fw, h); cr.fill()
-        cr.set_source_rgba(*color, 0.20); cr.set_line_width(h+6)
-        cr.move_to(x, y+h/2); cr.line_to(x+fw, y+h/2); cr.stroke()
+        fw = max(0,min(pct/100,1.0))*w
+        cr.set_source_rgba(*color,0.88); cr.rectangle(x,y,fw,h); cr.fill()
+        cr.set_source_rgba(*color,0.18); cr.set_line_width(h+6)
+        cr.move_to(x,y+h/2); cr.line_to(x+fw,y+h/2); cr.stroke()
 
-def sparkline(cr, x, y, w, h, hist, color, max_val=None):
-    vals = list(hist)
+def arc_gauge(cr, cx, cy, R, pct, color, thick=14, label=""):
+    a0 = math.pi*0.75; a1 = math.pi*2.25; span = a1-a0
+    cr.set_source_rgba(*C_DIM,0.18); cr.set_line_width(thick)
+    cr.arc(cx,cy,R,a0,a1); cr.stroke()
+    if pct > 0:
+        end = a0+span*min(pct/100,1.0)
+        cr.set_source_rgba(*color,0.20); cr.set_line_width(thick+10)
+        cr.arc(cx,cy,R,a0,end); cr.stroke()
+        cr.set_source_rgba(*color,0.92); cr.set_line_width(thick)
+        cr.arc(cx,cy,R,a0,end); cr.stroke()
+    if label:
+        glow_text_c(cr, cx, cy+8, label, *color, size=14, bold=True)
+
+def sparkline(cr, x, y, w, h, vals, color, max_val=None):
     if not vals: return
-    mv = max_val or (max(vals) if max(vals) > 0 else 1.0)
-    step = w / max(len(vals)-1, 1)
-    pts = [(x+i*step, y+h-(v/mv)*h*0.88) for i, v in enumerate(vals)]
-    cr.new_path(); cr.move_to(x, y+h)
-    for px, py in pts: cr.line_to(px, py)
-    cr.line_to(x+(len(vals)-1)*step, y+h); cr.close_path()
-    cr.set_source_rgba(*color, 0.14); cr.fill()
+    mv   = max_val or (max(vals) if max(vals) > 0 else 1.0)
+    step = w/max(len(vals)-1,1)
+    pts  = [(x+i*step, y+h-(v/mv)*h*0.88) for i,v in enumerate(vals)]
+    cr.new_path(); cr.move_to(x,y+h)
+    for px,py in pts: cr.line_to(px,py)
+    cr.line_to(x+(len(vals)-1)*step,y+h); cr.close_path()
+    cr.set_source_rgba(*color,0.13); cr.fill()
     cr.new_path()
-    for i, (px, py) in enumerate(pts):
-        (cr.move_to if i==0 else cr.line_to)(px, py)
-    cr.set_source_rgba(*color, 0.95); cr.set_line_width(1.8); cr.stroke()
+    for i,(px,py) in enumerate(pts):
+        (cr.move_to if i==0 else cr.line_to)(px,py)
+    cr.set_source_rgba(*color,0.92); cr.set_line_width(1.8); cr.stroke()
 
 def temp_color(t):
     if t is None: return C_DIM
-    return C_GREEN if t < 60 else (C_YELLOW if t < 80 else (C_ORANGE if t < 90 else C_RED))
+    return C_GREEN if t<60 else (C_YELLOW if t<80 else (C_ORANGE if t<90 else C_RED))
 
 def pct_color(p):
-    return C_GREEN if p < 60 else (C_YELLOW if p < 80 else C_ORANGE)
-
+    return C_GREEN if p<50 else (C_YELLOW if p<75 else (C_ORANGE if p<90 else C_RED))
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Application
 # ══════════════════════════════════════════════════════════════════════════════
-
 class NyxusControl(Gtk.Application):
     def __init__(self):
         super().__init__(application_id="io.nyxus.control",
                          flags=Gio.ApplicationFlags.NON_UNIQUE)
-        self.hw       = load_hw_profile()
-        self.live     = LiveData(self.hw)
-        self.profiles = load_profiles()
+        self.hw        = load_hw_profile()
+        self.live      = LiveData(self.hw)
+        self.profiles  = load_profiles()
         self._cur_page = "OVERVIEW"
         self._anim_t   = 0.0
-        self._toast_msg = ""
-        self._toast_until = 0.0
-        self._fan_sliders: dict = {}   # pwm_path -> Gtk.Scale
-        self._fan_manual  = False
-        self._nav_btns: dict = {}
-        self._das: dict = {}
+        self._toast_msg     = ""
+        self._toast_until   = 0.0
+        self._fan_sliders:  dict = {}
+        self._fan_manual    = False
+        self._nav_btns:     dict = {}
+        self._das:          dict = {}
+        self._selected_prof_idx = 0
+        self._proc_filter   = ""
+        self._proc_sort_key = "cpu"
+        self._proc_nice_delta = 0
+        self._rgb_color     = (1.0, 0.0, 1.0)
 
-    # ─────────────────────────────────────────────── activate ──────────────────
-
+    # ──────────────────────────────────────────────────────── activate ──────────
     def do_activate(self):
         prov = Gtk.CssProvider()
-        try:
-            prov.load_from_string(CSS)
-        except AttributeError:
-            prov.load_from_data(CSS.encode())
+        try:    prov.load_from_string(CSS)
+        except: prov.load_from_data(CSS.encode())
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
@@ -656,12 +622,14 @@ class NyxusControl(Gtk.Application):
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.win.set_child(root)
 
-        # Header
-        self._hdr = self._da(self._draw_hdr, -1, 50)
-        root.append(self._hdr)
-        self._das["hdr"] = self._hdr
+        # Header bar
+        hdr_da = Gtk.DrawingArea()
+        hdr_da.set_size_request(-1, 56)
+        hdr_da.set_draw_func(self._draw_hdr, None)
+        self._hdr_da = hdr_da
+        root.append(hdr_da)
 
-        # Body = nav + stack
+        # Body
         body = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         body.set_vexpand(True)
         root.append(body)
@@ -669,7 +637,7 @@ class NyxusControl(Gtk.Application):
 
         self._stack = Gtk.Stack()
         self._stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-        self._stack.set_transition_duration(100)
+        self._stack.set_transition_duration(80)
         self._stack.set_hexpand(True)
         self._stack.set_vexpand(True)
         body.append(self._stack)
@@ -683,65 +651,62 @@ class NyxusControl(Gtk.Application):
         self._stack.add_named(self._build_processes(), "PROCESSES")
         self._stack.set_visible_child_name("OVERVIEW")
 
-        # Toast bar (bottom)
-        self._toast_da = self._da(self._draw_toast, -1, 0)
+        # Toast
+        self._toast_da = Gtk.DrawingArea()
+        self._toast_da.set_size_request(-1,0)
+        self._toast_da.set_draw_func(self._draw_toast, None)
         root.append(self._toast_da)
 
-        GLib.timeout_add(50,    self._anim_tick)
-        GLib.timeout_add(10000, self._data_tick)
+        GLib.timeout_add(50,   self._anim_tick)
+        GLib.timeout_add(3000, self._data_tick)
         self._data_tick()
         self.win.present()
 
     def _on_close(self, *_):
-        self.win.hide()
-        return True  # suppress destroy — keep running
+        self.win.hide(); return True
 
-    # ─────────────────────────────────────────────── DA helper ─────────────────
-
-    def _da(self, fn, w, h):
+    def _da(self, fn, w=-1, h=-1, expand=True):
         a = Gtk.DrawingArea()
         a.set_size_request(w, h)
+        if expand: a.set_vexpand(True); a.set_hexpand(True)
         a.set_draw_func(fn, None)
         return a
 
-    # ─────────────────────────────────────────────── header ────────────────────
-
+    # ──────────────────────────────────────────────────────── header ────────────
     def _draw_hdr(self, area, cr, w, h, _):
         draw_nyxus_bg(cr, w, h)
-        cr.set_source_rgba(0.50, 0.40, 0.10, 0.20); cr.set_line_width(1.5)
-        cr.move_to(0, h-1); cr.line_to(w, h-1); cr.stroke()
-        glow_text(cr, 14, h-10, "NYXUS  Control", *C_PINK, size=16, bold=True)
-        cr.select_font_face("Caveat", 0, 0); cr.set_font_size(13)
-        board = self.hw.get("board", "Unknown Board")[:40]
-        cr.set_source_rgba(*C_DIM, 0.80); cr.move_to(220, h-10); cr.show_text(board)
-        clk = datetime.now().strftime("%H:%M:%S")
-        cr.select_font_face("Caveat", 0, 1)
-        ext = cr.text_extents(clk)
-        glow_text(cr, w-ext.width-16, h-8, clk, *C_ORANGE, size=15, bold=True)
-        pulse = 0.5 + 0.5*math.sin(self._anim_t * 3)
-        cr.set_source_rgba(*C_GREEN, pulse)
-        cr.arc(w-ext.width-36, h//2, 5, 0, math.pi*2); cr.fill()
         rainbow_bar(cr, 0, h-3, w, 3)
+        # Pulse dot
+        pulse = 0.5+0.5*math.sin(self._anim_t*3)
+        cr.set_source_rgba(*C_GREEN, pulse); cr.arc(22, h//2, 5, 0, math.pi*2); cr.fill()
+        glow_text(cr, 38, h-14, "NYXUS  Control", *C_PINK, size=18, bold=True)
+        # Board
+        board = self.hw.get("board","Unknown Board")[:38]
+        cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
+        cr.set_source_rgba(*C_DIM,0.80)
+        cr.move_to(260, h-14); cr.show_text(board)
+        # Clock
+        clk = datetime.now().strftime("%A  %H:%M:%S")
+        cr.select_font_face("Caveat",0,1); cr.set_font_size(15)
+        ext = cr.text_extents(clk)
+        glow_text(cr, w-ext.width-20, h-12, clk, *C_ORANGE, size=15, bold=True)
 
     def _draw_toast(self, area, cr, w, h, _):
         if self._toast_msg and time.time() < self._toast_until:
-            area.set_size_request(-1, 36)
-            cr.set_source_rgba(0.08, 0.05, 0.18, 0.95); cr.rectangle(0,0,w,36); cr.fill()
-            cr.set_source_rgba(*C_PURPLE, 0.60); cr.set_line_width(1)
+            area.set_size_request(-1,36)
+            cr.set_source_rgba(0.08,0.05,0.18,0.96); cr.rectangle(0,0,w,36); cr.fill()
+            cr.set_source_rgba(*C_PURPLE,0.55); cr.set_line_width(1.5)
             cr.rectangle(0,0,w,36); cr.stroke()
-            glow_text(cr, 20, 24, self._toast_msg, *C_PURPLE, size=13)
+            glow_text(cr, 20, 24, self._toast_msg, *C_PURPLE, size=14)
         else:
-            area.set_size_request(-1, 0)
-            self._toast_msg = ""
+            area.set_size_request(-1,0); self._toast_msg=""
 
-    def _toast(self, msg: str, secs: float = 4.0):
-        self._toast_msg   = msg
-        self._toast_until = time.time() + secs
+    def _toast(self, msg, secs=4.0):
+        self._toast_msg=msg; self._toast_until=time.time()+secs
         GLib.idle_add(self._toast_da.queue_draw)
 
-    # ─────────────────────────────────────────────── nav ───────────────────────
-
-    def _build_nav(self) -> Gtk.Widget:
+    # ──────────────────────────────────────────────────────── nav ───────────────
+    def _build_nav(self):
         nav = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         nav.add_css_class("nav-bar")
         for name, color in PAGES:
@@ -759,20 +724,15 @@ class NyxusControl(Gtk.Application):
         self._update_nav(name)
 
     def _update_nav(self, active):
-        COLOR_CLASS = {
-            C_PINK: "pink", C_ORANGE: "orange", C_PURPLE: "purple",
-            C_BLUE: "blue", C_GREEN: "green", C_YELLOW: "yellow",
-        }
-        for name, (btn, col) in self._nav_btns.items():
+        CN = {C_PINK:"pink",C_ORANGE:"orange",C_PURPLE:"purple",
+              C_BLUE:"blue",C_GREEN:"green",C_YELLOW:"yellow",C_RED:"red"}
+        for name,(btn,col) in self._nav_btns.items():
             for c in list(btn.get_css_classes()):
-                if c.startswith("nav-active"):
-                    btn.remove_css_class(c)
+                if c.startswith("nav-active"): btn.remove_css_class(c)
             if name == active:
-                cls = f"nav-active-{COLOR_CLASS.get(col, 'pink')}"
-                btn.add_css_class(cls)
+                btn.add_css_class(f"nav-active-{CN.get(col,'pink')}")
 
-    # ─────────────────────────────────────────────── data ──────────────────────
-
+    # ──────────────────────────────────────────────────────── data ──────────────
     def _data_tick(self):
         threading.Thread(target=self._collect, daemon=True).start()
         return GLib.SOURCE_CONTINUE
@@ -782,501 +742,665 @@ class NyxusControl(Gtk.Application):
         GLib.idle_add(self._refresh_ui)
 
     def _refresh_ui(self):
-        for da in self._das.values():
-            da.queue_draw()
-        self._refresh_fan_labels()
+        for da in self._das.values(): da.queue_draw()
         return GLib.SOURCE_REMOVE
 
     def _anim_tick(self):
         self._anim_t += 0.04
-        self._hdr.queue_draw()
+        self._hdr_da.queue_draw()
         self._toast_da.queue_draw()
         return GLib.SOURCE_CONTINUE
 
     # ══════════════════════════════════════════════════════════════════════════
-    #  OVERVIEW PAGE
+    #  OVERVIEW PAGE  — full-size, all 4 system areas tiled
     # ══════════════════════════════════════════════════════════════════════════
-
-    def _build_overview(self) -> Gtk.Widget:
-        sw = Gtk.ScrolledWindow()
-        sw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        da = self._da(self._draw_overview, -1, 700)
+    def _build_overview(self):
+        da = self._da(self._draw_overview)
         self._das["overview"] = da
-        sw.set_child(da)
-        return sw
+        return da
 
     def _draw_overview(self, area, cr, w, h, _):
         draw_nyxus_bg(cr, w, h)
-        dot_grid(cr, 0, 0, w, h, 28)
+        pad = 18
+        col_w = (w - pad*3) / 2
+        # Row heights — split remaining height into 3 rows
+        rh1 = (h - pad*4) * 0.38   # CPU + GPU
+        rh2 = (h - pad*4) * 0.28   # Fans + Thermal
+        rh3 = (h - pad*4) * 0.34   # Battery/Profile + System info
+        r1y = pad
+        r2y = r1y + rh1 + pad
+        r3y = r2y + rh2 + pad
 
-        pad = 20
-        cw  = (w - pad*3) / 2
-        # ── CPU card ──
-        cx, cy = pad, pad
-        neon_card(cr, cx, cy, cw, 220, C_PINK)
-        cpu  = self.hw.get("cpu", {})
-        gov  = self.live.governor
-        freq = f"{self.live.cpu_freq:.0f} MHz" if self.live.cpu_freq else ""
-        glow_text(cr, cx+14, cy+28, "CPU", *C_PINK, size=14, bold=True)
-        cr.select_font_face("Caveat", 0, 0); cr.set_font_size(11)
-        cr.set_source_rgba(*C_DIM, 0.80)
-        cr.move_to(cx+14, cy+46); cr.show_text(cpu.get("model","")[:50])
-        cr.move_to(cx+14, cy+62); cr.show_text(f"{cpu.get('cores',0)} cores  ·  {gov}  ·  boost {'on' if self.live.boost else 'off'}  {freq}")
-        # CPU temps from hwmon
-        ty = cy + 80
-        for k, v in self.live.temps.items():
-            if "cpu" in k.lower() or "core" in k.lower() or "k10" in k.lower():
-                col = temp_color(v)
-                glow_text(cr, cx+14, ty, f"{k.split(':')[-1][:18]}  {v:.1f}°C", *col, size=12)
-                hbar(cr, cx+14, ty+4, cw-28, 8, min(v,120)/120*100, col)
-                ty += 26
-                if ty > cy+200: break
-        if not any("cpu" in k.lower() or "core" in k.lower() or "k10" in k.lower()
-                   for k in self.live.temps):
-            glow_text(cr, cx+14, ty, "No CPU temp sensors detected", *C_DIM, size=12)
-        sketch_rect(cr, cx+2, cy+2, cw-4, 216, *C_PINK, thick=2.2, jitter=2.2)
+        # ── CPU card ──────────────────────────────────────────────────────────
+        cx, cy = pad, r1y; cw, ch = col_w, rh1
+        neon_card(cr, cx, cy, cw, ch, C_PINK)
+        cpu = self.hw.get("cpu",{})
+        cores = cpu.get("cores",1)
+        glow_text(cr, cx+16, cy+30, "CPU", *C_PINK, size=17, bold=True)
+        model = cpu.get("model","Unknown CPU")
+        cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
+        cr.set_source_rgba(*C_DIM,0.80)
+        cr.move_to(cx+16, cy+50); cr.show_text(model[:46])
+        freq  = f"{self.live.cpu_freq:.0f} MHz" if self.live.cpu_freq else "-- MHz"
+        gov   = self.live.governor
+        boost = "BOOST ON" if self.live.boost else "boost off"
+        cr.move_to(cx+16, cy+68)
+        cr.show_text(f"{cores} cores  ·  {gov}  ·  {boost}  ·  {freq}")
+        # Per-core heatmap
+        pcts = self.live.cpu_pcts or [0]*cores
+        n = min(len(pcts), 32)
+        bw = max(4, min(24, (cw-32) / max(n,1) - 2))
+        bh = 20
+        for i in range(n):
+            bx = cx+16 + i*(bw+2); by = cy+82
+            p  = pcts[i] if i < len(pcts) else 0
+            col = pct_color(p)
+            cr.set_source_rgba(*col, 0.15); cr.rectangle(bx,by,bw,bh); cr.fill()
+            cr.set_source_rgba(*col, 0.90)
+            cr.rectangle(bx, by+bh*(1-p/100), bw, bh*(p/100)); cr.fill()
+        cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+        cr.set_source_rgba(*C_DIM,0.60); cr.move_to(cx+16,cy+116)
+        cr.show_text(f"core load  (avg {sum(pcts)/max(len(pcts),1):.1f}%)")
+        # CPU temp hbars
+        ty = cy+136
+        for k,v in self.live.temps.items():
+            if not any(x in k.lower() for x in ("cpu","core","k10","tctl","tdie")): continue
+            col = temp_color(v)
+            label = k.split(":")[-1][:22]
+            glow_text(cr, cx+16, ty, f"{label}", *col, size=12)
+            ext = cr.text_extents(f"{v:.0f}°C")
+            glow_text(cr, cx+cw-ext.width-20, ty, f"{v:.0f}°C", *col, size=12, bold=True)
+            hbar(cr, cx+16, ty+4, cw-32, 7, min(v,120)/120*100, col)
+            ty += 26
+            if ty > cy+ch-20: break
+        if ty == cy+136:
+            glow_text(cr, cx+16, ty, "no CPU temp sensors", *C_DIM, size=12)
+        # CPU sparkline
+        if self.live.cpu_hist:
+            sl_y = cy + ch - 48
+            sparkline(cr, cx+16, sl_y, cw-32, 38, list(self.live.cpu_hist), C_PINK, 100)
+            glow_text(cr, cx+16, sl_y+38, "CPU% history", *C_DIM, size=10)
 
-        # ── GPU card ──
-        gx, gy = pad*2+cw, pad
-        gpu_hw = self.hw.get("gpu", {})
-        gpu_col = C_PURPLE if gpu_hw.get("vendor") == "nvidia" else C_BLUE
-        neon_card(cr, gx, gy, cw, 220, gpu_col)
-        glow_text(cr, gx+14, gy+28, "GPU", *gpu_col, size=14, bold=True)
-        cr.select_font_face("Caveat", 0, 0); cr.set_font_size(11)
-        cr.set_source_rgba(*C_DIM, 0.80)
-        cr.move_to(gx+14, gy+46); cr.show_text(gpu_hw.get("name", "Not detected"))
+        # ── GPU card ──────────────────────────────────────────────────────────
+        gx, gy = pad*2+col_w, r1y; gw, gh = col_w, rh1
+        gpu_hw  = self.hw.get("gpu",{})
+        gpu_col = C_PURPLE if gpu_hw.get("vendor")=="nvidia" else C_BLUE
+        neon_card(cr, gx, gy, gw, gh, gpu_col)
+        vendor_tag = gpu_hw.get("vendor","").upper()
+        glow_text(cr, gx+16, gy+30, f"GPU  [{vendor_tag}]", *gpu_col, size=17, bold=True)
+        cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
+        cr.set_source_rgba(*C_DIM,0.80)
+        cr.move_to(gx+16, gy+50); cr.show_text(gpu_hw.get("name","Not detected")[:44])
         if self.live.gpu:
             g = self.live.gpu
-            glow_text(cr, gx+14, gy+72, f"Util  {g.get('util',0):.0f}%", *gpu_col, size=12)
-            hbar(cr, gx+14, gy+80, cw-28, 8, g.get("util",0), gpu_col)
-            glow_text(cr, gx+14, gy+100, f"Temp  {g.get('temp',0):.0f}°C", *temp_color(g.get("temp")), size=12)
-            hbar(cr, gx+14, gy+108, cw-28, 8, min(g.get("temp",0),120)/120*100, temp_color(g.get("temp")))
-            glow_text(cr, gx+14, gy+128, f"VRAM  {g.get('mem_used',0)} / {gpu_hw.get('mem_total',0)} MB", *C_DIM, size=12)
-            glow_text(cr, gx+14, gy+148, f"Power {g.get('power_draw',0):.1f} / {gpu_hw.get('power_limit',0):.0f} W", *gpu_col, size=12)
+            items = [
+                ("Util",   f"{g.get('util',0):.0f}%",    g.get("util",0),    gpu_col),
+                ("Temp",   f"{g.get('temp',0):.0f}°C",   min(g.get("temp",0),120)/120*100, temp_color(g.get("temp",0))),
+                ("VRAM",   f"{g.get('mem_used',0)} / {gpu_hw.get('mem_total',0)} MB",
+                           g.get("mem_used",0)/max(gpu_hw.get("mem_total",1),1)*100, gpu_col),
+                ("Power",  f"{g.get('power_draw',0):.1f} / {gpu_hw.get('power_limit',0):.0f} W",
+                           g.get("power_draw",0)/max(gpu_hw.get("power_limit",1),1)*100, C_YELLOW),
+            ]
+            ty2 = gy+76
+            for lbl,val,pct,col in items:
+                glow_text(cr, gx+16, ty2, lbl, *C_DIM, size=12)
+                ext = cr.text_extents(val)
+                glow_text(cr, gx+gw-ext.width-20, ty2, val, *col, size=12, bold=True)
+                hbar(cr, gx+16, ty2+4, gw-32, 7, pct, col)
+                ty2 += 28
         elif not gpu_hw.get("detected"):
-            glow_text(cr, gx+14, gy+80, "No GPU detected", *C_DIM, size=12)
+            glow_text(cr, gx+16, gy+90, "No GPU detected", *C_DIM, size=13)
         else:
-            glow_text(cr, gx+14, gy+80, "Live data unavailable", *C_DIM, size=11)
-        sketch_rect(cr, gx+2, gy+2, cw-4, 216, *gpu_col, thick=2.2, jitter=2.2)
+            glow_text(cr, gx+16, gy+90, "Live data unavailable", *C_DIM, size=13)
 
-        # ── Fans card ──
-        fx, fy = pad, pad + 240
-        neon_card(cr, fx, fy, cw, 220, C_BLUE)
-        glow_text(cr, fx+14, fy+28, "FANS", *C_BLUE, size=14, bold=True)
+        # ── Fans card ─────────────────────────────────────────────────────────
+        fx, fy = pad, r2y; fw, fh = col_w, rh2
+        neon_card(cr, fx, fy, fw, fh, C_BLUE)
+        glow_text(cr, fx+16, fy+28, "FANS", *C_BLUE, size=16, bold=True)
         if self.live.fans:
-            ty2 = fy + 54
-            for k, rpm in self.live.fans.items():
+            ty3 = fy+52
+            for k,rpm in list(self.live.fans.items())[:int((fh-60)/24)]:
+                col = C_GREEN if rpm<1500 else (C_YELLOW if rpm<3000 else C_ORANGE)
                 label = k.split(":")[-1][:20]
-                col = C_GREEN if rpm < 2000 else (C_YELLOW if rpm < 3500 else C_ORANGE)
-                glow_text(cr, fx+14, ty2, f"{label}  {rpm} RPM", *col, size=12)
-                hbar(cr, fx+14, ty2+4, cw-28, 8, min(rpm, 4000)/4000*100, col)
-                ty2 += 26
-                if ty2 > fy+200: break
+                glow_text(cr, fx+16, ty3, label, *col, size=12)
+                ext = cr.text_extents(f"{rpm} RPM")
+                glow_text(cr, fx+fw-ext.width-16, ty3, f"{rpm} RPM", *col, size=12, bold=True)
+                hbar(cr, fx+16, ty3+4, fw-32, 7, min(rpm,4500)/4500*100, col)
+                ty3 += 26
         else:
-            glow_text(cr, fx+14, fy+80, "No fan sensors detected", *C_DIM, size=12)
-        sketch_rect(cr, fx+2, fy+2, cw-4, 216, *C_BLUE, thick=2.2, jitter=2.2)
+            glow_text(cr, fx+16, fy+60, "no fan sensors", *C_DIM, size=13)
 
-        # ── Temps card ──
-        tx2, ty3 = pad*2+cw, pad + 240
-        neon_card(cr, tx2, ty3, cw, 220, C_ORANGE)
-        glow_text(cr, tx2+14, ty3+28, "THERMAL", *C_ORANGE, size=14, bold=True)
+        # ── Thermal card ──────────────────────────────────────────────────────
+        tx, ty_c = pad*2+col_w, r2y; tw, th = col_w, rh2
+        neon_card(cr, tx, ty_c, tw, th, C_ORANGE)
+        glow_text(cr, tx+16, ty_c+28, "THERMAL", *C_ORANGE, size=16, bold=True)
         if self.live.temps:
-            yt = ty3 + 54
-            for k, v in list(self.live.temps.items())[:7]:
+            ty4 = ty_c+52
+            for k,v in list(self.live.temps.items())[:int((th-60)/24)]:
                 col = temp_color(v)
                 label = k.split(":")[-1][:22]
-                glow_text(cr, tx2+14, yt, f"{label}  {v:.1f}°C", *col, size=12)
-                hbar(cr, tx2+14, yt+4, cw-28, 8, min(v,120)/120*100, col)
-                yt += 26
+                glow_text(cr, tx+16, ty4, label, *col, size=12)
+                ext = cr.text_extents(f"{v:.0f}°C")
+                glow_text(cr, tx+tw-ext.width-16, ty4, f"{v:.0f}°C", *col, size=12, bold=True)
+                hbar(cr, tx+16, ty4+4, tw-32, 7, min(v,120)/120*100, col)
+                ty4 += 26
         else:
-            glow_text(cr, tx2+14, ty3+80, "No temperature sensors", *C_DIM, size=12)
-        sketch_rect(cr, tx2+2, ty3+2, cw-4, 216, *C_ORANGE, thick=2.2, jitter=2.2)
+            glow_text(cr, tx+16, ty_c+60, "no temp sensors", *C_DIM, size=13)
 
-        # ── Battery ──
-        batt = self.live.battery or self.hw.get("battery")
+        # ── Battery card ──────────────────────────────────────────────────────
+        bx, by = pad, r3y; bw2, bh2 = col_w, rh3
+        batt = self.live.battery or self.hw.get("battery") or {}
+        batt_col = C_GREEN
+        neon_card(cr, bx, by, bw2, bh2, batt_col)
+        glow_text(cr, bx+16, by+30, "BATTERY", *batt_col, size=16, bold=True)
         if batt:
-            bx, by = pad, pad + 480
-            neon_card(cr, bx, by, cw, 120, C_GREEN)
-            glow_text(cr, bx+14, by+28, "BATTERY", *C_GREEN, size=14, bold=True)
-            pct = batt.get("pct", 0)
-            st  = batt.get("status", "Unknown")
-            col = C_GREEN if pct > 40 else (C_YELLOW if pct > 15 else C_RED)
-            glow_text(cr, bx+14, by+54, f"{pct}%  ·  {st}", *col, size=13)
-            hbar(cr, bx+14, by+70, cw-28, 12, pct, col)
-            sketch_rect(cr, bx+2, by+2, cw-4, 116, *C_GREEN, thick=2.2, jitter=2.2)
+            pct  = batt.get("pct",0); stat = batt.get("status","Unknown")
+            col  = C_GREEN if pct>40 else (C_YELLOW if pct>15 else C_RED)
+            glow_text_c(cr, bx+bw2/2, by+bh2*0.44, f"{pct}%", *col, size=38, bold=True)
+            glow_text_c(cr, bx+bw2/2, by+bh2*0.62, stat.upper(), *C_DIM, size=14)
+            hbar(cr, bx+20, by+bh2*0.70, bw2-40, 14, pct, col)
+            # Battery arc
+            arc_gauge(cr, bx+bw2//2, by+bh2*0.45, min(bw2,bh2)*0.28,
+                      pct, col, thick=10, label=f"{pct}%")
+        else:
+            glow_text_c(cr, bx+bw2//2, by+bh2//2, "No Battery / Desktop", *C_DIM, size=14)
 
-        # ── System profile indicator ──
-        px2, py2 = pad*2+cw, pad + 480
-        neon_card(cr, px2, py2, cw, 120, C_YELLOW)
-        glow_text(cr, px2+14, py2+28, "ACTIVE PROFILE", *C_YELLOW, size=14, bold=True)
-        glow_text(cr, px2+14, py2+58, self.live.governor.upper(), *C_YELLOW, size=22, bold=True)
-        bst = "BOOST ON" if self.live.boost else "BOOST OFF"
-        cr.select_font_face("Caveat", 0, 0); cr.set_font_size(11)
-        cr.set_source_rgba(*C_DIM, 0.80)
-        cr.move_to(px2+14, py2+84); cr.show_text(bst)
-        sketch_rect(cr, px2+2, py2+2, cw-4, 116, *C_YELLOW, thick=2.2, jitter=2.2)
+        # ── System info card ──────────────────────────────────────────────────
+        sx, sy = pad*2+col_w, r3y; sw2, sh2 = col_w, rh3
+        neon_card(cr, sx, sy, sw2, sh2, C_YELLOW)
+        glow_text(cr, sx+16, sy+30, "SYSTEM", *C_YELLOW, size=16, bold=True)
+        # Uptime
+        up = self.live.uptime_s
+        d,rem = divmod(up,86400); hh,rem2 = divmod(rem,3600); mm,ss = divmod(rem2,60)
+        upstr = f"{d}d {hh:02d}:{mm:02d}:{ss:02d}" if d else f"{hh:02d}:{mm:02d}:{ss:02d}"
+        glow_text(cr, sx+16, sy+60, f"uptime  {upstr}", *C_YELLOW, size=13)
+        # Governor + boost
+        gov_col = C_GREEN if self.live.governor=="performance" else \
+                  (C_YELLOW if self.live.governor=="schedutil" else C_BLUE)
+        glow_text(cr, sx+16, sy+86, f"governor  {self.live.governor}", *gov_col, size=13)
+        boost_col = C_GREEN if self.live.boost else C_DIM
+        glow_text(cr, sx+16, sy+110, f"boost  {'ON' if self.live.boost else 'off'}", *boost_col, size=13)
+        # Mem
+        if self.live.mem_total > 0:
+            mem_pct = self.live.mem_used/self.live.mem_total*100
+            mem_col = pct_color(mem_pct)
+            glow_text(cr, sx+16, sy+136,
+                      f"RAM  {self.live.mem_used:.1f} / {self.live.mem_total:.1f} GB",
+                      *mem_col, size=13)
+            hbar(cr, sx+16, sy+142, sw2-32, 7, mem_pct, mem_col)
+            if self.live.mem_hist:
+                sparkline(cr, sx+16, sy+sh2-54, sw2-32, 40,
+                          list(self.live.mem_hist), mem_col, 100)
+                glow_text(cr, sx+16, sy+sh2-12, "RAM% history", *C_DIM, size=10)
 
     # ══════════════════════════════════════════════════════════════════════════
-    #  FANS PAGE
+    #  FANS PAGE  — large arc-gauge cards per fan + PWM sliders
     # ══════════════════════════════════════════════════════════════════════════
+    def _build_fans(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
-    def _build_fans(self) -> Gtk.Widget:
-        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        outer.set_margin_top(16); outer.set_margin_bottom(16)
-        outer.set_margin_start(20); outer.set_margin_end(20)
-
-        # Header with preset buttons
-        top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        top.set_margin_bottom(16)
-        lbl = Gtk.Label(label="Fan Control")
-        lbl.add_css_class("neon-btn")  # reuse pill style
-        top.append(lbl)
+        # Preset toolbar
+        tb = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        tb.set_margin_top(14); tb.set_margin_start(18); tb.set_margin_end(18)
+        tb.set_margin_bottom(8)
+        lbl = Gtk.Label(label="Fan Preset:")
+        lbl.set_markup("<span font='Caveat 16' color='#88aaff'>Fan Preset:</span>")
+        tb.append(lbl)
         for name, pct, css in [
             ("Silent",      20,  "neon-btn-blue"),
-            ("Balanced",    50,  "neon-btn"),
+            ("Balanced",    50,  "neon-btn-green"),
             ("Performance", 80,  "neon-btn-orange"),
             ("Turbo",       100, "neon-btn-red"),
-            ("Auto",        -1,  "neon-btn-green"),
+            ("Auto",        -1,  "neon-btn-purple"),
         ]:
             b = Gtk.Button(label=name)
             b.add_css_class(css)
             b.connect("clicked", self._on_fan_preset, pct)
-            top.append(b)
-        outer.append(top)
+            tb.append(b)
+        box.append(tb)
 
-        # Fan rows from hwmon
-        self._fan_value_labels: dict = {}
-        self._fan_sliders = {}
-        devs = self.hw.get("hwmon", [])
-        has_fans = False
-        for dev in devs:
-            if not dev.get("fans") and not dev.get("pwms"):
-                continue
-            has_fans = True
-            # Section header
-            sh = Gtk.Label(label=f"  {dev['name'].upper()}  ")
-            sh.set_xalign(0)
-            cr_stub_color = C_BLUE
-            outer.append(sh)
-
-            for fan in dev.get("fans", []):
-                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-                row.set_margin_bottom(6)
-                lname = Gtk.Label(label=fan["label"])
-                lname.set_size_request(140, -1)
-                lname.set_xalign(0)
-                row.append(lname)
-                rpm_lbl = Gtk.Label(label="-- RPM")
-                rpm_lbl.set_size_request(100, -1)
-                rpm_lbl.set_xalign(1)
-                row.append(rpm_lbl)
-                fk = f"{dev['name']}:{fan['label']}"
-                self._fan_value_labels[fk] = rpm_lbl
-                outer.append(row)
-
-            for pwm in dev.get("pwms", []):
-                row2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-                row2.set_margin_bottom(12)
-                lbl2 = Gtk.Label(label=f"PWM {pwm['idx']}")
-                lbl2.set_size_request(140, -1); lbl2.set_xalign(0)
-                row2.append(lbl2)
-                scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 255, 1)
-                scale.add_css_class("blue")
-                scale.set_hexpand(True)
-                cur = self.live.pwms.get(pwm["path"], 128)
-                scale.set_value(cur)
-                scale.set_draw_value(True)
-                scale.connect("value-changed", self._on_pwm_changed, pwm)
-                row2.append(scale)
-                pct_lbl = Gtk.Label(label=f"{int(cur/255*100)}%")
-                pct_lbl.set_size_request(50, -1)
-                row2.append(pct_lbl)
-                scale._pct_label = pct_lbl
-                self._fan_sliders[pwm["path"]] = scale
-                outer.append(row2)
-
-        if not has_fans:
-            no_fans = Gtk.Label(label="No fan control sensors detected on this machine.\nCheck that lm-sensors is installed: sudo pacman -S lm_sensors\nThen run: sudo sensors-detect")
-            no_fans.set_xalign(0); no_fans.set_margin_top(40); no_fans.set_margin_start(20)
-            outer.append(no_fans)
-
-        # Live fan chart
-        da = self._da(self._draw_fan_chart, -1, 200)
-        da.set_vexpand(False)
-        da.set_margin_top(20)
+        # Cairo fan gauges + history chart
+        da = self._da(self._draw_fans)
         self._das["fans"] = da
-        outer.append(da)
+        da.set_vexpand(True)
+        box.append(da)
 
-        sw = Gtk.ScrolledWindow()
-        sw.set_child(outer)
-        return sw
+        # PWM sliders
+        self._fan_sliders = {}
+        self._fan_value_labels = {}
+        devs = self.hw.get("hwmon",[])
+        for dev in devs:
+            for pwm in dev.get("pwms",[]):
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+                row.set_margin_start(18); row.set_margin_end(18)
+                row.set_margin_bottom(8)
+                lbl2 = Gtk.Label(label=f"PWM {pwm['idx']}")
+                lbl2.set_size_request(120,-1); lbl2.set_xalign(0)
+                row.append(lbl2)
+                sc = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL,0,255,1)
+                sc.add_css_class("blue"); sc.set_hexpand(True)
+                cur = self.live.pwms.get(pwm["path"],128)
+                sc.set_value(cur); sc.set_draw_value(True)
+                sc.connect("value-changed", self._on_pwm_changed, pwm)
+                row.append(sc)
+                pct_lbl = Gtk.Label(label=f"{int(cur/255*100)}%")
+                pct_lbl.set_size_request(52,-1)
+                row.append(pct_lbl)
+                sc._pct_label = pct_lbl
+                self._fan_sliders[pwm["path"]] = sc
+                box.append(row)
+        return box
+
+    def _draw_fans(self, area, cr, w, h, _):
+        draw_nyxus_bg(cr, w, h)
+        fans = list(self.live.fans.items())
+        if not fans:
+            glow_text_c(cr, w//2, h//2-20, "No fan sensors detected", *C_DIM, size=16)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
+            cr.set_source_rgba(*C_DIM,0.60)
+            cr.move_to(w//2-160, h//2+10)
+            cr.show_text("Install lm_sensors: sudo pacman -S lm_sensors && sudo sensors-detect")
+            return
+
+        # Split: top = gauge cards, bottom = history sparklines
+        gauge_h = min(h*0.62, 300)
+        hist_h  = h - gauge_h - 16
+
+        # ── Fan gauge cards ────────────────────────────────────────────────────
+        n   = len(fans)
+        pad = 16
+        cw  = (w - pad*(n+1)) / max(n,1)
+        ch  = gauge_h - pad*2
+
+        for i, (k, rpm) in enumerate(fans):
+            cx  = pad + i*(cw+pad)
+            cy  = pad
+            col = C_GREEN if rpm<1500 else (C_YELLOW if rpm<3000 else (C_ORANGE if rpm<4000 else C_RED))
+            neon_card(cr, cx, cy, cw, ch, col)
+            label = k.split(":")[-1][:18]
+            dev   = k.split(":")[0][:12]
+            glow_text_c(cr, cx+cw//2, cy+22, label, *col, size=14, bold=True)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.set_source_rgba(*C_DIM,0.60)
+            cr.move_to(cx+8, cy+36); cr.show_text(dev)
+
+            # Big RPM gauge
+            R   = min(cw,ch)*0.28
+            gcx = cx + cw//2; gcy = cy + ch*0.48
+            max_rpm = max(rpm, 5000)
+            arc_gauge(cr, gcx, gcy, R, rpm/max_rpm*100, col, thick=14)
+            glow_text_c(cr, gcx, gcy+8, f"{rpm}", *col, size=22, bold=True)
+            glow_text_c(cr, gcx, gcy+30, "RPM", *C_DIM, size=12)
+
+            # Speed zone label
+            zone = "IDLE" if rpm<200 else ("SILENT" if rpm<1500 else
+                   ("MED" if rpm<3000 else ("HIGH" if rpm<4000 else "MAX")))
+            sketch_rect(cr, cx+cw//2-32, gcy+38, 64, 22, *col,
+                        thick=1.8, jitter=2.0, fill_rgba=(*col,0.08))
+            glow_text_c(cr, cx+cw//2, gcy+54, zone, *col, size=12, bold=True)
+
+            # Min RPM from hwmon
+            fan_info = next((f for dev_d in self.hw.get("hwmon",[])
+                            for f in dev_d["fans"]
+                            if f"{dev_d['name']}:{f['label']}"==k), {})
+            min_rpm = fan_info.get("min_rpm",0)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(10)
+            cr.set_source_rgba(*C_DIM,0.55)
+            cr.move_to(cx+8, cy+ch-8); cr.show_text(f"min {min_rpm} RPM")
+
+            # History sparkline at bottom of card
+            hist_vals = list(self.live.fan_hist.get(k,[]))
+            if hist_vals and len(hist_vals) > 2:
+                sl_h = ch*0.16; sl_y = cy+ch-sl_h-18
+                sparkline(cr, cx+8, sl_y, cw-16, sl_h, hist_vals, col,
+                          max_val=max(max(hist_vals),5000))
+
+        # ── Fan history panel ──────────────────────────────────────────────────
+        hy = gauge_h + 8
+        cr.set_source_rgba(*C_PANEL,0.70); cr.rectangle(pad, hy, w-pad*2, hist_h-8); cr.fill()
+        sketch_rect(cr, pad, hy, w-pad*2, hist_h-8, *C_BLUE, thick=2.0, jitter=2.0)
+        glow_text(cr, pad+12, hy+22, "Fan Speed History  (60 min)", *C_BLUE, size=13, bold=True)
+        for i,(k,_) in enumerate(fans):
+            col = PALETTE[i%len(PALETTE)]
+            hist_vals = [v for v in self.live.fan_hist.get(k,[])]
+            if hist_vals and len(hist_vals)>2:
+                sparkline(cr, pad+12, hy+30, w-pad*2-24, hist_h-48,
+                          hist_vals, col, max_val=max(max(hist_vals),5000))
+            label = k.split(":")[-1][:16]
+            last  = list(self.live.fan_hist.get(k,[[-1]])); last_v = last[-1] if last else 0
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.set_source_rgba(*col,0.80)
+            cr.move_to(pad+14+i*160, hy+hist_h-12); cr.show_text(f"{label}: {last_v} rpm")
 
     def _on_fan_preset(self, btn, pct):
         self._fan_manual = pct >= 0
-        for dev in self.hw.get("hwmon", []):
-            for pwm in dev.get("pwms", []):
+        for dev in self.hw.get("hwmon",[]):
+            for pwm in dev.get("pwms",[]):
                 if pct < 0:
-                    _write_priv(pwm["enable_path"], "2")  # auto
+                    _write_priv(pwm["enable_path"],"2")
                     if pwm["path"] in self._fan_sliders:
                         self._fan_sliders[pwm["path"]].set_sensitive(False)
                 else:
-                    _write_priv(pwm["enable_path"], "1")
-                    val = int(pct / 100 * 255)
-                    ok, err = _write_priv(pwm["path"], str(val))
+                    _write_priv(pwm["enable_path"],"1")
+                    val = int(pct/100*255)
+                    ok,err = _write_priv(pwm["path"],str(val))
                     if pwm["path"] in self._fan_sliders:
                         self._fan_sliders[pwm["path"]].set_value(val)
                         self._fan_sliders[pwm["path"]].set_sensitive(True)
                     if not ok:
-                        self._toast(f"Fan control needs elevated permissions: {err}")
-                        return
-        label = {-1:"Auto", 20:"Silent", 50:"Balanced", 80:"Performance", 100:"Turbo"}.get(pct, f"{pct}%")
-        self._toast(f"Fans set to {label}" + (" mode" if pct >= 0 else " (controlled by motherboard)"))
+                        self._toast(f"Fan control needs elevated permissions: {err}"); return
+        names = {-1:"Auto",20:"Silent",50:"Balanced",80:"Performance",100:"Turbo"}
+        self._toast(f"Fans → {names.get(pct,f'{pct}%')}")
 
     def _on_pwm_changed(self, scale, pwm):
-        val = int(scale.get_value())
-        pct = int(val / 255 * 100)
-        if hasattr(scale, "_pct_label"):
-            scale._pct_label.set_text(f"{pct}%")
+        val = int(scale.get_value()); pct = int(val/255*100)
+        if hasattr(scale,"_pct_label"): scale._pct_label.set_text(f"{pct}%")
         if self._fan_manual:
-            _write_priv(pwm["enable_path"], "1")
-            _write_priv(pwm["path"], str(val))
-
-    def _refresh_fan_labels(self):
-        for k, lbl in self._fan_value_labels.items():
-            rpm = self.live.fans.get(k)
-            if rpm is not None:
-                lbl.set_text(f"{rpm} RPM")
-
-    def _draw_fan_chart(self, area, cr, w, h, _):
-        draw_nyxus_bg(cr, w, h)
-        dot_grid(cr, 0, 0, w, h, 24)
-        glow_text(cr, 12, 22, "Fan Speed History", *C_BLUE, size=12, bold=True)
-        if not self.live.fan_hist:
-            return
-        ch_x, ch_y, ch_w, ch_h = 12, 32, w-24, h-44
-        for i, (k, hist) in enumerate(self.live.fan_hist.items()):
-            vals = [v for _, v in hist]
-            if not vals: continue
-            col = PALETTE[i % len(PALETTE)]
-            sparkline(cr, ch_x, ch_y, ch_w, ch_h, vals, col,
-                      max_val=max(max(vals), 4000))
-            last = vals[-1] if vals else 0
-            cr.select_font_face("Caveat", 0, 0); cr.set_font_size(10)
-            cr.set_source_rgba(*col, 0.80)
-            label = k.split(":")[-1][:14]
-            cr.move_to(ch_x + 4 + i*110, ch_y + ch_h - 4)
-            cr.show_text(f"{label}: {last} RPM")
+            _write_priv(pwm["enable_path"],"1")
+            _write_priv(pwm["path"],str(val))
 
     # ══════════════════════════════════════════════════════════════════════════
-    #  THERMAL PAGE
+    #  THERMAL PAGE  — sensor cards with big numbers, history sparklines, thresholds
     # ══════════════════════════════════════════════════════════════════════════
-
-    def _build_thermal(self) -> Gtk.Widget:
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        da  = self._da(self._draw_thermal, -1, -1)
-        da.set_vexpand(True)
+    def _build_thermal(self):
+        da = self._da(self._draw_thermal)
         self._das["thermal"] = da
-        box.append(da)
-        return box
+        return da
 
     def _draw_thermal(self, area, cr, w, h, _):
         draw_nyxus_bg(cr, w, h)
-        dot_grid(cr, 0, 0, w, h, 28)
-        glow_text(cr, 14, 32, "Thermal Monitoring  —  60 min history", *C_ORANGE, size=15, bold=True)
+        glow_text(cr, 16, 32, "THERMAL MONITORING", *C_ORANGE, size=18, bold=True)
         rainbow_bar(cr, 0, 40, w, 2)
 
+        # Colour key
+        zones = [("< 60°C COOL",C_GREEN),("60–80 WARM",C_YELLOW),
+                 ("80–90 HOT",C_ORANGE),("> 90 CRIT",C_RED)]
+        for i,(zt,zc) in enumerate(zones):
+            cr.set_source_rgba(*zc,0.85); cr.arc(16+i*120+4, 56, 4, 0, math.pi*2); cr.fill()
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.set_source_rgba(*zc,0.80); cr.move_to(26+i*120,60); cr.show_text(zt)
+
         if not self.live.temps:
-            glow_text(cr, w//2-120, h//2, "No temperature sensors detected", *C_DIM, size=14)
+            glow_text_c(cr,w//2,h//2,"No temperature sensors detected",*C_DIM,size=16)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
+            cr.set_source_rgba(*C_DIM,0.55)
+            cr.move_to(w//2-200, h//2+28)
+            cr.show_text("Install: sudo pacman -S lm_sensors && sudo sensors-detect && sudo sensors")
             return
 
         sensors = list(self.live.temps.items())
-        cols = min(len(sensors), 3)
-        rows = math.ceil(len(sensors) / cols)
-        pad  = 14
-        cw   = (w - pad*(cols+1)) / cols
-        ch   = min(180, (h - 80 - pad*(rows+1)) / max(rows, 1))
+        # Layout: fit sensors in a grid filling the space
+        pad = 14
+        top_off = 72
+        avail_w = w - pad
+        avail_h = h - top_off - pad
+        cols = min(len(sensors), max(1, int(avail_w / 260)))
+        rows = math.ceil(len(sensors)/cols)
+        cw   = (avail_w - pad*(cols+1)) / cols
+        rh   = (avail_h - pad*(rows+1)) / max(rows,1)
+        ch   = max(rh, 140)
 
-        for i, (k, cur_temp) in enumerate(sensors):
-            col = i % cols
-            row = i // cols
-            cx  = pad + col * (cw + pad)
-            cy  = 54 + row * (ch + pad)
-            color = temp_color(cur_temp)
+        for idx,(k,cur) in enumerate(sensors):
+            col_i = idx % cols; row_i = idx // cols
+            cx = pad + col_i*(cw+pad)
+            cy = top_off + row_i*(ch+pad)
+            color = temp_color(cur)
+            neon_card(cr, cx, cy, cw, ch, color, tint=0.05)
 
-            neon_card(cr, cx, cy, cw, ch, color)
-            label = k.split(":")[-1][:24]
-            dev   = k.split(":")[0][:12]
-            glow_text(cr, cx+12, cy+22, label, *color, size=12, bold=True)
-            cr.select_font_face("Caveat", 0, 0); cr.set_font_size(10)
-            cr.set_source_rgba(*C_DIM, 0.70)
-            cr.move_to(cx+12, cy+36); cr.show_text(dev)
+            label = k.split(":")[-1][:22]
+            dev   = k.split(":")[0][:14]
+            glow_text(cr, cx+12, cy+24, label, *color, size=14, bold=True)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.set_source_rgba(*C_DIM,0.60)
+            cr.move_to(cx+12, cy+40); cr.show_text(dev)
 
-            # Big temp
-            glow_text(cr, cx+cw-70, cy+22, f"{cur_temp:.1f}°C", *color, size=18, bold=True)
+            # Big temperature number
+            big_y = cy + ch*0.44
+            glow_text_c(cr, cx+cw//2, big_y, f"{cur:.1f}°C", *color, size=28, bold=True)
 
-            # Sparkline
-            hist_vals = [v for _, v in self.live.temp_hist.get(k, [])]
-            if hist_vals:
-                sparkline(cr, cx+8, cy+46, cw-16, ch-58, hist_vals, color, max_val=100)
+            # Threshold info
+            hw_info = next((t for d in self.hw.get("hwmon",[])
+                              for t in d["temps"]
+                              if f"{d['name']}:{t['label']}"==k), {})
+            crit = hw_info.get("crit"); mx = hw_info.get("max")
+            info_parts = []
+            if mx:   info_parts.append(f"max {mx}°")
+            if crit: info_parts.append(f"crit {crit}°")
+            if info_parts:
+                cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+                cr.set_source_rgba(*C_RED,0.70)
+                cr.move_to(cx+12, cy+ch*0.52+4); cr.show_text("  /  ".join(info_parts))
 
-            # Crit line
-            temp_info = next(
-                (t for dev_d in self.hw.get("hwmon",[])
-                   for t in dev_d["temps"]
-                   if f"{dev_d['name']}:{t['label']}" == k), None)
-            if temp_info and temp_info.get("crit"):
-                crit = temp_info["crit"]
-                yc   = cy + 46 + (ch-58) - (crit/100)*(ch-58)*0.88
-                cr.set_source_rgba(*C_RED, 0.45); cr.set_line_width(1)
-                cr.move_to(cx+8, yc); cr.line_to(cx+cw-8, yc); cr.stroke()
-                cr.select_font_face("Caveat", 0, 0); cr.set_font_size(9)
-                cr.set_source_rgba(*C_RED, 0.70)
-                cr.move_to(cx+cw-44, yc-2); cr.show_text(f"crit {crit}°")
+            # Warning badge if hot
+            if cur >= 80:
+                badge_txt = "!!  CRITICAL" if cur>=90 else "!  HOT"
+                sketch_rect(cr, cx+cw-84, cy+6, 78, 20, *C_RED,
+                            thick=2.0, jitter=2.0, fill_rgba=(*C_RED,0.15))
+                glow_text_c(cr, cx+cw-45, cy+20, badge_txt, *C_RED, size=10, bold=True)
 
-            sketch_rect(cr, cx+2, cy+2, cw-4, ch-4, *color, thick=2.2, jitter=2.2)
+            # Sparkline history
+            hist_vals = list(self.live.temp_hist.get(k,[]))
+            sl_top = cy + ch*0.58
+            sl_h   = ch - ch*0.58 - 12
+            if hist_vals and sl_h > 20:
+                sparkline(cr, cx+12, sl_top, cw-24, sl_h, hist_vals, color, max_val=100)
+                # Crit threshold line
+                if crit and sl_h > 0:
+                    yc = sl_top + sl_h - (crit/100)*sl_h*0.88
+                    cr.set_source_rgba(*C_RED,0.50); cr.set_line_width(1.2)
+                    cr.move_to(cx+12,yc); cr.line_to(cx+cw-12,yc); cr.stroke()
+            glow_text(cr, cx+12, cy+ch-4, "60 min history", *C_DIM, size=9)
 
     # ══════════════════════════════════════════════════════════════════════════
-    #  PROFILES PAGE
+    #  PROFILES PAGE  — visual profile tiles + editor
     # ══════════════════════════════════════════════════════════════════════════
+    def _build_profiles(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
-    def _build_profiles(self) -> Gtk.Widget:
-        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        box.set_margin_top(20); box.set_margin_bottom(20)
-        box.set_margin_start(20); box.set_margin_end(20)
-        box.set_spacing(20)
+        # Profile tiles (Cairo)
+        tiles_da = self._da(self._draw_profile_tiles, -1, -1, expand=False)
+        tiles_da.set_size_request(-1, 200)
+        tiles_da.set_content_width(800)
+        tiles_da.set_draw_func(self._draw_profile_tiles, None)
+        # Allow click selection
+        click = Gtk.GestureClick()
+        click.connect("pressed", self._on_profile_tile_click)
+        tiles_da.add_controller(click)
+        self._tiles_da = tiles_da
+        self._das["profile_tiles"] = tiles_da
+        box.append(tiles_da)
 
-        # Left: profile list
-        left = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        left.set_size_request(280, -1)
+        # Editor area
+        editor = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+        editor.set_margin_top(16); editor.set_margin_start(20)
+        editor.set_margin_end(20); editor.set_margin_bottom(16)
+        editor.set_vexpand(True)
 
-        list_lbl = Gtk.Label(label="Saved Profiles")
-        list_lbl.set_xalign(0)
-        left.append(list_lbl)
+        # Left: detail canvas
+        detail_da = self._da(self._draw_profile_detail)
+        self._das["profile_detail"] = detail_da
+        editor.append(detail_da)
 
-        self._prof_listbox = Gtk.ListBox()
-        self._prof_listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
-        self._prof_listbox.connect("row-selected", self._on_prof_selected)
-        self._refresh_profile_list()
-        left.append(self._prof_listbox)
+        # Right: controls
+        ctrl = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        ctrl.set_size_request(280, -1)
 
-        apply_btn = Gtk.Button(label="⚡ Apply Profile")
-        apply_btn.add_css_class("neon-btn")
-        apply_btn.connect("clicked", self._on_apply_profile)
-        left.append(apply_btn)
+        def _row(label_txt, widget):
+            r = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            lbl = Gtk.Label(label=label_txt)
+            lbl.set_size_request(120,-1); lbl.set_xalign(0)
+            r.append(lbl); r.append(widget)
+            return r
 
-        new_btn = Gtk.Button(label="+ New Profile")
-        new_btn.add_css_class("neon-btn-green")
-        new_btn.connect("clicked", self._on_new_profile)
-        left.append(new_btn)
-
-        del_btn = Gtk.Button(label="Delete")
-        del_btn.add_css_class("neon-btn-red")
-        del_btn.connect("clicked", self._on_delete_profile)
-        left.append(del_btn)
-
-        box.append(left)
-
-        # Right: detail editor
-        right = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
-        right.set_hexpand(True)
-
-        da = self._da(self._draw_profile_detail, -1, 300)
-        self._das["profiles_da"] = da
-        right.append(da)
-
-        # Governor selector
-        gov_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        Gtk.Label(label="Governor:")
-        gov_lbl = Gtk.Label(label="Governor:")
-        gov_lbl.set_size_request(110, -1); gov_lbl.set_xalign(0)
-        gov_box.append(gov_lbl)
-        self._gov_combo = Gtk.DropDown.new_from_strings(
-            self.hw.get("cpu", {}).get("governors", ["powersave","schedutil","performance"]))
-        gov_box.append(self._gov_combo)
-        right.append(gov_box)
-
-        # Boost toggle
-        boost_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        boost_lbl = Gtk.Label(label="CPU Boost:")
-        boost_lbl.set_size_request(110, -1); boost_lbl.set_xalign(0)
-        boost_box.append(boost_lbl)
-        self._boost_sw = Gtk.Switch()
-        self._boost_sw.set_active(True)
-        boost_box.append(self._boost_sw)
-        right.append(boost_box)
-
-        # Fan PWM
-        fan_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        fan_lbl = Gtk.Label(label="Fan %:")
-        fan_lbl.set_size_request(110, -1); fan_lbl.set_xalign(0)
-        fan_box.append(fan_lbl)
-        self._fan_pct_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 100, 1)
-        self._fan_pct_scale.add_css_class("blue")
-        self._fan_pct_scale.set_value(50)
-        self._fan_pct_scale.set_hexpand(True)
-        self._fan_pct_scale.set_draw_value(True)
-        fan_box.append(self._fan_pct_scale)
-        right.append(fan_box)
-
-        # Name entry
-        name_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        name_lbl = Gtk.Label(label="Name:")
-        name_lbl.set_size_request(110, -1); name_lbl.set_xalign(0)
-        name_box.append(name_lbl)
         self._prof_name_entry = Gtk.Entry()
         self._prof_name_entry.set_placeholder_text("Profile name...")
         self._prof_name_entry.set_hexpand(True)
-        name_box.append(self._prof_name_entry)
-        right.append(name_box)
+        ctrl.append(_row("Name:", self._prof_name_entry))
 
-        # Description
-        desc_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        desc_lbl = Gtk.Label(label="Description:")
-        desc_lbl.set_size_request(110, -1); desc_lbl.set_xalign(0)
-        desc_box.append(desc_lbl)
         self._prof_desc_entry = Gtk.Entry()
-        self._prof_desc_entry.set_placeholder_text("Short description...")
+        self._prof_desc_entry.set_placeholder_text("Description...")
         self._prof_desc_entry.set_hexpand(True)
-        desc_box.append(self._prof_desc_entry)
-        right.append(desc_box)
+        ctrl.append(_row("Description:", self._prof_desc_entry))
 
-        save_btn = Gtk.Button(label="Save Changes")
-        save_btn.add_css_class("neon-btn-purple" if False else "neon-btn")
-        save_btn.connect("clicked", self._on_save_profile_edit)
-        right.append(save_btn)
+        govs = self.hw.get("cpu",{}).get("governors",["powersave","schedutil","performance"])
+        self._gov_combo = Gtk.DropDown.new_from_strings(govs)
+        ctrl.append(_row("Governor:", self._gov_combo))
 
-        box.append(right)
-        self._selected_prof_idx = 0
+        self._boost_sw = Gtk.Switch(); self._boost_sw.set_active(True)
+        ctrl.append(_row("CPU Boost:", self._boost_sw))
+
+        self._fan_pct_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL,0,100,1)
+        self._fan_pct_scale.add_css_class("blue"); self._fan_pct_scale.set_value(50)
+        self._fan_pct_scale.set_hexpand(True); self._fan_pct_scale.set_draw_value(True)
+        ctrl.append(_row("Fan %:", self._fan_pct_scale))
+
+        save_btn = Gtk.Button(label="💾  Save Profile")
+        save_btn.add_css_class("neon-btn"); save_btn.connect("clicked", self._on_save_profile_edit)
+        ctrl.append(save_btn)
+
+        apply_btn = Gtk.Button(label="⚡  Apply Now")
+        apply_btn.add_css_class("neon-btn-green"); apply_btn.connect("clicked", self._on_apply_profile)
+        ctrl.append(apply_btn)
+
+        new_btn = Gtk.Button(label="+ New Profile")
+        new_btn.add_css_class("neon-btn-blue"); new_btn.connect("clicked", self._on_new_profile)
+        ctrl.append(new_btn)
+
+        del_btn = Gtk.Button(label="Delete Profile")
+        del_btn.add_css_class("neon-btn-red"); del_btn.connect("clicked", self._on_delete_profile)
+        ctrl.append(del_btn)
+
+        editor.append(ctrl)
+        box.append(editor)
+        self._load_profile_into_editor(0)
         return box
 
-    def _refresh_profile_list(self):
-        while True:
-            row = self._prof_listbox.get_row_at_index(0) if hasattr(self, "_prof_listbox") else None
-            if row is None: break
-            self._prof_listbox.remove(row)
-        for i, p in enumerate(self.profiles):
-            lbl = Gtk.Label(label=f"  {p['name']}")
-            lbl.set_xalign(0)
-            lbl.set_size_request(240, 36)
-            row = Gtk.ListBoxRow()
-            row.set_child(lbl)
-            self._prof_listbox.append(row)
+    def _draw_profile_tiles(self, area, cr, w, h, _):
+        draw_nyxus_bg(cr, w, h)
+        glow_text(cr, 16, 28, "SAVED PROFILES — click to select", *C_PURPLE, size=15, bold=True)
+        rainbow_bar(cr, 0, 34, w, 2)
+        n   = len(self.profiles)
+        if n == 0: return
+        pad = 14
+        tw  = (w - pad*(n+1)) / n
+        th  = h - 44 - pad*2
+        tile_colors = [C_BLUE, C_GREEN, C_ORANGE, C_PINK, C_PURPLE, C_YELLOW]
+        for i,p in enumerate(self.profiles):
+            tx  = pad + i*(tw+pad)
+            ty  = 42
+            col = tile_colors[i % len(tile_colors)]
+            active = (i == self._selected_prof_idx)
+            tint   = 0.18 if active else 0.06
+            thick  = 3.5  if active else 2.0
+            neon_card(cr, tx, ty, tw, th, col, tint=tint, jitter=3.5 if active else 2.0)
+            if active:
+                sketch_rect(cr, tx, ty, tw, th, *col, thick=thick+1, jitter=4.0)
+            glow_text_c(cr, tx+tw//2, ty+28, p.get("name","Profile"), *col, size=16, bold=True)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.set_source_rgba(*C_DIM,0.70)
+            desc = p.get("description","")[:28]
+            ext  = cr.text_extents(desc); dx = tx+tw//2-ext.width//2
+            cr.move_to(dx, ty+46); cr.show_text(desc)
+            items = [
+                (f"gov: {p.get('governor','?')}", C_YELLOW),
+                (f"boost: {'ON' if p.get('boost') else 'off'}", C_GREEN if p.get("boost") else C_DIM),
+                (f"fans: {p.get('fan_pwm_pct',50)}%", C_BLUE),
+            ]
+            for j,(txt,icol) in enumerate(items):
+                glow_text_c(cr, tx+tw//2, ty+66+j*20, txt, *icol, size=12)
+            if active:
+                glow_text_c(cr, tx+tw//2, ty+th-14, "● SELECTED", *col, size=11, bold=True)
+
+    def _on_profile_tile_click(self, gesture, n_press, x, y):
+        w   = self._tiles_da.get_width()
+        h   = self._tiles_da.get_height()
+        n   = len(self.profiles)
+        if n == 0: return
+        pad = 14
+        tw  = (w - pad*(n+1)) / n
+        idx = int((x - pad) / (tw + pad))
+        if 0 <= idx < n:
+            self._selected_prof_idx = idx
+            self._load_profile_into_editor(idx)
+            for da in [self._tiles_da, self._das["profile_detail"]]:
+                da.queue_draw()
+
+    def _load_profile_into_editor(self, idx):
+        if not (0 <= idx < len(self.profiles)): return
+        p    = self.profiles[idx]
+        govs = self.hw.get("cpu",{}).get("governors",["schedutil"])
+        self._prof_name_entry.set_text(p.get("name",""))
+        self._prof_desc_entry.set_text(p.get("description",""))
+        gov  = p.get("governor","schedutil")
+        if gov in govs:
+            self._gov_combo.set_selected(govs.index(gov))
+        self._boost_sw.set_active(p.get("boost",True))
+        self._fan_pct_scale.set_value(p.get("fan_pwm_pct",50))
+
+    def _draw_profile_detail(self, area, cr, w, h, _):
+        draw_nyxus_bg(cr, w, h)
+        idx = self._selected_prof_idx
+        if not (0 <= idx < len(self.profiles)): return
+        p     = self.profiles[idx]
+        col   = [C_BLUE,C_GREEN,C_ORANGE,C_PINK,C_PURPLE,C_YELLOW][idx%6]
+        name  = p.get("name","Profile")
+        desc  = p.get("description","")
+        gov   = p.get("governor","?")
+        boost = p.get("boost",True)
+        fan   = p.get("fan_pwm_pct",50)
+
+        sketch_rect(cr, 12, 12, w-24, h-24, *col, thick=3.0, jitter=4.0,
+                    fill_rgba=(*col, 0.04))
+        glow_text_c(cr, w//2, 52, name, *col, size=30, bold=True)
+        cr.select_font_face("Caveat",0,0); cr.set_font_size(14)
+        cr.set_source_rgba(*C_DIM,0.80)
+        ext = cr.text_extents(desc); cr.move_to(w//2-ext.width//2, 76); cr.show_text(desc)
+
+        # Governor badge
+        gbc = C_GREEN if gov=="performance" else (C_YELLOW if gov=="schedutil" else C_BLUE)
+        sketch_rect(cr, w//2-80, 94, 160, 30, *gbc,
+                    thick=2.0, jitter=2.5, fill_rgba=(*gbc,0.10))
+        glow_text_c(cr, w//2, 114, gov.upper(), *gbc, size=14, bold=True)
+
+        # Boost badge
+        bc = C_GREEN if boost else C_DIM
+        sketch_rect(cr, w//2-50, 134, 100, 26, *bc,
+                    thick=2.0, jitter=2.0, fill_rgba=(*bc,0.10))
+        glow_text_c(cr, w//2, 151, f"BOOST {'ON' if boost else 'OFF'}", *bc, size=13, bold=True)
+
+        # Fan gauge
+        glow_text(cr, 24, 186, "Fan Speed", *C_BLUE, size=13, bold=True)
+        hbar(cr, 24, 192, w-48, 14, fan, C_BLUE)
+        glow_text_c(cr, w//2, 218, f"{fan}%", *C_BLUE, size=16, bold=True)
+
+        # Quick stats
+        stats = [
+            ("Governor",    gov,            gbc),
+            ("CPU Boost",   "ON" if boost else "off", bc),
+            ("Fan Speed",   f"{fan}%",      C_BLUE),
+        ]
+        sy = 240
+        for lbl,val,sc in stats:
+            glow_text(cr, 24, sy, lbl+":", *C_DIM, size=13)
+            ext = cr.text_extents(val)
+            glow_text(cr, w-ext.width-28, sy, val, *sc, size=13, bold=True)
+            sy += 28
+
+        # Apply indicator
+        cur_gov = self.live.governor
+        is_active = (gov==cur_gov)
+        if is_active:
+            sketch_rect(cr, w//2-70, h-40, 140, 28, *C_GREEN,
+                        thick=2.0, jitter=2.0, fill_rgba=(*C_GREEN,0.12))
+            glow_text_c(cr, w//2, h-22, "● ACTIVE NOW", *C_GREEN, size=13, bold=True)
 
     def _on_prof_selected(self, lb, row):
         if row is None: return
         idx = row.get_index()
         self._selected_prof_idx = idx
-        p = self.profiles[idx]
-        self._prof_name_entry.set_text(p.get("name",""))
-        self._prof_desc_entry.set_text(p.get("description",""))
-        govs = self.hw.get("cpu",{}).get("governors", [])
-        gov  = p.get("governor","schedutil")
-        if gov in govs:
-            self._gov_combo.set_selected(govs.index(gov))
-        self._boost_sw.set_active(p.get("boost", True))
-        self._fan_pct_scale.set_value(p.get("fan_pwm_pct", 50))
-        if "profiles_da" in self._das:
-            self._das["profiles_da"].queue_draw()
+        self._load_profile_into_editor(idx)
+        for k in ("profile_tiles","profile_detail"):
+            if k in self._das: self._das[k].queue_draw()
 
     def _on_apply_profile(self, *_):
         idx = self._selected_prof_idx
@@ -1285,31 +1409,30 @@ class NyxusControl(Gtk.Application):
             self._toast("  ·  ".join(msgs[:3]))
 
     def _on_new_profile(self, *_):
-        self.profiles.append({
-            "name": "New Profile",
-            "governor": "schedutil",
-            "boost": True,
-            "fan_pwm_pct": 50,
-            "description": "Custom profile",
-        })
+        self.profiles.append({"name":"New Profile","governor":"schedutil",
+                               "boost":True,"fan_pwm_pct":50,"description":"Custom"})
         save_profiles(self.profiles)
-        self._refresh_profile_list()
-        self._toast("New profile created — edit and save it")
+        self._selected_prof_idx = len(self.profiles)-1
+        self._load_profile_into_editor(self._selected_prof_idx)
+        for k in ("profile_tiles","profile_detail"):
+            if k in self._das: self._das[k].queue_draw()
+        self._toast("New profile created")
 
     def _on_delete_profile(self, *_):
-        idx = getattr(self, "_selected_prof_idx", 0)
+        idx = self._selected_prof_idx
         if 0 <= idx < len(self.profiles) and len(self.profiles) > 1:
-            name = self.profiles[idx]["name"]
-            self.profiles.pop(idx)
-            self._selected_prof_idx = max(0, idx-1)
+            name = self.profiles.pop(idx)["name"]
+            self._selected_prof_idx = max(0,idx-1)
             save_profiles(self.profiles)
-            self._refresh_profile_list()
+            self._load_profile_into_editor(self._selected_prof_idx)
+            for k in ("profile_tiles","profile_detail"):
+                if k in self._das: self._das[k].queue_draw()
             self._toast(f"Deleted: {name}")
 
     def _on_save_profile_edit(self, *_):
-        idx = getattr(self, "_selected_prof_idx", 0)
+        idx = self._selected_prof_idx
         if 0 <= idx < len(self.profiles):
-            govs = self.hw.get("cpu",{}).get("governors", ["schedutil"])
+            govs = self.hw.get("cpu",{}).get("governors",["schedutil"])
             sel  = self._gov_combo.get_selected()
             gov  = govs[sel] if sel < len(govs) else "schedutil"
             self.profiles[idx].update({
@@ -1320,454 +1443,499 @@ class NyxusControl(Gtk.Application):
                 "fan_pwm_pct": int(self._fan_pct_scale.get_value()),
             })
             save_profiles(self.profiles)
-            self._refresh_profile_list()
+            for k in ("profile_tiles","profile_detail"):
+                if k in self._das: self._das[k].queue_draw()
             self._toast(f"Saved: {self.profiles[idx]['name']}")
 
-    def _draw_profile_detail(self, area, cr, w, h, _):
-        draw_nyxus_bg(cr, w, h)
-        dot_grid(cr, 0, 0, w, h, 26)
-        idx = getattr(self, "_selected_prof_idx", 0)
-        if not (0 <= idx < len(self.profiles)):
-            return
-        p = self.profiles[idx]
-        name = p.get("name", "Profile")
-        glow_text(cr, 20, 44, name, *C_PURPLE, size=26, bold=True)
-        cr.select_font_face("Caveat", 0, 0); cr.set_font_size(13)
-        cr.set_source_rgba(*C_DIM, 0.80)
-        cr.move_to(20, 68); cr.show_text(p.get("description",""))
-        items = [
-            (f"Governor:  {p.get('governor','?')}", C_YELLOW),
-            (f"CPU Boost: {'ON' if p.get('boost') else 'OFF'}", C_GREEN if p.get('boost') else C_DIM),
-            (f"Fan Speed: {p.get('fan_pwm_pct',50)}%", C_BLUE),
-        ]
-        for i, (txt, col) in enumerate(items):
-            glow_text(cr, 20, 100 + i*28, txt, *col, size=14)
-        # Fan pct bar
-        hbar(cr, 20, 190, w-40, 14, p.get("fan_pwm_pct",50), C_BLUE)
-        sketch_rect(cr, 8, 8, w-16, h-16, *C_PURPLE, thick=2.0, jitter=2.2)
-
     # ══════════════════════════════════════════════════════════════════════════
-    #  RGB PAGE
+    #  RGB PAGE  — paint-blob palette + OpenRGB integration
     # ══════════════════════════════════════════════════════════════════════════
-
-    def _build_rgb(self) -> Gtk.Widget:
+    def _build_rgb(self):
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        box.set_margin_top(20); box.set_margin_bottom(20)
-        box.set_margin_start(20); box.set_margin_end(20)
-        box.set_spacing(14)
-        da = self._da(self._draw_rgb, -1, 200)
+        da  = self._da(self._draw_rgb)
         self._das["rgb"] = da
         box.append(da)
 
-        # OpenRGB connection status
-        status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        self._rgb_status_lbl = Gtk.Label(label="Checking OpenRGB...")
-        self._rgb_status_lbl.set_xalign(0)
-        status_box.append(self._rgb_status_lbl)
-        conn_btn = Gtk.Button(label="Connect to OpenRGB")
-        conn_btn.add_css_class("neon-btn-green")
-        conn_btn.connect("clicked", self._rgb_connect)
-        status_box.append(conn_btn)
-        box.append(status_box)
-
-        # NYXUS preset colors
-        presets_lbl = Gtk.Label(label="NYXUS RGB Presets")
-        presets_lbl.set_xalign(0)
-        box.append(presets_lbl)
-        presets_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        for name, hex_col, css in [
-            ("NyX Default", "#ff00ff", "neon-btn"),
-            ("Chill Blue",  "#0088ff", "neon-btn-blue"),
-            ("Ghost Green", "#39ff14", "neon-btn-green"),
-            ("Solar",       "#ff5500", "neon-btn-orange"),
-            ("All Off",     "#000000", "neon-btn-red"),
+        # Color preset buttons
+        btn_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_row.set_margin_start(18); btn_row.set_margin_end(18)
+        btn_row.set_margin_top(8); btn_row.set_margin_bottom(12)
+        for name, col, css in [
+            ("Pink",   C_PINK,   "neon-btn"),
+            ("Purple", C_PURPLE, "neon-btn-purple"),
+            ("Blue",   C_BLUE,   "neon-btn-blue"),
+            ("Green",  C_GREEN,  "neon-btn-green"),
+            ("Yellow", C_YELLOW, "neon-btn-yellow"),
+            ("Orange", C_ORANGE, "neon-btn-orange"),
+            ("Red",    C_RED,    "neon-btn-red"),
+            ("Cycle",  None,     "neon-btn-blue"),
         ]:
             b = Gtk.Button(label=name)
             b.add_css_class(css)
-            b.connect("clicked", self._on_rgb_preset, hex_col)
-            presets_row.append(b)
-        box.append(presets_row)
+            b.connect("clicked", self._on_rgb_color, col, name)
+            btn_row.append(b)
+        box.append(btn_row)
 
-        # Audio sync toggle
-        async_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        al = Gtk.Label(label="Audio Sync (requires OpenRGB plug-in):")
-        al.set_xalign(0)
-        async_box.append(al)
-        self._audio_sync_sw = Gtk.Switch()
-        async_box.append(self._audio_sync_sw)
-        box.append(async_box)
-
-        # Instructions
-        info = Gtk.Label()
-        info.set_markup(
-            "OpenRGB must be running:  <b>openrgb --server</b>\n"
-            "Install:  <b>sudo pacman -S openrgb</b>   then launch and enable server mode.\n"
-            "State-linked RGB: neon pink at idle, red when thermals &gt; 85°C, blue on battery."
-        )
-        info.set_xalign(0)
-        box.append(info)
-
-        self._rgb_connect(None)
+        # OpenRGB commands
+        cmd_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        cmd_row.set_margin_start(18); cmd_row.set_margin_end(18)
+        cmd_row.set_margin_bottom(12)
+        for name, cmd in [
+            ("All OFF",   ["openrgb","--mode","off"]),
+            ("Static",    None),
+            ("Rainbow",   ["openrgb","--mode","rainbow"]),
+            ("Breathing", ["openrgb","--mode","breathing"]),
+        ]:
+            b = Gtk.Button(label=name)
+            b.add_css_class("neon-btn-blue")
+            b.connect("clicked", self._on_rgb_cmd, cmd, name)
+            cmd_row.append(b)
+        box.append(cmd_row)
         return box
-
-    def _rgb_connect(self, *_):
-        try:
-            import urllib.request
-            with urllib.request.urlopen("http://localhost:6742/api/devices", timeout=1) as r:
-                devs = json.loads(r.read())
-                self._rgb_devices = devs
-                self._rgb_status_lbl.set_text(f"OpenRGB: {len(devs)} device(s) connected")
-        except Exception:
-            self._rgb_devices = []
-            self._rgb_status_lbl.set_text("OpenRGB not running. Start with: openrgb --server")
-
-    def _on_rgb_preset(self, btn, hex_col):
-        r = int(hex_col[1:3], 16)
-        g = int(hex_col[3:5], 16)
-        b = int(hex_col[5:7], 16)
-        for i, dev in enumerate(getattr(self, "_rgb_devices", [])):
-            try:
-                import urllib.request
-                payload = json.dumps({
-                    "mode": 0,
-                    "colors": [{"red": r, "green": g, "blue": b}]
-                }).encode()
-                req = urllib.request.Request(
-                    f"http://localhost:6742/api/devices/{i}/resizable",
-                    data=payload, method="POST",
-                    headers={"Content-Type": "application/json"}
-                )
-                urllib.request.urlopen(req, timeout=2)
-            except Exception:
-                pass
-        self._toast(f"RGB set to {hex_col} on {len(getattr(self,'_rgb_devices',[]))} device(s)")
 
     def _draw_rgb(self, area, cr, w, h, _):
         draw_nyxus_bg(cr, w, h)
-        dot_grid(cr, 0, 0, w, h, 24)
-        glow_text(cr, 16, 34, "RGB Control", *C_GREEN, size=16, bold=True)
-        # Neon light simulation
-        t = self._anim_t
-        for i, (r, g, b) in enumerate(PALETTE):
-            cx = 80 + i * 110
-            cy = 130
-            pulse = 0.4 + 0.35*math.sin(t*2 + i*1.1)
-            cr.set_source_rgba(r, g, b, pulse*0.22)
-            cr.arc(cx, cy, 36, 0, math.pi*2); cr.fill()
-            cr.set_source_rgba(r, g, b, 0.85)
-            cr.arc(cx, cy, 18, 0, math.pi*2); cr.fill()
-            cr.set_source_rgba(1,1,1,0.55)
-            cr.arc(cx-5, cy-5, 5, 0, math.pi*2); cr.fill()
-        sketch_rect(cr, 8, 8, w-16, h-16, *C_GREEN, thick=2.0, jitter=2.0)
+        glow_text(cr, 16, 32, "RGB LIGHTING CONTROL", *C_GREEN, size=18, bold=True)
+        rainbow_bar(cr, 0, 38, w, 3)
+
+        # Paint-blob palette display
+        colors = [C_PINK,C_PURPLE,C_BLUE,C_GREEN,C_YELLOW,C_ORANGE,C_RED]
+        n = len(colors); blobr = min(w/(n*3), 60)
+        blob_y = h*0.30
+        for i,col in enumerate(colors):
+            bx = (w/(n+1))*(i+1)
+            is_sel = (col == self._rgb_color)
+            # Outer glow blob
+            for layer in range(5):
+                rr = blobr*(1.4-layer*0.10)
+                cr.set_source_rgba(*col, 0.06+layer*0.02 if not is_sel else 0.10+layer*0.03)
+                cr.arc(bx, blob_y, rr, 0, math.pi*2); cr.fill()
+            # Main blob
+            cr.set_source_rgba(*col, 0.88 if is_sel else 0.60)
+            cr.arc(bx, blob_y, blobr, 0, math.pi*2); cr.fill()
+            if is_sel:
+                sketch_rect(cr, bx-blobr-4, blob_y-blobr-4, blobr*2+8, blobr*2+8,
+                            *col, thick=3.0, jitter=4.0)
+                glow_text_c(cr, bx, blob_y+blobr+20, "SELECTED", *col, size=11, bold=True)
+
+        # Current color display
+        r,g,b = self._rgb_color
+        glow_text_c(cr, w//2, h*0.56, "ACTIVE COLOR", *C_DIM, size=13)
+        glow_text_c(cr, w//2, h*0.64,
+                    f"#{int(r*255):02X}{int(g*255):02X}{int(b*255):02X}",
+                    *self._rgb_color, size=24, bold=True)
+
+        # OpenRGB status
+        try:
+            has_org = subprocess.run(["which","openrgb"],
+                                      capture_output=True,timeout=1).returncode==0
+        except: has_org = False
+        status_col = C_GREEN if has_org else C_ORANGE
+        status_txt = "OpenRGB found — commands ready" if has_org else \
+                     "OpenRGB not found — install: sudo pacman -S openrgb"
+        glow_text_c(cr, w//2, h*0.78, status_txt, *status_col, size=13)
+
+        # Tips
+        tips = [
+            "Click a color button below to set RGB",
+            "Use the mode buttons to set effects",
+            "OpenRGB supports per-device control",
+        ]
+        for i,tip in enumerate(tips):
+            glow_text_c(cr, w//2, h*0.86+i*20, tip, *C_DIM, size=11)
+
+    def _on_rgb_color(self, btn, col, name):
+        if col is None:
+            self._toast("Cycle mode — use OpenRGB for animated effects"); return
+        self._rgb_color = col
+        r,g,b = col
+        hex_col = f"#{int(r*255):02X}{int(g*255):02X}{int(b*255):02X}"
+        try:
+            subprocess.Popen(["openrgb","--color",hex_col],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            self._toast(f"RGB → {name}  ({hex_col})")
+        except FileNotFoundError:
+            self._toast(f"OpenRGB not found — color set to {name} locally")
+        if "rgb" in self._das: self._das["rgb"].queue_draw()
+
+    def _on_rgb_cmd(self, btn, cmd, name):
+        if cmd is None:
+            r,g,b = self._rgb_color
+            hex_col = f"#{int(r*255):02X}{int(g*255):02X}{int(b*255):02X}"
+            cmd = ["openrgb","--mode","static","--color",hex_col]
+        try:
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            self._toast(f"RGB mode → {name}")
+        except FileNotFoundError:
+            self._toast("OpenRGB not installed")
 
     # ══════════════════════════════════════════════════════════════════════════
-    #  POWER PAGE
+    #  POWER PAGE  — governor, freq, battery, TDP, uptime — all drawn
     # ══════════════════════════════════════════════════════════════════════════
+    def _build_power(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
-    def _build_power(self) -> Gtk.Widget:
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
-        box.set_margin_top(20); box.set_margin_bottom(20)
-        box.set_margin_start(24); box.set_margin_end(24)
-
-        da = self._da(self._draw_power_header, -1, 120)
-        self._das["power"] = da
-        box.append(da)
-
-        # CPU Governor
-        gov_frame_lbl = Gtk.Label(label="CPU Governor")
-        gov_frame_lbl.set_xalign(0)
-        box.append(gov_frame_lbl)
-        gov_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        govs = self.hw.get("cpu",{}).get("governors", ["powersave","schedutil","performance"])
-        self._power_gov_btns = {}
+        # Governor quick-set buttons
+        tb = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        tb.set_margin_top(14); tb.set_margin_start(18)
+        tb.set_margin_end(18); tb.set_margin_bottom(10)
+        govs = self.hw.get("cpu",{}).get("governors",
+               ["powersave","schedutil","performance","ondemand","conservative"])
+        gov_css = {"powersave":"neon-btn-blue","schedutil":"neon-btn-green",
+                   "performance":"neon-btn-orange","ondemand":"neon-btn-yellow",
+                   "conservative":"neon-btn-purple"}
         for gov in govs:
             b = Gtk.Button(label=gov)
-            css = {"powersave":"neon-btn-blue","schedutil":"neon-btn-green",
-                   "performance":"neon-btn-orange","conservative":"neon-btn"}.get(gov,"neon-btn")
-            b.add_css_class(css)
+            b.add_css_class(gov_css.get(gov,"neon-btn"))
             b.connect("clicked", self._on_set_governor, gov)
-            gov_row.append(b)
-            self._power_gov_btns[gov] = b
-        box.append(gov_row)
+            tb.append(b)
+        box.append(tb)
 
-        # CPU Boost
-        boost_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        bl = Gtk.Label(label="CPU Boost:")
-        bl.set_size_request(140, -1); bl.set_xalign(0)
+        # Boost toggle
+        boost_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        boost_row.set_margin_start(18); boost_row.set_margin_bottom(10)
+        bl = Gtk.Label(label="CPU Boost")
+        bl.set_markup("<span font='Caveat 16'>CPU Boost</span>")
         boost_row.append(bl)
-        self._power_boost_sw = Gtk.Switch()
-        self._power_boost_sw.set_active(self.hw.get("cpu",{}).get("boost", True))
-        self._power_boost_sw.connect("notify::active", self._on_set_boost)
-        boost_row.append(self._power_boost_sw)
-        boost_row.append(Gtk.Label(label="  (requires /sys/devices/system/cpu/cpufreq/boost)"))
+        self._pwr_boost_sw = Gtk.Switch()
+        self._pwr_boost_sw.set_active(self.live.boost)
+        self._pwr_boost_sw.connect("notify::active", self._on_boost_toggle)
+        boost_row.append(self._pwr_boost_sw)
         box.append(boost_row)
 
-        if not self.hw.get("cpu",{}).get("boost_supported"):
-            bl2 = Gtk.Label(label="CPU boost toggle not supported on this machine.")
-            bl2.set_xalign(0)
-            box.append(bl2)
-
-        # NVIDIA GPU Power Limit
-        gpu = self.hw.get("gpu",{})
-        if gpu.get("vendor") == "nvidia":
-            sep = Gtk.Label(label="GPU Power Limit  (NVIDIA)")
-            sep.set_xalign(0); sep.set_margin_top(12)
-            box.append(sep)
-            gpu_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-            gl = Gtk.Label(label="Power limit (W):")
-            gl.set_size_request(160,-1); gl.set_xalign(0)
-            gpu_row.append(gl)
-            self._gpu_power_scale = Gtk.Scale.new_with_range(
-                Gtk.Orientation.HORIZONTAL,
-                50, gpu.get("power_limit", 200), 5)
-            self._gpu_power_scale.add_css_class("orange")
-            self._gpu_power_scale.set_value(gpu.get("power_limit", 150))
-            self._gpu_power_scale.set_hexpand(True)
-            self._gpu_power_scale.set_draw_value(True)
-            gpu_row.append(self._gpu_power_scale)
-            apply_gpu = Gtk.Button(label="Apply")
-            apply_gpu.add_css_class("neon-btn-orange")
-            apply_gpu.connect("clicked", self._on_set_gpu_power)
-            gpu_row.append(apply_gpu)
-            box.append(gpu_row)
-
-        # Battery charge limit
-        batt = self.hw.get("battery",{}) or {}
-        if batt.get("charge_limit_path"):
-            sep2 = Gtk.Label(label="Battery Charge Limit")
-            sep2.set_xalign(0); sep2.set_margin_top(12)
-            box.append(sep2)
-            brow = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-            blbl = Gtk.Label(label="Max charge %:")
-            blbl.set_size_request(160,-1); blbl.set_xalign(0)
-            brow.append(blbl)
-            self._batt_limit_scale = Gtk.Scale.new_with_range(
-                Gtk.Orientation.HORIZONTAL, 50, 100, 1)
-            self._batt_limit_scale.add_css_class("green")
-            self._batt_limit_scale.set_value(80)
-            self._batt_limit_scale.set_hexpand(True)
-            self._batt_limit_scale.set_draw_value(True)
-            brow.append(self._batt_limit_scale)
-            apply_batt = Gtk.Button(label="Apply")
-            apply_batt.add_css_class("neon-btn-green")
-            apply_batt.connect("clicked", self._on_set_batt_limit)
-            brow.append(apply_batt)
-            box.append(brow)
-
+        # Cairo power display
+        da = self._da(self._draw_power)
+        self._das["power"] = da
+        box.append(da)
         return box
 
-    def _on_set_governor(self, btn, gov):
-        cpus = list(Path("/sys/devices/system/cpu").glob("cpu[0-9]*/cpufreq/scaling_governor"))
-        failed = 0
-        for cpu_path in cpus:
-            ok, _ = _write_priv(str(cpu_path), gov)
-            if not ok: failed += 1
-        if failed:
-            self._toast(f"Failed to set governor on {failed} CPUs — may need pkexec/polkit")
-        else:
-            self._toast(f"CPU governor → {gov}")
-        self._das.get("power") and self._das["power"].queue_draw()
-
-    def _on_set_boost(self, sw, _):
-        active = sw.get_active()
-        ok, err = _write_priv("/sys/devices/system/cpu/cpufreq/boost", "1" if active else "0")
-        self._toast(f"CPU boost {'enabled' if active else 'disabled'}" if ok
-                    else f"Boost change failed: {err}")
-
-    def _on_set_gpu_power(self, *_):
-        limit = int(self._gpu_power_scale.get_value())
-        try:
-            subprocess.run(
-                ["nvidia-smi", f"--power-limit={limit}"],
-                check=True, capture_output=True, timeout=5)
-            self._toast(f"GPU power limit set to {limit} W")
-        except Exception as e:
-            self._toast(f"GPU power limit failed: {e}")
-
-    def _on_set_batt_limit(self, *_):
-        limit = int(self._batt_limit_scale.get_value())
-        batt  = self.hw.get("battery",{}) or {}
-        path  = batt.get("charge_limit_path","")
-        if path:
-            ok, err = _write_priv(path, str(limit))
-            self._toast(f"Battery limit → {limit}%" if ok else f"Battery limit failed: {err}")
-
-    def _draw_power_header(self, area, cr, w, h, _):
+    def _draw_power(self, area, cr, w, h, _):
         draw_nyxus_bg(cr, w, h)
-        dot_grid(cr, 0, 0, w, h, 24)
-        glow_text(cr, 16, 34, "Power Management", *C_YELLOW, size=16, bold=True)
+        glow_text(cr, 16, 32, "POWER MANAGEMENT", *C_YELLOW, size=18, bold=True)
+        rainbow_bar(cr, 0, 38, w, 2)
+
+        pad = 18; cw = (w-pad*3)//2
+        # ── Governor card ─────────────────────────────────────────────────────
+        neon_card(cr, pad, 50, cw, 160, C_YELLOW)
+        glow_text(cr, pad+14, 78, "CPU GOVERNOR", *C_YELLOW, size=14, bold=True)
         gov = self.live.governor
-        boost = "BOOST ON" if self.live.boost else "BOOST OFF"
-        freq  = f"{self.live.cpu_freq:.0f} MHz" if self.live.cpu_freq else ""
-        cr.select_font_face("Caveat", 0, 0); cr.set_font_size(13)
-        cr.set_source_rgba(*C_DIM, 0.80)
-        cr.move_to(16, 58)
-        cr.show_text(f"Current:  governor = {gov}   {boost}   {freq}")
-        # Governor visual
-        govs = self.hw.get("cpu",{}).get("governors", [])
-        bw = min(140, (w - 32) / max(len(govs), 1))
-        for i, g in enumerate(govs):
-            col = (C_BLUE if g=="powersave" else C_GREEN if g=="schedutil"
-                   else C_ORANGE if g=="performance" else C_DIM)
-            active = g == gov
-            fill = (*col, 0.25 if active else 0.06)
-            sketch_rect(cr, 16+i*bw, 70, bw-8, 38, *col, thick=2.2 if active else 1.2,
-                        jitter=2.0, fill_rgba=fill)
-            cr.select_font_face("Caveat", 0, 1 if active else 0)
-            cr.set_font_size(11)
-            cr.set_source_rgba(*col, 0.90 if active else 0.55)
-            ext = cr.text_extents(g)
-            cr.move_to(16+i*bw + (bw-8-ext.width)/2 - ext.x_bearing, 94)
-            cr.show_text(g)
-        sketch_rect(cr, 4, 4, w-8, h-8, *C_YELLOW, thick=1.8, jitter=1.8)
+        gov_col = C_GREEN if gov=="performance" else \
+                  (C_YELLOW if gov=="schedutil" else (C_BLUE if gov=="powersave" else C_ORANGE))
+        glow_text_c(cr, pad+cw//2, 130, gov.upper(), *gov_col, size=26, bold=True)
+        freq_str = f"{self.live.cpu_freq:.0f} MHz" if self.live.cpu_freq else "--"
+        glow_text_c(cr, pad+cw//2, 162, freq_str, *C_DIM, size=16)
+        sketch_rect(cr, pad+2, 52, cw-4, 156, *C_YELLOW, thick=2.5, jitter=2.5)
+
+        # ── Boost card ────────────────────────────────────────────────────────
+        gx = pad*2+cw
+        bc = C_GREEN if self.live.boost else C_DIM
+        neon_card(cr, gx, 50, cw, 160, bc)
+        glow_text(cr, gx+14, 78, "CPU BOOST", *bc, size=14, bold=True)
+        glow_text_c(cr, gx+cw//2, 130, "ON" if self.live.boost else "OFF", *bc, size=36, bold=True)
+        cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
+        cr.set_source_rgba(*C_DIM,0.70)
+        cr.move_to(gx+14, 162)
+        cr.show_text("Turbo Boost / AMD Precision Boost")
+        sketch_rect(cr, gx+2, 52, cw-4, 156, *bc, thick=2.5, jitter=2.5)
+
+        # ── Frequency display ─────────────────────────────────────────────────
+        fy = 228
+        neon_card(cr, pad, fy, w-pad*2, 100, C_PURPLE)
+        glow_text(cr, pad+14, fy+28, "PER-CORE FREQUENCY  (cpu0 scaling)", *C_PURPLE, size=13, bold=True)
+        try:
+            freqs = []
+            for cpu_p in sorted(Path("/sys/devices/system/cpu").glob("cpu[0-9]*/cpufreq/scaling_cur_freq")):
+                try: freqs.append(int(cpu_p.read_text().strip())/1000)
+                except: pass
+            if freqs:
+                mn,mx,av = min(freqs),max(freqs),sum(freqs)/len(freqs)
+                glow_text(cr, pad+14, fy+52, f"min {mn:.0f}  avg {av:.0f}  max {mx:.0f}  MHz",
+                          *C_PURPLE, size=14)
+                hbar(cr, pad+14, fy+62, w-pad*2-28, 10, (av-mn)/(max(mx-mn,1))*100, C_PURPLE)
+        except: pass
+        sketch_rect(cr, pad+2, fy+2, w-pad*2-4, 96, *C_PURPLE, thick=2.2, jitter=2.2)
+
+        # ── Uptime card ───────────────────────────────────────────────────────
+        uy = 348
+        neon_card(cr, pad, uy, cw, 110, C_ORANGE)
+        glow_text(cr, pad+14, uy+28, "UPTIME", *C_ORANGE, size=14, bold=True)
+        up = self.live.uptime_s
+        d,rem = divmod(up,86400); hh,rem2 = divmod(rem,3600); mm,ss = divmod(rem2,60)
+        up_str = f"{d}d {hh:02d}h {mm:02d}m" if d else f"{hh:02d}h {mm:02d}m {ss:02d}s"
+        glow_text_c(cr, pad+cw//2, uy+70, up_str, *C_ORANGE, size=20, bold=True)
+        sketch_rect(cr, pad+2, uy+2, cw-4, 106, *C_ORANGE, thick=2.2, jitter=2.2)
+
+        # ── Battery card ──────────────────────────────────────────────────────
+        batt = self.live.battery or self.hw.get("battery") or {}
+        bx = pad*2+cw
+        bc2 = C_GREEN if batt.get("status","")=="Charging" else \
+              (C_YELLOW if batt else C_DIM)
+        neon_card(cr, bx, uy, cw, 110, bc2)
+        glow_text(cr, bx+14, uy+28, "BATTERY", *bc2, size=14, bold=True)
+        if batt:
+            pct = batt.get("pct",0); stat = batt.get("status","Unknown")
+            col = C_GREEN if pct>40 else (C_YELLOW if pct>15 else C_RED)
+            glow_text_c(cr, bx+cw//2, uy+60, f"{pct}%", *col, size=26, bold=True)
+            glow_text_c(cr, bx+cw//2, uy+84, stat.upper(), *C_DIM, size=13)
+            hbar(cr, bx+14, uy+88, cw-28, 8, pct, col)
+        else:
+            glow_text_c(cr, bx+cw//2, uy+66, "No Battery", *C_DIM, size=14)
+        sketch_rect(cr, bx+2, uy+2, cw-4, 106, *bc2, thick=2.2, jitter=2.2)
+
+        # ── CPU Load history ──────────────────────────────────────────────────
+        hy = 478
+        if h > hy + 60:
+            avail_h = h - hy - 14
+            neon_card(cr, pad, hy, w-pad*2, avail_h, C_PINK)
+            glow_text(cr, pad+14, hy+24, "CPU Load History  (3-sec samples)", *C_PINK, size=13, bold=True)
+            if self.live.cpu_hist:
+                sparkline(cr, pad+14, hy+32, w-pad*2-28, avail_h-44,
+                          list(self.live.cpu_hist), C_PINK, 100)
+            if self.live.mem_hist:
+                sparkline(cr, pad+14, hy+32, w-pad*2-28, avail_h-44,
+                          list(self.live.mem_hist), C_BLUE, 100)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.set_source_rgba(*C_PINK,0.80); cr.move_to(pad+14,hy+avail_h-8)
+            cr.show_text("CPU%")
+            cr.set_source_rgba(*C_BLUE,0.80); cr.move_to(pad+72,hy+avail_h-8)
+            cr.show_text("MEM%")
+            sketch_rect(cr, pad+2, hy+2, w-pad*2-4, avail_h-4, *C_PINK, thick=2.2, jitter=2.2)
+
+    def _on_set_governor(self, btn, gov):
+        ok_any = False
+        for cpu in Path("/sys/devices/system/cpu").glob("cpu[0-9]*/cpufreq/scaling_governor"):
+            ok,err = _write_priv(str(cpu),gov)
+            if ok: ok_any=True
+            else:  self._toast(f"Governor failed: {err}"); return
+        if ok_any:
+            self.live.governor = gov
+            self._toast(f"Governor set to {gov}")
+            if "power" in self._das: self._das["power"].queue_draw()
+
+    def _on_boost_toggle(self, sw, param):
+        val = "1" if sw.get_active() else "0"
+        ok,err = _write_priv("/sys/devices/system/cpu/cpufreq/boost", val)
+        if ok:
+            self.live.boost = sw.get_active()
+            self._toast(f"CPU Boost {'ON' if sw.get_active() else 'OFF'}")
+        else:
+            self._toast(f"Boost toggle failed: {err}")
 
     # ══════════════════════════════════════════════════════════════════════════
-    #  PROCESSES PAGE
+    #  PROCESSES PAGE  — live Cairo-rendered process list with kill / nice
     # ══════════════════════════════════════════════════════════════════════════
-
-    def _build_processes(self) -> Gtk.Widget:
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+    def _build_processes(self):
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
         # Toolbar
-        toolbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        toolbar.set_margin_top(12); toolbar.set_margin_start(12)
-        toolbar.set_margin_end(12); toolbar.set_margin_bottom(8)
+        tb = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        tb.set_margin_top(12); tb.set_margin_start(18)
+        tb.set_margin_end(18); tb.set_margin_bottom(8)
 
-        search = Gtk.SearchEntry()
-        search.set_placeholder_text("Filter processes...")
-        search.set_hexpand(True)
-        search.connect("search-changed", self._on_proc_search)
-        toolbar.append(search)
+        self._proc_search = Gtk.Entry()
+        self._proc_search.set_placeholder_text("  filter processes...")
+        self._proc_search.set_hexpand(True)
+        self._proc_search.connect("changed", self._on_proc_search)
+        tb.append(self._proc_search)
 
-        renice_btn = Gtk.Button(label="Raise Priority (nice -5)")
-        renice_btn.add_css_class("neon-btn-green")
-        renice_btn.connect("clicked", self._on_renice)
-        toolbar.append(renice_btn)
-
-        lower_btn = Gtk.Button(label="Lower Priority (nice +10)")
-        lower_btn.add_css_class("neon-btn-blue")
-        lower_btn.connect("clicked", self._on_lower_nice)
-        toolbar.append(lower_btn)
+        for name,css,nice in [
+            ("Raise prio (nice -5)", "neon-btn-green", -5),
+            ("Lower prio (nice +10)","neon-btn-orange", 10),
+        ]:
+            b = Gtk.Button(label=name)
+            b.add_css_class(css)
+            b.connect("clicked", self._on_renice, nice)
+            tb.append(b)
 
         kill_btn = Gtk.Button(label="Kill")
         kill_btn.add_css_class("neon-btn-red")
-        kill_btn.connect("clicked", self._on_kill_proc)
-        toolbar.append(kill_btn)
+        kill_btn.connect("clicked", self._on_kill)
+        tb.append(kill_btn)
 
-        box.append(toolbar)
+        box.append(tb)
 
-        # Process list as a Gtk.ListView
-        self._proc_store = Gtk.StringList()
-        self._proc_filter_text = ""
-        self._proc_data: list = []
+        # Sort buttons
+        sort_tb = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        sort_tb.set_margin_start(18); sort_tb.set_margin_bottom(8)
+        sort_lbl = Gtk.Label(label="Sort by:")
+        sort_lbl.set_markup("<span font='Caveat 14' color='#8866aa'>Sort by:</span>")
+        sort_tb.append(sort_lbl)
+        self._sort_btns = {}
+        for key,lbl in [("cpu","CPU%"),("mem","MEM%"),("pid","PID"),("name","Name")]:
+            b = Gtk.Button(label=lbl)
+            b.add_css_class("neon-btn-blue" if key=="cpu" else "neon-btn-purple")
+            b.connect("clicked", self._on_proc_sort, key)
+            sort_tb.append(b)
+            self._sort_btns[key] = b
+        box.append(sort_tb)
 
-        col_model = Gtk.ColumnView()
-        col_model.set_vexpand(True)
-        col_model.set_show_row_separators(True)
-
-        # We'll use a simpler TreeView approach
-        self._proc_tv_store = Gtk.ListStore(int, str, float, float, int, str)
-        self._proc_tv = Gtk.TreeView(model=self._proc_tv_store)
-        self._proc_tv.set_vexpand(True)
-
-        cols_def = [
-            ("PID",   0, 70),
-            ("Name",  1, 180),
-            ("CPU %", 2, 80),
-            ("MEM %", 3, 80),
-            ("Nice",  4, 60),
-            ("Stat",  5, 60),
-        ]
-        for title, col_idx, width in cols_def:
-            renderer = Gtk.CellRendererText()
-            col = Gtk.TreeViewColumn(title, renderer, text=col_idx)
-            col.set_fixed_width(width)
-            col.set_resizable(True)
-            col.set_sort_column_id(col_idx)
-            self._proc_tv.append_column(col)
-
-        self._proc_tv.get_selection().set_mode(Gtk.SelectionMode.SINGLE)
-        self._proc_tv.set_headers_visible(True)
-
+        # Scrolled Cairo canvas
         sw = Gtk.ScrolledWindow()
+        sw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         sw.set_vexpand(True)
-        sw.set_child(self._proc_tv)
+        da = Gtk.DrawingArea()
+        da.set_hexpand(True)
+        da.set_size_request(-1, 80*30)   # 80 rows × 30px
+        da.set_draw_func(self._draw_processes, None)
+        self._das["processes"] = da
+        sw.set_child(da)
         box.append(sw)
 
-        self._refresh_proc_tv()
+        # Stats bar
+        stats_da = Gtk.DrawingArea()
+        stats_da.set_size_request(-1, 40)
+        stats_da.set_hexpand(True)
+        stats_da.set_draw_func(self._draw_proc_stats, None)
+        self._das["proc_stats"] = stats_da
+        box.append(stats_da)
+
+        # Selection tracking
+        self._proc_selected_pid = None
+        click = Gtk.GestureClick()
+        click.connect("pressed", self._on_proc_click)
+        da.add_controller(click)
         return box
 
-    def _refresh_proc_tv(self):
-        flt = getattr(self, "_proc_filter_text", "")
-        self._proc_tv_store.clear()
-        for p in self.live.procs:
-            if flt and flt.lower() not in p["name"].lower():
-                continue
-            self._proc_tv_store.append([
-                p["pid"], p["name"],
-                p["cpu"], p["mem"],
-                p["nice"], p["stat"]
-            ])
+    def _filtered_procs(self):
+        procs = self.live.procs or []
+        f = self._proc_filter.lower()
+        if f:
+            procs = [p for p in procs if f in p["name"].lower() or f in str(p["pid"])]
+        key  = self._proc_sort_key
+        rev  = key in ("cpu","mem")
+        return sorted(procs, key=lambda p: p.get(key,0), reverse=rev)
+
+    def _draw_processes(self, area, cr, w, h, _):
+        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        procs = self._filtered_procs()
+
+        # Header
+        row_h = 30
+        cols  = [("PID",50),("Name",240),("CPU%",80),("MEM%",80),
+                 ("Nice",56),("Stat",60),("User",100)]
+        hdr_h = 32
+
+        cr.set_source_rgba(*C_PANEL,0.98); cr.rectangle(0,0,w,hdr_h); cr.fill()
+        rainbow_bar(cr, 0, hdr_h-2, w, 2)
+        x = 8
+        for lbl,cw in cols:
+            glow_text(cr, x, hdr_h-10, lbl,
+                      *C_YELLOW if lbl.lower()==self._proc_sort_key else C_DIM,
+                      size=13, bold=True)
+            x += cw
+
+        # Rows
+        for i,p in enumerate(procs[:80]):
+            ry  = hdr_h + i*row_h
+            cpu = p.get("cpu",0); mem = p.get("mem",0)
+            pid = p["pid"]
+
+            # Row bg
+            if pid == self._proc_selected_pid:
+                cr.set_source_rgba(*C_PURPLE,0.20)
+            elif i%2==0:
+                cr.set_source_rgba(1,1,1,0.02)
+            else:
+                cr.set_source_rgba(0,0,0,0.0)
+            cr.rectangle(0,ry,w,row_h); cr.fill()
+
+            # CPU heat bar on left edge
+            heat = min(cpu/100,1.0)
+            col  = pct_color(cpu)
+            cr.set_source_rgba(*col, 0.60*heat)
+            cr.rectangle(0, ry, 4, row_h); cr.fill()
+
+            # MEM heat on right edge
+            mcol = pct_color(mem*4)
+            cr.set_source_rgba(*mcol, 0.40*min(mem/10,1.0))
+            cr.rectangle(w-4, ry, 4, row_h); cr.fill()
+
+            # Data
+            sel_col = C_PURPLE if pid==self._proc_selected_pid else None
+            txt_col = sel_col or (col if cpu>10 else C_TEXT)
+
+            x  = 8
+            texts = [
+                (str(pid),          C_DIM,    50),
+                (p["name"],         txt_col, 240),
+                (f"{cpu:.1f}",      col,      80),
+                (f"{mem:.2f}",      pct_color(mem*4), 80),
+                (str(p.get("nice",0)), C_DIM, 56),
+                (p.get("stat",""), C_DIM,     60),
+                (p.get("user",""), C_DIM,    100),
+            ]
+            for txt, tc, fw in texts:
+                cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
+                cr.set_source_rgba(*tc,0.90)
+                cr.move_to(x, ry+row_h-9); cr.show_text(txt[:int(fw/7)])
+                x += fw
+
+            # Separator
+            cr.set_source_rgba(1,1,1,0.04); cr.set_line_width(0.5)
+            cr.move_to(0,ry+row_h-0.5); cr.line_to(w,ry+row_h-0.5); cr.stroke()
+
+        if not procs:
+            glow_text_c(cr, w//2, hdr_h+80, "No processes found", *C_DIM, size=16)
+
+    def _draw_proc_stats(self, area, cr, w, h, _):
+        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        rainbow_bar(cr, 0, 0, w, 2)
+        procs  = self.live.procs or []
+        total  = len(procs)
+        cpu_t  = sum(p.get("cpu",0) for p in procs)
+        mem_t  = sum(p.get("mem",0) for p in procs)
+        sel    = next((p for p in procs if p["pid"]==self._proc_selected_pid), None)
+        glow_text(cr, 14, 28, f"Processes: {total}   Total CPU: {cpu_t:.1f}%   Total MEM: {mem_t:.1f}%",
+                  *C_DIM, size=13)
+        if sel:
+            glow_text(cr, 400, 28,
+                      f"Selected: {sel['name']} (PID {sel['pid']})  CPU {sel['cpu']:.1f}%  MEM {sel['mem']:.2f}%",
+                      *C_PURPLE, size=13)
+
+    def _on_proc_click(self, gesture, n_press, x, y):
+        row_h = 30; hdr_h = 32
+        if y < hdr_h: return
+        idx = int((y-hdr_h)//row_h)
+        procs = self._filtered_procs()
+        if 0 <= idx < len(procs):
+            self._proc_selected_pid = procs[idx]["pid"]
+            if "processes" in self._das: self._das["processes"].queue_draw()
+            if "proc_stats" in self._das: self._das["proc_stats"].queue_draw()
 
     def _on_proc_search(self, entry):
-        self._proc_filter_text = entry.get_text()
-        self._refresh_proc_tv()
+        self._proc_filter = entry.get_text()
+        if "processes" in self._das: self._das["processes"].queue_draw()
 
-    def _selected_pid(self) -> int | None:
-        sel = self._proc_tv.get_selection()
-        model, it = sel.get_selected()
-        if it is None: return None
-        return model.get_value(it, 0)
+    def _on_proc_sort(self, btn, key):
+        self._proc_sort_key = key
+        if "processes" in self._das: self._das["processes"].queue_draw()
 
-    def _on_renice(self, *_):
-        pid = self._selected_pid()
-        if pid is None:
-            self._toast("Select a process first"); return
+    def _on_renice(self, btn, delta):
+        pid = self._proc_selected_pid
+        if pid is None: self._toast("Select a process first"); return
+        ok,err = _write_priv("/dev/null","")  # dummy check
         try:
-            subprocess.run(["renice", "-n", "-5", "-p", str(pid)], check=True, capture_output=True)
-            self._toast(f"PID {pid}: priority raised (nice -5)")
+            subprocess.run(["renice","-n",str(delta),"-p",str(pid)],
+                           timeout=3, capture_output=True)
+            self._toast(f"Reniced PID {pid} by {delta:+d}")
         except Exception as e:
             self._toast(f"renice failed: {e}")
 
-    def _on_lower_nice(self, *_):
-        pid = self._selected_pid()
-        if pid is None:
-            self._toast("Select a process first"); return
-        try:
-            subprocess.run(["renice", "-n", "+10", "-p", str(pid)], check=True, capture_output=True)
-            self._toast(f"PID {pid}: priority lowered (nice +10)")
-        except Exception as e:
-            self._toast(f"renice failed: {e}")
-
-    def _on_kill_proc(self, *_):
-        pid = self._selected_pid()
-        if pid is None:
-            self._toast("Select a process first"); return
+    def _on_kill(self, btn):
+        pid = self._proc_selected_pid
+        if pid is None: self._toast("Select a process first"); return
         try:
             os.kill(pid, signal.SIGTERM)
-            self._toast(f"SIGTERM sent to PID {pid}")
-        except Exception as e:
-            self._toast(f"Kill failed: {e}")
-        GLib.timeout_add(800, lambda: (self._refresh_proc_tv(), False))
-
-    def _refresh_ui(self):
-        for da in self._das.values():
-            da.queue_draw()
-        self._refresh_fan_labels()
-        self._refresh_proc_tv()
-        return GLib.SOURCE_REMOVE
-
+            self._toast(f"SIGTERM → PID {pid}")
+            self._proc_selected_pid = None
+        except PermissionError:
+            self._toast(f"Permission denied — try pkexec kill {pid}")
+        except ProcessLookupError:
+            self._toast(f"Process {pid} already gone")
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Entry point
 # ══════════════════════════════════════════════════════════════════════════════
-
 if __name__ == "__main__":
-    try:
-        NyxusControl().run(None)
-    except Exception:
-        log = "/tmp/nyxus-control.log"
-        with open(log, "w") as f:
-            traceback.print_exc(file=f)
-        print(f"NYXUS Control crashed — see {log}")
-        sys.exit(1)
+    app = NyxusControl()
+    sys.exit(app.run(sys.argv))
