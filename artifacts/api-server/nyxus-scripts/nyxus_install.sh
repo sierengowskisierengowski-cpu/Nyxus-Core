@@ -68,7 +68,8 @@ hdr "Python Terminal Scripts"
 mkdir -p "$SCRIPTS_DIR"
 for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
          nyxus_sysmon.py nyxus_sysmon_gtk.py \
-         nyxus_stickies.py nyxus_notepad.py nyxus_weather.py nyxus_terminal.py; do
+         nyxus_stickies.py nyxus_notepad.py nyxus_weather.py nyxus_terminal.py \
+         nyxus_gen_icons.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
@@ -83,6 +84,14 @@ else
     && ok "PyGObject psutil pycairo (pip)" \
     || printf "  ${DIM}pip install failed — install python-gobject manually${R}\n"
   printf "  ${DIM}Note: also install vte4 / gir1.2-vte-2.91 for the NYXUS Terminal${R}\n"
+fi
+
+# ── App Icons — paint-splatter neon icons via Cairo ───────────────────────────
+hdr "App Icons (NYXUS paint-splatter)"
+if python3 "$SCRIPTS_DIR/nyxus_gen_icons.py" 2>/dev/null; then
+  ok "NYXUS icons generated → ~/.local/share/icons/hicolor/256x256/apps/"
+else
+  printf "  ${DIM}Icon generation skipped (pycairo not available yet)${R}\n"
 fi
 
 # ── HYPRLAND CONFIGS ──────────────────────────────────────────────────────────
@@ -152,7 +161,7 @@ Name=NYXUS SysMon
 GenericName=System Monitor
 Comment=NYXUS OS live system stats — CPU, RAM, Network, Disk, Processes
 Exec=python3 /home/nyx/.nyxus/nyxus_sysmon_gtk.py
-Icon=/home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png
+Icon=io.nyxus.sysmon
 Terminal=false
 Categories=System;Monitor;
 Keywords=nyxus;sysmon;cpu;ram;network;monitor;stats;
@@ -168,7 +177,7 @@ Name=NYXUS Stickies
 GenericName=Sticky Notes
 Comment=NYXUS OS neon sticky notes — native GTK4
 Exec=python3 /home/nyx/.nyxus/nyxus_stickies.py
-Icon=/home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png
+Icon=io.nyxus.stickies
 Terminal=false
 Categories=Utility;
 Keywords=nyxus;stickies;notes;sticky;widget;
@@ -184,7 +193,7 @@ Name=NYXUS Weather
 GenericName=Weather Widget
 Comment=NYXUS OS animated weather widget — native GTK4
 Exec=python3 /home/nyx/.nyxus/nyxus_weather.py
-Icon=/home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png
+Icon=io.nyxus.weather
 Terminal=false
 Categories=Utility;Weather;
 Keywords=nyxus;weather;widget;forecast;
@@ -200,7 +209,7 @@ Name=NYXUS Notepad
 GenericName=Notepad
 Comment=NYXUS OS markdown notepad with auto-save — native GTK4
 Exec=python3 /home/nyx/.nyxus/nyxus_notepad.py
-Icon=/home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png
+Icon=io.nyxus.notepad
 Terminal=false
 Categories=Utility;TextEditor;
 Keywords=nyxus;notepad;notes;markdown;editor;
@@ -216,7 +225,7 @@ Name=NYXUS Terminal
 GenericName=Terminal
 Comment=NYXUS OS brick-wall graffiti terminal — native GTK4 + VTE
 Exec=python3 /home/nyx/.nyxus/nyxus_terminal.py
-Icon=/home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png
+Icon=io.nyxus.terminal
 Terminal=false
 Categories=System;TerminalEmulator;
 Keywords=nyxus;terminal;bash;graffiti;brick;

@@ -458,7 +458,9 @@ class NyxusSysmonGtk(Gtk.Application):
         psutil.cpu_percent(interval=0.1); psutil.cpu_percent(percpu=True,interval=None)
 
     def do_activate(self):
-        prov=Gtk.CssProvider(); prov.load_from_data(CSS.encode())
+        prov=Gtk.CssProvider()
+        try: prov.load_from_string(CSS)
+        except AttributeError: prov.load_from_data(CSS.encode())
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(),prov,Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.win=Gtk.ApplicationWindow(application=self,title="NYXUS SysMon")
         self.win.set_default_size(1440,900); self.win.fullscreen()
