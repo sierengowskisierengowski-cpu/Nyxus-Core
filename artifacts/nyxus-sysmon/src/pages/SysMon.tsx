@@ -10,26 +10,22 @@ import { NetworkChart } from '../components/NetworkChart';
 import { ProcessTable } from '../components/ProcessTable';
 
 export default function SysMon() {
-  const { data, isOffline, cpuHistory, networkHistory } = useSysmon();
-
-  if (isOffline) {
-    return (
-      <div className="w-screen h-screen flex flex-col items-center justify-center bg-nyxus-bg text-red-500 p-8">
-        <div className="border-4 border-red-500 p-12 flex flex-col items-center gap-6 offline-border bg-red-900/10">
-          <h1 className="text-6xl font-bold tracking-widest glow-text-red">SYSMON OFFLINE</h1>
-          <p className="text-xl text-red-400">Connection to localhost:9191 refused.</p>
-          <div className="mt-8 px-6 py-3 bg-black/50 border border-red-500/50 text-red-300 font-mono text-lg">
-            $ start nyxus_sysmon.py
-          </div>
-          <p className="text-sm mt-4 text-red-500/60 animate-pulse">Retrying connection...</p>
-        </div>
-      </div>
-    );
-  }
+  const { data, isDemoMode, cpuHistory, networkHistory } = useSysmon();
 
   return (
     <div className="w-screen h-screen flex flex-col bg-nyxus-bg overflow-hidden p-2 gap-2 text-nyxus-text selection:bg-nyxus-pink/30">
-      <Header data={data} isOffline={isOffline} />
+      {isDemoMode && (
+        <div style={{
+          position: 'fixed', top: 8, right: 12, zIndex: 9999,
+          background: 'rgba(255,85,0,0.18)', border: '1.5px solid #ff5500',
+          borderRadius: 5, padding: '2px 12px',
+          fontFamily: "'Caveat', cursive", fontSize: 14, color: '#ff8844',
+          letterSpacing: '0.08em',
+        }}>
+          ◉ DEMO MODE — start nyxus_sysmon.py for live data
+        </div>
+      )}
+      <Header data={data} isOffline={false} />
       
       {/* Top Cards Row */}
       <div className="flex gap-2 h-48 shrink-0">
