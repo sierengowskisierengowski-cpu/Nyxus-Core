@@ -171,16 +171,15 @@ def _draw_graffiti_word(cr, cx, cy, word, color1, color2, size, rng):
 # ── Terminal background (graffiti wall with NYXUS watermark) ──────────────────
 
 def draw_terminal_bg(cr, x, y, w, h):
-    """Full graffiti bg — faint brick outline + NYXUS tag + blobs + drips."""
+    """Minimal bg — dark base + ghost brick lines + faint NYXUS watermark only."""
     rng = _rng(42)
-    import cairo as _cairo
 
-    # Base dark fill
+    # Base dark fill — terminal content is the star
     cr.set_source_rgb(*C_DARK)
     cr.rectangle(x, y, w, h)
     cr.fill()
 
-    # Faint ghost brick lines (very subtle, not the border style)
+    # Ghost brick texture — barely visible hint, max 5% opacity
     BH2, M2 = 26, 3
     row2 = 0; yy2 = y
     while yy2 < y + h:
@@ -188,89 +187,35 @@ def draw_terminal_bg(cr, x, y, w, h):
         xx2 = x - off2
         while xx2 < x + w + 80:
             bw2 = 82 + rng.randint(-10, 10)
-            lx = max(x, xx2 + M2); rx = min(x + w, xx2 + bw2 - M2)
-            if rx - lx > 4:
-                cr.set_line_width(0.5)
-                cr.set_source_rgba(0.25, 0.16, 0.08, 0.09)
-                cr.rectangle(lx, yy2 + M2, rx - lx, BH2 - M2 * 2)
+            lx2 = max(x, xx2 + M2); rx2 = min(x + w, xx2 + bw2 - M2)
+            if rx2 - lx2 > 4:
+                cr.set_line_width(0.4)
+                cr.set_source_rgba(0.30, 0.20, 0.10, 0.05)
+                cr.rectangle(lx2, yy2 + M2, rx2 - lx2, BH2 - M2 * 2)
                 cr.stroke()
             xx2 += bw2
         yy2 += BH2; row2 += 1
 
-    # Large background paint blobs
-    blob_data = [
-        (0.08, 0.15, C_GREEN,  60), (0.92, 0.12, C_ORANGE, 50),
-        (0.50, 0.08, C_BLUE,   44), (0.22, 0.80, C_YELLOW, 55),
-        (0.78, 0.75, C_PURPLE, 62), (0.15, 0.48, C_PINK,   40),
-        (0.85, 0.50, C_BLUE,   48), (0.40, 0.30, C_ORANGE, 35),
-        (0.62, 0.65, C_GREEN,  42), (0.30, 0.60, C_PURPLE, 32),
-        (0.70, 0.25, C_PINK,   36), (0.55, 0.88, C_YELLOW, 46),
-        (0.05, 0.72, C_BLUE,   28), (0.95, 0.40, C_GREEN,  30),
-        (0.48, 0.52, C_ORANGE, 24), (0.20, 0.20, C_PURPLE, 22),
-        (0.80, 0.82, C_PINK,   26), (0.35, 0.42, C_YELLOW, 20),
-        (0.65, 0.38, C_BLUE,   18), (0.12, 0.90, C_ORANGE, 22),
-    ]
-    for bfx, bfy, bcol, brad in blob_data:
-        bpx = x + w * bfx; bpy = y + h * bfy
-        cr.set_source_rgba(*bcol, rng.uniform(0.08, 0.20))
-        cr.arc(bpx, bpy, brad, 0, math.pi * 2)
-        cr.fill()
-        spray_dots(cr, bpx, bpy, bcol, n=70, spread=int(brad * 1.6),
-                   alpha_max=0.22, rng=rng)
-
-    # Splatter streaks
-    for _ in range(30):
+    # A few very faint splatter streaks — texture hint only, max ~8% opacity
+    for _ in range(10):
         sx = rng.uniform(x, x + w); sy = rng.uniform(y, y + h)
-        ex = sx + rng.uniform(-140, 140); ey = sy + rng.uniform(-20, 20)
+        ex = sx + rng.uniform(-100, 100); ey = sy + rng.uniform(-15, 15)
         col = rng.choice(PALETTE)
-        cr.set_source_rgba(*col, rng.uniform(0.10, 0.35))
-        cr.set_line_width(rng.uniform(0.6, 2.5))
+        cr.set_source_rgba(*col, rng.uniform(0.03, 0.07))
+        cr.set_line_width(rng.uniform(0.5, 1.5))
         cr.move_to(sx, sy); cr.line_to(ex, ey); cr.stroke()
-        spray_dots(cr, ex, ey, col, n=10, spread=7, alpha_max=0.28, rng=rng)
 
-    # Dense small dot field
-    for _ in range(100):
-        bpx = rng.uniform(x + 4, x + w - 4)
-        bpy = rng.uniform(y + 4, y + h - 4)
-        brad = rng.uniform(0.8, 4.0)
-        col = rng.choice(PALETTE)
-        cr.set_source_rgba(*col, rng.uniform(0.18, 0.55))
-        cr.arc(bpx, bpy, brad, 0, math.pi * 2); cr.fill()
-
-    # BIG NYXUS background watermark — fills the terminal area
+    # NYXUS watermark — rendered full then painted at 9% opacity
+    cr.push_group()
     _draw_graffiti_word(cr, x + w * 0.5, y + h * 0.44, "NYXUS",
                         C_PINK, C_PURPLE, min(w * 0.55, 320), rng)
+    cr.pop_group_to_source()
+    cr.paint_with_alpha(0.09)
 
-    # TERMINAL crew tag below
-    _draw_graffiti_word(cr, x + w * 0.5, y + h * 0.78, "TERMINAL",
-                        C_BLUE, C_GREEN, min(w * 0.24, 80), rng)
-
-    # Stars
-    star_pts = [
-        (x + w * 0.04, y + h * 0.55, C_YELLOW, 18),
-        (x + w * 0.96, y + h * 0.48, C_PINK,   14),
-        (x + w * 0.46, y + h * 0.94, C_GREEN,  12),
-        (x + w * 0.88, y + h * 0.88, C_ORANGE, 10),
-        (x + w * 0.06, y + h * 0.25, C_BLUE,   10),
-    ]
-    for sx2, sy2, scol, sr in star_pts:
-        _draw_star(cr, sx2, sy2, scol, sr)
-
-    # Drips from top edge of inner area
-    drip_data = [
-        (x + w * 0.13, y, C_PINK,   h * 0.28),
-        (x + w * 0.32, y, C_GREEN,  h * 0.20),
-        (x + w * 0.58, y, C_ORANGE, h * 0.25),
-        (x + w * 0.77, y, C_BLUE,   h * 0.18),
-        (x + w * 0.90, y, C_YELLOW, h * 0.15),
-    ]
-    for dx2, dy2, dcol, dlen in drip_data:
-        _draw_drip(cr, dx2, dy2, dcol, dlen, rng)
-
-    # Subtle notebook rules on top for readability
-    cr.set_line_width(0.30)
+    # Subtle notebook rules — barely visible grid
+    cr.set_line_width(0.25)
     for ry in range(int(y) + 24, int(y + h), 24):
-        cr.set_source_rgba(1, 1, 1, 0.028)
+        cr.set_source_rgba(1, 1, 1, 0.022)
         cr.move_to(x, ry); cr.line_to(x + w, ry); cr.stroke()
 
 
@@ -304,45 +249,47 @@ def draw_spray_brick_wall(cr, x, y, w, h, seed=0):
                 by_clip = max(by, y + MORTAR // 2)
                 bh_clip = min(by + bh_draw, y + h - MORTAR // 2) - by_clip
                 if bh_clip > 0:
-                    # Each brick gets a random neon color — visibly bright
-                    col = rng.choice(PALETTE)
-                    r, g, b = col
-                    # Base coat — mid brightness so you can clearly see the color
-                    darkness = rng.uniform(0.55, 0.85)
-                    cr.set_source_rgb(r * darkness, g * darkness, b * darkness)
-                    cr.rectangle(bx, by_clip, bw_draw, bh_clip); cr.fill()
+                    colored = rng.random() < 0.35  # ~35% get color, rest dark
 
-                    # Spray paint coverage — brighter hot-spot in center
-                    if rng.random() < 0.65:
-                        bright = rng.uniform(0.82, 1.00)
-                        cx_b = bx + bw_draw * rng.uniform(0.25, 0.75)
-                        cy_b = by_clip + bh_clip * rng.uniform(0.25, 0.75)
-                        cr.set_source_rgba(r * bright, g * bright, b * bright, 0.75)
-                        cr.arc(cx_b, cy_b,
-                               max(bw_draw, bh_clip) * rng.uniform(0.25, 0.45),
-                               0, math.pi * 2)
-                        cr.fill()
+                    if colored:
+                        col = rng.choice(PALETTE)
+                        r, g, b = col
+                        darkness = rng.uniform(0.55, 0.85)
+                        cr.set_source_rgb(r * darkness, g * darkness, b * darkness)
+                        cr.rectangle(bx, by_clip, bw_draw, bh_clip); cr.fill()
 
-                    # Spray bleed over mortar lines — dots spilling past brick edge
-                    bleed_n = rng.randint(2, 8)
-                    for _ in range(bleed_n):
-                        bdx = rng.uniform(-5, bw_draw + 5)
-                        bdy = rng.uniform(-4, bh_clip + 4)
-                        br = rng.uniform(0.5, 2.5)
-                        ba = rng.uniform(0.15, 0.50)
-                        cr.set_source_rgba(r, g, b, ba)
-                        cr.arc(bx + bdx, by_clip + bdy, br, 0, math.pi * 2)
-                        cr.fill()
+                        # Brighter hot-spot in center
+                        if rng.random() < 0.60:
+                            bright = rng.uniform(0.82, 1.00)
+                            cx_b = bx + bw_draw * rng.uniform(0.25, 0.75)
+                            cy_b = by_clip + bh_clip * rng.uniform(0.25, 0.75)
+                            cr.set_source_rgba(r * bright, g * bright, b * bright, 0.72)
+                            cr.arc(cx_b, cy_b,
+                                   max(bw_draw, bh_clip) * rng.uniform(0.22, 0.42),
+                                   0, math.pi * 2)
+                            cr.fill()
 
-                    # Occasional highlight streak (spray pass direction)
-                    if rng.random() < 0.30:
-                        sx1 = bx + rng.uniform(2, bw_draw * 0.4)
-                        sy1 = by_clip + rng.uniform(2, bh_clip * 0.4)
-                        sx2 = bx + rng.uniform(bw_draw * 0.5, bw_draw - 2)
-                        sy2 = by_clip + rng.uniform(bh_clip * 0.5, bh_clip - 2)
-                        cr.set_source_rgba(1, 1, 1, rng.uniform(0.06, 0.18))
-                        cr.set_line_width(rng.uniform(0.6, 2.0))
-                        cr.move_to(sx1, sy1); cr.line_to(sx2, sy2); cr.stroke()
+                        # Spray bleed dots — paint spilling past mortar
+                        for _ in range(rng.randint(2, 6)):
+                            bdx = rng.uniform(-4, bw_draw + 4)
+                            bdy = rng.uniform(-3, bh_clip + 3)
+                            cr.set_source_rgba(r, g, b, rng.uniform(0.12, 0.40))
+                            cr.arc(bx + bdx, by_clip + bdy,
+                                   rng.uniform(0.4, 2.0), 0, math.pi * 2)
+                            cr.fill()
+                    else:
+                        # Dark brick — near-black with very subtle warm tint
+                        dv = rng.uniform(0.07, 0.14)
+                        cr.set_source_rgb(dv * 1.1, dv * 0.9, dv * 0.85)
+                        cr.rectangle(bx, by_clip, bw_draw, bh_clip); cr.fill()
+
+                        # Faint surface texture on dark bricks
+                        if rng.random() < 0.25:
+                            cr.set_source_rgba(1, 1, 1, rng.uniform(0.03, 0.07))
+                            cr.set_line_width(0.5)
+                            cr.move_to(bx + 2, by_clip + bh_clip * rng.uniform(0.3, 0.7))
+                            cr.line_to(bx + bw_draw - 2, by_clip + bh_clip * rng.uniform(0.3, 0.7))
+                            cr.stroke()
 
             xx += bw
         yy += BH
