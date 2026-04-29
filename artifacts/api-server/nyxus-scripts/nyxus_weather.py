@@ -397,7 +397,8 @@ class Particles:
 # ── App ───────────────────────────────────────────────────────────────────────
 class NyxusWeather(Gtk.Application):
     def __init__(self):
-        super().__init__(application_id="io.nyxus.weather")
+        super().__init__(application_id="io.nyxus.weather",
+                         flags=Gio.ApplicationFlags.NON_UNIQUE)
         self._particles = Particles()
         self._city="LOCATING..."; self._temp=None; self._feels=None
         self._cond="CLEAR"; self._is_day=True; self._wind=None

@@ -391,11 +391,11 @@ class NyxusNotepad(Gtk.Application):
                 cr.set_source_rgba(*C_YELLOW,0.8); cr.arc(w-10,y+10,3,0,math.pi*2); cr.fill()
             # Title
             title = n.get("title","Untitled")[:24]
-            glow_text(cr,10,y+20,title,*col,size=10,bold=True)
+            glow_text(cr,10,y+22,title,*col,size=14,bold=True)
             # Preview
             txt = n.get("text","").replace('\n',' ')[:60]+"…" if len(n.get("text",""))>60 else n.get("text","").replace('\n',' ')
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(8)
-            cr.set_source_rgba(*C_DIM,0.75); cr.move_to(10,y+34); cr.show_text(txt[:46])
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
+            cr.set_source_rgba(*C_DIM,0.80); cr.move_to(10,y+38); cr.show_text(txt[:46])
             # Tags
             tags=n.get("tags",[]); tx=10
             for j,tag in enumerate(tags[:3]):
@@ -516,12 +516,12 @@ class NyxusNotepad(Gtk.Application):
             cr.set_source_rgba(*col,bg); cr.rectangle(0,0,w,h); cr.fill()
             cr.set_source_rgba(*col,0.6); cr.set_line_width(2)
             cr.move_to(0,0); cr.line_to(0,h); cr.stroke()
-            cr.select_font_face("JetBrains Mono",0,0); cr.set_font_size(8)
-            cr.set_source_rgba(*col,0.85)
+            cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
+            cr.set_source_rgba(*col,0.88)
             preview=txt.replace('\n',' ')[:36]
-            cr.move_to(8,16); cr.show_text(preview)
+            cr.move_to(8,18); cr.show_text(preview)
             if len(txt)>36:
-                cr.set_source_rgba(*col,0.5); cr.move_to(8,28); cr.show_text(txt.replace('\n',' ')[36:72])
+                cr.set_source_rgba(*col,0.55); cr.move_to(8,34); cr.show_text(txt.replace('\n',' ')[36:72])
             cr.set_source_rgba(*col,0.3); cr.set_line_width(1)
             cr.move_to(0,h-1); cr.line_to(w,h-1); cr.stroke()
         return draw
