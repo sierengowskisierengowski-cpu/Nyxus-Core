@@ -9,17 +9,21 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Gdk, GLib, Pango, Gio  # lock GTK4 first
 
 try:
-    gi.require_version("Vte", "2.91")
+    try:
+        gi.require_version("Vte", "2.91")
+    except ValueError:
+        pass  # already required
     from gi.repository import Vte
     HAS_VTE = True
-except Exception:
+except Exception as _vte_err:
     HAS_VTE = False
+    print(f"[nyxus-terminal] VTE import failed: {_vte_err}")
 
 # ── Dimensions ────────────────────────────────────────────────────────────────
 WIN_W, WIN_H   = 1100, 680
 BORDER_TOP     = 68   # title bar + top brick
 BORDER_BOTTOM  = 38
-BORDER_SIDE    = 50
+BORDER_SIDE    = 34
 IDLE_SECS      = 90   # seconds before blur kicks in
 
 # ── NYXUS palette (r,g,b floats) ─────────────────────────────────────────────
@@ -189,85 +193,105 @@ def draw_spray_can(cr, cx, cy, color, hovered=False):
 
 
 def draw_graffiti_bg(cr, x, y, w, h, t=0.0):
-    """Draw graffiti art background for the terminal inner area."""
+    """Paint-splatter graffiti wall — icon-generator style, full bleed."""
     rng = _rng(42)
 
-    # Base dark background
+    # ── Base dark wall ──
     cr.set_source_rgb(*C_DARK)
     cr.rectangle(x, y, w, h)
     cr.fill()
 
-    # ── Faint brick hint on graffiti wall (very subtle) ──
-    cr.set_source_rgba(0.18, 0.12, 0.08, 0.25)
-    M = 3
-    BH2 = 32
-    row2 = 0
-    yy2 = y
+    # ── Faint real brick outline in background (very subtle, like a real wall) ──
+    BH2, M2 = 28, 3
+    row2 = 0; yy2 = y
     while yy2 < y + h:
-        off2 = 40 if row2 % 2 else 0
+        off2 = 44 if row2 % 2 else 0
         xx2 = x - off2
-        while xx2 < x + w + 80:
-            bw2 = 80 + rng.randint(-10, 10)
-            lx = max(x, xx2 + M)
-            rx = min(x + w, xx2 + bw2 - M)
-            if rx - lx > 4:
-                cr.set_line_width(0.8)
-                cr.set_source_rgba(0.30, 0.22, 0.14, 0.15)
-                cr.rectangle(lx, yy2 + M, rx - lx, BH2 - M * 2)
+        while xx2 < x + w + 88:
+            bw2 = 88 + rng.randint(-12, 12)
+            lx = max(x, xx2 + M2); rx = min(x + w, xx2 + bw2 - M2)
+            if rx - lx > 6:
+                cr.set_line_width(0.6)
+                cr.set_source_rgba(0.28, 0.18, 0.10, 0.12)
+                cr.rectangle(lx, yy2 + M2, rx - lx, BH2 - M2 * 2)
                 cr.stroke()
             xx2 += bw2
-        yy2 += BH2
-        row2 += 1
+        yy2 += BH2; row2 += 1
 
-    # ── Large NYXUS graffiti text ──
-    _draw_graffiti_word(cr, x + w * 0.5, y + h * 0.48, "NYXUS",
-                        C_PINK, C_PURPLE, 88, rng)
-
-    # ── TERMINAL secondary tag ──
-    _draw_graffiti_word(cr, x + w * 0.5, y + h * 0.75, "TERMINAL",
-                        C_BLUE, C_GREEN, 38, rng)
-
-    # ── Random spray splatters ──
-    splatter_pts = [
-        (x + w * 0.12, y + h * 0.22, C_GREEN,  70),
-        (x + w * 0.88, y + h * 0.30, C_ORANGE, 55),
-        (x + w * 0.25, y + h * 0.72, C_YELLOW, 60),
-        (x + w * 0.78, y + h * 0.70, C_PURPLE, 65),
-        (x + w * 0.50, y + h * 0.20, C_BLUE,   45),
+    # ── MASSIVE background paint blobs (like icon generator — 20 large blobs) ──
+    blob_data = [
+        (0.08, 0.15, C_GREEN,  52), (0.92, 0.12, C_ORANGE, 44),
+        (0.50, 0.08, C_BLUE,   38), (0.22, 0.80, C_YELLOW, 48),
+        (0.78, 0.75, C_PURPLE, 55), (0.15, 0.48, C_PINK,   35),
+        (0.85, 0.50, C_BLUE,   42), (0.40, 0.30, C_ORANGE, 30),
+        (0.62, 0.65, C_GREEN,  36), (0.30, 0.60, C_PURPLE, 28),
+        (0.70, 0.25, C_PINK,   32), (0.55, 0.88, C_YELLOW, 40),
+        (0.05, 0.72, C_BLUE,   24), (0.95, 0.40, C_GREEN,  26),
+        (0.48, 0.52, C_ORANGE, 20), (0.20, 0.20, C_PURPLE, 18),
+        (0.80, 0.82, C_PINK,   22), (0.35, 0.42, C_YELLOW, 16),
+        (0.65, 0.38, C_BLUE,   14), (0.12, 0.90, C_ORANGE, 18),
     ]
-    for px, py, col, spread in splatter_pts:
-        spray_dots(cr, px, py, col, n=80, spread=spread, alpha_max=0.38)
-        # Center blob
-        cr.set_source_rgba(*col, 0.20)
-        cr.arc(px, py, spread * 0.18, 0, math.pi * 2)
+    for bfx, bfy, bcol, brad in blob_data:
+        bpx = x + w * bfx; bpy = y + h * bfy
+        cr.set_source_rgba(*bcol, rng.uniform(0.12, 0.30))
+        cr.arc(bpx, bpy, brad, 0, math.pi * 2)
         cr.fill()
+        spray_dots(cr, bpx, bpy, bcol, n=90, spread=int(brad * 1.8), alpha_max=0.32)
 
-    # ── Paint drips (vertical) ──
+    # ── Splatter streaks (horizontal throws) ──
+    for _ in range(28):
+        sx = rng.uniform(x, x + w); sy = rng.uniform(y, y + h)
+        ex = sx + rng.uniform(-120, 120); ey = sy + rng.uniform(-18, 18)
+        col = rng.choice(PALETTE)
+        cr.set_source_rgba(*col, rng.uniform(0.14, 0.42))
+        cr.set_line_width(rng.uniform(0.7, 2.8))
+        cr.move_to(sx, sy); cr.line_to(ex, ey); cr.stroke()
+        # Splatter dots at end of streak
+        spray_dots(cr, ex, ey, col, n=12, spread=8, alpha_max=0.35)
+
+    # ── Dense small dot field (icon-generator small dots — 80 dots) ──
+    for _ in range(80):
+        bpx = rng.uniform(x + 4, x + w - 4); bpy = rng.uniform(y + 4, y + h - 4)
+        brad = rng.uniform(1, 4.5)
+        col = rng.choice(PALETTE)
+        cr.set_source_rgba(*col, rng.uniform(0.25, 0.65))
+        cr.arc(bpx, bpy, brad, 0, math.pi * 2); cr.fill()
+
+    # ── Large NYXUS graffiti tag (main piece) ──
+    _draw_graffiti_word(cr, x + w * 0.5, y + h * 0.46, "NYXUS",
+                        C_PINK, C_PURPLE, 92, rng)
+
+    # ── TERMINAL crew tag ──
+    _draw_graffiti_word(cr, x + w * 0.5, y + h * 0.76, "TERMINAL",
+                        C_BLUE, C_GREEN, 40, rng)
+
+    # ── Paint drips from the top brick edge ──
     drip_data = [
-        (x + w * 0.15, y + h * 0.15, C_PINK,   h * 0.30),
-        (x + w * 0.38, y + h * 0.05, C_GREEN,  h * 0.22),
-        (x + w * 0.62, y + h * 0.08, C_ORANGE, h * 0.28),
-        (x + w * 0.84, y + h * 0.12, C_BLUE,   h * 0.20),
+        (x + w * 0.13, y,       C_PINK,   h * 0.38),
+        (x + w * 0.32, y,       C_GREEN,  h * 0.26),
+        (x + w * 0.58, y,       C_ORANGE, h * 0.34),
+        (x + w * 0.77, y,       C_BLUE,   h * 0.24),
+        (x + w * 0.90, y,       C_YELLOW, h * 0.20),
     ]
-    for dx, dy, dcol, dlen in drip_data:
-        _draw_drip(cr, dx, dy, dcol, dlen, rng)
+    for dx2, dy2, dcol, dlen in drip_data:
+        _draw_drip(cr, dx2, dy2, dcol, dlen, rng)
 
-    # ── Graffiti stars / asterisks ──
+    # ── Graffiti stars / crowd tags ──
     star_pts = [
-        (x + w * 0.05, y + h * 0.55, C_YELLOW, 16),
-        (x + w * 0.95, y + h * 0.50, C_PINK,   12),
-        (x + w * 0.48, y + h * 0.90, C_GREEN,  10),
+        (x + w * 0.04, y + h * 0.55, C_YELLOW, 18),
+        (x + w * 0.96, y + h * 0.48, C_PINK,   14),
+        (x + w * 0.46, y + h * 0.93, C_GREEN,  12),
+        (x + w * 0.88, y + h * 0.88, C_ORANGE, 10),
+        (x + w * 0.06, y + h * 0.25, C_BLUE,   10),
     ]
-    for sx, sy, scol, sr in star_pts:
-        _draw_star(cr, sx, sy, scol, sr)
+    for sx2, sy2, scol, sr in star_pts:
+        _draw_star(cr, sx2, sy2, scol, sr)
 
-    # ── Subtle ruled lines over everything (composition notebook) ──
-    cr.set_line_width(0.4)
-    for ry in range(int(y) + 28, int(y + h), 28):
-        cr.set_source_rgba(1, 1, 1, 0.045)
-        cr.move_to(x, ry)
-        cr.line_to(x + w, ry)
-        cr.stroke()
+    # ── Subtle notebook ruled lines on top (keeps it readable) ──
+    cr.set_line_width(0.35)
+    for ry in range(int(y) + 26, int(y + h), 26):
+        cr.set_source_rgba(1, 1, 1, 0.038)
+        cr.move_to(x, ry); cr.line_to(x + w, ry); cr.stroke()
 
 
 def _draw_graffiti_word(cr, cx, cy, word, color1, color2, size, rng):
@@ -363,6 +387,77 @@ def _draw_star(cr, cx, cy, color, radius):
     cr.fill()
 
 
+def _draw_border_graffiti(cr, w, h, rng):
+    """Spray paint tags, drips, and gang stars directly on the brick border strips."""
+    # ── Left strip: "NYX" sprayed at angle ──
+    cr.save()
+    lx = BORDER_SIDE / 2
+    cr.translate(lx, h * 0.42)
+    cr.rotate(-math.pi / 2)
+    cr.select_font_face("Caveat", 0, 1)
+    cr.set_font_size(17)
+    # Glow
+    cr.set_source_rgba(*C_PINK, 0.28)
+    cr.set_line_width(5)
+    cr.move_to(0, 0); cr.text_path("NYX"); cr.stroke()
+    # Fill
+    cr.set_source_rgba(*C_PINK, 0.72)
+    cr.move_to(0, 0); cr.show_text("NYX")
+    cr.restore()
+
+    # ── Left strip: spray scatter around tag ──
+    spray_dots(cr, BORDER_SIDE * 0.5, h * 0.42, C_PINK, n=28, spread=BORDER_SIDE // 2, alpha_max=0.28)
+    spray_dots(cr, BORDER_SIDE * 0.5, h * 0.62, C_PURPLE, n=20, spread=10, alpha_max=0.22)
+
+    # ── Left strip: a graffiti crown ──
+    cx = BORDER_SIDE * 0.5; cy = h * 0.25
+    cr.set_source_rgba(*C_YELLOW, 0.60)
+    cr.set_line_width(1.5)
+    pts = [(cx - 8, cy + 6), (cx - 8, cy - 2), (cx - 4, cy + 2),
+           (cx, cy - 6),     (cx + 4, cy + 2), (cx + 8, cy - 2), (cx + 8, cy + 6)]
+    cr.move_to(*pts[0])
+    for px2, py2 in pts[1:]: cr.line_to(px2, py2)
+    cr.close_path(); cr.stroke()
+    spray_dots(cr, cx, cy, C_YELLOW, n=12, spread=8, alpha_max=0.20)
+
+    # ── Right strip: "TERM" at angle ──
+    cr.save()
+    rx = w - BORDER_SIDE / 2
+    cr.translate(rx, h * 0.42)
+    cr.rotate(-math.pi / 2)
+    cr.select_font_face("Caveat", 0, 1)
+    cr.set_font_size(14)
+    cr.set_source_rgba(*C_BLUE, 0.28)
+    cr.set_line_width(5)
+    cr.move_to(0, 0); cr.text_path("TERM"); cr.stroke()
+    cr.set_source_rgba(*C_BLUE, 0.70)
+    cr.move_to(0, 0); cr.show_text("TERM")
+    cr.restore()
+    spray_dots(cr, w - BORDER_SIDE * 0.5, h * 0.38, C_BLUE, n=28, spread=BORDER_SIDE // 2, alpha_max=0.25)
+    spray_dots(cr, w - BORDER_SIDE * 0.5, h * 0.62, C_GREEN, n=18, spread=10, alpha_max=0.20)
+
+    # ── Top strip: scattered tags + stars ──
+    for fx, col in [(0.28, C_GREEN), (0.72, C_ORANGE)]:
+        spray_dots(cr, w * fx, BORDER_TOP * 0.5, col, n=22, spread=18, alpha_max=0.30)
+    _draw_star(cr, w * 0.15, BORDER_TOP * 0.5, C_YELLOW, 7)
+    _draw_star(cr, w * 0.82, BORDER_TOP * 0.5, C_PINK,   6)
+
+    # ── Bottom strip: drips falling from bottom edge ──
+    for fx, col in [(0.22, C_PURPLE), (0.55, C_BLUE), (0.78, C_GREEN)]:
+        spray_dots(cr, w * fx, h - BORDER_BOTTOM * 0.5, col, n=16, spread=12, alpha_max=0.28)
+
+    # ── Big background splatters over corners + sides (more rawness) ──
+    for cx2, cy2, col2, sp in [
+        (BORDER_SIDE * 0.5, BORDER_TOP,            C_ORANGE, 22),
+        (w - BORDER_SIDE * 0.5, BORDER_TOP,        C_GREEN,  18),
+        (BORDER_SIDE * 0.5, h - BORDER_BOTTOM,     C_YELLOW, 18),
+        (w - BORDER_SIDE * 0.5, h - BORDER_BOTTOM, C_PINK,   16),
+    ]:
+        spray_dots(cr, cx2, cy2, col2, n=30, spread=sp, alpha_max=0.30)
+        cr.set_source_rgba(*col2, 0.18)
+        cr.arc(cx2, cy2, sp * 0.35, 0, math.pi * 2); cr.fill()
+
+
 def draw_chrome(cr, w, h, hovering_can=None, t=0.0):
     """Draw the full brick-wall window frame + spray can buttons."""
     # ── Top brick border (title bar) ──
@@ -387,6 +482,9 @@ def draw_chrome(cr, w, h, hovering_can=None, t=0.0):
     draw_brick_wall(cr, 0, h - BORDER_BOTTOM, BORDER_SIDE, BORDER_BOTTOM, seed=7)
     # Bottom-right
     draw_brick_wall(cr, w - BORDER_SIDE, h - BORDER_BOTTOM, BORDER_SIDE, BORDER_BOTTOM, seed=8)
+
+    # ── Street graffiti tags sprayed ON the bricks ──
+    _draw_border_graffiti(cr, w, h, _rng(77))
 
     # ── NYXUS title in top brick bar ──
     cr.select_font_face("Caveat", 0, 1)
