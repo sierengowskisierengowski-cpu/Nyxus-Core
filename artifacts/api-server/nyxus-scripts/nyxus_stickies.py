@@ -117,83 +117,85 @@ def _wrap(cr, text, max_w, size=14):
 
 # ── Background ────────────────────────────────────────────────────────────────
 
-def draw_bg(cr, w, h):
-    cr.set_source_rgb(*C_DARK); cr.rectangle(0,0,w,h); cr.fill()
+def draw_canvas_bg(cr, x, y, w, h):
+    """Paint-splatter background for the sticky note canvas only."""
+    cr.set_source_rgb(*C_DARK); cr.rectangle(x,y,w,h); cr.fill()
     neons = list(NOTE_INK)
     rng = _rand.Random(77)
     for _ in range(24):
-        bx=rng.uniform(0,w); by=rng.uniform(0,h); br=rng.uniform(8,38)
+        bx=x+rng.uniform(0,w); by=y+rng.uniform(0,h); br=rng.uniform(8,38)
         cr.set_source_rgba(*rng.choice(neons), rng.uniform(0.04,0.13))
         cr.arc(bx,by,br,0,math.pi*2); cr.fill()
     for _ in range(32):
-        sx=rng.uniform(0,w); sy=rng.uniform(0,h)
+        sx=x+rng.uniform(0,w); sy=y+rng.uniform(0,h)
         ex=sx+rng.uniform(-110,110); ey=sy+rng.uniform(-16,16)
         cr.set_source_rgba(*rng.choice(neons), rng.uniform(0.04,0.14))
         cr.set_line_width(rng.uniform(0.6,2.6))
         cr.move_to(sx,sy); cr.line_to(ex,ey); cr.stroke()
     for _ in range(8):
-        spray_dots(cr, rng.uniform(0,w), rng.uniform(0,h),
+        spray_dots(cr, x+rng.uniform(0,w), y+rng.uniform(0,h),
                    rng.choice(neons), n=35, spread=int(rng.uniform(22,65)),
                    alpha_max=0.14, rng=rng)
     for _ in range(130):
         cr.set_source_rgba(*rng.choice(neons), rng.uniform(0.05,0.18))
-        cr.arc(rng.uniform(0,w), rng.uniform(0,h), rng.uniform(0.6,2.8), 0, math.pi*2)
-        cr.fill()
+        cr.arc(x+rng.uniform(0,w), y+rng.uniform(0,h),
+               rng.uniform(0.6,2.8), 0, math.pi*2); cr.fill()
     sp=32
-    for gx in range(sp,int(w),sp):
-        for gy in range(sp,int(h),sp):
+    for gx in range(int(x)+sp, int(x+w), sp):
+        for gy in range(int(y)+sp, int(y+h), sp):
             cr.set_source_rgba(*rng.choice(neons), 0.05)
             cr.arc(gx,gy,1.1,0,math.pi*2); cr.fill()
     cr.set_line_width(0.35)
-    for ry in range(32,int(h),32):
+    for ry in range(int(y)+32,int(y+h),32):
         cr.set_source_rgba(1,1,1,0.025)
-        cr.move_to(0,ry); cr.line_to(w,ry); cr.stroke()
+        cr.move_to(x,ry); cr.line_to(x+w,ry); cr.stroke()
 
 
 # ── Toolbar ───────────────────────────────────────────────────────────────────
 
 def draw_toolbar(cr, w, note_count, selected_theme, search_txt, hovered_btn):
-    # Dark band
-    cr.set_source_rgba(0.06,0.04,0.10,0.97)
-    cr.rectangle(0,0,w,TOOLBAR_H); cr.fill()
+    # Distinctly purple-dark band — very different from canvas
+    cr.set_source_rgb(0.10, 0.04, 0.18)
+    cr.rectangle(0, 0, w, TOOLBAR_H); cr.fill()
 
-    # Bottom border glow
-    cr.set_source_rgba(1,0,1,0.35); cr.set_line_width(1.5)
-    cr.move_to(0,TOOLBAR_H); cr.line_to(w,TOOLBAR_H); cr.stroke()
+    # Neon top edge line
+    cr.set_source_rgba(1, 0, 1, 0.70); cr.set_line_width(2.5)
+    cr.move_to(0, 1); cr.line_to(w, 1); cr.stroke()
+    # Neon bottom edge line
+    cr.set_source_rgba(1, 0, 1, 0.55); cr.set_line_width(2.0)
+    cr.move_to(0, TOOLBAR_H-1); cr.line_to(w, TOOLBAR_H-1); cr.stroke()
 
-    # Title
-    glow_text(cr, 18, 42, "NYXUS STICKIES", (1,0.3,1), 28, bold=True, glow_alpha=0.28)
+    # Title — very bright, large
+    glow_text(cr, 18, 44, "NYXUS STICKIES", (1, 0, 1), 30, bold=True, glow_alpha=0.35)
 
     # Note count
     caveat(cr, 15)
-    cr.set_source_rgba(0.75,0.55,0.95,0.70)
-    count_txt = f"{note_count} note{'s' if note_count!=1 else ''}"
-    cr.move_to(280, 40); cr.show_text(count_txt)
+    cr.set_source_rgba(0.80, 0.60, 1.0, 0.80)
+    cr.move_to(295, 42)
+    cr.show_text(f"{note_count} note{'s' if note_count!=1 else ''}")
 
-    # Search box  (static visual — entry is handled by GTK overlay)
+    # Search box border (GTK Entry is overlaid transparently here)
     search_x = w - 580
-    sketch_rect(cr, search_x, 16, 210, 36, (0.6,0.3,0.8), thick=1.6, jitter=1.8,
-                fill_rgba=(0.06,0.04,0.10,0.95))
-    caveat(cr, 14)
-    cr.set_source_rgba(0.55,0.45,0.75,0.55)
-    cr.move_to(search_x+12, 39)
-    cr.show_text(search_txt if search_txt else "search notes...")
+    sketch_rect(cr, search_x, 15, 212, 38, (0.7, 0.3, 1.0), thick=2.0, jitter=1.8,
+                fill_rgba=(0.06, 0.02, 0.12, 0.95))
+    if not search_txt:
+        caveat(cr, 14)
+        cr.set_source_rgba(0.55, 0.40, 0.80, 0.50)
+        cr.move_to(search_x+12, 39); cr.show_text("search notes...")
 
     # + NEW NOTE button
-    new_col = (1, 0, 1)
-    new_x = w - 350
-    is_hov_new = hovered_btn == "new"
-    sketch_rect(cr, new_x, 12, 152, 44, new_col, thick=2.2, jitter=2.2,
-                fill_rgba=(0.22,0.0,0.22,0.90) if is_hov_new else (0.10,0.0,0.14,0.90))
-    glow_text(cr, new_x+14, 40, "+ NEW NOTE", new_col, 16, bold=True)
+    new_x = w - 352; new_col = (1.0, 0.0, 1.0)
+    hov_new = hovered_btn == "new"
+    sketch_rect(cr, new_x, 11, 156, 46, new_col, thick=2.6, jitter=2.4,
+                fill_rgba=(0.30, 0.0, 0.30, 0.95) if hov_new else (0.16, 0.0, 0.20, 0.95))
+    glow_text(cr, new_x+12, 41, "+ NEW NOTE", new_col, 17, bold=True, glow_alpha=0.30)
 
     # ✕ DELETE button
-    del_col = (1, 0.25, 0.1)
-    del_x = w - 185
-    is_hov_del = hovered_btn == "del"
-    sketch_rect(cr, del_x, 12, 140, 44, del_col, thick=2.2, jitter=2.2,
-                fill_rgba=(0.22,0.04,0.02,0.90) if is_hov_del else (0.12,0.02,0.01,0.90))
-    glow_text(cr, del_x+16, 40, "✕ DELETE", del_col, 16, bold=True)
+    del_x = w - 182; del_col = (1.0, 0.28, 0.08)
+    hov_del = hovered_btn == "del"
+    sketch_rect(cr, del_x, 11, 142, 46, del_col, thick=2.6, jitter=2.4,
+                fill_rgba=(0.28, 0.06, 0.02, 0.95) if hov_del else (0.15, 0.03, 0.01, 0.95))
+    glow_text(cr, del_x+14, 41, "✕ DELETE", del_col, 17, bold=True, glow_alpha=0.28)
 
 
 def draw_colorbar(cr, w, selected_theme, hovered_color):
@@ -389,7 +391,6 @@ class StickyApp(Gtk.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app, title="NYXUS Stickies")
         self.set_default_size(WIN_W, WIN_H)
-        self.set_decorated(False)
         self.set_resizable(True)
         self.notes          = load_notes()
         self.selected_id    = None
@@ -467,33 +468,40 @@ class StickyApp(Gtk.ApplicationWindow):
     # ── Draw ───────────────────────────────────────────────────────────────
 
     def _draw(self, area, cr, w, h, _):
-        draw_bg(cr, w, h)
+        # 1. Full window base fill
+        cr.set_source_rgb(*C_DARK); cr.rectangle(0,0,w,h); cr.fill()
+
+        # 2. Toolbar (distinctly purple-dark band at top)
         draw_toolbar(cr, w, len(self.notes), self.selected_theme,
                      self._search_txt, self.hovered_btn)
+
+        # 3. Color bar
         draw_colorbar(cr, w, self.selected_theme, self.hovered_color)
 
-        # Canvas clip — notes live below the bars
-        cr.rectangle(0, CANVAS_Y, w, h - CANVAS_Y); cr.clip()
+        # 4. Canvas paint-splatter background (below the bars only)
+        canvas_h = h - CANVAS_Y
+        if canvas_h > 0:
+            draw_canvas_bg(cr, 0, CANVAS_Y, w, canvas_h)
 
+        # 5. Notes
         filt = self._filter
         for n in self.notes:
             if filt and filt not in (n.get("title","")+n.get("body","")).lower():
                 continue
+            ny_draw = n.get("y", 40) + CANVAS_Y
             draw_sticky(cr,
-                n.get("x",40), n.get("y",40) + CANVAS_Y,
+                n.get("x", 40), ny_draw,
                 NOTE_W, NOTE_H,
-                n.get("color",0),
-                n.get("title","Note"),
-                n.get("body",""),
-                n.get("angle",0),
+                n.get("color", 0),
+                n.get("title", "Note"),
+                n.get("body", ""),
+                n.get("angle", 0),
                 selected=(n["id"] == self.selected_id),
                 created=n.get("created",""))
 
-        cr.reset_clip()
-
-        # Watermark
+        # 6. Watermark
         caveat(cr, 11)
-        cr.set_source_rgba(0.50,0.38,0.70,0.25)
+        cr.set_source_rgba(0.50, 0.38, 0.70, 0.25)
         cr.move_to(14, h-8)
         cr.show_text("NYXUS Stickies  ·  double-click to edit  ·  drag to move")
 
