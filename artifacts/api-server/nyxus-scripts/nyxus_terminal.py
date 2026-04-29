@@ -262,17 +262,16 @@ def draw_terminal_bg(cr, x, y, w, h):
 # ── Spray-painted brick wall ──────────────────────────────────────────────────
 
 def draw_spray_brick_wall(cr, x, y, w, h, seed=0):
-    """Dark brick wall with spray-paint throws spanning multiple bricks.
-    The mortar lines stay visible through the paint — real spray can look."""
+    """White brick wall — light mortar, near-white bricks, like the reference images."""
     rng = _rng(seed + int(x * 0.1) + int(y * 0.3))
     MORTAR = 4
     BH = 22
 
-    # ── Step 1: dark mortar background ──────────────────────────────────────
-    cr.set_source_rgb(0.05, 0.04, 0.07)
+    # ── Step 1: light grey mortar background ────────────────────────────────
+    cr.set_source_rgb(0.68, 0.66, 0.70)
     cr.rectangle(x, y, w, h); cr.fill()
 
-    # ── Step 2: draw bricks — dark base, ~30% get individual spray color ────
+    # ── Step 2: near-white bricks ────────────────────────────────────────────
     row = 0; yy = y
     while yy < y + h + BH:
         offset = 36 if (row % 2) else 0
@@ -288,59 +287,15 @@ def draw_spray_brick_wall(cr, x, y, w, h, seed=0):
                 by_clip = max(by_val, y + MORTAR // 2)
                 bh_clip = min(by_val + bh_draw, y + h - MORTAR // 2) - by_clip
                 if bh_clip > 0:
-                    # White/off-white brick face — dark mortar gap already set
-                    wv = rng.uniform(0.78, 0.94)
-                    cr.set_source_rgb(wv, wv * 0.97, wv * 0.96)
+                    # Near-white brick face with slight warm variation
+                    wv = rng.uniform(0.90, 0.98)
+                    cr.set_source_rgb(wv, wv * 0.985, wv * 0.975)
                     cr.rectangle(bx2_val, by_clip, bw_draw, bh_clip); cr.fill()
-
-                    # ~30% of bricks get a tight individual spray pass
-                    if rng.random() < 0.30:
-                        col = rng.choice(PALETTE)
-                        nozzle_x = bx2_val + bw_draw * rng.uniform(0.2, 0.8)
-                        nozzle_y = by_clip + bh_clip * rng.uniform(0.2, 0.8)
-                        brick_r = max(bw_draw, bh_clip) * rng.uniform(0.4, 0.7)
-                        spray_dots(cr, nozzle_x, nozzle_y, col,
-                                   n=rng.randint(25, 45),
-                                   spread=max(4, int(brick_r * 0.5)),
-                                   alpha_max=rng.uniform(0.60, 0.88),
-                                   rng=rng)
-                        spray_dots(cr, nozzle_x, nozzle_y, col,
-                                   n=rng.randint(10, 20),
-                                   spread=max(6, int(brick_r)),
-                                   alpha_max=rng.uniform(0.25, 0.45),
-                                   rng=rng)
+                    # Very subtle shadow on bottom/right edge
+                    cr.set_source_rgba(0, 0, 0, 0.06)
+                    cr.rectangle(bx2_val, by_clip + bh_clip - 2, bw_draw, 2); cr.fill()
             xx += bw
         yy += BH; row += 1
-
-    # ── Step 3: spray-paint throws — large organic clouds over the bricks ───
-    # Each "throw" is like holding a can at one spot — dense center, feathered
-    # edge — the dark mortar lines show THROUGH the paint naturally.
-    # Decide number of throws proportional to area
-    area = w * h
-    n_throws = max(1, int(area / 7000))
-
-    for _ in range(n_throws):
-        # Random nozzle position across the whole strip
-        throw_x = rng.uniform(x, x + w)
-        throw_y = rng.uniform(y, y + h)
-        col = rng.choice(PALETTE)
-
-        # Throw diameter scaled to the shorter wall dimension
-        short = min(w, h)
-        long  = max(w, h)
-        base_r = rng.uniform(short * 0.6, min(short * 1.8, long * 0.55))
-
-        # Three passes: tight dense center → loose feathered edge
-        # Each pass is just spray_dots — Gaussian falloff IS the spray shape
-        spray_dots(cr, throw_x, throw_y, col,
-                   n=180, spread=max(4, int(base_r * 0.30)),
-                   alpha_max=0.95, rng=rng)
-        spray_dots(cr, throw_x, throw_y, col,
-                   n=130, spread=max(6, int(base_r * 0.60)),
-                   alpha_max=0.65, rng=rng)
-        spray_dots(cr, throw_x, throw_y, col,
-                   n=80,  spread=max(8, int(base_r)),
-                   alpha_max=0.30, rng=rng)
 
 
 # ── Graffiti frame — spray-painted bricks + tags + drips ──────────────────────
@@ -536,6 +491,52 @@ def _draw_spray_can(cr, cx, cy, color, hovered=False):
         rng2 = random.Random()
         spray_dots(cr, cx + cap_w / 2 + 14, by - cap_h - 2,
                    color, n=35, spread=12, alpha_max=0.50, rng=rng2)
+
+
+# ── Paint blob (HARLEY-style large ink throw on wall) ─────────────────────────
+
+def draw_paint_blob(cr, cx, cy, col, size, rng):
+    """Organic ink blob + mist + drips — like paint thrown at a white wall."""
+    r, g, b = col
+    n_pts = rng.randint(9, 14)
+    step = (math.pi * 2) / n_pts
+    angles = sorted(i * step + rng.uniform(-step * 0.3, step * 0.3)
+                    for i in range(n_pts))
+    radii  = [size * rng.uniform(0.45, 1.38) for _ in range(n_pts)]
+
+    # Main blob shape (bezier)
+    cr.set_source_rgba(r, g, b, rng.uniform(0.68, 0.86))
+    fx = cx + math.cos(angles[0]) * radii[0]
+    fy = cy + math.sin(angles[0]) * radii[0] * 0.52
+    cr.move_to(fx, fy)
+    for i in range(1, n_pts + 1):
+        ai = angles[i % n_pts]; ri = radii[i % n_pts]
+        ap = angles[(i - 1) % n_pts]; rp = radii[(i - 1) % n_pts]
+        am = (ap + ai) / 2
+        rm = (rp + ri) / 2 * rng.uniform(0.72, 1.28)
+        cr.curve_to(cx + math.cos(am) * rm,       cy + math.sin(am) * rm * 0.52,
+                    cx + math.cos(am) * rm,       cy + math.sin(am) * rm * 0.52,
+                    cx + math.cos(ai) * ri,        cy + math.sin(ai) * ri * 0.52)
+    cr.close_path(); cr.fill()
+
+    # Outer mist ring
+    spray_dots(cr, cx, cy, col, n=90,  spread=int(size * 1.35), alpha_max=0.30, rng=rng)
+    spray_dots(cr, cx, cy, col, n=55,  spread=int(size * 0.65), alpha_max=0.60, rng=rng)
+
+    # Fine splatter dots scattered outward
+    for _ in range(rng.randint(6, 12)):
+        ang = rng.uniform(0, math.pi * 2)
+        dist = rng.uniform(size * 0.6, size * 1.8)
+        sx = cx + math.cos(ang) * dist
+        sy = cy + math.sin(ang) * dist * 0.55
+        spray_dots(cr, sx, sy, col, n=14, spread=int(size * 0.15),
+                   alpha_max=0.55, rng=rng)
+
+    # Paint drips
+    for _ in range(rng.randint(2, 4)):
+        dx = cx + rng.uniform(-size * 0.55, size * 0.55)
+        _draw_drip(cr, dx, cy + size * rng.uniform(0.35, 0.70), col,
+                   rng.uniform(size * 0.4, size * 0.95), rng)
 
 
 # ── Idle overlay ──────────────────────────────────────────────────────────────
@@ -882,11 +883,11 @@ class NyxusTerminal(Gtk.Application):
         cr.set_source_rgb(*C_DARK)
         cr.rectangle(0, 0, w, h); cr.fill()
 
-        # 2. Brick wall texture at 28% opacity over the full window
+        # 2. White brick wall texture at 52% opacity — clearly visible bricks
         cr.push_group()
         draw_spray_brick_wall(cr, 0, 0, w, h, seed=42)
         cr.pop_group_to_source()
-        cr.paint_with_alpha(0.28)
+        cr.paint_with_alpha(0.52)
 
         # 3. Subtle dark tint on the top strip so buttons are readable
         cr.set_source_rgba(0.03, 0.01, 0.08, 0.72)
@@ -915,46 +916,46 @@ class NyxusTerminal(Gtk.Application):
             draw_no_vte(cr, 0, BORDER_TOP, w, h - BORDER_TOP)
 
     def _draw_nyxus_overlay(self, area, cr, w, h, _):
-        """NYXUS graffiti piece — smaller, centred, with matching paint splatters."""
+        """NYXUS on white bricks — HARLEY-style ink blob splatters + graffiti piece."""
         inner_x = BORDER_SIDE
         inner_y = BORDER_TOP
         inner_w = w - BORDER_SIDE * 2
         inner_h = h - BORDER_TOP - BORDER_BOTTOM
         if inner_w <= 0 or inner_h <= 0:
             return
-        rng = _rng(42)
-        cx = inner_x + inner_w * 0.5
-        cy = inner_y + inner_h * 0.46
-        piece_size = min(inner_w * 0.32, 200)   # smaller than before
+
+        rng  = _rng(42)
+        rng2 = _rng(77)
+        cx   = inner_x + inner_w * 0.5
+        cy   = inner_y + inner_h * 0.46
+        # Half the old size (old was min(inner_w*0.32, 200))
+        piece_size = min(inner_w * 0.16, 100)
+        blob_sz    = piece_size * 1.10   # blob radius relative to text size
 
         cr.push_group()
 
-        # Paint splatter throws around the text — same look as brick wall bg
-        splat_cols = [C_PINK, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE, C_PURPLE]
-        for i, col in enumerate(splat_cols):
-            angle = math.radians(i * 60 + 15)
-            dist = rng.uniform(piece_size * 0.55, piece_size * 1.1)
-            sx = cx + math.cos(angle) * dist
-            sy = cy + math.sin(angle) * dist * 0.65
-            spread = int(rng.uniform(piece_size * 0.22, piece_size * 0.45))
-            spray_dots(cr, sx, sy, col, n=90,  spread=spread,      alpha_max=0.85, rng=rng)
-            spray_dots(cr, sx, sy, col, n=60,  spread=spread * 2,  alpha_max=0.45, rng=rng)
-            spray_dots(cr, sx, sy, col, n=30,  spread=spread * 3,  alpha_max=0.18, rng=rng)
+        # ── Large HARLEY-style ink blobs BEHIND the text ───────────────────
+        # Centre mega-blob (like the main splat behind HARLEY)
+        draw_paint_blob(cr, cx, cy, C_PURPLE, blob_sz * 1.6, rng)
 
-        # A few extra random throws for natural randomness
-        rng2 = _rng(99)
-        for _ in range(4):
-            sx = cx + rng2.uniform(-inner_w * 0.35, inner_w * 0.35)
-            sy = cy + rng2.uniform(-inner_h * 0.25, inner_h * 0.25)
-            col = rng2.choice(PALETTE)
-            spray_dots(cr, sx, sy, col, n=55, spread=int(piece_size * 0.30),
-                       alpha_max=0.55, rng=rng2)
+        # Offset blobs left + right for asymmetry
+        draw_paint_blob(cr, cx - piece_size * 0.9, cy + piece_size * 0.15,
+                        C_PINK,  blob_sz * 1.1, rng2)
+        draw_paint_blob(cr, cx + piece_size * 0.85, cy - piece_size * 0.10,
+                        C_BLUE,  blob_sz * 1.0, rng2)
 
-        # NYXUS piece on top of the splatters
+        # Smaller accent blobs scattered around
+        for i, col in enumerate([C_GREEN, C_ORANGE, C_YELLOW]):
+            ang = math.radians(i * 120 + 40)
+            bx  = cx + math.cos(ang) * piece_size * 1.6
+            by  = cy + math.sin(ang) * piece_size * 0.8
+            draw_paint_blob(cr, bx, by, col, blob_sz * 0.55, rng)
+
+        # ── NYXUS graffiti piece on top ────────────────────────────────────
         _draw_nyxus_piece(cr, cx, cy, piece_size, rng)
 
         cr.pop_group_to_source()
-        cr.paint_with_alpha(0.42)
+        cr.paint_with_alpha(0.45)
 
     def _draw_sel_overlay(self, area, cr, w, h, _):
         cr.set_operator(1)
