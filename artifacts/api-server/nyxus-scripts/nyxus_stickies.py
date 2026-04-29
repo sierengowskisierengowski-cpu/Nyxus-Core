@@ -12,7 +12,7 @@ from datetime import datetime
 DATA_FILE = os.path.expanduser("~/.nyxus/stickies.json")
 os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
 
-WIN_W, WIN_H = 1100, 720
+WIN_W, WIN_H = 960, 640
 TOOLBAR_H    = 68
 COLORBAR_H   = 44
 CANVAS_Y     = TOOLBAR_H + COLORBAR_H
@@ -431,7 +431,8 @@ class StickyApp(Gtk.ApplicationWindow):
         key.connect("key-pressed", self._on_key)
         self.add_controller(key)
 
-        self.connect("notify::default-size", self._on_resize)
+        self.connect("notify::default-width", self._on_resize)
+        self.connect("notify::default-height", self._on_resize)
 
     def _reposition_search(self):
         w = self.get_width() or WIN_W
@@ -447,6 +448,15 @@ class StickyApp(Gtk.ApplicationWindow):
     # ── Draw ───────────────────────────────────────────────────────────────
 
     def _draw(self, area, cr, w, h, _):
+        try:
+            self._draw_inner(cr, w, h)
+        except Exception:
+            import traceback
+            with open("/tmp/nyxus-stickies.log", "a") as f:
+                f.write(f"_draw crash (w={w} h={h}):\n")
+                traceback.print_exc(file=f)
+
+    def _draw_inner(self, cr, w, h):
         # 1. Full window base fill
         cr.set_source_rgb(*C_DARK); cr.rectangle(0,0,w,h); cr.fill()
 

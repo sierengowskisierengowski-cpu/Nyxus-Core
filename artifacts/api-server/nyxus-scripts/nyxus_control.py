@@ -625,7 +625,7 @@ class NyxusControl(Gtk.Application):
             Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
         self.win = Gtk.ApplicationWindow(application=self, title="NYXUS Control")
-        self.win.set_default_size(1440, 900)
+        self.win.set_default_size(1200, 750)
         self.win.connect("close-request", self._on_close)
 
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)

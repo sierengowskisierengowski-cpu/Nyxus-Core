@@ -377,33 +377,43 @@ window { background-color: #08080e; color: rgba(232,224,245,0.92); }
 
 /* ── Nav sidebar ─────────────────────────────────────────────────────── */
 .nav-bar {
-    background-color: #0d0d1a;
-    border-right: 2px solid rgba(255,0,255,0.18);
-    min-width: 152px;
+    background-color: #0a0a18;
+    border-right: 3px solid rgba(255,0,255,0.30);
+    min-width: 168px;
 }
 .nav-btn {
-    background-color: transparent;
-    color: rgba(180,160,220,0.70);
-    border: none; border-left: 4px solid transparent; border-radius: 0;
-    padding: 11px 14px 11px 16px;
-    font-size: 16px; font-weight: bold; letter-spacing: 1px; min-height: 0;
+    background-color: rgba(255,255,255,0.03);
+    color: rgba(180,160,220,0.75);
+    border: 1px solid rgba(255,0,255,0.14);
+    border-left: 5px solid transparent;
+    border-radius: 5px;
+    padding: 13px 14px 13px 15px;
+    margin: 3px 8px;
+    font-size: 17px; font-weight: bold; letter-spacing: 2px; min-height: 0;
 }
 .nav-btn:hover {
-    background-color: rgba(255,0,255,0.09);
-    color: rgba(255,180,255,0.92);
+    background-color: rgba(255,0,255,0.11);
+    color: rgba(255,200,255,0.96);
+    border-color: rgba(255,0,255,0.38);
 }
-.nav-active-pink   { background: rgba(255,0,255,0.12); color: #ff88ff;
-                     border-left: 4px solid #ff00ff; }
-.nav-active-orange { background: rgba(255,85,0,0.12); color: #ff8855;
-                     border-left: 4px solid #ff5500; }
-.nav-active-purple { background: rgba(204,0,255,0.12); color: #dd88ff;
-                     border-left: 4px solid #cc00ff; }
-.nav-active-blue   { background: rgba(0,136,255,0.12); color: #66bbff;
-                     border-left: 4px solid #0088ff; }
-.nav-active-green  { background: rgba(57,255,20,0.10); color: #88ff55;
-                     border-left: 4px solid #39ff14; }
-.nav-active-yellow { background: rgba(255,255,0,0.10); color: #ffff88;
-                     border-left: 4px solid #ffff00; }
+.nav-active-pink   { background: rgba(255,0,255,0.14); color: #ff99ff;
+                     border-left: 5px solid #ff00ff;
+                     border-color: rgba(255,0,255,0.45); }
+.nav-active-orange { background: rgba(255,85,0,0.14); color: #ff9966;
+                     border-left: 5px solid #ff5500;
+                     border-color: rgba(255,85,0,0.45); }
+.nav-active-purple { background: rgba(204,0,255,0.14); color: #ee99ff;
+                     border-left: 5px solid #cc00ff;
+                     border-color: rgba(204,0,255,0.45); }
+.nav-active-blue   { background: rgba(0,136,255,0.14); color: #77ccff;
+                     border-left: 5px solid #0088ff;
+                     border-color: rgba(0,136,255,0.45); }
+.nav-active-green  { background: rgba(57,255,20,0.11); color: #99ff66;
+                     border-left: 5px solid #39ff14;
+                     border-color: rgba(57,255,20,0.45); }
+.nav-active-yellow { background: rgba(255,255,0,0.11); color: #ffff99;
+                     border-left: 5px solid #ffff00;
+                     border-color: rgba(255,255,0,0.45); }
 
 /* ── Search input ────────────────────────────────────────────────────── */
 .search-e {
@@ -480,7 +490,7 @@ class NyxusSysmonGtk(Gtk.Application):
             except Exception: pass
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(),prov,Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.win=Gtk.ApplicationWindow(application=self,title="NYXUS SysMon")
-        self.win.set_default_size(1440,900)
+        self.win.set_default_size(1280,800)
 
         root=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.win.set_child(root)
@@ -520,7 +530,6 @@ class NyxusSysmonGtk(Gtk.Application):
         GLib.timeout_add(1000,self._clock_tick)
         self._data_tick()
         self.win.present()
-        self.win.fullscreen()
 
     # ── Header ─────────────────────────────────────────────────────────────────
     def _draw_hdr(self,area,cr,w,h,_):
@@ -550,16 +559,24 @@ class NyxusSysmonGtk(Gtk.Application):
 
     # ── Nav sidebar ─────────────────────────────────────────────────────────────
     def _build_nav(self):
-        box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        box.add_css_class("nav-bar")
+        outer=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        outer.add_css_class("nav-bar")
+        outer.set_vexpand(True)
+        # Spacer above — pushes buttons to center
+        top_spacer=Gtk.Box(); top_spacer.set_vexpand(True)
+        outer.append(top_spacer)
+        # Buttons
         self._nav_btns={}
         for name,color in PAGES:
             btn=Gtk.Button(label=name)
             btn.add_css_class("nav-btn")
             btn.connect("clicked",lambda *_,n=name:self._nav(n))
-            box.append(btn); self._nav_btns[name]=btn
+            outer.append(btn); self._nav_btns[name]=btn
+        # Spacer below — mirrors top
+        bot_spacer=Gtk.Box(); bot_spacer.set_vexpand(True)
+        outer.append(bot_spacer)
         self._nav_update()
-        return box
+        return outer
 
     def _nav(self,name):
         self._cur_page=name

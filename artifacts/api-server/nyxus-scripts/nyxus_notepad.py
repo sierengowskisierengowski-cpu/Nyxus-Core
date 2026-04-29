@@ -248,7 +248,7 @@ class NyxusNotepad(Gtk.Application):
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
         self.win = Gtk.ApplicationWindow(application=self, title="NYXUS Notepad")
-        self.win.set_default_size(1280, 800)
+        self.win.set_default_size(1100, 720)
 
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.win.set_child(root)
