@@ -6,49 +6,10 @@
 # ╚══════════════════════════════════════════════════════════════════════╝
 import gi
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, Gdk, GLib, Gio, GdkPixbuf
+from gi.repository import Gtk, Gdk, GLib, Gio
 import math, time, os, threading, socket, platform, signal, subprocess, traceback, sys
 from collections import deque
 from datetime import datetime, timedelta
-
-_NYXUS_BG_DIR   = os.path.expanduser("~/.nyxus/backgrounds")
-_nyxus_bg_cache: dict = {}
-
-def _load_bg(name: str):
-    if name in _nyxus_bg_cache:
-        return _nyxus_bg_cache[name]
-    path = os.path.join(_NYXUS_BG_DIR, name)
-    if not os.path.exists(path):
-        _nyxus_bg_cache[name] = None
-        return None
-    try:
-        pb = GdkPixbuf.Pixbuf.new_from_file(path)
-        _nyxus_bg_cache[name] = pb
-        return pb
-    except Exception:
-        _nyxus_bg_cache[name] = None
-        return None
-
-def draw_image_bg(cr, x, y, w, h, name, alpha=1.0):
-    pb = _load_bg(name)
-    if pb is None:
-        return False
-    iw, ih = pb.get_width(), pb.get_height()
-    if iw <= 0 or ih <= 0:
-        return False
-    cr.save()
-    try:
-        cr.rectangle(x, y, w, h)
-        cr.clip()
-        cr.translate(x, y)
-        cr.scale(w / iw, h / ih)
-        Gdk.cairo_set_source_pixbuf(cr, pb, 0, 0)
-        cr.paint_with_alpha(alpha)
-    except Exception:
-        pass
-    finally:
-        cr.restore()
-    return True
 
 try:
     import psutil
@@ -502,6 +463,16 @@ class NyxusSysmonGtk(Gtk.Application):
         psutil.cpu_percent(interval=0.1); psutil.cpu_percent(percpu=True,interval=None)
 
     def do_activate(self):
+        try:
+            self._do_activate_inner()
+        except Exception:
+            log="/tmp/nyxus-sysmon.log"
+            with open(log,"a") as f:
+                f.write("do_activate crash:\n")
+                traceback.print_exc(file=f)
+            print(f"NYXUS SysMon do_activate crashed — see {log}")
+
+    def _do_activate_inner(self):
         prov=Gtk.CssProvider()
         try: prov.load_from_string(CSS)
         except Exception:
@@ -509,7 +480,7 @@ class NyxusSysmonGtk(Gtk.Application):
             except Exception: pass
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(),prov,Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.win=Gtk.ApplicationWindow(application=self,title="NYXUS SysMon")
-        self.win.set_default_size(1440,900); self.win.fullscreen()
+        self.win.set_default_size(1440,900)
 
         root=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.win.set_child(root)
@@ -549,6 +520,7 @@ class NyxusSysmonGtk(Gtk.Application):
         GLib.timeout_add(1000,self._clock_tick)
         self._data_tick()
         self.win.present()
+        self.win.fullscreen()
 
     # ── Header ─────────────────────────────────────────────────────────────────
     def _draw_hdr(self,area,cr,w,h,_):
