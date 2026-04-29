@@ -655,7 +655,7 @@ class SketchButton(Gtk.DrawingArea):
         self._press = False; self.queue_draw()
         if was: self.emit("clicked")
 
-    def _draw(self, area, cr, w, h, _):
+    def _draw(self, area, cr, w, h, _=None):
         try:
             self._draw_inner(cr, w, h)
         except Exception:
@@ -743,7 +743,7 @@ class SketchSeparator(Gtk.DrawingArea):
             self.set_size_request(length, 2)
         self.set_draw_func(self._draw)
 
-    def _draw(self, area, cr, w, h, _):
+    def _draw(self, area, cr, w, h, _=None):
         cr.set_source_rgba(*self.color, 0.55)
         cr.set_line_width(1.2)
         if self.vertical:
@@ -802,7 +802,7 @@ class SketchSearchEntry(Gtk.Box):
     def get_text(self): return self.entry.get_text()
     def set_text(self, t): self.entry.set_text(t)
 
-    def _draw_bg(self, area, cr, w, h, _):
+    def _draw_bg(self, area, cr, w, h, _=None):
         cr.set_source_rgba(*self.color, 0.06)
         _rounded_path(cr, 2, 2, w - 4, h - 4, 6); cr.fill()
         cr.set_source_rgba(*self.color, 0.55)
@@ -853,7 +853,7 @@ class NoteCard(Gtk.DrawingArea):
         if sel != self._sel:
             self._sel = sel; self.queue_draw()
 
-    def _draw(self, area, cr, w, h, _):
+    def _draw(self, area, cr, w, h, _=None):
         try:
             self._draw_inner(cr, w, h)
         except Exception:
@@ -1833,7 +1833,7 @@ class NotepadWindow(Gtk.ApplicationWindow):
         try: da.set_content_width(22); da.set_content_height(22)
         except Exception: pass
         rgb = color["rgb"]
-        def _draw(area, cr, w, h, _):
+        def _draw(area, cr, w, h, _=None):
             cr.set_source_rgb(*rgb)
             cr.arc(w/2, h/2, w/2 - 3, 0, math.pi*2); cr.fill()
             sel = self.current_id and self._cur_color() == color["key"]
@@ -2263,7 +2263,7 @@ class NotepadWindow(Gtk.ApplicationWindow):
         da.set_size_request(18, 18)
         try: da.set_content_width(18); da.set_content_height(18)
         except Exception: pass
-        def _d(area, cr, w, h, _):
+        def _d(area, cr, w, h, _=None):
             cr.set_source_rgb(*rgb); cr.arc(w/2, h/2, w/2 - 2, 0, math.pi*2); cr.fill()
             cr.set_source_rgba(0,0,0,0.4); cr.set_line_width(1.0)
             cr.arc(w/2, h/2, w/2 - 2, 0, math.pi*2); cr.stroke()
