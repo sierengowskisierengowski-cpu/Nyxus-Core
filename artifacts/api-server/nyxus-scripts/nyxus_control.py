@@ -119,22 +119,39 @@ def _detect_cpu():
     }
 
 def _detect_gpu():
+    # Column order: name, temperature.gpu, power.draw, power.limit,
+    #               memory.used, memory.total, utilization.gpu
     try:
         out = subprocess.check_output(
             ["nvidia-smi",
-             "--query-gpu=name,utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw,power.limit",
+             "--query-gpu=name,temperature.gpu,power.draw,power.limit,"
+             "memory.used,memory.total,utilization.gpu",
              "--format=csv,noheader,nounits"],
-            timeout=3, stderr=subprocess.DEVNULL).decode().strip()
+            timeout=5, stderr=subprocess.DEVNULL).decode().strip()
         p = [x.strip() for x in out.split(",")]
         if len(p) >= 7:
             return {"vendor":"nvidia","name":p[0],"detected":True,
-                    "util":float(p[1]),"mem_used":int(p[2]),"mem_total":int(p[3]),
-                    "temp":float(p[4]),"power_draw":float(p[5]),"power_limit":float(p[6])}
-    except: pass
+                    "temp":      _safe_float(p[1]),
+                    "power_draw":_safe_float(p[2]),
+                    "power_limit":_safe_float(p[3]),
+                    "mem_used":  _safe_int(p[4]),
+                    "mem_total": _safe_int(p[5]),
+                    "util":      _safe_float(p[6])}
+    except Exception:
+        pass
+    # AMD fallback
     for drm in Path("/sys/class/drm").glob("card*/device"):
         if _read(str(drm/"vendor")) == "0x1002":
             return {"vendor":"amd","name":"AMD GPU","detected":True}
     return {"vendor":"none","name":"No GPU","detected":False}
+
+def _safe_float(s, default=0.0):
+    try:    return float(s)
+    except: return default
+
+def _safe_int(s, default=0):
+    try:    return int(float(s))
+    except: return default
 
 def _detect_battery():
     ps = Path("/sys/class/power_supply")
@@ -161,7 +178,13 @@ def build_hw_profile():
 
 def load_hw_profile():
     if HW_PROFILE.exists():
-        try: return json.loads(HW_PROFILE.read_text())
+        try:
+            p = json.loads(HW_PROFILE.read_text())
+            # Always re-detect GPU — cached "none" from earlier session is wrong
+            if not p.get("gpu", {}).get("detected"):
+                p["gpu"] = _detect_gpu()
+                HW_PROFILE.write_text(json.dumps(p, indent=2))
+            return p
         except: pass
     return build_hw_profile()
 
@@ -241,19 +264,32 @@ class LiveData:
             self.uptime_s  = int(time.time() - psutil.boot_time())
         except: pass
 
-        # GPU
+        # GPU — same column order as _detect_gpu
         if self.hw.get("gpu",{}).get("vendor") == "nvidia":
             try:
                 out = subprocess.check_output(
                     ["nvidia-smi",
-                     "--query-gpu=utilization.gpu,memory.used,temperature.gpu,power.draw",
+                     "--query-gpu=name,temperature.gpu,power.draw,power.limit,"
+                     "memory.used,memory.total,utilization.gpu",
                      "--format=csv,noheader,nounits"],
-                    timeout=2, stderr=subprocess.DEVNULL).decode().strip()
+                    timeout=4, stderr=subprocess.DEVNULL).decode().strip()
                 p = [x.strip() for x in out.split(",")]
-                if len(p) >= 4:
-                    self.gpu = {"util":float(p[0]),"mem_used":int(p[1]),
-                                "temp":float(p[2]),"power_draw":float(p[3])}
-            except: pass
+                if len(p) >= 7:
+                    self.gpu = {
+                        "name":        p[0],
+                        "temp":        _safe_float(p[1]),
+                        "power_draw":  _safe_float(p[2]),
+                        "power_limit": _safe_float(p[3]),
+                        "mem_used":    _safe_int(p[4]),
+                        "mem_total":   _safe_int(p[5]),
+                        "util":        _safe_float(p[6]),
+                    }
+                    # Also keep hw profile in sync so GPU card shows correct name
+                    if not self.hw.get("gpu",{}).get("detected"):
+                        self.hw["gpu"] = {"vendor":"nvidia","detected":True,
+                                          **self.gpu}
+            except Exception:
+                pass
 
         # Battery
         batt = self.hw.get("battery")
@@ -657,9 +693,9 @@ class NyxusControl(Gtk.Application):
         self._toast_da.set_draw_func(self._draw_toast, None)
         root.append(self._toast_da)
 
-        GLib.timeout_add(50,   self._anim_tick)
-        GLib.timeout_add(3000, self._data_tick)
-        self._data_tick()
+        GLib.timeout_add(500, self._anim_tick)          # 2 fps — clock only
+        GLib.timeout_add_seconds(5, self._data_tick)    # 5 s — sensor poll
+        threading.Thread(target=self._initial_collect, daemon=True).start()
         self.win.present()
 
     def _on_close(self, *_):
@@ -674,16 +710,25 @@ class NyxusControl(Gtk.Application):
 
     # ──────────────────────────────────────────────────────── header ────────────
     def _draw_hdr(self, area, cr, w, h, _):
-        draw_nyxus_bg(cr, w, h)
+        # Cheap header — solid dark bg + a handful of accent elements (no draw_nyxus_bg)
+        cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
+        # Subtle left-to-right neon fade
+        cr.set_source_rgba(*C_PINK, 0.06); cr.rectangle(0, 0, w*0.4, h); cr.fill()
+        cr.set_source_rgba(*C_PURPLE, 0.04); cr.rectangle(w*0.3, 0, w*0.4, h); cr.fill()
+        cr.set_source_rgba(*C_BLUE, 0.03); cr.rectangle(w*0.6, 0, w*0.4, h); cr.fill()
+        # Bottom rainbow bar
         rainbow_bar(cr, 0, h-3, w, 3)
+        # Thin top border
+        cr.set_source_rgba(*C_PINK, 0.18); cr.set_line_width(1)
+        cr.move_to(0, 1); cr.line_to(w, 1); cr.stroke()
         # Pulse dot
-        pulse = 0.5+0.5*math.sin(self._anim_t*3)
+        pulse = 0.5 + 0.5*math.sin(self._anim_t * 2.5)
         cr.set_source_rgba(*C_GREEN, pulse); cr.arc(22, h//2, 5, 0, math.pi*2); cr.fill()
         glow_text(cr, 38, h-14, "NYXUS  Control", *C_PINK, size=18, bold=True)
         # Board
         board = self.hw.get("board","Unknown Board")[:38]
         cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
-        cr.set_source_rgba(*C_DIM,0.80)
+        cr.set_source_rgba(*C_DIM, 0.80)
         cr.move_to(260, h-14); cr.show_text(board)
         # Clock
         clk = datetime.now().strftime("%A  %H:%M:%S")
@@ -796,20 +841,36 @@ class NyxusControl(Gtk.Application):
         pass  # handled by Cairo draw
 
     # ──────────────────────────────────────────────────────── data ──────────────
+    def _initial_collect(self):
+        """Run first data collection in background then schedule the regular tick."""
+        time.sleep(1)          # let GTK finish setting up first
+        self.live.collect()
+        GLib.idle_add(self._refresh_ui)
+
     def _data_tick(self):
+        if getattr(self, "_collecting", False):
+            return GLib.SOURCE_CONTINUE   # previous poll still running — skip
+        self._collecting = True
         threading.Thread(target=self._collect, daemon=True).start()
         return GLib.SOURCE_CONTINUE
 
     def _collect(self):
-        self.live.collect()
+        try:
+            self.live.collect()
+        finally:
+            self._collecting = False
         GLib.idle_add(self._refresh_ui)
 
     def _refresh_ui(self):
-        for da in self._das.values(): da.queue_draw()
+        # Redraw data panels — NOT the nav (it only needs to change on page switch)
+        skip = {"nav"}
+        for key, da in self._das.items():
+            if key not in skip:
+                da.queue_draw()
         return GLib.SOURCE_REMOVE
 
     def _anim_tick(self):
-        self._anim_t += 0.04
+        self._anim_t += 0.10   # larger step since we're at 2 fps now
         self._hdr_da.queue_draw()
         self._toast_da.queue_draw()
         return GLib.SOURCE_CONTINUE
