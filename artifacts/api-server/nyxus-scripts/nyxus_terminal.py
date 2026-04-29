@@ -640,14 +640,35 @@ class NyxusTerminal(Gtk.Application):
         vte.set_allow_bold(True)
         vte.set_scroll_on_output(True)
         vte.set_scroll_on_keystroke(True)
-        vte.set_scrollback_lines(5000)
+        vte.set_scrollback_lines(50000)
         vte.set_mouse_autohide(True)
+        vte.set_cell_height_scale(1.05)
+
+        # Hyperlinks (Ctrl+click opens URLs)
+        try: vte.set_allow_hyperlink(True)
+        except AttributeError: pass
+
+        # Sixel inline image graphics (VTE ≥ 0.65) — enables chafa/viu/timg
+        try: vte.set_enable_sixel_graphics(True)
+        except AttributeError: pass
 
         # Transparent background so graffiti shows through slightly
-        bg = Gdk.RGBA(); bg.red = 0.05; bg.green = 0.03; bg.blue = 0.12; bg.alpha = 0.88
+        bg = Gdk.RGBA(); bg.red = 0.05; bg.green = 0.03; bg.blue = 0.12; bg.alpha = 0.82
         fg = Gdk.RGBA(); fg.red = 0.92; fg.green = 0.88; fg.blue = 0.98; fg.alpha = 1.0
         vte.set_color_background(bg)
         vte.set_color_foreground(fg)
+
+        # Spray-paint selection colors (neon orange, semi-transparent)
+        hl = Gdk.RGBA(); hl.red = 1.0; hl.green = 0.34; hl.blue = 0.0; hl.alpha = 0.58
+        hl_fg = Gdk.RGBA(); hl_fg.red = 1.0; hl_fg.green = 1.0; hl_fg.blue = 1.0; hl_fg.alpha = 1.0
+        try:
+            vte.set_color_highlight(hl)
+            vte.set_color_highlight_foreground(hl_fg)
+        except AttributeError: pass
+
+        # Neon pink cursor
+        cur = Gdk.RGBA(); cur.red = 1.0; cur.green = 0.0; cur.blue = 1.0; cur.alpha = 1.0
+        vte.set_color_cursor(cur)
 
         # NYXUS neon color palette for terminal colors
         def c(r, g, b): col = Gdk.RGBA(); col.red=r; col.green=g; col.blue=b; col.alpha=1; return col
@@ -671,11 +692,23 @@ class NyxusTerminal(Gtk.Application):
         ]
         vte.set_colors(fg, bg, colors)
 
-        # Spawn shell
+        # Spawn shell with truecolor + sixel hints in the environment
         shell = os.environ.get("SHELL", "/bin/bash")
+        env = dict(os.environ)
+        env.update({
+            "TERM":         "xterm-256color",
+            "COLORTERM":    "truecolor",
+            "TERM_PROGRAM": "nyxus-terminal",
+            "FORCE_COLOR":  "3",
+        })
+        env_list = [f"{k}={v}" for k, v in env.items()]
         vte.spawn_async(
-            Vte.PtyFlags.DEFAULT, None, [shell], None,
-            GLib.SpawnFlags.SEARCH_PATH, None, None, -1, None, None)
+            Vte.PtyFlags.DEFAULT,
+            os.path.expanduser("~"),
+            [shell],
+            env_list,
+            GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+            None, None, -1, None, None)
 
         vte.connect("child-exited", lambda *_: self.quit())
 
