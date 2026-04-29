@@ -76,14 +76,15 @@ done
 # ── GTK4 Python dependencies ──────────────────────────────────────────────────
 hdr "Python GTK4 Dependencies"
 if command -v pacman &>/dev/null; then
-  pacman -S --noconfirm --needed python-gobject python-psutil python-cairo gtk4 vte4 2>/dev/null \
-    && ok "python-gobject gtk4 python-psutil python-cairo vte4" \
+  pacman -S --noconfirm --needed python-gobject python-psutil python-cairo gtk4 vte4 chafa 2>/dev/null \
+    && ok "python-gobject gtk4 python-psutil python-cairo vte4 chafa" \
     || printf "  ${DIM}(pacman install failed — try: pip install PyGObject psutil pycairo)${R}\n"
 else
   pip install PyGObject psutil pycairo 2>/dev/null \
     && ok "PyGObject psutil pycairo (pip)" \
     || printf "  ${DIM}pip install failed — install python-gobject manually${R}\n"
   printf "  ${DIM}Note: also install vte4 / gir1.2-vte-2.91 for the NYXUS Terminal${R}\n"
+  printf "  ${DIM}      install chafa for inline image display (chafa -f sixel image.jpg)${R}\n"
 fi
 
 # ── App Icons — paint-splatter neon icons via Cairo ───────────────────────────
