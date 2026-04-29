@@ -82,7 +82,7 @@ def draw_tilt_badge(cr, x, y, txt, color, angle=-4.5, size=9):
     r, g, b = color
     cr.save()
     cr.translate(x, y); cr.rotate(math.radians(angle))
-    cr.select_font_face("JetBrains Mono", 0, 1); cr.set_font_size(size)
+    cr.select_font_face("Caveat", 0, 1); cr.set_font_size(size)
     ext = cr.text_extents(txt)
     bw = ext.width + 20; bh = size + 10
     # Fill
@@ -100,8 +100,8 @@ def draw_tilt_badge(cr, x, y, txt, color, angle=-4.5, size=9):
     cr.set_source_rgba(r, g, b, 1.0); cr.move_to(0, 0); cr.show_text(txt)
     cr.restore()
 
-def dim_text(cr, x, y, txt, size=9):
-    cr.select_font_face("JetBrains Mono", 0, 0)
+def dim_text(cr, x, y, txt, size=11):
+    cr.select_font_face("Caveat", 0, 0)
     cr.set_font_size(size); cr.set_source_rgba(*C_DIM, 0.85)
     cr.move_to(x, y); cr.show_text(txt)
 
