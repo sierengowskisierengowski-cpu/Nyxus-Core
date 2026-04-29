@@ -807,7 +807,7 @@ class NyxusTerminal(Gtk.Application):
 
         win_click = Gtk.GestureClick()
         win_click.set_button(0)
-        win_click.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        win_click.set_propagation_phase(Gtk.PropagationPhase.BUBBLE)
         win_click.connect("pressed",  self._on_win_press)
         win_click.connect("released", self._on_win_release)
         self.win.add_controller(win_click)
