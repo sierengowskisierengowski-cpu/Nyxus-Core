@@ -12,23 +12,23 @@ from datetime import datetime
 DATA_FILE = os.path.expanduser("~/.nyxus/stickies.json")
 os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
 
-# Sticky note paper colors (warm, real Post-it feel)
+# Sticky note card colors (dark neon)
 NOTE_PAPER = [
-    (1.00, 0.96, 0.52),   # classic yellow
-    (1.00, 0.70, 0.80),   # hot pink
-    (0.65, 0.87, 1.00),   # sky blue
-    (0.72, 1.00, 0.68),   # mint green
-    (0.90, 0.76, 1.00),   # lavender
-    (1.00, 0.80, 0.58),   # peach/orange
+    (0.10, 0.02, 0.10),   # dark magenta card
+    (0.07, 0.02, 0.14),   # dark purple card
+    (0.02, 0.06, 0.14),   # dark blue card
+    (0.02, 0.10, 0.02),   # dark green card
+    (0.10, 0.10, 0.02),   # dark yellow card
+    (0.12, 0.04, 0.02),   # dark orange card
 ]
-# Marker ink colors (darker, for text + borders on each sticky)
+# Neon marker ink colors (borders, text, accents)
 NOTE_INK = [
-    (0.62, 0.50, 0.00),   # dark yellow ink
-    (0.75, 0.05, 0.35),   # dark pink ink
-    (0.05, 0.32, 0.72),   # dark blue ink
-    (0.08, 0.52, 0.08),   # dark green ink
-    (0.48, 0.12, 0.78),   # dark purple ink
-    (0.75, 0.28, 0.02),   # dark orange ink
+    (1.00, 0.00, 1.00),   # neon magenta/pink
+    (0.80, 0.00, 1.00),   # neon purple
+    (0.00, 0.53, 1.00),   # neon blue
+    (0.22, 1.00, 0.08),   # neon green
+    (1.00, 1.00, 0.00),   # neon yellow
+    (1.00, 0.33, 0.00),   # neon orange
 ]
 PALETTE_HEX = ["#ff00ff","#cc00ff","#0088ff","#39ff14","#ffff00","#ff5500"]
 NOTE_W, NOTE_H = 230, 175
@@ -58,24 +58,25 @@ def sketch_rect(cr, x, y, w, h, r, g, b, thick=2.2, jitter=2.8, fill_rgba=None):
     cr.stroke()
 
 def paper_bg(cr, w, h):
-    """Cork-board background."""
-    # Cork base
-    cr.set_source_rgb(0.74, 0.56, 0.34); cr.rectangle(0, 0, w, h); cr.fill()
-    # Cork texture — random small blobs
+    """Dark NYXUS background with subtle neon dot grid."""
+    cr.set_source_rgb(0.031, 0.031, 0.055); cr.rectangle(0, 0, w, h); cr.fill()
+    # Subtle dot grid
+    spacing = 28
+    cr.set_line_width(1.0)
+    neons = [(1,0,1),(0.8,0,1),(0,0.53,1),(0.22,1,0.08),(1,1,0),(1,0.33,0)]
     rng = _rand.Random(99)
-    for _ in range(900):
+    for gx in range(spacing, int(w), spacing):
+        for gy in range(spacing, int(h), spacing):
+            nc = rng.choice(neons)
+            cr.set_source_rgba(*nc, 0.08)
+            cr.arc(gx, gy, 1.2, 0, math.pi*2); cr.fill()
+    # Faint ambient splatter
+    for _ in range(80):
         bx = rng.uniform(0, w); by = rng.uniform(0, h)
-        br = rng.uniform(4, 22); ba = rng.uniform(0.04, 0.14)
-        cr.set_source_rgba(rng.uniform(0.5,0.9), rng.uniform(0.38,0.55), rng.uniform(0.18,0.35), ba)
+        br = rng.uniform(2, 14)
+        nc = rng.choice(neons)
+        cr.set_source_rgba(*nc, rng.uniform(0.02, 0.06))
         cr.arc(bx, by, br, 0, math.pi*2); cr.fill()
-    # Subtle grain lines
-    cr.set_line_width(0.5)
-    for _ in range(120):
-        lx1=rng.uniform(0,w); ly1=rng.uniform(0,h)
-        cr.set_source_rgba(0.42,0.28,0.10, rng.uniform(0.04,0.10))
-        cr.move_to(lx1, ly1)
-        cr.line_to(lx1+rng.uniform(-60,60), ly1+rng.uniform(-4,4))
-        cr.stroke()
 
 def handwriting(cr, x, y, txt, r, g, b, size=13, bold=False, alpha=0.90):
     cr.select_font_face("Caveat", 0, 1 if bold else 0)
@@ -117,9 +118,9 @@ def draw_sticky(cr, nx, ny, nw, nh, cidx, title, body, angle, selected=False):
     cx, cy = nx+nw/2, ny+nh/2
     cr.translate(cx, cy); cr.rotate(math.radians(angle)); cr.translate(-nw/2, -nh/2)
 
-    # Drop shadow (offset, slightly fuzzy)
-    for sh, sa in [(10, 0.10), (6, 0.14), (3, 0.18)]:
-        cr.set_source_rgba(0.12, 0.06, 0.02, sa)
+    # Neon glow shadow
+    for sh, sa in [(10, 0.08), (6, 0.12), (3, 0.16)]:
+        cr.set_source_rgba(ir, ig, ib, sa)
         cr.rectangle(sh, sh+2, nw, nh); cr.fill()
 
     # Main paper body
@@ -145,9 +146,9 @@ def draw_sticky(cr, nx, ny, nw, nh, cidx, title, body, angle, selected=False):
     if selected:
         sketch_rect(cr, -3, -3, nw+6, nh+6, 0.08, 0.08, 0.80, thick=3.0, jitter=3.5)
 
-    # Folded corner (bottom-right — real sticky note fold)
+    # Folded corner (bottom-right)
     corner = 18
-    cr.set_source_rgba(pr*0.72, pg*0.72, pb*0.72, 0.95)
+    cr.set_source_rgba(ir*0.35, ig*0.35, ib*0.35, 0.95)
     cr.move_to(nw-corner, nh)
     cr.line_to(nw, nh-corner)
     cr.line_to(nw, nh)
@@ -191,47 +192,43 @@ def draw_sticky(cr, nx, ny, nw, nh, cidx, title, body, angle, selected=False):
 
 # ── CSS — warm paper toolbar ────────────────────────────────────────────────
 
-CSS = b"""
+CSS = """
 * { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
-window { background-color: #b08040; color: #3a2010; }
+window { background-color: #08080e; color: rgba(232,224,245,0.92); }
 .hdr {
-    background-color: rgba(240, 225, 190, 0.96);
-    border-bottom: 2px solid rgba(120, 80, 20, 0.35);
+    background-color: #0d0d1a;
+    border-bottom: 2px solid rgba(255,0,255,0.18);
     padding: 6px 16px; min-height: 52px;
 }
 .hdr-title {
-    color: #7a3010;
+    color: #ff88ff;
     font-size: 20px; font-weight: bold; letter-spacing: 2px;
 }
 .add-btn {
-    background-color: rgba(255, 210, 80, 0.80);
-    color: #5a2800;
-    border: 2px solid rgba(180, 110, 20, 0.60);
-    border-radius: 4px;
+    background-color: rgba(255,0,255,0.14); color: #ff88ff;
+    border: 2px solid rgba(255,0,255,0.50); border-radius: 4px;
     padding: 6px 18px; font-size: 14px; font-weight: bold;
 }
-.add-btn:hover { background-color: rgba(255, 230, 100, 0.95); }
+.add-btn:hover { background-color: rgba(255,0,255,0.30); }
 .del-btn {
-    background-color: rgba(255, 160, 140, 0.75);
-    color: #5a0000;
-    border: 2px solid rgba(180, 60, 40, 0.55);
-    border-radius: 4px;
+    background-color: rgba(255,50,30,0.16); color: #ff6655;
+    border: 2px solid rgba(255,80,50,0.50); border-radius: 4px;
     padding: 6px 16px; font-size: 14px; font-weight: bold;
 }
-.del-btn:hover { background-color: rgba(255, 180, 160, 0.95); }
+.del-btn:hover { background-color: rgba(255,80,50,0.30); }
 .search-e {
-    background-color: rgba(255, 252, 240, 0.90);
-    border: 2px solid rgba(160, 110, 40, 0.50);
-    color: #3a2010; border-radius: 4px;
-    padding: 5px 12px; font-size: 13px; caret-color: #7a3010;
+    background-color: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,0,255,0.30);
+    color: rgba(232,224,245,0.88); border-radius: 4px;
+    padding: 5px 12px; font-size: 13px; caret-color: #ff00ff;
 }
 .search-e text { background-color: transparent; }
-.count-lbl { color: #7a5020; font-size: 12px; }
+.count-lbl { color: rgba(180,160,220,0.75); font-size: 12px; }
 .col-btn {
     border-radius: 50%; min-width:22px; min-height:22px;
-    padding:0; border: 2px solid rgba(80,50,10,0.40);
+    padding:0; border: 2px solid rgba(255,255,255,0.20);
 }
-.col-btn:hover { border: 2px solid rgba(80,50,10,0.80); }
+.col-btn:hover { border: 2px solid rgba(255,255,255,0.65); }
 """
 
 
@@ -261,7 +258,9 @@ class StickyApp(Gtk.ApplicationWindow):
         self._build()
 
     def _build(self):
-        css_p = Gtk.CssProvider(); css_p.load_from_data(CSS)
+        css_p = Gtk.CssProvider()
+        try: css_p.load_from_string(CSS)
+        except AttributeError: css_p.load_from_data(CSS.encode())
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(), css_p,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
@@ -332,11 +331,12 @@ class StickyApp(Gtk.ApplicationWindow):
     def _add_note(self, *_):
         w,h = self.da.get_width(), self.da.get_height()
         rng = _rand.Random()
+        next_color = len(self.notes) % len(NOTE_PAPER)
         self.notes.append({
             "id": str(uuid.uuid4()),
             "title": f"Note {len(self.notes)+1}",
             "body": "",
-            "color": 0,
+            "color": next_color,
             "x": max(20, min(w-NOTE_W-20, rng.randint(60, max(61,w-NOTE_W-60)))),
             "y": max(20, min(h-NOTE_H-20, rng.randint(60, max(61,h-NOTE_H-60)))),
             "angle": rng.uniform(-6, 6),
@@ -448,7 +448,7 @@ class StickyApp(Gtk.ApplicationWindow):
 
         # Watermark at bottom
         cr.select_font_face("Caveat", 0, 0); cr.set_font_size(11)
-        cr.set_source_rgba(0.42, 0.28, 0.10, 0.35)
+        cr.set_source_rgba(0.55, 0.45, 0.75, 0.35)
         cr.move_to(12, h-8); cr.show_text("NYXUS Stickies  ·  double-click to edit  ·  drag to move")
 
 
