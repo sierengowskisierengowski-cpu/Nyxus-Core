@@ -12,6 +12,41 @@ from datetime import datetime
 DATA_FILE = os.path.expanduser("~/.nyxus/stickies.json")
 os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
 
+BG_DIR   = os.path.expanduser("~/.nyxus/backgrounds")
+_bg_cache: dict = {}
+
+def _load_bg(name: str):
+    if name in _bg_cache:
+        return _bg_cache[name]
+    path = os.path.join(BG_DIR, name)
+    if not os.path.exists(path):
+        _bg_cache[name] = None
+        return None
+    try:
+        import cairo as _c
+        surf = _c.ImageSurface.create_from_png(path)
+        _bg_cache[name] = surf
+        return surf
+    except Exception:
+        _bg_cache[name] = None
+        return None
+
+def draw_image_bg(cr, x, y, w, h, name, alpha=1.0):
+    surf = _load_bg(name)
+    if surf is None:
+        return False
+    iw, ih = surf.get_width(), surf.get_height()
+    if iw <= 0 or ih <= 0:
+        return False
+    cr.save()
+    cr.rectangle(x, y, w, h); cr.clip()
+    cr.translate(x, y)
+    cr.scale(w / iw, h / ih)
+    cr.set_source_surface(surf, 0, 0)
+    cr.paint_with_alpha(alpha)
+    cr.restore()
+    return True
+
 WIN_W, WIN_H = 1100, 720
 TOOLBAR_H    = 68
 COLORBAR_H   = 44
@@ -118,49 +153,25 @@ def _wrap(cr, text, max_w, size=14):
 # ── Background ────────────────────────────────────────────────────────────────
 
 def draw_canvas_bg(cr, x, y, w, h):
-    """Paint-splatter background for the sticky note canvas only."""
-    cr.set_source_rgb(*C_DARK); cr.rectangle(x,y,w,h); cr.fill()
-    neons = list(NOTE_INK)
-    rng = _rand.Random(77)
-    for _ in range(24):
-        bx=x+rng.uniform(0,w); by=y+rng.uniform(0,h); br=rng.uniform(8,38)
-        cr.set_source_rgba(*rng.choice(neons), rng.uniform(0.04,0.13))
-        cr.arc(bx,by,br,0,math.pi*2); cr.fill()
-    for _ in range(32):
-        sx=x+rng.uniform(0,w); sy=y+rng.uniform(0,h)
-        ex=sx+rng.uniform(-110,110); ey=sy+rng.uniform(-16,16)
-        cr.set_source_rgba(*rng.choice(neons), rng.uniform(0.04,0.14))
-        cr.set_line_width(rng.uniform(0.6,2.6))
-        cr.move_to(sx,sy); cr.line_to(ex,ey); cr.stroke()
-    for _ in range(8):
-        spray_dots(cr, x+rng.uniform(0,w), y+rng.uniform(0,h),
-                   rng.choice(neons), n=35, spread=int(rng.uniform(22,65)),
-                   alpha_max=0.14, rng=rng)
-    for _ in range(130):
-        cr.set_source_rgba(*rng.choice(neons), rng.uniform(0.05,0.18))
-        cr.arc(x+rng.uniform(0,w), y+rng.uniform(0,h),
-               rng.uniform(0.6,2.8), 0, math.pi*2); cr.fill()
-    sp=32
-    for gx in range(int(x)+sp, int(x+w), sp):
-        for gy in range(int(y)+sp, int(y+h), sp):
-            cr.set_source_rgba(*rng.choice(neons), 0.05)
-            cr.arc(gx,gy,1.1,0,math.pi*2); cr.fill()
-    cr.set_line_width(0.35)
-    for ry in range(int(y)+32,int(y+h),32):
-        cr.set_source_rgba(1,1,1,0.025)
-        cr.move_to(x,ry); cr.line_to(x+w,ry); cr.stroke()
+    """Neon splat image background for the sticky note canvas."""
+    cr.set_source_rgb(*C_DARK); cr.rectangle(x, y, w, h); cr.fill()
+    if not draw_image_bg(cr, x, y, w, h, "nyxus-bg-11.png", alpha=0.28):
+        # Fallback: subtle neon scatter if image not available
+        rng = _rand.Random(77)
+        for _ in range(40):
+            cr.set_source_rgba(*_rand.Random(rng.random()).choice(NOTE_INK), rng.uniform(0.04, 0.11))
+            cr.arc(x + rng.uniform(0, w), y + rng.uniform(0, h), rng.uniform(4, 28), 0, math.pi*2)
+            cr.fill()
 
 
 # ── Toolbar ───────────────────────────────────────────────────────────────────
 
 def draw_toolbar(cr, w, note_count, selected_theme, search_txt, hovered_btn):
-    # Distinctly purple-dark band — very different from canvas
-    cr.set_source_rgb(0.10, 0.04, 0.18)
+    # Dark base then neon splat image — matches waybar aesthetic
+    cr.set_source_rgb(0.031, 0.031, 0.055)
     cr.rectangle(0, 0, w, TOOLBAR_H); cr.fill()
+    draw_image_bg(cr, 0, 0, w, TOOLBAR_H, "nyxus-bg-07.png", alpha=0.92)
 
-    # Neon top edge line
-    cr.set_source_rgba(1, 0, 1, 0.70); cr.set_line_width(2.5)
-    cr.move_to(0, 1); cr.line_to(w, 1); cr.stroke()
     # Neon bottom edge line
     cr.set_source_rgba(1, 0, 1, 0.55); cr.set_line_width(2.0)
     cr.move_to(0, TOOLBAR_H-1); cr.line_to(w, TOOLBAR_H-1); cr.stroke()
@@ -199,8 +210,9 @@ def draw_toolbar(cr, w, note_count, selected_theme, search_txt, hovered_btn):
 
 
 def draw_colorbar(cr, w, selected_theme, hovered_color):
-    cr.set_source_rgba(0.05,0.03,0.09,0.98)
+    cr.set_source_rgba(0.031, 0.031, 0.055, 1.0)
     cr.rectangle(0, TOOLBAR_H, w, COLORBAR_H); cr.fill()
+    draw_image_bg(cr, 0, TOOLBAR_H, w, COLORBAR_H, "nyxus-bg-03.png", alpha=0.75)
     cr.set_source_rgba(0.5,0.2,0.7,0.18); cr.set_line_width(1.0)
     cr.move_to(0,TOOLBAR_H+COLORBAR_H); cr.line_to(w,TOOLBAR_H+COLORBAR_H); cr.stroke()
 

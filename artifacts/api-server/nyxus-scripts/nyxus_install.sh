@@ -139,6 +139,14 @@ mkdir -p "$WALLS_DIR"
 dl "nyxus-sierengowski-clean.png" "$WALLS_DIR/nyxus-sierengowski-clean.png" || failed=$((failed+1))
 dl "nyxus-taskbar-bg.png"         "$WALLS_DIR/nyxus-taskbar-bg.png"         || failed=$((failed+1))
 
+# ── APP BACKGROUNDS (neon splat panels — used by all GTK apps) ────────────────
+hdr "App Backgrounds (neon splat panels)"
+BG_DIR="$HOME/.nyxus/backgrounds"
+mkdir -p "$BG_DIR"
+for i in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15; do
+  dl "nyxus-bg-${i}.png" "$BG_DIR/nyxus-bg-${i}.png" || failed=$((failed+1))
+done
+
 # ── WAYBAR ────────────────────────────────────────────────────────────────────
 hdr "Waybar"
 mkdir -p "$WAYBAR_DIR"

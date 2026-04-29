@@ -8,9 +8,44 @@ import gi, sys, os, math, json, time, threading, subprocess, random, signal
 from pathlib import Path
 from collections import deque
 from datetime import datetime, timedelta
-
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Gdk, GLib, Gio, Pango
+
+# ── Neon splat image backgrounds ───────────────────────────────────────────────
+_NYXUS_BG_DIR   = str(Path.home() / ".nyxus" / "backgrounds")
+_nyxus_bg_cache: dict = {}
+
+def _load_bg(name: str):
+    if name in _nyxus_bg_cache:
+        return _nyxus_bg_cache[name]
+    path = os.path.join(_NYXUS_BG_DIR, name)
+    if not os.path.exists(path):
+        _nyxus_bg_cache[name] = None
+        return None
+    try:
+        import cairo as _c
+        surf = _c.ImageSurface.create_from_png(path)
+        _nyxus_bg_cache[name] = surf
+        return surf
+    except Exception:
+        _nyxus_bg_cache[name] = None
+        return None
+
+def draw_image_bg(cr, x, y, w, h, name, alpha=1.0):
+    surf = _load_bg(name)
+    if surf is None:
+        return False
+    iw, ih = surf.get_width(), surf.get_height()
+    if iw <= 0 or ih <= 0:
+        return False
+    cr.save()
+    cr.rectangle(x, y, w, h); cr.clip()
+    cr.translate(x, y)
+    cr.scale(w / iw, h / ih)
+    cr.set_source_surface(surf, 0, 0)
+    cr.paint_with_alpha(alpha)
+    cr.restore()
+    return True
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 HOME         = Path.home()
@@ -523,41 +558,9 @@ def sketch_rect(cr, x, y, w, h, r, g, b, thick=2.5, jitter=3.0, fill_rgba=None):
     cr.set_line_cap(1); cr.set_line_join(1); cr.stroke()
 
 def draw_nyxus_bg(cr, w, h):
-    """Dark base + paint splatters (no cairo module import needed)."""
-    cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
-    rng = random.Random(0xBEEF)
-    blobs = [C_PINK,C_PURPLE,C_BLUE,C_GREEN,C_YELLOW,C_ORANGE,
-             C_PINK,C_PURPLE,C_BLUE,C_GREEN,C_YELLOW,C_ORANGE,C_PINK,C_PURPLE]
-    # Large soft blobs — layered arcs with decreasing alpha
-    for i,(r,g,b) in enumerate(blobs):
-        bx = rng.uniform(0,w); by = rng.uniform(0,h)
-        for layer in range(4):
-            rr    = rng.uniform(w*0.03, w*0.12) * (1.0 - layer*0.22)
-            alpha = rng.uniform(0.03, 0.10)    * (1.0 - layer*0.20)
-            cr.set_source_rgba(r,g,b,alpha)
-            cr.arc(bx, by, max(rr,1), 0, math.pi*2); cr.fill()
-    # Splatter streaks
-    for _ in range(20):
-        r,g,b = blobs[rng.randrange(len(blobs))]
-        sx = rng.uniform(0,w); sy = rng.uniform(0,h)
-        ln = rng.uniform(w*0.03, w*0.20); ang = rng.uniform(0, math.pi*2)
-        ex = sx+math.cos(ang)*ln; ey = sy+math.sin(ang)*ln
-        cr.set_source_rgba(r,g,b,rng.uniform(0.05,0.16))
-        cr.set_line_width(rng.uniform(1.2,5.0))
-        cr.move_to(sx,sy); cr.line_to(ex,ey); cr.stroke()
-    # Dense small dots
-    for _ in range(90):
-        r,g,b = blobs[rng.randrange(len(blobs))]
-        cr.set_source_rgba(r,g,b,rng.uniform(0.07,0.22))
-        cr.arc(rng.uniform(0,w), rng.uniform(0,h),
-               rng.uniform(0.6,3.5), 0, math.pi*2); cr.fill()
-    # Ruled notebook lines
-    cr.set_line_width(0.45)
-    sp = max(h/28, 18)
-    for i in range(int(h/sp)+2):
-        ly = i*sp
-        cr.set_source_rgba(0.45,0.25,0.80, 0.05+0.015*(i%3==0))
-        cr.move_to(0,ly); cr.line_to(w,ly); cr.stroke()
+    """Neon splat image background — matches waybar aesthetic."""
+    cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
+    draw_image_bg(cr, 0, 0, w, h, "nyxus-bg-04.png", alpha=0.22)
 
 def neon_card(cr, x, y, w, h, color, tint=0.07, jitter=2.5):
     r,g,b = color
@@ -710,12 +713,8 @@ class NyxusControl(Gtk.Application):
 
     # ──────────────────────────────────────────────────────── header ────────────
     def _draw_hdr(self, area, cr, w, h, _):
-        # Cheap header — solid dark bg + a handful of accent elements (no draw_nyxus_bg)
         cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
-        # Subtle left-to-right neon fade
-        cr.set_source_rgba(*C_PINK, 0.06); cr.rectangle(0, 0, w*0.4, h); cr.fill()
-        cr.set_source_rgba(*C_PURPLE, 0.04); cr.rectangle(w*0.3, 0, w*0.4, h); cr.fill()
-        cr.set_source_rgba(*C_BLUE, 0.03); cr.rectangle(w*0.6, 0, w*0.4, h); cr.fill()
+        draw_image_bg(cr, 0, 0, w, h, "nyxus-bg-08.png", alpha=0.92)
         # Bottom rainbow bar
         rainbow_bar(cr, 0, h-3, w, 3)
         # Thin top border

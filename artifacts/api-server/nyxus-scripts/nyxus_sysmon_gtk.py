@@ -11,6 +11,41 @@ import math, time, os, threading, socket, platform, signal, subprocess, tracebac
 from collections import deque
 from datetime import datetime, timedelta
 
+_NYXUS_BG_DIR   = os.path.expanduser("~/.nyxus/backgrounds")
+_nyxus_bg_cache: dict = {}
+
+def _load_bg(name: str):
+    if name in _nyxus_bg_cache:
+        return _nyxus_bg_cache[name]
+    path = os.path.join(_NYXUS_BG_DIR, name)
+    if not os.path.exists(path):
+        _nyxus_bg_cache[name] = None
+        return None
+    try:
+        import cairo as _c
+        surf = _c.ImageSurface.create_from_png(path)
+        _nyxus_bg_cache[name] = surf
+        return surf
+    except Exception:
+        _nyxus_bg_cache[name] = None
+        return None
+
+def draw_image_bg(cr, x, y, w, h, name, alpha=1.0):
+    surf = _load_bg(name)
+    if surf is None:
+        return False
+    iw, ih = surf.get_width(), surf.get_height()
+    if iw <= 0 or ih <= 0:
+        return False
+    cr.save()
+    cr.rectangle(x, y, w, h); cr.clip()
+    cr.translate(x, y)
+    cr.scale(w / iw, h / ih)
+    cr.set_source_surface(surf, 0, 0)
+    cr.paint_with_alpha(alpha)
+    cr.restore()
+    return True
+
 try:
     import psutil
 except ImportError:
@@ -96,36 +131,9 @@ def draw_tilt_badge(cr, x, y, txt, color, angle=-4.5, size=14):
 
 
 def draw_nyxus_bg(cr, w, h):
-    """Shared NYXUS background — dark #08080e + paint splatters + ruled lines."""
-    import random as _r2
+    """Neon splat image background — matches waybar aesthetic."""
     cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
-    rng = _r2.Random(42)
-    neons = [C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE]
-    # Large background paint blobs
-    for _ in range(14):
-        bx = rng.uniform(0, w); by = rng.uniform(0, h)
-        brad = rng.uniform(6, 22); nc = rng.choice(neons)
-        cr.set_source_rgba(*nc, rng.uniform(0.04, 0.13))
-        cr.arc(bx, by, brad, 0, math.pi * 2); cr.fill()
-    # Splatter streaks
-    for _ in range(18):
-        sx = rng.uniform(0, w); sy = rng.uniform(0, h)
-        ex = sx + rng.uniform(-80, 80); ey = sy + rng.uniform(-12, 12)
-        nc = rng.choice(neons)
-        cr.set_source_rgba(*nc, rng.uniform(0.05, 0.14))
-        cr.set_line_width(rng.uniform(0.6, 1.8))
-        cr.move_to(sx, sy); cr.line_to(ex, ey); cr.stroke()
-    # Dense small dots
-    for _ in range(60):
-        bx = rng.uniform(0, w); by = rng.uniform(0, h)
-        brad = rng.uniform(0.8, 3.2); nc = rng.choice(neons)
-        cr.set_source_rgba(*nc, rng.uniform(0.06, 0.20))
-        cr.arc(bx, by, brad, 0, math.pi * 2); cr.fill()
-    # Ruled notebook lines
-    cr.set_line_width(0.4)
-    for ry in range(28, int(h), 28):
-        cr.set_source_rgba(1, 1, 1, 0.038)
-        cr.move_to(0, ry); cr.line_to(w, ry); cr.stroke()
+    draw_image_bg(cr, 0, 0, w, h, "nyxus-bg-06.png", alpha=0.22)
 
 def dim_text(cr, x, y, txt, size=11):
     cr.select_font_face("Caveat", 0, 0)

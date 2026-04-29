@@ -41,6 +41,21 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_notepad.py":             "nyxus_notepad.py",
   "nyxus_gen_icons.py":           "nyxus_gen_icons.py",
   "nyxus_control.py":             "nyxus_control.py",
+  "nyxus-bg-01.png": "nyxus-bg-01.png",
+  "nyxus-bg-02.png": "nyxus-bg-02.png",
+  "nyxus-bg-03.png": "nyxus-bg-03.png",
+  "nyxus-bg-04.png": "nyxus-bg-04.png",
+  "nyxus-bg-05.png": "nyxus-bg-05.png",
+  "nyxus-bg-06.png": "nyxus-bg-06.png",
+  "nyxus-bg-07.png": "nyxus-bg-07.png",
+  "nyxus-bg-08.png": "nyxus-bg-08.png",
+  "nyxus-bg-09.png": "nyxus-bg-09.png",
+  "nyxus-bg-10.png": "nyxus-bg-10.png",
+  "nyxus-bg-11.png": "nyxus-bg-11.png",
+  "nyxus-bg-12.png": "nyxus-bg-12.png",
+  "nyxus-bg-13.png": "nyxus-bg-13.png",
+  "nyxus-bg-14.png": "nyxus-bg-14.png",
+  "nyxus-bg-15.png": "nyxus-bg-15.png",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
