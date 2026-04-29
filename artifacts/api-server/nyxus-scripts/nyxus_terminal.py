@@ -882,11 +882,11 @@ class NyxusTerminal(Gtk.Application):
         cr.set_source_rgb(*C_DARK)
         cr.rectangle(0, 0, w, h); cr.fill()
 
-        # 2. Brick wall texture at 12% opacity over the full window
+        # 2. Brick wall texture at 28% opacity over the full window
         cr.push_group()
         draw_spray_brick_wall(cr, 0, 0, w, h, seed=42)
         cr.pop_group_to_source()
-        cr.paint_with_alpha(0.12)
+        cr.paint_with_alpha(0.28)
 
         # 3. Subtle dark tint on the top strip so buttons are readable
         cr.set_source_rgba(0.03, 0.01, 0.08, 0.72)
@@ -927,7 +927,7 @@ class NyxusTerminal(Gtk.Application):
             draw_no_vte(cr, 0, BORDER_TOP, w, h - BORDER_TOP)
 
     def _draw_nyxus_overlay(self, area, cr, w, h, _):
-        """NYXUS graffiti piece drawn ABOVE the VTE at ~38% — visible, not intrusive."""
+        """NYXUS graffiti piece — smaller, centred, with matching paint splatters."""
         inner_x = BORDER_SIDE
         inner_y = BORDER_TOP
         inner_w = w - BORDER_SIDE * 2
@@ -935,13 +935,38 @@ class NyxusTerminal(Gtk.Application):
         if inner_w <= 0 or inner_h <= 0:
             return
         rng = _rng(42)
+        cx = inner_x + inner_w * 0.5
+        cy = inner_y + inner_h * 0.46
+        piece_size = min(inner_w * 0.32, 200)   # smaller than before
+
         cr.push_group()
-        _draw_nyxus_piece(cr,
-                          inner_x + inner_w * 0.5,
-                          inner_y + inner_h * 0.46,
-                          min(inner_w * 0.60, 360), rng)
+
+        # Paint splatter throws around the text — same look as brick wall bg
+        splat_cols = [C_PINK, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE, C_PURPLE]
+        for i, col in enumerate(splat_cols):
+            angle = math.radians(i * 60 + 15)
+            dist = rng.uniform(piece_size * 0.55, piece_size * 1.1)
+            sx = cx + math.cos(angle) * dist
+            sy = cy + math.sin(angle) * dist * 0.65
+            spread = int(rng.uniform(piece_size * 0.22, piece_size * 0.45))
+            spray_dots(cr, sx, sy, col, n=90,  spread=spread,      alpha_max=0.85, rng=rng)
+            spray_dots(cr, sx, sy, col, n=60,  spread=spread * 2,  alpha_max=0.45, rng=rng)
+            spray_dots(cr, sx, sy, col, n=30,  spread=spread * 3,  alpha_max=0.18, rng=rng)
+
+        # A few extra random throws for natural randomness
+        rng2 = _rng(99)
+        for _ in range(4):
+            sx = cx + rng2.uniform(-inner_w * 0.35, inner_w * 0.35)
+            sy = cy + rng2.uniform(-inner_h * 0.25, inner_h * 0.25)
+            col = rng2.choice(PALETTE)
+            spray_dots(cr, sx, sy, col, n=55, spread=int(piece_size * 0.30),
+                       alpha_max=0.55, rng=rng2)
+
+        # NYXUS piece on top of the splatters
+        _draw_nyxus_piece(cr, cx, cy, piece_size, rng)
+
         cr.pop_group_to_source()
-        cr.paint_with_alpha(0.38)
+        cr.paint_with_alpha(0.42)
 
     def _draw_sel_overlay(self, area, cr, w, h, _):
         cr.set_operator(1)
