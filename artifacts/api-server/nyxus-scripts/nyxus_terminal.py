@@ -249,47 +249,60 @@ def draw_spray_brick_wall(cr, x, y, w, h, seed=0):
                 by_clip = max(by, y + MORTAR // 2)
                 bh_clip = min(by + bh_draw, y + h - MORTAR // 2) - by_clip
                 if bh_clip > 0:
-                    colored = rng.random() < 0.35  # ~35% get color, rest dark
+                    colored = rng.random() < 0.35  # ~35% get spray paint
 
                     if colored:
                         col = rng.choice(PALETTE)
                         r, g, b = col
-                        darkness = rng.uniform(0.55, 0.85)
-                        cr.set_source_rgb(r * darkness, g * darkness, b * darkness)
+
+                        # Thin semi-transparent base wash — not solid, like first
+                        # pass of a spray can before dots build up
+                        cr.set_source_rgba(r, g, b, rng.uniform(0.18, 0.32))
                         cr.rectangle(bx, by_clip, bw_draw, bh_clip); cr.fill()
 
-                        # Brighter hot-spot in center
-                        if rng.random() < 0.60:
-                            bright = rng.uniform(0.82, 1.00)
-                            cx_b = bx + bw_draw * rng.uniform(0.25, 0.75)
-                            cy_b = by_clip + bh_clip * rng.uniform(0.25, 0.75)
-                            cr.set_source_rgba(r * bright, g * bright, b * bright, 0.72)
-                            cr.arc(cx_b, cy_b,
-                                   max(bw_draw, bh_clip) * rng.uniform(0.22, 0.42),
-                                   0, math.pi * 2)
-                            cr.fill()
+                        # Main spray pass — dense dot cloud from a random angle
+                        # Nozzle position offset to one side so coverage is uneven
+                        nozzle_x = bx + bw_draw * rng.uniform(0.1, 0.9)
+                        nozzle_y = by_clip + bh_clip * rng.uniform(0.1, 0.9)
+                        spread = max(bw_draw, bh_clip) * rng.uniform(0.5, 0.9)
+                        spray_dots(cr, nozzle_x, nozzle_y, col,
+                                   n=rng.randint(30, 55),
+                                   spread=int(spread),
+                                   alpha_max=rng.uniform(0.55, 0.82),
+                                   rng=rng)
 
-                        # Spray bleed dots — paint spilling past mortar
-                        for _ in range(rng.randint(2, 6)):
-                            bdx = rng.uniform(-4, bw_draw + 4)
-                            bdy = rng.uniform(-3, bh_clip + 3)
-                            cr.set_source_rgba(r, g, b, rng.uniform(0.12, 0.40))
+                        # Second lighter pass from a different angle for depth
+                        if rng.random() < 0.65:
+                            nx2 = bx + bw_draw * rng.uniform(0.0, 1.0)
+                            ny2 = by_clip + bh_clip * rng.uniform(0.0, 1.0)
+                            spray_dots(cr, nx2, ny2, col,
+                                       n=rng.randint(12, 25),
+                                       spread=int(spread * 0.5),
+                                       alpha_max=rng.uniform(0.30, 0.50),
+                                       rng=rng)
+
+                        # Bleed dots past mortar — paint can never be perfectly contained
+                        for _ in range(rng.randint(3, 9)):
+                            bdx = rng.uniform(-6, bw_draw + 6)
+                            bdy = rng.uniform(-5, bh_clip + 5)
+                            cr.set_source_rgba(r, g, b, rng.uniform(0.08, 0.28))
                             cr.arc(bx + bdx, by_clip + bdy,
-                                   rng.uniform(0.4, 2.0), 0, math.pi * 2)
+                                   rng.uniform(0.3, 1.6), 0, math.pi * 2)
                             cr.fill()
                     else:
-                        # Dark brick — near-black with very subtle warm tint
-                        dv = rng.uniform(0.07, 0.14)
-                        cr.set_source_rgb(dv * 1.1, dv * 0.9, dv * 0.85)
+                        # Unpainted brick — white/off-white like bare wall
+                        wv = rng.uniform(0.78, 0.94)
+                        cr.set_source_rgb(wv, wv * 0.97, wv * 0.96)
                         cr.rectangle(bx, by_clip, bw_draw, bh_clip); cr.fill()
 
-                        # Faint surface texture on dark bricks
-                        if rng.random() < 0.25:
-                            cr.set_source_rgba(1, 1, 1, rng.uniform(0.03, 0.07))
-                            cr.set_line_width(0.5)
-                            cr.move_to(bx + 2, by_clip + bh_clip * rng.uniform(0.3, 0.7))
-                            cr.line_to(bx + bw_draw - 2, by_clip + bh_clip * rng.uniform(0.3, 0.7))
-                            cr.stroke()
+                        # Subtle surface variation — no spray, just wall texture
+                        if rng.random() < 0.35:
+                            cr.set_source_rgba(0, 0, 0, rng.uniform(0.04, 0.10))
+                            for _ in range(rng.randint(1, 3)):
+                                tx = bx + rng.uniform(3, bw_draw - 3)
+                                ty = by_clip + rng.uniform(2, bh_clip - 2)
+                                cr.arc(tx, ty, rng.uniform(0.5, 1.5), 0, math.pi * 2)
+                                cr.fill()
 
             xx += bw
         yy += BH
