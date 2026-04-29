@@ -528,6 +528,47 @@ def dot_grid(cr, x, y, w, h, spacing=22):
         cr.set_source_rgba(0.28, 0.18, 0.55, 0.12)
         cr.move_to(x, gy); cr.line_to(x+w, gy); cr.stroke()
 
+def draw_nyxus_bg(cr, w, h):
+    """Dark #08080e base + icon-generator-style paint splatters + ruled lines."""
+    import math as _m
+    cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
+    rng = _rand.Random(0xBEEF)
+    blobs = [
+        (0.80, 0.00, 0.80), (0.55, 0.00, 1.00), (0.00, 0.53, 1.00),
+        (0.22, 1.00, 0.08), (1.00, 1.00, 0.00), (1.00, 0.40, 0.00),
+        (0.80, 0.00, 0.80), (0.55, 0.00, 1.00), (0.00, 0.53, 1.00),
+        (0.22, 1.00, 0.08), (1.00, 1.00, 0.00), (1.00, 0.40, 0.00),
+        (0.80, 0.00, 0.80), (0.55, 0.00, 1.00),
+    ]
+    for i, (r, g, b) in enumerate(blobs):
+        bx = rng.uniform(0, w); by = rng.uniform(0, h)
+        rr = rng.uniform(w*0.04, w*0.14); alpha = rng.uniform(0.05, 0.14)
+        pat = cairo.RadialGradient(bx, by, 0, bx, by, rr)
+        pat.add_color_stop_rgba(0, r, g, b, alpha)
+        pat.add_color_stop_rgba(1, r, g, b, 0)
+        cr.set_source(pat); cr.arc(bx, by, rr, 0, _m.pi*2); cr.fill()
+    for _ in range(18):
+        r, g, b = blobs[rng.randrange(len(blobs))]
+        sx = rng.uniform(0, w); sy = rng.uniform(0, h)
+        length = rng.uniform(w*0.04, w*0.22); angle = rng.uniform(0, _m.pi*2)
+        ex = sx + _m.cos(angle)*length; ey = sy + _m.sin(angle)*length
+        alpha = rng.uniform(0.06, 0.18)
+        cr.set_source_rgba(r, g, b, alpha)
+        cr.set_line_width(rng.uniform(1.5, 6.0))
+        cr.move_to(sx, sy); cr.line_to(ex, ey); cr.stroke()
+    for _ in range(80):
+        r, g, b = blobs[rng.randrange(len(blobs))]
+        dx = rng.uniform(0, w); dy = rng.uniform(0, h)
+        dr = rng.uniform(0.8, 4.0); alpha = rng.uniform(0.08, 0.24)
+        cr.set_source_rgba(r, g, b, alpha)
+        cr.arc(dx, dy, dr, 0, _m.pi*2); cr.fill()
+    cr.set_line_width(0.5)
+    spacing = h / 26
+    for i in range(27):
+        ly = i * spacing
+        cr.set_source_rgba(0.45, 0.25, 0.80, 0.06 + 0.02*(i%3==0))
+        cr.move_to(0, ly); cr.line_to(w, ly); cr.stroke()
+
 def neon_card(cr, x, y, w, h, color, tint=0.08):
     r, g, b = color
     cr.set_source_rgba(r, g, b, 0.07); cr.rectangle(x+5, y+6, w, h); cr.fill()
@@ -666,7 +707,7 @@ class NyxusControl(Gtk.Application):
     # ─────────────────────────────────────────────── header ────────────────────
 
     def _draw_hdr(self, area, cr, w, h, _):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         cr.set_source_rgba(0.50, 0.40, 0.10, 0.20); cr.set_line_width(1.5)
         cr.move_to(0, h-1); cr.line_to(w, h-1); cr.stroke()
         glow_text(cr, 14, h-10, "NYXUS  Control", *C_PINK, size=16, bold=True)
@@ -765,7 +806,7 @@ class NyxusControl(Gtk.Application):
         return sw
 
     def _draw_overview(self, area, cr, w, h, _):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr, 0, 0, w, h, 28)
 
         pad = 20
@@ -1007,7 +1048,7 @@ class NyxusControl(Gtk.Application):
                 lbl.set_text(f"{rpm} RPM")
 
     def _draw_fan_chart(self, area, cr, w, h, _):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr, 0, 0, w, h, 24)
         glow_text(cr, 12, 22, "Fan Speed History", *C_BLUE, size=12, bold=True)
         if not self.live.fan_hist:
@@ -1039,7 +1080,7 @@ class NyxusControl(Gtk.Application):
         return box
 
     def _draw_thermal(self, area, cr, w, h, _):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr, 0, 0, w, h, 28)
         glow_text(cr, 14, 32, "Thermal Monitoring  —  60 min history", *C_ORANGE, size=15, bold=True)
         rainbow_bar(cr, 0, 40, w, 2)
@@ -1283,7 +1324,7 @@ class NyxusControl(Gtk.Application):
             self._toast(f"Saved: {self.profiles[idx]['name']}")
 
     def _draw_profile_detail(self, area, cr, w, h, _):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr, 0, 0, w, h, 26)
         idx = getattr(self, "_selected_prof_idx", 0)
         if not (0 <= idx < len(self.profiles)):
@@ -1402,7 +1443,7 @@ class NyxusControl(Gtk.Application):
         self._toast(f"RGB set to {hex_col} on {len(getattr(self,'_rgb_devices',[]))} device(s)")
 
     def _draw_rgb(self, area, cr, w, h, _):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr, 0, 0, w, h, 24)
         glow_text(cr, 16, 34, "RGB Control", *C_GREEN, size=16, bold=True)
         # Neon light simulation
@@ -1552,7 +1593,7 @@ class NyxusControl(Gtk.Application):
             self._toast(f"Battery limit → {limit}%" if ok else f"Battery limit failed: {err}")
 
     def _draw_power_header(self, area, cr, w, h, _):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0,0,w,h); cr.fill()
+        draw_nyxus_bg(cr, w, h)
         dot_grid(cr, 0, 0, w, h, 24)
         glow_text(cr, 16, 34, "Power Management", *C_YELLOW, size=16, bold=True)
         gov = self.live.governor
