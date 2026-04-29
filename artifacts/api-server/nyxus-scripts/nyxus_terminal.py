@@ -117,6 +117,81 @@ def _draw_star(cr, cx, cy, color, radius):
     cr.fill()
 
 
+def _draw_nyxus_piece(cr, cx, cy, size, rng):
+    """Graffiti piece: spray cans above + chunky NYXUS, thick white outline + drips.
+    Drawn at full opacity — caller controls the push_group alpha."""
+    import cairo as _cairo
+    word = "NYXUS"
+    cr.select_font_face("Caveat", 0, 1)
+    cr.set_font_size(size)
+    ext = cr.text_extents(word)
+    tx = cx - ext.width / 2 - ext.x_bearing
+    ty = cy - ext.height / 2 - ext.y_bearing
+
+    # ── Spray cans above the text ─────────────────────────────────────────
+    can_cols = [C_PINK, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE]
+    n_cans = 5
+    can_y_base = ty - size * 0.52
+    for i in range(n_cans):
+        cx_can = tx + ext.width * (i + 0.5) / n_cans
+        angle = rng.uniform(-0.30, 0.30)
+        cr.save()
+        cr.translate(cx_can, can_y_base + rng.uniform(-8, 8))
+        cr.rotate(angle)
+        _draw_spray_can(cr, 0, 0, can_cols[i % len(can_cols)])
+        cr.restore()
+
+    # ── Scattered spray dots around the word ──────────────────────────────
+    for _ in range(14):
+        px = tx + rng.uniform(-size * 0.25, ext.width + size * 0.25)
+        py = ty + rng.uniform(-size * 0.35, ext.height + size * 0.35)
+        spray_dots(cr, px, py, rng.choice(PALETTE),
+                   n=14, spread=18, alpha_max=0.32, rng=rng)
+
+    # ── Thick WHITE outer outline — the graffiti bubble effect ───────────
+    cr.set_source_rgba(1, 1, 1, 0.97)
+    cr.set_line_width(24)
+    cr.set_line_join(_cairo.LineJoin.ROUND)
+    cr.move_to(tx, ty)
+    cr.text_path(word)
+    cr.stroke()
+
+    # ── Thin dark inner outline ────────────────────────────────────────────
+    cr.set_source_rgba(0.04, 0.01, 0.08, 0.92)
+    cr.set_line_width(6)
+    cr.set_line_join(_cairo.LineJoin.ROUND)
+    cr.move_to(tx, ty)
+    cr.text_path(word)
+    cr.stroke()
+
+    # ── Rainbow neon gradient fill (left→right, all 5 colors) ─────────────
+    pat = _cairo.LinearGradient(tx, 0, tx + ext.width, 0)
+    pat.add_color_stop_rgba(0.00, *C_PINK,   0.98)
+    pat.add_color_stop_rgba(0.25, *C_PURPLE, 0.98)
+    pat.add_color_stop_rgba(0.50, *C_BLUE,   0.98)
+    pat.add_color_stop_rgba(0.75, *C_GREEN,  0.98)
+    pat.add_color_stop_rgba(1.00, *C_YELLOW, 0.98)
+    cr.set_source(pat)
+    cr.move_to(tx, ty)
+    cr.text_path(word)
+    cr.fill()
+
+    # ── White inner shine stroke ───────────────────────────────────────────
+    cr.set_source_rgba(1, 1, 1, 0.28)
+    cr.set_line_width(2.0)
+    cr.move_to(tx + 4, ty + 4)
+    cr.text_path(word)
+    cr.stroke()
+
+    # ── Paint drips from bottom of letters ────────────────────────────────
+    drip_y = ty + ext.height * 0.88
+    drip_cols = [C_PINK, C_BLUE, C_GREEN, C_PURPLE, C_ORANGE, C_YELLOW]
+    for i in range(7):
+        dx = tx + ext.width * rng.uniform(0.04, 0.96)
+        _draw_drip(cr, dx, drip_y, drip_cols[i % len(drip_cols)],
+                   rng.uniform(size * 0.22, size * 0.50), rng)
+
+
 def _draw_graffiti_word(cr, cx, cy, word, color1, color2, size, rng):
     import cairo as _cairo
     r1, g1, b1 = color1
@@ -171,52 +246,26 @@ def _draw_graffiti_word(cr, cx, cy, word, color1, color2, size, rng):
 # ── Terminal background (graffiti wall with NYXUS watermark) ──────────────────
 
 def draw_terminal_bg(cr, x, y, w, h):
-    """Minimal bg — dark base + ghost brick lines + faint NYXUS watermark only."""
+    """Terminal interior: dark base + NYXUS graffiti piece (cans, bubble letters, drips)."""
     rng = _rng(42)
 
-    # Base dark fill — terminal content is the star
+    # Base dark fill
     cr.set_source_rgb(*C_DARK)
     cr.rectangle(x, y, w, h)
     cr.fill()
 
-    # Ghost brick texture — barely visible hint, max 5% opacity
-    BH2, M2 = 26, 3
-    row2 = 0; yy2 = y
-    while yy2 < y + h:
-        off2 = 40 if row2 % 2 else 0
-        xx2 = x - off2
-        while xx2 < x + w + 80:
-            bw2 = 82 + rng.randint(-10, 10)
-            lx2 = max(x, xx2 + M2); rx2 = min(x + w, xx2 + bw2 - M2)
-            if rx2 - lx2 > 4:
-                cr.set_line_width(0.4)
-                cr.set_source_rgba(0.30, 0.20, 0.10, 0.05)
-                cr.rectangle(lx2, yy2 + M2, rx2 - lx2, BH2 - M2 * 2)
-                cr.stroke()
-            xx2 += bw2
-        yy2 += BH2; row2 += 1
-
-    # A few very faint splatter streaks — texture hint only, max ~8% opacity
-    for _ in range(10):
-        sx = rng.uniform(x, x + w); sy = rng.uniform(y, y + h)
-        ex = sx + rng.uniform(-100, 100); ey = sy + rng.uniform(-15, 15)
-        col = rng.choice(PALETTE)
-        cr.set_source_rgba(*col, rng.uniform(0.03, 0.07))
-        cr.set_line_width(rng.uniform(0.5, 1.5))
-        cr.move_to(sx, sy); cr.line_to(ex, ey); cr.stroke()
-
-    # NYXUS watermark — rendered full then painted at 9% opacity
-    cr.push_group()
-    _draw_graffiti_word(cr, x + w * 0.5, y + h * 0.44, "NYXUS",
-                        C_PINK, C_PURPLE, min(w * 0.55, 320), rng)
-    cr.pop_group_to_source()
-    cr.paint_with_alpha(0.09)
-
-    # Subtle notebook rules — barely visible grid
+    # Barely-there notebook rules
     cr.set_line_width(0.25)
     for ry in range(int(y) + 24, int(y + h), 24):
-        cr.set_source_rgba(1, 1, 1, 0.022)
+        cr.set_source_rgba(1, 1, 1, 0.018)
         cr.move_to(x, ry); cr.line_to(x + w, ry); cr.stroke()
+
+    # NYXUS graffiti piece — cans + bubble text + drips, at ~22% opacity
+    cr.push_group()
+    _draw_nyxus_piece(cr, x + w * 0.5, y + h * 0.46,
+                      min(w * 0.58, 340), rng)
+    cr.pop_group_to_source()
+    cr.paint_with_alpha(0.22)
 
 
 # ── Spray-painted brick wall ──────────────────────────────────────────────────
@@ -248,9 +297,9 @@ def draw_spray_brick_wall(cr, x, y, w, h, seed=0):
                 by_clip = max(by_val, y + MORTAR // 2)
                 bh_clip = min(by_val + bh_draw, y + h - MORTAR // 2) - by_clip
                 if bh_clip > 0:
-                    # Dark base for every brick
-                    dv = rng.uniform(0.11, 0.20)
-                    cr.set_source_rgb(dv * 1.05, dv, dv * 0.90)
+                    # White/off-white brick face — dark mortar gap already set
+                    wv = rng.uniform(0.78, 0.94)
+                    cr.set_source_rgb(wv, wv * 0.97, wv * 0.96)
                     cr.rectangle(bx2_val, by_clip, bw_draw, bh_clip); cr.fill()
 
                     # ~30% of bricks get a tight individual spray pass
