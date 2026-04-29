@@ -418,6 +418,8 @@ class StickyApp(Gtk.ApplicationWindow):
 
         # Full-window Cairo drawing area
         self.da = Gtk.DrawingArea()
+        self.da.set_hexpand(True)
+        self.da.set_vexpand(True)
         self.da.set_draw_func(self._draw)
         overlay.set_child(self.da)
 
