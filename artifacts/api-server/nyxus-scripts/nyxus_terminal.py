@@ -246,9 +246,7 @@ def _draw_graffiti_word(cr, cx, cy, word, color1, color2, size, rng):
 # ── Terminal background (graffiti wall with NYXUS watermark) ──────────────────
 
 def draw_terminal_bg(cr, x, y, w, h):
-    """Terminal interior: dark base + NYXUS graffiti piece (cans, bubble letters, drips)."""
-    rng = _rng(42)
-
+    """Terminal interior: dark base only. NYXUS piece lives on its own overlay layer."""
     # Base dark fill
     cr.set_source_rgb(*C_DARK)
     cr.rectangle(x, y, w, h)
@@ -259,13 +257,6 @@ def draw_terminal_bg(cr, x, y, w, h):
     for ry in range(int(y) + 24, int(y + h), 24):
         cr.set_source_rgba(1, 1, 1, 0.018)
         cr.move_to(x, ry); cr.line_to(x + w, ry); cr.stroke()
-
-    # NYXUS graffiti piece — cans + bubble text + drips, at ~22% opacity
-    cr.push_group()
-    _draw_nyxus_piece(cr, x + w * 0.5, y + h * 0.46,
-                      min(w * 0.58, 340), rng)
-    cr.pop_group_to_source()
-    cr.paint_with_alpha(0.22)
 
 
 # ── Spray-painted brick wall ──────────────────────────────────────────────────
@@ -768,6 +759,16 @@ class NyxusTerminal(Gtk.Application):
             self._setup_vte()
             overlay.add_overlay(self._vte)
 
+        # Layer 1.5 — NYXUS graffiti piece (above VTE, invisible to events)
+        self._nyxus_da = Gtk.DrawingArea()
+        self._nyxus_da.set_draw_func(self._draw_nyxus_overlay, None)
+        self._nyxus_da.set_can_focus(False)
+        self._nyxus_da.set_can_target(False)   # mouse/keyboard fall through to VTE
+        self._nyxus_da.set_halign(Gtk.Align.FILL)
+        self._nyxus_da.set_valign(Gtk.Align.FILL)
+        overlay.add_overlay(self._nyxus_da)
+        overlay.set_clip_overlay(self._nyxus_da, False)
+
         # Layer 2 — spray selection overlay
         self._sel_da = Gtk.DrawingArea()
         self._sel_da.set_draw_func(self._draw_sel_overlay, None)
@@ -896,6 +897,23 @@ class NyxusTerminal(Gtk.Application):
 
         if not HAS_VTE and inner_w > 0 and inner_h > 0:
             draw_no_vte(cr, inner_x, inner_y, inner_w, inner_h)
+
+    def _draw_nyxus_overlay(self, area, cr, w, h, _):
+        """NYXUS graffiti piece drawn ABOVE the VTE at ~38% — visible, not intrusive."""
+        inner_x = BORDER_SIDE
+        inner_y = BORDER_TOP
+        inner_w = w - BORDER_SIDE * 2
+        inner_h = h - BORDER_TOP - BORDER_BOTTOM
+        if inner_w <= 0 or inner_h <= 0:
+            return
+        rng = _rng(42)
+        cr.push_group()
+        _draw_nyxus_piece(cr,
+                          inner_x + inner_w * 0.5,
+                          inner_y + inner_h * 0.46,
+                          min(inner_w * 0.60, 360), rng)
+        cr.pop_group_to_source()
+        cr.paint_with_alpha(0.38)
 
     def _draw_sel_overlay(self, area, cr, w, h, _):
         cr.set_operator(1)
