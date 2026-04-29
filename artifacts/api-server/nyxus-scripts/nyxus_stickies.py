@@ -406,15 +406,19 @@ class StickyApp(Gtk.ApplicationWindow):
             cs.append(db)
 
         # ── Canvas (ScrolledWindow + single DrawingArea) ──────────────────────
+        # NEVER horizontal policy forces the DrawingArea to fill the full
+        # viewport width — with AUTOMATIC it would get 0-width allocation.
         self._scroll = Gtk.ScrolledWindow()
         self._scroll.set_hexpand(True)
         self._scroll.set_vexpand(True)
-        self._scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self._scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         root.append(self._scroll)
 
         self._da = Gtk.DrawingArea()
         self._da.set_hexpand(True)
-        self._da.set_vexpand(True)
+        self._da.set_vexpand(False)   # height driven by set_content_height below
+        self._da.set_content_width(WIN_W)
+        self._da.set_content_height(400)
         self._da.set_draw_func(self._on_draw)
         self._scroll.set_child(self._da)
 
@@ -440,10 +444,11 @@ class StickyApp(Gtk.ApplicationWindow):
         n   = len(vis)
         self._cnt.set_label(f"{n} note{'s' if n != 1 else ''}")
         self._bcl.set_sensitive(len(self.notes) > 0)
-        # Ensure canvas is tall enough to show all notes
+        # set_content_height tells the ScrolledWindow how tall the canvas is
+        # so vertical scrollbars appear when notes overflow the viewport.
         cw = self._da.get_width() or WIN_W
         needed = _canvas_height(n, cw)
-        self._da.set_size_request(-1, max(300, needed))
+        self._da.set_content_height(max(300, needed))
         self._da.queue_draw()
 
     def _note_at(self, mx, my):
@@ -573,7 +578,9 @@ class StickyApp(Gtk.ApplicationWindow):
         save_notes(self.notes)
         self._sel = note["id"]
         self._update()
-        self._edit_note(note["id"])
+        # Use idle_add so the canvas draws the new (empty) card before the
+        # edit dialog steals focus and freezes the main window.
+        GLib.idle_add(self._edit_note, note["id"])
 
     def _on_clear(self, _=None):
         dlg = Gtk.MessageDialog(
