@@ -5,7 +5,7 @@
 # ╚══════════════════════════════════════════════════════════════════════╝
 import gi
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, Gdk, GLib, Gio, Pango
+from gi.repository import Gtk, Gdk, GLib, Gio, Pango, GdkPixbuf
 import json, uuid, os, math, random as _rand
 from datetime import datetime
 
@@ -23,28 +23,32 @@ def _load_bg(name: str):
         _bg_cache[name] = None
         return None
     try:
-        import cairo as _c
-        surf = _c.ImageSurface.create_from_png(path)
-        _bg_cache[name] = surf
-        return surf
+        pb = GdkPixbuf.Pixbuf.new_from_file(path)
+        _bg_cache[name] = pb
+        return pb
     except Exception:
         _bg_cache[name] = None
         return None
 
 def draw_image_bg(cr, x, y, w, h, name, alpha=1.0):
-    surf = _load_bg(name)
-    if surf is None:
+    pb = _load_bg(name)
+    if pb is None:
         return False
-    iw, ih = surf.get_width(), surf.get_height()
+    iw, ih = pb.get_width(), pb.get_height()
     if iw <= 0 or ih <= 0:
         return False
     cr.save()
-    cr.rectangle(x, y, w, h); cr.clip()
-    cr.translate(x, y)
-    cr.scale(w / iw, h / ih)
-    cr.set_source_surface(surf, 0, 0)
-    cr.paint_with_alpha(alpha)
-    cr.restore()
+    try:
+        cr.rectangle(x, y, w, h)
+        cr.clip()
+        cr.translate(x, y)
+        cr.scale(w / iw, h / ih)
+        Gdk.cairo_set_source_pixbuf(cr, pb, 0, 0)
+        cr.paint_with_alpha(alpha)
+    except Exception:
+        pass
+    finally:
+        cr.restore()
     return True
 
 WIN_W, WIN_H = 1100, 720
