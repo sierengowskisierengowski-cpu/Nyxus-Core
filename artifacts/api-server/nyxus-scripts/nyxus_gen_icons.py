@@ -31,6 +31,7 @@ APPS = [
     ("io.nyxus.weather",  "WEATHER",  (0.00, 0.53, 1.00)),
     ("io.nyxus.notepad",  "NOTEPAD",  (0.80, 0.00, 1.00)),
     ("io.nyxus.terminal", "TERMINAL", (0.22, 1.00, 0.08)),
+    ("io.nyxus.control",  "CONTROL",  (1.00, 0.33, 0.00)),
 ]
 
 

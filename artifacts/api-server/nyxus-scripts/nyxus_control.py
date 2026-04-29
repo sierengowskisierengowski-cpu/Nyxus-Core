@@ -707,30 +707,93 @@ class NyxusControl(Gtk.Application):
 
     # ──────────────────────────────────────────────────────── nav ───────────────
     def _build_nav(self):
-        nav = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        nav.add_css_class("nav-bar")
-        for name, color in PAGES:
-            btn = Gtk.Button(label=name)
-            btn.add_css_class("nav-btn")
-            btn.connect("clicked", self._on_nav, name)
-            self._nav_btns[name] = (btn, color)
-            nav.append(btn)
-        self._update_nav("OVERVIEW")
-        return nav
+        nav_da = Gtk.DrawingArea()
+        nav_da.set_size_request(164, -1)
+        nav_da.set_vexpand(True)
+        nav_da.set_draw_func(self._draw_nav, None)
+        self._nav_da = nav_da
+        self._das["nav"] = nav_da
+        click = Gtk.GestureClick()
+        click.connect("pressed", self._on_nav_click)
+        nav_da.add_controller(click)
+        return nav_da
+
+    def _draw_nav(self, area, cr, w, h, _):
+        # Background — full height NYXUS style
+        draw_nyxus_bg(cr, w, h)
+        # Right border
+        cr.set_source_rgba(*C_PINK, 0.28); cr.set_line_width(2.5)
+        cr.move_to(w-1, 0); cr.line_to(w-1, h); cr.stroke()
+        # Top label
+        cr.select_font_face("Caveat", 0, 1); cr.set_font_size(11)
+        cr.set_source_rgba(*C_DIM, 0.50)
+        cr.move_to(12, 20); cr.show_text("NAVIGATION")
+        rainbow_bar(cr, 0, 26, w, 2)
+
+        item_h = min(58, (h - 32) / max(len(PAGES), 1))
+        for i, (name, color) in enumerate(PAGES):
+            iy     = 32 + i * item_h
+            active = (name == self._cur_page)
+            r, g, b = color
+
+            # Active highlight
+            if active:
+                # Glow fill
+                cr.set_source_rgba(r, g, b, 0.14)
+                cr.rectangle(0, iy, w, item_h); cr.fill()
+                # Left accent bar
+                cr.set_source_rgba(r, g, b, 0.95)
+                cr.rectangle(0, iy + 4, 5, item_h - 8); cr.fill()
+                # Glow bar
+                cr.set_source_rgba(r, g, b, 0.22)
+                cr.rectangle(0, iy + 4, 18, item_h - 8); cr.fill()
+                # Sketch underline
+                rng = _rng(i * 37, iy)
+                j   = lambda s=1.0: rng.uniform(-2*s, 2*s)
+                cr.set_source_rgba(r, g, b, 0.70); cr.set_line_width(1.5)
+                y_ul = iy + item_h - 6
+                cr.move_to(10+j(), y_ul+j()); cr.line_to(w-10+j(), y_ul+j())
+                cr.stroke()
+            else:
+                # Subtle hover-ready bg
+                cr.set_source_rgba(r, g, b, 0.03)
+                cr.rectangle(0, iy, w, item_h); cr.fill()
+
+            # Label — Caveat via Cairo
+            cy = iy + item_h * 0.62
+            if active:
+                glow_text(cr, 16, cy, name, r, g, b, size=17, bold=True)
+            else:
+                cr.select_font_face("Caveat", 0, 0)
+                cr.set_font_size(15)
+                cr.set_source_rgba(r, g, b, 0.55)
+                cr.move_to(16, cy); cr.show_text(name)
+
+            # Row separator
+            cr.set_source_rgba(1, 1, 1, 0.04); cr.set_line_width(0.6)
+            cr.move_to(0, iy + item_h); cr.line_to(w, iy + item_h); cr.stroke()
+
+        # Fill remaining space below items with continued bg pattern
+        last_y = 32 + len(PAGES) * item_h
+        if last_y < h:
+            # Small rainbow tick at the very bottom
+            rainbow_bar(cr, 0, h - 3, w, 3)
+
+    def _on_nav_click(self, gesture, n_press, x, y):
+        item_h = min(58, (self._nav_da.get_height() - 32) / max(len(PAGES), 1))
+        idx    = int((y - 32) / item_h)
+        if 0 <= idx < len(PAGES):
+            name = PAGES[idx][0]
+            self._cur_page = name
+            self._stack.set_visible_child_name(name)
+            self._nav_da.queue_draw()
 
     def _on_nav(self, btn, name):
         self._cur_page = name
         self._stack.set_visible_child_name(name)
-        self._update_nav(name)
 
     def _update_nav(self, active):
-        CN = {C_PINK:"pink",C_ORANGE:"orange",C_PURPLE:"purple",
-              C_BLUE:"blue",C_GREEN:"green",C_YELLOW:"yellow",C_RED:"red"}
-        for name,(btn,col) in self._nav_btns.items():
-            for c in list(btn.get_css_classes()):
-                if c.startswith("nav-active"): btn.remove_css_class(c)
-            if name == active:
-                btn.add_css_class(f"nav-active-{CN.get(col,'pink')}")
+        pass  # handled by Cairo draw
 
     # ──────────────────────────────────────────────────────── data ──────────────
     def _data_tick(self):
