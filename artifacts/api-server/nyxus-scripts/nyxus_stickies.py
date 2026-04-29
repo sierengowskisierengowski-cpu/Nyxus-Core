@@ -58,25 +58,42 @@ def sketch_rect(cr, x, y, w, h, r, g, b, thick=2.2, jitter=2.8, fill_rgba=None):
     cr.stroke()
 
 def paper_bg(cr, w, h):
-    """Dark NYXUS background with subtle neon dot grid."""
+    """Dark NYXUS cork board — paint splatters + dot grid + ruled lines."""
     cr.set_source_rgb(0.031, 0.031, 0.055); cr.rectangle(0, 0, w, h); cr.fill()
-    # Subtle dot grid
-    spacing = 28
-    cr.set_line_width(1.0)
     neons = [(1,0,1),(0.8,0,1),(0,0.53,1),(0.22,1,0.08),(1,1,0),(1,0.33,0)]
     rng = _rand.Random(99)
+    # Large paint blobs (icon-generator style)
+    for _ in range(14):
+        bx = rng.uniform(0, w); by = rng.uniform(0, h)
+        br = rng.uniform(6, 22); nc = rng.choice(neons)
+        cr.set_source_rgba(*nc, rng.uniform(0.05, 0.14))
+        cr.arc(bx, by, br, 0, math.pi*2); cr.fill()
+    # Splatter streaks
+    for _ in range(20):
+        sx = rng.uniform(0, w); sy = rng.uniform(0, h)
+        ex = sx + rng.uniform(-70, 70); ey = sy + rng.uniform(-10, 10)
+        nc = rng.choice(neons)
+        cr.set_source_rgba(*nc, rng.uniform(0.06, 0.18))
+        cr.set_line_width(rng.uniform(0.7, 2.0))
+        cr.move_to(sx, sy); cr.line_to(ex, ey); cr.stroke()
+    # Dense small dots
+    for _ in range(80):
+        bx = rng.uniform(0, w); by = rng.uniform(0, h)
+        br = rng.uniform(0.8, 3.5); nc = rng.choice(neons)
+        cr.set_source_rgba(*nc, rng.uniform(0.08, 0.24))
+        cr.arc(bx, by, br, 0, math.pi*2); cr.fill()
+    # Subtle dot grid on top
+    spacing = 28; cr.set_line_width(1.0)
     for gx in range(spacing, int(w), spacing):
         for gy in range(spacing, int(h), spacing):
             nc = rng.choice(neons)
-            cr.set_source_rgba(*nc, 0.08)
-            cr.arc(gx, gy, 1.2, 0, math.pi*2); cr.fill()
-    # Faint ambient splatter
-    for _ in range(80):
-        bx = rng.uniform(0, w); by = rng.uniform(0, h)
-        br = rng.uniform(2, 14)
-        nc = rng.choice(neons)
-        cr.set_source_rgba(*nc, rng.uniform(0.02, 0.06))
-        cr.arc(bx, by, br, 0, math.pi*2); cr.fill()
+            cr.set_source_rgba(*nc, 0.06)
+            cr.arc(gx, gy, 1.0, 0, math.pi*2); cr.fill()
+    # Ruled lines
+    cr.set_line_width(0.4)
+    for ry in range(28, int(h), 28):
+        cr.set_source_rgba(1, 1, 1, 0.035)
+        cr.move_to(0, ry); cr.line_to(w, ry); cr.stroke()
 
 def handwriting(cr, x, y, txt, r, g, b, size=13, bold=False, alpha=0.90):
     cr.select_font_face("Caveat", 0, 1 if bold else 0)
