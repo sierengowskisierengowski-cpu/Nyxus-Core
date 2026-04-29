@@ -852,6 +852,90 @@ window#waybar.right #battery {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
+   RIGHT BAR  ·  APP LAUNCHER BUTTONS  (paint-splatter icons)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Shared base for all app launcher buttons */
+window#waybar.right #custom-app-sysmon,
+window#waybar.right #custom-app-stickies,
+window#waybar.right #custom-app-weather,
+window#waybar.right #custom-app-notepad,
+window#waybar.right #custom-app-terminal {
+    min-width:            42px;
+    min-height:           42px;
+    margin:               5px 4px;
+    border-radius:        8px;
+    background-size:      34px 34px;
+    background-repeat:    no-repeat;
+    background-position:  center center;
+    background-color:     rgba(255, 255, 255, 0.04);
+    border:               2px solid rgba(255, 255, 255, 0.10);
+    transition:           all 0.18s ease;
+    cursor:               pointer;
+}
+
+/* SysMon — neon pink */
+window#waybar.right #custom-app-sysmon {
+    background-image: -gtk-icontheme("io.nyxus.sysmon");
+    border-color:     rgba(255, 0, 255, 0.30);
+}
+window#waybar.right #custom-app-sysmon:hover {
+    background-color: rgba(255, 0, 255, 0.18);
+    border-color:     #ff00ff;
+    box-shadow:       0 0 16px rgba(255, 0, 255, 0.70),
+                      inset 0 0 8px rgba(255, 0, 255, 0.10);
+}
+
+/* Stickies — neon yellow */
+window#waybar.right #custom-app-stickies {
+    background-image: -gtk-icontheme("io.nyxus.stickies");
+    border-color:     rgba(255, 255, 0, 0.30);
+}
+window#waybar.right #custom-app-stickies:hover {
+    background-color: rgba(255, 255, 0, 0.18);
+    border-color:     #ffff00;
+    box-shadow:       0 0 16px rgba(255, 255, 0, 0.70),
+                      inset 0 0 8px rgba(255, 255, 0, 0.10);
+}
+
+/* Weather — neon blue */
+window#waybar.right #custom-app-weather {
+    background-image: -gtk-icontheme("io.nyxus.weather");
+    border-color:     rgba(0, 136, 255, 0.30);
+}
+window#waybar.right #custom-app-weather:hover {
+    background-color: rgba(0, 136, 255, 0.18);
+    border-color:     #0088ff;
+    box-shadow:       0 0 16px rgba(0, 136, 255, 0.70),
+                      inset 0 0 8px rgba(0, 136, 255, 0.10);
+}
+
+/* Notepad — neon purple */
+window#waybar.right #custom-app-notepad {
+    background-image: -gtk-icontheme("io.nyxus.notepad");
+    border-color:     rgba(204, 0, 255, 0.30);
+}
+window#waybar.right #custom-app-notepad:hover {
+    background-color: rgba(204, 0, 255, 0.18);
+    border-color:     #cc00ff;
+    box-shadow:       0 0 16px rgba(204, 0, 255, 0.70),
+                      inset 0 0 8px rgba(204, 0, 255, 0.10);
+}
+
+/* Terminal — neon green */
+window#waybar.right #custom-app-terminal {
+    background-image: -gtk-icontheme("io.nyxus.terminal");
+    border-color:     rgba(57, 255, 20, 0.30);
+}
+window#waybar.right #custom-app-terminal:hover {
+    background-color: rgba(57, 255, 20, 0.18);
+    border-color:     #39ff14;
+    box-shadow:       0 0 16px rgba(57, 255, 20, 0.70),
+                      inset 0 0 8px rgba(57, 255, 20, 0.10);
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
    SHARED — tooltip
    ════════════════════════════════════════════════════════════════════════════ */
 
