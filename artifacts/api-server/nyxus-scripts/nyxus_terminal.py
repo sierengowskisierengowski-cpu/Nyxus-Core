@@ -25,9 +25,9 @@ for _vte_ver in ("3.91", "2.91"):
 
 # ── Dimensions ────────────────────────────────────────────────────────────────
 WIN_W, WIN_H   = 1100, 680
-BORDER_TOP     = 70   # title bar height
-BORDER_BOTTOM  = 28
-BORDER_SIDE    = 28
+BORDER_TOP     = 40   # minimal strip for spray-can buttons only
+BORDER_BOTTOM  = 0
+BORDER_SIDE    = 0
 IDLE_SECS      = 90
 
 # ── NYXUS palette ────────────────────────────────────────────────────────────
@@ -545,14 +545,6 @@ def draw_idle_overlay(cr, w, h, phase):
     cr.set_source_rgba(0.03, 0.02, 0.08, alpha * 0.90)
     cr.rectangle(0, 0, w, h); cr.fill()
 
-    rng = _rng(999)
-    for _ in range(14):
-        bx = rng.uniform(0, w); by = rng.uniform(0, h)
-        bw = rng.uniform(80, 300)
-        bcol = rng.choice(PALETTE)
-        cr.set_source_rgba(*bcol, alpha * 0.035)
-        cr.arc(bx, by, bw * 0.6, 0, math.pi * 2); cr.fill()
-
     if alpha < 0.25:
         return
 
@@ -836,8 +828,8 @@ class NyxusTerminal(Gtk.Application):
         try: vte.set_enable_sixel_graphics(True)
         except AttributeError: pass
 
-        # Background — slightly transparent so graffiti watermark shows through
-        bg = Gdk.RGBA(); bg.red=0.04; bg.green=0.02; bg.blue=0.10; bg.alpha=0.80
+        # Background — transparent enough for brick wall texture to show through
+        bg = Gdk.RGBA(); bg.red=0.04; bg.green=0.02; bg.blue=0.10; bg.alpha=0.65
         fg = Gdk.RGBA(); fg.red=0.92; fg.green=0.88; fg.blue=0.98; fg.alpha=1.0
         vte.set_color_background(bg)
         vte.set_color_foreground(fg)
@@ -883,20 +875,56 @@ class NyxusTerminal(Gtk.Application):
 
     # ── Draw callbacks ─────────────────────────────────────────────────────────
     def _draw_chrome_bg(self, area, cr, w, h, _):
+        import cairo as _cairo
         self._anim_t += 0.015
-        inner_x = BORDER_SIDE
-        inner_y = BORDER_TOP
-        inner_w = w - BORDER_SIDE * 2
-        inner_h = h - BORDER_TOP - BORDER_BOTTOM
 
-        # Draw bg fresh every tick — ensures NYXUS scales correctly on resize
-        if inner_w > 0 and inner_h > 0:
-            draw_terminal_bg(cr, inner_x, inner_y, inner_w, inner_h)
+        # 1. Solid dark base
+        cr.set_source_rgb(*C_DARK)
+        cr.rectangle(0, 0, w, h); cr.fill()
 
-        draw_graffiti_frame(cr, w, h, self._hovering_can)
+        # 2. Brick wall texture at 12% opacity over the full window
+        cr.push_group()
+        draw_spray_brick_wall(cr, 0, 0, w, h, seed=42)
+        cr.pop_group_to_source()
+        cr.paint_with_alpha(0.12)
 
-        if not HAS_VTE and inner_w > 0 and inner_h > 0:
-            draw_no_vte(cr, inner_x, inner_y, inner_w, inner_h)
+        # 3. Subtle dark tint on the top strip so buttons are readable
+        cr.set_source_rgba(0.03, 0.01, 0.08, 0.72)
+        cr.rectangle(0, 0, w, BORDER_TOP); cr.fill()
+
+        # 4. Neon rainbow separator at bottom of top strip
+        pat = _cairo.LinearGradient(0, BORDER_TOP - 2, w, BORDER_TOP - 2)
+        for i, col in enumerate(PALETTE):
+            pat.add_color_stop_rgb(i / max(len(PALETTE) - 1, 1), *col)
+        cr.set_source(pat)
+        cr.rectangle(0, BORDER_TOP - 2, w, 2); cr.fill()
+
+        # 5. "NYXUS Terminal" title in top strip
+        cr.select_font_face("Caveat", 0, 1)
+        cr.set_font_size(20)
+        title = "NYXUS Terminal"
+        ty = BORDER_TOP - 10
+        cr.set_source_rgba(1, 0, 1, 0.30)
+        cr.set_line_width(3)
+        cr.move_to(16, ty); cr.text_path(title); cr.stroke()
+        cr.set_source_rgba(1, 1, 1, 0.90)
+        cr.move_to(16, ty); cr.show_text(title)
+
+        # 6. Spray-can buttons
+        for key, cx, cy, color in _can_positions(w):
+            _draw_spray_can(cr, cx, cy, color, hovered=(self._hovering_can == key))
+        label_map = {"close": "✕", "min": "▂", "max": "▣"}
+        for key, cx, cy, color in _can_positions(w):
+            lbl = label_map[key]
+            cr.select_font_face("Caveat", 0, 0)
+            cr.set_font_size(11)
+            ext2 = cr.text_extents(lbl)
+            cr.set_source_rgba(1, 1, 1, 0.42)
+            cr.move_to(cx - ext2.width / 2 - ext2.x_bearing, BORDER_TOP - 6)
+            cr.show_text(lbl)
+
+        if not HAS_VTE:
+            draw_no_vte(cr, 0, BORDER_TOP, w, h - BORDER_TOP)
 
     def _draw_nyxus_overlay(self, area, cr, w, h, _):
         """NYXUS graffiti piece drawn ABOVE the VTE at ~38% — visible, not intrusive."""
