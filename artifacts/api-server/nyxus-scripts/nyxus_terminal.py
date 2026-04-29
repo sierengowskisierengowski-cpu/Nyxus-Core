@@ -6,14 +6,14 @@
 # ╚══════════════════════════════════════════════════════════════════════════╝
 import gi, sys, os, math, random, time, traceback
 gi.require_version("Gtk", "4.0")
+from gi.repository import Gtk, Gdk, GLib, Pango, Gio  # lock GTK4 first
+
 try:
     gi.require_version("Vte", "2.91")
     from gi.repository import Vte
     HAS_VTE = True
 except Exception:
     HAS_VTE = False
-
-from gi.repository import Gtk, Gdk, GLib, Pango, Gio
 
 # ── Dimensions ────────────────────────────────────────────────────────────────
 WIN_W, WIN_H   = 1100, 680

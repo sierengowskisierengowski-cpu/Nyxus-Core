@@ -14,7 +14,8 @@ from datetime import datetime, timedelta
 try:
     import psutil
 except ImportError:
-    subprocess.run(["pip","install","psutil"], check=True); import psutil
+    subprocess.run([sys.executable,"-m","pip","install","--break-system-packages","--quiet","psutil"],check=True)
+    import psutil
 
 HIST = 120  # 2 minutes at 1Hz
 

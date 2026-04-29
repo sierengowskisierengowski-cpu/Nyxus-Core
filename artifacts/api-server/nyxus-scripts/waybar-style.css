@@ -856,6 +856,7 @@ window#waybar.right #battery {
    ════════════════════════════════════════════════════════════════════════════ */
 
 /* Shared base for all app launcher buttons */
+window#waybar.right #custom-app-control,
 window#waybar.right #custom-app-sysmon,
 window#waybar.right #custom-app-stickies,
 window#waybar.right #custom-app-weather,
@@ -871,6 +872,18 @@ window#waybar.right #custom-app-terminal {
     background-color:     rgba(255, 255, 255, 0.04);
     border:               2px solid rgba(255, 255, 255, 0.10);
     transition:           all 0.18s ease;
+}
+
+/* Control — neon red/orange */
+window#waybar.right #custom-app-control {
+    background-image: -gtk-icontheme("io.nyxus.control");
+    border-color:     rgba(255, 50, 50, 0.30);
+}
+window#waybar.right #custom-app-control:hover {
+    background-color: rgba(255, 50, 50, 0.18);
+    border-color:     #ff3232;
+    box-shadow:       0 0 16px rgba(255, 50, 50, 0.70),
+                      inset 0 0 8px rgba(255, 50, 50, 0.10);
 }
 
 /* SysMon — neon pink */
