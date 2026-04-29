@@ -199,7 +199,7 @@
     "margin-top":    100,
     "margin-bottom": 100,
 
-    "modules-top":    ["custom/app-sysmon", "custom/app-stickies", "custom/app-weather", "custom/app-notepad", "custom/app-terminal"],
+    "modules-left":   ["custom/app-sysmon", "custom/app-stickies", "custom/app-weather", "custom/app-notepad", "custom/app-terminal"],
     "modules-center": ["cpu#right", "memory#right", "battery#right"],
 
     "custom/app-sysmon": {
