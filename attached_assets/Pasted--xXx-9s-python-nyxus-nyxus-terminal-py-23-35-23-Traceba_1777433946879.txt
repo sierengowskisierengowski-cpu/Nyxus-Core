@@ -1,0 +1,63 @@
+
+...xXx... ~  9s
+❯ python ~/.nyxus/nyxus_terminal.py                       23:35:23
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/site-packages/gi/importer.py", line 137, in create_module
+    introspection_module = get_introspection_module(namespace)
+  File "/usr/lib/python3.14/site-packages/gi/module.py", line 247, in get_introspection_module
+    module = IntrospectionModule(namespace, version)
+  File "/usr/lib/python3.14/site-packages/gi/module.py", line 107, in __init__
+    repository.require(namespace, version)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+gi.RepositoryError: Requiring namespace 'Gtk' version '4.0', but '3.0' is already loaded
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/nyx/.nyxus/nyxus_terminal.py", line 16, in <module>
+    from gi.repository import Gtk, Gdk, GLib, Pango
+  File "/usr/lib/python3.14/site-packages/gi/importer.py", line 139, in create_module
+    raise ImportError(e) from e
+ImportError: Requiring namespace 'Gtk' version '4.0', but '3.0' is already loaded
+
+...xXx... ~
+❯ python ~/.nyxus/nyxus_sysmon_gtk.py                     23:38:41
+error: externally-managed-environment
+
+× This environment is externally managed
+╰─> To install Python packages system-wide, try 'pacman -S
+    python-xyz', where xyz is the package you are trying to
+    install.
+
+    If you wish to install a non-Arch-packaged Python package,
+    create a virtual environment using 'python -m venv path/to/venv'.
+    Then use path/to/venv/bin/python and path/to/venv/bin/pip.
+
+    If you wish to install a non-Arch packaged Python application,
+    it may be easiest to use 'pipx install xyz', which will manage a
+    virtual environment for you. Make sure you have python-pipx
+    installed via pacman.
+
+note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+hint: See PEP 668 for the detailed specification.
+Traceback (most recent call last):
+  File "/home/nyx/.nyxus/nyxus_sysmon_gtk.py", line 15, in <module>
+    import psutil
+ModuleNotFoundError: No module named 'psutil'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/nyx/.nyxus/nyxus_sysmon_gtk.py", line 17, in <module>
+    subprocess.run(["pip","install","psutil"], check=True); import psutil
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['pip', 'install', 'psutil']' returned non-zero exit status 1.
+
+...xXx... ~
+❯ cat /tmp/nyxus-terminal.log 2>/dev/null; cat /tmp/nyxus-sysmon.log 2>/dev/null
+
+...xXx... ~
+❯                      

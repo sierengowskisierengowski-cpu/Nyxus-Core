@@ -199,9 +199,14 @@
     "margin-top":    100,
     "margin-bottom": 100,
 
-    "modules-left":   ["custom/app-sysmon", "custom/app-stickies", "custom/app-weather", "custom/app-notepad", "custom/app-terminal"],
+    "modules-left":   ["custom/app-control", "custom/app-sysmon", "custom/app-stickies", "custom/app-weather", "custom/app-notepad", "custom/app-terminal"],
     "modules-center": ["cpu#right", "memory#right", "battery#right"],
 
+    "custom/app-control": {
+      "format":   "",
+      "tooltip":  "NYXUS Control — Hardware Control Center",
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_control.py"
+    },
     "custom/app-sysmon": {
       "format":   "",
       "tooltip":  "NYXUS SysMon",

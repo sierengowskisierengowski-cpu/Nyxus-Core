@@ -69,7 +69,7 @@ mkdir -p "$SCRIPTS_DIR"
 for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
          nyxus_sysmon.py nyxus_sysmon_gtk.py \
          nyxus_stickies.py nyxus_notepad.py nyxus_weather.py nyxus_terminal.py \
-         nyxus_gen_icons.py; do
+         nyxus_gen_icons.py nyxus_control.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
@@ -233,6 +233,22 @@ Keywords=nyxus;terminal;bash;graffiti;brick;
 StartupWMClass=io.nyxus.terminal
 DEOF
 ok "nyxus-terminal.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-control.desktop" << 'DEOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Control
+GenericName=Hardware Control Center
+Comment=NYXUS OS hardware control — fans, thermal, profiles, RGB, power
+Exec=python3 /home/nyx/.nyxus/nyxus_control.py
+Icon=io.nyxus.control
+Terminal=false
+Categories=System;Settings;HardwareSettings;
+Keywords=nyxus;control;fans;thermal;rgb;power;hardware;profiles;
+StartupWMClass=io.nyxus.control
+DEOF
+ok "nyxus-control.desktop"
 
 # Refresh app launcher cache
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true

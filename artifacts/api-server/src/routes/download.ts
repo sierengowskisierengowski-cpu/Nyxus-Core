@@ -40,6 +40,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_weather.py":             "nyxus_weather.py",
   "nyxus_notepad.py":             "nyxus_notepad.py",
   "nyxus_gen_icons.py":           "nyxus_gen_icons.py",
+  "nyxus_control.py":             "nyxus_control.py",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
