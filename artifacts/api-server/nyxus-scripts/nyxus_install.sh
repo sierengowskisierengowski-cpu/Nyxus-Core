@@ -323,6 +323,23 @@ if command -v makoctl &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]
   makoctl reload 2>/dev/null && ok "Mako reloaded" || true
 fi
 
+# ── OS Name Fix (NyX.oS → NyX.x.OS in /etc/os-release) ──────────────────────
+hdr "OS Name"
+if grep -q "NyX\.oS" /etc/os-release 2>/dev/null; then
+  if sudo sed -i 's/NyX\.oS/NyX.x.OS/g' /etc/os-release 2>/dev/null; then
+    ok "/etc/os-release patched: NyX.oS → NyX.x.OS"
+  else
+    printf "  ${DIM}Could not patch /etc/os-release (needs sudo) — run manually:${R}\n"
+    printf "  ${DIM}  sudo sed -i 's/NyX\\.oS/NyX.x.OS/g' /etc/os-release${R}\n"
+  fi
+else
+  if grep -q "NyX\.x\.OS" /etc/os-release 2>/dev/null; then
+    ok "/etc/os-release already correct (NyX.x.OS)"
+  else
+    printf "  ${DIM}/etc/os-release does not contain NyX.oS — skipping${R}\n"
+  fi
+fi
+
 # ── SUMMARY ───────────────────────────────────────────────────────────────────
 echo ""
 printf "${DIM}──────────────────────────────────────────────────────────────────────${R}\n"
