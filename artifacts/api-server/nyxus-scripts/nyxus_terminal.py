@@ -268,23 +268,102 @@ def draw_terminal_bg(cr, x, y, w, h):
         cr.move_to(x, ry); cr.line_to(x + w, ry); cr.stroke()
 
 
-# ── Graffiti frame (no bricks — pure spray paint) ─────────────────────────────
+# ── Spray-painted brick wall ──────────────────────────────────────────────────
+
+def draw_spray_brick_wall(cr, x, y, w, h, seed=0):
+    """Brick wall where every brick is spray-painted a neon NYXUS color."""
+    rng = _rng(seed + x * 0.1 + y * 0.3)
+    MORTAR = 4
+    BH = 22  # brick height including mortar
+
+    # Mortar — very dark, almost black
+    cr.set_source_rgb(0.06, 0.05, 0.08)
+    cr.rectangle(x, y, w, h); cr.fill()
+
+    row = 0
+    yy = y
+    while yy < y + h + BH:
+        offset = 36 if (row % 2) else 0
+        xx = x - offset
+        while xx < x + w + 80:
+            bw = 68 + rng.randint(-10, 12)
+
+            bx = max(x, xx + MORTAR // 2)
+            bx2 = min(x + w, xx + bw - MORTAR // 2)
+            bw_draw = bx2 - bx
+            by = yy + MORTAR // 2
+            bh_draw = BH - MORTAR
+
+            if bw_draw > 4:
+                by_clip = max(by, y + MORTAR // 2)
+                bh_clip = min(by + bh_draw, y + h - MORTAR // 2) - by_clip
+                if bh_clip > 0:
+                    # Each brick gets a random neon color from the palette
+                    col = rng.choice(PALETTE)
+                    r, g, b = col
+                    # Darken slightly so bricks read as painted, not glowing
+                    darkness = rng.uniform(0.28, 0.62)
+                    cr.set_source_rgb(r * darkness, g * darkness, b * darkness)
+                    cr.rectangle(bx, by_clip, bw_draw, bh_clip); cr.fill()
+
+                    # Spray paint coverage — uneven, slightly over-sprayed
+                    # Some bricks have brighter center patch (fresh spray)
+                    if rng.random() < 0.55:
+                        bright = rng.uniform(0.55, 0.85)
+                        cx_b = bx + bw_draw * rng.uniform(0.2, 0.8)
+                        cy_b = by_clip + bh_clip * rng.uniform(0.2, 0.8)
+                        pw = bw_draw * rng.uniform(0.3, 0.7)
+                        ph = bh_clip * rng.uniform(0.3, 0.7)
+                        cr.set_source_rgba(r * bright, g * bright, b * bright, 0.70)
+                        cr.arc(cx_b, cy_b, max(pw, ph) * 0.5, 0, math.pi * 2)
+                        cr.fill()
+
+                    # Spray bleed over mortar lines — dots spilling past brick edge
+                    bleed_n = rng.randint(2, 8)
+                    for _ in range(bleed_n):
+                        bdx = rng.uniform(-5, bw_draw + 5)
+                        bdy = rng.uniform(-4, bh_clip + 4)
+                        br = rng.uniform(0.5, 2.5)
+                        ba = rng.uniform(0.15, 0.50)
+                        cr.set_source_rgba(r, g, b, ba)
+                        cr.arc(bx + bdx, by_clip + bdy, br, 0, math.pi * 2)
+                        cr.fill()
+
+                    # Occasional highlight streak (spray pass direction)
+                    if rng.random() < 0.30:
+                        sx1 = bx + rng.uniform(2, bw_draw * 0.4)
+                        sy1 = by_clip + rng.uniform(2, bh_clip * 0.4)
+                        sx2 = bx + rng.uniform(bw_draw * 0.5, bw_draw - 2)
+                        sy2 = by_clip + rng.uniform(bh_clip * 0.5, bh_clip - 2)
+                        cr.set_source_rgba(1, 1, 1, rng.uniform(0.06, 0.18))
+                        cr.set_line_width(rng.uniform(0.6, 2.0))
+                        cr.move_to(sx1, sy1); cr.line_to(sx2, sy2); cr.stroke()
+
+            xx += bw
+        yy += BH
+        row += 1
+
+
+# ── Graffiti frame — spray-painted bricks + tags + drips ──────────────────────
 
 def draw_graffiti_frame(cr, w, h, hovering_can=None):
-    """Paint-sprayed window frame — neon splatter, drips, tags, NO bricks."""
+    """Spray-painted brick frame — neon bricks + graffiti tags + drips."""
     import cairo as _cairo
     rng = _rng(77)
 
-    # Dark base for all border strips
-    cr.set_source_rgb(*C_DARK)
-    # Top bar
-    cr.rectangle(0, 0, w, BORDER_TOP); cr.fill()
-    # Bottom bar
-    cr.rectangle(0, h - BORDER_BOTTOM, w, BORDER_BOTTOM); cr.fill()
-    # Left strip
-    cr.rectangle(0, 0, BORDER_SIDE, h); cr.fill()
-    # Right strip
-    cr.rectangle(w - BORDER_SIDE, 0, BORDER_SIDE, h); cr.fill()
+    # Draw spray-painted bricks for all border strips
+    draw_spray_brick_wall(cr, 0, 0, w, BORDER_TOP, seed=1)
+    draw_spray_brick_wall(cr, 0, h - BORDER_BOTTOM, w, BORDER_BOTTOM, seed=2)
+    draw_spray_brick_wall(cr, 0, BORDER_TOP, BORDER_SIDE,
+                          h - BORDER_TOP - BORDER_BOTTOM, seed=3)
+    draw_spray_brick_wall(cr, w - BORDER_SIDE, BORDER_TOP, BORDER_SIDE,
+                          h - BORDER_TOP - BORDER_BOTTOM, seed=4)
+    # Corners
+    draw_spray_brick_wall(cr, 0, 0, BORDER_SIDE, BORDER_TOP, seed=5)
+    draw_spray_brick_wall(cr, w - BORDER_SIDE, 0, BORDER_SIDE, BORDER_TOP, seed=6)
+    draw_spray_brick_wall(cr, 0, h - BORDER_BOTTOM, BORDER_SIDE, BORDER_BOTTOM, seed=7)
+    draw_spray_brick_wall(cr, w - BORDER_SIDE, h - BORDER_BOTTOM,
+                          BORDER_SIDE, BORDER_BOTTOM, seed=8)
 
     # ── Heavy paint splatter blobs on frame strips ──
     frame_blobs = [
