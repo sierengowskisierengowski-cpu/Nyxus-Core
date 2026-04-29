@@ -562,9 +562,15 @@ def sketch_rect(cr, x, y, w, h, r, g, b, thick=2.5, jitter=3.0, fill_rgba=None):
     cr.set_line_cap(1); cr.set_line_join(1); cr.stroke()
 
 def draw_nyxus_bg(cr, w, h):
-    """Neon splat image background — matches waybar aesthetic."""
+    """Dark base fill — pure Cairo, no image dependency."""
     cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
-    draw_image_bg(cr, 0, 0, w, h, "nyxus-bg-04.png", alpha=0.22)
+    # Subtle dot grid for texture
+    cr.set_source_rgba(0.55, 0.25, 0.85, 0.07)
+    step = 24
+    for gx in range(0, int(w) + step, step):
+        for gy in range(0, int(h) + step, step):
+            cr.arc(gx, gy, 1.0, 0, 6.2832)
+            cr.fill()
 
 def neon_card(cr, x, y, w, h, color, tint=0.07, jitter=2.5):
     r,g,b = color
@@ -717,8 +723,8 @@ class NyxusControl(Gtk.Application):
 
     # ──────────────────────────────────────────────────────── header ────────────
     def _draw_hdr(self, area, cr, w, h, _):
-        cr.set_source_rgb(*C_BG); cr.rectangle(0, 0, w, h); cr.fill()
-        draw_image_bg(cr, 0, 0, w, h, "nyxus-bg-08.png", alpha=0.92)
+        # Dark purple header band — pure Cairo
+        cr.set_source_rgb(0.10, 0.04, 0.18); cr.rectangle(0, 0, w, h); cr.fill()
         # Bottom rainbow bar
         rainbow_bar(cr, 0, h-3, w, 3)
         # Thin top border
