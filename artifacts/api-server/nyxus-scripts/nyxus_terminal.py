@@ -910,18 +910,6 @@ class NyxusTerminal(Gtk.Application):
         cr.set_source_rgba(1, 1, 1, 0.90)
         cr.move_to(16, ty); cr.show_text(title)
 
-        # 6. Spray-can buttons
-        for key, cx, cy, color in _can_positions(w):
-            _draw_spray_can(cr, cx, cy, color, hovered=(self._hovering_can == key))
-        label_map = {"close": "✕", "min": "▂", "max": "▣"}
-        for key, cx, cy, color in _can_positions(w):
-            lbl = label_map[key]
-            cr.select_font_face("Caveat", 0, 0)
-            cr.set_font_size(11)
-            ext2 = cr.text_extents(lbl)
-            cr.set_source_rgba(1, 1, 1, 0.42)
-            cr.move_to(cx - ext2.width / 2 - ext2.x_bearing, BORDER_TOP - 6)
-            cr.show_text(lbl)
 
         if not HAS_VTE:
             draw_no_vte(cr, 0, BORDER_TOP, w, h - BORDER_TOP)
@@ -1016,16 +1004,6 @@ class NyxusTerminal(Gtk.Application):
         self._btn_pressed = False
 
     def _on_motion(self, ctrl, x, y):
-        prev = self._hovering_can
-        self._hovering_can = None
-        cw = self.win.get_width() or WIN_W
-        for key, cx, cy, _ in _can_positions(cw):
-            if abs(x - cx) < 20 and abs(y - cy) < 30:
-                self._hovering_can = key
-                break
-        if self._hovering_can != prev:
-            self._chrome_da.queue_draw()
-
         # Spray selection splatters when dragging inside terminal area
         if self._btn_pressed:
             ix = BORDER_SIDE; iy = BORDER_TOP
@@ -1043,19 +1021,6 @@ class NyxusTerminal(Gtk.Application):
 
     def _on_click_pressed(self, gesture, n, x, y):
         self._reset_idle()
-        cw = self.win.get_width() or WIN_W
-        for key, cx, cy, _ in _can_positions(cw):
-            if abs(x - cx) < 20 and abs(y - cy) < 30:
-                if key == "close":
-                    self.quit()
-                elif key == "min":
-                    self.win.minimize()
-                elif key == "max":
-                    if self.win.is_maximized():
-                        self.win.unmaximize()
-                    else:
-                        self.win.maximize()
-                return
         if y < BORDER_TOP:
             self.win.begin_move_drag(1, int(x), int(y), Gdk.CURRENT_TIME)
 
