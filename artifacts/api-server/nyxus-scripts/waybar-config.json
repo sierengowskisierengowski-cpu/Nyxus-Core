@@ -221,58 +221,69 @@
     ],
     "custom/app-godsapp": {
       "format": "",
-      "tooltip": "GodsApp — NYXUS Configuration Hub",
-      "on-click": "python3 -m godsapp.main"
+      "tooltip": true,
+      "on-click": "python3 -m godsapp.main",
+      "tooltip-format": "<span size=\"x-large\" weight=\"bold\" foreground=\"#ffd700\">NYXUS</span>\n<span size=\"large\" weight=\"bold\" foreground=\"#ffffff\">GodsApp</span>\n<span size=\"small\" foreground=\"#b8a8d0\">Configuration Hub</span>"
     },
     "custom/app-studio": {
       "format": "",
-      "tooltip": "NYXUS Studio — Creative Suite",
-      "on-click": "python3 -m studio.main"
+      "tooltip": true,
+      "on-click": "python3 -m studio.main",
+      "tooltip-format": "<span size=\"x-large\" weight=\"bold\" foreground=\"#ff3ea5\">NYXUS</span>\n<span size=\"large\" weight=\"bold\" foreground=\"#ffffff\">Studio</span>\n<span size=\"small\" foreground=\"#b8a8d0\">Creative Suite</span>"
     },
     "custom/app-sage": {
       "format": "",
-      "tooltip": "SAGE — Local AI Assistant",
-      "on-click": "python3 -m sage.main"
+      "tooltip": true,
+      "on-click": "python3 -m sage.main",
+      "tooltip-format": "<span size=\"x-large\" weight=\"bold\" foreground=\"#4de2e2\">NYXUS</span>\n<span size=\"large\" weight=\"bold\" foreground=\"#ffffff\">SAGE</span>\n<span size=\"small\" foreground=\"#b8a8d0\">Local AI Assistant</span>"
     },
     "custom/app-shield": {
       "format": "",
-      "tooltip": "NYXUS Shield — Security Center",
-      "on-click": "python3 -m shield.main"
+      "tooltip": true,
+      "on-click": "python3 -m shield.main",
+      "tooltip-format": "<span size=\"x-large\" weight=\"bold\" foreground=\"#4ade80\">NYXUS</span>\n<span size=\"large\" weight=\"bold\" foreground=\"#ffffff\">Shield</span>\n<span size=\"small\" foreground=\"#b8a8d0\">Security Center</span>"
     },
     "custom/app-control": {
       "format": "",
-      "tooltip": "NYXUS Control — Hardware Control Center",
-      "on-click": "python3 /home/nyx/.nyxus/nyxus_control.py"
+      "tooltip": true,
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_control.py",
+      "tooltip-format": "<span size=\"x-large\" weight=\"bold\" foreground=\"#ff3232\">NYXUS</span>\n<span size=\"large\" weight=\"bold\" foreground=\"#ffffff\">Control</span>\n<span size=\"small\" foreground=\"#b8a8d0\">Hardware Control Center</span>"
     },
     "custom/app-sysmon": {
       "format": "",
-      "tooltip": "NYXUS SysMon",
-      "on-click": "python3 /home/nyx/.nyxus/nyxus_sysmon_gtk.py"
+      "tooltip": true,
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_sysmon_gtk.py",
+      "tooltip-format": "<span size=\"x-large\" weight=\"bold\" foreground=\"#ff00ff\">NYXUS</span>\n<span size=\"large\" weight=\"bold\" foreground=\"#ffffff\">SysMon</span>\n<span size=\"small\" foreground=\"#b8a8d0\">System Monitor</span>"
     },
     "custom/app-stickies": {
       "format": "",
-      "tooltip": "NYXUS Stickies",
-      "on-click": "python3 /home/nyx/.nyxus/nyxus_stickies.py"
+      "tooltip": true,
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_stickies.py",
+      "tooltip-format": "<span size=\"x-large\" weight=\"bold\" foreground=\"#ffff00\">NYXUS</span>\n<span size=\"large\" weight=\"bold\" foreground=\"#ffffff\">Stickies</span>\n<span size=\"small\" foreground=\"#b8a8d0\">Sticky Notes</span>"
     },
     "custom/app-weather": {
       "format": "",
-      "tooltip": "NYXUS Weather",
-      "on-click": "python3 /home/nyx/.nyxus/nyxus_weather.py"
+      "tooltip": true,
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_weather.py",
+      "tooltip-format": "<span size=\"x-large\" weight=\"bold\" foreground=\"#0088ff\">NYXUS</span>\n<span size=\"large\" weight=\"bold\" foreground=\"#ffffff\">Weather</span>\n<span size=\"small\" foreground=\"#b8a8d0\">Weather Forecast</span>"
     },
     "custom/app-notepad": {
       "format": "",
-      "tooltip": "NYXUS Notepad",
-      "on-click": "python3 /home/nyx/.nyxus/nyxus_notepad.py"
+      "tooltip": true,
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_notepad.py",
+      "tooltip-format": "<span size=\"x-large\" weight=\"bold\" foreground=\"#cc00ff\">NYXUS</span>\n<span size=\"large\" weight=\"bold\" foreground=\"#ffffff\">Notepad</span>\n<span size=\"small\" foreground=\"#b8a8d0\">Quick Notes</span>"
     },
     "custom/app-terminal": {
       "format": "",
-      "tooltip": "NYXUS Terminal",
-      "on-click": "python3 /home/nyx/.nyxus/nyxus_terminal.py"
+      "tooltip": true,
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_terminal.py",
+      "tooltip-format": "<span size=\"x-large\" weight=\"bold\" foreground=\"#39ff14\">NYXUS</span>\n<span size=\"large\" weight=\"bold\" foreground=\"#ffffff\">Terminal</span>\n<span size=\"small\" foreground=\"#b8a8d0\">Command Line</span>"
     },
     "custom/app-settings": {
       "format": "",
-      "tooltip": "NYXUS Settings",
-      "on-click": "python3 /home/nyx/.nyxus/nyxus_settings.py"
+      "tooltip": true,
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_settings.py",
+      "tooltip-format": "<span size=\"x-large\" weight=\"bold\" foreground=\"#a78bfa\">NYXUS</span>\n<span size=\"large\" weight=\"bold\" foreground=\"#ffffff\">Settings</span>\n<span size=\"small\" foreground=\"#b8a8d0\">System Settings</span>"
     },
     "cpu#right": {
       "format": "{usage}",

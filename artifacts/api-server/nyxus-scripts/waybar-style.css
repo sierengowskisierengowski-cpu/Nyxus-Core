@@ -19,14 +19,17 @@ tooltip {
     background:    rgba(4, 2, 14, 0.97);
     border:        2px solid #ff00ff;
     border-radius: 14px;
-    padding:       10px 14px;
-    box-shadow:    0 0 24px rgba(255,0,255,0.50);
+    padding:       12px 18px;
+    box-shadow:    0 0 28px rgba(255, 0, 255, 0.65),
+                   inset 0 0 14px rgba(255, 0, 255, 0.10);
 }
 tooltip label {
     color:       #ffffff;
-    font-size:   12px;
-    font-family: "JetBrains Mono Nerd Font", "JetBrains Mono", monospace;
-    text-shadow: 0 0 6px rgba(255,0,255,0.40);
+    font-size:   13px;
+    font-family: "Caveat", "JetBrains Mono Nerd Font", "JetBrains Mono", monospace;
+    text-shadow: 0 0 8px rgba(255, 0, 255, 0.55),
+                 0 0 16px rgba(255, 0, 255, 0.30);
+    padding:     2px 0;
 }
 
 * {
