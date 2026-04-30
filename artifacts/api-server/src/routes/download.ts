@@ -57,9 +57,10 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-bg-14.png": "nyxus-bg-14.png",
   "nyxus-bg-15.png": "nyxus-bg-15.png",
   "nyxus_settings.py":     "nyxus_settings.py",
-  "nyxus-phantom.tgz":     "nyxus-phantom.tgz",
-  "nyxus-shield.tgz":      "nyxus-shield.tgz",
-  "nyxus-godsapp.tgz":     "nyxus-godsapp.tgz",
+  "nyxus-phantom.tgz":          "nyxus-phantom.tgz",
+  "nyxus-shield.tgz":           "nyxus-shield.tgz",
+  "nyxus-godsapp.tgz":          "nyxus-godsapp.tgz",
+  "nyxus_security_install.sh":  "nyxus_security_install.sh",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
