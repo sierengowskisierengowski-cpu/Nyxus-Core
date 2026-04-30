@@ -69,7 +69,7 @@ mkdir -p "$SCRIPTS_DIR"
 for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
          nyxus_sysmon.py nyxus_sysmon_gtk.py \
          nyxus_stickies.py nyxus_notepad.py nyxus_weather.py nyxus_terminal.py \
-         nyxus_gen_icons.py nyxus_control.py; do
+         nyxus_gen_icons.py nyxus_control.py nyxus_settings.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
@@ -224,6 +224,22 @@ Keywords=nyxus;stickies;notes;sticky;widget;
 StartupWMClass=io.nyxus.stickies
 DEOF
 ok "nyxus-stickies.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-settings.desktop" <<'DEOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Settings
+GenericName=System Settings
+Comment=NYXUS OS system control center — display, sound, network, bluetooth, power, appearance
+Exec=python3 /home/nyx/.nyxus/nyxus_settings.py
+Icon=io.nyxus.settings
+Terminal=false
+Categories=Settings;System;DesktopSettings;
+Keywords=nyxus;settings;preferences;control;system;display;sound;network;bluetooth;power;wifi;
+StartupWMClass=io.nyxus.settings
+DEOF
+ok "nyxus-settings.desktop"
 
 cat > "$DESKTOP_DIR/nyxus-weather.desktop" <<'DEOF'
 [Desktop Entry]
