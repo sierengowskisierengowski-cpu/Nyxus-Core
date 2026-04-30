@@ -19,17 +19,18 @@ tooltip {
     background:    rgba(4, 2, 14, 0.97);
     border:        2px solid #ff00ff;
     border-radius: 14px;
-    padding:       12px 18px;
+    padding:       16px 22px;
     box-shadow:    0 0 28px rgba(255, 0, 255, 0.65),
                    inset 0 0 14px rgba(255, 0, 255, 0.10);
 }
 tooltip label {
     color:       #ffffff;
-    font-size:   13px;
+    font-size:   18px;
+    font-weight: bold;
     font-family: "Caveat", "JetBrains Mono Nerd Font", "JetBrains Mono", monospace;
-    text-shadow: 0 0 8px rgba(255, 0, 255, 0.55),
-                 0 0 16px rgba(255, 0, 255, 0.30);
-    padding:     2px 0;
+    text-shadow: 0 0 8px rgba(255, 0, 255, 0.75),
+                 0 0 16px rgba(255, 0, 255, 0.45);
+    padding:     3px 0;
 }
 
 * {
@@ -1025,19 +1026,4 @@ window#waybar.right #custom-app-settings:hover {
     text-shadow:      0 0 14px #a78bfa, 0 0 24px rgba(167, 139, 250, 0.70);
     box-shadow:       0 0 18px rgba(167, 139, 250, 0.80),
                       inset 0 0 10px rgba(167, 139, 250, 0.15);
-}
-
-
-/* ════════════════════════════════════════════════════════════════════════════
-   SHARED — tooltip
-   ════════════════════════════════════════════════════════════════════════════ */
-
-tooltip {
-    background:    rgba(12, 8, 22, 0.98);
-    border:        1px solid rgba(192, 132, 252, 0.30);
-    border-radius: 5px;
-    color:         #e0d4f8;
-    font-size:     10px;
-    padding:       8px 14px;
-    box-shadow:    0 4px 20px rgba(192, 132, 252, 0.18);
 }
