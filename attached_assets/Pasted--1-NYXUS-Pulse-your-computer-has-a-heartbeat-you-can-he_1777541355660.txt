@@ -1,0 +1,22 @@
+
+
+1. NYXUS Pulse — your computer has a heartbeat you can hear.
+Ambient generative soundtrack that shifts in real time with your system. CPU spikes = tempo accelerates. Network burst = bass thump. Phantom blocks something = sharp string hit at 3am. You'd literally feel what your machine is doing without looking. Sit in a quiet room, your computer hums. Reaction: "wait, my computer is alive."
+
+2. NYXUS Phantom Limb — watch your attacker like a ghost re-enacting a crime scene.
+Pairs directly with your security stack. When Phantom catches an intrusion, this opens a hand-drawn replay — a ghostly animated hand showing every keystroke, file touched, network packet sent, in the order it happened. Forensic theater. Reaction: "holy shit, I'm watching the hacker."
+
+3. NYXUS Mirror — your day, auto-rendered as a hand-drawn comic strip.
+Quietly logs what you did all day (apps opened, files saved, songs played, idle moments). At end of day, it generates an illustrated comic — sticky-note panels with little sketched figures: "9:14am, opened vim. 9:42am, distracted by twitter. 11:03am, finally fixed the bug." Export the week as a graphic novel of your life. Reaction: "this is the most insane screenshot I've ever shown someone."
+
+4. NYXUS Hex — see what a command will do BEFORE you hit enter.
+Type any shell command, and a hand-drawn x-ray overlay shows the consequences live: which files will be deleted, which processes will die, which ports will open, glowing red on doomed paths. rm -rf ~/projects shows your projects folder lit up with skull glow before you press enter. Educational + terrifying + addictive. Reaction: "why isn't this in every Linux distro?"
+
+5. NYXUS Familiar — a character that LIVES in your computer.
+Not a chatbot window. An actual hand-drawn sprite that walks across your screen, sits on top of windows, leaves you sticky notes when you're away, gets excited when you commit code, sad when you ignore it for a week, suspicious when it sees a new USB plugged in (since it talks to Phantom). Has a name, a memory, a personality. Reaction: "my Linux box has a soul now."
+
+6. NYXUS Confess — burn-after-writing diary, encrypted to no one.
+Once a day, a sticky note pops up: "what's eating you today?" You write. You hit submit. The note literally burns on screen — beautiful crumple-and-ash animation — and the text is encrypted with a key that's destroyed the moment it's written. Even you can never read it back. A daily digital ritual. Reaction: "why am I crying at a Linux app."
+
+7. NYXUS Heartbeat — your computer syncs to YOUR pulse.
+Webcam reads your actual heartbeat (Eulerian video magnification — real, doable). The wallpaper pulses with you. When you're stressed, the system throttles non-essential processes, dims notifications, slows animations. When you're calm, full speed. Your machine becomes a literal extension of your body. Reaction: "are you kidding me, that's crazy."
