@@ -1,0 +1,35 @@
+interfaces, or game-ready models. 
+1. Core Modeling & Geometry Tools
+These tools are used to create the fundamental shapes and structures of your 3D assets. 
+
+    Mesh Modeling: Standard tools like Extrude (E), Loop Cut (Ctrl+R), Bevel (Ctrl+B), Inset (I), and Knife (K).
+    Non-Destructive Modifiers: Automated effects like Mirror, Array, Solidify (adding thickness), Boolean (cutting/joining), and Subdivision Surface (smoothing).
+    Geometry Nodes: A powerful node-based system for procedural design, allowing you to generate complex layouts or repeating patterns mathematically.
+    Digital Sculpting: Over 20 brushes (Draw, Grab, Smooth, Clay) for organic modeling, including Dynamic Topology (Dyntopo) for real-time detail adjustment. 
+
+2. Shading, Texturing, & UI Design
+Essential for defining the "look" of your app’s visual elements. 
+
+    Shader Editor: A node-based system to design materials like glass, metal, or plastic using PBR (Physically Based Rendering) shaders.
+    Texture Painting: Tools for painting directly onto your 3D models with textured brushes and masks.
+    UV Unwrapping: Unfolding 3D objects into 2D maps to apply precise images or UI graphics.
+    Grease Pencil: A unique 2D drawing tool in a 3D space, often used for sketching UI icons, storyboarding, or creating 2D/3D hybrid art. 
+
+3. Animation & Interactivity
+Used if your app requires moving parts, characters, or interactive simulations. 
+
+    Rigging: Building skeletons with Inverse Kinematics (IK) and automatic skinning to animate objects.
+    Keyframing & Graph Editor: Precise control over movements using the Dope Sheet and NLA (Non-Linear Animation) editor.
+    Physics Simulations: Real-time tools for cloth, fire, fluids, and rigid body collisions. 
+
+4. Rendering & Export for Apps
+How you turn your work into final images or files for your app. 
+
+    Render Engines: Cycles (photorealistic, path-tracing) and Eevee (high-speed, real-time), which is ideal for testing app-like performance.
+    Compositing: A node-based post-processing system to "fix it in post" with effects like color grading or motion tracking.
+    Export Pipeline: Built-in support for industry-standard formats like .gltf, .obj, and .fbx, allowing assets to be dropped directly into app development tools like Cocos Creator, Unity, or Unreal Engine. 
+
+5. App Development Specifics
+
+    Python Scripting API: You can automate repetitive tasks, create custom tools, or even run Blender as a Python library to generate assets on the fly.
+    Precision Add-ons: Built-in features like MeasureIt for architectural/UI dimensions and Archimesh for structural design. 
