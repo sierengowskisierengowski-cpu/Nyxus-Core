@@ -1,278 +1,311 @@
 [
   {
-    "name":        "top",
-    "layer":       "top",
-    "position":    "top",
-    "height":      28,
-    "spacing":     0,
-    "margin-top":  0,
+    "name": "top",
+    "layer": "top",
+    "position": "top",
+    "height": 28,
+    "spacing": 0,
+    "margin-top": 0,
     "margin-left": 0,
     "margin-right": 0,
-
-    "modules-left":   ["custom/ticker"],
-    "modules-center": ["custom/nyxus"],
-    "modules-right":  ["cpu", "memory", "temperature", "custom/sep", "network", "custom/sep", "battery", "custom/sep", "clock"],
-
+    "modules-left": [
+      "custom/ticker"
+    ],
+    "modules-center": [
+      "custom/nyxus"
+    ],
+    "modules-right": [
+      "cpu",
+      "memory",
+      "temperature",
+      "custom/sep",
+      "network",
+      "custom/sep",
+      "battery",
+      "custom/sep",
+      "clock"
+    ],
     "custom/ticker": {
-      "exec":     "~/.config/waybar/ticker.sh",
+      "exec": "~/.config/waybar/ticker.sh",
       "interval": 1,
-      "format":   "{}",
-      "tooltip":  false
+      "format": "{}",
+      "tooltip": false
     },
-
     "custom/nyxus": {
-      "format":  "<span foreground='#ff00ff' font_weight='bold'>N</span><span foreground='#ff5500' font_weight='bold'> Y</span><span foreground='#ffff00' font_weight='bold'> X</span><span foreground='#39ff14' font_weight='bold'> U</span><span foreground='#0088ff' font_weight='bold'> S</span>",
+      "format": "<span foreground='#ff00ff' font_weight='bold'>N</span><span foreground='#ff5500' font_weight='bold'> Y</span><span foreground='#ffff00' font_weight='bold'> X</span><span foreground='#39ff14' font_weight='bold'> U</span><span foreground='#0088ff' font_weight='bold'> S</span>",
       "tooltip": false,
-      "escape":  false
+      "escape": false
     },
-
     "custom/sep": {
-      "format":  "◈",
+      "format": "◈",
       "tooltip": false
     },
-
     "cpu": {
-      "format":   "  {usage}%",
+      "format": "  {usage}%",
       "interval": 2,
-      "tooltip":  false
-    },
-
-    "memory": {
-      "format":  "  {percentage}%",
       "tooltip": false
     },
-
+    "memory": {
+      "format": "  {percentage}%",
+      "tooltip": false
+    },
     "temperature": {
       "hwmon-path-abs": "/sys/class/thermal/thermal_zone0/temp",
       "input-filename": "temp",
       "critical-threshold": 80,
-      "format":          "  {temperatureC}°C",
+      "format": "  {temperatureC}°C",
       "format-critical": "  {temperatureC}°C",
-      "tooltip":         false
+      "tooltip": false
     },
-
     "network": {
-      "format-wifi":         "  {essid}  ↓{bandwidthDownBytes}  ↑{bandwidthUpBytes}",
-      "format-ethernet":     "  ETH  ↓{bandwidthDownBytes}  ↑{bandwidthUpBytes}",
+      "format-wifi": "  {essid}  ↓{bandwidthDownBytes}  ↑{bandwidthUpBytes}",
+      "format-ethernet": "  ETH  ↓{bandwidthDownBytes}  ↑{bandwidthUpBytes}",
       "format-disconnected": "  NO NET",
-      "interval":            2,
-      "tooltip-format":      "{ipaddr}  ·  {ifname}"
+      "interval": 2,
+      "tooltip-format": "{ipaddr}  ·  {ifname}"
     },
-
     "battery": {
-      "format":          "{icon}  {capacity}%",
+      "format": "{icon}  {capacity}%",
       "format-charging": "  {capacity}%",
-      "format-plugged":  "  {capacity}%",
-      "format-icons":    ["", "", "", "", ""],
-      "states":          { "warning": 30, "critical": 15 },
-      "tooltip":         false
+      "format-plugged": "  {capacity}%",
+      "format-icons": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "states": {
+        "warning": 30,
+        "critical": 15
+      },
+      "tooltip": false
     },
-
     "clock": {
-      "interval":       1,
-      "format":         "  {:%H:%M:%S}",
-      "format-alt":     "  {:%a %b %d  ·  %H:%M:%S}",
+      "interval": 1,
+      "format": "  {:%H:%M:%S}",
+      "format-alt": "  {:%a %b %d  ·  %H:%M:%S}",
       "tooltip-format": "<big>{:%A  %B %d  %Y}</big>"
     }
   },
-
   {
-    "name":          "bottom",
-    "layer":         "top",
-    "position":      "bottom",
-    "height":        60,
-    "spacing":       0,
+    "name": "bottom",
+    "layer": "top",
+    "position": "bottom",
+    "height": 60,
+    "spacing": 0,
     "margin-bottom": 0,
-    "margin-left":   0,
-    "margin-right":  0,
-
-    "modules-left":   ["custom/start"],
-    "modules-center": ["hyprland/workspaces"],
-    "modules-right":  ["tray", "pulseaudio", "network#bottom", "bluetooth", "battery#bottom", "custom/quicksettings", "clock#bottom"],
-
+    "margin-left": 0,
+    "margin-right": 0,
+    "modules-left": [
+      "custom/start"
+    ],
+    "modules-center": [
+      "hyprland/workspaces"
+    ],
+    "modules-right": [
+      "tray",
+      "pulseaudio",
+      "network#bottom",
+      "bluetooth",
+      "battery#bottom",
+      "custom/quicksettings",
+      "clock#bottom"
+    ],
     "custom/start": {
-      "format":   "✕",
-      "escape":   false,
-      "tooltip":  false,
+      "format": "✕",
+      "escape": false,
+      "tooltip": false,
       "on-click": "rofi -show drun -theme ~/.config/rofi/startmenu.rasi"
     },
-
     "custom/quicksettings": {
-      "format":   "  ⊰",
-      "tooltip":  false,
+      "format": "  ⊰",
+      "tooltip": false,
       "on-click": "python3 ~/.config/waybar/quicksettings.py"
     },
-
     "hyprland/workspaces": {
-      "format":         "{id}",
-      "on-click":       "activate",
+      "format": "{id}",
+      "on-click": "activate",
       "sort-by-number": true,
-      "active-only":    false,
-      "persistent-workspaces": { "*": 6 }
+      "active-only": false,
+      "persistent-workspaces": {
+        "*": 6
+      }
     },
-
     "hyprland/window": {
-      "format":           "{}",
-      "max-length":       52,
+      "format": "{}",
+      "max-length": 52,
       "separate-outputs": true
     },
-
     "clock#bottom": {
-      "interval":   1,
-      "format":     "  {:%a · %d %b %Y · %H:%M:%S}",
+      "interval": 1,
+      "format": "  {:%a · %d %b %Y · %H:%M:%S}",
       "format-alt": "  {:%H:%M:%S}",
       "tooltip-format": "<span font='JetBrains Mono 13' foreground='#ff00ff'><b> {:%A}</b></span>\n<span font='JetBrains Mono 11' foreground='#ffffff'> {:%d %B %Y}</span>\n\n<span font='JetBrains Mono 10'><tt>{calendar}</tt></span>",
       "calendar": {
-        "mode":        "month",
-        "on-scroll":   1,
+        "mode": "month",
+        "on-scroll": 1,
         "format": {
-          "months":   "<span foreground='#ff00ff' font_weight='bold'>{}</span>",
-          "days":     "<span foreground='#ffffff'>{}</span>",
-          "weeks":    "<span foreground='#0088ff'><b>W{}</b></span>",
+          "months": "<span foreground='#ff00ff' font_weight='bold'>{}</span>",
+          "days": "<span foreground='#ffffff'>{}</span>",
+          "weeks": "<span foreground='#0088ff'><b>W{}</b></span>",
           "weekdays": "<span foreground='#ffff00' font_weight='bold'>{}</span>",
-          "today":    "<span foreground='#39ff14' font_weight='bold'><u>{}</u></span>"
+          "today": "<span foreground='#39ff14' font_weight='bold'><u>{}</u></span>"
         }
       }
     },
-
     "bluetooth": {
-      "format":           "  ",
-      "format-disabled":  "",
+      "format": "  ",
+      "format-disabled": "",
       "format-connected": "  {num_connections}",
-      "tooltip-format":   "{controller_alias}\n{device_enumerate}",
-      "on-click":         "blueman-manager"
+      "tooltip-format": "{controller_alias}\n{device_enumerate}",
+      "on-click": "blueman-manager"
     },
-
     "network#bottom": {
-      "format-wifi":         "  {signalStrength}%",
-      "format-ethernet":     "  ETH",
+      "format-wifi": "  {signalStrength}%",
+      "format-ethernet": "  ETH",
       "format-disconnected": "  ",
       "tooltip-format-wifi": "{essid}  {signalStrength}%\n{ipaddr}",
-      "on-click":            "nm-connection-editor"
+      "on-click": "nm-connection-editor"
     },
-
     "pulseaudio": {
-      "format":       "  {volume}%",
+      "format": "  {volume}%",
       "format-muted": "  ",
-      "scroll-step":  5,
-      "on-click":     "pavucontrol"
+      "scroll-step": 5,
+      "on-click": "pavucontrol"
     },
-
     "battery#bottom": {
-      "format":          "{icon}  {capacity}%",
+      "format": "{icon}  {capacity}%",
       "format-charging": "  {capacity}%",
-      "format-plugged":  "  {capacity}%",
-      "format-icons":    ["", "", "", "", ""],
-      "states":          { "warning": 30, "critical": 15 }
+      "format-plugged": "  {capacity}%",
+      "format-icons": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "states": {
+        "warning": 30,
+        "critical": 15
+      }
     },
-
     "tray": {
       "icon-size": 14,
-      "spacing":   6
+      "spacing": 6
     }
   },
-
   {
-    "name":          "left",
-    "layer":         "top",
-    "position":      "left",
-    "width":         52,
-    "spacing":       0,
-    "margin-top":    160,
+    "name": "left",
+    "layer": "top",
+    "position": "left",
+    "width": 52,
+    "spacing": 0,
+    "margin-top": 160,
     "margin-bottom": 160,
-
-    "modules-center": ["hyprland/workspaces#left"],
-
+    "modules-center": [
+      "hyprland/workspaces#left"
+    ],
     "hyprland/workspaces#left": {
-      "format":         "{id}",
-      "on-click":       "activate",
+      "format": "{id}",
+      "on-click": "activate",
       "sort-by-number": true
     }
   },
-
   {
-    "name":          "right",
-    "layer":         "top",
-    "position":      "right",
-    "width":         52,
-    "spacing":       0,
-    "margin-top":    100,
+    "name": "right",
+    "layer": "top",
+    "position": "right",
+    "width": 52,
+    "spacing": 0,
+    "margin-top": 100,
     "margin-bottom": 100,
-
-    "modules-left":   ["custom/app-godsapp", "custom/app-studio", "custom/app-sage", "custom/app-shield", "custom/app-control", "custom/app-sysmon", "custom/app-stickies", "custom/app-weather", "custom/app-notepad", "custom/app-terminal", "custom/app-settings"],
-    "modules-center": ["cpu#right", "memory#right", "battery#right"],
-
+    "modules-left": [
+      "custom/app-godsapp",
+      "custom/app-studio",
+      "custom/app-sage",
+      "custom/app-shield",
+      "custom/app-control",
+      "custom/app-sysmon",
+      "custom/app-stickies",
+      "custom/app-weather",
+      "custom/app-notepad",
+      "custom/app-terminal",
+      "custom/app-settings"
+    ],
+    "modules-center": [
+      "cpu#right",
+      "memory#right",
+      "battery#right"
+    ],
     "custom/app-godsapp": {
-      "format":   "󱎓",
-      "tooltip":  "GodsApp — NYXUS Configuration Hub",
+      "format": "",
+      "tooltip": "GodsApp — NYXUS Configuration Hub",
       "on-click": "python3 -m godsapp.main"
     },
     "custom/app-studio": {
-      "format":   "󰏘",
-      "tooltip":  "NYXUS Studio — Creative Suite",
+      "format": "",
+      "tooltip": "NYXUS Studio — Creative Suite",
       "on-click": "python3 -m studio.main"
     },
     "custom/app-sage": {
-      "format":   "󱙺",
-      "tooltip":  "SAGE — Local AI Assistant",
+      "format": "",
+      "tooltip": "SAGE — Local AI Assistant",
       "on-click": "python3 -m sage.main"
     },
     "custom/app-shield": {
-      "format":   "󰒃",
-      "tooltip":  "NYXUS Shield — Security Center",
+      "format": "",
+      "tooltip": "NYXUS Shield — Security Center",
       "on-click": "python3 -m shield.main"
     },
     "custom/app-control": {
-      "format":   "",
-      "tooltip":  "NYXUS Control — Hardware Control Center",
+      "format": "",
+      "tooltip": "NYXUS Control — Hardware Control Center",
       "on-click": "python3 /home/nyx/.nyxus/nyxus_control.py"
     },
     "custom/app-sysmon": {
-      "format":   "",
-      "tooltip":  "NYXUS SysMon",
+      "format": "",
+      "tooltip": "NYXUS SysMon",
       "on-click": "python3 /home/nyx/.nyxus/nyxus_sysmon_gtk.py"
     },
     "custom/app-stickies": {
-      "format":   "",
-      "tooltip":  "NYXUS Stickies",
+      "format": "",
+      "tooltip": "NYXUS Stickies",
       "on-click": "python3 /home/nyx/.nyxus/nyxus_stickies.py"
     },
     "custom/app-weather": {
-      "format":   "",
-      "tooltip":  "NYXUS Weather",
+      "format": "",
+      "tooltip": "NYXUS Weather",
       "on-click": "python3 /home/nyx/.nyxus/nyxus_weather.py"
     },
     "custom/app-notepad": {
-      "format":   "",
-      "tooltip":  "NYXUS Notepad",
+      "format": "",
+      "tooltip": "NYXUS Notepad",
       "on-click": "python3 /home/nyx/.nyxus/nyxus_notepad.py"
     },
     "custom/app-terminal": {
-      "format":   "",
-      "tooltip":  "NYXUS Terminal",
+      "format": "",
+      "tooltip": "NYXUS Terminal",
       "on-click": "python3 /home/nyx/.nyxus/nyxus_terminal.py"
     },
     "custom/app-settings": {
-      "format":   "󰒓",
-      "tooltip":  "NYXUS Settings",
+      "format": "",
+      "tooltip": "NYXUS Settings",
       "on-click": "python3 /home/nyx/.nyxus/nyxus_settings.py"
     },
-
     "cpu#right": {
-      "format":   "{usage}",
+      "format": "{usage}",
       "interval": 2,
-      "tooltip":  false
-    },
-
-    "memory#right": {
-      "format":  "{percentage}",
       "tooltip": false
     },
-
+    "memory#right": {
+      "format": "{percentage}",
+      "tooltip": false
+    },
     "battery#right": {
-      "format":          "{capacity}",
+      "format": "{capacity}",
       "format-charging": "{capacity}+",
-      "tooltip":         false
+      "tooltip": false
     }
   }
 ]
