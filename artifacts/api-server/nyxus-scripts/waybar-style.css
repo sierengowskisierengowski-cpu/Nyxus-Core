@@ -86,8 +86,8 @@ tooltip label {
    TOP BAR  ·  signature color: HOT PINK #ff00ff
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.top {
-    background-image:    url("NYXUS_WALL_PATH");
-    background-color:    rgba(10, 5, 18, 0.42);
+    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png");
+    background-color:    rgba(10, 5, 18, 0.78);
     background-size:     cover;
     background-position: 50% 25%;
     background-repeat:   no-repeat;
@@ -237,8 +237,8 @@ window#waybar.top #clock {
    BOTTOM BAR  ·  signature color: ORANGE #ff5500
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.bottom {
-    background-image:    url("NYXUS_TASKBAR_BG");
-    background-color:    rgba(0, 0, 0, 0.18);
+    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-taskbar-bg.png");
+    background-color:    rgba(0, 0, 0, 0.72);
     background-size:     cover;
     background-position: center center;
     background-repeat:   no-repeat;
@@ -642,8 +642,8 @@ window#waybar.bottom #custom-quicksettings:hover {
    LEFT BAR  ·  signature color: PURPLE #cc00ff  (70% height)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.left {
-    background-image:    url("NYXUS_WALL_PATH");
-    background-color:    rgba(8, 5, 18, 0.42);
+    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png");
+    background-color:    rgba(8, 5, 18, 0.78);
     background-size:     cover;
     background-position: 18% 50%;
     background-repeat:   no-repeat;
@@ -703,8 +703,8 @@ window#waybar.left #workspaces button.active {
    RIGHT BAR  ·  signature color: GOLD #ffff00  (70% height)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.right {
-    background-image:    url("NYXUS_WALL_PATH");
-    background-color:    rgba(10, 7, 2, 0.42);
+    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png");
+    background-color:    rgba(10, 7, 2, 0.78);
     background-size:     cover;
     background-position: 82% 50%;
     background-repeat:   no-repeat;
