@@ -88,6 +88,29 @@ else
   printf "  ${DIM}      install chafa for inline image display (chafa -f sixel image.jpg)${R}\n"
 fi
 
+# ── ACTION CENTER backends ────────────────────────────────────────────────────
+# NetworkManager, bluez, brightness, screen-snip, notifications, displays
+hdr "Action Center backends (network/bluetooth/audio/screen-snip/etc)"
+if command -v pacman &>/dev/null; then
+  # Core (must succeed)
+  sudo pacman -S --noconfirm --needed \
+    networkmanager bluez bluez-utils brightnessctl \
+    grim slurp wl-clipboard mako \
+    wireplumber pipewire-pulse \
+    2>/dev/null && ok "core: networkmanager bluez brightnessctl grim slurp wl-clipboard mako wireplumber pipewire-pulse" \
+                || printf "  ${DIM}(some core packages failed — re-run: sudo pacman -S networkmanager bluez bluez-utils)${R}\n"
+  # Optional (best-effort — Action Center degrades gracefully if any are missing)
+  sudo pacman -S --noconfirm --needed wdisplays blueman geoclue power-profiles-daemon hyprshade 2>/dev/null \
+    && ok "optional: wdisplays blueman geoclue power-profiles-daemon hyprshade" \
+    || printf "  ${DIM}(optional: install with: sudo pacman -S wdisplays blueman geoclue power-profiles-daemon; AUR: hyprshade)${R}\n"
+  # Make sure NetworkManager + bluetooth daemons are enabled & running
+  sudo systemctl enable --now NetworkManager.service 2>/dev/null && ok "NetworkManager.service enabled" || true
+  sudo systemctl enable --now bluetooth.service       2>/dev/null && ok "bluetooth.service enabled"     || true
+  # User session: enable mako so notifications + Focus Assist work
+  systemctl --user enable --now mako.service 2>/dev/null \
+    || printf "  ${DIM}(mako runs on demand from Hyprland exec-once; this is fine)${R}\n"
+fi
+
 # ── Caveat Font (REQUIRED for NYXUS hand-drawn aesthetic) ────────────────────
 hdr "Caveat Font (NYXUS hand-drawn design)"
 FONT_DIR="$HOME/.local/share/fonts"
