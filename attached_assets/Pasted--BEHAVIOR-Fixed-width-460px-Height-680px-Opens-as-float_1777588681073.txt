@@ -1,0 +1,182 @@
+
+BEHAVIOR:
+- Fixed width 460px
+- Height 680px
+- Opens as floating popup above taskbar button
+- Opens on click OR on hover after 500ms — configurable
+- Closes when clicking outside panel
+- Smooth slide up animation when opening
+- Smooth slide down animation when closing
+- Always on top when open
+
+BACKGROUND:
+- Full graffiti collage background behind everything
+- Looks like a wall that has been heavily tagged
+- Graffiti text elements: NYXUS, LINUX, NVIDIA, ARCH,
+  KALI, PYTHON, GTK, WAYLAND, and similar tech words
+- Each word in different graffiti styles and angles
+- Colorful spray paint style — purples pinks greens
+- Dark underlying wall texture behind the graffiti
+- All content panels sit on top of this background
+- Panels have semi-transparent dark backgrounds so
+  graffiti is visible behind them but content readable
+
+HEADER — fixed top row:
+- Left: Current location name — pulls from NYXUS Weather
+  app config so it matches whatever city is set there
+- Right side icons — hand drawn sketch style:
+  Circular arrow — refresh all content
+  Pencil icon — manage panel settings
+  Three dots — more options menu:
+    Open on hover toggle
+    Reduce animations toggle
+    Notification settings
+    About NYXUS Panel
+
+WEATHER TILE — top right:
+- Pulls live data from NYXUS Weather app directly
+  reads from ~/.config/nyxus-weather/ config and cache
+- Shows: current temp large font, condition icon,
+  high and low for today, feels like temp
+- Click opens NYXUS Weather app full window
+- Refresh pulls fresh weather data
+- Hand drawn border around tile
+- Semi-transparent dark background
+
+SYSTEM TILE — below weather:
+- Live system stats pulled via psutil:
+  CPU usage percentage
+  RAM usage — used of total
+  GPU temp and usage — nvidia-smi
+  Active network — upload and download speed
+- Color coded — green normal yellow warning red high
+- Updates every 5 seconds
+- Hand drawn border
+
+NYXUS NEWS FEED — left column and bottom:
+This replaces Microsoft news with tech focused content
+relevant to you specifically. Sources:
+
+Linux news:
+- DistroWatch — latest distro releases and news
+- LWN.net — Linux kernel and system news
+- Phoronix — Linux hardware and performance news
+- ArchLinux.org news feed — direct Arch announcements
+- Kali Linux blog — new tools and release notes
+
+Security news:
+- Krebs on Security
+- The Hacker News
+- CVE feed — latest critical CVEs
+- NVD feed — new vulnerability announcements
+- Bleeping Computer security section
+
+Hardware and GPU news:
+- NVIDIA developer blog
+- AnandTech
+- Tom's Hardware — GPU and CPU news
+- NotebookCheck — laptop hardware news
+
+Developer news:
+- GitHub blog
+- Python.org announcements
+- GTK development news
+- Wayland compositor news
+
+NEWS CARD LAYOUT:
+Main hero card — top left — full width of left column:
+- Large high res thumbnail image
+- Bold headline — handwritten font
+- Source name with favicon
+- Time posted
+- Click opens article in Chromium
+
+Sub story cards — masonry grid below hero:
+- Thumbnail left side
+- Source favicon and name
+- Headline 2-3 lines
+- Time posted
+- Bottom of each card:
+  Heart icon — save article
+  Bookmark icon — read later
+  Share icon — copy link
+- Hover effect — card lifts slightly
+- Click opens in Chromium
+
+NEWS SETTINGS — manage interests:
+- Toggle each news source on or off
+- Add custom RSS feed URL
+- Add custom website to monitor
+- Keyword filters — only show articles containing
+  specific words
+- Keyword blocks — never show articles with these words
+- Refresh interval — 15min 30min 1hr
+- Max articles to show — slider
+- Open links in: Chromium, Firefox, default browser
+
+CHROMIUM INTEGRATION:
+- All article links open in Chromium by default
+- Configurable to any installed browser
+- Option to open in reader mode
+- Option to open in private window
+- Browser choice saved in settings
+
+FOOTER:
+- See more tech news button — opens Chromium to
+  configured news aggregator page
+- Quick launch row — hand drawn icons for:
+  NYXUS Terminal
+  NYXUS Settings  
+  NYXUS Security
+  GodsApp
+  NYXUS SAGE
+  File manager
+
+SETTINGS PANEL — full settings accessible via pencil icon:
+- Weather source — link to NYXUS Weather config
+- News sources — manage all toggles
+- Custom RSS feeds — add remove
+- Keyword filters
+- Open on hover toggle — timeout slider 300-1000ms
+- Open on click toggle
+- Animation speed
+- Panel position — above taskbar or side
+- Auto refresh interval
+- Notification for breaking security news toggle
+- Startup behavior — load content on boot or on open
+- Cache location
+- Clear cache button
+
+TECHNICAL:
+- GTK4 Python native
+- feedparser for RSS feed reading
+- requests for fetching news content
+- BeautifulSoup4 for parsing article previews
+- psutil for system stats
+- subprocess for nvidia-smi GPU data
+- Pillow for image handling in news cards
+- Chromium launched via subprocess
+- Weather data read from NYXUS Weather cache files
+  at ~/.config/nyxus-weather/
+- News cache at ~/.config/nyxus-panel/cache/
+- Settings at ~/.config/nyxus-panel/config.json
+- News refreshed in background thread
+- UI never freezes during refresh
+- Graceful fallback if feed unavailable
+- Waybar integration:
+  Add to Waybar config as custom module
+  Click waybar button triggers panel open/close
+  Panel anchors above the button position
+
+DELIVER:
+- main.py — panel entry point
+- news_feed.py — RSS fetching and parsing
+- weather_widget.py — weather tile
+- system_widget.py — system stats tile
+- news_card.py — individual card rendering
+- settings.py — settings panel
+- waybar_integration.md — how to wire into Waybar
+- requirements.txt
+- packages.txt
+- install.sh
+- README.md
