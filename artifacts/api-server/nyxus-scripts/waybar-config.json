@@ -204,7 +204,8 @@
     "spacing": 0,
     "margin-top": 100,
     "margin-bottom": 100,
-    "modules-left": [
+    "modules-left": [],
+    "modules-center": [
       "custom/app-godsapp",
       "custom/app-studio",
       "custom/app-sage",
@@ -217,7 +218,6 @@
       "custom/app-terminal",
       "custom/app-settings"
     ],
-    "modules-center": [],
     "custom/app-godsapp": {
       "format": "",
       "tooltip": "GodsApp — NYXUS Configuration Hub",
@@ -286,6 +286,7 @@
       "format": "{capacity}",
       "format-charging": "{capacity}+",
       "tooltip": false
-    }
+    },
+    "modules-right": []
   }
 ]

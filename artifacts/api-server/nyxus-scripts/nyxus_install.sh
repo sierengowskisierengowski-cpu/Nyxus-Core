@@ -120,10 +120,32 @@ fi
 
 # ── App Icons — paint-splatter neon icons via Cairo ───────────────────────────
 hdr "App Icons (NYXUS paint-splatter)"
-if python3 "$SCRIPTS_DIR/nyxus_gen_icons.py" 2>/dev/null; then
-  ok "NYXUS icons generated → ~/.local/share/icons/hicolor/256x256/apps/"
+# Hard-require pycairo before generating icons. If missing, install it.
+if ! python3 -c "import cairo" 2>/dev/null; then
+  printf "  ${DIM}pycairo missing — installing python-cairo via pacman...${R}\n"
+  sudo pacman -S --noconfirm --needed python-cairo 2>/dev/null \
+    || pip install --user pycairo 2>/dev/null \
+    || pip install --break-system-packages pycairo 2>/dev/null \
+    || true
+fi
+if ! python3 -c "import cairo" 2>/dev/null; then
+  printf "  \033[91mFAILED:\033[0m pycairo could not be installed. App icons WILL NOT render.\n"
+  printf "  Run manually:  sudo pacman -S python-cairo  (or:  pip install --user pycairo)\n"
+  failed=$((failed+1))
 else
-  printf "  ${DIM}Icon generation skipped (pycairo not available yet)${R}\n"
+  # Run icon generator with FULL output visible so failures are loud
+  if python3 "$SCRIPTS_DIR/nyxus_gen_icons.py"; then
+    icon_count=$(ls ~/.local/share/icons/hicolor/256x256/apps/io.nyxus.*.png 2>/dev/null | wc -l)
+    if [ "$icon_count" -ge 11 ]; then
+      ok "NYXUS icons: $icon_count painted → ~/.local/share/icons/hicolor/256x256/apps/"
+    else
+      printf "  \033[93mWARN:\033[0m only $icon_count of 11 icons created\n"
+      failed=$((failed+1))
+    fi
+  else
+    printf "  \033[91mFAILED:\033[0m icon generator crashed (see output above)\n"
+    failed=$((failed+1))
+  fi
 fi
 
 # ── HYPRLAND CONFIGS ──────────────────────────────────────────────────────────
