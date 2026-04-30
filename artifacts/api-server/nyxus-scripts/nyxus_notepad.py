@@ -79,7 +79,7 @@ except Exception:
 # ═══════════════════════════════════════════════════════════════════════════════
 APP_ID    = "com.nyxus.notepad"
 APP_NAME  = "NYXUS Notepad"
-WIN_W, WIN_H = 1280, 820
+WIN_W, WIN_H = 960, 620
 
 CONFIG_DIR  = Path.home() / ".config" / "nyxus-notepad"
 NOTES_DIR   = CONFIG_DIR / "notes"
@@ -608,7 +608,7 @@ class SketchButton(Gtk.DrawingArea):
     """Hand-drawn pushbutton with sketchy outline."""
     __gsignals__ = {"clicked": (GObject.SignalFlags.RUN_FIRST, None, ())}
 
-    def __init__(self, label, *, width=88, height=32, color=NEON_PINK,
+    def __init__(self, label, *, width=72, height=26, color=NEON_PINK,
                  icon_draw=None, tooltip=None, primary=False):
         super().__init__()
         self.label    = label
@@ -778,7 +778,7 @@ class SketchSearchEntry(Gtk.Box):
     def __init__(self, *, placeholder="search…", color=NEON_PINK):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         self.color = color
-        self.set_size_request(220, 32)
+        self.set_size_request(160, 26)
         # background DrawingArea
         self.bg = Gtk.DrawingArea()
         self.bg.set_hexpand(True); self.bg.set_vexpand(True)
@@ -790,8 +790,8 @@ class SketchSearchEntry(Gtk.Box):
         entry = Gtk.Entry()
         entry.set_placeholder_text(placeholder)
         entry.set_has_frame(False)
-        entry.set_margin_start(34); entry.set_margin_end(8)
-        entry.set_margin_top(2);    entry.set_margin_bottom(2)
+        entry.set_margin_start(26); entry.set_margin_end(6)
+        entry.set_margin_top(1);    entry.set_margin_bottom(1)
         entry.add_css_class("nyxus-entry")
         entry.connect("changed",
                       lambda e: self.emit("changed", e.get_text()))
@@ -821,7 +821,7 @@ class SketchSearchEntry(Gtk.Box):
 # ═══════════════════════════════════════════════════════════════════════════════
 class NoteCard(Gtk.DrawingArea):
     """Single note row in the sidebar (ListBox child)."""
-    CARD_H = 92
+    CARD_H = 72
 
     def __init__(self, note, tags, *, on_click, on_context):
         super().__init__()
@@ -968,15 +968,15 @@ window, .nyx-bg {
     color: #f0eef8;
 }
 .nyx-sidebar  { background-color: rgba(255,255,255,0.025); }
-.nyx-toolbar  { background-color: rgba(10,10,18,0.96); padding: 6px 14px; }
-.nyx-statusbar{ background-color: rgba(10,10,18,0.96); padding: 4px 14px;
+.nyx-toolbar  { background-color: rgba(10,10,18,0.96); padding: 3px 8px; }
+.nyx-statusbar{ background-color: rgba(10,10,18,0.96); padding: 2px 10px;
                 border-top: 1px solid rgba(255,255,255,0.05); }
 
 .nyxus-entry {
     background-color: transparent;
     border: none; outline: none; box-shadow: none;
     color: rgba(240,235,250,0.92);
-    font-size: 16px; font-family: 'Caveat', cursive;
+    font-size: 14px; font-family: 'Caveat', cursive;
     caret-color: #ff00ff;
 }
 .nyxus-entry:focus { outline: none; box-shadow: none; }
@@ -986,8 +986,8 @@ window, .nyx-bg {
     border: none; outline: none; box-shadow: none;
     color: #ffffff;
     font-family: 'Caveat', cursive;
-    font-size: 32px; font-weight: bold;
-    padding: 12px 20px;
+    font-size: 22px; font-weight: bold;
+    padding: 4px 14px;
     caret-color: #ff00ff;
 }
 .nyx-title-entry:focus { outline: none; box-shadow: none; }
@@ -996,15 +996,15 @@ window, .nyx-bg {
     background-color: transparent;
     color: rgba(240,235,250,0.95);
     font-family: 'Caveat', 'Patrick Hand', cursive;
-    font-size: 18px;
+    font-size: 15px;
     caret-color: #ff00ff;
-    padding: 0 20px;
+    padding: 0 14px;
 }
 .nyx-editor { background-color: transparent; }
 
 .nyx-mono {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 scrollbar slider {
@@ -1018,10 +1018,10 @@ scrollbar { background-color: transparent; }
 
 .nyx-headline {
     color: #ff00ff;
-    text-shadow: 0 0 12px rgba(255,0,255,0.55);
-    font-size: 22px; font-weight: bold;
+    text-shadow: 0 0 10px rgba(255,0,255,0.55);
+    font-size: 17px; font-weight: bold;
 }
-.nyx-meta { color: rgba(240,235,250,0.45); font-size: 13px; }
+.nyx-meta { color: rgba(240,235,250,0.45); font-size: 11px; }
 .nyx-accent { color: #ff00ff; }
 .nyx-accent2 { color: #0088ff; }
 .nyx-accent3 { color: #39ff14; }
@@ -1033,9 +1033,9 @@ scrollbar { background-color: transparent; }
     background-color: rgba(139,92,246,0.18);
     color: #c8a8ff;
     border: 1px solid rgba(139,92,246,0.55);
-    border-radius: 10px;
-    padding: 1px 10px;
-    font-size: 13px;
+    border-radius: 9px;
+    padding: 0 8px;
+    font-size: 11px;
 }
 .nyx-popover {
     background-color: rgba(15,12,28,0.98);
@@ -1649,7 +1649,7 @@ class NotepadWindow(Gtk.ApplicationWindow):
 
         # Body — paned (sidebar | editor)
         paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
-        paned.set_position(300)
+        paned.set_position(220)
         paned.set_wide_handle(True)
         paned.set_hexpand(True); paned.set_vexpand(True)
         root.append(paned)
@@ -1694,43 +1694,49 @@ class NotepadWindow(Gtk.ApplicationWindow):
         root.append(self.status_bar)
 
     def _make_toolbar(self):
-        bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        outer = Gtk.ScrolledWindow()
+        outer.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
+        outer.set_hexpand(True)
+        bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         bar.add_css_class("nyx-toolbar")
+        outer.set_child(bar)
+        outer.add_css_class("nyx-toolbar")
 
         # Title / logo
-        logo = Gtk.Label(label="📓 NYXUS Notepad")
+        logo = Gtk.Label(label="📓 Notepad")
         logo.add_css_class("nyx-headline")
         bar.append(logo)
 
-        bar.append(SketchSeparator(vertical=True, length=24, color=NEON_PINK))
+        bar.append(SketchSeparator(vertical=True, length=18, color=NEON_PINK))
 
         # New note button
-        b_new = SketchButton("＋ New", width=92, color=NEON_GREEN, primary=True,
+        b_new = SketchButton("＋ New", width=72, height=24,
+                             color=NEON_GREEN, primary=True,
                              tooltip="New note (Ctrl+N)")
         b_new.connect("clicked", lambda _b: self._new_note())
         bar.append(b_new)
 
-        b_save = SketchButton("Save", width=78, color=NEON_BLUE,
+        b_save = SketchButton("Save", width=58, height=24, color=NEON_BLUE,
                               tooltip="Save (Ctrl+S)")
         b_save.connect("clicked", lambda _b: self._save_now())
         bar.append(b_save)
 
-        b_dup = SketchButton("Duplicate", width=104, color=ACCENT_PURP,
+        b_dup = SketchButton("Dup", width=52, height=24, color=ACCENT_PURP,
                              tooltip="Duplicate")
         b_dup.connect("clicked", lambda _b: self._duplicate_current())
         bar.append(b_dup)
 
-        b_lock = SketchButton("Lock", width=78, color=ACCENT_GOLD,
+        b_lock = SketchButton("Lock", width=58, height=24, color=ACCENT_GOLD,
                               tooltip="Lock note (Ctrl+L)")
         b_lock.connect("clicked", lambda _b: self._toggle_lock())
         bar.append(b_lock); self.btn_lock = b_lock
 
-        b_pin = SketchToggle("Pin", width=68, color=DANGER_RED,
+        b_pin = SketchToggle("Pin", width=52, height=24, color=DANGER_RED,
                              tooltip="Pin to top")
         b_pin.connect("clicked", lambda _b: self._toggle_pin())
         bar.append(b_pin); self.btn_pin = b_pin
 
-        b_star = SketchToggle("★ Star", width=86, color=ACCENT_GOLD,
+        b_star = SketchToggle("★", width=36, height=24, color=ACCENT_GOLD,
                               tooltip="Star this note")
         b_star.connect("clicked", lambda _b: self._toggle_star())
         bar.append(b_star); self.btn_star = b_star
@@ -1739,39 +1745,44 @@ class NotepadWindow(Gtk.ApplicationWindow):
         sp = Gtk.Box(); sp.set_hexpand(True); bar.append(sp)
 
         # Templates / Export / Settings / Cmd palette
-        b_tpl = SketchButton("Templates", width=110, color=NEON_PINK)
+        b_tpl = SketchButton("Tmpl", width=58, height=24, color=NEON_PINK,
+                             tooltip="Templates (Ctrl+T)")
         b_tpl.connect("clicked", lambda _b: self._show_templates())
         bar.append(b_tpl)
 
-        b_exp = SketchButton("Export", width=88, color=NEON_PINK,
+        b_exp = SketchButton("Export", width=64, height=24, color=NEON_PINK,
                              tooltip="Export (Ctrl+E)")
         b_exp.connect("clicked", lambda _b: self._show_export())
         bar.append(b_exp)
 
-        b_cmd = SketchButton("⌘ Cmd", width=78, color=NEON_PINK,
+        b_cmd = SketchButton("⌘", width=32, height=24, color=NEON_PINK,
                              tooltip="Command palette (Ctrl+Shift+P)")
         b_cmd.connect("clicked", lambda _b: self._show_command_palette())
         bar.append(b_cmd)
 
-        b_set = SketchButton("⚙", width=42, color=INK_DIM,
+        b_set = SketchButton("⚙", width=32, height=24, color=INK_DIM,
                              tooltip="Settings (Ctrl+,)")
         b_set.connect("clicked", lambda _b: self._show_settings())
         bar.append(b_set)
 
-        b_full = SketchButton("⛶", width=42, color=INK_DIM,
-                              tooltip="Distraction-free mode (Ctrl+Shift+F)")
+        b_full = SketchButton("⛶", width=32, height=24, color=INK_DIM,
+                              tooltip="Distraction-free (Ctrl+Shift+F)")
         b_full.connect("clicked", lambda _b: self._toggle_distraction_free())
         bar.append(b_full)
 
-        return bar
+        return outer
 
     def _make_format_bar(self):
-        bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        bar.set_margin_start(20); bar.set_margin_end(20)
-        bar.set_margin_top(4);    bar.set_margin_bottom(4)
+        scroller = Gtk.ScrolledWindow()
+        scroller.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
+        scroller.set_hexpand(True)
+        bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=3)
+        bar.set_margin_start(10); bar.set_margin_end(10)
+        bar.set_margin_top(2);    bar.set_margin_bottom(2)
+        scroller.set_child(bar)
 
-        def addbtn(label, fn, *, color=NEON_PINK, w=44, tip=None):
-            b = SketchButton(label, width=w, height=28, color=color,
+        def addbtn(label, fn, *, color=NEON_PINK, w=32, tip=None):
+            b = SketchButton(label, width=w, height=22, color=color,
                              tooltip=tip)
             b.connect("clicked", lambda _b: fn())
             bar.append(b); return b
@@ -1782,17 +1793,17 @@ class NotepadWindow(Gtk.ApplicationWindow):
                color=NEON_PINK, tip="Italic (Ctrl+I)")
         addbtn("U", lambda: self.editor.toggle_tag("underline"),
                color=NEON_PINK, tip="Underline (Ctrl+U)")
-        addbtn("S̶", lambda: self.editor.toggle_tag("strike"),
+        addbtn("S", lambda: self.editor.toggle_tag("strike"),
                color=NEON_PINK, tip="Strikethrough")
-        addbtn("`</>", lambda: self.editor.toggle_tag("code"),
-               color=NEON_GREEN, w=58, tip="Inline code")
-        bar.append(SketchSeparator(vertical=True, length=22, color=INK_FAINT))
+        addbtn("</>", lambda: self.editor.toggle_tag("code"),
+               color=NEON_GREEN, w=42, tip="Inline code")
+        bar.append(SketchSeparator(vertical=True, length=16, color=INK_FAINT))
 
         addbtn("H1", lambda: self.editor.apply_heading(1), color=NEON_BLUE)
         addbtn("H2", lambda: self.editor.apply_heading(2), color=NEON_BLUE)
         addbtn("H3", lambda: self.editor.apply_heading(3), color=NEON_BLUE)
         addbtn("H4", lambda: self.editor.apply_heading(4), color=NEON_BLUE)
-        bar.append(SketchSeparator(vertical=True, length=22, color=INK_FAINT))
+        bar.append(SketchSeparator(vertical=True, length=16, color=INK_FAINT))
 
         addbtn("•", lambda: self.editor.apply_bullet_to_lines(),
                color=ACCENT_PURP, tip="Bullet list")
@@ -1804,33 +1815,32 @@ class NotepadWindow(Gtk.ApplicationWindow):
                color=ACCENT_PURP, tip="Block quote")
         addbtn("⎯", lambda: self.editor.insert_horizontal_rule(),
                color=ACCENT_PURP, tip="Horizontal rule")
-        bar.append(SketchSeparator(vertical=True, length=22, color=INK_FAINT))
+        bar.append(SketchSeparator(vertical=True, length=16, color=INK_FAINT))
 
-        addbtn("⛓ Link", lambda: self._insert_link(),
-               color=NEON_GREEN, w=72, tip="Insert link (Ctrl+K)")
-        addbtn("▦ Tbl", lambda: self.editor.insert_table(),
-               color=NEON_GREEN, w=64, tip="Insert table")
-        addbtn("⊞ Code", lambda: self.editor.insert_code_block(),
-               color=NEON_GREEN, w=78, tip="Code block")
+        addbtn("Link", lambda: self._insert_link(),
+               color=NEON_GREEN, w=46, tip="Insert link (Ctrl+K)")
+        addbtn("Tbl", lambda: self.editor.insert_table(),
+               color=NEON_GREEN, w=42, tip="Insert table")
+        addbtn("```", lambda: self.editor.insert_code_block(),
+               color=NEON_GREEN, w=42, tip="Code block")
 
-        bar.append(SketchSeparator(vertical=True, length=22, color=INK_FAINT))
+        bar.append(SketchSeparator(vertical=True, length=16, color=INK_FAINT))
 
         # Color picker swatches
         for c in NOTE_COLORS:
             sw = self._make_swatch(c)
             bar.append(sw)
 
-        # Find button on the right
-        sp = Gtk.Box(); sp.set_hexpand(True); bar.append(sp)
-        addbtn("🔍 Find", lambda: self.find_bar.open(),
-               color=NEON_PINK, w=86, tip="Find & Replace (Ctrl+F)")
-        return bar
+        bar.append(SketchSeparator(vertical=True, length=16, color=INK_FAINT))
+        addbtn("🔍", lambda: self.find_bar.open(),
+               color=NEON_PINK, w=32, tip="Find & Replace (Ctrl+F)")
+        return scroller
 
     def _make_swatch(self, color):
         da = Gtk.DrawingArea()
-        da.set_size_request(22, 22)
+        da.set_size_request(18, 18)
         da.set_tooltip_text(color["name"])
-        try: da.set_content_width(22); da.set_content_height(22)
+        try: da.set_content_width(18); da.set_content_height(18)
         except Exception: pass
         rgb = color["rgb"]
         def _draw(area, cr, w, h, _=None):
@@ -1849,18 +1859,18 @@ class NotepadWindow(Gtk.ApplicationWindow):
         return da
 
     def _make_tags_row(self):
-        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        box.set_margin_start(20); box.set_margin_end(20)
-        box.set_margin_top(2); box.set_margin_bottom(4)
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        box.set_margin_start(14); box.set_margin_end(14)
+        box.set_margin_top(1); box.set_margin_bottom(2)
         lbl = Gtk.Label(label="🏷"); lbl.add_css_class("nyx-meta")
         box.append(lbl)
         self.tags_pills = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,
-                                  spacing=4)
+                                  spacing=3)
         box.append(self.tags_pills)
         self.tag_entry = Gtk.Entry()
-        self.tag_entry.set_placeholder_text("add tag, press Enter")
+        self.tag_entry.set_placeholder_text("add tag…")
         self.tag_entry.add_css_class("nyxus-entry")
-        self.tag_entry.set_size_request(180, 28)
+        self.tag_entry.set_size_request(120, 22)
         self.tag_entry.connect("activate", self._on_tag_added)
         box.append(self.tag_entry)
         return box
@@ -1868,34 +1878,34 @@ class NotepadWindow(Gtk.ApplicationWindow):
     def _make_sidebar(self):
         col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         col.add_css_class("nyx-sidebar")
-        col.set_size_request(280, -1)
+        col.set_size_request(210, -1)
 
-        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        head.set_margin_start(12); head.set_margin_end(12)
-        head.set_margin_top(10); head.set_margin_bottom(6)
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        head.set_margin_start(8); head.set_margin_end(8)
+        head.set_margin_top(6); head.set_margin_bottom(4)
         h = Gtk.Label(label="my notes", xalign=0)
         h.add_css_class("nyx-headline"); head.append(h)
         sp = Gtk.Box(); sp.set_hexpand(True); head.append(sp)
         col.append(head)
 
         # search
-        sb = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        sb.set_margin_start(10); sb.set_margin_end(10); sb.set_margin_bottom(4)
-        self.search = SketchSearchEntry(placeholder="search notes…")
+        sb = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        sb.set_margin_start(8); sb.set_margin_end(8); sb.set_margin_bottom(2)
+        self.search = SketchSearchEntry(placeholder="search…")
         self.search.connect("changed", self._on_search)
         sb.append(self.search)
         col.append(sb)
 
         # filter row (sort dropdown + tag filter)
-        fr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        fr.set_margin_start(10); fr.set_margin_end(10); fr.set_margin_bottom(6)
+        fr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        fr.set_margin_start(8); fr.set_margin_end(8); fr.set_margin_bottom(4)
 
-        sort_btn = SketchButton("⇅ Sort", width=86, height=26, color=NEON_BLUE,
+        sort_btn = SketchButton("⇅ Sort", width=64, height=22, color=NEON_BLUE,
                                 tooltip="Sort notes")
         sort_btn.connect("clicked", lambda _b: self._show_sort_menu(sort_btn))
         fr.append(sort_btn); self.sort_btn = sort_btn
 
-        filt_btn = SketchButton("⛛ Filter", width=92, height=26, color=NEON_BLUE,
+        filt_btn = SketchButton("⛛ Filter", width=70, height=22, color=NEON_BLUE,
                                 tooltip="Filter notes")
         filt_btn.connect("clicked", lambda _b: self._show_filter_menu(filt_btn))
         fr.append(filt_btn)
@@ -1907,7 +1917,7 @@ class NotepadWindow(Gtk.ApplicationWindow):
         fr.append(self.count_lbl)
         col.append(fr)
 
-        col.append(SketchSeparator(length=240, color=INK_FAINT))
+        col.append(SketchSeparator(length=180, color=INK_FAINT))
 
         # list of notes
         self.notes_list = Gtk.ListBox()

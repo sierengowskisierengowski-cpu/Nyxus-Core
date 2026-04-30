@@ -1,0 +1,264 @@
+Rebuild the existing NYXUS Stickies from scratch as a fully 
+functional native GTK4 Python application. The current version 
+is broken — rebuild it completely, do not patch the old code.
+
+DO NOT design colors, theme, or NyX brand styling — that will 
+be applied separately. Focus entirely on functionality, 
+features, and the hand drawn hand written visual style ONLY.
+
+VISUAL STYLE — THIS IS REQUIRED:
+- Every sticky note must look like a real physical sticky note
+- Notes are slightly tilted — random small rotation between 
+  -8 and +8 degrees per note — no two notes at same angle
+- Notes have a folded corner effect — bottom right corner 
+  curls up slightly like a real sticky note
+- Notes have a subtle drop shadow — like they are physically 
+  pinned above the surface
+- All text on notes uses handwritten style font — looks like 
+  someone actually wrote on the note by hand
+- Note borders are hand drawn — slightly imperfect, sketch-like
+- Pin or tape at top of each note — hand drawn pushpin or 
+  tape strip holding the note up
+- When you hover a note it lifts slightly — shadow grows, 
+  slight scale up animation, feels physical
+- When you drag a note it tilts more — feels like picking 
+  it up
+- Notes slightly overlap each other naturally like a real 
+  desk covered in sticky notes
+- Delete animation — note crumples and falls off screen
+- New note animation — note flies in and sticks to surface
+- All buttons and UI elements outside the notes are hand 
+  drawn sketch style — no standard GTK widgets visible
+- The background canvas looks like a corkboard, dark desk 
+  surface, or wall — configurable
+- Scrollable infinite canvas — notes can go anywhere
+
+NOTE COLORS — each color is a distinct sticky note style:
+- Yellow — classic sticky note, warm yellow
+- Pink — hot pink, vibrant
+- Blue — sky blue, cool
+- Green — mint green, fresh
+- Purple — soft purple
+- Orange — bright orange
+- Red — urgent red
+- White — clean white for important notes
+- Black — dark note for special use
+- Teal — deep teal
+- Each color has its own slightly different shade for the 
+  folded corner and shadow — looks realistic
+- Color is visible from across the screen — bold and clear
+- User can set custom hex color for any note
+
+NOTE CONTENT — what you can put in a note:
+- Plain text — default, handwritten font rendered on note
+- Checklist — checkbox items, click to check off, 
+  checked items get strikethrough, shows progress counter
+- Code snippet — monospace font, syntax highlighted, 
+  copy button on hover
+- Link — paste URL it becomes clickable, shows favicon 
+  and page title automatically
+- Image — drag and drop image onto note, displays inline
+- Voice memo — record audio, playback button on note, 
+  waveform displayed
+- Drawing — small canvas on note to draw/sketch with mouse
+- Math — LaTeX math expression rendered inline
+- Table — small inline table, editable
+- Color mixed — any combination of above in one note
+- Each content type renders differently on the note 
+  surface — feels appropriate for the note type
+
+NOTE SIZES:
+- Small — compact, title only visible
+- Medium — default, few lines visible
+- Large — full content visible
+- Extra Large — detailed note, full workspace
+- Resize by dragging any corner — smooth resize
+- Double click to expand to full readable size
+- Minimized — collapses to just title bar strip
+
+NOTE FEATURES — every note has:
+- Title — editable, shown at top in larger handwritten font
+- Body — full editable content area
+- Color selector — click to change color, color wheel 
+  appears
+- Pin — pin to always stay on top of other notes
+- Lock — password protect individual note content
+- Reminder — set date and time, notification fires
+- Priority — low, normal, high, urgent — shown as colored 
+  dot on note corner
+- Tags — add tags to any note for filtering
+- Created date and modified date shown subtly at bottom 
+  of note
+- Character count shown subtly
+- Link to other notes — drag one note onto another to 
+  link them, linked notes shown with a drawn string 
+  between them on canvas
+- Duplicate note button
+- Archive note — removes from main canvas to archive
+- Delete — crumple animation then gone
+- Snap to grid — optional per note
+- Group with other notes — group moves together
+- Color fade warning — note slowly fades if not touched 
+  for configured number of days, reminds you to review it
+
+CANVAS FEATURES:
+- Infinite scrollable canvas — notes can go anywhere in 
+  any direction
+- Zoom in and out — mouse wheel or pinch gesture
+- Mini map — small overview of entire canvas in corner
+- Snap to grid — optional, configurable grid size
+- Auto arrange — automatically organizes notes neatly
+- Group by tag — auto arranges notes by tag into clusters
+- Group by color — auto arranges by color
+- Group by priority — organizes by urgency
+- Select multiple notes — rubber band selection
+- Move multiple selected notes together
+- Align selected notes — left, right, top, bottom, center
+- Distribute selected notes — even spacing
+- Canvas backgrounds — corkboard, dark wood, slate, 
+  brick, concrete, pure black — all hand drawn textured
+- Board name — name your board at top
+- Multiple boards — create unlimited boards, switch between
+- Board overview — thumbnail view of all boards
+- Board templates — pre-arranged layouts for common uses
+
+ORGANIZATION AND SEARCH:
+- Search bar — searches all notes on all boards 
+  simultaneously, results highlighted on notes
+- Filter by color, tag, priority, date, content type
+- Tag cloud — visual overview of all tags
+- Notes with reminders section — upcoming reminders 
+  listed separately
+- Archived notes section — browse and restore
+- Recently modified notes section
+- Starred notes — always accessible
+- Quick note — global hotkey, small floating input, 
+  creates note instantly without opening full app
+- Sort mode — temporarily straightens all notes for 
+  easy reading then returns to natural positions
+
+REMINDERS AND ALERTS:
+- Set reminder on any note — date, time, recurring option
+- Recurring reminders — daily, weekly, monthly, custom
+- Desktop notification when reminder fires
+- Notification shows note preview
+- Click notification to jump to note on canvas
+- Overdue reminders shown with urgent styling
+- Reminder list view — see all upcoming reminders
+- Snooze reminder — 5, 10, 30 minutes, 1 hour, tomorrow
+- MQTT publish on reminder fire for GowskiNet integration
+
+COLLABORATION FEATURES:
+- Export single note as image — PNG with note styling 
+  intact including tilt and shadow
+- Export entire board as image — full canvas screenshot
+- Export note as plain text
+- Export note as markdown
+- Copy note content to clipboard
+- Share board as JSON — import on another machine
+- Print board — all notes arranged on paper
+- Email note content
+
+TEMPLATES:
+- Built in note templates:
+  Quick thought, Todo list, Shopping list, 
+  Meeting reminder, Code snippet, Bug note,
+  Idea capture, Follow up, Password hint,
+  Daily goal, Inspiration quote, Warning note
+- Save any note as custom template
+- Template picker when creating new note
+
+KEYBOARD SHORTCUTS:
+- Ctrl+N — new note at canvas center
+- Ctrl+Shift+N — new note from template
+- Ctrl+F — search all notes
+- Ctrl+A — select all notes
+- Ctrl+Z — undo
+- Ctrl+Y — redo
+- Ctrl+G — group selected notes
+- Ctrl+L — lock selected note
+- Delete — delete selected note with animation
+- Escape — deselect all
+- Space+drag — pan canvas
+- Ctrl+scroll — zoom canvas
+- F11 — fullscreen canvas mode
+- Ctrl+E — export selected note
+- All shortcuts configurable
+
+SETTINGS:
+- Default note color
+- Default note size
+- Canvas background
+- Auto-save interval
+- Fade warning days — how many days before note fades
+- Reminder notification style
+- Global hotkey for quick note
+- Snap to grid on/off and grid size
+- Note font family — handwritten fonts listed
+- Note font size default
+- Animation speed — fast, normal, slow, off
+- Shadow intensity
+- Tilt range — min and max degrees of random tilt
+- Board auto-backup location
+- Startup board — which board opens on launch
+
+DATA AND BACKUP:
+- All notes auto-saved every 30 seconds
+- Full board backup on close
+- Crash recovery — all notes restored after crash
+- Backup to configurable location
+- Export entire vault as encrypted archive
+- Note history — every note keeps last 20 versions
+- Restore previous version of any note
+
+TECH STACK:
+- GTK4 Python native
+- Cairo for all custom note drawing — tilt, shadow, 
+  curl, pin, all visual effects
+- GtkSourceView for syntax highlighted code notes
+- Pango for handwritten font rendering
+- wl-clipboard for clipboard integration
+- paho-mqtt for GowskiNet reminder integration
+- sqlite3 for all note storage
+- Pillow for image handling in notes
+- pygame or GStreamer for voice memo recording 
+  and playback
+- libnotify for desktop notifications
+- All animations use GLib.timeout for smooth rendering
+- All operations in background threads — UI never freezes
+- Notes stored at ~/.config/nyxus-stickies/notes/
+- Boards stored at ~/.config/nyxus-stickies/boards/
+- Backups at ~/.config/nyxus-stickies/backups/
+- Config at ~/.config/nyxus-stickies/config.json
+
+EVERYTHING MUST WORK:
+- Every button functional — no placeholders
+- Tilted notes must actually render tilted via Cairo
+- Folded corner must actually render
+- Drop shadow must render correctly
+- Drag and drop must work smoothly
+- Resize must work smoothly
+- All animations must play
+- Reminders must actually fire desktop notifications
+- Search must return real results
+- Lock must actually encrypt content
+- Export must produce real files
+- Clipboard copy must work via wl-copy
+- All keyboard shortcuts must work
+- Multiple boards must be fully independent
+- Canvas zoom and pan must be smooth
+
+DELIVER:
+- main.py — entry point and canvas
+- note.py — individual note widget with all Cairo drawing
+- board.py — board management
+- search.py — search and filter engine
+- reminders.py — reminder system
+- templates.py — template management
+- export.py — all export formats
+- crypto.py — note locking encryption
+- settings.py — settings management
+- requirements.txt
+- system packages list
+- install.sh
+- README.md
