@@ -25,6 +25,18 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 | `nyxus_weather.py`    | `io.nyxus.weather`  | float, pinned, move 20 100 |
 | `nyxus_sysmon_gtk.py` | `io.nyxus.sysmon`   | workspace 6, fullscreen |
 
+### NYXUS Studio (multi-module GTK4 creative suite)
+- Tarball: `artifacts/api-server/nyxus-scripts/nyxus-studio.tgz` (~61 KB).
+- Installer entry: `nyxus_studio_install.sh` — installed via
+  `curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_studio_install.sh | bash`.
+- Tarball top-level: `studio/install.sh`, `studio/README.md`, `studio/packages.txt`,
+  `studio/requirements.txt`, `studio/studio/{main,document,engine,ui,
+  audio_engine,video_engine,three_d_engine}.py`, `studio/studio/modules/m01–m09.py`.
+- Modules: paint (m01), vector (m02), 3d (m03), video (m04), animate (m05),
+  photo (m06), layout (m07), type (m08), voice (m09).
+- Deploy target: `/opt/nyxus-studio`; launcher `/usr/local/bin/nyxus-studio`;
+  desktop entry + generated icon under user XDG paths.
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
