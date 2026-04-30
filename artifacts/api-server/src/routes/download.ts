@@ -56,6 +56,10 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-bg-13.png": "nyxus-bg-13.png",
   "nyxus-bg-14.png": "nyxus-bg-14.png",
   "nyxus-bg-15.png": "nyxus-bg-15.png",
+  "nyxus_settings.py":     "nyxus_settings.py",
+  "nyxus-phantom.tgz":     "nyxus-phantom.tgz",
+  "nyxus-shield.tgz":      "nyxus-shield.tgz",
+  "nyxus-godsapp.tgz":     "nyxus-godsapp.tgz",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
@@ -82,6 +86,7 @@ router.get("/download/nyxus/:filename", (req, res) => {
     filename.endsWith(".toml")   ? "text/plain" :
     filename.endsWith(".png")    ? "image/png" :
     filename.endsWith(".tar.gz") ? "application/gzip" :
+    filename.endsWith(".tgz")    ? "application/gzip" :
     "text/plain";
   res.setHeader("Content-Type", contentType);
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
