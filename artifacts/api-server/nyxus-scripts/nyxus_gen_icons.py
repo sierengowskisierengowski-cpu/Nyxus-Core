@@ -124,14 +124,37 @@ def gen_icon(app_id, label, color):
 
     path = os.path.join(ICON_DIR, f"{app_id}.png")
     surface.write_to_png(path)
-    print(f"  \033[92m✓\033[0m  {path}")
+    sz = os.path.getsize(path)
+    print(f"  \033[92m✓\033[0m  {label:10s}  {path}  ({sz} bytes)")
 
 
 print("\n\033[1m\033[38;5;135m──  NYXUS Icon Generator  ──────────────────────────────────\033[0m")
+print(f"   Target dir: {ICON_DIR}")
+print(f"   Generating {len(APPS)} icons...\n")
+
+# Wipe ALL old NYXUS icons first so stale files can't shadow new ones
+import glob
+for stale in glob.glob(os.path.join(ICON_DIR, "io.nyxus.*.png")):
+    os.remove(stale)
+
 for app_id, label, color in APPS:
     gen_icon(app_id, label, color)
 
-# Refresh icon cache
-os.system("gtk-update-icon-cache ~/.local/share/icons/hicolor/ 2>/dev/null || true")
+# Make sure hicolor index.theme exists (otherwise gtk-update-icon-cache silently bails)
+hicolor_root = os.path.expanduser("~/.local/share/icons/hicolor")
+index_path = os.path.join(hicolor_root, "index.theme")
+if not os.path.exists(index_path):
+    with open(index_path, "w") as f:
+        f.write("[Icon Theme]\nName=Hicolor\nComment=Default Icon Theme\nDirectories=256x256/apps\n\n[256x256/apps]\nSize=256\nType=Fixed\n")
+
+# Force-refresh icon cache (--force --ignore-theme-index)
+ret = os.system(f"gtk-update-icon-cache --force --ignore-theme-index {hicolor_root} 2>&1")
+print(f"\n   gtk-update-icon-cache exit: {ret}")
 os.system("update-desktop-database ~/.local/share/applications/ 2>/dev/null || true")
-print("\n\033[1m\033[92mIcons installed.\033[0m\n")
+
+# Final verification
+print("\n\033[1mFinal disk state:\033[0m")
+import subprocess
+subprocess.run(["ls", "-la", ICON_DIR])
+
+print("\n\033[1m\033[92mIcons installed. Now run:  pkill waybar; sleep 1; setsid waybar &\033[0m\n")
