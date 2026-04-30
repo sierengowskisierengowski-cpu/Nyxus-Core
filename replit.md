@@ -36,6 +36,15 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   photo (m06), layout (m07), type (m08), voice (m09).
 - Deploy target: `/opt/nyxus-studio`; launcher `/usr/local/bin/nyxus-studio`;
   desktop entry + generated icon under user XDG paths.
+- Arch system deps (PACMAN_PKGS): `gtk4 libadwaita python-gobject python-cairo
+  python-numpy python-pillow ffmpeg ttf-caveat`.  `libadwaita` is required for
+  `Adw.Application*` in `main.py`; `ttf-caveat` is the sketchbook font used by
+  the whole UI (CSS + Cairo).  Optional pip extras: sounddevice, soundfile,
+  scipy, trimesh.
+- Cross-module wiring audit (apr 2026): every `_broadcast` and `_switch_then`
+  target invoked by `main.py` resolves to a real method on the target module;
+  every `engine/ui/audio_engine/video_engine/three_d_engine/document` reference
+  resolves to a real symbol.
 
 ## Stack
 
