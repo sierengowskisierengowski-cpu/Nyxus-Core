@@ -1,0 +1,487 @@
+Build a native GTK4 Python application called NYXUS Settings.
+This is the complete system control center for NyX.x.OS.
+Replaces and extends GNOME Settings entirely.
+
+DO NOT design colors, theme, or NyX brand styling — that will
+be applied separately. Focus entirely on functionality.
+Hand drawn hand written visual style throughout — same as all
+other NYXUS apps. Every element looks sketched and hand drawn.
+
+PHILOSOPHY:
+One app controls everything. Every system setting, every
+hardware control, every preference, every customization —
+all in one place. Clean, organized, actually works.
+No hunting through terminals for config files.
+No memorizing commands. Everything visual and clickable.
+
+NAVIGATION:
+- Left sidebar — all categories listed with hand drawn icons
+- Search bar at top — searches every setting by name
+  Type any setting name and jump straight to it
+- Breadcrumb trail — shows where you are
+- Recently changed settings — quick access panel
+- Favorites — star any setting to pin it to top
+- Back and forward navigation
+
+DISPLAY AND MONITORS:
+- Detect all connected monitors automatically
+- Visual monitor arrangement — drag monitors to position
+- Per monitor settings:
+  Resolution — all supported listed
+  Refresh rate — all supported listed
+  Scale — 100% 125% 150% 200%
+  Orientation — 0 90 180 270 degrees
+  Color depth
+  HDR toggle if supported
+  Color profile — sRGB, Display P3, custom ICC
+  Brightness slider
+  Blue light filter — intensity and schedule
+  Night mode — schedule, color temperature slider
+- Primary monitor selector
+- Mirror displays toggle
+- Fractional scaling toggle
+- Variable refresh rate toggle if supported
+- Overscan adjustment if needed
+- Display power management — sleep timer
+- Screensaver — select, preview, configure timeout
+
+SOUND:
+- Output device selector — all detected devices listed
+- Output volume slider with mute toggle
+- Per application volume — every app listed separately
+- Balance slider — left right
+- Input device selector — all microphones listed
+- Input volume slider with mute toggle
+- Input level meter — live visual
+- System sounds — toggle each sound event on/off
+- Alert sound selector — preview available
+- Startup sound toggle
+- Over amplification toggle — goes above 100%
+- Equalizer — 10 band, presets plus custom
+- Audio profiles — save and switch between configs
+- HDMI audio output control
+- Bluetooth audio device management
+- Latency settings for low latency audio work
+
+NETWORK:
+- WiFi on/off toggle
+- Available networks list — signal strength, security type
+- Connect to network — password entry
+- Known networks management — forget, auto-connect toggle
+- WiFi hotspot — create and share, password, band
+- Ethernet — all interfaces listed with status
+- Per connection settings:
+  IP configuration — DHCP or manual
+  DNS servers — primary, secondary, custom
+  Gateway
+  IPv6 configuration
+  MTU setting
+  Connection sharing
+- VPN — WireGuard management:
+  Connection status
+  Connect/disconnect toggle
+  Add new peer
+  Remove peer
+  Generate QR code for phone
+  Key management
+  Connection log
+- Proxy settings — manual, automatic, PAC URL
+- Firewall — UFW visual management:
+  On/off toggle
+  Rules list in plain English
+  Add rule wizard
+  Delete rule
+  Preset profiles — home, work, public, lockdown
+- DNS over HTTPS — toggle and provider selector
+- Network diagnostics — ping, traceroute, DNS lookup built in
+- Bandwidth monitor — per interface live graph
+- MAC address — view and randomize per connection
+- Connection speed test built in
+
+BLUETOOTH:
+- Bluetooth on/off toggle
+- Discoverable toggle with timeout
+- Paired devices list — connect, disconnect, remove
+- Available devices scan — discover and pair
+- Per device settings:
+  Trusted toggle
+  Auto connect toggle
+  Device type and capabilities shown
+- File transfer — send and receive files
+- Bluetooth audio quality selector
+- Bluetooth power saving settings
+
+APPEARANCE:
+- NyX.x.OS theme selector — current plus available themes
+- Wallpaper manager:
+  Browse installed wallpapers — grid view
+  All 40 owl wallpapers shown
+  Set per workspace
+  Slideshow — interval, order, transition
+  Add wallpaper — file picker or URL
+  Download wallpapers from online collection
+- Color scheme — dark, light, auto by time of day
+- Accent color — full color picker
+- Icon theme selector — preview shown
+- Cursor theme selector — preview shown
+- Font settings:
+  Interface font — family and size
+  Document font
+  Monospace font — JetBrains Mono default
+  Handwritten font for NYXUS apps
+  Font rendering — hinting, antialiasing
+  Subpixel rendering — RGB BGR VRGB VBGR
+- Window style settings:
+  Border radius
+  Shadow intensity
+  Transparency level
+  Animation speed
+  Button layout — close min max positions
+- GTK theme fine tuning
+- GNOME Shell appearance if applicable
+- Login screen appearance
+- Lock screen appearance and wallpaper
+- Boot splash — NYXUS boot screen customization
+
+WORKSPACES:
+- Number of workspaces — slider 1 to 20
+- Workspace names — rename each one
+- Workspace thumbnails — visual preview of each
+- Dynamic workspaces toggle
+- Workspace switching animation — style selector
+- Per workspace wallpaper
+- Workspace overview hotkey
+- Multi-monitor workspace behavior
+
+KEYBOARD:
+- Keyboard layout — add, remove, switch between layouts
+- Layout indicator — shows current layout
+- Compose key selector
+- Caps Lock behavior — caps, ctrl, esc, disabled
+- Repeat delay slider
+- Repeat speed slider
+- Keyboard shortcuts — complete system wide list:
+  All Hyprland bindings
+  All NYXUS app shortcuts
+  Custom shortcut creator — add new shortcuts
+  Conflict detector
+  Import and export shortcuts
+- Input method editor settings
+- Special character input
+- NumLock default state on login
+- Keyboard backlight if available — brightness slider
+
+MOUSE AND TOUCHPAD:
+- Mouse speed slider
+- Mouse acceleration — adaptive, flat, none
+- Natural scrolling toggle
+- Scroll speed slider
+- Primary button — left or right hand
+- Middle click behavior
+- Double click speed slider
+- Touchpad on/off toggle
+- Tap to click toggle
+- Two finger scroll toggle
+- Two finger right click toggle
+- Three finger gestures configuration
+- Four finger gestures configuration
+- Palm rejection toggle
+- Touchpad scroll speed
+- Pointer size slider
+- Pointer color
+
+POWER:
+- Battery status — percentage, time remaining, health
+- Battery charge limit — slider, MSI specific support
+- Power profiles — Silent, Balanced, Performance, Beast Mode
+  Active profile shown prominently
+  Quick switch buttons
+- Screen blank timeout — on battery, on AC separately
+- Suspend timeout — on battery, on AC separately
+- Hibernate settings
+- Power button behavior
+- Lid close behavior — on battery, on AC
+- Wake on LAN toggle
+- USB power management
+- CPU governor display — links to NYXUS Control
+- Fan profile display — links to NYXUS Control
+- Power usage graph — last 24 hours
+- Estimated battery life per profile shown
+
+USERS AND ACCOUNTS:
+- Current user info — name, username, avatar
+- Change avatar — file picker or take photo
+- Change display name
+- Change password
+- YubiKey management:
+  Connected YubiKey shown — serial 35272364
+  FIDO2 status
+  GPG key status
+  Configure YubiKey authentication
+  PIV certificate management
+- Auto login toggle
+- Login screen user list toggle
+- Fingerprint login if hardware present
+- Account privileges — groups membership shown
+- Add user account
+- Remove user account
+- Parental controls per account
+
+PRIVACY AND SECURITY:
+- Screen lock — timeout slider, lock on suspend toggle
+- Automatic screen lock toggle
+- Lock screen notifications — show or hide content
+- Location services toggle — per app control
+- Camera access — per app control
+- Microphone access — per app control
+- File access — per app permissions
+- App permissions overview — every app and what it accesses
+- Diagnostics and usage reporting — toggle off by default
+- Activity log — toggle on/off, clear history
+- Recent files — toggle, clear
+- Temporary files — clear now button
+- AppArmor status — profiles loaded, enable/disable
+- SELinux status if applicable
+- Secure boot status
+- Full disk encryption status — LUKS info if encrypted
+- GPG keyring management
+- SSH key management — view, add, remove, generate
+- Certificate manager
+- Firewall shortcut — links to NYXUS Security
+- Audit log viewer — recent security events
+
+APPLICATIONS:
+- Installed applications list — all apps with icons
+- Default apps:
+  Web browser selector
+  Email client selector
+  File manager selector
+  Terminal selector — NYXUS Terminal default
+  Text editor selector — NYXUS Notepad default
+  Music player selector
+  Video player selector
+  Image viewer selector
+  Archive manager selector
+  PDF viewer selector
+- Startup applications — add, remove, toggle each
+- File type associations — which app opens which file type
+- Application permissions overview
+- Remove application — uninstall from here
+- Application storage usage — which apps use most space
+- Background app management — which run in background
+- Flatpak management — installed, update, remove
+- AUR package management shortcut
+
+STORAGE:
+- All drives and partitions shown visually
+- Storage usage breakdown — categories shown with sizes
+  System, Applications, Documents, Downloads, Media, Other
+- Per drive info — model, size, used, free, health (SMART)
+- SMART data — full health report per drive
+- Mount points management — mount, unmount, configure
+- Auto-mount settings
+- External drive management
+- Network drive mapping — SMB, NFS, SSHFS
+- Disk cleanup — find and remove large or old files
+- Duplicate file finder
+- Timeshift integration — create and manage snapshots
+  Create snapshot now
+  Browse snapshots
+  Restore from snapshot
+  Snapshot schedule
+- BTRFS subvolume management if applicable
+- Disk benchmark — read write speed test
+
+NOTIFICATIONS:
+- Notifications on/off master toggle
+- Do not disturb mode — toggle and schedule
+- Lock screen notifications toggle
+- Per application notification settings:
+  Every installed app listed
+  On/off toggle per app
+  Sound on/off per app
+  Popup on/off per app
+  Badge on/off per app
+  Priority level per app
+- Notification history — all recent notifications list
+- Clear notification history
+- Notification position on screen
+- Notification duration slider
+- Notification size
+
+DATE AND TIME:
+- Current date and time shown large
+- Automatic time sync toggle — NTP
+- NTP server configuration
+- Manual date and time if auto disabled
+- Timezone — map picker plus list
+- 12 or 24 hour format toggle
+- Date format selector
+- First day of week — Sunday or Monday
+- Show week numbers toggle
+- Show seconds in clock toggle
+- Additional clocks — add cities for multiple time zones
+
+LANGUAGE AND REGION:
+- System language selector
+- Regional format — numbers, currency, dates, measurements
+- Input sources — keyboard layouts with preview
+- Spell check languages
+- Text to speech voice selector and speed
+- Measurement system — metric or imperial
+
+ACCESSIBILITY:
+- High contrast mode toggle
+- Large text toggle — scale factor
+- Zoom — screen magnifier on/off, level
+- Screen reader toggle — Orca configuration
+- Cursor size
+- Cursor blinking speed
+- Locate cursor — shake to find toggle
+- Keyboard accessibility:
+  Sticky keys toggle
+  Slow keys toggle
+  Bounce keys toggle
+  Toggle keys toggle
+- Mouse keys — control mouse with numpad
+- Click assist — simulated secondary click
+- Hover click
+- Visual alerts — flash screen instead of sound
+
+PRINTERS AND SCANNERS:
+- Detected printers list
+- Add printer wizard
+- Default printer selector
+- Per printer settings and test print
+- Ink or toner levels if available
+- Print queue management
+- Scanner detection and configuration
+
+GAMING:
+- GameMode status — running/stopped, toggle
+- Steam launch options helper
+- Lutris integration
+- Wine prefix management
+- Controller detection — all connected controllers shown
+- Controller mapping configuration
+- Controller calibration
+- Gamepad button layout visual
+- 8BitDo Pro 3 specific settings
+- Performance overlay toggle — FPS counter
+- MangoHud configuration
+- GPU overclocking shortcut — links to NYXUS Control
+- Game mode power profile — auto switch when game launches
+- Notification suppression during games toggle
+
+DEVELOPER:
+- System information — full hardware and software summary
+  CPU, GPU, RAM, storage, kernel, drivers, everything
+- Environment variables — view and edit
+- SSH server — on/off, configuration, port, auth methods
+- Firewall developer rules
+- Port management — open and close ports visually
+- Docker status — running containers, quick controls
+  Links to Portainer for full management
+- Virtual machine management
+- Network interfaces — full technical details
+- Kernel parameters — sysctl viewer and editor
+- System logs viewer — journalctl in readable UI
+- Startup services — systemd services list
+  Enable, disable, start, stop, restart each
+- Cron jobs — visual cron editor
+- Hosts file editor — visual GUI for /etc/hosts
+- DNS configuration editor
+- Grub configuration
+- Kernel selection — installed kernels, set default
+- Module management — loaded modules, load, unload
+- Hardware information — lshw output in readable format
+
+ABOUT NYXUS:
+- NyX.x.OS logo and owl mascot centered
+- Version information — OS version, kernel, desktop
+- Hardware summary — machine, CPU, GPU, RAM
+- Uptime shown
+- GowskiNet status — connected/offline
+- NYXUS apps installed — list with versions
+- License information
+- Credits — built by Joey Sierengowski
+- Copyright © 2026 GowskiNet
+- Check for updates button
+- Release notes — what changed in this version
+- System diagnostics — generate full system report
+- Send bug report
+
+DESKTOP RIGHT CLICK MENU — system wide:
+- New file — submenu of file types
+- New folder
+- Open terminal here — NYXUS Terminal
+- Change wallpaper — opens Appearance settings
+- Display settings
+- NYXUS Settings
+- Refresh desktop
+- Sort icons by name, size, date, type
+- Clean up desktop
+- Paste
+- Select all
+- Undo last action
+
+FILE MANAGER INTEGRATION:
+- Right click on any file in file manager:
+  Open with — submenu of compatible apps
+  Open with NYXUS app — context sensitive
+  Cut, copy, paste, delete, rename
+  Compress — ZIP, tar.gz, 7z
+  Extract here for archives
+  Share via email or clipboard
+  Encrypt file — GPG encrypt with your key
+  Decrypt file
+  Check hash — MD5 SHA256 SHA512
+  Scan with GodsApp
+  Properties — full file info
+  Copy path
+  Copy filename
+  Open terminal here
+  Open in NYXUS Notepad
+  Git operations if in repo — status, add, commit
+
+SYSTEM TRAY RIGHT CLICK — system wide:
+- NYXUS apps quick launch
+- System status summary
+- Quick settings — volume, brightness, network, VPN
+- Notifications toggle
+- Do not disturb toggle
+- NYXUS Settings shortcut
+- Lock screen
+- Log out
+- Reboot
+- Shutdown
+- Suspend
+
+TECH STACK:
+- GTK4 Python native
+- GLib for system integration
+- DBus for system service control
+- NetworkManager DBus API for all network management
+- UPower DBus for power management
+- AccountsService DBus for user management
+- systemd DBus for service management
+- udev for hardware detection
+- subprocess for system commands
+- psutil for system information
+- All operations in background threads
+- Settings stored at ~/.config/nyxus-settings/
+- System settings written to appropriate system paths
+- All changes applied immediately — no apply button needed
+  except where restart is required
+- Restart required indicator shown when needed
+
+DELIVER:
+- main.py — entry point and navigation
+- One Python file per settings category
+- settings_engine.py — applies all settings to system
+- search.py — settings search engine
+- dbus_manager.py — all DBus communications
+- requirements.txt
+- system packages list
+- install.sh
+- README.md

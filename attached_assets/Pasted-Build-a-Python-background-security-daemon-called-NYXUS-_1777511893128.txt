@@ -1,0 +1,235 @@
+Build a Python background security daemon called NYXUS Phantom.
+
+This is a silent systemd service. No GUI. No UI at all. Runs invisibly 
+in the background from boot. Never shows itself unless something is 
+wrong. Catches everything. Misses nothing.
+
+DO NOT build any UI. This is pure backend daemon code only.
+
+CORE BEHAVIOR:
+- Runs as a systemd service starting before any user session
+- Runs as its own isolated system user with minimal permissions
+- Cannot be killed by regular user — requires root plus YubiKey 
+  confirmation to stop
+- Self healing — if killed restarts itself within 2 seconds via 
+  systemd WatchdogSec
+- Total CPU usage must never exceed 0.5% — performance invisible 
+  by design
+- All operations use kernel interfaces directly — inotify, netlink, 
+  proc filesystem
+- Runs at nice 19 ionice idle — lowest possible priority
+- Never impacts system performance under any circumstance
+
+WHAT IT WATCHES 24/7:
+
+File System Integrity:
+- On first run generate SHA256 cryptographic hash of every file in:
+  /etc, /usr/bin, /usr/lib, /usr/sbin, /boot, ~/.ssh, ~/.config,
+  ~/.gnupg, /etc/systemd, /etc/pam.d, /etc/sudoers, /etc/hosts,
+  /etc/passwd, /etc/shadow, /etc/group, /etc/crontab, /etc/cron.d,
+  /etc/profile, /etc/bash.bashrc, ~/.bashrc, ~/.zshrc, ~/.profile
+- Store all hashes as encrypted baseline in 
+  ~/.nyxus/phantom/baseline.db
+- Watch all paths continuously via inotify kernel interface
+- Any file modified, added, or deleted — compare against baseline
+- Hash mismatch on critical file — immediate RED alert
+- New unexpected file in system paths — immediate ORANGE alert
+- File deletion of critical file — immediate RED alert
+- Attempt to modify Phantom's own files — immediate RED alert plus 
+  self protection response
+
+Process Monitoring:
+- Build baseline of all normal processes on first boot over 24 hours
+- Every new process that spawns gets analyzed immediately:
+  - Parent process checked — is it a legitimate spawner
+  - Binary path verified against known good list
+  - Command line arguments inspected for suspicious patterns
+  - Network connections opened by process monitored
+  - File access patterns monitored
+- Detect process injection — ptrace calls on running processes
+- Detect privilege escalation attempts — setuid setgid calls
+- Detect processes masquerading as system processes via name 
+  similarity
+- Detect cryptominers — sustained high CPU from unexpected process
+- Detect keyloggers — processes reading input devices unexpectedly
+- Detect reverse shells — shell spawned by non-shell parent process
+- Monitor parent child relationships for anomalies
+- Any shell spawned by a network service — immediate RED alert
+
+Network Behavior Monitoring:
+- Build baseline of all normal outbound connections over first 48 
+  hours — destination IPs, ports, protocols, timing, data volumes
+- Any new outbound connection analyzed immediately:
+  - Destination IP checked against threat intelligence database
+  - Destination IP checked against Tor exit node list
+  - Destination IP checked against known C2 server list
+  - Port and protocol compared against process that opened it
+  - Data volume monitored for exfiltration patterns
+- Detect reverse shells — inbound connection spawning shell
+- Detect C2 beaconing — regular timed connections to same destination
+- Detect DNS tunneling — abnormally large DNS queries or responses
+- Detect data exfiltration — sustained large outbound transfers
+- Monitor /etc/hosts for unauthorized modifications
+- Monitor DNS resolver configuration for tampering
+- Rate limit and alert on port scanning of local machine
+- Any connection to known malicious IP — block via UFW immediately 
+  plus alert
+
+Authentication and User Monitoring:
+- Every sudo attempt logged with full context — user, command, 
+  timestamp, working directory
+- Every SSH login attempt logged — successful and failed with 
+  source IP
+- Failed login threshold — 3 failures from same IP triggers 
+  automatic ban via UFW plus alert
+- Privilege escalation attempts caught and logged immediately
+- New user account creation — immediate ORANGE alert
+- User added to sudo/wheel group — immediate RED alert
+- Monitor /etc/passwd /etc/shadow /etc/sudoers for any changes
+- Monitor /etc/group for privilege changes
+- Monitor authorized_keys files for additions
+- Login at statistically unusual time for that user — YELLOW alert
+- Simultaneous sessions from different locations — ORANGE alert
+- Root login attempt — immediate RED alert regardless of success
+
+Memory Monitoring:
+- Monitor /proc/*/maps for injection patterns
+- Detect unusual memory allocation from unexpected processes
+- Watch for shellcode signatures in accessible memory regions
+- Detect fileless malware executing entirely in memory
+- Monitor for heap spray patterns
+- Detect unusual mmap calls from non-development processes
+
+Kernel Monitoring:
+- Monitor kernel module loading — alert on any unexpected module
+- Watch /proc/sys for unauthorized parameter changes
+- Monitor syscall patterns for exploitation signatures
+- Detect container escape attempts
+- Watch for LD_PRELOAD manipulation
+- Monitor /proc/kallsyms for unexpected symbol changes
+- Detect rootkit hiding techniques — discrepancies between 
+  /proc process list and actual process list
+
+Hardware Monitoring:
+- Every USB device insertion logged and fingerprinted — vendor, 
+  product ID, serial number
+- Unknown USB device — YELLOW alert
+- USB device claiming to be HID keyboard when it shouldn't be — 
+  immediate RED alert plus block
+- YubiKey serial 35272364 monitored continuously
+- YubiKey removed during active session — immediate screen lock 
+  plus ORANGE alert
+- New network interface appearing — ORANGE alert
+- Bluetooth device pairing attempt — YELLOW alert
+
+Log Integrity:
+- All Phantom logs cryptographically signed with GPG
+- Log files monitored for tampering via hash chain
+- Any log modification detected — immediate RED alert
+- Logs shipped to local Loki instance in real time
+- If Loki unavailable logs written to encrypted local store
+- Log rotation handled automatically with signature verification
+
+SEVERITY RESPONSE SYSTEM:
+
+WHITE — logged silently only, no notification, normal operation
+BLUE — logged, added to daily report, shown in NYXUS Security app
+YELLOW — desktop notification via libnotify, logged, reported
+ORANGE — notification plus automatic defensive action taken, 
+         full event capture, logged
+RED — immediate lockdown triggered, all non-essential connections 
+      killed, full forensic capture, encrypted report generated,
+      system remains operational but locked down
+
+AUTOMATIC DEFENSIVE RESPONSES:
+
+On YELLOW:
+- Full event logged with context
+- Notification sent
+- Event queued for daily report
+
+On ORANGE:
+- Block source IP via UFW if network event
+- Quarantine suspicious file if file event
+- Kill suspicious process if process event
+- Capture full system state snapshot
+- Send immediate desktop notification with details
+
+On RED:
+- Kill all non-whitelisted outbound connections immediately
+- Block all new inbound connections via UFW
+- Lock user session
+- Capture full memory snapshot
+- Capture all active network connections
+- Capture all running processes with full details
+- Capture 60 seconds of network traffic before and after event
+- Generate full forensic report
+- Encrypt everything with GPG key
+- Save to ~/.nyxus/phantom/forensics/TIMESTAMP/
+- Send critical desktop notification
+- Write permanent audit log entry
+- Attempt to ship forensic data to Loki
+
+FORENSIC CAPTURE on RED event includes:
+- Full memory dump of suspicious process
+- Network connections at time of event
+- File system changes in last 60 minutes
+- Process tree at time of event
+- All open file handles
+- All loaded kernel modules
+- All active user sessions
+- Complete dmesg output
+- Complete journalctl output for last 2 hours
+- All of the above encrypted and GPG signed automatically
+
+THREAT INTELLIGENCE:
+- Maintain local database of known malicious IPs updated daily
+- Maintain local Tor exit node list updated daily
+- Maintain local C2 server list from abuse.ch and similar feeds
+- All lookups done locally — no external calls during monitoring
+- Daily background update of all threat feeds
+- Sources: AbuseIPDB, Emerging Threats, abuse.ch, Feodo Tracker,
+  SSL Blacklist, URLhaus
+
+INTEGRATION:
+- All events published to MQTT on localhost for GowskiNet
+- All events shipped to Loki with structured labels
+- NYXUS Security app reads Phantom event database when open
+- GodsApp can query Phantom event history
+- Daily summary report written to 
+  ~/.nyxus/phantom/reports/YYYY-MM-DD.json
+- Grafana dashboard JSON provided for visualizing Phantom data
+
+CONFIGURATION:
+- Config at ~/.config/nyxus-phantom/config.json
+- Whitelist for trusted processes, IPs, USB devices, modules
+- All thresholds configurable
+- Baseline can be manually triggered to rebuild
+- Emergency stop requires: root password plus YubiKey touch
+
+TECH STACK:
+- Python with C extensions via ctypes for hot paths
+- inotify via inotify_simple for file watching
+- netlink via pyroute2 for network monitoring
+- psutil for process monitoring
+- scapy for network packet analysis
+- sqlite3 for all local databases
+- cryptography library for all hashing and encryption
+- GPG via python-gnupg for signing
+- paho-mqtt for MQTT publishing
+- requests for threat feed updates only — never during monitoring
+- systemd sd_notify for watchdog integration
+
+DELIVER:
+- phantom.py main daemon
+- phantom_monitor.py monitoring modules
+- phantom_response.py response engine
+- phantom_forensics.py forensic capture
+- phantom_threats.py threat intelligence
+- nyxus-phantom.service systemd unit file
+- install.sh that sets up the service, user, directories, 
+  and permissions
+- config.json default configuration
+- requirements.txt
+- Full list of system packages needed
+- README with architecture explanation
