@@ -452,8 +452,10 @@ def notif_clear():
 
 # ── Launchers ─────────────────────────────────────────────────────────────────
 def open_all_settings():
-    for p in ("~/.local/share/nyxus/nyxus_settings.py",
-              "~/.config/waybar/nyxus_settings.py"):
+    for p in ("~/.nyxus/nyxus_settings.py",
+              "~/.local/share/nyxus/nyxus_settings.py",
+              "~/.config/waybar/nyxus_settings.py",
+              "~/.config/nyxus/nyxus_settings.py"):
         full = os.path.expanduser(p)
         if os.path.exists(full):
             detached(f"python3 {shlex.quote(full)}")
