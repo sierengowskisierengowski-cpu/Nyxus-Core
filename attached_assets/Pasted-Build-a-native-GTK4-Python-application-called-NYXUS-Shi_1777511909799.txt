@@ -1,0 +1,186 @@
+Build a native GTK4 Python application called NYXUS Shield.
+
+DO NOT design the UI theme, colors, fonts, or styling. Leave all 
+visual design completely unstyled default GTK4. Focus 100% on 
+functionality and backend logic only.
+
+PHILOSOPHY:
+This is the everyday security app. Simple, clean, plain English. 
+Anyone can use it. No technical knowledge required. One click 
+operations. Clear results. Friendly warnings. Powerful underneath 
+but approachable on top. Complements NYXUS Phantom which runs 
+silently underneath, and NYXUS GodsApp for deep professional work.
+
+DASHBOARD — Main Screen:
+- Large threat score display — 0 to 100, color coded green/yellow/red
+- Last scan time and result summary
+- System health at a glance — 5 indicators:
+  Firewall, Antivirus, Updates, VPN, Phantom Daemon
+  Each shows green checkmark or red warning
+- Quick action buttons — Scan Now, Fix All, View Report
+- Recent alerts from Phantom daemon shown in plain English
+- News ticker — latest security advisories relevant to installed 
+  software
+
+ONE CLICK QUICK SCAN:
+Runs all of the following automatically in sequence and shows 
+simple pass/fail/warning for each:
+- Firewall enabled and configured correctly
+- All system packages up to date
+- No known vulnerable packages installed
+- No unauthorized open ports
+- No suspicious processes running
+- No unknown devices on network
+- SSH configured securely
+- No unauthorized users or sudo access
+- No world writable sensitive files
+- No suspicious scheduled tasks
+- Disk encryption status
+- DNS configuration is secure
+- No plaintext passwords in common locations
+- Browser extension audit — flags suspicious extensions
+- Startup application audit
+Full plain English report generated at end
+Fix button appears next to every failed check
+
+NETWORK SCANNER — Simple:
+- Scan my network button — discovers all devices
+- Shows each device as a card: name, IP, MAC, vendor, 
+  last seen, known/unknown status
+- Flag unknown device button — marks it for monitoring
+- Simple port check — scans own machine for exposed ports
+- Shows result as: Safe / Warning / Danger per port
+- Internet exposure check — what's visible from outside
+- Neighbor WiFi networks — lists nearby networks with 
+  security rating
+
+FIREWALL MANAGER — Simple:
+- Visual on/off toggle — big and obvious
+- Current rules shown in plain English not technical syntax
+- Add rule wizard — walks through adding a rule step by step
+- Preset rule sets — Gaming, Work, Maximum Security, Custom
+- Blocked connections log — shows what was blocked and why
+- Application firewall — per app network permission control
+
+MALWARE SCANNER:
+- Scan entire system button
+- Uses ClamAV for signature based detection
+- Uses rkhunter for rootkit detection
+- Uses chkrootkit as second opinion
+- Behavioral analysis — flags files with suspicious properties
+- Quarantine suspicious files safely
+- Schedule automatic daily scan
+- Shows results in plain English with severity
+
+PASSWORD SECURITY:
+- Password strength checker — type any password and get score
+- Check if any saved passwords have been breached via 
+  HaveIBeenPwned API — hashed before sending, privacy safe
+- Password generator — generates strong passwords
+- Master password audit — checks system passwords are strong
+- SSH key audit — checks key types and sizes
+- Shows which accounts have weak or reused passwords
+
+PRIVACY CHECKER:
+- Camera and microphone access audit — which apps have access
+- Location access audit
+- Browser privacy check — cookies, tracking, fingerprinting
+- App permission audit
+- Network privacy check — DNS over HTTPS status
+- VPN status and connection quality
+- Checks for common privacy leaks
+
+VULNERABILITY CHECKER — Simple:
+- Scans installed software against CVE database
+- Shows vulnerabilities in plain English
+  "Firefox has a known security flaw — update immediately"
+- Severity shown as Critical/High/Medium/Low with color coding
+- One click update for vulnerable packages
+- Browser vulnerability check
+- Plugin and extension vulnerability check
+
+UPDATES MANAGER:
+- All available updates shown with security priority flagging
+- Security updates highlighted in red — update now
+- One click update all
+- Automatic security update scheduling
+- Kernel update notifications
+- Shows what each update fixes in plain English
+
+VPN STATUS AND CONTROL:
+- WireGuard status — connected/disconnected
+- Quick connect/disconnect toggle
+- Connection quality indicator
+- DNS leak check button
+- IP address before and after VPN shown
+- Kill switch status
+
+PARENTAL CONTROLS — for Lola and Saint:
+- Per user content filtering
+- Screen time limits per user
+- App blocking per user
+- Safe search enforcement
+- Usage reports per user
+- Bedtime mode — locks device at set time
+
+BACKUP AND RECOVERY:
+- Timeshift snapshot status
+- Last backup time and size
+- Create snapshot button
+- Restore from snapshot wizard
+- Important files backup status
+- Cloud backup status if configured
+
+PHANTOM DAEMON INTEGRATION:
+- Shows Phantom daemon status — running/stopped
+- Recent Phantom alerts in plain English
+- Phantom threat timeline — last 24 hours
+- Alert history with severity
+- One click view full Phantom report
+- Start/stop Phantom — requires password
+
+SECURITY REPORT:
+- Full daily security report generated automatically
+- Weekly summary report
+- Month over month security trend
+- Export as PDF or markdown
+- Email report option
+- All reports stored at ~/.nyxus/shield/reports/
+
+ALERTS AND NOTIFICATIONS:
+- Plain English desktop notifications for everything
+- Notification priority settings
+- Do not disturb hours configuration
+- Alert history searchable and filterable
+- Email alerts for critical events
+
+SETTINGS:
+- Scan schedule configuration
+- Notification preferences
+- Whitelist management — mark known safe items
+- Automatic fix preferences — what can be fixed automatically
+- Report preferences
+- Theme — follows NyX system theme automatically
+
+TECH STACK:
+- GTK4 Python native
+- ClamAV via clamd for malware scanning
+- rkhunter and chkrootkit via subprocess
+- python-nmap for network scanning
+- UFW via subprocess for firewall management
+- HaveIBeenPwned API for breach checking
+- NVD API for CVE lookups
+- pyshark for network monitoring
+- psutil for process monitoring
+- sqlite3 for all local data
+- reportlab for PDF export
+- All scans in background threads — UI never freezes
+- Config at ~/.config/nyxus-shield/
+- Reads Phantom daemon database for integrated alerts
+
+DELIVER:
+- Clean modular file structure
+- requirements.txt
+- Full system package list
+- install.sh
+- README
