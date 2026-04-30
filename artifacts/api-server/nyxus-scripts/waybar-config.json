@@ -94,6 +94,7 @@
       "hyprland/workspaces"
     ],
     "modules-right": [
+      "custom/quicksettings",
       "clock#bottom"
     ],
     "custom/start": {
@@ -103,7 +104,7 @@
       "on-click": "rofi -show drun -theme ~/.config/rofi/startmenu.rasi"
     },
     "custom/quicksettings": {
-      "format": "  ⊰",
+      "format": "",
       "tooltip": false,
       "on-click": "python3 ~/.config/waybar/quicksettings.py"
     },
