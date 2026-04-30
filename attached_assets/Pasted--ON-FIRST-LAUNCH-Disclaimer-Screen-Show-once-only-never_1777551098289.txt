@@ -1,0 +1,415 @@
+
+ON FIRST LAUNCH — Disclaimer Screen:
+Show once only, never again after accepted:
+
+"NYXUS Creative Studio is a creative production tool intended
+for legal and ethical use only. By using this software you agree:
+
+- You will only process content you own or have explicit 
+  rights to use
+- You will not use this software to create deceptive, 
+  defamatory, or non-consensual content involving real people
+- You will not use this software to infringe copyright or 
+  intellectual property
+- You will not distribute AI transformed content without 
+  clearly labeling it as synthetically modified
+- You accept full legal responsibility for all content you 
+  create with this software
+- This software runs entirely locally — no data ever leaves 
+  your machine
+
+This tool is built for musicians, creators, filmmakers, and
+artists to explore creative possibilities with their own
+original content.
+
+By continuing you accept these terms completely."
+
+One checkbox. One continue button. Timestamp logged.
+Never shown again after first accept.
+
+NAVIGATION:
+- Left sidebar — all studio modules listed with hand drawn 
+  sketch style icons
+- Each module is a full workspace switching in main area
+- Unified project system — all modules share one project
+- Unified asset library — use anything across all modules
+- Unified export system — export from anywhere
+- Search bar at top — searches all tools and assets
+
+MODULE 1 — AUDIO STUDIO:
+
+Voice and Stem Separation:
+- Drag and drop any audio or video file
+- Separate into stems automatically using Demucs locally:
+  Vocals, Bass, Drums, Other instruments — all separate
+- Each stem gets its own track with waveform display
+- Mute, solo, volume control per stem
+- Export any stem individually or recombined
+
+Voice Style Transfer:
+- Select vocal stem or any audio file
+- Choose transformation style:
+  1940s Crooner — warm intimate period mic character
+  1920s Jazz Singer — early recording character
+  Old Radio Announcer — narrow bandwidth AM warmth
+  Opera — classical vocal character
+  Vintage Country — 1950s honky tonk character
+  Gospel — 1930s gospel character
+  Custom — load any RVC voice model file
+- Powered by RVC running locally on GPU via Python 3.12
+- Real time preview before applying
+- Intensity slider — how much transformation applied
+- Apply transformation to selected audio
+- Original always preserved — non destructive
+
+Era Audio Processing:
+- Vinyl crackle — intensity slider
+- Record surface noise
+- Tape hiss — era appropriate
+- Tape saturation — analog warmth
+- Wow and flutter — pitch instability of old tape
+- Mono mixdown
+- Frequency narrowing — limited bandwidth of old recordings
+- Age EQ presets — 1920s 1930s 1940s 1950s 1960s
+- Room reverb — era specific spaces
+- Microphone character — period accurate coloring
+- All effects non destructive — toggle on/off anytime
+- Save effect chains as named presets
+
+Audio Restoration:
+- Remove background noise — AI noise reduction locally
+- Remove vinyl crackle from old recordings
+- Remove hiss and hum
+- Restore clipped audio
+- Enhance old recordings
+- Upscale audio quality
+- Repair damaged recordings
+
+Audio Editor:
+- Full waveform editor
+- Cut copy paste delete regions
+- Fade in fade out per region
+- Crossfade between regions
+- Pitch correction — auto tune and manual
+- Time stretching — change speed without pitch change
+- Pitch shifting — change pitch without speed change
+- Reverb — multiple algorithms
+- Delay and echo
+- Compression and limiting
+- Equalizer — 31 band graphic plus parametric
+- Chorus flanger phaser effects
+- Normalize audio
+- Silence detection and removal
+- Beat detection and grid snapping
+- Multi track mixing — unlimited tracks
+- Master bus processing
+- Export: WAV MP3 FLAC OGG AAC M4A
+
+Voice Recording:
+- Record directly from any microphone
+- Real time monitoring
+- Multiple take recording
+- Punch in recording
+- Metronome with configurable tempo
+- Count in before recording
+
+MODULE 2 — VIDEO STUDIO:
+
+Video Editor:
+- Multi track timeline — video audio effects tracks
+- Import any format — MP4 MOV MKV AVI WebM
+- Cut trim split merge clips
+- Transitions — fade dissolve wipe custom
+- Speed control — slow motion fast forward reverse
+- Color correction per clip:
+  Brightness contrast saturation hue
+  Curves — RGB and individual channels
+  White balance vignette grain
+- Text overlays — title cards lower thirds subtitles
+- Subtitle import — SRT VTT files
+- Picture in picture
+- Timeline zoom and navigation
+- Snap to cuts and markers
+- Export: MP4 MOV MKV WebM GIF image sequence
+
+Background Removal:
+- Remove background from any video without green screen
+- Powered by Rembg running locally
+- Real time preview
+- Edge refinement
+- Replace background with:
+  Any image or video file
+  Solid color or gradient
+  Blur of original background
+  Era specific environments
+- Fine tune mask per frame if needed
+
+Video Style Transfer:
+- Apply era style to any video:
+  1920s Silent Film — black and white flicker scratches
+  1930s Noir — high contrast deep shadows
+  1940s Newsreel — grainy period color grade vignette
+  1950s Technicolor — saturated warm vintage color
+  1960s Super 8 — grain light leaks color shift
+  1970s Film — faded colors specific grain
+  1980s VHS — scan lines color bleeding tape artifacts
+  1990s Camcorder — specific video look of era
+  Custom — define your own style parameters
+- Intensity slider
+- Preview before rendering
+- Non destructive — original preserved
+
+Video Restoration:
+- Upscale video resolution — Real-ESRGAN locally
+- Remove noise and grain from old footage
+- Stabilize shaky footage
+- Restore color to black and white footage
+- Remove scratches and damage artifacts
+- Enhance old footage
+- Slow motion enhancement — FILM frame interpolation
+- Deinterlace old video
+
+Face Compositing — own content only:
+- Place your face or any consented face into video scenes
+- Powered by DeepFaceLab running locally on GPU
+- Lighting matching automatically
+- Color matching automatically
+- Disclaimer shown every time this tool is used:
+  "This tool is for use with your own likeness or with
+  explicit written consent of all persons involved.
+  Label all synthetic content clearly as AI modified."
+
+Screen Recording:
+- Record entire screen or selected region
+- Record with or without cursor
+- System audio and microphone simultaneously
+- Webcam overlay picture in picture
+- Export as video or GIF
+
+MODULE 3 — IMAGE STUDIO:
+
+Canvas and Drawing:
+- Infinite canvas with zoom and pan
+- Full layer system — unlimited layers
+- Layer groups and folders
+- Layer blend modes — all standard modes
+- Layer masks — non destructive
+- Vector drawing tools:
+  Pen tool — bezier curves
+  Shape tools — rectangle circle polygon star
+  Line tool
+  Path editor
+  Boolean operations — union subtract intersect
+- Raster painting tools:
+  Brush engine — pressure size opacity flow
+  30 plus brush presets
+  Eraser
+  Smudge and blend
+  Clone stamp
+  Healing brush
+  Dodge and burn
+  Gradient tool
+  Paint bucket fill
+  Pattern fill
+
+Image Editing:
+- Non destructive adjustment layers:
+  Brightness and contrast
+  Curves — RGB and individual channels
+  Levels
+  Hue saturation lightness
+  Color balance
+  Vibrance
+  Photo filter
+  Gradient map
+  Threshold
+  Posterize
+- Filters:
+  Blur — Gaussian motion radial lens
+  Sharpen — unsharp mask smart sharpen
+  Noise — add grain reduce noise
+  Distort — warp liquify perspective
+  Stylize — emboss find edges
+  Vintage — era specific photo looks
+- Selection tools:
+  Rectangular and elliptical marquee
+  Lasso and magnetic lasso
+  Magic wand
+  Select by color range
+  Quick select
+  Refine edge — hair and complex edges
+- Transform tools:
+  Move rotate scale skew
+  Perspective transform
+  Warp
+  Puppet warp
+- Text tool:
+  Any installed font
+  Character and paragraph formatting
+  Text on path
+  Text warp
+
+Image Restoration:
+- AI upscaling — Real-ESRGAN locally
+- Noise removal
+- Scratch and damage removal
+- Old photo restoration
+- Colorize black and white photos
+- Remove JPEG artifacts
+
+Export:
+- PNG JPG WEBP TIFF BMP GIF SVG
+- PSD compatible layered export
+- Export at any resolution and DPI
+- Batch export
+
+MODULE 4 — 3D STUDIO:
+
+Basic 3D — built natively in PyOpenGL:
+- 3D viewport with orbit pan zoom
+- Primitive objects — cube sphere cylinder cone plane torus
+- Object selection and transformation — move rotate scale
+- Basic mesh editing:
+  Extrude faces and edges
+  Bevel edges
+  Loop cut
+  Inset faces
+  Bridge edge loops
+  Merge vertices
+  Delete geometry
+- Basic sculpting brushes:
+  Draw smooth grab flatten inflate pinch
+- Material assignment — basic PBR materials
+- Simple lighting — point directional ambient
+- Basic OpenGL viewport render
+- Export: OBJ STL GLTF
+
+Blender Integration — for advanced 3D:
+- Open in Blender button — sends project to Blender
+- Blender runs as subprocess invisibly
+- Import from Blender — bring assets back in
+- Asset library shared between app and Blender
+- Render in Blender result displayed in app
+
+MODULE 5 — PROJECT MANAGER:
+- All projects listed with thumbnail previews
+- Create new project — name type resolution frame rate
+- Open recent projects
+- Project templates:
+  Music video short film podcast photo series
+  Album artwork social media content personal archive
+- Project file browser — all assets organized
+- Version history — every save tracked
+- Project notes
+- Export entire project as archive
+
+MODULE 6 — ASSET LIBRARY:
+- All media assets in one browsable library
+- Organized by type — audio video image 3D
+- Search by name type date tags
+- Preview any asset before using
+- Drag and drop into any module
+- Tag and organize assets
+- Favorites and recently used sections
+
+GLOBAL FEATURES:
+
+Keyboard Shortcuts:
+- Ctrl+N — new project
+- Ctrl+O — open project
+- Ctrl+S — save
+- Ctrl+Z — undo unlimited
+- Ctrl+Y — redo
+- Ctrl+E — export
+- Space — play pause in video and audio
+- All shortcuts configurable
+
+Command Palette:
+- Ctrl+Shift+P opens palette
+- Search any tool or action
+- Fuzzy search — partial matches work
+
+Settings:
+- GPU selection — use RTX 3060 for all AI processing
+- Python 3.12 path — set explicitly for all AI features
+- Default project settings
+- Export defaults
+- Keyboard shortcut editor
+- Performance settings — quality vs speed
+- Cache management
+- All AI models path — points to downloaded model files
+
+CRITICAL TECHNICAL REQUIREMENTS:
+
+Python and AI setup:
+- All AI features must use Python 3.12 explicitly
+  not system Python 3.14 — Python 3.12 path must be
+  configurable in settings
+- PyTorch must be loaded with CUDA enabled
+- Check for CUDA on startup — if not available show
+  which features are CPU only vs GPU accelerated
+- GPU memory management — load and unload models
+  as needed so they dont compete for VRAM
+- All AI processing in background threads always
+- Show progress bar for all AI operations
+- Graceful fallback — if model not downloaded show
+  clear message with download instructions
+
+GTK4 requirements:
+- All action names must use only letters numbers 
+  hyphens and dots — no spaces no parentheses
+  no special characters anywhere in action names
+- Do not import adwaita CSS that doesnt exist
+- Test every menu item and action name for 
+  valid GTK4 format before delivering
+- App must launch without crashing
+
+TECH STACK:
+- GTK4 Python native
+- PyOpenGL and ModernGL for 3D viewport
+- Demucs for stem separation — Python 3.12
+- RVC for voice style transfer — Python 3.12 CUDA
+- Rembg for background removal — Python 3.12
+- Real-ESRGAN for upscaling — Python 3.12 CUDA
+- FILM for frame interpolation
+- DeepFaceLab for face compositing — Python 3.12 CUDA
+- FFmpeg for all video processing
+- GStreamer for audio engine
+- Cairo for all custom UI drawing
+- Pillow for image processing
+- OpenCV for video frame processing
+- NumPy for all numerical processing
+- PyTorch as AI runtime — CUDA enabled RTX 3060
+- sqlite3 for project and asset database
+- All processing local — no internet required
+- Projects at ~/NYXUS-Creative/Projects/
+- Assets at ~/NYXUS-Creative/Assets/
+- Models at ~/NYXUS-Creative/Models/
+- Config at ~/.config/nyxus-creative/
+
+EVERYTHING MUST WORK:
+- Every button functional — no placeholders
+- All AI features actually run on RTX 3060 via CUDA
+- All export formats produce real valid files
+- Undo and redo work everywhere
+- Project save and load works completely
+- App launches without crashing
+- No invalid GTK4 action names anywhere
+
+DELIVER:
+- main.py — entry point and navigation
+- audio_studio.py — complete audio module
+- video_studio.py — complete video module
+- image_studio.py — complete image module
+- studio_3d.py — complete 3D module
+- project_manager.py — project system
+- asset_library.py — asset management
+- ai_engine.py — all AI model management
+- gpu_manager.py — GPU memory and CUDA management
+- export_engine.py — all export formats
+- settings.py — settings management
+- requirements.txt — all Python dependencies
+- packages.txt — all system packages needed
+- models_download.sh — downloads all AI models
+- install.sh — complete installation script
+- README.md — full documentation
