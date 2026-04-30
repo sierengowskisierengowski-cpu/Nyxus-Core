@@ -1,0 +1,431 @@
+Build a native GTK4 Python application and background service 
+called NYXUS SAGE.
+
+NYXUS SAGE is an intelligent code auditing system, knowledge 
+base, and passive learning engine. It audits any code, script, 
+config, or build — learns from everything it sees — and gets 
+smarter every single day automatically.
+
+DO NOT design colors, theme, or NyX brand styling — that will
+be applied separately. Focus entirely on functionality.
+Hand drawn hand written visual style throughout — same as all
+other NYXUS apps.
+
+ARCHITECTURE OVERVIEW:
+NYXUS SAGE has four connected components:
+1. Knowledge Base — ChromaDB vector database storing all 
+   knowledge, docs, rules, and learned patterns
+2. Audit Engine — scans any file or folder and produces 
+   a detailed report
+3. Terminal Watcher — silent background service that learns
+   passively from everything the user does
+4. GTK4 App — visual interface for auditing, reports, 
+   rule management, and knowledge base browsing
+
+ALL FOUR must be built and working together.
+
+COMPONENT 1 — KNOWLEDGE BASE:
+
+Storage:
+- ChromaDB vector database running completely locally
+- No internet required after initial setup
+- Stored at ~/.config/nyxus-sage/knowledge/
+- Unlimited knowledge capacity
+- Millisecond search and retrieval
+- Organized into collections:
+  linux_docs — Linux and Arch specific knowledge
+  security_docs — security rules and patterns
+  python_docs — Python best practices and rules
+  gtk4_docs — GTK4 specific rules and patterns
+  bash_docs — Bash and Zsh scripting rules
+  nyxus_rules — NYXUS specific rules and conventions
+  learned_patterns — patterns learned from terminal watching
+  user_rules — manually added rules from user
+  codebase_index — index of entire NYXUS codebase
+
+Day One Pre-loaded Knowledge:
+Process and store all of the following as actionable rules
+not raw text — every piece of knowledge must be converted
+into a checkable rule with:
+  - What to look for
+  - Why it matters
+  - Severity level
+  - Suggested fix
+
+Linux and Arch Linux rules:
+- File permission best practices — what should be 755 644 600
+- Systemd unit file requirements — all mandatory fields
+- Systemd security hardening options
+- Pacman package management conventions
+- AUR best practices
+- Linux file system structure — what goes where
+- Environment variable conventions
+- Shell scripting best practices
+- Process management rules
+- Cron job security rules
+- SSH configuration hardening rules
+- sudo configuration security rules
+- PAM configuration rules
+- UFW firewall rule best practices
+- Network configuration conventions
+- Kernel parameter security settings via sysctl
+- Boot loader configuration rules
+- Journal and logging best practices
+
+Python rules:
+- PEP8 complete style guide converted to checkable rules
+- PEP20 Zen of Python principles
+- Common Python anti-patterns — 200 plus patterns
+- Python security guidelines — OWASP Python cheat sheet
+- Threading best practices — deadlocks race conditions
+- Memory management — leaks circular references
+- Exception handling — bare excepts missing finally
+- Import organization and conventions
+- Type hint conventions
+- Docstring requirements
+- Virtual environment best practices
+- requirements.txt completeness checking
+- Python version compatibility rules
+- Async best practices
+- Generator and iterator patterns
+
+GTK4 specific rules — CRITICAL:
+- Action names must only contain letters numbers hyphens dots
+  No spaces parentheses or special characters anywhere
+- Never import CSS resources that dont exist
+- All UI updates must happen on main thread only
+- Background work must use GLib.timeout_add or threads
+- Threads must never directly modify GTK widgets
+- Always use GLib.idle_add to update UI from threads
+- Polling threads must have minimum time.sleep(2)
+- Never use tight loops for monitoring
+- VTE4 clipboard must use wl-copy for Wayland
+- Always handle widget destroy signals
+- CSS class names must be valid identifiers
+- All signal connections must have matching disconnections
+- Window close must not exit app if tray icon present
+- All file paths must use os.path or pathlib never hardcoded
+- Config must go to ~/.config/appname/ never elsewhere
+- Every button must be connected to a real handler
+- No placeholder lambda functions on buttons
+- All dialogs must have parent window set
+
+Bash and Zsh rules:
+- Always quote variables — $var should be "$var"
+- Use [[ ]] not [ ] for conditionals in bash
+- Always check command exit codes
+- Use set -e set -u set -o pipefail in scripts
+- Never use ls in scripts — use glob patterns
+- Avoid parsing ls output
+- Use $() not backticks for command substitution
+- Always handle signals in long running scripts
+- Heredoc formatting rules
+- Function naming conventions
+- Local variable declarations in functions
+- Script must have shebang line
+- Executable scripts must have correct permissions
+- Temporary files must be cleaned up
+
+Security rules:
+- OWASP top 10 converted to code patterns
+- Never hardcode passwords API keys or secrets
+- Never hardcode file paths that should be configurable
+- SQL injection prevention patterns
+- Command injection prevention — never pass user input to shell
+- Path traversal prevention
+- Insecure random number generation detection
+- Weak cryptography detection — MD5 SHA1 for passwords
+- Missing input validation patterns
+- Insecure file operations — world writable temp files
+- Privilege escalation patterns
+- Sensitive data in logs detection
+- Insecure deserialization patterns
+- Missing authentication checks
+- Missing authorization checks
+
+NYXUS specific rules — Layer 4:
+- Build order must be: build/test → obfuscate → 
+  master-backup → CHANGELOG → docs
+- Copyright header required in every file:
+  NYXUS AppName, Copyright 2026 Joey Sierengowski GowskiNet
+- Config always at ~/.config/nyxus-appname/
+- Apps must use Python 3.12 for AI features not 3.14
+- AI polling threads minimum time.sleep(2)
+- wl-clipboard required not xclip or xdg-clipboard
+- All GTK4 apps must handle DISPLAY and WAYLAND_DISPLAY
+- nvidia-smi used for GPU detection not hardcoded
+- YubiKey operations must have timeout handling
+- UFW rules must be logged
+- All NYXUS apps must minimize to tray on close
+- Tray icon required for all NYXUS apps
+- Hand drawn font required throughout all NYXUS apps
+- No placeholder buttons anywhere
+- Every exported function must have docstring
+- All file operations must have error handling
+- Docker operations must check daemon is running first
+- Honeypot configs must not be world readable
+- WireGuard keys must have 600 permissions
+- GPG operations must handle missing key gracefully
+
+COMPONENT 2 — AUDIT ENGINE:
+
+Command line interface:
+nyxus-audit <file or folder> — audit anything
+nyxus-audit <file> --fix — auto fix simple issues
+nyxus-audit <folder> --report — generate full PDF report
+nyxus-audit --learn <file> — add file to knowledge base
+nyxus-audit --rules — list all active rules
+nyxus-audit --add-rule — interactive rule addition
+
+Audit process:
+1. Scan all files in target — detect file types automatically
+2. Run all applicable rule collections against each file
+3. Cross-reference patterns against knowledge base
+4. Check NYXUS specific Layer 4 rules
+5. Check for security vulnerabilities
+6. Check for common bugs and anti-patterns
+7. Generate severity rated report
+
+Severity levels:
+CRITICAL — will cause crash or security breach fix immediately
+HIGH — likely to cause bugs or failures fix before shipping
+MEDIUM — bad practice should be fixed
+LOW — style or convention issue
+INFO — suggestion for improvement
+
+Report format:
+NYXUS SAGE AUDIT REPORT
+========================
+Target: ~/Projects/GodsApp/
+Files scanned: 47
+Total issues: 23
+Scan time: 2.3 seconds
+
+CRITICAL (2):
+  godsapp.py:234 — GTK4 action name contains spaces
+  Action: app.Edit Undo History
+  Fix: rename to app.edit-undo-history
+  Rule: GTK4-ACTION-001
+
+  scanner.py:891 — Thread missing sleep interval
+  Tight loop detected in network_monitor()
+  Fix: add time.sleep(2) inside loop
+  Rule: GTK4-THREAD-002
+
+HIGH (5):
+  [list continues]
+
+AUTO-FIXABLE (8 issues):
+  Run: nyxus-audit ~/Projects/GodsApp/ --fix
+  to automatically fix 8 of 23 issues
+
+PASS: NO — fix CRITICAL issues before shipping
+
+Auto-fix capability:
+Simple issues fixed automatically:
+- Add missing copyright headers
+- Fix import ordering
+- Add missing shebang lines
+- Fix file permissions
+- Add missing docstrings skeleton
+- Fix obvious naming convention violations
+- Add missing error handling skeleton
+- Fix quoted variables in bash
+
+Learning from audits:
+- Every issue found logged to learned_patterns collection
+- Every fix applied logged with context
+- Patterns that appear frequently get promoted to rules
+- User can approve or reject pattern promotions
+
+COMPONENT 3 — TERMINAL WATCHER:
+
+Runs as silent systemd service from boot
+Zero UI — completely invisible during normal operation
+CPU usage must never exceed 0.3%
+
+What it watches:
+- Every command run in terminal — logged with timestamp
+- Every file created or modified — content analyzed
+- Every error message — pattern extracted and stored
+- Every fix applied after an error — fix pattern stored
+- Every git commit — code changes analyzed
+- Every pip or pacman install — dependency tracked
+- Every script executed — analyzed for patterns
+- Build processes — success and failure patterns stored
+
+What it learns:
+- Your coding patterns — how you structure things
+- Your common mistakes — what you often get wrong
+- Your fix patterns — how you resolve issues
+- Your tool preferences — what commands you use
+- Your workflow — order you do things in
+- New technologies you adopt — learns them with you
+- Errors you encounter and how you fix them
+
+How it stores learning:
+- Extracts patterns from everything it sees
+- Converts patterns to knowledge base entries
+- Tags everything with confidence score
+- Low confidence patterns stored but not used for auditing
+  until confirmed by repeated observation
+- High confidence patterns automatically promoted to rules
+- Weekly summary of what was learned shown in SAGE app
+
+Privacy:
+- Everything stored locally only
+- No data ever leaves the machine
+- User can view everything that was logged
+- User can delete any logged data
+- User can pause learning at any time
+- Sensitive data like passwords automatically excluded
+  using pattern matching — never stored
+
+COMPONENT 4 — GTK4 APP:
+
+Main sections accessible from left sidebar:
+
+AUDIT TAB:
+- Drag and drop zone — drop any file or folder
+- Or browse button to select target
+- Audit Now button — runs full audit
+- Progress bar during scan
+- Results panel — full report displayed
+- Filter by severity — show only critical etc
+- Click any issue — jumps to explanation and fix
+- Fix All button — applies all auto-fixable issues
+- Export report — PDF markdown JSON
+- History — all previous audit reports listed
+
+KNOWLEDGE BASE TAB:
+- Browse all knowledge collections
+- Search knowledge base — find any rule or pattern
+- View rules by category
+- Rule detail view — full explanation of any rule
+- Add rule button — opens plain English rule editor
+- Edit existing rules
+- Delete rules
+- Import knowledge — drag in docs scripts or text files
+  SAGE processes them and extracts rules automatically
+- Export knowledge base — backup everything
+
+RULE EDITOR — plain English form:
+Rule Name: [text field]
+Category: [dropdown — Python GTK4 Bash Security NYXUS Custom]
+What to look for: [text area — describe in plain English]
+Example of violation: [code field]
+Example of correct version: [code field]  
+Why it matters: [text area]
+Severity: [dropdown — Critical High Medium Low Info]
+Auto-fixable: [toggle]
+Fix description: [text area if auto-fixable]
+[Save Rule button]
+
+SAGE processes plain English description and converts it
+to actual detection logic automatically
+
+LEARNING TAB:
+- What SAGE learned this week — summary
+- Patterns discovered — list with confidence scores
+- Approve pattern as rule button per pattern
+- Reject pattern button
+- View full learning history
+- Pause learning toggle
+- View everything terminal watcher has logged
+- Delete logged data options
+- Learning statistics — total patterns discovered
+  total rules created from learning
+  most common issues found
+
+TERMINAL WATCHER TAB:
+- Watcher status — running stopped
+- Start stop toggle
+- What it watched today — activity summary
+- Recent learnings — what it picked up recently
+- Excluded patterns — sensitive data exclusions
+- Configure what to watch and what to ignore
+
+SETTINGS TAB:
+- Knowledge base location
+- Auto-fix on audit toggle
+- Report format defaults
+- Notification preferences
+- Learning sensitivity — how confident before promoting pattern
+- Terminal watcher configuration
+- Excluded paths — what never to audit or watch
+- Backup schedule for knowledge base
+- Python 3.12 path for AI features
+- Performance settings
+
+ABOUT TAB:
+- NYXUS SAGE version
+- Knowledge base statistics:
+  Total rules loaded
+  Total patterns learned
+  Total audits run
+  Total issues caught
+  Total files in codebase index
+- Credits — Built for NYXUS by Joey Sierengowski
+
+INITIAL KNOWLEDGE LOADING:
+
+On first launch run setup wizard:
+1. Welcome screen — explains what SAGE is
+2. Load built in knowledge — progress bar as all pre-loaded
+   rules are processed into ChromaDB
+3. Index existing codebase — ask user to point to their
+   projects folder — indexes everything it finds
+4. Configure terminal watcher — explain what it does
+   ask permission to start watching
+5. Ready — shows knowledge base statistics
+   Total rules loaded, ready to audit
+
+TECH STACK:
+- GTK4 Python native
+- ChromaDB for vector knowledge base — runs locally
+- sentence-transformers for converting knowledge to vectors
+  use Python 3.12 for this
+- ast module for Python code parsing
+- bashate for Bash script analysis
+- pyflakes for Python static analysis
+- bandit for Python security analysis
+- pylint for comprehensive Python checking
+- Custom rule engine for NYXUS specific Layer 4 rules
+- sqlite3 for audit history and learning logs
+- inotify for file system watching in terminal watcher
+- systemd service for terminal watcher daemon
+- reportlab for PDF report generation
+- All processing in background threads
+- Knowledge base at ~/.config/nyxus-sage/knowledge/
+- Audit history at ~/.config/nyxus-sage/audits/
+- Learning logs at ~/.config/nyxus-sage/learning/
+- Config at ~/.config/nyxus-sage/config.json
+
+EVERYTHING MUST WORK:
+- Audit must actually scan and find real issues
+- Knowledge base must actually store and retrieve
+- Terminal watcher must actually run as systemd service
+- Rule editor must actually create working rules
+- Auto-fix must actually fix files correctly
+- Learning must actually extract and store patterns
+- Report export must produce real valid files
+- App must launch without crashing
+- All GTK4 action names valid format
+- No placeholder features anywhere
+
+DELIVER:
+- main.py — GTK4 app entry point
+- audit_engine.py — core audit logic
+- knowledge_base.py — ChromaDB interface
+- rule_engine.py — rule loading and matching
+- terminal_watcher.py — passive learning daemon
+- learning_engine.py — pattern extraction and promotion
+- report_generator.py — PDF and markdown reports
+- rule_editor.py — plain English rule creation
+- setup_wizard.py — first launch knowledge loading
+- preloaded_rules/ — folder of all day one rules as JSON
+- nyxus-sage.service — systemd unit file
+- requirements.txt
+- packages.txt
+- install.sh
+- README.md
