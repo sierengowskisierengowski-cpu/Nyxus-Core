@@ -856,12 +856,17 @@ window#waybar.right #battery {
    ════════════════════════════════════════════════════════════════════════════ */
 
 /* Shared base for all app launcher buttons */
+window#waybar.right #custom-app-godsapp,
+window#waybar.right #custom-app-studio,
+window#waybar.right #custom-app-sage,
+window#waybar.right #custom-app-shield,
 window#waybar.right #custom-app-control,
 window#waybar.right #custom-app-sysmon,
 window#waybar.right #custom-app-stickies,
 window#waybar.right #custom-app-weather,
 window#waybar.right #custom-app-notepad,
-window#waybar.right #custom-app-terminal {
+window#waybar.right #custom-app-terminal,
+window#waybar.right #custom-app-settings {
     min-width:            42px;
     min-height:           42px;
     margin:               5px 4px;
@@ -871,6 +876,9 @@ window#waybar.right #custom-app-terminal {
     background-position:  center center;
     background-color:     rgba(255, 255, 255, 0.04);
     border:               2px solid rgba(255, 255, 255, 0.10);
+    color:                #ffffff;
+    font-family:          "JetBrains Mono Nerd Font", "Symbols Nerd Font", monospace;
+    font-size:            22px;
     transition:           all 0.18s ease;
 }
 
@@ -944,6 +952,86 @@ window#waybar.right #custom-app-terminal:hover {
     border-color:     #39ff14;
     box-shadow:       0 0 16px rgba(57, 255, 20, 0.70),
                       inset 0 0 8px rgba(57, 255, 20, 0.10);
+}
+
+/* GodsApp — neon gold (configuration hub) */
+window#waybar.right #custom-app-godsapp {
+    background-image: -gtk-icontheme("io.nyxus.godsapp");
+    color:            #ffd700;
+    border-color:     rgba(255, 215, 0, 0.35);
+    text-shadow:      0 0 8px rgba(255, 215, 0, 0.85);
+}
+window#waybar.right #custom-app-godsapp:hover {
+    background-color: rgba(255, 215, 0, 0.18);
+    border-color:     #ffd700;
+    color:            #ffffff;
+    text-shadow:      0 0 14px #ffd700, 0 0 24px rgba(255, 215, 0, 0.70);
+    box-shadow:       0 0 18px rgba(255, 215, 0, 0.80),
+                      inset 0 0 10px rgba(255, 215, 0, 0.15);
+}
+
+/* Studio — neon hot pink (creative suite) */
+window#waybar.right #custom-app-studio {
+    background-image: -gtk-icontheme("io.nyxus.studio");
+    color:            #ff3ea5;
+    border-color:     rgba(255, 62, 165, 0.35);
+    text-shadow:      0 0 8px rgba(255, 62, 165, 0.85);
+}
+window#waybar.right #custom-app-studio:hover {
+    background-color: rgba(255, 62, 165, 0.18);
+    border-color:     #ff3ea5;
+    color:            #ffffff;
+    text-shadow:      0 0 14px #ff3ea5, 0 0 24px rgba(255, 62, 165, 0.70);
+    box-shadow:       0 0 18px rgba(255, 62, 165, 0.80),
+                      inset 0 0 10px rgba(255, 62, 165, 0.15);
+}
+
+/* SAGE — neon cyan (AI assistant) */
+window#waybar.right #custom-app-sage {
+    background-image: -gtk-icontheme("io.nyxus.sage");
+    color:            #4de2e2;
+    border-color:     rgba(77, 226, 226, 0.35);
+    text-shadow:      0 0 8px rgba(77, 226, 226, 0.85);
+}
+window#waybar.right #custom-app-sage:hover {
+    background-color: rgba(77, 226, 226, 0.18);
+    border-color:     #4de2e2;
+    color:            #ffffff;
+    text-shadow:      0 0 14px #4de2e2, 0 0 24px rgba(77, 226, 226, 0.70);
+    box-shadow:       0 0 18px rgba(77, 226, 226, 0.80),
+                      inset 0 0 10px rgba(77, 226, 226, 0.15);
+}
+
+/* Shield — neon emerald (security) */
+window#waybar.right #custom-app-shield {
+    background-image: -gtk-icontheme("io.nyxus.shield");
+    color:            #4ade80;
+    border-color:     rgba(74, 222, 128, 0.35);
+    text-shadow:      0 0 8px rgba(74, 222, 128, 0.85);
+}
+window#waybar.right #custom-app-shield:hover {
+    background-color: rgba(74, 222, 128, 0.18);
+    border-color:     #4ade80;
+    color:            #ffffff;
+    text-shadow:      0 0 14px #4ade80, 0 0 24px rgba(74, 222, 128, 0.70);
+    box-shadow:       0 0 18px rgba(74, 222, 128, 0.80),
+                      inset 0 0 10px rgba(74, 222, 128, 0.15);
+}
+
+/* Settings — neon indigo */
+window#waybar.right #custom-app-settings {
+    background-image: -gtk-icontheme("io.nyxus.settings");
+    color:            #a78bfa;
+    border-color:     rgba(167, 139, 250, 0.35);
+    text-shadow:      0 0 8px rgba(167, 139, 250, 0.85);
+}
+window#waybar.right #custom-app-settings:hover {
+    background-color: rgba(167, 139, 250, 0.18);
+    border-color:     #a78bfa;
+    color:            #ffffff;
+    text-shadow:      0 0 14px #a78bfa, 0 0 24px rgba(167, 139, 250, 0.70);
+    box-shadow:       0 0 18px rgba(167, 139, 250, 0.80),
+                      inset 0 0 10px rgba(167, 139, 250, 0.15);
 }
 
 

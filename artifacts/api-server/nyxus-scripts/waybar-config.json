@@ -199,9 +199,29 @@
     "margin-top":    100,
     "margin-bottom": 100,
 
-    "modules-left":   ["custom/app-control", "custom/app-sysmon", "custom/app-stickies", "custom/app-weather", "custom/app-notepad", "custom/app-terminal"],
+    "modules-left":   ["custom/app-godsapp", "custom/app-studio", "custom/app-sage", "custom/app-shield", "custom/app-control", "custom/app-sysmon", "custom/app-stickies", "custom/app-weather", "custom/app-notepad", "custom/app-terminal", "custom/app-settings"],
     "modules-center": ["cpu#right", "memory#right", "battery#right"],
 
+    "custom/app-godsapp": {
+      "format":   "󱎓",
+      "tooltip":  "GodsApp — NYXUS Configuration Hub",
+      "on-click": "python3 -m godsapp.main"
+    },
+    "custom/app-studio": {
+      "format":   "󰏘",
+      "tooltip":  "NYXUS Studio — Creative Suite",
+      "on-click": "python3 -m studio.main"
+    },
+    "custom/app-sage": {
+      "format":   "󱙺",
+      "tooltip":  "SAGE — Local AI Assistant",
+      "on-click": "python3 -m sage.main"
+    },
+    "custom/app-shield": {
+      "format":   "󰒃",
+      "tooltip":  "NYXUS Shield — Security Center",
+      "on-click": "python3 -m shield.main"
+    },
     "custom/app-control": {
       "format":   "",
       "tooltip":  "NYXUS Control — Hardware Control Center",
@@ -231,6 +251,11 @@
       "format":   "",
       "tooltip":  "NYXUS Terminal",
       "on-click": "python3 /home/nyx/.nyxus/nyxus_terminal.py"
+    },
+    "custom/app-settings": {
+      "format":   "󰒓",
+      "tooltip":  "NYXUS Settings",
+      "on-click": "python3 /home/nyx/.nyxus/nyxus_settings.py"
     },
 
     "cpu#right": {
