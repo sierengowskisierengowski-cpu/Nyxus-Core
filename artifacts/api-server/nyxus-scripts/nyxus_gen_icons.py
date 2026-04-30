@@ -32,6 +32,11 @@ APPS = [
     ("io.nyxus.notepad",  "NOTEPAD",  (0.80, 0.00, 1.00)),
     ("io.nyxus.terminal", "TERMINAL", (0.22, 1.00, 0.08)),
     ("io.nyxus.control",  "CONTROL",  (1.00, 0.33, 0.00)),
+    ("io.nyxus.godsapp",  "GODSAPP",  (1.00, 0.84, 0.00)),
+    ("io.nyxus.studio",   "STUDIO",   (1.00, 0.24, 0.65)),
+    ("io.nyxus.sage",     "SAGE",     (0.30, 0.89, 0.89)),
+    ("io.nyxus.shield",   "SHIELD",   (0.29, 0.87, 0.50)),
+    ("io.nyxus.settings", "SETTINGS", (0.65, 0.55, 0.98)),
 ]
 
 

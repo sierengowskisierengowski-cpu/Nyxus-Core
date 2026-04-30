@@ -14,17 +14,7 @@
     "modules-center": [
       "custom/nyxus"
     ],
-    "modules-right": [
-      "cpu",
-      "memory",
-      "temperature",
-      "custom/sep",
-      "network",
-      "custom/sep",
-      "battery",
-      "custom/sep",
-      "clock"
-    ],
+    "modules-right": [],
     "custom/ticker": {
       "exec": "~/.config/waybar/ticker.sh",
       "interval": 1,
@@ -104,12 +94,6 @@
       "hyprland/workspaces"
     ],
     "modules-right": [
-      "tray",
-      "pulseaudio",
-      "network#bottom",
-      "bluetooth",
-      "battery#bottom",
-      "custom/quicksettings",
       "clock#bottom"
     ],
     "custom/start": {
@@ -233,11 +217,7 @@
       "custom/app-terminal",
       "custom/app-settings"
     ],
-    "modules-center": [
-      "cpu#right",
-      "memory#right",
-      "battery#right"
-    ],
+    "modules-center": [],
     "custom/app-godsapp": {
       "format": "",
       "tooltip": "GodsApp — NYXUS Configuration Hub",

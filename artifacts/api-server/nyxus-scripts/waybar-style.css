@@ -956,10 +956,8 @@ window#waybar.right #custom-app-terminal:hover {
 
 /* GodsApp — neon gold (configuration hub) */
 window#waybar.right #custom-app-godsapp {
-    color:            #ffd700;
-    font-size:        24px;
+    background-image: -gtk-icontheme("io.nyxus.godsapp");
     border-color:     rgba(255, 215, 0, 0.35);
-    text-shadow:      0 0 8px rgba(255, 215, 0, 0.85);
 }
 window#waybar.right #custom-app-godsapp:hover {
     background-color: rgba(255, 215, 0, 0.18);
@@ -972,10 +970,8 @@ window#waybar.right #custom-app-godsapp:hover {
 
 /* Studio — neon hot pink (creative suite) */
 window#waybar.right #custom-app-studio {
-    color:            #ff3ea5;
-    font-size:        24px;
+    background-image: -gtk-icontheme("io.nyxus.studio");
     border-color:     rgba(255, 62, 165, 0.35);
-    text-shadow:      0 0 8px rgba(255, 62, 165, 0.85);
 }
 window#waybar.right #custom-app-studio:hover {
     background-color: rgba(255, 62, 165, 0.18);
@@ -988,10 +984,8 @@ window#waybar.right #custom-app-studio:hover {
 
 /* SAGE — neon cyan (AI assistant) */
 window#waybar.right #custom-app-sage {
-    color:            #4de2e2;
-    font-size:        24px;
+    background-image: -gtk-icontheme("io.nyxus.sage");
     border-color:     rgba(77, 226, 226, 0.35);
-    text-shadow:      0 0 8px rgba(77, 226, 226, 0.85);
 }
 window#waybar.right #custom-app-sage:hover {
     background-color: rgba(77, 226, 226, 0.18);
@@ -1004,10 +998,8 @@ window#waybar.right #custom-app-sage:hover {
 
 /* Shield — neon emerald (security) */
 window#waybar.right #custom-app-shield {
-    color:            #4ade80;
-    font-size:        24px;
+    background-image: -gtk-icontheme("io.nyxus.shield");
     border-color:     rgba(74, 222, 128, 0.35);
-    text-shadow:      0 0 8px rgba(74, 222, 128, 0.85);
 }
 window#waybar.right #custom-app-shield:hover {
     background-color: rgba(74, 222, 128, 0.18);
@@ -1020,10 +1012,8 @@ window#waybar.right #custom-app-shield:hover {
 
 /* Settings — neon indigo */
 window#waybar.right #custom-app-settings {
-    color:            #a78bfa;
-    font-size:        24px;
+    background-image: -gtk-icontheme("io.nyxus.settings");
     border-color:     rgba(167, 139, 250, 0.35);
-    text-shadow:      0 0 8px rgba(167, 139, 250, 0.85);
 }
 window#waybar.right #custom-app-settings:hover {
     background-color: rgba(167, 139, 250, 0.18);
