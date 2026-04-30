@@ -53,7 +53,14 @@ EOF
 if [[ $EUID -ne 0 ]]; then
   if command -v sudo >/dev/null 2>&1; then
     printf "  ${DIM}elevating with sudo (you'll be prompted)…${R}\n\n"
-    exec sudo -E bash "$0" "$@"
+    # if $0 is a real readable file, just re-exec it under sudo.
+    # if we're piped from curl ($0 is "bash" or /dev/fd/N), re-fetch the
+    # script under sudo so root can read it.
+    if [[ -f "$0" && -r "$0" ]]; then
+      exec sudo -E bash "$0" "$@"
+    else
+      exec sudo -E bash -c "curl -fsSL '${BASE_URL}/api/download/nyxus/nyxus_security_install.sh' | bash"
+    fi
   fi
   fail "must be run as root (sudo not available)"
   exit 1
