@@ -61,9 +61,12 @@ cat <<EOF
   ${GOLD}NYXUS Studio is ready.${R}
 
   ${B}launch:${R}    nyxus-studio
-  ${B}modules:${R}   Paint · Vector  ${DIM}(active)${R}
-              3D · Video · Animate · Photo · Layout · Type  ${DIM}(slots)${R}
 
-  ${PINK}P A I N T  ·  V E C T O R  ·  C R E A T E${R}
+  ${B}modules:${R}   Paint · Vector · 3D · Video · Animate
+              Photo · Layout · Type · Voice
+
+  ${PINK}P A I N T  ·  V E C T O R  ·  3 D  ·  V I D E O${R}
+  ${PINK}A N I M A T E  ·  P H O T O  ·  L A Y O U T${R}
+  ${PINK}T Y P E  ·  V O I C E${R}
 
 EOF
