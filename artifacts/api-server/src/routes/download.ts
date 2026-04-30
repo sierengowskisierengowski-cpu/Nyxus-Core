@@ -63,6 +63,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_security_install.sh":  "nyxus_security_install.sh",
   "nyxus-studio.tgz":           "nyxus-studio.tgz",
   "nyxus_studio_install.sh":    "nyxus_studio_install.sh",
+  "nyxus-sage.tgz":             "nyxus-sage.tgz",
+  "nyxus_sage_install.sh":      "nyxus_sage_install.sh",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
