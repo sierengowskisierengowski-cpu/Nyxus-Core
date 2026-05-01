@@ -56,18 +56,47 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   swapping these would break icon rendering.
 
 ### Waybar bottom-bar buttons (installed by Start's `install.sh`)
-- Three exec-driven custom modules, all rendered by
-  `~/.local/bin/nyxus-waybar-state {start|panel|notifications}`:
+- Four custom modules — three exec-driven (rendered by
+  `~/.local/bin/nyxus-waybar-state {start|panel|notifications}`) plus a
+  static cog button:
   - `custom/nyxus-start` — far-left, magenta `#ff7af0`, label "Start"
+  - `custom/nyxus-settings` — right side, white cog glyph (\uf013),
+    on-click → `nyxus-settings` (the unified Settings window from Panel).
   - `custom/nyxus-panel` — right side, lavender `#c4a8ff`, label "The Panel"
   - `custom/nyxus-notifications` — far-right, cyan `#7ae0ff`, label
-    "Notifications" (button only — flyout backend lands in a follow-up
-    release; on-click points to `nyxus-notifications` so wiring is ready).
-- Helper script writes Pango markup with `font_family='Caveat'`. CSS in
-  `waybar_styles.css` pins the same fallback stack and adds glow + `.open`
-  pressed-state per button. Idempotent jq patch in `install.sh` rewrites
-  `modules-left` / `modules-right` so re-running the installer never
-  duplicates entries.
+    "Notifications".
+- Idempotent jq patch in `install.sh` rewrites `modules-left` /
+  `modules-right` / `modules-center` so re-running the installer never
+  duplicates entries; aggressive `startswith("clock")` filter strips ANY
+  clock variant (`clock`, `clock#main`, etc.) from the bottom bar — the
+  user keeps the date/time module on the TOP bar only.
+
+### NYXUS Start menu — page-switched layout (Apps | Store)
+- The middle scrollable area is a `Gtk.Stack` with two named pages,
+  switched by toggle buttons in a header strip:
+  - `apps` page: search results, Pinned grid, Recently Used, All Apps
+    (current behavior, unchanged).
+  - `store` page: inline NYXUS App Store catalog. Each row detects
+    installation via `shutil.which(binary)` and shows either
+    `\uf04b Open` (run binary) or `\uf019 Install` (curl|sudo bash the
+    installer in a terminal — foot/alacritty/kitty/xterm fallback chain).
+    A footer button opens the standalone `nyxus-store` window.
+- `_switch_page` uses an `_in_switch_page` re-entry guard to avoid the
+  recursive-toggle infinite loop common to manual radio implementations.
+
+### NYXUS Settings window — sidebar-nav premium layout
+- Replaced the old `Gtk.Notebook` with a hero header + sidebar nav
+  (`Gtk.ToggleButton` list) + content `Gtk.Stack` (cross-fade transition).
+- Pages: Appearance, Profile, Notifications, Panel, News Sources,
+  Filters, Browser, Cache, About — each with its own Font Awesome glyph.
+- About is pushed to the bottom of the sidebar via a `vexpand` spacer.
+- Hero header: cog glyph badge + "NYXUS Settings" title (Caveat) +
+  rounded version pill on the right.
+- `_select_page` uses an `_in_select_page` re-entry guard (same pattern
+  as the Start page-switcher) to handle the cascade of toggle events.
+- Standalone launcher (`/usr/local/bin/nyxus-settings`) imports
+  `_install_css` from `panel/main.py` so the standalone window inherits
+  the same hand-drawn theme it would when launched from inside Panel.
 
 ## Stack
 
