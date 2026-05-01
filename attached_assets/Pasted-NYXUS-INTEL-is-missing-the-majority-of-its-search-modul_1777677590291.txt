@@ -1,0 +1,79 @@
+NYXUS INTEL is missing the majority of its 
+search modules. Currently only 2-3 modules 
+are actually running. Every single one of 
+these must be fully built and returning 
+real results:
+
+PERSON SEARCH — all must run simultaneously:
+- Sherlock — 300+ platform scan — must actually run
+- Google dork automation — 15 preset dorks using 
+  Google CSE API — wire in existing key
+- Reddit search via Pushshift API
+- GitHub user and name search via GitHub API
+- Pastebin search via psbdmp.ws API
+- News mention search via Google News RSS
+- Academic paper search via Google Scholar
+- Wayback Machine — search for name mentions
+
+PUBLIC RECORDS — all must query real APIs:
+- USPTO patent search by inventor name
+- USPTO trademark search by owner name
+- FEC campaign donation search — key already set
+- SEC EDGAR filing search by name
+- FAA aircraft registration by owner name
+- FCC license search by name
+- OpenSanctions watchlist check — key already set
+- Federal court PACER search if credentials set
+
+EMAIL SEARCH — all must run on email input:
+- Holehe — 200+ platform check — must actually run
+- HaveIBeenPwned if key set
+- DeHashed if key set
+- Username extraction — feed into person search
+- Name extraction — feed into person search
+
+IP SEARCH — all must run on IP input:
+- Shodan full host report — key already set
+- VirusTotal IP report — key already set
+- AbuseIPDB report — key already set
+- IPinfo geolocation — key already set
+- WHOIS lookup
+- Reverse DNS
+- Tor exit node check
+
+DOMAIN SEARCH — all must run on domain input:
+- WHOIS current and historical
+- DNS records all types
+- SSL certificate history via crt.sh
+- Wayback Machine all snapshots
+- Shodan domain search
+- VirusTotal domain report
+- Subdomain enumeration via crt.sh
+- Technology detection
+
+CRYPTO SEARCH — must run on wallet input:
+- Bitcoin via Blockchain.info API
+- Ethereum via Etherscan V2 API — fix V2 endpoint
+
+PHOTO ANALYSIS — must run on image upload:
+- Full EXIF extraction via piexif
+- GPS coordinate resolution to address
+- Date modification detection
+- File integrity analysis
+- Reverse image search
+
+Every tab in the case file viewer must populate 
+with real data:
+- Overview — summary of all findings
+- Identity — all profiles and usernames found
+- Breach Data — all breach results
+- Public Records — all government records found
+- Digital Footprint — all platform accounts found
+- Historical — all archived content found
+- Financial — all business and donation records
+- Photos — all images found
+- Crypto — blockchain results if applicable
+
+Fix every single module. Test every single one 
+with real data before delivering. This must 
+actually work not just look like it works.
