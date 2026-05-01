@@ -874,6 +874,38 @@ class NyxusTerminal(Gtk.Application):
 
         vte.connect("child-exited", lambda *_: self.quit())
 
+        # ── Right-click context menu (Copy / Paste / Select All) ──
+        rc = Gtk.GestureClick()
+        rc.set_button(3)  # right mouse button
+        rc.connect("pressed", self._on_vte_right_click)
+        vte.add_controller(rc)
+
+        # Action group backing the menu items declared in _on_vte_right_click.
+        actions = Gio.SimpleActionGroup()
+
+        def _act(name, fn):
+            a = Gio.SimpleAction.new(name, None)
+            a.connect("activate", lambda *_: fn())
+            actions.add_action(a)
+
+        def _do_copy():
+            try: vte.copy_clipboard_format(Vte.Format.TEXT)
+            except Exception:
+                try: vte.copy_clipboard()
+                except Exception: pass
+        def _do_paste():
+            try: vte.paste_clipboard()
+            except Exception: pass
+        def _do_select_all():
+            try: vte.select_all()
+            except Exception: pass
+
+        _act("copy",      _do_copy)
+        _act("paste",     _do_paste)
+        _act("selectall", _do_select_all)
+        # Insert under the "term" prefix so menu items "term.copy" etc. resolve.
+        vte.insert_action_group("term", actions)
+
     # ── Draw callbacks ─────────────────────────────────────────────────────────
     def _draw_chrome_bg(self, area, cr, w, h, _):
         import cairo as _cairo
@@ -994,7 +1026,62 @@ class NyxusTerminal(Gtk.Application):
 
     def _on_key(self, ctrl, keyval, keycode, state):
         self._reset_idle()
+
+        # ── Copy / paste keyboard shortcuts ──
+        # VTE doesn't bind these by default; the host app must wire them up.
+        # Standard terminal bindings:
+        #   Ctrl+Shift+C / Ctrl+Insert  → copy selection to clipboard
+        #   Ctrl+Shift+V / Shift+Insert → paste clipboard at cursor
+        #   Ctrl+Shift+A                → select all
+        ctrl_mask  = bool(state & Gdk.ModifierType.CONTROL_MASK)
+        shift_mask = bool(state & Gdk.ModifierType.SHIFT_MASK)
+
+        if self._vte is not None:
+            # Copy
+            if (ctrl_mask and shift_mask and keyval in (
+                    Gdk.KEY_c, Gdk.KEY_C)) or \
+               (ctrl_mask and keyval == Gdk.KEY_Insert):
+                try:
+                    self._vte.copy_clipboard_format(Vte.Format.TEXT)
+                except Exception:
+                    try: self._vte.copy_clipboard()
+                    except Exception: pass
+                return True
+
+            # Paste
+            if (ctrl_mask and shift_mask and keyval in (
+                    Gdk.KEY_v, Gdk.KEY_V)) or \
+               (shift_mask and keyval == Gdk.KEY_Insert):
+                try:
+                    self._vte.paste_clipboard()
+                except Exception: pass
+                return True
+
+            # Select all
+            if ctrl_mask and shift_mask and keyval in (Gdk.KEY_a, Gdk.KEY_A):
+                try:
+                    self._vte.select_all()
+                except Exception: pass
+                return True
+
         return False
+
+    def _on_vte_right_click(self, gesture, n, x, y):
+        """Right-click anywhere in the terminal opens a copy/paste menu."""
+        if self._vte is None:
+            return
+        menu = Gio.Menu()
+        menu.append("Copy",  "term.copy")
+        menu.append("Paste", "term.paste")
+        menu.append("Select All", "term.selectall")
+
+        popover = Gtk.PopoverMenu.new_from_model(menu)
+        popover.set_parent(self._vte)
+        popover.set_has_arrow(False)
+        rect = Gdk.Rectangle()
+        rect.x = int(x); rect.y = int(y); rect.width = 1; rect.height = 1
+        popover.set_pointing_to(rect)
+        popover.popup()
 
     def _on_win_press(self, gesture, n, x, y):
         self._reset_idle()
