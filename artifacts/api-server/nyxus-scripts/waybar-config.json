@@ -33,11 +33,11 @@
     "cpu": {
       "format": "  {usage}%",
       "interval": 2,
-      "tooltip": false
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#cc00ff'>NYXUS · CPU</span>\n<span size='small' foreground='#b8a8d0'>Processor utilization</span>"
     },
     "memory": {
       "format": "  {percentage}%",
-      "tooltip": false
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#8800ff'>NYXUS · Memory</span>\n<span size='small' foreground='#b8a8d0'>RAM usage</span>"
     },
     "temperature": {
       "hwmon-path-abs": "/sys/class/thermal/thermal_zone0/temp",
@@ -45,14 +45,14 @@
       "critical-threshold": 80,
       "format": "  {temperatureC}°C",
       "format-critical": "  {temperatureC}°C",
-      "tooltip": false
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#39ff14'>NYXUS · Temp</span>\n<span size='small' foreground='#b8a8d0'>Thermal sensor</span>"
     },
     "network": {
       "format-wifi": "  {essid}  ↓{bandwidthDownBytes}  ↑{bandwidthUpBytes}",
       "format-ethernet": "  ETH  ↓{bandwidthDownBytes}  ↑{bandwidthUpBytes}",
       "format-disconnected": "  NO NET",
       "interval": 2,
-      "tooltip-format": "{ipaddr}  ·  {ifname}"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Network</span>\n<span size='small' foreground='#b8a8d0'>{ipaddr} · {ifname}</span>"
     },
     "battery": {
       "format": "{icon}  {capacity}%",
@@ -69,13 +69,13 @@
         "warning": 30,
         "critical": 15
       },
-      "tooltip": false
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Battery</span>\n<span size='small' foreground='#b8a8d0'>{capacity}% · {time}</span>"
     },
     "clock": {
       "interval": 1,
       "format": "  {:%H:%M:%S}",
       "format-alt": "  {:%a %b %d  ·  %H:%M:%S}",
-      "tooltip-format": "<big>{:%A  %B %d  %Y}</big>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS · Time</span>\n<span size='small' foreground='#b8a8d0'><span foreground='#ffffff'>{:%A · %B %d, %Y}</span></span>"
     }
   },
   {
@@ -101,13 +101,15 @@
     "custom/start": {
       "format": "✕",
       "escape": false,
-      "tooltip": false,
-      "on-click": "rofi -show drun -theme ~/.config/rofi/startmenu.rasi"
+      "tooltip": true,
+      "on-click": "rofi -show drun -theme ~/.config/rofi/startmenu.rasi",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS · Start</span>\n<span size='small' foreground='#b8a8d0'>Application launcher</span>"
     },
     "custom/quicksettings": {
       "format": "",
-      "tooltip": false,
-      "on-click": "python3 ~/.config/waybar/quicksettings.py"
+      "tooltip": true,
+      "on-click": "python3 ~/.config/waybar/quicksettings.py",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#a78bfa'>NYXUS · QuickSettings</span>\n<span size='small' foreground='#b8a8d0'>Toggles · Volume · Brightness</span>"
     },
     "hyprland/workspaces": {
       "format": "{id}",
@@ -144,21 +146,24 @@
       "format": "  ",
       "format-disabled": "",
       "format-connected": "  {num_connections}",
-      "tooltip-format": "{controller_alias}\n{device_enumerate}",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#0088ff'>NYXUS · Bluetooth</span>\n<span size='small' foreground='#b8a8d0'>{controller_alias}\n{device_enumerate}</span>",
       "on-click": "blueman-manager"
     },
     "network#bottom": {
       "format-wifi": "  {signalStrength}%",
       "format-ethernet": "  ETH",
       "format-disconnected": "  ",
-      "tooltip-format-wifi": "{essid}  {signalStrength}%\n{ipaddr}",
-      "on-click": "nm-connection-editor"
+      "tooltip-format-wifi": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Wi-Fi</span>\n<span size='small' foreground='#b8a8d0'>{essid}  ·  {signalStrength}%\n{ipaddr}</span>",
+      "on-click": "nm-connection-editor",
+      "tooltip-format-ethernet": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Ethernet</span>\n<span size='small' foreground='#b8a8d0'>{ifname}  ·  {ipaddr}</span>",
+      "tooltip-format-disconnected": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Network</span>\n<span size='small' foreground='#b8a8d0'>No connection</span>"
     },
     "pulseaudio": {
       "format": "  {volume}%",
       "format-muted": "  ",
       "scroll-step": 5,
-      "on-click": "pavucontrol"
+      "on-click": "pavucontrol",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS · Audio</span>\n<span size='small' foreground='#b8a8d0'>{volume}%  ·  {desc}</span>"
     },
     "battery#bottom": {
       "format": "{icon}  {capacity}%",
@@ -295,16 +300,16 @@
     "cpu#right": {
       "format": "{usage}",
       "interval": 2,
-      "tooltip": false
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#cc00ff'>NYXUS · CPU</span>\n<span size='small' foreground='#b8a8d0'>{usage}% utilization</span>"
     },
     "memory#right": {
       "format": "{percentage}",
-      "tooltip": false
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#8800ff'>NYXUS · RAM</span>\n<span size='small' foreground='#b8a8d0'>{percentage}% used</span>"
     },
     "battery#right": {
       "format": "{capacity}",
       "format-charging": "{capacity}+",
-      "tooltip": false
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Battery</span>\n<span size='small' foreground='#b8a8d0'>{capacity}%</span>"
     },
     "modules-right": []
   }
