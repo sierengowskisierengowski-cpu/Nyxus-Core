@@ -88,21 +88,21 @@
     "margin-left": 0,
     "margin-right": 0,
     "modules-left": [
-      "custom/start"
+      "custom/nyxus-start"
     ],
     "modules-center": [
       "hyprland/workspaces"
     ],
     "modules-right": [
-      "custom/nyxus-panel",
       "custom/quicksettings",
-      "clock#bottom"
+      "clock#bottom",
+      "custom/nyxus-panel"
     ],
     "custom/start": {
       "format": "✕",
       "escape": false,
       "tooltip": true,
-      "on-click": "rofi -show drun -theme ~/.config/rofi/startmenu.rasi",
+      "on-click": "/home/nyx/.local/bin/nyxus-start",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS · Start</span>\n<span size='small' foreground='#b8a8d0'>Application launcher</span>"
     },
     "custom/quicksettings": {
@@ -189,7 +189,14 @@
       "format": "",
       "tooltip": true,
       "on-click": "/home/nyx/.local/bin/nyxus-panel",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#a78bfa'>NYXUS Panel</span>\n<span size='small' foreground='#b8a8d0'>Weather · News · System · Settings</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#a78bfa'>NYXUS · Panel</span>\n<span size='small' foreground='#b8a8d0'>Weather · News · System · Settings</span>"
+    },
+    "custom/nyxus-start": {
+      "format": "",
+      "escape": false,
+      "tooltip": true,
+      "on-click": "/home/nyx/.local/bin/nyxus-start",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS · Start</span>\n<span size='small' foreground='#b8a8d0'>Search · Pinned · Recent · Power</span>"
     }
   },
   {
