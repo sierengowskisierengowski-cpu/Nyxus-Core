@@ -1028,55 +1028,91 @@ window#waybar.right #custom-app-settings:hover {
                       inset 0 0 10px rgba(167, 139, 250, 0.15);
 }
 
+
+
+
 /* ──────────────────────────────────────────────────────────────────
  * NYXUS-START-BUTTON-STYLE  (do not remove this comment — sentinel)
- * Hand-drawn Caveat tooltip aesthetic, magenta glow, matches the
- * rest of the right-bar app icons.
+ *
+ * Hand-drawn aesthetic for the bottom-bar Start + Panel buttons.
+ *   Start:  large glowing magenta X behind the word "Start" (Caveat)
+ *   Panel:  glowing handwritten "The Panel" (Caveat)
+ * Both buttons render their text via Pango from the helper script
+ * `nyxus-waybar-state` — that's why no font/glyph appears here in CSS.
+ *
+ * The .open class is applied by the helper while the matching flyout
+ * is alive (PID file present + process responsive); when open, both
+ * buttons "light up" with brighter glow + saturated background.
+ *
  * © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
  * ──────────────────────────────────────────────────────────────── */
 
-window#waybar.bottom #custom-nyxus-start {
-    font-family:    "JetBrains Mono Nerd Font", monospace;
-    font-size:      18px;
-    color:          #ff00ff;
-    background:     rgba(8, 4, 22, 0.55);
-    border:         1.5px solid rgba(255, 0, 255, 0.55);
-    border-radius:  10px;
-    padding:        2px 10px;
-    margin:         3px 6px 3px 4px;
-    text-shadow:    0 0 10px rgba(255, 0, 255, 0.65);
-    transition:     all 0.18s ease;
+window#waybar.bottom #custom-nyxus-start,
+window#waybar.bottom #custom-nyxus-panel {
+    /* Belt-and-suspenders: the helper script's Pango span requests Caveat
+     * via font_family, but we also pin it here so the bar reserves the
+     * right metrics even if the markup is briefly invalidated. */
+    font-family:     "Caveat", "Comic Neue", "Patrick Hand", cursive, sans-serif;
+    font-size:       22px;
+    font-weight:     bold;
 }
 
-window#waybar.bottom #custom-nyxus-start:hover {
-    color:          #ffffff;
-    border-color:   #ff00ff;
-    background:     rgba(255, 0, 255, 0.22);
-    text-shadow:    0 0 14px #ff00ff, 0 0 24px rgba(255, 0, 255, 0.70);
-    box-shadow:     0 0 18px rgba(255, 0, 255, 0.85),
-                    0 0 32px rgba(255, 0, 255, 0.45),
-                    inset 0 0 10px rgba(255, 0, 255, 0.15);
+window#waybar.bottom #custom-nyxus-start {
+    color:           #ff7af0;
+    background:      rgba(8, 4, 22, 0.55);
+    /* The glowing X — inline data-URI SVG, dual-stroke (blur + sharp) */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 64'><defs><filter id='g' x='-50%25' y='-50%25' width='200%25' height='200%25'><feGaussianBlur stdDeviation='3'/></filter></defs><g stroke='%23ff00ff' stroke-width='8' stroke-linecap='round' opacity='0.55' filter='url(%23g)'><line x1='14' y1='10' x2='66' y2='54'/><line x1='66' y1='10' x2='14' y2='54'/></g><g stroke='%23ff5cf0' stroke-width='3' stroke-linecap='round'><line x1='14' y1='10' x2='66' y2='54'/><line x1='66' y1='10' x2='14' y2='54'/></g></svg>");
+    background-repeat:   no-repeat;
+    background-position: center;
+    background-size:     contain;
+    border:          1.5px solid rgba(255, 0, 255, 0.55);
+    border-radius:   10px;
+    padding:         2px 18px;
+    margin:          3px 6px 3px 4px;
+    text-shadow:     0 0 8px rgba(255, 0, 255, 0.85),
+                     0 0 14px rgba(255, 0, 255, 0.55);
+    transition:      all 0.18s ease;
+}
+
+window#waybar.bottom #custom-nyxus-start:hover,
+window#waybar.bottom #custom-nyxus-start.open {
+    color:           #ffffff;
+    border-color:    #ff00ff;
+    background-color: rgba(255, 0, 255, 0.20);
+    text-shadow:     0 0 14px #ff00ff, 0 0 24px rgba(255, 0, 255, 0.85);
+    box-shadow:      0 0 18px rgba(255, 0, 255, 0.85),
+                     0 0 32px rgba(255, 0, 255, 0.45),
+                     inset 0 0 10px rgba(255, 0, 255, 0.18);
+}
+
+window#waybar.bottom #custom-nyxus-start.open {
+    /* Held-pressed look while the flyout is showing */
+    border-width:    2px;
 }
 
 window#waybar.bottom #custom-nyxus-panel {
-    font-family:    "JetBrains Mono Nerd Font", monospace;
-    font-size:      18px;
-    color:          #a78bfa;
-    background:     rgba(8, 4, 22, 0.55);
-    border:         1.5px solid rgba(167, 139, 250, 0.55);
-    border-radius:  10px;
-    padding:        2px 10px;
-    margin:         3px 4px 3px 6px;
-    text-shadow:    0 0 10px rgba(167, 139, 250, 0.65);
-    transition:     all 0.18s ease;
+    color:           #c4a8ff;
+    background:      rgba(8, 4, 22, 0.55);
+    border:          1.5px solid rgba(167, 139, 250, 0.55);
+    border-radius:   10px;
+    padding:         2px 18px;
+    margin:          3px 4px 3px 6px;
+    text-shadow:     0 0 8px rgba(167, 139, 250, 0.85),
+                     0 0 14px rgba(167, 139, 250, 0.55);
+    transition:      all 0.18s ease;
 }
 
-window#waybar.bottom #custom-nyxus-panel:hover {
-    color:          #ffffff;
-    border-color:   #a78bfa;
-    background:     rgba(167, 139, 250, 0.22);
-    text-shadow:    0 0 14px #a78bfa, 0 0 24px rgba(167, 139, 250, 0.70);
-    box-shadow:     0 0 18px rgba(167, 139, 250, 0.85),
-                    0 0 32px rgba(255, 0, 255, 0.45),
-                    inset 0 0 10px rgba(167, 139, 250, 0.15);
+window#waybar.bottom #custom-nyxus-panel:hover,
+window#waybar.bottom #custom-nyxus-panel.open {
+    color:           #ffffff;
+    border-color:    #a78bfa;
+    background-color: rgba(167, 139, 250, 0.22);
+    text-shadow:     0 0 14px #a78bfa, 0 0 24px rgba(167, 139, 250, 0.85);
+    box-shadow:      0 0 18px rgba(167, 139, 250, 0.85),
+                     0 0 32px rgba(255, 0, 255, 0.45),
+                     inset 0 0 10px rgba(167, 139, 250, 0.18);
+}
+
+window#waybar.bottom #custom-nyxus-panel.open {
+    border-width:    2px;
 }

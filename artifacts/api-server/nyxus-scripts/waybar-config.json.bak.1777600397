@@ -27,32 +27,32 @@
       "escape": false
     },
     "custom/sep": {
-      "format": "\u25c8",
+      "format": "◈",
       "tooltip": false
     },
     "cpu": {
       "format": "  {usage}%",
       "interval": 2,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#cc00ff'>NYXUS \u00b7 CPU</span>\n<span size='small' foreground='#b8a8d0'>Processor utilization</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#cc00ff'>NYXUS · CPU</span>\n<span size='small' foreground='#b8a8d0'>Processor utilization</span>"
     },
     "memory": {
       "format": "  {percentage}%",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#8800ff'>NYXUS \u00b7 Memory</span>\n<span size='small' foreground='#b8a8d0'>RAM usage</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#8800ff'>NYXUS · Memory</span>\n<span size='small' foreground='#b8a8d0'>RAM usage</span>"
     },
     "temperature": {
       "hwmon-path-abs": "/sys/class/thermal/thermal_zone0/temp",
       "input-filename": "temp",
       "critical-threshold": 80,
-      "format": "  {temperatureC}\u00b0C",
-      "format-critical": "  {temperatureC}\u00b0C",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#39ff14'>NYXUS \u00b7 Temp</span>\n<span size='small' foreground='#b8a8d0'>Thermal sensor</span>"
+      "format": "  {temperatureC}°C",
+      "format-critical": "  {temperatureC}°C",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#39ff14'>NYXUS · Temp</span>\n<span size='small' foreground='#b8a8d0'>Thermal sensor</span>"
     },
     "network": {
-      "format-wifi": "  {essid}  \u2193{bandwidthDownBytes}  \u2191{bandwidthUpBytes}",
-      "format-ethernet": "  ETH  \u2193{bandwidthDownBytes}  \u2191{bandwidthUpBytes}",
+      "format-wifi": "  {essid}  ↓{bandwidthDownBytes}  ↑{bandwidthUpBytes}",
+      "format-ethernet": "  ETH  ↓{bandwidthDownBytes}  ↑{bandwidthUpBytes}",
       "format-disconnected": "  NO NET",
       "interval": 2,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#b8a8d0'>{ipaddr} \u00b7 {ifname}</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Network</span>\n<span size='small' foreground='#b8a8d0'>{ipaddr} · {ifname}</span>"
     },
     "battery": {
       "format": "{icon}  {capacity}%",
@@ -69,13 +69,13 @@
         "warning": 30,
         "critical": 15
       },
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#b8a8d0'>{capacity}% \u00b7 {time}</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Battery</span>\n<span size='small' foreground='#b8a8d0'>{capacity}% · {time}</span>"
     },
     "clock": {
       "interval": 1,
       "format": "  {:%H:%M:%S}",
-      "format-alt": "  {:%a %b %d  \u00b7  %H:%M:%S}",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS \u00b7 Time</span>\n<span size='small' foreground='#b8a8d0'><span foreground='#ffffff'>{:%A \u00b7 %B %d, %Y}</span></span>"
+      "format-alt": "  {:%a %b %d  ·  %H:%M:%S}",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS · Time</span>\n<span size='small' foreground='#b8a8d0'><span foreground='#ffffff'>{:%A · %B %d, %Y}</span></span>"
     }
   },
   {
@@ -98,11 +98,18 @@
       "clock#bottom",
       "custom/nyxus-panel"
     ],
+    "custom/start": {
+      "format": "✕",
+      "escape": false,
+      "tooltip": true,
+      "on-click": "/home/nyx/.local/bin/nyxus-start",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS · Start</span>\n<span size='small' foreground='#b8a8d0'>Application launcher</span>"
+    },
     "custom/quicksettings": {
-      "format": "\uf013",
+      "format": "",
       "tooltip": true,
       "on-click": "python3 ~/.config/waybar/quicksettings.py",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#a78bfa'>NYXUS \u00b7 QuickSettings</span>\n<span size='small' foreground='#b8a8d0'>Toggles \u00b7 Volume \u00b7 Brightness</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#a78bfa'>NYXUS · QuickSettings</span>\n<span size='small' foreground='#b8a8d0'>Toggles · Volume · Brightness</span>"
     },
     "hyprland/workspaces": {
       "format": "{id}",
@@ -120,7 +127,7 @@
     },
     "clock#bottom": {
       "interval": 1,
-      "format": "  {:%a \u00b7 %d %b %Y \u00b7 %H:%M:%S}",
+      "format": "  {:%a · %d %b %Y · %H:%M:%S}",
       "format-alt": "  {:%H:%M:%S}",
       "tooltip-format": "<span font='JetBrains Mono 13' foreground='#ff00ff'><b> {:%A}</b></span>\n<span font='JetBrains Mono 11' foreground='#ffffff'> {:%d %B %Y}</span>\n\n<span font='JetBrains Mono 10'><tt>{calendar}</tt></span>",
       "calendar": {
@@ -139,24 +146,24 @@
       "format": "  ",
       "format-disabled": "",
       "format-connected": "  {num_connections}",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#0088ff'>NYXUS \u00b7 Bluetooth</span>\n<span size='small' foreground='#b8a8d0'>{controller_alias}\n{device_enumerate}</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#0088ff'>NYXUS · Bluetooth</span>\n<span size='small' foreground='#b8a8d0'>{controller_alias}\n{device_enumerate}</span>",
       "on-click": "blueman-manager"
     },
     "network#bottom": {
       "format-wifi": "  {signalStrength}%",
       "format-ethernet": "  ETH",
       "format-disconnected": "  ",
-      "tooltip-format-wifi": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Wi-Fi</span>\n<span size='small' foreground='#b8a8d0'>{essid}  \u00b7  {signalStrength}%\n{ipaddr}</span>",
+      "tooltip-format-wifi": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Wi-Fi</span>\n<span size='small' foreground='#b8a8d0'>{essid}  ·  {signalStrength}%\n{ipaddr}</span>",
       "on-click": "nm-connection-editor",
-      "tooltip-format-ethernet": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Ethernet</span>\n<span size='small' foreground='#b8a8d0'>{ifname}  \u00b7  {ipaddr}</span>",
-      "tooltip-format-disconnected": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#b8a8d0'>No connection</span>"
+      "tooltip-format-ethernet": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Ethernet</span>\n<span size='small' foreground='#b8a8d0'>{ifname}  ·  {ipaddr}</span>",
+      "tooltip-format-disconnected": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Network</span>\n<span size='small' foreground='#b8a8d0'>No connection</span>"
     },
     "pulseaudio": {
       "format": "  {volume}%",
       "format-muted": "  ",
       "scroll-step": 5,
       "on-click": "pavucontrol",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS \u00b7 Audio</span>\n<span size='small' foreground='#b8a8d0'>{volume}%  \u00b7  {desc}</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS · Audio</span>\n<span size='small' foreground='#b8a8d0'>{volume}%  ·  {desc}</span>"
     },
     "battery#bottom": {
       "format": "{icon}  {capacity}%",
@@ -179,22 +186,17 @@
       "spacing": 6
     },
     "custom/nyxus-panel": {
-      "exec": "/home/nyx/.local/bin/nyxus-waybar-state panel",
-      "interval": 1,
-      "return-type": "json",
+      "format": "",
       "tooltip": true,
       "on-click": "/home/nyx/.local/bin/nyxus-panel",
-      "format": "{}",
-      "escape": false
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#a78bfa'>NYXUS · Panel</span>\n<span size='small' foreground='#b8a8d0'>Weather · News · System · Settings</span>"
     },
     "custom/nyxus-start": {
-      "exec": "/home/nyx/.local/bin/nyxus-waybar-state start",
-      "interval": 1,
-      "return-type": "json",
+      "format": "",
+      "escape": false,
       "tooltip": true,
       "on-click": "/home/nyx/.local/bin/nyxus-start",
-      "format": "{}",
-      "escape": false
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS · Start</span>\n<span size='small' foreground='#b8a8d0'>Search · Pinned · Recent · Power</span>"
     }
   },
   {
@@ -237,67 +239,67 @@
       "custom/app-settings"
     ],
     "custom/app-godsapp": {
-      "format": "\uf0d0",
+      "format": "",
       "tooltip": true,
       "on-click": "nyxus-godsapp",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS GodsApp</span>\n<span size='small' foreground='#b8a8d0'>Configuration Hub</span>"
     },
     "custom/app-studio": {
-      "format": "\uf1fc",
+      "format": "",
       "tooltip": true,
       "on-click": "nyxus-studio",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff3ea5'>NYXUS Studio</span>\n<span size='small' foreground='#b8a8d0'>Creative Suite</span>"
     },
     "custom/app-sage": {
-      "format": "\uf19d",
+      "format": "",
       "tooltip": true,
       "on-click": "nyxus-sage",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#4de2e2'>NYXUS SAGE</span>\n<span size='small' foreground='#b8a8d0'>Local AI Assistant</span>"
     },
     "custom/app-shield": {
-      "format": "\uf132",
+      "format": "",
       "tooltip": true,
       "on-click": "nyxus-shield",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#4ade80'>NYXUS Shield</span>\n<span size='small' foreground='#b8a8d0'>Security Center</span>"
     },
     "custom/app-control": {
-      "format": "\uf2db",
+      "format": "",
       "tooltip": true,
       "on-click": "python3 /home/nyx/.nyxus/nyxus_control.py",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff3232'>NYXUS Control</span>\n<span size='small' foreground='#b8a8d0'>Hardware Control Center</span>"
     },
     "custom/app-sysmon": {
-      "format": "\uf201",
+      "format": "",
       "tooltip": true,
       "on-click": "python3 /home/nyx/.nyxus/nyxus_sysmon_gtk.py",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS SysMon</span>\n<span size='small' foreground='#b8a8d0'>System Monitor</span>"
     },
     "custom/app-stickies": {
-      "format": "\uf249",
+      "format": "",
       "tooltip": true,
       "on-click": "python3 /home/nyx/.nyxus/nyxus_stickies.py",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffff00'>NYXUS Stickies</span>\n<span size='small' foreground='#b8a8d0'>Sticky Notes</span>"
     },
     "custom/app-weather": {
-      "format": "\uf0c2",
+      "format": "",
       "tooltip": true,
       "on-click": "python3 /home/nyx/.nyxus/nyxus_weather.py",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#0088ff'>NYXUS Weather</span>\n<span size='small' foreground='#b8a8d0'>Weather Forecast</span>"
     },
     "custom/app-notepad": {
-      "format": "\uf0f6",
+      "format": "",
       "tooltip": true,
       "on-click": "python3 /home/nyx/.nyxus/nyxus_notepad.py",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#cc00ff'>NYXUS Notepad</span>\n<span size='small' foreground='#b8a8d0'>Quick Notes</span>"
     },
     "custom/app-terminal": {
-      "format": "\uf120",
+      "format": "",
       "tooltip": true,
       "on-click": "python3 /home/nyx/.nyxus/nyxus_terminal.py",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#39ff14'>NYXUS Terminal</span>\n<span size='small' foreground='#b8a8d0'>Command Line</span>"
     },
     "custom/app-settings": {
-      "format": "\uf085",
+      "format": "",
       "tooltip": true,
       "on-click": "python3 /home/nyx/.nyxus/nyxus_settings.py",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#a78bfa'>NYXUS Settings</span>\n<span size='small' foreground='#b8a8d0'>System Settings</span>"
@@ -305,16 +307,16 @@
     "cpu#right": {
       "format": "{usage}",
       "interval": 2,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#cc00ff'>NYXUS \u00b7 CPU</span>\n<span size='small' foreground='#b8a8d0'>{usage}% utilization</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#cc00ff'>NYXUS · CPU</span>\n<span size='small' foreground='#b8a8d0'>{usage}% utilization</span>"
     },
     "memory#right": {
       "format": "{percentage}",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#8800ff'>NYXUS \u00b7 RAM</span>\n<span size='small' foreground='#b8a8d0'>{percentage}% used</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#8800ff'>NYXUS · RAM</span>\n<span size='small' foreground='#b8a8d0'>{percentage}% used</span>"
     },
     "battery#right": {
       "format": "{capacity}",
       "format-charging": "{capacity}+",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#b8a8d0'>{capacity}%</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Battery</span>\n<span size='small' foreground='#b8a8d0'>{capacity}%</span>"
     },
     "modules-right": []
   }
