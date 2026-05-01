@@ -46,6 +46,29 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   every `engine/ui/audio_engine/video_engine/three_d_engine/document` reference
   resolves to a real symbol.
 
+### NYXUS Start + Panel flyouts — typography
+- All UI text (labels, buttons, titles, sub-headers, status lines, notepad
+  body) in both `nyxus-start/main.py` and `nyxus-panel/main.py` uses the
+  exact GodsApp font stack: `'Caveat', 'Comic Sans MS', cursive`.
+- Glyph-only classes (Font Awesome / Nerd Font icons in the power row,
+  weather widget, system widget, news cards) keep their explicit
+  `"JetBrains Mono Nerd Font", "Symbols Nerd Font", monospace` family —
+  swapping these would break icon rendering.
+
+### Waybar bottom-bar buttons (installed by Start's `install.sh`)
+- Three exec-driven custom modules, all rendered by
+  `~/.local/bin/nyxus-waybar-state {start|panel|notifications}`:
+  - `custom/nyxus-start` — far-left, magenta `#ff7af0`, label "Start"
+  - `custom/nyxus-panel` — right side, lavender `#c4a8ff`, label "The Panel"
+  - `custom/nyxus-notifications` — far-right, cyan `#7ae0ff`, label
+    "Notifications" (button only — flyout backend lands in a follow-up
+    release; on-click points to `nyxus-notifications` so wiring is ready).
+- Helper script writes Pango markup with `font_family='Caveat'`. CSS in
+  `waybar_styles.css` pins the same fallback stack and adds glow + `.open`
+  pressed-state per button. Idempotent jq patch in `install.sh` rewrites
+  `modules-left` / `modules-right` so re-running the installer never
+  duplicates entries.
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
