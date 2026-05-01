@@ -19,6 +19,27 @@ step() { printf "\n${PURPLE}▌${R} ${B}%s${R}\n" "$*"; }
 ok()   { printf "  ${CYAN}✓${R}  %s\n" "$*"; }
 fail() { printf "  ${PINK}✗${R}  %s\n" "$*" >&2; }
 
+DIM=$'\e[2m'
+
+# ── ROOT CHECK + SELF-ESCALATION ────────────────────────────────────────
+# This installer needs root for pacman + ownership-preserving file ops.
+# Without it the inner install.sh hits a chown failure under `set -e` and
+# bails partway through, leaving the user with a half-applied state
+# (downloads succeed, files never deploy, fonts never register, Waybar
+# never gets patched). Auto-elevate via sudo. When invoked through
+# `curl … | bash` $0 is /dev/stdin, so we re-curl ourselves under sudo.
+if [[ $EUID -ne 0 ]]; then
+  if command -v sudo >/dev/null 2>&1; then
+    printf "  ${DIM}elevating with sudo (you'll be prompted)…${R}\n\n"
+    if [[ -f "$0" && -r "$0" ]]; then
+      exec sudo -E bash "$0" "$@"
+    else
+      exec sudo -E bash -c "curl -fsSL 'https://nyxus-core.replit.app/api/download/nyxus/nyxus_start_install.sh' | bash"
+    fi
+  fi
+  fail "must be run as root (sudo not available)"; exit 1
+fi
+
 BASE="${NYXUS_BASE:-https://nyxus-core.replit.app/api/download/nyxus}"
 TGZ_URL="${BASE}/nyxus-start.tgz"
 
