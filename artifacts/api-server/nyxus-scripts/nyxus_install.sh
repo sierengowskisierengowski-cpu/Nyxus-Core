@@ -231,6 +231,20 @@ hdr "Alacritty"
 mkdir -p "$HOME/.config/alacritty"
 dl "alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" || failed=$((failed+1))
 
+# ── GTK4 TARBALL APPS — Home, Intel, Panel, Start, Sage, Studio, Shield… ────
+hdr "GTK4 Tarball Apps"
+TARBALL_APPS=(home intel panel start sage studio security godsapp)
+for app in "${TARBALL_APPS[@]}"; do
+  installer="nyxus_${app}_install.sh"
+  if curl -fsSL "${API}/${installer}" | bash >/tmp/nyxus-${app}-install.log 2>&1; then
+    ok "${app} (nyxus-${app})"
+  else
+    fail "${app} — see /tmp/nyxus-${app}-install.log"
+    failed=$((failed+1))
+    failed_items+=("nyxus-${app}")
+  fi
+done
+
 # ── DESKTOP ENTRIES — show in Rofi / any app launcher ────────────────────────
 hdr "App Launcher Entries (Rofi / .desktop)"
 DESKTOP_DIR="$HOME/.local/share/applications"
