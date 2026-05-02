@@ -13,6 +13,7 @@
 // as live iframes; the 8 tarball apps open NYXUS-themed previews.
 
 import { useState, useEffect, ReactNode } from "react";
+import HomeDashboard from "./HomeDashboard";
 
 const BASE = "/api/download/nyxus";
 
@@ -343,10 +344,11 @@ function RightBar({ onLaunch, openId }: { onLaunch: (a: AppDef) => void; openId:
 }
 
 // ── BOTTOM BAR (Start | workspace pager | gear time Panel Notifications) ─
-function BottomBar({ activeWs, onSelectWs, onStart, onSettings, onPanel, onNotif, time }: {
+function BottomBar({ activeWs, onSelectWs, onStart, onHome, onSettings, onPanel, onNotif, time }: {
   activeWs: number;
   onSelectWs: (n: number) => void;
   onStart: () => void;
+  onHome: () => void;
   onSettings: () => void;
   onPanel: () => void;
   onNotif: () => void;
@@ -392,6 +394,32 @@ function BottomBar({ activeWs, onSelectWs, onStart, onSettings, onPanel, onNotif
         onMouseLeave={e => { e.currentTarget.style.color = C.cyan; }}
       >
         Start
+      </button>
+
+      {/* Home button (workspace 0 — dashboard) */}
+      <button
+        onClick={onHome}
+        title="Home dashboard (workspace 0)"
+        style={{
+          background: activeWs === 0 ? `${C.pink}22` : "transparent",
+          border: activeWs === 0 ? `1px solid ${C.pink}88` : "1px solid transparent",
+          color: activeWs === 0 ? C.pink : C.gold,
+          fontSize: "0.72rem",
+          letterSpacing: "0.04em",
+          fontWeight: 700,
+          cursor: "pointer",
+          padding: "0px 8px",
+          textShadow: `0 0 6px ${activeWs === 0 ? C.pink : C.gold}88`,
+          fontFamily: "'Caveat', cursive",
+          borderRadius: 3,
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+        }}
+        onMouseEnter={e => { if (activeWs !== 0) e.currentTarget.style.color = C.pink; }}
+        onMouseLeave={e => { if (activeWs !== 0) e.currentTarget.style.color = C.gold; }}
+      >
+        <span style={{ fontSize: "0.8rem", lineHeight: 1 }}>⌂</span> Home
       </button>
 
       {/* center: workspace pager */}
@@ -994,7 +1022,7 @@ export default function Mirror() {
   const time = useTime();
   const wp = useWallpaperRotation(15000);
 
-  const [activeWs, setActiveWs] = useState(1);
+  const [activeWs, setActiveWs] = useState(0);
   const [openApp, setOpenApp] = useState<AppDef | null>(null);
   const [showStart, setShowStart] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
@@ -1051,11 +1079,27 @@ export default function Mirror() {
         activeWs={activeWs}
         onSelectWs={setActiveWs}
         time={time}
+        onHome     ={() => { setActiveWs(0); setShowStart(false); setShowPanel(false); setShowNotif(false); setShowSettings(false); }}
         onStart    ={() => { setShowStart(s => !s);    setShowPanel(false); setShowNotif(false); setShowSettings(false); }}
         onPanel    ={() => { setShowPanel(s => !s);    setShowStart(false); setShowNotif(false); setShowSettings(false); }}
         onNotif    ={() => { setShowNotif(s => !s);    setShowStart(false); setShowPanel(false); setShowSettings(false); }}
         onSettings ={() => { setShowSettings(s => !s); setShowStart(false); setShowPanel(false); setShowNotif(false); }}
       />
+
+      {/* HOME DASHBOARD (workspace 0) — sits inside the desktop area between bars */}
+      {activeWs === 0 && (
+        <div style={{
+          position: "absolute",
+          top: 32,
+          left: 46,
+          right: 50,
+          bottom: 32,
+          zIndex: 40,
+          overflow: "hidden",
+        }}>
+          <HomeDashboard />
+        </div>
+      )}
 
       {/* Wallpaper + back-to-portal labels (tiny, corner) */}
       <div style={{
