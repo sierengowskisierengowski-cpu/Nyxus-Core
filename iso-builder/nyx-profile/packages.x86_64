@@ -1,0 +1,129 @@
+# ============================================
+# NYXUS — nyx-2026.05.02-x86_64.iso
+# Copyright © 2026 Joseph Sierengowski
+# All Rights Reserved
+# NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+#
+# Pacman packages baked into the NYX live ISO.
+# Comments + blank lines are ignored by mkarchiso.
+
+# ── base system ────────────────────────────────────────────────────
+base
+base-devel
+linux
+linux-firmware
+mkinitcpio
+mkinitcpio-archiso
+intel-ucode
+amd-ucode
+sudo
+networkmanager
+iwd
+wpa_supplicant
+dhcpcd
+openssh
+git
+nano
+vim
+wget
+curl
+unzip
+zip
+tar
+htop
+neofetch
+
+# ── boot ───────────────────────────────────────────────────────────
+syslinux
+grub
+efibootmgr
+edk2-shell
+memtest86+
+memtest86+-efi
+
+# ── filesystem support ─────────────────────────────────────────────
+btrfs-progs
+dosfstools
+e2fsprogs
+exfatprogs
+f2fs-tools
+ntfs-3g
+xfsprogs
+gptfdisk
+parted
+mtools
+
+# ── Hyprland / Wayland ────────────────────────────────────────────
+hyprland
+hyprlock
+hypridle
+hyprpaper
+hyprcursor
+waybar
+wofi
+mako
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+qt5-wayland
+qt6-wayland
+xorg-xwayland
+wl-clipboard
+grim
+slurp
+cliphist
+brightnessctl
+playerctl
+pamixer
+pavucontrol
+polkit
+polkit-gnome
+
+# ── audio ─────────────────────────────────────────────────────────
+pipewire
+pipewire-alsa
+pipewire-pulse
+pipewire-jack
+wireplumber
+alsa-utils
+
+# ── GTK4 + Python (for NYXUS apps) ────────────────────────────────
+gtk4
+libadwaita
+python
+python-gobject
+python-pip
+python-cryptography
+python-requests
+python-pillow
+python-dnspython
+
+# ── fonts ─────────────────────────────────────────────────────────
+ttf-jetbrains-mono-nerd
+ttf-firacode-nerd
+noto-fonts
+noto-fonts-emoji
+ttf-font-awesome
+
+# ── terminal + utilities ──────────────────────────────────────────
+foot
+kitty
+fzf
+ripgrep
+fd
+bat
+eza
+zoxide
+starship
+ranger
+
+# ── installer (Calamares) ─────────────────────────────────────────
+calamares
+
+# ── archiso runtime requirements ──────────────────────────────────
+arch-install-scripts
+archinstall
+pacman-contrib
+reflector
+rsync
+which

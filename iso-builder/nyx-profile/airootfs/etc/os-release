@@ -1,0 +1,13 @@
+NAME="NYXUS"
+PRETTY_NAME="NYXUS · The Night Has Eyes"
+ID=nyxus
+ID_LIKE=arch
+BUILD_ID=nyx-2026.05.02-x86_64
+ANSI_COLOR="38;5;177"
+HOME_URL="https://nyxus-core.replit.app/"
+DOCUMENTATION_URL="https://nyxus-core.replit.app/"
+SUPPORT_URL="https://github.com/sierengowski/NyX.OS-V1"
+BUG_REPORT_URL="https://github.com/sierengowski/NyX.OS-V1/issues"
+LOGO=nyxus
+VARIANT="Live ISO"
+VARIANT_ID=live

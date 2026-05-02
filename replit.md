@@ -119,3 +119,62 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## NYX ISO build (iso-builder/)
+
+The `iso-builder/` directory contains the archiso profile that bakes
+the NYX ISO. **Cannot be built inside Replit** — `mkarchiso` requires
+root + loop devices + an Arch Linux host. The user runs this on their
+MSI Arch box.
+
+- `iso-builder/build-iso.sh` — one-command wrapper. Pulls the latest
+  `nyxus-intel.tgz` from production (or local), seeds the tamper
+  manifest at `airootfs/opt/nyxus-intel/.manifest.sha256`, mirrors
+  OS-level docs into `airootfs/etc/nyxus/`, runs mkarchiso, renames
+  the output to `nyx-2026.05.02-x86_64.iso`.
+- `iso-builder/nyx-profile/profiledef.sh` — ISO label `NYX_2026_05`,
+  iso_name `nyx`, iso_version `2026.05.02`, BIOS+UEFI bootmodes.
+- `iso-builder/nyx-profile/packages.x86_64` — full pacman list:
+  hyprland stack, gtk4, python-gobject, calamares, fonts, etc.
+- `iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf`
+  is a **placeholder** — user must drop their daily-driver config in
+  before final bake.
+- Boot menus (`syslinux/syslinux.cfg`, `efiboot/loader/entries/01-nyx.conf`,
+  `grub/grub.cfg`) all branded "NYXUS — The Night Has Eyes".
+- `airootfs/etc/os-release` sets `NAME=NYXUS`, `BUILD_ID=nyx-2026.05.02-x86_64`.
+
+## OS-level docs (repo root)
+
+- `LICENSE.md` — NYX & NYXUS Custom License v1.0 (covers both ISO and OS)
+- `README.md` — project overview + repo layout
+- `CHANGELOG.md` — v1.0.0 release notes for the OS + 14-app suite
+- `CREDITS.md` — author + tooling credits
+These same docs are mirrored into `iso-builder/nyx-profile/airootfs/etc/nyxus/`
+by `build-iso.sh` so they live at `/etc/nyxus/` on the live system.
+
+## Brand naming rule (CRITICAL — do not get this wrong)
+
+- **NYX** = the ISO file. Filename: `nyx-2026.05.02-x86_64.iso`.
+- **NYXUS** = the operating system. Everything inside the ISO,
+  every app, every doc, every menu, every About dialog says NYXUS.
+- The LICENSE is "NYX & NYXUS LICENSE" because it covers both.
+- No other brand names — no NyX.x.OS, NyXxOS, GowskiNet, NyX.OS-V1
+  (the GitHub URL is the one allowed exception, in LICENSE.md).
+- Author is always: **Joseph Sierengowski**.
+- Lock code: `NYX-J5W-2026-SIERENGOWSKI-LOCKED`.
+
+## NYXUS Phantom watermarking (nyxus-intel.tgz)
+
+The OSINT tarball at `artifacts/api-server/nyxus-scripts/nyxus-intel.tgz`
+ships with comprehensive ownership protection:
+- 6-line copyright banner on every Python/Bash/CSS file
+- `_fingerprint.py` silent `_check()` called from `main()`
+- `_tamper.py` SHA-256s every shipped `.py` (including itself —
+  non-bypassable) against `/opt/nyxus-intel/.manifest.sha256`. Mismatch
+  prints exact warning text and appends a JSON record to
+  `~/.config/nyxus/tamper.log`. App always continues.
+- `_legal.py` first-launch disclaimer modal stored in
+  `~/.config/nyxus/accepted.json` keyed by app name.
+- `_about.py` standard NYXUS About window wired to the topbar info button.
+- `install.sh` seeds the tamper manifest at install time and deploys
+  per-app LICENSE/README/CHANGELOG/CREDITS to `/opt/nyxus-intel/`.
