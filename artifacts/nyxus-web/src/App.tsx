@@ -1,6 +1,17 @@
 import { useState, useEffect, useRef } from "react";
+import Mirror from "./pages/Mirror";
 
 const BASE = "/api/download/nyxus";
+
+function useHashRoute() {
+  const [route, setRoute] = useState(() => window.location.hash.replace(/^#\/?/, ""));
+  useEffect(() => {
+    const handler = () => setRoute(window.location.hash.replace(/^#\/?/, ""));
+    window.addEventListener("hashchange", handler);
+    return () => window.removeEventListener("hashchange", handler);
+  }, []);
+  return route;
+}
 
 const SCRIPTS = [
   {
@@ -265,12 +276,15 @@ function Ticker() {
 const BG_URL = `${import.meta.env.BASE_URL}nyxus-bg.png`;
 
 export default function App() {
+  const route = useHashRoute();
   const [time, setTime] = useState(new Date().toISOString().replace("T", " ").slice(0, 19));
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date().toISOString().replace("T", " ").slice(0, 19)), 1000);
     return () => clearInterval(t);
   }, []);
+
+  if (route === "mirror") return <Mirror />;
 
   return (
     <div style={{
@@ -313,6 +327,26 @@ export default function App() {
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
+                <a
+                  href="#/mirror"
+                  style={{
+                    display: "inline-block",
+                    fontSize: "0.6rem",
+                    color: "#c084fc",
+                    textDecoration: "none",
+                    border: "1px solid rgba(192,132,252,0.4)",
+                    padding: "4px 10px",
+                    borderRadius: 2,
+                    letterSpacing: "0.18em",
+                    marginBottom: "0.4rem",
+                    textShadow: "0 0 8px rgba(192,132,252,0.5)",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(192,132,252,0.18)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  ◐ MIRROR · ALL APPS
+                </a>
                 <div style={{ fontSize: "0.6rem", color: "#2a2a2a", fontFamily: "monospace" }}>{time} UTC</div>
                 <div style={{ fontSize: "0.6rem", color: "#1e1e1e", marginTop: "0.2rem" }}>KERNEL 6.6.0-nyxus · x86_64</div>
                 <div style={{ fontSize: "0.6rem", color: "#1e1e1e" }}>STATUS: <span style={{ color: "#2d6a3f" }}>OPERATIONAL</span></div>
