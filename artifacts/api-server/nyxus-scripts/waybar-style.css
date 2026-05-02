@@ -1120,3 +1120,38 @@ window#waybar.bottom #custom-nyxus-panel.open {
 window#waybar.bottom #custom-nyxus-panel.open {
     border-width:    2px;
 }
+
+/* ── MAIN (NYXUS Home) button ─────────────────────────────────────────────
+ * Sits between Start and the workspace pills. Cyan/magenta gradient theme
+ * to match the Home dashboard's clock + notepad cards. Hand-drawn label
+ * via Caveat, glowing dashed border, "active" state when workspace 1 is
+ * focused (Hyprland auto-tags via hyprland.conf workspace rules).
+ * © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ * ───────────────────────────────────────────────────────────────────── */
+window#waybar.bottom #custom-main {
+    font-family:     "Caveat", "Comic Neue", "Patrick Hand", cursive, sans-serif;
+    font-size:       22px;
+    font-weight:     bold;
+    color:           #22d3ee;
+    background:      rgba(8, 4, 22, 0.55);
+    border:          1.5px dashed rgba(34, 211, 238, 0.55);
+    border-radius:   10px;
+    padding:         2px 18px;
+    margin:          3px 6px 3px 6px;
+    text-shadow:     0 0 8px rgba(34, 211, 238, 0.85),
+                     0 0 14px rgba(255, 0, 255, 0.40);
+    transition:      all 0.18s ease;
+}
+
+window#waybar.bottom #custom-main:hover,
+window#waybar.bottom #custom-main.open {
+    color:           #ffffff;
+    border-color:    #22d3ee;
+    background-color: rgba(34, 211, 238, 0.18);
+    text-shadow:     0 0 14px #22d3ee,
+                     0 0 24px rgba(255, 0, 255, 0.85);
+    box-shadow:      0 0 18px rgba(34, 211, 238, 0.85),
+                     0 0 32px rgba(255, 0, 255, 0.45),
+                     inset 0 0 10px rgba(34, 211, 238, 0.18);
+}
+
