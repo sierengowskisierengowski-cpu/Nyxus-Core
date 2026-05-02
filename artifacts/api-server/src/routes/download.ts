@@ -34,6 +34,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-sierengowski-clean.png": "nyxus-sierengowski-clean.png",
   "nyxus-taskbar-bg.png":         "nyxus-taskbar-bg.png",
   "nyxus-taskbar-bg2.png":        "nyxus-taskbar-bg2.png",
+  "nyxus-rightbar-bg.png":        "nyxus-rightbar-bg.png",
   "nyxus_sysmon.py":              "nyxus_sysmon.py",
   "nyxus_sysmon_gtk.py":          "nyxus_sysmon_gtk.py",
   "nyxus_stickies.py":            "nyxus_stickies.py",

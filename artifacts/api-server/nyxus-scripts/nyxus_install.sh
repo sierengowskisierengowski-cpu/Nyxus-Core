@@ -184,6 +184,7 @@ WALLS_DIR="$HYPR_DIR/walls"
 mkdir -p "$WALLS_DIR"
 dl "nyxus-sierengowski-clean.png" "$WALLS_DIR/nyxus-sierengowski-clean.png" || failed=$((failed+1))
 dl "nyxus-taskbar-bg.png"         "$WALLS_DIR/nyxus-taskbar-bg.png"         || failed=$((failed+1))
+dl "nyxus-rightbar-bg.png"        "$WALLS_DIR/nyxus-rightbar-bg.png"        || failed=$((failed+1))
 
 # ── APP BACKGROUNDS (neon splat panels — used by all GTK apps) ────────────────
 hdr "App Backgrounds (neon splat panels)"
