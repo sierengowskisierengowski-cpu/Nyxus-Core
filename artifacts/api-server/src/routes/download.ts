@@ -74,6 +74,18 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_intel_install.sh":     "nyxus_intel_install.sh",
   "nyxus-home.tgz":             "nyxus-home.tgz",
   "nyxus_home_install.sh":      "nyxus_home_install.sh",
+  "nyxus-clock.tgz":              "nyxus-clock.tgz",
+  "nyxus_clock_install.sh":       "nyxus_clock_install.sh",
+  "nyxus-weather.tgz":            "nyxus-weather.tgz",
+  "nyxus_weather_install.sh":     "nyxus_weather_install.sh",
+  "nyxus-calendar.tgz":           "nyxus-calendar.tgz",
+  "nyxus_calendar_install.sh":    "nyxus_calendar_install.sh",
+  "nyxus-notifications.tgz":      "nyxus-notifications.tgz",
+  "nyxus_notifications_install.sh":"nyxus_notifications_install.sh",
+  "nyxus-notepad.tgz":            "nyxus-notepad.tgz",
+  "nyxus_notepad_install.sh":     "nyxus_notepad_install.sh",
+  "nyxus-passwords.tgz":          "nyxus-passwords.tgz",
+  "nyxus_passwords_install.sh":   "nyxus_passwords_install.sh",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {

@@ -233,7 +233,7 @@ dl "alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" || failed=$((failed
 
 # ── GTK4 TARBALL APPS — Home, Intel, Panel, Start, Sage, Studio, Shield… ────
 hdr "GTK4 Tarball Apps"
-TARBALL_APPS=(home intel panel start sage studio security)
+TARBALL_APPS=(home clock weather calendar notifications notepad passwords intel panel start sage studio security)
 for app in "${TARBALL_APPS[@]}"; do
   installer="nyxus_${app}_install.sh"
   if curl -fsSL "${API}/${installer}" | bash >/tmp/nyxus-${app}-install.log 2>&1; then
