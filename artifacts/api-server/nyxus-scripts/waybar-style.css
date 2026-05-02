@@ -703,18 +703,22 @@ window#waybar.left #workspaces button.active {
    RIGHT BAR  ·  signature color: GOLD #ffff00  (70% height)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.right {
-    /* Paint-splatter image as the bar's background. Solid color sits
-     * underneath so the bar still has chrome even if the image file is
-     * missing on disk. The image was chosen by the user (multi-color
-     * neon paint splatter on black). */
-    background-color:    #0a0700;
-    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-rightbar-bg.png");
-    background-size:     cover;
-    background-position: center center;
-    background-repeat:   no-repeat;
+    /* Paint-splatter image as the base, with a dark gold gradient TINT
+     * layered on top — same dual-layer pattern the LEFT bar uses (image
+     * underneath, dark color overlay on top). Solid fallback color sits
+     * underneath both so the chrome never disappears. */
+    background-image:    linear-gradient(180deg,
+                            rgba(40, 28, 0, 0.55) 0%,
+                            rgba(20, 14, 0, 0.65) 50%,
+                            rgba(40, 28, 0, 0.55) 100%),
+                         url("file:///home/nyx/.config/hypr/walls/nyxus-rightbar-bg.png");
+    background-color:    rgba(18, 12, 2, 0.92);
+    background-size:     cover, cover;
+    background-position: center center, center center;
+    background-repeat:   no-repeat, no-repeat;
     color:               #ffffff;
     border-left:         5px solid #ffff00;
-    border-right:        4px solid #d4a015;
+    border-right:        4px solid rgba(251, 191, 36, 0.50);
     border-top:          5px solid #ffff00;
     border-bottom:       5px solid #ffff00;
     box-shadow:         -6px 0 50px rgba(255,255,0,0.78),
