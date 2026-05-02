@@ -703,11 +703,15 @@ window#waybar.left #workspaces button.active {
    RIGHT BAR  ·  signature color: GOLD #ffff00  (70% height)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.right {
-    /* FLAT SOLID BACKGROUND — no gradient, no image, no transparency.
-     * Uses shorthand `background:` so it can't be split-overridden by any
-     * later background-color/-image rule. Will render even if GTK's
-     * gradient or image-url paths fail. */
-    background:          #1a1200;
+    /* Paint-splatter image as the bar's background. Solid color sits
+     * underneath so the bar still has chrome even if the image file is
+     * missing on disk. The image was chosen by the user (multi-color
+     * neon paint splatter on black). */
+    background-color:    #0a0700;
+    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-rightbar-bg.png");
+    background-size:     cover;
+    background-position: center center;
+    background-repeat:   no-repeat;
     color:               #ffffff;
     border-left:         5px solid #ffff00;
     border-right:        4px solid #d4a015;
@@ -718,8 +722,7 @@ window#waybar.right {
     animation:           right-pulse 5s ease-in-out infinite;
 }
 
-/* Belt-and-suspenders: if the bar's class is set differently or the
- * outer GtkBox is what needs paint, hit those too. */
+/* Inner module rows stay transparent so the splatter shows through. */
 window#waybar.right > box,
 window#waybar.right .modules-center,
 window#waybar.right .modules-right,
