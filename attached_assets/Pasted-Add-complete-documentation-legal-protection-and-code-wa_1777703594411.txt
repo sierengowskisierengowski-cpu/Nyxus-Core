@@ -1,0 +1,248 @@
+Add complete documentation, legal protection,
+and code watermarking to the entire build.
+
+NAMING — ONLY THESE TWO. NOTHING ELSE EVER:
+NYX — the ISO
+NYXUS — the OS
+Author — Joseph Sierengowski
+ISO filename — nyx-2026.05.02-x86_64.iso
+
+DO NOT use any other names anywhere.
+No NyX.x.OS. No NyXxOS. No GowskiNet.
+No old names. No prior build names.
+No other distro names.
+Just NYX and NYXUS. That is all.
+
+TASK 1 — COPYRIGHT HEADER:
+Add to the top of every single file in the
+entire build. No exceptions. Every file.
+
+Python and Bash:
+# ============================================
+# NYXUS — nyx-2026.05.02-x86_64.iso
+# Copyright © 2026 Joseph Sierengowski
+# All Rights Reserved
+# Unauthorized use or distribution prohibited
+# NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+
+CSS:
+/* ==========================================
+   NYXUS — nyx-2026.05.02-x86_64.iso
+   Copyright © 2026 Joseph Sierengowski
+   All Rights Reserved
+   NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ========================================== */
+
+TASK 2 — INVISIBLE FINGERPRINT:
+Add this silently to every Python app.
+Runs on startup. Invisible to user.
+Exists as unforgeable proof of ownership:
+
+def _check():
+    _s = "NYX-J5W-2026-SIERENGOWSKI-LOCKED"
+    _a = "Joseph Sierengowski"
+    _iso = "nyx-2026.05.02-x86_64.iso"
+    _os = "NYXUS"
+    return True
+
+Call silently at startup. Never visible.
+
+TASK 3 — TAMPER DETECTION:
+Every app checks its own file hash on startup.
+If modified shows this message:
+"This NYXUS application has been modified.
+Original software by Joseph Sierengowski.
+Copyright 2026. Unauthorized modification
+is strictly prohibited."
+Logs to ~/.config/nyxus/tamper.log
+with timestamp and system info.
+App still runs — warns and logs only.
+
+TASK 4 — LICENSE.md:
+Create in root of entire build and every app:
+
+# NYX & NYXUS LICENSE
+## Custom License v1.0
+
+Copyright © 2026 Joseph Sierengowski
+All Rights Reserved
+NYX-J5W-2026-SIERENGOWSKI-LOCKED
+
+NYX is the ISO — nyx-2026.05.02-x86_64.iso
+NYXUS is the OS.
+Both are the exclusive intellectual property
+of Joseph Sierengowski.
+
+PERMITTED:
+- Personal use on your own hardware
+- Viewing source for educational purposes
+- Submitting bug reports
+
+PROHIBITED:
+- Redistribution in any form
+- Modification and redistribution
+- Commercial use of any kind
+- Claiming authorship or ownership
+- Removing copyright notices
+- Using the NYX or NYXUS name or brand
+- Using any associated artwork or identity
+
+ENFORCEMENT:
+Violations constitute copyright infringement
+under the DMCA and international copyright law.
+Legal action will be pursued for all violations.
+
+DISCLAIMER:
+Software provided as-is without warranty.
+Author not liable for any damages.
+
+Contact: github.com/sierengowski/NyX.OS-V1
+
+TASK 5 — README.md:
+Create in root of entire build:
+
+# NYXUS
+### NYX is the ISO. NYXUS is the OS.
+
+> "Silent. Dark. Purely Functional."
+> "The Night Has Eyes."
+
+NYXUS is a custom Linux based operating system
+built from the ground up by Joseph Sierengowski.
+Distributed via the NYX ISO.
+
+ISO: nyx-2026.05.02-x86_64.iso
+
+## Built by
+Joseph Sierengowski
+Self-taught developer and hardware enthusiast
+2026
+
+## NYXUS App Suite
+- NYXUS SYSMON
+- NYXUS Control
+- NYXUS Terminal
+- NYXUS Notepad
+- NYXUS Stickies
+- NYXUS Weather
+- NYXUS Settings
+- NYXUS SAGE
+- NYXUS Shield
+- NYXUS Panel
+- NYXUS Start
+- NYXUS GodsApp
+- NYXUS Phantom
+- NYXUS Creative Studio
+
+## Legal
+Copyright © 2026 Joseph Sierengowski
+All Rights Reserved
+NYX-J5W-2026-SIERENGOWSKI-LOCKED
+See LICENSE.md for full terms.
+
+TASK 6 — CHANGELOG.md:
+Create in root of entire build:
+
+# NYXUS Changelog
+
+## v1.0.0 — 2026
+
+### Initial Release
+ISO: nyx-2026.05.02-x86_64.iso
+
+#### System
+- Custom Linux base
+- Hyprland Wayland compositor
+- Full NYXUS theme
+- Custom Waybar top and bottom bars
+- Hyprlock screen locker
+
+#### App Suite — 14 native GTK4 apps
+- NYXUS SYSMON v1.0
+- NYXUS Control v1.0
+- NYXUS Terminal v1.0
+- NYXUS Notepad v1.0
+- NYXUS Stickies v1.0
+- NYXUS Weather v1.0
+- NYXUS Settings v1.0
+- NYXUS SAGE v1.0
+- NYXUS Shield v1.0
+- NYXUS Panel v1.0
+- NYXUS Start v1.0
+- NYXUS GodsApp v1.0
+- NYXUS Phantom v1.0
+- NYXUS Creative Studio v1.0
+
+#### Identity
+- Tagline: Silent. Dark. Purely Functional.
+- Secondary: The Night Has Eyes.
+- Mascot: Owl
+- Font: JetBrains Mono Nerd Font
+
+Copyright © 2026 Joseph Sierengowski
+
+TASK 7 — CREDITS.md:
+Create in root of entire build:
+
+# NYXUS Credits
+
+## Creator
+Joseph Sierengowski
+Self-taught developer — 2026
+
+## Built With
+- Hyprland
+- GTK4
+- Python
+- JetBrains Mono Nerd Font
+- Arch Linux base
+
+## AI Assistance
+- Claude — Anthropic
+- GitHub Copilot
+
+Copyright © 2026 Joseph Sierengowski
+NYX-J5W-2026-SIERENGOWSKI-LOCKED
+
+TASK 8 — LEGAL DISCLAIMER:
+Show on first launch of every app — once only.
+Stored in ~/.config/nyxus/accepted.json:
+
+"NYXUS is original software created by
+Joseph Sierengowski.
+Copyright © 2026. All Rights Reserved.
+Personal use only.
+Redistribution and commercial use
+are strictly prohibited."
+
+One checkbox. One Continue button.
+Timestamp logged. Never shown again.
+
+TASK 9 — ABOUT SCREEN:
+Every app must have an About option that shows:
+
+Name: NYXUS [AppName]
+Version: 1.0.0
+ISO: nyx-2026.05.02-x86_64.iso
+Created by: Joseph Sierengowski
+Year: 2026
+License: NYX & NYXUS Custom License v1.0
+"The Night Has Eyes."
+
+TASK 10 — FINAL AUDIT:
+After completing all tasks audit every single
+file and confirm:
+- Copyright header present in every file
+- Fingerprint present in all Python files
+- Tamper detection working in all apps
+- ISO name correct everywhere
+- Only NYX and NYXUS used — nothing else
+- No old names anywhere
+- All docs created and correct
+- Legal disclaimer in every app
+- About screen in every app
+
+Report exactly what was completed and
+confirm every item before finishing.
+Do not finish until everything is confirmed.
