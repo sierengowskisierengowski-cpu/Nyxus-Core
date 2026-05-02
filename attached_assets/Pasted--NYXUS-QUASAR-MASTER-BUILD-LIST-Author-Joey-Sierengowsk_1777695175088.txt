@@ -1,0 +1,207 @@
+# NYXUS QUASAR — MASTER BUILD LIST
+**Author: Joey Sierengowski / GowskiNet**
+**Date: May 2026**
+**Golden Rule: One item at a time. Confirm complete before moving to next. Never change established theme, colors, fonts, or brand. This is NYXUS Quasar — nothing else.**
+
+---
+
+## RULES FOR ALL — CLAUDE, REPLIT, JOEY
+- Work from this list ONLY
+- Complete item 1 before touching item 2
+- Never skip ahead
+- Never change what is already working and confirmed
+- Never add features not on this list without Joey's approval
+- Never change the theme — dark background #080808, purple #7B5EA7, pink #C4607A, handwritten font, hand drawn borders
+- If unsure — stop and ask Joey before doing anything
+- Every completed item gets checked off before moving on
+
+---
+
+## SECTION 1 — MASTER STYLE AND CONSISTENCY
+**Goal: Everything looks like it belongs to the same OS**
+
+- [ ] **1.1** Create master shared style file nyxus_theme.py — defines fonts, colors, borders, buttons, cards for ALL apps to import
+- [ ] **1.2** Waybar Start button — "Start" handwritten font, glowing X behind text, correct NYXUS style
+- [ ] **1.3** Waybar The Panel button — "The Panel" same handwritten font, same glow, identical style to Start
+- [ ] **1.4** Waybar Notifications button — "Notifications" same handwritten font, same glow, identical style
+- [ ] **1.5** All three Waybar buttons confirmed matching exactly before moving on
+- [ ] **1.6** NYXUS Start flyout — apply handwritten font matching GodsApp, keep graffiti background
+- [ ] **1.7** NYXUS Panel flyout — apply same handwritten font, keep graffiti background
+- [ ] **1.8** NYXUS SAGE — apply master style
+- [ ] **1.9** NYXUS Shield — apply master style
+- [ ] **1.10** NYXUS Studio — apply master style
+- [ ] **1.11** NYXUS Notepad — apply master style
+- [ ] **1.12** NYXUS Stickies — apply master style
+- [ ] **1.13** NYXUS Terminal — apply master style
+- [ ] **1.14** NYXUS Settings — apply master style
+- [ ] **1.15** NYXUS SYSMON — verify matches, fix if needed
+- [ ] **1.16** NYXUS Control — verify matches, fix if needed
+- [ ] **1.17** NYXUS Weather — verify matches, fix if needed
+- [ ] **1.18** GodsApp — verify matches, this is the reference style
+- [ ] **1.19** All apps confirmed uniform and flowing together as one theme
+
+---
+
+## SECTION 2 — APP WINDOW BEHAVIOR
+**Goal: All apps behave like real proper applications**
+
+- [ ] **2.1** All apps get minimize, maximize, close buttons — every single one
+- [ ] **2.2** All apps open at a defined set size — no more opening too big or too small
+- [ ] **2.3** All apps auto-fit and scale to any window size — fully responsive
+- [ ] **2.4** Right click context menus — added to all apps with appropriate options
+- [ ] **2.5** Left click behaviors — consistent across all apps
+- [ ] **2.6** All apps confirmed working window behavior before moving on
+
+---
+
+## SECTION 3 — WAYBAR TOP AND BOTTOM
+**Goal: Both Waybar bars complete, correct, and all buttons working**
+
+- [ ] **3.1** Top Waybar — audit everything, remove anything not wanted, confirm all working
+- [ ] **3.2** Bottom Waybar — audit everything, confirm all buttons work
+- [ ] **3.3** Left side Waybar — audit and confirm
+- [ ] **3.4** Settings button on bottom Waybar — confirm if same as right side or separate, keep only one
+- [ ] **3.5** All Waybar buttons confirmed working before moving on
+
+---
+
+## SECTION 4 — NOTIFICATIONS CENTER
+**Goal: Full working notification center**
+
+- [ ] **4.1** Notifications flyout — fully built and working, opens from Notifications button
+- [ ] **4.2** Built in calendar with reminders at top of notifications
+- [ ] **4.3** All system notifications appear in center
+- [ ] **4.4** Notification center styled to match NYXUS theme
+
+---
+
+## SECTION 5 — SETTINGS APP
+**Goal: Real fully working system settings**
+
+- [ ] **5.1** NYXUS Settings — full rebuild done correctly, all 20 categories working
+- [ ] **5.2** Every setting actually applies to real system
+- [ ] **5.3** No broken categories, no grey screens, no placeholder buttons
+- [ ] **5.4** Settings confirmed fully working before moving on
+
+---
+
+## SECTION 6 — EXISTING APPS AUDIT
+**Goal: Every app clean, correct, nothing unwanted**
+
+- [ ] **6.1** Go through every installed app — remove anything not wanted
+- [ ] **6.2** Add anything missing to apps that need it
+- [ ] **6.3** NYXUS SYSMON — full audit, confirm all working
+- [ ] **6.4** NYXUS Control — GPU fix confirmed, all modules working
+- [ ] **6.5** NYXUS Terminal — copy fix, sleep screen bokeh removed, final border decision
+- [ ] **6.6** NYXUS Notepad — full audit, all buttons working
+- [ ] **6.7** NYXUS Stickies — simple version confirmed working
+- [ ] **6.8** NYXUS Weather — full audit, confirmed working
+- [ ] **6.9** NYXUS SAGE — audit fix, all buttons wired, knowledge base loaded
+- [ ] **6.10** GodsApp — all 30 modules actually working and returning real results
+- [ ] **6.11** NYXUS Shield — full audit confirmed working
+- [ ] **6.12** NYXUS Panel — flyout stays open fix, news feed loading
+- [ ] **6.13** NYXUS Start — all sections working, power buttons working
+- [ ] **6.14** NYXUS Settings — all 20 categories fully functional
+
+---
+
+## SECTION 7 — WALLPAPERS AND BACKGROUNDS
+**Goal: All wallpapers correct and available**
+
+- [ ] **7.1** All 40 owl wallpapers confirmed installed
+- [ ] **7.2** New wallpaper — graffiti splatter that says "Hyprland" — created and added
+- [ ] **7.3** New wallpaper — graffiti splatter that says "80's Baby" — created and added
+- [ ] **7.4** All wallpapers available in NYXUS Settings wallpaper picker
+
+---
+
+## SECTION 8 — LOGOUT AND LOCK SCREENS
+**Goal: All screens themed and working**
+
+- [ ] **8.1** Logout menu — designed in NYXUS theme, fully working
+- [ ] **8.2** Logout screen — for when not running next to GNOME — designed and working
+- [ ] **8.3** Hyprlock — redesigned to match NYXUS theme, not much change needed
+- [ ] **8.4** All lock and logout screens confirmed working before moving on
+
+---
+
+## SECTION 9 — BRANDING AND LEGAL
+**Goal: Everything properly branded and protected**
+
+- [ ] **9.1** All files, docs, README files — audited, correct, no typos, nothing from old builds
+- [ ] **9.2** Copyright headers in every single file — © 2026 Joseph Sierengowski / GowskiNet
+- [ ] **9.3** Legal disclaimers — in every app that needs one, all the same format
+- [ ] **9.4** LICENSE file — custom NYXUS license, correct and in place
+- [ ] **9.5** CHANGELOG — up to date with everything built
+- [ ] **9.6** README — complete, accurate, no old build references
+- [ ] **9.7** BRANDING.md — complete and locked
+- [ ] **9.8** Invisible watermark / steganographic fingerprint — embedded in all code and artwork
+- [ ] **9.9** Obfuscation — all scripts compiled and obfuscated before release
+- [ ] **9.10** GPG signed — all commits signed with YubiKey
+- [ ] **9.11** Nothing from old builds (GALAXIAS, NyX.oS references) anywhere in codebase
+- [ ] **9.12** All branding confirmed correct — Display=NyX.x.OS, Code=NyXxOS, NEVER NyX.oS
+
+---
+
+## SECTION 10 — CLEANUP
+**Goal: Clean build, nothing extra, nothing old**
+
+- [ ] **10.1** Remove all old or unused apps from the system
+- [ ] **10.2** Remove all old config files from prior builds
+- [ ] **10.3** Remove anything not tied to this build
+- [ ] **10.4** Ensure nothing from GALAXIAS or prior builds exists anywhere
+- [ ] **10.5** Clean package list — remove anything unused
+- [ ] **10.6** Timeshift snapshot taken after cleanup confirmed complete
+
+---
+
+## SECTION 11 — PRE-AUDIT FINAL CHECK
+**Goal: Everything ready for full audit**
+
+- [ ] **11.1** All apps open without crashing
+- [ ] **11.2** All buttons in all apps functional
+- [ ] **11.3** All Waybar buttons working
+- [ ] **11.4** All flyouts open and stay open correctly
+- [ ] **11.5** Theme uniform across everything
+- [ ] **11.6** All legal and branding in place
+- [ ] **11.7** Timeshift snapshot taken
+- [ ] **11.8** Everything pushed to GitHub — YubiKey signed
+- [ ] **11.9** Ready for full audit
+
+---
+
+## SECTION 12 — FULL AUDIT
+**Goal: Complete system audit before release**
+
+- [ ] **12.1** Claude — full code review of all apps and scripts
+- [ ] **12.2** Copilot — second pass, catch what Claude missed
+- [ ] **12.3** Joey — live hardware testing on MSI GS77
+- [ ] **12.4** All bugs and errors documented
+- [ ] **12.5** All fixes applied
+- [ ] **12.6** Re-test after fixes
+- [ ] **12.7** Full audit passed — confirmed by all three
+
+---
+
+## SECTION 13 — BAKE AND RELEASE
+**Goal: Complete finished system ready to ship**
+
+- [ ] **13.1** Everything baked into one complete cohesive system
+- [ ] **13.2** ISO build — final build with all components
+- [ ] **13.3** Flash USB and test full install on real hardware
+- [ ] **13.4** Install confirmed clean and complete
+- [ ] **13.5** Final Timeshift snapshot
+- [ ] **13.6** GitHub — final release tagged and signed
+- [ ] **13.7** NYXUS Quasar v1.0 — COMPLETE
+
+---
+
+## CURRENT STATUS
+**Starting at: Item 1.1**
+**Last completed: Nothing yet — starting now**
+
+---
+
+*NYXUS Quasar — The Night Has Eyes*
+*Copyright © 2026 Joseph Sierengowski / GowskiNet*
+*All Rights Reserved*
