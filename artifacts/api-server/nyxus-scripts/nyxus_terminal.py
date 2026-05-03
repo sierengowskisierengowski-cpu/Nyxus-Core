@@ -36,7 +36,7 @@ for _vte_ver in ("3.91", "2.91"):
         _vte_err_msg = str(_e)
 
 # ── Dimensions ────────────────────────────────────────────────────────────────
-WIN_W, WIN_H   = 1100, 680
+WIN_W, WIN_H   = 1280, 800
 BORDER_TOP     = 40   # minimal strip for spray-can buttons only
 BORDER_BOTTOM  = 0
 BORDER_SIDE    = 0
@@ -584,11 +584,7 @@ def draw_idle_overlay(cr, w, h, phase):
     cr.set_source_rgba(1, 1, 1, alpha * 0.55)
     cr.move_to(w / 2 - ext2.width / 2 - ext2.x_bearing, cy_lgo + 58)
     cr.show_text(sub)
-
-    rng2 = _rng(77)
-    for i, col in enumerate(PALETTE[:4]):
-        dx = lx + (i + 0.5) * ext.width / 4
-        _draw_drip(cr, dx, cy_lgo + 10, col, h * 0.22, rng2)
+    # (drips/bokeh circles removed — clean sleep screen, just logo + caption)
 
 
 # ── Spray-paint selection overlay ─────────────────────────────────────────────
