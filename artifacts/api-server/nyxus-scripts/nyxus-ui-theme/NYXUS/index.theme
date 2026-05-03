@@ -1,12 +1,12 @@
 [Desktop Entry]
 Type=X-GNOME-Metatheme
-Name=NyXxOS
-Comment=NyX.x.OS GTK Theme — Silent. Dark. Purely Functional.
+Name=NYXUS
+Comment=NYXUS GTK Theme — Silent. Dark. Purely Functional.
 Encoding=UTF-8
 
 [X-GNOME-Metatheme]
-GtkTheme=NyXxOS
-MetacityTheme=NyXxOS
+GtkTheme=NYXUS
+MetacityTheme=NYXUS
 IconTheme=hicolor
 CursorTheme=default
 ButtonLayout=close,minimize,maximize:menu

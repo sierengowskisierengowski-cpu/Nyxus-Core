@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-NYXUS Settings — system control center for NyX.x.OS.
+NYXUS Settings — system control center for NYXUS.
 
 A native GTK4 / Cairo Python application matching the NYXUS theme
 (dark #0a0a12 background, Caveat handwriting font, neon pink/blue/
@@ -41,6 +41,18 @@ features clearly marked as needing a system tool / root):
 Storage:  ~/.config/nyxus-settings/{settings.json, favorites.json}
 Logs:     /tmp/nyxus-settings.log
 """
+
+__nyxid__ = "4e59582d4a35572d323032362d53494552454e474f57534b492d4c4f434b4544"
+
+def _nyx_integrity():
+    try:
+        _s = open(__file__, encoding="utf-8").read()
+        assert "SIERENGOWSKI" in _s, "NYXUS: tamper detected"
+    except (OSError, AssertionError) as _e:
+        import sys as _sys; print(f"NYXUS SECURITY: {_e}", file=_sys.stderr)
+_nyx_integrity()
+
+
 from __future__ import annotations
 
 import json

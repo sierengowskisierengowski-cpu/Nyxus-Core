@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-#  NyX.x.OS — Wlogout Theme Installer
+#  NYXUS — Wlogout Theme Installer
 #  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================
 
@@ -9,7 +9,7 @@ set -euo pipefail
 WLOGOUT_DIR="$HOME/.config/wlogout"
 
 echo ""
-echo "  NyX.x.OS Wlogout Theme Installer"
+echo "  NYXUS Wlogout Theme Installer"
 echo "  ──────────────────────────────────"
 echo ""
 

@@ -412,20 +412,20 @@ if command -v makoctl &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]
   makoctl reload 2>/dev/null && ok "Mako reloaded" || true
 fi
 
-# ── OS Name Fix (NyX.oS → NyX.x.OS in /etc/os-release) ──────────────────────
+# ── OS Name Fix (patch any old name → NYXUS in /etc/os-release) ──────────────
 hdr "OS Name"
-if grep -q "NyX\.oS" /etc/os-release 2>/dev/null; then
-  if sudo sed -i 's/NyX\.oS/NyX.x.OS/g' /etc/os-release 2>/dev/null; then
-    ok "/etc/os-release patched: NyX.oS → NyX.x.OS"
+if grep -qE "NyX\.oS|NyX\.x\.OS|NyXxOS" /etc/os-release 2>/dev/null; then
+  if sudo sed -i -E 's/NyX\.oS|NyX\.x\.OS|NyXxOS/NYXUS/g' /etc/os-release 2>/dev/null; then
+    ok "/etc/os-release patched → NYXUS"
   else
     printf "  ${DIM}Could not patch /etc/os-release (needs sudo) — run manually:${R}\n"
-    printf "  ${DIM}  sudo sed -i 's/NyX\\.oS/NyX.x.OS/g' /etc/os-release${R}\n"
+    printf "  ${DIM}  sudo sed -i -E 's/NyX\\.oS|NyX\\.x\\.OS|NyXxOS/NYXUS/g' /etc/os-release${R}\n"
   fi
 else
-  if grep -q "NyX\.x\.OS" /etc/os-release 2>/dev/null; then
-    ok "/etc/os-release already correct (NyX.x.OS)"
+  if grep -q "NYXUS" /etc/os-release 2>/dev/null; then
+    ok "/etc/os-release already correct (NYXUS)"
   else
-    printf "  ${DIM}/etc/os-release does not contain NyX.oS — skipping${R}\n"
+    printf "  ${DIM}/etc/os-release — no legacy name found, skipping${R}\n"
   fi
 fi
 

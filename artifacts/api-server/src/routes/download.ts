@@ -88,6 +88,10 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-passwords.tgz":          "nyxus-passwords.tgz",
   "nyxus_passwords_install.sh":   "nyxus_passwords_install.sh",
   "wallpaper-rotate.sh":          "wallpaper-rotate.sh",
+  "README.md":                    "README.md",
+  "LICENSE.md":                   "LICENSE.md",
+  "CHANGELOG.md":                 "CHANGELOG.md",
+  "CREDITS.md":                   "CREDITS.md",
 };
 
 router.get("/download/nyxus/:filename", (req, res) => {
