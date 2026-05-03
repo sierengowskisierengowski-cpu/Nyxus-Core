@@ -10,17 +10,7 @@ vt = 1
 
 [default_session]
 # Launches Hyprland after successful auth.
-# Replace `Hyprland` with your preferred session command if needed
-# (e.g. dbus-run-session Hyprland, or a sway/wayland command).
-command = "tuigreet \
-  --time \
-  --remember \
-  --remember-user-session \
-  --asterisks \
-  --user-menu \
-  --greeting 'NYXUS · enter the dark side' \
-  --power-shutdown 'systemctl poweroff' \
-  --power-reboot   'systemctl reboot' \
-  --theme 'border=magenta;text=white;prompt=magenta;time=cyan;action=green;button=magenta;container=black;input=white' \
-  --cmd 'Hyprland'"
+# Replace `Hyprland` in --cmd with your preferred session command if needed
+# (e.g. "dbus-run-session Hyprland", or a sway/wayland command).
+command = "tuigreet --time --remember --remember-user-session --asterisks --user-menu --greeting 'NYXUS · enter the dark side' --power-shutdown 'systemctl poweroff' --power-reboot 'systemctl reboot' --theme 'border=magenta;text=white;prompt=magenta;time=cyan;action=green;button=magenta;container=black;input=white' --cmd 'Hyprland'"
 user = "greeter"

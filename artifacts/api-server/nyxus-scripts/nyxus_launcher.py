@@ -17,7 +17,7 @@ Bind to a Hyprland keybind in ~/.config/hypr/hyprland.conf:
 Esc closes. Enter launches selected. Up/Down navigate.
 """
 from __future__ import annotations
-import gi, os, sys, subprocess, shlex, configparser, time
+import gi, os, sys, subprocess, shlex, configparser, time, threading, re
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
 from gi.repository import Gtk, Gdk, GLib, Gio, Pango
@@ -58,6 +58,8 @@ def desktop_dirs() -> list[Path]:
     return [r for r in roots if r.exists()]
 
 
+_FIELD_CODE_RE = re.compile(r"%[fFuUdDnNickvm]")
+
 def parse_desktop(p: Path) -> dict | None:
     try:
         cp = configparser.ConfigParser(interpolation=None, strict=False)
@@ -70,14 +72,19 @@ def parse_desktop(p: Path) -> dict | None:
         name = e.get("Name", p.stem)
         exec_s = e.get("Exec", "").strip()
         if not exec_s: return None
-        # strip %f, %F, %u, %U placeholders
-        for ph in ("%f", "%F", "%u", "%U", "%i", "%c", "%k"):
-            exec_s = exec_s.replace(ph, "")
-        exec_s = exec_s.strip()
+        # strip XDG field codes (%f, %F, %u, %U, %i, %c, %k, etc.)
+        exec_s = _FIELD_CODE_RE.sub("", exec_s).strip()
+        # parse to argv NOW so launch is shell-free
+        try:
+            argv = shlex.split(exec_s, posix=True)
+        except ValueError:
+            return None
+        if not argv: return None
         return {
             "kind":    "app",
             "name":    name,
-            "exec":    exec_s,
+            "argv":    argv,             # safe argv form (no shell)
+            "exec":    exec_s,           # display only
             "icon":    e.get("Icon", "application-x-executable"),
             "comment": e.get("Comment", ""),
             "term":    e.get("Terminal", "false").lower() == "true",
@@ -99,9 +106,12 @@ def scan_apps() -> list[dict]:
     return sorted(seen.values(), key=lambda x: x["name"].lower())
 
 
-def scan_path_execs() -> list[dict]:
+def scan_path_execs(limit: int = 4000) -> list[dict]:
+    """Scan PATH for executables. Capped to keep startup snappy on
+    systems with huge PATHs (anaconda, nix, etc.)."""
     seen: dict[str, dict] = {}
     for p in os.environ.get("PATH", "").split(":"):
+        if not p: continue
         d = Path(p)
         if not d.is_dir(): continue
         try:
@@ -109,12 +119,16 @@ def scan_path_execs() -> list[dict]:
                 if not f.is_file(): continue
                 if not os.access(f, os.X_OK): continue
                 seen.setdefault(f.name, {
-                    "kind": "exec", "name": f.name, "exec": str(f),
+                    "kind": "exec", "name": f.name,
+                    "argv": [str(f)],
+                    "exec": str(f),
                     "comment": str(f), "icon": "utilities-terminal",
                     "term": False,
                 })
+                if len(seen) >= limit: break
         except Exception:
             pass
+        if len(seen) >= limit: break
     return sorted(seen.values(), key=lambda x: x["name"].lower())
 
 
@@ -219,9 +233,24 @@ class Launcher(Gtk.Application):
 
     # ── data ────────────────────────────────────────────────────────────
     def _load_data(self):
-        self._all = scan_apps() + scan_path_execs()
+        # Apps are fast (small set), load synchronously so user sees
+        # results immediately. PATH scan can be slow on huge PATHs, so
+        # do it in a background thread and merge when it lands.
+        self._all = scan_apps()
         self._refresh()
+        threading.Thread(target=self._load_path_async,
+                         daemon=True).start()
         return False
+
+    def _load_path_async(self):
+        execs = scan_path_execs()
+        # merge on the GTK main thread
+        def merge():
+            names = {it["name"] for it in self._all}
+            self._all += [e for e in execs if e["name"] not in names]
+            self._refresh()
+            return False
+        GLib.idle_add(merge)
 
     # ── search/refresh ──────────────────────────────────────────────────
     def _on_changed(self, _entry):
@@ -236,6 +265,7 @@ class Launcher(Gtk.Application):
             if cmd:
                 items.append((10_000, {
                     "kind": "shell", "name": f"Run: {cmd}",
+                    "argv": ["sh", "-c", cmd],
                     "exec": cmd, "comment": "shell command",
                     "icon": "utilities-terminal", "term": True,
                 }))
@@ -244,7 +274,8 @@ class Launcher(Gtk.Application):
             url = f"https://duckduckgo.com/?q={qq.replace(' ', '+')}"
             items.append((10_000, {
                 "kind": "web", "name": f"Search web: {qq}",
-                "exec": f"xdg-open {shlex.quote(url)}",
+                "argv": ["xdg-open", url],
+                "exec": f"xdg-open {url}",
                 "comment": url, "icon": "applications-internet", "term": False,
             }))
         else:
@@ -321,16 +352,24 @@ class Launcher(Gtk.Application):
         self.quit()
 
     def _spawn(self, it: dict):
-        cmd = it["exec"]
+        # Always launch via argv (no shell=True). Desktop Exec was
+        # already split with shlex at parse time. The only "shell"
+        # path is the explicit !cmd entry, whose argv is ["sh","-c",…]
+        # — that is the user's deliberate intent.
+        argv = it.get("argv") or []
+        if not argv:
+            print("launch error: empty argv", file=sys.stderr); return
         try:
             if it.get("term"):
                 term = (os.environ.get("TERMINAL")
                         or ("nyxus_terminal.py" if have("nyxus_terminal.py")
                             else "alacritty"))
-                subprocess.Popen(f"{term} -e {cmd}", shell=True,
+                subprocess.Popen([term, "-e", *argv],
                                  start_new_session=True)
             else:
-                subprocess.Popen(cmd, shell=True, start_new_session=True)
+                subprocess.Popen(argv, start_new_session=True)
+        except FileNotFoundError as e:
+            print(f"launch error (not found): {e}", file=sys.stderr)
         except Exception as e:
             print(f"launch error: {e}", file=sys.stderr)
 
