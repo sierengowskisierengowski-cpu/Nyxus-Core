@@ -2037,30 +2037,982 @@ class _PhaseBStub(BasePage):
         self.box.append(c)
 
 
-class AccountPage(_PhaseBStub):
+# ─── Account & Profile (Category 1) ─────────────────────────────────────────
+class AccountPage(BasePage):
     KEY = "account"; TITLE = "Account & Profile"; ICON = "🪪"
     TILE_COLOR = NEON_PINK
-    SUBTITLE  = "Profile · Password · PIN · Auto-login"
+    SUBTITLE  = "Profile · Password · Login · Profile color"
+
+    ACC_PATH = CONFIG_DIR / "account.json"
+
+    def _user(self):
+        try:
+            import pwd
+            pw = pwd.getpwuid(os.geteuid())
+            gecos = (pw.pw_gecos or "").split(",")
+            return {"u": pw.pw_name,
+                    "f": (gecos[0] if gecos and gecos[0] else pw.pw_name),
+                    "h": pw.pw_dir, "s": pw.pw_shell}
+        except Exception:
+            return {"u": os.environ.get("USER", "user"), "f": "—",
+                    "h": str(Path.home()), "s": "—"}
+
+    def _is_admin(self):
+        u = os.environ.get("USER", "")
+        rc, o, _ = sh(f"id -nG {shlex.quote(u)}", timeout=2)
+        return rc == 0 and any(g in o.split() for g in ("wheel","sudo","admin"))
+
+    def _last_login(self):
+        u = os.environ.get("USER", "")
+        rc, o, _ = sh(f"last -1 {shlex.quote(u)}", timeout=3)
+        if rc != 0 or not o.strip(): return "—"
+        return o.splitlines()[0].strip()[:80]
+
+    def _created(self):
+        try:
+            from datetime import datetime
+            st = os.stat(self._user()["h"])
+            return datetime.fromtimestamp(st.st_ctime).strftime("%Y-%m-%d %H:%M")
+        except Exception: return "—"
+
+    def _load(self):
+        if self.ACC_PATH.exists():
+            try: return json.loads(self.ACC_PATH.read_text())
+            except Exception: pass
+        return {"email":"", "bio":"", "pin":"", "auto_login": False}
+
+    def _save(self):
+        try: self.ACC_PATH.write_text(json.dumps(self.acc, indent=2))
+        except Exception as e: log.error("acc save: %s", e)
+
+    def build(self):
+        self.acc = self._load()
+        info = self._user()
+
+        # ── profile card ──
+        c = Card("profile")
+        prow = Gtk.Box(spacing=14)
+        self._face_da = Gtk.DrawingArea()
+        self._face_da.set_size_request(96, 96)
+        try: self._face_da.set_content_width(96); self._face_da.set_content_height(96)
+        except Exception: pass
+        self._face_da.set_draw_func(self._draw_face)
+        prow.append(self._face_da)
+        rcol = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        b1 = SketchButton("change picture", width=170, height=24, color=NEON_BLUE)
+        b1.connect("clicked", lambda _b: self._pick_face())
+        rcol.append(b1)
+        b2 = SketchButton("remove picture", width=170, height=24, color=DANGER_RED)
+        b2.connect("clicked", lambda _b: self._rm_face())
+        rcol.append(b2)
+        nf = Gtk.Label(label="(saved as ~/.face)", xalign=0); nf.add_css_class("nyx-meta")
+        rcol.append(nf)
+        prow.append(rcol)
+        c.add_row(prow)
+
+        c.add_row(kv_row("username", info["u"]))
+
+        self._fn = Gtk.Entry(); self._fn.set_text(info["f"]); self._fn.add_css_class("nyx-entry")
+        bsave = SketchButton("save", width=70, height=22, color=NEON_GREEN)
+        bsave.connect("clicked", lambda _b: self._save_fullname())
+        nm = Gtk.Box(spacing=6); nm.append(self._fn); nm.append(bsave)
+        c.add_row(kv_row("full name", nm))
+
+        self._em = Gtk.Entry(); self._em.set_text(self.acc.get("email","")); self._em.add_css_class("nyx-entry")
+        self._em.connect("changed", lambda e: (self.acc.__setitem__("email", e.get_text()), self._save()))
+        c.add_row(kv_row("email", self._em))
+
+        self._bio = Gtk.Entry(); self._bio.set_text(self.acc.get("bio","")); self._bio.add_css_class("nyx-entry")
+        self._bio.connect("changed", lambda e: (self.acc.__setitem__("bio", e.get_text()), self._save()))
+        c.add_row(kv_row("bio", self._bio))
+
+        c.add_row(kv_row("account type", "admin" if self._is_admin() else "standard"))
+        c.add_row(kv_row("home", info["h"]))
+        c.add_row(kv_row("shell", info["s"]))
+        c.add_row(kv_row("created", self._created()))
+        c.add_row(kv_row("last login", self._last_login()))
+        self.box.append(c)
+
+        # ── security & login ──
+        c2 = Card("security & login")
+        bpw = SketchButton("change password (opens terminal: passwd)",
+                           width=340, height=26, color=NEON_PINK)
+        bpw.connect("clicked", lambda _b: self._passwd())
+        c2.add_row(bpw)
+
+        self._pin = Gtk.Entry(); self._pin.set_text(self.acc.get("pin",""))
+        self._pin.set_visibility(False); self._pin.add_css_class("nyx-entry")
+        bpin = SketchButton("save PIN", width=100, height=22, color=NEON_GREEN)
+        bpin.connect("clicked", lambda _b: (
+            self.acc.__setitem__("pin", self._pin.get_text()),
+            self._save(), self.mark_changed("PIN")))
+        pr = Gtk.Box(spacing=6); pr.append(self._pin); pr.append(bpin)
+        c2.add_row(kv_row("quick PIN", pr))
+
+        al = SketchToggle("auto-login on boot", width=200, height=24,
+                          color=NEON_BLUE, active=bool(self.acc.get("auto_login")))
+        al.connect("clicked", lambda b: self._toggle_autologin(b))
+        c2.add_row(al)
+        nl = Gtk.Label(label=("(persists to ~/.config/nyxus-settings/account.json — "
+                              "wiring to display manager requires sudo)"),
+                       xalign=0, wrap=True); nl.add_css_class("nyx-meta")
+        c2.add_row(nl)
+        self.box.append(c2)
+
+        # ── profile color ──
+        c3 = Card("profile color (NYXUS accent)")
+        sw = Gtk.Box(spacing=8)
+        for n, rgb in [("pink", NEON_PINK), ("blue", NEON_BLUE),
+                       ("green", NEON_GREEN), ("purple", ACCENT_PURP),
+                       ("gold", ACCENT_GOLD)]:
+            b = SketchButton(n, width=72, height=22, color=rgb,
+                             primary=(self.win.prefs.get("accent")==n))
+            b.connect("clicked", lambda _b, nn=n: self._set_accent(nn))
+            sw.append(b)
+        c3.add_row(sw)
+        c3.add_row(kv_row("current", self.win.prefs.get("accent","pink")))
+        self.box.append(c3)
+
+        # ── data & danger zone ──
+        c4 = Card("data & account actions")
+        bex = SketchButton("export account data → ~/Documents/nyxus-account.json",
+                           width=440, height=24, color=NEON_BLUE)
+        bex.connect("clicked", lambda _b: self._export())
+        c4.add_row(bex)
+        bdel = SketchButton("delete this account (sudo userdel)",
+                            width=320, height=24, color=DANGER_RED)
+        bdel.connect("clicked", lambda _b: self.win.toast(
+            "deletion is irreversible — run `sudo userdel -r $USER` from a TTY"))
+        c4.add_row(bdel)
+        self.box.append(c4)
+
+    def _draw_face(self, area, cr, w, h, _=None):
+        cr.save()
+        cr.arc(w/2, h/2, min(w,h)/2 - 2, 0, math.pi*2); cr.clip()
+        face = Path.home() / ".face"
+        loaded = False
+        if face.exists():
+            try:
+                from gi.repository import GdkPixbuf
+                pb = GdkPixbuf.Pixbuf.new_from_file_at_scale(str(face), w, h, True)
+                Gdk.cairo_set_source_pixbuf(cr, pb, 0, 0); cr.paint(); loaded = True
+            except Exception as e:
+                log.warning("face load: %s", e)
+        if not loaded:
+            cr.set_source_rgba(0.10, 0.07, 0.18, 0.95); cr.rectangle(0,0,w,h); cr.fill()
+            info = self._user()
+            ini = (info["f"] or info["u"] or "?")[:1].upper()
+            draw_caveat(cr, w/2-14, h/2-26, ini, size=46,
+                        color=(*NEON_PINK, 0.95), weight=Pango.Weight.BOLD)
+        cr.restore()
+        cr.set_source_rgba(*NEON_PINK, 0.85); cr.set_line_width(1.6)
+        cr.arc(w/2, h/2, min(w,h)/2 - 2, 0, math.pi*2); cr.stroke()
+
+    def _pick_face(self):
+        dlg = Gtk.FileChooserDialog(title="Choose profile picture",
+            transient_for=self.win, action=Gtk.FileChooserAction.OPEN)
+        dlg.add_buttons("Cancel", Gtk.ResponseType.CANCEL,
+                        "Open", Gtk.ResponseType.OK)
+        f = Gtk.FileFilter(); f.set_name("Images")
+        for mt in ("image/png","image/jpeg","image/webp","image/bmp"):
+            f.add_mime_type(mt)
+        dlg.add_filter(f)
+        def _resp(d, r):
+            if r == Gtk.ResponseType.OK:
+                try:
+                    src = d.get_file().get_path() if d.get_file() else None
+                    if src:
+                        import shutil as _sh
+                        _sh.copyfile(src, str(Path.home()/".face"))
+                        self._face_da.queue_draw()
+                        self.mark_changed("profile picture")
+                except Exception as e: log.error("face: %s", e)
+            d.destroy()
+        dlg.connect("response", _resp); dlg.show()
+
+    def _rm_face(self):
+        try:
+            (Path.home()/".face").unlink(missing_ok=True)
+            self._face_da.queue_draw(); self.mark_changed("profile picture removed")
+        except Exception as e: log.error("rm face: %s", e)
+
+    def _save_fullname(self):
+        new = self._fn.get_text().strip()
+        if not new: return
+        rc, _o, e = sh(f"chfn -f {shlex.quote(new)}", timeout=4)
+        if rc == 0:
+            self.mark_changed(f"full name → {new}")
+        else:
+            self.win.toast(f"chfn: {(e or 'failed').splitlines()[-1][:60]}")
+
+    def _passwd(self):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if have(term):
+                sh_async(["setsid", term, "-e", "passwd"], timeout=2)
+                self.win.toast(f"opened {term} for `passwd`"); return
+        self.win.toast("no terminal found — run `passwd` manually")
+
+    def _toggle_autologin(self, btn):
+        self.acc["auto_login"] = bool(btn.active)
+        self._save()
+        self.needs_restart("auto-login (display manager)")
+        self.mark_changed(f"auto-login → {'on' if btn.active else 'off'}")
+
+    def _set_accent(self, n):
+        self.win.prefs["accent"] = n
+        self.win.save_prefs()
+        self.mark_changed(f"accent → {n}")
+
+    def _export(self):
+        try:
+            out = {"user": self._user(), "admin": self._is_admin(),
+                   "created": self._created(), "last_login": self._last_login(),
+                   "account": self.acc}
+            p = Path.home()/"Documents"/"nyxus-account.json"
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(json.dumps(out, indent=2))
+            self.win.toast(f"exported → {p}")
+        except Exception as e:
+            self.win.toast(f"export failed: {e}")
+
+    def search_entries(self):
+        labels = ["profile picture", "full name", "username", "email", "bio",
+                  "account type", "home directory", "shell", "account created",
+                  "last login", "change password", "PIN", "auto-login",
+                  "profile color", "accent", "export account", "delete account"]
+        return [SearchEntry(self.KEY, self.TITLE, l, "account profile user")
+                for l in labels]
 
 
-class WallpaperPage(_PhaseBStub):
+# ─── Wallpaper & Backgrounds (Category 2) ────────────────────────────────────
+class WallpaperPage(BasePage):
     KEY = "wallpaper"; TITLE = "Wallpaper & Backgrounds"; ICON = "🖼"
     TILE_COLOR = NEON_BLUE
-    SUBTITLE  = "Browse · Per-workspace · Slideshow · Lock screen"
+    SUBTITLE  = "Browse · Set · Slideshow · Fit"
+
+    DIRS = [
+        Path.home()/".nyxus"/"wallpapers",
+        Path.home()/"Pictures"/"Wallpapers",
+        Path.home()/"Pictures",
+        Path("/usr/share/backgrounds"),
+    ]
+    EXTS = (".png",".jpg",".jpeg",".webp",".bmp")
+    WP_CFG = CONFIG_DIR / "wallpaper.json"
+    SLIDE_PID = Path("/tmp/nyxus-wallpaper-slideshow.pid")
+
+    def _scan(self) -> List[Path]:
+        out: List[Path] = []
+        for d in self.DIRS:
+            if not d.exists(): continue
+            try:
+                for p in sorted(d.iterdir()):
+                    if p.is_file() and p.suffix.lower() in self.EXTS:
+                        out.append(p)
+            except Exception: pass
+        # de-dupe by name
+        seen = set(); uniq = []
+        for p in out:
+            if p.name in seen: continue
+            seen.add(p.name); uniq.append(p)
+        return uniq[:60]
+
+    def _current(self) -> str:
+        # try swww first, then hyprpaper
+        if have("swww"):
+            rc, o, _ = sh("swww query", timeout=3)
+            if rc == 0:
+                for ln in o.splitlines():
+                    if "image:" in ln:
+                        return ln.split("image:",1)[1].strip()
+        cfg = Path.home()/".config"/"hypr"/"hyprpaper.conf"
+        if cfg.exists():
+            for ln in cfg.read_text().splitlines():
+                if ln.startswith("wallpaper"):
+                    return ln.split(",",1)[-1].strip()
+        return "—"
+
+    def _load_cfg(self):
+        if self.WP_CFG.exists():
+            try: return json.loads(self.WP_CFG.read_text())
+            except Exception: pass
+        return {"slideshow": False, "interval": 900, "order": "sequential",
+                "fit": "crop", "transition": "fade"}
+
+    def _save_cfg(self):
+        try: self.WP_CFG.write_text(json.dumps(self.cfg, indent=2))
+        except Exception as e: log.error("wp cfg: %s", e)
+
+    def _set(self, path: Path):
+        if have("swww"):
+            cmd = ["swww","img",str(path),"--resize",self.cfg.get("fit","crop"),
+                   "--transition-type",self.cfg.get("transition","fade")]
+            sh_async(cmd, timeout=8)
+            self.mark_changed(f"wallpaper → {path.name}"); return
+        if have("hyprctl"):
+            sh_async(["hyprctl","hyprpaper","preload",str(path)], timeout=4)
+            sh_async(["hyprctl","hyprpaper","wallpaper",f",{path}"], timeout=4)
+            self.mark_changed(f"wallpaper → {path.name}"); return
+        self.win.toast("install swww or hyprpaper to set wallpapers")
+
+    def _del_wp(self, path: Path):
+        # only delete if inside ~/.nyxus/wallpapers
+        nyx = Path.home()/".nyxus"/"wallpapers"
+        try:
+            if nyx in path.parents:
+                path.unlink(missing_ok=True)
+                self.mark_changed(f"deleted {path.name}")
+                self.refresh()
+            else:
+                self.win.toast("only files in ~/.nyxus/wallpapers can be deleted")
+        except Exception as e: log.error("del wp: %s", e)
+
+    def build(self):
+        self.cfg = self._load_cfg()
+
+        # ── current ──
+        c0 = Card("current wallpaper")
+        cur = self._current()
+        c0.add_row(Gtk.Label(label=cur, xalign=0, wrap=True,
+                             ellipsize=Pango.EllipsizeMode.MIDDLE))
+        self.box.append(c0)
+
+        # ── add ──
+        ca = Card("add wallpaper")
+        add_row = Gtk.Box(spacing=8)
+        bf = SketchButton("from file…", width=140, height=24, color=NEON_GREEN)
+        bf.connect("clicked", lambda _b: self._add_from_file())
+        add_row.append(bf)
+        bu = SketchButton("from URL…", width=140, height=24, color=NEON_BLUE)
+        bu.connect("clicked", lambda _b: self._add_from_url())
+        add_row.append(bu)
+        ca.add_row(add_row)
+        ca.add_row(Gtk.Label(label="(downloads land in ~/.nyxus/wallpapers/)",
+                             xalign=0))
+        self.box.append(ca)
+
+        # ── slideshow & fit ──
+        cs = Card("slideshow & fit")
+        ss = SketchToggle("slideshow on", width=180, height=24,
+                          color=NEON_GREEN, active=bool(self.cfg.get("slideshow")))
+        ss.connect("clicked", lambda b: self._toggle_slideshow(b))
+        cs.add_row(ss)
+        # interval
+        ir = Gtk.Box(spacing=6)
+        for label, secs in [("5m",300),("15m",900),("30m",1800),("1h",3600)]:
+            b = SketchButton(label, width=58, height=22, color=NEON_BLUE,
+                             primary=(self.cfg.get("interval")==secs))
+            b.connect("clicked", lambda _b, s=secs:
+                      (self.cfg.__setitem__("interval", s), self._save_cfg(),
+                       self.mark_changed(f"interval → {s}s")))
+            ir.append(b)
+        cs.add_row(kv_row("interval", ir))
+        # order
+        or_row = Gtk.Box(spacing=6)
+        for o in ("sequential","random"):
+            b = SketchButton(o, width=110, height=22, color=ACCENT_PURP,
+                             primary=(self.cfg.get("order")==o))
+            b.connect("clicked", lambda _b, oo=o:
+                      (self.cfg.__setitem__("order", oo), self._save_cfg(),
+                       self.mark_changed(f"order → {oo}")))
+            or_row.append(b)
+        cs.add_row(kv_row("order", or_row))
+        # fit
+        fit_row = Gtk.Box(spacing=6)
+        for f in ("fit","crop","stretch","no"):
+            b = SketchButton(f, width=80, height=22, color=NEON_PINK,
+                             primary=(self.cfg.get("fit")==f))
+            b.connect("clicked", lambda _b, ff=f:
+                      (self.cfg.__setitem__("fit", ff), self._save_cfg(),
+                       self.mark_changed(f"fit → {ff}")))
+            fit_row.append(b)
+        cs.add_row(kv_row("fit (swww --resize)", fit_row))
+        # transition
+        tr_row = Gtk.Box(spacing=6)
+        for t in ("fade","wipe","grow","outer","none"):
+            b = SketchButton(t, width=80, height=22, color=NEON_BLUE,
+                             primary=(self.cfg.get("transition")==t))
+            b.connect("clicked", lambda _b, tt=t:
+                      (self.cfg.__setitem__("transition", tt), self._save_cfg(),
+                       self.mark_changed(f"transition → {tt}")))
+            tr_row.append(b)
+        cs.add_row(kv_row("transition", tr_row))
+        self.box.append(cs)
+
+        # ── grid ──
+        cw = Card(f"installed wallpapers ({len(self._scan())})")
+        self._grid = Gtk.FlowBox()
+        self._grid.set_max_children_per_line(6)
+        self._grid.set_min_children_per_line(2)
+        self._grid.set_column_spacing(10); self._grid.set_row_spacing(10)
+        self._grid.set_selection_mode(Gtk.SelectionMode.NONE)
+        self._grid.set_homogeneous(True)
+        cw.add_row(self._grid)
+        self.box.append(cw)
+        self._populate_grid()
+
+    def _populate_grid(self):
+        c = self._grid.get_first_child()
+        while c:
+            n = c.get_next_sibling(); self._grid.remove(c); c = n
+        for p in self._scan():
+            tile = self._make_thumb(p)
+            self._grid.insert(tile, -1)
+
+    def _make_thumb(self, path: Path) -> Gtk.Widget:
+        wrap = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        try:
+            from gi.repository import GdkPixbuf
+            pic = Gtk.Picture()
+            pb = GdkPixbuf.Pixbuf.new_from_file_at_scale(str(path), 180, 110, True)
+            pic.set_pixbuf(pb)
+            pic.set_size_request(180, 110)
+            pic.set_can_shrink(False)
+        except Exception:
+            pic = Gtk.Label(label=path.name); pic.set_size_request(180, 110)
+        wrap.append(pic)
+        bar = Gtk.Box(spacing=4)
+        bset = SketchButton("set", width=80, height=22, color=NEON_GREEN)
+        bset.connect("clicked", lambda _b, pp=path: self._set(pp))
+        bar.append(bset)
+        bdel = SketchButton("✕", width=28, height=22, color=DANGER_RED,
+                            tooltip="delete (only ~/.nyxus/wallpapers)")
+        bdel.connect("clicked", lambda _b, pp=path: self._del_wp(pp))
+        bar.append(bdel)
+        wrap.append(bar)
+        nm = Gtk.Label(label=path.name, xalign=0,
+                       ellipsize=Pango.EllipsizeMode.MIDDLE)
+        nm.add_css_class("nyx-meta"); nm.set_size_request(180, -1)
+        wrap.append(nm)
+        return wrap
+
+    def _add_from_file(self):
+        dlg = Gtk.FileChooserDialog(title="Add wallpaper",
+            transient_for=self.win, action=Gtk.FileChooserAction.OPEN)
+        dlg.add_buttons("Cancel", Gtk.ResponseType.CANCEL,
+                        "Add", Gtk.ResponseType.OK)
+        f = Gtk.FileFilter(); f.set_name("Images")
+        for mt in ("image/png","image/jpeg","image/webp","image/bmp"):
+            f.add_mime_type(mt)
+        dlg.add_filter(f)
+        def _resp(d, r):
+            if r == Gtk.ResponseType.OK:
+                try:
+                    src = d.get_file().get_path() if d.get_file() else None
+                    if src:
+                        dst_dir = Path.home()/".nyxus"/"wallpapers"
+                        dst_dir.mkdir(parents=True, exist_ok=True)
+                        import shutil as _sh
+                        _sh.copy(src, dst_dir/Path(src).name)
+                        self.mark_changed(f"added {Path(src).name}")
+                        self.refresh()
+                except Exception as e: log.error("wp add: %s", e)
+            d.destroy()
+        dlg.connect("response", _resp); dlg.show()
+
+    def _add_from_url(self):
+        dlg = Gtk.Window(transient_for=self.win, title="Add wallpaper from URL",
+                         modal=True); dlg.set_default_size(460, 100)
+        b = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        b.set_margin_start(14); b.set_margin_end(14)
+        b.set_margin_top(14); b.set_margin_bottom(14)
+        e = Gtk.Entry(); e.set_placeholder_text("https://…")
+        e.add_css_class("nyx-entry"); b.append(e)
+        ar = Gtk.Box(spacing=6)
+        bok = SketchButton("download", width=120, height=24, color=NEON_GREEN)
+        bcancel = SketchButton("cancel", width=80, height=24, color=INK_DIM)
+        ar.append(bok); ar.append(bcancel); b.append(ar)
+        dlg.set_child(b)
+        def _go(*_a):
+            url = e.get_text().strip()
+            if not url: return
+            dst_dir = Path.home()/".nyxus"/"wallpapers"
+            dst_dir.mkdir(parents=True, exist_ok=True)
+            name = url.rsplit("/",1)[-1].split("?",1)[0] or "download.img"
+            dst = dst_dir / name
+            def done(r):
+                rc, _o, er = r
+                if rc == 0:
+                    self.mark_changed(f"downloaded {name}"); self.refresh()
+                else:
+                    self.win.toast(f"download failed: {er[:60]}")
+                dlg.close()
+            sh_async(["curl","-fsSL","-o",str(dst),url], on_done=done, timeout=20)
+        bok.connect("clicked", _go)
+        bcancel.connect("clicked", lambda *_a: dlg.close())
+        dlg.present()
+
+    def _toggle_slideshow(self, btn):
+        self.cfg["slideshow"] = bool(btn.active)
+        self._save_cfg()
+        if btn.active:
+            self._start_slideshow()
+        else:
+            self._stop_slideshow()
+        self.mark_changed(f"slideshow → {'on' if btn.active else 'off'}")
+
+    def _start_slideshow(self):
+        # write a tiny shell loop and background it
+        files = self._scan()
+        if not files:
+            self.win.toast("no wallpapers found"); return
+        self._stop_slideshow()
+        interval = int(self.cfg.get("interval", 900))
+        order = self.cfg.get("order","sequential")
+        flist = " ".join(shlex.quote(str(p)) for p in files)
+        order_cmd = "shuf" if order == "random" else "cat"
+        # daemonised loop
+        script = (f"while true; do for f in $(printf '%s\\n' {flist} | {order_cmd}); do "
+                  f"swww img \"$f\" --resize {self.cfg.get('fit','crop')} "
+                  f"--transition-type {self.cfg.get('transition','fade')} "
+                  f"2>/dev/null || hyprctl hyprpaper preload \"$f\" 2>/dev/null; "
+                  f"sleep {interval}; done; done")
+        rc, _o, _e = sh(["sh","-c",
+            f"setsid sh -c {shlex.quote(script)} >/tmp/nyxus-wp.log 2>&1 & echo $! > {self.SLIDE_PID}"],
+            timeout=3)
+
+    def _stop_slideshow(self):
+        try:
+            if self.SLIDE_PID.exists():
+                pid = self.SLIDE_PID.read_text().strip()
+                if pid: sh(f"pkill -P {pid}", timeout=2); sh(f"kill {pid}", timeout=2)
+                self.SLIDE_PID.unlink(missing_ok=True)
+        except Exception: pass
+
+    def refresh(self):
+        ch = self.box.get_first_child(); first = ch
+        # remove everything after the title (first child)
+        items = []
+        while ch: items.append(ch); ch = ch.get_next_sibling()
+        for w in items[1:]: self.box.remove(w)
+        self.build()
+
+    def search_entries(self):
+        labels = ["set wallpaper","add wallpaper","wallpaper from URL",
+                  "slideshow","interval","order","fit","stretch","crop",
+                  "transition","fade","wipe","delete wallpaper",
+                  "current wallpaper"]
+        return [SearchEntry(self.KEY, self.TITLE, l, "wallpaper background swww")
+                for l in labels]
 
 
-class FontsPage(_PhaseBStub):
+# ─── Fonts (Category 3) ──────────────────────────────────────────────────────
+class FontsPage(BasePage):
     KEY = "fonts"; TITLE = "Fonts"; ICON = "🅰"
     TILE_COLOR = ACCENT_GOLD
-    SUBTITLE  = "System · Mono · Caveat · Hinting · Install"
+    SUBTITLE  = "Browse · Install · Sample · Hinting"
+
+    USER_FONT_DIR = Path.home() / ".local" / "share" / "fonts"
+
+    def _list_families(self) -> List[str]:
+        rc, o, _ = sh("fc-list : family", timeout=4)
+        if rc != 0: return []
+        fams = set()
+        for ln in o.splitlines():
+            for f in ln.split(","):
+                f = f.strip()
+                if f: fams.add(f)
+        return sorted(fams)
+
+    def _list_mono(self) -> List[str]:
+        rc, o, _ = sh("fc-list :mono family", timeout=4)
+        if rc != 0: return []
+        fams = set()
+        for ln in o.splitlines():
+            for f in ln.split(","):
+                f = f.strip()
+                if f: fams.add(f)
+        return sorted(fams)
+
+    def _gset_get(self, schema: str, key: str) -> str:
+        if not have("gsettings"): return "—"
+        rc, o, _ = sh(f"gsettings get {schema} {key}", timeout=2)
+        return o.strip().strip("'") if rc == 0 else "—"
+
+    def _gset_set(self, schema: str, key: str, val: str):
+        if not have("gsettings"):
+            self.win.toast("gsettings not installed"); return False
+        rc, _o, e = sh(["gsettings","set",schema,key,val], timeout=3)
+        if rc != 0: self.win.toast(f"gsettings: {e[:50]}"); return False
+        return True
+
+    def build(self):
+        # ── current fonts ──
+        c = Card("current fonts (gsettings)")
+        cur_iface = self._gset_get("org.gnome.desktop.interface","font-name")
+        cur_doc   = self._gset_get("org.gnome.desktop.interface","document-font-name")
+        cur_mono  = self._gset_get("org.gnome.desktop.interface","monospace-font-name")
+        c.add_row(kv_row("interface",  cur_iface))
+        c.add_row(kv_row("document",   cur_doc))
+        c.add_row(kv_row("monospace",  cur_mono))
+        c.add_row(kv_row("handwritten (NYXUS apps)", "Caveat 14 (built-in)"))
+        self.box.append(c)
+
+        # ── pickers ──
+        cp = Card("change fonts")
+        for label, schema, key, mono in [
+            ("interface", "org.gnome.desktop.interface", "font-name", False),
+            ("document",  "org.gnome.desktop.interface", "document-font-name", False),
+            ("monospace", "org.gnome.desktop.interface", "monospace-font-name", True),
+        ]:
+            b = SketchButton(f"choose {label} font…", width=240, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked",
+                      lambda _b, lbl=label, sch=schema, k=key, m=mono:
+                          self._pick_font(lbl, sch, k, m))
+            cp.add_row(b)
+        self.box.append(cp)
+
+        # ── rendering ──
+        cr_ = Card("rendering")
+        for label, key, opts in [
+            ("antialiasing", "font-antialiasing", ["none","grayscale","rgba"]),
+            ("hinting",      "font-hinting",     ["none","slight","medium","full"]),
+            ("subpixel",     "font-rgba-order",  ["rgb","bgr","vrgb","vbgr"]),
+        ]:
+            cur = self._gset_get("org.gnome.desktop.interface", key)
+            row = Gtk.Box(spacing=6)
+            for o in opts:
+                bb = SketchButton(o, width=70, height=22, color=NEON_PINK,
+                                  primary=(cur == o))
+                bb.connect("clicked", lambda _b, k=key, oo=o:
+                           (self._gset_set("org.gnome.desktop.interface", k, oo),
+                            self.mark_changed(f"{k} → {oo}"), self.refresh()))
+                row.append(bb)
+            cr_.add_row(kv_row(label, row))
+        # text scaling
+        scale = self._gset_get("org.gnome.desktop.interface","text-scaling-factor")
+        try: sval = max(0.5, min(2.0, float(scale)))
+        except Exception: sval = 1.0
+        sl = SketchSlider(value=(sval - 0.5)/1.5, color=ACCENT_GOLD, width=260)
+        def _scl(_w, v):
+            new = round(0.5 + v*1.5, 2)
+            self._gset_set("org.gnome.desktop.interface","text-scaling-factor",
+                           f"{new}")
+            self.mark_changed(f"text scale → {new}")
+        sl.connect("value-changed", _scl)
+        cr_.add_row(kv_row(f"text scale ({sval:.2f})", sl))
+        self.box.append(cr_)
+
+        # ── install / browse ──
+        ci = Card("install & browse")
+        bi = SketchButton("install font from file…", width=220, height=24,
+                         color=NEON_GREEN)
+        bi.connect("clicked", lambda _b: self._install_font())
+        ci.add_row(bi)
+        ci.add_row(Gtk.Label(label=f"(installs into {self.USER_FONT_DIR}/ "
+                                   f"and runs `fc-cache -f`)", xalign=0))
+        # browse list with sample
+        fams = self._list_families()
+        ci.add_row(Gtk.Label(label=f"installed families: {len(fams)}", xalign=0))
+        sample = Gtk.Entry(); sample.set_text("The quick brown fox jumps over the lazy dog 0123")
+        sample.add_css_class("nyx-entry")
+        ci.add_row(kv_row("sample text", sample))
+        # font list (top 60) with previews
+        scroller = Gtk.ScrolledWindow(); scroller.set_size_request(-1, 240)
+        scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        flist = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        scroller.set_child(flist)
+        def _redraw():
+            ch = flist.get_first_child()
+            while ch:
+                n = ch.get_next_sibling(); flist.remove(ch); ch = n
+            for fam in fams[:80]:
+                row = Gtk.Box(spacing=8)
+                lbl = Gtk.Label(label=fam, xalign=0); lbl.set_size_request(220, -1)
+                row.append(lbl)
+                pv = Gtk.Label(label=sample.get_text(), xalign=0)
+                pv.set_attributes(self._pango_font_attr(fam))
+                row.append(pv)
+                flist.append(row)
+        sample.connect("changed", lambda _e: _redraw())
+        _redraw()
+        ci.add_row(scroller)
+        self.box.append(ci)
+
+        # ── reset ──
+        cz = Card("reset")
+        br = SketchButton("reset fonts to NYXUS defaults", width=280, height=24,
+                         color=DANGER_RED)
+        br.connect("clicked", lambda _b: self._reset())
+        cz.add_row(br)
+        self.box.append(cz)
+
+    def _pango_font_attr(self, fam: str) -> Pango.AttrList:
+        al = Pango.AttrList()
+        try:
+            fd = Pango.FontDescription.from_string(f"{fam} 14")
+            al.insert(Pango.attr_font_desc_new(fd))
+        except Exception: pass
+        return al
+
+    def _pick_font(self, label: str, schema: str, key: str, mono: bool):
+        d = Gtk.FontDialog()
+        if mono:
+            try: d.set_filter(Gtk.FontFilter.new())   # GTK4 mono filter is limited
+            except Exception: pass
+        cur_str = self._gset_get(schema, key)
+        try:
+            init = Pango.FontDescription.from_string(cur_str if cur_str != "—" else "Sans 11")
+        except Exception:
+            init = None
+        def _done(dlg, res):
+            try: fd = dlg.choose_font_finish(res)
+            except Exception: return
+            if not fd: return
+            new_name = fd.to_string()
+            if self._gset_set(schema, key, new_name):
+                self.mark_changed(f"{label} font → {new_name}")
+                self.refresh()
+        d.choose_font(self.win, init, None, _done)
+
+    def _install_font(self):
+        dlg = Gtk.FileChooserDialog(title="Install font",
+            transient_for=self.win, action=Gtk.FileChooserAction.OPEN)
+        dlg.add_buttons("Cancel", Gtk.ResponseType.CANCEL,
+                        "Install", Gtk.ResponseType.OK)
+        f = Gtk.FileFilter(); f.set_name("Fonts (.ttf .otf)")
+        f.add_pattern("*.ttf"); f.add_pattern("*.otf"); dlg.add_filter(f)
+        def _resp(d, r):
+            if r == Gtk.ResponseType.OK:
+                try:
+                    src = d.get_file().get_path() if d.get_file() else None
+                    if src:
+                        self.USER_FONT_DIR.mkdir(parents=True, exist_ok=True)
+                        import shutil as _sh
+                        _sh.copy(src, self.USER_FONT_DIR/Path(src).name)
+                        sh("fc-cache -f", timeout=8)
+                        self.mark_changed(f"installed {Path(src).name}")
+                        self.refresh()
+                except Exception as e: log.error("install font: %s", e)
+            d.destroy()
+        dlg.connect("response", _resp); dlg.show()
+
+    def _reset(self):
+        for k, v in [
+            ("font-name","Inter 11"),
+            ("document-font-name","Sans 11"),
+            ("monospace-font-name","JetBrains Mono 11"),
+            ("font-antialiasing","rgba"),
+            ("font-hinting","slight"),
+            ("text-scaling-factor","1.0"),
+        ]:
+            self._gset_set("org.gnome.desktop.interface", k, v)
+        self.mark_changed("fonts reset to NYXUS defaults"); self.refresh()
+
+    def refresh(self):
+        items = []
+        ch = self.box.get_first_child()
+        while ch: items.append(ch); ch = ch.get_next_sibling()
+        for w in items[1:]: self.box.remove(w)
+        self.build()
+
+    def search_entries(self):
+        labels = ["interface font","document font","monospace font","jetbrains mono",
+                  "caveat","antialiasing","hinting","subpixel","text scale",
+                  "install font","fc-cache","reset fonts"]
+        return [SearchEntry(self.KEY, self.TITLE, l, "fonts typography")
+                for l in labels]
 
 
-class AboutPage(_PhaseBStub):
+# ─── About NYXUS (Category 22) ───────────────────────────────────────────────
+class AboutPage(BasePage):
     KEY = "about"; TITLE = "About NYXUS"; ICON = "ℹ"
     TILE_COLOR = NEON_GREEN
     SUBTITLE  = "Version · Hardware · Updates · Diagnostics"
-    PHASE_B_NOTE = ("Live system summary, NYXUS app inventory, update check, "
-                    "and bug-report exporter land in the Phase B About task.")
+
+    NYXUS_VERSION = "1.0.0"
+    LICENSE_TAG   = "NYX-J5W-2026-SIERENGOWSKI-LOCKED"
+
+    def _read(self, path: str) -> str:
+        try: return Path(path).read_text().strip()
+        except Exception: return "—"
+
+    def _machine(self) -> str:
+        m = self._read("/sys/devices/virtual/dmi/id/product_name")
+        v = self._read("/sys/devices/virtual/dmi/id/sys_vendor")
+        if m != "—" and v != "—": return f"{v} {m}"
+        return m if m != "—" else "—"
+
+    def _cpu(self) -> str:
+        rc, o, _ = sh("lscpu", timeout=2)
+        if rc != 0: return "—"
+        d = {}
+        for ln in o.splitlines():
+            if ":" in ln:
+                k,v = ln.split(":",1); d[k.strip()] = v.strip()
+        name = d.get("Model name", d.get("CPU(s)","—"))
+        cores = d.get("CPU(s)","?"); thr = d.get("Thread(s) per core","?")
+        return f"{name}  ·  {cores} CPUs"
+
+    def _gpu(self) -> str:
+        rc, o, _ = sh("lspci -nn", timeout=3)
+        if rc != 0: return "—"
+        for ln in o.splitlines():
+            if "VGA" in ln or "3D controller" in ln or "Display controller" in ln:
+                # trim PCI id and class prefix
+                if ":" in ln:
+                    return ln.split(":",2)[-1].strip()[:80]
+        return "—"
+
+    def _ram(self) -> str:
+        rc, o, _ = sh("free -h", timeout=2)
+        if rc != 0: return "—"
+        ls = o.splitlines()
+        if len(ls) < 2: return "—"
+        parts = ls[1].split()
+        return f"{parts[1]} total · {parts[2]} used · {parts[6] if len(parts)>6 else parts[3]} avail"
+
+    def _storage(self) -> str:
+        rc, o, _ = sh("lsblk -d -o NAME,SIZE,MODEL --noheadings", timeout=3)
+        if rc != 0: return "—"
+        return "  |  ".join(ln.strip() for ln in o.splitlines() if ln.strip())[:160]
+
+    def _kernel(self) -> str:
+        rc, o, _ = sh("uname -srm", timeout=1)
+        return o.strip() if rc == 0 else "—"
+
+    def _hypr(self) -> str:
+        rc, o, _ = sh("hyprctl version", timeout=2)
+        if rc != 0: return "—"
+        for ln in o.splitlines():
+            if "Tag:" in ln or "tag:" in ln: return ln.strip()
+        return o.splitlines()[0].strip() if o.strip() else "—"
+
+    def _gpu_driver(self) -> str:
+        rc, o, _ = sh("glxinfo -B", timeout=4)
+        if rc == 0:
+            for ln in o.splitlines():
+                if "OpenGL renderer" in ln or "OpenGL version" in ln:
+                    return ln.split(":",1)[-1].strip()[:80]
+        return "(install glxinfo for driver detail)"
+
+    def _uptime(self) -> str:
+        try:
+            up = float(Path("/proc/uptime").read_text().split()[0])
+            d = int(up // 86400); h = int((up % 86400) // 3600)
+            m = int((up % 3600) // 60); s = int(up % 60)
+            if d: return f"{d}d {h}h {m}m {s}s"
+            if h: return f"{h}h {m}m {s}s"
+            return f"{m}m {s}s"
+        except Exception: return "—"
+
+    def _nyxus_apps(self) -> List[str]:
+        nyx = Path.home() / ".nyxus"
+        if not nyx.exists(): return []
+        try:
+            return sorted(p.name for p in nyx.iterdir()
+                          if p.is_file() and p.suffix == ".py")
+        except Exception: return []
+
+    def build(self):
+        # ── hero ──
+        ch = Card("NYXUS")
+        big = Gtk.Label(label="NYX  ·  NYXUS", xalign=0)
+        big.add_css_class("nyx-headline")
+        ch.add_row(big)
+        ch.add_row(kv_row("version", self.NYXUS_VERSION))
+        ch.add_row(kv_row("license tag", self.LICENSE_TAG))
+        ch.add_row(kv_row("build date", "2026-05"))
+        self.box.append(ch)
+
+        # ── live hardware ──
+        chw = Card("hardware (live)")
+        chw.add_row(kv_row("machine",  self._machine()))
+        chw.add_row(kv_row("CPU",      self._cpu()))
+        chw.add_row(kv_row("GPU",      self._gpu()))
+        chw.add_row(kv_row("RAM",      self._ram()))
+        chw.add_row(kv_row("storage",  self._storage()))
+        self.box.append(chw)
+
+        # ── live system ──
+        cs = Card("system (live)")
+        cs.add_row(kv_row("kernel",      self._kernel()))
+        cs.add_row(kv_row("Hyprland",    self._hypr()))
+        cs.add_row(kv_row("GPU driver",  self._gpu_driver()))
+        cs.add_row(kv_row("session",     os.environ.get("XDG_CURRENT_DESKTOP","Hyprland")))
+        cs.add_row(kv_row("server",      os.environ.get("XDG_SESSION_TYPE","wayland")))
+        self._uptime_lbl = Gtk.Label(label=self._uptime(), xalign=0)
+        self._uptime_lbl.add_css_class("nyx-row-value")
+        cs.add_row(kv_row("uptime", self._uptime_lbl))
+        # tick uptime once a second
+        if not hasattr(self, "_uptime_tick"):
+            self._uptime_tick = GLib.timeout_add_seconds(
+                1, lambda: (self._uptime_lbl.set_text(self._uptime()), True)[1])
+        self.box.append(cs)
+
+        # ── NYXUS apps ──
+        ca = Card("NYXUS apps installed")
+        apps = self._nyxus_apps()
+        if not apps:
+            ca.add_row(Gtk.Label(label="(none found in ~/.nyxus/)", xalign=0))
+        else:
+            for a in apps:
+                ca.add_row(kv_row(a, "v1.0.0"))
+        self.box.append(ca)
+
+        # ── legal ──
+        cl = Card("legal")
+        cl.add_row(kv_row("copyright", "© 2026 Joseph Sierengowski"))
+        cl.add_row(kv_row("rights",    "All Rights Reserved"))
+        cl.add_row(kv_row("locked",    self.LICENSE_TAG))
+        self.box.append(cl)
+
+        # ── actions ──
+        cax = Card("actions")
+        bu = SketchButton("check for updates", width=200, height=26,
+                          color=NEON_BLUE)
+        bu.connect("clicked", lambda _b: self._check_updates())
+        cax.add_row(bu)
+        br = SketchButton("generate full system report → ~/Documents",
+                          width=380, height=26, color=NEON_GREEN)
+        br.connect("clicked", lambda _b: self._gen_report())
+        cax.add_row(br)
+        bb = SketchButton("send bug report (open GitHub)", width=300, height=26,
+                          color=ACCENT_PURP)
+        bb.connect("clicked", lambda _b: sh_async(
+            ["xdg-open","https://github.com/replit/nyxus-core/issues/new"], timeout=2))
+        cax.add_row(bb)
+        self.box.append(cax)
+
+    def _check_updates(self):
+        def done(r):
+            rc, o, e = r
+            if rc == 0:
+                self.win.toast(f"available: {o.strip().splitlines()[0][:60]}")
+            else:
+                self.win.toast(f"update check failed: {(e or '').splitlines()[-1][:60]}")
+        sh_async(["curl","-fsSL","https://nyxus-core.replit.app/api/version"],
+                 on_done=done, timeout=8)
+
+    def _gen_report(self):
+        out = []
+        out.append(f"# NYXUS system report\n")
+        out.append(f"_Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}_\n")
+        out.append(f"\n## NYXUS\n")
+        out.append(f"- version: {self.NYXUS_VERSION}\n- license: {self.LICENSE_TAG}\n")
+        out.append(f"\n## Hardware\n")
+        out.append(f"- machine: {self._machine()}\n- CPU: {self._cpu()}\n- GPU: {self._gpu()}\n")
+        out.append(f"- RAM: {self._ram()}\n- storage: {self._storage()}\n")
+        out.append(f"\n## System\n")
+        out.append(f"- kernel: {self._kernel()}\n- Hyprland: {self._hypr()}\n")
+        out.append(f"- GPU driver: {self._gpu_driver()}\n- uptime: {self._uptime()}\n")
+        out.append(f"\n## NYXUS apps\n")
+        for a in self._nyxus_apps(): out.append(f"- {a}\n")
+        try:
+            p = Path.home()/"Documents"/f"nyxus-report-{int(time.time())}.md"
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text("".join(out))
+            self.win.toast(f"saved → {p.name}")
+        except Exception as e:
+            self.win.toast(f"report failed: {e}")
+
+    def search_entries(self):
+        labels = ["NYXUS version","build date","copyright","license","machine model",
+                  "CPU","GPU","RAM","storage","kernel","Hyprland version",
+                  "GPU driver","uptime","NYXUS apps","check for updates",
+                  "generate report","bug report"]
+        return [SearchEntry(self.KEY, self.TITLE, l, "about system info")
+                for l in labels]
 
 
 # Subtitle / tile-color metadata for the existing pages so the home grid is consistent.
