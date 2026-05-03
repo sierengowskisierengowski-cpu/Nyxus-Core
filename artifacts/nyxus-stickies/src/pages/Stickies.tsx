@@ -195,7 +195,7 @@ export default function Stickies() {
       className="flex flex-col"
       style={{
         width: '100%', height: '100vh',
-        background: '#0a0a12',
+        background: '#000000',
         backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, rgba(255,255,255,0.045) 27px, rgba(255,255,255,0.045) 28px)',
         fontFamily: "'Caveat', 'Patrick Hand', cursive",
         overflow: 'hidden',

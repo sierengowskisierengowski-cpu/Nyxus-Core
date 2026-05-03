@@ -4,7 +4,7 @@
 NYXUS Settings — system control center for NYXUS.
 
 A native GTK4 / Cairo Python application matching the NYXUS theme
-(dark #0a0a12 background, Caveat handwriting font, neon pink/blue/
+(dark #000000 background, Caveat handwriting font, neon pink/blue/
 green/purple/gold accents — same vocabulary as the notepad / stickies).
 
 Categories (left sidebar):
@@ -100,7 +100,7 @@ logging.basicConfig(
 log = logging.getLogger("nyxus-settings")
 
 # ── NYXUS palette ────────────────────────────────────────────────────────────
-BG_DEEP    = (0.039, 0.039, 0.071)   # #0a0a12
+BG_DEEP    = (0.0, 0.0, 0.0)         # #000000 (pure black, Tesla grade)
 BG_PANEL   = (0.059, 0.055, 0.106)
 INK_BRIGHT = (0.94, 0.92, 0.97)
 INK_DIM    = (0.62, 0.59, 0.72)
@@ -6987,8 +6987,11 @@ class GraffitiBackground(Gtk.DrawingArea):
 
     def _build_layout(self, w: int, h: int):
         rng = random.Random(0x9F33A1)
-        palette = [NEON_PINK, NEON_BLUE, NEON_GREEN, ACCENT_GOLD,
-                   ACCENT_PURP, DANGER_RED]
+        # Pink-heavy palette (less purple — match the rest of NYXUS)
+        palette = [NEON_PINK, NEON_PINK, NEON_PINK,
+                   NEON_BLUE, NEON_BLUE,
+                   NEON_GREEN, NEON_GREEN,
+                   ACCENT_GOLD, DANGER_RED]
         items = []
         # poisson-ish placement: random tries with min-distance check
         placed: List[tuple] = []
@@ -7019,8 +7022,8 @@ class GraffitiBackground(Gtk.DrawingArea):
         self._cache_w, self._cache_h = w, h
 
     def _draw(self, area, cr, w, h, _=None):
-        # solid black bg (so cards float over it cleanly)
-        cr.set_source_rgba(0.039, 0.039, 0.071, 1.0)
+        # PURE black bg (Tesla grade — no dark purple anywhere)
+        cr.set_source_rgba(0.0, 0.0, 0.0, 1.0)
         cr.rectangle(0, 0, w, h); cr.fill()
         if (self._layout_cache is None or
             abs(w - self._cache_w) > 40 or abs(h - self._cache_h) > 40):
@@ -7054,6 +7057,10 @@ class SettingsRow(Gtk.DrawingArea):
         self.color = color; self.starred = starred
         self.active = active; self.compact = compact
         self._hover = False
+        # ── glitch-scramble reveal state ───────────────────────────────
+        self._scramble_text = title       # what _draw renders for title
+        self._scramble_step = 0           # 0..N (chars locked left→right)
+        self._scramble_tid  = 0           # GLib timeout id
         if compact and height == 40: height = 36
         self.set_size_request(width, height)
         self.set_hexpand(True); self.set_vexpand(False)
@@ -7064,12 +7071,49 @@ class SettingsRow(Gtk.DrawingArea):
         gc.connect("released", lambda *_a: self.emit("activated"))
         self.add_controller(gc)
         mc = Gtk.EventControllerMotion()
-        mc.connect("enter", lambda *_a: (setattr(self, "_hover", True),
-                                         self.queue_draw()))
-        mc.connect("leave", lambda *_a: (setattr(self, "_hover", False),
-                                         self.queue_draw()))
+        mc.connect("enter", lambda *_a: self._on_hover_enter())
+        mc.connect("leave", lambda *_a: self._on_hover_leave())
         self.add_controller(mc)
         self.set_cursor(Gdk.Cursor.new_from_name("pointer"))
+
+    # ── glitch-scramble (matrix-style char reveal) ─────────────────────
+    _SCRAMBLE_CHARS = "!<>-_\\/[]{}—=+*^?#░▒▓█▌▐│┤╡╢╖╕╣║╗╝┐└┴┬├─┼┘┌"
+
+    def _on_hover_enter(self):
+        self._hover = True
+        self._scramble_step = 0
+        if self._scramble_tid:
+            try: GLib.source_remove(self._scramble_tid)
+            except Exception: pass
+        self._scramble_tid = GLib.timeout_add(28, self._scramble_tick)
+        self.queue_draw()
+
+    def _on_hover_leave(self):
+        self._hover = False
+        if self._scramble_tid:
+            try: GLib.source_remove(self._scramble_tid)
+            except Exception: pass
+            self._scramble_tid = 0
+        self._scramble_text = self.title
+        self.queue_draw()
+
+    def _scramble_tick(self):
+        n = len(self.title)
+        # advance ~1.6 chars per tick → full reveal in ~n/1.6 ticks
+        self._scramble_step = min(n, self._scramble_step + 2)
+        out = []
+        for i, ch in enumerate(self.title):
+            if i < self._scramble_step or ch == " ":
+                out.append(ch)
+            else:
+                out.append(random.choice(self._SCRAMBLE_CHARS))
+        self._scramble_text = "".join(out)
+        self.queue_draw()
+        if self._scramble_step >= n:
+            self._scramble_tid = 0
+            self._scramble_text = self.title
+            return False
+        return True
 
     def set_active(self, on: bool):
         if self.active != on:
@@ -7101,9 +7145,20 @@ class SettingsRow(Gtk.DrawingArea):
         # title
         title_size = 15 if self.compact else 17
         title_y = (h-title_size-4)/2 - (4 if self.subtitle else 0)
-        draw_caveat(cr, 56, title_y, self.title, size=title_size,
-                    color=(*INK_BRIGHT, 0.98),
-                    weight=Pango.Weight.BOLD)
+        # use scrambled text while hover-reveal is animating, real title otherwise
+        title_str = self._scramble_text if (self._hover and self._scramble_tid) else self.title
+        # JetBrains Mono during scramble for that proper glitch/terminal feel
+        title_family = "JetBrains Mono" if (self._hover and self._scramble_tid) else None
+        # neon ink during scramble, normal ink otherwise
+        title_color = ((*self.color, 1.0) if (self._hover and self._scramble_tid)
+                       else (*INK_BRIGHT, 0.98))
+        if title_family:
+            draw_caveat(cr, 56, title_y, title_str, size=title_size,
+                        color=title_color, weight=Pango.Weight.BOLD,
+                        family=title_family)
+        else:
+            draw_caveat(cr, 56, title_y, title_str, size=title_size,
+                        color=title_color, weight=Pango.Weight.BOLD)
         # subtitle (mono dim)
         if self.subtitle and not self.compact:
             draw_caveat(cr, 56, h-16, self.subtitle, size=10,
@@ -7247,60 +7302,149 @@ class SettingsWindow(Gtk.ApplicationWindow):
     # ── CSS ─────────────────────────────────────────────────────────────────
     def _build_css(self):
         css = b"""
-* { font-family: 'Caveat', 'Patrick Hand', cursive; }
-window, .nyx-bg { background-color: #0a0a12; color: #f0eef8; }
-.nyx-toolbar { background-color: rgba(10,10,18,0.96); padding: 6px 12px;
-    border-bottom: 1px solid rgba(255,0,255,0.12); }
-.nyx-hero { background-color: rgba(10,10,18,0.96); padding: 14px 18px;
-    border-bottom: 1px solid rgba(255,0,255,0.18); }
-.nyx-hero-title { color: #ff00ff; text-shadow: 0 0 12px rgba(255,0,255,0.55);
-    font-size: 30px; font-weight: bold; letter-spacing: 1px; }
-.nyx-hero-sub { color: rgba(240,235,250,0.55); font-size: 14px;
-    margin-top: -2px; }
-.nyx-version-pill { color: rgba(240,235,250,0.85);
-    background-color: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,0,255,0.40);
+/* =====================================================================
+   NYXUS SETTINGS -- Tesla-grade global stylesheet
+   Pure black canvas, neon-pink glass chrome, multi-layer glow,
+   smooth 180ms transitions on every interactive surface.
+   ===================================================================== */
+
+* { font-family: 'Caveat', 'Patrick Hand', cursive;
+    transition: background-color 180ms ease,
+                border-color     180ms ease,
+                color            180ms ease,
+                box-shadow       220ms ease,
+                text-shadow      180ms ease; }
+
+window, .nyx-bg { background-color: #000000; color: #f0eef8; }
+
+/* -- HERO HEADER (frosted glass, dual-layer glow) --------------------- */
+.nyx-hero {
+    background-image: linear-gradient(180deg,
+        rgba(255,0,255,0.06) 0%,
+        rgba(0,0,0,0.92) 100%);
+    background-color: rgba(0,0,0,0.85);
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,0,255,0.55);
+    box-shadow: inset 0 -1px 0 0 rgba(255,0,255,0.12),
+                0 4px 24px -4px rgba(255,0,255,0.18);
+}
+.nyx-hero-title { color: #ff00ff;
+    text-shadow: 0 0 6px  rgba(255,0,255,0.95),
+                 0 0 18px rgba(255,0,255,0.55),
+                 0 0 36px rgba(255,0,255,0.28);
+    font-size: 32px; font-weight: bold; letter-spacing: 1.5px; }
+.nyx-hero-sub { color: rgba(240,235,250,0.62); font-size: 14px;
+    letter-spacing: 0.4px; margin-top: -2px; }
+
+/* -- VERSION PILL (glass capsule, hover bloom) ------------------------ */
+.nyx-version-pill { color: rgba(240,235,250,0.92);
+    background-image: linear-gradient(135deg,
+        rgba(255,0,255,0.10), rgba(0,0,0,0.55));
+    background-color: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,0,255,0.55);
     border-radius: 999px; padding: 5px 16px; font-size: 14px;
-    font-family: 'JetBrains Mono', monospace; }
-.nyx-toolbar2 { background-color: rgba(10,10,18,0.85); padding: 5px 14px;
-    border-bottom: 1px solid rgba(255,0,255,0.10); }
-.nyx-restartbar { background-color: rgba(255, 78, 0, 0.18);
-    border-bottom: 1px solid rgba(255,140,40,0.55);
-    padding: 6px 14px; }
-.nyx-restartbar label { color: #ffd6aa; font-size: 14px; }
+    font-family: 'JetBrains Mono', monospace;
+    box-shadow: inset 0 0 8px rgba(255,0,255,0.18),
+                0 0 8px rgba(255,0,255,0.10); }
+.nyx-version-pill:hover {
+    border-color: rgba(255,0,255,0.95);
+    box-shadow: inset 0 0 12px rgba(255,0,255,0.28),
+                0 0 18px rgba(255,0,255,0.45); }
+
+/* -- TOOLBARS (slim glass) -------------------------------------------- */
+.nyx-toolbar  { background-color: rgba(0,0,0,0.85);
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(255,0,255,0.18); }
+.nyx-toolbar2 { background-color: rgba(0,0,0,0.78);
+    padding: 5px 14px;
+    border-bottom: 1px solid rgba(255,0,255,0.18);
+    box-shadow: 0 2px 12px -4px rgba(255,0,255,0.20); }
+
+/* -- RESTART BAR (warning amber w/ glow) ------------------------------ */
+.nyx-restartbar {
+    background-image: linear-gradient(90deg,
+        rgba(255,78,0,0.28), rgba(255,140,40,0.10));
+    background-color: rgba(255,78,0,0.20);
+    border-top: 1px solid rgba(255,140,40,0.65);
+    border-bottom: 1px solid rgba(255,140,40,0.65);
+    padding: 6px 14px;
+    box-shadow: inset 0 0 14px rgba(255,140,40,0.18); }
+.nyx-restartbar label { color: #ffd6aa; font-size: 14px;
+    text-shadow: 0 0 6px rgba(255,140,40,0.45); }
+
+/* -- STRIPS (favorites/recents bands) --------------------------------- */
 .nyx-strip { background-color: transparent;
-    border-top: 1px solid rgba(255,0,255,0.18);
-    border-bottom: 1px solid rgba(255,0,255,0.10);
-    padding: 6px 16px; }
-.nyx-strip-label { color: rgba(255,150,230,0.80); font-size: 13px;
-    text-transform: uppercase; letter-spacing: 1.6px;
-    font-family: 'JetBrains Mono', monospace; }
-.nyx-statusbar { background-color: #06060c; padding: 3px 12px;
-    border-top: 1px solid rgba(255,0,255,0.20); }
-.nyx-headline { color: #ff00ff; text-shadow: 0 0 10px rgba(255,0,255,0.55);
-    font-size: 22px; font-weight: bold; }
-.nyx-meta { color: rgba(240,235,250,0.55); font-size: 12px; }
-.nyx-card { background-color: transparent;
-    border: 1px solid rgba(255,0,255,0.22); border-radius: 6px;
-    padding: 4px 0 8px 0; }
-.nyx-listcard { background-color: transparent;
-    border: 1px solid rgba(255,0,255,0.28); border-radius: 4px;
-    padding: 0; margin-top: 4px; }
+    border-top: 1px solid rgba(255,0,255,0.22);
+    border-bottom: 1px solid rgba(255,0,255,0.12);
+    padding: 8px 16px; }
+.nyx-strip-label { color: rgba(255,90,200,0.92); font-size: 13px;
+    text-transform: uppercase; letter-spacing: 1.8px;
+    font-family: 'JetBrains Mono', monospace;
+    text-shadow: 0 0 6px rgba(255,0,255,0.30); }
+
+/* -- STATUS BAR ------------------------------------------------------- */
+.nyx-statusbar { background-color: #000000; padding: 3px 12px;
+    border-top: 1px solid rgba(255,0,255,0.32);
+    box-shadow: 0 -2px 12px -4px rgba(255,0,255,0.20); }
+
+/* -- HEADLINES + META ------------------------------------------------- */
+.nyx-headline { color: #ff00ff;
+    text-shadow: 0 0 10px rgba(255,0,255,0.65),
+                 0 0 22px rgba(255,0,255,0.30);
+    font-size: 24px; font-weight: bold; letter-spacing: 0.6px; }
+.nyx-meta { color: rgba(240,235,250,0.55); font-size: 12px;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.4px; }
+
+/* -- CARDS (frosted glass, neon ring, hover lift) --------------------- */
+.nyx-card { background-color: rgba(0,0,0,0.55);
+    background-image: linear-gradient(180deg,
+        rgba(255,0,255,0.04) 0%,
+        rgba(0,0,0,0.60) 100%);
+    border: 1px solid rgba(255,0,255,0.32);
+    border-radius: 8px;
+    padding: 4px 0 10px 0;
+    box-shadow: inset 0 0 18px rgba(255,0,255,0.05),
+                0 4px 22px -10px rgba(255,0,255,0.18); }
+.nyx-card:hover {
+    border-color: rgba(255,0,255,0.65);
+    box-shadow: inset 0 0 22px rgba(255,0,255,0.10),
+                0 6px 30px -8px rgba(255,0,255,0.35); }
+
+.nyx-listcard { background-color: rgba(0,0,0,0.55);
+    background-image: linear-gradient(180deg,
+        rgba(255,0,255,0.05) 0%,
+        rgba(0,0,0,0.62) 100%);
+    border: 1px solid rgba(255,0,255,0.55);
+    border-radius: 6px; padding: 0; margin-top: 6px;
+    box-shadow: inset 0 0 22px rgba(255,0,255,0.06),
+                0 6px 28px -8px rgba(255,0,255,0.25); }
+.nyx-listcard:hover {
+    border-color: rgba(255,0,255,0.85);
+    box-shadow: inset 0 0 26px rgba(255,0,255,0.10),
+                0 8px 36px -6px rgba(255,0,255,0.40); }
+
 .nyx-settings-list { background-color: transparent; }
 .nyx-settings-list row { background-color: transparent;
     padding: 0; min-height: 40px; }
 .nyx-settings-list row:hover { background-color: transparent; }
 .nyx-settings-list row:selected { background-color: transparent; }
-/* -- Win10-style left sidebar nav ------------------------------------- */
-.nyx-sidebar { background-color: #06060c;
-    border-right: 1px solid rgba(255,0,255,0.28);
-    padding: 6px 0; min-width: 220px; }
-.nyx-sidebar-section { color: rgba(255,150,230,0.70);
+
+/* -- WIN10 LEFT SIDEBAR (frosted glass, glow rail) -------------------- */
+.nyx-sidebar { background-color: rgba(0,0,0,0.92);
+    background-image: linear-gradient(180deg,
+        rgba(255,0,255,0.04), rgba(0,0,0,0.92));
+    border-right: 1px solid rgba(255,0,255,0.55);
+    padding: 6px 0; min-width: 220px;
+    box-shadow: inset -1px 0 0 0 rgba(255,0,255,0.18),
+                4px 0 22px -8px rgba(255,0,255,0.32); }
+.nyx-sidebar-section { color: rgba(255,90,200,0.92);
     font-family: 'JetBrains Mono', monospace; font-size: 10px;
-    letter-spacing: 1.4px; text-transform: uppercase;
-    padding: 10px 14px 4px 14px; }
+    letter-spacing: 1.6px; text-transform: uppercase;
+    padding: 12px 14px 6px 14px;
+    text-shadow: 0 0 6px rgba(255,0,255,0.32); }
+
 .nyx-content { background-color: transparent; padding: 0; }
-.nyx-graffiti-host { background-color: #0a0a12; }
+.nyx-graffiti-host { background-color: #000000; }
 /* -- KILL ALL GREY: force every container transparent so graffiti
    shows through. GTK fallback theme paints opaque bg on these. ----- */
 .nyx-content scrolledwindow, .nyx-content viewport,
@@ -7321,7 +7465,8 @@ stack, frame, .background, .view, .nyx-bg > box {
     font-weight: bold; }
 .nyx-user-role { color: rgba(255,150,230,0.85); font-size: 11px;
     font-family: 'JetBrains Mono', monospace; letter-spacing: 0.6px; }
-.nyx-card-title { color: #b88dff; font-size: 18px; font-weight: bold; }
+.nyx-card-title { color: #ff00ff; text-shadow: 0 0 8px rgba(255,0,255,0.45);
+    font-size: 18px; font-weight: bold; letter-spacing: 0.5px; }
 .nyx-row-label { color: #f0eef8; font-size: 14px; }
 .nyx-row-value { color: rgba(240,235,250,0.75); font-size: 14px; }
 .nyx-entry { background-color: transparent; border: none; outline: none;
@@ -7651,12 +7796,15 @@ scrollbar { background-color: transparent; }
             page = self._page_widgets.get(cls.KEY)
             if page is None: continue
             if not getattr(page, "AVAILABLE", True): continue
+            # Title-only rows on Home (no subtitle) so the graffiti
+            # background breathes through. Compact 38px height.
             row = SettingsRow(
                 icon=getattr(cls, "ICON", "•"),
                 title=getattr(cls, "TITLE", cls.__name__),
-                subtitle=getattr(cls, "SUBTITLE", ""),
+                subtitle="",
                 color=getattr(cls, "TILE_COLOR", NEON_PINK),
                 starred=(cls.KEY in self.favorites),
+                compact=True, height=38,
             )
             row.connect("activated", lambda _t, k=cls.KEY:
                         self.show_page(k))

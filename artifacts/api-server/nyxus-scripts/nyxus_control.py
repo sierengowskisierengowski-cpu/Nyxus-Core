@@ -403,7 +403,7 @@ CSS = """
 window { background-color: #08080e; color: rgba(232,224,245,0.92); }
 
 .nav-bar {
-    background-color: #0a0a18;
+    background-color: #000000;
     border-right: 3px solid rgba(255,0,255,0.25);
     min-width: 160px;
 }
