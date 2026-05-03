@@ -2687,6 +2687,132 @@ class AppearancePage(BasePage):
         row.append(sl)
         c.add_row(row)
 
+        # ── 6. GTK theme ──────────────────────────────────────────────────
+        c = Card("GTK theme")
+        self.box.append(c)
+        themes = self._list_themes("themes", marker="gtk-3.0")
+        cur_theme = self._gset_str("org.gnome.desktop.interface", "gtk-theme")
+        c.add_row(kv_row("Active theme:", cur_theme or "(default)"))
+        c.add_row(kv_row("Installed:", f"{len(themes)}"))
+        if themes:
+            row = Gtk.Box(spacing=8)
+            self._theme_dd = Gtk.DropDown.new_from_strings(themes)
+            try: self._theme_dd.set_selected(themes.index(cur_theme))
+            except ValueError: pass
+            self._theme_dd.set_hexpand(True); row.append(self._theme_dd)
+            b = SketchButton("Apply", width=78, height=24, color=NEON_GREEN)
+            b.connect("clicked", lambda _b: self._apply_theme(themes))
+            row.append(b); c.add_row(row)
+        else:
+            c.add_row(Gtk.Label(
+                label="install themes to ~/.themes or /usr/share/themes",
+                xalign=0))
+
+        # ── 7. Icon theme ─────────────────────────────────────────────────
+        c = Card("icon theme")
+        self.box.append(c)
+        icons = self._list_themes("icons", marker="index.theme")
+        cur_icons = self._gset_str("org.gnome.desktop.interface", "icon-theme")
+        c.add_row(kv_row("Active icons:", cur_icons or "(default)"))
+        c.add_row(kv_row("Installed:", f"{len(icons)}"))
+        if icons:
+            row = Gtk.Box(spacing=8)
+            self._icon_dd = Gtk.DropDown.new_from_strings(icons)
+            try: self._icon_dd.set_selected(icons.index(cur_icons))
+            except ValueError: pass
+            self._icon_dd.set_hexpand(True); row.append(self._icon_dd)
+            b = SketchButton("Apply", width=78, height=24, color=NEON_GREEN)
+            b.connect("clicked", lambda _b: self._apply_iconset(icons))
+            row.append(b); c.add_row(row)
+
+        # ── 8. Cursor theme + size ───────────────────────────────────────
+        c = Card("cursor theme & size")
+        self.box.append(c)
+        cursors = self._list_themes("icons", marker="cursors")
+        cur_cur = self._gset_str("org.gnome.desktop.interface", "cursor-theme")
+        cur_size = 24
+        if have("gsettings"):
+            _, sz_out, _ = sh("gsettings get org.gnome.desktop.interface "
+                              "cursor-size")
+            try: cur_size = int(sz_out.strip() or "24")
+            except ValueError: pass
+        c.add_row(kv_row("Active cursor:", cur_cur or "(default)"))
+        if cursors:
+            row = Gtk.Box(spacing=8)
+            self._cur_dd = Gtk.DropDown.new_from_strings(cursors)
+            try: self._cur_dd.set_selected(cursors.index(cur_cur))
+            except ValueError: pass
+            self._cur_dd.set_hexpand(True); row.append(self._cur_dd)
+            b = SketchButton("Apply", width=78, height=24, color=NEON_GREEN)
+            b.connect("clicked", lambda _b: self._apply_cursor(cursors))
+            row.append(b); c.add_row(row)
+        size_row = Gtk.Box(spacing=10)
+        size_row.append(Gtk.Label(label="Cursor size:", xalign=0))
+        adj = Gtk.Adjustment(value=cur_size, lower=12, upper=64,
+                             step_increment=2, page_increment=4)
+        sc = Gtk.Scale(adjustment=adj,
+                       orientation=Gtk.Orientation.HORIZONTAL)
+        sc.set_size_request(220, -1); sc.set_draw_value(True)
+        sc.set_value_pos(Gtk.PositionType.RIGHT); sc.set_digits(0)
+        sc.connect("value-changed", lambda s: self._apply_cursor_size(
+            int(s.get_value())))
+        size_row.append(sc); c.add_row(size_row)
+
+        # ── 9. Interface font ─────────────────────────────────────────────
+        c = Card("interface font")
+        self.box.append(c)
+        cur_font = self._gset_str("org.gnome.desktop.interface", "font-name") \
+                   or "Cantarell 11"
+        c.add_row(kv_row("Active font:", cur_font))
+        row = Gtk.Box(spacing=8)
+        self._font_entry = Gtk.Entry()
+        self._font_entry.set_placeholder_text("e.g. JetBrainsMono Nerd Font 11")
+        self._font_entry.set_text(cur_font)
+        self._font_entry.set_hexpand(True); row.append(self._font_entry)
+        fb = SketchButton("Apply font", width=120, height=24, color=NEON_BLUE)
+        fb.connect("clicked", lambda _b: self._apply_font(
+            self._font_entry.get_text().strip()))
+        row.append(fb); c.add_row(row)
+        # monospace font
+        cur_mono = self._gset_str(
+            "org.gnome.desktop.interface", "monospace-font-name") \
+            or "Source Code Pro 10"
+        row = Gtk.Box(spacing=8)
+        row.append(Gtk.Label(label="Mono:", xalign=0))
+        self._mono_entry = Gtk.Entry()
+        self._mono_entry.set_text(cur_mono); self._mono_entry.set_hexpand(True)
+        row.append(self._mono_entry)
+        mb = SketchButton("Apply mono", width=120, height=24, color=NEON_BLUE)
+        mb.connect("clicked", lambda _b: self._gset_set(
+            "org.gnome.desktop.interface", "monospace-font-name",
+            f'"{self._mono_entry.get_text().strip()}"'))
+        row.append(mb); c.add_row(row)
+
+        # ── 10. Titlebar / window controls ───────────────────────────────
+        c = Card("titlebar buttons")
+        self.box.append(c)
+        cur_btns = self._gset_str(
+            "org.gnome.desktop.wm.preferences", "button-layout") \
+            or "appmenu:close"
+        c.add_row(kv_row("Layout:", cur_btns))
+        br = Gtk.Box(spacing=8)
+        for label, layout in (("Left",  "close,minimize,maximize:appmenu"),
+                              ("Right", "appmenu:minimize,maximize,close"),
+                              ("Close only R", "appmenu:close"),
+                              ("None",  "appmenu:")):
+            btn = SketchButton(label, width=110, height=22, color=ACCENT_GOLD,
+                               primary=(layout == cur_btns))
+            btn.connect("clicked", lambda _b, lay=layout: self._gset_set(
+                "org.gnome.desktop.wm.preferences", "button-layout",
+                f'"{lay}"'))
+            br.append(btn)
+        c.add_row(br)
+
+        self.add_note(
+            "Theme/icon/cursor/font changes apply via gsettings (GNOME schema). "
+            "Most GTK 3/4 apps will pick them up immediately. KDE apps need "
+            "their own settings (kvantum/kcm).")
+
     def _anim_on(self) -> bool:
         rc, out, _ = sh("hyprctl getoption animations:enabled -j")
         if rc != 0: return True
@@ -2741,6 +2867,68 @@ class AppearancePage(BasePage):
             self.win.toast(f"wallpaper → {path.name}"); return
         self.win.toast("no wallpaper tool installed (swww/hyprpaper)")
 
+    # ── helpers for theme management ──────────────────────────────────────
+    def _gset_str(self, schema: str, key: str) -> str:
+        if not have("gsettings"): return ""
+        rc, out, _ = sh(["gsettings", "get", schema, key])
+        if rc != 0: return ""
+        return out.strip().strip("'\"")
+
+    def _gset_set(self, schema: str, key: str, val: str):
+        if not have("gsettings"):
+            self.win.toast("gsettings not installed"); return
+        sh(["gsettings", "set", schema, key, val])
+        self.win.toast(f"{key} -> applied"); self.mark_changed(key)
+
+    def _list_themes(self, dirname: str, marker: str) -> list:
+        roots = [Path.home() / f".{dirname}",
+                 Path.home() / ".local/share" / dirname,
+                 Path(f"/usr/share/{dirname}")]
+        seen = set()
+        for root in roots:
+            if not root.exists(): continue
+            for p in root.iterdir():
+                if not p.is_dir(): continue
+                # marker can be a file or subdir
+                if (p / marker).exists() or any(
+                        (p / sub / marker).exists()
+                        for sub in p.iterdir() if sub.is_dir()):
+                    seen.add(p.name)
+        return sorted(seen)
+
+    def _apply_theme(self, themes):
+        idx = self._theme_dd.get_selected()
+        if 0 <= idx < len(themes):
+            self._gset_set("org.gnome.desktop.interface", "gtk-theme",
+                           f'"{themes[idx]}"')
+            # GTK4 honours GTK_THEME env var; for GNOME apps the gsettings
+            # key is canonical.
+            self.needs_restart("gtk theme")
+
+    def _apply_iconset(self, icons):
+        idx = self._icon_dd.get_selected()
+        if 0 <= idx < len(icons):
+            self._gset_set("org.gnome.desktop.interface", "icon-theme",
+                           f'"{icons[idx]}"')
+
+    def _apply_cursor(self, cursors):
+        idx = self._cur_dd.get_selected()
+        if 0 <= idx < len(cursors):
+            name = cursors[idx]
+            self._gset_set("org.gnome.desktop.interface", "cursor-theme",
+                           f'"{name}"')
+            # Hyprland honours hyprctl cursor as well
+            sh(["hyprctl", "setcursor", name, "24"])
+
+    def _apply_cursor_size(self, size: int):
+        self._gset_set("org.gnome.desktop.interface", "cursor-size", str(size))
+        sh(["hyprctl", "keyword", "misc:cursor_inactive_timeout", "0"])
+
+    def _apply_font(self, font: str):
+        if not font: return
+        self._gset_set("org.gnome.desktop.interface", "font-name",
+                       f'"{font}"')
+
     def search_entries(self):
         return [
             SearchEntry(self.KEY, self.TITLE, "Wallpaper"),
@@ -2748,6 +2936,15 @@ class AppearancePage(BasePage):
             SearchEntry(self.KEY, self.TITLE, "Accent color"),
             SearchEntry(self.KEY, self.TITLE, "Animations"),
             SearchEntry(self.KEY, self.TITLE, "UI font size"),
+            SearchEntry(self.KEY, self.TITLE, "GTK theme", "gnome theme"),
+            SearchEntry(self.KEY, self.TITLE, "Icon theme", "icons"),
+            SearchEntry(self.KEY, self.TITLE, "Cursor theme",
+                        "cursor pointer mouse"),
+            SearchEntry(self.KEY, self.TITLE, "Cursor size"),
+            SearchEntry(self.KEY, self.TITLE, "Interface font"),
+            SearchEntry(self.KEY, self.TITLE, "Monospace font"),
+            SearchEntry(self.KEY, self.TITLE, "Titlebar buttons",
+                        "window controls layout"),
         ]
 
 
