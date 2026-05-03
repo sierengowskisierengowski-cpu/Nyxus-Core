@@ -709,9 +709,9 @@ window#waybar.right {
      * aspect, repeated down the bar. NO color overlay — image shows raw. */
     background-image:    url("NYXUS_RIGHTBAR_BG");
     background-color:    #0a0410;
-    background-size:     100% auto;
-    background-position: top center;
-    background-repeat:   repeat-y;
+    background-size:     100% 100%;
+    background-position: center center;
+    background-repeat:   no-repeat;
     color:               #ffffff;
     border-left:         5px solid #ffff00;
     border-right:        4px solid rgba(251, 191, 36, 0.50);
