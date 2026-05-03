@@ -4230,49 +4230,283 @@ class NotificationsPage(BasePage):
 # ─── Users (read-only, honest) ──────────────────────────────────────────────
 class UsersPage(BasePage):
     KEY = "users"; TITLE = "Users & Accounts"; ICON = "👤"
+    TILE_COLOR = NEON_BLUE
+    SUBTITLE = "Identity · Groups · Sudoers · Login history"
 
+    # ── helpers ─────────────────────────────────────────────────────────────
+    def _read_passwd(self) -> List[Dict[str, str]]:
+        """Parse /etc/passwd → list of dicts. Returns only real users
+        (UID >= 1000 or root)."""
+        rows: List[Dict[str, str]] = []
+        try:
+            with open("/etc/passwd", "r") as f:
+                for ln in f:
+                    parts = ln.rstrip("\n").split(":")
+                    if len(parts) < 7: continue
+                    uid_s = parts[2]
+                    try: uid = int(uid_s)
+                    except ValueError: continue
+                    if uid != 0 and uid < 1000: continue
+                    if uid >= 65000: continue
+                    rows.append({
+                        "name": parts[0], "uid": uid_s, "gid": parts[3],
+                        "gecos": parts[4], "home": parts[5],
+                        "shell": parts[6],
+                    })
+        except Exception as e:
+            log.warning("read passwd: %s", e)
+        rows.sort(key=lambda r: int(r["uid"]))
+        return rows
+
+    def _shell_of(self, name: str) -> str:
+        for r in self._read_passwd():
+            if r["name"] == name: return r["shell"]
+        return "?"
+
+    def _login_shells(self) -> List[str]:
+        try:
+            with open("/etc/shells", "r") as f:
+                return [ln.strip() for ln in f
+                        if ln.strip() and not ln.startswith("#")]
+        except Exception:
+            return []
+
+    def _last_logins(self) -> str:
+        if not have("last"):
+            return "last(1) not installed"
+        rc, out, _ = sh("last -n 8 -F", timeout=4)
+        return (out or "").strip() or "no records"
+
+    def _account_locked(self, name: str) -> Optional[bool]:
+        """Try `passwd -S` (needs root) — fall back to /etc/shadow grep."""
+        rc, out, _ = sh(f"passwd -S {shlex.quote(name)}", timeout=2)
+        if rc == 0 and out:
+            tok = out.split()
+            if len(tok) >= 2:
+                st = tok[1]
+                if st in ("L", "LK"): return True
+                if st in ("P", "PS"): return False
+                if st in ("NP",): return False
+        # fallback: read shadow directly (will fail unless root)
+        try:
+            with open("/etc/shadow", "r") as f:
+                for ln in f:
+                    if ln.startswith(name + ":"):
+                        h = ln.split(":", 2)[1]
+                        return h.startswith("!") or h.startswith("*")
+        except Exception:
+            return None
+        return None
+
+    def _sudoers_preview(self) -> str:
+        """Return a redacted snippet of who has sudo. Reads /etc/sudoers
+        and /etc/sudoers.d/* if readable."""
+        lines: List[str] = []
+        try:
+            with open("/etc/sudoers", "r") as f:
+                for ln in f:
+                    s = ln.strip()
+                    if not s or s.startswith("#"): continue
+                    if any(t in s for t in ("ALL=", "%wheel", "%sudo",
+                                            "Defaults")):
+                        lines.append(s)
+        except Exception:
+            pass
+        try:
+            for p in sorted(Path("/etc/sudoers.d").glob("*")):
+                try:
+                    with open(p, "r") as f:
+                        for ln in f:
+                            s = ln.strip()
+                            if not s or s.startswith("#"): continue
+                            lines.append(f"[{p.name}] {s}")
+                except Exception: continue
+        except Exception:
+            pass
+        if not lines:
+            return "(unreadable — root only) try `sudo cat /etc/sudoers`"
+        return "\n".join(lines[:24])
+
+    # ── build ───────────────────────────────────────────────────────────────
     def build(self):
+        import getpass as _gp
+        u = _gp.getuser()
+        rc, idout, _ = sh("id")
+        rc, gout, _  = sh("id -nG")
+        groups = (gout or "").strip().split()
+
+        # ── current user identity ──────────────────────────────────────────
         c = Card("current user")
         self.box.append(c)
-        import getpass
-        u = getpass.getuser()
-        rc, out, _ = sh("id")
         c.add_row(kv_row("Username:", u))
-        c.add_row(kv_row("UID/GID:", out.strip()))
+        c.add_row(kv_row("UID/GID:", (idout or "").strip()))
         c.add_row(kv_row("Home:", str(Path.home())))
-        c.add_row(kv_row("Shell:", os.environ.get("SHELL", "?")))
+        c.add_row(kv_row("Shell:", os.environ.get("SHELL", self._shell_of(u))))
+        try: host = os.uname().nodename
+        except Exception: host = "?"
+        c.add_row(kv_row("Hostname:", host))
+        # GECOS (full name)
+        gecos = ""
+        for r in self._read_passwd():
+            if r["name"] == u: gecos = r["gecos"]; break
+        c.add_row(kv_row("Full name:", gecos.split(",", 1)[0] or "(unset)"))
         # avatar
         av = Path.home() / ".face"
-        c.add_row(kv_row("Avatar:", str(av) if av.exists() else "(none)"))
-        # passwd
-        b = SketchButton("Change password", width=180, height=26,
-                         color=ACCENT_GOLD)
+        c.add_row(kv_row("Avatar (~/.face):",
+                         str(av) if av.exists() else "(none)"))
+        # admin / lock state
+        is_admin = any(g in groups for g in ("wheel", "sudo", "adm"))
+        c.add_row(kv_row("Admin (wheel/sudo):",
+                         "yes" if is_admin else "no"))
+        locked = self._account_locked(u)
+        c.add_row(kv_row("Account locked:",
+                         "yes" if locked is True else
+                         ("no" if locked is False else "unknown (root only)")))
+        # actions
+        row = Gtk.Box(spacing=8)
+        b = SketchButton("Change password", width=170, height=26,
+                         color=ACCENT_GOLD,
+                         tooltip="passwd in a terminal")
         b.connect("clicked", lambda _b: subprocess.Popen(
             ["xdg-terminal-exec", "passwd"]) if have("xdg-terminal-exec")
             else self.win.toast("run `passwd` in a terminal"))
+        row.append(b)
+        b2 = SketchButton("Edit avatar", width=140, height=26,
+                          color=NEON_PINK,
+                          tooltip="open ~/.face folder")
+        b2.connect("clicked", lambda _b:
+            subprocess.Popen(["xdg-open", str(Path.home())])
+            if have("xdg-open") else self.win.toast("xdg-open not found"))
+        row.append(b2)
+        b3 = SketchButton("Edit GECOS", width=140, height=26,
+                          color=NEON_BLUE,
+                          tooltip="chfn in a terminal")
+        b3.connect("clicked", lambda _b: subprocess.Popen(
+            ["xdg-terminal-exec", "chfn"]) if have("xdg-terminal-exec")
+            else self.win.toast("run `chfn` in a terminal"))
+        row.append(b3)
+        c.add_row(row)
+
+        # ── group memberships ──────────────────────────────────────────────
+        c = Card("groups")
+        self.box.append(c)
+        c.add_row(kv_row("Member of:",
+                         "  ".join(groups) if groups else "(none)"))
+        # primary group
+        rc, pg, _ = sh("id -gn")
+        c.add_row(kv_row("Primary group:", (pg or "").strip()))
+        # privileged group flags
+        for g, blurb in (("wheel",   "sudo capability"),
+                         ("sudo",    "sudo capability"),
+                         ("video",   "GPU / brightness"),
+                         ("audio",   "ALSA / pipewire"),
+                         ("input",   "raw input devices"),
+                         ("docker",  "docker socket (root-equiv)"),
+                         ("kvm",     "virtualization"),
+                         ("plugdev", "removable storage")):
+            if g in groups:
+                c.add_row(kv_row(f"  ✓ {g}", blurb))
+
+        # ── sudoers preview ────────────────────────────────────────────────
+        c = Card("sudoers (preview)")
+        self.box.append(c)
+        sud = self._sudoers_preview()
+        lbl = Gtk.Label(label=sud, xalign=0); lbl.set_wrap(True)
+        lbl.set_selectable(True)
+        lbl.add_css_class("nyx-row-value")
+        c.add_row(lbl)
+        b = SketchButton("Open visudo", width=160, height=26,
+                         color=DANGER_RED,
+                         tooltip="EDITOR=nano sudo visudo")
+        b.connect("clicked", lambda _b: subprocess.Popen(
+            ["xdg-terminal-exec", "sudo", "visudo"])
+            if have("xdg-terminal-exec")
+            else self.win.toast("run `sudo visudo` in a terminal"))
         c.add_row(b)
 
-        # YubiKey
-        c = Card("YubiKey")
+        # ── login shells available ─────────────────────────────────────────
+        c = Card("available login shells (/etc/shells)")
+        self.box.append(c)
+        shells = self._login_shells()
+        if shells:
+            cur_sh = os.environ.get("SHELL", self._shell_of(u))
+            for s in shells:
+                mark = " ✓ current" if s == cur_sh else ""
+                c.add_row(kv_row(s, mark.strip() or "—"))
+            b = SketchButton("Change shell", width=160, height=26,
+                             color=ACCENT_PURP,
+                             tooltip="chsh in a terminal")
+            b.connect("clicked", lambda _b: subprocess.Popen(
+                ["xdg-terminal-exec", "chsh"]) if have("xdg-terminal-exec")
+                else self.win.toast("run `chsh` in a terminal"))
+            c.add_row(b)
+        else:
+            c.add_row(Gtk.Label(label="(/etc/shells unreadable)", xalign=0))
+
+        # ── all users on system (/etc/passwd) ──────────────────────────────
+        c = Card("all real users (/etc/passwd, UID 1000+ and root)")
+        self.box.append(c)
+        users = self._read_passwd()
+        c.add_row(kv_row("Total users:", str(len(users))))
+        for r in users[:20]:
+            tag = " (you)" if r["name"] == u else ""
+            c.add_row(kv_row(
+                f"{r['name']}{tag}",
+                f"uid={r['uid']}  shell={Path(r['shell']).name}  "
+                f"home={r['home']}"))
+        if len(users) > 20:
+            c.add_row(kv_row("…", f"+{len(users)-20} more"))
+
+        # ── login history ──────────────────────────────────────────────────
+        c = Card("recent logins (last -n 8)")
+        self.box.append(c)
+        ll = self._last_logins()
+        lbl = Gtk.Label(label=ll, xalign=0)
+        lbl.set_selectable(True); lbl.add_css_class("nyx-row-value")
+        c.add_row(lbl)
+
+        # ── YubiKey ────────────────────────────────────────────────────────
+        c = Card("YubiKey hardware key")
         self.box.append(c)
         if have("ykman"):
-            rc, out, _ = sh("ykman list")
-            c.add_row(Gtk.Label(label=out.strip() or "no YubiKey", xalign=0))
-            rc, out, _ = sh("ykman info")
-            c.add_row(Gtk.Label(label=out.strip()[:600] or "", xalign=0))
+            rc, out, _ = sh("ykman list", timeout=3)
+            c.add_row(Gtk.Label(
+                label=(out or "").strip() or "no YubiKey detected", xalign=0))
+            rc, out, _ = sh("ykman info", timeout=3)
+            if out:
+                lbl = Gtk.Label(label=out.strip()[:600], xalign=0)
+                lbl.set_selectable(True); lbl.set_wrap(True)
+                lbl.add_css_class("nyx-row-value")
+                c.add_row(lbl)
         else:
-            c.add_row(Gtk.Label(label="ykman not installed", xalign=0))
+            c.add_row(Gtk.Label(
+                label="ykman not installed — `pacman -S yubikey-manager`",
+                xalign=0))
 
         self.add_note(
-            "user creation, group changes, and removal are destructive and "
-            "require root — use `useradd`, `usermod`, or `userdel` in a "
-            "terminal.")
+            "user creation, group changes, password resets and account "
+            "removal are destructive and require root — use `useradd`, "
+            "`usermod`, `passwd`, `gpasswd`, or `userdel` in a terminal. "
+            "Sudoers should always be edited with `visudo` (never `nano` "
+            "directly) so syntax errors don't lock you out.")
 
     def search_entries(self):
         return [
             SearchEntry(self.KEY, self.TITLE, "Change password"),
-            SearchEntry(self.KEY, self.TITLE, "YubiKey"),
-            SearchEntry(self.KEY, self.TITLE, "User info"),
+            SearchEntry(self.KEY, self.TITLE, "Change shell (chsh)"),
+            SearchEntry(self.KEY, self.TITLE, "Edit GECOS / full name"),
+            SearchEntry(self.KEY, self.TITLE, "Edit avatar (~/.face)"),
+            SearchEntry(self.KEY, self.TITLE, "Group memberships"),
+            SearchEntry(self.KEY, self.TITLE, "Sudoers preview"),
+            SearchEntry(self.KEY, self.TITLE, "Open visudo"),
+            SearchEntry(self.KEY, self.TITLE, "Login shells (/etc/shells)"),
+            SearchEntry(self.KEY, self.TITLE, "All users (/etc/passwd)"),
+            SearchEntry(self.KEY, self.TITLE, "Recent logins (last)"),
+            SearchEntry(self.KEY, self.TITLE, "Account locked status"),
+            SearchEntry(self.KEY, self.TITLE, "Hostname"),
+            SearchEntry(self.KEY, self.TITLE, "UID and GID"),
+            SearchEntry(self.KEY, self.TITLE, "YubiKey hardware key"),
+            SearchEntry(self.KEY, self.TITLE, "Admin / wheel / sudo"),
         ]
 
 
@@ -6715,19 +6949,112 @@ PAGE_CLASSES: List[type] = [
 HOME_KEY = "_home"
 
 
+class GraffitiBackground(Gtk.DrawingArea):
+    """Hand-drawn neon graffiti collage of NYXUS-related words, drawn
+    behind every page. Stable layout (seeded RNG) so words don't dance
+    on every redraw. No grey — pure neon ink on black."""
+
+    WORDS = [
+        ("settings", 56), ("fonts", 38), ("keyboard", 42), ("mouse", 36),
+        ("display", 44), ("sound", 36), ("network", 40), ("bluetooth", 36),
+        ("wifi", 32), ("vpn", 30), ("firewall", 34), ("theme", 36),
+        ("wallpaper", 40), ("cursor", 32), ("monitor", 38), ("gpu", 30),
+        ("hyprland", 50), ("wayland", 44), ("makepkg", 38), ("pacman", 42),
+        ("jetbrains", 36), ("neovim", 36), ("pipewire", 38), ("mako", 30),
+        ("dunst", 30), ("sysmon", 34), ("notepad", 34), ("stickies", 36),
+        ("widgets", 36), ("calendar", 36), ("weather", 34), ("clock", 32),
+        ("password", 38), ("yubikey", 38), ("gpg", 32), ("ssh", 30),
+        ("apparmor", 34), ("ext4", 28), ("grub", 30), ("rofi", 32),
+        ("waybar", 36), ("hypridle", 32), ("locked", 32), ("root", 32),
+        ("nyx", 36), ("NYXUS", 80), ("sierengowski", 30), ("operator", 32),
+        ("admin", 30), ("sudo", 30), ("wheel", 28), ("palette", 32),
+        ("scale", 30), ("brightness", 32), ("vrr", 28), ("bluez", 28),
+        ("alsa", 28), ("mixer", 30), ("language", 32), ("locale", 30),
+        ("timezone", 32), ("accessibility", 28), ("gaming", 32),
+        ("printers", 30), ("workspaces", 34), ("snapshots", 30),
+        ("backup", 30), ("disk", 28), ("storage", 30), ("silent", 30),
+        ("phantom", 36), ("shield", 32), ("intel", 30), ("godsapp", 32),
+    ]
+
+    def __init__(self):
+        super().__init__()
+        self.set_hexpand(True); self.set_vexpand(True)
+        self.set_can_target(False)  # don't steal clicks
+        self.add_css_class("nyx-graffiti-host")
+        self.set_draw_func(self._draw)
+        self._layout_cache: Optional[List[tuple]] = None
+        self._cache_w = 0; self._cache_h = 0
+
+    def _build_layout(self, w: int, h: int):
+        rng = random.Random(0x9F33A1)
+        palette = [NEON_PINK, NEON_BLUE, NEON_GREEN, ACCENT_GOLD,
+                   ACCENT_PURP, DANGER_RED]
+        items = []
+        # poisson-ish placement: random tries with min-distance check
+        placed: List[tuple] = []
+        max_tries = len(self.WORDS) * 8
+        idx = 0; tries = 0
+        while idx < len(self.WORDS) and tries < max_tries:
+            tries += 1
+            word, base_size = self.WORDS[idx]
+            size = int(base_size * (0.85 + rng.random() * 0.5))
+            est_w = int(len(word) * size * 0.55)
+            est_h = int(size * 1.1)
+            x = rng.randint(20, max(40, w - est_w - 20))
+            y = rng.randint(20, max(40, h - est_h - 20))
+            angle = (rng.random() - 0.5) * 0.55  # ±15° rotation
+            # ensure not overlapping existing too tightly
+            ok = True
+            for (px, py, pw, ph) in placed:
+                if (x < px + pw + 10 and x + est_w + 10 > px and
+                    y < py + ph + 10 and y + est_h + 10 > py):
+                    ok = False; break
+            if not ok: continue
+            placed.append((x, y, est_w, est_h))
+            color = palette[rng.randrange(len(palette))]
+            alpha = 0.10 + rng.random() * 0.10  # 0.10–0.20 — subtle
+            items.append((word, x, y, size, angle, color, alpha))
+            idx += 1
+        self._layout_cache = items
+        self._cache_w, self._cache_h = w, h
+
+    def _draw(self, area, cr, w, h, _=None):
+        # solid black bg (so cards float over it cleanly)
+        cr.set_source_rgba(0.039, 0.039, 0.071, 1.0)
+        cr.rectangle(0, 0, w, h); cr.fill()
+        if (self._layout_cache is None or
+            abs(w - self._cache_w) > 40 or abs(h - self._cache_h) > 40):
+            self._build_layout(w, h)
+        for word, x, y, size, angle, color, alpha in (self._layout_cache or []):
+            cr.save()
+            cr.translate(x, y)
+            cr.rotate(angle)
+            layout = PangoCairo.create_layout(cr)
+            fd = Pango.FontDescription()
+            fd.set_family("Caveat")
+            fd.set_weight(Pango.Weight.BOLD)
+            fd.set_size(int(size * Pango.SCALE))
+            layout.set_font_description(fd); layout.set_text(word, -1)
+            cr.set_source_rgba(*color, alpha)
+            cr.move_to(0, 0); PangoCairo.show_layout(cr, layout)
+            cr.restore()
+
+
 class SettingsRow(Gtk.DrawingArea):
-    """Compact list-row tile (icon + title + subtitle + chevron) — like
-    macOS / GNOME System Settings. Replaces the giant CategoryTile in the
-    redesigned home list view."""
+    """Lean enterprise list-row (icon + title + subtitle + chevron) —
+    Windows 10 / GNOME System Settings style. No grey: pure black bg
+    over neon dividers. Used in home list AND sidebar nav (compact mode)."""
     __gsignals__ = {"activated": (GObject.SignalFlags.RUN_FIRST, None, ())}
 
-    def __init__(self, *, icon: str, title: str, subtitle: str,
-                 color=NEON_PINK, starred: bool = False,
-                 width=-1, height=52):
+    def __init__(self, *, icon: str, title: str, subtitle: str = "",
+                 color=NEON_PINK, starred: bool = False, active: bool = False,
+                 compact: bool = False, width=-1, height=40):
         super().__init__()
         self.icon, self.title, self.subtitle = icon, title, subtitle
         self.color = color; self.starred = starred
+        self.active = active; self.compact = compact
         self._hover = False
+        if compact and height == 40: height = 36
         self.set_size_request(width, height)
         self.set_hexpand(True); self.set_vexpand(False)
         try: self.set_content_height(height)
@@ -6744,40 +7071,51 @@ class SettingsRow(Gtk.DrawingArea):
         self.add_controller(mc)
         self.set_cursor(Gdk.Cursor.new_from_name("pointer"))
 
+    def set_active(self, on: bool):
+        if self.active != on:
+            self.active = on; self.queue_draw()
+
     def _draw(self, area, cr, w, h, _=None):
-        # row background (highlight on hover)
-        if self._hover:
+        # active state: stronger neon left bar + faint tinted bg
+        if self.active:
+            cr.set_source_rgba(*self.color, 0.14)
+            cr.rectangle(0, 0, w, h); cr.fill()
+            cr.set_source_rgba(*self.color, 1.0)
+            cr.rectangle(0, 0, 3, h); cr.fill()
+        elif self._hover:
             cr.set_source_rgba(*self.color, 0.10)
             cr.rectangle(0, 0, w, h); cr.fill()
-            cr.set_source_rgba(*self.color, 0.55); cr.set_line_width(1.0)
-            cr.move_to(0, 0); cr.line_to(3, 0)
-            cr.line_to(3, h); cr.line_to(0, h); cr.fill()
-        # bottom hairline divider
-        cr.set_source_rgba(*INK_FAINT, 0.18); cr.set_line_width(1.0)
-        sketch_line(cr, 14, h-0.5, w-14, h-0.5, jitter=0.25,
+            cr.set_source_rgba(*self.color, 0.55)
+            cr.rectangle(0, 0, 2, h); cr.fill()
+        # neon hairline divider (no grey)
+        cr.set_source_rgba(*NEON_PINK, 0.10); cr.set_line_width(1.0)
+        sketch_line(cr, 12, h-0.5, w-12, h-0.5, jitter=0.20,
                     key=("srow", self.title, w))
         # left accent dot
-        cr.set_source_rgba(*self.color, 0.85)
-        cr.arc(20, h/2, 4, 0, math.pi*2); cr.fill()
-        # icon (large emoji)
-        draw_caveat(cr, 36, (h-26)/2 - 2, self.icon, size=22,
-                    color=(*self.color, 0.95))
-        # title (Caveat bold)
-        draw_caveat(cr, 78, 7, self.title, size=18,
-                    color=(*INK_BRIGHT, 0.97),
+        cr.set_source_rgba(*self.color, 0.95)
+        cr.arc(16, h/2, 3, 0, math.pi*2); cr.fill()
+        # icon
+        icon_size = 16 if self.compact else 18
+        draw_caveat(cr, 28, (h-icon_size-4)/2, self.icon, size=icon_size,
+                    color=(*self.color, 0.98))
+        # title
+        title_size = 15 if self.compact else 17
+        title_y = (h-title_size-4)/2 - (4 if self.subtitle else 0)
+        draw_caveat(cr, 56, title_y, self.title, size=title_size,
+                    color=(*INK_BRIGHT, 0.98),
                     weight=Pango.Weight.BOLD)
         # subtitle (mono dim)
-        if self.subtitle:
-            draw_caveat(cr, 78, h-22, self.subtitle, size=11,
-                        color=(*INK_DIM, 0.85),
+        if self.subtitle and not self.compact:
+            draw_caveat(cr, 56, h-16, self.subtitle, size=10,
+                        color=(*INK_DIM, 0.80),
                         family="JetBrains Mono")
         # star
         if self.starred:
-            draw_caveat(cr, w-58, (h-22)/2, "★", size=18,
+            draw_caveat(cr, w-48, (h-18)/2, "★", size=14,
                         color=(*ACCENT_GOLD, 0.95))
         # chevron ›
-        draw_caveat(cr, w-28, (h-26)/2 - 2, "›", size=24,
-                    color=(*INK_DIM, 0.75))
+        draw_caveat(cr, w-22, (h-22)/2, "›", size=20,
+                    color=(*self.color if self.active else INK_DIM, 0.85))
 
 
 class CategoryTile(Gtk.DrawingArea):
@@ -6929,27 +7267,47 @@ window, .nyx-bg { background-color: #0a0a12; color: #f0eef8; }
     border-bottom: 1px solid rgba(255,140,40,0.55);
     padding: 6px 14px; }
 .nyx-restartbar label { color: #ffd6aa; font-size: 14px; }
-.nyx-strip { background-color: rgba(255,255,255,0.02);
-    border-top: 1px solid rgba(255,0,255,0.07);
-    border-bottom: 1px solid rgba(255,0,255,0.07);
+.nyx-strip { background-color: transparent;
+    border-top: 1px solid rgba(255,0,255,0.18);
+    border-bottom: 1px solid rgba(255,0,255,0.10);
     padding: 6px 16px; }
-.nyx-strip-label { color: rgba(240,235,250,0.55); font-size: 14px; }
-.nyx-statusbar { background-color: rgba(10,10,18,0.96); padding: 2px 12px;
-    border-top: 1px solid rgba(255,255,255,0.06); }
+.nyx-strip-label { color: rgba(255,150,230,0.80); font-size: 13px;
+    text-transform: uppercase; letter-spacing: 1.6px;
+    font-family: 'JetBrains Mono', monospace; }
+.nyx-statusbar { background-color: #06060c; padding: 3px 12px;
+    border-top: 1px solid rgba(255,0,255,0.20); }
 .nyx-headline { color: #ff00ff; text-shadow: 0 0 10px rgba(255,0,255,0.55);
     font-size: 22px; font-weight: bold; }
-.nyx-meta { color: rgba(240,235,250,0.45); font-size: 12px; }
-.nyx-card { background-color: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,0,255,0.08); border-radius: 6px;
+.nyx-meta { color: rgba(240,235,250,0.55); font-size: 12px; }
+.nyx-card { background-color: transparent;
+    border: 1px solid rgba(255,0,255,0.22); border-radius: 6px;
     padding: 4px 0 8px 0; }
-.nyx-listcard { background-color: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,0,255,0.10); border-radius: 8px;
+.nyx-listcard { background-color: transparent;
+    border: 1px solid rgba(255,0,255,0.28); border-radius: 4px;
     padding: 0; margin-top: 4px; }
 .nyx-settings-list { background-color: transparent; }
 .nyx-settings-list row { background-color: transparent;
-    padding: 0; min-height: 52px; }
+    padding: 0; min-height: 40px; }
 .nyx-settings-list row:hover { background-color: transparent; }
 .nyx-settings-list row:selected { background-color: transparent; }
+/* ── Win10-style left sidebar nav ────────────────────────────────────── */
+.nyx-sidebar { background-color: #06060c;
+    border-right: 1px solid rgba(255,0,255,0.28);
+    padding: 6px 0; min-width: 220px; }
+.nyx-sidebar-section { color: rgba(255,150,230,0.70);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 1.4px; text-transform: uppercase;
+    padding: 10px 14px 4px 14px; }
+.nyx-content { background-color: transparent; padding: 0; }
+.nyx-graffiti-host { background-color: #0a0a12; }
+/* ── user account chip (top-right) ───────────────────────────────────── */
+.nyx-user-chip { background-color: transparent;
+    border: 1px solid rgba(255,0,255,0.40); border-radius: 999px;
+    padding: 4px 12px 4px 4px; }
+.nyx-user-name { color: #f0eef8; font-size: 14px;
+    font-weight: bold; }
+.nyx-user-role { color: rgba(255,150,230,0.85); font-size: 11px;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.6px; }
 .nyx-card-title { color: #b88dff; font-size: 18px; font-weight: bold; }
 .nyx-row-label { color: #f0eef8; font-size: 14px; }
 .nyx-row-value { color: rgba(240,235,250,0.75); font-size: 14px; }
@@ -7021,6 +7379,58 @@ scrollbar { background-color: transparent; }
         vp.add_css_class("nyx-version-pill")
         vp.set_valign(Gtk.Align.CENTER)
         hero_row.append(vp)
+        # ── user account chip (top-right, Win10 style) ────────────────────
+        import getpass as _gp
+        u_name = _gp.getuser()
+        try: host = os.uname().nodename
+        except Exception: host = "?"
+        # role: detect wheel/sudo group membership
+        rc, gout, _ = sh("id -nG")
+        groups = (gout or "").split()
+        role = ("admin" if any(g in groups for g in
+                ("wheel", "sudo", "adm")) else "user")
+        chip = Gtk.Box(spacing=10); chip.add_css_class("nyx-user-chip")
+        chip.set_valign(Gtk.Align.CENTER)
+        # avatar circle (use ~/.face if present; else colored initial)
+        av_path = Path.home() / ".face"
+        avatar = Gtk.DrawingArea()
+        avatar.set_size_request(34, 34)
+        try: avatar.set_content_width(34); avatar.set_content_height(34)
+        except Exception: pass
+        avatar.set_valign(Gtk.Align.CENTER)
+        _initial = (u_name[:1] or "?").upper()
+        _accent  = (NEON_PINK if role == "admin" else NEON_BLUE)
+        def _draw_avatar(area, cr, w, h, _=None):
+            cr.set_source_rgba(*_accent, 0.20)
+            cr.arc(w/2, h/2, min(w,h)/2 - 2, 0, math.pi*2); cr.fill()
+            cr.set_source_rgba(*_accent, 0.95); cr.set_line_width(1.4)
+            cr.arc(w/2, h/2, min(w,h)/2 - 2, 0, math.pi*2); cr.stroke()
+            layout = PangoCairo.create_layout(cr)
+            fd = Pango.FontDescription()
+            fd.set_family("Caveat"); fd.set_weight(Pango.Weight.BOLD)
+            fd.set_size(int(20 * Pango.SCALE))
+            layout.set_font_description(fd); layout.set_text(_initial, -1)
+            tw, th = layout.get_pixel_size()
+            cr.set_source_rgba(*_accent, 0.98)
+            cr.move_to((w-tw)/2, (h-th)/2); PangoCairo.show_layout(cr, layout)
+        avatar.set_draw_func(_draw_avatar)
+        chip.append(avatar)
+        u_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        u_box.set_valign(Gtk.Align.CENTER)
+        u_lbl = Gtk.Label(label=u_name, xalign=0)
+        u_lbl.add_css_class("nyx-user-name")
+        u_box.append(u_lbl)
+        r_lbl = Gtk.Label(label=f"{role} @ {host}", xalign=0)
+        r_lbl.add_css_class("nyx-user-role")
+        u_box.append(r_lbl)
+        chip.append(u_box)
+        # click → jump to Users page
+        gc = Gtk.GestureClick(); gc.set_button(1)
+        gc.connect("released",
+                   lambda *_a: self.show_page("users"))
+        chip.add_controller(gc)
+        chip.set_cursor(Gdk.Cursor.new_from_name("pointer"))
+        hero_row.append(chip)
         root.append(hero_row)
 
         # ── SLIM SECONDARY TOOLBAR (nav + breadcrumb + search + star) ──────
@@ -7080,13 +7490,37 @@ scrollbar { background-color: transparent; }
         self.restart_bar.append(b_clear)
         root.append(self.restart_bar)
 
-        # ── stack (full-width, no sidebar) ─────────────────────────────────
+        # ── split layout: left sidebar (Win10 style) + content stack ──────
+        split = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        split.set_hexpand(True); split.set_vexpand(True)
+
+        # sidebar — scrollable, hidden on Home, visible on category pages
+        self._sidebar_sw = Gtk.ScrolledWindow()
+        self._sidebar_sw.set_policy(Gtk.PolicyType.NEVER,
+                                    Gtk.PolicyType.AUTOMATIC)
+        self._sidebar_sw.set_size_request(220, -1)
+        self._sidebar_sw.add_css_class("nyx-sidebar")
+        self._sidebar_sw.set_visible(False)
+        self._sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,
+                                    spacing=0)
+        self._sidebar_sw.set_child(self._sidebar_box)
+        self._sidebar_rows: Dict[str, "SettingsRow"] = {}
+        split.append(self._sidebar_sw)
+
+        # stack (content panel) — graffiti background sits behind
         self.stack = Gtk.Stack()
         self.stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
         self.stack.set_transition_duration(180)
         self.stack.set_hexpand(True); self.stack.set_vexpand(True)
-        ov = Gtk.Overlay(); ov.set_child(self.stack)
+        self.stack.add_css_class("nyx-content")
+        ov = Gtk.Overlay()
+        # bottom layer: graffiti collage (NYXUS, settings, fonts, etc)
+        self._graffiti = GraffitiBackground()
+        ov.set_child(self._graffiti)
         ov.set_hexpand(True); ov.set_vexpand(True)
+        # main content above graffiti
+        ov.add_overlay(self.stack)
+        # toast on top of everything
         self._toast_label = Gtk.Label()
         self._toast_label.add_css_class("nyx-toast")
         self._toast_label.set_halign(Gtk.Align.CENTER)
@@ -7094,7 +7528,8 @@ scrollbar { background-color: transparent; }
         self._toast_label.set_margin_bottom(20)
         self._toast_label.set_visible(False)
         ov.add_overlay(self._toast_label)
-        root.append(ov)
+        split.append(ov)
+        root.append(split)
 
         # build all pages
         for cls in PAGE_CLASSES:
@@ -7115,6 +7550,9 @@ scrollbar { background-color: transparent; }
         self.stack.add_named(self._home_widget, HOME_KEY)
         self.search_page = self._build_search_results_page()
         self.stack.add_named(self.search_page, "_search")
+
+        # populate sidebar nav (Win10 style — visible on category pages)
+        self._populate_sidebar()
 
         # status bar
         sb = Gtk.Box(spacing=10); sb.add_css_class("nyx-statusbar")
@@ -7278,6 +7716,48 @@ scrollbar { background-color: transparent; }
         else:
             self.toast("hyprctl reload failed — see /tmp/nyxus-settings.log")
 
+    # ── sidebar nav (Win10 style) ───────────────────────────────────────────
+    def _populate_sidebar(self):
+        """Fill the left sidebar with one compact SettingsRow per page,
+        grouped under section headers. Click → show_page(key)."""
+        # clear (in case rebuilt)
+        child = self._sidebar_box.get_first_child()
+        while child:
+            nxt = child.get_next_sibling()
+            self._sidebar_box.remove(child); child = nxt
+        self._sidebar_rows.clear()
+
+        # tiny header label
+        head = Gtk.Label(label="◆  CATEGORIES", xalign=0)
+        head.add_css_class("nyx-sidebar-section")
+        self._sidebar_box.append(head)
+
+        for cls in PAGE_CLASSES:
+            page = self._page_widgets.get(cls.KEY)
+            if not page: continue
+            color = getattr(cls, "TILE_COLOR", NEON_PINK)
+            row = SettingsRow(
+                icon=cls.ICON, title=cls.TITLE, subtitle="",
+                color=color, compact=True, height=34)
+            row.connect("activated",
+                        lambda _r, k=cls.KEY: self.show_page(k))
+            self._sidebar_box.append(row)
+            self._sidebar_rows[cls.KEY] = row
+
+        # spacer
+        spacer = Gtk.Box(); spacer.set_vexpand(True)
+        self._sidebar_box.append(spacer)
+        # footer link → home
+        head2 = Gtk.Label(label="◆  NAVIGATION", xalign=0)
+        head2.add_css_class("nyx-sidebar-section")
+        self._sidebar_box.append(head2)
+        home_row = SettingsRow(
+            icon="⌂", title="Home", subtitle="",
+            color=NEON_PINK, compact=True, height=34)
+        home_row.connect("activated",
+                         lambda _r: self.show_page(HOME_KEY))
+        self._sidebar_box.append(home_row)
+
     # ── navigation ──────────────────────────────────────────────────────────
     def _crumb_for(self, key: str) -> str:
         if key == HOME_KEY:   return "  ›  Home"
@@ -7294,6 +7774,13 @@ scrollbar { background-color: transparent; }
             self.history.append(cur)
             self._fwd_history.clear()
         self.stack.set_visible_child_name(key)
+        # sidebar visibility (Win10 style: hide on home/search, show on cats)
+        if hasattr(self, "_sidebar_sw"):
+            self._sidebar_sw.set_visible(
+                key not in (HOME_KEY, "_search"))
+        # highlight active sidebar row
+        for k, row in getattr(self, "_sidebar_rows", {}).items():
+            row.set_active(k == key)
         if key == HOME_KEY:
             self._rebuild_home_strips(); self._populate_tiles()
             self.crumb_lbl.set_text(self._crumb_for(HOME_KEY))
