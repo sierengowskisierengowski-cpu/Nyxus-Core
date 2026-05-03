@@ -17,7 +17,10 @@ from pathlib import Path
 API_BASE   = "https://nyxus-core.replit.app/api/download/nyxus"
 HOME       = Path.home()
 CACHE_DIR  = HOME / ".cache" / "nyxus" / "graffiti"
-BIN_DIR    = HOME / ".local" / "bin"
+# Installer (nyxus_install.sh) places all NYXUS python scripts in ~/.nyxus
+SCRIPTS_DIR = HOME / ".nyxus"
+# Some user setups also keep symlinks in ~/.local/bin — accept either
+BIN_DIR_ALT = HOME / ".local" / "bin"
 CFG_HYPR   = HOME / ".config" / "hypr"
 CFG_WAYBAR = HOME / ".config" / "waybar"
 CFG_DUNST  = HOME / ".config" / "dunst"
@@ -121,24 +124,33 @@ def check_graffiti_cache() -> None:
 
 def check_scripts_present() -> None:
     expected = [
-        "nyxus_chrome.py", "nyxus_settings.py", "nyxus_notepad.py",
-        "nyxus_stickies.py", "nyxus_sysmon_gtk.py", "nyxus_control.py",
-        "nyxus_weather.py", "nyxus_terminal.py", "nyxus_quicksettings.py",
+        "nyxus_settings.py", "nyxus_notepad.py", "nyxus_stickies.py",
+        "nyxus_sysmon_gtk.py", "nyxus_control.py", "nyxus_weather.py",
+        "nyxus_terminal.py",
+        # phase-2 additions
+        "nyxus_doctor.py", "nyxus_launcher.py", "nyxus_powermenu.py",
+        "nyxus_screenshot.py",
     ]
-    missing = [n for n in expected if not (BIN_DIR / n).exists()]
+    missing = [n for n in expected
+               if not (SCRIPTS_DIR / n).exists()
+               and not (BIN_DIR_ALT / n).exists()]
     if missing:
         add("warn", "NYXUS scripts",
-            f"{len(missing)} missing in {BIN_DIR}: {', '.join(missing[:5])}")
+            f"{len(missing)} missing in {SCRIPTS_DIR}: {', '.join(missing[:5])}")
     else:
-        add("ok", "NYXUS scripts", f"{len(expected)} present in {BIN_DIR}")
+        add("ok", "NYXUS scripts",
+            f"{len(expected)} present in {SCRIPTS_DIR}")
 
 def check_waybar() -> None:
     style = CFG_WAYBAR / "style.css"
-    cfg   = CFG_WAYBAR / "config.json"
+    # waybar accepts either `config` or `config.json`
+    cfg = next((CFG_WAYBAR / n for n in ("config", "config.json", "config.jsonc")
+                if (CFG_WAYBAR / n).exists()), None)
     if not style.exists():
         add("err", "waybar style.css", f"missing at {style}"); return
-    if not cfg.exists():
-        add("err", "waybar config.json", f"missing at {cfg}"); return
+    if cfg is None:
+        add("err", "waybar config",
+            f"missing at {CFG_WAYBAR}/config[.json]"); return
     s = style.read_text(errors="ignore")
     add("ok", "waybar style.css", f"{len(s):,} bytes")
     # right-bar background image
