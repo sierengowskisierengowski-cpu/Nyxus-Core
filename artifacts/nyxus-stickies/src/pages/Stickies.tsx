@@ -211,12 +211,12 @@ export default function Stickies() {
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 4 }}>
-          <span style={{ fontSize: 22, lineHeight: 1 }}>📌</span>
           <span style={{
             fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: 22,
             color: NEON_PINK, textShadow: `0 0 12px ${NEON_PINK}88, 0 0 24px ${NEON_PINK}44`,
             letterSpacing: 1,
-          }}>NYXUS Stickies</span>
+          }}>◈ NYXUS Stickies</span>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: `${NEON_PINK}55`, letterSpacing: '0.22em', marginLeft: 4 }}>NYX-J5W-2026</span>
         </div>
 
         {/* Search */}

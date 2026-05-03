@@ -231,8 +231,8 @@ export default function Notepad() {
       }}>
         {/* Logo */}
         <div style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 24 }}>📓</span>
-          <span style={{ fontFamily: FONT, fontWeight: 700, fontSize: 22, color: PINK, textShadow: `0 0 14px ${PINK}66` }}>NYXUS Notepad</span>
+          <span style={{ fontFamily: FONT, fontWeight: 700, fontSize: 22, color: PINK, textShadow: `0 0 14px ${PINK}66` }}>✑ NYXUS Notepad</span>
+          <span style={{ marginLeft: 'auto', fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: `${PINK}55`, letterSpacing: '0.22em' }}>NYX-J5W-2026</span>
         </div>
 
         {/* New note btn */}
@@ -388,7 +388,7 @@ export default function Notepad() {
         </>) : (
           /* Empty state */
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
-            <div style={{ fontSize: 60 }}>📝</div>
+            <div style={{ fontSize: 52, color: `${PINK}44`, lineHeight: 1 }}>✑</div>
             <div style={{ fontFamily: FONT, fontSize: 26, color: DIM, textAlign: 'center' }}>
               Select a note or create one
             </div>

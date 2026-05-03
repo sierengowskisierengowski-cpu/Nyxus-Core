@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -13,20 +14,32 @@
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
+  --font-sans: 'Caveat', 'Patrick Hand', cursive;
   --font-mono: var(--app-font-mono);
+
+  --color-nyxus-pink:   #ff00ff;
+  --color-nyxus-purple: #cc00ff;
+  --color-nyxus-blue:   #0088ff;
+  --color-nyxus-green:  #39ff14;
+  --color-nyxus-yellow: #ffff00;
+  --color-nyxus-orange: #ff5500;
+  --color-nyxus-bg:     #06040c;
+  --color-nyxus-panel:  #0d0d1a;
+  --color-nyxus-text:   #e8e0f5;
+  --color-nyxus-dim:    #7060a0;
 }
 
 :root {
-  --background: 0 0% 4%;
+  --background: 260 50% 2%;
   --foreground: 270 100% 85%;
   --border: 270 60% 20%;
-  --card: 0 0% 7%;
+  --card: 260 50% 4%;
   --card-foreground: 270 100% 85%;
-  --primary: 270 100% 65%;
-  --primary-foreground: 0 0% 4%;
-  --muted: 0 0% 10%;
+  --primary: 300 100% 50%;
+  --primary-foreground: 260 50% 2%;
+  --muted: 260 20% 10%;
   --muted-foreground: 270 30% 55%;
-  --app-font-mono: 'Courier New', 'Lucida Console', monospace;
+  --app-font-mono: 'JetBrains Mono', 'Courier New', monospace;
 }
 
 @layer base {
@@ -38,4 +51,8 @@
       radial-gradient(ellipse at 0% 100%, rgba(0, 255, 128, 0.04) 0%, transparent 50%);
     min-height: 100vh;
   }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: #06040c; }
+  ::-webkit-scrollbar-thumb { background: #2a1a3a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #cc00ff; }
 }
