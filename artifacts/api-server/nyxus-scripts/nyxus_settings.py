@@ -909,14 +909,273 @@ class SoundPage(BasePage):
     KEY = "sound"; TITLE = "Sound"; ICON = "🔊"
 
     def build(self):
-        # output
+        # ── 1. server info (pipewire / pulseaudio detect) ──────────────────
+        c = Card("audio server")
+        self.box.append(c)
+        rc, out, _ = sh("pactl info 2>/dev/null")
+        info = {}
+        for line in out.splitlines():
+            if ":" in line:
+                k, v = line.split(":", 1)
+                info[k.strip()] = v.strip()
+        c.add_row(kv_row("Server name:",
+                         info.get("Server Name", "(no pulse/pipewire)")))
+        c.add_row(kv_row("Server version:",
+                         info.get("Server Version", "?")))
+        c.add_row(kv_row("Default sink:",
+                         info.get("Default Sink", "?")))
+        c.add_row(kv_row("Default source:",
+                         info.get("Default Source", "?")))
+        c.add_row(kv_row("Sample spec:",
+                         info.get("Default Sample Specification", "?")))
+        c.add_row(kv_row("Channel map:",
+                         info.get("Default Channel Map", "?")))
+        c.add_row(kv_row("PipeWire active:",
+                         "yes" if "PipeWire" in info.get("Server Name", "")
+                         else "no (PulseAudio)"))
+        # quick service controls
+        row = Gtk.Box(spacing=8)
+        for label, cmd in (
+            ("Restart pipewire",
+             "systemctl --user restart pipewire pipewire-pulse wireplumber"),
+            ("Restart pulseaudio",
+             "systemctl --user restart pulseaudio"),
+        ):
+            b = SketchButton(label, width=180, height=24, color=NEON_BLUE)
+            b.connect("clicked",
+                      lambda _b, c=cmd, l=label: (
+                          sh_async(c, lambda r, l=l: self.win.toast(
+                              f"{l} → ok" if r[0]==0 else f"{l} failed")),
+                          None))
+            row.append(b)
+        c.add_row(row)
+
+        # output / input / app cards (existing dynamic)
         self.out_card = Card("output")
         self.box.append(self.out_card)
         self.in_card  = Card("input")
         self.box.append(self.in_card)
         self.app_card = Card("per-application volume")
         self.box.append(self.app_card)
+
+        # ── 2. cards & profiles ────────────────────────────────────────────
+        c = Card("sound cards & profiles")
+        self.box.append(c)
+        rc, out, _ = sh("pactl list cards short")
+        cards = [l.split("\t")[1] for l in out.splitlines()
+                 if len(l.split("\t")) >= 2]
+        if not cards:
+            c.add_row(Gtk.Label(label="(no cards detected)", xalign=0))
+        for cid in cards:
+            rc, info, _ = sh(
+                f"pactl list cards | awk '/Name: {re.escape(cid)}$/,/^$/'")
+            cur = "?"; profs = []
+            in_profiles = False
+            for ln in info.splitlines():
+                ln_s = ln.strip()
+                if ln_s.startswith("Active Profile:"):
+                    cur = ln_s.split(":", 1)[1].strip()
+                if ln_s.startswith("Profiles:"):
+                    in_profiles = True; continue
+                if in_profiles:
+                    m = re.match(r"([a-zA-Z0-9+_:.\-]+):\s+", ln_s)
+                    if m:
+                        profs.append(m.group(1))
+                    elif ln_s.startswith(("Ports:", "Sinks:", "Sources:",
+                                          "Formats:")):
+                        in_profiles = False
+            c.add_row(kv_row(cid + ":", cur))
+            if profs:
+                # show top 6 profiles, prefer common audio ones
+                sw = Gtk.ScrolledWindow()
+                sw.set_size_request(-1, 36)
+                fb = Gtk.Box(spacing=6)
+                for p in profs[:8]:
+                    b = SketchButton(
+                        p[:24] + ("…" if len(p) > 24 else ""),
+                        width=180, height=22, color=NEON_GREEN,
+                        primary=(p == cur), tooltip=p)
+                    b.connect("clicked",
+                              lambda _b, c=cid, p=p: (
+                                  sh(f"pactl set-card-profile {c} {p}"),
+                                  self.win.toast(f"{c} → {p}"),
+                                  self.refresh()))
+                    fb.append(b)
+                sw.set_child(fb); c.add_row(sw)
+
+        # ── 3. ports per sink (speakers / headphones / HDMI) ───────────────
+        c = Card("output ports")
+        self.box.append(c)
+        rc, out, _ = sh("pactl list sinks")
+        cur_sink = None
+        sink_ports: dict = {}
+        sink_active_port: dict = {}
+        in_ports = False
+        for ln in out.splitlines():
+            ln_s = ln.strip()
+            m = re.match(r"Name:\s+(.+)", ln_s)
+            if m and ln.startswith("\t"):
+                cur_sink = m.group(1); sink_ports[cur_sink] = []
+                in_ports = False
+                continue
+            if ln_s.startswith("Ports:"):
+                in_ports = True; continue
+            if ln_s.startswith("Active Port:"):
+                if cur_sink:
+                    sink_active_port[cur_sink] = ln_s.split(":", 1)[1].strip()
+                in_ports = False; continue
+            if in_ports and cur_sink:
+                m = re.match(r"([\w\-:.]+):\s+(.+?)\s*\(", ln_s)
+                if m:
+                    sink_ports[cur_sink].append((m.group(1), m.group(2)))
+        if not any(sink_ports.values()):
+            c.add_row(Gtk.Label(
+                label="(no port info — single-port device)", xalign=0))
+        for sink, ports in sink_ports.items():
+            if not ports: continue
+            cur = sink_active_port.get(sink, "")
+            c.add_row(kv_row(sink, f"active: {cur}"))
+            row = Gtk.Box(spacing=6)
+            for p_id, p_desc in ports[:6]:
+                b = SketchButton(
+                    p_desc[:22] + ("…" if len(p_desc) > 22 else ""),
+                    width=170, height=22, color=ACCENT_GOLD,
+                    primary=(p_id == cur), tooltip=f"{p_id}\n{p_desc}")
+                b.connect("clicked", lambda _b, s=sink, p=p_id: (
+                    sh(f"pactl set-sink-port {s} {p}"),
+                    self.win.toast(f"{s} → {p}"),
+                    self.refresh()))
+                row.append(b)
+            c.add_row(row)
+
+        # ── 4. EQ / EasyEffects ────────────────────────────────────────────
+        c = Card("EQ & effects")
+        self.box.append(c)
+        c.add_row(kv_row("easyeffects:",
+                         "installed" if have("easyeffects") else
+                         "not installed"))
+        c.add_row(kv_row("pavucontrol:",
+                         "installed" if have("pavucontrol") else
+                         "not installed"))
+        c.add_row(kv_row("alsamixer:",
+                         "installed" if have("alsamixer") else
+                         "not installed"))
+        c.add_row(kv_row("qpwgraph:",
+                         "installed" if have("qpwgraph") else
+                         "not installed"))
+        row = Gtk.Box(spacing=8)
+        if have("easyeffects"):
+            b = SketchButton("Launch EasyEffects", width=200, height=24,
+                             color=ACCENT_PURP)
+            b.connect("clicked", lambda _b: (
+                subprocess.Popen(["easyeffects"], start_new_session=True),
+                self.win.toast("launching easyeffects…")))
+            row.append(b)
+        if have("pavucontrol"):
+            b = SketchButton("Launch pavucontrol", width=200, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked", lambda _b: (
+                subprocess.Popen(["pavucontrol"], start_new_session=True),
+                self.win.toast("launching pavucontrol…")))
+            row.append(b)
+        if have("alsamixer"):
+            b = SketchButton("Open alsamixer", width=180, height=24,
+                             color=NEON_GREEN)
+            b.connect("clicked", lambda _b: self._term_run(
+                "alsamixer", "alsamixer opened…"))
+            row.append(b)
+        if have("qpwgraph"):
+            b = SketchButton("PipeWire graph", width=180, height=24,
+                             color=ACCENT_GOLD)
+            b.connect("clicked", lambda _b: (
+                subprocess.Popen(["qpwgraph"], start_new_session=True),
+                self.win.toast("launching qpwgraph…")))
+            row.append(b)
+        if row.get_first_child():
+            c.add_row(row)
+
+        # ── 5. mic test (loopback / record) ────────────────────────────────
+        c = Card("microphone test")
+        self.box.append(c)
+        c.add_row(Gtk.Label(
+            label=("Loopback: speaks your mic to your speakers. "
+                   "Record: 5s WAV to /tmp."), xalign=0))
+        row = Gtk.Box(spacing=8)
+        b1 = SketchButton("Start loopback", width=160, height=24,
+                          color=NEON_GREEN)
+        b1.connect("clicked", lambda _b: (
+            sh("pactl load-module module-loopback latency_msec=20"),
+            self.win.toast("loopback on (mic→speakers)")))
+        row.append(b1)
+        b2 = SketchButton("Stop loopback", width=160, height=24,
+                          color=DANGER_RED)
+        b2.connect("clicked", lambda _b: (
+            sh("pactl unload-module module-loopback"),
+            self.win.toast("loopback off")))
+        row.append(b2)
+        b3 = SketchButton("Record 5s → /tmp", width=180, height=24,
+                          color=NEON_BLUE)
+        b3.connect("clicked", lambda _b: self._term_run(
+            "f=/tmp/nyxus-mictest-$(date +%s).wav; "
+            "echo recording 5s to $f...; "
+            "parec --format=s16le --rate=44100 --channels=1 "
+            "--latency-msec=30 -d \"$(pactl get-default-source)\" "
+            "| timeout 5 head -c $((44100*2*5)) > $f && "
+            "echo; echo done: $f; aplay $f",
+            "recording 5s in terminal…"))
+        row.append(b3)
+        c.add_row(row)
+
+        # ── 6. system sounds (gnome event-sounds) ──────────────────────────
+        c = Card("system sounds")
+        self.box.append(c)
+        rc, out, _ = sh("gsettings get org.gnome.desktop.sound event-sounds")
+        cur = out.strip() == "true"
+        rc, theme, _ = sh(
+            "gsettings get org.gnome.desktop.sound theme-name")
+        c.add_row(kv_row("event-sounds:", "on" if cur else "off"))
+        c.add_row(kv_row("theme:", theme.strip().strip("'") or "(default)"))
+        row = Gtk.Box(spacing=8)
+        tog = SketchToggle("system sounds", width=160, height=24,
+                           color=NEON_BLUE, active=cur)
+        tog.connect("clicked", lambda _b: (
+            sh(f"gsettings set org.gnome.desktop.sound event-sounds "
+               f"{'true' if tog.active else 'false'}"),
+            self.win.toast(
+                f"system sounds → {'on' if tog.active else 'off'}")))
+        row.append(tog)
+        b_test = SketchButton("Test bell", width=120, height=24,
+                              color=NEON_GREEN)
+        b_test.connect("clicked", lambda _b: (
+            sh("paplay /usr/share/sounds/freedesktop/stereo/complete.oga "
+               "2>/dev/null || speaker-test -t sine -f 440 -l 1"),
+            self.win.toast("test bell played")))
+        row.append(b_test)
+        c.add_row(row)
+
+        # ── 7. modules loaded ──────────────────────────────────────────────
+        c = Card("loaded modules")
+        self.box.append(c)
+        rc, out, _ = sh("pactl list short modules | head -20")
+        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 140)
+        tv = Gtk.TextView(); tv.set_editable(False); tv.set_monospace(True)
+        tv.add_css_class("nyx-editor")
+        tv.get_buffer().set_text(out or "(no modules)")
+        sw.set_child(tv); c.add_row(sw)
+
         self.refresh()
+
+    # ── helper: run in terminal ────────────────────────────────────────────
+    def _term_run(self, cmd: str, toast: str):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if have(term):
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     f"{cmd}; echo; echo 'press enter to close'; read _"],
+                    start_new_session=True)
+                self.win.toast(toast)
+                return
+        self.win.toast("no terminal found (install foot/alacritty/kitty)")
 
     def _vol_get_default_sink(self) -> Tuple[Optional[str], int, bool]:
         """Returns (sink_name, volume_pct, muted)."""
@@ -1083,6 +1342,28 @@ class SoundPage(BasePage):
             SearchEntry(self.KEY, self.TITLE, "Per-app volume"),
             SearchEntry(self.KEY, self.TITLE, "Output device", "speaker headphones"),
             SearchEntry(self.KEY, self.TITLE, "Mute"),
+            SearchEntry(self.KEY, self.TITLE, "Audio server",
+                        "pipewire pulseaudio pactl"),
+            SearchEntry(self.KEY, self.TITLE, "Restart pipewire",
+                        "wireplumber service"),
+            SearchEntry(self.KEY, self.TITLE, "Sample rate", "channel map"),
+            SearchEntry(self.KEY, self.TITLE, "Sound card profile",
+                        "alsa pro audio"),
+            SearchEntry(self.KEY, self.TITLE, "Output port",
+                        "speakers headphones hdmi line out"),
+            SearchEntry(self.KEY, self.TITLE, "EasyEffects", "EQ equalizer"),
+            SearchEntry(self.KEY, self.TITLE, "pavucontrol", "mixer"),
+            SearchEntry(self.KEY, self.TITLE, "alsamixer"),
+            SearchEntry(self.KEY, self.TITLE, "PipeWire graph",
+                        "qpwgraph patchbay"),
+            SearchEntry(self.KEY, self.TITLE, "Microphone loopback",
+                        "monitor mic to speakers"),
+            SearchEntry(self.KEY, self.TITLE, "Record mic test",
+                        "parec wav"),
+            SearchEntry(self.KEY, self.TITLE, "System sounds",
+                        "event sounds bell theme"),
+            SearchEntry(self.KEY, self.TITLE, "Loaded modules",
+                        "pactl modules"),
         ]
 
 
