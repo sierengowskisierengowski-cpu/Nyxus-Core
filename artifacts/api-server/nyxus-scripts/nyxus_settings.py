@@ -2018,7 +2018,211 @@ class BluetoothPage(BasePage):
         row.append(b)
         c.add_row(row)
 
+        # ── 8. adapter alias (rename) ──────────────────────────────────────
+        c = Card("adapter alias")
+        self.box.append(c)
+        rc, out, _ = sh("bluetoothctl show")
+        cur_alias = ""
+        for line in out.splitlines():
+            if "Alias:" in line:
+                cur_alias = line.split(":", 1)[1].strip(); break
+        c.add_row(kv_row("Current alias:", cur_alias or "(unset)"))
+        row = Gtk.Box(spacing=8)
+        ent = Gtk.Entry()
+        ent.set_text(cur_alias or socket.gethostname())
+        ent.set_hexpand(True)
+        row.append(ent)
+        b = SketchButton("Set alias", width=120, height=24,
+                         color=NEON_BLUE)
+        b.connect("clicked", lambda _b: (
+            sh(f"bluetoothctl system-alias {shlex.quote(ent.get_text())}"),
+            self.win.toast(f"alias → {ent.get_text()}"),
+            self.refresh()))
+        row.append(b)
+        b2 = SketchButton("Reset", width=80, height=24, color=DANGER_RED)
+        b2.connect("clicked", lambda _b: (
+            sh("bluetoothctl reset-alias"),
+            self.win.toast("alias reset"),
+            self.refresh()))
+        row.append(b2)
+        c.add_row(row)
+
+        # ── 9. battery levels (upower / bluetoothctl) ──────────────────────
+        c = Card("device battery levels")
+        self.box.append(c)
+        if not have("upower"):
+            c.add_row(Gtk.Label(
+                label="upower not installed (pacman -S upower)",
+                xalign=0))
+        else:
+            rc, out, _ = sh("upower -e")
+            bt_paths = [p.strip() for p in out.splitlines()
+                        if "/devices/" in p
+                        and ("bluez" in p or "bluetooth" in p)]
+            if not bt_paths:
+                c.add_row(Gtk.Label(
+                    label="(no BT devices reporting battery to upower)",
+                    xalign=0))
+            for p in bt_paths:
+                rc, info, _ = sh(f"upower -i {p}")
+                model = pct = state = "?"
+                for ln in info.splitlines():
+                    s = ln.strip()
+                    if s.startswith("model:"):
+                        model = s.split(":", 1)[1].strip()
+                    elif s.startswith("percentage:"):
+                        pct = s.split(":", 1)[1].strip()
+                    elif s.startswith("state:"):
+                        state = s.split(":", 1)[1].strip()
+                c.add_row(kv_row(model, f"{pct} · {state}"))
+        # also try bluetoothctl info battery
+        rc, devs, _ = sh("bluetoothctl devices Connected")
+        for line in devs.splitlines():
+            m = re.match(r"Device ([0-9A-F:]+)\s+(.+)", line)
+            if not m: continue
+            mac, name = m.group(1), m.group(2)
+            rc, info, _ = sh(f"bluetoothctl info {mac}")
+            bat = ""
+            for ln in info.splitlines():
+                if "Battery Percentage:" in ln:
+                    m2 = re.search(r"\((\d+)\)", ln)
+                    if m2: bat = m2.group(1) + "%"
+            if bat:
+                c.add_row(kv_row(f"{name} (bluez):", bat))
+
+        # ── 10. autoconnect on boot ────────────────────────────────────────
+        c = Card("autoconnect on boot")
+        self.box.append(c)
+        c.add_row(Gtk.Label(
+            label="Trusted devices auto-reconnect when bluetooth comes up. "
+                  "Toggle main.conf AutoEnable to power on adapter at boot.",
+            xalign=0))
+        try:
+            txt = Path("/etc/bluetooth/main.conf").read_text()
+        except Exception:
+            txt = ""
+        ae_on = re.search(r"^\s*AutoEnable\s*=\s*true",
+                          txt, re.M | re.I) is not None
+        row = Gtk.Box(spacing=8)
+        tog = SketchToggle("AutoEnable adapter at boot",
+                           width=240, height=26,
+                           color=NEON_GREEN, active=ae_on)
+        tog.connect("clicked", lambda _b: self._toggle_autoenable(tog))
+        row.append(tog)
+        c.add_row(row)
+        # list trusted
+        rc, out, _ = sh("bluetoothctl devices Trusted")
+        trusted = [l for l in out.splitlines() if l.startswith("Device")]
+        c.add_row(kv_row("Trusted devices:", str(len(trusted))))
+        for line in trusted[:6]:
+            m = re.match(r"Device ([0-9A-F:]+)\s+(.+)", line)
+            if m:
+                c.add_row(Gtk.Label(
+                    label=f"  ★ {m.group(2)} ({m.group(1)})", xalign=0))
+
+        # ── 11. file transfer (OBEX push) ──────────────────────────────────
+        c = Card("file transfer (OBEX push)")
+        self.box.append(c)
+        for tool, label in (("obexctl",      "obexctl"),
+                            ("bt-obex",      "bt-obex (bluez-tools)"),
+                            ("obexd",        "obexd daemon")):
+            c.add_row(kv_row(f"{label}:",
+                             "installed" if have(tool) else "not installed"))
+        if have("bt-obex") or have("obexctl"):
+            rc, out, _ = sh("bluetoothctl devices Connected")
+            connected = []
+            for line in out.splitlines():
+                m = re.match(r"Device ([0-9A-F:]+)\s+(.+)", line)
+                if m: connected.append((m.group(1), m.group(2)))
+            if not connected:
+                c.add_row(Gtk.Label(
+                    label="(connect a device first to send files)",
+                    xalign=0))
+            for mac, name in connected:
+                row = Gtk.Box(spacing=8)
+                row.append(Gtk.Label(label=f"{name} ({mac})", xalign=0))
+                sp = Gtk.Box(); sp.set_hexpand(True); row.append(sp)
+                b = SketchButton("Send file…", width=130, height=22,
+                                 color=NEON_BLUE)
+                b.connect("clicked", lambda _b, m=mac, n=name:
+                          self._obex_send(m, n))
+                row.append(b)
+                c.add_row(row)
+        else:
+            c.add_row(Gtk.Label(
+                label="install bluez-tools (bt-obex) for file transfer",
+                xalign=0))
+
+        # ── 12. journal / live log ─────────────────────────────────────────
+        c = Card("bluetooth journal")
+        self.box.append(c)
+        rc, out, _ = sh(
+            "journalctl -u bluetooth -n 12 --no-pager 2>/dev/null "
+            "|| echo '(journalctl unavailable)'")
+        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 140)
+        tv = Gtk.TextView(); tv.set_editable(False); tv.set_monospace(True)
+        tv.add_css_class("nyx-editor")
+        tv.get_buffer().set_text(out)
+        sw.set_child(tv); c.add_row(sw)
+        row = Gtk.Box(spacing=8)
+        b = SketchButton("Tail live (-f)", width=160, height=24,
+                         color=NEON_GREEN)
+        b.connect("clicked", lambda _b: self._term_run(
+            "journalctl -u bluetooth -f", "tailing bluetoothd…"))
+        row.append(b)
+        b2 = SketchButton("dmesg | grep bluetooth", width=200, height=24,
+                          color=NEON_BLUE)
+        b2.connect("clicked", lambda _b: self._term_run(
+            "dmesg | grep -iE 'bluetooth|hci|bnep|btusb' | tail -50 | less",
+            "kernel BT messages…"))
+        row.append(b2)
+        c.add_row(row)
+
         self.refresh()
+
+    # ── helpers added for deepening ────────────────────────────────────────
+    def _toggle_autoenable(self, tog):
+        cmd = (
+            "sudo -n sh -c \"if grep -qE '^\\s*AutoEnable' "
+            "/etc/bluetooth/main.conf; then "
+            "sed -i 's/^\\s*AutoEnable\\s*=.*/AutoEnable=" +
+            ("true" if tog.active else "false") + "/' "
+            "/etc/bluetooth/main.conf; else "
+            "sed -i '/^\\[Policy\\]/a AutoEnable=" +
+            ("true" if tog.active else "false") + "' "
+            "/etc/bluetooth/main.conf || "
+            "echo -e '\\n[Policy]\\nAutoEnable=" +
+            ("true" if tog.active else "false") + "' "
+            ">> /etc/bluetooth/main.conf; fi && "
+            "systemctl restart bluetooth\""
+        )
+        sh_async(cmd, lambda r: self.win.toast(
+            f"AutoEnable={'on' if tog.active else 'off'}"
+            if r[0] == 0
+            else "needs sudo NOPASSWD or run via terminal"))
+
+    def _obex_send(self, mac: str, name: str):
+        # native GTK file chooser
+        d = Gtk.FileChooserDialog(
+            title=f"Send file to {name}",
+            transient_for=self.win,
+            action=Gtk.FileChooserAction.OPEN)
+        d.add_buttons("Cancel", Gtk.ResponseType.CANCEL,
+                      "Send", Gtk.ResponseType.ACCEPT)
+
+        def on_resp(dlg, resp):
+            if resp == Gtk.ResponseType.ACCEPT:
+                f = dlg.get_file()
+                if f:
+                    p = f.get_path()
+                    cmd = (f"bt-obex -p {mac} {shlex.quote(p)}"
+                           if have("bt-obex")
+                           else f"obexctl push {mac} {shlex.quote(p)}")
+                    self._term_run(cmd, f"sending {Path(p).name} → {name}…")
+            dlg.destroy()
+
+        d.connect("response", on_resp)
+        d.show()
 
     # ── helper: run in terminal ────────────────────────────────────────────
     def _term_run(self, cmd: str, toast: str):
