@@ -320,7 +320,7 @@ export default function App() {
                 <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "0.4rem" }}>
                   NYX-J5W-2026-SIERENGOWSKI-LOCKED
                 </div>
-                <h1 style={{ margin: 0, fontSize: "clamp(1.8rem, 5vw, 3rem)", fontWeight: 900, letterSpacing: "0.12em" }}>
+                <h1 style={{ margin: 0, fontSize: "clamp(1.8rem, 5vw, 3rem)", fontWeight: 900, letterSpacing: "0.12em", fontFamily: "'Caveat', cursive" }}>
                   <span style={{ color: "#c084fc", textShadow: "0 0 24px rgba(192,132,252,0.6)" }}>NYX</span>
                   <span style={{ color: "#555" }}>US</span>
                 </h1>
@@ -349,7 +349,7 @@ export default function App() {
                 >
                   ◐ MIRROR · ALL APPS
                 </a>
-                <div style={{ fontSize: "0.6rem", color: "#2a2a2a", fontFamily: "monospace" }}>{time} UTC</div>
+                <div style={{ fontSize: "0.6rem", color: "#2a2a2a", fontFamily: "'JetBrains Mono', monospace" }}>{time} UTC</div>
                 <div style={{ fontSize: "0.6rem", color: "#1e1e1e", marginTop: "0.2rem" }}>KERNEL 6.6.0-nyxus · x86_64</div>
                 <div style={{ fontSize: "0.6rem", color: "#1e1e1e" }}>STATUS: <span style={{ color: "#2d6a3f" }}>OPERATIONAL</span></div>
               </div>
@@ -495,9 +495,9 @@ curl -fsSL -o ~/.config/hypr/nyxus-wallpaper.png "${window.location.origin}${BAS
                   </div>
                   <div style={{ marginTop: "1rem", borderTop: "1px solid rgba(192,132,252,0.1)", paddingTop: "1rem" }}>
                     <div style={{ fontSize: "0.55rem", color: "rgba(192,132,252,0.45)", letterSpacing: "0.2em", marginBottom: 4 }}>OPERATOR ID</div>
-                    <div style={{ border: "1px solid rgba(192,132,252,0.3)", padding: "0.35rem 0.75rem", fontSize: "0.7rem", color: "#c084fc", fontFamily: "monospace", marginBottom: "0.75rem" }}>nyx</div>
+                    <div style={{ border: "1px solid rgba(192,132,252,0.3)", padding: "0.35rem 0.75rem", fontSize: "0.7rem", color: "#c084fc", fontFamily: "'JetBrains Mono', monospace", marginBottom: "0.75rem" }}>nyx</div>
                     <div style={{ fontSize: "0.55rem", color: "rgba(192,132,252,0.45)", letterSpacing: "0.2em", marginBottom: 4 }}>PASSPHRASE</div>
-                    <div style={{ border: "1px solid #c084fc", padding: "0.35rem 0.75rem", fontSize: "0.9rem", color: "#c084fc", fontFamily: "monospace", letterSpacing: "0.35em", boxShadow: "0 0 10px rgba(192,132,252,0.2)" }}>████████</div>
+                    <div style={{ border: "1px solid #c084fc", padding: "0.35rem 0.75rem", fontSize: "0.9rem", color: "#c084fc", fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.35em", boxShadow: "0 0 10px rgba(192,132,252,0.2)" }}>████████</div>
                     <div style={{ marginTop: "1rem", border: "1px solid rgba(192,132,252,0.4)", padding: "0.5rem", textAlign: "center", fontSize: "0.6rem", color: "#c084fc", letterSpacing: "0.2em", background: "rgba(192,132,252,0.08)" }}>
                       AUTHENTICATE  →
                     </div>
@@ -572,7 +572,10 @@ sudo bash sddm-theme/install.sh`}
 
           {/* ── HYPRLOCK SECTION ──────────────────────────────── */}
           <div style={{ marginTop: "3rem" }}>
-            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "1rem" }}>
+            <div style={{ fontFamily: "'Caveat', cursive", fontSize: "1.5rem", fontWeight: 700, color: "#c084fc", letterSpacing: "0.04em", marginBottom: "0.2rem", textShadow: "0 0 12px rgba(192,132,252,0.4)" }}>
+              Hyprlock
+            </div>
+            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "1rem", fontFamily: "'JetBrains Mono', monospace" }}>
               // HYPRLOCK · LOCK SCREEN · PURE BLACK
             </div>
 
@@ -600,7 +603,7 @@ sudo bash sddm-theme/install.sh`}
                   flexDirection: "column",
                   alignItems: "center",
                   gap: "0.5rem",
-                  fontFamily: "monospace",
+                  fontFamily: "'JetBrains Mono', monospace",
                 }}>
                   {/* Clock */}
                   <div style={{ fontSize: "2rem", fontWeight: 900, color: "#c084fc", textShadow: "0 0 20px rgba(192,132,252,0.6)", letterSpacing: "0.08em" }}>23:59</div>
@@ -713,7 +716,10 @@ curl -fsSL -o ~/.config/hypr/hyprlock.conf "${window.location.origin}${BASE}/hyp
 
           {/* ── WLOGOUT SECTION ───────────────────────────────── */}
           <div style={{ marginTop: "3rem" }}>
-            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "1rem" }}>
+            <div style={{ fontFamily: "'Caveat', cursive", fontSize: "1.5rem", fontWeight: 700, color: "#c084fc", letterSpacing: "0.04em", marginBottom: "0.2rem", textShadow: "0 0 12px rgba(192,132,252,0.4)" }}>
+              Wlogout
+            </div>
+            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "1rem", fontFamily: "'JetBrains Mono', monospace" }}>
               // WLOGOUT · POWER MENU · 6 ACTIONS
             </div>
 
@@ -759,14 +765,14 @@ curl -fsSL -o ~/.config/hypr/hyprlock.conf "${window.location.origin}${BASE}/hyp
                         alignItems: "center",
                         gap: "0.3rem",
                         background: "rgba(6,4,12,0.55)",
-                        fontFamily: "monospace",
+                        fontFamily: "'JetBrains Mono', monospace",
                       }}>
                         <span style={{ fontSize: "1rem", color }}>{icon}</span>
                         <span style={{ fontSize: "0.45rem", color: color === "#f87171" ? "rgba(248,113,113,0.7)" : "rgba(192,132,252,0.7)", letterSpacing: "0.1em" }}>{label.toUpperCase()}</span>
                       </div>
                     ))}
                   </div>
-                  <div style={{ marginTop: "0.75rem", textAlign: "center", fontSize: "0.45rem", color: "rgba(192,132,252,0.15)", letterSpacing: "0.15em", fontFamily: "monospace" }}>
+                  <div style={{ marginTop: "0.75rem", textAlign: "center", fontSize: "0.45rem", color: "rgba(192,132,252,0.15)", letterSpacing: "0.15em", fontFamily: "'JetBrains Mono', monospace" }}>
                     NyX.x.OS · POWER CONTROL
                   </div>
                 </div>
@@ -838,7 +844,10 @@ tar -xzf nyxus-wlogout.tar.gz && bash install.sh
 
           {/* ── UI CONFIGS SECTION ────────────────────────────── */}
           <div style={{ marginTop: "3rem" }}>
-            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "1rem" }}>
+            <div style={{ fontFamily: "'Caveat', cursive", fontSize: "1.5rem", fontWeight: 700, color: "#c084fc", letterSpacing: "0.04em", marginBottom: "0.2rem", textShadow: "0 0 12px rgba(192,132,252,0.4)" }}>
+              UI Configs
+            </div>
+            <div style={{ fontSize: "0.65rem", color: "#444", letterSpacing: "0.2em", marginBottom: "1rem", fontFamily: "'JetBrains Mono', monospace" }}>
               // UI CONFIGS · MAKO · ALACRITTY · GTK THEME
             </div>
 
@@ -865,10 +874,10 @@ tar -xzf nyxus-wlogout.tar.gz && bash install.sh
                     borderLeft: "3px solid #7B5EA7",
                     borderRadius: 6,
                     padding: "0.75rem 1rem",
-                    fontFamily: "monospace",
+                    fontFamily: "'JetBrains Mono', monospace",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
-                      <span style={{ fontSize: "0.9rem", fontFamily: "monospace" }}>&#x25C8;</span>
+                      <span style={{ fontSize: "0.9rem", fontFamily: "'JetBrains Mono', monospace" }}>&#x25C8;</span>
                       <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#f472b6", letterSpacing: "0.06em" }}>NyX.x.OS</span>
                     </div>
                     <div style={{ fontSize: "0.58rem", color: "rgba(200,192,192,0.65)", lineHeight: 1.5 }}>System initialized. All modules operational.</div>
@@ -883,7 +892,7 @@ tar -xzf nyxus-wlogout.tar.gz && bash install.sh
                     borderLeft: "3px solid #f87171",
                     borderRadius: 6,
                     padding: "0.75rem 1rem",
-                    fontFamily: "monospace",
+                    fontFamily: "'JetBrains Mono', monospace",
                   }}>
                     <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "#f87171", marginBottom: "0.2rem" }}>CRITICAL</div>
                     <div style={{ fontSize: "0.58rem", color: "rgba(248,165,165,0.65)", lineHeight: 1.5 }}>Anomaly detected — high urgency alert</div>
@@ -897,7 +906,7 @@ tar -xzf nyxus-wlogout.tar.gz && bash install.sh
                     border: "1px solid rgba(123,94,167,0.15)",
                     borderRadius: 4,
                     padding: "0.75rem 1rem",
-                    fontFamily: "monospace",
+                    fontFamily: "'JetBrains Mono', monospace",
                     fontSize: "0.55rem",
                     lineHeight: 1.7,
                   }}>
@@ -943,7 +952,7 @@ tar -xzf nyxus-wlogout.tar.gz && bash install.sh
                       <div key={i} style={{ borderLeft: `2px solid ${cfg.color}33`, paddingLeft: "0.75rem" }}>
                         <div style={{ fontSize: "0.6rem", color: cfg.color, letterSpacing: "0.15em", fontWeight: 700, marginBottom: "0.2rem" }}>{cfg.label}</div>
                         <div style={{ fontSize: "0.58rem", color: "#555", lineHeight: 1.5, marginBottom: "0.2rem" }}>{cfg.desc}</div>
-                        <div style={{ fontSize: "0.52rem", color: "#333", fontFamily: "monospace" }}>{cfg.dest}</div>
+                        <div style={{ fontSize: "0.52rem", color: "#333", fontFamily: "'JetBrains Mono', monospace" }}>{cfg.dest}</div>
                         {cfg.file && (
                           <a
                             href={`${BASE}/${cfg.file}`}

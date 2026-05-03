@@ -15,7 +15,7 @@ export function Header({ data, isOffline }: { data: SysmonData | null, isOffline
         <div className="text-nyxus-pink font-bold text-lg glow-text-pink tracking-wider">
           ▣ NYXUS_SYSMON <span className="text-xs text-nyxus-dim">v1.0</span>
         </div>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: 'rgba(255,0,255,0.35)', letterSpacing: '0.22em' }}>NYX-J5W-2026</span>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 7, color: 'rgba(255,0,255,0.25)', letterSpacing: '0.18em' }}>NYX-J5W-2026-SIERENGOWSKI-LOCKED</span>
       </div>
       
       <div className="flex items-center gap-8 text-sm text-nyxus-text">
