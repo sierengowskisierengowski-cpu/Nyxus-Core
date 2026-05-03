@@ -703,10 +703,7 @@ window#waybar.left #workspaces button.active {
    RIGHT BAR  ·  signature color: GOLD #ffff00  (70% height)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.right {
-    /* Splatter image fills the bar in one piece (cover = no tiling seams).
-     * The image is intentionally zoomed to show vivid color throughout the
-     * tall narrow column. NO color overlay — raw image shows through. */
-    background-image:    url("NYXUS_RIGHTBAR_BG");
+    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-rightbar-bg.png");
     background-color:    #0a0410;
     background-size:     cover;
     background-position: center center;
