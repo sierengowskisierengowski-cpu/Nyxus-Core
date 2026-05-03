@@ -7330,26 +7330,26 @@ class GraffitiBackground(Gtk.DrawingArea):
             cr.paint()
             cr.restore()
 
-            # heavy DARK overlay so UI text stays crisp on top. Vignette
-            # gradient: corners pure black, center ~62% black -- keeps the
-            # graffiti visible in the middle, lets edges anchor the chrome.
+            # softer DARK overlay -- lets the graffiti breathe through the
+            # entire window while keeping UI text legible on top. Center
+            # ~36% black, corners ~70% black for chrome anchoring.
             try:
                 pat = cairo.RadialGradient(w / 2, h / 2, 0,
                                            w / 2, h / 2, max(w, h) * 0.7)
-                pat.add_color_stop_rgba(0.00, 0.0, 0.0, 0.0, 0.62)
-                pat.add_color_stop_rgba(0.55, 0.0, 0.0, 0.0, 0.78)
-                pat.add_color_stop_rgba(1.00, 0.0, 0.0, 0.0, 0.92)
+                pat.add_color_stop_rgba(0.00, 0.0, 0.0, 0.0, 0.36)
+                pat.add_color_stop_rgba(0.55, 0.0, 0.0, 0.0, 0.52)
+                pat.add_color_stop_rgba(1.00, 0.0, 0.0, 0.0, 0.70)
                 cr.set_source(pat)
             except Exception:
-                cr.set_source_rgba(0.0, 0.0, 0.0, 0.78)
+                cr.set_source_rgba(0.0, 0.0, 0.0, 0.50)
             cr.rectangle(0, 0, w, h); cr.fill()
 
             # subtle pink edge bloom to keep the NYXUS palette vibe
             try:
                 pat2 = cairo.LinearGradient(0, 0, 0, h)
-                pat2.add_color_stop_rgba(0.00, 1.0, 0.0, 1.0, 0.10)
+                pat2.add_color_stop_rgba(0.00, 1.0, 0.0, 1.0, 0.07)
                 pat2.add_color_stop_rgba(0.50, 1.0, 0.0, 1.0, 0.00)
-                pat2.add_color_stop_rgba(1.00, 1.0, 0.0, 1.0, 0.10)
+                pat2.add_color_stop_rgba(1.00, 1.0, 0.0, 1.0, 0.07)
                 cr.set_source(pat2)
                 cr.rectangle(0, 0, w, h); cr.fill()
             except Exception:

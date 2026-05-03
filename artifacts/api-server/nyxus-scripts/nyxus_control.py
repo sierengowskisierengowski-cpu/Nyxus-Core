@@ -23,6 +23,25 @@ from datetime import datetime, timedelta
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, Gdk, GLib, Gio, Pango
 
+# ── NYXUS shared chrome (rainbow titles + graffiti walls, system-wide) ──
+def _nyxus_load_chrome():
+    try:
+        from nyxus_chrome import install_chrome, rainbow_markup
+        return install_chrome, rainbow_markup
+    except ImportError:
+        try:
+            import os, sys, urllib.request
+            _here = os.path.dirname(os.path.abspath(__file__))
+            urllib.request.urlretrieve(
+                "https://nyxus-core.replit.app/api/download/nyxus/nyxus_chrome.py",
+                os.path.join(_here, "nyxus_chrome.py"))
+            if _here not in sys.path: sys.path.insert(0, _here)
+            from nyxus_chrome import install_chrome, rainbow_markup
+            return install_chrome, rainbow_markup
+        except Exception:
+            return (lambda *a, **kw: None), (lambda t: t)
+_nyx_install_chrome, _nyx_rainbow = _nyxus_load_chrome()
+
 # ── Paths ──────────────────────────────────────────────────────────────────────
 HOME         = Path.home()
 NYXUS_DIR    = HOME / ".nyxus"
@@ -642,6 +661,8 @@ class NyxusControl(Gtk.Application):
 
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.win.set_child(root)
+        try: _nyx_install_chrome(self.win, page_key="_control")
+        except Exception: pass
 
         # Header bar
         hdr_da = Gtk.DrawingArea()
