@@ -1118,6 +1118,32 @@ window#waybar.bottom #custom-nyxus-panel {
     transition:      all 0.18s ease;
 }
 
+/* Notifications button — same chrome as the Panel button so it's visibly
+ * a sibling of it. Green neon accent so it's distinguishable. */
+window#waybar.bottom #custom-notifications {
+    font-family:     "Caveat", "Comic Neue", "Patrick Hand", "JetBrains Mono Nerd Font", "JetBrains Mono", cursive, sans-serif;
+    font-size:       20px;
+    font-weight:     bold;
+    color:           #a3e635;
+    background:      rgba(8, 4, 22, 0.55);
+    border:          1.5px solid rgba(57, 255, 20, 0.55);
+    border-radius:   10px;
+    padding:         2px 16px;
+    margin:          3px 4px 3px 6px;
+    text-shadow:     0 0 8px rgba(57, 255, 20, 0.85),
+                     0 0 14px rgba(57, 255, 20, 0.55);
+    transition:      all 0.18s ease;
+}
+window#waybar.bottom #custom-notifications:hover {
+    color:           #ffffff;
+    border-color:    #39ff14;
+    background-color: rgba(57, 255, 20, 0.22);
+    text-shadow:     0 0 14px #39ff14, 0 0 24px rgba(57, 255, 20, 0.85);
+    box-shadow:      0 0 18px rgba(57, 255, 20, 0.85),
+                     0 0 32px rgba(57, 255, 20, 0.45),
+                     inset 0 0 10px rgba(57, 255, 20, 0.18);
+}
+
 window#waybar.bottom #custom-nyxus-panel:hover,
 window#waybar.bottom #custom-nyxus-panel.open {
     color:           #ffffff;
