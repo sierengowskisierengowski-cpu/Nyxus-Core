@@ -51,6 +51,25 @@ System-wide audit + tone-down across all 12 GTK apps:
 - `$mod+Shift+H` → doctor health audit
 - Waybar clock `on-click` → toggle quicksettings panel
 
+### Phase 2 — Mako → Dunst migration (May 2026)
+NYXUS standardized on **dunst** as the sole notification daemon. Removed
+mako install + autostart from `nyxus_install.sh` and migrated active code:
+- `nyxus_install.sh`: pacman install, `MAKO_DIR`, `systemctl --user enable mako`,
+  `dl mako-config`, and `makoctl reload` block all removed/replaced with dunst
+  equivalents (`pkill -SIGUSR2 dunst` for live reload).
+- `nyxus_quicksettings.py`: Focus Assist now uses `dunstctl set-paused`
+  (2-state toggle Off ↔ DND, was 3-state mako modes); notif history reads
+  `dunstctl history`; `notif_clear` uses `dunstctl close-all`; capability
+  probe checks `has("dunstctl")`.
+- `nyxus-ui-theme/install.sh`: dropped mako step (now `[1/3]` is a noop note);
+  steps relabeled.
+- `download.ts`: `mako-config` route entry removed (now 404s).
+- Orphan files deleted: `nyxus-scripts/mako-config`,
+  `nyxus-scripts/nyxus-ui-theme/mako/config`, 4× stale `waybar-config.json.bak*`.
+- **Intentionally retained**: `nyxus_settings.py` notification panel keeps
+  multi-daemon support (mako/dunst/swaync) — that's a defensive Settings UI
+  for non-NYXUS Arch boxes that may have a different daemon installed.
+
 ### NYXUS Studio (multi-module GTK4 creative suite)
 - Tarball: `artifacts/api-server/nyxus-scripts/nyxus-studio.tgz` (~61 KB).
 - Installer entry: `nyxus_studio_install.sh` — installed via

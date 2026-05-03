@@ -26,16 +26,9 @@ echo "  Silent. Dark. Purely Functional."
 sep
 echo ""
 
-# ── 1. Mako notifications ─────────────────────────────────────
-echo "  [1/3] Installing Mako notification config..."
-MAKO_DIR="$HOME/.config/mako"
-mkdir -p "$MAKO_DIR"
-cp "$SCRIPT_DIR/mako/config" "$MAKO_DIR/config"
-echo "  [OK]  $MAKO_DIR/config"
-
-if command -v makoctl &>/dev/null; then
-    makoctl reload 2>/dev/null && echo "  [OK]  Mako reloaded" || true
-fi
+# ── 1. Notifications (NYXUS standardized on dunst in Phase 2) ─
+# Mako removed; dunst is now installed by the main nyxus_install.sh.
+echo "  [1/3] Notifications: handled by main nyxus_install.sh (dunst)"
 echo ""
 
 # ── 2. Alacritty terminal ─────────────────────────────────────

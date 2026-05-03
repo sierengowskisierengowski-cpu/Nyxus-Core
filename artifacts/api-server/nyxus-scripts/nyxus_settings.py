@@ -25,7 +25,7 @@ Real backend integrations (no fake toggles):
   • Date/Time   → timedatectl       (timezone, NTP, format)
   • Keyboard    → hyprctl getoption (layout, repeat, shortcuts viewer)
   • Mouse       → hyprctl keyword   (sensitivity, accel, natural scroll)
-  • Notifications → makoctl + ~/.config/mako/config
+  • Notifications → dunstctl + ~/.config/dunst/dunstrc
   • Workspaces  → hyprctl workspaces (live state)
   • Storage     → lsblk / df / smartctl
   • Apps        → pacman -Qq, .desktop scan, default-app picker

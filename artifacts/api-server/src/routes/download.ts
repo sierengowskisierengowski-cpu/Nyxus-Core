@@ -22,7 +22,6 @@ const ALLOWED_FILES: Record<string, string> = {
   "wlogout-style.css":       "wlogout-style.css",
   "wlogout-layout":          "wlogout-layout",
   "nyxus_terminal.py":       "nyxus_terminal.py",
-  "mako-config":              "mako-config",
   "nyxus-ui-configs.tar.gz": "nyxus-ui-configs.tar.gz",
   "hypridle.conf":           "hypridle.conf",
   "rofi-config.rasi":        "rofi-config.rasi",
