@@ -238,7 +238,7 @@ dl "alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" || failed=$((failed
 
 # ── GTK4 TARBALL APPS — Home, Intel, Panel, Start, Sage, Studio, Shield… ────
 hdr "GTK4 Tarball Apps"
-TARBALL_APPS=(home clock weather calendar notifications notepad passwords intel panel start sage studio security)
+TARBALL_APPS=(home weather notepad passwords intel panel start sage studio security)
 for app in "${TARBALL_APPS[@]}"; do
   installer="nyxus_${app}_install.sh"
   if curl -fsSL "${API}/${installer}" | bash >/tmp/nyxus-${app}-install.log 2>&1; then
@@ -249,6 +249,55 @@ for app in "${TARBALL_APPS[@]}"; do
     failed_items+=("nyxus-${app}")
   fi
 done
+
+# ── CLEANUP — remove old/duplicate binaries and desktop files ────────────────
+hdr "Cleanup (legacy apps + duplicate symlinks)"
+
+# Old nyx-* binaries from previous build
+OLD_BINS=(
+  nyx-command-hub nyx-fan nyx-firstboot nyx-monitor-workspace
+  nyx-msi-control nyx-msi-status nyx-sec-workspace nyx-security
+  nyx-security-center nyx-setup-wizard nyx-taskbar nyx-terminal
+  nyx-thermal nyx-trap nyx-wallpaper-rotate nyx-wallsync
+  nyx-ws-wallpaper nyx-yubikey-setup nyxus-audit nyxus-calendar
+  nyxus-clock nyxus-notifications
+)
+for bin in "${OLD_BINS[@]}"; do
+  for p in /usr/local/bin/$bin /usr/bin/$bin; do
+    if [[ -e "$p" || -L "$p" ]]; then
+      rm -f "$p"
+      ok "removed binary: $p"
+    fi
+  done
+done
+
+# Duplicate symlinks (plain short names — keep only nyxus-* prefixed names)
+for sym in gods godsapp sage; do
+  for p in /usr/local/bin/$sym /usr/bin/$sym; do
+    if [[ -L "$p" ]]; then
+      rm -f "$p"
+      ok "removed symlink: $p"
+    fi
+  done
+done
+
+# Legacy desktop files that should not exist in NYXUS
+OLD_DESKTOPS=(
+  io.nyxus.store.desktop
+  nyx-notepad.desktop
+  nyx-security-center.desktop
+  nyx-terminal.desktop
+)
+for desk in "${OLD_DESKTOPS[@]}"; do
+  for dir in "$HOME/.local/share/applications" /usr/share/applications; do
+    if [[ -f "$dir/$desk" ]]; then
+      rm -f "$dir/$desk"
+      ok "removed desktop: $dir/$desk"
+    fi
+  done
+done
+
+ok "cleanup complete"
 
 # ── DESKTOP ENTRIES — show in Rofi / any app launcher ────────────────────────
 hdr "App Launcher Entries (Rofi / .desktop)"

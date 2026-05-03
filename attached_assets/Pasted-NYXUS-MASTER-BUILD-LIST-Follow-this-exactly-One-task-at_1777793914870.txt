@@ -1,0 +1,197 @@
+NYXUS MASTER BUILD LIST — Follow this exactly.
+One task at a time. Confirm complete before 
+moving to the next. Do not skip anything.
+Do not add anything not on this list.
+
+GOLDEN RULE:
+This build is NYXUS. NYX is the ISO.
+Only these two names exist in this build.
+No old names. No old themes. No owl.
+No purple from any old build.
+Do not reference any previous build.
+This is its own complete standalone build.
+
+TASK 1 — REMOVE UNUSED APPS:
+Delete everything in this list completely.
+Remove the binary, the desktop file, and
+any associated files in /opt or elsewhere.
+
+DELETE THESE — not part of NYXUS build:
+- gods (duplicate symlink)
+- godsapp (duplicate symlink)
+- sage (duplicate symlink)
+- nyxus-audit
+- nyxus-calendar
+- nyxus-clock
+- nyxus-notifications
+- nyx-command-hub
+- nyx-fan
+- nyx-firstboot
+- nyx-monitor-workspace
+- nyx-msi-control
+- nyx-msi-status
+- nyx-sec-workspace
+- nyx-security
+- nyx-security-center
+- nyx-setup-wizard
+- nyx-taskbar
+- nyx-terminal (old version)
+- nyx-thermal
+- nyx-trap
+- nyx-wallpaper-rotate
+- nyx-wallsync
+- nyx-ws-wallpaper
+- nyx-yubikey-setup
+- io.nyxus.store.desktop
+- nyx-notepad.desktop (duplicate)
+- nyx-security-center.desktop
+- nyx-terminal.desktop (duplicate)
+
+KEEP ONLY THESE — official NYXUS app suite:
+- nyxus-sysmon
+- nyxus-control
+- nyxus-terminal
+- nyxus-notepad
+- nyxus-stickies
+- nyxus-weather
+- nyxus-settings
+- nyxus-sage
+- nyxus-shield
+- nyxus-godsapp
+- nyxus-panel
+- nyxus-start
+- nyxus-phantom
+- nyxus-studio
+- nyxus-home (dashboard)
+- nyxus-intel (keeping for later)
+- nyxus-passwords (standalone copy needed)
+
+Desktop files to keep:
+- io.nyxus.panel.desktop
+- io.nyxus.settings.desktop
+- io.nyxus.start.desktop
+- nyxus-control.desktop
+- nyxus-home.desktop
+- nyxus-notepad.desktop
+- nyxus-sage.desktop
+- nyxus-settings.desktop
+- nyxus-stickies.desktop
+- nyxus-studio.desktop
+- nyxus-sysmon.desktop
+- nyxus-terminal.desktop
+- nyxus-weather.desktop
+- nyxus-godsapp.desktop
+- nyxus-shield.desktop
+- nyxus-phantom.desktop
+- nyxus-intel.desktop
+- nyxus-passwords.desktop
+
+After deleting confirm exactly what was
+removed and what remains before moving
+to Task 2. Do not start Task 2 until
+Task 1 is fully confirmed.
+
+TASK 2 — APP ICONS:
+Every single NYXUS app must have a matching
+icon that fits the NYXUS style:
+- Hand drawn sketch style
+- Tilted slightly — consistent with build style
+- All icons matching each other
+- Applied to every desktop file
+- Applied to every app window
+- Applied to every taskbar appearance
+- Nothing mismatched or missing
+- No owl
+- Must match the overall aesthetic of the build
+
+Create one consistent icon set for all apps.
+Apply to every app listed in Task 1 keep list.
+Confirm every app has correct icon before
+moving to Task 3.
+
+TASK 3 — RIGHT SIDE WAYBAR:
+Fix the right side Waybar completely.
+Restore the paint splatter image background
+exactly as it was before it was broken.
+The splatter image is already in the build
+files — find it and restore it.
+Every button and element must be working
+correctly and styled correctly.
+Confirm complete before moving to Task 4.
+
+TASK 4 — BOTTOM WAYBAR:
+Fix the bottom Waybar completely.
+Every button working correctly.
+Styled correctly matching the build.
+Nothing broken. Nothing missing.
+Confirm complete before moving to Task 5.
+
+TASK 5 — LEFT SIDE WAYBAR:
+Fix the left side Waybar button issues.
+Every button working correctly.
+Styled correctly matching the build.
+Confirm complete before Task 6.
+
+TASK 6 — ALL APPS VISUAL STYLE:
+Every NYXUS app must match the dashboard
+web preview style exactly. Apply to all
+apps one by one:
+
+Visual rules for every app:
+- Same color scheme as dashboard
+- Same border style as dashboard
+- Same background treatment
+- Handwritten font used on certain elements
+  throughout — titles, labels, section headers
+  Keep existing app font for data and content
+  Balance handwritten and regular font evenly
+  Nothing sloppy or misplaced
+- Tilted design elements where appropriate
+- Consistent throughout — nothing looks like
+  it came from a different build
+- Hand drawn sketch style borders
+- Apps open at a normal correct size
+  Not fullscreen. Not too small.
+  Resizable by user.
+- Apps come to front when clicked
+  Never hide behind other windows
+- No app opens behind another without
+  being able to be brought to front
+
+Go through each app one at a time:
+1. NYXUS SYSMON
+2. NYXUS Control
+3. NYXUS Terminal
+4. NYXUS Notepad
+5. NYXUS Stickies
+6. NYXUS Weather
+7. NYXUS Settings
+8. NYXUS SAGE
+9. NYXUS Shield
+10. NYXUS GodsApp
+11. NYXUS Panel
+12. NYXUS Start
+13. NYXUS Phantom
+14. NYXUS Studio
+15. NYXUS Home Dashboard
+16. NYXUS Intel
+17. NYXUS Passwords
+
+Confirm each app complete before moving
+to the next one.
+
+TASK 7 — NYXUS SETTINGS REDESIGN:
+Full rebuild of NYXUS Settings.
+Must be much more in depth than current.
+Cover every system setting properly.
+This will be detailed separately after
+Tasks 1 through 6 are complete.
+
+TASK 8 — RIGHT CLICK AND LEFT CLICK:
+Add proper right click and left click
+context menus to all apps.
+This will be detailed separately after
+Tasks 1 through 7 are complete.
+
+START WITH TASK 1 NOW.
+Confirm Task 1 complete before anything else.
