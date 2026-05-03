@@ -7301,6 +7301,18 @@ window, .nyx-bg { background-color: #0a0a12; color: #f0eef8; }
     padding: 10px 14px 4px 14px; }
 .nyx-content { background-color: transparent; padding: 0; }
 .nyx-graffiti-host { background-color: #0a0a12; }
+/* -- KILL ALL GREY: force every container transparent so graffiti
+   shows through. GTK fallback theme paints opaque bg on these. ----- */
+.nyx-content scrolledwindow, .nyx-content viewport,
+.nyx-content listview, .nyx-content list, .nyx-content row,
+.nyx-content textview, .nyx-content box, .nyx-content stack,
+scrolledwindow, scrolledwindow > viewport, viewport,
+listview, list, list > row, listbox, listbox > row,
+stack, frame, .background, .view, .nyx-bg > box {
+    background-color: transparent;
+    background-image: none;
+}
+.nyx-content stack { background-color: transparent; }
 /* -- user account chip (top-right) ------------------------------------ */
 .nyx-user-chip { background-color: transparent;
     border: 1px solid rgba(255,0,255,0.40); border-radius: 999px;
