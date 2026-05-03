@@ -1719,34 +1719,45 @@ class NyxusControl(Gtk.Application):
         glow_text(cr, 16, 32, "POWER MANAGEMENT", *C_YELLOW, size=18, bold=True)
         rainbow_bar(cr, 0, 38, w, 2)
 
+        # ── Auto-fit layout: 4 rows split proportionally to window height ────
         pad = 18; cw = (w-pad*3)//2
+        title_h = 50
+        avail = h - title_h - pad*5
+        rh1 = int(avail * 0.22)   # Governor + Boost
+        rh2 = int(avail * 0.16)   # Per-Core Frequency
+        rh3 = int(avail * 0.18)   # Uptime + Battery
+        rh4 = avail - rh1 - rh2 - rh3   # CPU Load history (rest)
+        y1 = title_h
+        y2 = y1 + rh1 + pad
+        y3 = y2 + rh2 + pad
+        y4 = y3 + rh3 + pad
+
         # ── Governor card ─────────────────────────────────────────────────────
-        neon_card(cr, pad, 50, cw, 160, C_YELLOW)
-        glow_text(cr, pad+14, 78, "CPU GOVERNOR", *C_YELLOW, size=14, bold=True)
+        neon_card(cr, pad, y1, cw, rh1, C_YELLOW)
+        glow_text(cr, pad+14, y1+28, "CPU GOVERNOR", *C_YELLOW, size=14, bold=True)
         gov = self.live.governor
         gov_col = C_GREEN if gov=="performance" else \
                   (C_YELLOW if gov=="schedutil" else (C_BLUE if gov=="powersave" else C_ORANGE))
-        glow_text_c(cr, pad+cw//2, 130, gov.upper(), *gov_col, size=26, bold=True)
+        glow_text_c(cr, pad+cw//2, y1+rh1//2+10, gov.upper(), *gov_col, size=26, bold=True)
         freq_str = f"{self.live.cpu_freq:.0f} MHz" if self.live.cpu_freq else "--"
-        glow_text_c(cr, pad+cw//2, 162, freq_str, *C_DIM, size=16)
-        sketch_rect(cr, pad+2, 52, cw-4, 156, *C_YELLOW, thick=2.5, jitter=2.5)
+        glow_text_c(cr, pad+cw//2, y1+rh1-14, freq_str, *C_DIM, size=16)
+        sketch_rect(cr, pad+2, y1+2, cw-4, rh1-4, *C_YELLOW, thick=2.5, jitter=2.5)
 
         # ── Boost card ────────────────────────────────────────────────────────
         gx = pad*2+cw
         bc = C_GREEN if self.live.boost else C_DIM
-        neon_card(cr, gx, 50, cw, 160, bc)
-        glow_text(cr, gx+14, 78, "CPU BOOST", *bc, size=14, bold=True)
-        glow_text_c(cr, gx+cw//2, 130, "ON" if self.live.boost else "OFF", *bc, size=36, bold=True)
+        neon_card(cr, gx, y1, cw, rh1, bc)
+        glow_text(cr, gx+14, y1+28, "CPU BOOST", *bc, size=14, bold=True)
+        glow_text_c(cr, gx+cw//2, y1+rh1//2+12, "ON" if self.live.boost else "OFF", *bc, size=36, bold=True)
         cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
         cr.set_source_rgba(*C_DIM,0.70)
-        cr.move_to(gx+14, 162)
+        cr.move_to(gx+14, y1+rh1-14)
         cr.show_text("Turbo Boost / AMD Precision Boost")
-        sketch_rect(cr, gx+2, 52, cw-4, 156, *bc, thick=2.5, jitter=2.5)
+        sketch_rect(cr, gx+2, y1+2, cw-4, rh1-4, *bc, thick=2.5, jitter=2.5)
 
         # ── Frequency display ─────────────────────────────────────────────────
-        fy = 228
-        neon_card(cr, pad, fy, w-pad*2, 100, C_PURPLE)
-        glow_text(cr, pad+14, fy+28, "PER-CORE FREQUENCY  (cpu0 scaling)", *C_PURPLE, size=13, bold=True)
+        neon_card(cr, pad, y2, w-pad*2, rh2, C_PURPLE)
+        glow_text(cr, pad+14, y2+24, "PER-CORE FREQUENCY  (cpu0 scaling)", *C_PURPLE, size=13, bold=True)
         try:
             freqs = []
             for cpu_p in sorted(Path("/sys/devices/system/cpu").glob("cpu[0-9]*/cpufreq/scaling_cur_freq")):
@@ -1754,57 +1765,54 @@ class NyxusControl(Gtk.Application):
                 except: pass
             if freqs:
                 mn,mx,av = min(freqs),max(freqs),sum(freqs)/len(freqs)
-                glow_text(cr, pad+14, fy+52, f"min {mn:.0f}  avg {av:.0f}  max {mx:.0f}  MHz",
+                glow_text(cr, pad+14, y2+rh2//2+8, f"min {mn:.0f}  avg {av:.0f}  max {mx:.0f}  MHz",
                           *C_PURPLE, size=14)
-                hbar(cr, pad+14, fy+62, w-pad*2-28, 10, (av-mn)/(max(mx-mn,1))*100, C_PURPLE)
+                hbar(cr, pad+14, y2+rh2-18, w-pad*2-28, 10, (av-mn)/(max(mx-mn,1))*100, C_PURPLE)
         except: pass
-        sketch_rect(cr, pad+2, fy+2, w-pad*2-4, 96, *C_PURPLE, thick=2.2, jitter=2.2)
+        sketch_rect(cr, pad+2, y2+2, w-pad*2-4, rh2-4, *C_PURPLE, thick=2.2, jitter=2.2)
 
         # ── Uptime card ───────────────────────────────────────────────────────
-        uy = 348
-        neon_card(cr, pad, uy, cw, 110, C_ORANGE)
-        glow_text(cr, pad+14, uy+28, "UPTIME", *C_ORANGE, size=14, bold=True)
+        neon_card(cr, pad, y3, cw, rh3, C_ORANGE)
+        glow_text(cr, pad+14, y3+24, "UPTIME", *C_ORANGE, size=14, bold=True)
         up = self.live.uptime_s
         d,rem = divmod(up,86400); hh,rem2 = divmod(rem,3600); mm,ss = divmod(rem2,60)
         up_str = f"{d}d {hh:02d}h {mm:02d}m" if d else f"{hh:02d}h {mm:02d}m {ss:02d}s"
-        glow_text_c(cr, pad+cw//2, uy+70, up_str, *C_ORANGE, size=20, bold=True)
-        sketch_rect(cr, pad+2, uy+2, cw-4, 106, *C_ORANGE, thick=2.2, jitter=2.2)
+        glow_text_c(cr, pad+cw//2, y3+rh3//2+10, up_str, *C_ORANGE, size=20, bold=True)
+        sketch_rect(cr, pad+2, y3+2, cw-4, rh3-4, *C_ORANGE, thick=2.2, jitter=2.2)
 
         # ── Battery card ──────────────────────────────────────────────────────
         batt = self.live.battery or self.hw.get("battery") or {}
         bx = pad*2+cw
         bc2 = C_GREEN if batt.get("status","")=="Charging" else \
               (C_YELLOW if batt else C_DIM)
-        neon_card(cr, bx, uy, cw, 110, bc2)
-        glow_text(cr, bx+14, uy+28, "BATTERY", *bc2, size=14, bold=True)
+        neon_card(cr, bx, y3, cw, rh3, bc2)
+        glow_text(cr, bx+14, y3+24, "BATTERY", *bc2, size=14, bold=True)
         if batt:
             pct = batt.get("pct",0); stat = batt.get("status","Unknown")
             col = C_GREEN if pct>40 else (C_YELLOW if pct>15 else C_RED)
-            glow_text_c(cr, bx+cw//2, uy+60, f"{pct}%", *col, size=26, bold=True)
-            glow_text_c(cr, bx+cw//2, uy+84, stat.upper(), *C_DIM, size=13)
-            hbar(cr, bx+14, uy+88, cw-28, 8, pct, col)
+            glow_text_c(cr, bx+cw//2, y3+rh3//2,    f"{pct}%", *col, size=26, bold=True)
+            glow_text_c(cr, bx+cw//2, y3+rh3//2+22, stat.upper(), *C_DIM, size=13)
+            hbar(cr, bx+14, y3+rh3-18, cw-28, 8, pct, col)
         else:
-            glow_text_c(cr, bx+cw//2, uy+66, "No Battery", *C_DIM, size=14)
-        sketch_rect(cr, bx+2, uy+2, cw-4, 106, *bc2, thick=2.2, jitter=2.2)
+            glow_text_c(cr, bx+cw//2, y3+rh3//2+6, "No Battery", *C_DIM, size=14)
+        sketch_rect(cr, bx+2, y3+2, cw-4, rh3-4, *bc2, thick=2.2, jitter=2.2)
 
-        # ── CPU Load history ──────────────────────────────────────────────────
-        hy = 478
-        if h > hy + 60:
-            avail_h = h - hy - 14
-            neon_card(cr, pad, hy, w-pad*2, avail_h, C_PINK)
-            glow_text(cr, pad+14, hy+24, "CPU Load History  (3-sec samples)", *C_PINK, size=13, bold=True)
+        # ── CPU Load history (fills remaining bottom space) ──────────────────
+        if rh4 > 60:
+            neon_card(cr, pad, y4, w-pad*2, rh4, C_PINK)
+            glow_text(cr, pad+14, y4+24, "CPU Load History  (3-sec samples)", *C_PINK, size=13, bold=True)
             if self.live.cpu_hist:
-                sparkline(cr, pad+14, hy+32, w-pad*2-28, avail_h-44,
+                sparkline(cr, pad+14, y4+32, w-pad*2-28, rh4-44,
                           list(self.live.cpu_hist), C_PINK, 100)
             if self.live.mem_hist:
-                sparkline(cr, pad+14, hy+32, w-pad*2-28, avail_h-44,
+                sparkline(cr, pad+14, y4+32, w-pad*2-28, rh4-44,
                           list(self.live.mem_hist), C_BLUE, 100)
             cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
-            cr.set_source_rgba(*C_PINK,0.80); cr.move_to(pad+14,hy+avail_h-8)
+            cr.set_source_rgba(*C_PINK,0.80); cr.move_to(pad+14,y4+rh4-8)
             cr.show_text("CPU%")
-            cr.set_source_rgba(*C_BLUE,0.80); cr.move_to(pad+72,hy+avail_h-8)
+            cr.set_source_rgba(*C_BLUE,0.80); cr.move_to(pad+72,y4+rh4-8)
             cr.show_text("MEM%")
-            sketch_rect(cr, pad+2, hy+2, w-pad*2-4, avail_h-4, *C_PINK, thick=2.2, jitter=2.2)
+            sketch_rect(cr, pad+2, y4+2, w-pad*2-4, rh4-4, *C_PINK, thick=2.2, jitter=2.2)
 
     def _on_set_governor(self, btn, gov):
         ok_any = False
