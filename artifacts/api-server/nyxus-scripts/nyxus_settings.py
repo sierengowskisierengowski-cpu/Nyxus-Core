@@ -2969,51 +2969,389 @@ class KeyboardPage(BasePage):
 class MousePage(BasePage):
     KEY = "mouse"; TITLE = "Mouse & Touchpad"; ICON = "🖱"
 
+    # ── helpers ────────────────────────────────────────────────────────────
+    def _hypr_int(self, opt: str, default: int = 0) -> int:
+        rc, out, _ = sh(f"hyprctl getoption {opt} -j")
+        try: return int(json.loads(out).get("int", default))
+        except Exception: return default
+
+    def _hypr_float(self, opt: str, default: float = 0.0) -> float:
+        rc, out, _ = sh(f"hyprctl getoption {opt} -j")
+        try: return float(json.loads(out).get("float", default))
+        except Exception: return default
+
+    def _hypr_str(self, opt: str, default: str = "") -> str:
+        rc, out, _ = sh(f"hyprctl getoption {opt} -j")
+        try: return str(json.loads(out).get("str", default) or default)
+        except Exception: return default
+
     def build(self):
-        c = Card("pointer")
+        # ── 1. detected devices ────────────────────────────────────────────
+        c = Card("detected input devices")
         self.box.append(c)
-        rc, out, _ = sh("hyprctl getoption input:sensitivity -j")
-        try: s = float(json.loads(out).get("float", 0.0))
-        except Exception: s = 0.0
+        rc, out, _ = sh("hyprctl -j devices")
+        mice = touchpads = []; tablets = []
+        try:
+            d = json.loads(out)
+            mice      = d.get("mice", [])
+            touchpads = [m for m in mice if "touchpad" in
+                         (m.get("name","").lower())]
+            real_mice = [m for m in mice if m not in touchpads]
+            tablets   = d.get("tablets", [])
+        except Exception:
+            real_mice = []
+        c.add_row(kv_row("Mice / pointers:", str(len(real_mice))))
+        for m in real_mice[:8]:
+            c.add_row(Gtk.Label(label=f"  • {m.get('name','?')}",
+                                xalign=0))
+        c.add_row(kv_row("Touchpads:", str(len(touchpads))))
+        for t in touchpads[:4]:
+            c.add_row(Gtk.Label(label=f"  • {t.get('name','?')}",
+                                xalign=0))
+        c.add_row(kv_row("Tablets:", str(len(tablets))))
+        for t in tablets[:4]:
+            c.add_row(Gtk.Label(label=f"  • {t.get('name','?')}",
+                                xalign=0))
+        # libinput list-devices summary if available (needs root)
+        if have("libinput"):
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("libinput list-devices (sudo)", width=240,
+                             height=24, color=NEON_BLUE)
+            b.connect("clicked", lambda _b: self._term_run(
+                "sudo libinput list-devices | less",
+                "listing libinput devices…"))
+            row.append(b)
+            b2 = SketchButton("libinput debug-events", width=200,
+                              height=24, color=ACCENT_GOLD)
+            b2.connect("clicked", lambda _b: self._term_run(
+                "sudo libinput debug-events",
+                "watching live input events…"))
+            row.append(b2)
+            c.add_row(row)
+
+        # ── 2. pointer (mouse) ─────────────────────────────────────────────
+        c = Card("pointer (mouse)")
+        self.box.append(c)
+        s = self._hypr_float("input:sensitivity")
         row = Gtk.Box(spacing=10)
         row.append(Gtk.Label(label=f"sensitivity {s:+.2f}", xalign=0))
         sl = SketchSlider(value=(s+1)/2.0, color=NEON_PINK, width=240)
         sl.connect("value-changed",
-                   lambda _s, v: sh(f"hyprctl keyword input:sensitivity {(v*2-1):.2f}"))
+                   lambda _s, v: sh(
+                       f"hyprctl keyword input:sensitivity {(v*2-1):.2f}"))
         row.append(sl); c.add_row(row)
-        # accel profile
-        row = Gtk.Box(spacing=10)
-        row.append(Gtk.Label(label="accel:", xalign=0))
-        for label, ap in (("adaptive","adaptive"),("flat","flat")):
-            b = SketchButton(label, width=78, height=22, color=NEON_BLUE)
-            b.connect("clicked",
-                      lambda _b, ap=ap: (sh(f"hyprctl keyword input:accel_profile {ap}"),
-                                         self.win.toast(f"accel → {ap}")))
+        # presets
+        row = Gtk.Box(spacing=6)
+        for label, v in (("Slowest", -0.7), ("Slow", -0.3), ("Default", 0.0),
+                         ("Fast", 0.4), ("Fastest", 0.8)):
+            b = SketchButton(label, width=80, height=22,
+                             color=NEON_GREEN, primary=(abs(s-v) < 0.05))
+            b.connect("clicked", lambda _b, v=v: (
+                sh(f"hyprctl keyword input:sensitivity {v:.2f}"),
+                self.win.toast(f"sensitivity → {v:+.2f}"),
+                self.refresh()))
             row.append(b)
         c.add_row(row)
-        # natural scroll
-        b = SketchToggle("natural scroll", width=140, height=24, color=NEON_BLUE)
-        rc, out, _ = sh("hyprctl getoption input:touchpad:natural_scroll -j")
-        try: b.set_active(json.loads(out).get("int",0) == 1)
-        except Exception: pass
-        b.connect("clicked",
-                  lambda _b: sh(f"hyprctl keyword input:touchpad:natural_scroll {1 if b.active else 0}"))
-        c.add_row(b)
-        # tap to click
-        t = SketchToggle("tap to click", width=140, height=24, color=NEON_BLUE)
-        rc, out, _ = sh("hyprctl getoption input:touchpad:tap-to-click -j")
-        try: t.set_active(json.loads(out).get("int",1) == 1)
-        except Exception: pass
-        t.connect("clicked",
-                  lambda _b: sh(f"hyprctl keyword input:touchpad:tap-to-click {1 if t.active else 0}"))
-        c.add_row(t)
+        # accel profile
+        cur_ap = self._hypr_str("input:accel_profile", "adaptive")
+        row = Gtk.Box(spacing=8)
+        row.append(Gtk.Label(label=f"accel ({cur_ap}):", xalign=0))
+        for label, ap in (("adaptive", "adaptive"),
+                          ("flat (raw)", "flat"),
+                          ("custom", "custom")):
+            b = SketchButton(label, width=110, height=22,
+                             color=NEON_BLUE, primary=(ap == cur_ap))
+            b.connect("clicked",
+                      lambda _b, ap=ap: (
+                          sh(f"hyprctl keyword input:accel_profile {ap}"),
+                          self.win.toast(f"accel → {ap}"),
+                          self.refresh()))
+            row.append(b)
+        c.add_row(row)
+        # left-handed (button swap)
+        lh = self._hypr_int("input:left_handed", 0) == 1
+        lh_tog = SketchToggle("left-handed (swap L/R buttons)",
+                              width=260, height=24,
+                              color=ACCENT_PURP, active=lh)
+        lh_tog.connect("clicked", lambda _b: (
+            sh(f"hyprctl keyword input:left_handed "
+               f"{1 if lh_tog.active else 0}"),
+            self.win.toast(
+                f"buttons → {'swapped' if lh_tog.active else 'normal'}")))
+        c.add_row(lh_tog)
+        # follow mouse focus + scroll factor
+        fm = self._hypr_int("input:follow_mouse", 1)
+        row = Gtk.Box(spacing=8)
+        row.append(Gtk.Label(label=f"follow_mouse ({fm}):", xalign=0))
+        for label, val in (("0 always-focus", 0),
+                           ("1 normal", 1),
+                           ("2 sloppy", 2),
+                           ("3 click-only", 3)):
+            b = SketchButton(label, width=130, height=22,
+                             color=ACCENT_GOLD, primary=(val == fm))
+            b.connect("clicked", lambda _b, v=val: (
+                sh(f"hyprctl keyword input:follow_mouse {v}"),
+                self.win.toast(f"follow_mouse → {v}"),
+                self.refresh()))
+            row.append(b)
+        c.add_row(row)
+
+        # ── 3. scrolling ───────────────────────────────────────────────────
+        c = Card("scrolling")
+        self.box.append(c)
+        sf = self._hypr_float("input:scroll_factor", 1.0)
+        row = Gtk.Box(spacing=10)
+        row.append(Gtk.Label(label=f"scroll speed ×{sf:.2f}", xalign=0))
+        sl = SketchSlider(value=min(sf,3.0)/3.0, color=NEON_BLUE, width=220)
+        sl.connect("value-changed", lambda _s, v: sh(
+            f"hyprctl keyword input:scroll_factor {(0.1 + v*2.9):.2f}"))
+        row.append(sl); c.add_row(row)
+        # natural scroll - mouse + touchpad (separate)
+        ns_mouse = self._hypr_int("input:natural_scroll", 0) == 1
+        ns_tp    = self._hypr_int("input:touchpad:natural_scroll", 0) == 1
+        m_tog = SketchToggle("natural scroll (mouse wheel)",
+                             width=260, height=24,
+                             color=NEON_BLUE, active=ns_mouse)
+        m_tog.connect("clicked", lambda _b: (
+            sh(f"hyprctl keyword input:natural_scroll "
+               f"{1 if m_tog.active else 0}"),
+            self.win.toast(
+                f"mouse natural scroll → "
+                f"{'on' if m_tog.active else 'off'}")))
+        c.add_row(m_tog)
+        t_tog = SketchToggle("natural scroll (touchpad)",
+                             width=260, height=24,
+                             color=NEON_BLUE, active=ns_tp)
+        t_tog.connect("clicked", lambda _b: (
+            sh(f"hyprctl keyword input:touchpad:natural_scroll "
+               f"{1 if t_tog.active else 0}"),
+            self.win.toast(
+                f"touchpad natural scroll → "
+                f"{'on' if t_tog.active else 'off'}")))
+        c.add_row(t_tog)
+        # scroll method (touchpad)
+        sm = self._hypr_int("input:touchpad:scroll_method", 0)
+        row = Gtk.Box(spacing=8)
+        row.append(Gtk.Label(label="scroll method:", xalign=0))
+        for label, val in (("two-finger", "2fg"),
+                           ("edge", "edge"),
+                           ("on-button", "on_button_down"),
+                           ("none", "no_scroll")):
+            b = SketchButton(label, width=110, height=22,
+                             color=ACCENT_GOLD)
+            b.connect("clicked", lambda _b, v=label: (
+                sh(f"hyprctl keyword input:touchpad:scroll_method "
+                   f"{v.replace('-','_')}"),
+                self.win.toast(f"scroll method → {v}")))
+            row.append(b)
+        c.add_row(row)
+
+        # ── 4. touchpad ────────────────────────────────────────────────────
+        if touchpads:
+            c = Card("touchpad")
+            self.box.append(c)
+            # tap to click
+            tap = self._hypr_int("input:touchpad:tap-to-click", 1) == 1
+            t = SketchToggle("tap to click", width=160, height=24,
+                             color=NEON_BLUE, active=tap)
+            t.connect("clicked", lambda _b: (
+                sh(f"hyprctl keyword input:touchpad:tap-to-click "
+                   f"{1 if t.active else 0}"),
+                self.win.toast(
+                    f"tap → {'on' if t.active else 'off'}")))
+            c.add_row(t)
+            # tap and drag
+            td = self._hypr_int("input:touchpad:tap-and-drag", 1) == 1
+            ttd = SketchToggle("tap and drag", width=160, height=24,
+                               color=NEON_BLUE, active=td)
+            ttd.connect("clicked", lambda _b: sh(
+                f"hyprctl keyword input:touchpad:tap-and-drag "
+                f"{1 if ttd.active else 0}"))
+            c.add_row(ttd)
+            # drag lock
+            dl = self._hypr_int("input:touchpad:drag_lock", 0) == 1
+            dlt = SketchToggle("drag lock", width=160, height=24,
+                               color=NEON_BLUE, active=dl)
+            dlt.connect("clicked", lambda _b: sh(
+                f"hyprctl keyword input:touchpad:drag_lock "
+                f"{1 if dlt.active else 0}"))
+            c.add_row(dlt)
+            # disable while typing
+            dwt = self._hypr_int("input:touchpad:disable_while_typing",
+                                 1) == 1
+            dwtt = SketchToggle("disable while typing", width=200,
+                                height=24, color=ACCENT_PURP, active=dwt)
+            dwtt.connect("clicked", lambda _b: sh(
+                f"hyprctl keyword input:touchpad:disable_while_typing "
+                f"{1 if dwtt.active else 0}"))
+            c.add_row(dwtt)
+            # middle button emulation
+            mb = self._hypr_int("input:touchpad:middle_button_emulation",
+                                0) == 1
+            mbt = SketchToggle("middle-button emulation (L+R)",
+                               width=240, height=24,
+                               color=ACCENT_GOLD, active=mb)
+            mbt.connect("clicked", lambda _b: sh(
+                f"hyprctl keyword input:touchpad:middle_button_emulation "
+                f"{1 if mbt.active else 0}"))
+            c.add_row(mbt)
+            # click method
+            row = Gtk.Box(spacing=8)
+            row.append(Gtk.Label(label="click method:", xalign=0))
+            for label, val in (("button areas", "button_areas"),
+                               ("clickfinger",  "clickfinger"),
+                               ("none",         "none")):
+                b = SketchButton(label, width=130, height=22,
+                                 color=NEON_BLUE)
+                b.connect("clicked", lambda _b, v=val: (
+                    sh(f"hyprctl keyword input:touchpad:clickfinger_behavior "
+                       f"{1 if v == 'clickfinger' else 0}"),
+                    self.win.toast(f"click → {label}")))
+                row.append(b)
+            c.add_row(row)
+
+        # ── 5. DPI / cpi (libinput-measure) ────────────────────────────────
+        c = Card("mouse DPI / report rate")
+        self.box.append(c)
+        c.add_row(Gtk.Label(
+            label="Most gaming mice expose DPI via on-device buttons. "
+                  "Use libinput-measure to read your actual DPI/Hz.",
+            xalign=0))
+        for tool, desc in (
+            ("libinput-measure-touchpad-pressure", "touchpad pressure"),
+            ("libinput-measure-fretboard",         "(advanced)")):
+            pass
+        row = Gtk.Box(spacing=8)
+        if have("libinput"):
+            b = SketchButton("Measure mouse motion (libinput)",
+                             width=260, height=24, color=NEON_GREEN)
+            b.connect("clicked", lambda _b: self._term_run(
+                "sudo libinput measure touchpad-pressure 2>/dev/null || "
+                "sudo libinput measure 2>&1 | head -40",
+                "running libinput measure…"))
+            row.append(b)
+            b2 = SketchButton("Record mouse motion 5s",
+                              width=200, height=24, color=NEON_BLUE)
+            b2.connect("clicked", lambda _b: self._term_run(
+                "echo 'move your mouse for 5s...'; "
+                "timeout 5 sudo libinput record /dev/input/by-id/$(ls "
+                "/dev/input/by-id/ | grep -i mouse | head -1) | head -50",
+                "recording 5s of motion…"))
+            row.append(b2)
+        if have("piper"):
+            b = SketchButton("Launch Piper (gaming mouse GUI)",
+                             width=260, height=24, color=ACCENT_PURP)
+            b.connect("clicked", lambda _b: (
+                subprocess.Popen(["piper"], start_new_session=True),
+                self.win.toast("piper launched")))
+            row.append(b)
+        if not row.get_first_child():
+            c.add_row(Gtk.Label(
+                label="install libinput / piper for measurement",
+                xalign=0))
+        else:
+            c.add_row(row)
+
+        # ── 6. double-click speed test ─────────────────────────────────────
+        c = Card("double-click test")
+        self.box.append(c)
+        c.add_row(Gtk.Label(
+            label="Double-click in the box below — shows the gap (ms). "
+                  "GTK default threshold ≈ 400ms.", xalign=0))
+        click_lbl = Gtk.Label(label="(no clicks yet)", xalign=0)
+        click_lbl.add_css_class("nyx-mono")
+        target = Gtk.Box()
+        target.set_size_request(-1, 60)
+        target.add_css_class("nyx-card")
+        target_lbl = Gtk.Label(label="◉  click me twice  ◉")
+        target.append(target_lbl)
+        gc = Gtk.GestureClick(); gc.set_button(1)
+        last = [0.0]; count = [0]
+        def on_press(_g, n_press, x, y):
+            now = time.monotonic() * 1000
+            gap = now - last[0]; last[0] = now
+            count[0] += 1
+            if count[0] == 1 or gap > 1500:
+                click_lbl.set_text(
+                    f"click #{count[0]} (waiting for second…)")
+            else:
+                verdict = ("✓ DOUBLE-CLICK"
+                           if gap < 400 else
+                           "✗ too slow (single)")
+                click_lbl.set_text(
+                    f"gap = {int(gap)} ms  →  {verdict}")
+        gc.connect("pressed", on_press)
+        target.add_controller(gc)
+        c.add_row(target)
+        c.add_row(click_lbl)
+
+        # ── 7. cursor (jump-to-Appearance hint) ───────────────────────────
+        c = Card("cursor theme & size")
+        self.box.append(c)
+        c.add_row(kv_row("XCURSOR_THEME:",
+                         os.environ.get("XCURSOR_THEME", "(default)")))
+        c.add_row(kv_row("XCURSOR_SIZE:",
+                         os.environ.get("XCURSOR_SIZE", "24")))
+        # quick sizes (live via hyprctl)
+        cs = os.environ.get("XCURSOR_SIZE", "24")
+        ct = os.environ.get("XCURSOR_THEME", "Adwaita")
+        row = Gtk.Box(spacing=6)
+        for s in (16, 20, 24, 32, 40, 48):
+            b = SketchButton(str(s), width=48, height=22,
+                             color=NEON_BLUE, primary=(str(s) == cs))
+            b.connect("clicked", lambda _b, s=s: (
+                sh(f"hyprctl setcursor {ct} {s}"),
+                self.win.toast(f"cursor → {s}px")))
+            row.append(b)
+        c.add_row(row)
+        c.add_row(Gtk.Label(
+            label="(Theme picker lives in Themes & Appearance.)",
+            xalign=0))
+
+    # ── helper: run in terminal ────────────────────────────────────────────
+    def _term_run(self, cmd: str, toast: str):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if have(term):
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     f"{cmd}; echo; echo 'press enter to close'; read _"],
+                    start_new_session=True)
+                self.win.toast(toast)
+                return
+        self.win.toast("no terminal found (install foot/alacritty/kitty)")
 
     def search_entries(self):
         return [
             SearchEntry(self.KEY, self.TITLE, "Mouse sensitivity"),
-            SearchEntry(self.KEY, self.TITLE, "Acceleration"),
-            SearchEntry(self.KEY, self.TITLE, "Natural scroll"),
+            SearchEntry(self.KEY, self.TITLE, "Sensitivity presets",
+                        "slowest fastest"),
+            SearchEntry(self.KEY, self.TITLE, "Acceleration profile",
+                        "adaptive flat raw custom"),
+            SearchEntry(self.KEY, self.TITLE, "Left-handed mouse",
+                        "swap left right buttons"),
+            SearchEntry(self.KEY, self.TITLE, "Follow mouse focus",
+                        "sloppy click"),
+            SearchEntry(self.KEY, self.TITLE, "Natural scroll (mouse)"),
+            SearchEntry(self.KEY, self.TITLE, "Natural scroll (touchpad)"),
+            SearchEntry(self.KEY, self.TITLE, "Scroll speed factor"),
+            SearchEntry(self.KEY, self.TITLE, "Scroll method",
+                        "two finger edge button"),
             SearchEntry(self.KEY, self.TITLE, "Tap to click", "touchpad"),
+            SearchEntry(self.KEY, self.TITLE, "Tap and drag"),
+            SearchEntry(self.KEY, self.TITLE, "Drag lock"),
+            SearchEntry(self.KEY, self.TITLE, "Disable while typing",
+                        "palm touchpad"),
+            SearchEntry(self.KEY, self.TITLE, "Middle button emulation"),
+            SearchEntry(self.KEY, self.TITLE, "Click method",
+                        "clickfinger button areas"),
+            SearchEntry(self.KEY, self.TITLE, "Detected input devices",
+                        "libinput list"),
+            SearchEntry(self.KEY, self.TITLE, "libinput debug events"),
+            SearchEntry(self.KEY, self.TITLE, "Mouse DPI / report rate",
+                        "piper measure"),
+            SearchEntry(self.KEY, self.TITLE, "Double-click speed test",
+                        "threshold ms"),
+            SearchEntry(self.KEY, self.TITLE, "Cursor size live"),
         ]
 
 
