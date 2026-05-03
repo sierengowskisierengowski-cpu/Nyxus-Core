@@ -26,17 +26,31 @@ NEON = [
 ]
 
 APPS = [
-    ("io.nyxus.sysmon",   "SYSMON",   (1.00, 0.00, 1.00)),
-    ("io.nyxus.stickies", "STICKIES", (1.00, 1.00, 0.00)),
-    ("io.nyxus.weather",  "WEATHER",  (0.00, 0.53, 1.00)),
-    ("io.nyxus.notepad",  "NOTEPAD",  (0.80, 0.00, 1.00)),
-    ("io.nyxus.terminal", "TERMINAL", (0.22, 1.00, 0.08)),
-    ("io.nyxus.control",  "CONTROL",  (1.00, 0.33, 0.00)),
-    ("io.nyxus.godsapp",  "GODSAPP",  (1.00, 0.84, 0.00)),
-    ("io.nyxus.studio",   "STUDIO",   (1.00, 0.24, 0.65)),
-    ("io.nyxus.sage",     "SAGE",     (0.30, 0.89, 0.89)),
-    ("io.nyxus.shield",   "SHIELD",   (0.29, 0.87, 0.50)),
-    ("io.nyxus.settings", "SETTINGS", (0.65, 0.55, 0.98)),
+    # ── original apps ────────────────────────────────────────────────────
+    ("io.nyxus.sysmon",        "SYSMON",   (1.00, 0.00, 1.00)),
+    ("io.nyxus.stickies",      "STICKIES", (1.00, 1.00, 0.00)),
+    ("io.nyxus.weather",       "WEATHER",  (0.00, 0.53, 1.00)),
+    ("io.nyxus.notepad",       "NOTEPAD",  (0.80, 0.00, 1.00)),
+    ("io.nyxus.terminal",      "TERMINAL", (0.22, 1.00, 0.08)),
+    ("io.nyxus.control",       "CONTROL",  (1.00, 0.33, 0.00)),
+    ("io.nyxus.godsapp",       "GODSAPP",  (1.00, 0.84, 0.00)),
+    ("io.nyxus.studio",        "STUDIO",   (1.00, 0.24, 0.65)),
+    ("io.nyxus.sage",          "SAGE",     (0.30, 0.89, 0.89)),
+    ("io.nyxus.shield",        "SHIELD",   (0.29, 0.87, 0.50)),
+    ("io.nyxus.settings",      "SETTINGS", (0.65, 0.55, 0.98)),
+    # ── missing apps ─────────────────────────────────────────────────────
+    ("io.nyxus.clock",         "CLOCK",    (1.00, 0.00, 1.00)),
+    ("io.nyxus.calendar",      "CALEND",   (0.80, 0.00, 1.00)),
+    ("io.nyxus.passwords",     "PASSWD",   (1.00, 0.33, 0.00)),
+    ("io.nyxus.panel",         "PANEL",    (0.00, 0.53, 1.00)),
+    ("io.nyxus.notifications", "NOTIFS",   (0.00, 0.87, 0.87)),
+    ("io.nyxus.intel",         "INTEL",    (0.00, 0.73, 1.00)),
+    ("io.nyxus.start",         "START",    (1.00, 0.00, 0.80)),
+    ("io.nyxus.home",          "HOME",     (1.00, 0.84, 0.00)),
+    ("io.nyxus.store",         "STORE",    (0.22, 1.00, 0.08)),
+    ("io.nyxus.phantom",       "PHANTOM",  (0.50, 0.00, 1.00)),
+    # ── legacy aliases (match .desktop Icon= names from older installs) ──
+    ("nyxus-home",             "HOME",     (1.00, 0.84, 0.00)),
 ]
 
 

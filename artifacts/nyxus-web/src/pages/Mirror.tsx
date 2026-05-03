@@ -179,7 +179,7 @@ function TopBar({ time }: { time: Date }) {
       fontFamily: '"JetBrains Mono", monospace',
       zIndex: 50,
       userSelect: "none",
-      backdropFilter: "blur(6px)",
+      backdropFilter: "blur(14px) saturate(1.6)",
     }}>
       <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12, overflow: "hidden" }}>
         <Stat glyph="◉" value="CPU 15%"      color={C.purple} />
@@ -217,7 +217,7 @@ function LeftBar({ activeWs, onSelect }: { activeWs: number; onSelect: (n: numbe
       border: `1px solid ${C.pink}`,
       borderRadius: 4,
       boxShadow: `0 0 10px ${C.pink}66, 0 0 20px ${C.pink}33`,
-      backdropFilter: "blur(6px)",
+      backdropFilter: "blur(14px) saturate(1.6)",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -292,7 +292,7 @@ function RightBar({ onLaunch, openId }: { onLaunch: (a: AppDef) => void; openId:
       border: `1px solid ${C.gold}`,
       borderRadius: 4,
       boxShadow: `0 0 10px ${C.gold}66, 0 0 20px ${C.gold}33`,
-      backdropFilter: "blur(6px)",
+      backdropFilter: "blur(14px) saturate(1.6)",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -366,7 +366,7 @@ function BottomBar({ activeWs, onSelectWs, onStart, onHome, onSettings, onPanel,
       border: `1px solid ${C.pink}`,
       borderRadius: 4,
       boxShadow: `0 0 10px ${C.pink}66, 0 0 20px ${C.pink}33`,
-      backdropFilter: "blur(6px)",
+      backdropFilter: "blur(14px) saturate(1.6)",
       display: "flex",
       alignItems: "center",
       padding: "0 8px",
@@ -511,7 +511,9 @@ function Window({ a, onClose, children }: { a: AppDef; onClose: () => void; chil
       top: 40, bottom: 40, left: 50, right: 56,
       maxWidth: 1180,
       margin: "0 auto",
-      background: "rgba(8,6,16,0.96)",
+      background: "rgba(6,4,12,0.55)",
+      backdropFilter: "blur(14px) saturate(1.6)",
+      WebkitBackdropFilter: "blur(14px) saturate(1.6)",
       border: `1px solid ${a.color}`,
       borderTop: `2px solid ${a.color}`,
       borderRadius: 6,
@@ -520,7 +522,6 @@ function Window({ a, onClose, children }: { a: AppDef; onClose: () => void; chil
       flexDirection: "column",
       overflow: "hidden",
       zIndex: 100,
-      backdropFilter: "blur(4px)",
     }}>
       <div style={{
         flex: "0 0 auto",
@@ -597,7 +598,9 @@ function MockupBody({ a }: { a: AppDef }) {
       color: C.text,
     }}>
       <div style={{
-        background: "rgba(12,8,22,0.95)",
+        background: "rgba(6,4,12,0.55)",
+        backdropFilter: "blur(14px) saturate(1.6)",
+        WebkitBackdropFilter: "blur(14px) saturate(1.6)",
         borderRight: `1px solid ${a.color}33`,
         padding: "1rem 0.6rem",
         display: "flex", flexDirection: "column", gap: 4,
@@ -734,12 +737,13 @@ function PanelFlyout({ open, onClose }: { open: boolean; onClose: () => void }) 
       position: "fixed",
       top: 32, bottom: 32, right: 46,
       width: 320,
-      background: "rgba(8,6,16,0.96)",
+      background: "rgba(6,4,12,0.55)",
+      backdropFilter: "blur(14px) saturate(1.6)",
+      WebkitBackdropFilter: "blur(14px) saturate(1.6)",
       border: `1px solid ${C.purple}66`,
       borderTop: `2px solid ${C.purple}`,
       borderRadius: 6,
       boxShadow: `0 0 40px ${C.purple}66`,
-      backdropFilter: "blur(6px)",
       padding: "1rem 1.1rem",
       display: "flex", flexDirection: "column", gap: "0.85rem",
       zIndex: 80,
@@ -794,7 +798,7 @@ function StartMenu({ open, onClose, onLaunch }: { open: boolean; onClose: () => 
         position: "fixed",
         inset: 0,
         background: "rgba(0,0,0,0.7)",
-        backdropFilter: "blur(6px)",
+        backdropFilter: "blur(14px) saturate(1.6)",
         zIndex: 90,
         display: "flex",
         alignItems: "center",
@@ -887,7 +891,9 @@ function Notifications({ open, onClose }: { open: boolean; onClose: () => void }
           position: "absolute",
           bottom: 36, right: 14,
           width: 320,
-          background: "rgba(8,6,16,0.96)",
+          background: "rgba(6,4,12,0.55)",
+          backdropFilter: "blur(14px) saturate(1.6)",
+          WebkitBackdropFilter: "blur(14px) saturate(1.6)",
           border: `1px solid ${C.green}66`,
           borderTop: `2px solid ${C.green}`,
           borderRadius: 6,
@@ -942,8 +948,9 @@ function SettingsWindow({ open, onClose }: { open: boolean; onClose: () => void 
       onClick={onClose}
       style={{
         position: "fixed", inset: 0,
-        background: "rgba(0,0,0,0.65)",
-        backdropFilter: "blur(4px)",
+        background: "rgba(6,4,12,0.72)",
+        backdropFilter: "blur(14px) saturate(1.6)",
+        WebkitBackdropFilter: "blur(14px) saturate(1.6)",
         zIndex: 90,
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: 50,
@@ -954,7 +961,9 @@ function SettingsWindow({ open, onClose }: { open: boolean; onClose: () => void 
         style={{
           width: "100%", maxWidth: 720,
           height: "100%", maxHeight: 480,
-          background: "rgba(8,6,16,0.97)",
+          background: "rgba(6,4,12,0.55)",
+          backdropFilter: "blur(14px) saturate(1.6)",
+          WebkitBackdropFilter: "blur(14px) saturate(1.6)",
           border: `1px solid ${sec.color}66`,
           borderTop: `2px solid ${sec.color}`,
           borderRadius: 6,
@@ -965,7 +974,7 @@ function SettingsWindow({ open, onClose }: { open: boolean; onClose: () => void 
           overflow: "hidden",
         }}
       >
-        <div style={{ background: "rgba(12,8,22,0.85)", borderRight: `1px solid ${sec.color}22`, padding: "0.85rem 0.5rem" }}>
+        <div style={{ background: "rgba(6,4,12,0.55)", backdropFilter: "blur(14px) saturate(1.6)", WebkitBackdropFilter: "blur(14px) saturate(1.6)", borderRight: `1px solid ${sec.color}22`, padding: "0.85rem 0.5rem" }}>
           <div style={{ fontSize: "0.55rem", color: `${sec.color}99`, letterSpacing: "0.22em", padding: "0.3rem 0.5rem", marginBottom: 4 }}>SETTINGS</div>
           {sections.map(s => {
             const isActive = s.id === active;
@@ -1105,7 +1114,9 @@ export default function Mirror() {
       <div style={{
         position: "absolute",
         top: 34, left: 46,
-        background: "rgba(8,6,16,0.7)",
+        background: "rgba(6,4,12,0.55)",
+        backdropFilter: "blur(14px) saturate(1.6)",
+        WebkitBackdropFilter: "blur(14px) saturate(1.6)",
         border: "1px solid #1a1a1a",
         color: C.dim,
         fontSize: "0.5rem",
@@ -1122,7 +1133,9 @@ export default function Mirror() {
         style={{
           position: "absolute",
           top: 34, right: 50,
-          background: "rgba(8,6,16,0.7)",
+          background: "rgba(6,4,12,0.55)",
+          backdropFilter: "blur(14px) saturate(1.6)",
+          WebkitBackdropFilter: "blur(14px) saturate(1.6)",
           border: `1px solid ${C.purple}66`,
           color: C.purple,
           fontSize: "0.55rem",

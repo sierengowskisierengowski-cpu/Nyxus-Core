@@ -207,8 +207,8 @@ function Card({ tilt, color, title, glyph, span = 1, children, footer }: {
         0 6px 22px rgba(0,0,0,0.55),
         inset 0 0 24px rgba(0,0,0,0.18)
       `,
-      backdropFilter: "blur(10px) saturate(1.15)",
-      WebkitBackdropFilter: "blur(10px) saturate(1.15)",
+      backdropFilter: "blur(14px) saturate(1.6)",
+      WebkitBackdropFilter: "blur(14px) saturate(1.6)",
       padding: "0.9rem 1rem",
       display: "flex",
       flexDirection: "column",
