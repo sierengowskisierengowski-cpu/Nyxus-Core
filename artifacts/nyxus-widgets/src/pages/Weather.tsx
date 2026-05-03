@@ -443,6 +443,18 @@ export default function Weather() {
           </div>
         </div>
       </div>
+
+      {/* NYX stamp */}
+      <div style={{
+        position: 'absolute', bottom: 6, right: 10,
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 7, letterSpacing: '0.18em',
+        color: 'rgba(255,255,255,0.12)',
+        pointerEvents: 'none', zIndex: 50,
+        whiteSpace: 'nowrap',
+      }}>
+        © 2026 NYX-J5W-2026-SIERENGOWSKI-LOCKED
+      </div>
     </div>
   );
 }
