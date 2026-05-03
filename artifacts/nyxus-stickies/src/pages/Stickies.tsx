@@ -206,7 +206,9 @@ export default function Stickies() {
         display: 'flex', alignItems: 'center', gap: 12, padding: '0 18px',
         height: 56, flexShrink: 0,
         borderBottom: `2px solid ${NEON_PINK}33`,
-        background: 'rgba(10,10,20,0.96)',
+        background: 'rgba(6,4,12,0.65)',
+        backdropFilter: 'blur(14px) saturate(1.6)',
+        WebkitBackdropFilter: 'blur(14px) saturate(1.6)',
         boxShadow: `0 0 24px rgba(255,0,255,0.08)`,
       }}>
         {/* Logo */}
@@ -287,7 +289,7 @@ export default function Stickies() {
       {/* ── Color key strip ─────────────────────────────────────── */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8, padding: '6px 20px',
-        background: 'rgba(0,0,0,0.25)', borderBottom: '1px solid rgba(255,255,255,0.05)',
+        background: 'rgba(6,4,12,0.5)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(255,255,255,0.05)',
         flexShrink: 0,
       }}>
         <span style={{ color: 'rgba(255,255,255,0.3)', fontFamily: "'Caveat', cursive", fontSize: 14 }}>Colors:</span>
