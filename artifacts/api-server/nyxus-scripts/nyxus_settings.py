@@ -514,8 +514,238 @@ class DisplayPage(BasePage):
                                  color=NEON_GREEN)
         b_refresh.connect("clicked", lambda _b: self.refresh())
         c.add_row(b_refresh)
+        # quick utilities row
+        row = Gtk.Box(spacing=8)
+        b_off = SketchButton("Blank screens (DPMS off)", width=210,
+                             height=24, color=ACCENT_PURP)
+        b_off.connect("clicked", lambda _b: (
+            sh("hyprctl dispatch dpms off"),
+            self.win.toast("screens blanked — move mouse to wake")))
+        row.append(b_off)
+        b_shot = SketchButton("Region screenshot (grim+slurp)",
+                              width=240, height=24, color=NEON_GREEN)
+        b_shot.connect("clicked", lambda _b: (
+            sh_async(
+                "grim -g \"$(slurp)\" "
+                f"{Path.home()}/Pictures/Screenshot-$(date +%s).png",
+                lambda r: self.win.toast(
+                    "screenshot saved" if r[0]==0
+                    else "grim/slurp not installed")),
+            None))
+        row.append(b_shot)
+        c.add_row(row)
+
+        # ── brightness (per backlight) ──────────────────────────────────────
+        bl_dir = Path("/sys/class/backlight")
+        backlights = sorted(bl_dir.iterdir()) if bl_dir.exists() else []
+        if backlights:
+            c = Card("brightness")
+            self.box.append(c)
+            for bl in backlights:
+                try:
+                    cur = int((bl/"brightness").read_text().strip())
+                    mx  = int((bl/"max_brightness").read_text().strip())
+                    pct = (cur*100)//mx if mx else 0
+                except Exception:
+                    pct = 0
+                c.add_row(kv_row(bl.name + ":", f"{pct}%"))
+                row = Gtk.Box(spacing=6)
+                for p in (10, 25, 50, 75, 100):
+                    b = SketchButton(f"{p}%", width=54, height=22,
+                                     color=ACCENT_GOLD,
+                                     primary=(abs(pct - p) <= 5))
+                    b.connect("clicked", lambda _b, p=p, n=bl.name: (
+                        sh(f"brightnessctl -d {n} set {p}%")
+                        if have("brightnessctl") else
+                        sh(f"sudo -n sh -c 'echo $(({p}*"
+                           f"$(cat /sys/class/backlight/{n}/max_brightness)/100)) > "
+                           f"/sys/class/backlight/{n}/brightness'"),
+                        self.win.toast(f"{n} → {p}%"),
+                        self.refresh()))
+                    row.append(b)
+                c.add_row(row)
+            if not have("brightnessctl"):
+                c.add_row(Gtk.Label(
+                    label="install brightnessctl for keyless control "
+                          "(pacman -S brightnessctl)", xalign=0))
+
+        # ── night light / color temperature ────────────────────────────────
+        c = Card("night light / color temperature")
+        self.box.append(c)
+        tools = []
+        for t in ("hyprsunset", "wlsunset", "gammastep"):
+            if have(t): tools.append(t)
+        c.add_row(kv_row("Available tools:",
+                         ", ".join(tools) if tools else "(none installed)"))
+        # current process check
+        rc, out, _ = sh("pgrep -a -f 'hyprsunset|wlsunset|gammastep'")
+        running = out.strip().splitlines()[0] if out.strip() else "(off)"
+        c.add_row(kv_row("Running:", running))
+        if tools:
+            row = Gtk.Box(spacing=6)
+            for k, label in ((6500, "6500K (off)"),
+                             (5000, "5000K (mild)"),
+                             (4000, "4000K (warm)"),
+                             (3500, "3500K (warmer)"),
+                             (2700, "2700K (sunset)")):
+                b = SketchButton(label, width=130, height=22,
+                                 color=ACCENT_GOLD)
+                b.connect("clicked",
+                          lambda _b, k=k, t=tools[0]: self._set_temp(t, k))
+                row.append(b)
+            c.add_row(row)
+            row = Gtk.Box(spacing=6)
+            b_off = SketchButton("Stop night light", width=180, height=22,
+                                 color=DANGER_RED)
+            b_off.connect("clicked", lambda _b: (
+                sh("pkill -f 'hyprsunset|wlsunset|gammastep'"),
+                self.win.toast("night light stopped"),
+                self.refresh()))
+            row.append(b_off)
+            b_auto = SketchButton("Auto (dusk→dawn)", width=180, height=22,
+                                  color=NEON_BLUE)
+            b_auto.connect("clicked", lambda _b: (
+                sh("pkill -f 'hyprsunset|wlsunset|gammastep'; "
+                   "setsid wlsunset -t 3500 -T 6500 &"
+                   if have("wlsunset")
+                   else "pkill -f 'hyprsunset|wlsunset|gammastep'; "
+                        "setsid gammastep -O 3500 &"),
+                self.win.toast("auto night light on")))
+            row.append(b_auto)
+            c.add_row(row)
+
+        # ── GPU & driver ───────────────────────────────────────────────────
+        c = Card("GPU & display driver")
+        self.box.append(c)
+        rc, out, _ = sh(
+            "lspci -nn | grep -E 'VGA|3D|Display' | head -3")
+        for line in (out.strip().splitlines() or ["(no GPU detected)"]):
+            c.add_row(Gtk.Label(label=line.strip(), xalign=0))
+        if have("glxinfo"):
+            rc, out, _ = sh("glxinfo -B | grep -E 'OpenGL renderer|Device'",
+                            timeout=4)
+            for line in out.splitlines():
+                c.add_row(Gtk.Label(label=line.strip(), xalign=0))
+        if have("vulkaninfo"):
+            rc, out, _ = sh("vulkaninfo --summary 2>/dev/null | "
+                            "grep -E 'deviceName|driverName' | head -4",
+                            timeout=4)
+            for line in out.splitlines():
+                c.add_row(Gtk.Label(label=line.strip(), xalign=0))
+        # session type
+        c.add_row(kv_row("Session type:",
+                         os.environ.get("XDG_SESSION_TYPE", "?")))
+        c.add_row(kv_row("Wayland display:",
+                         os.environ.get("WAYLAND_DISPLAY", "(none)")))
+
+        # ── hyprland.conf monitor section ──────────────────────────────────
+        c = Card("hyprland monitor config")
+        self.box.append(c)
+        cfg = Path.home() / ".config/hypr/hyprland.conf"
+        if cfg.exists():
+            try:
+                txt = cfg.read_text()
+            except Exception:
+                txt = ""
+            mlines = [ln for ln in txt.splitlines()
+                      if ln.strip().lower().startswith("monitor")
+                      or ln.strip().startswith("monitor=")]
+            if mlines:
+                for ln in mlines[:8]:
+                    c.add_row(Gtk.Label(label=ln.strip(), xalign=0))
+            else:
+                c.add_row(Gtk.Label(
+                    label="(no `monitor=` lines in hyprland.conf)",
+                    xalign=0))
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("Edit hyprland.conf", width=200, height=24,
+                             color=ACCENT_GOLD)
+            b.connect("clicked", lambda _b: self._term_run(
+                f"${{EDITOR:-nano}} {cfg}",
+                "hyprland.conf opened…"))
+            row.append(b)
+            b2 = SketchButton("Reload (hyprctl reload)", width=200,
+                              height=24, color=NEON_BLUE)
+            b2.connect("clicked", lambda _b: (
+                sh("hyprctl reload"),
+                self.win.toast("hyprland reloaded"),
+                self.refresh()))
+            row.append(b2)
+            c.add_row(row)
+        else:
+            c.add_row(Gtk.Label(label="hyprland.conf not found", xalign=0))
+
+        # ── EDID per monitor (raw) ─────────────────────────────────────────
+        c = Card("EDID raw dump")
+        self.box.append(c)
+        edid_root = Path("/sys/class/drm")
+        any_edid = False
+        if edid_root.exists():
+            for d in sorted(edid_root.iterdir()):
+                e = d / "edid"
+                if not e.exists(): continue
+                try:
+                    if e.stat().st_size == 0: continue
+                except Exception: continue
+                any_edid = True
+                row = Gtk.Box(spacing=8)
+                lbl = Gtk.Label(label=d.name, xalign=0)
+                lbl.set_hexpand(True); row.append(lbl)
+                b = SketchButton("Decode (parse-edid)", width=180,
+                                 height=22, color=NEON_BLUE)
+                b.connect("clicked", lambda _b, p=e: self._term_run(
+                    (f"cat {p} | parse-edid 2>/dev/null || "
+                     f"hexdump -C {p}") + " | less",
+                    f"decoding {p}…"))
+                row.append(b)
+                c.add_row(row)
+        if not any_edid:
+            c.add_row(Gtk.Label(
+                label="(no EDID files exposed under /sys/class/drm)",
+                xalign=0))
+
+        # ── workspace / cursor extras ──────────────────────────────────────
+        c = Card("cursor & DPI")
+        self.box.append(c)
+        cs = os.environ.get("XCURSOR_SIZE", "24")
+        ct = os.environ.get("XCURSOR_THEME", "Adwaita")
+        c.add_row(kv_row("XCURSOR_SIZE:", cs))
+        c.add_row(kv_row("XCURSOR_THEME:", ct))
+        row = Gtk.Box(spacing=6)
+        for s in (16, 20, 24, 32, 48):
+            b = SketchButton(str(s), width=46, height=22, color=NEON_BLUE,
+                             primary=(str(s) == cs))
+            b.connect("clicked", lambda _b, s=s: (
+                sh(f"hyprctl setcursor {ct} {s}"),
+                self.win.toast(f"cursor → {s}px")))
+            row.append(b)
+        c.add_row(row)
 
         self.refresh()
+
+    def _set_temp(self, tool: str, kelvin: int):
+        sh("pkill -f 'hyprsunset|wlsunset|gammastep'")
+        if tool == "hyprsunset":
+            cmd = f"setsid hyprsunset -t {kelvin} &"
+        elif tool == "wlsunset":
+            cmd = f"setsid wlsunset -t {kelvin} -T {kelvin+1} &"
+        else:  # gammastep
+            cmd = f"setsid gammastep -O {kelvin} &"
+        sh(cmd)
+        self.win.toast(f"color temp → {kelvin}K")
+        self.refresh()
+
+    # ── helper: run in terminal ────────────────────────────────────────────
+    def _term_run(self, cmd: str, toast: str):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if have(term):
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     f"{cmd}; echo; echo 'press enter to close'; read _"],
+                    start_new_session=True)
+                self.win.toast(toast)
+                return
+        self.win.toast("no terminal found (install foot/alacritty/kitty)")
 
     def _has_fractional(self) -> bool:
         rc, out, _ = sh("hyprctl -j getoption misc:no_direct_scanout")
