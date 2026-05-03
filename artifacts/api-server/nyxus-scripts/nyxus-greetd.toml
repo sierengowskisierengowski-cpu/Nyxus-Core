@@ -1,0 +1,26 @@
+# NYXUS greetd configuration
+# Install greetd + tuigreet (pacman -S greetd greetd-tuigreet) then drop
+# this file into /etc/greetd/config.toml and enable: systemctl enable greetd
+#
+# tuigreet uses an ANSI palette; we set neon-pink/black for an on-brand
+# login screen that matches the rest of NYXUS.
+
+[terminal]
+vt = 1
+
+[default_session]
+# Launches Hyprland after successful auth.
+# Replace `Hyprland` with your preferred session command if needed
+# (e.g. dbus-run-session Hyprland, or a sway/wayland command).
+command = "tuigreet \
+  --time \
+  --remember \
+  --remember-user-session \
+  --asterisks \
+  --user-menu \
+  --greeting 'NYXUS · enter the dark side' \
+  --power-shutdown 'systemctl poweroff' \
+  --power-reboot   'systemctl reboot' \
+  --theme 'border=magenta;text=white;prompt=magenta;time=cyan;action=green;button=magenta;container=black;input=white' \
+  --cmd 'Hyprland'"
+user = "greeter"
