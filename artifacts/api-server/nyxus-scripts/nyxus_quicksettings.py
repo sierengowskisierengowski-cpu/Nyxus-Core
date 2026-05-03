@@ -519,23 +519,29 @@ CSS = """
 }
 
 window#actioncenter {
-    background-color: rgba(10, 10, 18, 0.985);
+    background-image: __BG_URL__;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(10, 10, 18, 0.92);
     color: #e8e0f5;
-    border: 3px solid rgba(204, 0, 255, 0.55);
+    border: 3px solid rgba(255, 40, 180, 0.55);
     border-radius: 4px;
+}
+window#actioncenter > * {
+    background-color: rgba(8, 6, 14, 0.78);
 }
 
 .ac-hdr {
     background: rgba(15, 12, 24, 0.99);
     padding: 14px 18px 12px;
-    border-bottom: 2px solid rgba(204, 0, 255, 0.30);
+    border-bottom: 2px solid rgba(255, 40, 180, 0.30);
 }
 .ac-title {
     color: #cc44ff;
     font-size: 22px;
     font-weight: bold;
     letter-spacing: 5px;
-    text-shadow: 0 0 14px rgba(204, 0, 255, 0.70);
+    text-shadow: 0 0 14px rgba(255, 40, 180, 0.70);
 }
 .ac-time { color: rgba(220, 200, 240, 0.85); font-size: 16px; }
 
@@ -551,12 +557,12 @@ window#actioncenter {
     border: none;
     padding: 2px 6px;
 }
-.ac-link:hover { color: #ee88ff; text-shadow: 0 0 8px rgba(204, 0, 255, 0.70); }
+.ac-link:hover { color: #ee88ff; text-shadow: 0 0 8px rgba(255, 40, 180, 0.70); }
 
 .ac-notiflist { background: transparent; min-height: 60px; }
 .ac-notif-row {
     background: rgba(20, 16, 36, 0.95);
-    border: 2px solid rgba(204, 0, 255, 0.18);
+    border: 2px solid rgba(255, 40, 180, 0.18);
     border-radius: 3px;
     padding: 8px 12px;
     margin-bottom: 4px;
@@ -573,7 +579,7 @@ window#actioncenter {
 
 .ac-tile {
     background: rgba(20, 16, 36, 0.96);
-    border: 2px solid rgba(204, 0, 255, 0.22);
+    border: 2px solid rgba(255, 40, 180, 0.22);
     border-radius: 3px;
     color: rgba(200, 180, 230, 0.85);
     min-width: 78px;
@@ -581,15 +587,15 @@ window#actioncenter {
     padding: 6px 4px;
 }
 .ac-tile:hover {
-    background: rgba(204, 0, 255, 0.14);
-    border-color: rgba(204, 0, 255, 0.65);
+    background: rgba(255, 40, 180, 0.14);
+    border-color: rgba(255, 40, 180, 0.65);
     color: #f0e8ff;
 }
 .ac-tile.on {
-    background: rgba(204, 0, 255, 0.24);
+    background: rgba(255, 40, 180, 0.24);
     border-color: #cc44ff;
     color: #ffffff;
-    box-shadow: 0 0 14px rgba(204, 0, 255, 0.50);
+    box-shadow: 0 0 14px rgba(255, 40, 180, 0.50);
 }
 .ac-tile.unavailable {
     color: rgba(120, 100, 150, 0.45);
@@ -608,7 +614,7 @@ window#actioncenter {
                  'Symbols Nerd Font Mono';
     font-size: 16px;
     color: #cc44ff;
-    text-shadow: 0 0 6px rgba(204, 0, 255, 0.50);
+    text-shadow: 0 0 6px rgba(255, 40, 180, 0.50);
     margin-right: 8px;
 }
 .ac-slider-label {
@@ -621,15 +627,15 @@ window#actioncenter {
     font-size: 14px;
     font-weight: bold;
     min-width: 40px;
-    text-shadow: 0 0 6px rgba(204, 0, 255, 0.40);
+    text-shadow: 0 0 6px rgba(255, 40, 180, 0.40);
 }
-scale trough    { background: rgba(204, 0, 255, 0.18); border-radius: 2px; min-height: 5px; }
+scale trough    { background: rgba(255, 40, 180, 0.18); border-radius: 2px; min-height: 5px; }
 scale highlight { background: #cc44ff; border-radius: 2px; }
 scale slider    {
     background: #cc44ff;
     min-width: 16px; min-height: 16px;
     border-radius: 2px; border: none;
-    box-shadow: 0 0 10px rgba(204, 0, 255, 0.70);
+    box-shadow: 0 0 10px rgba(255, 40, 180, 0.70);
     margin: -5px 0;
 }
 
@@ -638,7 +644,7 @@ button.ac-chev {
     font-size: 12px;
     color: rgba(200, 180, 230, 0.70);
     background: transparent;
-    border: 2px solid rgba(204, 0, 255, 0.20);
+    border: 2px solid rgba(255, 40, 180, 0.20);
     border-radius: 2px;
     min-width: 26px;
     min-height: 22px;
@@ -649,12 +655,12 @@ button.ac-chev:hover { color: #cc44ff; border-color: #cc44ff; }
 
 .ac-device-row {
     background: rgba(15, 12, 24, 0.95);
-    border-left: 2px solid rgba(204, 0, 255, 0.24);
+    border-left: 2px solid rgba(255, 40, 180, 0.24);
     padding: 6px 16px 6px 26px;
     color: rgba(220, 200, 240, 0.80);
 }
 .ac-device-row:hover {
-    background: rgba(204, 0, 255, 0.14);
+    background: rgba(255, 40, 180, 0.14);
     color: #f0e8ff;
 }
 .ac-device-row.on {
@@ -664,16 +670,16 @@ button.ac-chev:hover { color: #cc44ff; border-color: #cc44ff; }
 
 .ac-wifi-flyout {
     background: rgba(8, 6, 14, 0.99);
-    border-top: 2px solid rgba(204, 0, 255, 0.22);
-    border-bottom: 2px solid rgba(204, 0, 255, 0.22);
+    border-top: 2px solid rgba(255, 40, 180, 0.22);
+    border-bottom: 2px solid rgba(255, 40, 180, 0.22);
 }
 .ac-wifirow {
     background: rgba(15, 12, 24, 0.96);
-    border-bottom: 1px solid rgba(204, 0, 255, 0.10);
+    border-bottom: 1px solid rgba(255, 40, 180, 0.10);
     padding: 8px 16px;
 }
-.ac-wifirow:hover { background: rgba(204, 0, 255, 0.10); }
-.ac-wifirow.active { background: rgba(204, 0, 255, 0.12); }
+.ac-wifirow:hover { background: rgba(255, 40, 180, 0.10); }
+.ac-wifirow.active { background: rgba(255, 40, 180, 0.12); }
 .ac-wifi-ssid { color: #f0e8ff; font-size: 16px; font-weight: bold; }
 .ac-wifirow.active .ac-wifi-ssid { color: #cc44ff; }
 .ac-wifi-state { color: rgba(180, 150, 230, 0.75); font-size: 13px; }
@@ -691,26 +697,26 @@ button.ac-chev:hover { color: #cc44ff; border-color: #cc44ff; }
 
 button.ac-btn {
     background: rgba(20, 16, 36, 0.96);
-    border: 2px solid rgba(204, 0, 255, 0.30);
+    border: 2px solid rgba(255, 40, 180, 0.30);
     border-radius: 2px;
     color: #e8e0f5;
     font-size: 14px;
     padding: 6px 14px;
 }
 button.ac-btn:hover {
-    background: rgba(204, 0, 255, 0.18);
+    background: rgba(255, 40, 180, 0.18);
     border-color: #cc44ff;
     color: #f8f0ff;
 }
 button.ac-btn:disabled {
     color: rgba(180, 150, 230, 0.40);
-    border-color: rgba(204, 0, 255, 0.15);
+    border-color: rgba(255, 40, 180, 0.15);
 }
 
 entry {
     background: rgba(10, 8, 20, 0.99);
     color: #f0e8ff;
-    border: 2px solid rgba(204, 0, 255, 0.30);
+    border: 2px solid rgba(255, 40, 180, 0.30);
     border-radius: 2px;
     padding: 6px 10px;
     font-size: 14px;
@@ -720,7 +726,7 @@ entry:focus { border-color: #cc44ff; }
 checkbutton { color: rgba(220, 200, 240, 0.80); font-size: 14px; }
 checkbutton check {
     background: rgba(20, 16, 36, 0.96);
-    border: 2px solid rgba(204, 0, 255, 0.30);
+    border: 2px solid rgba(255, 40, 180, 0.30);
     min-width: 16px; min-height: 16px;
     border-radius: 2px;
 }
@@ -729,10 +735,10 @@ checkbutton check:checked {
     border-color: #cc44ff;
 }
 
-separator { background: rgba(204, 0, 255, 0.18); min-height: 1px; }
+separator { background: rgba(255, 40, 180, 0.18); min-height: 1px; }
 
 scrollbar slider {
-    background: rgba(204, 0, 255, 0.40);
+    background: rgba(255, 40, 180, 0.40);
     border-radius: 2px;
     min-width: 6px;
 }
@@ -1182,8 +1188,12 @@ class ActionCenter(Gtk.Window):
         self.set_skip_pager_hint(True)
         self.set_type_hint(Gdk.WindowTypeHint.POPUP_MENU)
 
+        # NYXUS unified graffiti chrome — pulls from the same 24-image pool
+        # that powers Settings/Notepad/Stickies/SysMon/Control/Weather.
+        bg_url = self._ensure_graffiti_bg()
+        css_text = CSS.replace("__BG_URL__", bg_url)
         p = Gtk.CssProvider()
-        p.load_from_data(CSS.encode("utf-8"))
+        p.load_from_data(css_text.encode("utf-8"))
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(), p,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
@@ -1202,6 +1212,30 @@ class ActionCenter(Gtk.Window):
         self.connect("key-press-event", self._on_key)
         # tick clock
         GLib.timeout_add_seconds(20, self._tick)
+
+    def _ensure_graffiti_bg(self):
+        """Pick a mural from the unified NYXUS pool, fetch if missing,
+        return a CSS-ready url(...) value. Falls back to 'none' on failure."""
+        try:
+            import urllib.request, hashlib, pathlib
+            pool = [f"nyxus-graffiti-{i:02d}.png" for i in range(1, 25)]
+            # deterministic per-host so the popup mural is stable per machine
+            key = (os.uname().nodename + "_quicksettings").encode()
+            idx = int(hashlib.sha1(key).hexdigest(), 16) % len(pool)
+            name = pool[idx]
+            cache = pathlib.Path.home() / ".cache" / "nyxus" / "graffiti"
+            cache.mkdir(parents=True, exist_ok=True)
+            dest = cache / name
+            if not dest.exists() or dest.stat().st_size < 1024:
+                url = f"https://nyxus-core.replit.app/api/download/nyxus/{name}"
+                try:
+                    with urllib.request.urlopen(url, timeout=3) as r:
+                        dest.write_bytes(r.read())
+                except Exception:
+                    return "none"
+            return f"url('file://{dest}')"
+        except Exception:
+            return "none"
 
     def _position(self):
         sc = Gdk.Screen.get_default()

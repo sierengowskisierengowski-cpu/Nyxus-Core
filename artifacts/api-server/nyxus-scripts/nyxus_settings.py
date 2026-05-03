@@ -8339,12 +8339,12 @@ class GraffitiBackground(Gtk.DrawingArea):
     # Pages not listed fall back to deterministic hash mapping.
     _PAGE_IMAGE_OVERRIDE = {
         "_home":         0,   # eye/skull -- biggest WOW for landing
-        "account":       16,  # purple flow piece
+        "account":       21,  # multi-color neon blend (was purple)
         "display":       3,   # geometric pink/blue
         "network":       4,   # walls of crowns
         "bluetooth":     7,   # rainbow flow
         "sound":         12,  # blue skull w/ headphones
-        "keyboard":      6,   # purple lettering
+        "keyboard":      22,  # bright spray blend (was purple)
         "mouse":         15,  # cartoon face
         "power":         11,  # neon eye
         "appearance":    10,  # rainbow on brick
