@@ -72,21 +72,50 @@ nyx-profile/
     └── opt/nyxus-intel/          # populated by build-iso.sh
 ```
 
-## What still needs your input
+## NYXUS chrome staging (Phase 2 — May 2026)
 
-The default `airootfs/etc/skel/.config/hypr/hyprland.conf` is a
-**placeholder**. Drop your own working `hyprland.conf` (and waybar,
-hyprlock, etc.) into `airootfs/etc/skel/.config/` so every new NYXUS
-user gets your daily-driver setup out of the box.
+`build-iso.sh` now stages the full NYXUS chrome layer into airootfs at
+bake time, with a single source of truth at
+`artifacts/api-server/nyxus-scripts/`. You no longer drop configs into
+`airootfs/etc/skel/` by hand — they get copied in fresh on every bake
+so `iso-builder/` and the live download portal can never drift apart.
 
-The `packages.x86_64` list is a sane Hyprland-on-Arch baseline. Add
-anything else you depend on (AUR packages need to be vendored
-separately — archiso doesn't pull from AUR).
+What gets staged on every `sudo ./build-iso.sh`:
 
-The other 13 apps in the suite are listed in CHANGELOG.md but only
-NYXUS Phantom (`nyxus-intel.tgz`) ships with this build. As you finish
-the others, drop their tarballs into `artifacts/api-server/nyxus-scripts/`
-and add them to `build-iso.sh` next to the Phantom step.
+| Source (in `nyxus-scripts/`) | Destination in airootfs |
+|---|---|
+| `hyprland.conf`, `hyprlock.conf`, `hypridle.conf` | `/etc/skel/.config/hypr/` |
+| `waybar-config.json` → `config`, `waybar-style.css` → `style.css` | `/etc/skel/.config/waybar/` |
+| `nyxus-dunstrc` → `dunstrc` | `/etc/skel/.config/dunst/` |
+| `rofi-config.rasi`, `rofi-nyxus.rasi`, `rofi-startmenu.rasi` | `/etc/skel/.config/rofi/` |
+| `wlogout-style.css`, `wlogout-layout` | `/etc/skel/.config/wlogout/` |
+| `alacritty.toml` | `/etc/skel/.config/alacritty/` |
+| `nyxus_*.py` (all 19 GTK apps + chrome library + helpers) | `/opt/nyxus/` |
+| `nyxus-bg-*.png`, `nyxus-sierengowski-*.png` (16 wallpapers) | `/etc/skel/.config/hypr/walls/` AND `/usr/share/backgrounds/nyxus/` |
+| `wallpaper-rotate.sh`, `waybar-stats.sh`, `waybar-ticker.sh` | `/usr/local/bin/` (renamed without `.sh`) |
+| 12 launcher wrappers + `.desktop` entries | `/usr/local/bin/nyxus-*` and `/usr/share/applications/io.nyxus.*.desktop` |
+
+The 12 apps with launchers + desktop entries are: notepad, stickies,
+sysmon, settings, control, weather, terminal, quicksettings, launcher,
+powermenu, screenshot, doctor.
+
+## packages.x86_64
+
+116 packages. Hyprland-on-Arch baseline plus every Phase 2 dep
+(`dunst`, `swaybg`, `hyprshade`, `ttf-caveat`, `python-cairo`,
+`python-psutil`, `power-profiles-daemon`, `blueman`, `wdisplays`,
+`geoclue`, `alacritty`, `rofi`, `bluez`, `network-manager-applet`).
+`mako` was removed in Phase 2 — NYXUS standardized on `dunst`.
+
+AUR packages still need to be vendored separately — archiso doesn't
+pull from AUR.
+
+## Other tarball apps
+
+Only NYXUS Phantom (`nyxus-intel.tgz`) gets a dedicated staging step
+in `build-iso.sh`. As the other tarball apps stabilize
+(godsapp, home, panel, sage, security, shield, start, studio,
+passwords), add their staging step alongside the Phantom block.
 
 ## Legal
 Copyright © 2026 Joseph Sierengowski

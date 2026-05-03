@@ -78,6 +78,116 @@ if [[ -n "${NYXUS_INTEL_SHA256:-}" ]]; then
   ok "SHA-256 matches NYXUS_INTEL_SHA256 — verified"
 fi
 
+# ── stage NYXUS chrome (Phase 2: configs + GTK apps + wallpapers + scripts)
+# Single source of truth: artifacts/api-server/nyxus-scripts/
+# This is what makes the live ISO actually feel like NYXUS instead of vanilla
+# Hyprland. Copies the full chrome layer into airootfs/ so mkarchiso bakes it
+# into the squashfs. Idempotent — safe to re-run.
+step "stage NYXUS chrome (configs, GTK apps, wallpapers, scripts)"
+NS="${REPO_ROOT}/artifacts/api-server/nyxus-scripts"
+SKEL="${PROFILE_DIR}/airootfs/etc/skel"
+OPT_NYXUS="${PROFILE_DIR}/airootfs/opt/nyxus"
+WALLS_USER="${SKEL}/.config/hypr/walls"
+WALLS_SYS="${PROFILE_DIR}/airootfs/usr/share/backgrounds/nyxus"
+LBIN="${PROFILE_DIR}/airootfs/usr/local/bin"
+APPS="${PROFILE_DIR}/airootfs/usr/share/applications"
+
+# Wipe & recreate so we never inherit stale files from a prior bake.
+rm -rf "${SKEL}/.config" "${OPT_NYXUS}" "${WALLS_SYS}"
+mkdir -p \
+  "${SKEL}/.config/hypr" \
+  "${SKEL}/.config/waybar" \
+  "${SKEL}/.config/dunst" \
+  "${SKEL}/.config/rofi" \
+  "${SKEL}/.config/wlogout" \
+  "${SKEL}/.config/alacritty" \
+  "${OPT_NYXUS}" \
+  "${WALLS_USER}" \
+  "${WALLS_SYS}" \
+  "${LBIN}" \
+  "${APPS}"
+
+# ── Configs → /etc/skel/.config/ ────────────────────────────────────────
+install -m 0644 "${NS}/hyprland.conf"        "${SKEL}/.config/hypr/hyprland.conf"
+install -m 0644 "${NS}/hyprlock.conf"        "${SKEL}/.config/hypr/hyprlock.conf"
+install -m 0644 "${NS}/hypridle.conf"        "${SKEL}/.config/hypr/hypridle.conf"
+install -m 0644 "${NS}/waybar-config.json"   "${SKEL}/.config/waybar/config"
+install -m 0644 "${NS}/waybar-style.css"     "${SKEL}/.config/waybar/style.css"
+install -m 0644 "${NS}/nyxus-dunstrc"        "${SKEL}/.config/dunst/dunstrc"
+install -m 0644 "${NS}/rofi-config.rasi"     "${SKEL}/.config/rofi/config.rasi"
+install -m 0644 "${NS}/rofi-nyxus.rasi"      "${SKEL}/.config/rofi/nyxus.rasi"
+install -m 0644 "${NS}/rofi-startmenu.rasi"  "${SKEL}/.config/rofi/startmenu.rasi"
+install -m 0644 "${NS}/wlogout-style.css"    "${SKEL}/.config/wlogout/style.css"
+install -m 0644 "${NS}/wlogout-layout"       "${SKEL}/.config/wlogout/layout"
+install -m 0644 "${NS}/alacritty.toml"       "${SKEL}/.config/alacritty/alacritty.toml"
+ok "configs: hypr / waybar / dunst / rofi / wlogout / alacritty"
+
+# ── GTK apps + chrome library + helpers → /opt/nyxus/ ───────────────────
+# Plus skel symlink ~/.nyxus → /opt/nyxus so hyprland.conf keybinds (which
+# launch python3 ~/.nyxus/nyxus_*.py to stay compatible with the
+# download-portal install flow that uses ~/.nyxus/) work on the live ISO.
+install -m 0644 "${NS}"/nyxus_*.py "${OPT_NYXUS}/"
+ln -sfn /opt/nyxus "${SKEL}/.nyxus"
+ok "GTK apps: $(ls "${OPT_NYXUS}"/*.py | wc -l) python files in /opt/nyxus/ (~/.nyxus → /opt/nyxus symlink in skel)"
+
+# ── Wallpapers → both user skel (matches hyprland.conf path) and system ─
+install -m 0644 "${NS}"/nyxus-bg-*.png            "${WALLS_USER}/"
+install -m 0644 "${NS}"/nyxus-sierengowski-*.png  "${WALLS_USER}/"
+install -m 0644 "${NS}"/nyxus-bg-*.png            "${WALLS_SYS}/"
+install -m 0644 "${NS}"/nyxus-sierengowski-*.png  "${WALLS_SYS}/"
+ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyxus/ + skel"
+
+# ── Helper scripts → /usr/local/bin/ ────────────────────────────────────
+install -m 0755 "${NS}/wallpaper-rotate.sh"  "${LBIN}/wallpaper-rotate"
+install -m 0755 "${NS}/waybar-stats.sh"      "${LBIN}/waybar-stats"
+install -m 0755 "${NS}/waybar-ticker.sh"     "${LBIN}/waybar-ticker"
+ok "helpers: wallpaper-rotate / waybar-stats / waybar-ticker"
+
+# ── App launchers + .desktop entries ────────────────────────────────────
+# mod-name : Display Name : tooltip
+APPS_LIST=(
+  "notepad:Notepad:NYXUS markdown notepad"
+  "stickies:Stickies:Sticky notes pinned to your desktop"
+  "sysmon_gtk:System Monitor:Real-time system metrics"
+  "settings:Settings:System & app preferences"
+  "control:Control:Quick toggles & launchers"
+  "weather:Weather:Local conditions & forecast"
+  "terminal:Terminal:NYXUS-themed Alacritty wrapper"
+  "quicksettings:Quick Settings:Action Center / quick toggles"
+  "launcher:Launcher:Application launcher"
+  "powermenu:Power Menu:Lock / suspend / restart / shut down"
+  "screenshot:Screenshot:Region & full-screen capture"
+  "doctor:Doctor:NYXUS health audit"
+)
+for entry in "${APPS_LIST[@]}"; do
+  IFS=':' read -r mod name comment <<< "${entry}"
+  # Friendly bin name: nyxus_sysmon_gtk → nyxus-sysmon (special-case),
+  # everything else → nyxus-<mod with underscores → dashes>.
+  if [[ "${mod}" == "sysmon_gtk" ]]; then
+    bin_name="nyxus-sysmon"
+  else
+    bin_name="nyxus-${mod//_/-}"
+  fi
+  cat > "${LBIN}/${bin_name}" <<LAUNCHER
+#!/usr/bin/env bash
+# NYXUS ${name} launcher — Copyright © 2026 Joseph Sierengowski
+exec python3 /opt/nyxus/nyxus_${mod}.py "\$@"
+LAUNCHER
+  chmod 0755 "${LBIN}/${bin_name}"
+  cat > "${APPS}/io.nyxus.${mod}.desktop" <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=NYXUS ${name}
+Comment=${comment}
+Exec=/usr/local/bin/${bin_name}
+Icon=preferences-system
+Categories=System;Utility;
+Terminal=false
+StartupNotify=true
+DESKTOP
+done
+ok "launchers + desktop entries: ${#APPS_LIST[@]} apps"
+
 # ── populate airootfs/opt/nyxus-intel ────────────────────────────────────
 step "stage Phantom into airootfs/opt/nyxus-intel/"
 INSTALL_DIR="${PROFILE_DIR}/airootfs/opt/nyxus-intel"
