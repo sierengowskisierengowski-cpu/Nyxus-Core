@@ -9073,9 +9073,9 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
    provides the rainbow ink; this rule layers a WHITE glow halo on top
    so every letter punches off the pure-black hero strip. */
 .nyx-hero-title {
-    text-shadow: 0 0 4px  rgba(255,255,255,0.95),
-                 0 0 12px rgba(255,255,255,0.55),
-                 0 0 26px rgba(255,255,255,0.28),
+    text-shadow: 0 0 4px  rgba(255,255,255,0.55),
+                 0 0 12px rgba(255,255,255,0.32),
+                 0 0 26px rgba(255,255,255,0.18),
                  0 0 40px rgba(255,0,255,0.35);
     font-size: 32px; font-weight: bold; letter-spacing: 1.5px; }
 .nyx-hero-sub { color: rgba(240,235,250,0.62); font-size: 14px;
@@ -9131,8 +9131,8 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 
 /* -- HEADLINES + META ------------------------------------------------- */
 .nyx-headline { color: #ff00ff;
-    text-shadow: 0 0 10px rgba(255,0,255,0.65),
-                 0 0 22px rgba(255,0,255,0.30);
+    text-shadow: 0 0 10px rgba(255,0,255,0.45),
+                 0 0 22px rgba(255,0,255,0.20);
     font-size: 24px; font-weight: bold; letter-spacing: 0.6px; }
 .nyx-meta { color: rgba(240,235,250,0.55); font-size: 12px;
     font-family: 'JetBrains Mono', monospace; letter-spacing: 0.4px; }
@@ -9141,7 +9141,7 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 .nyx-card { background-color: #000000;
     background-image: none;
     border: 1px solid rgba(255,0,255,0.40);
-    border-radius: 8px;
+    border-radius: 6px;
     padding: 4px 0 10px 0;
     box-shadow: 0 4px 22px -10px rgba(255,0,255,0.25); }
 .nyx-card:hover {
@@ -9213,7 +9213,7 @@ stack, frame, .background, .view, .nyx-bg > box {
 .nyx-toast { background-color: rgba(255,0,255,0.18);
     color: #ffffff; padding: 6px 14px;
     border: 1px solid rgba(255,0,255,0.55);
-    border-radius: 8px; font-size: 14px; }
+    border-radius: 6px; font-size: 14px; }
 scrollbar slider { background-color: rgba(255,0,255,0.30);
     border: 1px solid rgba(255,0,255,0.45); border-radius: 6px;
     min-width: 8px; min-height: 8px; }

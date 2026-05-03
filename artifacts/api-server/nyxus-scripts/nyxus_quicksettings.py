@@ -541,7 +541,7 @@ window#actioncenter > * {
     font-size: 22px;
     font-weight: bold;
     letter-spacing: 5px;
-    text-shadow: 0 0 14px rgba(255, 40, 180, 0.70);
+    text-shadow: 0 0 10px rgba(255, 40, 180, 0.45);
 }
 .ac-time { color: rgba(220, 200, 240, 0.85); font-size: 16px; }
 
@@ -557,13 +557,13 @@ window#actioncenter > * {
     border: none;
     padding: 2px 6px;
 }
-.ac-link:hover { color: #ee88ff; text-shadow: 0 0 8px rgba(255, 40, 180, 0.70); }
+.ac-link:hover { color: #ee88ff; text-shadow: 0 0 6px rgba(255, 40, 180, 0.45); }
 
 .ac-notiflist { background: transparent; min-height: 60px; }
 .ac-notif-row {
     background: rgba(20, 16, 36, 0.95);
     border: 2px solid rgba(255, 40, 180, 0.18);
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 8px 12px;
     margin-bottom: 4px;
 }
@@ -580,7 +580,7 @@ window#actioncenter > * {
 .ac-tile {
     background: rgba(20, 16, 36, 0.96);
     border: 2px solid rgba(255, 40, 180, 0.22);
-    border-radius: 3px;
+    border-radius: 4px;
     color: rgba(200, 180, 230, 0.85);
     min-width: 78px;
     min-height: 70px;
@@ -634,8 +634,8 @@ scale highlight { background: #cc44ff; border-radius: 2px; }
 scale slider    {
     background: #cc44ff;
     min-width: 16px; min-height: 16px;
-    border-radius: 2px; border: none;
-    box-shadow: 0 0 10px rgba(255, 40, 180, 0.70);
+    border-radius: 4px; border: none;
+    box-shadow: 0 0 8px rgba(255, 40, 180, 0.45);
     margin: -5px 0;
 }
 
@@ -645,7 +645,7 @@ button.ac-chev {
     color: rgba(200, 180, 230, 0.70);
     background: transparent;
     border: 2px solid rgba(255, 40, 180, 0.20);
-    border-radius: 2px;
+    border-radius: 4px;
     min-width: 26px;
     min-height: 22px;
     padding: 0 6px;
@@ -698,7 +698,7 @@ button.ac-chev:hover { color: #cc44ff; border-color: #cc44ff; }
 button.ac-btn {
     background: rgba(20, 16, 36, 0.96);
     border: 2px solid rgba(255, 40, 180, 0.30);
-    border-radius: 2px;
+    border-radius: 4px;
     color: #e8e0f5;
     font-size: 14px;
     padding: 6px 14px;
@@ -717,7 +717,7 @@ entry {
     background: rgba(10, 8, 20, 0.99);
     color: #f0e8ff;
     border: 2px solid rgba(255, 40, 180, 0.30);
-    border-radius: 2px;
+    border-radius: 4px;
     padding: 6px 10px;
     font-size: 14px;
 }

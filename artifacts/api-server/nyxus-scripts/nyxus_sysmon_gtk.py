@@ -417,7 +417,7 @@ window { background-color: #08080e; color: rgba(232,224,245,0.92); }
     color: rgba(180,160,220,0.75);
     border: 1px solid rgba(255,0,255,0.14);
     border-left: 5px solid transparent;
-    border-radius: 5px;
+    border-radius: 4px;
     padding: 13px 14px 13px 15px;
     margin: 3px 8px;
     font-size: 17px; font-weight: bold; letter-spacing: 2px; min-height: 0;
@@ -450,7 +450,7 @@ window { background-color: #08080e; color: rgba(232,224,245,0.92); }
 .search-e {
     background-color: rgba(255,255,255,0.06);
     color: rgba(232,224,245,0.88);
-    border: 2px solid rgba(255,0,255,0.30); border-radius: 5px;
+    border: 2px solid rgba(255,0,255,0.30); border-radius: 4px;
     padding: 5px 12px; font-size: 15px; box-shadow: none; caret-color: #ff00ff;
 }
 .search-e text { background-color: transparent; }
@@ -459,7 +459,7 @@ window { background-color: #08080e; color: rgba(232,224,245,0.92); }
 /* ── Process action buttons ──────────────────────────────────────────── */
 .kill-btn {
     background-color: rgba(255,50,30,0.18); color: #ff6655;
-    border: 2px solid rgba(255,80,50,0.45); border-radius: 5px;
+    border: 2px solid rgba(255,80,50,0.45); border-radius: 4px;
     padding: 5px 12px; font-size: 14px; font-weight: bold;
 }
 .kill-btn:hover { background-color: rgba(255,80,50,0.32); }
