@@ -7114,8 +7114,9 @@ class SettingsRow(Gtk.DrawingArea):
             draw_caveat(cr, w-48, (h-18)/2, "★", size=14,
                         color=(*ACCENT_GOLD, 0.95))
         # chevron ›
+        chev_col = self.color if self.active else INK_DIM
         draw_caveat(cr, w-22, (h-22)/2, "›", size=20,
-                    color=(*self.color if self.active else INK_DIM, 0.85))
+                    color=(*chev_col, 0.85))
 
 
 class CategoryTile(Gtk.DrawingArea):
@@ -7290,7 +7291,7 @@ window, .nyx-bg { background-color: #0a0a12; color: #f0eef8; }
     padding: 0; min-height: 40px; }
 .nyx-settings-list row:hover { background-color: transparent; }
 .nyx-settings-list row:selected { background-color: transparent; }
-/* ── Win10-style left sidebar nav ────────────────────────────────────── */
+/* -- Win10-style left sidebar nav ------------------------------------- */
 .nyx-sidebar { background-color: #06060c;
     border-right: 1px solid rgba(255,0,255,0.28);
     padding: 6px 0; min-width: 220px; }
@@ -7300,7 +7301,7 @@ window, .nyx-bg { background-color: #0a0a12; color: #f0eef8; }
     padding: 10px 14px 4px 14px; }
 .nyx-content { background-color: transparent; padding: 0; }
 .nyx-graffiti-host { background-color: #0a0a12; }
-/* ── user account chip (top-right) ───────────────────────────────────── */
+/* -- user account chip (top-right) ------------------------------------ */
 .nyx-user-chip { background-color: transparent;
     border: 1px solid rgba(255,0,255,0.40); border-radius: 999px;
     padding: 4px 12px 4px 4px; }
