@@ -66,7 +66,7 @@ def rainbow_markup(text: str) -> str:
 
 
 # ── Graffiti image background (hand-painted walls, page-aware) ──────────────
-_IMAGE_POOL = [f"nyxus-graffiti-{i:02d}.png" for i in range(1, 20)]
+_IMAGE_POOL = [f"nyxus-graffiti-{i:02d}.png" for i in range(1, 25)]
 _IMAGE_BASE_URL = "https://nyxus-core.replit.app/api/download/nyxus"
 _IMAGE_CACHE_DIR = Path.home() / ".cache" / "nyxus" / "graffiti"
 
@@ -83,7 +83,7 @@ _PAGE_IMAGE_OVERRIDE = {
     "printers":      8,  "gaming":        3,  "developer":     8,
     "wallpaper":    10,  "fonts":         6,  "about":         0,
     # other NYXUS apps
-    "_notepad":      6,   # purple lettering -- writerly
+    "_notepad":      6,   # mint lettering -- writerly
     "_stickies":    10,   # rainbow on brick
     "_sysmon":       8,   # MAN/STREET tags -- developer feel
     "_control":     11,   # neon eye -- watchful
