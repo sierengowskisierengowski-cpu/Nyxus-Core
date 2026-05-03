@@ -1,0 +1,948 @@
+APP 7 — NYXUS SETTINGS — Full rebuild.
+This needs to be completely redone properly.
+Much more in depth than current version.
+Think of every setting a real OS like 
+Windows or macOS would have — we need 
+all of that and more.
+
+NAVIGATION:
+- Main screen shows all categories as large
+  clickable tiles with icons
+- Click any category — opens full screen
+  with all settings for that category only
+- Back button always visible top left
+- Breadcrumb at top always shows location:
+  Settings > Display > Resolution
+- Search bar at top searches every setting
+  across all categories simultaneously
+  Results show with category breadcrumb
+- Recently changed settings on main screen
+- Favorite settings — star any setting
+  to pin it to top of main screen
+- All changes apply immediately
+- Restart required indicator shown when
+  a change needs restart to take effect
+
+CATEGORY 1 — USER ACCOUNT AND PROFILE:
+- Profile picture — large circular display
+  Click to change — file picker opens
+  Take photo with webcam option
+  Crop and adjust photo
+  Remove photo option
+- Full name — click to edit inline
+- Username — shown, click to edit
+- Email address — add and verify
+- Bio or description — optional
+- Account type — standard or admin
+- Password:
+  Change password
+  Password strength indicator
+  Require password on wake toggle
+  Password hint
+- PIN — set a shorter PIN for quick unlock
+- Automatic login toggle
+- Profile color — accent color for this user
+- Language preference per user
+- Timezone per user
+- Account created date shown
+- Last login shown
+- Linked accounts — GitHub, Google etc
+- Export account data
+- Delete account — with confirmation
+
+CATEGORY 2 — WALLPAPER AND BACKGROUNDS:
+- Full grid view of all installed wallpapers
+  Large thumbnails, hover to preview full
+- Current wallpaper shown prominently
+- Set wallpaper button
+- Per workspace wallpaper:
+  Each workspace shown with its wallpaper
+  Click to change per workspace
+- Slideshow mode:
+  Toggle on/off
+  Interval — 5min 15min 30min 1hr custom
+  Order — sequential or random
+  Transition effect — fade, slide, zoom
+- Add wallpaper:
+  From file picker
+  From URL
+  From online wallpaper browser
+- Wallpaper fit options:
+  Fill, fit, stretch, center, tile
+- Blur amount slider — for lock screen
+- Dark and light wallpaper pair —
+  auto switch based on time of day
+- Download more wallpapers button
+- Wallpaper history — recently used
+- Delete wallpaper from collection
+- Organize into folders or collections
+- Set as lock screen wallpaper separately
+- Set as login screen wallpaper separately
+
+CATEGORY 3 — FONTS:
+- System font — family and size
+- Interface font — for UI elements
+- Document font — for reading
+- Monospace font — for terminal and code
+  JetBrains Mono Nerd Font default
+- Handwritten font — for NYXUS apps
+- Font size — global scale slider
+- Font weight — thin normal bold
+- Font rendering:
+  Antialiasing — none grayscale rgba
+  Hinting — none slight medium full
+  Subpixel order — RGB BGR VRGB VBGR
+- Line spacing adjustment
+- Letter spacing adjustment
+- Install new font — drag and drop or
+  file picker, installs to system
+- Browse installed fonts — full list
+  Preview any font with sample text
+  Custom preview text input
+- Remove installed font
+- Import font from Google Fonts
+- Export font list
+- Reset fonts to NYXUS defaults
+
+CATEGORY 4 — THEMES AND APPEARANCE:
+- NYXUS theme selector — current and available
+- Color scheme:
+  Dark mode toggle
+  Light mode toggle
+  Auto by time of day schedule
+- Accent color — full color picker
+  Preset colors shown as swatches
+- Background color — separate from wallpaper
+- Window style:
+  Border radius slider
+  Shadow intensity slider
+  Transparency level slider
+  Blur effect toggle and intensity
+  Animation speed — off slow normal fast
+  Button layout — close min max positions
+- Icon theme selector — preview shown
+- Cursor theme selector:
+  Preview shown
+  Cursor size slider
+  Cursor color if supported
+- GTK theme fine tuning
+- Window decorations style
+- Panel and bar appearance
+- Login screen theme
+- Lock screen theme
+- Boot splash theme
+- Terminal color scheme
+- Save custom theme — name and export
+- Import theme from file
+- Share theme
+
+CATEGORY 5 — DISPLAY AND MONITORS:
+- Detect all connected monitors
+- Visual monitor arrangement — drag monitors
+- Per monitor settings:
+  Resolution — all supported listed
+  Refresh rate — all supported listed
+  Scale — 100% 125% 150% 175% 200%
+  Orientation — 0 90 180 270 degrees
+  Color depth
+  HDR toggle if supported
+  Color profile — sRGB Display P3 custom
+  Brightness slider
+  Contrast slider
+  Gamma adjustment
+  Blue light filter intensity and schedule
+  Night mode schedule and color temperature
+- Primary monitor selector
+- Mirror displays toggle
+- Extend displays configuration
+- Fractional scaling toggle
+- Variable refresh rate toggle
+- Overscan adjustment
+- Display power management:
+  Screen blank timeout on battery
+  Screen blank timeout on AC
+  Screen off vs suspend difference
+- Screensaver:
+  Enable toggle
+  Style selector — blank clock art etc
+  Preview button
+  Timeout slider
+  Require password after screensaver
+- HiDPI awareness settings
+- Multiple monitor workspace behavior
+
+CATEGORY 6 — SOUND AND AUDIO:
+- Output device selector all detected
+- Output volume slider with mute toggle
+- Per application volume:
+  Every running app listed separately
+  Individual volume and mute per app
+- Balance slider left right
+- Stereo enhancement toggle
+- Bass boost toggle and level
+- Input device selector all microphones
+- Input volume slider with mute
+- Input level meter live visual
+- Noise cancellation toggle
+- Echo cancellation toggle
+- System sounds:
+  Toggle each sound event on/off
+  Volume per event
+- Alert sound selector with preview
+- Startup sound toggle
+- Shutdown sound toggle
+- Over amplification above 100% toggle
+- Equalizer 10 band with presets:
+  Flat, Bass Boost, Treble Boost,
+  Voice, Music, Movie, Gaming, Custom
+- Save custom EQ presets
+- Audio profiles save and switch
+- HDMI audio output control
+- Bluetooth audio device management
+- Audio latency settings
+- Sample rate and bit depth
+- Audio server status PipeWire
+
+CATEGORY 7 — NETWORK:
+- WiFi on/off toggle
+- Available networks list:
+  Signal strength, security type, speed
+  Known networks marked
+  Connect button per network
+- Connect to hidden network
+- Known networks management:
+  Forget network
+  Auto connect toggle per network
+  View password of saved network
+- WiFi hotspot:
+  Create hotspot
+  Name and password
+  Band selection 2.4 or 5GHz
+  Connected devices shown
+  QR code to share
+- Ethernet:
+  All interfaces listed with status
+  Speed and duplex shown
+- Per connection advanced settings:
+  IP — DHCP or manual static
+  DNS servers primary secondary custom
+  Gateway
+  IPv6 — DHCP SLAAC manual disabled
+  MTU setting
+  DNS over HTTPS per connection
+  Connection sharing
+  MAC address clone or randomize
+- VPN — WireGuard:
+  Connection status shown prominently
+  Connect disconnect toggle
+  Active connection details
+  Add new peer wizard
+  Remove peer
+  Generate QR code for phone connection
+  Import config file
+  Export config file
+  Key management view and regenerate
+  Connection log
+  Kill switch toggle
+  DNS leak prevention
+- Proxy settings:
+  No proxy
+  Manual proxy HTTP HTTPS SOCKS
+  Automatic PAC URL
+  Per app proxy exceptions
+- Firewall UFW:
+  Master on/off toggle prominent
+  Incoming policy default
+  Outgoing policy default
+  Rules list in plain English
+  Add rule wizard — walks through it
+  Delete rule with confirmation
+  Preset profiles:
+    Home, Work, Public, Lockdown, Custom
+  Application rules
+  Log viewer
+- Network diagnostics:
+  Ping to any host
+  Traceroute
+  DNS lookup
+  Port check
+  Speed test built in
+- Bandwidth monitor per interface live
+- Data usage tracking
+
+CATEGORY 8 — BLUETOOTH:
+- Bluetooth on/off toggle prominent
+- Discoverable toggle with countdown timer
+- My devices — paired devices list:
+  Connect disconnect per device
+  Trust toggle
+  Auto connect toggle
+  Rename device
+  Remove paired device
+  Device type icon shown
+  Battery level if supported
+- Find new devices — scan and pair
+- File transfer:
+  Send file to device
+  Receive files from device
+  Transfer history
+- Bluetooth audio:
+  Audio quality selector
+  Codec selection if supported
+  Auto switch to bluetooth on connect
+- Bluetooth power saving settings
+- Bluetooth version and adapter info
+
+CATEGORY 9 — KEYBOARD:
+- Keyboard layout:
+  Current layout shown
+  Add layout
+  Remove layout
+  Switch between layouts shortcut
+  Layout indicator in bar
+- Input method editor settings
+- Compose key selector
+- Caps Lock behavior:
+  Caps Lock normal
+  Caps Lock as Ctrl
+  Caps Lock as Escape
+  Caps Lock disabled
+- Key repeat:
+  Delay slider — ms before repeat starts
+  Speed slider — repeat rate
+- Keyboard shortcuts full list:
+  All Hyprland window management binds
+  All NYXUS app shortcuts
+  System shortcuts volume brightness etc
+  Custom shortcut creator:
+    Name the shortcut
+    Pick the key combination
+    Choose the action or command
+  Conflict detector warns on duplicates
+  Import shortcuts from file
+  Export shortcuts to file
+  Reset category to defaults
+- Special character input
+- NumLock default on login toggle
+- Keyboard backlight if available:
+  Brightness slider
+  Auto dim timeout
+  Color if RGB keyboard
+
+CATEGORY 10 — MOUSE AND TOUCHPAD:
+- Mouse speed slider
+- Mouse acceleration:
+  Adaptive
+  Flat no acceleration
+  None
+- Natural scrolling toggle
+- Scroll speed slider
+- Primary button left or right hand
+- Middle click behavior selector
+- Double click speed with test area
+- Mouse precision enhancement
+- Touchpad:
+  On/off toggle
+  Tap to click toggle
+  Tap and drag toggle
+  Two finger scroll toggle
+  Two finger right click toggle
+  Three finger gestures configure each
+  Four finger gestures configure each
+  Palm rejection toggle and sensitivity
+  Scroll speed separate from mouse
+  Natural scrolling separate from mouse
+  Disable touchpad while typing toggle
+- Pointer:
+  Size slider
+  Color if supported
+  Trail effect toggle
+  Hide when typing toggle
+- Additional mouse buttons configure
+
+CATEGORY 11 — POWER:
+- Battery status large prominent display:
+  Percentage
+  Time remaining estimated
+  Charging status
+  Battery health percentage
+  Charge cycles count
+  Battery temperature
+- Battery charge limit:
+  Slider 60% to 100%
+  MSI specific hardware support
+  Recommended limit shown
+- Power profiles prominent:
+  Silent — fan quiet, power save
+  Balanced — everyday use
+  Performance — full power
+  Beast Mode — maximum everything
+  Active profile shown with indicator
+  Quick switch large buttons
+  Auto switch on AC vs battery option
+- Screen and display power:
+  Screen blank timeout on battery slider
+  Screen blank timeout on AC slider
+  Lock after blank toggle
+- Suspend and hibernate:
+  Suspend timeout on battery
+  Suspend timeout on AC
+  Hibernate option if supported
+  Hybrid sleep option
+- Power button behavior selector:
+  Suspend, hibernate, shutdown, nothing
+- Lid close behavior:
+  On battery — suspend, hibernate, nothing
+  On AC — suspend, hibernate, nothing
+  With external monitor connected option
+- Wake on LAN toggle
+- Wake on keyboard or mouse toggle
+- USB power management
+- CPU power management:
+  Governor shown — links to NYXUS Control
+  Boost shown — links to NYXUS Control
+- GPU power management link to Control
+- Power usage history graph 24 hours
+- Estimated battery life per profile
+- Power saving tips shown
+
+CATEGORY 12 — USERS AND ACCOUNTS:
+- Current user card prominent at top:
+  Profile picture large
+  Full name
+  Username
+  Account type
+  Last login
+- Change profile picture
+- Change full name
+- Change username
+- Change password with strength meter
+- Change account type admin or standard
+- YubiKey management:
+  Connected YubiKey shown — serial number
+  FIDO2 status and PIN management
+  GPG key status and management
+  PIV certificate management
+  Configure as login method
+  Configure as sudo authentication
+  Test YubiKey button
+- Login options:
+  Password
+  PIN
+  YubiKey
+  Auto login toggle
+  Login screen user list toggle
+- Other accounts on system:
+  List all accounts
+  Add new user account wizard
+  Remove user account
+  Change other user password admin only
+  Set account type for others
+- Groups management
+- Parental controls per account:
+  Content filtering
+  Screen time limits
+  App blocking
+  Safe search
+  Usage reports
+  Bedtime lock
+
+CATEGORY 13 — PRIVACY AND SECURITY:
+- Screen lock:
+  Auto lock timeout slider
+  Lock on suspend toggle
+  Lock on lid close toggle
+  Lock screen notifications — show or hide
+  Require password immediately or delay
+- Location services:
+  Master toggle
+  Per app location permission
+- Camera:
+  Per app camera permission list
+  Quick disable all cameras toggle
+- Microphone:
+  Per app microphone permission
+  Quick mute all toggle
+- File access per app permissions
+- App permissions full overview
+- Activity and history:
+  Activity log toggle on/off
+  Clear activity history
+  Recent files toggle
+  Clear recent files
+  Clipboard history clear
+- Diagnostics:
+  Error reporting toggle off by default
+  Crash reports toggle
+- Temporary files:
+  Size shown
+  Clear now button
+  Auto clear schedule
+- AppArmor:
+  Status enabled/disabled
+  Loaded profiles list
+  Enable/disable per profile
+- Secure boot status
+- Full disk encryption status LUKS info
+- TPM status if available
+- GPG keyring:
+  All keys listed
+  Import key
+  Export key
+  Generate new key
+  Revoke key
+  Key details expiry trust
+- SSH keys:
+  All keys listed
+  Generate new key pair
+  Import existing key
+  Delete key
+  Copy public key
+  Authorized keys management
+- Certificate manager
+- Firewall quick link to NYXUS Security
+- Security audit quick link to NYXUS SAGE
+- Audit log viewer last security events
+- Failed login attempts shown
+- Active sessions shown
+
+CATEGORY 14 — APPLICATIONS:
+- All installed applications list:
+  Icon name size install date
+  Search and filter
+  Sort by name size date
+- Default applications:
+  Web browser
+  Email client
+  File manager
+  Terminal — NYXUS Terminal default
+  Text editor — NYXUS Notepad default
+  Music player
+  Video player
+  Image viewer
+  PDF viewer
+  Archive manager
+  Calendar
+  Calculator
+  Per file type custom association
+- Startup applications:
+  List all that start on login
+  Toggle each on/off
+  Add new startup app
+  Remove startup app
+  Delay setting per app
+- File type associations:
+  All file types listed
+  Change default app per type
+  Add custom association
+- Application permissions overview:
+  Which apps access camera
+  Which apps access microphone
+  Which apps access location
+  Which apps run in background
+- Uninstall application from here
+- Storage usage per app:
+  Cache size
+  Data size
+  Clear cache per app
+- Flatpak applications:
+  Installed list
+  Update all
+  Remove
+  Permissions per flatpak
+- AUR packages quick access
+
+CATEGORY 15 — STORAGE:
+- Visual storage overview:
+  All drives shown as visual bars
+  Used vs free clearly shown
+  Color coded by category:
+    System, Apps, Documents, Downloads,
+    Media, Other
+- Per drive detailed info:
+  Model and manufacturer
+  Total size
+  Used and free
+  File system type
+  Mount point
+  Health status SMART data:
+    Overall health pass/fail
+    Temperature
+    Power on hours
+    Reallocated sectors
+    Pending sectors
+    Full SMART report expandable
+- Partitions list per drive
+- Mount and unmount volumes
+- Auto mount settings
+- Format drive wizard
+- External drive management
+- Network drives:
+  Map SMB share
+  Map NFS share
+  Map SSHFS
+  Saved network drives list
+  Connect disconnect per drive
+- Disk cleanup:
+  Scan for large files
+  Scan for duplicate files
+  Scan for old downloads
+  Clear package cache
+  Clear thumbnail cache
+  Clear trash
+  Results shown with sizes
+  Select and delete
+- Timeshift snapshots:
+  Create snapshot now
+  Browse all snapshots
+  Restore from snapshot wizard
+  Delete old snapshots
+  Snapshot schedule configure
+  Storage used by snapshots shown
+- BTRFS subvolumes if applicable
+
+CATEGORY 16 — NOTIFICATIONS:
+- Master on/off toggle prominent
+- Do not disturb:
+  Toggle
+  Schedule — from time to time
+  During screen share auto enable
+  During gaming auto enable
+- Lock screen notifications:
+  Show all
+  Show without content
+  Hide all
+- Per application settings:
+  Every installed app listed
+  On/off per app
+  Sound on/off per app
+  Popup on/off per app
+  Badge count on/off per app
+  Priority level per app — low normal high
+  Per app notification style
+- Notification appearance:
+  Position — top right, top left, etc
+  Duration slider
+  Size — compact normal large
+  Transparency slider
+  Stack limit — max shown at once
+- Notification sounds:
+  Default sound selector with preview
+  Volume separate from system volume
+- Notification history:
+  All recent notifications listed
+  Search notifications
+  Clear all history
+  Auto clear after X days setting
+- App notification groups
+- Emergency alerts toggle
+
+CATEGORY 17 — DATE AND TIME:
+- Current date and time shown large
+  Live updating every second
+- Automatic time sync toggle NTP
+- NTP server configuration:
+  Default servers shown
+  Add custom NTP server
+  Test server button
+- Manual date and time if auto off:
+  Date picker
+  Time picker
+  Apply button
+- Timezone:
+  Visual world map — click to select
+  Search by city or timezone name
+  Current timezone shown prominently
+  Offset shown
+- Time format:
+  12 hour with AM/PM
+  24 hour
+- Date format selector:
+  MM/DD/YYYY US
+  DD/MM/YYYY EU
+  YYYY/MM/DD ISO
+  Custom format
+- First day of week Sunday or Monday
+- Show week numbers toggle
+- Show seconds in clock toggle
+- Additional world clocks:
+  Add city
+  Remove city
+  All shown in notification area
+
+CATEGORY 18 — LANGUAGE AND REGION:
+- System language selector:
+  All available languages listed
+  Search languages
+  Install additional languages
+  Apply language change
+- Regional formats:
+  Numbers — decimal and thousands separator
+  Currency — symbol and format
+  Dates — short long full formats
+  Time — 12 or 24 hour
+  Measurements — metric or imperial
+  Paper size — A4 or Letter
+- Input sources:
+  All keyboard layouts listed
+  Add layout
+  Remove layout
+  Preview layout on keyboard diagram
+  Shortcut to switch layouts
+- Spell check:
+  Languages for spell check
+  Add language
+  Custom dictionary
+- Text to speech:
+  Voice selector
+  Speed slider
+  Pitch slider
+  Volume slider
+  Test button
+
+CATEGORY 19 — ACCESSIBILITY:
+- Vision:
+  High contrast mode toggle
+  Large text toggle with size slider
+  Reduce motion toggle
+  Screen zoom magnifier:
+    Toggle on/off
+    Zoom level slider
+    Follow mouse or keyboard focus
+  Color filters for color blindness:
+    None, grayscale, protanopia,
+    deuteranopia, tritanopia
+  Screen reader toggle Orca
+    Voice settings
+    Speed settings
+    Verbosity settings
+- Hearing:
+  Visual alerts flash screen toggle
+  Mono audio toggle
+  Volume normalization
+- Motor:
+  Sticky keys toggle:
+    Beep on modifier
+    Disable when two keys pressed
+  Slow keys toggle and delay
+  Bounce keys toggle and delay
+  Toggle keys beep toggle
+  Mouse keys numpad control:
+    Toggle
+    Speed slider
+    Acceleration
+  Click assist:
+    Simulated secondary click
+    Hover click toggle and delay
+  Pointer size large toggle
+  Shake to locate cursor toggle
+- Keyboard accessibility full settings
+- Switch access for assistive devices
+- Braille display support
+
+CATEGORY 20 — GAMING:
+- GameMode status running/stopped toggle
+- Performance overlay:
+  FPS counter toggle
+  MangoHud toggle
+  MangoHud configuration:
+    Which metrics to show
+    Position on screen
+    Size and opacity
+- Controllers:
+  All connected controllers listed
+  Controller type shown
+  Battery level shown
+  Test controller — button tester visual
+  Mapping configure per controller
+  Calibration wizard
+  8BitDo Pro 3 specific settings:
+    Firmware version
+    Mode selection
+    Rumble settings
+    Trigger sensitivity
+  Dead zone adjustment
+  Button remapping
+- Steam settings:
+  Launch options helper
+  Proton version management
+- Lutris integration quick access
+- Wine prefix management:
+  List prefixes
+  Create new prefix
+  Delete prefix
+  Configure prefix
+- Game mode power profile:
+  Auto switch to Beast Mode when game launches
+  Auto switch back when game closes
+- Notification suppression during games
+- Screen recording during games toggle
+- GPU overclocking link to NYXUS Control
+
+CATEGORY 21 — DEVELOPER:
+- System information full summary:
+  Machine make and model
+  CPU — model cores threads speed
+  GPU — model VRAM driver version
+  RAM — total used available
+  Storage — all drives
+  Network — interfaces MAC addresses
+  OS — version kernel desktop
+  Uptime
+  Copy all to clipboard button
+- Environment variables:
+  All current variables listed
+  Search variables
+  Add new variable
+  Edit existing variable
+  Delete variable
+  Export as file
+- SSH server:
+  On/off toggle
+  Port configuration
+  Auth methods:
+    Password auth toggle
+    Key auth toggle
+    Root login toggle
+  Max auth tries
+  Connected clients shown live
+  Authorized keys management
+  Host keys management
+- Port management:
+  All open ports listed
+  Protocol TCP or UDP
+  Process using port shown
+  Open new port in firewall
+  Close port
+- Docker:
+  Daemon status on/off toggle
+  Running containers list
+  Start stop restart per container
+  Resource usage per container
+  Quick link to Portainer
+- Virtual machines if installed
+- Network interfaces technical:
+  All interfaces full details
+  IP addresses all versions
+  MAC address
+  MTU
+  RX TX statistics
+  Error counts
+- Kernel:
+  Current kernel version
+  Installed kernels list
+  Set default kernel
+  Kernel parameters sysctl:
+    All parameters listed
+    Search parameters
+    Edit parameter value
+    Apply immediately or on reboot
+  Loaded modules list
+    Load module
+    Unload module
+    Module information
+- System logs:
+  journalctl live viewer
+  Filter by service
+  Filter by priority
+  Search logs
+  Export logs
+  Clear old logs
+- Startup services systemd:
+  All services listed with status
+  Running/stopped/failed indicator
+  Enable/disable on boot per service
+  Start/stop/restart per service
+  View service logs
+  Edit service file
+- Cron jobs visual editor:
+  All cron jobs listed
+  Add new cron job with wizard
+  Edit existing job
+  Delete job
+  Test run job now
+  Next run time shown
+- Hosts file editor:
+  All entries listed
+  Add entry
+  Edit entry
+  Delete entry
+  Import hosts file
+  Export hosts file
+- DNS configuration:
+  Current DNS servers shown
+  Change DNS servers
+  DNS over HTTPS settings
+  Flush DNS cache button
+- GRUB bootloader:
+  Default boot entry
+  Timeout setting
+  Boot entries list
+  Edit boot parameters
+- Hardware information:
+  Full lshw output readable format
+  PCI devices
+  USB devices
+  Input devices
+  Audio devices
+  Export hardware report
+
+CATEGORY 22 — ABOUT NYXUS:
+- NYXUS logo centered at top
+- NYX and NYXUS names displayed
+- Version — v1.0.0
+- Build date
+- Hardware summary:
+  Machine model
+  CPU model and speed
+  GPU model
+  RAM total
+  Storage total
+- System summary:
+  Kernel version
+  Hyprland version
+  Desktop session
+  Display server Wayland
+  GPU driver version
+- Uptime shown live
+- NYXUS apps installed:
+  All apps listed with versions
+- Legal:
+  Copyright 2026 Joseph Sierengowski
+  All Rights Reserved
+  NYX-J5W-2026-SIERENGOWSKI-LOCKED
+- Check for updates button
+- Release notes expandable
+- System diagnostics:
+  Generate full system report button
+  Export report as PDF or markdown
+- Send bug report link to GitHub
+
+VISUAL STYLE:
+- Same style as all NYXUS apps
+- Hand drawn sketch borders on all panels
+- Handwritten font on category tiles,
+  section headers, and category titles
+- Regular font for all setting labels,
+  values, descriptions, and data
+- Main screen — large category tiles
+  with hand drawn icon and title
+- Inside category — clean list of settings
+  grouped into logical sub sections
+- Back button top left always visible
+- Breadcrumb navigation always shown
+- Search bar always at top
+- Opens at correct normal size
+- Resizable
+- Comes to front when clicked
+- Matching NYXUS app icon
+- Added to right side Waybar
+
+Every single setting must actually work
+and apply to the real system immediately.
+No placeholders anywhere.
+No broken settings.
+No fake toggles.
+Everything real and functional.
+Test every setting before confirming.
+Confirm complete with screenshot.
