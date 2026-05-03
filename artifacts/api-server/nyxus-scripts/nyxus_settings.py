@@ -42,6 +42,8 @@ Storage:  ~/.config/nyxus-settings/{settings.json, favorites.json}
 Logs:     /tmp/nyxus-settings.log
 """
 
+from __future__ import annotations
+
 __nyxid__ = "4e59582d4a35572d323032362d53494552454e474f57534b492d4c4f434b4544"
 
 def _nyx_integrity():
@@ -52,8 +54,6 @@ def _nyx_integrity():
         import sys as _sys; print(f"NYXUS SECURITY: {_e}", file=_sys.stderr)
 _nyx_integrity()
 
-
-from __future__ import annotations
 
 import json
 import logging
