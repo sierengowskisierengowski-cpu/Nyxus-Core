@@ -80,6 +80,8 @@ import cairo  # noqa: E402
 # ─────────────────────────────────────────────────────────────────────────────
 APP_ID    = "io.nyxus.settings"
 APP_NAME  = "NYXUS Settings"
+APP_TAGLINE = "Tune your hand-drawn desktop ecosystem"
+NYXUS_VERSION = "2026.05.01"
 WIN_W, WIN_H = 1280, 800
 
 CONFIG_DIR = Path.home() / ".config" / "nyxus-settings"
@@ -286,14 +288,20 @@ class SketchSeparator(Gtk.DrawingArea):
 class SketchSearchEntry(Gtk.Box):
     __gsignals__ = {"changed": (GObject.SignalFlags.RUN_FIRST, None, (str,))}
 
-    def __init__(self, *, placeholder="search settings…", color=NEON_PINK):
+    def __init__(self, *, placeholder="search settings…", color=NEON_PINK,
+                 width=320, height=28):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         self.color = color
-        self.set_size_request(320, 30)
+        self.set_size_request(width, height)
+        self.set_valign(Gtk.Align.CENTER)
+        self.set_vexpand(False)
         bg = Gtk.DrawingArea()
-        bg.set_hexpand(True); bg.set_vexpand(True)
+        bg.set_hexpand(True); bg.set_vexpand(False)
+        bg.set_size_request(width, height)
+        try: bg.set_content_width(width); bg.set_content_height(height)
+        except Exception: pass
         bg.set_draw_func(self._draw_bg)
-        ov = Gtk.Overlay(); ov.set_hexpand(True); ov.set_vexpand(True)
+        ov = Gtk.Overlay(); ov.set_hexpand(True); ov.set_vexpand(False)
         ov.set_child(bg)
         ent = Gtk.Entry(); ent.set_placeholder_text(placeholder)
         ent.set_has_frame(False)
@@ -3187,6 +3195,19 @@ class SettingsWindow(Gtk.ApplicationWindow):
 window, .nyx-bg { background-color: #0a0a12; color: #f0eef8; }
 .nyx-toolbar { background-color: rgba(10,10,18,0.96); padding: 6px 12px;
     border-bottom: 1px solid rgba(255,0,255,0.12); }
+.nyx-hero { background-color: rgba(10,10,18,0.96); padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,0,255,0.18); }
+.nyx-hero-title { color: #ff00ff; text-shadow: 0 0 12px rgba(255,0,255,0.55);
+    font-size: 30px; font-weight: bold; letter-spacing: 1px; }
+.nyx-hero-sub { color: rgba(240,235,250,0.55); font-size: 14px;
+    margin-top: -2px; }
+.nyx-version-pill { color: rgba(240,235,250,0.85);
+    background-color: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,0,255,0.40);
+    border-radius: 999px; padding: 5px 16px; font-size: 14px;
+    font-family: 'JetBrains Mono', monospace; }
+.nyx-toolbar2 { background-color: rgba(10,10,18,0.85); padding: 5px 14px;
+    border-bottom: 1px solid rgba(255,0,255,0.10); }
 .nyx-restartbar { background-color: rgba(255, 78, 0, 0.18);
     border-bottom: 1px solid rgba(255,140,40,0.55);
     padding: 6px 14px; }
@@ -3237,38 +3258,82 @@ scrollbar { background-color: transparent; }
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         root.add_css_class("nyx-bg"); self.set_child(root)
 
-        # ── toolbar ────────────────────────────────────────────────────────
-        bar = Gtk.Box(spacing=8); bar.add_css_class("nyx-toolbar")
+        # ── HERO HEADER (NYXUS branding) ───────────────────────────────────
+        hero_row = Gtk.Box(spacing=14); hero_row.add_css_class("nyx-hero")
+        # gear logo (sketch circle with ⚙)
+        logo = Gtk.DrawingArea()
+        logo.set_size_request(52, 52)
+        try: logo.set_content_width(52); logo.set_content_height(52)
+        except Exception: pass
+        logo.set_valign(Gtk.Align.CENTER)
+        def _draw_logo(area, cr, w, h, _=None):
+            cr.set_source_rgba(*ACCENT_PURP, 0.18)
+            cr.arc(w/2, h/2, min(w,h)/2 - 3, 0, math.pi*2); cr.fill()
+            cr.set_source_rgba(*ACCENT_PURP, 0.95); cr.set_line_width(1.6)
+            cr.arc(w/2, h/2, min(w,h)/2 - 3, 0, math.pi*2); cr.stroke()
+            # inner gear glyph using Pango
+            layout = PangoCairo.create_layout(cr)
+            fd = Pango.FontDescription()
+            fd.set_family("Sans"); fd.set_size(int(22 * Pango.SCALE))
+            layout.set_font_description(fd); layout.set_text("⚙", -1)
+            tw, th = layout.get_pixel_size()
+            cr.set_source_rgba(*ACCENT_PURP, 0.95)
+            cr.move_to((w-tw)/2, (h-th)/2); PangoCairo.show_layout(cr, layout)
+        logo.set_draw_func(_draw_logo)
+        hero_row.append(logo)
+        # title + subtitle stacked
+        ts = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        ts.set_valign(Gtk.Align.CENTER); ts.set_hexpand(True)
+        title_lbl = Gtk.Label(label=APP_NAME, xalign=0)
+        title_lbl.add_css_class("nyx-hero-title")
+        ts.append(title_lbl)
+        sub_lbl = Gtk.Label(label=APP_TAGLINE, xalign=0)
+        sub_lbl.add_css_class("nyx-hero-sub")
+        ts.append(sub_lbl)
+        hero_row.append(ts)
+        # version pill
+        vp = Gtk.Label(label=f"v{NYXUS_VERSION}")
+        vp.add_css_class("nyx-version-pill")
+        vp.set_valign(Gtk.Align.CENTER)
+        hero_row.append(vp)
+        root.append(hero_row)
+
+        # ── SLIM SECONDARY TOOLBAR (nav + breadcrumb + search + star) ──────
+        bar = Gtk.Box(spacing=8); bar.add_css_class("nyx-toolbar2")
         root.append(bar)
 
-        b_home = SketchButton("⌂", width=36, height=28, color=NEON_PINK,
+        b_home = SketchButton("⌂", width=32, height=24, color=NEON_PINK,
                               tooltip="Home")
+        b_home.set_valign(Gtk.Align.CENTER)
         b_home.connect("clicked", lambda _b: self.show_page(HOME_KEY))
         bar.append(b_home)
-        b_back = SketchButton("◀", width=36, height=28, color=INK_DIM,
+        b_back = SketchButton("◀", width=32, height=24, color=INK_DIM,
                               tooltip="Back")
+        b_back.set_valign(Gtk.Align.CENTER)
         b_back.connect("clicked", lambda _b: self.go_back())
         bar.append(b_back)
-        b_fwd  = SketchButton("▶", width=36, height=28, color=INK_DIM,
+        b_fwd  = SketchButton("▶", width=32, height=24, color=INK_DIM,
                               tooltip="Forward")
+        b_fwd.set_valign(Gtk.Align.CENTER)
         b_fwd.connect("clicked", lambda _b: self.go_forward())
         bar.append(b_fwd)
 
-        title = Gtk.Label(label="🛠  Settings"); title.add_css_class("nyx-headline")
-        bar.append(title)
-
-        self.crumb_lbl = Gtk.Label(label="", xalign=0)
+        self.crumb_lbl = Gtk.Label(label="Home", xalign=0)
         self.crumb_lbl.add_css_class("nyx-meta")
+        self.crumb_lbl.set_valign(Gtk.Align.CENTER)
+        self.crumb_lbl.set_margin_start(6)
         bar.append(self.crumb_lbl)
 
         sp = Gtk.Box(); sp.set_hexpand(True); bar.append(sp)
 
-        self.search = SketchSearchEntry(placeholder="search every setting…")
+        self.search = SketchSearchEntry(placeholder="search every setting…",
+                                         width=300, height=26)
         self.search.connect("changed", self._on_search)
         bar.append(self.search)
 
-        b_fav = SketchButton("★", width=36, height=28, color=ACCENT_GOLD,
+        b_fav = SketchButton("★", width=32, height=24, color=ACCENT_GOLD,
                              tooltip="Star this page")
+        b_fav.set_valign(Gtk.Align.CENTER)
         b_fav.connect("clicked", lambda _b: self._toggle_fav())
         bar.append(b_fav)
 
