@@ -384,7 +384,7 @@ window.nyxus-launcher {
     font-family: 'Caveat', 'Patrick Hand', sans-serif;
     font-size: 28px;
     margin-bottom: 4px;
-    text-shadow: 0 0 12px rgba(255, 0, 255, 0.6);
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.45);
 }
 .nyxus-search {
     font-family: 'Caveat', 'Patrick Hand', sans-serif;
@@ -414,7 +414,7 @@ window.nyxus-launcher {
 }
 .nyxus-list row:selected {
     background: rgba(255, 0, 255, 0.22);
-    box-shadow: inset 0 0 0 1px rgba(255, 0, 255, 0.65);
+    box-shadow: inset 0 0 0 1px rgba(255, 0, 255, 0.45);
 }
 .nyxus-list row:hover {
     background: rgba(255, 0, 255, 0.12);

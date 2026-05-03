@@ -264,7 +264,7 @@ window.nyxus-shot {
 .nyxus-title {
     font-family: 'Caveat', sans-serif;
     font-size: 28px;
-    text-shadow: 0 0 12px rgba(255, 0, 255, 0.6);
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.45);
 }
 .nyxus-shotbtn {
     background: rgba(15, 12, 24, 0.92);

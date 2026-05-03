@@ -1063,7 +1063,7 @@ scrollbar { background-color: transparent; }
     background-color: rgba(139,92,246,0.18);
     color: #c8a8ff;
     border: 1px solid rgba(139,92,246,0.55);
-    border-radius: 9px;
+    border-radius: 6px;
     padding: 0 8px;
     font-size: 11px;
 }
@@ -1074,8 +1074,8 @@ scrollbar { background-color: transparent; }
 .nyx-cmdpalette entry, .nyx-cmdpalette text {
     background-color: rgba(15,12,28,0.99);
     color: #f0eef8;
-    border: 2px solid rgba(255,0,255,0.55);
-    border-radius: 8px;
+    border: 2px solid rgba(255,0,255,0.45);
+    border-radius: 6px;
     padding: 12px;
     font-family: 'Caveat', cursive; font-size: 20px;
     caret-color: #ff00ff;

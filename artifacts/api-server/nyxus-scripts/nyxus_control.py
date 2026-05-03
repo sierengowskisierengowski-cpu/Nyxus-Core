@@ -464,40 +464,40 @@ scale slider { min-width:18px; min-height:18px; border-radius:2px; background:wh
 
 .neon-btn {
     background-color: rgba(255,0,255,0.14); color: #ff88ff;
-    border: 2px solid rgba(255,0,255,0.55); border-radius: 2px;
+    border: 2px solid rgba(255,0,255,0.45); border-radius: 4px;
     padding: 9px 20px; font-size: 16px; font-weight: bold;
-    box-shadow: 0 0 10px rgba(255,0,255,0.18);
+    box-shadow: 0 0 8px rgba(255,0,255,0.18);
 }
 .neon-btn:hover { background-color: rgba(255,0,255,0.26); border-color:#ff00ff;
                   box-shadow: 0 0 18px rgba(255,0,255,0.40); }
 .neon-btn-blue  { background-color:rgba(0,136,255,0.14); color:#66bbff;
-                  border:2px solid rgba(0,136,255,0.55); border-radius:2px;
+                  border:2px solid rgba(0,136,255,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
 .neon-btn-blue:hover  { background-color:rgba(0,136,255,0.26); border-color:#0088ff; }
 .neon-btn-green { background-color:rgba(57,255,20,0.12); color:#88ff55;
-                  border:2px solid rgba(57,255,20,0.55); border-radius:2px;
+                  border:2px solid rgba(57,255,20,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
 .neon-btn-green:hover { background-color:rgba(57,255,20,0.24); border-color:#39ff14; }
 .neon-btn-red   { background-color:rgba(255,30,30,0.14); color:#ff6655;
-                  border:2px solid rgba(255,60,40,0.55); border-radius:2px;
+                  border:2px solid rgba(255,60,40,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
 .neon-btn-red:hover { background-color:rgba(255,60,40,0.28); }
 .neon-btn-yellow{ background-color:rgba(255,255,0,0.12); color:#ffff88;
-                  border:2px solid rgba(255,255,0,0.55); border-radius:2px;
+                  border:2px solid rgba(255,255,0,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
 .neon-btn-yellow:hover { background-color:rgba(255,255,0,0.24); border-color:#ffff00; }
 .neon-btn-orange{ background-color:rgba(255,85,0,0.14); color:#ff8855;
-                  border:2px solid rgba(255,85,0,0.55); border-radius:2px;
+                  border:2px solid rgba(255,85,0,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
 .neon-btn-orange:hover { background-color:rgba(255,85,0,0.26); border-color:#ff5500; }
 .neon-btn-purple{ background-color:rgba(200,0,255,0.14); color:#dd88ff;
-                  border:2px solid rgba(200,0,255,0.55); border-radius:2px;
+                  border:2px solid rgba(200,0,255,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
 .neon-btn-purple:hover { background-color:rgba(200,0,255,0.26); border-color:#cc00ff; }
 
 entry {
     background-color: rgba(255,255,255,0.05); color: rgba(232,224,245,0.90);
-    border: 2px solid rgba(255,0,255,0.30); border-radius: 2px;
+    border: 2px solid rgba(255,0,255,0.30); border-radius: 4px;
     padding: 7px 14px; font-size: 16px; caret-color: #ff00ff;
 }
 entry:focus { border-color: #ff00ff; box-shadow: 0 0 12px rgba(255,0,255,0.25); }

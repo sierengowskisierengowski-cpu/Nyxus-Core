@@ -153,7 +153,7 @@ window.nyxus-power {
 .nyxus-title {
     font-family: 'Caveat', sans-serif;
     font-size: 32px;
-    text-shadow: 0 0 14px rgba(255, 0, 255, 0.7);
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
 }
 .nyxus-sub {
     font-family: 'Caveat', sans-serif;
@@ -175,7 +175,7 @@ window.nyxus-power {
 }
 .nyxus-pwrbtn:active {
     background: rgba(255, 0, 255, 0.28);
-    box-shadow: inset 0 0 14px rgba(255, 0, 255, 0.6);
+    box-shadow: inset 0 0 10px rgba(255, 0, 255, 0.45);
 }
 """
 
