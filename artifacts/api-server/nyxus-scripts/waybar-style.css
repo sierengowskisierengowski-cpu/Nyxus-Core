@@ -703,13 +703,12 @@ window#waybar.left #workspaces button.active {
    RIGHT BAR  ·  signature color: GOLD #ffff00  (70% height)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.right {
-    /* Splatter image is wide-and-short (714x68). The right bar is tall and
-     * narrow, so we set width to 100% of the bar and let the image tile
-     * vertically — this keeps the splatter pattern visible at its native
-     * aspect, repeated down the bar. NO color overlay — image shows raw. */
+    /* Splatter image fills the bar in one piece (cover = no tiling seams).
+     * The image is intentionally zoomed to show vivid color throughout the
+     * tall narrow column. NO color overlay — raw image shows through. */
     background-image:    url("NYXUS_RIGHTBAR_BG");
     background-color:    #0a0410;
-    background-size:     100% 100%;
+    background-size:     cover;
     background-position: center center;
     background-repeat:   no-repeat;
     color:               #ffffff;
