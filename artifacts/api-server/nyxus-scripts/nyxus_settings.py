@@ -2433,24 +2433,127 @@ class StoragePage(BasePage):
     KEY = "storage"; TITLE = "Storage"; ICON = "💾"
 
     def build(self):
+        # ── 1. drives & partitions ─────────────────────────────────────────
         c = Card("drives & partitions")
         self.box.append(c)
-        rc, out, _ = sh("lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT,LABEL")
+        rc, out, _ = sh("lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT,LABEL")
         sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 200)
-        tv = Gtk.TextView(); tv.set_editable(False)
+        tv = Gtk.TextView(); tv.set_editable(False); tv.set_monospace(True)
         tv.add_css_class("nyx-editor")
         tv.get_buffer().set_text(out or "(no output)")
         sw.set_child(tv); c.add_row(sw)
 
+        # ── 2. SMART health (per physical drive) ───────────────────────────
+        c = Card("S.M.A.R.T. health")
+        self.box.append(c)
+        if not have("smartctl"):
+            c.add_row(Gtk.Label(
+                label="smartmontools not installed (pacman -S smartmontools)",
+                xalign=0))
+        else:
+            rc, out, _ = sh("lsblk -d -n -o NAME,TYPE,SIZE,MODEL")
+            drives = []
+            for line in out.splitlines():
+                parts = line.split(None, 3)
+                if len(parts) >= 2 and parts[1] == "disk":
+                    drives.append(parts)
+            if not drives:
+                c.add_row(Gtk.Label(label="(no physical drives detected)",
+                                    xalign=0))
+            for parts in drives:
+                name = parts[0]
+                size = parts[2] if len(parts) > 2 else "?"
+                model = parts[3] if len(parts) > 3 else ""
+                dev = f"/dev/{name}"
+                rc, sout, _ = sh(
+                    f"sudo -n smartctl -H {dev} 2>/dev/null | "
+                    "grep -E 'overall-health|SMART Health' | head -1")
+                state = sout.strip().split(":")[-1].strip() if sout.strip() \
+                        else "(needs sudo)"
+                row = Gtk.Box(spacing=8)
+                lbl = Gtk.Label(
+                    label=f"{dev}  {size}  {model[:32]}",
+                    xalign=0); lbl.set_hexpand(True)
+                row.append(lbl)
+                row.append(Gtk.Label(label=state, xalign=1))
+                b_full = SketchButton("Full report", width=110, height=24,
+                                      color=NEON_BLUE)
+                b_full.connect("clicked", lambda _b, d=dev: self._term_run(
+                    f"sudo smartctl -a {d} | less",
+                    f"smartctl -a {d}…"))
+                row.append(b_full)
+                b_test = SketchButton("Short test", width=110, height=24,
+                                      color=NEON_BLUE)
+                b_test.connect("clicked", lambda _b, d=dev: self._term_run(
+                    f"sudo smartctl -t short {d}",
+                    f"short test queued on {d}…"))
+                row.append(b_test)
+                c.add_row(row)
+
+        # ── 3. mount points ────────────────────────────────────────────────
+        c = Card("mount points")
+        self.box.append(c)
+        rc, out, _ = sh("findmnt -t nosquashfs,nooverlay -D "
+                        "-o TARGET,SOURCE,FSTYPE,SIZE,USED,AVAIL,USE%")
+        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 200)
+        tv = Gtk.TextView(); tv.set_editable(False); tv.set_monospace(True)
+        tv.add_css_class("nyx-editor")
+        tv.get_buffer().set_text(out or "(no output)")
+        sw.set_child(tv); c.add_row(sw)
+        row = Gtk.Box(spacing=8)
+        b_fstab = SketchButton("Edit /etc/fstab", width=160, height=26,
+                               color=ACCENT_GOLD)
+        b_fstab.connect("clicked", lambda _b: self._term_run(
+            "sudo ${EDITOR:-nano} /etc/fstab",
+            "/etc/fstab opened (sudo)…"))
+        row.append(b_fstab)
+        b_remount = SketchButton("Remount all (mount -a)", width=200,
+                                 height=26, color=NEON_BLUE)
+        b_remount.connect("clicked", lambda _b: self._term_run(
+            "sudo mount -a && echo OK",
+            "remounting…"))
+        row.append(b_remount)
+        c.add_row(row)
+
+        # ── 4. swap ────────────────────────────────────────────────────────
+        c = Card("swap")
+        self.box.append(c)
+        rc, out, _ = sh("swapon --show --noheadings")
+        if not out.strip():
+            c.add_row(Gtk.Label(label="no swap active", xalign=0))
+        else:
+            for line in out.splitlines():
+                parts = line.split()
+                if len(parts) >= 4:
+                    c.add_row(kv_row(
+                        f"{parts[0]} ({parts[1]}):",
+                        f"{parts[2]} total · {parts[3]} used"))
+        try:
+            swp = Path("/proc/sys/vm/swappiness").read_text().strip()
+        except Exception:
+            swp = "?"
+        c.add_row(kv_row("vm.swappiness:", swp))
+        row = Gtk.Box(spacing=6)
+        for v in (10, 20, 60, 100):
+            b = SketchButton(str(v), width=46, height=22, color=NEON_BLUE,
+                             primary=(str(v) == swp))
+            b.connect("clicked", lambda _b, v=v:
+                      (sh(f"sudo -n sysctl -w vm.swappiness={v}"),
+                       self.win.toast(f"swappiness → {v} (sudo)")))
+            row.append(b)
+        c.add_row(row)
+
+        # ── 5. disk usage (df) ─────────────────────────────────────────────
         c = Card("disk usage")
         self.box.append(c)
-        rc, out, _ = sh("df -h -x tmpfs -x devtmpfs")
+        rc, out, _ = sh("df -h -x tmpfs -x devtmpfs -x squashfs -x overlay")
         sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 180)
-        tv = Gtk.TextView(); tv.set_editable(False)
+        tv = Gtk.TextView(); tv.set_editable(False); tv.set_monospace(True)
         tv.add_css_class("nyx-editor")
         tv.get_buffer().set_text(out or "(no output)")
         sw.set_child(tv); c.add_row(sw)
 
+        # ── 6. home folder breakdown ───────────────────────────────────────
         c = Card("home folder breakdown")
         self.box.append(c)
         for sub in ("Documents", "Downloads", "Pictures", "Videos", "Music",
@@ -2461,16 +2564,196 @@ class StoragePage(BasePage):
             rc, out, _ = sh(f"du -sh {p}", timeout=10)
             c.add_row(kv_row(sub, out.split()[0] if out else "?"))
 
+        # ── 7. cleanup ─────────────────────────────────────────────────────
+        c = Card("cleanup")
+        self.box.append(c)
+        # pacman cache
+        rc, out, _ = sh("du -sh /var/cache/pacman/pkg 2>/dev/null", timeout=8)
+        size = out.split()[0] if out.strip() else "?"
+        row = Gtk.Box(spacing=8)
+        lbl = Gtk.Label(label=f"pacman cache: {size}", xalign=0)
+        lbl.set_hexpand(True); row.append(lbl)
+        b = SketchButton("Clean (paccache -rk2)", width=200, height=24,
+                         color=ACCENT_GOLD)
+        b.connect("clicked", lambda _b: self._term_run(
+            "sudo paccache -rk2",
+            "cleaning pacman cache…"))
+        row.append(b)
+        c.add_row(row)
+        # journal
+        rc, out, _ = sh("journalctl --disk-usage 2>/dev/null", timeout=4)
+        jsize = out.strip().split("take up")[-1].strip().rstrip(".") \
+                if "take up" in out else (out.strip() or "?")
+        row = Gtk.Box(spacing=8)
+        lbl = Gtk.Label(label=f"systemd journal: {jsize}", xalign=0)
+        lbl.set_hexpand(True); row.append(lbl)
+        b = SketchButton("Vacuum to 200M", width=180, height=24,
+                         color=ACCENT_GOLD)
+        b.connect("clicked", lambda _b: self._term_run(
+            "sudo journalctl --vacuum-size=200M",
+            "vacuuming journal…"))
+        row.append(b)
+        c.add_row(row)
+        # /tmp
+        rc, out, _ = sh("du -sh /tmp 2>/dev/null", timeout=6)
+        c.add_row(kv_row("/tmp:", out.split()[0] if out.strip() else "?"))
+        # trash
+        trash = Path.home() / ".local/share/Trash"
+        if trash.exists():
+            rc, out, _ = sh(f"du -sh {trash}", timeout=6)
+            row = Gtk.Box(spacing=8)
+            lbl = Gtk.Label(
+                label=f"trash: {out.split()[0] if out else '?'}", xalign=0)
+            lbl.set_hexpand(True); row.append(lbl)
+            b = SketchButton("Empty trash", width=140, height=24,
+                             color=NEON_RED)
+            b.connect("clicked", lambda _b: (
+                sh(f"rm -rf {trash}/files/* {trash}/info/*"),
+                self.win.toast("trash emptied")))
+            row.append(b)
+            c.add_row(row)
+
+        # ── 8. snapshots / btrfs ───────────────────────────────────────────
+        c = Card("snapshots")
+        self.box.append(c)
+        rc, out, _ = sh(
+            "lsblk -n -o FSTYPE | sort -u | grep -c btrfs || true")
+        has_btrfs = (out.strip() not in ("0", ""))
+        c.add_row(kv_row("btrfs filesystem present:",
+                         "yes" if has_btrfs else "no"))
+        c.add_row(kv_row("timeshift installed:",
+                         "yes" if have("timeshift") else "no"))
+        c.add_row(kv_row("snapper installed:",
+                         "yes" if have("snapper") else "no"))
+        if have("timeshift"):
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("Open Timeshift", width=160, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked", lambda _b: self._term_run(
+                "sudo timeshift-gtk &", "launching timeshift…"))
+            row.append(b)
+            b2 = SketchButton("List snapshots", width=160, height=24,
+                              color=NEON_BLUE)
+            b2.connect("clicked", lambda _b: self._term_run(
+                "sudo timeshift --list",
+                "listing snapshots…"))
+            row.append(b2)
+            c.add_row(row)
+        if have("snapper"):
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("snapper list", width=160, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked", lambda _b: self._term_run(
+                "sudo snapper list", "listing snapper snapshots…"))
+            row.append(b)
+            c.add_row(row)
+        if not (have("timeshift") or have("snapper")):
+            c.add_row(Gtk.Label(
+                label="install timeshift or snapper for snapshot management",
+                xalign=0))
+
+        # ── 9. I/O activity ────────────────────────────────────────────────
+        c = Card("I/O activity")
+        self.box.append(c)
+        try:
+            ds = Path("/proc/diskstats").read_text().splitlines()
+            rows = []
+            for line in ds:
+                f = line.split()
+                if len(f) < 14: continue
+                name = f[2]
+                if name.startswith(("loop", "ram")) or name[-1].isdigit():
+                    continue
+                reads = int(f[5]); writes = int(f[9])
+                rows.append((name, reads, writes))
+            rows.sort(key=lambda r: -(r[1] + r[2]))
+            for name, r, w in rows[:6]:
+                c.add_row(kv_row(
+                    f"/dev/{name}:",
+                    f"{r//2048} MiB read · {w//2048} MiB written"))
+            if not rows:
+                c.add_row(Gtk.Label(label="(no devices)", xalign=0))
+        except Exception as e:
+            c.add_row(Gtk.Label(label=f"(error: {e})", xalign=0))
+        if have("iotop"):
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("Launch iotop", width=160, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked", lambda _b: self._term_run(
+                "sudo iotop -o", "launching iotop (sudo)…"))
+            row.append(b)
+            c.add_row(row)
+
+        # ── 10. removable / automount ──────────────────────────────────────
+        c = Card("removable & automount")
+        self.box.append(c)
+        rc, out, _ = sh(
+            "lsblk -d -n -o NAME,SIZE,RM,MODEL,TRAN")
+        any_rem = False
+        for line in out.splitlines():
+            parts = line.split(None, 4)
+            if len(parts) >= 3 and parts[2] == "1":
+                any_rem = True
+                name = parts[0]; size = parts[1]
+                model = parts[3] if len(parts) > 3 else ""
+                row = Gtk.Box(spacing=8)
+                lbl = Gtk.Label(
+                    label=f"/dev/{name}  {size}  {model}", xalign=0)
+                lbl.set_hexpand(True); row.append(lbl)
+                if have("udisksctl"):
+                    b = SketchButton("Eject", width=100, height=22,
+                                     color=NEON_RED)
+                    b.connect("clicked", lambda _b, n=name: (
+                        sh(f"udisksctl power-off -b /dev/{n}"),
+                        self.win.toast(f"ejected /dev/{n}")))
+                    row.append(b)
+                c.add_row(row)
+        if not any_rem:
+            c.add_row(Gtk.Label(label="(no removable devices attached)",
+                                xalign=0))
+
         self.add_note(
-            "snapshot tools (timeshift / btrfs) and disk benchmarks need "
-            "root and are not run automatically — use the system tools "
-            "directly.")
+            "smartctl, fstab edits, paccache and journal vacuum require "
+            "sudo. snapshot tools (timeshift/snapper) launch in your "
+            "terminal so you can authenticate.")
+
+    # ── helper: run in terminal ────────────────────────────────────────────
+    def _term_run(self, cmd: str, toast: str):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if have(term):
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     f"{cmd}; echo; echo 'press enter to close'; read _"],
+                    start_new_session=True)
+                self.win.toast(toast)
+                return
+        self.win.toast("no terminal found (install foot/alacritty/kitty)")
 
     def search_entries(self):
         return [
-            SearchEntry(self.KEY, self.TITLE, "Drives"),
+            SearchEntry(self.KEY, self.TITLE, "Drives & partitions",
+                        "lsblk"),
+            SearchEntry(self.KEY, self.TITLE, "S.M.A.R.T. health",
+                        "smartctl drive"),
+            SearchEntry(self.KEY, self.TITLE, "Run SMART short test",
+                        "smartctl -t short"),
+            SearchEntry(self.KEY, self.TITLE, "Mount points", "findmnt"),
+            SearchEntry(self.KEY, self.TITLE, "Edit /etc/fstab", "fstab"),
+            SearchEntry(self.KEY, self.TITLE, "Swap", "swapon swappiness"),
+            SearchEntry(self.KEY, self.TITLE, "vm.swappiness"),
             SearchEntry(self.KEY, self.TITLE, "Disk usage", "df"),
-            SearchEntry(self.KEY, self.TITLE, "Home folder usage"),
+            SearchEntry(self.KEY, self.TITLE, "Home folder usage", "du"),
+            SearchEntry(self.KEY, self.TITLE, "Cleanup pacman cache",
+                        "paccache"),
+            SearchEntry(self.KEY, self.TITLE, "Vacuum journal",
+                        "journalctl disk usage"),
+            SearchEntry(self.KEY, self.TITLE, "Empty trash"),
+            SearchEntry(self.KEY, self.TITLE, "Snapshots",
+                        "timeshift snapper btrfs"),
+            SearchEntry(self.KEY, self.TITLE, "I/O activity",
+                        "iotop diskstats"),
+            SearchEntry(self.KEY, self.TITLE, "Removable devices",
+                        "eject usb udisks"),
         ]
 
 
