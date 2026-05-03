@@ -20,6 +20,8 @@ All persistent data lives under ~/.config/nyxus-notepad/.
 Database is sqlite3, locked-note encryption is Fernet (AES-128 CBC + HMAC).
 """
 
+from __future__ import annotations
+
 __nyxid__ = "4e59582d4a35572d323032362d53494552454e474f57534b492d4c4f434b4544"
 
 def _nyx_integrity():
@@ -29,9 +31,6 @@ def _nyx_integrity():
     except (OSError, AssertionError) as _e:
         import sys as _sys; print(f"NYXUS SECURITY: {_e}", file=_sys.stderr)
 _nyx_integrity()
-
-
-from __future__ import annotations
 
 import base64, hashlib, html, json, math, os, random, re, sqlite3, subprocess
 import sys, threading, time, traceback, uuid
@@ -112,7 +111,7 @@ def log(msg: str):
         pass
 
 # ── NYXUS colour palette (RGB floats) ───────────────────────────────────────
-BG_DARK     = (0.039, 0.039, 0.071)   # #0a0a12
+BG_DARK     = (0.039, 0.039, 0.071)   # #000000
 BG_PANEL    = (0.072, 0.067, 0.110)
 BG_RAISED   = (0.101, 0.094, 0.156)
 INK_BRIGHT  = (0.941, 0.922, 0.980)
@@ -976,7 +975,7 @@ class NoteCard(Gtk.DrawingArea):
 CSS = """
 * { font-family: 'Caveat', 'Patrick Hand', cursive; }
 window, .nyx-bg {
-    background-color: #0a0a12;
+    background-color: #000000;
     color: #f0eef8;
 }
 .nyx-sidebar  { background-color: rgba(255,255,255,0.025); }
@@ -1338,7 +1337,7 @@ class Exporter:
 <html><head><meta charset="utf-8"><title>{title}</title>
 <style>
 body {{ font-family: 'Caveat', 'Patrick Hand', cursive;
-        background:#0a0a12; color:#f0eef8;
+        background:#000000; color:#f0eef8;
         max-width:780px; margin:40px auto; padding:0 20px; }}
 h1,h2,h3 {{ color:#ff00ff; }}
 a {{ color:#39ff14; }}

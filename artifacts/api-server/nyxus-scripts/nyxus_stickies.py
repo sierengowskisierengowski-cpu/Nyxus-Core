@@ -13,6 +13,8 @@ Just the notes. Nothing else.
   • Auto-saved to ~/.config/nyxus-stickies/notes.db (sqlite3)
 """
 
+from __future__ import annotations
+
 __nyxid__ = "4e59582d4a35572d323032362d53494552454e474f57534b492d4c4f434b4544"
 
 def _nyx_integrity():
@@ -22,9 +24,6 @@ def _nyx_integrity():
     except (OSError, AssertionError) as _e:
         import sys as _sys; print(f"NYXUS SECURITY: {_e}", file=_sys.stderr)
 _nyx_integrity()
-
-
-from __future__ import annotations
 
 import logging
 import math
@@ -717,7 +716,7 @@ class StickiesWindow(Gtk.ApplicationWindow):
     def _build_css(self):
         css = b"""
 * { font-family: 'Caveat', 'Patrick Hand', cursive; }
-window, .nyx-bg { background-color: #0a0a12; color: #f0eef8; }
+window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 .nyx-toolbar { background-color: rgba(10,10,18,0.96); padding: 4px 10px;
     border-bottom: 1px solid rgba(255,0,255,0.12); }
 .nyx-headline { color: #ff00ff; text-shadow: 0 0 10px rgba(255,0,255,0.55);

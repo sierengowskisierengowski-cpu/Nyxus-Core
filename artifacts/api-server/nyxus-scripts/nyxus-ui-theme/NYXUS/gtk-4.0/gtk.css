@@ -13,15 +13,15 @@
 :root {
   --bg:          #080808;
   --bg-alt:      #0d0a12;
-  --bg-hover:    #13101a;
-  --bg-active:   #1a1525;
+  --bg-hover:    #000000;
+  --bg-active:   #0a0a0a;
   --accent:      #7B5EA7;
   --accent-light:#9b7dc7;
   --pink:        #C4607A;
   --text:        #C8C0C0;
   --text-dim:    #7a7080;
   --text-off:    #3a3248;
-  --border:      #1a1525;
+  --border:      #0a0a0a;
   --border-a:    #3a2a5a;
   --red:         #f87171;
   --green:       #34d399;
@@ -51,7 +51,7 @@
 @define-color view_fg_color         #C8C0C0;
 @define-color headerbar_bg_color    #0d0a12;
 @define-color headerbar_fg_color    #C8C0C0;
-@define-color headerbar_border_color #1a1525;
+@define-color headerbar_border_color #0a0a0a;
 @define-color sidebar_bg_color      #0d0a12;
 @define-color sidebar_fg_color      #C8C0C0;
 @define-color card_bg_color         #0d0a12;
@@ -126,13 +126,13 @@ button {
 }
 
 button:hover {
-  background-color: #13101a;
+  background-color: #000000;
   border-color: #C4607A;
   color: #C4607A;
 }
 
 button:active {
-  background-color: #1a1525;
+  background-color: #0a0a0a;
   border-color: #7B5EA7;
   color: #9b7dc7;
 }
@@ -161,7 +161,7 @@ button.destructive-action:hover {
 
 button:disabled {
   background-color: transparent;
-  border-color: #1a1525;
+  border-color: #0a0a0a;
   color: #3a3248;
 }
 
@@ -174,7 +174,7 @@ button.circular {
 
 button.flat:hover,
 button.circular:hover {
-  background-color: #13101a;
+  background-color: #000000;
   color: #C4607A;
 }
 
@@ -199,7 +199,7 @@ searchentry:focus {
 
 entry:disabled {
   color: #3a3248;
-  border-color: #1a1525;
+  border-color: #0a0a0a;
 }
 
 entry selection {
@@ -222,7 +222,7 @@ columnview > row {
 
 listview > row:hover,
 columnview > row:hover {
-  background-color: #13101a;
+  background-color: #000000;
   color: #C4607A;
 }
 
@@ -254,7 +254,7 @@ radiobutton radio:checked {
 
 /* ── Switch ─────────────────────────────────────────────────── */
 switch {
-  background-color: #1a1525;
+  background-color: #0a0a0a;
   border-radius: 14px;
   border: 1px solid #3a2a5a;
   min-width: 44px;
@@ -280,7 +280,7 @@ switch:checked > slider {
 
 /* ── Scale ──────────────────────────────────────────────────── */
 scale trough {
-  background-color: #1a1525;
+  background-color: #0a0a0a;
   border-radius: 6px;
   min-height: 4px;
 }
@@ -324,7 +324,7 @@ scrollbar slider:active { background-color: #9b7dc7; }
 stacksidebar,
 navigationview {
   background-color: @sidebar_bg_color;
-  border-right: 1px solid #1a1525;
+  border-right: 1px solid #0a0a0a;
 }
 
 .sidebar row,
@@ -335,7 +335,7 @@ stacksidebar row {
 
 .sidebar row:hover,
 stacksidebar row:hover {
-  background-color: #13101a;
+  background-color: #000000;
   color: #C4607A;
 }
 
@@ -362,7 +362,7 @@ popover modelbutton {
 }
 
 popover modelbutton:hover {
-  background-color: #13101a;
+  background-color: #000000;
   color: #C4607A;
 }
 
@@ -379,7 +379,7 @@ tooltip {
 
 /* ── Progress Bar ───────────────────────────────────────────── */
 progressbar trough {
-  background-color: #1a1525;
+  background-color: #0a0a0a;
   border-radius: 4px;
   min-height: 6px;
 }
@@ -392,13 +392,13 @@ progressbar progress {
 /* ── Card ───────────────────────────────────────────────────── */
 .card {
   background-color: @card_bg_color;
-  border: 1px solid #1a1525;
+  border: 1px solid #0a0a0a;
   border-radius: 6px;
 }
 
 /* ── Separator ──────────────────────────────────────────────── */
 separator {
-  background-color: #1a1525;
+  background-color: #0a0a0a;
   min-width: 1px;
   min-height: 1px;
 }
@@ -436,5 +436,5 @@ dialog {
 toolbarview > .top-bar,
 toolbarview > .bottom-bar {
   background-color: @headerbar_bg_color;
-  border-color: #1a1525;
+  border-color: #0a0a0a;
 }

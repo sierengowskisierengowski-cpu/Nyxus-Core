@@ -389,7 +389,7 @@ window { background-color: #08080e; color: rgba(232,224,245,0.92); }
 
 /* ── Nav sidebar ─────────────────────────────────────────────────────── */
 .nav-bar {
-    background-color: #0a0a18;
+    background-color: #000000;
     border-right: 3px solid rgba(255,0,255,0.30);
     min-width: 168px;
 }
@@ -464,7 +464,7 @@ treeview:selected {
     background-color: rgba(255,0,255,0.18); color: #ffaaff;
 }
 treeview header button {
-    background-color: #0d0d1a; color: rgba(180,160,220,0.80);
+    background-color: #000000; color: rgba(180,160,220,0.80);
     border: none; font-size: 13px; font-weight: bold;
     border-bottom: 2px solid rgba(255,0,255,0.18);
 }

@@ -238,7 +238,7 @@ export default function Weather() {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-[#08080e] text-white">
         <div style={{
-          width: 380, background: '#0d0d1a',
+          width: 380, background: '#000000',
           border: '2px solid #cc00ff', borderRadius: 16, padding: 32,
           boxShadow: '0 0 40px #cc00ff44',
         }}>
