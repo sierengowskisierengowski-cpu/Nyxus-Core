@@ -2324,75 +2324,464 @@ class GamingPage(BasePage):
 # ─── Developer / System info ────────────────────────────────────────────────
 class DeveloperPage(BasePage):
     KEY = "developer"; TITLE = "Developer / System Info"; ICON = "{}"
+    TILE_COLOR = NEON_GREEN
+    SUBTITLE  = "Docker · sshd · GRUB · journalctl · cron"
 
-    def build(self):
+    GRUB_PATH = Path("/etc/default/grub")
+
+    # ── kernel / hostname / distro ─────────────────────────────────────────
+    def _build_system_card(self):
         c = Card("kernel & system")
         self.box.append(c)
-        for label, cmd in (
-            ("Hostname:",    "hostnamectl --static"),
-            ("Kernel:",      "uname -r"),
-            ("Distro:",      "cat /etc/os-release"),
-            ("Uptime:",      "uptime -p"),
-        ):
-            rc, out, _ = sh(cmd)
-            v = out.strip().splitlines()[0] if out else "?"
-            if "PRETTY_NAME" in (out or ""):
-                m = re.search(r'PRETTY_NAME="([^"]+)"', out)
-                v = m.group(1) if m else v
-            c.add_row(kv_row(label, v))
+        rc, host, _ = sh("hostnamectl --static"); host = host.strip() or "?"
+        rc, kver, _ = sh("uname -r");              kver = kver.strip()
+        rc, mach, _ = sh("uname -m");              mach = mach.strip()
+        rc, osr,  _ = sh("cat /etc/os-release")
+        distro = "?"
+        for ln in osr.splitlines():
+            if ln.startswith("PRETTY_NAME="):
+                distro = ln.split("=",1)[1].strip().strip('"'); break
+        rc, up,   _ = sh("uptime -p");             up = up.strip() or "?"
+        rc, lod,  _ = sh("uptime"); load = lod.split("load average:")[-1].strip() if "load average" in lod else "?"
+        c.add_row(kv_row("Hostname:", host))
+        c.add_row(kv_row("Distro:",   distro))
+        c.add_row(kv_row("Kernel:",   f"{kver}  ({mach})"))
+        c.add_row(kv_row("Uptime:",   up))
+        c.add_row(kv_row("Load avg:", load))
 
+    # ── CPU / RAM / GPU ────────────────────────────────────────────────────
+    def _build_hw_card(self):
         c = Card("CPU")
         self.box.append(c)
         rc, out, _ = sh("lscpu")
+        keep = ("Model name", "Architecture", "CPU(s):",
+                "Thread(s) per core", "Core(s) per socket",
+                "CPU max MHz", "CPU min MHz", "Vulnerability")
         for ln in out.splitlines():
-            if any(k in ln for k in ("Model name", "CPU(s):", "Architecture",
-                                     "Thread(s) per core", "Core(s) per socket",
-                                     "CPU max MHz", "CPU min MHz")):
-                c.add_row(Gtk.Label(label=ln.strip(), xalign=0))
+            ls = ln.strip()
+            if any(k in ls for k in keep):
+                if ":" in ls:
+                    k, v = ls.split(":", 1)
+                    c.add_row(kv_row(k.strip()+":", v.strip()))
 
         c = Card("RAM")
         self.box.append(c)
         rc, out, _ = sh("free -h")
-        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 90)
-        tv = Gtk.TextView(); tv.set_editable(False); tv.add_css_class("nyx-editor")
-        tv.get_buffer().set_text(out)
-        sw.set_child(tv); c.add_row(sw)
-
-        c = Card("GPU")
-        self.box.append(c)
-        rc, out, _ = sh("lspci -k | grep -EA3 'VGA|3D|Display'")
-        c.add_row(Gtk.Label(label=out.strip() or "(unknown)", xalign=0))
-
-        c = Card("environment variables")
-        self.box.append(c)
-        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 220)
-        tv = Gtk.TextView(); tv.set_editable(False); tv.add_css_class("nyx-editor")
-        tv.get_buffer().set_text(
-            "\n".join(f"{k}={v}" for k, v in sorted(os.environ.items())))
-        sw.set_child(tv); c.add_row(sw)
-
-        c = Card("ssh server")
-        self.box.append(c)
-        rc, out, _ = sh("systemctl is-active sshd")
-        c.add_row(kv_row("sshd status:", out.strip() or "?"))
-
-        c = Card("open ports")
-        self.box.append(c)
-        rc, out, _ = sh("ss -tunlp")
-        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 160)
+        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 100)
         tv = Gtk.TextView(); tv.set_editable(False); tv.add_css_class("nyx-editor")
         tv.get_buffer().set_text(out or "(no output)")
         sw.set_child(tv); c.add_row(sw)
 
+        c = Card("GPU")
+        self.box.append(c)
+        rc, out, _ = sh("sh -c \"lspci | grep -E 'VGA|3D|Display'\"")
+        for ln in out.splitlines():
+            if ln.strip(): c.add_row(Gtk.Label(label=ln.strip(), xalign=0))
+        if not out.strip():
+            c.add_row(Gtk.Label(label="(no GPU detected)", xalign=0))
+
+    # ── Docker ─────────────────────────────────────────────────────────────
+    def _build_docker_card(self):
+        c = Card("Docker")
+        self.box.append(c)
+        if not which("docker"):
+            c.add_row(Gtk.Label(label="docker not installed", xalign=0))
+            return
+        rc, ver, _ = sh("docker --version", timeout=2)
+        c.add_row(kv_row("Version:", ver.strip() or "?"))
+        rc, dstat, _ = sh("systemctl is-active docker", timeout=2)
+        c.add_row(kv_row("docker.service:", dstat.strip() or "?"))
+        # daemon reachable?
+        rc, _, derr = sh("docker info --format '{{.ServerVersion}}'", timeout=3)
+        if rc != 0:
+            c.add_row(Gtk.Label(
+                label=f"daemon unreachable: {derr.strip()[:80]}", xalign=0))
+            row = Gtk.Box(spacing=8)
+            b_start = SketchButton("Start daemon", width=140, height=24,
+                                   color=NEON_GREEN)
+            b_start.connect("clicked", lambda _b: self._term_run(
+                "sudo systemctl start docker.service",
+                "starting docker (sudo)…"))
+            row.append(b_start)
+            c.add_row(row)
+            return
+        # containers
+        rc, out, _ = sh(
+            "docker ps -a --format '{{.ID}}|{{.Names}}|{{.Image}}|{{.Status}}'",
+            timeout=4)
+        rows = [ln.split("|") for ln in out.splitlines() if ln.strip()]
+        c.add_row(kv_row("Containers:", f"{len(rows)} total"))
+        for parts in rows[:10]:
+            if len(parts) < 4: continue
+            cid, name, image, status = parts[0], parts[1], parts[2], parts[3]
+            running = status.lower().startswith("up")
+            r = Gtk.Box(spacing=8)
+            badge = "▶" if running else "■"
+            r.append(Gtk.Label(
+                label=f"{badge} {name}  [{image[:30]}]  {status[:36]}",
+                xalign=0))
+            sp = Gtk.Box(); sp.set_hexpand(True); r.append(sp)
+            if running:
+                b = SketchButton("Stop", width=80, height=22, color=DANGER_RED)
+                b.connect("clicked", lambda _b, i=cid: self._docker_act("stop", i))
+                r.append(b)
+            else:
+                b = SketchButton("Start", width=80, height=22, color=NEON_GREEN)
+                b.connect("clicked", lambda _b, i=cid: self._docker_act("start", i))
+                r.append(b)
+            b_logs = SketchButton("Logs", width=80, height=22, color=ACCENT_PURP)
+            b_logs.connect("clicked", lambda _b, i=cid: self._docker_logs(i))
+            r.append(b_logs)
+            c.add_row(r)
+        if len(rows) > 10:
+            c.add_row(Gtk.Label(label=f"… and {len(rows)-10} more", xalign=0))
+        # images count
+        rc, iout, _ = sh("docker images -q", timeout=3)
+        n_img = len([l for l in iout.splitlines() if l.strip()])
+        c.add_row(kv_row("Images:", f"{n_img}"))
+        rc, vol, _ = sh("docker volume ls -q", timeout=3)
+        n_vol = len([l for l in vol.splitlines() if l.strip()])
+        c.add_row(kv_row("Volumes:", f"{n_vol}"))
+        row = Gtk.Box(spacing=8)
+        b_prune = SketchButton("Prune (system)", width=160, height=24,
+                               color=DANGER_RED,
+                               tooltip="docker system prune -f")
+        b_prune.connect("clicked", lambda _b: sh_async(
+            "docker system prune -f",
+            lambda r: (self.win.toast("pruned" if r[0]==0 else "failed"),
+                       self.refresh())))
+        row.append(b_prune)
+        b_pull = SketchButton("Pull image…", width=140, height=24,
+                              color=ACCENT_GOLD)
+        b_pull.connect("clicked", lambda _b: self._term_run(
+            "read -p 'image: ' img && docker pull \"$img\"",
+            "pull dialog opened in terminal"))
+        row.append(b_pull)
+        c.add_row(row)
+
+    def _docker_act(self, action: str, cid: str):
+        sh_async(f"docker {action} {cid}",
+                 lambda r: (self.win.toast(
+                     f"{action} {cid[:8]}: {'ok' if r[0]==0 else 'failed'}"),
+                     self.refresh()))
+
+    def _docker_logs(self, cid: str):
+        self._term_run(
+            f"docker logs --tail 200 -f {cid}",
+            f"logs for {cid[:8]} opened")
+
+    # ── SSH server ─────────────────────────────────────────────────────────
+    def _build_sshd_card(self):
+        c = Card("SSH server (sshd)")
+        self.box.append(c)
+        if not which("sshd"):
+            c.add_row(Gtk.Label(
+                label="openssh not installed (pacman -S openssh)", xalign=0))
+            return
+        rc, active, _ = sh("systemctl is-active sshd",  timeout=2)
+        rc, en,     _ = sh("systemctl is-enabled sshd", timeout=2)
+        c.add_row(kv_row("Active:",  active.strip() or "?"))
+        c.add_row(kv_row("Enabled at boot:", en.strip() or "?"))
+        # parse listening port
+        port = "22"
+        try:
+            txt = Path("/etc/ssh/sshd_config").read_text(errors="ignore")
+            for ln in txt.splitlines():
+                ls = ln.strip()
+                if ls.lower().startswith("port ") and not ls.startswith("#"):
+                    port = ls.split()[1]; break
+        except Exception:
+            pass
+        c.add_row(kv_row("Listening port:", port))
+        # who's connected
+        rc, out, _ = sh("who", timeout=2)
+        ssh_conns = [l for l in out.splitlines() if "(" in l]
+        c.add_row(kv_row("Active sessions:", str(len(ssh_conns))))
+        row = Gtk.Box(spacing=8)
+        if active.strip() == "active":
+            b = SketchButton("Stop sshd", width=130, height=24,
+                             color=DANGER_RED)
+            b.connect("clicked", lambda _b: self._term_run(
+                "sudo systemctl stop sshd",
+                "stopping sshd (sudo)…"))
+            row.append(b)
+        else:
+            b = SketchButton("Start sshd", width=130, height=24,
+                             color=NEON_GREEN)
+            b.connect("clicked", lambda _b: self._term_run(
+                "sudo systemctl start sshd",
+                "starting sshd (sudo)…"))
+            row.append(b)
+        if en.strip() == "enabled":
+            b2 = SketchButton("Disable at boot", width=160, height=24,
+                              color=ACCENT_GOLD)
+            b2.connect("clicked", lambda _b: self._term_run(
+                "sudo systemctl disable sshd",
+                "disabling sshd at boot (sudo)…"))
+        else:
+            b2 = SketchButton("Enable at boot", width=160, height=24,
+                              color=ACCENT_PURP)
+            b2.connect("clicked", lambda _b: self._term_run(
+                "sudo systemctl enable sshd",
+                "enabling sshd at boot (sudo)…"))
+        row.append(b2)
+        b3 = SketchButton("Edit config", width=130, height=24,
+                          color=NEON_PINK)
+        b3.connect("clicked", lambda _b: self._term_run(
+            "sudo ${EDITOR:-nano} /etc/ssh/sshd_config",
+            "sshd_config opened (sudo)…"))
+        row.append(b3)
+        c.add_row(row)
+
+    # ── GRUB editor ────────────────────────────────────────────────────────
+    def _build_grub_card(self):
+        c = Card("GRUB bootloader")
+        self.box.append(c)
+        if not self.GRUB_PATH.exists():
+            c.add_row(Gtk.Label(
+                label="GRUB not detected (no /etc/default/grub)", xalign=0))
+            return
+        try:
+            txt = self.GRUB_PATH.read_text(errors="ignore")
+        except Exception as e:
+            c.add_row(Gtk.Label(label=f"read failed: {e}", xalign=0))
+            return
+        opts = {}
+        for ln in txt.splitlines():
+            ls = ln.strip()
+            if ls.startswith("#") or "=" not in ls: continue
+            k, v = ls.split("=", 1)
+            opts[k.strip()] = v.strip().strip('"')
+        for key in ("GRUB_DEFAULT", "GRUB_TIMEOUT",
+                    "GRUB_CMDLINE_LINUX_DEFAULT", "GRUB_CMDLINE_LINUX",
+                    "GRUB_DISTRIBUTOR", "GRUB_GFXMODE"):
+            if key in opts:
+                c.add_row(kv_row(key+":", opts[key] or "(empty)"))
+        # entries
+        cfg = Path("/boot/grub/grub.cfg")
+        if cfg.exists():
+            try:
+                gtxt = cfg.read_text(errors="ignore")
+                ents = re.findall(r"^menuentry ['\"]([^'\"]+)['\"]",
+                                   gtxt, re.MULTILINE)
+                c.add_row(kv_row("Boot entries:", str(len(ents))))
+                for e in ents[:6]:
+                    c.add_row(Gtk.Label(label=f"  • {e}", xalign=0))
+            except Exception:
+                pass
+        row = Gtk.Box(spacing=8)
+        b_edit = SketchButton("Edit /etc/default/grub", width=200, height=24,
+                              color=NEON_PINK)
+        b_edit.connect("clicked", lambda _b: self._term_run(
+            "sudo ${EDITOR:-nano} /etc/default/grub",
+            "GRUB config opened (sudo)…"))
+        row.append(b_edit)
+        b_apply = SketchButton("Regenerate grub.cfg", width=180, height=24,
+                               color=DANGER_RED,
+                               tooltip="grub-mkconfig -o /boot/grub/grub.cfg")
+        b_apply.connect("clicked", lambda _b: self._term_run(
+            "sudo grub-mkconfig -o /boot/grub/grub.cfg",
+            "regenerating grub.cfg (sudo)…"))
+        row.append(b_apply)
+        c.add_row(row)
+        self.win.mark_restart_required(
+            self.KEY, "GRUB changes apply on next reboot.")
+
+    # ── journalctl tail viewer ─────────────────────────────────────────────
+    def _build_journal_card(self):
+        c = Card("system journal (journalctl)")
+        self.box.append(c)
+        if not which("journalctl"):
+            c.add_row(Gtk.Label(label="journalctl not available", xalign=0))
+            return
+        # priority filter dropdown (simple)
+        row = Gtk.Box(spacing=8)
+        row.append(Gtk.Label(label="show last 200 lines  ·  priority:", xalign=0))
+        for label, pri in (("err", "3"), ("warn", "4"), ("info", "6"), ("all", "7")):
+            b = SketchButton(label, width=70, height=22, color=NEON_GREEN)
+            b.connect("clicked",
+                      lambda _b, p=pri: self._journal_load(tv, p))
+            row.append(b)
+        c.add_row(row)
+        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 240)
+        tv = Gtk.TextView(); tv.set_editable(False); tv.add_css_class("nyx-editor")
+        tv.set_monospace(True); sw.set_child(tv); c.add_row(sw)
+        self._journal_load(tv, "4")  # default: warn+
+        row2 = Gtk.Box(spacing=8)
+        b_open = SketchButton("Follow (terminal)", width=180, height=24,
+                              color=ACCENT_GOLD)
+        b_open.connect("clicked", lambda _b: self._term_run(
+            "journalctl -f", "journal -f opened in terminal"))
+        row2.append(b_open)
+        b_boot = SketchButton("This boot only", width=160, height=24,
+                              color=ACCENT_PURP)
+        b_boot.connect("clicked", lambda _b: self._journal_load(tv, "7", boot=True))
+        row2.append(b_boot)
+        c.add_row(row2)
+
+    def _journal_load(self, tv: Gtk.TextView, priority: str, *, boot=False):
+        cmd = f"journalctl -n 200 --no-pager -p {priority}"
+        if boot: cmd += " -b 0"
+        rc, out, err = sh(cmd, timeout=4)
+        tv.get_buffer().set_text(out or err or "(no output)")
+
+    # ── cron / systemd timers ──────────────────────────────────────────────
+    def _build_cron_card(self):
+        c = Card("scheduled jobs (cron + systemd timers)")
+        self.box.append(c)
+        # user crontab
+        rc, out, _ = sh("crontab -l", timeout=2)
+        if rc == 0 and out.strip():
+            lines = [l for l in out.splitlines()
+                     if l.strip() and not l.lstrip().startswith("#")]
+            c.add_row(kv_row("user crontab:", f"{len(lines)} entries"))
+            for ln in lines[:5]:
+                c.add_row(Gtk.Label(label=f"  {ln.strip()}", xalign=0))
+        else:
+            c.add_row(kv_row("user crontab:", "(empty)"))
+        # systemd timers
+        rc, out, _ = sh("systemctl list-timers --no-pager --no-legend",
+                        timeout=3)
+        timers = [l for l in out.splitlines() if l.strip()]
+        c.add_row(kv_row("systemd timers active:", str(len(timers))))
+        for ln in timers[:6]:
+            parts = ln.split()
+            name = next((p for p in parts if p.endswith(".timer")), "?")
+            c.add_row(Gtk.Label(label=f"  ⏱  {name}", xalign=0))
+        row = Gtk.Box(spacing=8)
+        b_edit = SketchButton("Edit user crontab", width=170, height=24,
+                              color=NEON_PINK)
+        b_edit.connect("clicked", lambda _b: self._term_run(
+            "crontab -e", "crontab opened in terminal"))
+        row.append(b_edit)
+        c.add_row(row)
+
+    # ── sysctl / kernel parameters ─────────────────────────────────────────
+    def _build_sysctl_card(self):
+        c = Card("kernel parameters (sysctl)")
+        self.box.append(c)
+        params = [
+            "vm.swappiness",
+            "vm.vfs_cache_pressure",
+            "vm.dirty_ratio",
+            "fs.file-max",
+            "kernel.pid_max",
+            "kernel.kptr_restrict",
+            "kernel.dmesg_restrict",
+            "net.core.somaxconn",
+            "net.ipv4.tcp_fin_timeout",
+            "net.ipv4.ip_forward",
+        ]
+        for p in params:
+            rc, out, _ = sh(f"sysctl -n {p}", timeout=1)
+            c.add_row(kv_row(p+":", out.strip() if rc==0 else "n/a"))
+        row = Gtk.Box(spacing=8)
+        b = SketchButton("Edit /etc/sysctl.d/", width=180, height=24,
+                         color=NEON_PINK)
+        b.connect("clicked", lambda _b: self._term_run(
+            "sudo ${EDITOR:-nano} /etc/sysctl.d/99-nyxus.conf",
+            "sysctl override opened (sudo)…"))
+        row.append(b)
+        c.add_row(row)
+
+    # ── build tools detection ──────────────────────────────────────────────
+    def _build_tools_card(self):
+        c = Card("development toolchain")
+        self.box.append(c)
+        tools = [
+            ("python3",     "python3 --version"),
+            ("node",        "node --version"),
+            ("npm",         "npm --version"),
+            ("pnpm",        "pnpm --version"),
+            ("rustc",       "rustc --version"),
+            ("cargo",       "cargo --version"),
+            ("go",          "go version"),
+            ("gcc",         "gcc --version"),
+            ("clang",       "clang --version"),
+            ("git",         "git --version"),
+            ("make",        "make --version"),
+            ("cmake",       "cmake --version"),
+            ("docker",      "docker --version"),
+            ("kubectl",     "kubectl version --client --short"),
+        ]
+        for name, cmd in tools:
+            if not which(name):
+                c.add_row(kv_row(name+":", "(not installed)")); continue
+            rc, out, _ = sh(cmd, timeout=2)
+            ver = out.strip().splitlines()[0] if out else "?"
+            # trim noisy "(c) Free Software Foundation" suffix
+            ver = ver.split("(")[0].strip()
+            c.add_row(kv_row(name+":", ver[:80]))
+
+    # ── open ports ─────────────────────────────────────────────────────────
+    def _build_ports_card(self):
+        c = Card("open ports (ss -tunlp)")
+        self.box.append(c)
+        rc, out, _ = sh("ss -tunlp", timeout=3)
+        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 180)
+        tv = Gtk.TextView(); tv.set_editable(False); tv.add_css_class("nyx-editor")
+        tv.set_monospace(True)
+        tv.get_buffer().set_text(out or "(no output)")
+        sw.set_child(tv); c.add_row(sw)
+
+    # ── environment variables ──────────────────────────────────────────────
+    def _build_env_card(self):
+        c = Card("environment variables")
+        self.box.append(c)
+        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 200)
+        tv = Gtk.TextView(); tv.set_editable(False); tv.add_css_class("nyx-editor")
+        tv.set_monospace(True)
+        tv.get_buffer().set_text(
+            "\n".join(f"{k}={v}" for k, v in sorted(os.environ.items())))
+        sw.set_child(tv); c.add_row(sw)
+
+    # ── helpers ────────────────────────────────────────────────────────────
+    def _term_run(self, cmd: str, toast: str):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if which(term):
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     f"{cmd}; echo; echo 'press enter to close'; read _"],
+                    start_new_session=True)
+                self.win.toast(toast)
+                return
+        self.win.toast("no terminal found (install foot/alacritty/kitty)")
+
+    def build(self):
+        self._build_system_card()
+        self._build_hw_card()
+        self._build_docker_card()
+        self._build_sshd_card()
+        self._build_grub_card()
+        self._build_journal_card()
+        self._build_cron_card()
+        self._build_sysctl_card()
+        self._build_tools_card()
+        self._build_ports_card()
+        self._build_env_card()
+        self.add_note(
+            "Sudo-required actions (sshd toggle, GRUB regen, sysctl edits) "
+            "open in a terminal where they can prompt for your password. "
+            "The Docker section reads `docker ps -a` live; container Start/"
+            "Stop/Logs work without sudo if your user is in the `docker` "
+            "group. Journal viewer defaults to warn+; pick `all` to dump "
+            "everything.")
+
     def search_entries(self):
         return [
-            SearchEntry(self.KEY, self.TITLE, "System info", "hostname kernel"),
-            SearchEntry(self.KEY, self.TITLE, "CPU info"),
-            SearchEntry(self.KEY, self.TITLE, "RAM"),
-            SearchEntry(self.KEY, self.TITLE, "GPU"),
-            SearchEntry(self.KEY, self.TITLE, "Environment variables"),
-            SearchEntry(self.KEY, self.TITLE, "SSH server"),
+            SearchEntry(self.KEY, self.TITLE, "System info", "hostname kernel uptime"),
+            SearchEntry(self.KEY, self.TITLE, "CPU info", "lscpu cores threads"),
+            SearchEntry(self.KEY, self.TITLE, "RAM", "free memory"),
+            SearchEntry(self.KEY, self.TITLE, "GPU", "lspci graphics"),
+            SearchEntry(self.KEY, self.TITLE, "Docker", "containers images volumes"),
+            SearchEntry(self.KEY, self.TITLE, "SSH server", "sshd openssh"),
+            SearchEntry(self.KEY, self.TITLE, "GRUB bootloader"),
+            SearchEntry(self.KEY, self.TITLE, "journalctl", "logs systemd"),
+            SearchEntry(self.KEY, self.TITLE, "cron", "scheduled jobs timers"),
+            SearchEntry(self.KEY, self.TITLE, "sysctl", "kernel parameters"),
+            SearchEntry(self.KEY, self.TITLE, "Toolchain", "python node rust go gcc"),
             SearchEntry(self.KEY, self.TITLE, "Open ports"),
+            SearchEntry(self.KEY, self.TITLE, "Environment variables"),
         ]
 
 
