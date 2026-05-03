@@ -181,6 +181,13 @@ MSI Arch box.
   iso_name `nyx`, iso_version `2026.05.02`, BIOS+UEFI bootmodes.
 - `iso-builder/nyx-profile/packages.x86_64` — full pacman list:
   hyprland stack, gtk4, python-gobject, calamares, fonts, etc.
+- `iso-builder/build-iso.sh` `stage_nyxus_chrome` step (lines 84-186) — copies
+  the full Phase 2 chrome layer (configs, 19 GTK apps, 16 wallpapers,
+  3 helper scripts, 12 launcher wrappers + .desktop entries) from
+  `artifacts/api-server/nyxus-scripts/` (single source of truth) into
+  airootfs at bake time. Idempotent. Adds skel symlink `~/.nyxus →
+  /opt/nyxus` so the same hyprland.conf works on both the live ISO and
+  the download-portal install flow.
 - `iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf`
   is a **placeholder** — user must drop their daily-driver config in
   before final bake.

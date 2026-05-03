@@ -1,0 +1,11 @@
+# Everything below is staged at bake time by ../../build-iso.sh from
+# artifacts/api-server/nyxus-scripts/ and from nyxus-intel.tgz. Git
+# only tracks the ISO-specific bits (etc/os-release, etc/motd,
+# etc/hostname, etc/nyxus/* docs).
+etc/skel/.config/
+opt/nyxus/
+opt/nyxus-intel/
+usr/local/bin/
+usr/share/applications/
+usr/share/backgrounds/nyxus/
+usr/share/fonts/TTF/Caveat.ttf

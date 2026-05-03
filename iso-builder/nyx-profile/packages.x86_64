@@ -62,7 +62,9 @@ hyprpaper
 hyprcursor
 waybar
 wofi
-mako
+rofi
+rofi-emoji
+dunst
 xdg-desktop-portal-hyprland
 xdg-desktop-portal-gtk
 qt5-wayland
@@ -76,6 +78,16 @@ brightnessctl
 playerctl
 pamixer
 pavucontrol
+swaybg
+hyprshade
+wdisplays
+blueman
+geoclue
+power-profiles-daemon
+bluez
+bluez-utils
+networkmanager
+network-manager-applet
 polkit
 polkit-gnome
 
@@ -93,6 +105,8 @@ libadwaita
 python
 python-gobject
 python-pip
+python-cairo
+python-psutil
 python-cryptography
 python-requests
 python-pillow
@@ -101,9 +115,13 @@ python-dnspython
 # ── fonts ─────────────────────────────────────────────────────────
 ttf-jetbrains-mono-nerd
 ttf-firacode-nerd
+ttf-caveat
 noto-fonts
 noto-fonts-emoji
 ttf-font-awesome
+
+# ── terminal emulators (alacritty is NYXUS default) ───────────────
+alacritty
 
 # ── terminal + utilities ──────────────────────────────────────────
 foot
