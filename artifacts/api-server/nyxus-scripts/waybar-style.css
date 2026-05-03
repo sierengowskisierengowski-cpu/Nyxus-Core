@@ -707,7 +707,7 @@ window#waybar.right {
      * narrow, so we set width to 100% of the bar and let the image tile
      * vertically — this keeps the splatter pattern visible at its native
      * aspect, repeated down the bar. NO color overlay — image shows raw. */
-    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-rightbar-bg.png");
+    background-image:    url("NYXUS_RIGHTBAR_BG");
     background-color:    #0a0410;
     background-size:     100% auto;
     background-position: top center;
