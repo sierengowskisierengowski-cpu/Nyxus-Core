@@ -405,7 +405,7 @@ export default function Weather() {
                   </div>
                   {precip > 0 && (
                     <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, color: '#0088ff', letterSpacing: '0.1em' }}>
-                      💧 {precip}%
+                      ▼ {precip}%
                     </span>
                   )}
                 </div>

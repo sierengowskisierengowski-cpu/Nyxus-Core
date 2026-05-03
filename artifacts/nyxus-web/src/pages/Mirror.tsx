@@ -467,7 +467,7 @@ function BottomBar({ activeWs, onSelectWs, onStart, onHome, onSettings, onPanel,
           cursor: "pointer", padding: "0 4px",
           textShadow: `0 0 6px ${C.gold}88`,
         }}
-      >⚙</button>
+      >⚙&#xFE0E;</button>
       <span style={{ color: C.text, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.04em" }}>
         {hh}:{mm}:{ss}
       </span>

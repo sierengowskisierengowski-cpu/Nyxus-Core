@@ -13,8 +13,9 @@ export function Header({ data, isOffline }: { data: SysmonData | null, isOffline
     <header className="h-10 flex items-center justify-between px-4 bg-nyxus-panel border-b border-nyxus-dim/30 neon-border shrink-0">
       <div className="flex items-center gap-4">
         <div className="text-nyxus-pink font-bold text-lg glow-text-pink tracking-wider">
-          NYXUS_SYSMON <span className="text-xs text-nyxus-dim">v1.0</span>
+          ▣ NYXUS_SYSMON <span className="text-xs text-nyxus-dim">v1.0</span>
         </div>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, color: 'rgba(255,0,255,0.35)', letterSpacing: '0.22em' }}>NYX-J5W-2026</span>
       </div>
       
       <div className="flex items-center gap-8 text-sm text-nyxus-text">
