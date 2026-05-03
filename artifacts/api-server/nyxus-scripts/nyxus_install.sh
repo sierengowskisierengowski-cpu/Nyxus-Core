@@ -18,7 +18,7 @@ SCRIPTS_DIR="$HOME/.nyxus"
 HYPR_DIR="$HOME/.config/hypr"
 WAYBAR_DIR="$HOME/.config/waybar"
 ROFI_DIR="$HOME/.config/rofi"
-MAKO_DIR="$HOME/.config/mako"
+DUNST_DIR="$HOME/.config/dunst"
 
 # ── COLORS ────────────────────────────────────────────────────────────────────
 R="\033[0m"
@@ -97,9 +97,9 @@ if command -v pacman &>/dev/null; then
   # Core (must succeed)
   sudo pacman -S --noconfirm --needed \
     networkmanager bluez bluez-utils brightnessctl \
-    grim slurp wl-clipboard mako \
+    grim slurp wl-clipboard dunst \
     wireplumber pipewire-pulse \
-    2>/dev/null && ok "core: networkmanager bluez brightnessctl grim slurp wl-clipboard mako wireplumber pipewire-pulse" \
+    2>/dev/null && ok "core: networkmanager bluez brightnessctl grim slurp wl-clipboard dunst wireplumber pipewire-pulse" \
                 || printf "  ${DIM}(some core packages failed — re-run: sudo pacman -S networkmanager bluez bluez-utils)${R}\n"
   # Optional (best-effort — Action Center degrades gracefully if any are missing)
   sudo pacman -S --noconfirm --needed wdisplays blueman geoclue power-profiles-daemon hyprshade 2>/dev/null \
@@ -108,9 +108,8 @@ if command -v pacman &>/dev/null; then
   # Make sure NetworkManager + bluetooth daemons are enabled & running
   sudo systemctl enable --now NetworkManager.service 2>/dev/null && ok "NetworkManager.service enabled" || true
   sudo systemctl enable --now bluetooth.service       2>/dev/null && ok "bluetooth.service enabled"     || true
-  # User session: enable mako so notifications + Focus Assist work
-  systemctl --user enable --now mako.service 2>/dev/null \
-    || printf "  ${DIM}(mako runs on demand from Hyprland exec-once; this is fine)${R}\n"
+  # Dunst is started on demand by Hyprland exec-once — no systemd user service needed.
+  # (NYXUS standardized on dunst in Phase 2; mako removed to avoid daemon conflict.)
 fi
 
 # ── Caveat Font (REQUIRED for NYXUS hand-drawn aesthetic) ────────────────────
@@ -228,18 +227,24 @@ mkdir -p "$HOME/.config/wlogout"
 dl "wlogout-style.css" "$HOME/.config/wlogout/style.css" || failed=$((failed+1))
 dl "wlogout-layout"    "$HOME/.config/wlogout/layout"    || failed=$((failed+1))
 
-# ── MAKO ─────────────────────────────────────────────────────────────────────
-hdr "Mako Notifications"
-mkdir -p "$MAKO_DIR"
-dl "mako-config" "$MAKO_DIR/config" || failed=$((failed+1))
-
-# ── DUNST (alternative to mako; NYXUS-themed) ────────────────────────────────
+# ── DUNST (NYXUS-themed notification daemon) ─────────────────────────────────
 hdr "Dunst Notifications (NYXUS theme)"
-DUNST_DIR="$HOME/.config/dunst"
 mkdir -p "$DUNST_DIR"
 dl "nyxus-dunstrc" "$DUNST_DIR/dunstrc" || failed=$((failed+1))
-# reload if dunst is running
-pkill -USR1 dunst 2>/dev/null || true
+# Dunst has no signal-based config reload — restart it if it's running.
+# (USR1/USR2 are pause/unpause, not reload — common foot-gun.)
+if pgrep -x dunst &>/dev/null; then
+  pkill -x dunst 2>/dev/null || true
+  # dunst will be re-started by Hyprland exec-once on next session;
+  # for the current session, kick it off detached so notifications keep working.
+  if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] && command -v dunst &>/dev/null; then
+    setsid -f dunst &>/dev/null || (dunst &>/dev/null &)
+  fi
+fi
+
+# Best-effort: disable any legacy mako.service from prior NYXUS installs
+# so it doesn't race with dunst on next login.
+systemctl --user disable --now mako.service 2>/dev/null || true
 
 # ── ALACRITTY ────────────────────────────────────────────────────────────────
 hdr "Alacritty"
@@ -532,8 +537,14 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   ok "Wallpaper set — nyxus-sierengowski-clean"
 fi
 
-if command -v makoctl &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
-  makoctl reload 2>/dev/null && ok "Mako reloaded" || true
+if command -v dunst &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+  # Restart (not signal-reload — dunst lacks a real reload signal) so the
+  # freshly-written ~/.config/dunst/dunstrc is picked up in the live session.
+  if pgrep -x dunst &>/dev/null; then
+    pkill -x dunst 2>/dev/null || true
+    setsid -f dunst &>/dev/null || (dunst &>/dev/null &)
+    ok "Dunst restarted with new config"
+  fi
 fi
 
 # ── OS Name Fix (patch any old name → NYXUS in /etc/os-release) ──────────────

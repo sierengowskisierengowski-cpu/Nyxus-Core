@@ -6,7 +6,7 @@ NYXUS ACTION CENTER
 Windows-10-style Action Center with 15 quick-tile grid, inline WiFi flyout,
 volume + device picker, brightness slider, and notification list.
 EVERY action is wired to a real backend (NetworkManager / bluetoothctl /
-wpctl / pactl / brightnessctl / makoctl / hyprshade or wlsunset / grim+slurp).
+wpctl / pactl / brightnessctl / dunstctl / hyprshade or wlsunset / grim+slurp).
 
 (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
@@ -408,17 +408,18 @@ def loc_set(on):
            "|| pkexec systemctl stop geoclue", False, timeout=8)
 
 
-# ── Focus Assist (mako modes) ─────────────────────────────────────────────────
-FOCUS_STATES = ["off", "do-not-disturb", "alarms-only"]
-FOCUS_LABELS = {"off": "Off", "do-not-disturb": "Priority only",
-                "alarms-only": "Alarms only"}
+# ── Focus Assist (dunst paused state) ────────────────────────────────────────
+# NYXUS standardized on dunst in Phase 2. Dunst exposes paused/unpaused via
+# `dunstctl set-paused` rather than mako's named modes, so Focus Assist is
+# now a clean two-state toggle: Off ↔ Do Not Disturb.
+FOCUS_STATES = ["off", "do-not-disturb"]
+FOCUS_LABELS = {"off": "Off", "do-not-disturb": "Do Not Disturb"}
 
 
 def focus_state():
-    out = sh("makoctl mode 2>/dev/null")
+    out = sh("dunstctl is-paused 2>/dev/null")
     if not out: return "off"
-    cur = out.splitlines()[0].strip()
-    return cur if cur in FOCUS_STATES else "off"
+    return "do-not-disturb" if out.strip().lower() == "true" else "off"
 
 
 def focus_on():
@@ -427,18 +428,14 @@ def focus_on():
 
 def focus_cycle(_state=None):
     cur = focus_state()
-    idx = FOCUS_STATES.index(cur) if cur in FOCUS_STATES else 0
-    nxt = FOCUS_STATES[(idx + 1) % 3]
-    if nxt == "off":
-        sh("makoctl mode -s default 2>/dev/null", False)
-    else:
-        sh(f"makoctl mode -s {nxt} 2>/dev/null", False)
+    nxt = "do-not-disturb" if cur == "off" else "off"
+    sh(f"dunstctl set-paused {'true' if nxt == 'do-not-disturb' else 'false'} 2>/dev/null", False)
     return nxt
 
 
-# ── Notification history (mako) ───────────────────────────────────────────────
+# ── Notification history (dunst) ─────────────────────────────────────────────
 def notif_history():
-    raw = sh("makoctl history 2>/dev/null")
+    raw = sh("dunstctl history 2>/dev/null")
     if not raw: return []
     try:
         d = json.loads(raw)
@@ -459,7 +456,10 @@ def notif_history():
 
 
 def notif_clear():
-    sh("makoctl dismiss --all 2>/dev/null", False)
+    # Clear both currently-displayed notifications AND stored history,
+    # otherwise history-backed list rows reappear after refresh.
+    sh("dunstctl close-all 2>/dev/null", False)
+    sh("dunstctl history-clear 2>/dev/null", False)
 
 
 # ── Launchers ─────────────────────────────────────────────────────────────────
@@ -1368,7 +1368,7 @@ class ActionCenter(Gtk.Window):
             ("focus",    "Focus",    G["focus"],    focus_on, lambda t: focus_cycle()),
             ("project",  "Project",  G["project"],  None,     lambda t: (open_project(), Gtk.main_quit())),
         ], available_filter={
-            "focus":    has("makoctl"),
+            "focus":    has("dunstctl"),
             "location": has("systemctl") or True,
         })
 
