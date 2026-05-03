@@ -69,12 +69,13 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
-from gi.repository import Gtk, Gdk, GLib, GObject, Gio, Pango, PangoCairo  # noqa: E402
+from gi.repository import (Gtk, Gdk, GdkPixbuf, GLib, GObject, Gio,
+                            Pango, PangoCairo)  # noqa: E402
 import cairo  # noqa: E402
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -7138,18 +7139,42 @@ class GraffitiBackground(Gtk.DrawingArea):
     behind every page. Stable layout (seeded RNG) so words don't dance
     on every redraw. No grey — pure neon ink on black."""
 
-    # Subtle accent palette for word fills. Mostly white, with a small
-    # chance of a tinted pink/blue/green/gold core. White glow halo on
-    # top makes everything pop without shouting.
-    _TINTS = [
-        (1.00, 1.00, 1.00),  # pure white (most common)
-        (1.00, 1.00, 1.00),
-        (1.00, 1.00, 1.00),
-        (1.00, 0.45, 0.95),  # hot pink core
-        (0.45, 0.80, 1.00),  # electric blue core
-        (0.55, 1.00, 0.55),  # neon green core
-        (1.00, 0.85, 0.45),  # warm gold core
-    ]
+    # NYXUS graffiti image pool -- shipped via the api-server, downloaded
+    # on first launch into ~/.cache/nyxus/graffiti/. Each page key maps
+    # deterministically to one image (24 pages cycle over 17 images).
+    _IMAGE_POOL = [f"nyxus-graffiti-{i:02d}.png" for i in range(1, 18)]
+    _IMAGE_BASE_URL = "https://nyxus-core.replit.app/api/download/nyxus"
+    _IMAGE_CACHE_DIR = Path.home() / ".cache" / "nyxus" / "graffiti"
+
+    # Hand-picked best-fit image per page key (indexes into _IMAGE_POOL).
+    # Pages not listed fall back to deterministic hash mapping.
+    _PAGE_IMAGE_OVERRIDE = {
+        "_home":         0,   # eye/skull -- biggest WOW for landing
+        "account":       16,  # purple flow piece
+        "display":       3,   # geometric pink/blue
+        "network":       4,   # walls of crowns
+        "bluetooth":     7,   # rainbow flow
+        "sound":         12,  # blue skull w/ headphones
+        "keyboard":      6,   # purple lettering
+        "mouse":         15,  # cartoon face
+        "power":         11,  # neon eye
+        "appearance":    10,  # rainbow on brick
+        "workspaces":    5,   # green "style" piece
+        "datetime":      9,   # paint drips
+        "notifications": 13,  # "DANGER" street tag
+        "users":         14,  # donald duck spray
+        "privacy":       12,  # skull
+        "apps":          1,   # crowded shop wall
+        "storage":       1,
+        "language":      2,
+        "a11y":          5,
+        "printers":      8,   # MAN/STREET tags
+        "gaming":        3,
+        "developer":     8,
+        "wallpaper":     10,
+        "fonts":         6,
+        "about":         0,
+    }
 
     def __init__(self):
         super().__init__()
@@ -7161,16 +7186,97 @@ class GraffitiBackground(Gtk.DrawingArea):
         self._cache_w = 0; self._cache_h = 0
         self._page_key = "_home"
         self._words = _GRAFFITI_WORDS_BY_PAGE.get(self._page_key, [])
+        # image-mode state
+        self._pixbuf_cache: Dict[str, "GdkPixbuf.Pixbuf"] = {}
+        self._scaled_cache: Dict[Tuple[str, int, int], "GdkPixbuf.Pixbuf"] = {}
+        self._fetch_inflight: Set[str] = set()
+        try:
+            self._IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            log.warning("graffiti cache dir: %s", e)
 
     # public: called by SettingsWindow.show_page() so the background
-    # collage swaps to words relevant to the current page.
+    # swaps to the image picked for the current page.
     def set_page_key(self, key: str):
-        new_key = key if key in _GRAFFITI_WORDS_BY_PAGE else "_home"
+        new_key = key if (key in _GRAFFITI_WORDS_BY_PAGE
+                          or key in self._PAGE_IMAGE_OVERRIDE) else "_home"
         if new_key == self._page_key: return
         self._page_key = new_key
         self._words = _GRAFFITI_WORDS_BY_PAGE.get(new_key, [])
-        self._layout_cache = None  # force rebuild on next draw
+        self._layout_cache = None  # force word-fallback rebuild on next draw
         self.queue_draw()
+
+    # ── image picker / loader / async fetcher ──────────────────────────
+    def _image_for_page(self, key: str) -> str:
+        idx = self._PAGE_IMAGE_OVERRIDE.get(key)
+        if idx is None:
+            # deterministic hash over key -> pool index (stable per page)
+            idx = abs(hash(("nyx-graffiti-pick", key))) % len(self._IMAGE_POOL)
+        idx = max(0, min(idx, len(self._IMAGE_POOL) - 1))
+        return self._IMAGE_POOL[idx]
+
+    def _load_pixbuf(self, name: str) -> "Optional[GdkPixbuf.Pixbuf]":
+        """Return the pixbuf for `name` if cached on disk; otherwise
+        kick off an async download and return None. Subsequent draws
+        will pick it up once the file lands."""
+        if name in self._pixbuf_cache:
+            return self._pixbuf_cache[name]
+        local = self._IMAGE_CACHE_DIR / name
+        if local.exists() and local.stat().st_size > 1024:
+            try:
+                pb = GdkPixbuf.Pixbuf.new_from_file(str(local))
+                self._pixbuf_cache[name] = pb
+                return pb
+            except Exception as e:
+                log.warning("graffiti load %s: %s", name, e)
+                try: local.unlink()
+                except Exception: pass
+        # not on disk -> async fetch (idempotent)
+        if name not in self._fetch_inflight:
+            self._fetch_inflight.add(name)
+            url = f"{self._IMAGE_BASE_URL}/{name}"
+            def _on_done(result, _name=name, _local=local):
+                self._fetch_inflight.discard(_name)
+                rc, _out, _err = result
+                if rc == 0 and _local.exists() and _local.stat().st_size > 1024:
+                    try:
+                        pb = GdkPixbuf.Pixbuf.new_from_file(str(_local))
+                        self._pixbuf_cache[_name] = pb
+                        # invalidate scaled cache entries for this name
+                        self._scaled_cache = {k: v for k, v in
+                                              self._scaled_cache.items()
+                                              if k[0] != _name}
+                        self.queue_draw()
+                    except Exception as e:
+                        log.warning("graffiti decode %s: %s", _name, e)
+            sh_async(["curl", "-fsSL", "--max-time", "15", "-o",
+                      str(local), url], on_done=_on_done, timeout=20)
+        return None
+
+    def _scaled_for(self, name: str, w: int, h: int) -> "Optional[GdkPixbuf.Pixbuf]":
+        # round dims to nearest 32 so we don't thrash the cache on small resizes
+        bw = max(64, (w // 32) * 32)
+        bh = max(64, (h // 32) * 32)
+        ck = (name, bw, bh)
+        if ck in self._scaled_cache:
+            return self._scaled_cache[ck]
+        src = self._load_pixbuf(name)
+        if src is None: return None
+        sw, sh = src.get_width(), src.get_height()
+        if sw <= 0 or sh <= 0: return None
+        # COVER fit: scale so the image fills the viewport, crop overflow
+        scale = max(bw / sw, bh / sh)
+        tw, th = max(1, int(sw * scale)), max(1, int(sh * scale))
+        try:
+            scaled = src.scale_simple(tw, th, GdkPixbuf.InterpType.BILINEAR)
+        except Exception as e:
+            log.warning("graffiti scale %s: %s", name, e)
+            return None
+        # cap cache size
+        if len(self._scaled_cache) > 6:
+            self._scaled_cache.pop(next(iter(self._scaled_cache)))
+        self._scaled_cache[ck] = scaled
+        return scaled
 
     def _build_layout(self, w: int, h: int):
         # Seed by page key so layout is stable per page (no dancing) but
@@ -7206,14 +7312,57 @@ class GraffitiBackground(Gtk.DrawingArea):
         self._cache_w, self._cache_h = w, h
 
     def _draw(self, area, cr, w, h, _=None):
-        # PURE black bg (Tesla grade -- no dark purple anywhere)
+        # PURE black bg under everything (no grey anywhere)
         cr.set_source_rgba(0.0, 0.0, 0.0, 1.0)
         cr.rectangle(0, 0, w, h); cr.fill()
+
+        # ── primary path: hand-painted graffiti image, page-aware ─────
+        img_name = self._image_for_page(self._page_key)
+        scaled = self._scaled_for(img_name, w, h)
+        if scaled is not None:
+            sw, sh = scaled.get_width(), scaled.get_height()
+            # center the cover-fit pixbuf so important detail stays in frame
+            ox = (w - sw) // 2
+            oy = (h - sh) // 2
+            cr.save()
+            cr.rectangle(0, 0, w, h); cr.clip()
+            Gdk.cairo_set_source_pixbuf(cr, scaled, ox, oy)
+            cr.paint()
+            cr.restore()
+
+            # heavy DARK overlay so UI text stays crisp on top. Vignette
+            # gradient: corners pure black, center ~62% black -- keeps the
+            # graffiti visible in the middle, lets edges anchor the chrome.
+            try:
+                pat = cairo.RadialGradient(w / 2, h / 2, 0,
+                                           w / 2, h / 2, max(w, h) * 0.7)
+                pat.add_color_stop_rgba(0.00, 0.0, 0.0, 0.0, 0.62)
+                pat.add_color_stop_rgba(0.55, 0.0, 0.0, 0.0, 0.78)
+                pat.add_color_stop_rgba(1.00, 0.0, 0.0, 0.0, 0.92)
+                cr.set_source(pat)
+            except Exception:
+                cr.set_source_rgba(0.0, 0.0, 0.0, 0.78)
+            cr.rectangle(0, 0, w, h); cr.fill()
+
+            # subtle pink edge bloom to keep the NYXUS palette vibe
+            try:
+                pat2 = cairo.LinearGradient(0, 0, 0, h)
+                pat2.add_color_stop_rgba(0.00, 1.0, 0.0, 1.0, 0.10)
+                pat2.add_color_stop_rgba(0.50, 1.0, 0.0, 1.0, 0.00)
+                pat2.add_color_stop_rgba(1.00, 1.0, 0.0, 1.0, 0.10)
+                cr.set_source(pat2)
+                cr.rectangle(0, 0, w, h); cr.fill()
+            except Exception:
+                pass
+            return  # done -- skip word fallback
+
+        # ── fallback path (image not yet downloaded): render the
+        #   page-aware word collage we shipped previously. Once the
+        #   async fetch lands, queue_draw() flips us into image mode.
         if (self._layout_cache is None or
             abs(w - self._cache_w) > 40 or abs(h - self._cache_h) > 40):
             self._build_layout(w, h)
         for entry in (self._layout_cache or []):
-            # tolerate older 6-tuple cache if any sneak through
             if len(entry) == 7:
                 word, x, y, size, angle, alpha, tint = entry
             else:
@@ -7230,15 +7379,11 @@ class GraffitiBackground(Gtk.DrawingArea):
             layout.set_font_description(fd); layout.set_text(word, -1)
             cr.move_to(0, 0)
             PangoCairo.layout_path(cr, layout)
-            # outer WHITE halo (very soft, always white -- this is what
-            # makes every word pop off the black regardless of fill tint)
             cr.set_source_rgba(1.0, 1.0, 1.0, alpha * 0.18)
             cr.set_line_width(6.0); cr.set_line_join(cairo.LINE_JOIN_ROUND)
             cr.stroke_preserve()
-            # mid white bloom
             cr.set_source_rgba(1.0, 1.0, 1.0, alpha * 0.35)
             cr.set_line_width(3.0); cr.stroke_preserve()
-            # crisp tinted core on top (often white, occasionally a neon)
             cr.set_source_rgba(tint[0], tint[1], tint[2], alpha)
             cr.fill()
             cr.restore()
