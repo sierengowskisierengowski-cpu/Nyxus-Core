@@ -1347,70 +1347,313 @@ class BluetoothPage(BasePage):
     KEY = "bluetooth"; TITLE = "Bluetooth"; ICON = "🅱"
 
     def build(self):
+        # ── 1. service status ──────────────────────────────────────────────
+        c = Card("bluetooth service")
+        self.box.append(c)
+        rc, out, _ = sh("systemctl is-active bluetooth.service")
+        active = out.strip() == "active"
+        rc, en, _ = sh("systemctl is-enabled bluetooth.service")
+        enabled = en.strip() == "enabled"
+        c.add_row(kv_row("systemd unit:",
+                         f"{'active' if active else 'inactive'} · "
+                         f"{'enabled' if enabled else 'disabled'}"))
+        row = Gtk.Box(spacing=8)
+        for label, cmd in (
+            ("Start",   "sudo systemctl start bluetooth"),
+            ("Stop",    "sudo systemctl stop bluetooth"),
+            ("Restart", "sudo systemctl restart bluetooth"),
+            ("Enable on boot", "sudo systemctl enable bluetooth"),
+        ):
+            b = SketchButton(label, width=140, height=24, color=NEON_BLUE)
+            b.connect("clicked", lambda _b, c=cmd, l=label: self._term_run(
+                c, f"{l}…"))
+            row.append(b)
+        c.add_row(row)
+
+        # ── 2. rfkill ──────────────────────────────────────────────────────
+        c = Card("radio (rfkill)")
+        self.box.append(c)
+        if not have("rfkill"):
+            c.add_row(Gtk.Label(label="rfkill not installed", xalign=0))
+        else:
+            rc, out, _ = sh("rfkill list bluetooth")
+            soft = hard = "?"
+            for line in out.splitlines():
+                line = line.strip()
+                if line.startswith("Soft blocked:"):
+                    soft = line.split(":", 1)[1].strip()
+                elif line.startswith("Hard blocked:"):
+                    hard = line.split(":", 1)[1].strip()
+            c.add_row(kv_row("Soft blocked:", soft))
+            c.add_row(kv_row("Hard blocked:", hard))
+            row = Gtk.Box(spacing=8)
+            b1 = SketchButton("Unblock (rfkill unblock)", width=210,
+                              height=24, color=NEON_GREEN)
+            b1.connect("clicked", lambda _b: (
+                sh("rfkill unblock bluetooth"),
+                self.win.toast("bluetooth radio unblocked"),
+                self.refresh()))
+            row.append(b1)
+            b2 = SketchButton("Block", width=90, height=24,
+                              color=DANGER_RED)
+            b2.connect("clicked", lambda _b: (
+                sh("rfkill block bluetooth"),
+                self.win.toast("bluetooth radio blocked"),
+                self.refresh()))
+            row.append(b2)
+            c.add_row(row)
+
+        # ── 3. adapters (dynamic) ──────────────────────────────────────────
+        self.adp_card = Card("adapters")
+        self.box.append(self.adp_card)
+
+        # ── 4. controller (dynamic) ────────────────────────────────────────
         self.state_card = Card("controller")
         self.box.append(self.state_card)
+
+        # ── 5. devices (dynamic) ───────────────────────────────────────────
         self.dev_card = Card("devices")
         self.box.append(self.dev_card)
+
+        # ── 6. audio profile per connected device ──────────────────────────
+        c = Card("audio codecs / profile")
+        self.box.append(c)
+        if not have("pactl"):
+            c.add_row(Gtk.Label(
+                label="pactl not installed (pulseaudio/pipewire-pulse)",
+                xalign=0))
+        else:
+            rc, out, _ = sh("pactl list cards short")
+            bt_cards = [l for l in out.splitlines() if "bluez" in l.lower()]
+            if not bt_cards:
+                c.add_row(Gtk.Label(
+                    label="(no Bluetooth audio cards connected)", xalign=0))
+            for line in bt_cards:
+                parts = line.split()
+                if len(parts) < 2: continue
+                cid = parts[1]
+                # current profile
+                rc, info, _ = sh(f"pactl list cards | "
+                                 f"awk '/Name: {cid}/,/^$/'")
+                cur = "?"
+                for ln in info.splitlines():
+                    ln = ln.strip()
+                    if ln.startswith("Active Profile:"):
+                        cur = ln.split(":", 1)[1].strip()
+                        break
+                c.add_row(kv_row(cid, cur))
+                row = Gtk.Box(spacing=6)
+                for prof, label in (
+                    ("a2dp_sink",                 "A2DP (high-quality)"),
+                    ("headset_head_unit",         "Headset (mic)"),
+                    ("a2dp-sink-aac",             "AAC"),
+                    ("a2dp-sink-aptx",            "aptX"),
+                    ("a2dp-sink-ldac",            "LDAC"),
+                    ("off",                       "Off"),
+                ):
+                    b = SketchButton(label, width=160, height=22,
+                                     color=NEON_GREEN,
+                                     primary=(prof == cur))
+                    b.connect("clicked",
+                              lambda _b, c=cid, p=prof: (
+                                  sh(f"pactl set-card-profile {c} {p}"),
+                                  self.win.toast(f"{c} → {p}")))
+                    row.append(b)
+                c.add_row(row)
+
+        # ── 7. main.conf ───────────────────────────────────────────────────
+        c = Card("/etc/bluetooth/main.conf")
+        self.box.append(c)
+        try:
+            txt = Path("/etc/bluetooth/main.conf").read_text()
+        except Exception:
+            txt = ""
+        for key in ("AutoEnable", "JustWorksRepairing", "FastConnectable",
+                    "DiscoverableTimeout", "PairableTimeout", "Name"):
+            val = "(default)"
+            for line in txt.splitlines():
+                ln = line.strip()
+                if ln.startswith("#") or "=" not in ln: continue
+                k, v = ln.split("=", 1)
+                if k.strip() == key:
+                    val = v.strip()
+            c.add_row(kv_row(key + ":", val))
+        row = Gtk.Box(spacing=8)
+        b = SketchButton("Edit main.conf", width=180, height=26,
+                         color=ACCENT_GOLD)
+        b.connect("clicked", lambda _b: self._term_run(
+            "sudo ${EDITOR:-nano} /etc/bluetooth/main.conf && "
+            "sudo systemctl restart bluetooth",
+            "main.conf opened (sudo)…"))
+        row.append(b)
+        c.add_row(row)
+
         self.refresh()
 
+    # ── helper: run in terminal ────────────────────────────────────────────
+    def _term_run(self, cmd: str, toast: str):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if have(term):
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     f"{cmd}; echo; echo 'press enter to close'; read _"],
+                    start_new_session=True)
+                self.win.toast(toast)
+                return
+        self.win.toast("no terminal found (install foot/alacritty/kitty)")
+
+    # ── helper: clear card body, keep title row ────────────────────────────
+    def _clear_card(self, card):
+        child = card.get_first_child(); skip = True
+        while child:
+            n = child.get_next_sibling()
+            if skip: skip = False
+            else: card.remove(child)
+            child = n
+
     def refresh(self):
-        for c in (self.state_card, self.dev_card):
-            child = c.get_first_child(); skip = True
-            while child:
-                n = child.get_next_sibling()
-                if skip: skip = False
-                else: c.remove(child)
-                child = n
+        for c in (self.adp_card, self.state_card, self.dev_card):
+            self._clear_card(c)
+
         if not have("bluetoothctl"):
-            self.box.append(Gtk.Label(label="bluetoothctl not installed",
-                                      xalign=0))
+            self.adp_card.add_row(Gtk.Label(
+                label="bluetoothctl not installed (pacman -S bluez-utils)",
+                xalign=0))
             return
+
+        # adapters
+        rc, out, _ = sh("bluetoothctl list")
+        adps = []
+        for line in out.splitlines():
+            m = re.match(r"Controller\s+([0-9A-F:]+)\s+(.+?)(?:\s+\[default\])?$",
+                         line.strip())
+            if m:
+                adps.append((m.group(1), m.group(2).strip(),
+                             "[default]" in line))
+        if not adps:
+            self.adp_card.add_row(Gtk.Label(
+                label="(no controllers found)", xalign=0))
+        for mac, name, is_default in adps:
+            row = Gtk.Box(spacing=8)
+            tag = " (default)" if is_default else ""
+            lbl = Gtk.Label(label=f"{name} · {mac}{tag}", xalign=0)
+            lbl.set_hexpand(True); row.append(lbl)
+            if not is_default:
+                b = SketchButton("Make default", width=140, height=22,
+                                 color=ACCENT_GOLD)
+                b.connect("clicked", lambda _b, m=mac: (
+                    sh(f"bluetoothctl select {m}"),
+                    self.win.toast(f"default → {m}"),
+                    self.refresh()))
+                row.append(b)
+            self.adp_card.add_row(row)
+
+        # controller details
         rc, out, _ = sh("bluetoothctl show")
-        powered = "Powered: yes" in out
-        disc    = "Discoverable: yes" in out
+        powered  = "Powered: yes"      in out
+        disc     = "Discoverable: yes" in out
+        pairable = "Pairable: yes"     in out
+        # alias
+        alias = ""
+        for line in out.splitlines():
+            if "Alias:" in line:
+                alias = line.split(":", 1)[1].strip(); break
+        if alias:
+            self.state_card.add_row(kv_row("Alias:", alias))
         row = Gtk.Box(spacing=10)
         b = SketchToggle("power", width=80, height=26, color=NEON_BLUE,
                          active=powered)
-        b.connect("clicked", lambda _b: (sh(f"bluetoothctl power {'on' if b.active else 'off'}"),
-                                         GLib.timeout_add(500,
-                                              lambda:(self.refresh(), False)[1])))
+        b.connect("clicked", lambda _b: (
+            sh(f"bluetoothctl power {'on' if b.active else 'off'}"),
+            GLib.timeout_add(500,
+                             lambda:(self.refresh(), False)[1])))
         row.append(b)
         d = SketchToggle("discoverable", width=110, height=26,
                          color=ACCENT_PURP, active=disc)
-        d.connect("clicked", lambda _b: sh(f"bluetoothctl discoverable {'on' if d.active else 'off'}"))
+        d.connect("clicked", lambda _b: sh(
+            f"bluetoothctl discoverable {'on' if d.active else 'off'}"))
         row.append(d)
-        s = SketchButton("Scan", width=70, height=26, color=NEON_GREEN)
+        p = SketchToggle("pairable", width=90, height=26,
+                         color=ACCENT_GOLD, active=pairable)
+        p.connect("clicked", lambda _b: sh(
+            f"bluetoothctl pairable {'on' if p.active else 'off'}"))
+        row.append(p)
+        s = SketchButton("Scan 8s", width=90, height=26, color=NEON_GREEN)
         s.connect("clicked", lambda _b: self._scan())
         row.append(s)
+        ag = SketchButton("Agent on", width=100, height=26, color=NEON_BLUE)
+        ag.connect("clicked", lambda _b: (
+            sh_async("bluetoothctl agent on && bluetoothctl default-agent",
+                     lambda r: self.win.toast("agent on")),
+            None))
+        row.append(ag)
         self.state_card.add_row(row)
 
-        # devices
-        rc, out, _ = sh("bluetoothctl devices")
-        if rc == 0:
-            for line in out.splitlines():
+        # devices — separate paired vs discovered
+        rc, paired, _ = sh("bluetoothctl paired-devices")
+        rc, all_dev, _ = sh("bluetoothctl devices")
+        paired_macs = set()
+        for line in paired.splitlines():
+            m = re.match(r"Device ([0-9A-F:]+)", line)
+            if m: paired_macs.add(m.group(1))
+
+        # connected list (info per mac)
+        def render_list(title, lines, icon):
+            if not lines:
+                return
+            self.dev_card.add_row(Gtk.Label(
+                label=f"── {icon} {title} ──", xalign=0))
+            for line in lines:
                 m = re.match(r"Device ([0-9A-F:]+)\s+(.+)", line)
                 if not m: continue
                 mac, name = m.group(1), m.group(2)
+                # connected state
+                rc, info, _ = sh(f"bluetoothctl info {mac}")
+                connected = "Connected: yes" in info
+                trusted   = "Trusted: yes"   in info
+                blocked   = "Blocked: yes"   in info
+                tags = []
+                if connected: tags.append("●conn")
+                if trusted:   tags.append("trusted")
+                if blocked:   tags.append("blocked")
+                tag_str = (" [" + " ".join(tags) + "]") if tags else ""
                 row = Gtk.Box(spacing=10)
-                lbl = Gtk.Label(label=f"{name} ({mac})", xalign=0)
+                lbl = Gtk.Label(label=f"{name} ({mac}){tag_str}",
+                                xalign=0)
                 lbl.set_hexpand(True); row.append(lbl)
                 for label, action, color in (
                     ("Connect",    "connect",    NEON_GREEN),
                     ("Disconnect", "disconnect", DANGER_RED),
                     ("Trust",      "trust",      ACCENT_GOLD),
+                    ("Block" if not blocked else "Unblock",
+                     "block" if not blocked else "unblock", NEON_PINK),
                     ("Forget",     "remove",     INK_DIM),
                 ):
-                    b = SketchButton(label, width=86, height=22, color=color)
+                    b = SketchButton(label, width=86, height=22,
+                                     color=color)
                     b.connect("clicked",
                               lambda _b, a=action, m=mac:
                               sh_async(f"bluetoothctl {a} {m}",
-                                       lambda r: (self.win.toast(
-                                           f"{a}: {'ok' if r[0]==0 else 'failed'}"),
-                                                  self.refresh())))
+                                       lambda r, a=a: (self.win.toast(
+                                           f"{a}: "
+                                           f"{'ok' if r[0]==0 else 'failed'}"),
+                                                       self.refresh())))
                     row.append(b)
                 self.dev_card.add_row(row)
+
+        if rc == 0:
+            paired_lines = [l for l in all_dev.splitlines()
+                            if any(m in l for m in paired_macs)]
+            other_lines  = [l for l in all_dev.splitlines()
+                            if not any(m in l for m in paired_macs)]
+            render_list("paired", paired_lines, "★")
+            render_list("discovered", other_lines, "◌")
+            if not paired_lines and not other_lines:
+                self.dev_card.add_row(Gtk.Label(
+                    label="(no devices — hit Scan)", xalign=0))
         else:
-            self.dev_card.add_row(Gtk.Label(label="(no devices)", xalign=0))
+            self.dev_card.add_row(Gtk.Label(
+                label="(bluetoothctl error)", xalign=0))
 
     def _scan(self):
         sh_async("bluetoothctl --timeout 8 scan on",
@@ -1420,9 +1663,24 @@ class BluetoothPage(BasePage):
 
     def search_entries(self):
         return [
-            SearchEntry(self.KEY, self.TITLE, "Pair / connect"),
-            SearchEntry(self.KEY, self.TITLE, "Discoverable"),
             SearchEntry(self.KEY, self.TITLE, "Bluetooth power"),
+            SearchEntry(self.KEY, self.TITLE, "Pair / connect device"),
+            SearchEntry(self.KEY, self.TITLE, "Discoverable"),
+            SearchEntry(self.KEY, self.TITLE, "Pairable"),
+            SearchEntry(self.KEY, self.TITLE, "Scan for devices"),
+            SearchEntry(self.KEY, self.TITLE, "Trust device"),
+            SearchEntry(self.KEY, self.TITLE, "Block device"),
+            SearchEntry(self.KEY, self.TITLE, "Forget device", "remove"),
+            SearchEntry(self.KEY, self.TITLE, "Adapter / controller",
+                        "default"),
+            SearchEntry(self.KEY, self.TITLE, "Bluetooth service",
+                        "systemd start stop"),
+            SearchEntry(self.KEY, self.TITLE, "rfkill block", "radio"),
+            SearchEntry(self.KEY, self.TITLE, "Audio codec / profile",
+                        "a2dp aac aptx ldac headset"),
+            SearchEntry(self.KEY, self.TITLE, "Bluetooth main.conf",
+                        "AutoEnable name"),
+            SearchEntry(self.KEY, self.TITLE, "Agent / pairing prompts"),
         ]
 
 
