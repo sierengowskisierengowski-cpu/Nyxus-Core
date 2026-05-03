@@ -846,9 +846,11 @@ class NyxusSysmonGtk(Gtk.Application):
         glow_text(cr,p+10,hcy+158,f"↑ UPLOAD",*C_ORANGE,size=8)
         glow_text(cr,p+100,hcy+158,f"↓ DOWNLOAD",*C_BLUE,size=8)
 
-        # Connection states
+        # Connection states — fill remaining height down to bottom
         if self.st.net_conns_by_state:
-            neon_card(cr,p,hcy+168,w-p*2,min(120,h-hcy-174),C_GREEN)
+            cs_y = hcy + 168
+            cs_h = max(80, h - cs_y - p)
+            neon_card(cr,p,cs_y,w-p*2,cs_h,C_GREEN)
             draw_tilt_badge(cr,p+14,hcy+192,"CONNECTION STATES",C_GREEN,angle=-4.0)
             xc=p+12; yc=hcy+208
             for j,(state,count) in enumerate(sorted(self.st.net_conns_by_state.items(),key=lambda x:-x[1])[:8]):
@@ -867,10 +869,14 @@ class NyxusSysmonGtk(Gtk.Application):
     def _draw_disk(self,area,cr,w,h,_):
         draw_nyxus_bg(cr, w, h)
         dot_grid(cr,0,0,w,h); p=8
-        neon_card(cr,p,p,w-p*2,min(300,h-p*2),C_GREEN)
+        # Auto-fit: partitions card 55% of height, I/O card 45% — fill window
+        part_h = int((h - p*3) * 0.55)
+        io_h   = (h - p*3) - part_h
+        neon_card(cr,p,p,w-p*2,part_h,C_GREEN)
         draw_tilt_badge(cr,p+14,p+26,"DISK PARTITIONS",C_GREEN,angle=-4.0)
         iy=p+44
         for i,d in enumerate(self.st.disks[:8]):
+            if iy > p + part_h - 32: break
             col=C_ORANGE if d["pct"]>85 else (C_YELLOW if d["pct"]>70 else C_GREEN)
             glow_text(cr,p+12,iy,d["mount"],*col,size=10,bold=True)
             cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
@@ -880,14 +886,14 @@ class NyxusSysmonGtk(Gtk.Application):
             cr.select_font_face("Caveat",0,0); cr.set_font_size(11); cr.set_source_rgba(*C_DIM,0.7)
             cr.move_to(p+12,iy+20); cr.show_text(f"USED: {fmt_size(d['used'])}  FREE: {fmt_size(d['free'])}  TOTAL: {fmt_size(d['total'])}")
             iy+=38
-        # Disk I/O
+        # Disk I/O — fills bottom half down to window edge
         if self.st.disk_io:
-            io_y=p*2+min(300,h-p*2)
-            neon_card(cr,p,io_y,w-p*2,min(200,h-io_y-p),C_YELLOW)
+            io_y = p*2 + part_h
+            neon_card(cr,p,io_y,w-p*2,io_h,C_YELLOW)
             draw_tilt_badge(cr,p+14,io_y+26,"DISK I/O RATES",C_YELLOW,angle=-4.0)
             iy2=io_y+44
             for dev,(iod) in list(self.st.disk_io.items())[:6]:
-                if iy2>io_y+190: break
+                if iy2 > io_y + io_h - 12: break
                 glow_text(cr,p+12,iy2,dev,*C_YELLOW,size=9,bold=True)
                 glow_text(cr,p+120,iy2,f"R: {fmt_bytes(iod['read_bps'],'')}/s",*C_GREEN,size=9)
                 glow_text(cr,p+260,iy2,f"W: {fmt_bytes(iod['write_bps'],'')}/s",*C_ORANGE,size=9)
@@ -978,18 +984,19 @@ class NyxusSysmonGtk(Gtk.Application):
 
     def _draw_sensors(self,area,cr,w,h,_):
         draw_nyxus_bg(cr, w, h)
-        dot_grid(cr,0,0,w,h); p=8; col_y=p
+        dot_grid(cr,0,0,w,h); p=8
         hw=(w-p*3)//2
-        # Temperature sensors
-        neon_card(cr,p,p,hw,min(300,h-p*2),C_ORANGE)
+        full_h = h - p*2
+        # Left column: temperature sensors fills full height
+        neon_card(cr,p,p,hw,full_h,C_ORANGE)
         draw_tilt_badge(cr,p+14,p+26,"TEMPERATURE SENSORS",C_ORANGE,angle=-4.0)
         iy=p+42
         if self.st.temps:
             for chip,readings in self.st.temps.items():
-                if iy>p+280: break
+                if iy > p + full_h - 24: break
                 glow_text(cr,p+12,iy,chip.upper(),*C_YELLOW,size=9,bold=True); iy+=14
-                for r in readings[:6]:
-                    if iy>p+290: break
+                for r in readings[:8]:
+                    if iy > p + full_h - 14: break
                     tc=temp_color(r.current); lbl=r.label or f"Sensor"
                     cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
                     cr.set_source_rgba(*C_DIM,0.7); cr.move_to(p+20,iy); cr.show_text(f"  {lbl[:20]}")
@@ -999,50 +1006,58 @@ class NyxusSysmonGtk(Gtk.Application):
         else:
             cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
             cr.set_source_rgba(*C_DIM,0.5); cr.move_to(p+12,iy+30); cr.show_text("NO SENSORS DETECTED")
-        # Battery
+        # Right column: battery / gpu / fans split full height equally
         bw=hw; bx=p*2+hw
-        neon_card(cr,bx,p,bw,120,C_GREEN)
-        draw_tilt_badge(cr,bx+14,p+26,"BATTERY",C_GREEN,angle=-4.0)
+        right_h = (full_h - p*2) // 3
+        # Battery
+        by1 = p
+        neon_card(cr,bx,by1,bw,right_h,C_GREEN)
+        draw_tilt_badge(cr,bx+14,by1+26,"BATTERY",C_GREEN,angle=-4.0)
         if self.st.battery:
             b=self.st.battery; pct=b["pct"]
             col=C_GREEN if pct>40 else (C_YELLOW if pct>20 else C_ORANGE)
-            glow_text(cr,bx+12,p+68,f"{pct:.1f}%",*col,size=36,bold=True)
+            glow_text(cr,bx+12,by1+right_h//2+8,f"{pct:.1f}%",*col,size=36,bold=True)
             status="⚡ CHARGING" if b["charging"] else "🔋 DISCHARGING"
             cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
-            cr.set_source_rgba(*col,0.85); cr.move_to(bx+12,p+90)
+            cr.set_source_rgba(*col,0.85); cr.move_to(bx+12,by1+right_h//2+30)
             cr.show_text(status)
             if b["secs_left"]:
-                cr.set_source_rgba(*C_DIM,0.7); cr.move_to(bx+12,p+104)
+                cr.set_source_rgba(*C_DIM,0.7); cr.move_to(bx+12,by1+right_h-12)
                 cr.show_text(f"REMAINING: {fmt_uptime(b['secs_left'])}")
         else:
             cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
-            cr.set_source_rgba(*C_DIM,0.5); cr.move_to(bx+12,p+60); cr.show_text("NO BATTERY DETECTED")
+            cr.set_source_rgba(*C_DIM,0.5); cr.move_to(bx+12,by1+right_h//2); cr.show_text("NO BATTERY DETECTED")
         # GPU
-        neon_card(cr,bx,p+128,bw,120,C_BLUE)
-        draw_tilt_badge(cr,bx+14,p+154,"GPU (NVIDIA)",C_BLUE,angle=-4.0)
+        by2 = by1 + right_h + p
+        neon_card(cr,bx,by2,bw,right_h,C_BLUE)
+        draw_tilt_badge(cr,bx+14,by2+26,"GPU (NVIDIA)",C_BLUE,angle=-4.0)
         if self.st.gpu_util is not None:
-            glow_text(cr,bx+12,p+188,f"{self.st.gpu_util:.0f}%",*C_BLUE,size=32,bold=True)
-            ring_chart(cr,bx+bw-60,p+188,35,self.st.gpu_util,C_BLUE)
+            glow_text(cr,bx+12,by2+right_h//2+8,f"{self.st.gpu_util:.0f}%",*C_BLUE,size=32,bold=True)
+            ring_chart(cr,bx+bw-60,by2+right_h//2+8,35,self.st.gpu_util,C_BLUE)
             cr.select_font_face("Caveat",0,0); cr.set_font_size(12); cr.set_source_rgba(*C_DIM,0.7)
-            cr.move_to(bx+12,p+218); cr.show_text(f"VRAM: {self.st.gpu_mem_used}MB / {self.st.gpu_mem_total}MB")
-            cr.move_to(bx+12,p+232); cr.show_text(f"TEMP: {self.st.gpu_temp:.0f}°C")
+            cr.move_to(bx+12,by2+right_h-26); cr.show_text(f"VRAM: {self.st.gpu_mem_used}MB / {self.st.gpu_mem_total}MB")
+            cr.move_to(bx+12,by2+right_h-12); cr.show_text(f"TEMP: {self.st.gpu_temp:.0f}°C")
         else:
             cr.set_font_size(12); cr.set_source_rgba(*C_DIM,0.5)
-            cr.move_to(bx+12,p+185); cr.show_text("nvidia-smi NOT AVAILABLE")
-            cr.move_to(bx+12,p+200); cr.show_text("or no NVIDIA GPU found")
+            cr.move_to(bx+12,by2+right_h//2);     cr.show_text("nvidia-smi NOT AVAILABLE")
+            cr.move_to(bx+12,by2+right_h//2+15); cr.show_text("or no NVIDIA GPU found")
         # Fans
+        by3 = by2 + right_h + p
+        fan_h = h - by3 - p
+        neon_card(cr,bx,by3,bw,fan_h,C_PURPLE)
+        draw_tilt_badge(cr,bx+14,by3+26,"FANS",C_PURPLE,angle=-4.0)
         if self.st.fans:
-            fy=p+128+128
-            neon_card(cr,bx,fy,bw,min(120,h-fy-p),C_PURPLE)
-            draw_tilt_badge(cr,bx+14,fy+26,"FANS",C_PURPLE,angle=-4.0)
-            ffy=fy+42
+            ffy=by3+44
             for chip,readings in self.st.fans.items():
                 for r in readings:
-                    if ffy>fy+110: break
+                    if ffy > by3 + fan_h - 8: break
                     cr.set_font_size(12); cr.set_source_rgba(*C_DIM,0.7)
                     cr.move_to(bx+12,ffy); cr.show_text(f"{r.label or chip}: ")
                     glow_text(cr,bx+140,ffy,f"{r.current} RPM",*C_PURPLE,size=9)
                     ffy+=14
+        else:
+            cr.set_font_size(12); cr.set_source_rgba(*C_DIM,0.5)
+            cr.move_to(bx+12,by3+fan_h//2); cr.show_text("NO FAN SENSORS")
         rainbow_bar(cr,0,h-3,w,3)
 
     # ── System Info ─────────────────────────────────────────────────────────────
@@ -1053,8 +1068,9 @@ class NyxusSysmonGtk(Gtk.Application):
     def _draw_system(self,area,cr,w,h,_):
         draw_nyxus_bg(cr, w, h)
         dot_grid(cr,0,0,w,h); p=8
-        # Big system info card
-        neon_card(cr,p,p,w-p*2,min(360,h-p*2),C_PINK)
+        # Big system info card — auto-fits 75% of height, LIVE STATUS gets 25%
+        sys_h = int((h - p*3) * 0.75)
+        neon_card(cr,p,p,w-p*2,sys_h,C_PINK)
         glow_text(cr,p+10,p+30,"SYSTEM INFORMATION",*C_PINK,size=13,bold=True)
         rainbow_bar(cr,p,p+38,w-p*2,2)
         uname=platform.uname()
@@ -1083,9 +1099,10 @@ class NyxusSysmonGtk(Gtk.Application):
             cr.set_source_rgba(*C_PURPLE,0.08); cr.set_line_width(1)
             cr.move_to(p+8,iy+4); cr.line_to(w-p*2-8,iy+4); cr.stroke()
             iy+=22
-        # Live quick stats
-        qy=p*2+min(360,h-p*2)
-        neon_card(cr,p,qy,w-p*2,min(120,h-qy-p),C_PINK)
+        # Live quick stats — fills bottom 25% of window
+        qy = p*2 + sys_h
+        qh = h - qy - p
+        neon_card(cr,p,qy,w-p*2,qh,C_PINK)
         draw_tilt_badge(cr,p+14,qy+26,"LIVE STATUS",C_PINK,angle=-4.0)
         qs=[
             (f"CPU: {self.st.cpu_pct:.1f}%",   C_ORANGE),
