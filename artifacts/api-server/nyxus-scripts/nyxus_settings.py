@@ -2605,6 +2605,7 @@ class KeyboardPage(BasePage):
     KEY = "keyboard"; TITLE = "Keyboard"; ICON = "⌨"
 
     def build(self):
+        # ── 1. layout (live + persistent picker) ───────────────────────────
         c = Card("layout")
         self.box.append(c)
         rc, out, _ = sh("hyprctl -j devices")
@@ -2612,13 +2613,85 @@ class KeyboardPage(BasePage):
         try:
             data = json.loads(out)
             for kb in data.get("keyboards", []):
-                layouts.append(f"{kb.get('name','?')} → {kb.get('active_keymap','?')}")
+                layouts.append(
+                    f"{kb.get('name','?')} → {kb.get('active_keymap','?')}")
         except Exception: pass
         for l in layouts:
             c.add_row(Gtk.Label(label=l, xalign=0))
         if not layouts:
             c.add_row(Gtk.Label(label="(no keyboards detected)", xalign=0))
+        # current localectl
+        rc, out, _ = sh("localectl status")
+        for ln in out.splitlines():
+            s = ln.strip()
+            if s.startswith(("X11 Layout", "X11 Variant", "X11 Model",
+                             "X11 Options", "VC Keymap")):
+                c.add_row(Gtk.Label(label=s, xalign=0))
+        # picker — top common layouts + dropdown of all
+        all_layouts = []
+        rc, out, _ = sh("localectl list-x11-keymap-layouts")
+        if rc == 0:
+            all_layouts = [l.strip() for l in out.splitlines() if l.strip()]
+        common = ["us", "us(intl)", "gb", "de", "fr", "es", "it",
+                  "ru", "jp", "kr", "cn"]
+        c.add_row(Gtk.Label(label="Quick set (live + persistent):",
+                            xalign=0))
+        row = Gtk.Box(spacing=6)
+        for lay in common:
+            base = lay.split("(")[0]
+            if base not in all_layouts and all_layouts: continue
+            b = SketchButton(lay, width=80, height=22, color=NEON_BLUE)
+            b.connect("clicked", lambda _b, l=lay:
+                      self._set_layout(l, ""))
+            row.append(b)
+        c.add_row(row)
+        if all_layouts:
+            row = Gtk.Box(spacing=8)
+            row.append(Gtk.Label(label="All layouts:", xalign=0))
+            dd = Gtk.DropDown.new_from_strings(all_layouts)
+            try: dd.set_selected(all_layouts.index("us"))
+            except ValueError: pass
+            row.append(dd)
+            ent = Gtk.Entry()
+            ent.set_placeholder_text("variant (e.g. dvorak, intl) — optional")
+            ent.set_hexpand(True)
+            row.append(ent)
+            b = SketchButton("Apply", width=90, height=22,
+                             color=NEON_GREEN)
+            b.connect("clicked", lambda _b: self._set_layout(
+                all_layouts[dd.get_selected()], ent.get_text().strip()))
+            row.append(b)
+            c.add_row(row)
 
+        # ── 2. xkb options (caps swap, compose, etc.) ──────────────────────
+        c = Card("xkb options")
+        self.box.append(c)
+        rc, cur_opts, _ = sh(
+            "localectl status | awk -F': ' '/X11 Options/ {print $2}'")
+        cur_opts = cur_opts.strip()
+        c.add_row(kv_row("Active options:", cur_opts or "(none)"))
+        row = Gtk.Box(spacing=6)
+        for label, opt in (
+            ("Caps→Esc",     "caps:escape"),
+            ("Caps→Ctrl",    "ctrl:nocaps"),
+            ("Swap Caps↔Esc", "caps:swapescape"),
+            ("Compose=Right Alt",  "compose:ralt"),
+            ("Compose=Menu",       "compose:menu"),
+            ("Numlock on boot",    "numpad:mac"),
+        ):
+            active = opt in cur_opts
+            b = SketchButton(label, width=160, height=22,
+                             color=ACCENT_GOLD, primary=active)
+            b.connect("clicked",
+                      lambda _b, o=opt: self._toggle_xkb_opt(o))
+            row.append(b)
+        c.add_row(row)
+        b = SketchButton("Clear all options", width=180, height=22,
+                         color=DANGER_RED)
+        b.connect("clicked", lambda _b: self._set_xkb_opts(""))
+        c.add_row(b)
+
+        # ── 3. repeat rate / delay (existing, kept) ────────────────────────
         c = Card("repeat rate")
         self.box.append(c)
         rc, out, _ = sh("hyprctl getoption input:repeat_rate -j")
@@ -2629,40 +2702,266 @@ class KeyboardPage(BasePage):
         except Exception: delay = 600
         row = Gtk.Box(spacing=10)
         row.append(Gtk.Label(label=f"rate {rate}/s", xalign=0))
-        sl = SketchSlider(value=min(rate,80)/80.0, color=NEON_PINK, width=220)
+        sl = SketchSlider(value=min(rate,80)/80.0,
+                          color=NEON_PINK, width=220)
         sl.connect("value-changed",
-                   lambda _s, v: sh(f"hyprctl keyword input:repeat_rate {int(5+v*75)}"))
+                   lambda _s, v: sh(
+                       f"hyprctl keyword input:repeat_rate {int(5+v*75)}"))
         row.append(sl); c.add_row(row)
         row = Gtk.Box(spacing=10)
         row.append(Gtk.Label(label=f"delay {delay} ms", xalign=0))
-        sl = SketchSlider(value=min(delay,1000)/1000.0, color=NEON_BLUE, width=220)
+        sl = SketchSlider(value=min(delay,1000)/1000.0,
+                          color=NEON_BLUE, width=220)
         sl.connect("value-changed",
-                   lambda _s, v: sh(f"hyprctl keyword input:repeat_delay {int(150+v*850)}"))
+                   lambda _s, v: sh(
+                       f"hyprctl keyword input:repeat_delay {int(150+v*850)}"))
         row.append(sl); c.add_row(row)
+        # quick presets
+        row = Gtk.Box(spacing=6)
+        for label, r, d in (("Slow",  20, 700),
+                            ("Normal", 30, 500),
+                            ("Fast",   45, 300),
+                            ("Gamer",  60, 180)):
+            b = SketchButton(label, width=80, height=22,
+                             color=NEON_GREEN)
+            b.connect("clicked", lambda _b, r=r, d=d: (
+                sh(f"hyprctl keyword input:repeat_rate {r}"),
+                sh(f"hyprctl keyword input:repeat_delay {d}"),
+                self.win.toast(f"repeat → {r}/s @ {d}ms"),
+                self.refresh()))
+            row.append(b)
+        c.add_row(row)
 
-        c = Card("shortcuts")
+        # ── 4. numlock / capslock state ────────────────────────────────────
+        c = Card("lock keys")
+        self.box.append(c)
+        rc, out, _ = sh("hyprctl getoption input:numlock_by_default -j")
+        try: nl = json.loads(out).get("int", 0) == 1
+        except Exception: nl = False
+        nl_tog = SketchToggle("Numlock at login", width=180, height=24,
+                              color=NEON_BLUE, active=nl)
+        nl_tog.connect("clicked", lambda _b: (
+            sh(f"hyprctl keyword input:numlock_by_default "
+               f"{1 if nl_tog.active else 0}"),
+            self.win.toast(
+                f"numlock at login → {'on' if nl_tog.active else 'off'}")))
+        c.add_row(nl_tog)
+        # current LED state
+        rc, out, _ = sh(
+            "for d in /sys/class/leds/input*::numlock; do "
+            "[ -e $d ] && echo $(basename $d): $(cat $d/brightness); done")
+        if out.strip():
+            for ln in out.strip().splitlines()[:4]:
+                c.add_row(Gtk.Label(label=ln, xalign=0))
+
+        # ── 5. shortcuts (existing) + grouped by mod ──────────────────────
+        c = Card("Hyprland keybinds")
         self.box.append(c)
         rc, out, _ = sh("hyprctl -j binds")
         try: binds = json.loads(out)
         except Exception: binds = []
         c.add_row(Gtk.Label(label=f"{len(binds)} active binds", xalign=0))
-        # show a scrollable list of binds
-        sw = Gtk.ScrolledWindow(); sw.set_vexpand(True)
-        sw.set_size_request(-1, 220)
-        tv = Gtk.TextView(); tv.set_editable(False)
+        # group by modmask
+        from collections import defaultdict
+        groups = defaultdict(list)
+        for b in binds:
+            mm = int(b.get("modmask") or 0)
+            groups[mm].append(b)
+        c.add_row(kv_row("Mod groups:",
+                         ", ".join(f"mod{m}={len(v)}"
+                                   for m, v in sorted(groups.items()))))
+        # conflict detector — duplicate (mod, key) pairs
+        seen = {}
+        conflicts = []
+        for b in binds:
+            k = (b.get("modmask"), b.get("key"))
+            if k in seen and b.get("dispatcher") != seen[k].get("dispatcher"):
+                conflicts.append((k, seen[k], b))
+            else:
+                seen[k] = b
+        if conflicts:
+            c.add_row(Gtk.Label(
+                label=f"⚠ {len(conflicts)} conflicting binds — "
+                      f"first: mod{conflicts[0][0][0]}+"
+                      f"{conflicts[0][0][1]}", xalign=0))
+        else:
+            c.add_row(Gtk.Label(label="✓ no bind conflicts", xalign=0))
+        # full scrollable list
+        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 220)
+        tv = Gtk.TextView(); tv.set_editable(False); tv.set_monospace(True)
         tv.add_css_class("nyx-editor")
         text = "\n".join(
-            f"{(b.get('modmask') or 0):3d} + {b.get('key','')}  →  "
+            f"{(b.get('modmask') or 0):3d} + {b.get('key',''):<14}  →  "
             f"{b.get('dispatcher','')} {b.get('arg','')}"
-            for b in binds[:200])
+            for b in binds[:300])
         tv.get_buffer().set_text(text or "(no binds)")
         sw.set_child(tv); c.add_row(sw)
+
+        # ── 6. live key tester ─────────────────────────────────────────────
+        c = Card("key event tester")
+        self.box.append(c)
+        c.add_row(Gtk.Label(
+            label="Click into the field then press any key combo. "
+                  "Shows the keysym / keyval as Hyprland sees it.",
+            xalign=0))
+        ent = Gtk.Entry()
+        ent.set_placeholder_text("focus here, then press a key…")
+        c.add_row(ent)
+        out_lbl = Gtk.Label(label="(no key yet)", xalign=0)
+        out_lbl.add_css_class("nyx-mono")
+        c.add_row(out_lbl)
+        kc = Gtk.EventControllerKey()
+        def on_key(_ctl, keyval, keycode, state):
+            mods = []
+            if state & Gdk.ModifierType.SHIFT_MASK:   mods.append("SHIFT")
+            if state & Gdk.ModifierType.CONTROL_MASK: mods.append("CTRL")
+            if state & Gdk.ModifierType.ALT_MASK:     mods.append("ALT")
+            if state & Gdk.ModifierType.SUPER_MASK:   mods.append("SUPER")
+            name = Gdk.keyval_name(keyval) or "?"
+            out_lbl.set_text(
+                f"keyval={keyval} (0x{keyval:x})  name={name}  "
+                f"keycode={keycode}  mods=[{'+'.join(mods) or 'none'}]")
+            return False
+        kc.connect("key-pressed", on_key)
+        ent.add_controller(kc)
+
+        # ── 7. input methods (fcitx5/ibus) ─────────────────────────────────
+        c = Card("input method")
+        self.box.append(c)
+        for tool in ("fcitx5", "ibus", "fcitx"):
+            c.add_row(kv_row(f"{tool}:",
+                             "installed" if have(tool)
+                             else "not installed"))
+        c.add_row(kv_row("GTK_IM_MODULE:",
+                         os.environ.get("GTK_IM_MODULE", "(unset)")))
+        c.add_row(kv_row("QT_IM_MODULE:",
+                         os.environ.get("QT_IM_MODULE", "(unset)")))
+        c.add_row(kv_row("XMODIFIERS:",
+                         os.environ.get("XMODIFIERS", "(unset)")))
+        row = Gtk.Box(spacing=8)
+        if have("fcitx5"):
+            b = SketchButton("Launch fcitx5", width=160, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked", lambda _b: (
+                subprocess.Popen(["fcitx5", "-d"], start_new_session=True),
+                self.win.toast("fcitx5 launched (daemon)")))
+            row.append(b)
+            b2 = SketchButton("fcitx5-config-qt", width=180, height=24,
+                              color=ACCENT_GOLD)
+            b2.connect("clicked", lambda _b: (
+                subprocess.Popen(["fcitx5-config-qt"],
+                                 start_new_session=True),
+                self.win.toast("fcitx5 config opened")))
+            row.append(b2)
+        if have("ibus"):
+            b = SketchButton("Launch ibus-setup", width=180, height=24,
+                             color=ACCENT_PURP)
+            b.connect("clicked", lambda _b: (
+                subprocess.Popen(["ibus-setup"], start_new_session=True),
+                self.win.toast("ibus-setup opened")))
+            row.append(b)
+        if row.get_first_child(): c.add_row(row)
+
+        # ── 8. console keymap ──────────────────────────────────────────────
+        c = Card("virtual console keymap")
+        self.box.append(c)
+        rc, out, _ = sh("localectl status | awk -F': ' '/VC Keymap/ {print $2}'")
+        cur_vc = out.strip()
+        c.add_row(kv_row("VC Keymap:", cur_vc or "(default)"))
+        rc, out, _ = sh("localectl list-keymaps")
+        vc_maps = [l.strip() for l in out.splitlines() if l.strip()]
+        if vc_maps:
+            row = Gtk.Box(spacing=6)
+            row.append(Gtk.Label(label="Quick:", xalign=0))
+            for k in ("us", "uk", "de", "fr", "dvorak", "colemak"):
+                if k not in vc_maps: continue
+                b = SketchButton(k, width=72, height=22,
+                                 color=NEON_BLUE,
+                                 primary=(k == cur_vc))
+                b.connect("clicked", lambda _b, k=k: self._set_vc_keymap(k))
+                row.append(b)
+            c.add_row(row)
+
+    # ── helpers ────────────────────────────────────────────────────────────
+    def _set_layout(self, layout: str, variant: str):
+        # live (hyprctl)
+        sh(f"hyprctl keyword input:kb_layout {shlex.quote(layout)}")
+        if variant:
+            sh(f"hyprctl keyword input:kb_variant {shlex.quote(variant)}")
+        else:
+            sh("hyprctl keyword input:kb_variant ''")
+        # persistent (localectl) — needs sudo
+        cmd = (f"sudo -n localectl set-x11-keymap "
+               f"{shlex.quote(layout)} '' "
+               f"{shlex.quote(variant)}")
+        sh_async(cmd, lambda r: self.win.toast(
+            f"layout → {layout}{' (' + variant + ')' if variant else ''}"
+            if r[0] == 0 else
+            "live set; persistent needs sudo localectl"))
+
+    def _toggle_xkb_opt(self, opt: str):
+        rc, out, _ = sh(
+            "localectl status | awk -F': ' '/X11 Options/ {print $2}'")
+        cur = [o for o in out.strip().split(",") if o]
+        if opt in cur: cur.remove(opt)
+        else: cur.append(opt)
+        self._set_xkb_opts(",".join(cur))
+
+    def _set_xkb_opts(self, opts: str):
+        # live
+        sh(f"hyprctl keyword input:kb_options {shlex.quote(opts)}")
+        # persistent
+        rc, out, _ = sh("localectl status")
+        cur_layout = "us"; cur_variant = ""
+        for ln in out.splitlines():
+            if "X11 Layout" in ln:
+                cur_layout = ln.split(":", 1)[1].strip() or "us"
+            elif "X11 Variant" in ln:
+                cur_variant = ln.split(":", 1)[1].strip()
+        cmd = (f"sudo -n localectl set-x11-keymap "
+               f"{shlex.quote(cur_layout)} '' "
+               f"{shlex.quote(cur_variant)} {shlex.quote(opts)}")
+        sh_async(cmd, lambda r: self.win.toast(
+            f"xkb options → {opts or '(cleared)'}"
+            if r[0] == 0 else "live set; persistent needs sudo localectl"))
+
+    def _set_vc_keymap(self, k: str):
+        sh_async(f"sudo -n localectl set-keymap {shlex.quote(k)}",
+                 lambda r: self.win.toast(
+                     f"VC keymap → {k}" if r[0] == 0
+                     else "needs sudo NOPASSWD"))
 
     def search_entries(self):
         return [
             SearchEntry(self.KEY, self.TITLE, "Layout"),
             SearchEntry(self.KEY, self.TITLE, "Repeat rate"),
-            SearchEntry(self.KEY, self.TITLE, "Shortcuts", "binds keybinds hotkeys"),
+            SearchEntry(self.KEY, self.TITLE, "Repeat delay"),
+            SearchEntry(self.KEY, self.TITLE, "Repeat presets",
+                        "slow normal fast gamer"),
+            SearchEntry(self.KEY, self.TITLE, "Layout variant",
+                        "dvorak colemak intl"),
+            SearchEntry(self.KEY, self.TITLE, "All keyboard layouts",
+                        "localectl x11"),
+            SearchEntry(self.KEY, self.TITLE, "Caps Lock as Escape",
+                        "caps escape swap"),
+            SearchEntry(self.KEY, self.TITLE, "Caps Lock as Ctrl",
+                        "nocaps"),
+            SearchEntry(self.KEY, self.TITLE, "Compose key",
+                        "ralt menu"),
+            SearchEntry(self.KEY, self.TITLE, "xkb options",
+                        "modifier swap"),
+            SearchEntry(self.KEY, self.TITLE, "Numlock on login",
+                        "numlock_by_default"),
+            SearchEntry(self.KEY, self.TITLE, "Shortcuts",
+                        "binds keybinds hotkeys"),
+            SearchEntry(self.KEY, self.TITLE, "Bind conflicts",
+                        "duplicate hotkey"),
+            SearchEntry(self.KEY, self.TITLE, "Key event tester",
+                        "keysym keyval keycode capture"),
+            SearchEntry(self.KEY, self.TITLE, "Input method",
+                        "fcitx5 ibus IM"),
+            SearchEntry(self.KEY, self.TITLE, "Console keymap",
+                        "VC tty localectl"),
         ]
 
 
