@@ -1717,42 +1717,292 @@ class PowerPage(BasePage):
     KEY = "power"; TITLE = "Power"; ICON = "⚡"
 
     def build(self):
-        self.bat_card = Card("battery")
-        self.box.append(self.bat_card)
+        # ── 1. battery (auto-hides if none) ────────────────────────────────
+        bat_dir = Path("/sys/class/power_supply")
+        self.bats = sorted(bat_dir.glob("BAT*")) if bat_dir.exists() else []
+        if self.bats:
+            self.bat_card = Card("battery")
+            self.box.append(self.bat_card)
+        else:
+            self.bat_card = None
+
+        # ── 2. power profiles ──────────────────────────────────────────────
         self.prof_card = Card("power profiles")
         self.box.append(self.prof_card)
+
+        # ── 3. CPU governor ────────────────────────────────────────────────
+        self.gov_card = Card("CPU frequency governor")
+        self.box.append(self.gov_card)
+
+        # ── 4. charge thresholds (laptop-only) ─────────────────────────────
+        if self.bats:
+            ct = Card("charge thresholds")
+            self.box.append(ct)
+            any_thr = False
+            for b in self.bats:
+                start_p = b / "charge_control_start_threshold"
+                end_p   = b / "charge_control_end_threshold"
+                if not (start_p.exists() or end_p.exists()):
+                    continue
+                any_thr = True
+                try:
+                    s = start_p.read_text().strip() if start_p.exists() else "?"
+                    e = end_p.read_text().strip() if end_p.exists() else "?"
+                except Exception:
+                    s = e = "?"
+                ct.add_row(kv_row(f"{b.name} thresholds:",
+                                  f"start {s}%  · end {e}%"))
+                row = Gtk.Box(spacing=6)
+                for label, sv, ev in (("80% (longevity)", 75, 80),
+                                      ("90% (balanced)",  85, 90),
+                                      ("100% (full)",     0, 100)):
+                    btn = SketchButton(label, width=140, height=22,
+                                       color=ACCENT_GOLD)
+                    btn.connect(
+                        "clicked",
+                        lambda _b, bn=b.name, sv=sv, ev=ev:
+                            self._term_run(
+                                (f"sudo sh -c 'echo {sv} > "
+                                 f"/sys/class/power_supply/{bn}/"
+                                 f"charge_control_start_threshold; "
+                                 f"echo {ev} > "
+                                 f"/sys/class/power_supply/{bn}/"
+                                 f"charge_control_end_threshold'"),
+                                f"thresholds → {sv}-{ev}% on {bn}"))
+                    row.append(btn)
+                ct.add_row(row)
+            if not any_thr:
+                ct.add_row(Gtk.Label(
+                    label="(no charge_control_*_threshold files — "
+                          "vendor doesn't expose this)", xalign=0))
+
+        # ── 5. lid / power buttons (logind) ────────────────────────────────
+        c = Card("lid & power buttons (logind)")
+        self.box.append(c)
+        try:
+            conf = Path("/etc/systemd/logind.conf").read_text()
+        except Exception:
+            conf = ""
+        for key in ("HandleLidSwitch", "HandleLidSwitchExternalPower",
+                    "HandleLidSwitchDocked", "HandlePowerKey",
+                    "HandleSuspendKey", "HandleHibernateKey",
+                    "IdleAction", "IdleActionSec"):
+            val = "(default)"
+            for line in conf.splitlines():
+                ln = line.strip()
+                if ln.startswith("#") or "=" not in ln: continue
+                k, v = ln.split("=", 1)
+                if k.strip() == key:
+                    val = v.strip()
+            c.add_row(kv_row(key + ":", val))
+        row = Gtk.Box(spacing=8)
+        b_ed = SketchButton("Edit logind.conf", width=180, height=26,
+                            color=ACCENT_GOLD)
+        b_ed.connect("clicked", lambda _b: self._term_run(
+            "sudo ${EDITOR:-nano} /etc/systemd/logind.conf && "
+            "sudo systemctl restart systemd-logind",
+            "logind.conf opened (sudo)…"))
+        row.append(b_ed)
+        c.add_row(row)
+
+        # ── 6. sleep / hibernate / power actions ───────────────────────────
+        c = Card("sleep & power actions")
+        self.box.append(c)
+        row = Gtk.Box(spacing=8)
+        for label, cmd, color in (
+            ("Suspend",     "systemctl suspend",      NEON_BLUE),
+            ("Hibernate",   "systemctl hibernate",    NEON_BLUE),
+            ("Hybrid sleep","systemctl hybrid-sleep", NEON_BLUE),
+            ("Lock screen", "loginctl lock-session",  ACCENT_GOLD),
+        ):
+            b = SketchButton(label, width=130, height=24, color=color)
+            b.connect("clicked", lambda _b, c=cmd, l=label: (
+                sh_async(c, lambda r, l=l: self.win.toast(
+                    f"{l} → ok" if r[0]==0 else f"{l} failed (rc={r[0]})"))))
+            row.append(b)
+        c.add_row(row)
+        # supported sleep states
+        try:
+            states = Path("/sys/power/state").read_text().strip()
+        except Exception:
+            states = "?"
+        c.add_row(kv_row("Supported sleep states:", states))
+        try:
+            mem_sleep = Path("/sys/power/mem_sleep").read_text().strip()
+        except Exception:
+            mem_sleep = "?"
+        c.add_row(kv_row("Memory sleep mode:", mem_sleep))
+
+        # ── 7. screen idle / hypridle ──────────────────────────────────────
+        c = Card("screen idle / DPMS")
+        self.box.append(c)
+        c.add_row(kv_row("hypridle installed:",
+                         "yes" if have("hypridle") else "no"))
+        c.add_row(kv_row("hyprlock installed:",
+                         "yes" if have("hyprlock") else "no"))
+        cfg = Path.home() / ".config/hypr/hypridle.conf"
+        c.add_row(kv_row("hypridle config:",
+                         "found" if cfg.exists() else "(missing)"))
+        if cfg.exists():
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("Edit hypridle.conf", width=200, height=24,
+                             color=ACCENT_GOLD)
+            b.connect("clicked", lambda _b: self._term_run(
+                f"${{EDITOR:-nano}} {cfg}",
+                "hypridle.conf opened…"))
+            row.append(b)
+            b2 = SketchButton("Restart hypridle", width=160, height=24,
+                              color=NEON_BLUE)
+            b2.connect("clicked", lambda _b: (
+                sh("pkill -x hypridle; setsid hypridle &"),
+                self.win.toast("hypridle restarted")))
+            row.append(b2)
+            c.add_row(row)
+
+        # ── 8. wakeup devices ──────────────────────────────────────────────
+        c = Card("ACPI wakeup sources")
+        self.box.append(c)
+        try:
+            txt = Path("/proc/acpi/wakeup").read_text()
+            lines = txt.splitlines()[1:]  # skip header
+            shown = 0
+            for line in lines:
+                f = line.split()
+                if len(f) < 3: continue
+                name = f[0]; status = f[2]
+                state = "enabled" if "enabled" in status else "disabled"
+                row = Gtk.Box(spacing=8)
+                lbl = Gtk.Label(label=name, xalign=0); lbl.set_hexpand(True)
+                row.append(lbl)
+                row.append(Gtk.Label(label=state, xalign=1))
+                b = SketchButton("Toggle", width=90, height=22,
+                                 color=NEON_BLUE)
+                b.connect("clicked", lambda _b, n=name: self._term_run(
+                    f"sudo sh -c 'echo {n} > /proc/acpi/wakeup'",
+                    f"toggled wakeup: {n}"))
+                row.append(b)
+                c.add_row(row); shown += 1
+                if shown >= 12: break
+            if shown == 0:
+                c.add_row(Gtk.Label(label="(empty)", xalign=0))
+        except Exception:
+            c.add_row(Gtk.Label(label="/proc/acpi/wakeup not available",
+                                xalign=0))
+
+        # ── 9. tlp / auto-cpufreq detection ────────────────────────────────
+        c = Card("power management daemons")
+        self.box.append(c)
+        for name, svc in (("tlp", "tlp.service"),
+                          ("auto-cpufreq", "auto-cpufreq.service"),
+                          ("thermald", "thermald.service"),
+                          ("power-profiles-daemon",
+                           "power-profiles-daemon.service")):
+            installed = have(name) or have(name.replace("-", ""))
+            rc, out, _ = sh(f"systemctl is-active {svc} 2>/dev/null")
+            active = out.strip() == "active"
+            c.add_row(kv_row(
+                f"{name}:",
+                ("installed · " if installed else "not installed · ") +
+                ("active" if active else "inactive")))
+        if have("tlp"):
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("tlp-stat -s (terminal)", width=200, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked", lambda _b: self._term_run(
+                "sudo tlp-stat -s | less",
+                "tlp-stat opened…"))
+            row.append(b)
+            c.add_row(row)
+
+        # ── 10. powertop / consumption ─────────────────────────────────────
+        c = Card("power consumption")
+        self.box.append(c)
+        # try energy_now (laptop) — instantaneous draw
+        for b in self.bats:
+            try:
+                pn = (b / "power_now")
+                if pn.exists():
+                    pw = int(pn.read_text().strip())
+                    c.add_row(kv_row(
+                        f"{b.name} draw:", f"{pw/1_000_000:.2f} W"))
+            except Exception:
+                pass
+        if have("powertop"):
+            row = Gtk.Box(spacing=8)
+            b1 = SketchButton("Launch powertop", width=180, height=24,
+                              color=NEON_BLUE)
+            b1.connect("clicked", lambda _b: self._term_run(
+                "sudo powertop", "launching powertop…"))
+            row.append(b1)
+            b2 = SketchButton("Apply tunables (auto)", width=200, height=24,
+                              color=ACCENT_GOLD)
+            b2.connect("clicked", lambda _b: self._term_run(
+                "sudo powertop --auto-tune",
+                "applying powertop tunables…"))
+            row.append(b2)
+            c.add_row(row)
+        else:
+            c.add_row(Gtk.Label(label="powertop not installed", xalign=0))
+
         self.refresh()
 
+    # ── helper: run in terminal ────────────────────────────────────────────
+    def _term_run(self, cmd: str, toast: str):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if have(term):
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     f"{cmd}; echo; echo 'press enter to close'; read _"],
+                    start_new_session=True)
+                self.win.toast(toast)
+                return
+        self.win.toast("no terminal found (install foot/alacritty/kitty)")
+
     def refresh(self):
-        for c in (self.bat_card, self.prof_card):
-            child = c.get_first_child(); skip = True
+        # battery card
+        if self.bat_card is not None:
+            child = self.bat_card.get_first_child(); skip = True
             while child:
                 n = child.get_next_sibling()
                 if skip: skip = False
-                else: c.remove(child)
+                else: self.bat_card.remove(child)
                 child = n
-        # battery
-        bat_dir = Path("/sys/class/power_supply")
-        bats = list(bat_dir.glob("BAT*")) if bat_dir.exists() else []
-        if not bats:
-            self.bat_card.add_row(Gtk.Label(label="(no battery detected)",
-                                            xalign=0))
-        for b in bats:
-            try:
-                cap = (b/"capacity").read_text().strip()
-                stat = (b/"status").read_text().strip()
-                self.bat_card.add_row(kv_row(b.name, f"{cap}%  ({stat})"))
-                # health (energy_full vs energy_full_design)
-                ef = (b/"energy_full"); efd = (b/"energy_full_design")
-                if ef.exists() and efd.exists():
-                    e1 = int(ef.read_text()); e2 = int(efd.read_text())
-                    if e2 > 0:
-                        h = e1 * 100 // e2
-                        self.bat_card.add_row(kv_row("health", f"{h}%"))
-            except Exception as e:
-                log.warning("battery: %s", e)
+            for b in self.bats:
+                try:
+                    cap = (b/"capacity").read_text().strip()
+                    stat = (b/"status").read_text().strip()
+                    self.bat_card.add_row(kv_row(
+                        b.name, f"{cap}%  ({stat})"))
+                    ef = (b/"energy_full"); efd = (b/"energy_full_design")
+                    if ef.exists() and efd.exists():
+                        e1 = int(ef.read_text()); e2 = int(efd.read_text())
+                        if e2 > 0:
+                            self.bat_card.add_row(kv_row(
+                                "health", f"{e1*100//e2}%"))
+                    cyc = (b/"cycle_count")
+                    if cyc.exists():
+                        cv = cyc.read_text().strip()
+                        if cv and cv != "0":
+                            self.bat_card.add_row(kv_row("cycles", cv))
+                    vn = (b/"voltage_now")
+                    if vn.exists():
+                        v = int(vn.read_text().strip())
+                        self.bat_card.add_row(kv_row(
+                            "voltage", f"{v/1_000_000:.2f} V"))
+                    tech = (b/"technology")
+                    if tech.exists():
+                        self.bat_card.add_row(kv_row(
+                            "technology", tech.read_text().strip()))
+                except Exception as e:
+                    log.warning("battery: %s", e)
 
         # power profiles
+        child = self.prof_card.get_first_child(); skip = True
+        while child:
+            n = child.get_next_sibling()
+            if skip: skip = False
+            else: self.prof_card.remove(child)
+            child = n
         if have("powerprofilesctl"):
             rc, out, _ = sh("powerprofilesctl get")
             cur = out.strip() if rc == 0 else "?"
@@ -1770,10 +2020,75 @@ class PowerPage(BasePage):
             self.prof_card.add_row(Gtk.Label(
                 label="powerprofilesctl not installed", xalign=0))
 
+        # CPU governor
+        child = self.gov_card.get_first_child(); skip = True
+        while child:
+            n = child.get_next_sibling()
+            if skip: skip = False
+            else: self.gov_card.remove(child)
+            child = n
+        gov_p = Path(
+            "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
+        avail_p = Path(
+            "/sys/devices/system/cpu/cpu0/cpufreq/"
+            "scaling_available_governors")
+        if not gov_p.exists():
+            self.gov_card.add_row(Gtk.Label(
+                label="cpufreq scaling not available on this CPU",
+                xalign=0))
+        else:
+            try:
+                cur = gov_p.read_text().strip()
+                avail = avail_p.read_text().split() if avail_p.exists() \
+                        else [cur]
+            except Exception:
+                cur = "?"; avail = []
+            self.gov_card.add_row(kv_row("Current governor:", cur))
+            row = Gtk.Box(spacing=6)
+            for g in avail:
+                b = SketchButton(g, width=120, height=22, color=NEON_GREEN,
+                                 primary=(g == cur))
+                b.connect("clicked", lambda _b, g=g:
+                    self._term_run(
+                        ("sudo sh -c 'for f in "
+                         "/sys/devices/system/cpu/cpu*/cpufreq/"
+                         f"scaling_governor; do echo {g} > $f; done'"),
+                        f"governor → {g}"))
+                row.append(b)
+            self.gov_card.add_row(row)
+            # current frequency
+            freq_p = Path(
+                "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+            if freq_p.exists():
+                try:
+                    f = int(freq_p.read_text().strip())
+                    self.gov_card.add_row(kv_row(
+                        "cpu0 freq:", f"{f//1000} MHz"))
+                except Exception:
+                    pass
+
     def search_entries(self):
         return [
             SearchEntry(self.KEY, self.TITLE, "Battery"),
-            SearchEntry(self.KEY, self.TITLE, "Power profile"),
+            SearchEntry(self.KEY, self.TITLE, "Battery health & cycles"),
+            SearchEntry(self.KEY, self.TITLE, "Power profile",
+                        "power-saver balanced performance"),
+            SearchEntry(self.KEY, self.TITLE, "CPU governor",
+                        "performance powersave ondemand schedutil"),
+            SearchEntry(self.KEY, self.TITLE, "Charge thresholds",
+                        "battery longevity 80%"),
+            SearchEntry(self.KEY, self.TITLE, "Lid action", "logind.conf"),
+            SearchEntry(self.KEY, self.TITLE, "Power button action"),
+            SearchEntry(self.KEY, self.TITLE, "Suspend"),
+            SearchEntry(self.KEY, self.TITLE, "Hibernate"),
+            SearchEntry(self.KEY, self.TITLE, "Hybrid sleep"),
+            SearchEntry(self.KEY, self.TITLE, "Lock screen"),
+            SearchEntry(self.KEY, self.TITLE, "Screen idle / hypridle",
+                        "DPMS dim"),
+            SearchEntry(self.KEY, self.TITLE, "ACPI wakeup sources"),
+            SearchEntry(self.KEY, self.TITLE, "TLP / auto-cpufreq",
+                        "thermald daemon"),
+            SearchEntry(self.KEY, self.TITLE, "powertop", "tunables"),
         ]
 
 
@@ -2606,7 +2921,7 @@ class StoragePage(BasePage):
                 label=f"trash: {out.split()[0] if out else '?'}", xalign=0)
             lbl.set_hexpand(True); row.append(lbl)
             b = SketchButton("Empty trash", width=140, height=24,
-                             color=NEON_RED)
+                             color=NEON_PINK)
             b.connect("clicked", lambda _b: (
                 sh(f"rm -rf {trash}/files/* {trash}/info/*"),
                 self.win.toast("trash emptied")))
@@ -2702,7 +3017,7 @@ class StoragePage(BasePage):
                 lbl.set_hexpand(True); row.append(lbl)
                 if have("udisksctl"):
                     b = SketchButton("Eject", width=100, height=22,
-                                     color=NEON_RED)
+                                     color=NEON_PINK)
                     b.connect("clicked", lambda _b, n=name: (
                         sh(f"udisksctl power-off -b /dev/{n}"),
                         self.win.toast(f"ejected /dev/{n}")))
