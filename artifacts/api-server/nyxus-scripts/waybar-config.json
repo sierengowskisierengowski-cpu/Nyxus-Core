@@ -107,7 +107,7 @@
       "custom/nyxus-panel"
     ],
     "custom/notifications": {
-      "format": "\uf0f3",
+      "format": "\uf0f3 Notify",
       "tooltip": true,
       "on-click": "nyxus-notifications",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#39ff14'>NYXUS \u00b7 Notifications</span>\n<span size='small' foreground='#b8a8d0'>Click to open the notification center</span>"
