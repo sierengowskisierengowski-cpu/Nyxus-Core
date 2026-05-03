@@ -8331,7 +8331,7 @@ class GraffitiBackground(Gtk.DrawingArea):
     # NYXUS graffiti image pool -- shipped via the api-server, downloaded
     # on first launch into ~/.cache/nyxus/graffiti/. Each page key maps
     # deterministically to one image (24 pages cycle over 17 images).
-    _IMAGE_POOL = [f"nyxus-graffiti-{i:02d}.png" for i in range(1, 18)]
+    _IMAGE_POOL = [f"nyxus-graffiti-{i:02d}.png" for i in range(1, 20)]
     _IMAGE_BASE_URL = "https://nyxus-core.replit.app/api/download/nyxus"
     _IMAGE_CACHE_DIR = Path.home() / ".cache" / "nyxus" / "graffiti"
 
