@@ -6987,11 +6987,6 @@ class GraffitiBackground(Gtk.DrawingArea):
 
     def _build_layout(self, w: int, h: int):
         rng = random.Random(0x9F33A1)
-        # Pink-heavy palette (less purple — match the rest of NYXUS)
-        palette = [NEON_PINK, NEON_PINK, NEON_PINK,
-                   NEON_BLUE, NEON_BLUE,
-                   NEON_GREEN, NEON_GREEN,
-                   ACCENT_GOLD, DANGER_RED]
         items = []
         # poisson-ish placement: random tries with min-distance check
         placed: List[tuple] = []
@@ -7014,21 +7009,21 @@ class GraffitiBackground(Gtk.DrawingArea):
                     ok = False; break
             if not ok: continue
             placed.append((x, y, est_w, est_h))
-            color = palette[rng.randrange(len(palette))]
-            alpha = 0.10 + rng.random() * 0.10  # 0.10–0.20 — subtle
-            items.append((word, x, y, size, angle, color, alpha))
+            # alpha controls the crisp-white pop intensity (0.16–0.32)
+            alpha = 0.16 + rng.random() * 0.16
+            items.append((word, x, y, size, angle, alpha))
             idx += 1
         self._layout_cache = items
         self._cache_w, self._cache_h = w, h
 
     def _draw(self, area, cr, w, h, _=None):
-        # PURE black bg (Tesla grade — no dark purple anywhere)
+        # PURE black bg (Tesla grade -- no dark purple anywhere)
         cr.set_source_rgba(0.0, 0.0, 0.0, 1.0)
         cr.rectangle(0, 0, w, h); cr.fill()
         if (self._layout_cache is None or
             abs(w - self._cache_w) > 40 or abs(h - self._cache_h) > 40):
             self._build_layout(w, h)
-        for word, x, y, size, angle, color, alpha in (self._layout_cache or []):
+        for word, x, y, size, angle, alpha in (self._layout_cache or []):
             cr.save()
             cr.translate(x, y)
             cr.rotate(angle)
@@ -7038,8 +7033,19 @@ class GraffitiBackground(Gtk.DrawingArea):
             fd.set_weight(Pango.Weight.BOLD)
             fd.set_size(int(size * Pango.SCALE))
             layout.set_font_description(fd); layout.set_text(word, -1)
-            cr.set_source_rgba(*color, alpha)
-            cr.move_to(0, 0); PangoCairo.show_layout(cr, layout)
+            # WHITE GLOW: lay down the text path, stroke wide-soft -> mid -> fill crisp
+            cr.move_to(0, 0)
+            PangoCairo.layout_path(cr, layout)
+            # outer halo (very soft)
+            cr.set_source_rgba(1.0, 1.0, 1.0, alpha * 0.18)
+            cr.set_line_width(6.0); cr.set_line_join(cairo.LINE_JOIN_ROUND)
+            cr.stroke_preserve()
+            # mid bloom
+            cr.set_source_rgba(1.0, 1.0, 1.0, alpha * 0.35)
+            cr.set_line_width(3.0); cr.stroke_preserve()
+            # crisp white fill on top
+            cr.set_source_rgba(1.0, 1.0, 1.0, alpha)
+            cr.fill()
             cr.restore()
 
 
@@ -7120,17 +7126,26 @@ class SettingsRow(Gtk.DrawingArea):
             self.active = on; self.queue_draw()
 
     def _draw(self, area, cr, w, h, _=None):
-        # active state: stronger neon left bar + faint tinted bg
+        # NO tinted backgrounds (low-alpha pink reads as purple on black).
+        # Active/hover indicated by left neon bar + outer-edge glow only.
         if self.active:
-            cr.set_source_rgba(*self.color, 0.14)
-            cr.rectangle(0, 0, w, h); cr.fill()
+            # solid neon left bar
             cr.set_source_rgba(*self.color, 1.0)
             cr.rectangle(0, 0, 3, h); cr.fill()
+            # neon hairline ring around the row (no fill)
+            cr.set_source_rgba(*self.color, 0.65); cr.set_line_width(1.0)
+            cr.rectangle(0.5, 0.5, w-1, h-1); cr.stroke()
+            # outer glow halo (top + bottom edges) -- pure additive light
+            cr.set_source_rgba(*self.color, 0.18); cr.set_line_width(2.5)
+            cr.move_to(0, 0.5); cr.line_to(w, 0.5); cr.stroke()
+            cr.move_to(0, h-0.5); cr.line_to(w, h-0.5); cr.stroke()
         elif self._hover:
-            cr.set_source_rgba(*self.color, 0.10)
-            cr.rectangle(0, 0, w, h); cr.fill()
-            cr.set_source_rgba(*self.color, 0.55)
+            # softer neon left bar
+            cr.set_source_rgba(*self.color, 0.85)
             cr.rectangle(0, 0, 2, h); cr.fill()
+            # faint outer ring
+            cr.set_source_rgba(*self.color, 0.32); cr.set_line_width(1.0)
+            cr.rectangle(0.5, 0.5, w-1, h-1); cr.stroke()
         # neon hairline divider (no grey)
         cr.set_source_rgba(*NEON_PINK, 0.10); cr.set_line_width(1.0)
         sketch_line(cr, 12, h-0.5, w-12, h-0.5, jitter=0.20,
@@ -7317,16 +7332,13 @@ class SettingsWindow(Gtk.ApplicationWindow):
 
 window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 
-/* -- HERO HEADER (frosted glass, dual-layer glow) --------------------- */
+/* -- HERO HEADER (pure black + neon-pink underline glow) ------------- */
 .nyx-hero {
-    background-image: linear-gradient(180deg,
-        rgba(255,0,255,0.06) 0%,
-        rgba(0,0,0,0.92) 100%);
-    background-color: rgba(0,0,0,0.85);
+    background-image: none;
+    background-color: #000000;
     padding: 14px 18px;
-    border-bottom: 1px solid rgba(255,0,255,0.55);
-    box-shadow: inset 0 -1px 0 0 rgba(255,0,255,0.12),
-                0 4px 24px -4px rgba(255,0,255,0.18);
+    border-bottom: 1px solid rgba(255,0,255,0.65);
+    box-shadow: 0 6px 28px -6px rgba(255,0,255,0.45);
 }
 .nyx-hero-title { color: #ff00ff;
     text-shadow: 0 0 6px  rgba(255,0,255,0.95),
@@ -7336,20 +7348,17 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 .nyx-hero-sub { color: rgba(240,235,250,0.62); font-size: 14px;
     letter-spacing: 0.4px; margin-top: -2px; }
 
-/* -- VERSION PILL (glass capsule, hover bloom) ------------------------ */
-.nyx-version-pill { color: rgba(240,235,250,0.92);
-    background-image: linear-gradient(135deg,
-        rgba(255,0,255,0.10), rgba(0,0,0,0.55));
-    background-color: rgba(0,0,0,0.55);
-    border: 1px solid rgba(255,0,255,0.55);
+/* -- VERSION PILL (black capsule, neon ring, hover bloom) ------------ */
+.nyx-version-pill { color: rgba(240,235,250,0.95);
+    background-image: none;
+    background-color: #000000;
+    border: 1px solid rgba(255,0,255,0.65);
     border-radius: 999px; padding: 5px 16px; font-size: 14px;
     font-family: 'JetBrains Mono', monospace;
-    box-shadow: inset 0 0 8px rgba(255,0,255,0.18),
-                0 0 8px rgba(255,0,255,0.10); }
+    box-shadow: 0 0 10px rgba(255,0,255,0.18); }
 .nyx-version-pill:hover {
-    border-color: rgba(255,0,255,0.95);
-    box-shadow: inset 0 0 12px rgba(255,0,255,0.28),
-                0 0 18px rgba(255,0,255,0.45); }
+    border-color: #ff00ff;
+    box-shadow: 0 0 22px rgba(255,0,255,0.55); }
 
 /* -- TOOLBARS (slim glass) -------------------------------------------- */
 .nyx-toolbar  { background-color: rgba(0,0,0,0.85);
@@ -7395,33 +7404,25 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 .nyx-meta { color: rgba(240,235,250,0.55); font-size: 12px;
     font-family: 'JetBrains Mono', monospace; letter-spacing: 0.4px; }
 
-/* -- CARDS (frosted glass, neon ring, hover lift) --------------------- */
-.nyx-card { background-color: rgba(0,0,0,0.55);
-    background-image: linear-gradient(180deg,
-        rgba(255,0,255,0.04) 0%,
-        rgba(0,0,0,0.60) 100%);
-    border: 1px solid rgba(255,0,255,0.32);
+/* -- CARDS (pure black + neon ring + outer pink bloom on hover) ----- */
+.nyx-card { background-color: #000000;
+    background-image: none;
+    border: 1px solid rgba(255,0,255,0.40);
     border-radius: 8px;
     padding: 4px 0 10px 0;
-    box-shadow: inset 0 0 18px rgba(255,0,255,0.05),
-                0 4px 22px -10px rgba(255,0,255,0.18); }
+    box-shadow: 0 4px 22px -10px rgba(255,0,255,0.25); }
 .nyx-card:hover {
-    border-color: rgba(255,0,255,0.65);
-    box-shadow: inset 0 0 22px rgba(255,0,255,0.10),
-                0 6px 30px -8px rgba(255,0,255,0.35); }
+    border-color: #ff00ff;
+    box-shadow: 0 8px 36px -6px rgba(255,0,255,0.55); }
 
-.nyx-listcard { background-color: rgba(0,0,0,0.55);
-    background-image: linear-gradient(180deg,
-        rgba(255,0,255,0.05) 0%,
-        rgba(0,0,0,0.62) 100%);
+.nyx-listcard { background-color: #000000;
+    background-image: none;
     border: 1px solid rgba(255,0,255,0.55);
     border-radius: 6px; padding: 0; margin-top: 6px;
-    box-shadow: inset 0 0 22px rgba(255,0,255,0.06),
-                0 6px 28px -8px rgba(255,0,255,0.25); }
+    box-shadow: 0 6px 28px -8px rgba(255,0,255,0.30); }
 .nyx-listcard:hover {
-    border-color: rgba(255,0,255,0.85);
-    box-shadow: inset 0 0 26px rgba(255,0,255,0.10),
-                0 8px 36px -6px rgba(255,0,255,0.40); }
+    border-color: #ff00ff;
+    box-shadow: 0 10px 40px -6px rgba(255,0,255,0.55); }
 
 .nyx-settings-list { background-color: transparent; }
 .nyx-settings-list row { background-color: transparent;
@@ -7429,14 +7430,12 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 .nyx-settings-list row:hover { background-color: transparent; }
 .nyx-settings-list row:selected { background-color: transparent; }
 
-/* -- WIN10 LEFT SIDEBAR (frosted glass, glow rail) -------------------- */
-.nyx-sidebar { background-color: rgba(0,0,0,0.92);
-    background-image: linear-gradient(180deg,
-        rgba(255,0,255,0.04), rgba(0,0,0,0.92));
-    border-right: 1px solid rgba(255,0,255,0.55);
+/* -- WIN10 LEFT SIDEBAR (pure black + neon glow rail) ---------------- */
+.nyx-sidebar { background-color: #000000;
+    background-image: none;
+    border-right: 1px solid rgba(255,0,255,0.65);
     padding: 6px 0; min-width: 220px;
-    box-shadow: inset -1px 0 0 0 rgba(255,0,255,0.18),
-                4px 0 22px -8px rgba(255,0,255,0.32); }
+    box-shadow: 6px 0 28px -8px rgba(255,0,255,0.40); }
 .nyx-sidebar-section { color: rgba(255,90,200,0.92);
     font-family: 'JetBrains Mono', monospace; font-size: 10px;
     letter-spacing: 1.6px; text-transform: uppercase;
