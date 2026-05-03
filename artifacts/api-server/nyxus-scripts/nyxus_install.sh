@@ -280,8 +280,12 @@ OLD_BINS=(
 for bin in "${OLD_BINS[@]}"; do
   for p in /usr/local/bin/$bin /usr/bin/$bin; do
     if [[ -e "$p" || -L "$p" ]]; then
-      rm -f "$p"
-      ok "removed binary: $p"
+      # /usr/local/bin and /usr/bin are root-owned — needs sudo.
+      if sudo rm -f "$p" 2>/dev/null; then
+        ok "removed binary: $p"
+      else
+        printf "  ${DIM}(skip: $p — needs sudo; re-run with sudo to clean)${R}\n"
+      fi
     fi
   done
 done
@@ -290,8 +294,11 @@ done
 for sym in gods godsapp sage; do
   for p in /usr/local/bin/$sym /usr/bin/$sym; do
     if [[ -L "$p" ]]; then
-      rm -f "$p"
-      ok "removed symlink: $p"
+      if sudo rm -f "$p" 2>/dev/null; then
+        ok "removed symlink: $p"
+      else
+        printf "  ${DIM}(skip: $p — needs sudo; re-run with sudo to clean)${R}\n"
+      fi
     fi
   done
 done
