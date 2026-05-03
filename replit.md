@@ -24,6 +24,32 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 | `nyxus_stickies.py`   | `io.nyxus.stickies` | float, pinned, move 1430 100 |
 | `nyxus_weather.py`    | `io.nyxus.weather`  | float, pinned, move 20 100 |
 | `nyxus_sysmon_gtk.py` | `io.nyxus.sysmon`   | workspace 6, fullscreen |
+| `nyxus_settings.py`   | `io.nyxus.settings` | rofi / desktop entry |
+| `nyxus_control.py`    | `io.nyxus.control`  | waybar control icon |
+| `nyxus_terminal.py`   | `io.nyxus.terminal` | $mod+Return |
+| `nyxus_quicksettings.py` | `io.nyxus.quicksettings` | click waybar clock |
+| `nyxus_launcher.py`   | `io.nyxus.launcher` | $mod+Space |
+| `nyxus_powermenu.py`  | `io.nyxus.powermenu`| $mod+Escape |
+| `nyxus_screenshot.py` | `io.nyxus.screenshot` | Print / Shift+Print |
+| `nyxus_doctor.py`     | `io.nyxus.doctor`   | $mod+Shift+H |
+
+### Phase 2 — Visual Consistency Pass (May 2026)
+System-wide audit + tone-down across all 12 GTK apps:
+- **Border-radius canon**: 4px / 6px (pills 999px intentional only)
+- **Glow alpha cap**: 0.55 max in box-shadow / text-shadow (was 0.95)
+- **Pink dominance**: ≤6% per file; pink is accent only, never dominant
+- **Graffiti chrome**: 12/12 apps (`install_chrome` from `nyxus_chrome.py`)
+- **Caveat font**: 12/12 apps
+- **Letter-scrambling titles** (`rainbow_markup`): 9/12 apps (3 omissions
+  intentional — tiny dropdowns + custom Cairo titles)
+
+### Phase 2 — Hyprland integration (May 2026)
+- `exec-once = dunst` (was `mako` — conflicted with shipped `dunstrc`)
+- `$mod+Space` → launcher (was `centerwindow`, moved to `$mod+Shift+C`)
+- `$mod+Escape` → powermenu
+- `Print` / `Shift+Print` → screenshot (region / full)
+- `$mod+Shift+H` → doctor health audit
+- Waybar clock `on-click` → toggle quicksettings panel
 
 ### NYXUS Studio (multi-module GTK4 creative suite)
 - Tarball: `artifacts/api-server/nyxus-scripts/nyxus-studio.tgz` (~61 KB).
