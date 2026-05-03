@@ -1674,54 +1674,429 @@ class UsersPage(BasePage):
 # ─── Privacy ────────────────────────────────────────────────────────────────
 class PrivacyPage(BasePage):
     KEY = "privacy"; TITLE = "Privacy & Security"; ICON = "🔒"
+    TILE_COLOR = ACCENT_GOLD
+    SUBTITLE = "YubiKey · GPG · SSH · AppArmor"
 
-    def build(self):
-        c = Card("disk encryption")
+    # ── YubiKey hardware security key ──────────────────────────────────────
+    def _yubi_detect(self) -> Tuple[bool, str, str]:
+        """Return (present, serial, model_line)."""
+        rc, out, _ = sh("lsusb")
+        if "Yubico" not in out:
+            return False, "", ""
+        if which("ykman"):
+            rc2, info, _ = sh("ykman info", timeout=3)
+            if rc2 == 0:
+                serial = ""
+                model  = ""
+                for ln in info.splitlines():
+                    if ln.lower().startswith("device type"): model = ln.split(":",1)[1].strip()
+                    if ln.lower().startswith("serial number"): serial = ln.split(":",1)[1].strip()
+                return True, serial, model
+        # fallback: lsusb line
+        for ln in out.splitlines():
+            if "Yubico" in ln: return True, "", ln.strip()
+        return True, "", "Yubico device"
+
+    def _build_yubi_card(self):
+        present, serial, model = self._yubi_detect()
+        c = Card("hardware security key (YubiKey)")
         self.box.append(c)
-        rc, out, _ = sh("lsblk -no NAME,FSTYPE,MOUNTPOINT")
-        any_crypt = "crypto_LUKS" in out
-        c.add_row(Gtk.Label(
-            label=f"LUKS encrypted volumes detected: {'yes' if any_crypt else 'no'}",
-            xalign=0))
+        if not present:
+            c.add_row(Gtk.Label(
+                label="No YubiKey detected. Insert one and click Refresh.",
+                xalign=0))
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("Refresh", width=110, height=24, color=NEON_PINK)
+            b.connect("clicked", lambda _b: self.refresh())
+            row.append(b)
+            if not which("ykman"):
+                row.append(Gtk.Label(
+                    label="(install `yubikey-manager` for full features)",
+                    xalign=0))
+            c.add_row(row)
+            return
+        c.add_row(kv_row("Status:", "✓ detected"))
+        if model:  c.add_row(kv_row("Model:",  model))
+        if serial: c.add_row(kv_row("Serial:", serial))
+        if which("ykman"):
+            rc, info, _ = sh("ykman info", timeout=3)
+            if rc == 0:
+                # parse "Enabled USB interfaces" / "applications"
+                for ln in info.splitlines():
+                    s = ln.strip()
+                    if not s or ":" not in s: continue
+                    k, v = s.split(":", 1)
+                    if k.lower() in ("firmware version", "form factor",
+                                     "enabled usb interfaces",
+                                     "fips approved", "fido u2f", "openpgp",
+                                     "piv", "oath", "yubihsm auth"):
+                        c.add_row(kv_row(k.strip()+":", v.strip()))
+            row = Gtk.Box(spacing=8)
+            b1 = SketchButton("Test (touch)", width=130, height=24,
+                              color=NEON_GREEN, tooltip="ykman piv info")
+            b1.connect("clicked", lambda _b: self._yubi_test())
+            row.append(b1)
+            b2 = SketchButton("Change PIN", width=120, height=24,
+                              color=ACCENT_GOLD,
+                              tooltip="open terminal: ykman piv access change-pin")
+            b2.connect("clicked", lambda _b: self._yubi_change_pin())
+            row.append(b2)
+            b3 = SketchButton("List OATH", width=120, height=24,
+                              color=ACCENT_PURP,
+                              tooltip="ykman oath accounts list")
+            b3.connect("clicked", lambda _b: self._yubi_oath())
+            row.append(b3)
+            c.add_row(row)
 
-        c = Card("AppArmor / SELinux")
+    def _yubi_test(self):
+        self.win.toast("touch your YubiKey…")
+        sh_async("ykman piv info",
+                 lambda r: self.win.toast(
+                     "YubiKey OK ✓" if r[0]==0 else f"failed: {r[2].strip()[:60]}"),
+                 timeout=15)
+
+    def _yubi_change_pin(self):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if which(term):
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     "ykman piv access change-pin; "
+                     "echo; echo 'press enter to close'; read _"],
+                    start_new_session=True)
+                self.win.toast("change-PIN opened in terminal")
+                return
+        self.win.toast("no terminal found (install foot/alacritty/kitty)")
+
+    def _yubi_oath(self):
+        rc, out, err = sh("ykman oath accounts list", timeout=5)
+        msg = (out.strip()[:120] or "(no OATH accounts)") if rc==0 else f"err: {err.strip()[:60]}"
+        self.win.toast(msg)
+
+    # ── GPG keys ───────────────────────────────────────────────────────────
+    def _build_gpg_card(self):
+        c = Card("GPG keys")
         self.box.append(c)
-        rc, out, _ = sh("aa-status")
-        c.add_row(Gtk.Label(label=out.strip().split('\n')[0] if rc==0
-                            else "AppArmor not loaded", xalign=0))
+        if not which("gpg"):
+            c.add_row(Gtk.Label(label="gpg not installed (pacman -S gnupg)",
+                                xalign=0))
+            return
+        rc, out, _ = sh("gpg --list-secret-keys --with-colons", timeout=4)
+        keys = []  # list of (fpr, uid, expires)
+        cur_fpr = None
+        for ln in out.splitlines():
+            f = ln.split(":")
+            if not f: continue
+            if f[0] == "fpr" and len(f) > 9 and cur_fpr is None:
+                cur_fpr = f[9]
+            elif f[0] == "uid" and len(f) > 9 and cur_fpr is not None:
+                keys.append((cur_fpr, f[9], f[6] or ""))
+                cur_fpr = None
+            elif f[0] == "sec":
+                cur_fpr = None
+        if not keys:
+            c.add_row(Gtk.Label(label="(no secret GPG keys found)", xalign=0))
+        for fpr, uid, expires in keys[:6]:
+            short = fpr[-16:] if len(fpr) >= 16 else fpr
+            row = Gtk.Box(spacing=8)
+            row.append(Gtk.Label(label=f"🔑 {short}", xalign=0))
+            row.append(Gtk.Label(label=uid, xalign=0))
+            sp = Gtk.Box(); sp.set_hexpand(True); row.append(sp)
+            b_copy = SketchButton("Copy fpr", width=100, height=22,
+                                  color=ACCENT_PURP)
+            b_copy.connect("clicked", lambda _b, f=fpr: self._clip(f))
+            row.append(b_copy)
+            b_exp = SketchButton("Export pub", width=110, height=22,
+                                 color=NEON_GREEN)
+            b_exp.connect("clicked", lambda _b, f=fpr: self._gpg_export(f))
+            row.append(b_exp)
+            c.add_row(row)
+        # actions
+        row = Gtk.Box(spacing=8)
+        b_gen = SketchButton("Generate new key", width=170, height=24,
+                             color=NEON_PINK,
+                             tooltip="terminal: gpg --full-generate-key")
+        b_gen.connect("clicked", lambda _b: self._term_run(
+            "gpg --full-generate-key", "GPG key wizard opened"))
+        row.append(b_gen)
+        b_imp = SketchButton("Import .asc", width=130, height=24,
+                             color=ACCENT_GOLD)
+        b_imp.connect("clicked", lambda _b: self._gpg_import())
+        row.append(b_imp)
+        c.add_row(row)
 
+    def _gpg_export(self, fpr: str):
+        out_path = Path.home() / f"gpg-pub-{fpr[-8:]}.asc"
+        rc, out, err = sh(f"gpg --armor --export {fpr}", timeout=4)
+        if rc == 0 and out:
+            try:
+                out_path.write_text(out)
+                self.win.toast(f"exported → {out_path.name}")
+            except Exception as e:
+                self.win.toast(f"write failed: {e}")
+        else:
+            self.win.toast(f"export failed: {err.strip()[:60]}")
+
+    def _gpg_import(self):
+        dlg = Gtk.FileDialog(); dlg.set_title("Import GPG key (.asc)")
+        def _done(d, res):
+            try: f = d.open_finish(res)
+            except Exception: return
+            if not f: return
+            p = f.get_path()
+            sh_async(f"gpg --import {shlex.quote(p)}",
+                     lambda r: self.win.toast(
+                         "imported ✓" if r[0]==0 else f"err: {r[2].strip()[:60]}"))
+        dlg.open(self.win, None, _done)
+
+    # ── SSH keys ───────────────────────────────────────────────────────────
+    def _build_ssh_card(self):
         c = Card("SSH keys")
         self.box.append(c)
         ssh_dir = Path.home() / ".ssh"
-        keys = []
+        pubs: List[Path] = []
         if ssh_dir.exists():
-            for f in ssh_dir.iterdir():
-                if f.suffix == ".pub": keys.append(f.name)
-        c.add_row(Gtk.Label(label=", ".join(keys) or "(no keys found)",
-                            xalign=0))
+            pubs = sorted(p for p in ssh_dir.iterdir() if p.suffix == ".pub")
+        if not pubs:
+            c.add_row(Gtk.Label(label="(no public keys in ~/.ssh)", xalign=0))
+        for p in pubs:
+            try:
+                txt = p.read_text().strip()
+                parts = txt.split()
+                ktype = parts[0] if parts else "?"
+                comment = parts[2] if len(parts) > 2 else ""
+            except Exception:
+                ktype = "?"; comment = ""
+            rc, fpr_out, _ = sh(f"ssh-keygen -lf {shlex.quote(str(p))}",
+                                timeout=3)
+            fpr = fpr_out.split()[1] if fpr_out.split() else ""
+            row = Gtk.Box(spacing=8)
+            row.append(Gtk.Label(
+                label=f"🗝  {p.name}  [{ktype}]  {comment}", xalign=0))
+            sp = Gtk.Box(); sp.set_hexpand(True); row.append(sp)
+            b_copy = SketchButton("Copy pub", width=100, height=22,
+                                  color=ACCENT_PURP)
+            b_copy.connect("clicked", lambda _b, t=txt: self._clip(t))
+            row.append(b_copy)
+            b_fpr = SketchButton("Show fpr", width=100, height=22,
+                                 color=NEON_GREEN)
+            b_fpr.connect("clicked", lambda _b, f=fpr: self.win.toast(f or "(no fpr)"))
+            row.append(b_fpr)
+            c.add_row(row)
+        # ssh-agent loaded
+        rc, out, _ = sh("ssh-add -l", timeout=2)
+        loaded = 0 if rc != 0 else len([l for l in out.splitlines() if l.strip()])
+        c.add_row(kv_row("ssh-agent loaded:", f"{loaded} key(s)"))
+        # generate
+        row = Gtk.Box(spacing=8)
+        b_ed = SketchButton("Generate ed25519", width=170, height=24,
+                            color=NEON_PINK)
+        b_ed.connect("clicked", lambda _b: self._term_run(
+            "ssh-keygen -t ed25519 -C \"$(whoami)@$(hostname)\"",
+            "ssh-keygen opened in terminal"))
+        row.append(b_ed)
+        b_rsa = SketchButton("Generate RSA-4096", width=170, height=24,
+                             color=ACCENT_GOLD)
+        b_rsa.connect("clicked", lambda _b: self._term_run(
+            "ssh-keygen -t rsa -b 4096 -C \"$(whoami)@$(hostname)\"",
+            "ssh-keygen opened in terminal"))
+        row.append(b_rsa)
+        c.add_row(row)
 
-        c = Card("recent files")
+    # ── AppArmor / SELinux ─────────────────────────────────────────────────
+    def _build_mac_card(self):
+        c = Card("Mandatory Access Control (AppArmor / SELinux)")
+        self.box.append(c)
+        # AppArmor
+        if which("aa-status"):
+            rc, out, _ = sh("aa-status", timeout=3)
+            if rc == 0:
+                lines = out.splitlines()
+                summary = lines[0].strip() if lines else "AppArmor active"
+                profiles = ""
+                enforce = complain = ""
+                for ln in lines[:8]:
+                    s = ln.strip()
+                    if "profiles are loaded" in s: profiles = s
+                    if "profiles are in enforce" in s: enforce = s
+                    if "profiles are in complain" in s: complain = s
+                c.add_row(kv_row("AppArmor:", summary))
+                if profiles: c.add_row(kv_row("  ", profiles))
+                if enforce:  c.add_row(kv_row("  ", enforce))
+                if complain: c.add_row(kv_row("  ", complain))
+            else:
+                c.add_row(kv_row("AppArmor:", "kernel module not loaded"))
+        else:
+            c.add_row(kv_row("AppArmor:", "not installed"))
+        # SELinux
+        if which("getenforce"):
+            rc, out, _ = sh("getenforce", timeout=2)
+            c.add_row(kv_row("SELinux:", out.strip() if rc==0 else "n/a"))
+        else:
+            c.add_row(kv_row("SELinux:", "not installed (Arch default)"))
+        # Kernel hardening signals
+        rc, out, _ = sh("sysctl -n kernel.kptr_restrict", timeout=2)
+        c.add_row(kv_row("kernel.kptr_restrict:", out.strip() or "0"))
+        rc, out, _ = sh("sysctl -n kernel.dmesg_restrict", timeout=2)
+        c.add_row(kv_row("kernel.dmesg_restrict:", out.strip() or "0"))
+
+    # ── Disk encryption ────────────────────────────────────────────────────
+    def _build_luks_card(self):
+        c = Card("disk encryption (LUKS)")
+        self.box.append(c)
+        rc, out, _ = sh("lsblk -o NAME,FSTYPE,MOUNTPOINT,SIZE -nrp", timeout=3)
+        crypts = [ln for ln in out.splitlines() if "crypto_LUKS" in ln]
+        if not crypts:
+            c.add_row(Gtk.Label(
+                label="No LUKS-encrypted volumes detected on this system.",
+                xalign=0))
+            return
+        for ln in crypts:
+            parts = ln.split()
+            name = parts[0] if parts else "?"
+            size = parts[-1] if len(parts) >= 4 else ""
+            c.add_row(kv_row(name, f"crypto_LUKS  {size}"))
+
+    # ── Screen lock ────────────────────────────────────────────────────────
+    def _build_lock_card(self):
+        c = Card("screen lock")
+        self.box.append(c)
+        hl_path = Path.home() / ".config" / "hypr" / "hyprlock.conf"
+        si_path = Path.home() / ".config" / "hypr" / "hypridle.conf"
+        c.add_row(kv_row("hyprlock installed:",
+                         "yes" if which("hyprlock") else "no"))
+        c.add_row(kv_row("hypridle installed:",
+                         "yes" if which("hypridle") else "no"))
+        c.add_row(kv_row("hyprlock.conf:",
+                         "present" if hl_path.exists() else "missing"))
+        c.add_row(kv_row("hypridle.conf:",
+                         "present" if si_path.exists() else "missing"))
+        rc, out, _ = sh("pgrep -x hypridle", timeout=2)
+        c.add_row(kv_row("hypridle running:", "yes" if rc==0 else "no"))
+        row = Gtk.Box(spacing=8)
+        b_lock = SketchButton("Lock now", width=110, height=24,
+                              color=NEON_PINK)
+        b_lock.connect("clicked", lambda _b: (
+            sh_async("hyprlock"), self.win.toast("locking…")))
+        row.append(b_lock)
+        if which("hypridle"):
+            b_idle = SketchButton("Restart hypridle", width=160, height=24,
+                                  color=ACCENT_PURP)
+            b_idle.connect("clicked", lambda _b: (
+                sh("pkill -x hypridle"),
+                sh_async("setsid hypridle"),
+                self.win.toast("hypridle restarted")))
+            row.append(b_idle)
+        c.add_row(row)
+
+    # ── Location services ──────────────────────────────────────────────────
+    def _build_location_card(self):
+        c = Card("location services")
+        self.box.append(c)
+        rc, out, _ = sh("systemctl is-active geoclue", timeout=2)
+        active = out.strip()
+        c.add_row(kv_row("geoclue:", active or "inactive"))
+        if which("systemctl"):
+            row = Gtk.Box(spacing=8)
+            b_off = SketchButton("Disable", width=110, height=24,
+                                 color=DANGER_RED)
+            b_off.connect("clicked", lambda _b: self._term_run(
+                "sudo systemctl disable --now geoclue.service",
+                "disabling geoclue (requires sudo)…"))
+            row.append(b_off)
+            b_on = SketchButton("Enable", width=110, height=24,
+                                color=NEON_GREEN)
+            b_on.connect("clicked", lambda _b: self._term_run(
+                "sudo systemctl enable --now geoclue.service",
+                "enabling geoclue (requires sudo)…"))
+            row.append(b_on)
+            c.add_row(row)
+
+    # ── Recent files ───────────────────────────────────────────────────────
+    def _build_recent_card(self):
+        c = Card("recent files & history")
         self.box.append(c)
         recent = Path.home() / ".local/share/recently-used.xbel"
-        c.add_row(Gtk.Label(label=str(recent), xalign=0))
+        n = 0
         if recent.exists():
-            b = SketchButton("Clear recent files", width=180, height=24,
-                             color=DANGER_RED)
-            b.connect("clicked",
-                      lambda _b: (recent.unlink(missing_ok=True),
-                                  self.win.toast("recent files cleared")))
-            c.add_row(b)
+            try:
+                txt = recent.read_text(errors="ignore")
+                n = txt.count("<bookmark ")
+            except Exception:
+                pass
+        c.add_row(kv_row("recently-used.xbel:",
+                         f"{n} entries" if recent.exists() else "(missing)"))
+        thumbs = Path.home() / ".cache" / "thumbnails"
+        c.add_row(kv_row("thumbnail cache:",
+                         "present" if thumbs.exists() else "(none)"))
+        bash_hist = Path.home() / ".bash_history"
+        zsh_hist  = Path.home() / ".zsh_history"
+        h = ("zsh" if zsh_hist.exists() else "") + (" bash" if bash_hist.exists() else "")
+        c.add_row(kv_row("shell history:", h.strip() or "(none)"))
+        row = Gtk.Box(spacing=8)
+        if recent.exists():
+            b1 = SketchButton("Clear recent", width=130, height=24,
+                              color=DANGER_RED)
+            b1.connect("clicked", lambda _b: (
+                recent.unlink(missing_ok=True),
+                self.win.toast("recent files cleared"),
+                self.refresh()))
+            row.append(b1)
+        if thumbs.exists():
+            b2 = SketchButton("Clear thumbs", width=130, height=24,
+                              color=DANGER_RED)
+            b2.connect("clicked", lambda _b: (
+                sh_async(f"rm -rf {shlex.quote(str(thumbs))}/*"),
+                self.win.toast("thumbnail cache cleared")))
+            row.append(b2)
+        c.add_row(row)
 
+    # ── helpers ────────────────────────────────────────────────────────────
+    def _clip(self, text: str):
+        try:
+            disp = Gdk.Display.get_default()
+            disp.get_clipboard().set(text)
+            self.win.toast("copied to clipboard")
+        except Exception as e:
+            self.win.toast(f"copy failed: {e}")
+
+    def _term_run(self, cmd: str, toast: str):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if which(term):
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     f"{cmd}; echo; echo 'press enter to close'; read _"],
+                    start_new_session=True)
+                self.win.toast(toast)
+                return
+        self.win.toast("no terminal found (install foot/alacritty/kitty)")
+
+    def build(self):
+        self._build_yubi_card()
+        self._build_gpg_card()
+        self._build_ssh_card()
+        self._build_mac_card()
+        self._build_luks_card()
+        self._build_lock_card()
+        self._build_location_card()
+        self._build_recent_card()
         self.add_note(
-            "advanced firewall/AppArmor/SELinux changes need root and are "
-            "destructive — see NYXUS Security or use `ufw`, `aa-enforce`, "
-            "`setenforce` in a terminal.")
+            "System-wide changes (AppArmor enforce, geoclue enable/disable, "
+            "GPG key generation, SSH key generation) open in a terminal where "
+            "they can prompt for sudo or your passphrase. The YubiKey serial "
+            "shown here is read directly from `ykman info`.")
 
     def search_entries(self):
         return [
-            SearchEntry(self.KEY, self.TITLE, "SSH keys"),
-            SearchEntry(self.KEY, self.TITLE, "Encryption", "luks"),
+            SearchEntry(self.KEY, self.TITLE, "YubiKey", "hardware security key"),
+            SearchEntry(self.KEY, self.TITLE, "GPG keys", "pgp"),
+            SearchEntry(self.KEY, self.TITLE, "SSH keys", "ed25519 rsa"),
+            SearchEntry(self.KEY, self.TITLE, "AppArmor"),
+            SearchEntry(self.KEY, self.TITLE, "SELinux"),
+            SearchEntry(self.KEY, self.TITLE, "LUKS encryption"),
+            SearchEntry(self.KEY, self.TITLE, "Screen lock", "hyprlock hypridle"),
+            SearchEntry(self.KEY, self.TITLE, "Location services", "geoclue"),
             SearchEntry(self.KEY, self.TITLE, "Clear recent files"),
+            SearchEntry(self.KEY, self.TITLE, "Clear thumbnail cache"),
         ]
 
 
