@@ -378,7 +378,7 @@ class Launcher(Gtk.Application):
 CSS = """
 window.nyxus-launcher {
     background: rgba(8, 6, 14, 0.78);
-    border-radius: 8px;
+    border-radius: 6px;
 }
 .nyxus-title {
     font-family: 'Caveat', 'Patrick Hand', sans-serif;
@@ -409,7 +409,7 @@ window.nyxus-launcher {
 }
 .nyxus-list row {
     background: transparent;
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 0;
 }
 .nyxus-list row:selected {

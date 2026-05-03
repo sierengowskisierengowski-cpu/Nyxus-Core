@@ -259,7 +259,7 @@ class Picker(Gtk.Application):
 CSS = """
 window.nyxus-shot {
     background: rgba(8, 6, 14, 0.86);
-    border-radius: 8px;
+    border-radius: 6px;
 }
 .nyxus-title {
     font-family: 'Caveat', sans-serif;
@@ -269,7 +269,7 @@ window.nyxus-shot {
 .nyxus-shotbtn {
     background: rgba(15, 12, 24, 0.92);
     border: 2px solid rgba(255, 0, 255, 0.40);
-    border-radius: 6px;
+    border-radius: 4px;
 }
 .nyxus-shotbtn:hover {
     background: rgba(255, 0, 255, 0.16);
