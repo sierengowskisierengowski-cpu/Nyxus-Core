@@ -19,6 +19,25 @@ _nyx_integrity()
 import gi
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, Gdk, GLib, Gio
+
+# ── NYXUS shared chrome (rainbow titles + graffiti walls, system-wide) ──
+def _nyxus_load_chrome():
+    try:
+        from nyxus_chrome import install_chrome, rainbow_markup
+        return install_chrome, rainbow_markup
+    except ImportError:
+        try:
+            import os, sys, urllib.request
+            _here = os.path.dirname(os.path.abspath(__file__))
+            urllib.request.urlretrieve(
+                "https://nyxus-core.replit.app/api/download/nyxus/nyxus_chrome.py",
+                os.path.join(_here, "nyxus_chrome.py"))
+            if _here not in sys.path: sys.path.insert(0, _here)
+            from nyxus_chrome import install_chrome, rainbow_markup
+            return install_chrome, rainbow_markup
+        except Exception:
+            return (lambda *a, **kw: None), (lambda t: t)
+_nyx_install_chrome, _nyx_rainbow = _nyxus_load_chrome()
 import math, time, os, threading, socket, platform, signal, subprocess, traceback, sys
 from collections import deque
 from datetime import datetime, timedelta
@@ -506,6 +525,8 @@ class NyxusSysmonGtk(Gtk.Application):
 
         root=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.win.set_child(root)
+        try: _nyx_install_chrome(self.win, page_key="_sysmon")
+        except Exception: pass
 
         # Header
         self._hdr_da=self._da(self._draw_hdr,-1,46)

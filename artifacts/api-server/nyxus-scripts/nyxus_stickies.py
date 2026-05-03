@@ -39,6 +39,25 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
 from gi.repository import Gtk, Gdk, GLib, GObject, Gio, Pango, PangoCairo  # noqa: E402
+
+# ── NYXUS shared chrome (rainbow titles + graffiti walls, system-wide) ──
+def _nyxus_load_chrome():
+    try:
+        from nyxus_chrome import install_chrome, rainbow_markup
+        return install_chrome, rainbow_markup
+    except ImportError:
+        try:
+            import os, sys, urllib.request
+            _here = os.path.dirname(os.path.abspath(__file__))
+            urllib.request.urlretrieve(
+                "https://nyxus-core.replit.app/api/download/nyxus/nyxus_chrome.py",
+                os.path.join(_here, "nyxus_chrome.py"))
+            if _here not in sys.path: sys.path.insert(0, _here)
+            from nyxus_chrome import install_chrome, rainbow_markup
+            return install_chrome, rainbow_markup
+        except Exception:
+            return (lambda *a, **kw: None), (lambda t: t)
+_nyx_install_chrome, _nyx_rainbow = _nyxus_load_chrome()
 import cairo  # noqa: E402
 
 # ── paths ────────────────────────────────────────────────────────────────────
@@ -706,6 +725,8 @@ class StickiesWindow(Gtk.ApplicationWindow):
         self._build_css()
         self._build_layout()
         self.canvas.load_all()
+        try: _nyx_install_chrome(self, page_key="_stickies")
+        except Exception: pass
         self.connect("close-request", self._on_close)
 
     def _on_close(self, *a):

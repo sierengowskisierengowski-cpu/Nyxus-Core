@@ -75,6 +75,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-graffiti-16.png": "nyxus-graffiti-16.png",
   "nyxus-graffiti-17.png": "nyxus-graffiti-17.png",
   "nyxus_settings.py":     "nyxus_settings.py",
+  "nyxus_chrome.py":       "nyxus_chrome.py",
   "nyxus-phantom.tgz":          "nyxus-phantom.tgz",
   "nyxus-shield.tgz":           "nyxus-shield.tgz",
   "nyxus-godsapp.tgz":          "nyxus-godsapp.tgz",
