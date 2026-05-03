@@ -104,6 +104,7 @@
     },
     "modules-right": [
       "custom/notifications",
+      "custom/app-settings",
       "custom/nyxus-panel"
     ],
     "custom/notifications": {
