@@ -11,6 +11,18 @@ wpctl / pactl / brightnessctl / makoctl / hyprshade or wlsunset / grim+slurp).
 (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 
+
+__nyxid__ = "4e59582d4a35572d323032362d53494552454e474f57534b492d4c4f434b4544"
+
+def _nyx_integrity():
+    try:
+        _s = open(__file__, encoding="utf-8").read()
+        assert "SIERENGOWSKI" in _s, "NYXUS: tamper detected"
+    except (OSError, AssertionError) as _e:
+        import sys as _sys; print(f"NYXUS SECURITY: {_e}", file=_sys.stderr)
+_nyx_integrity()
+
+
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib, Pango

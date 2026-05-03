@@ -19,6 +19,18 @@
 All persistent data lives under ~/.config/nyxus-notepad/.
 Database is sqlite3, locked-note encryption is Fernet (AES-128 CBC + HMAC).
 """
+
+__nyxid__ = "4e59582d4a35572d323032362d53494552454e474f57534b492d4c4f434b4544"
+
+def _nyx_integrity():
+    try:
+        _s = open(__file__, encoding="utf-8").read()
+        assert "SIERENGOWSKI" in _s, "NYXUS: tamper detected"
+    except (OSError, AssertionError) as _e:
+        import sys as _sys; print(f"NYXUS SECURITY: {_e}", file=_sys.stderr)
+_nyx_integrity()
+
+
 from __future__ import annotations
 
 import base64, hashlib, html, json, math, os, random, re, sqlite3, subprocess
