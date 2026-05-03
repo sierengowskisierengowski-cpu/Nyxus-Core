@@ -69,7 +69,9 @@ mkdir -p "$SCRIPTS_DIR"
 for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
          nyxus_sysmon.py nyxus_sysmon_gtk.py \
          nyxus_stickies.py nyxus_notepad.py nyxus_weather.py nyxus_terminal.py \
-         nyxus_gen_icons.py nyxus_control.py nyxus_settings.py; do
+         nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
+         nyxus_doctor.py nyxus_launcher.py nyxus_powermenu.py \
+         nyxus_screenshot.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
@@ -175,7 +177,7 @@ fi
 hdr "Hyprland"
 mkdir -p "$HYPR_DIR"
 dl "hyprland.conf" "$HYPR_DIR/hyprland.conf" || failed=$((failed+1))
-dl "hyprlock.conf"  "$HYPR_DIR/hyprlock.conf"  || failed=$((failed+1))
+dl "nyxus-hyprlock.conf" "$HYPR_DIR/hyprlock.conf"  || failed=$((failed+1))
 dl "hypridle.conf"  "$HYPR_DIR/hypridle.conf"  || failed=$((failed+1))
 
 # ── WALLPAPER ─────────────────────────────────────────────────────────────────
@@ -230,6 +232,14 @@ dl "wlogout-layout"    "$HOME/.config/wlogout/layout"    || failed=$((failed+1))
 hdr "Mako Notifications"
 mkdir -p "$MAKO_DIR"
 dl "mako-config" "$MAKO_DIR/config" || failed=$((failed+1))
+
+# ── DUNST (alternative to mako; NYXUS-themed) ────────────────────────────────
+hdr "Dunst Notifications (NYXUS theme)"
+DUNST_DIR="$HOME/.config/dunst"
+mkdir -p "$DUNST_DIR"
+dl "nyxus-dunstrc" "$DUNST_DIR/dunstrc" || failed=$((failed+1))
+# reload if dunst is running
+pkill -USR1 dunst 2>/dev/null || true
 
 # ── ALACRITTY ────────────────────────────────────────────────────────────────
 hdr "Alacritty"
@@ -419,6 +429,71 @@ DEOF
 ok "nyxus-control.desktop"
 
 # Refresh app launcher cache
+cat > "$DESKTOP_DIR/nyxus-launcher.desktop" <<'DEOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Launcher
+GenericName=Application Launcher
+Comment=NYXUS Spotlight-style fuzzy app launcher (SUPER+Space)
+Exec=python3 /home/nyx/.nyxus/nyxus_launcher.py
+Icon=io.nyxus.launcher
+Terminal=false
+Categories=Utility;
+Keywords=nyxus;launcher;run;spotlight;search;
+StartupWMClass=io.nyxus.launcher
+NoDisplay=false
+DEOF
+ok "nyxus-launcher.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-powermenu.desktop" <<'DEOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Power
+GenericName=Power Menu
+Comment=NYXUS lock / logout / suspend / reboot / shutdown menu
+Exec=python3 /home/nyx/.nyxus/nyxus_powermenu.py
+Icon=io.nyxus.power
+Terminal=false
+Categories=System;
+Keywords=nyxus;power;logout;shutdown;reboot;suspend;lock;
+StartupWMClass=io.nyxus.powermenu
+DEOF
+ok "nyxus-powermenu.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-screenshot.desktop" <<'DEOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Screenshot
+GenericName=Screenshot
+Comment=NYXUS screenshot — region / window / full + annotate + OCR
+Exec=python3 /home/nyx/.nyxus/nyxus_screenshot.py
+Icon=io.nyxus.screenshot
+Terminal=false
+Categories=Graphics;Utility;
+Keywords=nyxus;screenshot;capture;snip;grab;ocr;annotate;
+StartupWMClass=io.nyxus.screenshot
+DEOF
+ok "nyxus-screenshot.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-doctor.desktop" <<'DEOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Doctor
+GenericName=System Health
+Comment=NYXUS health audit — cache, scripts, hyprctl, theme integrity
+Exec=alacritty -e python3 /home/nyx/.nyxus/nyxus_doctor.py
+Icon=io.nyxus.doctor
+Terminal=false
+Categories=System;
+Keywords=nyxus;doctor;audit;health;diagnostic;
+StartupWMClass=io.nyxus.doctor
+DEOF
+ok "nyxus-doctor.desktop"
+
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 
 # ── APPLY LIVE ───────────────────────────────────────────────────────────────
