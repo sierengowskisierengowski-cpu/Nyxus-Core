@@ -1,5 +1,5 @@
 # ============================================================
-#  NyX.x.OS — Alacritty Terminal Config
+#  NYXUS — Alacritty Terminal Config
 #  ~/.config/alacritty/alacritty.toml
 #
 #  Silent. Dark. Purely Functional.
@@ -70,7 +70,7 @@ animation = "EaseOutExpo"
 duration  = 0
 color     = "#c084fc"
 
-# ── Color Scheme — NyX.x.OS ─────────────────────────────────
+# ── Color Scheme — NYXUS ─────────────────────────────────────
 [colors]
 draw_bold_text_with_bright_colors = true
 
