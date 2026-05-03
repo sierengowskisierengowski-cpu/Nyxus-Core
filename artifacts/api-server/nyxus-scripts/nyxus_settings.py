@@ -851,6 +851,12 @@ class NetworkPage(BasePage):
         self.dns_card = Card("DNS / diagnostics")
         self.box.append(self.dns_card)
         self.refresh()
+        # extra deep-dive cards (built once; not wiped by refresh)
+        self._build_ufw_card()
+        self._build_wireguard_card()
+        self._build_connections_card()
+        self._build_iface_card()
+        self._build_proxy_card()
 
     def refresh(self):
         for c in (self.wifi_card, self.eth_card, self.vpn_card, self.dns_card):
@@ -1052,6 +1058,268 @@ class NetworkPage(BasePage):
         dlg.connect("response", lambda d, _r: d.destroy())
         dlg.present()
 
+    # ── UFW firewall ───────────────────────────────────────────────────────
+    def _build_ufw_card(self):
+        c = Card("firewall (UFW)")
+        self.box.append(c)
+        if not have("ufw"):
+            c.add_row(Gtk.Label(
+                label="ufw not installed (pacman -S ufw)", xalign=0))
+            return
+        rc, out, _ = sh("sudo -n ufw status verbose", timeout=3)
+        if rc != 0:
+            # ufw status needs sudo; show non-privileged hint
+            c.add_row(Gtk.Label(
+                label="ufw needs sudo to read status — use buttons below "
+                      "(they open a terminal that prompts for password).",
+                xalign=0))
+            status_text = ""
+        else:
+            status_text = out
+        # parse status / default / rule count
+        status   = "?"; defaults = ""; rules: List[str] = []
+        for ln in status_text.splitlines():
+            ls = ln.strip()
+            if ls.startswith("Status:"):   status = ls.split(":",1)[1].strip()
+            elif ls.startswith("Default:"): defaults = ls.split(":",1)[1].strip()
+            elif "ALLOW" in ls or "DENY" in ls or "REJECT" in ls or "LIMIT" in ls:
+                if not ls.startswith("--") and not ls.startswith("To"):
+                    rules.append(ls)
+        c.add_row(kv_row("Status:", status))
+        if defaults: c.add_row(kv_row("Defaults:", defaults))
+        c.add_row(kv_row("Active rules:", str(len(rules))))
+        for r in rules[:8]:
+            c.add_row(Gtk.Label(label=f"  • {r}", xalign=0))
+        if len(rules) > 8:
+            c.add_row(Gtk.Label(label=f"  … and {len(rules)-8} more",
+                                xalign=0))
+        # preset profiles
+        c.add_row(Gtk.Label(label="presets:", xalign=0))
+        row = Gtk.Box(spacing=8)
+        for label, cmds, color in (
+            ("Desktop (block-incoming)",
+             "ufw --force reset && ufw default deny incoming && "
+             "ufw default allow outgoing && ufw enable",
+             NEON_GREEN),
+            ("Server (allow ssh+http)",
+             "ufw --force reset && ufw default deny incoming && "
+             "ufw default allow outgoing && ufw allow ssh && "
+             "ufw allow http && ufw allow https && ufw enable",
+             ACCENT_GOLD),
+            ("Off (disable)",
+             "ufw disable",
+             DANGER_RED),
+        ):
+            b = SketchButton(label, width=220, height=24, color=color)
+            b.connect("clicked", lambda _b, cc=cmds, n=label: self._term_run(
+                f"sudo sh -c '{cc}'", f"applying preset: {n}"))
+            row.append(b)
+        c.add_row(row)
+        row2 = Gtk.Box(spacing=8)
+        b_add = SketchButton("Add rule…", width=130, height=24, color=NEON_PINK)
+        b_add.connect("clicked", lambda _b: self._term_run(
+            "read -p 'rule (eg: allow 8080/tcp): ' r && sudo ufw $r",
+            "add-rule prompt opened"))
+        row2.append(b_add)
+        b_log = SketchButton("Tail UFW log", width=160, height=24,
+                             color=ACCENT_PURP)
+        b_log.connect("clicked", lambda _b: self._term_run(
+            "sudo journalctl -u ufw -f",
+            "UFW log opened in terminal"))
+        row2.append(b_log)
+        c.add_row(row2)
+
+    # ── WireGuard import + manage ──────────────────────────────────────────
+    def _build_wireguard_card(self):
+        c = Card("WireGuard")
+        self.box.append(c)
+        wg_present = have("wg") or have("wg-quick")
+        if not wg_present:
+            c.add_row(Gtk.Label(
+                label="wireguard-tools not installed "
+                      "(pacman -S wireguard-tools)", xalign=0))
+            return
+        # active tunnels (needs sudo for `wg show`, but try anyway)
+        rc, out, _ = sh("sudo -n wg show", timeout=2)
+        if rc == 0 and out.strip():
+            ifaces = re.findall(r"^interface:\s*(\S+)", out, re.MULTILINE)
+            c.add_row(kv_row("Active tunnels:", str(len(ifaces))))
+            for i in ifaces:
+                c.add_row(Gtk.Label(label=f"  ↑ {i}", xalign=0))
+        else:
+            c.add_row(kv_row("Active tunnels:", "(none / sudo needed)"))
+        # configs in /etc/wireguard
+        wg_dir = Path("/etc/wireguard")
+        if wg_dir.exists():
+            try:
+                confs = sorted(p.stem for p in wg_dir.glob("*.conf"))
+            except PermissionError:
+                confs = []
+            if confs:
+                c.add_row(kv_row("Saved configs:", ", ".join(confs)))
+                for name in confs[:6]:
+                    r = Gtk.Box(spacing=8)
+                    r.append(Gtk.Label(label=f"  🔐 {name}", xalign=0))
+                    sp = Gtk.Box(); sp.set_hexpand(True); r.append(sp)
+                    b_up = SketchButton("Up", width=70, height=22,
+                                        color=NEON_GREEN)
+                    b_up.connect("clicked", lambda _b, n=name: self._term_run(
+                        f"sudo wg-quick up {n}", f"bringing {n} up…"))
+                    r.append(b_up)
+                    b_dn = SketchButton("Down", width=70, height=22,
+                                        color=DANGER_RED)
+                    b_dn.connect("clicked", lambda _b, n=name: self._term_run(
+                        f"sudo wg-quick down {n}", f"bringing {n} down…"))
+                    r.append(b_dn)
+                    c.add_row(r)
+            else:
+                c.add_row(kv_row("Saved configs:", "(none in /etc/wireguard)"))
+        # import .conf
+        row = Gtk.Box(spacing=8)
+        b_imp = SketchButton("Import .conf", width=140, height=24,
+                             color=NEON_PINK)
+        b_imp.connect("clicked", lambda _b: self._wg_import())
+        row.append(b_imp)
+        b_gen = SketchButton("Generate keypair", width=170, height=24,
+                             color=ACCENT_GOLD)
+        b_gen.connect("clicked", lambda _b: self._term_run(
+            "wg genkey | tee /tmp/wg_priv | wg pubkey > /tmp/wg_pub && "
+            "echo 'private: '$(cat /tmp/wg_priv) && "
+            "echo 'public:  '$(cat /tmp/wg_pub)",
+            "keypair written to /tmp/wg_priv + /tmp/wg_pub"))
+        row.append(b_gen)
+        c.add_row(row)
+
+    def _wg_import(self):
+        dlg = Gtk.FileDialog(); dlg.set_title("Import WireGuard .conf")
+        def _done(d, res):
+            try: f = d.open_finish(res)
+            except Exception: return
+            if not f: return
+            p = f.get_path()
+            stem = Path(p).stem
+            self._term_run(
+                f"sudo install -o root -g root -m 600 "
+                f"{shlex.quote(p)} /etc/wireguard/{shlex.quote(stem)}.conf "
+                f"&& echo 'imported as {stem}.conf'",
+                f"importing {Path(p).name}…")
+        dlg.open(self.win, None, _done)
+
+    # ── active connections (nmcli) ─────────────────────────────────────────
+    def _build_connections_card(self):
+        c = Card("active connections")
+        self.box.append(c)
+        if not have("nmcli"):
+            c.add_row(Gtk.Label(label="nmcli not installed", xalign=0))
+            return
+        rc, out, _ = sh(
+            "nmcli -t -f NAME,TYPE,DEVICE,STATE connection show --active",
+            timeout=3)
+        rows = [ln.split(":") for ln in out.splitlines() if ln.strip()]
+        if not rows:
+            c.add_row(Gtk.Label(label="(no active connections)", xalign=0))
+        for parts in rows:
+            if len(parts) < 4: continue
+            name, typ, dev, state = parts[0], parts[1], parts[2], parts[3]
+            r = Gtk.Box(spacing=8)
+            r.append(Gtk.Label(
+                label=f"⚡ {name}  [{typ}]  on {dev}  ({state})",
+                xalign=0))
+            sp = Gtk.Box(); sp.set_hexpand(True); r.append(sp)
+            b = SketchButton("Disconnect", width=120, height=22,
+                             color=DANGER_RED)
+            b.connect("clicked", lambda _b, n=name: sh_async(
+                f"nmcli connection down {shlex.quote(n)}",
+                lambda r: (self.win.toast(
+                    f"{n} down" if r[0]==0 else f"failed: {r[2].strip()[:50]}"),
+                    self.refresh())))
+            r.append(b)
+            c.add_row(r)
+        # show IP per active interface
+        rc, out, _ = sh("ip -4 -o addr show", timeout=2)
+        for ln in out.splitlines():
+            parts = ln.split()
+            if len(parts) >= 4 and parts[2] == "inet":
+                iface = parts[1]; ip = parts[3]
+                if iface != "lo":
+                    c.add_row(kv_row(f"  {iface}:", ip))
+        # public IP (cached, single call)
+        rc, ip4, _ = sh("curl -fsS --max-time 4 https://api.ipify.org",
+                        timeout=5)
+        c.add_row(kv_row("Public IP:", ip4.strip() or "(offline)"))
+
+    # ── interface stats (RX/TX) ────────────────────────────────────────────
+    def _build_iface_card(self):
+        c = Card("interface stats")
+        self.box.append(c)
+        rc, out, _ = sh("ip -s -h link", timeout=2)
+        if rc != 0 or not out.strip():
+            c.add_row(Gtk.Label(label="(ip command unavailable)", xalign=0))
+            return
+        # parse: each interface = 2-3 lines header, then RX line, RX numbers, TX line, TX numbers
+        cur = None
+        rx_label = tx_label = None
+        skip_next = 0
+        for ln in out.splitlines():
+            m = re.match(r"^\d+:\s+(\S+?):", ln)
+            if m:
+                cur = m.group(1).rstrip(":")
+                if cur != "lo":
+                    c.add_row(Gtk.Label(label=f"📶 {cur}", xalign=0))
+                continue
+            if cur and cur != "lo":
+                ls = ln.strip()
+                if ls.startswith("RX:"):  rx_label = True; continue
+                if ls.startswith("TX:"):  tx_label = True; continue
+                if rx_label:
+                    parts = ls.split()
+                    if parts: c.add_row(kv_row(f"  RX:", f"{parts[0]} bytes"))
+                    rx_label = False; continue
+                if tx_label:
+                    parts = ls.split()
+                    if parts: c.add_row(kv_row(f"  TX:", f"{parts[0]} bytes"))
+                    tx_label = False; continue
+
+    # ── proxy ──────────────────────────────────────────────────────────────
+    def _build_proxy_card(self):
+        c = Card("proxy")
+        self.box.append(c)
+        for var in ("http_proxy", "https_proxy", "ftp_proxy",
+                    "no_proxy", "all_proxy"):
+            v = os.environ.get(var) or os.environ.get(var.upper()) or ""
+            c.add_row(kv_row(var+":", v or "(unset)"))
+        # gsettings (GNOME apps respect this)
+        rc, mode, _ = sh("gsettings get org.gnome.system.proxy mode",
+                         timeout=2)
+        c.add_row(kv_row("gsettings proxy mode:", mode.strip() or "(n/a)"))
+        row = Gtk.Box(spacing=8)
+        b_off = SketchButton("Disable system proxy", width=200, height=24,
+                             color=NEON_GREEN)
+        b_off.connect("clicked", lambda _b: sh_async(
+            "gsettings set org.gnome.system.proxy mode 'none'",
+            lambda r: self.win.toast(
+                "proxy disabled" if r[0]==0 else "failed")))
+        row.append(b_off)
+        b_edit = SketchButton("Edit /etc/environment", width=200, height=24,
+                              color=NEON_PINK)
+        b_edit.connect("clicked", lambda _b: self._term_run(
+            "sudo ${EDITOR:-nano} /etc/environment",
+            "/etc/environment opened (sudo)…"))
+        row.append(b_edit)
+        c.add_row(row)
+
+    # ── helper: run in terminal ────────────────────────────────────────────
+    def _term_run(self, cmd: str, toast: str):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if which(term):
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     f"{cmd}; echo; echo 'press enter to close'; read _"],
+                    start_new_session=True)
+                self.win.toast(toast)
+                return
+        self.win.toast("no terminal found (install foot/alacritty/kitty)")
+
     def search_entries(self):
         return [
             SearchEntry(self.KEY, self.TITLE, "Wi-Fi"),
@@ -1059,8 +1327,18 @@ class NetworkPage(BasePage):
             SearchEntry(self.KEY, self.TITLE, "Hotspot"),
             SearchEntry(self.KEY, self.TITLE, "Ethernet"),
             SearchEntry(self.KEY, self.TITLE, "VPN", "wireguard"),
+            SearchEntry(self.KEY, self.TITLE, "WireGuard import", "wg-quick"),
+            SearchEntry(self.KEY, self.TITLE, "Firewall (UFW)", "ufw rules"),
+            SearchEntry(self.KEY, self.TITLE, "UFW preset profiles",
+                        "desktop server block"),
+            SearchEntry(self.KEY, self.TITLE, "Active connections", "nmcli"),
+            SearchEntry(self.KEY, self.TITLE, "Public IP"),
+            SearchEntry(self.KEY, self.TITLE, "Interface stats", "RX TX"),
+            SearchEntry(self.KEY, self.TITLE, "Proxy",
+                        "http_proxy https_proxy"),
             SearchEntry(self.KEY, self.TITLE, "DNS"),
             SearchEntry(self.KEY, self.TITLE, "Ping / diagnostics"),
+            SearchEntry(self.KEY, self.TITLE, "Speed test"),
         ]
 
 
