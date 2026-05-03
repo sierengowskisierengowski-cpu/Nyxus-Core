@@ -2415,6 +2415,20 @@ class BluetoothPage(BasePage):
             SearchEntry(self.KEY, self.TITLE, "Bluetooth main.conf",
                         "AutoEnable name"),
             SearchEntry(self.KEY, self.TITLE, "Agent / pairing prompts"),
+            SearchEntry(self.KEY, self.TITLE, "Adapter alias / rename",
+                        "system-alias hostname"),
+            SearchEntry(self.KEY, self.TITLE, "Device battery level",
+                        "upower percent headphones"),
+            SearchEntry(self.KEY, self.TITLE, "AutoEnable on boot",
+                        "Policy autoconnect"),
+            SearchEntry(self.KEY, self.TITLE, "Trusted devices list",
+                        "auto reconnect"),
+            SearchEntry(self.KEY, self.TITLE, "Send file (OBEX push)",
+                        "bt-obex obexctl transfer"),
+            SearchEntry(self.KEY, self.TITLE, "Bluetooth journal",
+                        "log journalctl bluetoothd"),
+            SearchEntry(self.KEY, self.TITLE, "dmesg bluetooth",
+                        "kernel hci btusb"),
         ]
 
 
