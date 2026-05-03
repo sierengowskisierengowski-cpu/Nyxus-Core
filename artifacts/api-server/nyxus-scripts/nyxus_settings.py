@@ -3460,7 +3460,7 @@ class DeveloperPage(BasePage):
             "regenerating grub.cfg (sudo)…"))
         row.append(b_apply)
         c.add_row(row)
-        self.win.mark_restart_required(
+        self.win.flag_restart_required(
             self.KEY, "GRUB changes apply on next reboot.")
 
     # ── journalctl tail viewer ─────────────────────────────────────────────
