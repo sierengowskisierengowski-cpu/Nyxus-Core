@@ -148,7 +148,7 @@ class PowerMenu(Gtk.Application):
 CSS = """
 window.nyxus-power {
     background: rgba(8, 6, 14, 0.85);
-    border-radius: 8px;
+    border-radius: 6px;
 }
 .nyxus-title {
     font-family: 'Caveat', sans-serif;
@@ -163,7 +163,7 @@ window.nyxus-power {
 .nyxus-pwrbtn {
     background: rgba(15, 12, 24, 0.92);
     border: 2px solid rgba(255, 0, 255, 0.40);
-    border-radius: 6px;
+    border-radius: 4px;
     color: #ffffff;
     font-family: 'Caveat', sans-serif;
     transition: all 0.12s ease;
