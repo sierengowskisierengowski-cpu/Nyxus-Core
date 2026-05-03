@@ -77,7 +77,8 @@
       "interval": 1,
       "format": "  {:%a \u00b7 %d %b %Y \u00b7 %H:%M:%S}",
       "format-alt": "  {:%H:%M:%S}",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS \u00b7 Time</span>\n<span size='small' foreground='#b8a8d0'><span foreground='#ffffff'>{:%A \u00b7 %B %d, %Y}</span></span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS \u00b7 Time</span>\n<span size='small' foreground='#b8a8d0'><span foreground='#ffffff'>{:%A \u00b7 %B %d, %Y}</span>\n<span foreground='#ffd700'>Click \u2192 Quick Settings</span></span>",
+      "on-click": "sh -c 'pgrep -f nyxus_quicksettings >/dev/null && pkill -f nyxus_quicksettings || setsid python3 ~/.nyxus/nyxus_quicksettings.py >/tmp/nyxus-qs.log 2>&1 < /dev/null &'"
     }
   },
   {
