@@ -294,17 +294,23 @@ class SketchSearchEntry(Gtk.Box):
         self.color = color
         self.set_size_request(width, height)
         self.set_valign(Gtk.Align.CENTER)
-        self.set_vexpand(False)
+        self.set_halign(Gtk.Align.END)
+        self.set_hexpand(False); self.set_vexpand(False)
         bg = Gtk.DrawingArea()
-        bg.set_hexpand(True); bg.set_vexpand(False)
+        bg.set_hexpand(False); bg.set_vexpand(False)
         bg.set_size_request(width, height)
         try: bg.set_content_width(width); bg.set_content_height(height)
         except Exception: pass
         bg.set_draw_func(self._draw_bg)
-        ov = Gtk.Overlay(); ov.set_hexpand(True); ov.set_vexpand(False)
+        ov = Gtk.Overlay(); ov.set_hexpand(False); ov.set_vexpand(False)
+        ov.set_size_request(width, height)
         ov.set_child(bg)
         ent = Gtk.Entry(); ent.set_placeholder_text(placeholder)
         ent.set_has_frame(False)
+        ent.set_hexpand(False); ent.set_vexpand(False)
+        ent.set_halign(Gtk.Align.FILL); ent.set_valign(Gtk.Align.CENTER)
+        ent.set_size_request(width - 38, height - 6)
+        ent.set_max_width_chars(40)
         ent.set_margin_start(30); ent.set_margin_end(8)
         ent.set_margin_top(2);    ent.set_margin_bottom(2)
         ent.add_css_class("nyx-entry")
@@ -3811,50 +3817,413 @@ class DateTimePage(BasePage):
 class NotificationsPage(BasePage):
     KEY = "notifications"; TITLE = "Notifications"; ICON = "🔔"
 
-    def build(self):
-        c = Card("mako (current notification daemon)")
-        self.box.append(c)
-        if have("makoctl"):
-            row = Gtk.Box(spacing=8)
-            b1 = SketchButton("Dismiss all", width=120, height=24,
-                              color=DANGER_RED)
-            b1.connect("clicked",
-                       lambda _b: (sh("makoctl dismiss --all"),
-                                   self.win.toast("dismissed all")))
-            b2 = SketchButton("Reload config", width=130, height=24,
-                              color=NEON_GREEN)
-            b2.connect("clicked",
-                       lambda _b: (sh("makoctl reload"),
-                                   self.win.toast("mako reloaded")))
-            b3 = SketchToggle("DND", width=70, height=24, color=ACCENT_GOLD)
-            rc, out, _ = sh("makoctl mode")
-            b3.set_active("do-not-disturb" in out)
-            b3.connect("clicked",
-                       lambda _b: (sh(f"makoctl mode -t {'do-not-disturb' if b3.active else 'default'}"),
-                                   self.win.toast(
-                                       "DND on" if b3.active else "DND off")))
-            row.append(b1); row.append(b2); row.append(b3)
-            c.add_row(row)
-            # show config path
-            cfg = Path.home() / ".config/mako/config"
-            c.add_row(kv_row("config path:", str(cfg)))
-            if cfg.exists():
-                b = SketchButton("Open in nyxus_notepad", width=200, height=24,
-                                 color=NEON_BLUE)
-                b.connect("clicked", lambda _b:
-                          subprocess.Popen(["python3",
-                                            str(Path.home()/".nyxus/nyxus_notepad.py"),
-                                            str(cfg)],
-                                           stdout=subprocess.DEVNULL,
-                                           stderr=subprocess.DEVNULL))
-                c.add_row(b)
+    def _detect_daemon(self) -> str:
+        # priority: live process > installed binary
+        for proc, ctl in (("mako",   "makoctl"),
+                          ("dunst",  "dunstctl"),
+                          ("swaync", "swaync-client")):
+            rc, out, _ = sh(f"pgrep -x {proc}")
+            if rc == 0 and out.strip():
+                return proc
+        for proc in ("mako", "dunst", "swaync"):
+            if have(proc): return proc
+        return ""
+
+    def _open_in_notepad(self, path: str):
+        np = Path.home() / ".nyxus/nyxus_notepad.py"
+        if np.exists():
+            subprocess.Popen(["python3", str(np), path],
+                             stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL)
         else:
-            c.add_row(Gtk.Label(label="makoctl not installed", xalign=0))
+            self.win.toast("nyxus_notepad.py not found")
+
+    def _term_run(self, cmd: str, toast: str):
+        for term in ("foot", "alacritty", "kitty", "xterm"):
+            if have(term):
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     f"{cmd}; echo; echo 'press enter to close'; read _"],
+                    start_new_session=True)
+                self.win.toast(toast); return
+        self.win.toast("no terminal found")
+
+    def build(self):
+        daemon = self._detect_daemon()
+
+        # ── 1. status / daemon picker ──────────────────────────────────────
+        c = Card("notification daemon")
+        self.box.append(c)
+        c.add_row(kv_row("Active daemon:", daemon or "(none detected)"))
+        for name in ("mako", "dunst", "swaync"):
+            rc, out, _ = sh(f"pgrep -x {name}")
+            running = rc == 0 and out.strip() != ""
+            installed = have(name) or have(name + "ctl") or have(
+                "swaync-client" if name == "swaync" else name)
+            mark = "● running" if running else (
+                "○ installed" if installed else "✗ missing")
+            c.add_row(kv_row(f"  {name}:", mark))
+        if not daemon:
+            c.add_row(Gtk.Label(
+                label="install mako, dunst, or swaync to enable notifications",
+                xalign=0))
+            self.add_note(
+                "no notification daemon is running. apps that send "
+                "notifications via libnotify/D-Bus will silently fail "
+                "until one is installed and started.")
+            return
+
+        # ── 2. quick controls ──────────────────────────────────────────────
+        c = Card("quick controls")
+        self.box.append(c)
+        row = Gtk.Box(spacing=8)
+        if daemon == "mako":
+            b = SketchButton("Dismiss all", width=120, height=24,
+                             color=DANGER_RED)
+            b.connect("clicked", lambda _b: (
+                sh("makoctl dismiss --all"),
+                self.win.toast("dismissed all notifications")))
+            row.append(b)
+            b = SketchButton("Dismiss latest", width=130, height=24,
+                             color=ACCENT_GOLD)
+            b.connect("clicked", lambda _b: (
+                sh("makoctl dismiss"),
+                self.win.toast("dismissed latest")))
+            row.append(b)
+            b = SketchButton("Restore last", width=120, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked", lambda _b: (
+                sh("makoctl restore"),
+                self.win.toast("restored")))
+            row.append(b)
+            b = SketchButton("Reload config", width=130, height=24,
+                             color=NEON_GREEN)
+            b.connect("clicked", lambda _b: (
+                sh("makoctl reload"),
+                self.win.toast("mako reloaded")))
+            row.append(b)
+        elif daemon == "dunst":
+            b = SketchButton("Close all", width=120, height=24,
+                             color=DANGER_RED)
+            b.connect("clicked", lambda _b: (
+                sh("dunstctl close-all"),
+                self.win.toast("closed all")))
+            row.append(b)
+            b = SketchButton("Close latest", width=130, height=24,
+                             color=ACCENT_GOLD)
+            b.connect("clicked", lambda _b: (
+                sh("dunstctl close"),
+                self.win.toast("closed latest")))
+            row.append(b)
+            b = SketchButton("Show context", width=130, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked", lambda _b: (
+                sh("dunstctl context"),
+                self.win.toast("context menu")))
+            row.append(b)
+        elif daemon == "swaync":
+            b = SketchButton("Hide panel", width=120, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked", lambda _b: sh("swaync-client -cp"))
+            row.append(b)
+            b = SketchButton("Toggle panel", width=130, height=24,
+                             color=NEON_GREEN)
+            b.connect("clicked", lambda _b: sh("swaync-client -t"))
+            row.append(b)
+            b = SketchButton("Reload", width=100, height=24,
+                             color=ACCENT_GOLD)
+            b.connect("clicked", lambda _b: (
+                sh("swaync-client -R"),
+                self.win.toast("swaync reloaded")))
+            row.append(b)
+        c.add_row(row)
+
+        # ── 3. Do-Not-Disturb ──────────────────────────────────────────────
+        c = Card("do not disturb")
+        self.box.append(c)
+        if daemon == "mako":
+            rc, out, _ = sh("makoctl mode")
+            dnd_on = "do-not-disturb" in (out or "")
+        elif daemon == "dunst":
+            rc, out, _ = sh("dunstctl is-paused")
+            dnd_on = "true" in (out or "").lower()
+        else:  # swaync
+            rc, out, _ = sh("swaync-client -D")
+            dnd_on = "true" in (out or "").lower()
+        dnd = SketchToggle("Do Not Disturb", width=180, height=26,
+                           color=ACCENT_GOLD, active=dnd_on)
+        def _dnd_cb(_b):
+            on = dnd.active
+            if daemon == "mako":
+                sh(f"makoctl mode -t "
+                   f"{'do-not-disturb' if on else 'default'}")
+            elif daemon == "dunst":
+                sh(f"dunstctl set-paused {'true' if on else 'false'}")
+            else:
+                sh(f"swaync-client -d")  # toggle
+            self.win.toast(f"DND {'on' if on else 'off'}")
+        dnd.connect("clicked", _dnd_cb)
+        c.add_row(dnd)
+        c.add_row(Gtk.Label(
+            label="silences all notifications. Daemon-specific behavior:",
+            xalign=0))
+        if daemon == "mako":
+            c.add_row(Gtk.Label(
+                label="  mako: switches to 'do-not-disturb' mode group "
+                      "(define `[mode=do-not-disturb] invisible=1` in "
+                      "config)", xalign=0))
+        elif daemon == "dunst":
+            c.add_row(Gtk.Label(
+                label="  dunst: pauses all notifications (queued & silent)",
+                xalign=0))
+        else:
+            c.add_row(Gtk.Label(
+                label="  swaync: toggles DND state (panel + popups muted)",
+                xalign=0))
+
+        # ── 4. notification history ────────────────────────────────────────
+        c = Card("history")
+        self.box.append(c)
+        if daemon == "mako":
+            rc, out, _ = sh("makoctl history")
+            try:
+                hist = json.loads(out or "{}").get("data", [[]])[0]
+            except Exception:
+                hist = []
+            c.add_row(kv_row("Recent count:", str(len(hist))))
+            for n in hist[-6:]:
+                summ = (n.get("summary", {}) or {}).get("data", "?")
+                body = (n.get("body", {}) or {}).get("data", "")
+                app  = (n.get("app-name", {}) or {}).get(
+                    "data", "?")
+                c.add_row(Gtk.Label(
+                    label=f"  • [{app}] {summ}  {body[:60]}",
+                    xalign=0))
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("Restore most recent", width=200, height=24,
+                             color=NEON_GREEN)
+            b.connect("clicked", lambda _b: (
+                sh("makoctl restore"),
+                self.win.toast("restored")))
+            row.append(b)
+            c.add_row(row)
+        elif daemon == "dunst":
+            rc, out, _ = sh("dunstctl count history")
+            n = (out or "0").strip()
+            c.add_row(kv_row("History count:", n))
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("Pop one from history", width=200, height=24,
+                             color=NEON_GREEN)
+            b.connect("clicked", lambda _b: (
+                sh("dunstctl history-pop"),
+                self.win.toast("popped one")))
+            row.append(b)
+            b = SketchButton("Clear history", width=160, height=24,
+                             color=DANGER_RED)
+            b.connect("clicked", lambda _b: (
+                sh("dunstctl history-clear"),
+                self.win.toast("history cleared")))
+            row.append(b)
+            c.add_row(row)
+        else:
+            rc, out, _ = sh("swaync-client -c")
+            c.add_row(kv_row("Pending notifications:", (out or "0").strip()))
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("Hide all", width=140, height=24,
+                             color=DANGER_RED)
+            b.connect("clicked", lambda _b: (
+                sh("swaync-client -C"),
+                self.win.toast("cleared all")))
+            row.append(b)
+            c.add_row(row)
+
+        # ── 5. config & test-fire ──────────────────────────────────────────
+        c = Card("config & test")
+        self.box.append(c)
+        cfg_paths = {
+            "mako":  Path.home() / ".config/mako/config",
+            "dunst": Path.home() / ".config/dunst/dunstrc",
+            "swaync": Path.home() / ".config/swaync/config.json",
+        }
+        cfg = cfg_paths.get(daemon)
+        c.add_row(kv_row("Config path:", str(cfg) if cfg else "?"))
+        c.add_row(kv_row("Exists:", "yes" if cfg and cfg.exists() else "no"))
+        row = Gtk.Box(spacing=8)
+        if cfg and cfg.exists():
+            b = SketchButton("Open in nyxus_notepad", width=200, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked", lambda _b: self._open_in_notepad(str(cfg)))
+            row.append(b)
+        b = SketchButton("Reveal in terminal", width=170, height=24,
+                         color=ACCENT_GOLD)
+        b.connect("clicked", lambda _b: self._term_run(
+            f"ls -la {cfg.parent if cfg else Path.home()/'.config'} && "
+            f"echo && cat {cfg if cfg and cfg.exists() else '/dev/null'} "
+            f"2>/dev/null | head -80",
+            "showing config…"))
+        row.append(b)
+        c.add_row(row)
+
+        # test-fire (notify-send for each urgency)
+        if have("notify-send"):
+            c.add_row(Gtk.Label(label="Send a test notification:",
+                                xalign=0))
+            row = Gtk.Box(spacing=8)
+            for label, urg, icon, color in (
+                ("Low",      "low",      "dialog-information",
+                 NEON_BLUE),
+                ("Normal",   "normal",   "dialog-information",
+                 NEON_GREEN),
+                ("Critical", "critical", "dialog-warning",
+                 DANGER_RED)):
+                b = SketchButton(label, width=110, height=24,
+                                 color=color)
+                b.connect("clicked", lambda _b, u=urg, l=label: (
+                    sh(f"notify-send -u {u} -i dialog-information "
+                       f"'NYXUS test ({l})' "
+                       f"'urgency = {u} — fired at "
+                       f"$(date +%H:%M:%S)'"),
+                    self.win.toast(f"test {l} sent")))
+                row.append(b)
+            c.add_row(row)
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("Test with action button",
+                             width=210, height=24, color=ACCENT_PURP)
+            b.connect("clicked", lambda _b: (
+                sh("notify-send -A 'view=View details' "
+                   "-A 'dismiss=Dismiss' "
+                   "'NYXUS' 'click an action below'"),
+                self.win.toast("action notification sent")))
+            row.append(b)
+            b = SketchButton("Test with icon",
+                             width=160, height=24, color=NEON_BLUE)
+            b.connect("clicked", lambda _b: (
+                sh("notify-send -i face-smile "
+                   "'NYXUS' 'icon test'"),
+                self.win.toast("icon notification sent")))
+            row.append(b)
+            c.add_row(row)
+        else:
+            c.add_row(Gtk.Label(
+                label="install libnotify (notify-send) for test-fire",
+                xalign=0))
+
+        # ── 6. fullscreen / idle inhibitor ────────────────────────────────
+        c = Card("inhibitors & integration")
+        self.box.append(c)
+        # mako has --inhibit, swaync has inhibit-while-fullscreen flag
+        if daemon == "mako":
+            rc, out, _ = sh("makoctl mode")
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("Inhibit (silence all)", width=200,
+                             height=24, color=DANGER_RED)
+            b.connect("clicked", lambda _b: (
+                sh("makoctl set-mode invisible"),
+                self.win.toast("mako: invisible mode on")))
+            row.append(b)
+            b = SketchButton("Restore default", width=180,
+                             height=24, color=NEON_GREEN)
+            b.connect("clicked", lambda _b: (
+                sh("makoctl set-mode default"),
+                self.win.toast("mako: default mode")))
+            row.append(b)
+            c.add_row(row)
+            c.add_row(Gtk.Label(
+                label="Tip: pair with hyprctl `bind = SUPER, F11, "
+                      "exec, makoctl mode -t do-not-disturb` for hotkey "
+                      "DND.", xalign=0))
+        elif daemon == "dunst":
+            row = Gtk.Box(spacing=8)
+            b = SketchButton("Pause", width=100, height=24,
+                             color=ACCENT_GOLD)
+            b.connect("clicked", lambda _b: (
+                sh("dunstctl set-paused true"),
+                self.win.toast("dunst paused")))
+            row.append(b)
+            b = SketchButton("Resume", width=100, height=24,
+                             color=NEON_GREEN)
+            b.connect("clicked", lambda _b: (
+                sh("dunstctl set-paused false"),
+                self.win.toast("dunst resumed")))
+            row.append(b)
+            c.add_row(row)
+        else:
+            c.add_row(Gtk.Label(
+                label="swaync auto-inhibits during fullscreen if "
+                      "`fullscreen-behavior: ignore` is set in "
+                      "~/.config/swaync/config.json", xalign=0))
+
+        # idle inhibitor (hypridle / systemd-inhibit availability)
+        if have("hypridle") or have("systemd-inhibit"):
+            row = Gtk.Box(spacing=8)
+            if have("hypridle"):
+                rc, out, _ = sh("pgrep -x hypridle")
+                state = "running" if (rc == 0 and out.strip()) else "stopped"
+                c.add_row(kv_row("hypridle:", state))
+                b = SketchButton("Start hypridle", width=160, height=24,
+                                 color=NEON_GREEN)
+                b.connect("clicked", lambda _b: (
+                    subprocess.Popen(["hypridle"],
+                                     start_new_session=True,
+                                     stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL),
+                    self.win.toast("hypridle started")))
+                row.append(b)
+                b = SketchButton("Stop hypridle", width=140, height=24,
+                                 color=DANGER_RED)
+                b.connect("clicked", lambda _b: (
+                    sh("pkill -x hypridle"),
+                    self.win.toast("hypridle stopped")))
+                row.append(b)
+            if row.get_first_child(): c.add_row(row)
+
+        # ── 7. quick reference ─────────────────────────────────────────────
+        c = Card("quick reference")
+        self.box.append(c)
+        ref = {
+            "mako":  ("makoctl reload | dismiss [-a] | restore | "
+                      "history | mode -t do-not-disturb"),
+            "dunst": ("dunstctl close[-all] | history-pop | "
+                      "set-paused true|false | count [history|displayed]"),
+            "swaync": ("swaync-client -t (toggle) -C (clear) "
+                       "-d (DND toggle) -R (reload) -c (count)"),
+        }
+        c.add_row(Gtk.Label(label=f"{daemon}: {ref.get(daemon,'?')}",
+                            xalign=0, wrap=True))
 
     def search_entries(self):
         return [
-            SearchEntry(self.KEY, self.TITLE, "Do not disturb"),
-            SearchEntry(self.KEY, self.TITLE, "Notification daemon", "mako"),
+            SearchEntry(self.KEY, self.TITLE, "Notification daemon",
+                        "mako dunst swaync"),
+            SearchEntry(self.KEY, self.TITLE, "Active daemon detection"),
+            SearchEntry(self.KEY, self.TITLE, "Do not disturb",
+                        "DND silence"),
+            SearchEntry(self.KEY, self.TITLE, "Dismiss all notifications"),
+            SearchEntry(self.KEY, self.TITLE, "Dismiss latest"),
+            SearchEntry(self.KEY, self.TITLE, "Restore last notification"),
+            SearchEntry(self.KEY, self.TITLE, "Reload notification config"),
+            SearchEntry(self.KEY, self.TITLE, "Notification history"),
+            SearchEntry(self.KEY, self.TITLE, "Clear history"),
+            SearchEntry(self.KEY, self.TITLE, "Pop history"),
+            SearchEntry(self.KEY, self.TITLE, "Notification config path",
+                        "mako dunstrc swaync"),
+            SearchEntry(self.KEY, self.TITLE, "Edit notification config",
+                        "open notepad"),
+            SearchEntry(self.KEY, self.TITLE, "Test notification (low)",
+                        "notify-send"),
+            SearchEntry(self.KEY, self.TITLE, "Test notification (normal)"),
+            SearchEntry(self.KEY, self.TITLE,
+                        "Test notification (critical)"),
+            SearchEntry(self.KEY, self.TITLE,
+                        "Test notification with action button"),
+            SearchEntry(self.KEY, self.TITLE, "Test notification with icon"),
+            SearchEntry(self.KEY, self.TITLE, "Inhibit notifications",
+                        "invisible mode pause"),
+            SearchEntry(self.KEY, self.TITLE, "Fullscreen inhibitor"),
+            SearchEntry(self.KEY, self.TITLE, "hypridle service",
+                        "idle inhibitor"),
+            SearchEntry(self.KEY, self.TITLE, "Notification quick reference",
+                        "command cheatsheet"),
         ]
 
 
@@ -6346,6 +6715,71 @@ PAGE_CLASSES: List[type] = [
 HOME_KEY = "_home"
 
 
+class SettingsRow(Gtk.DrawingArea):
+    """Compact list-row tile (icon + title + subtitle + chevron) — like
+    macOS / GNOME System Settings. Replaces the giant CategoryTile in the
+    redesigned home list view."""
+    __gsignals__ = {"activated": (GObject.SignalFlags.RUN_FIRST, None, ())}
+
+    def __init__(self, *, icon: str, title: str, subtitle: str,
+                 color=NEON_PINK, starred: bool = False,
+                 width=-1, height=52):
+        super().__init__()
+        self.icon, self.title, self.subtitle = icon, title, subtitle
+        self.color = color; self.starred = starred
+        self._hover = False
+        self.set_size_request(width, height)
+        self.set_hexpand(True); self.set_vexpand(False)
+        try: self.set_content_height(height)
+        except Exception: pass
+        self.set_draw_func(self._draw)
+        gc = Gtk.GestureClick(); gc.set_button(1)
+        gc.connect("released", lambda *_a: self.emit("activated"))
+        self.add_controller(gc)
+        mc = Gtk.EventControllerMotion()
+        mc.connect("enter", lambda *_a: (setattr(self, "_hover", True),
+                                         self.queue_draw()))
+        mc.connect("leave", lambda *_a: (setattr(self, "_hover", False),
+                                         self.queue_draw()))
+        self.add_controller(mc)
+        self.set_cursor(Gdk.Cursor.new_from_name("pointer"))
+
+    def _draw(self, area, cr, w, h, _=None):
+        # row background (highlight on hover)
+        if self._hover:
+            cr.set_source_rgba(*self.color, 0.10)
+            cr.rectangle(0, 0, w, h); cr.fill()
+            cr.set_source_rgba(*self.color, 0.55); cr.set_line_width(1.0)
+            cr.move_to(0, 0); cr.line_to(3, 0)
+            cr.line_to(3, h); cr.line_to(0, h); cr.fill()
+        # bottom hairline divider
+        cr.set_source_rgba(*INK_FAINT, 0.18); cr.set_line_width(1.0)
+        sketch_line(cr, 14, h-0.5, w-14, h-0.5, jitter=0.25,
+                    key=("srow", self.title, w))
+        # left accent dot
+        cr.set_source_rgba(*self.color, 0.85)
+        cr.arc(20, h/2, 4, 0, math.pi*2); cr.fill()
+        # icon (large emoji)
+        draw_caveat(cr, 36, (h-26)/2 - 2, self.icon, size=22,
+                    color=(*self.color, 0.95))
+        # title (Caveat bold)
+        draw_caveat(cr, 78, 7, self.title, size=18,
+                    color=(*INK_BRIGHT, 0.97),
+                    weight=Pango.Weight.BOLD)
+        # subtitle (mono dim)
+        if self.subtitle:
+            draw_caveat(cr, 78, h-22, self.subtitle, size=11,
+                        color=(*INK_DIM, 0.85),
+                        family="JetBrains Mono")
+        # star
+        if self.starred:
+            draw_caveat(cr, w-58, (h-22)/2, "★", size=18,
+                        color=(*ACCENT_GOLD, 0.95))
+        # chevron ›
+        draw_caveat(cr, w-28, (h-26)/2 - 2, "›", size=24,
+                    color=(*INK_DIM, 0.75))
+
+
 class CategoryTile(Gtk.DrawingArea):
     """A large hand-drawn sketch tile for the Home grid.
     260×140 by default — clickable, hover-glow, accent-coloured border."""
@@ -6508,6 +6942,14 @@ window, .nyx-bg { background-color: #0a0a12; color: #f0eef8; }
 .nyx-card { background-color: rgba(255,255,255,0.025);
     border: 1px solid rgba(255,0,255,0.08); border-radius: 6px;
     padding: 4px 0 8px 0; }
+.nyx-listcard { background-color: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,0,255,0.10); border-radius: 8px;
+    padding: 0; margin-top: 4px; }
+.nyx-settings-list { background-color: transparent; }
+.nyx-settings-list row { background-color: transparent;
+    padding: 0; min-height: 52px; }
+.nyx-settings-list row:hover { background-color: transparent; }
+.nyx-settings-list row:selected { background-color: transparent; }
 .nyx-card-title { color: #b88dff; font-size: 18px; font-weight: bold; }
 .nyx-row-label { color: #f0eef8; font-size: 14px; }
 .nyx-row-value { color: rgba(240,235,250,0.75); font-size: 14px; }
@@ -6705,27 +7147,28 @@ scrollbar { background-color: transparent; }
             xalign=0)
         sub.add_css_class("nyx-meta"); outer.append(sub)
 
-        # strips: favorites + recents
-        self._fav_strip    = self._make_strip("favorites")
-        self._recent_strip = self._make_strip("recently changed")
+        # strips: favorites + recents (compact chip rows)
+        self._fav_strip    = self._make_strip("★ favorites")
+        self._recent_strip = self._make_strip("⟲ recently changed")
         outer.append(self._fav_strip)
         outer.append(self._recent_strip)
 
-        # full grid of all categories (FlowBox = wrapping responsive grid)
+        # vertical list of all categories (compact rows, professional look)
         all_lbl = Gtk.Label(label="all categories", xalign=0)
         all_lbl.add_css_class("nyx-strip-label")
-        all_lbl.set_margin_top(6); all_lbl.set_margin_start(2)
+        all_lbl.set_margin_top(10); all_lbl.set_margin_start(2)
         outer.append(all_lbl)
 
-        self._tiles_box = Gtk.FlowBox()
-        self._tiles_box.set_valign(Gtk.Align.START)
-        self._tiles_box.set_max_children_per_line(6)
-        self._tiles_box.set_min_children_per_line(2)
-        self._tiles_box.set_column_spacing(14)
-        self._tiles_box.set_row_spacing(14)
+        # ListBox wrapper styled as a single bordered card
+        list_wrap = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        list_wrap.add_css_class("nyx-listcard")
+        outer.append(list_wrap)
+
+        self._tiles_box = Gtk.ListBox()
         self._tiles_box.set_selection_mode(Gtk.SelectionMode.NONE)
-        self._tiles_box.set_homogeneous(True)
-        outer.append(self._tiles_box)
+        self._tiles_box.add_css_class("nyx-settings-list")
+        self._tiles_box.set_hexpand(True)
+        list_wrap.append(self._tiles_box)
 
         self._rebuild_home_strips()
         self._populate_tiles()
@@ -6747,19 +7190,26 @@ scrollbar { background-color: transparent; }
         c = self._tiles_box.get_first_child()
         while c:
             n = c.get_next_sibling(); self._tiles_box.remove(c); c = n
-        for cls in PAGE_CLASSES:
+        # build compact list rows (favorites first, then everyone else)
+        fav_keys = [k for k in self.favorites
+                    if k in self._page_widgets]
+        ordered  = ([self._page_widgets[k].__class__ for k in fav_keys]
+                    + [cls for cls in PAGE_CLASSES
+                       if cls.KEY not in fav_keys])
+        for cls in ordered:
             page = self._page_widgets.get(cls.KEY)
             if page is None: continue
             if not getattr(page, "AVAILABLE", True): continue
-            tile = CategoryTile(
+            row = SettingsRow(
                 icon=getattr(cls, "ICON", "•"),
                 title=getattr(cls, "TITLE", cls.__name__),
                 subtitle=getattr(cls, "SUBTITLE", ""),
                 color=getattr(cls, "TILE_COLOR", NEON_PINK),
                 starred=(cls.KEY in self.favorites),
             )
-            tile.connect("activated", lambda _t, k=cls.KEY: self.show_page(k))
-            self._tiles_box.insert(tile, -1)
+            row.connect("activated", lambda _t, k=cls.KEY:
+                        self.show_page(k))
+            self._tiles_box.append(row)
 
     def _rebuild_home_strips(self):
         # favorites
@@ -6772,12 +7222,12 @@ scrollbar { background-color: transparent; }
             self._fav_strip.set_visible(bool(visible))
             for k in visible:
                 cls = type(self._page_widgets[k])
-                tile = CategoryTile(icon=cls.ICON, title=cls.TITLE,
-                                    subtitle=cls.SUBTITLE,
-                                    color=cls.TILE_COLOR, starred=True,
-                                    width=220, height=110)
-                tile.connect("activated", lambda _t, kk=k: self.show_page(kk))
-                inner.append(tile)
+                chip = SettingsRow(icon=cls.ICON, title=cls.TITLE,
+                                   subtitle="", color=cls.TILE_COLOR,
+                                   starred=True, width=240, height=44)
+                chip.connect("activated",
+                             lambda _t, kk=k: self.show_page(kk))
+                inner.append(chip)
         # recents
         inner = getattr(self._recent_strip, "_inner", None)
         if inner is not None:
@@ -6788,13 +7238,13 @@ scrollbar { background-color: transparent; }
             self._recent_strip.set_visible(bool(visible))
             for k in visible:
                 cls = type(self._page_widgets[k])
-                tile = CategoryTile(icon=cls.ICON, title=cls.TITLE,
-                                    subtitle="recently changed",
-                                    color=cls.TILE_COLOR,
-                                    starred=(k in self.favorites),
-                                    width=220, height=110)
-                tile.connect("activated", lambda _t, kk=k: self.show_page(kk))
-                inner.append(tile)
+                chip = SettingsRow(icon=cls.ICON, title=cls.TITLE,
+                                   subtitle="", color=cls.TILE_COLOR,
+                                   starred=(k in self.favorites),
+                                   width=240, height=44)
+                chip.connect("activated",
+                             lambda _t, kk=k: self.show_page(kk))
+                inner.append(chip)
 
     def _build_search_results_page(self) -> Gtk.ScrolledWindow:
         sw = Gtk.ScrolledWindow()
