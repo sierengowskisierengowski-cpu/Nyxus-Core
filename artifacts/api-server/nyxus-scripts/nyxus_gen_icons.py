@@ -50,16 +50,12 @@ APPS = [
     ("io.nyxus.sage",          "SAGE",     (0.30, 0.89, 0.89)),
     ("io.nyxus.shield",        "SHIELD",   (0.29, 0.87, 0.50)),
     ("io.nyxus.settings",      "SETTINGS", (0.65, 0.55, 0.98)),
-    # ── missing apps ─────────────────────────────────────────────────────
-    ("io.nyxus.clock",         "CLOCK",    (1.00, 0.00, 1.00)),
-    ("io.nyxus.calendar",      "CALEND",   (0.80, 0.00, 1.00)),
+    # ── extended apps ────────────────────────────────────────────────────
     ("io.nyxus.passwords",     "PASSWD",   (1.00, 0.33, 0.00)),
     ("io.nyxus.panel",         "PANEL",    (0.00, 0.53, 1.00)),
-    ("io.nyxus.notifications", "NOTIFS",   (0.00, 0.87, 0.87)),
     ("io.nyxus.intel",         "INTEL",    (0.00, 0.73, 1.00)),
     ("io.nyxus.start",         "START",    (1.00, 0.00, 0.80)),
     ("io.nyxus.home",          "HOME",     (1.00, 0.84, 0.00)),
-    ("io.nyxus.store",         "STORE",    (0.22, 1.00, 0.08)),
     ("io.nyxus.phantom",       "PHANTOM",  (0.50, 0.00, 1.00)),
     # ── legacy aliases (match .desktop Icon= names from older installs) ──
     ("nyxus-home",             "HOME",     (1.00, 0.84, 0.00)),
@@ -80,73 +76,145 @@ def sketch_rect(cr, x, y, w, h, r, g, b, thick=3.0):
     cr.close_path(); cr.stroke()
 
 
+def hatch_lines(cr, x, y, w, h, r, g, b, alpha=0.10, spacing=14, rng=None):
+    """Diagonal sketchy hatch lines for texture."""
+    if rng is None:
+        rng = random.Random(0)
+    cr.save()
+    cr.set_source_rgba(r, g, b, alpha)
+    cr.set_line_width(1.0)
+    n = int((w + h) / spacing)
+    for i in range(n):
+        off = i * spacing - h
+        sx = x + off + rng.uniform(-2, 2)
+        sy = y + rng.uniform(-2, 2)
+        ex = sx + h + rng.uniform(-4, 4)
+        ey = sy + h + rng.uniform(-4, 4)
+        cr.move_to(sx, sy); cr.line_to(ex, ey); cr.stroke()
+    cr.restore()
+
+
+def sketch_circle(cr, cx, cy, radius, r, g, b, thick=2.0, alpha=0.85, segments=3, rng=None):
+    """Hand-drawn wobbly circle — multiple overlapping passes for sketch feel."""
+    if rng is None:
+        rng = random.Random(int(cx*7 + cy*11 + radius*13) % 65535)
+    cr.set_source_rgba(r, g, b, alpha)
+    cr.set_line_width(thick)
+    cr.set_line_cap(1)
+    for _ in range(segments):
+        cr.save()
+        cr.translate(cx, cy)
+        cr.rotate(rng.uniform(-0.06, 0.06))
+        steps = 36
+        for i in range(steps + 1):
+            ang = (i / steps) * math.pi * 2
+            jr = radius + rng.uniform(-2.5, 2.5)
+            px = math.cos(ang) * jr
+            py = math.sin(ang) * jr
+            if i == 0:
+                cr.move_to(px, py)
+            else:
+                cr.line_to(px, py)
+        cr.stroke()
+        cr.restore()
+
+
 def gen_icon(app_id, label, color):
+    """Hand-drawn sketch-style NYXUS app icon — slightly tilted, consistent set.
+
+    Style spec (matches dashboard aesthetic):
+      - Dark frosted background (#08080e)
+      - Sketchy wobbly outer border in app color
+      - Diagonal hatch texture (very faint)
+      - Centered tilted "NYXUS" wordmark in Caveat (handwritten)
+      - App label below in Caveat, tilted in opposite direction
+      - Single accent dot for color identity
+    """
     r, g, b = color
     seed = abs(hash(app_id)) % 99991
+    rng = random.Random(seed)
 
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, SIZE, SIZE)
     cr = cairo.Context(surface)
 
-    # Dark background
-    cr.set_source_rgb(*BG); cr.rectangle(0, 0, SIZE, SIZE); cr.fill()
+    # ── Background: deep frosted black ───────────────────────────────────────
+    cr.set_source_rgb(*BG)
+    cr.rectangle(0, 0, SIZE, SIZE); cr.fill()
 
-    rng = random.Random(seed)
+    # Subtle inner panel tone
+    cr.set_source_rgba(r, g, b, 0.04)
+    cr.rectangle(10, 10, SIZE-20, SIZE-20); cr.fill()
 
-    # Large splatter blobs (background)
-    for _ in range(14):
-        bx = rng.uniform(8, SIZE-8)
-        by = rng.uniform(8, SIZE-8)
-        br = rng.uniform(6, 22)
-        nc = rng.choice(NEON)
-        cr.set_source_rgba(*nc, rng.uniform(0.08, 0.28))
-        cr.arc(bx, by, br, 0, math.pi*2); cr.fill()
+    # ── Faint diagonal hatch texture ─────────────────────────────────────────
+    hatch_lines(cr, 0, 0, SIZE, SIZE, r, g, b, alpha=0.06, spacing=18, rng=rng)
 
-    # Thin splatter streaks
-    for _ in range(20):
-        sx = rng.uniform(0, SIZE); sy = rng.uniform(0, SIZE)
-        ex = sx + rng.uniform(-40, 40); ey = sy + rng.uniform(-8, 8)
-        nc = rng.choice(NEON)
-        cr.set_source_rgba(*nc, rng.uniform(0.15, 0.45))
-        cr.set_line_width(rng.uniform(0.8, 2.5))
-        cr.move_to(sx, sy); cr.line_to(ex, ey); cr.stroke()
+    # ── Hand-drawn outer border (double-pass for sketch feel) ────────────────
+    sketch_rect(cr, 14, 14, SIZE-28, SIZE-28, r, g, b, thick=2.6)
+    sketch_rect(cr, 18, 18, SIZE-36, SIZE-36, r, g, b, thick=1.2)
 
-    # Small dots
-    for _ in range(60):
-        bx = rng.uniform(4, SIZE-4); by = rng.uniform(4, SIZE-4)
-        br = rng.uniform(1, 4)
-        nc = rng.choice(NEON)
-        cr.set_source_rgba(*nc, rng.uniform(0.25, 0.65))
-        cr.arc(bx, by, br, 0, math.pi*2); cr.fill()
+    # ── Sketch corner ticks (hand-drawn) ─────────────────────────────────────
+    cr.set_source_rgba(r, g, b, 0.55)
+    cr.set_line_width(1.6)
+    cr.set_line_cap(1)
+    for cx, cy in [(22, 22), (SIZE-22, 22), (22, SIZE-22), (SIZE-22, SIZE-22)]:
+        for _ in range(2):
+            jx = cx + rng.uniform(-1.5, 1.5)
+            jy = cy + rng.uniform(-1.5, 1.5)
+            cr.move_to(jx-5, jy); cr.line_to(jx+5, jy); cr.stroke()
+            cr.move_to(jx, jy-5); cr.line_to(jx, jy+5); cr.stroke()
 
-    # Accent splats near the accent color
-    for _ in range(8):
-        bx = rng.uniform(30, SIZE-30); by = rng.uniform(30, SIZE-30)
-        br = rng.uniform(3, 12)
-        cr.set_source_rgba(r, g, b, rng.uniform(0.20, 0.50))
-        cr.arc(bx, by, br, 0, math.pi*2); cr.fill()
-
-    # Wobbly border
-    sketch_rect(cr, 6, 6, SIZE-12, SIZE-12, r, g, b, thick=2.8)
-
-    # "NYXUS" glow text
+    # ── NYXUS wordmark — tilted -4°, hand-drawn shadow + outline ─────────────
+    cr.save()
+    cr.translate(SIZE/2, SIZE * 0.46)
+    cr.rotate(math.radians(-4))
     cr.select_font_face("Caveat", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-    cr.set_font_size(62)
+    cr.set_font_size(72)
     ext = cr.text_extents("NYXUS")
-    tx = (SIZE - ext.width) / 2 - ext.x_bearing
-    ty = SIZE * 0.52
-    for dx, dy in [(-2,-2),(2,-2),(-2,2),(2,2),(0,-3),(0,3),(-3,0),(3,0)]:
-        cr.set_source_rgba(r, g, b, 0.20)
-        cr.move_to(tx+dx, ty+dy); cr.show_text("NYXUS")
+    tx = -ext.width/2 - ext.x_bearing
+    ty = ext.height/2
+
+    # Soft shadow
+    cr.set_source_rgba(0, 0, 0, 0.55)
+    cr.move_to(tx+2, ty+3); cr.show_text("NYXUS")
+
+    # Color fill
     cr.set_source_rgba(r, g, b, 1.0)
     cr.move_to(tx, ty); cr.show_text("NYXUS")
+    cr.restore()
 
-    # App label below
+    # ── App label — tilted +5° in opposite direction ─────────────────────────
+    cr.save()
+    cr.translate(SIZE/2, SIZE * 0.74)
+    cr.rotate(math.radians(5))
     cr.select_font_face("Caveat", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-    cr.set_font_size(24)
+    cr.set_font_size(30)
     ext2 = cr.text_extents(label)
-    tx2 = (SIZE - ext2.width) / 2 - ext2.x_bearing
-    cr.set_source_rgba(r, g, b, 0.72)
-    cr.move_to(tx2, SIZE * 0.79); cr.show_text(label)
+    tx2 = -ext2.width/2 - ext2.x_bearing
+
+    # Hand-drawn underline (wobbly)
+    cr.set_source_rgba(r, g, b, 0.75)
+    cr.set_line_width(1.8)
+    cr.set_line_cap(1)
+    ux1 = tx2 - 4
+    ux2 = tx2 + ext2.width + 4
+    uy = 8
+    cr.move_to(ux1, uy + rng.uniform(-1, 1))
+    cr.curve_to(
+        ux1 + (ux2-ux1)*0.33, uy + rng.uniform(-2, 2),
+        ux1 + (ux2-ux1)*0.67, uy + rng.uniform(-2, 2),
+        ux2, uy + rng.uniform(-1, 1)
+    )
+    cr.stroke()
+
+    # Label text
+    cr.set_source_rgba(0.95, 0.92, 0.98, 0.92)
+    cr.move_to(tx2, 0); cr.show_text(label)
+    cr.restore()
+
+    # ── Accent dot (color identity marker, top-left) ─────────────────────────
+    sketch_circle(cr, 36, 36, 8, r, g, b, thick=2.0, alpha=0.95, segments=2, rng=rng)
+    cr.set_source_rgba(r, g, b, 0.85)
+    cr.arc(36, 36, 4, 0, math.pi*2); cr.fill()
 
     path = os.path.join(ICON_DIR, f"{app_id}.png")
     surface.write_to_png(path)
