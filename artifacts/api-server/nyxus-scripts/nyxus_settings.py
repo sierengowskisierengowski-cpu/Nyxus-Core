@@ -1311,7 +1311,7 @@ class NetworkPage(BasePage):
     # ── helper: run in terminal ────────────────────────────────────────────
     def _term_run(self, cmd: str, toast: str):
         for term in ("foot", "alacritty", "kitty", "xterm"):
-            if which(term):
+            if have(term):
                 subprocess.Popen(
                     [term, "-e", "sh", "-c",
                      f"{cmd}; echo; echo 'press enter to close'; read _"],
@@ -1961,7 +1961,7 @@ class PrivacyPage(BasePage):
         rc, out, _ = sh("lsusb")
         if "Yubico" not in out:
             return False, "", ""
-        if which("ykman"):
+        if have("ykman"):
             rc2, info, _ = sh("ykman info", timeout=3)
             if rc2 == 0:
                 serial = ""
@@ -1987,7 +1987,7 @@ class PrivacyPage(BasePage):
             b = SketchButton("Refresh", width=110, height=24, color=NEON_PINK)
             b.connect("clicked", lambda _b: self.refresh())
             row.append(b)
-            if not which("ykman"):
+            if not have("ykman"):
                 row.append(Gtk.Label(
                     label="(install `yubikey-manager` for full features)",
                     xalign=0))
@@ -1996,7 +1996,7 @@ class PrivacyPage(BasePage):
         c.add_row(kv_row("Status:", "✓ detected"))
         if model:  c.add_row(kv_row("Model:",  model))
         if serial: c.add_row(kv_row("Serial:", serial))
-        if which("ykman"):
+        if have("ykman"):
             rc, info, _ = sh("ykman info", timeout=3)
             if rc == 0:
                 # parse "Enabled USB interfaces" / "applications"
@@ -2035,7 +2035,7 @@ class PrivacyPage(BasePage):
 
     def _yubi_change_pin(self):
         for term in ("foot", "alacritty", "kitty", "xterm"):
-            if which(term):
+            if have(term):
                 subprocess.Popen(
                     [term, "-e", "sh", "-c",
                      "ykman piv access change-pin; "
@@ -2054,7 +2054,7 @@ class PrivacyPage(BasePage):
     def _build_gpg_card(self):
         c = Card("GPG keys")
         self.box.append(c)
-        if not which("gpg"):
+        if not have("gpg"):
             c.add_row(Gtk.Label(label="gpg not installed (pacman -S gnupg)",
                                 xalign=0))
             return
@@ -2185,7 +2185,7 @@ class PrivacyPage(BasePage):
         c = Card("Mandatory Access Control (AppArmor / SELinux)")
         self.box.append(c)
         # AppArmor
-        if which("aa-status"):
+        if have("aa-status"):
             rc, out, _ = sh("aa-status", timeout=3)
             if rc == 0:
                 lines = out.splitlines()
@@ -2206,7 +2206,7 @@ class PrivacyPage(BasePage):
         else:
             c.add_row(kv_row("AppArmor:", "not installed"))
         # SELinux
-        if which("getenforce"):
+        if have("getenforce"):
             rc, out, _ = sh("getenforce", timeout=2)
             c.add_row(kv_row("SELinux:", out.strip() if rc==0 else "n/a"))
         else:
@@ -2241,9 +2241,9 @@ class PrivacyPage(BasePage):
         hl_path = Path.home() / ".config" / "hypr" / "hyprlock.conf"
         si_path = Path.home() / ".config" / "hypr" / "hypridle.conf"
         c.add_row(kv_row("hyprlock installed:",
-                         "yes" if which("hyprlock") else "no"))
+                         "yes" if have("hyprlock") else "no"))
         c.add_row(kv_row("hypridle installed:",
-                         "yes" if which("hypridle") else "no"))
+                         "yes" if have("hypridle") else "no"))
         c.add_row(kv_row("hyprlock.conf:",
                          "present" if hl_path.exists() else "missing"))
         c.add_row(kv_row("hypridle.conf:",
@@ -2256,7 +2256,7 @@ class PrivacyPage(BasePage):
         b_lock.connect("clicked", lambda _b: (
             sh_async("hyprlock"), self.win.toast("locking…")))
         row.append(b_lock)
-        if which("hypridle"):
+        if have("hypridle"):
             b_idle = SketchButton("Restart hypridle", width=160, height=24,
                                   color=ACCENT_PURP)
             b_idle.connect("clicked", lambda _b: (
@@ -2273,7 +2273,7 @@ class PrivacyPage(BasePage):
         rc, out, _ = sh("systemctl is-active geoclue", timeout=2)
         active = out.strip()
         c.add_row(kv_row("geoclue:", active or "inactive"))
-        if which("systemctl"):
+        if have("systemctl"):
             row = Gtk.Box(spacing=8)
             b_off = SketchButton("Disable", width=110, height=24,
                                  color=DANGER_RED)
@@ -2339,7 +2339,7 @@ class PrivacyPage(BasePage):
 
     def _term_run(self, cmd: str, toast: str):
         for term in ("foot", "alacritty", "kitty", "xterm"):
-            if which(term):
+            if have(term):
                 subprocess.Popen(
                     [term, "-e", "sh", "-c",
                      f"{cmd}; echo; echo 'press enter to close'; read _"],
@@ -2662,7 +2662,7 @@ class DeveloperPage(BasePage):
     def _build_docker_card(self):
         c = Card("Docker")
         self.box.append(c)
-        if not which("docker"):
+        if not have("docker"):
             c.add_row(Gtk.Label(label="docker not installed", xalign=0))
             return
         rc, ver, _ = sh("docker --version", timeout=2)
@@ -2752,7 +2752,7 @@ class DeveloperPage(BasePage):
     def _build_sshd_card(self):
         c = Card("SSH server (sshd)")
         self.box.append(c)
-        if not which("sshd"):
+        if not have("sshd"):
             c.add_row(Gtk.Label(
                 label="openssh not installed (pacman -S openssh)", xalign=0))
             return
@@ -2869,7 +2869,7 @@ class DeveloperPage(BasePage):
     def _build_journal_card(self):
         c = Card("system journal (journalctl)")
         self.box.append(c)
-        if not which("journalctl"):
+        if not have("journalctl"):
             c.add_row(Gtk.Label(label="journalctl not available", xalign=0))
             return
         # priority filter dropdown (simple)
@@ -2983,7 +2983,7 @@ class DeveloperPage(BasePage):
             ("kubectl",     "kubectl version --client --short"),
         ]
         for name, cmd in tools:
-            if not which(name):
+            if not have(name):
                 c.add_row(kv_row(name+":", "(not installed)")); continue
             rc, out, _ = sh(cmd, timeout=2)
             ver = out.strip().splitlines()[0] if out else "?"
@@ -3016,7 +3016,7 @@ class DeveloperPage(BasePage):
     # ── helpers ────────────────────────────────────────────────────────────
     def _term_run(self, cmd: str, toast: str):
         for term in ("foot", "alacritty", "kitty", "xterm"):
-            if which(term):
+            if have(term):
                 subprocess.Popen(
                     [term, "-e", "sh", "-c",
                      f"{cmd}; echo; echo 'press enter to close'; read _"],
