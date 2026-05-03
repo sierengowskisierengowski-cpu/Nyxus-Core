@@ -78,14 +78,15 @@ from gi.repository import Gtk, Gdk, GLib, GObject, Gio, Pango, PangoCairo  # noq
 import cairo  # noqa: E402
 
 # ─────────────────────────────────────────────────────────────────────────────
-APP_ID    = "com.nyxus.settings"
+APP_ID    = "io.nyxus.settings"
 APP_NAME  = "NYXUS Settings"
-WIN_W, WIN_H = 1180, 760
+WIN_W, WIN_H = 1280, 800
 
 CONFIG_DIR = Path.home() / ".config" / "nyxus-settings"
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-FAV_PATH   = CONFIG_DIR / "favorites.json"
-PREF_PATH  = CONFIG_DIR / "preferences.json"
+FAV_PATH    = CONFIG_DIR / "favorites.json"
+PREF_PATH   = CONFIG_DIR / "preferences.json"
+RECENT_PATH = CONFIG_DIR / "recents.json"     # Phase A: page keys recently changed
 LOG_PATH   = Path("/tmp/nyxus-settings.log")
 WALL_DIR_NYXUS = Path.home() / ".nyxus"
 
@@ -436,6 +437,10 @@ class BasePage(Gtk.ScrolledWindow):
     KEY = "base"
     TITLE = "Base"
     ICON = "•"
+    TILE_COLOR = NEON_PINK              # Phase A: per-tile accent color
+    SUBTITLE = ""                       # Phase A: shown under tile title
+    HARDWARE_GATED = False              # Phase A: skip if hardware not detected
+    AVAILABLE = True                    # Phase A: set False to hide tile
 
     def __init__(self, win: "SettingsWindow"):
         super().__init__()
@@ -460,6 +465,17 @@ class BasePage(Gtk.ScrolledWindow):
 
     def refresh(self):
         pass
+
+    # ── Phase A: change tracking + restart-required ────────────────────────
+    def mark_changed(self, label: str = ""):
+        """Call from any control after the user successfully applied a setting."""
+        try: self.win.note_change(self.KEY, label)
+        except Exception: pass
+
+    def needs_restart(self, label: str = ""):
+        """Call when a change requires a logout / Hyprland reload to take effect."""
+        try: self.win.flag_restart_required(self.KEY, label or self.TITLE)
+        except Exception: pass
 
     # ── small note for honest disclosure ────────────────────────────────────
     def add_note(self, msg: str):
@@ -1126,7 +1142,9 @@ class BluetoothPage(BasePage):
 
 # ─── Appearance ─────────────────────────────────────────────────────────────
 class AppearancePage(BasePage):
-    KEY = "appearance"; TITLE = "Appearance"; ICON = "🎨"
+    KEY = "appearance"; TITLE = "Themes & Appearance"; ICON = "🎨"
+    TILE_COLOR = ACCENT_PURP
+    SUBTITLE  = "Theme · Accent · Window style · Cursor"
 
     def build(self):
         c = Card("color scheme")
@@ -1998,13 +2016,147 @@ class DeveloperPage(BasePage):
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Main window
 # ═══════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Phase A stub pages — full implementations land in Phase B per category
+# ═══════════════════════════════════════════════════════════════════════════════
+class _PhaseBStub(BasePage):
+    """Tile is shown on the home grid, but the page itself is a polite stub
+    saying 'in active build'.  Full functionality lands in Phase B."""
+    PHASE_B_NOTE = ("This category is in active build for Phase B. "
+                    "The home tile, search index, breadcrumb, favorite/recents, "
+                    "and restart-required wiring are already live.")
+
+    def build(self):
+        c = Card("Phase B — coming next")
+        c.add_row(Gtk.Label(
+            label=self.PHASE_B_NOTE, xalign=0, wrap=True))
+        c.add_row(Gtk.Label(
+            label=("All settings for this category will be wired to the live "
+                   "system, with zero placeholders, in the per-category Phase B "
+                   "task that follows."), xalign=0, wrap=True))
+        self.box.append(c)
+
+
+class AccountPage(_PhaseBStub):
+    KEY = "account"; TITLE = "Account & Profile"; ICON = "🪪"
+    TILE_COLOR = NEON_PINK
+    SUBTITLE  = "Profile · Password · PIN · Auto-login"
+
+
+class WallpaperPage(_PhaseBStub):
+    KEY = "wallpaper"; TITLE = "Wallpaper & Backgrounds"; ICON = "🖼"
+    TILE_COLOR = NEON_BLUE
+    SUBTITLE  = "Browse · Per-workspace · Slideshow · Lock screen"
+
+
+class FontsPage(_PhaseBStub):
+    KEY = "fonts"; TITLE = "Fonts"; ICON = "🅰"
+    TILE_COLOR = ACCENT_GOLD
+    SUBTITLE  = "System · Mono · Caveat · Hinting · Install"
+
+
+class AboutPage(_PhaseBStub):
+    KEY = "about"; TITLE = "About NYXUS"; ICON = "ℹ"
+    TILE_COLOR = NEON_GREEN
+    SUBTITLE  = "Version · Hardware · Updates · Diagnostics"
+    PHASE_B_NOTE = ("Live system summary, NYXUS app inventory, update check, "
+                    "and bug-report exporter land in the Phase B About task.")
+
+
+# Subtitle / tile-color metadata for the existing pages so the home grid is consistent.
+DisplayPage.TILE_COLOR       = NEON_BLUE;   DisplayPage.SUBTITLE       = "Resolution · Scale · Refresh · Night light"
+SoundPage.TILE_COLOR         = NEON_PINK;   SoundPage.SUBTITLE         = "Output · Input · Per-app · EQ · System sounds"
+NetworkPage.TILE_COLOR       = NEON_GREEN;  NetworkPage.SUBTITLE       = "Wi-Fi · Ethernet · VPN · Firewall · Proxy"
+BluetoothPage.TILE_COLOR     = NEON_BLUE;   BluetoothPage.SUBTITLE     = "Pair · Connect · Audio · File transfer"
+WorkspacesPage.TILE_COLOR    = ACCENT_PURP; WorkspacesPage.SUBTITLE    = "Per-workspace layout · Hyprland binds"
+KeyboardPage.TILE_COLOR      = NEON_PINK;   KeyboardPage.SUBTITLE      = "Layout · Repeat · Shortcuts · Backlight"
+MousePage.TILE_COLOR         = NEON_BLUE;   MousePage.SUBTITLE         = "Speed · Touchpad · Gestures · Pointer"
+PowerPage.TILE_COLOR         = ACCENT_GOLD; PowerPage.SUBTITLE         = "Battery · Profiles · Lid · Sleep · Charge limit"
+DateTimePage.TILE_COLOR      = NEON_BLUE;   DateTimePage.SUBTITLE      = "Timezone · NTP · 12/24h · Format · World clocks"
+NotificationsPage.TILE_COLOR = ACCENT_PURP; NotificationsPage.SUBTITLE = "DND · Per-app · Position · History"
+UsersPage.TILE_COLOR         = NEON_PINK;   UsersPage.SUBTITLE         = "Accounts · YubiKey · Login · Groups"
+PrivacyPage.TILE_COLOR       = DANGER_RED;  PrivacyPage.SUBTITLE       = "Lock · Permissions · GPG · SSH · AppArmor · TPM"
+AppsPage.TILE_COLOR          = NEON_GREEN;  AppsPage.SUBTITLE          = "Defaults · Startup · File types · Flatpak"
+StoragePage.TILE_COLOR       = NEON_BLUE;   StoragePage.SUBTITLE       = "Drives · SMART · Cleanup · Snapshots"
+LanguagePage.TILE_COLOR      = ACCENT_PURP; LanguagePage.SUBTITLE      = "Locale · Region · Spell-check · TTS"
+AccessibilityPage.TILE_COLOR = NEON_GREEN;  AccessibilityPage.SUBTITLE = "Vision · Hearing · Motor · Magnifier"
+PrintersPage.TILE_COLOR      = INK_DIM;     PrintersPage.SUBTITLE      = "CUPS printers and scanners"
+GamingPage.TILE_COLOR        = NEON_PINK;   GamingPage.SUBTITLE        = "GameMode · MangoHud · Controllers · Wine"
+DeveloperPage.TILE_COLOR     = NEON_GREEN;  DeveloperPage.SUBTITLE     = "SSH · Docker · Kernel · journalctl · cron · GRUB"
+
+
+# Spec order: Account → Wallpaper → Fonts → Themes → Display → Sound → Network →
+# Bluetooth → Keyboard → Mouse → Power → Users → Privacy → Apps → Storage →
+# Notifications → Date&Time → Language → Accessibility → Gaming → Developer → About
+# Plus extras kept from current build (Workspaces, Printers) — appended at end.
 PAGE_CLASSES: List[type] = [
-    DisplayPage, SoundPage, NetworkPage, BluetoothPage, AppearancePage,
-    WorkspacesPage, KeyboardPage, MousePage, PowerPage,
-    UsersPage, PrivacyPage, AppsPage, StoragePage, NotificationsPage,
-    DateTimePage, LanguagePage, AccessibilityPage, PrintersPage,
-    GamingPage, DeveloperPage,
+    AccountPage, WallpaperPage, FontsPage, AppearancePage,
+    DisplayPage, SoundPage, NetworkPage, BluetoothPage,
+    KeyboardPage, MousePage, PowerPage,
+    UsersPage, PrivacyPage, AppsPage, StoragePage,
+    NotificationsPage, DateTimePage, LanguagePage, AccessibilityPage,
+    GamingPage, DeveloperPage, AboutPage,
+    WorkspacesPage, PrintersPage,
 ]
+
+
+HOME_KEY = "_home"
+
+
+class CategoryTile(Gtk.DrawingArea):
+    """A large hand-drawn sketch tile for the Home grid.
+    260×140 by default — clickable, hover-glow, accent-coloured border."""
+    __gsignals__ = {"activated": (GObject.SignalFlags.RUN_FIRST, None, ())}
+
+    def __init__(self, *, icon: str, title: str, subtitle: str,
+                 color=NEON_PINK, starred: bool = False,
+                 width=260, height=140):
+        super().__init__()
+        self.icon, self.title, self.subtitle = icon, title, subtitle
+        self.color = color; self.starred = starred
+        self._hover = False
+        self.set_size_request(width, height)
+        try: self.set_content_width(width); self.set_content_height(height)
+        except Exception: pass
+        self.set_draw_func(self._draw)
+        gc = Gtk.GestureClick(); gc.set_button(1)
+        gc.connect("released", lambda *_a: self.emit("activated"))
+        self.add_controller(gc)
+        mc = Gtk.EventControllerMotion()
+        mc.connect("enter", lambda *_a: (setattr(self, "_hover", True),  self.queue_draw()))
+        mc.connect("leave", lambda *_a: (setattr(self, "_hover", False), self.queue_draw()))
+        self.add_controller(mc)
+        self.set_cursor(Gdk.Cursor.new_from_name("pointer"))
+
+    def _draw(self, area, cr, w, h, _=None):
+        # frosted panel
+        bg_a = 0.85 if self._hover else 0.70
+        cr.set_source_rgba(0.04, 0.04, 0.07, bg_a)
+        cr.rectangle(2, 2, w-4, h-4); cr.fill()
+        # accent halo on hover
+        if self._hover:
+            cr.set_source_rgba(*self.color, 0.10)
+            cr.rectangle(2, 2, w-4, h-4); cr.fill()
+        # double sketch border
+        cr.set_source_rgba(*self.color, 0.85); cr.set_line_width(1.5)
+        sketch_rect(cr, 2.5, 2.5, w-5, h-5, jitter=0.7,
+                    key=("tile", self.title, w, h), double=True)
+        # icon (top-left, large)
+        draw_caveat(cr, 14, 8, self.icon, size=32,
+                    color=(*self.color, 0.95))
+        # star if favorited
+        if self.starred:
+            draw_caveat(cr, w-26, 8, "★", size=22,
+                        color=(*ACCENT_GOLD, 0.95))
+        # title
+        draw_caveat(cr, 14, h-66, self.title, size=22,
+                    color=(*INK_BRIGHT, 0.97),
+                    weight=Pango.Weight.BOLD, wrap_w=w-28)
+        # subtitle
+        if self.subtitle:
+            draw_caveat(cr, 14, h-32, self.subtitle, size=13,
+                        color=(*INK_DIM, 0.95),
+                        family="JetBrains Mono", wrap_w=w-28)
 
 
 class SettingsWindow(Gtk.ApplicationWindow):
@@ -2013,17 +2165,21 @@ class SettingsWindow(Gtk.ApplicationWindow):
         self.set_default_size(WIN_W, WIN_H)
         self.prefs: Dict[str, Any] = self._load_prefs()
         self.favorites: List[str] = self._load_favs()
+        self.recents:   List[str] = self._load_recents()
         self.history: List[str] = []
         self._fwd_history: List[str] = []
         self._toast_label: Optional[Gtk.Label] = None
         self._search_entries: List[SearchEntry] = []
         self._page_widgets: Dict[str, BasePage] = {}
+        self._restart_pages: Dict[str, str] = {}    # key → label
+        self._home_widget: Optional[Gtk.ScrolledWindow] = None
+        self._tiles_box: Optional[Gtk.Box] = None
         self._build_css()
         self._build_layout()
-        # default page
-        self.show_page(self.prefs.get("startup_page", "display"),
-                       push_history=False)
+        # default landing page = HOME tile grid (always)
+        self.show_page(HOME_KEY, push_history=False)
 
+    # ── persistence ─────────────────────────────────────────────────────────
     def _load_prefs(self) -> Dict[str, Any]:
         if PREF_PATH.exists():
             try: return json.loads(PREF_PATH.read_text())
@@ -2045,14 +2201,49 @@ class SettingsWindow(Gtk.ApplicationWindow):
         try: FAV_PATH.write_text(json.dumps(self.favorites))
         except Exception as e: log.error("save_favs: %s", e)
 
+    def _load_recents(self) -> List[str]:
+        if RECENT_PATH.exists():
+            try: return json.loads(RECENT_PATH.read_text())
+            except Exception: pass
+        return []
+
+    def _save_recents(self):
+        try: RECENT_PATH.write_text(json.dumps(self.recents))
+        except Exception as e: log.error("save_recents: %s", e)
+
+    # ── public API used by pages ────────────────────────────────────────────
+    def note_change(self, page_key: str, label: str = ""):
+        """Page reports a setting was changed → bump recents + toast."""
+        try: self.recents = [page_key] + [k for k in self.recents if k != page_key]
+        except Exception: self.recents = [page_key]
+        self.recents = self.recents[:6]
+        self._save_recents()
+        if label:
+            self.toast(f"applied · {label}")
+        if self._tiles_box is not None:
+            self._rebuild_home_strips()
+
+    def flag_restart_required(self, page_key: str, label: str):
+        """Mark that a setting needs a restart / Hyprland reload."""
+        self._restart_pages[page_key] = label
+        self._refresh_restart_banner()
+
     # ── CSS ─────────────────────────────────────────────────────────────────
     def _build_css(self):
         css = b"""
 * { font-family: 'Caveat', 'Patrick Hand', cursive; }
 window, .nyx-bg { background-color: #0a0a12; color: #f0eef8; }
-.nyx-sidebar { background-color: rgba(255,255,255,0.025); }
 .nyx-toolbar { background-color: rgba(10,10,18,0.96); padding: 6px 12px;
     border-bottom: 1px solid rgba(255,0,255,0.12); }
+.nyx-restartbar { background-color: rgba(255, 78, 0, 0.18);
+    border-bottom: 1px solid rgba(255,140,40,0.55);
+    padding: 6px 14px; }
+.nyx-restartbar label { color: #ffd6aa; font-size: 14px; }
+.nyx-strip { background-color: rgba(255,255,255,0.02);
+    border-top: 1px solid rgba(255,0,255,0.07);
+    border-bottom: 1px solid rgba(255,0,255,0.07);
+    padding: 6px 16px; }
+.nyx-strip-label { color: rgba(240,235,250,0.55); font-size: 14px; }
 .nyx-statusbar { background-color: rgba(10,10,18,0.96); padding: 2px 12px;
     border-top: 1px solid rgba(255,255,255,0.06); }
 .nyx-headline { color: #ff00ff; text-shadow: 0 0 10px rgba(255,0,255,0.55);
@@ -2094,9 +2285,14 @@ scrollbar { background-color: transparent; }
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         root.add_css_class("nyx-bg"); self.set_child(root)
 
-        # toolbar
+        # ── toolbar ────────────────────────────────────────────────────────
         bar = Gtk.Box(spacing=8); bar.add_css_class("nyx-toolbar")
         root.append(bar)
+
+        b_home = SketchButton("⌂", width=36, height=28, color=NEON_PINK,
+                              tooltip="Home")
+        b_home.connect("clicked", lambda _b: self.show_page(HOME_KEY))
+        bar.append(b_home)
         b_back = SketchButton("◀", width=36, height=28, color=INK_DIM,
                               tooltip="Back")
         b_back.connect("clicked", lambda _b: self.go_back())
@@ -2119,24 +2315,36 @@ scrollbar { background-color: transparent; }
         self.search.connect("changed", self._on_search)
         bar.append(self.search)
 
-        b_fav = SketchButton("★ Fav", width=70, height=28, color=ACCENT_GOLD,
+        b_fav = SketchButton("★", width=36, height=28, color=ACCENT_GOLD,
                              tooltip="Star this page")
         b_fav.connect("clicked", lambda _b: self._toggle_fav())
         bar.append(b_fav)
 
-        # body: sidebar | overlay(stack + toast)
-        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
-        paned.set_position(220); paned.set_wide_handle(True)
-        paned.set_hexpand(True); paned.set_vexpand(True)
-        root.append(paned)
+        # ── restart-required banner (hidden until needed) ──────────────────
+        self.restart_bar = Gtk.Box(spacing=10)
+        self.restart_bar.add_css_class("nyx-restartbar")
+        self.restart_bar.set_visible(False)
+        self.restart_lbl = Gtk.Label(label="", xalign=0); self.restart_lbl.set_wrap(True)
+        self.restart_bar.append(self.restart_lbl)
+        sp2 = Gtk.Box(); sp2.set_hexpand(True); self.restart_bar.append(sp2)
+        b_reload = SketchButton("Reload Hyprland", width=160, height=24,
+                                color=NEON_GREEN,
+                                tooltip="hyprctl reload")
+        b_reload.connect("clicked", lambda _b: self._do_reload_hypr())
+        self.restart_bar.append(b_reload)
+        b_clear = SketchButton("Dismiss", width=90, height=24, color=INK_DIM,
+                               tooltip="Hide banner")
+        b_clear.connect("clicked", lambda _b: self._clear_restart_banner())
+        self.restart_bar.append(b_clear)
+        root.append(self.restart_bar)
 
-        self.sidebar = self._build_sidebar()
-        paned.set_start_child(self.sidebar)
-
+        # ── stack (full-width, no sidebar) ─────────────────────────────────
         self.stack = Gtk.Stack()
         self.stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
         self.stack.set_transition_duration(180)
+        self.stack.set_hexpand(True); self.stack.set_vexpand(True)
         ov = Gtk.Overlay(); ov.set_child(self.stack)
+        ov.set_hexpand(True); ov.set_vexpand(True)
         self._toast_label = Gtk.Label()
         self._toast_label.add_css_class("nyx-toast")
         self._toast_label.set_halign(Gtk.Align.CENTER)
@@ -2144,16 +2352,25 @@ scrollbar { background-color: transparent; }
         self._toast_label.set_margin_bottom(20)
         self._toast_label.set_visible(False)
         ov.add_overlay(self._toast_label)
-        paned.set_end_child(ov)
+        root.append(ov)
 
-        # Build all pages now (fast — most just read on demand)
+        # build all pages
         for cls in PAGE_CLASSES:
-            page = cls(self)
+            try:
+                page = cls(self)
+            except Exception as e:
+                log.error("failed to build page %s: %s", cls.__name__, e)
+                continue
             self._page_widgets[cls.KEY] = page
             self.stack.add_named(page, cls.KEY)
-            self._search_entries.extend(page.search_entries())
+            try:
+                self._search_entries.extend(page.search_entries())
+            except Exception as e:
+                log.warning("search_entries %s: %s", cls.__name__, e)
 
-        # search results page
+        # home page (tile grid) + search results page
+        self._home_widget = self._build_home_page()
+        self.stack.add_named(self._home_widget, HOME_KEY)
         self.search_page = self._build_search_results_page()
         self.stack.add_named(self.search_page, "_search")
 
@@ -2164,46 +2381,120 @@ scrollbar { background-color: transparent; }
         self.status_lbl.add_css_class("nyx-meta")
         sb.append(self.status_lbl)
         sp = Gtk.Box(); sp.set_hexpand(True); sb.append(sp)
-        rt = Gtk.Label(label=f"{len(PAGE_CLASSES)} categories")
+        rt = Gtk.Label(label=f"{len(PAGE_CLASSES)} categories  ·  "
+                             f"{len(self._search_entries)} settings indexed")
         rt.add_css_class("nyx-meta")
         sb.append(rt)
 
-    def _build_sidebar(self) -> Gtk.Widget:
+    # ── home tile grid ──────────────────────────────────────────────────────
+    def _build_home_page(self) -> Gtk.ScrolledWindow:
         sw = Gtk.ScrolledWindow()
         sw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        col.add_css_class("nyx-sidebar")
-        col.set_margin_start(6); col.set_margin_end(6)
-        col.set_margin_top(8); col.set_margin_bottom(8)
-        sw.set_child(col)
+        sw.set_hexpand(True); sw.set_vexpand(True)
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        outer.set_margin_start(20); outer.set_margin_end(20)
+        outer.set_margin_top(14); outer.set_margin_bottom(20)
+        sw.set_child(outer)
 
-        # favorites if any
-        if self.favorites:
-            lbl = Gtk.Label(label="favorites", xalign=0)
-            lbl.add_css_class("nyx-meta"); lbl.set_margin_start(8)
-            col.append(lbl)
-            for key in self.favorites:
-                cls = next((c for c in PAGE_CLASSES if c.KEY == key), None)
-                if not cls: continue
-                btn = SketchButton(f"★ {cls.ICON}  {cls.TITLE}",
-                                   width=200, height=26,
-                                   color=ACCENT_GOLD)
-                btn.connect("clicked", lambda _b, k=key: self.show_page(k))
-                col.append(btn)
-            col.append(SketchSeparator(length=200, color=INK_FAINT))
+        # hero headline
+        hero = Gtk.Label(label="✦  NYXUS Settings", xalign=0)
+        hero.add_css_class("nyx-headline")
+        outer.append(hero)
+        sub = Gtk.Label(
+            label="Pick a category to dive in, or search every setting at the top.",
+            xalign=0)
+        sub.add_css_class("nyx-meta"); outer.append(sub)
 
-        # all categories
-        lbl = Gtk.Label(label="all settings", xalign=0)
-        lbl.add_css_class("nyx-meta"); lbl.set_margin_start(8)
-        col.append(lbl)
-        self._sidebar_buttons: Dict[str, SketchButton] = {}
-        for cls in PAGE_CLASSES:
-            btn = SketchButton(f"{cls.ICON}  {cls.TITLE}",
-                               width=200, height=26, color=NEON_BLUE)
-            btn.connect("clicked", lambda _b, k=cls.KEY: self.show_page(k))
-            col.append(btn)
-            self._sidebar_buttons[cls.KEY] = btn
+        # strips: favorites + recents
+        self._fav_strip    = self._make_strip("favorites")
+        self._recent_strip = self._make_strip("recently changed")
+        outer.append(self._fav_strip)
+        outer.append(self._recent_strip)
+
+        # full grid of all categories (FlowBox = wrapping responsive grid)
+        all_lbl = Gtk.Label(label="all categories", xalign=0)
+        all_lbl.add_css_class("nyx-strip-label")
+        all_lbl.set_margin_top(6); all_lbl.set_margin_start(2)
+        outer.append(all_lbl)
+
+        self._tiles_box = Gtk.FlowBox()
+        self._tiles_box.set_valign(Gtk.Align.START)
+        self._tiles_box.set_max_children_per_line(6)
+        self._tiles_box.set_min_children_per_line(2)
+        self._tiles_box.set_column_spacing(14)
+        self._tiles_box.set_row_spacing(14)
+        self._tiles_box.set_selection_mode(Gtk.SelectionMode.NONE)
+        self._tiles_box.set_homogeneous(True)
+        outer.append(self._tiles_box)
+
+        self._rebuild_home_strips()
+        self._populate_tiles()
         return sw
+
+    def _make_strip(self, label: str) -> Gtk.Box:
+        wrap = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        wrap.add_css_class("nyx-strip")
+        h = Gtk.Label(label=label, xalign=0); h.add_css_class("nyx-strip-label")
+        wrap.append(h)
+        inner = Gtk.Box(spacing=10)
+        wrap.append(inner)
+        wrap._inner = inner   # type: ignore[attr-defined]
+        return wrap
+
+    def _populate_tiles(self):
+        if self._tiles_box is None: return
+        # clear
+        c = self._tiles_box.get_first_child()
+        while c:
+            n = c.get_next_sibling(); self._tiles_box.remove(c); c = n
+        for cls in PAGE_CLASSES:
+            page = self._page_widgets.get(cls.KEY)
+            if page is None: continue
+            if not getattr(page, "AVAILABLE", True): continue
+            tile = CategoryTile(
+                icon=getattr(cls, "ICON", "•"),
+                title=getattr(cls, "TITLE", cls.__name__),
+                subtitle=getattr(cls, "SUBTITLE", ""),
+                color=getattr(cls, "TILE_COLOR", NEON_PINK),
+                starred=(cls.KEY in self.favorites),
+            )
+            tile.connect("activated", lambda _t, k=cls.KEY: self.show_page(k))
+            self._tiles_box.insert(tile, -1)
+
+    def _rebuild_home_strips(self):
+        # favorites
+        inner = getattr(self._fav_strip, "_inner", None)
+        if inner is not None:
+            c = inner.get_first_child()
+            while c:
+                n = c.get_next_sibling(); inner.remove(c); c = n
+            visible = [k for k in self.favorites if k in self._page_widgets]
+            self._fav_strip.set_visible(bool(visible))
+            for k in visible:
+                cls = type(self._page_widgets[k])
+                tile = CategoryTile(icon=cls.ICON, title=cls.TITLE,
+                                    subtitle=cls.SUBTITLE,
+                                    color=cls.TILE_COLOR, starred=True,
+                                    width=220, height=110)
+                tile.connect("activated", lambda _t, kk=k: self.show_page(kk))
+                inner.append(tile)
+        # recents
+        inner = getattr(self._recent_strip, "_inner", None)
+        if inner is not None:
+            c = inner.get_first_child()
+            while c:
+                n = c.get_next_sibling(); inner.remove(c); c = n
+            visible = [k for k in self.recents if k in self._page_widgets]
+            self._recent_strip.set_visible(bool(visible))
+            for k in visible:
+                cls = type(self._page_widgets[k])
+                tile = CategoryTile(icon=cls.ICON, title=cls.TITLE,
+                                    subtitle="recently changed",
+                                    color=cls.TILE_COLOR,
+                                    starred=(k in self.favorites),
+                                    width=220, height=110)
+                tile.connect("activated", lambda _t, kk=k: self.show_page(kk))
+                inner.append(tile)
 
     def _build_search_results_page(self) -> Gtk.ScrolledWindow:
         sw = Gtk.ScrolledWindow()
@@ -2216,26 +2507,60 @@ scrollbar { background-color: transparent; }
         sw.set_child(self.search_box)
         return sw
 
+    # ── restart-required banner ─────────────────────────────────────────────
+    def _refresh_restart_banner(self):
+        if not self._restart_pages:
+            self.restart_bar.set_visible(False); return
+        labels = ", ".join(sorted(set(self._restart_pages.values())))
+        self.restart_lbl.set_text(
+            f"⟳  Restart required to fully apply: {labels}")
+        self.restart_bar.set_visible(True)
+
+    def _clear_restart_banner(self):
+        self._restart_pages.clear()
+        self.restart_bar.set_visible(False)
+
+    def _do_reload_hypr(self):
+        rc, _o, _e = sh("hyprctl reload", timeout=5)
+        if rc == 0:
+            self.toast("hyprctl reload sent")
+            self._clear_restart_banner()
+        else:
+            self.toast("hyprctl reload failed — see /tmp/nyxus-settings.log")
+
     # ── navigation ──────────────────────────────────────────────────────────
+    def _crumb_for(self, key: str) -> str:
+        if key == HOME_KEY:   return "  ›  Home"
+        if key == "_search":  return "  ›  Search"
+        page = self._page_widgets.get(key)
+        if not page: return ""
+        return f"  ›  Home  ›  {page.TITLE}"
+
     def show_page(self, key: str, *, push_history: bool = True):
-        if key not in self._page_widgets and key != "_search": return
-        if push_history and self.stack.get_visible_child_name() not in (None, "_search"):
-            self.history.append(self.stack.get_visible_child_name())
+        if key != HOME_KEY and key != "_search" and key not in self._page_widgets:
+            return
+        cur = self.stack.get_visible_child_name()
+        if push_history and cur and cur != "_search":
+            self.history.append(cur)
             self._fwd_history.clear()
         self.stack.set_visible_child_name(key)
+        if key == HOME_KEY:
+            self._rebuild_home_strips(); self._populate_tiles()
+            self.crumb_lbl.set_text(self._crumb_for(HOME_KEY))
+            self.status_lbl.set_text("Home")
+            return
+        if key == "_search":
+            self.crumb_lbl.set_text(self._crumb_for("_search")); return
         page = self._page_widgets.get(key)
         if page:
             try: page.refresh()
             except Exception as e: log.warning("refresh %s: %s", key, e)
-            self.crumb_lbl.set_text(f"  ›  {page.TITLE}")
-            self.status_lbl.set_text(f"{page.TITLE}")
-            for k, btn in self._sidebar_buttons.items():
-                btn.primary = (k == key); btn.queue_draw()
-        else:
-            self.crumb_lbl.set_text("  ›  Search")
+            self.crumb_lbl.set_text(self._crumb_for(key))
+            self.status_lbl.set_text(page.TITLE)
 
     def go_back(self):
-        if not self.history: return
+        if not self.history:
+            self.show_page(HOME_KEY, push_history=False); return
         prev = self.history.pop()
         cur = self.stack.get_visible_child_name()
         if cur and cur != "_search": self._fwd_history.append(cur)
@@ -2250,25 +2575,21 @@ scrollbar { background-color: transparent; }
 
     def _toggle_fav(self):
         cur = self.stack.get_visible_child_name()
-        if not cur or cur == "_search": return
+        if not cur or cur in (HOME_KEY, "_search"): return
         if cur in self.favorites:
             self.favorites.remove(cur); self.toast("removed favorite")
         else:
             self.favorites.append(cur); self.toast("starred")
         self._save_favs()
-        # rebuild sidebar
-        new = self._build_sidebar()
-        paned = self.sidebar.get_parent()
-        if isinstance(paned, Gtk.Paned):
-            paned.set_start_child(new)
-            self.sidebar = new
+        self._rebuild_home_strips(); self._populate_tiles()
 
     # ── search ──────────────────────────────────────────────────────────────
     def _on_search(self, _e, txt):
         q = (txt or "").strip().lower()
         if not q:
-            self.show_page(self.history[-1] if self.history else "display",
-                           push_history=False)
+            target = self.history[-1] if self.history else HOME_KEY
+            if target == "_search": target = HOME_KEY
+            self.show_page(target, push_history=False)
             return
         # render results
         c = self.search_box.get_first_child()
@@ -2278,20 +2599,33 @@ scrollbar { background-color: transparent; }
         h.add_css_class("nyx-headline")
         self.search_box.append(h)
         results = [e for e in self._search_entries if q in e.haystack()]
+        sub = Gtk.Label(label=f"{len(results)} match"
+                              f"{'es' if len(results)!=1 else ''} "
+                              f"across {len({e.page_key for e in results})} "
+                              f"categor{'ies' if len({e.page_key for e in results})!=1 else 'y'}",
+                        xalign=0)
+        sub.add_css_class("nyx-meta")
+        self.search_box.append(sub)
         if not results:
-            self.search_box.append(Gtk.Label(label="no matches", xalign=0))
+            self.search_box.append(Gtk.Label(
+                label="no matches — try a shorter or different word", xalign=0))
         for e in results:
             row = Gtk.Box(spacing=10)
-            row.append(Gtk.Label(label=f"{e.label}", xalign=0))
-            sp = Gtk.Box(); sp.set_hexpand(True); row.append(sp)
-            b = SketchButton(f"go to {e.page_title}", width=200, height=22,
+            row.set_margin_top(4); row.set_margin_bottom(2)
+            lbl = Gtk.Label(label=e.label, xalign=0)
+            lbl.add_css_class("nyx-row-label")
+            row.append(lbl)
+            crumb = Gtk.Label(label=f"  ·  Settings ›  {e.page_title}", xalign=0)
+            crumb.add_css_class("nyx-meta"); row.append(crumb)
+            spx = Gtk.Box(); spx.set_hexpand(True); row.append(spx)
+            b = SketchButton(f"open {e.page_title}", width=200, height=22,
                              color=NEON_BLUE)
             b.connect("clicked", lambda _b, k=e.page_key:
                       (self.search.set_text(""), self.show_page(k)))
             row.append(b)
             self.search_box.append(row)
         self.stack.set_visible_child_name("_search")
-        self.crumb_lbl.set_text(f"  ›  Search ({len(results)})")
+        self.crumb_lbl.set_text(f"  ›  Home  ›  Search ({len(results)})")
 
     # ── toast ───────────────────────────────────────────────────────────────
     def toast(self, msg: str, ms: int = 2200):
