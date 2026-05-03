@@ -163,7 +163,9 @@ function ScriptCard({ s, idx }: { s: typeof SCRIPTS[0]; idx: number }) {
         border: `1px solid ${s.color}44`,
         borderRadius: 4,
         padding: "1.5rem",
-        background: "rgba(10,10,10,0.85)",
+        background: "rgba(6,4,12,0.55)",
+        backdropFilter: "blur(14px) saturate(1.6)",
+        WebkitBackdropFilter: "blur(14px) saturate(1.6)",
         boxShadow: `0 0 32px ${s.glow}, inset 0 0 40px rgba(0,0,0,0.5)`,
         overflow: "hidden",
         animationDelay: `${idx * 0.1}s`,
@@ -441,7 +443,7 @@ export default function App() {
             </div>
 
             {/* Wallpaper curl command */}
-            <div style={{ marginTop: "0.75rem", background: "rgba(7,7,7,0.9)", border: "1px solid #111", borderRadius: 3, padding: "0.75rem 1rem" }}>
+            <div style={{ marginTop: "0.75rem", background: "rgba(6,4,12,0.55)", backdropFilter: "blur(14px) saturate(1.6)", WebkitBackdropFilter: "blur(14px) saturate(1.6)", border: "1px solid rgba(255,0,255,0.1)", borderRadius: 3, padding: "0.75rem 1rem" }}>
               <pre style={{ margin: 0, fontSize: "0.7rem", color: "#555", lineHeight: 1.6, overflow: "auto" }}>
 {`# Download to ~/.config/hypr/
 curl -fsSL -o ~/.config/hypr/nyxus-wallpaper.png "${window.location.origin}${BASE}/nyxus-wallpaper.png"`}
@@ -459,8 +461,9 @@ curl -fsSL -o ~/.config/hypr/nyxus-wallpaper.png "${window.location.origin}${BAS
               border: "1px solid rgba(192,132,252,0.25)",
               borderRadius: 4,
               overflow: "hidden",
-              background: "rgba(0,0,0,0.75)",
-              backdropFilter: "blur(8px)",
+              background: "rgba(6,4,12,0.55)",
+              backdropFilter: "blur(14px) saturate(1.6)",
+              WebkitBackdropFilter: "blur(14px) saturate(1.6)",
               boxShadow: "0 0 60px rgba(192,132,252,0.08), inset 0 0 60px rgba(192,132,252,0.02)",
             }}>
               {/* Title bar — matches the theme's own panel chrome */}

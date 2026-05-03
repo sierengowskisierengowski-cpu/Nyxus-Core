@@ -312,7 +312,7 @@ export default function Notepad() {
           {/* Editor toolbar */}
           <div style={{
             height: 54, borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center',
-            padding: '0 16px', gap: 8, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', flexShrink: 0,
+            padding: '0 16px', gap: 8, background: 'rgba(6,4,12,0.55)', backdropFilter: 'blur(14px) saturate(1.6)', WebkitBackdropFilter: 'blur(14px) saturate(1.6)', flexShrink: 0,
           }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <input id="note-title-input" value={title} onChange={e => setTitle(e.target.value)}
@@ -372,7 +372,7 @@ export default function Notepad() {
           <div style={{
             height: 32, borderTop: `1px solid ${BORDER}`, display: 'flex',
             alignItems: 'center', justifyContent: 'space-between', padding: '0 16px',
-            background: 'rgba(0,0,0,0.5)', fontSize: 13, color: DIM, flexShrink: 0,
+            background: 'rgba(6,4,12,0.55)', backdropFilter: 'blur(14px) saturate(1.6)', WebkitBackdropFilter: 'blur(14px) saturate(1.6)', fontSize: 13, color: DIM, flexShrink: 0,
           }}>
             <div style={{ display: 'flex', gap: 16 }}>
               <span><span style={{ color: PINK }}>{wordCount}</span> words</span>
