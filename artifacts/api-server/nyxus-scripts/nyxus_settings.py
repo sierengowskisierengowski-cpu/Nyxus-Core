@@ -2755,16 +2755,129 @@ class AppearancePage(BasePage):
 class WorkspacesPage(BasePage):
     KEY = "workspaces"; TITLE = "Workspaces"; ICON = "🪟"
 
+    HYPR_CONF = Path.home() / ".config/hypr/hyprland.conf"
+
     def build(self):
+        # ── 1. active workspaces (live) ────────────────────────────────────
         self.list_card = Card("active workspaces")
         self.box.append(self.list_card)
-        b = SketchButton("Refresh", width=100, height=24, color=NEON_GREEN)
+        row = Gtk.Box(spacing=8)
+        b = SketchButton("Refresh", width=92, height=24, color=NEON_GREEN)
         b.connect("clicked", lambda _b: self.refresh())
-        self.box.append(b)
+        row.append(b)
+        b2 = SketchButton("New scratchpad", width=140, height=24, color=NEON_BLUE)
+        b2.connect("clicked", lambda _b: (
+            sh("hyprctl dispatch togglespecialworkspace nyx-scratch"),
+            self.win.toast("scratchpad toggled"), self.refresh()))
+        row.append(b2)
+        b3 = SketchButton("Reload Hyprland", width=140, height=24, color=ACCENT_GOLD)
+        b3.connect("clicked", lambda _b: (
+            sh("hyprctl reload"), self.win.toast("hyprland reloaded")))
+        row.append(b3)
+        self.box.append(row)
+
+        # ── 2. layout picker (dwindle vs master) ──────────────────────────
+        c = Card("layout engine")
+        self.box.append(c)
+        cur_layout = self._hypr_option("general:layout") or "dwindle"
+        c.add_row(kv_row("Current layout:", cur_layout))
+        lr = Gtk.Box(spacing=8)
+        for name in ("dwindle", "master"):
+            btn = SketchButton(name, width=92, height=24, color=NEON_PINK,
+                               primary=(name == cur_layout))
+            btn.connect("clicked", lambda _b, n=name: self._set_layout(n))
+            lr.append(btn)
+        c.add_row(lr)
+
+        # ── 3. gaps + border ───────────────────────────────────────────────
+        c = Card("gaps & border")
+        self.box.append(c)
+        for opt, label, lo, hi in (
+                ("general:gaps_in",     "Inner gap (px)",   0, 30),
+                ("general:gaps_out",    "Outer gap (px)",   0, 50),
+                ("general:border_size", "Border width (px)",1, 10),
+                ("decoration:rounding", "Window rounding",  0, 24)):
+            cur = self._hypr_int(opt, 5)
+            adj = Gtk.Adjustment(value=cur, lower=lo, upper=hi,
+                                 step_increment=1, page_increment=2)
+            sc = Gtk.Scale(adjustment=adj,
+                           orientation=Gtk.Orientation.HORIZONTAL)
+            sc.set_size_request(220, -1); sc.set_draw_value(True)
+            sc.set_value_pos(Gtk.PositionType.RIGHT); sc.set_digits(0)
+            def _on_change(s, _opt=opt):
+                v = int(s.get_value())
+                sh_async(["hyprctl", "keyword", _opt, str(v)])
+            sc.connect("value-changed", _on_change)
+            c.add_row(kv_row(label, sc))
+
+        # ── 4. blur / decoration ───────────────────────────────────────────
+        c = Card("blur & shadow")
+        self.box.append(c)
+        blur_on = (self._hypr_option("decoration:blur:enabled") or "true") != "false"
+        bt = SketchToggle("Window blur", width=180, height=26,
+                          color=NEON_BLUE, active=blur_on)
+        bt.connect("clicked", lambda _b: (
+            sh(f"hyprctl keyword decoration:blur:enabled "
+               f"{'true' if bt.active else 'false'}"),
+            self.win.toast(f"blur {'on' if bt.active else 'off'}")))
+        c.add_row(bt)
+        sh_on = (self._hypr_option("decoration:drop_shadow") or "true") != "false"
+        st = SketchToggle("Drop shadow", width=180, height=26,
+                          color=NEON_BLUE, active=sh_on)
+        st.connect("clicked", lambda _b: sh(
+            f"hyprctl keyword decoration:drop_shadow "
+            f"{'true' if st.active else 'false'}"))
+        c.add_row(st)
+        anim_on = (self._hypr_option("animations:enabled") or "true") != "false"
+        at = SketchToggle("Animations", width=180, height=26,
+                          color=NEON_GREEN, active=anim_on)
+        at.connect("clicked", lambda _b: sh(
+            f"hyprctl keyword animations:enabled "
+            f"{'true' if at.active else 'false'}"))
+        c.add_row(at)
+
+        # ── 5. border colors ───────────────────────────────────────────────
+        c = Card("active border color")
+        self.box.append(c)
+        for name, expr in (
+                ("Neon pink",  "rgba(ff00ffee) rgba(b800ffee) 45deg"),
+                ("Cyber blue", "rgba(00aaffee) rgba(39ff14ee) 45deg"),
+                ("Acid green", "rgba(39ff14ee) rgba(ffc833ee) 45deg"),
+                ("Pure pink",  "rgba(ff00ffee)")):
+            br = Gtk.Box(spacing=8)
+            br.append(Gtk.Label(label=name, xalign=0))
+            apply_b = SketchButton("Apply", width=72, height=22,
+                                   color=NEON_PINK)
+            apply_b.connect("clicked", lambda _b, e=expr, n=name: (
+                sh(f"hyprctl keyword general:col.active_border {e}"),
+                self.win.toast(f"border -> {n}")))
+            br.append(apply_b); c.add_row(br)
+
         self.add_note(
-            "workspace count is dynamic in Hyprland — there's no fixed limit. "
-            "Each workspace is created on demand when you switch to it.")
+            "Live changes apply via hyprctl. To make any change permanent, "
+            "edit ~/.config/hypr/hyprland.conf -- the config is reloaded by "
+            "the 'Reload Hyprland' button above.")
         self.refresh()
+
+    def _hypr_option(self, key: str) -> str:
+        rc, out, _ = sh(["hyprctl", "getoption", key, "-j"])
+        if rc != 0: return ""
+        try:
+            j = json.loads(out)
+            for k in ("str", "custom", "int"):
+                if k in j and j[k] not in (None, ""): return str(j[k])
+        except Exception: pass
+        return ""
+
+    def _hypr_int(self, key: str, default: int) -> int:
+        v = self._hypr_option(key)
+        try: return int(v)
+        except Exception: return default
+
+    def _set_layout(self, name: str):
+        sh(["hyprctl", "keyword", "general:layout", name])
+        self.win.toast(f"layout -> {name}")
+        self.needs_restart("layout"); self.refresh()
 
     def refresh(self):
         c = self.list_card.get_first_child(); skip = True
@@ -2785,10 +2898,19 @@ class WorkspacesPage(BasePage):
         for w in sorted(ws, key=lambda x: x.get("id", 0)):
             self.list_card.add_row(kv_row(
                 f"workspace {w.get('id')}",
-                f"monitor: {w.get('monitor')}  •  windows: {w.get('windows',0)}"))
+                f"monitor: {w.get('monitor')}  windows: {w.get('windows',0)}"))
 
     def search_entries(self):
-        return [SearchEntry(self.KEY, self.TITLE, "Workspaces")]
+        return [
+            SearchEntry(self.KEY, self.TITLE, "Workspaces"),
+            SearchEntry(self.KEY, self.TITLE, "Gaps", "inner outer"),
+            SearchEntry(self.KEY, self.TITLE, "Border color", "active border"),
+            SearchEntry(self.KEY, self.TITLE, "Layout", "dwindle master tiling"),
+            SearchEntry(self.KEY, self.TITLE, "Blur", "decoration"),
+            SearchEntry(self.KEY, self.TITLE, "Rounding", "decoration corners"),
+            SearchEntry(self.KEY, self.TITLE, "Scratchpad", "special workspace"),
+            SearchEntry(self.KEY, self.TITLE, "Reload Hyprland"),
+        ]
 
 
 # ─── Keyboard ───────────────────────────────────────────────────────────────
@@ -3931,6 +4053,7 @@ class DateTimePage(BasePage):
     KEY = "datetime"; TITLE = "Date & Time"; ICON = "🕐"
 
     def build(self):
+        # ── 1. system time + NTP ──────────────────────────────────────────
         c = Card("system time")
         self.box.append(c)
         rc, out, _ = sh("timedatectl")
@@ -3941,48 +4064,144 @@ class DateTimePage(BasePage):
                 info[k.strip()] = v.strip()
         c.add_row(kv_row("Local time:", info.get("Local time", "?")))
         c.add_row(kv_row("Universal time:", info.get("Universal time", "?")))
-        c.add_row(kv_row("Timezone:", info.get("Time zone", "?")))
-        c.add_row(kv_row("NTP:", info.get("NTP service", "?")))
-        c.add_row(kv_row("Synced:", info.get("System clock synchronized", "?")))
+        c.add_row(kv_row("RTC time:", info.get("RTC time", "?")))
+        c.add_row(kv_row("Time zone:", info.get("Time zone", "?")))
+        c.add_row(kv_row("NTP service:", info.get("NTP service", "?")))
+        c.add_row(kv_row("Synchronized:", info.get("System clock synchronized", "?")))
+        c.add_row(kv_row("RTC in local TZ:", info.get("RTC in local TZ", "?")))
 
-        # toggle NTP
+        # NTP toggle
         ntp_on = "active" in info.get("NTP service", "")
-        tog = SketchToggle("NTP auto-sync", width=160, height=26,
+        tog = SketchToggle("NTP auto-sync", width=180, height=26,
                            color=NEON_GREEN, active=ntp_on)
         tog.connect("clicked",
                     lambda _b: sh_async(
-                        f"pkexec timedatectl set-ntp {'true' if tog.active else 'false'}",
+                        ["pkexec", "timedatectl", "set-ntp",
+                         "true" if tog.active else "false"],
                         lambda r: (self.win.toast(
                             "NTP changed" if r[0]==0 else "needs sudo"),
+                                   self.mark_changed("NTP"),
                                    self.refresh())))
         c.add_row(tog)
 
-        # timezone picker
+        # RTC toggle
+        rtc_local = info.get("RTC in local TZ", "no") == "yes"
+        rtog = SketchToggle("RTC stored in local time (else UTC)",
+                            width=320, height=26, color=NEON_BLUE,
+                            active=rtc_local)
+        rtog.connect("clicked", lambda _b: sh_async(
+            ["pkexec", "timedatectl", "set-local-rtc",
+             "1" if rtog.active else "0"],
+            lambda r: (self.win.toast(
+                "RTC mode changed" if r[0]==0 else "needs sudo"),
+                       self.mark_changed("RTC"), self.refresh())))
+        c.add_row(rtog)
+
+        # Sync now (chrony / timesyncd)
+        sn = SketchButton("Sync now", width=110, height=24, color=ACCENT_GOLD)
+        sn.connect("clicked", lambda _b: self._sync_now())
+        c.add_row(sn)
+
+        # ── 2. timezone picker ────────────────────────────────────────────
         tz_card = Card("timezone")
         self.box.append(tz_card)
         rc, out, _ = sh("timedatectl list-timezones")
         zones = out.splitlines() if rc == 0 else []
         if zones:
             row = Gtk.Box(spacing=8)
-            self.tz_combo = Gtk.DropDown.new_from_strings(zones[:300])
+            self.tz_combo = Gtk.DropDown.new_from_strings(zones)
             cur = info.get("Time zone", "").split(" ")[0]
             try: self.tz_combo.set_selected(zones.index(cur))
             except (ValueError, AttributeError): pass
+            self.tz_combo.set_hexpand(True)
             row.append(self.tz_combo)
             b = SketchButton("Set", width=58, height=24, color=NEON_GREEN)
             b.connect("clicked", lambda _b: self._set_tz(zones))
             row.append(b)
             tz_card.add_row(row)
+            tz_card.add_row(kv_row("Available zones:", f"{len(zones)}"))
+
+        # ── 3. clock format (gsettings if available) ──────────────────────
+        fmt_card = Card("clock format")
+        self.box.append(fmt_card)
+        cur_fmt = "24h"
+        if have("gsettings"):
+            _, fout, _ = sh("gsettings get org.gnome.desktop.interface clock-format")
+            if "12h" in fout: cur_fmt = "12h"
+        fmt_card.add_row(kv_row("Current format:", cur_fmt))
+        fr = Gtk.Box(spacing=8)
+        for name in ("12h", "24h"):
+            btn = SketchButton(name, width=72, height=22, color=NEON_PINK,
+                               primary=(name == cur_fmt))
+            btn.connect("clicked", lambda _b, n=name: self._set_clock_fmt(n))
+            fr.append(btn)
+        fmt_card.add_row(fr)
+
+        sec_on = "true" in (sh("gsettings get org.gnome.desktop.interface "
+                               "clock-show-seconds")[1] if have("gsettings") else "")
+        st = SketchToggle("Show seconds", width=180, height=26,
+                          color=NEON_BLUE, active=sec_on)
+        st.connect("clicked", lambda _b: self._gset_bool(
+            "org.gnome.desktop.interface", "clock-show-seconds", st.active))
+        fmt_card.add_row(st)
+
+        date_on = "true" in (sh("gsettings get org.gnome.desktop.interface "
+                                "clock-show-date")[1] if have("gsettings") else "")
+        dt = SketchToggle("Show date in clock", width=180, height=26,
+                          color=NEON_BLUE, active=date_on)
+        dt.connect("clicked", lambda _b: self._gset_bool(
+            "org.gnome.desktop.interface", "clock-show-date", dt.active))
+        fmt_card.add_row(dt)
+
+        # ── 4. world clock ────────────────────────────────────────────────
+        wc = Card("world clock")
+        self.box.append(wc)
+        from datetime import datetime as _dt
+        for label, tz in (("New York", "America/New_York"),
+                          ("London",   "Europe/London"),
+                          ("Tokyo",    "Asia/Tokyo"),
+                          ("Sydney",   "Australia/Sydney"),
+                          ("Berlin",   "Europe/Berlin")):
+            rc, t, _ = sh(["env", f"TZ={tz}", "date", "+%a %H:%M:%S"])
+            wc.add_row(kv_row(f"{label} ({tz}):", t.strip() or "?"))
+
+        self.add_note(
+            "Time zone and NTP changes use pkexec to elevate. "
+            "Clock format toggles use gsettings (GNOME schema) -- effective "
+            "in any GNOME-style status bar.")
+
+    def _sync_now(self):
+        if have("chronyc"):
+            sh_async(["pkexec", "chronyc", "makestep"],
+                     lambda r: self.win.toast("chrony resynced"
+                                              if r[0]==0 else "sync failed"))
+        else:
+            sh_async(["pkexec", "systemctl", "restart", "systemd-timesyncd"],
+                     lambda r: self.win.toast("timesyncd restarted"
+                                              if r[0]==0 else "sync failed"))
 
     def _set_tz(self, zones):
         z = zones[self.tz_combo.get_selected()]
-        sh_async(f"pkexec timedatectl set-timezone {z}",
+        sh_async(["pkexec", "timedatectl", "set-timezone", z],
                  lambda r: (self.win.toast(
-                     f"tz → {z}" if r[0]==0 else "needs sudo"),
-                            self.refresh()))
+                     f"tz -> {z}" if r[0]==0 else "needs sudo"),
+                            self.mark_changed("timezone"), self.refresh()))
+
+    def _set_clock_fmt(self, fmt: str):
+        if have("gsettings"):
+            sh(["gsettings", "set", "org.gnome.desktop.interface",
+                "clock-format", fmt])
+            self.win.toast(f"clock -> {fmt}")
+            self.mark_changed("clock format"); self.refresh()
+        else:
+            self.win.toast("gsettings not installed")
+
+    def _gset_bool(self, schema: str, key: str, val: bool):
+        if have("gsettings"):
+            sh(["gsettings", "set", schema, key, "true" if val else "false"])
+            self.mark_changed(key)
 
     def refresh(self):
-        # rebuild
         c = self.box.get_first_child()
         while c:
             n = c.get_next_sibling()
@@ -3993,8 +4212,12 @@ class DateTimePage(BasePage):
     def search_entries(self):
         return [
             SearchEntry(self.KEY, self.TITLE, "Time zone"),
-            SearchEntry(self.KEY, self.TITLE, "NTP"),
-            SearchEntry(self.KEY, self.TITLE, "Date format"),
+            SearchEntry(self.KEY, self.TITLE, "NTP", "auto sync"),
+            SearchEntry(self.KEY, self.TITLE, "Clock format", "12h 24h"),
+            SearchEntry(self.KEY, self.TITLE, "Show seconds"),
+            SearchEntry(self.KEY, self.TITLE, "RTC", "hardware clock UTC local"),
+            SearchEntry(self.KEY, self.TITLE, "World clock"),
+            SearchEntry(self.KEY, self.TITLE, "Sync now", "chrony timesyncd"),
         ]
 
 
@@ -5128,49 +5351,267 @@ class PrivacyPage(BasePage):
 class AppsPage(BasePage):
     KEY = "apps"; TITLE = "Applications"; ICON = "📦"
 
+    DEFAULT_MIMES = (
+        ("Web browser",  "x-scheme-handler/https"),
+        ("Email",        "x-scheme-handler/mailto"),
+        ("Text editor",  "text/plain"),
+        ("File manager", "inode/directory"),
+        ("Image viewer", "image/png"),
+        ("Video player", "video/mp4"),
+        ("Music player", "audio/mpeg"),
+        ("PDF viewer",   "application/pdf"),
+    )
+
     def build(self):
+        # ── 1. default app pickers (real xdg-mime change) ─────────────────
         c = Card("default applications")
         self.box.append(c)
-        for label, mime in (("Web browser",   "x-scheme-handler/https"),
-                            ("Email",         "x-scheme-handler/mailto"),
-                            ("Text editor",   "text/plain"),
-                            ("File manager",  "inode/directory"),
-                            ("Image viewer",  "image/png"),
-                            ("Video player",  "video/mp4"),
-                            ("Music player",  "audio/mpeg"),
-                            ("PDF viewer",    "application/pdf")):
-            rc, out, _ = sh(f"xdg-mime query default {mime}")
-            c.add_row(kv_row(label + ":", out.strip() or "(none)"))
-
-        c = Card("installed packages (pacman)")
+        desktops = self._list_desktops()
+        names = ["(unchanged)"] + [d for d in desktops]
+        for label, mime in self.DEFAULT_MIMES:
+            rc, out, _ = sh(["xdg-mime", "query", "default", mime])
+            cur = out.strip() or "(none)"
+            row = Gtk.Box(spacing=8)
+            row.append(Gtk.Label(label=label, xalign=0,
+                                 width_chars=14))
+            row.append(Gtk.Label(label=cur, xalign=0))
+            dd = Gtk.DropDown.new_from_strings(names)
+            dd.set_hexpand(True)
+            row.append(dd)
+            b = SketchButton("Set", width=58, height=22, color=NEON_GREEN)
+            b.connect("clicked",
+                lambda _b, m=mime, dd=dd: self._set_default(m, dd))
+            row.append(b)
+            c.add_row(row)
         self.box.append(c)
-        rc, out, _ = sh("pacman -Qq", timeout=5)
-        if rc == 0:
-            count = len(out.splitlines())
-            c.add_row(kv_row("Total packages:", f"{count}"))
-            sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 180)
-            tv = Gtk.TextView(); tv.set_editable(False)
-            tv.add_css_class("nyx-editor")
-            tv.get_buffer().set_text(out)
-            sw.set_child(tv); c.add_row(sw)
-        else:
-            c.add_row(Gtk.Label(label="pacman not available", xalign=0))
 
+        # ── 2. package manager summary ────────────────────────────────────
+        c = Card("pacman / packages")
+        self.box.append(c)
+        rc, out, _ = sh("pacman -Qq", timeout=6)
+        total = len(out.splitlines()) if rc == 0 else 0
+        rc2, exp, _ = sh("pacman -Qe", timeout=6)
+        explicit = len(exp.splitlines()) if rc2 == 0 else 0
+        rc3, aur, _ = sh("pacman -Qm", timeout=6)
+        aur_n = len(aur.splitlines()) if rc3 == 0 else 0
+        rc4, orph, _ = sh("pacman -Qtdq", timeout=6)
+        orph_n = len([l for l in orph.splitlines() if l.strip()]) if rc4 == 0 else 0
+        c.add_row(kv_row("Total packages:",  f"{total}"))
+        c.add_row(kv_row("Explicit:",        f"{explicit}"))
+        c.add_row(kv_row("AUR / foreign:",   f"{aur_n}"))
+        c.add_row(kv_row("Orphans:",         f"{orph_n}"))
+        rc5, cache, _ = sh(["du", "-sh", "/var/cache/pacman/pkg"], timeout=4)
+        c.add_row(kv_row("Cache size:",  cache.split()[0] if rc5==0 else "?"))
+
+        ar = Gtk.Box(spacing=8)
+        b1 = SketchButton("Update mirrorlist", width=160, height=24,
+                          color=ACCENT_GOLD)
+        b1.connect("clicked", lambda _b: sh_async(
+            ["pkexec", "pacman", "-Syy"],
+            lambda r: self.win.toast("mirrors refreshed"
+                                     if r[0]==0 else "failed")))
+        ar.append(b1)
+        b2 = SketchButton("Sync + upgrade", width=140, height=24,
+                          color=NEON_GREEN)
+        b2.connect("clicked", lambda _b: sh_async(
+            ["pkexec", "pacman", "-Syu", "--noconfirm"],
+            lambda r: self.win.toast("upgrade done"
+                                     if r[0]==0 else "failed"), timeout=600))
+        ar.append(b2)
+        b3 = SketchButton("Clean cache", width=120, height=24, color=DANGER_RED)
+        b3.connect("clicked", lambda _b: sh_async(
+            ["pkexec", "paccache", "-rk2"],
+            lambda r: (self.win.toast("cache trimmed"
+                                      if r[0]==0 else "needs paccache"),
+                       self.refresh())))
+        ar.append(b3)
+        if orph_n > 0:
+            b4 = SketchButton(f"Remove {orph_n} orphans", width=170,
+                              height=24, color=DANGER_RED)
+            b4.connect("clicked", lambda _b: sh_async(
+                ["pkexec", "sh", "-c",
+                 "pacman -Rns --noconfirm $(pacman -Qtdq)"],
+                lambda r: (self.win.toast("orphans removed"
+                                          if r[0]==0 else "failed"),
+                           self.refresh()), timeout=120))
+            ar.append(b4)
+        c.add_row(ar)
+
+        # search + install bar
+        ir = Gtk.Box(spacing=8)
+        ir.append(Gtk.Label(label="Install pkg:", xalign=0))
+        self._pkg_entry = Gtk.Entry()
+        self._pkg_entry.set_placeholder_text("package name (e.g. firefox)")
+        self._pkg_entry.set_hexpand(True); ir.append(self._pkg_entry)
+        ib = SketchButton("Install", width=92, height=24, color=NEON_GREEN)
+        ib.connect("clicked", lambda _b: self._install_pkg())
+        ir.append(ib)
+        rb = SketchButton("Remove", width=92, height=24, color=DANGER_RED)
+        rb.connect("clicked", lambda _b: self._remove_pkg())
+        ir.append(rb)
+        c.add_row(ir)
+
+        # ── 3. AUR helpers / flatpak ──────────────────────────────────────
+        c = Card("AUR & flatpak")
+        self.box.append(c)
+        for h in ("yay", "paru"):
+            c.add_row(kv_row(f"{h}:", "installed" if have(h) else "(missing)"))
+        if have("flatpak"):
+            rc, fout, _ = sh(["flatpak", "list", "--columns=application"], timeout=5)
+            n = len([l for l in fout.splitlines() if l.strip()])
+            c.add_row(kv_row("Flatpak apps:", f"{n}"))
+        else:
+            c.add_row(kv_row("Flatpak:", "(not installed)"))
+
+        # ── 4. autostart manager ──────────────────────────────────────────
         c = Card("startup applications")
         self.box.append(c)
         autostart = Path.home() / ".config/autostart"
-        if autostart.exists():
-            for f in sorted(autostart.glob("*.desktop")):
-                c.add_row(kv_row(f.name, ""))
-        else:
+        autostart.mkdir(parents=True, exist_ok=True)
+        entries = sorted(autostart.glob("*.desktop"))
+        if not entries:
             c.add_row(Gtk.Label(label="(no autostart entries)", xalign=0))
+        for f in entries:
+            row = Gtk.Box(spacing=8)
+            row.append(Gtk.Label(label=f.name, xalign=0, width_chars=30))
+            # parse Hidden=true to show enabled state
+            try: txt = f.read_text(errors="ignore")
+            except Exception: txt = ""
+            enabled = "Hidden=true" not in txt
+            tg = SketchToggle("Enabled", width=110, height=22,
+                              color=NEON_GREEN, active=enabled)
+            tg.connect("clicked",
+                       lambda _b, p=f, t=tg: self._toggle_autostart(p, t))
+            row.append(tg)
+            db = SketchButton("Delete", width=80, height=22, color=DANGER_RED)
+            db.connect("clicked",
+                       lambda _b, p=f: (p.unlink(missing_ok=True),
+                                        self.win.toast(f"removed {p.name}"),
+                                        self.refresh()))
+            row.append(db); c.add_row(row)
+
+        # add new autostart from /usr/share/applications
+        ar2 = Gtk.Box(spacing=8)
+        all_desktops = self._list_desktops()
+        if all_desktops:
+            self._add_autostart_dd = Gtk.DropDown.new_from_strings(all_desktops)
+            self._add_autostart_dd.set_hexpand(True)
+            ar2.append(self._add_autostart_dd)
+            ab = SketchButton("Add to startup", width=140, height=24,
+                              color=NEON_BLUE)
+            ab.connect("clicked", lambda _b: self._add_autostart(all_desktops))
+            ar2.append(ab); c.add_row(ar2)
+
+        # ── 5. last installed packages ────────────────────────────────────
+        c = Card("recent install history")
+        self.box.append(c)
+        rc, out, _ = sh(["sh", "-c",
+                         "grep -E ' installed | upgraded | removed ' "
+                         "/var/log/pacman.log 2>/dev/null | tail -12"])
+        sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 160)
+        tv = Gtk.TextView(); tv.set_editable(False); tv.set_monospace(True)
+        tv.add_css_class("nyx-editor")
+        tv.get_buffer().set_text(out.strip() or "(no log)")
+        sw.set_child(tv); c.add_row(sw)
+
+    def _list_desktops(self) -> List[str]:
+        seen = set(); out = []
+        for d in (Path("/usr/share/applications"),
+                  Path("/usr/local/share/applications"),
+                  Path.home() / ".local/share/applications"):
+            if not d.exists(): continue
+            for f in sorted(d.glob("*.desktop")):
+                if f.name not in seen:
+                    seen.add(f.name); out.append(f.name)
+        return out
+
+    def _set_default(self, mime: str, dd: Gtk.DropDown):
+        idx = dd.get_selected()
+        if idx <= 0: return
+        names = [dd.get_model().get_string(i)
+                 for i in range(dd.get_model().get_n_items())]
+        target = names[idx]
+        sh_async(["xdg-mime", "default", target, mime],
+                 lambda r: (self.win.toast(
+                     f"{mime.split('/')[-1]} -> {target}" if r[0]==0
+                     else "failed"),
+                            self.mark_changed(mime), self.refresh()))
+
+    def _install_pkg(self):
+        pkg = (self._pkg_entry.get_text() or "").strip()
+        if not pkg: return
+        sh_async(["pkexec", "pacman", "-S", "--noconfirm", pkg],
+                 lambda r: (self.win.toast(
+                     f"installed {pkg}" if r[0]==0 else f"failed: {pkg}"),
+                            self.mark_changed(f"install {pkg}"),
+                            self.refresh()), timeout=300)
+
+    def _remove_pkg(self):
+        pkg = (self._pkg_entry.get_text() or "").strip()
+        if not pkg: return
+        sh_async(["pkexec", "pacman", "-Rns", "--noconfirm", pkg],
+                 lambda r: (self.win.toast(
+                     f"removed {pkg}" if r[0]==0 else f"failed: {pkg}"),
+                            self.mark_changed(f"remove {pkg}"),
+                            self.refresh()), timeout=120)
+
+    def _toggle_autostart(self, p: Path, tg):
+        try:
+            txt = p.read_text(errors="ignore")
+            if tg.active:  # enable
+                txt = "\n".join(l for l in txt.splitlines()
+                                if l.strip().lower() != "hidden=true")
+            else:          # disable
+                if "Hidden=true" not in txt:
+                    txt = txt.rstrip() + "\nHidden=true\n"
+            p.write_text(txt)
+            self.win.toast(f"{p.name}: "
+                           f"{'enabled' if tg.active else 'disabled'}")
+        except Exception as e:
+            self.win.toast(f"err: {e}")
+
+    def _add_autostart(self, names: List[str]):
+        idx = self._add_autostart_dd.get_selected()
+        if idx < 0 or idx >= len(names): return
+        name = names[idx]
+        # find the source .desktop
+        for d in (Path("/usr/share/applications"),
+                  Path("/usr/local/share/applications"),
+                  Path.home() / ".local/share/applications"):
+            src = d / name
+            if src.exists():
+                dst = Path.home() / ".config/autostart" / name
+                try:
+                    dst.write_text(src.read_text())
+                    self.win.toast(f"added {name}")
+                    self.refresh()
+                except Exception as e:
+                    self.win.toast(f"err: {e}")
+                return
+
+    def refresh(self):
+        c = self.box.get_first_child()
+        while c:
+            n = c.get_next_sibling()
+            if c is not self.box.get_first_child(): self.box.remove(c)
+            c = n
+        self.build()
 
     def search_entries(self):
         return [
-            SearchEntry(self.KEY, self.TITLE, "Default browser"),
-            SearchEntry(self.KEY, self.TITLE, "Default editor"),
-            SearchEntry(self.KEY, self.TITLE, "Installed packages"),
-            SearchEntry(self.KEY, self.TITLE, "Startup applications"),
+            SearchEntry(self.KEY, self.TITLE, "Default browser", "xdg-mime"),
+            SearchEntry(self.KEY, self.TITLE, "Default editor", "xdg-mime"),
+            SearchEntry(self.KEY, self.TITLE, "Default file manager"),
+            SearchEntry(self.KEY, self.TITLE, "Install package", "pacman -S"),
+            SearchEntry(self.KEY, self.TITLE, "Remove package", "pacman -R"),
+            SearchEntry(self.KEY, self.TITLE, "Update mirrorlist", "pacman -Syy"),
+            SearchEntry(self.KEY, self.TITLE, "System upgrade", "pacman -Syu"),
+            SearchEntry(self.KEY, self.TITLE, "Orphans", "Qtd cleanup"),
+            SearchEntry(self.KEY, self.TITLE, "Pacman cache", "paccache"),
+            SearchEntry(self.KEY, self.TITLE, "AUR helper", "yay paru"),
+            SearchEntry(self.KEY, self.TITLE, "Flatpak"),
+            SearchEntry(self.KEY, self.TITLE, "Startup applications", "autostart"),
+            SearchEntry(self.KEY, self.TITLE, "Install history"),
         ]
 
 
@@ -5507,20 +5948,177 @@ class StoragePage(BasePage):
 class LanguagePage(BasePage):
     KEY = "language"; TITLE = "Language & Region"; ICON = "🗺"
 
+    REGIONAL_KEYS = (
+        ("LANG",        "System language"),
+        ("LC_CTYPE",    "Character classification"),
+        ("LC_NUMERIC",  "Number format"),
+        ("LC_TIME",     "Date / time format"),
+        ("LC_MONETARY", "Currency"),
+        ("LC_MESSAGES", "UI messages"),
+        ("LC_PAPER",    "Paper size"),
+        ("LC_MEASUREMENT", "Measurement units"),
+    )
+
     def build(self):
-        c = Card("locale")
+        # ── 1. current locale snapshot ────────────────────────────────────
+        c = Card("current locale")
         self.box.append(c)
+        env = {}
         rc, out, _ = sh("locale")
         for line in out.splitlines():
             if "=" in line:
                 k, v = line.split("=", 1)
-                c.add_row(kv_row(k + ":", v.strip('"')))
+                env[k.strip()] = v.strip().strip('"')
+        for k, label in self.REGIONAL_KEYS:
+            c.add_row(kv_row(f"{label} ({k}):", env.get(k, "(unset)")))
+
+        # ── 2. system language picker ─────────────────────────────────────
+        c = Card("system language")
+        self.box.append(c)
+        rc, out, _ = sh("localectl list-locales", timeout=4)
+        locales = [l.strip() for l in out.splitlines() if l.strip()]
+        if not locales:
+            # fallback: scan /etc/locale.gen
+            try:
+                gen = Path("/etc/locale.gen").read_text(errors="ignore")
+                locales = sorted(set(
+                    l.lstrip("# ").split()[0]
+                    for l in gen.splitlines()
+                    if l.strip() and not l.startswith("#") and "UTF-8" in l))
+            except Exception: pass
+        if locales:
+            row = Gtk.Box(spacing=8)
+            self.lang_dd = Gtk.DropDown.new_from_strings(locales)
+            cur = env.get("LANG", "").strip()
+            try: self.lang_dd.set_selected(locales.index(cur))
+            except ValueError: pass
+            self.lang_dd.set_hexpand(True); row.append(self.lang_dd)
+            b = SketchButton("Set system LANG", width=160, height=24,
+                             color=NEON_GREEN)
+            b.connect("clicked", lambda _b: self._set_lang(locales))
+            row.append(b); c.add_row(row)
+            c.add_row(kv_row("Available locales:", f"{len(locales)}"))
+        else:
+            c.add_row(Gtk.Label(label="localectl returned no locales -- "
+                                "run `locale-gen` first.", xalign=0))
+
+        # generate a locale on demand
+        gen_row = Gtk.Box(spacing=8)
+        gen_row.append(Gtk.Label(label="Generate locale:", xalign=0))
+        self._gen_entry = Gtk.Entry()
+        self._gen_entry.set_placeholder_text("e.g. fr_FR.UTF-8 UTF-8")
+        self._gen_entry.set_hexpand(True); gen_row.append(self._gen_entry)
+        gb = SketchButton("locale-gen", width=120, height=24, color=ACCENT_GOLD)
+        gb.connect("clicked", lambda _b: self._locale_gen())
+        gen_row.append(gb); c.add_row(gen_row)
+
+        # ── 3. keyboard layout (XKB / Hyprland) ───────────────────────────
+        c = Card("keyboard layout")
+        self.box.append(c)
+        rc, out, _ = sh("localectl status")
+        kb = {}
+        for line in out.splitlines():
+            if ":" in line:
+                k, v = line.split(":", 1); kb[k.strip()] = v.strip()
+        c.add_row(kv_row("X11 layout:",  kb.get("X11 Layout", "?")))
+        c.add_row(kv_row("X11 model:",   kb.get("X11 Model", "?")))
+        c.add_row(kv_row("X11 variant:", kb.get("X11 Variant", "?")))
+        c.add_row(kv_row("VC keymap:",   kb.get("VC Keymap", "?")))
+        for layout in ("us", "gb", "de", "fr", "es", "it", "ru", "jp"):
+            pass  # rendered below
+        kr = Gtk.Box(spacing=6)
+        cur_layout = kb.get("X11 Layout", "us").split(",")[0].strip()
+        for layout in ("us", "gb", "de", "fr", "es", "it", "ru", "jp"):
+            btn = SketchButton(layout, width=46, height=22, color=NEON_PINK,
+                               primary=(layout == cur_layout))
+            btn.connect("clicked", lambda _b, l=layout: self._set_layout(l))
+            kr.append(btn)
+        c.add_row(kr)
+
+        # ── 4. region / regional formats (LC_*) ───────────────────────────
+        c = Card("regional formats (LC_*)")
+        self.box.append(c)
+        if locales:
+            row = Gtk.Box(spacing=8)
+            self.region_dd = Gtk.DropDown.new_from_strings(locales)
+            cur = env.get("LC_TIME", env.get("LANG", "")).strip()
+            try: self.region_dd.set_selected(locales.index(cur))
+            except ValueError: pass
+            self.region_dd.set_hexpand(True); row.append(self.region_dd)
+            b = SketchButton("Apply regional", width=150, height=24,
+                             color=NEON_BLUE)
+            b.connect("clicked", lambda _b: self._set_region(locales))
+            row.append(b); c.add_row(row)
+
         self.add_note(
-            "system locale changes need root — edit /etc/locale.conf or "
-            "use `localectl set-locale`.")
+            "Locale + keymap changes go through pkexec localectl. "
+            "After changing LANG you must log out and back in for shell "
+            "and apps to pick up the new value.")
+
+    def _set_lang(self, locales):
+        idx = self.lang_dd.get_selected()
+        if idx < 0 or idx >= len(locales): return
+        loc = locales[idx]
+        sh_async(["pkexec", "localectl", "set-locale", f"LANG={loc}"],
+                 lambda r: (self.win.toast(
+                     f"LANG -> {loc}" if r[0]==0 else "needs sudo"),
+                            self.mark_changed("LANG"),
+                            self.needs_restart("system language")))
+
+    def _set_region(self, locales):
+        idx = self.region_dd.get_selected()
+        if idx < 0 or idx >= len(locales): return
+        loc = locales[idx]
+        # apply LC_TIME, LC_NUMERIC, LC_MONETARY, LC_PAPER, LC_MEASUREMENT
+        args = ["pkexec", "localectl", "set-locale",
+                f"LC_TIME={loc}", f"LC_NUMERIC={loc}",
+                f"LC_MONETARY={loc}", f"LC_PAPER={loc}",
+                f"LC_MEASUREMENT={loc}"]
+        sh_async(args,
+                 lambda r: (self.win.toast(
+                     f"region -> {loc}" if r[0]==0 else "needs sudo"),
+                            self.mark_changed("regional formats"),
+                            self.needs_restart("regional formats")))
+
+    def _set_layout(self, layout: str):
+        # live to Hyprland
+        sh(["hyprctl", "keyword", "input:kb_layout", layout])
+        # persist via localectl
+        sh_async(["pkexec", "localectl", "set-x11-keymap", layout],
+                 lambda r: (self.win.toast(
+                     f"layout -> {layout}" if r[0]==0 else "live only"),
+                            self.mark_changed("keyboard layout"),
+                            self.refresh()))
+
+    def _locale_gen(self):
+        spec = (self._gen_entry.get_text() or "").strip()
+        if not spec: return
+        # uncomment matching line in /etc/locale.gen, then run locale-gen
+        sh_async(["pkexec", "sh", "-c",
+                  f"sed -i 's/^#\\s*{spec.split()[0]}/{spec.split()[0]}/' "
+                  f"/etc/locale.gen && locale-gen"],
+                 lambda r: (self.win.toast(
+                     f"generated {spec}" if r[0]==0 else "locale-gen failed"),
+                            self.refresh()), timeout=120)
+
+    def refresh(self):
+        c = self.box.get_first_child()
+        while c:
+            n = c.get_next_sibling()
+            if c is not self.box.get_first_child(): self.box.remove(c)
+            c = n
+        self.build()
 
     def search_entries(self):
-        return [SearchEntry(self.KEY, self.TITLE, "Locale", "language")]
+        return [
+            SearchEntry(self.KEY, self.TITLE, "System language", "LANG locale"),
+            SearchEntry(self.KEY, self.TITLE, "Keyboard layout", "xkb us gb de"),
+            SearchEntry(self.KEY, self.TITLE, "Regional formats", "LC_TIME"),
+            SearchEntry(self.KEY, self.TITLE, "Currency", "LC_MONETARY"),
+            SearchEntry(self.KEY, self.TITLE, "Paper size", "LC_PAPER"),
+            SearchEntry(self.KEY, self.TITLE, "Measurement units"),
+            SearchEntry(self.KEY, self.TITLE, "Generate locale", "locale-gen"),
+        ]
 
 
 # ─── Accessibility ──────────────────────────────────────────────────────────
@@ -5528,32 +6126,215 @@ class AccessibilityPage(BasePage):
     KEY = "a11y"; TITLE = "Accessibility"; ICON = "♿"
 
     def build(self):
-        c = Card("hyprland accessibility")
+        # ── 1. cursor size + theme ────────────────────────────────────────
+        c = Card("cursor")
         self.box.append(c)
-        # cursor size
         env = os.environ.get("XCURSOR_SIZE", "24")
-        c.add_row(kv_row("Current cursor size (XCURSOR_SIZE):", env))
+        c.add_row(kv_row("Cursor size (XCURSOR_SIZE):", env))
         row = Gtk.Box(spacing=8)
-        for s in (20, 24, 32, 48):
-            b = SketchButton(str(s), width=46, height=22, color=NEON_BLUE,
+        for s in (20, 24, 32, 48, 64):
+            b = SketchButton(f"{s}px", width=58, height=22, color=NEON_BLUE,
                              primary=(str(s) == env))
-            b.connect("clicked", lambda _b, s=s:
-                      (sh(f"hyprctl setcursor Adwaita {s}"),
-                       self.win.toast(f"cursor → {s}px")))
+            b.connect("clicked", lambda _b, s=s: self._set_cursor(s))
             row.append(b)
         c.add_row(row)
 
-        c = Card("contrast / scale")
+        # ── 2. visual contrast / theme ────────────────────────────────────
+        c = Card("visual contrast")
         self.box.append(c)
-        c.add_row(Gtk.Label(
-            label="GTK accessibility — adjust per-app via GNOME Settings or",
-            xalign=0))
-        c.add_row(Gtk.Label(
-            label="GTK_THEME=Adwaita-dark / gsettings set gtk-text-scaling-factor",
-            xalign=0))
+        cur_theme = self._gget("org.gnome.desktop.interface", "gtk-theme")
+        c.add_row(kv_row("Current GTK theme:", cur_theme))
+        tr = Gtk.Box(spacing=8)
+        for name in ("Adwaita", "Adwaita-dark", "HighContrast",
+                     "HighContrastInverse"):
+            btn = SketchButton(name, width=140, height=22,
+                               color=NEON_PINK,
+                               primary=(name == cur_theme))
+            btn.connect("clicked", lambda _b, n=name: self._set_theme(n))
+            tr.append(btn)
+        c.add_row(tr)
+
+        # color scheme dark/light prefer
+        cs = self._gget("org.gnome.desktop.interface", "color-scheme")
+        dark = "dark" in cs
+        dt = SketchToggle("Prefer dark color scheme", width=240, height=26,
+                          color=NEON_BLUE, active=dark)
+        dt.connect("clicked", lambda _b: self._gset(
+            "org.gnome.desktop.interface", "color-scheme",
+            "prefer-dark" if dt.active else "default"))
+        c.add_row(dt)
+
+        # ── 3. text scale ─────────────────────────────────────────────────
+        c = Card("text size")
+        self.box.append(c)
+        cur_scale = self._gget_float(
+            "org.gnome.desktop.interface", "text-scaling-factor", 1.0)
+        c.add_row(kv_row("Text scale:", f"{cur_scale:.2f}x"))
+        adj = Gtk.Adjustment(value=cur_scale, lower=0.75, upper=2.5,
+                             step_increment=0.05, page_increment=0.25)
+        sc = Gtk.Scale(adjustment=adj,
+                       orientation=Gtk.Orientation.HORIZONTAL)
+        sc.set_size_request(280, -1); sc.set_draw_value(True)
+        sc.set_value_pos(Gtk.PositionType.RIGHT); sc.set_digits(2)
+        sc.connect("value-changed", lambda s: self._gset(
+            "org.gnome.desktop.interface", "text-scaling-factor",
+            f"{s.get_value():.2f}"))
+        c.add_row(sc)
+
+        # ── 4. keyboard accessibility (XKB options) ───────────────────────
+        c = Card("keyboard helpers")
+        self.box.append(c)
+        cur_opts = self._hypr_kb_options()
+
+        def _toggle_xkb(label, opt, color=NEON_GREEN):
+            on = opt in cur_opts
+            tg = SketchToggle(label, width=240, height=26,
+                              color=color, active=on)
+            tg.connect("clicked", lambda _b, o=opt, t=tg:
+                       self._toggle_xkb_option(o, t.active))
+            c.add_row(tg)
+
+        _toggle_xkb("Caps Lock acts as Ctrl",   "ctrl:nocaps")
+        _toggle_xkb("Compose key on Right Alt", "compose:ralt")
+        _toggle_xkb("Swap Alt and Win",         "altwin:swap_alt_win")
+        _toggle_xkb("Group toggle on Caps Lock","grp:caps_toggle")
+        _toggle_xkb("Numlock at boot",          "numpad:mac")
+
+        # ── 5. visual / motion preferences ────────────────────────────────
+        c = Card("motion & alerts")
+        self.box.append(c)
+        # reduce animations -> Hyprland animations:enabled false
+        anim_on = (self._hypr_option("animations:enabled") or "true") != "false"
+        at = SketchToggle("Disable window animations", width=240, height=26,
+                          color=ACCENT_GOLD, active=not anim_on)
+        at.connect("clicked", lambda _b: (
+            sh(["hyprctl", "keyword", "animations:enabled",
+                "false" if at.active else "true"]),
+            self.win.toast("animations "
+                           f"{'off' if at.active else 'on'}")))
+        c.add_row(at)
+
+        # blur disable
+        blur_on = (self._hypr_option("decoration:blur:enabled") or "true") != "false"
+        bt = SketchToggle("Disable window blur", width=240, height=26,
+                          color=ACCENT_GOLD, active=not blur_on)
+        bt.connect("clicked", lambda _b: (
+            sh(["hyprctl", "keyword", "decoration:blur:enabled",
+                "false" if bt.active else "true"]),
+            self.win.toast("blur "
+                           f"{'off' if bt.active else 'on'}")))
+        c.add_row(bt)
+
+        # event sounds
+        evs = self._gget("org.gnome.desktop.sound", "event-sounds")
+        es = SketchToggle("System event sounds", width=240, height=26,
+                          color=NEON_GREEN, active=(evs == "true"))
+        es.connect("clicked", lambda _b: self._gset(
+            "org.gnome.desktop.sound", "event-sounds",
+            "true" if es.active else "false"))
+        c.add_row(es)
+
+        # ── 6. assistive tech (orca / magnifier) ──────────────────────────
+        c = Card("assistive technologies")
+        self.box.append(c)
+        c.add_row(kv_row("orca screen reader:",
+                         "installed" if have("orca") else "(missing)"))
+        if have("orca"):
+            ob = SketchButton("Launch Orca", width=140, height=24,
+                              color=NEON_PINK)
+            ob.connect("clicked", lambda _b: sh_async(["orca"]))
+            c.add_row(ob)
+        c.add_row(kv_row("magnus magnifier:",
+                         "installed" if have("magnus") else "(missing)"))
+        if have("magnus"):
+            mb = SketchButton("Launch Magnifier", width=160, height=24,
+                              color=NEON_BLUE)
+            mb.connect("clicked", lambda _b: sh_async(["magnus"]))
+            c.add_row(mb)
+
+        self.add_note(
+            "GTK theme + text scale changes use gsettings (GNOME schema). "
+            "Keyboard helpers apply live via hyprctl AND get persisted by "
+            "localectl set-x11-keymap when you set the layout in Language.")
+
+    # ── helpers ───────────────────────────────────────────────────────────
+    def _set_cursor(self, s: int):
+        sh(["hyprctl", "setcursor", "Adwaita", str(s)])
+        if have("gsettings"):
+            sh(["gsettings", "set", "org.gnome.desktop.interface",
+                "cursor-size", str(s)])
+        os.environ["XCURSOR_SIZE"] = str(s)
+        self.win.toast(f"cursor -> {s}px")
+        self.mark_changed("cursor size"); self.refresh()
+
+    def _set_theme(self, name: str):
+        if have("gsettings"):
+            sh(["gsettings", "set", "org.gnome.desktop.interface",
+                "gtk-theme", name])
+        # Hyprland-friendly env hint
+        sh(["hyprctl", "keyword", "env", f"GTK_THEME,{name}"])
+        self.win.toast(f"theme -> {name}")
+        self.mark_changed("gtk-theme"); self.refresh()
+
+    def _gget(self, schema: str, key: str) -> str:
+        if not have("gsettings"): return "(no gsettings)"
+        rc, out, _ = sh(["gsettings", "get", schema, key])
+        return out.strip().strip("'") if rc == 0 else "?"
+
+    def _gget_float(self, schema: str, key: str, default: float) -> float:
+        try: return float(self._gget(schema, key))
+        except Exception: return default
+
+    def _gset(self, schema: str, key: str, val: str):
+        if not have("gsettings"):
+            self.win.toast("gsettings not installed"); return
+        sh(["gsettings", "set", schema, key, val])
+        self.mark_changed(key)
+
+    def _hypr_option(self, key: str) -> str:
+        rc, out, _ = sh(["hyprctl", "getoption", key, "-j"])
+        if rc != 0: return ""
+        try:
+            j = json.loads(out)
+            for k in ("str", "custom", "int"):
+                if k in j and j[k] not in (None, ""): return str(j[k])
+        except Exception: pass
+        return ""
+
+    def _hypr_kb_options(self) -> str:
+        return self._hypr_option("input:kb_options") or ""
+
+    def _toggle_xkb_option(self, opt: str, enable: bool):
+        cur = [o for o in self._hypr_kb_options().split(",") if o]
+        if enable and opt not in cur: cur.append(opt)
+        if not enable and opt in cur: cur.remove(opt)
+        new = ",".join(cur)
+        sh(["hyprctl", "keyword", "input:kb_options", new])
+        self.win.toast(f"{opt}: {'on' if enable else 'off'}")
+        self.mark_changed("kb_options")
+
+    def refresh(self):
+        c = self.box.get_first_child()
+        while c:
+            n = c.get_next_sibling()
+            if c is not self.box.get_first_child(): self.box.remove(c)
+            c = n
+        self.build()
 
     def search_entries(self):
-        return [SearchEntry(self.KEY, self.TITLE, "Cursor size")]
+        return [
+            SearchEntry(self.KEY, self.TITLE, "Cursor size", "xcursor large"),
+            SearchEntry(self.KEY, self.TITLE, "GTK theme", "high contrast"),
+            SearchEntry(self.KEY, self.TITLE, "Dark mode", "color scheme"),
+            SearchEntry(self.KEY, self.TITLE, "Text size", "scaling factor"),
+            SearchEntry(self.KEY, self.TITLE, "Caps Lock as Ctrl", "ctrl nocaps"),
+            SearchEntry(self.KEY, self.TITLE, "Compose key", "ralt"),
+            SearchEntry(self.KEY, self.TITLE, "Reduce animations"),
+            SearchEntry(self.KEY, self.TITLE, "Reduce blur"),
+            SearchEntry(self.KEY, self.TITLE, "Screen reader", "orca"),
+            SearchEntry(self.KEY, self.TITLE, "Magnifier", "magnus zoom"),
+            SearchEntry(self.KEY, self.TITLE, "System sounds"),
+        ]
 
 
 # ─── Printers ───────────────────────────────────────────────────────────────
@@ -5561,30 +6342,233 @@ class PrintersPage(BasePage):
     KEY = "printers"; TITLE = "Printers & Scanners"; ICON = "🖨"
 
     def build(self):
-        c = Card("CUPS")
+        # ── 1. CUPS service status ────────────────────────────────────────
+        c = Card("CUPS service")
+        self.box.append(c)
+        if not have("lpstat"):
+            c.add_row(Gtk.Label(label="cups package not installed -- "
+                                "`pacman -S cups`", xalign=0))
+            ib = SketchButton("Install CUPS", width=140, height=24,
+                              color=NEON_GREEN)
+            ib.connect("clicked", lambda _b: sh_async(
+                ["pkexec", "pacman", "-S", "--noconfirm", "cups"],
+                lambda r: (self.win.toast(
+                    "cups installed" if r[0]==0 else "install failed"),
+                           self.refresh()), timeout=300))
+            c.add_row(ib)
+        else:
+            rc, st, _ = sh(["systemctl", "is-active", "cups.service"])
+            active = "active" in st
+            rc2, en, _ = sh(["systemctl", "is-enabled", "cups.service"])
+            enabled = "enabled" in en
+            c.add_row(kv_row("Status:",  "active" if active else st.strip()))
+            c.add_row(kv_row("Enabled:", "yes" if enabled else "no"))
+            row = Gtk.Box(spacing=8)
+            tg = SketchToggle("CUPS enabled at boot", width=200, height=26,
+                              color=NEON_GREEN, active=enabled)
+            tg.connect("clicked", lambda _b: sh_async(
+                ["pkexec", "systemctl",
+                 "enable" if tg.active else "disable", "--now",
+                 "cups.service"],
+                lambda r: (self.win.toast(
+                    "cups updated" if r[0]==0 else "needs sudo"),
+                           self.refresh())))
+            row.append(tg)
+            rb = SketchButton("Restart CUPS", width=130, height=24,
+                              color=ACCENT_GOLD)
+            rb.connect("clicked", lambda _b: sh_async(
+                ["pkexec", "systemctl", "restart", "cups.service"],
+                lambda r: self.win.toast("cups restarted"
+                                         if r[0]==0 else "failed")))
+            row.append(rb); c.add_row(row)
+
+        # ── 2. installed printers ─────────────────────────────────────────
+        c = Card("installed printers")
         self.box.append(c)
         if have("lpstat"):
-            rc, out, _ = sh("lpstat -p -d")
-            c.add_row(Gtk.Label(label=out.strip() or "(no printers)",
-                                xalign=0))
-        else:
-            c.add_row(Gtk.Label(label="cups / lpstat not installed",
-                                xalign=0))
+            rc, out, _ = sh(["lpstat", "-p", "-d"])
+            text = out.strip() or "(no printers configured)"
+            sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 130)
+            tv = Gtk.TextView(); tv.set_editable(False); tv.set_monospace(True)
+            tv.add_css_class("nyx-editor")
+            tv.get_buffer().set_text(text)
+            sw.set_child(tv); c.add_row(sw)
 
+            # parse printer names
+            printers = []
+            for line in out.splitlines():
+                if line.startswith("printer "):
+                    parts = line.split()
+                    if len(parts) >= 2: printers.append(parts[1])
+
+            if printers:
+                # default printer picker
+                rc2, dout, _ = sh(["lpstat", "-d"])
+                cur_default = ""
+                if "system default destination:" in dout:
+                    cur_default = dout.split(":", 1)[1].strip()
+                row = Gtk.Box(spacing=8)
+                row.append(Gtk.Label(label="Default:", xalign=0))
+                self.def_dd = Gtk.DropDown.new_from_strings(printers)
+                try: self.def_dd.set_selected(printers.index(cur_default))
+                except ValueError: pass
+                self.def_dd.set_hexpand(True); row.append(self.def_dd)
+                db = SketchButton("Set default", width=120, height=22,
+                                  color=NEON_BLUE)
+                db.connect("clicked", lambda _b: self._set_default_printer(printers))
+                row.append(db); c.add_row(row)
+
+                # actions per printer
+                for p in printers:
+                    ar = Gtk.Box(spacing=8)
+                    ar.append(Gtk.Label(label=p, xalign=0, width_chars=18))
+                    tb = SketchButton("Test page", width=110, height=22,
+                                      color=NEON_PINK)
+                    tb.connect("clicked", lambda _b, n=p: self._test_print(n))
+                    ar.append(tb)
+                    qb = SketchButton("Show queue", width=110, height=22,
+                                      color=NEON_BLUE)
+                    qb.connect("clicked", lambda _b, n=p: self._show_queue(n))
+                    ar.append(qb)
+                    cb = SketchButton("Cancel jobs", width=120, height=22,
+                                      color=DANGER_RED)
+                    cb.connect("clicked", lambda _b, n=p: self._cancel_jobs(n))
+                    ar.append(cb)
+                    rb = SketchButton("Remove", width=92, height=22,
+                                      color=DANGER_RED)
+                    rb.connect("clicked", lambda _b, n=p: self._remove_printer(n))
+                    ar.append(rb); c.add_row(ar)
+            else:
+                # discovery + add (CUPS network browse)
+                rc, found, _ = sh(["lpinfo", "--make-and-model", "*", "-v"],
+                                  timeout=6)
+                if found.strip():
+                    c.add_row(Gtk.Label(
+                        label="Discovered devices:", xalign=0))
+                    sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 100)
+                    tv = Gtk.TextView(); tv.set_editable(False); tv.set_monospace(True)
+                    tv.add_css_class("nyx-editor")
+                    tv.get_buffer().set_text(found)
+                    sw.set_child(tv); c.add_row(sw)
+                if have("system-config-printer"):
+                    ab = SketchButton("Open Printer Manager", width=200,
+                                      height=24, color=NEON_GREEN)
+                    ab.connect("clicked", lambda _b: sh_async(
+                        ["system-config-printer"]))
+                    c.add_row(ab)
+
+        # ── 3. add network printer (manual lpadmin) ───────────────────────
+        if have("lpadmin"):
+            c = Card("add network printer (IPP)")
+            self.box.append(c)
+            ar = Gtk.Box(spacing=8)
+            ar.append(Gtk.Label(label="Name:", xalign=0))
+            self._add_name = Gtk.Entry()
+            self._add_name.set_placeholder_text("HP_LaserJet")
+            self._add_name.set_size_request(140, -1); ar.append(self._add_name)
+            ar.append(Gtk.Label(label="URI:", xalign=0))
+            self._add_uri = Gtk.Entry()
+            self._add_uri.set_placeholder_text("ipp://192.168.1.50/ipp/print")
+            self._add_uri.set_hexpand(True); ar.append(self._add_uri)
+            ab = SketchButton("Add", width=70, height=24, color=NEON_GREEN)
+            ab.connect("clicked", lambda _b: self._add_printer())
+            ar.append(ab); c.add_row(ar)
+
+        # ── 4. scanners ───────────────────────────────────────────────────
         c = Card("scanners (sane)")
         self.box.append(c)
         if have("scanimage"):
-            rc, out, _ = sh("scanimage -L", timeout=8)
-            c.add_row(Gtk.Label(label=out.strip() or "(no scanners)",
-                                xalign=0))
+            rc, out, _ = sh(["scanimage", "-L"], timeout=10)
+            text = out.strip() or "(no scanners detected)"
+            c.add_row(Gtk.Label(label=text, xalign=0))
+            if rc == 0 and "no SANE devices" not in text:
+                row = Gtk.Box(spacing=8)
+                sb = SketchButton("Scan to ~/scan.png", width=180,
+                                  height=24, color=NEON_BLUE)
+                sb.connect("clicked", lambda _b: sh_async(
+                    ["sh", "-c",
+                     "scanimage --format=png -o ~/scan.png"],
+                    lambda r: self.win.toast("scan saved -> ~/scan.png"
+                                             if r[0]==0 else "scan failed"),
+                    timeout=60))
+                row.append(sb); c.add_row(row)
         else:
-            c.add_row(Gtk.Label(label="sane / scanimage not installed",
-                                xalign=0))
+            c.add_row(Gtk.Label(label="sane / scanimage not installed -- "
+                                "`pacman -S sane`", xalign=0))
+
+        self.add_note(
+            "Printer changes use pkexec + lpadmin. The CUPS web UI is also "
+            "available at http://localhost:631 for full driver selection.")
+
+    # ── helpers ───────────────────────────────────────────────────────────
+    def _set_default_printer(self, names):
+        idx = self.def_dd.get_selected()
+        if idx < 0 or idx >= len(names): return
+        n = names[idx]
+        sh_async(["pkexec", "lpadmin", "-d", n],
+                 lambda r: (self.win.toast(
+                     f"default -> {n}" if r[0]==0 else "needs sudo"),
+                            self.mark_changed("default printer"),
+                            self.refresh()))
+
+    def _test_print(self, name: str):
+        for path in ("/usr/share/cups/data/testprint",
+                     "/usr/share/cups/data/default-testpage.pdf"):
+            if Path(path).exists():
+                sh_async(["lp", "-d", name, path],
+                         lambda r: self.win.toast(
+                             f"test queued on {name}" if r[0]==0
+                             else "lp failed"))
+                return
+        self.win.toast("no CUPS testprint file found")
+
+    def _show_queue(self, name: str):
+        rc, out, _ = sh(["lpq", "-P", name])
+        self.win.toast((out.strip() or "(empty queue)").splitlines()[0]
+                       if out else "no queue data")
+
+    def _cancel_jobs(self, name: str):
+        sh_async(["cancel", "-a", name],
+                 lambda r: self.win.toast(
+                     f"queue cleared on {name}" if r[0]==0 else "failed"))
+
+    def _remove_printer(self, name: str):
+        sh_async(["pkexec", "lpadmin", "-x", name],
+                 lambda r: (self.win.toast(
+                     f"removed {name}" if r[0]==0 else "needs sudo"),
+                            self.refresh()))
+
+    def _add_printer(self):
+        name = (self._add_name.get_text() or "").strip()
+        uri  = (self._add_uri.get_text() or "").strip()
+        if not name or not uri:
+            self.win.toast("name and URI required"); return
+        sh_async(["pkexec", "lpadmin", "-p", name, "-E", "-v", uri,
+                  "-m", "everywhere"],
+                 lambda r: (self.win.toast(
+                     f"added {name}" if r[0]==0
+                     else "lpadmin failed -- check URI"),
+                            self.refresh()), timeout=30)
+
+    def refresh(self):
+        c = self.box.get_first_child()
+        while c:
+            n = c.get_next_sibling()
+            if c is not self.box.get_first_child(): self.box.remove(c)
+            c = n
+        self.build()
 
     def search_entries(self):
         return [
-            SearchEntry(self.KEY, self.TITLE, "Printers"),
-            SearchEntry(self.KEY, self.TITLE, "Scanners"),
+            SearchEntry(self.KEY, self.TITLE, "CUPS service"),
+            SearchEntry(self.KEY, self.TITLE, "Default printer"),
+            SearchEntry(self.KEY, self.TITLE, "Test page"),
+            SearchEntry(self.KEY, self.TITLE, "Cancel print jobs"),
+            SearchEntry(self.KEY, self.TITLE, "Remove printer"),
+            SearchEntry(self.KEY, self.TITLE, "Add network printer", "IPP"),
+            SearchEntry(self.KEY, self.TITLE, "Print queue", "lpq"),
+            SearchEntry(self.KEY, self.TITLE, "Scanners", "sane scanimage"),
+            SearchEntry(self.KEY, self.TITLE, "Scan to file"),
         ]
 
 
@@ -5592,39 +6576,244 @@ class PrintersPage(BasePage):
 class GamingPage(BasePage):
     KEY = "gaming"; TITLE = "Gaming"; ICON = "🎮"
 
-    def build(self):
-        c = Card("GameMode")
-        self.box.append(c)
-        if have("gamemoded"):
-            rc, out, _ = sh("gamemoded -s")
-            c.add_row(Gtk.Label(label=out.strip(), xalign=0))
-        else:
-            c.add_row(Gtk.Label(label="gamemoded not installed", xalign=0))
+    MANGOHUD_CONF = Path.home() / ".config/MangoHud/MangoHud.conf"
+    DEFAULT_MANGOHUD = (
+        "fps\nfps_limit=0\nframetime\ngpu_stats\ngpu_temp\ngpu_power\n"
+        "cpu_stats\ncpu_temp\ncpu_power\nram\nvram\nio_stats\nposition=top-left\n"
+        "background_alpha=0.4\nfont_size=20\ntoggle_hud=Shift_R+F12\n"
+    )
 
+    def build(self):
+        # ── 1. GameMode ───────────────────────────────────────────────────
+        c = Card("GameMode (CPU governor + GPU boost)")
+        self.box.append(c)
+        if not have("gamemoded"):
+            c.add_row(Gtk.Label(label="gamemode not installed", xalign=0))
+            ib = SketchButton("Install gamemode", width=160, height=24,
+                              color=NEON_GREEN)
+            ib.connect("clicked", lambda _b: sh_async(
+                ["pkexec", "pacman", "-S", "--noconfirm", "gamemode",
+                 "lib32-gamemode"],
+                lambda r: (self.win.toast(
+                    "gamemode installed" if r[0]==0 else "failed"),
+                           self.refresh()), timeout=300))
+            c.add_row(ib)
+        else:
+            rc, st, _ = sh(["systemctl", "--user", "is-active",
+                            "gamemoded.service"])
+            active = "active" in st
+            rc2, en, _ = sh(["systemctl", "--user", "is-enabled",
+                             "gamemoded.service"])
+            enabled = "enabled" in en
+            c.add_row(kv_row("Service:",   "active" if active else "inactive"))
+            c.add_row(kv_row("At login:",  "enabled" if enabled else "disabled"))
+            rc, gs, _ = sh(["gamemoded", "-s"])
+            c.add_row(kv_row("Live state:", gs.strip() or "?"))
+            row = Gtk.Box(spacing=8)
+            tg = SketchToggle("Run at login", width=180, height=26,
+                              color=NEON_GREEN, active=enabled)
+            tg.connect("clicked", lambda _b: sh_async(
+                ["systemctl", "--user",
+                 "enable" if tg.active else "disable", "--now",
+                 "gamemoded.service"],
+                lambda r: (self.win.toast(
+                    "gamemoded updated" if r[0]==0 else "failed"),
+                           self.refresh())))
+            row.append(tg)
+            tb = SketchButton("Test (gamemoderun glxgears)", width=240,
+                              height=24, color=NEON_PINK)
+            tb.connect("clicked", lambda _b: sh_async(
+                ["sh", "-c", "gamemoderun glxgears &"]))
+            row.append(tb); c.add_row(row)
+
+        # ── 2. MangoHud overlay ───────────────────────────────────────────
+        c = Card("MangoHud (in-game perf overlay)")
+        self.box.append(c)
+        if not have("mangohud"):
+            c.add_row(Gtk.Label(label="mangohud not installed", xalign=0))
+            ib = SketchButton("Install MangoHud", width=180, height=24,
+                              color=NEON_GREEN)
+            ib.connect("clicked", lambda _b: sh_async(
+                ["pkexec", "pacman", "-S", "--noconfirm", "mangohud",
+                 "lib32-mangohud"],
+                lambda r: (self.win.toast(
+                    "mangohud installed" if r[0]==0 else "failed"),
+                           self.refresh()), timeout=300))
+            c.add_row(ib)
+        else:
+            c.add_row(kv_row("Config file:", str(self.MANGOHUD_CONF)))
+            c.add_row(kv_row("Exists:",
+                             "yes" if self.MANGOHUD_CONF.exists() else "no"))
+            try: cfg_text = self.MANGOHUD_CONF.read_text()
+            except Exception: cfg_text = self.DEFAULT_MANGOHUD
+            sw = Gtk.ScrolledWindow(); sw.set_size_request(-1, 200)
+            self._mh_tv = Gtk.TextView(); self._mh_tv.set_monospace(True)
+            self._mh_tv.add_css_class("nyx-editor")
+            self._mh_tv.get_buffer().set_text(cfg_text)
+            sw.set_child(self._mh_tv); c.add_row(sw)
+            row = Gtk.Box(spacing=8)
+            sb = SketchButton("Save config", width=120, height=24,
+                              color=NEON_GREEN)
+            sb.connect("clicked", lambda _b: self._save_mangohud())
+            row.append(sb)
+            db = SketchButton("Reset to defaults", width=160, height=24,
+                              color=ACCENT_GOLD)
+            db.connect("clicked", lambda _b: self._reset_mangohud())
+            row.append(db)
+            tb = SketchButton("Test (mangohud glxgears)", width=210,
+                              height=24, color=NEON_PINK)
+            tb.connect("clicked", lambda _b: sh_async(
+                ["sh", "-c", "mangohud glxgears &"]))
+            row.append(tb)
+            if have("goverlay"):
+                gb = SketchButton("Open GOverlay GUI", width=170, height=24,
+                                  color=NEON_BLUE)
+                gb.connect("clicked", lambda _b: sh_async(["goverlay"]))
+                row.append(gb)
+            c.add_row(row)
+
+        # ── 3. Steam / Proton ─────────────────────────────────────────────
+        c = Card("Steam & Proton")
+        self.box.append(c)
+        c.add_row(kv_row("Steam (system):",
+                         "installed" if have("steam") else "(not installed)"))
+        flatpak_steam = ""
+        if have("flatpak"):
+            rc, fl, _ = sh(["flatpak", "list", "--columns=application"])
+            flatpak_steam = "yes" if "com.valvesoftware.Steam" in fl else "no"
+        c.add_row(kv_row("Steam (flatpak):", flatpak_steam or "(no flatpak)"))
+        compat = Path.home() / ".steam/root/compatibilitytools.d"
+        if compat.exists():
+            tools = sorted([p.name for p in compat.iterdir() if p.is_dir()])
+            c.add_row(kv_row("Compat tools:",
+                             ", ".join(tools[:6]) if tools else "(none)"))
+            if len(tools) > 6:
+                c.add_row(kv_row("",  f"+ {len(tools)-6} more"))
+        else:
+            c.add_row(kv_row("Compat tools:", "(no Steam install)"))
+
+        if not have("steam"):
+            sb = SketchButton("Install Steam", width=140, height=24,
+                              color=NEON_BLUE)
+            sb.connect("clicked", lambda _b: sh_async(
+                ["pkexec", "pacman", "-S", "--noconfirm", "steam"],
+                lambda r: (self.win.toast(
+                    "steam installed" if r[0]==0 else "enable multilib first"),
+                           self.refresh()), timeout=600))
+            c.add_row(sb)
+
+        # ── 4. Wine prefixes ──────────────────────────────────────────────
+        c = Card("Wine prefixes")
+        self.box.append(c)
+        c.add_row(kv_row("wine binary:",
+                         "installed" if have("wine") else "(missing)"))
+        wp = Path.home() / ".wine"
+        c.add_row(kv_row("default prefix:",
+                         "exists" if wp.exists() else "(none)"))
+        # discover other prefixes
+        prefixes = []
+        for d in (Path.home(), Path.home() / ".local/share"):
+            if d.exists():
+                for sub in d.iterdir():
+                    if sub.is_dir() and (sub / "system.reg").exists():
+                        prefixes.append(str(sub))
+        for p in prefixes[:6]:
+            c.add_row(kv_row("prefix:", p))
+
+        # ── 5. environment helpers ────────────────────────────────────────
+        c = Card("graphics tweaks (live)")
+        self.box.append(c)
+        # MANGOHUD env (Hyprland-wide)
+        mh_env = self._hypr_env("MANGOHUD")
+        et = SketchToggle("Force MANGOHUD=1 in all apps",
+                          width=300, height=26, color=NEON_BLUE,
+                          active=(mh_env == "1"))
+        et.connect("clicked", lambda _b: self._set_hypr_env(
+            "MANGOHUD", "1" if et.active else ""))
+        c.add_row(et)
+        dxvk = self._hypr_env("DXVK_HUD")
+        dt = SketchToggle("DXVK_HUD=full (DXVK overlay)",
+                          width=300, height=26, color=NEON_PINK,
+                          active=(dxvk == "full"))
+        dt.connect("clicked", lambda _b: self._set_hypr_env(
+            "DXVK_HUD", "full" if dt.active else ""))
+        c.add_row(dt)
+
+        # ── 6. controllers ────────────────────────────────────────────────
         c = Card("controllers")
         self.box.append(c)
-        # list /dev/input/event* with udev info
-        rc, out, _ = sh("ls /dev/input/by-id/")
+        rc, out, _ = sh(["ls", "/dev/input/by-id/"])
         controllers = [l for l in out.splitlines()
-                       if "joystick" in l or "gamepad" in l or "8bitdo" in l.lower()]
+                       if any(k in l.lower()
+                              for k in ("joystick", "gamepad", "event-joystick",
+                                        "8bitdo", "xbox", "ds4", "ps4", "ps5"))]
         if controllers:
-            for c_dev in controllers:
-                c.add_row(Gtk.Label(label=c_dev, xalign=0))
+            for dev in controllers:
+                c.add_row(kv_row("device:", dev))
         else:
-            c.add_row(Gtk.Label(label="(no controllers detected)", xalign=0))
+            c.add_row(Gtk.Label(label="(no controllers detected -- "
+                                "plug one in and refresh)", xalign=0))
+        rb = SketchButton("Refresh", width=92, height=22, color=NEON_GREEN)
+        rb.connect("clicked", lambda _b: self.refresh())
+        c.add_row(rb)
 
-        c = Card("MangoHud / overlay")
-        self.box.append(c)
-        cfg = Path.home() / ".config/MangoHud/MangoHud.conf"
-        c.add_row(kv_row("config:", str(cfg)))
-        c.add_row(Gtk.Label(label="exists" if cfg.exists()
-                            else "(not configured)", xalign=0))
+        self.add_note(
+            "GameMode + MangoHud + Proton give Tesla-grade gaming on Arch. "
+            "GOverlay is a GUI editor for the same MangoHud config file.")
+
+    def _save_mangohud(self):
+        try:
+            self.MANGOHUD_CONF.parent.mkdir(parents=True, exist_ok=True)
+            buf = self._mh_tv.get_buffer()
+            text = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), False)
+            self.MANGOHUD_CONF.write_text(text)
+            self.win.toast("MangoHud config saved")
+            self.mark_changed("MangoHud config")
+        except Exception as e:
+            self.win.toast(f"save err: {e}")
+
+    def _reset_mangohud(self):
+        try:
+            self.MANGOHUD_CONF.parent.mkdir(parents=True, exist_ok=True)
+            self.MANGOHUD_CONF.write_text(self.DEFAULT_MANGOHUD)
+            self.win.toast("MangoHud reset to NYXUS defaults")
+            self.refresh()
+        except Exception as e:
+            self.win.toast(f"reset err: {e}")
+
+    def _hypr_env(self, name: str) -> str:
+        rc, out, _ = sh(["hyprctl", "-j", "getoption", "env"])
+        return os.environ.get(name, "")
+
+    def _set_hypr_env(self, name: str, val: str):
+        if val:
+            sh(["hyprctl", "keyword", "env", f"{name},{val}"])
+            os.environ[name] = val
+        else:
+            os.environ.pop(name, None)
+        self.win.toast(f"{name}={val or '(unset)'}")
+        self.mark_changed(f"env {name}")
+        self.needs_restart(f"env {name}")
+
+    def refresh(self):
+        c = self.box.get_first_child()
+        while c:
+            n = c.get_next_sibling()
+            if c is not self.box.get_first_child(): self.box.remove(c)
+            c = n
+        self.build()
 
     def search_entries(self):
         return [
-            SearchEntry(self.KEY, self.TITLE, "GameMode"),
-            SearchEntry(self.KEY, self.TITLE, "Controllers"),
-            SearchEntry(self.KEY, self.TITLE, "MangoHud"),
+            SearchEntry(self.KEY, self.TITLE, "GameMode", "cpu governor boost"),
+            SearchEntry(self.KEY, self.TITLE, "MangoHud", "perf overlay fps"),
+            SearchEntry(self.KEY, self.TITLE, "MangoHud config editor"),
+            SearchEntry(self.KEY, self.TITLE, "Steam", "valve"),
+            SearchEntry(self.KEY, self.TITLE, "Proton compatibility tools"),
+            SearchEntry(self.KEY, self.TITLE, "Wine prefixes"),
+            SearchEntry(self.KEY, self.TITLE, "DXVK HUD"),
+            SearchEntry(self.KEY, self.TITLE, "Controllers", "gamepad joystick"),
+            SearchEntry(self.KEY, self.TITLE, "GOverlay"),
         ]
 
 
