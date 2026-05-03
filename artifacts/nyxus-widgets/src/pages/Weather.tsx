@@ -344,7 +344,7 @@ export default function Weather() {
 
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div style={{ padding: '16px 18px', background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,85,0,0.35)', borderRadius: 12, backdropFilter: 'blur(8px)' }}>
+            <div style={{ padding: '16px 18px', background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,85,0,0.35)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                 <Wind size={13} color="rgba(255,255,255,0.3)" />
                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.25em' }}>WIND SPEED</span>
@@ -353,7 +353,7 @@ export default function Weather() {
                 {wind} <span style={{ fontSize: 16, fontWeight: 500 }}>MPH</span>
               </span>
             </div>
-            <div style={{ padding: '16px 18px', background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(0,136,255,0.35)', borderRadius: 12, backdropFilter: 'blur(8px)' }}>
+            <div style={{ padding: '16px 18px', background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(0,136,255,0.35)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                 <Droplets size={13} color="rgba(255,255,255,0.3)" />
                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.25em' }}>HUMIDITY</span>
@@ -385,7 +385,7 @@ export default function Weather() {
                   padding: '18px 8px',
                   background: isToday ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.38)',
                   border: isToday ? `2px solid ${color}55` : '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 16, backdropFilter: 'blur(10px)',
+                  borderRadius: 16, backdropFilter: 'blur(14px) saturate(1.6)',
                   boxShadow: isToday ? `0 0 20px ${color}22` : 'none',
                   transition: 'all 0.2s',
                 }}>
@@ -415,7 +415,7 @@ export default function Weather() {
 
           {/* Precipitation bar */}
           {precip0 > 0 && (
-            <div style={{ marginTop: 20, padding: '16px 20px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,136,255,0.2)', borderRadius: 12, backdropFilter: 'blur(8px)' }}>
+            <div style={{ marginTop: 20, padding: '16px 20px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,136,255,0.2)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.25em' }}>PRECIP CHANCE TODAY</span>
                 <span style={{ fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: '#0088ff' }}>{precip0}%</span>
@@ -428,13 +428,13 @@ export default function Weather() {
 
           {/* UV / Visibility extra row */}
           <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(57,255,20,0.2)', borderRadius: 12, backdropFilter: 'blur(8px)' }}>
+            <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(57,255,20,0.2)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.2em', marginBottom: 4 }}>MAX TEMP</div>
               <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: '#39ff14', textShadow: '0 0 8px #39ff1466' }}>
                 {Math.round(daily.temperature_2m_max[0])}°F
               </span>
             </div>
-            <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(204,0,255,0.2)', borderRadius: 12, backdropFilter: 'blur(8px)' }}>
+            <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(204,0,255,0.2)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.2em', marginBottom: 4 }}>MIN TEMP</div>
               <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: '#cc00ff', textShadow: '0 0 8px #cc00ff66' }}>
                 {Math.round(daily.temperature_2m_min[0])}°F

@@ -580,8 +580,9 @@ sudo bash sddm-theme/install.sh`}
               border: "1px solid rgba(192,132,252,0.22)",
               borderRadius: 4,
               overflow: "hidden",
-              background: "rgba(0,0,0,0.8)",
-              backdropFilter: "blur(8px)",
+              background: "rgba(6,4,12,0.55)",
+              backdropFilter: "blur(14px) saturate(1.6)",
+              WebkitBackdropFilter: "blur(14px) saturate(1.6)",
               boxShadow: "0 0 48px rgba(192,132,252,0.07)",
             }}>
               {/* Mockup preview */}
@@ -590,7 +591,9 @@ sudo bash sddm-theme/install.sh`}
                 {/* Left — visual mockup */}
                 <div style={{
                   flex: "0 0 220px",
-                  background: "#080808",
+                  background: "rgba(6,4,12,0.55)",
+                  backdropFilter: "blur(14px) saturate(1.6)",
+                  WebkitBackdropFilter: "blur(14px) saturate(1.6)",
                   border: "1px solid rgba(192,132,252,0.15)",
                   padding: "1.5rem 1rem",
                   display: "flex",
@@ -632,7 +635,7 @@ sudo bash sddm-theme/install.sh`}
                     width: "90%",
                     border: "1px solid #c084fc",
                     padding: "0.35rem 0.7rem",
-                    background: "rgba(8,8,8,0.97)",
+                    background: "rgba(6,4,12,0.72)",
                     color: "#c084fc",
                     fontSize: "0.85rem",
                     letterSpacing: "0.4em",
@@ -718,8 +721,9 @@ curl -fsSL -o ~/.config/hypr/hyprlock.conf "${window.location.origin}${BASE}/hyp
               border: "1px solid rgba(192,132,252,0.22)",
               borderRadius: 4,
               overflow: "hidden",
-              background: "rgba(0,0,0,0.8)",
-              backdropFilter: "blur(8px)",
+              background: "rgba(6,4,12,0.55)",
+              backdropFilter: "blur(14px) saturate(1.6)",
+              WebkitBackdropFilter: "blur(14px) saturate(1.6)",
               boxShadow: "0 0 48px rgba(192,132,252,0.07)",
             }}>
               {/* Mockup */}
@@ -728,7 +732,9 @@ curl -fsSL -o ~/.config/hypr/hyprlock.conf "${window.location.origin}${BASE}/hyp
                 {/* Left — button grid mockup */}
                 <div style={{
                   flex: "0 0 260px",
-                  background: "rgba(8,8,8,0.98)",
+                  background: "rgba(6,4,12,0.55)",
+                  backdropFilter: "blur(14px) saturate(1.6)",
+                  WebkitBackdropFilter: "blur(14px) saturate(1.6)",
                   border: "1px solid rgba(192,132,252,0.12)",
                   padding: "1.25rem",
                 }}>
@@ -752,7 +758,7 @@ curl -fsSL -o ~/.config/hypr/hyprlock.conf "${window.location.origin}${BASE}/hyp
                         flexDirection: "column",
                         alignItems: "center",
                         gap: "0.3rem",
-                        background: "rgba(12,10,18,0.92)",
+                        background: "rgba(6,4,12,0.55)",
                         fontFamily: "monospace",
                       }}>
                         <span style={{ fontSize: "1rem", color }}>{icon}</span>
@@ -840,8 +846,9 @@ tar -xzf nyxus-wlogout.tar.gz && bash install.sh
               border: "1px solid rgba(192,132,252,0.22)",
               borderRadius: 4,
               overflow: "hidden",
-              background: "rgba(0,0,0,0.8)",
-              backdropFilter: "blur(8px)",
+              background: "rgba(6,4,12,0.55)",
+              backdropFilter: "blur(14px) saturate(1.6)",
+              WebkitBackdropFilter: "blur(14px) saturate(1.6)",
               boxShadow: "0 0 48px rgba(192,132,252,0.07)",
             }}>
               <div style={{ padding: "2rem", display: "flex", gap: "2rem", flexWrap: "wrap" }}>
@@ -851,7 +858,9 @@ tar -xzf nyxus-wlogout.tar.gz && bash install.sh
 
                   {/* Mako notification mockup */}
                   <div style={{
-                    background: "rgba(8,8,8,0.96)",
+                    background: "rgba(6,4,12,0.55)",
+                    backdropFilter: "blur(14px) saturate(1.6)",
+                    WebkitBackdropFilter: "blur(14px) saturate(1.6)",
                     border: "1px solid rgba(123,94,167,0.2)",
                     borderLeft: "3px solid #7B5EA7",
                     borderRadius: 6,
@@ -859,7 +868,7 @@ tar -xzf nyxus-wlogout.tar.gz && bash install.sh
                     fontFamily: "monospace",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
-                      <span style={{ fontSize: "0.9rem" }}>🔔</span>
+                      <span style={{ fontSize: "0.9rem", fontFamily: "monospace" }}>&#x25C8;</span>
                       <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#f472b6", letterSpacing: "0.06em" }}>NyX.x.OS</span>
                     </div>
                     <div style={{ fontSize: "0.58rem", color: "rgba(200,192,192,0.65)", lineHeight: 1.5 }}>System initialized. All modules operational.</div>
@@ -867,7 +876,9 @@ tar -xzf nyxus-wlogout.tar.gz && bash install.sh
 
                   {/* Mako error urgency */}
                   <div style={{
-                    background: "rgba(15,8,10,0.96)",
+                    background: "rgba(6,4,12,0.55)",
+                    backdropFilter: "blur(14px) saturate(1.6)",
+                    WebkitBackdropFilter: "blur(14px) saturate(1.6)",
                     border: "1px solid rgba(248,113,113,0.2)",
                     borderLeft: "3px solid #f87171",
                     borderRadius: 6,
@@ -880,7 +891,9 @@ tar -xzf nyxus-wlogout.tar.gz && bash install.sh
 
                   {/* Alacritty terminal mockup */}
                   <div style={{
-                    background: "rgba(8,8,8,0.88)",
+                    background: "rgba(6,4,12,0.55)",
+                    backdropFilter: "blur(14px) saturate(1.6)",
+                    WebkitBackdropFilter: "blur(14px) saturate(1.6)",
                     border: "1px solid rgba(123,94,167,0.15)",
                     borderRadius: 4,
                     padding: "0.75rem 1rem",
