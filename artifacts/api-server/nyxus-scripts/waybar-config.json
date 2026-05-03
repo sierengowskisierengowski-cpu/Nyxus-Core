@@ -307,7 +307,7 @@
     "custom/app-settings": {
       "format": "\uf085",
       "tooltip": true,
-      "on-click": "python3 /home/nyx/.nyxus/nyxus_settings.py",
+      "on-click": "sh -c 'if hyprctl clients -j | grep -q \"\\\"class\\\": \\\"io.nyxus.settings\\\"\"; then hyprctl dispatch focuswindow class:^io\\\\.nyxus\\\\.settings$; else setsid python3 /home/nyx/.nyxus/nyxus_settings.py >/tmp/nyxus-settings.log 2>&1 & fi'",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#a78bfa'>NYXUS Settings</span>\n<span size='small' foreground='#b8a8d0'>System Settings</span>"
     },
     "cpu#right": {
