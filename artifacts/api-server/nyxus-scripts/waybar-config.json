@@ -283,7 +283,7 @@
     "custom/app-stickies": {
       "format": "\uf249",
       "tooltip": true,
-      "on-click": "python3 /home/nyx/.nyxus/nyxus_stickies.py",
+      "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.stickies\"; then hyprctl dispatch focuswindow class:io.nyxus.stickies; else setsid python3 /home/nyx/.nyxus/nyxus_stickies.py >/tmp/nyxus-stickies.log 2>&1 < /dev/null & fi'",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffff00'>NYXUS Stickies</span>\n<span size='small' foreground='#b8a8d0'>Sticky Notes</span>"
     },
     "custom/app-weather": {

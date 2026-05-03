@@ -43,9 +43,9 @@ from gi.repository import Gtk, Gdk, GLib, GObject, Gio, Pango, PangoCairo  # noq
 import cairo  # noqa: E402
 
 # ── paths ────────────────────────────────────────────────────────────────────
-APP_ID    = "com.nyxus.stickies"
+APP_ID    = "io.nyxus.stickies"
 APP_NAME  = "NYXUS Stickies"
-WIN_W, WIN_H = 1000, 680
+WIN_W, WIN_H = 1280, 800
 
 CONFIG_DIR = Path.home() / ".config" / "nyxus-stickies"
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
