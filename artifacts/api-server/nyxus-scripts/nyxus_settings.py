@@ -114,6 +114,190 @@ DANGER_RED = (1.0,  0.27, 0.40)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+#  Multi-color rainbow markup for hero titles
+# ═══════════════════════════════════════════════════════════════════════════════
+# Hex stops cycled per character (matches NYXUS suite + Hyprland border).
+_RAINBOW_HEX = ("#ff00ff", "#ff2da8", "#b800ff", "#00aaff",
+                "#39ff14", "#ffc833", "#ff66dd", "#ff00ff")
+
+def _rainbow_markup(text: str) -> str:
+    """Return Pango markup where each visible character is colored from
+    the NYXUS neon palette. Spaces, punctuation and the leading sigil are
+    kept neutral so the readable letters do the singing."""
+    out = []
+    i = 0
+    for ch in text:
+        if ch.isspace():
+            out.append(ch); continue
+        col = _RAINBOW_HEX[i % len(_RAINBOW_HEX)]
+        # GLib.markup_escape_text is the safe escaper but is over-eager
+        # for our simple ASCII titles; manually escape the few that matter.
+        esc = (ch.replace("&", "&amp;").replace("<", "&lt;")
+                  .replace(">", "&gt;"))
+        out.append(f'<span foreground="{col}">{esc}</span>')
+        i += 1
+    return "".join(out)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Graffiti word sets per page (background collage matches current page)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Each list: (word, base_size). Tighter, page-relevant terms instead of
+# the generic NYXUS dump. Keys match BasePage.KEY values; "_home" is the
+# default landing-page set.
+_GRAFFITI_WORDS_BY_PAGE: Dict[str, List[Tuple[str, int]]] = {
+    "_home": [
+        ("settings", 56), ("NYXUS", 80), ("hyprland", 50), ("wayland", 44),
+        ("pacman", 42), ("makepkg", 38), ("rofi", 32), ("waybar", 36),
+        ("pipewire", 38), ("yubikey", 38), ("workspaces", 34),
+        ("sysmon", 34), ("notepad", 34), ("stickies", 36), ("widgets", 36),
+        ("nyx", 36), ("sierengowski", 30), ("operator", 32), ("admin", 30),
+        ("phantom", 36), ("shield", 32), ("godsapp", 32),
+    ],
+    "account": [
+        ("profile", 48), ("user", 42), ("avatar", 36), ("password", 38),
+        ("PIN", 32), ("bio", 32), ("email", 36), ("name", 36), ("role", 30),
+        ("admin", 38), ("login", 36), ("session", 32), ("sudoers", 34),
+        ("shell", 32), ("identity", 36), ("face", 32), ("signature", 30),
+        ("GPG", 36), ("ssh", 36), ("yubikey", 38), ("passwd", 36),
+        ("lastlog", 30), ("group", 32), ("uid", 30),
+    ],
+    "display": [
+        ("monitor", 48), ("resolution", 38), ("refresh", 36), ("scale", 36),
+        ("VRR", 38), ("brightness", 36), ("gamma", 32), ("contrast", 32),
+        ("HDR", 42), ("primary", 32), ("mirror", 32), ("rotate", 32),
+        ("EDID", 36), ("HiDPI", 36), ("color", 36), ("gamut", 30),
+        ("hertz", 32), ("pixel", 32), ("4K", 44), ("OLED", 38),
+        ("nits", 30), ("subpixel", 28),
+    ],
+    "network": [
+        ("wifi", 44), ("ethernet", 38), ("VPN", 44), ("DNS", 42),
+        ("gateway", 36), ("subnet", 32), ("IP", 38), ("IPv6", 36),
+        ("SSID", 36), ("MAC", 36), ("firewall", 38), ("tunnel", 32),
+        ("route", 32), ("latency", 30), ("ping", 36), ("bandwidth", 32),
+        ("proxy", 32), ("hostname", 30), ("port", 32), ("nat", 30),
+    ],
+    "bluetooth": [
+        ("pair", 42), ("LDAC", 38), ("SBC", 36), ("AAC", 36),
+        ("A2DP", 38), ("HFP", 32), ("HSP", 32), ("RSSI", 32),
+        ("codec", 36), ("profile", 32), ("MAC", 36), ("scan", 36),
+        ("headset", 34), ("speaker", 34), ("controller", 30), ("trust", 32),
+        ("bluez", 34), ("LE", 32),
+    ],
+    "sound": [
+        ("pipewire", 44), ("ALSA", 38), ("JACK", 36), ("mixer", 38),
+        ("mic", 36), ("speaker", 36), ("headphones", 30), ("sample", 32),
+        ("channel", 32), ("EQ", 38), ("volume", 36), ("mute", 36),
+        ("output", 32), ("input", 32), ("balance", 30), ("surround", 30),
+        ("48kHz", 32), ("96kHz", 30),
+    ],
+    "keyboard": [
+        ("layout", 42), ("qwerty", 38), ("dvorak", 36), ("colemak", 32),
+        ("hotkey", 38), ("shortcut", 34), ("repeat", 32), ("delay", 32),
+        ("super", 38), ("ctrl", 36), ("alt", 36), ("shift", 36),
+        ("modifier", 30), ("compose", 30), ("dead-key", 28), ("Esc", 32),
+    ],
+    "mouse": [
+        ("pointer", 42), ("DPI", 42), ("accel", 36), ("scroll", 36),
+        ("click", 38), ("sensitivity", 30), ("palm", 32), ("tap", 36),
+        ("gesture", 32), ("swipe", 32), ("libinput", 30), ("touchpad", 32),
+        ("natural", 30), ("drag", 32),
+    ],
+    "power": [
+        ("battery", 44), ("suspend", 36), ("hibernate", 32), ("lid", 36),
+        ("watt", 36), ("governor", 30), ("balance", 32), ("performance", 28),
+        ("dim", 36), ("sleep", 38), ("idle", 36), ("wake", 36),
+        ("charge", 38), ("AC", 36),
+    ],
+    "appearance": [
+        ("theme", 44), ("palette", 38), ("accent", 36), ("opacity", 32),
+        ("blur", 38), ("rounding", 32), ("shadow", 36), ("GTK", 38),
+        ("Qt", 38), ("icon", 36), ("cursor", 36), ("font", 36),
+        ("dark", 36), ("gradient", 30), ("Adwaita", 30),
+    ],
+    "workspaces": [
+        ("tile", 44), ("float", 38), ("master", 36), ("dwindle", 34),
+        ("scratchpad", 30), ("monocle", 32), ("gap", 38), ("focus", 36),
+        ("swap", 36), ("group", 34), ("layout", 34), ("pin", 36),
+        ("special", 32),
+    ],
+    "datetime": [
+        ("timezone", 38), ("NTP", 42), ("UTC", 40), ("sync", 36),
+        ("calendar", 34), ("locale", 32), ("DST", 36), ("epoch", 32),
+        ("12h", 32), ("24h", 32),
+    ],
+    "notifications": [
+        ("dunst", 42), ("mako", 40), ("swaync", 34), ("urgency", 32),
+        ("popup", 36), ("position", 32), ("timeout", 32), ("history", 32),
+        ("DND", 38), ("banner", 32), ("badge", 32),
+    ],
+    "users": [
+        ("passwd", 42), ("groups", 38), ("sudoers", 36), ("shells", 32),
+        ("lastlog", 32), ("UID", 38), ("GID", 36), ("home", 36),
+        ("useradd", 30), ("usermod", 30), ("wheel", 36), ("adm", 36),
+        ("lock", 36), ("nyx", 38), ("root", 38),
+    ],
+    "privacy": [
+        ("firewall", 40), ("UFW", 40), ("sandbox", 32), ("secret", 34),
+        ("encryption", 30), ("GPG", 38), ("ssh", 38), ("Tor", 38),
+        ("VPN", 40), ("audit", 34), ("journald", 30), ("AppArmor", 30),
+        ("SELinux", 30), ("anonymize", 28),
+    ],
+    "apps": [
+        ("pacman", 44), ("makepkg", 38), ("flatpak", 34), ("AUR", 42),
+        ("install", 36), ("remove", 36), ("update", 36), ("repo", 36),
+        ("mirror", 32), ("package", 32), ("version", 32), ("yay", 38),
+        ("paru", 36),
+    ],
+    "storage": [
+        ("ext4", 42), ("btrfs", 40), ("xfs", 38), ("LVM", 40),
+        ("snapshot", 32), ("partition", 30), ("mount", 36), ("fstab", 36),
+        ("SMART", 36), ("RAID", 38), ("ZFS", 38), ("swap", 36),
+        ("trim", 36), ("NVMe", 38),
+    ],
+    "language": [
+        ("locale", 42), ("lang", 38), ("region", 36), ("currency", 32),
+        ("UTF-8", 38), ("decimal", 32), ("paper", 32), ("measurement", 28),
+    ],
+    "a11y": [
+        ("contrast", 38), ("magnifier", 32), ("captions", 32),
+        ("sticky", 36), ("dwell", 34), ("narrator", 30),
+        ("zoom", 36), ("a11y", 42),
+    ],
+    "printers": [
+        ("CUPS", 44), ("IPP", 40), ("driver", 36), ("queue", 36),
+        ("paper", 36), ("toner", 32), ("ink", 36), ("scan", 36),
+        ("duplex", 32), ("PPD", 38),
+    ],
+    "gaming": [
+        ("gamemode", 38), ("MangoHud", 32), ("vulkan", 38), ("DLSS", 36),
+        ("FSR", 38), ("gamepad", 32), ("vsync", 36), ("framerate", 30),
+        ("raytrace", 30), ("Steam", 38), ("Proton", 36),
+    ],
+    "developer": [
+        ("kernel", 42), ("dmesg", 36), ("sysctl", 34), ("journalctl", 30),
+        ("systemd", 32), ("modprobe", 30), ("gcc", 38), ("clang", 36),
+        ("python", 36), ("rust", 38), ("node", 38), ("git", 38),
+    ],
+    "wallpaper": [
+        ("hyprpaper", 40), ("swww", 40), ("image", 36), ("blur", 38),
+        ("fit", 36), ("scale", 36), ("slideshow", 30), ("animated", 30),
+        ("live", 38), ("PNG", 38), ("JPG", 38),
+    ],
+    "fonts": [
+        ("Caveat", 42), ("JetBrains", 32), ("Mono", 38), ("Sans", 38),
+        ("Serif", 38), ("hinting", 30), ("antialias", 28), ("DPI", 38),
+        ("weight", 32), ("italic", 34), ("kerning", 30),
+    ],
+    "about": [
+        ("NYXUS", 60), ("sierengowski", 32), ("version", 36), ("build", 36),
+        ("kernel", 36), ("Arch", 42), ("hyprland", 38), ("wayland", 36),
+        ("copyright", 30), ("license", 32), ("2026", 38),
+    ],
+}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 #  shell helper
 # ═══════════════════════════════════════════════════════════════════════════════
 def have(cmd: str) -> bool:
@@ -6954,26 +7138,17 @@ class GraffitiBackground(Gtk.DrawingArea):
     behind every page. Stable layout (seeded RNG) so words don't dance
     on every redraw. No grey — pure neon ink on black."""
 
-    WORDS = [
-        ("settings", 56), ("fonts", 38), ("keyboard", 42), ("mouse", 36),
-        ("display", 44), ("sound", 36), ("network", 40), ("bluetooth", 36),
-        ("wifi", 32), ("vpn", 30), ("firewall", 34), ("theme", 36),
-        ("wallpaper", 40), ("cursor", 32), ("monitor", 38), ("gpu", 30),
-        ("hyprland", 50), ("wayland", 44), ("makepkg", 38), ("pacman", 42),
-        ("jetbrains", 36), ("neovim", 36), ("pipewire", 38), ("mako", 30),
-        ("dunst", 30), ("sysmon", 34), ("notepad", 34), ("stickies", 36),
-        ("widgets", 36), ("calendar", 36), ("weather", 34), ("clock", 32),
-        ("password", 38), ("yubikey", 38), ("gpg", 32), ("ssh", 30),
-        ("apparmor", 34), ("ext4", 28), ("grub", 30), ("rofi", 32),
-        ("waybar", 36), ("hypridle", 32), ("locked", 32), ("root", 32),
-        ("nyx", 36), ("NYXUS", 80), ("sierengowski", 30), ("operator", 32),
-        ("admin", 30), ("sudo", 30), ("wheel", 28), ("palette", 32),
-        ("scale", 30), ("brightness", 32), ("vrr", 28), ("bluez", 28),
-        ("alsa", 28), ("mixer", 30), ("language", 32), ("locale", 30),
-        ("timezone", 32), ("accessibility", 28), ("gaming", 32),
-        ("printers", 30), ("workspaces", 34), ("snapshots", 30),
-        ("backup", 30), ("disk", 28), ("storage", 30), ("silent", 30),
-        ("phantom", 36), ("shield", 32), ("intel", 30), ("godsapp", 32),
+    # Subtle accent palette for word fills. Mostly white, with a small
+    # chance of a tinted pink/blue/green/gold core. White glow halo on
+    # top makes everything pop without shouting.
+    _TINTS = [
+        (1.00, 1.00, 1.00),  # pure white (most common)
+        (1.00, 1.00, 1.00),
+        (1.00, 1.00, 1.00),
+        (1.00, 0.45, 0.95),  # hot pink core
+        (0.45, 0.80, 1.00),  # electric blue core
+        (0.55, 1.00, 0.55),  # neon green core
+        (1.00, 0.85, 0.45),  # warm gold core
     ]
 
     def __init__(self):
@@ -6984,24 +7159,38 @@ class GraffitiBackground(Gtk.DrawingArea):
         self.set_draw_func(self._draw)
         self._layout_cache: Optional[List[tuple]] = None
         self._cache_w = 0; self._cache_h = 0
+        self._page_key = "_home"
+        self._words = _GRAFFITI_WORDS_BY_PAGE.get(self._page_key, [])
+
+    # public: called by SettingsWindow.show_page() so the background
+    # collage swaps to words relevant to the current page.
+    def set_page_key(self, key: str):
+        new_key = key if key in _GRAFFITI_WORDS_BY_PAGE else "_home"
+        if new_key == self._page_key: return
+        self._page_key = new_key
+        self._words = _GRAFFITI_WORDS_BY_PAGE.get(new_key, [])
+        self._layout_cache = None  # force rebuild on next draw
+        self.queue_draw()
 
     def _build_layout(self, w: int, h: int):
-        rng = random.Random(0x9F33A1)
+        # Seed by page key so layout is stable per page (no dancing) but
+        # different pages get different compositions.
+        seed = abs(hash(("graffiti-v2", self._page_key))) & 0xFFFFFFFF
+        rng = random.Random(seed)
         items = []
-        # poisson-ish placement: random tries with min-distance check
         placed: List[tuple] = []
-        max_tries = len(self.WORDS) * 8
+        words = self._words or _GRAFFITI_WORDS_BY_PAGE["_home"]
+        max_tries = len(words) * 10
         idx = 0; tries = 0
-        while idx < len(self.WORDS) and tries < max_tries:
+        while idx < len(words) and tries < max_tries:
             tries += 1
-            word, base_size = self.WORDS[idx]
+            word, base_size = words[idx]
             size = int(base_size * (0.85 + rng.random() * 0.5))
             est_w = int(len(word) * size * 0.55)
             est_h = int(size * 1.1)
             x = rng.randint(20, max(40, w - est_w - 20))
             y = rng.randint(20, max(40, h - est_h - 20))
-            angle = (rng.random() - 0.5) * 0.55  # ±15° rotation
-            # ensure not overlapping existing too tightly
+            angle = (rng.random() - 0.5) * 0.55  # +/- ~15deg rotation
             ok = True
             for (px, py, pw, ph) in placed:
                 if (x < px + pw + 10 and x + est_w + 10 > px and
@@ -7009,9 +7198,9 @@ class GraffitiBackground(Gtk.DrawingArea):
                     ok = False; break
             if not ok: continue
             placed.append((x, y, est_w, est_h))
-            # alpha controls the crisp-white pop intensity (0.16–0.32)
             alpha = 0.16 + rng.random() * 0.16
-            items.append((word, x, y, size, angle, alpha))
+            tint = self._TINTS[rng.randrange(len(self._TINTS))]
+            items.append((word, x, y, size, angle, alpha, tint))
             idx += 1
         self._layout_cache = items
         self._cache_w, self._cache_h = w, h
@@ -7023,7 +7212,13 @@ class GraffitiBackground(Gtk.DrawingArea):
         if (self._layout_cache is None or
             abs(w - self._cache_w) > 40 or abs(h - self._cache_h) > 40):
             self._build_layout(w, h)
-        for word, x, y, size, angle, alpha in (self._layout_cache or []):
+        for entry in (self._layout_cache or []):
+            # tolerate older 6-tuple cache if any sneak through
+            if len(entry) == 7:
+                word, x, y, size, angle, alpha, tint = entry
+            else:
+                word, x, y, size, angle, alpha = entry
+                tint = (1.0, 1.0, 1.0)
             cr.save()
             cr.translate(x, y)
             cr.rotate(angle)
@@ -7033,18 +7228,18 @@ class GraffitiBackground(Gtk.DrawingArea):
             fd.set_weight(Pango.Weight.BOLD)
             fd.set_size(int(size * Pango.SCALE))
             layout.set_font_description(fd); layout.set_text(word, -1)
-            # WHITE GLOW: lay down the text path, stroke wide-soft -> mid -> fill crisp
             cr.move_to(0, 0)
             PangoCairo.layout_path(cr, layout)
-            # outer halo (very soft)
+            # outer WHITE halo (very soft, always white -- this is what
+            # makes every word pop off the black regardless of fill tint)
             cr.set_source_rgba(1.0, 1.0, 1.0, alpha * 0.18)
             cr.set_line_width(6.0); cr.set_line_join(cairo.LINE_JOIN_ROUND)
             cr.stroke_preserve()
-            # mid bloom
+            # mid white bloom
             cr.set_source_rgba(1.0, 1.0, 1.0, alpha * 0.35)
             cr.set_line_width(3.0); cr.stroke_preserve()
-            # crisp white fill on top
-            cr.set_source_rgba(1.0, 1.0, 1.0, alpha)
+            # crisp tinted core on top (often white, occasionally a neon)
+            cr.set_source_rgba(tint[0], tint[1], tint[2], alpha)
             cr.fill()
             cr.restore()
 
@@ -7337,13 +7532,20 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
     background-image: none;
     background-color: #000000;
     padding: 14px 18px;
-    border-bottom: 1px solid rgba(255,0,255,0.65);
-    box-shadow: 0 6px 28px -6px rgba(255,0,255,0.45);
+    /* Beefier edge -- matches the 4px Hyprland window border weight so
+       the hero feels anchored instead of floating on a hairline. */
+    border-bottom: 3px solid rgba(255,0,255,0.85);
+    box-shadow: 0 8px 36px -4px rgba(255,0,255,0.55),
+                0 2px 0    0    rgba(255,80,220,0.35);
 }
-.nyx-hero-title { color: #ff00ff;
-    text-shadow: 0 0 6px  rgba(255,0,255,0.95),
-                 0 0 18px rgba(255,0,255,0.55),
-                 0 0 36px rgba(255,0,255,0.28);
+/* Multi-color hero title: per-letter <span foreground=...> markup
+   provides the rainbow ink; this rule layers a WHITE glow halo on top
+   so every letter punches off the pure-black hero strip. */
+.nyx-hero-title {
+    text-shadow: 0 0 4px  rgba(255,255,255,0.95),
+                 0 0 12px rgba(255,255,255,0.55),
+                 0 0 26px rgba(255,255,255,0.28),
+                 0 0 40px rgba(255,0,255,0.35);
     font-size: 32px; font-weight: bold; letter-spacing: 1.5px; }
 .nyx-hero-sub { color: rgba(240,235,250,0.62); font-size: 14px;
     letter-spacing: 0.4px; margin-top: -2px; }
@@ -7524,7 +7726,13 @@ scrollbar { background-color: transparent; }
         # title + subtitle stacked
         ts = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         ts.set_valign(Gtk.Align.CENTER); ts.set_hexpand(True)
-        title_lbl = Gtk.Label(label=APP_NAME, xalign=0)
+        # Multi-color hero title: each letter cycles through the NYXUS
+        # neon palette (hot-pink, magenta, electric-blue, neon-green, gold,
+        # back to hot-pink). The CSS class adds a white outer glow halo on
+        # top so every letter punches off the black background.
+        title_lbl = Gtk.Label(xalign=0)
+        title_lbl.set_use_markup(True)
+        title_lbl.set_markup(_rainbow_markup(APP_NAME))
         title_lbl.add_css_class("nyx-hero-title")
         ts.append(title_lbl)
         sub_lbl = Gtk.Label(label=APP_TAGLINE, xalign=0)
@@ -7934,6 +8142,13 @@ scrollbar { background-color: transparent; }
             self.history.append(cur)
             self._fwd_history.clear()
         self.stack.set_visible_child_name(key)
+        # swap graffiti background to match the new page (page-aware words)
+        if hasattr(self, "_graffiti") and self._graffiti is not None:
+            try:
+                graffiti_key = "_home" if key in (HOME_KEY, "_search") else key
+                self._graffiti.set_page_key(graffiti_key)
+            except Exception:
+                pass
         # sidebar visibility (Win10 style: hide on home/search, show on cats)
         if hasattr(self, "_sidebar_sw"):
             self._sidebar_sw.set_visible(
