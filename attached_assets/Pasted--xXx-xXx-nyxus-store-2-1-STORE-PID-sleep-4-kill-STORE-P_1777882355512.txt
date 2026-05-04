@@ -1,0 +1,85 @@
+
+...xXx... ~
+
+...xXx... ~
+❯ ( nyxus-store 2>&1 & STORE_PID=$!; sleep 4; kill $STORE_PID 2>/dev/null ) 2>&1 | head -60
+echo "──────"
+( nyxus-start 2>&1 & START_PID=$!; sleep 3; kill $START_PID 2>/dev/null ) 2>&1 | head -40
+echo "──────"
+echo "─ waybar process cmdline ─"
+cat /proc/$(pgrep -x waybar | head -1)/cmdline 2>/dev/null | tr '\0' ' '; echo
+echo "─ first 30 lines of your live waybar config ─"
+head -30 /home/nyx/.config/waybar/config
+echo "──────"
+echo "─ NYXUS-managed CSS block in waybar style.css present? ─"
+grep -n 'NYXUS-WAYBAR-MANAGED-BLOCK\|nyxus-start\|nyxus-panel' /home/nyx/.config/waybar/style.css | head -10
+install_chrome: Data access methods are unsupported. Use normal Python attributes instead
+
+(python3:44065): Gtk-CRITICAL **: 02:13:57.902: gtk_window_set_child: assertion 'child == NULL || priv->child == child || gtk_widget_get_parent (child) == NULL' failed
+──────
+
+** (python3:44185): WARNING **: 02:14:01.881: Failed to initialize layer surface, GTK4 Layer Shell may have been linked after libwayland.
+** Message: 02:14:01.881: Move gtk4-layer-shell before libwayland-client in the linker options.
+** Message: 02:14:01.881: You may be able to fix with without recompiling by setting LD_PRELOAD=/path/to/libgtk4-layer-shell.so
+** Message: 02:14:01.881: See https://github.com/wmww/gtk4-layer-shell/blob/main/linking.md for more info
+
+** (python3:44185): WARNING **: 02:14:01.881: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (python3:44185): WARNING **: 02:14:01.881: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (python3:44185): WARNING **: 02:14:01.881: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (python3:44185): WARNING **: 02:14:01.881: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (python3:44185): WARNING **: 02:14:01.881: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (python3:44185): WARNING **: 02:14:01.881: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+──────
+─ waybar process cmdline ─
+waybar --config /home/nyx/.config/waybar/config --style /home/nyx/.config/waybar/style.css
+─ first 30 lines of your live waybar config ─
+[
+  {
+    "name": "top",
+    "layer": "top",
+    "position": "top",
+    "height": 28,
+    "spacing": 0,
+    "margin-top": 0,
+    "margin-left": 0,
+    "margin-right": 0,
+    "modules-left": [
+      "custom/ticker"
+    ],
+    "modules-center": [
+      "custom/nyxus"
+    ],
+    "modules-right": [
+      "clock"
+    ],
+    "custom/ticker": {
+      "exec": "~/.config/waybar/ticker.sh",
+      "interval": 1,
+      "format": "{}",
+      "tooltip": false
+    },
+    "custom/nyxus": {
+      "format": "<span foreground='#ff00ff' font_weight='bold'>N</span><span foreground='#ff5500' font_weight='bold'> Y</span><span foreground='#ffff00' font_weight='bold'> X</span><span foreground='#39ff14' font_weight='bold'> U</span><span foreground='#0088ff' font_weight='bold'> S</span>",
+      "tooltip": false,
+      "escape": false
+    },
+──────
+─ NYXUS-managed CSS block in waybar style.css present? ─
+1039:/* >>> NYXUS-WAYBAR-MANAGED-BLOCK BEGIN — do not edit between markers <<< */
+1057:window#waybar.bottom #custom-nyxus-start,
+1058:window#waybar.bottom #custom-nyxus-panel,
+1068:window#waybar.bottom #custom-nyxus-start {
+1085:window#waybar.bottom #custom-nyxus-start:hover,
+1086:window#waybar.bottom #custom-nyxus-start.open {
+1096:window#waybar.bottom #custom-nyxus-start.open {
+1101:window#waybar.bottom #custom-nyxus-panel {
+1113:window#waybar.bottom #custom-nyxus-panel:hover,
+1114:window#waybar.bottom #custom-nyxus-panel.open {
+
+...xXx... ~  7s
+❯                  

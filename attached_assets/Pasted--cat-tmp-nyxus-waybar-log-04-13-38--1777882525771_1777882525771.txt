@@ -1,0 +1,105 @@
+
+❯ cat /tmp/nyxus-waybar.log                             04:13:38
+─────┬────────────────────────────────────────────────────────────
+     │ File: /tmp/nyxus-waybar.log
+─────┼────────────────────────────────────────────────────────────
+   1 │ [2026-05-04 04:13:37.740] [info] Using configuration file /
+     │ home/nyx/.config/waybar/config
+   2 │ [2026-05-04 04:13:37.744] [info] Discovered appearance 'dar
+     │ k'
+   3 │ [2026-05-04 04:13:37.744] [info] Using CSS file /home/nyx/.
+     │ config/waybar/style.css
+   4 │ [2026-05-04 04:13:37.779] [info] Hyprland IPC starting
+   5 │ [2026-05-04 04:13:37.780] [info] Loading persistent workspa
+     │ ces from Waybar config
+   6 │ [2026-05-04 04:13:37.780] [info] Loading persistent workspa
+     │ ces from Hyprland workspace rules
+   7 │ [2026-05-04 04:13:37.780] [warning] There is no configurati
+     │ on for 'custom/app-settings', element will be hidden
+   8 │ [2026-05-04 04:13:37.792] [info] Loading persistent workspa
+     │ ces from Hyprland workspace rules
+   9 │ [2026-05-04 04:13:37.822] [warning] Requested height: 28 is
+     │  less than the minimum height: 36 required by the modules
+  10 │ [2026-05-04 04:13:37.822] [info] Bar configured (width: 192
+     │ 0, height: 36) for output: eDP-1
+  11 │ [2026-05-04 04:13:37.822] [info] Bar configured (width: 192
+     │ 0, height: 60) for output: eDP-1
+  12 │ [2026-05-04 04:13:37.822] [warning] Requested width: 52 is
+     │ less than the minimum width: 55 required by the modules
+  13 │ [2026-05-04 04:13:37.822] [info] Bar configured (width: 55,
+     │  height: 664) for output: eDP-1
+  14 │ [2026-05-04 04:13:37.822] [warning] Requested width: 52 is
+     │ less than the minimum width: 54 required by the modules
+  15 │ [2026-05-04 04:13:37.822] [info] Bar configured (width: 54,
+     │  height: 784) for output: eDP-1
+  16 │ [2026-05-04 04:13:38.020] [warning] Requested height: 60 is
+     │  less than the minimum height: 62 required by the modules
+  17 │ [2026-05-04 04:13:38.020] [info] Bar configured (width: 192
+     │ 0, height: 62) for output: eDP-1
+  18 │ [2026-05-04 04:13:38.060] [info] Bar configured (width: 55,
+     │  height: 662) for output: eDP-1
+  19 │ [2026-05-04 04:13:38.060] [info] Bar configured (width: 54,
+     │  height: 782) for output: eDP-1
+  20 │ [2026-05-04 04:14:03.656] [info] Reloading...
+  21 │ [2026-05-04 04:14:03.659] [info] Using configuration file /
+     │ home/nyx/.config/waybar/config
+  22 │ [2026-05-04 04:14:03.659] [info] Using CSS file /home/nyx/.
+     │ config/waybar/style.css
+  23 │ [2026-05-04 04:14:03.685] [info] Loading persistent workspa
+     │ ces from Waybar config
+  24 │ [2026-05-04 04:14:03.686] [info] Loading persistent workspa
+     │ ces from Hyprland workspace rules
+  25 │ [2026-05-04 04:14:03.686] [warning] There is no configurati
+     │ on for 'custom/app-settings', element will be hidden
+  26 │ [2026-05-04 04:14:03.691] [info] Loading persistent workspa
+     │ ces from Hyprland workspace rules
+  27 │ [2026-05-04 04:14:03.713] [warning] Requested height: 28 is
+     │  less than the minimum height: 36 required by the modules
+  28 │ [2026-05-04 04:14:03.713] [info] Bar configured (width: 192
+     │ 0, height: 36) for output: eDP-1
+  29 │ [2026-05-04 04:14:03.713] [info] Bar configured (width: 192
+     │ 0, height: 60) for output: eDP-1
+  30 │ [2026-05-04 04:14:03.713] [warning] Requested width: 52 is
+     │ less than the minimum width: 55 required by the modules
+  31 │ [2026-05-04 04:14:03.713] [info] Bar configured (width: 55,
+     │  height: 664) for output: eDP-1
+  32 │ [2026-05-04 04:14:03.713] [warning] Requested width: 52 is
+     │ less than the minimum width: 54 required by the modules
+  33 │ [2026-05-04 04:14:03.713] [info] Bar configured (width: 54,
+     │  height: 784) for output: eDP-1
+  34 │ [2026-05-04 04:14:03.919] [warning] Requested height: 60 is
+     │  less than the minimum height: 62 required by the modules
+  35 │ [2026-05-04 04:14:03.919] [info] Bar configured (width: 192
+     │ 0, height: 62) for output: eDP-1
+  36 │ [2026-05-04 04:14:03.966] [info] Bar configured (width: 54,
+     │  height: 782) for output: eDP-1
+  37 │ [2026-05-04 04:14:03.966] [info] Bar configured (width: 55,
+     │  height: 662) for output: eDP-1
+  38 │ [2026-05-04 04:14:41.945] [info] Hyprland config reloaded,
+     │ reinitializing hyprland/workspaces module...
+  39 │ [2026-05-04 04:14:41.964] [info] Bar configured (width: 55,
+     │  height: 637) for output: eDP-1
+  40 │ [2026-05-04 04:14:41.975] [info] Loading persistent workspa
+     │ ces from Waybar config
+  41 │ [2026-05-04 04:14:41.975] [info] Loading persistent workspa
+     │ ces from Hyprland workspace rules
+  42 │ [2026-05-04 04:14:41.975] [info] Hyprland config reloaded,
+     │ reinitializing hyprland/workspaces module...
+  43 │ [2026-05-04 04:14:41.975] [info] Loading persistent workspa
+     │ ces from Hyprland workspace rules
+  44 │ [2026-05-04 04:14:41.977] [info] Hyprland config reloaded,
+     │ reinitializing hyprland/workspaces module...
+  45 │ [2026-05-04 04:14:41.977] [info] Loading persistent workspa
+     │ ces from Waybar config
+  46 │ [2026-05-04 04:14:41.977] [info] Loading persistent workspa
+     │ ces from Hyprland workspace rules
+  47 │ [2026-05-04 04:14:41.977] [info] Hyprland config reloaded,
+     │ reinitializing hyprland/workspaces module...
+  48 │ [2026-05-04 04:14:41.978] [info] Loading persistent workspa
+     │ ces from Hyprland workspace rules
+  49 │ [2026-05-04 04:14:42.005] [info] Bar configured (width: 55,
+     │  height: 662) for output: eDP-1
+─────┴────────────────────────────────────────────────────────────
+
+...xXx... ~
+❯                             
