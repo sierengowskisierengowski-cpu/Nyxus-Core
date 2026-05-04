@@ -342,6 +342,12 @@ uri = "file://attached_assets/nyxus-sierengowski-clean.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "l8SOIxZZd5LyQxjcgtayg"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-demon.png"
+type = "image"
+title = "scary demon jumpscare"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"

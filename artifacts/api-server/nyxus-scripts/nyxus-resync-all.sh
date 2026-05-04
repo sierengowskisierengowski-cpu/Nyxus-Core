@@ -7,16 +7,23 @@
 #
 # What this does (in order):
 #   1. Kills every running NYXUS process (so stale chrome.py is evicted)
-#   2. Downloads + installs every app tarball from production:
-#        nyxus-start (waybar patch + chrome.py + start menu + App Store)
-#        nyxus-panel
-#        nyxus-godsapp / home / weather / notepad / passwords
-#        nyxus-intel / sage / studio / shield
-#        nyxus-phantom (background daemon)
-#   3. Reloads waybar so the new NYXUS modules show up
-#   4. Verifies chrome.py SHA, waybar module count, /usr/local/bin launchers
+#   2. Downloads + installs every app tarball from production
+#   3. Installs Hyprland window rules (float NYXUS apps at 900x650, center)
+#   4. Installs lock + screensaver stack:
+#        - /etc/pam.d/hyprlock                           (login error fix)
+#        - ~/.config/hypr/hyprlock.conf                  (NYXUS lock screen)
+#        - ~/.config/hypr/hypridle.conf                  (idle pipeline)
+#        - /usr/share/nyxus/scripts/nyxus_screensaver.py
+#        - /usr/share/nyxus/scripts/nyxus_demon_wake.py
+#        - /usr/share/nyxus/demon.png
+#        - /usr/local/bin/nyxus-screensaver              (wrapper)
+#        - /usr/local/bin/nyxus-demon-wake               (wrapper)
+#        - restarts hypridle so the new pipeline is live
+#   5. Reloads waybar so the new NYXUS modules show up
+#   6. Verifies chrome.py SHA, waybar module count, /usr/local/bin launchers,
+#      PAM file, screensaver wrappers, demon image
 #
-# Safe to re-run any number of times. Each app's installer is idempotent.
+# Safe to re-run any number of times. Each step is idempotent.
 # ============================================================================
 
 set -uo pipefail
@@ -80,8 +87,8 @@ printf "  ${DIM}target user:${R} %s    ${DIM}home:${R} %s\n" "$REAL_USER" "$REAL
 printf "  ${DIM}source:${R} %s\n" "$PROD"
 hr
 
-# ── 1/4 KILL stale processes ─────────────────────────────────────────────────
-step "1/4 · KILL all running NYXUS processes (evict stale chrome.py from memory)"
+# ── 1/6 KILL stale processes ─────────────────────────────────────────────────
+step "1/6 · KILL all running NYXUS processes (evict stale chrome.py from memory)"
 killed=0
 for pat in "$REAL_HOME/\.nyxus/" "$REAL_HOME/\.local/share/nyxus-" "/opt/nyxus-"; do
   if pkill -f "$pat" 2>/dev/null; then
@@ -90,8 +97,8 @@ for pat in "$REAL_HOME/\.nyxus/" "$REAL_HOME/\.local/share/nyxus-" "/opt/nyxus-"
 done
 ok "killed stale NYXUS app processes"
 
-# ── 2/4 INSTALL every app from prod ──────────────────────────────────────────
-step "2/4 · DOWNLOAD + INSTALL every app from production"
+# ── 2/6 INSTALL every app from prod ──────────────────────────────────────────
+step "2/6 · DOWNLOAD + INSTALL every app from production"
 declare -A RESULT
 for app in "${APPS[@]}"; do
   echo
@@ -115,8 +122,7 @@ for app in "${APPS[@]}"; do
   fi
   ok "extracted"
 
-  # locate install.sh (depth varies: start/install.sh, godsapp/install.sh,
-  # nyxus-weather/install.sh, etc.). Pick the SHALLOWEST one named install.sh.
+  # locate install.sh (depth varies). Pick the SHALLOWEST one named install.sh.
   installer=$(find "$TMP/${app}-extract" -maxdepth 4 -name install.sh -printf '%d %p\n' 2>/dev/null | sort -n | head -1 | awk '{print $2}')
   if [[ -z "$installer" || ! -f "$installer" ]]; then
     warn "no install.sh found — app may not be GUI-installable, skipping"
@@ -137,8 +143,8 @@ for app in "${APPS[@]}"; do
   fi
 done
 
-# ── 3/5 INSTALL Hyprland window rules (float NYXUS apps + 900x650 default) ─
-step "3/5 · INSTALL Hyprland window rules (float NYXUS apps at sensible size)"
+# ── 3/6 INSTALL Hyprland window rules ────────────────────────────────────────
+step "3/6 · INSTALL Hyprland window rules (float NYXUS apps + 900x650 default)"
 HYPR_DIR="$REAL_HOME/.config/hypr"
 HYPR_CONF_D="$HYPR_DIR/conf.d"
 HYPR_RULES="$HYPR_CONF_D/nyxus-windowrules.conf"
@@ -173,17 +179,123 @@ else
   printf "      ${DIM}%s${R}\n" "$SOURCE_LINE"
 fi
 
-# Live-reload Hyprland so the rules apply RIGHT NOW (no logout needed)
+# ── 4/6 INSTALL lock + screensaver stack ─────────────────────────────────────
+step "4/6 · INSTALL lock + screensaver stack (PAM fix + hyprlock + hypridle + demon jumpscare)"
+
+# 4a. PAM module for hyprlock — THIS IS THE LOGIN ERROR FIX.
+# Without /etc/pam.d/hyprlock, hyprlock can't authenticate the password and
+# every unlock attempt returns "Failed to authenticate" / silent rejection.
+# `auth include system-auth` delegates to the user's existing PAM stack,
+# which is the canonical Arch + Hyprland setup.
+PAM_FILE="/etc/pam.d/hyprlock"
+PAM_BODY=$'#%PAM-1.0\n# NYXUS — installed by nyxus-resync-all.sh so hyprlock can authenticate.\nauth        include    system-auth\naccount     include    system-auth\npassword    include    system-auth\nsession     include    system-auth\n'
+if [[ -f "$PAM_FILE" ]] && grep -q "system-auth" "$PAM_FILE" 2>/dev/null; then
+  ok "$PAM_FILE already configured (system-auth include present)"
+else
+  printf '%s' "$PAM_BODY" > "$PAM_FILE"
+  chmod 644 "$PAM_FILE"
+  chown root:root "$PAM_FILE"
+  ok "wrote $PAM_FILE — hyprlock can now authenticate via system-auth"
+fi
+
+# 4b. Lock screen + idle config
+for cf in hyprlock.conf hypridle.conf; do
+  dst="$HYPR_DIR/$cf"
+  if curl -fsSL --max-time 30 "$PROD/$cf" -o "$dst.new"; then
+    mv "$dst.new" "$dst"
+    chown "$REAL_USER:$REAL_USER" "$dst"
+    chmod 644 "$dst"
+    ok "wrote $dst"
+  else
+    fail "could not download $cf"
+  fi
+done
+
+# 4c. Screensaver + demon-wake Python scripts
+NYX_SHARE="/usr/share/nyxus"
+NYX_SCRIPTS="$NYX_SHARE/scripts"
+mkdir -p "$NYX_SCRIPTS"
+for pyf in nyxus_screensaver.py nyxus_demon_wake.py; do
+  dst="$NYX_SCRIPTS/$pyf"
+  if curl -fsSL --max-time 30 "$PROD/$pyf" -o "$dst.new"; then
+    mv "$dst.new" "$dst"
+    chmod 755 "$dst"
+    ok "wrote $dst"
+  else
+    fail "could not download $pyf"
+  fi
+done
+
+# 4d. Demon image
+DEMON_DST="$NYX_SHARE/demon.png"
+if curl -fsSL --max-time 30 "$PROD/nyxus-demon.png" -o "$DEMON_DST.new"; then
+  mv "$DEMON_DST.new" "$DEMON_DST"
+  chmod 644 "$DEMON_DST"
+  ok "wrote $DEMON_DST ($(stat -c%s "$DEMON_DST" 2>/dev/null || echo "?") bytes)"
+else
+  fail "could not download nyxus-demon.png — demon wake will show ☠ glyph fallback"
+fi
+
+# 4e. /usr/local/bin wrappers so hypridle on-timeout/on-resume can find them
+for pair in "nyxus-screensaver:nyxus_screensaver.py" "nyxus-demon-wake:nyxus_demon_wake.py"; do
+  bin_name="${pair%%:*}"
+  py_name="${pair##*:}"
+  dst="/usr/local/bin/$bin_name"
+  cat > "$dst" <<EOF
+#!/usr/bin/env bash
+# NYXUS — $bin_name wrapper (installed by nyxus-resync-all.sh)
+exec python3 "$NYX_SCRIPTS/$py_name" "\$@"
+EOF
+  chmod 755 "$dst"
+  ok "wrote $dst"
+done
+
+# 4f. Restart hypridle so the new 6-stage idle pipeline is live RIGHT NOW.
+# CRITICAL: hypridle needs the user's Wayland session env to talk to Hyprland —
+# specifically XDG_RUNTIME_DIR (where the wayland socket and hyprland IPC live)
+# and HYPRLAND_INSTANCE_SIGNATURE. Launching it from a sudo shell loses both,
+# so we resolve them from the user's running Hyprland process and re-export
+# them in the child shell. Falls back gracefully if Hyprland isn't running.
+if command -v hypridle >/dev/null 2>&1; then
+  pkill -x hypridle 2>/dev/null || true
+  sleep 0.3
+  REAL_UID="$(id -u "$REAL_USER" 2>/dev/null || echo "")"
+  HYPR_PID="$(pgrep -u "$REAL_USER" -x Hyprland | head -1 || true)"
+  if [[ -n "$HYPR_PID" && -n "$REAL_UID" ]]; then
+    # Pull HYPRLAND_INSTANCE_SIGNATURE + WAYLAND_DISPLAY straight from the
+    # running Hyprland process's environ — guaranteed to match the live session.
+    HIS="$(tr '\0' '\n' < /proc/$HYPR_PID/environ 2>/dev/null | grep -E '^HYPRLAND_INSTANCE_SIGNATURE=' | cut -d= -f2- || true)"
+    WLD="$(tr '\0' '\n' < /proc/$HYPR_PID/environ 2>/dev/null | grep -E '^WAYLAND_DISPLAY=' | cut -d= -f2- || true)"
+    XRD="/run/user/$REAL_UID"
+    [[ -z "$WLD" ]] && WLD="wayland-1"
+    sudo -u "$REAL_USER" \
+      env XDG_RUNTIME_DIR="$XRD" WAYLAND_DISPLAY="$WLD" HYPRLAND_INSTANCE_SIGNATURE="$HIS" \
+      nohup hypridle >/dev/null 2>&1 &
+    disown 2>/dev/null || true
+    sleep 0.5
+    if pgrep -u "$REAL_USER" -x hypridle >/dev/null 2>&1; then
+      ok "restarted hypridle as $REAL_USER with full session env (new idle pipeline active)"
+    else
+      warn "hypridle process didn't appear after restart — try logging out and back in"
+    fi
+  else
+    warn "Hyprland isn't running for $REAL_USER — hypridle will start at next login"
+  fi
+else
+  warn "hypridle not installed — install it with:  sudo pacman -S hypridle"
+fi
+
+# 4g. Live-reload Hyprland so the window rules apply immediately
 if command -v hyprctl >/dev/null 2>&1 && pgrep -x Hyprland >/dev/null 2>&1; then
   if sudo -u "$REAL_USER" hyprctl reload >/dev/null 2>&1; then
-    ok "hyprctl reload — rules active immediately"
+    ok "hyprctl reload — rules + screensaver hooks active immediately"
   else
     warn "hyprctl reload failed — log out + back in, or run 'hyprctl reload' manually"
   fi
 fi
 
-# ── 4/5 RELOAD waybar ────────────────────────────────────────────────────────
-step "4/5 · RELOAD waybar (so the new NYXUS modules show up)"
+# ── 5/6 RELOAD waybar ────────────────────────────────────────────────────────
+step "5/6 · RELOAD waybar (so the new NYXUS modules show up)"
 # SIGUSR2 reloads config in place — preserves the running waybar process and
 # its taskbar state, but picks up the freshly patched config.json.
 if pgrep -x waybar >/dev/null 2>&1; then
@@ -192,8 +304,8 @@ else
   warn "waybar not running — Hyprland will respawn it on next session, or start it manually"
 fi
 
-# ── 5/5 VERIFY ──────────────────────────────────────────────────────────────
-step "5/5 · VERIFICATION"
+# ── 6/6 VERIFY ──────────────────────────────────────────────────────────────
+step "6/6 · VERIFICATION"
 
 echo
 echo "${B}Per-app install result:${R}"
@@ -230,9 +342,39 @@ else
   warn "waybar config not found at $waybar_cfg"
 fi
 
+# PAM file for hyprlock
+if [[ -f "$PAM_FILE" ]] && grep -q "system-auth" "$PAM_FILE"; then
+  ok "$PAM_FILE present (hyprlock auth fixed)"
+else
+  fail "$PAM_FILE missing or misconfigured — hyprlock unlock will fail"
+fi
+
+# Screensaver + demon-wake wrappers
+for bin_name in nyxus-screensaver nyxus-demon-wake; do
+  if [[ -x "/usr/local/bin/$bin_name" ]]; then
+    ok "/usr/local/bin/$bin_name installed"
+  else
+    fail "/usr/local/bin/$bin_name missing"
+  fi
+done
+
+# Demon image
+if [[ -f "$DEMON_DST" ]]; then
+  ok "$DEMON_DST present ($(stat -c%s "$DEMON_DST" 2>/dev/null || echo "?") bytes)"
+else
+  warn "$DEMON_DST missing — jumpscare will fall back to ☠ glyph"
+fi
+
+# Hypridle running
+if pgrep -x hypridle >/dev/null 2>&1; then
+  ok "hypridle running (idle pipeline active)"
+else
+  warn "hypridle not running — start it with:  hypridle &"
+fi
+
 # launchers in /usr/local/bin
 echo
-echo "${B}Launchers in /usr/local/bin:${R}"
+echo "${B}App launchers in /usr/local/bin:${R}"
 for app in "${APPS[@]}"; do
   if [[ -x "/usr/local/bin/$app" ]]; then
     printf "  ${GREEN}✓${R} %s\n" "$app"
@@ -243,8 +385,8 @@ done
 
 echo
 hr
-printf "  ${B}${GREEN}DONE.${R} Open any NYXUS app from the Start menu or App Store —\n"
-printf "  it will load the new chrome (graffiti background + frosted glass +\n"
-printf "  Caveat title + neon palette) on first paint.\n"
+printf "  ${B}${GREEN}DONE.${R} The NYXUS apps will load the new chrome on next launch.\n"
+printf "  ${DIM}Idle pipeline:${R} 2min dim → 3min screensaver → 5min lock → 8min DPMS off → 15min suspend\n"
+printf "  ${DIM}Try it now:${R} let the screen idle for 3 min, then move the mouse.  ${PINK}😈${R}\n"
 hr
 echo
