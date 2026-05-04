@@ -470,10 +470,17 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
         set_content = window.set_child
 
     # Already wrapped? (re-entrancy guard)
+    # NOTE: Gtk.Widget.set_data/get_data were removed in PyGObject 3.42+.
+    # On systems with the new PyGObject they raise "Data access methods are
+    # unsupported. Use normal Python attributes instead." — which used to
+    # crash chrome injection silently and leave the window in a torn state
+    # (set_content(None) had already detached the original child). We now
+    # use plain Python attributes on the overlay GObject; PyGObject permits
+    # arbitrary attribute assignment on any subclass instance.
     cur = get_content()
     if cur is None: return None
-    if isinstance(cur, Gtk.Overlay) and cur.get_data("nyxus-chrome-installed"):
-        bg = cur.get_data("nyxus-chrome-bg")
+    if isinstance(cur, Gtk.Overlay) and getattr(cur, "_nyxus_chrome_installed", False):
+        bg = getattr(cur, "_nyxus_chrome_bg", None)
         if bg and page_key:
             try: bg.set_page_key(page_key)
             except Exception: pass
@@ -489,13 +496,24 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
         # original content rides on top, fully sized
         cur.set_hexpand(True); cur.set_vexpand(True)
         overlay.add_overlay(cur)
-        overlay.set_data("nyxus-chrome-installed", True)
-        overlay.set_data("nyxus-chrome-bg", bg)
+        overlay._nyxus_chrome_installed = True
+        overlay._nyxus_chrome_bg = bg
         set_content(overlay)
     except Exception as e:
         log.warning("install_chrome: %s", e)
-        # restore on failure
-        try: set_content(cur)
+        # Restore on failure. `cur` may still be parented to overlay (from
+        # add_overlay above) — unparent first to avoid "child has parent"
+        # GTK-CRITICAL when handing it back to the window.
+        try:
+            parent = cur.get_parent() if hasattr(cur, "get_parent") else None
+            if parent is not None:
+                if isinstance(parent, Gtk.Overlay):
+                    try: parent.remove_overlay(cur)
+                    except Exception: pass
+                else:
+                    try: cur.unparent()
+                    except Exception: pass
+            set_content(cur)
         except Exception: pass
         return None
 
