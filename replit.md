@@ -43,6 +43,21 @@ System-wide audit + tone-down across all 12 GTK apps:
 - **Letter-scrambling titles** (`rainbow_markup`): 9/12 apps (3 omissions
   intentional — tiny dropdowns + custom Cairo titles)
 
+### Phase 2.1 — Adw + Store fixes (May 2026)
+Two install-time gaps caught after the first user reinstall:
+- **`install_chrome` is now Adw-aware.** `Adw.ApplicationWindow` uses
+  `set_content/get_content` (not `set_child/get_child`), so the original
+  Gtk-only `install_chrome` silently failed on the 4 Adw apps —
+  **godsapp, sage, shield, studio**. Added `_is_adw_app_window()` and
+  branched the get/set accessor pair. The auto-injected bootstrap
+  in every entry now also monkey-patches `Adw.ApplicationWindow.present`
+  in addition to `Gtk.ApplicationWindow.present`.
+- **`io.nyxus.store.desktop` no longer self-deletes.** It was listed in
+  `OLD_DESKTOPS=( … )` in `nyxus_install.sh`, so the cleanup loop wiped
+  it on every install — which is why the App Store launcher disappeared
+  from Rofi / the Start menu even though `nyxus-start.tgz` correctly
+  creates it. Removed from the legacy list and documented inline.
+
 ### Phase 2 — Hyprland integration (May 2026)
 - `exec-once = dunst` (was `mako` — conflicted with shipped `dunstrc`)
 - `$mod+Space` → launcher (was `centerwindow`, moved to `$mod+Shift+C`)
