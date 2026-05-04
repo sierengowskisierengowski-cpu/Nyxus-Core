@@ -1,0 +1,34 @@
+# NYXUS GodsApp — udev rules for hardware access
+# © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+# Allows the `wireshark` group (which the GodsApp installer adds the user to)
+# raw access to wireless monitor mode, USB serial devices like the Flipper
+# Zero, RFID/NFC readers, and Bluetooth controllers.
+
+# YubiKey
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1050", GROUP="plugdev", MODE="0660", TAG+="uaccess"
+
+# Flipper Zero (live data feed)
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="5740", \
+    GROUP="plugdev", MODE="0660", TAG+="uaccess", SYMLINK+="flipper%n"
+
+# Common USB→serial adapters used for RFID/NFC sniffers
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="0403", GROUP="dialout", MODE="0660", TAG+="uaccess"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="10c4", GROUP="dialout", MODE="0660", TAG+="uaccess"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1a86", GROUP="dialout", MODE="0660", TAG+="uaccess"
+
+# Proxmark3
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="9ac4", ATTRS{idProduct}=="4b8f", \
+    GROUP="plugdev", MODE="0660", TAG+="uaccess", SYMLINK+="proxmark3"
+
+# HackRF
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1d50", ATTRS{idProduct}=="6089", \
+    GROUP="plugdev", MODE="0660", TAG+="uaccess"
+
+# RTL-SDR
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="2838", \
+    GROUP="plugdev", MODE="0660", TAG+="uaccess"
+
+# Allow members of `wireshark` group to capture
+KERNEL=="bpf*", GROUP="wireshark", MODE="0660"
+KERNEL=="raw[0-9]*", GROUP="wireshark", MODE="0660"

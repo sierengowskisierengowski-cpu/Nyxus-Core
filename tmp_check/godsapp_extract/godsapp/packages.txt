@@ -1,0 +1,45 @@
+# NYXUS GodsApp — system packages
+# Names match Arch (pacman); apt names mostly identical.
+# © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+
+python
+python-gobject
+gtk4
+libadwaita
+vte4
+nmap
+wireshark-cli
+tcpdump
+aircrack-ng
+bettercap
+ettercap
+hashcat
+john
+metasploit
+clamav
+rkhunter
+chkrootkit
+nikto
+gobuster
+sqlmap
+yara
+binwalk
+foremost
+volatility3
+strace
+ltrace
+ufw
+wireguard-tools
+bluez
+bluez-utils
+smbclient
+ldap-utils
+snmp
+nbtscan
+masscan
+arp-scan
+proxychains-ng
+gnupg
+libnotify
+exiftool
+ssdeep

@@ -237,19 +237,207 @@ class GraffitiBackground(Gtk.DrawingArea):
                 pass
 
 
-# ── Shared NYXUS chrome CSS -- safe to layer on top of any app's CSS. ──────
-# We override window/box backgrounds to be slightly translucent so the
-# GraffitiBackground (sitting underneath in the overlay) is visible. We
-# do NOT touch any inner content that should stay opaque (toolbars,
-# editors, sticky-text, etc.). We add `.nyx-rainbow-title` so callers can
-# tag any Gtk.Label and get the multi-color treatment.
-CHROME_CSS = b"""
-/* NYXUS shared chrome -- translucent shell so murals show through */
-window { background-color: rgba(0, 0, 0, 0.0); }
-window > * > box, window > overlay > box, .nyx-bg, .nyx-shell-bg {
+# ── Shared NYXUS chrome CSS -- "godsapp visual language", system-wide. ────
+# Reference: the godsapp screenshot — transparent window so the graffiti
+# mural shows through, translucent dark inner panels, semi-opaque entries
+# /textviews where text needs to be readable, and rainbow-cycling neon
+# button outlines with handwritten Caveat labels. We promote godsapp's
+# `* { font-family: Caveat }` universal rule across every NYXUS app, with
+# a `.nyx-mono` opt-out class for places that genuinely need a monospace
+# face (terminals, code editors, log views). This CSS is loaded at
+# Gtk.STYLE_PROVIDER_PRIORITY_USER so it overrides each app's own
+# APPLICATION provider — apps don't have to opt-in.
+CHROME_CSS = """
+/* -- Typography: Caveat everywhere except explicit monospace zones --- */
+* {
+    font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', cursive;
+}
+.nyx-mono, .nyx-mono *, .nyx-code, .nyx-code *,
+.monospace, .monospace *,
+textview.nyx-mono, textview.nyx-mono text,
+textview.monospace, textview.monospace text {
+    font-family: 'JetBrains Mono', 'Fira Code', 'DejaVu Sans Mono', monospace;
+}
+
+/* -- Window: fully transparent so the graffiti mural reads through ----- */
+window {
+    background-color: rgba(0, 0, 0, 0.0);
+    color: #efefee;
+}
+
+/* -- Outer shell layers: translucent dark so graffiti glows through ---- */
+window > * > box, window > overlay > box,
+.nyx-bg, .nyx-shell-bg {
     background-color: rgba(0, 0, 0, 0.42);
 }
-/* Hero / rainbow title labels */
+
+/* -- Inner panels (frame/scrolledwindow/listbox/card): darker plate ---- */
+frame, scrolledwindow, listbox, .card, .nyx-card, .nyx-panel {
+    background-color: rgba(10, 10, 18, 0.55);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+list, listbox row {
+    background-color: transparent;
+}
+listbox row:selected {
+    background-color: rgba(255, 0, 255, 0.18);
+    color: #ffffff;
+}
+listbox row:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* -- Headerbar (Adw apps): translucent so the graffiti shows up top --- */
+headerbar, .titlebar {
+    background-color: rgba(10, 10, 18, 0.65);
+    border-bottom: 1px solid rgba(255, 0, 255, 0.18);
+    color: #efefee;
+}
+
+/* -- Text inputs: more opaque so text is readable, neon focus ring ---- */
+entry, textview, textview text, spinbutton {
+    background-color: rgba(16, 16, 25, 0.85);
+    color: #efefee;
+    border-radius: 6px;
+    padding: 8px 12px;
+    min-height: 36px;
+    font-size: 17px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+entry:focus, textview:focus, spinbutton:focus {
+    border-color: rgba(255, 0, 255, 0.65);
+    box-shadow: 0 0 8px rgba(255, 0, 255, 0.30);
+}
+/* GTK4 placeholder is a child node, not a CSS pseudo-element */
+entry > text > placeholder,
+entry placeholder {
+    color: rgba(174, 174, 182, 0.55);
+}
+
+/* -- Buttons: transparent fill, Caveat label, rainbow neon outline --- */
+button {
+    background-color: rgba(0, 0, 0, 0.35);
+    color: #efefee;
+    border: 1.5px solid rgba(255, 0, 255, 0.70);
+    border-radius: 6px;
+    padding: 6px 14px;
+    min-height: 32px;
+    font-family: 'Caveat', cursive;
+    font-size: 17px;
+    transition: background-color 120ms ease, box-shadow 120ms ease,
+                border-color 120ms ease;
+}
+button:hover {
+    background-color: rgba(255, 0, 255, 0.10);
+    box-shadow: 0 0 14px rgba(255, 0, 255, 0.40);
+}
+button:active, button:checked {
+    background-color: rgba(255, 0, 255, 0.18);
+    box-shadow: inset 0 0 8px rgba(255, 0, 255, 0.45);
+}
+button:disabled {
+    color: rgba(239, 239, 238, 0.35);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* -- Sibling-cycling neon outlines so adjacent buttons differ in hue -- */
+/* (matches godsapp where each button in a row has its own neon color) */
+/* Gated to .nyx-rainbow-row so titlebar/utility buttons stay uniform   */
+/* pink. Apps that want the godsapp action-bar look wrap their button   */
+/* row container in `.nyx-rainbow-row`.                                 */
+.nyx-rainbow-row > button:nth-child(2n) {
+    border-color: rgba(0, 170, 255, 0.75);
+}
+.nyx-rainbow-row > button:nth-child(2n):hover {
+    background-color: rgba(0, 170, 255, 0.10);
+    box-shadow: 0 0 14px rgba(0, 170, 255, 0.40);
+}
+.nyx-rainbow-row > button:nth-child(3n) {
+    border-color: rgba(255, 215, 0, 0.75);
+}
+.nyx-rainbow-row > button:nth-child(3n):hover {
+    background-color: rgba(255, 215, 0, 0.10);
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.40);
+}
+.nyx-rainbow-row > button:nth-child(4n) {
+    border-color: rgba(57, 255, 20, 0.75);
+}
+.nyx-rainbow-row > button:nth-child(4n):hover {
+    background-color: rgba(57, 255, 20, 0.10);
+    box-shadow: 0 0 14px rgba(57, 255, 20, 0.40);
+}
+
+/* Adwaita semantic button classes (Adw apps use these heavily) */
+button.suggested-action {
+    border-color: rgba(57, 255, 20, 0.85);
+    color: #d6ffcd;
+}
+button.destructive-action {
+    border-color: rgba(255, 80, 100, 0.85);
+    color: #ffd6dc;
+}
+button.flat {
+    border-color: transparent;
+    background-color: transparent;
+}
+button.flat:hover {
+    background-color: rgba(255, 0, 255, 0.10);
+    border-color: rgba(255, 0, 255, 0.40);
+}
+
+/* -- Dropdowns / combos: same treatment as buttons -------------------- */
+dropdown, combobox > box.linked > button {
+    background-color: rgba(16, 16, 25, 0.85);
+    border: 1px solid rgba(255, 0, 255, 0.55);
+    border-radius: 6px;
+    padding: 6px 12px;
+    min-height: 36px;
+    font-size: 16px;
+    color: #efefee;
+}
+
+/* -- Checkbuttons / switches: Caveat label, neon accent --------------- */
+checkbutton label, switch label, radiobutton label {
+    font-size: 18px;
+    color: #efefee;
+}
+check, radio {
+    background-color: rgba(16, 16, 25, 0.85);
+    border: 1.5px solid rgba(255, 0, 255, 0.55);
+    min-width: 18px; min-height: 18px;
+    border-radius: 4px;
+}
+check:checked, radio:checked {
+    background-color: rgba(255, 0, 255, 0.55);
+    color: #ffffff;
+}
+switch slider {
+    background-color: rgba(239, 239, 238, 0.85);
+    border-radius: 999px;
+}
+switch:checked {
+    background-color: rgba(255, 0, 255, 0.55);
+}
+
+/* -- Sliders ----------------------------------------------------------- */
+scale trough {
+    background-color: rgba(16, 16, 25, 0.85);
+    border-radius: 4px;
+    min-height: 6px;
+}
+scale highlight {
+    background-color: rgba(255, 0, 255, 0.65);
+    border-radius: 4px;
+}
+scale slider {
+    background-color: #efefee;
+    box-shadow: 0 0 8px rgba(255, 0, 255, 0.55);
+    border-radius: 999px;
+    min-width: 16px; min-height: 16px;
+}
+
+/* -- Hero / rainbow title labels (callers add .nyx-rainbow-title) ----- */
 .nyx-rainbow-title {
     font-family: 'Caveat', 'Patrick Hand', cursive;
     font-weight: bold;
@@ -257,20 +445,114 @@ window > * > box, window > overlay > box, .nyx-bg, .nyx-shell-bg {
     text-shadow: 0 0 14px rgba(255, 255, 255, 0.55),
                  0 0 28px rgba(255, 0, 255, 0.45);
 }
+
+/* -- Window edge glow (callers add .nyx-chrome-edge to a wrapper) ----- */
 .nyx-chrome-edge {
     border: 3px solid rgba(255, 0, 255, 0.85);
     border-radius: 6px;
     box-shadow: 0 0 36px rgba(255, 0, 255, 0.45),
                 inset 0 0 2px rgba(255, 0, 255, 0.65);
 }
-/* Scrollbars get the neon treatment everywhere */
+
+/* -- Status / footer bar ----------------------------------------------- */
+.nyx-statusbar {
+    color: #8a8a93;
+    padding: 6px 14px;
+    font-size: 16px;
+}
+
+/* -- Convenience text classes (mirror godsapp's ui.py) ---------------- */
+.nyx-dim   { color: #aeaeb6; }
+.nyx-faint { color: #6c6c75; }
+
+/* -- Scrollbars: neon pink slider on transparent track ---------------- */
+scrollbar { background-color: transparent; }
 scrollbar slider {
     background-color: rgba(255, 0, 255, 0.45);
     border: 1px solid rgba(255, 0, 255, 0.65);
     border-radius: 6px;
     min-width: 8px; min-height: 8px;
 }
-scrollbar { background-color: transparent; }
+scrollbar slider:hover {
+    background-color: rgba(255, 0, 255, 0.65);
+}
+
+/* -- Tooltips ---------------------------------------------------------- */
+tooltip {
+    background-color: rgba(10, 10, 18, 0.92);
+    border: 1px solid rgba(255, 0, 255, 0.55);
+    border-radius: 6px;
+    color: #efefee;
+    padding: 6px 10px;
+}
+
+/* -- Popovers / menus / menubuttons ----------------------------------- */
+popover, popover.menu, popover > contents, popover > arrow {
+    background-color: rgba(10, 10, 18, 0.92);
+    color: #efefee;
+    border: 1px solid rgba(255, 0, 255, 0.55);
+    border-radius: 6px;
+    box-shadow: 0 0 18px rgba(255, 0, 255, 0.25);
+}
+popover modelbutton, popover button {
+    background-color: transparent;
+    border: none;
+    color: #efefee;
+    padding: 6px 12px;
+    font-size: 16px;
+}
+popover modelbutton:hover, popover button:hover {
+    background-color: rgba(255, 0, 255, 0.18);
+    color: #ffffff;
+    box-shadow: none;
+}
+menubutton button, menubutton > button {
+    background-color: rgba(0, 0, 0, 0.35);
+    border: 1.5px solid rgba(255, 0, 255, 0.70);
+    border-radius: 6px;
+    color: #efefee;
+}
+menubutton button:hover {
+    background-color: rgba(255, 0, 255, 0.10);
+    box-shadow: 0 0 14px rgba(255, 0, 255, 0.40);
+}
+
+/* -- Progress bars ---------------------------------------------------- */
+progressbar trough {
+    background-color: rgba(16, 16, 25, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    min-height: 6px;
+}
+progressbar progress {
+    background-color: rgba(255, 0, 255, 0.65);
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(255, 0, 255, 0.45);
+}
+progressbar text {
+    color: #efefee;
+    font-size: 14px;
+}
+
+/* -- Notebook / tabs (used by some Adw/Gtk apps) ---------------------- */
+notebook header {
+    background-color: rgba(10, 10, 18, 0.65);
+    border-bottom: 1px solid rgba(255, 0, 255, 0.18);
+}
+notebook tab {
+    background-color: transparent;
+    color: #aeaeb6;
+    padding: 6px 14px;
+    font-size: 16px;
+    border: none;
+}
+notebook tab:checked {
+    color: #ffffff;
+    box-shadow: inset 0 -2px 0 rgba(255, 0, 255, 0.85);
+}
+notebook tab:hover {
+    color: #efefee;
+}
 """
 
 _CHROME_PROVIDER_INSTALLED = False
@@ -281,10 +563,19 @@ def _install_global_css():
     if _CHROME_PROVIDER_INSTALLED: return
     try:
         prov = Gtk.CssProvider()
-        try: prov.load_from_data(CHROME_CSS)
+        # CHROME_CSS may be str or bytes depending on Python literal used.
+        # GTK4's load_from_data accepts both forms across versions; we try
+        # bytes first (most permissive), then fall back to str.
+        css_bytes = (CHROME_CSS.encode("utf-8")
+                     if isinstance(CHROME_CSS, str) else CHROME_CSS)
+        try:
+            prov.load_from_data(css_bytes)
         except TypeError:
-            try: prov.load_from_data(CHROME_CSS.decode())
-            except Exception: pass
+            try:
+                prov.load_from_data(css_bytes.decode("utf-8"))
+            except Exception as e:
+                log.warning("nyxus_chrome css load: %s", e)
+                return
         disp = Gdk.Display.get_default()
         if disp is None: return
         # USER priority -- runs AFTER each app's APPLICATION provider so
