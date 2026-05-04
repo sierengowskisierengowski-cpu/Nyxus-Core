@@ -314,12 +314,19 @@ OLD_DESKTOPS=(
   nyx-terminal.desktop
 )
 for desk in "${OLD_DESKTOPS[@]}"; do
-  for dir in "$HOME/.local/share/applications" /usr/share/applications; do
-    if [[ -f "$dir/$desk" ]]; then
-      rm -f "$dir/$desk"
-      ok "removed desktop: $dir/$desk"
+  # User-writable dir — no sudo needed
+  if [[ -f "$HOME/.local/share/applications/$desk" ]]; then
+    rm -f "$HOME/.local/share/applications/$desk" \
+      && ok "removed desktop: $HOME/.local/share/applications/$desk"
+  fi
+  # System dir — needs sudo; non-fatal if not granted
+  if [[ -f "/usr/share/applications/$desk" ]]; then
+    if sudo -n rm -f "/usr/share/applications/$desk" 2>/dev/null; then
+      ok "removed desktop: /usr/share/applications/$desk"
+    else
+      printf "  ${DIM}(skip: /usr/share/applications/$desk — needs sudo; re-run with sudo to clean)${R}\n"
     fi
-  done
+  fi
 done
 
 ok "cleanup complete"
