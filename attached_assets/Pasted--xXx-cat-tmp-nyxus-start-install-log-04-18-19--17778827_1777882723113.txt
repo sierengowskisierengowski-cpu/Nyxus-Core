@@ -1,0 +1,129 @@
+
+...xXx... ~
+❯ cat /tmp/nyxus-start-install.log                      04:18:19
+─────┬────────────────────────────────────────────────────────────
+     │ File: /tmp/nyxus-start-install.log
+─────┼────────────────────────────────────────────────────────────
+   1 │   elevating with sudo (you'll be prompted)…
+   2 │
+   3 │
+   4 │ 38;5;177m▌ fetch nyxus-start.tgz
+   5 │   38;5;51m✓  downloaded 268K
+   6 │
+   7 │ 38;5;177m▌ extract
+   8 │   38;5;51m✓  extracted to /tmp/tmp.ISzNenWwHA/start
+   9 │
+  10 │ 38;5;177m▌ run install.sh
+  11 │
+  12 │ 38;5;177m▌ preflight
+  13 │   38;5;51m✓  python3 / install present
+  14 │
+  15 │ 38;5;177m▌ system packages (pacman)
+  16 │  there is nothing to do
+  17 │   38;5;51m✓  gtk4 / python-gobject / python-cairo / psutil
+  18 │  there is nothing to do
+  19 │   38;5;51m✓  gtk4-layer-shell (Start anchors above taskbar)
+  20 │  there is nothing to do
+  21 │   38;5;51m✓  jq (used to patch Waybar config safely)
+  22 │
+  23 │ 38;5;177m▌ deploy files → /home/nyx/.nyxus/nyxus-start
+  24 │   38;5;51m✓  deployed 6 files
+  25 │
+  26 │ 38;5;177m▌ launcher script
+  27 │   38;5;51m✓  /home/nyx/.local/bin/nyxus-start (with LayerSh
+     │ ell LD_PRELOAD)
+  28 │   38;5;51m✓  /home/nyx/.local/bin/nyxus-waybar-state
+  29 │
+  30 │ 38;5;177m▌ NYXUS App Store
+  31 │   38;5;51m✓  /home/nyx/.local/bin/nyxus-store
+  32 │   38;5;51m✓  /home/nyx/.local/share/applications/io.nyxus.s
+     │ tore.desktop
+  33 │
+  34 │ 38;5;177m▌ notifications flyout
+  35 │   38;5;51m✓  /home/nyx/.local/bin/nyxus-notifications (real
+     │  GTK4 flyout, LayerShell preload)
+  36 │
+  37 │ 38;5;177m▌ fonts (Caveat — handwritten button labels)
+  38 │   38;5;220m!  Caveat copied but fontconfig still does NOT s
+     │ ee it — try: fc-cache -frv ; or relog.
+  39 │   38;5;51m✓  .desktop entry
+  40 │
+  41 │ 38;5;177m▌ waybar integration
+  42 │ /tmp/tmp.ISzNenWwHA/start/install.sh: line 336: syntax erro
+     │ r near unexpected token `.[]'
+─────┴────────────────────────────────────────────────────────────
+
+...xXx... ~
+❯ echo "─ start install log ─"                          04:18:23
+cat /tmp/nyxus-start-install.log
+echo
+echo "─ what start.tgz did your box just download? ─"
+curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-start.tgz | sha256sum | cut -c1-12
+echo "  expected: 8fa656b3ca4d  (the new fix-bundle)"
+echo
+echo "─ does your live waybar config still have OLD custom/app-settings (pre-fix)? ─"
+grep -c 'custom/app-settings\|custom/nyxus-start\|custom/nyxus-panel' /home/nyx/.config/waybar/config
+echo "  expected after successful install: nyxus-start ≥1, nyxus-panel ≥1, app-settings 0"
+─ start install log ─
+─────┬────────────────────────────────────────────────────────────
+     │ File: /tmp/nyxus-start-install.log
+─────┼────────────────────────────────────────────────────────────
+   1 │   elevating with sudo (you'll be prompted)…
+   2 │
+   3 │
+   4 │ 38;5;177m▌ fetch nyxus-start.tgz
+   5 │   38;5;51m✓  downloaded 268K
+   6 │
+   7 │ 38;5;177m▌ extract
+   8 │   38;5;51m✓  extracted to /tmp/tmp.ISzNenWwHA/start
+   9 │
+  10 │ 38;5;177m▌ run install.sh
+  11 │
+  12 │ 38;5;177m▌ preflight
+  13 │   38;5;51m✓  python3 / install present
+  14 │
+  15 │ 38;5;177m▌ system packages (pacman)
+  16 │  there is nothing to do
+  17 │   38;5;51m✓  gtk4 / python-gobject / python-cairo / psutil
+  18 │  there is nothing to do
+  19 │   38;5;51m✓  gtk4-layer-shell (Start anchors above taskbar)
+  20 │  there is nothing to do
+  21 │   38;5;51m✓  jq (used to patch Waybar config safely)
+  22 │
+  23 │ 38;5;177m▌ deploy files → /home/nyx/.nyxus/nyxus-start
+  24 │   38;5;51m✓  deployed 6 files
+  25 │
+  26 │ 38;5;177m▌ launcher script
+  27 │   38;5;51m✓  /home/nyx/.local/bin/nyxus-start (with LayerSh
+     │ ell LD_PRELOAD)
+  28 │   38;5;51m✓  /home/nyx/.local/bin/nyxus-waybar-state
+  29 │
+  30 │ 38;5;177m▌ NYXUS App Store
+  31 │   38;5;51m✓  /home/nyx/.local/bin/nyxus-store
+  32 │   38;5;51m✓  /home/nyx/.local/share/applications/io.nyxus.s
+     │ tore.desktop
+  33 │
+  34 │ 38;5;177m▌ notifications flyout
+  35 │   38;5;51m✓  /home/nyx/.local/bin/nyxus-notifications (real
+     │  GTK4 flyout, LayerShell preload)
+  36 │
+  37 │ 38;5;177m▌ fonts (Caveat — handwritten button labels)
+  38 │   38;5;220m!  Caveat copied but fontconfig still does NOT s
+     │ ee it — try: fc-cache -frv ; or relog.
+  39 │   38;5;51m✓  .desktop entry
+  40 │
+  41 │ 38;5;177m▌ waybar integration
+  42 │ /tmp/tmp.ISzNenWwHA/start/install.sh: line 336: syntax erro
+     │ r near unexpected token `.[]'
+─────┴────────────────────────────────────────────────────────────
+
+─ what start.tgz did your box just download? ─
+8fa656b3ca4d
+  expected: 8fa656b3ca4d  (the new fix-bundle)
+
+─ does your live waybar config still have OLD custom/app-settings (pre-fix)? ─
+7
+  expected after successful install: nyxus-start ≥1, nyxus-panel ≥1, app-settings 0
+
+...xXx... ~
+❯                               
