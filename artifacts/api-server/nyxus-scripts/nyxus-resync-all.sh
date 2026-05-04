@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.04-r4"
+NYXUS_RESYNC_VERSION="2026.05.04-r5"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -145,6 +145,37 @@ for app in "${APPS[@]}"; do
 done
 
 # ── 3/6 INSTALL Hyprland window rules ────────────────────────────────────────
+## ─────────────────────────────────────────────────────────────────────────────
+## STEP 2.5 — DIRECT chrome.py refresh (r5)
+## ─────────────────────────────────────────────────────────────────────────────
+## The per-app installers above sometimes leave a stale nyxus_chrome.py at
+## ~/.nyxus/ (because the start tarball doesn't always bundle the latest
+## copy). Force-overwrite it directly from production so r5+ chrome changes
+## actually land on the user's machine. Without this step every chrome.py
+## update would silently no-op until the start.tgz happened to be repacked.
+step "2.5/6 · DIRECT-DOWNLOAD nyxus_chrome.py (force-refresh from production)"
+NYX_HOME_DIR="$REAL_HOME/.nyxus"
+mkdir -p "$NYX_HOME_DIR"
+chown "$REAL_USER:$REAL_USER" "$NYX_HOME_DIR"
+chrome_dst="$NYX_HOME_DIR/nyxus_chrome.py"
+if curl -fsSL --max-time 30 "$PROD/nyxus_chrome.py" -o "$chrome_dst.new"; then
+  # Validate the file actually parses before swapping it in — protects users
+  # from a half-downloaded file bricking every NYXUS app on next launch.
+  if python3 -c "import ast,sys; ast.parse(open('$chrome_dst.new').read())" 2>/dev/null; then
+    mv "$chrome_dst.new" "$chrome_dst"
+    chown "$REAL_USER:$REAL_USER" "$chrome_dst"
+    chmod 644 "$chrome_dst"
+    chrome_ver=$(grep '^NYXUS_CHROME_VERSION' "$chrome_dst" | head -1 | cut -d'"' -f2)
+    chrome_sha=$(sha256sum "$chrome_dst" | cut -c1-12)
+    ok "wrote $chrome_dst (version=$chrome_ver, sha=$chrome_sha)"
+  else
+    rm -f "$chrome_dst.new"
+    fail "downloaded chrome.py failed Python syntax check — kept previous copy"
+  fi
+else
+  fail "could not download nyxus_chrome.py — apps will keep their old chrome"
+fi
+
 step "3/6 · INSTALL Hyprland window rules (float NYXUS apps + 900x650 default)"
 HYPR_DIR="$REAL_HOME/.config/hypr"
 HYPR_CONF_D="$HYPR_DIR/conf.d"
@@ -317,17 +348,20 @@ done
 echo
 echo "${B}System checks:${R}"
 
-# chrome.py SHA on disk
+# chrome.py SHA + version on disk (r5 expected)
 chrome_path="$REAL_HOME/.nyxus/nyxus_chrome.py"
 if [[ -f "$chrome_path" ]]; then
   sha=$(sha256sum "$chrome_path" | cut -c1-12)
-  if [[ "$sha" == "6ef320c0d69e" ]]; then
-    ok "chrome.py SHA = $sha (universal Caveat + hover-scramble + size policy)"
+  ver=$(grep '^NYXUS_CHROME_VERSION' "$chrome_path" | head -1 | cut -d'"' -f2)
+  if [[ "$sha" == "dd5f06042d75" ]]; then
+    ok "chrome.py version=$ver  sha=$sha (transparent windows + universal hover-scramble)"
+  elif [[ -n "$ver" && "$ver" == 2026.05.04-r* ]]; then
+    ok "chrome.py version=$ver  sha=$sha (r4+ — visual changes will be live next app launch)"
   else
-    warn "chrome.py SHA = $sha (expected 6ef320c0d69e — start install may have failed)"
+    warn "chrome.py sha=$sha version=${ver:-unknown} (expected dd5f06042d75 / r4+ — direct-download step may have failed)"
   fi
 else
-  fail "chrome.py NOT FOUND at $chrome_path — start install failed"
+  fail "chrome.py NOT FOUND at $chrome_path — direct-download step failed"
 fi
 
 # waybar config NYXUS module count
