@@ -296,11 +296,27 @@ def _install_global_css():
         log.warning("nyxus_chrome css: %s", e)
 
 
+def _is_adw_app_window(window) -> bool:
+    """True if `window` is an Adw.ApplicationWindow (uses set_content/
+    get_content), False for plain Gtk.ApplicationWindow (uses set_child/
+    get_child). Adw is optional — falls back to False if unavailable."""
+    try:
+        import gi as _gi
+        _gi.require_version("Adw", "1")
+        from gi.repository import Adw as _Adw
+        return isinstance(window, _Adw.ApplicationWindow)
+    except Exception:
+        return False
+
+
 def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
                    title_label: Optional[Gtk.Label] = None) -> Optional[GraffitiBackground]:
     """Wrap `window`'s current child in a Gtk.Overlay with a graffiti
     mural underneath. Inject shared NYXUS chrome CSS. Optionally swap a
     hero label's markup to the rainbow palette.
+
+    Handles both `Gtk.ApplicationWindow` (set_child/get_child) and
+    `Adw.ApplicationWindow` (set_content/get_content).
 
     Returns the GraffitiBackground instance so callers can call
     `.set_page_key(...)` later (e.g. when changing tabs).
@@ -309,8 +325,19 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
     if window is None: return None
     _install_global_css()
 
+    # Pick the right accessor pair for the window class — Gtk uses
+    # set_child/get_child; Adw.ApplicationWindow uses set_content/
+    # get_content (its set_child is reserved for the internal layout).
+    is_adw = _is_adw_app_window(window)
+    if is_adw:
+        get_content = window.get_content
+        set_content = window.set_content
+    else:
+        get_content = window.get_child
+        set_content = window.set_child
+
     # Already wrapped? (re-entrancy guard)
-    cur = window.get_child()
+    cur = get_content()
     if cur is None: return None
     if isinstance(cur, Gtk.Overlay) and cur.get_data("nyxus-chrome-installed"):
         bg = cur.get_data("nyxus-chrome-bg")
@@ -320,8 +347,8 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
         return bg
 
     try:
-        # Detach current child, build overlay [graffiti, original]
-        window.set_child(None)
+        # Detach current content, build overlay [graffiti, original]
+        set_content(None)
         overlay = Gtk.Overlay()
         overlay.set_hexpand(True); overlay.set_vexpand(True)
         bg = GraffitiBackground(page_key=page_key)
@@ -331,11 +358,11 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
         overlay.add_overlay(cur)
         overlay.set_data("nyxus-chrome-installed", True)
         overlay.set_data("nyxus-chrome-bg", bg)
-        window.set_child(overlay)
+        set_content(overlay)
     except Exception as e:
         log.warning("install_chrome: %s", e)
         # restore on failure
-        try: window.set_child(cur)
+        try: set_content(cur)
         except Exception: pass
         return None
 
