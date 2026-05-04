@@ -43,6 +43,47 @@ System-wide audit + tone-down across all 12 GTK apps:
 - **Letter-scrambling titles** (`rainbow_markup`): 9/12 apps (3 omissions
   intentional — tiny dropdowns + custom Cairo titles)
 
+### Phase 2.2 — GodsApp visual language, system-wide (May 2026)
+User declared **GodsApp the gold-standard reference** and demanded every
+other NYXUS app (start, panel, notifications, settings, all 12 — terminal
+excluded) match its exact look: transparent window so the graffiti mural
+shows through, translucent dark inner panels, semi-opaque entries/textviews,
+rainbow-cycling neon button outlines with handwritten Caveat labels.
+- Rewrote `CHROME_CSS` in `nyxus_chrome.py` to promote godsapp's
+  visual rules globally:
+  - `* { font-family: 'Caveat' }` universal rule (mirrors godsapp/ui.py),
+    with `.nyx-mono`/`.nyx-code` opt-out for code/log areas.
+  - Window 100% transparent; outer shell boxes at 0.42 alpha; inner
+    panels (frame/scrolledwindow/listbox/.card) at 0.55 with 1px
+    white-6% border for godsapp's "dark glass plate" look.
+  - Buttons: transparent fill, 1.5px neon-pink border by default;
+    `nth-child(2n/3n/4n)` cycles through blue/gold/green so adjacent
+    buttons in a row each take a different neon hue (matches the
+    pink/cyan/gold/magenta button row in the godsapp screenshot).
+    Hover adds a matching-color box-shadow glow.
+  - Headerbar / titlebar at 0.65 alpha with 1px pink underline so Adw
+    apps' top bars also show the graffiti through them.
+  - Adw semantic classes (`.suggested-action` -> green outline,
+    `.destructive-action` -> red, `.flat` -> borderless w/ hover glow).
+  - `entry`/`textview`/`spinbutton` at 0.85 alpha with neon-pink focus
+    ring; `dropdown`, `check`, `radio`, `switch`, `scale` all picked up
+    matching neon styling. `tooltip` gets the same dark-pink-edged plate.
+- Loader hardened: CHROME_CSS is now a Python `str` (so non-ASCII
+  characters in comments would be safe) but block was sanitized to
+  pure ASCII anyway. `_install_global_css()` encodes to bytes once,
+  passes to `Gtk.CssProvider.load_from_data`, falls back to the
+  string-arg form on `TypeError` for older GTK4 builds.
+- Loaded at `Gtk.STYLE_PROVIDER_PRIORITY_USER` so it overrides every
+  app's own APPLICATION-priority CSS without per-app code changes.
+- Sync verified: `nyxus-scripts/nyxus_chrome.py` -> `dist/` SHA match,
+  `curl localhost:80/api/download/nyxus/nyxus_chrome.py` returns the
+  same SHA, key new selectors (`button:nth-child`, `headerbar`,
+  `switch:checked`, `tooltip`, `.nyx-mono`) all present in served file.
+- Terminal intentionally excluded — it doesn't ship the bootstrap so
+  it stays a clean readable monospace surface. All 12 main apps + the
+  start/panel/notifications/settings shells inherit the new look on
+  next reinstall.
+
 ### Phase 2.1 — Adw + Store fixes (May 2026)
 Two install-time gaps caught after the first user reinstall:
 - **`install_chrome` is now Adw-aware.** `Adw.ApplicationWindow` uses

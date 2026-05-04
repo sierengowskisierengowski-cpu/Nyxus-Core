@@ -1,0 +1,14 @@
+PyGObject>=3.46
+psutil>=5.9
+requests>=2.31
+scapy>=2.5
+python-nmap>=0.7
+pyshark>=0.6
+cryptography>=41.0
+yara-python>=4.5
+capstone>=5.0
+paho-mqtt>=2.0
+python-whois>=0.9
+dnspython>=2.6
+beautifulsoup4>=4.12
+reportlab>=4.0
