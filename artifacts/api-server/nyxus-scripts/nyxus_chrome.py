@@ -43,7 +43,7 @@ log = logging.getLogger("nyxus.chrome")
 # Bumped with every visible chrome change so apps can log which chrome
 # version actually loaded. Curl /api/download/nyxus/nyxus_chrome.py |
 # grep NYXUS_CHROME_VERSION to confirm freshness from prod.
-NYXUS_CHROME_VERSION = "2026.05.04-r5"
+NYXUS_CHROME_VERSION = "2026.05.04-r6"
 
 # ── Palette (matches nyxus_settings.py) ─────────────────────────────────────
 NEON_PINK   = (1.00, 0.00, 1.00)
@@ -294,6 +294,75 @@ window > headerbar, window > windowhandle, window > windowhandle > * {
 .nyx-bg, .nyx-shell-bg, .nyx-frosted, .nyx-panel,
 .nyx-godsapp-frame, .nyx-card {
     background-color: rgba(10, 10, 18, 0.72);
+}
+
+/* === ACCENT FROST PALETTE — apply to any panel for tinted frosted glass.
+ * Layer with .nyx-frosted-* + .nyx-glow-* for soft neon halo.        === */
+.nyx-frost-dark    { background-color: rgba(10, 10, 18, 0.65); border-radius: 10px; }
+.nyx-frost-deeper  { background-color: rgba(5, 5, 12, 0.82);  border-radius: 10px; }
+.nyx-frost-pink    { background-color: rgba(255, 0, 180, 0.28);  border-radius: 10px;
+                     border: 1px solid rgba(255, 0, 180, 0.55); }
+.nyx-frost-cyan    { background-color: rgba(0, 200, 255, 0.26);  border-radius: 10px;
+                     border: 1px solid rgba(0, 200, 255, 0.55); }
+.nyx-frost-purple  { background-color: rgba(140, 60, 220, 0.30); border-radius: 10px;
+                     border: 1px solid rgba(140, 60, 220, 0.55); }
+.nyx-frost-gold    { background-color: rgba(255, 200, 60, 0.24); border-radius: 10px;
+                     border: 1px solid rgba(255, 215, 0, 0.65); }
+.nyx-frost-green   { background-color: rgba(60, 255, 140, 0.24); border-radius: 10px;
+                     border: 1px solid rgba(57, 255, 20, 0.55); }
+.nyx-frost-red     { background-color: rgba(255, 60, 80, 0.30);  border-radius: 10px;
+                     border: 1px solid rgba(255, 80, 100, 0.55); }
+.nyx-frost-orange  { background-color: rgba(255, 140, 0, 0.26);  border-radius: 10px;
+                     border: 1px solid rgba(255, 140, 0, 0.55); }
+
+.nyx-glow-pink   { box-shadow: 0 0 18px rgba(255, 0, 180, 0.45); }
+.nyx-glow-cyan   { box-shadow: 0 0 18px rgba(0, 200, 255, 0.45); }
+.nyx-glow-purple { box-shadow: 0 0 18px rgba(140, 60, 220, 0.55); }
+.nyx-glow-gold   { box-shadow: 0 0 22px rgba(255, 215, 0, 0.65); }
+.nyx-glow-green  { box-shadow: 0 0 18px rgba(57, 255, 20, 0.45); }
+.nyx-glow-red    { box-shadow: 0 0 18px rgba(255, 80, 100, 0.55); }
+
+/* === UNIVERSAL frost for content widgets that apps commonly paint solid.
+ * Catches GTK textview/entry/listrows everywhere so leftover solid bg
+ * panels become frosted automatically without per-app patches.       === */
+textview {
+    background-color: rgba(10, 10, 18, 0.55);
+    color: #efefee;
+    border-radius: 8px;
+}
+textview text { background-color: transparent; color: #efefee; }
+
+scrolledwindow > viewport,
+scrolledwindow > viewport > * {
+    background-color: transparent;
+}
+
+list, listview, listbox,
+list > row, listview > row, listbox > row {
+    background-color: transparent;
+    color: #efefee;
+}
+listbox > row:hover, list > row:hover, listview > row:hover {
+    background-color: rgba(255, 0, 180, 0.12);
+}
+listbox > row:selected, list > row:selected, listview > row:selected {
+    background-color: rgba(255, 0, 180, 0.22);
+    box-shadow: inset 3px 0 0 rgba(255, 0, 180, 0.85);
+}
+
+frame > border { border-color: rgba(192, 132, 252, 0.30); }
+
+/* Scrollbars: neon-pink default, cyan on hover */
+scrollbar { background: transparent; }
+scrollbar slider {
+    background: rgba(255, 0, 180, 0.55);
+    border-radius: 4px;
+    min-width: 8px;
+    min-height: 8px;
+}
+scrollbar slider:hover {
+    background: rgba(0, 220, 255, 0.85);
+    box-shadow: 0 0 8px rgba(0, 220, 255, 0.55);
 }
 
 /* -- Typography: UNIVERSAL Caveat, mirrors godsapp/ui.py exactly ----- */
