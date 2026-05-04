@@ -71,7 +71,7 @@ for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
          nyxus_stickies.py nyxus_notepad.py nyxus_weather.py nyxus_terminal.py \
          nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
          nyxus_doctor.py nyxus_launcher.py nyxus_powermenu.py \
-         nyxus_screenshot.py; do
+         nyxus_screenshot.py nyxus_chrome.py nyxus_quicksettings.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
