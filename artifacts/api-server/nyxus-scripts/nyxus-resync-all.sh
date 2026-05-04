@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.04-r11"
+NYXUS_RESYNC_VERSION="2026.05.04-r12"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -89,29 +89,32 @@ printf "  ${DIM}source:${R} %s\n" "$PROD"
 hr
 
 # ── 1/6 KILL stale processes ─────────────────────────────────────────────────
-# IMPORTANT: patterns are ANCHORED to "python" so we only kill the actual
-# NYXUS python apps. Earlier revisions matched any process with "~/.nyxus/"
-# anywhere in its argv — that included swaybg / hyprpaper when they were
-# launched with a wallpaper path under ~/.nyxus/, which wiped the user's
-# desktop background. Never match swaybg, hyprpaper, mpvpaper, or wpaperd.
-step "1/6 · KILL all running NYXUS python apps (evict stale chrome.py from memory)"
-killed=0
-for pat in \
-    "python[0-9.]*[[:space:]].*$REAL_HOME/\.nyxus/" \
-    "python[0-9.]*[[:space:]].*$REAL_HOME/\.local/share/nyxus-" \
-    "python[0-9.]*[[:space:]].*/opt/nyxus-"; do
-  if pkill -f "$pat" 2>/dev/null; then
-    killed=$((killed + 1))
+# Bulletproof PID-by-PID killer. For every process under $REAL_USER we read
+# /proc/$pid/cmdline; if it references a NYXUS path AND is NOT a wallpaper
+# daemon, we send SIGTERM. This avoids any pkill -f regex pitfalls where
+# argv layout (wrapper scripts, env vars, hashbangs) defeats the pattern.
+step "1/6 · KILL stale NYXUS apps  (wallpaper daemons explicitly protected)"
+WALLPAPER_RE='swaybg|hyprpaper|mpvpaper|wpaperd|swww-daemon|swww'
+NYXUS_RE="$REAL_HOME/\.nyxus/|$REAL_HOME/\.local/share/nyxus-|/opt/nyxus-|nyxus-godsapp|nyxus-shield|nyxus-sage|nyxus-studio|nyxus-home|nyxus-notepad|nyxus-weather|nyxus-passwords|nyxus-intel|nyxus-phantom|nyxus-panel|nyxus-start"
+killed_pids=()
+skipped_wp=()
+for pid in $(pgrep -u "$REAL_USER" "" 2>/dev/null); do
+  cmd="$(tr '\0' ' ' < /proc/$pid/cmdline 2>/dev/null)"
+  [[ -z "$cmd" ]] && continue
+  if echo "$cmd" | grep -qE "$WALLPAPER_RE"; then
+    skipped_wp+=("$pid")
+    continue
+  fi
+  if echo "$cmd" | grep -qE "$NYXUS_RE"; then
+    kill -TERM "$pid" 2>/dev/null && killed_pids+=("$pid")
   fi
 done
-# Belt-and-suspenders: explicitly protect any wallpaper daemon that somehow
-# matched. If they got killed, restart from the user's hyprland config.
-for wp in swaybg hyprpaper mpvpaper wpaperd swww; do
-  if ! pgrep -x "$wp" >/dev/null 2>&1; then
-    : # was not running before, leave alone
-  fi
+sleep 0.5
+# Force-kill any survivors after grace period
+for pid in "${killed_pids[@]}"; do
+  kill -KILL "$pid" 2>/dev/null || true
 done
-ok "killed stale NYXUS python processes (wallpaper daemons untouched)"
+ok "killed ${#killed_pids[@]} NYXUS app PIDs ; skipped ${#skipped_wp[@]} wallpaper daemons"
 
 # ── 2/6 INSTALL every app from prod ──────────────────────────────────────────
 step "2/6 · DOWNLOAD + INSTALL every app from production"
@@ -353,6 +356,27 @@ fi
 
 # ── 6/6 VERIFY ──────────────────────────────────────────────────────────────
 step "6/6 · VERIFICATION"
+# Print the chrome.py version that actually landed on disk — so you can
+# eyeball it and confirm the new chrome is live, not the cached one.
+CHROME_ON_DISK=""
+for cand in "$REAL_HOME/.nyxus/nyxus_chrome.py" "/opt/nyxus/nyxus_chrome.py" "$REAL_HOME/.local/share/nyxus/nyxus_chrome.py"; do
+  if [[ -f "$cand" ]]; then
+    ver=$(grep -E '^NYXUS_CHROME_VERSION' "$cand" | head -1)
+    printf "  ${B}chrome on disk:${R}  %-60s  %s\n" "$cand" "$ver"
+    CHROME_ON_DISK="$cand"
+    break
+  fi
+done
+if [[ -z "$CHROME_ON_DISK" ]]; then
+  warn "could not find nyxus_chrome.py on disk in any standard location"
+fi
+# Confirm wallpaper daemon is still alive
+for wp in swaybg hyprpaper mpvpaper wpaperd swww-daemon; do
+  if pgrep -x "$wp" >/dev/null 2>&1; then
+    ok "wallpaper daemon still running:  $wp  (background preserved)"
+    break
+  fi
+done
 
 echo
 echo "${B}Per-app install result:${R}"
