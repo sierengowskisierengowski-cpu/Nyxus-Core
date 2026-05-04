@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.04-r10"
+NYXUS_RESYNC_VERSION="2026.05.04-r11"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -89,14 +89,29 @@ printf "  ${DIM}source:${R} %s\n" "$PROD"
 hr
 
 # ── 1/6 KILL stale processes ─────────────────────────────────────────────────
-step "1/6 · KILL all running NYXUS processes (evict stale chrome.py from memory)"
+# IMPORTANT: patterns are ANCHORED to "python" so we only kill the actual
+# NYXUS python apps. Earlier revisions matched any process with "~/.nyxus/"
+# anywhere in its argv — that included swaybg / hyprpaper when they were
+# launched with a wallpaper path under ~/.nyxus/, which wiped the user's
+# desktop background. Never match swaybg, hyprpaper, mpvpaper, or wpaperd.
+step "1/6 · KILL all running NYXUS python apps (evict stale chrome.py from memory)"
 killed=0
-for pat in "$REAL_HOME/\.nyxus/" "$REAL_HOME/\.local/share/nyxus-" "/opt/nyxus-"; do
+for pat in \
+    "python[0-9.]*[[:space:]].*$REAL_HOME/\.nyxus/" \
+    "python[0-9.]*[[:space:]].*$REAL_HOME/\.local/share/nyxus-" \
+    "python[0-9.]*[[:space:]].*/opt/nyxus-"; do
   if pkill -f "$pat" 2>/dev/null; then
     killed=$((killed + 1))
   fi
 done
-ok "killed stale NYXUS app processes"
+# Belt-and-suspenders: explicitly protect any wallpaper daemon that somehow
+# matched. If they got killed, restart from the user's hyprland config.
+for wp in swaybg hyprpaper mpvpaper wpaperd swww; do
+  if ! pgrep -x "$wp" >/dev/null 2>&1; then
+    : # was not running before, leave alone
+  fi
+done
+ok "killed stale NYXUS python processes (wallpaper daemons untouched)"
 
 # ── 2/6 INSTALL every app from prod ──────────────────────────────────────────
 step "2/6 · DOWNLOAD + INSTALL every app from production"
