@@ -419,11 +419,11 @@ def apply_profile(profile, hw):
 # ══════════════════════════════════════════════════════════════════════════════
 CSS = """
 * { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
-window { background-color: #08080e; color: rgba(232,224,245,0.92); }
+window { background-color: transparent; color: rgba(232,224,245,0.92); }
 
 .nav-bar {
-    background-color: #000000;
-    border-right: 3px solid rgba(255,0,255,0.25);
+    background-color: rgba(0, 0, 0, 0.62);
+    border-right: 3px solid rgba(255,0,255,0.45);
     min-width: 160px;
 }
 .nav-btn {

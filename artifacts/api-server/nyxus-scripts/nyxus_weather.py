@@ -79,31 +79,32 @@ C_DARK   = (0.031, 0.031, 0.055) # #08080e background
 # ── CSS ──────────────────────────────────────────────────────────────────────
 CSS = """
 window {
-  background-color: #08080e;
+  background-color: transparent;
   font-family: 'Caveat', 'Patrick Hand', cursive;
 }
 .search-entry {
-  background: rgba(255,255,255,0.06);
-  border: 2px solid rgba(255,0,255,0.35);
-  border-radius: 6px;
-  color: rgba(255,255,255,0.88);
+  background: rgba(10, 10, 20, 0.55);
+  border: 2px solid rgba(255,0,255,0.45);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.92);
   font-family: 'Caveat', cursive;
   font-size: 17px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   caret-color: #ff00ff;
 }
-.search-entry:focus { border-color: #ff00ff; box-shadow: 0 0 14px rgba(255,0,255,0.25); }
+.search-entry:focus { border-color: #00dcff; box-shadow: 0 0 14px rgba(0,220,255,0.55); }
 .go-btn {
-  background: #cc00ff;
+  background: rgba(204, 0, 255, 0.55);
   color: #fff;
-  border: none;
-  border-radius: 6px;
+  border: 1px solid rgba(255, 0, 255, 0.85);
+  border-radius: 8px;
   font-family: 'Caveat', cursive;
   font-weight: 700;
   font-size: 18px;
-  padding: 6px 18px;
+  padding: 6px 22px;
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.45);
 }
-.go-btn:hover { background: #ff00ff; }
+.go-btn:hover { background: rgba(255, 0, 255, 0.65); box-shadow: 0 0 18px rgba(255, 0, 255, 0.85); }
 .err-lbl { color: #ff5500; font-family: 'Caveat', cursive; font-size: 15px; padding: 0 14px; }
 """
 
