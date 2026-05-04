@@ -43,7 +43,7 @@ log = logging.getLogger("nyxus.chrome")
 # Bumped with every visible chrome change so apps can log which chrome
 # version actually loaded. Curl /api/download/nyxus/nyxus_chrome.py |
 # grep NYXUS_CHROME_VERSION to confirm freshness from prod.
-NYXUS_CHROME_VERSION = "2026.05.04-r8"
+NYXUS_CHROME_VERSION = "2026.05.04-r9"
 
 # ── Palette (matches nyxus_settings.py) ─────────────────────────────────────
 NEON_PINK   = (1.00, 0.00, 1.00)
@@ -322,51 +322,72 @@ window > headerbar, window > windowhandle, window > windowhandle > * {
 .nyx-glow-green  { box-shadow: 0 0 18px rgba(57, 255, 20, 0.45); }
 .nyx-glow-red    { box-shadow: 0 0 18px rgba(255, 80, 100, 0.55); }
 
-/* === WHITE FROST PALETTE — layered milk-glass for hero/content pieces.
- * Auto-darkens text inside since dark ink is needed on light frost.
- *   solid → ~92% white, looks frosted but nearly opaque
- *   white → ~65% white, wallpaper bleeds through clearly
- *   soft  → ~30% white, very translucent over wallpaper
- *  All three keep the neon border so they still feel "NYXUS".       === */
+/* === SEATTLE-WASHED TRI-TONE PALETTE ============================= *
+ * Aged paper / overcast fog / sun-bleached espresso. Muted, warm    *
+ * greys instead of pure white-on-black so neon accents sing. Think  *
+ * driftwood, weathered concrete, washed denim, faded tarmac.        *
+ *                                                                    *
+ *   .nyx-frost-cream  → warm off-white milk-glass, nearly solid      *
+ *   .nyx-frost-fog    → light driftwood-grey, wallpaper hints through*
+ *   .nyx-frost-tar    → sun-bleached espresso-black, warm light text *
+ *                                                                    *
+ * Plus legacy aliases (.nyx-frost-white-solid etc.) so existing      *
+ * apps keep working without churn.                                  */
+
+/* TIER 1 — cream / aged-paper hero. Heavy frost, you can read code */
+.nyx-frost-cream,
 .nyx-frost-white-solid {
-    background-color: rgba(245, 245, 250, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.85);
+    background-color: rgba(245, 243, 239, 0.92);
+    border: 1px solid rgba(255, 252, 244, 0.85);
     border-radius: 12px;
-    color: #0a0a12;
+    color: #1a1816;
 }
-.nyx-frost-white-solid label,
-.nyx-frost-white-solid > * { color: #0a0a12; }
-.nyx-frost-white-solid:hover { box-shadow: 0 0 20px rgba(255, 255, 255, 0.45); }
+.nyx-frost-cream label, .nyx-frost-cream > *,
+.nyx-frost-white-solid label, .nyx-frost-white-solid > * {
+    color: #1a1816;
+}
 
+/* TIER 2 — fog / overcast Seattle grey. Wallpaper bleeds through.  */
+.nyx-frost-fog,
 .nyx-frost-white {
-    background-color: rgba(248, 248, 252, 0.62);
-    border: 1px solid rgba(255, 255, 255, 0.55);
+    background-color: rgba(220, 217, 211, 0.72);
+    border: 1px solid rgba(245, 243, 239, 0.55);
     border-radius: 12px;
-    color: #0a0a12;
+    color: #2a2622;
 }
-.nyx-frost-white label,
-.nyx-frost-white > * { color: #0a0a12; }
+.nyx-frost-fog label, .nyx-frost-fog > *,
+.nyx-frost-white label, .nyx-frost-white > * {
+    color: #2a2622;
+}
 
+/* TIER 3 — tar / sun-bleached espresso. Warm faded black w/ cream ink */
+.nyx-frost-tar {
+    background-color: rgba(42, 38, 34, 0.78);
+    border: 1px solid rgba(176, 172, 164, 0.35);
+    border-radius: 12px;
+    color: #f0ede7;
+}
+.nyx-frost-tar label, .nyx-frost-tar > * { color: #f0ede7; }
+
+/* Very translucent variant — image-2 wallpaper-forward look */
 .nyx-frost-white-soft {
-    background-color: rgba(255, 255, 255, 0.30);
-    border: 1px solid rgba(255, 255, 255, 0.45);
+    background-color: rgba(245, 243, 239, 0.30);
+    border: 1px solid rgba(245, 243, 239, 0.45);
     border-radius: 12px;
-    color: #0a0a12;
+    color: #1a1816;
 }
-.nyx-frost-white-soft label,
-.nyx-frost-white-soft > * { color: #0a0a12; }
+.nyx-frost-white-soft label, .nyx-frost-white-soft > * { color: #1a1816; }
 
-/* Shield/sage/studio hero widgets — auto-promote known classes      *
- * to white-solid frost so apps inherit the look without per-app     *
- * code changes.                                                     */
+/* Shield/sage/studio hero widgets — auto-promote shared classes to *
+ * the cream-paper tier so apps inherit the look without code edits.*/
 .nyx-card,
 .nyx-hero,
 .nyx-threat-score,
 .sage-issue,
 .nyx-doc-title {
-    background-color: rgba(248, 248, 252, 0.62);
-    color: #0a0a12;
-    border: 1px solid rgba(255, 255, 255, 0.55);
+    background-color: rgba(245, 243, 239, 0.88);
+    color: #1a1816;
+    border: 1px solid rgba(176, 172, 164, 0.45);
     border-radius: 12px;
     padding: 12px;
 }
@@ -374,21 +395,20 @@ window > headerbar, window > windowhandle, window > windowhandle > * {
 .nyx-hero  label, .nyx-hero  > *,
 .sage-issue label, .sage-issue > *,
 .nyx-threat-score, .nyx-threat-label {
-    color: #0a0a12;
+    color: #1a1816;
 }
-.nyx-threat-score { font-size: 38px; font-weight: bold; }
-/* NB: keep this rule plain — em-unit spacing properties are not parsed
- * by GTK4 and a single bad property invalidates the whole stylesheet. */
-.nyx-threat-label { font-size: 14px; color: #2a2a32; }
+.nyx-threat-score { font-size: 38px; font-weight: bold; color: #1a1816; }
+/* Keep plain — em-unit spacing breaks GTK4 stylesheet load */
+.nyx-threat-label { font-size: 14px; color: #5c5852; }
 
-/* Opt-out: if an app needs the old dark card explicitly. */
+/* Opt-out: any app that needs the original dark card explicitly. */
 .nyx-card-dark {
-    background-color: rgba(10, 10, 18, 0.72);
-    color: #efefee;
-    border: 1px solid rgba(192, 132, 252, 0.30);
+    background-color: rgba(42, 38, 34, 0.78);
+    color: #f0ede7;
+    border: 1px solid rgba(176, 172, 164, 0.35);
     border-radius: 12px;
 }
-.nyx-card-dark label, .nyx-card-dark > * { color: #efefee; }
+.nyx-card-dark label, .nyx-card-dark > * { color: #f0ede7; }
 
 /* === UNIVERSAL frost for content widgets that apps commonly paint solid.
  * Catches GTK textview/entry/listrows everywhere so leftover solid bg
