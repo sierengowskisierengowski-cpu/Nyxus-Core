@@ -137,8 +137,53 @@ for app in "${APPS[@]}"; do
   fi
 done
 
-# ── 3/4 RELOAD waybar ────────────────────────────────────────────────────────
-step "3/4 · RELOAD waybar (so the new NYXUS modules show up)"
+# ── 3/5 INSTALL Hyprland window rules (float NYXUS apps + 900x650 default) ─
+step "3/5 · INSTALL Hyprland window rules (float NYXUS apps at sensible size)"
+HYPR_DIR="$REAL_HOME/.config/hypr"
+HYPR_CONF_D="$HYPR_DIR/conf.d"
+HYPR_RULES="$HYPR_CONF_D/nyxus-windowrules.conf"
+HYPR_MAIN="$HYPR_DIR/hyprland.conf"
+SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-windowrules.conf'
+
+mkdir -p "$HYPR_CONF_D"
+chown -R "$REAL_USER:$REAL_USER" "$HYPR_DIR"
+if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-rules.conf" -o "$HYPR_RULES"; then
+  chown "$REAL_USER:$REAL_USER" "$HYPR_RULES"
+  chmod 644 "$HYPR_RULES"
+  ok "wrote $HYPR_RULES"
+else
+  fail "could not download nyxus-hyprland-rules.conf — apps may still tile-stretch"
+fi
+
+# Ensure hyprland.conf sources the rules file (idempotent — only appends if missing)
+if [[ -f "$HYPR_MAIN" ]]; then
+  if grep -qF "nyxus-windowrules.conf" "$HYPR_MAIN"; then
+    ok "hyprland.conf already sources nyxus-windowrules.conf"
+  else
+    {
+      echo
+      echo "# NYXUS — float-and-size rules for nyxus-* apps (added by nyxus-resync-all.sh)"
+      echo "$SOURCE_LINE"
+    } >> "$HYPR_MAIN"
+    chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
+    ok "appended source line to $HYPR_MAIN"
+  fi
+else
+  warn "$HYPR_MAIN not found — drop this line into your hyprland.conf manually:"
+  printf "      ${DIM}%s${R}\n" "$SOURCE_LINE"
+fi
+
+# Live-reload Hyprland so the rules apply RIGHT NOW (no logout needed)
+if command -v hyprctl >/dev/null 2>&1 && pgrep -x Hyprland >/dev/null 2>&1; then
+  if sudo -u "$REAL_USER" hyprctl reload >/dev/null 2>&1; then
+    ok "hyprctl reload — rules active immediately"
+  else
+    warn "hyprctl reload failed — log out + back in, or run 'hyprctl reload' manually"
+  fi
+fi
+
+# ── 4/5 RELOAD waybar ────────────────────────────────────────────────────────
+step "4/5 · RELOAD waybar (so the new NYXUS modules show up)"
 # SIGUSR2 reloads config in place — preserves the running waybar process and
 # its taskbar state, but picks up the freshly patched config.json.
 if pgrep -x waybar >/dev/null 2>&1; then
@@ -147,8 +192,8 @@ else
   warn "waybar not running — Hyprland will respawn it on next session, or start it manually"
 fi
 
-# ── 4/4 VERIFY ──────────────────────────────────────────────────────────────
-step "4/4 · VERIFICATION"
+# ── 5/5 VERIFY ──────────────────────────────────────────────────────────────
+step "5/5 · VERIFICATION"
 
 echo
 echo "${B}Per-app install result:${R}"
@@ -163,10 +208,10 @@ echo "${B}System checks:${R}"
 chrome_path="$REAL_HOME/.nyxus/nyxus_chrome.py"
 if [[ -f "$chrome_path" ]]; then
   sha=$(sha256sum "$chrome_path" | cut -c1-12)
-  if [[ "$sha" == "ed2efc886e98" ]]; then
-    ok "chrome.py SHA = $sha (NEW attribute-access fix)"
+  if [[ "$sha" == "6ef320c0d69e" ]]; then
+    ok "chrome.py SHA = $sha (universal Caveat + hover-scramble + size policy)"
   else
-    warn "chrome.py SHA = $sha (expected ed2efc886e98 — start install may have failed)"
+    warn "chrome.py SHA = $sha (expected 6ef320c0d69e — start install may have failed)"
   fi
 else
   fail "chrome.py NOT FOUND at $chrome_path — start install failed"

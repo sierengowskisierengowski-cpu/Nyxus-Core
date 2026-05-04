@@ -583,11 +583,35 @@ def _is_adw_app_window(window) -> bool:
         return False
 
 
+def _apply_size_policy(window: Gtk.Window) -> None:
+    """Force a sensible small default window size and clear any maximize /
+    fullscreen state. Universal NYXUS rule: apps open at 900x650, content
+    auto-fits via hexpand/vexpand on the chrome overlay (already set
+    below). Min size 400x300 so the window can still shrink. Apps' own
+    set_default_size(1280...) calls get overridden -- this runs LAST in
+    install_chrome and `set_default_size` is honoured at first realize."""
+    try:
+        window.unmaximize()
+    except Exception: pass
+    try:
+        window.unfullscreen()
+    except Exception: pass
+    try:
+        window.set_default_size(900, 650)
+    except Exception as e:
+        log.debug("set_default_size: %s", e)
+    try:
+        window.set_size_request(400, 300)
+    except Exception as e:
+        log.debug("set_size_request: %s", e)
+
+
 def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
                    title_label: Optional[Gtk.Label] = None) -> Optional[GraffitiBackground]:
     """Wrap `window`'s current child in a Gtk.Overlay with a graffiti
     mural underneath. Inject shared NYXUS chrome CSS. Optionally swap a
-    hero label's markup to the rainbow palette.
+    hero label's markup to the rainbow palette. Force a sensible small
+    default window size + clear any fullscreen/maximize state.
 
     Handles both `Gtk.ApplicationWindow` (set_child/get_child) and
     `Adw.ApplicationWindow` (set_content/get_content).
@@ -598,6 +622,7 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
     Idempotent: safe to call once per window."""
     if window is None: return None
     _install_global_css()
+    _apply_size_policy(window)
 
     # Pick the right accessor pair for the window class — Gtk uses
     # set_child/get_child; Adw.ApplicationWindow uses set_content/
