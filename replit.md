@@ -51,6 +51,43 @@ System-wide audit + tone-down across all 12 GTK apps:
 - `$mod+Shift+H` → doctor health audit
 - Waybar clock `on-click` → toggle quicksettings panel
 
+### Phase 2 — Unified chrome across every GTK app (May 2026)
+A full audit found **13 distinct GTK entries** across the 12 tarballs
+(nyxus-start ships three: start, notifications, store). All 12 GUI
+entries now carry an auto-injected chrome bootstrap; one entry is
+intentionally excluded.
+
+- **Patched (12)**: home, weather, notepad, passwords, intel, start,
+  notifications, store, sage, studio, shield, godsapp.
+- **Excluded — `nyxus-panel`**: uses `Gtk4LayerShell.init_for_window`
+  which is incompatible with re-parenting the window content into a
+  `Gtk.Overlay`. Wrapping it would break LayerShell anchoring.
+- **Excluded — `nyxus-phantom`**: silent background daemon, no GTK
+  windows at all.
+
+Bootstrap design (post code-review):
+
+- Inserted **above** `if __name__ == "__main__":` so the monkey-patch
+  is in place before `app.run()` blocks. (An earlier appended-at-EOF
+  version never executed — caught by the architect review.)
+- Monkey-patches `Gtk.ApplicationWindow.present` so the canonical
+  `install_chrome()` from `nyxus_chrome.py` runs exactly once per
+  top-level window. Idempotent on two layers — class-level
+  `_nyx_chrome_hooked` guard + `install_chrome`'s own
+  `nyxus-chrome-installed` window-data flag.
+- **No synchronous network fetch** (also from review). The bootstrap
+  prepends `~/.nyxus` to `sys.path`, imports `nyxus_chrome` locally,
+  and silently no-ops if the module is missing. `nyxus_install.sh`
+  now ships `nyxus_chrome.py` (and `nyxus_quicksettings.py`) to
+  `$SCRIPTS_DIR` (`~/.nyxus`) so the import always succeeds offline.
+- Each entry is keyed by its own `_NYX_PAGE_KEY` (`_home`, `_intel`,
+  `_store`, etc.) so the right graffiti mural is selected per-app;
+  unknown keys fall back to `_home` inside `GraffitiBackground`.
+- Per-tarball `install.sh` scripts and pre-existing per-app
+  `graffiti.py`/`style.py` files are left intact — the chrome rides on
+  top via Gtk.Overlay so legacy paint code keeps rendering underneath
+  if it was already styled.
+
 ### Phase 2 — SDDM login theme wired in (May 2026)
 - `nyxus_install.sh` now installs the NYXUS SDDM theme: ensures `sddm` +
   `qt5-quickcontrols2` + `qt5-graphicaleffects` packages, downloads
