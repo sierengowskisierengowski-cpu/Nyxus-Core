@@ -43,7 +43,7 @@ log = logging.getLogger("nyxus.chrome")
 # Bumped with every visible chrome change so apps can log which chrome
 # version actually loaded. Curl /api/download/nyxus/nyxus_chrome.py |
 # grep NYXUS_CHROME_VERSION to confirm freshness from prod.
-NYXUS_CHROME_VERSION = "2026.05.04-r4"
+NYXUS_CHROME_VERSION = "2026.05.04-r5"
 
 # ── Palette (matches nyxus_settings.py) ─────────────────────────────────────
 NEON_PINK   = (1.00, 0.00, 1.00)
@@ -264,19 +264,35 @@ CHROME_CSS = """
  * this gives the GodsApp screenshot look across every NYXUS app.        *
  * =================================================================== */
 
-/* -- Root window: pure transparency, NO background image -------------- */
-window, window.background, window.solid-csd {
+/* -- Root window: pure transparency, NO background image -------------- *
+ * r5: also strip background-color from EVERY direct child of the window  *
+ * (covers apps that paint a coloured root box, including the purple-     *
+ * tinted ones the user reported). The frosted-glass wash is applied      *
+ * ONLY via the explicit .nyx-frosted/.nyx-panel/.nyx-godsapp-frame       *
+ * classes from now on, never automatically — that prevents any app from  *
+ * accidentally turning the whole window opaque.                          */
+window, window.background, window.solid-csd,
+window.nyx-transparent, window.nyx-transparent.background {
     background-color: transparent;
     background-image: none;
     color: #efefee;
 }
+/* Strip any background paint that an app or Adw bin paints on the root  *
+ * widget directly under the window. Inner panels still get frosted via  *
+ * their explicit .nyx-* classes below.                                  */
+window > *, window > box, window > overlay,
+window > scrolledwindow, window > grid,
+window > stack, window > viewport,
+window > .background, window > .solid-csd,
+window > toolbarview, window > toolbarview > *,
+window > headerbar, window > windowhandle, window > windowhandle > * {
+    background-color: transparent;
+    background-image: none;
+}
 
-/* -- Frosted-glass dark wash on every direct content container so text *
- * stays readable. Apps don\'t need to opt in — these selectors target  *
- * the standard GTK/Adw container hierarchy.                          */
-window > box, window > overlay > box, window > overlay,
-window > scrolledwindow,
-.nyx-bg, .nyx-shell-bg, .nyx-frosted, .nyx-panel {
+/* -- Frosted-glass wash: ONLY when an app opts in via these classes ---- */
+.nyx-bg, .nyx-shell-bg, .nyx-frosted, .nyx-panel,
+.nyx-godsapp-frame, .nyx-card {
     background-color: rgba(10, 10, 18, 0.72);
 }
 
@@ -708,12 +724,12 @@ def _is_adw_app_window(window) -> bool:
 
 
 def _apply_size_policy(window: Gtk.Window) -> None:
-    """Force a sensible small default window size and clear any maximize /
-    fullscreen state. Universal NYXUS rule: apps open at 900x650, content
-    auto-fits via hexpand/vexpand on the chrome overlay (already set
-    below). Min size 400x300 so the window can still shrink. Apps' own
-    set_default_size(1280...) calls get overridden -- this runs LAST in
-    install_chrome and `set_default_size` is honoured at first realize."""
+    """r5: open SMALL and let GTK auto-grow to natural content size.
+    Default 480x320 is intentionally small; min 320x240 so the user can
+    shrink further. resizable=True + setting size_request to the small
+    minimum (not the default) means content can request more space and
+    the window will naturally expand to fit it. Universal NYXUS rule:
+    every app + every flyout opens compact, then grows to its content."""
     try:
         window.unmaximize()
     except Exception: pass
@@ -721,11 +737,15 @@ def _apply_size_policy(window: Gtk.Window) -> None:
         window.unfullscreen()
     except Exception: pass
     try:
-        window.set_default_size(900, 650)
+        window.set_resizable(True)
+    except Exception: pass
+    try:
+        window.set_default_size(480, 320)
     except Exception as e:
         log.debug("set_default_size: %s", e)
     try:
-        window.set_size_request(400, 300)
+        # Min size only — natural request from content drives the actual size.
+        window.set_size_request(320, 240)
     except Exception as e:
         log.debug("set_size_request: %s", e)
 
