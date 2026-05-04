@@ -51,6 +51,23 @@ System-wide audit + tone-down across all 12 GTK apps:
 - `$mod+Shift+H` → doctor health audit
 - Waybar clock `on-click` → toggle quicksettings panel
 
+### Phase 2 — SDDM login theme wired in (May 2026)
+- `nyxus_install.sh` now installs the NYXUS SDDM theme: ensures `sddm` +
+  `qt5-quickcontrols2` + `qt5-graphicaleffects` packages, downloads
+  `nyxus-sddm-theme.tar.gz`, runs the bundled `install.sh` (writes
+  `/etc/sddm.conf.d/nyxus.conf`), then disables `gdm.service` if active
+  and enables `sddm.service`. Effective on next reboot.
+- The tarball's internal `install.sh` had a stale wallpaper-fallback URL
+  pointing at `jsierengowski-workspace.replit.app` — repacked with the
+  current `nyxus-core.replit.app` URL.
+- `iso-builder/nyx-profile/packages.x86_64` adds `sddm`,
+  `qt5-quickcontrols2`, `qt5-graphicaleffects`.
+- `iso-builder/build-iso.sh` `stage_nyxus_chrome` now extracts the
+  SDDM tarball into `airootfs/usr/share/sddm/themes/nyxus/` and writes
+  `airootfs/etc/sddm.conf.d/nyxus.conf` so the theme is dormant on the
+  live ISO (which uses Hyprland autologin) but ready for the disk
+  installer (Job 2) to enable on a real install.
+
 ### Phase 2 — Mako → Dunst migration (May 2026)
 NYXUS standardized on **dunst** as the sole notification daemon. Removed
 mako install + autostart from `nyxus_install.sh` and migrated active code:
