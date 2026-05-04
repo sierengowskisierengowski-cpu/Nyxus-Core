@@ -304,8 +304,11 @@ for sym in gods godsapp sage; do
 done
 
 # Legacy desktop files that should not exist in NYXUS
+# NOTE: io.nyxus.store.desktop intentionally NOT listed — it is a real,
+# active launcher created by the nyxus-start tarball's install.sh and
+# was previously being silently deleted by this cleanup loop, which is
+# why the App Store icon stopped appearing in Rofi / the Start menu.
 OLD_DESKTOPS=(
-  io.nyxus.store.desktop
   nyx-notepad.desktop
   nyx-security-center.desktop
   nyx-terminal.desktop
