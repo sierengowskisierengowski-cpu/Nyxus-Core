@@ -1,0 +1,56 @@
+
+═══ NYXUS DOCTOR — paste everything below back to Claude ═══
+─ host: Linux NyxOS 6.19.14-zen1-1-zen #1 ZEN SMP PREEMPT_DYNAMIC Thu, 23 Apr 2026 06:56:44 +0000 x86_64 GNU/Linux · user: nyx · home: /home/nyx
+─ date: 2026-05-04T06:10:34Z
+
+─── ON-DISK SHAs (what your box actually has) ───
+  98603416883d  size=20237  mtime=2026-05-04 01:53:14  /home/nyx/.nyxus/nyxus_chrome.py
+  72621e778590  size=34560  mtime=2026-05-04 01:53:37  /home/nyx/.local/share/nyxus-store/main.py
+  ----          MISSING                                      /home/nyx/.local/share/nyxus-start/main.py
+  b8a230cdfa6e  size=24793  mtime=2026-05-04 01:53:37  /home/nyx/.local/share/nyxus-notifications/main.py
+  ----          MISSING                                      /home/nyx/.local/share/nyxus-panel/main.py
+  ----          MISSING                                      /home/nyx/.local/share/nyxus-intel/main.py
+
+─── EXPECTED SHAs (what production is serving right now) ───
+  98603416883d  nyxus_chrome.py
+  b0312dba6e7f  nyxus-start.tgz
+  d6682b749984  nyxus_start_install.sh
+  4f3ad9905330  nyxus_install.sh
+
+─── V2 STORE MARKERS in your store/main.py ───
+  total lines: 877  (should be 877)
+  v2 markers : 3  (should be ≥3)
+
+─── RUNNING NYXUS PROCESSES (stale code = blocker) ───
+   3093       06:08 /usr/bin/python3 /opt/nyxus-phantom/phantom.py
+  12288       05:55 waybar --config /home/nyx/.config/waybar/config --style /home/nyx/.config/waybar/style.css
+  12292       05:55 swaybg -i /home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png -m fill
+  12295       05:55 python3 /home/nyx/.nyxus/nyxus-home/main.py
+
+─── LAUNCHER PATHS (which file does $ nyxus-store actually run?) ───
+  nyxus-start -> /home/nyx/.local/bin/nyxus-start
+      #!/usr/bin/env bash
+      exec python3 "/home/nyx/.nyxus/nyxus-start/main.py" "$@"
+  nyxus-store -> /home/nyx/.local/bin/nyxus-store
+      #!/usr/bin/env bash
+      exec python3 "/home/nyx/.local/share/nyxus-store/main.py" "$@"
+  nyxus-notifications -> /home/nyx/.local/bin/nyxus-notifications
+      #!/usr/bin/env bash
+      exec python3 "/home/nyx/.local/share/nyxus-notifications/main.py" "$@"
+  nyxus-panel -> /home/nyx/.local/bin/nyxus-panel
+      #!/usr/bin/env bash
+      exec python3 "/home/nyx/.nyxus/nyxus-panel/main.py" "$@"
+  nyxus-intel -> /usr/local/bin/nyxus-intel
+      #!/usr/bin/env bash
+      # NYXUS INTEL launcher
+      exec python3 -c '
+
+─── LAST INSTALL OUTPUT (any silent failure?) ───
+
+─── LIVE TEST: download chrome.py + diff against on-disk ───
+  fresh download SHA: 98603416883d
+  on-disk SHA       : 98603416883d
+═══ END DOCTOR ═══
+
+...xXx... ~
+❯                               
