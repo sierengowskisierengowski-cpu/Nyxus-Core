@@ -259,26 +259,25 @@ window > * > box, window > overlay > box,
     background-color: rgba(0, 0, 0, 0.42);
 }
 
-/* -- Typography: Caveat on the user-facing widgets ONLY -------------- */
-/* Earlier attempt used `* { font-family: ... }` which caused content   */
-/* visibility regressions in some apps -- using a NAMED widget list is  */
-/* far safer and still gets the godsapp handwritten look everywhere a   */
-/* user actually reads text. `.nyx-mono`/`.nyx-code`/`.monospace` opt   */
-/* out for terminal/log/code surfaces.                                  */
-label, button, button label,
-entry, entry text,
-dropdown, combobox,
-checkbutton, checkbutton label,
-radiobutton, radiobutton label,
-switch label,
-headerbar, headerbar label, .titlebar, .titlebar label,
-menubutton, popover label, modelbutton {
+/* -- Typography: UNIVERSAL Caveat (mirrors godsapp/ui.py exactly) ---- */
+/* godsapp ships `* { font-family: Caveat }` in its own ui.py. We       */
+/* promote that rule here at PRIORITY_USER so EVERY NYXUS app inherits  */
+/* the same handwritten look without each app having to opt in. The    */
+/* `.nyx-mono`/`.nyx-code`/`.monospace`/textview/vte opt-outs below    */
+/* keep terminals, code editors, and log surfaces in a real monospace   */
+/* face — preventing the content-visibility regressions the earlier   */
+/* selective version was trying to avoid.                               */
+* {
     font-family: \'Caveat\', \'Patrick Hand\', \'Comic Sans MS\', cursive;
 }
-.nyx-mono, .nyx-mono label, .nyx-mono *,
-.nyx-code, .nyx-code label, .nyx-code *,
-.monospace, .monospace label, .monospace *,
-textview, textview text {
+/* Opt-out: anything explicitly tagged for code/terminal/log surfaces. */
+.nyx-mono, .nyx-mono *,
+.nyx-code, .nyx-code *,
+.monospace, .monospace *,
+textview.nyx-mono, textview.nyx-mono *,
+textview.nyx-code, textview.nyx-code *,
+.terminal, .terminal *,
+vte-terminal, vte-terminal * {
     font-family: \'JetBrains Mono\', \'Fira Code\', \'DejaVu Sans Mono\', monospace;
 }
 
