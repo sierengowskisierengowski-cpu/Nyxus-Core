@@ -1,10 +1,44 @@
 import { Router, type IRouter } from "express";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 
 const router: IRouter = Router();
 
 const SCRIPTS_DIR = path.resolve(__dirname, "nyxus-scripts");
+
+// ── SHA256 manifest cache ────────────────────────────────────────────────
+// Hashes every served file at request time, but only re-hashes when the
+// file's mtime changes — so steady-state cost is a single fs.statSync
+// per file per request (cheap), not a full SHA recompute.
+type CacheEntry = { mtimeMs: number; size: number; sha256: string };
+const _shaCache = new Map<string, CacheEntry>();
+
+function _sha256OfFile(p: string): string {
+  const h = crypto.createHash("sha256");
+  h.update(fs.readFileSync(p));
+  return h.digest("hex");
+}
+
+function _hashOrCached(name: string, p: string): CacheEntry | null {
+  let st: fs.Stats;
+  try {
+    st = fs.statSync(p);
+  } catch {
+    return null;
+  }
+  const cached = _shaCache.get(name);
+  if (cached && cached.mtimeMs === st.mtimeMs && cached.size === st.size) {
+    return cached;
+  }
+  const entry: CacheEntry = {
+    mtimeMs: st.mtimeMs,
+    size: st.size,
+    sha256: _sha256OfFile(p),
+  };
+  _shaCache.set(name, entry);
+  return entry;
+}
 
 const ALLOWED_FILES: Record<string, string> = {
   "nyxus_motd.py":        "nyxus_motd.py",
@@ -90,6 +124,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-greetd.toml":      "nyxus-greetd.toml",
   "nyxus_settings.py":     "nyxus_settings.py",
   "nyxus_chrome.py":       "nyxus_chrome.py",
+  "nyxus_verify.sh":       "nyxus_verify.sh",
   "nyxus-phantom.tgz":          "nyxus-phantom.tgz",
   "nyxus-shield.tgz":           "nyxus-shield.tgz",
   "nyxus-godsapp.tgz":          "nyxus-godsapp.tgz",
@@ -119,6 +154,44 @@ const ALLOWED_FILES: Record<string, string> = {
   "CHANGELOG.md":                 "CHANGELOG.md",
   "CREDITS.md":                   "CREDITS.md",
 };
+
+// ── SHA256 manifest ─────────────────────────────────────────────────────
+// Returns { version, generated_at, files: { name: { sha256, size_bytes } } }
+// Clients (nyxus_verify.sh / NYXUS App Store) hit this endpoint, then
+// SHA-verify each subsequently-downloaded file. Defends against single-file
+// transit corruption and single-file server tampering.
+router.get("/download/nyxus/manifest.json", (_req, res) => {
+  const files: Record<string, { sha256: string; size_bytes: number }> = {};
+  for (const name of Object.keys(ALLOWED_FILES)) {
+    const p = path.join(SCRIPTS_DIR, ALLOWED_FILES[name]);
+    const entry = _hashOrCached(name, p);
+    if (entry) {
+      files[name] = { sha256: entry.sha256, size_bytes: entry.size };
+    }
+  }
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Cache-Control", "no-store");
+  res.json({
+    version: 1,
+    generated_at: new Date().toISOString(),
+    file_count: Object.keys(files).length,
+    files,
+  });
+});
+
+// Plain-text manifest in `sha256sum -c` format. Useful from shell scripts:
+//   curl -fsSL .../manifest.txt > /tmp/m && sha256sum -c /tmp/m
+router.get("/download/nyxus/manifest.txt", (_req, res) => {
+  const lines: string[] = [];
+  for (const name of Object.keys(ALLOWED_FILES)) {
+    const p = path.join(SCRIPTS_DIR, ALLOWED_FILES[name]);
+    const entry = _hashOrCached(name, p);
+    if (entry) lines.push(`${entry.sha256}  ${name}`);
+  }
+  res.setHeader("Content-Type", "text/plain");
+  res.setHeader("Cache-Control", "no-store");
+  res.send(lines.join("\n") + "\n");
+});
 
 router.get("/download/nyxus/:filename", (req, res) => {
   const { filename } = req.params;
