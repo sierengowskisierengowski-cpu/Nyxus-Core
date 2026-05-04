@@ -508,6 +508,59 @@ ok "nyxus-doctor.desktop"
 
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 
+# ── SDDM (NYXUS-themed login screen — the boot/lock-out screen, NOT hyprlock)
+# hyprlock = Super+L lock inside an active session.
+# SDDM     = the login screen you see at boot, before Hyprland starts.
+# This block installs the NYXUS QML theme + flips GDM→SDDM if GDM is active.
+hdr "SDDM Login Theme (NYXUS)"
+if ! command -v sddm &>/dev/null; then
+  printf "  ${PURPLE}→${R} ${DIM}installing sddm package …${R}\n"
+  if command -v pacman &>/dev/null; then
+    sudo pacman -S --needed --noconfirm sddm qt5-quickcontrols2 qt5-graphicaleffects qt5-declarative \
+      >/tmp/nyxus-sddm-pacman.log 2>&1 \
+      && ok "sddm + qt5 deps installed" \
+      || { fail "sddm package install"; failed_items+=("sddm package"); failed=$((failed+1)); }
+  else
+    printf "  ${DIM}pacman not available — skipping SDDM (install sddm manually first)${R}\n"
+  fi
+fi
+
+if command -v sddm &>/dev/null; then
+  SDDM_TMP="$(mktemp -d)"
+  if dl "nyxus-sddm-theme.tar.gz" "${SDDM_TMP}/theme.tar.gz"; then
+    if tar -xzf "${SDDM_TMP}/theme.tar.gz" -C "${SDDM_TMP}" 2>/dev/null \
+       && [[ -f "${SDDM_TMP}/sddm-theme/install.sh" ]]; then
+      if sudo bash "${SDDM_TMP}/sddm-theme/install.sh" >/tmp/nyxus-sddm-install.log 2>&1; then
+        ok "NYXUS SDDM theme → /usr/share/sddm/themes/nyxus/"
+      else
+        fail "SDDM theme installer (see /tmp/nyxus-sddm-install.log)"
+        failed_items+=("SDDM theme installer"); failed=$((failed+1))
+      fi
+      # Atomic DM swap: ONLY disable GDM if SDDM was successfully enabled.
+      # Doing it the other way around can leave the user with NO active
+      # display manager and a TTY-only boot — never acceptable.
+      if sudo systemctl enable sddm.service &>/dev/null; then
+        ok "sddm.service enabled"
+        if systemctl is-enabled gdm.service &>/dev/null; then
+          printf "  ${PURPLE}→${R} ${DIM}sddm OK — now disabling gdm.service …${R}\n"
+          sudo systemctl disable gdm.service &>/dev/null \
+            && ok "gdm.service disabled (sddm is now your login manager)" \
+            || printf "  ${ORANGE}⚠${R}  could not disable gdm — run: sudo systemctl disable gdm\n"
+        fi
+        printf "  ${DIM}Reboot or 'sudo systemctl start sddm' to see the NYXUS login screen${R}\n"
+      else
+        printf "  ${RED}✗${R}  could not enable sddm.service — leaving gdm in place to keep you logged in\n"
+        printf "  ${DIM}    Manual fix:  sudo systemctl enable sddm.service && sudo systemctl disable gdm.service${R}\n"
+        failed_items+=("sddm.service enable"); failed=$((failed+1))
+      fi
+    else
+      fail "SDDM theme tarball extract failed"
+      failed_items+=("SDDM theme tarball"); failed=$((failed+1))
+    fi
+  fi
+  rm -rf "${SDDM_TMP}"
+fi
+
 # ── APPLY LIVE ───────────────────────────────────────────────────────────────
 hdr "Applying Changes"
 

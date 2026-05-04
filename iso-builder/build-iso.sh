@@ -143,6 +143,31 @@ install -m 0755 "${NS}/waybar-stats.sh"      "${LBIN}/waybar-stats"
 install -m 0755 "${NS}/waybar-ticker.sh"     "${LBIN}/waybar-ticker"
 ok "helpers: wallpaper-rotate / waybar-stats / waybar-ticker"
 
+# ── SDDM theme → /usr/share/sddm/themes/nyxus/ + config ────────────────
+# Stages the NYXUS QML login theme into the airootfs. The live ISO itself
+# autologs into Hyprland (no SDDM at boot) so this is dormant on the live
+# session — but when the disk installer (Job 2) provisions a real install,
+# sddm.service gets enabled and this theme is what the user sees at boot.
+SDDM_TMP_STAGE="$(mktemp -d)"
+tar -xzf "${NS}/nyxus-sddm-theme.tar.gz" -C "${SDDM_TMP_STAGE}"
+SDDM_THEME_DIR="${PROFILE_DIR}/airootfs/usr/share/sddm/themes/nyxus"
+SDDM_CONF_DIR="${PROFILE_DIR}/airootfs/etc/sddm.conf.d"
+mkdir -p "${SDDM_THEME_DIR}" "${SDDM_CONF_DIR}"
+cp -a "${SDDM_TMP_STAGE}/sddm-theme/." "${SDDM_THEME_DIR}/"
+rm -f "${SDDM_THEME_DIR}/install.sh"  # not needed at runtime
+cat > "${SDDM_CONF_DIR}/nyxus.conf" <<'SDDM'
+[Theme]
+Current=nyxus
+SDDM
+# DisplayServer is intentionally NOT set — SDDM defaults to X11 for the
+# greeter, which is the only setting that works reliably across NVIDIA,
+# Intel, and AMD hardware. The user's actual session (Hyprland) is still
+# pure Wayland regardless of what the greeter uses to render itself.
+# To opt into a Wayland greeter, the user can drop their own conf into
+# /etc/sddm.conf.d/wayland.conf later.
+rm -rf "${SDDM_TMP_STAGE}"
+ok "SDDM theme staged: /usr/share/sddm/themes/nyxus/ + /etc/sddm.conf.d/nyxus.conf"
+
 # ── App launchers + .desktop entries ────────────────────────────────────
 # mod-name : Display Name : tooltip
 APPS_LIST=(

@@ -60,6 +60,10 @@ hyprlock
 hypridle
 hyprpaper
 hyprcursor
+sddm
+qt5-quickcontrols2
+qt5-graphicaleffects
+qt5-declarative
 waybar
 wofi
 rofi
