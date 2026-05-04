@@ -34,7 +34,7 @@ gi.require_version("GdkPixbuf", "2.0")
 from gi.repository import Gtk, Gdk, GLib, GdkPixbuf  # noqa: E402
 
 import cairo  # type: ignore
-import logging, subprocess, threading
+import logging, subprocess, threading, random
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Set
 
@@ -399,6 +399,148 @@ tooltip {
 _CHROME_PROVIDER_INSTALLED = False
 
 
+# ── Hover scramble effect ────────────────────────────────────────────────────
+# When the mouse enters any plain Gtk.Label, the visible characters rapidly
+# cycle through random ASCII/symbol chars and then "settle" left-to-right
+# back to the original text -- the classic terminal-cipher / NYXUS hacker
+# scramble. Effect lives entirely in chrome.py so it cascades to every app
+# that calls install_chrome (~9 GTK apps) without per-app changes.
+#
+# Skips: Gtk.Entry / Gtk.TextView / Gtk.SpinButton (editable surfaces),
+# labels using Pango markup (rainbow titles -- scrambling would destroy the
+# spans), labels with .nyx-no-scramble / .nyx-mono / .nyx-code / .monospace,
+# empty labels, and labels longer than 60 chars (status bars/footers).
+_SCRAMBLE_POOL = ("!<>-_\\/[]{}=+*^?#@&%$" +
+                  "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+                  "abcdefghijklmnopqrstuvwxyz" +
+                  "0123456789")
+_SCRAMBLE_TICK_MS    = 28      # frame interval
+_SCRAMBLE_TOTAL_TICKS = 18     # ~500ms total animation
+_SCRAMBLE_MAX_LEN     = 60
+
+
+class _Scrambler:
+    """Per-label scramble animator. One instance attached to each label."""
+    __slots__ = ("label", "original", "tick_id", "step")
+
+    def __init__(self, label: Gtk.Label):
+        self.label    = label
+        self.original = None
+        self.tick_id  = 0
+        self.step     = 0
+
+    def trigger(self):
+        # Don't re-trigger mid-animation
+        if self.tick_id:
+            return
+        try:
+            text = self.label.get_text() or ""
+        except Exception:
+            return
+        if not text or len(text) > _SCRAMBLE_MAX_LEN:
+            return
+        self.original = text
+        self.step     = 0
+        try:
+            self.tick_id = GLib.timeout_add(_SCRAMBLE_TICK_MS, self._tick)
+        except Exception:
+            self.tick_id = 0
+
+    def _tick(self):
+        self.step += 1
+        if self.step >= _SCRAMBLE_TOTAL_TICKS or self.original is None:
+            try: self.label.set_text(self.original or "")
+            except Exception: pass
+            self.tick_id = 0
+            return False
+        progress = self.step / _SCRAMBLE_TOTAL_TICKS
+        reveal   = int(len(self.original) * progress)
+        out = []
+        for i, ch in enumerate(self.original):
+            if i < reveal or ch in (" ", "\n", "\t"):
+                out.append(ch)
+            else:
+                out.append(random.choice(_SCRAMBLE_POOL))
+        try:
+            self.label.set_text("".join(out))
+        except Exception:
+            self.tick_id = 0
+            return False
+        return True
+
+
+_SCRAMBLE_OPT_OUT_CLASSES = (
+    "nyx-no-scramble", "nyx-mono", "nyx-code", "monospace",
+    "nyx-statusbar",  # footer bars are info-dense; leave them alone
+)
+
+
+def _attach_scramble_to_label(label: Gtk.Label) -> None:
+    """Wire a single Gtk.Label up for hover-scramble. Idempotent + defensive."""
+    try:
+        if not isinstance(label, Gtk.Label):
+            return
+        if getattr(label, "_nyx_scramble_attached", False):
+            return
+        # Skip markup labels (rainbow titles etc.) -- scrambling would
+        # destroy their Pango spans.
+        try:
+            if label.get_use_markup():
+                return
+        except Exception:
+            pass
+        # Opt-out CSS classes
+        for cls in _SCRAMBLE_OPT_OUT_CLASSES:
+            try:
+                if label.has_css_class(cls):
+                    return
+            except Exception:
+                pass
+        text = ""
+        try: text = label.get_text() or ""
+        except Exception: pass
+        if not text or len(text) > _SCRAMBLE_MAX_LEN:
+            return
+
+        scrambler = _Scrambler(label)
+        motion = Gtk.EventControllerMotion()
+        motion.connect("enter", lambda *_a: scrambler.trigger())
+        label.add_controller(motion)
+        label._nyx_scramble_attached = True
+    except Exception as e:
+        log.debug("attach_scramble label: %s", e)
+
+
+def _walk_attach_scramble(widget) -> None:
+    """Walk widget tree, attach scramble to every eligible Gtk.Label."""
+    try:
+        if widget is None:
+            return
+        if isinstance(widget, Gtk.Label):
+            _attach_scramble_to_label(widget)
+            return  # labels have no relevant children to walk
+        # Skip editable surfaces -- never mess with user-entered text.
+        if isinstance(widget, (Gtk.Entry, Gtk.TextView, Gtk.SpinButton,
+                               Gtk.SearchEntry, Gtk.PasswordEntry)):
+            return
+        # Walk children. GTK4 widgets expose get_first_child/get_next_sibling.
+        if hasattr(widget, "get_first_child"):
+            child = widget.get_first_child()
+            while child is not None:
+                _walk_attach_scramble(child)
+                child = child.get_next_sibling()
+    except Exception as e:
+        log.debug("walk scramble: %s", e)
+
+
+def attach_scramble(widget) -> None:
+    """Public helper -- apps can call this after building dynamic content
+    to wire scramble onto newly-added labels. install_chrome already calls
+    it once at install time + on a deferred re-walk; this is for apps that
+    swap in big subtrees later (e.g. settings page changes)."""
+    _walk_attach_scramble(widget)
+
+
 def _install_global_css():
     global _CHROME_PROVIDER_INSTALLED
     if _CHROME_PROVIDER_INSTALLED: return
@@ -525,4 +667,14 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
                 title_label.add_css_class("nyx-rainbow-title")
         except Exception as e:
             log.warning("install_chrome title: %s", e)
+
+    # Wire hover-scramble onto every eligible label in the window. We walk
+    # immediately (catches static layout) and again at +600ms / +2000ms
+    # (catches lazy/async-loaded content like Adw.PreferencesPage rows).
+    try:
+        _walk_attach_scramble(cur)
+        GLib.timeout_add(600,  lambda: (_walk_attach_scramble(cur), False)[1])
+        GLib.timeout_add(2000, lambda: (_walk_attach_scramble(cur), False)[1])
+    except Exception as e:
+        log.debug("install_chrome scramble walk: %s", e)
     return bg
