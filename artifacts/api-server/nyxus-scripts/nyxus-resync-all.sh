@@ -80,9 +80,10 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
+NYXUS_RESYNC_VERSION="2026.05.04-r3"
 echo
 hr
-printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}\n"
+printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
 printf "  ${DIM}target user:${R} %s    ${DIM}home:${R} %s\n" "$REAL_USER" "$REAL_HOME"
 printf "  ${DIM}source:${R} %s\n" "$PROD"
 hr
@@ -372,21 +373,39 @@ else
   warn "hypridle not running — start it with:  hypridle &"
 fi
 
-# launchers in /usr/local/bin
+# App launchers — check BOTH /usr/local/bin AND ~/.local/bin AND ~/.nyxus/.
+# Different installers land in different places (some system-wide via
+# /usr/local/bin, some user-local via ~/.local/bin, some via .desktop entry +
+# install dir under ~/.nyxus/<app>/). We check all three so we don't false-
+# negative on apps that installed perfectly but elsewhere.
 echo
-echo "${B}App launchers in /usr/local/bin:${R}"
+echo "${B}App launchers (checking /usr/local/bin, ~/.local/bin, ~/.nyxus/<app>/):${R}"
+USER_LOCAL_BIN="$REAL_HOME/.local/bin"
+NYXUS_INSTALL_ROOT="$REAL_HOME/.nyxus"
 for app in "${APPS[@]}"; do
+  found=""
   if [[ -x "/usr/local/bin/$app" ]]; then
-    printf "  ${GREEN}✓${R} %s\n" "$app"
+    found="/usr/local/bin"
+  elif [[ -x "$USER_LOCAL_BIN/$app" ]]; then
+    found="~/.local/bin"
+  elif [[ -d "$NYXUS_INSTALL_ROOT/$app" ]]; then
+    found="~/.nyxus/$app/"
+  elif [[ -f "/usr/share/applications/$app.desktop" ]] || [[ -f "$REAL_HOME/.local/share/applications/$app.desktop" ]]; then
+    found=".desktop"
+  fi
+  if [[ -n "$found" ]]; then
+    printf "  ${GREEN}✓${R} %-22s ${DIM}(%s)${R}\n" "$app" "$found"
   else
-    printf "  ${PINK}✗${R} %s ${DIM}(not installed)${R}\n" "$app"
+    printf "  ${PINK}✗${R} %-22s ${DIM}(not installed anywhere — check install log above)${R}\n" "$app"
   fi
 done
 
 echo
 hr
-printf "  ${B}${GREEN}DONE.${R} The NYXUS apps will load the new chrome on next launch.\n"
+printf "  ${B}${GREEN}DONE.${R} ${DIM}(resync script v%s)${R}\n" "$NYXUS_RESYNC_VERSION"
+printf "  The NYXUS apps will load the new chrome on next launch.\n"
 printf "  ${DIM}Idle pipeline:${R} 2min dim → 3min screensaver → 5min lock → 8min DPMS off → 15min suspend\n"
-printf "  ${DIM}Try it now:${R} let the screen idle for 3 min, then move the mouse.  ${PINK}😈${R}\n"
+printf "  ${DIM}Test the jumpscare without waiting:${R}  ${B}nyxus-demon-wake${R}\n"
+printf "  ${DIM}Test the lock screen:${R}                ${B}loginctl lock-session${R}\n"
 hr
 echo
