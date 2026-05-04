@@ -526,10 +526,17 @@ hdr "SDDM Login Theme (NYXUS)"
 if ! command -v sddm &>/dev/null; then
   printf "  ${PURPLE}→${R} ${DIM}installing sddm package …${R}\n"
   if command -v pacman &>/dev/null; then
-    sudo pacman -S --needed --noconfirm sddm qt5-quickcontrols2 qt5-graphicaleffects qt5-declarative \
-      >/tmp/nyxus-sddm-pacman.log 2>&1 \
-      && ok "sddm + qt5 deps installed" \
-      || { fail "sddm package install"; failed_items+=("sddm package"); failed=$((failed+1)); }
+    # sudo -n: don't prompt — when piped from curl, prompts are swallowed
+    # and sudo returns failure instantly. Cleaner to skip with guidance.
+    if sudo -n pacman -S --needed --noconfirm sddm qt5-quickcontrols2 qt5-graphicaleffects qt5-declarative \
+        >/tmp/nyxus-sddm-pacman.log 2>&1; then
+      ok "sddm + qt5 deps installed"
+    elif ! sudo -n true 2>/dev/null; then
+      printf "  ${DIM}(skip: sddm install — needs sudo; run 'sudo -v' first then re-run)${R}\n"
+    else
+      fail "sddm package install (see /tmp/nyxus-sddm-pacman.log)"
+      failed_items+=("sddm package"); failed=$((failed+1))
+    fi
   else
     printf "  ${DIM}pacman not available — skipping SDDM (install sddm manually first)${R}\n"
   fi
@@ -540,28 +547,43 @@ if command -v sddm &>/dev/null; then
   if dl "nyxus-sddm-theme.tar.gz" "${SDDM_TMP}/theme.tar.gz"; then
     if tar -xzf "${SDDM_TMP}/theme.tar.gz" -C "${SDDM_TMP}" 2>/dev/null \
        && [[ -f "${SDDM_TMP}/sddm-theme/install.sh" ]]; then
-      if sudo bash "${SDDM_TMP}/sddm-theme/install.sh" >/tmp/nyxus-sddm-install.log 2>&1; then
+      # Theme installer (writes to /usr/share/sddm/themes/) needs sudo
+      if sudo -n bash "${SDDM_TMP}/sddm-theme/install.sh" >/tmp/nyxus-sddm-install.log 2>&1; then
         ok "NYXUS SDDM theme → /usr/share/sddm/themes/nyxus/"
+        _sddm_theme_ok=1
+      elif ! sudo -n true 2>/dev/null; then
+        printf "  ${DIM}(skip: SDDM theme — needs sudo; run 'sudo -v' first then re-run)${R}\n"
+        _sddm_theme_ok=0
       else
         fail "SDDM theme installer (see /tmp/nyxus-sddm-install.log)"
         failed_items+=("SDDM theme installer"); failed=$((failed+1))
+        _sddm_theme_ok=0
       fi
+
       # Atomic DM swap: ONLY disable GDM if SDDM was successfully enabled.
       # Doing it the other way around can leave the user with NO active
       # display manager and a TTY-only boot — never acceptable.
-      if sudo systemctl enable sddm.service &>/dev/null; then
-        ok "sddm.service enabled"
-        if systemctl is-enabled gdm.service &>/dev/null; then
-          printf "  ${PURPLE}→${R} ${DIM}sddm OK — now disabling gdm.service …${R}\n"
-          sudo systemctl disable gdm.service &>/dev/null \
-            && ok "gdm.service disabled (sddm is now your login manager)" \
-            || printf "  ${ORANGE}⚠${R}  could not disable gdm — run: sudo systemctl disable gdm\n"
+      if [[ ${_sddm_theme_ok:-0} -eq 1 ]]; then
+        if sudo -n systemctl enable sddm.service &>/dev/null; then
+          ok "sddm.service enabled"
+          if systemctl is-enabled gdm.service &>/dev/null; then
+            printf "  ${PURPLE}→${R} ${DIM}sddm OK — now disabling gdm.service …${R}\n"
+            if sudo -n systemctl disable gdm.service &>/dev/null; then
+              ok "gdm.service disabled (sddm is now your login manager)"
+            else
+              printf "  ${ORANGE}⚠${R}  could not disable gdm — run: sudo systemctl disable gdm\n"
+            fi
+          fi
+          printf "  ${DIM}Reboot or 'sudo systemctl start sddm' to see the NYXUS login screen${R}\n"
+        elif ! sudo -n true 2>/dev/null; then
+          printf "  ${DIM}(skip: sddm.service enable — needs sudo; run:${R}\n"
+          printf "  ${DIM}     sudo -v && curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | bash${R}\n"
+          printf "  ${DIM}   or one-shot:  sudo systemctl enable sddm.service${R}\n"
+        else
+          printf "  ${RED}✗${R}  could not enable sddm.service — leaving gdm in place to keep you logged in\n"
+          printf "  ${DIM}    Manual fix:  sudo systemctl enable sddm.service && sudo systemctl disable gdm.service${R}\n"
+          failed_items+=("sddm.service enable"); failed=$((failed+1))
         fi
-        printf "  ${DIM}Reboot or 'sudo systemctl start sddm' to see the NYXUS login screen${R}\n"
-      else
-        printf "  ${RED}✗${R}  could not enable sddm.service — leaving gdm in place to keep you logged in\n"
-        printf "  ${DIM}    Manual fix:  sudo systemctl enable sddm.service && sudo systemctl disable gdm.service${R}\n"
-        failed_items+=("sddm.service enable"); failed=$((failed+1))
       fi
     else
       fail "SDDM theme tarball extract failed"
