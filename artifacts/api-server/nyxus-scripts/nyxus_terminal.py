@@ -1133,3 +1133,57 @@ if __name__ == "__main__":
             traceback.print_exc(file=f)
         print(f"NYXUS Terminal crashed — see {log}")
         sys.exit(1)
+
+
+# ─────────────────────────── NYXUS CHROME (auto-injected r4) ────────────────
+# Unifies look across every NYXUS GTK4 app: fully transparent window so the
+# user's desktop wallpaper shows through, frosted-glass dark panels, Caveat
+# font, neon-pink outlined buttons, hover-scramble labels. install_chrome()
+# is idempotent and runs once per top-level window via a `present` hook.
+# nyxus_chrome.py is shipped to ~/.nyxus by the install pipeline.
+try:
+    import os as _nyx_os, sys as _nyx_sys
+    _nyx_chrome_dir = _nyx_os.path.expanduser("~/.nyxus")
+    if _nyx_chrome_dir not in _nyx_sys.path:
+        _nyx_sys.path.insert(0, _nyx_chrome_dir)
+    try:
+        from nyxus_chrome import install_chrome as _nyx_install_chrome
+    except ImportError:
+        _nyx_install_chrome = lambda *a, **kw: None  # noqa: E731 silent no-op
+    _NYX_PAGE_KEY = "_terminal"
+
+    def _nyx_make_present_hook(_orig):
+        def _nyx_present(self, *args, **kwargs):
+            try:
+                _nyx_install_chrome(self, page_key=_NYX_PAGE_KEY)
+            except Exception:
+                pass
+            return _orig(self, *args, **kwargs)
+        return _nyx_present
+
+    # Gtk.Window.present — base case, also covers Gtk.ApplicationWindow.
+    try:
+        import gi as _nyx_gi
+        _nyx_gi.require_version("Gtk", "4.0")
+        from gi.repository import Gtk as _NyxGtk
+        if not getattr(_NyxGtk.Window, "_nyx_chrome_hooked", False):
+            _NyxGtk.Window.present = _nyx_make_present_hook(_NyxGtk.Window.present)
+            _NyxGtk.Window._nyx_chrome_hooked = True
+    except Exception as _nyx_eg:
+        import sys as _nyx_sys
+        print("nyxus-chrome Gtk.Window hook skipped: %s" % _nyx_eg, file=_nyx_sys.stderr)
+
+    # Adw.ApplicationWindow.present — covers shield, sage, studio, godsapp.
+    try:
+        import gi as _nyx_gi
+        _nyx_gi.require_version("Adw", "1")
+        from gi.repository import Adw as _NyxAdw
+        if not getattr(_NyxAdw.ApplicationWindow, "_nyx_chrome_hooked", False):
+            _NyxAdw.ApplicationWindow.present = _nyx_make_present_hook(
+                _NyxAdw.ApplicationWindow.present)
+            _NyxAdw.ApplicationWindow._nyx_chrome_hooked = True
+    except Exception:
+        pass  # Adw is optional
+except Exception as _nyx_e:
+    import sys as _nyx_sys
+    print("nyxus-chrome injection failed: %s" % _nyx_e, file=_nyx_sys.stderr)

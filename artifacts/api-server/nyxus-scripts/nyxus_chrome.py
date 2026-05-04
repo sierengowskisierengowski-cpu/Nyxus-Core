@@ -40,6 +40,11 @@ from typing import Dict, Optional, Tuple, Set
 
 log = logging.getLogger("nyxus.chrome")
 
+# Bumped with every visible chrome change so apps can log which chrome
+# version actually loaded. Curl /api/download/nyxus/nyxus_chrome.py |
+# grep NYXUS_CHROME_VERSION to confirm freshness from prod.
+NYXUS_CHROME_VERSION = "2026.05.04-r4"
+
 # ── Palette (matches nyxus_settings.py) ─────────────────────────────────────
 NEON_PINK   = (1.00, 0.00, 1.00)
 NEON_BLUE   = (0.00, 0.67, 1.00)
@@ -248,29 +253,39 @@ class GraffitiBackground(Gtk.DrawingArea):
 # Gtk.STYLE_PROVIDER_PRIORITY_USER so it overrides each app's own
 # APPLICATION provider — apps don't have to opt-in.
 CHROME_CSS = """
-/* -- KNOWN-GOOD SHELL (was working before; do not touch) -------------- */
-/* window transparent so the GraffitiBackground in the overlay shows up; */
-/* outer shell boxes translucent dark so the mural reads through.       */
-window {
-    background-color: rgba(0, 0, 0, 0.0);
-}
-window > * > box, window > overlay > box,
-.nyx-bg, .nyx-shell-bg {
-    background-color: rgba(0, 0, 0, 0.42);
+/* === NYXUS Universal App Chrome — GodsApp visual language =========== *
+ *                                                                       *
+ * The window itself is FULLY TRANSPARENT so the user\'s desktop          *
+ * wallpaper shows through. The "graffiti" the user sees behind every    *
+ * app IS the desktop wallpaper, NOT an embedded image — apps must       *
+ * never paint their own background. Inner content panels use a          *
+ * translucent dark wash ("frosted glass") so text stays legible against *
+ * any wallpaper. Combined with Hyprland\'s blur on transparent windows,  *
+ * this gives the GodsApp screenshot look across every NYXUS app.        *
+ * =================================================================== */
+
+/* -- Root window: pure transparency, NO background image -------------- */
+window, window.background, window.solid-csd {
+    background-color: transparent;
+    background-image: none;
+    color: #efefee;
 }
 
-/* -- Typography: UNIVERSAL Caveat (mirrors godsapp/ui.py exactly) ---- */
-/* godsapp ships `* { font-family: Caveat }` in its own ui.py. We       */
-/* promote that rule here at PRIORITY_USER so EVERY NYXUS app inherits  */
-/* the same handwritten look without each app having to opt in. The    */
-/* `.nyx-mono`/`.nyx-code`/`.monospace`/textview/vte opt-outs below    */
-/* keep terminals, code editors, and log surfaces in a real monospace   */
-/* face — preventing the content-visibility regressions the earlier   */
-/* selective version was trying to avoid.                               */
+/* -- Frosted-glass dark wash on every direct content container so text *
+ * stays readable. Apps don\'t need to opt in — these selectors target  *
+ * the standard GTK/Adw container hierarchy.                          */
+window > box, window > overlay > box, window > overlay,
+window > scrolledwindow,
+.nyx-bg, .nyx-shell-bg, .nyx-frosted, .nyx-panel {
+    background-color: rgba(10, 10, 18, 0.72);
+}
+
+/* -- Typography: UNIVERSAL Caveat, mirrors godsapp/ui.py exactly ----- */
 * {
     font-family: \'Caveat\', \'Patrick Hand\', \'Comic Sans MS\', cursive;
+    font-size: 17px;
 }
-/* Opt-out: anything explicitly tagged for code/terminal/log surfaces. */
+/* Opt-out for code/terminal/log surfaces — keep them in real mono. */
 .nyx-mono, .nyx-mono *,
 .nyx-code, .nyx-code *,
 .monospace, .monospace *,
@@ -279,54 +294,70 @@ textview.nyx-code, textview.nyx-code *,
 .terminal, .terminal *,
 vte-terminal, vte-terminal * {
     font-family: \'JetBrains Mono\', \'Fira Code\', \'DejaVu Sans Mono\', monospace;
+    font-size: 13px;
 }
 
-/* -- Headerbar (Adw apps) translucent so graffiti shows up top ------- */
+/* -- Headerbar / titlebar: frosted-glass, neon underline ------------- */
 headerbar, .titlebar {
-    background-color: rgba(10, 10, 18, 0.55);
+    background-color: rgba(10, 10, 18, 0.78);
     color: #efefee;
+    border-bottom: 1px solid rgba(192, 132, 252, 0.45);
 }
 
-/* -- Text inputs: semi-opaque so text is readable, neon focus ring --- */
-/* Scoped to entry/spinbutton -- NOT textview (textview content can be  */
-/* an editor\'s main surface; leaving it to the app prevents collapse). */
+/* -- Text inputs: dark glass, neon focus ring ----------------------- */
 entry, spinbutton {
-    background-color: rgba(16, 16, 25, 0.80);
+    background-color: rgba(0, 0, 0, 0.55);
     color: #efefee;
-    border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(192, 132, 252, 0.45);
+    border-radius: 10px;
+    padding: 8px 14px;
     font-size: 16px;
+    caret-color: #ff00ff;
 }
 entry:focus, spinbutton:focus {
-    border-color: rgba(255, 0, 255, 0.65);
+    border-color: rgba(255, 0, 255, 0.95);
+    box-shadow: 0 0 12px rgba(255, 0, 255, 0.35);
 }
+entry placeholder, entry > placeholder { color: #6c6c75; }
 
-/* -- Buttons: transparent fill, neon outline, Caveat label ----------- */
-/* No min-height -- let GTK size them naturally so layout doesn\'t shift.*/
+/* -- Buttons: transparent fill, neon-pink outline, Caveat label ----- */
 button {
-    background-color: rgba(0, 0, 0, 0.30);
+    background-color: rgba(0, 0, 0, 0.45);
     color: #efefee;
     border: 1.5px solid rgba(255, 0, 255, 0.65);
-    border-radius: 6px;
-    font-size: 16px;
-    transition: background-color 120ms ease, box-shadow 120ms ease,
-                border-color 120ms ease;
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 17px;
+    transition: background-color 140ms ease, box-shadow 140ms ease,
+                border-color 140ms ease;
 }
 button:hover {
-    background-color: rgba(255, 0, 255, 0.10);
-    box-shadow: 0 0 12px rgba(255, 0, 255, 0.40);
+    background-color: rgba(255, 0, 255, 0.12);
+    box-shadow: 0 0 14px rgba(255, 0, 255, 0.55);
 }
 button:active, button:checked {
-    background-color: rgba(255, 0, 255, 0.18);
+    background-color: rgba(255, 0, 255, 0.22);
 }
 button:disabled {
     color: rgba(239, 239, 238, 0.35);
     border-color: rgba(255, 255, 255, 0.12);
 }
 
-/* Adwaita semantic button classes (Adw apps use these heavily) */
-button.suggested-action  { border-color: rgba(57, 255, 20, 0.80); }
-button.destructive-action{ border-color: rgba(255, 80, 100, 0.80); }
+/* Adwaita semantic button classes — purple = action, red = danger */
+button.suggested-action {
+    border-color: rgba(192, 132, 252, 0.95);
+    color: #c084fc;
+}
+button.suggested-action:hover {
+    box-shadow: 0 0 14px rgba(192, 132, 252, 0.65);
+}
+button.destructive-action {
+    border-color: rgba(255, 80, 100, 0.85);
+    color: #ff5066;
+}
+button.destructive-action:hover {
+    box-shadow: 0 0 14px rgba(255, 80, 100, 0.65);
+}
 button.flat {
     border-color: transparent;
     background-color: transparent;
@@ -336,46 +367,117 @@ button.flat:hover {
     border-color: rgba(255, 0, 255, 0.35);
 }
 
-/* Opt-in cycling rainbow row (matches godsapp\'s action button bar).
-   Apps wrap a Gtk.Box of buttons in a container with .nyx-rainbow-row */
-.nyx-rainbow-row > button:nth-child(2n) { border-color: rgba(0,170,255,0.75); }
-.nyx-rainbow-row > button:nth-child(3n) { border-color: rgba(255,215,0,0.75); }
-.nyx-rainbow-row > button:nth-child(4n) { border-color: rgba(57,255,20,0.75); }
+/* -- GodsApp\'s color-cycling action button row ---------------------- */
+/* Wrap a Gtk.Box of buttons in .nyx-rainbow-row to get the look.    */
+.nyx-rainbow-row > button:nth-child(2n)   { border-color: rgba(0,170,255,0.85); }
+.nyx-rainbow-row > button:nth-child(2n):hover { box-shadow: 0 0 14px rgba(0,170,255,0.55); }
+.nyx-rainbow-row > button:nth-child(3n)   { border-color: rgba(255,215,0,0.85); }
+.nyx-rainbow-row > button:nth-child(3n):hover { box-shadow: 0 0 14px rgba(255,215,0,0.55); }
+.nyx-rainbow-row > button:nth-child(4n)   { border-color: rgba(57,255,20,0.85); }
+.nyx-rainbow-row > button:nth-child(4n):hover { box-shadow: 0 0 14px rgba(57,255,20,0.55); }
 
-/* -- Switch: neon pink when active ----------------------------------- */
-switch:checked {
-    background-color: rgba(255, 0, 255, 0.55);
+/* -- The "GOD MODE" gold action button ------------------------------ */
+.nyx-god-mode {
+    border-color: rgba(255, 215, 0, 0.95);
+    color: #ffd700;
+    font-weight: 700;
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.55);
+}
+.nyx-god-mode:hover {
+    background-color: rgba(255, 215, 0, 0.15);
+    box-shadow: 0 0 18px rgba(255, 215, 0, 0.75);
 }
 
-/* -- Hero / rainbow title labels (callers add .nyx-rainbow-title) --- */
+/* -- Numbered sidebar tabs (01, 02, 03, ...) — GodsApp left rail --- */
+.nyx-tab-list row, .nyx-tab-list listrow,
+list.nyx-tab-list row, list.nyx-tab-list listrow {
+    background-color: transparent;
+    padding: 4px 12px;
+    border-radius: 8px;
+}
+.nyx-tab-list row:hover, list.nyx-tab-list row:hover {
+    background-color: rgba(192, 132, 252, 0.10);
+}
+.nyx-tab-list row:selected, list.nyx-tab-list row:selected {
+    background-color: rgba(192, 132, 252, 0.18);
+    box-shadow: inset 2px 0 0 #c084fc;
+}
+.nyx-tab-num {
+    border: 1px solid rgba(0, 255, 255, 0.85);
+    border-radius: 999px;
+    padding: 0 8px;
+    color: #00ffff;
+    font-family: \'JetBrains Mono\', monospace;
+    font-size: 12px;
+    margin-right: 8px;
+}
+
+/* -- Switch: neon pink when active ---------------------------------- */
+switch:checked {
+    background-color: rgba(255, 0, 255, 0.65);
+}
+switch:checked slider { background-color: #ffe0ff; }
+
+/* -- Hero / rainbow / title labels --------------------------------- */
 .nyx-rainbow-title {
     font-family: \'Caveat\', \'Patrick Hand\', cursive;
     font-weight: bold;
-    font-size: 28px;
+    font-size: 32px;
     text-shadow: 0 0 14px rgba(255, 255, 255, 0.55),
-                 0 0 28px rgba(255, 0, 255, 0.45);
+                 0 0 28px rgba(255, 0, 255, 0.45),
+                 0 0 42px rgba(0, 255, 255, 0.30);
+}
+.nyx-app-title {
+    font-family: \'Caveat\', \'Patrick Hand\', cursive;
+    font-size: 36px;
+    color: #efefee;
+    text-shadow: 0 0 12px rgba(255, 0, 255, 0.45);
+}
+.nyx-section-title {
+    font-family: \'Caveat\', \'Patrick Hand\', cursive;
+    font-size: 26px;
+    color: #efefee;
 }
 
-/* -- Window edge glow (callers add .nyx-chrome-edge to a wrapper) --- */
-.nyx-chrome-edge {
-    border: 3px solid rgba(255, 0, 255, 0.85);
-    border-radius: 6px;
-    box-shadow: 0 0 36px rgba(255, 0, 255, 0.45),
-                inset 0 0 2px rgba(255, 0, 255, 0.65);
-}
-
-/* -- Status / footer bar --------------------------------------------- */
+/* -- Status / footer bar -------------------------------------------- */
 .nyx-statusbar {
     color: #8a8a93;
     padding: 6px 14px;
-    font-size: 16px;
+    font-size: 13px;
+    font-family: \'JetBrains Mono\', \'Fira Code\', monospace;
+    background-color: transparent;
 }
 
-/* -- Convenience text classes (mirror godsapp\'s ui.py) -------------- */
+/* -- Convenience text classes -------------------------------------- */
 .nyx-dim   { color: #aeaeb6; }
 .nyx-faint { color: #6c6c75; }
 
-/* -- Scrollbars: neon pink slider on transparent track -------------- */
+/* -- Output / log / terminal area (black frosted, mono) ----------- */
+.nyx-output, .nyx-output text, .nyx-output textview,
+.nyx-output * textview {
+    background-color: rgba(0, 0, 0, 0.78);
+    color: #d8d8de;
+    font-family: \'JetBrains Mono\', \'Fira Code\', monospace;
+    font-size: 13px;
+    border: 1px solid rgba(192, 132, 252, 0.45);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+
+/* -- The signature GodsApp neon-gradient outer frame --------------- */
+/* Apps wrap their root in a Gtk.Frame with .nyx-godsapp-frame to     */
+/* get the multi-color glow border seen in the godsapp screenshot.   */
+.nyx-chrome-edge, .nyx-godsapp-frame {
+    border: 2px solid rgba(192, 132, 252, 0.95);
+    border-radius: 14px;
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 0, 255, 0.55),
+        0 0 24px rgba(192, 132, 252, 0.55),
+        0 0 48px rgba(255, 0, 255, 0.30),
+        0 0 72px rgba(0, 255, 255, 0.20);
+}
+
+/* -- Scrollbars: neon pink slider on transparent track ------------- */
 scrollbar { background-color: transparent; }
 scrollbar slider {
     background-color: rgba(255, 0, 255, 0.45);
@@ -387,11 +489,26 @@ scrollbar slider:hover {
     background-color: rgba(255, 0, 255, 0.65);
 }
 
-/* -- Tooltips -------------------------------------------------------- */
+/* -- Tooltips ------------------------------------------------------ */
 tooltip {
-    background-color: rgba(10, 10, 18, 0.92);
+    background-color: rgba(10, 10, 18, 0.96);
     border: 1px solid rgba(255, 0, 255, 0.55);
-    border-radius: 6px;
+    border-radius: 8px;
+    color: #efefee;
+}
+
+/* -- Dropdowns + popovers (Quick selector, settings menus, etc.) -- */
+dropdown, dropdown > button {
+    background-color: rgba(0, 0, 0, 0.55);
+    color: #efefee;
+    border: 1px solid rgba(192, 132, 252, 0.55);
+    border-radius: 10px;
+    padding: 4px 10px;
+}
+popover, popover > contents, popover > arrow {
+    background-color: rgba(10, 10, 18, 0.96);
+    border: 1px solid rgba(192, 132, 252, 0.55);
+    border-radius: 12px;
     color: #efefee;
 }
 """
@@ -416,7 +533,9 @@ _SCRAMBLE_POOL = ("!<>-_\\/[]{}=+*^?#@&%$" +
                   "0123456789")
 _SCRAMBLE_TICK_MS    = 28      # frame interval
 _SCRAMBLE_TOTAL_TICKS = 18     # ~500ms total animation
-_SCRAMBLE_MAX_LEN     = 60
+_SCRAMBLE_MAX_LEN     = 200    # r4: was 60 — bumped so status bars,
+                               # full button labels, and footer copy
+                               # all qualify for hover-scramble.
 
 
 class _Scrambler:
@@ -470,8 +589,13 @@ class _Scrambler:
 
 
 _SCRAMBLE_OPT_OUT_CLASSES = (
-    "nyx-no-scramble", "nyx-mono", "nyx-code", "monospace",
-    "nyx-statusbar",  # footer bars are info-dense; leave them alone
+    "nyx-no-scramble",
+    # NOTE r4: per user request the scramble effect now applies to *every*
+    # eligible label across every NYXUS app — including status bars,
+    # footers, and mono-font labels. The only opt-out left is the explicit
+    # `.nyx-no-scramble` class for cases where an app genuinely needs to
+    # disable scrambling on a specific label (e.g. live tickers whose text
+    # changes faster than the scramble animation can resolve).
 )
 
 
@@ -607,82 +731,61 @@ def _apply_size_policy(window: Gtk.Window) -> None:
 
 
 def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
-                   title_label: Optional[Gtk.Label] = None) -> Optional[GraffitiBackground]:
-    """Wrap `window`'s current child in a Gtk.Overlay with a graffiti
-    mural underneath. Inject shared NYXUS chrome CSS. Optionally swap a
-    hero label's markup to the rainbow palette. Force a sensible small
-    default window size + clear any fullscreen/maximize state.
+                   title_label: Optional[Gtk.Label] = None) -> None:
+    """Install NYXUS chrome on `window`.
 
-    Handles both `Gtk.ApplicationWindow` (set_child/get_child) and
-    `Adw.ApplicationWindow` (set_content/get_content).
+    NEW (r4): the window is made fully transparent so the user\'s desktop
+    wallpaper shows through. The graffiti seen behind every app is the
+    desktop wallpaper, NOT an embedded image. We no longer wrap the
+    window\'s child in a Gtk.Overlay+GraffitiBackground (that was the old
+    behaviour — it embedded the mural inside the app, which was wrong).
 
-    Returns the GraffitiBackground instance so callers can call
-    `.set_page_key(...)` later (e.g. when changing tabs).
+    What this function still does:
+      * installs the global NYXUS CSS provider (Caveat font, neon
+        button outlines, frosted-glass panels, GodsApp visual language)
+      * forces a sensible 900x650 default window size and clears any
+        fullscreen/maximize state the app may have set
+      * marks the window transparent so Hyprland can apply blur on top
+        of the wallpaper for the frosted-glass look
+      * optionally swaps a hero label\'s markup to the rainbow palette
+      * walks the widget tree and attaches hover-scramble onto every
+        eligible Gtk.Label (with re-walks at +600ms / +2000ms for
+        lazy-loaded content like Adw.PreferencesPage rows)
 
-    Idempotent: safe to call once per window."""
-    if window is None: return None
+    Compatible with both `Gtk.ApplicationWindow`, `Gtk.Window`, and
+    `Adw.ApplicationWindow`. Idempotent: safe to call repeatedly.
+    `page_key` is accepted for backward compatibility with the previous
+    GraffitiBackground-based API, but is no longer used for image
+    selection (no more embedded images). Returns None."""
+    if window is None:
+        return None
     _install_global_css()
     _apply_size_policy(window)
+    _make_window_transparent(window)
 
-    # Pick the right accessor pair for the window class — Gtk uses
-    # set_child/get_child; Adw.ApplicationWindow uses set_content/
-    # get_content (its set_child is reserved for the internal layout).
-    is_adw = _is_adw_app_window(window)
-    if is_adw:
-        get_content = window.get_content
-        set_content = window.set_content
-    else:
-        get_content = window.get_child
-        set_content = window.set_child
-
-    # Already wrapped? (re-entrancy guard)
-    # NOTE: Gtk.Widget.set_data/get_data were removed in PyGObject 3.42+.
-    # On systems with the new PyGObject they raise "Data access methods are
-    # unsupported. Use normal Python attributes instead." — which used to
-    # crash chrome injection silently and leave the window in a torn state
-    # (set_content(None) had already detached the original child). We now
-    # use plain Python attributes on the overlay GObject; PyGObject permits
-    # arbitrary attribute assignment on any subclass instance.
-    cur = get_content()
-    if cur is None: return None
-    if isinstance(cur, Gtk.Overlay) and getattr(cur, "_nyxus_chrome_installed", False):
-        bg = getattr(cur, "_nyxus_chrome_bg", None)
-        if bg and page_key:
-            try: bg.set_page_key(page_key)
-            except Exception: pass
-        return bg
-
-    try:
-        # Detach current content, build overlay [graffiti, original]
-        set_content(None)
-        overlay = Gtk.Overlay()
-        overlay.set_hexpand(True); overlay.set_vexpand(True)
-        bg = GraffitiBackground(page_key=page_key)
-        overlay.set_child(bg)
-        # original content rides on top, fully sized
-        cur.set_hexpand(True); cur.set_vexpand(True)
-        overlay.add_overlay(cur)
-        overlay._nyxus_chrome_installed = True
-        overlay._nyxus_chrome_bg = bg
-        set_content(overlay)
-    except Exception as e:
-        log.warning("install_chrome: %s", e)
-        # Restore on failure. `cur` may still be parented to overlay (from
-        # add_overlay above) — unparent first to avoid "child has parent"
-        # GTK-CRITICAL when handing it back to the window.
-        try:
-            parent = cur.get_parent() if hasattr(cur, "get_parent") else None
-            if parent is not None:
-                if isinstance(parent, Gtk.Overlay):
-                    try: parent.remove_overlay(cur)
-                    except Exception: pass
-                else:
-                    try: cur.unparent()
-                    except Exception: pass
-            set_content(cur)
-        except Exception: pass
+    # Re-entrancy guard. Use a plain attribute on the window itself —
+    # Gtk.Widget.set_data was removed in PyGObject 3.42+ and would raise.
+    if getattr(window, "_nyxus_chrome_installed", False):
         return None
+    try:
+        window._nyxus_chrome_installed = True
+    except Exception:
+        # Some widget subclasses are __slots__-locked; we tolerate that
+        # and just lose the re-entrancy guard for those windows.
+        pass
 
+    # Find the current content widget (Adw uses get_content / Gtk uses
+    # get_child) so we can run the scramble walk over it.
+    cur = None
+    try:
+        if _is_adw_app_window(window):
+            cur = window.get_content()
+        elif hasattr(window, "get_child"):
+            cur = window.get_child()
+    except Exception as e:
+        log.debug("install_chrome get content: %s", e)
+
+    # Optional rainbow markup on a passed-in hero title.
     if title_label is not None:
         try:
             txt = title_label.get_text() or title_label.get_label() or ""
@@ -693,13 +796,37 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
         except Exception as e:
             log.warning("install_chrome title: %s", e)
 
-    # Wire hover-scramble onto every eligible label in the window. We walk
-    # immediately (catches static layout) and again at +600ms / +2000ms
-    # (catches lazy/async-loaded content like Adw.PreferencesPage rows).
+    # Hover-scramble walk. Walks immediately (static layout) and again
+    # at +600ms / +2000ms (catches lazy/async-loaded content).
     try:
-        _walk_attach_scramble(cur)
-        GLib.timeout_add(600,  lambda: (_walk_attach_scramble(cur), False)[1])
-        GLib.timeout_add(2000, lambda: (_walk_attach_scramble(cur), False)[1])
+        target = cur if cur is not None else window
+        _walk_attach_scramble(target)
+        GLib.timeout_add(600,  lambda: (_walk_attach_scramble(target), False)[1])
+        GLib.timeout_add(2000, lambda: (_walk_attach_scramble(target), False)[1])
     except Exception as e:
         log.debug("install_chrome scramble walk: %s", e)
-    return bg
+    return None
+
+
+def _make_window_transparent(window: Gtk.Window) -> None:
+    """Mark the window with the .nyx-transparent CSS class and strip the
+    .background class some apps add (which would re-paint the surface
+    opaque). Combined with the global `window { background: transparent }`
+    rule from CHROME_CSS this gives a fully see-through window surface
+    that Hyprland can blur on top of the desktop wallpaper."""
+    if window is None:
+        return
+    try:
+        window.add_css_class("nyx-transparent")
+    except Exception as e:
+        log.debug("add nyx-transparent: %s", e)
+    try:
+        if window.has_css_class("background"):
+            window.remove_css_class("background")
+    except Exception:
+        pass
+    try:
+        if window.has_css_class("solid-csd"):
+            window.remove_css_class("solid-csd")
+    except Exception:
+        pass
