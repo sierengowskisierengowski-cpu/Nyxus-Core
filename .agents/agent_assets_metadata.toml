@@ -587,3 +587,9 @@ id = "FFvENobry4nrSRe4g9hla"
 uri = "file://attached_assets/nyxus-sierengowski-clean.png"
 type = "image"
 title = "SIERENGOWSKI — Clean Neon Splatter"
+
+[[outputs]]
+id = "EL2mO9LebhvdaZ4SlP0Mq"
+uri = "file://attached_assets/nyxus-resync-r12.tar.gz"
+type = "unspecified"
+title = "nyxus-resync-r12.tar.gz — wallpaper-safe + chrome-verify"

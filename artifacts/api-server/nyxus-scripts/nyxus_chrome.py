@@ -43,7 +43,7 @@ log = logging.getLogger("nyxus.chrome")
 # Bumped with every visible chrome change so apps can log which chrome
 # version actually loaded. Curl /api/download/nyxus/nyxus_chrome.py |
 # grep NYXUS_CHROME_VERSION to confirm freshness from prod.
-NYXUS_CHROME_VERSION = "2026.05.04-r7"
+NYXUS_CHROME_VERSION = "2026.05.04-r8"
 
 # ── Palette (matches nyxus_settings.py) ─────────────────────────────────────
 NEON_PINK   = (1.00, 0.00, 1.00)
@@ -376,8 +376,10 @@ window > headerbar, window > windowhandle, window > windowhandle > * {
 .nyx-threat-score, .nyx-threat-label {
     color: #0a0a12;
 }
-.nyx-threat-score { font-size: 38px; font-weight: 700; }
-.nyx-threat-label { font-size: 14px; letter-spacing: 0.18em; color: #2a2a32; }
+.nyx-threat-score { font-size: 38px; font-weight: bold; }
+/* NB: keep this rule plain — em-unit spacing properties are not parsed
+ * by GTK4 and a single bad property invalidates the whole stylesheet. */
+.nyx-threat-label { font-size: 14px; color: #2a2a32; }
 
 /* Opt-out: if an app needs the old dark card explicitly. */
 .nyx-card-dark {
