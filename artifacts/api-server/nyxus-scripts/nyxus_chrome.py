@@ -43,7 +43,7 @@ log = logging.getLogger("nyxus.chrome")
 # Bumped with every visible chrome change so apps can log which chrome
 # version actually loaded. Curl /api/download/nyxus/nyxus_chrome.py |
 # grep NYXUS_CHROME_VERSION to confirm freshness from prod.
-NYXUS_CHROME_VERSION = "2026.05.04-r6"
+NYXUS_CHROME_VERSION = "2026.05.04-r7"
 
 # ── Palette (matches nyxus_settings.py) ─────────────────────────────────────
 NEON_PINK   = (1.00, 0.00, 1.00)
@@ -321,6 +321,72 @@ window > headerbar, window > windowhandle, window > windowhandle > * {
 .nyx-glow-gold   { box-shadow: 0 0 22px rgba(255, 215, 0, 0.65); }
 .nyx-glow-green  { box-shadow: 0 0 18px rgba(57, 255, 20, 0.45); }
 .nyx-glow-red    { box-shadow: 0 0 18px rgba(255, 80, 100, 0.55); }
+
+/* === WHITE FROST PALETTE — layered milk-glass for hero/content pieces.
+ * Auto-darkens text inside since dark ink is needed on light frost.
+ *   solid → ~92% white, looks frosted but nearly opaque
+ *   white → ~65% white, wallpaper bleeds through clearly
+ *   soft  → ~30% white, very translucent over wallpaper
+ *  All three keep the neon border so they still feel "NYXUS".       === */
+.nyx-frost-white-solid {
+    background-color: rgba(245, 245, 250, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 12px;
+    color: #0a0a12;
+}
+.nyx-frost-white-solid label,
+.nyx-frost-white-solid > * { color: #0a0a12; }
+.nyx-frost-white-solid:hover { box-shadow: 0 0 20px rgba(255, 255, 255, 0.45); }
+
+.nyx-frost-white {
+    background-color: rgba(248, 248, 252, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 12px;
+    color: #0a0a12;
+}
+.nyx-frost-white label,
+.nyx-frost-white > * { color: #0a0a12; }
+
+.nyx-frost-white-soft {
+    background-color: rgba(255, 255, 255, 0.30);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 12px;
+    color: #0a0a12;
+}
+.nyx-frost-white-soft label,
+.nyx-frost-white-soft > * { color: #0a0a12; }
+
+/* Shield/sage/studio hero widgets — auto-promote known classes      *
+ * to white-solid frost so apps inherit the look without per-app     *
+ * code changes.                                                     */
+.nyx-card,
+.nyx-hero,
+.nyx-threat-score,
+.sage-issue,
+.nyx-doc-title {
+    background-color: rgba(248, 248, 252, 0.62);
+    color: #0a0a12;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 12px;
+    padding: 12px;
+}
+.nyx-card label, .nyx-card > *,
+.nyx-hero  label, .nyx-hero  > *,
+.sage-issue label, .sage-issue > *,
+.nyx-threat-score, .nyx-threat-label {
+    color: #0a0a12;
+}
+.nyx-threat-score { font-size: 38px; font-weight: 700; }
+.nyx-threat-label { font-size: 14px; letter-spacing: 0.18em; color: #2a2a32; }
+
+/* Opt-out: if an app needs the old dark card explicitly. */
+.nyx-card-dark {
+    background-color: rgba(10, 10, 18, 0.72);
+    color: #efefee;
+    border: 1px solid rgba(192, 132, 252, 0.30);
+    border-radius: 12px;
+}
+.nyx-card-dark label, .nyx-card-dark > * { color: #efefee; }
 
 /* === UNIVERSAL frost for content widgets that apps commonly paint solid.
  * Catches GTK textview/entry/listrows everywhere so leftover solid bg
