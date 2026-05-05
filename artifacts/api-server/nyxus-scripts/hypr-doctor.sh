@@ -20,8 +20,14 @@ set -euo pipefail
 #  (or installed automatically by nyxus-resync-all.sh r15+)
 #
 #  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Version log:
+#    r1 — initial release
+#    r2 — fix tilde expansion in source-chain check (was false-flagging
+#         every ~/-rooted source path as missing)
 # ============================================================
 
+HYPR_DOCTOR_VERSION="2026.05.05-r2"
 FULL=0
 if [[ "${1:-}" == "--full" ]]; then
   FULL=1
@@ -37,7 +43,7 @@ LOG="$OUTDIR/hypr-doctor-$(date +%Y%m%d-%H%M%S).log"
 # Tee all output to log
 exec > >(tee -a "$LOG") 2>&1
 
-echo "Hypr Doctor report @ $(ts)"
+echo "Hypr Doctor report @ $(ts)  (version $HYPR_DOCTOR_VERSION)"
 echo "Log file: $LOG"
 hr
 
@@ -125,7 +131,11 @@ if [[ -f "$MAINCFG" ]]; then
     src="$(trim "$src")"
     [[ -z "$src" ]] && continue
 
-    eval "resolved=\"$src\"" 2>/dev/null || resolved="$src"
+    # Expand leading ~ to $HOME first (tilde expansion does NOT happen
+    # inside double quotes via eval — that was the bug that falsely
+    # reported every NYXUS source line as missing).
+    src_expanded="${src/#\~/$HOME}"
+    eval "resolved=\"$src_expanded\"" 2>/dev/null || resolved="$src_expanded"
 
     shopt -s nullglob
     matches=( $resolved )
