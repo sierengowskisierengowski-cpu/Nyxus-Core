@@ -132,6 +132,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_screensaver.py":  "nyxus_screensaver.py",
   "nyxus_demon_wake.py":   "nyxus_demon_wake.py",
   "nyxus-demon.png":       "nyxus-demon.png",
+  "nyxus-frost-sierengowski.png": "nyxus-frost-sierengowski.png",
+  "nyxus-set-frost-wallpaper.sh": "nyxus-set-frost-wallpaper.sh",
   "nyxus_verify.sh":       "nyxus_verify.sh",
   "nyxus-phantom.tgz":          "nyxus-phantom.tgz",
   "nyxus-shield.tgz":           "nyxus-shield.tgz",
