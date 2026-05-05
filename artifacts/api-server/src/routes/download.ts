@@ -49,6 +49,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-resync-all.sh":  "nyxus-resync-all.sh",
   "hypr-doctor.sh":       "hypr-doctor.sh",
   "nyxus-hyprland-rules.conf": "nyxus-hyprland-rules.conf",
+  "nyxus-hyprland-blur.conf":  "nyxus-hyprland-blur.conf",
   "hyprland.conf":        "hyprland.conf",
   "waybar-config.json":   "waybar-config.json",
   "waybar-style.css":     "waybar-style.css",
