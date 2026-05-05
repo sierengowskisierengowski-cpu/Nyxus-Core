@@ -25,9 +25,12 @@ set -euo pipefail
 #    r1 — initial release
 #    r2 — fix tilde expansion in source-chain check (was false-flagging
 #         every ~/-rooted source path as missing)
+#    r3 — add `hyprctl configerrors` (THE definitive list that powers
+#         the red waybar overlay) + show actual rule file contents +
+#         tail Hyprland's own log file (~/.cache/hyprland/hyprland.log)
 # ============================================================
 
-HYPR_DOCTOR_VERSION="2026.05.05-r2"
+HYPR_DOCTOR_VERSION="2026.05.05-r3"
 FULL=0
 if [[ "${1:-}" == "--full" ]]; then
   FULL=1
@@ -209,21 +212,34 @@ echo "[8] Runtime checks (hyprctl)"
 if command -v hyprctl >/dev/null 2>&1; then
   if hyprctl -j monitors >/dev/null 2>&1; then
     echo "OK: hyprctl can talk to Hyprland (Hyprland likely running)."
+
+    # ── 8a · CONFIG ERRORS — THIS IS THE LIST THAT POWERS THE RED WAYBAR
+    # OVERLAY. If hyprctl configerrors prints anything, those are the
+    # exact errors the user sees on screen, with file + line numbers.
     echo
-    echo "Monitors:"
-    hyprctl monitors || true
-    echo
-    echo "Clients:"
-    hyprctl clients || true
-    echo
-    echo "Active window:"
-    hyprctl activewindow || true
+    echo "── 8a · hyprctl configerrors  (THE definitive error list) ──"
+    CFGERRS="$(hyprctl configerrors 2>/dev/null || true)"
+    if [[ -z "$CFGERRS" ]] || echo "$CFGERRS" | grep -qiE '^no errors|^\s*$'; then
+      echo "OK: hyprctl configerrors reports no errors"
+    else
+      echo "ERROR: Hyprland is reporting active config errors:"
+      echo "$CFGERRS" | sed 's/^/    /'
+    fi
 
     if [[ $FULL -eq 1 ]]; then
       echo
+      echo "Monitors:"
+      hyprctl monitors || true
+      echo
+      echo "Clients:"
+      hyprctl clients || true
+      echo
+      echo "Active window:"
+      hyprctl activewindow || true
+      echo
       hr
       echo "[FULL] hyprctl -j dumps"
-      for cmd in monitors workspaces clients devices binds activewindow; do
+      for cmd in monitors workspaces clients devices binds activewindow configerrors; do
         echo "--- hyprctl -j $cmd"
         hyprctl -j "$cmd" 2>/dev/null || true
       done
@@ -238,11 +254,56 @@ else
 fi
 echo
 
-# --- Recent journal logs (best-effort, may be empty) ---
-echo "[9] Logs (best-effort)"
+# ── 8b · NYXUS rules file: show what's actually on disk RIGHT NOW
+echo "[8b] NYXUS windowrules file on disk"
+NYXUS_RULES="$HYPRDIR/conf.d/nyxus-windowrules.conf"
+if [[ -f "$NYXUS_RULES" ]]; then
+  RULES_SHA=$(sha256sum "$NYXUS_RULES" 2>/dev/null | cut -c1-12)
+  RULES_LINES=$(wc -l < "$NYXUS_RULES")
+  RULES_RULECOUNT=$(grep -cE '^[[:space:]]*windowrule(v2)?[[:space:]]*=' "$NYXUS_RULES")
+  echo "Path:        $NYXUS_RULES"
+  echo "SHA (12):    $RULES_SHA"
+  echo "Lines:       $RULES_LINES"
+  echo "Rule count:  $RULES_RULECOUNT"
+  echo "── Contents ──"
+  cat -n "$NYXUS_RULES" | sed 's/^/    /'
+  echo "── End contents ──"
+else
+  echo "WARN: $NYXUS_RULES not found (resync may not have run)"
+fi
+echo
+
+# --- Recent logs ---
+echo "[9] Logs"
+
+# 9a · Hyprland's OWN log file — this is where parse errors land EVEN WHEN
+# debug:disable_logs is true, because errors bypass the disable flag.
+echo "── 9a · Hyprland's own log (parse errors land here) ──"
+HLOG_CACHE="$HOME/.cache/hyprland/hyprland.log"
+HLOG_RUN=""
+if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" && -n "${XDG_RUNTIME_DIR:-}" ]]; then
+  HLOG_RUN="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/hyprland.log"
+fi
+HLOG=""
+[[ -f "$HLOG_CACHE" ]] && HLOG="$HLOG_CACHE"
+[[ -z "$HLOG" && -f "$HLOG_RUN" ]] && HLOG="$HLOG_RUN"
+
+if [[ -n "$HLOG" ]]; then
+  echo "Found: $HLOG"
+  echo "── Last 50 lines containing 'error' or 'invalid' ──"
+  grep -iE 'error|invalid|fail|warn' "$HLOG" 2>/dev/null | tail -n 50 | sed 's/^/    /' || true
+  echo "── End ──"
+else
+  echo "WARN: no Hyprland log found at $HLOG_CACHE or \$XDG_RUNTIME_DIR/hypr/<sig>/hyprland.log"
+  echo "Tip: enable verbose logging by setting in hyprland.conf:"
+  echo "    debug { disable_logs = false }"
+fi
+echo
+
+# 9b · Journal (best-effort; may be empty if Hyprland wasn't started by the DM)
+echo "── 9b · journalctl --user (Hyprland-related) ──"
 if command -v journalctl >/dev/null 2>&1; then
-  echo "Last Hyprland-related logs from current boot (may be empty):"
-  journalctl --user -b 0 2>/dev/null | grep -Ei 'hyprland|hypr|wayland|wlroots' | tail -n 200 || true
+  journalctl --user -b 0 2>/dev/null | grep -iE 'hyprland|wlroots' | grep -iE 'error|invalid|fail|warn' | tail -n 50 | sed 's/^/    /' || true
 else
   echo "journalctl not found; skipping."
 fi
