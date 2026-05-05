@@ -1,873 +1,387 @@
 /* ────────────────────────────────────────────────────────────────────────────
-   NYXUS Waybar — 4-Bar Signature Theme  |  SIERENGOWSKI PALETTE
+   NYXUS Waybar — EMBOSSED CREAM PAPER theme  (Seattle Frost · SIERENGOWSKI)
    © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+
+   Aesthetic: cream-on-cream embossed stationery. Same color family throughout,
+   depth created by light highlight (top-left) + soft shadow (bottom-right).
+   Charcoal pencil text. No neon. No rainbow. Workspace identity preserved
+   via thin colored top-stripe (3px) on each pill — the only color in the bar.
+
+   PALETTE
+     Cream paper      #f5f3ef   (matches wallpaper background — seamless)
+     Cream raised     #fbfaf6   (highlight side of every pill)
+     Cream pressed    #ebe8e2   (shadow side / pressed state)
+     Pencil ink       #1a1816   (all text)
+     Pencil light     #58524c   (secondary text, separators)
+     Pencil ghost     #9e948a   (placeholder, disabled)
+     Workspace stripes (top 3px only, accent identity):
+       1 pink   #ec4899   2 orange #ea7e3c   3 gold   #d4a73a
+       4 green  #6aa872   5 blue   #5a8aab   6 purple #8a6aaa
    ──────────────────────────────────────────────────────────────────────────── */
 
-/* ── PALETTE
-   Hot Pink  : #ff00ff   →  TOP    bar signature
-   Cyan      : #22d3ee   →  BOTTOM bar signature
-   Purple    : #39ff14   →  LEFT   bar signature
-   Gold      : #ffff00   →  RIGHT  bar signature
-   Indigo    : #00ffaa
-   Green     : #39ff14
-   Text light: #e8e0f5   (readable on all bars)
-   BG        : rgba(16, 12, 28, 0.91)
-*/
-
-/* ── Calendar / tooltip popup ─────────────────────────────────────────────── */
-tooltip {
-    background:    rgba(4, 2, 14, 0.97);
-    border:        2px solid #ff00ff;
-    border-radius: 14px;
-    padding:       16px 22px;
-    box-shadow:    0 0 28px rgba(255, 0, 255, 0.65),
-                   inset 0 0 14px rgba(255, 0, 255, 0.10);
-}
-tooltip label {
-    color:       #ffffff;
-    font-size:   18px;
-    font-weight: bold;
-    font-family: "Caveat", "JetBrains Mono Nerd Font", "JetBrains Mono", monospace;
-    text-shadow: 0 0 8px rgba(255, 0, 255, 0.75),
-                 0 0 16px rgba(255, 0, 255, 0.45);
-    padding:     3px 0;
-}
-
 * {
-    font-family:   "JetBrains Mono", "Fira Code", monospace;
+    font-family:   'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
     font-size:     11px;
     border:        none;
     border-radius: 0;
     padding:       0;
     margin:        0;
     min-height:    0;
+    color:         #1a1816;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   ANIMATIONS
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-@keyframes nyxus-rainbow {
-    0%   { opacity: 0.80; }
-    50%  { opacity: 1.00; }
-    100% { opacity: 0.80; }
+/* ── Tooltip popups: cream embossed cards ────────────────────────────────── */
+tooltip {
+    background:    #f5f3ef;
+    border:        1px solid rgba(26, 24, 22, 0.22);
+    border-radius: 10px;
+    padding:       12px 18px;
+    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
+                   inset -1px -1px 0 rgba(26, 24, 22, 0.06),
+                   0 4px 12px rgba(26, 24, 22, 0.10);
 }
-
-@keyframes top-pulse {
-    0%   { opacity: 0.88; }
-    50%  { opacity: 1.00; }
-    100% { opacity: 0.88; }
-}
-
-@keyframes bottom-pulse {
-    0%   { opacity: 0.88; }
-    50%  { opacity: 1.00; }
-    100% { opacity: 0.88; }
-}
-
-@keyframes left-pulse {
-    0%   { opacity: 0.85; }
-    50%  { opacity: 1.00; }
-    100% { opacity: 0.85; }
-}
-
-@keyframes right-pulse {
-    0%   { opacity: 0.85; }
-    50%  { opacity: 1.00; }
-    100% { opacity: 0.85; }
-}
-
-@keyframes batt-crit {
-    from { opacity: 1.0; }
-    to   { opacity: 0.45; }
+tooltip label {
+    color:       #1a1816;
+    font-size:   13px;
+    font-weight: 500;
+    font-family: 'Architects Daughter', 'Caveat', 'Patrick Hand', cursive;
+    padding:     2px 0;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   TOP BAR  ·  signature color: HOT PINK #ff00ff
+   SHARED EMBOSSED PILL — used by every module pill in every bar
+   ════════════════════════════════════════════════════════════════════════════ */
+@define-color cream         #f5f3ef;
+@define-color cream-raised  #fbfaf6;
+@define-color cream-pressed #ebe8e2;
+@define-color ink           #1a1816;
+@define-color ink-light     #58524c;
+
+/* ════════════════════════════════════════════════════════════════════════════
+   TOP BAR — cream paper strip with charcoal text
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.top {
-    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png");
-    background-color:    rgba(10, 5, 18, 0.78);
-    background-size:     cover;
-    background-position: 50% 25%;
-    background-repeat:   no-repeat;
-    color:               #ffffff;
-    border-top:          5px solid #ff00ff;
-    border-bottom:       3px solid rgba(244, 114, 182, 0.70);
-    box-shadow:          0 5px 45px rgba(255,0,255,0.75),
-                         0 -1px 20px rgba(255,0,255,0.40);
-    animation:           top-pulse 4s ease-in-out infinite;
+    background-color: #f5f3ef;
+    background-image: none;
+    color:            #1a1816;
+    border:           none;
+    border-bottom:    1px solid rgba(26, 24, 22, 0.12);
+    box-shadow:       inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                      0 1px 3px rgba(26, 24, 22, 0.06);
 }
 
-/* Ticker */
+/* Ticker — pencil-light, no glow */
 #custom-ticker {
-    padding:        0 12px;
+    padding:        0 14px;
     font-size:      10px;
-    font-weight:    bold;
-    letter-spacing: 0.07em;
-    color:          #ffffff;
-    text-shadow:    0 0 8px rgba(255,0,255,0.90);
-    margin:         3px 2px;
+    font-weight:    500;
+    letter-spacing: 0.06em;
+    color:          #58524c;
+    margin:         3px 4px;
 }
 
-/* NYXUS wordmark — per-letter colors via Pango, rainbow animated pill */
+/* NYXUS wordmark — embossed cream pill, hand-drawn feel */
 #custom-nyxus {
+    font-family:    'Architects Daughter', 'Caveat', cursive;
     font-size:      14px;
-    letter-spacing: 0.55em;
-    padding:        3px 22px;
-    background:     rgba(0, 0, 0, 0.60);
+    letter-spacing: 0.40em;
+    padding:        2px 22px;
+    color:          #1a1816;
+    background:     #fbfaf6;
+    border:         1px solid rgba(26, 24, 22, 0.18);
     border-radius:  8px;
-    border:         2px solid rgba(255,0,255,0.75);
     margin:         3px 0;
-    animation:      nyxus-rainbow 6s linear infinite;
+    box-shadow:     inset 1px 1px 0 rgba(255, 255, 255, 0.9),
+                    inset -1px -1px 0 rgba(26, 24, 22, 0.06),
+                    0 1px 3px rgba(26, 24, 22, 0.08);
 }
 
-/* Separator */
+/* Separator dots — pencil ghost */
 #custom-sep {
-    color:     rgba(255, 255, 255, 0.35);
-    padding:   0 3px;
+    color:     rgba(26, 24, 22, 0.28);
+    padding:   0 4px;
     font-size: 10px;
 }
 
-/* ── shared pill base for all top-bar stat modules ── */
+/* ── Top-bar stat pills — all share the same embossed cream look ── */
 window#waybar.top #cpu,
 window#waybar.top #memory,
 window#waybar.top #temperature,
 window#waybar.top #network,
 window#waybar.top #battery,
 window#waybar.top #clock {
-    border-radius: 8px;
-    margin:        3px 3px;
-    padding:       3px 12px;
-    font-size:     10px;
-    font-weight:   bold;
+    color:          #1a1816;
+    background:     #fbfaf6;
+    border:         1px solid rgba(26, 24, 22, 0.15);
+    border-radius:  8px;
+    margin:         3px 3px;
+    padding:        3px 12px;
+    font-size:      10px;
+    font-weight:    500;
     letter-spacing: 0.04em;
+    box-shadow:     inset 1px 1px 0 rgba(255, 255, 255, 0.85),
+                    inset -1px -1px 0 rgba(26, 24, 22, 0.05);
 }
 
-/* CPU - acid green */
-window#waybar.top #cpu {
-    color:       #ffffff;
-    background:  rgba(57,255,20,0.38);
-    border:      2px solid #39ff14;
-    box-shadow:  0 0 14px rgba(57,255,20,0.65), 0 0 28px rgba(57,255,20,0.25);
-    text-shadow: 0 0 10px rgba(57,255,20,0.90);
-}
-
-/* RAM — indigo */
-window#waybar.top #memory {
-    color:       #ffffff;
-    background:  rgba(0,255,170,0.38);
-    border:      2px solid #00ffaa;
-    box-shadow:  0 0 14px rgba(0,255,170,0.65), 0 0 28px rgba(0,255,170,0.25);
-    text-shadow: 0 0 10px rgba(0,255,170,0.90);
-}
-
-/* Temp — green */
-window#waybar.top #temperature {
-    color:       #ffffff;
-    background:  rgba(57,255,20,0.38);
-    border:      2px solid #39ff14;
-    box-shadow:  0 0 14px rgba(57,255,20,0.65), 0 0 28px rgba(57,255,20,0.25);
-    text-shadow: 0 0 10px rgba(57,255,20,0.90);
-}
-window#waybar.top #temperature.critical {
-    background:  rgba(255,34,0,0.40);
-    border:      2px solid #ff2200;
-    box-shadow:  0 0 18px rgba(255,34,0,0.80);
-    text-shadow: 0 0 14px #ff2200;
-    animation:   batt-crit 0.8s ease-in-out infinite alternate;
-}
-
-/* Network — gold */
-window#waybar.top #network {
-    color:       #ffffff;
-    background:  rgba(255,255,0,0.38);
-    border:      2px solid #ffff00;
-    box-shadow:  0 0 14px rgba(255,255,0,0.65), 0 0 28px rgba(255,255,0,0.25);
-    text-shadow: 0 0 10px rgba(255,255,0,0.90);
-}
-window#waybar.top #network.disconnected {
-    background:  rgba(255,255,255,0.08);
-    border:      2px solid rgba(255,255,255,0.20);
-    box-shadow:  none;
-    text-shadow: none;
-}
-
-/* Battery — pink */
-window#waybar.top #battery {
-    color:       #ffffff;
-    background:  rgba(255,0,255,0.38);
-    border:      2px solid #ff00ff;
-    box-shadow:  0 0 14px rgba(255,0,255,0.65), 0 0 28px rgba(255,0,255,0.25);
-    text-shadow: 0 0 10px rgba(255,0,255,0.90);
-}
-window#waybar.top #battery.charging,
-window#waybar.top #battery.plugged {
-    background:  rgba(57,255,20,0.38);
-    border:      2px solid #39ff14;
-    box-shadow:  0 0 14px rgba(57,255,20,0.65);
-    text-shadow: 0 0 12px #39ff14;
+/* Critical / warning states — keep cream pill, add subtle tint + colored stripe */
+window#waybar.top #temperature.critical,
+window#waybar.top #battery.critical {
+    color:        #8a2a2a;
+    border-color: rgba(138, 42, 42, 0.50);
+    box-shadow:   inset 1px 1px 0 rgba(255, 255, 255, 0.85),
+                  inset 0 -2px 0 rgba(138, 42, 42, 0.45);
 }
 window#waybar.top #battery.warning {
-    background:  rgba(255,85,0,0.38);
-    border:      2px solid #ff5500;
-    box-shadow:  0 0 14px rgba(255,85,0,0.65);
-    text-shadow: 0 0 10px #ff5500;
+    color:        #8a5a2a;
+    border-color: rgba(138, 90, 42, 0.45);
+    box-shadow:   inset 1px 1px 0 rgba(255, 255, 255, 0.85),
+                  inset 0 -2px 0 rgba(138, 90, 42, 0.40);
 }
-window#waybar.top #battery.critical {
-    background:  rgba(255,34,0,0.40);
-    border:      2px solid #ff2200;
-    box-shadow:  0 0 18px rgba(255,34,0,0.80);
-    text-shadow: 0 0 12px #ff2200;
-    animation:   batt-crit 1s ease-in-out infinite alternate;
+window#waybar.top #network.disconnected {
+    color:        #9e948a;
+    background:   #ebe8e2;
 }
-
-/* Clock — sky */
-window#waybar.top #clock {
-    color:          #ffffff;
-    background:     rgba(0,136,255,0.38);
-    border:         2px solid #0088ff;
-    box-shadow:     0 0 14px rgba(0,136,255,0.65), 0 0 28px rgba(0,136,255,0.25);
-    text-shadow:    0 0 10px rgba(0,136,255,0.90);
-    letter-spacing: 0.08em;
-}
-
 
 /* ════════════════════════════════════════════════════════════════════════════
-   BOTTOM BAR  ·  signature color: ORANGE #ff5500
+   BOTTOM BAR — same embossed cream paper, slightly taller (60px)
    ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.bottom {
-    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-taskbar-bg.png");
-    background-color:    rgba(0, 0, 0, 0.72);
-    background-size:     cover;
-    background-position: center center;
-    background-repeat:   no-repeat;
-    color:               #ffffff;
-    border-bottom:       5px solid #ff5500;
-    border-top:          3px solid rgba(249, 115, 22, 0.75);
-    box-shadow:          0 -5px 45px rgba(255,85,0,0.75),
-                         0  2px 20px rgba(255,85,0,0.40);
-    animation:           bottom-pulse 4s ease-in-out infinite;
+    background-color: #f5f3ef;
+    background-image: none;
+    color:            #1a1816;
+    border:           none;
+    border-top:       1px solid rgba(26, 24, 22, 0.12);
+    box-shadow:       inset 0 -1px 0 rgba(255, 255, 255, 0.9),
+                      0 -1px 3px rgba(26, 24, 22, 0.06);
 }
 
-/* ── Workspaces — each number gets its own neon identity ── */
+/* ── Workspaces — cream pills with thin colored top-stripe per workspace ── */
 window#waybar.bottom #workspaces { padding: 0 10px; }
 
 window#waybar.bottom #workspaces button {
+    color:         #58524c;
+    background:    #fbfaf6;
     padding:       3px 16px;
-    margin:        5px 4px;
-    background:    rgba(255,255,255,0.05);
+    margin:        9px 4px;
+    border:        1px solid rgba(26, 24, 22, 0.15);
     border-radius: 8px;
-    border:        2px solid rgba(255,255,255,0.10);
     min-width:     34px;
     font-size:     12px;
-    font-weight:   bold;
-    transition:    all 0.20s ease;
+    font-weight:   500;
+    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
+                   inset -1px -1px 0 rgba(26, 24, 22, 0.05);
+    transition:    all 0.18s ease;
 }
 
-/* 1 — Hot Pink */
-window#waybar.bottom #workspaces button:nth-child(1) {
-    color:      #ffffff;
-    background: rgba(255,0,255,0.55);
-    border:     2px solid #ff00ff;
-    text-shadow: 0 0 8px rgba(255,0,255,0.90);
-    box-shadow:  0 0 10px rgba(255,0,255,0.40);
-}
-window#waybar.bottom #workspaces button:nth-child(1):hover {
-    background: rgba(255,0,255,0.72);
-    border:     2px solid #ff00ff;
-    box-shadow:  0 0 18px rgba(255,0,255,0.70);
-}
-window#waybar.bottom #workspaces button:nth-child(1).occupied {
-    background: rgba(255,0,255,0.68);
-    border:     2px solid #ff00ff;
-    box-shadow:  0 0 14px rgba(255,0,255,0.55);
-}
-window#waybar.bottom #workspaces button:nth-child(1).active {
-    color:      #ffffff;
-    background: rgba(255,0,255,0.85);
-    border:     3px solid #ff00ff;
-    text-shadow: 0 0 16px #ff00ff, 0 0 32px rgba(255,0,255,0.90);
-    box-shadow:  0 0 30px rgba(255,0,255,0.95), 0 0 60px rgba(255,0,255,0.55), 0 0 90px rgba(255,0,255,0.25);
+window#waybar.bottom #workspaces button:hover {
+    background:  #ffffff;
+    color:       #1a1816;
+    border-color: rgba(26, 24, 22, 0.30);
 }
 
-/* 2 — Orange */
-window#waybar.bottom #workspaces button:nth-child(2) {
-    color:      #ffffff;
-    background: rgba(255,85,0,0.55);
-    border:     2px solid #ff5500;
-    text-shadow: 0 0 8px rgba(255,85,0,0.90);
-    box-shadow:  0 0 10px rgba(255,85,0,0.40);
-}
-window#waybar.bottom #workspaces button:nth-child(2):hover {
-    background: rgba(255,85,0,0.72);
-    border:     2px solid #ff5500;
-    box-shadow:  0 0 18px rgba(255,85,0,0.70);
-}
-window#waybar.bottom #workspaces button:nth-child(2).occupied {
-    background: rgba(255,85,0,0.68);
-    border:     2px solid #ff5500;
-    box-shadow:  0 0 14px rgba(255,85,0,0.55);
-}
-window#waybar.bottom #workspaces button:nth-child(2).active {
-    color:      #ffffff;
-    background: rgba(255,85,0,0.85);
-    border:     3px solid #ff5500;
-    text-shadow: 0 0 16px #ff5500, 0 0 32px rgba(255,85,0,0.90);
-    box-shadow:  0 0 30px rgba(255,85,0,0.95), 0 0 60px rgba(255,85,0,0.55), 0 0 90px rgba(255,85,0,0.25);
+window#waybar.bottom #workspaces button.active {
+    color:        #1a1816;
+    background:   #ffffff;
+    border:       1px solid rgba(26, 24, 22, 0.45);
+    box-shadow:   inset 1px 1px 0 rgba(255, 255, 255, 0.95),
+                  inset -1px -1px 0 rgba(26, 24, 22, 0.08),
+                  0 2px 6px rgba(26, 24, 22, 0.10);
 }
 
-/* 3 — Gold */
-window#waybar.bottom #workspaces button:nth-child(3) {
-    color:      #ffffff;
-    background: rgba(255,255,0,0.55);
-    border:     2px solid #ffff00;
-    text-shadow: 0 0 8px rgba(255,255,0,0.90);
-    box-shadow:  0 0 10px rgba(255,255,0,0.40);
-}
-window#waybar.bottom #workspaces button:nth-child(3):hover {
-    background: rgba(255,255,0,0.72);
-    border:     2px solid #ffff00;
-    box-shadow:  0 0 18px rgba(255,255,0,0.70);
-}
-window#waybar.bottom #workspaces button:nth-child(3).occupied {
-    background: rgba(255,255,0,0.68);
-    border:     2px solid #ffff00;
-    box-shadow:  0 0 14px rgba(255,255,0,0.55);
-}
-window#waybar.bottom #workspaces button:nth-child(3).active {
-    color:      #ffffff;
-    background: rgba(255,255,0,0.85);
-    border:     3px solid #ffff00;
-    text-shadow: 0 0 16px #ffff00, 0 0 32px rgba(255,255,0,0.90);
-    box-shadow:  0 0 30px rgba(255,255,0,0.95), 0 0 60px rgba(255,255,0,0.55), 0 0 90px rgba(255,255,0,0.25);
-}
+/* Per-workspace identity — 3px colored bottom stripe (single color accent) */
+window#waybar.bottom #workspaces button:nth-child(1) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba(236, 72, 153, 0.55); }
+window#waybar.bottom #workspaces button:nth-child(2) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba(234, 126,  60, 0.55); }
+window#waybar.bottom #workspaces button:nth-child(3) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba(212, 167,  58, 0.55); }
+window#waybar.bottom #workspaces button:nth-child(4) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba(106, 168, 114, 0.55); }
+window#waybar.bottom #workspaces button:nth-child(5) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba( 90, 138, 171, 0.55); }
+window#waybar.bottom #workspaces button:nth-child(6) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba(138, 106, 170, 0.55); }
 
-/* 4 — Mint Green */
-window#waybar.bottom #workspaces button:nth-child(4) {
-    color:      #ffffff;
-    background: rgba(57,255,20,0.55);
-    border:     2px solid #39ff14;
-    text-shadow: 0 0 8px rgba(57,255,20,0.90);
-    box-shadow:  0 0 10px rgba(57,255,20,0.40);
-}
-window#waybar.bottom #workspaces button:nth-child(4):hover {
-    background: rgba(57,255,20,0.72);
-    border:     2px solid #39ff14;
-    box-shadow:  0 0 18px rgba(57,255,20,0.70);
-}
-window#waybar.bottom #workspaces button:nth-child(4).occupied {
-    background: rgba(57,255,20,0.68);
-    border:     2px solid #39ff14;
-    box-shadow:  0 0 14px rgba(57,255,20,0.55);
-}
-window#waybar.bottom #workspaces button:nth-child(4).active {
-    color:      #ffffff;
-    background: rgba(57,255,20,0.85);
-    border:     3px solid #39ff14;
-    text-shadow: 0 0 16px #39ff14, 0 0 32px rgba(57,255,20,0.90);
-    box-shadow:  0 0 30px rgba(57,255,20,0.95), 0 0 60px rgba(57,255,20,0.55), 0 0 90px rgba(57,255,20,0.25);
-}
+window#waybar.bottom #workspaces button.active:nth-child(1) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(236, 72, 153, 0.95), 0 2px 6px rgba(236, 72, 153, 0.20); }
+window#waybar.bottom #workspaces button.active:nth-child(2) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(234, 126,  60, 0.95), 0 2px 6px rgba(234, 126,  60, 0.20); }
+window#waybar.bottom #workspaces button.active:nth-child(3) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(212, 167,  58, 0.95), 0 2px 6px rgba(212, 167,  58, 0.20); }
+window#waybar.bottom #workspaces button.active:nth-child(4) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(106, 168, 114, 0.95), 0 2px 6px rgba(106, 168, 114, 0.20); }
+window#waybar.bottom #workspaces button.active:nth-child(5) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba( 90, 138, 171, 0.95), 0 2px 6px rgba( 90, 138, 171, 0.20); }
+window#waybar.bottom #workspaces button.active:nth-child(6) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(138, 106, 170, 0.95), 0 2px 6px rgba(138, 106, 170, 0.20); }
 
-/* 5 — Sky Blue */
-window#waybar.bottom #workspaces button:nth-child(5) {
-    color:      #ffffff;
-    background: rgba(0,136,255,0.55);
-    border:     2px solid #0088ff;
-    text-shadow: 0 0 8px rgba(0,136,255,0.90);
-    box-shadow:  0 0 10px rgba(0,136,255,0.40);
-}
-window#waybar.bottom #workspaces button:nth-child(5):hover {
-    background: rgba(0,136,255,0.72);
-    border:     2px solid #0088ff;
-    box-shadow:  0 0 18px rgba(0,136,255,0.70);
-}
-window#waybar.bottom #workspaces button:nth-child(5).occupied {
-    background: rgba(0,136,255,0.68);
-    border:     2px solid #0088ff;
-    box-shadow:  0 0 14px rgba(0,136,255,0.55);
-}
-window#waybar.bottom #workspaces button:nth-child(5).active {
-    color:      #ffffff;
-    background: rgba(0,136,255,0.85);
-    border:     3px solid #0088ff;
-    text-shadow: 0 0 16px #0088ff, 0 0 32px rgba(0,136,255,0.90);
-    box-shadow:  0 0 30px rgba(0,136,255,0.95), 0 0 60px rgba(0,136,255,0.55), 0 0 90px rgba(0,136,255,0.25);
-}
-
-/* 6 — Purple */
-window#waybar.bottom #workspaces button:nth-child(6) {
-    color:      #ffffff;
-    background: rgba(57,255,20,0.55);
-    border:     2px solid #39ff14;
-    text-shadow: 0 0 8px rgba(57,255,20,0.90);
-    box-shadow:  0 0 10px rgba(57,255,20,0.40);
-}
-window#waybar.bottom #workspaces button:nth-child(6):hover {
-    background: rgba(57,255,20,0.72);
-    border:     2px solid #39ff14;
-    box-shadow:  0 0 18px rgba(57,255,20,0.70);
-}
-window#waybar.bottom #workspaces button:nth-child(6).occupied {
-    background: rgba(57,255,20,0.68);
-    border:     2px solid #39ff14;
-    box-shadow:  0 0 14px rgba(57,255,20,0.55);
-}
-window#waybar.bottom #workspaces button:nth-child(6).active {
-    color:      #ffffff;
-    background: rgba(57,255,20,0.85);
-    border:     3px solid #39ff14;
-    text-shadow: 0 0 16px #39ff14, 0 0 32px rgba(57,255,20,0.90);
-    box-shadow:  0 0 30px rgba(57,255,20,0.95), 0 0 60px rgba(57,255,20,0.55), 0 0 90px rgba(57,255,20,0.25);
-}
-
-/* Urgent — always red */
 window#waybar.bottom #workspaces button.urgent {
-    color:      #ffffff;
-    background: rgba(255,34,0,0.75);
-    border:     3px solid #ff2200;
-    text-shadow: 0 0 14px #ff2200;
-    box-shadow:  0 0 24px rgba(255,34,0,0.70);
+    color:        #8a2a2a;
+    background:   #fff5f3;
+    border-color: rgba(138, 42, 42, 0.55);
+    box-shadow:   inset 1px 1px 0 rgba(255,255,255,0.85),
+                  inset 0 -3px 0 rgba(138, 42, 42, 0.85);
 }
 
-/* ── Window title ── */
+/* ── Window title (current focused window) ── */
 window#waybar.bottom #window {
-    color:          #ffffff;
-    font-size:      11px;
-    font-weight:    bold;
-    letter-spacing: 0.06em;
+    color:          #1a1816;
+    font-family:    'Architects Daughter', 'Caveat', cursive;
+    font-size:      13px;
+    font-weight:    500;
+    letter-spacing: 0.04em;
     padding:        3px 18px;
-    background:     rgba(255,85,0,0.22);
-    border-radius:  8px;
-    border:         2px solid rgba(255,85,0,0.70);
-    box-shadow:     0 0 12px rgba(255,85,0,0.45);
-    text-shadow:    0 0 10px rgba(255,85,0,0.80);
+    background:     transparent;
+    border:         none;
+    box-shadow:     none;
 }
 
-/* ── Clock ── */
+/* ── Bottom-bar clock ── */
 window#waybar.bottom #clock {
-    color:          #ffffff;
-    letter-spacing: 0.10em;
+    color:          #1a1816;
+    background:     #fbfaf6;
+    letter-spacing: 0.08em;
     font-size:      11px;
-    font-weight:    bold;
+    font-weight:    500;
     padding:        3px 18px;
-    background:     rgba(0,136,255,0.32);
+    border:         1px solid rgba(26, 24, 22, 0.15);
     border-radius:  8px;
-    border:         2px solid #0088ff;
-    box-shadow:     0 0 14px rgba(0,136,255,0.65), 0 0 28px rgba(0,136,255,0.25);
     margin:         3px 4px;
-    text-shadow:    0 0 10px rgba(0,136,255,0.90);
+    box-shadow:     inset 1px 1px 0 rgba(255, 255, 255, 0.85),
+                    inset -1px -1px 0 rgba(26, 24, 22, 0.05);
 }
 
-/* ── Bottom-right system modules — shared pill base ── */
+/* ── Bottom-right system modules — shared embossed pill ── */
 window#waybar.bottom #tray {
     padding:      0 12px;
-    border-left:  3px solid rgba(255,255,255,0.08);
+    border-left:  1px solid rgba(26, 24, 22, 0.12);
 }
 
 window#waybar.bottom #pulseaudio,
 window#waybar.bottom #network,
 window#waybar.bottom #bluetooth,
 window#waybar.bottom #battery {
+    color:         #1a1816;
+    background:    #fbfaf6;
+    border:        1px solid rgba(26, 24, 22, 0.15);
     border-radius: 8px;
+    padding:       3px 13px;
     margin:        3px 3px;
-}
-
-window#waybar.bottom #pulseaudio {
-    padding:     3px 13px;
-    font-size:   12px;
-    font-weight: bold;
-    color:       #ffffff;
-    background:  rgba(255,0,255,0.32);
-    border:      2px solid #ff00ff;
-    box-shadow:  0 0 12px rgba(255,0,255,0.60);
-    text-shadow: 0 0 10px rgba(255,0,255,0.90);
-    transition:  all 0.15s ease;
-}
-window#waybar.bottom #pulseaudio:hover {
-    background:  rgba(255,0,255,0.50);
-    box-shadow:  0 0 20px rgba(255,0,255,0.80);
-}
-window#waybar.bottom #pulseaudio.muted {
-    background:  rgba(255,255,255,0.08);
-    border:      2px solid rgba(255,255,255,0.20);
-    box-shadow:  none;
-    text-shadow: none;
-}
-
-window#waybar.bottom #network {
-    padding:     3px 13px;
-    font-size:   11px;
-    font-weight: bold;
-    color:       #ffffff;
-    background:  rgba(0,136,255,0.32);
-    border:      2px solid #0088ff;
-    box-shadow:  0 0 12px rgba(0,136,255,0.60);
-    text-shadow: 0 0 10px rgba(0,136,255,0.90);
-    transition:  all 0.15s ease;
-}
-window#waybar.bottom #network:hover {
-    background:  rgba(0,136,255,0.50);
-    box-shadow:  0 0 20px rgba(0,136,255,0.80);
-}
-window#waybar.bottom #network.ethernet {
-    background:  rgba(57,255,20,0.32);
-    border:      2px solid #39ff14;
-    box-shadow:  0 0 12px rgba(57,255,20,0.60);
-    text-shadow: 0 0 8px rgba(57,255,20,0.80);
-}
-window#waybar.bottom #network.disconnected {
-    background:  rgba(255,34,0,0.25);
-    border:      2px solid #ff2200;
-    box-shadow:  0 0 10px rgba(255,34,0,0.50);
-    text-shadow: 0 0 8px rgba(255,34,0,0.70);
-}
-
-window#waybar.bottom #bluetooth {
-    padding:     3px 13px;
-    font-size:   11px;
-    font-weight: bold;
-    color:       #ffffff;
-    background:  rgba(0,255,170,0.32);
-    border:      2px solid #00ffaa;
-    box-shadow:  0 0 12px rgba(0,255,170,0.60);
-    text-shadow: 0 0 10px rgba(0,255,170,0.90);
-    transition:  all 0.15s ease;
-}
-window#waybar.bottom #bluetooth:hover {
-    background:  rgba(0,255,170,0.50);
-    box-shadow:  0 0 20px rgba(0,255,170,0.80);
-}
-window#waybar.bottom #bluetooth.connected {
-    background:  rgba(0,255,170,0.48);
-    border:      2px solid #00ffaa;
-    box-shadow:  0 0 16px rgba(0,255,170,0.70);
-    text-shadow: 0 0 10px #00ffaa, 0 0 20px rgba(0,255,170,0.45);
-}
-
-window#waybar.bottom #battery {
-    padding:     3px 13px;
-    font-size:   11px;
-    font-weight: bold;
-    color:       #ffffff;
-    background:  rgba(57,255,20,0.32);
-    border:      2px solid #39ff14;
-    box-shadow:  0 0 12px rgba(57,255,20,0.60);
-    text-shadow: 0 0 10px rgba(57,255,20,0.90);
-    transition:  all 0.15s ease;
-}
-window#waybar.bottom #battery:hover {
-    background:  rgba(57,255,20,0.50);
-    box-shadow:  0 0 20px rgba(57,255,20,0.80);
-}
-window#waybar.bottom #battery.charging,
-window#waybar.bottom #battery.plugged {
-    background:  rgba(57,255,20,0.48);
-    border:      2px solid #39ff14;
-    box-shadow:  0 0 16px rgba(57,255,20,0.70);
-    text-shadow: 0 0 12px #39ff14;
-}
-window#waybar.bottom #battery.warning  {
-    background:  rgba(255,255,0,0.32);
-    border:      2px solid #ffff00;
-    box-shadow:  0 0 12px rgba(255,255,0,0.60);
-    text-shadow: 0 0 8px rgba(255,255,0,0.80);
-}
-window#waybar.bottom #battery.critical {
-    background:  rgba(255,34,0,0.40);
-    border:      2px solid #ff2200;
-    box-shadow:  0 0 18px rgba(255,34,0,0.80);
-    text-shadow: 0 0 12px #ff2200;
-    animation:   batt-crit 1s ease-in-out infinite alternate;
-}
-
-
-/* ════════════════════════════════════════════════════════════════════════════
-   BOTTOM BAR EXTRAS — Start + Quick Settings
-   ════════════════════════════════════════════════════════════════════════════ */
-
-/* ✕ Start / launcher button — glowing X */
-window#waybar.bottom #custom-start {
-    font-size:     24px;
-    font-weight:   bold;
-    color:         #ff00ff;
-    padding:       2px 16px;
-    min-width:     46px;
-    background:    rgba(8, 2, 20, 0.94);
-    border-radius: 10px;
-    border:        3px solid #ff00ff;
-    margin:        4px 8px;
-    animation:     nyxus-rainbow 6s linear infinite;
-    text-shadow:   0 0 2px #ffffff,
-                   0 0 6px #ffffff,
-                   0 0 16px #ff00ff,
-                   0 0 32px #ff00ff;
-    box-shadow:    0 0 22px rgba(255,0,255,0.85),
-                   0 0 50px rgba(255,0,255,0.40),
-                   inset 0 0 14px rgba(255,0,255,0.12);
-    transition:    all 0.18s ease;
-}
-window#waybar.bottom #custom-start:hover {
-    color:       #ffffff;
-    background:  rgba(255,0,255,0.20);
-    text-shadow: 0 0 2px #ffffff,
-                 0 0 8px #ffffff,
-                 0 0 22px #ff00ff,
-                 0 0 44px #ff00ff;
-    box-shadow:  0 0 36px rgba(255,0,255,0.95),
-                 0 0 80px rgba(255,0,255,0.55),
-                 inset 0 0 20px rgba(255,0,255,0.18);
-}
-
-/* ⊰ Quick Settings button */
-window#waybar.bottom #custom-quicksettings {
-    font-size:   14px;
-    color:       #ffffff;
-    padding:     3px 18px;
-    background:  rgba(57,255,20,0.20);
-    border:      2px solid #39ff14;
-    border-radius: 8px;
-    box-shadow:  0 0 12px rgba(57,255,20,0.55);
-    text-shadow: 0 0 10px rgba(57,255,20,0.90);
-    margin:      3px 4px;
-    transition:  all 0.15s ease;
-}
-window#waybar.bottom #custom-quicksettings:hover {
-    background:  rgba(57,255,20,0.40);
-    box-shadow:  0 0 22px rgba(57,255,20,0.85);
-    text-shadow: 0 0 18px #39ff14;
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   LEFT BAR  ·  signature color: PURPLE #39ff14  (70% height)
-   ════════════════════════════════════════════════════════════════════════════ */
-window#waybar.left {
-    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-sierengowski-clean.png");
-    background-color:    rgba(8, 5, 18, 0.78);
-    background-size:     cover;
-    background-position: 18% 50%;
-    background-repeat:   no-repeat;
-    color:               #ffffff;
-    border-right:        5px solid #39ff14;
-    border-left:         4px solid rgba(192, 132, 252, 0.50);
-    border-top:          5px solid #39ff14;
-    border-bottom:       5px solid #39ff14;
-    box-shadow:          6px 0 50px rgba(57,255,20,0.80),
-                        -2px 0 20px rgba(57,255,20,0.35);
-    animation:           left-pulse 5s ease-in-out infinite;
-}
-
-window#waybar.left #workspaces { padding: 6px 0; }
-
-window#waybar.left #workspaces button {
-    padding:       10px 0;
-    margin:        3px 5px;
-    color:         rgba(255,255,255,0.25);
-    background:    rgba(255,255,255,0.03);
-    border-radius: 6px;
-    border:        2px solid rgba(255,255,255,0.06);
-    min-width:     22px;
-    min-height:    26px;
-    font-size:     12px;
-    font-weight:   bold;
+    font-size:     11px;
+    font-weight:   500;
+    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
+                   inset -1px -1px 0 rgba(26, 24, 22, 0.05);
     transition:    all 0.15s ease;
 }
-
-/* Left bar: solid neon fills per workspace */
-window#waybar.left #workspaces button:nth-child(1) { color: #fff; background: rgba(255,0,255,0.55); border: 2px solid #ff00ff; box-shadow: 0 0 10px rgba(255,0,255,0.45); }
-window#waybar.left #workspaces button:nth-child(2) { color: #fff; background: rgba(255,85,0,0.55);  border: 2px solid #ff5500; box-shadow: 0 0 10px rgba(255,85,0,0.45);  }
-window#waybar.left #workspaces button:nth-child(3) { color: #fff; background: rgba(255,255,0,0.55);  border: 2px solid #ffff00; box-shadow: 0 0 10px rgba(255,255,0,0.45);  }
-window#waybar.left #workspaces button:nth-child(4) { color: #fff; background: rgba(57,255,20,0.55);  border: 2px solid #39ff14; box-shadow: 0 0 10px rgba(57,255,20,0.45);  }
-window#waybar.left #workspaces button:nth-child(5) { color: #fff; background: rgba(0,136,255,0.55);  border: 2px solid #0088ff; box-shadow: 0 0 10px rgba(0,136,255,0.45);  }
-window#waybar.left #workspaces button:nth-child(6) { color: #fff; background: rgba(57,255,20,0.55); border: 2px solid #39ff14; box-shadow: 0 0 10px rgba(57,255,20,0.45); }
-
-window#waybar.left #workspaces button:hover {
-    color:      #ffffff;
-    background: rgba(57,255,20,0.75);
-    box-shadow: 0 0 20px rgba(57,255,20,0.70);
+window#waybar.bottom #pulseaudio:hover,
+window#waybar.bottom #network:hover,
+window#waybar.bottom #bluetooth:hover,
+window#waybar.bottom #battery:hover {
+    background:   #ffffff;
+    border-color: rgba(26, 24, 22, 0.30);
 }
-window#waybar.left #workspaces button.occupied {
-    background: rgba(57,255,20,0.68);
-    box-shadow: 0 0 14px rgba(57,255,20,0.55);
+window#waybar.bottom #pulseaudio.muted,
+window#waybar.bottom #network.disconnected {
+    color:      #9e948a;
+    background: #ebe8e2;
 }
-window#waybar.left #workspaces button.active {
-    color:      #ffffff;
-    background: rgba(57,255,20,0.85);
-    border:     3px solid #39ff14;
-    text-shadow: 0 0 14px #39ff14, 0 0 28px rgba(57,255,20,0.90);
-    box-shadow:  0 0 30px rgba(57,255,20,0.95), 0 0 60px rgba(57,255,20,0.55), 0 0 90px rgba(57,255,20,0.25);
-}
-
+window#waybar.bottom #battery.warning  { color: #8a5a2a; border-color: rgba(138, 90, 42, 0.50); }
+window#waybar.bottom #battery.critical { color: #8a2a2a; border-color: rgba(138, 42, 42, 0.55); }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   RIGHT BAR  ·  signature color: GOLD #ffff00  (70% height)
+   START + QUICK-SETTINGS + NOTIFICATIONS + APP-BUTTONS
+   All embossed cream pills, charcoal text, hand-drawn font for labels.
    ════════════════════════════════════════════════════════════════════════════ */
-window#waybar.right {
-    background-image:    url("file:///home/nyx/.config/hypr/walls/nyxus-rightbar-bg.png");
-    background-color:    #0a0410;
-    background-size:     cover;
-    background-position: center center;
-    background-repeat:   no-repeat;
-    color:               #ffffff;
-    border-left:         5px solid #ffff00;
-    border-right:        4px solid rgba(251, 191, 36, 0.50);
-    border-top:          5px solid #ffff00;
-    border-bottom:       5px solid #ffff00;
-    box-shadow:         -6px 0 50px rgba(255,255,0,0.78),
-                         2px 0 20px rgba(255,255,0,0.35);
-    animation:           right-pulse 5s ease-in-out infinite;
+
+window#waybar.bottom #custom-nyxus-start,
+window#waybar.bottom #custom-start {
+    font-family:   'Architects Daughter', 'Caveat', cursive;
+    font-size:     16px;
+    font-weight:   500;
+    color:         #1a1816;
+    padding:       2px 18px;
+    min-width:     54px;
+    background:    #fbfaf6;
+    border:        1px solid rgba(26, 24, 22, 0.22);
+    border-radius: 10px;
+    margin:        4px 8px;
+    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.95),
+                   inset -1px -1px 0 rgba(26, 24, 22, 0.08),
+                   0 2px 5px rgba(26, 24, 22, 0.10);
+    transition:    all 0.18s ease;
+}
+window#waybar.bottom #custom-nyxus-start:hover,
+window#waybar.bottom #custom-start:hover {
+    background: #ffffff;
+    border-color: rgba(26, 24, 22, 0.40);
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.95),
+                inset -1px -1px 0 rgba(26, 24, 22, 0.10),
+                0 3px 8px rgba(26, 24, 22, 0.14);
 }
 
-/* Inner module rows stay transparent so the splatter shows through. */
-window#waybar.right > box,
-window#waybar.right .modules-center,
-window#waybar.right .modules-right,
-window#waybar.right .modules-left {
-    background: transparent;
+window#waybar.bottom #custom-main {
+    font-family:    'Architects Daughter', 'Caveat', cursive;
+    font-size:      13px;
+    letter-spacing: 0.10em;
+    color:          #58524c;
+    padding:        3px 14px;
+    background:     transparent;
+    border:         none;
+    margin:         3px 2px;
 }
+window#waybar.bottom #custom-main:hover { color: #1a1816; }
 
-window#waybar.right #cpu,
-window#waybar.right #memory,
-window#waybar.right #battery {
-    font-size:      12px;
-    font-weight:    bold;
-    letter-spacing: 0.04em;
-    padding:        12px 0;
-    min-width:      30px;
-    transition:     all 0.15s ease;
+window#waybar.bottom #custom-quicksettings,
+window#waybar.bottom #custom-notifications,
+window#waybar.bottom #custom-nyxus-panel {
+    font-family:   'Inter', sans-serif;
+    font-size:     11px;
+    font-weight:   500;
+    color:         #1a1816;
+    padding:       3px 14px;
+    background:    #fbfaf6;
+    border:        1px solid rgba(26, 24, 22, 0.18);
+    border-radius: 8px;
+    margin:        3px 4px;
+    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
+                   inset -1px -1px 0 rgba(26, 24, 22, 0.05);
+    transition:    all 0.15s ease;
 }
-
-window#waybar.right #cpu {
-    color:       #ffffff;
-    text-shadow: 0 0 10px rgba(255,255,0,0.80),
-                 0 0 22px rgba(255,255,0,0.35);
+window#waybar.bottom #custom-quicksettings:hover,
+window#waybar.bottom #custom-notifications:hover,
+window#waybar.bottom #custom-nyxus-panel:hover {
+    background: #ffffff;
+    border-color: rgba(26, 24, 22, 0.35);
 }
-window#waybar.right #memory {
-    color:       #ffffff;
-    text-shadow: 0 0 10px rgba(0,136,255,0.80),
-                 0 0 22px rgba(0,136,255,0.35);
-}
-window#waybar.right #battery {
-    color:       #ffffff;
-    text-shadow: 0 0 10px rgba(57,255,20,0.80),
-                 0 0 22px rgba(57,255,20,0.35);
-}
-window#waybar.right #battery.charging {
-    color:       #ffffff;
-    text-shadow: 0 0 12px #a3e635, 0 0 24px rgba(163,230,53,0.45);
-}
-window#waybar.right #battery.critical {
-    color: #ffffff;
-    text-shadow: 0 0 12px #ff2200;
-    animation: batt-crit 1s ease-in-out infinite alternate;
-}
-
 
 /* ════════════════════════════════════════════════════════════════════════════
-   PAINT SPLATTER — workspace button shapes (all bars)
-   Each nth-child gets a unique polygon clip-path that looks like a paint splatter.
-   filter: drop-shadow() is used instead of box-shadow because box-shadow is
-   clipped by clip-path — drop-shadow follows the splatter outline instead.
+   LEFT BAR — workspace ribbon (cream pills, vertical)
    ════════════════════════════════════════════════════════════════════════════ */
-
-/* Base overrides for workspace blob buttons */
-window#waybar #workspaces button {
-    min-width:  38px;
-    min-height: 38px;
-}
-window#waybar.bottom #workspaces button {
-    padding: 5px 7px;
-    margin:  4px 5px;
+window#waybar.left {
+    background-color: #f5f3ef;
+    background-image: none;
+    border:           none;
+    border-right:     1px solid rgba(26, 24, 22, 0.12);
+    box-shadow:       inset -1px 0 0 rgba(255, 255, 255, 0.9);
 }
 window#waybar.left #workspaces button {
-    padding: 5px 4px;
-    margin:  3px 4px;
+    color:         #58524c;
+    background:    #fbfaf6;
+    border:        1px solid rgba(26, 24, 22, 0.15);
+    border-radius: 8px;
+    margin:        4px 6px;
+    padding:       8px 0;
+    font-size:     12px;
+    font-weight:   500;
+    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
+                   inset -1px -1px 0 rgba(26, 24, 22, 0.05);
 }
-
-/* ── Blob 1 — Hot Pink ── */
-window#waybar #workspaces button:nth-child(1) {
-    border-radius: 62% 38% 46% 54%;
-    border: 2px solid rgba(255,0,255,0.55);
-}
-window#waybar #workspaces button:nth-child(1):hover,
-window#waybar #workspaces button:nth-child(1).active {
-    border-color: #ff00ff;
-    box-shadow: 0 0 14px rgba(255,0,255,0.85), inset 0 0 8px rgba(255,0,255,0.15);
-    background-color: rgba(255,0,255,0.18);
-}
-
-/* ── Blob 2 — Orange ── */
-window#waybar #workspaces button:nth-child(2) {
-    border-radius: 38% 62% 54% 46%;
-    border: 2px solid rgba(255,85,0,0.55);
-}
-window#waybar #workspaces button:nth-child(2):hover,
-window#waybar #workspaces button:nth-child(2).active {
-    border-color: #ff5500;
-    box-shadow: 0 0 14px rgba(255,85,0,0.85), inset 0 0 8px rgba(255,85,0,0.15);
-    background-color: rgba(255,85,0,0.18);
-}
-
-/* ── Blob 3 — Yellow ── */
-window#waybar #workspaces button:nth-child(3) {
-    border-radius: 70% 30% 38% 62%;
-    border: 2px solid rgba(230,184,0,0.55);
-}
-window#waybar #workspaces button:nth-child(3):hover,
-window#waybar #workspaces button:nth-child(3).active {
-    border-color: #e6b800;
-    box-shadow: 0 0 14px rgba(230,184,0,0.85), inset 0 0 8px rgba(230,184,0,0.15);
-    background-color: rgba(230,184,0,0.18);
-}
-
-/* ── Blob 4 — Mint Green ── */
-window#waybar #workspaces button:nth-child(4) {
-    border-radius: 30% 70% 62% 38%;
-    border: 2px solid rgba(57,255,20,0.55);
-}
-window#waybar #workspaces button:nth-child(4):hover,
-window#waybar #workspaces button:nth-child(4).active {
-    border-color: #39ff14;
-    box-shadow: 0 0 14px rgba(57,255,20,0.85), inset 0 0 8px rgba(57,255,20,0.15);
-    background-color: rgba(57,255,20,0.18);
-}
-
-/* ── Blob 5 — Sky Blue ── */
-window#waybar #workspaces button:nth-child(5) {
-    border-radius: 54% 46% 30% 70%;
-    border: 2px solid rgba(0,136,255,0.55);
-}
-window#waybar #workspaces button:nth-child(5):hover,
-window#waybar #workspaces button:nth-child(5).active {
-    border-color: #0088ff;
-    box-shadow: 0 0 14px rgba(0,136,255,0.85), inset 0 0 8px rgba(0,136,255,0.15);
-    background-color: rgba(0,136,255,0.18);
-}
-
-/* ── Blob 6 — Purple ── */
-window#waybar #workspaces button:nth-child(6) {
-    border-radius: 46% 54% 70% 30%;
-    border: 2px solid rgba(57,255,20,0.55);
-}
-window#waybar #workspaces button:nth-child(6):hover,
-window#waybar #workspaces button:nth-child(6).active {
-    border-color: #39ff14;
-    box-shadow: 0 0 14px rgba(57,255,20,0.85), inset 0 0 8px rgba(57,255,20,0.15);
-    background-color: rgba(57,255,20,0.18);
-}
-
-/* Right bar — widen modules so they match the left bar width */
-window#waybar.right #cpu,
-window#waybar.right #memory,
-window#waybar.right #battery {
-    min-width: 44px;
+window#waybar.left #workspaces button.active {
+    color:        #1a1816;
+    background:   #ffffff;
+    border-color: rgba(26, 24, 22, 0.40);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   RIGHT BAR  ·  APP LAUNCHER BUTTONS  (paint-splatter icons)
+   RIGHT BAR — app launcher column (cream pills with icon glyphs)
    ════════════════════════════════════════════════════════════════════════════ */
-
-/* Shared base for all app launcher buttons */
+window#waybar.right {
+    background-color: #f5f3ef;
+    background-image: none;
+    border:           none;
+    border-left:      1px solid rgba(26, 24, 22, 0.12);
+    box-shadow:       inset 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+/* Waybar exposes custom/app-* modules as IDs (#custom-app-foo), not classes,
+ * so list every right-bar app icon explicitly. */
 window#waybar.right #custom-app-godsapp,
 window#waybar.right #custom-app-studio,
 window#waybar.right #custom-app-sage,
@@ -876,320 +390,49 @@ window#waybar.right #custom-app-control,
 window#waybar.right #custom-app-sysmon,
 window#waybar.right #custom-app-stickies,
 window#waybar.right #custom-app-weather,
-window#waybar.right #custom-app-notepad,
+window#waybar.right #custom-app-notes,
 window#waybar.right #custom-app-terminal,
 window#waybar.right #custom-app-settings {
-    min-width:            42px;
-    min-height:           42px;
-    margin:               5px 4px;
-    border-radius:        8px;
-    background-size:      34px 34px;
-    background-repeat:    no-repeat;
-    background-position:  center center;
-    background-color:     rgba(255, 255, 255, 0.04);
-    border:               2px solid rgba(255, 255, 255, 0.10);
-    color:                #ffffff;
-    font-family:          "JetBrains Mono Nerd Font", "Symbols Nerd Font", monospace;
-    font-size:            22px;
-    transition:           all 0.18s ease;
+    font-family:   'Symbols Nerd Font', 'Font Awesome 6 Free', 'Font Awesome 5 Free';
+    font-size:     16px;
+    color:         #1a1816;
+    background:    #fbfaf6;
+    border:        1px solid rgba(26, 24, 22, 0.15);
+    border-radius: 8px;
+    margin:        4px 6px;
+    padding:       8px 0;
+    min-width:     38px;
+    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
+                   inset -1px -1px 0 rgba(26, 24, 22, 0.05);
+    transition:    all 0.15s ease;
 }
-
-/* Control — neon red/orange */
-window#waybar.right #custom-app-control {
-    background-image: -gtk-icontheme("io.nyxus.control");
-    border-color:     rgba(255, 50, 50, 0.30);
-}
-window#waybar.right #custom-app-control:hover {
-    background-color: rgba(255, 50, 50, 0.18);
-    border-color:     #ff3232;
-    box-shadow:       0 0 16px rgba(255, 50, 50, 0.70), 0 0 32px rgba(255, 0, 255, 0.45),
-                      inset 0 0 8px rgba(255, 50, 50, 0.10);
-}
-
-/* SysMon — neon pink */
-window#waybar.right #custom-app-sysmon {
-    background-image: -gtk-icontheme("io.nyxus.sysmon");
-    border-color:     rgba(255, 0, 255, 0.30);
-}
-window#waybar.right #custom-app-sysmon:hover {
-    background-color: rgba(255, 0, 255, 0.18);
-    border-color:     #ff00ff;
-    box-shadow:       0 0 16px rgba(255, 0, 255, 0.70),
-                      inset 0 0 8px rgba(255, 0, 255, 0.10);
-}
-
-/* Stickies — neon yellow */
-window#waybar.right #custom-app-stickies {
-    background-image: -gtk-icontheme("io.nyxus.stickies");
-    border-color:     rgba(255, 255, 0, 0.30);
-}
-window#waybar.right #custom-app-stickies:hover {
-    background-color: rgba(255, 255, 0, 0.18);
-    border-color:     #ffff00;
-    box-shadow:       0 0 16px rgba(255, 255, 0, 0.70), 0 0 32px rgba(255, 0, 255, 0.45),
-                      inset 0 0 8px rgba(255, 255, 0, 0.10);
-}
-
-/* Weather — neon blue */
-window#waybar.right #custom-app-weather {
-    background-image: -gtk-icontheme("io.nyxus.weather");
-    border-color:     rgba(0, 136, 255, 0.30);
-}
-window#waybar.right #custom-app-weather:hover {
-    background-color: rgba(0, 136, 255, 0.18);
-    border-color:     #0088ff;
-    box-shadow:       0 0 16px rgba(0, 136, 255, 0.70), 0 0 32px rgba(255, 0, 255, 0.45),
-                      inset 0 0 8px rgba(0, 136, 255, 0.10);
-}
-
-/* Notepad - mint glow */
-window#waybar.right #custom-app-notepad {
-    background-image: -gtk-icontheme("io.nyxus.notepad");
-    border-color:     rgba(57,255,20, 0.30);
-}
-window#waybar.right #custom-app-notepad:hover {
-    background-color: rgba(57,255,20, 0.18);
-    border-color:     #39ff14;
-    box-shadow:       0 0 16px rgba(57,255,20, 0.70), 0 0 32px rgba(255, 0, 255, 0.45),
-                      inset 0 0 8px rgba(57,255,20, 0.10);
-}
-
-/* Terminal — neon green */
-window#waybar.right #custom-app-terminal {
-    background-image: -gtk-icontheme("io.nyxus.terminal");
-    border-color:     rgba(57, 255, 20, 0.30);
-}
-window#waybar.right #custom-app-terminal:hover {
-    background-color: rgba(57, 255, 20, 0.18);
-    border-color:     #39ff14;
-    box-shadow:       0 0 16px rgba(57, 255, 20, 0.70), 0 0 32px rgba(255, 0, 255, 0.45),
-                      inset 0 0 8px rgba(57, 255, 20, 0.10);
-}
-
-/* GodsApp — neon gold (configuration hub) */
-window#waybar.right #custom-app-godsapp {
-    background-image: -gtk-icontheme("io.nyxus.godsapp");
-    border-color:     rgba(255, 215, 0, 0.35);
-}
-window#waybar.right #custom-app-godsapp:hover {
-    background-color: rgba(255, 215, 0, 0.18);
-    border-color:     #ffd700;
-    color:            #ffffff;
-    text-shadow:      0 0 14px #ffd700, 0 0 24px rgba(255, 215, 0, 0.70);
-    box-shadow:       0 0 18px rgba(255, 215, 0, 0.80), 0 0 32px rgba(255, 0, 255, 0.45),
-                      inset 0 0 10px rgba(255, 215, 0, 0.15);
-}
-
-/* Studio — neon hot pink (creative suite) */
-window#waybar.right #custom-app-studio {
-    background-image: -gtk-icontheme("io.nyxus.studio");
-    border-color:     rgba(255, 62, 165, 0.35);
-}
-window#waybar.right #custom-app-studio:hover {
-    background-color: rgba(255, 62, 165, 0.18);
-    border-color:     #ff3ea5;
-    color:            #ffffff;
-    text-shadow:      0 0 14px #ff3ea5, 0 0 24px rgba(255, 62, 165, 0.70);
-    box-shadow:       0 0 18px rgba(255, 62, 165, 0.80), 0 0 32px rgba(255, 0, 255, 0.45),
-                      inset 0 0 10px rgba(255, 62, 165, 0.15);
-}
-
-/* SAGE — neon cyan (AI assistant) */
-window#waybar.right #custom-app-sage {
-    background-image: -gtk-icontheme("io.nyxus.sage");
-    border-color:     rgba(77, 226, 226, 0.35);
-}
-window#waybar.right #custom-app-sage:hover {
-    background-color: rgba(77, 226, 226, 0.18);
-    border-color:     #4de2e2;
-    color:            #ffffff;
-    text-shadow:      0 0 14px #4de2e2, 0 0 24px rgba(77, 226, 226, 0.70);
-    box-shadow:       0 0 18px rgba(77, 226, 226, 0.80), 0 0 32px rgba(255, 0, 255, 0.45),
-                      inset 0 0 10px rgba(77, 226, 226, 0.15);
-}
-
-/* Shield — neon emerald (security) */
-window#waybar.right #custom-app-shield {
-    background-image: -gtk-icontheme("io.nyxus.shield");
-    border-color:     rgba(74, 222, 128, 0.35);
-}
-window#waybar.right #custom-app-shield:hover {
-    background-color: rgba(74, 222, 128, 0.18);
-    border-color:     #4ade80;
-    color:            #ffffff;
-    text-shadow:      0 0 14px #4ade80, 0 0 24px rgba(74, 222, 128, 0.70);
-    box-shadow:       0 0 18px rgba(74, 222, 128, 0.80), 0 0 32px rgba(255, 0, 255, 0.45),
-                      inset 0 0 10px rgba(74, 222, 128, 0.15);
-}
-
-/* Settings — neon indigo */
-window#waybar.right #custom-app-settings {
-    background-image: -gtk-icontheme("io.nyxus.settings");
-    border-color:     rgba(167, 139, 250, 0.35);
-}
+window#waybar.right #custom-app-godsapp:hover,
+window#waybar.right #custom-app-studio:hover,
+window#waybar.right #custom-app-sage:hover,
+window#waybar.right #custom-app-shield:hover,
+window#waybar.right #custom-app-control:hover,
+window#waybar.right #custom-app-sysmon:hover,
+window#waybar.right #custom-app-stickies:hover,
+window#waybar.right #custom-app-weather:hover,
+window#waybar.right #custom-app-notes:hover,
+window#waybar.right #custom-app-terminal:hover,
 window#waybar.right #custom-app-settings:hover {
-    background-color: rgba(167, 139, 250, 0.18);
-    border-color:     #a78bfa;
-    color:            #ffffff;
-    text-shadow:      0 0 14px #a78bfa, 0 0 24px rgba(167, 139, 250, 0.70);
-    box-shadow:       0 0 18px rgba(167, 139, 250, 0.80), 0 0 32px rgba(255, 0, 255, 0.45),
-                      inset 0 0 10px rgba(167, 139, 250, 0.15);
+    background:   #ffffff;
+    color:        #1a1816;
+    border-color: rgba(26, 24, 22, 0.35);
+    box-shadow:   inset 1px 1px 0 rgba(255, 255, 255, 0.95),
+                  inset -1px -1px 0 rgba(26, 24, 22, 0.08),
+                  0 2px 6px rgba(26, 24, 22, 0.12);
 }
 
-
-
-
-/* ──────────────────────────────────────────────────────────────────
- * NYXUS-START-BUTTON-STYLE  (do not remove this comment — sentinel)
- *
- * Hand-drawn aesthetic for the bottom-bar Start + Panel buttons.
- *   Start:  large glowing magenta X behind the word "Start" (Caveat)
- *   Panel:  glowing handwritten "The Panel" (Caveat)
- * Both buttons render their text via Pango from the helper script
- * `nyxus-waybar-state` — that's why no font/glyph appears here in CSS.
- *
- * The .open class is applied by the helper while the matching flyout
- * is alive (PID file present + process responsive); when open, both
- * buttons "light up" with brighter glow + saturated background.
- *
- * © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
- * ──────────────────────────────────────────────────────────────── */
-
-window#waybar.bottom #custom-nyxus-start,
-window#waybar.bottom #custom-nyxus-panel {
-    /* Belt-and-suspenders: the helper script's Pango span requests Caveat
-     * via font_family, but we also pin it here so the bar reserves the
-     * right metrics even if the markup is briefly invalidated. */
-    font-family:     "Caveat", "Comic Neue", "Patrick Hand", cursive, sans-serif;
-    font-size:       22px;
-    font-weight:     bold;
+/* Right-bar mini stat readouts (CPU/RAM/BAT numerics) — cream chip */
+window#waybar.right #cpu,
+window#waybar.right #memory,
+window#waybar.right #battery {
+    color:         #58524c;
+    background:    transparent;
+    font-size:     9px;
+    font-weight:   500;
+    padding:       2px 0;
+    margin:        2px 6px;
 }
-
-window#waybar.bottom #custom-nyxus-start {
-    color:           #ff7af0;
-    background:      rgba(8, 4, 22, 0.55);
-    /* The glowing X — inline data-URI SVG, dual-stroke (blur + sharp) */
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 64'><defs><filter id='g' x='-50%25' y='-50%25' width='200%25' height='200%25'><feGaussianBlur stdDeviation='3'/></filter></defs><g stroke='%23ff00ff' stroke-width='8' stroke-linecap='round' opacity='0.55' filter='url(%23g)'><line x1='14' y1='10' x2='66' y2='54'/><line x1='66' y1='10' x2='14' y2='54'/></g><g stroke='%23ff5cf0' stroke-width='3' stroke-linecap='round'><line x1='14' y1='10' x2='66' y2='54'/><line x1='66' y1='10' x2='14' y2='54'/></g></svg>");
-    background-repeat:   no-repeat;
-    background-position: center;
-    background-size:     contain;
-    border:          1.5px solid rgba(255, 0, 255, 0.55);
-    border-radius:   10px;
-    padding:         2px 18px;
-    margin:          3px 6px 3px 4px;
-    text-shadow:     0 0 8px rgba(255, 0, 255, 0.85),
-                     0 0 14px rgba(255, 0, 255, 0.55);
-    transition:      all 0.18s ease;
-}
-
-window#waybar.bottom #custom-nyxus-start:hover,
-window#waybar.bottom #custom-nyxus-start.open {
-    color:           #ffffff;
-    border-color:    #ff00ff;
-    background-color: rgba(255, 0, 255, 0.20);
-    text-shadow:     0 0 14px #ff00ff, 0 0 24px rgba(255, 0, 255, 0.85);
-    box-shadow:      0 0 18px rgba(255, 0, 255, 0.85),
-                     0 0 32px rgba(255, 0, 255, 0.45),
-                     inset 0 0 10px rgba(255, 0, 255, 0.18);
-}
-
-window#waybar.bottom #custom-nyxus-start.open {
-    /* Held-pressed look while the flyout is showing */
-    border-width:    2px;
-}
-
-window#waybar.bottom #custom-nyxus-panel {
-    color:           #c4a8ff;
-    background:      rgba(8, 4, 22, 0.55);
-    border:          1.5px solid rgba(167, 139, 250, 0.55);
-    border-radius:   10px;
-    padding:         2px 18px;
-    margin:          3px 4px 3px 6px;
-    text-shadow:     0 0 8px rgba(167, 139, 250, 0.85),
-                     0 0 14px rgba(167, 139, 250, 0.55);
-    transition:      all 0.18s ease;
-}
-
-/* Notifications button — same chrome as the Panel button so it's visibly
- * a sibling of it. Green neon accent so it's distinguishable. */
-window#waybar.bottom #custom-notifications {
-    font-family:     "Caveat", "Comic Neue", "Patrick Hand", "JetBrains Mono Nerd Font", "JetBrains Mono", cursive, sans-serif;
-    font-size:       20px;
-    font-weight:     bold;
-    color:           #a3e635;
-    background:      rgba(8, 4, 22, 0.55);
-    border:          1.5px solid rgba(57, 255, 20, 0.55);
-    border-radius:   10px;
-    padding:         2px 16px;
-    margin:          3px 4px 3px 6px;
-    text-shadow:     0 0 8px rgba(57, 255, 20, 0.85),
-                     0 0 14px rgba(57, 255, 20, 0.55);
-    transition:      all 0.18s ease;
-}
-window#waybar.bottom #custom-notifications:hover {
-    color:           #ffffff;
-    border-color:    #39ff14;
-    background-color: rgba(57, 255, 20, 0.22);
-    text-shadow:     0 0 14px #39ff14, 0 0 24px rgba(57, 255, 20, 0.85);
-    box-shadow:      0 0 18px rgba(57, 255, 20, 0.85),
-                     0 0 32px rgba(57, 255, 20, 0.45),
-                     inset 0 0 10px rgba(57, 255, 20, 0.18);
-}
-
-window#waybar.bottom #custom-nyxus-panel:hover,
-window#waybar.bottom #custom-nyxus-panel.open {
-    color:           #ffffff;
-    border-color:    #a78bfa;
-    background-color: rgba(167, 139, 250, 0.22);
-    text-shadow:     0 0 14px #a78bfa, 0 0 24px rgba(167, 139, 250, 0.85);
-    box-shadow:      0 0 18px rgba(167, 139, 250, 0.85),
-                     0 0 32px rgba(255, 0, 255, 0.45),
-                     inset 0 0 10px rgba(167, 139, 250, 0.18);
-}
-
-window#waybar.bottom #custom-nyxus-panel.open {
-    border-width:    2px;
-}
-
-/* ── MAIN (NYXUS Home) button ─────────────────────────────────────────────
- * Sits between Start and the workspace pills. Cyan/magenta gradient theme
- * to match the Home dashboard's clock + notepad cards. Hand-drawn label
- * via Caveat, glowing dashed border, "active" state when workspace 1 is
- * focused (Hyprland auto-tags via hyprland.conf workspace rules).
- * © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
- * ───────────────────────────────────────────────────────────────────── */
-/* MAIN button — matches the EXACT chrome of #custom-nyxus-start and
- * #custom-nyxus-panel (Caveat 22px, 1.5px solid border, semi-transparent
- * dark bg, border-radius 10px, padding 2px 18px). Cyan accent so it reads
- * as the third sibling without colliding with start (magenta) or
- * panel (purple). */
-window#waybar.bottom #custom-main {
-    font-family:     "Caveat", "Comic Neue", "Patrick Hand", cursive, sans-serif;
-    font-size:       22px;
-    font-weight:     bold;
-    color:           #5cf0f0;
-    background:      rgba(8, 4, 22, 0.55);
-    border:          1.5px solid rgba(34, 211, 238, 0.55);
-    border-radius:   10px;
-    padding:         2px 18px;
-    margin:          3px 6px 3px 6px;
-    text-shadow:     0 0 8px rgba(34, 211, 238, 0.85),
-                     0 0 14px rgba(34, 211, 238, 0.55);
-    transition:      all 0.18s ease;
-}
-
-window#waybar.bottom #custom-main:hover,
-window#waybar.bottom #custom-main.open {
-    color:           #ffffff;
-    border-color:    #22d3ee;
-    background-color: rgba(34, 211, 238, 0.22);
-    text-shadow:     0 0 14px #22d3ee, 0 0 24px rgba(34, 211, 238, 0.85);
-    box-shadow:      0 0 18px rgba(34, 211, 238, 0.85),
-                     0 0 32px rgba(255, 0, 255, 0.45),
-                     inset 0 0 10px rgba(34, 211, 238, 0.18);
-}
-
-window#waybar.bottom #custom-main.open {
-    border-width:    2px;
-}
-
