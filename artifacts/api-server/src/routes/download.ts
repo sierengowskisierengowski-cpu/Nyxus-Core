@@ -47,6 +47,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_splash.py":      "nyxus_splash.py",
   "nyxus_install.sh":     "nyxus_install.sh",
   "nyxus-resync-all.sh":  "nyxus-resync-all.sh",
+  "hypr-doctor.sh":       "hypr-doctor.sh",
   "nyxus-hyprland-rules.conf": "nyxus-hyprland-rules.conf",
   "hyprland.conf":        "hyprland.conf",
   "waybar-config.json":   "waybar-config.json",

@@ -1,0 +1,243 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ============================================================
+#  NYXUS · hypr-doctor.sh
+#  Hyprland config + environment diagnostic (no root required)
+#
+#  Usage:
+#    hypr-doctor              # standard report
+#    hypr-doctor --full       # adds verbose hyprctl -j dumps
+#
+#  Output:
+#    Prints a summary to stdout AND writes a full report to
+#    ~/.cache/hypr-doctor/hypr-doctor-YYYYmmdd-HHMMSS.log
+#
+#  Install:
+#    curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/hypr-doctor.sh \
+#      | sudo tee /usr/local/bin/hypr-doctor >/dev/null
+#    sudo chmod +x /usr/local/bin/hypr-doctor
+#  (or installed automatically by nyxus-resync-all.sh r15+)
+#
+#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================
+
+FULL=0
+if [[ "${1:-}" == "--full" ]]; then
+  FULL=1
+fi
+
+ts() { date +"%Y-%m-%d %H:%M:%S"; }
+hr() { printf '%*s\n' "${COLUMNS:-80}" '' | tr ' ' -; }
+
+OUTDIR="${XDG_CACHE_HOME:-$HOME/.cache}/hypr-doctor"
+mkdir -p "$OUTDIR"
+LOG="$OUTDIR/hypr-doctor-$(date +%Y%m%d-%H%M%S).log"
+
+# Tee all output to log
+exec > >(tee -a "$LOG") 2>&1
+
+echo "Hypr Doctor report @ $(ts)"
+echo "Log file: $LOG"
+hr
+
+# --- Basic system/session info ---
+echo "[1] Session / system"
+echo "User: $(id -un) (uid=$(id -u))"
+echo "Host: $(hostnamectl --static 2>/dev/null || hostname)"
+echo "Kernel: $(uname -r)"
+echo "Shell: ${SHELL:-unknown}"
+echo "XDG_SESSION_TYPE: ${XDG_SESSION_TYPE:-}"
+echo "XDG_CURRENT_DESKTOP: ${XDG_CURRENT_DESKTOP:-}"
+echo "WAYLAND_DISPLAY: ${WAYLAND_DISPLAY:-}"
+echo "DISPLAY: ${DISPLAY:-}"
+echo "XDG_RUNTIME_DIR: ${XDG_RUNTIME_DIR:-}"
+echo
+
+# --- Binaries presence ---
+echo "[2] Binary checks"
+need_bins=(hyprctl Hyprland)
+for b in "${need_bins[@]}"; do
+  if command -v "$b" >/dev/null 2>&1; then
+    echo "OK: $b -> $(command -v "$b")"
+  else
+    echo "MISSING: $b (not in PATH)"
+  fi
+done
+echo
+
+# --- Versions ---
+echo "[3] Versions (best-effort)"
+if command -v Hyprland >/dev/null 2>&1; then
+  echo "Hyprland:"
+  Hyprland --version 2>/dev/null || true
+fi
+if command -v hyprctl >/dev/null 2>&1; then
+  echo "hyprctl:"
+  hyprctl version 2>/dev/null || true
+fi
+echo
+
+# --- Config discovery ---
+echo "[4] Config locations"
+HYPRDIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
+MAINCFG="$HYPRDIR/hyprland.conf"
+echo "HYPRDIR: $HYPRDIR"
+echo "MAINCFG: $MAINCFG"
+if [[ -f "$MAINCFG" ]]; then
+  echo "OK: main config exists"
+else
+  echo "ERROR: main config missing: $MAINCFG"
+fi
+echo
+
+# Collect config files (main + any sourced confs we can resolve)
+declare -a FILES=()
+if [[ -f "$MAINCFG" ]]; then
+  FILES+=("$MAINCFG")
+fi
+
+# Helper: trim quotes/spaces
+trim() {
+  local s="$1"
+  s="${s#\"}"; s="${s%\"}"
+  s="${s#\'}"; s="${s%\'}"
+  echo "$s"
+}
+
+echo "[5] Source chain check"
+if [[ -f "$MAINCFG" ]]; then
+  mapfile -t sources < <(grep -REn '^[[:space:]]*source[[:space:]]*=' "$MAINCFG" 2>/dev/null || true)
+  if [[ ${#sources[@]} -eq 0 ]]; then
+    echo "No 'source =' lines found in main config (that's fine if you keep it monolithic)."
+  else
+    echo "Found sources:"
+    printf '%s\n' "${sources[@]}"
+  fi
+
+  echo
+  echo "Resolved source targets:"
+  while IFS= read -r line; do
+    src="${line#*:source}"
+    src="${src#*source}"
+    src="${src#*=}"
+    src="$(echo "$src" | sed 's/#.*$//' | xargs)"
+    src="$(trim "$src")"
+    [[ -z "$src" ]] && continue
+
+    eval "resolved=\"$src\"" 2>/dev/null || resolved="$src"
+
+    shopt -s nullglob
+    matches=( $resolved )
+    shopt -u nullglob
+
+    if [[ ${#matches[@]} -eq 0 ]]; then
+      echo "ERROR: source target does not exist / glob matched nothing: $src  (resolved: $resolved)"
+    else
+      for m in "${matches[@]}"; do
+        if [[ -f "$m" ]]; then
+          echo "OK: $src -> $m"
+          FILES+=("$m")
+        else
+          echo "ERROR: source target is not a file: $src -> $m"
+        fi
+      done
+    fi
+  done < <(printf '%s\n' "${sources[@]}")
+else
+  echo "Skipping source check (main config missing)."
+fi
+echo
+
+# Deduplicate FILES
+if [[ ${#FILES[@]} -gt 0 ]]; then
+  mapfile -t FILES < <(printf '%s\n' "${FILES[@]}" | awk '!seen[$0]++')
+fi
+
+echo "[6] Config file list (${#FILES[@]} files)"
+if [[ ${#FILES[@]} -eq 0 ]]; then
+  echo "No config files found to scan."
+else
+  printf '%s\n' "${FILES[@]}"
+fi
+echo
+
+# --- Scan for common issues ---
+echo "[7] Config scans (common pitfalls)"
+scan_file() {
+  local f="$1"
+
+  if LC_ALL=C grep -n $'\r' "$f" >/dev/null 2>&1; then
+    echo "WARN: CRLF line endings detected in $f (can cause weird parse issues). Convert with: sed -i 's/\r\$//' '$f'"
+  fi
+
+  if LC_ALL=C grep -nP $'\t' "$f" >/dev/null 2>&1; then
+    echo "INFO: tabs found in $f (usually fine, but be careful around alignment)."
+  fi
+
+  if grep -En '^[[:space:]]*exec[[:space:]]*=' "$f" >/dev/null 2>&1; then
+    echo "NOTE: 'exec =' found in $f. If these launch daemons, consider 'exec-once =' to avoid respawns on reload."
+  fi
+
+  if grep -En '^[[:space:]]*source[[:space:]]*=[[:space:]]*$' "$f" >/dev/null 2>&1; then
+    echo "ERROR: empty 'source =' line in $f"
+  fi
+}
+
+if [[ ${#FILES[@]} -gt 0 ]]; then
+  for f in "${FILES[@]}"; do
+    echo "Scanning: $f"
+    scan_file "$f"
+  done
+else
+  echo "Skipping scans (no files)."
+fi
+echo
+
+# --- Hyprland runtime checks (only if running / accessible) ---
+echo "[8] Runtime checks (hyprctl)"
+if command -v hyprctl >/dev/null 2>&1; then
+  if hyprctl -j monitors >/dev/null 2>&1; then
+    echo "OK: hyprctl can talk to Hyprland (Hyprland likely running)."
+    echo
+    echo "Monitors:"
+    hyprctl monitors || true
+    echo
+    echo "Clients:"
+    hyprctl clients || true
+    echo
+    echo "Active window:"
+    hyprctl activewindow || true
+
+    if [[ $FULL -eq 1 ]]; then
+      echo
+      hr
+      echo "[FULL] hyprctl -j dumps"
+      for cmd in monitors workspaces clients devices binds activewindow; do
+        echo "--- hyprctl -j $cmd"
+        hyprctl -j "$cmd" 2>/dev/null || true
+      done
+    fi
+  else
+    echo "WARN: hyprctl cannot connect to Hyprland."
+    echo "This is normal if Hyprland is not running or WAYLAND_DISPLAY/XDG_RUNTIME_DIR are not set for this shell."
+    echo "Try running this script from inside your Hyprland session."
+  fi
+else
+  echo "hyprctl not installed/found; skipping runtime checks."
+fi
+echo
+
+# --- Recent journal logs (best-effort, may be empty) ---
+echo "[9] Logs (best-effort)"
+if command -v journalctl >/dev/null 2>&1; then
+  echo "Last Hyprland-related logs from current boot (may be empty):"
+  journalctl --user -b 0 2>/dev/null | grep -Ei 'hyprland|hypr|wayland|wlroots' | tail -n 200 || true
+else
+  echo "journalctl not found; skipping."
+fi
+
+echo
+hr
+echo "Done. Report saved to: $LOG"
+echo "Tip: paste the last ~80 lines of the report (especially sections [5], [7], [8], [9]) when asking for help."

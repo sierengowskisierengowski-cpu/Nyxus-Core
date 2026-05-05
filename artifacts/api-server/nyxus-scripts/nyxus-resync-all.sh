@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.04-r15"
+NYXUS_RESYNC_VERSION="2026.05.04-r16"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -192,6 +192,22 @@ if curl -fsSL --max-time 30 "$PROD/nyxus_chrome.py" -o "$chrome_dst.new"; then
   fi
 else
   fail "could not download nyxus_chrome.py — apps will keep their old chrome"
+fi
+
+step "2.7/6 · INSTALL hypr-doctor diagnostic (writes report to ~/.cache/hypr-doctor/)"
+DOCTOR_DST="/usr/local/bin/hypr-doctor"
+if curl -fsSL --max-time 30 "$PROD/hypr-doctor.sh" -o "$DOCTOR_DST.new"; then
+  if bash -n "$DOCTOR_DST.new" 2>/dev/null; then
+    mv "$DOCTOR_DST.new" "$DOCTOR_DST"
+    chmod 755 "$DOCTOR_DST"
+    chown root:root "$DOCTOR_DST"
+    ok "wrote $DOCTOR_DST — run as user with: hypr-doctor  (or hypr-doctor --full)"
+  else
+    rm -f "$DOCTOR_DST.new"
+    fail "downloaded hypr-doctor.sh failed bash syntax check — kept previous copy"
+  fi
+else
+  fail "could not download hypr-doctor.sh"
 fi
 
 step "3/6 · INSTALL Hyprland window rules (proven baseline — 13 rules)"
