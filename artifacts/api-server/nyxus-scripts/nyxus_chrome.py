@@ -43,7 +43,7 @@ log = logging.getLogger("nyxus.chrome")
 # Bumped with every visible chrome change so apps can log which chrome
 # version actually loaded. Curl /api/download/nyxus/nyxus_chrome.py |
 # grep NYXUS_CHROME_VERSION to confirm freshness from prod.
-NYXUS_CHROME_VERSION = "2026.05.04-r10"
+NYXUS_CHROME_VERSION = "2026.05.05-r11"
 
 # ── Palette (matches nyxus_settings.py) ─────────────────────────────────────
 NEON_PINK   = (1.00, 0.00, 1.00)
@@ -275,7 +275,7 @@ window, window.background, window.solid-csd,
 window.nyx-transparent, window.nyx-transparent.background {
     background-color: transparent;
     background-image: none;
-    color: #efefee;
+    color: #1a1816;   /* r11: dark ink for Seattle Frost cream wash */
 }
 /* Strip any background paint that an app or Adw bin paints on the root  *
  * widget directly under the window. Inner panels still get frosted via  *
@@ -290,10 +290,21 @@ window > headerbar, window > windowhandle, window > windowhandle > * {
     background-image: none;
 }
 
-/* -- Frosted-glass wash: ONLY when an app opts in via these classes ---- */
+/* -- Frosted-glass wash: ONLY when an app opts in via these classes ---- *
+ * r11: FLIPPED from dark (rgba 10,10,18,0.72) to Seattle Frost cream.   *
+ * This is THE single change that converts every app from neon-on-black  *
+ * to misty-white-on-cream without touching app code. .nyx-card stays    *
+ * cream (already in tier-1 below), so no override needed.              */
 .nyx-bg, .nyx-shell-bg, .nyx-frosted, .nyx-panel,
-.nyx-godsapp-frame, .nyx-card {
-    background-color: rgba(10, 10, 18, 0.72);
+.nyx-godsapp-frame {
+    background-color: rgba(245, 243, 239, 0.72);
+    color: #1a1816;
+}
+.nyx-bg label, .nyx-shell-bg label, .nyx-frosted label,
+.nyx-panel label, .nyx-godsapp-frame label,
+.nyx-bg > *, .nyx-shell-bg > *, .nyx-frosted > *,
+.nyx-panel > *, .nyx-godsapp-frame > * {
+    color: #1a1816;
 }
 
 /* === ACCENT FROST PALETTE — apply to any panel for tinted frosted glass.
@@ -414,11 +425,11 @@ window > headerbar, window > windowhandle, window > windowhandle > * {
  * Catches GTK textview/entry/listrows everywhere so leftover solid bg
  * panels become frosted automatically without per-app patches.       === */
 textview {
-    background-color: rgba(10, 10, 18, 0.55);
-    color: #efefee;
+    background-color: rgba(245, 243, 239, 0.85);   /* r11: cream glass */
+    color: #1a1816;                                /* r11: pencil-ink */
     border-radius: 8px;
 }
-textview text { background-color: transparent; color: #efefee; }
+textview text { background-color: transparent; color: #1a1816; }
 
 scrolledwindow > viewport,
 scrolledwindow > viewport > * {
@@ -428,35 +439,46 @@ scrolledwindow > viewport > * {
 list, listview, listbox,
 list > row, listview > row, listbox > row {
     background-color: transparent;
-    color: #efefee;
+    color: #1a1816;   /* r11: dark ink on cream */
 }
 listbox > row:hover, list > row:hover, listview > row:hover {
-    background-color: rgba(255, 0, 180, 0.12);
+    background-color: rgba(49, 49, 49, 0.12);   /* r11: charcoal smoke */
 }
 listbox > row:selected, list > row:selected, listview > row:selected {
-    background-color: rgba(255, 0, 180, 0.22);
-    box-shadow: inset 3px 0 0 rgba(255, 0, 180, 0.85);
+    background-color: rgba(49, 49, 49, 0.22);
+    box-shadow: inset 3px 0 0 rgba(26, 24, 22, 0.85);
 }
 
 frame > border { border-color: rgba(192, 132, 252, 0.30); }
 
-/* Scrollbars: neon-pink default, cyan on hover */
+/* Scrollbars: r11 — pencil-grey default, charcoal on hover */
 scrollbar { background: transparent; }
 scrollbar slider {
-    background: rgba(255, 0, 180, 0.55);
+    background: rgba(49, 49, 49, 0.45);
     border-radius: 4px;
     min-width: 8px;
     min-height: 8px;
 }
 scrollbar slider:hover {
-    background: rgba(0, 220, 255, 0.85);
-    box-shadow: 0 0 8px rgba(0, 220, 255, 0.55);
+    background: rgba(26, 24, 22, 0.85);
 }
 
-/* -- Typography: UNIVERSAL Caveat, mirrors godsapp/ui.py exactly ----- */
+/* -- Typography: r11 Seattle Frost font policy ---------------------- *
+ *  - Body / labels / menus / app content → Inter (clean sans-serif)   *
+ *  - Display / titles / clock / workspace names → Architects Daughter *
+ *  - Code / terminal / hex → JetBrains Mono (opt-in via .nyx-mono)    *
+ *  Falls back through hand-drawn alternatives if Inter/AD missing.    */
 * {
-    font-family: \'Caveat\', \'Patrick Hand\', \'Comic Sans MS\', cursive;
-    font-size: 17px;
+    font-family: \'Inter\', \'Inter Light\', \'Cantarell\', \'DejaVu Sans\', sans-serif;
+    font-size: 14px;
+}
+.nyx-display, .nyx-display *,
+.nyx-clock, .nyx-clock *,
+.nyx-workspace, .nyx-workspace *,
+.nyx-headline, .nyx-headline *,
+.nyx-app-title, .nyx-section-title,
+.nyx-rainbow-title {
+    font-family: \'Architects Daughter\', \'Caveat\', \'Patrick Hand\', \'Comic Sans MS\', cursive;
 }
 /* Opt-out for code/terminal/log surfaces — keep them in real mono. */
 .nyx-mono, .nyx-mono *,
@@ -470,50 +492,51 @@ vte-terminal, vte-terminal * {
     font-size: 13px;
 }
 
-/* -- Headerbar / titlebar: frosted-glass, neon underline ------------- */
+/* -- Headerbar / titlebar: r11 cream frosted, charcoal pencil line --- */
 headerbar, .titlebar {
-    background-color: rgba(10, 10, 18, 0.78);
-    color: #efefee;
-    border-bottom: 1px solid rgba(192, 132, 252, 0.45);
+    background-color: rgba(245, 243, 239, 0.78);
+    color: #1a1816;
+    border-bottom: 1px solid rgba(49, 49, 49, 0.27);
 }
 
-/* -- Text inputs: dark glass, neon focus ring ----------------------- */
+/* -- Text inputs: r11 cream glass, charcoal focus ring -------------- */
 entry, spinbutton {
-    background-color: rgba(0, 0, 0, 0.55);
-    color: #efefee;
-    border: 1px solid rgba(192, 132, 252, 0.45);
+    background-color: rgba(255, 255, 255, 0.55);
+    color: #1a1816;
+    border: 1px solid rgba(49, 49, 49, 0.35);
     border-radius: 10px;
     padding: 8px 14px;
-    font-size: 16px;
-    caret-color: #ff00ff;
+    font-size: 14px;
+    caret-color: #1a1816;
 }
 entry:focus, spinbutton:focus {
-    border-color: rgba(255, 0, 255, 0.95);
-    box-shadow: 0 0 12px rgba(255, 0, 255, 0.35);
+    border-color: rgba(26, 24, 22, 0.85);
+    box-shadow: 0 0 0 2px rgba(209, 209, 209, 0.55);
 }
-entry placeholder, entry > placeholder { color: #6c6c75; }
+entry placeholder, entry > placeholder { color: #8a8580; }
 
-/* -- Buttons: transparent fill, neon-pink outline, Caveat label ----- */
+/* -- Buttons: r11 cream glass, charcoal pencil outline -------------- */
 button {
-    background-color: rgba(0, 0, 0, 0.45);
-    color: #efefee;
-    border: 1.5px solid rgba(255, 0, 255, 0.65);
+    background-color: rgba(255, 255, 255, 0.45);
+    color: #1a1816;
+    border: 1px solid rgba(49, 49, 49, 0.45);
     border-radius: 10px;
     padding: 6px 14px;
-    font-size: 17px;
+    font-size: 14px;
     transition: background-color 140ms ease, box-shadow 140ms ease,
                 border-color 140ms ease;
 }
 button:hover {
-    background-color: rgba(255, 0, 255, 0.12);
-    box-shadow: 0 0 14px rgba(255, 0, 255, 0.55);
+    background-color: rgba(255, 255, 255, 0.78);
+    border-color: rgba(26, 24, 22, 0.85);
 }
 button:active, button:checked {
-    background-color: rgba(255, 0, 255, 0.22);
+    background-color: rgba(209, 209, 209, 0.65);
+    border-color: rgba(26, 24, 22, 0.95);
 }
 button:disabled {
-    color: rgba(239, 239, 238, 0.35);
-    border-color: rgba(255, 255, 255, 0.12);
+    color: rgba(26, 24, 22, 0.35);
+    border-color: rgba(49, 49, 49, 0.18);
 }
 
 /* Adwaita semantic button classes — purple = action, red = danger */

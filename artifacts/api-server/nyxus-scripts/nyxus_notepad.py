@@ -130,20 +130,26 @@ def log(msg: str):
     except Exception:
         pass
 
-# ── NYXUS colour palette (RGB floats) ───────────────────────────────────────
-BG_DARK     = (0.039, 0.039, 0.071)   # #000000
-BG_PANEL    = (0.072, 0.067, 0.110)
-BG_RAISED   = (0.101, 0.094, 0.156)
-INK_BRIGHT  = (0.941, 0.922, 0.980)
-INK_DIM     = (0.620, 0.604, 0.690)
-INK_FAINT   = (0.380, 0.365, 0.450)
+# ── NYXUS colour palette — r3 SEATTLE FROST (RGB floats) ───────────────────
+# Was neon-on-black; now charcoal-ink on cream/fog frosted glass.
+# Variable names kept identical so the rest of the file (2700 lines of
+# Cairo paints + GTK CSS) needs zero further edits — the rename happens
+# only in the values below.
+BG_DARK     = (0.961, 0.953, 0.937)   # #f5f3ef cream paper (was #000000)
+BG_PANEL    = (0.929, 0.918, 0.898)   # #edeae5 fog tier
+BG_RAISED   = (1.000, 1.000, 1.000)   # white card pop on cream
+INK_BRIGHT  = (0.102, 0.094, 0.086)   # #1a1816 pencil ink (was near-white)
+INK_DIM     = (0.345, 0.325, 0.298)   # #58524c mid pencil
+INK_FAINT   = (0.620, 0.580, 0.541)   # #9e948a faded pencil
 
-NEON_PINK   = (1.000, 0.000, 1.000)   # #ff00ff
-NEON_BLUE   = (0.000, 0.533, 1.000)   # #0088ff
-NEON_GREEN  = (0.224, 1.000, 0.078)   # #39ff14
-ACCENT_GOLD = (1.000, 0.776, 0.196)
-ACCENT_PURP = (0.545, 0.361, 0.965)   # #8b5cf6
-DANGER_RED  = (1.000, 0.302, 0.243)
+# Accent colors → muted Seattle-frost tones (NOT neon).
+# Names kept (NEON_*, ACCENT_*) so all existing button/icon code still works.
+NEON_PINK   = (0.102, 0.094, 0.086)   # #1a1816 charcoal (was #ff00ff)
+NEON_BLUE   = (0.345, 0.325, 0.298)   # #58524c mid pencil (was #0088ff)
+NEON_GREEN  = (0.220, 0.388, 0.275)   # #386346 muted moss (was #39ff14)
+ACCENT_GOLD = (0.733, 0.561, 0.180)   # #bb8f2e weathered brass (kept gold-ish)
+ACCENT_PURP = (0.357, 0.286, 0.451)   # #5b4973 dusk purple (was #8b5cf6)
+DANGER_RED  = (0.580, 0.149, 0.149)   # #942626 oxblood (was bright red)
 
 NOTE_COLORS = [
     {"key": "lemon",    "rgb": (0.996, 0.941, 0.541), "name": "Lemon"},
