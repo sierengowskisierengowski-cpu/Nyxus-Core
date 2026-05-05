@@ -90,7 +90,8 @@ except Exception:
 # ═══════════════════════════════════════════════════════════════════════════════
 APP_ID    = "com.nyxus.notepad"
 APP_NAME  = "NYXUS Notepad"
-WIN_W, WIN_H = 960, 620
+WIN_W, WIN_H = 880, 580   # compact default (was 960, 620)
+WIN_MIN_W, WIN_MIN_H = 720, 480   # hard minimum — prevents layout collapse
 
 # ── NYXUS shared chrome (rainbow titles + graffiti walls, system-wide) ──
 def _nyxus_load_chrome():
@@ -1632,6 +1633,7 @@ class NotepadWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app, title=APP_NAME)
         self.set_default_size(WIN_W, WIN_H)
+        self.set_size_request(WIN_MIN_W, WIN_MIN_H)   # hard minimum — keeps layout intact when shrunk
         self.db = DB()
         self.crypto = Crypto(self.db)
         self.current_id = None
@@ -1681,7 +1683,7 @@ class NotepadWindow(Gtk.ApplicationWindow):
 
         # Body — paned (sidebar | editor)
         paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
-        paned.set_position(220)
+        paned.set_position(180)   # narrower sidebar — leaves more room for editor at compact widths
         paned.set_wide_handle(True)
         paned.set_hexpand(True); paned.set_vexpand(True)
         root.append(paned)
