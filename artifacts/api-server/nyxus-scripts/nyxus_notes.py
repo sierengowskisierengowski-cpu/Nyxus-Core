@@ -45,10 +45,13 @@ headerbar {
 }
 headerbar .title {
     font-family: 'Architects Daughter', 'Caveat', cursive;
-    font-size: 17px;
-    color: #58524c;
-    font-weight: 400;
-    letter-spacing: 0.06em;
+    font-size: 19px;
+    color: #1a1816;
+    font-weight: 500;
+    letter-spacing: 0.10em;
+    text-shadow: 1px 1px 0 #ffffff,
+                 -1px -1px 0 rgba(26, 24, 22, 0.10),
+                 0 2px 3px rgba(26, 24, 22, 0.10);
 }
 headerbar windowcontrols button {
     background: transparent;
