@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.05-r19"
+NYXUS_RESYNC_VERSION="2026.05.05-r20"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -210,13 +210,15 @@ else
   fail "could not download hypr-doctor.sh"
 fi
 
-step "3/6 · INSTALL Hyprland window rules (proven baseline — 13 rules)"
+step "3/6 · INSTALL Hyprland window rules (13-rule baseline) + compositor blur kernel"
 HYPR_DIR="$REAL_HOME/.config/hypr"
 HYPR_CONF_D="$HYPR_DIR/conf.d"
 HYPR_RULES="$HYPR_CONF_D/nyxus-windowrules.conf"
+HYPR_BLUR="$HYPR_CONF_D/nyxus-hyprland-blur.conf"
 HYPR_FROST_OLD="$HYPR_CONF_D/nyxus-seattle-frost.conf"
 HYPR_MAIN="$HYPR_DIR/hyprland.conf"
 SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-windowrules.conf'
+BLUR_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf'
 
 mkdir -p "$HYPR_CONF_D"
 chown -R "$REAL_USER:$REAL_USER" "$HYPR_DIR"
@@ -257,6 +259,33 @@ if [[ -f "$HYPR_MAIN" ]]; then
 else
   warn "$HYPR_MAIN not found — drop this line into your hyprland.conf manually:"
   printf "      ${DIM}%s${R}\n" "$SOURCE_LINE"
+fi
+
+# ── Frosted-white FEATURE 1: compositor blur kernel (no opacity, no brightness)
+# This file ONLY enables Hyprland's blur kernel. You will NOT see visual frost
+# yet — that arrives with feature 2 (per-app opacity rules) and feature 3
+# (chrome.py rgba backgrounds). Shipping it standalone first proves Hyprland
+# parses a decoration{} block without the brightness=1.4 whitewash bug.
+if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-blur.conf" -o "$HYPR_BLUR"; then
+  chown "$REAL_USER:$REAL_USER" "$HYPR_BLUR"
+  chmod 644 "$HYPR_BLUR"
+  ok "wrote $HYPR_BLUR  (compositor blur kernel — no opacity yet)"
+else
+  warn "could not download nyxus-hyprland-blur.conf — frosted-white feature 1 skipped"
+fi
+
+if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_BLUR" ]]; then
+  if grep -qF "nyxus-hyprland-blur.conf" "$HYPR_MAIN"; then
+    ok "hyprland.conf already sources nyxus-hyprland-blur.conf"
+  else
+    {
+      echo
+      echo "# NYXUS — compositor blur kernel (added by nyxus-resync-all.sh, feature 1)"
+      echo "$BLUR_SOURCE_LINE"
+    } >> "$HYPR_MAIN"
+    chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
+    ok "appended blur source line to $HYPR_MAIN"
+  fi
 fi
 
 # ── 4/6 INSTALL lock + screensaver stack ─────────────────────────────────────
