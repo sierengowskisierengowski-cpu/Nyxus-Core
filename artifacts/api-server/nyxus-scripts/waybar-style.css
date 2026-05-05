@@ -60,14 +60,19 @@ tooltip label {
 /* ════════════════════════════════════════════════════════════════════════════
    TOP BAR — cream paper strip with charcoal text
    ════════════════════════════════════════════════════════════════════════════ */
+/* Layered architectural tablet — top bar slab + 2 slabs peeking from below */
 window#waybar.top {
     background-color: #f5f3ef;
     background-image: none;
     color:            #1a1816;
     border:           none;
-    border-bottom:    1px solid rgba(26, 24, 22, 0.12);
-    box-shadow:       inset 0 1px 0 rgba(255, 255, 255, 0.9),
-                      0 1px 3px rgba(26, 24, 22, 0.06);
+    border-bottom:    1px solid rgba(26, 24, 22, 0.10);
+    box-shadow:       inset 0 1px 0 rgba(255, 255, 255, 0.95),
+                      0  3px 0 -2px #ebe8e2,
+                      0  4px 0 -2px rgba(26, 24, 22, 0.08),
+                      0  6px 0 -4px #ddd9d3,
+                      0  7px 0 -4px rgba(26, 24, 22, 0.06),
+                      0 10px 18px -4px rgba(26, 24, 22, 0.10);
 }
 
 /* Ticker — pencil-light, no glow */
@@ -145,14 +150,19 @@ window#waybar.top #network.disconnected {
 /* ════════════════════════════════════════════════════════════════════════════
    BOTTOM BAR — same embossed cream paper, slightly taller (60px)
    ════════════════════════════════════════════════════════════════════════════ */
+/* Layered tablet — bottom bar with slabs peeking UP from behind */
 window#waybar.bottom {
     background-color: #f5f3ef;
     background-image: none;
     color:            #1a1816;
     border:           none;
-    border-top:       1px solid rgba(26, 24, 22, 0.12);
-    box-shadow:       inset 0 -1px 0 rgba(255, 255, 255, 0.9),
-                      0 -1px 3px rgba(26, 24, 22, 0.06);
+    border-top:       1px solid rgba(26, 24, 22, 0.10);
+    box-shadow:       inset 0 -1px 0 rgba(255, 255, 255, 0.95),
+                      0  -3px 0 -2px #ebe8e2,
+                      0  -4px 0 -2px rgba(26, 24, 22, 0.08),
+                      0  -6px 0 -4px #ddd9d3,
+                      0  -7px 0 -4px rgba(26, 24, 22, 0.06),
+                      0 -10px 18px -4px rgba(26, 24, 22, 0.10);
 }
 
 /* ── Workspaces — cream pills with thin colored top-stripe per workspace ── */
@@ -345,12 +355,18 @@ window#waybar.bottom #custom-nyxus-panel:hover {
 /* ════════════════════════════════════════════════════════════════════════════
    LEFT BAR — workspace ribbon (cream pills, vertical)
    ════════════════════════════════════════════════════════════════════════════ */
+/* Layered tablet — left bar with slabs peeking out to the RIGHT */
 window#waybar.left {
     background-color: #f5f3ef;
     background-image: none;
     border:           none;
-    border-right:     1px solid rgba(26, 24, 22, 0.12);
-    box-shadow:       inset -1px 0 0 rgba(255, 255, 255, 0.9);
+    border-right:     1px solid rgba(26, 24, 22, 0.10);
+    box-shadow:       inset -1px 0 0 rgba(255, 255, 255, 0.95),
+                      3px 0 0 -2px #ebe8e2,
+                      4px 0 0 -2px rgba(26, 24, 22, 0.08),
+                      6px 0 0 -4px #ddd9d3,
+                      7px 0 0 -4px rgba(26, 24, 22, 0.06),
+                      10px 0 18px -4px rgba(26, 24, 22, 0.10);
 }
 window#waybar.left #workspaces button {
     color:         #58524c;
@@ -373,12 +389,18 @@ window#waybar.left #workspaces button.active {
 /* ════════════════════════════════════════════════════════════════════════════
    RIGHT BAR — app launcher column (cream pills with icon glyphs)
    ════════════════════════════════════════════════════════════════════════════ */
+/* Layered tablet — right bar with slabs peeking out to the LEFT */
 window#waybar.right {
     background-color: #f5f3ef;
     background-image: none;
     border:           none;
-    border-left:      1px solid rgba(26, 24, 22, 0.12);
-    box-shadow:       inset 1px 0 0 rgba(255, 255, 255, 0.9);
+    border-left:      1px solid rgba(26, 24, 22, 0.10);
+    box-shadow:       inset 1px 0 0 rgba(255, 255, 255, 0.95),
+                      -3px 0 0 -2px #ebe8e2,
+                      -4px 0 0 -2px rgba(26, 24, 22, 0.08),
+                      -6px 0 0 -4px #ddd9d3,
+                      -7px 0 0 -4px rgba(26, 24, 22, 0.06),
+                      -10px 0 18px -4px rgba(26, 24, 22, 0.10);
 }
 /* Waybar exposes custom/app-* modules as IDs (#custom-app-foo), not classes,
  * so list every right-bar app icon explicitly. */
