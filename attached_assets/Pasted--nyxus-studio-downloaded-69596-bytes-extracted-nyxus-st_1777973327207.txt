@@ -1,0 +1,122 @@
+
+── nyxus-studio ──
+  ✓  downloaded 69596 bytes
+  ✓  extracted
+  ✓  nyxus-studio installed
+
+── nyxus-shield ──
+  ✓  downloaded 18026 bytes
+  ✓  extracted
+  ✓  nyxus-shield installed
+
+── nyxus-phantom ──
+  ✓  downloaded 26875 bytes
+  ✓  extracted
+  ✓  nyxus-phantom installed
+
+▌ 2.5/6 · DIRECT-DOWNLOAD nyxus_chrome.py (force-refresh from production)
+  ✓  wrote /home/nyx/.nyxus/nyxus_chrome.py (version=2026.05.04-r10, sha=52c5d4c63af5)
+
+▌ 2.7/6 · INSTALL hypr-doctor diagnostic (writes report to ~/.cache/hypr-doctor/)
+  ✓  wrote /usr/local/bin/hypr-doctor — run as user with: hypr-doctor  (or hypr-doctor --full)
+
+▌ 3/6 · INSTALL Hyprland window rules (13-rule baseline) + compositor blur kernel
+  ✓  wrote /home/nyx/.config/hypr/conf.d/nyxus-windowrules.conf  (13 rules — proven baseline)
+  ✓  hyprland.conf already sources nyxus-windowrules.conf
+  ✓  wrote /home/nyx/.config/hypr/conf.d/nyxus-hyprland-blur.conf  (compositor blur kernel — no opacity yet)
+  ✓  hyprland.conf already sources nyxus-hyprland-blur.conf
+
+▌ 4/6 · INSTALL lock + screensaver stack (PAM fix + hyprlock + hypridle + demon jumpscare)
+  ✓  /etc/pam.d/hyprlock already configured (system-auth include present)
+  ✓  wrote /home/nyx/.config/hypr/hyprlock.conf
+  ✓  wrote /home/nyx/.config/hypr/hypridle.conf
+  ✓  wrote /usr/share/nyxus/scripts/nyxus_screensaver.py
+  ✓  wrote /usr/share/nyxus/scripts/nyxus_demon_wake.py
+  ✓  wrote /usr/share/nyxus/demon.png (947757 bytes)
+  ✓  wrote /usr/local/bin/nyxus-screensaver
+  ✓  wrote /usr/local/bin/nyxus-demon-wake
+  ✓  restarted hypridle as nyx with full session env (new idle pipeline active)
+  !  hyprctl reload failed — log out + back in, or run 'hyprctl reload' manually
+
+▌ 5/6 · RELOAD waybar (so the new NYXUS modules show up)
+  ✓  sent SIGUSR2 to running waybar (config reloaded)
+
+▌ 6/6 · VERIFICATION
+  chrome on disk:  /home/nyx/.nyxus/nyxus_chrome.py                              NYXUS_CHROME_VERSION = "2026.05.04-r10"
+  ✓  wallpaper daemon still running:  swaybg  (background preserved)
+
+Per-app install result:
+  nyxus-start             ✓ installed
+  nyxus-panel             ✓ installed
+  nyxus-godsapp           ✓ installed
+  nyxus-home              ✓ installed
+  nyxus-weather           ✓ installed
+  nyxus-notepad           ✓ installed
+  nyxus-passwords         ✓ installed
+  nyxus-intel             ✓ installed
+  nyxus-sage              ✓ installed
+  nyxus-studio            ✓ installed
+  nyxus-shield            ✓ installed
+  nyxus-phantom           ✓ installed
+
+System checks:
+  ✓  chrome.py version=2026.05.04-r10  sha=52c5d4c63af5 (r4+ — visual changes will be live next app launch)
+  ✓  waybar has 8 NYXUS module references (expected ≥8)
+  ✓  /etc/pam.d/hyprlock present (hyprlock auth fixed)
+  ✓  /usr/local/bin/nyxus-screensaver installed
+  ✓  /usr/local/bin/nyxus-demon-wake installed
+  ✓  /usr/share/nyxus/demon.png present (947757 bytes)
+  ✓  hypridle running (idle pipeline active)
+
+App launchers (checking /usr/local/bin, ~/.local/bin, ~/.nyxus/<app>/):
+  ✓ nyxus-start            (~/.local/bin)
+  ✓ nyxus-panel            (~/.local/bin)
+  ✓ nyxus-godsapp          (/usr/local/bin)
+  ✓ nyxus-home             (~/.local/bin)
+  ✓ nyxus-weather          (/usr/local/bin)
+  ✓ nyxus-notepad          (/usr/local/bin)
+  ✓ nyxus-passwords        (/usr/local/bin)
+  ✓ nyxus-intel            (/usr/local/bin)
+  ✓ nyxus-sage             (/usr/local/bin)
+  ✓ nyxus-studio           (/usr/local/bin)
+  ✓ nyxus-shield           (/usr/local/bin)
+  ✗ nyxus-phantom          (not installed anywhere — check install log above)
+
+──────────────────────────────────────────────────────────────
+
+▌ 7/7 · DIAGNOSE Hyprland (auto-runs hypr-doctor — instant error surface)
+  ✓  full report: /home/nyx/.cache/hypr-doctor/hypr-doctor-20260505-052747.log
+
+  Hyprland config errors (section [8a] — powers the waybar overlay):
+  ✓  hyprctl configerrors: 0 errors — waybar overlay should be clean
+
+  Hyprland source chain (section [5]):
+      Found sources:
+      399:source = ~/.config/hypr/conf.d/nyxus-windowrules.conf
+      403:source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+      Resolved source targets:
+      OK: ~/.config/hypr/conf.d/nyxus-windowrules.conf -> /home/nyx/.config/hypr/conf.d/nyxus-windowrules.conf
+      OK: ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf -> /home/nyx/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+
+  Hyprland log tail (section [9a] — parse errors land here):
+      WARN: no Hyprland log found at /home/nyx/.cache/hyprland/hyprland.log or $XDG_RUNTIME_DIR/hypr/<sig>/hyprland.log
+      Tip: enable verbose logging by setting in hyprland.conf:
+          debug { disable_logs = false }
+
+──────────────────────────────────────────────────────────────
+  DONE. (resync script v2026.05.05-r20)
+  The NYXUS apps will load the new chrome on next launch.
+  Re-run hypr-doctor any time:  hypr-doctor  or  hypr-doctor --full
+  Idle pipeline: 2min dim → 3min screensaver → 5min lock → 8min DPMS off → 15min suspend
+  Test the jumpscare without waiting:  nyxus-demon-wake
+  Test the lock screen:                loginctl lock-session
+──────────────────────────────────────────────────────────────
+
+
+...xXx... ~  24s
+❯ hyprctl getoption decoration:blur:enabled           05:27:47
+int: 1
+set: true
+
+...xXx... ~
+❯                      
