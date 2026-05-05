@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.04-r16"
+NYXUS_RESYNC_VERSION="2026.05.04-r17"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -505,8 +505,55 @@ done
 
 echo
 hr
+step "7/7 · DIAGNOSE Hyprland (auto-runs hypr-doctor — instant error surface)"
+# Run hypr-doctor as the REAL user (not root) so it sees their config + logs.
+# Pass through WAYLAND_DISPLAY / XDG_RUNTIME_DIR so [8] runtime checks work
+# when the user is currently in a Hyprland session (otherwise hyprctl can't
+# reach the running compositor).
+DOCTOR_BIN="/usr/local/bin/hypr-doctor"
+if [[ ! -x "$DOCTOR_BIN" ]]; then
+  warn "hypr-doctor not installed — skipping auto-diagnosis"
+else
+  REAL_UID=$(id -u "$REAL_USER")
+  DOCTOR_OUT=$(sudo -u "$REAL_USER" \
+    HOME="$REAL_HOME" \
+    XDG_RUNTIME_DIR="/run/user/$REAL_UID" \
+    WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
+    "$DOCTOR_BIN" 2>&1 || true)
+
+  # Save full report path for the user
+  REPORT_FILE=$(echo "$DOCTOR_OUT" | grep -m1 "^Log file:" | awk '{print $3}')
+  [[ -n "$REPORT_FILE" ]] && ok "full report: $REPORT_FILE"
+
+  # Surface ERROR / WARN lines inline so the user sees them WITHOUT
+  # needing to ssh in and read the log file separately.
+  ERR_COUNT=$(echo "$DOCTOR_OUT" | grep -cE '^(ERROR|WARN):' || true)
+  if [[ "$ERR_COUNT" -eq 0 ]]; then
+    ok "hypr-doctor found 0 ERROR/WARN lines — config is clean"
+  else
+    warn "hypr-doctor found $ERR_COUNT ERROR/WARN lines:"
+    echo "$DOCTOR_OUT" | grep -E '^(ERROR|WARN):' | sed 's/^/      /'
+    echo
+    printf "      ${DIM}For full context (sources, file scans, journal):${R}\n"
+    printf "      ${DIM}  cat %s${R}\n" "$REPORT_FILE"
+  fi
+
+  # Always show source-chain resolution — if a 'source = ...' target is
+  # missing, that's the #1 cause of "errors after reload" and we want it loud.
+  echo
+  printf "  ${B}Hyprland source chain (from hypr-doctor section [5]):${R}\n"
+  echo "$DOCTOR_OUT" | awk '
+    /^\[5\] Source chain check/ {capture=1; next}
+    /^\[6\] / {capture=0}
+    capture && NF { print "      " $0 }
+  '
+fi
+
+echo
+hr
 printf "  ${B}${GREEN}DONE.${R} ${DIM}(resync script v%s)${R}\n" "$NYXUS_RESYNC_VERSION"
 printf "  The NYXUS apps will load the new chrome on next launch.\n"
+printf "  ${DIM}Re-run hypr-doctor any time:${R}  hypr-doctor  ${DIM}or${R}  hypr-doctor --full\n"
 printf "  ${DIM}Idle pipeline:${R} 2min dim → 3min screensaver → 5min lock → 8min DPMS off → 15min suspend\n"
 printf "  ${DIM}Test the jumpscare without waiting:${R}  ${B}nyxus-demon-wake${R}\n"
 printf "  ${DIM}Test the lock screen:${R}                ${B}loginctl lock-session${R}\n"
