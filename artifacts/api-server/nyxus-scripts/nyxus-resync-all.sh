@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.05-r18"
+NYXUS_RESYNC_VERSION="2026.05.05-r19"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -525,28 +525,39 @@ else
   REPORT_FILE=$(echo "$DOCTOR_OUT" | grep -m1 "^Log file:" | awk '{print $3}')
   [[ -n "$REPORT_FILE" ]] && ok "full report: $REPORT_FILE"
 
-  # Surface ERROR / WARN lines inline so the user sees them WITHOUT
-  # needing to ssh in and read the log file separately.
-  ERR_COUNT=$(echo "$DOCTOR_OUT" | grep -cE '^(ERROR|WARN):' || true)
-  if [[ "$ERR_COUNT" -eq 0 ]]; then
-    ok "hypr-doctor found 0 ERROR/WARN lines — config is clean"
+  # ── Surface the DEFINITIVE error list from `hyprctl configerrors`
+  # (section [8a] of the doctor). This is what powers the red waybar
+  # overlay — if it's empty, the user is clean.
+  echo
+  printf "  ${B}Hyprland config errors (section [8a] — powers the waybar overlay):${R}\n"
+  CFGBLOCK=$(echo "$DOCTOR_OUT" | awk '
+    /^── 8a · hyprctl configerrors/ {capture=1; next}
+    /^── 8b ·|^\[8b\]/ {capture=0}
+    capture && NF { print }
+  ')
+  if [[ -z "$CFGBLOCK" ]] || echo "$CFGBLOCK" | grep -q "OK: hyprctl configerrors reports no errors"; then
+    ok "hyprctl configerrors: 0 errors — waybar overlay should be clean"
   else
-    warn "hypr-doctor found $ERR_COUNT ERROR/WARN lines:"
-    echo "$DOCTOR_OUT" | grep -E '^(ERROR|WARN):' | sed 's/^/      /'
-    echo
-    printf "      ${DIM}For full context (sources, file scans, journal):${R}\n"
-    printf "      ${DIM}  cat %s${R}\n" "$REPORT_FILE"
+    echo "$CFGBLOCK" | sed 's/^/      /'
   fi
 
-  # Always show source-chain resolution — if a 'source = ...' target is
-  # missing, that's the #1 cause of "errors after reload" and we want it loud.
+  # Show source-chain resolution — missing source = is #1 cause of cascades
   echo
-  printf "  ${B}Hyprland source chain (from hypr-doctor section [5]):${R}\n"
+  printf "  ${B}Hyprland source chain (section [5]):${R}\n"
   echo "$DOCTOR_OUT" | awk '
     /^\[5\] Source chain check/ {capture=1; next}
     /^\[6\] / {capture=0}
     capture && NF { print "      " $0 }
   '
+
+  # Show whatever Hyprland's own log (~/.cache/hyprland/hyprland.log) says
+  echo
+  printf "  ${B}Hyprland log tail (section [9a] — parse errors land here):${R}\n"
+  echo "$DOCTOR_OUT" | awk '
+    /^── 9a ·/ {capture=1; next}
+    /^── 9b ·|^\[9b\]|^── End/ {capture=0}
+    capture && NF { print "      " $0 }
+  ' | head -30
 fi
 
 echo
