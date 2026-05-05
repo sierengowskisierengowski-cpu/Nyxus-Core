@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.05-r20"
+NYXUS_RESYNC_VERSION="2026.05.05-r21"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -215,10 +215,12 @@ HYPR_DIR="$REAL_HOME/.config/hypr"
 HYPR_CONF_D="$HYPR_DIR/conf.d"
 HYPR_RULES="$HYPR_CONF_D/nyxus-windowrules.conf"
 HYPR_BLUR="$HYPR_CONF_D/nyxus-hyprland-blur.conf"
+HYPR_OPACITY="$HYPR_CONF_D/nyxus-hyprland-opacity.conf"
 HYPR_FROST_OLD="$HYPR_CONF_D/nyxus-seattle-frost.conf"
 HYPR_MAIN="$HYPR_DIR/hyprland.conf"
 SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-windowrules.conf'
 BLUR_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf'
+OPACITY_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf'
 
 mkdir -p "$HYPR_CONF_D"
 chown -R "$REAL_USER:$REAL_USER" "$HYPR_DIR"
@@ -285,6 +287,48 @@ if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_BLUR" ]]; then
     } >> "$HYPR_MAIN"
     chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
     ok "appended blur source line to $HYPR_MAIN"
+  fi
+fi
+
+# ── Frosted-white FEATURE 2: per-window opacity (notepad canary first)
+# Gentle 0.92/0.88 alpha so blur becomes visible behind the window without
+# the whitewash that 0.85/0.70 + brightness=1.4 caused before. Only one
+# app's class is in the rule for now — if notepad looks right, the same
+# rule's regex gets expanded to all 11 NYXUS apps.
+if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-opacity.conf" -o "$HYPR_OPACITY"; then
+  chown "$REAL_USER:$REAL_USER" "$HYPR_OPACITY"
+  chmod 644 "$HYPR_OPACITY"
+  ok "wrote $HYPR_OPACITY  (canary: nyxus-notepad only)"
+else
+  warn "could not download nyxus-hyprland-opacity.conf — frosted-white feature 2 skipped"
+fi
+
+if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_OPACITY" ]]; then
+  if grep -qF "nyxus-hyprland-opacity.conf" "$HYPR_MAIN"; then
+    ok "hyprland.conf already sources nyxus-hyprland-opacity.conf"
+  else
+    {
+      echo
+      echo "# NYXUS — per-window opacity (added by nyxus-resync-all.sh, feature 2)"
+      echo "$OPACITY_SOURCE_LINE"
+    } >> "$HYPR_MAIN"
+    chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
+    ok "appended opacity source line to $HYPR_MAIN"
+  fi
+fi
+
+# Try to reload Hyprland so blur+opacity take effect immediately. Best-effort
+# — if it fails (xauth/permissions), the user can run `hyprctl reload`
+# manually after the script finishes. The runtime check in step 7/7 will
+# show whether the reload actually picked up.
+if command -v hyprctl >/dev/null 2>&1; then
+  if sudo -u "$REAL_USER" \
+       XDG_RUNTIME_DIR="/run/user/$(id -u "$REAL_USER")" \
+       HYPRLAND_INSTANCE_SIGNATURE="$(ls -1t /run/user/$(id -u "$REAL_USER")/hypr 2>/dev/null | head -1)" \
+       hyprctl reload >/dev/null 2>&1; then
+    ok "hyprctl reload succeeded — blur + opacity should now be live"
+  else
+    warn "hyprctl reload didn't take — run it manually:  hyprctl reload"
   fi
 fi
 
