@@ -75,6 +75,37 @@ _IMAGE_POOL = [f"nyxus-graffiti-{i:02d}.png" for i in range(1, 25)]
 _IMAGE_BASE_URL = "https://nyxus-core.replit.app/api/download/nyxus"
 _IMAGE_CACHE_DIR = Path.home() / ".cache" / "nyxus" / "graffiti"
 
+# Frost tile assets — small repeatable textures used as background-image
+# fills inside cards / headerbars. Fetched once at chrome install time and
+# substituted into CHROME_CSS via __NYX_TILE_*__ placeholders. Failing to
+# fetch is fine — placeholder becomes empty, CSS falls back to flat cream.
+_FROST_TILE_GRID   = "nyxus-frost-tile-grid.png"
+_FROST_TILE_GLYPHS = "nyxus-frost-tile-glyphs.png"
+_FROST_TILE_ASSETS = [_FROST_TILE_GRID, _FROST_TILE_GLYPHS]
+
+
+def _ensure_frost_tile(name: str) -> str:
+    """Ensure the named frost tile exists in the local cache. Returns a
+    file:// URL string usable inside a GTK CSS background-image rule, or
+    empty string if the tile could not be fetched."""
+    try:
+        _IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        log.warning("frost tile cache dir: %s", e)
+        return ""
+    local = _IMAGE_CACHE_DIR / name
+    if not (local.exists() and local.stat().st_size > 1024):
+        try:
+            url = f"{_IMAGE_BASE_URL}/{name}"
+            subprocess.call(
+                ["curl", "-fsSL", "--max-time", "20", "-o", str(local), url],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception as e:
+            log.warning("frost tile fetch %s: %s", name, e)
+    if local.exists() and local.stat().st_size > 1024:
+        return f"file://{local}"
+    return ""
+
 # Per-app default image picks. Each NYXUS app has a signature mural.
 _PAGE_IMAGE_OVERRIDE = {
     # nyxus_settings page keys
@@ -390,17 +421,25 @@ window > headerbar, window > windowhandle, window > windowhandle > * {
 .nyx-frost-white-soft label, .nyx-frost-white-soft > * { color: #1a1816; }
 
 /* Shield/sage/studio hero widgets — auto-promote shared classes to *
- * the cream-paper tier so apps inherit the look without code edits.*/
+ * the cream-paper tier so apps inherit the look without code edits.*
+ * r12: layered-tablet emboss + faint triangle-tessellation tile so   *
+ * cards read as carved cream stone, matching the new waybar look.   */
 .nyx-card,
 .nyx-hero,
 .nyx-threat-score,
 .sage-issue,
 .nyx-doc-title {
-    background-color: rgba(245, 243, 239, 0.88);
+    background-color: rgba(245, 243, 239, 0.92);
+    background-image: url("__NYX_TILE_GRID__");
+    background-repeat: repeat;
+    background-size: 220px 220px;
     color: #1a1816;
-    border: 1px solid rgba(176, 172, 164, 0.45);
+    border: 1px solid rgba(26, 24, 22, 0.18);
     border-radius: 12px;
     padding: 12px;
+    box-shadow: inset  1px  1px 0 rgba(255, 255, 255, 0.85),
+                inset -1px -1px 0 rgba(26,  24, 22, 0.06),
+                0 2px 6px rgba(26, 24, 22, 0.10);
 }
 .nyx-card label, .nyx-card > *,
 .nyx-hero  label, .nyx-hero  > *,
@@ -492,11 +531,19 @@ vte-terminal, vte-terminal * {
     font-size: 13px;
 }
 
-/* -- Headerbar / titlebar: r11 cream frosted, charcoal pencil line --- */
+/* -- Headerbar / titlebar: r12 cream embossed slab + faint glyph wall --- *
+ * The runic-glyph tile below the cream gives the headerbar a "carved"     *
+ * identity matching the sculptural waybar pills. Tile is faint so app     *
+ * titles stay perfectly legible in pencil ink.                            */
 headerbar, .titlebar {
-    background-color: rgba(245, 243, 239, 0.78);
+    background-color: rgba(245, 243, 239, 0.85);
+    background-image: url("__NYX_TILE_GLYPHS__");
+    background-repeat: repeat;
+    background-size: 180px 320px;
     color: #1a1816;
-    border-bottom: 1px solid rgba(49, 49, 49, 0.27);
+    border-bottom: 1px solid rgba(26, 24, 22, 0.20);
+    box-shadow: inset 0  1px 0 rgba(255, 255, 255, 0.85),
+                inset 0 -1px 0 rgba(26,  24, 22, 0.08);
 }
 
 /* -- Text inputs: r11 cream glass, charcoal focus ring -------------- */
@@ -866,11 +913,24 @@ def _install_global_css():
     if _CHROME_PROVIDER_INSTALLED: return
     try:
         prov = Gtk.CssProvider()
-        # CHROME_CSS may be str or bytes depending on Python literal used.
-        # GTK4's load_from_data accepts both forms across versions; we try
-        # bytes first (most permissive), then fall back to str.
-        css_bytes = (CHROME_CSS.encode("utf-8")
-                     if isinstance(CHROME_CSS, str) else CHROME_CSS)
+        # r12: substitute frost-tile placeholders with resolved file:// URLs.
+        # Fetches the tile PNGs into ~/.cache/nyxus/graffiti/ on first call.
+        # On fetch failure the placeholder becomes empty -> CSS falls back
+        # gracefully to flat cream (background-image: url("") is a no-op).
+        css_text = (CHROME_CSS if isinstance(CHROME_CSS, str)
+                    else CHROME_CSS.decode("utf-8"))
+        try:
+            grid_url = _ensure_frost_tile(_FROST_TILE_GRID)
+            glyph_url = _ensure_frost_tile(_FROST_TILE_GLYPHS)
+            css_text = (css_text
+                        .replace("__NYX_TILE_GRID__",   grid_url)
+                        .replace("__NYX_TILE_GLYPHS__", glyph_url))
+        except Exception as e:
+            log.warning("frost tile substitute: %s", e)
+            css_text = (css_text
+                        .replace("__NYX_TILE_GRID__",   "")
+                        .replace("__NYX_TILE_GLYPHS__", ""))
+        css_bytes = css_text.encode("utf-8")
         try:
             prov.load_from_data(css_bytes)
         except TypeError:
