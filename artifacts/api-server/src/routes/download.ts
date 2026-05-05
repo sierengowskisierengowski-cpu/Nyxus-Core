@@ -79,6 +79,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_stickies.py":            "nyxus_stickies.py",
   "nyxus_weather.py":             "nyxus_weather.py",
   "nyxus_notepad.py":             "nyxus_notepad.py",
+  "nyxus_notes.py":               "nyxus_notes.py",
   "nyxus_gen_icons.py":           "nyxus_gen_icons.py",
   "nyxus_control.py":             "nyxus_control.py",
   "nyxus-bg-01.png": "nyxus-bg-01.png",
