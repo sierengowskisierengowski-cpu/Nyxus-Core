@@ -1,0 +1,137 @@
+
+...xXx... ~
+❯ curl -s https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-rules.conf | grep -m1 windowrule
+#  ~/.config/hypr/conf.d/nyxus-windowrules.conf
+
+...xXx... ~  2s
+❯ curl -s https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-rules.conf | grep -m1 '^windowrule'
+windowrulev2 = float, class:^([Nn]yxus.*)$
+
+...xXx... ~
+❯ curl -s https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-rules.conf | grep -m1 '^windowrule'
+windowrule = float, class:re:^([Nn]yxus.*)$
+
+...xXx... ~
+❯ curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-rules.conf -o ~/.config/hypr/conf.d/nyxus-windowrules.conf && curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-opacity.conf -o ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+
+...xXx... ~
+❯ hyprctl reload                                          12:50:46
+ok
+
+...xXx... ~
+❯ sed -n '20,45p' ~/.config/hypr/hyprland.conf            12:50:56
+# for future pages they're planning to add).
+exec-once = [workspace name:0 silent] sh -c 'sleep 1 && ~/.local/bin/nyxus-home'
+# Pin the home window to workspace name:0 no matter where it spawns from.
+windowrule {
+    name = nyxus-home-pin-class
+    match:class = ^io\.nyxus\.home$
+    workspace = name:0 silent
+}
+windowrule {
+    name = nyxus-home-pin-title
+    match:title = ^NYXUS Home$
+    workspace = name:0 silent
+}
+
+# ── NYXUS Floating Widgets — uncomment to pin to desktop ─────────────────────
+# exec-once = python3 ~/.nyxus/nyxus_weather.py &
+# exec-once = python3 ~/.nyxus/nyxus_stickies.py &
+# exec-once = python3 ~/.nyxus/nyxus_notepad.py &
+
+# ── Environment ──────────────────────────────────────────────────────────────
+env = GTK_THEME,NYXUS
+env = XCURSOR_SIZE,24
+env = QT_AUTO_SCREEN_SCALE_FACTOR,1
+env = MOZ_ENABLE_WAYLAND,1
+env = GDK_BACKEND,wayland,x11
+env = SDL_VIDEODRIVER,wayland
+
+...xXx... ~
+❯ curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-rules.conf -o ~/.config/hypr/conf.d/nyxus-windowrules.conf && curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-opacity.conf -o ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+
+...xXx... ~
+❯ hyprctl reload                                          13:12:25
+ok
+
+...xXx... ~
+❯ pkill -f nyxus-notepad ; pkill -f nyxus_notepad ; sleep 1
+
+...xXx... ~
+❯ sudo rm -rf /opt/nyxus-notepad /usr/local/bin/nyxus-notepad
+[sudo] password for nyx:
+
+...xXx... ~  6s
+❯ sudo mkdir -p /opt/nyxus-notes && sudo curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_notes.py -o /opt/nyxus-notes/main.py && sudo chmod 755 /opt/nyxus-notes/main.py
+
+...xXx... ~
+❯ echo '#!/bin/sh' | sudo tee /usr/local/bin/nyxus-notes && echo 'exec python3 /opt/nyxus-notes/main.py "$@"' | sudo tee -a /usr/local/bin/nyxus-notes && sudo chmod 755 /usr/local/bin/nyxus-notes
+#!/bin/sh
+exec python3 /opt/nyxus-notes/main.py "$@"
+
+...xXx... ~
+❯ pkill -f nyxus-notepad ; pkill -f nyxus_notepad ; sleep 1
+
+...xXx... ~
+❯ sudo rm -rf /opt/nyxus-notepad /usr/local/bin/nyxus-notepad
+[sudo] password for nyx:
+
+...xXx... ~  3s
+❯ sudo mkdir -p /opt/nyxus-notes && sudo curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_notes.py -o /opt/nyxus-notes/main.py && sudo chmod 755 /opt/nyxus-notes/main.py
+
+...xXx... ~  3s
+❯ curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-opacity.conf -o ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf && hyprctl reload
+ok
+
+...xXx... ~
+❯ nyxus-notes                                             15:46:20
+Traceback (most recent call last):
+  File "/opt/nyxus-notes/main.py", line 240, in do_activate
+    self.win = NotesWindow(self)
+               ~~~~~~~~~~~^^^^^^
+  File "/opt/nyxus-notes/main.py", line 148, in __init__
+    scroll.set_hscrollbar_policy(Gtk.PolicyType.NEVER)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ScrolledWindow' object has no attribute 'set_hscrollbar_policy'
+
+
+
+
+^CTraceback (most recent call last):
+  File "/opt/nyxus-notes/main.py", line 250, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/opt/nyxus-notes/main.py", line 246, in main
+    return app.run(sys.argv)
+           ~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/site-packages/gi/overrides/Gio.py", line 135, in run
+    register_sigint_fallback(self.quit),
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/usr/lib/python3.14/contextlib.py", line 148, in __exit__
+    next(self.gen)
+    ~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/site-packages/gi/_ossighelper.py", line 237, in register_sigint_fallback
+    signal.default_int_handler(signal.SIGINT, None)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+
+
+...xXx... ~  1m40s
+❯ nyxus-notes                                             15:48:12
+Traceback (most recent call last):
+  File "/opt/nyxus-notes/main.py", line 240, in do_activate
+    self.win = NotesWindow(self)
+               ~~~~~~~~~~~^^^^^^
+  File "/opt/nyxus-notes/main.py", line 148, in __init__
+    scroll.set_hscrollbar_policy(Gtk.PolicyType.NEVER)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ScrolledWindow' object has no attribute 'set_hscrollbar_policy'
+
+
+
+
+^CTraceback (most recent call last):
+  File "/opt/nyxus-notes/main.py", line 250, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/opt/nyxus-notes/main.py", line 246, in main

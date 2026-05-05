@@ -145,8 +145,7 @@ class NotesWindow(Gtk.ApplicationWindow):
 
         scroll = Gtk.ScrolledWindow()
         scroll.set_vexpand(True)
-        scroll.set_hscrollbar_policy(Gtk.PolicyType.NEVER)
-        scroll.set_vscrollbar_policy(Gtk.PolicyType.AUTOMATIC)
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
         self.buffer = Gtk.TextBuffer()
         self.text = Gtk.TextView(buffer=self.buffer)
