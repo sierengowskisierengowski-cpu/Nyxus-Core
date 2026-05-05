@@ -141,6 +141,18 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-set-frost-wallpaper.sh": "nyxus-set-frost-wallpaper.sh",
   "wallpaper-rotate.sh":          "wallpaper-rotate.sh",
 
+  // ── ★ FROST RELIEF / TILE / HERO ASSETS (sculptural cream textures) ──────
+  // Tiles: tile-grid (triangle tessellation) repeats inside cards & headerbars.
+  // tile-glyphs (runic wall) repeats vertically inside the right-bar column.
+  // Hero assets: portal stone + companion cube — full sculptural images for
+  // splash, app store, settings/about, lockscreen.
+  "nyxus-frost-tile-grid.png":    "nyxus-frost-tile-grid.png",
+  "nyxus-frost-tile-glyphs.png":  "nyxus-frost-tile-glyphs.png",
+  "nyxus-frost-portal.png":       "nyxus-frost-portal.png",
+  "nyxus-frost-cube.png":         "nyxus-frost-cube.png",
+  "nyxus-frost-relief.png":       "nyxus-frost-relief.png",
+  "nyxus-frost-relief-deep.png":  "nyxus-frost-relief-deep.png",
+
   // ── ★ BRAND ASSETS (logos, taskbar bgs, demon) ───────────────────────────
   "nyxus-sierengowski-clean.png": "nyxus-sierengowski-clean.png",
   "nyxus-taskbar-bg.png":         "nyxus-taskbar-bg.png",
