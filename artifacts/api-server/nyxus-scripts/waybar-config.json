@@ -242,7 +242,7 @@
       "custom/app-sysmon",
       "custom/app-stickies",
       "custom/app-weather",
-      "custom/app-notepad",
+      "custom/app-notes",
       "custom/app-terminal",
       "custom/app-settings"
     ],
@@ -294,11 +294,11 @@
       "on-click": "python3 /home/nyx/.nyxus/nyxus_weather.py",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#0088ff'>NYXUS Weather</span>\n<span size='small' foreground='#b8a8d0'>Weather Forecast</span>"
     },
-    "custom/app-notepad": {
-      "format": "\uf0f6",
+    "custom/app-notes": {
+      "format": "\uf249",
       "tooltip": true,
-      "on-click": "python3 /home/nyx/.nyxus/nyxus_notepad.py",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#cc00ff'>NYXUS Notepad</span>\n<span size='small' foreground='#b8a8d0'>Quick Notes</span>"
+      "on-click": "sh -c 'if hyprctl clients -j | grep -q \"org.nyxus.notes\"; then hyprctl dispatch focuswindow class:org.nyxus.notes; else setsid /usr/local/bin/nyxus-notes >/tmp/nyxus-notes.log 2>&1 < /dev/null & fi'",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#58524c'>NYXUS Notes</span>\n<span size='small' foreground='#9e948a'>Plain text · auto-saved</span>"
     },
     "custom/app-terminal": {
       "format": "\uf120",

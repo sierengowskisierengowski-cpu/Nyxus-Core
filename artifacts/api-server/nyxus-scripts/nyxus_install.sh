@@ -68,7 +68,7 @@ hdr "Python Terminal Scripts"
 mkdir -p "$SCRIPTS_DIR"
 for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
          nyxus_sysmon.py nyxus_sysmon_gtk.py \
-         nyxus_stickies.py nyxus_notepad.py nyxus_weather.py nyxus_terminal.py \
+         nyxus_stickies.py nyxus_notes.py nyxus_weather.py nyxus_terminal.py \
          nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
          nyxus_doctor.py nyxus_launcher.py nyxus_powermenu.py \
          nyxus_screenshot.py nyxus_chrome.py nyxus_quicksettings.py; do
@@ -402,21 +402,30 @@ StartupWMClass=io.nyxus.weather
 DEOF
 ok "nyxus-weather.desktop"
 
-cat > "$DESKTOP_DIR/nyxus-notepad.desktop" <<'DEOF'
+cat > "$DESKTOP_DIR/nyxus-notes.desktop" <<'DEOF'
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=NYXUS Notepad
-GenericName=Notepad
-Comment=NYXUS OS markdown notepad with auto-save — native GTK4
-Exec=python3 /home/nyx/.nyxus/nyxus_notepad.py
-Icon=io.nyxus.notepad
+Name=NYXUS Notes
+GenericName=Notes
+Comment=NYXUS OS minimal plain-text notes — Tesla-tier, auto-saved
+Exec=/usr/local/bin/nyxus-notes
+Icon=org.nyxus.notes
 Terminal=false
 Categories=Utility;TextEditor;
-Keywords=nyxus;notepad;notes;markdown;editor;
-StartupWMClass=io.nyxus.notepad
+Keywords=nyxus;notes;notepad;text;editor;minimal;
+StartupWMClass=org.nyxus.notes
 DEOF
-ok "nyxus-notepad.desktop"
+ok "nyxus-notes.desktop"
+
+# Install /usr/local/bin/nyxus-notes launcher (calls /opt/nyxus-notes/main.py)
+sudo mkdir -p /opt/nyxus-notes
+sudo cp "$SCRIPTS_DIR/nyxus_notes.py" /opt/nyxus-notes/main.py
+sudo chmod 755 /opt/nyxus-notes/main.py
+echo '#!/bin/sh' | sudo tee /usr/local/bin/nyxus-notes >/dev/null
+echo 'exec python3 /opt/nyxus-notes/main.py "$@"' | sudo tee -a /usr/local/bin/nyxus-notes >/dev/null
+sudo chmod 755 /usr/local/bin/nyxus-notes
+ok "/usr/local/bin/nyxus-notes (launcher)"
 
 cat > "$DESKTOP_DIR/nyxus-terminal.desktop" << 'DEOF'
 [Desktop Entry]
