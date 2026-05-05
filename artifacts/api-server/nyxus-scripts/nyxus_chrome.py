@@ -43,7 +43,7 @@ log = logging.getLogger("nyxus.chrome")
 # Bumped with every visible chrome change so apps can log which chrome
 # version actually loaded. Curl /api/download/nyxus/nyxus_chrome.py |
 # grep NYXUS_CHROME_VERSION to confirm freshness from prod.
-NYXUS_CHROME_VERSION = "2026.05.04-r9"
+NYXUS_CHROME_VERSION = "2026.05.04-r10"
 
 # ── Palette (matches nyxus_settings.py) ─────────────────────────────────────
 NEON_PINK   = (1.00, 0.00, 1.00)

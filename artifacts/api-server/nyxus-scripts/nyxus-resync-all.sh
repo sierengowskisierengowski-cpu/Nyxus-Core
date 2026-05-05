@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.04-r13"
+NYXUS_RESYNC_VERSION="2026.05.04-r14"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -194,39 +194,60 @@ else
   fail "could not download nyxus_chrome.py — apps will keep their old chrome"
 fi
 
-step "3/6 · INSTALL Hyprland window rules (float NYXUS apps + 900x650 default)"
+step "3/6 · INSTALL Hyprland window rules + Seattle Frost decoration profile"
 HYPR_DIR="$REAL_HOME/.config/hypr"
 HYPR_CONF_D="$HYPR_DIR/conf.d"
 HYPR_RULES="$HYPR_CONF_D/nyxus-windowrules.conf"
+HYPR_FROST="$HYPR_CONF_D/nyxus-seattle-frost.conf"
 HYPR_MAIN="$HYPR_DIR/hyprland.conf"
-SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-windowrules.conf'
 
 mkdir -p "$HYPR_CONF_D"
 chown -R "$REAL_USER:$REAL_USER" "$HYPR_DIR"
+
+# 3a — windowrules (now in windowrulev2 syntax to fix the "invalid field
+# float: missing a value" parser errors from legacy V1 syntax).
 if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-rules.conf" -o "$HYPR_RULES"; then
   chown "$REAL_USER:$REAL_USER" "$HYPR_RULES"
   chmod 644 "$HYPR_RULES"
-  ok "wrote $HYPR_RULES"
+  ok "wrote $HYPR_RULES  (windowrulev2 syntax — no more parse errors)"
 else
   fail "could not download nyxus-hyprland-rules.conf — apps may still tile-stretch"
 fi
 
-# Ensure hyprland.conf sources the rules file (idempotent — only appends if missing)
-if [[ -f "$HYPR_MAIN" ]]; then
-  if grep -qF "nyxus-windowrules.conf" "$HYPR_MAIN"; then
-    ok "hyprland.conf already sources nyxus-windowrules.conf"
+# 3b — Seattle Frost decoration profile: pencil-line borders, framed-sketch
+# gaps, thick milk-white blur with etched-glass grain. Pairs with chrome r9+.
+if curl -fsSL --max-time 30 "$PROD/nyxus-seattle-frost.conf" -o "$HYPR_FROST"; then
+  chown "$REAL_USER:$REAL_USER" "$HYPR_FROST"
+  chmod 644 "$HYPR_FROST"
+  ok "wrote $HYPR_FROST  (Seattle Frost — pencil borders, milk-white blur)"
+else
+  fail "could not download nyxus-seattle-frost.conf"
+fi
+
+# 3c — Ensure hyprland.conf sources both files (idempotent — appends if missing)
+ensure_source() {
+  local marker="$1"  # filename grep marker
+  local line="$2"    # full source = ... line to append
+  local label="$3"   # human label
+  if grep -qF "$marker" "$HYPR_MAIN" 2>/dev/null; then
+    ok "hyprland.conf already sources $label"
   else
     {
       echo
-      echo "# NYXUS — float-and-size rules for nyxus-* apps (added by nyxus-resync-all.sh)"
-      echo "$SOURCE_LINE"
+      echo "# NYXUS — $label  (added by nyxus-resync-all.sh)"
+      echo "$line"
     } >> "$HYPR_MAIN"
     chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
-    ok "appended source line to $HYPR_MAIN"
+    ok "appended $label source line to $HYPR_MAIN"
   fi
+}
+if [[ -f "$HYPR_MAIN" ]]; then
+  ensure_source "nyxus-windowrules.conf"  'source = ~/.config/hypr/conf.d/nyxus-windowrules.conf'  "window rules"
+  ensure_source "nyxus-seattle-frost.conf" 'source = ~/.config/hypr/conf.d/nyxus-seattle-frost.conf' "Seattle Frost decoration"
 else
-  warn "$HYPR_MAIN not found — drop this line into your hyprland.conf manually:"
-  printf "      ${DIM}%s${R}\n" "$SOURCE_LINE"
+  warn "$HYPR_MAIN not found — drop these two lines into your hyprland.conf manually:"
+  printf "      ${DIM}source = ~/.config/hypr/conf.d/nyxus-windowrules.conf${R}\n"
+  printf "      ${DIM}source = ~/.config/hypr/conf.d/nyxus-seattle-frost.conf${R}\n"
 fi
 
 # ── 4/6 INSTALL lock + screensaver stack ─────────────────────────────────────
