@@ -51,6 +51,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-hyprland-rules.conf": "nyxus-hyprland-rules.conf",
   "nyxus-hyprland-blur.conf":  "nyxus-hyprland-blur.conf",
   "nyxus-hyprland-opacity.conf": "nyxus-hyprland-opacity.conf",
+  "nyxus-hyprland-general.conf": "nyxus-hyprland-general.conf",
   "hyprland.conf":        "hyprland.conf",
   "waybar-config.json":   "waybar-config.json",
   "waybar-style.css":     "waybar-style.css",
