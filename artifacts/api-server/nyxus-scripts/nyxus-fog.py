@@ -58,7 +58,7 @@ BAR_RIGHT_MARGIN_BOTTOM    = 220
 # ── ANIMATION ──────────────────────────────────────────────────────────────
 FPS              = 30
 FRAME_MS         = int(1000 / FPS)
-BLOBS_PER_BAR    = 14
+BLOBS_PER_BAR    = 18
 
 # ── PALETTE (NYXUS locked: pure white / off-white / gold jewelry accent) ───
 COLOR_WHITE      = (1.000, 1.000, 1.000)
@@ -88,7 +88,7 @@ class FogBlob:
         self.x = random.uniform(0, w)
         self.y = random.uniform(0, h)
 
-        speed = random.uniform(0.18, 0.65)
+        speed = random.uniform(0.15, 0.50)
         angle = random.uniform(0, 2 * math.pi)
         self.vx = math.cos(angle) * speed
         self.vy = math.sin(angle) * speed
@@ -100,11 +100,13 @@ class FogBlob:
         scale = max(28, min(w, h))
         self.radius = random.uniform(scale * 1.4, scale * 3.2)
 
+        # Alpha bumped (rev 2026-05-06k) so fog punches through compositor
+        # blur. Even at 0.95 the soft radial falloff keeps it cloud-like.
         self.color = random.choice(COLOR_BAG)
         if self.color == COLOR_GOLD:
-            self.alpha = random.uniform(0.10, 0.22)   # gold stays subtle
+            self.alpha = random.uniform(0.25, 0.50)   # warm wisps
         else:
-            self.alpha = random.uniform(0.22, 0.55)
+            self.alpha = random.uniform(0.55, 0.95)   # bright fog
 
     def update(self):
         self.wobble_phase += self.wobble_speed
