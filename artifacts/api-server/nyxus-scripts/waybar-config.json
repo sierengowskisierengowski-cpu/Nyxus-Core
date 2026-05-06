@@ -22,7 +22,7 @@
     "custom/nyxus": {
       "format": " NYXUS ",
       "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Sierengowski</span>\n<span size='small' foreground='#58524c'>Hyprland · Arch Linux · 2026\nClick to open the NYXUS Start menu</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Sierengowski</span>\n<span size='small' foreground='#a8b0bd'>Hyprland · Arch Linux · 2026\nClick to open the NYXUS Start menu</span>",
       "on-click": "/home/nyx/.local/bin/nyxus-start"
     },
     "network": {
@@ -30,9 +30,9 @@
       "format-ethernet":     "",
       "format-disconnected": "",
       "tooltip": true,
-      "tooltip-format-wifi":         "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Network</span>\n<span size='small' foreground='#58524c'>Wi-Fi · {essid}\nSignal: {signalStrength}%\nIP: {ipaddr}\nClick to open Network Settings</span>",
-      "tooltip-format-ethernet":     "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Network</span>\n<span size='small' foreground='#58524c'>Ethernet · {ifname}\nIP: {ipaddr}\nClick to open Network Settings</span>",
-      "tooltip-format-disconnected": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Network</span>\n<span size='small' foreground='#58524c'>Disconnected\nClick to open Network Settings</span>",
+      "tooltip-format-wifi":         "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Network</span>\n<span size='small' foreground='#a8b0bd'>Wi-Fi · {essid}\nSignal: {signalStrength}%\nIP: {ipaddr}\nClick to open Network Settings</span>",
+      "tooltip-format-ethernet":     "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Network</span>\n<span size='small' foreground='#a8b0bd'>Ethernet · {ifname}\nIP: {ipaddr}\nClick to open Network Settings</span>",
+      "tooltip-format-disconnected": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Network</span>\n<span size='small' foreground='#a8b0bd'>Disconnected\nClick to open Network Settings</span>",
       "on-click": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'"
     },
     "pulseaudio": {
@@ -41,8 +41,8 @@
       "format-muted":   "",
       "format-icons": { "default": ["", "", ""] },
       "tooltip": true,
-      "tooltip-format":        "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Volume</span>\n<span size='small' foreground='#58524c'>{volume}% · {desc}\nScroll to change · Click to open Audio Settings</span>",
-      "tooltip-format-muted":  "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Volume</span>\n<span size='small' foreground='#58524c'>Muted\nClick to unmute · Right-click to open Audio</span>",
+      "tooltip-format":        "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Volume</span>\n<span size='small' foreground='#a8b0bd'>{volume}% · {desc}\nScroll to change · Click to open Audio Settings</span>",
+      "tooltip-format-muted":  "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Volume</span>\n<span size='small' foreground='#a8b0bd'>Muted\nClick to unmute · Right-click to open Audio</span>",
       "on-click":       "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
       "on-click-right": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'",
       "on-scroll-up":   "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+",
@@ -52,7 +52,7 @@
       "format": "{icon}",
       "format-icons": ["", "", "", "", "", "", "", "", ""],
       "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Brightness</span>\n<span size='small' foreground='#58524c'>{percent}%\nScroll to change · Click to open Display Settings</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Brightness</span>\n<span size='small' foreground='#a8b0bd'>{percent}%\nScroll to change · Click to open Display Settings</span>",
       "on-click":       "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'",
       "on-scroll-up":   "brightnessctl set 5%+",
       "on-scroll-down": "brightnessctl set 5%-"
@@ -64,21 +64,21 @@
       "format-plugged":  "",
       "format-icons": ["", "", "", "", ""],
       "tooltip": true,
-      "tooltip-format":           "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Battery</span>\n<span size='small' foreground='#58524c'>{capacity}% · {status}\nClick to open Power Settings</span>",
-      "tooltip-format-discharging": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Battery</span>\n<span size='small' foreground='#58524c'>{capacity}% · discharging\n{time} remaining\nClick to open Power Settings</span>",
+      "tooltip-format":           "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Battery</span>\n<span size='small' foreground='#a8b0bd'>{capacity}% · {status}\nClick to open Power Settings</span>",
+      "tooltip-format-discharging": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Battery</span>\n<span size='small' foreground='#a8b0bd'>{capacity}% · discharging\n{time} remaining\nClick to open Power Settings</span>",
       "on-click": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'"
     },
     "clock": {
       "interval": 1,
       "format": "{0:%H:%M} | {0:%a %d}",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · {0:%A}</span>\n<span size='small' foreground='#58524c'>{0:%B %d, %Y · %H:%M:%S %Z}\nClick to open Quick Settings</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · {0:%A}</span>\n<span size='small' foreground='#a8b0bd'>{0:%B %d, %Y · %H:%M:%S %Z}\nClick to open Quick Settings</span>",
       "on-click": "sh -c 'pgrep -f nyxus_quicksettings >/dev/null && pkill -f nyxus_quicksettings || setsid python3 ~/.nyxus/nyxus_quicksettings.py >/tmp/nyxus-qs.log 2>&1 < /dev/null &'"
     },
     "custom/weather": {
       "exec": "curl -fsS --max-time 4 'wttr.in/?format=1' 2>/dev/null || echo '— —'",
       "interval": 3600,
       "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Weather</span>\n<span size='small' foreground='#58524c'>via wttr.in · refreshes hourly\nClick for full forecast</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Weather</span>\n<span size='small' foreground='#a8b0bd'>via wttr.in · refreshes hourly\nClick for full forecast</span>",
       "on-click": "python3 /home/nyx/.nyxus/nyxus_weather.py"
     }
   },
@@ -98,14 +98,14 @@
     "custom/owl": {
       "format": "✶ OWL ✶",
       "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · OWL Signature</span>\n<span size='small' foreground='#58524c'>The owl is the signature mark of\nJoseph Sierengowski's NYXUS system.\nWatchful · Quiet · Hand-built.</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · OWL Signature</span>\n<span size='small' foreground='#a8b0bd'>The owl is the signature mark of\nJoseph Sierengowski's NYXUS system.\nWatchful · Quiet · Hand-built.</span>"
     },
     "custom/nyxus-start": {
       "exec": "/home/nyx/.local/bin/nyxus-waybar-state start",
       "interval": 1,
       "return-type": "json",
       "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Start</span>\n<span size='small' foreground='#58524c'>Open the application launcher\nFind apps · Recent files · Power</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Start</span>\n<span size='small' foreground='#a8b0bd'>Open the application launcher\nFind apps · Recent files · Power</span>",
       "on-click": "/home/nyx/.local/bin/nyxus-start",
       "format": "{}",
       "escape": false
@@ -120,7 +120,7 @@
       "interval": 1,
       "return-type": "json",
       "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Panel</span>\n<span size='small' foreground='#58524c'>System control panel\nQuick toggles · Notifications · Profile</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Panel</span>\n<span size='small' foreground='#a8b0bd'>System control panel\nQuick toggles · Notifications · Profile</span>",
       "on-click": "/home/nyx/.local/bin/nyxus-panel",
       "format": "{}",
       "escape": false
@@ -159,16 +159,16 @@
       "custom/app-stickies", "custom/app-weather", "custom/app-notes",
       "custom/app-terminal", "custom/app-settings"
     ],
-    "custom/app-godsapp": { "format": "", "tooltip": true, "on-click": "nyxus-godsapp", "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · GodsApp</span>\n<span size='small' foreground='#58524c'>Configuration Hub\nClick to open</span>" },
-    "custom/app-studio":  { "format": "", "tooltip": true, "on-click": "nyxus-studio",  "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Studio</span>\n<span size='small' foreground='#58524c'>Creative Suite — Paint · Vector · 3D · Video\nClick to open</span>" },
-    "custom/app-sage":    { "format": "", "tooltip": true, "on-click": "nyxus-sage",    "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · SAGE</span>\n<span size='small' foreground='#58524c'>Local AI Assistant\nClick to open</span>" },
-    "custom/app-shield":  { "format": "", "tooltip": true, "on-click": "nyxus-shield",  "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Shield</span>\n<span size='small' foreground='#58524c'>Security Center · Firewall · Audit\nClick to open</span>" },
-    "custom/app-control": { "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.control\"; then hyprctl dispatch focuswindow class:io.nyxus.control; else setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Control</span>\n<span size='small' foreground='#58524c'>Hardware Control Center · Display · Audio · Network\nClick to open</span>" },
-    "custom/app-sysmon":  { "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.sysmon\"; then hyprctl dispatch focuswindow class:io.nyxus.sysmon; else setsid python3 /home/nyx/.nyxus/nyxus_sysmon_gtk.py >/tmp/nyxus-sysmon.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · SysMon</span>\n<span size='small' foreground='#58524c'>System Monitor · CPU · RAM · Disk · Net\nClick to open</span>" },
-    "custom/app-stickies":{ "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.stickies\"; then hyprctl dispatch focuswindow class:io.nyxus.stickies; else setsid python3 /home/nyx/.nyxus/nyxus_stickies.py >/tmp/nyxus-stickies.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Stickies</span>\n<span size='small' foreground='#58524c'>Sticky Notes · auto-saved\nClick to open</span>" },
-    "custom/app-weather": { "format": "", "tooltip": true, "on-click": "python3 /home/nyx/.nyxus/nyxus_weather.py", "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Weather</span>\n<span size='small' foreground='#58524c'>Forecast · 7 day · radar\nClick to open</span>" },
-    "custom/app-notes":   { "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"org.nyxus.notes\"; then hyprctl dispatch focuswindow class:org.nyxus.notes; else setsid /usr/local/bin/nyxus-notes >/tmp/nyxus-notes.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Notes</span>\n<span size='small' foreground='#58524c'>Plain text · auto-saved\nClick to open</span>" },
-    "custom/app-terminal":{ "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.terminal\"; then hyprctl dispatch focuswindow class:io.nyxus.terminal; else setsid python3 /home/nyx/.nyxus/nyxus_terminal.py >/tmp/nyxus-terminal.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Terminal</span>\n<span size='small' foreground='#58524c'>Command Line · zsh · tmux\nClick to open</span>" },
-    "custom/app-settings":{ "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.settings\"; then hyprctl dispatch focuswindow class:io.nyxus.settings; else setsid python3 /home/nyx/.nyxus/nyxus_settings.py >/tmp/nyxus-settings.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Settings</span>\n<span size='small' foreground='#58524c'>System Settings · Theme · Keyboard · Power\nClick to open</span>" }
+    "custom/app-godsapp": { "format": "", "tooltip": true, "on-click": "nyxus-godsapp", "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · GodsApp</span>\n<span size='small' foreground='#a8b0bd'>Configuration Hub\nClick to open</span>" },
+    "custom/app-studio":  { "format": "", "tooltip": true, "on-click": "nyxus-studio",  "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Studio</span>\n<span size='small' foreground='#a8b0bd'>Creative Suite — Paint · Vector · 3D · Video\nClick to open</span>" },
+    "custom/app-sage":    { "format": "", "tooltip": true, "on-click": "nyxus-sage",    "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · SAGE</span>\n<span size='small' foreground='#a8b0bd'>Local AI Assistant\nClick to open</span>" },
+    "custom/app-shield":  { "format": "", "tooltip": true, "on-click": "nyxus-shield",  "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Shield</span>\n<span size='small' foreground='#a8b0bd'>Security Center · Firewall · Audit\nClick to open</span>" },
+    "custom/app-control": { "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.control\"; then hyprctl dispatch focuswindow class:io.nyxus.control; else setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Control</span>\n<span size='small' foreground='#a8b0bd'>Hardware Control Center · Display · Audio · Network\nClick to open</span>" },
+    "custom/app-sysmon":  { "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.sysmon\"; then hyprctl dispatch focuswindow class:io.nyxus.sysmon; else setsid python3 /home/nyx/.nyxus/nyxus_sysmon_gtk.py >/tmp/nyxus-sysmon.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · SysMon</span>\n<span size='small' foreground='#a8b0bd'>System Monitor · CPU · RAM · Disk · Net\nClick to open</span>" },
+    "custom/app-stickies":{ "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.stickies\"; then hyprctl dispatch focuswindow class:io.nyxus.stickies; else setsid python3 /home/nyx/.nyxus/nyxus_stickies.py >/tmp/nyxus-stickies.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Stickies</span>\n<span size='small' foreground='#a8b0bd'>Sticky Notes · auto-saved\nClick to open</span>" },
+    "custom/app-weather": { "format": "", "tooltip": true, "on-click": "python3 /home/nyx/.nyxus/nyxus_weather.py", "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Weather</span>\n<span size='small' foreground='#a8b0bd'>Forecast · 7 day · radar\nClick to open</span>" },
+    "custom/app-notes":   { "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"org.nyxus.notes\"; then hyprctl dispatch focuswindow class:org.nyxus.notes; else setsid /usr/local/bin/nyxus-notes >/tmp/nyxus-notes.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Notes</span>\n<span size='small' foreground='#a8b0bd'>Plain text · auto-saved\nClick to open</span>" },
+    "custom/app-terminal":{ "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.terminal\"; then hyprctl dispatch focuswindow class:io.nyxus.terminal; else setsid python3 /home/nyx/.nyxus/nyxus_terminal.py >/tmp/nyxus-terminal.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Terminal</span>\n<span size='small' foreground='#a8b0bd'>Command Line · zsh · tmux\nClick to open</span>" },
+    "custom/app-settings":{ "format": "", "tooltip": true, "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.settings\"; then hyprctl dispatch focuswindow class:io.nyxus.settings; else setsid python3 /home/nyx/.nyxus/nyxus_settings.py >/tmp/nyxus-settings.log 2>&1 < /dev/null & fi'", "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Settings</span>\n<span size='small' foreground='#a8b0bd'>System Settings · Theme · Keyboard · Power\nClick to open</span>" }
   }
 ]
