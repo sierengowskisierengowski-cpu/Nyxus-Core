@@ -3,11 +3,11 @@
     "name": "top",
     "layer": "top",
     "position": "top",
-    "height": 60,
-    "spacing": 4,
-    "margin-top": 5,
-    "margin-left": 10,
-    "margin-right": 10,
+    "height": 56,
+    "spacing": 6,
+    "margin-top": 8,
+    "margin-left": 12,
+    "margin-right": 12,
     "modules-left": [
       "custom/ticker"
     ],
@@ -17,21 +17,20 @@
     "modules-right": [
       "pulseaudio",
       "network",
-      "backlight",
       "bluetooth",
-      "custom/mic",
       "custom/dnd",
       "custom/lock",
       "battery",
-      "clock#date",
-      "clock",
-      "clock#year",
-      "custom/hyprland-side-top"
+      "clock"
     ],
     "pulseaudio": {
       "format": "{icon}",
       "format-muted": "",
-      "format-icons": ["", "", ""],
+      "format-icons": [
+        "",
+        "",
+        ""
+      ],
       "scroll-step": 5,
       "on-click": "pavucontrol",
       "tooltip-format": "Volume {volume}%"
@@ -46,26 +45,12 @@
       "tooltip-format-ethernet": "{ifname} · {ipaddr}",
       "tooltip-format-disconnected": "Disconnected"
     },
-    "backlight": {
-      "format": "{icon}",
-      "format-icons": ["", "", "", "", "", "", "", "", ""],
-      "on-scroll-up": "brightnessctl set 5%+",
-      "on-scroll-down": "brightnessctl set 5%-",
-      "tooltip-format": "Brightness {percent}%"
-    },
     "bluetooth": {
       "format": "",
       "format-disabled": "",
       "format-connected": "",
       "on-click": "blueman-manager",
       "tooltip-format": "Bluetooth"
-    },
-    "custom/mic": {
-      "exec": "sh -c 'wpctl get-volume @DEFAULT_AUDIO_SOURCE@ 2>/dev/null | grep -q MUTED && echo \"\" || echo \"\"'",
-      "interval": 2,
-      "on-click": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
-      "tooltip": true,
-      "tooltip-format": "Microphone toggle"
     },
     "custom/dnd": {
       "exec": "sh -c 'dunstctl is-paused 2>/dev/null | grep -q true && echo \"\" || echo \"\"'",
@@ -84,8 +69,17 @@
       "format": "{icon}",
       "format-charging": "",
       "format-plugged": "",
-      "format-icons": ["", "", "", "", ""],
-      "states": { "warning": 30, "critical": 15 },
+      "format-icons": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "states": {
+        "warning": 30,
+        "critical": 15
+      },
       "tooltip-format": "Battery {capacity}% · {time}"
     },
     "custom/ticker": {
@@ -102,38 +96,22 @@
       "escape": false,
       "on-click": "/home/nyx/.local/bin/nyxus-start"
     },
-    "clock#date": {
-      "interval": 60,
-      "format": "<span size='large' weight='bold' foreground='#ec4899'>{:%d}</span>\n<span size='x-small' weight='bold' letter_spacing='1500' foreground='#ea7e3c'>{:%b}</span>\n<span size='x-small' letter_spacing='1500' foreground='#d4a73a'>{:%Y}</span>",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · DATE</span>\n<span size='small' foreground='#58524c'>{:%A · %B %d, %Y}</span>"
-    },
     "clock": {
       "interval": 1,
-      "format": "<span size='small' foreground='#d4a73a'></span>\n<span size='medium' weight='bold' foreground='#6aa872'>{:%H:%M:%S}</span>",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · TIME</span>\n<span size='small' foreground='#58524c'>{:%H:%M:%S} · {:%Z}</span>",
+      "format": "<span weight='bold' foreground='#1a1816'>{0:%a %d %b}</span>  <span weight='bold' foreground='#d4a73a'>{0:%H:%M:%S}</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · {0:%A}</span>\n<span size='small' foreground='#58524c'>{0:%B %d, %Y · %H:%M:%S %Z}</span>",
       "on-click": "sh -c 'pgrep -f nyxus_quicksettings >/dev/null && pkill -f nyxus_quicksettings || setsid python3 ~/.nyxus/nyxus_quicksettings.py >/tmp/nyxus-qs.log 2>&1 < /dev/null &'"
-    },
-    "clock#year": {
-      "interval": 3600,
-      "format": "<span size='x-small' weight='bold' letter_spacing='1500' foreground='#5a8aab'>YEAR</span>\n<span size='large' weight='bold' foreground='#8a6aaa'>{:%Y}</span>\n<span size='x-small' letter_spacing='1500' foreground='#ec4899'>({:%Z})</span>",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · YEAR</span>\n<span size='small' foreground='#58524c'>{:%Y · %Z}</span>"
-    },
-    "custom/hyprland-side-top": {
-      "format": "<span foreground='#d4a73a' weight='bold'>H</span>\n<span foreground='#d4a73a' weight='bold'>Y</span>\n<span foreground='#d4a73a' weight='bold'>P</span>\n<span foreground='#d4a73a' weight='bold'>R</span>\n<span foreground='#d4a73a' weight='bold'>L</span>\n<span foreground='#d4a73a' weight='bold'>A</span>\n<span foreground='#d4a73a' weight='bold'>N</span>\n<span foreground='#d4a73a' weight='bold'>D</span>",
-      "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>HYPRLAND · WAYBAR</span>\n<span size='small' foreground='#58524c'>NYXUS Edition · 2026</span>",
-      "escape": false
     }
   },
   {
     "name": "bottom",
     "layer": "top",
     "position": "bottom",
-    "height": 30,
-    "spacing": 4,
-    "margin-bottom": 5,
-    "margin-left": 10,
-    "margin-right": 10,
+    "height": 32,
+    "spacing": 6,
+    "margin-bottom": 8,
+    "margin-left": 12,
+    "margin-right": 12,
     "modules-left": [
       "custom/nyxus-start"
     ],
@@ -171,7 +149,7 @@
       "escape": false
     },
     "hyprland/workspaces": {
-      "format": "<span size='medium' weight='bold' foreground='#ec4899'>{id}</span>\n<span size='x-small' foreground='#58524c'>WS {id}</span>",
+      "format": "<span font_family='Architects Daughter' weight='bold' size='medium'>{id}</span>",
       "on-click": "activate",
       "sort-by-number": true,
       "active-only": false,
@@ -186,9 +164,9 @@
     },
     "clock#bottom": {
       "interval": 1,
-      "format": "  {:%a · %d %b %Y · %H:%M:%S}",
-      "format-alt": "  {:%H:%M:%S}",
-      "tooltip-format": "<span font='JetBrains Mono 13' foreground='#ff00ff'><b> {:%A}</b></span>\n<span font='JetBrains Mono 11' foreground='#ffffff'> {:%d %B %Y}</span>\n\n<span font='JetBrains Mono 10'><tt>{calendar}</tt></span>",
+      "format": "  {0:%a · %d %b %Y · %H:%M:%S}",
+      "format-alt": "  {0:%H:%M:%S}",
+      "tooltip-format": "<span font='JetBrains Mono 13' foreground='#ff00ff'><b> {0:%A}</b></span>\n<span font='JetBrains Mono 11' foreground='#ffffff'> {0:%d %B %Y}</span>\n\n<span font='JetBrains Mono 10'><tt>{calendar}</tt></span>",
       "calendar": {
         "mode": "month",
         "on-scroll": 1,
@@ -274,15 +252,15 @@
     "name": "left",
     "layer": "top",
     "position": "left",
-    "width": 64,
+    "width": 60,
     "spacing": 0,
-    "margin-top": 280,
-    "margin-bottom": 280,
+    "margin-top": 240,
+    "margin-bottom": 240,
     "modules-center": [
       "hyprland/workspaces#left"
     ],
     "hyprland/workspaces#left": {
-      "format": "<span weight='bold' foreground='#ec4899'>{id}</span>",
+      "format": "<span font_family='Architects Daughter' weight='bold'>{id}</span>",
       "on-click": "activate",
       "sort-by-number": true
     }
@@ -291,7 +269,7 @@
     "name": "right",
     "layer": "top",
     "position": "right",
-    "width": 72,
+    "width": 70,
     "spacing": 0,
     "margin-top": 220,
     "margin-bottom": 220,
