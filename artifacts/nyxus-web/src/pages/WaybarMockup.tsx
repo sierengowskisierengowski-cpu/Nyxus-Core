@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const BASE = "/api/download/nyxus";
 const v = `?v=${Date.now()}`;
@@ -102,17 +102,130 @@ function RainbowText({ text, size = 14 }: { text: string; size?: number }) {
   );
 }
 
-// Live fog waybars (rev 2026-05-06i). Three drifting white radial-
-// gradient plumes animate inside each bar. Mirrors the actual waybar
-// CSS one-to-one so the mockup is a true reference.
+// Live fog waybars (rev 2026-05-06j). Canvas particle fog mirrors
+// nyxus-fog.py 1:1 — same blob count (14/bar), same palette weights,
+// same speed/radius ranges, same wobble. Render path: HTMLCanvas →
+// radial-gradient blobs that drift, wobble, wrap edges. Stays exactly
+// in sync with what the Python daemon paints under the real waybar.
 const MISTY_GLOW =
   "inset 0 0 2px 0 rgba(255,255,255,1.0), inset 0 0 6px 1px rgba(255,255,255,0.85), inset 0 0 14px 3px rgba(255,255,255,0.60), inset 0 0 28px 6px rgba(255,255,255,0.40), inset 0 0 56px 12px rgba(255,255,255,0.22)";
 
-const FOG_BG = `
-  radial-gradient(ellipse 60% 80% at center, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.25) 40%, rgba(255,255,255,0.00) 70%),
-  radial-gradient(ellipse 45% 70% at center, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.00) 75%),
-  radial-gradient(ellipse 75% 60% at center, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0.18) 45%, rgba(255,255,255,0.00) 80%)
-`;
+// ── PALETTE (mirror nyxus-fog.py COLOR_BAG weights) ──
+type RGB = [number, number, number];
+const COLOR_WHITE: RGB      = [255, 255, 255];
+const COLOR_OFFWHITE: RGB   = [251, 250, 246];
+const COLOR_CREAM_BASE: RGB = [245, 243, 239];
+const COLOR_GOLD: RGB       = [212, 167, 58];
+const COLOR_BAG: RGB[] = [
+  ...Array(5).fill(COLOR_WHITE),
+  ...Array(4).fill(COLOR_OFFWHITE),
+  ...Array(2).fill(COLOR_CREAM_BASE),
+  ...Array(2).fill(COLOR_GOLD),
+];
+
+const BLOBS_PER_BAR = 14;
+const FPS_TARGET    = 30;
+
+interface Blob {
+  x: number; y: number;
+  vx: number; vy: number;
+  wPhase: number; wSpeed: number;
+  radius: number; alpha: number;
+  color: RGB;
+  isGold: boolean;
+}
+
+function makeBlob(w: number, h: number): Blob {
+  const speed = 0.18 + Math.random() * 0.47;
+  const angle = Math.random() * Math.PI * 2;
+  const color = COLOR_BAG[Math.floor(Math.random() * COLOR_BAG.length)];
+  const isGold = color === COLOR_GOLD;
+  const scale = Math.max(28, Math.min(w, h));
+  return {
+    x: Math.random() * w,
+    y: Math.random() * h,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    wPhase: Math.random() * Math.PI * 2,
+    wSpeed: 0.006 + Math.random() * 0.016,
+    radius: scale * (1.4 + Math.random() * 1.8),
+    alpha: isGold
+      ? 0.10 + Math.random() * 0.12
+      : 0.22 + Math.random() * 0.33,
+    color,
+    isGold,
+  };
+}
+
+function FogCanvas({ width, height }: { width: number; height: number }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  const blobsRef = useRef<Blob[]>([]);
+  const rafRef = useRef<number | null>(null);
+  const lastTickRef = useRef<number>(0);
+
+  useEffect(() => {
+    const cvs = ref.current;
+    if (!cvs) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cvs.width  = Math.max(1, Math.floor(width  * dpr));
+    cvs.height = Math.max(1, Math.floor(height * dpr));
+    const ctx = cvs.getContext("2d");
+    if (!ctx) return;
+    ctx.scale(dpr, dpr);
+    blobsRef.current = Array.from({ length: BLOBS_PER_BAR },
+                                  () => makeBlob(width, height));
+
+    const frameMs = 1000 / FPS_TARGET;
+    const loop = (now: number) => {
+      if (now - lastTickRef.current >= frameMs) {
+        lastTickRef.current = now;
+        // Update
+        for (const b of blobsRef.current) {
+          b.wPhase += b.wSpeed;
+          const wob = Math.sin(b.wPhase) * 0.20;
+          b.x += b.vx + wob;
+          b.y += b.vy + wob * 0.4;
+          const m = b.radius;
+          if (b.x < -m) b.x = width  + m;
+          else if (b.x > width  + m) b.x = -m;
+          if (b.y < -m) b.y = height + m;
+          else if (b.y > height + m) b.y = -m;
+        }
+        // Draw
+        ctx.clearRect(0, 0, width, height);
+        ctx.globalCompositeOperation = "source-over";
+        for (const b of blobsRef.current) {
+          const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.radius);
+          const [r, g, bl] = b.color;
+          grad.addColorStop(0.00, `rgba(${r},${g},${bl},${b.alpha.toFixed(3)})`);
+          grad.addColorStop(0.45, `rgba(${r},${g},${bl},${(b.alpha * 0.40).toFixed(3)})`);
+          grad.addColorStop(1.00, `rgba(${r},${g},${bl},0)`);
+          ctx.fillStyle = grad;
+          ctx.fillRect(b.x - b.radius, b.y - b.radius, b.radius * 2, b.radius * 2);
+        }
+      }
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [width, height]);
+
+  return (
+    <canvas
+      ref={ref}
+      style={{
+        position: "absolute",
+        inset: 0,
+        width:  "100%",
+        height: "100%",
+        pointerEvents: "none",
+      }}
+      aria-hidden
+    />
+  );
+}
 
 function BarShell({
   position,
@@ -124,50 +237,31 @@ function BarShell({
   style?: React.CSSProperties;
   children?: React.ReactNode;
 }) {
-  const horizontal = position === "top" || position === "bottom";
+  // Read width/height from style (numeric) so the canvas can size itself.
+  const w = Number(style?.width  ?? 0) || 0;
+  const h = Number(style?.height ?? 0) || 0;
   return (
     <div
       style={{
         position: "absolute",
-        backgroundColor: "rgba(255,255,255,0.30)",
-        backgroundImage: FOG_BG,
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "300% 200%, 250% 220%, 350% 180%",
-        animation: horizontal
-          ? "nyx-fog-drift-h 60s linear infinite"
-          : "nyx-fog-drift-v 75s linear infinite",
+        backgroundColor: "rgba(255,255,255,0.18)",
         backdropFilter: "blur(12px) saturate(110%)",
         WebkitBackdropFilter: "blur(12px) saturate(110%)",
         display: "flex",
         alignItems: "center",
         border: "1px solid rgba(255,255,255,1.0)",
         boxShadow: MISTY_GLOW,
+        overflow: "hidden",   // clip fog to bar bounds (matches layer-shell)
         ...style,
       }}
       data-bar={position}
     >
-      {children}
+      {w > 0 && h > 0 && <FogCanvas width={w} height={h} />}
+      <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%", height: "100%" }}>
+        {children}
+      </div>
     </div>
   );
-}
-
-// Inject keyframes once.
-if (typeof document !== "undefined" && !document.getElementById("nyx-fog-keyframes")) {
-  const s = document.createElement("style");
-  s.id = "nyx-fog-keyframes";
-  s.textContent = `
-    @keyframes nyx-fog-drift-h {
-      0%   { background-position:    0% 50%,  100% 30%,  -50% 70%; }
-      50%  { background-position:  100% 50%, -100% 80%,  150% 30%; }
-      100% { background-position:  200% 50%, -300% 30%,  350% 70%; }
-    }
-    @keyframes nyx-fog-drift-v {
-      0%   { background-position:  50%   0%,  30%  100%,  70%  -50%; }
-      50%  { background-position:  50% 100%,  80% -100%,  30%  150%; }
-      100% { background-position:  50% 200%,  30% -300%,  70%  350%; }
-    }
-  `;
-  document.head.appendChild(s);
 }
 
 export default function WaybarMockup() {
