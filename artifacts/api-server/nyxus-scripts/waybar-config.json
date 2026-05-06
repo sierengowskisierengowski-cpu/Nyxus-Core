@@ -64,7 +64,8 @@
       "format-plugged":  "",
       "format-icons": ["", "", "", "", ""],
       "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Battery</span>\n<span size='small' foreground='#58524c'>{capacity}% · {status}\n{time} remaining\nClick to open Power Settings</span>",
+      "tooltip-format":           "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Battery</span>\n<span size='small' foreground='#58524c'>{capacity}% · {status}\nClick to open Power Settings</span>",
+      "tooltip-format-discharging": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Battery</span>\n<span size='small' foreground='#58524c'>{capacity}% · discharging\n{time} remaining\nClick to open Power Settings</span>",
       "on-click": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'"
     },
     "clock": {
