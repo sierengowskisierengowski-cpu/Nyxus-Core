@@ -25,49 +25,27 @@
 /* ──────────────────────────────────────────────────────────────────────────
    1. SHELL — heavier cream tint so Dual-Kawase blur reads as frosted glass.
    ────────────────────────────────────────────────────────────────────────── */
-/* SHELL — base reset; per-bar bg images set below. */
-window#waybar {
-    background-color: transparent;
-    background-image: none;
-    border:           none;
-    box-shadow:       none;
-    color:            #1a1816;
-}
-
-/* Per-bar embossed-cream texture backgrounds (rev. 2026-05-06e). A
-   faint white veil is layered on top of the image for legibility +
-   to keep the frosted-glass feel. */
-window#waybar.top {
-    background-image:
-        linear-gradient(rgba(255,255,255,0.35), rgba(255,255,255,0.35)),
-        url("bg-top.png");
-    background-size:     cover, cover;
-    background-position: center center;
-    background-repeat:   no-repeat, no-repeat;
-}
-window#waybar.bottom {
-    background-image:
-        linear-gradient(rgba(255,255,255,0.35), rgba(255,255,255,0.35)),
-        url("bg-bottom.png");
-    background-size:     cover, cover;
-    background-position: center center;
-    background-repeat:   no-repeat, no-repeat;
-}
-window#waybar.left {
-    background-image:
-        linear-gradient(rgba(255,255,255,0.35), rgba(255,255,255,0.35)),
-        url("bg-left.png");
-    background-size:     cover, cover;
-    background-position: center center;
-    background-repeat:   no-repeat, no-repeat;
-}
+/* FROSTED-GLASS SHELL (rev. 2026-05-06g) — all 4 bars are translucent
+   white plates so the wallpaper shows through. Hyprland Dual-Kawase
+   blur (size 8, passes 4, vibrancy 0) frosts the wallpaper inside the
+   bar bounds. A thin white edge + soft outer white halo gives the
+   "mist rolling off the edges" look the user requested.
+   Buttons stay solid cream on top — they're the contrast islands. */
+window#waybar,
+window#waybar.top,
+window#waybar.bottom,
+window#waybar.left,
 window#waybar.right {
-    background-image:
-        linear-gradient(rgba(255,255,255,0.35), rgba(255,255,255,0.35)),
-        url("bg-right.png");
-    background-size:     cover, cover;
-    background-position: center center;
-    background-repeat:   no-repeat, no-repeat;
+    background-color: rgba(255, 255, 255, 0.35);
+    background-image: none;
+    color:            #1a1816;
+    /* Misty white edge — thin bright rim + diffuse outer halo */
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow:
+        inset 0 0  6px  1px rgba(255, 255, 255, 0.55),
+        0 0 14px  2px rgba(255, 255, 255, 0.55),
+        0 0 28px  6px rgba(255, 255, 255, 0.35),
+        0 0 48px 14px rgba(255, 255, 255, 0.18);
 }
 
 /* ──────────────────────────────────────────────────────────────────────────

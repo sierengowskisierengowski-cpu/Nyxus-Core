@@ -102,16 +102,19 @@ function RainbowText({ text, size = 14 }: { text: string; size?: number }) {
   );
 }
 
-const VEIL = "linear-gradient(rgba(255,255,255,0.35), rgba(255,255,255,0.35))";
+// Frosted-glass shell (rev 2026-05-06g) — translucent white plate, no
+// per-bar bg image. Wallpaper shows through. Misty white edge + outer
+// halo glow gives the "mist rolling off the edges" feel.
+const MISTY_GLOW =
+  "inset 0 0 6px 1px rgba(255,255,255,0.55), 0 0 14px 2px rgba(255,255,255,0.55), 0 0 28px 6px rgba(255,255,255,0.35), 0 0 48px 14px rgba(255,255,255,0.18)";
 
 function BarShell({
   position,
-  bg,
   style,
   children,
 }: {
   position: "top" | "bottom" | "left" | "right";
-  bg: string;
+  bg?: string;
   style?: React.CSSProperties;
   children?: React.ReactNode;
 }) {
@@ -119,14 +122,13 @@ function BarShell({
     <div
       style={{
         position: "absolute",
-        backgroundImage: `${VEIL}, url(${BASE}/${bg}${v})`,
-        backgroundSize: "cover, cover",
-        backgroundPosition: "center center",
-        backgroundRepeat: "no-repeat, no-repeat",
+        backgroundColor: "rgba(255,255,255,0.35)",
+        backdropFilter: "blur(12px) saturate(110%)",
+        WebkitBackdropFilter: "blur(12px) saturate(110%)",
         display: "flex",
         alignItems: "center",
-        border: "none",
-        boxShadow: "none",
+        border: "1px solid rgba(255,255,255,0.85)",
+        boxShadow: MISTY_GLOW,
         ...style,
       }}
       data-bar={position}
