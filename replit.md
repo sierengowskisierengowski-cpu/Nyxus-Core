@@ -35,16 +35,23 @@ NYXUS is an Arch Linux-based operating system providing a suite of native Python
 - `nyxus-scripts/nyxus_chrome.py`: Source of truth for unified GTK4 application styling.
 - `iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf`: Hyprland configuration template.
 
-## Visual System — COSMIC INK SWIRL over EMBOSSED CREAM PAPER (LOCKED · golden rule, rev 2026-05-06u)
+## Visual System — COSMIC INK SWIRL · DARK GLASS WAYBAR (LOCKED · rev 2026-05-06v)
 
-The wallpaper is now the **black-hole / cosmic ink swirl** (`nyxus-ink-swirl.png`,
-2560×1396, mostly black with silver-white wisps and occasional gold dust).
-The waybar pebbles, beads, plaques, and engraved typography stay **EMBOSSED
-CREAM PAPER** — translucent cream `clay` floating on top of the cosmic
-backdrop. Hover effects bloom with a cool **silver-white starlight halo**
-(rgb 230,240,255) plus a small gold sparkle on the text — NOT the previous
-pure-gold halo. Cream chrome remains the rule for surfaces; the wallpaper
-is the only dark element. No dark-mode buttons, no dark-mode dialogs.
+The wallpaper is the **black-hole / cosmic ink swirl** (`nyxus-ink-swirl.png`,
+2560×1396, mostly black with silver-white wisps). The waybar shells, pebbles,
+beads, ticker, plaques, and tooltips are now **DARK FROSTED GLASS** —
+translucent near-black `rgba(8,12,20,0.58)` shells with darker blue-black
+pebbles `rgba(15,20,32,0.72)`, light text `#e8edf5`, and cool silver-white
+starlight halos `rgba(230,240,255, …)` on hover. **NO GOLD anywhere** in
+the waybar — silver/cool-white only. Engraved text-shadow direction is
+flipped for dark surfaces: dark above (`0 -1px 0 rgba(0,0,0,0.65)`),
+light below (`0 1px 0 rgba(230,240,255,0.20-0.30)`). Workspaces appear
+ONLY on the left bar. The OWL signature lives on the bottom bar
+modules-right next to Panel.
+
+Apps and dialogs (NOT the waybar) keep the EMBOSSED CREAM PAPER chrome
+described below. The dark glass treatment applies exclusively to the
+floating waybar modules.
 
 - **Aesthetic**: Cream-on-cream tone-on-tone embossed stationery. Deeply
   carved sculptural plaques. Hand-cast nameplates. Engraved labels.

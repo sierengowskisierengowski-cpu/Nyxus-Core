@@ -25,18 +25,18 @@ window#waybar.top,
 window#waybar.bottom,
 window#waybar.left,
 window#waybar.right {
-    background-color: rgba(245, 248, 255, 0.18);
-    color:            #1a1816;
-    border:           1px solid rgba(220, 235, 255, 0.40);
+    background-color: rgba(8, 12, 20, 0.58);
+    color:            #e8edf5;
+    border:           1px solid rgba(230, 240, 255, 0.18);
     border-radius:    22px;
     box-shadow:
-        inset  0px   1px  0px   0px  rgba(255, 255, 255, 0.85),
-        inset  0px  -1px  0px   0px  rgba(10,  12,  20,  0.18),
-        inset  0px   0px  32px  6px  rgba(230, 240, 255, 0.30),
-        inset  2px   2px  10px  0px  rgba(255, 255, 255, 0.40),
-        inset -2px  -2px  8px   0px  rgba(10,  12,  20,  0.10),
-        0px  8px 28px rgba(10, 12, 20, 0.40),
-        0px 22px 56px rgba(10, 12, 20, 0.25);
+        inset  0px   1px  0px   0px  rgba(230, 240, 255, 0.35),
+        inset  0px  -1px  0px   0px  rgba(0,   0,   0,   0.45),
+        inset  0px   0px  32px  6px  rgba(230, 240, 255, 0.10),
+        inset  2px   2px  10px  0px  rgba(230, 240, 255, 0.12),
+        inset -2px  -2px  8px   0px  rgba(0,   0,   0,   0.30),
+        0px  8px 28px rgba(0, 0, 0, 0.55),
+        0px 22px 56px rgba(0, 0, 0, 0.35);
 }
 
 /* ── 2. UNIVERSAL GLASS PEBBLE ──────────────────────────────────────────── */
@@ -56,8 +56,8 @@ window#waybar.right {
 #custom-app-notes,
 #custom-app-terminal,
 #custom-app-settings {
-    color:            #1a1816;
-    background-color: rgba(245, 248, 255, 0.32);
+    color:            #e8edf5;
+    background-color: rgba(15, 20, 32, 0.72);
     margin:           5px 5px;
     padding:          4px 14px;
     border-radius:    14px;
@@ -67,17 +67,17 @@ window#waybar.right {
     letter-spacing:   0.04em;
 
     text-shadow:
-         0px  1px 0px rgba(255, 255, 255, 0.95),
-         0px -1px 0px rgba(10,  12,  20,  0.30);
+         0px -1px 0px rgba(0,   0,   0,   0.65),
+         0px  1px 0px rgba(230, 240, 255, 0.20);
 
     box-shadow:
-        inset  0px  1.5px 0px rgba(255, 255, 255, 0.95),
-        inset  0px -1px   0px rgba(10,  12,  20,  0.18),
-        inset  1px  0px   0px rgba(255, 255, 255, 0.55),
-        inset -1px  0px   0px rgba(10,  12,  20,  0.08),
-        0px  3px  10px rgba(10, 12, 20, 0.35),
-        0px 10px 22px rgba(10, 12, 20, 0.22),
-       -2px -2px 6px  rgba(255, 255, 255, 0.45);
+        inset  0px  1.5px 0px rgba(230, 240, 255, 0.30),
+        inset  0px -1px   0px rgba(0,   0,   0,   0.45),
+        inset  1px  0px   0px rgba(230, 240, 255, 0.15),
+        inset -1px  0px   0px rgba(0,   0,   0,   0.30),
+        0px  3px  10px rgba(0, 0, 0, 0.55),
+        0px 10px 22px rgba(0, 0, 0, 0.35),
+       -2px -2px 6px  rgba(230, 240, 255, 0.10);
 }
 
 #clock:hover,
@@ -96,21 +96,21 @@ window#waybar.right {
 #custom-app-notes:hover,
 #custom-app-terminal:hover,
 #custom-app-settings:hover {
-    background-color: rgba(255, 255, 255, 0.96);
-    color:            #1a1816;
+    background-color: rgba(40, 52, 78, 0.88);
+    color:            #ffffff;
     box-shadow:
-        inset  0px  1.5px 0px  0px  rgba(255, 255, 255, 1.00),
-        inset  0px -1px   0px  0px  rgba(26,  24,  22,  0.12),
-        inset  0px  0px   0px  1px  rgba(220, 230, 245, 0.85),
-        0px  5px 14px rgba(10,  12,  20,  0.45),
-        0px 14px 32px rgba(10,  12,  20,  0.30),
-        0px  0px 18px rgba(230, 240, 255, 0.75),
-        0px  0px 28px rgba(180, 200, 230, 0.45),
-       -2px -2px 8px  rgba(255, 255, 255, 0.85);
+        inset  0px  1.5px 0px  0px  rgba(230, 240, 255, 0.50),
+        inset  0px -1px   0px  0px  rgba(0,   0,   0,   0.45),
+        inset  0px  0px   0px  1px  rgba(230, 240, 255, 0.55),
+        0px  5px 14px rgba(0, 0, 0, 0.60),
+        0px 14px 32px rgba(0, 0, 0, 0.40),
+        0px  0px 18px rgba(230, 240, 255, 0.55),
+        0px  0px 28px rgba(180, 200, 230, 0.30),
+       -2px -2px 8px  rgba(230, 240, 255, 0.20);
     text-shadow:
-        0px  1px 0px  rgba(255, 255, 255, 0.95),
-        0px -1px 0px  rgba(26,  24,  22,  0.25),
-        0px  0px 6px  rgba(230, 240, 255,  0.40);
+        0px -1px 0px  rgba(0,   0,   0,   0.65),
+        0px  1px 0px  rgba(230, 240, 255, 0.25),
+        0px  0px 6px  rgba(230, 240, 255, 0.50);
 }
 
 /* ── 3. NYXUS ENGRAVED INTO THE GLASS · gold inner light ────────────────── */
@@ -119,34 +119,32 @@ window#waybar.right {
     font-size:      30px;
     font-weight:    700;
     letter-spacing: 0.20em;
-    color:          rgba(245, 243, 239, 0.92);
+    color:          #e8edf5;
     background:     transparent;
     padding:        0 32px;
     margin:         0 14px;
     text-shadow:
-        0 -1px 0 rgba(26,  24, 22, 0.55),
-        0  1px 0 rgba(255, 255, 255, 0.95),
-        0  2px 1px rgba(26, 24, 22, 0.30),
-        0  0  8px rgba(230, 240, 255, 0.95),
-        0  0 18px rgba(230, 240, 255, 0.55),
-        0  0 36px rgba(230, 240, 255, 0.28);
+        0 -1px 0 rgba(0, 0, 0, 0.65),
+        0  1px 0 rgba(230, 240, 255, 0.30),
+        0  0  8px rgba(230, 240, 255, 0.85),
+        0  0 18px rgba(230, 240, 255, 0.50),
+        0  0 36px rgba(230, 240, 255, 0.25);
 }
 
 #custom-nyxus:hover {
-    color: rgba(255, 248, 220, 0.95);
+    color: #ffffff;
     text-shadow:
-        0 -1px 0 rgba(26,  24, 22, 0.55),
-        0  1px 0 rgba(255, 255, 255, 0.95),
-        0  2px 1px rgba(26, 24, 22, 0.30),
+        0 -1px 0 rgba(0, 0, 0, 0.65),
+        0  1px 0 rgba(230, 240, 255, 0.35),
         0  0 12px rgba(230, 240, 255, 1.00),
-        0  0 26px rgba(230, 240, 255, 0.75),
-        0  0 48px rgba(230, 240, 255, 0.40);
+        0  0 26px rgba(230, 240, 255, 0.70),
+        0  0 48px rgba(230, 240, 255, 0.35);
 }
 
 /* ── 4. AIRPORT TICKER ──────────────────────────────────────────────────── */
 #custom-ticker {
-    background-color: rgba(255, 255, 255, 0.92);
-    color:            #1a1816;
+    background-color: rgba(15, 20, 32, 0.78);
+    color:            #e8edf5;
     margin:           5px 8px 5px 0;
     padding:          5px 18px;
     min-width:        300px;
@@ -156,23 +154,24 @@ window#waybar.right {
     font-weight:      700;
     letter-spacing:   0.14em;
     text-shadow:
-        0  1px 0 rgba(255, 255, 255, 0.95),
-        0 -1px 0 rgba(26, 24, 22, 0.18);
+        0 -1px 0 rgba(0, 0, 0, 0.65),
+        0  1px 0 rgba(230, 240, 255, 0.20);
     box-shadow:
-        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
-        inset  0 -1px 0 rgba(26, 24, 22, 0.12),
-        0  3px  8px rgba(26, 24, 22, 0.20),
-        0 10px 22px rgba(26, 24, 22, 0.10);
+        inset  0  1.5px 0 rgba(230, 240, 255, 0.30),
+        inset  0 -1px   0 rgba(0, 0, 0, 0.45),
+        0  3px  8px rgba(0, 0, 0, 0.55),
+        0 10px 22px rgba(0, 0, 0, 0.32);
 }
 
 #custom-ticker:hover {
-    color: #e8edf5;
+    background-color: rgba(40, 52, 78, 0.88);
+    color: #ffffff;
     box-shadow:
-        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
-        inset  0 -1px 0 rgba(26, 24, 22, 0.14),
-        0  5px 12px rgba(26, 24, 22, 0.24),
-        0 12px 26px rgba(26, 24, 22, 0.14),
-        0  0 16px rgba(230, 240, 255, 0.40);
+        inset  0  1.5px 0 rgba(230, 240, 255, 0.50),
+        inset  0 -1px   0 rgba(0, 0, 0, 0.45),
+        0  5px 12px rgba(0, 0, 0, 0.60),
+        0 12px 26px rgba(0, 0, 0, 0.40),
+        0  0 16px rgba(230, 240, 255, 0.55);
 }
 
 /* ── 5. CLOCK + WEATHER glass pebbles ───────────────────────────────────── */
@@ -196,8 +195,8 @@ window#waybar.right {
 #pulseaudio,
 #backlight,
 #battery {
-    color:            #1a1816;
-    background-color: rgba(245, 248, 255, 0.30);
+    color:            #e8edf5;
+    background-color: rgba(15, 20, 32, 0.72);
     font-family:      'Symbols Nerd Font', 'JetBrains Mono', monospace;
     font-size:        14px;
     margin:           6px 2px;
@@ -206,36 +205,36 @@ window#waybar.right {
     min-height:       30px;
     border-radius:    50%;
     text-shadow:
-        0  1px 0 rgba(255, 255, 255, 0.95),
-        0 -1px 0 rgba(26, 24, 22, 0.20);
+        0 -1px 0 rgba(0, 0, 0, 0.65),
+        0  1px 0 rgba(230, 240, 255, 0.20);
     box-shadow:
-        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
-        inset  0 -1px 0 rgba(26, 24, 22, 0.12),
-        inset  1px  0  0 rgba(255, 255, 255, 0.65),
-        inset -1px  0  0 rgba(26, 24, 22, 0.05),
-        0  2px 5px rgba(26, 24, 22, 0.16),
-        0  6px 14px rgba(26, 24, 22, 0.08),
-       -1.5px -1.5px 4px rgba(255, 255, 255, 0.60);
+        inset  0  1.5px 0 rgba(230, 240, 255, 0.30),
+        inset  0 -1px   0 rgba(0, 0, 0, 0.45),
+        inset  1px  0   0 rgba(230, 240, 255, 0.18),
+        inset -1px  0   0 rgba(0, 0, 0, 0.30),
+        0  2px 5px rgba(0, 0, 0, 0.50),
+        0  6px 14px rgba(0, 0, 0, 0.30),
+       -1.5px -1.5px 4px rgba(230, 240, 255, 0.10);
 }
 
 #network:hover,
 #pulseaudio:hover,
 #backlight:hover,
 #battery:hover {
-    background-color: rgba(255, 255, 255, 0.96);
-    color:            #1a1816;
+    background-color: rgba(40, 52, 78, 0.92);
+    color:            #ffffff;
     box-shadow:
-        inset  0px  0px   0px  1px  rgba(220, 230, 245, 0.90),
-        inset  0px  1.5px 0px  0px  rgba(255, 255, 255, 1.00),
-        inset  0px -1px   0px  0px  rgba(26,  24,  22,  0.12),
-        0px  3px  8px rgba(10,  12,  20,  0.40),
-        0px 10px 20px rgba(10,  12,  20,  0.22),
-        0px  0px 16px rgba(230, 240, 255, 0.85),
-        0px  0px 26px rgba(180, 200, 230, 0.50),
-       -2px -2px 6px  rgba(255, 255, 255, 0.80);
+        inset  0px  0px   0px  1px  rgba(230, 240, 255, 0.55),
+        inset  0px  1.5px 0px  0px  rgba(230, 240, 255, 0.50),
+        inset  0px -1px   0px  0px  rgba(0,   0,   0,   0.45),
+        0px  3px  8px rgba(0, 0, 0, 0.60),
+        0px 10px 20px rgba(0, 0, 0, 0.40),
+        0px  0px 16px rgba(230, 240, 255, 0.65),
+        0px  0px 26px rgba(180, 200, 230, 0.40),
+       -2px -2px 6px  rgba(230, 240, 255, 0.20);
     text-shadow:
-        0px 0px 5px rgba(230, 240, 255, 0.55),
-        0px 0px 12px rgba(230, 240, 255, 0.45);
+        0px 0px 5px rgba(230, 240, 255, 0.65),
+        0px 0px 12px rgba(230, 240, 255, 0.50);
 }
 
 #battery.warning  { color: #b8782a; }
@@ -249,7 +248,7 @@ window#waybar.bottom #custom-nyxus-panel {
     font-size:       12px;
     font-weight:     700;
     letter-spacing:  0.18em;
-    color:           #1a1816;
+    color:           #e8edf5;
     padding:         4px 22px;
     margin:          5px 8px;
     min-height:      26px;
@@ -258,7 +257,7 @@ window#waybar.bottom #custom-nyxus-panel {
 
 window#waybar.bottom #custom-nyxus-start:hover,
 window#waybar.bottom #custom-nyxus-panel:hover {
-    color: #e8edf5;
+    color: #ffffff;
 }
 
 window#waybar.bottom #tray {
@@ -271,14 +270,14 @@ window#waybar.bottom #tray {
 window#waybar.bottom #tray > .passive,
 window#waybar.bottom #tray > .active,
 window#waybar.bottom #tray > .needs-attention {
-    background-color: rgba(255, 255, 255, 0.45);
+    background-color: rgba(15, 20, 32, 0.65);
     margin:           4px 4px;
     padding:          3px;
     border-radius:    9px;
     box-shadow:
-        inset  0  1px 0 rgba(255, 255, 255, 1.00),
-        inset  0 -1px 0 rgba(26, 24, 22, 0.08),
-        0  1px 4px rgba(26, 24, 22, 0.14);
+        inset  0  1px 0 rgba(230, 240, 255, 0.25),
+        inset  0 -1px 0 rgba(0, 0, 0, 0.40),
+        0  1px 4px rgba(0, 0, 0, 0.45);
 }
 
 window#waybar.bottom #tray > .needs-attention {
@@ -302,20 +301,20 @@ window#waybar.left #workspaces button {
 
 window#waybar.left #workspaces button.active,
 window#waybar.left #workspaces button.focused {
-    color:            #e8edf5;
-    background-color: rgba(255, 255, 255, 0.78);
+    color:            #ffffff;
+    background-color: rgba(40, 52, 78, 0.92);
     box-shadow:
-        inset  0  0  0 1.5px rgba(230, 240, 255, 0.90),
-        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
-        inset  0 -1px 0 rgba(26, 24, 22, 0.10),
-        0  4px 10px rgba(26, 24, 22, 0.22),
+        inset  0  0  0 1.5px rgba(230, 240, 255, 0.65),
+        inset  0  1.5px 0 rgba(230, 240, 255, 0.50),
+        inset  0 -1px   0 rgba(0, 0, 0, 0.45),
+        0  4px 10px rgba(0, 0, 0, 0.55),
         0  0 18px rgba(230, 240, 255, 0.55),
         0  0 32px rgba(230, 240, 255, 0.25);
     text-shadow:
-        -1px -1px 0 rgba(26,  24, 22, 0.30),
-         1px -1px 0 rgba(26,  24, 22, 0.30),
-        -1px  1px 0 rgba(26,  24, 22, 0.30),
-         1px  1px 0 rgba(26,  24, 22, 0.30),
+        -1px -1px 0 rgba(0, 0, 0, 0.55),
+         1px -1px 0 rgba(0, 0, 0, 0.55),
+        -1px  1px 0 rgba(0, 0, 0, 0.55),
+         1px  1px 0 rgba(0, 0, 0, 0.55),
          0    0 10px rgba(230, 240, 255, 0.85),
          0    0 18px rgba(230, 240, 255, 0.50);
 }
@@ -347,51 +346,51 @@ window#waybar.right #custom-app-settings {
     font-size:      14px;
     font-weight:    700;
     letter-spacing: 0.18em;
-    color:          rgba(245, 243, 239, 0.92);
+    color:          #e8edf5;
     background:     transparent;
     padding:        14px 0 18px 0;
     margin:         12px 4px 6px 4px;
 
-    /* Mini-NYXUS engrave + gold inner light */
+    /* Mini-NYXUS engrave + silver starlight */
     text-shadow:
-        0 -1px 0 rgba(26,  24, 22, 0.55),
-        0  1px 0 rgba(255, 255, 255, 0.95),
-        0  0  6px rgba(230, 240, 255, 0.95),
-        0  0 14px rgba(230, 240, 255, 0.55),
-        0  0 24px rgba(230, 240, 255, 0.28);
+        0 -1px 0 rgba(0, 0, 0, 0.65),
+        0  1px 0 rgba(230, 240, 255, 0.30),
+        0  0  6px rgba(230, 240, 255, 0.85),
+        0  0 14px rgba(230, 240, 255, 0.50),
+        0  0 24px rgba(230, 240, 255, 0.25);
 
     /* Hairline divider above */
-    border-top: 1px solid rgba(26, 24, 22, 0.18);
+    border-top: 1px solid rgba(230, 240, 255, 0.18);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.90);
+        inset 0 1px 0 rgba(230, 240, 255, 0.20);
 }
 
 #custom-owl:hover {
-    color: rgba(255, 248, 220, 0.95);
+    color: #ffffff;
     text-shadow:
-        0 -1px 0 rgba(26,  24, 22, 0.55),
-        0  1px 0 rgba(255, 255, 255, 0.95),
+        0 -1px 0 rgba(0, 0, 0, 0.65),
+        0  1px 0 rgba(230, 240, 255, 0.35),
         0  0 10px rgba(230, 240, 255, 1.00),
-        0  0 22px rgba(230, 240, 255, 0.75),
-        0  0 38px rgba(230, 240, 255, 0.40);
+        0  0 22px rgba(230, 240, 255, 0.70),
+        0  0 38px rgba(230, 240, 255, 0.35);
 }
 
 /* ── 11. TOOLTIPS · frosted-glass cream popovers ────────────────────────── */
 tooltip {
-    background-color: rgba(251, 250, 246, 0.96);
-    color:            #1a1816;
-    border:           1px solid rgba(26, 24, 22, 0.22);
+    background-color: rgba(8, 12, 20, 0.94);
+    color:            #e8edf5;
+    border:           1px solid rgba(230, 240, 255, 0.30);
     border-radius:    14px;
     padding:          0;
     box-shadow:
-        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
-        inset  0 -1px 0 rgba(26, 24, 22, 0.10),
-        0  6px 20px rgba(26, 24, 22, 0.22),
-        0 18px 44px rgba(26, 24, 22, 0.14);
+        inset  0  1.5px 0 rgba(230, 240, 255, 0.30),
+        inset  0 -1px   0 rgba(0, 0, 0, 0.50),
+        0  6px 20px rgba(0, 0, 0, 0.55),
+        0 18px 44px rgba(0, 0, 0, 0.40);
 }
 
 tooltip label {
-    color:    #1a1816;
+    color:    #e8edf5;
     padding:  10px 16px;
     font-family: 'Inter', sans-serif;
     font-size: 13px;
