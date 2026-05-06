@@ -1,67 +1,110 @@
-#!/usr/bin/env bash
-# NYXUS Airport-Style Looping Marquee Ticker
-# Scrolls continuously left→right→wrap, like an airport departure board
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#!/bin/bash
+# ─────────────────────────────────────────────────────────────────────────
+# NYXUS Waybar Airport-Ticker
+# Rotating system-status board feeding the top-bar custom/ticker module.
+# Output: JSON {"text": "...", "tooltip": "..."} consumed by waybar.
+# Refresh: every 1s via waybar interval; message rotates every 5s.
+# ─────────────────────────────────────────────────────────────────────────
 
-STATE="/tmp/nyxus-ticker-pos"
-WIDTH=110  # chars shown at once — fills the left side of the top bar
+set -u
 
-# ── Gather live stats ──────────────────────────────────────────────────────────
-CPU=$(top -bn1 2>/dev/null | awk '/Cpu\(s\)/{printf "%.0f", $2+$4}' | head -1 2>/dev/null || echo "?")
-RAM=$(free 2>/dev/null | awk '/Mem:/{printf "%.0f", $3/$2*100}')
-DISK=$(df -h / 2>/dev/null | awk 'NR==2{print $5}')
-TIME=$(date "+%H:%M:%S")
-DATE=$(date "+%a  %b %d  %Y")
+# ── Cached probes (refresh every N seconds, never block waybar) ──────────
+CACHE="/tmp/nyxus-ticker.cache"
+NOW=$(date +%s)
 
-# CPU Temp
-TEMP="--"
-for z in /sys/class/thermal/thermal_zone*/temp; do
-  [[ -f "$z" ]] && TEMP=$(awk '{printf "%.0f", $1/1000}' "$z") && break
-done
+read_cache() {
+    local key="$1" ttl="$2"
+    [[ -f "$CACHE" ]] || { echo ""; return; }
+    awk -F'\t' -v k="$key" -v now="$NOW" -v ttl="$ttl" '
+        $1 == k && (now - $2) < ttl { print $3; found=1; exit }
+    ' "$CACHE"
+}
 
-# Battery
-BAT=$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -1 || echo "--")
-BAT_STATUS=$(cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -1 || echo "")
-[[ "$BAT_STATUS" == "Charging" ]] && BAT_ICON="⚡" || BAT_ICON="🔋"
-[[ "$BAT" == "--" ]] && BAT_STR="NO BAT" || BAT_STR="${BAT_ICON} ${BAT}%"
+write_cache() {
+    local key="$1" val="$2"
+    [[ -f "$CACHE" ]] && grep -v "^${key}	" "$CACHE" > "${CACHE}.new" 2>/dev/null || true
+    printf '%s\t%s\t%s\n' "$key" "$NOW" "$val" >> "${CACHE}.new" 2>/dev/null || \
+        printf '%s\t%s\t%s\n' "$key" "$NOW" "$val" > "${CACHE}.new"
+    mv -f "${CACHE}.new" "$CACHE" 2>/dev/null || true
+}
 
-# WiFi / Network
-SSID=$(iwgetid -r 2>/dev/null || nmcli -t -f active,ssid dev wifi 2>/dev/null | grep "^yes" | cut -d: -f2 2>/dev/null || echo "")
-[[ -z "$SSID" ]] && SSID="NO WIFI"
-IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "--")
+# ── Probes (each cached at its own TTL so the script never stalls) ──────
+get_uptime() {
+    local v; v=$(read_cache uptime 60)
+    if [[ -z "$v" ]]; then
+        v=$(uptime -p 2>/dev/null | sed 's/^up //; s/ minutes/m/; s/ minute/m/; s/ hours/h/; s/ hour/h/; s/ days/d/; s/ day/d/; s/, /·/g')
+        [[ -z "$v" ]] && v="—"
+        write_cache uptime "$v"
+    fi
+    echo "$v"
+}
 
-# Network speeds via /sys
-IF=$(ip route 2>/dev/null | awk '/default/{print $5; exit}')
-DN_S="--" ; UP_S="--"
-if [[ -n "$IF" && -f "/sys/class/net/$IF/statistics/rx_bytes" ]]; then
-  R1=$(cat /sys/class/net/$IF/statistics/rx_bytes)
-  T1=$(cat /sys/class/net/$IF/statistics/tx_bytes)
-  sleep 0.25
-  R2=$(cat /sys/class/net/$IF/statistics/rx_bytes)
-  T2=$(cat /sys/class/net/$IF/statistics/tx_bytes)
-  DN=$(( (R2 - R1) * 4 / 1024 ))
-  UP=$(( (T2 - T1) * 4 / 1024 ))
-  [[ $DN -gt 1024 ]] && DN_S="$(awk "BEGIN{printf \"%.1f\", $DN/1024}")MB/s" || DN_S="${DN}KB/s"
-  [[ $UP -gt 1024 ]] && UP_S="$(awk "BEGIN{printf \"%.1f\", $UP/1024}")MB/s" || UP_S="${UP}KB/s"
-fi
+get_updates() {
+    local v; v=$(read_cache updates 1800)
+    if [[ -z "$v" ]]; then
+        if command -v checkupdates >/dev/null 2>&1; then
+            v=$(timeout 8 checkupdates 2>/dev/null | wc -l)
+        else
+            v="0"
+        fi
+        write_cache updates "$v"
+    fi
+    echo "$v"
+}
 
-# ── Build the full looping string ─────────────────────────────────────────────
-SEP="   ◈   "
-T="${SEP}CPU ${CPU}%${SEP}RAM ${RAM}%${SEP}TEMP ${TEMP}°C${SEP}↓ ${DN_S}  ↑ ${UP_S}${SEP}${SSID}  ·  ${IP}${SEP}${BAT_STR}${SEP}DISK ${DISK}${SEP}${DATE}  ·  ${TIME}${SEP}SILENT · DARK · PURELY FUNCTIONAL${SEP}"
+get_kernel() {
+    local v; v=$(read_cache kernel 3600)
+    if [[ -z "$v" ]]; then
+        v=$(uname -r 2>/dev/null | cut -d- -f1)
+        [[ -z "$v" ]] && v="—"
+        write_cache kernel "$v"
+    fi
+    echo "$v"
+}
 
-LEN=${#T}
-POS=$(cat "$STATE" 2>/dev/null || echo 0)
-[[ "$POS" -ge "$LEN" || "$POS" -lt 0 ]] && POS=0
+get_load() {
+    local v
+    v=$(awk '{printf "%.2f", $1}' /proc/loadavg 2>/dev/null)
+    [[ -z "$v" ]] && v="—"
+    echo "$v"
+}
 
-# Circular slice — wraps seamlessly
-if [[ $((POS + WIDTH)) -le $LEN ]]; then
-  SLICE="${T:$POS:$WIDTH}"
-else
-  REM=$((LEN - POS))
-  SLICE="${T:$POS:$REM}${T:0:$((WIDTH - REM))}"
-fi
+get_mem() {
+    awk '/MemTotal/ {t=$2} /MemAvailable/ {a=$2} END {if (t>0) printf "%d%%", (t-a)*100/t; else print "—"}' /proc/meminfo 2>/dev/null
+}
 
-# Advance 3 chars per tick — adjust for speed
-echo $(( (POS + 3) % LEN )) > "$STATE"
+get_net() {
+    if ip route get 1.1.1.1 >/dev/null 2>&1; then echo "ONLINE"; else echo "OFFLINE"; fi
+}
 
-echo "$SLICE"
+# ── Build the ticker board ──────────────────────────────────────────────
+UPTIME=$(get_uptime)
+UPDATES=$(get_updates)
+KERNEL=$(get_kernel)
+LOAD=$(get_load)
+MEM=$(get_mem)
+NET=$(get_net)
+
+MESSAGES=(
+    "▸ NYXUS · SYSTEM NOMINAL"
+    "▸ UPTIME · ${UPTIME}"
+    "▸ KERNEL · ${KERNEL}"
+    "▸ LOAD · ${LOAD}   MEM · ${MEM}"
+    "▸ UPDATES · ${UPDATES} pending"
+    "▸ NETWORK · ${NET}"
+    "▸ HYPRLAND · WAYLAND ACTIVE"
+    "▸ SIERENGOWSKI · 2026"
+)
+
+INDEX=$(( NOW / 5 % ${#MESSAGES[@]} ))
+TEXT="${MESSAGES[$INDEX]}"
+
+# Tooltip: full live status snapshot
+TOOLTIP=$(printf "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · LIVE STATUS</span>\n<span size='small' foreground='#58524c'>Uptime:   %s\nKernel:   %s\nLoad:     %s\nMemory:   %s\nUpdates:  %s pending\nNetwork:  %s</span>" \
+    "$UPTIME" "$KERNEL" "$LOAD" "$MEM" "$UPDATES" "$NET")
+
+# JSON-safe escaping
+TEXT_ESC=${TEXT//\\/\\\\}; TEXT_ESC=${TEXT_ESC//\"/\\\"}
+TT_ESC=${TOOLTIP//\\/\\\\};   TT_ESC=${TT_ESC//\"/\\\"};   TT_ESC=${TT_ESC//$'\n'/\\n}
+
+printf '{"text":"%s","tooltip":"%s","class":"ticker"}\n' "$TEXT_ESC" "$TT_ESC"
