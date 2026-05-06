@@ -1,14 +1,15 @@
 /* ════════════════════════════════════════════════════════════════════════════
-   NYXUS WAYBAR — FLOATING NEOMORPHIC BUTTONS
+   NYXUS WAYBAR — FLOATING NEOMORPHIC BUTTONS  (rev. 2026-05-06b)
    ════════════════════════════════════════════════════════════════════════════
-   Spec (per Joseph Sierengowski, locked 2026-05-06):
-     1. Waybar shell is fully transparent — no bar substrate visible.
+   Spec (locked):
+     1. Waybar shell carries a faint cream tint (≈18% alpha) so Hyprland's
+        `windowrule = blur, ^(waybar)$` has a surface to frost.  No border,
+        no shadow on the shell itself.
      2. Every module is an independently floating cream "clay" button with
-        neomorphic dual-shadow depth (light from upper-left, dark to
-        lower-right) and margins that create gaps between them.
-     3. Text on every button is engraved with a soft text-shadow.
-     4. Locked cream palette only: #fbfaf6 raised, #1a1816 ink, charcoal-alpha
-        + white-highlight shadow stack. No greys, no neon, no dark mode.
+        deeper neomorphic dual-shadow (bumped this rev for more weight).
+     3. Bottom bar is HALF-size (compact) per Joseph's request.  Top bar
+        stays at the previous size.  Right side bar gets square icon-buttons.
+     4. Locked cream palette only.  No greys, no neon, no dark mode.
    ════════════════════════════════════════════════════════════════════════════ */
 
 * {
@@ -21,28 +22,25 @@
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   1. INVISIBLE BAR SHELL — pure transparent, no bg / border / shadow.
+   1. SHELL — faint cream tint (lets Hyprland's blur frost the wall behind),
+      no border, no shadow.  Pure cream, no greys.
    ────────────────────────────────────────────────────────────────────────── */
-window#waybar {
-    background-color: rgba(0, 0, 0, 0);
+window#waybar,
+window#waybar.top,
+window#waybar.bottom,
+window#waybar.left,
+window#waybar.right {
+    background-color: rgba(251, 250, 246, 0.18);
     background-image: none;
     border:           none;
     box-shadow:       none;
     color:            #1a1816;
 }
 
-window#waybar.top,
-window#waybar.bottom {
-    background-color: rgba(0, 0, 0, 0);
-    background-image: none;
-    border:           none;
-    box-shadow:       none;
-}
-
 /* ──────────────────────────────────────────────────────────────────────────
-   2. UNIVERSAL FLOATING CREAM BUTTON
-      Every module + every workspace button gets this treatment.
-      Neomorphic dual-shadow: light from upper-left, dark to lower-right.
+   2. UNIVERSAL FLOATING CREAM BUTTON  — every module + every workspace
+      button on every bar.  Deeper shadow this rev (was 4/4/10 → now 5/5/14
+      with 0.24 alpha) for more pronounced 3D float.
    ────────────────────────────────────────────────────────────────────────── */
 #workspaces button,
 #clock,
@@ -60,6 +58,16 @@ window#waybar.bottom {
 #custom-nyxus-wordmark,
 #custom-notifications,
 #custom-app-settings,
+#custom-app-godsapp,
+#custom-app-studio,
+#custom-app-sage,
+#custom-app-shield,
+#custom-app-control,
+#custom-app-sysmon,
+#custom-app-stickies,
+#custom-app-weather,
+#custom-app-notes,
+#custom-app-terminal,
 #custom-nyxus-panel,
 #custom-hyprland-side,
 #custom-hyprland-side-top,
@@ -74,23 +82,17 @@ window#waybar.bottom {
     font-weight:      500;
     letter-spacing:   0.04em;
 
-    /* Engraved text — soft top highlight + faint bottom ink. */
     text-shadow:      0 1px 0 rgba(255, 255, 255, 0.85),
                       0 -1px 0 rgba(26,  24, 22, 0.18);
 
-    /* Neomorphic dual-shadow:
-         · outer DARK to lower-right (the "weight" / dropped shadow)
-         · outer LIGHT to upper-left  (the "lift" / reflected highlight)
-         · inset white top-left rim   (the bevel highlight)
-         · inset ink bottom-right rim (the bevel shadow) */
+    /* Deeper neomorphic dual-shadow this rev. */
     box-shadow:
-        4px 4px 10px rgba(26, 24, 22, 0.18),
-       -3px -3px 8px rgba(255, 255, 255, 0.90),
+        5px 5px 14px rgba(26, 24, 22, 0.24),
+       -4px -4px 10px rgba(255, 255, 255, 0.92),
         inset  1px  1px 0 rgba(255, 255, 255, 0.95),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.06);
+        inset -1px -1px 0 rgba(26,  24, 22, 0.08);
 }
 
-/* Hover — push the button slightly inward (subtler shadow), feels pressable. */
 #workspaces button:hover,
 #clock:hover,
 #cpu:hover,
@@ -103,27 +105,34 @@ window#waybar.bottom {
 #custom-nyxus-wordmark:hover,
 #custom-notifications:hover,
 #custom-app-settings:hover,
+#custom-app-godsapp:hover,
+#custom-app-studio:hover,
+#custom-app-sage:hover,
+#custom-app-shield:hover,
+#custom-app-control:hover,
+#custom-app-sysmon:hover,
+#custom-app-stickies:hover,
+#custom-app-weather:hover,
+#custom-app-notes:hover,
+#custom-app-terminal:hover,
 #custom-nyxus-panel:hover {
     background-color: #ffffff;
     box-shadow:
-        2px 2px 5px rgba(26, 24, 22, 0.14),
-       -2px -2px 5px rgba(255, 255, 255, 0.85),
+        3px 3px 8px rgba(26, 24, 22, 0.18),
+       -2px -2px 6px rgba(255, 255, 255, 0.90),
         inset  1px  1px 0 rgba(255, 255, 255, 1.0),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.08);
+        inset -1px -1px 0 rgba(26,  24, 22, 0.10);
 }
 
-/* Active workspace — pressed-IN look (inverted neomorphic) so it reads
-   as "selected"; keeps the cream palette, no color accent. */
 #workspaces button.active,
 #workspaces button.focused {
     background-color: #efece6;
     color:            #1a1816;
     box-shadow:
-        inset  3px  3px 6px rgba(26, 24, 22, 0.22),
-        inset -2px -2px 5px rgba(255, 255, 255, 0.70);
+        inset  3px  3px 7px rgba(26, 24, 22, 0.26),
+        inset -2px -2px 6px rgba(255, 255, 255, 0.70);
 }
 
-/* Urgent workspace — same inset feel, very subtle warm tint (still cream-only). */
 #workspaces button.urgent {
     background-color: #f3e8d8;
     box-shadow:
@@ -132,29 +141,19 @@ window#waybar.bottom {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   3. PER-MODULE TWEAKS — keep the floating-button recipe, just
-      adjust padding/font for special cases.
+   3. PER-MODULE FONT TWEAKS (top bar — unchanged sizing).
    ────────────────────────────────────────────────────────────────────────── */
-
-/* NYXUS / wordmark plaques — handwritten font, more letter-spacing,
-   slightly bigger padding so the wordmark feels like a nameplate. */
-#custom-nyxus,
-#custom-nyxus-start,
-#custom-nyxus-wordmark {
+window#waybar.top #custom-nyxus,
+window#waybar.top #custom-nyxus-start,
+window#waybar.top #custom-nyxus-wordmark {
     font-family:    'Architects Daughter', 'Caveat', cursive;
     font-size:      14px;
     letter-spacing: 0.18em;
-    padding:        6px 18px;
+    padding:        4px 22px;
 }
 
-/* Top-bar center NYXUS uses pango markup multi-line — give it room. */
-window#waybar.top #custom-nyxus {
-    padding: 4px 22px;
-}
-
-/* Vertical HYPRLAND sidetext — narrower, monospace, tight padding. */
-#custom-hyprland-side,
-#custom-hyprland-side-top {
+window#waybar.top #custom-hyprland-side,
+window#waybar.top #custom-hyprland-side-top {
     font-family:    'JetBrains Mono', 'Inter', monospace;
     font-size:      9px;
     font-weight:    700;
@@ -162,14 +161,7 @@ window#waybar.top #custom-nyxus {
     padding:        6px 8px;
 }
 
-/* Workspace buttons — square-ish, monospace number for the carved digit. */
-#workspaces {
-    background-color: transparent;
-    box-shadow:       none;
-    margin:           0;
-    padding:          0;
-}
-#workspaces button {
+window#waybar.top #workspaces button {
     font-family: 'JetBrains Mono', 'Inter', monospace;
     font-size:   12px;
     font-weight: 700;
@@ -177,25 +169,110 @@ window#waybar.top #custom-nyxus {
     min-width:   38px;
 }
 
-/* Ticker (top bar) — wider, more breathing room for the rolling text. */
-#custom-ticker {
+window#waybar.top #custom-ticker {
     min-width:   220px;
     padding:     6px 14px;
     font-family: 'Inter', sans-serif;
     font-size:   11px;
 }
 
-/* Tray icons — smaller padding so icons aren't oversized. */
-#tray {
-    padding: 4px 8px;
+/* ──────────────────────────────────────────────────────────────────────────
+   4. BOTTOM BAR  — HALF-SIZE / COMPACT (per Joseph 2026-05-06b).
+      Smaller margin + padding + font + border-radius across every module.
+   ────────────────────────────────────────────────────────────────────────── */
+window#waybar.bottom #workspaces button,
+window#waybar.bottom #clock,
+window#waybar.bottom #cpu,
+window#waybar.bottom #memory,
+window#waybar.bottom #temperature,
+window#waybar.bottom #network,
+window#waybar.bottom #pulseaudio,
+window#waybar.bottom #bluetooth,
+window#waybar.bottom #battery,
+window#waybar.bottom #tray,
+window#waybar.bottom #custom-nyxus,
+window#waybar.bottom #custom-nyxus-start,
+window#waybar.bottom #custom-nyxus-wordmark,
+window#waybar.bottom #custom-notifications,
+window#waybar.bottom #custom-app-settings,
+window#waybar.bottom #custom-nyxus-panel,
+window#waybar.bottom #custom-hyprland-side,
+window#waybar.bottom #custom-sep {
+    margin:        4px 3px;
+    padding:       2px 8px;
+    border-radius: 7px;
+    font-size:     8px;
+    /* Slightly tighter shadow at small size so it stays crisp. */
+    box-shadow:
+        3px 3px 8px rgba(26, 24, 22, 0.22),
+       -2px -2px 6px rgba(255, 255, 255, 0.90),
+        inset  1px  1px 0 rgba(255, 255, 255, 0.95),
+        inset -1px -1px 0 rgba(26,  24, 22, 0.07);
 }
-#tray > .needs-attention {
-    background-color: #f3e8d8;
+
+window#waybar.bottom #workspaces button {
+    font-family: 'JetBrains Mono', 'Inter', monospace;
+    font-size:   8px;
+    font-weight: 700;
+    padding:     2px 6px;
+    min-width:   22px;
+}
+
+window#waybar.bottom #custom-nyxus,
+window#waybar.bottom #custom-nyxus-start,
+window#waybar.bottom #custom-nyxus-wordmark {
+    font-family:    'Architects Daughter', 'Caveat', cursive;
+    font-size:      11px;
+    letter-spacing: 0.14em;
+    padding:        2px 10px;
+}
+
+window#waybar.bottom #custom-hyprland-side {
+    font-family:    'JetBrains Mono', 'Inter', monospace;
+    font-size:      6px;
+    font-weight:    700;
+    letter-spacing: 0.06em;
+    padding:        4px 4px;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   4. STATE MODIFIERS — battery / network warnings.
-      Keep cream button, tint the text only (no neon, no colored backgrounds).
+   5. RIGHT SIDE BAR — square icon-buttons with large nerd-font glyphs.
+      The bar width itself is bumped to 72 in waybar-config.json.
+   ────────────────────────────────────────────────────────────────────────── */
+window#waybar.right #custom-app-godsapp,
+window#waybar.right #custom-app-studio,
+window#waybar.right #custom-app-sage,
+window#waybar.right #custom-app-shield,
+window#waybar.right #custom-app-control,
+window#waybar.right #custom-app-sysmon,
+window#waybar.right #custom-app-stickies,
+window#waybar.right #custom-app-weather,
+window#waybar.right #custom-app-notes,
+window#waybar.right #custom-app-terminal,
+window#waybar.right #custom-app-settings {
+    font-family:    'Symbols Nerd Font', 'JetBrains Mono', monospace;
+    font-size:      18px;
+    margin:         5px 6px;
+    padding:        8px 0;
+    min-width:      48px;
+    min-height:     48px;
+    border-radius:  12px;
+}
+
+/* Same for the LEFT side bar workspace digits. */
+window#waybar.left #workspaces button {
+    font-family: 'JetBrains Mono', 'Inter', monospace;
+    font-size:   13px;
+    font-weight: 700;
+    margin:      5px 6px;
+    padding:     8px 0;
+    min-width:   42px;
+    min-height:  42px;
+    border-radius: 12px;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   6. STATE MODIFIERS — keep cream button, tint text only (no neon bg).
    ────────────────────────────────────────────────────────────────────────── */
 #battery.warning,
 #temperature.critical {
