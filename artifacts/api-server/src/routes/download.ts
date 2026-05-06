@@ -114,6 +114,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-hyprlock.conf":         "nyxus-hyprlock.conf",
   "nyxus-hyprland-rules.conf":   "nyxus-hyprland-rules.conf",
   "nyxus-hyprland-blur.conf":    "nyxus-hyprland-blur.conf",
+  "nyxus-hyprland-fog.conf":     "nyxus-hyprland-fog.conf",
   "nyxus-hyprland-opacity.conf": "nyxus-hyprland-opacity.conf",
   "nyxus-hyprland-general.conf": "nyxus-hyprland-general.conf",
 
