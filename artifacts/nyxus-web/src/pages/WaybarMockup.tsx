@@ -105,8 +105,11 @@ function RainbowText({ text, size = 14 }: { text: string; size?: number }) {
 // Frosted-glass shell (rev 2026-05-06g) — translucent white plate, no
 // per-bar bg image. Wallpaper shows through. Misty white edge + outer
 // halo glow gives the "mist rolling off the edges" feel.
+// Pure-inset stack mirrors the actual waybar CSS (rev 2026-05-06h)
+// since Wayland layer-shell clips outer shadows. Reads as glowing
+// pure-white edges with fog rolling inward.
 const MISTY_GLOW =
-  "inset 0 0 6px 1px rgba(255,255,255,0.55), 0 0 14px 2px rgba(255,255,255,0.55), 0 0 28px 6px rgba(255,255,255,0.35), 0 0 48px 14px rgba(255,255,255,0.18)";
+  "inset 0 0 2px 0 rgba(255,255,255,1.0), inset 0 0 6px 1px rgba(255,255,255,0.85), inset 0 0 14px 3px rgba(255,255,255,0.60), inset 0 0 28px 6px rgba(255,255,255,0.40), inset 0 0 56px 12px rgba(255,255,255,0.22)";
 
 function BarShell({
   position,
@@ -127,7 +130,7 @@ function BarShell({
         WebkitBackdropFilter: "blur(12px) saturate(110%)",
         display: "flex",
         alignItems: "center",
-        border: "1px solid rgba(255,255,255,0.85)",
+        border: "1px solid rgba(255,255,255,1.0)",
         boxShadow: MISTY_GLOW,
         ...style,
       }}
