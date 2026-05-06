@@ -15,11 +15,79 @@
       "custom/nyxus"
     ],
     "modules-right": [
+      "pulseaudio",
+      "network",
+      "backlight",
+      "bluetooth",
+      "custom/mic",
+      "custom/dnd",
+      "custom/lock",
+      "battery",
       "clock#date",
       "clock",
       "clock#year",
       "custom/hyprland-side-top"
     ],
+    "pulseaudio": {
+      "format": "{icon}",
+      "format-muted": "",
+      "format-icons": ["", "", ""],
+      "scroll-step": 5,
+      "on-click": "pavucontrol",
+      "tooltip-format": "Volume {volume}%"
+    },
+    "network": {
+      "format-wifi": "",
+      "format-ethernet": "",
+      "format-disconnected": "",
+      "interval": 5,
+      "on-click": "nm-connection-editor",
+      "tooltip-format-wifi": "{essid} · {signalStrength}%\n{ipaddr}",
+      "tooltip-format-ethernet": "{ifname} · {ipaddr}",
+      "tooltip-format-disconnected": "Disconnected"
+    },
+    "backlight": {
+      "format": "{icon}",
+      "format-icons": ["", "", "", "", "", "", "", "", ""],
+      "on-scroll-up": "brightnessctl set 5%+",
+      "on-scroll-down": "brightnessctl set 5%-",
+      "tooltip-format": "Brightness {percent}%"
+    },
+    "bluetooth": {
+      "format": "",
+      "format-disabled": "",
+      "format-connected": "",
+      "on-click": "blueman-manager",
+      "tooltip-format": "Bluetooth"
+    },
+    "custom/mic": {
+      "exec": "sh -c 'wpctl get-volume @DEFAULT_AUDIO_SOURCE@ 2>/dev/null | grep -q MUTED && echo \"\" || echo \"\"'",
+      "interval": 2,
+      "on-click": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
+      "tooltip": true,
+      "tooltip-format": "Microphone toggle"
+    },
+    "custom/dnd": {
+      "exec": "sh -c 'dunstctl is-paused 2>/dev/null | grep -q true && echo \"\" || echo \"\"'",
+      "interval": 2,
+      "on-click": "dunstctl set-paused toggle",
+      "tooltip": true,
+      "tooltip-format": "Do Not Disturb"
+    },
+    "custom/lock": {
+      "format": "",
+      "on-click": "hyprlock",
+      "tooltip": true,
+      "tooltip-format": "Lock screen"
+    },
+    "battery": {
+      "format": "{icon}",
+      "format-charging": "",
+      "format-plugged": "",
+      "format-icons": ["", "", "", "", ""],
+      "states": { "warning": 30, "critical": 15 },
+      "tooltip-format": "Battery {capacity}% · {time}"
+    },
     "custom/ticker": {
       "exec": "~/.config/waybar/ticker.sh",
       "interval": 1,
@@ -73,15 +141,7 @@
       "hyprland/workspaces"
     ],
     "modules-right": [
-      "cpu",
-      "network#bottom",
-      "pulseaudio",
-      "battery#bottom",
-      "custom/notifications",
-      "custom/app-settings",
-      "custom/nyxus-panel",
-      "custom/nyxus-wordmark",
-      "custom/hyprland-side"
+      "custom/nyxus-panel"
     ],
     "custom/notifications": {
       "format": "<span foreground='#5a8aab'></span>\n<span foreground='#ec4899' weight='bold' size='x-small'>A</span><span foreground='#ea7e3c' weight='bold' size='x-small'>l</span><span foreground='#d4a73a' weight='bold' size='x-small'>e</span><span foreground='#6aa872' weight='bold' size='x-small'>r</span><span foreground='#5a8aab' weight='bold' size='x-small'>t</span><span foreground='#8a6aaa' weight='bold' size='x-small'>s</span>",
