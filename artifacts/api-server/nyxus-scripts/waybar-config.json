@@ -85,37 +85,53 @@
     "name": "bottom",
     "layer": "top",
     "position": "bottom",
-    "height": 60,
+    "height": 78,
     "spacing": 0,
     "margin-bottom": 0,
     "margin-left": 0,
     "margin-right": 0,
     "modules-left": [
-      "custom/nyxus-start",
-      "custom/main"
+      "custom/nyxus-start"
     ],
     "modules-center": [
       "hyprland/workspaces"
     ],
-    "custom/main": {
-      "format": "MAIN",
-      "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#22d3ee'>NYXUS \u00b7 Home</span>\n<span size='small' foreground='#b8a8d0'>Page 0 \u00b7 dashboard (1\u201310 reserved)</span>",
-      "on-click": "hyprctl dispatch workspace name:0 && (pgrep -f nyxus-home >/dev/null || nyxus-home &)"
-    },
     "modules-right": [
+      "cpu",
+      "network#bottom",
+      "pulseaudio",
+      "battery#bottom",
       "custom/notifications",
       "custom/app-settings",
-      "custom/nyxus-panel"
+      "custom/nyxus-panel",
+      "custom/nyxus-wordmark",
+      "custom/hyprland-side"
     ],
     "custom/notifications": {
-      "format": "\uf0f3 Notify",
+      "format": "\uf0f3\nAlerts",
       "tooltip": true,
       "on-click": "nyxus-notifications",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#39ff14'>NYXUS \u00b7 Notifications</span>\n<span size='small' foreground='#b8a8d0'>Click to open the notification center</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Notifications</span>\n<span size='small' foreground='#58524c'>Click to open the notification center</span>"
+    },
+    "custom/app-settings": {
+      "format": "\uf085\nApps",
+      "tooltip": true,
+      "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.settings\"; then hyprctl dispatch focuswindow class:io.nyxus.settings; else setsid python3 /home/nyx/.nyxus/nyxus_settings.py >/tmp/nyxus-settings.log 2>&1 < /dev/null & fi'",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Apps</span>\n<span size='small' foreground='#58524c'>System Settings &amp; Apps</span>"
+    },
+    "custom/nyxus-wordmark": {
+      "format": "NYXUS",
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Sierengowski</span>\n<span size='small' foreground='#58524c'>Hyprland \u00b7 Arch Linux \u00b7 2026</span>",
+      "on-click": "/home/nyx/.local/bin/nyxus-start"
+    },
+    "custom/hyprland-side": {
+      "format": "H\nY\nP\nR\nL\nA\nN\nD",
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>HYPRLAND \u00b7 WAYBAR</span>\n<span size='small' foreground='#58524c'>Wayland Compositor \u00b7 NYXUS Edition</span>"
     },
     "hyprland/workspaces": {
-      "format": "{id}",
+      "format": "{id}\nWS {id}",
       "on-click": "activate",
       "sort-by-number": true,
       "active-only": false,
@@ -152,26 +168,32 @@
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#0088ff'>NYXUS \u00b7 Bluetooth</span>\n<span size='small' foreground='#b8a8d0'>{controller_alias}\n{device_enumerate}</span>",
       "on-click": "blueman-manager"
     },
+    "cpu": {
+      "format": "\uf2db\nCPU / Mem",
+      "interval": 2,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 CPU / Memory</span>\n<span size='small' foreground='#58524c'>{usage}% utilization</span>"
+    },
     "network#bottom": {
-      "format-wifi": "  {signalStrength}%",
-      "format-ethernet": "  ETH",
-      "format-disconnected": "  ",
-      "tooltip-format-wifi": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Wi-Fi</span>\n<span size='small' foreground='#b8a8d0'>{essid}  \u00b7  {signalStrength}%\n{ipaddr}</span>",
+      "format-wifi": "\uf1eb\nNet",
+      "format-ethernet": "\uf6ff\nNet",
+      "format-disconnected": "\uf127\nNet",
+      "interval": 2,
+      "tooltip-format-wifi": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Wi-Fi</span>\n<span size='small' foreground='#58524c'>{essid}  \u00b7  {signalStrength}%\n{ipaddr}</span>",
       "on-click": "nm-connection-editor",
-      "tooltip-format-ethernet": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Ethernet</span>\n<span size='small' foreground='#b8a8d0'>{ifname}  \u00b7  {ipaddr}</span>",
-      "tooltip-format-disconnected": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#b8a8d0'>No connection</span>"
+      "tooltip-format-ethernet": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Ethernet</span>\n<span size='small' foreground='#58524c'>{ifname}  \u00b7  {ipaddr}</span>",
+      "tooltip-format-disconnected": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#58524c'>No connection</span>"
     },
     "pulseaudio": {
-      "format": "  {volume}%",
-      "format-muted": "  ",
+      "format": "\uf028\nVol",
+      "format-muted": "\uf026\nVol",
       "scroll-step": 5,
       "on-click": "pavucontrol",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS \u00b7 Audio</span>\n<span size='small' foreground='#b8a8d0'>{volume}%  \u00b7  {desc}</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Audio</span>\n<span size='small' foreground='#58524c'>{volume}%  \u00b7  {desc}</span>"
     },
     "battery#bottom": {
-      "format": "{icon}  {capacity}%",
-      "format-charging": "  {capacity}%",
-      "format-plugged": "  {capacity}%",
+      "format": "{icon}\nBat",
+      "format-charging": "\uf0e7\nBat",
+      "format-plugged": "\uf1e6\nBat",
       "format-icons": [
         "",
         "",
@@ -182,7 +204,8 @@
       "states": {
         "warning": 30,
         "critical": 15
-      }
+      },
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#58524c'>{capacity}% \u00b7 {time}</span>"
     },
     "tray": {
       "icon-size": 14,

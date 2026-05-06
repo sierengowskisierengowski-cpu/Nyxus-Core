@@ -152,135 +152,118 @@ window#waybar.top #network.disconnected {
 /* ════════════════════════════════════════════════════════════════════════════
    BOTTOM BAR — same embossed cream paper, slightly taller (60px)
    ════════════════════════════════════════════════════════════════════════════ */
-/* Layered tablet — bottom bar with slabs peeking UP from behind. Deepened. */
+/* ════════════════════════════════════════════════════════════════════════════
+   BOTTOM BAR — Embossed cream nameplate.
+   Sculptural plaque inspired by carved-cream "HYPRLAND WAYBAR" reference:
+   each module is a deeply carved cream tile with icon-on-top and a tiny
+   pencil label below. Far-right ends with a big NYXUS plaque + a vertical
+   "HYPRLAND" engraved sidetext. Per-workspace colored identity stripes
+   are preserved as our signature accent.
+   ════════════════════════════════════════════════════════════════════════════ */
 window#waybar.bottom {
     background-color: #f5f3ef;
     background-image: none;
     color:            #1a1816;
     border:           none;
-    border-top:       1px solid rgba(26, 24, 22, 0.14);
-    box-shadow:       inset 0 -1px 0 rgba(255, 255, 255, 0.95),
-                      inset 0  1px 0 rgba(26,  24, 22, 0.10),
-                      0  -6px 0 -2px #ebe8e2,
-                      0  -7px 0 -2px rgba(26, 24, 22, 0.14),
-                      0 -12px 0 -4px #ddd9d3,
-                      0 -13px 0 -4px rgba(26, 24, 22, 0.10),
-                      0 -16px 24px -6px rgba(26, 24, 22, 0.18);
+    border-top:       1px solid rgba(26, 24, 22, 0.20);
+    box-shadow:       inset 0 -2px 0 rgba(255, 255, 255, 0.95),
+                      inset 0  2px 0 rgba(26,  24, 22, 0.12),
+                      0  -8px 0 -2px #ebe8e2,
+                      0  -9px 0 -2px rgba(26, 24, 22, 0.18),
+                      0 -16px 0 -4px #ddd9d3,
+                      0 -17px 0 -4px rgba(26, 24, 22, 0.12),
+                      0 -22px 30px -8px rgba(26, 24, 22, 0.22);
 }
 
-/* ── Workspaces — cream pills with thin colored top-stripe per workspace ── */
-window#waybar.bottom #workspaces { padding: 0 10px; }
-
-window#waybar.bottom #workspaces button {
-    color:         #58524c;
-    background:    #fbfaf6;
-    padding:       3px 16px;
-    margin:        9px 4px;
-    border:        1px solid rgba(26, 24, 22, 0.15);
-    border-radius: 8px;
-    min-width:     34px;
-    font-size:     12px;
-    font-weight:   500;
-    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
-                   inset -1px -1px 0 rgba(26, 24, 22, 0.05);
-    transition:    all 0.18s ease;
+/* ── Shared carved-tile sizing for every module on the bottom bar ──────────
+ * Every tile is a deeply embossed cream square: 2-line label inside (icon
+ * on top, tiny pencil label below). The combined inset-highlight + inset-
+ * shadow + bottom-rim + drop-shadow stack sells the "carved into cream"
+ * read. text-shadow gives the icon glyph and label a faint engraved feel.*/
+window#waybar.bottom #workspaces button,
+window#waybar.bottom #cpu,
+window#waybar.bottom #memory,
+window#waybar.bottom #network,
+window#waybar.bottom #pulseaudio,
+window#waybar.bottom #battery,
+window#waybar.bottom #custom-notifications,
+window#waybar.bottom #custom-app-settings,
+window#waybar.bottom #custom-nyxus-panel,
+window#waybar.bottom #custom-nyxus-start {
+    color:           #1a1816;
+    background:      #fbfaf6;
+    border:          1px solid rgba(26, 24, 22, 0.22);
+    border-radius:   12px;
+    padding:         5px 12px;
+    margin:          7px 4px;
+    min-width:       58px;
+    min-height:      58px;
+    font-family:     'Inter', sans-serif;
+    font-size:       11px;
+    font-weight:     600;
+    letter-spacing:  0.04em;
+    box-shadow:      inset  1px  1px 0 rgba(255, 255, 255, 0.95),
+                     inset -1px -1px 0 rgba(26,  24, 22, 0.08),
+                     inset  0   -2px 0 rgba(26,  24, 22, 0.06),
+                     0 2px 5px rgba(26, 24, 22, 0.14);
+    text-shadow:     0  1px 0 rgba(255, 255, 255, 0.85),
+                     0 -1px 0 rgba(26,  24, 22, 0.18);
+    transition:      all 0.18s ease;
 }
 
-window#waybar.bottom #workspaces button:hover {
-    background:  #ffffff;
-    color:       #1a1816;
-    border-color: rgba(26, 24, 22, 0.30);
-}
-
-window#waybar.bottom #workspaces button.active {
-    color:        #1a1816;
+window#waybar.bottom #workspaces button:hover,
+window#waybar.bottom #cpu:hover,
+window#waybar.bottom #network:hover,
+window#waybar.bottom #pulseaudio:hover,
+window#waybar.bottom #battery:hover,
+window#waybar.bottom #custom-notifications:hover,
+window#waybar.bottom #custom-app-settings:hover,
+window#waybar.bottom #custom-nyxus-panel:hover,
+window#waybar.bottom #custom-nyxus-start:hover {
     background:   #ffffff;
-    border:       1px solid rgba(26, 24, 22, 0.45);
-    box-shadow:   inset 1px 1px 0 rgba(255, 255, 255, 0.95),
-                  inset -1px -1px 0 rgba(26, 24, 22, 0.08),
-                  0 2px 6px rgba(26, 24, 22, 0.10);
+    border-color: rgba(26, 24, 22, 0.42);
+    box-shadow:   inset  1px  1px 0 rgba(255, 255, 255, 0.95),
+                  inset -1px -1px 0 rgba(26,  24, 22, 0.10),
+                  inset  0   -3px 0 rgba(26,  24, 22, 0.08),
+                  0 3px 8px rgba(26, 24, 22, 0.20);
 }
 
-/* Per-workspace identity — 3px colored bottom stripe (single color accent) */
-window#waybar.bottom #workspaces button:nth-child(1) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba(236, 72, 153, 0.55); }
-window#waybar.bottom #workspaces button:nth-child(2) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba(234, 126,  60, 0.55); }
-window#waybar.bottom #workspaces button:nth-child(3) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba(212, 167,  58, 0.55); }
-window#waybar.bottom #workspaces button:nth-child(4) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba(106, 168, 114, 0.55); }
-window#waybar.bottom #workspaces button:nth-child(5) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba( 90, 138, 171, 0.55); }
-window#waybar.bottom #workspaces button:nth-child(6) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba(138, 106, 170, 0.55); }
+/* ── Workspaces — same carved tile, BIG number on top, tiny WS label ───── */
+window#waybar.bottom #workspaces { padding: 0 12px; }
 
-window#waybar.bottom #workspaces button.active:nth-child(1) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(236, 72, 153, 0.95), 0 2px 6px rgba(236, 72, 153, 0.20); }
-window#waybar.bottom #workspaces button.active:nth-child(2) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(234, 126,  60, 0.95), 0 2px 6px rgba(234, 126,  60, 0.20); }
-window#waybar.bottom #workspaces button.active:nth-child(3) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(212, 167,  58, 0.95), 0 2px 6px rgba(212, 167,  58, 0.20); }
-window#waybar.bottom #workspaces button.active:nth-child(4) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(106, 168, 114, 0.95), 0 2px 6px rgba(106, 168, 114, 0.20); }
-window#waybar.bottom #workspaces button.active:nth-child(5) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba( 90, 138, 171, 0.95), 0 2px 6px rgba( 90, 138, 171, 0.20); }
-window#waybar.bottom #workspaces button.active:nth-child(6) { box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(138, 106, 170, 0.95), 0 2px 6px rgba(138, 106, 170, 0.20); }
+/* Per-workspace identity stripe — preserved colors, deeper. */
+window#waybar.bottom #workspaces button:nth-child(1) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba(236, 72, 153, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
+window#waybar.bottom #workspaces button:nth-child(2) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba(234, 126,  60, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
+window#waybar.bottom #workspaces button:nth-child(3) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba(212, 167,  58, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
+window#waybar.bottom #workspaces button:nth-child(4) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba(106, 168, 114, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
+window#waybar.bottom #workspaces button:nth-child(5) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba( 90, 138, 171, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
+window#waybar.bottom #workspaces button:nth-child(6) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba(138, 106, 170, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
+
+window#waybar.bottom #workspaces button.active:nth-child(1) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba(236, 72, 153, 0.95), 0 4px 10px rgba(236, 72, 153, 0.28); }
+window#waybar.bottom #workspaces button.active:nth-child(2) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba(234, 126,  60, 0.95), 0 4px 10px rgba(234, 126,  60, 0.28); }
+window#waybar.bottom #workspaces button.active:nth-child(3) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba(212, 167,  58, 0.95), 0 4px 10px rgba(212, 167,  58, 0.28); }
+window#waybar.bottom #workspaces button.active:nth-child(4) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba(106, 168, 114, 0.95), 0 4px 10px rgba(106, 168, 114, 0.28); }
+window#waybar.bottom #workspaces button.active:nth-child(5) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba( 90, 138, 171, 0.95), 0 4px 10px rgba( 90, 138, 171, 0.28); }
+window#waybar.bottom #workspaces button.active:nth-child(6) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba(138, 106, 170, 0.95), 0 4px 10px rgba(138, 106, 170, 0.28); }
 
 window#waybar.bottom #workspaces button.urgent {
     color:        #8a2a2a;
     background:   #fff5f3;
     border-color: rgba(138, 42, 42, 0.55);
-    box-shadow:   inset 1px 1px 0 rgba(255,255,255,0.85),
-                  inset 0 -3px 0 rgba(138, 42, 42, 0.85);
 }
 
-/* ── Window title (current focused window) ── */
-window#waybar.bottom #window {
-    color:          #1a1816;
-    font-family:    'Architects Daughter', 'Caveat', cursive;
-    font-size:      13px;
-    font-weight:    500;
-    letter-spacing: 0.04em;
-    padding:        3px 18px;
-    background:     transparent;
-    border:         none;
-    box-shadow:     none;
+/* Workspace number+label uses the icon font + Inter for the small label.  *
+ * GTK doesn't let us size two lines of one label differently from CSS,    *
+ * so the number+label both render at 13px — the BIG-number / SMALL-label  *
+ * differentiation is supplied by Pango markup inside the format string in *
+ * waybar-config.json (cpu/network/pulseaudio/etc.) where supported.       */
+window#waybar.bottom #workspaces button {
+    font-family: 'JetBrains Mono', 'Inter', monospace;
+    font-size:   13px;
+    font-weight: 700;
 }
 
-/* ── Bottom-bar clock ── */
-window#waybar.bottom #clock {
-    color:          #1a1816;
-    background:     #fbfaf6;
-    letter-spacing: 0.08em;
-    font-size:      11px;
-    font-weight:    500;
-    padding:        3px 18px;
-    border:         1px solid rgba(26, 24, 22, 0.15);
-    border-radius:  8px;
-    margin:         3px 4px;
-    box-shadow:     inset 1px 1px 0 rgba(255, 255, 255, 0.85),
-                    inset -1px -1px 0 rgba(26, 24, 22, 0.05);
-}
-
-/* ── Bottom-right system modules — shared embossed pill ── */
-window#waybar.bottom #tray {
-    padding:      0 12px;
-    border-left:  1px solid rgba(26, 24, 22, 0.12);
-}
-
-window#waybar.bottom #pulseaudio,
-window#waybar.bottom #network,
-window#waybar.bottom #bluetooth,
-window#waybar.bottom #battery {
-    color:         #1a1816;
-    background:    #fbfaf6;
-    border:        1px solid rgba(26, 24, 22, 0.15);
-    border-radius: 8px;
-    padding:       3px 13px;
-    margin:        3px 3px;
-    font-size:     11px;
-    font-weight:   500;
-    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
-                   inset -1px -1px 0 rgba(26, 24, 22, 0.05);
-    transition:    all 0.15s ease;
-}
-window#waybar.bottom #pulseaudio:hover,
-window#waybar.bottom #network:hover,
-window#waybar.bottom #bluetooth:hover,
-window#waybar.bottom #battery:hover {
-    background:   #ffffff;
-    border-color: rgba(26, 24, 22, 0.30);
-}
+/* Disabled / muted states — pencil-grey, dimmer carving */
 window#waybar.bottom #pulseaudio.muted,
 window#waybar.bottom #network.disconnected {
     color:      #9e948a;
@@ -289,70 +272,63 @@ window#waybar.bottom #network.disconnected {
 window#waybar.bottom #battery.warning  { color: #8a5a2a; border-color: rgba(138, 90, 42, 0.50); }
 window#waybar.bottom #battery.critical { color: #8a2a2a; border-color: rgba(138, 42, 42, 0.55); }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   START + QUICK-SETTINGS + NOTIFICATIONS + APP-BUTTONS
-   All embossed cream pills, charcoal text, hand-drawn font for labels.
-   ════════════════════════════════════════════════════════════════════════════ */
-
-window#waybar.bottom #custom-nyxus-start,
-window#waybar.bottom #custom-start {
-    font-family:   'Architects Daughter', 'Caveat', cursive;
-    font-size:     16px;
-    font-weight:   500;
-    color:         #1a1816;
-    padding:       2px 18px;
-    min-width:     54px;
-    background:    #fbfaf6;
-    border:        1px solid rgba(26, 24, 22, 0.22);
-    border-radius: 10px;
-    margin:        4px 8px;
-    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.95),
-                   inset -1px -1px 0 rgba(26, 24, 22, 0.08),
-                   0 2px 5px rgba(26, 24, 22, 0.10);
-    transition:    all 0.18s ease;
-}
-window#waybar.bottom #custom-nyxus-start:hover,
-window#waybar.bottom #custom-start:hover {
-    background: #ffffff;
-    border-color: rgba(26, 24, 22, 0.40);
-    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.95),
-                inset -1px -1px 0 rgba(26, 24, 22, 0.10),
-                0 3px 8px rgba(26, 24, 22, 0.14);
-}
-
-window#waybar.bottom #custom-main {
+/* NYXUS Start — same tile but hand-drawn font (script-driven content) */
+window#waybar.bottom #custom-nyxus-start {
     font-family:    'Architects Daughter', 'Caveat', cursive;
-    font-size:      13px;
-    letter-spacing: 0.10em;
+    font-size:      14px;
+    margin:         7px 8px 7px 12px;
+}
+
+/* ── NYXUS wordmark — the big embossed plaque on the far right ───────────
+ * This is the "SK" of our reference photo: a deeper, larger carved block
+ * with the wordmark in handwritten Architects Daughter, big text-shadow
+ * to fake the photographic relief depth.                                  */
+window#waybar.bottom #custom-nyxus-wordmark {
+    color:          #1a1816;
+    background:     #fbfaf6;
+    border:         2px solid rgba(26, 24, 22, 0.32);
+    border-radius:  16px;
+    padding:        4px 22px;
+    margin:         5px 6px 5px 14px;
+    min-height:     62px;
+    font-family:    'Architects Daughter', 'Caveat', cursive;
+    font-size:      30px;
+    font-weight:    700;
+    letter-spacing: 0.04em;
+    box-shadow:     inset  2px  2px 0 rgba(255, 255, 255, 0.95),
+                    inset -2px -2px 0 rgba(26,  24, 22, 0.14),
+                    inset  0   -5px 0 rgba(26,  24, 22, 0.10),
+                    0 5px 14px rgba(26, 24, 22, 0.22);
+    text-shadow:    0  2px 0 rgba(255, 255, 255, 0.95),
+                    0 -1px 0 rgba(26,  24, 22, 0.30),
+                    0  3px 5px rgba(26,  24, 22, 0.20);
+    transition:     all 0.20s ease;
+}
+window#waybar.bottom #custom-nyxus-wordmark:hover {
+    background: #ffffff;
+    border-color: rgba(26, 24, 22, 0.50);
+    box-shadow:  inset  2px  2px 0 rgba(255, 255, 255, 0.95),
+                 inset -2px -2px 0 rgba(26,  24, 22, 0.16),
+                 inset  0   -6px 0 rgba(26,  24, 22, 0.12),
+                 0 6px 18px rgba(26, 24, 22, 0.28);
+}
+
+/* ── HYPRLAND vertical sidetext (right edge engraved label) ──────────────
+ * GTK CSS doesn't support transform: rotate for waybar labels, so the
+ * "vertical" text is achieved by stacking each letter on its own line
+ * via the format string. Tiny, engraved with double text-shadow.        */
+window#waybar.bottom #custom-hyprland-side {
     color:          #58524c;
-    padding:        3px 14px;
     background:     transparent;
     border:         none;
-    margin:         3px 2px;
-}
-window#waybar.bottom #custom-main:hover { color: #1a1816; }
-
-window#waybar.bottom #custom-quicksettings,
-window#waybar.bottom #custom-notifications,
-window#waybar.bottom #custom-nyxus-panel {
-    font-family:   'Inter', sans-serif;
-    font-size:     11px;
-    font-weight:   500;
-    color:         #1a1816;
-    padding:       3px 14px;
-    background:    #fbfaf6;
-    border:        1px solid rgba(26, 24, 22, 0.18);
-    border-radius: 8px;
-    margin:        3px 4px;
-    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
-                   inset -1px -1px 0 rgba(26, 24, 22, 0.05);
-    transition:    all 0.15s ease;
-}
-window#waybar.bottom #custom-quicksettings:hover,
-window#waybar.bottom #custom-notifications:hover,
-window#waybar.bottom #custom-nyxus-panel:hover {
-    background: #ffffff;
-    border-color: rgba(26, 24, 22, 0.35);
+    padding:        4px 8px;
+    margin:         8px 10px 8px 0;
+    font-family:    'Inter', sans-serif;
+    font-size:      8px;
+    font-weight:    800;
+    letter-spacing: 0.20em;
+    text-shadow:    0  1px 0 rgba(255, 255, 255, 0.90),
+                    0 -1px 0 rgba(26,  24, 22, 0.22);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
