@@ -1,42 +1,31 @@
 /* ════════════════════════════════════════════════════════════════════════════
-   NYXUS WAYBAR — FLOATING NEOMORPHIC BUTTONS  (rev. 2026-05-06c)
+   NYXUS WAYBAR — TESLA/APPLE POLISH, FROSTED GLASS, EMBOSSED CREAM
+   rev 2026-05-06p · LOCKED EMBOSSED CREAM PAPER aesthetic
    ════════════════════════════════════════════════════════════════════════════
-   Spec (locked):
-     1. Waybar shell carries a heavier cream tint (≈42% alpha) so Hyprland's
-        Dual-Kawase blur is clearly visible behind the floating buttons —
-        wallpaper still readable, but obviously frosted.
-     2. Modules: floating cream "clay" buttons with deep neomorphic shadow.
-     3. Bottom bar shrunk again — half the height of the previous rev.
-     4. Engraved text-shadow upgraded to a soft "washed-black halo" so the
-        rainbow Pango letters stay readable on cream.
-     5. Locked palette only.  Per-letter color uses the workspace stripe
-        palette in Pango spans (set in waybar-config.json).
+   Recipe (every pill on every bar):
+     • Cream #fbfaf6 fill, 14px radius, 8px×16px padding (top), 4px×12px (bottom)
+     • Multi-layer shadow stack:
+         - inset 1px 1px 0 rgba(255,255,255,0.95)   ← top-left highlight
+         - inset -1px -1px 0 rgba(26,24,22,0.10)    ← bottom-right groove
+         - 0 2px 6px rgba(26,24,22,0.16)            ← close drop shadow
+         - 0 8px 24px rgba(26,24,22,0.10)           ← ambient halo
+         - -3px -3px 8px rgba(255,255,255,0.55)     ← soft white bloom
+     • Engraved text: 4-corner outline (rgba 0.40 charcoal) + cream inner glow
+     • Hover: lift 1px, brighter highlight, deeper shadow
+     • Active workspace: gold jewelry glow ring, NO fill change (jewelry-scale)
+   Shell: rgba(255,255,255,0.55) — Hyprland Dual-Kawase blur shows through.
    ════════════════════════════════════════════════════════════════════════════ */
 
 * {
-    font-family:    'Inter', 'Architects Daughter', sans-serif;
-    font-size:      11px;
-    border:         none;
-    border-radius:  0;
-    min-height:     0;
+    font-family:     'Inter', 'Architects Daughter', sans-serif;
+    font-size:       12px;
+    border:          none;
+    border-radius:   0;
+    min-height:      0;
     -gtk-icon-style: regular;
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   1. SHELL — heavier cream tint so Dual-Kawase blur reads as frosted glass.
-   ────────────────────────────────────────────────────────────────────────── */
-/* FROSTED-GLASS SHELL (rev. 2026-05-06g) — all 4 bars are translucent
-   white plates so the wallpaper shows through. Hyprland Dual-Kawase
-   blur (size 8, passes 4, vibrancy 0) frosts the wallpaper inside the
-   bar bounds. A thin white edge + soft outer white halo gives the
-   "mist rolling off the edges" look the user requested.
-   Buttons stay solid cream on top — they're the contrast islands. */
-/* LIVE FOG WAYBARS (rev. 2026-05-06j).
-   The animated fog itself is rendered by nyxus-fog.py — a Python GTK4 +
-   Cairo particle daemon running on a wlr-layer-shell BOTTOM layer
-   underneath each waybar. The waybar shell only needs to be translucent
-   enough for the fog to show through, with the misty pure-white inset
-   edge giving the "glass plate sealing in fog" feel. */
+/* ── 1. SHELL — frosted glass plate, 4 bars ─────────────────────────────── */
 window#waybar,
 window#waybar.top,
 window#waybar.bottom,
@@ -45,20 +34,13 @@ window#waybar.right {
     background-color: rgba(255, 255, 255, 0.55);
     background-image: none;
     color:            #1a1816;
-    /* Misty pure-white edge — inset only (Wayland layer-shell clips outer). */
-    border: 1px solid rgba(255, 255, 255, 1.0);
+    border:           none;
     box-shadow:
-        inset 0 0   2px  0 rgba(255, 255, 255, 1.00),
-        inset 0 0   6px  1px rgba(255, 255, 255, 0.85),
-        inset 0 0  14px  3px rgba(255, 255, 255, 0.60),
-        inset 0 0  28px  6px rgba(255, 255, 255, 0.40),
-        inset 0 0  56px 12px rgba(255, 255, 255, 0.22);
+        inset 0 0  2px 0 rgba(255, 255, 255, 1.00),
+        inset 0 0 12px 2px rgba(255, 255, 255, 0.55);
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   2. UNIVERSAL FLOATING CREAM BUTTON — deep neomorphic shadow + soft black
-      glow text-shadow so the rainbow Pango letters keep contrast on cream.
-   ────────────────────────────────────────────────────────────────────────── */
+/* ── 2. UNIVERSAL PILL — sculpted cream button (all bars, default) ──────── */
 #workspaces button,
 #clock,
 #cpu,
@@ -87,43 +69,44 @@ window#waybar.right {
 #custom-app-terminal,
 #custom-nyxus-panel,
 #custom-hyprland-side,
-#custom-hyprland-side-top,
-#custom-sep {
+#custom-dnd,
+#custom-lock {
     color:            #1a1816;
-    /* Solid cream neomorphic button (locked) — sits on top of the frosted
-       shell.  Buttons themselves are NOT translucent. */
     background-color: #fbfaf6;
-    margin:           8px 5px;
-    padding:          6px 14px;
-    border-radius:    12px;
-    font-family:      'Inter', 'Architects Daughter', sans-serif;
-    font-size:        11px;
+    margin:           6px 4px;
+    padding:          5px 14px;
+    border-radius:    14px;
+    font-family:      'Inter', sans-serif;
+    font-size:        12px;
     font-weight:      500;
-    letter-spacing:   0.04em;
+    letter-spacing:   0.02em;
 
-    /* UNIVERSAL TEXT TREATMENT (rev 2026-05-06m):
-       Thin faded-black outline (4-corner stroke) + cream solid glow inside.
-       Gold variant overrides below on jewelry-scale anchors only. */
+    /* Engraved label — 4-corner outline + cream glow */
     text-shadow:
         -1px -1px 0 rgba(26,  24, 22, 0.40),
          1px -1px 0 rgba(26,  24, 22, 0.40),
         -1px  1px 0 rgba(26,  24, 22, 0.40),
          1px  1px 0 rgba(26,  24, 22, 0.40),
-         0    0  6px rgba(255, 255, 255, 0.90),
-         0    0 14px rgba(251, 250, 246, 0.55);
+         0    1px 0 rgba(255, 255, 255, 0.95),
+         0    0  6px rgba(255, 255, 255, 0.85);
 
+    /* Sculpted depth — 5-layer shadow stack (Tesla/Apple polish) */
     box-shadow:
-        5px 5px 14px rgba(26, 24, 22, 0.24),
-       -4px -4px 10px rgba(255, 255, 255, 0.92),
         inset  1px  1px 0 rgba(255, 255, 255, 0.95),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.08);
+        inset -1px -1px 0 rgba(26,  24, 22, 0.10),
+        inset  0  -2px 0 rgba(26,  24, 22, 0.05),
+        0  2px  6px rgba(26, 24, 22, 0.16),
+        0  8px 24px rgba(26, 24, 22, 0.10),
+       -3px -3px 8px rgba(255, 255, 255, 0.55);
 }
 
+/* Hover — lift, brighten, deepen shadow */
 #workspaces button:hover,
 #clock:hover,
 #cpu:hover,
 #network:hover,
 #pulseaudio:hover,
+#bluetooth:hover,
 #battery:hover,
 #custom-ticker:hover,
 #custom-nyxus:hover,
@@ -141,240 +124,228 @@ window#waybar.right {
 #custom-app-weather:hover,
 #custom-app-notes:hover,
 #custom-app-terminal:hover,
-#custom-nyxus-panel:hover {
+#custom-nyxus-panel:hover,
+#custom-dnd:hover,
+#custom-lock:hover {
     background-color: #ffffff;
     box-shadow:
-        3px 3px 8px rgba(26, 24, 22, 0.18),
-       -2px -2px 6px rgba(255, 255, 255, 0.90),
-        inset  1px  1px 0 rgba(255, 255, 255, 1.0),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.10);
+        inset  1px  1px 0 rgba(255, 255, 255, 1.00),
+        inset -1px -1px 0 rgba(26,  24, 22, 0.12),
+        0  4px 10px rgba(26, 24, 22, 0.22),
+        0 12px 28px rgba(26, 24, 22, 0.14),
+       -3px -3px 10px rgba(255, 255, 255, 0.70);
 }
 
-#workspaces button.active,
-#workspaces button.focused {
-    background-color: #efece6;
-    color:            #1a1816;
-    box-shadow:
-        inset  3px  3px 7px rgba(26, 24, 22, 0.26),
-        inset -2px -2px 6px rgba(255, 255, 255, 0.70);
-}
-
-#workspaces button.urgent {
-    background-color: #f3e8d8;
-    box-shadow:
-        inset  3px  3px 6px rgba(138, 90, 42, 0.30),
-        inset -2px -2px 5px rgba(255, 255, 255, 0.65);
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   3. TOP BAR — keep larger sizing for the rainbow date/clock/year pills.
-   ────────────────────────────────────────────────────────────────────────── */
-window#waybar.top #custom-nyxus,
-window#waybar.top #custom-nyxus-start,
-window#waybar.top #custom-nyxus-wordmark {
+/* ── 3. TOP BAR — hero NYXUS wordmark, ticker, single clock pill ────────── */
+window#waybar.top #custom-nyxus {
     font-family:    'Architects Daughter', 'Caveat', cursive;
-    font-size:      14px;
-    letter-spacing: 0.18em;
-    padding:        4px 22px;
-    /* Gold jewelry-accent glow (locked 2026-05-06f) — wordmarks only. */
-    text-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.85),
-        0 -1px 0 rgba(26, 24, 22, 0.35),
-        0  0 8px rgba(212, 167, 58, 0.55),
-        0  0 18px rgba(212, 167, 58, 0.45);
-}
-
-window#waybar.top #custom-hyprland-side-top {
-    text-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.85),
-        0 -1px 0 rgba(26, 24, 22, 0.35),
-        0  0 6px rgba(212, 167, 58, 0.55);
-}
-
-window#waybar.top #custom-hyprland-side,
-window#waybar.top #custom-hyprland-side-top {
-    font-family:    'JetBrains Mono', 'Inter', monospace;
-    font-size:      10px;
+    font-size:      16px;
     font-weight:    700;
-    letter-spacing: 0.08em;
-    padding:        6px 8px;
+    letter-spacing: 0.20em;
+    padding:        4px 28px;
+    /* Gold jewelry glow — wordmark only */
+    text-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.90),
+        0 -1px 0 rgba(26, 24, 22, 0.32),
+        0  0  8px rgba(212, 167, 58, 0.65),
+        0  0 20px rgba(212, 167, 58, 0.45);
 }
 
-/* ── Workspaces 1-6 — TORN PAPER SQUARES (rev 2026-05-06m, opt E) ────────
-   Each workspace gets a unique organic border-radius (4-corner asymmetric)
-   to fake hand-torn paper edges (GTK CSS has no clip-path). Pencil number
-   in Architects Daughter. Active = paper lifts up with deeper shadow. */
-window#waybar.top #workspaces button {
-    font-family:   'Architects Daughter', 'Caveat', cursive;
-    font-size:     15px;
-    font-weight:   700;
-    padding:       4px 10px;
-    margin:        6px 5px;
-    min-width:     34px;
-    min-height:    32px;
-    background-color: #fbfaf6;
-    color:         #1a1816;
-    border:        1px solid rgba(26, 24, 22, 0.18);
-    box-shadow:
-        4px 4px 10px rgba(26, 24, 22, 0.20),
-       -3px -3px 8px rgba(255, 255, 255, 0.92),
-        inset  1px  1px 0 rgba(255, 255, 255, 0.95),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.08);
+window#waybar.top #custom-ticker {
+    min-width:      260px;
+    padding:        5px 18px;
+    font-family:    'Inter', sans-serif;
+    font-size:      11px;
+    font-weight:    500;
+    letter-spacing: 0.06em;
 }
 
-/* Per-workspace deckle-edge variations (organic asymmetric corners). */
-window#waybar.top #workspaces button:nth-child(1) { border-radius: 14px 4px 12px 6px; }
-window#waybar.top #workspaces button:nth-child(2) { border-radius:  4px 16px 5px 14px; }
-window#waybar.top #workspaces button:nth-child(3) { border-radius: 12px 8px  4px 16px; }
-window#waybar.top #workspaces button:nth-child(4) { border-radius:  6px 14px 18px 4px; }
-window#waybar.top #workspaces button:nth-child(5) { border-radius: 18px 4px  8px 12px; }
-window#waybar.top #workspaces button:nth-child(6) { border-radius:  4px 12px 16px 8px; }
+window#waybar.top #clock {
+    font-family:    'Inter', sans-serif;
+    font-size:      13px;
+    font-weight:    600;
+    padding:        5px 18px;
+    letter-spacing: 0.04em;
+}
 
-/* Gold "here-and-there" glints — workspaces 2 and 5 only. */
-window#waybar.top #workspaces button:nth-child(2),
-window#waybar.top #workspaces button:nth-child(5) {
+/* Bare-glyph mini-icons (volume / wifi / bt / dnd / lock / battery) */
+window#waybar.top #pulseaudio,
+window#waybar.top #network,
+window#waybar.top #bluetooth,
+window#waybar.top #custom-dnd,
+window#waybar.top #custom-lock,
+window#waybar.top #battery {
+    background-color: transparent;
+    box-shadow:       none;
+    margin:           0 4px;
+    padding:          0 6px;
+    min-width:        20px;
+    min-height:       28px;
+    font-family:      'Symbols Nerd Font', 'JetBrains Mono', monospace;
+    font-size:        16px;
+    color:            #1a1816;
     text-shadow:
         -1px -1px 0 rgba(26,  24, 22, 0.40),
          1px -1px 0 rgba(26,  24, 22, 0.40),
         -1px  1px 0 rgba(26,  24, 22, 0.40),
          1px  1px 0 rgba(26,  24, 22, 0.40),
-         0    0  8px rgba(212, 167, 58, 0.90),
-         0    0 18px rgba(212, 167, 58, 0.55);
-}
-
-/* Active workspace = paper lifts up off the bar. */
-window#waybar.top #workspaces button.active,
-window#waybar.top #workspaces button.focused {
-    background-color: #ffffff;
-    margin-top:       3px;
-    margin-bottom:    9px;
-    box-shadow:
-        6px 9px 16px rgba(26, 24, 22, 0.32),
-       -3px -3px 8px rgba(255, 255, 255, 0.95),
-        inset  1px  1px 0 rgba(255, 255, 255, 1.00),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.10);
-}
-
-/* ── Mini-icons (volume / wifi / brightness / bt / mic / dnd / lock / bat)
-   No pill background — just charcoal glyph with the universal outline+glow.
-   Gold glint on volume + lock only ("here and there"). */
-window#waybar.top #pulseaudio,
-window#waybar.top #network,
-window#waybar.top #backlight,
-window#waybar.top #bluetooth,
-window#waybar.top #custom-mic,
-window#waybar.top #custom-dnd,
-window#waybar.top #custom-lock,
-window#waybar.top #battery {
-    background-color: transparent;
-    background-image: none;
-    border:           none;
-    box-shadow:       none;
-    margin:           0 6px;
-    padding:          0 4px;
-    min-width:        18px;
-    min-height:       28px;
-    font-family:      'Symbols Nerd Font', 'JetBrains Mono', monospace;
-    font-size:        16px;
-    color:            #1a1816;
+         0    0  4px rgba(255, 255, 255, 0.85);
 }
 
 window#waybar.top #pulseaudio:hover,
 window#waybar.top #network:hover,
-window#waybar.top #backlight:hover,
 window#waybar.top #bluetooth:hover,
-window#waybar.top #custom-mic:hover,
 window#waybar.top #custom-dnd:hover,
 window#waybar.top #custom-lock:hover,
 window#waybar.top #battery:hover {
     background-color: transparent;
     box-shadow:       none;
     color:            #d4a73a;
+    text-shadow:
+        0 0  6px rgba(212, 167, 58, 0.85),
+        0 0 14px rgba(212, 167, 58, 0.45);
 }
 
+/* Sparse gold-glint accents (jewelry-scale, "here and there") */
 window#waybar.top #pulseaudio,
 window#waybar.top #custom-lock {
+    text-shadow:
+        -1px -1px 0 rgba(26,  24, 22, 0.35),
+         1px -1px 0 rgba(26,  24, 22, 0.35),
+        -1px  1px 0 rgba(26,  24, 22, 0.35),
+         1px  1px 0 rgba(26,  24, 22, 0.35),
+         0    0  6px rgba(212, 167, 58, 0.75),
+         0    0 14px rgba(212, 167, 58, 0.40);
+}
+
+/* ── 4. BOTTOM BAR — Start | workspaces | Panel ─────────────────────────── */
+window#waybar.bottom #custom-nyxus-start,
+window#waybar.bottom #custom-nyxus-panel {
+    font-family:    'Architects Daughter', 'Caveat', cursive;
+    font-size:      13px;
+    font-weight:    700;
+    letter-spacing: 0.10em;
+    padding:        3px 16px;
+    margin:         3px 6px;
+    min-height:     22px;
+    border-radius:  12px;
+}
+
+/* Workspaces — handwritten numbers in cream pills, gold ring on active */
+window#waybar.bottom #workspaces {
+    margin: 0 6px;
+}
+window#waybar.bottom #workspaces button {
+    font-family:   'Architects Daughter', 'Caveat', cursive;
+    font-size:     13px;
+    font-weight:   700;
+    padding:       2px 0;
+    margin:        3px 3px;
+    min-width:     28px;
+    min-height:    22px;
+    border-radius: 11px;
+    background-color: #fbfaf6;
+    color:         #1a1816;
+    box-shadow:
+        inset  1px  1px 0 rgba(255, 255, 255, 0.95),
+        inset -1px -1px 0 rgba(26,  24, 22, 0.10),
+        0  2px  5px rgba(26, 24, 22, 0.16),
+        0  6px 16px rgba(26, 24, 22, 0.08),
+       -2px -2px 5px rgba(255, 255, 255, 0.55);
     text-shadow:
         -1px -1px 0 rgba(26,  24, 22, 0.40),
          1px -1px 0 rgba(26,  24, 22, 0.40),
         -1px  1px 0 rgba(26,  24, 22, 0.40),
          1px  1px 0 rgba(26,  24, 22, 0.40),
-         0    0  8px rgba(212, 167, 58, 0.90),
-         0    0 16px rgba(212, 167, 58, 0.55);
+         0    1px 0 rgba(255, 255, 255, 0.90);
 }
 
-window#waybar.top #custom-ticker {
-    min-width:   220px;
-    padding:     6px 14px;
-    font-family: 'Inter', sans-serif;
-    font-size:   11px;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   4. BOTTOM BAR — TINY (half-of-half this rev).  Minimal padding, tiny
-      font, modest border-radius.  Shadow scaled down to stay crisp.
-   ────────────────────────────────────────────────────────────────────────── */
-window#waybar.bottom #workspaces button,
-window#waybar.bottom #clock,
-window#waybar.bottom #cpu,
-window#waybar.bottom #memory,
-window#waybar.bottom #temperature,
-window#waybar.bottom #network,
-window#waybar.bottom #pulseaudio,
-window#waybar.bottom #bluetooth,
-window#waybar.bottom #battery,
-window#waybar.bottom #tray,
-window#waybar.bottom #custom-nyxus,
-window#waybar.bottom #custom-nyxus-start,
-window#waybar.bottom #custom-nyxus-wordmark,
-window#waybar.bottom #custom-notifications,
-window#waybar.bottom #custom-app-settings,
-window#waybar.bottom #custom-nyxus-panel,
-window#waybar.bottom #custom-hyprland-side,
-window#waybar.bottom #custom-sep {
-    margin:        2px 3px;
-    padding:       0px 6px;
-    border-radius: 6px;
-    font-size:     7px;
-    min-height:    18px;
+window#waybar.bottom #workspaces button:hover {
+    background-color: #ffffff;
     box-shadow:
-        2px 2px 6px rgba(26, 24, 22, 0.22),
-       -2px -2px 5px rgba(255, 255, 255, 0.90),
+        inset  1px  1px 0 rgba(255, 255, 255, 1.00),
+        inset -1px -1px 0 rgba(26,  24, 22, 0.12),
+        0  3px  8px rgba(26, 24, 22, 0.20),
+       -2px -2px 5px rgba(255, 255, 255, 0.70);
+}
+
+/* Active workspace — gold jewelry RING (no fill change), engraved gold number */
+window#waybar.bottom #workspaces button.active,
+window#waybar.bottom #workspaces button.focused {
+    background-color: #fbfaf6;
+    color:            #d4a73a;
+    box-shadow:
+        inset  0  0  0 1.5px rgba(212, 167, 58, 0.85),
         inset  1px  1px 0 rgba(255, 255, 255, 0.95),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.07);
+        inset -1px -1px 0 rgba(26,  24, 22, 0.10),
+        0  2px  6px rgba(26, 24, 22, 0.18),
+        0  0 14px rgba(212, 167, 58, 0.45),
+        0  0 24px rgba(212, 167, 58, 0.22);
+    text-shadow:
+        -1px -1px 0 rgba(26,  24, 22, 0.30),
+         1px -1px 0 rgba(26,  24, 22, 0.30),
+        -1px  1px 0 rgba(26,  24, 22, 0.30),
+         1px  1px 0 rgba(26,  24, 22, 0.30),
+         0    0  6px rgba(212, 167, 58, 0.85),
+         0    0 14px rgba(212, 167, 58, 0.45);
 }
 
-window#waybar.bottom #workspaces button {
-    font-family: 'JetBrains Mono', 'Inter', monospace;
-    font-size:   7px;
-    font-weight: 700;
-    padding:     0 5px;
-    min-width:   18px;
-    min-height:  18px;
-}
-
-window#waybar.bottom #custom-nyxus,
-window#waybar.bottom #custom-nyxus-start,
-window#waybar.bottom #custom-nyxus-wordmark {
+/* ── 5. LEFT BAR — vertical workspace column ────────────────────────────── */
+window#waybar.left #workspaces button {
     font-family:    'Architects Daughter', 'Caveat', cursive;
-    font-size:      9px;
-    letter-spacing: 0.12em;
-    padding:        0 8px;
-    min-height:     18px;
-}
-
-window#waybar.bottom #custom-hyprland-side {
-    font-family:    'JetBrains Mono', 'Inter', monospace;
-    font-size:      5px;
+    font-size:      14px;
     font-weight:    700;
-    letter-spacing: 0.04em;
-    padding:        2px 3px;
-    min-height:     18px;
+    margin:         5px 8px;
+    padding:        6px 0;
+    min-width:      40px;
+    min-height:     40px;
+    border-radius:  13px;
+    background-color: #fbfaf6;
+    color:          #1a1816;
+    box-shadow:
+        inset  1px  1px 0 rgba(255, 255, 255, 0.95),
+        inset -1px -1px 0 rgba(26,  24, 22, 0.10),
+        0  3px  8px rgba(26, 24, 22, 0.18),
+        0  8px 20px rgba(26, 24, 22, 0.10),
+       -3px -3px 8px rgba(255, 255, 255, 0.55);
+    text-shadow:
+        -1px -1px 0 rgba(26,  24, 22, 0.40),
+         1px -1px 0 rgba(26,  24, 22, 0.40),
+        -1px  1px 0 rgba(26,  24, 22, 0.40),
+         1px  1px 0 rgba(26,  24, 22, 0.40),
+         0    1px 0 rgba(255, 255, 255, 0.90);
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   5. RIGHT SIDE BAR — square icon-buttons.
-   ────────────────────────────────────────────────────────────────────────── */
+window#waybar.left #workspaces button:hover {
+    background-color: #ffffff;
+    box-shadow:
+        inset  1px  1px 0 rgba(255, 255, 255, 1.00),
+        inset -1px -1px 0 rgba(26,  24, 22, 0.12),
+        0  4px 10px rgba(26, 24, 22, 0.22),
+       -3px -3px 10px rgba(255, 255, 255, 0.70);
+}
+
+window#waybar.left #workspaces button.active,
+window#waybar.left #workspaces button.focused {
+    background-color: #fbfaf6;
+    color:            #d4a73a;
+    box-shadow:
+        inset  0  0  0 1.5px rgba(212, 167, 58, 0.85),
+        inset  1px  1px 0 rgba(255, 255, 255, 0.95),
+        inset -1px -1px 0 rgba(26,  24, 22, 0.10),
+        0  3px  8px rgba(26, 24, 22, 0.20),
+        0  0 16px rgba(212, 167, 58, 0.50),
+        0  0 28px rgba(212, 167, 58, 0.22);
+    text-shadow:
+        -1px -1px 0 rgba(26,  24, 22, 0.30),
+         1px -1px 0 rgba(26,  24, 22, 0.30),
+        -1px  1px 0 rgba(26,  24, 22, 0.30),
+         1px  1px 0 rgba(26,  24, 22, 0.30),
+         0    0  8px rgba(212, 167, 58, 0.85),
+         0    0 16px rgba(212, 167, 58, 0.50);
+}
+
+/* ── 6. RIGHT BAR — vertical app launcher (square cream tiles) ──────────── */
 window#waybar.right #custom-app-godsapp,
 window#waybar.right #custom-app-studio,
 window#waybar.right #custom-app-sage,
@@ -387,29 +358,54 @@ window#waybar.right #custom-app-notes,
 window#waybar.right #custom-app-terminal,
 window#waybar.right #custom-app-settings {
     font-family:    'Symbols Nerd Font', 'JetBrains Mono', monospace;
-    font-size:      18px;
-    margin:         5px 6px;
-    padding:        8px 0;
+    font-size:      19px;
+    margin:         5px 8px;
+    padding:        0;
     min-width:      48px;
     min-height:     48px;
-    border-radius:  12px;
+    border-radius:  14px;
+    color:          #1a1816;
+    background-color: #fbfaf6;
+    box-shadow:
+        inset  1px  1px 0 rgba(255, 255, 255, 0.95),
+        inset -1px -1px 0 rgba(26,  24, 22, 0.10),
+        0  3px  8px rgba(26, 24, 22, 0.18),
+        0  8px 20px rgba(26, 24, 22, 0.10),
+       -3px -3px 8px rgba(255, 255, 255, 0.55);
+    text-shadow:
+        -1px -1px 0 rgba(26,  24, 22, 0.35),
+         1px -1px 0 rgba(26,  24, 22, 0.35),
+        -1px  1px 0 rgba(26,  24, 22, 0.35),
+         1px  1px 0 rgba(26,  24, 22, 0.35),
+         0    1px 0 rgba(255, 255, 255, 0.90);
 }
 
-/* Same for the LEFT side bar workspace digits. */
-window#waybar.left #workspaces button {
-    font-family: 'JetBrains Mono', 'Inter', monospace;
-    font-size:   13px;
-    font-weight: 700;
-    margin:      5px 6px;
-    padding:     8px 0;
-    min-width:   42px;
-    min-height:  42px;
-    border-radius: 12px;
+window#waybar.right #custom-app-godsapp:hover,
+window#waybar.right #custom-app-studio:hover,
+window#waybar.right #custom-app-sage:hover,
+window#waybar.right #custom-app-shield:hover,
+window#waybar.right #custom-app-control:hover,
+window#waybar.right #custom-app-sysmon:hover,
+window#waybar.right #custom-app-stickies:hover,
+window#waybar.right #custom-app-weather:hover,
+window#waybar.right #custom-app-notes:hover,
+window#waybar.right #custom-app-terminal:hover,
+window#waybar.right #custom-app-settings:hover {
+    background-color: #ffffff;
+    color:            #d4a73a;
+    box-shadow:
+        inset  0  0  0 1.5px rgba(212, 167, 58, 0.55),
+        inset  1px  1px 0 rgba(255, 255, 255, 1.00),
+        inset -1px -1px 0 rgba(26,  24, 22, 0.12),
+        0  4px 12px rgba(26, 24, 22, 0.22),
+        0  0 16px rgba(212, 167, 58, 0.40),
+       -3px -3px 10px rgba(255, 255, 255, 0.70);
+    text-shadow:
+        0 0  8px rgba(212, 167, 58, 0.85),
+        0 0 16px rgba(212, 167, 58, 0.45);
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   6. STATE MODIFIERS — tint text only, keep cream button.
-   ────────────────────────────────────────────────────────────────────────── */
+/* ── 7. STATE TINTS — battery low / network down ────────────────────────── */
 #battery.warning,
 #temperature.critical {
     color: #8a5a2a;
