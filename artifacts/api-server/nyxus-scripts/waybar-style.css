@@ -72,7 +72,10 @@ window#waybar.right {
 #custom-hyprland-side-top,
 #custom-sep {
     color:            #1a1816;
-    background-color: #fbfaf6;
+    /* FROSTED-GLASS BUTTON (rev. 2026-05-06d experiment) — translucent
+       cream so Hyprland's Dual-Kawase blur frosts the wallpaper through
+       the button, exactly like image-2 reference. */
+    background-color: rgba(251, 250, 246, 0.38);
     margin:           8px 5px;
     padding:          6px 14px;
     border-radius:    12px;
@@ -82,18 +85,22 @@ window#waybar.right {
     letter-spacing:   0.04em;
 
     /* Washed-black halo glow + white top highlight (legibility for rainbow
-       Pango letters on cream).  Thin, soft, faded — never harsh. */
+       Pango letters on the now-translucent cream surface).  Stronger this
+       rev because the bg is no longer opaque. */
     text-shadow:
-        0 0 5px  rgba(26,  24, 22, 0.45),
-        0 0 12px rgba(26,  24, 22, 0.18),
-        0 1px 0  rgba(255, 255, 255, 0.90);
+        0 0 4px  rgba(26,  24, 22, 0.65),
+        0 0 10px rgba(26,  24, 22, 0.30),
+        0 1px 0  rgba(255, 255, 255, 0.85);
 
-    /* Deep neomorphic dual-shadow. */
+    /* Frosted-glass rim + soft outer float.  Inner white-rim mimics the
+       refractive edge of real frosted glass; outer shadows keep the
+       floating depth. */
     box-shadow:
-        5px 5px 14px rgba(26, 24, 22, 0.24),
-       -4px -4px 10px rgba(255, 255, 255, 0.92),
-        inset  1px  1px 0 rgba(255, 255, 255, 0.95),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.08);
+        inset 0  0   0 1px rgba(255, 255, 255, 0.45),
+        inset 1px 1px 0    rgba(255, 255, 255, 0.55),
+        inset -1px -1px 0  rgba(26,  24, 22, 0.10),
+        4px 4px 12px rgba(26, 24, 22, 0.22),
+       -3px -3px 9px rgba(255, 255, 255, 0.65);
 }
 
 #workspaces button:hover,
