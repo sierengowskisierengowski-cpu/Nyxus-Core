@@ -1,0 +1,37 @@
+The "Swirling Depth" CSSReplace your window#waybar section with this code. It uses two separate animations to make the white "mist" and the "gold glow" move independently.css/* 1. Define independent movement patterns */
+@keyframes fog-swirl-one {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 0%; }
+}
+
+@keyframes fog-swirl-two {
+    0% { background-position: 100% 100%; }
+    50% { background-position: 0% 50%; }
+    100% { background-position: 100% 100%; }
+}
+
+window#waybar {
+    /* STACKED LAYERS for 3D depth */
+    background: 
+        /* Top Layer: Light Mist */
+        radial-gradient(circle at center, rgba(255, 255, 255, 0.15), transparent 70%),
+        /* Middle Layer: Moving Gold Glow */
+        linear-gradient(135deg, rgba(212, 175, 55, 0.1) 25%, transparent 50%, rgba(212, 175, 55, 0.1) 75%),
+        /* Bottom Layer: Main Fog Body */
+        linear-gradient(45deg, rgba(248, 248, 248, 0.2), rgba(255, 255, 255, 0.3));
+
+    background-size: 200% 200%, 300% 300%, 400% 400%;
+    
+    /* Apply both animations at different speeds for realism */
+    animation: 
+        fog-swirl-one 40s ease-in-out infinite,
+        fog-swirl-two 65s linear infinite;
+
+    /* Frosted glass effect */
+    box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.4);
+    
+    color: #ffffff;
+}
+Use code with caution.Why This Looks "Real"Asynchronous Motion: Because one animation takes 40 seconds and the other takes 65, the layers will never repeat the same pattern twice in a row, making it feel like living, trapped gas.Parallax Effect: By setting different background-size percentages, the gold shimmer appears to move "deeper" inside the bar than the white mist.MSI GS77 Fit: The 8K image you have can be set as a static wallpaper, while this Waybar CSS sits on top of it, adding that moving glow to the very top edge of your screen.Crucial Step: To get that "trapped behind glass" look, you must enable blur in your window manager (e.g., adding layerrule = blur, waybar to your Hyprland config).
