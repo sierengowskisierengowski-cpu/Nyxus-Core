@@ -348,6 +348,24 @@ uri = "file://artifacts/api-server/nyxus-scripts/nyxus-demon.png"
 type = "image"
 title = "scary demon jumpscare"
 
+[[generated]]
+id = "9wRT901y5PU5VRHPW2ebv"
+uri = "file://attached_assets/generated_images/waybar-variant-A-plaster.png"
+type = "image"
+title = "waybar variant A plaster"
+
+[[generated]]
+id = "7MlccKsZPTrA56yJW3Pe2"
+uri = "file://attached_assets/generated_images/waybar-variant-B-floating.png"
+type = "image"
+title = "waybar variant B floating frosted"
+
+[[generated]]
+id = "A5xVRiPkaImXWWNghL_Cu"
+uri = "file://attached_assets/generated_images/waybar-variant-C-direct.png"
+type = "image"
+title = "waybar variant C no bar wall"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -593,3 +611,21 @@ id = "EL2mO9LebhvdaZ4SlP0Mq"
 uri = "file://attached_assets/nyxus-resync-r12.tar.gz"
 type = "unspecified"
 title = "nyxus-resync-r12.tar.gz — wallpaper-safe + chrome-verify"
+
+[[outputs]]
+id = "JK3JQ77koPSl2xA9PL1ZF"
+uri = "file://attached_assets/generated_images/waybar-variant-A-plaster.png"
+type = "image"
+title = "Variant A — Continuous plaster plaque (drips off the bar)"
+
+[[outputs]]
+id = "cNkmSX0drZiHiczPlAzS1"
+uri = "file://attached_assets/generated_images/waybar-variant-B-floating.png"
+type = "image"
+title = "Variant B — Frosted strip + floating buttons (4D)"
+
+[[outputs]]
+id = "sQJqH3pskX6K8v57Pzp7M"
+uri = "file://attached_assets/generated_images/waybar-variant-C-direct.png"
+type = "image"
+title = "Variant C — Buttons direct on wall (no bar)"
