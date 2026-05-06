@@ -1,14 +1,17 @@
 /* ════════════════════════════════════════════════════════════════════════════
-   NYXUS WAYBAR — ENTERPRISE FROSTED CREAM (rev 2026-05-06r)
+   NYXUS WAYBAR · OPTION A · LIQUID GLASS BRUTALIST  (rev 2026-05-06s)
    ════════════════════════════════════════════════════════════════════════════
-   4-bar layout (top + bottom + left + right). Frosted cream shells with
-   rounded corners, sculpted cream pills (5-layer shadow), gold jewelry
-   accents on NYXUS wordmark + active workspace + hover states.
+   Design language:
+     • Translucent milky-cream bar shells (Hyprland blur does the frost)
+     • NYXUS wordmark ENGRAVED into the top shell — same color as the shell,
+       with deep inset shadow rims + a warm gold inner glow bleeding through
+     • Modules float as glass pebbles (high inner-top highlight, soft drop)
+     • Active workspace = gold halo ring (jewelry-scale gold only)
 
-   GTK3 CSS notes:
-     • backdrop-filter NOT supported — Hyprland Dual-Kawase blur handles it
-     • transform: rotate() NOT supported — skipped
-     • All depth = real multi-layer box-shadow + inset bevels
+   GTK3 CSS limits acknowledged:
+     • No backdrop-filter → Hyprland Dual-Kawase blur fills that role
+     • No transform → all depth = multi-layer box-shadow + inset bevels
+     • Shell alpha low (0.42) so blur reads through
    ════════════════════════════════════════════════════════════════════════════ */
 
 * {
@@ -19,28 +22,27 @@
     min-height:     0;
 }
 
-/* ── 1. SHELL · frosted cream plate, 4 bars ─────────────────────────────── */
+/* ── 1. SHELL · liquid-glass cream slab (Hyprland blur shows through) ──── */
 window#waybar,
 window#waybar.top,
 window#waybar.bottom,
 window#waybar.left,
 window#waybar.right {
-    background-color: rgba(245, 243, 239, 0.82);
+    background-color: rgba(251, 250, 246, 0.42);
     color:            #1a1816;
-    border:           1px solid rgba(255, 255, 255, 0.55);
-    border-radius:    18px;
+    border:           1px solid rgba(255, 255, 255, 0.65);
+    border-radius:    22px;
     box-shadow:
-        inset 0 0  2px 0 rgba(255, 255, 255, 1.00),
-        inset 0 0 16px 2px rgba(255, 255, 255, 0.45),
-        0  6px 20px rgba(26, 24, 22, 0.16),
-        0 14px 40px rgba(26, 24, 22, 0.10);
+        inset 0 1px 0 0 rgba(255, 255, 255, 1.00),
+        inset 0 -1px 0 0 rgba(26, 24, 22, 0.10),
+        inset 0 0 24px 4px rgba(255, 255, 255, 0.40),
+        0  8px 28px rgba(26, 24, 22, 0.18),
+        0 22px 56px rgba(26, 24, 22, 0.10);
 }
 
-/* ── 2. UNIVERSAL CREAM PILL · sculpted depth (5-layer shadow) ──────────── */
+/* ── 2. UNIVERSAL GLASS PEBBLE · floats inside the shell ────────────────── */
 #clock,
 #custom-weather,
-#cpu, #memory, #disk,
-#network, #pulseaudio, #battery,
 #workspaces button,
 #custom-nyxus-start,
 #custom-nyxus-panel,
@@ -56,36 +58,31 @@ window#waybar.right {
 #custom-app-terminal,
 #custom-app-settings {
     color:            #1a1816;
-    background-color: #fbfaf6;
+    background-color: rgba(255, 255, 255, 0.62);
     margin:           5px 5px;
     padding:          4px 14px;
-    border-radius:    12px;
+    border-radius:    14px;
     font-family:      'Inter', sans-serif;
     font-size:        13px;
     font-weight:      600;
-    letter-spacing:   0.03em;
+    letter-spacing:   0.04em;
 
     text-shadow:
-        -1px -1px 0 rgba(26,  24, 22, 0.38),
-         1px -1px 0 rgba(26,  24, 22, 0.38),
-        -1px  1px 0 rgba(26,  24, 22, 0.38),
-         1px  1px 0 rgba(26,  24, 22, 0.38),
-         0    1px 0 rgba(255, 255, 255, 0.95),
-         0    0  6px rgba(255, 255, 255, 0.85);
+         0 1px 0 rgba(255, 255, 255, 0.95),
+         0 -1px 0 rgba(26,  24, 22, 0.20);
 
     box-shadow:
-        inset  1px  1px 0 rgba(255, 255, 255, 0.95),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.10),
-        inset  0  -2px 0 rgba(26,  24, 22, 0.05),
-        0  2px  6px rgba(26, 24, 22, 0.18),
-        0  8px 20px rgba(26, 24, 22, 0.10),
-       -3px -3px 8px rgba(255, 255, 255, 0.55);
+        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
+        inset  0 -1px 0 rgba(26, 24, 22, 0.10),
+        inset  1px  0  0 rgba(255, 255, 255, 0.60),
+        inset -1px  0  0 rgba(26, 24, 22, 0.05),
+        0  3px  8px rgba(26, 24, 22, 0.16),
+        0 10px 22px rgba(26, 24, 22, 0.10),
+       -2px -2px 6px rgba(255, 255, 255, 0.55);
 }
 
 #clock:hover,
 #custom-weather:hover,
-#cpu:hover, #memory:hover, #disk:hover,
-#network:hover, #pulseaudio:hover, #battery:hover,
 #workspaces button:hover,
 #custom-nyxus-start:hover,
 #custom-nyxus-panel:hover,
@@ -100,77 +97,82 @@ window#waybar.right {
 #custom-app-notes:hover,
 #custom-app-terminal:hover,
 #custom-app-settings:hover {
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.88);
     box-shadow:
-        inset  1px  1px 0 rgba(255, 255, 255, 1.00),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.12),
-        0  4px 10px rgba(26, 24, 22, 0.22),
-        0 12px 28px rgba(26, 24, 22, 0.14),
-       -3px -3px 10px rgba(255, 255, 255, 0.70);
+        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
+        inset  0 -1px 0 rgba(26, 24, 22, 0.12),
+        0  5px 12px rgba(26, 24, 22, 0.22),
+        0 14px 30px rgba(26, 24, 22, 0.14),
+       -2px -2px 8px rgba(255, 255, 255, 0.70);
 }
 
-/* ── 3. NYXUS CENTERPIECE · gold wordmark, jewelry glow ─────────────────── */
+/* ── 3. NYXUS ENGRAVED INTO THE GLASS · gold inner light ────────────────── */
 #custom-nyxus {
     font-family:    'Dancing Script', 'Caveat', 'Architects Daughter', cursive;
-    font-size:      26px;
+    font-size:      30px;
     font-weight:    700;
-    letter-spacing: 0.18em;
-    color:          #d4a73a;
+    letter-spacing: 0.20em;
+
+    /* color = SAME tone as bar shell → looks cut-through, not painted on */
+    color:          rgba(245, 243, 239, 0.92);
     background:     transparent;
-    padding:        0 28px;
-    margin:         0 12px;
+    padding:        0 32px;
+    margin:         0 14px;
+
+    /* Engrave + gold inner-light recipe */
     text-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.95),
-        0 -1px 0 rgba(26, 24, 22, 0.40),
-        0  0 10px rgba(212, 167, 58, 0.85),
-        0  0 22px rgba(212, 167, 58, 0.55),
-        0  0 36px rgba(212, 167, 58, 0.30);
+        0 -1px 0 rgba(26,  24, 22, 0.55),       /* recess top edge (dark)  */
+        0  1px 0 rgba(255, 255, 255, 0.95),     /* recess bottom (light)   */
+        0  2px 1px rgba(26, 24, 22, 0.30),      /* extra depth             */
+        0  0  8px rgba(212, 167, 58, 0.95),     /* gold inner light        */
+        0  0 18px rgba(212, 167, 58, 0.55),     /* gold halo               */
+        0  0 36px rgba(212, 167, 58, 0.28);     /* outer warm bloom        */
 }
 
 #custom-nyxus:hover {
-    color: #e6bf52;
+    color: rgba(255, 248, 220, 0.95);
     text-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.95),
-        0 -1px 0 rgba(26, 24, 22, 0.40),
-        0  0 14px rgba(212, 167, 58, 1.00),
-        0  0 28px rgba(212, 167, 58, 0.75),
+        0 -1px 0 rgba(26,  24, 22, 0.55),
+        0  1px 0 rgba(255, 255, 255, 0.95),
+        0  2px 1px rgba(26, 24, 22, 0.30),
+        0  0 12px rgba(212, 167, 58, 1.00),
+        0  0 26px rgba(212, 167, 58, 0.75),
         0  0 48px rgba(212, 167, 58, 0.40);
 }
 
 /* ── 4. AIRPORT TICKER · pure-white split-flap board, mono type ─────────── */
 #custom-ticker {
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.92);
     color:            #1a1816;
     margin:           5px 8px 5px 0;
     padding:          5px 18px;
     min-width:        300px;
-    border-radius:    10px;
+    border-radius:    11px;
     font-family:      'JetBrains Mono', 'Fira Mono', 'Courier New', monospace;
     font-size:        12px;
     font-weight:      700;
     letter-spacing:   0.14em;
     text-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.95),
+        0  1px 0 rgba(255, 255, 255, 0.95),
         0 -1px 0 rgba(26, 24, 22, 0.18);
     box-shadow:
-        inset  1px  1px 0 rgba(255, 255, 255, 1.00),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.12),
-        inset  0  -2px 0 rgba(26,  24, 22, 0.06),
-        0  2px  6px rgba(26, 24, 22, 0.20),
-        0  8px 18px rgba(26, 24, 22, 0.10);
+        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
+        inset  0 -1px 0 rgba(26, 24, 22, 0.12),
+        0  3px  8px rgba(26, 24, 22, 0.20),
+        0 10px 22px rgba(26, 24, 22, 0.10);
 }
 
 #custom-ticker:hover {
     color: #d4a73a;
     box-shadow:
-        inset  1px  1px 0 rgba(255, 255, 255, 1.00),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.14),
-        0  4px 10px rgba(26, 24, 22, 0.24),
-        0 10px 24px rgba(26, 24, 22, 0.14),
-        0  0 14px rgba(212, 167, 58, 0.35);
+        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
+        inset  0 -1px 0 rgba(26, 24, 22, 0.14),
+        0  5px 12px rgba(26, 24, 22, 0.24),
+        0 12px 26px rgba(26, 24, 22, 0.14),
+        0  0 16px rgba(212, 167, 58, 0.40);
 }
 
-/* ── 5. CLOCK + WEATHER pills ───────────────────────────────────────────── */
+/* ── 5. CLOCK + WEATHER glass pebbles ───────────────────────────────────── */
 #clock {
     font-family:    'Inter', sans-serif;
     font-size:      13px;
@@ -196,7 +198,7 @@ window#waybar.bottom #custom-nyxus-panel {
     padding:        3px 18px;
     margin:         4px 6px;
     min-height:     24px;
-    border-radius:  12px;
+    border-radius:  14px;
 }
 
 window#waybar.bottom #workspaces { margin: 0 6px; }
@@ -209,50 +211,18 @@ window#waybar.bottom #workspaces button {
     margin:        4px 4px;
     min-width:     32px;
     min-height:    24px;
-    border-radius: 11px;
+    border-radius: 13px;
 }
 
 /* Active workspace · gold jewelry RING (no fill change) */
 window#waybar.bottom #workspaces button.active,
 window#waybar.bottom #workspaces button.focused {
     color:            #d4a73a;
-    background-color: #fbfaf6;
+    background-color: rgba(255, 255, 255, 0.78);
     box-shadow:
-        inset  0  0  0 1.5px rgba(212, 167, 58, 0.85),
-        inset  1px  1px 0 rgba(255, 255, 255, 0.95),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.10),
-        0  2px  6px rgba(26, 24, 22, 0.18),
-        0  0 14px rgba(212, 167, 58, 0.45),
-        0  0 24px rgba(212, 167, 58, 0.22);
-    text-shadow:
-        -1px -1px 0 rgba(26,  24, 22, 0.30),
-         1px -1px 0 rgba(26,  24, 22, 0.30),
-        -1px  1px 0 rgba(26,  24, 22, 0.30),
-         1px  1px 0 rgba(26,  24, 22, 0.30),
-         0    0  6px rgba(212, 167, 58, 0.85),
-         0    0 14px rgba(212, 167, 58, 0.45);
-}
-
-/* ── 7. LEFT BAR · vertical workspace column ────────────────────────────── */
-window#waybar.left #workspaces button {
-    font-family:    'Architects Daughter', 'Caveat', cursive;
-    font-size:      14px;
-    font-weight:    700;
-    margin:         5px 6px;
-    padding:        6px 0;
-    min-width:      40px;
-    min-height:     40px;
-    border-radius:  13px;
-}
-
-window#waybar.left #workspaces button.active,
-window#waybar.left #workspaces button.focused {
-    color:            #d4a73a;
-    background-color: #fbfaf6;
-    box-shadow:
-        inset  0  0  0 1.5px rgba(212, 167, 58, 0.85),
-        inset  1px  1px 0 rgba(255, 255, 255, 0.95),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.10),
+        inset  0  0  0 1.5px rgba(212, 167, 58, 0.90),
+        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
+        inset  0 -1px 0 rgba(26, 24, 22, 0.10),
         0  3px  8px rgba(26, 24, 22, 0.20),
         0  0 16px rgba(212, 167, 58, 0.50),
         0  0 28px rgba(212, 167, 58, 0.22);
@@ -265,7 +235,39 @@ window#waybar.left #workspaces button.focused {
          0    0 16px rgba(212, 167, 58, 0.50);
 }
 
-/* ── 8. RIGHT BAR · vertical app launcher tiles ─────────────────────────── */
+/* ── 7. LEFT BAR · vertical workspace column ────────────────────────────── */
+window#waybar.left #workspaces button {
+    font-family:    'Architects Daughter', 'Caveat', cursive;
+    font-size:      14px;
+    font-weight:    700;
+    margin:         5px 6px;
+    padding:        6px 0;
+    min-width:      40px;
+    min-height:     40px;
+    border-radius:  14px;
+}
+
+window#waybar.left #workspaces button.active,
+window#waybar.left #workspaces button.focused {
+    color:            #d4a73a;
+    background-color: rgba(255, 255, 255, 0.78);
+    box-shadow:
+        inset  0  0  0 1.5px rgba(212, 167, 58, 0.90),
+        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
+        inset  0 -1px 0 rgba(26, 24, 22, 0.10),
+        0  4px 10px rgba(26, 24, 22, 0.22),
+        0  0 18px rgba(212, 167, 58, 0.55),
+        0  0 32px rgba(212, 167, 58, 0.25);
+    text-shadow:
+        -1px -1px 0 rgba(26,  24, 22, 0.30),
+         1px -1px 0 rgba(26,  24, 22, 0.30),
+        -1px  1px 0 rgba(26,  24, 22, 0.30),
+         1px  1px 0 rgba(26,  24, 22, 0.30),
+         0    0 10px rgba(212, 167, 58, 0.85),
+         0    0 18px rgba(212, 167, 58, 0.50);
+}
+
+/* ── 8. RIGHT BAR · vertical app launcher glass beads ───────────────────── */
 window#waybar.right #custom-app-godsapp,
 window#waybar.right #custom-app-studio,
 window#waybar.right #custom-app-sage,
@@ -283,7 +285,7 @@ window#waybar.right #custom-app-settings {
     padding:        0;
     min-width:      48px;
     min-height:     48px;
-    border-radius:  14px;
+    border-radius:  16px;
 }
 
 window#waybar.right #custom-app-godsapp:hover,
@@ -297,17 +299,18 @@ window#waybar.right #custom-app-weather:hover,
 window#waybar.right #custom-app-notes:hover,
 window#waybar.right #custom-app-terminal:hover,
 window#waybar.right #custom-app-settings:hover {
-    color: #d4a73a;
+    color:            #d4a73a;
+    background-color: rgba(255, 255, 255, 0.92);
     box-shadow:
         inset  0  0  0 1.5px rgba(212, 167, 58, 0.55),
-        inset  1px  1px 0 rgba(255, 255, 255, 1.00),
-        inset -1px -1px 0 rgba(26,  24, 22, 0.12),
-        0  4px 12px rgba(26, 24, 22, 0.22),
-        0  0 16px rgba(212, 167, 58, 0.40),
-       -3px -3px 10px rgba(255, 255, 255, 0.70);
+        inset  0  1.5px 0 rgba(255, 255, 255, 1.00),
+        inset  0 -1px 0 rgba(26, 24, 22, 0.12),
+        0  5px 14px rgba(26, 24, 22, 0.22),
+        0  0 18px rgba(212, 167, 58, 0.45),
+       -2px -2px 8px rgba(255, 255, 255, 0.70);
     text-shadow:
         0 0  8px rgba(212, 167, 58, 0.85),
-        0 0 16px rgba(212, 167, 58, 0.45);
+        0 0 18px rgba(212, 167, 58, 0.45);
 }
 
 /* ── 9. STATE TINTS ─────────────────────────────────────────────────────── */
