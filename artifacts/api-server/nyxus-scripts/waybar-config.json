@@ -93,8 +93,13 @@
     "margin-right": 20,
     "modules-left": ["custom/nyxus-start"],
     "modules-center": ["tray"],
-    "modules-right": ["custom/nyxus-panel"],
+    "modules-right": ["custom/nyxus-panel", "custom/owl"],
 
+    "custom/owl": {
+      "format": "✶ OWL ✶",
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · OWL Signature</span>\n<span size='small' foreground='#58524c'>The owl is the signature mark of\nJoseph Sierengowski's NYXUS system.\nWatchful · Quiet · Hand-built.</span>"
+    },
     "custom/nyxus-start": {
       "exec": "/home/nyx/.local/bin/nyxus-waybar-state start",
       "interval": 1,
@@ -154,14 +159,6 @@
       "custom/app-stickies", "custom/app-weather", "custom/app-notes",
       "custom/app-terminal", "custom/app-settings"
     ],
-    "modules-right": ["custom/owl"],
-
-    "custom/owl": {
-      "format": "✶ OWL ✶",
-      "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · OWL Signature</span>\n<span size='small' foreground='#58524c'>The owl is the signature mark of\nJoseph Sierengowski's NYXUS system.\nWatchful · Quiet · Hand-built.</span>"
-    },
-
     "custom/app-godsapp": { "format": "", "tooltip": true, "on-click": "nyxus-godsapp", "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · GodsApp</span>\n<span size='small' foreground='#58524c'>Configuration Hub\nClick to open</span>" },
     "custom/app-studio":  { "format": "", "tooltip": true, "on-click": "nyxus-studio",  "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Studio</span>\n<span size='small' foreground='#58524c'>Creative Suite — Paint · Vector · 3D · Video\nClick to open</span>" },
     "custom/app-sage":    { "format": "", "tooltip": true, "on-click": "nyxus-sage",    "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · SAGE</span>\n<span size='small' foreground='#58524c'>Local AI Assistant\nClick to open</span>" },
