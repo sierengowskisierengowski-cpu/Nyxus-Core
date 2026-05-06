@@ -28,39 +28,40 @@
       "escape": false
     },
     "custom/nyxus": {
-      "format": "<span size='xx-large' weight='bold' font_family='Architects Daughter'>NYXUS</span>\n<span size='small' letter_spacing='3000'>HYPRLAND</span>",
+      "format": "<span foreground='#ec4899' weight='bold' size='xx-large' font_family='Architects Daughter'>N</span><span foreground='#ea7e3c' weight='bold' size='xx-large' font_family='Architects Daughter'>Y</span><span foreground='#d4a73a' weight='bold' size='xx-large' font_family='Architects Daughter'>X</span><span foreground='#6aa872' weight='bold' size='xx-large' font_family='Architects Daughter'>U</span><span foreground='#5a8aab' weight='bold' size='xx-large' font_family='Architects Daughter'>S</span>\n<span foreground='#ec4899' weight='bold' size='small' letter_spacing='3000'>H</span><span foreground='#ea7e3c' weight='bold' size='small' letter_spacing='3000'>Y</span><span foreground='#d4a73a' weight='bold' size='small' letter_spacing='3000'>P</span><span foreground='#6aa872' weight='bold' size='small' letter_spacing='3000'>R</span><span foreground='#5a8aab' weight='bold' size='small' letter_spacing='3000'>L</span><span foreground='#8a6aaa' weight='bold' size='small' letter_spacing='3000'>A</span><span foreground='#ec4899' weight='bold' size='small' letter_spacing='3000'>N</span><span foreground='#ea7e3c' weight='bold' size='small' letter_spacing='3000'>D</span>",
       "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Sierengowski</span>\n<span size='small' foreground='#58524c'>Hyprland \u00b7 Arch Linux \u00b7 2026</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Sierengowski</span>\n<span size='small' foreground='#58524c'>Hyprland · Arch Linux · 2026</span>",
       "escape": false,
       "on-click": "/home/nyx/.local/bin/nyxus-start"
     },
     "clock#date": {
       "interval": 60,
-      "format": "<span size='large' weight='bold'>{:%d}</span>\n<span size='x-small' weight='bold' letter_spacing='1500'>{:%b}</span>\n<span size='x-small' letter_spacing='1500'>{:%Y}</span>",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 DATE</span>\n<span size='small' foreground='#58524c'>{:%A \u00b7 %B %d, %Y}</span>"
+      "format": "<span size='large' weight='bold' foreground='#ec4899'>{:%d}</span>\n<span size='x-small' weight='bold' letter_spacing='1500' foreground='#ea7e3c'>{:%b}</span>\n<span size='x-small' letter_spacing='1500' foreground='#d4a73a'>{:%Y}</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · DATE</span>\n<span size='small' foreground='#58524c'>{:%A · %B %d, %Y}</span>"
     },
     "clock": {
       "interval": 1,
-      "format": "<span size='small'>\uf017</span>\n<span size='medium' weight='bold'>{:%H:%M:%S}</span>",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 TIME</span>\n<span size='small' foreground='#58524c'>{:%H:%M:%S} \u00b7 {:%Z}</span>",
+      "format": "<span size='small' foreground='#d4a73a'></span>\n<span size='medium' weight='bold' foreground='#6aa872'>{:%H:%M:%S}</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · TIME</span>\n<span size='small' foreground='#58524c'>{:%H:%M:%S} · {:%Z}</span>",
       "on-click": "sh -c 'pgrep -f nyxus_quicksettings >/dev/null && pkill -f nyxus_quicksettings || setsid python3 ~/.nyxus/nyxus_quicksettings.py >/tmp/nyxus-qs.log 2>&1 < /dev/null &'"
     },
     "clock#year": {
       "interval": 3600,
-      "format": "<span size='x-small' weight='bold' letter_spacing='1500'>YEAR</span>\n<span size='large' weight='bold'>{:%Y}</span>\n<span size='x-small' letter_spacing='1500'>({:%Z})</span>",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 YEAR</span>\n<span size='small' foreground='#58524c'>{:%Y \u00b7 %Z}</span>"
+      "format": "<span size='x-small' weight='bold' letter_spacing='1500' foreground='#5a8aab'>YEAR</span>\n<span size='large' weight='bold' foreground='#8a6aaa'>{:%Y}</span>\n<span size='x-small' letter_spacing='1500' foreground='#ec4899'>({:%Z})</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · YEAR</span>\n<span size='small' foreground='#58524c'>{:%Y · %Z}</span>"
     },
     "custom/hyprland-side-top": {
-      "format": "H\nY\nP\nR\nL\nA\nN\nD",
+      "format": "<span foreground='#ec4899' weight='bold'>H</span>\n<span foreground='#ea7e3c' weight='bold'>Y</span>\n<span foreground='#d4a73a' weight='bold'>P</span>\n<span foreground='#6aa872' weight='bold'>R</span>\n<span foreground='#5a8aab' weight='bold'>L</span>\n<span foreground='#8a6aaa' weight='bold'>A</span>\n<span foreground='#ec4899' weight='bold'>N</span>\n<span foreground='#ea7e3c' weight='bold'>D</span>",
       "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>HYPRLAND \u00b7 WAYBAR</span>\n<span size='small' foreground='#58524c'>NYXUS Edition \u00b7 2026</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>HYPRLAND · WAYBAR</span>\n<span size='small' foreground='#58524c'>NYXUS Edition · 2026</span>",
+      "escape": false
     }
   },
   {
     "name": "bottom",
     "layer": "top",
     "position": "bottom",
-    "height": 60,
+    "height": 30,
     "spacing": 4,
     "margin-bottom": 5,
     "margin-left": 10,
@@ -83,30 +84,34 @@
       "custom/hyprland-side"
     ],
     "custom/notifications": {
-      "format": "\uf0f3\nAlerts",
+      "format": "<span foreground='#5a8aab'></span>\n<span foreground='#ec4899' weight='bold' size='x-small'>A</span><span foreground='#ea7e3c' weight='bold' size='x-small'>l</span><span foreground='#d4a73a' weight='bold' size='x-small'>e</span><span foreground='#6aa872' weight='bold' size='x-small'>r</span><span foreground='#5a8aab' weight='bold' size='x-small'>t</span><span foreground='#8a6aaa' weight='bold' size='x-small'>s</span>",
       "tooltip": true,
       "on-click": "nyxus-notifications",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Notifications</span>\n<span size='small' foreground='#58524c'>Click to open the notification center</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Notifications</span>\n<span size='small' foreground='#58524c'>Click to open the notification center</span>",
+      "escape": false
     },
     "custom/app-settings": {
-      "format": "\uf085\nApps",
+      "format": "<span foreground='#8a6aaa'></span>\n<span foreground='#ec4899' weight='bold' size='x-small'>A</span><span foreground='#ea7e3c' weight='bold' size='x-small'>p</span><span foreground='#d4a73a' weight='bold' size='x-small'>p</span><span foreground='#6aa872' weight='bold' size='x-small'>s</span>",
       "tooltip": true,
       "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.settings\"; then hyprctl dispatch focuswindow class:io.nyxus.settings; else setsid python3 /home/nyx/.nyxus/nyxus_settings.py >/tmp/nyxus-settings.log 2>&1 < /dev/null & fi'",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Apps</span>\n<span size='small' foreground='#58524c'>System Settings &amp; Apps</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Apps</span>\n<span size='small' foreground='#58524c'>System Settings &amp; Apps</span>",
+      "escape": false
     },
     "custom/nyxus-wordmark": {
-      "format": "NYXUS",
+      "format": "<span foreground='#ec4899' weight='bold' size='medium' font_family='Architects Daughter'>N</span><span foreground='#ea7e3c' weight='bold' size='medium' font_family='Architects Daughter'>Y</span><span foreground='#d4a73a' weight='bold' size='medium' font_family='Architects Daughter'>X</span><span foreground='#6aa872' weight='bold' size='medium' font_family='Architects Daughter'>U</span><span foreground='#5a8aab' weight='bold' size='medium' font_family='Architects Daughter'>S</span>",
       "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Sierengowski</span>\n<span size='small' foreground='#58524c'>Hyprland \u00b7 Arch Linux \u00b7 2026</span>",
-      "on-click": "/home/nyx/.local/bin/nyxus-start"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Sierengowski</span>\n<span size='small' foreground='#58524c'>Hyprland · Arch Linux · 2026</span>",
+      "on-click": "/home/nyx/.local/bin/nyxus-start",
+      "escape": false
     },
     "custom/hyprland-side": {
-      "format": "H\nY\nP\nR\nL\nA\nN\nD",
+      "format": "<span foreground='#ec4899' weight='bold' size='small'>H</span>\n<span foreground='#ea7e3c' weight='bold' size='small'>Y</span>\n<span foreground='#d4a73a' weight='bold' size='small'>P</span>\n<span foreground='#6aa872' weight='bold' size='small'>R</span>\n<span foreground='#5a8aab' weight='bold' size='small'>L</span>\n<span foreground='#8a6aaa' weight='bold' size='small'>A</span>\n<span foreground='#ec4899' weight='bold' size='small'>N</span>\n<span foreground='#ea7e3c' weight='bold' size='small'>D</span>",
       "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>HYPRLAND \u00b7 WAYBAR</span>\n<span size='small' foreground='#58524c'>Wayland Compositor \u00b7 NYXUS Edition</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>HYPRLAND · WAYBAR</span>\n<span size='small' foreground='#58524c'>Wayland Compositor · NYXUS Edition</span>",
+      "escape": false
     },
     "hyprland/workspaces": {
-      "format": "{id}\nWS {id}",
+      "format": "<span size='medium' weight='bold' foreground='#ec4899'>{id}</span>\n<span size='x-small' foreground='#58524c'>WS {id}</span>",
       "on-click": "activate",
       "sort-by-number": true,
       "active-only": false,
@@ -121,7 +126,7 @@
     },
     "clock#bottom": {
       "interval": 1,
-      "format": "  {:%a \u00b7 %d %b %Y \u00b7 %H:%M:%S}",
+      "format": "  {:%a · %d %b %Y · %H:%M:%S}",
       "format-alt": "  {:%H:%M:%S}",
       "tooltip-format": "<span font='JetBrains Mono 13' foreground='#ff00ff'><b> {:%A}</b></span>\n<span font='JetBrains Mono 11' foreground='#ffffff'> {:%d %B %Y}</span>\n\n<span font='JetBrains Mono 10'><tt>{calendar}</tt></span>",
       "calendar": {
@@ -140,35 +145,35 @@
       "format": "  ",
       "format-disabled": "",
       "format-connected": "  {num_connections}",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#0088ff'>NYXUS \u00b7 Bluetooth</span>\n<span size='small' foreground='#b8a8d0'>{controller_alias}\n{device_enumerate}</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#0088ff'>NYXUS · Bluetooth</span>\n<span size='small' foreground='#b8a8d0'>{controller_alias}\n{device_enumerate}</span>",
       "on-click": "blueman-manager"
     },
     "cpu": {
-      "format": "\uf2db\nCPU / Mem",
+      "format": "<span foreground='#ec4899'></span>\n<span foreground='#ec4899' weight='bold' size='x-small'>C</span><span foreground='#ea7e3c' weight='bold' size='x-small'>P</span><span foreground='#d4a73a' weight='bold' size='x-small'>U</span><span foreground='#6aa872' weight='bold' size='x-small'>/</span><span foreground='#5a8aab' weight='bold' size='x-small'>M</span><span foreground='#8a6aaa' weight='bold' size='x-small'>e</span><span foreground='#ec4899' weight='bold' size='x-small'>m</span>",
       "interval": 2,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 CPU / Memory</span>\n<span size='small' foreground='#58524c'>{usage}% utilization</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · CPU / Memory</span>\n<span size='small' foreground='#58524c'>{usage}% utilization</span>"
     },
     "network#bottom": {
-      "format-wifi": "\uf1eb\nNet",
-      "format-ethernet": "\uf6ff\nNet",
-      "format-disconnected": "\uf127\nNet",
+      "format-wifi": "<span foreground='#ea7e3c'></span>\n<span foreground='#ec4899' weight='bold' size='x-small'>N</span><span foreground='#ea7e3c' weight='bold' size='x-small'>e</span><span foreground='#d4a73a' weight='bold' size='x-small'>t</span>",
+      "format-ethernet": "<span foreground='#ea7e3c'></span>\n<span foreground='#ec4899' weight='bold' size='x-small'>N</span><span foreground='#ea7e3c' weight='bold' size='x-small'>e</span><span foreground='#d4a73a' weight='bold' size='x-small'>t</span>",
+      "format-disconnected": "<span foreground='#ea7e3c'></span>\n<span foreground='#ec4899' weight='bold' size='x-small'>N</span><span foreground='#ea7e3c' weight='bold' size='x-small'>e</span><span foreground='#d4a73a' weight='bold' size='x-small'>t</span>",
       "interval": 2,
-      "tooltip-format-wifi": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Wi-Fi</span>\n<span size='small' foreground='#58524c'>{essid}  \u00b7  {signalStrength}%\n{ipaddr}</span>",
+      "tooltip-format-wifi": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Wi-Fi</span>\n<span size='small' foreground='#58524c'>{essid}  ·  {signalStrength}%\n{ipaddr}</span>",
       "on-click": "nm-connection-editor",
-      "tooltip-format-ethernet": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Ethernet</span>\n<span size='small' foreground='#58524c'>{ifname}  \u00b7  {ipaddr}</span>",
-      "tooltip-format-disconnected": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#58524c'>No connection</span>"
+      "tooltip-format-ethernet": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Ethernet</span>\n<span size='small' foreground='#58524c'>{ifname}  ·  {ipaddr}</span>",
+      "tooltip-format-disconnected": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Network</span>\n<span size='small' foreground='#58524c'>No connection</span>"
     },
     "pulseaudio": {
-      "format": "\uf028\nVol",
-      "format-muted": "\uf026\nVol",
+      "format": "<span foreground='#d4a73a'></span>\n<span foreground='#ec4899' weight='bold' size='x-small'>V</span><span foreground='#ea7e3c' weight='bold' size='x-small'>o</span><span foreground='#d4a73a' weight='bold' size='x-small'>l</span>",
+      "format-muted": "<span foreground='#d4a73a'></span>\n<span foreground='#ec4899' weight='bold' size='x-small'>V</span><span foreground='#ea7e3c' weight='bold' size='x-small'>o</span><span foreground='#d4a73a' weight='bold' size='x-small'>l</span>",
       "scroll-step": 5,
       "on-click": "pavucontrol",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Audio</span>\n<span size='small' foreground='#58524c'>{volume}%  \u00b7  {desc}</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Audio</span>\n<span size='small' foreground='#58524c'>{volume}%  ·  {desc}</span>"
     },
     "battery#bottom": {
-      "format": "{icon}\nBat",
-      "format-charging": "\uf0e7\nBat",
-      "format-plugged": "\uf1e6\nBat",
+      "format": "<span foreground='#6aa872'>{icon}</span>\n<span foreground='#ec4899' weight='bold' size='x-small'>B</span><span foreground='#ea7e3c' weight='bold' size='x-small'>a</span><span foreground='#d4a73a' weight='bold' size='x-small'>t</span>",
+      "format-charging": "<span foreground='#6aa872'></span>\n<span foreground='#ec4899' weight='bold' size='x-small'>B</span><span foreground='#ea7e3c' weight='bold' size='x-small'>a</span><span foreground='#d4a73a' weight='bold' size='x-small'>t</span>",
+      "format-plugged": "<span foreground='#6aa872'></span>\n<span foreground='#ec4899' weight='bold' size='x-small'>B</span><span foreground='#ea7e3c' weight='bold' size='x-small'>a</span><span foreground='#d4a73a' weight='bold' size='x-small'>t</span>",
       "format-icons": [
         "",
         "",
@@ -180,7 +185,7 @@
         "warning": 30,
         "critical": 15
       },
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#58524c'>{capacity}% \u00b7 {time}</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Battery</span>\n<span size='small' foreground='#58524c'>{capacity}% · {time}</span>"
     },
     "tray": {
       "icon-size": 14,
@@ -211,13 +216,13 @@
     "position": "left",
     "width": 64,
     "spacing": 0,
-    "margin-top": 160,
-    "margin-bottom": 160,
+    "margin-top": 280,
+    "margin-bottom": 280,
     "modules-center": [
       "hyprland/workspaces#left"
     ],
     "hyprland/workspaces#left": {
-      "format": "{id}",
+      "format": "<span weight='bold' foreground='#ec4899'>{id}</span>",
       "on-click": "activate",
       "sort-by-number": true
     }
@@ -228,8 +233,8 @@
     "position": "right",
     "width": 72,
     "spacing": 0,
-    "margin-top": 100,
-    "margin-bottom": 100,
+    "margin-top": 220,
+    "margin-bottom": 220,
     "modules-left": [],
     "modules-center": [
       "custom/app-godsapp",
@@ -245,84 +250,95 @@
       "custom/app-settings"
     ],
     "custom/app-godsapp": {
-      "format": "\uf0d0",
+      "format": "<span foreground='#d4a73a'></span>",
       "tooltip": true,
       "on-click": "nyxus-godsapp",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS GodsApp</span>\n<span size='small' foreground='#b8a8d0'>Configuration Hub</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS GodsApp</span>\n<span size='small' foreground='#b8a8d0'>Configuration Hub</span>",
+      "escape": false
     },
     "custom/app-studio": {
-      "format": "\uf1fc",
+      "format": "<span foreground='#ec4899'></span>",
       "tooltip": true,
       "on-click": "nyxus-studio",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff3ea5'>NYXUS Studio</span>\n<span size='small' foreground='#b8a8d0'>Creative Suite</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff3ea5'>NYXUS Studio</span>\n<span size='small' foreground='#b8a8d0'>Creative Suite</span>",
+      "escape": false
     },
     "custom/app-sage": {
-      "format": "\uf19d",
+      "format": "<span foreground='#5a8aab'></span>",
       "tooltip": true,
       "on-click": "nyxus-sage",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#4de2e2'>NYXUS SAGE</span>\n<span size='small' foreground='#b8a8d0'>Local AI Assistant</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#4de2e2'>NYXUS SAGE</span>\n<span size='small' foreground='#b8a8d0'>Local AI Assistant</span>",
+      "escape": false
     },
     "custom/app-shield": {
-      "format": "\uf132",
+      "format": "<span foreground='#6aa872'></span>",
       "tooltip": true,
       "on-click": "nyxus-shield",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#4ade80'>NYXUS Shield</span>\n<span size='small' foreground='#b8a8d0'>Security Center</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#4ade80'>NYXUS Shield</span>\n<span size='small' foreground='#b8a8d0'>Security Center</span>",
+      "escape": false
     },
     "custom/app-control": {
-      "format": "\uf2db",
+      "format": "<span foreground='#ea7e3c'></span>",
       "tooltip": true,
       "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.control\"; then hyprctl dispatch focuswindow class:io.nyxus.control; else setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null & fi'",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff3232'>NYXUS Control</span>\n<span size='small' foreground='#b8a8d0'>Hardware Control Center</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff3232'>NYXUS Control</span>\n<span size='small' foreground='#b8a8d0'>Hardware Control Center</span>",
+      "escape": false
     },
     "custom/app-sysmon": {
-      "format": "\uf201",
+      "format": "<span foreground='#8a6aaa'></span>",
       "tooltip": true,
       "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.sysmon\"; then hyprctl dispatch focuswindow class:io.nyxus.sysmon; else setsid python3 /home/nyx/.nyxus/nyxus_sysmon_gtk.py >/tmp/nyxus-sysmon.log 2>&1 < /dev/null & fi'",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS SysMon</span>\n<span size='small' foreground='#b8a8d0'>System Monitor</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS SysMon</span>\n<span size='small' foreground='#b8a8d0'>System Monitor</span>",
+      "escape": false
     },
     "custom/app-stickies": {
-      "format": "\uf249",
+      "format": "<span foreground='#d4a73a'></span>",
       "tooltip": true,
       "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.stickies\"; then hyprctl dispatch focuswindow class:io.nyxus.stickies; else setsid python3 /home/nyx/.nyxus/nyxus_stickies.py >/tmp/nyxus-stickies.log 2>&1 < /dev/null & fi'",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffff00'>NYXUS Stickies</span>\n<span size='small' foreground='#b8a8d0'>Sticky Notes</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffff00'>NYXUS Stickies</span>\n<span size='small' foreground='#b8a8d0'>Sticky Notes</span>",
+      "escape": false
     },
     "custom/app-weather": {
-      "format": "\uf0c2",
+      "format": "<span foreground='#5a8aab'></span>",
       "tooltip": true,
       "on-click": "python3 /home/nyx/.nyxus/nyxus_weather.py",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#0088ff'>NYXUS Weather</span>\n<span size='small' foreground='#b8a8d0'>Weather Forecast</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#0088ff'>NYXUS Weather</span>\n<span size='small' foreground='#b8a8d0'>Weather Forecast</span>",
+      "escape": false
     },
     "custom/app-notes": {
-      "format": "\uf249",
+      "format": "<span foreground='#6aa872'></span>",
       "tooltip": true,
       "on-click": "sh -c 'if hyprctl clients -j | grep -q \"org.nyxus.notes\"; then hyprctl dispatch focuswindow class:org.nyxus.notes; else setsid /usr/local/bin/nyxus-notes >/tmp/nyxus-notes.log 2>&1 < /dev/null & fi'",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#58524c'>NYXUS Notes</span>\n<span size='small' foreground='#9e948a'>Plain text · auto-saved</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#58524c'>NYXUS Notes</span>\n<span size='small' foreground='#9e948a'>Plain text · auto-saved</span>",
+      "escape": false
     },
     "custom/app-terminal": {
-      "format": "\uf120",
+      "format": "<span foreground='#8a6aaa'></span>",
       "tooltip": true,
       "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.terminal\"; then hyprctl dispatch focuswindow class:io.nyxus.terminal; else setsid python3 /home/nyx/.nyxus/nyxus_terminal.py >/tmp/nyxus-terminal.log 2>&1 < /dev/null & fi'",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#39ff14'>NYXUS Terminal</span>\n<span size='small' foreground='#b8a8d0'>Command Line</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#39ff14'>NYXUS Terminal</span>\n<span size='small' foreground='#b8a8d0'>Command Line</span>",
+      "escape": false
     },
     "custom/app-settings": {
-      "format": "\uf085",
+      "format": "<span foreground='#ec4899'></span>",
       "tooltip": true,
       "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.settings\"; then hyprctl dispatch focuswindow class:io.nyxus.settings; else setsid python3 /home/nyx/.nyxus/nyxus_settings.py >/tmp/nyxus-settings.log 2>&1 < /dev/null & fi'",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#a78bfa'>NYXUS Settings</span>\n<span size='small' foreground='#b8a8d0'>System Settings</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#a78bfa'>NYXUS Settings</span>\n<span size='small' foreground='#b8a8d0'>System Settings</span>",
+      "escape": false
     },
     "cpu#right": {
       "format": "{usage}",
       "interval": 2,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#cc00ff'>NYXUS \u00b7 CPU</span>\n<span size='small' foreground='#b8a8d0'>{usage}% utilization</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#cc00ff'>NYXUS · CPU</span>\n<span size='small' foreground='#b8a8d0'>{usage}% utilization</span>"
     },
     "memory#right": {
       "format": "{percentage}",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#8800ff'>NYXUS \u00b7 RAM</span>\n<span size='small' foreground='#b8a8d0'>{percentage}% used</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#8800ff'>NYXUS · RAM</span>\n<span size='small' foreground='#b8a8d0'>{percentage}% used</span>"
     },
     "battery#right": {
       "format": "{capacity}",
       "format-charging": "{capacity}+",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#b8a8d0'>{capacity}%</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS · Battery</span>\n<span size='small' foreground='#b8a8d0'>{capacity}%</span>"
     },
     "modules-right": []
   }
