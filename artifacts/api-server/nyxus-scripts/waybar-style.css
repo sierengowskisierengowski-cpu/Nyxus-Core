@@ -25,20 +25,49 @@
 /* ──────────────────────────────────────────────────────────────────────────
    1. SHELL — heavier cream tint so Dual-Kawase blur reads as frosted glass.
    ────────────────────────────────────────────────────────────────────────── */
-window#waybar,
-window#waybar.top,
-window#waybar.bottom,
-window#waybar.left,
-window#waybar.right {
-    /* FROSTED-GLASS SHELL (rev. 2026-05-06d) — the BAR itself is the
-       frosted plate.  Translucent cream tint so Hyprland's Dual-Kawase
-       blur frosts the wallpaper inside the bar bounds, exactly like the
-       image-2 reference.  Buttons stay solid cream on top. */
-    background-color: rgba(255, 255, 255, 0.82);
+/* SHELL — base reset; per-bar bg images set below. */
+window#waybar {
+    background-color: transparent;
     background-image: none;
     border:           none;
     box-shadow:       none;
     color:            #1a1816;
+}
+
+/* Per-bar embossed-cream texture backgrounds (rev. 2026-05-06e). A
+   faint white veil is layered on top of the image for legibility +
+   to keep the frosted-glass feel. */
+window#waybar.top {
+    background-image:
+        linear-gradient(rgba(255,255,255,0.35), rgba(255,255,255,0.35)),
+        url("/home/nyx/.config/waybar/bg-top.png");
+    background-size:     cover, cover;
+    background-position: center center;
+    background-repeat:   no-repeat, no-repeat;
+}
+window#waybar.bottom {
+    background-image:
+        linear-gradient(rgba(255,255,255,0.35), rgba(255,255,255,0.35)),
+        url("/home/nyx/.config/waybar/bg-bottom.png");
+    background-size:     cover, cover;
+    background-position: center center;
+    background-repeat:   no-repeat, no-repeat;
+}
+window#waybar.left {
+    background-image:
+        linear-gradient(rgba(255,255,255,0.35), rgba(255,255,255,0.35)),
+        url("/home/nyx/.config/waybar/bg-left.png");
+    background-size:     cover, cover;
+    background-position: center center;
+    background-repeat:   no-repeat, no-repeat;
+}
+window#waybar.right {
+    background-image:
+        linear-gradient(rgba(255,255,255,0.35), rgba(255,255,255,0.35)),
+        url("/home/nyx/.config/waybar/bg-right.png");
+    background-size:     cover, cover;
+    background-position: center center;
+    background-repeat:   no-repeat, no-repeat;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
