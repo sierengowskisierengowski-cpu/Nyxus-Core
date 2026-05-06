@@ -103,19 +103,19 @@
     },
     "clock#date": {
       "interval": 60,
-      "format": "<span size='large' weight='bold' foreground='#ec4899'>{0:%d}</span>\n<span size='x-small' weight='bold' letter_spacing='1500' foreground='#ea7e3c'>{0:%b}</span>\n<span size='x-small' letter_spacing='1500' foreground='#d4a73a'>{0:%Y}</span>",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · DATE</span>\n<span size='small' foreground='#58524c'>{0:%A · %B %d, %Y}</span>"
+      "format": "<span size='large' weight='bold' foreground='#ec4899'>%d</span>\n<span size='x-small' weight='bold' letter_spacing='1500' foreground='#ea7e3c'>%b</span>\n<span size='x-small' letter_spacing='1500' foreground='#d4a73a'>%Y</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · DATE</span>\n<span size='small' foreground='#58524c'>%A · %B %d, %Y</span>"
     },
     "clock": {
       "interval": 1,
-      "format": "<span size='small' foreground='#d4a73a'></span>\n<span size='medium' weight='bold' foreground='#6aa872'>{0:%H:%M:%S}</span>",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · TIME</span>\n<span size='small' foreground='#58524c'>{0:%H:%M:%S} · {0:%Z}</span>",
+      "format": "<span size='small' foreground='#d4a73a'></span>\n<span size='medium' weight='bold' foreground='#6aa872'>%H:%M:%S</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · TIME</span>\n<span size='small' foreground='#58524c'>%H:%M:%S · %Z</span>",
       "on-click": "sh -c 'pgrep -f nyxus_quicksettings >/dev/null && pkill -f nyxus_quicksettings || setsid python3 ~/.nyxus/nyxus_quicksettings.py >/tmp/nyxus-qs.log 2>&1 < /dev/null &'"
     },
     "clock#year": {
       "interval": 3600,
-      "format": "<span size='x-small' weight='bold' letter_spacing='1500' foreground='#5a8aab'>YEAR</span>\n<span size='large' weight='bold' foreground='#8a6aaa'>{0:%Y}</span>\n<span size='x-small' letter_spacing='1500' foreground='#ec4899'>({0:%Z})</span>",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · YEAR</span>\n<span size='small' foreground='#58524c'>{0:%Y · %Z}</span>"
+      "format": "<span size='x-small' weight='bold' letter_spacing='1500' foreground='#5a8aab'>YEAR</span>\n<span size='large' weight='bold' foreground='#8a6aaa'>%Y</span>\n<span size='x-small' letter_spacing='1500' foreground='#ec4899'>(%Z)</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · YEAR</span>\n<span size='small' foreground='#58524c'>%Y · %Z</span>"
     },
     "custom/hyprland-side-top": {
       "format": "<span foreground='#d4a73a' weight='bold'>H</span>\n<span foreground='#d4a73a' weight='bold'>Y</span>\n<span foreground='#d4a73a' weight='bold'>P</span>\n<span foreground='#d4a73a' weight='bold'>R</span>\n<span foreground='#d4a73a' weight='bold'>L</span>\n<span foreground='#d4a73a' weight='bold'>A</span>\n<span foreground='#d4a73a' weight='bold'>N</span>\n<span foreground='#d4a73a' weight='bold'>D</span>",
@@ -185,9 +185,9 @@
     },
     "clock#bottom": {
       "interval": 1,
-      "format": "  {0:%a · %d %b %Y · %H:%M:%S}",
-      "format-alt": "  {0:%H:%M:%S}",
-      "tooltip-format": "<span font='JetBrains Mono 13' foreground='#ff00ff'><b> {0:%A}</b></span>\n<span font='JetBrains Mono 11' foreground='#ffffff'> {0:%d %B %Y}</span>\n\n<span font='JetBrains Mono 10'><tt>{calendar}</tt></span>",
+      "format": "  %a · %d %b %Y · %H:%M:%S",
+      "format-alt": "  %H:%M:%S",
+      "tooltip-format": "<span font='JetBrains Mono 13' foreground='#ff00ff'><b> %A</b></span>\n<span font='JetBrains Mono 11' foreground='#ffffff'> %d %B %Y</span>\n\n<span font='JetBrains Mono 10'><tt>{calendar}</tt></span>",
       "calendar": {
         "mode": "month",
         "on-scroll": 1,
