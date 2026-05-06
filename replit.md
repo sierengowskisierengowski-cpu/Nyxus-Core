@@ -35,14 +35,66 @@ NYXUS is an Arch Linux-based operating system providing a suite of native Python
 - `nyxus-scripts/nyxus_chrome.py`: Source of truth for unified GTK4 application styling.
 - `iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf`: Hyprland configuration template.
 
+## Visual System — EMBOSSED CREAM PAPER (LOCKED · golden rule)
+
+This is the **only** visual language for NYXUS as of 2026-05. Every new app,
+widget, panel, dialog, lockscreen, splash, ISO branding, web property, and
+documentation surface MUST conform. No exceptions, no neon, no dark mode.
+
+- **Aesthetic**: Cream-on-cream tone-on-tone embossed stationery. Deeply
+  carved sculptural plaques. Hand-cast nameplates. Engraved labels.
+  Reference: bottom waybar (`waybar-style.css`) is the canonical example.
+- **Palette** (use these hex values everywhere — no other colors):
+  - Cream base: `#f5f3ef` (wallpaper letterbox, bar background)
+  - Cream raised: `#fbfaf6` (tile/pill surface)
+  - Cream highlight: `#ffffff` (hover, top inset highlight)
+  - Cream shadow stack: `#ebe8e2` → `#ddd9d3` (slab layers behind bars)
+  - Charcoal pencil ink: `#1a1816` (all primary text)
+  - Pencil-light: `#58524c` (secondary text, sublabels)
+  - Pencil-faint: `#9e948a` (disabled, dimmed)
+  - Charcoal border alphas: `rgba(26,24,22, 0.18 / 0.22 / 0.32 / 0.45)`
+  - Workspace identity stripes (only place color is allowed): pink
+    `rgba(236, 72, 153, …)`, orange `rgba(234,126, 60, …)`, gold
+    `rgba(212,167, 58, …)`, green `rgba(106,168,114, …)`, blue
+    `rgba( 90,138,171, …)`, purple `rgba(138,106,170, …)` — at 0.55
+    inactive / 0.95 active.
+- **Fonts**:
+  - `Architects Daughter` (or `Caveat` fallback) — handwritten labels,
+    NYXUS wordmarks, app titles, hand-feel accents.
+  - `Inter` — system text, stats, sublabels, UI body.
+  - `JetBrains Mono` — workspace numbers, code, monospace data.
+  - **Never** use the old Caveat-only or neon-pixel font stacks.
+- **Emboss recipe** (every raised tile / pill / card / plaque):
+  - 1px charcoal border at 0.22 alpha (deeper plaques: 2px at 0.32)
+  - `inset 1px 1px 0 rgba(255,255,255,0.95)` — top-left highlight
+  - `inset -1px -1px 0 rgba(26,24,22,0.08)` — bottom-right shadow
+  - `inset 0 -2px 0 rgba(26,24,22,0.06)` — bottom rim depth
+  - `0 2px 5px rgba(26,24,22,0.14)` — outer drop shadow
+  - Bigger plaques scale all values up proportionally.
+- **Engraved text recipe** (every label):
+  - `text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 -1px 0 rgba(26,24,22,0.18)`
+- **Slab depth** (bars / nameplates protruding from wall):
+  - Stack 2 cream slabs behind: offsets `6px/12px` (standard),
+    `8px/16px` (deeper), with progressively darker rim shadows + a
+    soft outer drop. See `waybar-style.css` for canonical values.
+- **Tile texture fills**: cards / headerbars get the `frost-tile-grid`
+  (triangle tessellation, 220px repeat) or `frost-tile-glyphs` (runic
+  wall, 180×320) repeating background-image at 0.85-0.92 cream-overlay
+  alpha. Substituted at runtime via `__NYX_TILE_*__` placeholders in
+  `nyxus_chrome.py`.
+- **Forbidden**: neon colors, glow effects, gradient backgrounds, dark
+  mode, sharp 90° corners under 8px radius, sans-serif-only mockups,
+  raster icons that aren't nerd-font / Phosphor / hand-drawn.
+
 ## Architecture decisions
 
 - **Native GTK4 for all apps**: Every NYXUS app and widget is developed exclusively with native Python GTK4, prohibiting any web-based frameworks for performance and consistency.
-- **Unified Visual Chrome**: A single `nyxus_chrome.py` module applies system-wide visual styling (GodsApp visual language, Caveat font, neon palette) to all GTK4 applications by monkey-patching `Gtk.ApplicationWindow.present`.
+- **Unified Visual Chrome**: A single `nyxus_chrome.py` module applies system-wide EMBOSSED CREAM PAPER styling to all GTK4 applications by monkey-patching `Gtk.ApplicationWindow.present`. See the Visual System section above for the locked-in rules `nyxus_chrome.py` enforces.
 - **Offline-first Chrome Bootstrap**: The chrome bootstrap mechanism avoids synchronous network fetches by distributing `nyxus_chrome.py` locally during installation, ensuring offline functionality.
 - **Dunst for Notifications**: Switched from Mako to Dunst as the sole notification daemon for system-wide consistency and improved features.
 - **Modular Studio Suite**: NYXUS Studio is a multi-module GTK4 creative suite, architected with distinct modules (paint, vector, 3d, video, etc.) connected via internal broadcast mechanisms.
 - **No-op for `nyxus-panel` Chrome**: `nyxus-panel` is intentionally excluded from the unified chrome bootstrap due to its reliance on `Gtk4LayerShell` which conflicts with window re-parenting.
+- **Wallpaper canvas padded for side waybars**: `nyxus-frost-sierengowski.png` is a 1.5x-padded canvas (cream `#f5f3ef` margins) so the SIERENGOWSKI artwork sits at ~67% of the visible width, clearing the 52px-wide left/right waybars by a comfortable margin in `fit` mode.
 
 ## Product
 
@@ -55,7 +107,17 @@ NYXUS is an Arch Linux-based operating system providing a suite of native Python
 
 ## User preferences
 
-- _Populate as you build_
+- **Visual style is LOCKED** to EMBOSSED CREAM PAPER — see "Visual System"
+  section above. Every future change (apps, widgets, web properties, ISO
+  branding, lockscreen, splash, docs) MUST follow the locked palette,
+  fonts, emboss recipe, and slab-depth rules. No neon, no dark mode, no
+  alternate themes. Only allowed accent color: per-workspace identity
+  stripes on the bottom waybar.
+- **Brand-naming lock**: "NYX" = ISO file only. "NYXUS" = OS + every
+  component. "SIERENGOWSKI" = creator wordmark on wallpaper + plaques.
+- **Propose-before-build for visual direction changes**: when the user
+  shares a reference image or asks for a new look, present options +
+  tradeoffs first; do not start implementing until they greenlight.
 
 ## Gotchas
 
