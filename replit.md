@@ -58,6 +58,15 @@ documentation surface MUST conform. No exceptions, no neon, no dark mode.
     `rgba(212,167, 58, …)`, green `rgba(106,168,114, …)`, blue
     `rgba( 90,138,171, …)`, purple `rgba(138,106,170, …)` — at 0.55
     inactive / 0.95 active.
+  - **Warm gold jewelry accent** (locked 2026-05-06f): `#d4a73a` is
+    permitted as a *jewelry-scale* accent ONLY — wordmarks
+    (NYXUS / SIERENGOWSKI / hyprland), focused-workspace ring,
+    notification dot, "now playing" indicator. Always paired with a
+    soft warm glow `0 0 12px rgba(212,167,58,0.55)` and an engraved
+    text-shadow. **Never** as a fill on surfaces, buttons, bars, or
+    icons. If in doubt, leave it cream. Gold is the ONLY second hue
+    permitted in the system; no other accent colors will ever be
+    added.
 - **Fonts**:
   - `Architects Daughter` (or `Caveat` fallback) — handwritten labels,
     NYXUS wordmarks, app titles, hand-feel accents.

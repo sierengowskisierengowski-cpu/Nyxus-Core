@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import Mirror from "./pages/Mirror";
+import WaybarMockup from "./pages/WaybarMockup";
 
 const BASE = "/api/download/nyxus";
 
@@ -287,6 +288,7 @@ export default function App() {
   }, []);
 
   if (route === "mirror") return <Mirror />;
+  if (route === "waybars") return <WaybarMockup />;
 
   return (
     <div style={{
