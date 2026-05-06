@@ -11,7 +11,7 @@
 # © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 set -euo pipefail
 
-VERSION="2026.05.05-r2"
+VERSION="2026.05.05-r3"
 PROD="https://nyxus-core.replit.app/api/download/nyxus"
 WP_NAME="nyxus-frost-sierengowski.png"
 WP_DIR="${HOME}/Pictures/nyxus"
