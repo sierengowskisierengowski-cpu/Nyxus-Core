@@ -248,16 +248,36 @@ window#waybar.bottom #custom-nyxus-panel {
     font-size:       12px;
     font-weight:     700;
     letter-spacing:  0.18em;
-    color:           #e8edf5;
+    color:           #0a0a0a;
     padding:         4px 22px;
     margin:          5px 8px;
     min-height:      26px;
     border-radius:   13px;
+    /* Thin white outline around every glyph (4-direction stroke) */
+    text-shadow:
+        -1px -1px 0 rgba(255, 255, 255, 0.95),
+         1px -1px 0 rgba(255, 255, 255, 0.95),
+        -1px  1px 0 rgba(255, 255, 255, 0.95),
+         1px  1px 0 rgba(255, 255, 255, 0.95),
+         0   -1px 0 rgba(255, 255, 255, 0.95),
+         0    1px 0 rgba(255, 255, 255, 0.95),
+        -1px  0   0 rgba(255, 255, 255, 0.95),
+         1px  0   0 rgba(255, 255, 255, 0.95);
 }
 
 window#waybar.bottom #custom-nyxus-start:hover,
 window#waybar.bottom #custom-nyxus-panel:hover {
-    color: #ffffff;
+    color: #000000;
+    text-shadow:
+        -1px -1px 0 rgba(255, 255, 255, 1.00),
+         1px -1px 0 rgba(255, 255, 255, 1.00),
+        -1px  1px 0 rgba(255, 255, 255, 1.00),
+         1px  1px 0 rgba(255, 255, 255, 1.00),
+         0   -1px 0 rgba(255, 255, 255, 1.00),
+         0    1px 0 rgba(255, 255, 255, 1.00),
+        -1px  0   0 rgba(255, 255, 255, 1.00),
+         1px  0   0 rgba(255, 255, 255, 1.00),
+         0    0   8px rgba(230, 240, 255, 0.55);
 }
 
 window#waybar.bottom #tray {
