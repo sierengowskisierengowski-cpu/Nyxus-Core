@@ -110,7 +110,7 @@ documentation surface MUST conform. No exceptions, no neon, no dark mode.
 - **Dunst for Notifications**: Switched from Mako to Dunst as the sole notification daemon for system-wide consistency and improved features.
 - **Modular Studio Suite**: NYXUS Studio is a multi-module GTK4 creative suite, architected with distinct modules (paint, vector, 3d, video, etc.) connected via internal broadcast mechanisms.
 - **No-op for `nyxus-panel` Chrome**: `nyxus-panel` is intentionally excluded from the unified chrome bootstrap due to its reliance on `Gtk4LayerShell` which conflicts with window re-parenting.
-- **Wallpaper canvas padded for side waybars**: `nyxus-frost-sierengowski.png` is a 1.5x-padded canvas (cream `#f5f3ef` margins) so the SIERENGOWSKI artwork sits at ~67% of the visible width, clearing the 52px-wide left/right waybars by a comfortable margin in `fit` mode.
+- **Wallpaper is full-bleed** (locked 2026-05-06c): `nyxus-frost-sierengowski.png` is the unpadded SIERENGOWSKI graffiti-on-cream artwork edge-to-edge. The padded variant was reverted at user request — side waybars (now 64px left / 72px right) will overlap the outermost letter strokes; the frosted blur softens the overlap. Do NOT re-pad without explicit user confirmation.
 - **Asset-driven design pipeline** (locked 2026-05-06): high-fidelity
   3D look (sculpted plaques, liquid drips, extruded monograms) is
   produced as **rendered assets** by the user (Blender / Inkscape /
