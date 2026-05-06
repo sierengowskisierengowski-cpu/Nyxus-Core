@@ -3,7 +3,7 @@
     "name": "top",
     "layer": "top",
     "position": "top",
-    "height": 28,
+    "height": 78,
     "spacing": 0,
     "margin-top": 0,
     "margin-left": 0,
@@ -15,70 +15,45 @@
       "custom/nyxus"
     ],
     "modules-right": [
-      "clock"
+      "clock#date",
+      "clock",
+      "clock#year",
+      "custom/hyprland-side-top"
     ],
     "custom/ticker": {
       "exec": "~/.config/waybar/ticker.sh",
       "interval": 1,
       "format": "{}",
-      "tooltip": false
-    },
-    "custom/nyxus": {
-      "format": "<span foreground='#ff00ff' font_weight='bold'>N</span><span foreground='#ff5500' font_weight='bold'> Y</span><span foreground='#ffff00' font_weight='bold'> X</span><span foreground='#39ff14' font_weight='bold'> U</span><span foreground='#0088ff' font_weight='bold'> S</span>",
       "tooltip": false,
       "escape": false
     },
-    "custom/sep": {
-      "format": "\u25c8",
-      "tooltip": false
+    "custom/nyxus": {
+      "format": "<span size='xx-large' weight='bold' font_family='Architects Daughter'>NYXUS</span>\n<span size='small' letter_spacing='3000'>HYPRLAND</span>",
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 Sierengowski</span>\n<span size='small' foreground='#58524c'>Hyprland \u00b7 Arch Linux \u00b7 2026</span>",
+      "escape": false,
+      "on-click": "/home/nyx/.local/bin/nyxus-start"
     },
-    "cpu": {
-      "format": "  {usage}%",
-      "interval": 2,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#cc00ff'>NYXUS \u00b7 CPU</span>\n<span size='small' foreground='#b8a8d0'>Processor utilization</span>"
-    },
-    "memory": {
-      "format": "  {percentage}%",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#8800ff'>NYXUS \u00b7 Memory</span>\n<span size='small' foreground='#b8a8d0'>RAM usage</span>"
-    },
-    "temperature": {
-      "hwmon-path-abs": "/sys/class/thermal/thermal_zone0/temp",
-      "input-filename": "temp",
-      "critical-threshold": 80,
-      "format": "  {temperatureC}\u00b0C",
-      "format-critical": "  {temperatureC}\u00b0C",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#39ff14'>NYXUS \u00b7 Temp</span>\n<span size='small' foreground='#b8a8d0'>Thermal sensor</span>"
-    },
-    "network": {
-      "format-wifi": "  {essid}  \u2193{bandwidthDownBytes}  \u2191{bandwidthUpBytes}",
-      "format-ethernet": "  ETH  \u2193{bandwidthDownBytes}  \u2191{bandwidthUpBytes}",
-      "format-disconnected": "  NO NET",
-      "interval": 2,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#b8a8d0'>{ipaddr} \u00b7 {ifname}</span>"
-    },
-    "battery": {
-      "format": "{icon}  {capacity}%",
-      "format-charging": "  {capacity}%",
-      "format-plugged": "  {capacity}%",
-      "format-icons": [
-        "",
-        "",
-        "",
-        "",
-        ""
-      ],
-      "states": {
-        "warning": 30,
-        "critical": 15
-      },
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ffd700'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#b8a8d0'>{capacity}% \u00b7 {time}</span>"
+    "clock#date": {
+      "interval": 60,
+      "format": "<span size='large' weight='bold'>{:%d}</span>\n<span size='x-small' weight='bold' letter_spacing='1500'>{:%b}</span>\n<span size='x-small' letter_spacing='1500'>{:%Y}</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 DATE</span>\n<span size='small' foreground='#58524c'>{:%A \u00b7 %B %d, %Y}</span>"
     },
     "clock": {
       "interval": 1,
-      "format": "  {:%a \u00b7 %d %b %Y \u00b7 %H:%M:%S}",
-      "format-alt": "  {:%H:%M:%S}",
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#ff00ff'>NYXUS \u00b7 Time</span>\n<span size='small' foreground='#b8a8d0'><span foreground='#ffffff'>{:%A \u00b7 %B %d, %Y}</span>\n<span foreground='#ffd700'>Click \u2192 Quick Settings</span></span>",
+      "format": "<span size='small'>\uf017</span>\n<span size='medium' weight='bold'>{:%H:%M:%S}</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 TIME</span>\n<span size='small' foreground='#58524c'>{:%H:%M:%S} \u00b7 {:%Z}</span>",
       "on-click": "sh -c 'pgrep -f nyxus_quicksettings >/dev/null && pkill -f nyxus_quicksettings || setsid python3 ~/.nyxus/nyxus_quicksettings.py >/tmp/nyxus-qs.log 2>&1 < /dev/null &'"
+    },
+    "clock#year": {
+      "interval": 3600,
+      "format": "<span size='x-small' weight='bold' letter_spacing='1500'>YEAR</span>\n<span size='large' weight='bold'>{:%Y}</span>\n<span size='x-small' letter_spacing='1500'>({:%Z})</span>",
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS \u00b7 YEAR</span>\n<span size='small' foreground='#58524c'>{:%Y \u00b7 %Z}</span>"
+    },
+    "custom/hyprland-side-top": {
+      "format": "H\nY\nP\nR\nL\nA\nN\nD",
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>HYPRLAND \u00b7 WAYBAR</span>\n<span size='small' foreground='#58524c'>NYXUS Edition \u00b7 2026</span>"
     }
   },
   {
