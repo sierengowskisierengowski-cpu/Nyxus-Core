@@ -142,6 +142,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-waybar-bottom.png":      "nyxus-waybar-bottom.png",
   "nyxus-waybar-left.png":        "nyxus-waybar-left.png",
   "nyxus-waybar-right.png":       "nyxus-waybar-right.png",
+  "nyxus-fog.py":                 "nyxus-fog.py",
   "nyxus-set-frost-wallpaper.sh": "nyxus-set-frost-wallpaper.sh",
   "wallpaper-rotate.sh":          "wallpaper-rotate.sh",
 
