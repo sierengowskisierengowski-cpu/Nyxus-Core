@@ -146,6 +146,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-fog.py":                 "nyxus-fog.py",
   "nyxus-set-frost-wallpaper.sh": "nyxus-set-frost-wallpaper.sh",
   "wallpaper-rotate.sh":          "wallpaper-rotate.sh",
+  "nyxus-ink-swirl.png":          "nyxus-ink-swirl.png",
 
   // ── ★ FROST RELIEF / TILE / HERO ASSETS (sculptural cream textures) ──────
   // Tiles: tile-grid (triangle tessellation) repeats inside cards & headerbars.
