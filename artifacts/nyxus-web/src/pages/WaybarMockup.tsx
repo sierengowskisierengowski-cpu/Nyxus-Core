@@ -102,14 +102,17 @@ function RainbowText({ text, size = 14 }: { text: string; size?: number }) {
   );
 }
 
-// Frosted-glass shell (rev 2026-05-06g) — translucent white plate, no
-// per-bar bg image. Wallpaper shows through. Misty white edge + outer
-// halo glow gives the "mist rolling off the edges" feel.
-// Pure-inset stack mirrors the actual waybar CSS (rev 2026-05-06h)
-// since Wayland layer-shell clips outer shadows. Reads as glowing
-// pure-white edges with fog rolling inward.
+// Live fog waybars (rev 2026-05-06i). Three drifting white radial-
+// gradient plumes animate inside each bar. Mirrors the actual waybar
+// CSS one-to-one so the mockup is a true reference.
 const MISTY_GLOW =
   "inset 0 0 2px 0 rgba(255,255,255,1.0), inset 0 0 6px 1px rgba(255,255,255,0.85), inset 0 0 14px 3px rgba(255,255,255,0.60), inset 0 0 28px 6px rgba(255,255,255,0.40), inset 0 0 56px 12px rgba(255,255,255,0.22)";
+
+const FOG_BG = `
+  radial-gradient(ellipse 60% 80% at center, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.25) 40%, rgba(255,255,255,0.00) 70%),
+  radial-gradient(ellipse 45% 70% at center, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.00) 75%),
+  radial-gradient(ellipse 75% 60% at center, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0.18) 45%, rgba(255,255,255,0.00) 80%)
+`;
 
 function BarShell({
   position,
@@ -121,11 +124,18 @@ function BarShell({
   style?: React.CSSProperties;
   children?: React.ReactNode;
 }) {
+  const horizontal = position === "top" || position === "bottom";
   return (
     <div
       style={{
         position: "absolute",
-        backgroundColor: "rgba(255,255,255,0.35)",
+        backgroundColor: "rgba(255,255,255,0.30)",
+        backgroundImage: FOG_BG,
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "300% 200%, 250% 220%, 350% 180%",
+        animation: horizontal
+          ? "nyx-fog-drift-h 60s linear infinite"
+          : "nyx-fog-drift-v 75s linear infinite",
         backdropFilter: "blur(12px) saturate(110%)",
         WebkitBackdropFilter: "blur(12px) saturate(110%)",
         display: "flex",
@@ -139,6 +149,25 @@ function BarShell({
       {children}
     </div>
   );
+}
+
+// Inject keyframes once.
+if (typeof document !== "undefined" && !document.getElementById("nyx-fog-keyframes")) {
+  const s = document.createElement("style");
+  s.id = "nyx-fog-keyframes";
+  s.textContent = `
+    @keyframes nyx-fog-drift-h {
+      0%   { background-position:    0% 50%,  100% 30%,  -50% 70%; }
+      50%  { background-position:  100% 50%, -100% 80%,  150% 30%; }
+      100% { background-position:  200% 50%, -300% 30%,  350% 70%; }
+    }
+    @keyframes nyx-fog-drift-v {
+      0%   { background-position:  50%   0%,  30%  100%,  70%  -50%; }
+      50%  { background-position:  50% 100%,  80% -100%,  30%  150%; }
+      100% { background-position:  50% 200%,  30% -300%,  70%  350%; }
+    }
+  `;
+  document.head.appendChild(s);
 }
 
 export default function WaybarMockup() {
