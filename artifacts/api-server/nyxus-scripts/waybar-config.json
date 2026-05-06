@@ -28,7 +28,7 @@
       "escape": false
     },
     "custom/nyxus": {
-      "format": "<span foreground='#ec4899' weight='bold' size='xx-large' font_family='Architects Daughter'>N</span><span foreground='#ea7e3c' weight='bold' size='xx-large' font_family='Architects Daughter'>Y</span><span foreground='#d4a73a' weight='bold' size='xx-large' font_family='Architects Daughter'>X</span><span foreground='#6aa872' weight='bold' size='xx-large' font_family='Architects Daughter'>U</span><span foreground='#5a8aab' weight='bold' size='xx-large' font_family='Architects Daughter'>S</span>\n<span foreground='#ec4899' weight='bold' size='small' letter_spacing='3000'>H</span><span foreground='#ea7e3c' weight='bold' size='small' letter_spacing='3000'>Y</span><span foreground='#d4a73a' weight='bold' size='small' letter_spacing='3000'>P</span><span foreground='#6aa872' weight='bold' size='small' letter_spacing='3000'>R</span><span foreground='#5a8aab' weight='bold' size='small' letter_spacing='3000'>L</span><span foreground='#8a6aaa' weight='bold' size='small' letter_spacing='3000'>A</span><span foreground='#ec4899' weight='bold' size='small' letter_spacing='3000'>N</span><span foreground='#ea7e3c' weight='bold' size='small' letter_spacing='3000'>D</span>",
+      "format": "<span foreground='#d4a73a' weight='bold' size='xx-large' font_family='Architects Daughter' letter_spacing='4000'>NYXUS</span>\n<span foreground='#d4a73a' weight='bold' size='small' letter_spacing='3000' font_family='Architects Daughter'>HYPRLAND</span>",
       "tooltip": true,
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · Sierengowski</span>\n<span size='small' foreground='#58524c'>Hyprland · Arch Linux · 2026</span>",
       "escape": false,
@@ -51,7 +51,7 @@
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>NYXUS · YEAR</span>\n<span size='small' foreground='#58524c'>{:%Y · %Z}</span>"
     },
     "custom/hyprland-side-top": {
-      "format": "<span foreground='#ec4899' weight='bold'>H</span>\n<span foreground='#ea7e3c' weight='bold'>Y</span>\n<span foreground='#d4a73a' weight='bold'>P</span>\n<span foreground='#6aa872' weight='bold'>R</span>\n<span foreground='#5a8aab' weight='bold'>L</span>\n<span foreground='#8a6aaa' weight='bold'>A</span>\n<span foreground='#ec4899' weight='bold'>N</span>\n<span foreground='#ea7e3c' weight='bold'>D</span>",
+      "format": "<span foreground='#d4a73a' weight='bold'>H</span>\n<span foreground='#d4a73a' weight='bold'>Y</span>\n<span foreground='#d4a73a' weight='bold'>P</span>\n<span foreground='#d4a73a' weight='bold'>R</span>\n<span foreground='#d4a73a' weight='bold'>L</span>\n<span foreground='#d4a73a' weight='bold'>A</span>\n<span foreground='#d4a73a' weight='bold'>N</span>\n<span foreground='#d4a73a' weight='bold'>D</span>",
       "tooltip": true,
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#1a1816'>HYPRLAND · WAYBAR</span>\n<span size='small' foreground='#58524c'>NYXUS Edition · 2026</span>",
       "escape": false
