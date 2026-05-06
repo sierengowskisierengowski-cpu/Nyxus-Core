@@ -1,447 +1,207 @@
-/* ────────────────────────────────────────────────────────────────────────────
-   NYXUS Waybar — EMBOSSED CREAM PAPER theme  (Seattle Frost · SIERENGOWSKI)
-   © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
-
-   Aesthetic: cream-on-cream embossed stationery. Same color family throughout,
-   depth created by light highlight (top-left) + soft shadow (bottom-right).
-   Charcoal pencil text. No neon. No rainbow. Workspace identity preserved
-   via thin colored top-stripe (3px) on each pill — the only color in the bar.
-
-   PALETTE
-     Cream paper      #f5f3ef   (matches wallpaper background — seamless)
-     Cream raised     #fbfaf6   (highlight side of every pill)
-     Cream pressed    #ebe8e2   (shadow side / pressed state)
-     Pencil ink       #1a1816   (all text)
-     Pencil light     #58524c   (secondary text, separators)
-     Pencil ghost     #9e948a   (placeholder, disabled)
-     Workspace stripes (top 3px only, accent identity):
-       1 pink   #ec4899   2 orange #ea7e3c   3 gold   #d4a73a
-       4 green  #6aa872   5 blue   #5a8aab   6 purple #8a6aaa
-   ──────────────────────────────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════════════
+   NYXUS WAYBAR — FLOATING NEOMORPHIC BUTTONS
+   ════════════════════════════════════════════════════════════════════════════
+   Spec (per Joseph Sierengowski, locked 2026-05-06):
+     1. Waybar shell is fully transparent — no bar substrate visible.
+     2. Every module is an independently floating cream "clay" button with
+        neomorphic dual-shadow depth (light from upper-left, dark to
+        lower-right) and margins that create gaps between them.
+     3. Text on every button is engraved with a soft text-shadow.
+     4. Locked cream palette only: #fbfaf6 raised, #1a1816 ink, charcoal-alpha
+        + white-highlight shadow stack. No greys, no neon, no dark mode.
+   ════════════════════════════════════════════════════════════════════════════ */
 
 * {
-    font-family:   'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
-    font-size:     11px;
-    border:        none;
-    border-radius: 0;
-    padding:       0;
-    margin:        0;
-    min-height:    0;
-    color:         #1a1816;
-}
-
-/* ── Tooltip popups: cream embossed cards ────────────────────────────────── */
-tooltip {
-    background:    #f5f3ef;
-    border:        1px solid rgba(26, 24, 22, 0.22);
-    border-radius: 10px;
-    padding:       12px 18px;
-    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
-                   inset -1px -1px 0 rgba(26, 24, 22, 0.06),
-                   0 4px 12px rgba(26, 24, 22, 0.10);
-}
-tooltip label {
-    color:       #1a1816;
-    font-size:   13px;
-    font-weight: 500;
-    font-family: 'Architects Daughter', 'Caveat', 'Patrick Hand', cursive;
-    padding:     2px 0;
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   SHARED EMBOSSED PILL — used by every module pill in every bar
-   ════════════════════════════════════════════════════════════════════════════ */
-@define-color cream         #f5f3ef;
-@define-color cream-raised  #fbfaf6;
-@define-color cream-pressed #ebe8e2;
-@define-color ink           #1a1816;
-@define-color ink-light     #58524c;
-
-/* ════════════════════════════════════════════════════════════════════════════
-   TOP BAR — cream paper strip with charcoal text
-   ════════════════════════════════════════════════════════════════════════════ */
-/* TOP BAR — Embossed cream nameplate (matches bottom bar grammar).
- * 78px tall · sculptural plaque protruding from cream wall · slabs cast
- * shadow DOWNWARD since the bar is anchored to the top edge. */
-window#waybar.top {
-    background-color: #fbfaf6;
-    background-image: none;
-    color:            #1a1816;
-    border:           none;
-    border-bottom:    2px solid rgba(26, 24, 22, 0.32);
-    box-shadow:       inset  0  1px 0 rgba(255, 255, 255, 0.95),
-                      inset  1  0   0 rgba(255, 255, 255, 0.55),
-                      inset -1  0   0 rgba(26,  24, 22, 0.10),
-                      inset  0 -2px 0 rgba(26,  24, 22, 0.06),
-                      0  6px 0 -2px #ebe8e2,
-                      0  7px 0 -2px rgba(26, 24, 22, 0.18),
-                      0 12px 0 -4px #ddd9d3,
-                      0 13px 0 -4px rgba(26, 24, 22, 0.14),
-                      0 18px 28px -6px rgba(26, 24, 22, 0.22);
-}
-
-/* ── Ticker — INSET RECESSED WELL carved into the cream plaque.
- *    Opposite of raised tile: dark on top/left, highlight on bottom/right.
- *    Reads as a small viewfinder pressed INTO the bar. */
-window#waybar.top #custom-ticker {
-    color:          #58524c;
-    background:     #efece6;
-    border:         1px solid rgba(26, 24, 22, 0.22);
-    border-radius:  10px;
-    margin:         10px 12px 10px 16px;
-    padding:        6px 14px;
-    min-width:      220px;
     font-family:    'Inter', 'Architects Daughter', sans-serif;
     font-size:      11px;
-    font-weight:    500;
-    letter-spacing: 0.04em;
-    text-shadow:    0 1px 0 rgba(255, 255, 255, 0.65);
-    box-shadow:     inset  0  2px 4px rgba(26, 24, 22, 0.22),
-                    inset  2  0   3px rgba(26, 24, 22, 0.14),
-                    inset  0 -1px 0   rgba(255, 255, 255, 0.70),
-                    inset -1  0   0   rgba(255, 255, 255, 0.45);
+    border:         none;
+    border-radius:  0;
+    min-height:     0;
+    -gtk-icon-style: regular;
 }
 
-/* ── Big embossed NYXUS wordmark + HYPRLAND subtitle (center).
- *    Hand-cast nameplate carved deep into the bar surface. */
-window#waybar.top #custom-nyxus {
-    color:          #1a1816;
-    background:     transparent;
-    border:         none;
-    margin:         4px 24px;
-    padding:        2px 18px;
+/* ──────────────────────────────────────────────────────────────────────────
+   1. INVISIBLE BAR SHELL — pure transparent, no bg / border / shadow.
+   ────────────────────────────────────────────────────────────────────────── */
+window#waybar {
+    background-color: rgba(0, 0, 0, 0);
+    background-image: none;
+    border:           none;
+    box-shadow:       none;
+    color:            #1a1816;
+}
+
+window#waybar.top,
+window#waybar.bottom {
+    background-color: rgba(0, 0, 0, 0);
+    background-image: none;
+    border:           none;
+    box-shadow:       none;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   2. UNIVERSAL FLOATING CREAM BUTTON
+      Every module + every workspace button gets this treatment.
+      Neomorphic dual-shadow: light from upper-left, dark to lower-right.
+   ────────────────────────────────────────────────────────────────────────── */
+#workspaces button,
+#clock,
+#cpu,
+#memory,
+#temperature,
+#network,
+#pulseaudio,
+#bluetooth,
+#battery,
+#tray,
+#custom-ticker,
+#custom-nyxus,
+#custom-nyxus-start,
+#custom-nyxus-wordmark,
+#custom-notifications,
+#custom-app-settings,
+#custom-nyxus-panel,
+#custom-hyprland-side,
+#custom-hyprland-side-top,
+#custom-sep {
+    color:            #1a1816;
+    background-color: #fbfaf6;
+    margin:           8px 5px;
+    padding:          6px 14px;
+    border-radius:    12px;
+    font-family:      'Inter', 'Architects Daughter', sans-serif;
+    font-size:        11px;
+    font-weight:      500;
+    letter-spacing:   0.04em;
+
+    /* Engraved text — soft top highlight + faint bottom ink. */
+    text-shadow:      0 1px 0 rgba(255, 255, 255, 0.85),
+                      0 -1px 0 rgba(26,  24, 22, 0.18);
+
+    /* Neomorphic dual-shadow:
+         · outer DARK to lower-right (the "weight" / dropped shadow)
+         · outer LIGHT to upper-left  (the "lift" / reflected highlight)
+         · inset white top-left rim   (the bevel highlight)
+         · inset ink bottom-right rim (the bevel shadow) */
+    box-shadow:
+        4px 4px 10px rgba(26, 24, 22, 0.18),
+       -3px -3px 8px rgba(255, 255, 255, 0.90),
+        inset  1px  1px 0 rgba(255, 255, 255, 0.95),
+        inset -1px -1px 0 rgba(26,  24, 22, 0.06);
+}
+
+/* Hover — push the button slightly inward (subtler shadow), feels pressable. */
+#workspaces button:hover,
+#clock:hover,
+#cpu:hover,
+#network:hover,
+#pulseaudio:hover,
+#battery:hover,
+#custom-ticker:hover,
+#custom-nyxus:hover,
+#custom-nyxus-start:hover,
+#custom-nyxus-wordmark:hover,
+#custom-notifications:hover,
+#custom-app-settings:hover,
+#custom-nyxus-panel:hover {
+    background-color: #ffffff;
+    box-shadow:
+        2px 2px 5px rgba(26, 24, 22, 0.14),
+       -2px -2px 5px rgba(255, 255, 255, 0.85),
+        inset  1px  1px 0 rgba(255, 255, 255, 1.0),
+        inset -1px -1px 0 rgba(26,  24, 22, 0.08);
+}
+
+/* Active workspace — pressed-IN look (inverted neomorphic) so it reads
+   as "selected"; keeps the cream palette, no color accent. */
+#workspaces button.active,
+#workspaces button.focused {
+    background-color: #efece6;
+    color:            #1a1816;
+    box-shadow:
+        inset  3px  3px 6px rgba(26, 24, 22, 0.22),
+        inset -2px -2px 5px rgba(255, 255, 255, 0.70);
+}
+
+/* Urgent workspace — same inset feel, very subtle warm tint (still cream-only). */
+#workspaces button.urgent {
+    background-color: #f3e8d8;
+    box-shadow:
+        inset  3px  3px 6px rgba(138, 90, 42, 0.30),
+        inset -2px -2px 5px rgba(255, 255, 255, 0.65);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   3. PER-MODULE TWEAKS — keep the floating-button recipe, just
+      adjust padding/font for special cases.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* NYXUS / wordmark plaques — handwritten font, more letter-spacing,
+   slightly bigger padding so the wordmark feels like a nameplate. */
+#custom-nyxus,
+#custom-nyxus-start,
+#custom-nyxus-wordmark {
     font-family:    'Architects Daughter', 'Caveat', cursive;
+    font-size:      14px;
     letter-spacing: 0.18em;
-    text-shadow:    0 1px 0 rgba(255, 255, 255, 0.95),
-                    0 -1px 0 rgba(26,  24, 22, 0.22);
+    padding:        6px 18px;
 }
 
-/* ── Date / Clock / Year tiles — three small carved nameplate tiles
- *    on the right (mirror the bottom-bar tile recipe). */
-window#waybar.top #clock,
-window#waybar.top #clock.date,
-window#waybar.top #clock.year {
-    color:          #1a1816;
-    background:     #fbfaf6;
-    border:         1px solid rgba(26, 24, 22, 0.22);
-    border-radius:  10px;
-    margin:         10px 4px;
-    padding:        6px 10px;
-    min-width:      54px;
-    font-family:    'Inter', sans-serif;
-    text-shadow:    0 1px 0 rgba(255, 255, 255, 0.85),
-                    0 -1px 0 rgba(26,  24, 22, 0.18);
-    box-shadow:     inset  1px  1px 0 rgba(255, 255, 255, 0.95),
-                    inset -1px -1px 0 rgba(26,  24, 22, 0.08),
-                    inset  0   -2px 0 rgba(26,  24, 22, 0.06),
-                    0 2px 5px rgba(26, 24, 22, 0.14);
-}
-window#waybar.top #clock.year {
-    margin-right:   8px;
+/* Top-bar center NYXUS uses pango markup multi-line — give it room. */
+window#waybar.top #custom-nyxus {
+    padding: 4px 22px;
 }
 
-/* Right-edge vertical HYPRLAND engraved sidetext (top bar twin). */
-window#waybar.top #custom-hyprland-side-top {
-    color:          #58524c;
-    background:     transparent;
-    border:         none;
-    margin:         8px 8px 8px 4px;
-    padding:        4px 6px;
+/* Vertical HYPRLAND sidetext — narrower, monospace, tight padding. */
+#custom-hyprland-side,
+#custom-hyprland-side-top {
     font-family:    'JetBrains Mono', 'Inter', monospace;
     font-size:      9px;
     font-weight:    700;
     letter-spacing: 0.08em;
-    text-shadow:    0 1px 0 rgba(255, 255, 255, 0.85),
-                    0 -1px 0 rgba(26,  24, 22, 0.18);
+    padding:        6px 8px;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   BOTTOM BAR — same embossed cream paper, slightly taller (60px)
-   ════════════════════════════════════════════════════════════════════════════ */
-/* ════════════════════════════════════════════════════════════════════════════
-   BOTTOM BAR — Embossed cream nameplate.
-   Sculptural plaque inspired by carved-cream "HYPRLAND WAYBAR" reference:
-   each module is a deeply carved cream tile with icon-on-top and a tiny
-   pencil label below. Far-right ends with a big NYXUS plaque + a vertical
-   "HYPRLAND" engraved sidetext. Per-workspace colored identity stripes
-   are preserved as our signature accent.
-   ════════════════════════════════════════════════════════════════════════════ */
-window#waybar.bottom {
-    background-color: #f5f3ef;
-    background-image: none;
-    color:            #1a1816;
-    border:           none;
-    border-top:       1px solid rgba(26, 24, 22, 0.20);
-    box-shadow:       inset 0 -2px 0 rgba(255, 255, 255, 0.95),
-                      inset 0  2px 0 rgba(26,  24, 22, 0.12),
-                      0  -8px 0 -2px #ebe8e2,
-                      0  -9px 0 -2px rgba(26, 24, 22, 0.18),
-                      0 -16px 0 -4px #ddd9d3,
-                      0 -17px 0 -4px rgba(26, 24, 22, 0.12),
-                      0 -22px 30px -8px rgba(26, 24, 22, 0.22);
+/* Workspace buttons — square-ish, monospace number for the carved digit. */
+#workspaces {
+    background-color: transparent;
+    box-shadow:       none;
+    margin:           0;
+    padding:          0;
 }
-
-/* ── Shared carved-tile sizing for every module on the bottom bar ──────────
- * Every tile is a deeply embossed cream square: 2-line label inside (icon
- * on top, tiny pencil label below). The combined inset-highlight + inset-
- * shadow + bottom-rim + drop-shadow stack sells the "carved into cream"
- * read. text-shadow gives the icon glyph and label a faint engraved feel.*/
-window#waybar.bottom #workspaces button,
-window#waybar.bottom #cpu,
-window#waybar.bottom #memory,
-window#waybar.bottom #network,
-window#waybar.bottom #pulseaudio,
-window#waybar.bottom #battery,
-window#waybar.bottom #custom-notifications,
-window#waybar.bottom #custom-app-settings,
-window#waybar.bottom #custom-nyxus-panel,
-window#waybar.bottom #custom-nyxus-start {
-    color:           #1a1816;
-    background:      #fbfaf6;
-    border:          1px solid rgba(26, 24, 22, 0.22);
-    border-radius:   12px;
-    padding:         5px 12px;
-    margin:          7px 4px;
-    min-width:       58px;
-    min-height:      58px;
-    font-family:     'Inter', sans-serif;
-    font-size:       11px;
-    font-weight:     600;
-    letter-spacing:  0.04em;
-    box-shadow:      inset  1px  1px 0 rgba(255, 255, 255, 0.95),
-                     inset -1px -1px 0 rgba(26,  24, 22, 0.08),
-                     inset  0   -2px 0 rgba(26,  24, 22, 0.06),
-                     0 2px 5px rgba(26, 24, 22, 0.14);
-    text-shadow:     0  1px 0 rgba(255, 255, 255, 0.85),
-                     0 -1px 0 rgba(26,  24, 22, 0.18);
-    transition:      all 0.18s ease;
-}
-
-window#waybar.bottom #workspaces button:hover,
-window#waybar.bottom #cpu:hover,
-window#waybar.bottom #network:hover,
-window#waybar.bottom #pulseaudio:hover,
-window#waybar.bottom #battery:hover,
-window#waybar.bottom #custom-notifications:hover,
-window#waybar.bottom #custom-app-settings:hover,
-window#waybar.bottom #custom-nyxus-panel:hover,
-window#waybar.bottom #custom-nyxus-start:hover {
-    background:   #ffffff;
-    border-color: rgba(26, 24, 22, 0.42);
-    box-shadow:   inset  1px  1px 0 rgba(255, 255, 255, 0.95),
-                  inset -1px -1px 0 rgba(26,  24, 22, 0.10),
-                  inset  0   -3px 0 rgba(26,  24, 22, 0.08),
-                  0 3px 8px rgba(26, 24, 22, 0.20);
-}
-
-/* ── Workspaces — same carved tile, BIG number on top, tiny WS label ───── */
-window#waybar.bottom #workspaces { padding: 0 12px; }
-
-/* Per-workspace identity stripe — preserved colors, deeper. */
-window#waybar.bottom #workspaces button:nth-child(1) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba(236, 72, 153, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
-window#waybar.bottom #workspaces button:nth-child(2) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba(234, 126,  60, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
-window#waybar.bottom #workspaces button:nth-child(3) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba(212, 167,  58, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
-window#waybar.bottom #workspaces button:nth-child(4) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba(106, 168, 114, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
-window#waybar.bottom #workspaces button:nth-child(5) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba( 90, 138, 171, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
-window#waybar.bottom #workspaces button:nth-child(6) { box-shadow: inset  1px  1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.08), inset 0 -3px 0 rgba(138, 106, 170, 0.55), 0 2px 5px rgba(26,24,22,0.14); }
-
-window#waybar.bottom #workspaces button.active:nth-child(1) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba(236, 72, 153, 0.95), 0 4px 10px rgba(236, 72, 153, 0.28); }
-window#waybar.bottom #workspaces button.active:nth-child(2) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba(234, 126,  60, 0.95), 0 4px 10px rgba(234, 126,  60, 0.28); }
-window#waybar.bottom #workspaces button.active:nth-child(3) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba(212, 167,  58, 0.95), 0 4px 10px rgba(212, 167,  58, 0.28); }
-window#waybar.bottom #workspaces button.active:nth-child(4) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba(106, 168, 114, 0.95), 0 4px 10px rgba(106, 168, 114, 0.28); }
-window#waybar.bottom #workspaces button.active:nth-child(5) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba( 90, 138, 171, 0.95), 0 4px 10px rgba( 90, 138, 171, 0.28); }
-window#waybar.bottom #workspaces button.active:nth-child(6) { background: #ffffff; border-color: rgba(26,24,22,0.45); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.95), inset -1px -1px 0 rgba(26,24,22,0.10), inset 0 -4px 0 rgba(138, 106, 170, 0.95), 0 4px 10px rgba(138, 106, 170, 0.28); }
-
-window#waybar.bottom #workspaces button.urgent {
-    color:        #8a2a2a;
-    background:   #fff5f3;
-    border-color: rgba(138, 42, 42, 0.55);
-}
-
-/* Workspace number+label uses the icon font + Inter for the small label.  *
- * GTK doesn't let us size two lines of one label differently from CSS,    *
- * so the number+label both render at 13px — the BIG-number / SMALL-label  *
- * differentiation is supplied by Pango markup inside the format string in *
- * waybar-config.json (cpu/network/pulseaudio/etc.) where supported.       */
-window#waybar.bottom #workspaces button {
+#workspaces button {
     font-family: 'JetBrains Mono', 'Inter', monospace;
-    font-size:   13px;
+    font-size:   12px;
     font-weight: 700;
+    padding:     6px 12px;
+    min-width:   38px;
 }
 
-/* Disabled / muted states — pencil-grey, dimmer carving */
-window#waybar.bottom #pulseaudio.muted,
-window#waybar.bottom #network.disconnected {
-    color:      #9e948a;
-    background: #ebe8e2;
-}
-window#waybar.bottom #battery.warning  { color: #8a5a2a; border-color: rgba(138, 90, 42, 0.50); }
-window#waybar.bottom #battery.critical { color: #8a2a2a; border-color: rgba(138, 42, 42, 0.55); }
-
-/* NYXUS Start — same tile but hand-drawn font (script-driven content) */
-window#waybar.bottom #custom-nyxus-start {
-    font-family:    'Architects Daughter', 'Caveat', cursive;
-    font-size:      14px;
-    margin:         7px 8px 7px 12px;
+/* Ticker (top bar) — wider, more breathing room for the rolling text. */
+#custom-ticker {
+    min-width:   220px;
+    padding:     6px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size:   11px;
 }
 
-/* ── NYXUS wordmark — the big embossed plaque on the far right ───────────
- * This is the "SK" of our reference photo: a deeper, larger carved block
- * with the wordmark in handwritten Architects Daughter, big text-shadow
- * to fake the photographic relief depth.                                  */
-window#waybar.bottom #custom-nyxus-wordmark {
-    color:          #1a1816;
-    background:     #fbfaf6;
-    border:         2px solid rgba(26, 24, 22, 0.32);
-    border-radius:  16px;
-    padding:        4px 22px;
-    margin:         5px 6px 5px 14px;
-    min-height:     62px;
-    font-family:    'Architects Daughter', 'Caveat', cursive;
-    font-size:      30px;
-    font-weight:    700;
-    letter-spacing: 0.04em;
-    box-shadow:     inset  2px  2px 0 rgba(255, 255, 255, 0.95),
-                    inset -2px -2px 0 rgba(26,  24, 22, 0.14),
-                    inset  0   -5px 0 rgba(26,  24, 22, 0.10),
-                    0 5px 14px rgba(26, 24, 22, 0.22);
-    text-shadow:    0  2px 0 rgba(255, 255, 255, 0.95),
-                    0 -1px 0 rgba(26,  24, 22, 0.30),
-                    0  3px 5px rgba(26,  24, 22, 0.20);
-    transition:     all 0.20s ease;
+/* Tray icons — smaller padding so icons aren't oversized. */
+#tray {
+    padding: 4px 8px;
 }
-window#waybar.bottom #custom-nyxus-wordmark:hover {
-    background: #ffffff;
-    border-color: rgba(26, 24, 22, 0.50);
-    box-shadow:  inset  2px  2px 0 rgba(255, 255, 255, 0.95),
-                 inset -2px -2px 0 rgba(26,  24, 22, 0.16),
-                 inset  0   -6px 0 rgba(26,  24, 22, 0.12),
-                 0 6px 18px rgba(26, 24, 22, 0.28);
+#tray > .needs-attention {
+    background-color: #f3e8d8;
 }
 
-/* ── HYPRLAND vertical sidetext (right edge engraved label) ──────────────
- * GTK CSS doesn't support transform: rotate for waybar labels, so the
- * "vertical" text is achieved by stacking each letter on its own line
- * via the format string. Tiny, engraved with double text-shadow.        */
-window#waybar.bottom #custom-hyprland-side {
-    color:          #58524c;
-    background:     transparent;
-    border:         none;
-    padding:        4px 8px;
-    margin:         8px 10px 8px 0;
-    font-family:    'Inter', sans-serif;
-    font-size:      8px;
-    font-weight:    800;
-    letter-spacing: 0.20em;
-    text-shadow:    0  1px 0 rgba(255, 255, 255, 0.90),
-                    0 -1px 0 rgba(26,  24, 22, 0.22);
+/* ──────────────────────────────────────────────────────────────────────────
+   4. STATE MODIFIERS — battery / network warnings.
+      Keep cream button, tint the text only (no neon, no colored backgrounds).
+   ────────────────────────────────────────────────────────────────────────── */
+#battery.warning,
+#temperature.critical {
+    color: #8a5a2a;
 }
-
-/* ════════════════════════════════════════════════════════════════════════════
-   LEFT BAR — workspace ribbon (cream pills, vertical)
-   ════════════════════════════════════════════════════════════════════════════ */
-/* Layered tablet — left bar with slabs peeking out to the RIGHT. Deepened. */
-window#waybar.left {
-    background-color: #f5f3ef;
-    background-image: none;
-    border:           none;
-    border-right:     1px solid rgba(26, 24, 22, 0.14);
-    box-shadow:       inset -1px 0 0 rgba(255, 255, 255, 0.95),
-                      inset  1px 0 0 rgba(26,  24, 22, 0.10),
-                       6px 0 0 -2px #ebe8e2,
-                       7px 0 0 -2px rgba(26, 24, 22, 0.14),
-                      12px 0 0 -4px #ddd9d3,
-                      13px 0 0 -4px rgba(26, 24, 22, 0.10),
-                      16px 0 24px -6px rgba(26, 24, 22, 0.18);
-}
-window#waybar.left #workspaces button {
-    color:         #58524c;
-    background:    #fbfaf6;
-    border:        1px solid rgba(26, 24, 22, 0.15);
-    border-radius: 8px;
-    margin:        4px 6px;
-    padding:       8px 0;
-    font-size:     12px;
-    font-weight:   500;
-    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
-                   inset -1px -1px 0 rgba(26, 24, 22, 0.05);
-}
-window#waybar.left #workspaces button.active {
-    color:        #1a1816;
-    background:   #ffffff;
-    border-color: rgba(26, 24, 22, 0.40);
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   RIGHT BAR — app launcher column (cream pills with icon glyphs)
-   ════════════════════════════════════════════════════════════════════════════ */
-/* Layered tablet — right bar with slabs peeking out to the LEFT. Deepened. */
-window#waybar.right {
-    background-color: #f5f3ef;
-    background-image: none;
-    border:           none;
-    border-left:      1px solid rgba(26, 24, 22, 0.14);
-    box-shadow:       inset 1px 0 0 rgba(255, 255, 255, 0.95),
-                      inset -1px 0 0 rgba(26,  24, 22, 0.10),
-                       -6px 0 0 -2px #ebe8e2,
-                       -7px 0 0 -2px rgba(26, 24, 22, 0.14),
-                      -12px 0 0 -4px #ddd9d3,
-                      -13px 0 0 -4px rgba(26, 24, 22, 0.10),
-                      -16px 0 24px -6px rgba(26, 24, 22, 0.18);
-}
-/* Waybar exposes custom/app-* modules as IDs (#custom-app-foo), not classes,
- * so list every right-bar app icon explicitly. */
-window#waybar.right #custom-app-godsapp,
-window#waybar.right #custom-app-studio,
-window#waybar.right #custom-app-sage,
-window#waybar.right #custom-app-shield,
-window#waybar.right #custom-app-control,
-window#waybar.right #custom-app-sysmon,
-window#waybar.right #custom-app-stickies,
-window#waybar.right #custom-app-weather,
-window#waybar.right #custom-app-notes,
-window#waybar.right #custom-app-terminal,
-window#waybar.right #custom-app-settings {
-    font-family:   'Symbols Nerd Font', 'Font Awesome 6 Free', 'Font Awesome 5 Free';
-    font-size:     16px;
-    color:         #1a1816;
-    background:    #fbfaf6;
-    border:        1px solid rgba(26, 24, 22, 0.15);
-    border-radius: 8px;
-    margin:        4px 6px;
-    padding:       8px 0;
-    min-width:     38px;
-    box-shadow:    inset 1px 1px 0 rgba(255, 255, 255, 0.85),
-                   inset -1px -1px 0 rgba(26, 24, 22, 0.05);
-    transition:    all 0.15s ease;
-}
-window#waybar.right #custom-app-godsapp:hover,
-window#waybar.right #custom-app-studio:hover,
-window#waybar.right #custom-app-sage:hover,
-window#waybar.right #custom-app-shield:hover,
-window#waybar.right #custom-app-control:hover,
-window#waybar.right #custom-app-sysmon:hover,
-window#waybar.right #custom-app-stickies:hover,
-window#waybar.right #custom-app-weather:hover,
-window#waybar.right #custom-app-notes:hover,
-window#waybar.right #custom-app-terminal:hover,
-window#waybar.right #custom-app-settings:hover {
-    background:   #ffffff;
-    color:        #1a1816;
-    border-color: rgba(26, 24, 22, 0.35);
-    box-shadow:   inset 1px 1px 0 rgba(255, 255, 255, 0.95),
-                  inset -1px -1px 0 rgba(26, 24, 22, 0.08),
-                  0 2px 6px rgba(26, 24, 22, 0.12);
-}
-
-/* Right-bar mini stat readouts (CPU/RAM/BAT numerics) — cream chip */
-window#waybar.right #cpu,
-window#waybar.right #memory,
-window#waybar.right #battery {
-    color:         #58524c;
-    background:    transparent;
-    font-size:     9px;
-    font-weight:   500;
-    padding:       2px 0;
-    margin:        2px 6px;
+#battery.critical,
+#network.disconnected {
+    color: #8a2a2a;
 }

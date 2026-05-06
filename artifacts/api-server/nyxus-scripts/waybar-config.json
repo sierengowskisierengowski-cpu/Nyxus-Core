@@ -3,11 +3,11 @@
     "name": "top",
     "layer": "top",
     "position": "top",
-    "height": 78,
-    "spacing": 0,
-    "margin-top": 0,
-    "margin-left": 0,
-    "margin-right": 0,
+    "height": 60,
+    "spacing": 4,
+    "margin-top": 5,
+    "margin-left": 10,
+    "margin-right": 10,
     "modules-left": [
       "custom/ticker"
     ],
@@ -60,11 +60,11 @@
     "name": "bottom",
     "layer": "top",
     "position": "bottom",
-    "height": 78,
-    "spacing": 0,
-    "margin-bottom": 0,
-    "margin-left": 0,
-    "margin-right": 0,
+    "height": 60,
+    "spacing": 4,
+    "margin-bottom": 5,
+    "margin-left": 10,
+    "margin-right": 10,
     "modules-left": [
       "custom/nyxus-start"
     ],
