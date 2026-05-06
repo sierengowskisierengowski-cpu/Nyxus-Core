@@ -35,11 +35,16 @@ NYXUS is an Arch Linux-based operating system providing a suite of native Python
 - `nyxus-scripts/nyxus_chrome.py`: Source of truth for unified GTK4 application styling.
 - `iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf`: Hyprland configuration template.
 
-## Visual System — EMBOSSED CREAM PAPER (LOCKED · golden rule)
+## Visual System — COSMIC INK SWIRL over EMBOSSED CREAM PAPER (LOCKED · golden rule, rev 2026-05-06u)
 
-This is the **only** visual language for NYXUS as of 2026-05. Every new app,
-widget, panel, dialog, lockscreen, splash, ISO branding, web property, and
-documentation surface MUST conform. No exceptions, no neon, no dark mode.
+The wallpaper is now the **black-hole / cosmic ink swirl** (`nyxus-ink-swirl.png`,
+2560×1396, mostly black with silver-white wisps and occasional gold dust).
+The waybar pebbles, beads, plaques, and engraved typography stay **EMBOSSED
+CREAM PAPER** — translucent cream `clay` floating on top of the cosmic
+backdrop. Hover effects bloom with a cool **silver-white starlight halo**
+(rgb 230,240,255) plus a small gold sparkle on the text — NOT the previous
+pure-gold halo. Cream chrome remains the rule for surfaces; the wallpaper
+is the only dark element. No dark-mode buttons, no dark-mode dialogs.
 
 - **Aesthetic**: Cream-on-cream tone-on-tone embossed stationery. Deeply
   carved sculptural plaques. Hand-cast nameplates. Engraved labels.
