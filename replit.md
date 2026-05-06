@@ -73,10 +73,26 @@ documentation surface MUST conform. No exceptions, no neon, no dark mode.
   - Bigger plaques scale all values up proportionally.
 - **Engraved text recipe** (every label):
   - `text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 -1px 0 rgba(26,24,22,0.18)`
-- **Slab depth** (bars / nameplates protruding from wall):
-  - Stack 2 cream slabs behind: offsets `6px/12px` (standard),
-    `8px/16px` (deeper), with progressively darker rim shadows + a
-    soft outer drop. See `waybar-style.css` for canonical values.
+- **Waybar shell = invisible** (locked 2026-05-06): both top + bottom
+  bars use `background: rgba(0,0,0,0); border:none; box-shadow:none`.
+  No bar substrate, no slab depth on the bar itself — the wallpaper
+  shows through. Modules float independently as cream "clay" buttons.
+  Hyprland needs `windowrule = noborder, ^(waybar)$` +
+  `windowrule = noshadow, ^(waybar)$` to keep the float clean.
+- **Floating neomorphic button recipe** (every waybar module):
+  - `background: #fbfaf6; margin: 8px 5px; padding: 6px 14px;`
+  - `border-radius: 12px;`
+  - Dual outer shadow: `4px 4px 10px rgba(26,24,22,0.18)` (dark, lower-right)
+    + `-3px -3px 8px rgba(255,255,255,0.90)` (light, upper-left)
+  - Inset bevel rims: `inset 1px 1px 0 rgba(255,255,255,0.95)` +
+    `inset -1px -1px 0 rgba(26,24,22,0.06)`
+  - Engraved text-shadow on every label.
+  - Active workspace = INVERTED (inset shadows instead of outset) =
+    "pressed-in" feel, same cream, no color accent.
+- **Slab/nameplate depth** (for Python GTK4 app cards / dialogs / panels
+  — NOT the waybar): stack 2 cream slabs behind, offsets `6px/12px`
+  (standard) / `8px/16px` (deeper), with progressively darker rim
+  shadows + a soft outer drop.
 - **Tile texture fills**: cards / headerbars get the `frost-tile-grid`
   (triangle tessellation, 220px repeat) or `frost-tile-glyphs` (runic
   wall, 180×320) repeating background-image at 0.85-0.92 cream-overlay
@@ -95,6 +111,14 @@ documentation surface MUST conform. No exceptions, no neon, no dark mode.
 - **Modular Studio Suite**: NYXUS Studio is a multi-module GTK4 creative suite, architected with distinct modules (paint, vector, 3d, video, etc.) connected via internal broadcast mechanisms.
 - **No-op for `nyxus-panel` Chrome**: `nyxus-panel` is intentionally excluded from the unified chrome bootstrap due to its reliance on `Gtk4LayerShell` which conflicts with window re-parenting.
 - **Wallpaper canvas padded for side waybars**: `nyxus-frost-sierengowski.png` is a 1.5x-padded canvas (cream `#f5f3ef` margins) so the SIERENGOWSKI artwork sits at ~67% of the visible width, clearing the 52px-wide left/right waybars by a comfortable margin in `fit` mode.
+- **Asset-driven design pipeline** (locked 2026-05-06): high-fidelity
+  3D look (sculpted plaques, liquid drips, extruded monograms) is
+  produced as **rendered assets** by the user (Blender / Inkscape /
+  Figma) or via AI image generation — NOT faked with CSS box-shadows.
+  Pure CSS is reserved for the floating-neomorphic-button recipe and
+  positioning. When the user drops a PNG/SVG, it's added to the
+  `download.ts` whitelist, mirrored to `dist/`, and wired in as a
+  background-image or icon. Stop trying to sculpt 3D depth in CSS.
 
 ## Product
 
