@@ -138,6 +138,10 @@ const ALLOWED_FILES: Record<string, string> = {
 
   // ── ★ FROST WALLPAPER ────────────────────────────────────────────────────
   "nyxus-frost-sierengowski.png": "nyxus-frost-sierengowski.png",
+  "nyxus-waybar-top.png":         "nyxus-waybar-top.png",
+  "nyxus-waybar-bottom.png":      "nyxus-waybar-bottom.png",
+  "nyxus-waybar-left.png":        "nyxus-waybar-left.png",
+  "nyxus-waybar-right.png":       "nyxus-waybar-right.png",
   "nyxus-set-frost-wallpaper.sh": "nyxus-set-frost-wallpaper.sh",
   "wallpaper-rotate.sh":          "wallpaper-rotate.sh",
 
