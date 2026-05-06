@@ -1,0 +1,258 @@
+
+
+...xXx... ~
+❯ ^[[200~# 1. Pull everything fresh                                        03:20:39
+zsh: bad pattern: ^[[200~#
+
+...xXx... ~
+❯ mkdir -p ~/.nyxus ~/.config/hypr/conf.d                                  03:21:41
+
+...xXx... ~
+❯ T=$(date +%s)                                                            03:21:41
+
+...xXx... ~
+❯ curl -fsSL "https://nyxus-core.replit.app/api/download/nyxus/nyxus-fog.py?v=$T"             -o ~/.nyxus/nyxus-fog.py
+
+...xXx... ~
+❯ curl -fsSL "https://nyxus-core.replit.app/api/download/nyxus/waybar-style.css?v=$T"         -o ~/.config/waybar/style.css
+
+...xXx... ~
+❯ curl -fsSL "https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-fog.conf?v=$T"  -o ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+
+...xXx... ~
+❯ curl -fsSL "https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-blur.conf?v=$T" -o ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+
+...xXx... ~
+❯ chmod +x ~/.nyxus/nyxus-fog.py                                           03:21:42
+
+...xXx... ~
+❯                                                                          03:21:42
+
+...xXx... ~
+❯ # 2. Verify checksums                                                    03:21:42
+zsh: command not found: #
+
+...xXx... ~
+❯ md5sum ~/.nyxus/nyxus-fog.py ~/.config/waybar/style.css \                03:21:42
+∙        ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf \
+∙        ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+01064d47cbe5d1e18eea6f3e921f8442  /home/nyx/.nyxus/nyxus-fog.py
+9b8686a57773cc6eb71b7fab14aa7dbe  /home/nyx/.config/waybar/style.css
+5fe51d6c9ad93d6e891e8f66c212d9fc  /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+42dfe6a8fb5cb685725c625db31d089d  /home/nyx/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+
+...xXx... ~
+❯ # Expect:                                                                03:21:42
+zsh: command not found: #
+
+...xXx... ~
+❯ #   01064d47cbe5d1e18eea6f3e921f8442  ~/.nyxus/nyxus-fog.py              03:21:42
+zsh: command not found: #
+
+...xXx... ~
+❯ #   9b8686a57773cc6eb71b7fab14aa7dbe  ~/.config/waybar/style.css         03:21:42
+zsh: command not found: #
+
+...xXx... ~
+❯ #   5fe51d6c9ad93d6e891e8f66c212d9fc  ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+zsh: command not found: #
+
+...xXx... ~
+❯ #   42dfe6a8fb5cb685725c625db31d089d  ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+zsh: command not found: #
+
+...xXx... ~
+❯                                                                          03:21:43
+
+...xXx... ~
+❯ # 3. Make sure hyprland.conf sources the conf.d directory (idempotent)   03:21:43
+zsh: unknown file attribute: i
+
+...xXx... ~
+❯ grep -q 'source = ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf' ~/.config/hypr/hyprland.conf \
+∙   || echo 'source = ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf' >> ~/.config/hypr/hyprland.conf
+
+...xXx... ~
+❯ grep -q 'source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf' ~/.config/hypr/hyprland.conf \
+∙   || echo 'source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf' >> ~/.config/hypr/hyprland.conf
+
+...xXx... ~
+❯                                                                          03:21:43
+
+...xXx... ~
+❯ # 4. Kill old, reload Hyprland, restart waybar, run fog daemon (foreground so we see errors)
+zsh: invalid mode specification
+
+...xXx... ~
+❯ pkill -f nyxus-fog.py 2>/dev/null                                        03:21:43
+
+...xXx... ~
+❯ pkill waybar 2>/dev/null                                                 03:21:43
+
+...xXx... ~
+❯ sleep 1                                                                  03:21:43
+
+...xXx... ~
+❯ hyprctl reload                                                           03:21:44
+ok
+
+...xXx... ~
+❯ setsid waybar >/dev/null 2>&1 < /dev/null & disown                       03:21:44
+[1] 845387
+
+...xXx... ~
+❯ sleep 1                                                                  03:21:44
+
+...xXx... ~
+❯                                                                          03:21:45
+
+...xXx... ~
+❯ # Run fog daemon IN FOREGROUND — Ctrl+C after you confirm fog is visible 03:21:45
+zsh: command not found: #
+
+...xXx... ~
+❯ python3 ~/.nyxus/nyxus-fog.py~                                           03:21:45
+python3: can't open file '/home/nyx/.nyxus/nyxus-fog.py~': [Errno 2] No such file or directory
+
+...xXx... ~
+❯ >....
+#   5fe51d6c9ad93d6e891e8f66c212d9fc  ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+#   42dfe6a8fb5cb685725c625db31d089d  ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+
+# 3. Make sure hyprland.conf sources the conf.d directory (idempotent)
+grep -q 'source = ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf' ~/.config/hypr/hyprland.conf \
+  || echo 'source = ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf' >> ~/.config/hypr/hyprland.conf
+grep -q 'source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf' ~/.config/hypr/hyprland.conf \
+  || echo 'source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf' >> ~/.config/hypr/hyprland.conf
+
+# 4. Kill old, reload Hyprland, restart waybar, run fog daemon (foreground so we see errors)
+pkill -f nyxus-fog.py 2>/dev/null
+pkill waybar 2>/dev/null
+sleep 1
+hyprctl reload
+setsid waybar >/dev/null 2>&1 < /dev/null & disown
+sleep 1
+
+# Run fog daemon IN FOREGROUND — Ctrl+C after you confirm fog is visible
+python3 ~/.nyxus/nyxus-fog.py
+zsh: command not found: #
+zsh: command not found: #
+01064d47cbe5d1e18eea6f3e921f8442  /home/nyx/.nyxus/nyxus-fog.py
+9b8686a57773cc6eb71b7fab14aa7dbe  /home/nyx/.config/waybar/style.css
+5fe51d6c9ad93d6e891e8f66c212d9fc  /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+42dfe6a8fb5cb685725c625db31d089d  /home/nyx/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+zsh: command not found: #
+zsh: command not found: #
+zsh: command not found: #
+zsh: command not found: #
+zsh: command not found: #
+zsh: unknown file attribute: i
+zsh: invalid mode specification
+ok
+[1] 846799
+zsh: command not found: #
+[nyxus-fog] starting — 18 blobs/bar × 4 bars @ 30fps (rev 2026-05-06j)
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: Failed to initialize layer surface, GTK4 Layer Shell may have been linked after libwayland.
+** Message: 03:22:01.750: Move gtk4-layer-shell before libwayland-client in the linker options.
+** Message: 03:22:01.750: You may be able to fix with without recompiling by setting LD_PRELOAD=/path/to/libgtk4-layer-shell.so
+** Message: 03:22:01.750: See https://github.com/wmww/gtk4-layer-shell/blob/main/linking.md for more info
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.750: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: Failed to initialize layer surface, GTK4 Layer Shell may have been linked after libwayland.
+** Message: 03:22:01.751: Move gtk4-layer-shell before libwayland-client in the linker options.
+** Message: 03:22:01.751: You may be able to fix with without recompiling by setting LD_PRELOAD=/path/to/libgtk4-layer-shell.so
+** Message: 03:22:01.751: See https://github.com/wmww/gtk4-layer-shell/blob/main/linking.md for more info
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: Failed to initialize layer surface, GTK4 Layer Shell may have been linked after libwayland.
+** Message: 03:22:01.751: Move gtk4-layer-shell before libwayland-client in the linker options.
+** Message: 03:22:01.751: You may be able to fix with without recompiling by setting LD_PRELOAD=/path/to/libgtk4-layer-shell.so
+** Message: 03:22:01.751: See https://github.com/wmww/gtk4-layer-shell/blob/main/linking.md for more info
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: Failed to initialize layer surface, GTK4 Layer Shell may have been linked after libwayland.
+** Message: 03:22:01.751: Move gtk4-layer-shell before libwayland-client in the linker options.
+** Message: 03:22:01.751: You may be able to fix with without recompiling by setting LD_PRELOAD=/path/to/libgtk4-layer-shell.so
+** Message: 03:22:01.751: See https://github.com/wmww/gtk4-layer-shell/blob/main/linking.md for more info
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()
+
+** (nyxus-fog.py:846866): WARNING **: 03:22:01.751: GtkWindow is not a layer surface. Make sure you called gtk_layer_init_for_window()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-nyxus-fog.py — Animated fog daemon for NYXUS waybars (rev 2026-05-06j).
+nyxus-fog.py — Animated fog daemon for NYXUS waybars (rev 2026-05-06k).
 
 Spawns 4 transparent wlr-layer-shell windows (BOTTOM layer), one anchored
 to each screen edge at the same size + margins as the corresponding waybar.
@@ -24,6 +24,41 @@ Autostart from Hyprland:
 """
 from __future__ import annotations
 
+# ─────────────────────────────────────────────────────────────────────────────
+# LD_PRELOAD BOOTSTRAP (rev 2026-05-06k)
+# gtk4-layer-shell MUST be loaded before libwayland-client or the wayland
+# layer-surface hook never registers ("Failed to initialize layer surface,
+# GTK4 Layer Shell may have been linked after libwayland"). The official fix
+# is LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so. We probe a few standard
+# Arch/Fedora/Debian paths and re-exec ourselves with it set if missing.
+# ─────────────────────────────────────────────────────────────────────────────
+import os, sys
+_LAYER_SHELL_CANDIDATES = (
+    "/usr/lib/libgtk4-layer-shell.so",
+    "/usr/lib/libgtk4-layer-shell.so.0",
+    "/usr/lib64/libgtk4-layer-shell.so",
+    "/usr/lib64/libgtk4-layer-shell.so.0",
+    "/usr/lib/x86_64-linux-gnu/libgtk4-layer-shell.so",
+    "/usr/lib/x86_64-linux-gnu/libgtk4-layer-shell.so.0",
+)
+def _ensure_ld_preload() -> None:
+    lib = next((p for p in _LAYER_SHELL_CANDIDATES if os.path.exists(p)), None)
+    if not lib:
+        sys.stderr.write(
+            "[nyxus-fog] FATAL: libgtk4-layer-shell.so not found in standard "
+            "paths. Install with:  sudo pacman -S gtk4-layer-shell\n"
+        )
+        sys.exit(2)
+    cur = os.environ.get("LD_PRELOAD", "")
+    if lib in cur:
+        return  # already preloaded — proceed
+    new_preload = f"{lib}:{cur}" if cur else lib
+    env = os.environ.copy()
+    env["LD_PRELOAD"] = new_preload
+    sys.stderr.write(f"[nyxus-fog] re-exec with LD_PRELOAD={lib}\n")
+    os.execvpe(sys.executable, [sys.executable, __file__, *sys.argv[1:]], env)
+_ensure_ld_preload()
+
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gtk4LayerShell", "1.0")
@@ -33,7 +68,6 @@ import cairo
 import random
 import math
 import signal
-import sys
 
 # ── BAR DIMENSIONS (mirror waybar-config.json EXACTLY so fog stays inside) ──
 # Top bar:    height 60,  margin-top 5,  margin-left/right 10
@@ -254,7 +288,7 @@ class FogApp(Gtk.Application):
 def main() -> int:
     sys.stderr.write(
         f"[nyxus-fog] starting — {BLOBS_PER_BAR} blobs/bar × 4 bars "
-        f"@ {FPS}fps (rev 2026-05-06j)\n"
+        f"@ {FPS}fps (rev 2026-05-06k)\n"
     )
     app = FogApp()
 
