@@ -80,7 +80,7 @@ failed_items=()
 hdr "Python Terminal Scripts"
 mkdir -p "$SCRIPTS_DIR"
 for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
-         nyxus_sysmon.py nyxus_sysmon_gtk.py \
+         nyxus_sysmon_gtk.py \
          nyxus_stickies.py nyxus_notes.py nyxus_weather.py nyxus_terminal.py \
          nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
          nyxus_doctor.py nyxus_launcher.py nyxus_powermenu.py \
