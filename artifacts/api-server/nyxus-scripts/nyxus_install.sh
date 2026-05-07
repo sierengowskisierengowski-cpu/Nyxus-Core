@@ -35,8 +35,21 @@ ok()   { printf "  ${GREEN}${B}✓${R}  ${DIM}%s${R}\n" "$1"; }
 fail() { printf "  ${RED}${B}✗${R}  ${DIM}%s — FAILED${R}\n" "$1"; }
 hdr()  { printf "\n${PURPLE}${B}── %s ${DIM}%s${R}\n" "$1" "────────────────────────────────────────────"; }
 
+## Offline mode: if NYXUS_OFFLINE_DIR is set, copy from local cache
+## instead of fetching over the network. Used by the offline ISO bake
+## (cache pre-staged into /opt/nyxus-cache by customize_airootfs.sh).
 dl() {
   local name="$1" dest="$2"
+  if [ -n "${NYXUS_OFFLINE_DIR:-}" ] && [ -f "${NYXUS_OFFLINE_DIR}/${name}" ]; then
+    if cp -f "${NYXUS_OFFLINE_DIR}/${name}" "$dest" 2>/dev/null; then
+      ok "$name → $dest  ${DIM}(offline)${R}"
+      return 0
+    else
+      fail "$name (offline copy failed)"
+      failed_items+=("$name")
+      return 1
+    fi
+  fi
   if curl -fsSL -o "$dest" "${API}/${name}" 2>/dev/null; then
     ok "$name → $dest"
   else
