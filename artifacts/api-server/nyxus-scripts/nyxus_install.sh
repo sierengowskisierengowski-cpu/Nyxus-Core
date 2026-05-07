@@ -658,8 +658,16 @@ if command -v sddm &>/dev/null; then
           printf "  ${RED}✗${R}  sddm.service unit not found on disk — sddm package install probably failed silently\n"
           printf "  ${DIM}    Manual fix:  sudo pacman -S sddm && sudo systemctl enable sddm.service${R}\n"
           failed_items+=("sddm.service enable (unit missing)"); failed=$((failed+1))
-        elif sudo -n systemctl enable sddm.service >/tmp/nyxus-sddm-enable.log 2>&1; then
-          ok "sddm.service enabled"
+        elif {
+            # If gdm (or any other DM) is already linked as display-manager,
+            # `systemctl enable sddm.service` will fail with
+            # "Failed to enable unit: File ... already exists". Force-overwrite
+            # the display-manager.service symlink so SDDM wins cleanly.
+            sudo -n rm -f /etc/systemd/system/display-manager.service 2>/dev/null
+            sudo -n systemctl enable --force sddm.service \
+                >/tmp/nyxus-sddm-enable.log 2>&1
+          }; then
+          ok "sddm.service enabled (display-manager.service → sddm)"
           if systemctl is-enabled gdm.service &>/dev/null; then
             printf "  ${PURPLE}→${R} ${DIM}sddm OK — now disabling gdm.service …${R}\n"
             if sudo -n systemctl disable gdm.service &>/dev/null; then
