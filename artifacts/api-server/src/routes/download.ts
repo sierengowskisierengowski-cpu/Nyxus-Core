@@ -45,6 +45,9 @@ function _hashOrCached(name: string, p: string): CacheEntry | null {
 //   When you add a new GTK4 app, add it to "GTK4 USER APPS" only.
 // ═══════════════════════════════════════════════════════════════════════════
 const ALLOWED_FILES: Record<string, string> = {
+  // ── ★ MASTER PALETTE — single source of truth (rev r13) ─────────────────
+  "nyxus_palette.py":       "nyxus_palette.py",        //  Python palette constants
+  "nyxus-palette.css":      "nyxus-palette.css",       //  CSS @define-color palette
   // ── ★ THE 12 NYXUS GTK4 USER APPS (the "11 + flyout") ────────────────────
   // 1. Home (workspace dashboard) — see TGZ section below
   "nyxus_notes.py":         "nyxus_notes.py",          //  2. Notes (Tesla-min)
