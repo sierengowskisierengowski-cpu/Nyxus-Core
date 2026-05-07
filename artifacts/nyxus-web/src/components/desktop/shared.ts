@@ -1,39 +1,49 @@
 // ============================================
 // NYXUS — shared desktop primitives
-// Palette, app registry, hooks used by every desktop component.
+// DARK MIRROR rev r16 (LOCKED) — monochrome only.
+// White / off-white / black / dark glass. No neon. No per-app colors.
+// Mirrors the actual installed Hyprland system: 27 apps + 4 iframes.
 // ============================================
 import { useState, useEffect } from "react";
 
 export const BASE = "/api/download/nyxus";
 
-// ── PALETTE (matches waybar-style.css and the actual Hyprland build) ─────
+// ── DARK MIRROR PALETTE (matches nyxus_chrome.py + nyxus-palette.css) ────
 export const C = {
-  pink:    "#ff00ff",
-  cyan:    "#22d3ee",
-  purple:  "#cc00ff",
-  gold:    "#ffff00",
-  indigo:  "#8800ff",
-  green:   "#39ff14",
-  orange:  "#ff5500",
-  blue:    "#0088ff",
-  red:     "#ff3344",
-  white:   "#ffffff",
-  text:    "#e8e0f5",
-  dim:     "#9b8db8",
-  panelBg: "rgba(4,2,10,0.86)",
-  void:    "#080808",
+  // surfaces
+  void:         "#000000",
+  glassDark:    "rgba(8,12,20,0.55)",     // panels, cards, frames, headerbars
+  glassDeeper:  "rgba(15,20,32,0.72)",    // inputs, hovered cards
+  glassDeepest: "rgba(5,7,12,0.92)",      // tooltips, popovers, dropdowns
+  panelBg:      "rgba(8,12,20,0.55)",     // alias for back-compat
+
+  // hairline + rim
+  hairline:     "rgba(255,255,255,0.10)", // 1px white border
+  hairlineHi:   "rgba(255,255,255,0.18)", // hover border
+  rimDark:      "rgba(0,0,0,0.55)",       // outer drop
+
+  // text
+  textPrimary:   "#e8edf5",  // off-white primary
+  textSecondary: "#c8ccd6",  // light grey
+  textTertiary:  "#6a6e78",  // dim grey
+  white:         "#ffffff",  // hover halos + selected pip ONLY
+  text:          "#e8edf5",  // alias
+  dim:           "#6a6e78",  // alias
+
+  // workspace identity stripes — ONLY allowed color, ONLY on bottom waybar
+  ws: ["#ec4899", "#ea7e3c", "#d4a73a", "#6aa872", "#5a8aab", "#8a6aaa", "#ec4899", "#ea7e3c", "#d4a73a"],
 };
 
-// neon palette cycled across workspace circles + launcher icons
-export const NEONS = [C.pink, C.cyan, C.gold, C.green, C.purple, C.orange, C.blue, C.indigo, C.red];
+// Back-compat NEONS export — now monochrome (used by LeftBar workspace pips)
+export const NEONS = ["#e8edf5", "#c8ccd6", "#e8edf5", "#c8ccd6", "#e8edf5", "#c8ccd6", "#e8edf5", "#c8ccd6", "#e8edf5"];
 
-// ── APP REGISTRY ─────────────────────────────────────────────────────────
+// ── APP REGISTRY — all 27 real apps from nyxus-scripts/ ──────────────────
 export type AppKind = "iframe" | "mockup";
 export type AppDef = {
   id: string;
   name: string;
   glyph: string;
-  color: string;
+  color: string;          // kept for type-compat — always C.textPrimary now
   kind: AppKind;
   src?: string;
   tagline?: string;
@@ -41,69 +51,132 @@ export type AppDef = {
   install?: string;
   download?: string;
   modules?: string[];
+  category?: "live" | "tarball" | "system";
 };
 
+const T = C.textPrimary; // every app uses the same off-white
+
 export const APPS: AppDef[] = [
-  { id: "notepad",  name: "Notepad",  glyph: "✑", color: C.purple, kind: "iframe", src: "/nyxus-notepad/" },
-  { id: "stickies", name: "Stickies", glyph: "▢", color: C.gold,   kind: "iframe", src: "/nyxus-stickies/" },
-  { id: "sysmon",   name: "SysMon",   glyph: "◉", color: C.green,  kind: "iframe", src: "/nyxus-sysmon/" },
-  { id: "widgets",  name: "Widgets",  glyph: "◍", color: C.cyan,   kind: "iframe", src: "/nyxus-widgets/" },
-  {
-    id: "intel", name: "INTEL", glyph: "◉", color: C.purple, kind: "mockup",
+  // ── LIVE IFRAMES (4) — actual interactive React mockups ────────────
+  { id: "notepad",  name: "Notepad",  glyph: "✑", color: T, kind: "iframe", src: "/nyxus-notepad/",  category: "live",
+    tagline: "PLAINTEXT EDITOR · GTK4",
+    desc: "Frictionless plaintext notebook with autosave to ~/.nyxus/notepad.json. DARK MIRROR chrome." },
+  { id: "stickies", name: "Stickies", glyph: "▢", color: T, kind: "iframe", src: "/nyxus-stickies/", category: "live",
+    tagline: "STICKY NOTES · GTK4",
+    desc: "Pin-to-desktop sticky notes. Layer-shell anchored, auto-persist." },
+  { id: "sysmon",   name: "SysMon",   glyph: "◉", color: T, kind: "iframe", src: "/nyxus-sysmon/",   category: "live",
+    tagline: "SYSTEM MONITOR · GTK4",
+    desc: "Live CPU / memory / network / disk dashboard with dark glass chrome." },
+  { id: "widgets",  name: "Widgets",  glyph: "◍", color: T, kind: "iframe", src: "/nyxus-widgets/",  category: "live",
+    tagline: "DESKTOP WIDGETS",
+    desc: "Glanceable cards (clock, weather, system, calendar) for the home dashboard." },
+
+  // ── TARBALL APPS (11) — installed via install.sh ───────────────────
+  { id: "godsapp", name: "GodsApp", glyph: "✦", color: T, kind: "mockup", category: "tarball",
+    tagline: "9-MODULE SECURITY SUPER TOOL",
+    desc: "All-in-one offensive/defensive workstation. udev rules for live device events. Each module is a standalone tab.",
+    install: "nyxus_godsapp_install.sh", download: "nyxus-godsapp.tgz",
+    modules: ["m01 Network", "m02 Ports", "m03 Packets", "m04 WiFi", "m05 Vulns", "m06 Traffic", "m07 Attack Surface", "m08 OSINT", "m09 Passwords"] },
+  { id: "home", name: "Home", glyph: "⌂", color: T, kind: "mockup", category: "tarball",
+    tagline: "HOME DASHBOARD",
+    desc: "The main dashboard — system glance, recent apps, weather, calendar, news ticker.",
+    install: "nyxus_home_install.sh", download: "nyxus-home.tgz",
+    modules: ["Glance", "Recent", "Weather", "Calendar", "News"] },
+  { id: "intel", name: "INTEL", glyph: "◉", color: T, kind: "mockup", category: "tarball",
     tagline: "OSINT INVESTIGATION WORKSTATION",
-    desc: "Email · Phone · IP · Domain · Crypto · Photo · Public Records. Real APIs (HIBP, Shodan, VirusTotal, AbuseIPDB, IPinfo, blockchain.info, Etherscan, FAA, FCC, SEC, FEC, USPTO, OpenSanctions). AES-256-GCM encrypted case storage with passwordless device-key auth.",
+    desc: "Email · Phone · IP · Domain · Crypto · Photo · Public Records. Real APIs (HIBP, Shodan, VirusTotal, AbuseIPDB, IPinfo, blockchain.info, Etherscan, FAA, FCC, SEC, FEC, USPTO, OpenSanctions). AES-256-GCM encrypted case storage.",
     install: "nyxus_intel_install.sh", download: "nyxus-intel.tgz",
-    modules: ["Email Intel", "Phone Intel", "IP Intel", "Domain Intel", "Crypto Intel", "Photo EXIF", "Public Records", "Case Library"],
-  },
-  {
-    id: "phantom", name: "Phantom", glyph: "◈", color: C.blue, kind: "mockup",
+    modules: ["Email Intel", "Phone Intel", "IP Intel", "Domain Intel", "Crypto Intel", "Photo EXIF", "Public Records", "Case Library"] },
+  { id: "passwords", name: "Passwords", glyph: "🔑", color: T, kind: "mockup", category: "tarball",
+    tagline: "PASSWORD VAULT · AES-256",
+    desc: "Local-first encrypted password vault. AES-256-GCM, Argon2id derivation, autotype helper, browser bridge.",
+    install: "nyxus_passwords_install.sh", download: "nyxus-passwords.tgz",
+    modules: ["Vault", "Generator", "Autotype", "Bridge", "Audit"] },
+  { id: "phantom", name: "Phantom", glyph: "◈", color: T, kind: "mockup", category: "tarball",
     tagline: "STEALTH SECURITY DAEMON",
     desc: "Always-on threat monitor + automated response daemon. Forensics module captures evidence, threats engine fingerprints attackers, response engine isolates compromised processes. Runs as a systemd service.",
     install: "nyxus-phantom.tgz", download: "nyxus-phantom.tgz",
-    modules: ["Monitor", "Response", "Forensics", "Threat Engine", "systemd"],
-  },
-  {
-    id: "shield", name: "Shield", glyph: "⛨", color: C.green, kind: "mockup",
-    tagline: "NETWORK SECURITY SCANNER",
-    desc: "Active vulnerability + network exposure scanner. Local scan (open ports, services), network scan (subnet sweep, fingerprinting), persistent SQLite DB of findings. NYXUS-themed GTK UI.",
-    install: "nyxus_security_install.sh", download: "nyxus-shield.tgz",
-    modules: ["Local Scan", "Network Sweep", "Service Probe", "Findings DB", "Reports"],
-  },
-  {
-    id: "godsapp", name: "GodsApp", glyph: "✦", color: C.gold, kind: "mockup",
-    tagline: "9-MODULE SECURITY SUPER TOOL",
-    desc: "All-in-one offensive/defensive workstation. udev rules for live device events. Each module is a standalone tab with its own engine, UI, and persistence.",
-    install: "nyxus_godsapp_install.sh", download: "nyxus-godsapp.tgz",
-    modules: ["m01 Network", "m02 Ports", "m03 Packets", "m04 WiFi", "m05 Vulns", "m06 Traffic", "m07 Attack Surface", "m08 OSINT", "m09 Passwords"],
-  },
-  {
-    id: "sage", name: "Sage", glyph: "✧", color: C.pink, kind: "mockup",
+    modules: ["Monitor", "Response", "Forensics", "Threat Engine", "systemd"] },
+  { id: "sage", name: "Sage", glyph: "✧", color: T, kind: "mockup", category: "tarball",
     tagline: "RULES + KNOWLEDGE ENGINE",
-    desc: "Tabbed Adwaita UI for system rules, audit trails, and knowledge base. CLI companion for headless audits. Pluggable rules engine — add your own checks as Python modules.",
+    desc: "Tabbed Adwaita UI for system rules, audit trails, and knowledge base. CLI companion for headless audits. Pluggable rules engine.",
     install: "nyxus_sage_install.sh", download: "nyxus-sage.tgz",
-    modules: ["Rules", "Audit", "Knowledge", "CLI", "UI", "Tabs"],
-  },
-  {
-    id: "panel", name: "Panel", glyph: "▦", color: C.purple, kind: "mockup",
-    tagline: "TOPBAR + SETTINGS FLYOUT",
-    desc: "The Panel — right-side flyout with weather, news ticker, system widgets, and the unified Settings window (Appearance / Profile / Notifications / News Sources / Filters / Browser / Cache / About).",
-    install: "nyxus_panel_install.sh", download: "nyxus-panel.tgz",
-    modules: ["Appearance", "Profile", "Notifications", "News Sources", "Filters", "Browser", "Cache", "About"],
-  },
-  {
-    id: "start", name: "Start Menu", glyph: "◐", color: C.cyan, kind: "mockup",
+    modules: ["Rules", "Audit", "Knowledge", "CLI", "UI", "Tabs"] },
+  { id: "shield", name: "Shield", glyph: "⛨", color: T, kind: "mockup", category: "tarball",
+    tagline: "NETWORK SECURITY SCANNER",
+    desc: "Active vulnerability + network exposure scanner. Local scan (open ports, services), network scan (subnet sweep, fingerprinting), persistent SQLite DB.",
+    install: "nyxus_security_install.sh", download: "nyxus-shield.tgz",
+    modules: ["Local Scan", "Network Sweep", "Service Probe", "Findings DB", "Reports"] },
+  { id: "start", name: "Start Menu", glyph: "◐", color: T, kind: "mockup", category: "tarball",
     tagline: "START MENU + BOTTOM BAR",
-    desc: "The Start menu (Apps page + Store page, page-switched layout) and the four custom Waybar bottom-bar buttons: Start, The Panel, Notifications, Settings. Idempotent installer that won't double-add.",
+    desc: "The Start menu (Apps + Store, page-switched layout) and the four custom Waybar buttons: Start, Panel, Notifications, Settings.",
     install: "nyxus_start_install.sh", download: "nyxus-start.tgz",
-    modules: ["Apps Page", "Store Page", "Bottom Bar", "Power Menu"],
-  },
-  {
-    id: "studio", name: "Creative Studio", glyph: "✎", color: C.orange, kind: "mockup",
+    modules: ["Apps Page", "Store Page", "Bottom Bar", "Power Menu"] },
+  { id: "studio", name: "Creative Studio", glyph: "✎", color: T, kind: "mockup", category: "tarball",
     tagline: "9-MODULE CREATIVE SUITE",
     desc: "Multi-module creative workstation. Cross-module wired with shared engine, UI, audio engine, video engine, 3d engine, and document references.",
     install: "nyxus_studio_install.sh", download: "nyxus-studio.tgz",
-    modules: ["m01 Paint", "m02 Vector", "m03 3D", "m04 Video", "m05 Animate", "m06 Photo", "m07 Layout", "m08 Type", "m09 Voice"],
-  },
+    modules: ["m01 Paint", "m02 Vector", "m03 3D", "m04 Video", "m05 Animate", "m06 Photo", "m07 Layout", "m08 Type", "m09 Voice"] },
+  { id: "weather", name: "Weather", glyph: "☁", color: T, kind: "mockup", category: "tarball",
+    tagline: "WEATHER · GTK4",
+    desc: "Local + extended forecast, radar, severe alerts. Sources: NWS, OpenWeatherMap, Met.no.",
+    install: "nyxus_weather_install.sh", download: "nyxus-weather.tgz",
+    modules: ["Now", "Hourly", "10-Day", "Radar", "Alerts"] },
+  { id: "panel", name: "The Panel", glyph: "▦", color: T, kind: "mockup", category: "tarball",
+    tagline: "TOPBAR + SETTINGS FLYOUT",
+    desc: "Right-side flyout with weather, news ticker, system widgets, and the unified Settings window.",
+    install: "nyxus_panel_install.sh", download: "nyxus-panel.tgz",
+    modules: ["Appearance", "Profile", "Notifications", "News Sources", "Filters", "Browser", "Cache", "About"] },
+
+  // ── SYSTEM UTILITIES (12) — Python / .desktop entries on the live OS ─
+  { id: "calendar", name: "Calendar", glyph: "▦", color: T, kind: "mockup", category: "system",
+    tagline: "CALENDAR · GTK4",
+    desc: "Month / week / agenda views. Local ICS storage. CalDAV sync planned.",
+    install: "nyxus_calendar.py" },
+  { id: "clock", name: "Clock", glyph: "◷", color: T, kind: "mockup", category: "system",
+    tagline: "CLOCK · TIMERS · STOPWATCH",
+    desc: "World clock, timers, stopwatch, alarms. Layer-shell pop-up.",
+    install: "nyxus_clock.py" },
+  { id: "control", name: "Control", glyph: "◑", color: T, kind: "mockup", category: "system",
+    tagline: "CONTROL CENTER",
+    desc: "Quick toggles — wifi, bluetooth, audio, brightness, dnd, idle inhibit.",
+    install: "nyxus_control.py" },
+  { id: "doctor", name: "Doctor", glyph: "✚", color: T, kind: "mockup", category: "system",
+    tagline: "SYSTEM HEALTH AUDIT",
+    desc: "Health audit tool — checks chrome bootstrap, palette integrity, app installs, fog daemon, waybar state.",
+    install: "nyxus_doctor.py" },
+  { id: "launcher", name: "Launcher", glyph: "▣", color: T, kind: "mockup", category: "system",
+    tagline: "APP LAUNCHER",
+    desc: "Fuzzy launcher (Super-key). Layer-shell overlay, fzf-like ranking.",
+    install: "nyxus_launcher.py" },
+  { id: "notes", name: "Notes", glyph: "✑", color: T, kind: "mockup", category: "system",
+    tagline: "QUICK NOTES",
+    desc: "One-shot quick note capture. Different from the full Notepad app.",
+    install: "nyxus_notes.py" },
+  { id: "powermenu", name: "Power", glyph: "⏻", color: T, kind: "mockup", category: "system",
+    tagline: "POWER MENU",
+    desc: "Lock / suspend / reboot / shutdown / log out. Confirmation dialog with countdown.",
+    install: "nyxus_powermenu.py" },
+  { id: "quicksettings", name: "Quick Settings", glyph: "◧", color: T, kind: "mockup", category: "system",
+    tagline: "QUICK SETTINGS",
+    desc: "Right-edge slide-out — volume, brightness, network, dnd, screenshot, screencast.",
+    install: "nyxus_quicksettings.py" },
+  { id: "screensaver", name: "Screensaver", glyph: "◌", color: T, kind: "mockup", category: "system",
+    tagline: "SCREENSAVER + LOCK",
+    desc: "Idle-triggered screensaver with the cosmic ink-swirl wallpaper. Doubles as the lockscreen.",
+    install: "nyxus_screensaver.py" },
+  { id: "screenshot", name: "Screenshot", glyph: "◰", color: T, kind: "mockup", category: "system",
+    tagline: "SCREENSHOT TOOL",
+    desc: "Region / window / fullscreen capture. PNG to ~/Pictures, optional clipboard, optional annotate.",
+    install: "nyxus_screenshot.py" },
+  { id: "settings", name: "Settings", glyph: "⚙", color: T, kind: "mockup", category: "system",
+    tagline: "SYSTEM SETTINGS",
+    desc: "The unified settings window — Appearance / Profile / Notifications / News / Filters / Browser / Cache / About.",
+    install: "nyxus_settings.py" },
+  { id: "terminal", name: "Terminal", glyph: "▶", color: T, kind: "mockup", category: "system",
+    tagline: "TERMINAL · BARE VTE",
+    desc: "Bare VTE widget on dark glass. No window chrome — Hyprland's rim-light gradient is the sole frame.",
+    install: "nyxus_terminal.py" },
 ];
 
 // ── HOOKS ────────────────────────────────────────────────────────────────
@@ -125,3 +198,12 @@ export function useWallpaperRotation(intervalMs = 15000) {
   const file = `nyxus-bg-${String(idx + 1).padStart(2, "0")}.png`;
   return { idx, file, url: `${BASE}/${file}` };
 }
+
+// ── SHARED STYLE FRAGMENTS ───────────────────────────────────────────────
+export const FRAME = {
+  background: C.glassDark,
+  border: `1px solid ${C.hairline}`,
+  borderRadius: 14,
+  backdropFilter: "blur(14px) saturate(1.1)",
+  WebkitBackdropFilter: "blur(14px) saturate(1.1)",
+} as const;

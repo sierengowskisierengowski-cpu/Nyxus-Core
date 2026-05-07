@@ -1,20 +1,19 @@
-import { C } from "./shared";
+import { C, FRAME } from "./shared";
 
-function Stat({ glyph, value, color }: { glyph: string; value: string; color: string }) {
+function Stat({ glyph, value }: { glyph: string; value: string }) {
   return (
     <span style={{
       display: "inline-flex",
       alignItems: "center",
-      gap: 4,
-      color,
+      gap: 5,
+      color: C.textSecondary,
       fontSize: "0.62rem",
       fontFamily: '"JetBrains Mono", monospace',
       letterSpacing: "0.05em",
-      textShadow: `0 0 4px ${color}88`,
       whiteSpace: "nowrap",
     }}>
-      <span style={{ fontSize: "0.7rem" }}>{glyph}</span>
-      <span style={{ color: C.text }}>{value}</span>
+      <span style={{ fontSize: "0.7rem", color: C.textTertiary }}>{glyph}</span>
+      <span style={{ color: C.textPrimary }}>{value}</span>
     </span>
   );
 }
@@ -27,41 +26,41 @@ export function TopBar({ time }: { time: Date }) {
 
   return (
     <div style={{
+      ...FRAME,
       position: "fixed",
       top: 6, left: 6, right: 6,
-      height: 22,
-      background: C.panelBg,
-      border: `1px solid ${C.pink}`,
-      borderRadius: 4,
-      boxShadow: `0 0 10px ${C.pink}66, 0 0 20px ${C.pink}33, inset 0 0 10px rgba(255,0,255,0.06)`,
+      height: 24,
       display: "flex",
       alignItems: "center",
-      padding: "0 8px",
+      padding: "0 10px",
       fontFamily: '"JetBrains Mono", monospace',
       zIndex: 50,
       userSelect: "none",
-      backdropFilter: "blur(14px) saturate(1.6)",
     }}>
-      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12, overflow: "hidden" }}>
-        <Stat glyph="◉" value="CPU 15%"      color={C.purple} />
-        <Stat glyph="▲" value="TEMP 84°C"    color={C.orange} />
-        <Stat glyph="↓" value="0KB/s"        color={C.green} />
-        <Stat glyph="↑" value="0KB/s"        color={C.green} />
-        <Stat glyph="⊘" value="NO-WIFI"      color={C.red} />
-        <Stat glyph="▣" value="92%"          color={C.gold} />
-        <Stat glyph="◧" value="DISK 35%"     color={C.cyan} />
+      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, overflow: "hidden" }}>
+        <Stat glyph="◉" value="CPU 15%"   />
+        <Stat glyph="▲" value="84°C"      />
+        <Stat glyph="↓" value="0KB/s"     />
+        <Stat glyph="↑" value="0KB/s"     />
+        <Stat glyph="⊘" value="NO-WIFI"   />
+        <Stat glyph="▣" value="92%"       />
+        <Stat glyph="◧" value="DISK 35%"  />
       </div>
-      <div style={{ flex: "0 0 auto", padding: "0 1.2rem", fontWeight: 800, letterSpacing: "0.18em", fontSize: "0.7rem" }}>
-        <span style={{ color: C.pink   }}>N</span>
-        <span style={{ color: C.orange }}> Y</span>
-        <span style={{ color: C.gold   }}> X</span>
-        <span style={{ color: C.green  }}> U</span>
-        <span style={{ color: C.blue   }}> S</span>
+      <div style={{
+        flex: "0 0 auto",
+        padding: "0 1.2rem",
+        fontWeight: 700,
+        letterSpacing: "0.32em",
+        fontSize: "0.7rem",
+        color: C.textPrimary,
+        fontFamily: '"Architects Daughter", "Caveat", cursive',
+      }}>
+        N Y X U S
       </div>
-      <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, color: C.text, fontSize: "0.62rem" }}>
-        <span style={{ color: C.dim }}>{date}</span>
-        <span style={{ color: C.cyan, fontSize: "0.65rem" }}>▢</span>
-        <span style={{ fontWeight: 700, color: C.text }}>{hh}:{mm}:{ss}</span>
+      <div style={{ flex: 1, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, fontSize: "0.62rem" }}>
+        <span style={{ color: C.textTertiary }}>{date}</span>
+        <span style={{ color: C.textSecondary }}>▢</span>
+        <span style={{ fontWeight: 700, color: C.textPrimary }}>{hh}:{mm}:{ss}</span>
       </div>
     </div>
   );

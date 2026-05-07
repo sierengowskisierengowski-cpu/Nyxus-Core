@@ -1,26 +1,26 @@
-import { C, APPS, AppDef } from "./shared";
+import { C, APPS, AppDef, FRAME } from "./shared";
+
+// Right bar shows the 4 LIVE iframe apps + the 11 tarball apps.
+// System utilities (12) live inside the Start menu only.
+const RIGHT_BAR_APPS = APPS.filter(a => a.category === "live" || a.category === "tarball");
 
 export function RightBar({ onLaunch, openId }: { onLaunch: (a: AppDef) => void; openId: string | null }) {
   return (
     <div style={{
+      ...FRAME,
       position: "fixed",
-      top: 32, right: 6, bottom: 32,
-      width: 36,
-      background: C.panelBg,
-      border: `1px solid ${C.gold}`,
-      borderRadius: 4,
-      boxShadow: `0 0 10px ${C.gold}66, 0 0 20px ${C.gold}33`,
-      backdropFilter: "blur(14px) saturate(1.6)",
+      top: 34, right: 6, bottom: 34,
+      width: 38,
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      padding: "6px 0",
-      gap: 5,
+      padding: "8px 0",
+      gap: 6,
       zIndex: 50,
       userSelect: "none",
       overflowY: "auto",
     }}>
-      {APPS.map(a => {
+      {RIGHT_BAR_APPS.map(a => {
         const active = a.id === openId;
         return (
           <button
@@ -28,29 +28,27 @@ export function RightBar({ onLaunch, openId }: { onLaunch: (a: AppDef) => void; 
             onClick={() => onLaunch(a)}
             title={a.name}
             style={{
-              width: 26, height: 26,
-              borderRadius: 4,
-              background: `linear-gradient(145deg, ${a.color}cc 0%, ${a.color}66 60%, ${a.color}22 100%)`,
-              border: active ? `2px solid ${C.white}` : `1.5px solid ${a.color}`,
-              boxShadow: active
-                ? `0 0 14px ${a.color}, 0 0 26px ${a.color}88, inset 0 0 4px rgba(255,255,255,0.5)`
-                : `0 0 6px ${a.color}99, inset 0 0 3px rgba(255,255,255,0.25)`,
-              color: "#0a0612",
-              fontSize: "0.85rem",
-              fontWeight: 900,
+              width: 28, height: 28,
+              borderRadius: 7,
+              background: active ? C.glassDeeper : "transparent",
+              border: `1px solid ${active ? C.hairlineHi : "transparent"}`,
+              color: active ? C.white : C.textSecondary,
+              fontSize: "0.95rem",
+              fontWeight: 600,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               padding: 0,
               transition: "all 0.15s",
-              textShadow: "0 1px 2px rgba(255,255,255,0.4)",
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.transform = "scale(1.1)";
+              e.currentTarget.style.background = C.glassDeeper;
+              e.currentTarget.style.color = C.white;
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.background = active ? C.glassDeeper : "transparent";
+              e.currentTarget.style.color = active ? C.white : C.textSecondary;
             }}
           >
             {a.glyph}

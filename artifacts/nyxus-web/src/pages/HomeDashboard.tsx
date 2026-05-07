@@ -14,24 +14,28 @@
 
 import { useEffect, useMemo, useRef, useState, ReactNode } from "react";
 
-// ── PALETTE (mirrors waybar-style.css) ──────────────────────────────────
+// ── DARK MIRROR PALETTE (rev r16 LOCKED) — monochrome only ──────────────
+// Per-card "neon" tints all collapse to the same off-white.
+// Cards now read as dark glass plaques with white hairline borders.
+const T = "#e8edf5";  // primary off-white
+const T2 = "#c8ccd6"; // secondary
 const C = {
-  pink:    "#ff00ff",
-  cyan:    "#22d3ee",
-  purple:  "#cc00ff",
-  gold:    "#ffff00",
-  indigo:  "#8800ff",
-  green:   "#39ff14",
-  orange:  "#ff5500",
-  blue:    "#0088ff",
-  red:     "#ff3344",
+  pink:    T,
+  cyan:    T,
+  purple:  T,
+  gold:    T,
+  indigo:  T,
+  green:   T,
+  orange:  T,
+  blue:    T,
+  red:     T2,    // close buttons stay slightly muted
   white:   "#ffffff",
-  text:    "#f0e8fa",
-  dim:     "#b0a3c8",
-  void:    "#080808",
+  text:    T,
+  dim:     "#6a6e78",
+  void:    "#000000",
 };
 
-const NEONS = [C.pink, C.cyan, C.gold, C.green, C.purple, C.orange, C.blue, C.indigo, C.red];
+const NEONS = [T, T2, T, T2, T, T2, T, T2, T];
 
 // ── TYPED LOCALSTORAGE ──────────────────────────────────────────────────
 function useLocalStorage<T>(key: string, initial: T) {

@@ -1,58 +1,113 @@
 import { C, useTime } from "./shared";
 
+function Card({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{
+      background: C.glassDeeper,
+      border: `1px solid ${C.hairline}`,
+      borderRadius: 12,
+      padding: "0.8rem 0.95rem",
+    }}>
+      <div style={{
+        fontSize: "0.55rem",
+        color: C.textTertiary,
+        letterSpacing: "0.18em",
+        fontFamily: '"JetBrains Mono", monospace',
+        marginBottom: 6,
+      }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
 export function PanelFlyout({ open, onClose }: { open: boolean; onClose: () => void }) {
   const time = useTime();
   if (!open) return null;
   return (
     <div style={{
       position: "fixed",
-      top: 32, bottom: 32, right: 46,
+      top: 34, bottom: 34, right: 50,
       width: 320,
-      background: "rgba(6,4,12,0.55)",
-      backdropFilter: "blur(14px) saturate(1.6)",
-      WebkitBackdropFilter: "blur(14px) saturate(1.6)",
-      border: `1px solid ${C.purple}66`,
-      borderTop: `2px solid ${C.purple}`,
-      borderRadius: 6,
-      boxShadow: `0 0 40px ${C.purple}66`,
+      background: C.glassDark,
+      backdropFilter: "blur(14px) saturate(1.1)",
+      WebkitBackdropFilter: "blur(14px) saturate(1.1)",
+      border: `1px solid ${C.hairline}`,
+      borderRadius: 14,
+      boxShadow: `0 20px 60px ${C.rimDark}`,
       padding: "1rem 1.1rem",
       display: "flex", flexDirection: "column", gap: "0.85rem",
       zIndex: 80,
-      fontFamily: '"JetBrains Mono", monospace',
+      fontFamily: '"Inter", sans-serif',
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
         <div>
-          <div style={{ fontSize: "0.5rem", color: `${C.purple}aa`, letterSpacing: "0.22em" }}>NYXUS · PANEL</div>
-          <div style={{ fontSize: "1.1rem", color: C.purple, fontFamily: "'Caveat', cursive", textShadow: `0 0 10px ${C.purple}55` }}>The Panel</div>
+          <div style={{ fontSize: "0.5rem", color: C.textTertiary, letterSpacing: "0.22em", fontFamily: '"JetBrains Mono", monospace' }}>NYXUS · PANEL</div>
+          <div style={{
+            fontSize: "1.2rem",
+            color: C.textPrimary,
+            fontFamily: '"Architects Daughter", "Caveat", cursive',
+          }}>The Panel</div>
         </div>
-        <button onClick={onClose} style={{ background: "transparent", border: `1px solid ${C.red}66`, color: C.red, padding: "2px 8px", fontSize: "0.6rem", cursor: "pointer", borderRadius: 2 }}>✕</button>
+        <button onClick={onClose} style={{
+          background: "transparent",
+          border: `1px solid ${C.hairline}`,
+          color: C.textSecondary,
+          padding: "2px 8px",
+          fontSize: "0.6rem",
+          cursor: "pointer",
+          borderRadius: 6,
+          fontFamily: '"JetBrains Mono", monospace',
+        }}>✕</button>
       </div>
 
-      <div style={{ border: `1px solid ${C.gold}44`, borderLeft: `3px solid ${C.gold}`, borderRadius: 3, padding: "0.75rem 0.85rem", background: "rgba(255,255,0,0.04)" }}>
-        <div style={{ fontSize: "0.55rem", color: `${C.gold}aa`, letterSpacing: "0.18em" }}>WEATHER</div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 4 }}>
-          <div style={{ fontSize: "1.6rem", color: C.gold, textShadow: `0 0 12px ${C.gold}66`, fontFamily: "'Caveat', cursive" }}>72°F</div>
-          <div style={{ fontSize: "0.65rem", color: C.dim }}>Clear · Light breeze</div>
+      <Card label="WEATHER">
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+          <div style={{
+            fontSize: "1.7rem",
+            color: C.textPrimary,
+            fontFamily: '"Architects Daughter", "Caveat", cursive',
+          }}>72°F</div>
+          <div style={{ fontSize: "0.7rem", color: C.textSecondary }}>Clear · Light breeze</div>
         </div>
-      </div>
+      </Card>
 
-      <div style={{ border: `1px solid ${C.cyan}44`, borderLeft: `3px solid ${C.cyan}`, borderRadius: 3, padding: "0.75rem 0.85rem", background: "rgba(34,211,238,0.04)" }}>
-        <div style={{ fontSize: "0.55rem", color: `${C.cyan}aa`, letterSpacing: "0.18em" }}>NEWS</div>
-        <div style={{ fontSize: "0.7rem", color: C.text, marginTop: 4, lineHeight: 1.5 }}>
-          NYXUS v2.0 ships with 8 tarball apps and 4-bar Waybar
+      <Card label="NEWS">
+        <div style={{ fontSize: "0.72rem", color: C.textSecondary, lineHeight: 1.5 }}>
+          NYXUS rev r16 — DARK MIRROR locked. 27 apps mirrored to web preview.
         </div>
-      </div>
+      </Card>
 
-      <div style={{ border: `1px solid ${C.purple}44`, borderLeft: `3px solid ${C.purple}`, borderRadius: 3, padding: "0.75rem 0.85rem", background: "rgba(204,0,255,0.04)" }}>
-        <div style={{ fontSize: "0.55rem", color: `${C.purple}aa`, letterSpacing: "0.18em" }}>CLOCK</div>
-        <div style={{ fontSize: "1.4rem", color: C.purple, textShadow: `0 0 12px ${C.purple}66`, fontFamily: "'Caveat', cursive", marginTop: 2 }}>
+      <Card label="CLOCK">
+        <div style={{
+          fontSize: "1.5rem",
+          color: C.textPrimary,
+          fontFamily: '"JetBrains Mono", monospace',
+          fontWeight: 700,
+        }}>
           {String(time.getHours()).padStart(2, "0")}:{String(time.getMinutes()).padStart(2, "0")}
         </div>
-        <div style={{ fontSize: "0.6rem", color: C.dim }}>{time.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</div>
-      </div>
+        <div style={{ fontSize: "0.65rem", color: C.textTertiary, marginTop: 3 }}>
+          {time.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+        </div>
+      </Card>
+
+      <Card label="SYSTEM">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: "0.65rem", color: C.textSecondary }}>
+          <div>CPU <span style={{ color: C.textPrimary }}>15%</span></div>
+          <div>MEM <span style={{ color: C.textPrimary }}>34%</span></div>
+          <div>DISK <span style={{ color: C.textPrimary }}>35%</span></div>
+          <div>BAT <span style={{ color: C.textPrimary }}>92%</span></div>
+        </div>
+      </Card>
 
       <div style={{ flex: 1 }} />
-      <div style={{ fontSize: "0.5rem", color: "#444", letterSpacing: "0.2em", textAlign: "center" }}>
+      <div style={{
+        fontSize: "0.5rem",
+        color: C.textTertiary,
+        letterSpacing: "0.2em",
+        textAlign: "center",
+        fontFamily: '"JetBrains Mono", monospace',
+      }}>
         © 2026 JOSEPH SIERENGOWSKI
       </div>
     </div>
