@@ -84,7 +84,8 @@ for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
          nyxus_stickies.py nyxus_notes.py nyxus_weather.py nyxus_terminal.py \
          nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
          nyxus_doctor.py nyxus_launcher.py nyxus_powermenu.py \
-         nyxus_screenshot.py nyxus_chrome.py nyxus_quicksettings.py; do
+         nyxus_screenshot.py nyxus_chrome.py nyxus_quicksettings.py \
+         nyxus_calendar.py nyxus_clock.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
@@ -537,6 +538,38 @@ Keywords=nyxus;doctor;audit;health;diagnostic;
 StartupWMClass=io.nyxus.doctor
 DEOF
 ok "nyxus-doctor.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-calendar.desktop" <<'DEOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Calendar
+GenericName=Calendar
+Comment=NYXUS calendar — month view with per-day notes (DARK MIRROR)
+Exec=python3 /home/nyx/.nyxus/nyxus_calendar.py
+Icon=io.nyxus.calendar
+Terminal=false
+Categories=Office;Calendar;
+Keywords=nyxus;calendar;date;month;notes;agenda;
+StartupWMClass=io.nyxus.calendar
+DEOF
+ok "nyxus-calendar.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-clock.desktop" <<'DEOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS Clock
+GenericName=Clock
+Comment=NYXUS clock — digital + world clocks + stopwatch (DARK MIRROR)
+Exec=python3 /home/nyx/.nyxus/nyxus_clock.py
+Icon=io.nyxus.clock
+Terminal=false
+Categories=Utility;Clock;
+Keywords=nyxus;clock;time;world;stopwatch;timer;
+StartupWMClass=io.nyxus.clock
+DEOF
+ok "nyxus-clock.desktop"
 
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 
