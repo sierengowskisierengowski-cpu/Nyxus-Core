@@ -134,6 +134,7 @@ const ALLOWED_FILES: Record<string, string> = {
 
   // ── ★ THEMES / TARBALLS ──────────────────────────────────────────────────
   "nyxus-sddm-theme.tar.gz":  "nyxus-sddm-theme.tar.gz",
+  "nyxus-void-splash.tar.gz": "nyxus-void-splash.tar.gz",
   "nyxus-wlogout.tar.gz":     "nyxus-wlogout.tar.gz",
   "nyxus-ui-configs.tar.gz":  "nyxus-ui-configs.tar.gz",
   "nyxus-greetd.toml":        "nyxus-greetd.toml",

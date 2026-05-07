@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=NYXUS VOID
+Description=NYXUS VOID · Pure black · Minimal enterprise boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/nyxus-void
+ScriptFile=/usr/share/plymouth/themes/nyxus-void/nyxus-void.script
