@@ -117,8 +117,9 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-hyprland-rules.conf":   "nyxus-hyprland-rules.conf",
   "nyxus-hyprland-blur.conf":    "nyxus-hyprland-blur.conf",
   "nyxus-hyprland-fog.conf":     "nyxus-hyprland-fog.conf",
-  "nyxus-hyprland-opacity.conf": "nyxus-hyprland-opacity.conf",
-  "nyxus-hyprland-general.conf": "nyxus-hyprland-general.conf",
+  "nyxus-hyprland-opacity.conf":   "nyxus-hyprland-opacity.conf",
+  "nyxus-hyprland-general.conf":   "nyxus-hyprland-general.conf",
+  "nyxus-hyprland-layerblur.conf": "nyxus-hyprland-layerblur.conf",
 
   // ── ★ DESKTOP UI CONFIGS (waybar, rofi, alacritty, dunst, wlogout) ───────
   "waybar-config.json":    "waybar-config.json",

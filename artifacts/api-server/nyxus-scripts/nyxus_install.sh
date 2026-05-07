@@ -190,9 +190,24 @@ fi
 # ── HYPRLAND CONFIGS ──────────────────────────────────────────────────────────
 hdr "Hyprland"
 mkdir -p "$HYPR_DIR"
+mkdir -p "$HYPR_DIR/conf.d"
 dl "hyprland.conf" "$HYPR_DIR/hyprland.conf" || failed=$((failed+1))
 dl "nyxus-hyprlock.conf" "$HYPR_DIR/hyprlock.conf"  || failed=$((failed+1))
 dl "hypridle.conf"  "$HYPR_DIR/hypridle.conf"  || failed=$((failed+1))
+
+# ── Modular DARK MIRROR confs (sourced by hyprland.conf) ─────────────────────
+# Without these, hyprland.conf's `source = ~/.config/hypr/conf.d/...` lines
+# silently no-op and apps render fully opaque / unblurred. These six files
+# carry the locked NYXUS window opacity, blur tuning, layer-shell blur,
+# float/center/size rules, fog daemon hooks, and general behavior.
+for conf in nyxus-hyprland-general.conf \
+            nyxus-hyprland-rules.conf \
+            nyxus-hyprland-opacity.conf \
+            nyxus-hyprland-blur.conf \
+            nyxus-hyprland-layerblur.conf \
+            nyxus-hyprland-fog.conf; do
+  dl "$conf" "$HYPR_DIR/conf.d/$conf" || failed=$((failed+1))
+done
 
 # ── WALLPAPER ─────────────────────────────────────────────────────────────────
 hdr "Wallpaper (SIERENGOWSKI)"

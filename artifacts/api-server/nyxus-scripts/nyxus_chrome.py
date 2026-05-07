@@ -324,7 +324,9 @@ window > .background, window > .solid-csd {
     color: #e8edf5;
 }
 /* Strip every container that an app might fill with an opaque color so      *
- * the Hyprland blur reaches the surface under our explicit glass panels.    */
+ * the Hyprland blur reaches the surface under our explicit glass panels.    *
+ * r14: extended to cover libadwaita + GTK4 deep selectors that previously   *
+ * leaked an opaque background and defeated Hyprland blur per-pixel.         */
 window > *, window > box, window > overlay,
 window > scrolledwindow, window > grid,
 window > stack, window > viewport,
@@ -333,7 +335,29 @@ window > windowhandle, window > windowhandle > *,
 box, grid, stack, viewport, overlay,
 scrolledwindow, scrolledwindow > viewport,
 scrolledwindow > viewport > *,
-overlay > * {
+overlay > *,
+/* libadwaita */
+windowhandle, windowhandle.background,
+windowhandle > *,
+toolbarview, toolbarview > *,
+.background, box.background, grid.background,
+overlay.background, scrolledwindow.background,
+viewport.background, stack.background,
+/* containers commonly inside Adw.PreferencesPage / NavigationView */
+preferencesgroup, preferencesgroup > *,
+navigationview, navigationview > *,
+navigationpage, navigationpage > *,
+splitview, splitview > *,
+banner, statuspage,
+/* lists + columns + tabs */
+listview, listview > row, columnview, columnview > *,
+tabview, tabview > *, tabbar, tabbar > *,
+/* flowbox / listbox row backgrounds (cards explicitly opt-in via .nyx-glass) */
+flowbox, flowboxchild,
+listbox, listbox > row,
+/* sidebars + flap leaflets */
+leaflet, leaflet > *,
+flap, flap > * {
     background-color: transparent;
     background-image: none;
 }
