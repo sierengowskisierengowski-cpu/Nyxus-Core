@@ -2,13 +2,19 @@ import { useState } from "react";
 import { C, BASE, AppDef } from "./shared";
 
 export function MockupBody({ a }: { a: AppDef }) {
-  const installPath = a.install ?? a.download ?? "";
-  const installUrl = `${window.location.origin}${BASE}/${installPath}`;
-  const installCmd = installPath.endsWith(".sh")
+  const installPath = a.install ?? a.download;
+  const hasInstallAsset = Boolean(installPath);
+  const installUrl = hasInstallAsset
+    ? `${window.location.origin}${BASE}/${installPath}`
+    : "";
+  const installCmd = !hasInstallAsset
+    ? "echo \"Install artifact unavailable\""
+    : installPath!.endsWith(".sh")
     ? `curl -fsSL "${installUrl}" | bash`
     : `curl -fsSL -O "${installUrl}"`;
   const [copied, setCopied] = useState(false);
   const copy = () => {
+    if (!hasInstallAsset) return;
     navigator.clipboard.writeText(installCmd);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
@@ -102,7 +108,9 @@ export function MockupBody({ a }: { a: AppDef }) {
           display: "flex", alignItems: "center", gap: 8,
         }}>
           <code style={{ flex: 1, fontSize: "0.7rem", color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            <span style={{ color: "#444" }}>$</span> {a.install?.endsWith(".sh")
+            <span style={{ color: "#444" }}>$</span> {!hasInstallAsset
+              ? "install artifact unavailable"
+              : a.install?.endsWith(".sh")
               ? <>curl -fsSL "<span style={{ color: a.color }}>$BASE/{a.install}</span>" | bash</>
               : <>curl -fsSL -O "<span style={{ color: a.color }}>$BASE/{a.download}</span>"</>}
           </code>
@@ -117,26 +125,30 @@ export function MockupBody({ a }: { a: AppDef }) {
               fontSize: "0.6rem",
               cursor: "pointer",
               letterSpacing: "0.05em",
+              opacity: hasInstallAsset ? 1 : 0.5,
             }}
+            disabled={!hasInstallAsset}
           >
             {copied ? "COPIED" : "COPY"}
           </button>
         </div>
 
         <div style={{ display: "flex", gap: 8 }}>
-          <a
-            href={`${BASE}/${a.download}`} download={a.download}
-            style={{
-              flex: 1, textAlign: "center", padding: "0.5rem",
-              background: `${a.color}14`, border: `1px solid ${a.color}66`,
-              color: a.color, textDecoration: "none",
-              fontSize: "0.65rem", letterSpacing: "0.15em",
-              borderRadius: 2, fontWeight: 700,
-              textShadow: `0 0 6px ${a.color}88`,
-            }}
-          >
-            ▼ DOWNLOAD {a.download}
-          </a>
+          {a.download && (
+            <a
+              href={`${BASE}/${a.download}`} download={a.download}
+              style={{
+                flex: 1, textAlign: "center", padding: "0.5rem",
+                background: `${a.color}14`, border: `1px solid ${a.color}66`,
+                color: a.color, textDecoration: "none",
+                fontSize: "0.65rem", letterSpacing: "0.15em",
+                borderRadius: 2, fontWeight: 700,
+                textShadow: `0 0 6px ${a.color}88`,
+              }}
+            >
+              ▼ DOWNLOAD {a.download}
+            </a>
+          )}
           {a.install && (
             <a
               href={`${BASE}/${a.install}`} download={a.install}
