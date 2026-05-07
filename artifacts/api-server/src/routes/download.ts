@@ -275,9 +275,34 @@ router.get("/download/nyxus/:filename", (req, res) => {
     filename.endsWith(".tar.gz") ? "application/gzip" :
     filename.endsWith(".tgz")    ? "application/gzip" :
     "text/plain";
+
+  // ── ★ ANTI-STALE GUARANTEE ──────────────────────────────────────────────
+  // Defeats every cache layer (browser, CDN, corporate proxy, Replit edge):
+  //   * Cache-Control: no-store + no-cache + must-revalidate + max-age=0
+  //   * Pragma: no-cache              (HTTP/1.0 backward compat)
+  //   * Expires: 0                    (HTTP/1.0 backward compat)
+  // After this, every GET hits this server fresh — there is no way for any
+  // intermediary to serve an older copy of a NYXUS file. Pairs with the
+  // X-File-SHA256 header so curl can verify the bytes after download:
+  //     curl -fsSL .../nyxus-hyprland-blur.conf -D /tmp/h
+  //     grep -i x-file-sha256 /tmp/h
+  // and matches the value in /api/download/nyxus/manifest.json.
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  const entry = _hashOrCached(filename, filePath);
+  if (entry) {
+    res.setHeader("X-File-SHA256", entry.sha256);
+    res.setHeader("X-File-Size", String(entry.size));
+    res.setHeader("X-File-MTime", String(Math.floor(entry.mtimeMs)));
+  }
   res.setHeader("Content-Type", contentType);
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-  res.sendFile(filePath);
+
+  // Disable Express's automatic ETag + Last-Modified on sendFile so no
+  // intermediary can issue a conditional GET and receive 304. Always 200,
+  // always full body, always the freshest bytes on disk.
+  res.sendFile(filePath, { etag: false, lastModified: false, cacheControl: false });
 });
 
 router.get("/download/nyxus", (_req, res) => {
