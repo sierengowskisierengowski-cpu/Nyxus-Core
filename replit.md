@@ -32,7 +32,9 @@ NYXUS is an Arch Linux-based operating system providing a suite of native Python
 - `artifacts/api-server/nyxus-scripts/`: Contains all GTK4 application sources and installation tarballs.
 - `airootfs/etc/nyxus/`: OS-level documentation mirrored from repo root.
 - `~/.nyxus/`: Runtime directory for installed GTK4 apps and helper scripts.
-- `nyxus-scripts/nyxus_chrome.py`: Source of truth for unified GTK4 application styling.
+- `nyxus-scripts/nyxus_palette.py`: **★ MASTER PALETTE** (Python) — every NYXUS app imports color/font/radius/blur constants from here. Edit this file to change the system look.
+- `nyxus-scripts/nyxus-palette.css`: **★ MASTER PALETTE** (CSS) — every CSS file `@import`s this and uses `@define-color` names like `@nyx_white_off`, `@nyx_glass_dark`. Mirrors `nyxus_palette.py` exactly.
+- `nyxus-scripts/nyxus_chrome.py`: Source of truth for unified GTK4 application chrome (windows, popovers, headerbars). Imports its colors from `nyxus_palette.py`.
 - `iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf`: Hyprland configuration template.
 
 ## Visual System — DARK MIRROR · UNIFIED FROSTED GLASS (LOCKED · rev 2026-05-07 r13)

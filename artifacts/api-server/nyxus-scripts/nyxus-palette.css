@@ -1,0 +1,47 @@
+/* ============================================================
+ *  NYXUS PALETTE — CSS source of truth for DARK MIRROR
+ *  (LOCKED · rev 2026-05-07 r13)
+ *
+ *  Every NYXUS GTK4 / waybar / rofi CSS must @import this file
+ *  and reference the @define-color names below — never hard-code
+ *  hex values inline.
+ *
+ *  Mirrors nyxus_palette.py exactly. When the visual lock changes,
+ *  edit BOTH files in lockstep.
+ *
+ *  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ * ============================================================ */
+
+/* ── PRIMARY RAMP ─────────────────────────────────────────── */
+@define-color nyx_white         #ffffff;
+@define-color nyx_white_off     #e8edf5;
+@define-color nyx_grey_light    #c8ccd6;
+@define-color nyx_grey_mid      #9aa0ad;
+@define-color nyx_grey_tertiary #6a6e78;
+@define-color nyx_ink_faded     #0a0a0a;
+@define-color nyx_ink_black     #000000;
+
+/* ── DARK GLASS SURFACES ───────────────────────────────────── */
+@define-color nyx_glass_dark    rgba(8, 12, 20, 0.55);
+@define-color nyx_glass_deeper  rgba(15, 20, 32, 0.72);
+@define-color nyx_glass_deepest rgba(5, 7, 12, 0.92);
+
+/* ── HAIRLINES ─────────────────────────────────────────────── */
+@define-color nyx_hairline_white rgba(255, 255, 255, 0.10);
+@define-color nyx_hairline_ink   rgba(0, 0, 0, 0.45);
+
+/* ── DROP SHADOW INK ───────────────────────────────────────── */
+@define-color nyx_shadow_active   rgba(0, 0, 0, 0.65);
+@define-color nyx_shadow_inactive rgba(0, 0, 0, 0.20);
+
+/* ── SEMANTIC ALIASES (preferred in app CSS) ──────────────── */
+@define-color nyx_text        @nyx_white_off;
+@define-color nyx_text_dim    @nyx_grey_light;
+@define-color nyx_text_ghost  @nyx_grey_tertiary;
+@define-color nyx_bg          @nyx_glass_dark;
+@define-color nyx_bg_hover    @nyx_glass_deeper;
+@define-color nyx_bg_popover  @nyx_glass_deepest;
+@define-color nyx_border      @nyx_hairline_white;
+@define-color nyx_caret       @nyx_white;
+@define-color nyx_select_bg   @nyx_grey_light;
+@define-color nyx_select_fg   @nyx_ink_black;

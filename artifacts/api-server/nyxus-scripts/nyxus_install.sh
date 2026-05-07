@@ -79,7 +79,8 @@ failed_items=()
 # ── PYTHON TERMINAL SCRIPTS ───────────────────────────────────────────────────
 hdr "Python Terminal Scripts"
 mkdir -p "$SCRIPTS_DIR"
-for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
+for f in nyxus_palette.py nyxus-palette.css \
+         nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
          nyxus_sysmon_gtk.py \
          nyxus_stickies.py nyxus_notes.py nyxus_terminal.py \
          nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
