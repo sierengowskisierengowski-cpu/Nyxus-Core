@@ -170,8 +170,8 @@ DANGER_RED = (0.784, 0.800, 0.839)   # → GREY_LIGHT (semantic only)
 #  Multi-color rainbow markup for hero titles
 # ═══════════════════════════════════════════════════════════════════════════════
 # Hex stops cycled per character (matches NYXUS suite + Hyprland border).
-_RAINBOW_HEX = ("#e8edf5", "#ff2da8", "#b800ff", "#c8ccd6",
-                "#c8ccd6", "#ffc833", "#ff66dd", "#e8edf5")
+_RAINBOW_HEX = ("#e8edf5", "#6a6e78", "#3a3e4a", "#c8ccd6",
+                "#c8ccd6", "#c8ccd6", "#9aa0ad", "#e8edf5")
 
 def _rainbow_markup(text: str) -> str:
     """Return Pango markup where each visible character is colored from
@@ -9110,7 +9110,7 @@ class SettingsWindow(Gtk.ApplicationWindow):
                 box-shadow       220ms ease,
                 text-shadow      180ms ease; }
 
-window, .nyx-bg { background-color: #000000; color: #f0eef8; }
+window, .nyx-bg { background-color: #000000; color: #e8edf5; }
 
 /* -- HERO HEADER (pure black + neon-pink underline glow) ------------- */
 .nyx-hero {
@@ -9119,9 +9119,9 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
     padding: 14px 18px;
     /* Beefier edge -- matches the 4px Hyprland window border weight so
        the hero feels anchored instead of floating on a hairline. */
-    border-bottom: 3px solid rgba(255,0,255,0.85);
-    box-shadow: 0 8px 36px -4px rgba(255,0,255,0.55),
-                0 2px 0    0    rgba(255,80,220,0.35);
+    border-bottom: 3px solid rgba(8, 12, 20, 0.85);
+    box-shadow: 0 8px 36px -4px rgba(8, 12, 20, 0.55),
+                0 2px 0    0    rgba(8, 12, 20, 0.35);
 }
 /* Multi-color hero title: per-letter <span foreground=...> markup
    provides the rainbow ink; this rule layers a WHITE glow halo on top
@@ -9130,7 +9130,7 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
     text-shadow: 0 0 4px  rgba(255,255,255,0.55),
                  0 0 12px rgba(255,255,255,0.32),
                  0 0 26px rgba(255,255,255,0.18),
-                 0 0 40px rgba(255,0,255,0.35);
+                 0 0 40px rgba(8, 12, 20, 0.35);
     font-size: 32px; font-weight: bold; letter-spacing: 1.5px; }
 .nyx-hero-sub { color: rgba(240,235,250,0.62); font-size: 14px;
     letter-spacing: 0.4px; margin-top: -2px; }
@@ -9139,54 +9139,54 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 .nyx-version-pill { color: rgba(240,235,250,0.95);
     background-image: none;
     background-color: #000000;
-    border: 1px solid rgba(255,0,255,0.65);
+    border: 1px solid rgba(8, 12, 20, 0.65);
     border-radius: 999px; padding: 5px 16px; font-size: 14px;
     font-family: 'JetBrains Mono', monospace;
-    box-shadow: 0 0 10px rgba(255,0,255,0.18); }
+    box-shadow: 0 0 10px rgba(8, 12, 20, 0.18); }
 .nyx-version-pill:hover {
     border-color: #e8edf5;
-    box-shadow: 0 0 22px rgba(255,0,255,0.55); }
+    box-shadow: 0 0 22px rgba(8, 12, 20, 0.55); }
 
 /* -- TOOLBARS (slim glass) -------------------------------------------- */
 .nyx-toolbar  { background-color: rgba(0,0,0,0.85);
     padding: 6px 12px;
-    border-bottom: 1px solid rgba(255,0,255,0.18); }
+    border-bottom: 1px solid rgba(8, 12, 20, 0.18); }
 .nyx-toolbar2 { background-color: rgba(0,0,0,0.78);
     padding: 5px 14px;
-    border-bottom: 1px solid rgba(255,0,255,0.18);
-    box-shadow: 0 2px 12px -4px rgba(255,0,255,0.20); }
+    border-bottom: 1px solid rgba(8, 12, 20, 0.18);
+    box-shadow: 0 2px 12px -4px rgba(8, 12, 20, 0.20); }
 
 /* -- RESTART BAR (warning amber w/ glow) ------------------------------ */
 .nyx-restartbar {
     background-image: linear-gradient(90deg,
-        rgba(255,78,0,0.28), rgba(255,140,40,0.10));
-    background-color: rgba(255,78,0,0.20);
-    border-top: 1px solid rgba(255,140,40,0.65);
-    border-bottom: 1px solid rgba(255,140,40,0.65);
+        rgba(8, 12, 20, 0.28), rgba(255, 255, 255, 0.10));
+    background-color: rgba(8, 12, 20, 0.20);
+    border-top: 1px solid rgba(255, 255, 255, 0.65);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.65);
     padding: 6px 14px;
-    box-shadow: inset 0 0 14px rgba(255,140,40,0.18); }
-.nyx-restartbar label { color: #ffd6aa; font-size: 14px;
-    text-shadow: 0 0 6px rgba(255,140,40,0.45); }
+    box-shadow: inset 0 0 14px rgba(255, 255, 255, 0.18); }
+.nyx-restartbar label { color: #e8edf5; font-size: 14px;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.45); }
 
 /* -- STRIPS (favorites/recents bands) --------------------------------- */
 .nyx-strip { background-color: transparent;
-    border-top: 1px solid rgba(255,0,255,0.22);
-    border-bottom: 1px solid rgba(255,0,255,0.12);
+    border-top: 1px solid rgba(8, 12, 20, 0.22);
+    border-bottom: 1px solid rgba(8, 12, 20, 0.12);
     padding: 8px 16px; }
-.nyx-strip-label { color: rgba(255,90,200,0.92); font-size: 13px;
+.nyx-strip-label { color: rgba(255, 255, 255, 0.92); font-size: 13px;
     text-transform: uppercase; letter-spacing: 1.8px;
     font-family: 'JetBrains Mono', monospace;
-    text-shadow: 0 0 6px rgba(255,0,255,0.30); }
+    text-shadow: 0 0 6px rgba(8, 12, 20, 0.30); }
 
 /* -- STATUS BAR ------------------------------------------------------- */
 .nyx-statusbar { background-color: #000000; padding: 3px 12px;
-    border-top: 1px solid rgba(255,0,255,0.32);
-    box-shadow: 0 -2px 12px -4px rgba(255,0,255,0.20); }
+    border-top: 1px solid rgba(8, 12, 20, 0.32);
+    box-shadow: 0 -2px 12px -4px rgba(8, 12, 20, 0.20); }
 
 /* -- HEADLINES + META ------------------------------------------------- */
 .nyx-headline { color: #e8edf5;
-    text-shadow: 0 0 10px rgba(255,0,255,0.45),
-                 0 0 22px rgba(255,0,255,0.20);
+    text-shadow: 0 0 10px rgba(8, 12, 20, 0.45),
+                 0 0 22px rgba(8, 12, 20, 0.20);
     font-size: 24px; font-weight: bold; letter-spacing: 0.6px; }
 .nyx-meta { color: rgba(240,235,250,0.55); font-size: 12px;
     font-family: 'JetBrains Mono', monospace; letter-spacing: 0.4px; }
@@ -9194,22 +9194,22 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 /* -- CARDS (pure black + neon ring + outer pink bloom on hover) ----- */
 .nyx-card { background-color: #000000;
     background-image: none;
-    border: 1px solid rgba(255,0,255,0.40);
+    border: 1px solid rgba(8, 12, 20, 0.40);
     border-radius: 6px;
     padding: 4px 0 10px 0;
-    box-shadow: 0 4px 22px -10px rgba(255,0,255,0.25); }
+    box-shadow: 0 4px 22px -10px rgba(8, 12, 20, 0.25); }
 .nyx-card:hover {
     border-color: #e8edf5;
-    box-shadow: 0 8px 36px -6px rgba(255,0,255,0.55); }
+    box-shadow: 0 8px 36px -6px rgba(8, 12, 20, 0.55); }
 
 .nyx-listcard { background-color: #000000;
     background-image: none;
-    border: 1px solid rgba(255,0,255,0.55);
+    border: 1px solid rgba(8, 12, 20, 0.55);
     border-radius: 6px; padding: 0; margin-top: 6px;
-    box-shadow: 0 6px 28px -8px rgba(255,0,255,0.30); }
+    box-shadow: 0 6px 28px -8px rgba(8, 12, 20, 0.30); }
 .nyx-listcard:hover {
     border-color: #e8edf5;
-    box-shadow: 0 10px 40px -6px rgba(255,0,255,0.55); }
+    box-shadow: 0 10px 40px -6px rgba(8, 12, 20, 0.55); }
 
 .nyx-settings-list { background-color: transparent; }
 .nyx-settings-list row { background-color: transparent;
@@ -9220,14 +9220,14 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 /* -- WIN10 LEFT SIDEBAR (pure black + neon glow rail) ---------------- */
 .nyx-sidebar { background-color: #000000;
     background-image: none;
-    border-right: 1px solid rgba(255,0,255,0.65);
+    border-right: 1px solid rgba(8, 12, 20, 0.65);
     padding: 6px 0; min-width: 220px;
-    box-shadow: 6px 0 28px -8px rgba(255,0,255,0.40); }
-.nyx-sidebar-section { color: rgba(255,90,200,0.92);
+    box-shadow: 6px 0 28px -8px rgba(8, 12, 20, 0.40); }
+.nyx-sidebar-section { color: rgba(255, 255, 255, 0.92);
     font-family: 'JetBrains Mono', monospace; font-size: 10px;
     letter-spacing: 1.6px; text-transform: uppercase;
     padding: 12px 14px 6px 14px;
-    text-shadow: 0 0 6px rgba(255,0,255,0.32); }
+    text-shadow: 0 0 6px rgba(8, 12, 20, 0.32); }
 
 .nyx-content { background-color: transparent; padding: 0; }
 .nyx-graffiti-host { background-color: #000000; }
@@ -9245,18 +9245,18 @@ stack, frame, .background, .view, .nyx-bg > box {
 .nyx-content stack { background-color: transparent; }
 /* -- user account chip (top-right) ------------------------------------ */
 .nyx-user-chip { background-color: transparent;
-    border: 1px solid rgba(255,0,255,0.40); border-radius: 999px;
+    border: 1px solid rgba(8, 12, 20, 0.40); border-radius: 999px;
     padding: 4px 12px 4px 4px; }
-.nyx-user-name { color: #f0eef8; font-size: 14px;
+.nyx-user-name { color: #e8edf5; font-size: 14px;
     font-weight: bold; }
-.nyx-user-role { color: rgba(255,150,230,0.85); font-size: 11px;
+.nyx-user-role { color: rgba(255, 255, 255, 0.85); font-size: 11px;
     font-family: 'JetBrains Mono', monospace; letter-spacing: 0.6px; }
-.nyx-card-title { color: #e8edf5; text-shadow: 0 0 8px rgba(255,0,255,0.45);
+.nyx-card-title { color: #e8edf5; text-shadow: 0 0 8px rgba(8, 12, 20, 0.45);
     font-size: 18px; font-weight: bold; letter-spacing: 0.5px; }
-.nyx-row-label { color: #f0eef8; font-size: 14px; }
+.nyx-row-label { color: #e8edf5; font-size: 14px; }
 .nyx-row-value { color: rgba(240,235,250,0.75); font-size: 14px; }
 .nyx-entry { background-color: transparent; border: none; outline: none;
-    color: #f0eef8; font-size: 14px; caret-color: #e8edf5; }
+    color: #e8edf5; font-size: 14px; caret-color: #e8edf5; }
 .nyx-entry:focus { outline: none; box-shadow: none; }
 .nyx-editor textview, .nyx-editor text {
     background-color: rgba(0,0,0,0.25);
@@ -9264,12 +9264,12 @@ stack, frame, .background, .view, .nyx-bg > box {
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
     padding: 6px 10px; caret-color: #e8edf5; }
-.nyx-toast { background-color: rgba(255,0,255,0.18);
+.nyx-toast { background-color: rgba(8, 12, 20, 0.18);
     color: #ffffff; padding: 6px 14px;
-    border: 1px solid rgba(255,0,255,0.55);
+    border: 1px solid rgba(8, 12, 20, 0.55);
     border-radius: 6px; font-size: 14px; }
-scrollbar slider { background-color: rgba(255,0,255,0.30);
-    border: 1px solid rgba(255,0,255,0.45); border-radius: 6px;
+scrollbar slider { background-color: rgba(8, 12, 20, 0.30);
+    border: 1px solid rgba(8, 12, 20, 0.45); border-radius: 6px;
     min-width: 8px; min-height: 8px; }
 scrollbar { background-color: transparent; }
 """

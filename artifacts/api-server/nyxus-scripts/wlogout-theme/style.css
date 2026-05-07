@@ -47,7 +47,7 @@ button {
 button:focus,
 button:active,
 button:hover {
-    background-color: rgba(40, 52, 78, 0.88)   !important;
+    background-color: rgba(8, 12, 20, 0.88)   !important;
     border-color:     rgba(232, 237, 245, 0.55)!important;
     color:            #ffffff                  !important;
     box-shadow:       0 8px 24px rgba(0, 0, 0, 0.55),
@@ -76,7 +76,7 @@ button:hover {
 #hibernate:hover,button#hibernate:hover,.hibernate:hover,button.hibernate:hover,
 #reboot:hover,   button#reboot:hover,   .reboot:hover,   button.reboot:hover,
 #shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
-    background-color: rgba(40, 52, 78, 0.88) !important;
+    background-color: rgba(8, 12, 20, 0.88) !important;
     border-color:     rgba(232, 237, 245, 0.55) !important;
     color:            #ffffff !important;
 }

@@ -172,7 +172,7 @@ def gen_icon(app_id, label, color):
     """Hand-drawn sketch-style NYXUS app icon — slightly tilted, consistent set.
 
     Style spec (matches dashboard aesthetic):
-      - Dark frosted background (#08080e)
+      - Dark frosted background (#0a0a0a)
       - Sketchy wobbly outer border in app color
       - Diagonal hatch texture (very faint)
       - Centered tilted "NYXUS" wordmark in Inter (handwritten)

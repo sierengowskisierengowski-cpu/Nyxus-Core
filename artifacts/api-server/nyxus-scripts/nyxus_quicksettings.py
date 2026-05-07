@@ -572,8 +572,8 @@ window#actioncenter {{
     background-size: cover;
     background-position: center;
     background-color: rgba(10, 10, 18, 0.92);
-    color: #e8e0f5;
-    border: 3px solid rgba(255, 40, 180, 0.55);
+    color: #e8edf5;
+    border: 3px solid rgba(8, 12, 20, 0.55);
     border-radius: 4px;
 }}
 window#actioncenter > * {{
@@ -583,20 +583,20 @@ window#actioncenter > * {{
 .ac-hdr {{
     background: rgba(15, 12, 24, 0.99);
     padding: 14px 18px 12px;
-    border-bottom: 2px solid rgba(255, 40, 180, 0.30);
+    border-bottom: 2px solid rgba(8, 12, 20, 0.30);
 }}
 .ac-title {{
     color: {WHITE_OFF};
     font-size: 22px;
     font-weight: bold;
     letter-spacing: 5px;
-    text-shadow: 0 0 10px rgba(255, 40, 180, 0.45);
+    text-shadow: 0 0 10px rgba(8, 12, 20, 0.45);
 }}
-.ac-time {{ color: rgba(220, 200, 240, 0.85); font-size: 16px; }}
+.ac-time {{ color: rgba(255, 255, 255, 0.85); font-size: 16px; }}
 
 .ac-section {{ padding: 10px 16px; }}
 .ac-section-hdr {{
-    color: rgba(180, 150, 230, 0.82);
+    color: rgba(255, 255, 255, 0.82);
     font-size: 14px;
     letter-spacing: 3px;
 }}
@@ -606,21 +606,21 @@ window#actioncenter > * {{
     border: none;
     padding: 2px 6px;
 }}
-.ac-link:hover {{ color: #ee88ff; text-shadow: 0 0 6px rgba(255, 40, 180, 0.45); }}
+.ac-link:hover {{ color: #9aa0ad; text-shadow: 0 0 6px rgba(8, 12, 20, 0.45); }}
 
 .ac-notiflist {{ background: transparent; min-height: 60px; }}
 .ac-notif-row {{
     background: rgba(20, 16, 36, 0.95);
-    border: 2px solid rgba(255, 40, 180, 0.18);
+    border: 2px solid rgba(8, 12, 20, 0.18);
     border-radius: 4px;
     padding: 8px 12px;
     margin-bottom: 4px;
 }}
 .ac-notif-app {{ color: {WHITE_OFF}; font-size: 13px; letter-spacing: 1px; }}
-.ac-notif-sum {{ color: #f0e8ff; font-size: 16px; font-weight: bold; }}
-.ac-notif-body {{ color: rgba(220, 200, 240, 0.75); font-size: 14px; }}
+.ac-notif-sum {{ color: #e8edf5; font-size: 16px; font-weight: bold; }}
+.ac-notif-body {{ color: rgba(255, 255, 255, 0.75); font-size: 14px; }}
 .ac-notif-empty {{
-    color: rgba(180, 150, 230, 0.55);
+    color: rgba(255, 255, 255, 0.55);
     font-size: 16px;
     font-style: italic;
     padding: 12px 0;
@@ -628,26 +628,26 @@ window#actioncenter > * {{
 
 .ac-tile {{
     background: rgba(20, 16, 36, 0.96);
-    border: 2px solid rgba(255, 40, 180, 0.22);
+    border: 2px solid rgba(8, 12, 20, 0.22);
     border-radius: 4px;
-    color: rgba(200, 180, 230, 0.85);
+    color: rgba(255, 255, 255, 0.85);
     min-width: 78px;
     min-height: 70px;
     padding: 6px 4px;
 }}
 .ac-tile:hover {{
-    background: rgba(255, 40, 180, 0.14);
-    border-color: rgba(255, 40, 180, 0.65);
-    color: #f0e8ff;
+    background: rgba(8, 12, 20, 0.14);
+    border-color: rgba(8, 12, 20, 0.65);
+    color: #e8edf5;
 }}
 .ac-tile.on {{
-    background: rgba(255, 40, 180, 0.24);
+    background: rgba(8, 12, 20, 0.24);
     border-color: {WHITE_OFF};
     color: {WHITE_PURE};
-    box-shadow: 0 0 14px rgba(255, 40, 180, 0.50);
+    box-shadow: 0 0 14px rgba(8, 12, 20, 0.50);
 }}
 .ac-tile.unavailable {{
-    color: rgba(120, 100, 150, 0.45);
+    color: rgba(8, 12, 20, 0.45);
 }}
 .ac-tile-glyph {{
     font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free',
@@ -663,11 +663,11 @@ window#actioncenter > * {{
                  'Symbols Nerd Font Mono';
     font-size: 16px;
     color: {WHITE_OFF};
-    text-shadow: 0 0 6px rgba(255, 40, 180, 0.50);
+    text-shadow: 0 0 6px rgba(8, 12, 20, 0.50);
     margin-right: 8px;
 }}
 .ac-slider-label {{
-    color: rgba(220, 200, 240, 0.80);
+    color: rgba(255, 255, 255, 0.80);
     font-size: 14px;
     letter-spacing: 1px;
 }}
@@ -676,24 +676,24 @@ window#actioncenter > * {{
     font-size: 14px;
     font-weight: bold;
     min-width: 40px;
-    text-shadow: 0 0 6px rgba(255, 40, 180, 0.40);
+    text-shadow: 0 0 6px rgba(8, 12, 20, 0.40);
 }}
-scale trough    {{ background: rgba(255, 40, 180, 0.18); border-radius: 2px; min-height: 5px; }}
+scale trough    {{ background: rgba(8, 12, 20, 0.18); border-radius: 2px; min-height: 5px; }}
 scale highlight {{ background: {WHITE_OFF}; border-radius: 2px; }}
 scale slider    {{
     background: {WHITE_OFF};
     min-width: 16px; min-height: 16px;
     border-radius: 4px; border: none;
-    box-shadow: 0 0 8px rgba(255, 40, 180, 0.45);
+    box-shadow: 0 0 8px rgba(8, 12, 20, 0.45);
     margin: -5px 0;
 }}
 
 button.ac-chev {{
     font-family: 'Font Awesome 6 Free', 'JetBrainsMono Nerd Font';
     font-size: 12px;
-    color: rgba(200, 180, 230, 0.70);
+    color: rgba(255, 255, 255, 0.70);
     background: transparent;
-    border: 2px solid rgba(255, 40, 180, 0.20);
+    border: 2px solid rgba(8, 12, 20, 0.20);
     border-radius: 4px;
     min-width: 26px;
     min-height: 22px;
@@ -704,13 +704,13 @@ button.ac-chev:hover {{ color: {WHITE_OFF}; border-color: {WHITE_OFF}; }}
 
 .ac-device-row {{
     background: rgba(15, 12, 24, 0.95);
-    border-left: 2px solid rgba(255, 40, 180, 0.24);
+    border-left: 2px solid rgba(8, 12, 20, 0.24);
     padding: 6px 16px 6px 26px;
-    color: rgba(220, 200, 240, 0.80);
+    color: rgba(255, 255, 255, 0.80);
 }}
 .ac-device-row:hover {{
-    background: rgba(255, 40, 180, 0.14);
-    color: #f0e8ff;
+    background: rgba(8, 12, 20, 0.14);
+    color: #e8edf5;
 }}
 .ac-device-row.on {{
     color: {WHITE_OFF};
@@ -719,63 +719,63 @@ button.ac-chev:hover {{ color: {WHITE_OFF}; border-color: {WHITE_OFF}; }}
 
 .ac-wifi-flyout {{
     background: rgba(8, 6, 14, 0.99);
-    border-top: 2px solid rgba(255, 40, 180, 0.22);
-    border-bottom: 2px solid rgba(255, 40, 180, 0.22);
+    border-top: 2px solid rgba(8, 12, 20, 0.22);
+    border-bottom: 2px solid rgba(8, 12, 20, 0.22);
 }}
 .ac-wifirow {{
     background: rgba(15, 12, 24, 0.96);
-    border-bottom: 1px solid rgba(255, 40, 180, 0.10);
+    border-bottom: 1px solid rgba(8, 12, 20, 0.10);
     padding: 8px 16px;
 }}
-.ac-wifirow:hover {{ background: rgba(255, 40, 180, 0.10); }}
-.ac-wifirow.active {{ background: rgba(255, 40, 180, 0.12); }}
-.ac-wifi-ssid {{ color: #f0e8ff; font-size: 16px; font-weight: bold; }}
+.ac-wifirow:hover {{ background: rgba(8, 12, 20, 0.10); }}
+.ac-wifirow.active {{ background: rgba(8, 12, 20, 0.12); }}
+.ac-wifi-ssid {{ color: #e8edf5; font-size: 16px; font-weight: bold; }}
 .ac-wifirow.active .ac-wifi-ssid {{ color: {WHITE_OFF}; }}
-.ac-wifi-state {{ color: rgba(180, 150, 230, 0.75); font-size: 13px; }}
+.ac-wifi-state {{ color: rgba(255, 255, 255, 0.75); font-size: 13px; }}
 .ac-wifi-sig {{
     font-family: 'Font Awesome 6 Free', 'JetBrainsMono Nerd Font';
     font-size: 14px;
-    color: rgba(200, 180, 230, 0.70);
+    color: rgba(255, 255, 255, 0.70);
 }}
 .ac-wifi-lock {{
     font-family: 'Font Awesome 6 Free', 'JetBrainsMono Nerd Font';
     font-size: 12px;
-    color: rgba(200, 180, 230, 0.60);
+    color: rgba(255, 255, 255, 0.60);
     margin-right: 6px;
 }}
 
 button.ac-btn {{
     background: rgba(20, 16, 36, 0.96);
-    border: 2px solid rgba(255, 40, 180, 0.30);
+    border: 2px solid rgba(8, 12, 20, 0.30);
     border-radius: 4px;
-    color: #e8e0f5;
+    color: #e8edf5;
     font-size: 14px;
     padding: 6px 14px;
 }}
 button.ac-btn:hover {{
-    background: rgba(255, 40, 180, 0.18);
+    background: rgba(8, 12, 20, 0.18);
     border-color: {WHITE_OFF};
-    color: #f8f0ff;
+    color: #e8edf5;
 }}
 button.ac-btn:disabled {{
-    color: rgba(180, 150, 230, 0.40);
-    border-color: rgba(255, 40, 180, 0.15);
+    color: rgba(255, 255, 255, 0.40);
+    border-color: rgba(8, 12, 20, 0.15);
 }}
 
 entry {{
     background: rgba(10, 8, 20, 0.99);
-    color: #f0e8ff;
-    border: 2px solid rgba(255, 40, 180, 0.30);
+    color: #e8edf5;
+    border: 2px solid rgba(8, 12, 20, 0.30);
     border-radius: 4px;
     padding: 6px 10px;
     font-size: 14px;
 }}
 entry:focus {{ border-color: {WHITE_OFF}; }}
 
-checkbutton {{ color: rgba(220, 200, 240, 0.80); font-size: 14px; }}
+checkbutton {{ color: rgba(255, 255, 255, 0.80); font-size: 14px; }}
 checkbutton check {{
     background: rgba(20, 16, 36, 0.96);
-    border: 2px solid rgba(255, 40, 180, 0.30);
+    border: 2px solid rgba(8, 12, 20, 0.30);
     min-width: 16px; min-height: 16px;
     border-radius: 2px;
 }}
@@ -784,10 +784,10 @@ checkbutton check:checked {{
     border-color: {WHITE_OFF};
 }}
 
-separator {{ background: rgba(255, 40, 180, 0.18); min-height: 1px; }}
+separator {{ background: rgba(8, 12, 20, 0.18); min-height: 1px; }}
 
 scrollbar slider {{
-    background: rgba(255, 40, 180, 0.40);
+    background: rgba(8, 12, 20, 0.40);
     border-radius: 2px;
     min-width: 6px;
 }}

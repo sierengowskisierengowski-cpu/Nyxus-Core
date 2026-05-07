@@ -83,34 +83,34 @@ from gi.repository import Gtk, Gdk, GLib, Gio  # noqa: E402
 _CSS = b"""
 window.nyx-screensaver { background: #000000; }
 .nyx-logo {
-  color: rgba(192, 132, 252, 0.95);
+  color: rgba(255, 255, 255, 0.95);
   font-family: 'JetBrains Mono', monospace;
   font-size: 96px;
   font-weight: 800;
-  text-shadow: 0 0 28px rgba(192, 132, 252, 0.60);
+  text-shadow: 0 0 28px rgba(255, 255, 255, 0.60);
 }
 .nyx-word {
-  color: rgba(192, 132, 252, 0.85);
+  color: rgba(255, 255, 255, 0.85);
   font-family: 'JetBrains Mono', monospace;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 0.55em;
-  text-shadow: 0 0 14px rgba(192, 132, 252, 0.40);
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.40);
 }
 .nyx-clock {
-  color: rgba(192, 132, 252, 0.85);
+  color: rgba(255, 255, 255, 0.85);
   font-family: 'JetBrains Mono', monospace;
   font-size: 56px;
   font-weight: 600;
 }
 .nyx-tag {
-  color: rgba(120, 80, 160, 0.55);
+  color: rgba(8, 12, 20, 0.55);
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   letter-spacing: 0.45em;
 }
 .nyx-pulse {
-  color: rgba(192, 132, 252, 0.18);
+  color: rgba(255, 255, 255, 0.18);
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.6em;

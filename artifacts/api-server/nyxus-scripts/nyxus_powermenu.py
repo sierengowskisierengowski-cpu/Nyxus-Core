@@ -98,11 +98,11 @@ ACTIONS = [
         lambda: run("hyprctl dispatch exit")),
     ("Suspend",  "S", "💤", "#e8edf5",
         lambda: run("systemctl suspend")),
-    ("Hibernate","H", "🛌", "#ff8800",
+    ("Hibernate","H", "🛌", "#9aa0ad",
         lambda: run("systemctl hibernate")),
     ("Reboot",   "R", "↻",  "#e8edf5",
         lambda: run("systemctl reboot")),
-    ("Shutdown", "P", "⏻",  "#ff3030",
+    ("Shutdown", "P", "⏻",  "#6a6e78",
         lambda: run("systemctl poweroff")),
 ]
 
@@ -166,7 +166,7 @@ class PowerMenu(Gtk.Application):
                          f"font_weight='bold' size='large'>{label}</span>")
             inner.append(l)
             kl = Gtk.Label()
-            kl.set_markup(f"<span foreground='#aaaaaa' size='small'>"
+            kl.set_markup(f"<span foreground='#9aa0ad' size='small'>"
                           f"({key})</span>")
             inner.append(kl)
             btn.set_child(inner)
@@ -202,7 +202,7 @@ window.nyxus-power {{
 .nyxus-title {{
     font-family: 'Inter Display', sans-serif;
     font-size: 32px;
-    text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+    text-shadow: 0 0 10px rgba(8, 12, 20, 0.5);
 }}
 .nyxus-sub {{
     font-family: 'Inter Display', sans-serif;
@@ -211,20 +211,20 @@ window.nyxus-power {{
 }}
 .nyxus-pwrbtn {{
     background: rgba(15, 12, 24, 0.92);
-    border: 2px solid rgba(255, 0, 255, 0.40);
+    border: 2px solid rgba(8, 12, 20, 0.40);
     border-radius: 4px;
     color: {WHITE_PURE};
     font-family: 'Inter Display', sans-serif;
     transition: all 0.12s ease;
 }}
 .nyxus-pwrbtn:hover {{
-    background: rgba(255, 0, 255, 0.18);
+    background: rgba(8, 12, 20, 0.18);
     border-color: {WHITE_OFF};
-    box-shadow: 0 0 16px rgba(255, 0, 255, 0.55);
+    box-shadow: 0 0 16px rgba(8, 12, 20, 0.55);
 }}
 .nyxus-pwrbtn:active {{
-    background: rgba(255, 0, 255, 0.28);
-    box-shadow: inset 0 0 10px rgba(255, 0, 255, 0.45);
+    background: rgba(8, 12, 20, 0.28);
+    box-shadow: inset 0 0 10px rgba(8, 12, 20, 0.45);
 }}
 """)
 

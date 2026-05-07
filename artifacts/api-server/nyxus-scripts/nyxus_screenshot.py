@@ -313,17 +313,17 @@ window.nyxus-shot {{
 .nyxus-title {{
     font-family: 'Inter Display', sans-serif;
     font-size: 28px;
-    text-shadow: 0 0 10px rgba(255, 0, 255, 0.45);
+    text-shadow: 0 0 10px rgba(8, 12, 20, 0.45);
 }}
 .nyxus-shotbtn {{
     background: rgba(15, 12, 24, 0.92);
-    border: 2px solid rgba(255, 0, 255, 0.40);
+    border: 2px solid rgba(8, 12, 20, 0.40);
     border-radius: 4px;
 }}
 .nyxus-shotbtn:hover {{
-    background: rgba(255, 0, 255, 0.16);
+    background: rgba(8, 12, 20, 0.16);
     border-color: {WHITE_OFF};
-    box-shadow: 0 0 14px rgba(255, 0, 255, 0.5);
+    box-shadow: 0 0 14px rgba(8, 12, 20, 0.5);
 }}
 .nyxus-cb {{
     font-family: 'Inter Display', sans-serif;

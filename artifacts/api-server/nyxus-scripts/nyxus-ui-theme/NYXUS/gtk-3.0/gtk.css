@@ -2,30 +2,30 @@
    NYXUS GTK3 Theme
    ~/.themes/NYXUS/gtk-3.0/gtk.css
 
-   Background: #0a0e16  Text: #C8C0C0  Accent: #7B5EA7
-   Pink Hover: #C4607A  Font: JetBrains Mono Nerd Font
+   Background: #0f1420  Text: #c8ccd6  Accent: #6a6e78
+   Pink Hover: #6a6e78  Font: JetBrains Mono Nerd Font
 
    Silent. Dark. Purely Functional.
    © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ============================================================ */
 
 /* ── Color variables ───────────────────────────────────────── */
-@define-color bg_color       #0a0e16;
-@define-color bg_alt         #0d0a12;
-@define-color bg_hover       #13101a;
-@define-color bg_active      #1a1525;
-@define-color bg_selected    #7B5EA7;
-@define-color accent         #7B5EA7;
-@define-color accent_light   #9b7dc7;
-@define-color pink           #C4607A;
-@define-color pink_glow      rgba(196,96,122,0.15);
-@define-color accent_glow    rgba(123,94,167,0.18);
-@define-color text           #C8C0C0;
-@define-color text_dim       #7a7080;
-@define-color text_disabled  #3a3248;
-@define-color border         #1a1525;
-@define-color border_accent  #3a2a5a;
-@define-color red            #f87171;
+@define-color bg_color       #0f1420;
+@define-color bg_alt         #0a0a0a;
+@define-color bg_hover       #0f1420;
+@define-color bg_active      #1a1e2a;
+@define-color bg_selected    #6a6e78;
+@define-color accent         #6a6e78;
+@define-color accent_light   #9aa0ad;
+@define-color pink           #6a6e78;
+@define-color pink_glow      rgba(8, 12, 20, 0.15);
+@define-color accent_glow    rgba(8, 12, 20, 0.18);
+@define-color text           #c8ccd6;
+@define-color text_dim       #6a6e78;
+@define-color text_disabled  #3a3e4a;
+@define-color border         #1a1e2a;
+@define-color border_accent  #2a2e3a;
+@define-color red            #9aa0ad;
 @define-color green          #c8ccd6;
 @define-color yellow         #e8edf5;
 @define-color cyan           #c8ccd6;
@@ -135,7 +135,7 @@ button.suggested-action:hover {
 }
 
 button.destructive-action {
-  background-color: rgba(248,113,113,0.12);
+  background-color: rgba(255, 255, 255, 0.12);
   border-color: @red;
   color: @red;
 }
@@ -178,7 +178,7 @@ spinbutton entry {
 entry:focus,
 entry:focus-within {
   border-color: @accent;
-  box-shadow: 0 0 0 2px rgba(123,94,167,0.25);
+  box-shadow: 0 0 0 2px rgba(8, 12, 20, 0.25);
 }
 
 entry:disabled {
@@ -194,7 +194,7 @@ entry selection {
 
 entry.error {
   border-color: @red;
-  box-shadow: 0 0 0 2px rgba(248,113,113,0.2);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
 }
 
 /* ── Labels ─────────────────────────────────────────────────── */
@@ -475,7 +475,7 @@ tooltip label {
 
 .sidebar row:selected,
 .sidebar row:checked {
-  background-color: rgba(123,94,167,0.18);
+  background-color: rgba(8, 12, 20, 0.18);
   color: @accent_light;
   border-left: 2px solid @accent;
 }
@@ -580,7 +580,7 @@ placessidebar row:hover {
 
 filechooser .sidebar-row:selected,
 placessidebar row:selected {
-  background-color: rgba(123,94,167,0.18);
+  background-color: rgba(8, 12, 20, 0.18);
   color: @accent_light;
 }
 
