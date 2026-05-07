@@ -2,7 +2,7 @@
    NYXUS GTK4 Theme
    ~/.themes/NYXUS/gtk-4.0/gtk.css
 
-   Background: #080808  Text: #C8C0C0  Accent: #7B5EA7
+   Background: #0a0e16  Text: #C8C0C0  Accent: #7B5EA7
    Pink Hover: #C4607A  Font: JetBrains Mono Nerd Font
 
    Silent. Dark. Purely Functional.
@@ -11,7 +11,7 @@
 
 /* GTK4 uses custom properties */
 :root {
-  --bg:          #080808;
+  --bg:          #0a0e16;
   --bg-alt:      #0d0a12;
   --bg-hover:    #000000;
   --bg-active:   #0a0a0a;
@@ -45,9 +45,9 @@
 @define-color error_color           #f87171;
 @define-color error_bg_color        rgba(248,113,113,0.12);
 @define-color error_fg_color        #f87171;
-@define-color window_bg_color       #080808;
+@define-color window_bg_color       #0a0e16;
 @define-color window_fg_color       #C8C0C0;
-@define-color view_bg_color         #080808;
+@define-color view_bg_color         #0a0e16;
 @define-color view_fg_color         #C8C0C0;
 @define-color headerbar_bg_color    #0d0a12;
 @define-color headerbar_fg_color    #C8C0C0;
@@ -60,7 +60,7 @@
 @define-color dialog_fg_color       #C8C0C0;
 @define-color popover_bg_color      #0d0a12;
 @define-color popover_fg_color      #C8C0C0;
-@define-color thumbnail_bg_color    #080808;
+@define-color thumbnail_bg_color    #0a0e16;
 @define-color thumbnail_fg_color    #C8C0C0;
 @define-color shade_color           rgba(0,0,0,0.5);
 @define-color scrollbar_outline_color transparent;
@@ -156,7 +156,7 @@ button.destructive-action {
 
 button.destructive-action:hover {
   background-color: #f87171;
-  color: #080808;
+  color: #0a0e16;
 }
 
 button:disabled {

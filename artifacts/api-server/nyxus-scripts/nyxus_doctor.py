@@ -123,9 +123,11 @@ def check_graffiti_cache() -> None:
                 f"{len(files)} murals · {total_mb:.1f} MB")
 
 def check_scripts_present() -> None:
+    # rev r13: nyxus_notepad.py + nyxus_weather.py removed (rich
+    # tarball editions installed to /opt/nyxus-notepad + /opt/nyxus-weather)
     expected = [
-        "nyxus_settings.py", "nyxus_notepad.py", "nyxus_stickies.py",
-        "nyxus_sysmon_gtk.py", "nyxus_control.py", "nyxus_weather.py",
+        "nyxus_settings.py", "nyxus_stickies.py",
+        "nyxus_sysmon_gtk.py", "nyxus_control.py",
         "nyxus_terminal.py",
         # phase-2 additions
         "nyxus_doctor.py", "nyxus_launcher.py", "nyxus_powermenu.py",

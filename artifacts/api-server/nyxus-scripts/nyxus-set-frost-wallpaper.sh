@@ -17,7 +17,7 @@ WP_NAME="nyxus-frost-sierengowski.png"
 WP_DIR="${HOME}/Pictures/nyxus"
 WP_DST="${WP_DIR}/${WP_NAME}"
 MODE="${1:-fit}"             # fit | fill | center | tile  (default fit — shows whole SIERENGOWSKI centered)
-LETTERBOX_COLOR="#f5f3ef"    # cream — matches wallpaper's own background, seamless margins
+LETTERBOX_COLOR="#e8edf5"    # cream — matches wallpaper's own background, seamless margins
 
 c_cyan="$(printf '\033[1;36m')"; c_grn="$(printf '\033[1;32m')"
 c_yel="$(printf '\033[1;33m')"; c_red="$(printf '\033[1;31m')"

@@ -13,12 +13,12 @@
     fg1:     #3b2060;
     fg2:     rgba(80, 50, 130, 0.45);
 
-    splat-pink:   #ff00ff;
-    splat-purple: #cc00ff;
-    splat-blue:   #0088ff;
-    splat-green:  #39ff14;
+    splat-pink:   #e8edf5;
+    splat-purple: #e8edf5;
+    splat-blue:   #c8ccd6;
+    splat-green:  #c8ccd6;
     splat-yellow: #e6b800;
-    splat-orange: #ff5500;
+    splat-orange: #e8edf5;
 
     background-color: transparent;
     text-color:       @fg0;
@@ -174,7 +174,7 @@ element-text {
     horizontal-align: 0.5;
     vertical-align:   0.5;
     font:             "JetBrains Mono 9";
-    highlight:        bold #ff00ff;
+    highlight:        bold #e8edf5;
 }
 
 /* ── Mode bar — splatter pill buttons ───────────────────── */

@@ -35,7 +35,7 @@ NYX-J5W-2026-SIERENGOWSKI-LOCKED
 - Docs (README.md, LICENSE.md, CHANGELOG.md, CREDITS.md) added to allowlist
 
 ### Theme
-- NYXUS GTK3/4 theme: `#080808` background, `#7B5EA7` accent, JetBrains Mono Nerd Font
+- NYXUS GTK3/4 theme: `#0a0e16` background, `#7B5EA7` accent, JetBrains Mono Nerd Font
 - Waybar: 4-bar signature theme with neon gradient accents and background images
 - Wlogout: NYXUS-themed logout screen
 - Hyprlock: dark purple glow lock screen, no GNOME elements

@@ -2,7 +2,7 @@
    NYXUS GTK3 Theme
    ~/.themes/NYXUS/gtk-3.0/gtk.css
 
-   Background: #080808  Text: #C8C0C0  Accent: #7B5EA7
+   Background: #0a0e16  Text: #C8C0C0  Accent: #7B5EA7
    Pink Hover: #C4607A  Font: JetBrains Mono Nerd Font
 
    Silent. Dark. Purely Functional.
@@ -10,7 +10,7 @@
    ============================================================ */
 
 /* ── Color variables ───────────────────────────────────────── */
-@define-color bg_color       #080808;
+@define-color bg_color       #0a0e16;
 @define-color bg_alt         #0d0a12;
 @define-color bg_hover       #13101a;
 @define-color bg_active      #1a1525;
