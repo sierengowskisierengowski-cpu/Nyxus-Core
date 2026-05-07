@@ -197,7 +197,7 @@ dl "hypridle.conf"  "$HYPR_DIR/hypridle.conf"  || failed=$((failed+1))
 hdr "Wallpaper (SIERENGOWSKI)"
 WALLS_DIR="$HYPR_DIR/walls"
 mkdir -p "$WALLS_DIR"
-dl "nyxus-sierengowski-clean.png" "$WALLS_DIR/nyxus-sierengowski-clean.png" || failed=$((failed+1))
+dl "nyxus-ink-swirl.png" "$WALLS_DIR/nyxus-ink-swirl.png" || failed=$((failed+1))
 dl "nyxus-taskbar-bg.png"         "$WALLS_DIR/nyxus-taskbar-bg.png"         || failed=$((failed+1))
 dl "nyxus-rightbar-bg.png"        "$WALLS_DIR/nyxus-rightbar-bg.png"        || failed=$((failed+1))
 
@@ -215,7 +215,7 @@ mkdir -p "$WAYBAR_DIR"
 dl "waybar-config.json"       "$WAYBAR_DIR/config"            || failed=$((failed+1))
 dl "waybar-style.css"         "$WAYBAR_DIR/style.css"         || failed=$((failed+1))
 # Inject real paths into CSS
-WALL_PATH="$HOME/.config/hypr/walls/nyxus-sierengowski-clean.png"
+WALL_PATH="$HOME/.config/hypr/walls/nyxus-ink-swirl.png"
 TASKBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-taskbar-bg.png"
 RIGHTBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-rightbar-bg.png"
 sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"                  "$WAYBAR_DIR/style.css"
@@ -600,7 +600,10 @@ fi
 if command -v sddm &>/dev/null; then
   SDDM_TMP="$(mktemp -d)"
   if dl "nyxus-sddm-theme.tar.gz" "${SDDM_TMP}/theme.tar.gz"; then
-    if tar -xzf "${SDDM_TMP}/theme.tar.gz" -C "${SDDM_TMP}" 2>/dev/null \
+    # Tarball extracts flat (./install.sh, ./Main.qml, etc.) — extract into
+    # a sddm-theme/ subdir so the rest of the install path is consistent.
+    mkdir -p "${SDDM_TMP}/sddm-theme"
+    if tar -xzf "${SDDM_TMP}/theme.tar.gz" -C "${SDDM_TMP}/sddm-theme" 2>/dev/null \
        && [[ -f "${SDDM_TMP}/sddm-theme/install.sh" ]]; then
       # Theme installer (writes to /usr/share/sddm/themes/) needs sudo
       if sudo -n bash "${SDDM_TMP}/sddm-theme/install.sh" >/tmp/nyxus-sddm-install.log 2>&1; then
@@ -679,9 +682,9 @@ fi
 
 if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   pkill swaybg 2>/dev/null || true
-  swaybg -i "$WALLS_DIR/nyxus-sierengowski-clean.png" -m fill &
+  swaybg -i "$WALLS_DIR/nyxus-ink-swirl.png" -m fill &
   disown
-  ok "Wallpaper set — nyxus-sierengowski-clean"
+  ok "Wallpaper set — nyxus-ink-swirl (DARK MIRROR · cosmic ink)"
 fi
 
 if command -v dunst &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
