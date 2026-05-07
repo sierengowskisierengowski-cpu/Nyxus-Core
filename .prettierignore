@@ -1,0 +1,13 @@
+node_modules
+dist
+.local
+.git
+attached_assets
+artifacts/api-server/nyxus-scripts
+artifacts/api-server/dist
+**/*.tgz
+**/*.tar.gz
+**/*.png
+**/*.jpg
+**/*.svg
+pnpm-lock.yaml
