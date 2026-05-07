@@ -4,7 +4,7 @@
 NYXUS Settings — system control center for NYXUS.
 
 A native GTK4 / Cairo Python application matching the NYXUS theme
-(dark {INK_BLACK} background, Caveat handwriting font, neon pink/blue/
+(dark {INK_BLACK} background, Inter handwriting font, neon pink/blue/
 green/purple/gold accents — same vocabulary as the notepad / stickies).
 
 Categories (left sidebar):
@@ -175,7 +175,7 @@ _RAINBOW_HEX = ("#e8edf5", "#ff2da8", "#b800ff", "#c8ccd6",
 
 def _rainbow_markup(text: str) -> str:
     """Return Pango markup where each visible character is colored from
-    the NYXUS neon palette. Spaces, punctuation and the leading sigil are
+    the NYXUS DARK MIRROR palette. Spaces, punctuation and the leading sigil are
     kept neutral so the readable letters do the singing."""
     out = []
     i = 0
@@ -338,7 +338,7 @@ _GRAFFITI_WORDS_BY_PAGE: Dict[str, List[Tuple[str, int]]] = {
         ("live", 38), ("PNG", 38), ("JPG", 38),
     ],
     "fonts": [
-        ("Caveat", 42), ("JetBrains", 32), ("Mono", 38), ("Sans", 38),
+        ("Inter Display", 42), ("JetBrains", 32), ("Mono", 38), ("Sans", 38),
         ("Serif", 38), ("hinting", 30), ("antialias", 28), ("DPI", 38),
         ("weight", 32), ("italic", 34), ("kerning", 30),
     ],
@@ -411,7 +411,7 @@ def sketch_rect(cr, x, y, w, h, *, jitter=0.6, key=None, double=False):
                     jitter=jitter*0.6, segments=6, key=(k, "t2"))
 
 def draw_caveat(cr, x, y, text, *, size=14, color=(0.94,0.92,0.97,0.95),
-                family="Caveat", weight=Pango.Weight.NORMAL, wrap_w=None):
+                family="Inter Display", weight=Pango.Weight.NORMAL, wrap_w=None):
     cr.save(); cr.set_source_rgba(*color)
     layout = PangoCairo.create_layout(cr)
     fd = Pango.FontDescription()
@@ -472,7 +472,7 @@ class SketchButton(Gtk.DrawingArea):
                     double=self.primary, key=("btn", id(self), w, h))
         layout = PangoCairo.create_layout(cr)
         fd = Pango.FontDescription()
-        fd.set_family("Caveat"); fd.set_size(int(13 * Pango.SCALE))
+        fd.set_family("Inter Display"); fd.set_size(int(13 * Pango.SCALE))
         fd.set_weight(Pango.Weight.BOLD if self.primary else Pango.Weight.NORMAL)
         layout.set_font_description(fd); layout.set_text(self.label, -1)
         tw, th = layout.get_pixel_size()
@@ -8163,7 +8163,7 @@ class FontsPage(BasePage):
         c.add_row(kv_row("interface",  cur_iface))
         c.add_row(kv_row("document",   cur_doc))
         c.add_row(kv_row("monospace",  cur_mono))
-        c.add_row(kv_row("handwritten (NYXUS apps)", "Caveat 14 (built-in)"))
+        c.add_row(kv_row("handwritten (NYXUS apps)", "Inter Display 14 (built-in)"))
         self.box.append(c)
 
         # ── pickers ──
@@ -8813,7 +8813,7 @@ class GraffitiBackground(Gtk.DrawingArea):
             cr.rotate(angle)
             layout = PangoCairo.create_layout(cr)
             fd = Pango.FontDescription()
-            fd.set_family("Caveat")
+            fd.set_family("Inter Display")
             fd.set_weight(Pango.Weight.BOLD)
             fd.set_size(int(size * Pango.SCALE))
             layout.set_font_description(fd); layout.set_text(word, -1)
@@ -9103,7 +9103,7 @@ class SettingsWindow(Gtk.ApplicationWindow):
    smooth 180ms transitions on every interactive surface.
    ===================================================================== */
 
-* { font-family: 'Caveat', 'Patrick Hand', cursive;
+* { font-family: 'Inter Display', 'Inter Display', cursive;
     transition: background-color 180ms ease,
                 border-color     180ms ease,
                 color            180ms ease,
@@ -9312,7 +9312,7 @@ scrollbar { background-color: transparent; }
         ts = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         ts.set_valign(Gtk.Align.CENTER); ts.set_hexpand(True)
         # Multi-color hero title: each letter cycles through the NYXUS
-        # neon palette (hot-pink, magenta, electric-blue, neon-green, gold,
+        # DARK MIRROR palette (hot-pink, magenta, electric-blue, neon-green, gold,
         # back to hot-pink). The CSS class adds a white outer glow halo on
         # top so every letter punches off the black background.
         title_lbl = Gtk.Label(xalign=0)
@@ -9357,7 +9357,7 @@ scrollbar { background-color: transparent; }
             cr.arc(w/2, h/2, min(w,h)/2 - 2, 0, math.pi*2); cr.stroke()
             layout = PangoCairo.create_layout(cr)
             fd = Pango.FontDescription()
-            fd.set_family("Caveat"); fd.set_weight(Pango.Weight.BOLD)
+            fd.set_family("Inter Display"); fd.set_weight(Pango.Weight.BOLD)
             fd.set_size(int(20 * Pango.SCALE))
             layout.set_font_description(fd); layout.set_text(_initial, -1)
             tw, th = layout.get_pixel_size()
@@ -9855,7 +9855,7 @@ if __name__ == "__main__":
 
 # ─────────────────────────── NYXUS CHROME (auto-injected r4) ────────────────
 # Unifies look across every NYXUS GTK4 app: fully transparent window so the
-# user's desktop wallpaper shows through, frosted-glass dark panels, Caveat
+# user's desktop wallpaper shows through, frosted-glass dark panels, Inter
 # font, neon-pink outlined buttons, hover-scramble labels. install_chrome()
 # is idempotent and runs once per top-level window via a `present` hook.
 # nyxus_chrome.py is shipped to ~/.nyxus by the install pipeline.

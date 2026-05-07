@@ -9,7 +9,7 @@
 
 NYXUS is a hand-crafted Arch Linux distribution built on Hyprland. It ships a complete, opinionated desktop environment — Waybar, Hyprlock, SDDM, Rofi, Mako, Alacritty — alongside a full suite of native GTK4 Python applications designed as a cohesive system.
 
-Every visual element follows the NYXUS design language: black frosted-glass panels, Caveat handwriting font for UI, JetBrains Mono for data and code, neon pink/purple/green/gold palette.
+Every visual element follows the NYXUS design language: black frosted-glass panels, Inter handwriting font for UI, JetBrains Mono for data and code, neon pink/purple/green/gold palette.
 
 ---
 
@@ -43,7 +43,7 @@ curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | b
 
 - **Background**: `#0a0e16`
 - **Glass panels**: `rgba(6,4,12,0.55)` + `backdrop-filter: blur(14px) saturate(1.6)`
-- **UI font**: Caveat
+- **UI font**: Inter
 - **Code/data font**: JetBrains Mono
 - **Pink accent**: `#e8edf5` / `#c8ccd6`
 - **Green accent**: `#c8ccd6`

@@ -563,7 +563,7 @@ def _do_snip():
 
 CSS = format_css("""
 * {{
-    font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', sans-serif;
+    font-family: 'Inter Display', 'Inter Display', 'Inter', sans-serif;
     font-size: 16px;
 }}
 
@@ -1561,7 +1561,7 @@ if __name__ == "__main__":
 
 # ─────────────────────────── NYXUS CHROME (auto-injected r4) ────────────────
 # Unifies look across every NYXUS GTK4 app: fully transparent window so the
-# user's desktop wallpaper shows through, frosted-glass dark panels, Caveat
+# user's desktop wallpaper shows through, frosted-glass dark panels, Inter
 # font, neon-pink outlined buttons, hover-scramble labels. install_chrome()
 # is idempotent and runs once per top-level window via a `present` hook.
 # nyxus_chrome.py is shipped to ~/.nyxus by the install pipeline.

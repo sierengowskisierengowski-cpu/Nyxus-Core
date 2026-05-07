@@ -229,7 +229,7 @@ def check_dunst() -> None:
     rc_path = CFG_DUNST / "dunstrc"
     if rc_path.exists():
         s = rc_path.read_text(errors="ignore")
-        if "NYXUS" in s or "Caveat" in s:
+        if "NYXUS" in s or "Inter Display" in s:
             add("ok", "dunst config", "NYXUS theme active")
         else:
             add("warn", "dunst config", "default theme — pull nyxus-dunstrc")

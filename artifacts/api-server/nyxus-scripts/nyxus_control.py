@@ -467,7 +467,7 @@ def apply_profile(profile, hw):
 #  CSS
 # ══════════════════════════════════════════════════════════════════════════════
 CSS = format_css("""
-* {{ font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }}
+* {{ font-family: 'Inter Display', 'Inter Display', 'Inter', 'Sans'; }}
 window {{ background-color: transparent; color: rgba(232,224,245,0.92); }}
 
 .nav-bar {{
@@ -565,14 +565,14 @@ def _rng(x, y=0, w=0, h=0):
     return random.Random(int(abs(x*3+y*7+(w or 1)*11+(h or 1)*13)) % 65535)
 
 def glow_text(cr, x, y, txt, r, g, b, size=13, bold=False):
-    cr.select_font_face("Caveat", 0, 1 if bold else 0)
+    cr.select_font_face("Inter Display", 0, 1 if bold else 0)
     cr.set_font_size(size)
     cr.set_source_rgba(r, g, b, 0.22); cr.move_to(x+1.5,y+1.0); cr.show_text(txt)
     cr.set_source_rgba(r, g, b, 0.94); cr.move_to(x, y);         cr.show_text(txt)
 
 def glow_text_c(cr, cx, y, txt, r, g, b, size=13, bold=False):
     """Centered glow text."""
-    cr.select_font_face("Caveat", 0, 1 if bold else 0)
+    cr.select_font_face("Inter Display", 0, 1 if bold else 0)
     cr.set_font_size(size)
     ext = cr.text_extents(txt)
     x   = cx - ext.width/2 - ext.x_bearing
@@ -778,12 +778,12 @@ class NyxusControl(Gtk.Application):
         glow_text(cr, 38, h-14, "NYXUS  Control", *C_PINK, size=18, bold=True)
         # Board
         board = self.hw.get("board","Unknown Board")[:38]
-        cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
+        cr.select_font_face("Inter Display",0,0); cr.set_font_size(13)
         cr.set_source_rgba(*C_DIM, 0.80)
         cr.move_to(260, h-14); cr.show_text(board)
         # Clock
         clk = datetime.now().strftime("%A  %H:%M:%S")
-        cr.select_font_face("Caveat",0,1); cr.set_font_size(15)
+        cr.select_font_face("Inter Display",0,1); cr.set_font_size(15)
         ext = cr.text_extents(clk)
         glow_text(cr, w-ext.width-20, h-12, clk, *C_ORANGE, size=15, bold=True)
 
@@ -821,7 +821,7 @@ class NyxusControl(Gtk.Application):
         cr.set_source_rgba(*C_PINK, 0.28); cr.set_line_width(2.5)
         cr.move_to(w-1, 0); cr.line_to(w-1, h); cr.stroke()
         # Top label
-        cr.select_font_face("Caveat", 0, 1); cr.set_font_size(11)
+        cr.select_font_face("Inter Display", 0, 1); cr.set_font_size(11)
         cr.set_source_rgba(*C_DIM, 0.50)
         cr.move_to(12, 20); cr.show_text("NAVIGATION")
         rainbow_bar(cr, 0, 26, w, 2)
@@ -855,12 +855,12 @@ class NyxusControl(Gtk.Application):
                 cr.set_source_rgba(r, g, b, 0.03)
                 cr.rectangle(0, iy, w, item_h); cr.fill()
 
-            # Label — Caveat via Cairo
+            # Label — Inter via Cairo
             cy = iy + item_h * 0.62
             if active:
                 glow_text(cr, 16, cy, name, r, g, b, size=17, bold=True)
             else:
-                cr.select_font_face("Caveat", 0, 0)
+                cr.select_font_face("Inter Display", 0, 0)
                 cr.set_font_size(15)
                 cr.set_source_rgba(r, g, b, 0.55)
                 cr.move_to(16, cy); cr.show_text(name)
@@ -953,7 +953,7 @@ class NyxusControl(Gtk.Application):
         cores = cpu.get("cores",1)
         glow_text(cr, cx+16, cy+30, "CPU", *C_PINK, size=17, bold=True)
         model = cpu.get("model","Unknown CPU")
-        cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
+        cr.select_font_face("Inter Display",0,0); cr.set_font_size(12)
         cr.set_source_rgba(*C_DIM,0.80)
         cr.move_to(cx+16, cy+50); cr.show_text(model[:46])
         freq  = f"{self.live.cpu_freq:.0f} MHz" if self.live.cpu_freq else "-- MHz"
@@ -973,7 +973,7 @@ class NyxusControl(Gtk.Application):
             cr.set_source_rgba(*col, 0.15); cr.rectangle(bx,by,bw,bh); cr.fill()
             cr.set_source_rgba(*col, 0.90)
             cr.rectangle(bx, by+bh*(1-p/100), bw, bh*(p/100)); cr.fill()
-        cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+        cr.select_font_face("Inter Display",0,0); cr.set_font_size(11)
         cr.set_source_rgba(*C_DIM,0.60); cr.move_to(cx+16,cy+116)
         cr.show_text(f"core load  (avg {sum(pcts)/max(len(pcts),1):.1f}%)")
         # CPU temp hbars
@@ -1003,7 +1003,7 @@ class NyxusControl(Gtk.Application):
         neon_card(cr, gx, gy, gw, gh, gpu_col)
         vendor_tag = gpu_hw.get("vendor","").upper()
         glow_text(cr, gx+16, gy+30, f"GPU  [{vendor_tag}]", *gpu_col, size=17, bold=True)
-        cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
+        cr.select_font_face("Inter Display",0,0); cr.set_font_size(12)
         cr.set_source_rgba(*C_DIM,0.80)
         cr.move_to(gx+16, gy+50); cr.show_text(gpu_hw.get("name","Not detected")[:44])
         if self.live.gpu:
@@ -1119,7 +1119,7 @@ class NyxusControl(Gtk.Application):
         tb.set_margin_top(14); tb.set_margin_start(18); tb.set_margin_end(18)
         tb.set_margin_bottom(8)
         lbl = Gtk.Label(label="Fan Preset:")
-        lbl.set_markup("<span font='Caveat 16' color='#88aaff'>Fan Preset:</span>")
+        lbl.set_markup("<span font='Inter Display 16' color='#88aaff'>Fan Preset:</span>")
         tb.append(lbl)
         for name, pct, css in [
             ("Silent",      20,  "neon-btn-blue"),
@@ -1171,7 +1171,7 @@ class NyxusControl(Gtk.Application):
         fans = list(self.live.fans.items())
         if not fans:
             glow_text_c(cr, w//2, h//2-20, "No fan sensors detected", *C_DIM, size=16)
-            cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
+            cr.select_font_face("Inter Display",0,0); cr.set_font_size(13)
             cr.set_source_rgba(*C_DIM,0.60)
             cr.move_to(w//2-160, h//2+10)
             cr.show_text("Install lm_sensors: sudo pacman -S lm_sensors && sudo sensors-detect")
@@ -1195,7 +1195,7 @@ class NyxusControl(Gtk.Application):
             label = k.split(":")[-1][:18]
             dev   = k.split(":")[0][:12]
             glow_text_c(cr, cx+cw//2, cy+22, label, *col, size=14, bold=True)
-            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.select_font_face("Inter Display",0,0); cr.set_font_size(11)
             cr.set_source_rgba(*C_DIM,0.60)
             cr.move_to(cx+8, cy+36); cr.show_text(dev)
 
@@ -1219,7 +1219,7 @@ class NyxusControl(Gtk.Application):
                             for f in dev_d["fans"]
                             if f"{dev_d['name']}:{f['label']}"==k), {})
             min_rpm = fan_info.get("min_rpm",0)
-            cr.select_font_face("Caveat",0,0); cr.set_font_size(10)
+            cr.select_font_face("Inter Display",0,0); cr.set_font_size(10)
             cr.set_source_rgba(*C_DIM,0.55)
             cr.move_to(cx+8, cy+ch-8); cr.show_text(f"min {min_rpm} RPM")
 
@@ -1243,7 +1243,7 @@ class NyxusControl(Gtk.Application):
                           hist_vals, col, max_val=max(max(hist_vals),5000))
             label = k.split(":")[-1][:16]
             last  = list(self.live.fan_hist.get(k,[[-1]])); last_v = last[-1] if last else 0
-            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.select_font_face("Inter Display",0,0); cr.set_font_size(11)
             cr.set_source_rgba(*col,0.80)
             cr.move_to(pad+14+i*160, hy+hist_h-12); cr.show_text(f"{label}: {last_v} rpm")
 
@@ -1292,12 +1292,12 @@ class NyxusControl(Gtk.Application):
                  ("80–90 HOT",C_ORANGE),("> 90 CRIT",C_RED)]
         for i,(zt,zc) in enumerate(zones):
             cr.set_source_rgba(*zc,0.85); cr.arc(16+i*120+4, 56, 4, 0, math.pi*2); cr.fill()
-            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.select_font_face("Inter Display",0,0); cr.set_font_size(11)
             cr.set_source_rgba(*zc,0.80); cr.move_to(26+i*120,60); cr.show_text(zt)
 
         if not self.live.temps:
             glow_text_c(cr,w//2,h//2,"No temperature sensors detected",*C_DIM,size=16)
-            cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
+            cr.select_font_face("Inter Display",0,0); cr.set_font_size(13)
             cr.set_source_rgba(*C_DIM,0.55)
             cr.move_to(w//2-200, h//2+28)
             cr.show_text("Install: sudo pacman -S lm_sensors && sudo sensors-detect && sudo sensors")
@@ -1325,7 +1325,7 @@ class NyxusControl(Gtk.Application):
             label = k.split(":")[-1][:22]
             dev   = k.split(":")[0][:14]
             glow_text(cr, cx+12, cy+24, label, *color, size=14, bold=True)
-            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.select_font_face("Inter Display",0,0); cr.set_font_size(11)
             cr.set_source_rgba(*C_DIM,0.60)
             cr.move_to(cx+12, cy+40); cr.show_text(dev)
 
@@ -1342,7 +1342,7 @@ class NyxusControl(Gtk.Application):
             if mx:   info_parts.append(f"max {mx}°")
             if crit: info_parts.append(f"crit {crit}°")
             if info_parts:
-                cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+                cr.select_font_face("Inter Display",0,0); cr.set_font_size(11)
                 cr.set_source_rgba(*C_RED,0.70)
                 cr.move_to(cx+12, cy+ch*0.52+4); cr.show_text("  /  ".join(info_parts))
 
@@ -1471,7 +1471,7 @@ class NyxusControl(Gtk.Application):
             if active:
                 sketch_rect(cr, tx, ty, tw, th, *col, thick=thick+1, jitter=4.0)
             glow_text_c(cr, tx+tw//2, ty+28, p.get("name","Profile"), *col, size=16, bold=True)
-            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.select_font_face("Inter Display",0,0); cr.set_font_size(11)
             cr.set_source_rgba(*C_DIM,0.70)
             desc = p.get("description","")[:28]
             ext  = cr.text_extents(desc); dx = tx+tw//2-ext.width//2
@@ -1527,7 +1527,7 @@ class NyxusControl(Gtk.Application):
         sketch_rect(cr, 12, 12, w-24, h-24, *col, thick=3.0, jitter=4.0,
                     fill_rgba=(*col, 0.04))
         glow_text_c(cr, w//2, 52, name, *col, size=30, bold=True)
-        cr.select_font_face("Caveat",0,0); cr.set_font_size(14)
+        cr.select_font_face("Inter Display",0,0); cr.set_font_size(14)
         cr.set_source_rgba(*C_DIM,0.80)
         ext = cr.text_extents(desc); cr.move_to(w//2-ext.width//2, 76); cr.show_text(desc)
 
@@ -1770,7 +1770,7 @@ class NyxusControl(Gtk.Application):
         boost_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         boost_row.set_margin_start(18); boost_row.set_margin_bottom(10)
         bl = Gtk.Label(label="CPU Boost")
-        bl.set_markup("<span font='Caveat 16'>CPU Boost</span>")
+        bl.set_markup("<span font='Inter Display 16'>CPU Boost</span>")
         boost_row.append(bl)
         self._pwr_boost_sw = Gtk.Switch()
         self._pwr_boost_sw.set_active(self.live.boost)
@@ -1819,7 +1819,7 @@ class NyxusControl(Gtk.Application):
         neon_card(cr, gx, y1, cw, rh1, bc)
         glow_text(cr, gx+14, y1+28, "CPU BOOST", *bc, size=14, bold=True)
         glow_text_c(cr, gx+cw//2, y1+rh1//2+12, "ON" if self.live.boost else "OFF", *bc, size=36, bold=True)
-        cr.select_font_face("Caveat",0,0); cr.set_font_size(12)
+        cr.select_font_face("Inter Display",0,0); cr.set_font_size(12)
         cr.set_source_rgba(*C_DIM,0.70)
         cr.move_to(gx+14, y1+rh1-14)
         cr.show_text("Turbo Boost / AMD Precision Boost")
@@ -1877,7 +1877,7 @@ class NyxusControl(Gtk.Application):
             if self.live.mem_hist:
                 sparkline(cr, pad+14, y4+32, w-pad*2-28, rh4-44,
                           list(self.live.mem_hist), C_BLUE, 100)
-            cr.select_font_face("Caveat",0,0); cr.set_font_size(11)
+            cr.select_font_face("Inter Display",0,0); cr.set_font_size(11)
             cr.set_source_rgba(*C_PINK,0.80); cr.move_to(pad+14,y4+rh4-8)
             cr.show_text("CPU%")
             cr.set_source_rgba(*C_BLUE,0.80); cr.move_to(pad+72,y4+rh4-8)
@@ -1941,7 +1941,7 @@ class NyxusControl(Gtk.Application):
         sort_tb = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         sort_tb.set_margin_start(18); sort_tb.set_margin_bottom(8)
         sort_lbl = Gtk.Label(label="Sort by:")
-        sort_lbl.set_markup("<span font='Caveat 14' color='#8866aa'>Sort by:</span>")
+        sort_lbl.set_markup("<span font='Inter Display 14' color='#8866aa'>Sort by:</span>")
         sort_tb.append(sort_lbl)
         self._sort_btns = {}
         for key,lbl in [("cpu","CPU%"),("mem","MEM%"),("pid","PID"),("name","Name")]:
@@ -2048,7 +2048,7 @@ class NyxusControl(Gtk.Application):
                 (p.get("user",""), C_DIM,    100),
             ]
             for txt, tc, fw in texts:
-                cr.select_font_face("Caveat",0,0); cr.set_font_size(13)
+                cr.select_font_face("Inter Display",0,0); cr.set_font_size(13)
                 cr.set_source_rgba(*tc,0.90)
                 cr.move_to(x, ry+row_h-9); cr.show_text(txt[:int(fw/7)])
                 x += fw

@@ -311,7 +311,7 @@ window.nyxus-shot {{
     border-radius: 6px;
 }}
 .nyxus-title {{
-    font-family: 'Caveat', sans-serif;
+    font-family: 'Inter Display', sans-serif;
     font-size: 28px;
     text-shadow: 0 0 10px rgba(255, 0, 255, 0.45);
 }}
@@ -326,12 +326,12 @@ window.nyxus-shot {{
     box-shadow: 0 0 14px rgba(255, 0, 255, 0.5);
 }}
 .nyxus-cb {{
-    font-family: 'Caveat', sans-serif;
+    font-family: 'Inter Display', sans-serif;
     font-size: 16px;
     color: {WHITE_PURE};
 }}
 .nyxus-hint {{
-    font-family: 'Caveat', sans-serif;
+    font-family: 'Inter Display', sans-serif;
     font-size: 13px;
     color: rgba(255, 255, 255, 0.45);
 }}
