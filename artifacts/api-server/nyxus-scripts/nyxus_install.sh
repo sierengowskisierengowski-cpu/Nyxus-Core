@@ -81,7 +81,7 @@ hdr "Python Terminal Scripts"
 mkdir -p "$SCRIPTS_DIR"
 for f in nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
          nyxus_sysmon_gtk.py \
-         nyxus_stickies.py nyxus_notes.py nyxus_weather.py nyxus_terminal.py \
+         nyxus_stickies.py nyxus_notes.py nyxus_terminal.py \
          nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
          nyxus_doctor.py nyxus_launcher.py nyxus_powermenu.py \
          nyxus_screenshot.py nyxus_chrome.py nyxus_quicksettings.py \
@@ -400,21 +400,9 @@ StartupWMClass=io.nyxus.settings
 DEOF
 ok "nyxus-settings.desktop"
 
-cat > "$DESKTOP_DIR/nyxus-weather.desktop" <<'DEOF'
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=NYXUS Weather
-GenericName=Weather Widget
-Comment=NYXUS OS animated weather widget — native GTK4
-Exec=python3 /home/nyx/.nyxus/nyxus_weather.py
-Icon=io.nyxus.weather
-Terminal=false
-Categories=Utility;Weather;
-Keywords=nyxus;weather;widget;forecast;
-StartupWMClass=io.nyxus.weather
-DEOF
-ok "nyxus-weather.desktop"
+# NOTE: nyxus-weather.desktop is created by the nyxus-weather tarball's
+# own install.sh (rich GTK4 variant). The standalone .py duplicate has
+# been removed (rev 2026-05-07 r13).
 
 cat > "$DESKTOP_DIR/nyxus-notes.desktop" <<'DEOF'
 [Desktop Entry]
