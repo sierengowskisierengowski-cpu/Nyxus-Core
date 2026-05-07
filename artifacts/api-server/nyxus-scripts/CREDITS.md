@@ -56,14 +56,14 @@ Designer, architect, and sole developer of NYXUS
 | Cairo (pycairo) | LGPL v2.1 |
 | psutil | BSD 3-Clause |
 | JetBrains Mono | SIL OFL 1.1 |
-| Caveat Font | SIL OFL 1.1 |
+| Inter Font | SIL OFL 1.1 |
 | Arch Linux | Various (GPL, MIT, BSD) |
 
 ---
 
 ## Fonts
 
-- **Caveat** — UI headings and body labels  
+- **Inter** — UI headings and body labels  
   Designer: Pablo Impallari  
   License: SIL Open Font License 1.1
 

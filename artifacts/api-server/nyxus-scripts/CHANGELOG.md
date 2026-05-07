@@ -47,7 +47,7 @@ NYX-J5W-2026-SIERENGOWSKI-LOCKED
 
 - Initial desktop composition: Hyprland + Waybar + Mako + Alacritty + Rofi
 - GTK4 Python application suite developed
-- NYXUS design system established: Caveat + JetBrains Mono + black glass panels
+- NYXUS design system established: Inter + JetBrains Mono + black glass panels
 - Web apps: Portal, Notepad, Stickies, SysMon, Widgets, Mirror, HomeDashboard
 - Download API established at nyxus-core.replit.app
 

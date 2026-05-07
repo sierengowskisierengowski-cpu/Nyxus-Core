@@ -14,7 +14,7 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 * {
-    font-family:    'Inter', 'Architects Daughter', sans-serif;
+    font-family:    'Inter', 'Inter Display', sans-serif;
     font-size:      13px;
     border:         none;
     border-radius:  0;
@@ -117,7 +117,7 @@ window#waybar.right {
 
 /* ── 3. NYXUS ENGRAVED INTO THE GLASS · gold inner light ────────────────── */
 #custom-nyxus {
-    font-family:    'Dancing Script', 'Caveat', 'Architects Daughter', cursive;
+    font-family:    'Dancing Script', 'Inter Display', 'Inter Display', cursive;
     font-size:      30px;
     font-weight:    700;
     letter-spacing: 0.20em;
@@ -334,7 +334,7 @@ window#waybar.bottom #tray > .needs-attention {
 
 /* ── 8. LEFT BAR · vertical workspace column (only place 1-6 lives) ─────── */
 window#waybar.left #workspaces button {
-    font-family:    'Architects Daughter', 'Caveat', cursive;
+    font-family:    'Inter Display', 'Inter Display', cursive;
     font-size:      14px;
     font-weight:    700;
     margin:         5px 6px;

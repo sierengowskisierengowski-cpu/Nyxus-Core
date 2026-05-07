@@ -175,8 +175,8 @@ def gen_icon(app_id, label, color):
       - Dark frosted background (#08080e)
       - Sketchy wobbly outer border in app color
       - Diagonal hatch texture (very faint)
-      - Centered tilted "NYXUS" wordmark in Caveat (handwritten)
-      - App label below in Caveat, tilted in opposite direction
+      - Centered tilted "NYXUS" wordmark in Inter (handwritten)
+      - App label below in Inter, tilted in opposite direction
       - Single accent dot for color identity
     """
     r, g, b = color
@@ -216,7 +216,7 @@ def gen_icon(app_id, label, color):
     cr.save()
     cr.translate(SIZE/2, SIZE * 0.46)
     cr.rotate(math.radians(-4))
-    cr.select_font_face("Caveat", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+    cr.select_font_face("Inter Display", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(72)
     ext = cr.text_extents("NYXUS")
     tx = -ext.width/2 - ext.x_bearing
@@ -235,7 +235,7 @@ def gen_icon(app_id, label, color):
     cr.save()
     cr.translate(SIZE/2, SIZE * 0.74)
     cr.rotate(math.radians(5))
-    cr.select_font_face("Caveat", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+    cr.select_font_face("Inter Display", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     cr.set_font_size(30)
     ext2 = cr.text_extents(label)
     tx2 = -ext2.width/2 - ext2.x_bearing

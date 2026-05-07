@@ -80,6 +80,14 @@ from typing import List, Tuple
 
 import gi
 gi.require_version("Gtk", "4.0")
+
+# ── DARK MIRROR chrome (rev r13): unified DARK MIRROR theme on every window ──
+try:
+    import nyxus_chrome  # noqa: F401  (auto-installs CHROME_CSS via Gtk import hook)
+except Exception as _nyx_chrome_err:
+    import logging as _l
+    _l.getLogger("nyxus").debug("nyxus_chrome unavailable: %s", _nyx_chrome_err)
+# ─────────────────────────────────────────────────────────────────────────────
 from gi.repository import Gtk, GLib
 
 try:

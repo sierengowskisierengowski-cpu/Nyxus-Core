@@ -284,8 +284,8 @@ class GraffitiBackground(Gtk.DrawingArea):
 # Reference: the godsapp screenshot — transparent window so the graffiti
 # mural shows through, translucent dark inner panels, semi-opaque entries
 # /textviews where text needs to be readable, and rainbow-cycling neon
-# button outlines with handwritten Caveat labels. We promote godsapp's
-# `* { font-family: Caveat }` universal rule across every NYXUS app, with
+# button outlines with handwritten Inter labels. We promote godsapp's
+# `* { font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif}` universal rule across every NYXUS app, with
 # a `.nyx-mono` opt-out class for places that genuinely need a monospace
 # face (terminals, code editors, log views). This CSS is loaded at
 # Gtk.STYLE_PROVIDER_PRIORITY_USER so it overrides each app's own
@@ -358,7 +358,7 @@ vte-terminal, vte-terminal * {
 .nyx-headline, .nyx-headline *,
 .nyx-app-title, .nyx-section-title,
 .nyx-rainbow-title, .nyx-h1, .nyx-h2, .nyx-h3 {
-    font-family: 'Architects Daughter', 'Caveat', 'Patrick Hand', cursive;
+    font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
 }
 .nyx-h1 { font-size: 28px; color: #ffffff; }
 .nyx-h2 { font-size: 22px; color: #e8edf5; }
@@ -378,7 +378,7 @@ headerbar, .titlebar {
 headerbar label, headerbar label.title,
 .titlebar label, .titlebar label.title {
     color: #e8edf5;
-    font-family: 'Architects Daughter', 'Caveat', 'Inter', cursive;
+    font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
     text-shadow: 0  1px 0 rgba(0, 0, 0, 0.65),
                  0 -1px 0 rgba(255, 255, 255, 0.10);
 }
@@ -694,7 +694,7 @@ tooltip, tooltip.background {
 }
 
 /* -- Phantom @nyx_* consumer overrides (in case @define-color leaks) ----- *
- * Phantom's nyxus_theme.css defines purple/pink/gold tokens used for      *
+ * Phantom's nyxus_theme.css defines DARK MIRROR monochrome tokens used for      *
  * window bg, headerbars, h1/h2/h3, .nyx-card-active. We override the      *
  * consumers directly here at PRIORITY_USER so phantom looks identical to  *
  * every other NYXUS app.                                                   */
@@ -951,7 +951,7 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
     behaviour — it embedded the mural inside the app, which was wrong).
 
     What this function still does:
-      * installs the global NYXUS CSS provider (Caveat font, neon
+      * installs the global NYXUS CSS provider (Inter font, neon
         button outlines, frosted-glass panels, GodsApp visual language)
       * forces a sensible 900x650 default window size and clears any
         fullscreen/maximize state the app may have set

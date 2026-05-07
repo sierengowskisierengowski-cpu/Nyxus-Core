@@ -176,7 +176,7 @@ def sketch_rect(cr, x, y, w, h, *, jitter=0.6, key=None):
     sketch_line(cr, x, y+h, x, y,    jitter=jitter, key=(k, "l"))
 
 def draw_caveat(cr, x, y, text, *, size=16, color=(0,0,0,0.95),
-                family="Caveat", wrap_w=None):
+                family="Inter Display", wrap_w=None):
     cr.save(); cr.set_source_rgba(*color)
     layout = PangoCairo.create_layout(cr)
     fd = Pango.FontDescription()
@@ -285,7 +285,7 @@ class SketchButton(Gtk.DrawingArea):
                     key=("btn", id(self), w, h))
         layout = PangoCairo.create_layout(cr)
         fd = Pango.FontDescription()
-        fd.set_family("Caveat"); fd.set_size(int(14 * Pango.SCALE))
+        fd.set_family("Inter Display"); fd.set_size(int(14 * Pango.SCALE))
         fd.set_weight(Pango.Weight.BOLD if self.primary else Pango.Weight.NORMAL)
         layout.set_font_description(fd); layout.set_text(self.label, -1)
         tw, th = layout.get_pixel_size()
@@ -789,7 +789,7 @@ class StickiesWindow(Gtk.ApplicationWindow):
 
     def _build_css(self):
         css = b"""
-* { font-family: 'Caveat', 'Patrick Hand', cursive; }
+* { font-family: 'Inter Display', 'Inter Display', cursive; }
 window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 .nyx-toolbar { background-color: rgba(10,10,18,0.96); padding: 4px 10px;
     border-bottom: 1px solid rgba(255,0,255,0.12); }
@@ -801,7 +801,7 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
     background-image: none;
     color: #15101e;
     caret-color: #15101e;
-    font-family: 'Caveat', 'Patrick Hand', cursive;
+    font-family: 'Inter Display', 'Inter Display', cursive;
     font-size: 18px;
 }
 .nyx-sticky-text { border: none; }

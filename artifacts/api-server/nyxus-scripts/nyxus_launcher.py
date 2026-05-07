@@ -8,7 +8,7 @@ Fuzzy search across:
   • shell commands (with the !cmd prefix)
   • web search (with the ?query prefix → opens xdg-open https://duckduckgo.com/?q=)
 
-GTK4 + the unified NYXUS chrome (graffiti background, frosted glass,
+GTK4 + the unified NYXUS chrome (DARK MIRROR glass, frosted glass,
 rainbow-markup title, scrambling letters in headings).
 
 Bind to a Hyprland keybind in ~/.config/hypr/hyprland.conf:
@@ -430,13 +430,13 @@ window.nyxus-launcher {{
     border-radius: 6px;
 }}
 .nyxus-title {{
-    font-family: 'Caveat', 'Patrick Hand', sans-serif;
+    font-family: 'Inter Display', 'Inter Display', sans-serif;
     font-size: 28px;
     margin-bottom: 4px;
     text-shadow: 0 0 10px rgba(255, 0, 255, 0.45);
 }}
 .nyxus-search {{
-    font-family: 'Caveat', 'Patrick Hand', sans-serif;
+    font-family: 'Inter Display', 'Inter Display', sans-serif;
     font-size: 22px;
     background: rgba(15, 12, 24, 0.92);
     color: {WHITE_PURE};
@@ -469,17 +469,17 @@ window.nyxus-launcher {{
     background: rgba(255, 0, 255, 0.12);
 }}
 .nyxus-name {{
-    font-family: 'Caveat', 'Patrick Hand', sans-serif;
+    font-family: 'Inter Display', 'Inter Display', sans-serif;
     font-size: 18px;
     color: {WHITE_PURE};
 }}
 .nyxus-cmt {{
-    font-family: 'Caveat', sans-serif;
+    font-family: 'Inter Display', sans-serif;
     font-size: 14px;
     color: rgba(255, 255, 255, 0.55);
 }}
 .nyxus-hint {{
-    font-family: 'Caveat', sans-serif;
+    font-family: 'Inter Display', sans-serif;
     font-size: 13px;
     color: rgba(255, 255, 255, 0.42);
 }}

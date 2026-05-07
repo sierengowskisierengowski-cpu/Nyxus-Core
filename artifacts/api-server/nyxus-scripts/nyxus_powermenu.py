@@ -200,12 +200,12 @@ window.nyxus-power {{
     border-radius: 6px;
 }}
 .nyxus-title {{
-    font-family: 'Caveat', sans-serif;
+    font-family: 'Inter Display', sans-serif;
     font-size: 32px;
     text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
 }}
 .nyxus-sub {{
-    font-family: 'Caveat', sans-serif;
+    font-family: 'Inter Display', sans-serif;
     font-size: 16px;
     color: rgba(255, 255, 255, 0.55);
 }}
@@ -214,7 +214,7 @@ window.nyxus-power {{
     border: 2px solid rgba(255, 0, 255, 0.40);
     border-radius: 4px;
     color: {WHITE_PURE};
-    font-family: 'Caveat', sans-serif;
+    font-family: 'Inter Display', sans-serif;
     transition: all 0.12s ease;
 }}
 .nyxus-pwrbtn:hover {{
