@@ -20,7 +20,7 @@
       "escape": false
     },
     "custom/quick-settings": {
-      "format": "",
+      "format": " SET",
       "tooltip": true,
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Quick Settings</span>\n<span size='small' foreground='#a8b0bd'>Open the System Settings panel\nTheme · Display · Keyboard · Power\nClick to open</span>",
       "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.settings\"; then hyprctl dispatch focuswindow class:io.nyxus.settings; else setsid python3 /home/nyx/.nyxus/nyxus_settings.py >/tmp/nyxus-settings.log 2>&1 < /dev/null & fi'"
@@ -32,9 +32,9 @@
       "on-click": "/home/nyx/.local/bin/nyxus-start"
     },
     "network": {
-      "format-wifi":         "",
-      "format-ethernet":     "",
-      "format-disconnected": "",
+      "format-wifi":         " {signalStrength}%",
+      "format-ethernet":     " ETH",
+      "format-disconnected": " OFF",
       "tooltip": true,
       "tooltip-format-wifi":         "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Network</span>\n<span size='small' foreground='#a8b0bd'>Wi-Fi · {essid}\nSignal: {signalStrength}%\nIP: {ipaddr}\nClick to open Network Settings</span>",
       "tooltip-format-ethernet":     "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Network</span>\n<span size='small' foreground='#a8b0bd'>Ethernet · {ifname}\nIP: {ipaddr}\nClick to open Network Settings</span>",
@@ -42,9 +42,9 @@
       "on-click": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'"
     },
     "pulseaudio": {
-      "format":         "{icon}",
-      "format-bluetooth": "{icon}",
-      "format-muted":   "",
+      "format":           " {volume}",
+      "format-bluetooth": " {volume}",
+      "format-muted":     " MUTE",
       "format-icons": { "default": ["", "", ""] },
       "tooltip": true,
       "tooltip-format":        "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Volume</span>\n<span size='small' foreground='#a8b0bd'>{volume}% · {desc}\nScroll to change · Click to open Audio Settings</span>",
@@ -55,7 +55,7 @@
       "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
     },
     "backlight": {
-      "format": "{icon}",
+      "format": " {percent}%",
       "format-icons": ["", "", "", "", "", "", "", "", ""],
       "tooltip": true,
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Brightness</span>\n<span size='small' foreground='#a8b0bd'>{percent}%\nScroll to change · Click to open Display Settings</span>",
@@ -65,11 +65,11 @@
     },
     "battery": {
       "states": { "warning": 30, "critical": 15 },
-      "format":           "{icon}",
-      "format-charging":  "{icon}",
-      "format-plugged":   "{icon}",
-      "format-full":      "{icon}",
-      "format-discharging": "{icon}",
+      "format":             " {capacity}%",
+      "format-charging":    " {capacity}%",
+      "format-plugged":     " {capacity}%",
+      "format-full":        " 100%",
+      "format-discharging": " {capacity}%",
       "format-icons": ["", "", "", "", ""],
       "tooltip": true,
       "tooltip-format":              "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Battery</span>\n<span size='small' foreground='#a8b0bd'>{capacity}%\nClick to open Power Settings</span>",
