@@ -216,11 +216,13 @@ HYPR_CONF_D="$HYPR_DIR/conf.d"
 HYPR_RULES="$HYPR_CONF_D/nyxus-windowrules.conf"
 HYPR_BLUR="$HYPR_CONF_D/nyxus-hyprland-blur.conf"
 HYPR_OPACITY="$HYPR_CONF_D/nyxus-hyprland-opacity.conf"
+HYPR_GENERAL="$HYPR_CONF_D/nyxus-hyprland-general.conf"
 HYPR_FROST_OLD="$HYPR_CONF_D/nyxus-seattle-frost.conf"
 HYPR_MAIN="$HYPR_DIR/hyprland.conf"
 SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-windowrules.conf'
 BLUR_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf'
 OPACITY_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf'
+GENERAL_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-general.conf'
 
 mkdir -p "$HYPR_CONF_D"
 chown -R "$REAL_USER:$REAL_USER" "$HYPR_DIR"
@@ -314,6 +316,33 @@ if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_OPACITY" ]]; then
     } >> "$HYPR_MAIN"
     chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
     ok "appended opacity source line to $HYPR_MAIN"
+  fi
+fi
+
+# ── DARK MIRROR FEATURE 4: window edges (white→off-white→black border)
+# col.active_border gradient + 2px border + 15px rounding + ink shadow.
+# Combined with blur + opacity, every window reads as a starlight-rimmed
+# dark glass tile floating above the wallpaper. Without this file the
+# Hyprland default hot-pink border bleeds through and breaks the look.
+if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-general.conf" -o "$HYPR_GENERAL"; then
+  chown "$REAL_USER:$REAL_USER" "$HYPR_GENERAL"
+  chmod 644 "$HYPR_GENERAL"
+  ok "wrote $HYPR_GENERAL  (DARK MIRROR window edges)"
+else
+  warn "could not download nyxus-hyprland-general.conf — DARK MIRROR border skipped"
+fi
+
+if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_GENERAL" ]]; then
+  if grep -qF "nyxus-hyprland-general.conf" "$HYPR_MAIN"; then
+    ok "hyprland.conf already sources nyxus-hyprland-general.conf"
+  else
+    {
+      echo
+      echo "# NYXUS — DARK MIRROR window edges (added by nyxus-resync-all.sh)"
+      echo "$GENERAL_SOURCE_LINE"
+    } >> "$HYPR_MAIN"
+    chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
+    ok "appended general source line to $HYPR_MAIN"
   fi
 fi
 

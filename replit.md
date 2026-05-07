@@ -35,7 +35,56 @@ NYXUS is an Arch Linux-based operating system providing a suite of native Python
 - `nyxus-scripts/nyxus_chrome.py`: Source of truth for unified GTK4 application styling.
 - `iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf`: Hyprland configuration template.
 
-## Visual System — COSMIC INK SWIRL · DARK GLASS WAYBAR (LOCKED · rev 2026-05-06v)
+## Visual System — DARK MIRROR · UNIFIED FROSTED GLASS (LOCKED · rev 2026-05-07 r12)
+
+**Apps + flyout (rev 2026-05-07 r12 — replaces EMBOSSED CREAM PAPER for apps):**
+All 11 GTK4 apps (godsapp, home, intel, notepad, passwords, phantom, sage,
+shield, start, studio, weather) and the flyout (panel) now share one
+unified DARK MIRROR look enforced centrally by `nyxus_chrome.py` CHROME_CSS
+loaded at `Gtk.STYLE_PROVIDER_PRIORITY_USER` (overrides every per-app
+provider — no app code changes needed). Per-app neon palettes (card-pink,
+card-cyan, card-gold, btn-primary-*, phantom @nyx_purple/pink/gold, etc.)
+are all collapsed to the same monochrome glass.
+
+- **Window root**: fully transparent — Hyprland blur paints the wallpaper.
+- **Panels / cards / frames / headerbars**: `rgba(8,12,20,0.55)` dark glass
+  with `rgba(255,255,255,0.10)` white hairline border + 14px radius.
+- **Inputs / hovered cards**: `rgba(15,20,32,0.72)` deeper glass.
+- **Tooltips / popovers / dropdowns**: `rgba(5,7,12,0.82–0.96)` deepest glass.
+- **Text**: `#e8edf5` primary off-white, `#c8ccd6` secondary, `#6a6e78`
+  tertiary, `#ffffff` only on hover halos + selected pip.
+- **Hyprland active border**: pure white → off-white `#e8edf5` → black
+  gradient at 135° (starlight rim-light fading into ink). Inactive border
+  is the same gradient at low alpha.
+- **Hyprland blur**: size 14, 4 passes, brightness 0.92 (darkens the
+  wallpaper behind the dark glass), vibrancy 0.18, noise 0.06.
+- **Hyprland window opacity**: 0.92 focused / 0.78 unfocused, applied
+  uniformly to every NYXUS class (`org.nyxus.*`, `nyxus-*`, the 11 apps,
+  the flyout) via `nyxus-hyprland-opacity.conf`.
+- **No gold, no pink, no cyan, no green, no purple anywhere in apps**.
+  Monochrome only. Every accent is white / off-white / black.
+
+**Waybar (unchanged from rev 2026-05-06v):**
+The waybar shells, pebbles, beads, ticker, plaques, and tooltips remain
+**DARK FROSTED GLASS** — translucent near-black `rgba(8,12,20,0.58)` shells
+with darker blue-black pebbles `rgba(15,20,32,0.72)`, light text `#e8edf5`,
+cool silver-white starlight halos `rgba(230,240,255, …)` on hover. **NO
+GOLD anywhere** in the waybar — silver/cool-white only. Workspaces appear
+ONLY on the left bar. The OWL signature lives on the bottom bar
+modules-right next to Panel.
+
+The wallpaper is the **black-hole / cosmic ink swirl**
+(`nyxus-ink-swirl.png`, 2560×1396, mostly black with silver-white wisps).
+
+---
+
+### Legacy reference — EMBOSSED CREAM PAPER (rev 2026-05-06v · superseded for apps)
+
+The cream-paper rules below described the previous app + waybar treatment.
+They are kept for reference only — the waybar dark-glass spec above
+supersedes the cream waybar rules, and the DARK MIRROR spec above
+supersedes the cream chrome for apps. Do NOT use cream paper rules in new
+work unless the user explicitly reverts the lock.
 
 The wallpaper is the **black-hole / cosmic ink swirl** (`nyxus-ink-swirl.png`,
 2560×1396, mostly black with silver-white wisps). The waybar shells, pebbles,
@@ -153,12 +202,13 @@ floating waybar modules.
 
 ## User preferences
 
-- **Visual style is LOCKED** to EMBOSSED CREAM PAPER — see "Visual System"
-  section above. Every future change (apps, widgets, web properties, ISO
-  branding, lockscreen, splash, docs) MUST follow the locked palette,
-  fonts, emboss recipe, and slab-depth rules. No neon, no dark mode, no
-  alternate themes. Only allowed accent color: per-workspace identity
-  stripes on the bottom waybar.
+- **Visual style is LOCKED** to DARK MIRROR (apps + flyout) + DARK GLASS
+  WAYBAR (waybar shells) — see "Visual System" section above (rev
+  2026-05-07 r12). Every future change MUST follow the locked monochrome
+  palette: white / off-white `#e8edf5` / `#c8ccd6` / black / dark-glass
+  rgba(8,12,20,0.55). No neon, no gold, no per-app colors, no alternate
+  themes. The only accent permitted is per-workspace identity stripes on
+  the bottom waybar.
 - **Brand-naming lock**: "NYX" = ISO file only. "NYXUS" = OS + every
   component. "SIERENGOWSKI" = creator wordmark on wallpaper + plaques.
 - **Propose-before-build for visual direction changes**: when the user
