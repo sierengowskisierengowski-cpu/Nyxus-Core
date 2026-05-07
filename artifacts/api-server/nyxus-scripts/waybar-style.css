@@ -248,9 +248,9 @@ window#waybar.right {
         0px 0px 12px rgba(230, 240, 255, 0.50);
 }
 
-#battery.warning  { color: #b8782a; }
-#battery.critical { color: #b03030; }
-#network.disconnected { color: #b03030; }
+#battery.warning  { color: #c8ccd6; }
+#battery.critical { color: #c8ccd6; }
+#network.disconnected { color: #c8ccd6; }
 
 /* ── 7. BOTTOM BAR · Start | tray | Panel | Notifications ───────────────── */
 /* Sticker pills: WHITE FILL + thin black 8-direction outline around the

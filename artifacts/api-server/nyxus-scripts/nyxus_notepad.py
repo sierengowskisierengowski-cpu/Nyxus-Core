@@ -135,17 +135,17 @@ def log(msg: str):
 # Variable names kept identical so the rest of the file (2700 lines of
 # Cairo paints + GTK CSS) needs zero further edits — the rename happens
 # only in the values below.
-BG_DARK     = (0.961, 0.953, 0.937)   # #f5f3ef cream paper (was #000000)
+BG_DARK     = (0.961, 0.953, 0.937)   # #e8edf5 cream paper (was #000000)
 BG_PANEL    = (0.929, 0.918, 0.898)   # #edeae5 fog tier
 BG_RAISED   = (1.000, 1.000, 1.000)   # white card pop on cream
-INK_BRIGHT  = (0.102, 0.094, 0.086)   # #1a1816 pencil ink (was near-white)
-INK_DIM     = (0.345, 0.325, 0.298)   # #58524c mid pencil
-INK_FAINT   = (0.620, 0.580, 0.541)   # #9e948a faded pencil
+INK_BRIGHT  = (0.102, 0.094, 0.086)   # #000000 pencil ink (was near-white)
+INK_DIM     = (0.345, 0.325, 0.298)   # #6a6e78 mid pencil
+INK_FAINT   = (0.620, 0.580, 0.541)   # #6a6e78 faded pencil
 
 # Accent colors → muted Seattle-frost tones (NOT neon).
 # Names kept (NEON_*, ACCENT_*) so all existing button/icon code still works.
-NEON_PINK   = (0.102, 0.094, 0.086)   # #1a1816 charcoal (was #ff00ff)
-NEON_BLUE   = (0.345, 0.325, 0.298)   # #58524c mid pencil (was #0088ff)
+NEON_PINK   = (0.102, 0.094, 0.086)   # #000000 charcoal (was #e8edf5)
+NEON_BLUE   = (0.345, 0.325, 0.298)   # #6a6e78 mid pencil (was #0088ff)
 NEON_GREEN  = (0.220, 0.388, 0.275)   # #386346 muted moss (was #39ff14)
 ACCENT_GOLD = (0.733, 0.561, 0.180)   # #bb8f2e weathered brass (kept gold-ish)
 ACCENT_PURP = (0.357, 0.286, 0.451)   # #5b4973 dusk purple (was #8b5cf6)
@@ -1014,7 +1014,7 @@ window, .nyx-bg {
     border: none; outline: none; box-shadow: none;
     color: rgba(240,235,250,0.92);
     font-size: 14px; font-family: 'Caveat', cursive;
-    caret-color: #ff00ff;
+    caret-color: #e8edf5;
 }
 .nyxus-entry:focus { outline: none; box-shadow: none; }
 
@@ -1025,7 +1025,7 @@ window, .nyx-bg {
     font-family: 'Caveat', cursive;
     font-size: 22px; font-weight: bold;
     padding: 4px 14px;
-    caret-color: #ff00ff;
+    caret-color: #e8edf5;
 }
 .nyx-title-entry:focus { outline: none; box-shadow: none; }
 
@@ -1034,7 +1034,7 @@ window, .nyx-bg {
     color: rgba(240,235,250,0.95);
     font-family: 'Caveat', 'Patrick Hand', cursive;
     font-size: 15px;
-    caret-color: #ff00ff;
+    caret-color: #e8edf5;
     padding: 0 14px;
 }
 .nyx-editor { background-color: transparent; }
@@ -1054,12 +1054,12 @@ scrollbar slider:hover { background-color: rgba(255,0,255,0.55); }
 scrollbar { background-color: transparent; }
 
 .nyx-headline {
-    color: #ff00ff;
+    color: #e8edf5;
     text-shadow: 0 0 10px rgba(255,0,255,0.55);
     font-size: 17px; font-weight: bold;
 }
 .nyx-meta { color: rgba(240,235,250,0.45); font-size: 11px; }
-.nyx-accent { color: #ff00ff; }
+.nyx-accent { color: #e8edf5; }
 .nyx-accent2 { color: #0088ff; }
 .nyx-accent3 { color: #39ff14; }
 
@@ -1085,7 +1085,7 @@ scrollbar { background-color: transparent; }
     border-radius: 6px;
     padding: 12px;
     font-family: 'Caveat', cursive; font-size: 20px;
-    caret-color: #ff00ff;
+    caret-color: #e8edf5;
 }
 .nyx-cmdpalette row {
     background-color: transparent;
@@ -1147,7 +1147,7 @@ class Editor(Gtk.Box):
             scale=0.92)
         # Headings
         self.buf.create_tag("h1", weight=Pango.Weight.BOLD,
-                            scale=2.2, foreground="#ff00ff",
+                            scale=2.2, foreground="#e8edf5",
                             pixels_above_lines=10, pixels_below_lines=4)
         self.buf.create_tag("h2", weight=Pango.Weight.BOLD,
                             scale=1.7, foreground="#ff66ff",
@@ -1365,7 +1365,7 @@ class Exporter:
 body {{ font-family: 'Caveat', 'Patrick Hand', cursive;
         background:#000000; color:#f0eef8;
         max-width:780px; margin:40px auto; padding:0 20px; }}
-h1,h2,h3 {{ color:#ff00ff; }}
+h1,h2,h3 {{ color:#e8edf5; }}
 a {{ color:#39ff14; }}
 code {{ background:#1a1530; color:#ff88ff;
         padding:2px 5px; border-radius:3px; font-family:monospace; }}
@@ -1388,7 +1388,7 @@ td,th {{ border:1px solid #444; padding:4px 8px; }}
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
             "title", parent=styles["Title"],
-            fontSize=22, textColor=HexColor("#ff00ff"),
+            fontSize=22, textColor=HexColor("#e8edf5"),
             spaceAfter=14)
         body_style = ParagraphStyle(
             "body", parent=styles["BodyText"],
@@ -1560,7 +1560,7 @@ class FindBar(Gtk.Box):
         self._tag = editor.buf.get_tag_table().lookup("find_match")
         if self._tag is None:
             self._tag = editor.buf.create_tag("find_match",
-                background="#ff00ff",
+                background="#e8edf5",
                 foreground="#000000")
         self._regex = False
 

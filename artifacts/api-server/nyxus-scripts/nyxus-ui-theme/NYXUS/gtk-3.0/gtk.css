@@ -26,9 +26,9 @@
 @define-color border         #1a1525;
 @define-color border_accent  #3a2a5a;
 @define-color red            #f87171;
-@define-color green          #34d399;
-@define-color yellow         #fb923c;
-@define-color cyan           #22d3ee;
+@define-color green          #c8ccd6;
+@define-color yellow         #e8edf5;
+@define-color cyan           #c8ccd6;
 
 /* ── Reset & Base ──────────────────────────────────────────── */
 * {

@@ -24,7 +24,7 @@ except Exception:
     HAS_CHROME = False
     def install_chrome(win, key="_powermenu"): return None
     def rainbow_markup(s: str) -> str:
-        return f"<span foreground='#ff00ff' font_weight='bold'>{s}</span>"
+        return f"<span foreground='#e8edf5' font_weight='bold'>{s}</span>"
 
 WIN_W, WIN_H = 560, 360
 
@@ -51,7 +51,7 @@ ACTIONS = [
         lambda: run("systemctl suspend")),
     ("Hibernate","H", "🛌", "#ff8800",
         lambda: run("systemctl hibernate")),
-    ("Reboot",   "R", "↻",  "#ff00ff",
+    ("Reboot",   "R", "↻",  "#e8edf5",
         lambda: run("systemctl reboot")),
     ("Shutdown", "P", "⏻",  "#ff3030",
         lambda: run("systemctl poweroff")),
@@ -170,7 +170,7 @@ window.nyxus-power {
 }
 .nyxus-pwrbtn:hover {
     background: rgba(255, 0, 255, 0.18);
-    border-color: #ff00ff;
+    border-color: #e8edf5;
     box-shadow: 0 0 16px rgba(255, 0, 255, 0.55);
 }
 .nyxus-pwrbtn:active {

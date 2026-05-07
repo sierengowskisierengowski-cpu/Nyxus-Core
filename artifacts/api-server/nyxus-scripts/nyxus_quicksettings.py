@@ -537,7 +537,7 @@ window#actioncenter > * {
     border-bottom: 2px solid rgba(255, 40, 180, 0.30);
 }
 .ac-title {
-    color: #cc44ff;
+    color: #e8edf5;
     font-size: 22px;
     font-weight: bold;
     letter-spacing: 5px;
@@ -552,7 +552,7 @@ window#actioncenter > * {
     letter-spacing: 3px;
 }
 .ac-link {
-    color: #cc44ff; font-size: 15px;
+    color: #e8edf5; font-size: 15px;
     background: transparent;
     border: none;
     padding: 2px 6px;
@@ -567,7 +567,7 @@ window#actioncenter > * {
     padding: 8px 12px;
     margin-bottom: 4px;
 }
-.ac-notif-app { color: #cc44ff; font-size: 13px; letter-spacing: 1px; }
+.ac-notif-app { color: #e8edf5; font-size: 13px; letter-spacing: 1px; }
 .ac-notif-sum { color: #f0e8ff; font-size: 16px; font-weight: bold; }
 .ac-notif-body { color: rgba(220, 200, 240, 0.75); font-size: 14px; }
 .ac-notif-empty {
@@ -593,7 +593,7 @@ window#actioncenter > * {
 }
 .ac-tile.on {
     background: rgba(255, 40, 180, 0.24);
-    border-color: #cc44ff;
+    border-color: #e8edf5;
     color: #ffffff;
     box-shadow: 0 0 14px rgba(255, 40, 180, 0.50);
 }
@@ -613,7 +613,7 @@ window#actioncenter > * {
     font-family: 'Font Awesome 6 Free', 'JetBrainsMono Nerd Font',
                  'Symbols Nerd Font Mono';
     font-size: 16px;
-    color: #cc44ff;
+    color: #e8edf5;
     text-shadow: 0 0 6px rgba(255, 40, 180, 0.50);
     margin-right: 8px;
 }
@@ -623,16 +623,16 @@ window#actioncenter > * {
     letter-spacing: 1px;
 }
 .ac-slider-val {
-    color: #cc44ff;
+    color: #e8edf5;
     font-size: 14px;
     font-weight: bold;
     min-width: 40px;
     text-shadow: 0 0 6px rgba(255, 40, 180, 0.40);
 }
 scale trough    { background: rgba(255, 40, 180, 0.18); border-radius: 2px; min-height: 5px; }
-scale highlight { background: #cc44ff; border-radius: 2px; }
+scale highlight { background: #e8edf5; border-radius: 2px; }
 scale slider    {
-    background: #cc44ff;
+    background: #e8edf5;
     min-width: 16px; min-height: 16px;
     border-radius: 4px; border: none;
     box-shadow: 0 0 8px rgba(255, 40, 180, 0.45);
@@ -651,7 +651,7 @@ button.ac-chev {
     padding: 0 6px;
     margin-left: 6px;
 }
-button.ac-chev:hover { color: #cc44ff; border-color: #cc44ff; }
+button.ac-chev:hover { color: #e8edf5; border-color: #e8edf5; }
 
 .ac-device-row {
     background: rgba(15, 12, 24, 0.95);
@@ -664,7 +664,7 @@ button.ac-chev:hover { color: #cc44ff; border-color: #cc44ff; }
     color: #f0e8ff;
 }
 .ac-device-row.on {
-    color: #cc44ff;
+    color: #e8edf5;
     font-weight: bold;
 }
 
@@ -681,7 +681,7 @@ button.ac-chev:hover { color: #cc44ff; border-color: #cc44ff; }
 .ac-wifirow:hover { background: rgba(255, 40, 180, 0.10); }
 .ac-wifirow.active { background: rgba(255, 40, 180, 0.12); }
 .ac-wifi-ssid { color: #f0e8ff; font-size: 16px; font-weight: bold; }
-.ac-wifirow.active .ac-wifi-ssid { color: #cc44ff; }
+.ac-wifirow.active .ac-wifi-ssid { color: #e8edf5; }
 .ac-wifi-state { color: rgba(180, 150, 230, 0.75); font-size: 13px; }
 .ac-wifi-sig {
     font-family: 'Font Awesome 6 Free', 'JetBrainsMono Nerd Font';
@@ -705,7 +705,7 @@ button.ac-btn {
 }
 button.ac-btn:hover {
     background: rgba(255, 40, 180, 0.18);
-    border-color: #cc44ff;
+    border-color: #e8edf5;
     color: #f8f0ff;
 }
 button.ac-btn:disabled {
@@ -721,7 +721,7 @@ entry {
     padding: 6px 10px;
     font-size: 14px;
 }
-entry:focus { border-color: #cc44ff; }
+entry:focus { border-color: #e8edf5; }
 
 checkbutton { color: rgba(220, 200, 240, 0.80); font-size: 14px; }
 checkbutton check {
@@ -731,8 +731,8 @@ checkbutton check {
     border-radius: 2px;
 }
 checkbutton check:checked {
-    background: #cc44ff;
-    border-color: #cc44ff;
+    background: #e8edf5;
+    border-color: #e8edf5;
 }
 
 separator { background: rgba(255, 40, 180, 0.18); min-height: 1px; }
@@ -742,7 +742,7 @@ scrollbar slider {
     border-radius: 2px;
     min-width: 6px;
 }
-scrollbar slider:hover { background: #cc44ff; }
+scrollbar slider:hover { background: #e8edf5; }
 """
 
 

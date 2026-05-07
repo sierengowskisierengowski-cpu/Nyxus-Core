@@ -435,12 +435,12 @@ window { background-color: transparent; color: rgba(232,224,245,0.92); }
 }
 .nav-btn:hover { background-color: rgba(255,0,255,0.10); color: rgba(255,180,255,0.95); }
 .nav-active-pink   { background: rgba(255,0,255,0.14);  color: #ff88ff;
-                     border-left: 4px solid #ff00ff;
+                     border-left: 4px solid #e8edf5;
                      box-shadow: inset 4px 0 16px rgba(255,0,255,0.14); }
 .nav-active-red    { background: rgba(255,30,30,0.14);  color: #ff6655;
                      border-left: 4px solid #ff2020; }
 .nav-active-orange { background: rgba(255,85,0,0.14);  color: #ff8855;
-                     border-left: 4px solid #ff5500; }
+                     border-left: 4px solid #e8edf5; }
 .nav-active-purple { background: rgba(204,0,255,0.14); color: #dd88ff;
                      border-left: 4px solid #cc00ff; }
 .nav-active-blue   { background: rgba(0,136,255,0.14); color: #66bbff;
@@ -452,11 +452,11 @@ window { background-color: transparent; color: rgba(232,224,245,0.92); }
 
 scale trough { background-color: rgba(255,255,255,0.08); border-radius: 2px; min-height: 8px; }
 scale highlight { border-radius: 2px; min-height: 8px; }
-scale.pink   highlight { background-color: #ff00ff; }
+scale.pink   highlight { background-color: #e8edf5; }
 scale.blue   highlight { background-color: #0088ff; }
 scale.green  highlight { background-color: #39ff14; }
 scale.yellow highlight { background-color: #ffff00; }
-scale.orange highlight { background-color: #ff5500; }
+scale.orange highlight { background-color: #e8edf5; }
 scale.purple highlight { background-color: #cc00ff; }
 scale.red    highlight { background-color: #ff2020; }
 scale slider { min-width:18px; min-height:18px; border-radius:2px; background:white;
@@ -468,7 +468,7 @@ scale slider { min-width:18px; min-height:18px; border-radius:2px; background:wh
     padding: 9px 20px; font-size: 16px; font-weight: bold;
     box-shadow: 0 0 8px rgba(255,0,255,0.18);
 }
-.neon-btn:hover { background-color: rgba(255,0,255,0.26); border-color:#ff00ff;
+.neon-btn:hover { background-color: rgba(255,0,255,0.26); border-color:#e8edf5;
                   box-shadow: 0 0 18px rgba(255,0,255,0.40); }
 .neon-btn-blue  { background-color:rgba(0,136,255,0.14); color:#66bbff;
                   border:2px solid rgba(0,136,255,0.45); border-radius:4px;
@@ -489,7 +489,7 @@ scale slider { min-width:18px; min-height:18px; border-radius:2px; background:wh
 .neon-btn-orange{ background-color:rgba(255,85,0,0.14); color:#ff8855;
                   border:2px solid rgba(255,85,0,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
-.neon-btn-orange:hover { background-color:rgba(255,85,0,0.26); border-color:#ff5500; }
+.neon-btn-orange:hover { background-color:rgba(255,85,0,0.26); border-color:#e8edf5; }
 .neon-btn-purple{ background-color:rgba(200,0,255,0.14); color:#dd88ff;
                   border:2px solid rgba(200,0,255,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
@@ -498,9 +498,9 @@ scale slider { min-width:18px; min-height:18px; border-radius:2px; background:wh
 entry {
     background-color: rgba(255,255,255,0.05); color: rgba(232,224,245,0.90);
     border: 2px solid rgba(255,0,255,0.30); border-radius: 4px;
-    padding: 7px 14px; font-size: 16px; caret-color: #ff00ff;
+    padding: 7px 14px; font-size: 16px; caret-color: #e8edf5;
 }
-entry:focus { border-color: #ff00ff; box-shadow: 0 0 12px rgba(255,0,255,0.25); }
+entry:focus { border-color: #e8edf5; box-shadow: 0 0 12px rgba(255,0,255,0.25); }
 entry text { background-color: transparent; }
 
 scrollbar { background-color: transparent; }
