@@ -1,0 +1,103 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  NYXUS · GRUB Theme · Cosmic Ink Swirl · Dark Glass
+#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ─────────────────────────────────────────────────────────────────────────────
+
+desktop-image: "background.png"
+desktop-color: "#000000"
+
+title-text:        ""
+message-color:     "#a8b0bd"
+message-bg-color:  "#000000"
+terminal-font:     "DejaVu Sans Mono Regular 12"
+terminal-box:      "select_*.png"
+terminal-left:     "10%"
+terminal-top:      "10%"
+terminal-width:    "80%"
+terminal-height:   "80%"
+terminal-border:   "1"
+
+# ── NYXUS wordmark + tagline (top center) ────────────────────────────────────
++ image {
+    file = "wordmark.png"
+    top  = 12%
+    left = 50%-450
+    width  = 900
+    height = 180
+}
+
++ label {
+    text = "WELCOME  TO  THE  DARKSIDE"
+    color = "#e6f0ff"
+    font  = "DejaVu Sans Bold 14"
+    top   = 12%+200
+    left  = 0
+    width = 100%
+    align = "center"
+}
+
++ label {
+    text = "NYXUS  ·  SIERENGOWSKI  ·  2026"
+    color = "#a8b0bd"
+    font  = "DejaVu Sans Mono Regular 11"
+    top   = 12%+232
+    left  = 0
+    width = 100%
+    align = "center"
+}
+
+# ── Boot menu ────────────────────────────────────────────────────────────────
++ boot_menu {
+    left  = 25%
+    top   = 45%
+    width = 50%
+    height = 35%
+
+    item_font  = "DejaVu Sans Bold 16"
+    item_color = "#e8edf5"
+    selected_item_color = "#d4a73a"
+    selected_item_pixmap_style = "select_*.png"
+
+    item_height  = 44
+    item_padding = 6
+    item_spacing = 6
+    icon_width   = 0
+    icon_height  = 0
+    item_icon_space = 0
+}
+
+# ── Footer ───────────────────────────────────────────────────────────────────
++ label {
+    text  = "Press ENTER to boot · ↑↓ to select · E to edit · C for command-line"
+    color = "#6b7383"
+    font  = "DejaVu Sans Mono Regular 10"
+    top   = 100%-60
+    left  = 0
+    width = 100%
+    align = "center"
+}
+
++ label {
+    text  = "NYX-J5W-2026  ·  BUILT BY HAND"
+    color = "#6b7383"
+    font  = "DejaVu Sans Mono Regular 9"
+    top   = 100%-32
+    left  = 0
+    width = 100%
+    align = "center"
+}
+
+# ── Progress bar (countdown) ─────────────────────────────────────────────────
++ progress_bar {
+    id = "__timeout__"
+    left  = 30%
+    top   = 100%-90
+    width = 40%
+    height = 4
+    bar_style       = "select_*.png"
+    highlight_style = "select_*.png"
+    text = "@TIMEOUT_NOTIFICATION_LONG@"
+    text_color = "#a8b0bd"
+    font  = "DejaVu Sans Mono Regular 10"
+    show_text = "false"
+}

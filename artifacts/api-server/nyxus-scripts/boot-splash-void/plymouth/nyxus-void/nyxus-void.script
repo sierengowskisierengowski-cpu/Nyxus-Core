@@ -1,0 +1,321 @@
+// ─────────────────────────────────────────────────────────────────────────────
+//  NYXUS VOID · Plymouth boot splash · Pure black · Premium reveal
+//
+//  Design intent: Apple/Tesla-tier first impression. Pure void, one perfect
+//  detail. The eye sees only the gold diamond ─ NYXUS' jewelry-scale brand
+//  mark ─ then a single horizontal beam sweeps across, igniting the
+//  wordmark behind it. After the reveal, a soft orbital ring breathes
+//  around the wordmark and an ultra-thin progress hairline fills with a
+//  gold leading edge. Bottom-right carries a discreet build watermark.
+//
+//  Forbidden: cyan, lime, neon, multi-color, strobes. Cool starlight white
+//  + warm-gold jewelry accent only. Locked Visual System rev 2026-05-06v.
+//
+//  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Screen geometry ─────────────────────────────────────────────────────────
+screen.w  = Window.GetWidth();
+screen.h  = Window.GetHeight();
+screen.cx = screen.w / 2;
+screen.cy = screen.h / 2;
+
+// ── Pure void background, full bleed ────────────────────────────────────────
+bg.image  = Image("background.png");
+bg.scale  = Math.Max(screen.w / bg.image.GetWidth(),
+                     screen.h / bg.image.GetHeight());
+bg.scaled = bg.image.Scale(bg.image.GetWidth()  * bg.scale,
+                           bg.image.GetHeight() * bg.scale);
+bg.sprite = Sprite(bg.scaled);
+bg.sprite.SetX((screen.w - bg.scaled.GetWidth())  / 2);
+bg.sprite.SetY((screen.h - bg.scaled.GetHeight()) / 2);
+bg.sprite.SetZ(-100);
+
+// ── NYXUS VOID wordmark (centered, slightly above middle) ───────────────────
+wm.image  = Image("wordmark.png");
+wm.x      = screen.cx - wm.image.GetWidth()  / 2;
+wm.y      = screen.cy - 30;
+wm.sprite = Sprite(wm.image);
+wm.sprite.SetX(wm.x);
+wm.sprite.SetY(wm.y);
+wm.sprite.SetOpacity(0);
+
+// ── Gold brand diamond (the "one detail you remember") ──────────────────────
+// Sits 64px above the wordmark, perfectly centered.
+dia.image  = Image("diamond.png");
+dia.x      = screen.cx - dia.image.GetWidth() / 2;
+dia.y      = wm.y - 60;
+dia.sprite = Sprite(dia.image);
+dia.sprite.SetX(dia.x);
+dia.sprite.SetY(dia.y);
+dia.sprite.SetOpacity(0);
+
+dia.halo.image  = Image("diamond_halo.png");
+dia.halo.x      = screen.cx - dia.halo.image.GetWidth() / 2;
+dia.halo.y      = dia.y - (dia.halo.image.GetHeight() - dia.image.GetHeight()) / 2;
+dia.halo.sprite = Sprite(dia.halo.image);
+dia.halo.sprite.SetX(dia.halo.x);
+dia.halo.sprite.SetY(dia.halo.y);
+dia.halo.sprite.SetOpacity(0);
+
+// ── Reveal beam (vertical bloom that sweeps across the wordmark) ────────────
+beam.image  = Image("beam.png");
+beam.y      = wm.y - 20;
+beam.sprite = Sprite(beam.image);
+beam.sprite.SetY(beam.y);
+beam.sprite.SetOpacity(0);
+
+// ── Orbit ring (24 micro-dots forming a breathing ellipse around wordmark) ──
+orbit.dot      = Image("orbit_dot.png");
+orbit.count    = 24;
+orbit.rx       = (wm.image.GetWidth() / 2) + 80;   // horizontal radius
+orbit.ry       = (wm.image.GetHeight() / 2) + 50;  // vertical radius
+orbit.cx       = screen.cx;
+orbit.cy       = wm.y + (wm.image.GetHeight() / 2);
+orbit.dots     = [];
+orbit.angle_off = 0;
+
+for (i = 0; i < orbit.count; i++) {
+    a = (i * 2 * 3.14159265) / orbit.count;
+    px = orbit.cx + Math.Cos(a) * orbit.rx - 2;
+    py = orbit.cy + Math.Sin(a) * orbit.ry - 2;
+    orbit.dots[i] = Sprite(orbit.dot);
+    orbit.dots[i].SetX(px);
+    orbit.dots[i].SetY(py);
+    orbit.dots[i].SetOpacity(0);
+}
+
+// ── Progress bar (ultra-thin hairline + gold leading edge) ──────────────────
+pg.track.image  = Image("progress_track.png");
+pg.track.x      = screen.cx - pg.track.image.GetWidth() / 2;
+pg.track.y      = wm.y + wm.image.GetHeight() + 60;
+pg.track.sprite = Sprite(pg.track.image);
+pg.track.sprite.SetX(pg.track.x);
+pg.track.sprite.SetY(pg.track.y);
+pg.track.sprite.SetOpacity(0);
+
+pg.fill.image   = Image("progress_fill.png");
+pg.fill.sprite  = Sprite(pg.fill.image);
+pg.fill.sprite.SetX(pg.track.x);
+pg.fill.sprite.SetY(pg.track.y);
+pg.fill.sprite.SetOpacity(0);
+pg.width_full   = pg.fill.image.GetWidth();   // 480
+
+pg.lead.image   = Image("progress_lead.png");
+pg.lead.sprite  = Sprite(pg.lead.image);
+pg.lead.sprite.SetY(pg.track.y - 2);
+pg.lead.sprite.SetOpacity(0);
+
+pg.progress     = 0.0;
+
+// ── Watermark · bottom-right ────────────────────────────────────────────────
+wat.image  = Image("watermark.png");
+wat.sprite = Sprite(wat.image);
+wat.sprite.SetX(screen.w - wat.image.GetWidth() - 24);
+wat.sprite.SetY(screen.h - wat.image.GetHeight() - 18);
+wat.sprite.SetOpacity(0);
+
+// ── Status sprite (LUKS prompts, late-boot messages) ────────────────────────
+status.sprite = Sprite();
+status.sprite.SetY(screen.h - 60);
+
+// ════════════════════════════════════════════════════════════════════════════
+//  ANIMATION TIMELINE  (Plymouth refresh runs ~50 fps)
+//
+//  ticks  0 –  20   (0.0–0.4s)  ─ diamond fades in (the "one detail")
+//  ticks 20 –  35   (0.4–0.7s)  ─ diamond halo breathes once
+//  ticks 35 –  85   (0.7–1.7s)  ─ reveal beam sweeps L→R, wordmark ignites
+//  ticks 85 – 110   (1.7–2.2s)  ─ beam fades, orbit ring fades in
+//  ticks 110+                   ─ orbit slowly rotates, watermark visible,
+//                                 progress bar present (real or sweeping)
+// ════════════════════════════════════════════════════════════════════════════
+
+anim.tick = 0;
+
+fun ease_out_cubic(t) {
+    inv = 1.0 - t;
+    return 1.0 - (inv * inv * inv);
+}
+
+fun smooth_step(t) {
+    if (t < 0) return 0;
+    if (t > 1) return 1;
+    return t * t * (3 - 2 * t);
+}
+
+fun Refresh() {
+    anim.tick++;
+    t = anim.tick;
+
+    // ── Phase 1: diamond fades in (ticks 0-20) ──────────────────────────────
+    if (t <= 20) {
+        a = ease_out_cubic(t / 20.0);
+        dia.sprite.SetOpacity(a);
+    }
+
+    // ── Phase 2: diamond halo single breath (ticks 20-50) ───────────────────
+    if (t >= 20 && t <= 50) {
+        local_t = (t - 20) / 30.0;
+        // sin curve for breath: 0 → 1 → 0
+        breath = Math.Sin(3.14159265 * local_t);
+        dia.halo.sprite.SetOpacity(breath * 0.95);
+    }
+    if (t > 50) dia.halo.sprite.SetOpacity(0);
+
+    // ── Phase 3: beam sweep + wordmark ignite (ticks 35-85) ─────────────────
+    if (t >= 35 && t <= 85) {
+        local_t = (t - 35) / 50.0;
+        eased   = smooth_step(local_t);
+
+        // Beam sweeps across wordmark width
+        beam_w = beam.image.GetWidth();
+        sweep_start = wm.x - beam_w;
+        sweep_end   = wm.x + wm.image.GetWidth();
+        beam.sprite.SetX(sweep_start + (sweep_end - sweep_start) * eased);
+
+        // Beam visibility: full during sweep, fades at the end
+        beam_op = 1.0;
+        if (local_t > 0.85) beam_op = 1.0 - ((local_t - 0.85) / 0.15);
+        beam.sprite.SetOpacity(beam_op);
+
+        // Wordmark ignites in tandem with beam position
+        wm.sprite.SetOpacity(eased);
+    }
+    if (t > 85) {
+        beam.sprite.SetOpacity(0);
+        wm.sprite.SetOpacity(1.0);
+    }
+
+    // ── Phase 4: orbit ring fades in (ticks 85-130) ─────────────────────────
+    if (t >= 85 && t <= 130) {
+        a = (t - 85) / 45.0;
+        if (a > 1) a = 1;
+        // Stagger: dots at top fade in first, sweeping clockwise
+        for (i = 0; i < orbit.count; i++) {
+            stagger = i / (orbit.count * 1.0);
+            local = a - stagger * 0.4;
+            if (local < 0) local = 0;
+            if (local > 1) local = 1;
+            orbit.dots[i].SetOpacity(local * 0.45);
+        }
+    }
+    if (t > 130) {
+        for (i = 0; i < orbit.count; i++)
+            orbit.dots[i].SetOpacity(0.45);
+    }
+
+    // ── Phase 5: progress bar + watermark fade in (ticks 100+) ──────────────
+    if (t >= 100 && t <= 140) {
+        a = (t - 100) / 40.0;
+        if (a > 1) a = 1;
+        pg.track.sprite.SetOpacity(a * 0.65);
+        pg.fill.sprite.SetOpacity(a);
+        wat.sprite.SetOpacity(a * 0.85);
+    }
+    if (t > 140) {
+        pg.track.sprite.SetOpacity(0.65);
+        wat.sprite.SetOpacity(0.85);
+    }
+
+    // ── Continuous: orbit ring slow rotation (every refresh after 130) ──────
+    // Rotates by recomputing dot positions with a phase offset.
+    if (t > 130) {
+        orbit.angle_off = orbit.angle_off + 0.006;   // ~slow
+        for (i = 0; i < orbit.count; i++) {
+            a = orbit.angle_off + (i * 2 * 3.14159265) / orbit.count;
+            px = orbit.cx + Math.Cos(a) * orbit.rx - 2;
+            py = orbit.cy + Math.Sin(a) * orbit.ry - 2;
+            orbit.dots[i].SetX(px);
+            orbit.dots[i].SetY(py);
+        }
+    }
+
+    // ── Continuous: progress bar (indeterminate sweep until real progress) ──
+    if (t > 130 && pg.progress == 0.0) {
+        // Indeterminate: a thin 60px gold-leading segment slides L→R, eases.
+        sweep_period = 90;
+        local_t = (t % sweep_period) / sweep_period;
+        eased = smooth_step(local_t);
+        seg_w = 60;
+        max_x = pg.width_full - seg_w;
+        x_off = max_x * eased;
+
+        cropped = pg.fill.image.Scale(seg_w, pg.fill.image.GetHeight());
+        pg.fill.sprite.SetImage(cropped);
+        pg.fill.sprite.SetX(pg.track.x + x_off);
+
+        // Gold leading edge follows the right end of the segment
+        pg.lead.sprite.SetX(pg.track.x + x_off + seg_w - 6);
+        pg.lead.sprite.SetOpacity(0.85);
+    }
+}
+Plymouth.SetRefreshFunction(Refresh);
+
+// ── Real boot progress (overrides the indeterminate sweep) ──────────────────
+fun BootProgressCallback(duration, progress) {
+    pg.progress = progress;
+    new_w = pg.width_full * progress;
+    if (new_w < 1) new_w = 1;
+    cropped = pg.fill.image.Scale(new_w, pg.fill.image.GetHeight());
+    pg.fill.sprite.SetImage(cropped);
+    pg.fill.sprite.SetX(pg.track.x);
+
+    // Gold leading edge rides the fill's right edge
+    pg.lead.sprite.SetX(pg.track.x + new_w - 6);
+    pg.lead.sprite.SetOpacity(1.0);
+}
+Plymouth.SetBootProgressFunction(BootProgressCallback);
+
+// ── Quit: graceful fade-to-void ─────────────────────────────────────────────
+fun QuitCallback() {
+    wm.sprite.SetOpacity(0);
+    dia.sprite.SetOpacity(0);
+    dia.halo.sprite.SetOpacity(0);
+    pg.track.sprite.SetOpacity(0);
+    pg.fill.sprite.SetOpacity(0);
+    pg.lead.sprite.SetOpacity(0);
+    wat.sprite.SetOpacity(0);
+    for (i = 0; i < orbit.count; i++)
+        orbit.dots[i].SetOpacity(0);
+}
+Plymouth.SetQuitFunction(QuitCallback);
+
+// ── LUKS password prompt ────────────────────────────────────────────────────
+// Replace the progress bar with bullet dots (gold) when prompting.
+fun DisplayPasswordCallback(prompt, bullets) {
+    pg.fill.sprite.SetOpacity(0);
+    pg.lead.sprite.SetOpacity(0);
+
+    if (global.bullets) {
+        for (i = 0; i < global.bullets_count; i++) global.bullets[i] = NULL;
+    }
+    global.bullets = [];
+    global.bullets_count = bullets;
+    spacing = 18;
+    start_x = screen.cx - ((bullets - 1) * spacing) / 2;
+    bullet_img = Image("diamond.png");
+    for (i = 0; i < bullets; i++) {
+        s = Sprite(bullet_img);
+        s.SetX(start_x + (i * spacing) - 9);
+        s.SetY(pg.track.y - 4);
+        s.SetOpacity(1.0);
+        global.bullets[i] = s;
+    }
+}
+Plymouth.SetDisplayPasswordFunction(DisplayPasswordCallback);
+
+fun DisplayNormalCallback() {
+    if (global.bullets) {
+        for (i = 0; i < global.bullets_count; i++) global.bullets[i] = NULL;
+        global.bullets = NULL;
+    }
+}
+Plymouth.SetDisplayNormalFunction(DisplayNormalCallback);
+
+// ── Boot status messages (small, bottom-center, very subtle) ────────────────
+fun MessageCallback(text) {
+    status.image  = Image.Text(text, 0.45, 0.50, 0.60, 0.65, "Sans 9");
+    status.sprite.SetImage(status.image);
+    status.sprite.SetX(screen.cx - status.image.GetWidth() / 2);
+}
+Plymouth.SetMessageFunction(MessageCallback);
