@@ -99,7 +99,7 @@
     "margin-right": 20,
     "modules-left": ["custom/nyxus-start"],
     "modules-center": ["tray"],
-    "modules-right": ["custom/notifications", "custom/nyxus-panel", "custom/owl"],
+    "modules-right": ["custom/notifications", "custom/nyxus-panel"],
 
     "custom/notifications": {
       "exec": "~/.config/waybar/nyxus-notif-status.sh",
@@ -110,12 +110,6 @@
       "on-click":        "dunstctl history-pop",
       "on-click-right":  "dunstctl close-all",
       "on-click-middle": "dunstctl set-paused toggle"
-    },
-
-    "custom/owl": {
-      "format": "✶ OWL ✶",
-      "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · OWL Signature</span>\n<span size='small' foreground='#a8b0bd'>The owl is the signature mark of\nJoseph Sierengowski's NYXUS system.\nWatchful · Quiet · Hand-built.</span>"
     },
     "custom/nyxus-start": {
       "exec": "/home/nyx/.local/bin/nyxus-waybar-state start",
