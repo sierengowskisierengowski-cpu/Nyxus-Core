@@ -20,6 +20,55 @@ def _nyx_integrity():
         assert "SIERENGOWSKI" in _s, "NYXUS: tamper detected"
     except (OSError, AssertionError) as _e:
         import sys as _sys; print(f"NYXUS SECURITY: {_e}", file=_sys.stderr)
+
+# ── NYXUS palette (single source of truth · rev r13) ────────────────
+try:
+    from nyxus_palette import (
+        WHITE_PURE, WHITE_OFF, GREY_LIGHT, GREY_MID, GREY_TERTIARY,
+        INK_FADED, INK_BLACK,
+        GLASS_DARK, GLASS_DEEPER, GLASS_DEEPEST,
+        HAIRLINE_WHITE, HAIRLINE_INK,
+        SHADOW_INK_ACTIVE, SHADOW_INK_INACTIVE,
+        RADIUS_CARD, RADIUS_PILL, RADIUS_INPUT,
+        FONT_UI, FONT_MONO, FONT_DISPLAY,
+        format_css, assert_no_forbidden,
+    )
+except Exception:
+    # palette module is shipped alongside every NYXUS app via
+    # nyxus_install.sh; if it's missing, fall back to literals so
+    # the app still launches.
+    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
+    INK_FADED='#0a0a0a'; INK_BLACK='#000000'
+    GLASS_DARK='rgba(8, 12, 20, 0.55)'
+    GLASS_DEEPER='rgba(15, 20, 32, 0.72)'
+    GLASS_DEEPEST='rgba(5, 7, 12, 0.92)'
+    HAIRLINE_WHITE='rgba(255, 255, 255, 0.10)'
+    HAIRLINE_INK='rgba(0, 0, 0, 0.45)'
+    SHADOW_INK_ACTIVE='rgba(0, 0, 0, 0.65)'
+    SHADOW_INK_INACTIVE='rgba(0, 0, 0, 0.20)'
+    RADIUS_CARD=14; RADIUS_PILL=12; RADIUS_INPUT=10
+    FONT_UI='Inter'; FONT_MONO='JetBrains Mono'; FONT_DISPLAY='Inter Display'
+    def format_css(t):
+        _d = {
+            'WHITE_PURE': WHITE_PURE, 'WHITE_OFF': WHITE_OFF,
+            'GREY_LIGHT': GREY_LIGHT, 'GREY_MID': GREY_MID,
+            'GREY_TERTIARY': GREY_TERTIARY,
+            'INK_FADED': INK_FADED, 'INK_BLACK': INK_BLACK,
+            'GLASS_DARK': GLASS_DARK, 'GLASS_DEEPER': GLASS_DEEPER,
+            'GLASS_DEEPEST': GLASS_DEEPEST,
+            'HAIRLINE_WHITE': HAIRLINE_WHITE, 'HAIRLINE_INK': HAIRLINE_INK,
+            'SHADOW_INK_ACTIVE': SHADOW_INK_ACTIVE,
+            'SHADOW_INK_INACTIVE': SHADOW_INK_INACTIVE,
+            'RADIUS_CARD': RADIUS_CARD, 'RADIUS_PILL': RADIUS_PILL,
+            'RADIUS_INPUT': RADIUS_INPUT,
+            'FONT_UI': FONT_UI, 'FONT_MONO': FONT_MONO,
+            'FONT_DISPLAY': FONT_DISPLAY,
+        }
+        return t.format_map(_d)
+    def assert_no_forbidden(*a, **k): pass
+# ─────────────────────────────────────────────────────────────────────
+
 _nyx_integrity()
 
 
@@ -512,13 +561,13 @@ def _do_snip():
 # THEME
 # ════════════════════════════════════════════════════════════════════════════════
 
-CSS = """
-* {
+CSS = format_css("""
+* {{
     font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', sans-serif;
     font-size: 16px;
-}
+}}
 
-window#actioncenter {
+window#actioncenter {{
     background-image: __BG_URL__;
     background-size: cover;
     background-position: center;
@@ -526,58 +575,58 @@ window#actioncenter {
     color: #e8e0f5;
     border: 3px solid rgba(255, 40, 180, 0.55);
     border-radius: 4px;
-}
-window#actioncenter > * {
+}}
+window#actioncenter > * {{
     background-color: rgba(8, 6, 14, 0.78);
-}
+}}
 
-.ac-hdr {
+.ac-hdr {{
     background: rgba(15, 12, 24, 0.99);
     padding: 14px 18px 12px;
     border-bottom: 2px solid rgba(255, 40, 180, 0.30);
-}
-.ac-title {
-    color: #e8edf5;
+}}
+.ac-title {{
+    color: {WHITE_OFF};
     font-size: 22px;
     font-weight: bold;
     letter-spacing: 5px;
     text-shadow: 0 0 10px rgba(255, 40, 180, 0.45);
-}
-.ac-time { color: rgba(220, 200, 240, 0.85); font-size: 16px; }
+}}
+.ac-time {{ color: rgba(220, 200, 240, 0.85); font-size: 16px; }}
 
-.ac-section { padding: 10px 16px; }
-.ac-section-hdr {
+.ac-section {{ padding: 10px 16px; }}
+.ac-section-hdr {{
     color: rgba(180, 150, 230, 0.82);
     font-size: 14px;
     letter-spacing: 3px;
-}
-.ac-link {
-    color: #e8edf5; font-size: 15px;
+}}
+.ac-link {{
+    color: {WHITE_OFF}; font-size: 15px;
     background: transparent;
     border: none;
     padding: 2px 6px;
-}
-.ac-link:hover { color: #ee88ff; text-shadow: 0 0 6px rgba(255, 40, 180, 0.45); }
+}}
+.ac-link:hover {{ color: #ee88ff; text-shadow: 0 0 6px rgba(255, 40, 180, 0.45); }}
 
-.ac-notiflist { background: transparent; min-height: 60px; }
-.ac-notif-row {
+.ac-notiflist {{ background: transparent; min-height: 60px; }}
+.ac-notif-row {{
     background: rgba(20, 16, 36, 0.95);
     border: 2px solid rgba(255, 40, 180, 0.18);
     border-radius: 4px;
     padding: 8px 12px;
     margin-bottom: 4px;
-}
-.ac-notif-app { color: #e8edf5; font-size: 13px; letter-spacing: 1px; }
-.ac-notif-sum { color: #f0e8ff; font-size: 16px; font-weight: bold; }
-.ac-notif-body { color: rgba(220, 200, 240, 0.75); font-size: 14px; }
-.ac-notif-empty {
+}}
+.ac-notif-app {{ color: {WHITE_OFF}; font-size: 13px; letter-spacing: 1px; }}
+.ac-notif-sum {{ color: #f0e8ff; font-size: 16px; font-weight: bold; }}
+.ac-notif-body {{ color: rgba(220, 200, 240, 0.75); font-size: 14px; }}
+.ac-notif-empty {{
     color: rgba(180, 150, 230, 0.55);
     font-size: 16px;
     font-style: italic;
     padding: 12px 0;
-}
+}}
 
-.ac-tile {
+.ac-tile {{
     background: rgba(20, 16, 36, 0.96);
     border: 2px solid rgba(255, 40, 180, 0.22);
     border-radius: 4px;
@@ -585,61 +634,61 @@ window#actioncenter > * {
     min-width: 78px;
     min-height: 70px;
     padding: 6px 4px;
-}
-.ac-tile:hover {
+}}
+.ac-tile:hover {{
     background: rgba(255, 40, 180, 0.14);
     border-color: rgba(255, 40, 180, 0.65);
     color: #f0e8ff;
-}
-.ac-tile.on {
+}}
+.ac-tile.on {{
     background: rgba(255, 40, 180, 0.24);
-    border-color: #e8edf5;
-    color: #ffffff;
+    border-color: {WHITE_OFF};
+    color: {WHITE_PURE};
     box-shadow: 0 0 14px rgba(255, 40, 180, 0.50);
-}
-.ac-tile.unavailable {
+}}
+.ac-tile.unavailable {{
     color: rgba(120, 100, 150, 0.45);
-}
-.ac-tile-glyph {
+}}
+.ac-tile-glyph {{
     font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free',
                  'JetBrainsMono Nerd Font', 'Symbols Nerd Font Mono';
     font-size: 22px;
     margin-bottom: 4px;
-}
-.ac-tile-label { font-size: 14px; letter-spacing: 1px; }
+}}
+.ac-tile-label {{ font-size: 14px; letter-spacing: 1px; }}
 
-.ac-slider-row { padding: 8px 16px; }
-.ac-slider-icon {
+.ac-slider-row {{ padding: 8px 16px; }}
+.ac-slider-icon {{
     font-family: 'Font Awesome 6 Free', 'JetBrainsMono Nerd Font',
                  'Symbols Nerd Font Mono';
     font-size: 16px;
-    color: #e8edf5;
+    color: {WHITE_OFF};
     text-shadow: 0 0 6px rgba(255, 40, 180, 0.50);
     margin-right: 8px;
-}
-.ac-slider-label {
+}}
+.ac-slider-label {{
     color: rgba(220, 200, 240, 0.80);
     font-size: 14px;
     letter-spacing: 1px;
-}
-.ac-slider-val {
-    color: #e8edf5;
+}}
+.ac-slider-val {{
+    color: {WHITE_OFF};
     font-size: 14px;
     font-weight: bold;
     min-width: 40px;
     text-shadow: 0 0 6px rgba(255, 40, 180, 0.40);
-}
-scale trough    { background: rgba(255, 40, 180, 0.18); border-radius: 2px; min-height: 5px; }
-scale highlight { background: #e8edf5; border-radius: 2px; }
-scale slider    {
-    background: #e8edf5;
+}}
+scale trough    {{ background: rgba(255, 40, 180, 0.18); border-radius: 2px; min-height: 5px; }}
+scale highlight {{ background: {WHITE_OFF}; border-radius: 2px; }}
+scale slider    {{
+    background: {WHITE_OFF};
     min-width: 16px; min-height: 16px;
     border-radius: 4px; border: none;
     box-shadow: 0 0 8px rgba(255, 40, 180, 0.45);
     margin: -5px 0;
-}
+}}
 
-button.ac-chev {
+button.ac-chev {{
     font-family: 'Font Awesome 6 Free', 'JetBrainsMono Nerd Font';
     font-size: 12px;
     color: rgba(200, 180, 230, 0.70);
@@ -650,100 +699,100 @@ button.ac-chev {
     min-height: 22px;
     padding: 0 6px;
     margin-left: 6px;
-}
-button.ac-chev:hover { color: #e8edf5; border-color: #e8edf5; }
+}}
+button.ac-chev:hover {{ color: {WHITE_OFF}; border-color: {WHITE_OFF}; }}
 
-.ac-device-row {
+.ac-device-row {{
     background: rgba(15, 12, 24, 0.95);
     border-left: 2px solid rgba(255, 40, 180, 0.24);
     padding: 6px 16px 6px 26px;
     color: rgba(220, 200, 240, 0.80);
-}
-.ac-device-row:hover {
+}}
+.ac-device-row:hover {{
     background: rgba(255, 40, 180, 0.14);
     color: #f0e8ff;
-}
-.ac-device-row.on {
-    color: #e8edf5;
+}}
+.ac-device-row.on {{
+    color: {WHITE_OFF};
     font-weight: bold;
-}
+}}
 
-.ac-wifi-flyout {
+.ac-wifi-flyout {{
     background: rgba(8, 6, 14, 0.99);
     border-top: 2px solid rgba(255, 40, 180, 0.22);
     border-bottom: 2px solid rgba(255, 40, 180, 0.22);
-}
-.ac-wifirow {
+}}
+.ac-wifirow {{
     background: rgba(15, 12, 24, 0.96);
     border-bottom: 1px solid rgba(255, 40, 180, 0.10);
     padding: 8px 16px;
-}
-.ac-wifirow:hover { background: rgba(255, 40, 180, 0.10); }
-.ac-wifirow.active { background: rgba(255, 40, 180, 0.12); }
-.ac-wifi-ssid { color: #f0e8ff; font-size: 16px; font-weight: bold; }
-.ac-wifirow.active .ac-wifi-ssid { color: #e8edf5; }
-.ac-wifi-state { color: rgba(180, 150, 230, 0.75); font-size: 13px; }
-.ac-wifi-sig {
+}}
+.ac-wifirow:hover {{ background: rgba(255, 40, 180, 0.10); }}
+.ac-wifirow.active {{ background: rgba(255, 40, 180, 0.12); }}
+.ac-wifi-ssid {{ color: #f0e8ff; font-size: 16px; font-weight: bold; }}
+.ac-wifirow.active .ac-wifi-ssid {{ color: {WHITE_OFF}; }}
+.ac-wifi-state {{ color: rgba(180, 150, 230, 0.75); font-size: 13px; }}
+.ac-wifi-sig {{
     font-family: 'Font Awesome 6 Free', 'JetBrainsMono Nerd Font';
     font-size: 14px;
     color: rgba(200, 180, 230, 0.70);
-}
-.ac-wifi-lock {
+}}
+.ac-wifi-lock {{
     font-family: 'Font Awesome 6 Free', 'JetBrainsMono Nerd Font';
     font-size: 12px;
     color: rgba(200, 180, 230, 0.60);
     margin-right: 6px;
-}
+}}
 
-button.ac-btn {
+button.ac-btn {{
     background: rgba(20, 16, 36, 0.96);
     border: 2px solid rgba(255, 40, 180, 0.30);
     border-radius: 4px;
     color: #e8e0f5;
     font-size: 14px;
     padding: 6px 14px;
-}
-button.ac-btn:hover {
+}}
+button.ac-btn:hover {{
     background: rgba(255, 40, 180, 0.18);
-    border-color: #e8edf5;
+    border-color: {WHITE_OFF};
     color: #f8f0ff;
-}
-button.ac-btn:disabled {
+}}
+button.ac-btn:disabled {{
     color: rgba(180, 150, 230, 0.40);
     border-color: rgba(255, 40, 180, 0.15);
-}
+}}
 
-entry {
+entry {{
     background: rgba(10, 8, 20, 0.99);
     color: #f0e8ff;
     border: 2px solid rgba(255, 40, 180, 0.30);
     border-radius: 4px;
     padding: 6px 10px;
     font-size: 14px;
-}
-entry:focus { border-color: #e8edf5; }
+}}
+entry:focus {{ border-color: {WHITE_OFF}; }}
 
-checkbutton { color: rgba(220, 200, 240, 0.80); font-size: 14px; }
-checkbutton check {
+checkbutton {{ color: rgba(220, 200, 240, 0.80); font-size: 14px; }}
+checkbutton check {{
     background: rgba(20, 16, 36, 0.96);
     border: 2px solid rgba(255, 40, 180, 0.30);
     min-width: 16px; min-height: 16px;
     border-radius: 2px;
-}
-checkbutton check:checked {
-    background: #e8edf5;
-    border-color: #e8edf5;
-}
+}}
+checkbutton check:checked {{
+    background: {WHITE_OFF};
+    border-color: {WHITE_OFF};
+}}
 
-separator { background: rgba(255, 40, 180, 0.18); min-height: 1px; }
+separator {{ background: rgba(255, 40, 180, 0.18); min-height: 1px; }}
 
-scrollbar slider {
+scrollbar slider {{
     background: rgba(255, 40, 180, 0.40);
     border-radius: 2px;
     min-width: 6px;
-}
-scrollbar slider:hover { background: #e8edf5; }
-"""
+}}
+scrollbar slider:hover {{ background: {WHITE_OFF}; }}
+""")
 
 
 # Font-Awesome glyphs (Nerd Font / FontAwesome 6 Free)
@@ -1562,3 +1611,7 @@ try:
 except Exception as _nyx_e:
     import sys as _nyx_sys
     print("nyxus-chrome injection failed: %s" % _nyx_e, file=_nyx_sys.stderr)
+
+# ── palette guard (rev r13) ─────────────────────────────────────────
+try: assert_no_forbidden(CSS, __file__)
+except Exception as _e: import sys; sys.stderr.write(str(_e)+chr(10))

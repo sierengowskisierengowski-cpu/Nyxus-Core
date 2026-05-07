@@ -12,8 +12,9 @@ Each window renders a Cairo particle system at 30fps:
     - Wraps off-edge cleanly (blobs leave one side, enter the other)
     - Radial-gradient soft falloff (no hard edges)
 
-Architecture: matches the locked NYXUS Visual System — pure white /
-off-white #fbfaf6 / gold #d4a73a (jewelry accent only). Runs underneath
+Architecture: matches the locked NYXUS Visual System (DARK MIRROR rev
+r13) — pure white #ffffff / off-white #e8edf5 / light grey #c8ccd6 /
+mid grey #9aa0ad. Monochrome only — no gold, no cream. Runs underneath
 the translucent waybar shell so the fog reads as living atmosphere
 trapped inside the bars.
 
@@ -94,18 +95,20 @@ FPS              = 30
 FRAME_MS         = int(1000 / FPS)
 BLOBS_PER_BAR    = 18
 
-# ── PALETTE (NYXUS locked: pure white / off-white / gold jewelry accent) ───
-COLOR_WHITE      = (1.000, 1.000, 1.000)
-COLOR_OFFWHITE   = (0.984, 0.980, 0.965)   # #fbfaf6 cream raised
-COLOR_CREAM_BASE = (0.960, 0.953, 0.937)   # #f5f3ef cream base
-COLOR_GOLD       = (0.831, 0.655, 0.227)   # #d4a73a jewelry accent
+# ── PALETTE (DARK MIRROR rev r13 — see nyxus_palette.py canonical source) ──
+# Float tuples for Cairo. Mirrors WHITE_PURE / WHITE_OFF / GREY_LIGHT /
+# GREY_MID from nyxus_palette.py.
+COLOR_WHITE      = (1.000, 1.000, 1.000)   # #ffffff
+COLOR_OFFWHITE   = (0.910, 0.929, 0.961)   # #e8edf5
+COLOR_GREY_LIGHT = (0.784, 0.800, 0.839)   # #c8ccd6
+COLOR_GREY_MID   = (0.604, 0.627, 0.678)   # #9aa0ad
 
-# Weighted bag of colors — mostly white, some off-white, rare gold.
+# Weighted bag — mostly white, some off-white, occasional grey wisp.
 COLOR_BAG = (
     [COLOR_WHITE]      * 5 +
     [COLOR_OFFWHITE]   * 4 +
-    [COLOR_CREAM_BASE] * 2 +
-    [COLOR_GOLD]       * 2
+    [COLOR_GREY_LIGHT] * 2 +
+    [COLOR_GREY_MID]   * 2
 )
 
 # ─────────────────────────────────────────────────────────────────────────────

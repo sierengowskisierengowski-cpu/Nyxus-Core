@@ -13,6 +13,55 @@ def _nyx_integrity():
         assert "SIERENGOWSKI" in _s, "NYXUS: tamper detected"
     except (OSError, AssertionError) as _e:
         import sys as _sys; print(f"NYXUS SECURITY: {_e}", file=_sys.stderr)
+
+# ── NYXUS palette (single source of truth · rev r13) ────────────────
+try:
+    from nyxus_palette import (
+        WHITE_PURE, WHITE_OFF, GREY_LIGHT, GREY_MID, GREY_TERTIARY,
+        INK_FADED, INK_BLACK,
+        GLASS_DARK, GLASS_DEEPER, GLASS_DEEPEST,
+        HAIRLINE_WHITE, HAIRLINE_INK,
+        SHADOW_INK_ACTIVE, SHADOW_INK_INACTIVE,
+        RADIUS_CARD, RADIUS_PILL, RADIUS_INPUT,
+        FONT_UI, FONT_MONO, FONT_DISPLAY,
+        format_css, assert_no_forbidden,
+    )
+except Exception:
+    # palette module is shipped alongside every NYXUS app via
+    # nyxus_install.sh; if it's missing, fall back to literals so
+    # the app still launches.
+    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
+    INK_FADED='#0a0a0a'; INK_BLACK='#000000'
+    GLASS_DARK='rgba(8, 12, 20, 0.55)'
+    GLASS_DEEPER='rgba(15, 20, 32, 0.72)'
+    GLASS_DEEPEST='rgba(5, 7, 12, 0.92)'
+    HAIRLINE_WHITE='rgba(255, 255, 255, 0.10)'
+    HAIRLINE_INK='rgba(0, 0, 0, 0.45)'
+    SHADOW_INK_ACTIVE='rgba(0, 0, 0, 0.65)'
+    SHADOW_INK_INACTIVE='rgba(0, 0, 0, 0.20)'
+    RADIUS_CARD=14; RADIUS_PILL=12; RADIUS_INPUT=10
+    FONT_UI='Inter'; FONT_MONO='JetBrains Mono'; FONT_DISPLAY='Inter Display'
+    def format_css(t):
+        _d = {
+            'WHITE_PURE': WHITE_PURE, 'WHITE_OFF': WHITE_OFF,
+            'GREY_LIGHT': GREY_LIGHT, 'GREY_MID': GREY_MID,
+            'GREY_TERTIARY': GREY_TERTIARY,
+            'INK_FADED': INK_FADED, 'INK_BLACK': INK_BLACK,
+            'GLASS_DARK': GLASS_DARK, 'GLASS_DEEPER': GLASS_DEEPER,
+            'GLASS_DEEPEST': GLASS_DEEPEST,
+            'HAIRLINE_WHITE': HAIRLINE_WHITE, 'HAIRLINE_INK': HAIRLINE_INK,
+            'SHADOW_INK_ACTIVE': SHADOW_INK_ACTIVE,
+            'SHADOW_INK_INACTIVE': SHADOW_INK_INACTIVE,
+            'RADIUS_CARD': RADIUS_CARD, 'RADIUS_PILL': RADIUS_PILL,
+            'RADIUS_INPUT': RADIUS_INPUT,
+            'FONT_UI': FONT_UI, 'FONT_MONO': FONT_MONO,
+            'FONT_DISPLAY': FONT_DISPLAY,
+        }
+        return t.format_map(_d)
+    def assert_no_forbidden(*a, **k): pass
+# ─────────────────────────────────────────────────────────────────────
+
 _nyx_integrity()
 
 
@@ -417,95 +466,95 @@ def apply_profile(profile, hw):
 # ══════════════════════════════════════════════════════════════════════════════
 #  CSS
 # ══════════════════════════════════════════════════════════════════════════════
-CSS = """
-* { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
-window { background-color: transparent; color: rgba(232,224,245,0.92); }
+CSS = format_css("""
+* {{ font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }}
+window {{ background-color: transparent; color: rgba(232,224,245,0.92); }}
 
-.nav-bar {
+.nav-bar {{
     background-color: rgba(0, 0, 0, 0.62);
     border-right: 3px solid rgba(255,0,255,0.45);
     min-width: 160px;
-}
-.nav-btn {
+}}
+.nav-btn {{
     background-color: transparent;
     color: rgba(180,160,220,0.70);
     border: none; border-left: 4px solid transparent; border-radius: 0;
     padding: 14px 14px 14px 18px;
     font-size: 17px; font-weight: bold; min-height: 0; text-align: left;
-}
-.nav-btn:hover { background-color: rgba(255,0,255,0.10); color: rgba(255,180,255,0.95); }
-.nav-active-pink   { background: rgba(255,0,255,0.14);  color: #ff88ff;
-                     border-left: 4px solid #e8edf5;
-                     box-shadow: inset 4px 0 16px rgba(255,0,255,0.14); }
-.nav-active-red    { background: rgba(255,30,30,0.14);  color: #ff6655;
-                     border-left: 4px solid #ff2020; }
-.nav-active-orange { background: rgba(255,85,0,0.14);  color: #ff8855;
-                     border-left: 4px solid #e8edf5; }
-.nav-active-purple { background: rgba(204,0,255,0.14); color: #dd88ff;
-                     border-left: 4px solid #e8edf5; }
-.nav-active-blue   { background: rgba(0,136,255,0.14); color: #66bbff;
-                     border-left: 4px solid #c8ccd6; }
-.nav-active-green  { background: rgba(57,255,20,0.12); color: #88ff55;
-                     border-left: 4px solid #c8ccd6; }
-.nav-active-yellow { background: rgba(255,255,0,0.12); color: #ffff88;
-                     border-left: 4px solid #e8edf5; }
+}}
+.nav-btn:hover {{ background-color: rgba(255,0,255,0.10); color: rgba(255,180,255,0.95); }}
+.nav-active-pink   {{ background: rgba(255,0,255,0.14);  color: #ff88ff;
+                     border-left: 4px solid {WHITE_OFF};
+                     box-shadow: inset 4px 0 16px rgba(255,0,255,0.14); }}
+.nav-active-red    {{ background: rgba(255,30,30,0.14);  color: #ff6655;
+                     border-left: 4px solid #ff2020; }}
+.nav-active-orange {{ background: rgba(255,85,0,0.14);  color: #ff8855;
+                     border-left: 4px solid {WHITE_OFF}; }}
+.nav-active-purple {{ background: rgba(204,0,255,0.14); color: #dd88ff;
+                     border-left: 4px solid {WHITE_OFF}; }}
+.nav-active-blue   {{ background: rgba(0,136,255,0.14); color: #66bbff;
+                     border-left: 4px solid {GREY_LIGHT}; }}
+.nav-active-green  {{ background: rgba(57,255,20,0.12); color: #88ff55;
+                     border-left: 4px solid {GREY_LIGHT}; }}
+.nav-active-yellow {{ background: rgba(255,255,0,0.12); color: #ffff88;
+                     border-left: 4px solid {WHITE_OFF}; }}
 
-scale trough { background-color: rgba(255,255,255,0.08); border-radius: 2px; min-height: 8px; }
-scale highlight { border-radius: 2px; min-height: 8px; }
-scale.pink   highlight { background-color: #e8edf5; }
-scale.blue   highlight { background-color: #c8ccd6; }
-scale.green  highlight { background-color: #c8ccd6; }
-scale.yellow highlight { background-color: #e8edf5; }
-scale.orange highlight { background-color: #e8edf5; }
-scale.purple highlight { background-color: #e8edf5; }
-scale.red    highlight { background-color: #ff2020; }
-scale slider { min-width:18px; min-height:18px; border-radius:2px; background:white;
-               border:2px solid rgba(255,255,255,0.50); }
+scale trough {{ background-color: rgba(255,255,255,0.08); border-radius: 2px; min-height: 8px; }}
+scale highlight {{ border-radius: 2px; min-height: 8px; }}
+scale.pink   highlight {{ background-color: {WHITE_OFF}; }}
+scale.blue   highlight {{ background-color: {GREY_LIGHT}; }}
+scale.green  highlight {{ background-color: {GREY_LIGHT}; }}
+scale.yellow highlight {{ background-color: {WHITE_OFF}; }}
+scale.orange highlight {{ background-color: {WHITE_OFF}; }}
+scale.purple highlight {{ background-color: {WHITE_OFF}; }}
+scale.red    highlight {{ background-color: #ff2020; }}
+scale slider {{ min-width:18px; min-height:18px; border-radius:2px; background:white;
+               border:2px solid rgba(255,255,255,0.50); }}
 
-.neon-btn {
+.neon-btn {{
     background-color: rgba(255,0,255,0.14); color: #ff88ff;
     border: 2px solid rgba(255,0,255,0.45); border-radius: 4px;
     padding: 9px 20px; font-size: 16px; font-weight: bold;
     box-shadow: 0 0 8px rgba(255,0,255,0.18);
-}
-.neon-btn:hover { background-color: rgba(255,0,255,0.26); border-color:#e8edf5;
-                  box-shadow: 0 0 18px rgba(255,0,255,0.40); }
-.neon-btn-blue  { background-color:rgba(0,136,255,0.14); color:#66bbff;
+}}
+.neon-btn:hover {{ background-color: rgba(255,0,255,0.26); border-color:{WHITE_OFF};
+                  box-shadow: 0 0 18px rgba(255,0,255,0.40); }}
+.neon-btn-blue  {{ background-color:rgba(0,136,255,0.14); color:#66bbff;
                   border:2px solid rgba(0,136,255,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }
-.neon-btn-blue:hover  { background-color:rgba(0,136,255,0.26); border-color:#c8ccd6; }
-.neon-btn-green { background-color:rgba(57,255,20,0.12); color:#88ff55;
+                  padding:9px 20px; font-size:16px; font-weight:bold; }}
+.neon-btn-blue:hover  {{ background-color:rgba(0,136,255,0.26); border-color:{GREY_LIGHT}; }}
+.neon-btn-green {{ background-color:rgba(57,255,20,0.12); color:#88ff55;
                   border:2px solid rgba(57,255,20,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }
-.neon-btn-green:hover { background-color:rgba(57,255,20,0.24); border-color:#c8ccd6; }
-.neon-btn-red   { background-color:rgba(255,30,30,0.14); color:#ff6655;
+                  padding:9px 20px; font-size:16px; font-weight:bold; }}
+.neon-btn-green:hover {{ background-color:rgba(57,255,20,0.24); border-color:{GREY_LIGHT}; }}
+.neon-btn-red   {{ background-color:rgba(255,30,30,0.14); color:#ff6655;
                   border:2px solid rgba(255,60,40,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }
-.neon-btn-red:hover { background-color:rgba(255,60,40,0.28); }
-.neon-btn-yellow{ background-color:rgba(255,255,0,0.12); color:#ffff88;
+                  padding:9px 20px; font-size:16px; font-weight:bold; }}
+.neon-btn-red:hover {{ background-color:rgba(255,60,40,0.28); }}
+.neon-btn-yellow{{ background-color:rgba(255,255,0,0.12); color:#ffff88;
                   border:2px solid rgba(255,255,0,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }
-.neon-btn-yellow:hover { background-color:rgba(255,255,0,0.24); border-color:#e8edf5; }
-.neon-btn-orange{ background-color:rgba(255,85,0,0.14); color:#ff8855;
+                  padding:9px 20px; font-size:16px; font-weight:bold; }}
+.neon-btn-yellow:hover {{ background-color:rgba(255,255,0,0.24); border-color:{WHITE_OFF}; }}
+.neon-btn-orange{{ background-color:rgba(255,85,0,0.14); color:#ff8855;
                   border:2px solid rgba(255,85,0,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }
-.neon-btn-orange:hover { background-color:rgba(255,85,0,0.26); border-color:#e8edf5; }
-.neon-btn-purple{ background-color:rgba(200,0,255,0.14); color:#dd88ff;
+                  padding:9px 20px; font-size:16px; font-weight:bold; }}
+.neon-btn-orange:hover {{ background-color:rgba(255,85,0,0.26); border-color:{WHITE_OFF}; }}
+.neon-btn-purple{{ background-color:rgba(200,0,255,0.14); color:#dd88ff;
                   border:2px solid rgba(200,0,255,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }
-.neon-btn-purple:hover { background-color:rgba(200,0,255,0.26); border-color:#e8edf5; }
+                  padding:9px 20px; font-size:16px; font-weight:bold; }}
+.neon-btn-purple:hover {{ background-color:rgba(200,0,255,0.26); border-color:{WHITE_OFF}; }}
 
-entry {
+entry {{
     background-color: rgba(255,255,255,0.05); color: rgba(232,224,245,0.90);
     border: 2px solid rgba(255,0,255,0.30); border-radius: 4px;
-    padding: 7px 14px; font-size: 16px; caret-color: #e8edf5;
-}
-entry:focus { border-color: #e8edf5; box-shadow: 0 0 12px rgba(255,0,255,0.25); }
-entry text { background-color: transparent; }
+    padding: 7px 14px; font-size: 16px; caret-color: {WHITE_OFF};
+}}
+entry:focus {{ border-color: {WHITE_OFF}; box-shadow: 0 0 12px rgba(255,0,255,0.25); }}
+entry text {{ background-color: transparent; }}
 
-scrollbar { background-color: transparent; }
-scrollbar slider { background-color: rgba(255,0,255,0.22); border-radius: 2px; min-width:5px; }
-"""
+scrollbar {{ background-color: transparent; }}
+scrollbar slider {{ background-color: rgba(255,0,255,0.22); border-radius: 2px; min-width:5px; }}
+""")
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Drawing helpers  (NO cairo import needed — use cr.arc for all fills)
@@ -2073,3 +2122,7 @@ class NyxusControl(Gtk.Application):
 if __name__ == "__main__":
     app = NyxusControl()
     sys.exit(app.run(sys.argv))
+
+# ── palette guard (rev r13) ─────────────────────────────────────────
+try: assert_no_forbidden(CSS, __file__)
+except Exception as _e: import sys; sys.stderr.write(str(_e)+chr(10))

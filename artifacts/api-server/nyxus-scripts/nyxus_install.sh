@@ -242,6 +242,26 @@ mkdir -p "$HOME/.config/wlogout"
 dl "wlogout-style.css" "$HOME/.config/wlogout/style.css" || failed=$((failed+1))
 dl "wlogout-layout"    "$HOME/.config/wlogout/layout"    || failed=$((failed+1))
 
+# ── PALETTE.CSS COPY-ALONGSIDE (rev r13) ─────────────────────────────────────
+# Every CSS file that @imports nyxus-palette.css needs the file resolvable
+# in its own directory (GTK CSS @import is path-relative). Copy it next to
+# every consumer.
+hdr "Palette CSS (mirroring to all consumer dirs)"
+PALETTE_SRC="$SCRIPTS_DIR/nyxus-palette.css"
+if [[ -f "$PALETTE_SRC" ]]; then
+  for dest in "$WAYBAR_DIR" "$HOME/.config/wlogout" "$HOME/.config/dunst" \
+              "$HOME/.config/rofi" "$HOME/.nyxus"; do
+    [[ -d "$dest" ]] && cp -f "$PALETTE_SRC" "$dest/nyxus-palette.css" 2>/dev/null && echo "  · mirrored to $dest/"
+  done
+  # And into every per-app tarball install dir under ~/.nyxus/
+  for d in "$HOME/.nyxus"/*/; do
+    [[ -d "$d" ]] && cp -f "$PALETTE_SRC" "$d/nyxus-palette.css" 2>/dev/null
+  done
+else
+  echo "  WARN: nyxus-palette.css missing at $PALETTE_SRC — palette imports will fail"
+  failed=$((failed+1))
+fi
+
 # ── DUNST (NYXUS-themed notification daemon) ─────────────────────────────────
 hdr "Dunst Notifications (NYXUS theme)"
 mkdir -p "$DUNST_DIR"

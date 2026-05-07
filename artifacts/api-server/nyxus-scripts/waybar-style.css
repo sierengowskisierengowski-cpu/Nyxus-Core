@@ -1,3 +1,6 @@
+/* ── NYXUS palette (single source of truth · rev r13) ────────── */
+@import url("nyxus-palette.css");
+
 /* ════════════════════════════════════════════════════════════════════════════
    NYXUS WAYBAR · OPTION A · LIQUID GLASS BRUTALIST  (rev 2026-05-06t)
    ════════════════════════════════════════════════════════════════════════════
@@ -25,7 +28,7 @@ window#waybar.bottom,
 window#waybar.left,
 window#waybar.right {
     background-color: rgba(8, 12, 20, 0.58);
-    color:            #e8edf5;
+    color:            @nyx_white_off;
     border:           1px solid rgba(230, 240, 255, 0.18);
     border-radius:    22px;
     box-shadow:
@@ -55,7 +58,7 @@ window#waybar.right {
 #custom-app-notes,
 #custom-app-terminal,
 #custom-app-settings {
-    color:            #e8edf5;
+    color:            @nyx_white_off;
     background-color: rgba(10, 12, 18, 0.78);
     margin:           5px 5px;
     padding:          4px 14px;
@@ -96,7 +99,7 @@ window#waybar.right {
 #custom-app-terminal:hover,
 #custom-app-settings:hover {
     background-color: rgba(40, 52, 78, 0.88);
-    color:            #ffffff;
+    color:            @nyx_white;
     box-shadow:
         inset  0px  1.5px 0px  0px  rgba(230, 240, 255, 0.50),
         inset  0px -1px   0px  0px  rgba(0,   0,   0,   0.45),
@@ -118,7 +121,7 @@ window#waybar.right {
     font-size:      30px;
     font-weight:    700;
     letter-spacing: 0.20em;
-    color:          #e8edf5;
+    color:          @nyx_white_off;
     background:     transparent;
     padding:        0 32px;
     margin:         0 14px;
@@ -131,7 +134,7 @@ window#waybar.right {
 }
 
 #custom-nyxus:hover {
-    color: #ffffff;
+    color: @nyx_white;
     text-shadow:
         0 -1px 0 rgba(0, 0, 0, 0.65),
         0  1px 0 rgba(230, 240, 255, 0.35),
@@ -143,7 +146,7 @@ window#waybar.right {
 /* ── 4. AIRPORT TICKER ──────────────────────────────────────────────────── */
 #custom-ticker {
     background-color: rgba(15, 20, 32, 0.78);
-    color:            #e8edf5;
+    color:            @nyx_white_off;
     margin:           5px 8px 5px 0;
     padding:          5px 18px;
     /* Width cap is enforced by the 100-char WINDOW in waybar-ticker.sh
@@ -160,17 +163,17 @@ window#waybar.right {
         0  1px 0 rgba(230, 240, 255, 0.20);
     box-shadow:
         inset  0  1.5px 0 rgba(230, 240, 255, 0.30),
-        inset  0 -1px   0 rgba(0, 0, 0, 0.45),
+        inset  0 -1px   0 @nyx_hairline_ink,
         0  3px  8px rgba(0, 0, 0, 0.55),
         0 10px 22px rgba(0, 0, 0, 0.32);
 }
 
 #custom-ticker:hover {
     background-color: rgba(40, 52, 78, 0.88);
-    color: #ffffff;
+    color: @nyx_white;
     box-shadow:
         inset  0  1.5px 0 rgba(230, 240, 255, 0.50),
-        inset  0 -1px   0 rgba(0, 0, 0, 0.45),
+        inset  0 -1px   0 @nyx_hairline_ink,
         0  5px 12px rgba(0, 0, 0, 0.60),
         0 12px 26px rgba(0, 0, 0, 0.40),
         0  0 16px rgba(230, 240, 255, 0.55);
@@ -203,8 +206,8 @@ window#waybar.right {
 #backlight,
 #battery,
 #custom-quick-settings {
-    color:            #e8edf5;
-    background-color: rgba(15, 20, 32, 0.72);
+    color:            @nyx_white_off;
+    background-color: @nyx_glass_deeper;
     font-family:      'Inter', 'Symbols Nerd Font', 'JetBrains Mono', sans-serif;
     font-size:        11px;
     font-weight:      700;
@@ -219,7 +222,7 @@ window#waybar.right {
         0  1px 0 rgba(230, 240, 255, 0.20);
     box-shadow:
         inset  0  1.5px 0 rgba(230, 240, 255, 0.30),
-        inset  0 -1px   0 rgba(0, 0, 0, 0.45),
+        inset  0 -1px   0 @nyx_hairline_ink,
         inset  1px  0   0 rgba(230, 240, 255, 0.18),
         inset -1px  0   0 rgba(0, 0, 0, 0.30),
         0  2px 5px rgba(0, 0, 0, 0.50),
@@ -233,7 +236,7 @@ window#waybar.right {
 #battery:hover,
 #custom-quick-settings:hover {
     background-color: rgba(40, 52, 78, 0.92);
-    color:            #ffffff;
+    color:            @nyx_white;
     box-shadow:
         inset  0px  0px   0px  1px  rgba(230, 240, 255, 0.55),
         inset  0px  1.5px 0px  0px  rgba(230, 240, 255, 0.50),
@@ -248,9 +251,9 @@ window#waybar.right {
         0px 0px 12px rgba(230, 240, 255, 0.50);
 }
 
-#battery.warning  { color: #c8ccd6; }
-#battery.critical { color: #c8ccd6; }
-#network.disconnected { color: #c8ccd6; }
+#battery.warning  { color: @nyx_grey_light; }
+#battery.critical { color: @nyx_grey_light; }
+#network.disconnected { color: @nyx_grey_light; }
 
 /* ── 7. BOTTOM BAR · Start | tray | Panel | Notifications ───────────────── */
 /* Sticker pills: WHITE FILL + thin black 8-direction outline around the
@@ -263,8 +266,8 @@ window#waybar.bottom #custom-notifications {
     font-size:        12px;
     font-weight:      800;
     letter-spacing:   0.18em;
-    color:            #ffffff;
-    background-color: #ffffff;
+    color:            @nyx_white;
+    background-color: @nyx_white;
     padding:          4px 22px;
     margin:           5px 8px;
     min-width:        0;
@@ -284,15 +287,15 @@ window#waybar.bottom #custom-notifications {
     box-shadow:
         inset 0  1px 0 rgba(255, 255, 255, 1.00),
         inset 0 -1px 0 rgba(0, 0, 0, 0.18),
-        0  2px  6px rgba(0, 0, 0, 0.45),
+        0  2px  6px @nyx_hairline_ink,
         0  6px 14px rgba(0, 0, 0, 0.30);
 }
 
 window#waybar.bottom #custom-nyxus-start:hover,
 window#waybar.bottom #custom-nyxus-panel:hover,
 window#waybar.bottom #custom-notifications:hover {
-    color:            #ffffff;
-    background-color: #ffffff;
+    color:            @nyx_white;
+    background-color: @nyx_white;
     border:           1px solid rgba(0, 0, 0, 1.00);
     box-shadow:
         inset 0  1px 0 rgba(255, 255, 255, 1.00),
@@ -319,7 +322,7 @@ window#waybar.bottom #tray > .needs-attention {
     box-shadow:
         inset  0  1px 0 rgba(230, 240, 255, 0.25),
         inset  0 -1px 0 rgba(0, 0, 0, 0.40),
-        0  1px 4px rgba(0, 0, 0, 0.45);
+        0  1px 4px @nyx_hairline_ink;
 }
 
 window#waybar.bottom #tray > .needs-attention {
@@ -343,12 +346,12 @@ window#waybar.left #workspaces button {
 
 window#waybar.left #workspaces button.active,
 window#waybar.left #workspaces button.focused {
-    color:            #ffffff;
+    color:            @nyx_white;
     background-color: rgba(40, 52, 78, 0.92);
     box-shadow:
         inset  0  0  0 1.5px rgba(230, 240, 255, 0.65),
         inset  0  1.5px 0 rgba(230, 240, 255, 0.50),
-        inset  0 -1px   0 rgba(0, 0, 0, 0.45),
+        inset  0 -1px   0 @nyx_hairline_ink,
         0  4px 10px rgba(0, 0, 0, 0.55),
         0  0 18px rgba(230, 240, 255, 0.55),
         0  0 32px rgba(230, 240, 255, 0.25);
@@ -385,7 +388,7 @@ window#waybar.right #custom-app-settings {
 /* ── 10. TOOLTIPS · frosted-glass cream popovers ────────────────────────── */
 tooltip {
     background-color: rgba(8, 12, 20, 0.94);
-    color:            #e8edf5;
+    color:            @nyx_white_off;
     border:           1px solid rgba(230, 240, 255, 0.30);
     border-radius:    14px;
     padding:          0;
@@ -397,7 +400,7 @@ tooltip {
 }
 
 tooltip label {
-    color:    #e8edf5;
+    color:    @nyx_white_off;
     padding:  10px 16px;
     font-family: 'Inter', sans-serif;
     font-size: 13px;

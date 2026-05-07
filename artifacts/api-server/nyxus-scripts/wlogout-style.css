@@ -1,7 +1,10 @@
+/* ── NYXUS palette (single source of truth · rev r13) ────────── */
+@import url("nyxus-palette.css");
+
 /* ════════════════════════════════════════════════════════════════════════════
    NYXUS · wlogout · DARK MIRROR · LOCKED rev 2026-05-07 r13
    Matches unified DARK MIRROR · UNIFIED FROSTED GLASS spec.
-   Pure monochrome — white / off-white #e8edf5 / light grey #c8ccd6 /
+   Pure monochrome — white / off-white @nyx_white_off / light grey @nyx_grey_light /
    faded black / ink black. No pink, no purple, no neon, no per-button
    color fills.
    © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
@@ -18,12 +21,12 @@
 window {
     background-color: rgba(8, 12, 20, 0.62) !important;
     background-image: none                  !important;
-    color: #e8edf5                          !important;
+    color: @nyx_white_off                          !important;
 }
 
 /* ── BUTTON BASE · DARK MIRROR pebble ────────────────────────────── */
 button {
-    background-color: rgba(15, 20, 32, 0.72)  !important;
+    background-color: @nyx_glass_deeper  !important;
     background-image: none                    !important;
     background-repeat: no-repeat;
     background-position: center 30%;
@@ -31,11 +34,11 @@ button {
 
     border-style:  solid                       !important;
     border-width:  1px                         !important;
-    border-color:  rgba(255, 255, 255, 0.10)   !important;
+    border-color:  @nyx_hairline_white   !important;
     border-radius: 16px                        !important;
 
-    color:        #e8edf5                      !important;
-    box-shadow:   0 6px 18px rgba(0, 0, 0, 0.45),
+    color:        @nyx_white_off                      !important;
+    box-shadow:   0 6px 18px @nyx_hairline_ink,
                   inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
     outline:      none                         !important;
 
@@ -49,7 +52,7 @@ button:active,
 button:hover {
     background-color: rgba(40, 52, 78, 0.88)   !important;
     border-color:     rgba(232, 237, 245, 0.55)!important;
-    color:            #ffffff                  !important;
+    color:            @nyx_white                  !important;
     box-shadow:       0 8px 24px rgba(0, 0, 0, 0.55),
                       0 0 22px rgba(232, 237, 245, 0.45),
                       inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
@@ -63,10 +66,10 @@ button:hover {
 #hibernate,button#hibernate,.hibernate,button.hibernate,
 #reboot,   button#reboot,   .reboot,   button.reboot,
 #shutdown, button#shutdown, .shutdown, button.shutdown {
-    background-color: rgba(15, 20, 32, 0.72) !important;
+    background-color: @nyx_glass_deeper !important;
     background-image: none                   !important;
-    border-color:     rgba(255, 255, 255, 0.10) !important;
-    color:            #e8edf5                !important;
+    border-color:     @nyx_hairline_white !important;
+    color:            @nyx_white_off                !important;
     border-radius:    16px                   !important;
 }
 
@@ -78,5 +81,5 @@ button:hover {
 #shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
     background-color: rgba(40, 52, 78, 0.88) !important;
     border-color:     rgba(232, 237, 245, 0.55) !important;
-    color:            #ffffff !important;
+    color:            @nyx_white !important;
 }

@@ -13,6 +13,55 @@ def _nyx_integrity():
         assert "SIERENGOWSKI" in _s, "NYXUS: tamper detected"
     except (OSError, AssertionError) as _e:
         import sys as _sys; print(f"NYXUS SECURITY: {_e}", file=_sys.stderr)
+
+# ── NYXUS palette (single source of truth · rev r13) ────────────────
+try:
+    from nyxus_palette import (
+        WHITE_PURE, WHITE_OFF, GREY_LIGHT, GREY_MID, GREY_TERTIARY,
+        INK_FADED, INK_BLACK,
+        GLASS_DARK, GLASS_DEEPER, GLASS_DEEPEST,
+        HAIRLINE_WHITE, HAIRLINE_INK,
+        SHADOW_INK_ACTIVE, SHADOW_INK_INACTIVE,
+        RADIUS_CARD, RADIUS_PILL, RADIUS_INPUT,
+        FONT_UI, FONT_MONO, FONT_DISPLAY,
+        format_css, assert_no_forbidden,
+    )
+except Exception:
+    # palette module is shipped alongside every NYXUS app via
+    # nyxus_install.sh; if it's missing, fall back to literals so
+    # the app still launches.
+    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
+    INK_FADED='#0a0a0a'; INK_BLACK='#000000'
+    GLASS_DARK='rgba(8, 12, 20, 0.55)'
+    GLASS_DEEPER='rgba(15, 20, 32, 0.72)'
+    GLASS_DEEPEST='rgba(5, 7, 12, 0.92)'
+    HAIRLINE_WHITE='rgba(255, 255, 255, 0.10)'
+    HAIRLINE_INK='rgba(0, 0, 0, 0.45)'
+    SHADOW_INK_ACTIVE='rgba(0, 0, 0, 0.65)'
+    SHADOW_INK_INACTIVE='rgba(0, 0, 0, 0.20)'
+    RADIUS_CARD=14; RADIUS_PILL=12; RADIUS_INPUT=10
+    FONT_UI='Inter'; FONT_MONO='JetBrains Mono'; FONT_DISPLAY='Inter Display'
+    def format_css(t):
+        _d = {
+            'WHITE_PURE': WHITE_PURE, 'WHITE_OFF': WHITE_OFF,
+            'GREY_LIGHT': GREY_LIGHT, 'GREY_MID': GREY_MID,
+            'GREY_TERTIARY': GREY_TERTIARY,
+            'INK_FADED': INK_FADED, 'INK_BLACK': INK_BLACK,
+            'GLASS_DARK': GLASS_DARK, 'GLASS_DEEPER': GLASS_DEEPER,
+            'GLASS_DEEPEST': GLASS_DEEPEST,
+            'HAIRLINE_WHITE': HAIRLINE_WHITE, 'HAIRLINE_INK': HAIRLINE_INK,
+            'SHADOW_INK_ACTIVE': SHADOW_INK_ACTIVE,
+            'SHADOW_INK_INACTIVE': SHADOW_INK_INACTIVE,
+            'RADIUS_CARD': RADIUS_CARD, 'RADIUS_PILL': RADIUS_PILL,
+            'RADIUS_INPUT': RADIUS_INPUT,
+            'FONT_UI': FONT_UI, 'FONT_MONO': FONT_MONO,
+            'FONT_DISPLAY': FONT_DISPLAY,
+        }
+        return t.format_map(_d)
+    def assert_no_forbidden(*a, **k): pass
+# ─────────────────────────────────────────────────────────────────────
+
 _nyx_integrity()
 
 
@@ -402,17 +451,17 @@ def collect(st):
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
 
-CSS = """
-* { font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }
-window { background-color: #08080e; color: rgba(232,224,245,0.92); }
+CSS = format_css("""
+* {{ font-family: 'Caveat', 'Patrick Hand', 'Comic Sans MS', 'Sans'; }}
+window {{ background-color: #08080e; color: rgba(232,224,245,0.92); }}
 
 /* ── Nav sidebar ─────────────────────────────────────────────────────── */
-.nav-bar {
-    background-color: #000000;
+.nav-bar {{
+    background-color: {INK_BLACK};
     border-right: 3px solid rgba(255,0,255,0.30);
     min-width: 168px;
-}
-.nav-btn {
+}}
+.nav-btn {{
     background-color: rgba(255,255,255,0.03);
     color: rgba(180,160,220,0.75);
     border: 1px solid rgba(255,0,255,0.14);
@@ -421,73 +470,73 @@ window { background-color: #08080e; color: rgba(232,224,245,0.92); }
     padding: 13px 14px 13px 15px;
     margin: 3px 8px;
     font-size: 17px; font-weight: bold; letter-spacing: 2px; min-height: 0;
-}
-.nav-btn:hover {
+}}
+.nav-btn:hover {{
     background-color: rgba(255,0,255,0.11);
     color: rgba(255,200,255,0.96);
     border-color: rgba(255,0,255,0.38);
-}
-.nav-active-pink   { background: rgba(255,0,255,0.14); color: #ff99ff;
-                     border-left: 5px solid #e8edf5;
-                     border-color: rgba(255,0,255,0.45); }
-.nav-active-orange { background: rgba(255,85,0,0.14); color: #ff9966;
-                     border-left: 5px solid #e8edf5;
-                     border-color: rgba(255,85,0,0.45); }
-.nav-active-purple { background: rgba(204,0,255,0.14); color: #ee99ff;
-                     border-left: 5px solid #e8edf5;
-                     border-color: rgba(204,0,255,0.45); }
-.nav-active-blue   { background: rgba(0,136,255,0.14); color: #77ccff;
-                     border-left: 5px solid #c8ccd6;
-                     border-color: rgba(0,136,255,0.45); }
-.nav-active-green  { background: rgba(57,255,20,0.11); color: #99ff66;
-                     border-left: 5px solid #c8ccd6;
-                     border-color: rgba(57,255,20,0.45); }
-.nav-active-yellow { background: rgba(255,255,0,0.11); color: #ffff99;
-                     border-left: 5px solid #e8edf5;
-                     border-color: rgba(255,255,0,0.45); }
+}}
+.nav-active-pink   {{ background: rgba(255,0,255,0.14); color: #ff99ff;
+                     border-left: 5px solid {WHITE_OFF};
+                     border-color: rgba(255,0,255,0.45); }}
+.nav-active-orange {{ background: rgba(255,85,0,0.14); color: #ff9966;
+                     border-left: 5px solid {WHITE_OFF};
+                     border-color: rgba(255,85,0,0.45); }}
+.nav-active-purple {{ background: rgba(204,0,255,0.14); color: #ee99ff;
+                     border-left: 5px solid {WHITE_OFF};
+                     border-color: rgba(204,0,255,0.45); }}
+.nav-active-blue   {{ background: rgba(0,136,255,0.14); color: #77ccff;
+                     border-left: 5px solid {GREY_LIGHT};
+                     border-color: rgba(0,136,255,0.45); }}
+.nav-active-green  {{ background: rgba(57,255,20,0.11); color: #99ff66;
+                     border-left: 5px solid {GREY_LIGHT};
+                     border-color: rgba(57,255,20,0.45); }}
+.nav-active-yellow {{ background: rgba(255,255,0,0.11); color: #ffff99;
+                     border-left: 5px solid {WHITE_OFF};
+                     border-color: rgba(255,255,0,0.45); }}
 
 /* ── Search input ────────────────────────────────────────────────────── */
-.search-e {
+.search-e {{
     background-color: rgba(255,255,255,0.06);
     color: rgba(232,224,245,0.88);
     border: 2px solid rgba(255,0,255,0.30); border-radius: 4px;
-    padding: 5px 12px; font-size: 15px; box-shadow: none; caret-color: #e8edf5;
-}
-.search-e text { background-color: transparent; }
-.search-e:focus { border-color: #e8edf5; }
+    padding: 5px 12px; font-size: 15px; box-shadow: none; caret-color: {WHITE_OFF};
+}}
+.search-e text {{ background-color: transparent; }}
+.search-e:focus {{ border-color: {WHITE_OFF}; }}
 
 /* ── Process action buttons ──────────────────────────────────────────── */
-.kill-btn {
+.kill-btn {{
     background-color: rgba(255,50,30,0.18); color: #ff6655;
     border: 2px solid rgba(255,80,50,0.45); border-radius: 4px;
     padding: 5px 12px; font-size: 14px; font-weight: bold;
-}
-.kill-btn:hover { background-color: rgba(255,80,50,0.32); }
-.sort-btn {
+}}
+.kill-btn:hover {{ background-color: rgba(255,80,50,0.32); }}
+.sort-btn {{
     background-color: rgba(255,255,255,0.06); color: rgba(200,180,240,0.80);
     border: 1px solid rgba(255,255,255,0.12); border-radius: 4px;
     padding: 4px 10px; font-size: 13px;
-}
-.sort-btn:hover { background-color: rgba(255,255,255,0.12); }
-.sort-active {
+}}
+.sort-btn:hover {{ background-color: rgba(255,255,255,0.12); }}
+.sort-active {{
     color: #ffff88; border-color: rgba(255,255,0,0.50);
     background-color: rgba(255,255,0,0.10);
-}
+}}
 
 /* ── Process treeview ────────────────────────────────────────────────── */
-treeview {
+treeview {{
     background-color: #0a0a14; color: rgba(230,220,245,0.88);
     font-size: 14px; font-family: 'Caveat', 'Sans';
-}
-treeview:selected {
+}}
+treeview:selected {{
     background-color: rgba(255,0,255,0.18); color: #ffaaff;
-}
-treeview header button {
-    background-color: #000000; color: rgba(180,160,220,0.80);
+}}
+treeview header button {{
+    background-color: {INK_BLACK}; color: rgba(180,160,220,0.80);
     border: none; font-size: 13px; font-weight: bold;
     border-bottom: 2px solid rgba(255,0,255,0.18);
-}
-"""
+}}
+""")
 
 COLOR_NAMES = {
     C_PINK:"pink", C_ORANGE:"orange", C_PURPLE:"purple",
@@ -1177,3 +1226,7 @@ if __name__=="__main__":
         with open(log,"w") as f: traceback.print_exc(file=f)
         print(f"NYXUS SysMon crashed — see {log}")
         sys.exit(1)
+
+# ── palette guard (rev r13) ─────────────────────────────────────────
+try: assert_no_forbidden(CSS, __file__)
+except Exception as _e: import sys; sys.stderr.write(str(_e)+chr(10))
