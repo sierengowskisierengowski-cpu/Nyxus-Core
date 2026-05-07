@@ -92,7 +92,7 @@ sudo plymouth quit
 ## Visual specification (locked)
 
 - **Background** — `nyxus-ink-swirl.png` (cosmic black-hole / silver wisps), full-bleed cover.
-- **Wordmark** — `NYXUS` in DejaVu Serif Bold, 130pt, fill `#d4a73a` (warm gold), soft warm shadow.
+- **Wordmark** — `NYXUS` in DejaVu Serif Bold, 130pt, fill `#e8edf5` (warm gold), soft warm shadow.
 - **Tagline** — `WELCOME  TO  THE  DARKSIDE` in DejaVu Sans Bold, 22pt, fill `#e6f0ff` (starlight cool-white), heavy letter-spacing.
 - **Subline** — `NYXUS · SIERENGOWSKI · 2026` in DejaVu Sans Mono, 14pt, fill `#a8b0bd` (pencil-light).
 - **Spinner** — 12 dots arrayed in a 64px-radius ring, anchored 130px from bottom-center.

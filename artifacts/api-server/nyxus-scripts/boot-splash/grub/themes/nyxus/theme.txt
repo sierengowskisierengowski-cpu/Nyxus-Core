@@ -55,7 +55,7 @@ terminal-border:   "1"
 
     item_font  = "DejaVu Sans Bold 16"
     item_color = "#e8edf5"
-    selected_item_color = "#d4a73a"
+    selected_item_color = "#e8edf5"
     selected_item_pixmap_style = "select_*.png"
 
     item_height  = 44

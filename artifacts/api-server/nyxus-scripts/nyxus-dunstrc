@@ -28,7 +28,7 @@
     horizontal_padding = 16
     text_icon_padding = 10
     frame_width = 3
-    frame_color = "#ff00ff"
+    frame_color = "#e8edf5"
     gap_size = 6
     separator_color = frame
     sort = yes
@@ -74,22 +74,22 @@
 
 [urgency_low]
     background = "#0a0a12"
-    foreground = "#39ff14"
-    frame_color = "#39ff14"
+    foreground = "#c8ccd6"
+    frame_color = "#c8ccd6"
     timeout = 6
     default_icon = dialog-information
 
 [urgency_normal]
     background = "#0a0a12"
     foreground = "#ffffff"
-    frame_color = "#ff00ff"
+    frame_color = "#e8edf5"
     timeout = 8
     override_pause_level = 30
     default_icon = dialog-information
 
 [urgency_critical]
     background = "#0a0a12"
-    foreground = "#ffff00"
+    foreground = "#e8edf5"
     frame_color = "#ff3030"
     timeout = 0
     override_pause_level = 60
@@ -98,15 +98,15 @@
 # Per-app overrides — match NYXUS app classes
 [nyxus_terminal]
     appname = nyxus-terminal
-    foreground = "#39ff14"
-    frame_color = "#39ff14"
+    foreground = "#c8ccd6"
+    frame_color = "#c8ccd6"
 
 [nyxus_settings]
     appname = nyxus-settings
-    foreground = "#ff00ff"
-    frame_color = "#ff00ff"
+    foreground = "#e8edf5"
+    frame_color = "#e8edf5"
 
 [nyxus_control]
     appname = nyxus-control
-    foreground = "#00aaff"
-    frame_color = "#00aaff"
+    foreground = "#c8ccd6"
+    frame_color = "#c8ccd6"

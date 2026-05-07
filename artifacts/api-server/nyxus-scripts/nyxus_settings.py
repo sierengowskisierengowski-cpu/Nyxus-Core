@@ -118,8 +118,8 @@ DANGER_RED = (1.0,  0.27, 0.40)
 #  Multi-color rainbow markup for hero titles
 # ═══════════════════════════════════════════════════════════════════════════════
 # Hex stops cycled per character (matches NYXUS suite + Hyprland border).
-_RAINBOW_HEX = ("#e8edf5", "#ff2da8", "#b800ff", "#00aaff",
-                "#39ff14", "#ffc833", "#ff66dd", "#e8edf5")
+_RAINBOW_HEX = ("#e8edf5", "#ff2da8", "#b800ff", "#c8ccd6",
+                "#c8ccd6", "#ffc833", "#ff66dd", "#e8edf5")
 
 def _rainbow_markup(text: str) -> str:
     """Return Pango markup where each visible character is colored from
@@ -4435,13 +4435,15 @@ class NotificationsPage(BasePage):
         return ""
 
     def _open_in_notepad(self, path: str):
-        np = Path.home() / ".nyxus/nyxus_notepad.py"
-        if np.exists():
-            subprocess.Popen(["python3", str(np), path],
+        # rev r13: standalone nyxus_notepad.py removed; tarball edition
+        # provides /usr/local/bin/nyxus-notepad
+        bin_path = "/usr/local/bin/nyxus-notepad"
+        if Path(bin_path).exists():
+            subprocess.Popen([bin_path, path],
                              stdout=subprocess.DEVNULL,
                              stderr=subprocess.DEVNULL)
         else:
-            self.win.toast("nyxus_notepad.py not found")
+            self.win.toast("nyxus-notepad not installed")
 
     def _term_run(self, cmd: str, toast: str):
         for term in ("foot", "alacritty", "kitty", "xterm"):

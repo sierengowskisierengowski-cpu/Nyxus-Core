@@ -44,10 +44,10 @@ def lock_cmd() -> str:
 
 
 ACTIONS = [
-    ("Lock",     "L", "🔒", "#39ff14", lambda: run(lock_cmd())),
-    ("Logout",   "O", "↩",  "#00aaff",
+    ("Lock",     "L", "🔒", "#c8ccd6", lambda: run(lock_cmd())),
+    ("Logout",   "O", "↩",  "#c8ccd6",
         lambda: run("hyprctl dispatch exit")),
-    ("Suspend",  "S", "💤", "#ffd700",
+    ("Suspend",  "S", "💤", "#e8edf5",
         lambda: run("systemctl suspend")),
     ("Hibernate","H", "🛌", "#ff8800",
         lambda: run("systemctl hibernate")),

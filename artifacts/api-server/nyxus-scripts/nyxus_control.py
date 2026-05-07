@@ -442,22 +442,22 @@ window { background-color: transparent; color: rgba(232,224,245,0.92); }
 .nav-active-orange { background: rgba(255,85,0,0.14);  color: #ff8855;
                      border-left: 4px solid #e8edf5; }
 .nav-active-purple { background: rgba(204,0,255,0.14); color: #dd88ff;
-                     border-left: 4px solid #cc00ff; }
+                     border-left: 4px solid #e8edf5; }
 .nav-active-blue   { background: rgba(0,136,255,0.14); color: #66bbff;
-                     border-left: 4px solid #0088ff; }
+                     border-left: 4px solid #c8ccd6; }
 .nav-active-green  { background: rgba(57,255,20,0.12); color: #88ff55;
-                     border-left: 4px solid #39ff14; }
+                     border-left: 4px solid #c8ccd6; }
 .nav-active-yellow { background: rgba(255,255,0,0.12); color: #ffff88;
-                     border-left: 4px solid #ffff00; }
+                     border-left: 4px solid #e8edf5; }
 
 scale trough { background-color: rgba(255,255,255,0.08); border-radius: 2px; min-height: 8px; }
 scale highlight { border-radius: 2px; min-height: 8px; }
 scale.pink   highlight { background-color: #e8edf5; }
-scale.blue   highlight { background-color: #0088ff; }
-scale.green  highlight { background-color: #39ff14; }
-scale.yellow highlight { background-color: #ffff00; }
+scale.blue   highlight { background-color: #c8ccd6; }
+scale.green  highlight { background-color: #c8ccd6; }
+scale.yellow highlight { background-color: #e8edf5; }
 scale.orange highlight { background-color: #e8edf5; }
-scale.purple highlight { background-color: #cc00ff; }
+scale.purple highlight { background-color: #e8edf5; }
 scale.red    highlight { background-color: #ff2020; }
 scale slider { min-width:18px; min-height:18px; border-radius:2px; background:white;
                border:2px solid rgba(255,255,255,0.50); }
@@ -473,11 +473,11 @@ scale slider { min-width:18px; min-height:18px; border-radius:2px; background:wh
 .neon-btn-blue  { background-color:rgba(0,136,255,0.14); color:#66bbff;
                   border:2px solid rgba(0,136,255,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
-.neon-btn-blue:hover  { background-color:rgba(0,136,255,0.26); border-color:#0088ff; }
+.neon-btn-blue:hover  { background-color:rgba(0,136,255,0.26); border-color:#c8ccd6; }
 .neon-btn-green { background-color:rgba(57,255,20,0.12); color:#88ff55;
                   border:2px solid rgba(57,255,20,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
-.neon-btn-green:hover { background-color:rgba(57,255,20,0.24); border-color:#39ff14; }
+.neon-btn-green:hover { background-color:rgba(57,255,20,0.24); border-color:#c8ccd6; }
 .neon-btn-red   { background-color:rgba(255,30,30,0.14); color:#ff6655;
                   border:2px solid rgba(255,60,40,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
@@ -485,7 +485,7 @@ scale slider { min-width:18px; min-height:18px; border-radius:2px; background:wh
 .neon-btn-yellow{ background-color:rgba(255,255,0,0.12); color:#ffff88;
                   border:2px solid rgba(255,255,0,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
-.neon-btn-yellow:hover { background-color:rgba(255,255,0,0.24); border-color:#ffff00; }
+.neon-btn-yellow:hover { background-color:rgba(255,255,0,0.24); border-color:#e8edf5; }
 .neon-btn-orange{ background-color:rgba(255,85,0,0.14); color:#ff8855;
                   border:2px solid rgba(255,85,0,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
@@ -493,7 +493,7 @@ scale slider { min-width:18px; min-height:18px; border-radius:2px; background:wh
 .neon-btn-purple{ background-color:rgba(200,0,255,0.14); color:#dd88ff;
                   border:2px solid rgba(200,0,255,0.45); border-radius:4px;
                   padding:9px 20px; font-size:16px; font-weight:bold; }
-.neon-btn-purple:hover { background-color:rgba(200,0,255,0.26); border-color:#cc00ff; }
+.neon-btn-purple:hover { background-color:rgba(200,0,255,0.26); border-color:#e8edf5; }
 
 entry {
     background-color: rgba(255,255,255,0.05); color: rgba(232,224,245,0.90);

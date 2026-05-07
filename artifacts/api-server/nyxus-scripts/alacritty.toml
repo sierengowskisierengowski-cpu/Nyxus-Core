@@ -68,58 +68,58 @@ hide_when_typing = true
 [bell]
 animation = "EaseOutExpo"
 duration  = 0
-color     = "#c084fc"
+color     = "#c8ccd6"
 
 # ── Color Scheme — NYXUS ─────────────────────────────────────
 [colors]
 draw_bold_text_with_bright_colors = true
 
 [colors.primary]
-background    = "#080808"
+background    = "#0a0e16"
 foreground    = "#C8C0C0"
 dim_foreground = "#888090"
 
 [colors.cursor]
-text   = "#080808"
-cursor = "#c084fc"
+text   = "#0a0e16"
+cursor = "#c8ccd6"
 
 [colors.vi_mode_cursor]
-text   = "#080808"
-cursor = "#f472b6"
+text   = "#0a0e16"
+cursor = "#e8edf5"
 
 [colors.selection]
-text       = "#080808"
+text       = "#0a0e16"
 background = "#7B5EA7"
 
 [colors.search.matches]
-foreground = "#080808"
-background = "#c084fc"
+foreground = "#0a0e16"
+background = "#c8ccd6"
 
 [colors.search.focused_match]
-foreground = "#080808"
-background = "#f472b6"
+foreground = "#0a0e16"
+background = "#e8edf5"
 
 [colors.footer_bar]
 background = "#0d0a12"
 foreground = "#888090"
 
 [colors.hints.start]
-foreground = "#080808"
-background = "#fbbf24"
+foreground = "#0a0e16"
+background = "#e8edf5"
 
 [colors.hints.end]
-foreground = "#080808"
-background = "#fb923c"
+foreground = "#0a0e16"
+background = "#e8edf5"
 
 # ── Normal palette ───────────────────────────────────────────
 [colors.normal]
 black   = "#0d0a12"
 red     = "#f87171"
-green   = "#34d399"
-yellow  = "#fb923c"
+green   = "#c8ccd6"
+yellow  = "#e8edf5"
 blue    = "#818cf8"
-magenta = "#c084fc"
-cyan    = "#22d3ee"
+magenta = "#c8ccd6"
+cyan    = "#c8ccd6"
 white   = "#C8C0C0"
 
 # ── Bright palette ───────────────────────────────────────────
@@ -129,7 +129,7 @@ red     = "#fca5a5"
 green   = "#6ee7b7"
 yellow  = "#fcd34d"
 blue    = "#a5b4fc"
-magenta = "#e879f9"
+magenta = "#c8ccd6"
 cyan    = "#67e8f9"
 white   = "#e8e4f0"
 

@@ -434,16 +434,16 @@ window { background-color: #08080e; color: rgba(232,224,245,0.92); }
                      border-left: 5px solid #e8edf5;
                      border-color: rgba(255,85,0,0.45); }
 .nav-active-purple { background: rgba(204,0,255,0.14); color: #ee99ff;
-                     border-left: 5px solid #cc00ff;
+                     border-left: 5px solid #e8edf5;
                      border-color: rgba(204,0,255,0.45); }
 .nav-active-blue   { background: rgba(0,136,255,0.14); color: #77ccff;
-                     border-left: 5px solid #0088ff;
+                     border-left: 5px solid #c8ccd6;
                      border-color: rgba(0,136,255,0.45); }
 .nav-active-green  { background: rgba(57,255,20,0.11); color: #99ff66;
-                     border-left: 5px solid #39ff14;
+                     border-left: 5px solid #c8ccd6;
                      border-color: rgba(57,255,20,0.45); }
 .nav-active-yellow { background: rgba(255,255,0,0.11); color: #ffff99;
-                     border-left: 5px solid #ffff00;
+                     border-left: 5px solid #e8edf5;
                      border-color: rgba(255,255,0,0.45); }
 
 /* ── Search input ────────────────────────────────────────────────────── */

@@ -194,9 +194,9 @@ class Picker(Gtk.Application):
 
         # mode buttons
         modes = [
-            ("Region",     "region",     "▭", "#39ff14"),
-            ("Window",     "window",     "🗖", "#00aaff"),
-            ("Full screen","fullscreen", "▣", "#ffd700"),
+            ("Region",     "region",     "▭", "#c8ccd6"),
+            ("Window",     "window",     "🗖", "#c8ccd6"),
+            ("Full screen","fullscreen", "▣", "#e8edf5"),
         ]
         row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         row.set_halign(Gtk.Align.CENTER)

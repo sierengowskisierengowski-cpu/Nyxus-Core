@@ -41,12 +41,12 @@ curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | b
 
 ## Design Tokens
 
-- **Background**: `#080808`
+- **Background**: `#0a0e16`
 - **Glass panels**: `rgba(6,4,12,0.55)` + `backdrop-filter: blur(14px) saturate(1.6)`
 - **UI font**: Caveat
 - **Code/data font**: JetBrains Mono
-- **Pink accent**: `#ff00ff` / `#c084fc`
-- **Green accent**: `#39ff14`
+- **Pink accent**: `#e8edf5` / `#c8ccd6`
+- **Green accent**: `#c8ccd6`
 - **Stamp**: `© 2026 NYX-J5W-2026-SIERENGOWSKI-LOCKED`
 
 ---

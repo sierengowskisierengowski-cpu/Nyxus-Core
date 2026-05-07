@@ -31,7 +31,7 @@ Pure monochrome. Three shades of black for void depth, light grey for HUD chrome
 | Role | Hex | Notes |
 |---|---|---|
 | Void center | `#000000` | True black at the eye of the swirl |
-| Faded black | `#050507` | Sub-vignette, +1 in lightness |
+| Faded black | `#0a0e16` | Sub-vignette, +1 in lightness |
 | Charcoal mid | `#0a0a0c` | Mid-vignette, +2 |
 | Graphite edge | `#14141a` | Outer ring, +5 |
 | Wordmark fill | `#1a1a1f` | The letters are *darker than the page edges* |

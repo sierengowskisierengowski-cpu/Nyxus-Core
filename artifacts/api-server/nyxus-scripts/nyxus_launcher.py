@@ -38,9 +38,9 @@ WIN_W, WIN_H = 720, 520
 MAX_RESULTS  = 40
 
 NEON_PINK  = "#e8edf5"
-NEON_BLUE  = "#00aaff"
-NEON_GREEN = "#39ff14"
-GOLD       = "#ffd700"
+NEON_BLUE  = "#c8ccd6"
+NEON_GREEN = "#c8ccd6"
+GOLD       = "#e8edf5"
 
 
 def have(cmd: str) -> bool:
