@@ -631,7 +631,19 @@ if command -v sddm &>/dev/null; then
       # Doing it the other way around can leave the user with NO active
       # display manager and a TTY-only boot — never acceptable.
       if [[ ${_sddm_theme_ok:-0} -eq 1 ]]; then
-        if sudo -n systemctl enable sddm.service &>/dev/null; then
+        # daemon-reload so systemd sees the just-installed sddm.service unit
+        # (without this, `systemctl enable sddm.service` will fail with
+        # "Unit sddm.service does not exist" on a fresh sddm install).
+        sudo -n systemctl daemon-reload &>/dev/null || true
+
+        # Verify the unit file actually exists before trying to enable —
+        # gives us a clearer error than systemctl's generic "does not exist".
+        if [[ ! -f /usr/lib/systemd/system/sddm.service \
+            && ! -f /etc/systemd/system/sddm.service ]]; then
+          printf "  ${RED}✗${R}  sddm.service unit not found on disk — sddm package install probably failed silently\n"
+          printf "  ${DIM}    Manual fix:  sudo pacman -S sddm && sudo systemctl enable sddm.service${R}\n"
+          failed_items+=("sddm.service enable (unit missing)"); failed=$((failed+1))
+        elif sudo -n systemctl enable sddm.service >/tmp/nyxus-sddm-enable.log 2>&1; then
           ok "sddm.service enabled"
           if systemctl is-enabled gdm.service &>/dev/null; then
             printf "  ${PURPLE}→${R} ${DIM}sddm OK — now disabling gdm.service …${R}\n"
@@ -647,7 +659,13 @@ if command -v sddm &>/dev/null; then
           printf "  ${DIM}     sudo -v && curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | bash${R}\n"
           printf "  ${DIM}   or one-shot:  sudo systemctl enable sddm.service${R}\n"
         else
+          # Real failure — show the captured systemctl error so the user can
+          # see WHY (conflicting DM, masked unit, missing dep, etc.).
           printf "  ${RED}✗${R}  could not enable sddm.service — leaving gdm in place to keep you logged in\n"
+          if [[ -s /tmp/nyxus-sddm-enable.log ]]; then
+            printf "  ${DIM}    systemctl said:${R}\n"
+            sed 's/^/      /' /tmp/nyxus-sddm-enable.log | head -5
+          fi
           printf "  ${DIM}    Manual fix:  sudo systemctl enable sddm.service && sudo systemctl disable gdm.service${R}\n"
           failed_items+=("sddm.service enable"); failed=$((failed+1))
         fi
