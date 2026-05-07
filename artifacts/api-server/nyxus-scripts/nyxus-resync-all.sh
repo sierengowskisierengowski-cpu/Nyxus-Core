@@ -239,6 +239,41 @@ if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-seattle-frost.conf" "$HYPR_MAIN"; th
   ok "stripped Seattle Frost source line from hyprland.conf"
 fi
 
+# r17 migration — Hyprland 0.49+ removed `windowrulev2` (and `layerrulev2`)
+# in favor of unified `windowrule` / `layerrule`. Stale installs still have
+# the old syntax in ~/.config/hypr/conf.d/*.conf — rewrite every line
+# in-place across every conf so reload stops throwing 400+ deprecation
+# errors. Idempotent: if a file is already on `windowrule = …` it's a no-op.
+HYPR_RULES_OLD="$HYPR_CONF_D/nyxus-hyprland-rules.conf"
+v2_total=0
+if compgen -G "$HYPR_CONF_D/*.conf" > /dev/null; then
+  for f in "$HYPR_CONF_D"/*.conf; do
+    [[ -f "$f" ]] || continue
+    n=$(grep -c '^[[:space:]]*windowrulev2[[:space:]]*=' "$f" 2>/dev/null || echo 0)
+    n2=$(grep -c '^[[:space:]]*layerrulev2[[:space:]]*=' "$f" 2>/dev/null || echo 0)
+    if (( n + n2 > 0 )); then
+      sed -i -E 's/^([[:space:]]*)windowrulev2([[:space:]]*=)/\1windowrule\2/; s/^([[:space:]]*)layerrulev2([[:space:]]*=)/\1layerrule\2/' "$f"
+      ok "migrated $((n+n2)) v2 rule(s) → unified syntax in ${f##*/}"
+      v2_total=$((v2_total + n + n2))
+    fi
+  done
+fi
+if (( v2_total > 0 )); then
+  ok "total v2 → unified rule rewrites: $v2_total  (was throwing $v2_total deprecation errors at hyprctl reload)"
+fi
+
+# The shipped rules file has been renamed from nyxus-hyprland-rules.conf
+# to nyxus-windowrules.conf. If the old path still exists, replace it with
+# the freshly-downloaded clean version below AND drop its source line.
+if [[ -f "$HYPR_RULES_OLD" ]]; then
+  rm -f "$HYPR_RULES_OLD"
+  ok "removed legacy $HYPR_RULES_OLD  (replaced by nyxus-windowrules.conf)"
+fi
+if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-hyprland-rules.conf" "$HYPR_MAIN"; then
+  sed -i '/nyxus-hyprland-rules.conf/d' "$HYPR_MAIN"
+  ok "stripped legacy nyxus-hyprland-rules.conf source line from hyprland.conf"
+fi
+
 if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-rules.conf" -o "$HYPR_RULES"; then
   chown "$REAL_USER:$REAL_USER" "$HYPR_RULES"
   chmod 644 "$HYPR_RULES"
