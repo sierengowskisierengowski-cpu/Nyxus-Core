@@ -410,7 +410,7 @@ def sketch_rect(cr, x, y, w, h, *, jitter=0.6, key=None, double=False):
         sketch_line(cr, x+0.6, y-0.4, x+w-0.4, y+0.3,
                     jitter=jitter*0.6, segments=6, key=(k, "t2"))
 
-def draw_caveat(cr, x, y, text, *, size=14, color=(0.94,0.92,0.97,0.95),
+def draw_display(cr, x, y, text, *, size=14, color=(0.94,0.92,0.97,0.95),
                 family="Inter Display", weight=Pango.Weight.NORMAL, wrap_w=None):
     cr.save(); cr.set_source_rgba(*color)
     layout = PangoCairo.create_layout(cr)
@@ -7721,7 +7721,7 @@ class AccountPage(BasePage):
             cr.set_source_rgba(0.10, 0.07, 0.18, 0.95); cr.rectangle(0,0,w,h); cr.fill()
             info = self._user()
             ini = (info["f"] or info["u"] or "?")[:1].upper()
-            draw_caveat(cr, w/2-14, h/2-26, ini, size=46,
+            draw_display(cr, w/2-14, h/2-26, ini, size=46,
                         color=(*NEON_PINK, 0.95), weight=Pango.Weight.BOLD)
         cr.restore()
         cr.set_source_rgba(*NEON_PINK, 0.85); cr.set_line_width(1.6)
@@ -8327,7 +8327,7 @@ class FontsPage(BasePage):
 
     def search_entries(self):
         labels = ["interface font","document font","monospace font","jetbrains mono",
-                  "caveat","antialiasing","hinting","subpixel","text scale",
+                  "display","antialiasing","hinting","subpixel","text scale",
                   "install font","fc-cache","reset fonts"]
         return [SearchEntry(self.KEY, self.TITLE, l, "fonts typography")
                 for l in labels]
@@ -8935,7 +8935,7 @@ class SettingsRow(Gtk.DrawingArea):
         cr.arc(16, h/2, 3, 0, math.pi*2); cr.fill()
         # icon
         icon_size = 16 if self.compact else 18
-        draw_caveat(cr, 28, (h-icon_size-4)/2, self.icon, size=icon_size,
+        draw_display(cr, 28, (h-icon_size-4)/2, self.icon, size=icon_size,
                     color=(*self.color, 0.98))
         # title
         title_size = 15 if self.compact else 17
@@ -8948,24 +8948,24 @@ class SettingsRow(Gtk.DrawingArea):
         title_color = ((*self.color, 1.0) if (self._hover and self._scramble_tid)
                        else (*INK_BRIGHT, 0.98))
         if title_family:
-            draw_caveat(cr, 56, title_y, title_str, size=title_size,
+            draw_display(cr, 56, title_y, title_str, size=title_size,
                         color=title_color, weight=Pango.Weight.BOLD,
                         family=title_family)
         else:
-            draw_caveat(cr, 56, title_y, title_str, size=title_size,
+            draw_display(cr, 56, title_y, title_str, size=title_size,
                         color=title_color, weight=Pango.Weight.BOLD)
         # subtitle (mono dim)
         if self.subtitle and not self.compact:
-            draw_caveat(cr, 56, h-16, self.subtitle, size=10,
+            draw_display(cr, 56, h-16, self.subtitle, size=10,
                         color=(*INK_DIM, 0.80),
                         family="JetBrains Mono")
         # star
         if self.starred:
-            draw_caveat(cr, w-48, (h-18)/2, "★", size=14,
+            draw_display(cr, w-48, (h-18)/2, "★", size=14,
                         color=(*ACCENT_GOLD, 0.95))
         # chevron ›
         chev_col = self.color if self.active else INK_DIM
-        draw_caveat(cr, w-22, (h-22)/2, "›", size=20,
+        draw_display(cr, w-22, (h-22)/2, "›", size=20,
                     color=(*chev_col, 0.85))
 
 
@@ -9008,19 +9008,19 @@ class CategoryTile(Gtk.DrawingArea):
         sketch_rect(cr, 2.5, 2.5, w-5, h-5, jitter=0.7,
                     key=("tile", self.title, w, h), double=True)
         # icon (top-left, large)
-        draw_caveat(cr, 14, 8, self.icon, size=32,
+        draw_display(cr, 14, 8, self.icon, size=32,
                     color=(*self.color, 0.95))
         # star if favorited
         if self.starred:
-            draw_caveat(cr, w-26, 8, "★", size=22,
+            draw_display(cr, w-26, 8, "★", size=22,
                         color=(*ACCENT_GOLD, 0.95))
         # title
-        draw_caveat(cr, 14, h-66, self.title, size=22,
+        draw_display(cr, 14, h-66, self.title, size=22,
                     color=(*INK_BRIGHT, 0.97),
                     weight=Pango.Weight.BOLD, wrap_w=w-28)
         # subtitle
         if self.subtitle:
-            draw_caveat(cr, 14, h-32, self.subtitle, size=13,
+            draw_display(cr, 14, h-32, self.subtitle, size=13,
                         color=(*INK_DIM, 0.95),
                         family="JetBrains Mono", wrap_w=w-28)
 
