@@ -86,7 +86,7 @@
       "on-click": "sh -c 'pgrep -f nyxus_quicksettings >/dev/null && pkill -f nyxus_quicksettings || setsid python3 ~/.nyxus/nyxus_quicksettings.py >/tmp/nyxus-qs.log 2>&1 < /dev/null &'"
     },
     "custom/weather": {
-      "exec": sh -c "curl -fsS --max-time 4 'wttr.in/?format=%t' 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || echo '— —'",
+      "exec": "sh -c \"curl -fsS --max-time 4 'wttr.in/?format=%t' 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || echo '\u2014 \u2014'\"",
       "interval": 3600,
       "tooltip": true,
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Weather</span>\n<span size='small' foreground='#c8ccd6'>via wttr.in · refreshes hourly\nClick for full forecast</span>",
