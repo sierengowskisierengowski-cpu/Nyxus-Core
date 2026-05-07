@@ -22,7 +22,7 @@ export default function SysMon() {
           fontFamily: "'Caveat', cursive", fontSize: 14, color: '#ff8844',
           letterSpacing: '0.08em',
         }}>
-          ◉ DEMO MODE — start nyxus_sysmon.py for live data
+          ◉ DEMO MODE — start nyxus_sysmon_gtk.py for live data
         </div>
       )}
       <Header data={data} isOffline={false} />

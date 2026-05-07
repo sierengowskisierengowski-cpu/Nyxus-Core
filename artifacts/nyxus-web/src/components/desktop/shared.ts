@@ -59,7 +59,7 @@ export const APPS: AppDef[] = [
     id: "phantom", name: "Phantom", glyph: "◈", color: C.blue, kind: "mockup",
     tagline: "STEALTH SECURITY DAEMON",
     desc: "Always-on threat monitor + automated response daemon. Forensics module captures evidence, threats engine fingerprints attackers, response engine isolates compromised processes. Runs as a systemd service.",
-    install: "nyxus-phantom.tgz", download: "nyxus-phantom.tgz",
+    download: "nyxus-phantom.tgz",
     modules: ["Monitor", "Response", "Forensics", "Threat Engine", "systemd"],
   },
   {

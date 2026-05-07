@@ -7,7 +7,7 @@
 
 ## What is NYXUS
 
-NYXUS is a hand-crafted Arch Linux distribution built on Hyprland. It ships a complete, opinionated desktop environment — Waybar, Hyprlock, SDDM, Rofi, Mako, Alacritty — alongside a full suite of native GTK4 Python applications designed as a cohesive system.
+NYXUS is a hand-crafted Arch Linux distribution built on Hyprland. It ships a complete, opinionated desktop environment — Waybar, Hyprlock, SDDM, Rofi, Dunst, Alacritty — alongside a full suite of native GTK4 Python applications designed as a cohesive system.
 
 Every visual element follows the NYXUS design language: black frosted-glass panels, Inter handwriting font for UI, JetBrains Mono for data and code, neon pink/purple/green/gold palette.
 
@@ -18,16 +18,35 @@ Every visual element follows the NYXUS design language: black frosted-glass pane
 | App | Description |
 |---|---|
 | nyxus_sysmon_gtk.py | Live system monitor — CPU, RAM, Network, Disk, Processes |
-| nyxus_weather.py | Weather widget with animated sky |
-| nyxus_notepad.py | Rich-text notes with Markdown preview |
+| nyxus_quicksettings.py | Quick settings flyout and toggles |
+| nyxus_calendar.py | Calendar window with notes support |
+| nyxus_clock.py | Clock window with utility modes |
 | nyxus_stickies.py | Minimal sticky notes on a dark canvas |
 | nyxus_terminal.py | GTK4 + VTE terminal with graffiti frame |
 | nyxus_control.py | Hardware control — fans, thermal, RGB, power profiles |
 | nyxus_settings.py | System settings control center |
+| nyxus_launcher.py | Launcher / app search UI |
+| nyxus_powermenu.py | Power actions menu |
+| nyxus_screenshot.py | Screenshot utility shell |
 | nyxus_gen_icons.py | Generates all NYXUS paint-splatter app icons |
 | nyxus_motd.py | Terminal message-of-the-day |
 | nyxus_splash.py | Boot splash screen |
 | nyxus_preboot.py | Pre-boot flicker sequence |
+
+Tarball-delivered apps are published as `.tgz` packages (for example `nyxus-weather.tgz` and `nyxus-notepad.tgz`) with matching installer shells (`nyxus_*_install.sh`).
+
+---
+
+## Theme archive
+
+Inactive/alternate theme variants are kept in:
+
+- `theme-archive/boot-splash/`
+- `theme-archive/boot-splash-void/`
+- `theme-archive/nyxus-ui-theme/`
+- `theme-archive/wlogout-theme/`
+
+These are intentionally stored off the active build path for cleaner default builds while preserving assets for future reuse.
 
 ---
 

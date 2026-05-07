@@ -2,10 +2,14 @@ import { useState } from "react";
 import { C, BASE, AppDef } from "./shared";
 
 export function MockupBody({ a }: { a: AppDef }) {
-  const curl = `curl -fsSL "${window.location.origin}${BASE}/${a.install}" | bash`;
+  const installPath = a.install ?? a.download ?? "";
+  const installUrl = `${window.location.origin}${BASE}/${installPath}`;
+  const installCmd = installPath.endsWith(".sh")
+    ? `curl -fsSL "${installUrl}" | bash`
+    : `curl -fsSL -O "${installUrl}"`;
   const [copied, setCopied] = useState(false);
   const copy = () => {
-    navigator.clipboard.writeText(curl);
+    navigator.clipboard.writeText(installCmd);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -98,7 +102,9 @@ export function MockupBody({ a }: { a: AppDef }) {
           display: "flex", alignItems: "center", gap: 8,
         }}>
           <code style={{ flex: 1, fontSize: "0.7rem", color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            <span style={{ color: "#444" }}>$</span> curl -fsSL "<span style={{ color: a.color }}>$BASE/{a.install}</span>" | bash
+            <span style={{ color: "#444" }}>$</span> {a.install?.endsWith(".sh")
+              ? <>curl -fsSL "<span style={{ color: a.color }}>$BASE/{a.install}</span>" | bash</>
+              : <>curl -fsSL -O "<span style={{ color: a.color }}>$BASE/{a.download}</span>"</>}
           </code>
           <button
             onClick={copy}
@@ -131,18 +137,20 @@ export function MockupBody({ a }: { a: AppDef }) {
           >
             ▼ DOWNLOAD {a.download}
           </a>
-          <a
-            href={`${BASE}/${a.install}`} download={a.install}
-            style={{
-              flex: 1, textAlign: "center", padding: "0.5rem",
-              background: "transparent", border: `1px solid ${a.color}33`,
-              color: `${a.color}cc`, textDecoration: "none",
-              fontSize: "0.65rem", letterSpacing: "0.15em",
-              borderRadius: 2, fontWeight: 700,
-            }}
-          >
-            ▼ INSTALL.SH
-          </a>
+          {a.install && (
+            <a
+              href={`${BASE}/${a.install}`} download={a.install}
+              style={{
+                flex: 1, textAlign: "center", padding: "0.5rem",
+                background: "transparent", border: `1px solid ${a.color}33`,
+                color: `${a.color}cc`, textDecoration: "none",
+                fontSize: "0.65rem", letterSpacing: "0.15em",
+                borderRadius: 2, fontWeight: 700,
+              }}
+            >
+              ▼ INSTALL.SH
+            </a>
+          )}
         </div>
       </div>
     </div>
