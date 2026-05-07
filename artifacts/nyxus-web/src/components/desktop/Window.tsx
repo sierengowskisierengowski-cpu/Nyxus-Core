@@ -5,16 +5,15 @@ export function Window({ a, onClose, children }: { a: AppDef; onClose: () => voi
   return (
     <div style={{
       position: "fixed",
-      top: 40, bottom: 40, left: 50, right: 56,
+      top: 44, bottom: 44, left: 50, right: 56,
       maxWidth: 1180,
       margin: "0 auto",
-      background: "rgba(6,4,12,0.55)",
-      backdropFilter: "blur(14px) saturate(1.6)",
-      WebkitBackdropFilter: "blur(14px) saturate(1.6)",
-      border: `1px solid ${a.color}`,
-      borderTop: `2px solid ${a.color}`,
-      borderRadius: 6,
-      boxShadow: `0 0 40px ${a.color}66, 0 0 100px rgba(0,0,0,0.85), inset 0 0 80px rgba(0,0,0,0.4)`,
+      background: C.glassDark,
+      backdropFilter: "blur(14px) saturate(1.1)",
+      WebkitBackdropFilter: "blur(14px) saturate(1.1)",
+      border: `1px solid ${C.hairline}`,
+      borderRadius: 14,
+      boxShadow: `0 20px 60px ${C.rimDark}, inset 0 0 0 1px rgba(0,0,0,0.35)`,
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
@@ -22,54 +21,58 @@ export function Window({ a, onClose, children }: { a: AppDef; onClose: () => voi
     }}>
       <div style={{
         flex: "0 0 auto",
-        height: 28,
-        background: `linear-gradient(180deg, ${a.color}22 0%, rgba(0,0,0,0.55) 100%)`,
-        borderBottom: `1px solid ${a.color}55`,
+        height: 30,
+        background: C.glassDeeper,
+        borderBottom: `1px solid ${C.hairline}`,
         display: "flex",
         alignItems: "center",
-        padding: "0 0.6rem",
+        padding: "0 0.7rem",
         gap: 10,
         userSelect: "none",
       }}>
-        <div style={{ display: "flex", gap: 5 }}>
-          {[C.green, C.gold, C.red].map(c => (
-            <span key={c} style={{ width: 9, height: 9, borderRadius: "50%", background: c, opacity: 0.7, boxShadow: `0 0 4px ${c}` }} />
+        <div style={{ display: "flex", gap: 6 }}>
+          {[0, 1, 2].map(i => (
+            <span key={i} style={{
+              width: 9, height: 9, borderRadius: "50%",
+              background: C.glassDeepest,
+              border: `1px solid ${C.hairline}`,
+            }} />
           ))}
         </div>
-        <span style={{ color: a.color, fontSize: "0.85rem", textShadow: `0 0 8px ${a.color}` }}>{a.glyph}</span>
+        <span style={{ color: C.textSecondary, fontSize: "0.85rem" }}>{a.glyph}</span>
         <span style={{
-          color: a.color,
-          fontSize: "0.85rem",
-          fontFamily: "'Caveat', cursive",
+          color: C.textPrimary,
+          fontSize: "0.78rem",
+          fontFamily: '"Inter", sans-serif',
           letterSpacing: "0.04em",
-          fontWeight: 700,
-          textShadow: `0 0 6px ${a.color}55`,
+          fontWeight: 600,
         }}>
           {a.name}
         </span>
-        <span style={{ color: C.dim, fontSize: "0.55rem", letterSpacing: "0.18em", opacity: 0.6 }}>
-          NYXUS · WINDOW
+        <span style={{ color: C.textTertiary, fontSize: "0.55rem", letterSpacing: "0.18em" }}>
+          NYXUS
         </span>
         <div style={{ flex: 1 }} />
         <button
           onClick={onClose}
           style={{
             background: "transparent",
-            border: `1px solid ${C.red}66`,
-            color: C.red,
+            border: `1px solid ${C.hairline}`,
+            color: C.textSecondary,
             fontSize: "0.6rem",
             cursor: "pointer",
-            borderRadius: 2,
-            padding: "2px 8px",
+            borderRadius: 6,
+            padding: "2px 9px",
             letterSpacing: "0.15em",
+            fontFamily: '"JetBrains Mono", monospace',
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = `${C.red}22`; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+          onMouseEnter={e => { e.currentTarget.style.background = C.glassDeepest; e.currentTarget.style.color = C.white; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.textSecondary; }}
         >
           ✕ CLOSE
         </button>
       </div>
-      <div style={{ flex: 1, overflow: "auto", background: C.void }}>
+      <div style={{ flex: 1, overflow: "auto", background: "transparent" }}>
         {children}
       </div>
     </div>

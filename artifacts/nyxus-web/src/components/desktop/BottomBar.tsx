@@ -1,4 +1,4 @@
-import { C, NEONS } from "./shared";
+import { C, FRAME } from "./shared";
 
 export function BottomBar({ activeWs, onSelectWs, onStart, onHome, onSettings, onPanel, onNotif, time }: {
   activeWs: number;
@@ -12,99 +12,77 @@ export function BottomBar({ activeWs, onSelectWs, onStart, onHome, onSettings, o
 }) {
   const hh = String(time.getHours()).padStart(2, "0");
   const mm = String(time.getMinutes()).padStart(2, "0");
-  const ss = String(time.getSeconds()).padStart(2, "0");
+
+  const navBtn = (label: string, onClick: () => void, isActive = false) => (
+    <button
+      onClick={onClick}
+      style={{
+        background: isActive ? C.glassDeeper : "transparent",
+        border: `1px solid ${isActive ? C.hairlineHi : "transparent"}`,
+        color: isActive ? C.white : C.textSecondary,
+        fontSize: "0.7rem",
+        letterSpacing: "0.06em",
+        fontWeight: 500,
+        cursor: "pointer",
+        padding: "2px 10px",
+        borderRadius: 8,
+        fontFamily: '"Inter", sans-serif',
+        transition: "all 0.12s",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.color = C.white; }}
+      onMouseLeave={e => { e.currentTarget.style.color = isActive ? C.white : C.textSecondary; }}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <div style={{
+      ...FRAME,
       position: "fixed",
       bottom: 6, left: 6, right: 6,
-      height: 24,
-      background: C.panelBg,
-      border: `1px solid ${C.pink}`,
-      borderRadius: 4,
-      boxShadow: `0 0 10px ${C.pink}66, 0 0 20px ${C.pink}33`,
-      backdropFilter: "blur(14px) saturate(1.6)",
+      height: 26,
       display: "flex",
       alignItems: "center",
-      padding: "0 8px",
-      gap: 8,
+      padding: "0 10px",
+      gap: 4,
       zIndex: 50,
       userSelect: "none",
-      fontFamily: '"JetBrains Mono", monospace',
+      fontFamily: '"Inter", sans-serif',
     }}>
-      {/* Start button */}
-      <button
-        onClick={onStart}
-        style={{
-          background: "transparent",
-          border: "none",
-          color: C.cyan,
-          fontSize: "0.72rem",
-          letterSpacing: "0.06em",
-          fontWeight: 700,
-          cursor: "pointer",
-          padding: "1px 8px",
-          textShadow: `0 0 6px ${C.cyan}88`,
-          fontFamily: "'Caveat', cursive",
-        }}
-        onMouseEnter={e => { e.currentTarget.style.color = C.pink; }}
-        onMouseLeave={e => { e.currentTarget.style.color = C.cyan; }}
-      >
-        Start
-      </button>
+      {navBtn("Start",         onStart)}
+      {navBtn("Home",          onHome,  activeWs === 0)}
+      {navBtn("Panel",         onPanel)}
+      {navBtn("Notifications", onNotif)}
+      {navBtn("Settings",      onSettings)}
 
-      {/* Home button (workspace 0 — dashboard) */}
-      <button
-        onClick={onHome}
-        title="Home dashboard (workspace 0)"
-        style={{
-          background: activeWs === 0 ? `${C.pink}22` : "transparent",
-          border: activeWs === 0 ? `1px solid ${C.pink}88` : "1px solid transparent",
-          color: activeWs === 0 ? C.pink : C.gold,
-          fontSize: "0.72rem",
-          letterSpacing: "0.04em",
-          fontWeight: 700,
-          cursor: "pointer",
-          padding: "0px 8px",
-          textShadow: `0 0 6px ${activeWs === 0 ? C.pink : C.gold}88`,
-          fontFamily: "'Caveat', cursive",
-          borderRadius: 3,
-          display: "flex",
-          alignItems: "center",
-          gap: 4,
-        }}
-        onMouseEnter={e => { if (activeWs !== 0) e.currentTarget.style.color = C.pink; }}
-        onMouseLeave={e => { if (activeWs !== 0) e.currentTarget.style.color = C.gold; }}
-      >
-        <span style={{ fontSize: "0.8rem", lineHeight: 1 }}>⌂</span> Home
-      </button>
+      <div style={{ width: 12 }} />
 
-      {/* center: workspace pager */}
-      <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}>
-        {Array.from({ length: 6 }).map((_, i) => {
+      {/* Workspace identity stripes — the ONLY color permitted, only here */}
+      <div style={{ display: "flex", gap: 5 }}>
+        {Array.from({ length: 9 }).map((_, i) => {
           const n = i + 1;
-          const color = NEONS[i];
           const active = n === activeWs;
+          const stripe = C.ws[i];
           return (
             <button
               key={n}
               onClick={() => onSelectWs(n)}
               title={`Workspace ${n}`}
               style={{
-                width: 16, height: 16,
+                width: 14, height: 14,
                 borderRadius: "50%",
-                background: active
-                  ? `radial-gradient(circle at 35% 35%, ${color}, ${color}66 70%)`
-                  : `radial-gradient(circle at 35% 35%, ${color}aa, ${color}33 70%)`,
-                border: `1.2px solid ${color}`,
-                boxShadow: active
-                  ? `0 0 8px ${color}, 0 0 16px ${color}88`
-                  : `0 0 4px ${color}66`,
-                color: "#0a0612",
+                background: active ? stripe : "transparent",
+                border: `1px solid ${active ? stripe : `${stripe}88`}`,
+                opacity: active ? 1 : 0.55,
+                color: active ? C.void : C.textTertiary,
                 fontSize: "0.5rem",
-                fontWeight: 900,
+                fontWeight: 700,
+                fontFamily: '"JetBrains Mono", monospace',
                 cursor: "pointer",
                 padding: 0,
                 display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.15s",
               }}
             >
               {n}
@@ -113,48 +91,24 @@ export function BottomBar({ activeWs, onSelectWs, onStart, onHome, onSettings, o
         })}
       </div>
 
-      {/* right cluster: gear time | The Panel | Notifications */}
-      <button
-        onClick={onSettings}
-        title="Settings"
-        style={{
-          background: "transparent", border: "none",
-          color: C.gold, fontSize: "0.85rem",
-          cursor: "pointer", padding: "0 4px",
-          textShadow: `0 0 6px ${C.gold}88`,
-        }}
-      >⚙&#xFE0E;</button>
-      <span style={{ color: C.text, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.04em" }}>
-        {hh}:{mm}:{ss}
+      <div style={{ flex: 1 }} />
+
+      <span style={{
+        color: C.textTertiary,
+        fontSize: "0.55rem",
+        letterSpacing: "0.18em",
+        fontFamily: '"Architects Daughter", "Caveat", cursive',
+      }}>
+        OWL
       </span>
-      <button
-        onClick={onPanel}
-        style={{
-          background: "transparent", border: "none",
-          color: C.purple, fontSize: "0.72rem",
-          letterSpacing: "0.04em", fontWeight: 700, cursor: "pointer",
-          padding: "1px 8px", textShadow: `0 0 6px ${C.purple}88`,
-          fontFamily: "'Caveat', cursive",
-        }}
-        onMouseEnter={e => { e.currentTarget.style.color = C.pink; }}
-        onMouseLeave={e => { e.currentTarget.style.color = C.purple; }}
-      >
-        The Panel
-      </button>
-      <button
-        onClick={onNotif}
-        style={{
-          background: "transparent", border: "none",
-          color: C.green, fontSize: "0.72rem",
-          letterSpacing: "0.04em", fontWeight: 700, cursor: "pointer",
-          padding: "1px 8px", textShadow: `0 0 6px ${C.green}88`,
-          fontFamily: "'Caveat', cursive",
-        }}
-        onMouseEnter={e => { e.currentTarget.style.color = C.cyan; }}
-        onMouseLeave={e => { e.currentTarget.style.color = C.green; }}
-      >
-        Notifications
-      </button>
+      <span style={{
+        color: C.textPrimary,
+        fontSize: "0.7rem",
+        fontWeight: 700,
+        fontFamily: '"JetBrains Mono", monospace',
+      }}>
+        {hh}:{mm}
+      </span>
     </div>
   );
 }

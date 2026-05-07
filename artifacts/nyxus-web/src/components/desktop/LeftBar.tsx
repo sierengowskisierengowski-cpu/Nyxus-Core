@@ -1,27 +1,22 @@
-import { C, NEONS } from "./shared";
+import { C, FRAME } from "./shared";
 
 export function LeftBar({ activeWs, onSelect }: { activeWs: number; onSelect: (n: number) => void }) {
   return (
     <div style={{
+      ...FRAME,
       position: "fixed",
-      top: 32, left: 6, bottom: 32,
-      width: 32,
-      background: C.panelBg,
-      border: `1px solid ${C.pink}`,
-      borderRadius: 4,
-      boxShadow: `0 0 10px ${C.pink}66, 0 0 20px ${C.pink}33`,
-      backdropFilter: "blur(14px) saturate(1.6)",
+      top: 34, left: 6, bottom: 34,
+      width: 36,
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      padding: "8px 0",
-      gap: 7,
+      padding: "10px 0",
+      gap: 8,
       zIndex: 50,
       userSelect: "none",
     }}>
       {Array.from({ length: 9 }).map((_, i) => {
         const n = i + 1;
-        const color = NEONS[i];
         const active = n === activeWs;
         return (
           <button
@@ -29,18 +24,16 @@ export function LeftBar({ activeWs, onSelect }: { activeWs: number; onSelect: (n
             onClick={() => onSelect(n)}
             title={`Workspace ${n}`}
             style={{
-              width: 20, height: 20,
+              width: 22, height: 22,
               borderRadius: "50%",
-              background: active
-                ? `radial-gradient(circle at 35% 35%, ${color}, ${color}66 70%, transparent)`
-                : `radial-gradient(circle at 35% 35%, ${color}cc, ${color}44 70%, transparent)`,
-              border: `1.5px solid ${color}`,
+              background: active ? C.white : C.glassDeeper,
+              border: `1px solid ${active ? C.white : C.hairlineHi}`,
               boxShadow: active
-                ? `0 0 12px ${color}, 0 0 24px ${color}88, inset 0 0 4px rgba(255,255,255,0.4)`
-                : `0 0 6px ${color}88, inset 0 0 3px rgba(255,255,255,0.2)`,
-              color: "#0a0612",
+                ? `0 0 8px rgba(255,255,255,0.45), inset 0 0 0 2px ${C.glassDark}`
+                : `inset 0 0 0 1px rgba(0,0,0,0.35)`,
+              color: active ? C.void : C.textSecondary,
               fontSize: "0.6rem",
-              fontWeight: 900,
+              fontWeight: 700,
               fontFamily: '"JetBrains Mono", monospace',
               cursor: "pointer",
               display: "flex",
@@ -58,14 +51,13 @@ export function LeftBar({ activeWs, onSelect }: { activeWs: number; onSelect: (n
       <button
         title="Power"
         style={{
-          width: 22, height: 22,
-          borderRadius: 4,
-          background: `${C.red}22`,
-          border: `1px solid ${C.red}`,
-          color: C.red,
+          width: 24, height: 24,
+          borderRadius: 6,
+          background: C.glassDeeper,
+          border: `1px solid ${C.hairline}`,
+          color: C.textSecondary,
           fontSize: "0.85rem",
           cursor: "pointer",
-          textShadow: `0 0 6px ${C.red}`,
           padding: 0,
           display: "flex", alignItems: "center", justifyContent: "center",
         }}

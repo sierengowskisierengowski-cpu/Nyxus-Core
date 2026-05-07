@@ -62,8 +62,8 @@ export default function Mirror() {
       background: C.void,
       fontFamily: '"JetBrains Mono", monospace',
     }}>
-      {/* Caveat font import (UI signature font) */}
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" />
+      {/* DARK MIRROR fonts — Architects Daughter (wordmarks), Inter (body), JetBrains Mono (stats/code) */}
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" />
 
       {/* full-bleed wallpaper */}
       <div style={{
@@ -112,19 +112,19 @@ export default function Mirror() {
         </div>
       )}
 
-      {/* Wallpaper + back-to-portal labels (tiny, corner) */}
+      {/* Wallpaper + back-to-portal labels (tiny, corner) — DARK MIRROR */}
       <div style={{
         position: "absolute",
-        top: 34, left: 46,
-        background: "rgba(6,4,12,0.55)",
-        backdropFilter: "blur(14px) saturate(1.6)",
-        WebkitBackdropFilter: "blur(14px) saturate(1.6)",
-        border: "1px solid #1a1a1a",
-        color: C.dim,
+        top: 36, left: 50,
+        background: C.glassDark,
+        backdropFilter: "blur(14px) saturate(1.1)",
+        WebkitBackdropFilter: "blur(14px) saturate(1.1)",
+        border: `1px solid ${C.hairline}`,
+        color: C.textTertiary,
         fontSize: "0.5rem",
-        padding: "2px 7px",
+        padding: "3px 8px",
         letterSpacing: "0.18em",
-        borderRadius: 2,
+        borderRadius: 6,
         fontFamily: '"JetBrains Mono", monospace',
         zIndex: 60,
       }}>
@@ -134,19 +134,18 @@ export default function Mirror() {
         href="#/"
         style={{
           position: "absolute",
-          top: 34, right: 50,
-          background: "rgba(6,4,12,0.55)",
-          backdropFilter: "blur(14px) saturate(1.6)",
-          WebkitBackdropFilter: "blur(14px) saturate(1.6)",
-          border: `1px solid ${C.purple}66`,
-          color: C.purple,
+          top: 36, right: 54,
+          background: C.glassDark,
+          backdropFilter: "blur(14px) saturate(1.1)",
+          WebkitBackdropFilter: "blur(14px) saturate(1.1)",
+          border: `1px solid ${C.hairline}`,
+          color: C.textSecondary,
           fontSize: "0.55rem",
-          padding: "2px 8px",
+          padding: "3px 9px",
           textDecoration: "none",
           letterSpacing: "0.18em",
-          borderRadius: 2,
+          borderRadius: 6,
           fontFamily: '"JetBrains Mono", monospace',
-          textShadow: `0 0 6px ${C.purple}88`,
           zIndex: 60,
         }}
       >
