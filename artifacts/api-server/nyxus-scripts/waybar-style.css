@@ -6,7 +6,7 @@
    ════════════════════════════════════════════════════════════════════════════
    Updates over rev s:
      • Bottom bar workspaces removed (only on left bar now)
-     • Start / Panel pills: Inter font (no cursive), charcoal → gold on hover
+     • Start / Panel pills: Inter font (no cursive), off-white on hover
      • Top-right status icons (network, pulseaudio, backlight, battery) styled
        as tiny round glass beads — small, clickable, gold halo on hover
      • System tray (bottom center) — glass, subtle, transparent
@@ -21,7 +21,7 @@
     min-height:     0;
 }
 
-/* ── 1. SHELL · liquid-glass cream slab (Hyprland blur shows through) ──── */
+/* ── 1. SHELL · liquid-glass dark slab (Hyprland blur shows through) ──── */
 window#waybar,
 window#waybar.top,
 window#waybar.bottom,
@@ -385,7 +385,7 @@ window#waybar.right #custom-app-settings {
     border-radius:  16px;
 }
 
-/* ── 10. TOOLTIPS · frosted-glass cream popovers ────────────────────────── */
+/* ── 10. TOOLTIPS · frosted-glass dark popovers ────────────────────────── */
 tooltip {
     background-color: rgba(8, 12, 20, 0.94);
     color:            @nyx_white_off;
