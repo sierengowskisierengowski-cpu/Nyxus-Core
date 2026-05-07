@@ -35,7 +35,25 @@ NYXUS is an Arch Linux-based operating system providing a suite of native Python
 - `nyxus-scripts/nyxus_chrome.py`: Source of truth for unified GTK4 application styling.
 - `iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf`: Hyprland configuration template.
 
-## Visual System — DARK MIRROR · UNIFIED FROSTED GLASS (LOCKED · rev 2026-05-07 r12)
+## Visual System — DARK MIRROR · UNIFIED FROSTED GLASS (LOCKED · rev 2026-05-07 r13)
+
+**System-wide active glow (rev r13):** Hyprland window borders now use the
+DARK MIRROR rim-light gradient (white `#ffffff` → off-white `#e8edf5` →
+light grey `#c8ccd6` → faded black `#0a0a0a` → ink `#000000`, 135°,
+animated 240-frame slow rotation). This is the SOLE source of "active
+glow" anywhere in the system. Apps no longer draw their own borders,
+glows, headerbars, or chrome animations. The terminal in particular is
+now a bare VTE widget on dark glass — every visual frame around any
+window comes from Hyprland.
+
+**Standalone duplicates removed (rev r13):** `nyxus_notepad.py` and
+`nyxus_weather.py` standalone scripts have been deleted. The rich
+GTK4 tarball editions (`nyxus-notepad.tgz`, `nyxus-weather.tgz`) are
+the sole survivors; install.sh extracts them via the existing tarball
+pipeline and they create their own `.desktop` entries
+(`io.nyxus.notepad.desktop`, `io.nyxus.weather.desktop`).
+
+
 
 **Apps + flyout (rev 2026-05-07 r12 — replaces EMBOSSED CREAM PAPER for apps):**
 All 11 GTK4 apps (godsapp, home, intel, notepad, passwords, phantom, sage,

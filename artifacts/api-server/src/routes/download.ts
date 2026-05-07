@@ -48,9 +48,7 @@ const ALLOWED_FILES: Record<string, string> = {
   // ── ★ THE 12 NYXUS GTK4 USER APPS (the "11 + flyout") ────────────────────
   // 1. Home (workspace dashboard) — see TGZ section below
   "nyxus_notes.py":         "nyxus_notes.py",          //  2. Notes (Tesla-min)
-  "nyxus_notepad.py":       "nyxus_notepad.py",        //  3. Notepad (legacy)
   "nyxus_stickies.py":      "nyxus_stickies.py",       //  4. Stickies
-  "nyxus_weather.py":       "nyxus_weather.py",        //  5. Weather
   "nyxus_terminal.py":      "nyxus_terminal.py",       //  6. Terminal
   "nyxus_settings.py":      "nyxus_settings.py",       //  7. Settings
   "nyxus_sysmon_gtk.py":    "nyxus_sysmon_gtk.py",     //  8. Sysmon (GTK)
