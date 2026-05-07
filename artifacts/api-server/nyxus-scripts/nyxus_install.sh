@@ -650,7 +650,7 @@ if command -v sddm &>/dev/null; then
             if sudo -n systemctl disable gdm.service &>/dev/null; then
               ok "gdm.service disabled (sddm is now your login manager)"
             else
-              printf "  ${ORANGE}⚠${R}  could not disable gdm — run: sudo systemctl disable gdm\n"
+              printf "  ${GOLD}⚠${R}  could not disable gdm — run: sudo systemctl disable gdm\n"
             fi
           fi
           printf "  ${DIM}Reboot or 'sudo systemctl start sddm' to see the NYXUS login screen${R}\n"
