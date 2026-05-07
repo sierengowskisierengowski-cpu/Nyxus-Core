@@ -131,16 +131,16 @@ fi
 hdr "Inter Font (NYXUS hand-drawn design)"
 FONT_DIR="$HOME/.local/share/fonts"
 mkdir -p "$FONT_DIR"
-CAVEAT_URL="https://github.com/googlefonts/caveat/raw/main/fonts/ttf"
-CAVEAT_FILES=("Inter-Regular.ttf" "InterDisplay-Bold.ttf" "Inter-Medium.ttf" "Inter-SemiBold.ttf")
+INTER_URL="https://github.com/googlefonts/inter/raw/main/fonts/ttf"
+INTER_FILES=("Inter-Regular.ttf" "InterDisplay-Bold.ttf" "Inter-Medium.ttf" "Inter-SemiBold.ttf")
 inter_ok=0
-for f in "${CAVEAT_FILES[@]}"; do
+for f in "${INTER_FILES[@]}"; do
   if [ -f "$FONT_DIR/$f" ]; then
     inter_ok=$((inter_ok+1))
   else
-    if curl -fsSL "$CAVEAT_URL/$f" -o "$FONT_DIR/$f" 2>/dev/null; then
+    if curl -fsSL "$INTER_URL/$f" -o "$FONT_DIR/$f" 2>/dev/null; then
       inter_ok=$((inter_ok+1))
-    elif wget -qO "$FONT_DIR/$f" "$CAVEAT_URL/$f" 2>/dev/null; then
+    elif wget -qO "$FONT_DIR/$f" "$INTER_URL/$f" 2>/dev/null; then
       inter_ok=$((inter_ok+1))
     fi
   fi
