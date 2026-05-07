@@ -252,36 +252,40 @@ window#waybar.bottom #custom-nyxus-panel {
     font-size:       12px;
     font-weight:     700;
     letter-spacing:  0.18em;
-    color:           #0a0a0a;
+    color:           #ffffff;
     padding:         4px 22px;
     margin:          5px 8px;
     min-height:      26px;
     border-radius:   13px;
-    /* Thin white outline around every glyph (4-direction stroke) */
+    /* White glyph fill + thin black 8-direction outline + soft white glow */
     text-shadow:
-        -1px -1px 0 rgba(255, 255, 255, 0.95),
-         1px -1px 0 rgba(255, 255, 255, 0.95),
-        -1px  1px 0 rgba(255, 255, 255, 0.95),
-         1px  1px 0 rgba(255, 255, 255, 0.95),
-         0   -1px 0 rgba(255, 255, 255, 0.95),
-         0    1px 0 rgba(255, 255, 255, 0.95),
-        -1px  0   0 rgba(255, 255, 255, 0.95),
-         1px  0   0 rgba(255, 255, 255, 0.95);
+        -1px -1px 0 rgba(0, 0, 0, 0.95),
+         1px -1px 0 rgba(0, 0, 0, 0.95),
+        -1px  1px 0 rgba(0, 0, 0, 0.95),
+         1px  1px 0 rgba(0, 0, 0, 0.95),
+         0   -1px 0 rgba(0, 0, 0, 0.95),
+         0    1px 0 rgba(0, 0, 0, 0.95),
+        -1px  0   0 rgba(0, 0, 0, 0.95),
+         1px  0   0 rgba(0, 0, 0, 0.95),
+         0    0   6px rgba(255, 255, 255, 0.65),
+         0    0  12px rgba(230, 240, 255, 0.45);
 }
 
 window#waybar.bottom #custom-nyxus-start:hover,
 window#waybar.bottom #custom-nyxus-panel:hover {
-    color: #000000;
+    color: #ffffff;
     text-shadow:
-        -1px -1px 0 rgba(255, 255, 255, 1.00),
-         1px -1px 0 rgba(255, 255, 255, 1.00),
-        -1px  1px 0 rgba(255, 255, 255, 1.00),
-         1px  1px 0 rgba(255, 255, 255, 1.00),
-         0   -1px 0 rgba(255, 255, 255, 1.00),
-         0    1px 0 rgba(255, 255, 255, 1.00),
-        -1px  0   0 rgba(255, 255, 255, 1.00),
-         1px  0   0 rgba(255, 255, 255, 1.00),
-         0    0   8px rgba(230, 240, 255, 0.55);
+        -1px -1px 0 rgba(0, 0, 0, 1.00),
+         1px -1px 0 rgba(0, 0, 0, 1.00),
+        -1px  1px 0 rgba(0, 0, 0, 1.00),
+         1px  1px 0 rgba(0, 0, 0, 1.00),
+         0   -1px 0 rgba(0, 0, 0, 1.00),
+         0    1px 0 rgba(0, 0, 0, 1.00),
+        -1px  0   0 rgba(0, 0, 0, 1.00),
+         1px  0   0 rgba(0, 0, 0, 1.00),
+         0    0  10px rgba(255, 255, 255, 0.95),
+         0    0  22px rgba(230, 240, 255, 0.65),
+         0    0  36px rgba(230, 240, 255, 0.35);
 }
 
 window#waybar.bottom #tray {
