@@ -10,14 +10,20 @@
     "margin-right": 20,
     "modules-left": ["custom/ticker"],
     "modules-center": ["custom/nyxus"],
-    "modules-right": ["network", "pulseaudio", "backlight", "battery", "clock", "custom/weather"],
+    "modules-right": ["network", "pulseaudio", "backlight", "battery", "custom/quick-settings", "clock", "custom/weather"],
 
     "custom/ticker": {
       "exec": "~/.config/waybar/waybar-ticker.sh",
-      "interval": 5,
+      "restart-interval": 3,
       "return-type": "json",
       "tooltip": true,
       "escape": false
+    },
+    "custom/quick-settings": {
+      "format": "",
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Quick Settings</span>\n<span size='small' foreground='#a8b0bd'>Open the System Settings panel\nTheme · Display · Keyboard · Power\nClick to open</span>",
+      "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.settings\"; then hyprctl dispatch focuswindow class:io.nyxus.settings; else setsid python3 /home/nyx/.nyxus/nyxus_settings.py >/tmp/nyxus-settings.log 2>&1 < /dev/null & fi'"
     },
     "custom/nyxus": {
       "format": " NYXUS ",
@@ -93,7 +99,18 @@
     "margin-right": 20,
     "modules-left": ["custom/nyxus-start"],
     "modules-center": ["tray"],
-    "modules-right": ["custom/nyxus-panel", "custom/owl"],
+    "modules-right": ["custom/notifications", "custom/nyxus-panel", "custom/owl"],
+
+    "custom/notifications": {
+      "exec": "~/.config/waybar/nyxus-notif-status.sh",
+      "interval": 2,
+      "return-type": "json",
+      "tooltip": true,
+      "escape": false,
+      "on-click":        "dunstctl history-pop",
+      "on-click-right":  "dunstctl close-all",
+      "on-click-middle": "dunstctl set-paused toggle"
+    },
 
     "custom/owl": {
       "format": "✶ OWL ✶",

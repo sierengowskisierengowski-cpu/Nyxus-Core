@@ -122,6 +122,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "waybar-config.json":    "waybar-config.json",
   "waybar-style.css":      "waybar-style.css",
   "waybar-ticker.sh":      "waybar-ticker.sh",
+  "nyxus-notif-status.sh": "nyxus-notif-status.sh",
   "waybar-stats.sh":       "waybar-stats.sh",
   "alacritty.toml":        "alacritty.toml",
   "rofi-config.rasi":      "rofi-config.rasi",
