@@ -47,6 +47,9 @@ Self-taught developer and hardware enthusiast
 ├── iso-builder/              # archiso profile that bakes the NYX ISO
 │   ├── build-iso.sh          # one-command wrapper (run on Arch as root)
 │   └── nyx-profile/          # mkarchiso profile (releng-style)
+├── releases/                 # Organized drop zone for published build artifacts
+│   ├── iso/                  # Final ISO images + checksums + notes
+│   └── kernel/               # Custom kernel builds + module packages + notes
 ├── LICENSE.md                # NYX & NYXUS Custom License v1.0
 ├── CHANGELOG.md
 └── CREDITS.md
