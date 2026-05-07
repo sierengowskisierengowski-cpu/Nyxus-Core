@@ -65,13 +65,18 @@
     },
     "battery": {
       "states": { "warning": 30, "critical": 15 },
-      "format":          "{icon}",
-      "format-charging": "",
-      "format-plugged":  "",
+      "format":           "{icon}",
+      "format-charging":  "{icon}",
+      "format-plugged":   "{icon}",
+      "format-full":      "{icon}",
+      "format-discharging": "{icon}",
       "format-icons": ["", "", "", "", ""],
       "tooltip": true,
-      "tooltip-format":           "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Battery</span>\n<span size='small' foreground='#a8b0bd'>{capacity}% · {status}\nClick to open Power Settings</span>",
-      "tooltip-format-discharging": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Battery</span>\n<span size='small' foreground='#a8b0bd'>{capacity}% · discharging\n{time} remaining\nClick to open Power Settings</span>",
+      "tooltip-format":              "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Battery</span>\n<span size='small' foreground='#a8b0bd'>{capacity}%\nClick to open Power Settings</span>",
+      "tooltip-format-charging":     "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Battery</span>\n<span size='small' foreground='#a8b0bd'>{capacity}% · charging\nClick to open Power Settings</span>",
+      "tooltip-format-plugged":      "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Battery</span>\n<span size='small' foreground='#a8b0bd'>{capacity}% · plugged in\nClick to open Power Settings</span>",
+      "tooltip-format-full":         "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Battery</span>\n<span size='small' foreground='#a8b0bd'>{capacity}% · fully charged\nClick to open Power Settings</span>",
+      "tooltip-format-discharging":  "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Battery</span>\n<span size='small' foreground='#a8b0bd'>{capacity}% · discharging\n{time} remaining\nClick to open Power Settings</span>",
       "on-click": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'"
     },
     "clock": {
