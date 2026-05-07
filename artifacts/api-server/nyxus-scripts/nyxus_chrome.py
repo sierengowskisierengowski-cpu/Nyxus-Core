@@ -1033,3 +1033,96 @@ def _make_window_transparent(window: Gtk.Window) -> None:
             window.remove_css_class("solid-csd")
     except Exception:
         pass
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# UNIVERSAL ENFORCEMENT (rev 2026-05-07 r13)
+# ──────────────────────────────────────────────────────────────────────────────
+# Until now, install_chrome() had to be called explicitly by every app — and
+# any per-app set_default_size(900, 700) call would override the small-size
+# policy. r13 fixes both by monkey-patching at module import time:
+#
+#   1. Gtk.Window.set_default_size  → clamped to NYXUS_MAX_DEFAULT (700x480)
+#      so no app can open larger than the universal NYXUS default. Apps can
+#      still be resized larger BY THE USER via the resizable window edge.
+#   2. Gtk.Window.present / Adw.ApplicationWindow.present → wrapped to
+#      auto-call install_chrome(self) on first present, so apps that forgot
+#      to import or call install_chrome still get DARK MIRROR styling, the
+#      small default size, and the transparent surface.
+#
+# Both patches are idempotent + crash-proof (each call is wrapped in try).
+# ──────────────────────────────────────────────────────────────────────────────
+
+NYXUS_MAX_DEFAULT_W = 700
+NYXUS_MAX_DEFAULT_H = 480
+
+_NYX_PATCHED_FLAG = "_nyxus_universal_patched"
+
+def _nyx_install_universal_patches():
+    """Monkey-patch Gtk.Window + Adw.ApplicationWindow exactly once."""
+    try:
+        if getattr(Gtk.Window, _NYX_PATCHED_FLAG, False):
+            return
+    except Exception:
+        return
+
+    # ── 1. Clamp set_default_size on EVERY Gtk.Window subclass ──────────────
+    try:
+        _orig_sds = Gtk.Window.set_default_size
+        def _nyx_set_default_size(self, w, h):
+            try:
+                cw = min(int(w) if w and w > 0 else NYXUS_MAX_DEFAULT_W,
+                         NYXUS_MAX_DEFAULT_W)
+                ch = min(int(h) if h and h > 0 else NYXUS_MAX_DEFAULT_H,
+                         NYXUS_MAX_DEFAULT_H)
+                return _orig_sds(self, cw, ch)
+            except Exception:
+                return _orig_sds(self, w, h)
+        Gtk.Window.set_default_size = _nyx_set_default_size
+    except Exception as e:
+        log.debug("nyx patch set_default_size: %s", e)
+
+    # ── 2. Auto-install chrome on first present() ───────────────────────────
+    try:
+        _orig_present = Gtk.Window.present
+        def _nyx_present(self, *a, **kw):
+            try:
+                if not getattr(self, "_nyxus_chrome_installed", False):
+                    install_chrome(self)
+                _apply_size_policy(self)
+            except Exception as e:
+                log.debug("nyx present hook: %s", e)
+            return _orig_present(self, *a, **kw)
+        Gtk.Window.present = _nyx_present
+    except Exception as e:
+        log.debug("nyx patch present: %s", e)
+
+    # ── 3. Same for Adw.ApplicationWindow if available ──────────────────────
+    try:
+        import gi as _gi
+        _gi.require_version("Adw", "1")
+        from gi.repository import Adw as _Adw
+        _orig_adw_present = _Adw.ApplicationWindow.present
+        def _nyx_adw_present(self, *a, **kw):
+            try:
+                if not getattr(self, "_nyxus_chrome_installed", False):
+                    install_chrome(self)
+                _apply_size_policy(self)
+            except Exception as e:
+                log.debug("nyx adw present hook: %s", e)
+            return _orig_adw_present(self, *a, **kw)
+        _Adw.ApplicationWindow.present = _nyx_adw_present
+    except Exception as e:
+        log.debug("nyx patch Adw.present (Adw missing is OK): %s", e)
+
+    try:
+        setattr(Gtk.Window, _NYX_PATCHED_FLAG, True)
+    except Exception:
+        pass
+
+# Install patches at module import — every script that imports nyxus_chrome
+# gets universal enforcement, even if it never explicitly calls install_chrome.
+try:
+    _nyx_install_universal_patches()
+except Exception as _e:
+    log.warning("nyxus_chrome universal patch failed: %s", _e)

@@ -53,7 +53,6 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_weather.py":       "nyxus_weather.py",        //  5. Weather
   "nyxus_terminal.py":      "nyxus_terminal.py",       //  6. Terminal
   "nyxus_settings.py":      "nyxus_settings.py",       //  7. Settings
-  "nyxus_sysmon.py":        "nyxus_sysmon.py",         //  8. Sysmon (TUI)
   "nyxus_sysmon_gtk.py":    "nyxus_sysmon_gtk.py",     //  8. Sysmon (GTK)
   "nyxus_control.py":       "nyxus_control.py",        //  9. Control
   "nyxus_launcher.py":      "nyxus_launcher.py",       // 10. Launcher (Spotlight)
