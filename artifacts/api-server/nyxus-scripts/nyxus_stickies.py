@@ -790,23 +790,23 @@ class StickiesWindow(Gtk.ApplicationWindow):
     def _build_css(self):
         css = b"""
 * { font-family: 'Inter Display', 'Inter Display', cursive; }
-window, .nyx-bg { background-color: #000000; color: #f0eef8; }
+window, .nyx-bg { background-color: #000000; color: #e8edf5; }
 .nyx-toolbar { background-color: rgba(10,10,18,0.96); padding: 4px 10px;
-    border-bottom: 1px solid rgba(255,0,255,0.12); }
-.nyx-headline { color: #e8edf5; text-shadow: 0 0 10px rgba(255,0,255,0.55);
+    border-bottom: 1px solid rgba(8, 12, 20, 0.12); }
+.nyx-headline { color: #e8edf5; text-shadow: 0 0 10px rgba(8, 12, 20, 0.55);
     font-size: 18px; font-weight: bold; }
 .nyx-meta { color: rgba(240,235,250,0.45); font-size: 12px; }
 .nyx-sticky-text, .nyx-sticky-text text {
     background-color: transparent;
     background-image: none;
-    color: #15101e;
-    caret-color: #15101e;
+    color: #0f1420;
+    caret-color: #0f1420;
     font-family: 'Inter Display', 'Inter Display', cursive;
     font-size: 18px;
 }
 .nyx-sticky-text { border: none; }
-scrollbar slider { background-color: rgba(255,0,255,0.30);
-    border: 1px solid rgba(255,0,255,0.45); border-radius: 6px;
+scrollbar slider { background-color: rgba(8, 12, 20, 0.30);
+    border: 1px solid rgba(8, 12, 20, 0.45); border-radius: 6px;
     min-width: 8px; min-height: 8px; }
 scrollbar { background-color: transparent; }
 """

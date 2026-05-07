@@ -31,7 +31,7 @@ CLASS="notif"
 
 TOOLTIP="<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Notifications</span>"
 TOOLTIP+=$'\n'
-TOOLTIP+="<span size='small' foreground='#a8b0bd'>"
+TOOLTIP+="<span size='small' foreground='#9aa0ad'>"
 TOOLTIP+="Waiting:    ${WAITING}"$'\n'
 TOOLTIP+="Displayed:  ${DISPLAYED}"$'\n'
 TOOLTIP+="History:    ${HISTORY}"$'\n'

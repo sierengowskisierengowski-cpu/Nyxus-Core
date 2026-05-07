@@ -472,31 +472,31 @@ window {{ background-color: transparent; color: rgba(232,224,245,0.92); }}
 
 .nav-bar {{
     background-color: rgba(0, 0, 0, 0.62);
-    border-right: 3px solid rgba(255,0,255,0.45);
+    border-right: 3px solid rgba(8, 12, 20, 0.45);
     min-width: 160px;
 }}
 .nav-btn {{
     background-color: transparent;
-    color: rgba(180,160,220,0.70);
+    color: rgba(255, 255, 255, 0.70);
     border: none; border-left: 4px solid transparent; border-radius: 0;
     padding: 14px 14px 14px 18px;
     font-size: 17px; font-weight: bold; min-height: 0; text-align: left;
 }}
-.nav-btn:hover {{ background-color: rgba(255,0,255,0.10); color: rgba(255,180,255,0.95); }}
-.nav-active-pink   {{ background: rgba(255,0,255,0.14);  color: #ff88ff;
+.nav-btn:hover {{ background-color: rgba(8, 12, 20, 0.10); color: rgba(255, 255, 255, 0.95); }}
+.nav-active-pink   {{ background: rgba(8, 12, 20, 0.14);  color: #9aa0ad;
                      border-left: 4px solid {WHITE_OFF};
-                     box-shadow: inset 4px 0 16px rgba(255,0,255,0.14); }}
-.nav-active-red    {{ background: rgba(255,30,30,0.14);  color: #ff6655;
-                     border-left: 4px solid #ff2020; }}
-.nav-active-orange {{ background: rgba(255,85,0,0.14);  color: #ff8855;
+                     box-shadow: inset 4px 0 16px rgba(8, 12, 20, 0.14); }}
+.nav-active-red    {{ background: rgba(8, 12, 20, 0.14);  color: #9aa0ad;
+                     border-left: 4px solid #4a4e5a; }}
+.nav-active-orange {{ background: rgba(8, 12, 20, 0.14);  color: #9aa0ad;
                      border-left: 4px solid {WHITE_OFF}; }}
-.nav-active-purple {{ background: rgba(204,0,255,0.14); color: #dd88ff;
+.nav-active-purple {{ background: rgba(8, 12, 20, 0.14); color: #9aa0ad;
                      border-left: 4px solid {WHITE_OFF}; }}
-.nav-active-blue   {{ background: rgba(0,136,255,0.14); color: #66bbff;
+.nav-active-blue   {{ background: rgba(8, 12, 20, 0.14); color: #9aa0ad;
                      border-left: 4px solid {GREY_LIGHT}; }}
-.nav-active-green  {{ background: rgba(57,255,20,0.12); color: #88ff55;
+.nav-active-green  {{ background: rgba(255, 255, 255, 0.12); color: #c8ccd6;
                      border-left: 4px solid {GREY_LIGHT}; }}
-.nav-active-yellow {{ background: rgba(255,255,0,0.12); color: #ffff88;
+.nav-active-yellow {{ background: rgba(255, 255, 255, 0.12); color: #ffffff;
                      border-left: 4px solid {WHITE_OFF}; }}
 
 scale trough {{ background-color: rgba(255,255,255,0.08); border-radius: 2px; min-height: 8px; }}
@@ -507,53 +507,37 @@ scale.green  highlight {{ background-color: {GREY_LIGHT}; }}
 scale.yellow highlight {{ background-color: {WHITE_OFF}; }}
 scale.orange highlight {{ background-color: {WHITE_OFF}; }}
 scale.purple highlight {{ background-color: {WHITE_OFF}; }}
-scale.red    highlight {{ background-color: #ff2020; }}
+scale.red    highlight {{ background-color: #4a4e5a; }}
 scale slider {{ min-width:18px; min-height:18px; border-radius:2px; background:white;
                border:2px solid rgba(255,255,255,0.50); }}
 
-.neon-btn {{
-    background-color: rgba(255,0,255,0.14); color: #ff88ff;
-    border: 2px solid rgba(255,0,255,0.45); border-radius: 4px;
-    padding: 9px 20px; font-size: 16px; font-weight: bold;
-    box-shadow: 0 0 8px rgba(255,0,255,0.18);
+.neon-btn,
+.neon-btn-mono {{
+    background-color: rgba(8, 12, 20, 0.55);
+    color: {WHITE_OFF};
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 4px;
+    padding: 9px 20px;
+    font-size: 16px;
+    font-weight: bold;
 }}
-.neon-btn:hover {{ background-color: rgba(255,0,255,0.26); border-color:{WHITE_OFF};
-                  box-shadow: 0 0 18px rgba(255,0,255,0.40); }}
-.neon-btn-blue  {{ background-color:rgba(0,136,255,0.14); color:#66bbff;
-                  border:2px solid rgba(0,136,255,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }}
-.neon-btn-blue:hover  {{ background-color:rgba(0,136,255,0.26); border-color:{GREY_LIGHT}; }}
-.neon-btn-green {{ background-color:rgba(57,255,20,0.12); color:#88ff55;
-                  border:2px solid rgba(57,255,20,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }}
-.neon-btn-green:hover {{ background-color:rgba(57,255,20,0.24); border-color:{GREY_LIGHT}; }}
-.neon-btn-red   {{ background-color:rgba(255,30,30,0.14); color:#ff6655;
-                  border:2px solid rgba(255,60,40,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }}
-.neon-btn-red:hover {{ background-color:rgba(255,60,40,0.28); }}
-.neon-btn-yellow{{ background-color:rgba(255,255,0,0.12); color:#ffff88;
-                  border:2px solid rgba(255,255,0,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }}
-.neon-btn-yellow:hover {{ background-color:rgba(255,255,0,0.24); border-color:{WHITE_OFF}; }}
-.neon-btn-orange{{ background-color:rgba(255,85,0,0.14); color:#ff8855;
-                  border:2px solid rgba(255,85,0,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }}
-.neon-btn-orange:hover {{ background-color:rgba(255,85,0,0.26); border-color:{WHITE_OFF}; }}
-.neon-btn-purple{{ background-color:rgba(200,0,255,0.14); color:#dd88ff;
-                  border:2px solid rgba(200,0,255,0.45); border-radius:4px;
-                  padding:9px 20px; font-size:16px; font-weight:bold; }}
-.neon-btn-purple:hover {{ background-color:rgba(200,0,255,0.26); border-color:{WHITE_OFF}; }}
+.neon-btn:hover,
+.neon-btn-mono:hover {{
+    background-color: rgba(15, 20, 32, 0.72);
+    border-color: {WHITE_OFF};
+    color: {WHITE_PURE};
+}}
 
 entry {{
     background-color: rgba(255,255,255,0.05); color: rgba(232,224,245,0.90);
-    border: 2px solid rgba(255,0,255,0.30); border-radius: 4px;
+    border: 2px solid rgba(8, 12, 20, 0.30); border-radius: 4px;
     padding: 7px 14px; font-size: 16px; caret-color: {WHITE_OFF};
 }}
-entry:focus {{ border-color: {WHITE_OFF}; box-shadow: 0 0 12px rgba(255,0,255,0.25); }}
+entry:focus {{ border-color: {WHITE_OFF}; box-shadow: 0 0 12px rgba(8, 12, 20, 0.25); }}
 entry text {{ background-color: transparent; }}
 
 scrollbar {{ background-color: transparent; }}
-scrollbar slider {{ background-color: rgba(255,0,255,0.22); border-radius: 2px; min-width:5px; }}
+scrollbar slider {{ background-color: rgba(8, 12, 20, 0.22); border-radius: 2px; min-width:5px; }}
 """)
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1119,14 +1103,14 @@ class NyxusControl(Gtk.Application):
         tb.set_margin_top(14); tb.set_margin_start(18); tb.set_margin_end(18)
         tb.set_margin_bottom(8)
         lbl = Gtk.Label(label="Fan Preset:")
-        lbl.set_markup("<span font='Inter Display 16' color='#88aaff'>Fan Preset:</span>")
+        lbl.set_markup("<span font='Inter Display 16' color='#9aa0ad'>Fan Preset:</span>")
         tb.append(lbl)
         for name, pct, css in [
-            ("Silent",      20,  "neon-btn-blue"),
-            ("Balanced",    50,  "neon-btn-green"),
-            ("Performance", 80,  "neon-btn-orange"),
-            ("Turbo",       100, "neon-btn-red"),
-            ("Auto",        -1,  "neon-btn-purple"),
+            ("Silent",      20,  "neon-btn-mono"),
+            ("Balanced",    50,  "neon-btn-mono"),
+            ("Performance", 80,  "neon-btn-mono"),
+            ("Turbo",       100, "neon-btn-mono"),
+            ("Auto",        -1,  "neon-btn-mono"),
         ]:
             b = Gtk.Button(label=name)
             b.add_css_class(css)
@@ -1434,15 +1418,15 @@ class NyxusControl(Gtk.Application):
         ctrl.append(save_btn)
 
         apply_btn = Gtk.Button(label="⚡  Apply Now")
-        apply_btn.add_css_class("neon-btn-green"); apply_btn.connect("clicked", self._on_apply_profile)
+        apply_btn.add_css_class("neon-btn-mono"); apply_btn.connect("clicked", self._on_apply_profile)
         ctrl.append(apply_btn)
 
         new_btn = Gtk.Button(label="+ New Profile")
-        new_btn.add_css_class("neon-btn-blue"); new_btn.connect("clicked", self._on_new_profile)
+        new_btn.add_css_class("neon-btn-mono"); new_btn.connect("clicked", self._on_new_profile)
         ctrl.append(new_btn)
 
         del_btn = Gtk.Button(label="Delete Profile")
-        del_btn.add_css_class("neon-btn-red"); del_btn.connect("clicked", self._on_delete_profile)
+        del_btn.add_css_class("neon-btn-mono"); del_btn.connect("clicked", self._on_delete_profile)
         ctrl.append(del_btn)
 
         editor.append(ctrl)
@@ -1637,13 +1621,13 @@ class NyxusControl(Gtk.Application):
         btn_row.set_margin_top(8); btn_row.set_margin_bottom(12)
         for name, col, css in [
             ("Pink",   C_PINK,   "neon-btn"),
-            ("Purple", C_PURPLE, "neon-btn-purple"),
-            ("Blue",   C_BLUE,   "neon-btn-blue"),
-            ("Green",  C_GREEN,  "neon-btn-green"),
-            ("Yellow", C_YELLOW, "neon-btn-yellow"),
-            ("Orange", C_ORANGE, "neon-btn-orange"),
-            ("Red",    C_RED,    "neon-btn-red"),
-            ("Cycle",  None,     "neon-btn-blue"),
+            ("Purple", C_PURPLE, "neon-btn-mono"),
+            ("Blue",   C_BLUE,   "neon-btn-mono"),
+            ("Green",  C_GREEN,  "neon-btn-mono"),
+            ("Yellow", C_YELLOW, "neon-btn-mono"),
+            ("Orange", C_ORANGE, "neon-btn-mono"),
+            ("Red",    C_RED,    "neon-btn-mono"),
+            ("Cycle",  None,     "neon-btn-mono"),
         ]:
             b = Gtk.Button(label=name)
             b.add_css_class(css)
@@ -1662,7 +1646,7 @@ class NyxusControl(Gtk.Application):
             ("Breathing", ["openrgb","--mode","breathing"]),
         ]:
             b = Gtk.Button(label=name)
-            b.add_css_class("neon-btn-blue")
+            b.add_css_class("neon-btn-mono")
             b.connect("clicked", self._on_rgb_cmd, cmd, name)
             cmd_row.append(b)
         box.append(cmd_row)
@@ -1756,9 +1740,9 @@ class NyxusControl(Gtk.Application):
         tb.set_margin_end(18); tb.set_margin_bottom(10)
         govs = self.hw.get("cpu",{}).get("governors",
                ["powersave","schedutil","performance","ondemand","conservative"])
-        gov_css = {"powersave":"neon-btn-blue","schedutil":"neon-btn-green",
-                   "performance":"neon-btn-orange","ondemand":"neon-btn-yellow",
-                   "conservative":"neon-btn-purple"}
+        gov_css = {"powersave":"neon-btn-mono","schedutil":"neon-btn-mono",
+                   "performance":"neon-btn-mono","ondemand":"neon-btn-mono",
+                   "conservative":"neon-btn-mono"}
         for gov in govs:
             b = Gtk.Button(label=gov)
             b.add_css_class(gov_css.get(gov,"neon-btn"))
@@ -1922,8 +1906,8 @@ class NyxusControl(Gtk.Application):
         tb.append(self._proc_search)
 
         for name,css,nice in [
-            ("Raise prio (nice -5)", "neon-btn-green", -5),
-            ("Lower prio (nice +10)","neon-btn-orange", 10),
+            ("Raise prio (nice -5)", "neon-btn-mono", -5),
+            ("Lower prio (nice +10)","neon-btn-mono", 10),
         ]:
             b = Gtk.Button(label=name)
             b.add_css_class(css)
@@ -1931,7 +1915,7 @@ class NyxusControl(Gtk.Application):
             tb.append(b)
 
         kill_btn = Gtk.Button(label="Kill")
-        kill_btn.add_css_class("neon-btn-red")
+        kill_btn.add_css_class("neon-btn-mono")
         kill_btn.connect("clicked", self._on_kill)
         tb.append(kill_btn)
 
@@ -1941,12 +1925,12 @@ class NyxusControl(Gtk.Application):
         sort_tb = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         sort_tb.set_margin_start(18); sort_tb.set_margin_bottom(8)
         sort_lbl = Gtk.Label(label="Sort by:")
-        sort_lbl.set_markup("<span font='Inter Display 14' color='#8866aa'>Sort by:</span>")
+        sort_lbl.set_markup("<span font='Inter Display 14' color='#6a6e78'>Sort by:</span>")
         sort_tb.append(sort_lbl)
         self._sort_btns = {}
         for key,lbl in [("cpu","CPU%"),("mem","MEM%"),("pid","PID"),("name","Name")]:
             b = Gtk.Button(label=lbl)
-            b.add_css_class("neon-btn-blue" if key=="cpu" else "neon-btn-purple")
+            b.add_css_class("neon-btn-mono" if key=="cpu" else "neon-btn-mono")
             b.connect("clicked", self._on_proc_sort, key)
             sort_tb.append(b)
             self._sort_btns[key] = b

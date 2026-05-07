@@ -115,7 +115,7 @@ while true; do
 
   TXT_ESC=$(esc_json "$WIN")
   TIP_RAW="<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · LIVE TICKER</span>
-<span size='small' foreground='#a8b0bd'>${TOOLTIP_BODY}</span>"
+<span size='small' foreground='#9aa0ad'>${TOOLTIP_BODY}</span>"
   TIP_ESC=$(esc_json "$TIP_RAW")
 
   printf '{"text":"%s","tooltip":"%s","class":"ticker","alt":"ticker"}\n' "$TXT_ESC" "$TIP_ESC"

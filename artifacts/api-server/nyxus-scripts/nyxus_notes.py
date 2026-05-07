@@ -169,7 +169,7 @@ textview text selection {
     font-weight: 400;
 }
 .savedot.dirty {
-    color: #c97a2b;
+    color: #9aa0ad;
 }
 """
 

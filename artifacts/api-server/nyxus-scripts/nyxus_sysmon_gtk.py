@@ -108,7 +108,7 @@ PALETTE = [
     (1.0,  0.33, 0.0 ),  # C_ORANGE
 ]
 C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE = PALETTE
-C_BG    = (0.031, 0.031, 0.055)   # #08080e deep dark
+C_BG    = (0.031, 0.031, 0.055)   # #0a0a0a deep dark
 C_PANEL = (0.052, 0.052, 0.100)   # slightly lighter dark card
 C_TEXT  = (0.91,  0.88,  0.96 )   # light lavender text
 C_DIM   = (0.44,  0.376, 0.627)   # dim purple
@@ -453,18 +453,18 @@ def collect(st):
 
 CSS = format_css("""
 * {{ font-family: 'Inter Display', 'Inter Display', 'Inter', 'Sans'; }}
-window {{ background-color: #08080e; color: rgba(232,224,245,0.92); }}
+window {{ background-color: #0a0a0a; color: rgba(232,224,245,0.92); }}
 
 /* ── Nav sidebar ─────────────────────────────────────────────────────── */
 .nav-bar {{
     background-color: {INK_BLACK};
-    border-right: 3px solid rgba(255,0,255,0.30);
+    border-right: 3px solid rgba(8, 12, 20, 0.30);
     min-width: 168px;
 }}
 .nav-btn {{
     background-color: rgba(255,255,255,0.03);
-    color: rgba(180,160,220,0.75);
-    border: 1px solid rgba(255,0,255,0.14);
+    color: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(8, 12, 20, 0.14);
     border-left: 5px solid transparent;
     border-radius: 4px;
     padding: 13px 14px 13px 15px;
@@ -472,34 +472,34 @@ window {{ background-color: #08080e; color: rgba(232,224,245,0.92); }}
     font-size: 17px; font-weight: bold; letter-spacing: 2px; min-height: 0;
 }}
 .nav-btn:hover {{
-    background-color: rgba(255,0,255,0.11);
-    color: rgba(255,200,255,0.96);
-    border-color: rgba(255,0,255,0.38);
+    background-color: rgba(8, 12, 20, 0.11);
+    color: rgba(255, 255, 255, 0.96);
+    border-color: rgba(8, 12, 20, 0.38);
 }}
-.nav-active-pink   {{ background: rgba(255,0,255,0.14); color: #ff99ff;
+.nav-active-pink   {{ background: rgba(8, 12, 20, 0.14); color: #c8ccd6;
                      border-left: 5px solid {WHITE_OFF};
-                     border-color: rgba(255,0,255,0.45); }}
-.nav-active-orange {{ background: rgba(255,85,0,0.14); color: #ff9966;
+                     border-color: rgba(8, 12, 20, 0.45); }}
+.nav-active-orange {{ background: rgba(8, 12, 20, 0.14); color: #9aa0ad;
                      border-left: 5px solid {WHITE_OFF};
-                     border-color: rgba(255,85,0,0.45); }}
-.nav-active-purple {{ background: rgba(204,0,255,0.14); color: #ee99ff;
+                     border-color: rgba(8, 12, 20, 0.45); }}
+.nav-active-purple {{ background: rgba(8, 12, 20, 0.14); color: #9aa0ad;
                      border-left: 5px solid {WHITE_OFF};
-                     border-color: rgba(204,0,255,0.45); }}
-.nav-active-blue   {{ background: rgba(0,136,255,0.14); color: #77ccff;
+                     border-color: rgba(8, 12, 20, 0.45); }}
+.nav-active-blue   {{ background: rgba(8, 12, 20, 0.14); color: #c8ccd6;
                      border-left: 5px solid {GREY_LIGHT};
-                     border-color: rgba(0,136,255,0.45); }}
-.nav-active-green  {{ background: rgba(57,255,20,0.11); color: #99ff66;
+                     border-color: rgba(8, 12, 20, 0.45); }}
+.nav-active-green  {{ background: rgba(255, 255, 255, 0.11); color: #e8edf5;
                      border-left: 5px solid {GREY_LIGHT};
-                     border-color: rgba(57,255,20,0.45); }}
-.nav-active-yellow {{ background: rgba(255,255,0,0.11); color: #ffff99;
+                     border-color: rgba(255, 255, 255, 0.45); }}
+.nav-active-yellow {{ background: rgba(255, 255, 255, 0.11); color: #ffffff;
                      border-left: 5px solid {WHITE_OFF};
-                     border-color: rgba(255,255,0,0.45); }}
+                     border-color: rgba(255, 255, 255, 0.45); }}
 
 /* ── Search input ────────────────────────────────────────────────────── */
 .search-e {{
     background-color: rgba(255,255,255,0.06);
     color: rgba(232,224,245,0.88);
-    border: 2px solid rgba(255,0,255,0.30); border-radius: 4px;
+    border: 2px solid rgba(8, 12, 20, 0.30); border-radius: 4px;
     padding: 5px 12px; font-size: 15px; box-shadow: none; caret-color: {WHITE_OFF};
 }}
 .search-e text {{ background-color: transparent; }}
@@ -507,34 +507,34 @@ window {{ background-color: #08080e; color: rgba(232,224,245,0.92); }}
 
 /* ── Process action buttons ──────────────────────────────────────────── */
 .kill-btn {{
-    background-color: rgba(255,50,30,0.18); color: #ff6655;
-    border: 2px solid rgba(255,80,50,0.45); border-radius: 4px;
+    background-color: rgba(8, 12, 20, 0.18); color: #9aa0ad;
+    border: 2px solid rgba(8, 12, 20, 0.45); border-radius: 4px;
     padding: 5px 12px; font-size: 14px; font-weight: bold;
 }}
-.kill-btn:hover {{ background-color: rgba(255,80,50,0.32); }}
+.kill-btn:hover {{ background-color: rgba(8, 12, 20, 0.32); }}
 .sort-btn {{
-    background-color: rgba(255,255,255,0.06); color: rgba(200,180,240,0.80);
+    background-color: rgba(255,255,255,0.06); color: rgba(255, 255, 255, 0.80);
     border: 1px solid rgba(255,255,255,0.12); border-radius: 4px;
     padding: 4px 10px; font-size: 13px;
 }}
 .sort-btn:hover {{ background-color: rgba(255,255,255,0.12); }}
 .sort-active {{
-    color: #ffff88; border-color: rgba(255,255,0,0.50);
-    background-color: rgba(255,255,0,0.10);
+    color: #ffffff; border-color: rgba(255, 255, 255, 0.50);
+    background-color: rgba(255, 255, 255, 0.10);
 }}
 
 /* ── Process treeview ────────────────────────────────────────────────── */
 treeview {{
-    background-color: #0a0a14; color: rgba(230,220,245,0.88);
+    background-color: #0a0a0a; color: rgba(255, 255, 255, 0.88);
     font-size: 14px; font-family: 'Inter Display', 'Sans';
 }}
 treeview:selected {{
-    background-color: rgba(255,0,255,0.18); color: #ffaaff;
+    background-color: rgba(8, 12, 20, 0.18); color: #c8ccd6;
 }}
 treeview header button {{
-    background-color: {INK_BLACK}; color: rgba(180,160,220,0.80);
+    background-color: {INK_BLACK}; color: rgba(255, 255, 255, 0.80);
     border: none; font-size: 13px; font-weight: bold;
-    border-bottom: 2px solid rgba(255,0,255,0.18);
+    border-bottom: 2px solid rgba(8, 12, 20, 0.18);
 }}
 """)
 

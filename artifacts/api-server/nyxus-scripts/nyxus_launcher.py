@@ -433,7 +433,7 @@ window.nyxus-launcher {{
     font-family: 'Inter Display', 'Inter Display', sans-serif;
     font-size: 28px;
     margin-bottom: 4px;
-    text-shadow: 0 0 10px rgba(255, 0, 255, 0.45);
+    text-shadow: 0 0 10px rgba(8, 12, 20, 0.45);
 }}
 .nyxus-search {{
     font-family: 'Inter Display', 'Inter Display', sans-serif;
@@ -441,18 +441,18 @@ window.nyxus-launcher {{
     background: rgba(15, 12, 24, 0.92);
     color: {WHITE_PURE};
     caret-color: {WHITE_OFF};
-    border: 2px solid rgba(255, 0, 255, 0.55);
+    border: 2px solid rgba(8, 12, 20, 0.55);
     border-radius: 4px;
     padding: 10px 14px;
-    box-shadow: 0 0 14px rgba(255, 0, 255, 0.25);
+    box-shadow: 0 0 14px rgba(8, 12, 20, 0.25);
 }}
 .nyxus-search:focus {{
     border-color: {WHITE_OFF};
-    box-shadow: 0 0 22px rgba(255, 0, 255, 0.55);
+    box-shadow: 0 0 22px rgba(8, 12, 20, 0.55);
 }}
 .nyxus-list {{
     background: rgba(8, 6, 14, 0.55);
-    border: 1px solid rgba(255, 0, 255, 0.20);
+    border: 1px solid rgba(8, 12, 20, 0.20);
     border-radius: 4px;
     padding: 4px;
 }}
@@ -462,11 +462,11 @@ window.nyxus-launcher {{
     padding: 0;
 }}
 .nyxus-list row:selected {{
-    background: rgba(255, 0, 255, 0.22);
-    box-shadow: inset 0 0 0 1px rgba(255, 0, 255, 0.45);
+    background: rgba(8, 12, 20, 0.22);
+    box-shadow: inset 0 0 0 1px rgba(8, 12, 20, 0.45);
 }}
 .nyxus-list row:hover {{
-    background: rgba(255, 0, 255, 0.12);
+    background: rgba(8, 12, 20, 0.12);
 }}
 .nyxus-name {{
     font-family: 'Inter Display', 'Inter Display', sans-serif;

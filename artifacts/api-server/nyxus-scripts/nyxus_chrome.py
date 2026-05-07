@@ -405,8 +405,8 @@ headerbar button:hover, .titlebar button:hover {
 .nyx-frost-pink, .nyx-frost-cyan, .nyx-frost-purple,
 .nyx-frost-gold, .nyx-frost-green, .nyx-frost-red, .nyx-frost-orange,
 /* per-app card classes (home / notepad / passwords / weather style.py) */
-.card-pink, .card-cyan, .card-purple, .card-gold, .card-indigo,
-.card-green, .card-orange, .card-blue, .card-red, .card-white,
+.card-pink, .card-cyan, .card-purple, .card-gold, .card-green,
+.card-orange, .card-red, .card-yellow, .card-mono, .card-white,
 /* phantom theme.css consumers */
 frame {
     background-color: rgba(8, 12, 20, 0.55);
@@ -420,9 +420,10 @@ frame {
                 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 .nyx-card:hover, .card-pink:hover, .card-cyan:hover,
-.card-purple:hover, .card-gold:hover, .card-indigo:hover,
-.card-green:hover, .card-orange:hover, .card-blue:hover,
-.card-red:hover, .nyx-frosted:hover {
+.card-purple:hover, .card-gold:hover, .card-green:hover,
+.card-orange:hover, .card-red:hover, .card-yellow:hover,
+.card-mono:hover, .card-white:hover,
+.card-mono:hover, .nyx-frosted:hover {
     background-color: rgba(15, 20, 32, 0.72);
     border-color: rgba(255, 255, 255, 0.22);
 }
@@ -430,36 +431,28 @@ frame {
 /* Per-app neon halos collapse — no glow. Box-shadow stripped. */
 .nyx-glow-pink, .nyx-glow-cyan, .nyx-glow-purple,
 .nyx-glow-gold, .nyx-glow-green, .nyx-glow-red,
-.card-pink-header-glyph, .card-cyan-header-glyph,
-.card-purple-header-glyph, .card-gold-header-glyph,
-.card-indigo-header-glyph, .card-green-header-glyph,
-.card-orange-header-glyph, .card-blue-header-glyph,
-.card-red-header-glyph,
-.card-pink-header-title, .card-cyan-header-title,
-.card-purple-header-title, .card-gold-header-title,
-.card-indigo-header-title, .card-green-header-title,
-.card-orange-header-title, .card-blue-header-title,
-.card-red-header-title {
+.card-pink-header-glyph, .card-cyan-header-glyph, .card-purple-header-glyph, .card-gold-header-glyph,
+.card-green-header-glyph, .card-orange-header-glyph, .card-red-header-glyph, .card-yellow-header-glyph,
+.card-mono-header-glyph, .card-white-header-glyph,
+.card-pink-header-title, .card-cyan-header-title, .card-purple-header-title, .card-gold-header-title,
+.card-green-header-title, .card-orange-header-title, .card-red-header-title, .card-yellow-header-title,
+.card-mono-header-title, .card-white-header-title {
     color: #e8edf5;
     text-shadow: 0  1px 0 rgba(0,   0,  0,  0.65),
                  0 -1px 0 rgba(255, 255, 255, 0.10);
     box-shadow: none;
 }
-.card-pink-header-stamp, .card-cyan-header-stamp,
-.card-purple-header-stamp, .card-gold-header-stamp,
-.card-indigo-header-stamp, .card-green-header-stamp,
-.card-orange-header-stamp, .card-blue-header-stamp,
-.card-red-header-stamp,
-.card-pink-footer, .card-cyan-footer, .card-purple-footer,
-.card-gold-footer, .card-indigo-footer, .card-green-footer,
-.card-orange-footer, .card-blue-footer, .card-red-footer {
+.card-pink-header-stamp, .card-cyan-header-stamp, .card-purple-header-stamp, .card-gold-header-stamp,
+.card-green-header-stamp, .card-orange-header-stamp, .card-red-header-stamp, .card-yellow-header-stamp,
+.card-mono-header-stamp, .card-white-header-stamp,
+.card-pink-footer, .card-cyan-footer, .card-purple-footer, .card-gold-footer,
+.card-green-footer, .card-orange-footer, .card-red-footer, .card-yellow-footer,
+.card-mono-footer, .card-white-footer {
     color: #6a6e78;
 }
-.card-pink-header-rule, .card-cyan-header-rule,
-.card-purple-header-rule, .card-gold-header-rule,
-.card-indigo-header-rule, .card-green-header-rule,
-.card-orange-header-rule, .card-blue-header-rule,
-.card-red-header-rule {
+.card-pink-header-rule, .card-cyan-header-rule, .card-purple-header-rule, .card-gold-header-rule,
+.card-green-header-rule, .card-orange-header-rule, .card-red-header-rule, .card-yellow-header-rule,
+.card-mono-header-rule, .card-white-header-rule {
     background: rgba(255, 255, 255, 0.10);
     min-height: 1px;
 }
@@ -503,8 +496,8 @@ scrollbar slider:active { background-color: rgba(255, 255, 255, 0.85); }
 
 /* -- Inputs --------------------------------------------------------------- */
 entry, spinbutton,
-.input-pink, .input-cyan, .input-purple, .input-gold,
-.input-indigo, .input-green, .input-orange, .input-blue, .input-red {
+.input-mono, .input-mono, .input-mono, .input-mono,
+.input-mono, .input-mono, .input-mono, .input-mono, .input-mono {
     background-color: rgba(15, 20, 32, 0.62);
     background-image: none;
     color: #e8edf5;
@@ -515,9 +508,9 @@ entry, spinbutton,
     caret-color: #ffffff;
 }
 entry:focus, spinbutton:focus,
-.input-pink:focus, .input-cyan:focus, .input-purple:focus,
-.input-gold:focus, .input-indigo:focus, .input-green:focus,
-.input-orange:focus, .input-blue:focus, .input-red:focus {
+.input-mono:focus, .input-mono:focus, .input-mono:focus,
+.input-mono:focus, .input-mono:focus, .input-mono:focus,
+.input-mono:focus, .input-mono:focus, .input-mono:focus {
     border-color: rgba(255, 255, 255, 0.45);
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.10);
 }
@@ -525,14 +518,14 @@ entry placeholder, entry > placeholder { color: #6a6e78; }
 
 /* -- Buttons (universal) -------------------------------------------------- */
 button,
-.btn-nav-pink, .btn-nav-cyan, .btn-nav-purple, .btn-nav-gold,
-.btn-nav-indigo, .btn-nav-green, .btn-nav-orange, .btn-nav-blue, .btn-nav-red,
-.btn-primary-pink, .btn-primary-cyan, .btn-primary-purple, .btn-primary-gold,
-.btn-primary-indigo, .btn-primary-green, .btn-primary-orange,
-.btn-primary-blue, .btn-primary-red,
-.btn-icon-pink, .btn-icon-cyan, .btn-icon-purple, .btn-icon-gold,
-.btn-icon-indigo, .btn-icon-green, .btn-icon-orange, .btn-icon-blue,
-.btn-icon-red {
+.btn-nav-mono, .btn-nav-mono, .btn-nav-mono, .btn-nav-mono,
+.btn-nav-mono, .btn-nav-mono, .btn-nav-mono, .btn-nav-mono, .btn-nav-mono,
+.btn-primary-mono, .btn-primary-mono, .btn-primary-mono, .btn-primary-mono,
+.btn-primary-mono, .btn-primary-mono, .btn-primary-mono,
+.btn-primary-mono, .btn-primary-mono,
+.btn-icon-mono, .btn-icon-mono, .btn-icon-mono, .btn-icon-mono,
+.btn-icon-mono, .btn-icon-mono, .btn-icon-mono, .btn-icon-mono,
+.btn-icon-mono {
     background-color: rgba(15, 20, 32, 0.55);
     background-image: none;
     color: #e8edf5;
@@ -546,15 +539,15 @@ button,
     box-shadow: none;
 }
 button:hover,
-.btn-nav-pink:hover, .btn-nav-cyan:hover, .btn-nav-purple:hover,
-.btn-nav-gold:hover, .btn-nav-indigo:hover, .btn-nav-green:hover,
-.btn-nav-orange:hover, .btn-nav-blue:hover, .btn-nav-red:hover,
-.btn-primary-pink:hover, .btn-primary-cyan:hover, .btn-primary-purple:hover,
-.btn-primary-gold:hover, .btn-primary-indigo:hover, .btn-primary-green:hover,
-.btn-primary-orange:hover, .btn-primary-blue:hover, .btn-primary-red:hover,
-.btn-icon-pink:hover, .btn-icon-cyan:hover, .btn-icon-purple:hover,
-.btn-icon-gold:hover, .btn-icon-indigo:hover, .btn-icon-green:hover,
-.btn-icon-orange:hover, .btn-icon-blue:hover, .btn-icon-red:hover {
+.btn-nav-mono:hover, .btn-nav-mono:hover, .btn-nav-mono:hover,
+.btn-nav-mono:hover, .btn-nav-mono:hover, .btn-nav-mono:hover,
+.btn-nav-mono:hover, .btn-nav-mono:hover, .btn-nav-mono:hover,
+.btn-primary-mono:hover, .btn-primary-mono:hover, .btn-primary-mono:hover,
+.btn-primary-mono:hover, .btn-primary-mono:hover, .btn-primary-mono:hover,
+.btn-primary-mono:hover, .btn-primary-mono:hover, .btn-primary-mono:hover,
+.btn-icon-mono:hover, .btn-icon-mono:hover, .btn-icon-mono:hover,
+.btn-icon-mono:hover, .btn-icon-mono:hover, .btn-icon-mono:hover,
+.btn-icon-mono:hover, .btn-icon-mono:hover, .btn-icon-mono:hover {
     background-color: rgba(255, 255, 255, 0.12);
     border-color: rgba(255, 255, 255, 0.45);
     color: #ffffff;

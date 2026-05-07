@@ -93,7 +93,7 @@ def _hex(h: str) -> Gdk.RGBA:
     return r
 
 VTE_PALETTE = [
-    _hex("#0a0e16"),  # 0  black
+    _hex("#0f1420"),  # 0  black
     _hex("#6a6e78"),  # 1  red    -> tertiary grey
     _hex("#c8ccd6"),  # 2  green  -> secondary
     _hex("#e8edf5"),  # 3  yellow -> off-white
@@ -101,7 +101,7 @@ VTE_PALETTE = [
     _hex("#c8ccd6"),  # 5  magenta-> secondary
     _hex("#e8edf5"),  # 6  cyan   -> off-white
     _hex("#e8edf5"),  # 7  white  -> off-white
-    _hex("#1a1f2a"),  # 8  bright black
+    _hex("#1a1e2a"),  # 8  bright black
     _hex("#9aa0ad"),  # 9  bright red    -> mid grey
     _hex("#c8ccd6"),  # 10 bright green
     _hex("#ffffff"),  # 11 bright yellow -> pure white
