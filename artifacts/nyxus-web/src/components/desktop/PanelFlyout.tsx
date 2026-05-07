@@ -73,7 +73,7 @@ export function PanelFlyout({ open, onClose }: { open: boolean; onClose: () => v
 
       <Card label="NEWS">
         <div style={{ fontSize: "0.72rem", color: C.textSecondary, lineHeight: 1.5 }}>
-          NYXUS rev r16 — DARK MIRROR locked. 27 apps mirrored to web preview.
+          NYXUS rev r16 — DARK MIRROR locked. 26 apps mirrored to web preview.
         </div>
       </Card>
 

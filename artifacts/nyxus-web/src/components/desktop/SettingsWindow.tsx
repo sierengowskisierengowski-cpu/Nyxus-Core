@@ -70,7 +70,7 @@ export function SettingsWindow({ open, onClose }: { open: boolean; onClose: () =
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <Row label="NYXUS"     value="rev r16 · DARK MIRROR (LOCKED)" />
-            <Row label="Apps"      value="27 installed (4 live + 11 tarball + 12 system)" />
+            <Row label="Apps"      value="26 installed (3 live + 11 tarball + 12 system)" />
             <Row label="Creator"   value="Joseph Sierengowski" />
             <Row label="Source"    value="github.com/sierengowskisierengowski-cpu/Nyxus-Core" />
           </div>

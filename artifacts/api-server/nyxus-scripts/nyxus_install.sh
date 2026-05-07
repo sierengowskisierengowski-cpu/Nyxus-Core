@@ -86,7 +86,8 @@ for f in nyxus_palette.py nyxus-palette.css \
          nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
          nyxus_doctor.py nyxus_launcher.py nyxus_powermenu.py \
          nyxus_screenshot.py nyxus_chrome.py nyxus_quicksettings.py \
-         nyxus_calendar.py nyxus_clock.py; do
+         nyxus_calendar.py nyxus_clock.py nyxus_screensaver.py \
+         nyxus_demon_wake.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 

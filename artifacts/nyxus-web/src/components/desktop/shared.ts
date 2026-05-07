@@ -2,7 +2,9 @@
 // NYXUS — shared desktop primitives
 // DARK MIRROR rev r16 (LOCKED) — monochrome only.
 // White / off-white / black / dark glass. No neon. No per-app colors.
-// Mirrors the actual installed Hyprland system: 27 apps + 4 iframes.
+// Mirrors the actual installed Hyprland system: 26 real apps (3 live iframes
+// for the apps that ship a web mirror + 11 tarballs + 12 system Python apps).
+// Every entry below corresponds to a real installable file in nyxus-scripts/.
 // ============================================
 import { useState, useEffect } from "react";
 
@@ -37,7 +39,7 @@ export const C = {
 // Back-compat NEONS export — now monochrome (used by LeftBar workspace pips)
 export const NEONS = ["#e8edf5", "#c8ccd6", "#e8edf5", "#c8ccd6", "#e8edf5", "#c8ccd6", "#e8edf5", "#c8ccd6", "#e8edf5"];
 
-// ── APP REGISTRY — all 27 real apps from nyxus-scripts/ ──────────────────
+// ── APP REGISTRY — all 26 real apps from nyxus-scripts/ ──────────────────
 export type AppKind = "iframe" | "mockup";
 export type AppDef = {
   id: string;
@@ -57,7 +59,7 @@ export type AppDef = {
 const T = C.textPrimary; // every app uses the same off-white
 
 export const APPS: AppDef[] = [
-  // ── LIVE IFRAMES (4) — actual interactive React mockups ────────────
+  // ── LIVE IFRAMES (3) — apps that ship a web mirror alongside the GTK4 app ─
   { id: "notepad",  name: "Notepad",  glyph: "✑", color: T, kind: "iframe", src: "/nyxus-notepad/",  category: "live",
     tagline: "PLAINTEXT EDITOR · GTK4",
     desc: "Frictionless plaintext notebook with autosave to ~/.nyxus/notepad.json. DARK MIRROR chrome." },
@@ -67,9 +69,6 @@ export const APPS: AppDef[] = [
   { id: "sysmon",   name: "SysMon",   glyph: "◉", color: T, kind: "iframe", src: "/nyxus-sysmon/",   category: "live",
     tagline: "SYSTEM MONITOR · GTK4",
     desc: "Live CPU / memory / network / disk dashboard with dark glass chrome." },
-  { id: "widgets",  name: "Widgets",  glyph: "◍", color: T, kind: "iframe", src: "/nyxus-widgets/",  category: "live",
-    tagline: "DESKTOP WIDGETS",
-    desc: "Glanceable cards (clock, weather, system, calendar) for the home dashboard." },
 
   // ── TARBALL APPS (11) — installed via install.sh ───────────────────
   { id: "godsapp", name: "GodsApp", glyph: "✦", color: T, kind: "mockup", category: "tarball",
