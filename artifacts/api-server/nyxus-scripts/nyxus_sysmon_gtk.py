@@ -428,10 +428,10 @@ window { background-color: #08080e; color: rgba(232,224,245,0.92); }
     border-color: rgba(255,0,255,0.38);
 }
 .nav-active-pink   { background: rgba(255,0,255,0.14); color: #ff99ff;
-                     border-left: 5px solid #ff00ff;
+                     border-left: 5px solid #e8edf5;
                      border-color: rgba(255,0,255,0.45); }
 .nav-active-orange { background: rgba(255,85,0,0.14); color: #ff9966;
-                     border-left: 5px solid #ff5500;
+                     border-left: 5px solid #e8edf5;
                      border-color: rgba(255,85,0,0.45); }
 .nav-active-purple { background: rgba(204,0,255,0.14); color: #ee99ff;
                      border-left: 5px solid #cc00ff;
@@ -451,10 +451,10 @@ window { background-color: #08080e; color: rgba(232,224,245,0.92); }
     background-color: rgba(255,255,255,0.06);
     color: rgba(232,224,245,0.88);
     border: 2px solid rgba(255,0,255,0.30); border-radius: 4px;
-    padding: 5px 12px; font-size: 15px; box-shadow: none; caret-color: #ff00ff;
+    padding: 5px 12px; font-size: 15px; box-shadow: none; caret-color: #e8edf5;
 }
 .search-e text { background-color: transparent; }
-.search-e:focus { border-color: #ff00ff; }
+.search-e:focus { border-color: #e8edf5; }
 
 /* ── Process action buttons ──────────────────────────────────────────── */
 .kill-btn {

@@ -30,7 +30,7 @@ except Exception:
     HAS_CHROME = False
     def install_chrome(win, key="_screenshot"): return None
     def rainbow_markup(s: str) -> str:
-        return f"<span foreground='#ff00ff' font_weight='bold'>{s}</span>"
+        return f"<span foreground='#e8edf5' font_weight='bold'>{s}</span>"
 
 PIC_DIR = Path.home() / "Pictures" / "Screenshots"
 
@@ -273,7 +273,7 @@ window.nyxus-shot {
 }
 .nyxus-shotbtn:hover {
     background: rgba(255, 0, 255, 0.16);
-    border-color: #ff00ff;
+    border-color: #e8edf5;
     box-shadow: 0 0 14px rgba(255, 0, 255, 0.5);
 }
 .nyxus-cb {

@@ -59,12 +59,12 @@ WIND_DIRS = ["N","NE","E","SE","S","SW","W","NW"]
 
 # Full NYXUS palette (floats 0-1)
 PALETTE = [
-    (1.0, 0.0,  1.0 ),   # pink   #ff00ff
+    (1.0, 0.0,  1.0 ),   # pink   #e8edf5
     (0.8, 0.0,  1.0 ),   # purple #cc00ff
     (0.0, 0.53, 1.0 ),   # blue   #0088ff
     (0.22,1.0,  0.08),   # green  #39ff14
     (1.0, 1.0,  0.0 ),   # yellow #ffff00
-    (1.0, 0.33, 0.0 ),   # orange #ff5500
+    (1.0, 0.33, 0.0 ),   # orange #e8edf5
 ]
 C_PINK   = PALETTE[0]
 C_PURPLE = PALETTE[1]
@@ -90,7 +90,7 @@ window {
   font-family: 'Caveat', cursive;
   font-size: 17px;
   padding: 8px 14px;
-  caret-color: #ff00ff;
+  caret-color: #e8edf5;
 }
 .search-entry:focus { border-color: #00dcff; box-shadow: 0 0 14px rgba(0,220,255,0.55); }
 .go-btn {
@@ -105,7 +105,7 @@ window {
   box-shadow: 0 0 12px rgba(255, 0, 255, 0.45);
 }
 .go-btn:hover { background: rgba(255, 0, 255, 0.65); box-shadow: 0 0 18px rgba(255, 0, 255, 0.85); }
-.err-lbl { color: #ff5500; font-family: 'Caveat', cursive; font-size: 15px; padding: 0 14px; }
+.err-lbl { color: #e8edf5; font-family: 'Caveat', cursive; font-size: 15px; padding: 0 14px; }
 """
 
 

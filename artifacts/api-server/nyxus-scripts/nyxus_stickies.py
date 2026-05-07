@@ -740,7 +740,7 @@ class StickiesWindow(Gtk.ApplicationWindow):
 window, .nyx-bg { background-color: #000000; color: #f0eef8; }
 .nyx-toolbar { background-color: rgba(10,10,18,0.96); padding: 4px 10px;
     border-bottom: 1px solid rgba(255,0,255,0.12); }
-.nyx-headline { color: #ff00ff; text-shadow: 0 0 10px rgba(255,0,255,0.55);
+.nyx-headline { color: #e8edf5; text-shadow: 0 0 10px rgba(255,0,255,0.55);
     font-size: 18px; font-weight: bold; }
 .nyx-meta { color: rgba(240,235,250,0.45); font-size: 12px; }
 .nyx-sticky-text, .nyx-sticky-text text {

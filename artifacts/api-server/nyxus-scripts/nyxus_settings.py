@@ -118,8 +118,8 @@ DANGER_RED = (1.0,  0.27, 0.40)
 #  Multi-color rainbow markup for hero titles
 # ═══════════════════════════════════════════════════════════════════════════════
 # Hex stops cycled per character (matches NYXUS suite + Hyprland border).
-_RAINBOW_HEX = ("#ff00ff", "#ff2da8", "#b800ff", "#00aaff",
-                "#39ff14", "#ffc833", "#ff66dd", "#ff00ff")
+_RAINBOW_HEX = ("#e8edf5", "#ff2da8", "#b800ff", "#00aaff",
+                "#39ff14", "#ffc833", "#ff66dd", "#e8edf5")
 
 def _rainbow_markup(text: str) -> str:
     """Return Pango markup where each visible character is colored from
@@ -9090,7 +9090,7 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
     font-family: 'JetBrains Mono', monospace;
     box-shadow: 0 0 10px rgba(255,0,255,0.18); }
 .nyx-version-pill:hover {
-    border-color: #ff00ff;
+    border-color: #e8edf5;
     box-shadow: 0 0 22px rgba(255,0,255,0.55); }
 
 /* -- TOOLBARS (slim glass) -------------------------------------------- */
@@ -9130,7 +9130,7 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
     box-shadow: 0 -2px 12px -4px rgba(255,0,255,0.20); }
 
 /* -- HEADLINES + META ------------------------------------------------- */
-.nyx-headline { color: #ff00ff;
+.nyx-headline { color: #e8edf5;
     text-shadow: 0 0 10px rgba(255,0,255,0.45),
                  0 0 22px rgba(255,0,255,0.20);
     font-size: 24px; font-weight: bold; letter-spacing: 0.6px; }
@@ -9145,7 +9145,7 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
     padding: 4px 0 10px 0;
     box-shadow: 0 4px 22px -10px rgba(255,0,255,0.25); }
 .nyx-card:hover {
-    border-color: #ff00ff;
+    border-color: #e8edf5;
     box-shadow: 0 8px 36px -6px rgba(255,0,255,0.55); }
 
 .nyx-listcard { background-color: #000000;
@@ -9154,7 +9154,7 @@ window, .nyx-bg { background-color: #000000; color: #f0eef8; }
     border-radius: 6px; padding: 0; margin-top: 6px;
     box-shadow: 0 6px 28px -8px rgba(255,0,255,0.30); }
 .nyx-listcard:hover {
-    border-color: #ff00ff;
+    border-color: #e8edf5;
     box-shadow: 0 10px 40px -6px rgba(255,0,255,0.55); }
 
 .nyx-settings-list { background-color: transparent; }
@@ -9197,19 +9197,19 @@ stack, frame, .background, .view, .nyx-bg > box {
     font-weight: bold; }
 .nyx-user-role { color: rgba(255,150,230,0.85); font-size: 11px;
     font-family: 'JetBrains Mono', monospace; letter-spacing: 0.6px; }
-.nyx-card-title { color: #ff00ff; text-shadow: 0 0 8px rgba(255,0,255,0.45);
+.nyx-card-title { color: #e8edf5; text-shadow: 0 0 8px rgba(255,0,255,0.45);
     font-size: 18px; font-weight: bold; letter-spacing: 0.5px; }
 .nyx-row-label { color: #f0eef8; font-size: 14px; }
 .nyx-row-value { color: rgba(240,235,250,0.75); font-size: 14px; }
 .nyx-entry { background-color: transparent; border: none; outline: none;
-    color: #f0eef8; font-size: 14px; caret-color: #ff00ff; }
+    color: #f0eef8; font-size: 14px; caret-color: #e8edf5; }
 .nyx-entry:focus { outline: none; box-shadow: none; }
 .nyx-editor textview, .nyx-editor text {
     background-color: rgba(0,0,0,0.25);
     color: rgba(240,235,250,0.92);
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
-    padding: 6px 10px; caret-color: #ff00ff; }
+    padding: 6px 10px; caret-color: #e8edf5; }
 .nyx-toast { background-color: rgba(255,0,255,0.18);
     color: #ffffff; padding: 6px 14px;
     border: 1px solid rgba(255,0,255,0.55);

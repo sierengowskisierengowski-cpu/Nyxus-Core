@@ -32,11 +32,11 @@ CSS = b"""
     font-family: 'Inter', 'Cantarell', sans-serif;
 }
 window, .background {
-    background-color: #f5f3ef;
-    color: #1a1816;
+    background-color: #e8edf5;
+    color: #000000;
 }
 headerbar {
-    background-color: #f5f3ef;
+    background-color: #e8edf5;
     background-image: none;
     border: none;
     box-shadow: none;
@@ -46,7 +46,7 @@ headerbar {
 headerbar .title {
     font-family: 'Architects Daughter', 'Caveat', cursive;
     font-size: 19px;
-    color: #1a1816;
+    color: #000000;
     font-weight: 500;
     letter-spacing: 0.10em;
     text-shadow: 1px 1px 0 #ffffff,
@@ -56,7 +56,7 @@ headerbar .title {
 headerbar windowcontrols button {
     background: transparent;
     border: none;
-    color: #58524c;
+    color: #6a6e78;
     box-shadow: none;
     min-width: 24px;
     min-height: 24px;
@@ -67,10 +67,10 @@ headerbar windowcontrols button:hover {
     border-radius: 6px;
 }
 headerbar windowcontrols button image {
-    color: #58524c;
+    color: #6a6e78;
 }
 scrolledwindow, scrolledwindow viewport {
-    background-color: #f5f3ef;
+    background-color: #e8edf5;
     border: none;
 }
 scrollbar {
@@ -90,22 +90,22 @@ scrollbar slider:hover {
     background-color: rgba(26, 24, 22, 0.32);
 }
 textview, textview text {
-    background-color: #f5f3ef;
-    color: #1a1816;
+    background-color: #e8edf5;
+    color: #000000;
     font-family: 'Inter', 'Cantarell', sans-serif;
     font-size: 17px;
-    caret-color: #58524c;
+    caret-color: #6a6e78;
 }
 textview text selection {
     background-color: rgba(26, 24, 22, 0.16);
-    color: #1a1816;
+    color: #000000;
 }
 .statusrow {
     padding: 0 24px 12px 0;
     background: transparent;
 }
 .savedot {
-    color: #9e948a;
+    color: #6a6e78;
     font-size: 11px;
     font-family: 'Inter', sans-serif;
     letter-spacing: 0.18em;

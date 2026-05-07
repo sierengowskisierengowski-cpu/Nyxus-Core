@@ -32,12 +32,12 @@ except Exception:
     HAS_CHROME = False
     def install_chrome(win, key="_launcher"): return None  # noqa: E704
     def rainbow_markup(s: str) -> str:                    # noqa: E704
-        return f"<span foreground='#ff00ff' font_weight='bold'>{s}</span>"
+        return f"<span foreground='#e8edf5' font_weight='bold'>{s}</span>"
 
 WIN_W, WIN_H = 720, 520
 MAX_RESULTS  = 40
 
-NEON_PINK  = "#ff00ff"
+NEON_PINK  = "#e8edf5"
 NEON_BLUE  = "#00aaff"
 NEON_GREEN = "#39ff14"
 GOLD       = "#ffd700"
@@ -391,14 +391,14 @@ window.nyxus-launcher {
     font-size: 22px;
     background: rgba(15, 12, 24, 0.92);
     color: #ffffff;
-    caret-color: #ff00ff;
+    caret-color: #e8edf5;
     border: 2px solid rgba(255, 0, 255, 0.55);
     border-radius: 4px;
     padding: 10px 14px;
     box-shadow: 0 0 14px rgba(255, 0, 255, 0.25);
 }
 .nyxus-search:focus {
-    border-color: #ff00ff;
+    border-color: #e8edf5;
     box-shadow: 0 0 22px rgba(255, 0, 255, 0.55);
 }
 .nyxus-list {
