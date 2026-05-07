@@ -239,6 +239,7 @@ sed -i "s|NYXUS_TASKBAR_BG|file://${TASKBAR_BG_PATH}|g"    "$WAYBAR_DIR/style.cs
 sed -i "s|NYXUS_RIGHTBAR_BG|file://${RIGHTBAR_BG_PATH}|g"  "$WAYBAR_DIR/style.css"
 # Belt-and-suspenders: convert any leftover hardcoded /home/nyx/ to real $HOME
 sed -i "s|file:///home/nyx/|file://$HOME/|g"               "$WAYBAR_DIR/style.css"
+sed -i "s|/home/nyx/|$HOME/|g"                             "$WAYBAR_DIR/config"
 dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
 dl "waybar-stats.sh"          "$WAYBAR_DIR/stats.sh"          || failed=$((failed+1))
 dl "nyxus_quicksettings.py"   "$WAYBAR_DIR/quicksettings.py"  || failed=$((failed+1))
@@ -594,6 +595,10 @@ Keywords=nyxus;clock;time;world;stopwatch;timer;
 StartupWMClass=io.nyxus.clock
 DEOF
 ok "nyxus-clock.desktop"
+
+# Normalize any remaining hardcoded home paths in desktop entries for
+# non-nyx usernames.
+sed -i "s|/home/nyx/|$HOME/|g" "$DESKTOP_DIR"/nyxus-*.desktop 2>/dev/null || true
 
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 

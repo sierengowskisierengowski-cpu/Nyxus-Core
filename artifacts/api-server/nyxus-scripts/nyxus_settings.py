@@ -3,9 +3,9 @@
 """
 NYXUS Settings — system control center for NYXUS.
 
-A native GTK4 / Cairo Python application matching the NYXUS theme
-(dark {INK_BLACK} background, Inter handwriting font, neon pink/blue/
-green/purple/gold accents — same vocabulary as the notepad / stickies).
+A native GTK4 / Cairo Python application matching the locked NYXUS
+DARK MIRROR visual system (dark-glass surfaces, white/off-white/ink
+monochrome palette, Inter + JetBrains Mono typography).
 
 Categories (left sidebar):
 
@@ -31,12 +31,11 @@ Real backend integrations (no fake toggles):
   • Apps        → pacman -Qq, .desktop scan, default-app picker
   • Developer   → uname / lscpu / lspci / free / df / env
 
-Categories rendered as honest stubs (real read-only info; advanced
-features clearly marked as needing a system tool / root):
+Categories with guarded operations:
 
   Privacy, Accessibility, Printers, Gaming, Language, Users
-  (these surfaces show real state but defer destructive ops to
-  system tools — no fake "Apply" buttons that do nothing.)
+  (these pages expose live state and run safe operations directly;
+  destructive or privileged actions remain explicit and gated.)
 
 Storage:  ~/.config/nyxus-settings/{settings.json, favorites.json}
 Logs:     /tmp/nyxus-settings.log
@@ -7535,27 +7534,6 @@ class DeveloperPage(BasePage):
 # ═══════════════════════════════════════════════════════════════════════════════
 #  Main window
 # ═══════════════════════════════════════════════════════════════════════════════
-# ═══════════════════════════════════════════════════════════════════════════════
-#  Phase A stub pages — full implementations land in Phase B per category
-# ═══════════════════════════════════════════════════════════════════════════════
-class _PhaseBStub(BasePage):
-    """Tile is shown on the home grid, but the page itself is a polite stub
-    saying 'in active build'.  Full functionality lands in Phase B."""
-    PHASE_B_NOTE = ("This category is in active build for Phase B. "
-                    "The home tile, search index, breadcrumb, favorite/recents, "
-                    "and restart-required wiring are already live.")
-
-    def build(self):
-        c = Card("Phase B — coming next")
-        c.add_row(Gtk.Label(
-            label=self.PHASE_B_NOTE, xalign=0, wrap=True))
-        c.add_row(Gtk.Label(
-            label=("All settings for this category will be wired to the live "
-                   "system, with zero placeholders, in the per-category Phase B "
-                   "task that follows."), xalign=0, wrap=True))
-        self.box.append(c)
-
-
 # ─── Account & Profile (Category 1) ─────────────────────────────────────────
 class AccountPage(BasePage):
     KEY = "account"; TITLE = "Account & Profile"; ICON = "🪪"
