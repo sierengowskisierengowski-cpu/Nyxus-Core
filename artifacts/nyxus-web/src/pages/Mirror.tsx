@@ -9,7 +9,7 @@
 // Thin neon-outlined frames (pink top/bottom/left, gold right), colored
 // workspace circles, app launcher squares on the right edge, and a
 // wallpaper-only desktop. Click any launcher icon to open that app
-// in a window. Web mockups (Notepad, Stickies, SysMon, Widgets) load
+// in a window. Web mockups (Notepad, Stickies, SysMon) load
 // as live iframes; the 8 tarball apps open NYXUS-themed previews.
 //
 // All sub-components live in ./components/desktop/* — this file is the
