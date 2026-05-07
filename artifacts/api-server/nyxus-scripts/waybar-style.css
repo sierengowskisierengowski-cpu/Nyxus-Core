@@ -45,6 +45,7 @@ window#waybar.right {
 #workspaces button,
 #custom-nyxus-start,
 #custom-nyxus-panel,
+#custom-owl,
 #custom-app-godsapp,
 #custom-app-studio,
 #custom-app-sage,
@@ -57,7 +58,7 @@ window#waybar.right {
 #custom-app-terminal,
 #custom-app-settings {
     color:            #e8edf5;
-    background-color: rgba(15, 20, 32, 0.72);
+    background-color: rgba(10, 12, 18, 0.78);
     margin:           5px 5px;
     padding:          4px 14px;
     border-radius:    14px;

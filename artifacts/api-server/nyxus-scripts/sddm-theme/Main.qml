@@ -20,7 +20,7 @@ Item {
     readonly property color clrTextDim:  "#a8b0bd"   // secondary
     readonly property color clrTextFaint:"#6b7383"   // tertiary
     readonly property color clrStarlight:"#e6f0ff"   // hover halo
-    readonly property color clrGold:     "#d4a73a"   // jewelry-only
+    readonly property color clrGold:     "#e8edf5"   // DARK MIRROR r13: gold removed, off-white only
     readonly property color clrShadow:   "#000000"
 
     readonly property string fontHand: "Architects Daughter, Caveat, sans-serif"
@@ -272,7 +272,7 @@ Item {
                     echoMode: TextInput.Password
                     passwordCharacter: "•"
                     color: clrText
-                    selectionColor: Qt.rgba(212/255, 167/255, 58/255, 0.55)
+                    selectionColor: Qt.rgba(232/255, 237/255, 245/255, 0.45)
                     font.family: fontUI
                     font.pixelSize: 14
                     leftPadding: 14
@@ -301,7 +301,7 @@ Item {
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
                 text: authBusy ? "AUTHENTICATING…" : authMsg
-                color: authFailed ? Qt.rgba(212/255, 167/255, 58/255, 1.0) : clrTextDim
+                color: authFailed ? Qt.rgba(232/255, 237/255, 245/255, 1.0) : clrTextDim
                 font.family: fontMono
                 font.pixelSize: 11
                 font.letterSpacing: 3

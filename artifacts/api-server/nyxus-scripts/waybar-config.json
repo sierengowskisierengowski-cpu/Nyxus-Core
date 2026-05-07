@@ -104,7 +104,13 @@
     "margin-right": 20,
     "modules-left": ["custom/nyxus-start"],
     "modules-center": ["tray"],
-    "modules-right": ["custom/notifications", "custom/nyxus-panel"],
+    "modules-right": ["custom/notifications", "custom/nyxus-panel", "custom/owl"],
+
+    "custom/owl": {
+      "format": "★ OWL ★",
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · OWL</span>\n<span size='small' foreground='#a8b0bd'>Joseph Sierengowski · 2026\nNYX-J5W-2026 · built by hand</span>"
+    },
 
     "custom/notifications": {
       "exec": "~/.config/waybar/nyxus-notif-status.sh",

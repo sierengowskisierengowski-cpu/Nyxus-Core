@@ -1,136 +1,82 @@
-/* ============================================================
-   NYXUS — Wlogout Power Menu
-   Dark Canvas · Neon Paint-Splatter Blobs
-   © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
-   ============================================================ */
+/* ════════════════════════════════════════════════════════════════════════════
+   NYXUS · wlogout · DARK MIRROR · LOCKED rev 2026-05-07 r13
+   Matches unified DARK MIRROR · UNIFIED FROSTED GLASS spec.
+   Pure monochrome — white / off-white #e8edf5 / light grey #c8ccd6 /
+   faded black / ink black. No pink, no purple, no neon, no per-button
+   color fills.
+   © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ════════════════════════════════════════════════════════════════════════════ */
 
 * {
-    font-family: "Caveat", "JetBrains Mono", monospace !important;
-    font-size:   26px !important;
-    font-weight: 800 !important;
+    font-family: 'Inter', 'JetBrains Mono', sans-serif !important;
+    font-size:   16px !important;
+    font-weight: 700  !important;
+    letter-spacing: 0.18em;
 }
 
-/* ── DARK CANVAS ─────────────────────────────────────────── */
+/* ── DARK CANVAS · frosted glass over wallpaper ──────────────────── */
 window {
-    background-color: #08080e !important;
-    background-image: none    !important;
+    background-color: rgba(8, 12, 20, 0.62) !important;
+    background-image: none                  !important;
+    color: #e8edf5                          !important;
 }
 
-/* ── BUTTON BASE — strip GTK4 theme, then apply ours ─────── */
+/* ── BUTTON BASE · DARK MIRROR pebble ────────────────────────────── */
 button {
-    background-color: rgba(255, 255, 255, 0.04) !important;
-    background-image: none                       !important;
-    border-style:     solid                      !important;
-    border-width:     3px                        !important;
-    border-color:     rgba(255,255,255,0.18)     !important;
-    border-radius:    8px                        !important;
-    color:            rgba(255,255,255,0.55)     !important;
-    box-shadow:       none                       !important;
-    outline:          none                       !important;
-    margin:           40px;
-    letter-spacing:   0.12em;
-    text-transform:   uppercase;
-    transition:       all 220ms ease;
+    background-color: rgba(15, 20, 32, 0.72)  !important;
+    background-image: none                    !important;
+    background-repeat: no-repeat;
+    background-position: center 30%;
+    background-size: 26%;
+
+    border-style:  solid                       !important;
+    border-width:  1px                         !important;
+    border-color:  rgba(255, 255, 255, 0.10)   !important;
+    border-radius: 16px                        !important;
+
+    color:        #e8edf5                      !important;
+    box-shadow:   0 6px 18px rgba(0, 0, 0, 0.45),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    outline:      none                         !important;
+
+    margin:       40px;
+    text-transform: uppercase;
+    transition:     all 220ms ease;
 }
 
-/* ── LOCK — sky-blue blob ────────────────────────────────── */
-#lock, button#lock, .lock, button.lock {
-    background-color: rgba(0, 136, 255, 0.16)              !important;
-    background-image: none                                  !important;
-    border-color:     #0088ff                               !important;
-    color:            #0088ff                               !important;
-    border-radius:    62% 38% 70% 30% / 44% 56% 36% 64%   !important;
-    box-shadow:       0 0 18px rgba(0,136,255,0.40),
-                      inset 0 0 30px rgba(0,136,255,0.10)  !important;
-}
-#lock:hover, button#lock:hover, .lock:hover, button.lock:hover {
-    background-color: rgba(0, 136, 255, 0.40) !important;
-    box-shadow:       0 0 40px rgba(0,136,255,0.90),
-                      0 0 90px rgba(0,136,255,0.40),
-                      inset 0 0 40px rgba(0,136,255,0.18) !important;
+button:focus,
+button:active,
+button:hover {
+    background-color: rgba(40, 52, 78, 0.88)   !important;
+    border-color:     rgba(232, 237, 245, 0.55)!important;
+    color:            #ffffff                  !important;
+    box-shadow:       0 8px 24px rgba(0, 0, 0, 0.55),
+                      0 0 22px rgba(232, 237, 245, 0.45),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+    outline:          none                     !important;
 }
 
-/* ── LOGOUT — purple blob ────────────────────────────────── */
-#logout, button#logout, .logout, button.logout {
-    background-color: rgba(204, 0, 255, 0.14)              !important;
-    background-image: none                                  !important;
-    border-color:     #cc00ff                               !important;
-    color:            #cc00ff                               !important;
-    border-radius:    35% 65% 55% 45% / 55% 40% 65% 35%   !important;
-    box-shadow:       0 0 18px rgba(204,0,255,0.40),
-                      inset 0 0 30px rgba(204,0,255,0.08)  !important;
-}
-#logout:hover, button#logout:hover, .logout:hover, button.logout:hover {
-    background-color: rgba(204, 0, 255, 0.40) !important;
-    box-shadow:       0 0 40px rgba(204,0,255,0.90),
-                      0 0 90px rgba(204,0,255,0.40),
-                      inset 0 0 40px rgba(204,0,255,0.15) !important;
-}
-
-/* ── SUSPEND — mint-green blob ───────────────────────────── */
-#suspend, button#suspend, .suspend, button.suspend {
-    background-color: rgba(57, 255, 20, 0.13)              !important;
-    background-image: none                                  !important;
-    border-color:     #39ff14                               !important;
-    color:            #39ff14                               !important;
-    border-radius:    40% 60% 30% 70% / 65% 35% 70% 30%   !important;
-    box-shadow:       0 0 18px rgba(57,255,20,0.40),
-                      inset 0 0 30px rgba(57,255,20,0.07)  !important;
-}
-#suspend:hover, button#suspend:hover, .suspend:hover, button.suspend:hover {
-    background-color: rgba(57, 255, 20, 0.38) !important;
-    box-shadow:       0 0 40px rgba(57,255,20,0.90),
-                      0 0 90px rgba(57,255,20,0.40),
-                      inset 0 0 40px rgba(57,255,20,0.14) !important;
-}
-
-/* ── HIBERNATE — amber blob ──────────────────────────────── */
-#hibernate, button#hibernate, .hibernate, button.hibernate {
-    background-color: rgba(230, 184, 0, 0.13)              !important;
-    background-image: none                                  !important;
-    border-color:     #e6b800                               !important;
-    color:            #e6b800                               !important;
-    border-radius:    68% 32% 45% 55% / 38% 62% 32% 68%   !important;
-    box-shadow:       0 0 18px rgba(230,184,0,0.40),
-                      inset 0 0 30px rgba(230,184,0,0.07)  !important;
-}
-#hibernate:hover, button#hibernate:hover, .hibernate:hover, button.hibernate:hover {
-    background-color: rgba(230, 184, 0, 0.38) !important;
-    box-shadow:       0 0 40px rgba(230,184,0,0.90),
-                      0 0 90px rgba(230,184,0,0.40),
-                      inset 0 0 40px rgba(230,184,0,0.14) !important;
-}
-
-/* ── REBOOT — hot-pink blob ──────────────────────────────── */
-#reboot, button#reboot, .reboot, button.reboot {
-    background-color: rgba(255, 0, 255, 0.13)              !important;
-    background-image: none                                  !important;
-    border-color:     #ff00ff                               !important;
-    color:            #ff00ff                               !important;
-    border-radius:    55% 45% 38% 62% / 30% 70% 55% 45%   !important;
-    box-shadow:       0 0 18px rgba(255,0,255,0.40),
-                      inset 0 0 30px rgba(255,0,255,0.07)  !important;
-}
-#reboot:hover, button#reboot:hover, .reboot:hover, button.reboot:hover {
-    background-color: rgba(255, 0, 255, 0.38) !important;
-    box-shadow:       0 0 40px rgba(255,0,255,0.90),
-                      0 0 90px rgba(255,0,255,0.40),
-                      inset 0 0 40px rgba(255,0,255,0.14) !important;
-}
-
-/* ── SHUTDOWN — orange blob ──────────────────────────────── */
+/* ── All six action buttons share the SAME monochrome treatment ──── */
+#lock,     button#lock,     .lock,     button.lock,
+#logout,   button#logout,   .logout,   button.logout,
+#suspend,  button#suspend,  .suspend,  button.suspend,
+#hibernate,button#hibernate,.hibernate,button.hibernate,
+#reboot,   button#reboot,   .reboot,   button.reboot,
 #shutdown, button#shutdown, .shutdown, button.shutdown {
-    background-color: rgba(255, 85, 0, 0.16)               !important;
-    background-image: none                                  !important;
-    border-color:     #ff5500                               !important;
-    color:            #ff5500                               !important;
-    border-radius:    45% 55% 62% 38% / 60% 44% 52% 40%   !important;
-    box-shadow:       0 0 18px rgba(255,85,0,0.40),
-                      inset 0 0 30px rgba(255,85,0,0.09)   !important;
+    background-color: rgba(15, 20, 32, 0.72) !important;
+    background-image: none                   !important;
+    border-color:     rgba(255, 255, 255, 0.10) !important;
+    color:            #e8edf5                !important;
+    border-radius:    16px                   !important;
 }
+
+#lock:hover,     button#lock:hover,     .lock:hover,     button.lock:hover,
+#logout:hover,   button#logout:hover,   .logout:hover,   button.logout:hover,
+#suspend:hover,  button#suspend:hover,  .suspend:hover,  button.suspend:hover,
+#hibernate:hover,button#hibernate:hover,.hibernate:hover,button.hibernate:hover,
+#reboot:hover,   button#reboot:hover,   .reboot:hover,   button.reboot:hover,
 #shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
-    background-color: rgba(255, 85, 0, 0.40) !important;
-    box-shadow:       0 0 40px rgba(255,85,0,0.90),
-                      0 0 90px rgba(255,85,0,0.40),
-                      inset 0 0 40px rgba(255,85,0,0.16) !important;
+    background-color: rgba(40, 52, 78, 0.88) !important;
+    border-color:     rgba(232, 237, 245, 0.55) !important;
+    color:            #ffffff !important;
 }
