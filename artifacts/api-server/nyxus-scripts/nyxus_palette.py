@@ -114,6 +114,40 @@ def assert_no_forbidden(text: str, source: str = "<inline>") -> None:
             f"{bad} — use nyxus_palette constants instead."
         )
 
+# ── CSS TEMPLATE FORMATTER ──────────────────────────────────────────────────
+# Apps that embed CSS as a Python string can use placeholders instead of
+# hex literals. CSS braces must be doubled ({{ }}) inside the template.
+#
+#   CSS = format_css("""
+#     window {{ background: {GLASS_DARK}; color: {WHITE_OFF}; }}
+#     entry  {{ border: 1px solid {HAIRLINE_WHITE}; }}
+#   """)
+#
+# Future palette changes propagate automatically — apps never need to be
+# touched again.
+_PALETTE_DICT = {
+    "WHITE_PURE": WHITE_PURE, "WHITE_OFF": WHITE_OFF,
+    "GREY_LIGHT": GREY_LIGHT, "GREY_MID": GREY_MID,
+    "GREY_TERTIARY": GREY_TERTIARY,
+    "INK_FADED": INK_FADED, "INK_BLACK": INK_BLACK,
+    "GLASS_DARK": GLASS_DARK, "GLASS_DEEPER": GLASS_DEEPER,
+    "GLASS_DEEPEST": GLASS_DEEPEST,
+    "HAIRLINE_WHITE": HAIRLINE_WHITE, "HAIRLINE_INK": HAIRLINE_INK,
+    "SHADOW_INK_ACTIVE": SHADOW_INK_ACTIVE,
+    "SHADOW_INK_INACTIVE": SHADOW_INK_INACTIVE,
+    "RADIUS_CARD": RADIUS_CARD, "RADIUS_PILL": RADIUS_PILL,
+    "RADIUS_INPUT": RADIUS_INPUT,
+    "HAIRLINE_PX": HAIRLINE_PX, "BORDER_PX": BORDER_PX,
+    "FONT_UI": FONT_UI, "FONT_MONO": FONT_MONO, "FONT_DISPLAY": FONT_DISPLAY,
+}
+
+def format_css(tpl: str) -> str:
+    """Substitute {WHITE_OFF}, {GLASS_DARK}, etc. with palette values.
+
+    CSS literal braces must be doubled in the template ({{ }})."""
+    return tpl.format_map(_PALETTE_DICT)
+
+
 __all__ = [
     "WHITE_PURE", "WHITE_OFF", "GREY_LIGHT", "GREY_MID", "GREY_TERTIARY",
     "INK_FADED", "INK_BLACK",
@@ -127,5 +161,5 @@ __all__ = [
     "FONT_UI", "FONT_MONO", "FONT_DISPLAY",
     "MAX_DEFAULT_W", "MAX_DEFAULT_H",
     "hex_to_rgba_tuple", "rgba_str", "assert_no_forbidden",
-    "FORBIDDEN",
+    "format_css", "FORBIDDEN",
 ]

@@ -45,19 +45,26 @@ log = logging.getLogger("nyxus.chrome")
 # grep NYXUS_CHROME_VERSION to confirm freshness from prod.
 NYXUS_CHROME_VERSION = "2026.05.07-r12-darkmirror"
 
-# ── Palette (matches nyxus_settings.py) ─────────────────────────────────────
-NEON_PINK   = (1.00, 0.00, 1.00)
-NEON_BLUE   = (0.00, 0.67, 1.00)
-NEON_GREEN  = (0.22, 1.00, 0.08)
-ACCENT_GOLD = (1.00, 0.78, 0.20)
+# ── Palette (DARK MIRROR — see nyxus_palette.py for canonical source) ───────
+# Cairo float tuples kept here for legacy callers; new code should import
+# from nyxus_palette directly.
+DM_WHITE      = (1.00, 1.00, 1.00)   # #ffffff
+DM_OFFWHITE   = (0.91, 0.93, 0.96)   # #e8edf5
+DM_GREY_LIGHT = (0.78, 0.80, 0.84)   # #c8ccd6
+DM_GREY_MID   = (0.60, 0.62, 0.67)   # #9aa0ad
+DM_GREY_TERT  = (0.41, 0.43, 0.47)   # #6a6e78
+DM_INK        = (0.00, 0.00, 0.00)   # #000000
 
-_RAINBOW_HEX = ("#ff00ff", "#ff2da8", "#b800ff", "#00aaff",
-                "#39ff14", "#ffc833", "#ff66dd", "#ff00ff")
+# Mono ramp used by rainbow_markup (was a 7-color neon cycle, now a
+# monochrome white→grey→ink shimmer matching DARK MIRROR).
+_RAINBOW_HEX = ("#ffffff", "#e8edf5", "#c8ccd6", "#9aa0ad",
+                "#c8ccd6", "#e8edf5", "#ffffff", "#e8edf5")
 
 
 def rainbow_markup(text: str) -> str:
-    """Per-letter neon Pango spans cycling pink→magenta→blue→green→gold.
-    Whitespace stays neutral so the readable letters do the singing."""
+    """Per-letter Pango spans cycling through the DARK MIRROR mono ramp
+    (white → off-white → grey → mid-grey → back). Whitespace stays
+    neutral so the readable letters do the shimmer."""
     out, i = [], 0
     for ch in text:
         if ch.isspace():
