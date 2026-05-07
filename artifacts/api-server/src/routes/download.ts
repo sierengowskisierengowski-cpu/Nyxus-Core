@@ -60,6 +60,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_powermenu.py":     "nyxus_powermenu.py",      // 11. Powermenu
   "nyxus_screenshot.py":    "nyxus_screenshot.py",     // 12. Screenshot
   "nyxus_quicksettings.py": "nyxus_quicksettings.py",  // Flyout: Quicksettings
+  "nyxus_calendar.py":      "nyxus_calendar.py",       // 13. Calendar (month view + per-day notes)
+  "nyxus_clock.py":         "nyxus_clock.py",          // 14. Clock (digital + world + stopwatch)
 
   // ── ★ TGZ APP PACKAGES (heavyweight multi-module apps) ───────────────────
   "nyxus-home.tgz":      "nyxus-home.tgz",       // Home (workspace 0)
