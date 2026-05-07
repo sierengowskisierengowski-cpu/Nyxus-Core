@@ -1,0 +1,28 @@
+
+🟡 Overall: Well-structured foundation, but significant duplication and cleanup needed
+✅ What's solid
+Monorepo is properly set up — pnpm workspaces, unified typecheck/build from root, shared lib packages (api-spec, api-zod, api-client-react, db).
+API codegen pipeline is clean — OpenAPI spec → Orval → React Query hooks + Zod schemas, all wired correctly.
+Main "flyout" page (Mirror.tsx) is functional — has TopBar, LeftBar, RightBar (app launcher), BottomBar, PanelFlyout, StartMenu, Notifications, SettingsWindow all working together with proper state management.
+nyxus-chrome.py / nyxus-palette.py correctly serve as the single source of truth for all GTK4 app styling.
+🔴 Biggest problems found
+Problem	Where	Impact
+use-toast.ts copy-pasted into 5 apps (byte-for-byte identical)	artifacts/*/src/hooks/use-toast.ts	Bug in one = bug everywhere, divergence risk
+sidebar.tsx copy-pasted into 6 apps (full shadcn component, ~730 lines each)	artifacts/*/src/components/ui/sidebar.tsx	~4,400 lines of dead weight; sidebar isn't actually used in any page
+lib/utils.ts (cn()) copy-pasted into every app	artifacts/*/src/lib/utils.ts	Trivial to share but isn't
+Mirror.tsx is a 1,177-line mega-file	artifacts/nyxus-web/src/pages/Mirror.tsx	The whole desktop shell — bars, flyouts, app registry, window manager — lives in one page
+No tests anywhere	Entire repo	Zero test files detected
+No ESLint, no Prettier config	Repo root	Prettier is a dep but never configured
+No CI	.github/	No workflows, no automated checks on push/PR
+lib/integrations/* listed in workspace but doesn't exist	pnpm-workspace.yaml:40	Silent workspace resolution gap
+tmp_check/ extracted content committed to repo	tmp_check/godsapp_extract/	Temporary extraction artifact that shouldn't be tracked
+not-found.tsx unreferenced in stickies and web	nyxus-stickies/src/pages/not-found.tsx, nyxus-web/src/pages/not-found.tsx	Dead pages — generated but never routed to
+Inconsistent routing across apps	notepad/sysmon/widgets use wouter; stickies renders directly; web uses custom hash router	Makes cross-app patterns unpredictable
+🟡 Minor issues
+replit.md says "esbuild CJS bundle" but the server actually builds to ESM.
+attached_assets/ is a large mixed-asset/log dump with no clear access policy.
+Each app has a nearly-identical vite.config.ts copy instead of a shared factory.
+🏁 Recommended first 3 moves (in order)
+Extract a packages/ui workspace with use-toast, sidebar, and cn() — kills the biggest duplication immediately.
+Break Mirror.tsx into components/desktop/TopBar.tsx, RightBar.tsx, BottomBar.tsx, flyouts/PanelFlyout.tsx, etc.
+Add .eslintrc + .prettierrc + a GitHub Actions typecheck job — lowest effort, highest safety net value.
