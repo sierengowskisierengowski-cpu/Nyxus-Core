@@ -420,6 +420,12 @@ uri = "file://attached_assets/waybar-mockups/D-carved-marble.png"
 type = "image"
 title = "D carved marble"
 
+[[generated]]
+id = "XWh92GTshjjqP2tJKaP-u"
+uri = "file://attached_assets/generated_images/generated_image.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -713,3 +719,9 @@ id = "3mP0L9ux5ZCiDngAqgyQI"
 uri = "file://attached_assets/generated_images/wallpaper-variant-4-graffiti.png"
 type = "image"
 title = "Variant 4 — Street plaster with SIERENGOWSKI signature tag"
+
+[[outputs]]
+id = "NfVFHnya6SfzpSzmbs87k"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-16.png"
+type = "image"
+title = "nyxus-bg-16 · primordial singularity"

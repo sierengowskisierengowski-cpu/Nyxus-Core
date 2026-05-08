@@ -128,7 +128,7 @@ export default function Mirror() {
         fontFamily: '"JetBrains Mono", monospace',
         zIndex: 60,
       }}>
-        WALLPAPER {String(wp.idx + 1).padStart(2, "0")}/15
+        WALLPAPER {String(wp.idx + 1).padStart(2, "0")}/16
       </div>
       <a
         href="#/"

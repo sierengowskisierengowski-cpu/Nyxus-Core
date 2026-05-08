@@ -189,9 +189,9 @@ export function useTime() {
 }
 
 export function useWallpaperRotation(intervalMs = 15000) {
-  const [idx, setIdx] = useState(() => Math.floor(Math.random() * 15));
+  const [idx, setIdx] = useState(() => Math.floor(Math.random() * 16));
   useEffect(() => {
-    const i = setInterval(() => setIdx(p => (p + 1) % 15), intervalMs);
+    const i = setInterval(() => setIdx(p => (p + 1) % 16), intervalMs);
     return () => clearInterval(i);
   }, [intervalMs]);
   const file = `nyxus-bg-${String(idx + 1).padStart(2, "0")}.png`;
