@@ -107,6 +107,7 @@ const ALLOWED_FILES: Record<string, string> = {
   // ── ★ INSTALLERS / RESYNC ────────────────────────────────────────────────
   "nyxus_install.sh":    "nyxus_install.sh",
   "nyxus-resync-all.sh": "nyxus-resync-all.sh",
+  "nyxus-build-iso.sh":  "nyxus-build-iso.sh",
   "hypr-doctor.sh":      "hypr-doctor.sh",
 
   // ── ★ HYPRLAND CONFIGS ───────────────────────────────────────────────────

@@ -1,0 +1,55 @@
+Yes—go ahead and write the wrapper and wire it into the curl pipeline, with two constraints to keep it safe and reliable:
+
+Don’t pipe-to-root without a review path. Keep the curl command, but have it download to a temp file, print what it’s about to do, and require a --yes flag (or an interactive confirmation) before running as root. This protects you from supply-chain accidents.
+Make it idempotent and self-diagnosing. The script should detect missing deps, wrong distro, and common build failures and exit with clear messages.
+Below is what I recommend implementing.
+
+Recommended nyxus-build-iso.sh behavior
+Inputs / flags
+--profile-repo https://github.com/<owner>/<repo>.git (or fixed URL hardcoded if you prefer)
+--profile-ref main (branch/tag/commit)
+--out ~/nyx-out
+--workdir /var/tmp/nyxus-archiso-work (default)
+--yes (skip interactive prompt)
+--keep-workdir (for debugging failed builds)
+--ventoy optional later (not needed for build itself)
+Hard checks
+Must be running on Arch Linux (or Arch-based with pacman + archiso package availability). Check /etc/os-release and pacman -V.
+Must be root (or use sudo internally).
+Must have working loop devices: /dev/loop-control and modprobe loop.
+Must have enough disk space (these profiles get huge fast): warn if < 25–40GB free.
+Steps
+Install dependencies:
+pacman -Sy --needed --noconfirm archiso git squashfs-tools
+optionally: pacman-contrib, rsync, wget/curl
+Clone/update your profile repo into a predictable location:
+e.g. /var/lib/nyxus/profile-src (or under workdir)
+Copy profile into the build workdir (so you don’t mutate the git checkout).
+Run mkarchiso with explicit work/output dirs:
+mkarchiso -v -w "$WORKDIR" -o "$OUTDIR" "$PROFILEDIR"
+Find the produced ISO and rename it deterministically:
+nyxus-$(date +%Y.%m.%d).iso
+Print next steps:
+sudo dd if=... of=/dev/sdX bs=4M status=progress oflag=sync
+Logging
+Save full logs to ~/nyx-out/build.log (or $OUTDIR/build-…log) so you can debug “switch_root” class issues later.
+Curl pipeline (safe version)
+Instead of curl ... | sudo bash, do:
+
+bash
+curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-build-iso.sh -o /tmp/nyxus-build-iso.sh
+less /tmp/nyxus-build-iso.sh
+sudo bash /tmp/nyxus-build-iso.sh --yes
+If you insist on one-liner, at least:
+
+bash
+curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-build-iso.sh -o /tmp/nyxus-build-iso.sh \
+  && sudo bash /tmp/nyxus-build-iso.sh --yes
+One more critical note (ties back to your earlier boot bug)
+Your wrapper should fail the build if mkinitcpio prints errors like:
+
+Hook 'archiso' cannot be found
+errors were encountered during the build. The image may not be complete.
+So you don’t end up shipping a broken ISO again.
+
+If you tell me the exact GitHub repo URL where iso-builder/nyx-profile/ lives and what you want the final output path/name format to be, I can draft the exact script contents (including dependency checks, logging, and mkarchiso invocation) and the Replit endpoint wiring plan.
