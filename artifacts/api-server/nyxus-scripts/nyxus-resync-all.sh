@@ -637,7 +637,7 @@ fi
 # 4.5b  Pull background images so waybar style.css path substitutions resolve
 NYX_BG_DIR="$NYX_HOME_DIR/backgrounds"
 mkdir -p "$NYX_BG_DIR"; chown "$REAL_USER:$REAL_USER" "$NYX_BG_DIR"
-for bg in nyxus-taskbar-bg.png nyxus-rightbar-bg.png nyxus-frost-sierengowski.png nyxus-starlight.png; do
+for bg in nyxus-taskbar-bg.png nyxus-rightbar-bg.png nyxus-frost-sierengowski.png nyxus-starlight.png nyxus-void-wallpaper.mp4; do
   bgdst="$NYX_BG_DIR/$bg"
   if [[ ! -f "$bgdst" ]] || [[ "${1:-}" == "--force-bg" ]]; then
     if curl -fsSL --max-time 60 "$PROD/$bg" -o "$bgdst.new"; then
@@ -773,13 +773,33 @@ done
 if [[ -z "$CHROME_ON_DISK" ]]; then
   warn "could not find nyxus_chrome.py on disk in any standard location"
 fi
-# Confirm wallpaper daemon is still alive
-for wp in swaybg hyprpaper mpvpaper wpaperd swww-daemon; do
-  if pgrep -x "$wp" >/dev/null 2>&1; then
-    ok "wallpaper daemon still running:  $wp  (background preserved)"
-    break
+# rev r25 — VOID ANIMATED WALLPAPER. Swap whatever wallpaper daemon is
+# currently up (swaybg / hyprpaper / older mpvpaper) for a fresh mpvpaper
+# instance playing nyxus-void-wallpaper.mp4 on loop. We must run this as
+# REAL_USER inside the user's wayland session, not as root.
+VOID_MP4="$NYX_BG_DIR/nyxus-void-wallpaper.mp4"
+if [[ -s "$VOID_MP4" ]] && command -v mpvpaper >/dev/null 2>&1; then
+  pkill -x swaybg    2>/dev/null || true
+  pkill -x hyprpaper 2>/dev/null || true
+  pkill -x mpvpaper  2>/dev/null || true
+  sleep 0.4
+  if [[ -n "${REAL_USER:-}" ]] && command -v sudo >/dev/null 2>&1; then
+    sudo -u "$REAL_USER" \
+      env XDG_RUNTIME_DIR="/run/user/$(id -u "$REAL_USER")" \
+          WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
+          HOME="$REAL_HOME" \
+      nohup mpvpaper -o "no-audio loop-file=inf hwdec=auto-safe no-osc no-osd panscan=1.0" \
+        '*' "$VOID_MP4" >/tmp/nyxus-mpvpaper.log 2>&1 &
+    sleep 0.6
+    if pgrep -x mpvpaper >/dev/null 2>&1; then
+      ok "wallpaper restarted as mpvpaper · void animated loop"
+    else
+      warn "mpvpaper failed to spawn — see /tmp/nyxus-mpvpaper.log"
+    fi
   fi
-done
+elif ! command -v mpvpaper >/dev/null 2>&1; then
+  warn "mpvpaper not installed — run:  sudo pacman -S mpvpaper  (then re-run this script)"
+fi
 
 echo
 echo "${B}Per-app install result:${R}"
