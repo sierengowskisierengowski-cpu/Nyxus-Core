@@ -426,6 +426,12 @@ uri = "file://attached_assets/generated_images/generated_image.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "UAzCRPbDonM_elnFrlXAX"
+uri = "file://iso-builder/nyx-profile/airootfs/usr/share/icons/hicolor/256x256/apps/io.nyxus.intel.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -725,3 +731,9 @@ id = "NfVFHnya6SfzpSzmbs87k"
 uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-16.png"
 type = "image"
 title = "nyxus-bg-16 · cosmic vortex (rev 2)"
+
+[[outputs]]
+id = "gaV8d9GnQHFqN7AsADTxM"
+uri = "file://iso-builder/nyx-profile/airootfs/usr/share/icons/hicolor/512x512/apps/io.nyxus.intel.png"
+type = "image"
+title = "NYXUS Intel — app icon (512×512, monochrome dark mirror)"

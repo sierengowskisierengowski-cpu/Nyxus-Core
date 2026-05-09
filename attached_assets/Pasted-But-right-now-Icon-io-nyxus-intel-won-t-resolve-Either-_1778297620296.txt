@@ -1,0 +1,65 @@
+But: right now Icon=io.nyxus.intel won’t resolve. Either change Icon= to something you actually ship, or ship an icon.
+
+Recommended minimal icon shipping:
+
+add iso-builder/nyx-profile/airootfs/usr/share/icons/hicolor/scalable/apps/io.nyxus.intel.svg (SVG preferred), or a png in .../256x256/apps/.
+If you don’t have an icon yet, set Icon=utilities-terminal (or similar) temporarily to avoid a broken entry.
+
+2) Inter font: don’t stage a file you don’t have; add a package instead
+Since the tarball doesn’t include Inter.ttf, pre-staging is pointless.
+
+Add ttf-inter to packages.x86_64 if you want Inter on the live ISO.
+
+3) Add the runtime deps to packages.x86_64 (strongly recommended)
+If nyxus-intel is intended to run in the live ISO, it should not rely on pip install at first run.
+
+At minimum add (from your packages.txt):
+
+gtk4 (already present per your earlier mkarchiso package list, good)
+python-gobject (you already have this)
+python-cairo
+python-pillow
+python-requests
+python-dnspython
+python-bcrypt (verify name; on Arch it’s typically python-bcrypt)
+python-cryptography
+python-reportlab
+ttf-font-awesome (you already include)
+ttf-jetbrains-mono-nerd (you already include)
+From your earlier mkarchiso list, you already have several of these; add whatever is missing so grep isn’t “zero matches” anymore.
+
+4) Pre-create per-user config dirs via /etc/skel: yes
+Add these empty dirs:
+
+iso-builder/nyx-profile/airootfs/etc/skel/.config/nyxus-intel/cases/
+iso-builder/nyx-profile/airootfs/etc/skel/.config/nyxus-intel/backups/
+That matches the installer behavior and avoids needing root/sudo in the live session.
+
+5) Pip requirements: choose one of these policies
+You need to decide what you want:
+
+Policy A (best for live/offline): pacman-first, minimal/no pip
+
+Add as many deps as possible via pacman (e.g., python-shodan, python-piexif, python-whois if available in official repos).
+Only pip-install what isn’t packaged, and do it at build time inside the ISO build (so the live ISO works offline).
+Policy B (simplest): network-required first run
+
+Keep the pip install … -r requirements.txt step, but then nyxus-intel won’t work offline on first run.
+Given this is a live ISO, I’d recommend Policy A unless you explicitly don’t care about offline use.
+
+6) Add /etc/nyxus/build-info.conf: yes
+Add something like:
+
+iso-builder/nyx-profile/airootfs/etc/nyxus/build-info.conf
+containing:
+
+profile git commit
+build date
+archiso version
+kernel version
+ISO label
+maybe your “NYXUS VOID” version string
+This is pure upside for debugging.
+
+If you want, I can turn this into an exact patch/PR against sierengowskisierengowski-cpu/Nyxus-Core (create the desktop file, create the skel dirs, add missing packages, add build-info template, and optionally add a placeholder icon). Say “open a PR” and tell me whether you want to (a) ship a real icon now, or (b) temporarily switch Icon= to a stock one.
+
