@@ -263,6 +263,16 @@ floating waybar modules.
 - **Propose-before-build for visual direction changes**: when the user
   shares a reference image or asks for a new look, present options +
   tradeoffs first; do not start implementing until they greenlight.
+- **Design bar is "one-of-a-kind, top-tier" — never basic, never derivative**
+  (rev r14, 2026-05-09): every visual must be crisp, clean, neat, highly
+  polished, and uniquely NYXUS. Forbidden patterns: stock Bootstrap/
+  Tailwind/Material card looks, generic flat buttons, default Waybar
+  themes, anything that resembles another OS or app already shipping in
+  the wild. Every surface must justify its existence — if it could be
+  swapped into someone else's product unchanged, it isn't NYXUS enough.
+  When in doubt, push the detail further: tighter typography, finer
+  hairlines, more deliberate spacing, more careful layering of the
+  triple-black tiers.
 
 ## Gotchas
 
