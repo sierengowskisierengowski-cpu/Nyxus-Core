@@ -58,7 +58,13 @@ mtools
 hyprland
 hyprlock
 hypridle
-mpvpaper
+# mpvpaper is AUR-only — built from source by customize_airootfs.sh.
+# These are its runtime + build dependencies.
+mpv
+meson
+ninja
+scdoc
+wayland-protocols
 hyprcursor
 sddm
 plymouth
