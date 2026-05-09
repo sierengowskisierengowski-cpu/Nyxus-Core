@@ -239,27 +239,31 @@ if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-seattle-frost.conf" "$HYPR_MAIN"; th
   ok "stripped Seattle Frost source line from hyprland.conf"
 fi
 
-# r17 migration — Hyprland 0.49+ removed `windowrulev2` (and `layerrulev2`)
-# in favor of unified `windowrule` / `layerrule`. Stale installs still have
-# the old syntax in ~/.config/hypr/conf.d/*.conf — rewrite every line
-# in-place across every conf so reload stops throwing 400+ deprecation
-# errors. Idempotent: if a file is already on `windowrule = …` it's a no-op.
+# r17/r18 migration — Hyprland 0.49+ removed `windowrulev2` (and
+# `layerrulev2`) in favor of unified `windowrule` / `layerrule`. Stale
+# installs still have the old syntax — rewrite every line in-place
+# RECURSIVELY across the ENTIRE ~/.config/hypr/ tree (main hyprland.conf,
+# conf.d/, hyprland/, anywhere) so reload stops throwing 400+ deprecation
+# errors. Idempotent: if a file is already unified, it's a no-op.
 HYPR_RULES_OLD="$HYPR_CONF_D/nyxus-hyprland-rules.conf"
 v2_total=0
-if compgen -G "$HYPR_CONF_D/*.conf" > /dev/null; then
-  for f in "$HYPR_CONF_D"/*.conf; do
-    [[ -f "$f" ]] || continue
-    n=$(grep -c '^[[:space:]]*windowrulev2[[:space:]]*=' "$f" 2>/dev/null || echo 0)
-    n2=$(grep -c '^[[:space:]]*layerrulev2[[:space:]]*=' "$f" 2>/dev/null || echo 0)
-    if (( n + n2 > 0 )); then
-      sed -i -E 's/^([[:space:]]*)windowrulev2([[:space:]]*=)/\1windowrule\2/; s/^([[:space:]]*)layerrulev2([[:space:]]*=)/\1layerrule\2/' "$f"
-      ok "migrated $((n+n2)) v2 rule(s) → unified syntax in ${f##*/}"
-      v2_total=$((v2_total + n + n2))
-    fi
-  done
-fi
+v2_files=0
+while IFS= read -r -d '' f; do
+  [[ -f "$f" ]] || continue
+  n=$(grep -cE '^[[:space:]]*(window|layer)rulev2[[:space:]]*=' "$f" 2>/dev/null)
+  n=${n:-0}
+  if (( n > 0 )); then
+    sed -i -E 's/^([[:space:]]*)windowrulev2([[:space:]]*=)/\1windowrule\2/; s/^([[:space:]]*)layerrulev2([[:space:]]*=)/\1layerrule\2/' "$f"
+    rel="${f#$HYPR_DIR/}"
+    ok "migrated $n v2 rule(s) → unified syntax in $rel"
+    v2_total=$((v2_total + n))
+    v2_files=$((v2_files + 1))
+  fi
+done < <(find "$HYPR_DIR" -type f -name '*.conf' -print0 2>/dev/null)
 if (( v2_total > 0 )); then
-  ok "total v2 → unified rule rewrites: $v2_total  (was throwing $v2_total deprecation errors at hyprctl reload)"
+  ok "total v2 → unified rule rewrites: $v2_total across $v2_files file(s)  (was throwing $v2_total deprecation errors at hyprctl reload)"
+else
+  ok "no deprecated v2 rules found anywhere under $HYPR_DIR — already migrated"
 fi
 
 # The shipped rules file has been renamed from nyxus-hyprland-rules.conf
