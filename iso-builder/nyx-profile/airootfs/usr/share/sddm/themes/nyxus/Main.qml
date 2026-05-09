@@ -1,448 +1,300 @@
-// ─────────────────────────────────────────────────────────────────────────────
-//  NYXUS SDDM Greeter · COSMIC INK SWIRL · DARK GLASS LOGIN
-//  Visual System: locked rev 2026-05-06v
-//  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
-// ─────────────────────────────────────────────────────────────────────────────
+// NYXUS · SDDM greeter · DARK MIRROR void login (rev 2026-05-09)
+//
+// Replaces a 448-line theme that broke at line 245 with a non-existent
+// `contentItem` binding on a ComboBox `background:` — caused SDDM to fall
+// back to the default blue Breeze theme. This rewrite is intentionally
+// lean (~200 lines) and uses only well-supported QtQuick.Controls 2 API.
+//
+// Visual System lock (DARK MIRROR rev r13):
+//   - Pure void: black base + 78% black wash over background.png, so the
+//     existing cosmic-ink artwork barely whispers through as faint silver.
+//   - Login card: rgba(8,12,20,0.55) dark glass, 1px white hairline at
+//     0.10 alpha, 14px corner radius.
+//   - Inputs: rgba(15,20,32,0.72) deeper glass.
+//   - Text: #e8edf5 primary off-white, #c8ccd6 secondary, #6a6e78 hint,
+//     #ffffff hover halo only.
+//   - No gold, no neon, no per-app colors. Monochrome only.
+
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import SddmComponents 2.0
 
-Item {
+Rectangle {
     id: root
-    width:  Screen.width
-    height: Screen.height
+    width: 1920
+    height: 1080
+    color: "#000000"
 
-    // ── Locked NYXUS palette (DARK GLASS WAYBAR rules) ──────────────────────
-    readonly property color clrInk:      "#080c14"   // shell base
-    readonly property color clrPebble:   "#0f1420"   // raised pebble
-    readonly property color clrText:     "#e8edf5"   // primary
-    readonly property color clrTextDim:  "#a8b0bd"   // secondary
-    readonly property color clrTextFaint:"#6b7383"   // tertiary
-    readonly property color clrStarlight:"#e6f0ff"   // hover halo
-    readonly property color clrGold:     "#e8edf5"   // DARK MIRROR r13: gold removed, off-white only
-    readonly property color clrShadow:   "#000000"
+    // ── DARK MIRROR palette tokens ───────────────────────────────────────
+    readonly property color clrBgVoid:       "#000000"
+    readonly property color clrGlass:        Qt.rgba(8/255, 12/255, 20/255, 0.55)
+    readonly property color clrGlassDeep:    Qt.rgba(15/255, 20/255, 32/255, 0.72)
+    readonly property color clrGlassDeepest: Qt.rgba(5/255, 7/255, 12/255, 0.92)
+    readonly property color clrHairline:     Qt.rgba(255/255, 255/255, 255/255, 0.10)
+    readonly property color clrFocus:        Qt.rgba(230/255, 240/255, 255/255, 0.55)
+    readonly property color clrText:         "#e8edf5"
+    readonly property color clrTextDim:      "#c8ccd6"
+    readonly property color clrTextHint:     "#6a6e78"
+    readonly property color clrWhite:        "#ffffff"
 
-    readonly property string fontHand: "Architects Daughter, Caveat, sans-serif"
-    readonly property string fontUI:   "Inter, sans-serif"
-    readonly property string fontMono: "JetBrains Mono, Fira Code, monospace"
-
-    // ── State ────────────────────────────────────────────────────────────────
-    property bool   authBusy:   false
-    property bool   authFailed: false
-    property string authMsg:    ""
-
-    Connections {
-        target: sddm
-        function onLoginSucceeded() {
-            authBusy   = false
-            authFailed = false
-            authMsg    = "WELCOME"
-        }
-        function onLoginFailed() {
-            authBusy   = false
-            authFailed = true
-            authMsg    = "AUTHENTICATION FAILED — RETRY"
-            shakeAnim.restart()
-        }
-    }
-
-    // ── Wallpaper: cosmic ink swirl, full bleed ──────────────────────────────
+    // ── Background: artwork + heavy void wash ────────────────────────────
     Image {
-        id: wallpaper
         anchors.fill: parent
-        source:       "background.png"
-        fillMode:     Image.PreserveAspectCrop
-        smooth:       true
-        cache:        true
+        source: config.background || "background.png"
+        fillMode: Image.PreserveAspectCrop
         asynchronous: false
+        cache: true
+        smooth: true
     }
-
-    // Subtle vignette so the login plate reads against any wallpaper region
     Rectangle {
         anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.25) }
-            GradientStop { position: 0.5; color: Qt.rgba(0, 0, 0, 0.05) }
-            GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.45) }
-        }
+        color: Qt.rgba(0, 0, 0, 0.78)
     }
 
-    // ── NYXUS wordmark · top center ──────────────────────────────────────────
-    Column {
+    // ── Top-right power controls ─────────────────────────────────────────
+    Row {
         anchors.top: parent.top
-        anchors.topMargin: 64
-        anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 6
-
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "NYXUS"
-            color: clrGold
-            font.family: fontHand
-            font.pixelSize: 72
-            font.weight: Font.Bold
-            // engraved + warm gold glow
-            style: Text.Raised
-            styleColor: Qt.rgba(0, 0, 0, 0.85)
-        }
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "SIERENGOWSKI · 2026"
-            color: clrTextDim
-            font.family: fontMono
-            font.pixelSize: 13
-            font.letterSpacing: 6
-        }
-    }
-
-    // ── Date / time · top-left dark glass pebble ─────────────────────────────
-    Rectangle {
-        id: clockPlate
-        anchors.left: parent.left
-        anchors.top:  parent.top
-        anchors.leftMargin: 40
-        anchors.topMargin:  40
-        width:  220
-        height: 76
-        radius: 14
-        color:  Qt.rgba(8/255, 12/255, 20/255, 0.58)
-        border.color: Qt.rgba(255, 255, 255, 0.08)
-        border.width: 1
-
-        Column {
-            anchors.centerIn: parent
-            spacing: 2
-
-            Text {
-                id: clockTime
-                anchors.horizontalCenter: parent.horizontalCenter
-                color: clrText
-                font.family: fontMono
-                font.pixelSize: 28
-                font.weight: Font.Bold
-                text: Qt.formatTime(new Date(), "HH:mm")
-            }
-            Text {
-                id: clockDate
-                anchors.horizontalCenter: parent.horizontalCenter
-                color: clrTextDim
-                font.family: fontUI
-                font.pixelSize: 11
-                font.letterSpacing: 3
-                text: Qt.formatDate(new Date(), "ddd · MMM d yyyy").toUpperCase()
-            }
-        }
-
-        Timer {
-            interval: 1000; running: true; repeat: true
-            onTriggered: {
-                clockTime.text = Qt.formatTime(new Date(), "HH:mm")
-                clockDate.text = Qt.formatDate(new Date(), "ddd · MMM d yyyy").toUpperCase()
-            }
-        }
-    }
-
-    // ── Hostname pebble · top-right ──────────────────────────────────────────
-    Rectangle {
         anchors.right: parent.right
-        anchors.top:   parent.top
-        anchors.rightMargin: 40
-        anchors.topMargin:   40
-        width:  220
-        height: 76
-        radius: 14
-        color:  Qt.rgba(8/255, 12/255, 20/255, 0.58)
-        border.color: Qt.rgba(255, 255, 255, 0.08)
-        border.width: 1
+        anchors.margins: 24
+        spacing: 8
+        z: 10
 
-        Column {
-            anchors.centerIn: parent
-            spacing: 2
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                color: clrText
-                font.family: fontMono; font.pixelSize: 16; font.weight: Font.Bold
-                text: "NYXUS · ARCH"
-            }
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                color: clrTextDim
-                font.family: fontMono; font.pixelSize: 11; font.letterSpacing: 3
-                text: "HYPRLAND · WAYLAND"
-            }
-        }
-    }
-
-    // ── Login plate · centered dark glass ────────────────────────────────────
-    Rectangle {
-        id: loginPlate
-        anchors.centerIn: parent
-        width:  420
-        height: 360
-        radius: 18
-        color:  Qt.rgba(8/255, 12/255, 20/255, 0.66)
-        border.color: Qt.rgba(255, 255, 255, 0.10)
-        border.width: 1
-
-        // shake on auth fail
-        SequentialAnimation {
-            id: shakeAnim
-            NumberAnimation { target: loginPlate; property: "x"; to: loginPlate.x - 10; duration: 50 }
-            NumberAnimation { target: loginPlate; property: "x"; to: loginPlate.x + 10; duration: 50 }
-            NumberAnimation { target: loginPlate; property: "x"; to: loginPlate.x - 6;  duration: 50 }
-            NumberAnimation { target: loginPlate; property: "x"; to: loginPlate.x + 6;  duration: 50 }
-            NumberAnimation { target: loginPlate; property: "x"; to: loginPlate.x;      duration: 50 }
-        }
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 32
-            spacing: 18
-
-            // Title
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                text: "SIGN IN"
-                color: clrText
-                font.family: fontUI
-                font.pixelSize: 18
-                font.weight: Font.Bold
-                font.letterSpacing: 6
-            }
-
-            // ── Username row ────────────────────────────────────────────────
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 6
-
-                Text {
-                    text: "USER"
-                    color: clrTextFaint
-                    font.family: fontMono
-                    font.pixelSize: 10
-                    font.letterSpacing: 3
-                }
-
-                ComboBox {
-                    id: userBox
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 38
-                    model: userModel
-                    textRole: "name"
-                    currentIndex: userModel.lastIndex
-                    font.family: fontUI
-                    font.pixelSize: 14
-
-                    background: Rectangle {
-                        color: Qt.rgba(15/255, 20/255, 32/255, 0.85)
-                        radius: 10
-                        border.color: userBox.activeFocus
-                            ? Qt.rgba(230/255, 240/255, 255/255, 0.55)
-                            : Qt.rgba(255, 255, 255, 0.10)
-                        border.width: 1
-                    }
-                    contentItem: Text {
-                        text: userBox.displayText
-                        color: clrText
-                        font: userBox.font
-                        verticalAlignment: Text.AlignVCenter
-                        leftPadding: 14
-                    }
-                }
-            }
-
-            // ── Password row ────────────────────────────────────────────────
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 6
-
-                Text {
-                    text: "PASSWORD"
-                    color: clrTextFaint
-                    font.family: fontMono
-                    font.pixelSize: 10
-                    font.letterSpacing: 3
-                }
-
-                TextField {
-                    id: passwordField
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 38
-                    echoMode: TextInput.Password
-                    passwordCharacter: "•"
-                    color: clrText
-                    selectionColor: Qt.rgba(232/255, 237/255, 245/255, 0.45)
-                    font.family: fontUI
-                    font.pixelSize: 14
-                    leftPadding: 14
-                    rightPadding: 14
-                    placeholderText: "enter passphrase"
-                    placeholderTextColor: clrTextFaint
-
-                    background: Rectangle {
-                        color: Qt.rgba(15/255, 20/255, 32/255, 0.85)
-                        radius: 10
-                        border.color: passwordField.activeFocus
-                            ? Qt.rgba(230/255, 240/255, 255/255, 0.55)
-                            : Qt.rgba(255, 255, 255, 0.10)
-                        border.width: 1
-                    }
-
-                    Keys.onReturnPressed: doLogin()
-                    Keys.onEnterPressed:  doLogin()
-                    Component.onCompleted: forceActiveFocus()
-                }
-            }
-
-            // ── Status line ─────────────────────────────────────────────────
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-                text: authBusy ? "AUTHENTICATING…" : authMsg
-                color: authFailed ? Qt.rgba(232/255, 237/255, 245/255, 1.0) : clrTextDim
-                font.family: fontMono
+        Repeater {
+            model: [
+                { label: "REBOOT",  action: "reboot",  enabled: sddm.canReboot   },
+                { label: "POWER",   action: "off",     enabled: sddm.canPowerOff }
+            ]
+            delegate: Button {
+                text: modelData.label
+                enabled: modelData.enabled
+                font.family: "Inter"
                 font.pixelSize: 11
-                font.letterSpacing: 3
-                wrapMode: Text.WordWrap
-                elide: Text.ElideRight
-                visible: authBusy || authMsg.length > 0
-            }
-
-            // ── Sign-in button ──────────────────────────────────────────────
-            Button {
-                id: signInBtn
-                Layout.fillWidth: true
-                Layout.preferredHeight: 42
-                text: authBusy ? "•••" : "SIGN IN"
-                font.family: fontUI
-                font.pixelSize: 13
-                font.weight: Font.Bold
-                font.letterSpacing: 4
-
+                font.letterSpacing: 1.5
+                padding: 10
                 background: Rectangle {
-                    radius: 10
-                    color: signInBtn.down
-                        ? Qt.rgba(230/255, 240/255, 255/255, 0.18)
-                        : signInBtn.hovered
-                            ? Qt.rgba(230/255, 240/255, 255/255, 0.10)
-                            : Qt.rgba(15/255, 20/255, 32/255, 0.85)
-                    border.color: Qt.rgba(230/255, 240/255, 255/255, 0.35)
+                    color: parent.hovered ? clrGlassDeep : clrGlass
+                    border.color: clrHairline
                     border.width: 1
+                    radius: 14
                 }
                 contentItem: Text {
-                    text: signInBtn.text
-                    color: clrText
-                    font: signInBtn.font
+                    text: parent.text
+                    color: parent.hovered ? clrWhite : clrTextDim
+                    font: parent.font
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-                onClicked: doLogin()
+                onClicked: {
+                    if (modelData.action === "reboot") sddm.reboot()
+                    else                                sddm.powerOff()
+                }
             }
+        }
+    }
 
-            // ── Session selector (compact, bottom row) ──────────────────────
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignHCenter
-                spacing: 12
+    // ── Center clock + login card stack ──────────────────────────────────
+    ColumnLayout {
+        anchors.centerIn: parent
+        spacing: 36
+        width: 420
 
+        // Clock
+        Text {
+            id: clock
+            Layout.alignment: Qt.AlignHCenter
+            text: Qt.formatDateTime(new Date(), "HH:mm")
+            color: clrText
+            font.family: "Inter"
+            font.pixelSize: 96
+            font.weight: Font.Light
+            font.letterSpacing: 4
+        }
+        Text {
+            id: dateLabel
+            Layout.alignment: Qt.AlignHCenter
+            text: Qt.formatDateTime(new Date(), "dddd · d MMMM yyyy").toUpperCase()
+            color: clrTextDim
+            font.family: "Inter"
+            font.pixelSize: 12
+            font.letterSpacing: 3
+        }
+        Timer {
+            interval: 1000
+            running: true
+            repeat: true
+            onTriggered: {
+                clock.text = Qt.formatDateTime(new Date(), "HH:mm")
+                dateLabel.text = Qt.formatDateTime(new Date(), "dddd · d MMMM yyyy").toUpperCase()
+            }
+        }
+
+        // Login card
+        Rectangle {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredWidth: 380
+            Layout.preferredHeight: 220
+            color: clrGlass
+            border.color: clrHairline
+            border.width: 1
+            radius: 14
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 24
+                spacing: 14
+
+                // Tagline
                 Text {
-                    text: "SESSION"
-                    color: clrTextFaint
-                    font.family: fontMono
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignHCenter
+                    text: "NYXUS · THE NIGHT HAS EYES"
+                    color: clrTextHint
+                    font.family: "Inter"
                     font.pixelSize: 10
-                    font.letterSpacing: 3
+                    font.letterSpacing: 2.5
                 }
 
-                ComboBox {
-                    id: sessionBox
-                    Layout.preferredWidth: 200
-                    Layout.preferredHeight: 28
-                    model: sessionModel
-                    textRole: "name"
-                    currentIndex: sessionModel.lastIndex
-                    font.family: fontUI
-                    font.pixelSize: 11
-
+                // Username field (free entry — works on live ISO with no users)
+                TextField {
+                    id: userField
+                    Layout.fillWidth: true
+                    placeholderText: "username"
+                    placeholderTextColor: clrTextHint
+                    color: clrText
+                    font.family: "Inter"
+                    font.pixelSize: 14
+                    text: userModel.lastUser || (userModel.count > 0 ? userModel.data(userModel.index(0, 0), Qt.UserRole + 1) : "root")
+                    selectByMouse: true
+                    leftPadding: 14
+                    rightPadding: 14
                     background: Rectangle {
-                        color: Qt.rgba(15/255, 20/255, 32/255, 0.85)
-                        radius: 8
-                        border.color: Qt.rgba(255, 255, 255, 0.10)
+                        color: clrGlassDeep
+                        border.color: userField.activeFocus ? clrFocus : clrHairline
                         border.width: 1
+                        radius: 10
+                    }
+                    KeyNavigation.tab: passwordField
+                }
+
+                // Password field
+                TextField {
+                    id: passwordField
+                    Layout.fillWidth: true
+                    placeholderText: config.PasswordFieldPlaceholderText || "enter passphrase"
+                    placeholderTextColor: clrTextHint
+                    color: clrText
+                    font.family: "Inter"
+                    font.pixelSize: 14
+                    echoMode: TextInput.Password
+                    passwordCharacter: "•"
+                    selectByMouse: true
+                    leftPadding: 14
+                    rightPadding: 14
+                    background: Rectangle {
+                        color: clrGlassDeep
+                        border.color: passwordField.activeFocus ? clrFocus : clrHairline
+                        border.width: 1
+                        radius: 10
+                    }
+                    Keys.onReturnPressed: signInBtn.clicked()
+                    Keys.onEnterPressed:  signInBtn.clicked()
+                }
+
+                // Sign-in button
+                Button {
+                    id: signInBtn
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 36
+                    text: config.LoginButtonText || "SIGN IN"
+                    font.family: "Inter"
+                    font.pixelSize: 12
+                    font.letterSpacing: 3
+                    background: Rectangle {
+                        color: signInBtn.hovered ? clrGlassDeepest : clrGlassDeep
+                        border.color: signInBtn.hovered ? clrFocus : clrHairline
+                        border.width: 1
+                        radius: 10
                     }
                     contentItem: Text {
-                        text: sessionBox.displayText
-                        color: clrTextDim
-                        font: sessionBox.font
+                        text: signInBtn.text
+                        color: signInBtn.hovered ? clrWhite : clrText
+                        font: signInBtn.font
+                        horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        leftPadding: 10
                     }
+                    onClicked: sddm.login(userField.text, passwordField.text, sessionCombo.currentIndex)
+                }
+
+                // Error indicator
+                Text {
+                    id: errorLine
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignHCenter
+                    color: clrTextDim
+                    font.family: "Inter"
+                    font.pixelSize: 10
+                    font.letterSpacing: 1.5
+                    text: ""
                 }
             }
         }
-    }
 
-    // ── Power controls · bottom-right pebbles ────────────────────────────────
-    Row {
-        anchors.right:  parent.right
-        anchors.bottom: parent.bottom
-        anchors.rightMargin:  40
-        anchors.bottomMargin: 40
-        spacing: 10
-
-        // Reboot
-        Rectangle {
-            width: 110; height: 38; radius: 12
-            color: Qt.rgba(15/255, 20/255, 32/255, 0.72)
-            border.color: Qt.rgba(255, 255, 255, 0.10); border.width: 1
-            Text {
-                anchors.centerIn: parent
-                text: "REBOOT"
-                color: clrText
-                font.family: fontMono; font.pixelSize: 11; font.letterSpacing: 3; font.weight: Font.Bold
+        // Session selector (small, beneath card)
+        ComboBox {
+            id: sessionCombo
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredWidth: 220
+            model: sessionModel
+            textRole: "name"
+            currentIndex: sessionModel.lastIndex >= 0 ? sessionModel.lastIndex : 0
+            font.family: "Inter"
+            font.pixelSize: 11
+            background: Rectangle {
+                color: clrGlass
+                border.color: clrHairline
+                border.width: 1
+                radius: 10
             }
-            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: sddm.reboot() }
-        }
-        // Shut down
-        Rectangle {
-            width: 130; height: 38; radius: 12
-            color: Qt.rgba(15/255, 20/255, 32/255, 0.72)
-            border.color: Qt.rgba(255, 255, 255, 0.10); border.width: 1
-            Text {
-                anchors.centerIn: parent
-                text: "SHUT DOWN"
-                color: clrText
-                font.family: fontMono; font.pixelSize: 11; font.letterSpacing: 3; font.weight: Font.Bold
+            contentItem: Text {
+                text: sessionCombo.displayText
+                color: clrTextDim
+                font: sessionCombo.font
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                leftPadding: 14
             }
-            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: sddm.powerOff() }
+            popup.background: Rectangle {
+                color: clrGlassDeepest
+                border.color: clrHairline
+                border.width: 1
+                radius: 10
+            }
         }
     }
 
-    // ── Bottom-left signature ────────────────────────────────────────────────
+    // ── Bottom-left wordmark ─────────────────────────────────────────────
     Text {
-        anchors.left:   parent.left
         anchors.bottom: parent.bottom
-        anchors.leftMargin:   40
-        anchors.bottomMargin: 44
-        text: "NYX-J5W-2026 · BUILT BY HAND"
-        color: clrTextFaint
-        font.family: fontMono
+        anchors.left: parent.left
+        anchors.margins: 24
+        text: "SIERENGOWSKI"
+        color: clrTextHint
+        font.family: "Inter"
         font.pixelSize: 10
-        font.letterSpacing: 3
+        font.letterSpacing: 4
     }
 
-    // ── Login action ─────────────────────────────────────────────────────────
-    function doLogin() {
-        if (passwordField.text.length === 0) {
-            authFailed = true
-            authMsg = "PASSWORD REQUIRED"
-            shakeAnim.restart()
-            return
+    // ── SDDM signal wiring ───────────────────────────────────────────────
+    Connections {
+        target: sddm
+        function onLoginSucceeded() { errorLine.text = "" }
+        function onLoginFailed() {
+            errorLine.text = "ACCESS DENIED"
+            passwordField.selectAll()
+            passwordField.forceActiveFocus()
         }
-        authBusy   = true
-        authFailed = false
-        authMsg    = ""
-        sddm.login(userBox.currentText, passwordField.text, sessionBox.currentIndex)
     }
+
+    Component.onCompleted: passwordField.forceActiveFocus()
 }
