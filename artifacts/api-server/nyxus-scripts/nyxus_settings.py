@@ -63,9 +63,9 @@ except Exception:
     WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
     GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
     INK_FADED='#0a0a0a'; INK_BLACK='#000000'
-    GLASS_DARK='rgba(8, 12, 20, 0.55)'
-    GLASS_DEEPER='rgba(15, 20, 32, 0.72)'
-    GLASS_DEEPEST='rgba(5, 7, 12, 0.92)'
+    GLASS_DARK='#14141a'
+    GLASS_DEEPER='#0a0a0e'
+    GLASS_DEEPEST='#000000'
     HAIRLINE_WHITE='rgba(255, 255, 255, 0.10)'
     HAIRLINE_INK='rgba(0, 0, 0, 0.45)'
     SHADOW_INK_ACTIVE='rgba(0, 0, 0, 0.65)'
@@ -8671,26 +8671,7 @@ class GraffitiBackground(Gtk.DrawingArea):
                 log.warning("graffiti load %s: %s", name, e)
                 try: local.unlink()
                 except Exception: pass
-        # not on disk -> async fetch (idempotent)
-        if name not in self._fetch_inflight:
-            self._fetch_inflight.add(name)
-            url = f"{self._IMAGE_BASE_URL}/{name}"
-            def _on_done(result, _name=name, _local=local):
-                self._fetch_inflight.discard(_name)
-                rc, _out, _err = result
-                if rc == 0 and _local.exists() and _local.stat().st_size > 1024:
-                    try:
-                        pb = GdkPixbuf.Pixbuf.new_from_file(str(_local))
-                        self._pixbuf_cache[_name] = pb
-                        # invalidate scaled cache entries for this name
-                        self._scaled_cache = {k: v for k, v in
-                                              self._scaled_cache.items()
-                                              if k[0] != _name}
-                        self.queue_draw()
-                    except Exception as e:
-                        log.warning("graffiti decode %s: %s", _name, e)
-            sh_async(["curl", "-fsSL", "--max-time", "15", "-o",
-                      str(local), url], on_done=_on_done, timeout=20)
+        # rev r19: graffiti download disabled (matte-paint background)
         return None
 
     def _scaled_for(self, name: str, w: int, h: int) -> "Optional[GdkPixbuf.Pixbuf]":
@@ -8752,81 +8733,21 @@ class GraffitiBackground(Gtk.DrawingArea):
         self._cache_w, self._cache_h = w, h
 
     def _draw(self, area, cr, w, h, _=None):
-        # PURE black bg under everything (no grey anywhere)
-        cr.set_source_rgba(0.0, 0.0, 0.0, 1.0)
+        # rev r19: graffiti background removed by user request.
+        # Paint matte black paint + faint vignette so the settings shell
+        # reads as a flat enterprise instrument panel (no rainbow art).
+        cr.set_source_rgb(0.078, 0.078, 0.102)   # #14141a
         cr.rectangle(0, 0, w, h); cr.fill()
-
-        # ── primary path: hand-painted graffiti image, page-aware ─────
-        img_name = self._image_for_page(self._page_key)
-        scaled = self._scaled_for(img_name, w, h)
-        if scaled is not None:
-            sw, sh = scaled.get_width(), scaled.get_height()
-            # center the cover-fit pixbuf so important detail stays in frame
-            ox = (w - sw) // 2
-            oy = (h - sh) // 2
-            cr.save()
-            cr.rectangle(0, 0, w, h); cr.clip()
-            Gdk.cairo_set_source_pixbuf(cr, scaled, ox, oy)
-            cr.paint()
-            cr.restore()
-
-            # softer DARK overlay -- lets the graffiti breathe through the
-            # entire window while keeping UI text legible on top. Center
-            # ~36% black, corners ~70% black for chrome anchoring.
-            try:
-                pat = cairo.RadialGradient(w / 2, h / 2, 0,
-                                           w / 2, h / 2, max(w, h) * 0.7)
-                pat.add_color_stop_rgba(0.00, 0.0, 0.0, 0.0, 0.36)
-                pat.add_color_stop_rgba(0.55, 0.0, 0.0, 0.0, 0.52)
-                pat.add_color_stop_rgba(1.00, 0.0, 0.0, 0.0, 0.70)
-                cr.set_source(pat)
-            except Exception:
-                cr.set_source_rgba(0.0, 0.0, 0.0, 0.50)
+        try:
+            vg = cairo.RadialGradient(w / 2, h / 2, h * 0.25,
+                                      w / 2, h / 2, h * 0.95)
+            vg.add_color_stop_rgba(0.0, 0, 0, 0, 0.0)
+            vg.add_color_stop_rgba(1.0, 0, 0, 0, 0.55)
+            cr.set_source(vg)
             cr.rectangle(0, 0, w, h); cr.fill()
-
-            # subtle pink edge bloom to keep the NYXUS palette vibe
-            try:
-                pat2 = cairo.LinearGradient(0, 0, 0, h)
-                pat2.add_color_stop_rgba(0.00, 1.0, 0.0, 1.0, 0.07)
-                pat2.add_color_stop_rgba(0.50, 1.0, 0.0, 1.0, 0.00)
-                pat2.add_color_stop_rgba(1.00, 1.0, 0.0, 1.0, 0.07)
-                cr.set_source(pat2)
-                cr.rectangle(0, 0, w, h); cr.fill()
-            except Exception:
-                pass
-            return  # done -- skip word fallback
-
-        # ── fallback path (image not yet downloaded): render the
-        #   page-aware word collage we shipped previously. Once the
-        #   async fetch lands, queue_draw() flips us into image mode.
-        if (self._layout_cache is None or
-            abs(w - self._cache_w) > 40 or abs(h - self._cache_h) > 40):
-            self._build_layout(w, h)
-        for entry in (self._layout_cache or []):
-            if len(entry) == 7:
-                word, x, y, size, angle, alpha, tint = entry
-            else:
-                word, x, y, size, angle, alpha = entry
-                tint = (1.0, 1.0, 1.0)
-            cr.save()
-            cr.translate(x, y)
-            cr.rotate(angle)
-            layout = PangoCairo.create_layout(cr)
-            fd = Pango.FontDescription()
-            fd.set_family("Inter Display")
-            fd.set_weight(Pango.Weight.BOLD)
-            fd.set_size(int(size * Pango.SCALE))
-            layout.set_font_description(fd); layout.set_text(word, -1)
-            cr.move_to(0, 0)
-            PangoCairo.layout_path(cr, layout)
-            cr.set_source_rgba(1.0, 1.0, 1.0, alpha * 0.18)
-            cr.set_line_width(6.0); cr.set_line_join(cairo.LINE_JOIN_ROUND)
-            cr.stroke_preserve()
-            cr.set_source_rgba(1.0, 1.0, 1.0, alpha * 0.35)
-            cr.set_line_width(3.0); cr.stroke_preserve()
-            cr.set_source_rgba(tint[0], tint[1], tint[2], alpha)
-            cr.fill()
-            cr.restore()
+        except Exception:
+            pass
+        return
 
 
 class SettingsRow(Gtk.DrawingArea):
@@ -9120,7 +9041,7 @@ window, .nyx-bg { background-color: #000000; color: #e8edf5; }
     /* Beefier edge -- matches the 4px Hyprland window border weight so
        the hero feels anchored instead of floating on a hairline. */
     border-bottom: 3px solid rgba(8, 12, 20, 0.85);
-    box-shadow: 0 8px 36px -4px rgba(8, 12, 20, 0.55),
+    box-shadow: 0 8px 36px -4px #14141a,
                 0 2px 0    0    rgba(8, 12, 20, 0.35);
 }
 /* Multi-color hero title: per-letter <span foreground=...> markup
@@ -9145,13 +9066,13 @@ window, .nyx-bg { background-color: #000000; color: #e8edf5; }
     box-shadow: 0 0 10px rgba(8, 12, 20, 0.18); }
 .nyx-version-pill:hover {
     border-color: #e8edf5;
-    box-shadow: 0 0 22px rgba(8, 12, 20, 0.55); }
+    box-shadow: 0 0 22px #14141a; }
 
 /* -- TOOLBARS (slim glass) -------------------------------------------- */
-.nyx-toolbar  { background-color: rgba(0,0,0,0.85);
+.nyx-toolbar  { background-color: #000000;
     padding: 6px 12px;
     border-bottom: 1px solid rgba(8, 12, 20, 0.18); }
-.nyx-toolbar2 { background-color: rgba(0,0,0,0.78);
+.nyx-toolbar2 { background-color: #0a0a0e;
     padding: 5px 14px;
     border-bottom: 1px solid rgba(8, 12, 20, 0.18);
     box-shadow: 0 2px 12px -4px rgba(8, 12, 20, 0.20); }
@@ -9200,16 +9121,16 @@ window, .nyx-bg { background-color: #000000; color: #e8edf5; }
     box-shadow: 0 4px 22px -10px rgba(8, 12, 20, 0.25); }
 .nyx-card:hover {
     border-color: #e8edf5;
-    box-shadow: 0 8px 36px -6px rgba(8, 12, 20, 0.55); }
+    box-shadow: 0 8px 36px -6px #14141a; }
 
 .nyx-listcard { background-color: #000000;
     background-image: none;
-    border: 1px solid rgba(8, 12, 20, 0.55);
+    border: 1px solid #14141a;
     border-radius: 6px; padding: 0; margin-top: 6px;
     box-shadow: 0 6px 28px -8px rgba(8, 12, 20, 0.30); }
 .nyx-listcard:hover {
     border-color: #e8edf5;
-    box-shadow: 0 10px 40px -6px rgba(8, 12, 20, 0.55); }
+    box-shadow: 0 10px 40px -6px #14141a; }
 
 .nyx-settings-list { background-color: transparent; }
 .nyx-settings-list row { background-color: transparent;
@@ -9266,7 +9187,7 @@ stack, frame, .background, .view, .nyx-bg > box {
     padding: 6px 10px; caret-color: #e8edf5; }
 .nyx-toast { background-color: rgba(8, 12, 20, 0.18);
     color: #ffffff; padding: 6px 14px;
-    border: 1px solid rgba(8, 12, 20, 0.55);
+    border: 1px solid #14141a;
     border-radius: 6px; font-size: 14px; }
 scrollbar slider { background-color: rgba(8, 12, 20, 0.30);
     border: 1px solid rgba(8, 12, 20, 0.45); border-radius: 6px;
