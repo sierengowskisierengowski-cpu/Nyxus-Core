@@ -32,7 +32,7 @@ unzip
 zip
 tar
 htop
-neofetch
+fastfetch
 
 # ── boot ───────────────────────────────────────────────────────────
 syslinux
@@ -84,7 +84,6 @@ playerctl
 pamixer
 pavucontrol
 swaybg
-hyprshade
 wdisplays
 blueman
 geoclue
@@ -132,7 +131,6 @@ whois
 # ── fonts ─────────────────────────────────────────────────────────
 ttf-jetbrains-mono-nerd
 ttf-firacode-nerd
-ttf-caveat
 inter-font
 noto-fonts
 noto-fonts-emoji
@@ -153,8 +151,6 @@ zoxide
 starship
 ranger
 
-# ── installer (Calamares) ─────────────────────────────────────────
-calamares
 
 # ── archiso runtime requirements ──────────────────────────────────
 arch-install-scripts
