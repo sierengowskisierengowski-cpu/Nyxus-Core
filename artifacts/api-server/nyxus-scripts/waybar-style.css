@@ -126,10 +126,13 @@ window#waybar.right #custom-divider {
 #network.disconnected { color: #6a6e78; }
 
 /* ── 3. TICKER · monospace LIVE marquee (spans full top bar) ─────────────
-   rev r22 — width pushed to 1800px so it fills the bar edge-to-edge on
-   any common screen (1280 / 1366 / 1440 / 1920). Waybar will clip it to
-   the bar's actual width — never overflows past the slab. The .error
-   class flips the text + border red whenever any system probe fails.   */
+   rev r22b — TRUE edge-to-edge scroll. Slab pushed to 2400px (covers any
+   practical monitor up to 4K-half). NO horizontal margin so the slab
+   starts at the very left edge of the bar and extends past the right
+   edge; waybar clips to the bar's actual width and the marquee text
+   (380 chars from the script) scrolls the FULL width with no centered
+   blank space on either side. The .error class flips text + border red
+   whenever any system probe fails.                                       */
 #custom-ticker {
     font-family:      'JetBrains Mono', 'Fira Mono', monospace;
     font-size:        11px;
@@ -137,12 +140,14 @@ window#waybar.right #custom-divider {
     letter-spacing:   0.14em;
     color:            #c8ccd6;
     background-color: #0a0a0e;
-    margin:           6px 12px;
-    padding:          0 18px;
-    min-width:        1800px;
+    margin:           4px 0;        /* zero horizontal margin — true bar-edge fill */
+    padding:          0 14px;
+    min-width:        2400px;
     min-height:       32px;
-    border-radius:    4px;
+    border-radius:    0;            /* square edges so it reads as a single bar */
     border:           1px solid rgba(255, 255, 255, 0.07);
+    border-left:      none;
+    border-right:     none;
     text-shadow:      none;
     box-shadow:       none;
     transition:       color 160ms ease-out, background-color 160ms ease-out,

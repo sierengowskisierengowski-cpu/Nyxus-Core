@@ -13,7 +13,12 @@
 set -u
 export LC_ALL=C.UTF-8
 
-WINDOW=210          # visible chars in the marquee window — fills a 1200-1920px bar
+WINDOW=380          # visible chars — overflows even a 1920px bar so the
+                    # marquee text fills the slab EDGE-TO-EDGE without any
+                    # center-padding on either side. Anything that doesn't
+                    # fit in the bar is naturally clipped by waybar; the
+                    # marquee shifts one char per tick so the user sees
+                    # continuous left-scroll across the full width.
 SCROLL_SLEEP=0.18   # seconds per character (smaller = faster scroll)
 REFRESH=5           # rebuild metrics every N seconds
 
