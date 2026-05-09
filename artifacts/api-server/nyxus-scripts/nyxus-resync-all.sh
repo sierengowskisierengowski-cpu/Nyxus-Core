@@ -266,6 +266,44 @@ else
   ok "no deprecated v2 rules found anywhere under $HYPR_DIR — already migrated"
 fi
 
+# r17 PASS-2 — opacity rules with two values (e.g. `opacity 0.92 0.78,
+# class:...`) are rejected by Hyprland 0.49+ unified parser as "invalid
+# field class:...: missing a value" because opacity values stack
+# multiplicatively across rules, and the parser can't disambiguate the
+# two-float form from a single-float-plus-extra-field. Fix: insert the
+# `override` keyword after each float (per Hyprland wiki) which forces
+# absolute values and unambiguous parsing. Idempotent: skips lines that
+# already contain `override`.
+opa_total=0
+opa_files=0
+while IFS= read -r -d '' f; do
+  [[ -f "$f" ]] || continue
+  # Lines we need to touch: windowrule = opacity FLOAT FLOAT[ FLOAT][, ...]
+  # without `override` anywhere on the line.
+  n=$(grep -cE '^[[:space:]]*windowrule[[:space:]]*=[[:space:]]*opacity[[:space:]]+[0-9.]+[[:space:]]+[0-9.]+' "$f" 2>/dev/null)
+  n=${n:-0}
+  if (( n > 0 )) && grep -E '^[[:space:]]*windowrule[[:space:]]*=[[:space:]]*opacity[[:space:]]+[0-9.]+[[:space:]]+[0-9.]+' "$f" | grep -vqE 'override'; then
+    perl -i -pe '
+      if (/^\s*windowrule\s*=\s*opacity/ && !/override/) {
+        s{^(\s*windowrule\s*=\s*opacity\s+)([0-9.]+)(\s+)([0-9.]+)(?:(\s+)([0-9.]+))?(\s*,)}{
+          my $r = "$1$2 override $4 override";
+          $r .= " $6 override" if defined $6;
+          "$r$7"
+        }e;
+      }
+    ' "$f"
+    rel="${f#$HYPR_DIR/}"
+    ok "added 'override' to $n opacity rule(s) in $rel"
+    opa_total=$((opa_total + n))
+    opa_files=$((opa_files + 1))
+  fi
+done < <(find "$HYPR_DIR" -type f -name '*.conf' -print0 2>/dev/null)
+if (( opa_total > 0 )); then
+  ok "total opacity 'override' fixups: $opa_total across $opa_files file(s)  (these were the 'invalid field class: missing a value' errors)"
+else
+  ok "no opacity rules need 'override' keyword — already correct"
+fi
+
 # The shipped rules file has been renamed from nyxus-hyprland-rules.conf
 # to nyxus-windowrules.conf. If the old path still exists, replace it with
 # the freshly-downloaded clean version below AND drop its source line.
