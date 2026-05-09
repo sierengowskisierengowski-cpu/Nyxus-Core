@@ -1,0 +1,58 @@
+That spec is solid. The only changes I’d insist on before you ship it:
+
+Don’t rely on ~/nyx-out when running under sudo unless you deliberately resolve the invoking user’s home. Use SUDO_USER (or logname) and write output/logs to that user’s home, not /root.
+Add a trap so partial failures don’t leave stale mounts/loop devices/workdirs.
+Validate the profile path precisely (since your repo is Nyxus-Core, the profile likely lives under something like iso-builder/nyx-profile/—the script should locate it deterministically and fail loudly if not found).
+Make mkarchiso output location explicit and robust (don’t “find any .iso in outdir” if there could be multiple).
+Everything else reads correct and addresses the exact class of failure you hit (broken initramfs shipped despite mkinitcpio errors).
+
+Implementation notes (the key pitfalls)
+A) Correct “real user” output dir & logs under sudo
+When you run sudo bash /tmp/nyxus-build-iso.sh --yes:
+
+$HOME becomes /root
+~ expands to /root
+So instead do something like:
+
+REAL_USER="${SUDO_USER:-$(id -un)}"
+REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
+Then default:
+
+OUT="${OUT:-$REAL_HOME/nyx-out}"
+log file goes there too.
+B) Loop devices check (actually test, don’t just look)
+A reliable check:
+
+bash
+modprobe loop 2>/dev/null || true
+[[ -e /dev/loop-control ]] || die "No /dev/loop-control (loop module unavailable)."
+losetup -f >/dev/null 2>&1 || die "losetup cannot allocate a loop device."
+C) Disk space check should be on the filesystem that backs the workdir
+If workdir=/var/tmp/..., check free space on /var/tmp (not / generically):
+
+bash
+avail_kb=$(df -Pk "$WORKDIR_BASE" | awk 'NR==2{print $4}')
+D) mkarchiso exit codes + grep checks
+Do both:
+
+fail if mkarchiso exits non-zero
+and fail if grep finds known-bad patterns (your two strings)
+Also consider adding these two additional “bad patterns” that often indicate a doomed ISO:
+
+Initcpio image generation failed
+Target not found (pacman package missing)
+E) “Proceed?” prompt
+Make it print a clear plan (as you described) and require explicit y unless --yes.
+
+Wiring into the Replit “download endpoint”
+Your curl URL is fine. Two suggestions:
+
+Serve with Content-Type: text/x-shellscript (or text/plain) and a stable filename.
+Consider also publishing a .sha256 endpoint so you can optionally verify integrity.
+What I need to produce the exact script content
+Confirm these two repo-specific details so the script can “find the profile” correctly:
+
+In github.com/sierengowskisierengowski-cpu/Nyxus-Core, what is the exact path to the archiso profile directory you want mkarchiso to run on?
+e.g. iso-builder/nyx-profile/ or iso-builder/nyx-profile/profile/ etc.
+Is the profile meant to be used as-is, or do you generate it (templating) before running mkarchiso?
+If you answer those, I can give you a ready-to-paste nyxus-build-iso.sh that matches your spec exactly (flags, prompts, logging, greps, cleanup).
