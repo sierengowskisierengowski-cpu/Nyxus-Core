@@ -12,14 +12,7 @@
       "custom/ticker"
     ],
     "modules-center": [],
-    "modules-right": [
-      "network",
-      "pulseaudio",
-      "backlight",
-      "battery",
-      "custom/quick-settings",
-      "custom/weather"
-    ],
+    "modules-right": [],
     "custom/ticker": {
       "exec": "~/.config/waybar/waybar-ticker.sh",
       "restart-interval": 3,
@@ -27,103 +20,17 @@
       "tooltip": true,
       "escape": false
     },
-    "custom/quick-settings": {
-      "format": " SET",
-      "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Quick Settings</span>\n<span size='small' foreground='#c8ccd6'>Open the System Settings panel\nTheme \u00b7 Display \u00b7 Keyboard \u00b7 Power\nClick to open</span>",
-      "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.settings\"; then hyprctl dispatch focuswindow class:io.nyxus.settings; else setsid python3 /home/nyx/.nyxus/nyxus_settings.py >/tmp/nyxus-settings.log 2>&1 < /dev/null & fi'"
-    },
     "custom/nyxus": {
       "format": " NYXUS ",
       "tooltip": true,
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Sierengowski</span>\n<span size='small' foreground='#c8ccd6'>Hyprland \u00b7 Arch Linux \u00b7 2026\nClick to open the NYXUS Start menu</span>",
       "on-click": "/home/nyx/.local/bin/nyxus-start"
     },
-    "network": {
-      "format-wifi": " {signalStrength}%",
-      "format-ethernet": " ETH",
-      "format-disconnected": " OFF",
-      "tooltip": true,
-      "tooltip-format-wifi": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#c8ccd6'>Wi-Fi \u00b7 {essid}\nSignal: {signalStrength}%\nIP: {ipaddr}\nClick to open Network Settings</span>",
-      "tooltip-format-ethernet": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#c8ccd6'>Ethernet \u00b7 {ifname}\nIP: {ipaddr}\nClick to open Network Settings</span>",
-      "tooltip-format-disconnected": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#c8ccd6'>Disconnected\nClick to open Network Settings</span>",
-      "on-click": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'"
-    },
-    "pulseaudio": {
-      "format": " {volume}",
-      "format-bluetooth": " {volume}",
-      "format-muted": " MUTE",
-      "format-icons": {
-        "default": [
-          "",
-          "",
-          ""
-        ]
-      },
-      "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Volume</span>\n<span size='small' foreground='#c8ccd6'>{volume}% \u00b7 {desc}\nScroll to change \u00b7 Click to open Audio Settings</span>",
-      "tooltip-format-muted": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Volume</span>\n<span size='small' foreground='#c8ccd6'>Muted\nClick to unmute \u00b7 Right-click to open Audio</span>",
-      "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
-      "on-click-right": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'",
-      "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+",
-      "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
-    },
-    "backlight": {
-      "format": " {percent}%",
-      "format-icons": [
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        ""
-      ],
-      "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Brightness</span>\n<span size='small' foreground='#c8ccd6'>{percent}%\nScroll to change \u00b7 Click to open Display Settings</span>",
-      "on-click": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'",
-      "on-scroll-up": "brightnessctl set 5%+",
-      "on-scroll-down": "brightnessctl set 5%-"
-    },
-    "battery": {
-      "states": {
-        "warning": 30,
-        "critical": 15
-      },
-      "format": " {capacity}%",
-      "format-charging": " {capacity}%",
-      "format-plugged": " {capacity}%",
-      "format-full": " 100%",
-      "format-discharging": " {capacity}%",
-      "format-icons": [
-        "",
-        "",
-        "",
-        "",
-        ""
-      ],
-      "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#c8ccd6'>{capacity}%\nClick to open Power Settings</span>",
-      "tooltip-format-charging": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#c8ccd6'>{capacity}% \u00b7 charging\nClick to open Power Settings</span>",
-      "tooltip-format-plugged": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#c8ccd6'>{capacity}% \u00b7 plugged in\nClick to open Power Settings</span>",
-      "tooltip-format-full": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#c8ccd6'>{capacity}% \u00b7 fully charged\nClick to open Power Settings</span>",
-      "tooltip-format-discharging": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#c8ccd6'>{capacity}% \u00b7 discharging\n{time} remaining\nClick to open Power Settings</span>",
-      "on-click": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'"
-    },
     "clock": {
       "interval": 1,
       "format": "{0:%H:%M} | {0:%a %d}",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 {0:%A}</span>\n<span size='small' foreground='#c8ccd6'>{0:%B %d, %Y \u00b7 %H:%M:%S %Z}\nClick to open Quick Settings</span>",
       "on-click": "sh -c 'pgrep -f nyxus_quicksettings >/dev/null && pkill -f nyxus_quicksettings || setsid python3 ~/.nyxus/nyxus_quicksettings.py >/tmp/nyxus-qs.log 2>&1 < /dev/null &'"
-    },
-    "custom/weather": {
-      "exec": "sh -c \"curl -fsS --max-time 4 'wttr.in/?format=%t' 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || echo '\u2014 \u2014'\"",
-      "interval": 3600,
-      "tooltip": true,
-      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Weather</span>\n<span size='small' foreground='#c8ccd6'>via wttr.in \u00b7 refreshes hourly\nClick for full forecast</span>",
-      "on-click": "/usr/local/bin/nyxus-weather"
     }
   },
   {
@@ -231,6 +138,13 @@
     "margin-bottom": 200,
     "margin-right": 10,
     "modules-center": [
+      "custom/quick-settings",
+      "network",
+      "pulseaudio",
+      "backlight",
+      "battery",
+      "custom/weather",
+      "custom/divider",
       "custom/app-godsapp",
       "custom/app-studio",
       "custom/app-sage",
@@ -308,6 +222,97 @@
       "tooltip": true,
       "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.settings\"; then hyprctl dispatch focuswindow class:io.nyxus.settings; else setsid python3 /home/nyx/.nyxus/nyxus_settings.py >/tmp/nyxus-settings.log 2>&1 < /dev/null & fi'",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Settings</span>\n<span size='small' foreground='#c8ccd6'>System Settings \u00b7 Theme \u00b7 Keyboard \u00b7 Power\nClick to open</span>"
+    },
+    "network": {
+      "format-wifi": " {signalStrength}%",
+      "format-ethernet": " ETH",
+      "format-disconnected": " OFF",
+      "tooltip": true,
+      "tooltip-format-wifi": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#c8ccd6'>Wi-Fi \u00b7 {essid}\nSignal: {signalStrength}%\nIP: {ipaddr}\nClick to open Network Settings</span>",
+      "tooltip-format-ethernet": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#c8ccd6'>Ethernet \u00b7 {ifname}\nIP: {ipaddr}\nClick to open Network Settings</span>",
+      "tooltip-format-disconnected": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Network</span>\n<span size='small' foreground='#c8ccd6'>Disconnected\nClick to open Network Settings</span>",
+      "on-click": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'"
+    },
+    "pulseaudio": {
+      "format": " {volume}",
+      "format-bluetooth": " {volume}",
+      "format-muted": " MUTE",
+      "format-icons": {
+        "default": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Volume</span>\n<span size='small' foreground='#c8ccd6'>{volume}% \u00b7 {desc}\nScroll to change \u00b7 Click to open Audio Settings</span>",
+      "tooltip-format-muted": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Volume</span>\n<span size='small' foreground='#c8ccd6'>Muted\nClick to unmute \u00b7 Right-click to open Audio</span>",
+      "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+      "on-click-right": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'",
+      "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+",
+      "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+    },
+    "backlight": {
+      "format": " {percent}%",
+      "format-icons": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Brightness</span>\n<span size='small' foreground='#c8ccd6'>{percent}%\nScroll to change \u00b7 Click to open Display Settings</span>",
+      "on-click": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'",
+      "on-scroll-up": "brightnessctl set 5%+",
+      "on-scroll-down": "brightnessctl set 5%-"
+    },
+    "battery": {
+      "states": {
+        "warning": 30,
+        "critical": 15
+      },
+      "format": " {capacity}%",
+      "format-charging": " {capacity}%",
+      "format-plugged": " {capacity}%",
+      "format-full": " 100%",
+      "format-discharging": " {capacity}%",
+      "format-icons": [
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#c8ccd6'>{capacity}%\nClick to open Power Settings</span>",
+      "tooltip-format-charging": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#c8ccd6'>{capacity}% \u00b7 charging\nClick to open Power Settings</span>",
+      "tooltip-format-plugged": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#c8ccd6'>{capacity}% \u00b7 plugged in\nClick to open Power Settings</span>",
+      "tooltip-format-full": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#c8ccd6'>{capacity}% \u00b7 fully charged\nClick to open Power Settings</span>",
+      "tooltip-format-discharging": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Battery</span>\n<span size='small' foreground='#c8ccd6'>{capacity}% \u00b7 discharging\n{time} remaining\nClick to open Power Settings</span>",
+      "on-click": "sh -c 'pgrep -f nyxus_control >/dev/null && hyprctl dispatch focuswindow class:io.nyxus.control || setsid python3 /home/nyx/.nyxus/nyxus_control.py >/tmp/nyxus-control.log 2>&1 < /dev/null &'"
+    },
+    "custom/quick-settings": {
+      "format": " SET",
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Quick Settings</span>\n<span size='small' foreground='#c8ccd6'>Open the System Settings panel\nTheme \u00b7 Display \u00b7 Keyboard \u00b7 Power\nClick to open</span>",
+      "on-click": "sh -c 'if hyprctl clients -j | grep -q \"io.nyxus.settings\"; then hyprctl dispatch focuswindow class:io.nyxus.settings; else setsid python3 /home/nyx/.nyxus/nyxus_settings.py >/tmp/nyxus-settings.log 2>&1 < /dev/null & fi'"
+    },
+    "custom/weather": {
+      "exec": "sh -c \"curl -fsS --max-time 4 'wttr.in/?format=%t' 2>/dev/null | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || echo '\u2014 \u2014'\"",
+      "interval": 3600,
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 Weather</span>\n<span size='small' foreground='#c8ccd6'>via wttr.in \u00b7 refreshes hourly\nClick for full forecast</span>",
+      "on-click": "/usr/local/bin/nyxus-weather"
+    },
+    "custom/divider": {
+      "format": " ",
+      "tooltip": false,
+      "interval": "once"
     }
   }
 ]
