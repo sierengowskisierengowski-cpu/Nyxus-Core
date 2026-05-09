@@ -316,23 +316,29 @@ if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-hyprland-rules.conf" "$HYPR_MAIN"; t
   ok "stripped legacy nyxus-hyprland-rules.conf source line from hyprland.conf"
 fi
 
-# rev r19 — strip ALL legacy non-conf.d source lines from hyprland.conf.
-# Older ISO builds shipped `source = ~/.config/hypr/nyxus-hyprland-*.conf`
-# (without the conf.d/ subdir). Those files no longer exist at that path
+# rev r22 — GENERIC strip of ALL legacy non-conf.d source lines from
+# hyprland.conf. Old ISO builds shipped any of:
+#     source = ~/.config/hypr/nyxus-hyprland-general.conf
+#     source = ~/.config/hypr/nyxus-hyprland-blur.conf
+#     source = ~/.config/hypr/nyxus-hyprland-opacity.conf
+#     source = ~/.config/hypr/nyxus-hyprland-rules.conf
+#     source = ~/.config/hypr/nyxus-hyprland-layerblur.conf
+#     source = ~/.config/hypr/nyxus-hyprland-fog.conf
+# all WITHOUT the conf.d/ subdir. Those files no longer exist at that path
 # and Hyprland throws "globbing error: found no match" on every reload,
-# preventing the entire chrome (waybar styling, opacity, blur) from loading.
-# Strip them; the canonical conf.d/ versions are appended below.
+# blocking the entire chrome (waybar styling, opacity, blur) from loading.
+# rev r22 fix: strip ANY `source = ~/.config/hypr/nyxus-hyprland-*.conf`
+# without `conf.d/` regardless of suffix — catches future variants too.
 if [[ -f "$HYPR_MAIN" ]]; then
-  legacy_stripped=0
-  for legacy in nyxus-hyprland-general nyxus-hyprland-blur \
-                nyxus-hyprland-opacity nyxus-hyprland-rules; do
-    if grep -qE "^\s*source\s*=\s*~/.config/hypr/${legacy}\.conf\s*$" "$HYPR_MAIN"; then
-      sed -i -E "\#^\s*source\s*=\s*~/.config/hypr/${legacy}\.conf\s*\$#d" "$HYPR_MAIN"
-      legacy_stripped=$((legacy_stripped + 1))
-    fi
-  done
+  before=$(wc -l < "$HYPR_MAIN")
+  # Match `source = ~/.config/hypr/nyxus-hyprland-<anything>.conf` BUT
+  # only when the path does NOT contain `conf.d/`. Allows optional spaces
+  # around `=` and trailing whitespace.
+  sed -i -E '/^[[:space:]]*source[[:space:]]*=[[:space:]]*~\/\.config\/hypr\/nyxus-hyprland-[^\/]+\.conf[[:space:]]*$/d' "$HYPR_MAIN"
+  after=$(wc -l < "$HYPR_MAIN")
+  legacy_stripped=$((before - after))
   if (( legacy_stripped > 0 )); then
-    ok "stripped $legacy_stripped legacy non-conf.d source line(s) from hyprland.conf — globbing errors fixed"
+    ok "stripped $legacy_stripped legacy non-conf.d source line(s) from hyprland.conf — globbing errors fixed (rev r22)"
   fi
 fi
 
@@ -692,14 +698,61 @@ else
   fail "could not download waybar-style.css"
 fi
 
+# 4.5e  waybar-ticker.sh — REAL live-stats marquee (rev r22 fix: was
+# previously NEVER refreshed by resync — old ticker.sh stayed on disk
+# even after downloads of style.css/config.json, so users saw stale data
+# and never got the new red `.error` class on probe failures).
+WB_TICKER="$NYX_HOME_DIR/waybar-ticker.sh"
+if curl -fsSL --max-time 30 "$PROD/waybar-ticker.sh" -o "$WB_TICKER.new"; then
+  if [[ -s "$WB_TICKER.new" ]]; then
+    mv -f "$WB_TICKER.new" "$WB_TICKER"
+    chown "$REAL_USER:$REAL_USER" "$WB_TICKER"
+    chmod 755 "$WB_TICKER"
+    tk_sha=$(sha256sum "$WB_TICKER" | cut -c1-12)
+    tk_rev=$(grep -m1 -E '^# NYXUS Waybar Marquee Ticker' "$WB_TICKER" | sed 's/^# //')
+    ok "wrote $WB_TICKER (sha=$tk_sha) — $tk_rev"
+  else
+    rm -f "$WB_TICKER.new"
+    fail "downloaded waybar-ticker.sh was empty — kept previous copy"
+  fi
+else
+  fail "could not download waybar-ticker.sh — top-bar ticker will stay stale"
+fi
+
 # ── 5/6 RELOAD waybar ────────────────────────────────────────────────────────
 step "5/6 · RELOAD waybar (so the new NYXUS modules show up)"
-# SIGUSR2 reloads config in place — preserves the running waybar process and
-# its taskbar state, but picks up the freshly patched config.json.
+# rev r22 — FULL kill+respawn instead of SIGUSR2. SIGUSR2 reloads the CSS
+# but does NOT reliably re-evaluate structural changes (modules added,
+# removed, moved between bars). After the rev r19→r21 reorganisation
+# moving status pebbles top→right, SIGUSR2 left orphan modules from the
+# old layout. Full restart guarantees the new config is live.
 if pgrep -x waybar >/dev/null 2>&1; then
-  pkill -SIGUSR2 -x waybar 2>/dev/null && ok "sent SIGUSR2 to running waybar (config reloaded)"
-else
-  warn "waybar not running — Hyprland will respawn it on next session, or start it manually"
+  pkill -x waybar 2>/dev/null
+  # wait up to 2s for waybar to fully exit
+  for _ in 1 2 3 4 5 6 7 8; do
+    pgrep -x waybar >/dev/null 2>&1 || break
+    sleep 0.25
+  done
+  ok "waybar killed — Hyprland exec-once will respawn it with new config"
+fi
+# Defensive respawn — if Hyprland's exec-once doesn't fire (script run
+# outside a fresh session), launch waybar directly as the real user.
+if ! pgrep -x waybar >/dev/null 2>&1; then
+  if [[ -n "${REAL_USER:-}" ]] && command -v sudo >/dev/null 2>&1; then
+    sudo -u "$REAL_USER" \
+      env XDG_RUNTIME_DIR="/run/user/$(id -u "$REAL_USER")" \
+          WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
+      nohup waybar \
+        --config "$REAL_HOME/.config/waybar/config" \
+        --style  "$REAL_HOME/.config/waybar/style.css" \
+        >/dev/null 2>&1 &
+    sleep 0.5
+    if pgrep -x waybar >/dev/null 2>&1; then
+      ok "waybar respawned manually with new config"
+    else
+      warn "waybar failed to respawn — run \`waybar --config ~/.config/waybar/config --style ~/.config/waybar/style.css &\` manually"
+    fi
+  fi
 fi
 
 # ── 6/6 VERIFY ──────────────────────────────────────────────────────────────

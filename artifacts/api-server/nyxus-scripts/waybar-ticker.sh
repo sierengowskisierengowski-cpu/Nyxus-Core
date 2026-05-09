@@ -1,49 +1,59 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────────────────────
-# NYXUS Waybar Marquee Ticker  ·  rev 2026-05-06x
-# CONTINUOUS LEFT-SCROLL marquee. Streams one JSON line every ~0.18s.
-# A long status string is built every REFRESH seconds, then a fixed-width
-# WINDOW slides left across it, wrapping around in a loop (airport-board
-# style). Bulletproof: every probe has its own short timeout.
+# NYXUS Waybar Marquee Ticker  ·  rev r22 · 2026-05-09
+# CONTINUOUS LEFT-SCROLL marquee streamed as JSON, one line every SCROLL_SLEEP.
+# A long REAL-LIVE status string is rebuilt every REFRESH seconds, then a
+# fixed-width WINDOW slides left across it (airport-board style).
 #
-# Waybar config:  no "interval" — the script streams forever.
-#                 use "exec" + "return-type": "json".
+# rev r22 — full-bar width (WINDOW=210), structured PROBE_ERRORS array,
+# red `.error` class emitted whenever ANY probe fails so the user can see
+# the failure live in the bar. Tooltip shows the actual failing probes.
 # ─────────────────────────────────────────────────────────────────────────
 
 set -u
 export LC_ALL=C.UTF-8
 
-WINDOW=100      # visible chars in the marquee window
+WINDOW=210          # visible chars in the marquee window — fills a 1200-1920px bar
 SCROLL_SLEEP=0.18   # seconds per character (smaller = faster scroll)
-REFRESH=5       # rebuild metrics every N seconds
+REFRESH=5           # rebuild metrics every N seconds
+
+# Probe failure tracker — populated by build_string each rebuild.
+PROBE_ERRORS=""
 
 # ── Build the long status string ────────────────────────────────────────
 build_string() {
-  local UPTIME KERNEL LOAD MEM CPU DISK NET IP GPU CPUTEMP UPDATES HOST USER WS SEP
+  local UPTIME KERNEL LOAD MEM CPU DISK NET IP GPU CPUTEMP UPDATES HOST USER WS SEP NOW BAT
+  local errs=""
 
   UPTIME=$(uptime -p 2>/dev/null | sed 's/^up //; s/ minutes/m/; s/ minute/m/; s/ hours/h/; s/ hour/h/; s/ days/d/; s/ day/d/; s/, /·/g')
-  [ -z "$UPTIME" ] && UPTIME="—"
+  if [ -z "$UPTIME" ]; then UPTIME="ERR"; errs="${errs}uptime "; fi
+
   KERNEL=$(uname -r 2>/dev/null | cut -d- -f1)
-  [ -z "$KERNEL" ] && KERNEL="—"
+  if [ -z "$KERNEL" ]; then KERNEL="ERR"; errs="${errs}kernel "; fi
+
   LOAD=$(awk '{printf "%.2f", $1}' /proc/loadavg 2>/dev/null)
-  [ -z "$LOAD" ] && LOAD="—"
-  MEM=$(awk '/MemTotal/ {t=$2} /MemAvailable/ {a=$2} END {if (t>0) printf "%d%%", (t-a)*100/t; else print "—"}' /proc/meminfo 2>/dev/null)
-  [ -z "$MEM" ] && MEM="—"
+  if [ -z "$LOAD" ]; then LOAD="ERR"; errs="${errs}loadavg "; fi
+
+  MEM=$(awk '/MemTotal/ {t=$2} /MemAvailable/ {a=$2} END {if (t>0) printf "%d%%", (t-a)*100/t; else print ""}' /proc/meminfo 2>/dev/null)
+  if [ -z "$MEM" ]; then MEM="ERR"; errs="${errs}meminfo "; fi
+
   CPU=$(top -bn1 2>/dev/null | awk '/^%Cpu/ {printf "%d%%", 100 - $8; exit}')
-  [ -z "$CPU" ] && CPU="—"
+  if [ -z "$CPU" ]; then CPU="ERR"; errs="${errs}cpu "; fi
+
   DISK=$(df / 2>/dev/null | awk 'NR==2 {print $5}')
-  [ -z "$DISK" ] && DISK="—"
+  if [ -z "$DISK" ]; then DISK="ERR"; errs="${errs}disk "; fi
 
   if timeout 1 ip route get 1.1.1.1 >/dev/null 2>&1; then
     NET="ONLINE"
     IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") {print $(i+1); exit}}')
+    [ -z "$IP" ] && { IP="ERR"; errs="${errs}net-ip "; }
   else
     NET="OFFLINE"; IP="—"
+    errs="${errs}offline "
   fi
-  [ -z "$IP" ] && IP="—"
 
   CPUTEMP=$(timeout 1 sensors 2>/dev/null | awk '/^Package id 0:|^Tctl:/ {gsub(/\+|°C/,"",$2); printf "%s°C", $2; exit}')
-  [ -z "$CPUTEMP" ] && CPUTEMP="—"
+  [ -z "$CPUTEMP" ] && CPUTEMP="—"     # sensors is optional, no error
 
   GPU=$(timeout 1 sensors 2>/dev/null | awk '/edge:|GPU:|junction:/ {gsub(/\+|°C/,"",$2); printf "%s°C", $2; exit}')
   [ -z "$GPU" ] && GPU="—"
@@ -51,17 +61,31 @@ build_string() {
   UPDATES=$(timeout 4 checkupdates 2>/dev/null | wc -l)
   [ -z "$UPDATES" ] && UPDATES="0"
 
-  HOST=$(hostname 2>/dev/null)
-  [ -z "$HOST" ] && HOST="nyxus"
-  USER=${USER:-$(whoami 2>/dev/null)}
-  [ -z "$USER" ] && USER="nyx"
+  HOST=$(hostname 2>/dev/null);     [ -z "$HOST" ] && HOST="nyxus"
+  USER=${USER:-$(whoami 2>/dev/null)};  [ -z "$USER" ] && USER="nyx"
 
   WS=$(timeout 1 hyprctl -j activeworkspace 2>/dev/null | awk -F'[:,]' '/"id":/ {gsub(/[ "]/,"",$2); print $2; exit}')
   [ -z "$WS" ] && WS="—"
 
+  # Battery — present on laptops only, optional
+  BAT="—"
+  for b in /sys/class/power_supply/BAT*; do
+    if [ -d "$b" ]; then
+      cap=$(cat "$b/capacity" 2>/dev/null)
+      sta=$(cat "$b/status" 2>/dev/null)
+      if [ -n "$cap" ]; then BAT="${cap}% ${sta}"; break; fi
+    fi
+  done
+
+  NOW=$(date '+%a %d · %H:%M:%S' 2>/dev/null)
+  [ -z "$NOW" ] && NOW="—"
+
+  # Publish probe errors (newline-joined for tooltip readability)
+  PROBE_ERRORS="${errs}"
+
   SEP="   ◆   "
   printf '%s' \
-    "NYXUS · SIERENGOWSKI · 2026${SEP}HOST ${USER}@${HOST}${SEP}WORKSPACE ${WS}${SEP}UPTIME ${UPTIME}${SEP}KERNEL ${KERNEL}${SEP}CPU ${CPU} @ ${CPUTEMP}${SEP}MEM ${MEM}${SEP}LOAD ${LOAD}${SEP}DISK ${DISK}${SEP}GPU ${GPU}${SEP}NET ${NET}${SEP}IP ${IP}${SEP}UPDATES ${UPDATES} pending${SEP}HYPRLAND · WAYLAND${SEP}ARCH LINUX${SEP}BUILT BY HAND${SEP}"
+"NYXUS · SIERENGOWSKI · 2026${SEP}HOST ${USER}@${HOST}${SEP}WS ${WS}${SEP}UPTIME ${UPTIME}${SEP}KERNEL ${KERNEL}${SEP}CPU ${CPU} @ ${CPUTEMP}${SEP}MEM ${MEM}${SEP}LOAD ${LOAD}${SEP}DISK ${DISK}${SEP}GPU ${GPU}${SEP}BAT ${BAT}${SEP}NET ${NET}${SEP}IP ${IP}${SEP}UPDATES ${UPDATES} pending${SEP}${NOW}${SEP}HYPRLAND · WAYLAND · ARCH LINUX${SEP}"
 }
 
 # ── Tooltip = pretty-printed full snapshot ──────────────────────────────
@@ -114,11 +138,19 @@ while true; do
   fi
 
   TXT_ESC=$(esc_json "$WIN")
+  if [ -n "$PROBE_ERRORS" ]; then
+    CLASS="error"
+    ERR_LINE="<span size='small' foreground='#ff6464'>⚠ failed probes: ${PROBE_ERRORS}</span>"
+  else
+    CLASS="ok"
+    ERR_LINE="<span size='small' foreground='#7aff7a'>● all probes nominal</span>"
+  fi
   TIP_RAW="<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · LIVE TICKER</span>
+${ERR_LINE}
 <span size='small' foreground='#9aa0ad'>${TOOLTIP_BODY}</span>"
   TIP_ESC=$(esc_json "$TIP_RAW")
 
-  printf '{"text":"%s","tooltip":"%s","class":"ticker","alt":"ticker"}\n' "$TXT_ESC" "$TIP_ESC"
+  printf '{"text":"%s","tooltip":"%s","class":"%s","alt":"%s"}\n' "$TXT_ESC" "$TIP_ESC" "$CLASS" "$CLASS"
 
   OFFSET=$(( OFFSET + 1 ))
   TICK=$(( TICK + 1 ))
