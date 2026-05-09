@@ -34,16 +34,21 @@ mkdir -p "${THEME_DIR}"
 cp -r "${SCRIPT_DIR}/." "${THEME_DIR}/"
 rm -f "${THEME_DIR}/install.sh"
 
-# ── Background: prefer local nyxus-ink-swirl, fall back to bundled background, then network
-if [[ -f "${SCRIPT_DIR}/../nyxus-ink-swirl.png" ]]; then
-    echo "${C_DIM}→${C_RST} Using local cosmic ink swirl wallpaper"
+# ── Background: rev r26c — STARFIELD LOGIN (pure black + 4-point starbursts).
+# Priority order: nyxus-login-stars.png (current) → nyxus-ink-swirl.png
+# (legacy local) → bundled background.png → network fetch of starfield.
+if [[ -f "${SCRIPT_DIR}/../nyxus-login-stars.png" ]]; then
+    echo "${C_DIM}→${C_RST} Using local NYXUS starfield (nyxus-login-stars.png)"
+    cp "${SCRIPT_DIR}/../nyxus-login-stars.png" "${THEME_DIR}/background.png"
+elif [[ -f "${SCRIPT_DIR}/../nyxus-ink-swirl.png" ]]; then
+    echo "${C_DIM}→${C_RST} Using local cosmic ink swirl wallpaper (legacy)"
     cp "${SCRIPT_DIR}/../nyxus-ink-swirl.png" "${THEME_DIR}/background.png"
 elif [[ -f "${SCRIPT_DIR}/background.png" ]]; then
     echo "${C_DIM}→${C_RST} Using bundled background.png"
 elif command -v curl &>/dev/null; then
-    echo "${C_WARN}→${C_RST} Downloading cosmic ink swirl wallpaper ..."
+    echo "${C_WARN}→${C_RST} Downloading NYXUS starfield ..."
     curl -fsSL -o "${THEME_DIR}/background.png" \
-        "${NYX_BASE}/nyxus-ink-swirl.png" \
+        "${NYX_BASE}/nyxus-login-stars.png" \
         || echo "${C_WARN}⚠  Wallpaper download failed — drop a background.png in ${THEME_DIR}/${C_RST}"
 fi
 
