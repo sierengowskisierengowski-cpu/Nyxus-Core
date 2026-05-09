@@ -215,6 +215,7 @@ hdr "Wallpaper (SIERENGOWSKI)"
 WALLS_DIR="$HYPR_DIR/walls"
 mkdir -p "$WALLS_DIR"
 dl "nyxus-ink-swirl.png" "$WALLS_DIR/nyxus-ink-swirl.png" || failed=$((failed+1))
+dl "nyxus-void-wallpaper.mp4" "$WALLS_DIR/nyxus-void-wallpaper.mp4" || failed=$((failed+1))
 dl "nyxus-taskbar-bg.png"         "$WALLS_DIR/nyxus-taskbar-bg.png"         || failed=$((failed+1))
 dl "nyxus-rightbar-bg.png"        "$WALLS_DIR/nyxus-rightbar-bg.png"        || failed=$((failed+1))
 dl "nyxus-starlight.png"          "$WALLS_DIR/nyxus-starlight.png"          || failed=$((failed+1))
@@ -735,10 +736,28 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
 fi
 
 if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
-  pkill swaybg 2>/dev/null || true
-  swaybg -i "$WALLS_DIR/nyxus-ink-swirl.png" -m fill &
-  disown
-  ok "Wallpaper set — nyxus-ink-swirl (DARK MIRROR · cosmic ink)"
+  # rev r25 — VOID ANIMATED WALLPAPER. mpvpaper plays the swirling-galaxy
+  # MP4 on loop on every output as a wlr-layer-shell BACKGROUND surface.
+  # Flags: --no-audio (silence), loop-file=inf (seamless), hwdec=auto-safe
+  # (GPU decode where available, fallback to CPU), no-osc/no-osd (bare).
+  # We kill any prior wallpaper daemon (swaybg/hyprpaper/mpvpaper) first
+  # so re-runs don't stack instances.
+  pkill -x swaybg    2>/dev/null || true
+  pkill -x hyprpaper 2>/dev/null || true
+  pkill -x mpvpaper  2>/dev/null || true
+  VOID_MP4="$WALLS_DIR/nyxus-void-wallpaper.mp4"
+  if command -v mpvpaper >/dev/null 2>&1 && [[ -s "$VOID_MP4" ]]; then
+    nohup mpvpaper -o "no-audio loop-file=inf hwdec=auto-safe no-osc no-osd panscan=1.0" \
+      '*' "$VOID_MP4" >/tmp/nyxus-mpvpaper.log 2>&1 &
+    disown
+    ok "Wallpaper set — nyxus-void-wallpaper.mp4 (mpvpaper · animated)"
+  else
+    # Fallback: still image if mpvpaper missing or video missing
+    if command -v swaybg >/dev/null 2>&1; then
+      swaybg -i "$WALLS_DIR/nyxus-ink-swirl.png" -m fill & disown
+      warn "mpvpaper unavailable — fell back to static swaybg ink-swirl"
+    fi
+  fi
 fi
 
 if command -v dunst &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
