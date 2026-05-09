@@ -18,7 +18,10 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import SddmComponents 2.0
+// NOTE: do NOT import SddmComponents — its `Button` type (QQC1-era, no
+// `contentItem` property) shadows the QQC2 Button and breaks the theme
+// with `Cannot assign to non-existent property "contentItem"`. Nothing
+// in this theme uses SddmComponents types, so the import is unneeded.
 
 Rectangle {
     id: root
