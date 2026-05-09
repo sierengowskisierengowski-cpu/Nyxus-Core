@@ -97,9 +97,9 @@
     "name": "bottom",
     "layer": "top",
     "position": "bottom",
-    "height": 30,
+    "height": 44,
     "spacing": 2,
-    "margin-bottom": 8,
+    "margin-bottom": 10,
     "margin-left": 24,
     "margin-right": 24,
     "modules-left": ["custom/nyxus-start"],
@@ -127,8 +127,8 @@
       "escape": false
     },
     "tray": {
-      "icon-size": 14,
-      "spacing": 6,
+      "icon-size": 18,
+      "spacing": 8,
       "tooltip": true
     },
     "custom/nyxus-panel": {
