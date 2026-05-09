@@ -217,6 +217,7 @@ mkdir -p "$WALLS_DIR"
 dl "nyxus-ink-swirl.png" "$WALLS_DIR/nyxus-ink-swirl.png" || failed=$((failed+1))
 dl "nyxus-taskbar-bg.png"         "$WALLS_DIR/nyxus-taskbar-bg.png"         || failed=$((failed+1))
 dl "nyxus-rightbar-bg.png"        "$WALLS_DIR/nyxus-rightbar-bg.png"        || failed=$((failed+1))
+dl "nyxus-starlight.png"          "$WALLS_DIR/nyxus-starlight.png"          || failed=$((failed+1))
 
 # ── APP BACKGROUNDS (neon splat panels — used by all GTK apps) ────────────────
 hdr "App Backgrounds (neon splat panels)"
@@ -235,9 +236,11 @@ dl "waybar-style.css"         "$WAYBAR_DIR/style.css"         || failed=$((faile
 WALL_PATH="$HOME/.config/hypr/walls/nyxus-ink-swirl.png"
 TASKBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-taskbar-bg.png"
 RIGHTBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-rightbar-bg.png"
+STARLIGHT_BG_PATH="$HOME/.config/hypr/walls/nyxus-starlight.png"
 sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"                  "$WAYBAR_DIR/style.css"
 sed -i "s|NYXUS_TASKBAR_BG|file://${TASKBAR_BG_PATH}|g"    "$WAYBAR_DIR/style.css"
 sed -i "s|NYXUS_RIGHTBAR_BG|file://${RIGHTBAR_BG_PATH}|g"  "$WAYBAR_DIR/style.css"
+sed -i "s|NYXUS_STARLIGHT_BG|file://${STARLIGHT_BG_PATH}|g" "$WAYBAR_DIR/style.css"
 # Belt-and-suspenders: convert any leftover hardcoded /home/nyx/ to real $HOME
 sed -i "s|file:///home/nyx/|file://$HOME/|g"               "$WAYBAR_DIR/style.css"
 dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
