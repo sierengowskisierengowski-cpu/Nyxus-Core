@@ -97,11 +97,11 @@
     "name": "bottom",
     "layer": "top",
     "position": "bottom",
-    "height": 38,
-    "spacing": 4,
-    "margin-bottom": 10,
-    "margin-left": 20,
-    "margin-right": 20,
+    "height": 30,
+    "spacing": 2,
+    "margin-bottom": 8,
+    "margin-left": 24,
+    "margin-right": 24,
     "modules-left": ["custom/nyxus-start"],
     "modules-center": ["tray"],
     "modules-right": ["custom/notifications", "custom/nyxus-panel"],
@@ -127,8 +127,8 @@
       "escape": false
     },
     "tray": {
-      "icon-size": 18,
-      "spacing": 10,
+      "icon-size": 14,
+      "spacing": 6,
       "tooltip": true
     },
     "custom/nyxus-panel": {
