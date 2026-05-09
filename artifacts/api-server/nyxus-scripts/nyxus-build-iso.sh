@@ -196,6 +196,41 @@ mkdir -p "$BUILD_PROFILE"
 rsync -a "$PROFILE_SRC/" "$BUILD_PROFILE/"
 ok "profile staged"
 
+# ── render /etc/nyxus/build-info.conf from the .in template ───────────────
+# So a booted live system can answer "exactly which ISO is this?" via
+# `cat /etc/nyxus/build-info.conf`. Tokens get substituted with real values
+# at build time (commit SHA, archiso version, kernel, etc.).
+BI_TEMPLATE="$BUILD_PROFILE/airootfs/etc/nyxus/build-info.conf.in"
+BI_OUT="$BUILD_PROFILE/airootfs/etc/nyxus/build-info.conf"
+if [[ -f "$BI_TEMPLATE" ]]; then
+  step "render /etc/nyxus/build-info.conf"
+  PROFILE_COMMIT="$(git -C "$SRC_CACHE" rev-parse HEAD 2>/dev/null || echo unknown)"
+  ISO_LABEL="$(grep -E '^iso_label='    "$BUILD_PROFILE/profiledef.sh" | cut -d= -f2- | tr -d '"' || echo unknown)"
+  ISO_VERSION="$(grep -E '^iso_version=' "$BUILD_PROFILE/profiledef.sh" | cut -d= -f2- | tr -d '"' || echo unknown)"
+  ARCHISO_VERSION="$(pacman -Q archiso 2>/dev/null | awk '{print $2}' || echo unknown)"
+  KERNEL_VERSION="$(uname -r || echo unknown)"
+  MKARCHISO_PATH="$(command -v mkarchiso || echo unknown)"
+  BUILD_DATE_UTC="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+  BUILD_HOST="$(hostname || echo unknown)"
+  # Escape sed-replacement metacharacters (`\`, `&`, `|`) in every value
+  # before substitution so a hostile / weird PROFILE_REPO / PROFILE_REF
+  # flag value can't corrupt the rendered config.
+  _sed_esc() { printf '%s' "$1" | sed -e 's/[\&|]/\\&/g'; }
+  sed -e "s|@ISO_LABEL@|$(_sed_esc "$ISO_LABEL")|g" \
+      -e "s|@ISO_VERSION@|$(_sed_esc "$ISO_VERSION")|g" \
+      -e "s|@BUILD_DATE_UTC@|$(_sed_esc "$BUILD_DATE_UTC")|g" \
+      -e "s|@BUILD_HOST@|$(_sed_esc "$BUILD_HOST")|g" \
+      -e "s|@PROFILE_REPO@|$(_sed_esc "$PROFILE_REPO")|g" \
+      -e "s|@PROFILE_REF@|$(_sed_esc "$PROFILE_REF")|g" \
+      -e "s|@PROFILE_COMMIT@|$(_sed_esc "$PROFILE_COMMIT")|g" \
+      -e "s|@ARCHISO_VERSION@|$(_sed_esc "$ARCHISO_VERSION")|g" \
+      -e "s|@KERNEL_VERSION@|$(_sed_esc "$KERNEL_VERSION")|g" \
+      -e "s|@MKARCHISO_PATH@|$(_sed_esc "$MKARCHISO_PATH")|g" \
+      "$BI_TEMPLATE" > "$BI_OUT"
+  rm -f "$BI_TEMPLATE"
+  ok "rendered build-info.conf  (commit=${PROFILE_COMMIT:0:8}  archiso=$ARCHISO_VERSION  kernel=$KERNEL_VERSION)"
+fi
+
 # ── run mkarchiso ──────────────────────────────────────────────────────────
 step "run mkarchiso (this takes 10–25 minutes; full log → $LOG_FILE)"
 MKARCHISO_WORK="$WORK_DIR/work"

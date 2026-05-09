@@ -116,10 +116,23 @@ python-requests
 python-pillow
 python-dnspython
 
+# ── nyxus-intel runtime deps (Policy A — pacman-first, offline-capable) ─
+# Mirrors the contents of intel/packages.txt + intel/requirements.txt
+# packaged for Arch. Anything not in official repos stays as a pip-at-
+# first-run fallback inside install.sh.
+python-bcrypt
+python-reportlab
+python-shodan
+python-piexif
+# NOTE: `python-whois` is AUR-only — install.sh handles it as a pip
+# fallback at first run. The `whois` C binary below covers the CLI need.
+whois
+
 # ── fonts ─────────────────────────────────────────────────────────
 ttf-jetbrains-mono-nerd
 ttf-firacode-nerd
 ttf-caveat
+inter-font
 noto-fonts
 noto-fonts-emoji
 ttf-font-awesome
