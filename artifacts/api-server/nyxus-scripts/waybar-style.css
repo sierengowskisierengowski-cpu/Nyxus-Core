@@ -37,25 +37,27 @@
    ticker reads as a true full-width LIVE marquee. Subtle bottom
    hairline only, to separate it from the wallpaper visually. */
 
-/* rev r26 — TRANSPARENT BAR SHELLS. All four waybar shells are now fully
-   transparent so the live void wallpaper reads edge-to-edge underneath.
-   Visual weight is carried entirely by the per-module pebbles (their own
-   dark-glass backgrounds + insets). The bottom bar gets a separate
-   override below that keeps the STARLIGHT HEADLINER backdrop. To revert
-   any single bar, give that bar's selector a background-color again. */
+/* rev r26b — 75% TRANSPARENT BAR SHELLS (bottom / left / right) +
+   100% transparent TOP. Per user spec: faint dark veil at 25% opacity
+   so the wallpaper still reads strongly but module pebbles sit on a
+   subtle backdrop instead of floating naked. Top bar stays fully
+   transparent so the centered ticker reads as pure marquee text. */
 window#waybar,
 window#waybar.bottom,
 window#waybar.left,
 window#waybar.right {
     background-image:    none;
-    background-color:    rgba(0, 0, 0, 0);
+    background-color:    rgba(8, 8, 14, 0.25);
     color:               #c8ccd6;
     border:              none;
-    border-radius:       0;
-    box-shadow:          none;
+    border-radius:       14px;
+    box-shadow:
+        inset  0   1px  0   rgba(255, 255, 255, 0.05),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.45),
+        0      6px  18px    rgba(0,   0,   0,   0.45);
 }
 
-/* TOP bar — fully transparent, no ribbon, no drop shadow */
+/* TOP bar — fully transparent, no ribbon, no drop shadow, no radius */
 window#waybar.top {
     background-image: none;
     background-color: rgba(0, 0, 0, 0);
@@ -65,13 +67,11 @@ window#waybar.top {
     box-shadow:       none;
 }
 
-/* Side bars — fully transparent (modules float over wallpaper) */
+/* Side bars — 75% transparent (inherit from combined block above) */
 window#waybar.left,
 window#waybar.right {
-    background-image: none;
-    background-color: rgba(0, 0, 0, 0);
-    border:           none;
-    box-shadow:       none;
+    background-color: rgba(8, 8, 14, 0.25);
+    border-radius:    14px;
 }
 
 /* ── 2. UNIVERSAL INSTRUMENT PEBBLE (status indicators · all bars) ────── */
@@ -225,17 +225,18 @@ window#waybar.right #custom-divider {
     100% { opacity: 0.93; }
 }
 
-/* rev r26 — BOTTOM BAR ALSO TRANSPARENT (per user request). The starlight
-   headliner backdrop is dropped; the void wallpaper now reads through all
-   four bars edge-to-edge. Modules carry their own dark-glass pebbles, so
-   visual hierarchy is preserved. To restore the starlight, reinstate the
-   background-image / animation block from rev r25. */
+/* rev r26b — BOTTOM 75% TRANSPARENT (matches sides). Faint dark veil
+   at 25% opacity, soft hairline insets, pillow drop. No starlight
+   image, no animation. */
 window#waybar.bottom {
     background-image: none;
-    background-color: rgba(0, 0, 0, 0);
+    background-color: rgba(8, 8, 14, 0.25);
     border:           none;
-    border-radius:    0;
-    box-shadow:       none;
+    border-radius:    14px;
+    box-shadow:
+        inset  0   1px  0   rgba(255, 255, 255, 0.05),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.45),
+        0      6px  18px    rgba(0,   0,   0,   0.45);
     animation:        none;
 }
 

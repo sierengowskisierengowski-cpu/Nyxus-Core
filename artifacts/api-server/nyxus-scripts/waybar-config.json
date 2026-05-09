@@ -8,10 +8,10 @@
     "margin-top": 0,
     "margin-left": 0,
     "margin-right": 0,
-    "modules-left": [
+    "modules-left": [],
+    "modules-center": [
       "custom/ticker"
     ],
-    "modules-center": [],
     "modules-right": [],
     "custom/ticker": {
       "exec": "~/.config/waybar/waybar-ticker.sh",
