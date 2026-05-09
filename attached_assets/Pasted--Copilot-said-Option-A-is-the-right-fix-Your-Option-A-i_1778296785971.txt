@@ -1,0 +1,44 @@
+
+Copilot said: Option A is the right fix. Your
+Option A is the right fix. Your diagnosis is correct: the real problem is that your profile declares permissions for paths that your profile never actually provides in airootfs/, and archiso 88 is stricter about validating/setting those. The clean solution is to make the filesystem match your intent (ship the files/dirs), not to remove the intent.
+
+What to implement (Option A, ��proper fix”)
+1) Populate the missing paths in the profile airootfs/
+Create these directories in the repo:
+
+iso-builder/nyx-profile/airootfs/root/
+iso-builder/nyx-profile/airootfs/etc/nyxus/
+iso-builder/nyx-profile/airootfs/usr/local/bin/
+Then install nyxus-intel into:
+
+iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-intel
+Since it’s currently a tarball at artifacts/api-server/nyxus-scripts/nyxus-intel.tgz, extract it at build time (or commit the extracted script/binary directly). For reproducibility, I’d prefer committing the extracted nyxus-intel (so the ISO build doesn’t depend on tarball layout), but either is fine.
+
+2) Deal with /etc/shadow
+I recommend removing the /etc/shadow permission override from file_permissions unless you are also providing a managed airootfs/etc/shadow. ArchISO’s own tooling/pacstrap will create it; overriding permissions for a file you don’t ship is fragile.
+
+So either:
+
+Preferred: delete the ["/etc/shadow"]="0:0:400" line
+Alternative: provide airootfs/etc/shadow (but that’s sensitive and usually a bad idea for a live ISO repo)
+3) Keep the /root entry only if you really need it
+If you create airootfs/root/, then ["/root"]="0:0:750" is fine. If you don’t care, remove it. But creating the directory is harmless.
+
+I can implement this as a PR, but I need one thing
+You haven’t asked explicitly for a PR yet, and repo writes require you to explicitly opt in.
+
+If you want me to implement Option A in your repo, say:
+
+“Yes, open a PR against sierengowskisierengowski-cpu/Nyxus-Core implementing Option A.”
+And confirm:
+
+Should nyxus-intel.tgz be extracted into the repo (so nyxus-intel is tracked as a normal file), or should we add a customize_airootfs.sh (or equivalent) step that extracts it during build?
+My recommendation: commit the extracted nyxus-intel file into airootfs/usr/local/bin/ and stop using the tgz for this.
+Do you still want the /etc/shadow permission rule? (I recommend removing it.)
+Once you confirm, I’ll use the coding agent to create the PR with:
+
+directory additions
+extracted/copied nyxus-intel
+profiledef.sh adjusted (remove /etc/shadow entry, keep the rest)
+and a quick note in the PR description explaining why archiso 88 was failing.
+Block pasted, 1 total
