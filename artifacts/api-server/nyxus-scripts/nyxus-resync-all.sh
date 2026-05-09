@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.05-r21"
+NYXUS_RESYNC_VERSION="2026.05.09-r22"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -551,6 +551,110 @@ if command -v hyprctl >/dev/null 2>&1 && pgrep -x Hyprland >/dev/null 2>&1; then
   else
     warn "hyprctl reload failed — log out + back in, or run 'hyprctl reload' manually"
   fi
+fi
+
+# ── 4.5/6  REFRESH palette + waybar CSS/JSON  (r22 fix) ─────────────────────
+# Without this step every change to nyxus-palette.css, waybar-style.css, or
+# waybar-config.json is INVISIBLE on user machines: the original install
+# pulled them once and nothing ever overwrote them. r22 adds explicit pulls
+# so palette/waybar edits actually land.
+step "4.5/6 · REFRESH palette + waybar CSS/JSON  (r22: was previously missed)"
+
+NYX_HOME_DIR="${NYX_HOME_DIR:-$REAL_HOME/.nyxus}"
+WAYBAR_DIR="$REAL_HOME/.config/waybar"
+mkdir -p "$NYX_HOME_DIR" "$WAYBAR_DIR"
+chown "$REAL_USER:$REAL_USER" "$NYX_HOME_DIR" "$WAYBAR_DIR"
+
+# 4.5a  nyxus-palette.css — the single source of truth every CSS @imports
+PAL_DST="$NYX_HOME_DIR/nyxus-palette.css"
+if curl -fsSL --max-time 30 "$PROD/nyxus-palette.css" -o "$PAL_DST.new"; then
+  if grep -q "nyx_black_smoke\|nyx_glass_dark" "$PAL_DST.new"; then
+    mv "$PAL_DST.new" "$PAL_DST"
+    chown "$REAL_USER:$REAL_USER" "$PAL_DST"
+    chmod 644 "$PAL_DST"
+    pal_sha=$(sha256sum "$PAL_DST" | cut -c1-12)
+    ok "wrote $PAL_DST (sha=$pal_sha)"
+    # Mirror to every consumer dir so @import 'nyxus-palette.css' resolves
+    mirrored=0
+    for dest in "$WAYBAR_DIR" "$REAL_HOME/.config/wlogout" "$REAL_HOME/.config/dunst" \
+                "$REAL_HOME/.config/rofi" "$REAL_HOME/.config/hypr" "$NYX_HOME_DIR"; do
+      if [[ -d "$dest" ]]; then
+        cp -f "$PAL_DST" "$dest/nyxus-palette.css"
+        chown "$REAL_USER:$REAL_USER" "$dest/nyxus-palette.css"
+        mirrored=$((mirrored+1))
+      fi
+    done
+    ok "mirrored palette to $mirrored consumer dir(s)"
+  else
+    rm -f "$PAL_DST.new"
+    fail "downloaded nyxus-palette.css missing palette tokens — kept previous copy"
+  fi
+else
+  fail "could not download nyxus-palette.css — palette edits will not be visible"
+fi
+
+# 4.5b  Pull background images so waybar style.css path substitutions resolve
+NYX_BG_DIR="$NYX_HOME_DIR/backgrounds"
+mkdir -p "$NYX_BG_DIR"; chown "$REAL_USER:$REAL_USER" "$NYX_BG_DIR"
+for bg in nyxus-taskbar-bg.png nyxus-rightbar-bg.png nyxus-frost-sierengowski.png; do
+  bgdst="$NYX_BG_DIR/$bg"
+  if [[ ! -f "$bgdst" ]] || [[ "${1:-}" == "--force-bg" ]]; then
+    if curl -fsSL --max-time 60 "$PROD/$bg" -o "$bgdst.new"; then
+      mv "$bgdst.new" "$bgdst"
+      chown "$REAL_USER:$REAL_USER" "$bgdst"
+      chmod 644 "$bgdst"
+    fi
+  fi
+done
+
+# 4.5c  waybar-config.json
+WB_CFG="$WAYBAR_DIR/config"
+if curl -fsSL --max-time 30 "$PROD/waybar-config.json" -o "$WB_CFG.new"; then
+  if python3 -c "import json,sys; json.load(open('$WB_CFG.new'))" 2>/dev/null \
+     || python3 -c "import json,sys; json.loads(open('$WB_CFG.new').read().split('//')[0] if False else open('$WB_CFG.new').read())" 2>/dev/null; then
+    mv "$WB_CFG.new" "$WB_CFG"
+    chown "$REAL_USER:$REAL_USER" "$WB_CFG"
+    chmod 644 "$WB_CFG"
+    ok "wrote $WB_CFG"
+  else
+    # waybar config supports JSONC (//-comments). Just trust it if non-empty.
+    if [[ -s "$WB_CFG.new" ]]; then
+      mv "$WB_CFG.new" "$WB_CFG"
+      chown "$REAL_USER:$REAL_USER" "$WB_CFG"
+      chmod 644 "$WB_CFG"
+      ok "wrote $WB_CFG (JSONC, accepted as-is)"
+    else
+      rm -f "$WB_CFG.new"
+      fail "downloaded waybar-config.json was empty — kept previous copy"
+    fi
+  fi
+else
+  fail "could not download waybar-config.json"
+fi
+
+# 4.5d  waybar-style.css  + run the same path substitutions install.sh does
+WB_CSS="$WAYBAR_DIR/style.css"
+WALL_PATH="$NYX_BG_DIR/nyxus-frost-sierengowski.png"
+TASKBAR_BG_PATH="$NYX_BG_DIR/nyxus-taskbar-bg.png"
+RIGHTBAR_BG_PATH="$NYX_BG_DIR/nyxus-rightbar-bg.png"
+if curl -fsSL --max-time 30 "$PROD/waybar-style.css" -o "$WB_CSS.new"; then
+  if [[ -s "$WB_CSS.new" ]]; then
+    sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"                  "$WB_CSS.new"
+    sed -i "s|NYXUS_TASKBAR_BG|file://${TASKBAR_BG_PATH}|g"    "$WB_CSS.new"
+    sed -i "s|NYXUS_RIGHTBAR_BG|file://${RIGHTBAR_BG_PATH}|g"  "$WB_CSS.new"
+    sed -i "s|file:///home/nyx/|file://$REAL_HOME/|g"          "$WB_CSS.new"
+    mv "$WB_CSS.new" "$WB_CSS"
+    chown "$REAL_USER:$REAL_USER" "$WB_CSS"
+    chmod 644 "$WB_CSS"
+    css_sha=$(sha256sum "$WB_CSS" | cut -c1-12)
+    smoke_hits=$(grep -c "nyx_black_smoke\|nyx_glass_dark" "$WB_CSS" || echo 0)
+    ok "wrote $WB_CSS (sha=$css_sha, palette tokens=$smoke_hits)"
+  else
+    rm -f "$WB_CSS.new"
+    fail "downloaded waybar-style.css was empty — kept previous copy"
+  fi
+else
+  fail "could not download waybar-style.css"
 fi
 
 # ── 5/6 RELOAD waybar ────────────────────────────────────────────────────────
