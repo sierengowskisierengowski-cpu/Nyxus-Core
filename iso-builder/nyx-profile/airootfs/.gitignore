@@ -1,11 +1,27 @@
-# Everything below is staged at bake time by ../../build-iso.sh from
-# artifacts/api-server/nyxus-scripts/ and from nyxus-intel.tgz. Git
-# only tracks the ISO-specific bits (etc/os-release, etc/motd,
-# etc/hostname, etc/nyxus/* docs).
-etc/skel/.config/
-opt/nyxus/
-opt/nyxus-intel/
-usr/local/bin/
-usr/share/applications/
-usr/share/backgrounds/nyxus/
-usr/share/fonts/TTF/Caveat.ttf
+# NYXUS · airootfs gitignore — rev 2026-05-09 r3 (Option A switch + system override)
+#
+# HISTORICAL: this file used to exclude usr/local/bin/, opt/nyxus-intel/,
+# usr/share/applications/, and etc/skel/.config/ because the old build flow
+# extracted them at bake time from tarballs. That strategy was abandoned —
+# we now pre-stage everything into airootfs/ and let archiso copy the tree
+# directly. ALL of those paths must be tracked by git or build-iso.sh
+# clones a tree without the launcher and mkarchiso fails with
+# "Failed to set permissions ... Outside of valid path".
+#
+# IMPORTANT: the Replit container ships a system-wide /etc/.gitignore that
+# excludes `.config/`, `.local/`, `.cache/`, `__pycache__/`, etc. Those rules
+# would silently drop airootfs/etc/skel/.config/* from any commit. The
+# negation block below re-includes the skel tree so it actually ships.
+
+# Re-include the skel .config tree (system /etc/.gitignore excludes .config/).
+# Negation rules must un-ignore the directory FIRST, then its contents,
+# otherwise git prunes the dir before recursing.
+!etc/skel/.config/
+!etc/skel/.config/**
+
+# Local-only cruft we still want excluded
+*.pyc
+*.pyo
+*.swp
+*~
+.DS_Store
