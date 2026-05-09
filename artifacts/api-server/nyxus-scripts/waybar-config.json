@@ -3,11 +3,11 @@
     "name": "top",
     "layer": "top",
     "position": "top",
-    "height": 44,
-    "spacing": 4,
-    "margin-top": 12,
-    "margin-left": 24,
-    "margin-right": 24,
+    "height": 36,
+    "spacing": 0,
+    "margin-top": 0,
+    "margin-left": 0,
+    "margin-right": 0,
     "modules-left": [
       "custom/ticker"
     ],
@@ -138,13 +138,18 @@
     "margin-bottom": 200,
     "margin-right": 10,
     "modules-center": [
-      "custom/quick-settings",
+      "custom/rail-pulse",
+      "custom/section-status",
       "network",
       "pulseaudio",
       "backlight",
       "battery",
       "custom/weather",
       "custom/divider",
+      "custom/section-quick",
+      "custom/quick-settings",
+      "custom/divider2",
+      "custom/section-apps",
       "custom/app-godsapp",
       "custom/app-studio",
       "custom/app-sage",
@@ -157,6 +162,32 @@
       "custom/app-terminal",
       "custom/app-settings"
     ],
+    "custom/rail-pulse": {
+      "format": "●",
+      "tooltip": true,
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 RAIL</span>\n<span size='small' foreground='#c8ccd6'>Right-bar instrument rail \u2014 live\nStatus \u00b7 Quick \u00b7 Apps</span>",
+      "interval": "once"
+    },
+    "custom/section-status": {
+      "format": "STATUS",
+      "tooltip": false,
+      "interval": "once"
+    },
+    "custom/section-quick": {
+      "format": "QUICK",
+      "tooltip": false,
+      "interval": "once"
+    },
+    "custom/section-apps": {
+      "format": "APPS",
+      "tooltip": false,
+      "interval": "once"
+    },
+    "custom/divider2": {
+      "format": " ",
+      "tooltip": false,
+      "interval": "once"
+    },
     "custom/app-godsapp": {
       "format": "",
       "tooltip": true,

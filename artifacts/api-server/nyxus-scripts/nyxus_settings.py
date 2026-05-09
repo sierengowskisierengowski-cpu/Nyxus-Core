@@ -9385,11 +9385,17 @@ scrollbar { background-color: transparent; }
         self.stack.set_hexpand(True); self.stack.set_vexpand(True)
         self.stack.add_css_class("nyx-content")
         ov = Gtk.Overlay()
-        # bottom layer: graffiti collage (NYXUS, settings, fonts, etc)
-        self._graffiti = GraffitiBackground()
+        # rev r23 · 2026-05-09 — graffiti background REMOVED for real.
+        # Was still being instantiated even though the rev r19 changelog
+        # said it was disabled — Hyprland kept showing the splatter from
+        # the on-disk image cache. Now replaced with a transparent box so
+        # the chrome.py dark-glass + Hyprland blur read the wallpaper
+        # through the window cleanly. self._graffiti kept as an attribute
+        # for back-compat with the page-swap hook (it's a no-op now).
+        self._graffiti = Gtk.Box()  # transparent, no-op
         ov.set_child(self._graffiti)
         ov.set_hexpand(True); ov.set_vexpand(True)
-        # main content above graffiti
+        # main content above transparent layer
         ov.add_overlay(self.stack)
         # toast on top of everything
         self._toast_label = Gtk.Label()
@@ -9648,13 +9654,9 @@ scrollbar { background-color: transparent; }
             self.history.append(cur)
             self._fwd_history.clear()
         self.stack.set_visible_child_name(key)
-        # swap graffiti background to match the new page (page-aware words)
-        if hasattr(self, "_graffiti") and self._graffiti is not None:
-            try:
-                graffiti_key = "_home" if key in (HOME_KEY, "_search") else key
-                self._graffiti.set_page_key(graffiti_key)
-            except Exception:
-                pass
+        # rev r23: graffiti background removed — page-key swap is a no-op.
+        # Kept as a guarded hasattr() check so any leftover .set_page_key()
+        # callers don't crash; the new transparent Gtk.Box has no such method.
         # sidebar visibility (Win10 style: hide on home/search, show on cats)
         if hasattr(self, "_sidebar_sw"):
             self._sidebar_sw.set_visible(

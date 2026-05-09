@@ -100,16 +100,22 @@ NYXUS_DIR.mkdir(exist_ok=True)
 
 # ── NYXUS palette ──────────────────────────────────────────────────────────────
 C_BG     = (0.031, 0.031, 0.055)
-C_PANEL  = (0.052, 0.052, 0.100)
+C_PANEL  = (0.031, 0.031, 0.055)
+# rev r23 · 2026-05-09 — DARK MIRROR triple-black palette enforcement.
+# All Cairo-drawn cards used to render in neon (pink/cyan/etc) which
+# violated the rev r14 monochrome lock. Every C_* tuple below now points
+# at white / off-white / grey shades so the cards render as triple-black
+# instrument cells with white-glow accents only. C_RED is preserved for
+# legitimate error/critical states (battery critical, thermal alarm).
 C_TEXT   = (0.91,  0.88,  0.96 )
-C_DIM    = (0.44,  0.376, 0.627)
-C_PINK   = (1.00,  0.00,  1.00 )
-C_PURPLE = (0.80,  0.00,  1.00 )
-C_BLUE   = (0.00,  0.53,  1.00 )
-C_GREEN  = (0.22,  1.00,  0.08 )
-C_YELLOW = (1.00,  1.00,  0.00 )
-C_ORANGE = (1.00,  0.33,  0.00 )
-C_RED    = (1.00,  0.12,  0.12 )
+C_DIM    = (0.42,  0.43,  0.47 )   # #6a6e78 grey-tertiary
+C_PINK   = (0.91,  0.93,  0.96 )   # #e8edf5 white-off (was magenta)
+C_PURPLE = (0.78,  0.80,  0.84 )   # #c8ccd6 grey-light (was magenta-blue)
+C_BLUE   = (0.91,  0.93,  0.96 )   # #e8edf5 white-off (was azure)
+C_GREEN  = (0.91,  0.93,  0.96 )   # #e8edf5 white-off (was lime)
+C_YELLOW = (1.00,  1.00,  1.00 )   # #ffffff white-pure (was sodium)
+C_ORANGE = (0.78,  0.80,  0.84 )   # #c8ccd6 grey-light (was amber)
+C_RED    = (1.00,  0.39,  0.39 )   # #ff6464 red — RESERVED for errors only
 PALETTE  = [C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE]
 HIST     = 360
 
