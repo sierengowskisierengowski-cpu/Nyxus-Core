@@ -37,47 +37,41 @@
    ticker reads as a true full-width LIVE marquee. Subtle bottom
    hairline only, to separate it from the wallpaper visually. */
 
+/* rev r26 — TRANSPARENT BAR SHELLS. All four waybar shells are now fully
+   transparent so the live void wallpaper reads edge-to-edge underneath.
+   Visual weight is carried entirely by the per-module pebbles (their own
+   dark-glass backgrounds + insets). The bottom bar gets a separate
+   override below that keeps the STARLIGHT HEADLINER backdrop. To revert
+   any single bar, give that bar's selector a background-color again. */
 window#waybar,
 window#waybar.bottom,
 window#waybar.left,
 window#waybar.right {
-    background-image: linear-gradient(to bottom,
-        #1a1a22 0%, #1a1a22 6%,
-        #14141a 6%, #14141a 100%);
-    background-color: #14141a;
-    color:            #c8ccd6;
-    border:           none;
-    border-radius:    16px;
-    box-shadow:
-        inset  0   1px  0   rgba(255, 255, 255, 0.08),
-        inset  0  -1px  0   rgba(0,   0,   0,   0.65),
-        0  14px 36px rgba(0, 0, 0, 0.60);
+    background-image:    none;
+    background-color:    rgba(0, 0, 0, 0);
+    color:               #c8ccd6;
+    border:              none;
+    border-radius:       0;
+    box-shadow:          none;
 }
 
-/* TOP bar override — square, edge-to-edge ribbon */
+/* TOP bar — fully transparent, no ribbon, no drop shadow */
 window#waybar.top {
-    background-image: linear-gradient(to bottom,
-        #14141a 0%, #14141a 92%,
-        #0a0a0e 92%, #0a0a0e 100%);
-    background-color: #14141a;
+    background-image: none;
+    background-color: rgba(0, 0, 0, 0);
     color:            #c8ccd6;
     border:           none;
     border-radius:    0;
-    box-shadow:
-        inset 0  -1px 0 rgba(255, 255, 255, 0.06),    /* hairline bottom */
-        0      2px 8px rgba(0,   0,   0,   0.45);     /* drop into wall */
+    box-shadow:       none;
 }
 
-/* Side bars get a vertical-flow gradient (highlight strip on inside edge) */
-window#waybar.left {
-    background-image: linear-gradient(to right,
-        #1a1a22 0%, #1a1a22 6%,
-        #14141a 6%, #14141a 100%);
-}
+/* Side bars — fully transparent (modules float over wallpaper) */
+window#waybar.left,
 window#waybar.right {
-    background-image: linear-gradient(to left,
-        #1a1a22 0%, #1a1a22 6%,
-        #14141a 6%, #14141a 100%);
+    background-image: none;
+    background-color: rgba(0, 0, 0, 0);
+    border:           none;
+    box-shadow:       none;
 }
 
 /* ── 2. UNIVERSAL INSTRUMENT PEBBLE (status indicators · all bars) ────── */
