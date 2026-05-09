@@ -1,0 +1,13 @@
+# NYXUS INTEL — Arch system packages (installed via pacman)
+# Run by install.sh; not used as a pip requirements file.
+gtk4
+python-gobject
+python-cairo
+python-pillow
+python-requests
+python-dnspython
+python-bcrypt
+python-cryptography
+python-reportlab
+ttf-font-awesome
+ttf-jetbrains-mono-nerd
