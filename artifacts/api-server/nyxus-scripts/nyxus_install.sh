@@ -747,7 +747,8 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   pkill -x mpvpaper  2>/dev/null || true
   VOID_MP4="$WALLS_DIR/nyxus-void-wallpaper.mp4"
   if command -v mpvpaper >/dev/null 2>&1 && [[ -s "$VOID_MP4" ]]; then
-    nohup mpvpaper -o "no-audio loop-file=inf hwdec=auto-safe no-osc no-osd panscan=1.0" \
+    # rev r26d — speed=0.1 → 10× slower playback (video appears almost still).
+    nohup mpvpaper -o "no-audio loop-file=inf hwdec=auto-safe no-osc no-osd panscan=1.0 speed=0.1" \
       '*' "$VOID_MP4" >/tmp/nyxus-mpvpaper.log 2>&1 &
     disown
     ok "Wallpaper set — nyxus-void-wallpaper.mp4 (mpvpaper · animated)"
