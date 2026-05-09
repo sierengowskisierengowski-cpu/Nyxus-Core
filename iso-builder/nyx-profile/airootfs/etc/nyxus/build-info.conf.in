@@ -1,0 +1,25 @@
+# ============================================================================
+#  /etc/nyxus/build-info.conf — populated at ISO build time
+#  This `.in` template is rendered by nyxus-build-iso.sh into the live ISO
+#  as /etc/nyxus/build-info.conf with the @PLACEHOLDER@ tokens substituted.
+#
+#  Use this on a booted system to identify exactly which ISO is running:
+#      cat /etc/nyxus/build-info.conf
+# ============================================================================
+
+[build]
+distro          = NYXUS
+iso_label       = @ISO_LABEL@
+iso_version     = @ISO_VERSION@
+build_date_utc  = @BUILD_DATE_UTC@
+build_host      = @BUILD_HOST@
+
+[source]
+profile_repo    = @PROFILE_REPO@
+profile_ref     = @PROFILE_REF@
+profile_commit  = @PROFILE_COMMIT@
+
+[toolchain]
+archiso_version = @ARCHISO_VERSION@
+kernel_version  = @KERNEL_VERSION@
+mkarchiso_path  = @MKARCHISO_PATH@
