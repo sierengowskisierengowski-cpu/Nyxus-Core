@@ -25,11 +25,24 @@ GREY_TERTIARY     = "#6a6e78"   # tertiary text, ghost text
 INK_FADED         = "#0a0a0a"   # faded matte black (rim shadow stop)
 INK_BLACK         = "#000000"   # pure black (selection fg, deepest shadow)
 
-# ── DARK GLASS RGBA STACK ───────────────────────────────────────────────────
-# Used for window/panel/card/popover/tooltip surfaces.
-GLASS_DARK        = "rgba(8, 12, 20, 0.55)"    # standard dark glass
-GLASS_DEEPER      = "rgba(15, 20, 32, 0.72)"   # inputs, hovered cards
-GLASS_DEEPEST     = "rgba(5, 7, 12, 0.92)"     # tooltips, popovers, dropdowns
+# ── TRIPLE-BLACK SURFACE STACK (rev r14 · 2026-05-09) ──────────────────────
+# Three layered shades of black. Each tier is distinct but harmonious —
+# together they "pop" without color, just depth. Use them by elevation:
+#   smoke = base/bars/panels       (lightest, most blur shows through)
+#   ink   = raised cards/pebbles   (mid)
+#   void  = popovers/active/modals (deepest, maximum pop)
+BLACK_SMOKE       = "rgba(14, 14, 22, 0.55)"
+BLACK_INK         = "rgba(8, 8, 14, 0.78)"
+BLACK_VOID        = "rgba(0, 0, 0, 0.92)"
+
+# Backward-compat aliases — legacy names map to new tiers.
+GLASS_DARK        = BLACK_SMOKE
+GLASS_DEEPER      = BLACK_INK
+GLASS_DEEPEST     = BLACK_VOID
+
+# ── WHITE GLOW ACCENT (use sparingly on wordmarks/key labels) ──────────────
+GLOW_SOFT         = "rgba(255, 255, 255, 0.45)"
+GLOW_BRIGHT       = "rgba(255, 255, 255, 0.85)"
 
 # ── HAIRLINE BORDERS ────────────────────────────────────────────────────────
 HAIRLINE_WHITE    = "rgba(255, 255, 255, 0.10)"  # 1px white border on cards
