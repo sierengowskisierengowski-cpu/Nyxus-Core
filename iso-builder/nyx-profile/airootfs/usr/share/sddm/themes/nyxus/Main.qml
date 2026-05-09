@@ -151,7 +151,7 @@ Rectangle {
                 Text {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
-                    text: "NYXUS · THE NIGHT HAS EYES"
+                    text: "WELCOME TO THE DARKSIDE"
                     color: clrTextHint
                     font.family: "Inter"
                     font.pixelSize: 10
