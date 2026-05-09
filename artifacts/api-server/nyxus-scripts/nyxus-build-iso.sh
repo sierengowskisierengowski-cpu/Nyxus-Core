@@ -37,12 +37,21 @@ warn() { printf "  ${GOLD}!${R}  %s\n" "$*"; }
 fail() { printf "  ${RED}✗${R}  %s\n" "$*" >&2; }
 die()  { fail "$*"; exit 1; }
 
+# ── resolve invoking user (so output lands in THEIR home, not /root) ──────
+# When run via `sudo bash …`, $HOME=/root and ~ expands to /root, which is
+# wrong — the user wants the ISO in their own ~/nyx-out. Use SUDO_USER to
+# discover who actually invoked us, then look up their real home dir from
+# /etc/passwd so we don't depend on the env var being preserved.
+REAL_USER="${SUDO_USER:-$(id -un)}"
+REAL_HOME="$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)"
+[[ -n "$REAL_HOME" && -d "$REAL_HOME" ]] || REAL_HOME="${HOME:-/root}"
+
 # ── defaults (overridable via flags) ───────────────────────────────────────
 PROFILE_REPO="https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git"
 PROFILE_REF="main"
 PROFILE_SUBDIR="iso-builder/nyx-profile"
 SRC_CACHE="/var/lib/nyxus/profile-src"
-OUT_DIR="${HOME:-/root}/nyx-out"
+OUT_DIR="${REAL_HOME}/nyx-out"
 WORK_DIR="/var/tmp/nyxus-archiso-work"
 ASSUME_YES="no"
 KEEP_WORKDIR="no"
