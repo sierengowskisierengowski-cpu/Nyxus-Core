@@ -13,6 +13,11 @@ NYXUS is an Arch Linux-based operating system providing a suite of native Python
 **Required Environment Variables:**
 - `NYX-J5W-2026-SIERENGOWSKI-LOCKED`: Lock code for brand naming.
 
+**Live ISO credentials** (set by `iso-builder/nyx-profile/airootfs/root/customize_airootfs.sh`):
+- User: `nyx` / password: `nyx` (member of `wheel,audio,video,input,storage,network,uucp` — sudo enabled)
+- Root: `root` / password: `nyx` (change after install)
+- SDDM session: pick **Hyprland** from the bottom selector before signing in.
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
