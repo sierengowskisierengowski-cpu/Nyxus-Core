@@ -123,7 +123,7 @@
       "tooltip": true,
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Start</span>\n<span size='small' foreground='#c8ccd6'>Open the application launcher\nFind apps · Recent files · Power</span>",
       "on-click": "/home/nyx/.local/bin/nyxus-start",
-      "format": "{}",
+      "format": "✕",
       "escape": false
     },
     "tray": {
@@ -138,7 +138,7 @@
       "tooltip": true,
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Panel</span>\n<span size='small' foreground='#c8ccd6'>System control panel\nQuick toggles · Notifications · Profile</span>",
       "on-click": "/home/nyx/.local/bin/nyxus-panel",
-      "format": "{}",
+      "format": "≡",
       "escape": false
     }
   },
