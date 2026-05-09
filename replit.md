@@ -37,7 +37,36 @@ NYXUS is an Arch Linux-based operating system providing a suite of native Python
 - `nyxus-scripts/nyxus_chrome.py`: Source of truth for unified GTK4 application chrome (windows, popovers, headerbars). Imports its colors from `nyxus_palette.py`.
 - `iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf`: Hyprland configuration template.
 
-## Visual System — DARK MIRROR · UNIFIED FROSTED GLASS (LOCKED · rev 2026-05-07 r13)
+## Visual System — DARK MIRROR · TRIPLE-BLACK LAYERED (LOCKED · rev 2026-05-09 r14)
+
+**Triple-black surface stack (rev r14):** Every surface in the system
+now uses one of three layered shades of black, defined ONCE in
+`nyxus-palette.css` + `nyxus_palette.py`:
+
+| Token         | Value                       | Use                                           |
+|---------------|-----------------------------|-----------------------------------------------|
+| `nyx_black_smoke` (BLACK_SMOKE) | `rgba(14,14,22,0.55)` | Bars, panels, window backgrounds (lightest, lets blur through) |
+| `nyx_black_ink`   (BLACK_INK)   | `rgba(8,8,14,0.78)`   | Raised pebbles, cards, buttons, ticker (mid)  |
+| `nyx_black_void`  (BLACK_VOID)  | `rgba(0,0,0,0.92)`    | Hover, active, popovers, tooltips, modals (deepest, maximum pop) |
+
+**Layering rule:** never put two adjacent surfaces at the same tier —
+always go one tier darker as you elevate. That's what makes elements
+"pop" without using color: pure depth via three blacks.
+
+**White-glow accent (rev r14):** Two new tokens for sparing white-glow
+text accents — `nyx_glow_soft` (`rgba(255,255,255,0.45)`) and
+`nyx_glow_bright` (`rgba(255,255,255,0.85)`). Use only on wordmarks
+(NYXUS, SIERENGOWSKI), focused/active labels, and key headings — never
+on body text. Recipe: `text-shadow: 0 0 8px @nyx_glow_bright, 0 0 18px @nyx_glow_soft`.
+
+Legacy tokens (`nyx_glass_dark/deeper/deepest` and Python
+`GLASS_DARK/DEEPER/DEEPEST`) are kept as aliases pointing at the new
+tiers, so any existing app code keeps working but renders with the new
+triple-black palette automatically.
+
+---
+
+### Pre-r14 reference — DARK MIRROR · UNIFIED FROSTED GLASS (rev 2026-05-07 r13 · superseded)
 
 **System-wide active glow (rev r13):** Hyprland window borders now use the
 DARK MIRROR rim-light gradient (white `#ffffff` → off-white `#e8edf5` →
