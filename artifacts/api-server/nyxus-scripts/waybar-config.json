@@ -97,14 +97,31 @@
     "name": "bottom",
     "layer": "top",
     "position": "bottom",
-    "height": 44,
-    "spacing": 2,
-    "margin-bottom": 10,
+    "height": 52,
+    "spacing": 0,
+    "margin-bottom": 12,
     "margin-left": 24,
     "margin-right": 24,
-    "modules-left": ["custom/nyxus-start"],
-    "modules-center": ["tray"],
-    "modules-right": ["custom/notifications", "custom/nyxus-panel"],
+    "modules-left": ["custom/nyxus-start", "custom/heartbeat"],
+    "modules-center": ["custom/brand", "tray"],
+    "modules-right": ["clock", "custom/notifications", "custom/nyxus-panel"],
+
+    "custom/heartbeat": {
+      "exec": "echo SYS·LIVE",
+      "interval": 86400,
+      "format": "● {}",
+      "tooltip-format": "<span size='large' weight='bold' foreground='#e8edf5'>NYXUS · System Heartbeat</span>\n<span size='small' foreground='#c8ccd6'>Live system indicator — pulses while the session is active</span>"
+    },
+    "custom/brand": {
+      "exec": "echo 'NYXUS · SIERENGOWSKI'",
+      "interval": 86400,
+      "format": "{}",
+      "tooltip-format": "<span size='large' weight='bold' foreground='#e8edf5'>NYXUS</span>\n<span size='small' foreground='#c8ccd6'>by Sierengowski · Hyprland · Arch Linux · 2026</span>"
+    },
+    "clock": {
+      "format": "{:%H:%M · %a %d}",
+      "tooltip-format": "<big>{:%A · %B %Y}</big>\n<tt><small>{calendar}</small></tt>"
+    },
 
     "custom/notifications": {
       "exec": "~/.config/waybar/nyxus-notif-status.sh",

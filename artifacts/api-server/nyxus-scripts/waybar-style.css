@@ -255,101 +255,185 @@ window#waybar.right {
 #battery.critical { color: @nyx_grey_light; }
 #network.disconnected { color: @nyx_grey_light; }
 
-/* ── 7. BOTTOM BAR · MATTE OBSIDIAN MASTERPIECE (rev r18 · 2026-05-09) ── */
-/* The main system bar — designed as a precision-machined matte-black panel
-   in the spirit of B&O / Leica / high-end industrial cabinetry.
-   Architecture:
-       •  44px tall heavy slab in solid matte paint #14141a
-       •  routed white hairline along the top edge (1px, 7% alpha) — like
-          a CNC reveal in matte aluminum
-       •  notched ink shadow at the bottom (1px, 60% black) — grounds the
-          slab, gives it weight
-       •  one soft outer drop separates the bar from the wallpaper
-       •  32×32 square glyph buttons (✕ start / ≡ panel) sunk one paint
-          tier into the slab (#0a0a0e), with sharp 6px corners
-       •  hover state is a precise 1px CNC outline — pure black surface,
-          off-white glyph, hairline border at 20% white.  No glow.
-       •  vertical hairline dividers separate left / center / right zones
-       •  notifications text pebble matches button height for alignment
-   No bevels.  No glow.  No bleed-through.  Pure matte obsidian.        */
+/* ── 7. BOTTOM BAR · OBSIDIAN INSTRUMENT PANEL (rev r19 · 2026-05-09) ──
+   Designed as a horizontal slice of high-end studio gear (B&O / SSL / Leica
+   industrial language). Five-zone architecture:
+
+       [01·START]   [02·HEARTBEAT]    [BRAND·PLINTH·TRAY]    [04·CLOCK]   [05·NOTIF·PANEL]
+
+   • 52px tall heavy slab — 2-tone matte paint with a subtle "machined"
+     highlight band along the top 6% (#1a1a22) fading to base matte (#14141a).
+   • Routed white hairline along the very top edge (1px, 8%).
+   • Notched ink shadow at the bottom (1px, 65% black) — grounds the slab.
+   • Heavy outer drop (0 14px 36px) separates from the wallpaper.
+
+   • Square instrument-style glyph buttons (36×36, sharp 4px corners) for
+     ✕ Start and ≡ Panel — in the spirit of rack-mount equipment controls.
+   • Centered NYXUS · SIERENGOWSKI wordmark PLINTH with a soft white-glow
+     (jewelry-rule accent, locked-palette compliant). Flanked by 1px white
+     hairline pillars that read as cabinetry reveals.
+   • Heartbeat dot · "SYS·LIVE" monospace badge at the left, gives the bar
+     a "powered, live" feel. Constant grey, hover-bright.
+   • Monospace clock at the right (HH:MM · DAY DD), tabular alignment.
+   • Notifications and Panel get the same 36px instrument-button treatment
+     so the right cluster reads as a precise control group.
+
+   No bevels. No glass. No wallpaper bleed. One-of-a-kind matte-instrument
+   aesthetic — nothing else looks like this.                              */
 
 window#waybar.bottom {
+    background-image: linear-gradient(to bottom,
+        #1a1a22 0%, #1a1a22 6%,
+        #14141a 6%, #14141a 100%);
     background-color: #14141a;
-    border-radius: 14px;
+    border-radius: 16px;
     border: none;
     box-shadow:
-        inset  0   1px  0   rgba(255, 255, 255, 0.07),     /* routed top hairline */
-        inset  0  -1px  0   rgba(0,   0,   0,   0.60),     /* bottom notch */
-        0  10px 28px rgba(0, 0, 0, 0.55);                  /* outer drop */
+        inset  0   1px  0   rgba(255, 255, 255, 0.08),     /* routed top */
+        inset  0  -1px  0   rgba(0,   0,   0,   0.65),     /* bottom notch */
+        0  14px 36px rgba(0, 0, 0, 0.60);                  /* outer drop */
 }
 
-/* ── 7a · MATTE SQUARE GLYPH BUTTONS · ✕ start  /  ≡ panel ──────────── */
+/* ── 7a · INSTRUMENT GLYPH BUTTONS · ✕ start  /  ≡ panel ──────────── */
 window#waybar.bottom #custom-nyxus-start,
 window#waybar.bottom #custom-nyxus-panel {
     font-family:      'JetBrains Mono', 'Inter Display', monospace;
-    font-size:        18px;
+    font-size:        20px;
     font-weight:      600;
     letter-spacing:   0;
     color:            #6a6e78;
     background-color: #0a0a0e;
     padding:          0;
-    margin:           6px 5px;
-    min-width:        32px;
-    min-height:       32px;
-    border-radius:    6px;
-    border:           1px solid rgba(255, 255, 255, 0.06);
+    margin:           8px 6px;
+    min-width:        36px;
+    min-height:       36px;
+    border-radius:    4px;          /* sharp instrument-style corners */
+    border:           1px solid rgba(255, 255, 255, 0.07);
     text-shadow:      none;
     box-shadow:       none;
-    transition:       background-color 140ms cubic-bezier(0.2, 0.8, 0.2, 1),
-                      color 140ms cubic-bezier(0.2, 0.8, 0.2, 1),
-                      border-color 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition:       background-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      border-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-window#waybar.bottom #custom-nyxus-start { margin-left:  10px; }
-window#waybar.bottom #custom-nyxus-panel { margin-right: 10px; }
+window#waybar.bottom #custom-nyxus-start { margin-left:  12px; }
+window#waybar.bottom #custom-nyxus-panel { margin-right: 12px; }
 
 window#waybar.bottom #custom-nyxus-start:hover,
 window#waybar.bottom #custom-nyxus-panel:hover {
-    color:            #e8edf5;             /* off-white, no glow */
+    color:            #e8edf5;
     background-color: #000000;
-    border:           1px solid rgba(255, 255, 255, 0.20);  /* CNC-cut outline */
-    text-shadow:      none;
+    border:           1px solid rgba(255, 255, 255, 0.24);
+    text-shadow:      0 0 6px rgba(255, 255, 255, 0.45);
     box-shadow:       none;
 }
 
-/* ── 7b · NOTIFICATIONS · matte text pebble (matches button height) ─── */
-window#waybar.bottom #custom-notifications {
-    font-family:      'Inter', 'Inter Display', sans-serif;
+/* ── 7b · HEARTBEAT BADGE · "● SYS·LIVE" ─────────────────────────── */
+window#waybar.bottom #custom-heartbeat {
+    font-family:      'JetBrains Mono', 'Fira Mono', monospace;
     font-size:        10px;
+    font-weight:      700;
+    letter-spacing:   0.22em;
+    color:            #6a6e78;
+    background-color: transparent;
+    padding:          0 14px 0 8px;
+    margin:           8px 0 8px 4px;
+    min-height:       36px;
+    border-radius:    0;
+    border:           none;
+    border-right:     1px solid rgba(255, 255, 255, 0.06);  /* divider pillar */
+    text-shadow:      none;
+    box-shadow:       none;
+    transition:       color 160ms ease-out;
+}
+window#waybar.bottom #custom-heartbeat:hover {
+    color:            #e8edf5;
+    text-shadow:      0 0 6px rgba(255, 255, 255, 0.40);
+}
+
+/* ── 7c · CENTER WORDMARK PLINTH · NYXUS · SIERENGOWSKI ─────────── */
+window#waybar.bottom #custom-brand {
+    font-family:      'Architects Daughter', 'Caveat', 'Inter Display', cursive;
+    font-size:        15px;
+    font-weight:      400;
+    letter-spacing:   0.30em;
+    color:            rgba(232, 237, 245, 0.78);
+    background-color: transparent;
+    padding:          0 28px;
+    margin:           8px 0;
+    min-height:       36px;
+    border-radius:    0;
+    border:           none;
+    border-left:      1px solid rgba(255, 255, 255, 0.08);   /* pillar L */
+    border-right:     1px solid rgba(255, 255, 255, 0.08);   /* pillar R */
+    /* Locked-palette jewelry glow (white-glow accent allowed on wordmarks) */
+    text-shadow:
+        0 0 8px  rgba(255, 255, 255, 0.55),
+        0 0 18px rgba(255, 255, 255, 0.30);
+    box-shadow:       none;
+    transition:       color 200ms ease-out;
+}
+window#waybar.bottom #custom-brand:hover {
+    color:            #ffffff;
+    text-shadow:
+        0 0 10px rgba(255, 255, 255, 0.85),
+        0 0 24px rgba(255, 255, 255, 0.45);
+}
+
+/* ── 7d · CLOCK · monospace tabular HH:MM · DAY DD ───────────────── */
+window#waybar.bottom #clock {
+    font-family:      'JetBrains Mono', 'Fira Mono', monospace;
+    font-size:        12px;
     font-weight:      600;
-    letter-spacing:   0.20em;
+    letter-spacing:   0.10em;
+    color:            #c8ccd6;
+    background-color: transparent;
+    padding:          0 14px;
+    margin:           8px 0;
+    min-height:       36px;
+    border-radius:    0;
+    border:           none;
+    border-right:     1px solid rgba(255, 255, 255, 0.06);   /* divider pillar */
+    text-shadow:      none;
+    box-shadow:       none;
+    transition:       color 160ms ease-out;
+}
+window#waybar.bottom #clock:hover {
+    color:            #ffffff;
+    text-shadow:      0 0 6px rgba(255, 255, 255, 0.40);
+}
+
+/* ── 7e · NOTIFICATIONS · instrument-style match ─────────────────── */
+window#waybar.bottom #custom-notifications {
+    font-family:      'JetBrains Mono', 'Fira Mono', monospace;
+    font-size:        11px;
+    font-weight:      700;
+    letter-spacing:   0.18em;
     color:            #6a6e78;
     background-color: #0a0a0e;
     padding:          0 12px;
-    margin:           6px 4px;
-    min-height:       32px;
-    border-radius:    6px;
-    border:           1px solid rgba(255, 255, 255, 0.06);
+    margin:           8px 4px;
+    min-height:       36px;
+    border-radius:    4px;
+    border:           1px solid rgba(255, 255, 255, 0.07);
     text-shadow:      none;
     box-shadow:       none;
-    transition:       background-color 140ms cubic-bezier(0.2, 0.8, 0.2, 1),
-                      color 140ms cubic-bezier(0.2, 0.8, 0.2, 1),
-                      border-color 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition:       background-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      border-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-
 window#waybar.bottom #custom-notifications:hover {
     color:            #e8edf5;
     background-color: #000000;
-    border:           1px solid rgba(255, 255, 255, 0.20);
-    text-shadow:      none;
-    box-shadow:       none;
+    border:           1px solid rgba(255, 255, 255, 0.24);
+    text-shadow:      0 0 6px rgba(255, 255, 255, 0.45);
 }
 
-/* ── 7c · TRAY · transparent floating icons ──────────────────────────── */
+/* ── 7f · TRAY · transparent floating icons centered next to plinth ─── */
 window#waybar.bottom #tray {
     background:    transparent;
-    margin:        0 6px;
-    padding:       0 6px;
+    margin:        0 8px;
+    padding:       0 8px;
 }
 
 /* System tray — minimal, transparent, tight spacing. */
