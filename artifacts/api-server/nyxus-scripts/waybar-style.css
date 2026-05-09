@@ -2,258 +2,140 @@
 @import url("nyxus-palette.css");
 
 /* ════════════════════════════════════════════════════════════════════════════
-   NYXUS WAYBAR · OPTION A · LIQUID GLASS BRUTALIST  (rev 2026-05-06t)
+   NYXUS WAYBAR · UNIFIED OBSIDIAN INSTRUMENT  (rev r20 · 2026-05-09)
    ════════════════════════════════════════════════════════════════════════════
-   Updates over rev s:
-     • Bottom bar workspaces removed (only on left bar now)
-     • Start / Panel pills: Inter font (no cursive), off-white on hover
-     • Top-right status icons (network, pulseaudio, backlight, battery) styled
-       as tiny round glass beads — small, clickable, gold halo on hover
-     • System tray (bottom center) — glass, subtle, transparent
-     • Richer tooltips · denser glass detail · droplet inner-highlight pass
+   System-wide unification: every bar (top / bottom / left / right) uses ONE
+   visual language — matte-paint instrument panels in the spirit of B&O / SSL
+   studio gear. Single font stack throughout:
+
+       •  'Inter Display'        — labels, body text, status pebbles
+       •  'JetBrains Mono'       — clocks, data, monospace glyph buttons
+       •  'Architects Daughter'  — wordmarks ONLY (NYXUS · SIERENGOWSKI)
+
+   Single pebble shape: 36×variable, sharp 4px corners, solid #0a0a0e fill,
+   1px white-hairline border, off-white text on hover with soft white-glow.
+   No more chunky glass beads / drop shadows / inset highlights — every
+   surface is a precision-machined matte instrument cell.
+
+   Bottom bar (rev r19) is the centerpiece — top + side bars are now
+   secondary STATUS instruments matched to the same language. Time + date
+   + NYXUS wordmark live on the bottom ONLY (no duplicates).
    ════════════════════════════════════════════════════════════════════════════ */
 
 * {
-    font-family:    'Inter', 'Inter Display', sans-serif;
-    font-size:      13px;
+    font-family:    'Inter Display', 'Inter', sans-serif;
+    font-size:      12px;
     border:         none;
     border-radius:  0;
     min-height:     0;
 }
 
-/* ── 1. SHELL · liquid-glass dark slab (Hyprland blur shows through) ──── */
+/* ── 1. UNIFIED SHELL · matte instrument slab (all 4 bars) ─────────────── */
+/* Same 2-tone matte-paint slab from rev r19 bottom bar, applied uniformly
+   to top + left + right + bottom. Routed white hairline catches light
+   along the edge facing inward to the screen. Heavy outer drop. */
+
 window#waybar,
 window#waybar.top,
 window#waybar.bottom,
 window#waybar.left,
 window#waybar.right {
-    background-color: @nyx_black_smoke;
-    color:            @nyx_white_off;
-    border:           1px solid rgba(255, 255, 255, 0.18);
-    border-radius:    22px;
+    background-image: linear-gradient(to bottom,
+        #1a1a22 0%, #1a1a22 6%,
+        #14141a 6%, #14141a 100%);
+    background-color: #14141a;
+    color:            #c8ccd6;
+    border:           none;
+    border-radius:    16px;
     box-shadow:
-        inset  0px   1px  0px   0px  rgba(255, 255, 255, 0.35),
-        inset  0px  -1px  0px   0px  rgba(0,   0,   0,   0.45),
-        inset  0px   0px  32px  6px  rgba(255, 255, 255, 0.10),
-        inset  2px   2px  10px  0px  rgba(255, 255, 255, 0.12),
-        inset -2px  -2px  8px   0px  rgba(0,   0,   0,   0.30),
-        0px  8px 28px rgba(0, 0, 0, 0.55),
-        0px 22px 56px rgba(0, 0, 0, 0.35);
+        inset  0   1px  0   rgba(255, 255, 255, 0.08),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.65),
+        0  14px 36px rgba(0, 0, 0, 0.60);
 }
 
-/* ── 2. UNIVERSAL GLASS PEBBLE ──────────────────────────────────────────── */
-#clock,
-#custom-weather,
-#workspaces button,
-#custom-nyxus-start,
-#custom-nyxus-panel,
-#custom-app-godsapp,
-#custom-app-studio,
-#custom-app-sage,
-#custom-app-shield,
-#custom-app-control,
-#custom-app-sysmon,
-#custom-app-stickies,
-#custom-app-weather,
-#custom-app-notes,
-#custom-app-terminal,
-#custom-app-settings {
-    color:            @nyx_white_off;
-    background-color: @nyx_black_ink;
-    margin:           5px 5px;
-    padding:          4px 14px;
-    border-radius:    14px;
-    font-family:      'Inter', sans-serif;
-    font-size:        13px;
-    font-weight:      600;
-    letter-spacing:   0.04em;
-
-    text-shadow:
-         0px -1px 0px rgba(0,   0,   0,   0.65),
-         0px  1px 0px rgba(255, 255, 255, 0.20);
-
-    box-shadow:
-        inset  0px  1.5px 0px rgba(255, 255, 255, 0.30),
-        inset  0px -1px   0px rgba(0,   0,   0,   0.45),
-        inset  1px  0px   0px rgba(255, 255, 255, 0.15),
-        inset -1px  0px   0px rgba(0,   0,   0,   0.30),
-        0px  3px  10px rgba(0, 0, 0, 0.55),
-        0px 10px 22px rgba(0, 0, 0, 0.35),
-       -2px -2px 6px  rgba(255, 255, 255, 0.10);
+/* Side bars get a vertical-flow gradient (highlight strip on inside edge) */
+window#waybar.left {
+    background-image: linear-gradient(to right,
+        #1a1a22 0%, #1a1a22 6%,
+        #14141a 6%, #14141a 100%);
+}
+window#waybar.right {
+    background-image: linear-gradient(to left,
+        #1a1a22 0%, #1a1a22 6%,
+        #14141a 6%, #14141a 100%);
 }
 
-#clock:hover,
-#custom-weather:hover,
-#workspaces button:hover,
-#custom-nyxus-start:hover,
-#custom-nyxus-panel:hover,
-#custom-app-godsapp:hover,
-#custom-app-studio:hover,
-#custom-app-sage:hover,
-#custom-app-shield:hover,
-#custom-app-control:hover,
-#custom-app-sysmon:hover,
-#custom-app-stickies:hover,
-#custom-app-weather:hover,
-#custom-app-notes:hover,
-#custom-app-terminal:hover,
-#custom-app-settings:hover {
-    background-color: @nyx_black_void;
-    color:            @nyx_white;
-    box-shadow:
-        inset  0px  1.5px 0px  0px  rgba(255, 255, 255, 0.50),
-        inset  0px -1px   0px  0px  rgba(0,   0,   0,   0.45),
-        inset  0px  0px   0px  1px  rgba(255, 255, 255, 0.55),
-        0px  5px 14px rgba(0, 0, 0, 0.60),
-        0px 14px 32px rgba(0, 0, 0, 0.40),
-        0px  0px 18px rgba(255, 255, 255, 0.55),
-        0px  0px 28px rgba(255, 255, 255, 0.30),
-       -2px -2px 8px  rgba(255, 255, 255, 0.20);
-    text-shadow:
-        0px -1px 0px  rgba(0,   0,   0,   0.65),
-        0px  1px 0px  rgba(255, 255, 255, 0.25),
-        0px  0px 6px  rgba(255, 255, 255, 0.50);
-}
+/* ── 2. UNIVERSAL INSTRUMENT PEBBLE (status indicators · all bars) ────── */
+/* Single shape, single fill, single hover treatment. Used for everything
+   that's a clickable status cell on the top bar (network, audio, backlight,
+   battery, weather, quick-settings) and any other bar's data pebble. */
 
-/* ── 3. NYXUS ENGRAVED INTO THE GLASS · gold inner light ────────────────── */
-#custom-nyxus {
-    font-family:    'Dancing Script', 'Inter Display', 'Inter Display', cursive;
-    font-size:      30px;
-    font-weight:    700;
-    letter-spacing: 0.20em;
-    color:          @nyx_white_off;
-    background:     transparent;
-    padding:        0 32px;
-    margin:         0 14px;
-    text-shadow:
-        0 -1px 0 rgba(0, 0, 0, 0.65),
-        0  1px 0 rgba(255, 255, 255, 0.30),
-        0  0  8px rgba(255, 255, 255, 0.85),
-        0  0 18px rgba(255, 255, 255, 0.50),
-        0  0 36px rgba(255, 255, 255, 0.25);
-}
-
-#custom-nyxus:hover {
-    color: @nyx_white;
-    text-shadow:
-        0 -1px 0 rgba(0, 0, 0, 0.65),
-        0  1px 0 rgba(255, 255, 255, 0.35),
-        0  0 12px rgba(255, 255, 255, 1.00),
-        0  0 26px rgba(255, 255, 255, 0.70),
-        0  0 48px rgba(255, 255, 255, 0.35);
-}
-
-/* ── 4. AIRPORT TICKER ──────────────────────────────────────────────────── */
-#custom-ticker {
-    background-color: @nyx_black_ink;
-    color:            @nyx_white_off;
-    margin:           5px 8px 5px 0;
-    padding:          5px 18px;
-    /* Width cap is enforced by the 100-char WINDOW in waybar-ticker.sh
-       (GTK3 CSS doesn't support max-width). Min stays modest so the
-       pebble never grows past its content. */
-    min-width:        320px;
-    border-radius:    11px;
-    font-family:      'JetBrains Mono', 'Fira Mono', 'Courier New', monospace;
-    font-size:        12px;
-    font-weight:      700;
-    letter-spacing:   0.14em;
-    text-shadow:
-        0 -1px 0 rgba(0, 0, 0, 0.65),
-        0  1px 0 rgba(255, 255, 255, 0.20);
-    box-shadow:
-        inset  0  1.5px 0 rgba(255, 255, 255, 0.30),
-        inset  0 -1px   0 @nyx_hairline_ink,
-        0  3px  8px rgba(0, 0, 0, 0.55),
-        0 10px 22px rgba(0, 0, 0, 0.32);
-}
-
-#custom-ticker:hover {
-    background-color: @nyx_black_void;
-    color: @nyx_white;
-    box-shadow:
-        inset  0  1.5px 0 rgba(255, 255, 255, 0.50),
-        inset  0 -1px   0 @nyx_hairline_ink,
-        0  5px 12px rgba(0, 0, 0, 0.60),
-        0 12px 26px rgba(0, 0, 0, 0.40),
-        0  0 16px rgba(255, 255, 255, 0.55);
-}
-
-/* ── 5. CLOCK + WEATHER glass pebbles ───────────────────────────────────── */
-#clock {
-    font-family:    'Inter', sans-serif;
-    font-size:      13px;
-    font-weight:    700;
-    padding:        4px 18px;
-    letter-spacing: 0.06em;
-}
-
-#custom-weather {
-    font-family:    'Inter', sans-serif;
-    font-size:      13px;
-    font-weight:    600;
-    padding:        4px 14px;
-}
-
-/* ── 6. STATUS ICON BEADS · network · pulseaudio · backlight · battery ─── */
-/* NOTE: glyph-icons rely on Symbols Nerd Font. If that font isn't
-   installed the icons render as empty width and the bead vanishes. The
-   waybar-config.json now uses readable TEXT labels (Wi-Fi 80%, VOL 60,
-   BAT 87) as a guaranteed-visible fallback — these pebbles are sized
-   wide enough to fit them. */
 #network,
 #pulseaudio,
 #backlight,
 #battery,
-#custom-quick-settings {
-    color:            @nyx_white_off;
-    background-color: @nyx_glass_deeper;
-    font-family:      'Inter', 'Symbols Nerd Font', 'JetBrains Mono', sans-serif;
+#custom-quick-settings,
+#custom-weather {
+    font-family:      'JetBrains Mono', 'Fira Mono', 'Symbols Nerd Font', monospace;
     font-size:        11px;
     font-weight:      700;
-    letter-spacing:   0.06em;
-    margin:           6px 3px;
-    padding:          0 10px;
-    min-width:        44px;
-    min-height:       28px;
-    border-radius:    14px;
-    text-shadow:
-        0 -1px 0 rgba(0, 0, 0, 0.65),
-        0  1px 0 rgba(255, 255, 255, 0.20);
-    box-shadow:
-        inset  0  1.5px 0 rgba(255, 255, 255, 0.30),
-        inset  0 -1px   0 @nyx_hairline_ink,
-        inset  1px  0   0 rgba(255, 255, 255, 0.18),
-        inset -1px  0   0 rgba(0, 0, 0, 0.30),
-        0  2px 5px rgba(0, 0, 0, 0.50),
-        0  6px 14px rgba(0, 0, 0, 0.30),
-       -1.5px -1.5px 4px rgba(255, 255, 255, 0.10);
+    letter-spacing:   0.14em;
+    color:            #c8ccd6;
+    background-color: #0a0a0e;
+    margin:           6px 4px;
+    padding:          0 12px;
+    min-height:       32px;
+    border-radius:    4px;
+    border:           1px solid rgba(255, 255, 255, 0.07);
+    text-shadow:      none;
+    box-shadow:       none;
+    transition:       background-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      border-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 #network:hover,
 #pulseaudio:hover,
 #backlight:hover,
 #battery:hover,
-#custom-quick-settings:hover {
-    background-color: @nyx_black_void;
-    color:            @nyx_white;
-    box-shadow:
-        inset  0px  0px   0px  1px  rgba(255, 255, 255, 0.55),
-        inset  0px  1.5px 0px  0px  rgba(255, 255, 255, 0.50),
-        inset  0px -1px   0px  0px  rgba(0,   0,   0,   0.45),
-        0px  3px  8px rgba(0, 0, 0, 0.60),
-        0px 10px 20px rgba(0, 0, 0, 0.40),
-        0px  0px 16px rgba(255, 255, 255, 0.65),
-        0px  0px 26px rgba(255, 255, 255, 0.40),
-       -2px -2px 6px  rgba(255, 255, 255, 0.20);
-    text-shadow:
-        0px 0px 5px rgba(255, 255, 255, 0.65),
-        0px 0px 12px rgba(255, 255, 255, 0.50);
+#custom-quick-settings:hover,
+#custom-weather:hover {
+    background-color: #000000;
+    color:            #ffffff;
+    border:           1px solid rgba(255, 255, 255, 0.24);
+    text-shadow:      0 0 6px rgba(255, 255, 255, 0.45);
 }
 
-#battery.warning  { color: @nyx_grey_light; }
-#battery.critical { color: @nyx_grey_light; }
-#network.disconnected { color: @nyx_grey_light; }
+#battery.warning  { color: #e8edf5; }
+#battery.critical { color: #ffffff; text-shadow: 0 0 6px rgba(255,255,255,0.55); }
+#network.disconnected { color: #6a6e78; }
+
+/* ── 3. TICKER · monospace data slab (top-left news scroller) ─────────── */
+#custom-ticker {
+    font-family:      'JetBrains Mono', 'Fira Mono', monospace;
+    font-size:        11px;
+    font-weight:      700;
+    letter-spacing:   0.16em;
+    color:            #c8ccd6;
+    background-color: #0a0a0e;
+    margin:           6px 6px 6px 12px;
+    padding:          0 18px;
+    min-width:        360px;
+    min-height:       32px;
+    border-radius:    4px;
+    border:           1px solid rgba(255, 255, 255, 0.07);
+    text-shadow:      none;
+    box-shadow:       none;
+    transition:       color 160ms ease-out, background-color 160ms ease-out,
+                      border-color 160ms ease-out;
+}
+
+#custom-ticker:hover {
+    background-color: #000000;
+    color:            #ffffff;
+    border:           1px solid rgba(255, 255, 255, 0.24);
+    text-shadow:      0 0 6px rgba(255, 255, 255, 0.45);
+}
 
 /* ── 7. BOTTOM BAR · OBSIDIAN INSTRUMENT PANEL (rev r19 · 2026-05-09) ──
    Designed as a horizontal slice of high-end studio gear (B&O / SSL / Leica
@@ -436,75 +318,64 @@ window#waybar.bottom #tray {
     padding:       0 8px;
 }
 
-/* System tray — minimal, transparent, tight spacing. */
-window#waybar.bottom #tray {
-    background:    transparent;
-    margin:        0 4px;
-    padding:       0 4px;
-    border-radius: 8px;
-}
-
+/* Tray cells — matte instrument language (no glass beads) */
 window#waybar.bottom #tray > .passive,
 window#waybar.bottom #tray > .active,
 window#waybar.bottom #tray > .needs-attention {
-    background-color: @nyx_black_ink;
+    background-color: #0a0a0e;
     margin:           4px 2px;
     padding:          2px;
-    border-radius:    6px;
-    border:           1px solid rgba(255, 255, 255, 0.06);
-    box-shadow:
-        inset 0  1px 0 rgba(255, 255, 255, 0.10),
-        inset 0 -1px 0 rgba(0,   0,   0,   0.30);
-    transition: all 120ms ease-out;
+    border-radius:    4px;
+    border:           1px solid rgba(255, 255, 255, 0.07);
+    box-shadow:       none;
+    transition:       background-color 160ms ease-out, border-color 160ms ease-out;
 }
-
 window#waybar.bottom #tray > .passive:hover,
 window#waybar.bottom #tray > .active:hover {
-    background-color: @nyx_black_void;
-    border:           1px solid rgba(255, 255, 255, 0.18);
+    background-color: #000000;
+    border:           1px solid rgba(255, 255, 255, 0.24);
 }
-
 window#waybar.bottom #tray > .needs-attention {
-    border:           1px solid rgba(255, 255, 255, 0.40);
-    box-shadow:
-        inset 0  1px 0 rgba(255, 255, 255, 0.30),
-        inset 0 -1px 0 rgba(0,   0,   0,   0.30),
-        0  0  8px rgba(255, 255, 255, 0.35);
+    border:     1px solid rgba(255, 255, 255, 0.40);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
 }
 
-/* ── 8. LEFT BAR · vertical workspace column (only place 1-6 lives) ─────── */
+/* ── 8. LEFT BAR · workspace column · matte instrument cells ────────────── */
 window#waybar.left #workspaces button {
-    font-family:    'Inter Display', 'Inter Display', cursive;
-    font-size:      14px;
-    font-weight:    700;
-    margin:         5px 6px;
-    padding:        6px 0;
-    min-width:      40px;
-    min-height:     40px;
-    border-radius:  14px;
+    font-family:      'JetBrains Mono', 'Fira Mono', monospace;
+    font-size:        13px;
+    font-weight:      700;
+    letter-spacing:   0;
+    color:            #6a6e78;
+    background-color: #0a0a0e;
+    margin:           6px 8px;
+    padding:          0;
+    min-width:        36px;
+    min-height:       36px;
+    border-radius:    4px;
+    border:           1px solid rgba(255, 255, 255, 0.07);
+    text-shadow:      none;
+    box-shadow:       none;
+    transition:       background-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      border-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-
+window#waybar.left #workspaces button:hover {
+    color:            #e8edf5;
+    background-color: #000000;
+    border:           1px solid rgba(255, 255, 255, 0.24);
+    text-shadow:      0 0 6px rgba(255, 255, 255, 0.45);
+}
 window#waybar.left #workspaces button.active,
 window#waybar.left #workspaces button.focused {
-    color:            @nyx_white;
-    background-color: @nyx_black_void;
-    box-shadow:
-        inset  0  0  0 1.5px rgba(255, 255, 255, 0.65),
-        inset  0  1.5px 0 rgba(255, 255, 255, 0.50),
-        inset  0 -1px   0 @nyx_hairline_ink,
-        0  4px 10px rgba(0, 0, 0, 0.55),
-        0  0 18px rgba(255, 255, 255, 0.55),
-        0  0 32px rgba(255, 255, 255, 0.25);
-    text-shadow:
-        -1px -1px 0 rgba(0, 0, 0, 0.55),
-         1px -1px 0 rgba(0, 0, 0, 0.55),
-        -1px  1px 0 rgba(0, 0, 0, 0.55),
-         1px  1px 0 rgba(0, 0, 0, 0.55),
-         0    0 10px rgba(255, 255, 255, 0.85),
-         0    0 18px rgba(255, 255, 255, 0.50);
+    color:            #ffffff;
+    background-color: #000000;
+    border:           1px solid rgba(255, 255, 255, 0.55);
+    text-shadow:      0 0 8px rgba(255, 255, 255, 0.85),
+                      0 0 18px rgba(255, 255, 255, 0.45);
 }
 
-/* ── 9. RIGHT BAR · vertical app launcher glass beads ───────────────────── */
+/* ── 9. RIGHT BAR · app launcher cells · matte instrument language ──── */
 window#waybar.right #custom-app-godsapp,
 window#waybar.right #custom-app-studio,
 window#waybar.right #custom-app-sage,
@@ -516,32 +387,53 @@ window#waybar.right #custom-app-weather,
 window#waybar.right #custom-app-notes,
 window#waybar.right #custom-app-terminal,
 window#waybar.right #custom-app-settings {
-    font-family:    'Symbols Nerd Font', 'JetBrains Mono', monospace;
-    font-size:      19px;
-    margin:         5px 8px;
-    padding:        0;
-    min-width:      48px;
-    min-height:     48px;
-    border-radius:  16px;
-}
-
-/* ── 10. TOOLTIPS · frosted-glass dark popovers ────────────────────────── */
-tooltip {
-    background-color: @nyx_black_void;
-    color:            @nyx_white_off;
-    border:           1px solid rgba(255, 255, 255, 0.30);
-    border-radius:    14px;
+    font-family:      'Symbols Nerd Font', 'JetBrains Mono', monospace;
+    font-size:        18px;
+    font-weight:      600;
+    color:            #6a6e78;
+    background-color: #0a0a0e;
+    margin:           6px 8px;
     padding:          0;
-    box-shadow:
-        inset  0  1.5px 0 rgba(255, 255, 255, 0.30),
-        inset  0 -1px   0 rgba(0, 0, 0, 0.50),
-        0  6px 20px rgba(0, 0, 0, 0.55),
-        0 18px 44px rgba(0, 0, 0, 0.40);
+    min-width:        36px;
+    min-height:       36px;
+    border-radius:    4px;
+    border:           1px solid rgba(255, 255, 255, 0.07);
+    text-shadow:      none;
+    box-shadow:       none;
+    transition:       background-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      border-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+window#waybar.right #custom-app-godsapp:hover,
+window#waybar.right #custom-app-studio:hover,
+window#waybar.right #custom-app-sage:hover,
+window#waybar.right #custom-app-shield:hover,
+window#waybar.right #custom-app-control:hover,
+window#waybar.right #custom-app-sysmon:hover,
+window#waybar.right #custom-app-stickies:hover,
+window#waybar.right #custom-app-weather:hover,
+window#waybar.right #custom-app-notes:hover,
+window#waybar.right #custom-app-terminal:hover,
+window#waybar.right #custom-app-settings:hover {
+    color:            #ffffff;
+    background-color: #000000;
+    border:           1px solid rgba(255, 255, 255, 0.24);
+    text-shadow:      0 0 6px rgba(255, 255, 255, 0.45);
 }
 
+/* ── 10. TOOLTIPS · matte instrument popovers ───────────────────────────── */
+tooltip {
+    background-color: #000000;
+    color:            #e8edf5;
+    border:           1px solid rgba(255, 255, 255, 0.18);
+    border-radius:    6px;
+    padding:          0;
+    box-shadow:       0 14px 36px rgba(0, 0, 0, 0.65);
+}
 tooltip label {
-    color:    @nyx_white_off;
-    padding:  10px 16px;
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
+    color:       #e8edf5;
+    padding:     10px 14px;
+    font-family: 'Inter Display', 'Inter', sans-serif;
+    font-size:   12px;
+    letter-spacing: 0.04em;
 }
