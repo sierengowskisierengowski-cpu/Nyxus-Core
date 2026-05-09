@@ -1,0 +1,10 @@
+[SddmGreeterTheme]
+Name=NYXUS
+Description=NYXUS · Cosmic Ink Swirl · Dark Glass Login
+Author=Joseph Sierengowski
+License=Proprietary
+Version=3.0
+Website=https://nyxus-core.replit.app
+Screenshot=preview.png
+Type=sddm-theme
+ConfigFile=theme.conf
