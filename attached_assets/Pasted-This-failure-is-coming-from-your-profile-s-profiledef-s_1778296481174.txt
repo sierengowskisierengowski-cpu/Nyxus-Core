@@ -1,0 +1,73 @@
+This failure is coming from your profile’s profiledef.sh file_permissions logic (or equivalent), not from packages or the kernel:
+
+Failed to set permissions on .../airootfs/usr/local/bin/nyxus-intel'. Outside of valid path.
+mkarchiso is refusing to apply a permission rule because the destination path is considered invalid / unsafe (anti-path-traversal guard). This typically happens when the permission entry is malformed (wrong field order, missing leading /, stray whitespace/CRLF, or a path containing .. or unusual characters), or when it’s pointing outside the airootfs tree due to how it’s concatenated.
+
+What it usually means in practice
+In profiledef.sh you likely have something like:
+
+file_permissions+=( ["usr/local/bin/nyxus-intel"]="0:0:755" ) (missing leading /) or
+file_permissions+=( ["/usr/local/bin/nyxus-intel\r"]="0:0:755" ) (CRLF) or
+the array is written in a format archiso 88 doesn’t accept (old syntax)
+Archiso 88 tightened validation; older “worked by accident” entries now hard-fail.
+
+The other warning:
+
+Cannot change permissions of .../airootfs/root. The file or directory does not exist. just means you have a permissions entry for /root but your airootfs/ skeleton doesn’t include a root/ dir at copy time. That one is easy: either create airootfs/root/ in the profile or remove that permission rule.
+Fix (profile side)
+1) Inspect the permission rules
+Open:
+
+/var/tmp/nyxus-archiso-work/profile/profiledef.sh
+Search for:
+
+file_permissions
+nyxus-intel
+You’re looking for the exact entry that references /usr/local/bin/nyxus-intel.
+
+What it must look like for archiso:
+
+Path must be absolute and start with /
+Must not contain ..
+Must not contain trailing carriage returns
+Must refer to a file that exists in airootfs/ (or that will exist after customize step, depending on when permissions are applied)
+Depending on archiso version/profile style, valid formats are usually one of:
+
+file_permissions+=( ["/usr/local/bin/nyxus-intel"]="0:0:755" ) or the newer list form used in releng profiles (if you copied from releng, match that style exactly).
+If yours is missing the leading /, add it.
+
+2) Ensure the file actually exists in the airootfs skeleton
+Confirm your repo has:
+
+profile/airootfs/usr/local/bin/nyxus-intel
+and that it is a normal file (not a symlink escaping the tree). If it’s a symlink pointing somewhere outside, archiso will also complain. Check:
+
+bash
+ls -l profile/airootfs/usr/local/bin/nyxus-intel
+readlink -f profile/airootfs/usr/local/bin/nyxus-intel
+If readlink -f resolves outside the profile’s airootfs directory, that’s a problem—replace the symlink with a real file or a safe relative symlink within the tree.
+
+3) Normalize line endings (CRLF is a silent killer)
+If you edited profiledef.sh on Windows at any point:
+
+bash
+file profile/profiledef.sh
+If it says CRLF, run:
+
+bash
+dos2unix profile/profiledef.sh
+A trailing \r on the key "/usr/local/bin/nyxus-intel\r" is a classic way to trigger “outside of valid path” because the string no longer matches a clean path.
+
+4) Fix the /root permission warning
+Either:
+
+add the directory: mkdir -p profile/airootfs/root or remove that entry from file_permissions.
+Also: your log path shows /root/nyx-out/...
+That confirms what I warned about earlier: your wrapper is writing logs to root’s home. You should switch it to the invoking user’s home via SUDO_USER, so you don’t lose logs or ISOs.
+
+If you paste this, I’ll give you the exact patch
+Paste the file_permissions section from your profiledef.sh (just that portion, ~30 lines around it), especially the line that mentions nyxus-intel. Then I can tell you the exact correct syntax for archiso 88 and whether you’ve got a missing leading /, CRLF, or a symlink escape.
+
+Block pasted, 1 total
+Ask anything or type @ to add context
+
