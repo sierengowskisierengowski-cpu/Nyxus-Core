@@ -783,12 +783,17 @@ if [[ -s "$VOID_MP4" ]] && command -v mpvpaper >/dev/null 2>&1; then
   pkill -x hyprpaper 2>/dev/null || true
   pkill -x mpvpaper  2>/dev/null || true
   sleep 0.4
+  # rev r26d — speed=0.1 → 10× slower playback. The video appears almost
+  # still but is actually moving. Tweak the value in the mpvpaper -o string
+  # below (0.05 = barely moving, 0.25 = clearly moving) without re-encoding.
+  # IMPORTANT: do NOT insert comments between `\` line continuations of the
+  # sudo/env/nohup chain — bash treats them as broken commands.
   if [[ -n "${REAL_USER:-}" ]] && command -v sudo >/dev/null 2>&1; then
     sudo -u "$REAL_USER" \
       env XDG_RUNTIME_DIR="/run/user/$(id -u "$REAL_USER")" \
           WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
           HOME="$REAL_HOME" \
-      nohup mpvpaper -o "no-audio loop-file=inf hwdec=auto-safe no-osc no-osd panscan=1.0" \
+      nohup mpvpaper -o "no-audio loop-file=inf hwdec=auto-safe no-osc no-osd panscan=1.0 speed=0.1" \
         '*' "$VOID_MP4" >/tmp/nyxus-mpvpaper.log 2>&1 &
     sleep 0.6
     if pgrep -x mpvpaper >/dev/null 2>&1; then
