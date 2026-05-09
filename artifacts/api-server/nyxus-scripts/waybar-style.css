@@ -232,15 +232,12 @@ window#waybar.top:has(#custom-ticker.error) {
     100% { opacity: 0.93; }
 }
 
+/* Dark veil on top + starfield underneath. NOTE: GTK CSS is fussier than
+   browser CSS — keep the background-image value on a SINGLE line with NO
+   inline comments inside the value, and put `inset` at the START of every
+   inset box-shadow (not the end). Both rules learned the hard way. */
 window#waybar.bottom {
-    background-image:
-        /* dark veil so modules stay readable; gaps reveal the starfield */
-        linear-gradient(to bottom,
-            rgba(10, 10, 14, 0.62) 0%,
-            rgba(10, 10, 14, 0.55) 50%,
-            rgba(10, 10, 14, 0.72) 100%),
-        /* the actual starlight ceiling */
-        url("NYXUS_STARLIGHT_BG");
+    background-image: linear-gradient(to bottom, rgba(10,10,14,0.62) 0%, rgba(10,10,14,0.55) 50%, rgba(10,10,14,0.72) 100%), url("NYXUS_STARLIGHT_BG");
     background-size: auto, cover;
     background-position: 0 0, center center;
     background-repeat: repeat, no-repeat;
@@ -248,10 +245,10 @@ window#waybar.bottom {
     border-radius: 16px;
     border: none;
     box-shadow:
-        inset  0   1px  0   rgba(255, 255, 255, 0.10),     /* routed top */
-        inset  0  -1px  0   rgba(0,   0,   0,   0.70),     /* bottom notch */
-        0  14px 36px rgba(0, 0, 0, 0.65),                  /* outer drop */
-        0   0  60px rgba(255, 255, 255, 0.04) inset;       /* faint glow */
+        inset  0   1px  0   rgba(255, 255, 255, 0.10),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.70),
+        inset  0   0  60px  rgba(255, 255, 255, 0.04),
+        0  14px  36px       rgba(0,   0,   0,   0.65);
     animation: nyxus-starlight-breath 14s ease-in-out infinite;
 }
 
