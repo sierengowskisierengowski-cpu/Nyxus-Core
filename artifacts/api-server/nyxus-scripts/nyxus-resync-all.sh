@@ -316,6 +316,41 @@ if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-hyprland-rules.conf" "$HYPR_MAIN"; t
   ok "stripped legacy nyxus-hyprland-rules.conf source line from hyprland.conf"
 fi
 
+# rev r19 — strip ALL legacy non-conf.d source lines from hyprland.conf.
+# Older ISO builds shipped `source = ~/.config/hypr/nyxus-hyprland-*.conf`
+# (without the conf.d/ subdir). Those files no longer exist at that path
+# and Hyprland throws "globbing error: found no match" on every reload,
+# preventing the entire chrome (waybar styling, opacity, blur) from loading.
+# Strip them; the canonical conf.d/ versions are appended below.
+if [[ -f "$HYPR_MAIN" ]]; then
+  legacy_stripped=0
+  for legacy in nyxus-hyprland-general nyxus-hyprland-blur \
+                nyxus-hyprland-opacity nyxus-hyprland-rules; do
+    if grep -qE "^\s*source\s*=\s*~/.config/hypr/${legacy}\.conf\s*$" "$HYPR_MAIN"; then
+      sed -i -E "\#^\s*source\s*=\s*~/.config/hypr/${legacy}\.conf\s*\$#d" "$HYPR_MAIN"
+      legacy_stripped=$((legacy_stripped + 1))
+    fi
+  done
+  if (( legacy_stripped > 0 )); then
+    ok "stripped $legacy_stripped legacy non-conf.d source line(s) from hyprland.conf — globbing errors fixed"
+  fi
+fi
+
+# rev r19 — overwrite the user's hyprland.conf with the canonical version
+# IF it still references the old non-conf.d paths (defensive belt-and-braces
+# in case the per-line strip above missed something the user hand-edited).
+# We do NOT touch hyprland.conf if it already looks clean — preserves any
+# custom keybinds the user has added.
+if [[ -f "$HYPR_MAIN" ]] && grep -qE "^\s*source\s*=\s*~/.config/hypr/nyxus-hyprland-" "$HYPR_MAIN"; then
+  cp -f "$HYPR_MAIN" "${HYPR_MAIN}.bak.$(date +%s)" 2>/dev/null || true
+  if curl -fsSL --max-time 30 "$PROD/hyprland.conf" -o "$HYPR_MAIN.new" 2>/dev/null; then
+    mv -f "$HYPR_MAIN.new" "$HYPR_MAIN"
+    chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
+    chmod 644 "$HYPR_MAIN"
+    ok "rewrote $HYPR_MAIN from canonical (legacy backup at .bak.*)"
+  fi
+fi
+
 if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-rules.conf" -o "$HYPR_RULES"; then
   chown "$REAL_USER:$REAL_USER" "$HYPR_RULES"
   chmod 644 "$HYPR_RULES"
