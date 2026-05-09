@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Intel
+GenericName=Open Source Intelligence Workstation
+Comment=Professional grade OSINT and investigation app
+Exec=/usr/local/bin/nyxus-intel
+Icon=io.nyxus.intel
+Categories=Network;Security;Office;
+Terminal=false
+StartupNotify=true

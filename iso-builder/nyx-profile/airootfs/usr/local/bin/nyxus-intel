@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# NYXUS Intel — launcher (Option A, baked into ISO airootfs)
+# Resolves to /opt/nyxus-intel/main.py per the install.sh INSTALL_DIR convention.
+exec python3 /opt/nyxus-intel/main.py "$@"
