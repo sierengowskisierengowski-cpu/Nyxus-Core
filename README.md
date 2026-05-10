@@ -1,70 +1,102 @@
-# NYXUS
-### NYX is the ISO. NYXUS is the OS.
+# Nyxus-Core
 
-> "Silent. Dark. Purely Functional."
-> "The Night Has Eyes."
+Canonical source repository for the NYXUS platform and NYX image pipeline.
 
-NYXUS is a custom Linux based operating system
-built from the ground up by Joseph Sierengowski.
-Distributed via the NYX ISO.
+**Terminology standard**
+- **NYX**: the bootable ISO image artifact only.
+- **NYXUS**: the operating system, platform services, and application ecosystem delivered by NYX.
 
-ISO: nyx-2026.05.02-x86_64.iso
+---
 
-## Built by
-Joseph Sierengowski
-Self-taught developer and hardware enthusiast
-2026
+## System Overview
 
-## NYXUS App Suite
-- NYXUS SYSMON
-- NYXUS Control
-- NYXUS Terminal
-- NYXUS Notepad
-- NYXUS Stickies
-- NYXUS Weather
-- NYXUS Settings
-- NYXUS SAGE
-- NYXUS Shield
-- NYXUS Panel
-- NYXUS Start
-- NYXUS GodsApp
-- NYXUS Phantom
-- NYXUS Creative Studio
+Nyxus-Core contains the end-to-end platform implementation:
+- Arch-based image construction for **NYX**
+- Core runtime payloads and desktop assets for **NYXUS**
+- API and web distribution surfaces
+- Shared TypeScript packages and automation scripts
 
-## Repository Layout
+The repository is intentionally organized as a pnpm workspace so application, service, and shared-library changes can be versioned and shipped together.
 
-```
+---
+
+## Architecture at a Glance
+
+NYXUS is delivered through three coordinated layers:
+
+1. **Build-time**
+   - Workspace typechecking and package builds (`lib/*`, `artifacts/*`, `scripts`)
+   - API server bundling and dist payload generation
+2. **Distribution-time**
+   - API and web surfaces distribute installers, tarballs, and related assets
+   - ISO staging mirrors runtime payloads into the archiso profile
+3. **Runtime**
+   - NYX boots into NYXUS runtime components (desktop stack + app suite + supporting scripts)
+
+See `/docs/architecture/architecture-overview.md` for component relationships and responsibility boundaries.
+
+---
+
+## Repository Map
+
+```text
 .
-├── artifacts/                # Web download portal + app-suite scaffolds
-│   ├── nyxus-web/            # Download portal (this is the live site)
-│   ├── nyxus-notepad/        # Web demo of NYXUS Notepad
-│   ├── nyxus-stickies/       # Web demo of NYXUS Stickies
-│   ├── nyxus-sysmon/         # Web demo of NYXUS SYSMON
-│   ├── nyxus-widgets/        # Web demo of NYXUS Widgets
-│   └── api-server/           # Express API + tarball downloads
-│       └── nyxus-scripts/
-│           └── nyxus-intel.tgz   # NYXUS Phantom installer
-├── iso-builder/              # archiso profile that bakes the NYX ISO
-│   ├── build-iso.sh          # one-command wrapper (run on Arch as root)
-│   └── nyx-profile/          # mkarchiso profile (releng-style)
-├── LICENSE.md                # NYX & NYXUS Custom License v1.0
+├── artifacts/                  # Deployable apps/services and runtime payload sources
+│   ├── api-server/             # API distribution service and nyxus-scripts payload source
+│   ├── nyxus-web/              # Main web surface
+│   ├── nyxus-notepad/          # Web demo app
+│   ├── nyxus-stickies/         # Web demo app
+│   ├── nyxus-sysmon/           # Web demo app
+│   ├── nyxus-widgets/          # Web demo app
+│   └── mockup-sandbox/         # Preview and mockup environment
+├── iso-builder/                # Archiso profile and NYX ISO build pipeline
+├── lib/                        # Shared TypeScript packages (API spec/client/zod/db)
+├── scripts/                    # Workspace automation scripts
+├── docs/                       # Structured project documentation
 ├── CHANGELOG.md
-└── CREDITS.md
+├── CREDITS.md
+├── LICENSE.md
+├── SHIPPING.md
+└── replit.md                   # Replit-specific development notes
 ```
 
-## Building the ISO
-See `iso-builder/README.md`. Short version (run on an Arch host with
-`archiso` installed, as root):
+---
 
-```bash
-cd iso-builder
-sudo ./build-iso.sh
-```
+## Build and Deployment Summary
 
-The output lands in `iso-builder/out/nyx-2026.05.02-x86_64.iso`.
+### Workspace validation
+- `pnpm run typecheck`
+- `pnpm run build`
 
-## Legal
-Copyright © 2026 Joseph Sierengowski
-All Rights Reserved
-NYX-J5W-2026-SIERENGOWSKI-LOCKED
-See LICENSE.md for full terms.
+### API/Web packaging flow
+- API server build produces distribution outputs under `artifacts/api-server/dist/`
+- Vite-based web artifacts use environment-based ports/base paths (see deployment docs)
+
+### NYX ISO flow
+- Build host requirement: Arch Linux + root + `mkarchiso`
+- Entry point: `iso-builder/build-iso.sh`
+- Output artifact: `iso-builder/out/nyx-<version>-x86_64.iso`
+
+Operational detail is documented in `/docs/deployment/*`.
+
+---
+
+## Documentation Index
+
+- Documentation hub: [`docs/README.md`](docs/README.md)
+- System overview: [`docs/overview/system-overview.md`](docs/overview/system-overview.md)
+- Creator and authorship: [`docs/overview/creator.md`](docs/overview/creator.md)
+- Architecture overview: [`docs/architecture/architecture-overview.md`](docs/architecture/architecture-overview.md)
+- Repository structure: [`docs/architecture/repository-structure.md`](docs/architecture/repository-structure.md)
+- Build pipeline: [`docs/deployment/build-pipeline.md`](docs/deployment/build-pipeline.md)
+- ISO build pipeline: [`docs/deployment/iso-build.md`](docs/deployment/iso-build.md)
+- Web/API deployment: [`docs/deployment/web-and-api-deployment.md`](docs/deployment/web-and-api-deployment.md)
+- Legacy visual history: [`docs/legacy-visuals.md`](docs/legacy-visuals.md)
+
+---
+
+## Created by Joseph Sierengowski
+
+Nyxus-Core, NYX, and NYXUS were created, architected, and built by **Joseph Sierengowski**.
+
+Joseph serves as the original system designer and primary platform architect, defining the repository's direction across ISO engineering, runtime composition, application integration, and delivery workflow.
