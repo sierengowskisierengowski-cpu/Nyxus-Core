@@ -97,8 +97,8 @@ window#waybar.top {
         url("NYXUS_TOPBAR_MIST");
     background-blend-mode: screen, normal, normal;
     background-color:      rgba(0, 0, 0, 0.25);
-    background-size:       auto 100%, auto 100%, auto 100%;
-    background-repeat:     repeat-x, repeat-x, repeat-x;
+    background-size:       100% 100%, 100% 100%, 100% 100%;
+    background-repeat:     no-repeat, no-repeat, no-repeat;
     background-position:   center, center, center;
     border-radius:    0;
     box-shadow:
@@ -417,42 +417,42 @@ window#waybar.bottom #custom-sys-pulse.high {
 /* ── 7d · CENTER MONOGRAM PLINTH · ◈ N·Y·X ◈ ─ engraved with hairline
    pillars on both sides. Replaces the old SIERENGOWSKI brand. White-glow
    accent allowed (locked palette: jewelry-rule on wordmarks).            */
-/* rev r29 — NYXUS wordmark sits in its own silver-mist plinth, separate
-   from the rest of the bottom bar. The mist image is centered behind
-   the text and clipped by the cabinet pillars on either side, reading
-   as a small "window" into atmosphere behind the wordmark. Glow is
-   pushed hard (jewelry-rule accent · palette-locked tokens). */
+/* rev r30 — FOG-DRIFT NYXUS PLINTH. No borders, no rectangle — the mist
+   image bleeds out into the bar at both horizontal edges via a top-layer
+   gradient that fades to the bar's own dark-glass color. Reads as a wisp
+   of fog drifting through the bar carrying the wordmark, not a card with
+   an image inside it. Rev r29 cabinet pillars REMOVED per design call. */
 window#waybar.bottom #custom-nyx-monogram {
     font-family:      'Architects Daughter', 'Caveat', 'JetBrains Mono', monospace;
-    font-size:        15px;
+    font-size:        16px;
     font-weight:      700;
     letter-spacing:   0.32em;
     color:            #ffffff;
     background-image:
         linear-gradient(
-            rgba(0, 0, 0, 0.32),
-            rgba(0, 0, 0, 0.32)
+            to right,
+            rgba(6, 6, 12, 1.00) 0%,
+            rgba(6, 6, 12, 0.00) 22%,
+            rgba(6, 6, 12, 0.00) 78%,
+            rgba(6, 6, 12, 1.00) 100%
         ),
         url("NYXUS_MONOGRAM_MIST");
     background-blend-mode: normal, normal;
-    background-color: rgba(0, 0, 0, 0.55);
-    background-size:  auto 100%, cover;
+    background-color: transparent;
+    background-size:  100% 100%, cover;
     background-repeat: no-repeat, no-repeat;
     background-position: center, center;
-    padding:          0 32px;
+    padding:          0 56px;
     margin:           10px 0;
     min-height:       36px;
-    border-radius:    0;
     border:           none;
-    border-left:      1px solid rgba(255, 255, 255, 0.14);
-    border-right:     1px solid rgba(255, 255, 255, 0.14);
+    border-radius:    0;
     text-shadow:
         0 0 10px @nyx_glow_bright,
         0 0 22px @nyx_glow_soft,
+        0 0 40px @nyx_glow_soft,
         0 1px 0  rgba(0, 0, 0, 0.92);
-    box-shadow:
-        inset  0   1px  0   rgba(255, 255, 255, 0.10),
-        inset  0  -1px  0   rgba(0,   0,   0,   0.85);
+    box-shadow:       none;
     transition:       color 200ms ease-out, text-shadow 200ms ease-out;
 }
 window#waybar.bottom #custom-nyx-monogram:hover {
