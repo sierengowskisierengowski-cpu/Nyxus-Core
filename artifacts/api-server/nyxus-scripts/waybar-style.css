@@ -48,26 +48,28 @@
 window#waybar.top,
 window#waybar.left,
 window#waybar.right {
-    /* rev r29 — SILVER COSMIC MIST texture (replaces the cratered moon).
-       The mist is wispier + brighter than stone, so the dark veil is
-       turned up to 30% to keep text comfortably readable while the
-       wisps still read as a living atmosphere underneath.
-         1. faint screen-blend white wash (lifts star pinpricks, ~5%)
-         2. moderate dark veil (text legibility, ~30%)
-         3. the silver-mist image itself
+    /* rev r32 — CRACKED BLACK STONE texture (replaces silver cosmic mist).
+       Hand-made cracked-plaster image tiled seamlessly across all three
+       bars. Gives a tactile carved-stone surface that reads as one
+       continuous slab. Light dark veil (15%) keeps text crisp without
+       flattening the cracks; faint screen-blend wash (~3%) lifts the
+       highlights so the texture doesn't look painted-on.
+         1. faint screen-blend white wash (highlight lift, ~3%)
+         2. light dark veil (text legibility, ~15%)
+         3. the cracked-stone image itself, tiled
        background-blend-mode applies per layer (screen, normal, normal). */
     background-image:
         linear-gradient(
-            rgba(255, 255, 255, 0.05),
-            rgba(255, 255, 255, 0.05)
+            rgba(255, 255, 255, 0.03),
+            rgba(255, 255, 255, 0.03)
         ),
         linear-gradient(
-            rgba(0, 0, 0, 0.30),
-            rgba(0, 0, 0, 0.30)
+            rgba(0, 0, 0, 0.15),
+            rgba(0, 0, 0, 0.15)
         ),
-        url("NYXUS_WAYBAR_STARS");
+        url("NYXUS_BAR_STONE");
     background-blend-mode: screen, normal, normal;
-    background-color:      rgba(0, 0, 0, 0.25);
+    background-color:      rgba(0, 0, 0, 0.20);
     background-size:       auto, auto, auto;
     background-repeat:     repeat, repeat, repeat;
     color:               #c8ccd6;
@@ -85,20 +87,23 @@ window#waybar.right {
    nebula behind the live ticker. Edge-to-edge (no margin / no radius)
    so the ticker still scrolls as a full-width marquee. */
 window#waybar.top {
+    /* rev r32 — TOP bar shares the same cracked-stone texture as the
+       side bars (tiled, not stretched, so the cracks stay sharp across
+       the full screen width). Edge-to-edge, no radius — full-width band. */
     background-image:
         linear-gradient(
-            rgba(255, 255, 255, 0.05),
-            rgba(255, 255, 255, 0.05)
+            rgba(255, 255, 255, 0.03),
+            rgba(255, 255, 255, 0.03)
         ),
         linear-gradient(
-            rgba(0, 0, 0, 0.30),
-            rgba(0, 0, 0, 0.30)
+            rgba(0, 0, 0, 0.15),
+            rgba(0, 0, 0, 0.15)
         ),
-        url("NYXUS_TOPBAR_MIST");
+        url("NYXUS_BAR_STONE");
     background-blend-mode: screen, normal, normal;
-    background-color:      rgba(0, 0, 0, 0.25);
-    background-size:       100% 100%, 100% 100%, 100% 100%;
-    background-repeat:     no-repeat, no-repeat, no-repeat;
+    background-color:      rgba(0, 0, 0, 0.20);
+    background-size:       auto, auto, auto;
+    background-repeat:     repeat, repeat, repeat;
     background-position:   center, center, center;
     border-radius:    0;
     box-shadow:
@@ -442,10 +447,10 @@ window#waybar.bottom #custom-nyx-monogram {
     background-size:  100% 100%, 100% 100%;
     background-repeat: no-repeat, no-repeat;
     background-position: center, center;
-    padding:          0 360px;
+    padding:          0 180px;
     margin:           10px 0;
     min-height:       36px;
-    min-width:        820px;
+    min-width:        410px;
     border:           none;
     border-radius:    0;
     text-shadow:

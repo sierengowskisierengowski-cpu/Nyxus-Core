@@ -224,6 +224,7 @@ dl "nyxus-waybar-stars.png"       "$WALLS_DIR/nyxus-waybar-stars.png"       || f
 dl "nyxus-monogram-mist.png"      "$WALLS_DIR/nyxus-monogram-mist.png"      || failed=$((failed+1))
 dl "nyxus-topbar-mist.png"        "$WALLS_DIR/nyxus-topbar-mist.png"        || failed=$((failed+1))
 dl "nyxus-hyprlock-eye.png"       "$WALLS_DIR/nyxus-hyprlock-eye.png"       || failed=$((failed+1))
+dl "nyxus-bar-stone.png"          "$WALLS_DIR/nyxus-bar-stone.png"          || failed=$((failed+1))
 
 # ── APP BACKGROUNDS (neon splat panels — used by all GTK apps) ────────────────
 hdr "App Backgrounds (neon splat panels)"
@@ -246,6 +247,7 @@ STARLIGHT_BG_PATH="$HOME/.config/hypr/walls/nyxus-starlight.png"
 WAYBAR_STARS_PATH="$HOME/.config/hypr/walls/nyxus-waybar-stars.png"
 MONOGRAM_MIST_PATH="$HOME/.config/hypr/walls/nyxus-monogram-mist.png"
 TOPBAR_MIST_PATH="$HOME/.config/hypr/walls/nyxus-topbar-mist.png"
+BAR_STONE_PATH="$HOME/.config/hypr/walls/nyxus-bar-stone.png"
 sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"                  "$WAYBAR_DIR/style.css"
 sed -i "s|NYXUS_TASKBAR_BG|file://${TASKBAR_BG_PATH}|g"    "$WAYBAR_DIR/style.css"
 sed -i "s|NYXUS_RIGHTBAR_BG|file://${RIGHTBAR_BG_PATH}|g"  "$WAYBAR_DIR/style.css"
@@ -253,6 +255,7 @@ sed -i "s|NYXUS_STARLIGHT_BG|file://${STARLIGHT_BG_PATH}|g" "$WAYBAR_DIR/style.c
 sed -i "s|NYXUS_WAYBAR_STARS|file://${WAYBAR_STARS_PATH}|g" "$WAYBAR_DIR/style.css"
 sed -i "s|NYXUS_MONOGRAM_MIST|file://${MONOGRAM_MIST_PATH}|g" "$WAYBAR_DIR/style.css"
 sed -i "s|NYXUS_TOPBAR_MIST|file://${TOPBAR_MIST_PATH}|g" "$WAYBAR_DIR/style.css"
+sed -i "s|NYXUS_BAR_STONE|file://${BAR_STONE_PATH}|g"      "$WAYBAR_DIR/style.css"
 # Belt-and-suspenders: convert any leftover hardcoded /home/nyx/ to real $HOME
 sed -i "s|file:///home/nyx/|file://$HOME/|g"               "$WAYBAR_DIR/style.css"
 dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
