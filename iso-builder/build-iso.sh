@@ -31,7 +31,7 @@ ISO_NAME="nyx-2026.05.02-x86_64.iso"
 TARBALL_URL="https://nyxus-core.replit.app/api/download/nyxus/nyxus-intel.tgz"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROFILE_DIR="${SCRIPT_DIR}/nyx-profile"
-WORK_DIR="/tmp/nyx-work"
+WORK_DIR="${NYX_WORK_DIR:-/var/tmp/nyx-work}"
 OUT_DIR="${SCRIPT_DIR}/out"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
