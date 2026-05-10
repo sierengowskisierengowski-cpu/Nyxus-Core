@@ -128,6 +128,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "waybar-ticker.sh":      "waybar-ticker.sh",
   "nyxus-notif-status.sh": "nyxus-notif-status.sh",
   "waybar-stats.sh":       "waybar-stats.sh",
+  "nyxus-sys-pulse.sh":    "nyxus-sys-pulse.sh",
   "alacritty.toml":        "alacritty.toml",
   "rofi-config.rasi":      "rofi-config.rasi",
   "rofi-nyxus.rasi":       "rofi-nyxus.rasi",
@@ -163,6 +164,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-starlight.png":          "nyxus-starlight.png",
   "nyxus-void-wallpaper.mp4":     "nyxus-void-wallpaper.mp4",
   "nyxus-login-stars.png":        "nyxus-login-stars.png",
+  "nyxus-waybar-stars.png":       "nyxus-waybar-stars.png",
   "nyxus-demon.png":              "nyxus-demon.png",
 
   // ── ★ WALLPAPERS (15 backgrounds) ────────────────────────────────────────

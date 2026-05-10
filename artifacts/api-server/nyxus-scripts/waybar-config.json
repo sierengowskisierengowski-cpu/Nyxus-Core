@@ -37,7 +37,7 @@
     "name": "bottom",
     "layer": "top",
     "position": "bottom",
-    "height": 52,
+    "height": 56,
     "spacing": 0,
     "margin-bottom": 12,
     "margin-left": 24,
@@ -47,7 +47,8 @@
       "custom/heartbeat"
     ],
     "modules-center": [
-      "custom/brand",
+      "custom/sys-pulse",
+      "custom/nyx-monogram",
       "tray"
     ],
     "modules-right": [
@@ -61,14 +62,21 @@
       "format": "\u25cf {}",
       "tooltip-format": "<span size='large' weight='bold' foreground='#e8edf5'>NYXUS \u00b7 System Heartbeat</span>\n<span size='small' foreground='#c8ccd6'>Live system indicator \u2014 pulses while the session is active</span>"
     },
-    "custom/brand": {
-      "exec": "echo 'NYXUS \u00b7 SIERENGOWSKI'",
+    "custom/sys-pulse": {
+      "exec": "~/.config/waybar/sys-pulse.sh",
+      "interval": 1,
+      "return-type": "json",
+      "tooltip": true,
+      "escape": false
+    },
+    "custom/nyx-monogram": {
+      "exec": "echo '\u25c8  N \u00b7 Y \u00b7 X  \u25c8'",
       "interval": 86400,
       "format": "{}",
-      "tooltip-format": "<span size='large' weight='bold' foreground='#e8edf5'>NYXUS</span>\n<span size='small' foreground='#c8ccd6'>by Sierengowski \u00b7 Hyprland \u00b7 Arch Linux \u00b7 2026</span>"
+      "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS</span>\n<span size='small' foreground='#c8ccd6'>by Sierengowski \u00b7 Hyprland \u00b7 Arch Linux \u00b7 2026</span>"
     },
     "clock": {
-      "format": "{:%H:%M \u00b7 %a %d}",
+      "format": "\u25f7  {:%H:%M  \u00b7  %a %d}",
       "tooltip-format": "<big>{:%A \u00b7 %B %Y}</big>\n<tt><small>{calendar}</small></tt>"
     },
     "custom/notifications": {

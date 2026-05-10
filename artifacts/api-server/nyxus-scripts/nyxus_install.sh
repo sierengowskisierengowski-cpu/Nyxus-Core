@@ -219,6 +219,7 @@ dl "nyxus-void-wallpaper.mp4" "$WALLS_DIR/nyxus-void-wallpaper.mp4" || failed=$(
 dl "nyxus-taskbar-bg.png"         "$WALLS_DIR/nyxus-taskbar-bg.png"         || failed=$((failed+1))
 dl "nyxus-rightbar-bg.png"        "$WALLS_DIR/nyxus-rightbar-bg.png"        || failed=$((failed+1))
 dl "nyxus-starlight.png"          "$WALLS_DIR/nyxus-starlight.png"          || failed=$((failed+1))
+dl "nyxus-waybar-stars.png"       "$WALLS_DIR/nyxus-waybar-stars.png"       || failed=$((failed+1))
 
 # ── APP BACKGROUNDS (neon splat panels — used by all GTK apps) ────────────────
 hdr "App Backgrounds (neon splat panels)"
@@ -238,16 +239,19 @@ WALL_PATH="$HOME/.config/hypr/walls/nyxus-ink-swirl.png"
 TASKBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-taskbar-bg.png"
 RIGHTBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-rightbar-bg.png"
 STARLIGHT_BG_PATH="$HOME/.config/hypr/walls/nyxus-starlight.png"
+WAYBAR_STARS_PATH="$HOME/.config/hypr/walls/nyxus-waybar-stars.png"
 sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"                  "$WAYBAR_DIR/style.css"
 sed -i "s|NYXUS_TASKBAR_BG|file://${TASKBAR_BG_PATH}|g"    "$WAYBAR_DIR/style.css"
 sed -i "s|NYXUS_RIGHTBAR_BG|file://${RIGHTBAR_BG_PATH}|g"  "$WAYBAR_DIR/style.css"
 sed -i "s|NYXUS_STARLIGHT_BG|file://${STARLIGHT_BG_PATH}|g" "$WAYBAR_DIR/style.css"
+sed -i "s|NYXUS_WAYBAR_STARS|file://${WAYBAR_STARS_PATH}|g" "$WAYBAR_DIR/style.css"
 # Belt-and-suspenders: convert any leftover hardcoded /home/nyx/ to real $HOME
 sed -i "s|file:///home/nyx/|file://$HOME/|g"               "$WAYBAR_DIR/style.css"
 dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
 dl "waybar-stats.sh"          "$WAYBAR_DIR/stats.sh"          || failed=$((failed+1))
+dl "nyxus-sys-pulse.sh"       "$WAYBAR_DIR/sys-pulse.sh"      || failed=$((failed+1))
 dl "nyxus_quicksettings.py"   "$WAYBAR_DIR/quicksettings.py"  || failed=$((failed+1))
-chmod +x "$WAYBAR_DIR/ticker.sh" "$WAYBAR_DIR/stats.sh" "$WAYBAR_DIR/quicksettings.py" 2>/dev/null || true
+chmod +x "$WAYBAR_DIR/ticker.sh" "$WAYBAR_DIR/stats.sh" "$WAYBAR_DIR/sys-pulse.sh" "$WAYBAR_DIR/quicksettings.py" 2>/dev/null || true
 
 # ── ROFI ─────────────────────────────────────────────────────────────────────
 hdr "Rofi"
