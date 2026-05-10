@@ -504,6 +504,24 @@ uri = "file://attached_assets/wallpaper_concepts/concept12_hobo_nihei.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "uFhvc6UJ867DQxbscwGw4"
+uri = "file://attached_assets/wallpaper_concepts/concept13_drifter_flannel.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "IdEKNChESVEPSdWtOykFd"
+uri = "file://attached_assets/wallpaper_concepts/concept14_drifter_hoodie.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "j8Azp5vRlTHPGK_IkNt80"
+uri = "file://attached_assets/wallpaper_concepts/concept15_drifter_peacoat.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -881,3 +899,21 @@ id = "pIgF2T4Uw95pMcZORM9_D"
 uri = "file://attached_assets/wallpaper_concepts/concept12_hobo_nihei.png"
 type = "image"
 title = "Concept 12 — Hobo: Nihei/Otomo Manga"
+
+[[outputs]]
+id = "gUnBhKvx91eY_-aYi9jRf"
+uri = "file://attached_assets/wallpaper_concepts/concept13_drifter_flannel.png"
+type = "image"
+title = "Concept 13 — Drifter: Flannel + Denim Jacket"
+
+[[outputs]]
+id = "CeyV2iBjKugTKWkO6FYrR"
+uri = "file://attached_assets/wallpaper_concepts/concept14_drifter_hoodie.png"
+type = "image"
+title = "Concept 14 — Drifter: Hoodie + Canvas Jacket (in boxcar)"
+
+[[outputs]]
+id = "B3J6Gb866fCj1HYuqmnaj"
+uri = "file://attached_assets/wallpaper_concepts/concept15_drifter_peacoat.png"
+type = "image"
+title = "Concept 15 — Drifter: Peacoat + Suspenders (void background)"
