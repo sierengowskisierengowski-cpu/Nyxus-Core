@@ -26,7 +26,7 @@
 set -uo pipefail
 
 # ── Version stamp: BUMP ON EVERY RELEASE THAT TOUCHES INSTALLED FILES ───────
-BOOTSTRAP_VERSION="2026.05.10-r5"
+BOOTSTRAP_VERSION="2026.05.10-r6"
 
 PROD_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/download/nyxus/nyxus_install.sh"
 OFFLINE_CACHE="${NYXUS_OFFLINE_DIR:-/opt/nyxus-cache}"
