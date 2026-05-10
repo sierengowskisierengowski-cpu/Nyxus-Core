@@ -114,6 +114,7 @@ alsa-utils
 gtk4
 libadwaita
 vte4
+vte-common
 python
 python-gobject
 python-pip
