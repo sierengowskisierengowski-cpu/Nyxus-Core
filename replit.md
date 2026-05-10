@@ -281,6 +281,25 @@ floating waybar modules.
 
 ## Gotchas
 
+- **First-boot bootstrap chain (LOCKED · 2026-05-10 r3)**: The ISO ships
+  `/usr/local/bin/nyxus-bootstrap` (first-run installer wrapper) and
+  `/usr/local/bin/nyxus-wait-bootstrap` (autostart serializer). Hyprland's
+  `exec-once` fires every line in PARALLEL, so any autostart that depends
+  on files written by `nyxus_install.sh` (waybar, swaybg wallpaper,
+  nyxus-home) MUST be wrapped in `nyxus-wait-bootstrap` or it will race
+  the bootstrap and crash on first login. Bootstrap is idempotent via a
+  marker at `~/.nyxus/.bootstrapped` — to force re-run:
+  `rm ~/.nyxus/.bootstrapped && nyxus-bootstrap`. Both shims live in
+  `artifacts/api-server/nyxus-scripts/`, mirror to `dist/`, and are
+  pre-staged in `iso-builder/nyx-profile/airootfs/usr/local/bin/` with
+  `0755` perms set in `profiledef.sh`.
+- **Offline ISO cache is NOT auto-populated**: `nyxus-bootstrap` falls
+  back to `/opt/nyxus-cache` if there's no internet on first boot, but
+  nothing in the build pipeline currently stages that cache. First boot
+  effectively requires internet — without it the user gets a desktop
+  note explaining how to re-run `nyxus-bootstrap` once online. Populating
+  `/opt/nyxus-cache` from `dist/nyxus-scripts/` during `customize_airootfs.sh`
+  is a future improvement (would make the ISO truly offline-installable).
 - **Hyprland Lua migration (TODO · 2026-05-10)**: Hyprland 0.55 deprecated the
   `hyprlang` config syntax in favor of Lua. The new API uses `hl.animation({...})`
   and `hl.curve({...})` function calls instead of `animation = ...` / `bezier = ...`

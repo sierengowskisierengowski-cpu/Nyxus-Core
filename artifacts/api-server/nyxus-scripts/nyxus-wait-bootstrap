@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║  NYXUS — wait-for-bootstrap shim                                     ║
+# ║  Lives at: /usr/local/bin/nyxus-wait-bootstrap                       ║
+# ║                                                                      ║
+# ║  Hyprland's `exec-once` fires every command in parallel — it does    ║
+# ║  NOT wait for previous lines to finish. Without this shim, waybar /  ║
+# ║  swaybg / nyxus-home race nyxus-bootstrap on first login and crash   ║
+# ║  because their config files don't exist yet.                         ║
+# ║                                                                      ║
+# ║  Usage in hyprland.conf:                                             ║
+# ║    exec-once = nyxus-wait-bootstrap waybar --config ... --style ...  ║
+# ║    exec-once = nyxus-wait-bootstrap swaybg -i ... -m fill ...        ║
+# ║                                                                      ║
+# ║  With no args: just blocks until the marker appears (or timeout).    ║
+# ║  With args:    blocks, then exec()s into them.                       ║
+# ║                                                                      ║
+# ║  Timeout: 120s by default (override with NYXUS_WAIT_TIMEOUT=N).      ║
+# ║  After timeout, runs the args anyway — better degraded UI than no UI.║
+# ║                                                                      ║
+# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+set -u
+
+TIMEOUT="${NYXUS_WAIT_TIMEOUT:-120}"
+MARK="${HOME}/.nyxus/.bootstrapped"
+
+# Already bootstrapped? Skip the wait entirely (steady-state path).
+if [[ -f "${MARK}" ]]; then
+  if [[ $# -gt 0 ]]; then exec "$@"; fi
+  exit 0
+fi
+
+# Poll the marker. On a fresh install this can take ~30-90s while
+# nyxus_install.sh downloads everything. We grant 120s by default.
+i=0
+while [[ ! -f "${MARK}" && $i -lt $TIMEOUT ]]; do
+  sleep 1
+  i=$((i+1))
+done
+
+# Whether we hit the marker or timed out, execute the wrapped command
+# anyway so the user always gets *some* desktop on screen.
+if [[ $# -gt 0 ]]; then
+  exec "$@"
+fi
+exit 0

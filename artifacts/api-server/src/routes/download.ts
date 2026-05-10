@@ -108,6 +108,8 @@ const ALLOWED_FILES: Record<string, string> = {
   // ── ★ INSTALLERS / RESYNC ────────────────────────────────────────────────
   "nyxus_install.sh":    "nyxus_install.sh",
   "nyxus-resync-all.sh": "nyxus-resync-all.sh",
+  "nyxus-bootstrap":      "nyxus-bootstrap",       // first-boot wrapper (Hyprland exec-once)
+  "nyxus-wait-bootstrap": "nyxus-wait-bootstrap",  // gates dependent autostarts on bootstrap completion
   "nyxus-build-iso.sh":  "nyxus-build-iso.sh",
   "hypr-doctor.sh":      "hypr-doctor.sh",
 

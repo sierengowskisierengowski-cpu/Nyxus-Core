@@ -258,6 +258,13 @@ sed -i "s|NYXUS_TOPBAR_MIST|file://${TOPBAR_MIST_PATH}|g" "$WAYBAR_DIR/style.css
 sed -i "s|NYXUS_BAR_STONE|file://${BAR_STONE_PATH}|g"      "$WAYBAR_DIR/style.css"
 # Belt-and-suspenders: convert any leftover hardcoded /home/nyx/ to real $HOME
 sed -i "s|file:///home/nyx/|file://$HOME/|g"               "$WAYBAR_DIR/style.css"
+# waybar-config.json has 15+ hardcoded /home/nyx/.config/waybar/... paths
+# in module on-click handlers. Rewrite them so non-`nyx` users get working
+# clicks (otherwise every waybar click on a NYXUS module is a no-op).
+if [[ "$HOME" != "/home/nyx" ]]; then
+  sed -i "s|/home/nyx/|$HOME/|g" "$WAYBAR_DIR/config" \
+    && ok "waybar config rewritten: /home/nyx/ → $HOME/"
+fi
 dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
 dl "waybar-stats.sh"          "$WAYBAR_DIR/stats.sh"          || failed=$((failed+1))
 dl "nyxus-sys-pulse.sh"       "$WAYBAR_DIR/sys-pulse.sh"      || failed=$((failed+1))
@@ -614,6 +621,17 @@ Keywords=nyxus;clock;time;world;stopwatch;timer;
 StartupWMClass=io.nyxus.clock
 DEOF
 ok "nyxus-clock.desktop"
+
+# ── FIX HARDCODED /home/nyx/ PATHS ────────────────────────────────────────────
+# All the .desktop heredocs above use the literal `/home/nyx/.nyxus/...`
+# because GTK desktop entries don't expand $HOME at runtime. On the live
+# ISO the user IS `nyx` so this works, but the moment someone installs
+# NYXUS and creates a real account, every Exec= path breaks. Rewrite to
+# the actual $HOME so apps launch under any username.
+if [[ "$HOME" != "/home/nyx" ]]; then
+  sed -i "s|/home/nyx/|$HOME/|g" "$DESKTOP_DIR"/nyxus-*.desktop 2>/dev/null \
+    && ok "desktop entries rewritten: /home/nyx/ → $HOME/"
+fi
 
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 
