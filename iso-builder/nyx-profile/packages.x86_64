@@ -113,6 +113,7 @@ alsa-utils
 # ── GTK4 + Python (for NYXUS apps) ────────────────────────────────
 gtk4
 libadwaita
+vte4
 python
 python-gobject
 python-pip
