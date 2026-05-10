@@ -216,6 +216,7 @@ WALLS_DIR="$HYPR_DIR/walls"
 mkdir -p "$WALLS_DIR"
 dl "nyxus-ink-swirl.png" "$WALLS_DIR/nyxus-ink-swirl.png" || failed=$((failed+1))
 dl "nyxus-void-wallpaper.mp4" "$WALLS_DIR/nyxus-void-wallpaper.mp4" || failed=$((failed+1))
+dl "nyxus-starfield-wall.png" "$WALLS_DIR/nyxus-starfield-wall.png" || failed=$((failed+1))
 dl "nyxus-taskbar-bg.png"         "$WALLS_DIR/nyxus-taskbar-bg.png"         || failed=$((failed+1))
 dl "nyxus-rightbar-bg.png"        "$WALLS_DIR/nyxus-rightbar-bg.png"        || failed=$((failed+1))
 dl "nyxus-starlight.png"          "$WALLS_DIR/nyxus-starlight.png"          || failed=$((failed+1))
@@ -749,19 +750,18 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   pkill -x swaybg    2>/dev/null || true
   pkill -x hyprpaper 2>/dev/null || true
   pkill -x mpvpaper  2>/dev/null || true
-  VOID_MP4="$WALLS_DIR/nyxus-void-wallpaper.mp4"
-  if command -v mpvpaper >/dev/null 2>&1 && [[ -s "$VOID_MP4" ]]; then
-    # rev r26d — speed=0.1 → 10× slower playback (video appears almost still).
-    nohup mpvpaper -o "no-audio loop-file=inf hwdec=auto-safe no-osc no-osd panscan=1.0 speed=0.1" \
-      '*' "$VOID_MP4" >/tmp/nyxus-mpvpaper.log 2>&1 &
+  STAR_PNG="$WALLS_DIR/nyxus-starfield-wall.png"
+  # rev r29 — STARFIELD STILL WALLPAPER (replaces void mp4). Static PNG
+  # via swaybg fill-mode; black letterbox blends invisibly into the
+  # starfield's own black background.
+  if command -v swaybg >/dev/null 2>&1 && [[ -s "$STAR_PNG" ]]; then
+    nohup swaybg -i "$STAR_PNG" -m fill -c "#000000" \
+      >/tmp/nyxus-swaybg.log 2>&1 &
     disown
-    ok "Wallpaper set — nyxus-void-wallpaper.mp4 (mpvpaper · animated)"
-  else
-    # Fallback: still image if mpvpaper missing or video missing
-    if command -v swaybg >/dev/null 2>&1; then
-      swaybg -i "$WALLS_DIR/nyxus-ink-swirl.png" -m fill & disown
-      warn "mpvpaper unavailable — fell back to static swaybg ink-swirl"
-    fi
+    ok "Wallpaper set — nyxus-starfield-wall.png (swaybg · static cratered starfield)"
+  elif command -v swaybg >/dev/null 2>&1; then
+    swaybg -i "$WALLS_DIR/nyxus-ink-swirl.png" -m fill & disown
+    warn "starfield image missing — fell back to static swaybg ink-swirl"
   fi
 fi
 
