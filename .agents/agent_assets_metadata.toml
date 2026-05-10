@@ -522,6 +522,30 @@ uri = "file://attached_assets/wallpaper_concepts/concept15_drifter_peacoat.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "LpgmSBqhZqKr5kg49MWOq"
+uri = "file://attached_assets/wallpaper_concepts/wall_sierengowski.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "60a249ThTVge6QPc-tu-E"
+uri = "file://attached_assets/wallpaper_concepts/wall_freight_moon.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "qcBw91desDs9moiMiWvju"
+uri = "file://attached_assets/wallpaper_concepts/wall_brutalist_detroit.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "6LcgQUbAzVPaKlHqYcIe9"
+uri = "file://attached_assets/wallpaper_concepts/wall_black_wolf.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -917,3 +941,27 @@ id = "B3J6Gb866fCj1HYuqmnaj"
 uri = "file://attached_assets/wallpaper_concepts/concept15_drifter_peacoat.png"
 type = "image"
 title = "Concept 15 — Drifter: Peacoat + Suspenders (void background)"
+
+[[outputs]]
+id = "mk5pf-lKGYVPCkEki403D"
+uri = "file://attached_assets/wallpaper_concepts/wall_sierengowski.png"
+type = "image"
+title = "Wall 2 — SIERENGOWSKI Wordmark"
+
+[[outputs]]
+id = "bGUx70Fm_Xe_TkxhmcWij"
+uri = "file://attached_assets/wallpaper_concepts/wall_freight_moon.png"
+type = "image"
+title = "Wall 3 — Drifter on Freight Train (Massive Moon)"
+
+[[outputs]]
+id = "HFhfmHe9q82tPOu4rEbBX"
+uri = "file://attached_assets/wallpaper_concepts/wall_brutalist_detroit.png"
+type = "image"
+title = "Wall 4 — Brutalist Cyber-Detroit"
+
+[[outputs]]
+id = "MDHY1KHRkdQ69NtrGmj2P"
+uri = "file://attached_assets/wallpaper_concepts/wall_black_wolf.png"
+type = "image"
+title = "Wall 5 — Black Wolf in Foggy Forest"
