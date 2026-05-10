@@ -637,7 +637,7 @@ fi
 # 4.5b  Pull background images so waybar style.css path substitutions resolve
 NYX_BG_DIR="$NYX_HOME_DIR/backgrounds"
 mkdir -p "$NYX_BG_DIR"; chown "$REAL_USER:$REAL_USER" "$NYX_BG_DIR"
-for bg in nyxus-taskbar-bg.png nyxus-rightbar-bg.png nyxus-frost-sierengowski.png nyxus-starlight.png nyxus-void-wallpaper.mp4; do
+for bg in nyxus-taskbar-bg.png nyxus-rightbar-bg.png nyxus-frost-sierengowski.png nyxus-starlight.png nyxus-waybar-stars.png nyxus-void-wallpaper.mp4; do
   bgdst="$NYX_BG_DIR/$bg"
   if [[ ! -f "$bgdst" ]] || [[ "${1:-}" == "--force-bg" ]]; then
     if curl -fsSL --max-time 60 "$PROD/$bg" -o "$bgdst.new"; then
@@ -679,12 +679,14 @@ WALL_PATH="$NYX_BG_DIR/nyxus-frost-sierengowski.png"
 TASKBAR_BG_PATH="$NYX_BG_DIR/nyxus-taskbar-bg.png"
 RIGHTBAR_BG_PATH="$NYX_BG_DIR/nyxus-rightbar-bg.png"
 STARLIGHT_BG_PATH="$NYX_BG_DIR/nyxus-starlight.png"
+WAYBAR_STARS_PATH="$NYX_BG_DIR/nyxus-waybar-stars.png"
 if curl -fsSL --max-time 30 "$PROD/waybar-style.css" -o "$WB_CSS.new"; then
   if [[ -s "$WB_CSS.new" ]]; then
     sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"                  "$WB_CSS.new"
     sed -i "s|NYXUS_TASKBAR_BG|file://${TASKBAR_BG_PATH}|g"    "$WB_CSS.new"
     sed -i "s|NYXUS_RIGHTBAR_BG|file://${RIGHTBAR_BG_PATH}|g"  "$WB_CSS.new"
     sed -i "s|NYXUS_STARLIGHT_BG|file://${STARLIGHT_BG_PATH}|g" "$WB_CSS.new"
+    sed -i "s|NYXUS_WAYBAR_STARS|file://${WAYBAR_STARS_PATH}|g" "$WB_CSS.new"
     sed -i "s|file:///home/nyx/|file://$REAL_HOME/|g"          "$WB_CSS.new"
     mv "$WB_CSS.new" "$WB_CSS"
     chown "$REAL_USER:$REAL_USER" "$WB_CSS"

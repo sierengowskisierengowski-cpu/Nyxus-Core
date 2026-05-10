@@ -37,41 +37,42 @@
    ticker reads as a true full-width LIVE marquee. Subtle bottom
    hairline only, to separate it from the wallpaper visually. */
 
-/* rev r26b — 75% TRANSPARENT BAR SHELLS (bottom / left / right) +
-   100% transparent TOP. Per user spec: faint dark veil at 25% opacity
-   so the wallpaper still reads strongly but module pebbles sit on a
-   subtle backdrop instead of floating naked. Top bar stays fully
-   transparent so the centered ticker reads as pure marquee text. */
-window#waybar,
-window#waybar.bottom,
+/* ── rev r27 — STARFIELD-STONE TEXTURED BARS  (top / left / right) ──────
+   The wallpaper-stars-on-rough-stone PNG is loaded as the bar background,
+   then darkened by a near-opaque black overlay so the texture reads as
+   a SUBTLE backplate (~22% texture visible) rather than competing with
+   module text. The image tiles seamlessly at 360px so it reads as a
+   continuous "carved obsidian with embedded stars" surface across all
+   three bars. The bottom bar is intentionally EXCLUDED from this rule —
+   it gets the bespoke ASTROLABE CONSOLE treatment further below.        */
+window#waybar.top,
 window#waybar.left,
 window#waybar.right {
-    background-image:    none;
-    background-color:    rgba(8, 8, 14, 0.25);
+    background-image:
+        linear-gradient(
+            rgba(0, 0, 0, 0.78),
+            rgba(0, 0, 0, 0.78)
+        ),
+        url("NYXUS_WAYBAR_STARS");
+    background-color:    rgba(8, 8, 14, 0.55);
+    background-size:     auto, 360px 360px;
+    background-repeat:   repeat, repeat;
     color:               #c8ccd6;
     border:              none;
     border-radius:       14px;
     box-shadow:
-        inset  0   1px  0   rgba(255, 255, 255, 0.05),
-        inset  0  -1px  0   rgba(0,   0,   0,   0.45),
-        0      6px  18px    rgba(0,   0,   0,   0.45);
+        inset  0   1px  0   rgba(255, 255, 255, 0.06),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.55),
+        0      8px  22px    rgba(0,   0,   0,   0.55);
 }
 
-/* TOP bar — fully transparent, no ribbon, no drop shadow, no radius */
+/* TOP bar — same starfield, but edge-to-edge (no margin / no radius) so
+   the ticker still reads as a full-width marquee. */
 window#waybar.top {
-    background-image: none;
-    background-color: rgba(0, 0, 0, 0);
-    color:            #c8ccd6;
-    border:           none;
     border-radius:    0;
-    box-shadow:       none;
-}
-
-/* Side bars — 75% transparent (inherit from combined block above) */
-window#waybar.left,
-window#waybar.right {
-    background-color: rgba(8, 8, 14, 0.25);
-    border-radius:    14px;
+    box-shadow:
+        inset  0  -1px  0   rgba(255, 255, 255, 0.05),
+        0      2px  6px     rgba(0,   0,   0,   0.45);
 }
 
 /* ── 2. UNIVERSAL INSTRUMENT PEBBLE (status indicators · all bars) ────── */
@@ -225,154 +226,273 @@ window#waybar.right #custom-divider {
     100% { opacity: 0.93; }
 }
 
-/* rev r26b — BOTTOM 75% TRANSPARENT (matches sides). Faint dark veil
-   at 25% opacity, soft hairline insets, pillow drop. No starlight
-   image, no animation. */
+/* ════════════════════════════════════════════════════════════════════════
+   ★ rev r27 — ASTROLABE CONSOLE  (bottom bar · centerpiece)
+   ════════════════════════════════════════════════════════════════════════
+   The bottom bar is the system's marquee instrument. It is the only bar
+   that does NOT inherit the starfield-stone backplate above; instead it
+   is true frosted black glass with a soft luminous rim. Modules read as
+   deeply ENGRAVED octagonal stone cells — each pebble carries a hairline
+   chiseled top-edge highlight, a darker bottom-edge cut, and a wide
+   pillow drop that lifts it off the bar. Hover lights the rim from
+   within (white-glow accent · locked-palette compliant).
+
+       [✕ START · HEARTBEAT]   [◴ PULSE · ◈ N·Y·X · TRAY]   [◷ CLOCK · NOTIF · ≡ PANEL]
+
+   The centre-piece replaces SIERENGOWSKI with a triple-glyph N·Y·X
+   monogram flanked by the live ASTROLABE SIGIL — a 4-frame rotating
+   quarter-circle that turns faster as system load rises. Reads as a
+   piece of carved navigation instrument, not a software taskbar.
+   ════════════════════════════════════════════════════════════════════════ */
 window#waybar.bottom {
     background-image: none;
-    background-color: rgba(8, 8, 14, 0.25);
+    background-color: rgba(6, 6, 12, 0.42);
     border:           none;
-    border-radius:    14px;
+    border-radius:    16px;
     box-shadow:
-        inset  0   1px  0   rgba(255, 255, 255, 0.05),
-        inset  0  -1px  0   rgba(0,   0,   0,   0.45),
-        0      6px  18px    rgba(0,   0,   0,   0.45);
+        inset  0   1px  0   rgba(255, 255, 255, 0.10),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.78),
+        inset  1px 0    0   rgba(255, 255, 255, 0.04),
+        inset -1px 0    0   rgba(0,   0,   0,   0.55),
+        0      10px 28px    rgba(0,   0,   0,   0.55),
+        0      0    48px    rgba(0,   0,   0,   0.35);
     animation:        none;
 }
 
-/* ── 7a · INSTRUMENT GLYPH BUTTONS · ✕ start  /  ≡ panel ──────────── */
+/* ── 7a · ENGRAVED STONE BUTTONS · ✕ start  /  ≡ panel ──────────────────
+   Square instrument cells with a chiseled bevel: bright top-edge rim,
+   ink bottom-edge cut, hairline side-rails, pillow drop. Hover wakes
+   the rim and brightens the engraved glyph with a soft halo.            */
 window#waybar.bottom #custom-nyxus-start,
 window#waybar.bottom #custom-nyxus-panel {
     font-family:      'JetBrains Mono', 'Inter Display', monospace;
-    font-size:        20px;
-    font-weight:      600;
+    font-size:        18px;
+    font-weight:      700;
     letter-spacing:   0;
-    color:            #6a6e78;
-    background-color: #0a0a0e;
+    color:            #8a8f99;
+    background-color: rgba(0, 0, 0, 0.62);
     padding:          0;
-    margin:           8px 6px;
-    min-width:        36px;
+    margin:           10px 6px;
+    min-width:        38px;
     min-height:       36px;
-    border-radius:    4px;          /* sharp instrument-style corners */
-    border:           1px solid rgba(255, 255, 255, 0.07);
-    text-shadow:      none;
-    box-shadow:       none;
-    transition:       background-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
-                      color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
-                      border-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    border-radius:    9px;
+    border:           none;
+    text-shadow:
+        0 1px 0 rgba(0, 0, 0, 0.85);
+    box-shadow:
+        inset  0   1px  0   rgba(255, 255, 255, 0.16),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.85),
+        inset  1px 0    0   rgba(255, 255, 255, 0.05),
+        inset -1px 0    0   rgba(0,   0,   0,   0.55),
+        0      2px  4px     rgba(0,   0,   0,   0.65);
+    transition:       background-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      text-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-window#waybar.bottom #custom-nyxus-start { margin-left:  12px; }
-window#waybar.bottom #custom-nyxus-panel { margin-right: 12px; }
+window#waybar.bottom #custom-nyxus-start { margin-left:  14px; }
+window#waybar.bottom #custom-nyxus-panel { margin-right: 14px; }
 
 window#waybar.bottom #custom-nyxus-start:hover,
 window#waybar.bottom #custom-nyxus-panel:hover {
-    color:            #e8edf5;
-    background-color: #000000;
-    border:           1px solid rgba(255, 255, 255, 0.24);
-    text-shadow:      0 0 6px rgba(255, 255, 255, 0.45);
-    box-shadow:       none;
+    color:            #ffffff;
+    background-color: rgba(0, 0, 0, 0.92);
+    text-shadow:
+        0 0 8px  rgba(255, 255, 255, 0.85),
+        0 0 18px rgba(255, 255, 255, 0.45);
+    box-shadow:
+        inset  0   1px  0   rgba(255, 255, 255, 0.32),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.92),
+        inset  1px 0    0   rgba(255, 255, 255, 0.10),
+        inset -1px 0    0   rgba(0,   0,   0,   0.65),
+        0      2px  6px     rgba(0,   0,   0,   0.75),
+        0      0    12px    rgba(255, 255, 255, 0.16);
 }
 
-/* ── 7b · HEARTBEAT BADGE · "● SYS·LIVE" ─────────────────────────── */
+/* ── 7b · HEARTBEAT BADGE · "● SYS·LIVE" ─ engraved label, no pebble ── */
 window#waybar.bottom #custom-heartbeat {
     font-family:      'JetBrains Mono', 'Fira Mono', monospace;
     font-size:        10px;
     font-weight:      700;
-    letter-spacing:   0.22em;
+    letter-spacing:   0.24em;
     color:            #6a6e78;
     background-color: transparent;
-    padding:          0 14px 0 8px;
-    margin:           8px 0 8px 4px;
+    padding:          0 14px 0 10px;
+    margin:           10px 0 10px 6px;
     min-height:       36px;
     border-radius:    0;
     border:           none;
-    border-right:     1px solid rgba(255, 255, 255, 0.06);  /* divider pillar */
-    text-shadow:      none;
+    border-right:     1px solid rgba(255, 255, 255, 0.06);
+    text-shadow:      0 1px 0 rgba(0, 0, 0, 0.85);
     box-shadow:       none;
-    transition:       color 160ms ease-out;
+    transition:       color 200ms ease-out, text-shadow 200ms ease-out;
 }
 window#waybar.bottom #custom-heartbeat:hover {
     color:            #e8edf5;
-    text-shadow:      0 0 6px rgba(255, 255, 255, 0.40);
+    text-shadow:
+        0 1px 0 rgba(0, 0, 0, 0.85),
+        0 0   8px rgba(255, 255, 255, 0.55);
 }
 
-/* ── 7c · CENTER WORDMARK PLINTH · NYXUS · SIERENGOWSKI ─────────── */
-window#waybar.bottom #custom-brand {
-    font-family:      'Architects Daughter', 'Caveat', 'Inter Display', cursive;
-    font-size:        15px;
+/* ── 7c · LIVE ASTROLABE SIGIL · ◴◵◶◷ rotates with system load ────────
+   The single most original element on the bar: a real-time quarter-arc
+   glyph that turns faster as 1-min loadavg climbs. Three CSS classes
+   colour it (low / med / high) so the user reads system pressure at a
+   glance without a bar graph.                                            */
+window#waybar.bottom #custom-sys-pulse {
+    font-family:      'JetBrains Mono', 'Symbols Nerd Font', monospace;
+    font-size:        20px;
     font-weight:      400;
-    letter-spacing:   0.30em;
-    color:            rgba(232, 237, 245, 0.78);
+    letter-spacing:   0;
+    color:            #58606e;
+    background-color: rgba(0, 0, 0, 0.55);
+    padding:          0 6px;
+    margin:           10px 4px 10px 14px;
+    min-width:        36px;
+    min-height:       36px;
+    border-radius:    50%;
+    border:           none;
+    text-shadow:
+        0 0 6px rgba(255, 255, 255, 0.15),
+        0 1px 0 rgba(0,   0,   0,   0.85);
+    box-shadow:
+        inset  0   1px  0   rgba(255, 255, 255, 0.18),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.85),
+        0      2px  4px     rgba(0,   0,   0,   0.65);
+    transition:       color 600ms ease-out, text-shadow 600ms ease-out;
+}
+window#waybar.bottom #custom-sys-pulse.low {
+    color:        #6a6e78;
+    text-shadow:
+        0 0 4px rgba(255, 255, 255, 0.12),
+        0 1px 0 rgba(0,   0,   0,   0.85);
+}
+window#waybar.bottom #custom-sys-pulse.med {
+    color:        #c8ccd6;
+    text-shadow:
+        0 0 8px  rgba(255, 255, 255, 0.45),
+        0 0 16px rgba(255, 255, 255, 0.18),
+        0 1px 0  rgba(0,   0,   0,   0.85);
+}
+window#waybar.bottom #custom-sys-pulse.high {
+    color:        #ffffff;
+    text-shadow:
+        0 0 10px rgba(255, 255, 255, 0.85),
+        0 0 22px rgba(255, 255, 255, 0.45),
+        0 1px 0  rgba(0,   0,   0,   0.85);
+}
+
+/* ── 7d · CENTER MONOGRAM PLINTH · ◈ N·Y·X ◈ ─ engraved with hairline
+   pillars on both sides. Replaces the old SIERENGOWSKI brand. White-glow
+   accent allowed (locked palette: jewelry-rule on wordmarks).            */
+window#waybar.bottom #custom-nyx-monogram {
+    font-family:      'JetBrains Mono', 'Inter Display', monospace;
+    font-size:        13px;
+    font-weight:      700;
+    letter-spacing:   0.36em;
+    color:            #d6dae2;
     background-color: transparent;
-    padding:          0 28px;
-    margin:           8px 0;
+    padding:          0 26px 0 22px;
+    margin:           10px 0;
     min-height:       36px;
     border-radius:    0;
     border:           none;
-    border-left:      1px solid rgba(255, 255, 255, 0.08);   /* pillar L */
-    border-right:     1px solid rgba(255, 255, 255, 0.08);   /* pillar R */
-    /* Locked-palette jewelry glow (white-glow accent allowed on wordmarks) */
+    border-left:      1px solid rgba(255, 255, 255, 0.08);
+    border-right:     1px solid rgba(255, 255, 255, 0.08);
     text-shadow:
-        0 0 8px  rgba(255, 255, 255, 0.55),
-        0 0 18px rgba(255, 255, 255, 0.30);
+        0 0 8px  rgba(255, 255, 255, 0.45),
+        0 0 18px rgba(255, 255, 255, 0.18),
+        0 1px 0  rgba(0,   0,   0,   0.85);
     box-shadow:       none;
-    transition:       color 200ms ease-out;
+    transition:       color 200ms ease-out, text-shadow 200ms ease-out;
 }
-window#waybar.bottom #custom-brand:hover {
+window#waybar.bottom #custom-nyx-monogram:hover {
     color:            #ffffff;
     text-shadow:
         0 0 10px rgba(255, 255, 255, 0.85),
-        0 0 24px rgba(255, 255, 255, 0.45);
+        0 0 24px rgba(255, 255, 255, 0.45),
+        0 1px 0  rgba(0,   0,   0,   0.85);
 }
 
-/* ── 7d · CLOCK · monospace tabular HH:MM · DAY DD ───────────────── */
+/* ── 7e · CLOCK · ◷ instrument prefix + monospace tabular HH:MM ──── */
 window#waybar.bottom #clock {
     font-family:      'JetBrains Mono', 'Fira Mono', monospace;
     font-size:        12px;
-    font-weight:      600;
-    letter-spacing:   0.10em;
+    font-weight:      700;
+    letter-spacing:   0.14em;
     color:            #c8ccd6;
-    background-color: transparent;
-    padding:          0 14px;
-    margin:           8px 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    padding:          0 16px;
+    margin:           10px 6px;
     min-height:       36px;
-    border-radius:    0;
+    border-radius:    9px;
     border:           none;
-    border-right:     1px solid rgba(255, 255, 255, 0.06);   /* divider pillar */
-    text-shadow:      none;
-    box-shadow:       none;
-    transition:       color 160ms ease-out;
+    text-shadow:
+        0 1px 0 rgba(0, 0, 0, 0.85);
+    box-shadow:
+        inset  0   1px  0   rgba(255, 255, 255, 0.12),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.78),
+        inset  1px 0    0   rgba(255, 255, 255, 0.04),
+        inset -1px 0    0   rgba(0,   0,   0,   0.55),
+        0      2px  4px     rgba(0,   0,   0,   0.55);
+    transition:       color 200ms ease-out, background-color 200ms ease-out,
+                      text-shadow 200ms ease-out, box-shadow 200ms ease-out;
 }
 window#waybar.bottom #clock:hover {
     color:            #ffffff;
-    text-shadow:      0 0 6px rgba(255, 255, 255, 0.40);
+    background-color: rgba(0, 0, 0, 0.85);
+    text-shadow:
+        0 0 8px rgba(255, 255, 255, 0.55),
+        0 1px 0 rgba(0, 0, 0, 0.85);
+    box-shadow:
+        inset  0   1px  0   rgba(255, 255, 255, 0.28),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.92),
+        inset  1px 0    0   rgba(255, 255, 255, 0.08),
+        inset -1px 0    0   rgba(0,   0,   0,   0.65),
+        0      2px  6px     rgba(0,   0,   0,   0.75),
+        0      0    12px    rgba(255, 255, 255, 0.12);
 }
 
-/* ── 7e · NOTIFICATIONS · instrument-style match ─────────────────── */
+/* ── 7f · NOTIFICATIONS · matched engraved-stone pebble ─────────────── */
 window#waybar.bottom #custom-notifications {
     font-family:      'JetBrains Mono', 'Fira Mono', monospace;
     font-size:        11px;
     font-weight:      700;
-    letter-spacing:   0.18em;
-    color:            #6a6e78;
-    background-color: #0a0a0e;
-    padding:          0 12px;
-    margin:           8px 4px;
+    letter-spacing:   0.20em;
+    color:            #8a8f99;
+    background-color: rgba(0, 0, 0, 0.62);
+    padding:          0 14px;
+    margin:           10px 4px;
     min-height:       36px;
-    border-radius:    4px;
-    border:           1px solid rgba(255, 255, 255, 0.07);
-    text-shadow:      none;
-    box-shadow:       none;
-    transition:       background-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
-                      color 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
-                      border-color 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    border-radius:    9px;
+    border:           none;
+    text-shadow:
+        0 1px 0 rgba(0, 0, 0, 0.85);
+    box-shadow:
+        inset  0   1px  0   rgba(255, 255, 255, 0.16),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.85),
+        inset  1px 0    0   rgba(255, 255, 255, 0.05),
+        inset -1px 0    0   rgba(0,   0,   0,   0.55),
+        0      2px  4px     rgba(0,   0,   0,   0.65);
+    transition:       background-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      text-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+                      box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 window#waybar.bottom #custom-notifications:hover {
-    color:            #e8edf5;
-    background-color: #000000;
-    border:           1px solid rgba(255, 255, 255, 0.24);
-    text-shadow:      0 0 6px rgba(255, 255, 255, 0.45);
+    color:            #ffffff;
+    background-color: rgba(0, 0, 0, 0.92);
+    text-shadow:
+        0 0 8px rgba(255, 255, 255, 0.85),
+        0 1px 0 rgba(0, 0, 0, 0.85);
+    box-shadow:
+        inset  0   1px  0   rgba(255, 255, 255, 0.32),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.92),
+        inset  1px 0    0   rgba(255, 255, 255, 0.10),
+        inset -1px 0    0   rgba(0,   0,   0,   0.65),
+        0      2px  6px     rgba(0,   0,   0,   0.75),
+        0      0    12px    rgba(255, 255, 255, 0.16);
 }
 
 /* ── 7f · TRAY · transparent floating icons centered next to plinth ─── */
