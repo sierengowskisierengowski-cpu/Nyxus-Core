@@ -486,6 +486,24 @@ uri = "file://attached_assets/wallpaper_concepts/concept9_bw_sincity.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "kgefNxWEYfD8No4jzirkF"
+uri = "file://attached_assets/wallpaper_concepts/concept10_hobo_mignola.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "DjCL4_8i1ih8MuNCAN16X"
+uri = "file://attached_assets/wallpaper_concepts/concept11_hobo_sincity.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "DETlRCEJlGzt9MJaeYYZP"
+uri = "file://attached_assets/wallpaper_concepts/concept12_hobo_nihei.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -845,3 +863,21 @@ id = "ivEM4zz-FA-Yfmoo2keak"
 uri = "file://attached_assets/wallpaper_concepts/concept9_bw_sincity.png"
 type = "image"
 title = "Concept 9 — B&W Sin City Frank Miller"
+
+[[outputs]]
+id = "UMCOgd6ZX_lRcfZskPp1B"
+uri = "file://attached_assets/wallpaper_concepts/concept10_hobo_mignola.png"
+type = "image"
+title = "Concept 10 — Hobo: Mignola Hellboy"
+
+[[outputs]]
+id = "7-utRholDQKpcQsTrINMU"
+uri = "file://attached_assets/wallpaper_concepts/concept11_hobo_sincity.png"
+type = "image"
+title = "Concept 11 — Hobo: Sin City"
+
+[[outputs]]
+id = "pIgF2T4Uw95pMcZORM9_D"
+uri = "file://attached_assets/wallpaper_concepts/concept12_hobo_nihei.png"
+type = "image"
+title = "Concept 12 — Hobo: Nihei/Otomo Manga"
