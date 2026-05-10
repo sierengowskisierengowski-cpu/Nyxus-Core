@@ -55,7 +55,7 @@ window#waybar.right {
         ),
         url("NYXUS_WAYBAR_STARS");
     background-color:    rgba(4, 4, 10, 0.85);
-    background-size:     auto, 420px 420px;
+    background-size:     auto, auto;
     background-repeat:   repeat, repeat;
     color:               #c8ccd6;
     border:              none;
