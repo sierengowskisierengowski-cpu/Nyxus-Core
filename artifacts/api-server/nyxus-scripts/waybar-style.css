@@ -48,15 +48,26 @@
 window#waybar.top,
 window#waybar.left,
 window#waybar.right {
+    /* rev r28 — REVEAL the cratered-stone texture. Three layers,
+       top-to-bottom in CSS = front-to-back in render:
+         1. faint screen-blend white wash (lifts crater rims, ~6%)
+         2. very thin dark veil (only enough to keep text readable, ~22%)
+         3. the cratered moon image itself
+       background-blend-mode applies per layer (screen, normal, normal). */
     background-image:
         linear-gradient(
-            rgba(0, 0, 0, 0.45),
-            rgba(0, 0, 0, 0.45)
+            rgba(255, 255, 255, 0.06),
+            rgba(255, 255, 255, 0.06)
+        ),
+        linear-gradient(
+            rgba(0, 0, 0, 0.22),
+            rgba(0, 0, 0, 0.22)
         ),
         url("NYXUS_WAYBAR_STARS");
-    background-color:    rgba(0, 0, 0, 0.55);
-    background-size:     auto, auto;
-    background-repeat:   repeat, repeat;
+    background-blend-mode: screen, normal, normal;
+    background-color:      rgba(0, 0, 0, 0.25);
+    background-size:       auto, auto, auto;
+    background-repeat:     repeat, repeat, repeat;
     color:               #c8ccd6;
     border:              none;
     border-radius:       14px;
