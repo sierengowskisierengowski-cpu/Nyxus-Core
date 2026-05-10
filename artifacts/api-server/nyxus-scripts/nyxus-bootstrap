@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║  NYXUS — first-boot bootstrap                                        ║
+# ║  Lives at: /usr/local/bin/nyxus-bootstrap                            ║
+# ║  Triggered by: Hyprland exec-once on every login (idempotent)        ║
+# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+#
+# Behavior:
+#   - First successful run: pulls nyxus_install.sh from production (or the
+#     pre-staged offline cache at /opt/nyxus-cache), runs it, then drops a
+#     marker at ~/.nyxus/.bootstrapped to no-op on subsequent boots.
+#   - Subsequent boots: marker present → exit 0 immediately (~no-op).
+#   - To force re-bootstrap:  rm ~/.nyxus/.bootstrapped && nyxus-bootstrap
+#
+# Logs: /tmp/nyxus-bootstrap.log (Hyprland tee already wraps the call)
+set -uo pipefail
+
+PROD_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/download/nyxus/nyxus_install.sh"
+OFFLINE_CACHE="${NYXUS_OFFLINE_DIR:-/opt/nyxus-cache}"
+NYXUS_DIR="${HOME}/.nyxus"
+MARK="${NYXUS_DIR}/.bootstrapped"
+
+log() { printf '[nyxus-bootstrap] %s %s\n' "$(date -Iseconds)" "$*"; }
+
+log "starting (user=${USER:-?} home=${HOME:-?})"
+mkdir -p "${NYXUS_DIR}"
+
+# Already bootstrapped → no-op fast path
+if [[ -f "${MARK}" ]]; then
+  log "already bootstrapped (mark: ${MARK}) — nothing to do"
+  exit 0
+fi
+
+# ── 1. Try network ──────────────────────────────────────────────────────────
+TMP_INSTALLER="$(mktemp /tmp/nyxus_install.XXXXXX.sh)"
+trap 'rm -f "${TMP_INSTALLER}"' EXIT
+
+if curl -fsSL --max-time 30 --retry 2 --retry-delay 3 \
+       "${PROD_URL}" -o "${TMP_INSTALLER}" 2>/dev/null; then
+  log "downloaded installer from ${PROD_URL}"
+  if bash "${TMP_INSTALLER}"; then
+    touch "${MARK}"
+    log "complete (online) — marker written: ${MARK}"
+    exit 0
+  else
+    rc=$?
+    log "installer exited with code ${rc} — NOT marking bootstrapped (will retry next boot)"
+    exit "${rc}"
+  fi
+fi
+
+# ── 2. Offline fallback (pre-staged ISO cache) ──────────────────────────────
+if [[ -d "${OFFLINE_CACHE}" && -f "${OFFLINE_CACHE}/nyxus_install.sh" ]]; then
+  log "no internet — using offline cache: ${OFFLINE_CACHE}"
+  if NYXUS_OFFLINE_DIR="${OFFLINE_CACHE}" bash "${OFFLINE_CACHE}/nyxus_install.sh"; then
+    touch "${MARK}"
+    log "complete (offline) — marker written: ${MARK}"
+    exit 0
+  else
+    rc=$?
+    log "offline installer exited with code ${rc} — NOT marking bootstrapped"
+    exit "${rc}"
+  fi
+fi
+
+# ── 3. No internet, no cache → fail loud, leave a hint on the desktop ───────
+log "FAILED: no internet AND no offline cache at ${OFFLINE_CACHE}"
+log "Once online, re-run manually:  nyxus-bootstrap"
+
+# Drop a visible note on the desktop so a non-technical user knows what to do.
+NOTE="${HOME}/Desktop/NYXUS-FIRST-BOOT-FAILED.txt"
+mkdir -p "${HOME}/Desktop" 2>/dev/null
+cat > "${NOTE}" 2>/dev/null <<EONOTE
+NYXUS first-boot bootstrap could not download its installer.
+
+The system needs internet on first boot to fetch wallpapers, configs, and
+apps from production. Once you're online (NetworkManager applet on the
+waybar), open a terminal and run:
+
+    nyxus-bootstrap
+
+If you don't have a waybar yet, press SUPER+Q for a terminal, or
+SUPER+ENTER for Alacritty.
+
+— NYXUS · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+EONOTE
+
+exit 1
