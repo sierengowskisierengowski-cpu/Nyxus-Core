@@ -8,13 +8,25 @@
 #
 # Behavior:
 #   - First successful run: pulls nyxus_install.sh from production (or the
-#     pre-staged offline cache at /opt/nyxus-cache), runs it, then drops a
-#     marker at ~/.nyxus/.bootstrapped to no-op on subsequent boots.
-#   - Subsequent boots: marker present → exit 0 immediately (~no-op).
-#   - To force re-bootstrap:  rm ~/.nyxus/.bootstrapped && nyxus-bootstrap
+#     pre-staged offline cache at /opt/nyxus-cache), runs it, then writes
+#     the current BOOTSTRAP_VERSION into ~/.nyxus/.bootstrapped to no-op
+#     on subsequent boots.
+#   - Subsequent boots: marker present AND version matches → exit 0.
+#     Marker present but version mismatch (i.e. a newer ISO/bake landed
+#     a newer bootstrap script with a bumped version) → AUTO RE-RUN so
+#     the user picks up new configs/apps without manual intervention.
+#   - To force re-bootstrap manually: rm ~/.nyxus/.bootstrapped && nyxus-bootstrap
+#
+# Bumping BOOTSTRAP_VERSION:
+#   When you ship a bake that needs to refresh installed systems
+#   (new hyprland.conf, new app, new package list, etc.), bump this number.
+#   Existing installs will detect the mismatch on next login and self-heal.
 #
 # Logs: /tmp/nyxus-bootstrap.log (Hyprland tee already wraps the call)
 set -uo pipefail
+
+# ── Version stamp: BUMP ON EVERY RELEASE THAT TOUCHES INSTALLED FILES ───────
+BOOTSTRAP_VERSION="2026.05.10-r5"
 
 PROD_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/download/nyxus/nyxus_install.sh"
 OFFLINE_CACHE="${NYXUS_OFFLINE_DIR:-/opt/nyxus-cache}"
@@ -36,13 +48,21 @@ notify() {
     >/dev/null 2>&1 || true
 }
 
-log "starting (user=${USER:-?} home=${HOME:-?})"
+log "starting (user=${USER:-?} home=${HOME:-?} version=${BOOTSTRAP_VERSION})"
 mkdir -p "${NYXUS_DIR}"
 
-# Already bootstrapped → no-op fast path (no splash, this is steady-state)
+# Already bootstrapped → version check fast path
+# If marker contains current version → no-op (steady state).
+# If marker contains an older version → fall through and re-run so the
+# new bake's hyprland.conf, packages, and apps land automatically.
 if [[ -f "${MARK}" ]]; then
-  log "already bootstrapped (mark: ${MARK}) — nothing to do"
-  exit 0
+  INSTALLED_VERSION="$(cat "${MARK}" 2>/dev/null | head -1 | tr -d '[:space:]')"
+  if [[ "${INSTALLED_VERSION}" == "${BOOTSTRAP_VERSION}" ]]; then
+    log "already bootstrapped at version ${BOOTSTRAP_VERSION} — nothing to do"
+    exit 0
+  fi
+  log "marker version (${INSTALLED_VERSION:-<empty>}) != current (${BOOTSTRAP_VERSION}) — refreshing"
+  notify 2 60000 "rgb(c8ccd6)" "new NYXUS version detected (${BOOTSTRAP_VERSION}) — refreshing configs…"
 fi
 
 # First-boot splash — long timeout so it stays up through the install.
@@ -89,8 +109,8 @@ if curl -fsSL --max-time 30 --retry 2 --retry-delay 3 \
   log "downloaded installer from ${PROD_URL}"
   notify 2 10000 "rgb(c8ccd6)" "downloaded installer · running install (this is the long part)…"
   if bash "${TMP_INSTALLER}"; then
-    touch "${MARK}"
-    log "complete (online) — marker written: ${MARK}"
+    echo "${BOOTSTRAP_VERSION}" > "${MARK}"
+    log "complete (online) — marker written: ${MARK} (version ${BOOTSTRAP_VERSION})"
     notify 5 8000 "rgb(e8edf5)" "ready · welcome, ${USER:-friend}"
     exit 0
   else
@@ -106,8 +126,8 @@ if [[ -d "${OFFLINE_CACHE}" && -f "${OFFLINE_CACHE}/nyxus_install.sh" ]]; then
   log "no internet — using offline cache: ${OFFLINE_CACHE}"
   notify 2 10000 "rgb(c8ccd6)" "no internet — using offline cache, installing…"
   if NYXUS_OFFLINE_DIR="${OFFLINE_CACHE}" bash "${OFFLINE_CACHE}/nyxus_install.sh"; then
-    touch "${MARK}"
-    log "complete (offline) — marker written: ${MARK}"
+    echo "${BOOTSTRAP_VERSION}" > "${MARK}"
+    log "complete (offline) — marker written: ${MARK} (version ${BOOTSTRAP_VERSION})"
     notify 5 8000 "rgb(e8edf5)" "ready (offline install) · welcome, ${USER:-friend}"
     exit 0
   else
