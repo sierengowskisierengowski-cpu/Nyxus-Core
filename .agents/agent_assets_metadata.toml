@@ -1018,7 +1018,7 @@ title = "Wall 6 — Liquid Swirl (NYXUS Dark Mirror)"
 id = "etN45VwmC0GSf6iDGwL_Y"
 uri = "file://iso-builder/nyx-profile/airootfs/usr/share/plymouth/themes/nyxus-void/wordmark.png"
 type = "image"
-title = "New NYXUS wordmark (engraved tri-layer glow)"
+title = "NYXUS wordmark v2 — big X + WELCOME TO THE [DARK]SIDE"
 
 [[outputs]]
 id = "9EOkOkCvvdzK-OiLlt48p"
