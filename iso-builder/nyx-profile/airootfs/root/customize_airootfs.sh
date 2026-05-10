@@ -60,7 +60,19 @@ if ! command -v mpvpaper >/dev/null 2>&1; then
   cd / && rm -rf "$_bdir"
 fi
 
-# ── Enable display + network services ──────────────────────────────────
-systemctl enable sddm.service           2>/dev/null || true
-systemctl enable NetworkManager.service 2>/dev/null || true
-systemctl enable systemd-timesyncd.service 2>/dev/null || true
+# ── Enable display + network + hardware services on the LIVE ISO ───────
+# These are also re-enabled by nyxus-postinstall on the installed system,
+# but enabling them in the live image means hardware works for live demos.
+systemctl enable sddm.service                2>/dev/null || true
+systemctl enable NetworkManager.service      2>/dev/null || true
+systemctl enable systemd-timesyncd.service   2>/dev/null || true
+systemctl enable bluetooth.service           2>/dev/null || true
+systemctl enable thermald.service            2>/dev/null || true
+systemctl enable power-profiles-daemon.service 2>/dev/null || true
+systemctl enable acpid.service               2>/dev/null || true
+systemctl enable cups.service                2>/dev/null || true
+systemctl enable fstrim.timer                2>/dev/null || true
+# NVIDIA suspend/resume hooks ship with nvidia-utils ≥435
+systemctl enable nvidia-suspend.service      2>/dev/null || true
+systemctl enable nvidia-resume.service       2>/dev/null || true
+systemctl enable nvidia-hibernate.service    2>/dev/null || true

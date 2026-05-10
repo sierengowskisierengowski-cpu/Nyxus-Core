@@ -160,6 +160,73 @@ starship
 ranger
 
 
+# ── GPU drivers — NVIDIA hybrid stack (LOCKED · 2026-05-10 r5) ────
+# Target hw: MSI GS77 i9-12900H + RTX 3060 (Intel iGPU + NVIDIA dGPU).
+# nvidia-dkms rebuilds the module against any kernel; linux-headers is
+# required for DKMS to compile. egl-wayland + libva-nvidia-driver are
+# required for proper Wayland + hardware video decode under Hyprland.
+linux-headers
+nvidia-dkms
+nvidia-utils
+nvidia-settings
+lib32-nvidia-utils
+opencl-nvidia
+egl-wayland
+libva-nvidia-driver
+
+# ── GPU drivers — Intel iGPU + Vulkan loaders ────────────────────
+intel-media-driver
+libva-intel-driver
+libva-utils
+vulkan-intel
+lib32-vulkan-intel
+vulkan-icd-loader
+lib32-vulkan-icd-loader
+vulkan-tools
+intel-gpu-tools
+mesa
+lib32-mesa
+mesa-utils
+
+# ── Audio firmware (CRITICAL — MSI GS77 needs sof-firmware) ──────
+sof-firmware
+alsa-firmware
+alsa-ucm-conf
+
+# ── Power / thermal management ──────────────────────────────────
+thermald
+acpid
+upower
+lm_sensors
+nvtop
+powertop
+
+# ── Bluetooth + printing + webcam ───────────────────────────────
+bluez-obex
+cups
+cups-pdf
+system-config-printer
+v4l-utils
+
+# ── Gaming stack (multilib) ─────────────────────────────────────
+gamemode
+lib32-gamemode
+mangohud
+lib32-mangohud
+gamescope
+giflib
+lib32-giflib
+gnutls
+lib32-gnutls
+libpng
+lib32-libpng
+
+# ── Daily-driver apps ───────────────────────────────────────────
+firefox
+file-roller
+p7zip
+unrar
+
 # ── archiso runtime requirements ──────────────────────────────────
 arch-install-scripts
 archinstall

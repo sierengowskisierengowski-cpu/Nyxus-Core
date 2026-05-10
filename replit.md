@@ -153,6 +153,29 @@ the user explicitly reverts the lock.
   and failure. The `notify()` function in `nyxus-bootstrap` is a no-op
   when `hyprctl` is unavailable so the script remains testable on hosts
   without Hyprland.
+- **Disk installer + full hardware enablement (LOCKED · 2026-05-10 r5)**:
+  The ISO ships `/usr/local/bin/nyxus-install` (live wrapper) and
+  `/usr/local/bin/nyxus-postinstall` (chroot hook). Live user runs
+  `sudo nyxus-install`, which launches `archinstall`, then arch-chroots
+  into `/mnt` and runs `nyxus-postinstall` to: enable hardware services
+  (bluetooth, thermald, power-profiles-daemon, cups, fstrim.timer,
+  nvidia-suspend/resume/hibernate), regenerate initramfs (`mkinitcpio -P`)
+  so `MODULES=(i915 nvidia ...)` early-KMS takes effect, and install the
+  NYXUS app suite from the offline cache at `/opt/nyxus-cache`. Idempotent.
+  Both shims live in `iso-builder/.../usr/local/bin/` with `0755` perms set
+  in `profiledef.sh`. MOTD on the live ISO points users at
+  `sudo nyxus-install`. Hardware packages added to `packages.x86_64`:
+  full NVIDIA stack (nvidia-dkms, nvidia-utils, lib32-nvidia-utils,
+  egl-wayland, libva-nvidia-driver, opencl-nvidia, linux-headers),
+  Intel iGPU (intel-media-driver, vulkan-intel + lib32, mesa + lib32),
+  vulkan loaders + tools, **sof-firmware** (REQUIRED for MSI GS77 audio),
+  alsa-firmware, alsa-ucm-conf, thermald, acpid, upower, lm_sensors,
+  nvtop, powertop, bluez-obex, cups + cups-pdf + system-config-printer,
+  v4l-utils, gaming stack (gamemode + lib32, mangohud + lib32, gamescope,
+  giflib + lib32, gnutls + lib32), firefox, file-roller, p7zip, unrar.
+  Multilib is enabled on both the build host AND the installed system via
+  a baked `airootfs/etc/pacman.conf` override.
+
 - **Offline ISO cache (LOCKED · 2026-05-10 r4)**: `iso-builder/build-iso.sh`
   now stages `dist/nyxus-scripts/` into `airootfs/opt/nyxus-cache/` at bake
   time, so `nyxus-bootstrap`'s offline fallback works on a machine with no

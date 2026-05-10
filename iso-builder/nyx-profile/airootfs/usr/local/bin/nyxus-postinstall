@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+# ============================================
+# NYXUS — nyxus-postinstall · runs INSIDE chroot of new install
+# Copyright © 2026 Joseph Sierengowski
+# NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+#
+# Invoked by `nyxus-install` via `arch-chroot /mnt /usr/local/bin/nyxus-postinstall`.
+# Idempotent — safe to re-run.
+#
+# Responsibilities:
+#   1. Install the NYXUS hardware-enablement package set into the new
+#      root, independent of which archinstall profile the user chose.
+#   2. Drop the NYXUS-locked /etc/mkinitcpio.conf + /etc/modprobe.d/nvidia.conf
+#      into the chroot BEFORE regenerating initramfs, so MODULES=(i915
+#      nvidia ...) early-KMS actually takes effect on first boot.
+#   3. Enable hardware services.
+#   4. Install NYXUS apps + chrome from the offline cache at /opt/nyxus-cache,
+#      with NYXUS_OFFLINE_DIR set so no online fetches happen during the
+#      install — guarantees deterministic chroot installs even with no net.
+
+set -e -u
+B=$'\e[1m'; R=$'\e[0m'; CYAN=$'\e[38;5;51m'; PURPLE=$'\e[38;5;177m'; GOLD=$'\e[38;5;220m'; PINK=$'\e[38;5;201m'
+step() { printf "\n${PURPLE}▌${R} ${B}%s${R}\n" "$*"; }
+ok()   { printf "  ${CYAN}✓${R}  %s\n" "$*"; }
+warn() { printf "  ${GOLD}!${R}  %s\n" "$*"; }
+fail() { printf "  ${PINK}✗${R}  %s\n" "$*" >&2; }
+
+# ── 0. Sanity: must be root in a chroot ─────────────────────────────────
+if [[ $EUID -ne 0 ]]; then
+  fail "must run as root"
+  exit 1
+fi
+
+# ── 1. Hardware-enablement packages — install regardless of archinstall ─
+# Fail-loud here: if these can't be installed, the system won't be usable
+# on the MSI GS77 target.
+step "installing NYXUS hardware-enablement package set"
+HW_PKGS=(
+  # NVIDIA hybrid stack
+  linux-headers nvidia-dkms nvidia-utils nvidia-settings
+  lib32-nvidia-utils opencl-nvidia egl-wayland libva-nvidia-driver
+  # Intel iGPU + Vulkan
+  intel-media-driver libva-intel-driver libva-utils
+  vulkan-intel lib32-vulkan-intel
+  vulkan-icd-loader lib32-vulkan-icd-loader vulkan-tools
+  intel-gpu-tools mesa lib32-mesa mesa-utils
+  # Audio firmware (required for MSI GS77)
+  sof-firmware alsa-firmware alsa-ucm-conf
+  pipewire pipewire-alsa pipewire-pulse pipewire-jack wireplumber
+  # Power / thermal
+  thermald acpid upower power-profiles-daemon lm_sensors nvtop powertop
+  # Bluetooth, print, webcam
+  bluez bluez-utils bluez-obex blueman
+  cups cups-pdf system-config-printer v4l-utils
+  # Networking
+  networkmanager network-manager-applet
+  # Plymouth (so our boot splash works on the installed system too)
+  plymouth
+)
+# Refresh dbs first; --needed skips already-installed
+pacman -Sy --noconfirm --needed "${HW_PKGS[@]}" || {
+  fail "pacman failed to install hardware package set"
+  fail "check /var/log/pacman.log inside the new system; you may need internet"
+  exit 1
+}
+ok "hardware package set installed"
+
+# ── 2. Drop NYXUS-locked kernel + nvidia config into the chroot ────────
+# The customize_airootfs.sh stage only puts these into the LIVE ISO at
+# /etc/mkinitcpio.conf etc. They are NOT carried over to the installed
+# root by archinstall. We must explicitly stage them here.
+step "staging NYXUS kernel + NVIDIA config into installed root"
+
+# These same files exist on the LIVE ISO (we are running INSIDE the chroot
+# at /mnt of the live ISO, but the live ISO's airootfs is mounted at /run/
+# archiso/airootfs. We use /run/archiso/airootfs as the source.)
+LIVE_ROOT="/run/archiso/airootfs"
+if [[ ! -d "$LIVE_ROOT" ]]; then
+  # Fallback: maybe we're called outside arch-chroot; try /
+  LIVE_ROOT=""
+fi
+
+stage_config() {
+  local src="$1" dst="$2"
+  if [[ -f "$LIVE_ROOT$src" ]]; then
+    install -Dm644 "$LIVE_ROOT$src" "$dst"
+    ok "staged $dst"
+  elif [[ -f "$src" ]]; then
+    # already in chroot from package — leave it alone
+    ok "$dst already present (from package)"
+  else
+    warn "could not find source for $dst — leaving package default"
+  fi
+}
+
+stage_config "/etc/mkinitcpio.conf"        "/etc/mkinitcpio.conf"
+stage_config "/etc/modprobe.d/nvidia.conf" "/etc/modprobe.d/nvidia.conf"
+stage_config "/etc/pacman.conf"            "/etc/pacman.conf"
+
+# ── 3. Regenerate initramfs with NYXUS MODULES order ────────────────────
+step "regenerating initramfs (mkinitcpio -P)"
+if command -v mkinitcpio >/dev/null 2>&1; then
+  mkinitcpio -P || { fail "mkinitcpio -P failed"; exit 1; }
+  ok "initramfs rebuilt with i915→nvidia early-KMS order"
+else
+  warn "mkinitcpio not found — bootloader may need manual regen"
+fi
+
+# ── 4. Enable hardware + system services ────────────────────────────────
+step "enabling system services"
+for svc in \
+  NetworkManager.service \
+  sddm.service \
+  bluetooth.service \
+  thermald.service \
+  power-profiles-daemon.service \
+  cups.service \
+  acpid.service \
+  systemd-timesyncd.service \
+  ; do
+  systemctl enable "$svc" 2>/dev/null && ok "enabled $svc" || warn "skip $svc (not installed)"
+done
+
+# fstrim weekly for SSD longevity
+systemctl enable fstrim.timer 2>/dev/null && ok "enabled fstrim.timer" || true
+
+# NVIDIA suspend/resume/hibernate hooks (ship with nvidia-utils ≥435)
+for svc in nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service; do
+  systemctl enable "$svc" 2>/dev/null && ok "enabled $svc" || true
+done
+
+# ── 5. NYXUS apps + chrome from offline cache (deterministic / no net) ──
+step "installing NYXUS apps from offline cache"
+NUSER=$(awk -F: '$3 >= 1000 && $3 < 65534 {print $1; exit}' /etc/passwd)
+if [[ -z "$NUSER" ]]; then
+  warn "no regular user found yet — apps will install on first boot via nyxus-bootstrap"
+elif [[ ! -d /opt/nyxus-cache ]]; then
+  warn "/opt/nyxus-cache absent — first boot will use online bootstrap fallback"
+else
+  # Run the installer as the user, with NYXUS_OFFLINE_DIR pointing at the
+  # baked cache so it does NOT reach for the network. Granting passwordless
+  # sudo for this single invocation only.
+  if [[ -x /opt/nyxus-cache/nyxus_install.sh ]]; then
+    ok "running nyxus_install.sh as $NUSER (offline mode)"
+    chown -R "$NUSER:$NUSER" /opt/nyxus-cache 2>/dev/null || true
+    # Allow passwordless sudo for nyxus_install.sh duration
+    echo "$NUSER ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/99-nyxus-install
+    sudo -u "$NUSER" -H \
+      env NYXUS_OFFLINE_DIR=/opt/nyxus-cache HOME="/home/$NUSER" \
+      bash -c "cd /opt/nyxus-cache && ./nyxus_install.sh" \
+      || warn "nyxus_install.sh returned non-zero (apps will retry on first boot)"
+    rm -f /etc/sudoers.d/99-nyxus-install
+  else
+    warn "/opt/nyxus-cache/nyxus_install.sh missing — bootstrap will fetch on first boot"
+  fi
+
+  # Mark bootstrap complete so nyxus-wait-bootstrap doesn't re-run on first login
+  if [[ -d /home/$NUSER/.nyxus ]]; then
+    sudo -u "$NUSER" touch "/home/$NUSER/.nyxus/.bootstrapped"
+    ok "marked ~/.nyxus/.bootstrapped"
+  fi
+fi
+
+step "post-install complete"
+ok "Hardware: NVIDIA + Intel iGPU + sof-firmware + Vulkan + gaming stack installed."
+ok "Initramfs: i915 → nvidia early-KMS active on next boot."
+ok "Services: bluetooth, thermald, power-profiles, cups, fstrim, nvidia-{suspend,resume,hibernate} enabled."
+ok "Reboot to drop into NYXUS."
