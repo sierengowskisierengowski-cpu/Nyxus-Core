@@ -188,6 +188,55 @@ else
   fi
 fi
 
+# ── GTK DARK THEME (adw-gtk3-dark) ────────────────────────────────────────────
+# Without this, GTK4 apps fall back to default light Adwaita and error
+# dialogs render as white text on white background (unreadable). The
+# Hyprland env line `env = GTK_THEME,adw-gtk3-dark` only sets the env var;
+# the theme package + settings.ini files have to actually exist for it to
+# resolve. We belt-and-suspender three things:
+#   1) Install adw-gtk3 from official repo (or AUR fallback)
+#   2) Write XDG settings.ini for GTK3 + GTK4 (covers apps that ignore env)
+#   3) Set gsettings color-scheme=prefer-dark (covers libadwaita apps)
+hdr "GTK Dark Theme (adw-gtk3-dark)"
+if ! pacman -Qi adw-gtk3 >/dev/null 2>&1; then
+  if sudo pacman -S --noconfirm --needed adw-gtk3 2>/dev/null; then
+    ok "adw-gtk3 installed via pacman"
+  elif command -v yay >/dev/null 2>&1 && yay -S --noconfirm adw-gtk3 2>/dev/null; then
+    ok "adw-gtk3 installed via yay (AUR fallback)"
+  else
+    printf "  \033[93mWARN:\033[0m adw-gtk3 install failed — error dialogs may stay white-on-white\n"
+    failed=$((failed+1))
+  fi
+else
+  ok "adw-gtk3 already installed"
+fi
+
+# Write XDG settings.ini for GTK3 + GTK4 (these files are READ even when
+# GTK_THEME env var is unset — belt-and-suspenders against env loss)
+mkdir -p "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
+cat > "$HOME/.config/gtk-3.0/settings.ini" <<'GTK3'
+[Settings]
+gtk-theme-name=adw-gtk3-dark
+gtk-icon-theme-name=Adwaita
+gtk-application-prefer-dark-theme=1
+gtk-cursor-theme-size=24
+GTK3
+cat > "$HOME/.config/gtk-4.0/settings.ini" <<'GTK4'
+[Settings]
+gtk-theme-name=adw-gtk3-dark
+gtk-icon-theme-name=Adwaita
+gtk-application-prefer-dark-theme=1
+gtk-cursor-theme-size=24
+GTK4
+ok "GTK 3 + 4 settings.ini written (prefer-dark)"
+
+# gsettings handles libadwaita apps that ignore both env and settings.ini
+if command -v gsettings >/dev/null 2>&1; then
+  gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark' 2>/dev/null || true
+  ok "gsettings color-scheme=prefer-dark, gtk-theme=adw-gtk3-dark"
+fi
+
 # ── HYPRLAND CONFIGS ──────────────────────────────────────────────────────────
 hdr "Hyprland"
 mkdir -p "$HYPR_DIR"
