@@ -168,6 +168,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-monogram-mist.png":      "nyxus-monogram-mist.png",
   "nyxus-topbar-mist.png":        "nyxus-topbar-mist.png",
   "nyxus-hyprlock-eye.png":       "nyxus-hyprlock-eye.png",
+  "nyxus-bar-stone.png":          "nyxus-bar-stone.png",
   "nyxus-starfield-wall.png":     "nyxus-starfield-wall.png",
   "nyxus-demon.png":              "nyxus-demon.png",
 
