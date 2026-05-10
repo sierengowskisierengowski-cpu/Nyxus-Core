@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# ============================================
+# NYXUS — nyxus-install · guided disk installer
+# Copyright © 2026 Joseph Sierengowski
+# NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+#
+# Wraps `archinstall` and runs a NYXUS post-install hook inside the
+# new system's chroot to:
+#   • enable hardware services (bluetooth, thermald, cups, fstrim,
+#     nvidia suspend/resume/hibernate)
+#   • install the NYXUS visual chrome + GTK4 apps from the live ISO's
+#     pre-staged offline cache (/opt/nyxus-cache/, baked by build-iso.sh)
+#   • regenerate initramfs so MODULES=(i915 nvidia ...) takes effect
+#
+# Run from the live ISO as root:
+#   sudo nyxus-install
+
+set -e -u
+B=$'\e[1m'; R=$'\e[0m'
+PURPLE=$'\e[38;5;177m'; CYAN=$'\e[38;5;51m'; GOLD=$'\e[38;5;220m'; PINK=$'\e[38;5;201m'
+step() { printf "\n${PURPLE}▌${R} ${B}%s${R}\n" "$*"; }
+ok()   { printf "  ${CYAN}✓${R}  %s\n" "$*"; }
+warn() { printf "  ${GOLD}!${R}  %s\n" "$*"; }
+fail() { printf "  ${PINK}✗${R}  %s\n" "$*" >&2; }
+
+if [[ $EUID -ne 0 ]]; then
+  fail "must be run as root (try: sudo nyxus-install)"
+  exit 1
+fi
+
+cat <<'BANNER'
+
+  ╔═══════════════════════════════════════════════════════════╗
+  ║                                                           ║
+  ║       NYXUS · INSTALL TO DISK                             ║
+  ║       SIERENGOWSKI · NYX-J5W-2026                         ║
+  ║                                                           ║
+  ║   This wrapper launches archinstall, then runs the        ║
+  ║   NYXUS post-install hook in the new system's chroot      ║
+  ║   to enable hardware + bake the visual chrome.            ║
+  ║                                                           ║
+  ║   Recommended archinstall choices:                        ║
+  ║     • Bootloader:    systemd-boot OR grub                 ║
+  ║     • Profile:       minimal  (NYXUS supplies its own)    ║
+  ║     • Audio:         pipewire (pre-selected)              ║
+  ║     • Kernels:       linux                                ║
+  ║     • Network:       NetworkManager                       ║
+  ║     • Additional packages: leave empty                    ║
+  ║     • DO NOT enable a desktop profile — NYXUS replaces it ║
+  ║                                                           ║
+  ╚═══════════════════════════════════════════════════════════╝
+
+BANNER
+
+read -rp "  Continue with archinstall? [Y/n] " yn
+if [[ "${yn,,}" == "n" ]]; then
+  exit 0
+fi
+
+step "launching archinstall"
+archinstall
+
+# After archinstall completes, the new system is mounted at /mnt.
+# Stronger sanity than just `/mnt/etc`: a real installed Arch root has
+# pacman installed AND a populated /var/lib/pacman/local DB.
+if ! mountpoint -q /mnt 2>/dev/null; then
+  fail "/mnt is not a mountpoint — archinstall did not complete"
+  fail "if you cancelled or installed elsewhere, mount the new root at /mnt and re-run"
+  exit 1
+fi
+if [[ ! -x /mnt/usr/bin/pacman ]] || [[ ! -d /mnt/var/lib/pacman/local ]]; then
+  fail "/mnt does not look like a freshly installed Arch root (no pacman / no local DB)"
+  fail "abort to avoid clobbering a stale or wrong /mnt"
+  exit 1
+fi
+
+step "running NYXUS post-install hook in chroot at /mnt"
+
+# Stage offline cache from live ISO into the new system so post-install
+# script can read it without internet access.
+if [[ -d /opt/nyxus-cache ]]; then
+  ok "copying offline cache /opt/nyxus-cache → /mnt/opt/nyxus-cache"
+  mkdir -p /mnt/opt
+  cp -a /opt/nyxus-cache /mnt/opt/
+fi
+
+# Stage the post-install script
+install -m 755 /usr/local/bin/nyxus-postinstall /mnt/usr/local/bin/nyxus-postinstall
+
+# Run it inside the new root
+arch-chroot /mnt /usr/local/bin/nyxus-postinstall
+
+step "DONE"
+ok "NYXUS is installed."
+ok "Reboot, remove the install media, and pick Hyprland in the SDDM session selector."
+echo
+read -rp "  Reboot now? [Y/n] " yn
+if [[ "${yn,,}" != "n" ]]; then
+  systemctl reboot
+fi

@@ -36,5 +36,7 @@ file_permissions=(
   ["/usr/local/bin/nyxus-intel"]="0:0:755"
   ["/usr/local/bin/nyxus-bootstrap"]="0:0:755"
   ["/usr/local/bin/nyxus-wait-bootstrap"]="0:0:755"
+  ["/usr/local/bin/nyxus-install"]="0:0:755"
+  ["/usr/local/bin/nyxus-postinstall"]="0:0:755"
   ["/etc/nyxus"]="0:0:755"
 )

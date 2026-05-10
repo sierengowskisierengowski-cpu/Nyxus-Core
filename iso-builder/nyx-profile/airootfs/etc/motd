@@ -1,19 +1,16 @@
 
-   ███╗   ██╗██╗   ██╗██╗  ██╗██╗   ██╗███████╗
-   ████╗  ██║╚██╗ ██╔╝╚██╗██╔╝██║   ██║██╔════╝
-   ██╔██╗ ██║ ╚████╔╝  ╚███╔╝ ██║   ██║███████╗
-   ██║╚██╗██║  ╚██╔╝   ██╔██╗ ██║   ██║╚════██║
-   ██║ ╚████║   ██║   ██╔╝ ██╗╚██████╔╝███████║
-   ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
-
-         The Night Has Eyes.
-         Silent. Dark. Purely Functional.
-
-   ISO   : nyx-2026.05.02-x86_64.iso
-   OS    : NYXUS v1.0.0
-   Author: Joseph Sierengowski
-   © 2026 — NYX-J5W-2026-SIERENGOWSKI-LOCKED
-
-   docs  : /etc/nyxus/
-   apps  : /opt/nyxus-intel/  ·  nyxus-intel
+  ╔═══════════════════════════════════════════════════════════╗
+  ║                                                           ║
+  ║       NYXUS · LIVE                                        ║
+  ║       SIERENGOWSKI · NYX-J5W-2026                         ║
+  ║                                                           ║
+  ║   To install NYXUS to disk:                               ║
+  ║                                                           ║
+  ║       sudo nyxus-install                                  ║
+  ║                                                           ║
+  ║   Live credentials:                                       ║
+  ║       user: nyx     pass: nyx                             ║
+  ║       root          pass: nyx                             ║
+  ║                                                           ║
+  ╚═══════════════════════════════════════════════════════════╝
 
