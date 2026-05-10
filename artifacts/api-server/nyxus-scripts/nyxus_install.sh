@@ -223,6 +223,7 @@ dl "nyxus-starlight.png"          "$WALLS_DIR/nyxus-starlight.png"          || f
 dl "nyxus-waybar-stars.png"       "$WALLS_DIR/nyxus-waybar-stars.png"       || failed=$((failed+1))
 dl "nyxus-monogram-mist.png"      "$WALLS_DIR/nyxus-monogram-mist.png"      || failed=$((failed+1))
 dl "nyxus-topbar-mist.png"        "$WALLS_DIR/nyxus-topbar-mist.png"        || failed=$((failed+1))
+dl "nyxus-hyprlock-eye.png"       "$WALLS_DIR/nyxus-hyprlock-eye.png"       || failed=$((failed+1))
 
 # ── APP BACKGROUNDS (neon splat panels — used by all GTK apps) ────────────────
 hdr "App Backgrounds (neon splat panels)"
