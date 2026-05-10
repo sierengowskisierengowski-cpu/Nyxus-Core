@@ -281,6 +281,16 @@ floating waybar modules.
 
 ## Gotchas
 
+- **Hyprland Lua migration (TODO · 2026-05-10)**: Hyprland 0.55 deprecated the
+  `hyprlang` config syntax in favor of Lua. The new API uses `hl.animation({...})`
+  and `hl.curve({...})` function calls instead of `animation = ...` / `bezier = ...`
+  lines. NYXUS configs (`nyxus-scripts/hyprland.conf`,
+  `iso-builder/.../hyprland.conf`, all `nyxus-hyprland-*.conf` shards) are still
+  in the old syntax — it works (deprecated ≠ removed) but at some point the
+  hyprlang parser will be dropped. Plan a Lua migration sweep before that
+  happens. Until then, **do not** use Lua-only features (native spring curves,
+  etc.) — fake them with overshoot beziers (see `nyx-spring` / `nyx-glass` in
+  the animations block).
 - **ISO Build Environment**: The `iso-builder/` cannot be built within Replit; it requires root privileges and an Arch Linux host.
 - **Hyprland Config Placeholder**: `iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf` is a placeholder; users must replace it with their daily-driver configuration before building the ISO.
 - **Brand Naming**: Strictly adhere to "NYX" for the ISO file and "NYXUS" for the operating system and all its components.
