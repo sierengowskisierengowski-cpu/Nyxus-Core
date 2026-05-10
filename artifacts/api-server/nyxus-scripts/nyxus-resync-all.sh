@@ -511,6 +511,27 @@ for cf in hyprlock.conf hypridle.conf; do
   fi
 done
 
+# 4b.5  hyprlock background image — same obsidian-wave starfield as SDDM
+# login (nyxus-login-stars.png). hyprlock.conf reads from
+# ~/.config/nyxus/wallpaper.png (per nyxus-hyprlock.conf line 22).
+NYX_CFG_DIR="$REAL_HOME/.config/nyxus"
+mkdir -p "$NYX_CFG_DIR"
+chown "$REAL_USER:$REAL_USER" "$NYX_CFG_DIR"
+LOCK_BG_DST="$NYX_CFG_DIR/wallpaper.png"
+if curl -fsSL --max-time 30 "$PROD/nyxus-login-stars.png" -o "$LOCK_BG_DST.new"; then
+  if [[ -s "$LOCK_BG_DST.new" ]]; then
+    mv "$LOCK_BG_DST.new" "$LOCK_BG_DST"
+    chown "$REAL_USER:$REAL_USER" "$LOCK_BG_DST"
+    chmod 644 "$LOCK_BG_DST"
+    ok "wrote $LOCK_BG_DST — hyprlock now uses the obsidian-starfield bg"
+  else
+    rm -f "$LOCK_BG_DST.new"
+    fail "downloaded hyprlock bg was empty — kept previous copy"
+  fi
+else
+  fail "could not download hyprlock background image"
+fi
+
 # 4c. Screensaver + demon-wake Python scripts
 NYX_SHARE="/usr/share/nyxus"
 NYX_SCRIPTS="$NYX_SHARE/scripts"
