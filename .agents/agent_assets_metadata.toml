@@ -1025,3 +1025,9 @@ id = "9EOkOkCvvdzK-OiLlt48p"
 uri = "file://iso-builder/nyx-profile/airootfs/usr/share/plymouth/themes/nyxus-void/background.png"
 type = "image"
 title = "New splash background (your image)"
+
+[[outputs]]
+id = "JwnrksHKvVMbYCGBGpPlw"
+uri = "file://attached_assets/splash_previews/splash_preview.png"
+type = "image"
+title = "Splash steady-state preview (background + diamond + wordmark)"
