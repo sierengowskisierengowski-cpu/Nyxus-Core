@@ -184,7 +184,8 @@ tar -xzf "${NS}/nyxus-sddm-theme.tar.gz" -C "${SDDM_TMP_STAGE}"
 SDDM_THEME_DIR="${PROFILE_DIR}/airootfs/usr/share/sddm/themes/nyxus"
 SDDM_CONF_DIR="${PROFILE_DIR}/airootfs/etc/sddm.conf.d"
 mkdir -p "${SDDM_THEME_DIR}" "${SDDM_CONF_DIR}"
-cp -a "${SDDM_TMP_STAGE}/sddm-theme/." "${SDDM_THEME_DIR}/"
+# Tarball is packed flat (files at root, no wrapper dir) so copy from STAGE root.
+cp -a "${SDDM_TMP_STAGE}/." "${SDDM_THEME_DIR}/"
 rm -f "${SDDM_THEME_DIR}/install.sh"  # not needed at runtime
 cat > "${SDDM_CONF_DIR}/nyxus.conf" <<'SDDM'
 [Theme]
