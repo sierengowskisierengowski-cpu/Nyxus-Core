@@ -1,0 +1,581 @@
+
+...xXx... ~
+❯ DEV="https://7d45d4aa-bc2d-4fae-a4a4-a672ca904937-00-2ixlfhdaz3p4i.kirk.replit.dev"
+curl -fsSL "$DEV/api/download/nyxus/hyprland.conf?v=r7" \
+  -o ~/.config/hypr/hyprland.conf && \
+curl -fsSL "$DEV/api/download/nyxus/nyxus-hyprland-rules.conf?v=r7" \
+  -o ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf && \
+hyprctl reload && hyprctl configerrors
+ok
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 336: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 27: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 32: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 33: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 37: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 337: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 336: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 27: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 32: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 33: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 37: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 25: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 26: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 29: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 30: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 33: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 34: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 35: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 36: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 37: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 40: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 41: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 44: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 45: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 48: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 49: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 50: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 55: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 56: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 339: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 336: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 27: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 32: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 33: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 37: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 337: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 336: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 27: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 32: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 33: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 37: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 25: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 26: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 29: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 30: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 33: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 34: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 35: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 36: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 37: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 40: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 41: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 44: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 45: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 48: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 49: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 50: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 55: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 56: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 17: invalid field noblur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 19: invalid field noanim: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 21: invalid field ignorezero: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 23: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 340: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 336: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 27: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 32: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 33: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 37: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 337: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 336: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 27: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 32: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 33: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 37: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 25: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 26: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 29: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 30: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 33: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 34: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 35: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 36: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 37: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 40: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 41: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 44: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 45: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 48: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 49: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 50: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 55: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 56: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 339: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 336: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 27: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 32: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 33: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 37: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 337: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 336: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 313: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 314: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 24: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 25: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 26: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 30: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 31: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 35: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 36: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 40: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 41: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 57: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 58: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 62: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 69: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 73: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 74: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 78: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 82: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 27: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 32: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 33: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf at line 37: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 25: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 26: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 29: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 30: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 33: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 34: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 35: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 36: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 37: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 40: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 41: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 44: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 45: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 48: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 49: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 50: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 55: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 56: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 17: invalid field noblur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 19: invalid field noanim: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 21: invalid field ignorezero: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 23: invalid field type ignorealpha
+
+
+...xXx... ~
+❯                                            
