@@ -432,6 +432,24 @@ uri = "file://iso-builder/nyx-profile/airootfs/usr/share/icons/hicolor/256x256/a
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "pR25BAROcM4wh1Y6TjaMD"
+uri = "file://attached_assets/wallpaper_concepts/concept1_polaroid_avalanche.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "RMxNyPcdq-TgxiC1sMBQj"
+uri = "file://attached_assets/wallpaper_concepts/concept2_sanborn_map.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "pCBv9rNmdqPDJMb37wDol"
+uri = "file://attached_assets/wallpaper_concepts/concept3_cathedral_mosaic.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -737,3 +755,21 @@ id = "gaV8d9GnQHFqN7AsADTxM"
 uri = "file://iso-builder/nyx-profile/airootfs/usr/share/icons/hicolor/512x512/apps/io.nyxus.intel.png"
 type = "image"
 title = "NYXUS Intel — app icon (512×512, monochrome dark mirror)"
+
+[[outputs]]
+id = "YXVvIfVJ4qlfMecsjeTHe"
+uri = "file://attached_assets/wallpaper_concepts/concept1_polaroid_avalanche.png"
+type = "image"
+title = "Concept 1 — Polaroid Avalanche"
+
+[[outputs]]
+id = "mAR4T-URSRHI5asNcGlA8"
+uri = "file://attached_assets/wallpaper_concepts/concept2_sanborn_map.png"
+type = "image"
+title = "Concept 2 — Sanborn Map Awakening"
+
+[[outputs]]
+id = "oKpi-AOSlETiE_jGLFxWC"
+uri = "file://attached_assets/wallpaper_concepts/concept3_cathedral_mosaic.png"
+type = "image"
+title = "Concept 3 — Guardian Cathedral Mosaic"
