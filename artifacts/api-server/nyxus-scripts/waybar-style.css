@@ -50,11 +50,11 @@ window#waybar.left,
 window#waybar.right {
     background-image:
         linear-gradient(
-            rgba(0, 0, 0, 0.92),
-            rgba(0, 0, 0, 0.92)
+            rgba(0, 0, 0, 0.45),
+            rgba(0, 0, 0, 0.45)
         ),
         url("NYXUS_WAYBAR_STARS");
-    background-color:    rgba(4, 4, 10, 0.85);
+    background-color:    rgba(0, 0, 0, 0.55);
     background-size:     auto, auto;
     background-repeat:   repeat, repeat;
     color:               #c8ccd6;
