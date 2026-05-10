@@ -1,0 +1,130 @@
+Useful Utilities
+Status bars
+Status bars
+Simple status bars 
+Typically you’ll be able to configure the order and style of widgets with little to no coding skill.
+
+Waybar 
+Waybar is a GTK status bar made specifically for wlroots compositors and supports Hyprland by default. To use it, it’s recommended to use your distro’s package.
+
+To start configuring, copy the configuration files from /etc/xdg/waybar/ into ~/.config/waybar/.
+
+To use the workspaces module, replace all the occurrences of sway/workspaces with hyprland/workspaces. Additionally replace all occurrences of sway/mode with hyprland/submap
+
+For more info regarding configuration, see The Waybar Wiki.
+
+How to launch 
+Type waybar into your terminal. In order to have Waybar launch alongside Hyprland, add waybar to your hyprland config’s autostarts.
+
+Waybar also provides a systemd service. If you use Hyprland with uwsm, you can enable it, using the following command.
+
+systemctl --user enable --now waybar.service
+
+Waybar FAQ 
+Active workspace doesn’t show up 
+Replace #workspaces button.focused with #workspaces button.active in ~/.config/waybar/style.css.
+
+Scrolling through workspaces 
+Since a lot of configuration options from sway/workspaces are missing, you should deduce some of them by yourself. In the case of scrolling, it should look like this:
+
+"hyprland/workspaces": {
+     "format": "{icon}",
+     "on-scroll-up": "hyprctl dispatch workspace e+1",
+     "on-scroll-down": "hyprctl dispatch workspace e-1"
+}
+
+Window title is missing 
+The prefix for the window module that provides the title is hyprland not wlr. In your Waybar config, insert this module:
+
+"modules-center": ["hyprland/window"],
+
+If you are using multiple monitors, you may want to insert the following option:
+
+"hyprland/window": {
+    "separate-outputs": true
+},
+
+ashell 
+ashell is a ready to go Wayland status bar for Hyprland
+
+Ashell is ready to use out of the box. Just install it, start using it, and customize only what you need.
+Ashell comes with essential modules like workspaces, time, battery, network, and more. No need to hunt for plugins or write custom scripts.
+Powered by iced. A cross-platform GUI library for Rust
+Has a pretty limited configuration options. It’s a good and a bad thing at the same time. You can get a very decent result quickly and with a little effort, but some tricky waybar-alike tweaks are not possible.
+Calendar is absent but in the roadmap
+Noctalia 
+Noctalia is a beautiful, minimal desktop shell for Wayland.
+
+Built on a lean, modern stack with a calm, distinctive look you can tune to match your setup.
+Extensive theming with predefined color schemes and automatic color generation from your wallpaper.
+Notification system with history and Do Not Disturb.
+Plugin support.
+Built on Quickshell.
+Workaround for calendar 
+[modules]
+center = [ "calendar", "Clock" ]
+# ...
+[[CustomModule]]
+name = "calendar"
+icon = ""
+command = "zenity --calendar --title=\"Calendar\""
+
+Widget systems 
+Use them when you want custom menus with fully customizable layout. You basically need to write code, but widget systems significantly ease the process. Below are three popular choices in alphabetical order.
+
+AGS/Astal	EWW	Quickshell
+UI Toolkit	GTK 3/4	GTK 3	Qt
+Config language	JS(X)/TS/languages that support Gobject Introspection	Yuck (EWW’s flavor of Lisp)	QML
+AGS/Astal 
+Astal is a suite and framework to craft desktop shells and Wayland widgets with GTK.
+AGS (Aylur’s GTK Shell) is a scaffolding tool for Astal and TypeScript/Javascript(X). In simple words, it eases creation of Astal projects in those languages.
+To get started with Astal, see its installation instructions and examples. For AGS, see its Quick start page.
+
+Advantages 
+Language flexibility: You can use your favorite if it supports Gobject Introspection (although JS(X)/TS are most well-supported by AGS)
+Provides a large set of libraries, including Network (both Wi-Fi and Ethernet) and Bluetooth
+Disadvantages 
+Does not provide hot reload out of the box
+Eww 
+Eww (ElKowar’s Wacky Widgets) is a widget system made in Rust + GTK, which allows the creation of custom widgets similarly to AwesomeWM. The key difference is that it is independent of window manager/compositor.
+
+Install Eww either using your distro’s package manager, by searching eww-wayland, or by manually compiling. In the latter case, you can follow the instructions.
+
+Advantages 
+Its Lisp-like config syntax is simple compared to other config languages
+Supports styling with SCSS out of the box
+Disadvantages 
+Heavy reliance on external scripts/programs, as it does not provide many libraries
+Performance
+Only supports GTK 3, which does not support GPU acceleration
+Overhead from the use of external scripts and unnecessary component recreations on data re-evaluation
+Configuration 
+There are a few examples listed in the Readme. It’s also highly recommended to read through the Configuration options.
+
+Warning
+
+Read the Wayland section carefully, otherwise Eww won’t work on Hyprland.
+
+Here are some example widgets that might be useful for Hyprland:
+
+Workspaces widget
+Active window title widget
+Quickshell 
+Quickshell is a flexible QtQuick-based desktop shell toolkit. Note that although Qt is notoriously hard to theme, Quickshell can be styled independently.
+
+To get started, see the setup instructions and a guided hello world
+
+Advantages 
+Provides advanced Wayland/Hyprland integrations, for example live window previews
+Automatically reloads config on changes out of the box
+Disadvantages 
+Qt can be less intuitive to work with compared to GTK for its positioning system
+Does not yet provide a Wi-Fi service at the time of writing
+It is still in alpha and minor breaking changes are to be expected
+Styles are declared with components instead of in CSS, which might be less familiar for some people
+Tips 
+Blur 
+Use the blur and ignore_alpha layer rules. The former enables blur, and the latter makes it ignore insufficiently opaque regions. Ideally, the value used with ignore_alpha is higher than the shadow opacity and lower than the bar/menu content’s opacity. Additionally, if it has transparent popups, you can use the blur_popups rule.
+
+Last updated on May 10, 2026
+Must have
