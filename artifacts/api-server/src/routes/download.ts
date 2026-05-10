@@ -165,6 +165,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-void-wallpaper.mp4":     "nyxus-void-wallpaper.mp4",
   "nyxus-login-stars.png":        "nyxus-login-stars.png",
   "nyxus-waybar-stars.png":       "nyxus-waybar-stars.png",
+  "nyxus-starfield-wall.png":     "nyxus-starfield-wall.png",
   "nyxus-demon.png":              "nyxus-demon.png",
 
   // ── ★ WALLPAPERS (15 backgrounds) ────────────────────────────────────────

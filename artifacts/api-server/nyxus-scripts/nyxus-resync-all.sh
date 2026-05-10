@@ -637,7 +637,7 @@ fi
 # 4.5b  Pull background images so waybar style.css path substitutions resolve
 NYX_BG_DIR="$NYX_HOME_DIR/backgrounds"
 mkdir -p "$NYX_BG_DIR"; chown "$REAL_USER:$REAL_USER" "$NYX_BG_DIR"
-for bg in nyxus-taskbar-bg.png nyxus-rightbar-bg.png nyxus-frost-sierengowski.png nyxus-starlight.png nyxus-waybar-stars.png nyxus-void-wallpaper.mp4; do
+for bg in nyxus-taskbar-bg.png nyxus-rightbar-bg.png nyxus-frost-sierengowski.png nyxus-starlight.png nyxus-waybar-stars.png nyxus-starfield-wall.png nyxus-void-wallpaper.mp4; do
   bgdst="$NYX_BG_DIR/$bg"
   if [[ ! -f "$bgdst" ]] || [[ "${1:-}" == "--force-bg" ]]; then
     if curl -fsSL --max-time 60 "$PROD/$bg" -o "$bgdst.new"; then
@@ -775,37 +775,36 @@ done
 if [[ -z "$CHROME_ON_DISK" ]]; then
   warn "could not find nyxus_chrome.py on disk in any standard location"
 fi
-# rev r25 — VOID ANIMATED WALLPAPER. Swap whatever wallpaper daemon is
-# currently up (swaybg / hyprpaper / older mpvpaper) for a fresh mpvpaper
-# instance playing nyxus-void-wallpaper.mp4 on loop. We must run this as
-# REAL_USER inside the user's wayland session, not as root.
-VOID_MP4="$NYX_BG_DIR/nyxus-void-wallpaper.mp4"
-if [[ -s "$VOID_MP4" ]] && command -v mpvpaper >/dev/null 2>&1; then
+# rev r29 — STARFIELD STILL WALLPAPER. Replaces the rev r25 mpvpaper void
+# animation with a static cratered-starfield PNG via swaybg. Image is a
+# 2048x576 letterbox starfield — `-m fill` crops to screen, the uniform
+# starfield hides the crop. Letterbox color is pure black so any seam
+# blends invisibly into the black starfield background.
+STAR_PNG="$NYX_BG_DIR/nyxus-starfield-wall.png"
+if [[ -s "$STAR_PNG" ]] && command -v swaybg >/dev/null 2>&1; then
   pkill -x swaybg    2>/dev/null || true
   pkill -x hyprpaper 2>/dev/null || true
   pkill -x mpvpaper  2>/dev/null || true
+  pkill -x wpaperd   2>/dev/null || true
   sleep 0.4
-  # rev r26d — speed=0.1 → 10× slower playback. The video appears almost
-  # still but is actually moving. Tweak the value in the mpvpaper -o string
-  # below (0.05 = barely moving, 0.25 = clearly moving) without re-encoding.
-  # IMPORTANT: do NOT insert comments between `\` line continuations of the
-  # sudo/env/nohup chain — bash treats them as broken commands.
   if [[ -n "${REAL_USER:-}" ]] && command -v sudo >/dev/null 2>&1; then
     sudo -u "$REAL_USER" \
       env XDG_RUNTIME_DIR="/run/user/$(id -u "$REAL_USER")" \
           WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
           HOME="$REAL_HOME" \
-      nohup mpvpaper -o "no-audio loop-file=inf hwdec=auto-safe no-osc no-osd panscan=1.0 speed=0.1" \
-        '*' "$VOID_MP4" >/tmp/nyxus-mpvpaper.log 2>&1 &
-    sleep 0.6
-    if pgrep -x mpvpaper >/dev/null 2>&1; then
-      ok "wallpaper restarted as mpvpaper · void animated loop"
+      nohup swaybg -i "$STAR_PNG" -m fill -c "#000000" \
+        >/tmp/nyxus-swaybg.log 2>&1 &
+    sleep 0.5
+    if pgrep -x swaybg >/dev/null 2>&1; then
+      ok "wallpaper restarted as swaybg · cratered-starfield still"
     else
-      warn "mpvpaper failed to spawn — see /tmp/nyxus-mpvpaper.log"
+      warn "swaybg failed to spawn — see /tmp/nyxus-swaybg.log"
     fi
   fi
-elif ! command -v mpvpaper >/dev/null 2>&1; then
-  warn "mpvpaper not installed — run:  sudo pacman -S mpvpaper  (then re-run this script)"
+elif ! command -v swaybg >/dev/null 2>&1; then
+  warn "swaybg not installed — run:  sudo pacman -S swaybg  (then re-run this script)"
+elif [[ ! -s "$STAR_PNG" ]]; then
+  warn "wallpaper image missing at $STAR_PNG — re-run with --force-bg"
 fi
 
 echo
