@@ -468,6 +468,24 @@ uri = "file://attached_assets/wallpaper_concepts/concept6_celshaded_anime.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "qcOfAmeRBmXbbzMguH9L9"
+uri = "file://attached_assets/wallpaper_concepts/concept7_bw_celshaded.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "neXp-bMpf2EKgoGn15FAJ"
+uri = "file://attached_assets/wallpaper_concepts/concept8_bw_mignola.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "eYQSbEJ__LjM_q46mY918"
+uri = "file://attached_assets/wallpaper_concepts/concept9_bw_sincity.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -809,3 +827,21 @@ id = "FMoKos69GJU_RdlW1cY_d"
 uri = "file://attached_assets/wallpaper_concepts/concept6_celshaded_anime.png"
 type = "image"
 title = "Concept 6 — Cel-Shaded: Shinkai x Akira"
+
+[[outputs]]
+id = "kLKz9TA9m0Zz76LbrysSq"
+uri = "file://attached_assets/wallpaper_concepts/concept7_bw_celshaded.png"
+type = "image"
+title = "Concept 7 — B&W Cel-Shaded Comic"
+
+[[outputs]]
+id = "ZvKSsxQsi9MM0xnwaS5E7"
+uri = "file://attached_assets/wallpaper_concepts/concept8_bw_mignola.png"
+type = "image"
+title = "Concept 8 — B&W Mignola Hellboy"
+
+[[outputs]]
+id = "ivEM4zz-FA-Yfmoo2keak"
+uri = "file://attached_assets/wallpaper_concepts/concept9_bw_sincity.png"
+type = "image"
+title = "Concept 9 — B&W Sin City Frank Miller"
