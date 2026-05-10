@@ -173,6 +173,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-hyprlock-eye.png":       "nyxus-hyprlock-eye.png",
   "nyxus-bar-stone.png":          "nyxus-bar-stone.png",
   "nyxus-starfield-wall.png":     "nyxus-starfield-wall.png",
+  "nyxus-drifter-wall.png":       "nyxus-drifter-wall.png",
   "nyxus-demon.png":              "nyxus-demon.png",
 
   // ── ★ WALLPAPERS (15 backgrounds) ────────────────────────────────────────

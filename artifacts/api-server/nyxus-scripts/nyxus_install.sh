@@ -266,6 +266,7 @@ mkdir -p "$WALLS_DIR"
 dl "nyxus-ink-swirl.png" "$WALLS_DIR/nyxus-ink-swirl.png" || failed=$((failed+1))
 dl "nyxus-void-wallpaper.mp4" "$WALLS_DIR/nyxus-void-wallpaper.mp4" || failed=$((failed+1))
 dl "nyxus-starfield-wall.png" "$WALLS_DIR/nyxus-starfield-wall.png" || failed=$((failed+1))
+dl "nyxus-drifter-wall.png"   "$WALLS_DIR/nyxus-drifter-wall.png"   || failed=$((failed+1))
 dl "nyxus-taskbar-bg.png"         "$WALLS_DIR/nyxus-taskbar-bg.png"         || failed=$((failed+1))
 dl "nyxus-rightbar-bg.png"        "$WALLS_DIR/nyxus-rightbar-bg.png"        || failed=$((failed+1))
 dl "nyxus-starlight.png"          "$WALLS_DIR/nyxus-starlight.png"          || failed=$((failed+1))
@@ -289,7 +290,7 @@ mkdir -p "$WAYBAR_DIR"
 dl "waybar-config.json"       "$WAYBAR_DIR/config"            || failed=$((failed+1))
 dl "waybar-style.css"         "$WAYBAR_DIR/style.css"         || failed=$((failed+1))
 # Inject real paths into CSS
-WALL_PATH="$HOME/.config/hypr/walls/nyxus-starfield-wall.png"
+WALL_PATH="$HOME/.config/hypr/walls/nyxus-drifter-wall.png"
 TASKBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-taskbar-bg.png"
 RIGHTBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-rightbar-bg.png"
 STARLIGHT_BG_PATH="$HOME/.config/hypr/walls/nyxus-starlight.png"
@@ -827,18 +828,26 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   pkill -x swaybg    2>/dev/null || true
   pkill -x hyprpaper 2>/dev/null || true
   pkill -x mpvpaper  2>/dev/null || true
+  DRIFTER_PNG="$WALLS_DIR/nyxus-drifter-wall.png"
   STAR_PNG="$WALLS_DIR/nyxus-starfield-wall.png"
-  # rev r29 — STARFIELD STILL WALLPAPER (replaces void mp4). Static PNG
-  # via swaybg fill-mode; black letterbox blends invisibly into the
-  # starfield's own black background.
-  if command -v swaybg >/dev/null 2>&1 && [[ -s "$STAR_PNG" ]]; then
+  # rev r30 — DRIFTER STILL WALLPAPER (replaces starfield). Painterly B&W
+  # portrait of a tattooed drifter staring at god rays — locked-in default
+  # per user pick 2026-05-10. Static PNG via swaybg fill-mode; black
+  # letterbox blends into the dark right-side void of the image.
+  # Falls back to starfield, then to ink-swirl if drifter ever goes missing.
+  if command -v swaybg >/dev/null 2>&1 && [[ -s "$DRIFTER_PNG" ]]; then
+    nohup swaybg -i "$DRIFTER_PNG" -m fill -c "#000000" \
+      >/tmp/nyxus-swaybg.log 2>&1 &
+    disown
+    ok "Wallpaper set — nyxus-drifter-wall.png (swaybg · drifter portrait)"
+  elif command -v swaybg >/dev/null 2>&1 && [[ -s "$STAR_PNG" ]]; then
     nohup swaybg -i "$STAR_PNG" -m fill -c "#000000" \
       >/tmp/nyxus-swaybg.log 2>&1 &
     disown
-    ok "Wallpaper set — nyxus-starfield-wall.png (swaybg · static cratered starfield)"
+    warn "drifter image missing — fell back to static starfield"
   elif command -v swaybg >/dev/null 2>&1; then
     swaybg -i "$WALLS_DIR/nyxus-ink-swirl.png" -m fill & disown
-    warn "starfield image missing — fell back to static swaybg ink-swirl"
+    warn "drifter+starfield missing — fell back to static swaybg ink-swirl"
   fi
 fi
 
