@@ -103,7 +103,7 @@ window#waybar.top {
     font-weight:      700;
     letter-spacing:   0.10em;
     color:            #c8ccd6;
-    background-color: #0a0a0e;
+    background-color: @nyx_black_ink;
     margin:           4px 8px;
     padding:          0;
     min-width:        64px;
@@ -123,7 +123,7 @@ window#waybar.top {
 #battery:hover,
 #custom-quick-settings:hover,
 #custom-weather:hover {
-    background-color: #000000;
+    background-color: @nyx_black_void;
     color:            #ffffff;
     border:           1px solid rgba(255, 255, 255, 0.24);
     text-shadow:      0 0 6px rgba(255, 255, 255, 0.45);
@@ -397,33 +397,37 @@ window#waybar.bottom #custom-sys-pulse.high {
 /* ── 7d · CENTER MONOGRAM PLINTH · ◈ N·Y·X ◈ ─ engraved with hairline
    pillars on both sides. Replaces the old SIERENGOWSKI brand. White-glow
    accent allowed (locked palette: jewelry-rule on wordmarks).            */
+/* rev r29 — the monogram is the WORDMARK of the system. Glow harder
+   (jewelry-rule accent, palette-locked tokens). Idle reads as soft
+   silver halo; hover blooms into a full white-glow corona. */
 window#waybar.bottom #custom-nyx-monogram {
     font-family:      'JetBrains Mono', 'Inter Display', monospace;
     font-size:        13px;
     font-weight:      700;
     letter-spacing:   0.36em;
-    color:            #d6dae2;
+    color:            #e8edf5;
     background-color: transparent;
     padding:          0 26px 0 22px;
     margin:           10px 0;
     min-height:       36px;
     border-radius:    0;
     border:           none;
-    border-left:      1px solid rgba(255, 255, 255, 0.08);
-    border-right:     1px solid rgba(255, 255, 255, 0.08);
+    border-left:      1px solid rgba(255, 255, 255, 0.10);
+    border-right:     1px solid rgba(255, 255, 255, 0.10);
     text-shadow:
-        0 0 8px  rgba(255, 255, 255, 0.45),
-        0 0 18px rgba(255, 255, 255, 0.18),
-        0 1px 0  rgba(0,   0,   0,   0.85);
+        0 0 8px  @nyx_glow_bright,
+        0 0 18px @nyx_glow_soft,
+        0 1px 0  rgba(0, 0, 0, 0.85);
     box-shadow:       none;
     transition:       color 200ms ease-out, text-shadow 200ms ease-out;
 }
 window#waybar.bottom #custom-nyx-monogram:hover {
     color:            #ffffff;
     text-shadow:
-        0 0 10px rgba(255, 255, 255, 0.85),
-        0 0 24px rgba(255, 255, 255, 0.45),
-        0 1px 0  rgba(0,   0,   0,   0.85);
+        0 0 12px @nyx_glow_bright,
+        0 0 28px @nyx_glow_bright,
+        0 0 48px @nyx_glow_soft,
+        0 1px 0  rgba(0, 0, 0, 0.85);
 }
 
 /* ── 7e · CLOCK · ◷ instrument prefix + monospace tabular HH:MM ──── */
@@ -517,7 +521,7 @@ window#waybar.bottom #tray {
 window#waybar.bottom #tray > .passive,
 window#waybar.bottom #tray > .active,
 window#waybar.bottom #tray > .needs-attention {
-    background-color: #0a0a0e;
+    background-color: @nyx_black_ink;
     margin:           4px 2px;
     padding:          2px;
     border-radius:    4px;
@@ -527,7 +531,7 @@ window#waybar.bottom #tray > .needs-attention {
 }
 window#waybar.bottom #tray > .passive:hover,
 window#waybar.bottom #tray > .active:hover {
-    background-color: #000000;
+    background-color: @nyx_black_void;
     border:           1px solid rgba(255, 255, 255, 0.24);
 }
 window#waybar.bottom #tray > .needs-attention {
@@ -542,7 +546,7 @@ window#waybar.left #workspaces button {
     font-weight:      700;
     letter-spacing:   0;
     color:            #6a6e78;
-    background-color: #0a0a0e;
+    background-color: @nyx_black_ink;
     margin:           6px 8px;
     padding:          0;
     min-width:        36px;
@@ -557,17 +561,26 @@ window#waybar.left #workspaces button {
 }
 window#waybar.left #workspaces button:hover {
     color:            #e8edf5;
-    background-color: #000000;
+    background-color: @nyx_black_void;
     border:           1px solid rgba(255, 255, 255, 0.24);
     text-shadow:      0 0 6px rgba(255, 255, 255, 0.45);
 }
+/* rev r29 — active workspace is "pressed-in" deepest tier (BLACK_VOID)
+   with a jewelry-rule white-glow rim + bright halo around the digit.
+   This is the only visual cue for "you are here", so it must read
+   instantly across the whole monitor height. */
 window#waybar.left #workspaces button.active,
 window#waybar.left #workspaces button.focused {
     color:            #ffffff;
-    background-color: #000000;
+    background-color: @nyx_black_void;
     border:           1px solid rgba(255, 255, 255, 0.55);
-    text-shadow:      0 0 8px rgba(255, 255, 255, 0.85),
-                      0 0 18px rgba(255, 255, 255, 0.45);
+    text-shadow:
+        0 0 8px  @nyx_glow_bright,
+        0 0 18px @nyx_glow_soft;
+    box-shadow:
+        inset  0   1px  0   rgba(0,   0,   0,   0.92),
+        inset  0  -1px  0   rgba(255, 255, 255, 0.10),
+        0      0    10px    rgba(255, 255, 255, 0.18);
 }
 
 /* ── 9. RIGHT BAR · INSTRUMENT RAIL (rev r23 · masterpiece) ──────────────
@@ -647,7 +660,7 @@ window#waybar.right #custom-app-settings {
     font-size:        20px;
     font-weight:      600;
     color:            #6a6e78;
-    background-color: #0a0a0e;
+    background-color: @nyx_black_ink;
     margin:           3px 8px;
     padding:          0;
     min-width:        56px;
@@ -676,7 +689,7 @@ window#waybar.right #custom-app-notes:hover,
 window#waybar.right #custom-app-terminal:hover,
 window#waybar.right #custom-app-settings:hover {
     color:            #ffffff;
-    background-color: #000000;
+    background-color: @nyx_black_void;
     border:           1px solid rgba(255, 255, 255, 0.32);
     text-shadow:      0 0 8px  rgba(255, 255, 255, 0.85),
                       0 0 18px rgba(255, 255, 255, 0.35);
@@ -686,7 +699,8 @@ window#waybar.right #custom-app-settings:hover {
         0 0 12px rgba(255, 255, 255, 0.18);
 }
 
-/* STATUS PEBBLES on right bar — also tightened to 56px to match app cells */
+/* STATUS PEBBLES on right bar — engraved-stone treatment matching the
+   bottom-bar instrument cells (rev r29 · triple-black + chiseled bevel) */
 window#waybar.right #network,
 window#waybar.right #pulseaudio,
 window#waybar.right #backlight,
@@ -697,14 +711,33 @@ window#waybar.right #custom-weather {
     min-height:       40px;
     margin:           3px 8px;
     border-radius:    3px;
+    border:           none;
     box-shadow:
-        inset 0  1px 0 rgba(255, 255, 255, 0.04),
-        inset 0 -1px 0 rgba(0,   0,   0,   0.55);
+        inset  0   1px  0   rgba(255, 255, 255, 0.10),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.85),
+        inset  1px 0    0   rgba(255, 255, 255, 0.04),
+        inset -1px 0    0   rgba(0,   0,   0,   0.55),
+        0      2px  4px     rgba(0,   0,   0,   0.55);
+}
+window#waybar.right #network:hover,
+window#waybar.right #pulseaudio:hover,
+window#waybar.right #backlight:hover,
+window#waybar.right #battery:hover,
+window#waybar.right #custom-quick-settings:hover,
+window#waybar.right #custom-weather:hover {
+    border:           none;
+    box-shadow:
+        inset  0   1px  0   rgba(255, 255, 255, 0.24),
+        inset  0  -1px  0   rgba(0,   0,   0,   0.92),
+        inset  1px 0    0   rgba(255, 255, 255, 0.08),
+        inset -1px 0    0   rgba(0,   0,   0,   0.65),
+        0      2px  6px     rgba(0,   0,   0,   0.75),
+        0      0    12px    rgba(255, 255, 255, 0.14);
 }
 
 /* ── 10. TOOLTIPS · matte instrument popovers ───────────────────────────── */
 tooltip {
-    background-color: #000000;
+    background-color: @nyx_black_void;
     color:            #e8edf5;
     border:           1px solid rgba(255, 255, 255, 0.18);
     border-radius:    6px;
