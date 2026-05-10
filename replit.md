@@ -147,7 +147,12 @@ the user explicitly reverts the lock.
   `rm ~/.nyxus/.bootstrapped && nyxus-bootstrap`. Both shims live in
   `artifacts/api-server/nyxus-scripts/`, mirror to `dist/`, and are
   pre-staged in `iso-builder/nyx-profile/airootfs/usr/local/bin/` with
-  `0755` perms set in `profiledef.sh`.
+  `0755` perms set in `profiledef.sh`. First-boot UX uses `hyprctl notify`
+  (built into Hyprland — no daemon dependency, since dunst races
+  bootstrap too) to surface phase updates: start, post-download, success,
+  and failure. The `notify()` function in `nyxus-bootstrap` is a no-op
+  when `hyprctl` is unavailable so the script remains testable on hosts
+  without Hyprland.
 - **Offline ISO cache (LOCKED · 2026-05-10 r4)**: `iso-builder/build-iso.sh`
   now stages `dist/nyxus-scripts/` into `airootfs/opt/nyxus-cache/` at bake
   time, so `nyxus-bootstrap`'s offline fallback works on a machine with no
