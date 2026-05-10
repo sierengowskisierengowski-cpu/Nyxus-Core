@@ -1415,7 +1415,7 @@ class ActionCenter(Gtk.Window):
             ("night",    "Night",    G["moon"],     night_on, lambda t: night_set(not night_on())),
             ("location", "Location", G["location"], loc_on,   lambda t: loc_set(not loc_on())),
             ("focus",    "Focus",    G["focus"],    focus_on, lambda t: focus_cycle()),
-            ("project",  "Project",  G["project"],  None,     lambda t: (open_project(), Gtk.main_quit())),
+            ("project",  "Displays", G["project"],  None,     lambda t: (open_project(), Gtk.main_quit())),
         ], available_filter={
             "focus":    has("dunstctl"),
             "location": has("systemctl") or True,

@@ -86,8 +86,8 @@ for f in nyxus_palette.py nyxus-palette.css \
          nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
          nyxus_doctor.py nyxus_launcher.py nyxus_powermenu.py \
          nyxus_screenshot.py nyxus_chrome.py nyxus_quicksettings.py \
-         nyxus_calendar.py nyxus_clock.py nyxus_screensaver.py \
-         nyxus_demon_wake.py; do
+         nyxus_calendar.py nyxus_clock.py nyxus_cheatsheet.py \
+         nyxus_screensaver.py nyxus_demon_wake.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
@@ -240,7 +240,7 @@ mkdir -p "$WAYBAR_DIR"
 dl "waybar-config.json"       "$WAYBAR_DIR/config"            || failed=$((failed+1))
 dl "waybar-style.css"         "$WAYBAR_DIR/style.css"         || failed=$((failed+1))
 # Inject real paths into CSS
-WALL_PATH="$HOME/.config/hypr/walls/nyxus-ink-swirl.png"
+WALL_PATH="$HOME/.config/hypr/walls/nyxus-starfield-wall.png"
 TASKBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-taskbar-bg.png"
 RIGHTBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-rightbar-bg.png"
 STARLIGHT_BG_PATH="$HOME/.config/hypr/walls/nyxus-starlight.png"

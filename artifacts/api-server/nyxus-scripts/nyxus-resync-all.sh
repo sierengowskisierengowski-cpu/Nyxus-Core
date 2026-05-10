@@ -194,6 +194,71 @@ else
   fail "could not download nyxus_chrome.py — apps will keep their old chrome"
 fi
 
+## ─────────────────────────────────────────────────────────────────────────────
+## STEP 2.6 — REFRESH ~/.nyxus/ user-app Python scripts (rev r15 · 2026-05-10)
+## ─────────────────────────────────────────────────────────────────────────────
+## The .tgz app loop above only ships the heavyweight tarball apps (home,
+## start, godsapp, etc.). The small single-file Python apps under ~/.nyxus/
+## (powermenu, launcher, clock, calendar, cheatsheet, screenshot, settings,
+## sysmon_gtk, control, terminal, notes, stickies, doctor, quicksettings,
+## palette, gen_icons, …) only land on FRESH installs via nyxus_install.sh.
+## Without this step every fix to one of those scripts would silently no-op
+## on existing users until they re-ran the full installer. Force-refresh
+## them all here with the same syntax-check guard used for chrome.py.
+step "2.6/6 · REFRESH ~/.nyxus/ user-app Python scripts (force from production)"
+USER_SCRIPTS=(
+  nyxus_palette.py        nyxus-palette.css
+  nyxus_notes.py          nyxus_stickies.py       nyxus_terminal.py
+  nyxus_settings.py       nyxus_sysmon_gtk.py     nyxus_control.py
+  nyxus_launcher.py       nyxus_powermenu.py      nyxus_screenshot.py
+  nyxus_quicksettings.py  nyxus_calendar.py       nyxus_clock.py
+  nyxus_cheatsheet.py     nyxus_doctor.py         nyxus_gen_icons.py
+)
+# Validate REAL_USER actually exists before looping, so chown can't silently
+# fail on every iteration with an unresolvable user.
+if ! id -u "$REAL_USER" >/dev/null 2>&1; then
+  fail "REAL_USER='$REAL_USER' does not exist on this system — skipping user-script refresh"
+else
+  us_ok=0; us_fail=0
+  for f in "${USER_SCRIPTS[@]}"; do
+    dst="$NYX_HOME_DIR/$f"
+    if ! curl -fsSL --max-time 30 "$PROD/$f" -o "$dst.new"; then
+      rm -f "$dst.new"
+      fail "could not download $f"
+      us_fail=$((us_fail+1))
+      continue
+    fi
+    # Only run Python syntax check on .py files; CSS files just get moved.
+    if [[ "$f" == *.py ]]; then
+      if ! python3 -c "import ast,sys; ast.parse(open('$dst.new').read())" 2>/dev/null; then
+        rm -f "$dst.new"
+        fail "$f failed Python syntax check — kept previous copy"
+        us_fail=$((us_fail+1))
+        continue
+      fi
+    fi
+    # Treat mv/chown/chmod failures as real failures, not silent successes.
+    if ! mv "$dst.new" "$dst" 2>/dev/null; then
+      rm -f "$dst.new"
+      fail "$f mv into $NYX_HOME_DIR failed"
+      us_fail=$((us_fail+1))
+      continue
+    fi
+    if ! chown "$REAL_USER:$REAL_USER" "$dst" 2>/dev/null; then
+      fail "$f chown to $REAL_USER failed (file is in place but owned by root)"
+      us_fail=$((us_fail+1))
+      continue
+    fi
+    if ! chmod 644 "$dst" 2>/dev/null; then
+      fail "$f chmod 644 failed"
+      us_fail=$((us_fail+1))
+      continue
+    fi
+    us_ok=$((us_ok+1))
+  done
+  ok "refreshed $us_ok of ${#USER_SCRIPTS[@]} user-app scripts ($us_fail failed)"
+fi
+
 step "2.7/6 · INSTALL hypr-doctor diagnostic (writes report to ~/.cache/hypr-doctor/)"
 DOCTOR_DST="/usr/local/bin/hypr-doctor"
 if curl -fsSL --max-time 30 "$PROD/hypr-doctor.sh" -o "$DOCTOR_DST.new"; then
@@ -696,7 +761,7 @@ fi
 
 # 4.5d  waybar-style.css  + run the same path substitutions install.sh does
 WB_CSS="$WAYBAR_DIR/style.css"
-WALL_PATH="$NYX_BG_DIR/nyxus-frost-sierengowski.png"
+WALL_PATH="$NYX_BG_DIR/nyxus-starfield-wall.png"
 TASKBAR_BG_PATH="$NYX_BG_DIR/nyxus-taskbar-bg.png"
 RIGHTBAR_BG_PATH="$NYX_BG_DIR/nyxus-rightbar-bg.png"
 STARLIGHT_BG_PATH="$NYX_BG_DIR/nyxus-starlight.png"
