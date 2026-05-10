@@ -48,20 +48,22 @@
 window#waybar.top,
 window#waybar.left,
 window#waybar.right {
-    /* rev r28 — REVEAL the cratered-stone texture. Three layers,
-       top-to-bottom in CSS = front-to-back in render:
-         1. faint screen-blend white wash (lifts crater rims, ~6%)
-         2. very thin dark veil (only enough to keep text readable, ~22%)
-         3. the cratered moon image itself
+    /* rev r29 — SILVER COSMIC MIST texture (replaces the cratered moon).
+       The mist is wispier + brighter than stone, so the dark veil is
+       turned up to 30% to keep text comfortably readable while the
+       wisps still read as a living atmosphere underneath.
+         1. faint screen-blend white wash (lifts star pinpricks, ~5%)
+         2. moderate dark veil (text legibility, ~30%)
+         3. the silver-mist image itself
        background-blend-mode applies per layer (screen, normal, normal). */
     background-image:
         linear-gradient(
-            rgba(255, 255, 255, 0.06),
-            rgba(255, 255, 255, 0.06)
+            rgba(255, 255, 255, 0.05),
+            rgba(255, 255, 255, 0.05)
         ),
         linear-gradient(
-            rgba(0, 0, 0, 0.22),
-            rgba(0, 0, 0, 0.22)
+            rgba(0, 0, 0, 0.30),
+            rgba(0, 0, 0, 0.30)
         ),
         url("NYXUS_WAYBAR_STARS");
     background-blend-mode: screen, normal, normal;
