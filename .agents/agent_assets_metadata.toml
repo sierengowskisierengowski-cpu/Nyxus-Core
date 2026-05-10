@@ -546,6 +546,30 @@ uri = "file://attached_assets/wallpaper_concepts/wall_black_wolf.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "kJ43ae2CxDkER2jixo8_4"
+uri = "file://attached_assets/wallpaper_concepts/wall_sierengowski_v2.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "aOQ2BIE4ZXo6WahjM3XAL"
+uri = "file://attached_assets/wallpaper_concepts/wall_dark_alley.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "6iK8wEj60y74af_aFYO_r"
+uri = "file://attached_assets/wallpaper_concepts/wall_glow_forest.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "NV3dOUraiiorTGEppNF3t"
+uri = "file://attached_assets/wallpaper_concepts/wall_liquid_swirl.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -965,3 +989,27 @@ id = "MDHY1KHRkdQ69NtrGmj2P"
 uri = "file://attached_assets/wallpaper_concepts/wall_black_wolf.png"
 type = "image"
 title = "Wall 5 — Black Wolf in Foggy Forest"
+
+[[outputs]]
+id = "t1hmINymLfpood5KGU5R3"
+uri = "file://attached_assets/wallpaper_concepts/wall_sierengowski_v2.png"
+type = "image"
+title = "Wall 2 v2 — SIERENGOWSKI Spray-Paint on Foggy Glass"
+
+[[outputs]]
+id = "s4y2r5NklfemikjRgqYAq"
+uri = "file://attached_assets/wallpaper_concepts/wall_dark_alley.png"
+type = "image"
+title = "Wall 4 v2 — NYXUS Noir Alley"
+
+[[outputs]]
+id = "8GtxCjAmd3vslFAqUqD_M"
+uri = "file://attached_assets/wallpaper_concepts/wall_glow_forest.png"
+type = "image"
+title = "Wall 5 v2 — Bioluminescent Forest"
+
+[[outputs]]
+id = "tQaNqxpZt6_rI7piyKHn9"
+uri = "file://attached_assets/wallpaper_concepts/wall_liquid_swirl.png"
+type = "image"
+title = "Wall 6 — Liquid Swirl (NYXUS Dark Mirror)"
