@@ -166,3 +166,4 @@ pacman-contrib
 reflector
 rsync
 which
+adw-gtk3
