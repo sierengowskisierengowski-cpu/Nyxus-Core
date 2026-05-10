@@ -160,6 +160,14 @@ the user explicitly reverts the lock.
   `pnpm --filter @workspace/api-server run build` MUST run before
   `sudo ./build-iso.sh` so `dist/` is populated; build-iso.sh warns and
   continues if `dist/` is missing (online-only ISO in that case).
+- **NVIDIA hybrid-graphics setup (LOCKED · 2026-05-10 · target hw: MSI GS77, i9-12900H + RTX 3060)**:
+  Three coordinated files configure proper Wayland support on Intel-iGPU + NVIDIA-dGPU laptops.
+  All three MUST be present together — removing any one breaks the others.
+  1. `iso-builder/nyx-profile/airootfs/etc/mkinitcpio.conf` — `MODULES=(i915 nvidia nvidia_modeset nvidia_uvm nvidia_drm)`. **i915 MUST be first**, otherwise Electron/Chromium apps stall up to 60s after boot (per Hyprland wiki).
+  2. `iso-builder/nyx-profile/airootfs/etc/modprobe.d/nvidia.conf` — `options nvidia_drm modeset=1`. Required for Wayland.
+  3. `hyprland.conf` env block — `LIBVA_DRIVER_NAME=nvidia`, `__GLX_VENDOR_LIBRARY_NAME=nvidia`, `ELECTRON_OZONE_PLATFORM_HINT=auto`, `NVD_BACKEND=direct`. Mirrored in BOTH `iso-builder/.../skel/.config/hypr/hyprland.conf` AND `artifacts/api-server/nyxus-scripts/hyprland.conf` (+dist).
+  Tradeoff: early-KMS breaks hibernation resume (S4) — suspend (S3) still works. Acceptable for a laptop.
+  After disk install, the Phantom installer must run `mkinitcpio -P` for changes to take effect on the new initramfs.
 - **Hyprland Lua migration (TODO · 2026-05-10)**: Hyprland 0.55 deprecated the
   `hyprlang` config syntax in favor of Lua. The new API uses `hl.animation({...})`
   and `hl.curve({...})` function calls instead of `animation = ...` / `bezier = ...`
