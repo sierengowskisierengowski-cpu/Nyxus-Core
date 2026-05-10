@@ -143,6 +143,37 @@ install -m 0755 "${NS}/waybar-stats.sh"      "${LBIN}/waybar-stats"
 install -m 0755 "${NS}/waybar-ticker.sh"     "${LBIN}/waybar-ticker"
 ok "helpers: wallpaper-rotate / waybar-stats / waybar-ticker"
 
+# ── First-boot bootstrap shims → /usr/local/bin/ ────────────────────────
+# nyxus-bootstrap is the first-run installer wrapper that Hyprland's
+# exec-once fires on first login. nyxus-wait-bootstrap gates dependent
+# autostarts (waybar, swaybg, nyxus-home) on bootstrap completion.
+# Both must exist on the live ISO at 0755 — see profiledef.sh
+# file_permissions which enforces the perms post-bake.
+install -m 0755 "${NS}/nyxus-bootstrap"      "${LBIN}/nyxus-bootstrap"
+install -m 0755 "${NS}/nyxus-wait-bootstrap" "${LBIN}/nyxus-wait-bootstrap"
+ok "bootstrap shims: nyxus-bootstrap / nyxus-wait-bootstrap"
+
+# ── Offline cache → /opt/nyxus-cache/ ───────────────────────────────────
+# nyxus-bootstrap falls back to this path when the network is unreachable
+# on first boot. Mirroring the entire dist/nyxus-scripts/ payload in here
+# means the live ISO can fully install NYXUS chrome with zero internet —
+# the difference between "the user's coffee shop has no Wi-Fi" being a
+# blocker vs a non-event. ~52 MB added to the squashfs; the user's already
+# paying ~1.8 GB for the base ISO so this is rounding error.
+NYXUS_DIST="${REPO_ROOT}/artifacts/api-server/dist/nyxus-scripts"
+OFFLINE_CACHE="${PROFILE_DIR}/airootfs/opt/nyxus-cache"
+# Always wipe first so a missing dist/ never silently ships a stale cache
+# from a prior bake. The whole point of staging is fresh-each-time.
+rm -rf "${OFFLINE_CACHE}"
+if [[ -d "${NYXUS_DIST}" ]]; then
+  mkdir -p "${OFFLINE_CACHE}"
+  cp -a "${NYXUS_DIST}/." "${OFFLINE_CACHE}/"
+  ok "offline cache: $(ls "${OFFLINE_CACHE}" | wc -l) files in /opt/nyxus-cache/ ($(du -sh "${OFFLINE_CACHE}" | cut -f1))"
+else
+  warn "dist/nyxus-scripts/ not found — ISO will be ONLINE-ONLY (offline fallback disabled)"
+  warn "to enable offline fallback, run 'pnpm --filter @workspace/api-server run build' first"
+fi
+
 # ── SDDM theme → /usr/share/sddm/themes/nyxus/ + config ────────────────
 # Stages the NYXUS QML login theme into the airootfs. The live ISO itself
 # autologs into Hyprland (no SDDM at boot) so this is dormant on the live
