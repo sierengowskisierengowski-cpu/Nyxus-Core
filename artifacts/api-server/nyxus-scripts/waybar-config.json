@@ -70,7 +70,7 @@
       "escape": false
     },
     "custom/nyx-monogram": {
-      "exec": "echo '\u25c8  N \u00b7 Y \u00b7 X  \u25c8'",
+      "exec": "echo 'NYXUS'",
       "interval": 86400,
       "format": "{}",
       "tooltip-format": "<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS</span>\n<span size='small' foreground='#c8ccd6'>by Sierengowski \u00b7 Hyprland \u00b7 Arch Linux \u00b7 2026</span>"
