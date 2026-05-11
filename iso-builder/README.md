@@ -91,14 +91,14 @@ What gets staged on every `sudo ./build-iso.sh`:
 | Source (in `nyxus-scripts/`) | Destination in airootfs |
 |---|---|
 | `hyprland.conf`, `hyprlock.conf`, `hypridle.conf` | `/etc/skel/.config/hypr/` |
-| `waybar-config.json` → `config`, `waybar-style.css` → `style.css` | `/etc/skel/.config/waybar/` |
+| `eww/eww.yuck`, `eww/eww.scss`, `eww/nyxus.conf`, `eww/scripts/*.sh` | `/etc/skel/.config/eww/` (rev r6-eww — replaces waybar) |
 | `nyxus-dunstrc` → `dunstrc` | `/etc/skel/.config/dunst/` |
 | `rofi-config.rasi`, `rofi-nyxus.rasi`, `rofi-startmenu.rasi` | `/etc/skel/.config/rofi/` |
 | `wlogout-style.css`, `wlogout-layout` | `/etc/skel/.config/wlogout/` |
 | `alacritty.toml` | `/etc/skel/.config/alacritty/` |
 | `nyxus_*.py` (all 19 GTK apps + chrome library + helpers) | `/opt/nyxus/` |
-| `nyxus-bg-*.png`, `nyxus-sierengowski-*.png` (16 wallpapers) | `/etc/skel/.config/hypr/walls/` AND `/usr/share/backgrounds/nyxus/` |
-| `wallpaper-rotate.sh`, `waybar-stats.sh`, `waybar-ticker.sh` | `/usr/local/bin/` (renamed without `.sh`) |
+| `nyxus-bg-*.png`, `nyxus-sierengowski-*.png`, `nyxus-void-vortex.png` (default wallpaper) | `/etc/skel/.config/hypr/walls/` AND `/usr/share/backgrounds/nyxus/` |
+| `wallpaper-rotate.sh`, `nyxus-eww-launch` | `/usr/local/bin/` (renamed without `.sh`) |
 | 12 launcher wrappers + `.desktop` entries | `/usr/local/bin/nyxus-*` and `/usr/share/applications/io.nyxus.*.desktop` |
 
 The 12 apps with launchers + desktop entries are: notepad, stickies,
