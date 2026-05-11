@@ -242,11 +242,13 @@
       (label :class "dash-toggle-glyph" :text "${glyph}")
       (label :class "dash-toggle-label" :text "${label}"))))
 
+;; per-core bar — height is driven via inline GTK CSS (`min-height`)
+;; because yuck `box` does not accept a raw numeric :height attribute.
 (defwidget dash_core_bar [pct]
   (box :class "core-bar" :orientation "v" :space-evenly false :valign "end"
     (box :class {pct >= 80 ? "core-fill core-hot" :
                  pct >= 50 ? "core-fill core-warm" : "core-fill"}
-         :height {pct})))
+         :style "min-height: ${pct}px;")))
 
 (defwidget dash_player []
   (box :class "dash-player" :orientation "v" :space-evenly false :spacing 8
