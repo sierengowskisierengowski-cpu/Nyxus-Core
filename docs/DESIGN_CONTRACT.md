@@ -191,20 +191,20 @@ DARK MIRROR palette is locked. Do **not** invent new colors.
 Every component built before this contract was written must be audited
 against §1-12. Score each as PASS / NEEDS-FIX / FAIL.
 
-| Component                       | Status         | Notes |
-|---------------------------------|----------------|-------|
-| Bar (EWW main bar)              | TODO audit     | Check spacing on right cluster |
-| Quick Settings flyout           | TODO audit     | Verify centering on small displays |
-| WiFi flyout                     | TODO audit     | Verify scroll height fits 768px |
-| Bluetooth flyout                | TODO audit     | Verify empty state copy |
-| Audio Mixer flyout              | TODO audit     | Verify per-app rows scroll |
-| Calendar flyout                 | TODO audit     | Verify week alignment |
-| Notification Center             | TODO audit     | Verify scroll + DND state |
-| Cheatsheet                      | TODO audit     | Three-column layout fit |
-| Powermenu                       | TODO audit     | Centering + button hierarchy |
-| Dashboard                       | TODO audit     | Largest known offender — full pass |
+| Component                       | Status                 | Notes |
+|---------------------------------|------------------------|-------|
+| Bar (EWW main bar)              | TODO audit             | Check spacing on right cluster |
+| Quick Settings flyout           | PASS (audited 2026-05-11) | Tile grid + sliders, no list = no empty state needed |
+| WiFi flyout                     | PASS (audited 2026-05-11) | Empty state added: "No networks in range" |
+| Bluetooth flyout                | PASS (audited 2026-05-11) | Empty state added: powered/off-aware copy |
+| Audio Mixer flyout              | PASS (audited 2026-05-11) | Empty state added: "No apps playing audio" |
+| Calendar flyout                 | PASS (audited 2026-05-11) | Static grid, no list = no empty state needed |
+| Notification Center             | PASS (audited 2026-05-11) | Empty state added: DND-aware ("All caught up" / "DND on") |
+| Cheatsheet                      | TODO audit             | Three-column layout fit |
+| Powermenu                       | TODO audit             | Centering + button hierarchy |
+| Dashboard                       | TODO audit             | Largest known offender — full pass |
 | Welcome Wizard                  | PASS (built to contract) | Reference implementation |
-| Settings app                    | NOT BUILT      | Must be built to contract from day 1 |
+| Settings app                    | NOT BUILT              | Must be built to contract from day 1 |
 
 Audit pass: walk every component on a 1366×768 display. Anything that
 fails ships a fix in the same sprint as the audit.

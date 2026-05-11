@@ -599,6 +599,14 @@
            :halign "start")
     (scroll :class "wifi-scroll" :hscroll false :vscroll true :height 360
       (box :orientation "v" :space-evenly false :spacing 4
+        ;; DESIGN_CONTRACT §9 — empty state. Visible only when the
+        ;; networks array is empty so the panel never shows a blank box.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {arraylength(WIFILIST.networks) == 0}
+          (label :class "empty-glyph" :text "📡")
+          (label :class "empty-title" :text "No networks in range")
+          (label :class "empty-hint"  :text "Try Rescan, or move closer to an access point."))
         (for net in {WIFILIST.networks}
           (wifi_row :net {net}))))
     (box :orientation "h" :space-evenly true :spacing 10
@@ -642,6 +650,13 @@
         "${BTLIST.scanning == 'true' ? '⟳ scan' : 'Scan'}"))
     (scroll :class "bt-scroll" :hscroll false :vscroll true :height 360
       (box :orientation "v" :space-evenly false :spacing 4
+        ;; DESIGN_CONTRACT §9 — empty state.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {arraylength(BTLIST.devices) == 0}
+          (label :class "empty-glyph" :text {BTLIST.powered == 'true' ? "" : ""})
+          (label :class "empty-title" :text {BTLIST.powered == 'true' ? "No devices yet" : "Bluetooth is off"})
+          (label :class "empty-hint"  :text {BTLIST.powered == 'true' ? "Tap Scan to discover nearby devices." : "Toggle the adapter on, then Scan."}))
         (for dev in {BTLIST.devices}
           (bt_row :dev {dev}))))
     (box :orientation "h" :space-evenly true :spacing 10
@@ -690,6 +705,13 @@
     (label :class "mix-section" :text "PER-APP" :halign "start")
     (scroll :class "mix-scroll" :vscroll true :hscroll false :height 200
       (box :orientation "v" :space-evenly false :spacing 4
+        ;; DESIGN_CONTRACT §9 — empty state.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {arraylength(AUDIOMIX.apps) == 0}
+          (label :class "empty-glyph" :text "♪")
+          (label :class "empty-title" :text "No apps playing audio")
+          (label :class "empty-hint"  :text "Open a media app to see per-app volumes here."))
         (for a in {AUDIOMIX.apps}
           (mix_app_row :a {a}))))
 
@@ -751,6 +773,14 @@
         "Clear all"))
     (scroll :class "notif-scroll" :vscroll true :hscroll false :height 460
       (box :orientation "v" :space-evenly false :spacing 6
+        ;; DESIGN_CONTRACT §9 — empty state. NOTIFLIST.total is already
+        ;; surfaced by notif-history.sh so we don't need arraylength here.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {NOTIFLIST.total == 0}
+          (label :class "empty-glyph" :text "✓")
+          (label :class "empty-title" :text {NOTIFLIST.paused == 'true' ? "Do Not Disturb is on" : "All caught up"})
+          (label :class "empty-hint"  :text {NOTIFLIST.paused == 'true' ? "Notifications are silenced. Toggle DND to resume." : "New notifications will appear here."}))
         (for n in {NOTIFLIST.items}
           (notif_row :n {n}))))
     (button :class "notif-close" :onclick "eww close notifications" "Close (Esc)")))

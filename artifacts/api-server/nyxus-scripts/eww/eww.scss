@@ -719,6 +719,36 @@
   box-shadow: 0 0 10px rgba(160, 107, 255, 0.55);
 }
 
+/* ── DESIGN_CONTRACT §9 — empty states ───────────────────────────────── */
+/* Shared style for the "no items yet" placeholder shown inside any
+ * list-flyout's scroll area when its data array is empty. Apple/MS-grade
+ * panels never show a blank box — there is always copy + (optional) hint.
+ */
+.empty-state {
+  padding: 28px 16px;
+  margin: 8px 0;
+  background: rgba(17, 21, 31, 0.45);
+  border: 1px dashed rgba(160, 107, 255, 0.18);
+  border-radius: 12px;
+}
+.empty-glyph {
+  font-size: 28px;
+  color: #a06bff;
+  text-shadow: 0 0 14px rgba(160, 107, 255, 0.35);
+  padding-bottom: 4px;
+}
+.empty-title {
+  color: #e8edf5;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.empty-hint {
+  color: #6b7388;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
 .qs-close, .wifi-close, .bt-close, .mix-close, .cal-close, .notif-close {
   padding: 8px 14px;
   border-radius: 10px;
