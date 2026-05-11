@@ -61,24 +61,36 @@ if ! command -v mpvpaper >/dev/null 2>&1; then
 fi
 
 # ── Build EWW (ElKowar's Wacky Widgets) from source ────────────────────
-# rev r1 — AUR-only widget toolkit; replaces waybar in NYXUS as of
+# rev r2 — AUR-only widget toolkit; replaces waybar in NYXUS as of
 # 2026-05-11. Build deps (rust, cargo) are pulled in transiently below.
 # Runtime deps (gtk-layer-shell, socat, jq, acpi) are in packages.x86_64.
-# We build with the wayland feature flag and install to /usr/local/bin
-# so every fresh install ships with `eww` available system-wide.
+#
+# PINNED to a known-good upstream release tag so the ISO build is
+# reproducible and not vulnerable to upstream HEAD breakage / supply
+# chain surprises. Bump NYXUS_EWW_TAG when you've verified a newer tag.
+#
+# FAIL-FAST: since waybar has been removed, a missing eww binary leaves
+# the system with NO bar/widget stack at all. Treat the build as a hard
+# ISO requirement.
+NYXUS_EWW_TAG="${NYXUS_EWW_TAG:-v0.6.0}"
 if ! command -v eww >/dev/null 2>&1; then
-  echo "[customize_airootfs] building eww from source..."
+  echo "[customize_airootfs] building eww ${NYXUS_EWW_TAG} from source..."
   pacman -S --needed --noconfirm rust cargo || true
   _edir=$(mktemp -d)
-  if git clone --depth 1 https://github.com/elkowar/eww.git "$_edir/eww" \
+  if git clone --depth 1 --branch "${NYXUS_EWW_TAG}" \
+        https://github.com/elkowar/eww.git "$_edir/eww" \
      && cd "$_edir/eww" \
      && cargo build --release --no-default-features --features=wayland \
      && install -Dm755 target/release/eww /usr/local/bin/eww; then
     echo "[customize_airootfs] eww installed → $(command -v eww)"
+    cd / && rm -rf "$_edir"
   else
-    echo "[customize_airootfs] WARNING: eww build failed — bars/widgets/powermenu will not work until eww is installed manually"
+    echo "[customize_airootfs] FATAL: eww ${NYXUS_EWW_TAG} build failed."
+    echo "[customize_airootfs] waybar has been removed; the ISO would ship without any bar."
+    echo "[customize_airootfs] Override NYXUS_EWW_TAG or fix the build before re-running mkarchiso."
+    cd / && rm -rf "$_edir"
+    exit 1
   fi
-  cd / && rm -rf "$_edir"
 fi
 
 # ── Make all EWW helper scripts executable ─────────────────────────────

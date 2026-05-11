@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # NYXUS · EWW · network probe  (wifi SSID + signal, or wired/none)
+# Output is JSON with all dynamic strings escaped via jq so SSIDs
+# containing quotes/backslashes can never break the defpoll parse.
 set -u
 
 icon="✕"
@@ -38,4 +40,12 @@ if command -v nmcli >/dev/null 2>&1; then
   fi
 fi
 
-printf '{"icon":"%s","label":"%s","tooltip":"%s"}\n' "$icon" "$label" "$tooltip"
+if command -v jq >/dev/null 2>&1; then
+  jq -nc --arg icon "$icon" --arg label "$label" --arg tooltip "$tooltip" \
+    '{icon:$icon,label:$label,tooltip:$tooltip}'
+else
+  # jq missing fallback: strip risky chars
+  label="${label//\"/}"; label="${label//\\/}"
+  tooltip="${tooltip//\"/}"; tooltip="${tooltip//\\/}"
+  printf '{"icon":"%s","label":"%s","tooltip":"%s"}\n' "$icon" "$label" "$tooltip"
+fi

@@ -3,26 +3,29 @@
 # ║  NYXUS — EWW launcher                                                ║
 # ║  Lives at: /usr/local/bin/nyxus-eww-launch                           ║
 # ║                                                                      ║
-# ║  Waits for the eww IPC socket to appear (daemon up), then opens      ║
-# ║  the four bars. Closing first guards against duplicate windows on    ║
+# ║  Waits for the eww IPC socket to appear (daemon up), then opens the  ║
+# ║  four bars. Closing first guards against duplicate windows on        ║
 # ║  Hyprland config-reload.                                             ║
+# ║                                                                      ║
+# ║  Timeout uses WALL-CLOCK seconds (not loop counts), so a slow first  ║
+# ║  boot doesn't trip a false timeout.                                  ║
 # ║                                                                      ║
 # ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 set -u
 
 SOCK="${XDG_RUNTIME_DIR:-/tmp}/eww-server_default"
-TIMEOUT=30
-elapsed=0
-while [[ ! -S "$SOCK" && $elapsed -lt $TIMEOUT ]]; do
-  sleep 0.3
-  elapsed=$((elapsed + 1))
-done
+TIMEOUT_SECS="${NYXUS_EWW_TIMEOUT:-30}"
+deadline=$(( $(date +%s) + TIMEOUT_SECS ))
 
-if [[ ! -S "$SOCK" ]]; then
-  notify-send -u critical "NYXUS EWW" "Daemon socket never appeared — bars not started." 2>/dev/null || true
-  exit 1
-fi
+while [[ ! -S "$SOCK" ]]; do
+  if [[ $(date +%s) -ge $deadline ]]; then
+    notify-send -u critical "NYXUS EWW" \
+      "Daemon socket never appeared after ${TIMEOUT_SECS}s — bars not started." 2>/dev/null || true
+    exit 1
+  fi
+  sleep 0.3
+done
 
 # Close any pre-existing windows from a prior session, then open fresh.
 eww close-all 2>/dev/null || true
