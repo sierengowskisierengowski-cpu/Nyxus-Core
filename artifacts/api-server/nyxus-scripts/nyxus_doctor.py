@@ -3,7 +3,7 @@
 NYXUS doctor — single-shot health audit for an installed NYXUS system.
 
 Checks every moving part: cache integrity, script versions, hyprctl
-reachability, required tools, theme directories, waybar wiring, and
+reachability, required tools, theme directories, EWW wiring, and
 the API server connectivity. Prints a Tesla-tier health report and
 exits 0 (all green) or 1 (anything yellow/red).
 
@@ -71,7 +71,7 @@ SCRIPTS_DIR = HOME / ".nyxus"
 # Some user setups also keep symlinks in ~/.local/bin — accept either
 BIN_DIR_ALT = HOME / ".local" / "bin"
 CFG_HYPR   = HOME / ".config" / "hypr"
-CFG_WAYBAR = HOME / ".config" / "waybar"
+CFG_EWW    = HOME / ".config" / "eww"
 CFG_DUNST  = HOME / ".config" / "dunst"
 
 # (label, ansi-fg) — all printed with reset at end
@@ -102,7 +102,7 @@ def sh(cmd: list[str], timeout: int = 4) -> tuple[int, str]:
 def check_required_tools() -> None:
     required = [
         ("hyprctl",  "Hyprland IPC"),
-        ("waybar",   "status bar"),
+        ("eww",      "widget toolkit (replaces waybar as of r6)"),
         ("python3",  "runtime"),
         ("curl",     "fetch tool"),
     ]
@@ -194,32 +194,25 @@ def check_scripts_present() -> None:
         add("ok", "NYXUS scripts",
             f"{len(expected)} present in {SCRIPTS_DIR}")
 
-def check_waybar() -> None:
-    style = CFG_WAYBAR / "style.css"
-    # waybar accepts either `config` or `config.json`
-    cfg = next((CFG_WAYBAR / n for n in ("config", "config.json", "config.jsonc")
-                if (CFG_WAYBAR / n).exists()), None)
-    if not style.exists():
-        add("err", "waybar style.css", f"missing at {style}"); return
-    if cfg is None:
-        add("err", "waybar config",
-            f"missing at {CFG_WAYBAR}/config[.json]"); return
-    s = style.read_text(errors="ignore")
-    add("ok", "waybar style.css", f"{len(s):,} bytes")
-    # right-bar background image
-    rb = CFG_HYPR / "walls" / "nyxus-rightbar-bg.png"
-    if rb.exists():
-        add("ok", "right-bar background", f"{rb.stat().st_size//1024} KB")
-    else:
-        add("warn", "right-bar background",
-            f"missing at {rb} — run pull script")
-    # check for purple dominance regression
-    purple = s.count("rgba(204, 0, 255")
-    if purple > 5:
-        add("warn", "waybar palette",
-            f"{purple} dominant-purple panels (consider toning down)")
-    else:
-        add("ok", "waybar palette", "purple within accent budget")
+def check_eww() -> None:
+    """rev r6-eww: replaced check_waybar(). EWW = ElKowar's Wacky Widgets."""
+    yuck = CFG_EWW / "eww.yuck"
+    scss = CFG_EWW / "eww.scss"
+    conf = CFG_EWW / "nyxus.conf"
+    if not yuck.exists():
+        add("err", "eww.yuck", f"missing at {yuck}"); return
+    if not scss.exists():
+        add("err", "eww.scss", f"missing at {scss}"); return
+    if not conf.exists():
+        add("warn", "eww nyxus.conf",
+            f"missing at {conf} — eww-launch will skip bars"); return
+    add("ok", "eww.yuck",
+        f"{yuck.stat().st_size:,} bytes")
+    add("ok", "eww.scss",
+        f"{scss.stat().st_size:,} bytes")
+    bars = [ln.strip() for ln in conf.read_text(errors="ignore").splitlines()
+            if ln.strip() and not ln.strip().startswith("#")]
+    add("ok", "eww nyxus.conf", f"{len(bars)} bar(s) listed")
 
 def check_dunst() -> None:
     if not have("dunst"):
@@ -353,7 +346,7 @@ def main() -> int:
     check_hyprctl()
     check_graffiti_cache()
     check_scripts_present()
-    check_waybar()
+    check_eww()
     check_dunst()
     check_hyprlock()
     check_themes()

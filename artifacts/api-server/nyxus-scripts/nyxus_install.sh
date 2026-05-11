@@ -16,7 +16,7 @@ API="${BASE_URL}/api/download/nyxus"
 
 SCRIPTS_DIR="$HOME/.nyxus"
 HYPR_DIR="$HOME/.config/hypr"
-WAYBAR_DIR="$HOME/.config/waybar"
+EWW_DIR="$HOME/.config/eww"
 ROFI_DIR="$HOME/.config/rofi"
 DUNST_DIR="$HOME/.config/dunst"
 
@@ -270,6 +270,7 @@ done
 hdr "Wallpaper (SIERENGOWSKI)"
 WALLS_DIR="$HYPR_DIR/walls"
 mkdir -p "$WALLS_DIR"
+dl "nyxus-void-vortex.png"    "$WALLS_DIR/nyxus-void-vortex.png"    || failed=$((failed+1))
 dl "nyxus-ink-swirl.png" "$WALLS_DIR/nyxus-ink-swirl.png" || failed=$((failed+1))
 dl "nyxus-void-wallpaper.mp4" "$WALLS_DIR/nyxus-void-wallpaper.mp4" || failed=$((failed+1))
 dl "nyxus-starfield-wall.png" "$WALLS_DIR/nyxus-starfield-wall.png" || failed=$((failed+1))
@@ -277,7 +278,6 @@ dl "nyxus-drifter-wall.png"   "$WALLS_DIR/nyxus-drifter-wall.png"   || failed=$(
 dl "nyxus-taskbar-bg.png"         "$WALLS_DIR/nyxus-taskbar-bg.png"         || failed=$((failed+1))
 dl "nyxus-rightbar-bg.png"        "$WALLS_DIR/nyxus-rightbar-bg.png"        || failed=$((failed+1))
 dl "nyxus-starlight.png"          "$WALLS_DIR/nyxus-starlight.png"          || failed=$((failed+1))
-dl "nyxus-waybar-stars.png"       "$WALLS_DIR/nyxus-waybar-stars.png"       || failed=$((failed+1))
 dl "nyxus-monogram-mist.png"      "$WALLS_DIR/nyxus-monogram-mist.png"      || failed=$((failed+1))
 dl "nyxus-topbar-mist.png"        "$WALLS_DIR/nyxus-topbar-mist.png"        || failed=$((failed+1))
 dl "nyxus-hyprlock-eye.png"       "$WALLS_DIR/nyxus-hyprlock-eye.png"       || failed=$((failed+1))
@@ -291,9 +291,8 @@ for i in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16; do
   dl "nyxus-bg-${i}.png" "$BG_DIR/nyxus-bg-${i}.png" || failed=$((failed+1))
 done
 
-# ── WAYBAR ────────────────────────────────────────────────────────────────────
-hdr "Waybar"
 # ── EWW (replaces waybar as of rev r6-eww, 2026-05-11) ──────────────────────
+hdr "EWW (ElKowar's Wacky Widgets)"
 # 4 bars (top/bottom/left/right) + dashboard + powermenu + cheatsheet + 3 OSDs.
 # All real backends — no mock data, no placeholders. See eww/README.md.
 EWW_DIR="$HOME/.config/eww"
@@ -353,49 +352,18 @@ else
   ok "eww binary already installed: $(eww --version 2>/dev/null | head -1)"
 fi
 
-# ── WAYBAR (LEGACY — deprecated rev r6-eww 2026-05-11) ──────────────────────
-# Waybar is no longer downloaded by default. The block is preserved as
-# COMMENTED reference in case a user wants to fall back. The new hyprland.conf
-# does not start waybar; uncommenting these lines without also re-pointing
-# Hyprland's exec-once away from EWW will create a duplicate-bar conflict.
-# mkdir -p "$WAYBAR_DIR"
-# dl "waybar-config.json"       "$WAYBAR_DIR/config"            || failed=$((failed+1))
-# dl "waybar-style.css"         "$WAYBAR_DIR/style.css"         || failed=$((failed+1))
-# Inject real paths into CSS
-WALL_PATH="$HOME/.config/hypr/walls/nyxus-drifter-wall.png"
-TASKBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-taskbar-bg.png"
-RIGHTBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-rightbar-bg.png"
-STARLIGHT_BG_PATH="$HOME/.config/hypr/walls/nyxus-starlight.png"
-WAYBAR_STARS_PATH="$HOME/.config/hypr/walls/nyxus-waybar-stars.png"
-MONOGRAM_MIST_PATH="$HOME/.config/hypr/walls/nyxus-monogram-mist.png"
-TOPBAR_MIST_PATH="$HOME/.config/hypr/walls/nyxus-topbar-mist.png"
-BAR_STONE_PATH="$HOME/.config/hypr/walls/nyxus-bar-stone.png"
-# rev r6-eww (2026-05-11): the legacy waybar style.css path-substitution
-# block is now guarded — on fresh installs $WAYBAR_DIR/style.css does NOT
-# exist (waybar download disabled above), and `set -e` would otherwise
-# abort the entire installer on the first sed failure. The whole block
-# is now a single conditional; if a user manually restored waybar, the
-# sed lines run, otherwise they are skipped silently.
-if [[ -f "$WAYBAR_DIR/style.css" ]]; then
-  sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"                    "$WAYBAR_DIR/style.css" || true
-  sed -i "s|NYXUS_TASKBAR_BG|file://${TASKBAR_BG_PATH}|g"      "$WAYBAR_DIR/style.css" || true
-  sed -i "s|NYXUS_RIGHTBAR_BG|file://${RIGHTBAR_BG_PATH}|g"    "$WAYBAR_DIR/style.css" || true
-  sed -i "s|NYXUS_STARLIGHT_BG|file://${STARLIGHT_BG_PATH}|g"  "$WAYBAR_DIR/style.css" || true
-  sed -i "s|NYXUS_WAYBAR_STARS|file://${WAYBAR_STARS_PATH}|g"  "$WAYBAR_DIR/style.css" || true
-  sed -i "s|NYXUS_MONOGRAM_MIST|file://${MONOGRAM_MIST_PATH}|g" "$WAYBAR_DIR/style.css" || true
-  sed -i "s|NYXUS_TOPBAR_MIST|file://${TOPBAR_MIST_PATH}|g"    "$WAYBAR_DIR/style.css" || true
-fi
-# sed -i "s|NYXUS_BAR_STONE|file://${BAR_STONE_PATH}|g"      "$WAYBAR_DIR/style.css"
-# # Belt-and-suspenders: convert any leftover hardcoded /home/nyx/ to real $HOME
-# sed -i "s|file:///home/nyx/|file://$HOME/|g"               "$WAYBAR_DIR/style.css"
-# if [[ "$HOME" != "/home/nyx" ]]; then
-#   sed -i "s|/home/nyx/|$HOME/|g" "$WAYBAR_DIR/config" \
-#     && ok "waybar config rewritten: /home/nyx/ → $HOME/"
-# fi
-# dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
-# dl "waybar-stats.sh"          "$WAYBAR_DIR/stats.sh"          || failed=$((failed+1))
-# dl "nyxus-sys-pulse.sh"       "$WAYBAR_DIR/sys-pulse.sh"      || failed=$((failed+1))
-# (The above are part of the legacy waybar block — see EWW SHELL block above.)
+# ── WAYBAR REMOVED (rev r6-eww 2026-05-11) ──────────────────────────────────
+# The entire waybar download + sed-substitution block was deleted with the
+# EWW migration. EWW (see EWW SHELL block above) is now the sole bar/widget
+# toolkit. If a user really wants to fall back to waybar, they must:
+#   1. install waybar from pacman: sudo pacman -S waybar
+#   2. write their own ~/.config/waybar/config + style.css (the upstream
+#      NYXUS waybar theme is no longer maintained or shipped via the API)
+#   3. comment out the EWW exec-once lines in ~/.config/hypr/hyprland.conf
+#      and add: exec-once = waybar
+# History of removed pieces (deleted from nyxus-scripts/ source-of-truth):
+#   waybar-config.json, waybar-style.css, waybar-stats.sh, waybar-ticker.sh,
+#   nyxus-sys-pulse.sh, nyxus-waybar-stars.png
 
 # ── ROFI ─────────────────────────────────────────────────────────────────────
 hdr "Rofi"
@@ -417,8 +385,8 @@ dl "wlogout-layout"    "$HOME/.config/wlogout/layout"    || failed=$((failed+1))
 hdr "Palette CSS (mirroring to all consumer dirs)"
 PALETTE_SRC="$SCRIPTS_DIR/nyxus-palette.css"
 if [[ -f "$PALETTE_SRC" ]]; then
-  for dest in "$WAYBAR_DIR" "$HOME/.config/wlogout" "$HOME/.config/dunst" \
-              "$HOME/.config/rofi" "$HOME/.nyxus"; do
+  for dest in "$EWW_DIR" "$HOME/.config/wlogout" "$HOME/.config/dunst" \
+              "$HOME/.config/rofi" "$HOME/.config/hypr" "$HOME/.nyxus"; do
     [[ -d "$dest" ]] && cp -f "$PALETTE_SRC" "$dest/nyxus-palette.css" 2>/dev/null && echo "  · mirrored to $dest/"
   done
   # And into every per-app tarball install dir under ~/.nyxus/
@@ -891,26 +859,30 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   pkill -x swaybg    2>/dev/null || true
   pkill -x hyprpaper 2>/dev/null || true
   pkill -x mpvpaper  2>/dev/null || true
+  VORTEX_PNG="$WALLS_DIR/nyxus-void-vortex.png"
   DRIFTER_PNG="$WALLS_DIR/nyxus-drifter-wall.png"
   STAR_PNG="$WALLS_DIR/nyxus-starfield-wall.png"
-  # rev r30 — DRIFTER STILL WALLPAPER (replaces starfield). Painterly B&W
-  # portrait of a tattooed drifter staring at god rays — locked-in default
-  # per user pick 2026-05-10. Static PNG via swaybg fill-mode; black
-  # letterbox blends into the dark right-side void of the image.
-  # Falls back to starfield, then to ink-swirl if drifter ever goes missing.
-  if command -v swaybg >/dev/null 2>&1 && [[ -s "$DRIFTER_PNG" ]]; then
+  # rev r6-eww (2026-05-11) — VOID-VORTEX is the locked-in default wallpaper
+  # for the EWW era. Matches hyprland.conf swaybg autostart line. Falls back
+  # to drifter, then starfield, then ink-swirl if any are missing.
+  if command -v swaybg >/dev/null 2>&1 && [[ -s "$VORTEX_PNG" ]]; then
+    nohup swaybg -i "$VORTEX_PNG" -m fill -c "#000000" \
+      >/tmp/nyxus-swaybg.log 2>&1 &
+    disown
+    ok "Wallpaper set — nyxus-void-vortex.png (swaybg · EWW-era default)"
+  elif command -v swaybg >/dev/null 2>&1 && [[ -s "$DRIFTER_PNG" ]]; then
     nohup swaybg -i "$DRIFTER_PNG" -m fill -c "#000000" \
       >/tmp/nyxus-swaybg.log 2>&1 &
     disown
-    ok "Wallpaper set — nyxus-drifter-wall.png (swaybg · drifter portrait)"
+    warn "void-vortex missing — fell back to drifter portrait"
   elif command -v swaybg >/dev/null 2>&1 && [[ -s "$STAR_PNG" ]]; then
     nohup swaybg -i "$STAR_PNG" -m fill -c "#000000" \
       >/tmp/nyxus-swaybg.log 2>&1 &
     disown
-    warn "drifter image missing — fell back to static starfield"
+    warn "void-vortex+drifter missing — fell back to static starfield"
   elif command -v swaybg >/dev/null 2>&1; then
     swaybg -i "$WALLS_DIR/nyxus-ink-swirl.png" -m fill & disown
-    warn "drifter+starfield missing — fell back to static swaybg ink-swirl"
+    warn "all preferred walls missing — fell back to static swaybg ink-swirl"
   fi
 fi
 
@@ -961,7 +933,7 @@ else
     printf "    ${RED}✗${R}  ${DIM}${item}${R}\n"
   done
   echo ""
-  printf "  ${DIM}If waybar failed, run:  cat /tmp/nyxus-waybar.log${R}\n"
+  printf "  ${DIM}If EWW failed, run:  cat /tmp/nyxus-eww.log${R}\n"
   printf "  ${DIM}Otherwise re-run:  curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | bash${R}\n"
   exit 1
 fi

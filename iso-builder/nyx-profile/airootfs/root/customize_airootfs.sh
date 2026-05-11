@@ -61,7 +61,7 @@ if ! command -v mpvpaper >/dev/null 2>&1; then
 fi
 
 # ── Build EWW (ElKowar's Wacky Widgets) from source ────────────────────
-# rev r2 — AUR-only widget toolkit; replaces waybar in NYXUS as of
+# rev r2 — widget toolkit (replaces the now-removed waybar) — built from
 # 2026-05-11. Build deps (rust, cargo) are pulled in transiently below.
 # Runtime deps (gtk-layer-shell, socat, jq, acpi) are in packages.x86_64.
 #

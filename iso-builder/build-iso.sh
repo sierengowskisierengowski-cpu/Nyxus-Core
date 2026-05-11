@@ -114,8 +114,9 @@ APPS="${PROFILE_DIR}/airootfs/usr/share/applications"
 # Wipe & recreate so we never inherit stale files from a prior bake.
 rm -rf "${SKEL}/.config" "${OPT_NYXUS}" "${WALLS_SYS}"
 mkdir -p \
-  "${SKEL}/.config/hypr" \
-  "${SKEL}/.config/waybar" \
+  "${SKEL}/.config/hypr/conf.d" \
+  "${SKEL}/.config/hypr/walls" \
+  "${SKEL}/.config/eww/scripts" \
   "${SKEL}/.config/dunst" \
   "${SKEL}/.config/rofi" \
   "${SKEL}/.config/wlogout" \
@@ -127,11 +128,11 @@ mkdir -p \
   "${APPS}"
 
 # ── Configs → /etc/skel/.config/ ────────────────────────────────────────
+# rev r6-eww (2026-05-11): waybar replaced by EWW. waybar-config.json,
+# waybar-style.css, waybar-stats.sh, waybar-ticker.sh deleted from source.
 install -m 0644 "${NS}/hyprland.conf"        "${SKEL}/.config/hypr/hyprland.conf"
 install -m 0644 "${NS}/hyprlock.conf"        "${SKEL}/.config/hypr/hyprlock.conf"
 install -m 0644 "${NS}/hypridle.conf"        "${SKEL}/.config/hypr/hypridle.conf"
-install -m 0644 "${NS}/waybar-config.json"   "${SKEL}/.config/waybar/config"
-install -m 0644 "${NS}/waybar-style.css"     "${SKEL}/.config/waybar/style.css"
 install -m 0644 "${NS}/nyxus-dunstrc"        "${SKEL}/.config/dunst/dunstrc"
 install -m 0644 "${NS}/rofi-config.rasi"     "${SKEL}/.config/rofi/config.rasi"
 install -m 0644 "${NS}/rofi-nyxus.rasi"      "${SKEL}/.config/rofi/nyxus.rasi"
@@ -139,7 +140,23 @@ install -m 0644 "${NS}/rofi-startmenu.rasi"  "${SKEL}/.config/rofi/startmenu.ras
 install -m 0644 "${NS}/wlogout-style.css"    "${SKEL}/.config/wlogout/style.css"
 install -m 0644 "${NS}/wlogout-layout"       "${SKEL}/.config/wlogout/layout"
 install -m 0644 "${NS}/alacritty.toml"       "${SKEL}/.config/alacritty/alacritty.toml"
-ok "configs: hypr / waybar / dunst / rofi / wlogout / alacritty"
+
+# ── Hyprland conf.d/ overlays (blur/fog/general/opacity/rules/layerblur) ────
+install -m 0644 "${NS}"/nyxus-hyprland-*.conf "${SKEL}/.config/hypr/conf.d/"
+
+# ── EWW (replaces waybar as of rev r6-eww) ──────────────────────────────────
+# Top-level eww.yuck / eww.scss / nyxus.conf + scripts/ subdir.
+install -m 0644 "${NS}/eww/eww.yuck"   "${SKEL}/.config/eww/eww.yuck"
+install -m 0644 "${NS}/eww/eww.scss"   "${SKEL}/.config/eww/eww.scss"
+install -m 0644 "${NS}/eww/nyxus.conf" "${SKEL}/.config/eww/nyxus.conf"
+if [[ -f "${NS}/eww/README.md" ]]; then
+  install -m 0644 "${NS}/eww/README.md" "${SKEL}/.config/eww/README.md"
+fi
+if [[ -d "${NS}/eww/scripts" ]]; then
+  install -m 0755 "${NS}"/eww/scripts/* "${SKEL}/.config/eww/scripts/" 2>/dev/null || true
+fi
+
+ok "configs: hypr (+conf.d) / eww / dunst / rofi / wlogout / alacritty"
 
 # ── GTK apps + chrome library + helpers → /opt/nyxus/ ───────────────────
 # Plus skel symlink ~/.nyxus → /opt/nyxus so hyprland.conf keybinds (which
@@ -150,22 +167,25 @@ ln -sfn /opt/nyxus "${SKEL}/.nyxus"
 ok "GTK apps: $(ls "${OPT_NYXUS}"/*.py | wc -l) python files in /opt/nyxus/ (~/.nyxus → /opt/nyxus symlink in skel)"
 
 # ── Wallpapers → both user skel (matches hyprland.conf path) and system ─
-install -m 0644 "${NS}"/nyxus-bg-*.png            "${WALLS_USER}/"
-install -m 0644 "${NS}"/nyxus-sierengowski-*.png  "${WALLS_USER}/"
-install -m 0644 "${NS}"/nyxus-bg-*.png            "${WALLS_SYS}/"
-install -m 0644 "${NS}"/nyxus-sierengowski-*.png  "${WALLS_SYS}/"
+# Includes the new void-vortex (default EWW-era wallpaper, replaces drifter).
+install -m 0644 "${NS}"/nyxus-bg-*.png            "${WALLS_USER}/" 2>/dev/null || true
+install -m 0644 "${NS}"/nyxus-sierengowski-*.png  "${WALLS_USER}/" 2>/dev/null || true
+install -m 0644 "${NS}"/nyxus-void-vortex.png     "${WALLS_USER}/" 2>/dev/null || true
+install -m 0644 "${NS}"/nyxus-bg-*.png            "${WALLS_SYS}/"  2>/dev/null || true
+install -m 0644 "${NS}"/nyxus-sierengowski-*.png  "${WALLS_SYS}/"  2>/dev/null || true
+install -m 0644 "${NS}"/nyxus-void-vortex.png     "${WALLS_SYS}/"  2>/dev/null || true
 ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyxus/ + skel"
 
 # ── Helper scripts → /usr/local/bin/ ────────────────────────────────────
+# rev r6-eww: waybar-stats / waybar-ticker removed. nyxus-eww-launch added.
 install -m 0755 "${NS}/wallpaper-rotate.sh"  "${LBIN}/wallpaper-rotate"
-install -m 0755 "${NS}/waybar-stats.sh"      "${LBIN}/waybar-stats"
-install -m 0755 "${NS}/waybar-ticker.sh"     "${LBIN}/waybar-ticker"
-ok "helpers: wallpaper-rotate / waybar-stats / waybar-ticker"
+install -m 0755 "${NS}/nyxus-eww-launch"     "${LBIN}/nyxus-eww-launch"
+ok "helpers: wallpaper-rotate / nyxus-eww-launch"
 
 # ── First-boot bootstrap shims → /usr/local/bin/ ────────────────────────
 # nyxus-bootstrap is the first-run installer wrapper that Hyprland's
 # exec-once fires on first login. nyxus-wait-bootstrap gates dependent
-# autostarts (waybar, swaybg, nyxus-home) on bootstrap completion.
+# autostarts (eww, swaybg, nyxus-home) on bootstrap completion.
 # Both must exist on the live ISO at 0755 — see profiledef.sh
 # file_permissions which enforces the perms post-bake.
 install -m 0755 "${NS}/nyxus-bootstrap"      "${LBIN}/nyxus-bootstrap"

@@ -103,7 +103,7 @@ function makeDemoData(): SysmonData {
     processes: [
       { pid: 1,    name: 'systemd',  cpu: 0.0,                           mem: 0.1, status: 'sleeping' },
       { pid: 1842, name: 'Hyprland', cpu: Math.round((2+r()*2)*10)/10,   mem: 1.2, status: 'running'  },
-      { pid: 2203, name: 'waybar',   cpu: Math.round(r()*5*10)/10,       mem: 0.5, status: 'running'  },
+      { pid: 2203, name: 'eww',      cpu: Math.round(r()*5*10)/10,       mem: 0.5, status: 'running'  },
       { pid: 3112, name: 'kitty',    cpu: Math.round(r()*3*10)/10,       mem: 0.3, status: 'running'  },
       { pid: 4891, name: 'firefox',  cpu: Math.round((6+r()*8)*10)/10,   mem: 9.1, status: 'running'  },
       { pid: 5234, name: 'code',     cpu: Math.round((1+r()*5)*10)/10,   mem: 5.3, status: 'running'  },

@@ -163,8 +163,8 @@ WHAT HAPPENED:
 ${FAIL_REASON:-Bootstrap exited before completing.}
 
 HOW TO FIX:
-1. Get online (NetworkManager applet on waybar — but you don't have a
-   waybar yet, so use the terminal):
+1. Get online (NetworkManager applet lives on the EWW bar — but you don't
+   have an EWW bar yet, so use the terminal):
        SUPER + RETURN          (NYXUS terminal)
        SUPER + SHIFT + RETURN  (raw Alacritty fallback)
    Then:  nmtui   (Wi-Fi setup)
