@@ -71,7 +71,13 @@ plymouth
 qt5-quickcontrols2
 qt5-graphicaleffects
 qt5-declarative
-waybar
+# waybar removed 2026-05-11 — replaced by EWW (ElKowar's Wacky Widgets).
+# EWW is AUR-only (eww-wayland); built from source by customize_airootfs.sh.
+# Runtime helpers EWW expects:
+socat
+jq
+acpi
+gtk-layer-shell
 wofi
 rofi
 rofi-emoji

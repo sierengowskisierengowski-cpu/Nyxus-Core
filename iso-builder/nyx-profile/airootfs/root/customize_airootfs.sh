@@ -60,6 +60,32 @@ if ! command -v mpvpaper >/dev/null 2>&1; then
   cd / && rm -rf "$_bdir"
 fi
 
+# ── Build EWW (ElKowar's Wacky Widgets) from source ────────────────────
+# rev r1 — AUR-only widget toolkit; replaces waybar in NYXUS as of
+# 2026-05-11. Build deps (rust, cargo) are pulled in transiently below.
+# Runtime deps (gtk-layer-shell, socat, jq, acpi) are in packages.x86_64.
+# We build with the wayland feature flag and install to /usr/local/bin
+# so every fresh install ships with `eww` available system-wide.
+if ! command -v eww >/dev/null 2>&1; then
+  echo "[customize_airootfs] building eww from source..."
+  pacman -S --needed --noconfirm rust cargo || true
+  _edir=$(mktemp -d)
+  if git clone --depth 1 https://github.com/elkowar/eww.git "$_edir/eww" \
+     && cd "$_edir/eww" \
+     && cargo build --release --no-default-features --features=wayland \
+     && install -Dm755 target/release/eww /usr/local/bin/eww; then
+    echo "[customize_airootfs] eww installed → $(command -v eww)"
+  else
+    echo "[customize_airootfs] WARNING: eww build failed — bars/widgets/powermenu will not work until eww is installed manually"
+  fi
+  cd / && rm -rf "$_edir"
+fi
+
+# ── Make all EWW helper scripts executable ─────────────────────────────
+if [ -d /etc/skel/.config/eww/scripts ]; then
+  chmod +x /etc/skel/.config/eww/scripts/*.sh 2>/dev/null || true
+fi
+
 # ── Build howdy (face authentication) from source ──────────────────────
 # rev r1 — AUR-only PAM module that does IR-camera face match.  Runtime
 # deps (python-opencv, python-dlib, v4l2loopback-dkms) are pulled in via

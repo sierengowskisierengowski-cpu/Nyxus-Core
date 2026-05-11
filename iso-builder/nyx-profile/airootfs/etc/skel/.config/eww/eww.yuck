@@ -1,0 +1,255 @@
+;; ─────────────────────────────────────────────────────────────────────
+;; NYXUS · EWW configuration — DARK MIRROR aesthetic
+;; © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+;;
+;; Layout:
+;;   bar-bottom  — main bar (start, workspaces icon, tray, clock, audio,
+;;                 net, battery, powermenu)
+;;   bar-top     — live ticker marquee (left-scrolling) + system stats
+;;   bar-left    — vertical workspace pills 1..6
+;;   bar-right   — quick-launch app rail
+;;   dashboard   — full-screen overlay (clock click) — clock, calendar,
+;;                 weather, system stats, quick toggles
+;;   powermenu   — full-screen overlay ($mod+Escape) — lock/logout/etc.
+;; ─────────────────────────────────────────────────────────────────────
+
+;; ── poll variables ────────────────────────────────────────────────────
+(defpoll TIME       :interval "1s"   `date +'{"hms":"%H:%M:%S","hm":"%H:%M","date":"%a %d %b","long":"%A, %B %-d %Y"}'`)
+(defpoll TICKER     :interval "3s"   "~/.config/eww/scripts/ticker.sh")
+(defpoll SYSPULSE   :interval "2s"   "~/.config/eww/scripts/sys-pulse.sh")
+(defpoll BATTERY    :interval "10s"  "~/.config/eww/scripts/battery.sh")
+(defpoll NETWORK    :interval "5s"   "~/.config/eww/scripts/network.sh")
+(defpoll AUDIO      :interval "2s"   "~/.config/eww/scripts/audio.sh")
+(defpoll BACKLIGHT  :interval "5s"   "~/.config/eww/scripts/brightness.sh")
+(defpoll WORKSPACES :interval "1s"   "~/.config/eww/scripts/workspaces.sh")
+(defpoll WEATHER    :interval "900s" "~/.config/eww/scripts/weather.sh")
+
+;; ═════════════════════════════════════════════════════════════════════
+;; WIDGETS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget nyxus_brand []
+  (button :class "brand"
+          :onclick "rofi -show drun -theme ~/.config/rofi/startmenu.rasi 2>/dev/null || wofi --show drun"
+          :tooltip "NYXUS · Start menu"
+    "✕ NYXUS"))
+
+(defwidget heartbeat []
+  (label :class "heartbeat" :text "● SYS·LIVE" :tooltip "Session is alive"))
+
+(defwidget syspulse_widget []
+  (box :class "syspulse" :space-evenly false :spacing 8
+    (label :class "syspulse-cpu"  :text "CPU ${SYSPULSE.cpu}%")
+    (label :class "syspulse-mem"  :text "MEM ${SYSPULSE.mem}%")
+    (label :class "syspulse-temp" :text "${SYSPULSE.temp}°C")))
+
+(defwidget clock_widget []
+  (button :class "clock"
+          :onclick "eww open --toggle dashboard"
+          :tooltip "${TIME.long} · click to open dashboard"
+    (box :orientation "h" :space-evenly false :spacing 10
+      (label :class "clock-glyph" :text "◷")
+      (label :class "clock-hms"   :text "${TIME.hm}")
+      (label :class "clock-date"  :text "·  ${TIME.date}"))))
+
+(defwidget audio_widget []
+  (button :class "pill"
+          :onclick "pavucontrol &"
+          :tooltip "${AUDIO.tooltip}"
+    "${AUDIO.icon}  ${AUDIO.vol}%"))
+
+(defwidget net_widget []
+  (button :class "pill"
+          :onclick "alacritty -e nmtui &"
+          :tooltip "${NETWORK.tooltip}"
+    "${NETWORK.icon}  ${NETWORK.label}"))
+
+(defwidget battery_widget []
+  (button :class {BATTERY.status == "Charging" ? "pill batt-charge" :
+                  BATTERY.capacity < 20        ? "pill batt-low"    :
+                                                 "pill"}
+          :tooltip "${BATTERY.tooltip}"
+    "${BATTERY.icon}  ${BATTERY.capacity}%"))
+
+(defwidget brightness_widget []
+  (button :class "pill"
+          :onclick "brightnessctl set +10% &"
+          :onrightclick "brightnessctl set 10%- &"
+          :tooltip "Brightness ${BACKLIGHT.percent}%"
+    "☼  ${BACKLIGHT.percent}%"))
+
+(defwidget power_button []
+  (button :class "pill power-pill"
+          :onclick "eww open --toggle powermenu"
+          :tooltip "Power menu"
+    "⏻"))
+
+(defwidget tray_dummy []
+  (label :class "tray-dummy" :text "·  ·  ·"
+         :tooltip "Tray placeholder — wire to ironbar/nwg-tray once chosen"))
+
+;; ── ticker (top bar marquee) ──────────────────────────────────────────
+(defwidget ticker_widget []
+  (box :class "ticker-box" :space-evenly false :hexpand true
+    (label :class "ticker"
+           :limit-width 320
+           :text "${TICKER.text}"
+           :tooltip "${TICKER.tooltip}")))
+
+;; ── workspace rail (left bar) ─────────────────────────────────────────
+(defwidget workspace_pill [id active]
+  (button :class {active ? "ws-pill ws-pill-active" : "ws-pill"}
+          :onclick "hyprctl dispatch workspace ${id}"
+    "${id}"))
+
+(defwidget workspaces_rail []
+  (box :class "ws-rail" :orientation "v" :space-evenly false :spacing 8
+       :valign "center"
+    (workspace_pill :id 1 :active {WORKSPACES.active == 1})
+    (workspace_pill :id 2 :active {WORKSPACES.active == 2})
+    (workspace_pill :id 3 :active {WORKSPACES.active == 3})
+    (workspace_pill :id 4 :active {WORKSPACES.active == 4})
+    (workspace_pill :id 5 :active {WORKSPACES.active == 5})
+    (workspace_pill :id 6 :active {WORKSPACES.active == 6})))
+
+;; ── app launcher rail (right bar) ─────────────────────────────────────
+(defwidget app_launcher [glyph cmd label]
+  (button :class "app-pill" :onclick "${cmd} &" :tooltip "${label}" "${glyph}"))
+
+(defwidget app_rail []
+  (box :class "app-rail" :orientation "v" :space-evenly false :spacing 10
+       :valign "center"
+    (app_launcher :glyph "" :cmd "alacritty"          :label "Terminal")
+    (app_launcher :glyph "" :cmd "firefox"            :label "Firefox")
+    (app_launcher :glyph "" :cmd "nautilus"           :label "Files")
+    (app_launcher :glyph "" :cmd "nyxus-sysmon"       :label "SysMon")
+    (app_launcher :glyph "" :cmd "nyxus-notepad"      :label "Notepad")
+    (app_launcher :glyph "" :cmd "nyxus-stickies"     :label "Stickies")
+    (app_launcher :glyph "" :cmd "pavucontrol"        :label "Audio")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; LAYOUTS — top-level widgets per window
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget bar_bottom_layout []
+  (centerbox :class "bar bar-bottom" :orientation "h"
+    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 12 :halign "start"
+      (nyxus_brand)
+      (heartbeat))
+    (box :class "bar-cluster cluster-center" :space-evenly false :spacing 14 :halign "center"
+      (syspulse_widget)
+      (tray_dummy)
+      (clock_widget))
+    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 8 :halign "end"
+      (brightness_widget)
+      (audio_widget)
+      (net_widget)
+      (battery_widget)
+      (power_button))))
+
+(defwidget bar_top_layout []
+  (box :class "bar bar-top" :space-evenly false :spacing 12 :hexpand true
+    (label :class "ticker-label" :text "▌ NYXUS · LIVE")
+    (ticker_widget)))
+
+;; ── dashboard (full-screen overlay) ───────────────────────────────────
+(defwidget dashboard_layout []
+  (box :class "dashboard-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 24
+    (label :class "dash-clock" :text "${TIME.hm}")
+    (label :class "dash-date"  :text "${TIME.long}")
+    (box :class "dash-grid" :orientation "h" :space-evenly true :spacing 24
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 10
+        (label :class "dash-card-title" :text "WEATHER")
+        (label :class "dash-card-big"   :text "${WEATHER.temp}")
+        (label :class "dash-card-sub"   :text "${WEATHER.summary}"))
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 10
+        (label :class "dash-card-title" :text "SYSTEM")
+        (label :class "dash-card-big"   :text "${SYSPULSE.cpu}% · ${SYSPULSE.mem}%")
+        (label :class "dash-card-sub"   :text "CPU · MEM · ${SYSPULSE.temp}°C"))
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 10
+        (label :class "dash-card-title" :text "POWER")
+        (label :class "dash-card-big"   :text "${BATTERY.capacity}%")
+        (label :class "dash-card-sub"   :text "${BATTERY.status}")))
+    (box :class "dash-toggles" :orientation "h" :space-evenly true :spacing 16
+      (button :class "dash-toggle" :onclick "alacritty -e nmtui &"
+              "Network")
+      (button :class "dash-toggle" :onclick "blueman-manager &"
+              "Bluetooth")
+      (button :class "dash-toggle" :onclick "pavucontrol &"
+              "Audio")
+      (button :class "dash-toggle" :onclick "wdisplays &"
+              "Displays")
+      (button :class "dash-toggle" :onclick "eww close dashboard && hyprlock &"
+              "Lock"))
+    (button :class "dash-close" :onclick "eww close dashboard" "Close (Esc)")))
+
+;; ── powermenu (full-screen overlay) ───────────────────────────────────
+(defwidget power_btn [glyph label cmd]
+  (button :class "power-btn"
+          :onclick "eww close powermenu && (${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 8 :halign "center"
+      (label :class "power-glyph" :text "${glyph}")
+      (label :class "power-label" :text "${label}"))))
+
+(defwidget powermenu_layout []
+  (box :class "powermenu-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 24
+    (label :class "power-title" :text "NYXUS · POWER")
+    (box :class "power-grid" :orientation "h" :space-evenly true :spacing 18
+      (power_btn :glyph "⏻" :label "Shutdown" :cmd "systemctl poweroff")
+      (power_btn :glyph "↻" :label "Restart"  :cmd "systemctl reboot")
+      (power_btn :glyph "☾" :label "Suspend"  :cmd "systemctl suspend")
+      (power_btn :glyph "⏏" :label "Logout"   :cmd "hyprctl dispatch exit")
+      (power_btn :glyph "🔒" :label "Lock"    :cmd "hyprlock"))
+    (button :class "power-cancel" :onclick "eww close powermenu" "Cancel (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; WINDOWS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwindow bar-bottom
+  :monitor 0
+  :stacking "fg"
+  :exclusive true
+  :geometry (geometry :x "0" :y "12" :width "98%" :height "56px"
+                      :anchor "bottom center")
+  (bar_bottom_layout))
+
+(defwindow bar-top
+  :monitor 0
+  :stacking "fg"
+  :exclusive true
+  :geometry (geometry :x "0" :y "0" :width "100%" :height "32px"
+                      :anchor "top center")
+  (bar_top_layout))
+
+(defwindow bar-left
+  :monitor 0
+  :stacking "fg"
+  :exclusive true
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "60%"
+                      :anchor "center left")
+  (workspaces_rail))
+
+(defwindow bar-right
+  :monitor 0
+  :stacking "fg"
+  :exclusive true
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "60%"
+                      :anchor "center right")
+  (app_rail))
+
+(defwindow dashboard
+  :monitor 0
+  :stacking "overlay"
+  :focusable true
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  (dashboard_layout))
+
+(defwindow powermenu
+  :monitor 0
+  :stacking "overlay"
+  :focusable true
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  (powermenu_layout))
