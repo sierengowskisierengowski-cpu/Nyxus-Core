@@ -1,37 +1,41 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════════════════
-#  nyxus-bd-router — front-door / back-door PAM dispatcher
+#  nyxus-bd-router — front-door / back-door PAM dispatcher (4-factor)
 #  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 #  Wired as the FIRST auth step in /etc/pam.d/sddm:
 #      auth [success=done default=ignore] pam_exec.so quiet expose_authtok \
 #           /usr/local/bin/nyxus-bd-router
 #
-#  Reads the typed authtok from stdin (pam_exec `expose_authtok` pipe).
+#  AUTHTOK FORMAT (when the QML is in backdoor mode):
 #
-#    · No magic prefix  → exit 1 → PAM rule's `default=ignore` fires →
-#                          normal sddm auth chain proceeds (fprintd → howdy
-#                          → unix passphrase).  Router is a no-op.
+#      \x01NYXBD\x01  <ghost_password>  \x02  <yubikey_pin>  \x02  <totp>
+#      └── prefix ──┘ └─── factor 1 ───┘ sep └── factor 3 ──┘ sep └─ 4 ─┘
 #
-#    · Prefix detected  → strip it → run BOTH gates in sequence:
-#                            (a) nyxus-ghost-auth  (zero-width password)
-#                            (b) pam_u2f via /etc/pam.d/sddm-u2f-only
-#                                (forces YubiKey touch)
-#                          Both must succeed.  On full success, exit 0 →
-#                          PAM rule's `success=done` fires → entire `auth`
-#                          stack short-circuits as authenticated.  On any
-#                          failure, exit 1 → normal stack runs and will
-#                          (correctly) reject the prefixed garbage password.
+#  Four factors must ALL pass:
 #
-#  The prefix is NOT a security boundary — it's a routing signal.  All
-#  security comes from ghost-auth (something only you know, including the
-#  invisible bytes) AND pam_u2f (something only you have, the YubiKey).
+#    1. nyxus-ghost-auth          — zero-width-aware bcrypt on factor 1.
+#                                   Visible decoy + invisible signature.
+#    2. (TOTP)  oathtool --totp   — rotating 30-sec code (factor 4)
+#                                   matched against /etc/nyxus/oath.secret.
+#    3. pam_u2f USERPRESENCE=1    — physical YubiKey touch (factor 2).
+#    4. pam_u2f PINVERIFICATION=1 — YubiKey FIDO2 client PIN (factor 3).
+#
+#    (Factors 3 & 4 are run in a single pamtester invocation against
+#     /etc/pam.d/sddm-u2f-only, which has both flags set on pam_u2f.so.)
+#
+#  Without ALL FOUR, the router exits non-zero.  /etc/pam.d/sddm pairs
+#  this with nyxus-bd-detect so a backdoor failure HARD-DENIES the entire
+#  auth attempt (instead of falling through to front-door biometrics).
+#
+#  Front-door logins (no prefix) are a no-op for this script.
 # ═══════════════════════════════════════════════════════════════════════════
 set -u
 
 # Magic prefix MUST match the constant in
 # /usr/share/sddm/themes/nyxus/Main.qml :: backdoorPrefix
 PREFIX=$'\x01NYXBD\x01'
+SEP=$'\x02'
 
 LOG_DIR="/var/log/nyxus"
 LOG_FILE="${LOG_DIR}/backdoor.log"
@@ -45,12 +49,9 @@ log() {
         "${PAM_USER:-?}" "$1" "$2" >> "${LOG_FILE}"
 }
 
-# Read the typed password from stdin.  Use `-r` and IFS= so any byte is
-# preserved verbatim (zero-width unicode, NULs, etc.).
+# Read the typed authtok from stdin verbatim (preserves zero-width unicode).
 authtok=""
 IFS= read -r -d '' authtok || true
-
-# Strip an optional trailing newline that some PAM impls append.
 authtok="${authtok%$'\n'}"
 
 # Fast path: no prefix → not a backdoor attempt → defer to normal stack.
@@ -59,28 +60,69 @@ case "${authtok}" in
     *)            exit 1 ;;
 esac
 
-# Strip the prefix.
-real_pw="${authtok#${PREFIX}}"
+# Strip prefix.
+payload="${authtok#${PREFIX}}"
 
-if [ -z "${real_pw}" ]; then
-    log DENY "empty authtok after prefix strip"
+# Split payload on \x02 into ghost / pin / totp.  We do this in pure bash
+# parameter expansion to avoid spawning subshells that might inherit the
+# secret on argv.
+ghost_pw="${payload%%${SEP}*}"
+rest="${payload#*${SEP}}"
+yubi_pin="${rest%%${SEP}*}"
+totp_code="${rest#*${SEP}}"
+
+# Hard-fail any missing field BEFORE running any verifier — keeps audit
+# log clean and avoids leaking which factor is "the one" that failed.
+if [ -z "${ghost_pw}" ] || [ -z "${yubi_pin}" ] || [ -z "${totp_code}" ] \
+   || [ "${rest}" = "${payload}" ] || [ "${totp_code}" = "${rest}" ]; then
+    log DENY "malformed payload (missing factor)"
     exit 1
 fi
 
-# Gate 1 — ghost-auth (zero-width-aware bcrypt match).
-# We feed the stripped password on stdin; ghost-auth needs PAM_TYPE set.
-if ! PAM_TYPE=auth /usr/local/bin/nyxus-ghost-auth <<<"${real_pw}" >/dev/null 2>&1; then
+# ── Factor 1: zero-width ghost password ────────────────────────────────
+if ! PAM_TYPE=auth /usr/local/bin/nyxus-ghost-auth <<<"${ghost_pw}" >/dev/null 2>&1; then
     log DENY "ghost-auth mismatch"
     exit 1
 fi
 
-# Gate 2 — YubiKey FIDO2/U2F via a single-purpose PAM service.
-# pam_u2f talks directly to the USB token; no stdin needed.
-# pamtester returns 0 only if pam_u2f returned PAM_SUCCESS (touch confirmed).
-if ! pamtester sddm-u2f-only "${PAM_USER:-root}" authenticate >/dev/null 2>&1; then
-    log DENY "yubikey check failed"
+# ── Factor 4: TOTP via oathtool ────────────────────────────────────────
+# /etc/nyxus/oath.secret contains a base32-encoded TOTP secret on a single
+# line.  oathtool computes the current code; we compare with a window of 1
+# step on either side to tolerate small clock drift.
+OATH_SECRET_FILE="/etc/nyxus/oath.secret"
+if [ ! -r "${OATH_SECRET_FILE}" ]; then
+    log DENY "oath.secret missing or unreadable"
+    exit 1
+fi
+oath_secret="$(head -c 256 "${OATH_SECRET_FILE}" | tr -d '[:space:]')"
+if [ -z "${oath_secret}" ]; then
+    log DENY "oath.secret empty"
+    exit 1
+fi
+# Generate 3 candidate codes (now-30s, now, now+30s) for clock drift.
+# `oathtool --totp -b` prints just the 6-digit code.
+totp_now="$(oathtool --totp -b "${oath_secret}" 2>/dev/null || true)"
+totp_prev="$(oathtool --totp -b -N "$(date -u -d '-30 seconds' +'%Y-%m-%d %H:%M:%S UTC')" "${oath_secret}" 2>/dev/null || true)"
+totp_next="$(oathtool --totp -b -N "$(date -u -d '+30 seconds' +'%Y-%m-%d %H:%M:%S UTC')" "${oath_secret}" 2>/dev/null || true)"
+
+# Strip whitespace from user input.
+totp_in="$(printf '%s' "${totp_code}" | tr -d '[:space:]')"
+
+if [ "${totp_in}" != "${totp_now}" ] \
+   && [ "${totp_in}" != "${totp_prev}" ] \
+   && [ "${totp_in}" != "${totp_next}" ]; then
+    log DENY "totp mismatch"
     exit 1
 fi
 
-log GRANT "ghost+yubikey ok"
+# ── Factors 2 + 3: YubiKey touch + PIN ─────────────────────────────────
+# pam_u2f with userpresence=1 + pinverification=1 prompts for the PIN
+# via PAM conversation; pamtester pipes our stdin as the response.
+# The user must ALSO physically touch the key (no piping that part).
+if ! pamtester sddm-u2f-only "${PAM_USER:-root}" authenticate <<<"${yubi_pin}" >/dev/null 2>&1; then
+    log DENY "yubikey check failed (touch and/or PIN)"
+    exit 1
+fi
+
+log GRANT "ghost+totp+yubikey-pin+touch ok"
 exit 0

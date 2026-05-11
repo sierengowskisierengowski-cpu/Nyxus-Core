@@ -2,9 +2,18 @@
 #  PAM service · sddm-u2f-only  (NYXUS · DARK MIRROR)
 #
 #  Single-purpose stack invoked by /usr/local/bin/nyxus-bd-router after the
-#  ghost-auth password gate has already passed.  Runs ONLY the YubiKey
-#  touch check.  Not exposed to any login UI directly — internal use only.
+#  ghost-auth password gate and the TOTP gate have already passed.  Runs
+#  ONLY the YubiKey checks:
+#
+#    · userpresence=1   — the user must physically TOUCH the YubiKey
+#    · pinverification=1 — the YubiKey's FIDO2 client PIN must also be
+#                          entered (pam_u2f issues a PAM_PROMPT_ECHO_OFF
+#                          for the PIN; pamtester pipes it from stdin).
+#
+#  Not exposed to any login UI directly — internal use only.
+#  The /etc/nyxus/u2f_keys mapping must have been created by:
+#      sudo bash -c "pamu2fcfg --pin-verification > /etc/nyxus/u2f_keys"
 # ═══════════════════════════════════════════════════════════════════════════
 
-auth     required    pam_u2f.so   authfile=/etc/nyxus/u2f_keys cue userpresence=1
+auth     required    pam_u2f.so   authfile=/etc/nyxus/u2f_keys cue userpresence=1 pinverification=1
 account  required    pam_permit.so

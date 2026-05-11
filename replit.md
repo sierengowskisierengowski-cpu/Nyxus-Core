@@ -25,3 +25,14 @@ For canonical project architecture and deployment documentation, use:
 
 - **NYX** = ISO image only
 - **NYXUS** = operating system/platform/application ecosystem
+
+## User preferences
+
+- **Auth lockout policies stay OFF until post-install.** Do NOT add or
+  enable `fail2ban`, `pam_faillock`, `pam_tally2`, or any account-lockout
+  PAM module in the ISO build, base airootfs, or first-boot scripts.
+  These have repeatedly locked the user out during install/recovery.
+  They will be turned on by the user (as designed) only AFTER the system
+  is fully installed and verified working. Slow-failure delays inside
+  custom helpers (e.g. the 1.5s sleep in `nyxus-ghost-auth`) are fine —
+  no account state is changed.
