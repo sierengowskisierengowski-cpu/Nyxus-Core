@@ -255,6 +255,8 @@ lib32-libpng
 
 # ── Daily-driver apps ───────────────────────────────────────────
 firefox
+nautilus
+hyprshot
 file-roller
 p7zip
 unrar
