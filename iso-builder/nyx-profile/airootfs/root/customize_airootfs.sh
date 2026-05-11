@@ -78,52 +78,54 @@ fi
 # FAIL-FAST: since waybar has been removed, a missing eww binary leaves
 # the system with NO bar/widget stack at all. Treat the build as a hard
 # ISO requirement.
-# EWW build (rev r9-eww-2 2026-05-11):
-#   • Bumped default tag v0.6.0 → v0.6.2 — v0.6.0 ships a Cargo.lock with
-#     time 0.3.34, which fails to compile against rustc ≥ 1.80 with
-#     E0282 (type-inference failure in time::format_description).
-#     v0.6.2 already pins time ≥ 0.3.36 upstream.
-#   • Robust cargo update fallback: if the precise pin fails (because
-#     the lockfile has been bumped upstream), attempt a generic
-#     `cargo update -p time` then retry build.
+# EWW build (rev r9-eww-3 2026-05-11):
+#   • v0.6.0 is the latest published tag (no v0.6.1/v0.6.2 exist).
+#   • v0.6.0 ships a Cargo.lock with time-0.3.34, which fails to compile
+#     against rustc ≥ 1.80 with E0282 (type-inference failure in
+#     time::format_description::parse::mod::parse). This is a known
+#     upstream-unfixed regression because EWW v0.6.0 was tagged in 2024.
+#   • SOLUTION: run `cargo fetch` first to populate the registry cache,
+#     then apply the EXACT one-line type annotation rustc's diagnostic
+#     prints (`let items: Box<_> = format_items`), then build. This is
+#     deterministic and doesn't depend on the dep resolver picking newer
+#     versions or upstream re-publishing anything.
+#   • Override NYXUS_EWW_TAG to track a different ref if v0.6.0 ever
+#     becomes truly unbuildable (e.g. NYXUS_EWW_TAG=master).
 #   • FAIL-FAST: waybar is gone; missing eww = no bar. Treat as a hard
 #     ISO requirement (exit 1).
-NYXUS_EWW_TAG="${NYXUS_EWW_TAG:-v0.6.2}"
+NYXUS_EWW_TAG="${NYXUS_EWW_TAG:-v0.6.0}"
 if ! command -v eww >/dev/null 2>&1; then
   echo "[customize_airootfs] building eww ${NYXUS_EWW_TAG} from source..."
   _edir=$(mktemp -d)
-  # Apply the single-line type annotation that rustc itself suggests
-  # for time-0.3.34's format_description/parse/mod.rs E0282 failure.
-  # This is the exact fix from the compiler diagnostic — bulletproof
-  # against any version of cargo/rustc because it doesn't depend on
-  # the dep resolver doing the right thing.
+  # Apply the rustc-suggested type annotation to time-0.3.34. Idempotent:
+  # if the file is already patched (or already a newer time version),
+  # this is a no-op. Searches the cargo registry rather than the source
+  # tree because cargo extracts crates into ~/.cargo/registry/src/.
   patch_time_034() {
-    local f
+    local f patched=0
     for f in /root/.cargo/registry/src/*/time-0.3.34/src/format_description/parse/mod.rs; do
       [ -f "$f" ] || continue
       if grep -q '^    let items = format_items' "$f"; then
+        # Cargo registry sources are read-only by default; flip the bit.
+        chmod u+w "$f" 2>/dev/null || true
         sed -i 's|^    let items = format_items|    let items: Box<_> = format_items|' "$f"
         echo "[customize_airootfs] patched $f for E0282"
+        patched=1
       fi
     done
+    [ "$patched" = 1 ] || echo "[customize_airootfs] no time-0.3.34 found to patch (newer version likely in use — fine)"
   }
   build_eww() {
     cd "$_edir/eww" || return 1
-    # First attempt: try to bump `time` via cargo, then build.
-    while IFS= read -r v; do
-      cargo update -p "time@${v}" 2>/dev/null || true
-    done < <(awk '/^name = "time"$/{getline; if($1=="version") print $3}' \
-                   Cargo.lock 2>/dev/null | tr -d '"' | sort -u)
-    cargo update 2>/dev/null || true
-    if cargo build --release --no-default-features --features=wayland; then
-      return 0
-    fi
-    # Fallback: cargo couldn't escape time-0.3.34 (often the case when a
-    # transitive dep pins it). Patch the offending file in-place using
-    # the exact fix rustc's E0282 diagnostic prints, then retry.
-    echo "[customize_airootfs] first eww build failed — applying time-0.3.34 E0282 sed patch and retrying"
+    # Step 1: download every dep into the cargo registry without building.
+    # This materialises time-0.3.34/src/... so the sed patch has a target.
+    echo "[customize_airootfs] cargo fetch (populating registry)..."
+    cargo fetch || return 1
+    # Step 2: apply the E0282 patch eagerly. Known-good fix; runs every
+    # time so it survives clean builds.
     patch_time_034
-    cargo build --release --no-default-features --features=wayland
+    # Step 3: build offline since fetch already downloaded everything.
+    cargo build --release --no-default-features --features=wayland --offline
   }
   if git clone --depth 1 --branch "${NYXUS_EWW_TAG}" \
         https://github.com/elkowar/eww.git "$_edir/eww" \
