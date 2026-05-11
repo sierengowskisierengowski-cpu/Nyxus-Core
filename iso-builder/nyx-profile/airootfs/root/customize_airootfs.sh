@@ -69,6 +69,10 @@ fi
 # reproducible and not vulnerable to upstream HEAD breakage / supply
 # chain surprises. Bump NYXUS_EWW_TAG when you've verified a newer tag.
 #
+# `cargo update -p time` bumps the time crate above the broken 0.3.34
+# pinned in EWW v0.6.0's Cargo.lock — that version has a type-inference
+# bug (E0282) that breaks against rustc 1.80+. Fixed in time 0.3.36+.
+#
 # FAIL-FAST: since waybar has been removed, a missing eww binary leaves
 # the system with NO bar/widget stack at all. Treat the build as a hard
 # ISO requirement.
@@ -81,6 +85,7 @@ if ! command -v eww >/dev/null 2>&1; then
   if git clone --depth 1 --branch "${NYXUS_EWW_TAG}" \
         https://github.com/elkowar/eww.git "$_edir/eww" \
      && cd "$_edir/eww" \
+     && cargo update -p time \
      && cargo build --release --no-default-features --features=wayland \
      && install -Dm755 target/release/eww /usr/local/bin/eww; then
     echo "[customize_airootfs] eww installed → $(command -v eww)"
