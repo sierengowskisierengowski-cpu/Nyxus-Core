@@ -1,428 +1,234 @@
 // ═════════════════════════════════════════════════════════════════════════════
-//  NYXUS VOID · Plymouth boot splash · "THE INFALL" · rev 4 enterprise
+//  NYXUS · Plymouth boot splash · "THE DARKSIDE" · rev 5
 //
-//  CONCEPT
-//  ───────
-//  The cosmic void at boot is not a static logo — it's a *moment*.
-//  The screen tells a 3-second story:
+//  SEQUENCE  (10 seconds · 50 fps · 500 ticks)
+//  ─────────────────────────────────────────────────────────────────────────
+//    0 –  60  (0.0 – 1.2 s)  Eye fades in from black
+//   60 – 260  (1.2 – 5.2 s)  "NYXUS" emerges from pupil outward — 4 s slow zoom
+//  260 – 460  (5.2 – 9.2 s)  "WELCOME TO THE DARKSIDE" emerges from pupil — 4 s
+//  460 – 500  (9.2 – 10.0s)  Progress bar fades in
+//  500+                       Steady state · indeterminate sweep until real progress
 //
-//      1. The void reveals itself (cosmic ink swirl background fades in)
-//      2. A single dark diamond materialises at the eye of the swirl
-//      3. Twelve micro-stars seed across the screen — and one by one,
-//         each is pulled inward toward the diamond (gravitational infall),
-//         brightening as it accelerates, vanishing as it's absorbed
-//      4. When the last star is consumed, a bright shockwave pulses out
-//         from the diamond — the wordmark "N Y X U S    V O I D"
-//         ignites in tandem with a sweeping starlight beam
-//      5. The aperture settles: etched rules above & below, corner
-//         brackets at the four corners, top-left build stamp,
-//         orbital ring around the wordmark, ultra-thin progress hairline
-//         with a pure-white leading edge, bottom-right watermark
-//
-//  This is not a splash screen. This is the universe arranging itself
-//  into the NYXUS brand. People will remember it.
-//
-//  PALETTE — TRIPLE BLACK + LIGHT GREY + WHITE GLOW (locked rev 4)
-//  ─────────────────────────────────────────────────────────────────
-//      #000000   void center
-//      #050507   faded black
-//      #0a0a0c   charcoal mid
-//      #14141a   graphite edge
-//      #1a1a1f   wordmark form (DARKER than page edges)
-//      #2a2a30   progress fill
-//      #6a6e78   light grey (rules / brackets / build stamp / ticks)
-//      #c8ccd6   orbit dots
-//      #e8eaf2   wordmark rim
-//      #ffffff   pure white (glow + shockwave + leading edge)
-//
-//  Forbidden: gold, cyan, lime, neon, multi-color, strobes.
-//
-//  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+//  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI
 // ═════════════════════════════════════════════════════════════════════════════
 
-// ── Screen geometry ─────────────────────────────────────────────────────────
+// ── Screen geometry ──────────────────────────────────────────────────────────
 screen.w  = Window.GetWidth();
 screen.h  = Window.GetHeight();
 screen.cx = screen.w / 2;
 screen.cy = screen.h / 2;
 
-// ── Easing helpers ──────────────────────────────────────────────────────────
+// ── Easing helpers ───────────────────────────────────────────────────────────
 fun ease_out_cubic(t) {
     inv = 1.0 - t;
     return 1.0 - (inv * inv * inv);
 }
 
-fun ease_in_cubic(t) {
-    return t * t * t;
+fun ease_out_quart(t) {
+    inv = 1.0 - t;
+    return 1.0 - (inv * inv * inv * inv);
 }
 
 fun smooth_step(t) {
-    if (t < 0) return 0;
-    if (t > 1) return 1;
-    return t * t * (3 - 2 * t);
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    return t * t * (3.0 - 2.0 * t);
+}
+
+fun clamp01(v) {
+    if (v < 0) return 0;
+    if (v > 1) return 1;
+    return v;
 }
 
 fun lerp(a, b, t) {
     return a + (b - a) * t;
 }
 
-// ── Background: cosmic ink swirl, full bleed (cover) ────────────────────────
+// ── Background — the eye, full-bleed cover ───────────────────────────────────
 bg.image  = Image("background.png");
-bg.scale  = Math.Max(screen.w / bg.image.GetWidth(),
-                     screen.h / bg.image.GetHeight());
-bg.scaled = bg.image.Scale(bg.image.GetWidth()  * bg.scale,
-                           bg.image.GetHeight() * bg.scale);
+bg.iw     = bg.image.GetWidth();
+bg.ih     = bg.image.GetHeight();
+bg.scale  = Math.Max(screen.w / bg.iw, screen.h / bg.ih);
+bg.scaled = bg.image.Scale(bg.iw * bg.scale, bg.ih * bg.scale);
 bg.sprite = Sprite(bg.scaled);
 bg.sprite.SetX((screen.w - bg.scaled.GetWidth())  / 2);
 bg.sprite.SetY((screen.h - bg.scaled.GetHeight()) / 2);
 bg.sprite.SetZ(-100);
-bg.sprite.SetOpacity(0);   // fade in during phase 0
+bg.sprite.SetOpacity(0);
 
-// ── Wordmark (tri-layer glow PNG: outer aura + mid rim + dark form) ─────────
-wm.image  = Image("wordmark.png");
-wm.x      = screen.cx - wm.image.GetWidth()  / 2;
-wm.y      = screen.cy - 30;
-wm.sprite = Sprite(wm.image);
-wm.sprite.SetX(wm.x);
-wm.sprite.SetY(wm.y);
-wm.sprite.SetOpacity(0);
+// ── Pupil anchor ─────────────────────────────────────────────────────────────
+//  The pupil in the eye image sits roughly 43 % across and 40 % down.
+//  These fractions were measured from the image composition; adjust if the
+//  background is swapped for a differently-framed shot.
+pupil.x = screen.w * 0.43;
+pupil.y = screen.h * 0.40;
 
-// ── Brand diamond — sits at the eye of the void, above the wordmark ─────────
-dia.image  = Image("diamond.png");
-dia.x      = screen.cx - dia.image.GetWidth() / 2;
-dia.y      = wm.y - 70;
-dia.sprite = Sprite(dia.image);
-dia.sprite.SetX(dia.x);
-dia.sprite.SetY(dia.y);
-dia.sprite.SetOpacity(0);
+// ── NYXUS wordmark text ──────────────────────────────────────────────────────
+//  Wide letter-spacing gives it that brand weight even when small.
+nyxus.full  = Image.Text("N Y X U S", 1.0, 1.0, 1.0, 1.0, "Sans Bold 108");
+nyxus.fw    = nyxus.full.GetWidth();
+nyxus.fh    = nyxus.full.GetHeight();
 
-dia.halo.image  = Image("diamond_halo.png");
-dia.halo.x      = screen.cx - dia.halo.image.GetWidth() / 2;
-dia.halo.y      = dia.y - (dia.halo.image.GetHeight() - dia.image.GetHeight()) / 2;
-dia.halo.sprite = Sprite(dia.halo.image);
-dia.halo.sprite.SetX(dia.halo.x);
-dia.halo.sprite.SetY(dia.halo.y);
-dia.halo.sprite.SetOpacity(0);
+//  Final resting position: horizontally centred, slightly above vertical centre
+nyxus.final_cx = screen.cx;
+nyxus.final_cy = screen.cy - 30;
 
-// ── Reveal beam (vertical bloom that sweeps across the wordmark) ────────────
-beam.image  = Image("beam.png");
-beam.y      = wm.y - 20;
-beam.sprite = Sprite(beam.image);
-beam.sprite.SetY(beam.y);
-beam.sprite.SetOpacity(0);
+nyxus.sprite = Sprite();
+nyxus.sprite.SetZ(10);
+nyxus.sprite.SetOpacity(0);
 
-// ═════════════════════════════════════════════════════════════════════════════
-//  THE INFALL · 12 micro-stars seed across the screen and fall into the void
-// ═════════════════════════════════════════════════════════════════════════════
-star.count   = 12;
-star.image   = Image("star.png");
-star.target_x = screen.cx;
-star.target_y = dia.y + 9;   // diamond's center
-star.sprites = [];
-star.start_x = [];
-star.start_y = [];
-star.delay   = [];   // per-star stagger (each star starts falling at a different tick)
+// ── WELCOME TO THE DARKSIDE ───────────────────────────────────────────────────
+dark.full  = Image.Text("W E L C O M E  T O  T H E  D A R K S I D E",
+                         0.78, 0.78, 0.78, 1.0, "Sans 32");
+dark.fw    = dark.full.GetWidth();
+dark.fh    = dark.full.GetHeight();
 
-// Hand-picked positions: distributed across the screen, varied distance from center
-// (Plymouth has no random; deterministic positions = repeatable enterprise polish)
-star.pos_x = [ 240, 1680, 380, 1540, 580, 1340, 720, 1200, 480, 1440, 280, 1620 ];
-star.pos_y = [ 180, 200,  420, 440,  720, 700,  900, 880,  580, 560,  840, 320 ];
-star.delays = [ 0,   2,    4,   6,    8,   10,   12,  14,   16,  18,   20,  22 ];
+//  Sits just below NYXUS with a comfortable gap
+dark.final_cx = screen.cx;
+dark.final_cy = nyxus.final_cy + (nyxus.fh / 2) + 44;
 
-for (i = 0; i < star.count; i++) {
-    star.start_x[i] = star.pos_x[i];
-    star.start_y[i] = star.pos_y[i];
-    star.delay[i]   = star.delays[i];
-    star.sprites[i] = Sprite(star.image);
-    star.sprites[i].SetX(star.start_x[i]);
-    star.sprites[i].SetY(star.start_y[i]);
-    star.sprites[i].SetOpacity(0);
-}
+dark.sprite = Sprite();
+dark.sprite.SetZ(10);
+dark.sprite.SetOpacity(0);
 
-// ── Etched rules (light grey hairlines with bright center pip, top + bottom)
-rule.top.image  = Image("rule_top.png");
-rule.top.sprite = Sprite(rule.top.image);
-rule.top.sprite.SetX(screen.cx - rule.top.image.GetWidth() / 2);
-rule.top.sprite.SetY(wm.y - 24);
-rule.top.sprite.SetOpacity(0);
-
-rule.bot.image  = Image("rule_bottom.png");
-rule.bot.sprite = Sprite(rule.bot.image);
-rule.bot.sprite.SetX(screen.cx - rule.bot.image.GetWidth() / 2);
-rule.bot.sprite.SetY(wm.y + wm.image.GetHeight() + 16);
-rule.bot.sprite.SetOpacity(0);
-
-// ── Corner brackets · 4 small L-shapes at screen corners (HUD frame) ────────
-corner.margin = 32;
-corner.tl.image  = Image("corner_tl.png");
-corner.tl.sprite = Sprite(corner.tl.image);
-corner.tl.sprite.SetX(corner.margin);
-corner.tl.sprite.SetY(corner.margin);
-corner.tl.sprite.SetOpacity(0);
-
-corner.tr.image  = Image("corner_tr.png");
-corner.tr.sprite = Sprite(corner.tr.image);
-corner.tr.sprite.SetX(screen.w - corner.tr.image.GetWidth() - corner.margin);
-corner.tr.sprite.SetY(corner.margin);
-corner.tr.sprite.SetOpacity(0);
-
-corner.bl.image  = Image("corner_bl.png");
-corner.bl.sprite = Sprite(corner.bl.image);
-corner.bl.sprite.SetX(corner.margin);
-corner.bl.sprite.SetY(screen.h - corner.bl.image.GetHeight() - corner.margin);
-corner.bl.sprite.SetOpacity(0);
-
-corner.br.image  = Image("corner_br.png");
-corner.br.sprite = Sprite(corner.br.image);
-corner.br.sprite.SetX(screen.w - corner.br.image.GetWidth() - corner.margin);
-corner.br.sprite.SetY(screen.h - corner.br.image.GetHeight() - corner.margin);
-corner.br.sprite.SetOpacity(0);
-
-// ── Build stamp · top-left product metadata ─────────────────────────────────
-build.image  = Image("buildstamp.png");
-build.sprite = Sprite(build.image);
-build.sprite.SetX(corner.margin + 28);
-build.sprite.SetY(corner.margin + 4);
-build.sprite.SetOpacity(0);
-
-// ── Orbit ring · 24 dim micro-dots in elliptical formation around wordmark ──
-orbit.dot      = Image("orbit_dot.png");
-orbit.count    = 24;
-orbit.rx       = (wm.image.GetWidth() / 2) + 60;
-orbit.ry       = (wm.image.GetHeight() / 2) + 30;
-orbit.cx       = screen.cx;
-orbit.cy       = wm.y + (wm.image.GetHeight() / 2);
-orbit.dots     = [];
-orbit.angle_off = 0;
-
-for (i = 0; i < orbit.count; i++) {
-    a = (i * 2 * 3.14159265) / orbit.count;
-    px = orbit.cx + Math.Cos(a) * orbit.rx - 2;
-    py = orbit.cy + Math.Sin(a) * orbit.ry - 2;
-    orbit.dots[i] = Sprite(orbit.dot);
-    orbit.dots[i].SetX(px);
-    orbit.dots[i].SetY(py);
-    orbit.dots[i].SetOpacity(0);
-}
-
-// ── Progress bar (track + ticks + fill + glowing leading edge) ──────────────
+// ── Progress bar (kept from rev 4; sits near screen bottom) ──────────────────
 pg.track.image  = Image("progress_track.png");
 pg.track.x      = screen.cx - pg.track.image.GetWidth() / 2;
-pg.track.y      = wm.y + wm.image.GetHeight() + 60;
+pg.track.y      = screen.h - 72;
 pg.track.sprite = Sprite(pg.track.image);
 pg.track.sprite.SetX(pg.track.x);
 pg.track.sprite.SetY(pg.track.y);
 pg.track.sprite.SetOpacity(0);
 
-pg.fill.image   = Image("progress_fill.png");
-pg.fill.sprite  = Sprite(pg.fill.image);
+pg.fill.image  = Image("progress_fill.png");
+pg.fill.sprite = Sprite(pg.fill.image);
 pg.fill.sprite.SetX(pg.track.x);
 pg.fill.sprite.SetY(pg.track.y);
 pg.fill.sprite.SetOpacity(0);
-pg.width_full   = pg.fill.image.GetWidth();   // 480
+pg.width_full  = pg.fill.image.GetWidth();
 
-pg.lead.image   = Image("progress_lead.png");
-pg.lead.sprite  = Sprite(pg.lead.image);
+pg.lead.image  = Image("progress_lead.png");
+pg.lead.sprite = Sprite(pg.lead.image);
 pg.lead.sprite.SetY(pg.track.y - 8);
 pg.lead.sprite.SetOpacity(0);
 
-pg.progress     = 0.0;
+pg.progress = 0.0;
 
-// ── Tick marks at 25% / 50% / 75% (HUD detail) ──────────────────────────────
-pg.tick.image  = Image("tick.png");
-pg.tick.count  = 3;
-pg.tick.sprites = [];
-pg.tick.positions = [ 0.25, 0.50, 0.75 ];
-for (i = 0; i < pg.tick.count; i++) {
-    s = Sprite(pg.tick.image);
-    s.SetX(pg.track.x + (pg.width_full * pg.tick.positions[i]));
-    s.SetY(pg.track.y - 2);
-    s.SetOpacity(0);
-    pg.tick.sprites[i] = s;
+// ── Status / boot messages ───────────────────────────────────────────────────
+status.sprite = Sprite();
+status.sprite.SetY(screen.h - 36);
+
+// ── Tick counter ─────────────────────────────────────────────────────────────
+anim.tick = 0;
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Zoom helper
+//  Scales `full_img` (pre-rendered at 100 %) so that its visual centre travels
+//  from (from_cx, from_cy) to (to_cx, to_cy) while the image grows from
+//  min_scale → 1.0. `eased` is the 0→1 progress value (already eased).
+//  Returns nothing; updates the passed sprite in-place.
+// ─────────────────────────────────────────────────────────────────────────────
+fun apply_zoom(sprite, full_img, fw, fh,
+               from_cx, from_cy, to_cx, to_cy,
+               min_scale, eased, opacity) {
+
+    scale = min_scale + (1.0 - min_scale) * eased;
+
+    w = fw * scale;
+    h = fh * scale;
+    if (w < 2) w = 2;
+    if (h < 2) h = 2;
+
+    scaled_img = full_img.Scale(w, h);
+    sprite.SetImage(scaled_img);
+
+    cx = lerp(from_cx, to_cx, eased);
+    cy = lerp(from_cy, to_cy, eased);
+    sprite.SetX(cx - w / 2);
+    sprite.SetY(cy - h / 2);
+    sprite.SetOpacity(opacity);
 }
 
-// ── Watermark · bottom-right NYX-J5W-2026 ───────────────────────────────────
-wat.image  = Image("watermark.png");
-wat.sprite = Sprite(wat.image);
-wat.sprite.SetX(screen.w - wat.image.GetWidth() - corner.margin - 4);
-wat.sprite.SetY(screen.h - wat.image.GetHeight() - corner.margin - 8);
-wat.sprite.SetOpacity(0);
-
-// ── Status sprite (LUKS prompts, late-boot messages) ────────────────────────
-status.sprite = Sprite();
-status.sprite.SetY(screen.h - 80);
-
-// ═════════════════════════════════════════════════════════════════════════════
-//  ANIMATION TIMELINE — 50 fps refresh
-//
-//  ticks   0 –  20   (0.0–0.4s)  PHASE 0   void background fades in
-//  ticks  20 –  40   (0.4–0.8s)  PHASE 1   diamond materialises at the eye
-//  ticks  40 –  90   (0.8–1.8s)  PHASE 2   THE INFALL — 12 stars fall inward
-//  ticks  90 – 110   (1.8–2.2s)  PHASE 3   shockwave + beam sweep + ignite
-//  ticks 110 – 150   (2.2–3.0s)  PHASE 4   HUD assembles (rules / corners /
-//                                          stamp / orbit / progress / watermark)
-//  ticks 150+                    PHASE 5   steady state, slow rotation
-// ═════════════════════════════════════════════════════════════════════════════
-
-anim.tick      = 0;
-anim.fall_done = 0;
-
+// ─────────────────────────────────────────────────────────────────────────────
+//  REFRESH — called 50 × per second
+// ─────────────────────────────────────────────────────────────────────────────
 fun Refresh() {
     anim.tick++;
     t = anim.tick;
 
-    // ─── PHASE 0 · void reveal ─────────────────────────────────────────────
-    if (t <= 20) {
-        bg.sprite.SetOpacity(ease_out_cubic(t / 20.0));
+    // ── PHASE 0 · Eye fades in (0 → 60) ────────────────────────────────────
+    if (t <= 60) {
+        bg.sprite.SetOpacity(ease_out_cubic(t / 60.0));
     }
 
-    // ─── PHASE 1 · diamond materialises ────────────────────────────────────
-    if (t >= 20 && t <= 40) {
-        a = ease_out_cubic((t - 20) / 20.0);
-        dia.sprite.SetOpacity(a * 0.95);
+    // ── PHASE 1 · NYXUS zooms from pupil (60 → 260) ────────────────────────
+    if (t >= 60 && t <= 260) {
+        local_t = (t - 60) / 200.0;
+        eased   = ease_out_quart(local_t);
+
+        // Opacity: rush in during first 20 % of the phase
+        op = clamp01(smooth_step(local_t / 0.20));
+
+        apply_zoom(nyxus.sprite, nyxus.full, nyxus.fw, nyxus.fh,
+                   pupil.x, pupil.y, nyxus.final_cx, nyxus.final_cy,
+                   0.03, eased, op);
     }
 
-    // ─── PHASE 2 · THE INFALL ──────────────────────────────────────────────
-    // Each star has a stagger (delay), then falls toward the diamond over
-    // ~30 ticks, brightening as it accelerates (ease-in cubic), vanishing
-    // as it reaches center.
-    if (t >= 40 && t <= 90) {
-        local = t - 40;
-        for (i = 0; i < star.count; i++) {
-            si = local - star.delay[i];
-            if (si < 0) continue;
-            if (si > 30) {
-                star.sprites[i].SetOpacity(0);
-                continue;
-            }
-            p = si / 30.0;
-            eased = ease_in_cubic(p);          // accelerating infall
-            x = lerp(star.start_x[i], star.target_x, eased);
-            y = lerp(star.start_y[i], star.target_y, eased);
-            star.sprites[i].SetX(x);
-            star.sprites[i].SetY(y);
-            // Brightness curve: 0.2 → peak 0.95 around p=0.85 → 0 at absorption
-            if (p < 0.85)
-                op = 0.2 + (p / 0.85) * 0.75;
-            else
-                op = 0.95 * (1.0 - ((p - 0.85) / 0.15));
-            star.sprites[i].SetOpacity(op);
-        }
-    }
-    if (t > 90 && !anim.fall_done) {
-        for (i = 0; i < star.count; i++)
-            star.sprites[i].SetOpacity(0);
-        anim.fall_done = 1;
+    // Lock NYXUS at final position after its phase ends
+    if (t > 260) {
+        apply_zoom(nyxus.sprite, nyxus.full, nyxus.fw, nyxus.fh,
+                   nyxus.final_cx, nyxus.final_cy,
+                   nyxus.final_cx, nyxus.final_cy,
+                   1.0, 1.0, 1.0);
     }
 
-    // ─── PHASE 3 · SHOCKWAVE + beam + wordmark ignite ──────────────────────
-    // Diamond halo expands outward as a single bright pulse (the energy
-    // released when all matter is consumed). Beam sweeps L→R across the
-    // wordmark, which ignites (3-layer glow PNG fades in).
-    if (t >= 90 && t <= 110) {
-        local_t = (t - 90) / 20.0;
-        // Halo: 0 → 1 → 0 (sin) for one bright shockwave
-        shock = Math.Sin(3.14159265 * local_t);
-        dia.halo.sprite.SetOpacity(shock * 1.0);
-    }
-    if (t > 110) dia.halo.sprite.SetOpacity(0);
+    // ── PHASE 2 · WELCOME TO THE DARKSIDE zooms from pupil (260 → 460) ─────
+    if (t >= 260 && t <= 460) {
+        local_t = (t - 260) / 200.0;
+        eased   = ease_out_quart(local_t);
 
-    // Beam sweep + wordmark ignite (concurrent with shockwave tail)
-    if (t >= 95 && t <= 135) {
-        local_t = (t - 95) / 40.0;
+        op = clamp01(smooth_step(local_t / 0.20));
+
+        apply_zoom(dark.sprite, dark.full, dark.fw, dark.fh,
+                   pupil.x, pupil.y, dark.final_cx, dark.final_cy,
+                   0.03, eased, op);
+    }
+
+    if (t > 460) {
+        apply_zoom(dark.sprite, dark.full, dark.fw, dark.fh,
+                   dark.final_cx, dark.final_cy,
+                   dark.final_cx, dark.final_cy,
+                   1.0, 1.0, 1.0);
+    }
+
+    // ── PHASE 3 · Progress bar fades in (460 → 500) ─────────────────────────
+    if (t >= 460 && t <= 500) {
+        a = (t - 460) / 40.0;
+        pg.track.sprite.SetOpacity(a * 0.60);
+        pg.fill.sprite.SetOpacity(a * 0.80);
+    }
+
+    // ── PHASE 4 · Steady state / indeterminate sweep (500+) ─────────────────
+    if (t > 500 && pg.progress == 0.0) {
+        sweep_period = 120;
+        local_t = ((t - 500) % sweep_period) / sweep_period;
         eased   = smooth_step(local_t);
-
-        beam_w = beam.image.GetWidth();
-        sweep_start = wm.x - beam_w;
-        sweep_end   = wm.x + wm.image.GetWidth();
-        beam.sprite.SetX(sweep_start + (sweep_end - sweep_start) * eased);
-
-        beam_op = 1.0;
-        if (local_t > 0.85) beam_op = 1.0 - ((local_t - 0.85) / 0.15);
-        beam.sprite.SetOpacity(beam_op);
-
-        wm.sprite.SetOpacity(eased);
-    }
-    if (t > 135) {
-        beam.sprite.SetOpacity(0);
-        wm.sprite.SetOpacity(1.0);
-    }
-
-    // ─── PHASE 4 · HUD assembles ───────────────────────────────────────────
-    // Etched rules + corner brackets + build stamp + orbit ring fade in
-    // staggered between ticks 110 and 150. Premium "system online" feel.
-    if (t >= 110 && t <= 150) {
-        a = (t - 110) / 40.0;
-        if (a > 1) a = 1;
-
-        // Rules (above & below wordmark)
-        rule.top.sprite.SetOpacity(a * 0.85);
-        rule.bot.sprite.SetOpacity(a * 0.85);
-
-        // Corner brackets (slight stagger by quadrant)
-        corner.tl.sprite.SetOpacity(smooth_step(a) * 0.75);
-        corner.tr.sprite.SetOpacity(smooth_step((a - 0.1)) * 0.75);
-        corner.bl.sprite.SetOpacity(smooth_step((a - 0.15)) * 0.75);
-        corner.br.sprite.SetOpacity(smooth_step((a - 0.2)) * 0.75);
-
-        // Build stamp
-        build.sprite.SetOpacity(a * 0.80);
-
-        // Orbit ring · cascade in clockwise
-        for (i = 0; i < orbit.count; i++) {
-            stagger = i / (orbit.count * 1.0);
-            local = a - stagger * 0.4;
-            if (local < 0) local = 0;
-            if (local > 1) local = 1;
-            orbit.dots[i].SetOpacity(local * 0.45);
-        }
-
-        // Progress bar
-        pg.track.sprite.SetOpacity(a * 0.65);
-        pg.fill.sprite.SetOpacity(a);
-        for (i = 0; i < pg.tick.count; i++)
-            pg.tick.sprites[i].SetOpacity(a * 0.55);
-
-        // Watermark
-        wat.sprite.SetOpacity(a * 0.85);
-    }
-
-    // ─── PHASE 5 · steady state · slow continuous rotation ─────────────────
-    if (t > 150) {
-        orbit.angle_off = orbit.angle_off + 0.0055;
-        for (i = 0; i < orbit.count; i++) {
-            a = orbit.angle_off + (i * 2 * 3.14159265) / orbit.count;
-            px = orbit.cx + Math.Cos(a) * orbit.rx - 2;
-            py = orbit.cy + Math.Sin(a) * orbit.ry - 2;
-            orbit.dots[i].SetX(px);
-            orbit.dots[i].SetY(py);
-        }
-
-        // Diamond breathes very slowly (inhale-exhale, low amplitude)
-        breath = 0.85 + 0.15 * (Math.Sin(t * 0.04) + 1) / 2;
-        dia.sprite.SetOpacity(breath);
-    }
-
-    // ─── Indeterminate progress sweep until BootProgress fires ─────────────
-    if (t > 150 && pg.progress == 0.0) {
-        sweep_period = 100;
-        local_t = ((t - 150) % sweep_period) / sweep_period;
-        eased = smooth_step(local_t);
-        seg_w = 80;
-        max_x = pg.width_full - seg_w;
-        x_off = max_x * eased;
+        seg_w   = 72;
+        max_x   = pg.width_full - seg_w;
+        x_off   = max_x * eased;
 
         cropped = pg.fill.image.Scale(seg_w, pg.fill.image.GetHeight());
         pg.fill.sprite.SetImage(cropped);
         pg.fill.sprite.SetX(pg.track.x + x_off);
 
-        pg.lead.sprite.SetX(pg.track.x + x_off + seg_w - 24);
-        pg.lead.sprite.SetOpacity(1.0);
+        pg.lead.sprite.SetX(pg.track.x + x_off + seg_w - 20);
+        pg.lead.sprite.SetOpacity(0.9);
     }
 }
 Plymouth.SetRefreshFunction(Refresh);
 
-// ── Real boot progress (overrides indeterminate sweep) ──────────────────────
+// ── Real boot progress (replaces indeterminate sweep) ───────────────────────
 fun BootProgressCallback(duration, progress) {
     pg.progress = progress;
     new_w = pg.width_full * progress;
@@ -430,57 +236,39 @@ fun BootProgressCallback(duration, progress) {
     cropped = pg.fill.image.Scale(new_w, pg.fill.image.GetHeight());
     pg.fill.sprite.SetImage(cropped);
     pg.fill.sprite.SetX(pg.track.x);
-
-    pg.lead.sprite.SetX(pg.track.x + new_w - 24);
+    pg.lead.sprite.SetX(pg.track.x + new_w - 20);
     pg.lead.sprite.SetOpacity(1.0);
 }
 Plymouth.SetBootProgressFunction(BootProgressCallback);
 
-// ── Quit: graceful fade-to-void ─────────────────────────────────────────────
+// ── Quit: fade everything to void ───────────────────────────────────────────
 fun QuitCallback() {
     bg.sprite.SetOpacity(0);
-    wm.sprite.SetOpacity(0);
-    dia.sprite.SetOpacity(0);
-    dia.halo.sprite.SetOpacity(0);
-    rule.top.sprite.SetOpacity(0);
-    rule.bot.sprite.SetOpacity(0);
-    corner.tl.sprite.SetOpacity(0);
-    corner.tr.sprite.SetOpacity(0);
-    corner.bl.sprite.SetOpacity(0);
-    corner.br.sprite.SetOpacity(0);
-    build.sprite.SetOpacity(0);
+    nyxus.sprite.SetOpacity(0);
+    dark.sprite.SetOpacity(0);
     pg.track.sprite.SetOpacity(0);
     pg.fill.sprite.SetOpacity(0);
     pg.lead.sprite.SetOpacity(0);
-    wat.sprite.SetOpacity(0);
-    for (i = 0; i < pg.tick.count; i++)
-        pg.tick.sprites[i].SetOpacity(0);
-    for (i = 0; i < orbit.count; i++)
-        orbit.dots[i].SetOpacity(0);
-    for (i = 0; i < star.count; i++)
-        star.sprites[i].SetOpacity(0);
 }
 Plymouth.SetQuitFunction(QuitCallback);
 
-// ── LUKS password prompt ────────────────────────────────────────────────────
+// ── LUKS password prompt ─────────────────────────────────────────────────────
 fun DisplayPasswordCallback(prompt, bullets) {
     pg.fill.sprite.SetOpacity(0);
     pg.lead.sprite.SetOpacity(0);
-    for (i = 0; i < pg.tick.count; i++)
-        pg.tick.sprites[i].SetOpacity(0);
 
     if (global.bullets) {
         for (i = 0; i < global.bullets_count; i++) global.bullets[i] = NULL;
     }
-    global.bullets = [];
+    global.bullets       = [];
     global.bullets_count = bullets;
-    spacing = 22;
-    start_x = screen.cx - ((bullets - 1) * spacing) / 2;
-    bullet_img = Image("diamond.png");
+    spacing   = 20;
+    start_x   = screen.cx - ((bullets - 1) * spacing) / 2;
+    bullet_img = Image.Text("·", 1.0, 1.0, 1.0, 1.0, "Sans Bold 24");
     for (i = 0; i < bullets; i++) {
         s = Sprite(bullet_img);
-        s.SetX(start_x + (i * spacing) - 11);
-        s.SetY(pg.track.y - 8);
+        s.SetX(start_x + i * spacing - bullet_img.GetWidth() / 2);
+        s.SetY(pg.track.y - 6);
         s.SetOpacity(1.0);
         global.bullets[i] = s;
     }
@@ -495,9 +283,9 @@ fun DisplayNormalCallback() {
 }
 Plymouth.SetDisplayNormalFunction(DisplayNormalCallback);
 
-// ── Boot status messages (small, bottom-center, very subtle) ────────────────
+// ── Boot status messages ─────────────────────────────────────────────────────
 fun MessageCallback(text) {
-    status.image  = Image.Text(text, 0.42, 0.43, 0.47, 0.65, "Sans 9");
+    status.image  = Image.Text(text, 0.38, 0.39, 0.42, 0.55, "Sans 9");
     status.sprite.SetImage(status.image);
     status.sprite.SetX(screen.cx - status.image.GetWidth() / 2);
 }
