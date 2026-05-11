@@ -75,7 +75,8 @@ fi
 NYXUS_EWW_TAG="${NYXUS_EWW_TAG:-v0.6.0}"
 if ! command -v eww >/dev/null 2>&1; then
   echo "[customize_airootfs] building eww ${NYXUS_EWW_TAG} from source..."
-  pacman -S --needed --noconfirm rust cargo || true
+  # rust/cargo are pacstrapped via packages.x86_64 — the chroot has no
+  # mirrors, so we can't `pacman -S` here.
   _edir=$(mktemp -d)
   if git clone --depth 1 --branch "${NYXUS_EWW_TAG}" \
         https://github.com/elkowar/eww.git "$_edir/eww" \
@@ -106,7 +107,9 @@ fi
 # fatal).
 if ! command -v wlogout >/dev/null 2>&1; then
   echo "[customize_airootfs] building wlogout from source..."
-  pacman -S --needed --noconfirm scdoc gtk3 gtk-layer-shell || true
+  # scdoc + gtk-layer-shell are pacstrapped via packages.x86_64; gtk3 is
+  # pulled in transitively by hyprland/gtk-layer-shell. No in-chroot
+  # pacman call is possible (chroot mirrorlist is empty).
   _wdir=$(mktemp -d)
   if git clone --depth 1 https://github.com/ArtsyMacaw/wlogout.git "$_wdir/wlogout" \
      && cd "$_wdir/wlogout" \
