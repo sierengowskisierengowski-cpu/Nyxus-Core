@@ -99,6 +99,11 @@ const ALLOWED_FILES: Record<string, string> = {
   "eww/scripts/calendar-month.sh":"eww/scripts/calendar-month.sh",
   "eww/scripts/notif-history.sh": "eww/scripts/notif-history.sh",
   "eww/scripts/notif-action.sh":  "eww/scripts/notif-action.sh",
+  // ── Wave 2 / Sprint 2a · Welcome Wizard (rev r9-eww, 2026-05-11) ───────
+  "nyxus_welcome.py":             "nyxus_welcome.py",
+  "nyxus-welcome":                "nyxus-welcome",
+  "nyxus-welcome-helper":         "nyxus-welcome-helper",
+  "nyxus-welcome.policy":         "nyxus-welcome.policy",
 
   // ── ★ TGZ APP PACKAGES (heavyweight multi-module apps) ───────────────────
   "nyxus-home.tgz":      "nyxus-home.tgz",       // Home (workspace 0)

@@ -794,6 +794,31 @@ for s in audio battery bluetooth brightness calendar cpu-bars mic network \
   dest="$EWW_DIR/scripts/${s}.sh"
   if curl -fsSL --max-time 30 "$url" -o "${dest}.new"; then
     if [[ -s "${dest}.new" ]]; then
+      install -m 0755 "${dest}.new" "$dest"; rm -f "${dest}.new"
+    else rm -f "${dest}.new"; fi
+  fi
+done
+
+# 4.5e  Welcome Wizard refresh (rev r9-eww 2026-05-11) — pulls the python
+# module + launcher; helper/policy stay frozen at install time (root-only).
+mkdir -p "$REAL_HOME/.nyxus" "$REAL_HOME/.local/bin"
+if curl -fsSL --max-time 30 "$PROD/nyxus_welcome.py" -o "$REAL_HOME/.nyxus/nyxus_welcome.py.new"; then
+  install -m 0755 -o "$REAL_USER" -g "$REAL_USER" \
+    "$REAL_HOME/.nyxus/nyxus_welcome.py.new" "$REAL_HOME/.nyxus/nyxus_welcome.py"
+  rm -f "$REAL_HOME/.nyxus/nyxus_welcome.py.new"
+fi
+if curl -fsSL --max-time 30 "$PROD/nyxus-welcome" -o "$REAL_HOME/.local/bin/nyxus-welcome.new"; then
+  install -m 0755 -o "$REAL_USER" -g "$REAL_USER" \
+    "$REAL_HOME/.local/bin/nyxus-welcome.new" "$REAL_HOME/.local/bin/nyxus-welcome"
+  rm -f "$REAL_HOME/.local/bin/nyxus-welcome.new"
+fi
+
+for s in __no_op_so_loop_terminates_cleanly__; do
+  : # keep block structure; never executes
+  url="$PROD/eww/scripts/${s}.sh"
+  dest="$EWW_DIR/scripts/${s}.sh"
+  if curl -fsSL --max-time 30 "$url" -o "${dest}.new"; then
+    if [[ -s "${dest}.new" ]]; then
       mv -f "${dest}.new" "$dest"
       chown "$REAL_USER:$REAL_USER" "$dest"
       chmod 755 "$dest"
