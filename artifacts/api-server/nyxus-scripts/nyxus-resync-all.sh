@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.11-r7-eww"
+NYXUS_RESYNC_VERSION="2026.05.11-r9-eww"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -787,7 +787,9 @@ done
 # without this, fixes shipped to scripts/*.sh never reached existing installs).
 for s in audio battery bluetooth brightness calendar cpu-bars mic network \
          notifications osd-show player power-profile sys-pulse ticker \
-         updates weather workspaces; do
+         updates weather workspaces \
+         quicksettings qs-toggle wifi-list wifi-action bt-list bt-action \
+         audio-sinks audio-action calendar-month notif-history notif-action; do
   url="$PROD/eww/scripts/${s}.sh"
   dest="$EWW_DIR/scripts/${s}.sh"
   if curl -fsSL --max-time 30 "$url" -o "${dest}.new"; then

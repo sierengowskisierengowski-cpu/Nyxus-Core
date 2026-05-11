@@ -56,6 +56,20 @@
 (defpoll NOTIFS     :interval "3s"   :initial '{"icon":"○","label":"0","tooltip":"notifications","paused":"false","total":0}'
                                      "~/.config/eww/scripts/notifications.sh")
 
+;; ── Sprint 1 flyouts ─────────────────────────────────────────────────
+(defpoll QS         :interval "3s"   :initial '{"wifi":"off","bt":"off","airplane":"off","dnd":"off","nightlight":"off","profile":"balanced","mic_mute":"off","audio_mute":"off","rot_lock":"off","auto_bright":"off"}'
+                                     "~/.config/eww/scripts/quicksettings.sh")
+(defpoll WIFILIST   :interval "8s"   :initial '{"networks":[],"enabled":"false","current":""}'
+                                     "~/.config/eww/scripts/wifi-list.sh")
+(defpoll BTLIST     :interval "5s"   :initial '{"devices":[],"powered":"false","scanning":"false"}'
+                                     "~/.config/eww/scripts/bt-list.sh")
+(defpoll AUDIOMIX   :interval "3s"   :initial '{"sinks":[],"sources":[],"apps":[]}'
+                                     "~/.config/eww/scripts/audio-sinks.sh")
+(defpoll CALMONTH   :interval "300s" :initial '{"month":"—","year":"—","today":"","weeks":[]}'
+                                     "~/.config/eww/scripts/calendar-month.sh")
+(defpoll NOTIFLIST  :interval "3s"   :initial '{"items":[],"total":0,"paused":"false"}'
+                                     "~/.config/eww/scripts/notif-history.sh")
+
 ;; ═════════════════════════════════════════════════════════════════════
 ;; CORE BAR WIDGETS
 ;; ═════════════════════════════════════════════════════════════════════
@@ -86,9 +100,9 @@
 
 (defwidget audio_widget []
   (button :class "pill"
-          :onclick "pavucontrol &"
+          :onclick "eww open --toggle mixer"
           :onrightclick "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && ~/.config/eww/scripts/osd-show.sh osd-volume &"
-          :tooltip "${AUDIO.tooltip} · click pavucontrol · right-click mute"
+          :tooltip "${AUDIO.tooltip} · click mixer · right-click mute"
     "${AUDIO.icon}  ${AUDIO.vol}%"))
 
 (defwidget mic_widget []
@@ -99,16 +113,17 @@
 
 (defwidget net_widget []
   (button :class "pill"
-          :onclick "alacritty -e nmtui &"
-          :tooltip "${NETWORK.tooltip}"
+          :onclick "eww open --toggle wifi"
+          :onrightclick "alacritty -e nmtui &"
+          :tooltip "${NETWORK.tooltip} · click wifi panel · right-click nmtui"
     "${NETWORK.icon}  ${NETWORK.label}"))
 
 (defwidget bluetooth_widget []
   (button :class {BLUETOOTH.powered == "off" ? "pill bt-off" :
                   BLUETOOTH.connected > 0    ? "pill bt-conn" : "pill"}
-          :onclick "blueman-manager &"
+          :onclick "eww open --toggle bluetooth"
           :onrightclick "${BLUETOOTH.powered == 'off' ? 'bluetoothctl power on' : 'bluetoothctl power off'} &"
-          :tooltip "${BLUETOOTH.tooltip} · right-click toggles"
+          :tooltip "${BLUETOOTH.tooltip} · click panel · right-click toggle"
     "  ${BLUETOOTH.label}"))
 
 (defwidget battery_widget []
@@ -141,11 +156,23 @@
 (defwidget notifs_widget []
   (button :class {NOTIFS.paused == "true" ? "pill notif-dnd" :
                   NOTIFS.total > 0        ? "pill notif-on"  : "pill"}
-          :onclick "dunstctl history-pop &"
+          :onclick "eww open --toggle notifications"
           :onrightclick "dunstctl set-paused toggle &"
           :onmiddleclick "dunstctl close-all &"
-          :tooltip "${NOTIFS.tooltip}"
+          :tooltip "${NOTIFS.tooltip} · click panel · right-click DND · middle clear all"
     "${NOTIFS.icon}  ${NOTIFS.label}"))
+
+(defwidget qs_widget []
+  (button :class "pill qs-pill"
+          :onclick "eww open --toggle quicksettings"
+          :tooltip "Quick settings"
+    "⚙"))
+
+(defwidget cal_widget []
+  (button :class "pill cal-pill"
+          :onclick "eww open --toggle calendar"
+          :tooltip "Calendar · ${TIME.long}"
+    "▦"))
 
 (defwidget power_button []
   (button :class "pill power-pill"
@@ -223,8 +250,8 @@
     (box :class "bar-cluster cluster-center" :space-evenly false :spacing 14 :halign "center"
       (syspulse_widget) (tray_dummy) (clock_widget))
     (box :class "bar-cluster cluster-right" :space-evenly false :spacing 6 :halign "end"
-      (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
-      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (power_button))))
+      (cal_widget) (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
+      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget) (power_button))))
 
 (defwidget bar_top_layout []
   (box :class "bar bar-top" :space-evenly false :spacing 12 :hexpand true
@@ -376,15 +403,18 @@
         (cheatkey :chord "Super + E"        :action "File manager")
         (cheatkey :chord "Super + Tab"      :action "Window switcher"))
       (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
-        (label :class "cheat-section" :text "SYSTEM / MEDIA")
-        (cheatkey :chord "Super + L"        :action "Lock screen")
-        (cheatkey :chord "Super + Escape"   :action "Power menu")
+        (label :class "cheat-section" :text "SYSTEM / PANELS")
+        (cheatkey :chord "Super + A"        :action "Quick settings")
+        (cheatkey :chord "Super + N"        :action "Notifications")
+        (cheatkey :chord "Super + W"        :action "WiFi picker")
+        (cheatkey :chord "Super + Shift + B":action "Bluetooth")
+        (cheatkey :chord "Super + M"        :action "Audio mixer")
+        (cheatkey :chord "Super + C"        :action "Calendar")
         (cheatkey :chord "Super + ` "       :action "Dashboard")
-        (cheatkey :chord "Super + /"        :action "This cheatsheet")
-        (cheatkey :chord "Print"            :action "Screenshot region")
-        (cheatkey :chord "Vol+/Vol-/Mute"   :action "Audio · OSD")
-        (cheatkey :chord "Brt+/Brt-"        :action "Brightness · OSD")
-        (cheatkey :chord "Play/Next/Prev"   :action "Media controls")))
+        (cheatkey :chord "Super + Escape"   :action "Power menu")
+        (cheatkey :chord "Super + L"        :action "Lock screen")
+        (cheatkey :chord "Super + /"        :action "Cheatsheet")
+        (cheatkey :chord "Print"            :action "Screenshot region")))
     (button :class "cheat-close" :onclick "eww close cheatsheet" "Close (Esc)")))
 
 ;; ═════════════════════════════════════════════════════════════════════
@@ -485,3 +515,276 @@
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-screensaver"
   :geometry (geometry :width "100%" :height "100%" :anchor "center")
   (screensaver_layout))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · QUICK SETTINGS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget qs_tile [glyph label state cmd]
+  (button :class {state == "on" ? "qs-tile qs-tile-on" : "qs-tile"}
+          :onclick "(${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 4 :halign "center"
+      (label :class "qs-tile-glyph" :text "${glyph}")
+      (label :class "qs-tile-label" :text "${label}"))))
+
+(defwidget quicksettings_layout []
+  (box :class "qs-root" :orientation "v" :space-evenly false :spacing 14
+    (label :class "qs-title" :text "QUICK SETTINGS")
+
+    (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
+      (qs_tile :glyph "📶" :label "WiFi"      :state "${QS.wifi}"       :cmd "~/.config/eww/scripts/qs-toggle.sh wifi")
+      (qs_tile :glyph ""  :label "Bluetooth" :state "${QS.bt}"         :cmd "~/.config/eww/scripts/qs-toggle.sh bt")
+      (qs_tile :glyph "✈" :label "Airplane"  :state "${QS.airplane}"   :cmd "~/.config/eww/scripts/qs-toggle.sh airplane")
+      (qs_tile :glyph "🌙" :label "DND"       :state "${QS.dnd}"        :cmd "~/.config/eww/scripts/qs-toggle.sh dnd"))
+
+    (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
+      (qs_tile :glyph "☾"  :label "NightLight":state "${QS.nightlight}" :cmd "~/.config/eww/scripts/qs-toggle.sh nightlight")
+      (qs_tile :glyph "⚡" :label "${QS.profile}" :state "on"           :cmd "~/.config/eww/scripts/qs-toggle.sh profile")
+      (qs_tile :glyph "🎤" :label "Mic"        :state "${QS.mic_mute}"   :cmd "~/.config/eww/scripts/qs-toggle.sh mic")
+      (qs_tile :glyph "🔇" :label "Mute"       :state "${QS.audio_mute}" :cmd "~/.config/eww/scripts/qs-toggle.sh audio"))
+
+    (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
+      (qs_tile :glyph "🔄" :label "RotLock"   :state "${QS.rot_lock}"    :cmd "~/.config/eww/scripts/qs-toggle.sh rot")
+      (qs_tile :glyph "☼"  :label "AutoBrt"  :state "${QS.auto_bright}" :cmd "~/.config/eww/scripts/qs-toggle.sh auto-bright")
+      (qs_tile :glyph "🔒" :label "Lock"      :state "off" :cmd "eww close quicksettings && hyprlock")
+      (qs_tile :glyph "⏻"  :label "Power"    :state "off" :cmd "eww close quicksettings && eww open --toggle powermenu"))
+
+    (box :class "qs-sliders" :orientation "v" :space-evenly false :spacing 10
+      (box :orientation "h" :space-evenly false :spacing 12
+        (label :class "qs-slider-glyph" :text "🔊")
+        (scale :class "qs-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
+      (box :orientation "h" :space-evenly false :spacing 12
+        (label :class "qs-slider-glyph" :text "☼")
+        (scale :class "qs-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+               :onchange "brightnessctl set {}%"))
+      (box :orientation "h" :space-evenly false :spacing 12
+        (label :class "qs-slider-glyph" :text "🎤")
+        (scale :class "qs-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%")))
+
+    (button :class "qs-close" :onclick "eww close quicksettings" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · WIFI PICKER
+;; ═════════════════════════════════════════════════════════════════════
+
+;; SSID is passed only as the base64 `b64` field, never raw, to prevent
+;; shell injection from malicious access-point names (rev r9-eww).
+(defwidget wifi_row [net]
+  (box :class {net.active ? "wifi-row wifi-row-active" : "wifi-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (label :class "wifi-bars" :text "${net.bars}")
+    (button :class "wifi-name" :hexpand true :halign "start"
+            :onclick "~/.config/eww/scripts/wifi-action.sh connect ${net.b64} &"
+            :tooltip "Click to connect · ${net.security} · ${net.signal}%"
+      "${net.icon}  ${net.ssid}")
+    (label :class "wifi-sig" :text "${net.signal}%")
+    (button :class "wifi-forget"
+            :onclick "~/.config/eww/scripts/wifi-action.sh forget ${net.b64} &"
+            :tooltip "Forget" "✕")))
+
+(defwidget wifi_layout []
+  (box :class "wifi-root" :orientation "v" :space-evenly false :spacing 12
+    (box :class "wifi-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "wifi-title" :text "WIFI" :hexpand true :halign "start")
+      (button :class "wifi-toggle"
+              :onclick "~/.config/eww/scripts/wifi-action.sh toggle &"
+              :tooltip "Toggle WiFi radio"
+        "${WIFILIST.enabled == 'true' ? 'ON' : 'OFF'}")
+      (button :class "wifi-rescan"
+              :onclick "~/.config/eww/scripts/wifi-action.sh rescan &"
+              :tooltip "Rescan" "↻"))
+    (label :class "wifi-current" :text "Connected · ${WIFILIST.current == '' ? '—' : WIFILIST.current}"
+           :halign "start")
+    (scroll :class "wifi-scroll" :hscroll false :vscroll true :height 360
+      (box :orientation "v" :space-evenly false :spacing 4
+        (for net in {WIFILIST.networks}
+          (wifi_row :net {net}))))
+    (box :orientation "h" :space-evenly true :spacing 10
+      (button :class "wifi-advanced" :onclick "eww close wifi && alacritty -e nmtui &" "Advanced (nmtui)")
+      (button :class "wifi-close" :onclick "eww close wifi" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · BLUETOOTH MANAGER
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget bt_row [dev]
+  (box :class {dev.connected ? "bt-row bt-row-conn" : "bt-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (label :class "bt-icon" :text "${dev.icon}")
+    (box :orientation "v" :space-evenly false :spacing 2 :hexpand true :halign "start"
+      (label :class "bt-name" :halign "start" :text "${dev.name}")
+      (label :class "bt-mac"  :halign "start"
+             :text "${dev.mac}${dev.battery >= 0 ? '  ·  🔋' + dev.battery + '%' : ''}"))
+    (button :class "bt-act"
+            :onclick "~/.config/eww/scripts/bt-action.sh ${dev.connected ? 'disconnect' : 'connect'} ${dev.mac} &"
+            :tooltip "${dev.connected ? 'Disconnect' : 'Connect'}"
+      "${dev.connected ? 'Disc' : 'Conn'}")
+    (button :class "bt-act" :visible {!dev.paired}
+            :onclick "~/.config/eww/scripts/bt-action.sh pair ${dev.mac} &"
+            :tooltip "Pair" "Pair")
+    (button :class "bt-forget" :visible {dev.paired}
+            :onclick "~/.config/eww/scripts/bt-action.sh unpair ${dev.mac} &"
+            :tooltip "Forget" "✕")))
+
+(defwidget bluetooth_layout []
+  (box :class "bt-root" :orientation "v" :space-evenly false :spacing 12
+    (box :class "bt-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "bt-title" :text "BLUETOOTH" :hexpand true :halign "start")
+      (button :class "bt-toggle"
+              :onclick "~/.config/eww/scripts/bt-action.sh toggle &"
+              :tooltip "Toggle adapter"
+        "${BTLIST.powered == 'true' ? 'ON' : 'OFF'}")
+      (button :class "bt-scan"
+              :onclick "~/.config/eww/scripts/bt-action.sh scan &"
+              :tooltip "Scan 8s"
+        "${BTLIST.scanning == 'true' ? '⟳ scan' : 'Scan'}"))
+    (scroll :class "bt-scroll" :hscroll false :vscroll true :height 360
+      (box :orientation "v" :space-evenly false :spacing 4
+        (for dev in {BTLIST.devices}
+          (bt_row :dev {dev}))))
+    (box :orientation "h" :space-evenly true :spacing 10
+      (button :class "bt-advanced" :onclick "eww close bluetooth && blueman-manager &" "Advanced")
+      (button :class "bt-close" :onclick "eww close bluetooth" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · AUDIO MIXER
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget mix_sink_row [s]
+  (box :class {s.default ? "mix-row mix-row-default" : "mix-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (button :class "mix-pick"
+            :onclick "~/.config/eww/scripts/audio-action.sh set-default-sink ${s.id} &"
+            :tooltip "Make default" "${s.default ? '◉' : '○'}")
+    (label :class "mix-name" :hexpand true :halign "start" :limit-width 28
+           :text "${s.description}")
+    (scale :class "mix-scale" :value "${s.vol}" :min 0 :max 150 :hexpand true
+           :onchange "~/.config/eww/scripts/audio-action.sh set-sink-vol ${s.id} {} &")
+    (label :class "mix-pct" :text "${s.vol}%")
+    (button :class "mix-mute"
+            :onclick "~/.config/eww/scripts/audio-action.sh toggle-sink-mute ${s.id} &"
+      "${s.mute ? '✕' : '🔊'}")))
+
+(defwidget mix_app_row [a]
+  (box :class "mix-row" :orientation "h" :space-evenly false :spacing 10
+    (label :class "mix-app-glyph" :text "♫")
+    (label :class "mix-name" :hexpand true :halign "start" :limit-width 28 :text "${a.name}")
+    (scale :class "mix-scale" :value "${a.vol}" :min 0 :max 150 :hexpand true
+           :onchange "~/.config/eww/scripts/audio-action.sh set-app-vol ${a.id} {} &")
+    (label :class "mix-pct" :text "${a.vol}%")
+    (button :class "mix-mute"
+            :onclick "~/.config/eww/scripts/audio-action.sh toggle-app-mute ${a.id} &"
+      "${a.mute ? '✕' : '🔊'}")))
+
+(defwidget mixer_layout []
+  (box :class "mix-root" :orientation "v" :space-evenly false :spacing 14
+    (label :class "mix-title" :text "AUDIO MIXER")
+
+    (label :class "mix-section" :text "OUTPUT DEVICES" :halign "start")
+    (box :orientation "v" :space-evenly false :spacing 4
+      (for s in {AUDIOMIX.sinks}
+        (mix_sink_row :s {s})))
+
+    (label :class "mix-section" :text "PER-APP" :halign "start")
+    (scroll :class "mix-scroll" :vscroll true :hscroll false :height 200
+      (box :orientation "v" :space-evenly false :spacing 4
+        (for a in {AUDIOMIX.apps}
+          (mix_app_row :a {a}))))
+
+    (box :orientation "h" :space-evenly true :spacing 10
+      (button :class "mix-advanced" :onclick "eww close mixer && pavucontrol &" "Advanced (pavucontrol)")
+      (button :class "mix-close" :onclick "eww close mixer" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · CALENDAR
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget cal_day [c]
+  (label :class {c.today ? "cal-day cal-day-today" :
+                 c.inmonth ? "cal-day cal-day-in" : "cal-day cal-day-out"}
+         :text "${c.d}"))
+
+(defwidget cal_week [w]
+  (box :class "cal-week" :orientation "h" :space-evenly true :spacing 4
+    (for c in {w}
+      (cal_day :c {c}))))
+
+(defwidget calendar_layout []
+  (box :class "cal-root" :orientation "v" :space-evenly false :spacing 14
+    (label :class "cal-title" :text "${CALMONTH.month} ${CALMONTH.year}")
+    (label :class "cal-today" :text "${TIME.long}")
+    (box :class "cal-dow" :orientation "h" :space-evenly true :spacing 4
+      (label :class "cal-dow-cell" :text "Su") (label :class "cal-dow-cell" :text "Mo")
+      (label :class "cal-dow-cell" :text "Tu") (label :class "cal-dow-cell" :text "We")
+      (label :class "cal-dow-cell" :text "Th") (label :class "cal-dow-cell" :text "Fr")
+      (label :class "cal-dow-cell" :text "Sa"))
+    (box :class "cal-grid" :orientation "v" :space-evenly false :spacing 4
+      (for w in {CALMONTH.weeks}
+        (cal_week :w {w})))
+    (button :class "cal-close" :onclick "eww close calendar" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · NOTIFICATION CENTER
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget notif_row [n]
+  (box :class "notif-row" :orientation "h" :space-evenly false :spacing 10
+    (label :class "notif-app" :text "${n.app}")
+    (box :orientation "v" :space-evenly false :spacing 2 :hexpand true :halign "start"
+      (label :class "notif-summary" :halign "start" :limit-width 36 :text "${n.summary}")
+      (label :class "notif-body"    :halign "start" :limit-width 44 :text "${n.body}"))
+    (button :class "notif-dismiss"
+            :onclick "~/.config/eww/scripts/notif-action.sh close-id ${n.id} &"
+            :tooltip "Dismiss" "✕")))
+
+(defwidget notifications_layout []
+  (box :class "notif-root" :orientation "v" :space-evenly false :spacing 12
+    (box :class "notif-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "notif-title" :text "NOTIFICATIONS · ${NOTIFLIST.total}" :hexpand true :halign "start")
+      (button :class "notif-dnd"
+              :onclick "~/.config/eww/scripts/notif-action.sh toggle-dnd &"
+        "${NOTIFLIST.paused == 'true' ? 'DND' : 'ON'}")
+      (button :class "notif-clear"
+              :onclick "~/.config/eww/scripts/notif-action.sh clear-all &"
+        "Clear all"))
+    (scroll :class "notif-scroll" :vscroll true :hscroll false :height 460
+      (box :orientation "v" :space-evenly false :spacing 6
+        (for n in {NOTIFLIST.items}
+          (notif_row :n {n}))))
+    (button :class "notif-close" :onclick "eww close notifications" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · WINDOWS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwindow quicksettings
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-quicksettings"
+  :geometry (geometry :x "16" :y "78" :width "420px" :height "auto" :anchor "bottom right")
+  (quicksettings_layout))
+
+(defwindow wifi
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-wifi"
+  :geometry (geometry :x "16" :y "78" :width "440px" :height "560px" :anchor "bottom right")
+  (wifi_layout))
+
+(defwindow bluetooth
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-bluetooth"
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "560px" :anchor "bottom right")
+  (bluetooth_layout))
+
+(defwindow mixer
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-mixer"
+  :geometry (geometry :x "16" :y "78" :width "520px" :height "auto" :anchor "bottom right")
+  (mixer_layout))
+
+(defwindow calendar
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-calendar"
+  :geometry (geometry :x "16" :y "78" :width "380px" :height "auto" :anchor "bottom right")
+  (calendar_layout))
+
+(defwindow notifications
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-notifications"
+  :geometry (geometry :x "16" :y "78" :width "440px" :height "640px" :anchor "bottom right")
+  (notifications_layout))
