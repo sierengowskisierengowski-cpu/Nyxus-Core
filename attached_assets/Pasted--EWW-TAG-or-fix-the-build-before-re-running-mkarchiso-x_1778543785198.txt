@@ -1,0 +1,140 @@
+_EWW_TAG or fix the build before re-running mkarchiso.
+
+...xXx... nyxus/iso-builder  main $✘!+?⇣
+❯ grep customize_airootfs bake.log                                                       19:52:50
+ls -la /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-0.3.34/src/format_description/parse/mod.rs 2>/dev/null
+sed -n '80,90p' iso-builder/nyx-profile/airootfs/root/customize_airootfs.sh
+[mkarchiso] INFO: Running customize_airootfs.sh in '/var/tmp/nyx-work/x86_64/airootfs' chroot...
+[mkarchiso] WARNING: customize_airootfs.sh is deprecated! Support for it will be removed in a future archiso version.
+[customize_airootfs] building mpvpaper from source...
+[customize_airootfs] mpvpaper installed → /usr/local/bin/mpvpaper
+[customize_airootfs] building eww v0.6.0 from source...
+[customize_airootfs] FATAL: eww v0.6.0 build failed.
+[customize_airootfs] waybar has been removed; the ISO would ship without any bar.
+[customize_airootfs] Override NYXUS_EWW_TAG or fix the build before re-running mkarchiso.
+sed: can't read iso-builder/nyx-profile/airootfs/root/customize_airootfs.sh: No such file or directory
+
+...xXx... nyxus/iso-builder  main $✘!+?⇣
+❯ cd /path/to/nyxus     # repo root, NOT iso-builder/                                    19:54:24
+pwd
+git --no-optional-locks branch --show-current
+git --no-optional-locks log --oneline -5
+git --no-optional-locks status
+git pull
+git --no-optional-locks log --oneline -3
+grep -c "warm-up build" iso-builder/nyx-profile/airootfs/root/customize_airootfs.sh
+cd: too many arguments
+/home/nyx/nyxus/iso-builder
+main
+error: cannot run less: No such file or directory
+fatal: unable to execute pager 'less'
+On branch main
+Your branch is behind 'origin/main' by 25 commits, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   nyx-profile/packages.x86_64
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   ../artifacts/api-server/nyxus-scripts/hyprland.conf
+	modified:   ../artifacts/api-server/nyxus-scripts/nyxus-hyprland-opacity.conf
+	modified:   ../artifacts/api-server/nyxus-scripts/nyxus-hyprland-rules.conf
+	modified:   nyx-profile/airootfs/etc/sddm.conf.d/nyxus.conf
+	modified:   nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+	modified:   nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+	modified:   nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+	modified:   nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+	deleted:    nyx-profile/airootfs/etc/skel/.config/nyxus-intel/backups/.gitkeep
+	deleted:    nyx-profile/airootfs/etc/skel/.config/nyxus-intel/cases/.gitkeep
+	deleted:    nyx-profile/airootfs/etc/skel/.config/systemd/user/nyxus-eww.service
+	modified:   nyx-profile/airootfs/usr/local/bin/nyxus-bootstrap
+	modified:   nyx-profile/airootfs/usr/local/bin/nyxus-intel
+	modified:   nyx-profile/airootfs/usr/local/bin/nyxus-wait-bootstrap
+	modified:   nyx-profile/airootfs/usr/share/applications/io.nyxus.intel.desktop
+	modified:   nyx-profile/airootfs/usr/share/sddm/themes/nyxus/Main.qml
+	modified:   nyx-profile/airootfs/usr/share/sddm/themes/nyxus/background.png
+	modified:   nyx-profile/airootfs/usr/share/sddm/themes/nyxus/theme.conf
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	bake.log
+	nyx-profile/airootfs/etc/nyxus/CHANGELOG.md
+	nyx-profile/airootfs/etc/nyxus/CREDITS.md
+	nyx-profile/airootfs/etc/nyxus/LICENSE.md
+	nyx-profile/airootfs/etc/nyxus/README.md
+	nyx-profile/airootfs/etc/skel/.config/alacritty/
+	nyx-profile/airootfs/etc/skel/.config/dunst/
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-01.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-02.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-03.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-04.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-05.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-06.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-07.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-08.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-09.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-10.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-11.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-12.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-13.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-14.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-15.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-16.png
+	nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-sierengowski-clean.png
+	nyx-profile/airootfs/etc/skel/.config/rofi/
+	nyx-profile/airootfs/etc/skel/.config/wlogout/
+	nyx-profile/airootfs/etc/skel/.nyxus
+	nyx-profile/airootfs/opt/nyxus-cache/
+	nyx-profile/airootfs/opt/nyxus-intel/.manifest.sha256
+	nyx-profile/airootfs/opt/nyxus-intel/CHANGELOG.md
+	nyx-profile/airootfs/opt/nyxus-intel/CREDITS.md
+	nyx-profile/airootfs/opt/nyxus-intel/README.md
+	nyx-profile/airootfs/opt/nyxus/
+	nyx-profile/airootfs/usr/local/bin/nyxus-control
+	nyx-profile/airootfs/usr/local/bin/nyxus-doctor
+	nyx-profile/airootfs/usr/local/bin/nyxus-launcher
+	nyx-profile/airootfs/usr/local/bin/nyxus-notepad
+	nyx-profile/airootfs/usr/local/bin/nyxus-powermenu
+	nyx-profile/airootfs/usr/local/bin/nyxus-quicksettings
+	nyx-profile/airootfs/usr/local/bin/nyxus-screenshot
+	nyx-profile/airootfs/usr/local/bin/nyxus-settings
+	nyx-profile/airootfs/usr/local/bin/nyxus-stickies
+	nyx-profile/airootfs/usr/local/bin/nyxus-sysmon
+	nyx-profile/airootfs/usr/local/bin/nyxus-terminal
+	nyx-profile/airootfs/usr/local/bin/nyxus-weather
+	nyx-profile/airootfs/usr/local/bin/wallpaper-rotate
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.control.desktop
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.doctor.desktop
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.launcher.desktop
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.notepad.desktop
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.powermenu.desktop
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.quicksettings.desktop
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.screenshot.desktop
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.settings.desktop
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.stickies.desktop
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.sysmon_gtk.desktop
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.terminal.desktop
+	nyx-profile/airootfs/usr/share/applications/io.nyxus.weather.desktop
+	nyx-profile/airootfs/usr/share/backgrounds/
+	nyx-profile/airootfs/usr/share/sddm/themes/nyxus/theme.conf.user
+	out/
+
+Updating e96fe9e..f4686ae
+error: Your local changes to the following files would be overwritten by merge:
+	artifacts/api-server/nyxus-scripts/hyprland.conf
+	artifacts/api-server/nyxus-scripts/nyxus-hyprland-opacity.conf
+	artifacts/api-server/nyxus-scripts/nyxus-hyprland-rules.conf
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+Please commit your changes or stash them before you merge.
+Aborting
+error: cannot run less: No such file or directory
+fatal: unable to execute pager 'less'
+grep: iso-builder/nyx-profile/airootfs/root/customize_airootfs.sh: No such file or directory
+
+...xXx... nyxus/iso-builder  main $✘!+?⇣
+❯                                         
