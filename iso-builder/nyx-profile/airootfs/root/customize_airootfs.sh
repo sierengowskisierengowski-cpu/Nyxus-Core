@@ -131,22 +131,24 @@ fi
 #
 # Source files are copied into /root/ by mkarchiso (since they live under
 # nyx-profile/airootfs/root/ — same path used by every other build asset).
-# If they're missing we WARN and continue (wizard simply won't auto-run).
-for src in /root/nyxus-welcome /root/nyxus-welcome-helper /root/nyxus-welcome.policy; do
-  [ -f "$src" ] || { echo "[customize_airootfs] WARNING: $src not staged — wizard will not auto-run"; continue; }
-done
-
+# Each install block guards itself with `[ -f ]` and warns on miss.
 if [ -f /root/nyxus-welcome ]; then
   install -Dm755 /root/nyxus-welcome           /usr/local/bin/nyxus-welcome
   echo "[customize_airootfs] installed /usr/local/bin/nyxus-welcome (overrides auto-generated wrapper)"
+else
+  echo "[customize_airootfs] WARNING: /root/nyxus-welcome not staged — wizard will not auto-run"
 fi
 if [ -f /root/nyxus-welcome-helper ]; then
   install -Dm755 -o root -g root /root/nyxus-welcome-helper /usr/local/libexec/nyxus-welcome-helper
   echo "[customize_airootfs] installed /usr/local/libexec/nyxus-welcome-helper"
+else
+  echo "[customize_airootfs] WARNING: /root/nyxus-welcome-helper not staged — wizard's privileged ops will fail"
 fi
 if [ -f /root/nyxus-welcome.policy ]; then
   install -Dm644 /root/nyxus-welcome.policy /usr/share/polkit-1/actions/dev.nyxus.welcome.policy
   echo "[customize_airootfs] installed polkit policy dev.nyxus.welcome"
+else
+  echo "[customize_airootfs] WARNING: /root/nyxus-welcome.policy not staged — pkexec will deny helper invocation"
 fi
 
 # ── Make all EWW helper scripts executable ─────────────────────────────
