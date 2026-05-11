@@ -97,7 +97,9 @@ pamixer
 pavucontrol
 swaybg
 wdisplays
-wlogout
+# wlogout removed 2026-05-11 — built from upstream source by
+# customize_airootfs.sh (was failing pacstrap on mirrors that don't yet
+# carry it in extra; building from source removes the mirror dependency).
 nwg-displays
 blueman
 geoclue
@@ -230,9 +232,11 @@ libfprint
 pam-u2f
 libfido2
 yubikey-manager
-pamtester
+# pamtester removed 2026-05-11 — AUR-only, built from source by
+# customize_airootfs.sh (used at runtime by nyxus-bd-router for U2F auth).
 python-opencv
-python-dlib
+# python-dlib removed 2026-05-11 — AUR-only, pulled in transitively by
+# howdy's own debian/install.sh during the customize_airootfs.sh build.
 v4l2loopback-dkms
 # oath-toolkit ships oathtool (TOTP code generator/verifier) and pam_oath.
 # Used by the backdoor stack as the 4th factor (rotating 30-second OTP).
