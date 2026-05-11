@@ -53,8 +53,14 @@ Rectangle {
     readonly property color clrWhite:        "#ffffff"
     readonly property color clrBackdoor:     Qt.rgba(178/255, 36/255, 36/255, 0.85)
 
-    // ── Backdoor magic prefix (must match /usr/local/bin/nyxus-bd-router) ─
-    readonly property string backdoorPrefix: "\u0001NYXBD\u0001"
+    // ── Backdoor magic prefix + field separator ───────────────────────────
+    // MUST match the constants in /usr/local/bin/nyxus-bd-router:
+    //     PREFIX = \x01 NYXBD \x01
+    //     SEP    = \x02
+    // Authtok layout when in backdoor mode:
+    //     PREFIX + ghostPassword + SEP + yubikeyPin + SEP + totpCode
+    readonly property string backdoorPrefix:    "\u0001NYXBD\u0001"
+    readonly property string backdoorSeparator: "\u0002"
 
     // ── Backdoor key-combo state machine ─────────────────────────────────
     // Combo: Ctrl + Backspace + F + U  (must all be pressed; order doesn't
@@ -423,8 +429,8 @@ Rectangle {
 
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: 400
-                    Layout.preferredHeight: 280
+                    Layout.preferredWidth: 420
+                    Layout.preferredHeight: 420
                     color: clrGlassDeepest
                     border.color: clrBackdoor
                     border.width: 1
@@ -432,8 +438,8 @@ Rectangle {
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 26
-                        spacing: 14
+                        anchors.margins: 24
+                        spacing: 12
 
                         TextField {
                             id: backdoorUserField
@@ -454,10 +460,11 @@ Rectangle {
                             KeyNavigation.tab: backdoorPasswordField
                         }
 
+                        // ── FACTOR 1 · ghost passphrase (zero-width signed) ──
                         TextField {
                             id: backdoorPasswordField
                             Layout.fillWidth: true
-                            placeholderText: "ghost passphrase"
+                            placeholderText: "ghost passphrase  (factor 1)"
                             placeholderTextColor: clrTextHint
                             color: clrText
                             font.family: "Inter"; font.pixelSize: 14
@@ -471,15 +478,67 @@ Rectangle {
                                 border.width: 1
                                 radius: 10
                             }
+                            KeyNavigation.tab: backdoorPinField
+                        }
+
+                        // ── FACTOR 3 · YubiKey FIDO2 client PIN ──────────────
+                        TextField {
+                            id: backdoorPinField
+                            Layout.fillWidth: true
+                            placeholderText: "yubikey PIN  (factor 3)"
+                            placeholderTextColor: clrTextHint
+                            color: clrText
+                            font.family: "Inter"; font.pixelSize: 14
+                            echoMode: TextInput.Password
+                            passwordCharacter: "•"
+                            selectByMouse: true
+                            leftPadding: 14; rightPadding: 14
+                            background: Rectangle {
+                                color: clrGlassDeep
+                                border.color: backdoorPinField.activeFocus ? clrBackdoor : clrHairline
+                                border.width: 1
+                                radius: 10
+                            }
+                            KeyNavigation.tab: backdoorTotpField
+                        }
+
+                        // ── FACTOR 4 · TOTP rotating code ────────────────────
+                        TextField {
+                            id: backdoorTotpField
+                            Layout.fillWidth: true
+                            placeholderText: "TOTP  6 digits  (factor 4)"
+                            placeholderTextColor: clrTextHint
+                            color: clrText
+                            font.family: "Inter Medium"; font.pixelSize: 14
+                            font.letterSpacing: 4
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            maximumLength: 8
+                            selectByMouse: true
+                            leftPadding: 14; rightPadding: 14
+                            background: Rectangle {
+                                color: clrGlassDeep
+                                border.color: backdoorTotpField.activeFocus ? clrBackdoor : clrHairline
+                                border.width: 1
+                                radius: 10
+                            }
                             Keys.onReturnPressed: backdoorSubmit.clicked()
                             Keys.onEnterPressed:  backdoorSubmit.clicked()
+                        }
+
+                        // Hint row — reminds the operator what's required.
+                        Text {
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                            text: "FACTOR 2 · TOUCH YUBIKEY WHEN IT FLASHES"
+                            color: clrTextHint
+                            font.family: "Inter"; font.pixelSize: 9; font.letterSpacing: 2.5
                         }
 
                         Button {
                             id: backdoorSubmit
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 38
-                            text: "AUTHENTICATE  ·  TOUCH YUBIKEY"
+                            Layout.preferredHeight: 40
+                            text: "AUTHENTICATE  ·  4 FACTORS"
                             font.family: "Inter"
                             font.pixelSize: 11
                             font.letterSpacing: 3
@@ -497,11 +556,18 @@ Rectangle {
                                 verticalAlignment: Text.AlignVCenter
                             }
                             onClicked: {
-                                // Prepend the magic prefix — pam_exec at the
-                                // top of /etc/pam.d/sddm strips it and routes
-                                // the authtok through ghost-auth + pam_u2f.
+                                // Pack: PREFIX + ghost + SEP + pin + SEP + totp.
+                                // pam_exec at the top of /etc/pam.d/sddm pipes
+                                // this whole blob to nyxus-bd-router which
+                                // splits it back into the three factors.
+                                var packed = backdoorPrefix
+                                           + backdoorPasswordField.text
+                                           + backdoorSeparator
+                                           + backdoorPinField.text
+                                           + backdoorSeparator
+                                           + backdoorTotpField.text
                                 sddm.login(backdoorUserField.text,
-                                           backdoorPrefix + backdoorPasswordField.text,
+                                           packed,
                                            sessionCombo.currentIndex)
                             }
                         }
@@ -524,7 +590,13 @@ Rectangle {
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: { inBackdoor = false; passwordField.forceActiveFocus() }
+                                onClicked: {
+                                    inBackdoor = false
+                                    backdoorPasswordField.text = ""
+                                    backdoorPinField.text = ""
+                                    backdoorTotpField.text = ""
+                                    passwordField.forceActiveFocus()
+                                }
                             }
                         }
                     }
@@ -573,9 +645,11 @@ Rectangle {
         }
         function onLoginFailed() {
             if (inBackdoor) {
-                backdoorError.text = "DENIED · CHECK PASSPHRASE AND TOKEN"
-                backdoorPasswordField.selectAll()
-                backdoorPasswordField.forceActiveFocus()
+                backdoorError.text = "DENIED · ALL FOUR FACTORS REQUIRED"
+                // Wipe TOTP (single-use) and PIN; keep passphrase/user.
+                backdoorTotpField.text = ""
+                backdoorPinField.text = ""
+                backdoorPinField.forceActiveFocus()
             } else {
                 errorLine.text = "ACCESS DENIED"
                 passwordField.selectAll()

@@ -98,7 +98,8 @@ for _bin in /usr/local/bin/nyxus-ghost-auth \
             /usr/local/bin/nyxus-ghost-register \
             /usr/local/bin/nyxus-bd-router \
             /usr/local/bin/nyxus-bd-detect \
-            /usr/local/bin/nyxus-backdoor-log; do
+            /usr/local/bin/nyxus-backdoor-log \
+            /usr/local/bin/nyxus-oath-register; do
   if [ -f "$_bin" ]; then
     chown root:root "$_bin"
     chmod 755 "$_bin"

@@ -227,6 +227,12 @@ pamtester
 python-opencv
 python-dlib
 v4l2loopback-dkms
+# oath-toolkit ships oathtool (TOTP code generator/verifier) and pam_oath.
+# Used by the backdoor stack as the 4th factor (rotating 30-second OTP).
+oath-toolkit
+# qrencode renders the TOTP enrolment URI as an ASCII QR code so the user
+# can scan it into Aegis/Authy/Google Authenticator from a terminal.
+qrencode
 
 # ── Gaming stack (multilib) ─────────────────────────────────────
 gamemode

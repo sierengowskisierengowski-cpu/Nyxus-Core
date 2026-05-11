@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# ═══════════════════════════════════════════════════════════════════════════
+#  nyxus-oath-register — provision the backdoor TOTP secret
+#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  USAGE  (must be root)
+#    sudo nyxus-oath-register
+#
+#  Generates a 160-bit base32 TOTP secret, stores it at
+#  /etc/nyxus/oath.secret (root:600), and prints both:
+#    · the otpauth:// URI  (paste into a password manager)
+#    · an ASCII QR code    (scan with Aegis / Authy / Google Authenticator)
+#
+#  Re-running rotates the secret (old codes immediately stop working).
+# ═══════════════════════════════════════════════════════════════════════════
+set -eu
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "error: must be run as root" >&2; exit 1
+fi
+for _bin in oathtool qrencode; do
+    command -v "${_bin}" >/dev/null 2>&1 || { echo "error: ${_bin} not installed" >&2; exit 1; }
+done
+
+mkdir -p /etc/nyxus
+chmod 700 /etc/nyxus
+
+# 160-bit secret = 20 random bytes; oathtool's -v 'hexsec to base32' or
+# we generate ourselves via /dev/urandom + base32 (coreutils).
+secret_b32="$(head -c 20 /dev/urandom | base32 | tr -d '=' | head -c 32)"
+
+OATH_SECRET_FILE="/etc/nyxus/oath.secret"
+printf '%s\n' "${secret_b32}" > "${OATH_SECRET_FILE}"
+chown root:root "${OATH_SECRET_FILE}"
+chmod 600 "${OATH_SECRET_FILE}"
+
+label="NYXUS-Backdoor:$(hostname)"
+issuer="NYXUS"
+uri="otpauth://totp/${label}?secret=${secret_b32}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30"
+
+echo
+echo "  ✓ TOTP secret written to ${OATH_SECRET_FILE}"
+echo
+echo "  enrol your authenticator app with EITHER:"
+echo
+echo "    1. Manual entry"
+echo "       secret    : ${secret_b32}"
+echo "       type      : Time-based (TOTP)"
+echo "       digits    : 6"
+echo "       period    : 30s"
+echo "       algorithm : SHA1"
+echo
+echo "    2. URI"
+echo "       ${uri}"
+echo
+echo "    3. QR code (scan below)"
+echo
+qrencode -t ANSIUTF8 -m 2 "${uri}"
+echo
+echo "  After scanning, verify the rotating code matches:"
+echo "       current code → $(oathtool --totp -b "${secret_b32}")"
+echo
