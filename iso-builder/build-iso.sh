@@ -163,6 +163,20 @@ ok "configs: hypr (+conf.d) / eww / dunst / rofi / wlogout / alacritty"
 # launch python3 ~/.nyxus/nyxus_*.py to stay compatible with the
 # download-portal install flow that uses ~/.nyxus/) work on the live ISO.
 install -m 0644 "${NS}"/nyxus_*.py "${OPT_NYXUS}/"
+
+# ── Welcome Wizard companion files (rev r9-eww 2026-05-11) ─────────────
+# Stage the three hand-written files into airootfs/root/ where
+# customize_airootfs.sh expects them. The launcher script overrides the
+# auto-generated /usr/local/bin/nyxus-welcome wrapper because it adds
+# marker-file gating and a single-instance flock.
+ROOT_STAGE="${PROFILE_DIR}/airootfs/root"
+mkdir -p "${ROOT_STAGE}"
+for f in nyxus-welcome nyxus-welcome-helper nyxus-welcome.policy; do
+  if [ -f "${NS}/${f}" ]; then
+    install -m 0644 "${NS}/${f}" "${ROOT_STAGE}/${f}"
+  fi
+done
+ok "Welcome Wizard: staged 3 companion files into airootfs/root/"
 ln -sfn /opt/nyxus "${SKEL}/.nyxus"
 ok "GTK apps: $(ls "${OPT_NYXUS}"/*.py | wc -l) python files in /opt/nyxus/ (~/.nyxus → /opt/nyxus symlink in skel)"
 

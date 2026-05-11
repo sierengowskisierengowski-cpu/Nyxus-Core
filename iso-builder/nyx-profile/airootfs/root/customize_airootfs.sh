@@ -78,18 +78,38 @@ fi
 # FAIL-FAST: since waybar has been removed, a missing eww binary leaves
 # the system with NO bar/widget stack at all. Treat the build as a hard
 # ISO requirement.
-NYXUS_EWW_TAG="${NYXUS_EWW_TAG:-v0.6.0}"
+# EWW build (rev r9-eww-2 2026-05-11):
+#   • Bumped default tag v0.6.0 → v0.6.2 — v0.6.0 ships a Cargo.lock with
+#     time 0.3.34, which fails to compile against rustc ≥ 1.80 with
+#     E0282 (type-inference failure in time::format_description).
+#     v0.6.2 already pins time ≥ 0.3.36 upstream.
+#   • Robust cargo update fallback: if the precise pin fails (because
+#     the lockfile has been bumped upstream), attempt a generic
+#     `cargo update -p time` then retry build.
+#   • FAIL-FAST: waybar is gone; missing eww = no bar. Treat as a hard
+#     ISO requirement (exit 1).
+NYXUS_EWW_TAG="${NYXUS_EWW_TAG:-v0.6.2}"
 if ! command -v eww >/dev/null 2>&1; then
   echo "[customize_airootfs] building eww ${NYXUS_EWW_TAG} from source..."
-  # rust/cargo are pacstrapped via packages.x86_64 — the chroot has no
-  # mirrors, so we can't `pacman -S` here.
   _edir=$(mktemp -d)
+  build_eww() {
+    cd "$_edir/eww" || return 1
+    # Best-effort: bump every `time` crate version found in the lockfile
+    # to the highest compatible release. Failure here is non-fatal —
+    # the build attempt below is the real gate.
+    while IFS= read -r v; do
+      cargo update -p "time@${v}" 2>/dev/null || true
+    done < <(awk '/^name = "time"$/{getline; if($1=="version") print $3}' \
+                   Cargo.lock 2>/dev/null | tr -d '"' | sort -u)
+    # General refresh as last-ditch in case a different sub-dep (e.g.
+    # time-macros) is the culprit.
+    cargo update 2>/dev/null || true
+    cargo build --release --no-default-features --features=wayland
+  }
   if git clone --depth 1 --branch "${NYXUS_EWW_TAG}" \
         https://github.com/elkowar/eww.git "$_edir/eww" \
-     && cd "$_edir/eww" \
-     && cargo update -p time@0.3.34 --precise 0.3.37 \
-     && cargo build --release --no-default-features --features=wayland \
-     && install -Dm755 target/release/eww /usr/local/bin/eww; then
+     && build_eww \
+     && install -Dm755 "$_edir/eww/target/release/eww" /usr/local/bin/eww; then
     echo "[customize_airootfs] eww installed → $(command -v eww)"
     cd / && rm -rf "$_edir"
   else
@@ -99,6 +119,34 @@ if ! command -v eww >/dev/null 2>&1; then
     cd / && rm -rf "$_edir"
     exit 1
   fi
+fi
+
+# ── NYXUS Welcome Wizard staging (rev r9-eww 2026-05-11) ───────────────
+# nyxus_welcome.py itself is staged into /opt/nyxus/ by build-iso.sh
+# alongside the other nyxus_*.py modules. Here we install the three
+# hand-written companion files that don't follow that pattern:
+#   1. /usr/local/bin/nyxus-welcome           — gating launcher (marker check + flock)
+#   2. /usr/local/libexec/nyxus-welcome-helper — privileged helper (root-only ops)
+#   3. /usr/share/polkit-1/actions/dev.nyxus.welcome.policy
+#
+# Source files are copied into /root/ by mkarchiso (since they live under
+# nyx-profile/airootfs/root/ — same path used by every other build asset).
+# If they're missing we WARN and continue (wizard simply won't auto-run).
+for src in /root/nyxus-welcome /root/nyxus-welcome-helper /root/nyxus-welcome.policy; do
+  [ -f "$src" ] || { echo "[customize_airootfs] WARNING: $src not staged — wizard will not auto-run"; continue; }
+done
+
+if [ -f /root/nyxus-welcome ]; then
+  install -Dm755 /root/nyxus-welcome           /usr/local/bin/nyxus-welcome
+  echo "[customize_airootfs] installed /usr/local/bin/nyxus-welcome (overrides auto-generated wrapper)"
+fi
+if [ -f /root/nyxus-welcome-helper ]; then
+  install -Dm755 -o root -g root /root/nyxus-welcome-helper /usr/local/libexec/nyxus-welcome-helper
+  echo "[customize_airootfs] installed /usr/local/libexec/nyxus-welcome-helper"
+fi
+if [ -f /root/nyxus-welcome.policy ]; then
+  install -Dm644 /root/nyxus-welcome.policy /usr/share/polkit-1/actions/dev.nyxus.welcome.policy
+  echo "[customize_airootfs] installed polkit policy dev.nyxus.welcome"
 fi
 
 # ── Make all EWW helper scripts executable ─────────────────────────────
