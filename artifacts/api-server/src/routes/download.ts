@@ -48,8 +48,11 @@ const ALLOWED_FILES: Record<string, string> = {
   // ── ★ MASTER PALETTE — single source of truth (rev r13) ─────────────────
   "nyxus_palette.py":       "nyxus_palette.py",        //  Python palette constants
   "nyxus-palette.css":      "nyxus-palette.css",       //  CSS @define-color palette
-  // ── ★ THE 12 NYXUS GTK4 USER APPS (the "11 + flyout") ────────────────────
+  // ── ★ THE NYXUS GTK4 USER APPS ───────────────────────────────────────────
   // 1. Home (workspace dashboard) — see TGZ section below
+  // rev r6-eww (2026-05-11): nyxus_powermenu / _quicksettings / _clock /
+  // _calendar / _cheatsheet REMOVED — replaced by native EWW windows.
+  // See the "EWW SHELL" section below for the replacements.
   "nyxus_notes.py":         "nyxus_notes.py",          //  2. Notes (Tesla-min)
   "nyxus_stickies.py":      "nyxus_stickies.py",       //  4. Stickies
   "nyxus_terminal.py":      "nyxus_terminal.py",       //  6. Terminal
@@ -57,12 +60,33 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_sysmon_gtk.py":    "nyxus_sysmon_gtk.py",     //  8. Sysmon (GTK)
   "nyxus_control.py":       "nyxus_control.py",        //  9. Control
   "nyxus_launcher.py":      "nyxus_launcher.py",       // 10. Launcher (Spotlight)
-  "nyxus_powermenu.py":     "nyxus_powermenu.py",      // 11. Powermenu
   "nyxus_screenshot.py":    "nyxus_screenshot.py",     // 12. Screenshot
-  "nyxus_quicksettings.py": "nyxus_quicksettings.py",  // Flyout: Quicksettings
-  "nyxus_calendar.py":      "nyxus_calendar.py",       // 13. Calendar (month view + per-day notes)
-  "nyxus_clock.py":         "nyxus_clock.py",          // 14. Clock (digital + world + stopwatch)
-  "nyxus_cheatsheet.py":    "nyxus_cheatsheet.py",     // 15. Cheatsheet (live keybinds parser, Super+/)
+
+  // ── ★ EWW SHELL (rev r6-eww, 2026-05-11 — replaces waybar + 5 py apps) ──
+  // 4 bars + dashboard + powermenu + cheatsheet + 3 OSDs. All real backends.
+  "nyxus-eww-launch":           "nyxus-eww-launch",
+  "nyxus-eww.service":          "nyxus-eww.service",
+  "eww/eww.yuck":               "eww/eww.yuck",
+  "eww/eww.scss":               "eww/eww.scss",
+  "eww/nyxus.conf":             "eww/nyxus.conf",
+  "eww/README.md":              "eww/README.md",
+  "eww/scripts/audio.sh":         "eww/scripts/audio.sh",
+  "eww/scripts/battery.sh":       "eww/scripts/battery.sh",
+  "eww/scripts/bluetooth.sh":     "eww/scripts/bluetooth.sh",
+  "eww/scripts/brightness.sh":    "eww/scripts/brightness.sh",
+  "eww/scripts/calendar.sh":      "eww/scripts/calendar.sh",
+  "eww/scripts/cpu-bars.sh":      "eww/scripts/cpu-bars.sh",
+  "eww/scripts/mic.sh":           "eww/scripts/mic.sh",
+  "eww/scripts/network.sh":       "eww/scripts/network.sh",
+  "eww/scripts/notifications.sh": "eww/scripts/notifications.sh",
+  "eww/scripts/osd-show.sh":      "eww/scripts/osd-show.sh",
+  "eww/scripts/player.sh":        "eww/scripts/player.sh",
+  "eww/scripts/power-profile.sh": "eww/scripts/power-profile.sh",
+  "eww/scripts/sys-pulse.sh":     "eww/scripts/sys-pulse.sh",
+  "eww/scripts/ticker.sh":        "eww/scripts/ticker.sh",
+  "eww/scripts/updates.sh":       "eww/scripts/updates.sh",
+  "eww/scripts/weather.sh":       "eww/scripts/weather.sh",
+  "eww/scripts/workspaces.sh":    "eww/scripts/workspaces.sh",
 
   // ── ★ TGZ APP PACKAGES (heavyweight multi-module apps) ───────────────────
   "nyxus-home.tgz":      "nyxus-home.tgz",       // Home (workspace 0)
@@ -125,13 +149,11 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-hyprland-general.conf":   "nyxus-hyprland-general.conf",
   "nyxus-hyprland-layerblur.conf": "nyxus-hyprland-layerblur.conf",
 
-  // ── ★ DESKTOP UI CONFIGS (waybar, rofi, alacritty, dunst, wlogout) ───────
-  "waybar-config.json":    "waybar-config.json",
-  "waybar-style.css":      "waybar-style.css",
-  "waybar-ticker.sh":      "waybar-ticker.sh",
+  // ── ★ DESKTOP UI CONFIGS (rofi, alacritty, dunst, wlogout) ───────────────
+  // rev r6-eww (2026-05-11): waybar-config.json / waybar-style.css /
+  // waybar-ticker.sh / waybar-stats.sh / nyxus-sys-pulse.sh REMOVED — EWW
+  // shell now drives the bars (ticker/sys-pulse live in eww/scripts/).
   "nyxus-notif-status.sh": "nyxus-notif-status.sh",
-  "waybar-stats.sh":       "waybar-stats.sh",
-  "nyxus-sys-pulse.sh":    "nyxus-sys-pulse.sh",
   "alacritty.toml":        "alacritty.toml",
   "rofi-config.rasi":      "rofi-config.rasi",
   "rofi-nyxus.rasi":       "rofi-nyxus.rasi",
@@ -174,6 +196,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-bar-stone.png":          "nyxus-bar-stone.png",
   "nyxus-starfield-wall.png":     "nyxus-starfield-wall.png",
   "nyxus-drifter-wall.png":       "nyxus-drifter-wall.png",
+  "nyxus-void-vortex.png":        "nyxus-void-vortex.png",  // EWW-era default wallpaper (rev r6-eww)
   "nyxus-demon.png":              "nyxus-demon.png",
 
   // ── ★ WALLPAPERS (15 backgrounds) ────────────────────────────────────────
@@ -265,8 +288,13 @@ router.get("/download/nyxus/manifest.txt", (_req, res) => {
   res.send(lines.join("\n") + "\n");
 });
 
-router.get("/download/nyxus/:filename", (req, res) => {
-  const { filename } = req.params;
+// Express 5 wildcard splat — matches nested paths like `eww/scripts/audio.sh`.
+// req.params.splat is an array of path segments; join with "/" to recover the
+// original key shape used in ALLOWED_FILES (e.g. "eww/scripts/audio.sh").
+// Strict allowlist lookup below means the splat cannot be used for traversal.
+router.get("/download/nyxus/{*splat}", (req, res) => {
+  const splat = req.params.splat;
+  const filename = Array.isArray(splat) ? splat.join("/") : String(splat ?? "");
 
   if (!ALLOWED_FILES[filename]) {
     res.status(404).json({ error: "File not found" });

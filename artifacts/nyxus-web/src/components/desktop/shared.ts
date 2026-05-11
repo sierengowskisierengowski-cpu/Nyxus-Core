@@ -127,15 +127,13 @@ export const APPS: AppDef[] = [
     install: "nyxus_panel_install.sh", download: "nyxus-panel.tgz",
     modules: ["Appearance", "Profile", "Notifications", "News Sources", "Filters", "Browser", "Cache", "About"] },
 
-  // ── SYSTEM UTILITIES (12) — Python / .desktop entries on the live OS ─
-  { id: "calendar", name: "Calendar", glyph: "▦", color: T, kind: "mockup", category: "system",
-    tagline: "CALENDAR · GTK4",
-    desc: "Month / week / agenda views. Local ICS storage. CalDAV sync planned.",
-    install: "nyxus_calendar.py" },
-  { id: "clock", name: "Clock", glyph: "◷", color: T, kind: "mockup", category: "system",
-    tagline: "CLOCK · TIMERS · STOPWATCH",
-    desc: "World clock, timers, stopwatch, alarms. Layer-shell pop-up.",
-    install: "nyxus_clock.py" },
+  // ── SYSTEM UTILITIES — Python / .desktop entries on the live OS ─────
+  // NOTE (rev r6-eww, 2026-05-11): Calendar, Clock, Powermenu, Quicksettings
+  // REMOVED from the system-utilities list — all four are now native EWW
+  // surfaces. Calendar + Clock live inside the EWW dashboard (Super+`),
+  // Powermenu is `eww open --toggle powermenu` (Super+Esc), Quicksettings
+  // is the same dashboard. The 5th retired app, Cheatsheet, was already not
+  // in this list.
   { id: "control", name: "Control", glyph: "◑", color: T, kind: "mockup", category: "system",
     tagline: "CONTROL CENTER",
     desc: "Quick toggles — wifi, bluetooth, audio, brightness, dnd, idle inhibit.",
@@ -152,14 +150,6 @@ export const APPS: AppDef[] = [
     tagline: "QUICK NOTES",
     desc: "One-shot quick note capture. Different from the full Notepad app.",
     install: "nyxus_notes.py" },
-  { id: "powermenu", name: "Power", glyph: "⏻", color: T, kind: "mockup", category: "system",
-    tagline: "POWER MENU",
-    desc: "Lock / suspend / reboot / shutdown / log out. Confirmation dialog with countdown.",
-    install: "nyxus_powermenu.py" },
-  { id: "quicksettings", name: "Quick Settings", glyph: "◧", color: T, kind: "mockup", category: "system",
-    tagline: "QUICK SETTINGS",
-    desc: "Right-edge slide-out — volume, brightness, network, dnd, screenshot, screencast.",
-    install: "nyxus_quicksettings.py" },
   { id: "screensaver", name: "Screensaver", glyph: "◌", color: T, kind: "mockup", category: "system",
     tagline: "SCREENSAVER + LOCK",
     desc: "Idle-triggered screensaver with the cosmic ink-swirl wallpaper. Doubles as the lockscreen.",

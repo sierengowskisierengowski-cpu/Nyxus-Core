@@ -1,0 +1,487 @@
+;; ─────────────────────────────────────────────────────────────────────
+;; NYXUS · EWW configuration — DARK MIRROR aesthetic · ENTERPRISE BUILD
+;; © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+;;
+;; Layout matrix:
+;;   bar-bottom       — main bar: brand · syspulse · tray · clock ·
+;;                      brightness · audio · mic · net · bluetooth ·
+;;                      battery · power-profile · updates · notifications · power
+;;   bar-top          — live ticker + now-playing
+;;   bar-left         — vertical workspace pills 1..10 (populated detection)
+;;   bar-right        — quick-launch app rail (8 apps)
+;;   dashboard        — full overlay: clock · calendar · weather · system ·
+;;                      power · per-core CPU graph · sliders · player ·
+;;                      quick toggles · settings shortcuts
+;;   powermenu        — full overlay: 5 actions
+;;   cheatsheet       — full overlay: 3-column keybind reference
+;;   osd-volume       — transient volume pop-up
+;;   osd-brightness   — transient brightness pop-up
+;;   osd-mic          — transient microphone pop-up
+;;   screensaver      — fullscreen idle overlay (hypridle-triggered)
+;; ─────────────────────────────────────────────────────────────────────
+
+;; ── poll variables ────────────────────────────────────────────────────
+(defpoll TIME       :interval "1s"   :initial `date +'{"hms":"%H:%M:%S","hm":"%H:%M","date":"%a %d %b","long":"%A, %B %-d %Y"}'`
+                                     `date +'{"hms":"%H:%M:%S","hm":"%H:%M","date":"%a %d %b","long":"%A, %B %-d %Y"}'`)
+(defpoll TICKER     :interval "3s"   :initial '{"text":"NYXUS · DARK MIRROR · LIVE","tooltip":"NYXUS"}'
+                                     "~/.config/eww/scripts/ticker.sh")
+(defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0}'
+                                     "~/.config/eww/scripts/sys-pulse.sh")
+(defpoll CPUCORES   :interval "3s"   :initial '{"cores":[]}'
+                                     "~/.config/eww/scripts/cpu-bars.sh")
+(defpoll BATTERY    :interval "10s"  :initial '{"capacity":100,"status":"Full","icon":"⚡","tooltip":"battery"}'
+                                     "~/.config/eww/scripts/battery.sh")
+(defpoll NETWORK    :interval "5s"   :initial '{"icon":"…","label":"…","tooltip":"network"}'
+                                     "~/.config/eww/scripts/network.sh")
+(defpoll BLUETOOTH  :interval "5s"   :initial '{"icon":"…","label":"…","tooltip":"bt","powered":"off","connected":0,"paired":0}'
+                                     "~/.config/eww/scripts/bluetooth.sh")
+(defpoll AUDIO      :interval "2s"   :initial '{"icon":"…","vol":0,"tooltip":"audio"}'
+                                     "~/.config/eww/scripts/audio.sh")
+(defpoll MIC        :interval "2s"   :initial '{"icon":"○","mute":"no","vol":0,"tooltip":"mic"}'
+                                     "~/.config/eww/scripts/mic.sh")
+(defpoll BACKLIGHT  :interval "5s"   :initial '{"percent":50}'
+                                     "~/.config/eww/scripts/brightness.sh")
+(defpoll WORKSPACES :interval "1s"   :initial '{"active":1,"occupied":[1]}'
+                                     "~/.config/eww/scripts/workspaces.sh")
+(defpoll WEATHER    :interval "900s" :initial '{"temp":"—","summary":"…"}'
+                                     "~/.config/eww/scripts/weather.sh")
+(defpoll CALENDAR   :interval "60s"  :initial '{"month":"—","grid":""}'
+                                     "~/.config/eww/scripts/calendar.sh")
+(defpoll POWERPROF  :interval "10s"  :initial '{"active":"balanced","icon":"◐","label":"BAL","tooltip":"power profile"}'
+                                     "~/.config/eww/scripts/power-profile.sh")
+(defpoll UPDATES    :interval "1800s" :initial '{"count":0,"icon":"✓","label":"OK","tooltip":"updates"}'
+                                     "~/.config/eww/scripts/updates.sh")
+(defpoll PLAYER     :interval "2s"   :initial '{"status":"Stopped","title":"—","artist":"","icon":"□","tooltip":"player"}'
+                                     "~/.config/eww/scripts/player.sh")
+(defpoll NOTIFS     :interval "3s"   :initial '{"icon":"○","label":"0","tooltip":"notifications","paused":"false","total":0}'
+                                     "~/.config/eww/scripts/notifications.sh")
+
+;; ═════════════════════════════════════════════════════════════════════
+;; CORE BAR WIDGETS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget nyxus_brand []
+  (button :class "brand"
+          :onclick "rofi -show drun -theme ~/.config/rofi/startmenu.rasi 2>/dev/null || wofi --show drun"
+          :tooltip "NYXUS · Start menu"
+    "✕ NYXUS"))
+
+(defwidget heartbeat []
+  (label :class "heartbeat" :text "● SYS·LIVE" :tooltip "Session is alive"))
+
+(defwidget syspulse_widget []
+  (box :class "syspulse" :space-evenly false :spacing 8
+    (label :class "syspulse-cpu"  :text "CPU ${SYSPULSE.cpu}%")
+    (label :class "syspulse-mem"  :text "MEM ${SYSPULSE.mem}%")
+    (label :class "syspulse-temp" :text "${SYSPULSE.temp}°C")))
+
+(defwidget clock_widget []
+  (button :class "clock"
+          :onclick "eww open --toggle dashboard"
+          :tooltip "${TIME.long} · click for dashboard"
+    (box :orientation "h" :space-evenly false :spacing 10
+      (label :class "clock-glyph" :text "◷")
+      (label :class "clock-hms"   :text "${TIME.hm}")
+      (label :class "clock-date"  :text "·  ${TIME.date}"))))
+
+(defwidget audio_widget []
+  (button :class "pill"
+          :onclick "pavucontrol &"
+          :onrightclick "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && ~/.config/eww/scripts/osd-show.sh osd-volume &"
+          :tooltip "${AUDIO.tooltip} · click pavucontrol · right-click mute"
+    "${AUDIO.icon}  ${AUDIO.vol}%"))
+
+(defwidget mic_widget []
+  (button :class {MIC.mute == "yes" ? "pill mic-mute" : "pill"}
+          :onclick "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle &"
+          :tooltip "${MIC.tooltip} · click to toggle"
+    "${MIC.icon}"))
+
+(defwidget net_widget []
+  (button :class "pill"
+          :onclick "alacritty -e nmtui &"
+          :tooltip "${NETWORK.tooltip}"
+    "${NETWORK.icon}  ${NETWORK.label}"))
+
+(defwidget bluetooth_widget []
+  (button :class {BLUETOOTH.powered == "off" ? "pill bt-off" :
+                  BLUETOOTH.connected > 0    ? "pill bt-conn" : "pill"}
+          :onclick "blueman-manager &"
+          :onrightclick "${BLUETOOTH.powered == 'off' ? 'bluetoothctl power on' : 'bluetoothctl power off'} &"
+          :tooltip "${BLUETOOTH.tooltip} · right-click toggles"
+    "  ${BLUETOOTH.label}"))
+
+(defwidget battery_widget []
+  (button :class {BATTERY.status == "Charging" ? "pill batt-charge" :
+                  BATTERY.capacity < 20        ? "pill batt-low"    :
+                                                 "pill"}
+          :tooltip "${BATTERY.tooltip}"
+    "${BATTERY.icon}  ${BATTERY.capacity}%"))
+
+(defwidget brightness_widget []
+  (button :class "pill"
+          :onclick "brightnessctl set +10% && ~/.config/eww/scripts/osd-show.sh osd-brightness &"
+          :onrightclick "brightnessctl set 10%- && ~/.config/eww/scripts/osd-show.sh osd-brightness &"
+          :tooltip "Brightness ${BACKLIGHT.percent}% · scroll/right-click to adjust"
+    "☼  ${BACKLIGHT.percent}%"))
+
+(defwidget powerprof_widget []
+  (button :class {POWERPROF.active == "performance" ? "pill pp-perf" :
+                  POWERPROF.active == "power-saver" ? "pill pp-save" : "pill"}
+          :onclick "powerprofilesctl set $(powerprofilesctl list 2>/dev/null | awk '/Profiles/{f=1;next} f && /:/{gsub(/[*: ]/,\"\",$1); print $1}' | grep -v '^${POWERPROF.active}$' | head -1) &"
+          :tooltip "${POWERPROF.tooltip} · click to cycle"
+    "${POWERPROF.icon}  ${POWERPROF.label}"))
+
+(defwidget updates_widget []
+  (button :class {UPDATES.count > 24 ? "pill upd-many" : "pill"}
+          :onclick "alacritty -e sh -c 'sudo pacman -Syu; read -p \"press enter\"' &"
+          :tooltip "${UPDATES.tooltip} · click to sync"
+    "${UPDATES.icon}  ${UPDATES.label}"))
+
+(defwidget notifs_widget []
+  (button :class {NOTIFS.paused == "true" ? "pill notif-dnd" :
+                  NOTIFS.total > 0        ? "pill notif-on"  : "pill"}
+          :onclick "dunstctl history-pop &"
+          :onrightclick "dunstctl set-paused toggle &"
+          :onmiddleclick "dunstctl close-all &"
+          :tooltip "${NOTIFS.tooltip}"
+    "${NOTIFS.icon}  ${NOTIFS.label}"))
+
+(defwidget power_button []
+  (button :class "pill power-pill"
+          :onclick "eww open --toggle powermenu"
+          :tooltip "Power menu"
+    "⏻"))
+
+(defwidget tray_dummy []
+  (label :class "tray-dummy" :text "·  ·  ·" :tooltip "Tray placeholder"))
+
+(defwidget player_widget []
+  (button :class "ticker-player"
+          :onclick "playerctl play-pause &"
+          :onrightclick "playerctl next &"
+          :onmiddleclick "playerctl previous &"
+          :tooltip "${PLAYER.tooltip} · L play/pause · R next · M previous"
+          :visible {PLAYER.status != "Stopped"}
+    (label :class "ticker-player-text" :limit-width 48
+           :text "${PLAYER.icon}  ${PLAYER.title}")))
+
+(defwidget ticker_widget []
+  (box :class "ticker-box" :space-evenly false :hexpand true
+    (label :class "ticker"
+           :limit-width 320
+           :text "${TICKER.text}"
+           :tooltip "${TICKER.tooltip}")))
+
+;; ── workspaces (1..10, populated detection) ──────────────────────────
+;; yuck cannot dynamically index a JSON property by an int, so each pill
+;; receives its `occ` boolean as a parameter sourced from the matching
+;; WORKSPACES.occN field emitted by scripts/workspaces.sh.
+(defwidget workspace_pill [id occ]
+  (button :class {WORKSPACES.active == id ? "ws-pill ws-pill-active" :
+                  occ                     ? "ws-pill ws-pill-occupied" :
+                                            "ws-pill"}
+          :onclick "hyprctl dispatch workspace ${id}"
+          :tooltip "Workspace ${id}"
+    "${id}"))
+
+(defwidget workspaces_rail []
+  (box :class "ws-rail" :orientation "v" :space-evenly false :spacing 6 :valign "center"
+    (workspace_pill :id 1  :occ {WORKSPACES.occ1})
+    (workspace_pill :id 2  :occ {WORKSPACES.occ2})
+    (workspace_pill :id 3  :occ {WORKSPACES.occ3})
+    (workspace_pill :id 4  :occ {WORKSPACES.occ4})
+    (workspace_pill :id 5  :occ {WORKSPACES.occ5})
+    (workspace_pill :id 6  :occ {WORKSPACES.occ6})
+    (workspace_pill :id 7  :occ {WORKSPACES.occ7})
+    (workspace_pill :id 8  :occ {WORKSPACES.occ8})
+    (workspace_pill :id 9  :occ {WORKSPACES.occ9})
+    (workspace_pill :id 10 :occ {WORKSPACES.occ10})))
+
+(defwidget app_launcher [glyph cmd label]
+  (button :class "app-pill" :onclick "${cmd} &" :tooltip "${label}" "${glyph}"))
+
+(defwidget app_rail []
+  (box :class "app-rail" :orientation "v" :space-evenly false :spacing 10 :valign "center"
+    (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal")
+    (app_launcher :glyph "" :cmd "firefox"        :label "Firefox")
+    (app_launcher :glyph "" :cmd "nautilus"       :label "Files")
+    (app_launcher :glyph "" :cmd "nyxus-sysmon"   :label "SysMon")
+    (app_launcher :glyph "" :cmd "nyxus-notepad"  :label "Notepad")
+    (app_launcher :glyph "" :cmd "nyxus-stickies" :label "Stickies")
+    (app_launcher :glyph "" :cmd "pavucontrol"    :label "Audio")
+    (app_launcher :glyph "" :cmd "blueman-manager":label "Bluetooth")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; BARS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget bar_bottom_layout []
+  (centerbox :class "bar bar-bottom" :orientation "h"
+    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 12 :halign "start"
+      (nyxus_brand) (heartbeat))
+    (box :class "bar-cluster cluster-center" :space-evenly false :spacing 14 :halign "center"
+      (syspulse_widget) (tray_dummy) (clock_widget))
+    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 6 :halign "end"
+      (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
+      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (power_button))))
+
+(defwidget bar_top_layout []
+  (box :class "bar bar-top" :space-evenly false :spacing 12 :hexpand true
+    (label :class "ticker-label" :text "▌ NYXUS · LIVE")
+    (ticker_widget)
+    (player_widget)))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; DASHBOARD — replaces nyxus_quicksettings + nyxus_clock + nyxus_calendar
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget dash_quick_toggle [glyph label cmd]
+  (button :class "dash-toggle" :onclick "(${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 6 :halign "center"
+      (label :class "dash-toggle-glyph" :text "${glyph}")
+      (label :class "dash-toggle-label" :text "${label}"))))
+
+;; per-core bar — height is driven via inline GTK CSS (`min-height`)
+;; because yuck `box` does not accept a raw numeric :height attribute.
+(defwidget dash_core_bar [pct]
+  (box :class "core-bar" :orientation "v" :space-evenly false :valign "end"
+    (box :class {pct >= 80 ? "core-fill core-hot" :
+                 pct >= 50 ? "core-fill core-warm" : "core-fill"}
+         :style "min-height: ${pct}px;")))
+
+(defwidget dash_player []
+  (box :class "dash-player" :orientation "v" :space-evenly false :spacing 8
+    (label :class "dash-card-title" :text "MEDIA")
+    (label :class "dash-player-title"  :limit-width 32 :text "${PLAYER.title}")
+    (label :class "dash-player-artist" :limit-width 32 :text "${PLAYER.artist}")
+    (box :class "dash-player-controls" :orientation "h" :space-evenly true :spacing 12
+      (button :class "dash-player-btn" :onclick "playerctl previous &" "⏮")
+      (button :class "dash-player-btn" :onclick "playerctl play-pause &" "${PLAYER.icon}")
+      (button :class "dash-player-btn" :onclick "playerctl next &" "⏭"))))
+
+(defwidget dashboard_layout []
+  (box :class "dashboard-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 22
+    ;; ── header: clock + date ──────────────────────────────────────────
+    (label :class "dash-clock" :text "${TIME.hm}")
+    (label :class "dash-date"  :text "${TIME.long}")
+
+    ;; ── upper grid: weather / system / power / calendar / media ──────
+    (box :class "dash-grid" :orientation "h" :space-evenly true :spacing 16
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dash-card-title" :text "WEATHER")
+        (label :class "dash-card-big"   :text "${WEATHER.temp}")
+        (label :class "dash-card-sub"   :text "${WEATHER.summary}"))
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dash-card-title" :text "SYSTEM")
+        (label :class "dash-card-big"   :text "${SYSPULSE.cpu}% · ${SYSPULSE.mem}%")
+        (label :class "dash-card-sub"   :text "CPU · MEM · ${SYSPULSE.temp}°C"))
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dash-card-title" :text "POWER")
+        (label :class "dash-card-big"   :text "${BATTERY.capacity}%")
+        (label :class "dash-card-sub"   :text "${BATTERY.status} · ${POWERPROF.label}"))
+      (box :class "dash-card dash-card-cal" :orientation "v" :space-evenly false :spacing 6
+        (label :class "dash-card-title" :text "${CALENDAR.month}")
+        (label :class "dash-cal-grid"   :text "${CALENDAR.grid}"))
+      (dash_player))
+
+    ;; ── per-core CPU graph ───────────────────────────────────────────
+    (box :class "dash-cores-card" :orientation "v" :space-evenly false :spacing 8
+      (label :class "dash-card-title" :text "CPU CORES · ${arraylength(CPUCORES.cores)} threads")
+      (box :class "dash-cores" :orientation "h" :space-evenly true :spacing 4
+        (for core in {CPUCORES.cores}
+          (dash_core_bar :pct {core}))))
+
+    ;; ── sliders ──────────────────────────────────────────────────────
+    (box :class "dash-sliders" :orientation "v" :space-evenly false :spacing 10
+      (box :class "dash-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "dash-slider-label" :text "VOL")
+        (scale :class "dash-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
+      (box :class "dash-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "dash-slider-label" :text "MIC")
+        (scale :class "dash-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%"))
+      (box :class "dash-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "dash-slider-label" :text "BRT")
+        (scale :class "dash-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+               :onchange "brightnessctl set {}%")))
+
+    ;; ── quick toggles ────────────────────────────────────────────────
+    (box :class "dash-toggles" :orientation "h" :space-evenly true :spacing 12
+      (dash_quick_toggle :glyph "📶" :label "Network"   :cmd "alacritty -e nmtui")
+      (dash_quick_toggle :glyph ""  :label "Bluetooth" :cmd "blueman-manager")
+      (dash_quick_toggle :glyph ""  :label "Audio"     :cmd "pavucontrol")
+      (dash_quick_toggle :glyph "🖥"  :label "Displays"  :cmd "wdisplays")
+      (dash_quick_toggle :glyph ""  :label "Updates"   :cmd "alacritty -e sh -c 'sudo pacman -Syu; read'")
+      (dash_quick_toggle :glyph "🔒"  :label "Lock"      :cmd "eww close dashboard && hyprlock")
+      (dash_quick_toggle :glyph "?"   :label "Keys"      :cmd "eww close dashboard && eww open --toggle cheatsheet")
+      (dash_quick_toggle :glyph "⏻"   :label "Power"     :cmd "eww close dashboard && eww open --toggle powermenu"))
+
+    (button :class "dash-close" :onclick "eww close dashboard" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; POWERMENU
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget power_btn [glyph label cmd]
+  (button :class "power-btn"
+          :onclick "eww close powermenu && (${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 8 :halign "center"
+      (label :class "power-glyph" :text "${glyph}")
+      (label :class "power-label" :text "${label}"))))
+
+(defwidget powermenu_layout []
+  (box :class "powermenu-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 24
+    (label :class "power-title" :text "NYXUS · POWER")
+    (box :class "power-grid" :orientation "h" :space-evenly true :spacing 18
+      (power_btn :glyph "⏻" :label "Shutdown" :cmd "systemctl poweroff")
+      (power_btn :glyph "↻" :label "Restart"  :cmd "systemctl reboot")
+      (power_btn :glyph "☾" :label "Suspend"  :cmd "systemctl suspend")
+      (power_btn :glyph "⏏" :label "Logout"   :cmd "hyprctl dispatch exit")
+      (power_btn :glyph "🔒" :label "Lock"     :cmd "hyprlock"))
+    (button :class "power-cancel" :onclick "eww close powermenu" "Cancel (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; CHEATSHEET
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget cheatkey [chord action]
+  (box :class "cheat-row" :orientation "h" :space-evenly false :spacing 18
+    (label :class "cheat-chord"  :text "${chord}")
+    (label :class "cheat-action" :text "${action}")))
+
+(defwidget cheatsheet_layout []
+  (box :class "cheatsheet-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 20
+    (label :class "cheat-title" :text "NYXUS · KEY MAP")
+    (box :class "cheat-cols" :orientation "h" :space-evenly true :spacing 36
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "WINDOW")
+        (cheatkey :chord "Super + Q"        :action "Close window")
+        (cheatkey :chord "Super + V"        :action "Toggle floating")
+        (cheatkey :chord "Super + F"        :action "Fullscreen")
+        (cheatkey :chord "Super + T"        :action "Toggle split")
+        (cheatkey :chord "Super + ←/→/↑/↓"  :action "Move focus")
+        (cheatkey :chord "Super + 1..0"     :action "Switch workspace")
+        (cheatkey :chord "Super + Shift +#" :action "Move to workspace"))
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "LAUNCH")
+        (cheatkey :chord "Super + Space"    :action "App launcher")
+        (cheatkey :chord "Super + D"        :action "Rofi drun")
+        (cheatkey :chord "Super + Return"   :action "Terminal")
+        (cheatkey :chord "Super + B"        :action "Firefox")
+        (cheatkey :chord "Super + E"        :action "File manager")
+        (cheatkey :chord "Super + Tab"      :action "Window switcher"))
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "SYSTEM / MEDIA")
+        (cheatkey :chord "Super + L"        :action "Lock screen")
+        (cheatkey :chord "Super + Escape"   :action "Power menu")
+        (cheatkey :chord "Super + ` "       :action "Dashboard")
+        (cheatkey :chord "Super + /"        :action "This cheatsheet")
+        (cheatkey :chord "Print"            :action "Screenshot region")
+        (cheatkey :chord "Vol+/Vol-/Mute"   :action "Audio · OSD")
+        (cheatkey :chord "Brt+/Brt-"        :action "Brightness · OSD")
+        (cheatkey :chord "Play/Next/Prev"   :action "Media controls")))
+    (button :class "cheat-close" :onclick "eww close cheatsheet" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; OSD pop-ups
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget osd_volume_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+       :halign "center" :valign "center"
+    (label :class "osd-glyph" :text "${AUDIO.icon}")
+    (box :orientation "v" :space-evenly false :spacing 6 :hexpand true
+      (label :class "osd-label" :text "VOLUME · ${AUDIO.vol}%")
+      (scale :class "osd-bar" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true :active false))))
+
+(defwidget osd_brightness_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+       :halign "center" :valign "center"
+    (label :class "osd-glyph" :text "☼")
+    (box :orientation "v" :space-evenly false :spacing 6 :hexpand true
+      (label :class "osd-label" :text "BRIGHTNESS · ${BACKLIGHT.percent}%")
+      (scale :class "osd-bar" :value "${BACKLIGHT.percent}" :min 0 :max 100 :hexpand true :active false))))
+
+(defwidget osd_mic_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+       :halign "center" :valign "center"
+    (label :class "osd-glyph" :text "${MIC.icon}")
+    (box :orientation "v" :space-evenly false :spacing 6 :hexpand true
+      (label :class "osd-label" :text "MICROPHONE · ${MIC.mute == 'yes' ? 'MUTED' : '${MIC.vol}%'}")
+      (scale :class "osd-bar" :value "${MIC.vol}" :min 0 :max 100 :hexpand true :active false))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SCREENSAVER
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget screensaver_layout []
+  (box :class "saver-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 28
+    (label :class "saver-clock" :text "${TIME.hm}")
+    (label :class "saver-date"  :text "${TIME.long}")
+    (label :class "saver-brand" :text "NYXUS · DARK MIRROR")
+    (label :class "saver-hint"  :text "move mouse · press any key")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; WINDOWS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwindow bar-bottom
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-bottom"
+  :geometry (geometry :x "0" :y "12" :width "98%" :height "56px" :anchor "bottom center")
+  (bar_bottom_layout))
+
+(defwindow bar-top
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-top"
+  :geometry (geometry :x "0" :y "0" :width "100%" :height "32px" :anchor "top center")
+  (bar_top_layout))
+
+(defwindow bar-left
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-left"
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "70%" :anchor "center left")
+  (workspaces_rail))
+
+(defwindow bar-right
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-right"
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "70%" :anchor "center right")
+  (app_rail))
+
+(defwindow dashboard
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-dashboard"
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  (dashboard_layout))
+
+(defwindow powermenu
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-powermenu"
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  (powermenu_layout))
+
+(defwindow cheatsheet
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-cheatsheet"
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  (cheatsheet_layout))
+
+(defwindow osd-volume
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-osd"
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "70px" :anchor "bottom center")
+  (osd_volume_layout))
+
+(defwindow osd-brightness
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-osd"
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "70px" :anchor "bottom center")
+  (osd_brightness_layout))
+
+(defwindow osd-mic
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-osd"
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "70px" :anchor "bottom center")
+  (osd_mic_layout))
+
+(defwindow screensaver
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-screensaver"
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  (screensaver_layout))

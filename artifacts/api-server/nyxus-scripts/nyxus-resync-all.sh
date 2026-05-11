@@ -206,13 +206,15 @@ fi
 ## on existing users until they re-ran the full installer. Force-refresh
 ## them all here with the same syntax-check guard used for chrome.py.
 step "2.6/6 · REFRESH ~/.nyxus/ user-app Python scripts (force from production)"
+# NOTE (rev r6-eww, 2026-05-11): nyxus_powermenu, nyxus_quicksettings,
+# nyxus_clock, nyxus_calendar, and nyxus_cheatsheet REMOVED — replaced by
+# native EWW windows. EWW config files are refreshed in step 2.7 below.
 USER_SCRIPTS=(
   nyxus_palette.py        nyxus-palette.css
   nyxus_notes.py          nyxus_stickies.py       nyxus_terminal.py
   nyxus_settings.py       nyxus_sysmon_gtk.py     nyxus_control.py
-  nyxus_launcher.py       nyxus_powermenu.py      nyxus_screenshot.py
-  nyxus_quicksettings.py  nyxus_calendar.py       nyxus_clock.py
-  nyxus_cheatsheet.py     nyxus_doctor.py         nyxus_gen_icons.py
+  nyxus_launcher.py       nyxus_screenshot.py
+  nyxus_doctor.py         nyxus_gen_icons.py
 )
 # Validate REAL_USER actually exists before looping, so chown can't silently
 # fail on every iteration with an unresolvable user.
