@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # NYXUS · EWW · weather (wttr.in JSON, single-line, 15-min cache)
-# Uses jq end-to-end so weather descriptions with quotes can never
-# corrupt the defpoll-consumed JSON.
+# Honours NYXUS_WEATHER_LOCATION from ~/.config/eww/nyxus.conf
+# (empty → wttr.in geo-IP guess).
 set -u
+
+CONF="${HOME}/.config/eww/nyxus.conf"
+[[ -r "$CONF" ]] && . "$CONF"
+LOC="${NYXUS_WEATHER_LOCATION:-}"
 
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/nyxus-weather.json"
 mkdir -p "$(dirname "$CACHE")"
@@ -14,7 +18,8 @@ if [[ -f "$CACHE" ]]; then
 fi
 
 if $stale; then
-  raw=$(curl -fsS --max-time 5 "https://wttr.in/?format=j1" 2>/dev/null || echo "")
+  url="https://wttr.in/${LOC}?format=j1"
+  raw=$(curl -fsS --max-time 5 "$url" 2>/dev/null || echo "")
   if [[ -n "$raw" ]] && command -v jq >/dev/null 2>&1; then
     jq -c \
       '{temp: ((.current_condition[0].temp_C // "—") + "°C"),
