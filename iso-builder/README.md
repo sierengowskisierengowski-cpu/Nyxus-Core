@@ -1,5 +1,11 @@
 # NYX ISO builder
-### `iso-builder/` — bakes `nyx-2026.05.11-x86_64.iso`
+### `iso-builder/` — bakes `nyx-<YYYY.MM.DD>-x86_64.iso`
+
+> **Auto-dated builds:** every bake stamps today's date into the ISO
+> filename, `iso_version` (mkarchiso metadata), and `BUILD_ID`
+> (`/etc/os-release` inside the live system). Override with
+> `NYX_ISO_DATE=2026.05.11 sudo ./build-iso.sh` for deterministic
+> re-bakes of a specific release.
 
 This directory contains the `archiso` profile and a one-command wrapper
 that produces the NYX ISO. The ISO boots into NYXUS (the OS) with
@@ -30,7 +36,7 @@ cd iso-builder
 sudo ./build-iso.sh
 ```
 
-Output: `iso-builder/out/nyx-2026.05.11-x86_64.iso`
+Output: `iso-builder/out/nyx-<today>-x86_64.iso` (e.g. `nyx-2026.05.11-x86_64.iso`)
 
 ## What `build-iso.sh` does
 
@@ -43,7 +49,7 @@ Output: `iso-builder/out/nyx-2026.05.11-x86_64.iso`
 5. Mirrors the OS-level docs (`LICENSE.md`, `README.md`, `CHANGELOG.md`,
    `CREDITS.md`) into `airootfs/etc/nyxus/`
 6. Runs `mkarchiso -v -w /tmp/nyx-work -o ./out ./nyx-profile/`
-7. Renames the produced ISO to `nyx-2026.05.11-x86_64.iso`
+7. Renames the produced ISO to `nyx-<today>-x86_64.iso`
 
 ## Profile layout
 

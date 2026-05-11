@@ -27,7 +27,12 @@ ok()   { printf "  ${CYAN}✓${R}  %s\n" "$*"; }
 warn() { printf "  ${GOLD}!${R}  %s\n" "$*"; }
 fail() { printf "  ${PINK}✗${R}  %s\n" "$*" >&2; }
 
-ISO_NAME="nyx-2026.05.11-x86_64.iso"
+# ── ISO version (auto-dated) ─────────────────────────────────────────────
+# Default = today's date in YYYY.MM.DD; override with NYX_ISO_DATE env var
+# for deterministic re-bakes (e.g. NYX_ISO_DATE=2026.05.11 sudo ./build-iso.sh).
+ISO_DATE="${NYX_ISO_DATE:-$(date +%Y.%m.%d)}"
+ISO_NAME="nyx-${ISO_DATE}-x86_64.iso"
+
 TARBALL_URL="https://nyxus-core.replit.app/api/download/nyxus/nyxus-intel.tgz"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROFILE_DIR="${SCRIPT_DIR}/nyx-profile"
@@ -47,6 +52,20 @@ if [[ ! -f /etc/arch-release ]]; then
   fail "this script must run on Arch Linux (mkarchiso requires it)"; exit 1
 fi
 ok "running on Arch as root with mkarchiso available"
+ok "iso version: ${ISO_DATE} → ${ISO_NAME}"
+
+# ── stamp version into profiledef.sh + os-release ────────────────────────
+# Keep the date in a single place (this script). At every bake we rewrite
+# the iso_version in profiledef.sh (consumed by mkarchiso for ISO metadata)
+# and BUILD_ID in airootfs/etc/os-release (visible inside the live system)
+# so they always match ISO_NAME. No more "is this last week's bake?" drift.
+step "stamp iso version into profile metadata"
+PROFILEDEF="${PROFILE_DIR}/profiledef.sh"
+OSRELEASE="${PROFILE_DIR}/airootfs/etc/os-release"
+sed -i -E "s/^iso_version=\".*\"/iso_version=\"${ISO_DATE}\"/" "${PROFILEDEF}"
+sed -i -E "s/^BUILD_ID=nyx-[0-9]+\.[0-9]+\.[0-9]+-x86_64/BUILD_ID=nyx-${ISO_DATE}-x86_64/" "${OSRELEASE}"
+ok "stamped profiledef.sh   → iso_version=\"$(grep -oP '(?<=^iso_version=")[^"]+' "${PROFILEDEF}")\""
+ok "stamped os-release      → $(grep -oP '^BUILD_ID=\S+' "${OSRELEASE}")"
 
 # ── pull NYXUS Phantom tarball ───────────────────────────────────────────
 step "fetch latest NYXUS Phantom (nyxus-intel.tgz)"
