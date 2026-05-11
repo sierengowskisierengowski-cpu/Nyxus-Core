@@ -209,6 +209,25 @@ cups-pdf
 system-config-printer
 v4l-utils
 
+# ── Biometric + hardware-token authentication ───────────────────
+# fprintd  → fingerprint daemon (libfprint backend; works with most
+#            laptop fingerprint sensors out of the box).
+# pam-u2f  → PAM module for FIDO2/U2F hardware tokens (YubiKey).
+# libfido2 → FIDO2 support library used by pam-u2f + ykman.
+# yubikey-manager → CLI to register/program YubiKeys.
+# pamtester → diagnostic tool, useful when wiring this stack up.
+# python-opencv + python-dlib are runtime deps for `howdy` face auth
+# (built from AUR by customize_airootfs.sh, since howdy is AUR-only).
+fprintd
+libfprint
+pam-u2f
+libfido2
+yubikey-manager
+pamtester
+python-opencv
+python-dlib
+v4l2loopback-dkms
+
 # ── Gaming stack (multilib) ─────────────────────────────────────
 gamemode
 lib32-gamemode

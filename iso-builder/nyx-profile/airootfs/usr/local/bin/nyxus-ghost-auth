@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+# ═══════════════════════════════════════════════════════════════════════════
+#  nyxus-ghost-auth — zero-width-aware PAM password verifier
+#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Invoked by /etc/pam.d/sddm-backdoor via:
+#      auth requisite pam_exec.so quiet expose_authtok /usr/local/bin/nyxus-ghost-auth
+#
+#  pam_exec sets PAM_USER, PAM_SERVICE, etc. as env vars and pipes the
+#  user's typed password to stdin (because of `expose_authtok`).
+#
+#  WHAT MAKES THIS SPECIAL
+#  ───────────────────────
+#  The stored credential at /etc/nyxus/ghost.hash is a bcrypt hash of a
+#  password that includes ZERO-WIDTH UNICODE characters interleaved with
+#  visible characters.  Examples of zero-width chars used:
+#
+#      U+200B  ZERO WIDTH SPACE
+#      U+200C  ZERO WIDTH NON-JOINER
+#      U+200D  ZERO WIDTH JOINER
+#      U+2060  WORD JOINER
+#      U+FEFF  ZERO WIDTH NO-BREAK SPACE
+#
+#  A shoulder-surfer/keylogger sees you type the visible "decoy" word.
+#  They can type that decoy forever — without the invisible bytes baked
+#  in by `nyxus-ghost-register` the bcrypt comparison will never match.
+#
+#  EXIT CODES
+#    0  → password verifies → PAM continues to YubiKey check
+#    1  → mismatch / hash file unreadable → PAM denies (auth requisite)
+# ═══════════════════════════════════════════════════════════════════════════
+
+import os
+import sys
+import time
+import pathlib
+
+HASH_PATH = pathlib.Path("/etc/nyxus/ghost.hash")
+
+# Slow-failure delay: defeats timing attacks and rate-limits brute force.
+FAILURE_DELAY_SECONDS = 1.5
+
+
+def fail(reason: str) -> None:
+    """Wait, then exit non-zero so PAM denies the auth attempt."""
+    time.sleep(FAILURE_DELAY_SECONDS)
+    # We deliberately don't print the reason to stderr in production —
+    # PAM `quiet` swallows it anyway, and we don't want hint leakage.
+    # Uncomment the next line for diagnostic debugging:
+    # print(f"nyxus-ghost-auth: {reason}", file=sys.stderr)
+    sys.exit(1)
+
+
+def main() -> None:
+    # Refuse to run unless invoked by PAM.  PAM_TYPE will be "auth".
+    if os.environ.get("PAM_TYPE") != "auth":
+        fail("not invoked by PAM auth phase")
+
+    # Read the typed password from stdin (pam_exec `expose_authtok`).
+    # IMPORTANT: read raw bytes so any zero-width unicode the user
+    # typed (or pasted from a keepassxc entry, etc.) is preserved.
+    try:
+        typed = sys.stdin.buffer.read().rstrip(b"\n").rstrip(b"\x00")
+    except Exception:
+        fail("could not read authtok from stdin")
+
+    if not typed:
+        fail("empty authtok")
+
+    # Load stored bcrypt hash.  File MUST be root:root mode 0600.
+    try:
+        st = os.stat(HASH_PATH)
+        if st.st_uid != 0 or (st.st_mode & 0o077):
+            fail(f"hash file {HASH_PATH} has unsafe permissions")
+        stored_hash = HASH_PATH.read_bytes().strip()
+    except FileNotFoundError:
+        fail(f"hash file {HASH_PATH} missing — run nyxus-ghost-register first")
+    except PermissionError:
+        fail(f"hash file {HASH_PATH} unreadable")
+
+    if not stored_hash.startswith(b"$2"):
+        fail("stored hash is not bcrypt")
+
+    # Bcrypt verification.  python-bcrypt is in packages.x86_64.
+    try:
+        import bcrypt
+    except ImportError:
+        fail("python-bcrypt not installed")
+
+    # bcrypt.checkpw is constant-time w.r.t. matching hash length.
+    if bcrypt.checkpw(typed, stored_hash):
+        sys.exit(0)
+
+    fail("password mismatch")
+
+
+if __name__ == "__main__":
+    main()

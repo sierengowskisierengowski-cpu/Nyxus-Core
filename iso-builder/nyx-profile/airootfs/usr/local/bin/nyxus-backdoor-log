@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# ═══════════════════════════════════════════════════════════════════════════
+#  nyxus-backdoor-log — audit logger for the SDDM backdoor PAM stack
+#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Invoked by /etc/pam.d/sddm-backdoor as the LAST `auth` step
+#  (optional, so it never blocks auth itself).  Records every backdoor
+#  attempt, successful or not, to /var/log/nyxus/backdoor.log.
+#
+#  PAM exposes the result via PAM_USER (always set) and the fact that
+#  this script is reached at all (only if requisite + required passed).
+# ═══════════════════════════════════════════════════════════════════════════
+set -u
+
+LOG_DIR="/var/log/nyxus"
+LOG_FILE="${LOG_DIR}/backdoor.log"
+
+mkdir -p "${LOG_DIR}"
+chmod 700 "${LOG_DIR}"
+[ -e "${LOG_FILE}" ] || { touch "${LOG_FILE}"; chmod 600 "${LOG_FILE}"; }
+
+ts="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+user="${PAM_USER:-?}"
+service="${PAM_SERVICE:-?}"
+tty="${PAM_TTY:-?}"
+rhost="${PAM_RHOST:-local}"
+
+printf '%s  service=%s  user=%s  tty=%s  rhost=%s  result=GRANTED\n' \
+    "$ts" "$service" "$user" "$tty" "$rhost" >> "${LOG_FILE}"
+
+exit 0

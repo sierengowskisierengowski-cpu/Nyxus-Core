@@ -1,0 +1,22 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  PAM stack for hyprlock (NYXUS · DARK MIRROR)
+#
+#  Tries authentication methods in order, succeeding on the first one that
+#  works.  No method is required — any single one unlocks the screen.
+#
+#    1. fprintd  — fingerprint sensor (sufficient: skip rest on success)
+#    2. howdy    — IR-camera face match (sufficient: skip rest on success)
+#    3. unix     — system passphrase (the always-available fallback)
+#
+#  All three are wired through the standard `system-auth` chain for
+#  account/password/session, so successful unlock honours system policy
+#  (account expiry, locked accounts, etc.) the same way `login` does.
+# ═══════════════════════════════════════════════════════════════════════════
+
+auth      sufficient   pam_fprintd.so
+auth      sufficient   pam_python.so /lib/security/howdy/pam.py
+auth      include      system-auth
+
+account   include      system-auth
+password  include      system-auth
+session   include      system-auth

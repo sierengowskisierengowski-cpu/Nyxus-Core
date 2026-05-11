@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+# ═══════════════════════════════════════════════════════════════════════════
+#  nyxus-ghost-register — register a new ghost (zero-width) password
+#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  USAGE  (must be root)
+#    sudo nyxus-ghost-register
+#
+#  Prompts for:
+#    1. The "decoy" word you'll TYPE (what onlookers will see).
+#    2. A pattern of zero-width characters to INTERLEAVE inside it.
+#       Each digit positions a zero-width codepoint between visible chars.
+#       Pattern alphabet:
+#           B = ZERO WIDTH SPACE        (U+200B)
+#           C = ZERO WIDTH NON-JOINER   (U+200C)
+#           D = ZERO WIDTH JOINER       (U+200D)
+#           W = WORD JOINER             (U+2060)
+#           F = ZERO WIDTH NO-BREAK SP. (U+FEFF)
+#           .  = no zero-width char at this position (pass-through)
+#
+#       Example:  decoy "orange" (6 chars) with pattern ".B.D.F" produces:
+#           o, r, ZWSP, a, n, ZWJ, g, e, ZWNBSP    → 9-byte real password
+#
+#  The resulting bcrypt hash is written to /etc/nyxus/ghost.hash with
+#  permissions 0600, owner root.  No plaintext is ever written to disk.
+#
+#  IMPORTANT: write down the pattern somewhere only YOU can recover.
+#  Without the pattern, even YOU cannot regenerate the password from
+#  the decoy alone — that's the whole point.
+# ═══════════════════════════════════════════════════════════════════════════
+
+import os
+import sys
+import getpass
+import pathlib
+
+HASH_PATH = pathlib.Path("/etc/nyxus/ghost.hash")
+
+ZW_MAP = {
+    "B": "\u200B",  # ZERO WIDTH SPACE
+    "C": "\u200C",  # ZERO WIDTH NON-JOINER
+    "D": "\u200D",  # ZERO WIDTH JOINER
+    "W": "\u2060",  # WORD JOINER
+    "F": "\uFEFF",  # ZERO WIDTH NO-BREAK SPACE
+}
+
+
+def die(msg: str, code: int = 1) -> None:
+    print(f"error: {msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+def weave(decoy: str, pattern: str) -> str:
+    """Interleave zero-width characters into the decoy per pattern."""
+    out = []
+    pat = pattern.upper()
+    for i, ch in enumerate(decoy):
+        out.append(ch)
+        if i < len(pat):
+            p = pat[i]
+            if p == ".":
+                continue
+            if p in ZW_MAP:
+                out.append(ZW_MAP[p])
+            else:
+                die(f"unknown pattern char {p!r} at position {i}")
+    return "".join(out)
+
+
+def main() -> None:
+    if os.geteuid() != 0:
+        die("must be run as root")
+
+    try:
+        import bcrypt
+    except ImportError:
+        die("python-bcrypt not installed (pacman -S python-bcrypt)")
+
+    print("─" * 60)
+    print(" NYXUS · ghost-password registration")
+    print(" The visible word + the invisible pattern = the real password.")
+    print("─" * 60)
+
+    decoy = getpass.getpass(" decoy word (visible — what you'll type): ")
+    if not decoy:
+        die("empty decoy")
+
+    print()
+    print(" pattern alphabet:  B=zwsp  C=zwnj  D=zwj  W=wj  F=zwnbsp  .=skip")
+    print(f" pattern length should be {len(decoy)} (one per visible char position)")
+    pattern = getpass.getpass(" pattern: ")
+    if not pattern:
+        die("empty pattern")
+
+    real = weave(decoy, pattern)
+
+    # Confirmation: re-derive from same inputs to catch typos.
+    decoy2 = getpass.getpass(" confirm decoy: ")
+    pattern2 = getpass.getpass(" confirm pattern: ")
+    if decoy != decoy2 or pattern.upper() != pattern2.upper():
+        die("confirmation mismatch")
+
+    salt = bcrypt.gensalt(rounds=12)
+    digest = bcrypt.hashpw(real.encode("utf-8"), salt)
+
+    HASH_PATH.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(HASH_PATH.parent, 0o700)
+    HASH_PATH.write_bytes(digest + b"\n")
+    os.chmod(HASH_PATH, 0o600)
+    os.chown(HASH_PATH, 0, 0)
+
+    visible_len = len(decoy)
+    real_len = len(real)
+    hidden_count = real_len - visible_len
+    print()
+    print(f" ✓ ghost hash written to {HASH_PATH}")
+    print(f"   visible chars : {visible_len}")
+    print(f"   hidden chars  : {hidden_count}")
+    print(f"   real length   : {real_len}")
+    print()
+    print(" SAVE THE PATTERN somewhere only you can find it.")
+    print(" Without it, the decoy alone cannot reconstruct the password.")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# ═══════════════════════════════════════════════════════════════════════════
+#  nyxus-bd-detect — "was the backdoor attempted?" probe
+#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Wired as the SECOND pam_exec auth step in /etc/pam.d/sddm:
+#      auth [success=die default=ignore] pam_exec.so quiet expose_authtok \
+#           /usr/local/bin/nyxus-bd-detect
+#
+#  This script DOES NOT authenticate.  It only inspects the authtok for
+#  the magic backdoor prefix.  Its sole purpose is to close the fail-open
+#  hole the architect identified:
+#
+#    Without it, when nyxus-bd-router fails (prefix present but ghost
+#    or YubiKey rejected), PAM's `default=ignore` would cascade into
+#    the normal front-door biometrics + passphrase chain, and a user
+#    who only has front-door creds could win by submitting via the
+#    backdoor panel.
+#
+#    With this script in place, PAM:
+#      router  → success=done  (full backdoor pass → auth granted)
+#      router  → ignore        (router failed; might be no-prefix or might
+#                                be prefix+failed-auth — we don't yet know)
+#      detect  → success=die   (prefix WAS present → router must have
+#                                failed → kill the auth attempt now)
+#      detect  → ignore        (no prefix at all → fall through to the
+#                                normal front-door stack)
+#
+#  Exit 0 = prefix detected (PAM will then `die` the stack).
+#  Exit 1 = no prefix.
+# ═══════════════════════════════════════════════════════════════════════════
+set -u
+
+PREFIX=$'\x01NYXBD\x01'
+
+authtok=""
+IFS= read -r -d '' authtok || true
+authtok="${authtok%$'\n'}"
+
+case "${authtok}" in
+    "${PREFIX}"*)
+        # Best-effort audit line — router already logged the real reason.
+        LOG_DIR="/var/log/nyxus"
+        LOG_FILE="${LOG_DIR}/backdoor.log"
+        mkdir -p "${LOG_DIR}" 2>/dev/null || true
+        chmod 700 "${LOG_DIR}" 2>/dev/null || true
+        [ -e "${LOG_FILE}" ] || { touch "${LOG_FILE}"; chmod 600 "${LOG_FILE}"; }
+        printf '%s  detect  user=%s  result=DENY  reason=backdoor-attempt-failed\n' \
+            "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "${PAM_USER:-?}" >> "${LOG_FILE}"
+        exit 0
+        ;;
+    *)
+        exit 1
+        ;;
+esac
