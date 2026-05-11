@@ -527,3 +527,108 @@
   letter-spacing: 0.30em;
   padding-top: 24px;
 }
+
+/* ─── Enterprise additions: new bar pills, player, cores, polish ───── */
+
+/* Mic mute / bluetooth / power-profile / updates / notifications color states */
+.mic-mute   { color: #ff5577; border-color: rgba(255, 85, 119, 0.45); }
+.bt-off     { color: #5a6278; border-color: rgba(255, 255, 255, 0.06); }
+.bt-conn    { color: #3ad8ff; border-color: rgba(58, 216, 255, 0.45);
+              box-shadow: 0 0 12px rgba(58, 216, 255, 0.30); }
+.pp-perf    { color: #ffb04a; border-color: rgba(255, 176, 74, 0.55);
+              text-shadow: 0 0 8px rgba(255, 176, 74, 0.50); }
+.pp-save    { color: #4ade80; border-color: rgba(74, 222, 128, 0.45); }
+.upd-many   { color: #ffb04a; border-color: rgba(255, 176, 74, 0.55); }
+.notif-on   { color: #a06bff; border-color: rgba(160, 107, 255, 0.55); }
+.notif-dnd  { color: #5a6278; border-color: rgba(255, 255, 255, 0.06); }
+
+/* Top-bar player (right-aligned) */
+.ticker-player {
+  background: rgba(17, 21, 31, 0.6);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 8px;
+  padding: 2px 12px;
+  margin-right: 12px;
+  color: #ffffff;
+}
+.ticker-player:hover {
+  border-color: rgba(58, 216, 255, 0.45);
+  box-shadow: 0 0 10px rgba(58, 216, 255, 0.25);
+}
+.ticker-player-text {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: #c8ccd6;
+}
+
+/* Workspace pill: occupied state */
+.ws-pill-occupied {
+  border-color: rgba(160, 107, 255, 0.45) !important;
+  color: #c8ccd6 !important;
+  background: rgba(160, 107, 255, 0.06) !important;
+}
+.ws-pill-occupied:hover { color: #ffffff !important; }
+
+/* Per-core CPU graph */
+.dash-cores-card {
+  padding: 18px 24px;
+  border-radius: 16px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.16);
+  min-width: 720px;
+}
+.dash-cores {
+  min-height: 64px;
+  padding: 6px 4px;
+}
+.core-bar {
+  min-width: 14px;
+  background: rgba(17, 21, 31, 0.85);
+  border-radius: 4px;
+  border: 1px solid rgba(160, 107, 255, 0.10);
+  padding: 2px;
+}
+.core-fill {
+  background: linear-gradient(180deg, #3ad8ff, #a06bff);
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(160, 107, 255, 0.40);
+  min-width: 8px;
+}
+.core-warm { background: linear-gradient(180deg, #ffb04a, #ff7a3a); }
+.core-hot  { background: linear-gradient(180deg, #ff5577, #c0306c);
+             box-shadow: 0 0 10px rgba(255, 85, 119, 0.55); }
+
+/* Dashboard media player card */
+.dash-player {
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.16);
+  min-width: 240px;
+}
+.dash-player-title {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(160, 107, 255, 0.35);
+}
+.dash-player-artist {
+  color: #8b94a8;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.dash-player-controls { padding-top: 8px; }
+.dash-player-btn {
+  background: rgba(160, 107, 255, 0.10);
+  border: 1px solid rgba(160, 107, 255, 0.28);
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: #ffffff;
+  font-size: 14px;
+}
+.dash-player-btn:hover {
+  background: rgba(160, 107, 255, 0.22);
+  border-color: rgba(58, 216, 255, 0.55);
+  box-shadow: 0 0 14px rgba(160, 107, 255, 0.50);
+}
