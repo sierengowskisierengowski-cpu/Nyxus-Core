@@ -4,34 +4,57 @@
 # ║  Lives at: /usr/local/bin/nyxus-eww-launch                           ║
 # ║                                                                      ║
 # ║  Waits for the eww IPC socket to appear (daemon up), then opens the  ║
-# ║  four bars. Closing first guards against duplicate windows on        ║
+# ║  configured bars. Closing first guards against duplicate windows on  ║
 # ║  Hyprland config-reload.                                             ║
 # ║                                                                      ║
-# ║  Timeout uses WALL-CLOCK seconds (not loop counts), so a slow first  ║
-# ║  boot doesn't trip a false timeout.                                  ║
+# ║  Reads ~/.config/eww/nyxus.conf for:                                 ║
+# ║    NYXUS_EWW_BARS      — space-separated subset to open              ║
+# ║    NYXUS_EWW_TIMEOUT   — wall-clock socket-wait timeout (s)          ║
+# ║    NYXUS_EWW_LOG_DIR   — log destination                             ║
 # ║                                                                      ║
 # ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 set -u
 
-SOCK="${XDG_RUNTIME_DIR:-/tmp}/eww-server_default"
-TIMEOUT_SECS="${NYXUS_EWW_TIMEOUT:-30}"
-deadline=$(( $(date +%s) + TIMEOUT_SECS ))
+CONF="${HOME}/.config/eww/nyxus.conf"
+[[ -r "$CONF" ]] && . "$CONF"
 
+BARS="${NYXUS_EWW_BARS:-bar-bottom bar-top bar-left bar-right}"
+TIMEOUT_SECS="${NYXUS_EWW_TIMEOUT:-30}"
+LOG_DIR="${NYXUS_EWW_LOG_DIR:-$HOME/.cache/nyxus-eww}"
+mkdir -p "$LOG_DIR"
+LOG="${LOG_DIR}/launch.log"
+
+ts() { date '+%F %T'; }
+log() { printf '[%s] %s\n' "$(ts)" "$*" >> "$LOG"; }
+
+log "launch start — bars=[${BARS}] timeout=${TIMEOUT_SECS}s"
+
+SOCK="${XDG_RUNTIME_DIR:-/tmp}/eww-server_default"
+deadline=$(( $(date +%s) + TIMEOUT_SECS ))
 while [[ ! -S "$SOCK" ]]; do
   if [[ $(date +%s) -ge $deadline ]]; then
+    log "ERROR — daemon socket ${SOCK} never appeared after ${TIMEOUT_SECS}s"
     notify-send -u critical "NYXUS EWW" \
       "Daemon socket never appeared after ${TIMEOUT_SECS}s — bars not started." 2>/dev/null || true
     exit 1
   fi
   sleep 0.3
 done
+log "socket ready · ${SOCK}"
 
-# Close any pre-existing windows from a prior session, then open fresh.
-eww close-all 2>/dev/null || true
+eww close-all 2>/dev/null && log "closed pre-existing windows"
 sleep 0.2
 
-eww open bar-bottom
-eww open bar-top
-eww open bar-left
-eww open bar-right
+failed=0
+for bar in $BARS; do
+  if eww open "$bar" 2>>"$LOG"; then
+    log "opened · ${bar}"
+  else
+    log "ERROR opening · ${bar}"
+    failed=$((failed + 1))
+  fi
+done
+
+log "launch complete — ${failed} failure(s)"
+exit "$failed"

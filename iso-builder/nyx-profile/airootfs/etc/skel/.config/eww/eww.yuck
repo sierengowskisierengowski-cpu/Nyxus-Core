@@ -3,14 +3,18 @@
 ;; © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 ;;
 ;; Layout:
-;;   bar-bottom  — main bar (start, workspaces icon, tray, clock, audio,
-;;                 net, battery, powermenu)
-;;   bar-top     — live ticker marquee (left-scrolling) + system stats
-;;   bar-left    — vertical workspace pills 1..6
-;;   bar-right   — quick-launch app rail
-;;   dashboard   — full-screen overlay (clock click) — clock, calendar,
-;;                 weather, system stats, quick toggles
-;;   powermenu   — full-screen overlay ($mod+Escape) — lock/logout/etc.
+;;   bar-bottom       — main bar (start, tray, clock, audio, net, batt, power)
+;;   bar-top          — live ticker marquee + system stats
+;;   bar-left         — vertical workspace pills 1..6
+;;   bar-right        — quick-launch app rail
+;;   dashboard        — full-screen overlay (clock click / $mod+grave) —
+;;                      clock, calendar, weather, system stats, quick toggles,
+;;                      sliders (volume + brightness)
+;;   powermenu        — full-screen overlay ($mod+Escape)
+;;   cheatsheet       — full-screen overlay ($mod+slash) — keybind reference
+;;   osd-volume       — transient volume pop-up (1.5s)
+;;   osd-brightness   — transient brightness pop-up (1.5s)
+;;   screensaver      — fullscreen idle overlay (triggered by hypridle)
 ;; ─────────────────────────────────────────────────────────────────────
 
 ;; ── poll variables ────────────────────────────────────────────────────
@@ -23,9 +27,10 @@
 (defpoll BACKLIGHT  :interval "5s"   "~/.config/eww/scripts/brightness.sh")
 (defpoll WORKSPACES :interval "1s"   "~/.config/eww/scripts/workspaces.sh")
 (defpoll WEATHER    :interval "900s" "~/.config/eww/scripts/weather.sh")
+(defpoll CALENDAR   :interval "60s"  "~/.config/eww/scripts/calendar.sh")
 
 ;; ═════════════════════════════════════════════════════════════════════
-;; WIDGETS
+;; CORE BAR WIDGETS
 ;; ═════════════════════════════════════════════════════════════════════
 
 (defwidget nyxus_brand []
@@ -73,8 +78,8 @@
 
 (defwidget brightness_widget []
   (button :class "pill"
-          :onclick "brightnessctl set +10% &"
-          :onrightclick "brightnessctl set 10%- &"
+          :onclick "brightnessctl set +10% && ~/.config/eww/scripts/osd-show.sh osd-brightness &"
+          :onrightclick "brightnessctl set 10%- && ~/.config/eww/scripts/osd-show.sh osd-brightness &"
           :tooltip "Brightness ${BACKLIGHT.percent}%"
     "☼  ${BACKLIGHT.percent}%"))
 
@@ -86,9 +91,8 @@
 
 (defwidget tray_dummy []
   (label :class "tray-dummy" :text "·  ·  ·"
-         :tooltip "Tray placeholder — wire to ironbar/nwg-tray once chosen"))
+         :tooltip "Tray placeholder"))
 
-;; ── ticker (top bar marquee) ──────────────────────────────────────────
 (defwidget ticker_widget []
   (box :class "ticker-box" :space-evenly false :hexpand true
     (label :class "ticker"
@@ -96,15 +100,13 @@
            :text "${TICKER.text}"
            :tooltip "${TICKER.tooltip}")))
 
-;; ── workspace rail (left bar) ─────────────────────────────────────────
 (defwidget workspace_pill [id active]
   (button :class {active ? "ws-pill ws-pill-active" : "ws-pill"}
           :onclick "hyprctl dispatch workspace ${id}"
     "${id}"))
 
 (defwidget workspaces_rail []
-  (box :class "ws-rail" :orientation "v" :space-evenly false :spacing 8
-       :valign "center"
+  (box :class "ws-rail" :orientation "v" :space-evenly false :spacing 8 :valign "center"
     (workspace_pill :id 1 :active {WORKSPACES.active == 1})
     (workspace_pill :id 2 :active {WORKSPACES.active == 2})
     (workspace_pill :id 3 :active {WORKSPACES.active == 3})
@@ -112,79 +114,101 @@
     (workspace_pill :id 5 :active {WORKSPACES.active == 5})
     (workspace_pill :id 6 :active {WORKSPACES.active == 6})))
 
-;; ── app launcher rail (right bar) ─────────────────────────────────────
 (defwidget app_launcher [glyph cmd label]
   (button :class "app-pill" :onclick "${cmd} &" :tooltip "${label}" "${glyph}"))
 
 (defwidget app_rail []
-  (box :class "app-rail" :orientation "v" :space-evenly false :spacing 10
-       :valign "center"
-    (app_launcher :glyph "" :cmd "alacritty"          :label "Terminal")
-    (app_launcher :glyph "" :cmd "firefox"            :label "Firefox")
-    (app_launcher :glyph "" :cmd "nautilus"           :label "Files")
-    (app_launcher :glyph "" :cmd "nyxus-sysmon"       :label "SysMon")
-    (app_launcher :glyph "" :cmd "nyxus-notepad"      :label "Notepad")
-    (app_launcher :glyph "" :cmd "nyxus-stickies"     :label "Stickies")
-    (app_launcher :glyph "" :cmd "pavucontrol"        :label "Audio")))
+  (box :class "app-rail" :orientation "v" :space-evenly false :spacing 10 :valign "center"
+    (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal")
+    (app_launcher :glyph "" :cmd "firefox"        :label "Firefox")
+    (app_launcher :glyph "" :cmd "nautilus"       :label "Files")
+    (app_launcher :glyph "" :cmd "nyxus-sysmon"   :label "SysMon")
+    (app_launcher :glyph "" :cmd "nyxus-notepad"  :label "Notepad")
+    (app_launcher :glyph "" :cmd "nyxus-stickies" :label "Stickies")
+    (app_launcher :glyph "" :cmd "pavucontrol"    :label "Audio")))
 
 ;; ═════════════════════════════════════════════════════════════════════
-;; LAYOUTS — top-level widgets per window
+;; BARS
 ;; ═════════════════════════════════════════════════════════════════════
 
 (defwidget bar_bottom_layout []
   (centerbox :class "bar bar-bottom" :orientation "h"
     (box :class "bar-cluster cluster-left" :space-evenly false :spacing 12 :halign "start"
-      (nyxus_brand)
-      (heartbeat))
+      (nyxus_brand) (heartbeat))
     (box :class "bar-cluster cluster-center" :space-evenly false :spacing 14 :halign "center"
-      (syspulse_widget)
-      (tray_dummy)
-      (clock_widget))
+      (syspulse_widget) (tray_dummy) (clock_widget))
     (box :class "bar-cluster cluster-right" :space-evenly false :spacing 8 :halign "end"
-      (brightness_widget)
-      (audio_widget)
-      (net_widget)
-      (battery_widget)
-      (power_button))))
+      (brightness_widget) (audio_widget) (net_widget) (battery_widget) (power_button))))
 
 (defwidget bar_top_layout []
   (box :class "bar bar-top" :space-evenly false :spacing 12 :hexpand true
     (label :class "ticker-label" :text "▌ NYXUS · LIVE")
     (ticker_widget)))
 
-;; ── dashboard (full-screen overlay) ───────────────────────────────────
+;; ═════════════════════════════════════════════════════════════════════
+;; DASHBOARD — replaces nyxus_quicksettings + nyxus_clock + nyxus_calendar
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget dash_quick_toggle [glyph label cmd]
+  (button :class "dash-toggle" :onclick "(${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 6 :halign "center"
+      (label :class "dash-toggle-glyph" :text "${glyph}")
+      (label :class "dash-toggle-label" :text "${label}"))))
+
 (defwidget dashboard_layout []
   (box :class "dashboard-root" :orientation "v" :halign "center" :valign "center"
-       :space-evenly false :spacing 24
+       :space-evenly false :spacing 22
+    ;; ── top: clock + date ─────────────────────────────────────────────
     (label :class "dash-clock" :text "${TIME.hm}")
     (label :class "dash-date"  :text "${TIME.long}")
-    (box :class "dash-grid" :orientation "h" :space-evenly true :spacing 24
-      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 10
+
+    ;; ── upper grid: weather / system / power / calendar ──────────────
+    (box :class "dash-grid" :orientation "h" :space-evenly true :spacing 18
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
         (label :class "dash-card-title" :text "WEATHER")
         (label :class "dash-card-big"   :text "${WEATHER.temp}")
         (label :class "dash-card-sub"   :text "${WEATHER.summary}"))
-      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 10
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
         (label :class "dash-card-title" :text "SYSTEM")
         (label :class "dash-card-big"   :text "${SYSPULSE.cpu}% · ${SYSPULSE.mem}%")
         (label :class "dash-card-sub"   :text "CPU · MEM · ${SYSPULSE.temp}°C"))
-      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 10
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
         (label :class "dash-card-title" :text "POWER")
         (label :class "dash-card-big"   :text "${BATTERY.capacity}%")
-        (label :class "dash-card-sub"   :text "${BATTERY.status}")))
-    (box :class "dash-toggles" :orientation "h" :space-evenly true :spacing 16
-      (button :class "dash-toggle" :onclick "alacritty -e nmtui &"
-              "Network")
-      (button :class "dash-toggle" :onclick "blueman-manager &"
-              "Bluetooth")
-      (button :class "dash-toggle" :onclick "pavucontrol &"
-              "Audio")
-      (button :class "dash-toggle" :onclick "wdisplays &"
-              "Displays")
-      (button :class "dash-toggle" :onclick "eww close dashboard && hyprlock &"
-              "Lock"))
+        (label :class "dash-card-sub"   :text "${BATTERY.status}"))
+      (box :class "dash-card dash-card-cal" :orientation "v" :space-evenly false :spacing 6
+        (label :class "dash-card-title" :text "${CALENDAR.month}")
+        (label :class "dash-cal-grid" :text "${CALENDAR.grid}"
+               :tooltip "Calendar · system locale")))
+
+    ;; ── sliders ──────────────────────────────────────────────────────
+    (box :class "dash-sliders" :orientation "v" :space-evenly false :spacing 10
+      (box :class "dash-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "dash-slider-label" :text "VOL")
+        (scale :class "dash-scale"
+               :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
+      (box :class "dash-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "dash-slider-label" :text "BRT")
+        (scale :class "dash-scale"
+               :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+               :onchange "brightnessctl set {}%")))
+
+    ;; ── quick toggles ────────────────────────────────────────────────
+    (box :class "dash-toggles" :orientation "h" :space-evenly true :spacing 14
+      (dash_quick_toggle :glyph "📶" :label "Network"   :cmd "alacritty -e nmtui")
+      (dash_quick_toggle :glyph "" :label "Bluetooth" :cmd "blueman-manager")
+      (dash_quick_toggle :glyph "" :label "Audio"     :cmd "pavucontrol")
+      (dash_quick_toggle :glyph "🖥" :label "Displays"  :cmd "wdisplays")
+      (dash_quick_toggle :glyph "🔒" :label "Lock"      :cmd "eww close dashboard && hyprlock")
+      (dash_quick_toggle :glyph "?"  :label "Keys"     :cmd "eww close dashboard && eww open --toggle cheatsheet"))
+
     (button :class "dash-close" :onclick "eww close dashboard" "Close (Esc)")))
 
-;; ── powermenu (full-screen overlay) ───────────────────────────────────
+;; ═════════════════════════════════════════════════════════════════════
+;; POWERMENU — replaces nyxus_powermenu
+;; ═════════════════════════════════════════════════════════════════════
+
 (defwidget power_btn [glyph label cmd]
   (button :class "power-btn"
           :onclick "eww close powermenu && (${cmd}) &"
@@ -205,51 +229,127 @@
     (button :class "power-cancel" :onclick "eww close powermenu" "Cancel (Esc)")))
 
 ;; ═════════════════════════════════════════════════════════════════════
+;; CHEATSHEET — replaces nyxus_cheatsheet
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget cheatkey [chord action]
+  (box :class "cheat-row" :orientation "h" :space-evenly false :spacing 18
+    (label :class "cheat-chord"  :text "${chord}")
+    (label :class "cheat-action" :text "${action}")))
+
+(defwidget cheatsheet_layout []
+  (box :class "cheatsheet-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 20
+    (label :class "cheat-title" :text "NYXUS · KEY MAP")
+    (box :class "cheat-cols" :orientation "h" :space-evenly true :spacing 40
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "WINDOW")
+        (cheatkey :chord "Super + Q"        :action "Close window")
+        (cheatkey :chord "Super + V"        :action "Toggle floating")
+        (cheatkey :chord "Super + F"        :action "Fullscreen")
+        (cheatkey :chord "Super + T"        :action "Toggle split")
+        (cheatkey :chord "Super + ←/→/↑/↓"  :action "Move focus")
+        (cheatkey :chord "Super + 1..9"     :action "Switch workspace"))
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "LAUNCH")
+        (cheatkey :chord "Super + Space"    :action "App launcher")
+        (cheatkey :chord "Super + D"        :action "Rofi drun")
+        (cheatkey :chord "Super + Return"   :action "Terminal")
+        (cheatkey :chord "Super + B"        :action "Firefox")
+        (cheatkey :chord "Super + E"        :action "File manager")
+        (cheatkey :chord "Super + Tab"      :action "Window switcher"))
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "SYSTEM")
+        (cheatkey :chord "Super + L"        :action "Lock screen")
+        (cheatkey :chord "Super + Escape"   :action "Power menu")
+        (cheatkey :chord "Super + ` "       :action "Dashboard")
+        (cheatkey :chord "Super + /"        :action "This cheatsheet")
+        (cheatkey :chord "Print"            :action "Screenshot region")
+        (cheatkey :chord "Super + Shift + W":action "Screenshot region (alt)")))
+    (button :class "cheat-close" :onclick "eww close cheatsheet" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; OSD — volume + brightness transient pop-ups
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget osd_volume_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+       :halign "center" :valign "center"
+    (label :class "osd-glyph" :text "${AUDIO.icon}")
+    (box :orientation "v" :space-evenly false :spacing 6 :hexpand true
+      (label :class "osd-label" :text "VOLUME · ${AUDIO.vol}%")
+      (scale :class "osd-bar" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true :active false))))
+
+(defwidget osd_brightness_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+       :halign "center" :valign "center"
+    (label :class "osd-glyph" :text "☼")
+    (box :orientation "v" :space-evenly false :spacing 6 :hexpand true
+      (label :class "osd-label" :text "BRIGHTNESS · ${BACKLIGHT.percent}%")
+      (scale :class "osd-bar" :value "${BACKLIGHT.percent}" :min 0 :max 100 :hexpand true :active false))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SCREENSAVER — fullscreen idle overlay (triggered by hypridle)
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget screensaver_layout []
+  (box :class "saver-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 28
+    (label :class "saver-clock" :text "${TIME.hm}")
+    (label :class "saver-date"  :text "${TIME.long}")
+    (label :class "saver-brand" :text "NYXUS · DARK MIRROR")
+    (label :class "saver-hint"  :text "move mouse · press any key")))
+
+;; ═════════════════════════════════════════════════════════════════════
 ;; WINDOWS
 ;; ═════════════════════════════════════════════════════════════════════
 
 (defwindow bar-bottom
-  :monitor 0
-  :stacking "fg"
-  :exclusive true
-  :geometry (geometry :x "0" :y "12" :width "98%" :height "56px"
-                      :anchor "bottom center")
+  :monitor 0 :stacking "fg" :exclusive true
+  :geometry (geometry :x "0" :y "12" :width "98%" :height "56px" :anchor "bottom center")
   (bar_bottom_layout))
 
 (defwindow bar-top
-  :monitor 0
-  :stacking "fg"
-  :exclusive true
-  :geometry (geometry :x "0" :y "0" :width "100%" :height "32px"
-                      :anchor "top center")
+  :monitor 0 :stacking "fg" :exclusive true
+  :geometry (geometry :x "0" :y "0" :width "100%" :height "32px" :anchor "top center")
   (bar_top_layout))
 
 (defwindow bar-left
-  :monitor 0
-  :stacking "fg"
-  :exclusive true
-  :geometry (geometry :x "10" :y "0" :width "56px" :height "60%"
-                      :anchor "center left")
+  :monitor 0 :stacking "fg" :exclusive true
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "60%" :anchor "center left")
   (workspaces_rail))
 
 (defwindow bar-right
-  :monitor 0
-  :stacking "fg"
-  :exclusive true
-  :geometry (geometry :x "10" :y "0" :width "56px" :height "60%"
-                      :anchor "center right")
+  :monitor 0 :stacking "fg" :exclusive true
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "60%" :anchor "center right")
   (app_rail))
 
 (defwindow dashboard
-  :monitor 0
-  :stacking "overlay"
-  :focusable true
+  :monitor 0 :stacking "overlay" :focusable true
   :geometry (geometry :width "100%" :height "100%" :anchor "center")
   (dashboard_layout))
 
 (defwindow powermenu
-  :monitor 0
-  :stacking "overlay"
-  :focusable true
+  :monitor 0 :stacking "overlay" :focusable true
   :geometry (geometry :width "100%" :height "100%" :anchor "center")
   (powermenu_layout))
+
+(defwindow cheatsheet
+  :monitor 0 :stacking "overlay" :focusable true
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  (cheatsheet_layout))
+
+(defwindow osd-volume
+  :monitor 0 :stacking "overlay" :focusable false
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "70px" :anchor "bottom center")
+  (osd_volume_layout))
+
+(defwindow osd-brightness
+  :monitor 0 :stacking "overlay" :focusable false
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "70px" :anchor "bottom center")
+  (osd_brightness_layout))
+
+(defwindow screensaver
+  :monitor 0 :stacking "overlay" :focusable true
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  (screensaver_layout))
