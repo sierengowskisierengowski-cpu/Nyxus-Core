@@ -92,18 +92,37 @@ NYXUS_EWW_TAG="${NYXUS_EWW_TAG:-v0.6.2}"
 if ! command -v eww >/dev/null 2>&1; then
   echo "[customize_airootfs] building eww ${NYXUS_EWW_TAG} from source..."
   _edir=$(mktemp -d)
+  # Apply the single-line type annotation that rustc itself suggests
+  # for time-0.3.34's format_description/parse/mod.rs E0282 failure.
+  # This is the exact fix from the compiler diagnostic — bulletproof
+  # against any version of cargo/rustc because it doesn't depend on
+  # the dep resolver doing the right thing.
+  patch_time_034() {
+    local f
+    for f in /root/.cargo/registry/src/*/time-0.3.34/src/format_description/parse/mod.rs; do
+      [ -f "$f" ] || continue
+      if grep -q '^    let items = format_items' "$f"; then
+        sed -i 's|^    let items = format_items|    let items: Box<_> = format_items|' "$f"
+        echo "[customize_airootfs] patched $f for E0282"
+      fi
+    done
+  }
   build_eww() {
     cd "$_edir/eww" || return 1
-    # Best-effort: bump every `time` crate version found in the lockfile
-    # to the highest compatible release. Failure here is non-fatal —
-    # the build attempt below is the real gate.
+    # First attempt: try to bump `time` via cargo, then build.
     while IFS= read -r v; do
       cargo update -p "time@${v}" 2>/dev/null || true
     done < <(awk '/^name = "time"$/{getline; if($1=="version") print $3}' \
                    Cargo.lock 2>/dev/null | tr -d '"' | sort -u)
-    # General refresh as last-ditch in case a different sub-dep (e.g.
-    # time-macros) is the culprit.
     cargo update 2>/dev/null || true
+    if cargo build --release --no-default-features --features=wayland; then
+      return 0
+    fi
+    # Fallback: cargo couldn't escape time-0.3.34 (often the case when a
+    # transitive dep pins it). Patch the offending file in-place using
+    # the exact fix rustc's E0282 diagnostic prints, then retry.
+    echo "[customize_airootfs] first eww build failed — applying time-0.3.34 E0282 sed patch and retrying"
+    patch_time_034
     cargo build --release --no-default-features --features=wayland
   }
   if git clone --depth 1 --branch "${NYXUS_EWW_TAG}" \
