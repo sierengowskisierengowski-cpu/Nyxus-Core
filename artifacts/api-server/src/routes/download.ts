@@ -87,6 +87,18 @@ const ALLOWED_FILES: Record<string, string> = {
   "eww/scripts/updates.sh":       "eww/scripts/updates.sh",
   "eww/scripts/weather.sh":       "eww/scripts/weather.sh",
   "eww/scripts/workspaces.sh":    "eww/scripts/workspaces.sh",
+  // ── Sprint 1 (rev r9-eww, 2026-05-11) — 6 flyouts: QS / WiFi / BT / Mix / Cal / Notif
+  "eww/scripts/quicksettings.sh": "eww/scripts/quicksettings.sh",
+  "eww/scripts/qs-toggle.sh":     "eww/scripts/qs-toggle.sh",
+  "eww/scripts/wifi-list.sh":     "eww/scripts/wifi-list.sh",
+  "eww/scripts/wifi-action.sh":   "eww/scripts/wifi-action.sh",
+  "eww/scripts/bt-list.sh":       "eww/scripts/bt-list.sh",
+  "eww/scripts/bt-action.sh":     "eww/scripts/bt-action.sh",
+  "eww/scripts/audio-sinks.sh":   "eww/scripts/audio-sinks.sh",
+  "eww/scripts/audio-action.sh":  "eww/scripts/audio-action.sh",
+  "eww/scripts/calendar-month.sh":"eww/scripts/calendar-month.sh",
+  "eww/scripts/notif-history.sh": "eww/scripts/notif-history.sh",
+  "eww/scripts/notif-action.sh":  "eww/scripts/notif-action.sh",
 
   // ── ★ TGZ APP PACKAGES (heavyweight multi-module apps) ───────────────────
   "nyxus-home.tgz":      "nyxus-home.tgz",       // Home (workspace 0)
