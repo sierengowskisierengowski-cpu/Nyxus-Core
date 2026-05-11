@@ -325,7 +325,7 @@ function Landing() {
               </div>
               <div style={{ marginTop: "0.6rem", display: "flex", gap: "0.4rem", justifyContent: "flex-end" }}>
                 <NavPill href="#/mirror" label="◐ MIRROR" />
-                <NavPill href="#/waybars" label="◑ WAYBAR" />
+                <NavPill href="#/waybars" label="◑ EWW BAR" />
               </div>
             </div>
           </div>
@@ -619,7 +619,7 @@ function Landing() {
               </div>
               <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                 <NavPill href="#/mirror" label="◐ OPEN DESKTOP MIRROR" />
-                <NavPill href="#/waybars" label="◑ OPEN WAYBAR PREVIEW" />
+                <NavPill href="#/waybars" label="◑ OPEN EWW BAR PREVIEW" />
               </div>
             </Pebble>
           </div>

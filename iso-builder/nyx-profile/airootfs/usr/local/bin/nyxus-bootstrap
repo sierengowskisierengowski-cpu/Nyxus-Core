@@ -66,7 +66,7 @@ if [[ -f "${MARK}" ]]; then
 fi
 
 # First-boot splash — long timeout so it stays up through the install.
-# The user sees this immediately on first login, before waybar/wallpaper
+# The user sees this immediately on first login, before EWW bar/wallpaper
 # appear. Without it the screen looks frozen for ~60s.
 notify 2 120000 "rgb(e8edf5)" "first-boot setup starting — installing chrome, ~60 seconds…"
 
@@ -163,8 +163,8 @@ WHAT HAPPENED:
 ${FAIL_REASON:-Bootstrap exited before completing.}
 
 HOW TO FIX:
-1. Get online (NetworkManager applet on waybar — but you don't have a
-   waybar yet, so use the terminal):
+1. Get online (NetworkManager applet on the EWW bar — but you don't have
+   the EWW bar yet, so use the terminal):
        SUPER + RETURN          (NYXUS terminal)
        SUPER + SHIFT + RETURN  (raw Alacritty fallback)
    Then:  nmtui   (Wi-Fi setup)

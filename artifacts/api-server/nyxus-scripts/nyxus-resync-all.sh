@@ -19,8 +19,8 @@
 #        - /usr/local/bin/nyxus-screensaver              (wrapper)
 #        - /usr/local/bin/nyxus-demon-wake               (wrapper)
 #        - restarts hypridle so the new pipeline is live
-#   5. Reloads waybar so the new NYXUS modules show up
-#   6. Verifies chrome.py SHA, waybar module count, /usr/local/bin launchers,
+#   5. Reloads EWW so the new NYXUS bars/widgets show up (rev r6-eww)
+#   6. Verifies chrome.py SHA, EWW config presence, /usr/local/bin launchers,
 #      PAM file, screensaver wrappers, demon image
 #
 # Safe to re-run any number of times. Each step is idempotent.
@@ -393,7 +393,7 @@ fi
 #     source = ~/.config/hypr/nyxus-hyprland-fog.conf
 # all WITHOUT the conf.d/ subdir. Those files no longer exist at that path
 # and Hyprland throws "globbing error: found no match" on every reload,
-# blocking the entire chrome (waybar styling, opacity, blur) from loading.
+# blocking the entire chrome (EWW styling, opacity, blur) from loading.
 # rev r22 fix: strip ANY `source = ~/.config/hypr/nyxus-hyprland-*.conf`
 # without `conf.d/` regardless of suffix — catches future variants too.
 if [[ -f "$HYPR_MAIN" ]]; then
@@ -682,17 +682,20 @@ if command -v hyprctl >/dev/null 2>&1 && pgrep -x Hyprland >/dev/null 2>&1; then
   fi
 fi
 
-# ── 4.5/6  REFRESH palette + waybar CSS/JSON  (r22 fix) ─────────────────────
-# Without this step every change to nyxus-palette.css, waybar-style.css, or
-# waybar-config.json is INVISIBLE on user machines: the original install
-# pulled them once and nothing ever overwrote them. r22 adds explicit pulls
-# so palette/waybar edits actually land.
-step "4.5/6 · REFRESH palette + waybar CSS/JSON  (r22: was previously missed)"
+# ── 4.5/6  REFRESH palette + EWW configs  (rev r6-eww — replaces r22 waybar) ─
+# Without this step every change to nyxus-palette.css, eww.yuck/scss, or
+# nyxus.conf is INVISIBLE on user machines: the original install
+# pulled them once and nothing ever overwrote them. This adds explicit pulls
+# so palette/EWW edits actually land.
+step "4.5/6 · REFRESH palette + EWW configs  (rev r6-eww)"
 
 NYX_HOME_DIR="${NYX_HOME_DIR:-$REAL_HOME/.nyxus}"
-WAYBAR_DIR="$REAL_HOME/.config/waybar"
-mkdir -p "$NYX_HOME_DIR" "$WAYBAR_DIR"
-chown "$REAL_USER:$REAL_USER" "$NYX_HOME_DIR" "$WAYBAR_DIR"
+# rev r6-eww: create ~/.config/eww BEFORE 4.5a palette mirror so the
+# `[[ -d "$dest" ]]` test in the mirror loop picks up the EWW dir on
+# fresh installs (otherwise palette never lands in eww/ until next run).
+mkdir -p "$NYX_HOME_DIR" "$REAL_HOME/.config/eww/scripts"
+chown "$REAL_USER:$REAL_USER" "$NYX_HOME_DIR"
+chown -R "$REAL_USER:$REAL_USER" "$REAL_HOME/.config/eww"
 
 # 4.5a  nyxus-palette.css — the single source of truth every CSS @imports
 PAL_DST="$NYX_HOME_DIR/nyxus-palette.css"
@@ -705,7 +708,7 @@ if curl -fsSL --max-time 30 "$PROD/nyxus-palette.css" -o "$PAL_DST.new"; then
     ok "wrote $PAL_DST (sha=$pal_sha)"
     # Mirror to every consumer dir so @import 'nyxus-palette.css' resolves
     mirrored=0
-    for dest in "$WAYBAR_DIR" "$REAL_HOME/.config/wlogout" "$REAL_HOME/.config/dunst" \
+    for dest in "$REAL_HOME/.config/eww" "$REAL_HOME/.config/wlogout" "$REAL_HOME/.config/dunst" \
                 "$REAL_HOME/.config/rofi" "$REAL_HOME/.config/hypr" "$NYX_HOME_DIR"; do
       if [[ -d "$dest" ]]; then
         cp -f "$PAL_DST" "$dest/nyxus-palette.css"
@@ -722,10 +725,10 @@ else
   fail "could not download nyxus-palette.css — palette edits will not be visible"
 fi
 
-# 4.5b  Pull background images so waybar style.css path substitutions resolve
+# 4.5b  Pull background images (palette mirror only — waybar refresh removed)
 NYX_BG_DIR="$NYX_HOME_DIR/backgrounds"
 mkdir -p "$NYX_BG_DIR"; chown "$REAL_USER:$REAL_USER" "$NYX_BG_DIR"
-for bg in nyxus-taskbar-bg.png nyxus-rightbar-bg.png nyxus-frost-sierengowski.png nyxus-starlight.png nyxus-waybar-stars.png nyxus-monogram-mist.png nyxus-topbar-mist.png nyxus-starfield-wall.png nyxus-void-wallpaper.mp4; do
+for bg in nyxus-frost-sierengowski.png nyxus-starlight.png nyxus-monogram-mist.png nyxus-topbar-mist.png nyxus-starfield-wall.png nyxus-void-vortex.png; do
   bgdst="$NYX_BG_DIR/$bg"
   if [[ ! -f "$bgdst" ]] || [[ "${1:-}" == "--force-bg" ]]; then
     if curl -fsSL --max-time 60 "$PROD/$bg" -o "$bgdst.new"; then
@@ -736,117 +739,52 @@ for bg in nyxus-taskbar-bg.png nyxus-rightbar-bg.png nyxus-frost-sierengowski.pn
   fi
 done
 
-# 4.5c  waybar-config.json
-WB_CFG="$WAYBAR_DIR/config"
-if curl -fsSL --max-time 30 "$PROD/waybar-config.json" -o "$WB_CFG.new"; then
-  if python3 -c "import json,sys; json.load(open('$WB_CFG.new'))" 2>/dev/null \
-     || python3 -c "import json,sys; json.loads(open('$WB_CFG.new').read().split('//')[0] if False else open('$WB_CFG.new').read())" 2>/dev/null; then
-    mv "$WB_CFG.new" "$WB_CFG"
-    chown "$REAL_USER:$REAL_USER" "$WB_CFG"
-    chmod 644 "$WB_CFG"
-    ok "wrote $WB_CFG"
-  else
-    # waybar config supports JSONC (//-comments). Just trust it if non-empty.
-    if [[ -s "$WB_CFG.new" ]]; then
-      mv "$WB_CFG.new" "$WB_CFG"
-      chown "$REAL_USER:$REAL_USER" "$WB_CFG"
-      chmod 644 "$WB_CFG"
-      ok "wrote $WB_CFG (JSONC, accepted as-is)"
+# 4.5c  EWW config refresh (replaces 4.5c/d/e waybar refresh; rev r6-eww 2026-05-11)
+EWW_DIR="$REAL_HOME/.config/eww"
+mkdir -p "$EWW_DIR/scripts"
+chown -R "$REAL_USER:$REAL_USER" "$EWW_DIR"
+for f in eww.yuck eww.scss nyxus.conf; do
+  if curl -fsSL --max-time 30 "$PROD/eww/$f" -o "$EWW_DIR/$f.new"; then
+    if [[ -s "$EWW_DIR/$f.new" ]]; then
+      mv -f "$EWW_DIR/$f.new" "$EWW_DIR/$f"
+      chown "$REAL_USER:$REAL_USER" "$EWW_DIR/$f"
+      chmod 644 "$EWW_DIR/$f"
+      ok "wrote $EWW_DIR/$f ($(stat -c%s "$EWW_DIR/$f") bytes)"
     else
-      rm -f "$WB_CFG.new"
-      fail "downloaded waybar-config.json was empty — kept previous copy"
+      rm -f "$EWW_DIR/$f.new"
+      fail "downloaded eww/$f was empty — kept previous copy"
     fi
-  fi
-else
-  fail "could not download waybar-config.json"
-fi
-
-# 4.5d  waybar-style.css  + run the same path substitutions install.sh does
-WB_CSS="$WAYBAR_DIR/style.css"
-WALL_PATH="$NYX_BG_DIR/nyxus-starfield-wall.png"
-TASKBAR_BG_PATH="$NYX_BG_DIR/nyxus-taskbar-bg.png"
-RIGHTBAR_BG_PATH="$NYX_BG_DIR/nyxus-rightbar-bg.png"
-STARLIGHT_BG_PATH="$NYX_BG_DIR/nyxus-starlight.png"
-WAYBAR_STARS_PATH="$NYX_BG_DIR/nyxus-waybar-stars.png"
-MONOGRAM_MIST_PATH="$NYX_BG_DIR/nyxus-monogram-mist.png"
-TOPBAR_MIST_PATH="$NYX_BG_DIR/nyxus-topbar-mist.png"
-if curl -fsSL --max-time 30 "$PROD/waybar-style.css" -o "$WB_CSS.new"; then
-  if [[ -s "$WB_CSS.new" ]]; then
-    sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"                  "$WB_CSS.new"
-    sed -i "s|NYXUS_TASKBAR_BG|file://${TASKBAR_BG_PATH}|g"    "$WB_CSS.new"
-    sed -i "s|NYXUS_RIGHTBAR_BG|file://${RIGHTBAR_BG_PATH}|g"  "$WB_CSS.new"
-    sed -i "s|NYXUS_STARLIGHT_BG|file://${STARLIGHT_BG_PATH}|g" "$WB_CSS.new"
-    sed -i "s|NYXUS_WAYBAR_STARS|file://${WAYBAR_STARS_PATH}|g" "$WB_CSS.new"
-    sed -i "s|NYXUS_MONOGRAM_MIST|file://${MONOGRAM_MIST_PATH}|g" "$WB_CSS.new"
-    sed -i "s|NYXUS_TOPBAR_MIST|file://${TOPBAR_MIST_PATH}|g" "$WB_CSS.new"
-    sed -i "s|file:///home/nyx/|file://$REAL_HOME/|g"          "$WB_CSS.new"
-    mv "$WB_CSS.new" "$WB_CSS"
-    chown "$REAL_USER:$REAL_USER" "$WB_CSS"
-    chmod 644 "$WB_CSS"
-    css_sha=$(sha256sum "$WB_CSS" | cut -c1-12)
-    smoke_hits=$(grep -c "nyx_black_smoke\|nyx_glass_dark" "$WB_CSS" || echo 0)
-    ok "wrote $WB_CSS (sha=$css_sha, palette tokens=$smoke_hits)"
   else
-    rm -f "$WB_CSS.new"
-    fail "downloaded waybar-style.css was empty — kept previous copy"
+    fail "could not download eww/$f"
   fi
-else
-  fail "could not download waybar-style.css"
-fi
+done
 
-# 4.5e  waybar-ticker.sh — REAL live-stats marquee (rev r22 fix: was
-# previously NEVER refreshed by resync — old ticker.sh stayed on disk
-# even after downloads of style.css/config.json, so users saw stale data
-# and never got the new red `.error` class on probe failures).
-WB_TICKER="$NYX_HOME_DIR/waybar-ticker.sh"
-if curl -fsSL --max-time 30 "$PROD/waybar-ticker.sh" -o "$WB_TICKER.new"; then
-  if [[ -s "$WB_TICKER.new" ]]; then
-    mv -f "$WB_TICKER.new" "$WB_TICKER"
-    chown "$REAL_USER:$REAL_USER" "$WB_TICKER"
-    chmod 755 "$WB_TICKER"
-    tk_sha=$(sha256sum "$WB_TICKER" | cut -c1-12)
-    tk_rev=$(grep -m1 -E '^# NYXUS Waybar Marquee Ticker' "$WB_TICKER" | sed 's/^# //')
-    ok "wrote $WB_TICKER (sha=$tk_sha) — $tk_rev"
-  else
-    rm -f "$WB_TICKER.new"
-    fail "downloaded waybar-ticker.sh was empty — kept previous copy"
-  fi
-else
-  fail "could not download waybar-ticker.sh — top-bar ticker will stay stale"
-fi
-
-# ── 5/6 RELOAD waybar ────────────────────────────────────────────────────────
-step "5/6 · RELOAD waybar (so the new NYXUS modules show up)"
-# rev r22 — FULL kill+respawn instead of SIGUSR2. SIGUSR2 reloads the CSS
-# but does NOT reliably re-evaluate structural changes (modules added,
-# removed, moved between bars). After the rev r19→r21 reorganisation
-# moving status pebbles top→right, SIGUSR2 left orphan modules from the
-# old layout. Full restart guarantees the new config is live.
-if pgrep -x waybar >/dev/null 2>&1; then
-  pkill -x waybar 2>/dev/null
-  # wait up to 2s for waybar to fully exit
+# ── 5/6 RELOAD EWW (rev r6-eww — replaces the waybar reload block) ─────────
+step "5/6 · RELOAD EWW (so the new NYXUS bars/widgets show up)"
+# Kill running daemon then let nyxus-eww-launch (or Hyprland exec-once)
+# respawn it with the freshly-downloaded eww.yuck/eww.scss/nyxus.conf.
+if pgrep -x eww >/dev/null 2>&1; then
+  pkill -x eww 2>/dev/null
   for _ in 1 2 3 4 5 6 7 8; do
-    pgrep -x waybar >/dev/null 2>&1 || break
+    pgrep -x eww >/dev/null 2>&1 || break
     sleep 0.25
   done
-  ok "waybar killed — Hyprland exec-once will respawn it with new config"
+  ok "eww killed — Hyprland exec-once will respawn it with new config"
 fi
 # Defensive respawn — if Hyprland's exec-once doesn't fire (script run
-# outside a fresh session), launch waybar directly as the real user.
-if ! pgrep -x waybar >/dev/null 2>&1; then
+# outside a fresh session), start the EWW daemon + launch bars manually.
+if ! pgrep -x eww >/dev/null 2>&1; then
   if [[ -n "${REAL_USER:-}" ]] && command -v sudo >/dev/null 2>&1; then
     sudo -u "$REAL_USER" \
       env XDG_RUNTIME_DIR="/run/user/$(id -u "$REAL_USER")" \
           WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
-      nohup waybar \
-        --config "$REAL_HOME/.config/waybar/config" \
-        --style  "$REAL_HOME/.config/waybar/style.css" \
-        >/dev/null 2>&1 &
-    sleep 0.5
-    if pgrep -x waybar >/dev/null 2>&1; then
-      ok "waybar respawned manually with new config"
+          HOME="$REAL_HOME" \
+      nohup nyxus-eww-launch >/dev/null 2>&1 &
+    sleep 0.8
+    if pgrep -x eww >/dev/null 2>&1; then
+      ok "eww respawned manually via nyxus-eww-launch"
     else
-      warn "waybar failed to respawn — run \`waybar --config ~/.config/waybar/config --style ~/.config/waybar/style.css &\` manually"
+      warn "eww failed to respawn — run \`nyxus-eww-launch\` manually"
     fi
   fi
 fi
@@ -867,13 +805,18 @@ done
 if [[ -z "$CHROME_ON_DISK" ]]; then
   warn "could not find nyxus_chrome.py on disk in any standard location"
 fi
-# rev r29 — STARFIELD STILL WALLPAPER. Replaces the rev r25 mpvpaper void
-# animation with a static cratered-starfield PNG via swaybg. Image is a
-# 2048x576 letterbox starfield — `-m fill` crops to screen, the uniform
-# starfield hides the crop. Letterbox color is pure black so any seam
-# blends invisibly into the black starfield background.
+# rev r6-eww — VOID-VORTEX wallpaper (replaces the rev r29 starfield).
+# Static PNG via swaybg fill-mode — matches hyprland.conf swaybg autostart.
+# Falls back to starfield if void-vortex is missing.
+VORTEX_PNG="$NYX_BG_DIR/nyxus-void-vortex.png"
 STAR_PNG="$NYX_BG_DIR/nyxus-starfield-wall.png"
-if [[ -s "$STAR_PNG" ]] && command -v swaybg >/dev/null 2>&1; then
+WALL_TO_USE=""
+if [[ -s "$VORTEX_PNG" ]]; then
+  WALL_TO_USE="$VORTEX_PNG"
+elif [[ -s "$STAR_PNG" ]]; then
+  WALL_TO_USE="$STAR_PNG"
+fi
+if [[ -n "$WALL_TO_USE" ]] && command -v swaybg >/dev/null 2>&1; then
   pkill -x swaybg    2>/dev/null || true
   pkill -x hyprpaper 2>/dev/null || true
   pkill -x mpvpaper  2>/dev/null || true
@@ -884,19 +827,19 @@ if [[ -s "$STAR_PNG" ]] && command -v swaybg >/dev/null 2>&1; then
       env XDG_RUNTIME_DIR="/run/user/$(id -u "$REAL_USER")" \
           WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
           HOME="$REAL_HOME" \
-      nohup swaybg -i "$STAR_PNG" -m fill -c "#000000" \
+      nohup swaybg -i "$WALL_TO_USE" -m fill -c "#000000" \
         >/tmp/nyxus-swaybg.log 2>&1 &
     sleep 0.5
     if pgrep -x swaybg >/dev/null 2>&1; then
-      ok "wallpaper restarted as swaybg · cratered-starfield still"
+      ok "wallpaper restarted as swaybg · $(basename "$WALL_TO_USE")"
     else
       warn "swaybg failed to spawn — see /tmp/nyxus-swaybg.log"
     fi
   fi
 elif ! command -v swaybg >/dev/null 2>&1; then
   warn "swaybg not installed — run:  sudo pacman -S swaybg  (then re-run this script)"
-elif [[ ! -s "$STAR_PNG" ]]; then
-  warn "wallpaper image missing at $STAR_PNG — re-run with --force-bg"
+else
+  warn "wallpaper image missing (void-vortex + starfield both absent) — re-run with --force-bg"
 fi
 
 echo
@@ -924,17 +867,21 @@ else
   fail "chrome.py NOT FOUND at $chrome_path — direct-download step failed"
 fi
 
-# waybar config NYXUS module count
-waybar_cfg="$REAL_HOME/.config/waybar/config"
-if [[ -f "$waybar_cfg" ]]; then
-  cnt=$(grep -cE 'custom/nyxus-(start|panel|notifications|settings)' "$waybar_cfg" 2>/dev/null || echo 0)
-  if (( cnt >= 8 )); then
-    ok "waybar has $cnt NYXUS module references (expected ≥8)"
-  else
-    warn "waybar has only $cnt NYXUS module references (expected 8) — patch may have missed"
-  fi
+# EWW config presence (rev r6-eww — replaces waybar module-count check)
+eww_dir="$REAL_HOME/.config/eww"
+eww_missing=()
+for f in eww.yuck eww.scss nyxus.conf; do
+  [[ -s "$eww_dir/$f" ]] || eww_missing+=("$f")
+done
+if (( ${#eww_missing[@]} == 0 )); then
+  ok "EWW config present (eww.yuck + eww.scss + nyxus.conf in $eww_dir)"
 else
-  warn "waybar config not found at $waybar_cfg"
+  warn "EWW config incomplete — missing: ${eww_missing[*]} (re-run resync)"
+fi
+if pgrep -x eww >/dev/null 2>&1; then
+  ok "eww daemon is running"
+else
+  warn "eww daemon not running — run \`nyxus-eww-launch\` or log out + back in"
 fi
 
 # PAM file for hyprlock
@@ -1020,14 +967,14 @@ else
   # (section [8a] of the doctor). This is what powers the red waybar
   # overlay — if it's empty, the user is clean.
   echo
-  printf "  ${B}Hyprland config errors (section [8a] — powers the waybar overlay):${R}\n"
+  printf "  ${B}Hyprland config errors (section [8a] — powers the EWW config-error overlay):${R}\n"
   CFGBLOCK=$(echo "$DOCTOR_OUT" | awk '
     /^── 8a · hyprctl configerrors/ {capture=1; next}
     /^── 8b ·|^\[8b\]/ {capture=0}
     capture && NF { print }
   ')
   if [[ -z "$CFGBLOCK" ]] || echo "$CFGBLOCK" | grep -q "OK: hyprctl configerrors reports no errors"; then
-    ok "hyprctl configerrors: 0 errors — waybar overlay should be clean"
+    ok "hyprctl configerrors: 0 errors — EWW config-error overlay should be clean"
   else
     echo "$CFGBLOCK" | sed 's/^/      /'
   fi
