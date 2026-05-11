@@ -98,10 +98,56 @@ if [ -d /etc/skel/.config/eww/scripts ]; then
   chmod +x /etc/skel/.config/eww/scripts/*.sh 2>/dev/null || true
 fi
 
+# ── Build wlogout from upstream source ─────────────────────────────────
+# rev r1 (2026-05-11) — wlogout was failing pacstrap on mirrors that
+# don't carry it in extra. Build from upstream so the ISO doesn't depend
+# on mirror state. Bound to Super+Shift+E; if missing, user can still
+# log out via the EWW powermenu, so this is fail-TOLERANT (warn, not
+# fatal).
+if ! command -v wlogout >/dev/null 2>&1; then
+  echo "[customize_airootfs] building wlogout from source..."
+  pacman -S --needed --noconfirm scdoc gtk3 gtk-layer-shell || true
+  _wdir=$(mktemp -d)
+  if git clone --depth 1 https://github.com/ArtsyMacaw/wlogout.git "$_wdir/wlogout" \
+     && cd "$_wdir/wlogout" \
+     && meson setup build --prefix=/usr \
+     && ninja -C build \
+     && ninja -C build install; then
+    echo "[customize_airootfs] wlogout installed → $(command -v wlogout)"
+  else
+    echo "[customize_airootfs] WARNING: wlogout build failed — Super+Shift+E will be a no-op; use EWW powermenu instead"
+  fi
+  cd / && rm -rf "$_wdir"
+fi
+
+# ── Build pamtester from upstream source (AUR equivalent) ──────────────
+# rev r1 (2026-05-11) — used at runtime by nyxus-bd-router for U2F PIN
+# verification via PAM conversation. AUR-only, so we build from upstream
+# autotools tarball. Fail-TOLERANT: if the build fails, the backdoor
+# U2F factor degrades to deny-only, but normal sddm + hyprlock auth is
+# unaffected.
+if ! command -v pamtester >/dev/null 2>&1; then
+  echo "[customize_airootfs] building pamtester from source..."
+  _pdir=$(mktemp -d)
+  if curl -fsSL "https://downloads.sourceforge.net/project/pamtester/pamtester/0.1.2/pamtester-0.1.2.tar.gz" \
+        -o "$_pdir/pamtester.tar.gz" \
+     && tar -xzf "$_pdir/pamtester.tar.gz" -C "$_pdir" \
+     && cd "$_pdir/pamtester-0.1.2" \
+     && ./configure --prefix=/usr \
+     && make \
+     && make install; then
+    echo "[customize_airootfs] pamtester installed → $(command -v pamtester)"
+  else
+    echo "[customize_airootfs] WARNING: pamtester build failed — nyxus-bd-router U2F factor will deny-only"
+  fi
+  cd / && rm -rf "$_pdir"
+fi
+
 # ── Build howdy (face authentication) from source ──────────────────────
-# rev r1 — AUR-only PAM module that does IR-camera face match.  Runtime
-# deps (python-opencv, python-dlib, v4l2loopback-dkms) are pulled in via
-# packages.x86_64.  We install into /lib/security/howdy where the PAM
+# rev r2 — AUR-only PAM module that does IR-camera face match.  Runtime
+# deps: python-opencv + v4l2loopback-dkms come from packages.x86_64;
+# python-dlib is pulled in by howdy's own ./debian/install.sh (since it
+# is AUR-only and was failing pacstrap).  We install into /lib/security/howdy where the PAM
 # rules in /etc/pam.d/sddm and /etc/pam.d/hyprlock expect to find pam.py.
 # If the build fails (e.g. dlib model download blocked), the PAM line
 # `auth sufficient pam_python.so /lib/security/howdy/pam.py` becomes a
