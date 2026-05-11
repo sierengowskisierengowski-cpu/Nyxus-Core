@@ -51,6 +51,22 @@ Every status pill on the bar opens a real, working flyout.
 
 ---
 
+## 🎨 DESIGN-CONTRACT AUDIT (Wave 2 prerequisite — see `docs/DESIGN_CONTRACT.md` §13)
+
+Every existing component must pass §12 of the design contract before
+new surfaces are added. Walk each on a 1366×768 display.
+
+- [x] Quick Settings flyout — audited 2026-05-11 (no list, no empty state needed)
+- [x] WiFi flyout — audited 2026-05-11, added empty state
+- [x] Bluetooth flyout — audited 2026-05-11, added powered/off-aware empty state
+- [x] Audio Mixer flyout — audited 2026-05-11, added empty state
+- [x] Calendar flyout — audited 2026-05-11 (static grid, no list)
+- [x] Notification Center — audited 2026-05-11, added DND-aware empty state
+- [ ] Bar (EWW main bar) — check spacing on right cluster
+- [ ] Cheatsheet — three-column layout fit
+- [ ] Powermenu — centering + button hierarchy
+- [ ] Dashboard — largest known offender, full pass
+
 ## ⏳ WAVE 2 — Polish (5 items, ~1 sprint)
 
 - [ ] **First-Boot Welcome Wizard** ← biggest single win
