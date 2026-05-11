@@ -117,14 +117,27 @@ if ! command -v eww >/dev/null 2>&1; then
   }
   build_eww() {
     cd "$_edir/eww" || return 1
-    # Step 1: download every dep into the cargo registry without building.
-    # This materialises time-0.3.34/src/... so the sed patch has a target.
-    echo "[customize_airootfs] cargo fetch (populating registry)..."
+    # Step 1: download every dep TARBALL into the cargo registry cache.
+    # NOTE: `cargo fetch` populates ~/.cargo/registry/cache/ (the .crate
+    # tarballs) but does NOT extract them into ~/.cargo/registry/src/.
+    # Extraction is lazy — it happens the first time cargo actually
+    # compiles each dep. So the sed patch can't run yet; the file
+    # doesn't exist on disk.
+    echo "[customize_airootfs] cargo fetch (downloading tarballs)..."
     cargo fetch || return 1
-    # Step 2: apply the E0282 patch eagerly. Known-good fix; runs every
-    # time so it survives clean builds.
+    # Step 2: warm-up build. Allowed to fail. The point is purely to
+    # force cargo to extract every dep tarball into src/, so that the
+    # next step has real files to patch. The build will get as far as
+    # `time v0.3.34` and explode on E0282 — that's expected and fine.
+    echo "[customize_airootfs] warm-up build (extracts registry src/, expected to fail at time-0.3.34)..."
+    cargo build --release --no-default-features --features=wayland --offline >/dev/null 2>&1 || true
+    # Step 3: apply the E0282 patch now that time-0.3.34/src/ exists.
+    # Idempotent; safe if a future EWW lockfile no longer uses 0.3.34.
     patch_time_034
-    # Step 3: build offline since fetch already downloaded everything.
+    # Step 4: real build. Cargo will recompile only the patched crate
+    # and everything downstream of it, so this is much faster than a
+    # cold build.
+    echo "[customize_airootfs] final build (using patched time-0.3.34)..."
     cargo build --release --no-default-features --features=wayland --offline
   }
   if git clone --depth 1 --branch "${NYXUS_EWW_TAG}" \
