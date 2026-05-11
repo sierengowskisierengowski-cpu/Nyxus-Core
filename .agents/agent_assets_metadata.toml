@@ -576,6 +576,12 @@ uri = "file://attached_assets/generated_images/nyxus_splash_eyes.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "o3ze0m__vajZKiTLVGT41"
+uri = "file://attached_assets/generated_images/nyxus_splash_eyes_v2.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -1043,3 +1049,9 @@ id = "fDqVKGvkstm9qFDRdZ4nz"
 uri = "file://attached_assets/generated_videos/nyxus_splash_v1.mp4"
 type = "video"
 title = "NYXUS Splash v1 — eyes → NYXUS → DARKSIDE → fade (10s, 247KB)"
+
+[[outputs]]
+id = "D9sm6phE5aQEv3-d1yFF0"
+uri = "file://attached_assets/generated_videos/nyxus_splash_v2.mp4"
+type = "video"
+title = "NYXUS Splash v2 — faint predator eyes lurking, peak 32% opacity (10s)"
