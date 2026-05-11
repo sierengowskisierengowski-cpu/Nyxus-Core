@@ -73,7 +73,7 @@ cat <<EOF
   ${GOLD}NYXUS Panel is ready.${R}
 
   ${B}launch:${R}    ${PINK}nyxus-panel${R}     ${DIM}(toggles open / close)${R}
-  ${B}waybar:${R}    See waybar_integration.md for the taskbar JSON
+  ${B}eww:${R}       See ~/.config/eww/README.md for the EWW bar (replaces waybar)
   ${B}config:${R}    \$HOME/.config/nyxus-panel/config.json
 
   ${PURPLE}N E W S  ·  W E A T H E R  ·  S Y S T E M${R}

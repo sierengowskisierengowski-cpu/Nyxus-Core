@@ -61,7 +61,7 @@ sudo ./build-iso.sh
 
 Watch for these lines in the output:
 
-- [ ] `✓ configs: hypr / waybar / dunst / rofi / wlogout / alacritty`
+- [ ] `✓ configs: hypr / eww / dunst / rofi / wlogout / alacritty`
 - [ ] `✓ bootstrap shims: nyxus-bootstrap / nyxus-wait-bootstrap`
 - [ ] `✓ offline cache: 152 files in /opt/nyxus-cache/ (52M)` — if you see `! dist/nyxus-scripts/ not found`, **STOP**, go back to step 2
 - [ ] `✓ SDDM theme staged`
@@ -118,7 +118,7 @@ sync
 |------|--------------|
 | 0s   | Bare Hyprland desktop (black). A small notification top-right: `NYXUS · first-boot setup starting — installing chrome, ~60 seconds…` |
 | ~5s  | Notification updates: `downloaded installer · running install…` (or `using offline cache…` if no Wi-Fi) |
-| ~30–60s | Waybar appears bottom + side, wallpaper paints, NYXUS Home opens on workspace 0 |
+| ~30–60s | EWW bars appear (top/bottom/left/right), wallpaper paints, NYXUS Home opens on workspace 0 |
 | ~60s | Final notification: `NYXUS · ready · welcome, nyx` |
 
 If you only see the bare desktop after **2 minutes** → check `/tmp/nyxus-bootstrap.log` for what failed.
@@ -143,7 +143,7 @@ You'll have a bare Hyprland desktop with a red error notification top-right
 and a `NYXUS-FIRST-BOOT-FAILED.txt` file on the desktop.
 
 ```bash
-# Open a terminal (no waybar exists yet):
+# Open a terminal (no EWW bar exists yet):
 #   SUPER + RETURN          → NYXUS terminal
 #   SUPER + SHIFT + RETURN  → raw Alacritty (use this if NYXUS terminal fails)
 nmtui                  # Wi-Fi setup

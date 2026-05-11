@@ -70,7 +70,7 @@ import random
 import math
 import signal
 
-# ── BAR DIMENSIONS (mirror waybar-config.json EXACTLY so fog stays inside) ──
+# ── BAR DIMENSIONS (mirror eww/eww.yuck window geometry EXACTLY so fog stays inside) ──
 # Top bar:    height 60,  margin-top 5,  margin-left/right 10
 # Bottom bar: height 30,  margin-bottom 5, margin-left/right 10
 # Left bar:   width  64,  margin-top 280, margin-bottom 280
