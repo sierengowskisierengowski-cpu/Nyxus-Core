@@ -64,6 +64,10 @@ mpv
 meson
 ninja
 scdoc
+# rust provides `cargo` — required to build EWW from source in
+# customize_airootfs.sh. The chroot has no pacman mirrors, so build deps
+# CANNOT be installed at customize time; they MUST be pacstrapped here.
+rust
 wayland-protocols
 hyprcursor
 sddm
