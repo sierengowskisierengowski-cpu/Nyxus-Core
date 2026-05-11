@@ -386,7 +386,8 @@ function Landing() {
               <SpecRow k="Toolkit" v="GTK4 + libadwaita" />
               <SpecRow k="Chrome" v="nyxus_chrome.py" />
               <SpecRow k="Notify" v="Dunst" />
-              <SpecRow k="Wallpaper" v="mpvpaper" />
+              <SpecRow k="Bar" v="EWW · 4 bars + dashboard + OSDs" />
+              <SpecRow k="Wallpaper" v="swaybg · void-vortex" />
             </Pebble>
           </div>
 
