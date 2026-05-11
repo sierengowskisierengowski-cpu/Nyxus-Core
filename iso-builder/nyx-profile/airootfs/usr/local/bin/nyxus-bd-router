@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# ═══════════════════════════════════════════════════════════════════════════
+#  nyxus-bd-router — front-door / back-door PAM dispatcher
+#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Wired as the FIRST auth step in /etc/pam.d/sddm:
+#      auth [success=done default=ignore] pam_exec.so quiet expose_authtok \
+#           /usr/local/bin/nyxus-bd-router
+#
+#  Reads the typed authtok from stdin (pam_exec `expose_authtok` pipe).
+#
+#    · No magic prefix  → exit 1 → PAM rule's `default=ignore` fires →
+#                          normal sddm auth chain proceeds (fprintd → howdy
+#                          → unix passphrase).  Router is a no-op.
+#
+#    · Prefix detected  → strip it → run BOTH gates in sequence:
+#                            (a) nyxus-ghost-auth  (zero-width password)
+#                            (b) pam_u2f via /etc/pam.d/sddm-u2f-only
+#                                (forces YubiKey touch)
+#                          Both must succeed.  On full success, exit 0 →
+#                          PAM rule's `success=done` fires → entire `auth`
+#                          stack short-circuits as authenticated.  On any
+#                          failure, exit 1 → normal stack runs and will
+#                          (correctly) reject the prefixed garbage password.
+#
+#  The prefix is NOT a security boundary — it's a routing signal.  All
+#  security comes from ghost-auth (something only you know, including the
+#  invisible bytes) AND pam_u2f (something only you have, the YubiKey).
+# ═══════════════════════════════════════════════════════════════════════════
+set -u
+
+# Magic prefix MUST match the constant in
+# /usr/share/sddm/themes/nyxus/Main.qml :: backdoorPrefix
+PREFIX=$'\x01NYXBD\x01'
+
+LOG_DIR="/var/log/nyxus"
+LOG_FILE="${LOG_DIR}/backdoor.log"
+mkdir -p "${LOG_DIR}"
+chmod 700 "${LOG_DIR}" 2>/dev/null || true
+
+log() {
+    [ -e "${LOG_FILE}" ] || { touch "${LOG_FILE}"; chmod 600 "${LOG_FILE}"; }
+    printf '%s  router  user=%s  result=%s  reason=%s\n' \
+        "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+        "${PAM_USER:-?}" "$1" "$2" >> "${LOG_FILE}"
+}
+
+# Read the typed password from stdin.  Use `-r` and IFS= so any byte is
+# preserved verbatim (zero-width unicode, NULs, etc.).
+authtok=""
+IFS= read -r -d '' authtok || true
+
+# Strip an optional trailing newline that some PAM impls append.
+authtok="${authtok%$'\n'}"
+
+# Fast path: no prefix → not a backdoor attempt → defer to normal stack.
+case "${authtok}" in
+    "${PREFIX}"*) : ;;
+    *)            exit 1 ;;
+esac
+
+# Strip the prefix.
+real_pw="${authtok#${PREFIX}}"
+
+if [ -z "${real_pw}" ]; then
+    log DENY "empty authtok after prefix strip"
+    exit 1
+fi
+
+# Gate 1 — ghost-auth (zero-width-aware bcrypt match).
+# We feed the stripped password on stdin; ghost-auth needs PAM_TYPE set.
+if ! PAM_TYPE=auth /usr/local/bin/nyxus-ghost-auth <<<"${real_pw}" >/dev/null 2>&1; then
+    log DENY "ghost-auth mismatch"
+    exit 1
+fi
+
+# Gate 2 — YubiKey FIDO2/U2F via a single-purpose PAM service.
+# pam_u2f talks directly to the USB token; no stdin needed.
+# pamtester returns 0 only if pam_u2f returned PAM_SUCCESS (touch confirmed).
+if ! pamtester sddm-u2f-only "${PAM_USER:-root}" authenticate >/dev/null 2>&1; then
+    log DENY "yubikey check failed"
+    exit 1
+fi
+
+log GRANT "ghost+yubikey ok"
+exit 0

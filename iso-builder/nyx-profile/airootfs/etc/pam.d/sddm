@@ -1,0 +1,43 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  PAM stack for SDDM main login (NYXUS · DARK MIRROR)
+#
+#  Auth methods, in order:
+#    1. fprintd   — fingerprint
+#    2. howdy     — IR-camera face match
+#    3. unix      — system passphrase fallback
+#
+#  This is the FRONT-DOOR stack.  The hidden BACKDOOR stack lives in
+#  /etc/pam.d/sddm-backdoor and is a completely separate auth chain
+#  (password+YubiKey, with the zero-width-aware ghost-auth helper).
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── BACKDOOR ROUTER (must be first) ────────────────────────────────────
+# Two-stage dispatch closes the fail-open hole:
+#
+#   1. nyxus-bd-router  → exit 0 only if prefix present AND ghost-auth AND
+#                          YubiKey all pass.  success=done short-circuits
+#                          the entire auth phase as authenticated.
+#                          Any failure → exit 1 → `default=ignore` falls
+#                          through to step 2.
+#
+#   2. nyxus-bd-detect  → exit 0 if the magic prefix was present in the
+#                          authtok (regardless of whether router succeeded).
+#                          Combined with `success=die`, this hard-denies
+#                          the auth attempt the moment we know the user
+#                          tried the backdoor and the router rejected it.
+#                          No prefix → exit 1 → ignore → fall through to
+#                          the normal front-door stack untouched.
+#
+# Net effect: front-door creds NEVER work via the backdoor panel, and
+# backdoor creds NEVER need to round-trip through fingerprint/face/passwd.
+auth      [success=done default=ignore]  pam_exec.so  quiet expose_authtok  /usr/local/bin/nyxus-bd-router
+auth      [success=die  default=ignore]  pam_exec.so  quiet expose_authtok  /usr/local/bin/nyxus-bd-detect
+
+# ── NORMAL FRONT-DOOR STACK ────────────────────────────────────────────
+auth      sufficient   pam_fprintd.so
+auth      sufficient   pam_python.so /lib/security/howdy/pam.py
+auth      include      system-login
+
+account   include      system-login
+password  include      system-login
+session   include      system-login

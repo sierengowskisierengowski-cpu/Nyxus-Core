@@ -60,6 +60,70 @@ if ! command -v mpvpaper >/dev/null 2>&1; then
   cd / && rm -rf "$_bdir"
 fi
 
+# ── Build howdy (face authentication) from source ──────────────────────
+# rev r1 — AUR-only PAM module that does IR-camera face match.  Runtime
+# deps (python-opencv, python-dlib, v4l2loopback-dkms) are pulled in via
+# packages.x86_64.  We install into /lib/security/howdy where the PAM
+# rules in /etc/pam.d/sddm and /etc/pam.d/hyprlock expect to find pam.py.
+# If the build fails (e.g. dlib model download blocked), the PAM line
+# `auth sufficient pam_python.so /lib/security/howdy/pam.py` becomes a
+# no-op (pam_python returns FAIL, control falls through to the next
+# `sufficient` line) — fingerprint + passphrase still work.
+if [ ! -f /lib/security/howdy/pam.py ]; then
+  echo "[customize_airootfs] building howdy from source..."
+  _hdir=$(mktemp -d)
+  if git clone --depth 1 https://github.com/boltgolt/howdy.git "$_hdir/howdy" \
+     && cd "$_hdir/howdy" \
+     && ./debian/install.sh; then
+    echo "[customize_airootfs] howdy installed → /lib/security/howdy/"
+  else
+    echo "[customize_airootfs] WARNING: howdy build failed — face auth disabled, fingerprint + passphrase still work"
+    # Drop a no-op pam.py so the PAM rule doesn't error every boot.
+    mkdir -p /lib/security/howdy
+    cat > /lib/security/howdy/pam.py <<'PYEOF'
+def pam_sm_authenticate(pamh, flags, args):
+    return 7  # PAM_AUTH_ERR — falls through to next sufficient rule
+def pam_sm_setcred(pamh, flags, args):
+    return 0
+PYEOF
+  fi
+  cd / && rm -rf "$_hdir"
+fi
+
+# ── NYXUS auth helpers: permissions + runtime directories ──────────────
+# Ghost-auth (zero-width password verifier), ghost-register, backdoor
+# router, and audit logger all live in /usr/local/bin and need to be
+# executable + owned by root.
+for _bin in /usr/local/bin/nyxus-ghost-auth \
+            /usr/local/bin/nyxus-ghost-register \
+            /usr/local/bin/nyxus-bd-router \
+            /usr/local/bin/nyxus-bd-detect \
+            /usr/local/bin/nyxus-backdoor-log; do
+  if [ -f "$_bin" ]; then
+    chown root:root "$_bin"
+    chmod 755 "$_bin"
+  fi
+done
+
+# Secure storage for the ghost-password hash and the U2F mapping file.
+# Both are root-only so even the live `nyx` user cannot read them.
+mkdir -p /etc/nyxus
+chown root:root /etc/nyxus
+chmod 700 /etc/nyxus
+
+# Empty u2f_keys placeholder so pam_u2f doesn't error on first boot before
+# the user runs `pamu2fcfg > /etc/nyxus/u2f_keys` to register a YubiKey.
+# The backdoor stack will simply deny until a real key is registered.
+if [ ! -f /etc/nyxus/u2f_keys ]; then
+  : > /etc/nyxus/u2f_keys
+  chmod 600 /etc/nyxus/u2f_keys
+fi
+
+# Audit log directory (root-only)
+mkdir -p /var/log/nyxus
+chown root:root /var/log/nyxus
+chmod 700 /var/log/nyxus
+
 # ── Enable display + network + hardware services on the LIVE ISO ───────
 # These are also re-enabled by nyxus-postinstall on the installed system,
 # but enabling them in the live image means hardware works for live demos.

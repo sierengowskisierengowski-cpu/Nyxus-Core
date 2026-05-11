@@ -1,0 +1,33 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  PAM stack — SDDM BACKDOOR (NYXUS · DARK MIRROR)
+#
+#  THIS IS THE HIDDEN GATEWAY.  Reached only by the secret key combo
+#  Ctrl+Backspace+F+U on the SDDM greeter.  Both factors are REQUIRED:
+#
+#    1. nyxus-ghost-auth  — verifies the typed password against a stored
+#       hash that INCLUDES embedded zero-width unicode characters.
+#       A keylogger/shoulder-surfer who sees the visible word can type it
+#       all day; without the invisible bytes baked in by `nyxus-ghost-register`
+#       the hash will never match.
+#
+#    2. pam_u2f.so        — physical YubiKey hardware token must be present
+#       AND must touch-confirm.  No yubikey, no entry.  Period.
+#
+#  BOTH must succeed.  If either fails, access is denied and the failure
+#  is logged to /var/log/nyxus/backdoor.log via pam_exec.
+# ═══════════════════════════════════════════════════════════════════════════
+
+# 1) Zero-width-aware password gate (custom helper, exit 0 = pass)
+auth      requisite    pam_exec.so      quiet expose_authtok /usr/local/bin/nyxus-ghost-auth
+
+# 2) YubiKey FIDO2/U2F second factor — userpresence required (touch the key)
+auth      required     pam_u2f.so       authfile=/etc/nyxus/u2f_keys cue userpresence=1
+
+# 3) Audit log — every attempt (pass or fail) is recorded
+auth      optional     pam_exec.so      seteuid /usr/local/bin/nyxus-backdoor-log
+
+# Account / password / session inherit from system-login so the resulting
+# session is a normal user session (proper SELinux ctx, env, etc.).
+account   include      system-login
+password  include      system-login
+session   include      system-login

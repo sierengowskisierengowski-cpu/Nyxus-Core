@@ -1,0 +1,10 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  PAM service · sddm-u2f-only  (NYXUS · DARK MIRROR)
+#
+#  Single-purpose stack invoked by /usr/local/bin/nyxus-bd-router after the
+#  ghost-auth password gate has already passed.  Runs ONLY the YubiKey
+#  touch check.  Not exposed to any login UI directly — internal use only.
+# ═══════════════════════════════════════════════════════════════════════════
+
+auth     required    pam_u2f.so   authfile=/etc/nyxus/u2f_keys cue userpresence=1
+account  required    pam_permit.so
