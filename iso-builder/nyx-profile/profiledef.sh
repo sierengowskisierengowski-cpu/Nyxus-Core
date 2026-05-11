@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================
-# NYXUS — nyx-2026.05.02-x86_64.iso
+# NYXUS — nyx-2026.05.11-x86_64.iso
 # Copyright © 2026 Joseph Sierengowski
 # All Rights Reserved
 # Unauthorized use or distribution prohibited
@@ -14,7 +14,7 @@ iso_name="nyx"
 iso_label="NYX_2026_05"
 iso_publisher="Joseph Sierengowski <https://github.com/sierengowski/NyX.OS-V1>"
 iso_application="NYXUS Live/Install"
-iso_version="2026.05.02"
+iso_version="2026.05.11"
 install_dir="arch"
 buildmodes=('iso')
 bootmodes=(

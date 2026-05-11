@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================
-# NYXUS — nyx-2026.05.02-x86_64.iso
+# NYXUS — nyx-2026.05.11-x86_64.iso
 # Copyright © 2026 Joseph Sierengowski
 # All Rights Reserved
 # Unauthorized use or distribution prohibited
@@ -14,7 +14,7 @@
 #   sudo ./build-iso.sh
 #
 # Output:
-#   ./out/nyx-2026.05.02-x86_64.iso
+#   ./out/nyx-2026.05.11-x86_64.iso
 set -euo pipefail
 
 # Colours
@@ -27,7 +27,7 @@ ok()   { printf "  ${CYAN}✓${R}  %s\n" "$*"; }
 warn() { printf "  ${GOLD}!${R}  %s\n" "$*"; }
 fail() { printf "  ${PINK}✗${R}  %s\n" "$*" >&2; }
 
-ISO_NAME="nyx-2026.05.02-x86_64.iso"
+ISO_NAME="nyx-2026.05.11-x86_64.iso"
 TARBALL_URL="https://nyxus-core.replit.app/api/download/nyxus/nyxus-intel.tgz"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROFILE_DIR="${SCRIPT_DIR}/nyx-profile"
