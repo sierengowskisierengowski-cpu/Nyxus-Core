@@ -1,0 +1,634 @@
+/* ─────────────────────────────────────────────────────────────────────
+ * NYXUS · EWW styles — DARK MIRROR aesthetic
+ * © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ *
+ * Palette:
+ *   void-0     #05060a   (deep background)
+ *   void-1     #0a0d14   (panel)
+ *   void-2     #11151f   (raised)
+ *   text       #e8edf5
+ *   dim        #7a8298
+ *   violet     #a06bff   (primary accent — vortex glow)
+ *   cyan       #3ad8ff   (secondary accent — live signal)
+ *   gold       #e8c66b   (warning / highlight)
+ *   crimson    #ff4d6b   (critical / low)
+ * ───────────────────────────────────────────────────────────────────── */
+
+* {
+  all: unset;
+  font-family: "Inter Display", "Inter", "JetBrainsMono Nerd Font", sans-serif;
+  font-size: 12px;
+  color: #e8edf5;
+}
+
+/* ── BARS ─────────────────────────────────────────────────────────── */
+
+.bar {
+  background: rgba(5, 6, 10, 0.78);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 14px;
+  padding: 6px 14px;
+  box-shadow:
+    0 0 0 1px rgba(58, 216, 255, 0.04),
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    inset 0 0 24px rgba(160, 107, 255, 0.05);
+}
+
+.bar-bottom { padding: 8px 18px; min-height: 44px; }
+.bar-top    { padding: 4px 14px; min-height: 24px; border-radius: 0 0 14px 14px; }
+
+.bar-cluster { padding: 0 6px; }
+
+/* ── PILLS (right cluster + helpers) ──────────────────────────────── */
+
+.pill {
+  padding: 4px 12px;
+  border-radius: 10px;
+  background: rgba(17, 21, 31, 0.6);
+  border: 1px solid rgba(160, 107, 255, 0.10);
+  color: #e8edf5;
+  transition: all 180ms ease;
+}
+.pill:hover {
+  background: rgba(160, 107, 255, 0.14);
+  border-color: rgba(160, 107, 255, 0.45);
+  color: #ffffff;
+}
+
+.batt-charge {
+  border-color: rgba(58, 216, 255, 0.45);
+  color: #3ad8ff;
+}
+.batt-low {
+  border-color: rgba(255, 77, 107, 0.55);
+  color: #ff4d6b;
+}
+
+.power-pill {
+  background: rgba(255, 77, 107, 0.10);
+  border-color: rgba(255, 77, 107, 0.35);
+  color: #ff8b9e;
+}
+.power-pill:hover {
+  background: rgba(255, 77, 107, 0.22);
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(255, 77, 107, 0.45);
+}
+
+/* ── BRAND ────────────────────────────────────────────────────────── */
+
+.brand {
+  padding: 4px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  background: linear-gradient(135deg,
+    rgba(160, 107, 255, 0.22),
+    rgba(58, 216, 255, 0.10));
+  border: 1px solid rgba(160, 107, 255, 0.45);
+  color: #ffffff;
+  box-shadow:
+    inset 0 0 12px rgba(160, 107, 255, 0.18),
+    0 0 16px rgba(160, 107, 255, 0.20);
+}
+.brand:hover {
+  background: linear-gradient(135deg,
+    rgba(160, 107, 255, 0.40),
+    rgba(58, 216, 255, 0.22));
+  box-shadow:
+    inset 0 0 18px rgba(160, 107, 255, 0.30),
+    0 0 28px rgba(160, 107, 255, 0.45);
+}
+
+/* ── HEARTBEAT ────────────────────────────────────────────────────── */
+
+.heartbeat {
+  color: #3ad8ff;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  padding: 0 8px;
+  text-shadow: 0 0 8px rgba(58, 216, 255, 0.65);
+}
+
+/* ── SYS PULSE ────────────────────────────────────────────────────── */
+
+.syspulse {
+  padding: 2px 10px;
+  border-radius: 8px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.10);
+}
+.syspulse-cpu  { color: #3ad8ff; letter-spacing: 0.08em; }
+.syspulse-mem  { color: #a06bff; letter-spacing: 0.08em; }
+.syspulse-temp { color: #e8c66b; letter-spacing: 0.08em; }
+
+.tray-dummy {
+  color: #7a8298;
+  letter-spacing: 0.5em;
+  padding: 0 12px;
+}
+
+/* ── CLOCK ────────────────────────────────────────────────────────── */
+
+.clock {
+  padding: 4px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg,
+    rgba(160, 107, 255, 0.10),
+    rgba(58, 216, 255, 0.06));
+  border: 1px solid rgba(160, 107, 255, 0.22);
+  transition: all 180ms ease;
+}
+.clock:hover {
+  background: linear-gradient(135deg,
+    rgba(160, 107, 255, 0.25),
+    rgba(58, 216, 255, 0.14));
+  border-color: rgba(160, 107, 255, 0.55);
+  box-shadow: 0 0 24px rgba(160, 107, 255, 0.35);
+}
+.clock-glyph { color: #a06bff; font-size: 14px; }
+.clock-hms   { font-weight: 700; font-size: 13px; letter-spacing: 0.06em; }
+.clock-date  { color: #b8bfd0; }
+
+/* ── TICKER (top bar) ─────────────────────────────────────────────── */
+
+.ticker-label {
+  color: #a06bff;
+  font-weight: 700;
+  letter-spacing: 0.20em;
+  font-size: 10px;
+  padding: 0 8px;
+  text-shadow: 0 0 10px rgba(160, 107, 255, 0.55);
+}
+.ticker-box { padding: 0 4px; }
+.ticker {
+  color: #c8ccd6;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+/* ── WORKSPACES (left rail) ───────────────────────────────────────── */
+
+.ws-rail {
+  background: rgba(5, 6, 10, 0.78);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 18px;
+  padding: 14px 6px;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    inset 0 0 20px rgba(160, 107, 255, 0.05);
+}
+.ws-pill {
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 12px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.10);
+  color: #7a8298;
+  font-weight: 700;
+  font-size: 13px;
+  transition: all 180ms ease;
+}
+.ws-pill:hover {
+  background: rgba(160, 107, 255, 0.14);
+  color: #e8edf5;
+}
+.ws-pill-active {
+  background: linear-gradient(135deg, #a06bff, #3ad8ff);
+  color: #05060a;
+  border-color: rgba(58, 216, 255, 0.65);
+  box-shadow: 0 0 18px rgba(160, 107, 255, 0.55);
+}
+
+/* ── APP RAIL (right) ─────────────────────────────────────────────── */
+
+.app-rail {
+  background: rgba(5, 6, 10, 0.78);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 18px;
+  padding: 14px 6px;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    inset 0 0 20px rgba(160, 107, 255, 0.05);
+}
+.app-pill {
+  min-width: 38px;
+  min-height: 38px;
+  border-radius: 12px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.10);
+  color: #c8ccd6;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 16px;
+  transition: all 180ms ease;
+}
+.app-pill:hover {
+  background: linear-gradient(135deg,
+    rgba(160, 107, 255, 0.22),
+    rgba(58, 216, 255, 0.12));
+  border-color: rgba(160, 107, 255, 0.55);
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(160, 107, 255, 0.40);
+}
+
+/* ── DASHBOARD overlay ────────────────────────────────────────────── */
+
+.dashboard-root {
+  background: rgba(5, 6, 10, 0.92);
+  padding: 80px 60px;
+  border: 1px solid rgba(160, 107, 255, 0.30);
+  border-radius: 28px;
+  box-shadow:
+    0 0 0 1px rgba(58, 216, 255, 0.06),
+    0 40px 120px rgba(0, 0, 0, 0.85),
+    inset 0 0 80px rgba(160, 107, 255, 0.06);
+}
+.dash-clock {
+  font-size: 88px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  text-shadow: 0 0 32px rgba(160, 107, 255, 0.55);
+}
+.dash-date {
+  font-size: 16px;
+  color: #b8bfd0;
+  letter-spacing: 0.20em;
+}
+.dash-grid { padding: 24px 0; }
+.dash-card {
+  padding: 24px 32px;
+  border-radius: 18px;
+  background: rgba(17, 21, 31, 0.65);
+  border: 1px solid rgba(160, 107, 255, 0.15);
+  min-width: 200px;
+}
+.dash-card-title {
+  color: #a06bff;
+  letter-spacing: 0.30em;
+  font-size: 10px;
+  font-weight: 700;
+}
+.dash-card-big {
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffffff;
+}
+.dash-card-sub {
+  color: #7a8298;
+  font-size: 11px;
+  letter-spacing: 0.10em;
+}
+.dash-toggle {
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: rgba(17, 21, 31, 0.65);
+  border: 1px solid rgba(160, 107, 255, 0.15);
+  letter-spacing: 0.16em;
+  font-size: 11px;
+  transition: all 180ms ease;
+}
+.dash-toggle:hover {
+  background: rgba(160, 107, 255, 0.20);
+  border-color: rgba(160, 107, 255, 0.55);
+  box-shadow: 0 0 18px rgba(160, 107, 255, 0.35);
+}
+.dash-close {
+  margin-top: 16px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #7a8298;
+  letter-spacing: 0.16em;
+  font-size: 10px;
+}
+.dash-close:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.40); }
+
+/* ── POWERMENU overlay ────────────────────────────────────────────── */
+
+.powermenu-root {
+  background: rgba(5, 6, 10, 0.94);
+  padding: 60px 80px;
+  border: 1px solid rgba(255, 77, 107, 0.28);
+  border-radius: 28px;
+  box-shadow:
+    0 0 0 1px rgba(255, 77, 107, 0.06),
+    0 40px 120px rgba(0, 0, 0, 0.85),
+    inset 0 0 80px rgba(255, 77, 107, 0.05);
+}
+.power-title {
+  color: #ff8b9e;
+  font-size: 13px;
+  letter-spacing: 0.40em;
+  font-weight: 700;
+  padding-bottom: 16px;
+  text-shadow: 0 0 16px rgba(255, 77, 107, 0.55);
+}
+.power-btn {
+  min-width: 130px;
+  min-height: 130px;
+  border-radius: 20px;
+  background: rgba(17, 21, 31, 0.65);
+  border: 1px solid rgba(160, 107, 255, 0.15);
+  transition: all 180ms ease;
+}
+.power-btn:hover {
+  background: linear-gradient(135deg,
+    rgba(255, 77, 107, 0.20),
+    rgba(160, 107, 255, 0.18));
+  border-color: rgba(255, 77, 107, 0.55);
+  box-shadow: 0 0 32px rgba(255, 77, 107, 0.40);
+}
+.power-glyph {
+  font-size: 40px;
+  color: #ffffff;
+}
+.power-label {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #c8ccd6;
+}
+.power-cancel {
+  margin-top: 16px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #7a8298;
+  letter-spacing: 0.16em;
+  font-size: 10px;
+}
+.power-cancel:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.40); }
+
+/* ── DASHBOARD · sliders + calendar (additions) ────────────────────── */
+
+.dash-card-cal { min-width: 240px; }
+.dash-cal-grid {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 12px;
+  color: #c8ccd6;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+.dash-sliders { padding: 12px 0; min-width: 480px; }
+.dash-slider-row { padding: 0 8px; }
+.dash-slider-label {
+  color: #a06bff;
+  letter-spacing: 0.20em;
+  font-weight: 700;
+  font-size: 10px;
+  min-width: 36px;
+}
+.dash-scale trough {
+  min-height: 6px;
+  border-radius: 6px;
+  background: rgba(17, 21, 31, 0.85);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+}
+.dash-scale highlight {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #a06bff, #3ad8ff);
+  box-shadow: 0 0 12px rgba(160, 107, 255, 0.55);
+}
+.dash-scale slider {
+  background: #ffffff;
+  min-width: 14px;
+  min-height: 14px;
+  border-radius: 14px;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.55);
+  margin: -6px;
+}
+.dash-toggle-glyph { font-size: 22px; }
+.dash-toggle-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: #c8ccd6;
+}
+
+/* ── CHEATSHEET ────────────────────────────────────────────────────── */
+
+.cheatsheet-root {
+  background: rgba(5, 6, 10, 0.92);
+  padding: 60px 80px;
+  border: 1px solid rgba(160, 107, 255, 0.28);
+  border-radius: 28px;
+  box-shadow:
+    0 0 0 1px rgba(58, 216, 255, 0.06),
+    0 40px 120px rgba(0, 0, 0, 0.85),
+    inset 0 0 80px rgba(160, 107, 255, 0.06);
+}
+.cheat-title {
+  color: #ffffff;
+  font-size: 14px;
+  letter-spacing: 0.40em;
+  font-weight: 700;
+  padding-bottom: 12px;
+  text-shadow: 0 0 16px rgba(160, 107, 255, 0.55);
+}
+.cheat-section {
+  color: #a06bff;
+  letter-spacing: 0.30em;
+  font-size: 10px;
+  font-weight: 700;
+  padding-bottom: 8px;
+}
+.cheat-col {
+  padding: 16px 24px;
+  border-radius: 14px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.12);
+  min-width: 280px;
+}
+.cheat-row { padding: 3px 0; }
+.cheat-chord {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  color: #3ad8ff;
+  font-size: 11px;
+  min-width: 130px;
+  letter-spacing: 0.04em;
+}
+.cheat-action {
+  color: #c8ccd6;
+  font-size: 11px;
+}
+.cheat-close {
+  margin-top: 16px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #7a8298;
+  letter-spacing: 0.16em;
+  font-size: 10px;
+}
+.cheat-close:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.40); }
+
+/* ── OSD pop-ups ───────────────────────────────────────────────────── */
+
+.osd-root {
+  background: rgba(5, 6, 10, 0.92);
+  border: 1px solid rgba(160, 107, 255, 0.30);
+  border-radius: 18px;
+  padding: 14px 22px;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.65),
+    0 0 28px rgba(160, 107, 255, 0.20);
+}
+.osd-glyph {
+  font-size: 24px;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(160, 107, 255, 0.65);
+}
+.osd-label {
+  color: #c8ccd6;
+  letter-spacing: 0.16em;
+  font-size: 10px;
+  font-weight: 700;
+}
+.osd-bar trough {
+  min-height: 6px;
+  border-radius: 6px;
+  background: rgba(17, 21, 31, 0.85);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+}
+.osd-bar highlight {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #a06bff, #3ad8ff);
+  box-shadow: 0 0 12px rgba(160, 107, 255, 0.55);
+}
+
+/* ── SCREENSAVER ───────────────────────────────────────────────────── */
+
+.saver-root {
+  background: rgba(0, 0, 0, 0.96);
+  padding: 100px;
+}
+.saver-clock {
+  font-size: 140px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 0 48px rgba(160, 107, 255, 0.65);
+  letter-spacing: 0.04em;
+}
+.saver-date {
+  font-size: 18px;
+  color: #b8bfd0;
+  letter-spacing: 0.30em;
+}
+.saver-brand {
+  font-size: 12px;
+  color: #a06bff;
+  letter-spacing: 0.50em;
+  font-weight: 700;
+  text-shadow: 0 0 16px rgba(160, 107, 255, 0.45);
+}
+.saver-hint {
+  color: #5a6278;
+  font-size: 10px;
+  letter-spacing: 0.30em;
+  padding-top: 24px;
+}
+
+/* ─── Enterprise additions: new bar pills, player, cores, polish ───── */
+
+/* Mic mute / bluetooth / power-profile / updates / notifications color states */
+.mic-mute   { color: #ff5577; border-color: rgba(255, 85, 119, 0.45); }
+.bt-off     { color: #5a6278; border-color: rgba(255, 255, 255, 0.06); }
+.bt-conn    { color: #3ad8ff; border-color: rgba(58, 216, 255, 0.45);
+              box-shadow: 0 0 12px rgba(58, 216, 255, 0.30); }
+.pp-perf    { color: #ffb04a; border-color: rgba(255, 176, 74, 0.55);
+              text-shadow: 0 0 8px rgba(255, 176, 74, 0.50); }
+.pp-save    { color: #4ade80; border-color: rgba(74, 222, 128, 0.45); }
+.upd-many   { color: #ffb04a; border-color: rgba(255, 176, 74, 0.55); }
+.notif-on   { color: #a06bff; border-color: rgba(160, 107, 255, 0.55); }
+.notif-dnd  { color: #5a6278; border-color: rgba(255, 255, 255, 0.06); }
+
+/* Top-bar player (right-aligned) */
+.ticker-player {
+  background: rgba(17, 21, 31, 0.6);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 8px;
+  padding: 2px 12px;
+  margin-right: 12px;
+  color: #ffffff;
+}
+.ticker-player:hover {
+  border-color: rgba(58, 216, 255, 0.45);
+  box-shadow: 0 0 10px rgba(58, 216, 255, 0.25);
+}
+.ticker-player-text {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: #c8ccd6;
+}
+
+/* Workspace pill: occupied state */
+.ws-pill-occupied {
+  border-color: rgba(160, 107, 255, 0.45) !important;
+  color: #c8ccd6 !important;
+  background: rgba(160, 107, 255, 0.06) !important;
+}
+.ws-pill-occupied:hover { color: #ffffff !important; }
+
+/* Per-core CPU graph */
+.dash-cores-card {
+  padding: 18px 24px;
+  border-radius: 16px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.16);
+  min-width: 720px;
+}
+.dash-cores {
+  min-height: 64px;
+  padding: 6px 4px;
+}
+.core-bar {
+  min-width: 14px;
+  background: rgba(17, 21, 31, 0.85);
+  border-radius: 4px;
+  border: 1px solid rgba(160, 107, 255, 0.10);
+  padding: 2px;
+}
+.core-fill {
+  background: linear-gradient(180deg, #3ad8ff, #a06bff);
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(160, 107, 255, 0.40);
+  min-width: 8px;
+}
+.core-warm { background: linear-gradient(180deg, #ffb04a, #ff7a3a); }
+.core-hot  { background: linear-gradient(180deg, #ff5577, #c0306c);
+             box-shadow: 0 0 10px rgba(255, 85, 119, 0.55); }
+
+/* Dashboard media player card */
+.dash-player {
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.16);
+  min-width: 240px;
+}
+.dash-player-title {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(160, 107, 255, 0.35);
+}
+.dash-player-artist {
+  color: #8b94a8;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.dash-player-controls { padding-top: 8px; }
+.dash-player-btn {
+  background: rgba(160, 107, 255, 0.10);
+  border: 1px solid rgba(160, 107, 255, 0.28);
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: #ffffff;
+  font-size: 14px;
+}
+.dash-player-btn:hover {
+  background: rgba(160, 107, 255, 0.22);
+  border-color: rgba(58, 216, 255, 0.55);
+  box-shadow: 0 0 14px rgba(160, 107, 255, 0.50);
+}

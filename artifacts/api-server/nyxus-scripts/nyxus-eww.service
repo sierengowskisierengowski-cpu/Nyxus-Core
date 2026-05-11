@@ -1,0 +1,21 @@
+[Unit]
+Description=NYXUS EWW daemon (ElKowar's Wacky Widgets)
+Documentation=https://github.com/elkowar/eww
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=simple
+EnvironmentFile=-%h/.config/eww/nyxus.conf
+ExecStartPre=/usr/bin/sh -c 'mkdir -p "${NYXUS_EWW_LOG_DIR:-$HOME/.cache/nyxus-eww}"'
+ExecStart=/usr/local/bin/eww daemon --no-daemonize
+ExecStartPost=/usr/local/bin/nyxus-eww-launch
+ExecStop=/usr/local/bin/eww kill
+Restart=on-failure
+RestartSec=3
+StandardOutput=append:%h/.cache/nyxus-eww/daemon.log
+StandardError=append:%h/.cache/nyxus-eww/daemon.log
+
+[Install]
+WantedBy=graphical-session.target

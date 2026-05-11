@@ -174,12 +174,14 @@ def check_graffiti_cache() -> None:
 def check_scripts_present() -> None:
     # rev r13: nyxus_notepad.py + nyxus_weather.py removed (rich
     # tarball editions installed to /opt/nyxus-notepad + /opt/nyxus-weather)
+    # rev r6-eww (2026-05-11): nyxus_powermenu removed — replaced by EWW
+    # `eww open --toggle powermenu`. See artifacts/api-server/nyxus-scripts/eww/.
     expected = [
         "nyxus_settings.py", "nyxus_stickies.py",
         "nyxus_sysmon_gtk.py", "nyxus_control.py",
         "nyxus_terminal.py",
         # phase-2 additions
-        "nyxus_doctor.py", "nyxus_launcher.py", "nyxus_powermenu.py",
+        "nyxus_doctor.py", "nyxus_launcher.py",
         "nyxus_screenshot.py",
     ]
     missing = [n for n in expected

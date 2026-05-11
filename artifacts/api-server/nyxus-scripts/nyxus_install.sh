@@ -79,14 +79,21 @@ failed_items=()
 # ── PYTHON TERMINAL SCRIPTS ───────────────────────────────────────────────────
 hdr "Python Terminal Scripts"
 mkdir -p "$SCRIPTS_DIR"
+## NOTE (rev r6-eww, 2026-05-11): the following five Python apps were
+## REMOVED because EWW now provides the same functionality natively:
+##   nyxus_powermenu.py    → eww open --toggle powermenu
+##   nyxus_quicksettings.py → eww open --toggle dashboard
+##   nyxus_clock.py        → built into EWW dashboard clock card
+##   nyxus_calendar.py     → built into EWW dashboard calendar card
+##   nyxus_cheatsheet.py   → eww open --toggle cheatsheet
+## See artifacts/api-server/nyxus-scripts/eww/ for the replacements.
 for f in nyxus_palette.py nyxus-palette.css \
          nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
          nyxus_sysmon_gtk.py \
          nyxus_stickies.py nyxus_notes.py nyxus_terminal.py \
          nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
-         nyxus_doctor.py nyxus_launcher.py nyxus_powermenu.py \
-         nyxus_screenshot.py nyxus_chrome.py nyxus_quicksettings.py \
-         nyxus_calendar.py nyxus_clock.py nyxus_cheatsheet.py \
+         nyxus_doctor.py nyxus_launcher.py \
+         nyxus_screenshot.py nyxus_chrome.py \
          nyxus_screensaver.py nyxus_demon_wake.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
@@ -286,9 +293,74 @@ done
 
 # ── WAYBAR ────────────────────────────────────────────────────────────────────
 hdr "Waybar"
-mkdir -p "$WAYBAR_DIR"
-dl "waybar-config.json"       "$WAYBAR_DIR/config"            || failed=$((failed+1))
-dl "waybar-style.css"         "$WAYBAR_DIR/style.css"         || failed=$((failed+1))
+# ── EWW (replaces waybar as of rev r6-eww, 2026-05-11) ──────────────────────
+# 4 bars (top/bottom/left/right) + dashboard + powermenu + cheatsheet + 3 OSDs.
+# All real backends — no mock data, no placeholders. See eww/README.md.
+EWW_DIR="$HOME/.config/eww"
+EWW_SCRIPTS_DIR="$EWW_DIR/scripts"
+mkdir -p "$EWW_DIR" "$EWW_SCRIPTS_DIR"
+hdr "EWW Shell (bars · dashboard · powermenu · cheatsheet · OSDs)"
+dl "eww/eww.yuck"     "$EWW_DIR/eww.yuck"     || failed=$((failed+1))
+dl "eww/eww.scss"     "$EWW_DIR/eww.scss"     || failed=$((failed+1))
+dl "eww/nyxus.conf"   "$EWW_DIR/nyxus.conf"   || failed=$((failed+1))
+dl "eww/README.md"    "$EWW_DIR/README.md"    || failed=$((failed+1))
+for s in audio battery bluetooth brightness calendar cpu-bars mic network \
+         notifications osd-show player power-profile sys-pulse ticker \
+         updates weather workspaces; do
+  dl "eww/scripts/${s}.sh" "$EWW_SCRIPTS_DIR/${s}.sh" || failed=$((failed+1))
+done
+chmod +x "$EWW_SCRIPTS_DIR"/*.sh 2>/dev/null || true
+
+# nyxus-eww-launch (deadline-bounded launcher) → /usr/local/bin/
+if dl "nyxus-eww-launch" "/tmp/nyxus-eww-launch.new"; then
+  if sudo -n install -m 0755 /tmp/nyxus-eww-launch.new /usr/local/bin/nyxus-eww-launch 2>/dev/null; then
+    ok "nyxus-eww-launch → /usr/local/bin/"
+  else
+    install -m 0755 /tmp/nyxus-eww-launch.new "$HOME/.local/bin/nyxus-eww-launch" 2>/dev/null \
+      && ok "nyxus-eww-launch → ~/.local/bin/ (sudo unavailable)" \
+      || failed=$((failed+1))
+  fi
+  rm -f /tmp/nyxus-eww-launch.new
+fi
+
+# Optional systemd user service (idempotent — Hyprland exec-once also works)
+mkdir -p "$HOME/.config/systemd/user"
+dl "nyxus-eww.service" "$HOME/.config/systemd/user/nyxus-eww.service" \
+  && systemctl --user daemon-reload 2>/dev/null || true
+
+# Build EWW from source (v0.6.0 pinned) ONLY if not already installed.
+# Pinning + fail-fast lives in customize_airootfs.sh on the ISO; on existing
+# systems we install via cargo if the binary is missing.
+if ! command -v eww &>/dev/null; then
+  printf "  ${PURPLE}→${R} ${DIM}eww binary missing — installing prerequisites…${R}\n"
+  if command -v pacman &>/dev/null; then
+    sudo -n pacman -S --noconfirm --needed rustup gtk3 gtk-layer-shell pango cairo gdk-pixbuf2 \
+      glib2 dbus librsvg libdbusmenu-gtk3 2>/dev/null || true
+    sudo -n rustup default stable 2>/dev/null || rustup default stable 2>/dev/null || true
+    if command -v cargo &>/dev/null; then
+      printf "  ${DIM}building eww v0.6.0 (this takes ~3-5 min)…${R}\n"
+      cargo install --git https://github.com/elkowar/eww --tag v0.6.0 --root "$HOME/.local" eww 2>/tmp/nyxus-eww-build.log \
+        && ok "eww v0.6.0 built → ~/.local/bin/eww" \
+        || { fail "eww build (see /tmp/nyxus-eww-build.log)"; failed=$((failed+1)); }
+    else
+      fail "cargo missing — cannot build eww (re-run installer after rustup setup)"
+      failed=$((failed+1))
+    fi
+  else
+    printf "  ${DIM}pacman unavailable — install eww manually: cargo install --git https://github.com/elkowar/eww --tag v0.6.0 eww${R}\n"
+  fi
+else
+  ok "eww binary already installed: $(eww --version 2>/dev/null | head -1)"
+fi
+
+# ── WAYBAR (LEGACY — deprecated rev r6-eww 2026-05-11) ──────────────────────
+# Waybar is no longer downloaded by default. The block is preserved as
+# COMMENTED reference in case a user wants to fall back. The new hyprland.conf
+# does not start waybar; uncommenting these lines without also re-pointing
+# Hyprland's exec-once away from EWW will create a duplicate-bar conflict.
+# mkdir -p "$WAYBAR_DIR"
+# dl "waybar-config.json"       "$WAYBAR_DIR/config"            || failed=$((failed+1))
+# dl "waybar-style.css"         "$WAYBAR_DIR/style.css"         || failed=$((failed+1))
 # Inject real paths into CSS
 WALL_PATH="$HOME/.config/hypr/walls/nyxus-drifter-wall.png"
 TASKBAR_BG_PATH="$HOME/.config/hypr/walls/nyxus-taskbar-bg.png"
@@ -298,28 +370,32 @@ WAYBAR_STARS_PATH="$HOME/.config/hypr/walls/nyxus-waybar-stars.png"
 MONOGRAM_MIST_PATH="$HOME/.config/hypr/walls/nyxus-monogram-mist.png"
 TOPBAR_MIST_PATH="$HOME/.config/hypr/walls/nyxus-topbar-mist.png"
 BAR_STONE_PATH="$HOME/.config/hypr/walls/nyxus-bar-stone.png"
-sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"                  "$WAYBAR_DIR/style.css"
-sed -i "s|NYXUS_TASKBAR_BG|file://${TASKBAR_BG_PATH}|g"    "$WAYBAR_DIR/style.css"
-sed -i "s|NYXUS_RIGHTBAR_BG|file://${RIGHTBAR_BG_PATH}|g"  "$WAYBAR_DIR/style.css"
-sed -i "s|NYXUS_STARLIGHT_BG|file://${STARLIGHT_BG_PATH}|g" "$WAYBAR_DIR/style.css"
-sed -i "s|NYXUS_WAYBAR_STARS|file://${WAYBAR_STARS_PATH}|g" "$WAYBAR_DIR/style.css"
-sed -i "s|NYXUS_MONOGRAM_MIST|file://${MONOGRAM_MIST_PATH}|g" "$WAYBAR_DIR/style.css"
-sed -i "s|NYXUS_TOPBAR_MIST|file://${TOPBAR_MIST_PATH}|g" "$WAYBAR_DIR/style.css"
-sed -i "s|NYXUS_BAR_STONE|file://${BAR_STONE_PATH}|g"      "$WAYBAR_DIR/style.css"
-# Belt-and-suspenders: convert any leftover hardcoded /home/nyx/ to real $HOME
-sed -i "s|file:///home/nyx/|file://$HOME/|g"               "$WAYBAR_DIR/style.css"
-# waybar-config.json has 15+ hardcoded /home/nyx/.config/waybar/... paths
-# in module on-click handlers. Rewrite them so non-`nyx` users get working
-# clicks (otherwise every waybar click on a NYXUS module is a no-op).
-if [[ "$HOME" != "/home/nyx" ]]; then
-  sed -i "s|/home/nyx/|$HOME/|g" "$WAYBAR_DIR/config" \
-    && ok "waybar config rewritten: /home/nyx/ → $HOME/"
+# rev r6-eww (2026-05-11): the legacy waybar style.css path-substitution
+# block is now guarded — on fresh installs $WAYBAR_DIR/style.css does NOT
+# exist (waybar download disabled above), and `set -e` would otherwise
+# abort the entire installer on the first sed failure. The whole block
+# is now a single conditional; if a user manually restored waybar, the
+# sed lines run, otherwise they are skipped silently.
+if [[ -f "$WAYBAR_DIR/style.css" ]]; then
+  sed -i "s|NYXUS_WALL_PATH|${WALL_PATH}|g"                    "$WAYBAR_DIR/style.css" || true
+  sed -i "s|NYXUS_TASKBAR_BG|file://${TASKBAR_BG_PATH}|g"      "$WAYBAR_DIR/style.css" || true
+  sed -i "s|NYXUS_RIGHTBAR_BG|file://${RIGHTBAR_BG_PATH}|g"    "$WAYBAR_DIR/style.css" || true
+  sed -i "s|NYXUS_STARLIGHT_BG|file://${STARLIGHT_BG_PATH}|g"  "$WAYBAR_DIR/style.css" || true
+  sed -i "s|NYXUS_WAYBAR_STARS|file://${WAYBAR_STARS_PATH}|g"  "$WAYBAR_DIR/style.css" || true
+  sed -i "s|NYXUS_MONOGRAM_MIST|file://${MONOGRAM_MIST_PATH}|g" "$WAYBAR_DIR/style.css" || true
+  sed -i "s|NYXUS_TOPBAR_MIST|file://${TOPBAR_MIST_PATH}|g"    "$WAYBAR_DIR/style.css" || true
 fi
-dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
-dl "waybar-stats.sh"          "$WAYBAR_DIR/stats.sh"          || failed=$((failed+1))
-dl "nyxus-sys-pulse.sh"       "$WAYBAR_DIR/sys-pulse.sh"      || failed=$((failed+1))
-dl "nyxus_quicksettings.py"   "$WAYBAR_DIR/quicksettings.py"  || failed=$((failed+1))
-chmod +x "$WAYBAR_DIR/ticker.sh" "$WAYBAR_DIR/stats.sh" "$WAYBAR_DIR/sys-pulse.sh" "$WAYBAR_DIR/quicksettings.py" 2>/dev/null || true
+# sed -i "s|NYXUS_BAR_STONE|file://${BAR_STONE_PATH}|g"      "$WAYBAR_DIR/style.css"
+# # Belt-and-suspenders: convert any leftover hardcoded /home/nyx/ to real $HOME
+# sed -i "s|file:///home/nyx/|file://$HOME/|g"               "$WAYBAR_DIR/style.css"
+# if [[ "$HOME" != "/home/nyx" ]]; then
+#   sed -i "s|/home/nyx/|$HOME/|g" "$WAYBAR_DIR/config" \
+#     && ok "waybar config rewritten: /home/nyx/ → $HOME/"
+# fi
+# dl "waybar-ticker.sh"         "$WAYBAR_DIR/ticker.sh"         || failed=$((failed+1))
+# dl "waybar-stats.sh"          "$WAYBAR_DIR/stats.sh"          || failed=$((failed+1))
+# dl "nyxus-sys-pulse.sh"       "$WAYBAR_DIR/sys-pulse.sh"      || failed=$((failed+1))
+# (The above are part of the legacy waybar block — see EWW SHELL block above.)
 
 # ── ROFI ─────────────────────────────────────────────────────────────────────
 hdr "Rofi"
@@ -598,15 +674,15 @@ Version=1.0
 Type=Application
 Name=NYXUS Power
 GenericName=Power Menu
-Comment=NYXUS lock / logout / suspend / reboot / shutdown menu
-Exec=python3 /home/nyx/.nyxus/nyxus_powermenu.py
+Comment=NYXUS lock / logout / suspend / reboot / shutdown menu (EWW)
+Exec=eww open --toggle powermenu
 Icon=io.nyxus.power
 Terminal=false
 Categories=System;
 Keywords=nyxus;power;logout;shutdown;reboot;suspend;lock;
-StartupWMClass=io.nyxus.powermenu
+StartupWMClass=nyxus-powermenu
 DEOF
-ok "nyxus-powermenu.desktop"
+ok "nyxus-powermenu.desktop (→ eww)"
 
 cat > "$DESKTOP_DIR/nyxus-screenshot.desktop" <<'DEOF'
 [Desktop Entry]
@@ -640,37 +716,11 @@ StartupWMClass=io.nyxus.doctor
 DEOF
 ok "nyxus-doctor.desktop"
 
-cat > "$DESKTOP_DIR/nyxus-calendar.desktop" <<'DEOF'
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=NYXUS Calendar
-GenericName=Calendar
-Comment=NYXUS calendar — month view with per-day notes (DARK MIRROR)
-Exec=python3 /home/nyx/.nyxus/nyxus_calendar.py
-Icon=io.nyxus.calendar
-Terminal=false
-Categories=Office;Calendar;
-Keywords=nyxus;calendar;date;month;notes;agenda;
-StartupWMClass=io.nyxus.calendar
-DEOF
-ok "nyxus-calendar.desktop"
-
-cat > "$DESKTOP_DIR/nyxus-clock.desktop" <<'DEOF'
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=NYXUS Clock
-GenericName=Clock
-Comment=NYXUS clock — digital + world clocks + stopwatch (DARK MIRROR)
-Exec=python3 /home/nyx/.nyxus/nyxus_clock.py
-Icon=io.nyxus.clock
-Terminal=false
-Categories=Utility;Clock;
-Keywords=nyxus;clock;time;world;stopwatch;timer;
-StartupWMClass=io.nyxus.clock
-DEOF
-ok "nyxus-clock.desktop"
+# NOTE (rev r6-eww, 2026-05-11): standalone Calendar + Clock .desktop entries
+# REMOVED — both surfaces are now permanently visible inside the EWW dashboard
+# (Super+`). Keeping them as separate launchers would create duplicate UI.
+# The EWW dashboard's calendar card uses scripts/calendar.sh (real `cal` output)
+# and the clock card uses defpoll on the system locale time string.
 
 # ── FIX HARDCODED /home/nyx/ PATHS ────────────────────────────────────────────
 # All the .desktop heredocs above use the literal `/home/nyx/.nyxus/...`
@@ -800,21 +850,34 @@ else
 fi
 
 if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
-  pkill -x waybar 2>/dev/null || true
-  sleep 1.0
-  nohup waybar \
-    --config "$WAYBAR_DIR/config" \
-    --style  "$WAYBAR_DIR/style.css" \
-    > /tmp/nyxus-waybar.log 2>&1 &
-  disown
-  sleep 1.2
-  if pgrep -x waybar > /dev/null; then
-    ok "Waybar restarted — 4-bar NYXUS layout active"
+  # ── EWW restart (rev r6-eww — replaces the waybar restart block) ──────────
+  pkill -x eww 2>/dev/null || true
+  sleep 0.6
+  if command -v eww &>/dev/null; then
+    nohup eww daemon > /tmp/nyxus-eww-daemon.log 2>&1 &
+    disown
+    sleep 0.8
+    if command -v nyxus-eww-launch &>/dev/null; then
+      nohup nyxus-eww-launch > /tmp/nyxus-eww-launch.log 2>&1 &
+      disown
+      sleep 1.0
+    else
+      # Fallback: open windows directly from nyxus.conf list
+      for w in bar-bottom bar-top bar-left bar-right; do
+        eww open "$w" 2>/dev/null || true
+      done
+    fi
+    if pgrep -x eww > /dev/null; then
+      ok "EWW shell active — 4 bars + dashboard + powermenu + cheatsheet + OSDs"
+    else
+      fail "EWW daemon failed to start — check /tmp/nyxus-eww-daemon.log"
+      failed=$((failed+1))
+      failed_items+=("eww-start")
+    fi
   else
-    printf "  ${RED}${B}✗${R}  ${DIM}Waybar failed to start — check /tmp/nyxus-waybar.log${R}\n"
-    printf "  ${DIM}Run:  cat /tmp/nyxus-waybar.log${R}\n"
+    printf "  ${RED}${B}✗${R}  ${DIM}eww binary not found on PATH — install above failed${R}\n"
     failed=$((failed+1))
-    failed_items+=("waybar-start")
+    failed_items+=("eww-binary")
   fi
 fi
 

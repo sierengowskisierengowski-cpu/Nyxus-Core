@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║  NYXUS — EWW launcher                                                ║
+# ║  Lives at: /usr/local/bin/nyxus-eww-launch                           ║
+# ║                                                                      ║
+# ║  Waits for the eww IPC socket to appear (daemon up), then opens the  ║
+# ║  configured bars. Closing first guards against duplicate windows on  ║
+# ║  Hyprland config-reload.                                             ║
+# ║                                                                      ║
+# ║  Reads ~/.config/eww/nyxus.conf for:                                 ║
+# ║    NYXUS_EWW_BARS      — space-separated subset to open              ║
+# ║    NYXUS_EWW_TIMEOUT   — wall-clock socket-wait timeout (s)          ║
+# ║    NYXUS_EWW_LOG_DIR   — log destination                             ║
+# ║                                                                      ║
+# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+set -u
+
+CONF="${HOME}/.config/eww/nyxus.conf"
+[[ -r "$CONF" ]] && . "$CONF"
+
+BARS="${NYXUS_EWW_BARS:-bar-bottom bar-top bar-left bar-right}"
+TIMEOUT_SECS="${NYXUS_EWW_TIMEOUT:-30}"
+LOG_DIR="${NYXUS_EWW_LOG_DIR:-$HOME/.cache/nyxus-eww}"
+mkdir -p "$LOG_DIR"
+LOG="${LOG_DIR}/launch.log"
+
+ts() { date '+%F %T'; }
+log() { printf '[%s] %s\n' "$(ts)" "$*" >> "$LOG"; }
+
+log "launch start — bars=[${BARS}] timeout=${TIMEOUT_SECS}s"
+
+SOCK="${XDG_RUNTIME_DIR:-/tmp}/eww-server_default"
+deadline=$(( $(date +%s) + TIMEOUT_SECS ))
+while [[ ! -S "$SOCK" ]]; do
+  if [[ $(date +%s) -ge $deadline ]]; then
+    log "ERROR — daemon socket ${SOCK} never appeared after ${TIMEOUT_SECS}s"
+    notify-send -u critical "NYXUS EWW" \
+      "Daemon socket never appeared after ${TIMEOUT_SECS}s — bars not started." 2>/dev/null || true
+    exit 1
+  fi
+  sleep 0.3
+done
+log "socket ready · ${SOCK}"
+
+eww close-all 2>/dev/null && log "closed pre-existing windows"
+sleep 0.2
+
+failed=0
+for bar in $BARS; do
+  if eww open "$bar" 2>>"$LOG"; then
+    log "opened · ${bar}"
+  else
+    log "ERROR opening · ${bar}"
+    failed=$((failed + 1))
+  fi
+done
+
+log "launch complete — ${failed} failure(s)"
+exit "$failed"
