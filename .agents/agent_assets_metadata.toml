@@ -582,6 +582,18 @@ uri = "file://attached_assets/generated_images/nyxus_splash_eyes_v2.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "J7RvDozHAUPKxI9vTeD2_"
+uri = "file://attached_assets/generated_images/nyxus_splash_eyes_wraith.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "FqB6KHQVBQyq0YeYCGVvf"
+uri = "file://attached_assets/generated_images/nyxus_splash_eyes_abstract.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
