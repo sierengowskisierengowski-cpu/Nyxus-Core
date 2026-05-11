@@ -288,6 +288,12 @@
       (button :class "dash-player-btn" :onclick "playerctl next &" "⏭"))))
 
 (defwidget dashboard_layout []
+  ;; Wrap entire dashboard in a scroll so it never overflows on small
+  ;; displays (e.g. 1366×768). Inner box keeps the same vertical layout
+  ;; and centred alignment; scroll only kicks in when content exceeds
+  ;; the available height. Per DESIGN_CONTRACT.md §12.
+  (scroll :class "dashboard-scroll" :hscroll false :vscroll true
+          :hexpand true :vexpand true
   (box :class "dashboard-root" :orientation "v" :halign "center" :valign "center"
        :space-evenly false :spacing 22
     ;; ── header: clock + date ──────────────────────────────────────────
@@ -336,24 +342,30 @@
                :onchange "brightnessctl set {}%")))
 
     ;; ── quick toggles ────────────────────────────────────────────────
+    ;; Glyphs use JetBrainsMono Nerd Font code points (matches every
+    ;; other surface — bar, flyouts, OSD). Per DESIGN_CONTRACT.md §6.
     (box :class "dash-toggles" :orientation "h" :space-evenly true :spacing 12
-      (dash_quick_toggle :glyph "📶" :label "Network"   :cmd "alacritty -e nmtui")
-      (dash_quick_toggle :glyph ""  :label "Bluetooth" :cmd "blueman-manager")
-      (dash_quick_toggle :glyph ""  :label "Audio"     :cmd "pavucontrol")
-      (dash_quick_toggle :glyph "🖥"  :label "Displays"  :cmd "wdisplays")
-      (dash_quick_toggle :glyph ""  :label "Updates"   :cmd "alacritty -e sh -c 'sudo pacman -Syu; read'")
-      (dash_quick_toggle :glyph "🔒"  :label "Lock"      :cmd "eww close dashboard && hyprlock")
-      (dash_quick_toggle :glyph "?"   :label "Keys"      :cmd "eww close dashboard && eww open --toggle cheatsheet")
-      (dash_quick_toggle :glyph "⏻"   :label "Power"     :cmd "eww close dashboard && eww open --toggle powermenu"))
+      (dash_quick_toggle :glyph "󰖩" :label "Network"   :cmd "alacritty -e nmtui")
+      (dash_quick_toggle :glyph "󰂯" :label "Bluetooth" :cmd "blueman-manager")
+      (dash_quick_toggle :glyph "󰕾" :label "Audio"     :cmd "pavucontrol")
+      (dash_quick_toggle :glyph "󰍹" :label "Displays"  :cmd "wdisplays")
+      (dash_quick_toggle :glyph "󰚰" :label "Updates"   :cmd "alacritty -e sh -c 'sudo pacman -Syu; read'")
+      (dash_quick_toggle :glyph "󰌾" :label "Lock"      :cmd "eww close dashboard && hyprlock")
+      (dash_quick_toggle :glyph "󰌌" :label "Keys"      :cmd "eww close dashboard && eww open --toggle cheatsheet")
+      (dash_quick_toggle :glyph "󰐥" :label "Power"     :cmd "eww close dashboard && eww open --toggle powermenu"))
 
-    (button :class "dash-close" :onclick "eww close dashboard" "Close (Esc)")))
+    (button :class "dash-close" :onclick "eww close dashboard" "Close (Esc)"))))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; POWERMENU
 ;; ═════════════════════════════════════════════════════════════════════
 
-(defwidget power_btn [glyph label cmd]
-  (button :class "power-btn"
+;; `variant` ∈ "default" | "danger". Danger variants paint the glyph red
+;; and gain a red border so destructive actions (shutdown/restart) read
+;; as obviously different from soft ones (suspend/logout/lock).
+;; Per DESIGN_CONTRACT.md §8.
+(defwidget power_btn [glyph label cmd ?variant]
+  (button :class "power-btn power-btn-${variant ?: "default"}"
           :onclick "eww close powermenu && (${cmd}) &"
     (box :orientation "v" :space-evenly false :spacing 8 :halign "center"
       (label :class "power-glyph" :text "${glyph}")
@@ -364,11 +376,11 @@
        :space-evenly false :spacing 24
     (label :class "power-title" :text "NYXUS · POWER")
     (box :class "power-grid" :orientation "h" :space-evenly true :spacing 18
-      (power_btn :glyph "⏻" :label "Shutdown" :cmd "systemctl poweroff")
-      (power_btn :glyph "↻" :label "Restart"  :cmd "systemctl reboot")
-      (power_btn :glyph "☾" :label "Suspend"  :cmd "systemctl suspend")
-      (power_btn :glyph "⏏" :label "Logout"   :cmd "hyprctl dispatch exit")
-      (power_btn :glyph "🔒" :label "Lock"     :cmd "hyprlock"))
+      (power_btn :glyph "󰐥" :label "Shutdown" :cmd "systemctl poweroff" :variant "danger")
+      (power_btn :glyph "󰜉" :label "Restart"  :cmd "systemctl reboot"   :variant "danger")
+      (power_btn :glyph "󰒲" :label "Suspend"  :cmd "systemctl suspend")
+      (power_btn :glyph "󰗽" :label "Logout"   :cmd "hyprctl dispatch exit")
+      (power_btn :glyph "󰌾" :label "Lock"     :cmd "hyprlock"))
     (button :class "power-cancel" :onclick "eww close powermenu" "Cancel (Esc)")))
 
 ;; ═════════════════════════════════════════════════════════════════════

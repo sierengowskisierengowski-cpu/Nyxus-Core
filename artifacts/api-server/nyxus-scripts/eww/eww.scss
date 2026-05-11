@@ -244,6 +244,24 @@
     0 40px 120px rgba(0, 0, 0, 0.85),
     inset 0 0 80px rgba(160, 107, 255, 0.06);
 }
+/* Scroll wrapper around dashboard content (only visible when content
+   exceeds viewport height — typical 1366×768 keeps it hidden). */
+.dashboard-scroll {
+  background: transparent;
+  /* Make scrollbar match the dark/violet theme rather than the default
+     GTK accent — keeps the panel visually quiet when it does appear. */
+}
+.dashboard-scroll scrollbar {
+  background: transparent;
+  border: none;
+}
+.dashboard-scroll scrollbar slider {
+  background: rgba(160, 107, 255, 0.35);
+  border-radius: 4px;
+  min-width: 6px;
+  min-height: 24px;
+}
+.dashboard-scroll scrollbar slider:hover { background: rgba(160, 107, 255, 0.65); }
 .dash-clock {
   font-size: 88px;
   font-weight: 700;
@@ -339,6 +357,18 @@
     rgba(160, 107, 255, 0.18));
   border-color: rgba(255, 77, 107, 0.55);
   box-shadow: 0 0 32px rgba(255, 77, 107, 0.40);
+}
+/* Destructive variants (Shutdown/Restart) — red border + glyph in
+   resting state so they read as obviously different from soft actions
+   (Suspend/Logout/Lock). Per DESIGN_CONTRACT.md §8. */
+.power-btn-danger {
+  border-color: rgba(255, 77, 107, 0.45);
+  background: rgba(40, 12, 22, 0.55);
+}
+.power-btn-danger .power-glyph { color: #ff8b9e; }
+.power-btn-danger:hover {
+  border-color: rgba(255, 77, 107, 0.85);
+  box-shadow: 0 0 36px rgba(255, 77, 107, 0.55);
 }
 .power-glyph {
   font-size: 40px;

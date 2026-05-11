@@ -200,9 +200,9 @@ against §1-12. Score each as PASS / NEEDS-FIX / FAIL.
 | Audio Mixer flyout              | PASS (audited 2026-05-11) | Empty state added: "No apps playing audio" |
 | Calendar flyout                 | PASS (audited 2026-05-11) | Static grid, no list = no empty state needed |
 | Notification Center             | PASS (audited 2026-05-11) | Empty state added: DND-aware ("All caught up" / "DND on") |
-| Cheatsheet                      | TODO audit             | Three-column layout fit |
-| Powermenu                       | TODO audit             | Centering + button hierarchy |
-| Dashboard                       | TODO audit             | Largest known offender — full pass |
+| Cheatsheet                      | PASS (audited 2026-05-11) | Title + 3 cols + close button + Esc — no list = no empty state needed |
+| Powermenu                       | PASS (audited 2026-05-11) | Added `.power-btn-danger` variant: Shutdown/Restart now red-bordered with red glyph (§8) |
+| Dashboard                       | PASS (audited 2026-05-11) | Wrapped in `(scroll …)` so content never overflows 1366×768 (§12); replaced all 8 emoji toggles with nerd-font glyphs (§6) |
 | Welcome Wizard                  | PASS (built to contract) | Reference implementation |
 | Settings app                    | NOT BUILT              | Must be built to contract from day 1 |
 
