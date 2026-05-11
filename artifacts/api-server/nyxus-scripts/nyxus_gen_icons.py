@@ -300,4 +300,4 @@ print("\n\033[1mFinal disk state:\033[0m")
 import subprocess
 subprocess.run(["ls", "-la", ICON_DIR])
 
-print("\n\033[1m\033[92mIcons installed. Now run:  pkill waybar; sleep 1; setsid waybar &\033[0m\n")
+print("\n\033[1m\033[92mIcons installed. Now run:  pkill eww; sleep 1; setsid nyxus-eww-launch &\033[0m\n")

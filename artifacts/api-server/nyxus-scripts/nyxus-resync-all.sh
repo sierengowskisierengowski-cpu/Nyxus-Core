@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.09-r22"
+NYXUS_RESYNC_VERSION="2026.05.11-r7-eww"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -531,6 +531,30 @@ if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_GENERAL" ]]; then
   fi
 fi
 
+# 3.5/6  EXTRA conf.d shards (rev r7-eww — was missing in r6-eww;
+# without this, layerblur/fog/rules updates never reached existing
+# installs and EWW bars rendered as flat dark glass with no frost).
+# These shards are sourced by hyprland.conf via wildcard, so we only
+# need to ship the file — no source-line append required.
+for shard in nyxus-hyprland-layerblur.conf \
+             nyxus-hyprland-fog.conf \
+             nyxus-hyprland-rules.conf; do
+  dest="$HYPR_CONF_D/$shard"
+  if curl -fsSL --max-time 30 "$PROD/$shard" -o "${dest}.new"; then
+    if [[ -s "${dest}.new" ]]; then
+      mv -f "${dest}.new" "$dest"
+      chown "$REAL_USER:$REAL_USER" "$dest"
+      chmod 644 "$dest"
+      ok "wrote $dest ($(stat -c%s "$dest") bytes)"
+    else
+      rm -f "${dest}.new"
+      warn "downloaded $shard was empty — kept previous copy"
+    fi
+  else
+    warn "could not download $shard — kept previous copy if any"
+  fi
+done
+
 # Try to reload Hyprland so blur+opacity take effect immediately. Best-effort
 # — if it fails (xauth/permissions), the user can run `hyprctl reload`
 # manually after the script finishes. The runtime check in step 7/7 will
@@ -739,7 +763,7 @@ for bg in nyxus-frost-sierengowski.png nyxus-starlight.png nyxus-monogram-mist.p
   fi
 done
 
-# 4.5c  EWW config refresh (replaces 4.5c/d/e waybar refresh; rev r6-eww 2026-05-11)
+# 4.5c  EWW config refresh (replaces 4.5c/d/e waybar refresh; rev r7-eww 2026-05-11)
 EWW_DIR="$REAL_HOME/.config/eww"
 mkdir -p "$EWW_DIR/scripts"
 chown -R "$REAL_USER:$REAL_USER" "$EWW_DIR"
@@ -759,6 +783,28 @@ for f in eww.yuck eww.scss nyxus.conf; do
   fi
 done
 
+# 4.5d  EWW backend script refresh (rev r7-eww — was missing in r6-eww;
+# without this, fixes shipped to scripts/*.sh never reached existing installs).
+for s in audio battery bluetooth brightness calendar cpu-bars mic network \
+         notifications osd-show player power-profile sys-pulse ticker \
+         updates weather workspaces; do
+  url="$PROD/eww/scripts/${s}.sh"
+  dest="$EWW_DIR/scripts/${s}.sh"
+  if curl -fsSL --max-time 30 "$url" -o "${dest}.new"; then
+    if [[ -s "${dest}.new" ]]; then
+      mv -f "${dest}.new" "$dest"
+      chown "$REAL_USER:$REAL_USER" "$dest"
+      chmod 755 "$dest"
+      ok "wrote $dest ($(stat -c%s "$dest") bytes)"
+    else
+      rm -f "${dest}.new"
+      fail "downloaded eww/scripts/${s}.sh was empty — kept previous copy"
+    fi
+  else
+    fail "could not download eww/scripts/${s}.sh"
+  fi
+done
+
 # ── 5/6 RELOAD EWW (rev r6-eww — replaces the waybar reload block) ─────────
 step "5/6 · RELOAD EWW (so the new NYXUS bars/widgets show up)"
 # Kill running daemon then let nyxus-eww-launch (or Hyprland exec-once)
@@ -773,8 +819,21 @@ if pgrep -x eww >/dev/null 2>&1; then
 fi
 # Defensive respawn — if Hyprland's exec-once doesn't fire (script run
 # outside a fresh session), start the EWW daemon + launch bars manually.
+# rev r7-eww FIX: nyxus-eww-launch only WAITS for the IPC socket; it does
+# not spawn the daemon. We must explicitly `eww daemon` first, then call
+# the launcher to open all configured bars.
 if ! pgrep -x eww >/dev/null 2>&1; then
   if [[ -n "${REAL_USER:-}" ]] && command -v sudo >/dev/null 2>&1; then
+    sudo -u "$REAL_USER" \
+      env XDG_RUNTIME_DIR="/run/user/$(id -u "$REAL_USER")" \
+          WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
+          HOME="$REAL_HOME" \
+      nohup eww daemon >/dev/null 2>&1 &
+    # give the daemon a moment to bind its IPC socket
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      pgrep -x eww >/dev/null 2>&1 && break
+      sleep 0.2
+    done
     sudo -u "$REAL_USER" \
       env XDG_RUNTIME_DIR="/run/user/$(id -u "$REAL_USER")" \
           WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" \
@@ -782,9 +841,9 @@ if ! pgrep -x eww >/dev/null 2>&1; then
       nohup nyxus-eww-launch >/dev/null 2>&1 &
     sleep 0.8
     if pgrep -x eww >/dev/null 2>&1; then
-      ok "eww respawned manually via nyxus-eww-launch"
+      ok "eww daemon + bars respawned manually"
     else
-      warn "eww failed to respawn — run \`nyxus-eww-launch\` manually"
+      warn "eww failed to respawn — run \`eww daemon && nyxus-eww-launch\` manually"
     fi
   fi
 fi
