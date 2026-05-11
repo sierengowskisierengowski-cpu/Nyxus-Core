@@ -174,21 +174,29 @@
            :tooltip "${TICKER.tooltip}")))
 
 ;; ── workspaces (1..10, populated detection) ──────────────────────────
-(defwidget workspace_pill [id]
-  (button :class {WORKSPACES.active == id     ? "ws-pill ws-pill-active" :
-                  arraylength(jq(WORKSPACES.occupied, "map(select(. == ${id})) | length")) > 0
-                                              ? "ws-pill ws-pill-occupied" :
-                                                "ws-pill"}
+;; yuck cannot dynamically index a JSON property by an int, so each pill
+;; receives its `occ` boolean as a parameter sourced from the matching
+;; WORKSPACES.occN field emitted by scripts/workspaces.sh.
+(defwidget workspace_pill [id occ]
+  (button :class {WORKSPACES.active == id ? "ws-pill ws-pill-active" :
+                  occ                     ? "ws-pill ws-pill-occupied" :
+                                            "ws-pill"}
           :onclick "hyprctl dispatch workspace ${id}"
           :tooltip "Workspace ${id}"
     "${id}"))
 
 (defwidget workspaces_rail []
   (box :class "ws-rail" :orientation "v" :space-evenly false :spacing 6 :valign "center"
-    (workspace_pill :id 1) (workspace_pill :id 2) (workspace_pill :id 3)
-    (workspace_pill :id 4) (workspace_pill :id 5) (workspace_pill :id 6)
-    (workspace_pill :id 7) (workspace_pill :id 8) (workspace_pill :id 9)
-    (workspace_pill :id 10)))
+    (workspace_pill :id 1  :occ {WORKSPACES.occ1})
+    (workspace_pill :id 2  :occ {WORKSPACES.occ2})
+    (workspace_pill :id 3  :occ {WORKSPACES.occ3})
+    (workspace_pill :id 4  :occ {WORKSPACES.occ4})
+    (workspace_pill :id 5  :occ {WORKSPACES.occ5})
+    (workspace_pill :id 6  :occ {WORKSPACES.occ6})
+    (workspace_pill :id 7  :occ {WORKSPACES.occ7})
+    (workspace_pill :id 8  :occ {WORKSPACES.occ8})
+    (workspace_pill :id 9  :occ {WORKSPACES.occ9})
+    (workspace_pill :id 10 :occ {WORKSPACES.occ10})))
 
 (defwidget app_launcher [glyph cmd label]
   (button :class "app-pill" :onclick "${cmd} &" :tooltip "${label}" "${glyph}"))
