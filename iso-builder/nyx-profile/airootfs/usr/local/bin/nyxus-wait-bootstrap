@@ -4,12 +4,12 @@
 # ║  Lives at: /usr/local/bin/nyxus-wait-bootstrap                       ║
 # ║                                                                      ║
 # ║  Hyprland's `exec-once` fires every command in parallel — it does    ║
-# ║  NOT wait for previous lines to finish. Without this shim, eww /     ║
+# ║  NOT wait for previous lines to finish. Without this shim, waybar /  ║
 # ║  swaybg / nyxus-home race nyxus-bootstrap on first login and crash   ║
 # ║  because their config files don't exist yet.                         ║
 # ║                                                                      ║
 # ║  Usage in hyprland.conf:                                             ║
-# ║    exec-once = nyxus-wait-bootstrap nyxus-eww-launch                 ║
+# ║    exec-once = nyxus-wait-bootstrap waybar --config ... --style ...  ║
 # ║    exec-once = nyxus-wait-bootstrap swaybg -i ... -m fill ...        ║
 # ║                                                                      ║
 # ║  With no args: just blocks until the marker appears (or timeout).    ║

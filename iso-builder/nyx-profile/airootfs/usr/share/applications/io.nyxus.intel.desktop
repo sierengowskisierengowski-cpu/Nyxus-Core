@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=NYXUS Intel
+Name=NYXUS Phantom
 GenericName=Open Source Intelligence Workstation
 Comment=Professional grade OSINT and investigation app
 Exec=/usr/local/bin/nyxus-intel
-Icon=io.nyxus.intel
+Icon=preferences-system-search
 Categories=Network;Security;Office;
 Terminal=false
 StartupNotify=true
