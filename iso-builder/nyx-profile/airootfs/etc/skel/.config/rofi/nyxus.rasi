@@ -1,3 +1,6 @@
+/* nyxus accent — auto-loaded if present */
+@import "nyxus-accent.rasi"
+
 /* ============================================================
    NYXUS — Rofi List Launcher  (Super+D)
    Pure White Canvas · Neon Paint Splatter Palette

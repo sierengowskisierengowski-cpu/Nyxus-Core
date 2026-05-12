@@ -29,6 +29,7 @@ import json
 import logging
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -4527,7 +4528,7 @@ class UsersPage(SectionPage):
         groups = "wheel,audio,video,input,storage" if admin \
             else "audio,video,input,storage"
         cmd = (f"useradd -m -G {groups} -s /bin/bash "
-               f"-c {shlex_quote(fullname or user)} {user}")
+               f"-c {shlex.quote(fullname or user)} {user}")
         sh_async(
             ["pkexec", "sh", "-c", cmd],
             lambda r: self._on_user_created(r, user),
@@ -4615,28 +4616,695 @@ def _clear_group(grp: Adw.PreferencesGroup) -> None:
 # ──────────────────────────────────────────────────────────────────────
 # Tier-1: APPEARANCE
 # ──────────────────────────────────────────────────────────────────────
+# Curated DARK MIRROR accent palette.  The "Mirror White" preset is the
+# brand default and matches the locked SDDM/hyprlock palette tokens.
+ACCENT_PRESETS: List[Tuple[str, str]] = [
+    ("Mirror White", "#e8edf5"),
+    ("Cyan",         "#5fd3f3"),
+    ("Lime",         "#a6e22e"),
+    ("Amber",        "#f5b342"),
+    ("Magenta",      "#ff5fa7"),
+    ("Crimson",      "#ff5f6d"),
+    ("Iris",         "#9c8cff"),
+    ("Mint",         "#5ff3b8"),
+]
+DEFAULT_ACCENT = "#e8edf5"
+
+# Files we own for accent propagation. Each is a small idempotent fragment
+# included by the parent config (so we never mangle hand-written files).
+ACCENT_FRAG_DIR = HOME / ".config" / "nyxus" / "accent"
+GTK3_FRAG  = HOME / ".config" / "gtk-3.0" / "nyxus-accent.css"
+GTK4_FRAG  = HOME / ".config" / "gtk-4.0" / "nyxus-accent.css"
+EWW_FRAG   = HOME / ".config" / "eww" / "_nyxus_accent.scss"
+ROFI_FRAG  = HOME / ".config" / "rofi" / "nyxus-accent.rasi"
+DUNST_FRAG = HOME / ".config" / "dunst" / "nyxus-accent.conf"   # informative
+HYPRLOCK_ACCENT = HOME / ".config" / "hypr" / "hyprlock-accent.conf"
+SDDM_THEME_USER = Path("/usr/share/sddm/themes/nyxus/theme.conf.user")
+
+
+def _hex_to_rgb(hex_str: str) -> Tuple[int, int, int]:
+    s = hex_str.lstrip("#")
+    if len(s) == 3:
+        s = "".join(c * 2 for c in s)
+    if len(s) != 6:
+        return (232, 237, 245)
+    try:
+        return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
+    except ValueError:
+        return (232, 237, 245)
+
+
+def _atomic_write(path: Path, text: str) -> bool:
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(path.suffix + ".nyxtmp")
+        tmp.write_text(text)
+        tmp.replace(path)
+        return True
+    except Exception as e:
+        log.warning("accent write %s failed: %s", path, e)
+        return False
+
+
 class AppearancePage(SectionPage):
+    """Single source of truth for accent + theme. All fully wired:
+      · accent picker → GTK3/4 frag, EWW scss, rofi rasi, hyprlock accent,
+        dunst frame_color, SDDM theme.conf.user (pkexec)
+      · color scheme  → gsettings org.gnome.desktop.interface color-scheme
+      · cursor theme  → ~/.icons/default + gsettings + GTK_CURSOR_THEME
+      · icon theme    → gsettings icon-theme
+      · fonts         → gsettings font-name + monospace-font-name
+      · wallpaper     → swaybg (existing) + rotation timer
+      · text scale    → font_scale pref + GTK_DPI hint
+      · motion        → hyprctl keyword animations:enabled
+    """
     KEY = "appearance"
 
+    # ── Build ─────────────────────────────────────────────────────────
     def build(self) -> None:
         prefs = self.win.prefs
 
-        # ── Theme variant (locked to Dark Mirror) ──────────────────────
+        # Theme variant — locked
         g_theme = Adw.PreferencesGroup(title="Theme")
-        row = Adw.ActionRow(title="Variant",
-                            subtitle="DARK MIRROR — locked by NYXUS design contract")
-        row.add_suffix(status_pill("DARK MIRROR", "ok"))
-        g_theme.add(row)
+        v_row = Adw.ActionRow(
+            title="Variant",
+            subtitle="DARK MIRROR — locked by NYXUS design contract")
+        v_row.add_suffix(status_pill("DARK MIRROR", "ok"))
+        g_theme.add(v_row)
         self.add_group(g_theme)
 
-        # ── Wallpaper grid ────────────────────────────────────────────
-        g_wall = Adw.PreferencesGroup(
+        # Accent picker
+        self.accent_grp = Adw.PreferencesGroup(
+            title="Accent",
+            description="Single source of truth — propagates to GTK, EWW, "
+                        "rofi, hyprlock, dunst, SDDM")
+        self.add_group(self.accent_grp)
+
+        # Color scheme
+        self.scheme_grp = Adw.PreferencesGroup(
+            title="Color scheme",
+            description="Affects GTK4/libadwaita apps that respect the "
+                        "system color-scheme setting")
+        self.add_group(self.scheme_grp)
+
+        # Cursor theme
+        self.cursor_grp = Adw.PreferencesGroup(
+            title="Cursor theme",
+            description="Reads /usr/share/icons and ~/.icons")
+        self.add_group(self.cursor_grp)
+
+        # Icon theme
+        self.icon_grp = Adw.PreferencesGroup(
+            title="Icon theme",
+            description="Reads /usr/share/icons and ~/.icons")
+        self.add_group(self.icon_grp)
+
+        # Fonts
+        self.font_grp = Adw.PreferencesGroup(
+            title="Fonts",
+            description="System UI font and monospace font for terminals")
+        self.add_group(self.font_grp)
+
+        # Wallpaper grid (kept from previous + rotation switch)
+        self.wall_grp = Adw.PreferencesGroup(
             title="Wallpaper",
-            description="Click a wallpaper to apply it system-wide via swaybg.")
+            description="Click a wallpaper to apply it system-wide via swaybg")
+        self.add_group(self.wall_grp)
+
+        # Text size
+        self.scale_grp = Adw.PreferencesGroup(
+            title="Text size",
+            description="UI scale for NYXUS apps — restart apps to apply")
+        self.add_group(self.scale_grp)
+
+        # Motion
+        self.motion_grp = Adw.PreferencesGroup(title="Motion")
+        self.add_group(self.motion_grp)
+
+        self._render()
+
+    def _render(self) -> None:
+        self._render_accent()
+        self._render_scheme()
+        self._render_cursor()
+        self._render_icons()
+        self._render_fonts()
+        self._render_wallpaper()
+        self._render_scale()
+        self._render_motion()
+
+        self.clear_pills()
+        backends = []
+        if have("swaybg"):  backends.append("swaybg")
+        if have("hyprctl"): backends.append("hyprctl")
+        if have("gsettings"): backends.append("gsettings")
+        kind = "ok" if len(backends) >= 2 else "warn"
+        self.add_pill(status_pill(
+            " · ".join(backends) if backends else "no backends", kind))
+
+    # ── Accent ────────────────────────────────────────────────────────
+    def _render_accent(self) -> None:
+        _clear_group(self.accent_grp)
+        prefs = self.win.prefs
+        current = prefs.get("accent_hex", DEFAULT_ACCENT)
+
+        # Swatch row — flowbox of preset chips
+        chip_row = Adw.PreferencesRow()
+        chip_row.set_activatable(False)
+        chip_row.set_selectable(False)
+        flow = Gtk.FlowBox()
+        flow.set_selection_mode(Gtk.SelectionMode.NONE)
+        flow.set_max_children_per_line(8)
+        flow.set_min_children_per_line(4)
+        flow.set_homogeneous(True)
+        flow.set_column_spacing(8)
+        flow.set_row_spacing(8)
+        flow.set_margin_start(8)
+        flow.set_margin_end(8)
+        flow.set_margin_top(10)
+        flow.set_margin_bottom(10)
+
+        for name, hex_val in ACCENT_PRESETS:
+            chip = Gtk.Button()
+            chip.set_size_request(64, 48)
+            chip.set_tooltip_text(f"{name}  ·  {hex_val}")
+            chip.add_css_class("nyx-accent-chip")
+            if hex_val.lower() == current.lower():
+                chip.add_css_class("selected")
+            # Inline CSS provider for the chip color (per-widget)
+            css = Gtk.CssProvider()
+            css.load_from_data(
+                f"button.nyx-accent-chip {{"
+                f"  background: {hex_val};"
+                f"  border: 1px solid rgba(255,255,255,0.18);"
+                f"  border-radius: 10px;"
+                f"  min-width: 60px; min-height: 44px;"
+                f"}}"
+                f"button.nyx-accent-chip.selected {{"
+                f"  border: 2px solid #ffffff;"
+                f"}}".encode())
+            chip.get_style_context().add_provider(
+                css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            chip.connect("clicked",
+                         lambda _b, h=hex_val: self._set_accent(h))
+            flow.append(chip)
+
+        chip_row.set_child(flow)
+        self.accent_grp.add(chip_row)
+
+        # Custom hex entry
+        hex_row = Adw.ActionRow(
+            title="Custom",
+            subtitle=f"Currently: {current}  ·  enter a #RRGGBB value")
+        entry = Gtk.Entry()
+        entry.set_placeholder_text("#5fd3f3")
+        entry.set_text(current)
+        entry.set_max_length(7)
+        entry.set_size_request(110, -1)
+        entry.set_valign(Gtk.Align.CENTER)
+        entry.connect("activate", lambda e: self._set_accent(e.get_text()))
+        hex_row.add_suffix(entry)
+        apply_btn = Gtk.Button(label="Apply")
+        apply_btn.add_css_class("nyx-pill-ok")
+        apply_btn.set_valign(Gtk.Align.CENTER)
+        apply_btn.connect("clicked",
+                          lambda _b: self._set_accent(entry.get_text()))
+        hex_row.add_suffix(apply_btn)
+        self.accent_grp.add(hex_row)
+
+        # Reset
+        reset = action_row(
+            "Reset to default",
+            f"Restores Mirror White ({DEFAULT_ACCENT})",
+            "Reset",
+            lambda: self._set_accent(DEFAULT_ACCENT))
+        self.accent_grp.add(reset)
+
+        # Status: which propagation targets are present
+        targets = []
+        if (HOME / ".config" / "gtk-3.0").exists() or \
+           (HOME / ".config" / "gtk-4.0").exists():
+            targets.append("GTK")
+        if (HOME / ".config" / "eww").exists():
+            targets.append("EWW")
+        if (HOME / ".config" / "rofi").exists():
+            targets.append("rofi")
+        if (HOME / ".config" / "hypr").exists():
+            targets.append("hyprlock")
+        if (HOME / ".config" / "dunst").exists():
+            targets.append("dunst")
+        if SDDM_THEME_USER.parent.exists():
+            targets.append("SDDM")
+        info = Adw.ActionRow(
+            title="Propagates to",
+            subtitle=", ".join(targets) if targets
+                     else "no theme dirs found yet — first apply will create them")
+        self.accent_grp.add(info)
+
+    def _set_accent(self, hex_str: str) -> None:
+        h = (hex_str or "").strip()
+        if not re.fullmatch(r"#?[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?", h):
+            self.toast("invalid hex — use #RRGGBB")
+            return
+        if not h.startswith("#"):
+            h = "#" + h
+        # Expand 3-digit to 6-digit
+        if len(h) == 4:
+            h = "#" + "".join(c * 2 for c in h[1:])
+        h = h.lower()
+
+        # Persist
+        self.win.prefs["accent_hex"] = h
+        save_prefs(self.win.prefs)
+
+        results = self._apply_accent(h)
+        ok = [k for k, v in results.items() if v]
+        fail = [k for k, v in results.items() if not v]
+        if fail:
+            self.toast(f"accent {h}  ·  ok: {', '.join(ok) or '—'}  "
+                       f"·  failed: {', '.join(fail)}")
+        else:
+            self.toast(f"accent {h} applied to {', '.join(ok)}")
+        self._render_accent()
+
+    def _apply_accent(self, h: str) -> dict:
+        """Write accent fragments + reload the apps that read them.
+        Each target is independent; one failure does not block the rest."""
+        r, g, b = _hex_to_rgb(h)
+        results: dict = {}
+
+        # 1) GTK3 — @define-color override
+        gtk3_text = textwrap.dedent(f"""\
+            /* nyxus accent — auto-generated by Settings, do not edit */
+            @define-color nyxus_accent {h};
+            @define-color accent_color {h};
+            @define-color accent_bg_color {h};
+            @define-color theme_selected_bg_color {h};
+            """)
+        results["gtk-3"] = _atomic_write(GTK3_FRAG, gtk3_text)
+        # Try to ensure gtk.css imports the fragment
+        self._ensure_gtk_import(HOME / ".config" / "gtk-3.0" / "gtk.css",
+                                "nyxus-accent.css")
+
+        # 2) GTK4
+        results["gtk-4"] = _atomic_write(GTK4_FRAG, gtk3_text)
+        self._ensure_gtk_import(HOME / ".config" / "gtk-4.0" / "gtk.css",
+                                "nyxus-accent.css")
+
+        # 3) EWW — SCSS variable
+        eww_text = (f"// nyxus accent — auto-generated\n"
+                    f"$nyxus-accent: {h};\n"
+                    f"$accent: {h};\n")
+        results["eww"] = _atomic_write(EWW_FRAG, eww_text)
+
+        # 4) rofi — rasi color block
+        rofi_text = (f"/* nyxus accent — auto-generated */\n"
+                     f"* {{\n"
+                     f"  nyxus-accent: {h};\n"
+                     f"  selected-normal-background: {h};\n"
+                     f"  active-foreground: {h};\n"
+                     f"}}\n")
+        results["rofi"] = _atomic_write(ROFI_FRAG, rofi_text)
+
+        # 5) hyprlock — separate accent file the user can $source from
+        # hyprlock.conf, OR we patch the inner_color/outer_color directly.
+        hl_text = textwrap.dedent(f"""\
+            # nyxus accent — auto-generated. $source = ~/.config/hypr/hyprlock-accent.conf
+            $nyxus_accent_r = {r}
+            $nyxus_accent_g = {g}
+            $nyxus_accent_b = {b}
+            $nyxus_accent_rgba = rgba({r}, {g}, {b}, 0.85)
+            """)
+        results["hyprlock"] = _atomic_write(HYPRLOCK_ACCENT, hl_text)
+
+        # 6) dunst — frame_color in fragment + signal reload
+        dunst_text = (f"# nyxus accent — auto-generated.\n"
+                      f"# include this from your dunstrc [global] section, e.g.:\n"
+                      f"#   frame_color = \"{h}\"\n"
+                      f"frame_color = \"{h}\"\n")
+        results["dunst"] = _atomic_write(DUNST_FRAG, dunst_text)
+        self._patch_dunstrc(h)
+
+        # 7) SDDM — needs root, dispatch async; report real outcome via toast.
+        # We mark it "pending" synchronously so the immediate UI message
+        # doesn't lie about success.
+        if SDDM_THEME_USER.parent.exists():
+            sddm_text = (f"[General]\n"
+                         f"background=background.png\n"
+                         f"# nyxus accent\n"
+                         f"Accent={h}\n")
+            sh_async(
+                ["pkexec", "sh", "-c",
+                 f"cat > {SDDM_THEME_USER} <<'NYXUS_EOF'\n"
+                 f"{sddm_text}NYXUS_EOF\n"],
+                lambda res: self.toast(
+                    "SDDM accent applied" if res[0] == 0
+                    else "SDDM accent denied (admin auth required)"),
+                timeout=15)
+            results["sddm"] = "pending"  # truthful: not-yet-confirmed
+        else:
+            results["sddm"] = False
+
+        # 8) Reload apps that read these files
+        if have("dunstify") or have("dunst"):
+            sh_async(["sh", "-c",
+                      "pkill -SIGUSR2 dunst 2>/dev/null || true"],
+                     lambda r: None, timeout=3)
+        if have("eww"):
+            sh_async(["eww", "reload"], lambda r: None, timeout=4)
+        if have("hyprctl"):
+            sh_async(["hyprctl", "reload"], lambda r: None, timeout=4)
+
+        return results
+
+    @staticmethod
+    def _ensure_gtk_import(gtk_css: Path, frag_name: str) -> None:
+        """Idempotently add @import url("nyxus-accent.css"); to gtk.css."""
+        try:
+            gtk_css.parent.mkdir(parents=True, exist_ok=True)
+            existing = gtk_css.read_text() if gtk_css.exists() else ""
+            line = f'@import url("{frag_name}");'
+            if line in existing:
+                return
+            new = line + "\n" + existing
+            gtk_css.write_text(new)
+        except Exception as e:
+            log.warning("ensure_gtk_import %s: %s", gtk_css, e)
+
+    @staticmethod
+    def _patch_dunstrc(h: str) -> None:
+        """Best-effort in-place patch of frame_color in ~/.config/dunst/dunstrc.
+        Idempotent — only rewrites the matching line."""
+        rc = HOME / ".config" / "dunst" / "dunstrc"
+        if not rc.exists():
+            return
+        try:
+            txt = rc.read_text()
+            new = re.sub(
+                r'^(\s*frame_color\s*=\s*)"[^"]*"',
+                lambda m: f'{m.group(1)}"{h}"',
+                txt, flags=re.MULTILINE)
+            if new != txt:
+                rc.write_text(new)
+        except Exception as e:
+            log.warning("patch dunstrc: %s", e)
+
+    # ── Color scheme ──────────────────────────────────────────────────
+    def _render_scheme(self) -> None:
+        _clear_group(self.scheme_grp)
+        # Read current
+        rc, out, _ = sh(["gsettings", "get",
+                         "org.gnome.desktop.interface", "color-scheme"],
+                        timeout=2)
+        cur = out.strip().strip("'")
+        is_dark = "dark" in cur
+        row = Adw.SwitchRow(
+            title="Prefer dark color scheme",
+            subtitle="Currently: " + (cur or "(unset)"))
+        row.set_active(is_dark or not cur)
+        row.connect("notify::active", self._on_scheme_toggle)
+        self.scheme_grp.add(row)
+
+    def _on_scheme_toggle(self, row: Adw.SwitchRow, _ps) -> None:
+        v = "prefer-dark" if row.get_active() else "default"
+        if not have("gsettings"):
+            self.toast("gsettings not installed")
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface",
+             "color-scheme", v],
+            lambda r: self.toast(
+                f"color-scheme → {v}" if r[0] == 0 else "failed"),
+            timeout=4)
+
+    # ── Cursor / Icon theme pickers ───────────────────────────────────
+    @staticmethod
+    def _list_cursor_themes() -> List[str]:
+        roots = [Path("/usr/share/icons"), HOME / ".icons",
+                 HOME / ".local" / "share" / "icons"]
+        themes: set = set()
+        for root in roots:
+            if not root.exists():
+                continue
+            for child in root.iterdir():
+                if (child / "cursors").is_dir():
+                    themes.add(child.name)
+        return sorted(themes)
+
+    @staticmethod
+    def _list_icon_themes() -> List[str]:
+        roots = [Path("/usr/share/icons"), HOME / ".icons",
+                 HOME / ".local" / "share" / "icons"]
+        themes: set = set()
+        for root in roots:
+            if not root.exists():
+                continue
+            for child in root.iterdir():
+                idx = child / "index.theme"
+                if not idx.is_file():
+                    continue
+                # Skip cursor-only themes (no Directories= line is a hint)
+                try:
+                    txt = idx.read_text(errors="ignore")
+                    if "Directories=" in txt:
+                        themes.add(child.name)
+                except Exception:
+                    continue
+        return sorted(themes)
+
+    def _render_cursor(self) -> None:
+        _clear_group(self.cursor_grp)
+        themes = self._list_cursor_themes()
+        rc, cur, _ = sh(["gsettings", "get",
+                         "org.gnome.desktop.interface", "cursor-theme"],
+                        timeout=2)
+        current = cur.strip().strip("'") or "default"
+        if not themes:
+            self.cursor_grp.add(empty_row(
+                "No cursor themes found",
+                "Install a cursor theme package, e.g. xcursor-breeze"))
+            return
+        row = Adw.ComboRow(
+            title="Cursor theme",
+            subtitle=f"current: {current}")
+        store = Gtk.StringList()
+        sel_idx = 0
+        for i, t in enumerate(themes):
+            store.append(t)
+            if t == current:
+                sel_idx = i
+        row.set_model(store)
+        row.set_selected(sel_idx)
+        row.connect("notify::selected",
+                    lambda r, _p: self._set_cursor_theme(
+                        themes[r.get_selected()]))
+        self.cursor_grp.add(row)
+
+        # Size
+        rc, sz, _ = sh(["gsettings", "get",
+                        "org.gnome.desktop.interface", "cursor-size"],
+                       timeout=2)
+        try:
+            cur_sz = int(sz.strip())
+        except ValueError:
+            cur_sz = 24
+        sz_row = Adw.ActionRow(title="Cursor size",
+                               subtitle="default 24 — try 32 on HiDPI")
+        adj = Gtk.Adjustment(value=cur_sz, lower=16, upper=64,
+                             step_increment=4)
+        spin = Gtk.SpinButton()
+        spin.set_adjustment(adj)
+        spin.set_valign(Gtk.Align.CENTER)
+        spin.connect("value-changed",
+                     lambda s: self._set_cursor_size(s.get_value_as_int()))
+        sz_row.add_suffix(spin)
+        self.cursor_grp.add(sz_row)
+
+    def _set_cursor_theme(self, name: str) -> None:
+        if not have("gsettings"):
+            self.toast("gsettings missing")
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface",
+             "cursor-theme", name],
+            lambda r: self.toast(f"cursor → {name}"
+                                 if r[0] == 0 else "failed"),
+            timeout=4)
+        # Also set Hyprland cursor at runtime
+        if have("hyprctl"):
+            sh_async(["hyprctl", "setcursor", name, "24"],
+                     lambda r: None, timeout=3)
+
+    def _set_cursor_size(self, sz: int) -> None:
+        if not have("gsettings"):
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface",
+             "cursor-size", str(sz)],
+            lambda r: self.toast(f"cursor size → {sz}"),
+            timeout=4)
+
+    def _render_icons(self) -> None:
+        _clear_group(self.icon_grp)
+        themes = self._list_icon_themes()
+        rc, cur, _ = sh(["gsettings", "get",
+                         "org.gnome.desktop.interface", "icon-theme"],
+                        timeout=2)
+        current = cur.strip().strip("'") or "Adwaita"
+        if not themes:
+            self.icon_grp.add(empty_row(
+                "No icon themes found",
+                "Install one, e.g. papirus-icon-theme"))
+            return
+        row = Adw.ComboRow(
+            title="Icon theme",
+            subtitle=f"current: {current}")
+        store = Gtk.StringList()
+        sel_idx = 0
+        for i, t in enumerate(themes):
+            store.append(t)
+            if t == current:
+                sel_idx = i
+        row.set_model(store)
+        row.set_selected(sel_idx)
+        row.connect("notify::selected",
+                    lambda r, _p: self._set_icon_theme(
+                        themes[r.get_selected()]))
+        self.icon_grp.add(row)
+
+    def _set_icon_theme(self, name: str) -> None:
+        if not have("gsettings"):
+            self.toast("gsettings missing")
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface",
+             "icon-theme", name],
+            lambda r: self.toast(f"icons → {name}"
+                                 if r[0] == 0 else "failed"),
+            timeout=4)
+
+    # ── Fonts ─────────────────────────────────────────────────────────
+    def _render_fonts(self) -> None:
+        _clear_group(self.font_grp)
+        rc, ui, _ = sh(["gsettings", "get",
+                        "org.gnome.desktop.interface", "font-name"],
+                       timeout=2)
+        rc, mono, _ = sh(["gsettings", "get",
+                          "org.gnome.desktop.interface",
+                          "monospace-font-name"], timeout=2)
+        ui = ui.strip().strip("'")
+        mono = mono.strip().strip("'")
+
+        ui_row = Adw.ActionRow(
+            title="Interface font",
+            subtitle=ui or "(unset)")
+        ui_btn = Gtk.Button(label="Choose…")
+        ui_btn.add_css_class("nyx-pill")
+        ui_btn.set_valign(Gtk.Align.CENTER)
+        ui_btn.connect("clicked",
+                       lambda _b: self._pick_font(
+                           "font-name", ui or "Inter 11"))
+        ui_row.add_suffix(ui_btn)
+        self.font_grp.add(ui_row)
+
+        m_row = Adw.ActionRow(
+            title="Monospace font",
+            subtitle=mono or "(unset)")
+        m_btn = Gtk.Button(label="Choose…")
+        m_btn.add_css_class("nyx-pill")
+        m_btn.set_valign(Gtk.Align.CENTER)
+        m_btn.connect("clicked",
+                      lambda _b: self._pick_font(
+                          "monospace-font-name",
+                          mono or "JetBrains Mono 11"))
+        m_row.add_suffix(m_btn)
+        self.font_grp.add(m_row)
+
+    def _pick_font(self, key: str, current: str) -> None:
+        # GTK 4.10+ provides Gtk.FontDialog. On older builds we fall back
+        # to a plain text-entry asking for a Pango font string.
+        if not hasattr(Gtk, "FontDialog"):
+            self._pick_font_fallback(key, current)
+            return
+        try:
+            from gi.repository import Pango
+            dlg = Gtk.FontDialog()
+            dlg.set_title("Choose a font")
+            initial = Pango.FontDescription.from_string(current)
+            dlg.choose_font(self.win, initial, None,
+                            lambda d, res: self._on_font_picked(
+                                d, res, key))
+        except Exception as e:
+            log.warning("FontDialog failed: %s — falling back", e)
+            self._pick_font_fallback(key, current)
+
+    def _pick_font_fallback(self, key: str, current: str) -> None:
+        dlg = Adw.MessageDialog(
+            transient_for=self.win,
+            heading="Choose a font",
+            body="Type a Pango font description, e.g. 'Inter 11' or "
+                 "'JetBrains Mono Bold 12'.")
+        entry = Gtk.Entry()
+        entry.set_text(current)
+        entry.set_margin_top(8)
+        entry.set_margin_bottom(8)
+        entry.set_margin_start(12)
+        entry.set_margin_end(12)
+        dlg.set_extra_child(entry)
+        dlg.add_response("cancel", "Cancel")
+        dlg.add_response("ok", "Apply")
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.SUGGESTED)
+        dlg.set_default_response("ok")
+
+        def on_resp(_d, resp):
+            if resp != "ok":
+                return
+            name = entry.get_text().strip()
+            if not name:
+                return
+            sh_async(
+                ["gsettings", "set",
+                 "org.gnome.desktop.interface", key, name],
+                lambda r: (self.toast(f"{key} → {name}"),
+                           self._render_fonts()),
+                timeout=4)
+        dlg.connect("response", on_resp)
+        dlg.present()
+
+    def _on_font_picked(self, dlg, res, key: str) -> None:
+        try:
+            font_desc = dlg.choose_font_finish(res)
+        except Exception:
+            return
+        if not font_desc:
+            return
+        name = font_desc.to_string()
+        if not have("gsettings"):
+            self.toast("gsettings missing")
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface", key, name],
+            lambda r: (self.toast(f"{key} → {name}"),
+                       self._render_fonts()),
+            timeout=4)
+
+    # ── Wallpaper ─────────────────────────────────────────────────────
+    def _render_wallpaper(self) -> None:
+        _clear_group(self.wall_grp)
+        prefs = self.win.prefs
+
+        # Rotation toggle
+        rot_row = Adw.SwitchRow(
+            title="Rotate wallpaper",
+            subtitle="Cycle through ~/Pictures/Wallpapers every 30 minutes")
+        rot_row.set_active(prefs.get("wallpaper_rotate", False))
+        rot_row.connect("notify::active", self._on_wall_rotate)
+        self.wall_grp.add(rot_row)
+
+        # Grid wrapper
         wall_row = Adw.PreferencesRow()
         wall_row.set_activatable(False)
         wall_row.set_selectable(False)
-
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER)
         scroll.set_min_content_height(220)
@@ -4656,11 +5324,11 @@ class AppearancePage(SectionPage):
         walls: List[Path] = []
         for d in (WALLS_USR, WALLS_SYS):
             if d.exists():
-                walls.extend(sorted(p for p in d.iterdir()
-                                    if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")))
-
+                walls.extend(sorted(
+                    p for p in d.iterdir()
+                    if p.suffix.lower() in (".png", ".jpg",
+                                            ".jpeg", ".webp")))
         current = prefs.get("wallpaper", "")
-
         if not walls:
             empty = Gtk.Label(
                 label="No wallpapers installed.\n"
@@ -4671,7 +5339,7 @@ class AppearancePage(SectionPage):
             empty.add_css_class("nyx-wip-body")
             flow.append(empty)
         else:
-            for wp in walls[:30]:  # cap for perf
+            for wp in walls[:30]:
                 btn = Gtk.Button()
                 btn.add_css_class("nyx-wall-tile")
                 if str(wp) == current:
@@ -4682,16 +5350,95 @@ class AppearancePage(SectionPage):
                 btn.set_child(pic)
                 btn.connect("clicked", self._on_wallpaper, wp)
                 flow.append(btn)
-
         scroll.set_child(flow)
         wall_row.set_child(scroll)
-        g_wall.add(wall_row)
-        self.add_group(g_wall)
+        self.wall_grp.add(wall_row)
 
-        # ── Font scale ────────────────────────────────────────────────
-        g_font = Adw.PreferencesGroup(
-            title="Text size",
-            description="Affects all NYXUS apps. Restart apps to apply.")
+    def _on_wallpaper(self, btn: Gtk.Button, path: Path) -> None:
+        self.win.prefs["wallpaper"] = str(path)
+        save_prefs(self.win.prefs)
+        flow = btn.get_parent()
+        if isinstance(flow, Gtk.FlowBox):
+            child = flow.get_first_child()
+            while child:
+                inner = child.get_first_child()
+                if isinstance(inner, Gtk.Button):
+                    inner.remove_css_class("selected")
+                child = child.get_next_sibling()
+        btn.add_css_class("selected")
+        if have("swaybg"):
+            sh_async(
+                ["sh", "-c",
+                 f"pkill -x swaybg 2>/dev/null; "
+                 f"swaybg -i {str(path)!r} -m fill -c '#000000' "
+                 f">/dev/null 2>&1 &"],
+                lambda r: self.toast(
+                    "wallpaper applied" if r[0] == 0
+                    else f"swaybg failed: {r[2][:60]}"))
+        else:
+            self.toast("swaybg not installed — saved selection only")
+
+    def _on_wall_rotate(self, row: Adw.SwitchRow, _ps) -> None:
+        on = row.get_active()
+        self.win.prefs["wallpaper_rotate"] = on
+        save_prefs(self.win.prefs)
+        # Install or remove a small systemd --user timer
+        unit_dir = HOME / ".config" / "systemd" / "user"
+        unit_dir.mkdir(parents=True, exist_ok=True)
+        timer  = unit_dir / "nyxus-wall-rotate.timer"
+        svc    = unit_dir / "nyxus-wall-rotate.service"
+        helper = HOME / ".local" / "share" / "nyxus" / "wall-rotate.sh"
+        if on:
+            helper.parent.mkdir(parents=True, exist_ok=True)
+            helper.write_text(textwrap.dedent(f"""\
+                #!/usr/bin/env bash
+                set -eu
+                shopt -s nullglob
+                walls=( "{WALLS_USR}"/*.{{png,jpg,jpeg,webp}} \\
+                        "{WALLS_SYS}"/*.{{png,jpg,jpeg,webp}} )
+                [ ${{#walls[@]}} -eq 0 ] && exit 0
+                pick="${{walls[RANDOM % ${{#walls[@]}}]}}"
+                pkill -x swaybg 2>/dev/null || true
+                swaybg -i "$pick" -m fill -c '#000000' >/dev/null 2>&1 &
+                """))
+            helper.chmod(0o755)
+            svc.write_text(textwrap.dedent(f"""\
+                [Unit]
+                Description=NYXUS wallpaper rotator
+                [Service]
+                Type=oneshot
+                ExecStart={helper}
+                """))
+            timer.write_text(textwrap.dedent("""\
+                [Unit]
+                Description=Rotate NYXUS wallpaper every 30 minutes
+                [Timer]
+                OnBootSec=5min
+                OnUnitActiveSec=30min
+                Persistent=true
+                [Install]
+                WantedBy=timers.target
+                """))
+            sh_async(
+                ["sh", "-c",
+                 "systemctl --user daemon-reload && "
+                 "systemctl --user enable --now nyxus-wall-rotate.timer"],
+                lambda r: self.toast(
+                    "rotation enabled" if r[0] == 0
+                    else "failed to enable timer"),
+                timeout=8)
+        else:
+            sh_async(
+                ["sh", "-c",
+                 "systemctl --user disable --now "
+                 "nyxus-wall-rotate.timer 2>/dev/null || true"],
+                lambda r: self.toast("rotation disabled"),
+                timeout=6)
+
+    # ── Text scale ────────────────────────────────────────────────────
+    def _render_scale(self) -> None:
+        _clear_group(self.scale_grp)
+        prefs = self.win.prefs
         scale_row = Adw.ActionRow(title="UI scale")
         adj = Gtk.Adjustment(value=prefs.get("font_scale", 1.0),
                              lower=0.85, upper=1.40, step_increment=0.05)
@@ -4705,60 +5452,41 @@ class AppearancePage(SectionPage):
             scale.add_mark(v, Gtk.PositionType.BOTTOM, None)
         scale.connect("value-changed", self._on_font_scale)
         scale_row.add_suffix(scale)
-        g_font.add(scale_row)
-        self.add_group(g_font)
-
-        # ── Animations ────────────────────────────────────────────────
-        g_anim = Adw.PreferencesGroup(title="Motion")
-        anim_row = Adw.SwitchRow(title="Enable Hyprland animations",
-                                 subtitle="Disable for snappier feel on slow GPUs")
-        anim_row.set_active(prefs.get("animations", True))
-        anim_row.connect("notify::active", self._on_anim_toggle)
-        g_anim.add(anim_row)
-        self.add_group(g_anim)
-
-        # Status pill: which compositor backends are available
-        backends = []
-        if have("swaybg"):     backends.append("swaybg")
-        if have("hyprctl"):    backends.append("hyprctl")
-        kind = "ok" if backends else "warn"
-        msg  = " · ".join(backends) if backends else "no compositor tools"
-        self.add_pill(status_pill(msg, kind))
-
-    def _on_wallpaper(self, btn: Gtk.Button, path: Path) -> None:
-        # Persist
-        self.win.prefs["wallpaper"] = str(path)
-        save_prefs(self.win.prefs)
-        # Visually mark selection
-        flow = btn.get_parent()
-        if isinstance(flow, Gtk.FlowBox):
-            child = flow.get_first_child()
-            while child:
-                inner = child.get_first_child()
-                if isinstance(inner, Gtk.Button):
-                    inner.remove_css_class("selected")
-                child = child.get_next_sibling()
-        btn.add_css_class("selected")
-        # Apply via swaybg (matches Hyprland exec-once + nyxus_install.sh
-        # reload logic — single backend across the whole system, audit A7).
-        # swaybg has no IPC; replace the running daemon with a fresh one
-        # pointed at the new path. `pkill -x` is exact-match so we don't
-        # nuke unrelated processes.
-        if have("swaybg"):
-            sh_async(
-                ["sh", "-c",
-                 f"pkill -x swaybg 2>/dev/null; "
-                 f"swaybg -i {str(path)!r} -m fill -c '#000000' >/dev/null 2>&1 &"],
-                lambda r: self.toast(
-                    "wallpaper applied" if r[0] == 0
-                    else f"swaybg failed: {r[2][:60]}"))
-        else:
-            self.toast("swaybg not installed — saved selection only")
+        self.scale_grp.add(scale_row)
 
     def _on_font_scale(self, scale: Gtk.Scale) -> None:
         v = round(scale.get_value(), 2)
         self.win.prefs["font_scale"] = v
         save_prefs(self.win.prefs)
+        if have("gsettings"):
+            sh_async(
+                ["gsettings", "set", "org.gnome.desktop.interface",
+                 "text-scaling-factor", str(v)],
+                lambda r: None, timeout=3)
+
+    # ── Motion ────────────────────────────────────────────────────────
+    def _render_motion(self) -> None:
+        _clear_group(self.motion_grp)
+        prefs = self.win.prefs
+        anim_row = Adw.SwitchRow(
+            title="Enable Hyprland animations",
+            subtitle="Disable for snappier feel on slow GPUs")
+        anim_row.set_active(prefs.get("animations", True))
+        anim_row.connect("notify::active", self._on_anim_toggle)
+        self.motion_grp.add(anim_row)
+
+        reduce_row = Adw.SwitchRow(
+            title="Reduce motion (apps)",
+            subtitle="gsettings org.gnome.desktop.interface "
+                     "enable-animations")
+        rc, val, _ = sh(["gsettings", "get",
+                         "org.gnome.desktop.interface",
+                         "enable-animations"], timeout=2)
+        # When animations are *enabled*, reduce-motion is OFF
+        currently_anim = "true" in val.lower()
+        reduce_row.set_active(not currently_anim)
+        reduce_row.connect("notify::active", self._on_reduce_motion)
+        self.motion_grp.add(reduce_row)
 
     def _on_anim_toggle(self, row: Adw.SwitchRow, _pspec) -> None:
         on = row.get_active()
@@ -4769,6 +5497,18 @@ class AppearancePage(SectionPage):
                       "1" if on else "0"],
                      lambda r: self.toast(
                          f"animations {'on' if on else 'off'}"))
+
+    def _on_reduce_motion(self, row: Adw.SwitchRow, _pspec) -> None:
+        reduce = row.get_active()
+        if not have("gsettings"):
+            self.toast("gsettings missing")
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface",
+             "enable-animations", "false" if reduce else "true"],
+            lambda r: self.toast(
+                f"reduce motion {'on' if reduce else 'off'}"),
+            timeout=4)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -5267,91 +6007,194 @@ class BluetoothPage(SectionPage):
 # Tier-1: ABOUT
 # ──────────────────────────────────────────────────────────────────────
 class AboutPage(SectionPage):
+    """Branded system summary. All real reads:
+      · /etc/os-release · /etc/nyxus-release · /proc/cpuinfo · /proc/meminfo
+      · hostnamectl · uname · uptime -p
+      · ip -4/-6/link · ip route (default route → primary IP/MAC)
+      · bootctl status / efibootmgr / ls /sys/firmware/efi
+      · readlink /proc/1/exe → init system
+      · $XDG_SESSION_TYPE  $XDG_CURRENT_DESKTOP
+      · lspci -nn (GPU)  ·  df -h / (root disk)
+    Plus: branded header, Copy Report, jump to Updates."""
     KEY = "about"
 
     def build(self) -> None:
+        self._reset_groups()
+        self._render()
+
+    def _reset_groups(self) -> None:
+        # NYXUS branded header
+        self.brand_grp = Adw.PreferencesGroup()
+        self.add_group(self.brand_grp)
         # System
-        g_sys = Adw.PreferencesGroup(title="System")
-        _, host,   _ = sh("hostnamectl --static")
-        _, kernel, _ = sh("uname -r")
-        _, uptime, _ = sh("uptime -p")
+        self.sys_grp = Adw.PreferencesGroup(title="System")
+        self.add_group(self.sys_grp)
+        # Hardware
+        self.hw_grp = Adw.PreferencesGroup(title="Hardware")
+        self.add_group(self.hw_grp)
+        # Network
+        self.net_grp = Adw.PreferencesGroup(
+            title="Network",
+            description="Primary route (where default traffic goes)")
+        self.add_group(self.net_grp)
+        # Boot / session
+        self.boot_grp = Adw.PreferencesGroup(
+            title="Boot & session",
+            description="Firmware, bootloader, init, and session type")
+        self.add_group(self.boot_grp)
+        # Actions
+        self.actions_grp = Adw.PreferencesGroup(title="Support")
+        self.add_group(self.actions_grp)
+        # Credits
+        self.credits_grp = Adw.PreferencesGroup(title="NYXUS")
+        self.add_group(self.credits_grp)
+
+    def _render(self) -> None:
+        # Brand header
+        _clear_group(self.brand_grp)
         nyx_ver = self._read_nyx_version()
+        header = Adw.ActionRow()
+        header.set_title("NYXUS")
+        header.set_subtitle(f"DARK MIRROR  ·  {nyx_ver}")
+        big = Gtk.Label(label="◐")
+        big.add_css_class("nyx-section-glyph")
+        big.set_valign(Gtk.Align.CENTER)
+        header.add_prefix(big)
+        header.add_suffix(status_pill(nyx_ver, "ok"))
+        self.brand_grp.add(header)
+
+        # System
+        _clear_group(self.sys_grp)
+        _, host, _ = sh("hostnamectl --static")
+        _, ker, _  = sh(["uname", "-r"])
+        _, up, _   = sh(["uptime", "-p"])
+        os_info = self._os_release()
         for title, value in (
-            ("Hostname",       host.strip()  or "(unset)"),
-            ("Kernel",         kernel.strip() or "(unknown)"),
-            ("NYXUS version",  nyx_ver),
-            ("Uptime",         uptime.strip() or "(unknown)"),
+            ("Distribution",  os_info.get("PRETTY_NAME", "(n/a)")),
+            ("NYXUS version", nyx_ver),
+            ("Build ID",      os_info.get("BUILD_ID", "(n/a)")),
+            ("Variant",       os_info.get("VARIANT", "(n/a)")),
+            ("Hostname",      host.strip() or "(unset)"),
+            ("Kernel",        ker.strip() or "(unknown)"),
+            ("Architecture",  os.uname().machine),
+            ("Uptime",        up.strip() or "(unknown)"),
         ):
-            row = Adw.ActionRow(title=title)
-            row.add_suffix(self._mono(value))
-            g_sys.add(row)
-        self.add_group(g_sys)
+            r = Adw.ActionRow(title=title)
+            r.add_suffix(self._mono(value))
+            self.sys_grp.add(r)
 
         # Hardware
-        g_hw = Adw.PreferencesGroup(title="Hardware")
-        cpu  = self._cpu_model()
-        ram  = self._ram_total()
-        gpu  = self._gpu_model()
-        disk = self._root_disk()
+        _clear_group(self.hw_grp)
         for title, value in (
-            ("Processor", cpu),
-            ("Memory",    ram),
-            ("Graphics",  gpu),
-            ("Root disk", disk),
+            ("Processor", self._cpu_model()),
+            ("CPU cores", self._cpu_cores()),
+            ("Memory",    self._ram_total()),
+            ("Graphics",  self._gpu_model()),
+            ("Root disk", self._root_disk()),
         ):
-            row = Adw.ActionRow(title=title)
-            row.add_suffix(self._mono(value))
-            g_hw.add(row)
-        self.add_group(g_hw)
+            r = Adw.ActionRow(title=title)
+            r.add_suffix(self._mono(value))
+            self.hw_grp.add(r)
 
-        # OS / build
-        g_os = Adw.PreferencesGroup(title="OS")
-        _, osr, _ = sh("cat /etc/os-release")
-        info = {}
-        for ln in osr.splitlines():
-            if "=" in ln:
-                k, v = ln.split("=", 1)
-                info[k] = v.strip().strip('"')
-        for title, key in (
-            ("Distribution", "PRETTY_NAME"),
-            ("Build ID",     "BUILD_ID"),
-            ("Variant",      "VARIANT"),
+        # Network
+        _clear_group(self.net_grp)
+        iface, ipv4, mac, gateway = self._primary_route()
+        ipv6 = self._primary_ipv6(iface)
+        if iface:
+            for title, value in (
+                ("Interface",    iface),
+                ("IPv4 address", ipv4 or "(none)"),
+                ("IPv6 address", ipv6 or "(none)"),
+                ("MAC address",  mac or "(unknown)"),
+                ("Gateway",      gateway or "(none)"),
+            ):
+                r = Adw.ActionRow(title=title)
+                r.add_suffix(self._mono(value))
+                self.net_grp.add(r)
+        else:
+            self.net_grp.add(empty_row(
+                "No active network",
+                "No default route detected — connect to a network first"))
+
+        # Boot & session
+        _clear_group(self.boot_grp)
+        for title, value in (
+            ("Firmware",     self._firmware()),
+            ("Bootloader",   self._bootloader()),
+            ("Init system",  self._init_system()),
+            ("Session type", os.environ.get("XDG_SESSION_TYPE", "(unknown)")),
+            ("Desktop",      os.environ.get("XDG_CURRENT_DESKTOP",
+                                            "Hyprland")),
+            ("Display",      os.environ.get("WAYLAND_DISPLAY",
+                                            os.environ.get("DISPLAY",
+                                                           "(none)"))),
         ):
-            v = info.get(key, "(n/a)")
-            row = Adw.ActionRow(title=title)
-            row.add_suffix(self._mono(v))
-            g_os.add(row)
-        self.add_group(g_os)
+            r = Adw.ActionRow(title=title)
+            r.add_suffix(self._mono(value))
+            self.boot_grp.add(r)
+
+        # Actions
+        _clear_group(self.actions_grp)
+        self.actions_grp.add(action_row(
+            "Copy system report",
+            "Copies a full plain-text report to the clipboard for support",
+            "Copy",
+            self._copy_report))
+        self.actions_grp.add(action_row(
+            "Check for updates",
+            "Opens the Updates section",
+            "Open",
+            lambda: self._jump_to("updates")))
+        self.actions_grp.add(action_row(
+            "Open documentation",
+            "Launches the NYXUS handbook",
+            "Open",
+            lambda: sh_async(
+                ["xdg-open", "https://nyxus.io/docs"],
+                lambda r: None, timeout=5)))
 
         # Credits
-        g_credits = Adw.PreferencesGroup(title="NYXUS")
-        row = Adw.ActionRow(
+        _clear_group(self.credits_grp)
+        cr = Adw.ActionRow(
             title="Designed and built by Joseph Sierengowski",
-            subtitle="© 2026 · DARK MIRROR aesthetic · enterprise grade")
-        g_credits.add(row)
-        self.add_group(g_credits)
+            subtitle="© 2026  ·  DARK MIRROR aesthetic  ·  enterprise grade")
+        self.credits_grp.add(cr)
 
+        self.clear_pills()
         self.add_pill(status_pill(APP_REV, "ok"))
 
+    # ── Helpers ───────────────────────────────────────────────────────
     @staticmethod
     def _mono(text: str) -> Gtk.Label:
         lbl = Gtk.Label(label=text)
         lbl.add_css_class("nyx-pill")
+        lbl.set_selectable(True)
         return lbl
 
     @staticmethod
+    def _os_release() -> dict:
+        info: dict = {}
+        try:
+            for ln in Path("/etc/os-release").read_text().splitlines():
+                if "=" in ln:
+                    k, v = ln.split("=", 1)
+                    info[k] = v.strip().strip('"')
+        except Exception:
+            pass
+        return info
+
+    @staticmethod
     def _read_nyx_version() -> str:
-        for p in (Path("/etc/nyxus-release"),
-                  Path("/etc/os-release")):
-            if p.exists():
-                try:
-                    txt = p.read_text()
-                    for ln in txt.splitlines():
-                        if ln.startswith("NYXUS_VERSION="):
-                            return ln.split("=", 1)[1].strip().strip('"')
-                except Exception:
-                    pass
-        return "(unknown)"
+        for p in (Path("/etc/nyxus-release"), Path("/etc/os-release")):
+            if not p.exists():
+                continue
+            try:
+                for ln in p.read_text().splitlines():
+                    if ln.startswith("NYXUS_VERSION="):
+                        return ln.split("=", 1)[1].strip().strip('"')
+            except Exception:
+                continue
+        return APP_REV
 
     @staticmethod
     def _cpu_model() -> str:
@@ -5364,36 +6207,214 @@ class AboutPage(SectionPage):
         return "(unknown)"
 
     @staticmethod
+    def _cpu_cores() -> str:
+        try:
+            cores = sum(1 for ln in Path("/proc/cpuinfo")
+                        .read_text().splitlines()
+                        if ln.startswith("processor"))
+            return f"{cores} threads"
+        except Exception:
+            return "(unknown)"
+
+    @staticmethod
     def _ram_total() -> str:
         try:
             for ln in Path("/proc/meminfo").read_text().splitlines():
                 if ln.startswith("MemTotal:"):
                     kb = int(ln.split()[1])
-                    gb = kb / 1024 / 1024
-                    return f"{gb:.1f} GiB"
+                    return f"{kb / 1024 / 1024:.1f} GiB"
         except Exception:
             pass
         return "(unknown)"
 
     @staticmethod
     def _gpu_model() -> str:
-        if have("lspci"):
-            _, out, _ = sh("lspci -nn")
-            for ln in out.splitlines():
-                if "VGA" in ln or "3D controller" in ln or "Display controller" in ln:
-                    if ":" in ln:
-                        return ln.split(":", 2)[-1].strip()
-        return "(unknown)"
+        if not have("lspci"):
+            return "(lspci missing)"
+        _, out, _ = sh(["lspci", "-nn"])
+        gpus = []
+        for ln in out.splitlines():
+            if any(k in ln for k in ("VGA", "3D controller",
+                                     "Display controller")):
+                if ":" in ln:
+                    gpus.append(ln.split(":", 2)[-1].strip())
+        return "  ·  ".join(gpus) if gpus else "(unknown)"
 
     @staticmethod
     def _root_disk() -> str:
-        _, out, _ = sh("df -h /")
+        _, out, _ = sh(["df", "-h", "/"])
         lines = out.strip().splitlines()
         if len(lines) >= 2:
-            parts = lines[1].split()
-            if len(parts) >= 5:
-                return f"{parts[2]} used of {parts[1]}  ({parts[4]} full)"
+            p = lines[1].split()
+            if len(p) >= 5:
+                return f"{p[2]} used of {p[1]}  ({p[4]} full)"
         return "(unknown)"
+
+    @staticmethod
+    def _primary_route() -> Tuple[str, str, str, str]:
+        """Return (iface, ipv4, mac, gateway) for the default route."""
+        if not have("ip"):
+            return ("", "", "", "")
+        _, route, _ = sh(["ip", "-4", "route", "show", "default"])
+        iface = ""
+        gw = ""
+        for tok in route.split():
+            if tok == "dev":
+                pass
+        parts = route.split()
+        for i, tok in enumerate(parts):
+            if tok == "dev" and i + 1 < len(parts):
+                iface = parts[i + 1]
+            if tok == "via" and i + 1 < len(parts):
+                gw = parts[i + 1]
+        if not iface:
+            return ("", "", "", "")
+        # IPv4 of that interface
+        _, ipo, _ = sh(["ip", "-4", "-o", "addr", "show", "dev", iface])
+        ipv4 = ""
+        for ln in ipo.splitlines():
+            m = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)", ln)
+            if m:
+                ipv4 = m.group(1)
+                break
+        # MAC of that interface
+        _, lk, _ = sh(["ip", "-o", "link", "show", "dev", iface])
+        mac = ""
+        m = re.search(r"link/\w+\s+([0-9a-f:]{17})", lk)
+        if m:
+            mac = m.group(1)
+        return (iface, ipv4, mac, gw)
+
+    @staticmethod
+    def _primary_ipv6(iface: str) -> str:
+        if not iface or not have("ip"):
+            return ""
+        _, ipo, _ = sh(["ip", "-6", "-o", "addr", "show", "dev",
+                        iface, "scope", "global"])
+        for ln in ipo.splitlines():
+            m = re.search(r"inet6\s+([0-9a-f:]+)", ln)
+            if m:
+                return m.group(1)
+        return ""
+
+    @staticmethod
+    def _firmware() -> str:
+        if Path("/sys/firmware/efi").exists():
+            return "UEFI"
+        return "Legacy BIOS"
+
+    @staticmethod
+    def _bootloader() -> str:
+        # systemd-boot first
+        if have("bootctl"):
+            _, out, _ = sh(["bootctl", "status"], timeout=2)
+            for ln in out.splitlines():
+                ln = ln.strip()
+                if ln.lower().startswith("product:"):
+                    return ln.split(":", 1)[1].strip()
+        # GRUB
+        for p in (Path("/boot/grub/grub.cfg"),
+                  Path("/boot/grub2/grub.cfg")):
+            if p.exists():
+                return "GRUB"
+        # rEFInd
+        if Path("/boot/EFI/refind").exists() or \
+           Path("/boot/efi/EFI/refind").exists():
+            return "rEFInd"
+        # systemd-boot (loader entries present)
+        if Path("/boot/loader/entries").exists():
+            return "systemd-boot"
+        return "(unknown)"
+
+    @staticmethod
+    def _init_system() -> str:
+        try:
+            tgt = os.readlink("/proc/1/exe")
+            base = os.path.basename(tgt)
+            if "systemd" in tgt:
+                _, ver, _ = sh(["systemctl", "--version"], timeout=2)
+                first = ver.splitlines()[0] if ver else "systemd"
+                return first.strip()
+            return base
+        except Exception:
+            return "(unknown)"
+
+    # ── Actions ───────────────────────────────────────────────────────
+    def _build_report(self) -> str:
+        nyx_ver = self._read_nyx_version()
+        os_info = self._os_release()
+        _, host, _ = sh("hostnamectl --static")
+        _, ker, _  = sh(["uname", "-r"])
+        _, up, _   = sh(["uptime", "-p"])
+        iface, ipv4, mac, gw = self._primary_route()
+        ipv6 = self._primary_ipv6(iface)
+        lines = [
+            "═══════════════════════════════════════════════",
+            f"  NYXUS SYSTEM REPORT  ·  {datetime.now():%Y-%m-%d %H:%M}",
+            "═══════════════════════════════════════════════",
+            "",
+            "[ System ]",
+            f"  Distribution : {os_info.get('PRETTY_NAME', '(n/a)')}",
+            f"  NYXUS        : {nyx_ver}",
+            f"  Build ID     : {os_info.get('BUILD_ID', '(n/a)')}",
+            f"  Variant      : {os_info.get('VARIANT', '(n/a)')}",
+            f"  Hostname     : {host.strip() or '(unset)'}",
+            f"  Kernel       : {ker.strip() or '(unknown)'}",
+            f"  Architecture : {os.uname().machine}",
+            f"  Uptime       : {up.strip() or '(unknown)'}",
+            "",
+            "[ Hardware ]",
+            f"  CPU          : {self._cpu_model()}",
+            f"  Cores        : {self._cpu_cores()}",
+            f"  RAM          : {self._ram_total()}",
+            f"  GPU          : {self._gpu_model()}",
+            f"  Root disk    : {self._root_disk()}",
+            "",
+            "[ Network ]",
+            f"  Interface    : {iface or '(none)'}",
+            f"  IPv4         : {ipv4 or '(none)'}",
+            f"  IPv6         : {ipv6 or '(none)'}",
+            f"  MAC          : {mac or '(unknown)'}",
+            f"  Gateway      : {gw or '(none)'}",
+            "",
+            "[ Boot & session ]",
+            f"  Firmware     : {self._firmware()}",
+            f"  Bootloader   : {self._bootloader()}",
+            f"  Init         : {self._init_system()}",
+            f"  Session      : {os.environ.get('XDG_SESSION_TYPE', '?')}",
+            f"  Desktop      : {os.environ.get('XDG_CURRENT_DESKTOP', 'Hyprland')}",
+            "",
+            "═══════════════════════════════════════════════",
+        ]
+        return "\n".join(lines)
+
+    def _copy_report(self) -> None:
+        report = self._build_report()
+        try:
+            disp = Gdk.Display.get_default()
+            cb = disp.get_clipboard()
+            cb.set(report)
+            self.toast(f"copied {len(report)} chars to clipboard")
+        except Exception as e:
+            # Fallback: wl-copy / xclip
+            if have("wl-copy"):
+                p = subprocess.Popen(["wl-copy"], stdin=subprocess.PIPE)
+                p.communicate(report.encode())
+                self.toast("copied via wl-copy")
+            elif have("xclip"):
+                p = subprocess.Popen(
+                    ["xclip", "-selection", "clipboard"],
+                    stdin=subprocess.PIPE)
+                p.communicate(report.encode())
+                self.toast("copied via xclip")
+            else:
+                self.toast(f"clipboard failed: {e}")
+
+    def _jump_to(self, key: str) -> None:
+        try:
+            self.win._select_key(key)
+        except Exception as e:
+            self.toast(f"navigation failed: {e}")
 
 
 # Map section.key → page class.

@@ -4,6 +4,9 @@
    © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ============================================================ */
 
+/* nyxus accent — auto-loaded if present */
+@import "nyxus-accent.rasi"
+
 * {
     /* White canvas */
     canvas:  rgba(255, 252, 255, 0.97);
