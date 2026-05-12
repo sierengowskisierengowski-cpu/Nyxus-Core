@@ -17,10 +17,10 @@ Designer, architect, and sole developer of NYXUS
 | Component | Role |
 |---|---|
 | Hyprland | Wayland compositor |
-| Waybar | Status bar |
+| EWW | Status bar (4 bars + dashboard + flyouts + OSDs) |
 | Hyprlock | Lock screen |
 | SDDM | Display manager / login screen |
-| Mako | Notification daemon |
+| Dunst | Notification daemon |
 | Alacritty | Terminal emulator |
 | Rofi | Application launcher |
 | swaybg | Wallpaper daemon |

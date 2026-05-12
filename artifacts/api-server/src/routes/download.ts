@@ -157,8 +157,10 @@ const ALLOWED_FILES: Record<string, string> = {
   // ── ★ HYPRLAND CONFIGS ───────────────────────────────────────────────────
   "hyprland.conf":               "hyprland.conf",
   "hyprlock.conf":               "hyprlock.conf",
+  // A6 (2026-05-12): nyxus-hyprlock.conf was merged INTO hyprlock.conf
+  // (one canonical filename, branded variant with login-stars wallpaper).
+  // Allowlist entry removed — file no longer exists in nyxus-scripts/.
   "hypridle.conf":               "hypridle.conf",
-  "nyxus-hyprlock.conf":         "nyxus-hyprlock.conf",
   "nyxus-hyprland-rules.conf":   "nyxus-hyprland-rules.conf",
   "nyxus-hyprland-blur.conf":    "nyxus-hyprland-blur.conf",
   "nyxus-hyprland-fog.conf":     "nyxus-hyprland-fog.conf",
@@ -206,7 +208,6 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-starlight.png":          "nyxus-starlight.png",
   "nyxus-void-wallpaper.mp4":     "nyxus-void-wallpaper.mp4",
   "nyxus-login-stars.png":        "nyxus-login-stars.png",
-  "nyxus-waybar-stars.png":       "nyxus-waybar-stars.png",
   "nyxus-monogram-mist.png":      "nyxus-monogram-mist.png",
   "nyxus-topbar-mist.png":        "nyxus-topbar-mist.png",
   "nyxus-hyprlock-eye.png":       "nyxus-hyprlock-eye.png",

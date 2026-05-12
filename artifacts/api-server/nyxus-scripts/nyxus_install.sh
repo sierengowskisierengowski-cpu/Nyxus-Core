@@ -33,6 +33,7 @@ CYAN="\033[96m"
 
 ok()   { printf "  ${GREEN}${B}✓${R}  ${DIM}%s${R}\n" "$1"; }
 fail() { printf "  ${RED}${B}✗${R}  ${DIM}%s — FAILED${R}\n" "$1"; }
+warn() { printf "  ${YELLOW:-\033[33m}${B}!${R}  ${DIM}%s${R}\n" "$1"; }
 hdr()  { printf "\n${PURPLE}${B}── %s ${DIM}%s${R}\n" "$1" "────────────────────────────────────────────"; }
 
 ## Offline mode: if NYXUS_OFFLINE_DIR is set, copy from local cache
@@ -249,7 +250,7 @@ hdr "Hyprland"
 mkdir -p "$HYPR_DIR"
 mkdir -p "$HYPR_DIR/conf.d"
 dl "hyprland.conf" "$HYPR_DIR/hyprland.conf" || failed=$((failed+1))
-dl "nyxus-hyprlock.conf" "$HYPR_DIR/hyprlock.conf"  || failed=$((failed+1))
+dl "hyprlock.conf" "$HYPR_DIR/hyprlock.conf"  || failed=$((failed+1))
 dl "hypridle.conf"  "$HYPR_DIR/hypridle.conf"  || failed=$((failed+1))
 
 # ── Modular DARK MIRROR confs (sourced by hyprland.conf) ─────────────────────
@@ -281,6 +282,7 @@ dl "nyxus-starlight.png"          "$WALLS_DIR/nyxus-starlight.png"          || f
 dl "nyxus-monogram-mist.png"      "$WALLS_DIR/nyxus-monogram-mist.png"      || failed=$((failed+1))
 dl "nyxus-topbar-mist.png"        "$WALLS_DIR/nyxus-topbar-mist.png"        || failed=$((failed+1))
 dl "nyxus-hyprlock-eye.png"       "$WALLS_DIR/nyxus-hyprlock-eye.png"       || failed=$((failed+1))
+dl "nyxus-login-stars.png"        "$WALLS_DIR/nyxus-login-stars.png"        || failed=$((failed+1))
 dl "nyxus-bar-stone.png"          "$WALLS_DIR/nyxus-bar-stone.png"          || failed=$((failed+1))
 
 # ── APP BACKGROUNDS (neon splat panels — used by all GTK apps) ────────────────
@@ -303,9 +305,11 @@ dl "eww/eww.yuck"     "$EWW_DIR/eww.yuck"     || failed=$((failed+1))
 dl "eww/eww.scss"     "$EWW_DIR/eww.scss"     || failed=$((failed+1))
 dl "eww/nyxus.conf"   "$EWW_DIR/nyxus.conf"   || failed=$((failed+1))
 dl "eww/README.md"    "$EWW_DIR/README.md"    || failed=$((failed+1))
-for s in audio battery bluetooth brightness calendar cpu-bars mic network \
-         notifications osd-show player power-profile sys-pulse ticker \
-         updates weather workspaces; do
+for s in audio audio-action audio-sinks battery bluetooth brightness \
+         bt-action bt-list calendar calendar-month cpu-bars mic network \
+         notif-action notif-history notifications osd-show player \
+         power-profile qs-toggle quicksettings sys-pulse ticker \
+         updates weather wifi-action wifi-list workspaces; do
   dl "eww/scripts/${s}.sh" "$EWW_SCRIPTS_DIR/${s}.sh" || failed=$((failed+1))
 done
 chmod +x "$EWW_SCRIPTS_DIR"/*.sh 2>/dev/null || true
@@ -320,6 +324,45 @@ if dl "nyxus-eww-launch" "/tmp/nyxus-eww-launch.new"; then
       || failed=$((failed+1))
   fi
   rm -f /tmp/nyxus-eww-launch.new
+fi
+
+# ── A4 FIX (2026-05-12): bootstrap shims + welcome wizard parity ─────────────
+# hyprland.conf references nyxus-bootstrap, nyxus-wait-bootstrap, nyxus-welcome,
+# and nyxus_welcome.py. The ISO build installs them; the per-user installer
+# was missing them — leaving fresh installs unable to complete first-boot
+# bootstrap (the wait-shim would block 120s and the welcome wizard would
+# 'command not found'). Install path mirrors build-iso.sh:208-210.
+hdr "Bootstrap shims + Welcome wizard"
+mkdir -p "$HOME/.local/bin"
+for helper in nyxus-bootstrap nyxus-wait-bootstrap nyxus-welcome; do
+  if dl "$helper" "/tmp/${helper}.new"; then
+    if sudo -n install -m 0755 "/tmp/${helper}.new" "/usr/local/bin/${helper}" 2>/dev/null; then
+      ok "$helper → /usr/local/bin/"
+    else
+      install -m 0755 "/tmp/${helper}.new" "$HOME/.local/bin/${helper}" 2>/dev/null \
+        && ok "$helper → ~/.local/bin/ (sudo unavailable)" \
+        || failed=$((failed+1))
+    fi
+    rm -f "/tmp/${helper}.new"
+  fi
+done
+# Welcome wizard python module → ~/.nyxus/ (run by /usr/local/bin/nyxus-welcome)
+mkdir -p "$HOME/.nyxus"
+dl "nyxus_welcome.py" "$HOME/.nyxus/nyxus_welcome.py" || failed=$((failed+1))
+# Polkit helper + policy — root-only; only stage when sudo is non-interactive
+if sudo -n true 2>/dev/null; then
+  if dl "nyxus-welcome-helper" "/tmp/nyxus-welcome-helper.new"; then
+    sudo -n install -m 0755 /tmp/nyxus-welcome-helper.new /usr/local/bin/nyxus-welcome-helper 2>/dev/null \
+      && ok "nyxus-welcome-helper → /usr/local/bin/"
+    rm -f /tmp/nyxus-welcome-helper.new
+  fi
+  if dl "nyxus-welcome.policy" "/tmp/nyxus-welcome.policy.new"; then
+    sudo -n install -m 0644 /tmp/nyxus-welcome.policy.new /usr/share/polkit-1/actions/dev.nyxus.welcome.policy 2>/dev/null \
+      && ok "nyxus-welcome.policy → /usr/share/polkit-1/actions/"
+    rm -f /tmp/nyxus-welcome.policy.new
+  fi
+else
+  warn "skipping nyxus-welcome-helper + .policy (no passwordless sudo) — run installer with sudo to enable polkit elevation"
 fi
 
 # Optional systemd user service (idempotent — Hyprland exec-once also works)
