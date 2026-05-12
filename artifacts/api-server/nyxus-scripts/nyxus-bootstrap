@@ -26,7 +26,7 @@
 set -uo pipefail
 
 # ── Version stamp: BUMP ON EVERY RELEASE THAT TOUCHES INSTALLED FILES ───────
-BOOTSTRAP_VERSION="2026.05.11-r9-eww"
+BOOTSTRAP_VERSION="2026.05.12-r10-mission"
 
 PROD_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/download/nyxus/nyxus_install.sh"
 OFFLINE_CACHE="${NYXUS_OFFLINE_DIR:-/opt/nyxus-cache}"
@@ -50,6 +50,51 @@ notify() {
 
 log "starting (user=${USER:-?} home=${HOME:-?} version=${BOOTSTRAP_VERSION})"
 mkdir -p "${NYXUS_DIR}"
+
+# ── Hyprland plugin sync ─────────────────────────────────────────────────────
+# Runs on EVERY login (before the marker fast-path) so plugin-only changes
+# can ship without forcing a full re-install via version bump. The function
+# is fully idempotent: each `hyprpm` step is a no-op when already in the
+# desired state, and any failure is logged but never aborts bootstrap (the
+# desktop must still come up even if a plugin fails to compile against the
+# user's Hyprland headers).
+#
+# Currently managed plugins:
+#   hyprexpo  — Mission Control overview (P3.13). Triggered by SUPER+F3
+#               and the 4-finger touchpad swipe defined in the
+#               nyxus-hyprland-mission.conf shard.
+ensure_hyprland_plugins() {
+  command -v hyprpm >/dev/null 2>&1 || {
+    log "hyprpm not on PATH — skipping plugin sync (Hyprland too old?)"
+    return 0
+  }
+
+  # `hyprpm list` prints "Plugin <name>" lines for every installed plugin
+  # regardless of enabled/disabled state. Match case-insensitively because
+  # hyprpm has shifted the casing across versions.
+  local installed
+  installed="$(hyprpm list 2>/dev/null || true)"
+
+  if ! grep -qi 'hyprexpo' <<<"${installed}"; then
+    log "installing hyprexpo plugin (first time)"
+    # `hyprpm update` ensures the headers cache is fresh for the running
+    # Hyprland version — required before `add` will compile cleanly.
+    hyprpm update >/dev/null 2>&1 \
+      || log "hyprpm update failed (continuing — add may still work)"
+    hyprpm add https://github.com/hyprwm/hyprland-plugins >/dev/null 2>&1 \
+      || { log "hyprpm add failed — Mission Control unavailable until next boot"; return 0; }
+  fi
+
+  # `enable` is idempotent — re-running while enabled is a no-op.
+  hyprpm enable hyprexpo >/dev/null 2>&1 \
+    || log "hyprpm enable hyprexpo failed (plugin may not have compiled)"
+
+  # Reload so the just-loaded plugin is picked up by the running compositor
+  # without requiring a logout. Safe even on cold boot — Hyprland will be
+  # alive by the time exec-once nyxus-bootstrap runs.
+  hyprpm reload >/dev/null 2>&1 || true
+}
+ensure_hyprland_plugins || true
 
 # Already bootstrapped → version check fast path
 # If marker contains current version → no-op (steady state).
