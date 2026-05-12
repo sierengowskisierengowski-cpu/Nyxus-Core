@@ -117,6 +117,171 @@ def save_config(cfg: dict) -> None:
     CFG_FILE.write_text("\n".join(lines) + "\n")
 
 
+# ---------- icon model ----------
+ICON_W = 96
+ICON_H = 96
+ICON_PAD_X = 24
+ICON_PAD_Y = 28
+ICON_GRID_W = ICON_W + ICON_PAD_X
+ICON_GRID_H = ICON_H + ICON_PAD_Y
+DESKTOP_DIR = HOME / "Desktop"
+ICON_STATE_FILE = CFG_DIR / "desktop-icons.json"
+
+
+class DesktopEntry:
+    """One thing on the desktop: file, folder, .desktop launcher, or symlink.
+
+    Resolves: display name, icon name (XDG icon-theme lookup), launch command.
+    """
+
+    __slots__ = ("path", "name", "is_dir", "is_launcher",
+                 "exec_cmd", "icon_name", "mime")
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self.is_launcher = path.suffix == ".desktop" and path.is_file()
+        self.is_dir = path.is_dir()
+        self.name = path.name
+        self.exec_cmd: Optional[str] = None
+        self.icon_name = "text-x-generic"
+        self.mime: Optional[str] = None
+        self._resolve()
+
+    def _resolve(self) -> None:
+        if self.is_launcher:
+            self._parse_desktop_file()
+            return
+        if self.is_dir:
+            self.icon_name = "folder"
+            return
+        # regular file: query MIME + icon via Gio
+        try:
+            gfile = Gio.File.new_for_path(str(self.path))
+            info = gfile.query_info(
+                "standard::display-name,standard::icon,standard::content-type",
+                Gio.FileQueryInfoFlags.NONE,
+                None,
+            )
+            disp = info.get_display_name()
+            if disp:
+                self.name = disp
+            self.mime = info.get_content_type()
+            gicon = info.get_icon()
+            if isinstance(gicon, Gio.ThemedIcon):
+                names = gicon.get_names()
+                if names:
+                    self.icon_name = names[0]
+        except Exception as e:
+            log.debug("MIME query failed for %s: %s", self.path, e)
+
+    def _parse_desktop_file(self) -> None:
+        try:
+            kf = GLib.KeyFile.new()
+            kf.load_from_file(str(self.path), GLib.KeyFileFlags.NONE)
+            grp = "Desktop Entry"
+            try:
+                self.name = kf.get_locale_string(grp, "Name", None) or self.name
+            except GLib.Error:
+                pass
+            try:
+                self.icon_name = kf.get_string(grp, "Icon") or self.icon_name
+            except GLib.Error:
+                pass
+            try:
+                self.exec_cmd = kf.get_string(grp, "Exec")
+            except GLib.Error:
+                self.exec_cmd = None
+        except Exception as e:
+            log.warning("desktop file parse failed for %s: %s", self.path, e)
+
+    def launch(self) -> None:
+        try:
+            if self.is_launcher and self.exec_cmd:
+                # strip XDG field codes (%f %u %F %U %i %c %k)
+                import re
+                cmd = re.sub(r"%[fFuUickdDnNvm]", "", self.exec_cmd).strip()
+                subprocess.Popen(["sh", "-c", cmd],
+                                 start_new_session=True)
+                return
+            subprocess.Popen(["xdg-open", str(self.path)],
+                             start_new_session=True)
+        except Exception as e:
+            log.error("launch failed for %s: %s", self.path, e)
+
+
+class IconWidget(Gtk.Box):
+    """A single desktop icon: image + label, selectable, clickable."""
+
+    def __init__(
+        self,
+        entry: DesktopEntry,
+        on_open,  # callable(entry)
+        on_select,  # callable(IconWidget, additive)
+        on_context,  # callable(entry)
+    ) -> None:
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        self.entry = entry
+        self._on_open = on_open
+        self._on_select = on_select
+        self._on_context = on_context
+        self._selected = False
+
+        self.set_size_request(ICON_W, ICON_H)
+        self.add_css_class("nyxus-desktop-icon")
+        self.set_halign(Gtk.Align.CENTER)
+        self.set_valign(Gtk.Align.START)
+
+        img = Gtk.Image.new_from_icon_name(entry.icon_name)
+        img.set_pixel_size(56)
+        img.set_halign(Gtk.Align.CENTER)
+        self.append(img)
+
+        lbl = Gtk.Label(label=entry.name)
+        lbl.set_max_width_chars(12)
+        lbl.set_wrap(True)
+        lbl.set_wrap_mode(2)  # WORD_CHAR
+        lbl.set_lines(2)
+        lbl.set_ellipsize(3)  # END
+        lbl.set_justify(Gtk.Justification.CENTER)
+        lbl.set_halign(Gtk.Align.CENTER)
+        lbl.add_css_class("nyxus-desktop-icon-label")
+        self.append(lbl)
+
+        # gestures
+        click = Gtk.GestureClick()
+        click.set_button(0)
+        click.connect("pressed", self._on_press)
+        self.add_controller(click)
+
+    def _on_press(self, gesture: Gtk.GestureClick, n: int,
+                  x: float, y: float) -> None:
+        # Claim so the desktop background handler ignores this click.
+        gesture.set_state(Gtk.EventSequenceState.CLAIMED)
+        button = gesture.get_current_button()
+        event = gesture.get_last_event(None)
+        modifiers = event.get_modifier_state() if event else 0
+        additive = bool(modifiers & (Gdk.ModifierType.CONTROL_MASK
+                                     | Gdk.ModifierType.SHIFT_MASK))
+        if button == Gdk.BUTTON_SECONDARY:
+            self._on_select(self, False)  # right-click selects exclusive
+            self._on_context(self.entry)
+            return
+        if button == Gdk.BUTTON_PRIMARY:
+            if n >= 2:
+                self._on_open(self.entry)
+            else:
+                self._on_select(self, additive)
+
+    def set_selected(self, val: bool) -> None:
+        if val == self._selected:
+            return
+        self._selected = val
+        if val:
+            self.add_css_class("selected")
+        else:
+            self.remove_css_class("selected")
+
+
 # ---------- desktop window per monitor ----------
 class DesktopSurface(Gtk.ApplicationWindow):
     """One layer-shell window per monitor."""
@@ -130,9 +295,16 @@ class DesktopSurface(Gtk.ApplicationWindow):
         super().__init__(application=app)
         self.monitor = monitor
         self.cfg = cfg
+        self.icons: list[IconWidget] = []
+        self._monitor_handle: Optional[Gio.FileMonitor] = None
+        self._refresh_pending = False
         self._build_layer()
         self._build_content()
         self._build_input()
+        # icons + live filesystem watch
+        DESKTOP_DIR.mkdir(parents=True, exist_ok=True)
+        self._populate_icons()
+        self._watch_desktop_dir()
 
     # -- layer-shell config --
     def _build_layer(self) -> None:
@@ -222,10 +394,10 @@ class DesktopSurface(Gtk.ApplicationWindow):
         elif button == Gdk.BUTTON_PRIMARY:
             self._spawn_menu("dismiss")
 
-    def _spawn_menu(self, mode: str) -> None:
+    def _spawn_menu(self, mode: str, *args: str) -> None:
         try:
             subprocess.Popen(
-                [CONTEXT_MENU, mode],
+                [CONTEXT_MENU, mode, *args],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 start_new_session=True,
@@ -239,6 +411,119 @@ class DesktopSurface(Gtk.ApplicationWindow):
     def set_wallpaper(self, path: str) -> None:
         self.cfg["wallpaper"] = path
         self._apply_wallpaper(path)
+
+    # ============ icons ============
+    def _load_positions(self) -> dict:
+        if not ICON_STATE_FILE.exists():
+            return {}
+        try:
+            data = json.loads(ICON_STATE_FILE.read_text())
+            return data.get("positions", {})
+        except Exception as e:
+            log.warning("icon state read failed: %s", e)
+            return {}
+
+    def _save_positions(self, positions: dict) -> None:
+        try:
+            existing = {}
+            if ICON_STATE_FILE.exists():
+                existing = json.loads(ICON_STATE_FILE.read_text())
+            existing["positions"] = positions
+            ICON_STATE_FILE.write_text(json.dumps(existing, indent=2))
+        except Exception as e:
+            log.warning("icon state write failed: %s", e)
+
+    def _populate_icons(self) -> None:
+        # tear down previous icons
+        for ico in self.icons:
+            self.icon_layer.remove(ico)
+        self.icons.clear()
+
+        positions = self._load_positions()
+        # auto-grid: column-major from top-left, leaving margin for top bar
+        grid_x = 16
+        grid_y = 48
+        col = 0
+        row = 0
+        # max rows depends on monitor height; recomputed on first realize
+        try:
+            geom = self.monitor.get_geometry()
+            max_rows = max(1, (geom.height - grid_y - 16) // ICON_GRID_H)
+        except Exception:
+            max_rows = 8
+
+        try:
+            entries = sorted(
+                [p for p in DESKTOP_DIR.iterdir()
+                 if not p.name.startswith(".")],
+                key=lambda p: (not p.is_dir(), p.name.lower()),
+            )
+        except Exception as e:
+            log.error("scan ~/Desktop failed: %s", e)
+            entries = []
+
+        for path in entries:
+            try:
+                entry = DesktopEntry(path)
+            except Exception as e:
+                log.warning("entry build failed for %s: %s", path, e)
+                continue
+            ico = IconWidget(
+                entry,
+                on_open=self._open_entry,
+                on_select=self._on_icon_select,
+                on_context=self._on_icon_context,
+            )
+            saved = positions.get(str(path))
+            if saved and isinstance(saved, list) and len(saved) == 2:
+                x, y = int(saved[0]), int(saved[1])
+            else:
+                x = grid_x + col * ICON_GRID_W
+                y = grid_y + row * ICON_GRID_H
+                row += 1
+                if row >= max_rows:
+                    row = 0
+                    col += 1
+            self.icon_layer.put(ico, x, y)
+            self.icons.append(ico)
+        log.info("populated %d icons on %s", len(self.icons),
+                 self.monitor.get_connector())
+
+    def _watch_desktop_dir(self) -> None:
+        try:
+            gfile = Gio.File.new_for_path(str(DESKTOP_DIR))
+            self._monitor_handle = gfile.monitor_directory(
+                Gio.FileMonitorFlags.WATCH_MOVES, None)
+            self._monitor_handle.connect(
+                "changed", self._on_desktop_changed)
+        except Exception as e:
+            log.warning("desktop watch failed: %s", e)
+
+    def _on_desktop_changed(self, monitor, gfile, other,
+                            event_type) -> None:
+        if self._refresh_pending:
+            return
+        self._refresh_pending = True
+        # debounce — coalesce rapid bursts (cp -r etc.)
+        GLib.timeout_add(150, self._do_debounced_refresh)
+
+    def _do_debounced_refresh(self) -> bool:
+        self._refresh_pending = False
+        self._populate_icons()
+        return False
+
+    def _open_entry(self, entry: DesktopEntry) -> None:
+        entry.launch()
+
+    def _on_icon_select(self, ico: IconWidget, additive: bool) -> None:
+        if not additive:
+            for other in self.icons:
+                other.set_selected(other is ico)
+        else:
+            ico.set_selected(not ico._selected)
+
+    def _on_icon_context(self, entry: DesktopEntry) -> None:
+        self._spawn_menu("icon", str(entry.path))
 
 
 # ---------- IPC server (live wallpaper hot-swap from any process) ----------
@@ -294,6 +579,37 @@ class IPCServer(threading.Thread):
 CSS = b"""
 .nyxus-desktop-bg { background: #080a10; }
 .nyxus-desktop-icons { background: transparent; }
+
+.nyxus-desktop-icon {
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    transition: background-color 120ms ease, border-color 120ms ease;
+}
+.nyxus-desktop-icon:hover {
+    background: rgba(212, 184, 122, 0.10);
+    border-color: rgba(212, 184, 122, 0.35);
+}
+.nyxus-desktop-icon.selected {
+    background: rgba(212, 184, 122, 0.22);
+    border-color: #d4b87a;
+}
+
+.nyxus-desktop-icon-label {
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85),
+                 0 0 4px rgba(0, 0, 0, 0.7);
+    padding: 2px 4px;
+    background: rgba(8, 10, 16, 0.55);
+    border-radius: 4px;
+}
+.nyxus-desktop-icon.selected .nyxus-desktop-icon-label {
+    background: rgba(212, 184, 122, 0.95);
+    color: #080a10;
+    text-shadow: none;
+}
 """
 
 
