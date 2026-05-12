@@ -103,21 +103,37 @@ if ! command -v eww >/dev/null 2>&1; then
   # shell glob to be robust to non-standard CARGO_HOME locations and
   # multiple registry indexes.
   CARGO_HOME_REAL="${CARGO_HOME:-/root/.cargo}"
-  PATCH_REGEX='^    let items: Box<_> = format_items'  # post-patch line
-  ORIG_REGEX='^    let items = format_items'           # pre-patch line
+  # E0282 fix per upstream rustc guidance. The earlier one-line `Box<_>`
+  # binding annotation was insufficient — rustc 1.80+ still can't infer
+  # the collect() target because the turbofish keeps `Box<_>` too. The
+  # full fix rewrites the binding to `Vec<_>` AND drops the `Box<_>`
+  # from the collect turbofish so inference falls out cleanly. Then
+  # `Ok(items.into())` converts Vec → Box where the call site demands.
+  PATCH_SENTINEL='^    let items: Vec<_> = format_items'  # post-patch line
+  ORIG_REGEX='^    let items = format_items'              # pre-patch line
   patch_time_034() {
     local f changed=0
     while IFS= read -r f; do
       [ -f "$f" ] || continue
-      if grep -q "$PATCH_REGEX" "$f"; then
+      if grep -q "$PATCH_SENTINEL" "$f"; then
         echo "[customize_airootfs] $f already patched (skipping)"
         changed=1; continue
       fi
       if grep -q "$ORIG_REGEX" "$f"; then
         chmod u+w "$f" 2>/dev/null || true
-        sed -i 's|^    let items = format_items|    let items: Box<_> = format_items|' "$f"
-        echo "[customize_airootfs] patched $f for E0282"
-        changed=1
+        # Multi-line block rewrite via perl -0777 so it survives any
+        # whitespace differences between the binding line and the
+        # turbofish line (`sed` would need explicit \n handling).
+        perl -i -0777 -pe '
+          s{    let items = format_items\s*\n\s*\.map\(\|res\| res\.map\(Into::into\)\)\s*\n\s*\.collect::<Result<Box<_>, _>>\(\)\?;}
+           {    let items: Vec<_> = format_items\n        .map(|res| res.map(Into::into))\n        .collect::<Result<_, _>>()?;}s
+        ' "$f"
+        if grep -q "$PATCH_SENTINEL" "$f"; then
+          echo "[customize_airootfs] patched $f for E0282 (Vec<_> + collect::<Result<_, _>>)"
+          changed=1
+        else
+          echo "[customize_airootfs] WARN: perl rewrite did not land on $f — block text differs from expected"
+        fi
       else
         echo "[customize_airootfs] WARN: $f does not contain expected line"
       fi
@@ -159,7 +175,7 @@ if ! command -v eww >/dev/null 2>&1; then
     local f bad=0 found=0
     while IFS= read -r f; do
       found=1
-      if ! grep -q "$PATCH_REGEX" "$f"; then
+      if ! grep -q "$PATCH_SENTINEL" "$f"; then
         echo "[customize_airootfs] FAIL: $f is NOT patched"
         bad=1
       fi
