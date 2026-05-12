@@ -249,7 +249,11 @@
       (nyxus_brand) (heartbeat))
     (box :class "bar-cluster cluster-center" :space-evenly false :spacing 14 :halign "center"
       (syspulse_widget) (tray_dummy) (clock_widget))
-    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 6 :halign "end"
+    ;; Right cluster carries 12 status pills — the most of any cluster.
+    ;; :spacing 8 keeps it at the high end of the contract's "tight"
+    ;; range (§2: 6–10px) without overflowing 1366px width. Left/center
+    ;; use higher values because they carry fewer, larger widgets.
+    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 8 :halign "end"
       (cal_widget) (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
       (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget) (power_button))))
 
