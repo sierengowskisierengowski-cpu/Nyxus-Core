@@ -1,0 +1,37 @@
+{
+  "_comment": "Documentation snippet — modules-left should put custom/nyxus-start FIRST. modules-right ends with custom/nyxus-panel followed by custom/nyxus-notifications (the notifications button is the new far-right entry, sitting next to The Panel). All three buttons are exec-driven so the helper script writes Pango markup + open/closed class.",
+  "modules-left_prepend": [
+    "custom/nyxus-start"
+  ],
+  "modules-right_append": [
+    "custom/nyxus-panel",
+    "custom/nyxus-notifications"
+  ],
+  "custom/nyxus-start": {
+    "exec": "/home/nyx/.local/bin/nyxus-waybar-state start",
+    "interval": 1,
+    "return-type": "json",
+    "format": "{}",
+    "escape": false,
+    "tooltip": true,
+    "on-click": "/home/nyx/.local/bin/nyxus-start"
+  },
+  "custom/nyxus-panel": {
+    "exec": "/home/nyx/.local/bin/nyxus-waybar-state panel",
+    "interval": 1,
+    "return-type": "json",
+    "format": "{}",
+    "escape": false,
+    "tooltip": true,
+    "on-click": "/home/nyx/.local/bin/nyxus-panel"
+  },
+  "custom/nyxus-notifications": {
+    "exec": "/home/nyx/.local/bin/nyxus-waybar-state notifications",
+    "interval": 1,
+    "return-type": "json",
+    "format": "{}",
+    "escape": false,
+    "tooltip": true,
+    "on-click": "/home/nyx/.local/bin/nyxus-notifications"
+  }
+}

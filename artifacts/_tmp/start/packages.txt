@@ -1,0 +1,16 @@
+# System packages required by NYXUS Start (Arch Linux)
+# Install with: sudo pacman -S --needed $(grep -v '^#' packages.txt | tr '\n' ' ')
+
+# Core GTK4 + Python bindings
+gtk4
+python-gobject
+python-cairo
+
+# Layer-shell (Start anchors above the taskbar button)
+gtk4-layer-shell
+
+# Status probes
+python-psutil
+
+# JSON merger used by install.sh to patch waybar config safely
+jq

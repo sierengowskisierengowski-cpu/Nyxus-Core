@@ -1,0 +1,179 @@
+Canonical layout the repo is trying to use
+The intended source of truth for desktop/session payloads is artifacts/api-server/nyxus-scripts/, and iso-builder/build-iso.sh is supposed to wipe/re-stage the live image from that tree on every ISO bake. That staging target is:
+
+/etc/skel/.config/hypr/{hyprland.conf,hypridle.conf,hyprlock.conf,conf.d/*,walls/*}
+/etc/skel/.config/eww/{eww.yuck,eww.scss,nyxus.conf,scripts/*}
+/etc/skel/.config/{dunst,rofi,wlogout,alacritty}
+/usr/local/bin/{wallpaper-rotate,nyxus-eww-launch,nyxus-bootstrap,nyxus-wait-bootstrap}
+/opt/nyxus/*.py
+/usr/share/backgrounds/nyxus/*
+/opt/nyxus-cache/* when artifacts/api-server/dist/nyxus-scripts exists
+(iso-builder/README.md:83-101, iso-builder/build-iso.sh:105-224)
+For the non-ISO installer, the intended user-side targets are ~/.config/hypr, ~/.config/eww, ~/.config/{rofi,dunst,wlogout,alacritty}, ~/.config/hypr/walls, and ~/.nyxus/* (artifacts/api-server/nyxus-scripts/nyxus_install.sh:17-22, 247-305, 375-423).
+
+Critical findings
+1. The live-session bootstrap path is incomplete: nyxus-bootstrap is never started
+hyprland.conf gates EWW, wallpaper, and the welcome wizard behind nyxus-wait-bootstrap, but it never actually launches nyxus-bootstrap (artifacts/api-server/nyxus-scripts/hyprland.conf:14-18, 34).
+That directly contradicts the ISO builder comments, which say Hyprland’s exec-once should fire nyxus-bootstrap and use nyxus-wait-bootstrap only as a gate (iso-builder/build-iso.sh:199-207), and it contradicts the shipping doc’s expected first-login flow (SHIPPING.md:119-123).
+
+Impact: on first live boot, the documented “first-boot setup starting” flow cannot happen as written; tarball apps like Home are not pre-staged by the ISO builder (iso-builder/README.md:119-124), so the live session cannot reach the promised “EWW + wallpaper + NYXUS Home” state cleanly.
+
+Necessary fix: add a real bootstrap start from the canonical Hyprland startup path, then keep nyxus-wait-bootstrap as the gate for dependent autostarts.
+
+2. The live ISO boot/login model is internally contradictory
+The build script says the live ISO should autologin into Hyprland and that SDDM is only staged for installed systems (iso-builder/build-iso.sh:230-234).
+But customize_airootfs.sh enables sddm.service in the live image (iso-builder/nyx-profile/airootfs/root/customize_airootfs.sh:410-413), and the live SDDM config present in-tree has no [Autologin] stanza at all (iso-builder/nyx-profile/airootfs/etc/sddm.conf.d/nyxus.conf:1-10).
+SHIPPING.md explicitly expects autologin as nyx (SHIPPING.md:111-123).
+
+Impact: the repo does not currently implement its documented live-session entry path.
+
+Necessary fix: pick one live boot path and make all files match it.
+Most consistent arrangement with the repo comments is:
+
+Live ISO: do not enable SDDM; boot straight into the live Hyprland session.
+Installed system: keep SDDM theme staging/enabling there.
+If SDDM must stay on the live ISO, then add an explicit live-only autologin config for nyx + Hyprland.
+
+3. Fresh installs from nyxus_install.sh are missing files that hyprland.conf requires
+Canonical hyprland.conf calls:
+
+nyxus-wait-bootstrap
+nyxus-eww-launch
+nyxus-welcome
+(artifacts/api-server/nyxus-scripts/hyprland.conf:14-18, 34)
+But nyxus_install.sh only installs nyxus-eww-launch; it has no install block for nyxus-bootstrap, nyxus-wait-bootstrap, nyxus_welcome.py, nyxus-welcome, nyxus-welcome-helper, or nyxus-welcome.policy (artifacts/api-server/nyxus-scripts/nyxus_install.sh:247-340; download.ts does expose them at artifacts/api-server/src/routes/download.ts:103-106, 152-153).
+
+Impact: on a normal installed system, the next Hyprland login will reference commands that the installer never put on disk.
+
+Necessary fix: installer parity with the startup contract:
+
+install nyxus-bootstrap and nyxus-wait-bootstrap into the same PATH location Hyprland expects
+install nyxus_welcome.py into ~/.nyxus/
+install nyxus-welcome into a PATH location
+conditionally install nyxus-welcome-helper and dev.nyxus.welcome.policy when root is available
+4. Fresh installs get an incomplete EWW payload
+Current eww.yuck references the Sprint 1 flyouts and handlers:
+
+quicksettings.sh, qs-toggle.sh
+wifi-list.sh, wifi-action.sh
+bt-list.sh, bt-action.sh
+audio-sinks.sh, audio-action.sh
+calendar-month.sh
+notif-history.sh, notif-action.sh
+(artifacts/api-server/nyxus-scripts/eww/eww.yuck:60-71, 809-837)
+But nyxus_install.sh only downloads the older core script set (audio…workspaces) and omits all of those Sprint 1 scripts (artifacts/api-server/nyxus-scripts/nyxus_install.sh:306-310).
+
+nyxus-resync-all.sh does download the full expanded set (artifacts/api-server/nyxus-scripts/nyxus-resync-all.sh:786-808), which confirms the omission in the fresh installer.
+
+Impact: a fresh install cannot fully support the current EWW config; several flyouts/actions will be broken immediately.
+
+Necessary fix: make nyxus_install.sh download the exact same EWW script set that eww.yuck references and that nyxus-resync-all.sh already refreshes.
+
+5. The manual EWW build path is stale and likely broken
+The ISO build uses a pinned EWW source build plus a required workaround for the time-0.3.34 failure on modern Rust (iso-builder/nyx-profile/airootfs/root/customize_airootfs.sh:72-95, 202-258).
+But nyxus_install.sh still does a plain cargo install --git ... --tag v0.6.0 eww with no patch logic (artifacts/api-server/nyxus-scripts/nyxus_install.sh:330-343).
+
+Impact: systems without preinstalled EWW can fail to build the shell, leaving no bar stack.
+
+Necessary fix: use the same patched EWW build logic everywhere, or ship a prebuilt eww-wayland binary/package path. Do not keep two different build recipes.
+
+6. Hyprlock is split across three incompatible variants
+Current consumers are inconsistent:
+
+ISO build stages hyprlock.conf (iso-builder/build-iso.sh:133-135)
+installer stages nyxus-hyprlock.conf as ~/.config/hypr/hyprlock.conf (artifacts/api-server/nyxus-scripts/nyxus_install.sh:251-253)
+resync refreshes hyprlock.conf (artifacts/api-server/nyxus-scripts/nyxus-resync-all.sh:593-603)
+Those files are not equivalent:
+
+hyprlock.conf is a plain dark lock screen with no wallpaper path (artifacts/api-server/nyxus-scripts/hyprlock.conf:18-28)
+nyxus-hyprlock.conf expects ~/.config/hypr/walls/nyxus-hyprlock-eye.png (artifacts/api-server/nyxus-scripts/nyxus-hyprlock.conf:24-33)
+Worse, resync separately downloads nyxus-login-stars.png into ~/.config/nyxus/wallpaper.png under an assumption tied to nyxus-hyprlock.conf, but it is refreshing hyprlock.conf instead (artifacts/api-server/nyxus-scripts/nyxus-resync-all.sh:605-617).
+
+Impact: lockscreen theming is inconsistent across live ISO, fresh install, and resync; one background download path is currently unused.
+
+Necessary fix: keep one canonical lockscreen config file in artifacts/api-server/nyxus-scripts/ and make:
+
+build-iso.sh
+nyxus_install.sh
+nyxus-resync-all.sh all consume that same filename and only its matching assets.
+Recommended working arrangement:
+
+canonical file: artifacts/api-server/nyxus-scripts/hyprlock.conf
+matching referenced assets: under ~/.config/hypr/walls/ and /etc/skel/.config/hypr/walls/
+remove the extra variant and the unused ~/.config/nyxus/wallpaper.png path unless a config actually references it
+7. nyxus-resync-all.sh still carries obsolete Hyprland rule migration logic
+The resync script rewrites windowrulev2/layerrulev2 to unified syntax and even renames the rules file to nyxus-windowrules.conf (artifacts/api-server/nyxus-scripts/nyxus-resync-all.sh:309-430).
+That conflicts with the current canonical shipped files, which intentionally use windowrulev2 in nyxus-hyprland-rules.conf and nyxus-hyprland-opacity.conf (artifacts/api-server/nyxus-scripts/nyxus-hyprland-rules.conf:37-96, artifacts/api-server/nyxus-scripts/nyxus-hyprland-opacity.conf:27-37).
+
+Impact: resync can push an installed system away from the repo’s current canonical config and reintroduce syntax churn.
+
+Necessary fix: rewrite nyxus-resync-all.sh to stop migrating away from the current canonical filenames/syntax. It should refresh the same files that build-iso.sh and nyxus_install.sh now ship.
+
+Theming / wallpaper mismatch (not the boot blocker, but real drift)
+The actual boot/session path is built around swaybg:
+
+Hyprland autostart uses swaybg (artifacts/api-server/nyxus-scripts/hyprland.conf:18)
+wallpaper reload bind uses swaybg (artifacts/api-server/nyxus-scripts/hyprland.conf:317)
+ISO package list includes swaybg, not swww (iso-builder/nyx-profile/packages.x86_64:102)
+installer/reload logic restarts swaybg (artifacts/api-server/nyxus-scripts/nyxus_install.sh:868-885)
+But the Settings app’s Appearance page only applies wallpapers through swww and tells the user that explicitly (artifacts/api-server/nyxus-scripts/nyxus_settings.py:2454-2456, 2564-2574).
+
+Impact: wallpaper selection UX is inconsistent with the actual session backend; on stock builds it can only “save selection,” not apply it.
+
+Necessary fix for consistency: either:
+
+add swww everywhere and make it the real wallpaper backend, or
+change Settings to use the same backend the session already uses (swaybg / current running daemon detection)
+Given the current repo, standardizing on the existing swaybg flow is the smaller fix.
+
+Stale/generated duplicates (repo drift, lower severity)
+build-iso.sh explicitly says artifacts/api-server/nyxus-scripts/ is the single source of truth and that airootfs/etc/skel gets regenerated (iso-builder/README.md:83-101, iso-builder/build-iso.sh:114-159).
+But the checked-in generated copies under iso-builder/nyx-profile/airootfs/etc/skel/.config/ are stale relative to source (for example, current source eww.yuck has Sprint 1 windows at artifacts/api-server/nyxus-scripts/eww/eww.yuck:809-837, while the committed skel copy does not; current source hyprland.conf includes nyxus-welcome at artifacts/api-server/nyxus-scripts/hyprland.conf:34, while the committed skel copy is behind).
+
+Recommendation: treat iso-builder/nyx-profile/airootfs/etc/skel/.config/** as generated output only; either stop committing it or regenerate it whenever source changes.
+
+Obsolete Waybar/Mako leftovers (non-blocking)
+There are still stale references after the EWW migration:
+
+artifacts/api-server/nyxus-scripts/README.md:10 still says “Waybar … Mako”
+artifacts/api-server/nyxus-scripts/CREDITS.md:20-24 still lists Waybar and Mako
+artifacts/api-server/src/routes/download.ts:209 still exports nyxus-waybar-stars.png
+These do not stop boot, but they are outdated.
+
+Concrete remediation list (necessary only)
+Fix live boot startup contract
+
+File: artifacts/api-server/nyxus-scripts/hyprland.conf
+Add actual nyxus-bootstrap launch.
+Keep nyxus-wait-bootstrap only as gate for EWW/wallpaper/welcome.
+Make live login path consistent
+
+Files: iso-builder/nyx-profile/airootfs/root/customize_airootfs.sh, iso-builder/nyx-profile/airootfs/etc/sddm.conf.d/nyxus.conf, SHIPPING.md
+Either stop enabling SDDM on the live ISO, or add explicit live autologin.
+Align docs with the chosen path.
+Make nyxus_install.sh install the startup helpers it references indirectly
+
+File: artifacts/api-server/nyxus-scripts/nyxus_install.sh
+Install: nyxus-bootstrap, nyxus-wait-bootstrap, nyxus_welcome.py, nyxus-welcome
+Conditionally install: nyxus-welcome-helper, nyxus-welcome.policy
+Bring fresh-install EWW payload to parity with current eww.yuck
+
+File: artifacts/api-server/nyxus-scripts/nyxus_install.sh
+Add the missing Sprint 1 EWW scripts already served by the API and already refreshed by resync.
+Unify EWW build logic
+
+Files: artifacts/api-server/nyxus-scripts/nyxus_install.sh, iso-builder/nyx-profile/airootfs/root/customize_airootfs.sh
+Use one patched/pinned EWW build path everywhere.
+Collapse lockscreen config to one canonical file
+
+Files: artifacts/api-server/nyxus-scripts/{hyprlock.conf,nyxus-hyprlock.conf}, iso-builder/build-iso.sh, artifacts/api-server/nyxus-scripts/nyxus_install.sh, artifacts/api-server/nyxus-scripts/nyxus-resync-all.sh
+One filename, one asset location, one background path.
+Modernize nyxus-resync-all.sh to match current canonical Hyprland files
+
+File: artifacts/api-server/nyxus-scripts/nyxus-resync-all.sh
+Stop renaming to nyxus-windowrules.conf
+Stop rewriting away from the current canonical rule syntax unless the canonical files themselves change
+Align wallpaper control backend
+
+File: artifacts/api-server/nyxus-scripts/nyxus_settings.py
+Make Appearance use the same wallpaper backend the session ships with, or add/install/start swww everywhere
