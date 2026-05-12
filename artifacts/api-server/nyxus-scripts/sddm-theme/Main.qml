@@ -35,6 +35,9 @@ Rectangle {
     readonly property color clrGlassDeep:    Qt.rgba(15/255, 20/255, 32/255, 0.72)
     readonly property color clrGlassDeepest: Qt.rgba(5/255, 7/255, 12/255, 0.92)
     readonly property color clrHairline:     Qt.rgba(255/255, 255/255, 255/255, 0.10)
+    // Accent comes from theme.conf.user (written by Settings → Appearance).
+    // Falls back to the locked Mirror White if no accent has been set.
+    readonly property color clrAccent:       config.Accent || "#e8edf5"
     readonly property color clrFocus:        Qt.rgba(230/255, 240/255, 255/255, 0.55)
     readonly property color clrText:         "#e8edf5"
     readonly property color clrTextDim:      "#c8ccd6"
@@ -215,7 +218,7 @@ Rectangle {
                     font.letterSpacing: 3
                     background: Rectangle {
                         color: signInBtn.hovered ? clrGlassDeepest : clrGlassDeep
-                        border.color: signInBtn.hovered ? clrFocus : clrHairline
+                        border.color: signInBtn.hovered ? clrAccent : clrHairline
                         border.width: 1
                         radius: 10
                     }

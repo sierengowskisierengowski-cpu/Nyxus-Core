@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ──────────────────────────────────────────────────────────────────────
-#  NYXUS · Welcome Wizard          rev 2026.05.11-r9-eww
+#  NYXUS · Welcome Wizard          rev 2026.05.12-r10-mirror
 # ──────────────────────────────────────────────────────────────────────
 #  First-boot setup. Seven steps, single fullscreen window, no decoration.
 #  Every step writes real system state — never mock data.
@@ -58,24 +58,77 @@ CFG_FILE  = CFG_DIR / "welcome.json"
 MARKER    = NYXUS_DIR / "welcome-done"
 HELPER    = "/usr/local/libexec/nyxus-welcome-helper"
 
+# Accent fragment targets — MUST stay in sync with nyxus_settings.py
+# AppearancePage. If you change a path here, change it there too.
+GTK3_FRAG       = HOME / ".config" / "gtk-3.0" / "nyxus-accent.css"
+GTK4_FRAG       = HOME / ".config" / "gtk-4.0" / "nyxus-accent.css"
+EWW_FRAG        = HOME / ".config" / "eww" / "_nyxus_accent.scss"
+ROFI_FRAG       = HOME / ".config" / "rofi" / "nyxus-accent.rasi"
+DUNST_FRAG      = HOME / ".config" / "dunst" / "nyxus-accent.conf"
+HYPRLOCK_ACCENT = HOME / ".config" / "hypr" / "hyprlock-accent.conf"
+PREFS_FILE      = CFG_DIR / "settings.json"
+
+WALLS_USR = HOME / "Pictures" / "Wallpapers"
+WALLS_SYS = Path("/usr/share/backgrounds/nyxus")
+
 NYXUS_DIR.mkdir(parents=True, exist_ok=True)
 CFG_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── DARK MIRROR design tokens ─────────────────────────────────────────
+# Canonical accent palette — IDENTICAL to nyxus_settings.py
+# AppearancePage so the picker the user sees on first boot is the same
+# picker they see in Settings later. No two-palette confusion.
 ACCENTS = [
-    # name,     primary,   secondary
-    ("Mirror",  "#a06bff", "#3ad8ff"),
-    ("Plasma",  "#ff5edb", "#a06bff"),
-    ("Halo",    "#3ad8ff", "#82ffd2"),
-    ("Ember",   "#ff8b5e", "#ff4d6b"),
-    ("Bone",    "#e8edf5", "#9aa2b3"),
+    ("Mirror White", "#e8edf5"),
+    ("Cyan",         "#5fd3f3"),
+    ("Lime",         "#a6e22e"),
+    ("Amber",        "#f5b342"),
+    ("Magenta",      "#ff5fa7"),
+    ("Crimson",      "#ff5f6d"),
+    ("Iris",         "#9c8cff"),
+    ("Mint",         "#5ff3b8"),
 ]
+DEFAULT_ACCENT = "#e8edf5"
 
-WALLPAPERS = [
-    ("Void Vortex", "/usr/share/backgrounds/nyxus/nyxus-void-vortex.png"),
-    ("Glass Field", "/usr/share/backgrounds/nyxus/nyxus-glass-field.png"),
-    ("Quiet Black", "/usr/share/backgrounds/nyxus/nyxus-quiet-black.png"),
-]
+
+def discover_wallpapers() -> list[tuple[str, str]]:
+    """Real disk scan — Pictures/Wallpapers + /usr/share/backgrounds/nyxus.
+    Falls back to a single Quiet Black entry if neither exists."""
+    found: list[tuple[str, str]] = []
+    seen: set = set()
+    for d in (WALLS_USR, WALLS_SYS):
+        if not d.exists():
+            continue
+        for p in sorted(d.iterdir()):
+            if p.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp"):
+                continue
+            if p.name in seen:
+                continue
+            seen.add(p.name)
+            # Pretty title from filename: "nyxus-glass-field" → "Glass Field"
+            stem = p.stem
+            for prefix in ("nyxus-", "nyx-"):
+                if stem.startswith(prefix):
+                    stem = stem[len(prefix):]
+                    break
+            title = stem.replace("-", " ").replace("_", " ").title()
+            found.append((title, str(p)))
+    if not found:
+        found = [("Quiet Black",
+                  "/usr/share/backgrounds/nyxus/nyxus-quiet-black.png")]
+    return found[:6]
+
+
+def hex_to_rgb(h: str) -> tuple[int, int, int]:
+    s = h.lstrip("#")
+    if len(s) == 3:
+        s = "".join(c * 2 for c in s)
+    if len(s) != 6:
+        return (232, 237, 245)
+    try:
+        return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
+    except ValueError:
+        return (232, 237, 245)
 
 LOCALES = [
     ("English (US)",        "en_US.UTF-8"),
@@ -96,17 +149,19 @@ window.welcome {
 }
 
 .welcome-root {
+  /* Pure DARK MIRROR — monochrome ambient field. White wash top-left,
+   * faint cool grey wash bottom-right. No neon, no gradients of saturation. */
   background: radial-gradient(ellipse at top left,
-              rgba(160,107,255,0.10), transparent 55%),
+              rgba(232,237,245,0.06), transparent 55%),
               radial-gradient(ellipse at bottom right,
-              rgba(58,216,255,0.08), transparent 55%),
-              #050608;
+              rgba(200,204,214,0.04), transparent 55%),
+              #05060a;
 }
 
 /* ── left rail ─────────────────────────────────────────────────── */
 .welcome-rail {
   background: rgba(8,10,16,0.66);
-  border-right: 1px solid rgba(160,107,255,0.14);
+  border-right: 1px solid rgba(232,237,245,0.10);
   padding: 56px 28px 36px 36px;
   min-width: 320px;
 }
@@ -139,14 +194,13 @@ window.welcome {
   margin-right: 14px;
 }
 .welcome-step.current {
-  background: linear-gradient(90deg,
-              rgba(160,107,255,0.18), rgba(58,216,255,0.04));
+  background: rgba(232,237,245,0.06);
   color: #ffffff;
-  border-left: 2px solid #a06bff;
+  border-left: 2px solid #e8edf5;
 }
-.welcome-step.current .num { color: #3ad8ff; }
+.welcome-step.current .num { color: #c8ccd6; }
 .welcome-step.done { color: #8b94a8; }
-.welcome-step.done .num { color: #82ffd2; }
+.welcome-step.done .num { color: #c8ccd6; }
 .welcome-rail-foot {
   font-size: 10px;
   letter-spacing: 0.20em;
@@ -173,7 +227,7 @@ window.welcome {
 .welcome-eyebrow {
   font-size: 11px;
   letter-spacing: 0.32em;
-  color: #a06bff;
+  color: #c8ccd6;
   margin-bottom: 14px;
 }
 .welcome-title {
@@ -195,16 +249,16 @@ window.welcome {
 /* ── inputs ────────────────────────────────────────────────────── */
 entry.welcome-input, dropdown.welcome-input > button {
   background: rgba(17,21,31,0.85);
-  border: 1px solid rgba(160,107,255,0.20);
+  border: 1px solid rgba(232,237,245,0.16);
   border-radius: 10px;
   padding: 12px 14px;
   color: #ffffff;
   font-size: 14px;
-  caret-color: #3ad8ff;
+  caret-color: #e8edf5;
 }
 entry.welcome-input:focus, dropdown.welcome-input > button:focus {
-  border-color: #3ad8ff;
-  box-shadow: 0 0 0 3px rgba(58,216,255,0.18);
+  border-color: #e8edf5;
+  box-shadow: 0 0 0 3px rgba(232,237,245,0.18);
 }
 .welcome-label {
   font-size: 11px;
@@ -227,31 +281,33 @@ entry.welcome-input:focus, dropdown.welcome-input > button:focus {
 button.w-primary {
   padding: 12px 28px;
   border-radius: 10px;
-  background: linear-gradient(90deg, #a06bff, #3ad8ff);
+  background: #e8edf5;
   color: #05060a;
   font-weight: 700;
   letter-spacing: 0.10em;
-  border: none;
-  box-shadow: 0 8px 26px rgba(160,107,255,0.28);
+  border: 1px solid #ffffff;
+  box-shadow: 0 8px 26px rgba(232,237,245,0.18);
 }
 button.w-primary:hover {
-  box-shadow: 0 10px 32px rgba(160,107,255,0.42);
+  background: #ffffff;
+  box-shadow: 0 10px 32px rgba(232,237,245,0.28);
 }
 button.w-primary:disabled {
   background: rgba(60,66,82,0.55);
   color: rgba(255,255,255,0.4);
   box-shadow: none;
+  border-color: rgba(255,255,255,0.08);
 }
 button.w-ghost {
   padding: 12px 22px;
   border-radius: 10px;
   background: transparent;
-  color: #b9c1d4;
-  border: 1px solid rgba(160,107,255,0.22);
+  color: #c8ccd6;
+  border: 1px solid rgba(232,237,245,0.18);
   letter-spacing: 0.10em;
 }
 button.w-ghost:hover {
-  background: rgba(160,107,255,0.08);
+  background: rgba(232,237,245,0.06);
   color: #ffffff;
 }
 button.w-link {
@@ -269,28 +325,27 @@ button.w-link:hover { color: #ffffff; }
 .swatch {
   min-width: 56px; min-height: 56px;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.06);
   margin: 4px 8px;
 }
 .swatch.selected {
   border-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(58,216,255,0.35),
-              0 8px 22px rgba(160,107,255,0.30);
+  box-shadow: 0 0 0 3px rgba(232,237,245,0.32),
+              0 8px 22px rgba(232,237,245,0.22);
 }
 .tile {
   border-radius: 12px;
-  border: 1px solid rgba(160,107,255,0.14);
+  border: 1px solid rgba(232,237,245,0.10);
   background: rgba(17,21,31,0.65);
   padding: 14px;
   margin: 6px;
   min-width: 200px;
 }
 .tile.selected {
-  border-color: #3ad8ff;
-  background: linear-gradient(135deg,
-              rgba(160,107,255,0.18), rgba(58,216,255,0.06));
-  box-shadow: 0 0 0 1px rgba(58,216,255,0.45),
-              0 8px 28px rgba(58,216,255,0.18);
+  border-color: #e8edf5;
+  background: rgba(232,237,245,0.08);
+  box-shadow: 0 0 0 1px rgba(232,237,245,0.40),
+              0 8px 28px rgba(232,237,245,0.14);
 }
 .tile-title {
   color: #ffffff;
@@ -306,19 +361,19 @@ button.w-link:hover { color: #ffffff; }
   padding: 16px 18px;
   border-radius: 12px;
   background: rgba(17,21,31,0.6);
-  border: 1px solid rgba(160,107,255,0.10);
+  border: 1px solid rgba(232,237,245,0.08);
   margin: 6px 0;
 }
 .toggle-row .name { color: #ffffff; font-size: 14px; font-weight: 600; }
 .toggle-row .desc { color: #8b94a8; font-size: 11px; margin-top: 2px; }
 switch slider { background: #ffffff; }
-switch:checked { background: linear-gradient(90deg, #a06bff, #3ad8ff); }
+switch:checked { background: #e8edf5; }
 switch { background: rgba(60,66,82,0.85); }
 
 /* ── footer nav ────────────────────────────────────────────────── */
 .welcome-footer {
   padding: 20px 88px 28px 88px;
-  border-top: 1px solid rgba(160,107,255,0.10);
+  border-top: 1px solid rgba(232,237,245,0.10);
   background: rgba(5,6,10,0.55);
 }
 
@@ -326,8 +381,8 @@ switch { background: rgba(60,66,82,0.85); }
 .welcome-complete-glyph {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 96px;
-  color: #82ffd2;
-  text-shadow: 0 0 40px rgba(130,255,210,0.45);
+  color: #e8edf5;
+  text-shadow: 0 0 40px rgba(232,237,245,0.35);
 }
 """
 
@@ -431,7 +486,7 @@ class StepRail(Gtk.Box):
 
         spacer = Gtk.Box(vexpand=True)
         self.append(spacer)
-        foot = Gtk.Label(label="REV r9-EWW · 2026.05.11", xalign=0)
+        foot = Gtk.Label(label="REV r10-MIRROR · 2026.05.12", xalign=0)
         foot.add_css_class("welcome-rail-foot")
         self.append(foot)
 
@@ -616,11 +671,14 @@ class NetworkStep(Step):
         bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         rescan = Gtk.Button(label="Rescan"); rescan.add_css_class("w-ghost")
         rescan.connect("clicked", lambda *_: self._refresh())
-        adv = Gtk.Button(label="Advanced (nmtui)"); adv.add_css_class("w-link")
-        adv.connect("clicked", lambda *_: subprocess.Popen(
-            ["alacritty", "-e", "nmtui"]))
-        bar.append(rescan); bar.append(Gtk.Box(hexpand=True)); bar.append(adv)
+        skip = Gtk.Button(label="Skip — set up later"); skip.add_css_class("w-link")
+        skip.connect("clicked", lambda *_: self.list.unselect_all())
+        bar.append(rescan); bar.append(Gtk.Box(hexpand=True)); bar.append(skip)
         self.body.append(bar)
+        # Result feedback line — populated by commit() on connect attempts.
+        self.result = Gtk.Label(label="", xalign=0)
+        self.result.add_css_class("welcome-hint")
+        self.body.append(self.result)
 
         self._refresh()
 
@@ -665,31 +723,49 @@ class NetworkStep(Step):
 
     def commit(self):
         row = self.list.get_selected_row()
-        if not row: return
+        if not row:
+            return  # user explicitly skipped
         ssid = getattr(row, "ssid", "")
-        if not ssid: return
-        # try saved profile first, then ask for password
-        if subprocess.run(["nmcli", "connection", "up", ssid],
-                          capture_output=True).returncode == 0:
-            self.wizard.cfg["wifi"] = ssid; return
-        if subprocess.run(["nmcli", "device", "wifi", "connect", ssid],
-                          capture_output=True).returncode == 0:
-            self.wizard.cfg["wifi"] = ssid; return
-        # password prompt — modal dialog
-        d = Adw.MessageDialog.new(self.wizard.window,
-                                  f"Password for {ssid}", "")
-        ent = Gtk.PasswordEntry(); ent.add_css_class("welcome-input")
+        if not ssid:
+            return
+        # 1) Try a saved profile.
+        rc, _, err = run(["nmcli", "connection", "up", ssid])
+        if rc == 0:
+            self.wizard.cfg["wifi"] = ssid
+            self.result.set_label(f"connected to {ssid}")
+            return
+        # 2) Try open / passwordless connect.
+        rc, _, err = run(["nmcli", "device", "wifi", "connect", ssid])
+        if rc == 0:
+            self.wizard.cfg["wifi"] = ssid
+            self.result.set_label(f"connected to {ssid}")
+            return
+        # 3) Password prompt — branded dialog with real result feedback.
+        d = Adw.MessageDialog(transient_for=self.wizard,
+                              heading=f"Password for {ssid}",
+                              body="Enter the WiFi password to join this network.")
+        ent = Gtk.PasswordEntry()
+        ent.add_css_class("welcome-input")
+        ent.set_show_peek_icon(True)
         d.set_extra_child(ent)
         d.add_response("cancel", "Cancel")
         d.add_response("connect", "Connect")
         d.set_response_appearance("connect", Adw.ResponseAppearance.SUGGESTED)
         d.set_default_response("connect")
-        def _resp(dialog, resp):
-            if resp == "connect":
-                pw = ent.get_text()
-                subprocess.run(["nmcli", "device", "wifi", "connect", ssid,
-                                "password", pw], capture_output=True)
+
+        def _resp(_dialog, resp):
+            if resp != "connect":
+                self.result.set_label("connection cancelled")
+                return
+            pw = ent.get_text()
+            rc, _, err = run(["nmcli", "device", "wifi", "connect", ssid,
+                              "password", pw])
+            if rc == 0:
                 self.wizard.cfg["wifi"] = ssid
+                self.result.set_label(f"connected to {ssid}")
+            else:
+                short = (err or "connect failed").splitlines()[0][:80]
+                self.result.set_label(f"connect failed — {short}")
         d.connect("response", _resp)
         d.present()
 
@@ -762,83 +838,198 @@ class AccountStep(Step):
 class AppearanceStep(Step):
     eyebrow = "STEP 05 · APPEARANCE"
     title   = "Pick your accent."
-    lede    = ("NYXUS is locked to dark mode. The accent threads through "
-               "the bar, panels, and active states.")
+    lede    = ("NYXUS is locked to dark mode. Your accent threads through "
+               "the bar, panels, lock screen, and active states. You can "
+               "change it any time from Settings → Appearance.")
 
     def build(self):
-        # accent swatches
-        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        row.add_css_class("swatch-row")
-        self._swatches = []
-        cur = self.wizard.cfg.get("accent", "Mirror")
-        for name, c1, c2 in ACCENTS:
-            sw = Gtk.Button(); sw.add_css_class("swatch")
-            sw.set_tooltip_text(name)
-            css = (f"button.swatch.s-{name.lower()} {{ background:"
-                   f" linear-gradient(135deg, {c1}, {c2}); }}")
-            self._inject(css)
-            sw.add_css_class(f"s-{name.lower()}")
-            if name == cur: sw.add_css_class("selected")
-            sw.connect("clicked", lambda b, n=name: self._pick_accent(n))
-            row.append(sw); self._swatches.append((name, sw))
+        # Real on-disk wallpaper scan (matches Settings → Appearance).
+        self._wallpapers = discover_wallpapers()
+
+        # ── Accent chips: same 8-colour palette as Settings ──────────
+        row = Gtk.FlowBox()
+        row.set_selection_mode(Gtk.SelectionMode.NONE)
+        row.set_max_children_per_line(8)
+        row.set_min_children_per_line(4)
+        row.set_homogeneous(True)
+        row.set_column_spacing(8)
+        row.set_row_spacing(8)
+        self._chips: list[tuple[str, Gtk.Button]] = []
+        cur_hex = self.wizard.cfg.get("accent_hex", DEFAULT_ACCENT).lower()
+        for name, hex_val in ACCENTS:
+            sw = Gtk.Button()
+            sw.set_tooltip_text(f"{name}  ·  {hex_val}")
+            sw.set_size_request(56, 56)
+            sw.add_css_class("swatch")
+            css = (f"button.swatch.s-{name.lower().replace(' ', '-')} "
+                   f"{{ background: {hex_val}; }}").encode()
+            prov = Gtk.CssProvider()
+            prov.load_from_data(css)
+            sw.get_style_context().add_provider(
+                prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            sw.add_css_class(f"s-{name.lower().replace(' ', '-')}")
+            if hex_val.lower() == cur_hex:
+                sw.add_css_class("selected")
+            sw.connect("clicked",
+                       lambda _b, h=hex_val: self._pick_accent(h))
+            row.append(sw)
+            self._chips.append((hex_val, sw))
         self.body.append(row)
 
+        # ── Wallpaper tiles ──────────────────────────────────────────
         self.body.append(self.label("Wallpaper"))
-        wpr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        self._wp_buttons = []
-        cur_wp = self.wizard.cfg.get("wallpaper", WALLPAPERS[0][1])
-        for name, path in WALLPAPERS:
+        wpr = Gtk.FlowBox()
+        wpr.set_selection_mode(Gtk.SelectionMode.NONE)
+        wpr.set_max_children_per_line(3)
+        wpr.set_min_children_per_line(1)
+        wpr.set_column_spacing(10)
+        wpr.set_row_spacing(10)
+        self._wp_buttons: list[tuple[str, Gtk.Button]] = []
+        cur_wp = self.wizard.cfg.get("wallpaper",
+                                     self._wallpapers[0][1])
+        for name, path in self._wallpapers:
             t = Gtk.Button(); t.add_css_class("tile")
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-            n = Gtk.Label(label=name.upper(), xalign=0); n.add_css_class("tile-title")
-            s = Gtk.Label(label=Path(path).name, xalign=0); s.add_css_class("tile-sub")
+            # Live thumbnail when the file exists, label otherwise
+            if Path(path).exists():
+                pic = Gtk.Picture.new_for_filename(path)
+                pic.set_content_fit(Gtk.ContentFit.COVER)
+                pic.set_size_request(220, 130)
+                box.append(pic)
+            n = Gtk.Label(label=name.upper(), xalign=0)
+            n.add_css_class("tile-title")
+            s = Gtk.Label(label=Path(path).name, xalign=0)
+            s.add_css_class("tile-sub")
             box.append(n); box.append(s); t.set_child(box)
-            if path == cur_wp: t.add_css_class("selected")
-            t.connect("clicked", lambda b, p=path: self._pick_wp(p))
-            wpr.append(t); self._wp_buttons.append((path, t))
+            if path == cur_wp:
+                t.add_css_class("selected")
+            t.connect("clicked", lambda _b, p=path: self._pick_wp(p))
+            wpr.append(t)
+            self._wp_buttons.append((path, t))
         self.body.append(wpr)
 
+        # ── Text scale ───────────────────────────────────────────────
         self.body.append(self.label("Text scale"))
         self.scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL,
                                               0.85, 1.30, 0.05)
         self.scale.set_value(self.wizard.cfg.get("text_scale", 1.0))
         self.scale.set_draw_value(True)
         self.scale.set_value_pos(Gtk.PositionType.RIGHT)
+        self.scale.set_digits(2)
         self.scale.set_hexpand(True)
+        for v in (0.85, 1.00, 1.15, 1.30):
+            self.scale.add_mark(v, Gtk.PositionType.BOTTOM, None)
         self.body.append(self.scale)
 
-    def _inject(self, css: str):
-        prov = Gtk.CssProvider(); prov.load_from_data(css.encode())
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(), prov,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+    def _pick_accent(self, hex_val: str) -> None:
+        self.wizard.cfg["accent_hex"] = hex_val
+        for h, sw in self._chips:
+            (sw.add_css_class if h == hex_val
+             else sw.remove_css_class)("selected")
 
-    def _pick_accent(self, name: str):
-        self.wizard.cfg["accent"] = name
-        for n, sw in self._swatches:
-            (sw.add_css_class if n == name else sw.remove_css_class)("selected")
-
-    def _pick_wp(self, path: str):
+    def _pick_wp(self, path: str) -> None:
         self.wizard.cfg["wallpaper"] = path
         for p, t in self._wp_buttons:
-            (t.add_css_class if p == path else t.remove_css_class)("selected")
+            (t.add_css_class if p == path
+             else t.remove_css_class)("selected")
+
+    # ── Real propagation — identical strategy to nyxus_settings.py ───
+    def _atomic_write(self, path: Path, text: str) -> None:
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = path.with_suffix(path.suffix + ".nyxtmp")
+            tmp.write_text(text)
+            tmp.replace(path)
+        except Exception as e:
+            print(f"[welcome] accent write {path} failed: {e}",
+                  file=sys.stderr)
+
+    def _ensure_gtk_import(self, gtk_css: Path, frag_name: str) -> None:
+        try:
+            gtk_css.parent.mkdir(parents=True, exist_ok=True)
+            existing = gtk_css.read_text() if gtk_css.exists() else ""
+            line = f'@import url("{frag_name}");'
+            if line in existing:
+                return
+            gtk_css.write_text(line + "\n" + existing)
+        except Exception as e:
+            print(f"[welcome] gtk import {gtk_css}: {e}",
+                  file=sys.stderr)
+
+    def _propagate_accent(self, h: str) -> None:
+        """Write the same accent fragments AppearancePage writes, so the
+        accent chosen in Welcome is live the moment the wizard exits."""
+        r, g, b = hex_to_rgb(h)
+        css = (f"/* nyxus accent — written by Welcome wizard */\n"
+               f"@define-color nyxus_accent {h};\n"
+               f"@define-color accent_color {h};\n"
+               f"@define-color accent_bg_color {h};\n"
+               f"@define-color theme_selected_bg_color {h};\n")
+        self._atomic_write(GTK3_FRAG, css)
+        self._atomic_write(GTK4_FRAG, css)
+        self._ensure_gtk_import(HOME / ".config" / "gtk-3.0" / "gtk.css",
+                                "nyxus-accent.css")
+        self._ensure_gtk_import(HOME / ".config" / "gtk-4.0" / "gtk.css",
+                                "nyxus-accent.css")
+        self._atomic_write(EWW_FRAG,
+                           f"// nyxus accent — Welcome\n"
+                           f"$nyxus-accent: {h};\n"
+                           f"$accent: {h};\n")
+        self._atomic_write(ROFI_FRAG,
+                           f"/* nyxus accent — Welcome */\n"
+                           f"* {{\n"
+                           f"  nyxus-accent: {h};\n"
+                           f"  selected-normal-background: {h};\n"
+                           f"  active-foreground: {h};\n"
+                           f"}}\n")
+        self._atomic_write(HYPRLOCK_ACCENT,
+                           f"# nyxus accent — Welcome\n"
+                           f"$nyxus_accent_r = {r}\n"
+                           f"$nyxus_accent_g = {g}\n"
+                           f"$nyxus_accent_b = {b}\n"
+                           f"$nyxus_accent_rgba = "
+                           f"rgba({r}, {g}, {b}, 0.85)\n")
+        self._atomic_write(DUNST_FRAG,
+                           f"# nyxus accent — Welcome\n"
+                           f"frame_color = \"{h}\"\n")
+        # Persist to the same prefs file Settings reads on launch so the
+        # AppearancePage chip is pre-selected to match Welcome's choice.
+        try:
+            existing: dict = {}
+            if PREFS_FILE.exists():
+                existing = json.loads(PREFS_FILE.read_text())
+            existing["accent_hex"] = h
+            PREFS_FILE.parent.mkdir(parents=True, exist_ok=True)
+            PREFS_FILE.write_text(
+                json.dumps(existing, indent=2, sort_keys=True))
+        except Exception as e:
+            print(f"[welcome] settings prefs write: {e}",
+                  file=sys.stderr)
 
     def commit(self):
         self.wizard.cfg["text_scale"] = round(self.scale.get_value(), 2)
-        # apply wallpaper live
+        # 1) Wallpaper — apply live via swaybg.
         wp = self.wizard.cfg.get("wallpaper")
         if wp and Path(wp).exists():
             run(["pkill", "-x", "swaybg"])
-            subprocess.Popen(["swaybg", "-i", wp, "-m", "fill", "-c", "#000000"],
-                             start_new_session=True)
-        # write theme manifest for EWW / hyprland to pick up
-        accent = next((a for a in ACCENTS if a[0] == self.wizard.cfg.get("accent")),
-                      ACCENTS[0])
+            subprocess.Popen(
+                ["swaybg", "-i", wp, "-m", "fill", "-c", "#000000"],
+                start_new_session=True)
+        # 2) Accent — propagate to GTK/EWW/rofi/hyprlock/dunst + Settings prefs.
+        accent_hex = self.wizard.cfg.get("accent_hex", DEFAULT_ACCENT)
+        self._propagate_accent(accent_hex)
+        # 3) Text scaling factor — gsettings (best-effort).
+        run(["gsettings", "set", "org.gnome.desktop.interface",
+             "text-scaling-factor",
+             str(self.wizard.cfg["text_scale"])])
+        # 4) Manifest for any external consumer (legacy).
+        accent_name = next((n for n, h in ACCENTS
+                            if h.lower() == accent_hex.lower()),
+                           "Mirror White")
         theme = {
-            "accent": accent[0],
-            "primary": accent[1],
-            "secondary": accent[2],
-            "wallpaper": wp,
+            "accent":     accent_name,
+            "accent_hex": accent_hex,
+            "wallpaper":  wp,
             "text_scale": self.wizard.cfg["text_scale"],
         }
         (CFG_DIR / "theme.json").write_text(json.dumps(theme, indent=2))
