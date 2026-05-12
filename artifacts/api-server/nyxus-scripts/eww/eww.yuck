@@ -275,7 +275,7 @@
 ;; until then so the bar slot is real, not a stub).
 (defwidget search_btn []
   (button :class "search-btn"
-          :onclick "rofi -show drun -theme ~/.config/rofi/startmenu.rasi 2>/dev/null || rofi -show drun"
+          :onclick "(command -v nyxus_launcher.py >/dev/null && nyxus_launcher.py &) || (python3 ~/.local/bin/nyxus_launcher.py &) || rofi -show drun &"
           :tooltip "Search apps, files, calc, web (Super+Space)"
     (box :orientation "h" :space-evenly false :spacing 6 :valign "center"
       (label :class "search-glyph" :text "")
