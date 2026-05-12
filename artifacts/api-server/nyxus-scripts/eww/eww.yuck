@@ -354,6 +354,7 @@
       (dash_quick_toggle :glyph "󰕾" :label "Audio"     :cmd "pavucontrol")
       (dash_quick_toggle :glyph "󰍹" :label "Displays"  :cmd "wdisplays")
       (dash_quick_toggle :glyph "󰚰" :label "Updates"   :cmd "alacritty -e sh -c 'sudo pacman -Syu; read'")
+      (dash_quick_toggle :glyph "󰒓" :label "Settings"  :cmd "eww close dashboard && nyxus-settings")
       (dash_quick_toggle :glyph "󰌾" :label "Lock"      :cmd "eww close dashboard && hyprlock")
       (dash_quick_toggle :glyph "󰌌" :label "Keys"      :cmd "eww close dashboard && eww open --toggle cheatsheet")
       (dash_quick_toggle :glyph "󰐥" :label "Power"     :cmd "eww close dashboard && eww open --toggle powermenu"))
