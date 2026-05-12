@@ -60,7 +60,7 @@ ACTIONS = [
     ("suspend",  "Suspend",   "\uf186",  "pm-safe",   False,
      ["systemctl", "suspend"], None),
     ("logout",   "Logout",    "\uf08b",  "pm-warn",   True,
-     ["hyprctl", "dispatch", "exit"], ["loginctl", "terminate-session"]),
+     ["hyprctl", "dispatch", "exit"], ["loginctl", "terminate-user", os.environ.get("USER", "")]),
     ("restart",  "Restart",   "\uf021",  "pm-danger", True,
      ["systemctl", "reboot"], None),
     ("shutdown", "Shutdown",  "\uf011",  "pm-danger", True,

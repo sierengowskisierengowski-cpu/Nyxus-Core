@@ -715,6 +715,10 @@ class SearchSection(StoreSection):
         self._results_box.append(w)
 
     def _render(self, data: list[Pkg], query: str):
+        # Drop stale results: if a newer query has been submitted while
+        # this worker was running, ignore its results entirely.
+        if query != self._last_query:
+            return False
         if not data:
             self._set_results(_empty_state(
                 f"No packages match “{query}”",
