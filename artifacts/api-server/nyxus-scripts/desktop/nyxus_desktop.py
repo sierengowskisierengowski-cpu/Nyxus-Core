@@ -135,14 +135,14 @@ class DesktopEntry:
     """
 
     __slots__ = ("path", "name", "is_dir", "is_launcher",
-                 "exec_cmd", "icon_name", "mime")
+                 "app_info", "icon_name", "mime")
 
     def __init__(self, path: Path) -> None:
         self.path = path
         self.is_launcher = path.suffix == ".desktop" and path.is_file()
         self.is_dir = path.is_dir()
         self.name = path.name
-        self.exec_cmd: Optional[str] = None
+        self.app_info: Optional[Gio.DesktopAppInfo] = None
         self.icon_name = "text-x-generic"
         self.mime: Optional[str] = None
         self._resolve()
@@ -175,34 +175,39 @@ class DesktopEntry:
             log.debug("MIME query failed for %s: %s", self.path, e)
 
     def _parse_desktop_file(self) -> None:
+        # Use Gio.DesktopAppInfo — handles Type/Terminal/TryExec/Exec field
+        # codes correctly and never shell-evals the Exec line.
         try:
-            kf = GLib.KeyFile.new()
-            kf.load_from_file(str(self.path), GLib.KeyFileFlags.NONE)
-            grp = "Desktop Entry"
-            try:
-                self.name = kf.get_locale_string(grp, "Name", None) or self.name
-            except GLib.Error:
-                pass
-            try:
-                self.icon_name = kf.get_string(grp, "Icon") or self.icon_name
-            except GLib.Error:
-                pass
-            try:
-                self.exec_cmd = kf.get_string(grp, "Exec")
-            except GLib.Error:
-                self.exec_cmd = None
+            self.app_info = Gio.DesktopAppInfo.new_from_filename(
+                str(self.path))
         except Exception as e:
-            log.warning("desktop file parse failed for %s: %s", self.path, e)
+            log.warning("DesktopAppInfo build failed for %s: %s",
+                        self.path, e)
+            self.app_info = None
+        if self.app_info is not None:
+            n = self.app_info.get_display_name() or self.app_info.get_name()
+            if n:
+                self.name = n
+            icon = self.app_info.get_icon()
+            if isinstance(icon, Gio.ThemedIcon):
+                names = icon.get_names()
+                if names:
+                    self.icon_name = names[0]
+            elif icon is not None:
+                # FileIcon or other → use string repr as icon name fallback
+                try:
+                    self.icon_name = icon.to_string() or self.icon_name
+                except Exception:
+                    pass
 
     def launch(self) -> None:
         try:
-            if self.is_launcher and self.exec_cmd:
-                # strip XDG field codes (%f %u %F %U %i %c %k)
-                import re
-                cmd = re.sub(r"%[fFuUickdDnNvm]", "", self.exec_cmd).strip()
-                subprocess.Popen(["sh", "-c", cmd],
-                                 start_new_session=True)
+            # .desktop files: launch via the parsed AppInfo (no shell)
+            if self.is_launcher and self.app_info is not None:
+                ctx = Gio.AppLaunchContext()
+                self.app_info.launch([], ctx)
                 return
+            # everything else: hand to xdg-open (respects MIME defaults)
             subprocess.Popen(["xdg-open", str(self.path)],
                              start_new_session=True)
         except Exception as e:
@@ -296,15 +301,23 @@ class DesktopSurface(Gtk.ApplicationWindow):
         self.monitor = monitor
         self.cfg = cfg
         self.icons: list[IconWidget] = []
-        self._monitor_handle: Optional[Gio.FileMonitor] = None
-        self._refresh_pending = False
         self._build_layer()
         self._build_content()
         self._build_input()
-        # icons + live filesystem watch
+        # icons (filesystem watch is owned by DesktopApp, not per-window)
         DESKTOP_DIR.mkdir(parents=True, exist_ok=True)
         self._populate_icons()
-        self._watch_desktop_dir()
+        # ensure we tear down cleanly on close (hot-unplug etc.)
+        self.connect("close-request", self._on_close)
+
+    def _on_close(self, *_: object) -> bool:
+        for ico in self.icons:
+            try:
+                self.icon_layer.remove(ico)
+            except Exception:
+                pass
+        self.icons.clear()
+        return False
 
     # -- layer-shell config --
     def _build_layer(self) -> None:
@@ -440,17 +453,19 @@ class DesktopSurface(Gtk.ApplicationWindow):
         self.icons.clear()
 
         positions = self._load_positions()
-        # auto-grid: column-major from top-left, leaving margin for top bar
+        # auto-grid: row-major then column-wrap, leaving margin for top bar
         grid_x = 16
         grid_y = 48
-        col = 0
-        row = 0
-        # max rows depends on monitor height; recomputed on first realize
+        margin_right = 16
+        margin_bottom = 16
         try:
             geom = self.monitor.get_geometry()
-            max_rows = max(1, (geom.height - grid_y - 16) // ICON_GRID_H)
+            max_rows = max(1,
+                (geom.height - grid_y - margin_bottom) // ICON_GRID_H)
+            max_cols = max(1,
+                (geom.width - grid_x - margin_right) // ICON_GRID_W)
         except Exception:
-            max_rows = 8
+            max_rows, max_cols = 8, 12
 
         try:
             entries = sorted(
@@ -462,6 +477,8 @@ class DesktopSurface(Gtk.ApplicationWindow):
             log.error("scan ~/Desktop failed: %s", e)
             entries = []
 
+        col = 0
+        row = 0
         for path in entries:
             try:
                 entry = DesktopEntry(path)
@@ -478,39 +495,27 @@ class DesktopSurface(Gtk.ApplicationWindow):
             if saved and isinstance(saved, list) and len(saved) == 2:
                 x, y = int(saved[0]), int(saved[1])
             else:
+                # column-major: fill column top→bottom, then next column
                 x = grid_x + col * ICON_GRID_W
                 y = grid_y + row * ICON_GRID_H
                 row += 1
                 if row >= max_rows:
                     row = 0
                     col += 1
+                    if col >= max_cols:
+                        # overflow: stack remaining at last cell — caller
+                        # can scroll/sort; we never paint off-screen
+                        col = max_cols - 1
+                        row = max_rows - 1
             self.icon_layer.put(ico, x, y)
             self.icons.append(ico)
-        log.info("populated %d icons on %s", len(self.icons),
-                 self.monitor.get_connector())
+        log.info("populated %d icons on %s (grid=%dx%d)",
+                 len(self.icons), self.monitor.get_connector(),
+                 max_cols, max_rows)
 
-    def _watch_desktop_dir(self) -> None:
-        try:
-            gfile = Gio.File.new_for_path(str(DESKTOP_DIR))
-            self._monitor_handle = gfile.monitor_directory(
-                Gio.FileMonitorFlags.WATCH_MOVES, None)
-            self._monitor_handle.connect(
-                "changed", self._on_desktop_changed)
-        except Exception as e:
-            log.warning("desktop watch failed: %s", e)
-
-    def _on_desktop_changed(self, monitor, gfile, other,
-                            event_type) -> None:
-        if self._refresh_pending:
-            return
-        self._refresh_pending = True
-        # debounce — coalesce rapid bursts (cp -r etc.)
-        GLib.timeout_add(150, self._do_debounced_refresh)
-
-    def _do_debounced_refresh(self) -> bool:
-        self._refresh_pending = False
+    def refresh_icons(self) -> None:
+        """Public hook called by DesktopApp when ~/Desktop changes."""
         self._populate_icons()
-        return False
 
     def _open_entry(self, entry: DesktopEntry) -> None:
         entry.launch()
@@ -621,6 +626,10 @@ class DesktopApp(Gtk.Application):
         )
         self.windows_by_monitor: dict[str, DesktopSurface] = {}
         self.cfg: dict = load_config()
+        # single shared filesystem watcher (no per-monitor duplication)
+        self._desktop_monitor: Optional[Gio.FileMonitor] = None
+        self._refresh_pending = False
+        self._refresh_source_id: int = 0
 
     def do_startup(self) -> None:  # type: ignore[override]
         Gtk.Application.do_startup(self)
@@ -641,8 +650,45 @@ class DesktopApp(Gtk.Application):
         # hot-plug
         monitors = display.get_monitors()
         monitors.connect("items-changed", self._on_monitors_changed, display)
+        # one shared filesystem watcher for ~/Desktop, fans out to surfaces
+        self._start_desktop_watch()
         # ipc
         IPCServer(self).start()
+
+    def _start_desktop_watch(self) -> None:
+        try:
+            DESKTOP_DIR.mkdir(parents=True, exist_ok=True)
+            gfile = Gio.File.new_for_path(str(DESKTOP_DIR))
+            self._desktop_monitor = gfile.monitor_directory(
+                Gio.FileMonitorFlags.WATCH_MOVES, None)
+            self._desktop_monitor.connect(
+                "changed", self._on_desktop_changed)
+            log.info("watching %s", DESKTOP_DIR)
+        except Exception as e:
+            log.warning("desktop watcher failed: %s", e)
+
+    def _on_desktop_changed(self, monitor, gfile, other,
+                            event_type) -> None:
+        # debounce: coalesce bursts (cp -r, mv, etc.) into one refresh.
+        # Cancel any pending source so we restart the 150ms window.
+        if self._refresh_source_id:
+            try:
+                GLib.source_remove(self._refresh_source_id)
+            except Exception:
+                pass
+            self._refresh_source_id = 0
+        self._refresh_source_id = GLib.timeout_add(
+            150, self._do_debounced_refresh)
+
+    def _do_debounced_refresh(self) -> bool:
+        self._refresh_source_id = 0
+        for win in self.windows_by_monitor.values():
+            try:
+                win.refresh_icons()
+            except Exception as e:
+                log.warning("refresh failed on %s: %s",
+                            win.monitor.get_connector(), e)
+        return False  # one-shot
 
     # -- monitors --
     def _spawn_for_all_monitors(self, display: Gdk.Display) -> None:
