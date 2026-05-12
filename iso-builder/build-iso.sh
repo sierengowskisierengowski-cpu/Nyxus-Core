@@ -185,9 +185,15 @@ ok "GTK apps: $(ls "${OPT_NYXUS}"/*.py | wc -l) python files in /opt/nyxus/ (~/.
 install -m 0644 "${NS}"/nyxus-bg-*.png            "${WALLS_USER}/" 2>/dev/null || true
 install -m 0644 "${NS}"/nyxus-sierengowski-*.png  "${WALLS_USER}/" 2>/dev/null || true
 install -m 0644 "${NS}"/nyxus-void-vortex.png     "${WALLS_USER}/" 2>/dev/null || true
+# A6 (2026-05-12): canonical hyprlock.conf reads ~/.config/hypr/walls/nyxus-login-stars.png.
+# Must be staged into BOTH user skel and system walls or hyprlock 404s on the lock screen.
+install -m 0644 "${NS}"/nyxus-login-stars.png     "${WALLS_USER}/" 2>/dev/null || true
+install -m 0644 "${NS}"/nyxus-hyprlock-eye.png    "${WALLS_USER}/" 2>/dev/null || true
 install -m 0644 "${NS}"/nyxus-bg-*.png            "${WALLS_SYS}/"  2>/dev/null || true
 install -m 0644 "${NS}"/nyxus-sierengowski-*.png  "${WALLS_SYS}/"  2>/dev/null || true
 install -m 0644 "${NS}"/nyxus-void-vortex.png     "${WALLS_SYS}/"  2>/dev/null || true
+install -m 0644 "${NS}"/nyxus-login-stars.png     "${WALLS_SYS}/"  2>/dev/null || true
+install -m 0644 "${NS}"/nyxus-hyprlock-eye.png    "${WALLS_SYS}/"  2>/dev/null || true
 ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyxus/ + skel"
 
 # ── Helper scripts → /usr/local/bin/ ────────────────────────────────────

@@ -2453,7 +2453,7 @@ class AppearancePage(SectionPage):
         # ── Wallpaper grid ────────────────────────────────────────────
         g_wall = Adw.PreferencesGroup(
             title="Wallpaper",
-            description="Click a wallpaper to apply it system-wide via swww.")
+            description="Click a wallpaper to apply it system-wide via swaybg.")
         wall_row = Adw.PreferencesRow()
         wall_row.set_activatable(False)
         wall_row.set_selectable(False)
@@ -2540,7 +2540,7 @@ class AppearancePage(SectionPage):
 
         # Status pill: which compositor backends are available
         backends = []
-        if have("swww"):       backends.append("swww")
+        if have("swaybg"):     backends.append("swaybg")
         if have("hyprctl"):    backends.append("hyprctl")
         kind = "ok" if backends else "warn"
         msg  = " · ".join(backends) if backends else "no compositor tools"
@@ -2560,18 +2560,21 @@ class AppearancePage(SectionPage):
                     inner.remove_css_class("selected")
                 child = child.get_next_sibling()
         btn.add_css_class("selected")
-        # Apply
-        if have("swww"):
-            # List-form to avoid shell injection if the wallpaper filename
-            # contains quotes or shell metacharacters.
-            sh_async(["swww", "img", path,
-                      "--transition-type", "fade",
-                      "--transition-duration", "0.6"],
-                     lambda r: self.toast(
-                         "wallpaper applied" if r[0] == 0
-                         else f"swww failed: {r[2][:60]}"))
+        # Apply via swaybg (matches Hyprland exec-once + nyxus_install.sh
+        # reload logic — single backend across the whole system, audit A7).
+        # swaybg has no IPC; replace the running daemon with a fresh one
+        # pointed at the new path. `pkill -x` is exact-match so we don't
+        # nuke unrelated processes.
+        if have("swaybg"):
+            sh_async(
+                ["sh", "-c",
+                 f"pkill -x swaybg 2>/dev/null; "
+                 f"swaybg -i {str(path)!r} -m fill -c '#000000' >/dev/null 2>&1 &"],
+                lambda r: self.toast(
+                    "wallpaper applied" if r[0] == 0
+                    else f"swaybg failed: {r[2][:60]}"))
         else:
-            self.toast("swww not installed — saved selection only")
+            self.toast("swaybg not installed — saved selection only")
 
     def _on_font_scale(self, scale: Gtk.Scale) -> None:
         v = round(scale.get_value(), 2)

@@ -320,7 +320,7 @@ while IFS= read -r -d '' f; do
   n=$(grep -cE '^[[:space:]]*(window|layer)rulev2[[:space:]]*=' "$f" 2>/dev/null)
   n=${n:-0}
   if (( n > 0 )); then
-    sed -i -E 's/^([[:space:]]*)windowrulev2([[:space:]]*=)/\1windowrule\2/; s/^([[:space:]]*)layerrulev2([[:space:]]*=)/\1layerrule\2/' "$f"
+    : # A8-DISABLED: canonical confs intentionally use windowrulev2; rewriting to v1 corrupts them
     rel="${f#$HYPR_DIR/}"
     ok "migrated $n v2 rule(s) → unified syntax in $rel"
     v2_total=$((v2_total + n))
@@ -349,20 +349,12 @@ while IFS= read -r -d '' f; do
   # without `override` anywhere on the line.
   n=$(grep -cE '^[[:space:]]*windowrule[[:space:]]*=[[:space:]]*opacity[[:space:]]+[0-9.]+[[:space:]]+[0-9.]+' "$f" 2>/dev/null)
   n=${n:-0}
-  if (( n > 0 )) && grep -E '^[[:space:]]*windowrule[[:space:]]*=[[:space:]]*opacity[[:space:]]+[0-9.]+[[:space:]]+[0-9.]+' "$f" | grep -vqE 'override'; then
-    perl -i -pe '
-      if (/^\s*windowrule\s*=\s*opacity/ && !/override/) {
-        s{^(\s*windowrule\s*=\s*opacity\s+)([0-9.]+)(\s+)([0-9.]+)(?:(\s+)([0-9.]+))?(\s*,)}{
-          my $r = "$1$2 override $4 override";
-          $r .= " $6 override" if defined $6;
-          "$r$7"
-        }e;
-      }
-    ' "$f"
-    rel="${f#$HYPR_DIR/}"
-    ok "added 'override' to $n opacity rule(s) in $rel"
-    opa_total=$((opa_total + n))
-    opa_files=$((opa_files + 1))
+  # A8-DISABLED (2026-05-12): canonical nyxus-hyprland-opacity.conf uses
+  # `windowrulev2 = opacity 0.92 0.78, class:...` WITHOUT `override` and
+  # that syntax is correct on the shipped Hyprland. Inserting `override`
+  # actively corrupts the canonical file. No-op the entire block.
+  if false && (( n > 0 )); then
+    : # disabled
   fi
 done < <(find "$HYPR_DIR" -type f -name '*.conf' -print0 2>/dev/null)
 if (( opa_total > 0 )); then
@@ -602,26 +594,34 @@ for cf in hyprlock.conf hypridle.conf; do
   fi
 done
 
-# 4b.5  hyprlock background image — same obsidian-wave starfield as SDDM
-# login (nyxus-login-stars.png). hyprlock.conf reads from
-# ~/.config/nyxus/wallpaper.png (per nyxus-hyprlock.conf line 22).
-NYX_CFG_DIR="$REAL_HOME/.config/nyxus"
-mkdir -p "$NYX_CFG_DIR"
-chown "$REAL_USER:$REAL_USER" "$NYX_CFG_DIR"
-LOCK_BG_DST="$NYX_CFG_DIR/wallpaper.png"
-if curl -fsSL --max-time 30 "$PROD/nyxus-login-stars.png" -o "$LOCK_BG_DST.new"; then
-  if [[ -s "$LOCK_BG_DST.new" ]]; then
-    mv "$LOCK_BG_DST.new" "$LOCK_BG_DST"
-    chown "$REAL_USER:$REAL_USER" "$LOCK_BG_DST"
-    chmod 644 "$LOCK_BG_DST"
-    ok "wrote $LOCK_BG_DST — hyprlock now uses the obsidian-starfield bg"
+# 4b.5 REMOVED (audit A8): branded hyprlock.conf no longer reads from
+# ~/.config/nyxus/wallpaper.png. It now reads ~/.config/hypr/walls/nyxus-login-stars.png.
+# That path is provisioned by the 4b.6 block immediately below.
+
+# 4b.6  Hyprland walls/ refresh — keeps the lockscreen + default desktop bg
+# in sync. hyprland.conf points swaybg at nyxus-void-vortex.png, and
+# hyprlock.conf points its background at nyxus-login-stars.png. Both must
+# live in ~/.config/hypr/walls/ or the session boots to a black screen
+# and Hyprlock 404s into a blank lock surface.
+HYPR_WALLS="$REAL_HOME/.config/hypr/walls"
+mkdir -p "$HYPR_WALLS"
+chown "$REAL_USER:$REAL_USER" "$HYPR_WALLS"
+for w in nyxus-login-stars.png nyxus-void-vortex.png nyxus-hyprlock-eye.png; do
+  wdst="$HYPR_WALLS/$w"
+  if curl -fsSL --max-time 60 "$PROD/$w" -o "$wdst.new"; then
+    if [[ -s "$wdst.new" ]]; then
+      mv "$wdst.new" "$wdst"
+      chown "$REAL_USER:$REAL_USER" "$wdst"
+      chmod 644 "$wdst"
+      ok "wrote $wdst"
+    else
+      rm -f "$wdst.new"
+      fail "$w download was empty — kept previous copy"
+    fi
   else
-    rm -f "$LOCK_BG_DST.new"
-    fail "downloaded hyprlock bg was empty — kept previous copy"
+    fail "could not download $w"
   fi
-else
-  fail "could not download hyprlock background image"
-fi
+done
 
 # 4c. Screensaver + demon-wake Python scripts
 NYX_SHARE="/usr/share/nyxus"

@@ -7,7 +7,7 @@
 
 ## What is NYXUS
 
-NYXUS is a hand-crafted Arch Linux distribution built on Hyprland. It ships a complete, opinionated desktop environment — Waybar, Hyprlock, SDDM, Rofi, Mako, Alacritty — alongside a full suite of native GTK4 Python applications designed as a cohesive system.
+NYXUS is a hand-crafted Arch Linux distribution built on Hyprland. It ships a complete, opinionated desktop environment — EWW, Hyprlock, SDDM, Rofi, Dunst, Alacritty — alongside a full suite of native GTK4 Python applications designed as a cohesive system.
 
 Every visual element follows the NYXUS design language: black frosted-glass panels, Inter handwriting font for UI, JetBrains Mono for data and code, neon pink/purple/green/gold palette.
 
