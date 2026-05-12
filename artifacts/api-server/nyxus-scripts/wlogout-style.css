@@ -1,5 +1,19 @@
-/* ── NYXUS palette (single source of truth · rev r13) ────────── */
-@import url("nyxus-palette.css");
+/* ── NYXUS palette (INLINED rev r14 · 2026-05-12) ─────────────────
+ * wlogout's GTK CSS parser does NOT follow @import — using @import
+ * here causes the entire stylesheet to bail on line 1, falling back
+ * to the default GTK light theme (the white screen). All palette
+ * colors must be inlined as @define-color directly in this file.
+ * Keep in lockstep with nyxus-palette.css.
+ * ──────────────────────────────────────────────────────────────── */
+@define-color nyx_white          #ffffff;
+@define-color nyx_white_off      #e8edf5;
+@define-color nyx_grey_light     #c8ccd6;
+@define-color nyx_grey_mid       #9aa0ad;
+@define-color nyx_glass_dark     rgba(14, 14, 22, 0.55);
+@define-color nyx_glass_deeper   rgba(8,  8,  14, 0.78);
+@define-color nyx_glass_deepest  rgba(0,  0,  0,  0.92);
+@define-color nyx_hairline_white rgba(255, 255, 255, 0.10);
+@define-color nyx_hairline_ink   rgba(0,   0,   0,   0.45);
 
 /* ════════════════════════════════════════════════════════════════════════════
    NYXUS · wlogout · DARK MIRROR · LOCKED rev 2026-05-07 r13
