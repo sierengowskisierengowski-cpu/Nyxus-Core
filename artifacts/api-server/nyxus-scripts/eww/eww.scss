@@ -65,15 +65,21 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 /* ── BARS ─────────────────────────────────────────────────────────── */
 
 .bar {
-  background: rgba(5, 6, 10, 0.78);
-  border: 1px solid rgba(160, 107, 255, 0.18);
+  /* High-contrast readable surface — bars are NOT glass.
+     Wallpaper must NOT bleed through here, only through flyouts. */
+  background: rgba(8, 10, 16, 0.96);
+  color: #ffffff;
+  font-weight: 500;
+  border: 1px solid $gold-edge;
   border-radius: 14px;
   padding: 6px 14px;
   box-shadow:
-    0 0 0 1px rgba(58, 216, 255, 0.04),
-    0 12px 40px rgba(0, 0, 0, 0.55),
-    inset 0 0 24px rgba(160, 107, 255, 0.05);
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 14px 44px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
+.bar label,
+.bar button { color: #ffffff; font-weight: 500; }
 
 /* .bar-bottom sizing now defined alongside the P3.13d enterprise loadout
    block at the bottom of this file (search a.search-btn references). */
