@@ -17,6 +17,22 @@ $hairline-ink:   rgba(0, 0, 0, 0.45);
 $shadow-active:  rgba(0, 0, 0, 0.65);
 $shadow-rest:    rgba(0, 0, 0, 0.20);
 
+/* ── NYXUS WARM ACCENT (rev 2026-05-12) ────────────────────────────────
+   Pure mono read as flat at low light — user fed in cosmic/sepia
+   reference imagery (gold dust, aged amber, warm celestial). Soft
+   gold accent restores legibility on hover/active/badge states
+   without breaking the enterprise-dark feel. Gold is RESERVED for
+   "alive" states only: active task, focused control, current
+   workspace, hover edges, brand. Default text + chrome stay
+   monochrome. */
+$gold:           #d4b87a;                  /* primary warm accent */
+$gold-soft:      #e8d4a0;                  /* hover text */
+$gold-deep:      #8a6f3a;                  /* tooltips / dim */
+$gold-glow:      rgba(212, 184, 122, 0.35);
+$gold-edge:      rgba(212, 184, 122, 0.55);
+$gold-bg-soft:   rgba(212, 184, 122, 0.10);
+$gold-bg-active: rgba(212, 184, 122, 0.18);
+
 /* Marquee animation for the top-bar ticker (smooth scroll). */
 @keyframes nyx-marquee {
   from { margin-left:  100%; }
@@ -59,7 +75,8 @@ $shadow-rest:    rgba(0, 0, 0, 0.20);
     inset 0 0 24px rgba(160, 107, 255, 0.05);
 }
 
-.bar-bottom { padding: 8px 18px; min-height: 44px; }
+/* .bar-bottom sizing now defined alongside the P3.13d enterprise loadout
+   block at the bottom of this file (search a.search-btn references). */
 .bar-top    { padding: 4px 14px; min-height: 24px; border-radius: 0 0 14px 14px; }
 
 .bar-cluster { padding: 0 6px; }
@@ -1195,4 +1212,174 @@ $shadow-rest:    rgba(0, 0, 0, 0.20);
   background: rgba(255, 77, 107, 0.18);
   border-color: rgba(255, 77, 107, 0.40);
   color: #ff8b9e;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+ * P3.13d · BOTTOM BAR — enterprise loadout (search + dock + taskbar)
+ * Glass parity with the rest of NYXUS; tight, neutral, monochrome.
+ * ═════════════════════════════════════════════════════════════════════ */
+
+/* Spotlight-style search button — sits between Start and Workspaces. */
+.search-btn {
+  background: $glass-deeper;
+  border: 1px solid $hairline-white;
+  border-radius: 8px;
+  padding: 4px 14px;
+  min-width: 200px;
+  transition: all 140ms ease;
+}
+.search-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.search-glyph { color: #c8ccd6; font-size: 12px; padding-right: 2px; }
+.search-text  { color: #8b94a8; font-size: 11px; letter-spacing: 0.06em; }
+
+/* Horizontal pinned dock — Win11/Mac style. */
+.app-rail-h {
+  padding: 0 4px;
+  /* divider on the right separates dock from the live taskbar */
+  border-right: 1px solid $hairline-white;
+  margin-right: 4px;
+  padding-right: 10px;
+}
+.app-rail-h .app-pill {
+  padding: 4px 8px;
+  font-size: 14px;
+  color: #c8ccd6;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition: all 140ms ease;
+}
+.app-rail-h .app-pill:hover {
+  background: $glass-deeper;
+  border-color: $hairline-white;
+  color: #ffffff;
+}
+
+/* Live taskbar — running Hyprland windows. */
+.taskbar {
+  padding: 0 6px;
+  min-height: 36px;
+}
+.taskbar-empty {
+  color: #8b94a8;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 0 14px;
+}
+.taskbar-tile {
+  background: $glass-deeper;
+  border: 1px solid $hairline-white;
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: #c8ccd6;
+  transition: all 140ms ease;
+}
+.taskbar-tile:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+.taskbar-tile-active {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  box-shadow: inset 0 -2px 0 #ffffff;
+}
+.taskbar-glyph { font-size: 12px; font-weight: 700; }
+.taskbar-title { font-size: 10px; letter-spacing: 0.04em; }
+
+/* Tighten the right-cluster tray pills so 13 widgets fit cleanly
+   on a 1366-wide panel even with the new dock + taskbar on the left. */
+.cluster-right > * {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+/* Slightly taller bottom bar so the taskbar tiles don't crowd. */
+.bar-bottom { padding: 6px 14px; min-height: 48px; }
+
+/* ═════════════════════════════════════════════════════════════════════
+ * NYXUS WARM ACCENT OVERLAY (rev 2026-05-12)
+ * Re-targets active/alive states to use $gold instead of pure white.
+ * Applied as a final overlay so the rest of the file stays mono.
+ * ═════════════════════════════════════════════════════════════════════ */
+
+/* Brand button — ✕ NYXUS now reads as warm metal */
+.brand              { color: $gold; text-shadow: 0 0 10px $gold-glow; }
+.brand:hover        { color: $gold-soft; background: $gold-bg-soft;
+                      border-color: $gold-edge; }
+
+/* Top-bar marquee label */
+.ticker-label       { color: $gold; }
+
+/* Workspaces — current workspace pops gold */
+.ws-pill-active     { color: $gold !important;
+                      border-color: $gold-edge !important;
+                      background: $gold-bg-active !important;
+                      box-shadow: 0 0 12px $gold-glow !important; }
+.ws-pill:hover      { color: $gold-soft;
+                      border-color: $gold-edge; }
+
+/* Quick Settings active tile */
+.qs-tile-on         { color: $gold !important;
+                      border-color: $gold-edge !important;
+                      background: $gold-bg-active !important;
+                      box-shadow: inset 0 0 12px $gold-glow !important; }
+
+/* Search button focus edge */
+.search-btn:hover   { border-color: $gold-edge;
+                      background: $gold-bg-soft; }
+.search-btn:hover .search-text  { color: $gold-soft; }
+.search-btn:hover .search-glyph { color: $gold; }
+
+/* Pinned dock hover */
+.app-rail-h .app-pill:hover { color: $gold;
+                              border-color: $gold-edge;
+                              background: $gold-bg-soft; }
+
+/* Live taskbar — active window glows gold (replaces white underline) */
+.taskbar-tile-active {
+  color: $gold !important;
+  border-color: $gold-edge !important;
+  background: $gold-bg-active !important;
+  box-shadow: inset 0 -2px 0 $gold !important;
+}
+.taskbar-tile:hover  { color: $gold-soft;
+                       border-color: $gold-edge; }
+
+/* Start menu — current pinned tile hover gets a gold edge */
+.startmenu-tile:hover { border-color: $gold-edge;
+                        background: $gold-bg-soft; }
+.startmenu-tile-glyph { color: $gold-soft; }
+.startmenu-search:focus { border-color: $gold-edge;
+                          box-shadow: 0 0 12px $gold-glow; }
+.startmenu-power-btn:hover { color: $gold;
+                             border-color: $gold-edge;
+                             background: $gold-bg-soft; }
+
+/* Battery / updates / notification badges — warm when "needs attention" */
+.battery-low, .battery-crit { color: $gold !important; }
+.updates-pending           { color: $gold !important; }
+.notif-badge.has-items     { background: $gold-bg-active;
+                             color: $gold;
+                             border: 1px solid $gold-edge; }
+
+/* Tooltips — keep mono but tint border so they feel "of the system" */
+tooltip {
+  background: $glass-deepest;
+  color: #e8edf5;
+  border: 1px solid $gold-edge;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+/* Heartbeat dot — alive = gold pulse */
+.heartbeat { color: $gold; text-shadow: 0 0 8px $gold-glow; }
+
+/* SysPulse: dim the chrome, gold the values */
+.syspulse-cpu, .syspulse-mem, .syspulse-temp {
+  color: #c8ccd6;
 }

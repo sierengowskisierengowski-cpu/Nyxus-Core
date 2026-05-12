@@ -1078,4 +1078,40 @@ title = "NYXUS Splash v2 — faint predator eyes lurking, peak 32% opacity (10s)
 id = "UYxHOScQUxkSbTk9sv5uT"
 uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-darkmirror.png"
 type = "image"
-title = "NYXUS Dark Mirror — wallpaper preview"
+title = "Variant A — darkmirror (16:9 native)"
+
+[[outputs]]
+id = "awe4G1Jnep3Mg2R8sqkUv"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-darkmirror-02.png"
+type = "image"
+title = "Variant B — darkmirror-02 (square source, center-cropped)"
+
+[[outputs]]
+id = "jwXJR7NkgSauBSOd-7nM0"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-cosmos-gold.png"
+type = "image"
+title = "nyxus-bg-cosmos-gold (USE THIS NOW — 1920×1080)"
+
+[[outputs]]
+id = "RFuAI2PD7qVYOGLXQ1Nc7"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-sepia-watercolor.png"
+type = "image"
+title = "nyxus-bg-sepia-watercolor (rotation candidate)"
+
+[[outputs]]
+id = "HeVguE9GLNjff_PcWdZgK"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-cosmic-dust.png"
+type = "image"
+title = "nyxus-bg-cosmic-dust (rotation candidate)"
+
+[[outputs]]
+id = "zztNS3ANIgBlhVMqGqgo0"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-moon-crater.png"
+type = "image"
+title = "nyxus-bg-moon-crater (rotation candidate)"
+
+[[outputs]]
+id = "G_0oZTbX4Jf1tfUzo48qj"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-darkmirror-03.png"
+type = "image"
+title = "nyxus-bg-darkmirror-03 (MJ video #3 still frame)"

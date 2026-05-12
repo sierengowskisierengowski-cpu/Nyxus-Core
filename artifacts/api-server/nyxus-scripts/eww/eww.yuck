@@ -23,7 +23,13 @@
 ;; ── poll variables ────────────────────────────────────────────────────
 (defpoll TIME       :interval "1s"   :initial `date +'{"hms":"%H:%M:%S","hm":"%H:%M","date":"%a %d %b","long":"%A, %B %-d %Y"}'`
                                      `date +'{"hms":"%H:%M:%S","hm":"%H:%M","date":"%a %d %b","long":"%A, %B %-d %Y"}'`)
-(defpoll TICKER     :interval "3s"   :initial '{"text":"NYXUS · DARK MIRROR · LIVE","tooltip":"NYXUS"}'
+;; TICKER — polled every 30s. The marquee animation lives in CSS
+;; (@keyframes nyx-marquee, eww.scss) and runs uninterrupted between
+;; updates. ticker.sh emits a STABLE string with minute-resolution
+;; time so eww only redraws when something actually changes, which
+;; preserves the smooth horizontal scroll. The chain is doubled inside
+;; the script so the loop seam is invisible.
+(defpoll TICKER     :interval "30s"  :initial '{"text":"NYXUS · DARK MIRROR · LIVE     ▌ STARTING SYSTEM PROBES …     NYXUS · DARK MIRROR · LIVE     ▌ STARTING SYSTEM PROBES …","tooltip":"NYXUS"}'
                                      "~/.config/eww/scripts/ticker.sh")
 (defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0}'
                                      "~/.config/eww/scripts/sys-pulse.sh")
@@ -74,6 +80,9 @@
 ;; window open via `eww update STARTAPPS=...` from the brand button.
 (defpoll STARTAPPS  :interval "30s"  :initial '{"pinned":[],"recents":[],"all":[],"user":"nyx","host":"nyxus","avatar":""}'
                                      "~/.config/eww/scripts/startmenu-apps.sh")
+;; P3.13d · live taskbar (running windows from hyprctl).
+(defpoll TASKBAR    :interval "1s"   :initial '{"items":[]}'
+                                     "~/.config/eww/scripts/taskbar.sh")
 ;; Search query buffer. literal="" means show pinned/recents; any
 ;; other value filters `all` apps by case-insensitive substring.
 (defvar STARTQUERY "")
@@ -250,23 +259,82 @@
     (app_launcher :glyph "" :cmd "pavucontrol"    :label "Audio")
     (app_launcher :glyph "" :cmd "blueman-manager":label "Bluetooth")))
 
+;; Horizontal pinned launcher rail — Win11/Mac dock style. Lives in
+;; the bottom bar between the start button and the live taskbar.
+(defwidget app_rail_h []
+  (box :class "app-rail-h" :orientation "h" :space-evenly false :spacing 6 :valign "center"
+    (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal")
+    (app_launcher :glyph "" :cmd "firefox"        :label "Firefox")
+    (app_launcher :glyph "" :cmd "nautilus"       :label "Files")
+    (app_launcher :glyph "" :cmd "nyxus-sysmon"   :label "SysMon")
+    (app_launcher :glyph "" :cmd "nyxus-notepad"  :label "Notepad")
+    (app_launcher :glyph "" :cmd "nyxus-settings" :label "Settings")))
+
+;; Search button — Spotlight-style. Opens rofi (P3.14 will replace
+;; with a custom EWW spotlight; keeping rofi as the live entry point
+;; until then so the bar slot is real, not a stub).
+(defwidget search_btn []
+  (button :class "search-btn"
+          :onclick "rofi -show drun -theme ~/.config/rofi/startmenu.rasi 2>/dev/null || rofi -show drun"
+          :tooltip "Search apps, files, calc, web (Super+Space)"
+    (box :orientation "h" :space-evenly false :spacing 6 :valign "center"
+      (label :class "search-glyph" :text "")
+      (label :class "search-text"  :text "Search NYXUS"))))
+
+;; Live taskbar — one tile per running Hyprland window. Click to focus.
+;; Right-click closes (via dispatch killactive after focus). Active
+;; window gets `.taskbar-tile-active`.
+(defwidget taskbar_tile [t]
+  (eventbox :class "taskbar-tile-box"
+    (button :class {t.active == true ? "taskbar-tile taskbar-tile-active" : "taskbar-tile"}
+            :onclick "hyprctl dispatch focuswindow address:${t.address}"
+            :tooltip "${t.title} · ws ${t.workspace}"
+      (box :orientation "h" :space-evenly false :spacing 6 :valign "center"
+        (label :class "taskbar-glyph" :text "${t.glyph}")
+        (label :class "taskbar-title" :text "${t.title}" :limit-width 18)))))
+
+(defwidget taskbar_widget []
+  (scroll :hscroll true :vscroll false :hexpand true
+    (box :class "taskbar" :orientation "h" :space-evenly false :spacing 4 :valign "center"
+      ;; Empty-state placeholder so the bar doesn't visually collapse
+      ;; when no windows are open.
+      (label :class "taskbar-empty"
+             :text "No windows open · use ✕ NYXUS or Search to launch"
+             :visible {arraylength(TASKBAR.items) == 0})
+      (for t in {TASKBAR.items}
+        (taskbar_tile :t {t})))))
+
 ;; ═════════════════════════════════════════════════════════════════════
 ;; BARS
 ;; ═════════════════════════════════════════════════════════════════════
 
+;; ─────────────────────────────────────────────────────────────────────
+;; BOTTOM BAR — enterprise loadout (rev 2026-05-12)
+;; LEFT   · Start (✕ NYXUS) · Search · Workspaces · Pinned dock
+;; CENTER · Live taskbar (running Hyprland windows) — hexpands
+;; RIGHT  · Now-playing · SysPulse · Quick-settings cluster · Tray
+;;          (cal · brightness · audio · mic · net · bt · battery ·
+;;           powerprof · updates · notifs · qs) · Clock · Power
+;; ─────────────────────────────────────────────────────────────────────
 (defwidget bar_bottom_layout []
-  (centerbox :class "bar bar-bottom" :orientation "h"
-    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 12 :halign "start"
-      (nyxus_brand) (heartbeat))
-    (box :class "bar-cluster cluster-center" :space-evenly false :spacing 14 :halign "center"
-      (syspulse_widget) (tray_dummy) (clock_widget))
-    ;; Right cluster carries 12 status pills — the most of any cluster.
-    ;; :spacing 8 keeps it at the high end of the contract's "tight"
-    ;; range (§2: 6–10px) without overflowing 1366px width. Left/center
-    ;; use higher values because they carry fewer, larger widgets.
+  (box :class "bar bar-bottom" :orientation "h" :space-evenly false :spacing 10
+    ;; LEFT
+    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 10 :halign "start"
+      (nyxus_brand)
+      (search_btn)
+      (workspaces_rail)
+      (app_rail_h))
+    ;; CENTER — live taskbar takes all remaining width so the bar
+    ;; reads as one continuous surface, like Win11's centered task list.
+    (box :class "bar-cluster cluster-center" :space-evenly false :spacing 6 :hexpand true
+      (taskbar_widget))
+    ;; RIGHT — system tray + clock + power, tightly packed.
     (box :class "bar-cluster cluster-right" :space-evenly false :spacing 8 :halign "end"
-      (cal_widget) (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
-      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget) (power_button))))
+      (player_widget)
+      (syspulse_widget)
+      (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
+      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget)
+      (cal_widget) (clock_widget) (power_button))))
 
 (defwidget bar_top_layout []
   (box :class "bar bar-top" :space-evenly false :spacing 12 :hexpand true
