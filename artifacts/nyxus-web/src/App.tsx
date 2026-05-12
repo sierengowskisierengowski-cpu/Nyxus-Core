@@ -16,6 +16,7 @@
 import { useState, useEffect } from "react";
 import Mirror from "./pages/Mirror";
 import WaybarMockup from "./pages/WaybarMockup";
+import BuildManifest from "./pages/BuildManifest";
 
 const BASE = "/api/download/nyxus";
 const ISO_NAME = "nyx-2026.05.02-x86_64.iso";
@@ -673,5 +674,6 @@ export default function App() {
   const route = useHashRoute();
   if (route === "mirror") return <Mirror />;
   if (route === "waybars") return <WaybarMockup />;
+  if (route === "build") return <BuildManifest />;
   return <Landing />;
 }
