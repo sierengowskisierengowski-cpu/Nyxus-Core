@@ -80,22 +80,22 @@ failed_items=()
 # ── PYTHON TERMINAL SCRIPTS ───────────────────────────────────────────────────
 hdr "Python Terminal Scripts"
 mkdir -p "$SCRIPTS_DIR"
-## NOTE (rev r6-eww, 2026-05-11): the following five Python apps were
+## NOTE (rev r6-eww, 2026-05-11): the following four Python apps were
 ## REMOVED because EWW now provides the same functionality natively:
-##   nyxus_powermenu.py    → eww open --toggle powermenu
 ##   nyxus_quicksettings.py → eww open --toggle dashboard
 ##   nyxus_clock.py        → built into EWW dashboard clock card
 ##   nyxus_calendar.py     → built into EWW dashboard calendar card
 ##   nyxus_cheatsheet.py   → eww open --toggle cheatsheet
 ## See artifacts/api-server/nyxus-scripts/eww/ for the replacements.
 for f in nyxus_palette.py nyxus-palette.css \
-         nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
-         nyxus_sysmon_gtk.py \
-         nyxus_stickies.py nyxus_notes.py nyxus_terminal.py \
-         nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
-         nyxus_doctor.py nyxus_launcher.py \
-         nyxus_screenshot.py nyxus_chrome.py \
-         nyxus_screensaver.py nyxus_demon_wake.py; do
+          nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
+          nyxus_sysmon_gtk.py nyxus_notepad.py nyxus_store.py \
+          nyxus_powermenu.py nyxus_welcome.py \
+          nyxus_stickies.py nyxus_notes.py nyxus_terminal.py \
+          nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
+          nyxus_doctor.py nyxus_launcher.py \
+          nyxus_screenshot.py nyxus_chrome.py \
+          nyxus_screensaver.py nyxus_demon_wake.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
@@ -369,6 +369,34 @@ fi
 mkdir -p "$HOME/.config/systemd/user"
 dl "nyxus-eww.service" "$HOME/.config/systemd/user/nyxus-eww.service" \
   && systemctl --user daemon-reload 2>/dev/null || true
+
+# ── Welcome Wizard launcher / helper / policy ────────────────────────────────
+hdr "Welcome Wizard"
+mkdir -p "$HOME/.local/bin"
+if dl "nyxus-welcome" "/tmp/nyxus-welcome.new"; then
+  install -m 0755 /tmp/nyxus-welcome.new "$HOME/.local/bin/nyxus-welcome" \
+    && ok "nyxus-welcome → ~/.local/bin/"
+  sudo -n install -m 0755 /tmp/nyxus-welcome.new /usr/local/bin/nyxus-welcome 2>/dev/null \
+    && ok "nyxus-welcome → /usr/local/bin/" \
+    || printf "  ${DIM}(sudo unavailable — keeping nyxus-welcome in ~/.local/bin)${R}\n"
+  rm -f /tmp/nyxus-welcome.new
+fi
+if dl "nyxus-welcome-helper" "/tmp/nyxus-welcome-helper.new"; then
+  if sudo -n install -Dm0755 /tmp/nyxus-welcome-helper.new /usr/local/libexec/nyxus-welcome-helper 2>/dev/null; then
+    ok "nyxus-welcome-helper → /usr/local/libexec/"
+  else
+    printf "  ${DIM}(skip: nyxus-welcome-helper — needs sudo for /usr/local/libexec)${R}\n"
+  fi
+  rm -f /tmp/nyxus-welcome-helper.new
+fi
+if dl "nyxus-welcome.policy" "/tmp/nyxus-welcome.policy.new"; then
+  if sudo -n install -Dm0644 /tmp/nyxus-welcome.policy.new /usr/share/polkit-1/actions/dev.nyxus.welcome.policy 2>/dev/null; then
+    ok "nyxus-welcome.policy → /usr/share/polkit-1/actions/"
+  else
+    printf "  ${DIM}(skip: nyxus-welcome.policy — needs sudo for polkit actions)${R}\n"
+  fi
+  rm -f /tmp/nyxus-welcome.policy.new
+fi
 
 # Build EWW from source (v0.6.0 pinned) ONLY if not already installed.
 # Pinning + fail-fast lives in customize_airootfs.sh on the ISO; on existing
@@ -685,15 +713,31 @@ Version=1.0
 Type=Application
 Name=NYXUS Power
 GenericName=Power Menu
-Comment=NYXUS lock / logout / suspend / reboot / shutdown menu (EWW)
-Exec=eww open --toggle powermenu
+Comment=NYXUS lock / logout / suspend / reboot / shutdown menu
+Exec=python3 /home/nyx/.nyxus/nyxus_powermenu.py
 Icon=io.nyxus.power
 Terminal=false
 Categories=System;
 Keywords=nyxus;power;logout;shutdown;reboot;suspend;lock;
-StartupWMClass=nyxus-powermenu
+StartupWMClass=io.nyxus.powermenu
 DEOF
-ok "nyxus-powermenu.desktop (→ eww)"
+ok "nyxus-powermenu.desktop"
+
+cat > "$DESKTOP_DIR/nyxus-store.desktop" <<'DEOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NYXUS App Store
+GenericName=App Store
+Comment=Browse, install, and update software in NYXUS
+Exec=python3 /home/nyx/.nyxus/nyxus_store.py
+Icon=io.nyxus.store
+Terminal=false
+Categories=System;Utility;
+Keywords=nyxus;store;apps;packages;updates;software;
+StartupWMClass=io.nyxus.store
+DEOF
+ok "nyxus-store.desktop"
 
 cat > "$DESKTOP_DIR/nyxus-screenshot.desktop" <<'DEOF'
 [Desktop Entry]
