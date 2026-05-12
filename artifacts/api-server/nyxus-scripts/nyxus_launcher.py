@@ -69,7 +69,8 @@ except Exception:
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
-from gi.repository import Gtk, Gdk, GLib, Gio, Pango
+gi.require_version("Adw", "1")
+from gi.repository import Gtk, Gdk, GLib, Gio, Pango, Adw
 from pathlib import Path
 
 # Pull NYXUS chrome (frosted graffiti background + rainbow markup helpers).
@@ -197,15 +198,22 @@ def fuzzy_score(needle: str, hay: str) -> int:
 
 
 # ── window ───────────────────────────────────────────────────────────────
-class Launcher(Gtk.Application):
+class Launcher(Adw.Application):
     def __init__(self):
         super().__init__(application_id="io.nyxus.launcher",
                          flags=Gio.ApplicationFlags.NON_UNIQUE)
+        try: Adw.init()
+        except Exception: pass
         self._all: list[dict] = []
         self._results: list[dict] = []
         self._selected = 0
 
     def do_activate(self):
+        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        try:
+            sm = Adw.StyleManager.get_default()
+            sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+        except Exception: pass
         # CSS
         prov = Gtk.CssProvider()
         prov.load_from_data(CSS.encode("utf-8"))

@@ -70,7 +70,8 @@ from pathlib import Path
 from collections import deque
 from datetime import datetime, timedelta
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, Gdk, GLib, Gio, Pango
+gi.require_version("Adw", "1")
+from gi.repository import Gtk, Gdk, GLib, Gio, Pango, Adw
 
 # ── NYXUS shared chrome (rainbow titles + graffiti walls, system-wide) ──
 def _nyxus_load_chrome():
@@ -665,10 +666,12 @@ def pct_color(p):
 # ══════════════════════════════════════════════════════════════════════════════
 #  Application
 # ══════════════════════════════════════════════════════════════════════════════
-class NyxusControl(Gtk.Application):
+class NyxusControl(Adw.Application):
     def __init__(self):
         super().__init__(application_id="io.nyxus.control",
                          flags=Gio.ApplicationFlags.NON_UNIQUE)
+        try: Adw.init()
+        except Exception: pass
         self.hw        = load_hw_profile()
         self.live      = LiveData(self.hw)
         self.profiles  = load_profiles()
@@ -688,6 +691,12 @@ class NyxusControl(Gtk.Application):
 
     # ──────────────────────────────────────────────────────── activate ──────────
     def do_activate(self):
+        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        try:
+            sm = Adw.StyleManager.get_default()
+            sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+        except Exception: pass
+
         prov = Gtk.CssProvider()
         try:    prov.load_from_string(CSS)
         except: prov.load_from_data(CSS.encode())

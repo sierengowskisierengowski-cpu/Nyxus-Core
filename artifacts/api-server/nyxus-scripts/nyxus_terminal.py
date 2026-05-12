@@ -66,6 +66,7 @@ except Exception:
 
 gi.require_version("Gtk",  "4.0")
 gi.require_version("Gdk",  "4.0")
+gi.require_version("Adw",  "1")
 try:
     gi.require_version("Vte", "3.91")  # GTK4 build
     from gi.repository import Vte
@@ -73,7 +74,7 @@ try:
 except (ValueError, ImportError):
     HAS_VTE = False
 
-from gi.repository import Gtk, Gdk, Gio, GLib, Pango
+from gi.repository import Gtk, Gdk, Gio, GLib, Pango, Adw
 
 APP_ID  = "io.nyxus.terminal"
 WIN_W   = 700
@@ -118,12 +119,19 @@ window, .background {
 """
 
 
-class NyxusTerminal(Gtk.Application):
+class NyxusTerminal(Adw.Application):
     def __init__(self):
         super().__init__(application_id=APP_ID,
                          flags=Gio.ApplicationFlags.NON_UNIQUE)
+        try: Adw.init()
+        except Exception: pass
 
     def do_activate(self):
+        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        try:
+            sm = Adw.StyleManager.get_default()
+            sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+        except Exception: pass
         prov = Gtk.CssProvider()
         prov.load_from_data(CSS)
         Gtk.StyleContext.add_provider_for_display(

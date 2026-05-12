@@ -68,6 +68,7 @@ except Exception:
 # ─────────────────────────────────────────────────────────────────────
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
 
 # ── DARK MIRROR chrome (rev r13): unified DARK MIRROR theme on every window ──
 try:
@@ -76,7 +77,7 @@ except Exception as _nyx_chrome_err:
     import logging as _l
     _l.getLogger("nyxus").debug("nyxus_chrome unavailable: %s", _nyx_chrome_err)
 # ─────────────────────────────────────────────────────────────────────────────
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk, GLib, Adw
 
 # ── Storage ────────────────────────────────────────────────────────────────
 NOTES_DIR = Path.home() / ".config" / "nyxus" / "notes"
@@ -289,12 +290,19 @@ class NotesWindow(Gtk.ApplicationWindow):
             self.savedot.add_css_class("dirty")
 
 
-class NotesApp(Gtk.Application):
+class NotesApp(Adw.Application):
     def __init__(self):
         super().__init__(application_id="org.nyxus.notes")
+        try: Adw.init()
+        except Exception: pass
         self.win = None
 
     def do_activate(self):
+        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        try:
+            sm = Adw.StyleManager.get_default()
+            sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+        except Exception: pass
         if self.win is None:
             self.win = NotesWindow(self)
         self.win.present()

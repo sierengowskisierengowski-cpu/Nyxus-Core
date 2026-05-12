@@ -67,7 +67,8 @@ _nyx_integrity()
 
 import gi
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, Gdk, GLib, Gio
+gi.require_version('Adw', '1')
+from gi.repository import Gtk, Gdk, GLib, Gio, Adw, Pango
 
 # ── NYXUS shared chrome (rainbow titles + graffiti walls, system-wide) ──
 def _nyxus_load_chrome():
@@ -544,12 +545,17 @@ COLOR_NAMES = {
 }
 
 
-class NyxusSysmonGtk(Gtk.Application):
+class NyxusSysmonGtk(Adw.Application):
     def __init__(self):
         super().__init__(application_id="io.nyxus.sysmon",
                          flags=Gio.ApplicationFlags.NON_UNIQUE)
+        try: Adw.init()
+        except Exception: pass
         self.st=State(); self._anim_t=0.0; self._cur_page="OVERVIEW"
         self._proc_sort="cpu"; self._proc_filter=""; self._proc_sel_pid=None
+        self._hdr_lbl_host=None; self._hdr_lbl_uptime=None
+        self._hdr_lbl_clock=None; self._hdr_lbl_procs=None
+        self._nav_rows={}; self._split=None
         psutil.cpu_percent(interval=0.1); psutil.cpu_percent(percpu=True,interval=None)
 
     def do_activate(self):
@@ -563,38 +569,30 @@ class NyxusSysmonGtk(Gtk.Application):
             print(f"NYXUS SysMon do_activate crashed — see {log}")
 
     def _do_activate_inner(self):
+        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        try:
+            sm = Adw.StyleManager.get_default()
+            sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+        except Exception: pass
+
         prov=Gtk.CssProvider()
         try: prov.load_from_string(CSS)
         except Exception:
             try: prov.load_from_data(CSS.encode())
             except Exception: pass
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(),prov,Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        self.win=Gtk.ApplicationWindow(application=self,title="NYXUS SysMon")
-        self.win.set_default_size(1280,800)
 
-        root=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.win.set_child(root)
+        self.win=Adw.ApplicationWindow(application=self,title="NYXUS SysMon")
+        self.win.set_default_size(1280,800)
         try: _nyx_install_chrome(self.win, page_key="_sysmon")
         except Exception: pass
 
-        # Header
-        self._hdr_da=self._da(self._draw_hdr,-1,46)
-        root.append(self._hdr_da)
-
-        body=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        body.set_vexpand(True); root.append(body)
-
-        # Nav sidebar
-        body.append(self._build_nav())
-
-        # Page stack
+        # Build page stack first (sidebar references it)
         self._stack=Gtk.Stack()
         self._stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
         self._stack.set_transition_duration(120)
         self._stack.set_hexpand(True); self._stack.set_vexpand(True)
-        body.append(self._stack)
 
-        # Build all pages
         self._das = {}  # DrawingAreas to queue_draw on update
         self._stack.add_named(self._build_overview(),  "OVERVIEW")
         self._stack.add_named(self._build_cpu(),       "CPU")
@@ -604,8 +602,102 @@ class NyxusSysmonGtk(Gtk.Application):
         self._stack.add_named(self._build_processes(), "PROCESSES")
         self._stack.add_named(self._build_sensors(),   "SENSORS")
         self._stack.add_named(self._build_system(),    "SYSTEM")
-
         self._stack.set_visible_child_name("OVERVIEW")
+
+        # ── Sidebar pane (Adw.NavigationPage) ──────────────────────────
+        sb_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        sb_box.add_css_class("nav-bar")
+
+        sb_header=Adw.HeaderBar()
+        sb_header.add_css_class("flat")
+        sb_title=Gtk.Label(label="NYXUS SysMon")
+        sb_title.add_css_class("title-3")
+        sb_header.set_title_widget(sb_title)
+        sb_box.append(sb_header)
+
+        sb_scroll=Gtk.ScrolledWindow()
+        sb_scroll.set_vexpand(True)
+        sb_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        sb_list=Gtk.ListBox()
+        sb_list.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        sb_list.add_css_class("navigation-sidebar")
+
+        section_meta={
+            "OVERVIEW":  ("󰕮 ", "Overview"),
+            "CPU":       ("󰻠 ", "CPU"),
+            "MEMORY":    ("󰍛 ", "Memory"),
+            "NETWORK":   ("󰖩 ", "Network"),
+            "DISK":      ("󰋊 ", "Disk"),
+            "PROCESSES": ("󱖫 ", "Processes"),
+            "SENSORS":   ("󰔏 ", "Sensors"),
+            "SYSTEM":    ("󰌽 ", "System"),
+        }
+        first_row=None
+        for key,_color in PAGES:
+            icon,label = section_meta.get(key,("",key.title()))
+            row=Gtk.ListBoxRow()
+            rb=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=10)
+            rb.set_margin_top(6); rb.set_margin_bottom(6)
+            rb.set_margin_start(10); rb.set_margin_end(10)
+            ic=Gtk.Label(label=icon)
+            ic.add_css_class("dim-label")
+            lb=Gtk.Label(label=label, xalign=0.0)
+            lb.set_hexpand(True)
+            rb.append(ic); rb.append(lb)
+            row.set_child(rb)
+            row._page_key=key
+            sb_list.append(row)
+            self._nav_rows[key]=row
+            if first_row is None: first_row=row
+        sb_list.connect("row-selected", self._on_sidebar_row)
+        sb_scroll.set_child(sb_list)
+        sb_box.append(sb_scroll)
+        sidebar_page=Adw.NavigationPage.new(sb_box, "Sections")
+
+        # ── Content pane (Adw.NavigationPage) ──────────────────────────
+        ct_box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+
+        ct_header=Adw.HeaderBar()
+        title_lbl=Gtk.Label(label="NYXUS  SysMon")
+        title_lbl.add_css_class("title-2")
+        ct_header.set_title_widget(title_lbl)
+
+        # Live status pills on the right side of the header
+        pill_box=Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=12)
+        pill_box.set_margin_end(8)
+        self._hdr_lbl_host=Gtk.Label(label=self.st.hostname)
+        self._hdr_lbl_host.add_css_class("dim-label")
+        self._hdr_lbl_uptime=Gtk.Label(label="up --")
+        self._hdr_lbl_uptime.add_css_class("dim-label")
+        self._hdr_lbl_procs=Gtk.Label(label="-- procs")
+        self._hdr_lbl_procs.add_css_class("dim-label")
+        self._hdr_lbl_clock=Gtk.Label(label="--:--:--")
+        try:
+            attr=Pango.AttrList()
+            attr.insert(Pango.attr_weight_new(Pango.Weight.BOLD))
+            self._hdr_lbl_clock.set_attributes(attr)
+        except Exception: pass
+        for w in (self._hdr_lbl_host, self._hdr_lbl_uptime,
+                  self._hdr_lbl_procs, self._hdr_lbl_clock):
+            pill_box.append(w)
+        ct_header.pack_end(pill_box)
+        ct_box.append(ct_header)
+
+        ct_box.append(self._stack)
+        content_page=Adw.NavigationPage.new(ct_box, "NYXUS SysMon")
+
+        # ── Split view ─────────────────────────────────────────────────
+        self._split=Adw.NavigationSplitView()
+        self._split.set_sidebar(sidebar_page)
+        self._split.set_content(content_page)
+        try: self._split.set_min_sidebar_width(180)
+        except Exception: pass
+        try: self._split.set_max_sidebar_width(220)
+        except Exception: pass
+        self.win.set_content(self._split)
+
+        if first_row is not None:
+            sb_list.select_row(first_row)
 
         GLib.timeout_add(50,  self._anim_tick)
         GLib.timeout_add(1000,self._data_tick)
@@ -613,70 +705,25 @@ class NyxusSysmonGtk(Gtk.Application):
         self._data_tick()
         self.win.present()
 
-    # ── Header ─────────────────────────────────────────────────────────────────
-    def _draw_hdr(self,area,cr,w,h,_):
-        draw_nyxus_bg(cr, w, h)
-        # Subtle bottom border in warm ink
-        cr.set_source_rgba(0.50,0.40,0.10,0.22); cr.set_line_width(1.5)
-        cr.move_to(0,h-1); cr.line_to(w,h-1); cr.stroke()
-        glow_text(cr,14,h-10,"NYXUS  SysMon",*C_PINK[:3],size=16,bold=True)
-        cr.select_font_face("Inter Display",0,0); cr.set_font_size(13)
-        items=[
-            (f"  {self.st.hostname}", C_DIM),
-            (f"  ·  up {self.st.uptime}", C_DIM),
-            (f"  ·  {self.st.proc_count} procs", C_GREEN),
-        ]
-        xp=200
-        for txt,col in items:
-            cr.set_source_rgba(*col,0.85); cr.move_to(xp,h-10); cr.show_text(txt)
-            xp+=cr.text_extents(txt).width
-        now=datetime.now()
-        clk=now.strftime("%H:%M:%S")
-        cr.select_font_face("Inter Display",0,1)
-        ext=cr.text_extents(clk)
-        glow_text(cr,w-ext.width-16,h-8,clk,*C_ORANGE[:3],size=15,bold=True)
-        pulse=0.5+0.5*math.sin(self._anim_t*3)
-        cr.set_source_rgba(*C_GREEN,pulse); cr.arc(w-ext.width-36,h//2,5,0,math.pi*2); cr.fill()
-        rainbow_bar(cr,0,h-3,w,3)
+    def _on_sidebar_row(self, _list, row):
+        if row is None: return
+        key=getattr(row, "_page_key", None)
+        if not key: return
+        self._cur_page=key
+        self._stack.set_visible_child_name(key)
 
-    # ── Nav sidebar ─────────────────────────────────────────────────────────────
-    def _build_nav(self):
-        outer=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        outer.add_css_class("nav-bar")
-        outer.set_vexpand(True)
-        # Spacer above — pushes buttons to center
-        top_spacer=Gtk.Box(); top_spacer.set_vexpand(True)
-        outer.append(top_spacer)
-        # Buttons
-        self._nav_btns={}
-        for name,color in PAGES:
-            btn=Gtk.Button(label=name)
-            btn.add_css_class("nav-btn")
-            btn.connect("clicked",lambda *_,n=name:self._nav(n))
-            outer.append(btn); self._nav_btns[name]=btn
-        # Spacer below — mirrors top
-        bot_spacer=Gtk.Box(); bot_spacer.set_vexpand(True)
-        outer.append(bot_spacer)
-        self._nav_update()
-        return outer
-
-    def _nav(self,name):
-        self._cur_page=name
-        self._stack.set_visible_child_name(name)
-        self._nav_update()
-
-    def _nav_update(self):
-        page_color_class={
-            "OVERVIEW":"pink","CPU":"orange","MEMORY":"purple",
-            "NETWORK":"blue","DISK":"green","PROCESSES":"yellow",
-            "SENSORS":"orange","SYSTEM":"pink",
-        }
-        for n,btn in self._nav_btns.items():
-            for cls in ["nav-active-pink","nav-active-orange","nav-active-purple",
-                        "nav-active-blue","nav-active-green","nav-active-yellow"]:
-                btn.remove_css_class(cls)
-            if n==self._cur_page:
-                btn.add_css_class(f"nav-active-{page_color_class[n]}")
+    # ── Header pills (libadwaita-native; replaces former Cairo header) ────────
+    def _refresh_header(self):
+        try:
+            if self._hdr_lbl_host is not None:
+                self._hdr_lbl_host.set_text(f"  {self.st.hostname}")
+            if self._hdr_lbl_uptime is not None:
+                self._hdr_lbl_uptime.set_text(f"up {self.st.uptime}")
+            if self._hdr_lbl_procs is not None:
+                self._hdr_lbl_procs.set_text(f"{self.st.proc_count} procs")
+            if self._hdr_lbl_clock is not None:
+                self._hdr_lbl_clock.set_text(datetime.now().strftime("%H:%M:%S"))
+        except Exception: pass
 
     # ── Overview ────────────────────────────────────────────────────────────────
     def _build_overview(self):
@@ -1191,11 +1238,17 @@ class NyxusSysmonGtk(Gtk.Application):
     # ── Ticks / refresh ─────────────────────────────────────────────────────────
     def _anim_tick(self):
         self._anim_t+=0.04
-        self._hdr_da.queue_draw()
+        # Per-frame redraw of the active page only — keeps animations smooth
+        # without burning CPU on hidden pages.
+        try:
+            cur = self._stack.get_visible_child_name() if self._stack else None
+            da = self._das.get(cur) if cur else None
+            if da is not None: da.queue_draw()
+        except Exception: pass
         return GLib.SOURCE_CONTINUE
 
     def _clock_tick(self):
-        self._hdr_da.queue_draw()
+        self._refresh_header()
         if hasattr(self,'_proc_da_header'): self._proc_da_header.queue_draw()
         return GLib.SOURCE_CONTINUE
 
@@ -1209,8 +1262,9 @@ class NyxusSysmonGtk(Gtk.Application):
     def _refresh_ui(self):
         for name,da in self._das.items():
             da.queue_draw()
-        self._refresh_proc_list()
-        self._hdr_da.queue_draw()
+        try: self._refresh_proc_list()
+        except Exception: pass
+        self._refresh_header()
         return GLib.SOURCE_REMOVE
 
     def _da(self,fn,w,h):

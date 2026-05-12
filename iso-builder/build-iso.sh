@@ -255,20 +255,22 @@ ok "SDDM theme staged: /usr/share/sddm/themes/nyxus/ + /etc/sddm.conf.d/nyxus.co
 
 # ── App launchers + .desktop entries ────────────────────────────────────
 # mod-name : Display Name : tooltip
+#  Each entry maps to a real `nyxus_<mod>.py` in nyxus-scripts/. Any app
+#  added here must have a matching script — phantom entries produce
+#  launchers that exec a non-existent file and confuse the menu.
+#  weather/quicksettings/powermenu live in EWW, not as standalone .py
+#  apps, so they are intentionally NOT here.
 APPS_LIST=(
   "notepad:Notepad:NYXUS markdown notepad"
   "stickies:Stickies:Sticky notes pinned to your desktop"
+  "notes:Notes:Quick scratchpad notes"
   "sysmon_gtk:System Monitor:Real-time system metrics"
-  "settings:Settings:System & app preferences"
+  "settings:Settings:System control center"
   "control:Control:Quick toggles & launchers"
-  "weather:Weather:Local conditions & forecast"
-  "terminal:Terminal:NYXUS-themed Alacritty wrapper"
-  "quicksettings:Quick Settings:Action Center / quick toggles"
+  "terminal:Terminal:NYXUS-themed terminal"
   "launcher:Launcher:Application launcher"
-  "powermenu:Power Menu:Lock / suspend / restart / shut down"
   "screenshot:Screenshot:Region & full-screen capture"
   "doctor:Doctor:NYXUS health audit"
-  "settings:Settings:System control center"
 )
 for entry in "${APPS_LIST[@]}"; do
   IFS=':' read -r mod name comment <<< "${entry}"
