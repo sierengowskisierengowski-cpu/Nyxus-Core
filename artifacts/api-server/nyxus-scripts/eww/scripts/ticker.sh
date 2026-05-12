@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 # NYXUS · EWW · top-bar ticker  (live system data, JSON for eww)
-# Outputs a single-line JSON {"text":"…","tooltip":"…"} that the marquee
-# label in eww.yuck consumes. Restarted every 3s by defpoll.
+# Outputs a single-line JSON {"text":"…","tooltip":"…"} consumed by the
+# marquee `.ticker` label in eww.yuck (CSS @keyframes nyx-marquee).
+#
+# Design note (rev 2026-05-12): the previous version shuffled segments
+# every 3s which RESET the CSS animation each tick, killing the smooth
+# scroll. This version emits a STABLE ordered string and is polled
+# infrequently (TICKER defpoll lowered to 30s in eww.yuck), so the
+# marquee animation runs uninterrupted between updates. Time-of-day
+# is intentionally rendered down to minutes (HH:MM) so the string
+# stays identical across consecutive seconds — eww only redraws when
+# the JSON actually changes.
 set -u
 export LC_ALL=C.UTF-8
 
@@ -32,10 +41,13 @@ if command -v pacman >/dev/null 2>&1; then
   PKG=$(pacman -Qq 2>/dev/null | wc -l)
 fi
 
-TIME=$(date '+%H:%M:%S')
+# Minute-resolution clock — keeps the string stable across seconds so
+# eww doesn't redraw and reset the marquee animation 30 times a minute.
+TIME=$(date '+%H:%M')
 
-# ── compose segments and shuffle ─────────────────────────────────────
+# ── compose stable segment chain (NO shuffle) ────────────────────────
 SEGS=(
+  "▌ NYXUS · DARK MIRROR"
   "▌ TIME ${TIME}"
   "▌ HOST ${HOST:-?}"
   "▌ KERNEL ${KERN:-?}"
@@ -51,19 +63,14 @@ SEGS=(
   "▌ GW ${GW:-—}"
   "▌ WIFI ${WIFI:-—}"
   "▌ PKGS ${PKG:-?}"
-  "▌ NYXUS · DARK MIRROR"
 )
 
-# Fisher-Yates-ish shuffle so the user never sees the same loop twice.
-for ((i=${#SEGS[@]}-1; i>0; i--)); do
-  j=$(( RANDOM % (i + 1) ))
-  tmp="${SEGS[i]}"
-  SEGS[i]="${SEGS[j]}"
-  SEGS[j]="$tmp"
-done
-
 text=""
-for s in "${SEGS[@]}"; do text+="${s}   "; done
+for s in "${SEGS[@]}"; do text+="${s}     "; done
+# Duplicate the chain so when the marquee scrolls past the end there's
+# no visible gap before the loop restarts — the second copy fills the
+# void while the animation rewinds via @keyframes margin-left reset.
+text="${text}${text}"
 
 # JSON-escape minimally (eww label only needs " and \ escaped).
 text="${text//\\/\\\\}"
