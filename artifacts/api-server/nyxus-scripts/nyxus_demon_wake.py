@@ -75,12 +75,13 @@ except Exception:
 
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
 
 # ── chrome intentionally NOT imported: this app runs fullscreen and the
 #    chrome size-policy hook would unfullscreen it. The unified palette is
 #    still applied via in-file CSS that uses nyxus_palette constants.
 gi.require_version("Gdk", "4.0")
-from gi.repository import Gtk, Gdk, GLib, Gio  # noqa: E402
+from gi.repository import Gtk, Gdk, GLib, Gio, Adw  # noqa: E402
 
 
 # ── tunables ────────────────────────────────────────────────────────────────
@@ -300,11 +301,19 @@ def main():
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
     signal.signal(signal.SIGINT, lambda *_: sys.exit(0))
 
-    app = Gtk.Application(
+    try: Adw.init()
+    except Exception: pass
+    app = Adw.Application(
         application_id="app.nyxus.DemonWake",
         flags=Gio.ApplicationFlags.FLAGS_NONE,
     )
-    app.connect("activate", _on_activate)
+    def _on_activate_dark(_app):
+        try:
+            sm = Adw.StyleManager.get_default()
+            sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+        except Exception: pass
+        _on_activate(_app)
+    app.connect("activate", _on_activate_dark)
     return app.run(sys.argv)
 
 

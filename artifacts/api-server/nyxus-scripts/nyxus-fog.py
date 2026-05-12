@@ -62,8 +62,9 @@ _ensure_ld_preload()
 
 import gi
 gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
 gi.require_version("Gtk4LayerShell", "1.0")
-from gi.repository import Gtk, Gtk4LayerShell as LS, GLib, Gdk
+from gi.repository import Gtk, Adw, Gtk4LayerShell as LS, GLib, Gdk
 
 import cairo
 import random
@@ -139,11 +140,12 @@ class FogBlob:
 
         # Alpha bumped (rev 2026-05-06k) so fog punches through compositor
         # blur. Even at 0.95 the soft radial falloff keeps it cloud-like.
+        # NOTE: COLOR_GOLD branch removed 2026-05-12 — bag is white/grey
+        # only (per nyxus_palette.py); referencing the undefined GOLD
+        # token raised NameError on every blob construction and prevented
+        # nyxus-fog from launching.
         self.color = random.choice(COLOR_BAG)
-        if self.color == COLOR_GOLD:
-            self.alpha = random.uniform(0.25, 0.50)   # warm wisps
-        else:
-            self.alpha = random.uniform(0.55, 0.95)   # bright fog
+        self.alpha = random.uniform(0.55, 0.95)       # bright fog
 
     def update(self):
         self.wobble_phase += self.wobble_speed
@@ -254,12 +256,19 @@ class FogWindow(Gtk.Window):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class FogApp(Gtk.Application):
+class FogApp(Adw.Application):
     def __init__(self):
         super().__init__(application_id="org.nyxus.fog",
                          flags=0)
+        try: Adw.init()
+        except Exception: pass
 
     def do_activate(self):
+        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        try:
+            sm = Adw.StyleManager.get_default()
+            sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+        except Exception: pass
         self.win_top = FogWindow(
             self, "top", height=BAR_TOP_HEIGHT,
             margin_top=BAR_TOP_MARGIN_TOP,

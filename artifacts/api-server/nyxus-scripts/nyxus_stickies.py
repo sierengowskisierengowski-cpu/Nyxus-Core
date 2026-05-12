@@ -87,7 +87,8 @@ from typing import Dict, Optional
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
-from gi.repository import Gtk, Gdk, GLib, GObject, Gio, Pango, PangoCairo  # noqa: E402
+gi.require_version("Adw", "1")
+from gi.repository import Gtk, Gdk, GLib, GObject, Gio, Pango, PangoCairo, Adw  # noqa: E402
 
 # ── NYXUS shared chrome (rainbow titles + graffiti walls, system-wide) ──
 def _nyxus_load_chrome():
@@ -880,11 +881,18 @@ scrollbar { background-color: transparent; }
 # ═══════════════════════════════════════════════════════════════════════════════
 #  App
 # ═══════════════════════════════════════════════════════════════════════════════
-class StickiesApp(Gtk.Application):
+class StickiesApp(Adw.Application):
     def __init__(self):
         super().__init__(application_id=APP_ID,
                          flags=Gio.ApplicationFlags.FLAGS_NONE)
+        try: Adw.init()
+        except Exception: pass
     def do_activate(self):
+        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        try:
+            sm = Adw.StyleManager.get_default()
+            sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+        except Exception: pass
         win = self.props.active_window or StickiesWindow(self)
         win.present()
 
