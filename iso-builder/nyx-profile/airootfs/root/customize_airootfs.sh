@@ -97,47 +97,124 @@ NYXUS_EWW_TAG="${NYXUS_EWW_TAG:-v0.6.0}"
 if ! command -v eww >/dev/null 2>&1; then
   echo "[customize_airootfs] building eww ${NYXUS_EWW_TAG} from source..."
   _edir=$(mktemp -d)
-  # Apply the rustc-suggested type annotation to time-0.3.34. Idempotent:
-  # if the file is already patched (or already a newer time version),
-  # this is a no-op. Searches the cargo registry rather than the source
-  # tree because cargo extracts crates into ~/.cargo/registry/src/.
+  # ── time-0.3.34 E0282 patch ────────────────────────────────────────
+  # Apply the rustc-suggested type annotation to every copy of
+  # time-0.3.34 found in the cargo registry. Uses `find` instead of a
+  # shell glob to be robust to non-standard CARGO_HOME locations and
+  # multiple registry indexes.
+  CARGO_HOME_REAL="${CARGO_HOME:-/root/.cargo}"
+  PATCH_REGEX='^    let items: Box<_> = format_items'  # post-patch line
+  ORIG_REGEX='^    let items = format_items'           # pre-patch line
   patch_time_034() {
-    local f patched=0
-    for f in /root/.cargo/registry/src/*/time-0.3.34/src/format_description/parse/mod.rs; do
+    local f changed=0
+    while IFS= read -r f; do
       [ -f "$f" ] || continue
-      if grep -q '^    let items = format_items' "$f"; then
-        # Cargo registry sources are read-only by default; flip the bit.
+      if grep -q "$PATCH_REGEX" "$f"; then
+        echo "[customize_airootfs] $f already patched (skipping)"
+        changed=1; continue
+      fi
+      if grep -q "$ORIG_REGEX" "$f"; then
         chmod u+w "$f" 2>/dev/null || true
         sed -i 's|^    let items = format_items|    let items: Box<_> = format_items|' "$f"
         echo "[customize_airootfs] patched $f for E0282"
-        patched=1
+        changed=1
+      else
+        echo "[customize_airootfs] WARN: $f does not contain expected line"
       fi
-    done
-    [ "$patched" = 1 ] || echo "[customize_airootfs] no time-0.3.34 found to patch (newer version likely in use — fine)"
+    done < <(find "$CARGO_HOME_REAL/registry/src" -type f \
+                  -path '*/time-0.3.34/src/format_description/parse/mod.rs' 2>/dev/null)
+    return $((1 - changed))   # 0 if anything was patched/already-patched
   }
+
+  # Pre-extract every cached time-0.3.34.crate tarball into the matching
+  # registry/src/<index>/ tree, write the .cargo-ok sentinel cargo uses
+  # to mark a valid extraction, then patch. This bypasses cargo's lazy
+  # extraction entirely — used as a fallback when warm-up extraction
+  # didn't materialize the source tree for some reason.
+  preextract_time_034() {
+    local cache_dir tarball src_root extracted=0
+    while IFS= read -r tarball; do
+      cache_dir=$(dirname "$tarball")
+      # cache and src dirs use the same <index> sub-directory name
+      local idx
+      idx=$(basename "$cache_dir")
+      src_root="$CARGO_HOME_REAL/registry/src/$idx"
+      mkdir -p "$src_root"
+      if [ ! -d "$src_root/time-0.3.34" ]; then
+        echo "[customize_airootfs] pre-extracting $tarball → $src_root/"
+        tar -xzf "$tarball" -C "$src_root" || continue
+        # Cargo recognises this empty file as proof of a clean extraction
+        # and won't redo (or wipe) the work.
+        touch "$src_root/time-0.3.34/.cargo-ok"
+      fi
+      extracted=1
+    done < <(find "$CARGO_HOME_REAL/registry/cache" -type f -name 'time-0.3.34.crate' 2>/dev/null)
+    [ "$extracted" = 1 ]
+  }
+
+  # Verify the patch landed on disk in EVERY extracted copy. Fails loudly
+  # with a directory listing so we never silently fall through to a
+  # broken build again.
+  verify_time_034() {
+    local f bad=0 found=0
+    while IFS= read -r f; do
+      found=1
+      if ! grep -q "$PATCH_REGEX" "$f"; then
+        echo "[customize_airootfs] FAIL: $f is NOT patched"
+        bad=1
+      fi
+    done < <(find "$CARGO_HOME_REAL/registry/src" -type f \
+                  -path '*/time-0.3.34/src/format_description/parse/mod.rs' 2>/dev/null)
+    if [ "$found" = 0 ]; then
+      echo "[customize_airootfs] verify: no time-0.3.34 source on disk (likely newer version in use — OK)"
+      return 0
+    fi
+    [ "$bad" = 0 ]
+  }
+
   build_eww() {
     cd "$_edir/eww" || return 1
-    # Step 1: download every dep TARBALL into the cargo registry cache.
-    # NOTE: `cargo fetch` populates ~/.cargo/registry/cache/ (the .crate
-    # tarballs) but does NOT extract them into ~/.cargo/registry/src/.
-    # Extraction is lazy — it happens the first time cargo actually
-    # compiles each dep. So the sed patch can't run yet; the file
-    # doesn't exist on disk.
-    echo "[customize_airootfs] cargo fetch (downloading tarballs)..."
+
+    # Step 1: download dep tarballs into the cargo cache.
+    echo "[customize_airootfs] step 1/5: cargo fetch..."
     cargo fetch || return 1
-    # Step 2: warm-up build. Allowed to fail. The point is purely to
-    # force cargo to extract every dep tarball into src/, so that the
-    # next step has real files to patch. The build will get as far as
-    # `time v0.3.34` and explode on E0282 — that's expected and fine.
-    echo "[customize_airootfs] warm-up build (extracts registry src/, expected to fail at time-0.3.34)..."
+
+    # Step 2: warm-up build. Allowed to fail; purpose is to force cargo
+    # to extract every dep into registry/src/. Output silenced because
+    # it's noisy and not actionable on its own.
+    echo "[customize_airootfs] step 2/5: warm-up build (failure expected at time-0.3.34)..."
     cargo build --release --no-default-features --features=wayland --offline >/dev/null 2>&1 || true
-    # Step 3: apply the E0282 patch now that time-0.3.34/src/ exists.
-    # Idempotent; safe if a future EWW lockfile no longer uses 0.3.34.
-    patch_time_034
-    # Step 4: real build. Cargo will recompile only the patched crate
-    # and everything downstream of it, so this is much faster than a
-    # cold build.
-    echo "[customize_airootfs] final build (using patched time-0.3.34)..."
+
+    # Step 3: patch the extracted time-0.3.34. If warm-up didn't extract
+    # it for any reason, pre-extract the tarball ourselves and try again.
+    echo "[customize_airootfs] step 3/5: patching time-0.3.34..."
+    if ! patch_time_034; then
+      echo "[customize_airootfs] no extracted time-0.3.34 found — pre-extracting from cache..."
+      preextract_time_034 || true
+      patch_time_034 || true
+    fi
+
+    # Step 4: hard verification. If any extracted copy is still
+    # unpatched, dump diagnostics and bail BEFORE wasting time on a
+    # final build that will definitely fail.
+    echo "[customize_airootfs] step 4/5: verifying patch..."
+    if ! verify_time_034; then
+      echo "[customize_airootfs] ── DIAGNOSTICS ──"
+      echo "[customize_airootfs] CARGO_HOME=$CARGO_HOME_REAL"
+      find "$CARGO_HOME_REAL/registry" -maxdepth 4 -type d 2>/dev/null | head -20
+      find "$CARGO_HOME_REAL/registry/src" -type f \
+           -path '*/time-0.3.34/src/format_description/parse/mod.rs' 2>/dev/null \
+        | while IFS= read -r f; do
+            echo "[customize_airootfs] ── head of $f ──"
+            sed -n '80,90p' "$f"
+          done
+      echo "[customize_airootfs] FATAL: time-0.3.34 patch could not be applied. Aborting."
+      return 1
+    fi
+
+    # Step 5: real build. Cargo recompiles only the patched crate and
+    # everything downstream — fast because warm-up cached the rest.
+    echo "[customize_airootfs] step 5/5: final build..."
     cargo build --release --no-default-features --features=wayland --offline
   }
   if git clone --depth 1 --branch "${NYXUS_EWW_TAG}" \
