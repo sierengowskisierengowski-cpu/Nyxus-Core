@@ -278,10 +278,19 @@ data={}
 if p.exists():
     try: data=json.loads(p.read_text())
     except Exception: data={}
-data["sort"]=sys.argv[1]
+key = sys.argv[1]
+if key == "grid":
+    data["snap_to_grid"] = not bool(data.get("snap_to_grid", False))
+elif key == "auto":
+    data.pop("positions", None)
+    data["sort"] = data.get("sort", "name")
+else:
+    data["sort"] = key
+    data.pop("positions", None)
 p.write_text(json.dumps(data, indent=2))
 PY
-  notify-send "NYXUS" "Sort: $choice (applied on next refresh)"
+  _ipc_send "REFRESH"
+  notify-send "NYXUS" "Sort: $choice"
 }
 
 _icon_menu() {

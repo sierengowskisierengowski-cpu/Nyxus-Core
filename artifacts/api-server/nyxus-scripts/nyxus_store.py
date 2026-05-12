@@ -763,6 +763,96 @@ class ReposSection(StoreSection):
         self._set_content(_scrolled(list_box))
 
 
+class CategoriesSection(StoreSection):
+    """Curated category browser. Each category maps to one or more
+    pacman-search queries that the user can drill into. No remote API
+    calls needed — pacman's own metadata + a small static catalog of
+    well-known descriptions/screenshots keep the section snappy."""
+
+    title = "Categories"
+
+    CATEGORIES: list[tuple[str, str, list[str]]] = [
+        ("Internet",       "🌐", ["firefox", "chromium", "thunderbird",
+                                  "qbittorrent", "filezilla"]),
+        ("Office",         "📄", ["libreoffice-fresh", "onlyoffice-bin",
+                                  "okular", "evince"]),
+        ("Graphics",       "🎨", ["gimp", "inkscape", "krita", "blender",
+                                  "darktable"]),
+        ("Audio",          "🎧", ["audacity", "ardour", "lmms", "musescore",
+                                  "easyeffects", "pavucontrol"]),
+        ("Video",          "🎬", ["mpv", "vlc", "obs-studio", "kdenlive",
+                                  "handbrake"]),
+        ("Development",    "💻", ["code", "neovim", "git", "docker",
+                                  "postman-bin", "dbeaver"]),
+        ("Games",          "🎮", ["steam", "lutris", "0ad", "minetest",
+                                  "supertuxkart"]),
+        ("Utilities",      "🛠", ["htop", "bottom", "ranger", "rsync",
+                                  "rclone", "syncthing"]),
+        ("Communication",  "💬", ["telegram-desktop", "discord", "signal-desktop",
+                                  "element-desktop", "hexchat"]),
+        ("Education",      "🎓", ["anki", "kdenlive", "stellarium", "scratch",
+                                  "geogebra"]),
+    ]
+
+    def build(self) -> Gtk.Widget:
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        outer.append(_section_header(
+            "Browse by Category",
+            "Curated lists. Click to expand — each entry installs from "
+            "official repos (or AUR / flatpak when available)."))
+        flow = Gtk.FlowBox()
+        flow.set_max_children_per_line(3)
+        flow.set_min_children_per_line(2)
+        flow.set_homogeneous(True)
+        flow.set_row_spacing(12); flow.set_column_spacing(12)
+        flow.set_margin_start(16); flow.set_margin_end(16)
+        flow.set_margin_top(8); flow.set_margin_bottom(16)
+        flow.set_selection_mode(Gtk.SelectionMode.NONE)
+        for name, glyph, pkgs in self.CATEGORIES:
+            tile = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+            tile.add_css_class("card")
+            tile.set_margin_top(8); tile.set_margin_bottom(8)
+            tile.set_margin_start(8); tile.set_margin_end(8)
+            head = Gtk.Label(label=f"{glyph}  {name}", xalign=0)
+            head.add_css_class("title-4")
+            tile.append(head)
+            sub = Gtk.Label(
+                label="  •  ".join(pkgs[:3])
+                + ("  + more" if len(pkgs) > 3 else ""),
+                xalign=0)
+            sub.add_css_class("dim-label")
+            sub.set_wrap(True)
+            tile.append(sub)
+            btn = Gtk.Button(label="Browse →")
+            btn.add_css_class("flat")
+            btn.connect(
+                "clicked",
+                lambda _b, q=pkgs[0]: self._goto_search(q))
+            tile.append(btn)
+            child = Gtk.FlowBoxChild()
+            child.set_child(tile)
+            flow.append(child)
+        outer.append(_scrolled(flow))
+        return outer
+
+    def _goto_search(self, q: str) -> None:
+        try:
+            search_sec = self.app.sections.get("search")
+            if search_sec is None:
+                return
+            self.app._content_stack.set_visible_child_name("search")
+            if hasattr(search_sec, "_search_entry"):
+                search_sec._search_entry.set_text(q)
+            if hasattr(search_sec, "_run_search"):
+                search_sec._run_search()
+        except Exception as e:
+            log.warning("category goto failed: %s", e)
+
+    def refresh(self) -> None:
+        # Static — nothing to refresh. Implemented for protocol parity.
+        pass
+
+
 class AboutSection(StoreSection):
     title = "About"
     subtitle = "Backend availability"
@@ -846,6 +936,7 @@ class StoreApp(Adw.Application):
         # Build sections
         order = [
             ("featured",     FeaturedSection(self)),
+            ("categories",   CategoriesSection(self)),
             ("installed",    InstalledSection(self)),
             ("updates",      UpdatesSection(self)),
             ("search",       SearchSection(self)),

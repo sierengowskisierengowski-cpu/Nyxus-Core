@@ -1,0 +1,16 @@
+[Sound Theme]
+Name=NYXUS
+Comment=NYXUS Dark Mirror sound design pack
+Inherits=freedesktop
+Directories=stereo
+
+[stereo]
+OutputProfile=stereo
+
+# Event manifest (1:1 with nyxus-sound.sh):
+#   boot, login, logout, notification, message, error, lock, unlock,
+#   battery-low, battery-critical, plug, unplug, screenshot, trash, alert
+#
+# Each event ships as <event>.oga in this directory after the asset bake
+# step on the MSI host (see sounds/README.md). Until baked, the dispatcher
+# falls back to canberra/freedesktop event IDs automatically.
