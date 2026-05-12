@@ -1,0 +1,74 @@
+
+
+...xXx... Nyxus-Core  main ✘!+?⇣
+❯ git stash push --include-untracked --message "pre-pull-backup"                         07:04:21
+Saved working directory and index state On main: pre-pull-backup
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-01.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-02.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-03.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-04.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-05.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-06.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-07.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-08.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-09.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-10.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-11.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-12.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-13.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-14.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-15.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-16.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-hyprlock-eye.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-login-stars.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-sierengowski-clean.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus-intel/.manifest.sha256: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CHANGELOG.md: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CREDITS.md: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus-intel/README.md: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_launcher.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_settings.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_notepad.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_powermenu.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_terminal.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_splash.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_doctor.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_chrome.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_preboot.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_welcome.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_screenshot.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_notes.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_store.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_sysmon_gtk.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_error.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_motd.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_demon_wake.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_stickies.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_gen_icons.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_screensaver.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_palette.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_control.py: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-12.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-void-vortex.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-16.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-11.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-01.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-13.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-08.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-15.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-hyprlock-eye.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-07.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-04.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-02.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-10.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-sierengowski-clean.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-06.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-09.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-05.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-login-stars.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-03.png: Permission denied
+warning: failed to remove iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-14.png: Permission denied
+warning: failed to remove iso-builder/out/nyx-2026.05.12-x86_64.iso: Permission denied
+
+...xXx... Nyxus-Core  main $✘!+?⇣  52s
+❯                                                                                        07:06:39
