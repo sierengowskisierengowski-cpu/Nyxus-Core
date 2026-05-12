@@ -1078,4 +1078,10 @@ title = "NYXUS Splash v2 — faint predator eyes lurking, peak 32% opacity (10s)
 id = "UYxHOScQUxkSbTk9sv5uT"
 uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-darkmirror.png"
 type = "image"
-title = "NYXUS Dark Mirror — still frame (replaces previous)"
+title = "Variant A — darkmirror (16:9 native)"
+
+[[outputs]]
+id = "awe4G1Jnep3Mg2R8sqkUv"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-darkmirror-02.png"
+type = "image"
+title = "Variant B — darkmirror-02 (square source, center-cropped)"
