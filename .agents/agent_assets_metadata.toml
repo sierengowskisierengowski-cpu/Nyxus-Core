@@ -594,6 +594,12 @@ uri = "file://attached_assets/generated_images/nyxus_splash_eyes_abstract.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "CwETR99ismBQuPtZHwBTy"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-darkmirror.png"
+type = "image"
+title = "nyxus dark mirror wallpaper"
+
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -1067,3 +1073,9 @@ id = "D9sm6phE5aQEv3-d1yFF0"
 uri = "file://attached_assets/generated_videos/nyxus_splash_v2.mp4"
 type = "video"
 title = "NYXUS Splash v2 — faint predator eyes lurking, peak 32% opacity (10s)"
+
+[[outputs]]
+id = "UYxHOScQUxkSbTk9sv5uT"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-darkmirror.png"
+type = "image"
+title = "NYXUS Dark Mirror — wallpaper preview"

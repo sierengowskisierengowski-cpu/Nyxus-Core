@@ -69,6 +69,14 @@
                                      "~/.config/eww/scripts/calendar-month.sh")
 (defpoll NOTIFLIST  :interval "3s"   :initial '{"items":[],"groups":[],"muted":[],"total":0,"shown":0,"paused":"false"}'
                                      "~/.config/eww/scripts/notif-history.sh")
+;; P3.13b · NYXUS Start Menu — pinned + recent apps + user identity.
+;; Polled every 30s (apps don't churn) but re-runs immediately on
+;; window open via `eww update STARTAPPS=...` from the brand button.
+(defpoll STARTAPPS  :interval "30s"  :initial '{"pinned":[],"recents":[],"all":[],"user":"nyx","host":"nyxus","avatar":""}'
+                                     "~/.config/eww/scripts/startmenu-apps.sh")
+;; Search query buffer. literal="" means show pinned/recents; any
+;; other value filters `all` apps by case-insensitive substring.
+(defvar STARTQUERY "")
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; CORE BAR WIDGETS
@@ -76,7 +84,7 @@
 
 (defwidget nyxus_brand []
   (button :class "brand"
-          :onclick "rofi -show drun -theme ~/.config/rofi/startmenu.rasi 2>/dev/null || wofi --show drun"
+          :onclick "eww open --toggle startmenu"
           :tooltip "NYXUS · Start menu"
     "✕ NYXUS"))
 
@@ -193,10 +201,13 @@
     (label :class "ticker-player-text" :limit-width 48
            :text "${PLAYER.icon}  ${PLAYER.title}")))
 
+;; P3.13c · marquee ticker. The label overflows the box; CSS animation
+;; on `.ticker` (margin-left 100% → -100% over 60s) gives a smooth
+;; horizontal scroll. Removing :limit-width lets the full segment
+;; string render so the marquee actually has content to slide.
 (defwidget ticker_widget []
   (box :class "ticker-box" :space-evenly false :hexpand true
     (label :class "ticker"
-           :limit-width 320
            :text "${TICKER.text}"
            :tooltip "${TICKER.tooltip}")))
 
@@ -955,3 +966,80 @@
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-notifications"
   :geometry (geometry :x "16" :y "78" :width "440px" :height "640px" :anchor "bottom right")
   (notifications_layout))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; P3.13b · NYXUS START MENU (Win11-grade launcher)
+;; Bound to bottom-left "✕ NYXUS" brand button. STARTAPPS poller
+;; produces pinned/recents/all/user. STARTQUERY filters `all`.
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget startmenu_tile [name glyph exec]
+  (button :class "startmenu-tile"
+          :onclick "${exec} & disown ; eww close startmenu"
+          :tooltip "${name}"
+    (box :orientation "v" :space-evenly false :spacing 2 :halign "center"
+      (label :class "startmenu-tile-glyph" :text "${glyph}")
+      (label :class "startmenu-tile-label" :text "${name}" :limit-width 12))))
+
+(defwidget startmenu_recent_row [name path exec]
+  (button :class "startmenu-recent-row"
+          :onclick "${exec} & disown ; eww close startmenu"
+    (box :orientation "v" :space-evenly false :spacing 1 :halign "start" :hexpand true
+      (label :class "startmenu-recent-name" :text "${name}" :halign "start" :limit-width 56)
+      (label :class "startmenu-recent-path" :text "${path}" :halign "start" :limit-width 56))))
+
+(defwidget startmenu_layout []
+  (box :class "startmenu-root" :orientation "v" :space-evenly false :spacing 8
+    ;; Search bar — typing updates STARTQUERY which the script re-reads.
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "startmenu-tile-glyph" :text "")
+      (input :class "startmenu-search"
+             :hexpand true
+             :value STARTQUERY
+             :onchange "eww update STARTQUERY={} ; ~/.config/eww/scripts/startmenu-apps.sh search {} >/dev/null &"))
+
+    ;; Pinned grid (4 columns × 3 rows = 12 slots).
+    (label :class "startmenu-section" :text "PINNED" :halign "start"
+           :visible {STARTQUERY == ""})
+    (box :class "startmenu-grid" :orientation "v" :space-evenly false :spacing 4
+         :visible {STARTQUERY == ""}
+      (for row in {STARTAPPS.pinned}
+        (box :orientation "h" :space-evenly true :spacing 6
+          (for app in {row}
+            (startmenu_tile :name {app.name} :glyph {app.glyph} :exec {app.exec})))))
+
+    ;; Recents — most-recent .desktop launches.
+    (label :class "startmenu-section" :text "RECENT" :halign "start"
+           :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0})
+    (box :orientation "v" :space-evenly false :spacing 2
+         :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0}
+      (for r in {STARTAPPS.recents}
+        (startmenu_recent_row :name {r.name} :path {r.path} :exec {r.exec})))
+
+    ;; Search results — flat list when STARTQUERY != "".
+    (label :class "startmenu-section" :text "RESULTS" :halign "start"
+           :visible {STARTQUERY != ""})
+    (scroll :vscroll true :hscroll false :height 320
+            :visible {STARTQUERY != ""}
+      (box :orientation "v" :space-evenly false :spacing 2
+        (for a in {STARTAPPS.all}
+          (startmenu_recent_row :name {a.name} :path {a.exec} :exec {a.exec}))))
+
+    ;; Footer — user identity + power buttons.
+    (box :class "startmenu-footer" :orientation "h" :space-evenly false :spacing 10
+      (label :class "startmenu-user" :text "  ${STARTAPPS.user}@${STARTAPPS.host}"
+             :hexpand true :halign "start")
+      (button :class "startmenu-power-btn"
+              :tooltip "Lock"
+              :onclick "eww close startmenu ; hyprlock &" "")
+      (button :class "startmenu-power-btn"
+              :tooltip "Settings"
+              :onclick "eww close startmenu ; nyxus-settings &" "")
+      (button :class "startmenu-power-btn shutdown"
+              :tooltip "Power"
+              :onclick "eww close startmenu ; eww open --toggle powermenu" ""))))
+
+(defwindow startmenu
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-startmenu"
+  :geometry (geometry :x "16" :y "78" :width "640px" :height "auto" :anchor "bottom left")
+  (startmenu_layout))
