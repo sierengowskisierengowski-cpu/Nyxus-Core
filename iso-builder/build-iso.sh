@@ -270,6 +270,8 @@ APPS_LIST=(
   "terminal:Terminal:NYXUS-themed terminal"
   "launcher:Launcher:Application launcher"
   "screenshot:Screenshot:Region & full-screen capture"
+  "store:App Store:Browse, install, and update software"
+  "powermenu:Power:Lock / suspend / logout / restart / shutdown"
   "doctor:Doctor:NYXUS health audit"
 )
 for entry in "${APPS_LIST[@]}"; do
