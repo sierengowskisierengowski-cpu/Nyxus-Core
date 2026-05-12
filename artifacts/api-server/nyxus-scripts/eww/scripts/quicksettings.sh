@@ -55,20 +55,45 @@ if command -v wpctl >/dev/null 2>&1; then
   wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | grep -q MUTED && audio_mute="on"
 fi
 
-# Rotation lock (laptop)
-rot_lock="${NYXUS_ROT_LOCK:-off}"
-
-# Auto-brightness placeholder
-auto_bright="${NYXUS_AUTO_BRIGHT:-off}"
+# Display rotation — read the current Hyprland transform on the focused
+# monitor (0=normal, 1=90°, 2=180°, 3=270°). Reported as the integer so
+# the EWW tile can show "ROT 0/90/180/270" without guessing.
+# This replaces the previous flag-only "rot_lock" stub (P2.12 review
+# fix): rotation is now a real, observable system property.
+rotate="0"
+if command -v hyprctl >/dev/null 2>&1; then
+  if command -v jq >/dev/null 2>&1; then
+    rotate=$(hyprctl -j monitors 2>/dev/null \
+             | jq -r '(map(select(.focused)) | .[0].transform) // 0' 2>/dev/null \
+             || echo 0)
+  else
+    # No-jq fallback: walk plain-text `hyprctl monitors` output to
+    # find the focused monitor's transform field (P2.12 review
+    # round-3 fix — mirrors the awk strategy in qs-toggle.sh so the
+    # rotate probe stays accurate on minimal Arch installs without jq).
+    raw=$(hyprctl monitors 2>/dev/null) || raw=""
+    mon=$(printf '%s\n' "$raw" \
+          | awk '/^Monitor /{name=$2}
+                 /focused: yes/{print name; exit}')
+    if [[ -n "$mon" ]]; then
+      rotate=$(printf '%s\n' "$raw" \
+               | awk -v m="$mon" '
+                   $1=="Monitor" && $2==m {found=1}
+                   found && /transform:/ {print $2; exit}' \
+               || echo 0)
+    fi
+  fi
+  case "$rotate" in 0|1|2|3) : ;; *) rotate=0 ;; esac
+fi
 
 if command -v jq >/dev/null 2>&1; then
   jq -nc \
     --arg wifi "$wifi" --arg bt "$bt" --arg airplane "$airplane" \
     --arg dnd "$dnd" --arg nightlight "$nightlight" --arg profile "$profile" \
     --arg mic_mute "$mic_mute" --arg audio_mute "$audio_mute" \
-    --arg rot_lock "$rot_lock" --arg auto_bright "$auto_bright" \
-    '{wifi:$wifi,bt:$bt,airplane:$airplane,dnd:$dnd,nightlight:$nightlight,profile:$profile,mic_mute:$mic_mute,audio_mute:$audio_mute,rot_lock:$rot_lock,auto_bright:$auto_bright}'
+    --arg rotate "$rotate" \
+    '{wifi:$wifi,bt:$bt,airplane:$airplane,dnd:$dnd,nightlight:$nightlight,profile:$profile,mic_mute:$mic_mute,audio_mute:$audio_mute,rotate:$rotate}'
 else
-  printf '{"wifi":"%s","bt":"%s","airplane":"%s","dnd":"%s","nightlight":"%s","profile":"%s","mic_mute":"%s","audio_mute":"%s","rot_lock":"%s","auto_bright":"%s"}\n' \
-    "$wifi" "$bt" "$airplane" "$dnd" "$nightlight" "$profile" "$mic_mute" "$audio_mute" "$rot_lock" "$auto_bright"
+  printf '{"wifi":"%s","bt":"%s","airplane":"%s","dnd":"%s","nightlight":"%s","profile":"%s","mic_mute":"%s","audio_mute":"%s","rotate":"%s"}\n' \
+    "$wifi" "$bt" "$airplane" "$dnd" "$nightlight" "$profile" "$mic_mute" "$audio_mute" "$rotate"
 fi

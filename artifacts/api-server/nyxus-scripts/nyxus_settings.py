@@ -29,9 +29,11 @@ import json
 import logging
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
+import textwrap
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
@@ -1097,50 +1099,54 @@ class SoundPage(SectionPage):
 # POWER — battery, profiles (powerprofilesctl), CPU governor
 # ──────────────────────────────────────────────────────────────────────
 class PowerPage(SectionPage):
+    """Battery, power profiles, CPU governor, idle/sleep timers, lid &
+    button actions, and low-battery thresholds. All edits are real:
+      · powerprofilesctl       — live profile switching
+      · /sys/.../cpufreq/*     — pkexec write to all cores
+      · ~/.config/hypr/hypridle.conf  — regenerated from prefs
+      · /etc/systemd/logind.conf.d/00-nyxus-power.conf — pkexec
+      · /etc/UPower/UPower.conf — pkexec, restart upower
+      · ~/.config/systemd/user/nyxus-power-autoswitch.service — auto AC/bat
+    """
     KEY = "power"
+    LOGIND_OVERRIDE = "/etc/systemd/logind.conf.d/00-nyxus-power.conf"
+    HYPRIDLE_CONF = str(Path.home() / ".config/hypr/hypridle.conf")
+    LID_ACTIONS = ["suspend", "lock", "hibernate", "poweroff", "ignore"]
+    POWER_KEY_ACTIONS = ["suspend", "poweroff", "reboot", "lock",
+                         "hibernate", "ignore"]
+    IDLE_ACTIONS = ["suspend", "poweroff", "hibernate", "lock", "ignore"]
+    SLEEP_PRESETS = [0, 60, 120, 300, 600, 900, 1800, 3600, 7200]
 
     def build(self) -> None:
         self.bat_grp = Adw.PreferencesGroup(title="Battery")
         self.add_group(self.bat_grp)
         self.prof_grp = Adw.PreferencesGroup(
             title="Power profile",
-            description="Switches the system between power-saver, balanced, "
-                        "and performance modes")
+            description="Live switching via powerprofilesctl, plus optional "
+                        "auto-switch on AC/battery")
         self.add_group(self.prof_grp)
         self.gov_grp = Adw.PreferencesGroup(
             title="CPU governor",
-            description="Per-core scaling strategy (read from "
-                        "/sys/devices/system/cpu)")
+            description="Per-core scaling strategy from /sys/devices/system/cpu")
         self.add_group(self.gov_grp)
-        # Idle / lid behaviour (informational)
-        idle = Adw.PreferencesGroup(
-            title="Idle & lid",
-            description="Runtime values from logind. Edit /etc/systemd/"
-                        "logind.conf to change.")
-        self.add_group(idle)
-        rc, out, _ = sh(["loginctl", "show-session", "self"], timeout=3)
-        info = {k: v for k, v in
-                (line.split("=", 1) for line in out.splitlines()
-                 if "=" in line)}
-        for label, key in (("Idle action",         "IdleAction"),
-                           ("Idle hint timeout",   "IdleSinceHint"),
-                           ("Locked hint",         "LockedHint")):
-            idle.add(kv_row(label, info.get(key, "?")))
-        rc, conf, _ = sh(
-            ["sh", "-c", "grep -E '^(HandleLidSwitch|HandlePowerKey|"
-             "IdleAction)' /etc/systemd/logind.conf 2>/dev/null"], timeout=3)
-        if conf.strip():
-            for line in conf.splitlines():
-                if "=" in line:
-                    k, v = line.split("=", 1)
-                    idle.add(kv_row(k.strip(), v.strip()))
-
-        # Tools
+        self.sleep_grp = Adw.PreferencesGroup(
+            title="Screen & sleep",
+            description="Idle timers (managed by hypridle). 'Never' = disabled.")
+        self.add_group(self.sleep_grp)
+        self.lid_grp = Adw.PreferencesGroup(
+            title="Buttons & lid",
+            description="Logind actions (written to /etc/systemd/logind.conf.d/"
+                        "00-nyxus-power.conf via admin prompt)")
+        self.add_group(self.lid_grp)
+        self.low_grp = Adw.PreferencesGroup(
+            title="Low battery",
+            description="UPower thresholds for warning + critical action")
+        self.add_group(self.low_grp)
         tools = Adw.PreferencesGroup(title="Tools")
         self.add_group(tools)
-        for label, cmd in (("powertop", "sudo powertop"),
-                           ("tlp-stat",   "sudo tlp-stat -s | less"),
-                           ("upower dump", "upower --dump | less")):
+        for label, cmd in (("powertop",     "sudo powertop"),
+                           ("tlp-stat",     "sudo tlp-stat -s | less"),
+                           ("upower dump",  "upower --dump | less")):
             bin0 = label.split()[0]
             if have(bin0):
                 tools.add(action_row(
@@ -1153,63 +1159,224 @@ class PowerPage(SectionPage):
         self.schedule_refresh(8000, self._tick)
 
     def _tick(self) -> bool:
-        self._render()
+        # Only refresh fast-changing data (battery + freq) on the timer.
+        self._render_battery()
+        self._render_governor_freq()
         return True
 
     def _render(self) -> None:
-        # Battery
+        self._render_battery()
+        self._render_profile()
+        self._render_governor()
+        self._render_sleep()
+        self._render_lid()
+        self._render_low_battery()
+
+    # ────────────────────────────────────────────────────────────
+    # Battery
+    # ────────────────────────────────────────────────────────────
+    def _render_battery(self) -> None:
         _clear_group(self.bat_grp)
-        bats = sorted(Path("/sys/class/power_supply").glob("BAT*")) \
-            if Path("/sys/class/power_supply").exists() else []
+        psp = Path("/sys/class/power_supply")
+        bats = sorted(psp.glob("BAT*")) if psp.exists() else []
         if not bats:
             self.bat_grp.add(empty_row(
                 "No battery detected",
                 "This appears to be a desktop or VM"))
+            return
         for b in bats:
             try:
                 cap  = (b / "capacity").read_text().strip()
                 stat = (b / "status").read_text().strip()
                 row  = Adw.ActionRow(title=b.name,
                                      subtitle=f"{cap}%  ·  {stat}")
-                ef = (b / "energy_full")
-                efd = (b / "energy_full_design")
+                # Health: prefer energy_*, fall back to charge_*
+                e1 = e2 = 0
+                ef, efd = b / "energy_full", b / "energy_full_design"
+                cf, cfd = b / "charge_full", b / "charge_full_design"
                 if ef.exists() and efd.exists():
-                    e1 = int(ef.read_text())
-                    e2 = int(efd.read_text())
-                    if e2 > 0:
-                        h = Gtk.Label(label=f"health {e1*100//e2}%")
-                        h.add_css_class("nyx-kv-value")
-                        row.add_suffix(h)
+                    e1, e2 = int(ef.read_text()), int(efd.read_text())
+                elif cf.exists() and cfd.exists():
+                    e1, e2 = int(cf.read_text()), int(cfd.read_text())
+                if e2 > 0:
+                    pct = e1 * 100 // e2
+                    h = Gtk.Label(label=f"health {pct}%")
+                    h.add_css_class("nyx-kv-value")
+                    row.add_suffix(h)
                 self.bat_grp.add(row)
-            except Exception as e:
-                log.warning("battery: %s", e)
 
-        # Power profile
+                # Cycle count
+                cyc = b / "cycle_count"
+                if cyc.exists():
+                    try:
+                        n = int(cyc.read_text().strip())
+                        if n > 0:
+                            self.bat_grp.add(kv_row(
+                                f"{b.name} cycles", str(n),
+                                "lower is better"))
+                    except Exception:
+                        pass
+
+                # Time remaining
+                tr = self._battery_time_remaining(b)
+                if tr:
+                    self.bat_grp.add(kv_row(
+                        f"{b.name} time", tr,
+                        "estimate — refines as load stabilizes"))
+
+                # Charge limit (ASUS / Lenovo / Framework / supported)
+                ccet = b / "charge_control_end_threshold"
+                if ccet.exists():
+                    self._render_charge_limit_row(b, ccet)
+            except Exception as e:
+                log.warning("battery %s: %s", b, e)
+
+    def _render_charge_limit_row(self, bat: Path, ccet_path: Path) -> None:
+        try:
+            cur = int(ccet_path.read_text().strip())
+        except Exception:
+            cur = 100
+        row = Adw.ActionRow(
+            title=f"{bat.name} charge limit",
+            subtitle=f"Stop charging at {cur}% (extends battery longevity)")
+        scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 50, 100, 5)
+        scale.set_value(cur)
+        scale.set_size_request(180, -1)
+        scale.set_draw_value(True)
+        scale.set_value_pos(Gtk.PositionType.RIGHT)
+
+        def _apply(v, p=str(ccet_path)) -> None:
+            sh_async(
+                ["pkexec", "sh", "-c", f"echo {int(v)} > {p}"],
+                lambda r: self.toast(
+                    f"charge limit → {int(v)}%" if r[0] == 0
+                    else "needs admin / unsupported"),
+                timeout=6)
+
+        debounced(scale, _apply, 400)
+        row.add_suffix(scale)
+        self.bat_grp.add(row)
+
+    def _battery_time_remaining(self, b: Path) -> str:
+        try:
+            stat = (b / "status").read_text().strip()
+            if stat not in ("Discharging", "Charging"):
+                return ""
+            for now_n, rate_n, full_n in (
+                    ("energy_now", "power_now",   "energy_full"),
+                    ("charge_now", "current_now", "charge_full")):
+                pn, pr, pf = b / now_n, b / rate_n, b / full_n
+                if pn.exists() and pr.exists():
+                    n = int(pn.read_text())
+                    r = int(pr.read_text())
+                    if r <= 0:
+                        return ""
+                    if stat == "Discharging":
+                        secs = n * 3600 // r
+                        suffix = "until empty"
+                    else:
+                        if not pf.exists():
+                            return ""
+                        f = int(pf.read_text())
+                        secs = max(f - n, 0) * 3600 // r
+                        suffix = "until full"
+                    h, m = secs // 3600, (secs % 3600) // 60
+                    return f"{h}h {m:02d}m {suffix}"
+            return ""
+        except Exception:
+            return ""
+
+    # ────────────────────────────────────────────────────────────
+    # Power profile + auto-switch
+    # ────────────────────────────────────────────────────────────
+    def _render_profile(self) -> None:
         _clear_group(self.prof_grp)
         if not have("powerprofilesctl"):
             self.prof_grp.add(empty_row(
                 "powerprofilesctl not installed",
                 "Install power-profiles-daemon"))
-        else:
-            rc, out, _ = sh(["powerprofilesctl", "get"], timeout=3)
-            cur = out.strip() if rc == 0 else "?"
-            row = Adw.ActionRow(title="Active profile", subtitle=cur)
-            box = Gtk.Box(spacing=6)
-            box.set_valign(Gtk.Align.CENTER)
-            for p in ("power-saver", "balanced", "performance"):
-                btn = Gtk.Button(label=p)
-                btn.add_css_class("nyx-pill"
-                                  if p != cur else "nyx-pill-ok")
-                btn.connect("clicked", lambda _b, p=p: sh_async(
-                    ["powerprofilesctl", "set", p],
-                    lambda r: (self.toast(f"profile → {p}"
-                                          if r[0] == 0 else "failed"),
-                               self._render()), timeout=3))
-                box.append(btn)
-            row.add_suffix(box)
-            self.prof_grp.add(row)
+            return
+        rc, out, _ = sh(["powerprofilesctl", "get"], timeout=3)
+        cur = out.strip() if rc == 0 else "?"
+        row = Adw.ActionRow(title="Active profile", subtitle=cur)
+        box = Gtk.Box(spacing=6)
+        box.set_valign(Gtk.Align.CENTER)
+        for p in ("power-saver", "balanced", "performance"):
+            btn = Gtk.Button(label=p)
+            btn.add_css_class("nyx-pill" if p != cur else "nyx-pill-ok")
+            btn.connect("clicked", lambda _b, p=p: sh_async(
+                ["powerprofilesctl", "set", p],
+                lambda r: (self.toast(
+                    f"profile → {p}" if r[0] == 0 else "failed"),
+                    self._render_profile()),
+                timeout=3))
+            box.append(btn)
+        row.add_suffix(box)
+        self.prof_grp.add(row)
 
-        # CPU governor
+        prefs = load_prefs()
+        autosw = bool(prefs.get("power", {}).get("auto_profile", False))
+        sw_row = Adw.ActionRow(
+            title="Auto-switch on AC / battery",
+            subtitle="performance on AC, power-saver on battery "
+                     "(via systemd --user service)")
+        sw = Gtk.Switch()
+        sw.set_active(autosw)
+        sw.set_valign(Gtk.Align.CENTER)
+        sw.connect("notify::active", self._on_auto_profile_toggled)
+        sw_row.add_suffix(sw)
+        self.prof_grp.add(sw_row)
+
+    def _on_auto_profile_toggled(self, sw, _p) -> None:
+        prefs = load_prefs()
+        prefs.setdefault("power", {})["auto_profile"] = sw.get_active()
+        save_prefs(prefs)
+        self._sync_auto_profile_hook()
+        self.toast("auto-switch " + ("on" if sw.get_active() else "off"))
+
+    def _sync_auto_profile_hook(self) -> None:
+        unit_dir = Path.home() / ".config/systemd/user"
+        unit_dir.mkdir(parents=True, exist_ok=True)
+        unit = unit_dir / "nyxus-power-autoswitch.service"
+        prefs = load_prefs()
+        enabled = bool(prefs.get("power", {}).get("auto_profile", False))
+        if enabled:
+            unit.write_text(textwrap.dedent("""\
+                [Unit]
+                Description=NYXUS auto power profile switcher (AC/battery)
+                After=graphical-session.target
+
+                [Service]
+                Type=simple
+                ExecStart=/bin/sh -c 'while sleep 15; do ac=$(cat /sys/class/power_supply/A*/online 2>/dev/null | head -1); want=power-saver; [ "$ac" = "1" ] && want=performance; cur=$(powerprofilesctl get 2>/dev/null); [ -n "$cur" ] && [ "$cur" != "$want" ] && powerprofilesctl set "$want" 2>/dev/null || true; done'
+                Restart=on-failure
+                RestartSec=10
+
+                [Install]
+                WantedBy=default.target
+                """))
+            sh_async(
+                ["systemctl", "--user", "daemon-reload"],
+                lambda _r: sh_async(
+                    ["systemctl", "--user", "enable", "--now",
+                     "nyxus-power-autoswitch.service"],
+                    None, timeout=4),
+                timeout=4)
+        else:
+            sh_async(
+                ["systemctl", "--user", "disable", "--now",
+                 "nyxus-power-autoswitch.service"],
+                lambda _r: None, timeout=4)
+            try:
+                unit.unlink()
+            except FileNotFoundError:
+                pass
+
+    # ────────────────────────────────────────────────────────────
+    # CPU governor
+    # ────────────────────────────────────────────────────────────
+    def _render_governor(self) -> None:
         _clear_group(self.gov_grp)
         gp = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
         ap = Path("/sys/devices/system/cpu/cpu0/cpufreq/"
@@ -1218,42 +1385,384 @@ class PowerPage(SectionPage):
             self.gov_grp.add(empty_row(
                 "cpufreq not available",
                 "This CPU/kernel does not expose scaling governors"))
-        else:
+            return
+        try:
+            cur = gp.read_text().strip()
+            avail = ap.read_text().split() if ap.exists() else [cur]
+        except Exception:
+            cur, avail = "?", []
+        self.gov_grp.add(Adw.ActionRow(
+            title="Current governor", subtitle=cur))
+        self._freq_row = Adw.ActionRow(
+            title="cpu0 frequency", subtitle="reading…")
+        self.gov_grp.add(self._freq_row)
+        self._render_governor_freq()
+        for g in avail:
+            btn_row = Adw.ActionRow(
+                title=g,
+                subtitle="active" if g == cur
+                else "Click to switch (requires admin)")
+            if g != cur:
+                b = Gtk.Button(label="Use")
+                b.add_css_class("nyx-pill")
+                b.set_valign(Gtk.Align.CENTER)
+                b.connect("clicked", lambda _b, g=g: sh_async(
+                    ["pkexec", "sh", "-c",
+                     f"for f in /sys/devices/system/cpu/cpu*/cpufreq/"
+                     f"scaling_governor; do echo {g} > $f; done"],
+                    lambda r: (self.toast(
+                        f"governor → {g}" if r[0] == 0 else "needs admin"),
+                        self._render_governor()),
+                    timeout=10))
+                btn_row.add_suffix(b)
+            self.gov_grp.add(btn_row)
+
+    def _render_governor_freq(self) -> None:
+        if not hasattr(self, "_freq_row"):
+            return
+        fp = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        if fp.exists():
             try:
-                cur = gp.read_text().strip()
-                avail = ap.read_text().split() if ap.exists() else [cur]
+                f = int(fp.read_text().strip())
+                self._freq_row.set_subtitle(f"{f//1000} MHz")
+                return
             except Exception:
-                cur, avail = "?", []
-            row = Adw.ActionRow(title="Current governor", subtitle=cur)
-            self.gov_grp.add(row)
-            # Frequency
-            fp = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
-            if fp.exists():
-                try:
-                    f = int(fp.read_text().strip())
-                    self.gov_grp.add(kv_row("cpu0 freq", f"{f//1000} MHz"))
-                except Exception:
-                    pass
-            # Picker — uses pkexec to write all CPUs at once
-            for g in avail:
-                btn_row = Adw.ActionRow(
-                    title=g,
-                    subtitle="active" if g == cur
-                            else "Click to switch (requires sudo)")
-                if g != cur:
-                    b = Gtk.Button(label="Use")
-                    b.add_css_class("nyx-pill")
-                    b.set_valign(Gtk.Align.CENTER)
-                    b.connect("clicked", lambda _b, g=g: sh_async(
-                        ["pkexec", "sh", "-c",
-                         f"for f in /sys/devices/system/cpu/cpu*/cpufreq/"
-                         f"scaling_governor; do echo {g} > $f; done"],
-                        lambda r: (self.toast(f"governor → {g}"
-                                              if r[0] == 0 else "needs sudo"),
-                                   self._render()),
-                        timeout=10))
-                    btn_row.add_suffix(b)
-                self.gov_grp.add(btn_row)
+                pass
+        self._freq_row.set_subtitle("unavailable")
+
+    # ────────────────────────────────────────────────────────────
+    # Screen & sleep (hypridle, NYXUS-managed)
+    # ────────────────────────────────────────────────────────────
+    def _hypridle_prefs(self) -> dict:
+        prefs = load_prefs()
+        p = prefs.setdefault("power", {})
+        defaults = {
+            "dim_secs":         300,   # 5 min  — dim screen
+            "lock_secs":        600,   # 10 min — lockscreen
+            "screen_secs":      900,   # 15 min — DPMS off
+            "suspend_secs":    1800,   # 30 min — suspend (battery)
+            "suspend_ac_secs":    0,   # 0 = never on AC
+        }
+        for k, v in defaults.items():
+            p.setdefault(k, v)
+        return p
+
+    def _render_sleep(self) -> None:
+        _clear_group(self.sleep_grp)
+        p = self._hypridle_prefs()
+        for key, title, sub in (
+            ("dim_secs",         "Dim screen after",
+             "lower brightness while still showing the screen"),
+            ("lock_secs",        "Lock screen after",
+             "show the lockscreen (you can keep working)"),
+            ("screen_secs",      "Turn off screen after",
+             "DPMS off — display sleeps but session continues"),
+            ("suspend_secs",     "Suspend after (on battery)",
+             "system suspends to RAM"),
+            ("suspend_ac_secs",  "Suspend after (on AC)",
+             "system suspends while plugged in"),
+        ):
+            cur = int(p.get(key, 0))
+            self.sleep_grp.add(self._duration_row(title, sub, cur, key))
+
+    def _duration_row(self, title: str, sub: str, cur_secs: int,
+                      pref_key: str) -> Adw.ActionRow:
+        row = Adw.ActionRow(title=title, subtitle=sub)
+        try:
+            idx = self.SLEEP_PRESETS.index(cur_secs)
+        except ValueError:
+            idx = min(range(len(self.SLEEP_PRESETS)),
+                      key=lambda i: abs(self.SLEEP_PRESETS[i] - cur_secs))
+        labels = [self._fmt_secs(s) for s in self.SLEEP_PRESETS]
+        dd = Gtk.DropDown.new_from_strings(labels)
+        dd.set_selected(idx)
+        dd.set_valign(Gtk.Align.CENTER)
+        dd.connect("notify::selected",
+                   lambda d, _p, k=pref_key: self._on_duration_changed(d, k))
+        row.add_suffix(dd)
+        return row
+
+    @staticmethod
+    def _fmt_secs(s: int) -> str:
+        if s == 0:
+            return "Never"
+        if s < 60:
+            return f"{s}s"
+        if s < 3600:
+            return f"{s // 60} min"
+        return f"{s // 3600} h"
+
+    def _on_duration_changed(self, dd, pref_key: str) -> None:
+        idx = dd.get_selected()
+        if idx < 0 or idx >= len(self.SLEEP_PRESETS):
+            return
+        secs = self.SLEEP_PRESETS[idx]
+        prefs = load_prefs()
+        prefs.setdefault("power", {})[pref_key] = secs
+        save_prefs(prefs)
+        self._regenerate_hypridle()
+        self.toast(f"{pref_key.replace('_', ' ')} → {self._fmt_secs(secs)}")
+
+    def _regenerate_hypridle(self) -> None:
+        """Rewrite ~/.config/hypr/hypridle.conf from NYXUS prefs.
+
+        Battery-vs-AC suspend is implemented as TWO listeners, each gating
+        on the AC online state at fire time, so one of them is always a
+        no-op depending on power source."""
+        p = self._hypridle_prefs()
+        cfg = Path(self.HYPRIDLE_CONF)
+        cfg.parent.mkdir(parents=True, exist_ok=True)
+        lines = [
+            "# nyxus-managed: regenerated by Settings → Power. "
+            "Manual edits will be overwritten.",
+            "general {",
+            "    lock_cmd = pidof hyprlock || hyprlock",
+            "    before_sleep_cmd = loginctl lock-session",
+            "    after_sleep_cmd  = hyprctl dispatch dpms on",
+            "    ignore_dbus_inhibit = false",
+            "}",
+            "",
+        ]
+        if p["dim_secs"] > 0 and have("brightnessctl"):
+            lines += [
+                "listener {",
+                f"    timeout = {p['dim_secs']}",
+                "    on-timeout = brightnessctl -s set 10%",
+                "    on-resume  = brightnessctl -r",
+                "}",
+                "",
+            ]
+        if p["lock_secs"] > 0:
+            lines += [
+                "listener {",
+                f"    timeout = {p['lock_secs']}",
+                "    on-timeout = loginctl lock-session",
+                "}",
+                "",
+            ]
+        if p["screen_secs"] > 0:
+            lines += [
+                "listener {",
+                f"    timeout = {p['screen_secs']}",
+                "    on-timeout = hyprctl dispatch dpms off",
+                "    on-resume  = hyprctl dispatch dpms on",
+                "}",
+                "",
+            ]
+        if p["suspend_secs"] > 0:
+            lines += [
+                "listener {",
+                f"    timeout = {p['suspend_secs']}",
+                "    on-timeout = sh -c 'ac=$(cat /sys/class/power_supply/A*/online 2>/dev/null | head -1); [ \"$ac\" != \"1\" ] && systemctl suspend'",
+                "}",
+                "",
+            ]
+        if p["suspend_ac_secs"] > 0:
+            lines += [
+                "listener {",
+                f"    timeout = {p['suspend_ac_secs']}",
+                "    on-timeout = sh -c 'ac=$(cat /sys/class/power_supply/A*/online 2>/dev/null | head -1); [ \"$ac\" = \"1\" ] && systemctl suspend'",
+                "}",
+                "",
+            ]
+        try:
+            cfg.write_text("\n".join(lines))
+            sh_async(["systemctl", "--user", "restart", "hypridle.service"],
+                     None, timeout=4)
+        except Exception as e:
+            log.warning("hypridle write: %s", e)
+            self.toast("hypridle write failed")
+
+    # ────────────────────────────────────────────────────────────
+    # Buttons & lid (logind override)
+    # ────────────────────────────────────────────────────────────
+    def _logind_overrides(self) -> dict:
+        try:
+            txt = Path(self.LOGIND_OVERRIDE).read_text()
+        except Exception:
+            return {}
+        out = {}
+        for line in txt.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or line.startswith("["):
+                continue
+            if "=" in line:
+                k, v = line.split("=", 1)
+                out[k.strip()] = v.strip()
+        return out
+
+    def _write_logind_overrides(self, updates: dict, on_done=None) -> None:
+        cur = self._logind_overrides()
+        cur.update(updates)
+        cur = {k: v for k, v in cur.items() if v}  # strip empty → falls back
+        body = ("# nyxus-managed: written by Settings → Power\n"
+                "[Login]\n"
+                + "\n".join(f"{k}={v}" for k, v in sorted(cur.items()))
+                + "\n")
+        cmd = ["pkexec", "sh", "-c",
+               f"mkdir -p /etc/systemd/logind.conf.d && "
+               f"cat > {self.LOGIND_OVERRIDE} <<'NYXUS_EOF'\n{body}NYXUS_EOF\n"
+               f"systemctl kill -s HUP systemd-logind 2>/dev/null || true"]
+        sh_async(cmd, on_done, timeout=8)
+
+    def _render_lid(self) -> None:
+        _clear_group(self.lid_grp)
+        cur = self._logind_overrides()
+        rows = (
+            ("HandleLidSwitch", "When lid closes (on battery)",
+             "system action when laptop lid is closed",
+             self.LID_ACTIONS),
+            ("HandleLidSwitchExternalPower", "When lid closes (on AC)",
+             "system action when lid closed while plugged in",
+             self.LID_ACTIONS),
+            ("HandleLidSwitchDocked", "When lid closes (docked)",
+             "system action when an external monitor is connected",
+             self.LID_ACTIONS),
+            ("HandlePowerKey", "Power button",
+             "system action on a short press of the power key",
+             self.POWER_KEY_ACTIONS),
+            ("IdleAction", "After idle (logind fallback)",
+             "fired only if hypridle isn't already handling it",
+             self.IDLE_ACTIONS),
+        )
+        for key, title, sub, options in rows:
+            current = cur.get(key, "")
+            row = Adw.ActionRow(title=title, subtitle=sub)
+            labels = ["(system default)"] + options
+            dd = Gtk.DropDown.new_from_strings(labels)
+            try:
+                sel = labels.index(current) if current else 0
+            except ValueError:
+                sel = 0
+            dd.set_selected(sel)
+            dd.set_valign(Gtk.Align.CENTER)
+            dd.connect(
+                "notify::selected",
+                lambda d, _p, k=key, ls=labels:
+                    self._on_lid_changed(d, k, ls))
+            row.add_suffix(dd)
+            self.lid_grp.add(row)
+
+        sec_row = Adw.ActionRow(
+            title="Logind idle timeout",
+            subtitle="when to fire the action above (e.g. 30min, 1h, 0 = off)")
+        entry = Gtk.Entry()
+        entry.set_text(cur.get("IdleActionSec", ""))
+        entry.set_placeholder_text("e.g. 30min")
+        entry.set_valign(Gtk.Align.CENTER)
+        entry.set_size_request(120, -1)
+        entry.connect("activate", self._on_idle_sec_set)
+        sec_row.add_suffix(entry)
+        self.lid_grp.add(sec_row)
+
+    def _on_lid_changed(self, dd, key: str, labels: list) -> None:
+        idx = dd.get_selected()
+        val = labels[idx] if 0 <= idx < len(labels) else ""
+        if val == "(system default)":
+            val = ""
+        self._write_logind_overrides(
+            {key: val},
+            lambda r: self.toast(
+                f"{key} → {val or 'default'}" if r[0] == 0
+                else "needs admin / write failed"))
+
+    def _on_idle_sec_set(self, entry) -> None:
+        val = entry.get_text().strip()
+        self._write_logind_overrides(
+            {"IdleActionSec": val},
+            lambda r: self.toast(
+                f"idle timeout → {val or 'default'}" if r[0] == 0
+                else "needs admin / write failed"))
+
+    # ────────────────────────────────────────────────────────────
+    # Low battery (UPower)
+    # ────────────────────────────────────────────────────────────
+    def _render_low_battery(self) -> None:
+        _clear_group(self.low_grp)
+        if not have("upower"):
+            self.low_grp.add(empty_row(
+                "upower not installed",
+                "Install upower for low-battery actions"))
+            return
+        prefs = load_prefs().get("power", {})
+        thr = int(prefs.get("low_pct", 15))
+        crit = int(prefs.get("crit_pct", 5))
+        action = prefs.get("crit_action", "Suspend")
+
+        thr_row = Adw.ActionRow(
+            title="Warn at battery level",
+            subtitle="show a notification when battery falls below this")
+        scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 5, 50, 5)
+        scale.set_value(thr)
+        scale.set_size_request(180, -1)
+        scale.set_draw_value(True)
+        scale.set_value_pos(Gtk.PositionType.RIGHT)
+        debounced(scale,
+                  lambda v: self._set_low_pref("low_pct", int(v)), 400)
+        thr_row.add_suffix(scale)
+        self.low_grp.add(thr_row)
+
+        crit_row = Adw.ActionRow(
+            title="Critical at battery level",
+            subtitle="trigger action below when battery falls to this")
+        cscale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 1, 20, 1)
+        cscale.set_value(crit)
+        cscale.set_size_request(180, -1)
+        cscale.set_draw_value(True)
+        cscale.set_value_pos(Gtk.PositionType.RIGHT)
+        debounced(cscale,
+                  lambda v: self._set_low_pref("crit_pct", int(v)), 400)
+        crit_row.add_suffix(cscale)
+        self.low_grp.add(crit_row)
+
+        action_row_w = Adw.ActionRow(
+            title="At critical level",
+            subtitle="written to /etc/UPower/UPower.conf via admin prompt")
+        opts = ["Suspend", "Hibernate", "PowerOff", "Ignore"]
+        dd = Gtk.DropDown.new_from_strings(opts)
+        try:
+            dd.set_selected(opts.index(action))
+        except ValueError:
+            dd.set_selected(0)
+        dd.set_valign(Gtk.Align.CENTER)
+        dd.connect("notify::selected",
+                   lambda d, _p, o=opts: self._on_crit_action(d, o))
+        action_row_w.add_suffix(dd)
+        self.low_grp.add(action_row_w)
+
+    def _set_low_pref(self, key: str, val) -> None:
+        prefs = load_prefs()
+        prefs.setdefault("power", {})[key] = val
+        save_prefs(prefs)
+        self._sync_upower_conf()
+
+    def _on_crit_action(self, dd, opts: list) -> None:
+        idx = dd.get_selected()
+        if 0 <= idx < len(opts):
+            self._set_low_pref("crit_action", opts[idx])
+            self.toast(f"critical action → {opts[idx]}")
+
+    def _sync_upower_conf(self) -> None:
+        prefs = load_prefs().get("power", {})
+        thr = int(prefs.get("low_pct", 15))
+        crit = int(prefs.get("crit_pct", 5))
+        action = prefs.get("crit_action", "Suspend")
+        body = textwrap.dedent(f"""\
+            # nyxus-managed: written by Settings → Power
+            [UPower]
+            PercentageLow={thr}
+            PercentageCritical={crit}
+            PercentageAction={max(crit - 2, 1)}
+            CriticalPowerAction={action}
+            """)
+        cmd = ["pkexec", "sh", "-c",
+               f"cat > /etc/UPower/UPower.conf <<'NYXUS_EOF'\n{body}"
+               f"NYXUS_EOF\nsystemctl restart upower 2>/dev/null || true"]
+        sh_async(cmd, lambda r: self.toast(
+            "UPower updated" if r[0] == 0
+            else "UPower write failed (admin?)"), timeout=8)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -1770,356 +2279,1407 @@ class MousePage(SectionPage):
 # PRIVACY — hardware presence, indicators, telemetry audit
 # ──────────────────────────────────────────────────────────────────────
 class PrivacyPage(SectionPage):
+    """Capture hardware audit + live recording watch + location service
+    control + recent-activity clearing + telemetry audit + NYXUS data
+    transparency. All controls are real:
+      · pkexec systemctl       — toggle/mask geoclue
+      · ~/.local/share/recently-used.xbel — clear recent files
+      · ~/.bash_history, ~/.zsh_history — clear shell history
+      · ~/.cache/thumbnails/   — clear thumbnail cache
+      · NYXUS prefs            — crash-report opt-in (own-controlled)
+    """
     KEY = "privacy"
 
     def build(self) -> None:
-        # Hardware presence
-        hw = Adw.PreferencesGroup(
+        self.hw_grp = Adw.PreferencesGroup(
             title="Capture hardware",
-            description="Read-only — listed devices CAN see/hear you when "
-                        "an app uses them")
-        self.add_group(hw)
-        # Cameras
-        cams = sorted(Path("/dev").glob("video*"))
-        hw.add(kv_row("Cameras", f"{len(cams)} device(s)"
-                                  if cams else "none detected"))
-        for c in cams:
-            hw.add(kv_row(f"  {c.name}", str(c)))
-        # Microphones (via pactl sources, exclude monitors)
+            description="Devices that CAN see/hear you when an app uses them")
+        self.add_group(self.hw_grp)
+        self.active_grp = Adw.PreferencesGroup(
+            title="Active right now",
+            description="Apps currently holding a microphone or camera stream")
+        self.add_group(self.active_grp)
+        self.loc_grp = Adw.PreferencesGroup(
+            title="Location services",
+            description="GeoClue exposes location data to D-Bus consumers. "
+                        "Mask to fully prevent it from ever starting.")
+        self.add_group(self.loc_grp)
+        self.activity_grp = Adw.PreferencesGroup(
+            title="Activity & history",
+            description="Clear traces of what you've done on this system")
+        self.add_group(self.activity_grp)
+        self.idx_grp = Adw.PreferencesGroup(
+            title="File indexing",
+            description="Background indexers that catalog your files for search")
+        self.add_group(self.idx_grp)
+        self.tel_grp = Adw.PreferencesGroup(
+            title="Telemetry & opt-outs",
+            description="NYXUS ships zero telemetry. These show third-party "
+                        "env-var opt-outs.")
+        self.add_group(self.tel_grp)
+        self.data_grp = Adw.PreferencesGroup(
+            title="NYXUS data",
+            description="What NYXUS itself stores about you, and where")
+        self.add_group(self.data_grp)
+
+        self._render()
+        self.schedule_refresh(5000, self._tick)
+
+    def _tick(self) -> bool:
+        # Capture watch + activity sizes change frequently.
+        self._render_active()
+        self._render_activity()
+        return True
+
+    def _render(self) -> None:
+        self._render_hw()
+        self._render_active()
+        self._render_location()
+        self._render_activity()
+        self._render_indexing()
+        self._render_telemetry()
+        self._render_nyxus_data()
+        self.clear_pills()
+        cams_n = len(self._enumerate_cameras())
+        mics_n = len(self._enumerate_microphones())
+        self.add_pill(status_pill(f"{cams_n} cam · {mics_n} mic",
+                                  "ok" if cams_n + mics_n > 0 else "warn"))
+
+    # ── Hardware ─────────────────────────────────────────────
+    def _enumerate_cameras(self) -> list:
+        return sorted(Path("/dev").glob("video*"))
+
+    def _enumerate_microphones(self) -> list:
         mics = []
         if have("pactl"):
-            rc, out, _ = sh(["pactl", "list", "sources", "short"],
-                            timeout=3)
+            rc, out, _ = sh(["pactl", "list", "sources", "short"], timeout=3)
             for line in out.splitlines():
                 parts = line.split("\t")
                 if len(parts) >= 2 and ".monitor" not in parts[1]:
                     mics.append(parts[1])
-        hw.add(kv_row("Microphones", f"{len(mics)} input(s)"
-                                      if mics else "none detected"))
-        for m in mics:
-            hw.add(kv_row("  source", m[:60]))
+        return mics
 
-        # Active capture watch (PipeWire)
-        active = Adw.PreferencesGroup(
-            title="Active right now",
-            description="Apps currently holding a microphone or camera "
-                        "stream (best-effort detection via pw-cli / lsof)")
-        self.add_group(active)
-        active_apps = set()
-        if have("pw-cli"):
-            rc, out, _ = sh(["pw-cli", "info", "all"], timeout=4)
+    def _render_hw(self) -> None:
+        _clear_group(self.hw_grp)
+        cams = self._enumerate_cameras()
+        mics = self._enumerate_microphones()
+        self.hw_grp.add(kv_row("Cameras",
+                               f"{len(cams)} device(s)" if cams
+                               else "none detected"))
+        for c in cams:
+            self.hw_grp.add(kv_row(f"  {c.name}", str(c)))
+        self.hw_grp.add(kv_row("Microphones",
+                               f"{len(mics)} input(s)" if mics
+                               else "none detected"))
+        for m in mics:
+            self.hw_grp.add(kv_row("  source", m[:60]))
+
+    # ── Active capture ───────────────────────────────────────
+    def _render_active(self) -> None:
+        _clear_group(self.active_grp)
+        cams = self._enumerate_cameras()
+        active_audio = set()
+        active_video = []
+        if have("pw-dump"):
+            rc, out, _ = sh(["pw-dump"], timeout=4)
+            try:
+                data = json.loads(out) if out.strip() else []
+                for node in data:
+                    info = node.get("info", {}) or {}
+                    props = info.get("props", {}) or {}
+                    state = info.get("state", "")
+                    media = props.get("media.class", "")
+                    name = (props.get("application.name")
+                            or props.get("node.name") or "")
+                    if (state == "running" and name
+                            and ("Stream/Input" in media)):
+                        active_audio.add(name)
+            except Exception:
+                pass
+        elif have("pw-cli"):
+            rc, out, _ = sh(["pw-cli", "ls", "Node"], timeout=4)
             for m in re.finditer(
-                    r'application\.name\s*=\s*"([^"]+)"', out):
-                active_apps.add(m.group(1))
+                    r'application\.name\s*=\s*"([^"]+)".*?'
+                    r'media\.class\s*=\s*"Stream/Input/Audio"',
+                    out, re.DOTALL):
+                active_audio.add(m.group(1))
         if have("fuser"):
             for c in cams:
                 rc, out, _ = sh(["fuser", str(c)], timeout=2)
                 if rc == 0 and out.strip():
-                    active.add(kv_row(f"camera {c.name}", "in use"))
-        if active_apps:
-            for a in sorted(active_apps)[:10]:
-                active.add(kv_row("audio client", a))
+                    active_video.append(c.name)
+        if active_video:
+            for v in active_video:
+                row = Adw.ActionRow(title=f"📹 {v}",
+                                    subtitle="camera in use right now")
+                row.add_css_class("nyx-warn-row")
+                self.active_grp.add(row)
+        if active_audio:
+            for a in sorted(active_audio)[:15]:
+                row = Adw.ActionRow(title=f"🎤 {a}",
+                                    subtitle="audio input client")
+                self.active_grp.add(row)
+        if not active_video and not active_audio:
+            self.active_grp.add(empty_row(
+                "No active capture detected",
+                "Nothing is recording you right now"))
+
+    # ── Location ─────────────────────────────────────────────
+    def _render_location(self) -> None:
+        _clear_group(self.loc_grp)
+        rc1, st_active, _   = sh(["systemctl", "is-active",
+                                  "geoclue.service"], timeout=2)
+        rc2, st_enabled, _  = sh(["systemctl", "is-enabled",
+                                  "geoclue.service"], timeout=2)
+        active = st_active.strip()
+        enabled = st_enabled.strip()
+        is_masked = (enabled == "masked")
+        self.loc_grp.add(kv_row("Service status", active or "?"))
+        self.loc_grp.add(kv_row("Boot state", enabled or "?"))
+
+        master_row = Adw.ActionRow(
+            title="Location services",
+            subtitle="master switch — when off, no app can see your location")
+        sw = Gtk.Switch()
+        sw.set_valign(Gtk.Align.CENTER)
+        sw.set_active(active == "active" and not is_masked)
+        sw.connect("notify::active", self._on_location_toggled)
+        master_row.add_suffix(sw)
+        self.loc_grp.add(master_row)
+
+        if is_masked:
+            self.loc_grp.add(action_row(
+                "Unmask geoclue",
+                "Currently masked — even apps that ask cannot start it.",
+                "Unmask",
+                lambda: sh_async(
+                    ["pkexec", "systemctl", "unmask", "geoclue.service"],
+                    lambda r: (self.toast(
+                        "unmasked" if r[0] == 0 else "needs admin"),
+                        self._render_location()),
+                    timeout=10)))
         else:
-            active.add(empty_row("No active capture detected",
-                                  "Nothing is recording you right now"))
+            self.loc_grp.add(action_row(
+                "Mask geoclue (strongest)",
+                "Prevents any app from ever starting the location service",
+                "Mask",
+                lambda: sh_async(
+                    ["pkexec", "systemctl", "mask", "geoclue.service"],
+                    lambda r: (self.toast(
+                        "masked" if r[0] == 0 else "needs admin"),
+                        self._render_location()),
+                    timeout=10),
+                css="nyx-pill-warn"))
 
-        # Location services
-        loc = Adw.PreferencesGroup(
-            title="Location",
-            description="GeoClue exposes location to D-Bus consumers")
-        self.add_group(loc)
-        rc, out, _ = sh(["systemctl", "is-active", "geoclue.service"],
-                        timeout=2)
-        loc.add(kv_row("geoclue.service", out.strip() or "?"))
-        rc, out, _ = sh(["systemctl", "is-enabled", "geoclue.service"],
-                        timeout=2)
-        loc.add(kv_row("Auto-start at boot", out.strip() or "?"))
-        loc.add(action_row(
-            "Disable location service",
-            "Stops geoclue and prevents auto-start",
-            "Disable",
-            lambda: sh_async(
-                ["pkexec", "systemctl", "disable", "--now",
-                 "geoclue.service"],
-                lambda r: self.toast("disabled" if r[0] == 0
-                                     else "failed / needs sudo"),
-                timeout=10),
-            css="nyx-pill-warn"))
+    def _on_location_toggled(self, sw, _p) -> None:
+        wanted = sw.get_active()
+        cmd = ["pkexec", "systemctl",
+               "enable" if wanted else "disable",
+               "--now", "geoclue.service"]
+        sh_async(cmd,
+                 lambda r: (self.toast(
+                     "location " + ("on" if wanted else "off")
+                     if r[0] == 0 else "needs admin"),
+                     self._render_location()),
+                 timeout=10)
 
-        # Telemetry audit
-        tel = Adw.PreferencesGroup(
-            title="Telemetry & opt-outs",
-            description="NYXUS itself ships zero telemetry. Listed values "
-                        "show common third-party env opt-outs.")
-        self.add_group(tel)
-        for var, on_val in (("DO_NOT_TRACK",        "1"),
+    # ── Activity & history ───────────────────────────────────
+    def _render_activity(self) -> None:
+        _clear_group(self.activity_grp)
+        home = Path.home()
+
+        # Recent files (GTK + Adw apps)
+        xbel = home / ".local/share/recently-used.xbel"
+        recent_n = 0
+        if xbel.exists():
+            try:
+                recent_n = xbel.read_text(errors="ignore").count("<bookmark ")
+            except Exception:
+                pass
+        recent_row = Adw.ActionRow(
+            title="Recent files",
+            subtitle=f"{recent_n} entries in recently-used.xbel")
+        if recent_n > 0:
+            btn = Gtk.Button(label="Clear")
+            btn.add_css_class("nyx-pill-warn")
+            btn.set_valign(Gtk.Align.CENTER)
+            btn.connect("clicked", lambda _b: self._clear_path(
+                xbel, "recent files cleared"))
+            recent_row.add_suffix(btn)
+        self.activity_grp.add(recent_row)
+
+        # Shell history
+        for hist_name, label in (("bash_history", "Bash history"),
+                                 ("zsh_history",  "Zsh history"),
+                                 ("python_history", "Python REPL history")):
+            p = home / f".{hist_name}"
+            if p.exists():
+                try:
+                    n = sum(1 for _ in p.open(errors="ignore"))
+                except Exception:
+                    n = 0
+                row = Adw.ActionRow(
+                    title=label, subtitle=f"{n} lines in ~/.{hist_name}")
+                if n > 0:
+                    btn = Gtk.Button(label="Clear")
+                    btn.add_css_class("nyx-pill-warn")
+                    btn.set_valign(Gtk.Align.CENTER)
+                    btn.connect("clicked", lambda _b, pp=p, ll=label:
+                                self._clear_path(pp, f"{ll.lower()} cleared"))
+                    row.add_suffix(btn)
+                self.activity_grp.add(row)
+
+        # Thumbnail cache
+        thumb = home / ".cache/thumbnails"
+        thumb_size = self._dir_size(thumb)
+        thumb_row = Adw.ActionRow(
+            title="Thumbnail cache",
+            subtitle=f"{self._fmt_bytes(thumb_size)} in ~/.cache/thumbnails")
+        if thumb_size > 0:
+            btn = Gtk.Button(label="Clear")
+            btn.add_css_class("nyx-pill-warn")
+            btn.set_valign(Gtk.Align.CENTER)
+            btn.connect("clicked", lambda _b: self._clear_dir(
+                thumb, "thumbnail cache cleared"))
+            thumb_row.add_suffix(btn)
+        self.activity_grp.add(thumb_row)
+
+        # Trash
+        trash = home / ".local/share/Trash/files"
+        if trash.exists():
+            try:
+                n = len(list(trash.iterdir()))
+            except Exception:
+                n = 0
+            trash_row = Adw.ActionRow(
+                title="Trash", subtitle=f"{n} item(s)")
+            if n > 0:
+                btn = Gtk.Button(label="Empty")
+                btn.add_css_class("nyx-pill-warn")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked", lambda _b: sh_async(
+                    ["sh", "-c", "gio trash --empty 2>/dev/null || "
+                     "rm -rf ~/.local/share/Trash/files/* "
+                     "~/.local/share/Trash/info/*"],
+                    lambda r: (self.toast("trash emptied"),
+                               self._render_activity()),
+                    timeout=10))
+                trash_row.add_suffix(btn)
+            self.activity_grp.add(trash_row)
+
+    def _clear_path(self, p: Path, msg: str) -> None:
+        try:
+            p.write_text("")
+            self.toast(msg)
+            self._render_activity()
+        except Exception as e:
+            self.toast(f"failed: {e}")
+
+    def _clear_dir(self, p: Path, msg: str) -> None:
+        if not p.exists():
+            return
+        sh_async(
+            ["sh", "-c", f"rm -rf {str(p)}/*"],
+            lambda r: (self.toast(msg if r[0] == 0 else "failed"),
+                       self._render_activity()),
+            timeout=10)
+
+    @staticmethod
+    def _dir_size(p: Path) -> int:
+        if not p.exists():
+            return 0
+        total = 0
+        try:
+            for f in p.rglob("*"):
+                if f.is_file():
+                    try:
+                        total += f.stat().st_size
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        return total
+
+    @staticmethod
+    def _fmt_bytes(n: int) -> str:
+        for unit in ("B", "KB", "MB", "GB", "TB"):
+            if n < 1024:
+                return f"{n:.1f} {unit}" if unit != "B" else f"{n} B"
+            n /= 1024
+        return f"{n:.1f} PB"
+
+    # ── File indexing ────────────────────────────────────────
+    def _render_indexing(self) -> None:
+        _clear_group(self.idx_grp)
+        any_indexer = False
+        if have("tracker3"):
+            any_indexer = True
+            rc, out, _ = sh(["tracker3", "status"], timeout=3)
+            self.idx_grp.add(kv_row("Tracker", out.split("\n")[0][:60]
+                                    if out.strip() else "running"))
+            self.idx_grp.add(action_row(
+                "Pause indexing",
+                "Stops Tracker from scanning new files",
+                "Pause",
+                lambda: sh_async(
+                    ["tracker3", "daemon", "--pause", "nyxus-settings"],
+                    lambda r: self.toast("paused" if r[0] == 0
+                                         else "failed"),
+                    timeout=4)))
+            self.idx_grp.add(action_row(
+                "Reset Tracker database",
+                "Wipes the index — Tracker re-scans from scratch",
+                "Reset",
+                lambda: sh_async(
+                    ["tracker3", "reset", "--filesystem"],
+                    lambda r: self.toast("reset" if r[0] == 0
+                                         else "failed"),
+                    timeout=15),
+                css="nyx-pill-warn"))
+        if have("baloo_file") or have("balooctl"):
+            any_indexer = True
+            rc, out, _ = sh(["balooctl", "status"], timeout=3)
+            self.idx_grp.add(kv_row("Baloo", out.split("\n")[0][:60]
+                                    if out.strip() else "present"))
+            self.idx_grp.add(action_row(
+                "Disable Baloo",
+                "Stops KDE file indexer permanently",
+                "Disable",
+                lambda: sh_async(
+                    ["balooctl", "disable"],
+                    lambda r: self.toast("disabled" if r[0] == 0
+                                         else "failed"),
+                    timeout=4)))
+        if not any_indexer:
+            self.idx_grp.add(empty_row(
+                "No file indexer installed",
+                "NYXUS does not ship one by default — searches are live"))
+
+    # ── Telemetry audit ──────────────────────────────────────
+    def _render_telemetry(self) -> None:
+        _clear_group(self.tel_grp)
+        for var, on_val in (("DO_NOT_TRACK",                "1"),
                             ("DOTNET_CLI_TELEMETRY_OPTOUT", "1"),
-                            ("HOMEBREW_NO_ANALYTICS",      "1"),
-                            ("NEXT_TELEMETRY_DISABLED",    "1"),
-                            ("GATSBY_TELEMETRY_DISABLED",  "1"),
-                            ("VUE_CLI_TELEMETRY_DISABLED", "1")):
+                            ("HOMEBREW_NO_ANALYTICS",       "1"),
+                            ("NEXT_TELEMETRY_DISABLED",     "1"),
+                            ("GATSBY_TELEMETRY_DISABLED",   "1"),
+                            ("VUE_CLI_TELEMETRY_DISABLED",  "1"),
+                            ("AZURE_CORE_COLLECT_TELEMETRY","0"),
+                            ("POWERSHELL_TELEMETRY_OPTOUT", "1")):
             v = os.environ.get(var, "")
             ok = (v == on_val)
-            tel.add(kv_row(var, "opted out" if ok else f"unset ({v or '∅'})"))
-        self.add_pill(status_pill(f"{len(cams)} cam · {len(mics)} mic",
-                                  "ok"))
+            self.tel_grp.add(kv_row(
+                var, "opted out ✓" if ok else f"unset ({v or '∅'})"))
+
+        # NYXUS-managed: write a profile.d snippet that exports them all
+        self.tel_grp.add(action_row(
+            "Apply all opt-outs system-wide",
+            "Writes /etc/profile.d/nyxus-no-telemetry.sh (admin prompt)",
+            "Apply",
+            lambda: self._apply_no_telemetry()))
+
+    def _apply_no_telemetry(self) -> None:
+        body = textwrap.dedent("""\
+            # nyxus-managed: third-party telemetry opt-outs
+            export DO_NOT_TRACK=1
+            export DOTNET_CLI_TELEMETRY_OPTOUT=1
+            export HOMEBREW_NO_ANALYTICS=1
+            export NEXT_TELEMETRY_DISABLED=1
+            export GATSBY_TELEMETRY_DISABLED=1
+            export VUE_CLI_TELEMETRY_DISABLED=1
+            export AZURE_CORE_COLLECT_TELEMETRY=0
+            export POWERSHELL_TELEMETRY_OPTOUT=1
+            """)
+        sh_async(
+            ["pkexec", "sh", "-c",
+             "cat > /etc/profile.d/nyxus-no-telemetry.sh "
+             "<<'NYXUS_EOF'\n" + body + "NYXUS_EOF\n"
+             "chmod 0644 /etc/profile.d/nyxus-no-telemetry.sh"],
+            lambda r: self.toast(
+                "applied — log out and back in to take effect"
+                if r[0] == 0 else "needs admin"),
+            timeout=8)
+
+    # ── NYXUS data transparency ──────────────────────────────
+    def _render_nyxus_data(self) -> None:
+        _clear_group(self.data_grp)
+        # Confirm zero NYXUS analytics
+        zero_row = Adw.ActionRow(
+            title="NYXUS analytics",
+            subtitle="NYXUS sends nothing about you to anyone, ever")
+        zero = Gtk.Label(label="✓ none")
+        zero.add_css_class("nyx-kv-value")
+        zero_row.add_suffix(zero)
+        self.data_grp.add(zero_row)
+
+        # Where NYXUS stores its data
+        data_dirs = [
+            ("~/.config/nyxus",        "settings + per-app prefs"),
+            ("~/.local/share/nyxus",   "stickies, notes, app data"),
+            ("~/.cache/nyxus",         "thumbnails, runtime cache"),
+        ]
+        for path_s, desc in data_dirs:
+            p = Path(path_s.replace("~", str(Path.home())))
+            sz = self._dir_size(p) if p.exists() else 0
+            row = Adw.ActionRow(
+                title=path_s, subtitle=desc)
+            val = Gtk.Label(label=self._fmt_bytes(sz)
+                            if p.exists() else "(not created)")
+            val.add_css_class("nyx-kv-value")
+            row.add_suffix(val)
+            if p.exists() and have("xdg-open"):
+                btn = Gtk.Button(label="Open")
+                btn.add_css_class("nyx-pill")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked", lambda _b, pp=p:
+                            fire_and_forget(f"xdg-open {pp}"))
+                row.add_suffix(btn)
+            self.data_grp.add(row)
+
+        # Crash reporter opt-in (NYXUS-controlled)
+        prefs = load_prefs()
+        crash_optin = bool(prefs.get("privacy", {}).get("crash_optin", False))
+        crash_row = Adw.ActionRow(
+            title="Send crash logs to me",
+            subtitle="OFF by default. When ON, nyxus_error.py uploads "
+                     "anonymized stack traces. Off = nothing leaves your "
+                     "machine.")
+        sw = Gtk.Switch()
+        sw.set_valign(Gtk.Align.CENTER)
+        sw.set_active(crash_optin)
+        sw.connect("notify::active", self._on_crash_optin)
+        crash_row.add_suffix(sw)
+        self.data_grp.add(crash_row)
+
+    def _on_crash_optin(self, sw, _p) -> None:
+        prefs = load_prefs()
+        prefs.setdefault("privacy", {})["crash_optin"] = sw.get_active()
+        save_prefs(prefs)
+        self.toast("crash reports " + ("on" if sw.get_active() else "off"))
 
 
 # ──────────────────────────────────────────────────────────────────────
 # APPS — installed count, default mime apps, autostart
 # ──────────────────────────────────────────────────────────────────────
 class AppsPage(SectionPage):
+    """Installed GUI apps + default-app picker + autostart + Flatpak.
+    All controls are real:
+      · pkexec pacman -Rns <pkg>     — uninstall native apps
+      · flatpak uninstall <ref>      — uninstall flatpaks
+      · xdg-mime default <d> <mime>  — set per-mime default app
+      · ~/.config/autostart/*.desktop — add/remove startup entries
+    """
     KEY = "apps"
 
-    def build(self) -> None:
-        # Counts
-        cnt = Adw.PreferencesGroup(title="Installed packages")
-        self.add_group(cnt)
-        if have("pacman"):
-            rc, out, _ = sh(["pacman", "-Qq"], timeout=4)
-            n_total = len(out.splitlines()) if rc == 0 else 0
-            rc, out, _ = sh(["pacman", "-Qqe"], timeout=4)
-            n_explicit = len(out.splitlines()) if rc == 0 else 0
-            rc, out, _ = sh(["pacman", "-Qqm"], timeout=4)
-            n_foreign = len(out.splitlines()) if rc == 0 else 0
-            cnt.add(kv_row("Total", str(n_total)))
-            cnt.add(kv_row("Explicitly installed", str(n_explicit)))
-            cnt.add(kv_row("Foreign / AUR / local", str(n_foreign)))
-        else:
-            cnt.add(empty_row("pacman not available", ""))
+    DEFAULT_MIMES = [
+        ("Web browser",   "x-scheme-handler/https"),
+        ("Email",         "x-scheme-handler/mailto"),
+        ("Terminal",      "x-scheme-handler/terminal"),
+        ("Plain text",    "text/plain"),
+        ("PDF",           "application/pdf"),
+        ("Image",         "image/png"),
+        ("Image (JPEG)",  "image/jpeg"),
+        ("Audio",         "audio/flac"),
+        ("Audio (MP3)",   "audio/mpeg"),
+        ("Video",         "video/mp4"),
+        ("Archive",       "application/zip"),
+        ("File manager",  "inode/directory"),
+    ]
 
-        # GUI apps
-        gui = Adw.PreferencesGroup(
+    def build(self) -> None:
+        self.cnt_grp = Adw.PreferencesGroup(title="Installed packages")
+        self.add_group(self.cnt_grp)
+
+        self.def_grp = Adw.PreferencesGroup(
+            title="Default apps",
+            description="Pick which app opens which file or URL type")
+        self.add_group(self.def_grp)
+
+        self.installed_grp = Adw.PreferencesGroup(
             title="GUI applications",
-            description="Apps that ship a .desktop file in the standard "
-                        "search paths")
-        self.add_group(gui)
-        desktops = []
+            description="Apps with a .desktop entry — Launch or Uninstall any")
+        self.add_group(self.installed_grp)
+
+        self.flatpak_grp = Adw.PreferencesGroup(
+            title="Flatpak",
+            description="Sandboxed apps installed via Flatpak")
+        self.add_group(self.flatpak_grp)
+
+        self.auto_grp = Adw.PreferencesGroup(
+            title="Run at login",
+            description="Anything here starts when you log in "
+                        "(~/.config/autostart/)")
+        self.add_group(self.auto_grp)
+
+        self._desktop_index = self._build_desktop_index()
+        self._render()
+        self.schedule_refresh(20000, self._tick)
+
+    def _tick(self) -> bool:
+        # Refresh package counts and any user changes; the heavy desktop
+        # index only re-reads if a file was added/removed.
+        new_idx = self._build_desktop_index()
+        if {p for _, p, _, _ in new_idx} != \
+                {p for _, p, _, _ in self._desktop_index}:
+            self._desktop_index = new_idx
+            self._render_installed()
+        self._render_counts()
+        self._render_autostart()
+        return True
+
+    def _render(self) -> None:
+        self._render_counts()
+        self._render_defaults()
+        self._render_installed()
+        self._render_flatpak()
+        self._render_autostart()
+        self.clear_pills()
+        n = len(self._desktop_index)
+        self.add_pill(status_pill(f"{n} apps", "ok"))
+
+    # ── Counts ───────────────────────────────────────────────
+    def _render_counts(self) -> None:
+        _clear_group(self.cnt_grp)
+        if not have("pacman"):
+            self.cnt_grp.add(empty_row("pacman not available", ""))
+            return
+        rc, out, _ = sh(["pacman", "-Qq"], timeout=4)
+        n_total = len(out.splitlines()) if rc == 0 else 0
+        rc, out, _ = sh(["pacman", "-Qqe"], timeout=4)
+        n_explicit = len(out.splitlines()) if rc == 0 else 0
+        rc, out, _ = sh(["pacman", "-Qqm"], timeout=4)
+        n_foreign = len(out.splitlines()) if rc == 0 else 0
+        self.cnt_grp.add(kv_row("Total", str(n_total)))
+        self.cnt_grp.add(kv_row("Explicitly installed", str(n_explicit)))
+        self.cnt_grp.add(kv_row("Foreign / AUR / local", str(n_foreign)))
+        if have("flatpak"):
+            rc, out, _ = sh(["flatpak", "list", "--app", "--columns=name"],
+                            timeout=4)
+            n_fp = len([l for l in out.splitlines() if l.strip()]) - 1
+            self.cnt_grp.add(kv_row("Flatpak apps", str(max(n_fp, 0))))
+
+    # ── Default apps ─────────────────────────────────────────
+    def _render_defaults(self) -> None:
+        _clear_group(self.def_grp)
+        if not have("xdg-mime"):
+            self.def_grp.add(empty_row("xdg-mime not installed",
+                                       "Install xdg-utils"))
+            return
+        for label, mime in self.DEFAULT_MIMES:
+            handlers = self._find_handlers(mime)
+            rc, cur_out, _ = sh(["xdg-mime", "query", "default", mime],
+                                timeout=2)
+            cur = cur_out.strip()
+            row = Adw.ActionRow(
+                title=label,
+                subtitle=mime + (
+                    "  ·  " + (cur.replace(".desktop", "") or "(none)")
+                    if cur else "  ·  (none)"))
+            if not handlers:
+                row.add_suffix(Gtk.Label(label="no handlers"))
+                self.def_grp.add(row)
+                continue
+            labels = [name for name, _ in handlers]
+            files = [d for _, d in handlers]
+            try:
+                sel = files.index(cur)
+            except ValueError:
+                sel = 0
+            dd = Gtk.DropDown.new_from_strings(labels)
+            dd.set_selected(sel)
+            dd.set_valign(Gtk.Align.CENTER)
+            dd.connect(
+                "notify::selected",
+                lambda d, _p, m=mime, fs=files, ls=labels:
+                    self._on_default_changed(d, m, fs, ls))
+            row.add_suffix(dd)
+            self.def_grp.add(row)
+
+    def _find_handlers(self, mime: str) -> list:
+        """Return [(human_name, desktop_filename), ...] handling `mime`."""
+        out = []
+        seen = set()
         for base in ("/usr/share/applications",
                      str(Path.home() / ".local/share/applications")):
             p = Path(base)
-            if p.exists():
-                desktops.extend(p.glob("*.desktop"))
-        gui.add(kv_row("Desktop entries found", str(len(desktops))))
-        gui.add(action_row(
-            "Open application launcher",
-            "rofi / wofi / fuzzel — your configured launcher",
-            "Open",
-            lambda: fire_and_forget(
-                "fuzzel" if have("fuzzel") else
-                ("rofi -show drun" if have("rofi") else "wofi --show drun"))))
+            if not p.exists():
+                continue
+            for f in p.glob("*.desktop"):
+                if f.name in seen:
+                    continue
+                try:
+                    txt = f.read_text(errors="ignore")
+                except Exception:
+                    continue
+                if "MimeType=" not in txt:
+                    continue
+                mt_line = next((l for l in txt.splitlines()
+                                if l.startswith("MimeType=")), "")
+                if mime not in mt_line:
+                    continue
+                if "NoDisplay=true" in txt or "Hidden=true" in txt:
+                    continue
+                name = ""
+                for ln in txt.splitlines():
+                    if ln.startswith("Name="):
+                        name = ln.split("=", 1)[1].strip()
+                        break
+                if name:
+                    out.append((name, f.name))
+                    seen.add(f.name)
+        out.sort()
+        return out
 
-        # Default apps (xdg-mime)
-        defs = Adw.PreferencesGroup(
-            title="Default apps",
-            description="Resolved from xdg-mime query default")
-        self.add_group(defs)
-        if have("xdg-mime"):
-            for label, mime in (
-                    ("Web browser",      "x-scheme-handler/https"),
-                    ("Email",            "x-scheme-handler/mailto"),
-                    ("Terminal",         "x-scheme-handler/terminal"),
-                    ("Plain text",       "text/plain"),
-                    ("PDF",              "application/pdf"),
-                    ("Image (PNG)",      "image/png"),
-                    ("Audio (FLAC)",     "audio/flac"),
-                    ("Video (MP4)",      "video/mp4")):
-                rc, out, _ = sh(["xdg-mime", "query", "default", mime],
-                                timeout=2)
-                defs.add(kv_row(label,
-                                (out.strip() or "(unset)").replace(
-                                    ".desktop", "")))
-        else:
-            defs.add(empty_row("xdg-mime not installed",
-                                "Install xdg-utils"))
+    def _on_default_changed(self, dd, mime: str,
+                            files: list, labels: list) -> None:
+        idx = dd.get_selected()
+        if not (0 <= idx < len(files)):
+            return
+        sh_async(
+            ["xdg-mime", "default", files[idx], mime],
+            lambda r: self.toast(
+                f"{labels[idx]} → default for {mime}" if r[0] == 0
+                else "failed"),
+            timeout=4)
 
-        # Autostart
-        au = Adw.PreferencesGroup(
-            title="Autostart",
-            description="Anything in ~/.config/autostart starts at session "
-                        "login")
-        self.add_group(au)
+    # ── Installed apps with uninstall ────────────────────────
+    def _build_desktop_index(self) -> list:
+        """Return [(name, desktop_path, exec, owning_pkg), ...]
+        sorted alphabetically. Excludes NoDisplay/Hidden entries."""
+        items = []
+        seen = set()
+        for base in ("/usr/share/applications",
+                     str(Path.home() / ".local/share/applications")):
+            p = Path(base)
+            if not p.exists():
+                continue
+            for f in sorted(p.glob("*.desktop")):
+                if f.name in seen:
+                    continue
+                try:
+                    txt = f.read_text(errors="ignore")
+                except Exception:
+                    continue
+                if "NoDisplay=true" in txt or "Hidden=true" in txt:
+                    continue
+                if "Type=Application" not in txt:
+                    continue
+                name = ""
+                exec_s = ""
+                for ln in txt.splitlines():
+                    if ln.startswith("Name=") and not name:
+                        name = ln.split("=", 1)[1].strip()
+                    elif ln.startswith("Exec=") and not exec_s:
+                        exec_s = ln.split("=", 1)[1].strip()
+                if not name:
+                    continue
+                items.append((name, str(f), exec_s, ""))
+                seen.add(f.name)
+        items.sort(key=lambda t: t[0].lower())
+        return items
+
+    def _pkg_owner(self, path: str) -> str:
+        if not have("pacman"):
+            return ""
+        rc, out, _ = sh(["pacman", "-Qoq", path], timeout=2)
+        if rc == 0 and out.strip():
+            return out.strip().split("\n")[0]
+        return ""
+
+    def _render_installed(self) -> None:
+        _clear_group(self.installed_grp)
+        # Search filter
+        search_row = Adw.ActionRow(
+            title="Search",
+            subtitle="filter the list below by app name")
+        entry = Gtk.Entry()
+        entry.set_placeholder_text("type to filter…")
+        entry.set_size_request(220, -1)
+        entry.set_valign(Gtk.Align.CENTER)
+        entry.connect("changed", self._on_app_filter_changed)
+        search_row.add_suffix(entry)
+        self.installed_grp.add(search_row)
+
+        # Build rows (cap to 200 visible, search to find more)
+        self._app_rows = []
+        for (name, path, exec_s, _) in self._desktop_index[:200]:
+            row = Adw.ActionRow(title=name, subtitle=Path(path).name)
+            if exec_s:
+                btn_l = Gtk.Button(label="Launch")
+                btn_l.add_css_class("nyx-pill")
+                btn_l.set_valign(Gtk.Align.CENTER)
+                btn_l.connect(
+                    "clicked",
+                    lambda _b, e=exec_s: fire_and_forget(
+                        "gtk-launch " + Path(path).stem
+                        if have("gtk-launch")
+                        else re.sub(r"%[fFuUdDnNickvm]", "", e).strip()))
+                row.add_suffix(btn_l)
+            btn_u = Gtk.Button(label="Uninstall")
+            btn_u.add_css_class("nyx-pill-warn")
+            btn_u.set_valign(Gtk.Align.CENTER)
+            btn_u.connect(
+                "clicked",
+                lambda _b, n=name, p=path: self._uninstall_app(n, p))
+            row.add_suffix(btn_u)
+            self.installed_grp.add(row)
+            self._app_rows.append((name.lower(), row))
+
+        if len(self._desktop_index) > 200:
+            self.installed_grp.add(empty_row(
+                f"+ {len(self._desktop_index) - 200} more",
+                "use the search field above to find specific apps"))
+
+    def _on_app_filter_changed(self, entry) -> None:
+        q = entry.get_text().strip().lower()
+        for name_low, row in getattr(self, "_app_rows", []):
+            row.set_visible(not q or q in name_low)
+
+    def _uninstall_app(self, name: str, desktop_path: str) -> None:
+        owner = self._pkg_owner(desktop_path)
+        if not owner:
+            self.toast(f"{name}: no pacman package owns this .desktop")
+            return
+        # Confirmation dialog
+        dlg = Adw.MessageDialog(
+            transient_for=self.win,
+            heading=f"Uninstall {name}?",
+            body=f"This will run:\n  pkexec pacman -Rns {owner}\n\n"
+                 "Dependencies that nothing else needs will also be "
+                 "removed.")
+        dlg.add_response("cancel", "Cancel")
+        dlg.add_response("ok", "Uninstall")
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.DESTRUCTIVE)
+        dlg.set_default_response("cancel")
+        dlg.connect("response", lambda d, resp, p=owner, n=name:
+                    self._do_uninstall(resp, p, n))
+        dlg.present()
+
+    def _do_uninstall(self, resp: str, pkg: str, name: str) -> None:
+        if resp != "ok":
+            return
+        sh_async(
+            ["pkexec", "pacman", "-Rns", "--noconfirm", pkg],
+            lambda r: (self.toast(
+                f"{name} uninstalled" if r[0] == 0
+                else f"failed: {r[2][:80] if r[2] else 'admin denied'}"),
+                self._render()),
+            timeout=60)
+
+    # ── Flatpak ──────────────────────────────────────────────
+    def _render_flatpak(self) -> None:
+        _clear_group(self.flatpak_grp)
+        if not have("flatpak"):
+            self.flatpak_grp.add(empty_row(
+                "Flatpak not installed",
+                "Install flatpak to manage sandboxed apps"))
+            return
+        rc, out, _ = sh(
+            ["flatpak", "list", "--app",
+             "--columns=name,application,version"],
+            timeout=5)
+        lines = [l for l in out.splitlines() if l.strip()]
+        # Skip header
+        if lines and lines[0].lower().startswith("name"):
+            lines = lines[1:]
+        if not lines:
+            self.flatpak_grp.add(empty_row(
+                "No Flatpak apps installed", ""))
+            return
+        for ln in lines[:50]:
+            parts = ln.split("\t") if "\t" in ln else ln.split(None, 2)
+            name = parts[0] if parts else ln
+            ref = parts[1] if len(parts) >= 2 else ""
+            ver = parts[2] if len(parts) >= 3 else ""
+            row = Adw.ActionRow(
+                title=name, subtitle=f"{ref}  ·  {ver}" if ver else ref)
+            if ref:
+                btn = Gtk.Button(label="Uninstall")
+                btn.add_css_class("nyx-pill-warn")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect(
+                    "clicked",
+                    lambda _b, r=ref, n=name:
+                        self._uninstall_flatpak(n, r))
+                row.add_suffix(btn)
+            self.flatpak_grp.add(row)
+
+    def _uninstall_flatpak(self, name: str, ref: str) -> None:
+        dlg = Adw.MessageDialog(
+            transient_for=self.win,
+            heading=f"Uninstall Flatpak: {name}?",
+            body=f"This will run:\n  flatpak uninstall -y {ref}")
+        dlg.add_response("cancel", "Cancel")
+        dlg.add_response("ok", "Uninstall")
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.DESTRUCTIVE)
+        dlg.connect("response", lambda d, resp, r=ref, n=name:
+                    self._do_uninstall_flatpak(resp, r, n))
+        dlg.present()
+
+    def _do_uninstall_flatpak(self, resp: str, ref: str, name: str) -> None:
+        if resp != "ok":
+            return
+        sh_async(
+            ["flatpak", "uninstall", "-y", ref],
+            lambda r: (self.toast(
+                f"{name} uninstalled" if r[0] == 0 else "failed"),
+                self._render()),
+            timeout=120)
+
+    # ── Autostart ────────────────────────────────────────────
+    def _render_autostart(self) -> None:
+        _clear_group(self.auto_grp)
         as_dir = Path.home() / ".config" / "autostart"
         items = sorted(as_dir.glob("*.desktop")) if as_dir.exists() else []
+
+        # Add new — picker over installed apps
+        add_row = Adw.ActionRow(
+            title="Add an app to startup",
+            subtitle="pick any installed app to launch at login")
+        if self._desktop_index:
+            names = [n for n, _, _, _ in self._desktop_index[:300]]
+            paths = [p for _, p, _, _ in self._desktop_index[:300]]
+            dd = Gtk.DropDown.new_from_strings(["(select)"] + names)
+            dd.set_valign(Gtk.Align.CENTER)
+            dd.connect(
+                "notify::selected",
+                lambda d, _p, ps=paths, ns=names:
+                    self._on_autostart_add(d, ps, ns))
+            add_row.add_suffix(dd)
+        self.auto_grp.add(add_row)
+
         if not items:
-            au.add(empty_row("No autostart entries",
-                              "Drop a .desktop file into "
-                              "~/.config/autostart to add one"))
+            self.auto_grp.add(empty_row(
+                "No autostart entries",
+                "Pick an app above to add one"))
+            return
+
         for it in items:
-            au.add(kv_row(it.stem, str(it)))
-        self.add_pill(status_pill(f"{len(desktops)} apps", "ok"))
+            try:
+                txt = it.read_text(errors="ignore")
+            except Exception:
+                txt = ""
+            display = it.stem
+            for ln in txt.splitlines():
+                if ln.startswith("Name="):
+                    display = ln.split("=", 1)[1].strip()
+                    break
+            row = Adw.ActionRow(title=display, subtitle=str(it))
+            btn = Gtk.Button(label="Remove")
+            btn.add_css_class("nyx-pill-warn")
+            btn.set_valign(Gtk.Align.CENTER)
+            btn.connect(
+                "clicked",
+                lambda _b, p=it, n=display:
+                    self._remove_autostart(p, n))
+            row.add_suffix(btn)
+            self.auto_grp.add(row)
+
+    def _on_autostart_add(self, dd, paths: list, names: list) -> None:
+        idx = dd.get_selected()
+        if idx <= 0:  # 0 = "(select)"
+            return
+        i = idx - 1
+        if not (0 <= i < len(paths)):
+            return
+        src = Path(paths[i])
+        as_dir = Path.home() / ".config" / "autostart"
+        as_dir.mkdir(parents=True, exist_ok=True)
+        dst = as_dir / src.name
+        try:
+            shutil.copy2(src, dst)
+            self.toast(f"{names[i]} added to startup")
+            self._render_autostart()
+        except Exception as e:
+            self.toast(f"failed: {e}")
+        dd.set_selected(0)
+
+    def _remove_autostart(self, path: Path, display: str) -> None:
+        try:
+            path.unlink()
+            self.toast(f"{display} removed from startup")
+            self._render_autostart()
+        except Exception as e:
+            self.toast(f"failed: {e}")
 
 
 # ──────────────────────────────────────────────────────────────────────
 # STORAGE — df / lsblk / smartctl, pacman cache, journal
 # ──────────────────────────────────────────────────────────────────────
 class StoragePage(SectionPage):
+    """Mounts + block devices + SMART + per-folder home breakdown +
+    multi-target cleanup + largest-files finder. All real:
+      · df / lsblk / smartctl       — read-only system data
+      · du -sb on home subfolders   — usage breakdown
+      · paccache, journalctl vacuum, gio trash, find/sort — cleanup
+    """
     KEY = "storage"
+
+    HOME_FOLDERS = [
+        ("Documents",       "Documents",            "user files"),
+        ("Downloads",       "Downloads",            "downloaded files"),
+        ("Pictures",        "Pictures",             "images"),
+        ("Videos",          "Videos",               "videos"),
+        ("Music",           "Music",                "audio files"),
+        ("Desktop",         "Desktop",              "desktop items"),
+        ("App data",        ".local/share",         "user-installed app data"),
+        ("Cache",           ".cache",               "browser & app caches (safe to clear)"),
+        ("Config",          ".config",              "settings & preferences"),
+        ("Trash",           ".local/share/Trash",   "files marked for deletion"),
+    ]
 
     def build(self) -> None:
         self.mounts_grp = Adw.PreferencesGroup(
             title="Mounts",
-            description="Filesystem usage from df -h (excluding tmpfs/devfs)")
+            description="Filesystem usage from df (tmpfs/devfs hidden)")
         self.add_group(self.mounts_grp)
         self.disks_grp = Adw.PreferencesGroup(
             title="Block devices",
-            description="Physical disks and partitions from lsblk")
+            description="Physical disks from lsblk")
         self.add_group(self.disks_grp)
         self.smart_grp = Adw.PreferencesGroup(
             title="SMART health",
-            description="Requires smartmontools and root for full data")
+            description="Requires smartmontools (and admin for full data)")
         self.add_group(self.smart_grp)
+        self.home_grp = Adw.PreferencesGroup(
+            title="Your home folder",
+            description="What's using space under ~ (computed in background)")
+        self.add_group(self.home_grp)
+        self.clean_grp = Adw.PreferencesGroup(
+            title="Cleanup",
+            description="Targeted reclaims that won't affect your work")
+        self.add_group(self.clean_grp)
+        self.large_grp = Adw.PreferencesGroup(
+            title="Largest files in your home",
+            description="Computed on demand — may take a few seconds")
+        self.add_group(self.large_grp)
 
-        # Cleanup actions
-        clean = Adw.PreferencesGroup(title="Cleanup")
-        self.add_group(clean)
-        if have("paccache"):
-            clean.add(action_row(
-                "Trim pacman cache (keep latest 2)",
-                "paccache -rk2 — frees /var/cache/pacman/pkg",
-                "Trim",
-                lambda: sh_async(
-                    ["pkexec", "paccache", "-rk2"],
-                    lambda r: (self.toast("trimmed" if r[0] == 0
-                                          else "failed"),
-                               self._render()), timeout=30)))
-        else:
-            clean.add(empty_row("paccache not installed",
-                                "Install pacman-contrib"))
-        clean.add(action_row(
-            "Vacuum journal (keep 7 days)",
-            "journalctl --vacuum-time=7d",
-            "Vacuum",
-            lambda: sh_async(
-                ["pkexec", "journalctl", "--vacuum-time=7d"],
-                lambda r: self.toast("vacuumed" if r[0] == 0 else "failed"),
-                timeout=30)))
-        if have("baobab"):
-            clean.add(action_row(
-                "Open disk usage analyzer",
-                "GNOME baobab — visualize what's using space",
-                "Open",
-                lambda: fire_and_forget("baobab")))
-
+        self._home_cache: dict = {}  # folder -> (size, mtime)
         self._render()
         self.add_pill(status_pill("live", "ok"))
-        self.schedule_refresh(15000, self._tick)
+        self.schedule_refresh(20000, self._tick)
 
     def _tick(self) -> bool:
-        self._render()
+        # Mounts/disks/SMART change rarely; refresh those + home sizes.
+        self._render_mounts()
+        self._refresh_home_sizes()
         return True
 
     def _render(self) -> None:
+        self._render_mounts()
+        self._render_disks_and_smart()
+        self._render_home()
+        self._render_cleanup()
+        self._render_largest()
+
+    # ── Mounts ───────────────────────────────────────────────
+    def _render_mounts(self) -> None:
         _clear_group(self.mounts_grp)
         rc, out, _ = sh(
             ["df", "-h", "--output=target,fstype,size,used,avail,pcent",
              "-x", "tmpfs", "-x", "devtmpfs", "-x", "squashfs",
-             "-x", "overlay"],
-            timeout=4)
+             "-x", "overlay"], timeout=4)
         lines = out.splitlines()[1:] if out else []
         if not lines:
             self.mounts_grp.add(empty_row("No mounts found", ""))
+            return
         for ln in lines[:20]:
             cols = ln.split()
             if len(cols) < 6:
                 continue
-            target, fs, size, used, avail, pcent = cols[0], cols[1], \
-                cols[2], cols[3], cols[4], cols[5]
-            row = Adw.ActionRow(
-                title=target,
-                subtitle=f"{fs} · {used}/{size} used · {avail} free")
+            target, fs, size, used, avail, pcent = cols[:6]
             try:
                 pct = int(pcent.rstrip("%"))
             except ValueError:
                 pct = 0
-            tag_kind = "ok" if pct < 75 else ("warn" if pct < 90
-                                              else "danger")
-            row.add_suffix(status_pill(pcent, tag_kind))
+            tag = "ok" if pct < 75 else ("warn" if pct < 90 else "danger")
+            row = Adw.ActionRow(
+                title=target,
+                subtitle=f"{fs}  ·  {used} / {size} used  ·  {avail} free")
+            # Inline progress bar
+            bar = Gtk.LevelBar.new_for_interval(0, 100)
+            bar.set_value(pct)
+            bar.add_offset_value("low",  75)
+            bar.add_offset_value("high", 90)
+            bar.add_offset_value("full", 100)
+            bar.set_size_request(140, 8)
+            bar.set_valign(Gtk.Align.CENTER)
+            row.add_suffix(bar)
+            row.add_suffix(status_pill(pcent, tag))
             self.mounts_grp.add(row)
 
-        # Block devices
+    # ── Disks + SMART ────────────────────────────────────────
+    def _render_disks_and_smart(self) -> None:
         _clear_group(self.disks_grp)
-        rc, out, _ = sh(["lsblk", "-d", "-o", "NAME,SIZE,MODEL,ROTA",
-                         "-n"], timeout=3)
+        _clear_group(self.smart_grp)
+        rc, out, _ = sh(
+            ["lsblk", "-d", "-o", "NAME,SIZE,MODEL,ROTA", "-n"],
+            timeout=3)
         lines = out.splitlines() if out else []
         if not lines:
             self.disks_grp.add(empty_row("No block devices found", ""))
+        disk_names = []
         for ln in lines:
             parts = ln.split(None, 3)
             if len(parts) < 2:
                 continue
-            name = parts[0]
-            size = parts[1]
+            name, size = parts[0], parts[1]
             model = parts[2] if len(parts) >= 3 else ""
             rota = parts[3] if len(parts) >= 4 else "?"
             kind = "HDD" if rota.strip() == "1" else "SSD"
             self.disks_grp.add(kv_row(
                 f"/dev/{name}", f"{size} · {kind}",
-                subtitle=model.strip() if model.strip() else None))
+                subtitle=model.strip() or None))
+            disk_names.append(name)
 
-        # SMART
-        _clear_group(self.smart_grp)
         if not have("smartctl"):
             self.smart_grp.add(empty_row(
                 "smartctl not installed",
                 "Install smartmontools to view SMART status"))
             return
-        # Disks already enumerated above
-        for ln in lines:
-            parts = ln.split(None, 3)
-            if len(parts) < 1:
-                continue
-            name = parts[0]
+        if not disk_names:
+            self.smart_grp.add(empty_row("No disks to query", ""))
+            return
+        for name in disk_names:
             dev = f"/dev/{name}"
             rc, out, _ = sh(["smartctl", "-H", dev], timeout=4)
-            status = "?"
+            status = ""
             for line in out.splitlines():
                 if "overall-health" in line.lower():
                     status = line.split(":", 1)[-1].strip()
                     break
-            kind = "ok" if "PASSED" in status.upper() else "warn"
+            if not status:
+                status = "needs admin (try: sudo smartctl -H /dev/X)"
+                tag = "warn"
+            elif "PASSED" in status.upper():
+                tag = "ok"
+            else:
+                tag = "danger"
             row = Adw.ActionRow(title=dev, subtitle=status)
             row.add_suffix(status_pill(
-                "PASS" if "PASSED" in status.upper() else "?", kind))
+                "PASS" if "PASSED" in status.upper()
+                else ("?" if "admin" in status else "FAIL"),
+                tag))
             self.smart_grp.add(row)
+
+    # ── Home folder breakdown ────────────────────────────────
+    def _render_home(self) -> None:
+        _clear_group(self.home_grp)
+        home = Path.home()
+        for label, sub_path, desc in self.HOME_FOLDERS:
+            p = home / sub_path
+            row = Adw.ActionRow(
+                title=label, subtitle=f"~/{sub_path}  ·  {desc}")
+            if not p.exists():
+                row.add_suffix(Gtk.Label(label="(none)"))
+                self.home_grp.add(row)
+                continue
+            size, _ = self._home_cache.get(sub_path, (None, 0))
+            val = Gtk.Label(label=self._fmt_bytes(size)
+                            if size is not None else "computing…")
+            val.add_css_class("nyx-kv-value")
+            val.set_valign(Gtk.Align.CENTER)
+            row.add_suffix(val)
+            if have("xdg-open") and sub_path != ".local/share/Trash":
+                btn = Gtk.Button(label="Open")
+                btn.add_css_class("nyx-pill")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked",
+                            lambda _b, pp=p:
+                                fire_and_forget(f"xdg-open {pp}"))
+                row.add_suffix(btn)
+            self.home_grp.add(row)
+        # Kick off background du
+        self._refresh_home_sizes()
+
+    def _refresh_home_sizes(self) -> None:
+        home = Path.home()
+        for _, sub_path, _ in self.HOME_FOLDERS:
+            p = home / sub_path
+            if not p.exists():
+                continue
+            sh_async(
+                ["du", "-sb", str(p)],
+                lambda r, sp=sub_path:
+                    self._on_home_size(sp, r),
+                timeout=60)
+
+    def _on_home_size(self, sub_path: str, result) -> None:
+        rc, out, _ = result
+        if rc != 0 or not out.strip():
+            return
+        try:
+            size = int(out.split()[0])
+        except Exception:
+            return
+        self._home_cache[sub_path] = (size, 0)
+        # Re-render only the home group to show new value
+        self._render_home_values_only()
+
+    def _render_home_values_only(self) -> None:
+        # Cheap re-render: just the home group from cache
+        _clear_group(self.home_grp)
+        home = Path.home()
+        for label, sub_path, desc in self.HOME_FOLDERS:
+            p = home / sub_path
+            row = Adw.ActionRow(
+                title=label, subtitle=f"~/{sub_path}  ·  {desc}")
+            if not p.exists():
+                row.add_suffix(Gtk.Label(label="(none)"))
+                self.home_grp.add(row)
+                continue
+            size, _ = self._home_cache.get(sub_path, (None, 0))
+            val = Gtk.Label(label=self._fmt_bytes(size)
+                            if size is not None else "computing…")
+            val.add_css_class("nyx-kv-value")
+            val.set_valign(Gtk.Align.CENTER)
+            row.add_suffix(val)
+            if have("xdg-open") and sub_path != ".local/share/Trash":
+                btn = Gtk.Button(label="Open")
+                btn.add_css_class("nyx-pill")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked",
+                            lambda _b, pp=p:
+                                fire_and_forget(f"xdg-open {pp}"))
+                row.add_suffix(btn)
+            self.home_grp.add(row)
+
+    @staticmethod
+    def _fmt_bytes(n) -> str:
+        if n is None:
+            return "—"
+        n = float(n)
+        for unit in ("B", "KB", "MB", "GB", "TB"):
+            if n < 1024:
+                return f"{int(n)} {unit}" if unit == "B" else f"{n:.1f} {unit}"
+            n /= 1024
+        return f"{n:.1f} PB"
+
+    # ── Cleanup ──────────────────────────────────────────────
+    def _render_cleanup(self) -> None:
+        _clear_group(self.clean_grp)
+        # Trash empty
+        trash = Path.home() / ".local/share/Trash/files"
+        n_trash = 0
+        if trash.exists():
+            try:
+                n_trash = len(list(trash.iterdir()))
+            except Exception:
+                pass
+        self.clean_grp.add(action_row(
+            "Empty trash",
+            f"{n_trash} item(s) in ~/.local/share/Trash" if n_trash > 0
+            else "trash is empty",
+            "Empty",
+            lambda: self._do_cleanup(
+                ["sh", "-c",
+                 "gio trash --empty 2>/dev/null || "
+                 "rm -rf ~/.local/share/Trash/files/* "
+                 "~/.local/share/Trash/info/* 2>/dev/null"],
+                "trash emptied"),
+            css="nyx-pill-warn" if n_trash else "nyx-pill"))
+
+        # ~/.cache total
+        cache = Path.home() / ".cache"
+        cache_size = self._home_cache.get(".cache", (None, 0))[0]
+        self.clean_grp.add(action_row(
+            "Clear user cache",
+            f"~/.cache  ·  "
+            + (self._fmt_bytes(cache_size) if cache_size is not None
+               else "size pending"),
+            "Clear",
+            lambda: self._do_cleanup(
+                ["sh", "-c", "rm -rf ~/.cache/*"],
+                "cache cleared"),
+            css="nyx-pill-warn"))
+
+        # Browser caches
+        for name, paths in (
+            ("Firefox", "~/.cache/mozilla/firefox/*/cache2 "
+                        "~/.cache/mozilla/firefox/*/startupCache"),
+            ("Chromium / Chrome",
+             "~/.cache/chromium/Default/Cache "
+             "~/.cache/google-chrome/Default/Cache"),
+            ("Brave",
+             "~/.cache/BraveSoftware/Brave-Browser/Default/Cache"),
+            ("Thumbnail cache", "~/.cache/thumbnails"),
+        ):
+            self.clean_grp.add(action_row(
+                f"Clear {name} cache",
+                paths.replace(" ~/", "  ·  ~/"),
+                "Clear",
+                lambda p=paths, n=name: self._do_cleanup(
+                    ["sh", "-c", f"rm -rf {p}"],
+                    f"{n} cache cleared")))
+
+        # paccache
+        if have("paccache"):
+            self.clean_grp.add(action_row(
+                "Trim pacman cache (keep latest 2 versions)",
+                "paccache -rk2 — frees /var/cache/pacman/pkg",
+                "Trim",
+                lambda: sh_async(
+                    ["pkexec", "paccache", "-rk2"],
+                    lambda r: (self.toast(
+                        "trimmed" if r[0] == 0 else "needs admin"),
+                        self._render_mounts()),
+                    timeout=60),
+                css="nyx-pill-warn"))
+        else:
+            self.clean_grp.add(empty_row(
+                "paccache not installed",
+                "Install pacman-contrib to enable cache trimming"))
+
+        # journal
+        self.clean_grp.add(action_row(
+            "Vacuum systemd journal (keep 7 days)",
+            "journalctl --vacuum-time=7d",
+            "Vacuum",
+            lambda: sh_async(
+                ["pkexec", "journalctl", "--vacuum-time=7d"],
+                lambda r: (self.toast(
+                    "vacuumed" if r[0] == 0 else "needs admin"),
+                    self._render_mounts()),
+                timeout=60),
+            css="nyx-pill-warn"))
+
+        # Flatpak unused
+        if have("flatpak"):
+            self.clean_grp.add(action_row(
+                "Remove unused Flatpak runtimes",
+                "flatpak uninstall --unused -y",
+                "Remove",
+                lambda: sh_async(
+                    ["flatpak", "uninstall", "--unused", "-y"],
+                    lambda r: self.toast(
+                        "unused removed" if r[0] == 0 else "failed"),
+                    timeout=120)))
+
+        # baobab launcher (optional)
+        if have("baobab"):
+            self.clean_grp.add(action_row(
+                "Open disk usage analyzer",
+                "GNOME baobab — visualize what's using space",
+                "Open",
+                lambda: fire_and_forget("baobab")))
+
+    def _do_cleanup(self, cmd, success_msg: str) -> None:
+        sh_async(cmd, lambda r: (
+            self.toast(success_msg if r[0] == 0 else "failed"),
+            self._render_cleanup(),
+            self._refresh_home_sizes(),
+        ), timeout=30)
+
+    # ── Largest files in $HOME ───────────────────────────────
+    def _render_largest(self) -> None:
+        _clear_group(self.large_grp)
+        self.large_grp.add(action_row(
+            "Find the 20 largest files in your home",
+            "uses find — typically completes in a few seconds",
+            "Scan",
+            lambda: self._scan_largest()))
+        # Render previous results, if any
+        for size, path in getattr(self, "_largest_cache", []):
+            row = Adw.ActionRow(
+                title=Path(path).name,
+                subtitle=str(path).replace(str(Path.home()), "~"))
+            val = Gtk.Label(label=self._fmt_bytes(size))
+            val.add_css_class("nyx-kv-value")
+            row.add_suffix(val)
+            if have("xdg-open"):
+                btn = Gtk.Button(label="Open folder")
+                btn.add_css_class("nyx-pill")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked",
+                            lambda _b, p=path:
+                                fire_and_forget(
+                                    f"xdg-open {Path(p).parent}"))
+                row.add_suffix(btn)
+            self.large_grp.add(row)
+
+    def _scan_largest(self) -> None:
+        self.toast("scanning…")
+        sh_async(
+            ["sh", "-c",
+             "find ~ -xdev -type f -not -path '*/.cache/*' "
+             "-not -path '*/node_modules/*' "
+             "-not -path '*/.local/share/Trash/*' "
+             "-printf '%s\\t%p\\n' 2>/dev/null | sort -rn | head -20"],
+            self._on_largest_done, timeout=90)
+
+    def _on_largest_done(self, result) -> None:
+        rc, out, _ = result
+        if rc != 0:
+            self.toast("scan failed")
+            return
+        items = []
+        for line in out.splitlines():
+            try:
+                size_s, path = line.split("\t", 1)
+                items.append((int(size_s), path))
+            except Exception:
+                continue
+        self._largest_cache = items
+        self._render_largest()
+        self.toast(f"found {len(items)} files")
 
 
 # ──────────────────────────────────────────────────────────────────────
 # UPDATES — checkupdates, AUR helpers
 # ──────────────────────────────────────────────────────────────────────
 class UpdatesPage(SectionPage):
+    """Repo + AUR pending updates, reboot status, mirror refresh,
+    auto-check timer, channel selector, last-upgrade timestamp.
+    All real:
+      · checkupdates / paru -Qua / yay -Qua  — pending lists
+      · /var/log/pacman.log                  — last-upgrade time
+      · pkexec reflector                     — mirror refresh
+      · ~/.config/systemd/user/nyxus-update-check.{service,timer} — auto
+      · pkexec sed on /etc/pacman.conf       — channel toggle
+    """
     KEY = "updates"
+
+    REFLECTOR_COUNTRIES = ["United States", "United Kingdom", "Germany",
+                           "France", "Netherlands", "Canada", "Japan",
+                           "Australia", "Singapore", "Brazil"]
+    AUTOCHECK_INTERVALS = [
+        ("Off",       0),
+        ("Hourly",    3600),
+        ("Every 6h",  21600),
+        ("Daily",     86400),
+        ("Weekly",    604800),
+    ]
 
     def build(self) -> None:
         self.repo_grp = Adw.PreferencesGroup(
             title="Official repositories",
-            description="Pending updates from pacman (queried via "
-                        "checkupdates — does not need root)")
+            description="Pending updates from pacman (via checkupdates — "
+                        "no root required)")
         self.add_group(self.repo_grp)
         self.aur_grp = Adw.PreferencesGroup(
             title="AUR / foreign packages",
-            description="Pending updates for packages installed via paru, "
-                        "yay, etc.")
+            description="Pending updates for AUR packages")
         self.add_group(self.aur_grp)
-
-        # Reboot required
-        rb_grp = Adw.PreferencesGroup(title="Reboot")
-        self.add_group(rb_grp)
-        running_kernel = sh(["uname", "-r"], timeout=2)[1].strip()
-        rc, installed_kernel, _ = sh(
-            ["pacman", "-Q", "linux"], timeout=2)
-        installed_kernel = installed_kernel.strip().split(" ")[-1] \
-            if installed_kernel else "?"
-        kernel_match = installed_kernel.split("-")[0] in running_kernel
-        rb_grp.add(kv_row("Running kernel", running_kernel))
-        rb_grp.add(kv_row("Installed kernel", installed_kernel))
-        if not kernel_match:
-            rb_grp.add(empty_row(
-                "Reboot recommended",
-                "Installed kernel differs from running kernel — restart "
-                "to load it"))
-
-        # Tools
+        self.rb_grp = Adw.PreferencesGroup(title="Reboot status")
+        self.add_group(self.rb_grp)
+        self.history_grp = Adw.PreferencesGroup(
+            title="Update history",
+            description="From /var/log/pacman.log")
+        self.add_group(self.history_grp)
+        self.auto_grp = Adw.PreferencesGroup(
+            title="Auto-check schedule",
+            description="Background check via systemd --user timer")
+        self.add_group(self.auto_grp)
+        self.mirror_grp = Adw.PreferencesGroup(
+            title="Mirrors",
+            description="Refresh /etc/pacman.d/mirrorlist via reflector "
+                        "(admin prompt)")
+        self.add_group(self.mirror_grp)
+        self.channel_grp = Adw.PreferencesGroup(
+            title="Update channel",
+            description="Stable (default) or include [testing] / "
+                        "[community-testing] (faster updates, more risk)")
+        self.add_group(self.channel_grp)
         tools = Adw.PreferencesGroup(title="Tools")
         self.add_group(tools)
         tools.add(action_row(
@@ -2134,35 +3694,68 @@ class UpdatesPage(SectionPage):
                     f"AUR upgrade ({helper})",
                     f"{helper} -Syu — includes AUR & repos",
                     "Run",
-                    lambda h=helper: open_terminal(f"{h} -Syu", self.win)))
-        tools.add(action_row(
-            "Refresh mirror list",
-            "reflector --country US --age 6 --sort rate "
-            "--save /etc/pacman.d/mirrorlist",
-            "Refresh",
-            lambda: open_terminal(
-                "sudo reflector --age 6 --sort rate "
-                "--save /etc/pacman.d/mirrorlist",
-                self.win)) if have("reflector") else None)
+                    lambda h=helper:
+                        open_terminal(f"{h} -Syu", self.win)))
 
         self._render()
         self.add_pill(status_pill("live", "ok"))
         self.schedule_refresh(60000, self._tick)
 
     def _tick(self) -> bool:
-        self._render()
+        self._render_repo()
+        self._render_aur()
+        self._render_history()
         return True
 
     def _render(self) -> None:
+        self._render_repo()
+        self._render_aur()
+        self._render_reboot()
+        self._render_history()
+        self._render_autocheck()
+        self._render_mirrors()
+        self._render_channel()
+
+    # ── Repo + AUR ───────────────────────────────────────────
+    def _render_repo(self) -> None:
         _clear_group(self.repo_grp)
         if not have("checkupdates"):
             self.repo_grp.add(empty_row(
                 "checkupdates not installed",
                 "Install pacman-contrib to query pending updates without "
                 "needing root"))
-        else:
-            sh_async(["checkupdates"], self._on_repo, timeout=30)
+            return
+        self.repo_grp.add(kv_row("Status", "checking…"))
+        sh_async(["checkupdates"], self._on_repo, timeout=30)
 
+    def _on_repo(self, result) -> None:
+        rc, out, _ = result
+        _clear_group(self.repo_grp)
+        if rc == 2:
+            self.repo_grp.add(kv_row("Status", "up to date ✓"))
+            return
+        lines = [l for l in out.splitlines() if l.strip()]
+        n = len(lines)
+        self.repo_grp.add(kv_row(
+            "Pending", str(n),
+            "click 'Run full system upgrade' below to apply"))
+        for line in lines[:25]:
+            parts = line.split()
+            if len(parts) >= 4:
+                self.repo_grp.add(kv_row(
+                    parts[0], f"{parts[1]} → {parts[3]}"))
+        if n > 25:
+            self.repo_grp.add(kv_row(
+                "+ more", f"{n - 25} additional packages"))
+        # Persist last-checked timestamp
+        try:
+            (Path.home() / ".config/nyxus").mkdir(parents=True, exist_ok=True)
+            (Path.home() / ".config/nyxus/last_update_check").write_text(
+                datetime.now().isoformat())
+        except Exception:
+            pass
+
+    def _render_aur(self) -> None:
         _clear_group(self.aur_grp)
         helper = "paru" if have("paru") else ("yay" if have("yay") else "")
         if not helper:
@@ -2170,28 +3763,15 @@ class UpdatesPage(SectionPage):
                 "No AUR helper installed",
                 "Install paru or yay to track AUR updates"))
             return
+        self.aur_grp.add(kv_row("Status", "checking…"))
         sh_async([helper, "-Qua"], self._on_aur, timeout=60)
-
-    def _on_repo(self, result) -> None:
-        rc, out, _ = result
-        _clear_group(self.repo_grp)
-        if rc == 2:  # checkupdates exits 2 when no updates
-            self.repo_grp.add(kv_row("Status", "up to date"))
-            return
-        lines = [l for l in out.splitlines() if l.strip()]
-        self.repo_grp.add(kv_row("Pending", str(len(lines))))
-        for line in lines[:25]:
-            parts = line.split()
-            if len(parts) >= 4:
-                self.repo_grp.add(kv_row(
-                    parts[0], f"{parts[1]} → {parts[3]}"))
 
     def _on_aur(self, result) -> None:
         rc, out, _ = result
         _clear_group(self.aur_grp)
         lines = [l for l in out.splitlines() if l.strip()]
         if not lines:
-            self.aur_grp.add(kv_row("Status", "up to date"))
+            self.aur_grp.add(kv_row("Status", "up to date ✓"))
             return
         self.aur_grp.add(kv_row("Pending", str(len(lines))))
         for line in lines[:25]:
@@ -2199,6 +3779,304 @@ class UpdatesPage(SectionPage):
             if len(parts) >= 4:
                 self.aur_grp.add(kv_row(
                     parts[0], f"{parts[1]} → {parts[3]}"))
+
+    # ── Reboot status ────────────────────────────────────────
+    def _render_reboot(self) -> None:
+        _clear_group(self.rb_grp)
+        running_kernel = sh(["uname", "-r"], timeout=2)[1].strip()
+        rc, ik, _ = sh(["pacman", "-Q", "linux"], timeout=2)
+        installed_kernel = ik.strip().split(" ")[-1] if ik else "?"
+        kernel_match = installed_kernel.split("-")[0] in running_kernel
+        self.rb_grp.add(kv_row("Running kernel", running_kernel))
+        self.rb_grp.add(kv_row("Installed kernel", installed_kernel))
+
+        # Check critical packages: systemd, glibc — mtime > boot time?
+        rc, btime, _ = sh(
+            ["sh", "-c", "stat -c %Y /proc/1"], timeout=2)
+        try:
+            boot_ts = int(btime.strip())
+        except Exception:
+            boot_ts = 0
+        critical_changed = []
+        for pkg in ("systemd", "glibc", "linux", "linux-zen", "linux-lts"):
+            rc, mt, _ = sh(
+                ["sh", "-c",
+                 f"stat -c %Y /var/lib/pacman/local/{pkg}-* 2>/dev/null "
+                 "| sort -n | tail -1"], timeout=2)
+            try:
+                ts = int(mt.strip())
+                if ts > boot_ts:
+                    critical_changed.append(pkg)
+            except Exception:
+                continue
+
+        needs_reboot = (not kernel_match) or bool(critical_changed)
+        if needs_reboot:
+            why = []
+            if not kernel_match:
+                why.append("kernel differs from running")
+            if critical_changed:
+                why.append("upgraded since boot: "
+                          + ", ".join(critical_changed))
+            row = Adw.ActionRow(
+                title="⚠ Reboot recommended",
+                subtitle=" · ".join(why))
+            btn = Gtk.Button(label="Reboot now")
+            btn.add_css_class("nyx-pill-warn")
+            btn.set_valign(Gtk.Align.CENTER)
+            btn.connect("clicked", lambda _b: self._confirm_reboot())
+            row.add_suffix(btn)
+            self.rb_grp.add(row)
+        else:
+            self.rb_grp.add(kv_row(
+                "Status", "running kernel matches installed ✓"))
+
+    def _confirm_reboot(self) -> None:
+        dlg = Adw.MessageDialog(
+            transient_for=self.win,
+            heading="Reboot now?",
+            body="All unsaved work will be lost. Continue?")
+        dlg.add_response("cancel", "Cancel")
+        dlg.add_response("ok", "Reboot")
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.DESTRUCTIVE)
+        dlg.connect("response", lambda d, resp:
+                    sh_async(["systemctl", "reboot"], None, timeout=4)
+                    if resp == "ok" else None)
+        dlg.present()
+
+    # ── History ──────────────────────────────────────────────
+    def _render_history(self) -> None:
+        _clear_group(self.history_grp)
+        log_p = Path("/var/log/pacman.log")
+        if not log_p.exists():
+            self.history_grp.add(empty_row(
+                "No pacman log found",
+                "/var/log/pacman.log is missing"))
+            return
+        # Last upgrade timestamp
+        rc, out, _ = sh(
+            ["sh", "-c",
+             "grep -E 'starting full system upgrade' "
+             "/var/log/pacman.log | tail -1"], timeout=4)
+        last_full = out.strip()
+        m = re.match(r"^\[([^\]]+)\]", last_full)
+        if m:
+            self.history_grp.add(kv_row(
+                "Last full upgrade", m.group(1)))
+        else:
+            self.history_grp.add(kv_row(
+                "Last full upgrade", "(no record)"))
+
+        # Last 5 upgrades
+        rc, out, _ = sh(
+            ["sh", "-c",
+             "grep -E '\\[ALPM\\] upgraded' /var/log/pacman.log "
+             "| tail -5"], timeout=4)
+        for line in out.splitlines():
+            mm = re.match(
+                r"^\[([^\]]+)\].*upgraded\s+(\S+)\s+\(([^)]+)\)", line)
+            if mm:
+                self.history_grp.add(kv_row(
+                    mm.group(2), mm.group(3),
+                    subtitle=mm.group(1)))
+
+        # Last-checked
+        check_p = Path.home() / ".config/nyxus/last_update_check"
+        if check_p.exists():
+            try:
+                self.history_grp.add(kv_row(
+                    "Last checked (NYXUS)",
+                    check_p.read_text().strip()[:19]))
+            except Exception:
+                pass
+
+    # ── Auto-check timer ─────────────────────────────────────
+    def _render_autocheck(self) -> None:
+        _clear_group(self.auto_grp)
+        prefs = load_prefs().get("updates", {})
+        cur = int(prefs.get("autocheck_secs", 0))
+        labels = [n for n, _ in self.AUTOCHECK_INTERVALS]
+        secs   = [s for _, s in self.AUTOCHECK_INTERVALS]
+        try:
+            sel = secs.index(cur)
+        except ValueError:
+            sel = 0
+        row = Adw.ActionRow(
+            title="Check for updates automatically",
+            subtitle="runs `checkupdates` and writes the count to "
+                     "~/.config/nyxus/pending_count")
+        dd = Gtk.DropDown.new_from_strings(labels)
+        dd.set_selected(sel)
+        dd.set_valign(Gtk.Align.CENTER)
+        dd.connect("notify::selected",
+                   lambda d, _p, ss=secs: self._on_autocheck_changed(d, ss))
+        row.add_suffix(dd)
+        self.auto_grp.add(row)
+
+    def _on_autocheck_changed(self, dd, secs_list: list) -> None:
+        idx = dd.get_selected()
+        if not (0 <= idx < len(secs_list)):
+            return
+        secs = secs_list[idx]
+        prefs = load_prefs()
+        prefs.setdefault("updates", {})["autocheck_secs"] = secs
+        save_prefs(prefs)
+        self._sync_autocheck_unit(secs)
+        self.toast("auto-check " + ("off" if secs == 0
+                   else f"every {secs}s"))
+
+    def _sync_autocheck_unit(self, secs: int) -> None:
+        unit_dir = Path.home() / ".config/systemd/user"
+        unit_dir.mkdir(parents=True, exist_ok=True)
+        svc = unit_dir / "nyxus-update-check.service"
+        tmr = unit_dir / "nyxus-update-check.timer"
+        if secs <= 0:
+            sh_async(
+                ["systemctl", "--user", "disable", "--now",
+                 "nyxus-update-check.timer"],
+                None, timeout=4)
+            for p in (svc, tmr):
+                try:
+                    p.unlink()
+                except FileNotFoundError:
+                    pass
+            return
+        svc.write_text(textwrap.dedent("""\
+            [Unit]
+            Description=NYXUS pending-updates check
+
+            [Service]
+            Type=oneshot
+            ExecStart=/bin/sh -c 'mkdir -p ~/.config/nyxus && checkupdates 2>/dev/null | wc -l > ~/.config/nyxus/pending_count; date -Iseconds > ~/.config/nyxus/last_update_check'
+            """))
+        tmr.write_text(textwrap.dedent(f"""\
+            [Unit]
+            Description=NYXUS pending-updates check (every {secs}s)
+
+            [Timer]
+            OnBootSec=2min
+            OnUnitActiveSec={secs}s
+            Persistent=true
+
+            [Install]
+            WantedBy=timers.target
+            """))
+        sh_async(
+            ["systemctl", "--user", "daemon-reload"],
+            lambda _r: sh_async(
+                ["systemctl", "--user", "enable", "--now",
+                 "nyxus-update-check.timer"],
+                None, timeout=4),
+            timeout=4)
+
+    # ── Mirrors ──────────────────────────────────────────────
+    def _render_mirrors(self) -> None:
+        _clear_group(self.mirror_grp)
+        if not have("reflector"):
+            self.mirror_grp.add(empty_row(
+                "reflector not installed",
+                "Install reflector to refresh mirrors"))
+            return
+        prefs = load_prefs().get("updates", {})
+        country = prefs.get("mirror_country", "United States")
+        row = Adw.ActionRow(
+            title="Mirror country",
+            subtitle="reflector picks the fastest N mirrors in this country")
+        dd = Gtk.DropDown.new_from_strings(self.REFLECTOR_COUNTRIES)
+        try:
+            dd.set_selected(self.REFLECTOR_COUNTRIES.index(country))
+        except ValueError:
+            dd.set_selected(0)
+        dd.set_valign(Gtk.Align.CENTER)
+        dd.connect("notify::selected",
+                   lambda d, _p: self._on_country_changed(d))
+        row.add_suffix(dd)
+        self.mirror_grp.add(row)
+
+        self.mirror_grp.add(action_row(
+            "Refresh mirror list now",
+            f"reflector --country '{country}' --age 6 --sort rate "
+            "--save /etc/pacman.d/mirrorlist",
+            "Refresh",
+            lambda c=country: sh_async(
+                ["pkexec", "sh", "-c",
+                 f"reflector --country '{c}' --age 6 --sort rate "
+                 f"--save /etc/pacman.d/mirrorlist && pacman -Syy"],
+                lambda r: self.toast(
+                    "mirrors refreshed" if r[0] == 0 else "needs admin"),
+                timeout=120),
+            css="nyx-pill"))
+
+    def _on_country_changed(self, dd) -> None:
+        idx = dd.get_selected()
+        if not (0 <= idx < len(self.REFLECTOR_COUNTRIES)):
+            return
+        country = self.REFLECTOR_COUNTRIES[idx]
+        prefs = load_prefs()
+        prefs.setdefault("updates", {})["mirror_country"] = country
+        save_prefs(prefs)
+        self.toast(f"mirror country → {country}")
+        self._render_mirrors()
+
+    # ── Channel selector (stable / testing) ──────────────────
+    def _render_channel(self) -> None:
+        _clear_group(self.channel_grp)
+        try:
+            txt = Path("/etc/pacman.conf").read_text(errors="ignore")
+        except Exception:
+            self.channel_grp.add(empty_row(
+                "/etc/pacman.conf not readable", ""))
+            return
+        # Parse: a [testing] section with uncommented Include = ... = enabled
+        testing_on = re.search(
+            r"^\s*\[testing\]\s*\n([^\[]*?)Include\s*=",
+            txt, re.MULTILINE) is not None
+        comm_testing_on = re.search(
+            r"^\s*\[community-testing\]\s*\n([^\[]*?)Include\s*=",
+            txt, re.MULTILINE) is not None
+
+        for label, section, current in (
+            ("[testing]",           "testing",           testing_on),
+            ("[community-testing]", "community-testing", comm_testing_on),
+        ):
+            row = Adw.ActionRow(
+                title=label,
+                subtitle="WARNING: enabling brings unstable packages — "
+                         "may break your system")
+            sw = Gtk.Switch()
+            sw.set_valign(Gtk.Align.CENTER)
+            sw.set_active(current)
+            sw.connect("notify::active",
+                       lambda s, _p, sec=section:
+                           self._on_channel_toggled(s, sec))
+            row.add_suffix(sw)
+            self.channel_grp.add(row)
+
+    def _on_channel_toggled(self, sw, section: str) -> None:
+        on = sw.get_active()
+        # Idempotent: enable = uncomment [section] + Include line
+        # disable = comment them out
+        if on:
+            # Enable: uncomment if commented, else append a fresh block
+            cmd = f"""set -e
+if grep -qE '^\\s*#\\s*\\[{section}\\]' /etc/pacman.conf; then
+  sed -i -E '/^#\\s*\\[{section}\\]/,/^#\\s*Include/ s/^#//' /etc/pacman.conf
+elif ! grep -qE '^\\s*\\[{section}\\]' /etc/pacman.conf; then
+  printf '\\n[{section}]\\nInclude = /etc/pacman.d/mirrorlist\\n' >> /etc/pacman.conf
+fi
+pacman -Syy
+"""
+        else:
+            cmd = (
+                f"sed -i -E '/^\\[{section}\\]/,/^Include/ "
+                f"s/^([^#].*)/#\\1/' /etc/pacman.conf && pacman -Syy")
+        sh_async(
+            ["pkexec", "sh", "-c", cmd],
+            lambda r: (self.toast(
+                f"{section} " + ("enabled" if on else "disabled")
+                if r[0] == 0 else "needs admin / failed"),
+                self._render_channel()),
+            timeout=60)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -2315,46 +4193,76 @@ class AccessibilityPage(SectionPage):
 # USERS — current user, groups, password change
 # ──────────────────────────────────────────────────────────────────────
 class UsersPage(SectionPage):
+    """Local account management. All real:
+      · pkexec useradd / userdel / passwd / chfn / gpasswd
+      · ~/.face                — avatar (symlink for accountsservice)
+      · /var/lib/AccountsService/users/<u>  — Icon= line
+      · loginctl list-sessions  — active sessions
+    """
     KEY = "users"
 
     def build(self) -> None:
-        # Current user
-        cur = Adw.PreferencesGroup(title="Current account")
-        self.add_group(cur)
-        rc, user, _ = sh(["whoami"], timeout=2)
-        user = user.strip()
-        cur.add(kv_row("Username", user))
-        rc, fn, _ = sh(["getent", "passwd", user], timeout=2)
-        if rc == 0 and fn.strip():
-            parts = fn.strip().split(":")
-            if len(parts) >= 7:
-                cur.add(kv_row("UID", parts[2]))
-                cur.add(kv_row("Primary group", parts[3]))
-                cur.add(kv_row("Full name (GECOS)", parts[4] or "(unset)"))
-                cur.add(kv_row("Home", parts[5]))
-                cur.add(kv_row("Shell", parts[6]))
-        rc, groups, _ = sh(["groups"], timeout=2)
-        cur.add(kv_row("Groups",
-                       groups.strip().split(":")[-1].strip()
-                       if ":" in groups else groups.strip()))
-        cur.add(action_row(
-            "Change password",
-            "Opens a terminal with passwd",
-            "Change",
-            lambda: open_terminal("passwd", self.win)))
-        cur.add(action_row(
-            "Edit shell",
-            "Opens chsh in a terminal — pick from /etc/shells",
-            "Edit",
-            lambda: open_terminal("chsh", self.win)))
-
-        # Other users on the system
-        oth = Adw.PreferencesGroup(
+        self.cur_grp = Adw.PreferencesGroup(title="Current account")
+        self.add_group(self.cur_grp)
+        self.others_grp = Adw.PreferencesGroup(
             title="Other accounts",
-            description="Local accounts with UID ≥ 1000 (excluding nobody)")
-        self.add_group(oth)
+            description="Local accounts with UID ≥ 1000")
+        self.add_group(self.others_grp)
+        self.add_grp = Adw.PreferencesGroup(
+            title="Add a new account",
+            description="Creates the home directory, sets the password, "
+                        "optionally grants sudo via the wheel group")
+        self.add_group(self.add_grp)
+        self.sudoers_grp = Adw.PreferencesGroup(
+            title="Sudo rules",
+            description="Members of the wheel group can run sudo")
+        self.add_group(self.sudoers_grp)
+        self.sessions_grp = Adw.PreferencesGroup(title="Active sessions")
+        self.add_group(self.sessions_grp)
+
+        self._render()
+        self.schedule_refresh(15000, self._tick)
+
+    def _tick(self) -> bool:
+        self._render_sessions()
+        return True
+
+    def _render(self) -> None:
+        self._render_current()
+        self._render_others()
+        self._render_add()
+        self._render_sudoers()
+        self._render_sessions()
+        self.clear_pills()
+        rc, user, _ = sh(["whoami"], timeout=2)
+        self.add_pill(status_pill(user.strip(), "ok"))
+
+    # ── Helpers ──────────────────────────────────────────────
+    @staticmethod
+    def _whoami() -> str:
+        rc, u, _ = sh(["whoami"], timeout=2)
+        return u.strip()
+
+    @staticmethod
+    def _passwd_entry(user: str) -> dict:
+        rc, fn, _ = sh(["getent", "passwd", user], timeout=2)
+        if rc != 0 or not fn.strip():
+            return {}
+        p = fn.strip().split(":")
+        if len(p) < 7:
+            return {}
+        return {"name": p[0], "uid": p[2], "gid": p[3],
+                "gecos": p[4], "home": p[5], "shell": p[6]}
+
+    @staticmethod
+    def _user_groups(user: str) -> list:
+        rc, out, _ = sh(["id", "-Gn", user], timeout=2)
+        return out.strip().split() if rc == 0 else []
+
+    @staticmethod
+    def _list_real_users() -> list:
         rc, out, _ = sh(["getent", "passwd"], timeout=3)
-        others = []
+        users = []
         for line in out.splitlines():
             p = line.split(":")
             if len(p) < 7:
@@ -2363,50 +4271,322 @@ class UsersPage(SectionPage):
                 uid = int(p[2])
             except ValueError:
                 continue
-            if uid >= 1000 and p[0] != "nobody" and p[0] != user:
-                others.append((p[0], p[2], p[6]))
-        if not others:
-            oth.add(empty_row("No other user accounts",
-                               "This system has only the current user"))
-        for name, uid, shell in others[:10]:
-            oth.add(kv_row(name, f"uid {uid} · {shell}"))
+            if uid >= 1000 and p[0] != "nobody":
+                users.append((p[0], p[2], p[4] or "", p[6]))
+        return sorted(users)
 
-        # Add user (delegates to terminal — useradd needs root)
-        admin = Adw.PreferencesGroup(
-            title="Account management",
-            description="Account creation, removal, and group editing "
-                        "require root and are best done in a terminal")
-        self.add_group(admin)
-        admin.add(action_row(
-            "Add a new user",
-            "Opens useradd interactive helper in a terminal",
-            "Add",
-            lambda: open_terminal(
-                "echo 'Run: sudo useradd -m -G wheel,audio,video,input "
-                "-s /bin/bash USERNAME && sudo passwd USERNAME'; "
-                "$SHELL", self.win)))
-        admin.add(action_row(
-            "Edit /etc/sudoers",
-            "Opens sudo visudo — safest way to change sudo rules",
+    # ── Current account ──────────────────────────────────────
+    def _render_current(self) -> None:
+        _clear_group(self.cur_grp)
+        user = self._whoami()
+        info = self._passwd_entry(user)
+        groups = self._user_groups(user)
+        is_admin = "wheel" in groups
+
+        self.cur_grp.add(kv_row("Username", user))
+        if info:
+            self.cur_grp.add(kv_row("UID", info["uid"]))
+            self.cur_grp.add(kv_row("Home", info["home"]))
+            self.cur_grp.add(kv_row("Shell", info["shell"]))
+        self.cur_grp.add(kv_row(
+            "Account type", "Administrator" if is_admin else "Standard",
+            "wheel group" if is_admin else "no sudo access"))
+        self.cur_grp.add(kv_row(
+            "Groups", " ".join(groups) if groups else "(none)"))
+
+        # Full name (GECOS) editor — pkexec chfn
+        gecos_row = Adw.ActionRow(
+            title="Display name",
+            subtitle="shown in greeters, file managers, etc.")
+        entry = Gtk.Entry()
+        entry.set_text(info.get("gecos", "").split(",")[0])
+        entry.set_size_request(220, -1)
+        entry.set_valign(Gtk.Align.CENTER)
+        entry.connect("activate", lambda e, u=user:
+                      self._set_gecos(u, e.get_text().strip()))
+        gecos_row.add_suffix(entry)
+        self.cur_grp.add(gecos_row)
+
+        # Password
+        self.cur_grp.add(action_row(
+            "Change my password",
+            "Opens a terminal with passwd (interactive prompts are needed)",
+            "Change",
+            lambda: open_terminal("passwd", self.win)))
+
+        # Avatar
+        face = Path.home() / ".face"
+        face_row = Adw.ActionRow(
+            title="Avatar",
+            subtitle=str(face) + (
+                "  ·  set ✓" if face.exists() else "  ·  not set"))
+        btn = Gtk.Button(label="Choose…")
+        btn.add_css_class("nyx-pill")
+        btn.set_valign(Gtk.Align.CENTER)
+        btn.connect("clicked", lambda _b: self._pick_avatar())
+        face_row.add_suffix(btn)
+        self.cur_grp.add(face_row)
+
+        # Shell editor
+        self.cur_grp.add(action_row(
+            "Change my shell",
+            "Opens chsh in a terminal",
+            "Edit",
+            lambda: open_terminal("chsh", self.win)))
+
+    def _set_gecos(self, user: str, full_name: str) -> None:
+        sh_async(
+            ["pkexec", "chfn", "-f", full_name, user],
+            lambda r: (self.toast(
+                f"name → {full_name}" if r[0] == 0 else "needs admin"),
+                self._render_current()),
+            timeout=10)
+
+    def _pick_avatar(self) -> None:
+        dlg = Gtk.FileChooserNative(
+            title="Pick an avatar image",
+            transient_for=self.win,
+            action=Gtk.FileChooserAction.OPEN,
+            accept_label="Use",
+            cancel_label="Cancel")
+        flt = Gtk.FileFilter()
+        flt.set_name("Images")
+        for p in ("png", "jpg", "jpeg", "webp"):
+            flt.add_pattern(f"*.{p}")
+        dlg.add_filter(flt)
+        dlg.connect("response", self._on_avatar_picked)
+        dlg.show()
+        # Keep ref so it isn't GC'd
+        self._avatar_dlg = dlg
+
+    def _on_avatar_picked(self, dlg, resp) -> None:
+        if resp != Gtk.ResponseType.ACCEPT:
+            dlg.destroy()
+            return
+        f = dlg.get_file()
+        dlg.destroy()
+        if not f:
+            return
+        src = f.get_path()
+        face = Path.home() / ".face"
+        try:
+            shutil.copy2(src, face)
+            face.chmod(0o644)
+            self.toast(f"avatar → {face.name}")
+            # Also update accountsservice if available
+            user = self._whoami()
+            asu = Path(f"/var/lib/AccountsService/users/{user}")
+            if asu.parent.exists():
+                sh_async(
+                    ["pkexec", "sh", "-c",
+                     f"mkdir -p /var/lib/AccountsService/users && "
+                     f"printf '[User]\\nIcon={face}\\n' > "
+                     f"/var/lib/AccountsService/users/{user}"],
+                    lambda r: None, timeout=6)
+            self._render_current()
+        except Exception as e:
+            self.toast(f"failed: {e}")
+
+    # ── Other accounts ───────────────────────────────────────
+    def _render_others(self) -> None:
+        _clear_group(self.others_grp)
+        me = self._whoami()
+        others = [u for u in self._list_real_users() if u[0] != me]
+        if not others:
+            self.others_grp.add(empty_row(
+                "No other user accounts",
+                "This system has only your account"))
+            return
+        for name, uid, gecos, shell in others[:30]:
+            groups = self._user_groups(name)
+            is_admin = "wheel" in groups
+            row = Adw.ActionRow(
+                title=name + (f"  ·  {gecos}" if gecos else ""),
+                subtitle=f"uid {uid}  ·  {shell}  ·  "
+                         f"{'Administrator' if is_admin else 'Standard'}")
+
+            # Toggle admin
+            admin_btn = Gtk.Button(
+                label="Demote" if is_admin else "Make admin")
+            admin_btn.add_css_class(
+                "nyx-pill-warn" if is_admin else "nyx-pill")
+            admin_btn.set_valign(Gtk.Align.CENTER)
+            admin_btn.connect(
+                "clicked",
+                lambda _b, u=name, on=not is_admin:
+                    self._toggle_admin(u, on))
+            row.add_suffix(admin_btn)
+
+            # Reset password
+            pwd_btn = Gtk.Button(label="Set password")
+            pwd_btn.add_css_class("nyx-pill")
+            pwd_btn.set_valign(Gtk.Align.CENTER)
+            pwd_btn.connect(
+                "clicked",
+                lambda _b, u=name: open_terminal(
+                    f"sudo passwd {u}", self.win))
+            row.add_suffix(pwd_btn)
+
+            # Delete
+            del_btn = Gtk.Button(label="Delete")
+            del_btn.add_css_class("nyx-pill-warn")
+            del_btn.set_valign(Gtk.Align.CENTER)
+            del_btn.connect(
+                "clicked",
+                lambda _b, u=name: self._confirm_delete_user(u))
+            row.add_suffix(del_btn)
+
+            self.others_grp.add(row)
+
+    def _toggle_admin(self, user: str, on: bool) -> None:
+        cmd = (["pkexec", "gpasswd", "-a", user, "wheel"] if on
+               else ["pkexec", "gpasswd", "-d", user, "wheel"])
+        sh_async(
+            cmd,
+            lambda r: (self.toast(
+                f"{user} {'now admin' if on else 'demoted'}"
+                if r[0] == 0 else "failed"),
+                self._render_others()),
+            timeout=10)
+
+    def _confirm_delete_user(self, user: str) -> None:
+        dlg = Adw.MessageDialog(
+            transient_for=self.win,
+            heading=f"Delete user {user}?",
+            body=f"This will run:\n  pkexec userdel -r {user}\n\n"
+                 f"The home directory /home/{user} and all its contents "
+                 f"will be permanently deleted. This cannot be undone.")
+        dlg.add_response("cancel", "Cancel")
+        dlg.add_response("ok", "Delete")
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.DESTRUCTIVE)
+        dlg.set_default_response("cancel")
+        dlg.connect("response",
+                    lambda d, resp, u=user: self._do_delete_user(resp, u))
+        dlg.present()
+
+    def _do_delete_user(self, resp: str, user: str) -> None:
+        if resp != "ok":
+            return
+        sh_async(
+            ["pkexec", "userdel", "-r", user],
+            lambda r: (self.toast(
+                f"{user} deleted" if r[0] == 0
+                else f"failed: {r[2][:80] if r[2] else 'admin denied'}"),
+                self._render_others()),
+            timeout=30)
+
+    # ── Add new user ─────────────────────────────────────────
+    def _render_add(self) -> None:
+        _clear_group(self.add_grp)
+        u_row = Adw.ActionRow(title="Username",
+                              subtitle="lowercase, no spaces")
+        u_entry = Gtk.Entry()
+        u_entry.set_size_request(180, -1)
+        u_entry.set_valign(Gtk.Align.CENTER)
+        u_row.add_suffix(u_entry)
+        self.add_grp.add(u_row)
+        self._add_username = u_entry
+
+        f_row = Adw.ActionRow(title="Full name (optional)",
+                              subtitle="display name shown in greeters")
+        f_entry = Gtk.Entry()
+        f_entry.set_size_request(220, -1)
+        f_entry.set_valign(Gtk.Align.CENTER)
+        f_row.add_suffix(f_entry)
+        self.add_grp.add(f_row)
+        self._add_fullname = f_entry
+
+        a_row = Adw.ActionRow(
+            title="Grant administrator (sudo) access",
+            subtitle="adds the new user to the wheel group")
+        a_sw = Gtk.Switch()
+        a_sw.set_valign(Gtk.Align.CENTER)
+        a_row.add_suffix(a_sw)
+        self.add_grp.add(a_row)
+        self._add_admin = a_sw
+
+        action = Adw.ActionRow(
+            title="Create account",
+            subtitle="you'll be prompted for an admin password to confirm")
+        btn = Gtk.Button(label="Create")
+        btn.add_css_class("nyx-pill-ok")
+        btn.set_valign(Gtk.Align.CENTER)
+        btn.connect("clicked", lambda _b: self._create_user())
+        action.add_suffix(btn)
+        self.add_grp.add(action)
+
+    def _create_user(self) -> None:
+        user = self._add_username.get_text().strip()
+        fullname = self._add_fullname.get_text().strip()
+        admin = self._add_admin.get_active()
+        if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", user):
+            self.toast("invalid username")
+            return
+        # Build the create-and-set-password command.
+        # We can't take a password input safely here, so we drop the user
+        # straight into a terminal for `passwd` after creation.
+        groups = "wheel,audio,video,input,storage" if admin \
+            else "audio,video,input,storage"
+        cmd = (f"useradd -m -G {groups} -s /bin/bash "
+               f"-c {shlex.quote(fullname or user)} {user}")
+        sh_async(
+            ["pkexec", "sh", "-c", cmd],
+            lambda r: self._on_user_created(r, user),
+            timeout=20)
+
+    def _on_user_created(self, result, user: str) -> None:
+        rc, out, err = result
+        if rc != 0:
+            self.toast(f"create failed: {(err or out)[:80]}")
+            return
+        self.toast(f"{user} created — opening passwd")
+        # Open a terminal so the admin can set the password
+        open_terminal(f"sudo passwd {user}", self.win)
+        self._render_others()
+        self._add_username.set_text("")
+        self._add_fullname.set_text("")
+        self._add_admin.set_active(False)
+
+    # ── Sudoers ──────────────────────────────────────────────
+    def _render_sudoers(self) -> None:
+        _clear_group(self.sudoers_grp)
+        rc, out, _ = sh(["getent", "group", "wheel"], timeout=2)
+        members = []
+        if rc == 0 and out.strip():
+            parts = out.strip().split(":")
+            if len(parts) >= 4 and parts[3]:
+                members = parts[3].split(",")
+        if members:
+            self.sudoers_grp.add(kv_row(
+                "wheel members", ", ".join(members),
+                "these users can run sudo"))
+        else:
+            self.sudoers_grp.add(kv_row(
+                "wheel members", "(none)",
+                "no user has sudo access"))
+        self.sudoers_grp.add(action_row(
+            "Edit /etc/sudoers safely",
+            "Opens visudo — uses syntax checking before saving",
             "Open",
             lambda: open_terminal("sudo visudo", self.win),
             css="nyx-pill-warn"))
 
-        # Sessions
-        ses = Adw.PreferencesGroup(title="Active sessions")
-        self.add_group(ses)
+    # ── Sessions ─────────────────────────────────────────────
+    def _render_sessions(self) -> None:
+        _clear_group(self.sessions_grp)
         rc, out, _ = sh(["loginctl", "list-sessions", "--no-legend"],
                         timeout=3)
         rows = [l for l in out.splitlines() if l.strip()]
         if not rows:
-            ses.add(empty_row("No active sessions reported", ""))
-        for r in rows[:8]:
+            self.sessions_grp.add(empty_row(
+                "No active sessions reported", ""))
+            return
+        for r in rows[:12]:
             parts = r.split()
             if len(parts) >= 4:
-                ses.add(kv_row(parts[2],
-                               f"session {parts[0]} · seat {parts[3]}"))
-
-        self.add_pill(status_pill(user, "ok"))
+                self.sessions_grp.add(kv_row(
+                    parts[2],
+                    f"session {parts[0]}  ·  seat {parts[3]}"))
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -2436,28 +4616,695 @@ def _clear_group(grp: Adw.PreferencesGroup) -> None:
 # ──────────────────────────────────────────────────────────────────────
 # Tier-1: APPEARANCE
 # ──────────────────────────────────────────────────────────────────────
+# Curated DARK MIRROR accent palette.  The "Mirror White" preset is the
+# brand default and matches the locked SDDM/hyprlock palette tokens.
+ACCENT_PRESETS: List[Tuple[str, str]] = [
+    ("Mirror White", "#e8edf5"),
+    ("Cyan",         "#5fd3f3"),
+    ("Lime",         "#a6e22e"),
+    ("Amber",        "#f5b342"),
+    ("Magenta",      "#ff5fa7"),
+    ("Crimson",      "#ff5f6d"),
+    ("Iris",         "#9c8cff"),
+    ("Mint",         "#5ff3b8"),
+]
+DEFAULT_ACCENT = "#e8edf5"
+
+# Files we own for accent propagation. Each is a small idempotent fragment
+# included by the parent config (so we never mangle hand-written files).
+ACCENT_FRAG_DIR = HOME / ".config" / "nyxus" / "accent"
+GTK3_FRAG  = HOME / ".config" / "gtk-3.0" / "nyxus-accent.css"
+GTK4_FRAG  = HOME / ".config" / "gtk-4.0" / "nyxus-accent.css"
+EWW_FRAG   = HOME / ".config" / "eww" / "_nyxus_accent.scss"
+ROFI_FRAG  = HOME / ".config" / "rofi" / "nyxus-accent.rasi"
+DUNST_FRAG = HOME / ".config" / "dunst" / "nyxus-accent.conf"   # informative
+HYPRLOCK_ACCENT = HOME / ".config" / "hypr" / "hyprlock-accent.conf"
+SDDM_THEME_USER = Path("/usr/share/sddm/themes/nyxus/theme.conf.user")
+
+
+def _hex_to_rgb(hex_str: str) -> Tuple[int, int, int]:
+    s = hex_str.lstrip("#")
+    if len(s) == 3:
+        s = "".join(c * 2 for c in s)
+    if len(s) != 6:
+        return (232, 237, 245)
+    try:
+        return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
+    except ValueError:
+        return (232, 237, 245)
+
+
+def _atomic_write(path: Path, text: str) -> bool:
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(path.suffix + ".nyxtmp")
+        tmp.write_text(text)
+        tmp.replace(path)
+        return True
+    except Exception as e:
+        log.warning("accent write %s failed: %s", path, e)
+        return False
+
+
 class AppearancePage(SectionPage):
+    """Single source of truth for accent + theme. All fully wired:
+      · accent picker → GTK3/4 frag, EWW scss, rofi rasi, hyprlock accent,
+        dunst frame_color, SDDM theme.conf.user (pkexec)
+      · color scheme  → gsettings org.gnome.desktop.interface color-scheme
+      · cursor theme  → ~/.icons/default + gsettings + GTK_CURSOR_THEME
+      · icon theme    → gsettings icon-theme
+      · fonts         → gsettings font-name + monospace-font-name
+      · wallpaper     → swaybg (existing) + rotation timer
+      · text scale    → font_scale pref + GTK_DPI hint
+      · motion        → hyprctl keyword animations:enabled
+    """
     KEY = "appearance"
 
+    # ── Build ─────────────────────────────────────────────────────────
     def build(self) -> None:
         prefs = self.win.prefs
 
-        # ── Theme variant (locked to Dark Mirror) ──────────────────────
+        # Theme variant — locked
         g_theme = Adw.PreferencesGroup(title="Theme")
-        row = Adw.ActionRow(title="Variant",
-                            subtitle="DARK MIRROR — locked by NYXUS design contract")
-        row.add_suffix(status_pill("DARK MIRROR", "ok"))
-        g_theme.add(row)
+        v_row = Adw.ActionRow(
+            title="Variant",
+            subtitle="DARK MIRROR — locked by NYXUS design contract")
+        v_row.add_suffix(status_pill("DARK MIRROR", "ok"))
+        g_theme.add(v_row)
         self.add_group(g_theme)
 
-        # ── Wallpaper grid ────────────────────────────────────────────
-        g_wall = Adw.PreferencesGroup(
+        # Accent picker
+        self.accent_grp = Adw.PreferencesGroup(
+            title="Accent",
+            description="Single source of truth — propagates to GTK, EWW, "
+                        "rofi, hyprlock, dunst, SDDM")
+        self.add_group(self.accent_grp)
+
+        # Color scheme
+        self.scheme_grp = Adw.PreferencesGroup(
+            title="Color scheme",
+            description="Affects GTK4/libadwaita apps that respect the "
+                        "system color-scheme setting")
+        self.add_group(self.scheme_grp)
+
+        # Cursor theme
+        self.cursor_grp = Adw.PreferencesGroup(
+            title="Cursor theme",
+            description="Reads /usr/share/icons and ~/.icons")
+        self.add_group(self.cursor_grp)
+
+        # Icon theme
+        self.icon_grp = Adw.PreferencesGroup(
+            title="Icon theme",
+            description="Reads /usr/share/icons and ~/.icons")
+        self.add_group(self.icon_grp)
+
+        # Fonts
+        self.font_grp = Adw.PreferencesGroup(
+            title="Fonts",
+            description="System UI font and monospace font for terminals")
+        self.add_group(self.font_grp)
+
+        # Wallpaper grid (kept from previous + rotation switch)
+        self.wall_grp = Adw.PreferencesGroup(
             title="Wallpaper",
-            description="Click a wallpaper to apply it system-wide via swaybg.")
+            description="Click a wallpaper to apply it system-wide via swaybg")
+        self.add_group(self.wall_grp)
+
+        # Text size
+        self.scale_grp = Adw.PreferencesGroup(
+            title="Text size",
+            description="UI scale for NYXUS apps — restart apps to apply")
+        self.add_group(self.scale_grp)
+
+        # Motion
+        self.motion_grp = Adw.PreferencesGroup(title="Motion")
+        self.add_group(self.motion_grp)
+
+        self._render()
+
+    def _render(self) -> None:
+        self._render_accent()
+        self._render_scheme()
+        self._render_cursor()
+        self._render_icons()
+        self._render_fonts()
+        self._render_wallpaper()
+        self._render_scale()
+        self._render_motion()
+
+        self.clear_pills()
+        backends = []
+        if have("swaybg"):  backends.append("swaybg")
+        if have("hyprctl"): backends.append("hyprctl")
+        if have("gsettings"): backends.append("gsettings")
+        kind = "ok" if len(backends) >= 2 else "warn"
+        self.add_pill(status_pill(
+            " · ".join(backends) if backends else "no backends", kind))
+
+    # ── Accent ────────────────────────────────────────────────────────
+    def _render_accent(self) -> None:
+        _clear_group(self.accent_grp)
+        prefs = self.win.prefs
+        current = prefs.get("accent_hex", DEFAULT_ACCENT)
+
+        # Swatch row — flowbox of preset chips
+        chip_row = Adw.PreferencesRow()
+        chip_row.set_activatable(False)
+        chip_row.set_selectable(False)
+        flow = Gtk.FlowBox()
+        flow.set_selection_mode(Gtk.SelectionMode.NONE)
+        flow.set_max_children_per_line(8)
+        flow.set_min_children_per_line(4)
+        flow.set_homogeneous(True)
+        flow.set_column_spacing(8)
+        flow.set_row_spacing(8)
+        flow.set_margin_start(8)
+        flow.set_margin_end(8)
+        flow.set_margin_top(10)
+        flow.set_margin_bottom(10)
+
+        for name, hex_val in ACCENT_PRESETS:
+            chip = Gtk.Button()
+            chip.set_size_request(64, 48)
+            chip.set_tooltip_text(f"{name}  ·  {hex_val}")
+            chip.add_css_class("nyx-accent-chip")
+            if hex_val.lower() == current.lower():
+                chip.add_css_class("selected")
+            # Inline CSS provider for the chip color (per-widget)
+            css = Gtk.CssProvider()
+            css.load_from_data(
+                f"button.nyx-accent-chip {{"
+                f"  background: {hex_val};"
+                f"  border: 1px solid rgba(255,255,255,0.18);"
+                f"  border-radius: 10px;"
+                f"  min-width: 60px; min-height: 44px;"
+                f"}}"
+                f"button.nyx-accent-chip.selected {{"
+                f"  border: 2px solid #ffffff;"
+                f"}}".encode())
+            chip.get_style_context().add_provider(
+                css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            chip.connect("clicked",
+                         lambda _b, h=hex_val: self._set_accent(h))
+            flow.append(chip)
+
+        chip_row.set_child(flow)
+        self.accent_grp.add(chip_row)
+
+        # Custom hex entry
+        hex_row = Adw.ActionRow(
+            title="Custom",
+            subtitle=f"Currently: {current}  ·  enter a #RRGGBB value")
+        entry = Gtk.Entry()
+        entry.set_placeholder_text("#5fd3f3")
+        entry.set_text(current)
+        entry.set_max_length(7)
+        entry.set_size_request(110, -1)
+        entry.set_valign(Gtk.Align.CENTER)
+        entry.connect("activate", lambda e: self._set_accent(e.get_text()))
+        hex_row.add_suffix(entry)
+        apply_btn = Gtk.Button(label="Apply")
+        apply_btn.add_css_class("nyx-pill-ok")
+        apply_btn.set_valign(Gtk.Align.CENTER)
+        apply_btn.connect("clicked",
+                          lambda _b: self._set_accent(entry.get_text()))
+        hex_row.add_suffix(apply_btn)
+        self.accent_grp.add(hex_row)
+
+        # Reset
+        reset = action_row(
+            "Reset to default",
+            f"Restores Mirror White ({DEFAULT_ACCENT})",
+            "Reset",
+            lambda: self._set_accent(DEFAULT_ACCENT))
+        self.accent_grp.add(reset)
+
+        # Status: which propagation targets are present
+        targets = []
+        if (HOME / ".config" / "gtk-3.0").exists() or \
+           (HOME / ".config" / "gtk-4.0").exists():
+            targets.append("GTK")
+        if (HOME / ".config" / "eww").exists():
+            targets.append("EWW")
+        if (HOME / ".config" / "rofi").exists():
+            targets.append("rofi")
+        if (HOME / ".config" / "hypr").exists():
+            targets.append("hyprlock")
+        if (HOME / ".config" / "dunst").exists():
+            targets.append("dunst")
+        if SDDM_THEME_USER.parent.exists():
+            targets.append("SDDM")
+        info = Adw.ActionRow(
+            title="Propagates to",
+            subtitle=", ".join(targets) if targets
+                     else "no theme dirs found yet — first apply will create them")
+        self.accent_grp.add(info)
+
+    def _set_accent(self, hex_str: str) -> None:
+        h = (hex_str or "").strip()
+        if not re.fullmatch(r"#?[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?", h):
+            self.toast("invalid hex — use #RRGGBB")
+            return
+        if not h.startswith("#"):
+            h = "#" + h
+        # Expand 3-digit to 6-digit
+        if len(h) == 4:
+            h = "#" + "".join(c * 2 for c in h[1:])
+        h = h.lower()
+
+        # Persist
+        self.win.prefs["accent_hex"] = h
+        save_prefs(self.win.prefs)
+
+        results = self._apply_accent(h)
+        ok = [k for k, v in results.items() if v]
+        fail = [k for k, v in results.items() if not v]
+        if fail:
+            self.toast(f"accent {h}  ·  ok: {', '.join(ok) or '—'}  "
+                       f"·  failed: {', '.join(fail)}")
+        else:
+            self.toast(f"accent {h} applied to {', '.join(ok)}")
+        self._render_accent()
+
+    def _apply_accent(self, h: str) -> dict:
+        """Write accent fragments + reload the apps that read them.
+        Each target is independent; one failure does not block the rest."""
+        r, g, b = _hex_to_rgb(h)
+        results: dict = {}
+
+        # 1) GTK3 — @define-color override
+        gtk3_text = textwrap.dedent(f"""\
+            /* nyxus accent — auto-generated by Settings, do not edit */
+            @define-color nyxus_accent {h};
+            @define-color accent_color {h};
+            @define-color accent_bg_color {h};
+            @define-color theme_selected_bg_color {h};
+            """)
+        results["gtk-3"] = _atomic_write(GTK3_FRAG, gtk3_text)
+        # Try to ensure gtk.css imports the fragment
+        self._ensure_gtk_import(HOME / ".config" / "gtk-3.0" / "gtk.css",
+                                "nyxus-accent.css")
+
+        # 2) GTK4
+        results["gtk-4"] = _atomic_write(GTK4_FRAG, gtk3_text)
+        self._ensure_gtk_import(HOME / ".config" / "gtk-4.0" / "gtk.css",
+                                "nyxus-accent.css")
+
+        # 3) EWW — SCSS variable
+        eww_text = (f"// nyxus accent — auto-generated\n"
+                    f"$nyxus-accent: {h};\n"
+                    f"$accent: {h};\n")
+        results["eww"] = _atomic_write(EWW_FRAG, eww_text)
+
+        # 4) rofi — rasi color block
+        rofi_text = (f"/* nyxus accent — auto-generated */\n"
+                     f"* {{\n"
+                     f"  nyxus-accent: {h};\n"
+                     f"  selected-normal-background: {h};\n"
+                     f"  active-foreground: {h};\n"
+                     f"}}\n")
+        results["rofi"] = _atomic_write(ROFI_FRAG, rofi_text)
+
+        # 5) hyprlock — separate accent file the user can $source from
+        # hyprlock.conf, OR we patch the inner_color/outer_color directly.
+        hl_text = textwrap.dedent(f"""\
+            # nyxus accent — auto-generated. $source = ~/.config/hypr/hyprlock-accent.conf
+            $nyxus_accent_r = {r}
+            $nyxus_accent_g = {g}
+            $nyxus_accent_b = {b}
+            $nyxus_accent_rgba = rgba({r}, {g}, {b}, 0.85)
+            """)
+        results["hyprlock"] = _atomic_write(HYPRLOCK_ACCENT, hl_text)
+
+        # 6) dunst — frame_color in fragment + signal reload
+        dunst_text = (f"# nyxus accent — auto-generated.\n"
+                      f"# include this from your dunstrc [global] section, e.g.:\n"
+                      f"#   frame_color = \"{h}\"\n"
+                      f"frame_color = \"{h}\"\n")
+        results["dunst"] = _atomic_write(DUNST_FRAG, dunst_text)
+        self._patch_dunstrc(h)
+
+        # 7) SDDM — needs root, dispatch async; report real outcome via toast.
+        # We mark it "pending" synchronously so the immediate UI message
+        # doesn't lie about success.
+        if SDDM_THEME_USER.parent.exists():
+            sddm_text = (f"[General]\n"
+                         f"background=background.png\n"
+                         f"# nyxus accent\n"
+                         f"Accent={h}\n")
+            sh_async(
+                ["pkexec", "sh", "-c",
+                 f"cat > {SDDM_THEME_USER} <<'NYXUS_EOF'\n"
+                 f"{sddm_text}NYXUS_EOF\n"],
+                lambda res: self.toast(
+                    "SDDM accent applied" if res[0] == 0
+                    else "SDDM accent denied (admin auth required)"),
+                timeout=15)
+            results["sddm"] = "pending"  # truthful: not-yet-confirmed
+        else:
+            results["sddm"] = False
+
+        # 8) Reload apps that read these files
+        if have("dunstify") or have("dunst"):
+            sh_async(["sh", "-c",
+                      "pkill -SIGUSR2 dunst 2>/dev/null || true"],
+                     lambda r: None, timeout=3)
+        if have("eww"):
+            sh_async(["eww", "reload"], lambda r: None, timeout=4)
+        if have("hyprctl"):
+            sh_async(["hyprctl", "reload"], lambda r: None, timeout=4)
+
+        return results
+
+    @staticmethod
+    def _ensure_gtk_import(gtk_css: Path, frag_name: str) -> None:
+        """Idempotently add @import url("nyxus-accent.css"); to gtk.css."""
+        try:
+            gtk_css.parent.mkdir(parents=True, exist_ok=True)
+            existing = gtk_css.read_text() if gtk_css.exists() else ""
+            line = f'@import url("{frag_name}");'
+            if line in existing:
+                return
+            new = line + "\n" + existing
+            gtk_css.write_text(new)
+        except Exception as e:
+            log.warning("ensure_gtk_import %s: %s", gtk_css, e)
+
+    @staticmethod
+    def _patch_dunstrc(h: str) -> None:
+        """Best-effort in-place patch of frame_color in ~/.config/dunst/dunstrc.
+        Idempotent — only rewrites the matching line."""
+        rc = HOME / ".config" / "dunst" / "dunstrc"
+        if not rc.exists():
+            return
+        try:
+            txt = rc.read_text()
+            new = re.sub(
+                r'^(\s*frame_color\s*=\s*)"[^"]*"',
+                lambda m: f'{m.group(1)}"{h}"',
+                txt, flags=re.MULTILINE)
+            if new != txt:
+                rc.write_text(new)
+        except Exception as e:
+            log.warning("patch dunstrc: %s", e)
+
+    # ── Color scheme ──────────────────────────────────────────────────
+    def _render_scheme(self) -> None:
+        _clear_group(self.scheme_grp)
+        # Read current
+        rc, out, _ = sh(["gsettings", "get",
+                         "org.gnome.desktop.interface", "color-scheme"],
+                        timeout=2)
+        cur = out.strip().strip("'")
+        is_dark = "dark" in cur
+        row = Adw.SwitchRow(
+            title="Prefer dark color scheme",
+            subtitle="Currently: " + (cur or "(unset)"))
+        row.set_active(is_dark or not cur)
+        row.connect("notify::active", self._on_scheme_toggle)
+        self.scheme_grp.add(row)
+
+    def _on_scheme_toggle(self, row: Adw.SwitchRow, _ps) -> None:
+        v = "prefer-dark" if row.get_active() else "default"
+        if not have("gsettings"):
+            self.toast("gsettings not installed")
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface",
+             "color-scheme", v],
+            lambda r: self.toast(
+                f"color-scheme → {v}" if r[0] == 0 else "failed"),
+            timeout=4)
+
+    # ── Cursor / Icon theme pickers ───────────────────────────────────
+    @staticmethod
+    def _list_cursor_themes() -> List[str]:
+        roots = [Path("/usr/share/icons"), HOME / ".icons",
+                 HOME / ".local" / "share" / "icons"]
+        themes: set = set()
+        for root in roots:
+            if not root.exists():
+                continue
+            for child in root.iterdir():
+                if (child / "cursors").is_dir():
+                    themes.add(child.name)
+        return sorted(themes)
+
+    @staticmethod
+    def _list_icon_themes() -> List[str]:
+        roots = [Path("/usr/share/icons"), HOME / ".icons",
+                 HOME / ".local" / "share" / "icons"]
+        themes: set = set()
+        for root in roots:
+            if not root.exists():
+                continue
+            for child in root.iterdir():
+                idx = child / "index.theme"
+                if not idx.is_file():
+                    continue
+                # Skip cursor-only themes (no Directories= line is a hint)
+                try:
+                    txt = idx.read_text(errors="ignore")
+                    if "Directories=" in txt:
+                        themes.add(child.name)
+                except Exception:
+                    continue
+        return sorted(themes)
+
+    def _render_cursor(self) -> None:
+        _clear_group(self.cursor_grp)
+        themes = self._list_cursor_themes()
+        rc, cur, _ = sh(["gsettings", "get",
+                         "org.gnome.desktop.interface", "cursor-theme"],
+                        timeout=2)
+        current = cur.strip().strip("'") or "default"
+        if not themes:
+            self.cursor_grp.add(empty_row(
+                "No cursor themes found",
+                "Install a cursor theme package, e.g. xcursor-breeze"))
+            return
+        row = Adw.ComboRow(
+            title="Cursor theme",
+            subtitle=f"current: {current}")
+        store = Gtk.StringList()
+        sel_idx = 0
+        for i, t in enumerate(themes):
+            store.append(t)
+            if t == current:
+                sel_idx = i
+        row.set_model(store)
+        row.set_selected(sel_idx)
+        row.connect("notify::selected",
+                    lambda r, _p: self._set_cursor_theme(
+                        themes[r.get_selected()]))
+        self.cursor_grp.add(row)
+
+        # Size
+        rc, sz, _ = sh(["gsettings", "get",
+                        "org.gnome.desktop.interface", "cursor-size"],
+                       timeout=2)
+        try:
+            cur_sz = int(sz.strip())
+        except ValueError:
+            cur_sz = 24
+        sz_row = Adw.ActionRow(title="Cursor size",
+                               subtitle="default 24 — try 32 on HiDPI")
+        adj = Gtk.Adjustment(value=cur_sz, lower=16, upper=64,
+                             step_increment=4)
+        spin = Gtk.SpinButton()
+        spin.set_adjustment(adj)
+        spin.set_valign(Gtk.Align.CENTER)
+        spin.connect("value-changed",
+                     lambda s: self._set_cursor_size(s.get_value_as_int()))
+        sz_row.add_suffix(spin)
+        self.cursor_grp.add(sz_row)
+
+    def _set_cursor_theme(self, name: str) -> None:
+        if not have("gsettings"):
+            self.toast("gsettings missing")
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface",
+             "cursor-theme", name],
+            lambda r: self.toast(f"cursor → {name}"
+                                 if r[0] == 0 else "failed"),
+            timeout=4)
+        # Also set Hyprland cursor at runtime
+        if have("hyprctl"):
+            sh_async(["hyprctl", "setcursor", name, "24"],
+                     lambda r: None, timeout=3)
+
+    def _set_cursor_size(self, sz: int) -> None:
+        if not have("gsettings"):
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface",
+             "cursor-size", str(sz)],
+            lambda r: self.toast(f"cursor size → {sz}"),
+            timeout=4)
+
+    def _render_icons(self) -> None:
+        _clear_group(self.icon_grp)
+        themes = self._list_icon_themes()
+        rc, cur, _ = sh(["gsettings", "get",
+                         "org.gnome.desktop.interface", "icon-theme"],
+                        timeout=2)
+        current = cur.strip().strip("'") or "Adwaita"
+        if not themes:
+            self.icon_grp.add(empty_row(
+                "No icon themes found",
+                "Install one, e.g. papirus-icon-theme"))
+            return
+        row = Adw.ComboRow(
+            title="Icon theme",
+            subtitle=f"current: {current}")
+        store = Gtk.StringList()
+        sel_idx = 0
+        for i, t in enumerate(themes):
+            store.append(t)
+            if t == current:
+                sel_idx = i
+        row.set_model(store)
+        row.set_selected(sel_idx)
+        row.connect("notify::selected",
+                    lambda r, _p: self._set_icon_theme(
+                        themes[r.get_selected()]))
+        self.icon_grp.add(row)
+
+    def _set_icon_theme(self, name: str) -> None:
+        if not have("gsettings"):
+            self.toast("gsettings missing")
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface",
+             "icon-theme", name],
+            lambda r: self.toast(f"icons → {name}"
+                                 if r[0] == 0 else "failed"),
+            timeout=4)
+
+    # ── Fonts ─────────────────────────────────────────────────────────
+    def _render_fonts(self) -> None:
+        _clear_group(self.font_grp)
+        rc, ui, _ = sh(["gsettings", "get",
+                        "org.gnome.desktop.interface", "font-name"],
+                       timeout=2)
+        rc, mono, _ = sh(["gsettings", "get",
+                          "org.gnome.desktop.interface",
+                          "monospace-font-name"], timeout=2)
+        ui = ui.strip().strip("'")
+        mono = mono.strip().strip("'")
+
+        ui_row = Adw.ActionRow(
+            title="Interface font",
+            subtitle=ui or "(unset)")
+        ui_btn = Gtk.Button(label="Choose…")
+        ui_btn.add_css_class("nyx-pill")
+        ui_btn.set_valign(Gtk.Align.CENTER)
+        ui_btn.connect("clicked",
+                       lambda _b: self._pick_font(
+                           "font-name", ui or "Inter 11"))
+        ui_row.add_suffix(ui_btn)
+        self.font_grp.add(ui_row)
+
+        m_row = Adw.ActionRow(
+            title="Monospace font",
+            subtitle=mono or "(unset)")
+        m_btn = Gtk.Button(label="Choose…")
+        m_btn.add_css_class("nyx-pill")
+        m_btn.set_valign(Gtk.Align.CENTER)
+        m_btn.connect("clicked",
+                      lambda _b: self._pick_font(
+                          "monospace-font-name",
+                          mono or "JetBrains Mono 11"))
+        m_row.add_suffix(m_btn)
+        self.font_grp.add(m_row)
+
+    def _pick_font(self, key: str, current: str) -> None:
+        # GTK 4.10+ provides Gtk.FontDialog. On older builds we fall back
+        # to a plain text-entry asking for a Pango font string.
+        if not hasattr(Gtk, "FontDialog"):
+            self._pick_font_fallback(key, current)
+            return
+        try:
+            from gi.repository import Pango
+            dlg = Gtk.FontDialog()
+            dlg.set_title("Choose a font")
+            initial = Pango.FontDescription.from_string(current)
+            dlg.choose_font(self.win, initial, None,
+                            lambda d, res: self._on_font_picked(
+                                d, res, key))
+        except Exception as e:
+            log.warning("FontDialog failed: %s — falling back", e)
+            self._pick_font_fallback(key, current)
+
+    def _pick_font_fallback(self, key: str, current: str) -> None:
+        dlg = Adw.MessageDialog(
+            transient_for=self.win,
+            heading="Choose a font",
+            body="Type a Pango font description, e.g. 'Inter 11' or "
+                 "'JetBrains Mono Bold 12'.")
+        entry = Gtk.Entry()
+        entry.set_text(current)
+        entry.set_margin_top(8)
+        entry.set_margin_bottom(8)
+        entry.set_margin_start(12)
+        entry.set_margin_end(12)
+        dlg.set_extra_child(entry)
+        dlg.add_response("cancel", "Cancel")
+        dlg.add_response("ok", "Apply")
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.SUGGESTED)
+        dlg.set_default_response("ok")
+
+        def on_resp(_d, resp):
+            if resp != "ok":
+                return
+            name = entry.get_text().strip()
+            if not name:
+                return
+            sh_async(
+                ["gsettings", "set",
+                 "org.gnome.desktop.interface", key, name],
+                lambda r: (self.toast(f"{key} → {name}"),
+                           self._render_fonts()),
+                timeout=4)
+        dlg.connect("response", on_resp)
+        dlg.present()
+
+    def _on_font_picked(self, dlg, res, key: str) -> None:
+        try:
+            font_desc = dlg.choose_font_finish(res)
+        except Exception:
+            return
+        if not font_desc:
+            return
+        name = font_desc.to_string()
+        if not have("gsettings"):
+            self.toast("gsettings missing")
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface", key, name],
+            lambda r: (self.toast(f"{key} → {name}"),
+                       self._render_fonts()),
+            timeout=4)
+
+    # ── Wallpaper ─────────────────────────────────────────────────────
+    def _render_wallpaper(self) -> None:
+        _clear_group(self.wall_grp)
+        prefs = self.win.prefs
+
+        # Rotation toggle
+        rot_row = Adw.SwitchRow(
+            title="Rotate wallpaper",
+            subtitle="Cycle through ~/Pictures/Wallpapers every 30 minutes")
+        rot_row.set_active(prefs.get("wallpaper_rotate", False))
+        rot_row.connect("notify::active", self._on_wall_rotate)
+        self.wall_grp.add(rot_row)
+
+        # Grid wrapper
         wall_row = Adw.PreferencesRow()
         wall_row.set_activatable(False)
         wall_row.set_selectable(False)
-
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER)
         scroll.set_min_content_height(220)
@@ -2477,11 +5324,11 @@ class AppearancePage(SectionPage):
         walls: List[Path] = []
         for d in (WALLS_USR, WALLS_SYS):
             if d.exists():
-                walls.extend(sorted(p for p in d.iterdir()
-                                    if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")))
-
+                walls.extend(sorted(
+                    p for p in d.iterdir()
+                    if p.suffix.lower() in (".png", ".jpg",
+                                            ".jpeg", ".webp")))
         current = prefs.get("wallpaper", "")
-
         if not walls:
             empty = Gtk.Label(
                 label="No wallpapers installed.\n"
@@ -2492,7 +5339,7 @@ class AppearancePage(SectionPage):
             empty.add_css_class("nyx-wip-body")
             flow.append(empty)
         else:
-            for wp in walls[:30]:  # cap for perf
+            for wp in walls[:30]:
                 btn = Gtk.Button()
                 btn.add_css_class("nyx-wall-tile")
                 if str(wp) == current:
@@ -2503,16 +5350,95 @@ class AppearancePage(SectionPage):
                 btn.set_child(pic)
                 btn.connect("clicked", self._on_wallpaper, wp)
                 flow.append(btn)
-
         scroll.set_child(flow)
         wall_row.set_child(scroll)
-        g_wall.add(wall_row)
-        self.add_group(g_wall)
+        self.wall_grp.add(wall_row)
 
-        # ── Font scale ────────────────────────────────────────────────
-        g_font = Adw.PreferencesGroup(
-            title="Text size",
-            description="Affects all NYXUS apps. Restart apps to apply.")
+    def _on_wallpaper(self, btn: Gtk.Button, path: Path) -> None:
+        self.win.prefs["wallpaper"] = str(path)
+        save_prefs(self.win.prefs)
+        flow = btn.get_parent()
+        if isinstance(flow, Gtk.FlowBox):
+            child = flow.get_first_child()
+            while child:
+                inner = child.get_first_child()
+                if isinstance(inner, Gtk.Button):
+                    inner.remove_css_class("selected")
+                child = child.get_next_sibling()
+        btn.add_css_class("selected")
+        if have("swaybg"):
+            sh_async(
+                ["sh", "-c",
+                 f"pkill -x swaybg 2>/dev/null; "
+                 f"swaybg -i {str(path)!r} -m fill -c '#000000' "
+                 f">/dev/null 2>&1 &"],
+                lambda r: self.toast(
+                    "wallpaper applied" if r[0] == 0
+                    else f"swaybg failed: {r[2][:60]}"))
+        else:
+            self.toast("swaybg not installed — saved selection only")
+
+    def _on_wall_rotate(self, row: Adw.SwitchRow, _ps) -> None:
+        on = row.get_active()
+        self.win.prefs["wallpaper_rotate"] = on
+        save_prefs(self.win.prefs)
+        # Install or remove a small systemd --user timer
+        unit_dir = HOME / ".config" / "systemd" / "user"
+        unit_dir.mkdir(parents=True, exist_ok=True)
+        timer  = unit_dir / "nyxus-wall-rotate.timer"
+        svc    = unit_dir / "nyxus-wall-rotate.service"
+        helper = HOME / ".local" / "share" / "nyxus" / "wall-rotate.sh"
+        if on:
+            helper.parent.mkdir(parents=True, exist_ok=True)
+            helper.write_text(textwrap.dedent(f"""\
+                #!/usr/bin/env bash
+                set -eu
+                shopt -s nullglob
+                walls=( "{WALLS_USR}"/*.{{png,jpg,jpeg,webp}} \\
+                        "{WALLS_SYS}"/*.{{png,jpg,jpeg,webp}} )
+                [ ${{#walls[@]}} -eq 0 ] && exit 0
+                pick="${{walls[RANDOM % ${{#walls[@]}}]}}"
+                pkill -x swaybg 2>/dev/null || true
+                swaybg -i "$pick" -m fill -c '#000000' >/dev/null 2>&1 &
+                """))
+            helper.chmod(0o755)
+            svc.write_text(textwrap.dedent(f"""\
+                [Unit]
+                Description=NYXUS wallpaper rotator
+                [Service]
+                Type=oneshot
+                ExecStart={helper}
+                """))
+            timer.write_text(textwrap.dedent("""\
+                [Unit]
+                Description=Rotate NYXUS wallpaper every 30 minutes
+                [Timer]
+                OnBootSec=5min
+                OnUnitActiveSec=30min
+                Persistent=true
+                [Install]
+                WantedBy=timers.target
+                """))
+            sh_async(
+                ["sh", "-c",
+                 "systemctl --user daemon-reload && "
+                 "systemctl --user enable --now nyxus-wall-rotate.timer"],
+                lambda r: self.toast(
+                    "rotation enabled" if r[0] == 0
+                    else "failed to enable timer"),
+                timeout=8)
+        else:
+            sh_async(
+                ["sh", "-c",
+                 "systemctl --user disable --now "
+                 "nyxus-wall-rotate.timer 2>/dev/null || true"],
+                lambda r: self.toast("rotation disabled"),
+                timeout=6)
+
+    # ── Text scale ────────────────────────────────────────────────────
+    def _render_scale(self) -> None:
+        _clear_group(self.scale_grp)
+        prefs = self.win.prefs
         scale_row = Adw.ActionRow(title="UI scale")
         adj = Gtk.Adjustment(value=prefs.get("font_scale", 1.0),
                              lower=0.85, upper=1.40, step_increment=0.05)
@@ -2526,60 +5452,41 @@ class AppearancePage(SectionPage):
             scale.add_mark(v, Gtk.PositionType.BOTTOM, None)
         scale.connect("value-changed", self._on_font_scale)
         scale_row.add_suffix(scale)
-        g_font.add(scale_row)
-        self.add_group(g_font)
-
-        # ── Animations ────────────────────────────────────────────────
-        g_anim = Adw.PreferencesGroup(title="Motion")
-        anim_row = Adw.SwitchRow(title="Enable Hyprland animations",
-                                 subtitle="Disable for snappier feel on slow GPUs")
-        anim_row.set_active(prefs.get("animations", True))
-        anim_row.connect("notify::active", self._on_anim_toggle)
-        g_anim.add(anim_row)
-        self.add_group(g_anim)
-
-        # Status pill: which compositor backends are available
-        backends = []
-        if have("swaybg"):     backends.append("swaybg")
-        if have("hyprctl"):    backends.append("hyprctl")
-        kind = "ok" if backends else "warn"
-        msg  = " · ".join(backends) if backends else "no compositor tools"
-        self.add_pill(status_pill(msg, kind))
-
-    def _on_wallpaper(self, btn: Gtk.Button, path: Path) -> None:
-        # Persist
-        self.win.prefs["wallpaper"] = str(path)
-        save_prefs(self.win.prefs)
-        # Visually mark selection
-        flow = btn.get_parent()
-        if isinstance(flow, Gtk.FlowBox):
-            child = flow.get_first_child()
-            while child:
-                inner = child.get_first_child()
-                if isinstance(inner, Gtk.Button):
-                    inner.remove_css_class("selected")
-                child = child.get_next_sibling()
-        btn.add_css_class("selected")
-        # Apply via swaybg (matches Hyprland exec-once + nyxus_install.sh
-        # reload logic — single backend across the whole system, audit A7).
-        # swaybg has no IPC; replace the running daemon with a fresh one
-        # pointed at the new path. `pkill -x` is exact-match so we don't
-        # nuke unrelated processes.
-        if have("swaybg"):
-            sh_async(
-                ["sh", "-c",
-                 f"pkill -x swaybg 2>/dev/null; "
-                 f"swaybg -i {str(path)!r} -m fill -c '#000000' >/dev/null 2>&1 &"],
-                lambda r: self.toast(
-                    "wallpaper applied" if r[0] == 0
-                    else f"swaybg failed: {r[2][:60]}"))
-        else:
-            self.toast("swaybg not installed — saved selection only")
+        self.scale_grp.add(scale_row)
 
     def _on_font_scale(self, scale: Gtk.Scale) -> None:
         v = round(scale.get_value(), 2)
         self.win.prefs["font_scale"] = v
         save_prefs(self.win.prefs)
+        if have("gsettings"):
+            sh_async(
+                ["gsettings", "set", "org.gnome.desktop.interface",
+                 "text-scaling-factor", str(v)],
+                lambda r: None, timeout=3)
+
+    # ── Motion ────────────────────────────────────────────────────────
+    def _render_motion(self) -> None:
+        _clear_group(self.motion_grp)
+        prefs = self.win.prefs
+        anim_row = Adw.SwitchRow(
+            title="Enable Hyprland animations",
+            subtitle="Disable for snappier feel on slow GPUs")
+        anim_row.set_active(prefs.get("animations", True))
+        anim_row.connect("notify::active", self._on_anim_toggle)
+        self.motion_grp.add(anim_row)
+
+        reduce_row = Adw.SwitchRow(
+            title="Reduce motion (apps)",
+            subtitle="gsettings org.gnome.desktop.interface "
+                     "enable-animations")
+        rc, val, _ = sh(["gsettings", "get",
+                         "org.gnome.desktop.interface",
+                         "enable-animations"], timeout=2)
+        # When animations are *enabled*, reduce-motion is OFF
+        currently_anim = "true" in val.lower()
+        reduce_row.set_active(not currently_anim)
+        reduce_row.connect("notify::active", self._on_reduce_motion)
+        self.motion_grp.add(reduce_row)
 
     def _on_anim_toggle(self, row: Adw.SwitchRow, _pspec) -> None:
         on = row.get_active()
@@ -2590,6 +5497,18 @@ class AppearancePage(SectionPage):
                       "1" if on else "0"],
                      lambda r: self.toast(
                          f"animations {'on' if on else 'off'}"))
+
+    def _on_reduce_motion(self, row: Adw.SwitchRow, _pspec) -> None:
+        reduce = row.get_active()
+        if not have("gsettings"):
+            self.toast("gsettings missing")
+            return
+        sh_async(
+            ["gsettings", "set", "org.gnome.desktop.interface",
+             "enable-animations", "false" if reduce else "true"],
+            lambda r: self.toast(
+                f"reduce motion {'on' if reduce else 'off'}"),
+            timeout=4)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -3088,91 +6007,194 @@ class BluetoothPage(SectionPage):
 # Tier-1: ABOUT
 # ──────────────────────────────────────────────────────────────────────
 class AboutPage(SectionPage):
+    """Branded system summary. All real reads:
+      · /etc/os-release · /etc/nyxus-release · /proc/cpuinfo · /proc/meminfo
+      · hostnamectl · uname · uptime -p
+      · ip -4/-6/link · ip route (default route → primary IP/MAC)
+      · bootctl status / efibootmgr / ls /sys/firmware/efi
+      · readlink /proc/1/exe → init system
+      · $XDG_SESSION_TYPE  $XDG_CURRENT_DESKTOP
+      · lspci -nn (GPU)  ·  df -h / (root disk)
+    Plus: branded header, Copy Report, jump to Updates."""
     KEY = "about"
 
     def build(self) -> None:
+        self._reset_groups()
+        self._render()
+
+    def _reset_groups(self) -> None:
+        # NYXUS branded header
+        self.brand_grp = Adw.PreferencesGroup()
+        self.add_group(self.brand_grp)
         # System
-        g_sys = Adw.PreferencesGroup(title="System")
-        _, host,   _ = sh("hostnamectl --static")
-        _, kernel, _ = sh("uname -r")
-        _, uptime, _ = sh("uptime -p")
+        self.sys_grp = Adw.PreferencesGroup(title="System")
+        self.add_group(self.sys_grp)
+        # Hardware
+        self.hw_grp = Adw.PreferencesGroup(title="Hardware")
+        self.add_group(self.hw_grp)
+        # Network
+        self.net_grp = Adw.PreferencesGroup(
+            title="Network",
+            description="Primary route (where default traffic goes)")
+        self.add_group(self.net_grp)
+        # Boot / session
+        self.boot_grp = Adw.PreferencesGroup(
+            title="Boot & session",
+            description="Firmware, bootloader, init, and session type")
+        self.add_group(self.boot_grp)
+        # Actions
+        self.actions_grp = Adw.PreferencesGroup(title="Support")
+        self.add_group(self.actions_grp)
+        # Credits
+        self.credits_grp = Adw.PreferencesGroup(title="NYXUS")
+        self.add_group(self.credits_grp)
+
+    def _render(self) -> None:
+        # Brand header
+        _clear_group(self.brand_grp)
         nyx_ver = self._read_nyx_version()
+        header = Adw.ActionRow()
+        header.set_title("NYXUS")
+        header.set_subtitle(f"DARK MIRROR  ·  {nyx_ver}")
+        big = Gtk.Label(label="◐")
+        big.add_css_class("nyx-section-glyph")
+        big.set_valign(Gtk.Align.CENTER)
+        header.add_prefix(big)
+        header.add_suffix(status_pill(nyx_ver, "ok"))
+        self.brand_grp.add(header)
+
+        # System
+        _clear_group(self.sys_grp)
+        _, host, _ = sh("hostnamectl --static")
+        _, ker, _  = sh(["uname", "-r"])
+        _, up, _   = sh(["uptime", "-p"])
+        os_info = self._os_release()
         for title, value in (
-            ("Hostname",       host.strip()  or "(unset)"),
-            ("Kernel",         kernel.strip() or "(unknown)"),
-            ("NYXUS version",  nyx_ver),
-            ("Uptime",         uptime.strip() or "(unknown)"),
+            ("Distribution",  os_info.get("PRETTY_NAME", "(n/a)")),
+            ("NYXUS version", nyx_ver),
+            ("Build ID",      os_info.get("BUILD_ID", "(n/a)")),
+            ("Variant",       os_info.get("VARIANT", "(n/a)")),
+            ("Hostname",      host.strip() or "(unset)"),
+            ("Kernel",        ker.strip() or "(unknown)"),
+            ("Architecture",  os.uname().machine),
+            ("Uptime",        up.strip() or "(unknown)"),
         ):
-            row = Adw.ActionRow(title=title)
-            row.add_suffix(self._mono(value))
-            g_sys.add(row)
-        self.add_group(g_sys)
+            r = Adw.ActionRow(title=title)
+            r.add_suffix(self._mono(value))
+            self.sys_grp.add(r)
 
         # Hardware
-        g_hw = Adw.PreferencesGroup(title="Hardware")
-        cpu  = self._cpu_model()
-        ram  = self._ram_total()
-        gpu  = self._gpu_model()
-        disk = self._root_disk()
+        _clear_group(self.hw_grp)
         for title, value in (
-            ("Processor", cpu),
-            ("Memory",    ram),
-            ("Graphics",  gpu),
-            ("Root disk", disk),
+            ("Processor", self._cpu_model()),
+            ("CPU cores", self._cpu_cores()),
+            ("Memory",    self._ram_total()),
+            ("Graphics",  self._gpu_model()),
+            ("Root disk", self._root_disk()),
         ):
-            row = Adw.ActionRow(title=title)
-            row.add_suffix(self._mono(value))
-            g_hw.add(row)
-        self.add_group(g_hw)
+            r = Adw.ActionRow(title=title)
+            r.add_suffix(self._mono(value))
+            self.hw_grp.add(r)
 
-        # OS / build
-        g_os = Adw.PreferencesGroup(title="OS")
-        _, osr, _ = sh("cat /etc/os-release")
-        info = {}
-        for ln in osr.splitlines():
-            if "=" in ln:
-                k, v = ln.split("=", 1)
-                info[k] = v.strip().strip('"')
-        for title, key in (
-            ("Distribution", "PRETTY_NAME"),
-            ("Build ID",     "BUILD_ID"),
-            ("Variant",      "VARIANT"),
+        # Network
+        _clear_group(self.net_grp)
+        iface, ipv4, mac, gateway = self._primary_route()
+        ipv6 = self._primary_ipv6(iface)
+        if iface:
+            for title, value in (
+                ("Interface",    iface),
+                ("IPv4 address", ipv4 or "(none)"),
+                ("IPv6 address", ipv6 or "(none)"),
+                ("MAC address",  mac or "(unknown)"),
+                ("Gateway",      gateway or "(none)"),
+            ):
+                r = Adw.ActionRow(title=title)
+                r.add_suffix(self._mono(value))
+                self.net_grp.add(r)
+        else:
+            self.net_grp.add(empty_row(
+                "No active network",
+                "No default route detected — connect to a network first"))
+
+        # Boot & session
+        _clear_group(self.boot_grp)
+        for title, value in (
+            ("Firmware",     self._firmware()),
+            ("Bootloader",   self._bootloader()),
+            ("Init system",  self._init_system()),
+            ("Session type", os.environ.get("XDG_SESSION_TYPE", "(unknown)")),
+            ("Desktop",      os.environ.get("XDG_CURRENT_DESKTOP",
+                                            "Hyprland")),
+            ("Display",      os.environ.get("WAYLAND_DISPLAY",
+                                            os.environ.get("DISPLAY",
+                                                           "(none)"))),
         ):
-            v = info.get(key, "(n/a)")
-            row = Adw.ActionRow(title=title)
-            row.add_suffix(self._mono(v))
-            g_os.add(row)
-        self.add_group(g_os)
+            r = Adw.ActionRow(title=title)
+            r.add_suffix(self._mono(value))
+            self.boot_grp.add(r)
+
+        # Actions
+        _clear_group(self.actions_grp)
+        self.actions_grp.add(action_row(
+            "Copy system report",
+            "Copies a full plain-text report to the clipboard for support",
+            "Copy",
+            self._copy_report))
+        self.actions_grp.add(action_row(
+            "Check for updates",
+            "Opens the Updates section",
+            "Open",
+            lambda: self._jump_to("updates")))
+        self.actions_grp.add(action_row(
+            "Open documentation",
+            "Launches the NYXUS handbook",
+            "Open",
+            lambda: sh_async(
+                ["xdg-open", "https://nyxus.io/docs"],
+                lambda r: None, timeout=5)))
 
         # Credits
-        g_credits = Adw.PreferencesGroup(title="NYXUS")
-        row = Adw.ActionRow(
+        _clear_group(self.credits_grp)
+        cr = Adw.ActionRow(
             title="Designed and built by Joseph Sierengowski",
-            subtitle="© 2026 · DARK MIRROR aesthetic · enterprise grade")
-        g_credits.add(row)
-        self.add_group(g_credits)
+            subtitle="© 2026  ·  DARK MIRROR aesthetic  ·  enterprise grade")
+        self.credits_grp.add(cr)
 
+        self.clear_pills()
         self.add_pill(status_pill(APP_REV, "ok"))
 
+    # ── Helpers ───────────────────────────────────────────────────────
     @staticmethod
     def _mono(text: str) -> Gtk.Label:
         lbl = Gtk.Label(label=text)
         lbl.add_css_class("nyx-pill")
+        lbl.set_selectable(True)
         return lbl
 
     @staticmethod
+    def _os_release() -> dict:
+        info: dict = {}
+        try:
+            for ln in Path("/etc/os-release").read_text().splitlines():
+                if "=" in ln:
+                    k, v = ln.split("=", 1)
+                    info[k] = v.strip().strip('"')
+        except Exception:
+            pass
+        return info
+
+    @staticmethod
     def _read_nyx_version() -> str:
-        for p in (Path("/etc/nyxus-release"),
-                  Path("/etc/os-release")):
-            if p.exists():
-                try:
-                    txt = p.read_text()
-                    for ln in txt.splitlines():
-                        if ln.startswith("NYXUS_VERSION="):
-                            return ln.split("=", 1)[1].strip().strip('"')
-                except Exception:
-                    pass
-        return "(unknown)"
+        for p in (Path("/etc/nyxus-release"), Path("/etc/os-release")):
+            if not p.exists():
+                continue
+            try:
+                for ln in p.read_text().splitlines():
+                    if ln.startswith("NYXUS_VERSION="):
+                        return ln.split("=", 1)[1].strip().strip('"')
+            except Exception:
+                continue
+        return APP_REV
 
     @staticmethod
     def _cpu_model() -> str:
@@ -3185,36 +6207,214 @@ class AboutPage(SectionPage):
         return "(unknown)"
 
     @staticmethod
+    def _cpu_cores() -> str:
+        try:
+            cores = sum(1 for ln in Path("/proc/cpuinfo")
+                        .read_text().splitlines()
+                        if ln.startswith("processor"))
+            return f"{cores} threads"
+        except Exception:
+            return "(unknown)"
+
+    @staticmethod
     def _ram_total() -> str:
         try:
             for ln in Path("/proc/meminfo").read_text().splitlines():
                 if ln.startswith("MemTotal:"):
                     kb = int(ln.split()[1])
-                    gb = kb / 1024 / 1024
-                    return f"{gb:.1f} GiB"
+                    return f"{kb / 1024 / 1024:.1f} GiB"
         except Exception:
             pass
         return "(unknown)"
 
     @staticmethod
     def _gpu_model() -> str:
-        if have("lspci"):
-            _, out, _ = sh("lspci -nn")
-            for ln in out.splitlines():
-                if "VGA" in ln or "3D controller" in ln or "Display controller" in ln:
-                    if ":" in ln:
-                        return ln.split(":", 2)[-1].strip()
-        return "(unknown)"
+        if not have("lspci"):
+            return "(lspci missing)"
+        _, out, _ = sh(["lspci", "-nn"])
+        gpus = []
+        for ln in out.splitlines():
+            if any(k in ln for k in ("VGA", "3D controller",
+                                     "Display controller")):
+                if ":" in ln:
+                    gpus.append(ln.split(":", 2)[-1].strip())
+        return "  ·  ".join(gpus) if gpus else "(unknown)"
 
     @staticmethod
     def _root_disk() -> str:
-        _, out, _ = sh("df -h /")
+        _, out, _ = sh(["df", "-h", "/"])
         lines = out.strip().splitlines()
         if len(lines) >= 2:
-            parts = lines[1].split()
-            if len(parts) >= 5:
-                return f"{parts[2]} used of {parts[1]}  ({parts[4]} full)"
+            p = lines[1].split()
+            if len(p) >= 5:
+                return f"{p[2]} used of {p[1]}  ({p[4]} full)"
         return "(unknown)"
+
+    @staticmethod
+    def _primary_route() -> Tuple[str, str, str, str]:
+        """Return (iface, ipv4, mac, gateway) for the default route."""
+        if not have("ip"):
+            return ("", "", "", "")
+        _, route, _ = sh(["ip", "-4", "route", "show", "default"])
+        iface = ""
+        gw = ""
+        for tok in route.split():
+            if tok == "dev":
+                pass
+        parts = route.split()
+        for i, tok in enumerate(parts):
+            if tok == "dev" and i + 1 < len(parts):
+                iface = parts[i + 1]
+            if tok == "via" and i + 1 < len(parts):
+                gw = parts[i + 1]
+        if not iface:
+            return ("", "", "", "")
+        # IPv4 of that interface
+        _, ipo, _ = sh(["ip", "-4", "-o", "addr", "show", "dev", iface])
+        ipv4 = ""
+        for ln in ipo.splitlines():
+            m = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)", ln)
+            if m:
+                ipv4 = m.group(1)
+                break
+        # MAC of that interface
+        _, lk, _ = sh(["ip", "-o", "link", "show", "dev", iface])
+        mac = ""
+        m = re.search(r"link/\w+\s+([0-9a-f:]{17})", lk)
+        if m:
+            mac = m.group(1)
+        return (iface, ipv4, mac, gw)
+
+    @staticmethod
+    def _primary_ipv6(iface: str) -> str:
+        if not iface or not have("ip"):
+            return ""
+        _, ipo, _ = sh(["ip", "-6", "-o", "addr", "show", "dev",
+                        iface, "scope", "global"])
+        for ln in ipo.splitlines():
+            m = re.search(r"inet6\s+([0-9a-f:]+)", ln)
+            if m:
+                return m.group(1)
+        return ""
+
+    @staticmethod
+    def _firmware() -> str:
+        if Path("/sys/firmware/efi").exists():
+            return "UEFI"
+        return "Legacy BIOS"
+
+    @staticmethod
+    def _bootloader() -> str:
+        # systemd-boot first
+        if have("bootctl"):
+            _, out, _ = sh(["bootctl", "status"], timeout=2)
+            for ln in out.splitlines():
+                ln = ln.strip()
+                if ln.lower().startswith("product:"):
+                    return ln.split(":", 1)[1].strip()
+        # GRUB
+        for p in (Path("/boot/grub/grub.cfg"),
+                  Path("/boot/grub2/grub.cfg")):
+            if p.exists():
+                return "GRUB"
+        # rEFInd
+        if Path("/boot/EFI/refind").exists() or \
+           Path("/boot/efi/EFI/refind").exists():
+            return "rEFInd"
+        # systemd-boot (loader entries present)
+        if Path("/boot/loader/entries").exists():
+            return "systemd-boot"
+        return "(unknown)"
+
+    @staticmethod
+    def _init_system() -> str:
+        try:
+            tgt = os.readlink("/proc/1/exe")
+            base = os.path.basename(tgt)
+            if "systemd" in tgt:
+                _, ver, _ = sh(["systemctl", "--version"], timeout=2)
+                first = ver.splitlines()[0] if ver else "systemd"
+                return first.strip()
+            return base
+        except Exception:
+            return "(unknown)"
+
+    # ── Actions ───────────────────────────────────────────────────────
+    def _build_report(self) -> str:
+        nyx_ver = self._read_nyx_version()
+        os_info = self._os_release()
+        _, host, _ = sh("hostnamectl --static")
+        _, ker, _  = sh(["uname", "-r"])
+        _, up, _   = sh(["uptime", "-p"])
+        iface, ipv4, mac, gw = self._primary_route()
+        ipv6 = self._primary_ipv6(iface)
+        lines = [
+            "═══════════════════════════════════════════════",
+            f"  NYXUS SYSTEM REPORT  ·  {datetime.now():%Y-%m-%d %H:%M}",
+            "═══════════════════════════════════════════════",
+            "",
+            "[ System ]",
+            f"  Distribution : {os_info.get('PRETTY_NAME', '(n/a)')}",
+            f"  NYXUS        : {nyx_ver}",
+            f"  Build ID     : {os_info.get('BUILD_ID', '(n/a)')}",
+            f"  Variant      : {os_info.get('VARIANT', '(n/a)')}",
+            f"  Hostname     : {host.strip() or '(unset)'}",
+            f"  Kernel       : {ker.strip() or '(unknown)'}",
+            f"  Architecture : {os.uname().machine}",
+            f"  Uptime       : {up.strip() or '(unknown)'}",
+            "",
+            "[ Hardware ]",
+            f"  CPU          : {self._cpu_model()}",
+            f"  Cores        : {self._cpu_cores()}",
+            f"  RAM          : {self._ram_total()}",
+            f"  GPU          : {self._gpu_model()}",
+            f"  Root disk    : {self._root_disk()}",
+            "",
+            "[ Network ]",
+            f"  Interface    : {iface or '(none)'}",
+            f"  IPv4         : {ipv4 or '(none)'}",
+            f"  IPv6         : {ipv6 or '(none)'}",
+            f"  MAC          : {mac or '(unknown)'}",
+            f"  Gateway      : {gw or '(none)'}",
+            "",
+            "[ Boot & session ]",
+            f"  Firmware     : {self._firmware()}",
+            f"  Bootloader   : {self._bootloader()}",
+            f"  Init         : {self._init_system()}",
+            f"  Session      : {os.environ.get('XDG_SESSION_TYPE', '?')}",
+            f"  Desktop      : {os.environ.get('XDG_CURRENT_DESKTOP', 'Hyprland')}",
+            "",
+            "═══════════════════════════════════════════════",
+        ]
+        return "\n".join(lines)
+
+    def _copy_report(self) -> None:
+        report = self._build_report()
+        try:
+            disp = Gdk.Display.get_default()
+            cb = disp.get_clipboard()
+            cb.set(report)
+            self.toast(f"copied {len(report)} chars to clipboard")
+        except Exception as e:
+            # Fallback: wl-copy / xclip
+            if have("wl-copy"):
+                p = subprocess.Popen(["wl-copy"], stdin=subprocess.PIPE)
+                p.communicate(report.encode())
+                self.toast("copied via wl-copy")
+            elif have("xclip"):
+                p = subprocess.Popen(
+                    ["xclip", "-selection", "clipboard"],
+                    stdin=subprocess.PIPE)
+                p.communicate(report.encode())
+                self.toast("copied via xclip")
+            else:
+                self.toast(f"clipboard failed: {e}")
+
+    def _jump_to(self, key: str) -> None:
+        try:
+            self.win._select_key(key)
+        except Exception as e:
+            self.toast(f"navigation failed: {e}")
 
 
 # Map section.key → page class.

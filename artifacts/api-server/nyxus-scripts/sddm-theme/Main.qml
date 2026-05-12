@@ -1,4 +1,7 @@
-// NYXUS · SDDM greeter · DARK MIRROR void login (rev 2026-05-09)
+// NYXUS · SDDM greeter · DARK MIRROR void login (rev 2026-05-12 r14)
+// P2.10 polish: user avatar from ~/.face via UserModel, SUSPEND power
+// action, focus rings on power buttons, screen-reader accessibility
+// labels on every interactive control.
 //
 // Replaces a 448-line theme that broke at line 245 with a non-existent
 // `contentItem` binding on a ComboBox `background:` — caused SDDM to fall
@@ -35,6 +38,9 @@ Rectangle {
     readonly property color clrGlassDeep:    Qt.rgba(15/255, 20/255, 32/255, 0.72)
     readonly property color clrGlassDeepest: Qt.rgba(5/255, 7/255, 12/255, 0.92)
     readonly property color clrHairline:     Qt.rgba(255/255, 255/255, 255/255, 0.10)
+    // Accent comes from theme.conf.user (written by Settings → Appearance).
+    // Falls back to the locked Mirror White if no accent has been set.
+    readonly property color clrAccent:       config.Accent || "#e8edf5"
     readonly property color clrFocus:        Qt.rgba(230/255, 240/255, 255/255, 0.55)
     readonly property color clrText:         "#e8edf5"
     readonly property color clrTextDim:      "#c8ccd6"
@@ -65,32 +71,42 @@ Rectangle {
 
         Repeater {
             model: [
+                { label: "SUSPEND", action: "suspend", enabled: sddm.canSuspend  },
                 { label: "REBOOT",  action: "reboot",  enabled: sddm.canReboot   },
                 { label: "POWER",   action: "off",     enabled: sddm.canPowerOff }
             ]
             delegate: Button {
+                id: pwrBtn
                 text: modelData.label
                 enabled: modelData.enabled
                 font.family: "Inter"
                 font.pixelSize: 11
                 font.letterSpacing: 1.5
                 padding: 10
+                Accessible.role: Accessible.Button
+                Accessible.name: modelData.label
+                Accessible.description: "Session " + modelData.action.toLowerCase() + " action"
                 background: Rectangle {
-                    color: parent.hovered ? clrGlassDeep : clrGlass
-                    border.color: clrHairline
-                    border.width: 1
+                    color: pwrBtn.hovered ? clrGlassDeep : clrGlass
+                    // Visible keyboard focus ring — required for a11y.
+                    border.color: pwrBtn.activeFocus ? clrAccent
+                                : pwrBtn.hovered    ? clrFocus
+                                : clrHairline
+                    border.width: pwrBtn.activeFocus ? 2 : 1
                     radius: 14
+                    opacity: pwrBtn.enabled ? 1.0 : 0.45
                 }
                 contentItem: Text {
-                    text: parent.text
-                    color: parent.hovered ? clrWhite : clrTextDim
-                    font: parent.font
+                    text: pwrBtn.text
+                    color: pwrBtn.hovered ? clrWhite : clrTextDim
+                    font: pwrBtn.font
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
                 onClicked: {
-                    if (modelData.action === "reboot") sddm.reboot()
-                    else                                sddm.powerOff()
+                    if      (modelData.action === "suspend") sddm.suspend()
+                    else if (modelData.action === "reboot")  sddm.reboot()
+                    else                                     sddm.powerOff()
                 }
             }
         }
@@ -99,8 +115,53 @@ Rectangle {
     // ── Center clock + login card stack ──────────────────────────────────
     ColumnLayout {
         anchors.centerIn: parent
-        spacing: 36
+        spacing: 28
         width: 420
+
+        // Avatar — circular ~/.face from UserModel (when a real account
+        // exists). Falls back to a hairline glyph on the live ISO. The
+        // outer Rectangle gives us a hairline ring + circular clip.
+        Rectangle {
+            id: avatarRing
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredWidth: 96
+            Layout.preferredHeight: 96
+            color: clrGlass
+            radius: 48
+            border.color: clrHairline
+            border.width: 1
+            // The icon source from UserModel is already a file path; if
+            // missing or unreadable QML will silently skip the Image
+            // and the hairline ring + glyph remain visible.
+            property string iconPath: userModel.count > 0
+                ? userModel.data(userModel.index(0, 0), Qt.UserRole + 2)
+                : ""
+
+            Image {
+                id: avatarImg
+                anchors.fill: parent
+                anchors.margins: 2
+                source: avatarRing.iconPath
+                fillMode: Image.PreserveAspectCrop
+                visible: status === Image.Ready
+                asynchronous: true
+                cache: true
+                smooth: true
+                // Round mask via OpacityMask would require QtGraphicalEffects;
+                // a plain radius + clip on the parent achieves the same look
+                // on every Qt 6 stack without an extra import.
+                layer.enabled: true
+            }
+            Text {
+                anchors.centerIn: parent
+                visible: !avatarImg.visible
+                text: "◆"
+                color: clrTextDim
+                font.family: "Inter"
+                font.pixelSize: 38
+            }
+            clip: true
+        }
 
         // Clock
         Text {
@@ -171,6 +232,9 @@ Rectangle {
                     selectByMouse: true
                     leftPadding: 14
                     rightPadding: 14
+                    Accessible.role: Accessible.EditableText
+                    Accessible.name: "Username"
+                    Accessible.description: "Account username for sign-in"
                     background: Rectangle {
                         color: clrGlassDeep
                         border.color: userField.activeFocus ? clrFocus : clrHairline
@@ -194,6 +258,9 @@ Rectangle {
                     selectByMouse: true
                     leftPadding: 14
                     rightPadding: 14
+                    Accessible.role: Accessible.EditableText
+                    Accessible.name: "Password"
+                    Accessible.description: "Account password — input is hidden"
                     background: Rectangle {
                         color: clrGlassDeep
                         border.color: passwordField.activeFocus ? clrFocus : clrHairline
@@ -213,9 +280,12 @@ Rectangle {
                     font.family: "Inter"
                     font.pixelSize: 12
                     font.letterSpacing: 3
+                    Accessible.role: Accessible.Button
+                    Accessible.name: "Sign in"
+                    Accessible.description: "Authenticate and start the selected session"
                     background: Rectangle {
                         color: signInBtn.hovered ? clrGlassDeepest : clrGlassDeep
-                        border.color: signInBtn.hovered ? clrFocus : clrHairline
+                        border.color: signInBtn.hovered ? clrAccent : clrHairline
                         border.width: 1
                         radius: 10
                     }
