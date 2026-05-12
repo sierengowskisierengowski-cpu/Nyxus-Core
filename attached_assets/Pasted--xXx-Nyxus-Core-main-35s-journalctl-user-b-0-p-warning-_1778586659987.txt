@@ -1,0 +1,57 @@
+
+
+...xXx... Nyxus-Core  main ?⇡  35s
+❯ journalctl --user -b 0 -p warning -n 50 --no-pager                                     07:50:45
+May 12 05:24:02 NyxOS xdg-desktop-portal-gtk[7792]: Theme parsing error: gtk.css:844:11: 'icon-size' is not a valid property name
+May 12 05:24:24 NyxOS gcr-prompter[10150]: Theme parsing error: gtk.css:284:11: 'icon-size' is not a valid property name
+May 12 05:24:24 NyxOS gcr-prompter[10150]: Theme parsing error: gtk.css:331:20: 'none' is not a valid color name
+May 12 05:24:24 NyxOS gcr-prompter[10150]: Theme parsing error: gtk.css:703:2: Invalid name of pseudo-class
+May 12 05:24:24 NyxOS gcr-prompter[10150]: Theme parsing error: gtk.css:750:11: 'icon-size' is not a valid property name
+May 12 05:24:24 NyxOS gcr-prompter[10150]: Theme parsing error: gtk.css:781:107: Junk at end of value for background-image
+May 12 05:24:24 NyxOS gcr-prompter[10150]: Theme parsing error: gtk.css:840:11: 'icon-size' is not a valid property name
+May 12 05:24:24 NyxOS gcr-prompter[10150]: Theme parsing error: gtk.css:844:11: 'icon-size' is not a valid property name
+May 12 07:12:18 NyxOS gcr-prompter[80994]: Theme parsing error: gtk.css:284:11: 'icon-size' is not a valid property name
+May 12 07:12:18 NyxOS gcr-prompter[80994]: Theme parsing error: gtk.css:331:20: 'none' is not a valid color name
+May 12 07:12:18 NyxOS gcr-prompter[80994]: Theme parsing error: gtk.css:703:2: Invalid name of pseudo-class
+May 12 07:12:18 NyxOS gcr-prompter[80994]: Theme parsing error: gtk.css:750:11: 'icon-size' is not a valid property name
+May 12 07:12:18 NyxOS gcr-prompter[80994]: Theme parsing error: gtk.css:781:107: Junk at end of value for background-image
+May 12 07:12:18 NyxOS gcr-prompter[80994]: Theme parsing error: gtk.css:840:11: 'icon-size' is not a valid property name
+May 12 07:12:18 NyxOS gcr-prompter[80994]: Theme parsing error: gtk.css:844:11: 'icon-size' is not a valid property name
+May 12 07:12:59 NyxOS gcr-prompter[81875]: Theme parsing error: gtk.css:284:11: 'icon-size' is not a valid property name
+May 12 07:12:59 NyxOS gcr-prompter[81875]: Theme parsing error: gtk.css:331:20: 'none' is not a valid color name
+May 12 07:12:59 NyxOS gcr-prompter[81875]: Theme parsing error: gtk.css:703:2: Invalid name of pseudo-class
+May 12 07:12:59 NyxOS gcr-prompter[81875]: Theme parsing error: gtk.css:750:11: 'icon-size' is not a valid property name
+May 12 07:12:59 NyxOS gcr-prompter[81875]: Theme parsing error: gtk.css:781:107: Junk at end of value for background-image
+May 12 07:12:59 NyxOS gcr-prompter[81875]: Theme parsing error: gtk.css:840:11: 'icon-size' is not a valid property name
+May 12 07:12:59 NyxOS gcr-prompter[81875]: Theme parsing error: gtk.css:844:11: 'icon-size' is not a valid property name
+May 12 07:15:35 NyxOS gcr-prompter[83631]: Theme parsing error: gtk.css:284:11: 'icon-size' is not a valid property name
+May 12 07:15:35 NyxOS gcr-prompter[83631]: Theme parsing error: gtk.css:331:20: 'none' is not a valid color name
+May 12 07:15:35 NyxOS gcr-prompter[83631]: Theme parsing error: gtk.css:703:2: Invalid name of pseudo-class
+May 12 07:15:35 NyxOS gcr-prompter[83631]: Theme parsing error: gtk.css:750:11: 'icon-size' is not a valid property name
+May 12 07:15:35 NyxOS gcr-prompter[83631]: Theme parsing error: gtk.css:781:107: Junk at end of value for background-image
+May 12 07:15:35 NyxOS gcr-prompter[83631]: Theme parsing error: gtk.css:840:11: 'icon-size' is not a valid property name
+May 12 07:15:35 NyxOS gcr-prompter[83631]: Theme parsing error: gtk.css:844:11: 'icon-size' is not a valid property name
+May 12 07:40:47 NyxOS gcr-prompter[101204]: Theme parsing error: gtk.css:284:11: 'icon-size' is not a valid property name
+May 12 07:40:47 NyxOS gcr-prompter[101204]: Theme parsing error: gtk.css:331:20: 'none' is not a valid color name
+May 12 07:40:47 NyxOS gcr-prompter[101204]: Theme parsing error: gtk.css:703:2: Invalid name of pseudo-class
+May 12 07:40:47 NyxOS gcr-prompter[101204]: Theme parsing error: gtk.css:750:11: 'icon-size' is not a valid property name
+May 12 07:40:47 NyxOS gcr-prompter[101204]: Theme parsing error: gtk.css:781:107: Junk at end of value for background-image
+May 12 07:40:47 NyxOS gcr-prompter[101204]: Theme parsing error: gtk.css:840:11: 'icon-size' is not a valid property name
+May 12 07:40:47 NyxOS gcr-prompter[101204]: Theme parsing error: gtk.css:844:11: 'icon-size' is not a valid property name
+May 12 07:41:49 NyxOS gcr-prompter[102892]: Theme parsing error: gtk.css:284:11: 'icon-size' is not a valid property name
+May 12 07:41:49 NyxOS gcr-prompter[102892]: Theme parsing error: gtk.css:331:20: 'none' is not a valid color name
+May 12 07:41:49 NyxOS gcr-prompter[102892]: Theme parsing error: gtk.css:703:2: Invalid name of pseudo-class
+May 12 07:41:49 NyxOS gcr-prompter[102892]: Theme parsing error: gtk.css:750:11: 'icon-size' is not a valid property name
+May 12 07:41:49 NyxOS gcr-prompter[102892]: Theme parsing error: gtk.css:781:107: Junk at end of value for background-image
+May 12 07:41:49 NyxOS gcr-prompter[102892]: Theme parsing error: gtk.css:840:11: 'icon-size' is not a valid property name
+May 12 07:41:49 NyxOS gcr-prompter[102892]: Theme parsing error: gtk.css:844:11: 'icon-size' is not a valid property name
+May 12 07:49:19 NyxOS gcr-prompter[120644]: Theme parsing error: gtk.css:284:11: 'icon-size' is not a valid property name
+May 12 07:49:19 NyxOS gcr-prompter[120644]: Theme parsing error: gtk.css:331:20: 'none' is not a valid color name
+May 12 07:49:19 NyxOS gcr-prompter[120644]: Theme parsing error: gtk.css:703:2: Invalid name of pseudo-class
+May 12 07:49:19 NyxOS gcr-prompter[120644]: Theme parsing error: gtk.css:750:11: 'icon-size' is not a valid property name
+May 12 07:49:19 NyxOS gcr-prompter[120644]: Theme parsing error: gtk.css:781:107: Junk at end of value for background-image
+May 12 07:49:19 NyxOS gcr-prompter[120644]: Theme parsing error: gtk.css:840:11: 'icon-size' is not a valid property name
+May 12 07:49:19 NyxOS gcr-prompter[120644]: Theme parsing error: gtk.css:844:11: 'icon-size' is not a valid property name
+
+...xXx... Nyxus-Core  main ?⇡
+❯                                                                            
