@@ -57,7 +57,7 @@
                                      "~/.config/eww/scripts/notifications.sh")
 
 ;; ── Sprint 1 flyouts ─────────────────────────────────────────────────
-(defpoll QS         :interval "3s"   :initial '{"wifi":"off","bt":"off","airplane":"off","dnd":"off","nightlight":"off","profile":"balanced","mic_mute":"off","audio_mute":"off","rot_lock":"off","auto_bright":"off"}'
+(defpoll QS         :interval "3s"   :initial '{"wifi":"off","bt":"off","airplane":"off","dnd":"off","nightlight":"off","profile":"balanced","mic_mute":"off","audio_mute":"off","rotate":"0"}'
                                      "~/.config/eww/scripts/quicksettings.sh")
 (defpoll WIFILIST   :interval "8s"   :initial '{"networks":[],"enabled":"false","current":""}'
                                      "~/.config/eww/scripts/wifi-list.sh")
@@ -67,7 +67,7 @@
                                      "~/.config/eww/scripts/audio-sinks.sh")
 (defpoll CALMONTH   :interval "300s" :initial '{"month":"—","year":"—","today":"","weeks":[]}'
                                      "~/.config/eww/scripts/calendar-month.sh")
-(defpoll NOTIFLIST  :interval "3s"   :initial '{"items":[],"total":0,"paused":"false"}'
+(defpoll NOTIFLIST  :interval "3s"   :initial '{"items":[],"groups":[],"muted":[],"total":0,"shown":0,"paused":"false"}'
                                      "~/.config/eww/scripts/notif-history.sh")
 
 ;; ═════════════════════════════════════════════════════════════════════
@@ -544,41 +544,123 @@
       (label :class "qs-tile-glyph" :text "${glyph}")
       (label :class "qs-tile-label" :text "${label}"))))
 
+;; Reusable tile with optional tooltip — keeps backward-compat with the
+;; old (qs_tile glyph label state cmd) callsites by defaulting tooltip
+;; to the empty string when omitted.
+(defwidget qs_tile_t [glyph label state cmd tooltip]
+  (button :class {state == "on" ? "qs-tile qs-tile-on" : "qs-tile"}
+          :tooltip "${tooltip}"
+          :onclick "(${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 4 :halign "center"
+      (label :class "qs-tile-glyph" :text "${glyph}")
+      (label :class "qs-tile-label" :text "${label}"))))
+
+;; Now-playing strip. Hidden when no media player is reporting status,
+;; so the panel doesn't reserve dead space on a system without playerctl.
+(defwidget qs_nowplaying []
+  (box :class "qs-nowplaying" :orientation "h" :space-evenly false :spacing 10
+       :visible {PLAYER.status != "Stopped"}
+    (label :class "qs-np-icon" :text "${PLAYER.icon}")
+    (box :orientation "v" :space-evenly false :spacing 0 :hexpand true :halign "start"
+      (label :class "qs-np-title"  :halign "start" :limit-width 28 :text "${PLAYER.title}")
+      (label :class "qs-np-artist" :halign "start" :limit-width 32 :text "${PLAYER.artist}"
+             :visible {PLAYER.artist != ""}))
+    (button :class "qs-np-btn" :tooltip "Previous" :onclick "playerctl previous &" "⏮")
+    (button :class "qs-np-btn qs-np-btn-primary" :tooltip "Play / Pause"
+            :onclick "playerctl play-pause &"
+      "${PLAYER.status == 'Playing' ? '⏸' : '▶'}")
+    (button :class "qs-np-btn" :tooltip "Next"     :onclick "playerctl next &" "⏭")))
+
+;; Cohesive single-pane Control Center (P2.12). One panel surfaces
+;; everything: identity header, connectivity tiles, system tiles,
+;; sliders, now-playing, and footer shortcuts. No more flipping between
+;; separate WiFi / BT / Mixer windows for the common path — those
+;; windows still exist for advanced lists, reachable from the header.
 (defwidget quicksettings_layout []
   (box :class "qs-root" :orientation "v" :space-evenly false :spacing 14
-    (label :class "qs-title" :text "QUICK SETTINGS")
 
+    ;; ── Header: title + power-profile pill + Settings shortcut ──────
+    (box :class "qs-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "qs-title" :text "CONTROL CENTER" :hexpand true :halign "start")
+      (button :class "qs-pill" :tooltip "Cycle power profile (saver → balanced → performance)"
+              :onclick "~/.config/eww/scripts/qs-toggle.sh profile &"
+        "⚡ ${QS.profile}")
+      (button :class "qs-settings" :tooltip "Open System Settings"
+              :onclick "eww close quicksettings && nyxus-settings &"
+        "⚙"))
+
+    ;; ── Connectivity row ───────────────────────────────────────────
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
-      (qs_tile :glyph "📶" :label "WiFi"      :state "${QS.wifi}"       :cmd "~/.config/eww/scripts/qs-toggle.sh wifi")
-      (qs_tile :glyph ""  :label "Bluetooth" :state "${QS.bt}"         :cmd "~/.config/eww/scripts/qs-toggle.sh bt")
-      (qs_tile :glyph "✈" :label "Airplane"  :state "${QS.airplane}"   :cmd "~/.config/eww/scripts/qs-toggle.sh airplane")
-      (qs_tile :glyph "🌙" :label "DND"       :state "${QS.dnd}"        :cmd "~/.config/eww/scripts/qs-toggle.sh dnd"))
+      (qs_tile_t :glyph "📶" :label "WiFi"      :state "${QS.wifi}"
+                 :tooltip "Toggle WiFi · long-press header opens picker"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh wifi")
+      (qs_tile_t :glyph ""  :label "Bluetooth" :state "${QS.bt}"
+                 :tooltip "Toggle Bluetooth radio"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh bt")
+      (qs_tile_t :glyph "✈" :label "Airplane"  :state "${QS.airplane}"
+                 :tooltip "Airplane mode — block all radios"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh airplane")
+      (qs_tile_t :glyph "🌙" :label "DND"       :state "${QS.dnd}"
+                 :tooltip "Do Not Disturb — silence notifications"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh dnd"))
 
+    ;; ── System row ─────────────────────────────────────────────────
+    ;; P2.12 review fix: dropped the `auto-bright` tile (no native
+    ;; backend on Arch + Hyprland — would have been a flag-only stub).
+    ;; Replaced flag-only `rot_lock` with a real `Rotate` tile that
+    ;; cycles the focused monitor's transform via `hyprctl keyword
+    ;; monitor ,transform,N` and reports the live angle from QS.rotate.
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
-      (qs_tile :glyph "☾"  :label "NightLight":state "${QS.nightlight}" :cmd "~/.config/eww/scripts/qs-toggle.sh nightlight")
-      (qs_tile :glyph "⚡" :label "${QS.profile}" :state "on"           :cmd "~/.config/eww/scripts/qs-toggle.sh profile")
-      (qs_tile :glyph "🎤" :label "Mic"        :state "${QS.mic_mute}"   :cmd "~/.config/eww/scripts/qs-toggle.sh mic")
-      (qs_tile :glyph "🔇" :label "Mute"       :state "${QS.audio_mute}" :cmd "~/.config/eww/scripts/qs-toggle.sh audio"))
+      (qs_tile_t :glyph "☾"  :label "NightLight" :state "${QS.nightlight}"
+                 :tooltip "Warm color temperature for night use"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh nightlight")
+      (qs_tile_t :glyph "🎤" :label "Mic"        :state "${QS.mic_mute}"
+                 :tooltip "Mute / unmute microphone"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh mic")
+      (qs_tile_t :glyph "🔇" :label "Mute"       :state "${QS.audio_mute}"
+                 :tooltip "Mute / unmute audio output"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh audio")
+      (qs_tile_t :glyph "🔄"
+                 :label {QS.rotate == "0" ? "0°"
+                       : QS.rotate == "1" ? "90°"
+                       : QS.rotate == "2" ? "180°"
+                       : "270°"}
+                 :state {QS.rotate == "0" ? "off" : "on"}
+                 :tooltip "Rotate display (cycles 0° → 90° → 180° → 270°)"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh rotate"))
 
+    ;; ── Session row ────────────────────────────────────────────────
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
-      (qs_tile :glyph "🔄" :label "RotLock"   :state "${QS.rot_lock}"    :cmd "~/.config/eww/scripts/qs-toggle.sh rot")
-      (qs_tile :glyph "☼"  :label "AutoBrt"  :state "${QS.auto_bright}" :cmd "~/.config/eww/scripts/qs-toggle.sh auto-bright")
-      (qs_tile :glyph "🔒" :label "Lock"      :state "off" :cmd "eww close quicksettings && hyprlock")
-      (qs_tile :glyph "⏻"  :label "Power"    :state "off" :cmd "eww close quicksettings && eww open --toggle powermenu"))
+      (qs_tile_t :glyph "🔔" :label "Notifs"    :state "off"
+                 :tooltip "Open Notification Center"
+                 :cmd "eww close quicksettings && eww open --toggle notifications")
+      (qs_tile_t :glyph "🔒" :label "Lock"      :state "off"
+                 :tooltip "Lock screen now"
+                 :cmd "eww close quicksettings && hyprlock")
+      (qs_tile_t :glyph "⏻"  :label "Power"     :state "off"
+                 :tooltip "Power menu"
+                 :cmd "eww close quicksettings && eww open --toggle powermenu"))
 
+    ;; ── Sliders ────────────────────────────────────────────────────
     (box :class "qs-sliders" :orientation "v" :space-evenly false :spacing 10
       (box :orientation "h" :space-evenly false :spacing 12
         (label :class "qs-slider-glyph" :text "🔊")
         (scale :class "qs-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
+               :tooltip "Output volume · ${AUDIO.vol}%"
                :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
       (box :orientation "h" :space-evenly false :spacing 12
         (label :class "qs-slider-glyph" :text "☼")
         (scale :class "qs-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+               :tooltip "Display brightness · ${BACKLIGHT.percent}%"
                :onchange "brightnessctl set {}%"))
       (box :orientation "h" :space-evenly false :spacing 12
         (label :class "qs-slider-glyph" :text "🎤")
         (scale :class "qs-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
+               :tooltip "Microphone gain · ${MIC.vol}%"
                :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%")))
+
+    ;; ── Now-playing strip (auto-hides when no player is active) ────
+    (qs_nowplaying)
 
     (button :class "qs-close" :onclick "eww close quicksettings" "Close (Esc)")))
 
@@ -768,38 +850,76 @@
 ;; SPRINT 1 · NOTIFICATION CENTER
 ;; ═════════════════════════════════════════════════════════════════════
 
+;; A single notification row. Two action affordances on the right:
+;; the default action (only rendered when dunst exposes a name) and
+;; the per-row dismiss. Muted rows render at half opacity but are kept
+;; visible so users can still see what was silenced and unmute.
 (defwidget notif_row [n]
-  (box :class "notif-row" :orientation "h" :space-evenly false :spacing 10
-    (label :class "notif-app" :text "${n.app}")
+  (box :class {n.muted == true ? "notif-row notif-row-muted" : "notif-row"}
+       :orientation "h" :space-evenly false :spacing 10
     (box :orientation "v" :space-evenly false :spacing 2 :hexpand true :halign "start"
-      (label :class "notif-summary" :halign "start" :limit-width 36 :text "${n.summary}")
-      (label :class "notif-body"    :halign "start" :limit-width 44 :text "${n.body}"))
+      (label :class "notif-summary" :halign "start" :limit-width 38 :text "${n.summary}")
+      (label :class "notif-body"    :halign "start" :limit-width 46 :text "${n.body}"
+             :visible {n.body != ""}))
+    (button :class "notif-action"
+            :visible {n.default_action != ""}
+            :tooltip "${n.default_action}"
+            :onclick "~/.config/eww/scripts/notif-action.sh invoke-id ${n.id} &"
+      "↗")
     (button :class "notif-dismiss"
             :onclick "~/.config/eww/scripts/notif-action.sh close-id ${n.id} &"
             :tooltip "Dismiss" "✕")))
 
+;; Per-app group header. The app-name pill toggles mute for the whole
+;; app; the count badge shows in-history total. Click anywhere on the
+;; header to mute/unmute all notifications from that app.
+(defwidget notif_group [g]
+  (box :class {g.muted == true ? "notif-group notif-group-muted" : "notif-group"}
+       :orientation "v" :space-evenly false :spacing 6
+    (box :class "notif-group-header" :orientation "h" :space-evenly false :spacing 8
+      (label :class "notif-app"   :text "${g.app}" :hexpand true :halign "start")
+      (label :class "notif-count" :text "${g.count}")
+      (button :class {g.muted == true ? "notif-mute notif-mute-on" : "notif-mute"}
+              :tooltip {g.muted == true ? "Unmute ${g.app}" : "Mute ${g.app}"}
+              ;; SECURITY: app name is passed as base64 token (b64:<...>)
+              ;; rather than interpolated raw — notification metadata is
+              ;; attacker-influenced and a literal app name like
+              ;;     foo'; rm -rf $HOME; '
+              ;; would otherwise break out of the single-quoted argv.
+              :onclick "~/.config/eww/scripts/notif-action.sh mute-app b64:${g.app_b64} &"
+        "${g.muted == true ? '🔕' : '🔔'}"))
+    (box :orientation "v" :space-evenly false :spacing 4
+      (for n in {g.items}
+        (notif_row :n {n})))))
+
+;; Slide-in is provided at the layer-shell level by Hyprland — see
+;; `nyxus-hyprland-layerblur.conf` for the `layerrule = animation slide,
+;; nyxus-notifications` line. EWW just renders the static contents.
 (defwidget notifications_layout []
   (box :class "notif-root" :orientation "v" :space-evenly false :spacing 12
     (box :class "notif-header" :orientation "h" :space-evenly false :spacing 10
-      (label :class "notif-title" :text "NOTIFICATIONS · ${NOTIFLIST.total}" :hexpand true :halign "start")
-      (button :class "notif-dnd"
+      (label :class "notif-title"
+             :text "NOTIFICATIONS · ${NOTIFLIST.shown}/${NOTIFLIST.total}"
+             :hexpand true :halign "start")
+      (button :class {NOTIFLIST.paused == 'true' ? "notif-dnd notif-dnd-on" : "notif-dnd"}
+              :tooltip {NOTIFLIST.paused == 'true' ? "Do Not Disturb is ON — click to resume" : "Silence all notifications"}
               :onclick "~/.config/eww/scripts/notif-action.sh toggle-dnd &"
         "${NOTIFLIST.paused == 'true' ? 'DND' : 'ON'}")
       (button :class "notif-clear"
               :onclick "~/.config/eww/scripts/notif-action.sh clear-all &"
+              :tooltip "Clear notification history"
         "Clear all"))
-    (scroll :class "notif-scroll" :vscroll true :hscroll false :height 460
-      (box :orientation "v" :space-evenly false :spacing 6
-        ;; DESIGN_CONTRACT §9 — empty state. NOTIFLIST.total is already
-        ;; surfaced by notif-history.sh so we don't need arraylength here.
+    (scroll :class "notif-scroll" :vscroll true :hscroll false :height 480
+      (box :orientation "v" :space-evenly false :spacing 10
+        ;; DESIGN_CONTRACT §9 — empty state.
         (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
              :valign "center" :halign "center"
              :visible {NOTIFLIST.total == 0}
           (label :class "empty-glyph" :text "✓")
           (label :class "empty-title" :text {NOTIFLIST.paused == 'true' ? "Do Not Disturb is on" : "All caught up"})
           (label :class "empty-hint"  :text {NOTIFLIST.paused == 'true' ? "Notifications are silenced. Toggle DND to resume." : "New notifications will appear here."}))
-        (for n in {NOTIFLIST.items}
-          (notif_row :n {n}))))
+        (for g in {NOTIFLIST.groups}
+          (notif_group :g {g}))))
     (button :class "notif-close" :onclick "eww close notifications" "Close (Esc)")))
 
 ;; ═════════════════════════════════════════════════════════════════════

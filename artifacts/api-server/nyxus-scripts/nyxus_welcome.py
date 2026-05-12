@@ -721,14 +721,23 @@ class NetworkStep(Step):
             self.list.append(row)
         self.status.set_label(self._status())
 
+    # Wizard checks this before advancing — when a password modal is
+    # open we block the Continue button so the user actually sees the
+    # success / failure feedback instead of being yanked to the next step.
+    _busy: bool = False
+
+    def can_advance(self) -> bool:
+        return not self._busy
+
     def commit(self):
         row = self.list.get_selected_row()
         if not row:
-            return  # user explicitly skipped
+            return  # user explicitly skipped — wired or postponed
         ssid = getattr(row, "ssid", "")
         if not ssid:
             return
         # 1) Try a saved profile.
+        self.result.set_label(f"connecting to {ssid}…")
         rc, _, err = run(["nmcli", "connection", "up", ssid])
         if rc == 0:
             self.wizard.cfg["wifi"] = ssid
@@ -741,6 +750,10 @@ class NetworkStep(Step):
             self.result.set_label(f"connected to {ssid}")
             return
         # 3) Password prompt — branded dialog with real result feedback.
+        # Lock the Continue button while the modal is open so the user
+        # sees the outcome of their connect attempt before advancing.
+        self._busy = True
+        self.wizard.refresh_nav()
         d = Adw.MessageDialog(transient_for=self.wizard,
                               heading=f"Password for {ssid}",
                               body="Enter the WiFi password to join this network.")
@@ -754,18 +767,22 @@ class NetworkStep(Step):
         d.set_default_response("connect")
 
         def _resp(_dialog, resp):
-            if resp != "connect":
-                self.result.set_label("connection cancelled")
-                return
-            pw = ent.get_text()
-            rc, _, err = run(["nmcli", "device", "wifi", "connect", ssid,
-                              "password", pw])
-            if rc == 0:
-                self.wizard.cfg["wifi"] = ssid
-                self.result.set_label(f"connected to {ssid}")
-            else:
-                short = (err or "connect failed").splitlines()[0][:80]
-                self.result.set_label(f"connect failed — {short}")
+            try:
+                if resp != "connect":
+                    self.result.set_label("connection cancelled")
+                    return
+                pw = ent.get_text()
+                rc, _, err = run(["nmcli", "device", "wifi", "connect", ssid,
+                                  "password", pw])
+                if rc == 0:
+                    self.wizard.cfg["wifi"] = ssid
+                    self.result.set_label(f"connected to {ssid}")
+                else:
+                    short = (err or "connect failed").splitlines()[0][:80]
+                    self.result.set_label(f"connect failed — {short}")
+            finally:
+                self._busy = False
+                self.wizard.refresh_nav()
         d.connect("response", _resp)
         d.present()
 
@@ -1015,17 +1032,21 @@ class AppearanceStep(Step):
             subprocess.Popen(
                 ["swaybg", "-i", wp, "-m", "fill", "-c", "#000000"],
                 start_new_session=True)
-        # 2) Accent — propagate to GTK/EWW/rofi/hyprlock/dunst + Settings prefs.
-        accent_hex = self.wizard.cfg.get("accent_hex", DEFAULT_ACCENT)
+        # 2) Accent — normalize and persist BOTH the resolved preset name
+        # and the raw hex into wizard.cfg so downstream steps (ReadyStep
+        # summary, theme.json, prefs file) read the correct values.
+        accent_hex = self.wizard.cfg.get("accent_hex", DEFAULT_ACCENT).lower()
+        accent_name = next((n for n, h in ACCENTS
+                            if h.lower() == accent_hex),
+                           "Mirror White")
+        self.wizard.cfg["accent_hex"] = accent_hex
+        self.wizard.cfg["accent"]     = accent_name
         self._propagate_accent(accent_hex)
         # 3) Text scaling factor — gsettings (best-effort).
         run(["gsettings", "set", "org.gnome.desktop.interface",
              "text-scaling-factor",
              str(self.wizard.cfg["text_scale"])])
         # 4) Manifest for any external consumer (legacy).
-        accent_name = next((n for n, h in ACCENTS
-                            if h.lower() == accent_hex.lower()),
-                           "Mirror White")
         theme = {
             "accent":     accent_name,
             "accent_hex": accent_hex,
@@ -1094,11 +1115,16 @@ class ReadyStep(Step):
 
     def _summary(self) -> list[str]:
         c = self.wizard.cfg
+        # Resolve accent name from accent_hex for an accurate label,
+        # whether the user picked an accent or accepted the default.
+        ah = (c.get("accent_hex") or DEFAULT_ACCENT).lower()
+        accent_name = c.get("accent") or next(
+            (n for n, h in ACCENTS if h.lower() == ah), "Mirror White")
         return [
             f"  •  Region    {c.get('locale','en_US.UTF-8')}  ·  {c.get('timezone','UTC')}",
             f"  •  Network   {c.get('wifi') or 'wired / not connected'}",
             f"  •  Account   {c.get('display_name') or os.environ.get('USER','—')}",
-            f"  •  Theme     accent {c.get('accent','Mirror')}, scale {c.get('text_scale',1.0)}×",
+            f"  •  Theme     accent {accent_name} ({ah}), scale {c.get('text_scale',1.0)}×",
             f"  •  Privacy   updates {'on' if c.get('privacy_updates',True) else 'off'},"
             f" telemetry {'on' if c.get('privacy_telemetry') else 'off'}",
         ]
@@ -1187,6 +1213,22 @@ class WelcomeWizard(Adw.ApplicationWindow):
                         "Finish" if last else "Continue"),
             next_enabled=self.steps[i].can_advance(),
         )
+
+    def refresh_nav(self) -> None:
+        """Re-evaluate the footer Continue button against the current
+        step's can_advance() — used by NetworkStep to lock advancement
+        while a WiFi password modal is open."""
+        try:
+            last  = (self._idx == len(STEPS) - 1)
+            first = (self._idx == 0)
+            self.footer.configure(
+                back=not first and not last,
+                next_label=("Begin" if first else
+                            "Finish" if last else "Continue"),
+                next_enabled=self.steps[self._idx].can_advance(),
+            )
+        except Exception:
+            pass
 
     def _back(self):
         if self._idx > 0: self._show(self._idx - 1)
