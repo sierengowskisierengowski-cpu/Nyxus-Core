@@ -1,0 +1,171 @@
+# ============================================================
+#  NYXUS — Alacritty Terminal Config
+#  ~/.config/alacritty/alacritty.toml
+#
+#  Silent. Dark. Purely Functional.
+#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================
+
+[window]
+opacity            = 0.88
+padding.x          = 16
+padding.y          = 12
+decorations        = "None"
+startup_mode       = "Windowed"
+dynamic_title      = true
+dynamic_padding    = false
+
+[window.class]
+instance = "Alacritty"
+general  = "Alacritty"
+
+[scrolling]
+history    = 10000
+multiplier = 5
+
+# ── Font ─────────────────────────────────────────────────────
+[font]
+size = 11.5
+
+[font.normal]
+family = "JetBrains Mono Nerd Font"
+style  = "Regular"
+
+[font.bold]
+family = "JetBrains Mono Nerd Font"
+style  = "Bold"
+
+[font.italic]
+family = "JetBrains Mono Nerd Font"
+style  = "Italic"
+
+[font.bold_italic]
+family = "JetBrains Mono Nerd Font"
+style  = "Bold Italic"
+
+[font.offset]
+x = 0
+y = 2
+
+# ── Cursor ───────────────────────────────────────────────────
+[cursor]
+style.shape      = "Block"
+style.blinking   = "Always"
+blink_interval   = 500
+unfocused_hollow = true
+thickness        = 0.15
+
+# ── Selection ────────────────────────────────────────────────
+[selection]
+save_to_clipboard = true
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+
+# ── Mouse ────────────────────────────────────────────────────
+[mouse]
+hide_when_typing = true
+
+# ── Bell ─────────────────────────────────────────────────────
+[bell]
+animation = "EaseOutExpo"
+duration  = 0
+color     = "#c8ccd6"
+
+# ── Color Scheme — NYXUS ─────────────────────────────────────
+[colors]
+draw_bold_text_with_bright_colors = true
+
+[colors.primary]
+background    = "#0a0e16"
+foreground    = "#C8C0C0"
+dim_foreground = "#888090"
+
+[colors.cursor]
+text   = "#0a0e16"
+cursor = "#c8ccd6"
+
+[colors.vi_mode_cursor]
+text   = "#0a0e16"
+cursor = "#e8edf5"
+
+[colors.selection]
+text       = "#0a0e16"
+background = "#7B5EA7"
+
+[colors.search.matches]
+foreground = "#0a0e16"
+background = "#c8ccd6"
+
+[colors.search.focused_match]
+foreground = "#0a0e16"
+background = "#e8edf5"
+
+[colors.footer_bar]
+background = "#0d0a12"
+foreground = "#888090"
+
+[colors.hints.start]
+foreground = "#0a0e16"
+background = "#e8edf5"
+
+[colors.hints.end]
+foreground = "#0a0e16"
+background = "#e8edf5"
+
+# ── Normal palette ───────────────────────────────────────────
+[colors.normal]
+black   = "#0d0a12"
+red     = "#f87171"
+green   = "#c8ccd6"
+yellow  = "#e8edf5"
+blue    = "#818cf8"
+magenta = "#c8ccd6"
+cyan    = "#c8ccd6"
+white   = "#C8C0C0"
+
+# ── Bright palette ───────────────────────────────────────────
+[colors.bright]
+black   = "#3a3248"
+red     = "#fca5a5"
+green   = "#6ee7b7"
+yellow  = "#fcd34d"
+blue    = "#a5b4fc"
+magenta = "#c8ccd6"
+cyan    = "#67e8f9"
+white   = "#e8e4f0"
+
+# ── Dim palette ──────────────────────────────────────────────
+[colors.dim]
+black   = "#050408"
+red     = "#7f1d1d"
+green   = "#064e3b"
+yellow  = "#78350f"
+blue    = "#1e1b4b"
+magenta = "#4a1d7a"
+cyan    = "#164e63"
+white   = "#555060"
+
+# ── Key bindings ─────────────────────────────────────────────
+[[keyboard.bindings]]
+key    = "V"
+mods   = "Control|Shift"
+action = "Paste"
+
+[[keyboard.bindings]]
+key    = "C"
+mods   = "Control|Shift"
+action = "Copy"
+
+[[keyboard.bindings]]
+key    = "Plus"
+mods   = "Control"
+action = "IncreaseFontSize"
+
+[[keyboard.bindings]]
+key    = "Minus"
+mods   = "Control"
+action = "DecreaseFontSize"
+
+[[keyboard.bindings]]
+key    = "Key0"
+mods   = "Control"
+action = "ResetFontSize"

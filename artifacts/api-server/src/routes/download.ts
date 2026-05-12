@@ -50,10 +50,11 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-palette.css":      "nyxus-palette.css",       //  CSS @define-color palette
   // ── ★ THE NYXUS GTK4 USER APPS ───────────────────────────────────────────
   // 1. Home (workspace dashboard) — see TGZ section below
-  // rev r6-eww (2026-05-11): nyxus_powermenu / _quicksettings / _clock /
-  // _calendar / _cheatsheet REMOVED — replaced by native EWW windows.
-  // See the "EWW SHELL" section below for the replacements.
+  // rev r6-eww (2026-05-11): nyxus_quicksettings / _clock / _calendar /
+  // _cheatsheet REMOVED — replaced by native EWW windows. Standalone
+  // nyxus_powermenu.py later returned for launcher/menu invocation.
   "nyxus_notes.py":         "nyxus_notes.py",          //  2. Notes (Tesla-min)
+  "nyxus_notepad.py":       "nyxus_notepad.py",        //  3. Notepad
   "nyxus_stickies.py":      "nyxus_stickies.py",       //  4. Stickies
   "nyxus_terminal.py":      "nyxus_terminal.py",       //  6. Terminal
   "nyxus_settings.py":      "nyxus_settings.py",       //  7. Settings
@@ -61,6 +62,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_control.py":       "nyxus_control.py",        //  9. Control
   "nyxus_launcher.py":      "nyxus_launcher.py",       // 10. Launcher (Spotlight)
   "nyxus_screenshot.py":    "nyxus_screenshot.py",     // 12. Screenshot
+  "nyxus_store.py":         "nyxus_store.py",          // 13. App Store
+  "nyxus_powermenu.py":     "nyxus_powermenu.py",      // 14. Power Menu
 
   // ── ★ EWW SHELL (rev r6-eww, 2026-05-11 — replaces waybar + 5 py apps) ──
   // 4 bars + dashboard + powermenu + cheatsheet + 3 OSDs. All real backends.

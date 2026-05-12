@@ -20,7 +20,7 @@
 #
 #  Design contract:  premium / enterprise / DARK MIRROR.
 #    • Pure black background, single accent gradient.
-#    • Inter for UI, Space Grotesk for display, JetBrains Mono for code.
+#    • Inter for UI, Inter Display for display, JetBrains Mono for code.
 #    • Generous whitespace; one focused action per step.
 #    • Cross-fade transitions between steps; no jarring repaints.
 #    • Validation inline, never as a popup.
@@ -111,7 +111,7 @@ window.welcome {
   min-width: 320px;
 }
 .welcome-brand {
-  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-family: "Inter Display", "Inter", sans-serif;
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -177,7 +177,7 @@ window.welcome {
   margin-bottom: 14px;
 }
 .welcome-title {
-  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-family: "Inter Display", "Inter", sans-serif;
   font-size: 44px;
   font-weight: 700;
   color: #ffffff;
