@@ -204,7 +204,7 @@ against §1-12. Score each as PASS / NEEDS-FIX / FAIL.
 | Powermenu                       | PASS (audited 2026-05-11) | Added `.power-btn-danger` variant: Shutdown/Restart now red-bordered with red glyph (§8) |
 | Dashboard                       | PASS (audited 2026-05-11) | Wrapped in `(scroll …)` so content never overflows 1366×768 (§12); replaced all 8 emoji toggles with nerd-font glyphs (§6) |
 | Welcome Wizard                  | PASS (built to contract) | Reference implementation |
-| Settings app                    | BUILT, UNWIRED, UN-AUDITED | nyxus_settings.py exists (9830 lines, 22 sections, real backends). NOT staged in build-iso.sh, NOT on launcher, NO .desktop, NO bar binding. Contract audit pending. |
+| Settings app                    | REWRITTEN (Tier-1 done, Tier-2 placeholder) | New libadwaita Adw.NavigationSplitView app at rev r10. 17 sidebar sections. Tier-1 fully built: Appearance, Network, Bluetooth, About. Tier-2 use honest in-progress card per §9 (NEVER blank). Wired into APPS_LIST → auto-generates /usr/local/bin/nyxus-settings + io.nyxus.settings.desktop. Legacy 9830-line Cairo impl preserved as nyxus_settings.legacy.py.archive. EWW gear-icon binding still TODO (T005). |
 
 Audit pass: walk every component on a 1366×768 display. Anything that
 fails ships a fix in the same sprint as the audit.

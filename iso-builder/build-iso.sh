@@ -268,6 +268,7 @@ APPS_LIST=(
   "powermenu:Power Menu:Lock / suspend / restart / shut down"
   "screenshot:Screenshot:Region & full-screen capture"
   "doctor:Doctor:NYXUS health audit"
+  "settings:Settings:System control center"
 )
 for entry in "${APPS_LIST[@]}"; do
   IFS=':' read -r mod name comment <<< "${entry}"
