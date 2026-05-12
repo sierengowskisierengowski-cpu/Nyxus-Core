@@ -204,7 +204,7 @@ against §1-12. Score each as PASS / NEEDS-FIX / FAIL.
 | Powermenu                       | PASS (audited 2026-05-11) | Added `.power-btn-danger` variant: Shutdown/Restart now red-bordered with red glyph (§8) |
 | Dashboard                       | PASS (audited 2026-05-11) | Wrapped in `(scroll …)` so content never overflows 1366×768 (§12); replaced all 8 emoji toggles with nerd-font glyphs (§6) |
 | Welcome Wizard                  | PASS (built to contract) | Reference implementation |
-| Settings app                    | NOT BUILT              | Must be built to contract from day 1 |
+| Settings app                    | BUILT, UNWIRED, UN-AUDITED | nyxus_settings.py exists (9830 lines, 22 sections, real backends). NOT staged in build-iso.sh, NOT on launcher, NO .desktop, NO bar binding. Contract audit pending. |
 
 Audit pass: walk every component on a 1366×768 display. Anything that
 fails ships a fix in the same sprint as the audit.
