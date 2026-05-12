@@ -284,11 +284,93 @@ PY
   notify-send "NYXUS" "Sort: $choice (applied on next refresh)"
 }
 
+_icon_menu() {
+  # $1 = path of the icon that was right-clicked
+  local target="${1:-}"
+  if [[ -z "$target" || ! -e "$target" ]]; then
+    notify-send "NYXUS" "Icon path missing: ${target:-<empty>}"
+    exit 1
+  fi
+  local choice
+  choice=$(_menu "$(basename "$target")" <<'EOF'
+ Open
+ Open with…
+ Open containing folder
+ Copy path
+ Rename…
+ Move to Trash
+ Delete permanently
+ Properties
+EOF
+)
+  [[ -z "${choice:-}" ]] && exit 0
+  case "$choice" in
+    *"Open"$'\n'*|*"Open")
+      xdg-open "$target" >/dev/null 2>&1 &
+      ;;
+    *"Open with"*)
+      local app
+      app=$(grep -lE '^Exec=' /usr/share/applications/*.desktop \
+              ~/.local/share/applications/*.desktop 2>/dev/null \
+            | xargs -I{} basename {} .desktop \
+            | sort -u | _menu "open with")
+      [[ -z "$app" ]] && exit 0
+      gtk-launch "$app" "$target" >/dev/null 2>&1 &
+      ;;
+    *"Open containing folder")
+      _files_app "$(dirname "$target")"
+      ;;
+    *"Copy path")
+      if _have wl-copy; then printf '%s' "$target" | wl-copy
+      elif _have xclip; then printf '%s' "$target" | xclip -selection clipboard
+      else notify-send "NYXUS" "No clipboard tool"; fi
+      notify-send "NYXUS" "Path copied"
+      ;;
+    *"Rename"*)
+      local newname
+      newname=$(_have zenity && zenity --entry --title="Rename" \
+                  --text="New name for $(basename "$target"):" \
+                  --entry-text="$(basename "$target")" 2>/dev/null \
+                || printf '')
+      [[ -z "$newname" || "$newname" == "$(basename "$target")" ]] && exit 0
+      mv -n -- "$target" "$(dirname "$target")/$newname" \
+        && notify-send "NYXUS" "Renamed to $newname" \
+        || notify-send "NYXUS" "Rename failed"
+      ;;
+    *"Move to Trash")
+      if _have gio; then gio trash -- "$target" \
+        && notify-send "NYXUS" "Moved to Trash" \
+        || notify-send "NYXUS" "Trash failed"
+      else
+        notify-send "NYXUS" "gio not installed; cannot trash safely"
+      fi
+      ;;
+    *"Delete permanently")
+      local confirm
+      confirm=$(_have zenity && zenity --question --title="Delete" \
+                  --text="Permanently delete $(basename "$target")?" \
+                  && echo yes || echo no)
+      [[ "$confirm" == "yes" ]] && rm -rf -- "$target" \
+        && notify-send "NYXUS" "Deleted" \
+        || notify-send "NYXUS" "Delete cancelled or failed"
+      ;;
+    *"Properties")
+      _settings Storage
+      notify-send "NYXUS" "$(basename "$target")
+$(stat -c 'Size: %s bytes
+Modified: %y
+Owner: %U:%G
+Mode: %A' "$target" 2>/dev/null)"
+      ;;
+  esac
+}
+
 case "$MODE" in
   main)      _main_menu ;;
   wallpaper) _wallpaper_menu ;;
   sort)      _sort_menu ;;
   display)   _settings Display ;;
+  icon)      _icon_menu "${2:-}" ;;
   dismiss)   _dismiss ;;
   *)         echo "unknown mode: $MODE" >&2; exit 2 ;;
 esac
