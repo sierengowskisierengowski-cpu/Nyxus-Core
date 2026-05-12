@@ -1,0 +1,21 @@
+/* ============================================================
+   NYXUS — Rofi Config
+   ~/.config/rofi/config.rasi
+   © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ============================================================ */
+
+configuration {
+    modi:                "drun,run,window";
+    show-icons:          true;
+    icon-theme:          "Papirus-Dark";
+    display-drun:        " Apps";
+    display-run:         " Run";
+    display-window:      " Windows";
+    drun-display-format: "{name}";
+    font:                "JetBrains Mono 12";
+    terminal:            "alacritty";
+    case-sensitive:      false;
+    cycle:               true;
+}
+
+@theme "nyxus"
