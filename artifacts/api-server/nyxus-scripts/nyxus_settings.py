@@ -2278,356 +2278,1407 @@ class MousePage(SectionPage):
 # PRIVACY — hardware presence, indicators, telemetry audit
 # ──────────────────────────────────────────────────────────────────────
 class PrivacyPage(SectionPage):
+    """Capture hardware audit + live recording watch + location service
+    control + recent-activity clearing + telemetry audit + NYXUS data
+    transparency. All controls are real:
+      · pkexec systemctl       — toggle/mask geoclue
+      · ~/.local/share/recently-used.xbel — clear recent files
+      · ~/.bash_history, ~/.zsh_history — clear shell history
+      · ~/.cache/thumbnails/   — clear thumbnail cache
+      · NYXUS prefs            — crash-report opt-in (own-controlled)
+    """
     KEY = "privacy"
 
     def build(self) -> None:
-        # Hardware presence
-        hw = Adw.PreferencesGroup(
+        self.hw_grp = Adw.PreferencesGroup(
             title="Capture hardware",
-            description="Read-only — listed devices CAN see/hear you when "
-                        "an app uses them")
-        self.add_group(hw)
-        # Cameras
-        cams = sorted(Path("/dev").glob("video*"))
-        hw.add(kv_row("Cameras", f"{len(cams)} device(s)"
-                                  if cams else "none detected"))
-        for c in cams:
-            hw.add(kv_row(f"  {c.name}", str(c)))
-        # Microphones (via pactl sources, exclude monitors)
+            description="Devices that CAN see/hear you when an app uses them")
+        self.add_group(self.hw_grp)
+        self.active_grp = Adw.PreferencesGroup(
+            title="Active right now",
+            description="Apps currently holding a microphone or camera stream")
+        self.add_group(self.active_grp)
+        self.loc_grp = Adw.PreferencesGroup(
+            title="Location services",
+            description="GeoClue exposes location data to D-Bus consumers. "
+                        "Mask to fully prevent it from ever starting.")
+        self.add_group(self.loc_grp)
+        self.activity_grp = Adw.PreferencesGroup(
+            title="Activity & history",
+            description="Clear traces of what you've done on this system")
+        self.add_group(self.activity_grp)
+        self.idx_grp = Adw.PreferencesGroup(
+            title="File indexing",
+            description="Background indexers that catalog your files for search")
+        self.add_group(self.idx_grp)
+        self.tel_grp = Adw.PreferencesGroup(
+            title="Telemetry & opt-outs",
+            description="NYXUS ships zero telemetry. These show third-party "
+                        "env-var opt-outs.")
+        self.add_group(self.tel_grp)
+        self.data_grp = Adw.PreferencesGroup(
+            title="NYXUS data",
+            description="What NYXUS itself stores about you, and where")
+        self.add_group(self.data_grp)
+
+        self._render()
+        self.schedule_refresh(5000, self._tick)
+
+    def _tick(self) -> bool:
+        # Capture watch + activity sizes change frequently.
+        self._render_active()
+        self._render_activity()
+        return True
+
+    def _render(self) -> None:
+        self._render_hw()
+        self._render_active()
+        self._render_location()
+        self._render_activity()
+        self._render_indexing()
+        self._render_telemetry()
+        self._render_nyxus_data()
+        self.clear_pills()
+        cams_n = len(self._enumerate_cameras())
+        mics_n = len(self._enumerate_microphones())
+        self.add_pill(status_pill(f"{cams_n} cam · {mics_n} mic",
+                                  "ok" if cams_n + mics_n > 0 else "warn"))
+
+    # ── Hardware ─────────────────────────────────────────────
+    def _enumerate_cameras(self) -> list:
+        return sorted(Path("/dev").glob("video*"))
+
+    def _enumerate_microphones(self) -> list:
         mics = []
         if have("pactl"):
-            rc, out, _ = sh(["pactl", "list", "sources", "short"],
-                            timeout=3)
+            rc, out, _ = sh(["pactl", "list", "sources", "short"], timeout=3)
             for line in out.splitlines():
                 parts = line.split("\t")
                 if len(parts) >= 2 and ".monitor" not in parts[1]:
                     mics.append(parts[1])
-        hw.add(kv_row("Microphones", f"{len(mics)} input(s)"
-                                      if mics else "none detected"))
-        for m in mics:
-            hw.add(kv_row("  source", m[:60]))
+        return mics
 
-        # Active capture watch (PipeWire)
-        active = Adw.PreferencesGroup(
-            title="Active right now",
-            description="Apps currently holding a microphone or camera "
-                        "stream (best-effort detection via pw-cli / lsof)")
-        self.add_group(active)
-        active_apps = set()
-        if have("pw-cli"):
-            rc, out, _ = sh(["pw-cli", "info", "all"], timeout=4)
+    def _render_hw(self) -> None:
+        _clear_group(self.hw_grp)
+        cams = self._enumerate_cameras()
+        mics = self._enumerate_microphones()
+        self.hw_grp.add(kv_row("Cameras",
+                               f"{len(cams)} device(s)" if cams
+                               else "none detected"))
+        for c in cams:
+            self.hw_grp.add(kv_row(f"  {c.name}", str(c)))
+        self.hw_grp.add(kv_row("Microphones",
+                               f"{len(mics)} input(s)" if mics
+                               else "none detected"))
+        for m in mics:
+            self.hw_grp.add(kv_row("  source", m[:60]))
+
+    # ── Active capture ───────────────────────────────────────
+    def _render_active(self) -> None:
+        _clear_group(self.active_grp)
+        cams = self._enumerate_cameras()
+        active_audio = set()
+        active_video = []
+        if have("pw-dump"):
+            rc, out, _ = sh(["pw-dump"], timeout=4)
+            try:
+                data = json.loads(out) if out.strip() else []
+                for node in data:
+                    info = node.get("info", {}) or {}
+                    props = info.get("props", {}) or {}
+                    state = info.get("state", "")
+                    media = props.get("media.class", "")
+                    name = (props.get("application.name")
+                            or props.get("node.name") or "")
+                    if (state == "running" and name
+                            and ("Stream/Input" in media)):
+                        active_audio.add(name)
+            except Exception:
+                pass
+        elif have("pw-cli"):
+            rc, out, _ = sh(["pw-cli", "ls", "Node"], timeout=4)
             for m in re.finditer(
-                    r'application\.name\s*=\s*"([^"]+)"', out):
-                active_apps.add(m.group(1))
+                    r'application\.name\s*=\s*"([^"]+)".*?'
+                    r'media\.class\s*=\s*"Stream/Input/Audio"',
+                    out, re.DOTALL):
+                active_audio.add(m.group(1))
         if have("fuser"):
             for c in cams:
                 rc, out, _ = sh(["fuser", str(c)], timeout=2)
                 if rc == 0 and out.strip():
-                    active.add(kv_row(f"camera {c.name}", "in use"))
-        if active_apps:
-            for a in sorted(active_apps)[:10]:
-                active.add(kv_row("audio client", a))
+                    active_video.append(c.name)
+        if active_video:
+            for v in active_video:
+                row = Adw.ActionRow(title=f"📹 {v}",
+                                    subtitle="camera in use right now")
+                row.add_css_class("nyx-warn-row")
+                self.active_grp.add(row)
+        if active_audio:
+            for a in sorted(active_audio)[:15]:
+                row = Adw.ActionRow(title=f"🎤 {a}",
+                                    subtitle="audio input client")
+                self.active_grp.add(row)
+        if not active_video and not active_audio:
+            self.active_grp.add(empty_row(
+                "No active capture detected",
+                "Nothing is recording you right now"))
+
+    # ── Location ─────────────────────────────────────────────
+    def _render_location(self) -> None:
+        _clear_group(self.loc_grp)
+        rc1, st_active, _   = sh(["systemctl", "is-active",
+                                  "geoclue.service"], timeout=2)
+        rc2, st_enabled, _  = sh(["systemctl", "is-enabled",
+                                  "geoclue.service"], timeout=2)
+        active = st_active.strip()
+        enabled = st_enabled.strip()
+        is_masked = (enabled == "masked")
+        self.loc_grp.add(kv_row("Service status", active or "?"))
+        self.loc_grp.add(kv_row("Boot state", enabled or "?"))
+
+        master_row = Adw.ActionRow(
+            title="Location services",
+            subtitle="master switch — when off, no app can see your location")
+        sw = Gtk.Switch()
+        sw.set_valign(Gtk.Align.CENTER)
+        sw.set_active(active == "active" and not is_masked)
+        sw.connect("notify::active", self._on_location_toggled)
+        master_row.add_suffix(sw)
+        self.loc_grp.add(master_row)
+
+        if is_masked:
+            self.loc_grp.add(action_row(
+                "Unmask geoclue",
+                "Currently masked — even apps that ask cannot start it.",
+                "Unmask",
+                lambda: sh_async(
+                    ["pkexec", "systemctl", "unmask", "geoclue.service"],
+                    lambda r: (self.toast(
+                        "unmasked" if r[0] == 0 else "needs admin"),
+                        self._render_location()),
+                    timeout=10)))
         else:
-            active.add(empty_row("No active capture detected",
-                                  "Nothing is recording you right now"))
+            self.loc_grp.add(action_row(
+                "Mask geoclue (strongest)",
+                "Prevents any app from ever starting the location service",
+                "Mask",
+                lambda: sh_async(
+                    ["pkexec", "systemctl", "mask", "geoclue.service"],
+                    lambda r: (self.toast(
+                        "masked" if r[0] == 0 else "needs admin"),
+                        self._render_location()),
+                    timeout=10),
+                css="nyx-pill-warn"))
 
-        # Location services
-        loc = Adw.PreferencesGroup(
-            title="Location",
-            description="GeoClue exposes location to D-Bus consumers")
-        self.add_group(loc)
-        rc, out, _ = sh(["systemctl", "is-active", "geoclue.service"],
-                        timeout=2)
-        loc.add(kv_row("geoclue.service", out.strip() or "?"))
-        rc, out, _ = sh(["systemctl", "is-enabled", "geoclue.service"],
-                        timeout=2)
-        loc.add(kv_row("Auto-start at boot", out.strip() or "?"))
-        loc.add(action_row(
-            "Disable location service",
-            "Stops geoclue and prevents auto-start",
-            "Disable",
-            lambda: sh_async(
-                ["pkexec", "systemctl", "disable", "--now",
-                 "geoclue.service"],
-                lambda r: self.toast("disabled" if r[0] == 0
-                                     else "failed / needs sudo"),
-                timeout=10),
-            css="nyx-pill-warn"))
+    def _on_location_toggled(self, sw, _p) -> None:
+        wanted = sw.get_active()
+        cmd = ["pkexec", "systemctl",
+               "enable" if wanted else "disable",
+               "--now", "geoclue.service"]
+        sh_async(cmd,
+                 lambda r: (self.toast(
+                     "location " + ("on" if wanted else "off")
+                     if r[0] == 0 else "needs admin"),
+                     self._render_location()),
+                 timeout=10)
 
-        # Telemetry audit
-        tel = Adw.PreferencesGroup(
-            title="Telemetry & opt-outs",
-            description="NYXUS itself ships zero telemetry. Listed values "
-                        "show common third-party env opt-outs.")
-        self.add_group(tel)
-        for var, on_val in (("DO_NOT_TRACK",        "1"),
+    # ── Activity & history ───────────────────────────────────
+    def _render_activity(self) -> None:
+        _clear_group(self.activity_grp)
+        home = Path.home()
+
+        # Recent files (GTK + Adw apps)
+        xbel = home / ".local/share/recently-used.xbel"
+        recent_n = 0
+        if xbel.exists():
+            try:
+                recent_n = xbel.read_text(errors="ignore").count("<bookmark ")
+            except Exception:
+                pass
+        recent_row = Adw.ActionRow(
+            title="Recent files",
+            subtitle=f"{recent_n} entries in recently-used.xbel")
+        if recent_n > 0:
+            btn = Gtk.Button(label="Clear")
+            btn.add_css_class("nyx-pill-warn")
+            btn.set_valign(Gtk.Align.CENTER)
+            btn.connect("clicked", lambda _b: self._clear_path(
+                xbel, "recent files cleared"))
+            recent_row.add_suffix(btn)
+        self.activity_grp.add(recent_row)
+
+        # Shell history
+        for hist_name, label in (("bash_history", "Bash history"),
+                                 ("zsh_history",  "Zsh history"),
+                                 ("python_history", "Python REPL history")):
+            p = home / f".{hist_name}"
+            if p.exists():
+                try:
+                    n = sum(1 for _ in p.open(errors="ignore"))
+                except Exception:
+                    n = 0
+                row = Adw.ActionRow(
+                    title=label, subtitle=f"{n} lines in ~/.{hist_name}")
+                if n > 0:
+                    btn = Gtk.Button(label="Clear")
+                    btn.add_css_class("nyx-pill-warn")
+                    btn.set_valign(Gtk.Align.CENTER)
+                    btn.connect("clicked", lambda _b, pp=p, ll=label:
+                                self._clear_path(pp, f"{ll.lower()} cleared"))
+                    row.add_suffix(btn)
+                self.activity_grp.add(row)
+
+        # Thumbnail cache
+        thumb = home / ".cache/thumbnails"
+        thumb_size = self._dir_size(thumb)
+        thumb_row = Adw.ActionRow(
+            title="Thumbnail cache",
+            subtitle=f"{self._fmt_bytes(thumb_size)} in ~/.cache/thumbnails")
+        if thumb_size > 0:
+            btn = Gtk.Button(label="Clear")
+            btn.add_css_class("nyx-pill-warn")
+            btn.set_valign(Gtk.Align.CENTER)
+            btn.connect("clicked", lambda _b: self._clear_dir(
+                thumb, "thumbnail cache cleared"))
+            thumb_row.add_suffix(btn)
+        self.activity_grp.add(thumb_row)
+
+        # Trash
+        trash = home / ".local/share/Trash/files"
+        if trash.exists():
+            try:
+                n = len(list(trash.iterdir()))
+            except Exception:
+                n = 0
+            trash_row = Adw.ActionRow(
+                title="Trash", subtitle=f"{n} item(s)")
+            if n > 0:
+                btn = Gtk.Button(label="Empty")
+                btn.add_css_class("nyx-pill-warn")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked", lambda _b: sh_async(
+                    ["sh", "-c", "gio trash --empty 2>/dev/null || "
+                     "rm -rf ~/.local/share/Trash/files/* "
+                     "~/.local/share/Trash/info/*"],
+                    lambda r: (self.toast("trash emptied"),
+                               self._render_activity()),
+                    timeout=10))
+                trash_row.add_suffix(btn)
+            self.activity_grp.add(trash_row)
+
+    def _clear_path(self, p: Path, msg: str) -> None:
+        try:
+            p.write_text("")
+            self.toast(msg)
+            self._render_activity()
+        except Exception as e:
+            self.toast(f"failed: {e}")
+
+    def _clear_dir(self, p: Path, msg: str) -> None:
+        if not p.exists():
+            return
+        sh_async(
+            ["sh", "-c", f"rm -rf {str(p)}/*"],
+            lambda r: (self.toast(msg if r[0] == 0 else "failed"),
+                       self._render_activity()),
+            timeout=10)
+
+    @staticmethod
+    def _dir_size(p: Path) -> int:
+        if not p.exists():
+            return 0
+        total = 0
+        try:
+            for f in p.rglob("*"):
+                if f.is_file():
+                    try:
+                        total += f.stat().st_size
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        return total
+
+    @staticmethod
+    def _fmt_bytes(n: int) -> str:
+        for unit in ("B", "KB", "MB", "GB", "TB"):
+            if n < 1024:
+                return f"{n:.1f} {unit}" if unit != "B" else f"{n} B"
+            n /= 1024
+        return f"{n:.1f} PB"
+
+    # ── File indexing ────────────────────────────────────────
+    def _render_indexing(self) -> None:
+        _clear_group(self.idx_grp)
+        any_indexer = False
+        if have("tracker3"):
+            any_indexer = True
+            rc, out, _ = sh(["tracker3", "status"], timeout=3)
+            self.idx_grp.add(kv_row("Tracker", out.split("\n")[0][:60]
+                                    if out.strip() else "running"))
+            self.idx_grp.add(action_row(
+                "Pause indexing",
+                "Stops Tracker from scanning new files",
+                "Pause",
+                lambda: sh_async(
+                    ["tracker3", "daemon", "--pause", "nyxus-settings"],
+                    lambda r: self.toast("paused" if r[0] == 0
+                                         else "failed"),
+                    timeout=4)))
+            self.idx_grp.add(action_row(
+                "Reset Tracker database",
+                "Wipes the index — Tracker re-scans from scratch",
+                "Reset",
+                lambda: sh_async(
+                    ["tracker3", "reset", "--filesystem"],
+                    lambda r: self.toast("reset" if r[0] == 0
+                                         else "failed"),
+                    timeout=15),
+                css="nyx-pill-warn"))
+        if have("baloo_file") or have("balooctl"):
+            any_indexer = True
+            rc, out, _ = sh(["balooctl", "status"], timeout=3)
+            self.idx_grp.add(kv_row("Baloo", out.split("\n")[0][:60]
+                                    if out.strip() else "present"))
+            self.idx_grp.add(action_row(
+                "Disable Baloo",
+                "Stops KDE file indexer permanently",
+                "Disable",
+                lambda: sh_async(
+                    ["balooctl", "disable"],
+                    lambda r: self.toast("disabled" if r[0] == 0
+                                         else "failed"),
+                    timeout=4)))
+        if not any_indexer:
+            self.idx_grp.add(empty_row(
+                "No file indexer installed",
+                "NYXUS does not ship one by default — searches are live"))
+
+    # ── Telemetry audit ──────────────────────────────────────
+    def _render_telemetry(self) -> None:
+        _clear_group(self.tel_grp)
+        for var, on_val in (("DO_NOT_TRACK",                "1"),
                             ("DOTNET_CLI_TELEMETRY_OPTOUT", "1"),
-                            ("HOMEBREW_NO_ANALYTICS",      "1"),
-                            ("NEXT_TELEMETRY_DISABLED",    "1"),
-                            ("GATSBY_TELEMETRY_DISABLED",  "1"),
-                            ("VUE_CLI_TELEMETRY_DISABLED", "1")):
+                            ("HOMEBREW_NO_ANALYTICS",       "1"),
+                            ("NEXT_TELEMETRY_DISABLED",     "1"),
+                            ("GATSBY_TELEMETRY_DISABLED",   "1"),
+                            ("VUE_CLI_TELEMETRY_DISABLED",  "1"),
+                            ("AZURE_CORE_COLLECT_TELEMETRY","0"),
+                            ("POWERSHELL_TELEMETRY_OPTOUT", "1")):
             v = os.environ.get(var, "")
             ok = (v == on_val)
-            tel.add(kv_row(var, "opted out" if ok else f"unset ({v or '∅'})"))
-        self.add_pill(status_pill(f"{len(cams)} cam · {len(mics)} mic",
-                                  "ok"))
+            self.tel_grp.add(kv_row(
+                var, "opted out ✓" if ok else f"unset ({v or '∅'})"))
+
+        # NYXUS-managed: write a profile.d snippet that exports them all
+        self.tel_grp.add(action_row(
+            "Apply all opt-outs system-wide",
+            "Writes /etc/profile.d/nyxus-no-telemetry.sh (admin prompt)",
+            "Apply",
+            lambda: self._apply_no_telemetry()))
+
+    def _apply_no_telemetry(self) -> None:
+        body = textwrap.dedent("""\
+            # nyxus-managed: third-party telemetry opt-outs
+            export DO_NOT_TRACK=1
+            export DOTNET_CLI_TELEMETRY_OPTOUT=1
+            export HOMEBREW_NO_ANALYTICS=1
+            export NEXT_TELEMETRY_DISABLED=1
+            export GATSBY_TELEMETRY_DISABLED=1
+            export VUE_CLI_TELEMETRY_DISABLED=1
+            export AZURE_CORE_COLLECT_TELEMETRY=0
+            export POWERSHELL_TELEMETRY_OPTOUT=1
+            """)
+        sh_async(
+            ["pkexec", "sh", "-c",
+             "cat > /etc/profile.d/nyxus-no-telemetry.sh "
+             "<<'NYXUS_EOF'\n" + body + "NYXUS_EOF\n"
+             "chmod 0644 /etc/profile.d/nyxus-no-telemetry.sh"],
+            lambda r: self.toast(
+                "applied — log out and back in to take effect"
+                if r[0] == 0 else "needs admin"),
+            timeout=8)
+
+    # ── NYXUS data transparency ──────────────────────────────
+    def _render_nyxus_data(self) -> None:
+        _clear_group(self.data_grp)
+        # Confirm zero NYXUS analytics
+        zero_row = Adw.ActionRow(
+            title="NYXUS analytics",
+            subtitle="NYXUS sends nothing about you to anyone, ever")
+        zero = Gtk.Label(label="✓ none")
+        zero.add_css_class("nyx-kv-value")
+        zero_row.add_suffix(zero)
+        self.data_grp.add(zero_row)
+
+        # Where NYXUS stores its data
+        data_dirs = [
+            ("~/.config/nyxus",        "settings + per-app prefs"),
+            ("~/.local/share/nyxus",   "stickies, notes, app data"),
+            ("~/.cache/nyxus",         "thumbnails, runtime cache"),
+        ]
+        for path_s, desc in data_dirs:
+            p = Path(path_s.replace("~", str(Path.home())))
+            sz = self._dir_size(p) if p.exists() else 0
+            row = Adw.ActionRow(
+                title=path_s, subtitle=desc)
+            val = Gtk.Label(label=self._fmt_bytes(sz)
+                            if p.exists() else "(not created)")
+            val.add_css_class("nyx-kv-value")
+            row.add_suffix(val)
+            if p.exists() and have("xdg-open"):
+                btn = Gtk.Button(label="Open")
+                btn.add_css_class("nyx-pill")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked", lambda _b, pp=p:
+                            fire_and_forget(f"xdg-open {pp}"))
+                row.add_suffix(btn)
+            self.data_grp.add(row)
+
+        # Crash reporter opt-in (NYXUS-controlled)
+        prefs = load_prefs()
+        crash_optin = bool(prefs.get("privacy", {}).get("crash_optin", False))
+        crash_row = Adw.ActionRow(
+            title="Send crash logs to me",
+            subtitle="OFF by default. When ON, nyxus_error.py uploads "
+                     "anonymized stack traces. Off = nothing leaves your "
+                     "machine.")
+        sw = Gtk.Switch()
+        sw.set_valign(Gtk.Align.CENTER)
+        sw.set_active(crash_optin)
+        sw.connect("notify::active", self._on_crash_optin)
+        crash_row.add_suffix(sw)
+        self.data_grp.add(crash_row)
+
+    def _on_crash_optin(self, sw, _p) -> None:
+        prefs = load_prefs()
+        prefs.setdefault("privacy", {})["crash_optin"] = sw.get_active()
+        save_prefs(prefs)
+        self.toast("crash reports " + ("on" if sw.get_active() else "off"))
 
 
 # ──────────────────────────────────────────────────────────────────────
 # APPS — installed count, default mime apps, autostart
 # ──────────────────────────────────────────────────────────────────────
 class AppsPage(SectionPage):
+    """Installed GUI apps + default-app picker + autostart + Flatpak.
+    All controls are real:
+      · pkexec pacman -Rns <pkg>     — uninstall native apps
+      · flatpak uninstall <ref>      — uninstall flatpaks
+      · xdg-mime default <d> <mime>  — set per-mime default app
+      · ~/.config/autostart/*.desktop — add/remove startup entries
+    """
     KEY = "apps"
 
-    def build(self) -> None:
-        # Counts
-        cnt = Adw.PreferencesGroup(title="Installed packages")
-        self.add_group(cnt)
-        if have("pacman"):
-            rc, out, _ = sh(["pacman", "-Qq"], timeout=4)
-            n_total = len(out.splitlines()) if rc == 0 else 0
-            rc, out, _ = sh(["pacman", "-Qqe"], timeout=4)
-            n_explicit = len(out.splitlines()) if rc == 0 else 0
-            rc, out, _ = sh(["pacman", "-Qqm"], timeout=4)
-            n_foreign = len(out.splitlines()) if rc == 0 else 0
-            cnt.add(kv_row("Total", str(n_total)))
-            cnt.add(kv_row("Explicitly installed", str(n_explicit)))
-            cnt.add(kv_row("Foreign / AUR / local", str(n_foreign)))
-        else:
-            cnt.add(empty_row("pacman not available", ""))
+    DEFAULT_MIMES = [
+        ("Web browser",   "x-scheme-handler/https"),
+        ("Email",         "x-scheme-handler/mailto"),
+        ("Terminal",      "x-scheme-handler/terminal"),
+        ("Plain text",    "text/plain"),
+        ("PDF",           "application/pdf"),
+        ("Image",         "image/png"),
+        ("Image (JPEG)",  "image/jpeg"),
+        ("Audio",         "audio/flac"),
+        ("Audio (MP3)",   "audio/mpeg"),
+        ("Video",         "video/mp4"),
+        ("Archive",       "application/zip"),
+        ("File manager",  "inode/directory"),
+    ]
 
-        # GUI apps
-        gui = Adw.PreferencesGroup(
+    def build(self) -> None:
+        self.cnt_grp = Adw.PreferencesGroup(title="Installed packages")
+        self.add_group(self.cnt_grp)
+
+        self.def_grp = Adw.PreferencesGroup(
+            title="Default apps",
+            description="Pick which app opens which file or URL type")
+        self.add_group(self.def_grp)
+
+        self.installed_grp = Adw.PreferencesGroup(
             title="GUI applications",
-            description="Apps that ship a .desktop file in the standard "
-                        "search paths")
-        self.add_group(gui)
-        desktops = []
+            description="Apps with a .desktop entry — Launch or Uninstall any")
+        self.add_group(self.installed_grp)
+
+        self.flatpak_grp = Adw.PreferencesGroup(
+            title="Flatpak",
+            description="Sandboxed apps installed via Flatpak")
+        self.add_group(self.flatpak_grp)
+
+        self.auto_grp = Adw.PreferencesGroup(
+            title="Run at login",
+            description="Anything here starts when you log in "
+                        "(~/.config/autostart/)")
+        self.add_group(self.auto_grp)
+
+        self._desktop_index = self._build_desktop_index()
+        self._render()
+        self.schedule_refresh(20000, self._tick)
+
+    def _tick(self) -> bool:
+        # Refresh package counts and any user changes; the heavy desktop
+        # index only re-reads if a file was added/removed.
+        new_idx = self._build_desktop_index()
+        if {p for _, p, _, _ in new_idx} != \
+                {p for _, p, _, _ in self._desktop_index}:
+            self._desktop_index = new_idx
+            self._render_installed()
+        self._render_counts()
+        self._render_autostart()
+        return True
+
+    def _render(self) -> None:
+        self._render_counts()
+        self._render_defaults()
+        self._render_installed()
+        self._render_flatpak()
+        self._render_autostart()
+        self.clear_pills()
+        n = len(self._desktop_index)
+        self.add_pill(status_pill(f"{n} apps", "ok"))
+
+    # ── Counts ───────────────────────────────────────────────
+    def _render_counts(self) -> None:
+        _clear_group(self.cnt_grp)
+        if not have("pacman"):
+            self.cnt_grp.add(empty_row("pacman not available", ""))
+            return
+        rc, out, _ = sh(["pacman", "-Qq"], timeout=4)
+        n_total = len(out.splitlines()) if rc == 0 else 0
+        rc, out, _ = sh(["pacman", "-Qqe"], timeout=4)
+        n_explicit = len(out.splitlines()) if rc == 0 else 0
+        rc, out, _ = sh(["pacman", "-Qqm"], timeout=4)
+        n_foreign = len(out.splitlines()) if rc == 0 else 0
+        self.cnt_grp.add(kv_row("Total", str(n_total)))
+        self.cnt_grp.add(kv_row("Explicitly installed", str(n_explicit)))
+        self.cnt_grp.add(kv_row("Foreign / AUR / local", str(n_foreign)))
+        if have("flatpak"):
+            rc, out, _ = sh(["flatpak", "list", "--app", "--columns=name"],
+                            timeout=4)
+            n_fp = len([l for l in out.splitlines() if l.strip()]) - 1
+            self.cnt_grp.add(kv_row("Flatpak apps", str(max(n_fp, 0))))
+
+    # ── Default apps ─────────────────────────────────────────
+    def _render_defaults(self) -> None:
+        _clear_group(self.def_grp)
+        if not have("xdg-mime"):
+            self.def_grp.add(empty_row("xdg-mime not installed",
+                                       "Install xdg-utils"))
+            return
+        for label, mime in self.DEFAULT_MIMES:
+            handlers = self._find_handlers(mime)
+            rc, cur_out, _ = sh(["xdg-mime", "query", "default", mime],
+                                timeout=2)
+            cur = cur_out.strip()
+            row = Adw.ActionRow(
+                title=label,
+                subtitle=mime + (
+                    "  ·  " + (cur.replace(".desktop", "") or "(none)")
+                    if cur else "  ·  (none)"))
+            if not handlers:
+                row.add_suffix(Gtk.Label(label="no handlers"))
+                self.def_grp.add(row)
+                continue
+            labels = [name for name, _ in handlers]
+            files = [d for _, d in handlers]
+            try:
+                sel = files.index(cur)
+            except ValueError:
+                sel = 0
+            dd = Gtk.DropDown.new_from_strings(labels)
+            dd.set_selected(sel)
+            dd.set_valign(Gtk.Align.CENTER)
+            dd.connect(
+                "notify::selected",
+                lambda d, _p, m=mime, fs=files, ls=labels:
+                    self._on_default_changed(d, m, fs, ls))
+            row.add_suffix(dd)
+            self.def_grp.add(row)
+
+    def _find_handlers(self, mime: str) -> list:
+        """Return [(human_name, desktop_filename), ...] handling `mime`."""
+        out = []
+        seen = set()
         for base in ("/usr/share/applications",
                      str(Path.home() / ".local/share/applications")):
             p = Path(base)
-            if p.exists():
-                desktops.extend(p.glob("*.desktop"))
-        gui.add(kv_row("Desktop entries found", str(len(desktops))))
-        gui.add(action_row(
-            "Open application launcher",
-            "rofi / wofi / fuzzel — your configured launcher",
-            "Open",
-            lambda: fire_and_forget(
-                "fuzzel" if have("fuzzel") else
-                ("rofi -show drun" if have("rofi") else "wofi --show drun"))))
+            if not p.exists():
+                continue
+            for f in p.glob("*.desktop"):
+                if f.name in seen:
+                    continue
+                try:
+                    txt = f.read_text(errors="ignore")
+                except Exception:
+                    continue
+                if "MimeType=" not in txt:
+                    continue
+                mt_line = next((l for l in txt.splitlines()
+                                if l.startswith("MimeType=")), "")
+                if mime not in mt_line:
+                    continue
+                if "NoDisplay=true" in txt or "Hidden=true" in txt:
+                    continue
+                name = ""
+                for ln in txt.splitlines():
+                    if ln.startswith("Name="):
+                        name = ln.split("=", 1)[1].strip()
+                        break
+                if name:
+                    out.append((name, f.name))
+                    seen.add(f.name)
+        out.sort()
+        return out
 
-        # Default apps (xdg-mime)
-        defs = Adw.PreferencesGroup(
-            title="Default apps",
-            description="Resolved from xdg-mime query default")
-        self.add_group(defs)
-        if have("xdg-mime"):
-            for label, mime in (
-                    ("Web browser",      "x-scheme-handler/https"),
-                    ("Email",            "x-scheme-handler/mailto"),
-                    ("Terminal",         "x-scheme-handler/terminal"),
-                    ("Plain text",       "text/plain"),
-                    ("PDF",              "application/pdf"),
-                    ("Image (PNG)",      "image/png"),
-                    ("Audio (FLAC)",     "audio/flac"),
-                    ("Video (MP4)",      "video/mp4")):
-                rc, out, _ = sh(["xdg-mime", "query", "default", mime],
-                                timeout=2)
-                defs.add(kv_row(label,
-                                (out.strip() or "(unset)").replace(
-                                    ".desktop", "")))
-        else:
-            defs.add(empty_row("xdg-mime not installed",
-                                "Install xdg-utils"))
+    def _on_default_changed(self, dd, mime: str,
+                            files: list, labels: list) -> None:
+        idx = dd.get_selected()
+        if not (0 <= idx < len(files)):
+            return
+        sh_async(
+            ["xdg-mime", "default", files[idx], mime],
+            lambda r: self.toast(
+                f"{labels[idx]} → default for {mime}" if r[0] == 0
+                else "failed"),
+            timeout=4)
 
-        # Autostart
-        au = Adw.PreferencesGroup(
-            title="Autostart",
-            description="Anything in ~/.config/autostart starts at session "
-                        "login")
-        self.add_group(au)
+    # ── Installed apps with uninstall ────────────────────────
+    def _build_desktop_index(self) -> list:
+        """Return [(name, desktop_path, exec, owning_pkg), ...]
+        sorted alphabetically. Excludes NoDisplay/Hidden entries."""
+        items = []
+        seen = set()
+        for base in ("/usr/share/applications",
+                     str(Path.home() / ".local/share/applications")):
+            p = Path(base)
+            if not p.exists():
+                continue
+            for f in sorted(p.glob("*.desktop")):
+                if f.name in seen:
+                    continue
+                try:
+                    txt = f.read_text(errors="ignore")
+                except Exception:
+                    continue
+                if "NoDisplay=true" in txt or "Hidden=true" in txt:
+                    continue
+                if "Type=Application" not in txt:
+                    continue
+                name = ""
+                exec_s = ""
+                for ln in txt.splitlines():
+                    if ln.startswith("Name=") and not name:
+                        name = ln.split("=", 1)[1].strip()
+                    elif ln.startswith("Exec=") and not exec_s:
+                        exec_s = ln.split("=", 1)[1].strip()
+                if not name:
+                    continue
+                items.append((name, str(f), exec_s, ""))
+                seen.add(f.name)
+        items.sort(key=lambda t: t[0].lower())
+        return items
+
+    def _pkg_owner(self, path: str) -> str:
+        if not have("pacman"):
+            return ""
+        rc, out, _ = sh(["pacman", "-Qoq", path], timeout=2)
+        if rc == 0 and out.strip():
+            return out.strip().split("\n")[0]
+        return ""
+
+    def _render_installed(self) -> None:
+        _clear_group(self.installed_grp)
+        # Search filter
+        search_row = Adw.ActionRow(
+            title="Search",
+            subtitle="filter the list below by app name")
+        entry = Gtk.Entry()
+        entry.set_placeholder_text("type to filter…")
+        entry.set_size_request(220, -1)
+        entry.set_valign(Gtk.Align.CENTER)
+        entry.connect("changed", self._on_app_filter_changed)
+        search_row.add_suffix(entry)
+        self.installed_grp.add(search_row)
+
+        # Build rows (cap to 200 visible, search to find more)
+        self._app_rows = []
+        for (name, path, exec_s, _) in self._desktop_index[:200]:
+            row = Adw.ActionRow(title=name, subtitle=Path(path).name)
+            if exec_s:
+                btn_l = Gtk.Button(label="Launch")
+                btn_l.add_css_class("nyx-pill")
+                btn_l.set_valign(Gtk.Align.CENTER)
+                btn_l.connect(
+                    "clicked",
+                    lambda _b, e=exec_s: fire_and_forget(
+                        "gtk-launch " + Path(path).stem
+                        if have("gtk-launch")
+                        else re.sub(r"%[fFuUdDnNickvm]", "", e).strip()))
+                row.add_suffix(btn_l)
+            btn_u = Gtk.Button(label="Uninstall")
+            btn_u.add_css_class("nyx-pill-warn")
+            btn_u.set_valign(Gtk.Align.CENTER)
+            btn_u.connect(
+                "clicked",
+                lambda _b, n=name, p=path: self._uninstall_app(n, p))
+            row.add_suffix(btn_u)
+            self.installed_grp.add(row)
+            self._app_rows.append((name.lower(), row))
+
+        if len(self._desktop_index) > 200:
+            self.installed_grp.add(empty_row(
+                f"+ {len(self._desktop_index) - 200} more",
+                "use the search field above to find specific apps"))
+
+    def _on_app_filter_changed(self, entry) -> None:
+        q = entry.get_text().strip().lower()
+        for name_low, row in getattr(self, "_app_rows", []):
+            row.set_visible(not q or q in name_low)
+
+    def _uninstall_app(self, name: str, desktop_path: str) -> None:
+        owner = self._pkg_owner(desktop_path)
+        if not owner:
+            self.toast(f"{name}: no pacman package owns this .desktop")
+            return
+        # Confirmation dialog
+        dlg = Adw.MessageDialog(
+            transient_for=self.win,
+            heading=f"Uninstall {name}?",
+            body=f"This will run:\n  pkexec pacman -Rns {owner}\n\n"
+                 "Dependencies that nothing else needs will also be "
+                 "removed.")
+        dlg.add_response("cancel", "Cancel")
+        dlg.add_response("ok", "Uninstall")
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.DESTRUCTIVE)
+        dlg.set_default_response("cancel")
+        dlg.connect("response", lambda d, resp, p=owner, n=name:
+                    self._do_uninstall(resp, p, n))
+        dlg.present()
+
+    def _do_uninstall(self, resp: str, pkg: str, name: str) -> None:
+        if resp != "ok":
+            return
+        sh_async(
+            ["pkexec", "pacman", "-Rns", "--noconfirm", pkg],
+            lambda r: (self.toast(
+                f"{name} uninstalled" if r[0] == 0
+                else f"failed: {r[2][:80] if r[2] else 'admin denied'}"),
+                self._render()),
+            timeout=60)
+
+    # ── Flatpak ──────────────────────────────────────────────
+    def _render_flatpak(self) -> None:
+        _clear_group(self.flatpak_grp)
+        if not have("flatpak"):
+            self.flatpak_grp.add(empty_row(
+                "Flatpak not installed",
+                "Install flatpak to manage sandboxed apps"))
+            return
+        rc, out, _ = sh(
+            ["flatpak", "list", "--app",
+             "--columns=name,application,version"],
+            timeout=5)
+        lines = [l for l in out.splitlines() if l.strip()]
+        # Skip header
+        if lines and lines[0].lower().startswith("name"):
+            lines = lines[1:]
+        if not lines:
+            self.flatpak_grp.add(empty_row(
+                "No Flatpak apps installed", ""))
+            return
+        for ln in lines[:50]:
+            parts = ln.split("\t") if "\t" in ln else ln.split(None, 2)
+            name = parts[0] if parts else ln
+            ref = parts[1] if len(parts) >= 2 else ""
+            ver = parts[2] if len(parts) >= 3 else ""
+            row = Adw.ActionRow(
+                title=name, subtitle=f"{ref}  ·  {ver}" if ver else ref)
+            if ref:
+                btn = Gtk.Button(label="Uninstall")
+                btn.add_css_class("nyx-pill-warn")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect(
+                    "clicked",
+                    lambda _b, r=ref, n=name:
+                        self._uninstall_flatpak(n, r))
+                row.add_suffix(btn)
+            self.flatpak_grp.add(row)
+
+    def _uninstall_flatpak(self, name: str, ref: str) -> None:
+        dlg = Adw.MessageDialog(
+            transient_for=self.win,
+            heading=f"Uninstall Flatpak: {name}?",
+            body=f"This will run:\n  flatpak uninstall -y {ref}")
+        dlg.add_response("cancel", "Cancel")
+        dlg.add_response("ok", "Uninstall")
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.DESTRUCTIVE)
+        dlg.connect("response", lambda d, resp, r=ref, n=name:
+                    self._do_uninstall_flatpak(resp, r, n))
+        dlg.present()
+
+    def _do_uninstall_flatpak(self, resp: str, ref: str, name: str) -> None:
+        if resp != "ok":
+            return
+        sh_async(
+            ["flatpak", "uninstall", "-y", ref],
+            lambda r: (self.toast(
+                f"{name} uninstalled" if r[0] == 0 else "failed"),
+                self._render()),
+            timeout=120)
+
+    # ── Autostart ────────────────────────────────────────────
+    def _render_autostart(self) -> None:
+        _clear_group(self.auto_grp)
         as_dir = Path.home() / ".config" / "autostart"
         items = sorted(as_dir.glob("*.desktop")) if as_dir.exists() else []
+
+        # Add new — picker over installed apps
+        add_row = Adw.ActionRow(
+            title="Add an app to startup",
+            subtitle="pick any installed app to launch at login")
+        if self._desktop_index:
+            names = [n for n, _, _, _ in self._desktop_index[:300]]
+            paths = [p for _, p, _, _ in self._desktop_index[:300]]
+            dd = Gtk.DropDown.new_from_strings(["(select)"] + names)
+            dd.set_valign(Gtk.Align.CENTER)
+            dd.connect(
+                "notify::selected",
+                lambda d, _p, ps=paths, ns=names:
+                    self._on_autostart_add(d, ps, ns))
+            add_row.add_suffix(dd)
+        self.auto_grp.add(add_row)
+
         if not items:
-            au.add(empty_row("No autostart entries",
-                              "Drop a .desktop file into "
-                              "~/.config/autostart to add one"))
+            self.auto_grp.add(empty_row(
+                "No autostart entries",
+                "Pick an app above to add one"))
+            return
+
         for it in items:
-            au.add(kv_row(it.stem, str(it)))
-        self.add_pill(status_pill(f"{len(desktops)} apps", "ok"))
+            try:
+                txt = it.read_text(errors="ignore")
+            except Exception:
+                txt = ""
+            display = it.stem
+            for ln in txt.splitlines():
+                if ln.startswith("Name="):
+                    display = ln.split("=", 1)[1].strip()
+                    break
+            row = Adw.ActionRow(title=display, subtitle=str(it))
+            btn = Gtk.Button(label="Remove")
+            btn.add_css_class("nyx-pill-warn")
+            btn.set_valign(Gtk.Align.CENTER)
+            btn.connect(
+                "clicked",
+                lambda _b, p=it, n=display:
+                    self._remove_autostart(p, n))
+            row.add_suffix(btn)
+            self.auto_grp.add(row)
+
+    def _on_autostart_add(self, dd, paths: list, names: list) -> None:
+        idx = dd.get_selected()
+        if idx <= 0:  # 0 = "(select)"
+            return
+        i = idx - 1
+        if not (0 <= i < len(paths)):
+            return
+        src = Path(paths[i])
+        as_dir = Path.home() / ".config" / "autostart"
+        as_dir.mkdir(parents=True, exist_ok=True)
+        dst = as_dir / src.name
+        try:
+            shutil.copy2(src, dst)
+            self.toast(f"{names[i]} added to startup")
+            self._render_autostart()
+        except Exception as e:
+            self.toast(f"failed: {e}")
+        dd.set_selected(0)
+
+    def _remove_autostart(self, path: Path, display: str) -> None:
+        try:
+            path.unlink()
+            self.toast(f"{display} removed from startup")
+            self._render_autostart()
+        except Exception as e:
+            self.toast(f"failed: {e}")
 
 
 # ──────────────────────────────────────────────────────────────────────
 # STORAGE — df / lsblk / smartctl, pacman cache, journal
 # ──────────────────────────────────────────────────────────────────────
 class StoragePage(SectionPage):
+    """Mounts + block devices + SMART + per-folder home breakdown +
+    multi-target cleanup + largest-files finder. All real:
+      · df / lsblk / smartctl       — read-only system data
+      · du -sb on home subfolders   — usage breakdown
+      · paccache, journalctl vacuum, gio trash, find/sort — cleanup
+    """
     KEY = "storage"
+
+    HOME_FOLDERS = [
+        ("Documents",       "Documents",            "user files"),
+        ("Downloads",       "Downloads",            "downloaded files"),
+        ("Pictures",        "Pictures",             "images"),
+        ("Videos",          "Videos",               "videos"),
+        ("Music",           "Music",                "audio files"),
+        ("Desktop",         "Desktop",              "desktop items"),
+        ("App data",        ".local/share",         "user-installed app data"),
+        ("Cache",           ".cache",               "browser & app caches (safe to clear)"),
+        ("Config",          ".config",              "settings & preferences"),
+        ("Trash",           ".local/share/Trash",   "files marked for deletion"),
+    ]
 
     def build(self) -> None:
         self.mounts_grp = Adw.PreferencesGroup(
             title="Mounts",
-            description="Filesystem usage from df -h (excluding tmpfs/devfs)")
+            description="Filesystem usage from df (tmpfs/devfs hidden)")
         self.add_group(self.mounts_grp)
         self.disks_grp = Adw.PreferencesGroup(
             title="Block devices",
-            description="Physical disks and partitions from lsblk")
+            description="Physical disks from lsblk")
         self.add_group(self.disks_grp)
         self.smart_grp = Adw.PreferencesGroup(
             title="SMART health",
-            description="Requires smartmontools and root for full data")
+            description="Requires smartmontools (and admin for full data)")
         self.add_group(self.smart_grp)
+        self.home_grp = Adw.PreferencesGroup(
+            title="Your home folder",
+            description="What's using space under ~ (computed in background)")
+        self.add_group(self.home_grp)
+        self.clean_grp = Adw.PreferencesGroup(
+            title="Cleanup",
+            description="Targeted reclaims that won't affect your work")
+        self.add_group(self.clean_grp)
+        self.large_grp = Adw.PreferencesGroup(
+            title="Largest files in your home",
+            description="Computed on demand — may take a few seconds")
+        self.add_group(self.large_grp)
 
-        # Cleanup actions
-        clean = Adw.PreferencesGroup(title="Cleanup")
-        self.add_group(clean)
-        if have("paccache"):
-            clean.add(action_row(
-                "Trim pacman cache (keep latest 2)",
-                "paccache -rk2 — frees /var/cache/pacman/pkg",
-                "Trim",
-                lambda: sh_async(
-                    ["pkexec", "paccache", "-rk2"],
-                    lambda r: (self.toast("trimmed" if r[0] == 0
-                                          else "failed"),
-                               self._render()), timeout=30)))
-        else:
-            clean.add(empty_row("paccache not installed",
-                                "Install pacman-contrib"))
-        clean.add(action_row(
-            "Vacuum journal (keep 7 days)",
-            "journalctl --vacuum-time=7d",
-            "Vacuum",
-            lambda: sh_async(
-                ["pkexec", "journalctl", "--vacuum-time=7d"],
-                lambda r: self.toast("vacuumed" if r[0] == 0 else "failed"),
-                timeout=30)))
-        if have("baobab"):
-            clean.add(action_row(
-                "Open disk usage analyzer",
-                "GNOME baobab — visualize what's using space",
-                "Open",
-                lambda: fire_and_forget("baobab")))
-
+        self._home_cache: dict = {}  # folder -> (size, mtime)
         self._render()
         self.add_pill(status_pill("live", "ok"))
-        self.schedule_refresh(15000, self._tick)
+        self.schedule_refresh(20000, self._tick)
 
     def _tick(self) -> bool:
-        self._render()
+        # Mounts/disks/SMART change rarely; refresh those + home sizes.
+        self._render_mounts()
+        self._refresh_home_sizes()
         return True
 
     def _render(self) -> None:
+        self._render_mounts()
+        self._render_disks_and_smart()
+        self._render_home()
+        self._render_cleanup()
+        self._render_largest()
+
+    # ── Mounts ───────────────────────────────────────────────
+    def _render_mounts(self) -> None:
         _clear_group(self.mounts_grp)
         rc, out, _ = sh(
             ["df", "-h", "--output=target,fstype,size,used,avail,pcent",
              "-x", "tmpfs", "-x", "devtmpfs", "-x", "squashfs",
-             "-x", "overlay"],
-            timeout=4)
+             "-x", "overlay"], timeout=4)
         lines = out.splitlines()[1:] if out else []
         if not lines:
             self.mounts_grp.add(empty_row("No mounts found", ""))
+            return
         for ln in lines[:20]:
             cols = ln.split()
             if len(cols) < 6:
                 continue
-            target, fs, size, used, avail, pcent = cols[0], cols[1], \
-                cols[2], cols[3], cols[4], cols[5]
-            row = Adw.ActionRow(
-                title=target,
-                subtitle=f"{fs} · {used}/{size} used · {avail} free")
+            target, fs, size, used, avail, pcent = cols[:6]
             try:
                 pct = int(pcent.rstrip("%"))
             except ValueError:
                 pct = 0
-            tag_kind = "ok" if pct < 75 else ("warn" if pct < 90
-                                              else "danger")
-            row.add_suffix(status_pill(pcent, tag_kind))
+            tag = "ok" if pct < 75 else ("warn" if pct < 90 else "danger")
+            row = Adw.ActionRow(
+                title=target,
+                subtitle=f"{fs}  ·  {used} / {size} used  ·  {avail} free")
+            # Inline progress bar
+            bar = Gtk.LevelBar.new_for_interval(0, 100)
+            bar.set_value(pct)
+            bar.add_offset_value("low",  75)
+            bar.add_offset_value("high", 90)
+            bar.add_offset_value("full", 100)
+            bar.set_size_request(140, 8)
+            bar.set_valign(Gtk.Align.CENTER)
+            row.add_suffix(bar)
+            row.add_suffix(status_pill(pcent, tag))
             self.mounts_grp.add(row)
 
-        # Block devices
+    # ── Disks + SMART ────────────────────────────────────────
+    def _render_disks_and_smart(self) -> None:
         _clear_group(self.disks_grp)
-        rc, out, _ = sh(["lsblk", "-d", "-o", "NAME,SIZE,MODEL,ROTA",
-                         "-n"], timeout=3)
+        _clear_group(self.smart_grp)
+        rc, out, _ = sh(
+            ["lsblk", "-d", "-o", "NAME,SIZE,MODEL,ROTA", "-n"],
+            timeout=3)
         lines = out.splitlines() if out else []
         if not lines:
             self.disks_grp.add(empty_row("No block devices found", ""))
+        disk_names = []
         for ln in lines:
             parts = ln.split(None, 3)
             if len(parts) < 2:
                 continue
-            name = parts[0]
-            size = parts[1]
+            name, size = parts[0], parts[1]
             model = parts[2] if len(parts) >= 3 else ""
             rota = parts[3] if len(parts) >= 4 else "?"
             kind = "HDD" if rota.strip() == "1" else "SSD"
             self.disks_grp.add(kv_row(
                 f"/dev/{name}", f"{size} · {kind}",
-                subtitle=model.strip() if model.strip() else None))
+                subtitle=model.strip() or None))
+            disk_names.append(name)
 
-        # SMART
-        _clear_group(self.smart_grp)
         if not have("smartctl"):
             self.smart_grp.add(empty_row(
                 "smartctl not installed",
                 "Install smartmontools to view SMART status"))
             return
-        # Disks already enumerated above
-        for ln in lines:
-            parts = ln.split(None, 3)
-            if len(parts) < 1:
-                continue
-            name = parts[0]
+        if not disk_names:
+            self.smart_grp.add(empty_row("No disks to query", ""))
+            return
+        for name in disk_names:
             dev = f"/dev/{name}"
             rc, out, _ = sh(["smartctl", "-H", dev], timeout=4)
-            status = "?"
+            status = ""
             for line in out.splitlines():
                 if "overall-health" in line.lower():
                     status = line.split(":", 1)[-1].strip()
                     break
-            kind = "ok" if "PASSED" in status.upper() else "warn"
+            if not status:
+                status = "needs admin (try: sudo smartctl -H /dev/X)"
+                tag = "warn"
+            elif "PASSED" in status.upper():
+                tag = "ok"
+            else:
+                tag = "danger"
             row = Adw.ActionRow(title=dev, subtitle=status)
             row.add_suffix(status_pill(
-                "PASS" if "PASSED" in status.upper() else "?", kind))
+                "PASS" if "PASSED" in status.upper()
+                else ("?" if "admin" in status else "FAIL"),
+                tag))
             self.smart_grp.add(row)
+
+    # ── Home folder breakdown ────────────────────────────────
+    def _render_home(self) -> None:
+        _clear_group(self.home_grp)
+        home = Path.home()
+        for label, sub_path, desc in self.HOME_FOLDERS:
+            p = home / sub_path
+            row = Adw.ActionRow(
+                title=label, subtitle=f"~/{sub_path}  ·  {desc}")
+            if not p.exists():
+                row.add_suffix(Gtk.Label(label="(none)"))
+                self.home_grp.add(row)
+                continue
+            size, _ = self._home_cache.get(sub_path, (None, 0))
+            val = Gtk.Label(label=self._fmt_bytes(size)
+                            if size is not None else "computing…")
+            val.add_css_class("nyx-kv-value")
+            val.set_valign(Gtk.Align.CENTER)
+            row.add_suffix(val)
+            if have("xdg-open") and sub_path != ".local/share/Trash":
+                btn = Gtk.Button(label="Open")
+                btn.add_css_class("nyx-pill")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked",
+                            lambda _b, pp=p:
+                                fire_and_forget(f"xdg-open {pp}"))
+                row.add_suffix(btn)
+            self.home_grp.add(row)
+        # Kick off background du
+        self._refresh_home_sizes()
+
+    def _refresh_home_sizes(self) -> None:
+        home = Path.home()
+        for _, sub_path, _ in self.HOME_FOLDERS:
+            p = home / sub_path
+            if not p.exists():
+                continue
+            sh_async(
+                ["du", "-sb", str(p)],
+                lambda r, sp=sub_path:
+                    self._on_home_size(sp, r),
+                timeout=60)
+
+    def _on_home_size(self, sub_path: str, result) -> None:
+        rc, out, _ = result
+        if rc != 0 or not out.strip():
+            return
+        try:
+            size = int(out.split()[0])
+        except Exception:
+            return
+        self._home_cache[sub_path] = (size, 0)
+        # Re-render only the home group to show new value
+        self._render_home_values_only()
+
+    def _render_home_values_only(self) -> None:
+        # Cheap re-render: just the home group from cache
+        _clear_group(self.home_grp)
+        home = Path.home()
+        for label, sub_path, desc in self.HOME_FOLDERS:
+            p = home / sub_path
+            row = Adw.ActionRow(
+                title=label, subtitle=f"~/{sub_path}  ·  {desc}")
+            if not p.exists():
+                row.add_suffix(Gtk.Label(label="(none)"))
+                self.home_grp.add(row)
+                continue
+            size, _ = self._home_cache.get(sub_path, (None, 0))
+            val = Gtk.Label(label=self._fmt_bytes(size)
+                            if size is not None else "computing…")
+            val.add_css_class("nyx-kv-value")
+            val.set_valign(Gtk.Align.CENTER)
+            row.add_suffix(val)
+            if have("xdg-open") and sub_path != ".local/share/Trash":
+                btn = Gtk.Button(label="Open")
+                btn.add_css_class("nyx-pill")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked",
+                            lambda _b, pp=p:
+                                fire_and_forget(f"xdg-open {pp}"))
+                row.add_suffix(btn)
+            self.home_grp.add(row)
+
+    @staticmethod
+    def _fmt_bytes(n) -> str:
+        if n is None:
+            return "—"
+        n = float(n)
+        for unit in ("B", "KB", "MB", "GB", "TB"):
+            if n < 1024:
+                return f"{int(n)} {unit}" if unit == "B" else f"{n:.1f} {unit}"
+            n /= 1024
+        return f"{n:.1f} PB"
+
+    # ── Cleanup ──────────────────────────────────────────────
+    def _render_cleanup(self) -> None:
+        _clear_group(self.clean_grp)
+        # Trash empty
+        trash = Path.home() / ".local/share/Trash/files"
+        n_trash = 0
+        if trash.exists():
+            try:
+                n_trash = len(list(trash.iterdir()))
+            except Exception:
+                pass
+        self.clean_grp.add(action_row(
+            "Empty trash",
+            f"{n_trash} item(s) in ~/.local/share/Trash" if n_trash > 0
+            else "trash is empty",
+            "Empty",
+            lambda: self._do_cleanup(
+                ["sh", "-c",
+                 "gio trash --empty 2>/dev/null || "
+                 "rm -rf ~/.local/share/Trash/files/* "
+                 "~/.local/share/Trash/info/* 2>/dev/null"],
+                "trash emptied"),
+            css="nyx-pill-warn" if n_trash else "nyx-pill"))
+
+        # ~/.cache total
+        cache = Path.home() / ".cache"
+        cache_size = self._home_cache.get(".cache", (None, 0))[0]
+        self.clean_grp.add(action_row(
+            "Clear user cache",
+            f"~/.cache  ·  "
+            + (self._fmt_bytes(cache_size) if cache_size is not None
+               else "size pending"),
+            "Clear",
+            lambda: self._do_cleanup(
+                ["sh", "-c", "rm -rf ~/.cache/*"],
+                "cache cleared"),
+            css="nyx-pill-warn"))
+
+        # Browser caches
+        for name, paths in (
+            ("Firefox", "~/.cache/mozilla/firefox/*/cache2 "
+                        "~/.cache/mozilla/firefox/*/startupCache"),
+            ("Chromium / Chrome",
+             "~/.cache/chromium/Default/Cache "
+             "~/.cache/google-chrome/Default/Cache"),
+            ("Brave",
+             "~/.cache/BraveSoftware/Brave-Browser/Default/Cache"),
+            ("Thumbnail cache", "~/.cache/thumbnails"),
+        ):
+            self.clean_grp.add(action_row(
+                f"Clear {name} cache",
+                paths.replace(" ~/", "  ·  ~/"),
+                "Clear",
+                lambda p=paths, n=name: self._do_cleanup(
+                    ["sh", "-c", f"rm -rf {p}"],
+                    f"{n} cache cleared")))
+
+        # paccache
+        if have("paccache"):
+            self.clean_grp.add(action_row(
+                "Trim pacman cache (keep latest 2 versions)",
+                "paccache -rk2 — frees /var/cache/pacman/pkg",
+                "Trim",
+                lambda: sh_async(
+                    ["pkexec", "paccache", "-rk2"],
+                    lambda r: (self.toast(
+                        "trimmed" if r[0] == 0 else "needs admin"),
+                        self._render_mounts()),
+                    timeout=60),
+                css="nyx-pill-warn"))
+        else:
+            self.clean_grp.add(empty_row(
+                "paccache not installed",
+                "Install pacman-contrib to enable cache trimming"))
+
+        # journal
+        self.clean_grp.add(action_row(
+            "Vacuum systemd journal (keep 7 days)",
+            "journalctl --vacuum-time=7d",
+            "Vacuum",
+            lambda: sh_async(
+                ["pkexec", "journalctl", "--vacuum-time=7d"],
+                lambda r: (self.toast(
+                    "vacuumed" if r[0] == 0 else "needs admin"),
+                    self._render_mounts()),
+                timeout=60),
+            css="nyx-pill-warn"))
+
+        # Flatpak unused
+        if have("flatpak"):
+            self.clean_grp.add(action_row(
+                "Remove unused Flatpak runtimes",
+                "flatpak uninstall --unused -y",
+                "Remove",
+                lambda: sh_async(
+                    ["flatpak", "uninstall", "--unused", "-y"],
+                    lambda r: self.toast(
+                        "unused removed" if r[0] == 0 else "failed"),
+                    timeout=120)))
+
+        # baobab launcher (optional)
+        if have("baobab"):
+            self.clean_grp.add(action_row(
+                "Open disk usage analyzer",
+                "GNOME baobab — visualize what's using space",
+                "Open",
+                lambda: fire_and_forget("baobab")))
+
+    def _do_cleanup(self, cmd, success_msg: str) -> None:
+        sh_async(cmd, lambda r: (
+            self.toast(success_msg if r[0] == 0 else "failed"),
+            self._render_cleanup(),
+            self._refresh_home_sizes(),
+        ), timeout=30)
+
+    # ── Largest files in $HOME ───────────────────────────────
+    def _render_largest(self) -> None:
+        _clear_group(self.large_grp)
+        self.large_grp.add(action_row(
+            "Find the 20 largest files in your home",
+            "uses find — typically completes in a few seconds",
+            "Scan",
+            lambda: self._scan_largest()))
+        # Render previous results, if any
+        for size, path in getattr(self, "_largest_cache", []):
+            row = Adw.ActionRow(
+                title=Path(path).name,
+                subtitle=str(path).replace(str(Path.home()), "~"))
+            val = Gtk.Label(label=self._fmt_bytes(size))
+            val.add_css_class("nyx-kv-value")
+            row.add_suffix(val)
+            if have("xdg-open"):
+                btn = Gtk.Button(label="Open folder")
+                btn.add_css_class("nyx-pill")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked",
+                            lambda _b, p=path:
+                                fire_and_forget(
+                                    f"xdg-open {Path(p).parent}"))
+                row.add_suffix(btn)
+            self.large_grp.add(row)
+
+    def _scan_largest(self) -> None:
+        self.toast("scanning…")
+        sh_async(
+            ["sh", "-c",
+             "find ~ -xdev -type f -not -path '*/.cache/*' "
+             "-not -path '*/node_modules/*' "
+             "-not -path '*/.local/share/Trash/*' "
+             "-printf '%s\\t%p\\n' 2>/dev/null | sort -rn | head -20"],
+            self._on_largest_done, timeout=90)
+
+    def _on_largest_done(self, result) -> None:
+        rc, out, _ = result
+        if rc != 0:
+            self.toast("scan failed")
+            return
+        items = []
+        for line in out.splitlines():
+            try:
+                size_s, path = line.split("\t", 1)
+                items.append((int(size_s), path))
+            except Exception:
+                continue
+        self._largest_cache = items
+        self._render_largest()
+        self.toast(f"found {len(items)} files")
 
 
 # ──────────────────────────────────────────────────────────────────────
 # UPDATES — checkupdates, AUR helpers
 # ──────────────────────────────────────────────────────────────────────
 class UpdatesPage(SectionPage):
+    """Repo + AUR pending updates, reboot status, mirror refresh,
+    auto-check timer, channel selector, last-upgrade timestamp.
+    All real:
+      · checkupdates / paru -Qua / yay -Qua  — pending lists
+      · /var/log/pacman.log                  — last-upgrade time
+      · pkexec reflector                     — mirror refresh
+      · ~/.config/systemd/user/nyxus-update-check.{service,timer} — auto
+      · pkexec sed on /etc/pacman.conf       — channel toggle
+    """
     KEY = "updates"
+
+    REFLECTOR_COUNTRIES = ["United States", "United Kingdom", "Germany",
+                           "France", "Netherlands", "Canada", "Japan",
+                           "Australia", "Singapore", "Brazil"]
+    AUTOCHECK_INTERVALS = [
+        ("Off",       0),
+        ("Hourly",    3600),
+        ("Every 6h",  21600),
+        ("Daily",     86400),
+        ("Weekly",    604800),
+    ]
 
     def build(self) -> None:
         self.repo_grp = Adw.PreferencesGroup(
             title="Official repositories",
-            description="Pending updates from pacman (queried via "
-                        "checkupdates — does not need root)")
+            description="Pending updates from pacman (via checkupdates — "
+                        "no root required)")
         self.add_group(self.repo_grp)
         self.aur_grp = Adw.PreferencesGroup(
             title="AUR / foreign packages",
-            description="Pending updates for packages installed via paru, "
-                        "yay, etc.")
+            description="Pending updates for AUR packages")
         self.add_group(self.aur_grp)
-
-        # Reboot required
-        rb_grp = Adw.PreferencesGroup(title="Reboot")
-        self.add_group(rb_grp)
-        running_kernel = sh(["uname", "-r"], timeout=2)[1].strip()
-        rc, installed_kernel, _ = sh(
-            ["pacman", "-Q", "linux"], timeout=2)
-        installed_kernel = installed_kernel.strip().split(" ")[-1] \
-            if installed_kernel else "?"
-        kernel_match = installed_kernel.split("-")[0] in running_kernel
-        rb_grp.add(kv_row("Running kernel", running_kernel))
-        rb_grp.add(kv_row("Installed kernel", installed_kernel))
-        if not kernel_match:
-            rb_grp.add(empty_row(
-                "Reboot recommended",
-                "Installed kernel differs from running kernel — restart "
-                "to load it"))
-
-        # Tools
+        self.rb_grp = Adw.PreferencesGroup(title="Reboot status")
+        self.add_group(self.rb_grp)
+        self.history_grp = Adw.PreferencesGroup(
+            title="Update history",
+            description="From /var/log/pacman.log")
+        self.add_group(self.history_grp)
+        self.auto_grp = Adw.PreferencesGroup(
+            title="Auto-check schedule",
+            description="Background check via systemd --user timer")
+        self.add_group(self.auto_grp)
+        self.mirror_grp = Adw.PreferencesGroup(
+            title="Mirrors",
+            description="Refresh /etc/pacman.d/mirrorlist via reflector "
+                        "(admin prompt)")
+        self.add_group(self.mirror_grp)
+        self.channel_grp = Adw.PreferencesGroup(
+            title="Update channel",
+            description="Stable (default) or include [testing] / "
+                        "[community-testing] (faster updates, more risk)")
+        self.add_group(self.channel_grp)
         tools = Adw.PreferencesGroup(title="Tools")
         self.add_group(tools)
         tools.add(action_row(
@@ -2642,35 +3693,68 @@ class UpdatesPage(SectionPage):
                     f"AUR upgrade ({helper})",
                     f"{helper} -Syu — includes AUR & repos",
                     "Run",
-                    lambda h=helper: open_terminal(f"{h} -Syu", self.win)))
-        tools.add(action_row(
-            "Refresh mirror list",
-            "reflector --country US --age 6 --sort rate "
-            "--save /etc/pacman.d/mirrorlist",
-            "Refresh",
-            lambda: open_terminal(
-                "sudo reflector --age 6 --sort rate "
-                "--save /etc/pacman.d/mirrorlist",
-                self.win)) if have("reflector") else None)
+                    lambda h=helper:
+                        open_terminal(f"{h} -Syu", self.win)))
 
         self._render()
         self.add_pill(status_pill("live", "ok"))
         self.schedule_refresh(60000, self._tick)
 
     def _tick(self) -> bool:
-        self._render()
+        self._render_repo()
+        self._render_aur()
+        self._render_history()
         return True
 
     def _render(self) -> None:
+        self._render_repo()
+        self._render_aur()
+        self._render_reboot()
+        self._render_history()
+        self._render_autocheck()
+        self._render_mirrors()
+        self._render_channel()
+
+    # ── Repo + AUR ───────────────────────────────────────────
+    def _render_repo(self) -> None:
         _clear_group(self.repo_grp)
         if not have("checkupdates"):
             self.repo_grp.add(empty_row(
                 "checkupdates not installed",
                 "Install pacman-contrib to query pending updates without "
                 "needing root"))
-        else:
-            sh_async(["checkupdates"], self._on_repo, timeout=30)
+            return
+        self.repo_grp.add(kv_row("Status", "checking…"))
+        sh_async(["checkupdates"], self._on_repo, timeout=30)
 
+    def _on_repo(self, result) -> None:
+        rc, out, _ = result
+        _clear_group(self.repo_grp)
+        if rc == 2:
+            self.repo_grp.add(kv_row("Status", "up to date ✓"))
+            return
+        lines = [l for l in out.splitlines() if l.strip()]
+        n = len(lines)
+        self.repo_grp.add(kv_row(
+            "Pending", str(n),
+            "click 'Run full system upgrade' below to apply"))
+        for line in lines[:25]:
+            parts = line.split()
+            if len(parts) >= 4:
+                self.repo_grp.add(kv_row(
+                    parts[0], f"{parts[1]} → {parts[3]}"))
+        if n > 25:
+            self.repo_grp.add(kv_row(
+                "+ more", f"{n - 25} additional packages"))
+        # Persist last-checked timestamp
+        try:
+            (Path.home() / ".config/nyxus").mkdir(parents=True, exist_ok=True)
+            (Path.home() / ".config/nyxus/last_update_check").write_text(
+                datetime.now().isoformat())
+        except Exception:
+            pass
+
+    def _render_aur(self) -> None:
         _clear_group(self.aur_grp)
         helper = "paru" if have("paru") else ("yay" if have("yay") else "")
         if not helper:
@@ -2678,28 +3762,15 @@ class UpdatesPage(SectionPage):
                 "No AUR helper installed",
                 "Install paru or yay to track AUR updates"))
             return
+        self.aur_grp.add(kv_row("Status", "checking…"))
         sh_async([helper, "-Qua"], self._on_aur, timeout=60)
-
-    def _on_repo(self, result) -> None:
-        rc, out, _ = result
-        _clear_group(self.repo_grp)
-        if rc == 2:  # checkupdates exits 2 when no updates
-            self.repo_grp.add(kv_row("Status", "up to date"))
-            return
-        lines = [l for l in out.splitlines() if l.strip()]
-        self.repo_grp.add(kv_row("Pending", str(len(lines))))
-        for line in lines[:25]:
-            parts = line.split()
-            if len(parts) >= 4:
-                self.repo_grp.add(kv_row(
-                    parts[0], f"{parts[1]} → {parts[3]}"))
 
     def _on_aur(self, result) -> None:
         rc, out, _ = result
         _clear_group(self.aur_grp)
         lines = [l for l in out.splitlines() if l.strip()]
         if not lines:
-            self.aur_grp.add(kv_row("Status", "up to date"))
+            self.aur_grp.add(kv_row("Status", "up to date ✓"))
             return
         self.aur_grp.add(kv_row("Pending", str(len(lines))))
         for line in lines[:25]:
@@ -2707,6 +3778,304 @@ class UpdatesPage(SectionPage):
             if len(parts) >= 4:
                 self.aur_grp.add(kv_row(
                     parts[0], f"{parts[1]} → {parts[3]}"))
+
+    # ── Reboot status ────────────────────────────────────────
+    def _render_reboot(self) -> None:
+        _clear_group(self.rb_grp)
+        running_kernel = sh(["uname", "-r"], timeout=2)[1].strip()
+        rc, ik, _ = sh(["pacman", "-Q", "linux"], timeout=2)
+        installed_kernel = ik.strip().split(" ")[-1] if ik else "?"
+        kernel_match = installed_kernel.split("-")[0] in running_kernel
+        self.rb_grp.add(kv_row("Running kernel", running_kernel))
+        self.rb_grp.add(kv_row("Installed kernel", installed_kernel))
+
+        # Check critical packages: systemd, glibc — mtime > boot time?
+        rc, btime, _ = sh(
+            ["sh", "-c", "stat -c %Y /proc/1"], timeout=2)
+        try:
+            boot_ts = int(btime.strip())
+        except Exception:
+            boot_ts = 0
+        critical_changed = []
+        for pkg in ("systemd", "glibc", "linux", "linux-zen", "linux-lts"):
+            rc, mt, _ = sh(
+                ["sh", "-c",
+                 f"stat -c %Y /var/lib/pacman/local/{pkg}-* 2>/dev/null "
+                 "| sort -n | tail -1"], timeout=2)
+            try:
+                ts = int(mt.strip())
+                if ts > boot_ts:
+                    critical_changed.append(pkg)
+            except Exception:
+                continue
+
+        needs_reboot = (not kernel_match) or bool(critical_changed)
+        if needs_reboot:
+            why = []
+            if not kernel_match:
+                why.append("kernel differs from running")
+            if critical_changed:
+                why.append("upgraded since boot: "
+                          + ", ".join(critical_changed))
+            row = Adw.ActionRow(
+                title="⚠ Reboot recommended",
+                subtitle=" · ".join(why))
+            btn = Gtk.Button(label="Reboot now")
+            btn.add_css_class("nyx-pill-warn")
+            btn.set_valign(Gtk.Align.CENTER)
+            btn.connect("clicked", lambda _b: self._confirm_reboot())
+            row.add_suffix(btn)
+            self.rb_grp.add(row)
+        else:
+            self.rb_grp.add(kv_row(
+                "Status", "running kernel matches installed ✓"))
+
+    def _confirm_reboot(self) -> None:
+        dlg = Adw.MessageDialog(
+            transient_for=self.win,
+            heading="Reboot now?",
+            body="All unsaved work will be lost. Continue?")
+        dlg.add_response("cancel", "Cancel")
+        dlg.add_response("ok", "Reboot")
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.DESTRUCTIVE)
+        dlg.connect("response", lambda d, resp:
+                    sh_async(["systemctl", "reboot"], None, timeout=4)
+                    if resp == "ok" else None)
+        dlg.present()
+
+    # ── History ──────────────────────────────────────────────
+    def _render_history(self) -> None:
+        _clear_group(self.history_grp)
+        log_p = Path("/var/log/pacman.log")
+        if not log_p.exists():
+            self.history_grp.add(empty_row(
+                "No pacman log found",
+                "/var/log/pacman.log is missing"))
+            return
+        # Last upgrade timestamp
+        rc, out, _ = sh(
+            ["sh", "-c",
+             "grep -E 'starting full system upgrade' "
+             "/var/log/pacman.log | tail -1"], timeout=4)
+        last_full = out.strip()
+        m = re.match(r"^\[([^\]]+)\]", last_full)
+        if m:
+            self.history_grp.add(kv_row(
+                "Last full upgrade", m.group(1)))
+        else:
+            self.history_grp.add(kv_row(
+                "Last full upgrade", "(no record)"))
+
+        # Last 5 upgrades
+        rc, out, _ = sh(
+            ["sh", "-c",
+             "grep -E '\\[ALPM\\] upgraded' /var/log/pacman.log "
+             "| tail -5"], timeout=4)
+        for line in out.splitlines():
+            mm = re.match(
+                r"^\[([^\]]+)\].*upgraded\s+(\S+)\s+\(([^)]+)\)", line)
+            if mm:
+                self.history_grp.add(kv_row(
+                    mm.group(2), mm.group(3),
+                    subtitle=mm.group(1)))
+
+        # Last-checked
+        check_p = Path.home() / ".config/nyxus/last_update_check"
+        if check_p.exists():
+            try:
+                self.history_grp.add(kv_row(
+                    "Last checked (NYXUS)",
+                    check_p.read_text().strip()[:19]))
+            except Exception:
+                pass
+
+    # ── Auto-check timer ─────────────────────────────────────
+    def _render_autocheck(self) -> None:
+        _clear_group(self.auto_grp)
+        prefs = load_prefs().get("updates", {})
+        cur = int(prefs.get("autocheck_secs", 0))
+        labels = [n for n, _ in self.AUTOCHECK_INTERVALS]
+        secs   = [s for _, s in self.AUTOCHECK_INTERVALS]
+        try:
+            sel = secs.index(cur)
+        except ValueError:
+            sel = 0
+        row = Adw.ActionRow(
+            title="Check for updates automatically",
+            subtitle="runs `checkupdates` and writes the count to "
+                     "~/.config/nyxus/pending_count")
+        dd = Gtk.DropDown.new_from_strings(labels)
+        dd.set_selected(sel)
+        dd.set_valign(Gtk.Align.CENTER)
+        dd.connect("notify::selected",
+                   lambda d, _p, ss=secs: self._on_autocheck_changed(d, ss))
+        row.add_suffix(dd)
+        self.auto_grp.add(row)
+
+    def _on_autocheck_changed(self, dd, secs_list: list) -> None:
+        idx = dd.get_selected()
+        if not (0 <= idx < len(secs_list)):
+            return
+        secs = secs_list[idx]
+        prefs = load_prefs()
+        prefs.setdefault("updates", {})["autocheck_secs"] = secs
+        save_prefs(prefs)
+        self._sync_autocheck_unit(secs)
+        self.toast("auto-check " + ("off" if secs == 0
+                   else f"every {secs}s"))
+
+    def _sync_autocheck_unit(self, secs: int) -> None:
+        unit_dir = Path.home() / ".config/systemd/user"
+        unit_dir.mkdir(parents=True, exist_ok=True)
+        svc = unit_dir / "nyxus-update-check.service"
+        tmr = unit_dir / "nyxus-update-check.timer"
+        if secs <= 0:
+            sh_async(
+                ["systemctl", "--user", "disable", "--now",
+                 "nyxus-update-check.timer"],
+                None, timeout=4)
+            for p in (svc, tmr):
+                try:
+                    p.unlink()
+                except FileNotFoundError:
+                    pass
+            return
+        svc.write_text(textwrap.dedent("""\
+            [Unit]
+            Description=NYXUS pending-updates check
+
+            [Service]
+            Type=oneshot
+            ExecStart=/bin/sh -c 'mkdir -p ~/.config/nyxus && checkupdates 2>/dev/null | wc -l > ~/.config/nyxus/pending_count; date -Iseconds > ~/.config/nyxus/last_update_check'
+            """))
+        tmr.write_text(textwrap.dedent(f"""\
+            [Unit]
+            Description=NYXUS pending-updates check (every {secs}s)
+
+            [Timer]
+            OnBootSec=2min
+            OnUnitActiveSec={secs}s
+            Persistent=true
+
+            [Install]
+            WantedBy=timers.target
+            """))
+        sh_async(
+            ["systemctl", "--user", "daemon-reload"],
+            lambda _r: sh_async(
+                ["systemctl", "--user", "enable", "--now",
+                 "nyxus-update-check.timer"],
+                None, timeout=4),
+            timeout=4)
+
+    # ── Mirrors ──────────────────────────────────────────────
+    def _render_mirrors(self) -> None:
+        _clear_group(self.mirror_grp)
+        if not have("reflector"):
+            self.mirror_grp.add(empty_row(
+                "reflector not installed",
+                "Install reflector to refresh mirrors"))
+            return
+        prefs = load_prefs().get("updates", {})
+        country = prefs.get("mirror_country", "United States")
+        row = Adw.ActionRow(
+            title="Mirror country",
+            subtitle="reflector picks the fastest N mirrors in this country")
+        dd = Gtk.DropDown.new_from_strings(self.REFLECTOR_COUNTRIES)
+        try:
+            dd.set_selected(self.REFLECTOR_COUNTRIES.index(country))
+        except ValueError:
+            dd.set_selected(0)
+        dd.set_valign(Gtk.Align.CENTER)
+        dd.connect("notify::selected",
+                   lambda d, _p: self._on_country_changed(d))
+        row.add_suffix(dd)
+        self.mirror_grp.add(row)
+
+        self.mirror_grp.add(action_row(
+            "Refresh mirror list now",
+            f"reflector --country '{country}' --age 6 --sort rate "
+            "--save /etc/pacman.d/mirrorlist",
+            "Refresh",
+            lambda c=country: sh_async(
+                ["pkexec", "sh", "-c",
+                 f"reflector --country '{c}' --age 6 --sort rate "
+                 f"--save /etc/pacman.d/mirrorlist && pacman -Syy"],
+                lambda r: self.toast(
+                    "mirrors refreshed" if r[0] == 0 else "needs admin"),
+                timeout=120),
+            css="nyx-pill"))
+
+    def _on_country_changed(self, dd) -> None:
+        idx = dd.get_selected()
+        if not (0 <= idx < len(self.REFLECTOR_COUNTRIES)):
+            return
+        country = self.REFLECTOR_COUNTRIES[idx]
+        prefs = load_prefs()
+        prefs.setdefault("updates", {})["mirror_country"] = country
+        save_prefs(prefs)
+        self.toast(f"mirror country → {country}")
+        self._render_mirrors()
+
+    # ── Channel selector (stable / testing) ──────────────────
+    def _render_channel(self) -> None:
+        _clear_group(self.channel_grp)
+        try:
+            txt = Path("/etc/pacman.conf").read_text(errors="ignore")
+        except Exception:
+            self.channel_grp.add(empty_row(
+                "/etc/pacman.conf not readable", ""))
+            return
+        # Parse: a [testing] section with uncommented Include = ... = enabled
+        testing_on = re.search(
+            r"^\s*\[testing\]\s*\n([^\[]*?)Include\s*=",
+            txt, re.MULTILINE) is not None
+        comm_testing_on = re.search(
+            r"^\s*\[community-testing\]\s*\n([^\[]*?)Include\s*=",
+            txt, re.MULTILINE) is not None
+
+        for label, section, current in (
+            ("[testing]",           "testing",           testing_on),
+            ("[community-testing]", "community-testing", comm_testing_on),
+        ):
+            row = Adw.ActionRow(
+                title=label,
+                subtitle="WARNING: enabling brings unstable packages — "
+                         "may break your system")
+            sw = Gtk.Switch()
+            sw.set_valign(Gtk.Align.CENTER)
+            sw.set_active(current)
+            sw.connect("notify::active",
+                       lambda s, _p, sec=section:
+                           self._on_channel_toggled(s, sec))
+            row.add_suffix(sw)
+            self.channel_grp.add(row)
+
+    def _on_channel_toggled(self, sw, section: str) -> None:
+        on = sw.get_active()
+        # Idempotent: enable = uncomment [section] + Include line
+        # disable = comment them out
+        if on:
+            # Enable: uncomment if commented, else append a fresh block
+            cmd = f"""set -e
+if grep -qE '^\\s*#\\s*\\[{section}\\]' /etc/pacman.conf; then
+  sed -i -E '/^#\\s*\\[{section}\\]/,/^#\\s*Include/ s/^#//' /etc/pacman.conf
+elif ! grep -qE '^\\s*\\[{section}\\]' /etc/pacman.conf; then
+  printf '\\n[{section}]\\nInclude = /etc/pacman.d/mirrorlist\\n' >> /etc/pacman.conf
+fi
+pacman -Syy
+"""
+        else:
+            cmd = (
+                f"sed -i -E '/^\\[{section}\\]/,/^Include/ "
+                f"s/^([^#].*)/#\\1/' /etc/pacman.conf && pacman -Syy")
+        sh_async(
+            ["pkexec", "sh", "-c", cmd],
+            lambda r: (self.toast(
+                f"{section} " + ("enabled" if on else "disabled")
+                if r[0] == 0 else "needs admin / failed"),
+                self._render_channel()),
+            timeout=60)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -2823,46 +4192,76 @@ class AccessibilityPage(SectionPage):
 # USERS — current user, groups, password change
 # ──────────────────────────────────────────────────────────────────────
 class UsersPage(SectionPage):
+    """Local account management. All real:
+      · pkexec useradd / userdel / passwd / chfn / gpasswd
+      · ~/.face                — avatar (symlink for accountsservice)
+      · /var/lib/AccountsService/users/<u>  — Icon= line
+      · loginctl list-sessions  — active sessions
+    """
     KEY = "users"
 
     def build(self) -> None:
-        # Current user
-        cur = Adw.PreferencesGroup(title="Current account")
-        self.add_group(cur)
-        rc, user, _ = sh(["whoami"], timeout=2)
-        user = user.strip()
-        cur.add(kv_row("Username", user))
-        rc, fn, _ = sh(["getent", "passwd", user], timeout=2)
-        if rc == 0 and fn.strip():
-            parts = fn.strip().split(":")
-            if len(parts) >= 7:
-                cur.add(kv_row("UID", parts[2]))
-                cur.add(kv_row("Primary group", parts[3]))
-                cur.add(kv_row("Full name (GECOS)", parts[4] or "(unset)"))
-                cur.add(kv_row("Home", parts[5]))
-                cur.add(kv_row("Shell", parts[6]))
-        rc, groups, _ = sh(["groups"], timeout=2)
-        cur.add(kv_row("Groups",
-                       groups.strip().split(":")[-1].strip()
-                       if ":" in groups else groups.strip()))
-        cur.add(action_row(
-            "Change password",
-            "Opens a terminal with passwd",
-            "Change",
-            lambda: open_terminal("passwd", self.win)))
-        cur.add(action_row(
-            "Edit shell",
-            "Opens chsh in a terminal — pick from /etc/shells",
-            "Edit",
-            lambda: open_terminal("chsh", self.win)))
-
-        # Other users on the system
-        oth = Adw.PreferencesGroup(
+        self.cur_grp = Adw.PreferencesGroup(title="Current account")
+        self.add_group(self.cur_grp)
+        self.others_grp = Adw.PreferencesGroup(
             title="Other accounts",
-            description="Local accounts with UID ≥ 1000 (excluding nobody)")
-        self.add_group(oth)
+            description="Local accounts with UID ≥ 1000")
+        self.add_group(self.others_grp)
+        self.add_grp = Adw.PreferencesGroup(
+            title="Add a new account",
+            description="Creates the home directory, sets the password, "
+                        "optionally grants sudo via the wheel group")
+        self.add_group(self.add_grp)
+        self.sudoers_grp = Adw.PreferencesGroup(
+            title="Sudo rules",
+            description="Members of the wheel group can run sudo")
+        self.add_group(self.sudoers_grp)
+        self.sessions_grp = Adw.PreferencesGroup(title="Active sessions")
+        self.add_group(self.sessions_grp)
+
+        self._render()
+        self.schedule_refresh(15000, self._tick)
+
+    def _tick(self) -> bool:
+        self._render_sessions()
+        return True
+
+    def _render(self) -> None:
+        self._render_current()
+        self._render_others()
+        self._render_add()
+        self._render_sudoers()
+        self._render_sessions()
+        self.clear_pills()
+        rc, user, _ = sh(["whoami"], timeout=2)
+        self.add_pill(status_pill(user.strip(), "ok"))
+
+    # ── Helpers ──────────────────────────────────────────────
+    @staticmethod
+    def _whoami() -> str:
+        rc, u, _ = sh(["whoami"], timeout=2)
+        return u.strip()
+
+    @staticmethod
+    def _passwd_entry(user: str) -> dict:
+        rc, fn, _ = sh(["getent", "passwd", user], timeout=2)
+        if rc != 0 or not fn.strip():
+            return {}
+        p = fn.strip().split(":")
+        if len(p) < 7:
+            return {}
+        return {"name": p[0], "uid": p[2], "gid": p[3],
+                "gecos": p[4], "home": p[5], "shell": p[6]}
+
+    @staticmethod
+    def _user_groups(user: str) -> list:
+        rc, out, _ = sh(["id", "-Gn", user], timeout=2)
+        return out.strip().split() if rc == 0 else []
+
+    @staticmethod
+    def _list_real_users() -> list:
         rc, out, _ = sh(["getent", "passwd"], timeout=3)
-        others = []
+        users = []
         for line in out.splitlines():
             p = line.split(":")
             if len(p) < 7:
@@ -2871,50 +4270,322 @@ class UsersPage(SectionPage):
                 uid = int(p[2])
             except ValueError:
                 continue
-            if uid >= 1000 and p[0] != "nobody" and p[0] != user:
-                others.append((p[0], p[2], p[6]))
-        if not others:
-            oth.add(empty_row("No other user accounts",
-                               "This system has only the current user"))
-        for name, uid, shell in others[:10]:
-            oth.add(kv_row(name, f"uid {uid} · {shell}"))
+            if uid >= 1000 and p[0] != "nobody":
+                users.append((p[0], p[2], p[4] or "", p[6]))
+        return sorted(users)
 
-        # Add user (delegates to terminal — useradd needs root)
-        admin = Adw.PreferencesGroup(
-            title="Account management",
-            description="Account creation, removal, and group editing "
-                        "require root and are best done in a terminal")
-        self.add_group(admin)
-        admin.add(action_row(
-            "Add a new user",
-            "Opens useradd interactive helper in a terminal",
-            "Add",
-            lambda: open_terminal(
-                "echo 'Run: sudo useradd -m -G wheel,audio,video,input "
-                "-s /bin/bash USERNAME && sudo passwd USERNAME'; "
-                "$SHELL", self.win)))
-        admin.add(action_row(
-            "Edit /etc/sudoers",
-            "Opens sudo visudo — safest way to change sudo rules",
+    # ── Current account ──────────────────────────────────────
+    def _render_current(self) -> None:
+        _clear_group(self.cur_grp)
+        user = self._whoami()
+        info = self._passwd_entry(user)
+        groups = self._user_groups(user)
+        is_admin = "wheel" in groups
+
+        self.cur_grp.add(kv_row("Username", user))
+        if info:
+            self.cur_grp.add(kv_row("UID", info["uid"]))
+            self.cur_grp.add(kv_row("Home", info["home"]))
+            self.cur_grp.add(kv_row("Shell", info["shell"]))
+        self.cur_grp.add(kv_row(
+            "Account type", "Administrator" if is_admin else "Standard",
+            "wheel group" if is_admin else "no sudo access"))
+        self.cur_grp.add(kv_row(
+            "Groups", " ".join(groups) if groups else "(none)"))
+
+        # Full name (GECOS) editor — pkexec chfn
+        gecos_row = Adw.ActionRow(
+            title="Display name",
+            subtitle="shown in greeters, file managers, etc.")
+        entry = Gtk.Entry()
+        entry.set_text(info.get("gecos", "").split(",")[0])
+        entry.set_size_request(220, -1)
+        entry.set_valign(Gtk.Align.CENTER)
+        entry.connect("activate", lambda e, u=user:
+                      self._set_gecos(u, e.get_text().strip()))
+        gecos_row.add_suffix(entry)
+        self.cur_grp.add(gecos_row)
+
+        # Password
+        self.cur_grp.add(action_row(
+            "Change my password",
+            "Opens a terminal with passwd (interactive prompts are needed)",
+            "Change",
+            lambda: open_terminal("passwd", self.win)))
+
+        # Avatar
+        face = Path.home() / ".face"
+        face_row = Adw.ActionRow(
+            title="Avatar",
+            subtitle=str(face) + (
+                "  ·  set ✓" if face.exists() else "  ·  not set"))
+        btn = Gtk.Button(label="Choose…")
+        btn.add_css_class("nyx-pill")
+        btn.set_valign(Gtk.Align.CENTER)
+        btn.connect("clicked", lambda _b: self._pick_avatar())
+        face_row.add_suffix(btn)
+        self.cur_grp.add(face_row)
+
+        # Shell editor
+        self.cur_grp.add(action_row(
+            "Change my shell",
+            "Opens chsh in a terminal",
+            "Edit",
+            lambda: open_terminal("chsh", self.win)))
+
+    def _set_gecos(self, user: str, full_name: str) -> None:
+        sh_async(
+            ["pkexec", "chfn", "-f", full_name, user],
+            lambda r: (self.toast(
+                f"name → {full_name}" if r[0] == 0 else "needs admin"),
+                self._render_current()),
+            timeout=10)
+
+    def _pick_avatar(self) -> None:
+        dlg = Gtk.FileChooserNative(
+            title="Pick an avatar image",
+            transient_for=self.win,
+            action=Gtk.FileChooserAction.OPEN,
+            accept_label="Use",
+            cancel_label="Cancel")
+        flt = Gtk.FileFilter()
+        flt.set_name("Images")
+        for p in ("png", "jpg", "jpeg", "webp"):
+            flt.add_pattern(f"*.{p}")
+        dlg.add_filter(flt)
+        dlg.connect("response", self._on_avatar_picked)
+        dlg.show()
+        # Keep ref so it isn't GC'd
+        self._avatar_dlg = dlg
+
+    def _on_avatar_picked(self, dlg, resp) -> None:
+        if resp != Gtk.ResponseType.ACCEPT:
+            dlg.destroy()
+            return
+        f = dlg.get_file()
+        dlg.destroy()
+        if not f:
+            return
+        src = f.get_path()
+        face = Path.home() / ".face"
+        try:
+            shutil.copy2(src, face)
+            face.chmod(0o644)
+            self.toast(f"avatar → {face.name}")
+            # Also update accountsservice if available
+            user = self._whoami()
+            asu = Path(f"/var/lib/AccountsService/users/{user}")
+            if asu.parent.exists():
+                sh_async(
+                    ["pkexec", "sh", "-c",
+                     f"mkdir -p /var/lib/AccountsService/users && "
+                     f"printf '[User]\\nIcon={face}\\n' > "
+                     f"/var/lib/AccountsService/users/{user}"],
+                    lambda r: None, timeout=6)
+            self._render_current()
+        except Exception as e:
+            self.toast(f"failed: {e}")
+
+    # ── Other accounts ───────────────────────────────────────
+    def _render_others(self) -> None:
+        _clear_group(self.others_grp)
+        me = self._whoami()
+        others = [u for u in self._list_real_users() if u[0] != me]
+        if not others:
+            self.others_grp.add(empty_row(
+                "No other user accounts",
+                "This system has only your account"))
+            return
+        for name, uid, gecos, shell in others[:30]:
+            groups = self._user_groups(name)
+            is_admin = "wheel" in groups
+            row = Adw.ActionRow(
+                title=name + (f"  ·  {gecos}" if gecos else ""),
+                subtitle=f"uid {uid}  ·  {shell}  ·  "
+                         f"{'Administrator' if is_admin else 'Standard'}")
+
+            # Toggle admin
+            admin_btn = Gtk.Button(
+                label="Demote" if is_admin else "Make admin")
+            admin_btn.add_css_class(
+                "nyx-pill-warn" if is_admin else "nyx-pill")
+            admin_btn.set_valign(Gtk.Align.CENTER)
+            admin_btn.connect(
+                "clicked",
+                lambda _b, u=name, on=not is_admin:
+                    self._toggle_admin(u, on))
+            row.add_suffix(admin_btn)
+
+            # Reset password
+            pwd_btn = Gtk.Button(label="Set password")
+            pwd_btn.add_css_class("nyx-pill")
+            pwd_btn.set_valign(Gtk.Align.CENTER)
+            pwd_btn.connect(
+                "clicked",
+                lambda _b, u=name: open_terminal(
+                    f"sudo passwd {u}", self.win))
+            row.add_suffix(pwd_btn)
+
+            # Delete
+            del_btn = Gtk.Button(label="Delete")
+            del_btn.add_css_class("nyx-pill-warn")
+            del_btn.set_valign(Gtk.Align.CENTER)
+            del_btn.connect(
+                "clicked",
+                lambda _b, u=name: self._confirm_delete_user(u))
+            row.add_suffix(del_btn)
+
+            self.others_grp.add(row)
+
+    def _toggle_admin(self, user: str, on: bool) -> None:
+        cmd = (["pkexec", "gpasswd", "-a", user, "wheel"] if on
+               else ["pkexec", "gpasswd", "-d", user, "wheel"])
+        sh_async(
+            cmd,
+            lambda r: (self.toast(
+                f"{user} {'now admin' if on else 'demoted'}"
+                if r[0] == 0 else "failed"),
+                self._render_others()),
+            timeout=10)
+
+    def _confirm_delete_user(self, user: str) -> None:
+        dlg = Adw.MessageDialog(
+            transient_for=self.win,
+            heading=f"Delete user {user}?",
+            body=f"This will run:\n  pkexec userdel -r {user}\n\n"
+                 f"The home directory /home/{user} and all its contents "
+                 f"will be permanently deleted. This cannot be undone.")
+        dlg.add_response("cancel", "Cancel")
+        dlg.add_response("ok", "Delete")
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.DESTRUCTIVE)
+        dlg.set_default_response("cancel")
+        dlg.connect("response",
+                    lambda d, resp, u=user: self._do_delete_user(resp, u))
+        dlg.present()
+
+    def _do_delete_user(self, resp: str, user: str) -> None:
+        if resp != "ok":
+            return
+        sh_async(
+            ["pkexec", "userdel", "-r", user],
+            lambda r: (self.toast(
+                f"{user} deleted" if r[0] == 0
+                else f"failed: {r[2][:80] if r[2] else 'admin denied'}"),
+                self._render_others()),
+            timeout=30)
+
+    # ── Add new user ─────────────────────────────────────────
+    def _render_add(self) -> None:
+        _clear_group(self.add_grp)
+        u_row = Adw.ActionRow(title="Username",
+                              subtitle="lowercase, no spaces")
+        u_entry = Gtk.Entry()
+        u_entry.set_size_request(180, -1)
+        u_entry.set_valign(Gtk.Align.CENTER)
+        u_row.add_suffix(u_entry)
+        self.add_grp.add(u_row)
+        self._add_username = u_entry
+
+        f_row = Adw.ActionRow(title="Full name (optional)",
+                              subtitle="display name shown in greeters")
+        f_entry = Gtk.Entry()
+        f_entry.set_size_request(220, -1)
+        f_entry.set_valign(Gtk.Align.CENTER)
+        f_row.add_suffix(f_entry)
+        self.add_grp.add(f_row)
+        self._add_fullname = f_entry
+
+        a_row = Adw.ActionRow(
+            title="Grant administrator (sudo) access",
+            subtitle="adds the new user to the wheel group")
+        a_sw = Gtk.Switch()
+        a_sw.set_valign(Gtk.Align.CENTER)
+        a_row.add_suffix(a_sw)
+        self.add_grp.add(a_row)
+        self._add_admin = a_sw
+
+        action = Adw.ActionRow(
+            title="Create account",
+            subtitle="you'll be prompted for an admin password to confirm")
+        btn = Gtk.Button(label="Create")
+        btn.add_css_class("nyx-pill-ok")
+        btn.set_valign(Gtk.Align.CENTER)
+        btn.connect("clicked", lambda _b: self._create_user())
+        action.add_suffix(btn)
+        self.add_grp.add(action)
+
+    def _create_user(self) -> None:
+        user = self._add_username.get_text().strip()
+        fullname = self._add_fullname.get_text().strip()
+        admin = self._add_admin.get_active()
+        if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", user):
+            self.toast("invalid username")
+            return
+        # Build the create-and-set-password command.
+        # We can't take a password input safely here, so we drop the user
+        # straight into a terminal for `passwd` after creation.
+        groups = "wheel,audio,video,input,storage" if admin \
+            else "audio,video,input,storage"
+        cmd = (f"useradd -m -G {groups} -s /bin/bash "
+               f"-c {shlex_quote(fullname or user)} {user}")
+        sh_async(
+            ["pkexec", "sh", "-c", cmd],
+            lambda r: self._on_user_created(r, user),
+            timeout=20)
+
+    def _on_user_created(self, result, user: str) -> None:
+        rc, out, err = result
+        if rc != 0:
+            self.toast(f"create failed: {(err or out)[:80]}")
+            return
+        self.toast(f"{user} created — opening passwd")
+        # Open a terminal so the admin can set the password
+        open_terminal(f"sudo passwd {user}", self.win)
+        self._render_others()
+        self._add_username.set_text("")
+        self._add_fullname.set_text("")
+        self._add_admin.set_active(False)
+
+    # ── Sudoers ──────────────────────────────────────────────
+    def _render_sudoers(self) -> None:
+        _clear_group(self.sudoers_grp)
+        rc, out, _ = sh(["getent", "group", "wheel"], timeout=2)
+        members = []
+        if rc == 0 and out.strip():
+            parts = out.strip().split(":")
+            if len(parts) >= 4 and parts[3]:
+                members = parts[3].split(",")
+        if members:
+            self.sudoers_grp.add(kv_row(
+                "wheel members", ", ".join(members),
+                "these users can run sudo"))
+        else:
+            self.sudoers_grp.add(kv_row(
+                "wheel members", "(none)",
+                "no user has sudo access"))
+        self.sudoers_grp.add(action_row(
+            "Edit /etc/sudoers safely",
+            "Opens visudo — uses syntax checking before saving",
             "Open",
             lambda: open_terminal("sudo visudo", self.win),
             css="nyx-pill-warn"))
 
-        # Sessions
-        ses = Adw.PreferencesGroup(title="Active sessions")
-        self.add_group(ses)
+    # ── Sessions ─────────────────────────────────────────────
+    def _render_sessions(self) -> None:
+        _clear_group(self.sessions_grp)
         rc, out, _ = sh(["loginctl", "list-sessions", "--no-legend"],
                         timeout=3)
         rows = [l for l in out.splitlines() if l.strip()]
         if not rows:
-            ses.add(empty_row("No active sessions reported", ""))
-        for r in rows[:8]:
+            self.sessions_grp.add(empty_row(
+                "No active sessions reported", ""))
+            return
+        for r in rows[:12]:
             parts = r.split()
             if len(parts) >= 4:
-                ses.add(kv_row(parts[2],
-                               f"session {parts[0]} · seat {parts[3]}"))
-
-        self.add_pill(status_pill(user, "ok"))
+                self.sessions_grp.add(kv_row(
+                    parts[2],
+                    f"session {parts[0]}  ·  seat {parts[3]}"))
 
 
 # ──────────────────────────────────────────────────────────────────────
