@@ -28,9 +28,11 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import sys
+from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
@@ -700,58 +702,1735 @@ def _tier2(key: str, what_works: str, what_next: str) -> type:
     return cls
 
 
-DisplayPage       = _tier2("display",
-    "Read-only listing of monitors via hyprctl.",
-    "Resolution / refresh / scale / rotation pickers, brightness slider, "
-    "night light schedule, multi-monitor arrangement.")
-SoundPage         = _tier2("sound",
-    "Output and input device names from pactl.",
-    "Master + per-app volume sliders with live VU meters, default device "
-    "switcher, sample-rate picker, Bluetooth codec selector.")
-PowerPage         = _tier2("power",
-    "Battery percentage and charging state.",
-    "Power profile picker (powerprofilesctl), sleep/idle timing, lid "
-    "behavior, charge thresholds, CPU governor.")
-NotificationsPage = _tier2("notifications",
-    "DND on/off via dunstctl.",
-    "Notification history, per-app rules, quiet hours schedule, sound, "
-    "preview policy.")
-DateTimePage      = _tier2("datetime",
-    "Current timezone and clock format.",
-    "Timezone picker (timedatectl), NTP server selector, manual time "
-    "entry, 12/24 hour format, week-start.")
-KeyboardPage      = _tier2("keyboard",
-    "Current xkb layout from hyprctl.",
-    "Layout picker, repeat rate / delay sliders, modifier remap, "
-    "compose key, shortcut viewer linked to cheatsheet.")
-MousePage         = _tier2("mouse",
-    "Pointer device list from libinput.",
-    "Speed, acceleration profile, natural scroll, tap-to-click, "
-    "two-finger gestures, palm rejection.")
-PrivacyPage       = _tier2("privacy",
-    "Read-only mic/camera presence detection.",
-    "Per-app permission ledger, location services toggle, screen-record "
-    "indicator, clipboard history policy, telemetry opt-out audit.")
-AppsPage          = _tier2("apps",
-    "Installed package count via pacman.",
-    "Searchable installed-apps list, default browser/terminal/PDF picker, "
-    "MIME associations, autostart manager.")
-StoragePage       = _tier2("storage",
-    "Mount points and free space via df.",
-    "Per-disk usage chart, SMART health (smartctl), pacman cache cleanup, "
-    "journal trim, large-file finder.")
-UpdatesPage       = _tier2("updates",
-    "Pending pacman update count.",
-    "Live update list, AUR check, reboot-required flag, mirror picker, "
-    "scheduled update window.")
-AccessibilityPage = _tier2("accessibility",
-    "Reduce-motion preference (read-only).",
-    "Large text scale, high contrast (locked off — DARK MIRROR), sticky "
-    "keys, slow keys, screen reader hint, cursor size.")
-UsersPage         = _tier2("users",
-    "Current user, groups, default shell.",
-    "Password change, full name, avatar picker, group membership editor "
-    "(via polkit), sudoers viewer.")
+# ──────────────────────────────────────────────────────────────────────
+# Shared row helpers — kv_row + label_row (live in module scope, used
+# by every Tier-2/3 page).
+# ──────────────────────────────────────────────────────────────────────
+def kv_row(title: str, value: str, subtitle: str = "") -> Adw.ActionRow:
+    row = Adw.ActionRow(title=title)
+    if subtitle:
+        row.set_subtitle(subtitle)
+    val = Gtk.Label(label=value)
+    val.add_css_class("nyx-kv-value")
+    val.set_valign(Gtk.Align.CENTER)
+    val.set_selectable(True)
+    row.add_suffix(val)
+    return row
+
+
+def action_row(title: str, subtitle: str, button_label: str,
+               on_click: Callable[[], None],
+               css: str = "nyx-pill") -> Adw.ActionRow:
+    row = Adw.ActionRow(title=title, subtitle=subtitle)
+    btn = Gtk.Button(label=button_label)
+    btn.add_css_class(css)
+    btn.set_valign(Gtk.Align.CENTER)
+    btn.connect("clicked", lambda _b: on_click())
+    row.add_suffix(btn)
+    row.set_activatable_widget(btn)
+    return row
+
+
+def empty_row(title: str, subtitle: str = "") -> Adw.ActionRow:
+    row = Adw.ActionRow(title=title, subtitle=subtitle)
+    row.add_css_class("nyx-empty-row")
+    return row
+
+
+def debounced(scale: Gtk.Scale,
+              on_settle: Callable[[float], None],
+              delay_ms: int = 250) -> None:
+    """Wire a Gtk.Scale so on_settle(value) fires once after the user
+    stops dragging, not on every pixel. Prevents flooding hyprctl/IPC."""
+    state = {"src": 0}
+
+    def _changed(s):
+        if state["src"]:
+            try:
+                GLib.source_remove(state["src"])
+            except Exception:
+                pass
+
+        def _fire():
+            state["src"] = 0
+            try:
+                on_settle(s.get_value())
+            except Exception as e:
+                log.warning("debounced fire: %s", e)
+            return False
+
+        state["src"] = GLib.timeout_add(delay_ms, _fire)
+
+    scale.connect("value-changed", _changed)
+
+
+def open_terminal(cmd: str, win=None) -> bool:
+    """Run `cmd` in whatever terminal is installed. Returns True on success."""
+    for term in ("foot", "alacritty", "kitty", "wezterm", "xterm"):
+        if have(term):
+            try:
+                subprocess.Popen(
+                    [term, "-e", "sh", "-c",
+                     f"{cmd}; echo; echo '── press enter to close ──'; read _"],
+                    start_new_session=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL)
+                return True
+            except Exception as e:
+                log.warning("open_terminal: %s", e)
+    if win is not None:
+        win.toast("no terminal found (install foot/alacritty/kitty)")
+    return False
+
+
+# ──────────────────────────────────────────────────────────────────────
+# DISPLAY — hyprctl monitors, brightnessctl, gammastep / hyprsunset
+# ──────────────────────────────────────────────────────────────────────
+class DisplayPage(SectionPage):
+    KEY = "display"
+
+    def build(self) -> None:
+        # Monitors
+        self.mon_grp = Adw.PreferencesGroup(title="Monitors")
+        self.add_group(self.mon_grp)
+        # Brightness (per /sys/class/backlight)
+        self.bri_grp = Adw.PreferencesGroup(
+            title="Brightness",
+            description="Backlights detected under /sys/class/backlight")
+        self.add_group(self.bri_grp)
+        # Night light
+        self.nl_grp = Adw.PreferencesGroup(
+            title="Night light",
+            description="Warm screen tint after sundown to reduce eye strain")
+        self.add_group(self.nl_grp)
+        # Tools
+        tools = Adw.PreferencesGroup(title="Tools")
+        self.add_group(tools)
+        if have("wlr-randr"):
+            tools.add(action_row("Open wlr-randr",
+                                 "Inspect outputs in a terminal",
+                                 "Launch",
+                                 lambda: open_terminal("wlr-randr; read _",
+                                                       self.win)))
+        if have("nwg-displays"):
+            tools.add(action_row("Open nwg-displays",
+                                 "GUI multi-monitor arranger",
+                                 "Launch",
+                                 lambda: fire_and_forget("nwg-displays")))
+        if not have("wlr-randr") and not have("nwg-displays"):
+            tools.add(empty_row("No external display tool installed",
+                                "Install wlr-randr or nwg-displays for "
+                                "advanced arrangement"))
+
+        self._render_monitors()
+        self._render_brightness()
+        self._render_nightlight()
+        self.add_pill(status_pill("live", "ok"))
+        self.schedule_refresh(10000, self._tick)
+
+    def _tick(self) -> bool:
+        self._render_monitors()
+        self._render_brightness()
+        return True
+
+    def _render_monitors(self) -> None:
+        _clear_group(self.mon_grp)
+        if not have("hyprctl"):
+            self.mon_grp.add(empty_row(
+                "hyprctl not found",
+                "This page expects Hyprland. Install hyprland to manage "
+                "monitors."))
+            return
+        rc, out, _ = sh(["hyprctl", "monitors", "-j"], timeout=3)
+        try:
+            mons = json.loads(out) if rc == 0 else []
+        except Exception:
+            mons = []
+        if not mons:
+            self.mon_grp.add(empty_row("No monitors reported",
+                                        "hyprctl returned an empty list"))
+            return
+        for m in mons:
+            name = m.get("name", "?")
+            desc = m.get("description", "")
+            sub = (f"{m.get('width','?')}×{m.get('height','?')} "
+                   f"@ {m.get('refreshRate', 0):.0f}Hz · "
+                   f"scale {m.get('scale', 1)} · "
+                   f"transform {m.get('transform', 0)}")
+            row = Adw.ActionRow(title=name, subtitle=sub)
+            if desc:
+                row.set_subtitle(f"{desc} · {sub}")
+            tag = Gtk.Label(label="primary" if m.get("focused") else "")
+            tag.add_css_class("nyx-pill-ok")
+            if m.get("focused"):
+                row.add_suffix(tag)
+            self.mon_grp.add(row)
+
+    def _render_brightness(self) -> None:
+        _clear_group(self.bri_grp)
+        backlights = sorted(Path("/sys/class/backlight").glob("*")) \
+            if Path("/sys/class/backlight").exists() else []
+        if not backlights:
+            self.bri_grp.add(empty_row(
+                "No backlight device found",
+                "Desktops without a panel backlight have no software "
+                "brightness control"))
+            return
+        if not have("brightnessctl"):
+            self.bri_grp.add(empty_row(
+                "brightnessctl not installed",
+                "Install brightnessctl to adjust panel brightness"))
+            return
+        for bl in backlights:
+            try:
+                cur = int((bl / "brightness").read_text().strip())
+                mx  = int((bl / "max_brightness").read_text().strip())
+                pct = int(cur * 100 / max(mx, 1))
+            except Exception:
+                continue
+            row = Adw.ActionRow(title=bl.name, subtitle=f"{pct}% of {mx}")
+            scale = Gtk.Scale.new_with_range(
+                Gtk.Orientation.HORIZONTAL, 5, 100, 5)
+            scale.set_value(pct)
+            scale.set_size_request(220, -1)
+            scale.set_draw_value(False)
+            debounced(scale,
+                      lambda v, name=bl.name: sh_async(
+                          ["brightnessctl", "-d", name, "set",
+                           f"{int(v)}%"],
+                          None, timeout=3))
+            row.add_suffix(scale)
+            self.bri_grp.add(row)
+
+    def _render_nightlight(self) -> None:
+        _clear_group(self.nl_grp)
+        # Detect any of: hyprsunset, gammastep, wlsunset
+        running = ""
+        for proc in ("hyprsunset", "gammastep", "wlsunset"):
+            rc, out, _ = sh(["pgrep", "-x", proc], timeout=2)
+            if rc == 0 and out.strip():
+                running = proc
+                break
+        any_installed = any(have(x) for x in
+                            ("hyprsunset", "gammastep", "wlsunset"))
+        if not any_installed:
+            self.nl_grp.add(empty_row(
+                "No night-light service installed",
+                "Install hyprsunset, gammastep, or wlsunset"))
+            return
+        sw = Adw.SwitchRow(title="Night light enabled",
+                           subtitle=f"Currently running: "
+                                    f"{running or 'none'}")
+        sw.set_active(bool(running))
+        sw.connect("notify::active", self._on_nightlight, running)
+        self.nl_grp.add(sw)
+
+    def _on_nightlight(self, sw, _pspec, running: str) -> None:
+        if sw.get_active():
+            for proc in ("hyprsunset", "gammastep", "wlsunset"):
+                if have(proc):
+                    fire_and_forget(proc)
+                    self.toast(f"started {proc}")
+                    return
+        else:
+            if running:
+                sh_async(["pkill", "-x", running], None, timeout=3)
+                self.toast(f"stopped {running}")
+
+
+# ──────────────────────────────────────────────────────────────────────
+# SOUND — pactl (PipeWire/Pulse), per-sink volume + mute, default switcher
+# ──────────────────────────────────────────────────────────────────────
+class SoundPage(SectionPage):
+    KEY = "sound"
+
+    def build(self) -> None:
+        self.server_grp = Adw.PreferencesGroup(title="Audio server")
+        self.add_group(self.server_grp)
+        self.out_grp = Adw.PreferencesGroup(
+            title="Outputs",
+            description="Sliders adjust volume; switches mute the device")
+        self.add_group(self.out_grp)
+        self.in_grp  = Adw.PreferencesGroup(title="Inputs")
+        self.add_group(self.in_grp)
+        tools = Adw.PreferencesGroup(title="Tools")
+        self.add_group(tools)
+        if have("pavucontrol"):
+            tools.add(action_row("Open pavucontrol",
+                                 "Per-application mixer & routing",
+                                 "Launch",
+                                 lambda: fire_and_forget("pavucontrol")))
+        if have("easyeffects"):
+            tools.add(action_row("Open EasyEffects",
+                                 "EQ, compressor, noise reduction",
+                                 "Launch",
+                                 lambda: fire_and_forget("easyeffects")))
+        tools.add(action_row(
+            "Restart audio stack",
+            "systemctl --user restart pipewire pipewire-pulse wireplumber",
+            "Restart",
+            lambda: sh_async(
+                ["systemctl", "--user", "restart",
+                 "pipewire", "pipewire-pulse", "wireplumber"],
+                lambda r: self.toast("audio restarted" if r[0] == 0
+                                     else "restart failed"),
+                timeout=10),
+            css="nyx-pill-warn"))
+
+        self._render_all()
+        self.add_pill(status_pill("live", "ok"))
+        self.schedule_refresh(6000, self._tick)
+
+    def _tick(self) -> bool:
+        self._render_all()
+        return True
+
+    def _render_all(self) -> None:
+        self._render_server()
+        self._render_devices("sinks", self.out_grp, "set-sink-volume",
+                             "set-sink-mute", "set-default-sink")
+        self._render_devices("sources", self.in_grp, "set-source-volume",
+                             "set-source-mute", "set-default-source")
+
+    def _render_server(self) -> None:
+        _clear_group(self.server_grp)
+        if not have("pactl"):
+            self.server_grp.add(empty_row(
+                "pactl not installed",
+                "Install pipewire-pulse or pulseaudio-utils"))
+            return
+        rc, out, _ = sh(["pactl", "info"], timeout=3)
+        info = {}
+        for line in out.splitlines():
+            if ":" in line:
+                k, v = line.split(":", 1)
+                info[k.strip()] = v.strip()
+        name = info.get("Server Name", "(no audio server)")
+        backend = "PipeWire" if "PipeWire" in name else \
+                  ("PulseAudio" if "PulseAudio" in name else "?")
+        self.server_grp.add(kv_row("Backend", backend))
+        self.server_grp.add(kv_row("Server", name))
+        self.server_grp.add(kv_row("Default sink",
+                                   info.get("Default Sink", "?")))
+        self.server_grp.add(kv_row("Default source",
+                                   info.get("Default Source", "?")))
+
+    def _render_devices(self, kind: str, grp: Adw.PreferencesGroup,
+                        vol_cmd: str, mute_cmd: str, default_cmd: str) -> None:
+        _clear_group(grp)
+        if not have("pactl"):
+            grp.add(empty_row("pactl not installed", ""))
+            return
+        rc, out, _ = sh(["pactl", "list", kind, "short"], timeout=3)
+        if rc != 0 or not out.strip():
+            grp.add(empty_row(f"No {kind[:-1]} devices found", ""))
+            return
+        # Default device id
+        rc2, defout, _ = sh(["pactl", "get-default-" + kind[:-1]], timeout=2)
+        default_id = defout.strip() if rc2 == 0 else ""
+
+        rc3, full, _ = sh(["pactl", "list", kind], timeout=4)
+        # Parse description, mute, volume per device id
+        devices = {}
+        cur = None
+        for line in full.splitlines():
+            m = re.match(r"^\s*Name:\s+(.+)$", line)
+            if m and not line.startswith("\t\t"):
+                cur = m.group(1)
+                devices[cur] = {"desc": cur, "mute": False, "vol": 0}
+                continue
+            if cur is None:
+                continue
+            md = re.match(r"^\s*Description:\s+(.+)$", line)
+            if md:
+                devices[cur]["desc"] = md.group(1)
+            mm = re.match(r"^\s*Mute:\s+(yes|no)", line)
+            if mm:
+                devices[cur]["mute"] = (mm.group(1) == "yes")
+            mv = re.match(r"^\s*Volume:.*?(\d+)%", line)
+            if mv:
+                devices[cur]["vol"] = int(mv.group(1))
+
+        for did, d in devices.items():
+            is_default = (did == default_id)
+            sub = "default device" if is_default else did[:60]
+            row = Adw.ActionRow(title=d["desc"], subtitle=sub)
+            # Volume slider
+            scale = Gtk.Scale.new_with_range(
+                Gtk.Orientation.HORIZONTAL, 0, 150, 5)
+            scale.set_value(min(d["vol"], 150))
+            scale.set_size_request(180, -1)
+            scale.set_draw_value(False)
+            debounced(scale,
+                      lambda v, i=did, c=vol_cmd: sh_async(
+                          ["pactl", c, i, f"{int(v)}%"],
+                          None, timeout=3))
+            row.add_suffix(scale)
+            # Mute switch
+            mute = Gtk.Switch()
+            mute.set_active(not d["mute"])  # active = unmuted (sound on)
+            mute.set_valign(Gtk.Align.CENTER)
+            mute.set_tooltip_text("toggle audio")
+            mute.connect("notify::active",
+                         lambda sw, _p, i=did, c=mute_cmd: sh_async(
+                             ["pactl", c, i,
+                              "0" if sw.get_active() else "1"],
+                             None, timeout=3))
+            row.add_suffix(mute)
+            # Set-default button (if not current default)
+            if not is_default:
+                btn = Gtk.Button(label="Default")
+                btn.add_css_class("nyx-pill")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked",
+                            lambda _b, i=did, c=default_cmd: (
+                                sh_async(["pactl", c, i],
+                                         lambda r: self.toast(
+                                             "default set" if r[0] == 0
+                                             else "failed"),
+                                         timeout=3)))
+                row.add_suffix(btn)
+            grp.add(row)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# POWER — battery, profiles (powerprofilesctl), CPU governor
+# ──────────────────────────────────────────────────────────────────────
+class PowerPage(SectionPage):
+    KEY = "power"
+
+    def build(self) -> None:
+        self.bat_grp = Adw.PreferencesGroup(title="Battery")
+        self.add_group(self.bat_grp)
+        self.prof_grp = Adw.PreferencesGroup(
+            title="Power profile",
+            description="Switches the system between power-saver, balanced, "
+                        "and performance modes")
+        self.add_group(self.prof_grp)
+        self.gov_grp = Adw.PreferencesGroup(
+            title="CPU governor",
+            description="Per-core scaling strategy (read from "
+                        "/sys/devices/system/cpu)")
+        self.add_group(self.gov_grp)
+        # Idle / lid behaviour (informational)
+        idle = Adw.PreferencesGroup(
+            title="Idle & lid",
+            description="Runtime values from logind. Edit /etc/systemd/"
+                        "logind.conf to change.")
+        self.add_group(idle)
+        rc, out, _ = sh(["loginctl", "show-session", "self"], timeout=3)
+        info = {k: v for k, v in
+                (line.split("=", 1) for line in out.splitlines()
+                 if "=" in line)}
+        for label, key in (("Idle action",         "IdleAction"),
+                           ("Idle hint timeout",   "IdleSinceHint"),
+                           ("Locked hint",         "LockedHint")):
+            idle.add(kv_row(label, info.get(key, "?")))
+        rc, conf, _ = sh(
+            ["sh", "-c", "grep -E '^(HandleLidSwitch|HandlePowerKey|"
+             "IdleAction)' /etc/systemd/logind.conf 2>/dev/null"], timeout=3)
+        if conf.strip():
+            for line in conf.splitlines():
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    idle.add(kv_row(k.strip(), v.strip()))
+
+        # Tools
+        tools = Adw.PreferencesGroup(title="Tools")
+        self.add_group(tools)
+        for label, cmd in (("powertop", "sudo powertop"),
+                           ("tlp-stat",   "sudo tlp-stat -s | less"),
+                           ("upower dump", "upower --dump | less")):
+            bin0 = label.split()[0]
+            if have(bin0):
+                tools.add(action_row(
+                    f"Open {label}", "Runs in your terminal",
+                    "Launch",
+                    lambda c=cmd: open_terminal(c, self.win)))
+
+        self._render()
+        self.add_pill(status_pill("live", "ok"))
+        self.schedule_refresh(8000, self._tick)
+
+    def _tick(self) -> bool:
+        self._render()
+        return True
+
+    def _render(self) -> None:
+        # Battery
+        _clear_group(self.bat_grp)
+        bats = sorted(Path("/sys/class/power_supply").glob("BAT*")) \
+            if Path("/sys/class/power_supply").exists() else []
+        if not bats:
+            self.bat_grp.add(empty_row(
+                "No battery detected",
+                "This appears to be a desktop or VM"))
+        for b in bats:
+            try:
+                cap  = (b / "capacity").read_text().strip()
+                stat = (b / "status").read_text().strip()
+                row  = Adw.ActionRow(title=b.name,
+                                     subtitle=f"{cap}%  ·  {stat}")
+                ef = (b / "energy_full")
+                efd = (b / "energy_full_design")
+                if ef.exists() and efd.exists():
+                    e1 = int(ef.read_text())
+                    e2 = int(efd.read_text())
+                    if e2 > 0:
+                        h = Gtk.Label(label=f"health {e1*100//e2}%")
+                        h.add_css_class("nyx-kv-value")
+                        row.add_suffix(h)
+                self.bat_grp.add(row)
+            except Exception as e:
+                log.warning("battery: %s", e)
+
+        # Power profile
+        _clear_group(self.prof_grp)
+        if not have("powerprofilesctl"):
+            self.prof_grp.add(empty_row(
+                "powerprofilesctl not installed",
+                "Install power-profiles-daemon"))
+        else:
+            rc, out, _ = sh(["powerprofilesctl", "get"], timeout=3)
+            cur = out.strip() if rc == 0 else "?"
+            row = Adw.ActionRow(title="Active profile", subtitle=cur)
+            box = Gtk.Box(spacing=6)
+            box.set_valign(Gtk.Align.CENTER)
+            for p in ("power-saver", "balanced", "performance"):
+                btn = Gtk.Button(label=p)
+                btn.add_css_class("nyx-pill"
+                                  if p != cur else "nyx-pill-ok")
+                btn.connect("clicked", lambda _b, p=p: sh_async(
+                    ["powerprofilesctl", "set", p],
+                    lambda r: (self.toast(f"profile → {p}"
+                                          if r[0] == 0 else "failed"),
+                               self._render()), timeout=3))
+                box.append(btn)
+            row.add_suffix(box)
+            self.prof_grp.add(row)
+
+        # CPU governor
+        _clear_group(self.gov_grp)
+        gp = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
+        ap = Path("/sys/devices/system/cpu/cpu0/cpufreq/"
+                  "scaling_available_governors")
+        if not gp.exists():
+            self.gov_grp.add(empty_row(
+                "cpufreq not available",
+                "This CPU/kernel does not expose scaling governors"))
+        else:
+            try:
+                cur = gp.read_text().strip()
+                avail = ap.read_text().split() if ap.exists() else [cur]
+            except Exception:
+                cur, avail = "?", []
+            row = Adw.ActionRow(title="Current governor", subtitle=cur)
+            self.gov_grp.add(row)
+            # Frequency
+            fp = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+            if fp.exists():
+                try:
+                    f = int(fp.read_text().strip())
+                    self.gov_grp.add(kv_row("cpu0 freq", f"{f//1000} MHz"))
+                except Exception:
+                    pass
+            # Picker — uses pkexec to write all CPUs at once
+            for g in avail:
+                btn_row = Adw.ActionRow(
+                    title=g,
+                    subtitle="active" if g == cur
+                            else "Click to switch (requires sudo)")
+                if g != cur:
+                    b = Gtk.Button(label="Use")
+                    b.add_css_class("nyx-pill")
+                    b.set_valign(Gtk.Align.CENTER)
+                    b.connect("clicked", lambda _b, g=g: sh_async(
+                        ["pkexec", "sh", "-c",
+                         f"for f in /sys/devices/system/cpu/cpu*/cpufreq/"
+                         f"scaling_governor; do echo {g} > $f; done"],
+                        lambda r: (self.toast(f"governor → {g}"
+                                              if r[0] == 0 else "needs sudo"),
+                                   self._render()),
+                        timeout=10))
+                    btn_row.add_suffix(b)
+                self.gov_grp.add(btn_row)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# NOTIFICATIONS — mako / dunst / swaync
+# ──────────────────────────────────────────────────────────────────────
+class NotificationsPage(SectionPage):
+    KEY = "notifications"
+
+    def _detect(self) -> str:
+        for proc in ("mako", "dunst", "swaync"):
+            rc, out, _ = sh(["pgrep", "-x", proc], timeout=2)
+            if rc == 0 and out.strip():
+                return proc
+        for proc in ("mako", "dunst", "swaync"):
+            if have(proc):
+                return proc + ":installed"
+        return ""
+
+    def build(self) -> None:
+        self.daemon_full = self._detect()
+        self.daemon = self.daemon_full.split(":")[0] if self.daemon_full \
+            else ""
+
+        # Detection summary
+        det = Adw.PreferencesGroup(title="Notification daemon")
+        self.add_group(det)
+        for name in ("mako", "dunst", "swaync"):
+            rc, out, _ = sh(["pgrep", "-x", name], timeout=2)
+            running = (rc == 0 and bool(out.strip()))
+            installed = have(name) or have(name + "ctl") or \
+                        (name == "swaync" and have("swaync-client"))
+            mark = "running" if running else \
+                   ("installed" if installed else "missing")
+            row = kv_row(name, mark)
+            det.add(row)
+
+        if not self.daemon:
+            warn = Adw.PreferencesGroup(
+                title="No daemon active",
+                description="Apps that send notifications via D-Bus will "
+                            "fail silently until one is installed and "
+                            "running. Install mako, dunst, or swaync.")
+            self.add_group(warn)
+            self.add_pill(status_pill("inactive", "danger"))
+            return
+
+        # DND toggle
+        dnd_grp = Adw.PreferencesGroup(
+            title="Do Not Disturb",
+            description="Silences popups system-wide")
+        self.add_group(dnd_grp)
+        dnd_on = self._dnd_state()
+        sw = Adw.SwitchRow(title="Do Not Disturb",
+                           subtitle=f"daemon: {self.daemon}")
+        sw.set_active(dnd_on)
+        sw.connect("notify::active", self._on_dnd)
+        dnd_grp.add(sw)
+
+        # Quick controls
+        qc = Adw.PreferencesGroup(title="Quick controls")
+        self.add_group(qc)
+        # Use sh_async so the UI never blocks waiting for the daemon.
+        def _ctl(argv, toast_msg):
+            sh_async(argv, lambda r: self.toast(toast_msg), timeout=4)
+
+        if self.daemon == "mako":
+            qc.add(action_row("Dismiss all", "makoctl dismiss --all",
+                              "Dismiss",
+                              lambda: _ctl(["makoctl", "dismiss", "--all"],
+                                           "dismissed all"),
+                              css="nyx-pill-warn"))
+            qc.add(action_row("Dismiss latest", "makoctl dismiss",
+                              "Dismiss",
+                              lambda: _ctl(["makoctl", "dismiss"],
+                                           "dismissed latest")))
+            qc.add(action_row("Restore last", "makoctl restore",
+                              "Restore",
+                              lambda: _ctl(["makoctl", "restore"],
+                                           "restored")))
+            qc.add(action_row("Reload config", "makoctl reload",
+                              "Reload",
+                              lambda: _ctl(["makoctl", "reload"],
+                                           "reloaded")))
+        elif self.daemon == "dunst":
+            qc.add(action_row("Close all", "dunstctl close-all", "Close",
+                              lambda: _ctl(["dunstctl", "close-all"],
+                                           "closed all"),
+                              css="nyx-pill-warn"))
+            qc.add(action_row("Close latest", "dunstctl close", "Close",
+                              lambda: _ctl(["dunstctl", "close"],
+                                           "closed latest")))
+            qc.add(action_row("Show context menu", "dunstctl context",
+                              "Open",
+                              lambda: _ctl(["dunstctl", "context"],
+                                           "context")))
+        elif self.daemon == "swaync":
+            qc.add(action_row("Toggle panel", "swaync-client -t", "Toggle",
+                              lambda: _ctl(["swaync-client", "-t"],
+                                           "toggled")))
+            qc.add(action_row("Reload", "swaync-client -R", "Reload",
+                              lambda: _ctl(["swaync-client", "-R"],
+                                           "reloaded")))
+
+        # History
+        hist = Adw.PreferencesGroup(title="History")
+        self.add_group(hist)
+        if self.daemon == "dunst":
+            rc, out, _ = sh(["dunstctl", "count", "history"], timeout=3)
+            n = (out or "0").strip()
+            hist.add(kv_row("Stored notifications", n))
+            hist.add(action_row("Show history popup",
+                                "dunstctl history-pop",
+                                "Show",
+                                lambda: sh_async(
+                                    ["dunstctl", "history-pop"],
+                                    None, timeout=3)))
+        elif self.daemon == "mako":
+            rc, out, _ = sh(["makoctl", "history"], timeout=3)
+            try:
+                arr = json.loads(out or "{}").get("data", [[]])[0]
+            except Exception:
+                arr = []
+            hist.add(kv_row("Stored notifications", str(len(arr))))
+            for n in arr[-5:]:
+                summ = (n.get("summary", {}) or {}).get("data", "?")
+                app  = (n.get("app-name", {}) or {}).get("data", "?")
+                hist.add(kv_row(f"{app}", str(summ)[:60]))
+        else:
+            hist.add(empty_row("History viewer not implemented for swaync",
+                               "swaync provides its own panel UI"))
+
+        self.add_pill(status_pill(self.daemon, "ok"))
+
+    def _dnd_state(self) -> bool:
+        if self.daemon == "mako":
+            rc, out, _ = sh(["makoctl", "mode"], timeout=2)
+            return "do-not-disturb" in (out or "")
+        if self.daemon == "dunst":
+            rc, out, _ = sh(["dunstctl", "is-paused"], timeout=2)
+            return "true" in (out or "").lower()
+        if self.daemon == "swaync":
+            rc, out, _ = sh(["swaync-client", "-D"], timeout=2)
+            return "true" in (out or "").lower()
+        return False
+
+    def _on_dnd(self, sw, _pspec) -> None:
+        on = sw.get_active()
+        if self.daemon == "mako":
+            sh_async(["makoctl", "mode", "-t",
+                      "do-not-disturb" if on else "default"],
+                     None, timeout=3)
+        elif self.daemon == "dunst":
+            sh_async(["dunstctl", "set-paused",
+                      "true" if on else "false"], None, timeout=3)
+        elif self.daemon == "swaync":
+            sh_async(["swaync-client", "-d"], None, timeout=3)  # toggles
+        self.toast(f"DND {'on' if on else 'off'}")
+
+
+# ──────────────────────────────────────────────────────────────────────
+# DATE & TIME — timedatectl, world clock
+# ──────────────────────────────────────────────────────────────────────
+class DateTimePage(SectionPage):
+    KEY = "datetime"
+
+    def build(self) -> None:
+        rc, out, _ = sh(["timedatectl"], timeout=3)
+        info = {}
+        for line in out.splitlines():
+            if ":" in line:
+                k, v = line.split(":", 1)
+                info[k.strip()] = v.strip()
+
+        sys_grp = Adw.PreferencesGroup(title="System time")
+        self.add_group(sys_grp)
+        for label, key in (("Local time",     "Local time"),
+                           ("Universal time", "Universal time"),
+                           ("RTC time",       "RTC time"),
+                           ("Time zone",      "Time zone")):
+            sys_grp.add(kv_row(label, info.get(key, "?")))
+
+        # NTP toggle
+        ntp_on = info.get("System clock synchronized", "").lower() == "yes"
+        ntp_sw = Adw.SwitchRow(
+            title="Network time (NTP)",
+            subtitle="Auto-sync the system clock from internet time servers")
+        ntp_sw.set_active(ntp_on)
+        ntp_sw.connect("notify::active", self._on_ntp)
+        sys_grp.add(ntp_sw)
+
+        # RTC mode
+        rtc_local = info.get("RTC in local TZ", "no").lower() == "yes"
+        rtc_sw = Adw.SwitchRow(
+            title="RTC stored in local time",
+            subtitle="Off = UTC (recommended for Linux-only systems)")
+        rtc_sw.set_active(rtc_local)
+        rtc_sw.connect("notify::active", self._on_rtc_local)
+        sys_grp.add(rtc_sw)
+
+        # Sync now
+        sys_grp.add(action_row(
+            "Resync clock now",
+            "Restart the time service to force an NTP sync",
+            "Sync",
+            lambda: sh_async(
+                ["pkexec", "systemctl", "restart", "systemd-timesyncd"],
+                lambda r: self.toast("resynced" if r[0] == 0
+                                     else "needs sudo / not installed"),
+                timeout=10)))
+
+        # Timezone picker
+        tz_grp = Adw.PreferencesGroup(title="Time zone")
+        self.add_group(tz_grp)
+        rc, tzs_out, _ = sh(["timedatectl", "list-timezones"], timeout=4)
+        zones = tzs_out.splitlines() if rc == 0 else []
+        if zones:
+            sl = Gtk.StringList.new(zones)
+            combo = Adw.ComboRow(title="Time zone")
+            combo.set_subtitle(f"{len(zones)} zones available")
+            combo.set_model(sl)
+            cur_tz = info.get("Time zone", "").split(" ")[0]
+            try:
+                combo.set_selected(zones.index(cur_tz))
+            except (ValueError, AttributeError):
+                pass
+            tz_grp.add(combo)
+            tz_grp.add(action_row(
+                "Apply selected zone",
+                "Requires sudo",
+                "Apply",
+                lambda c=combo, z=zones: sh_async(
+                    ["pkexec", "timedatectl", "set-timezone",
+                     z[c.get_selected()]],
+                    lambda r: self.toast(
+                        f"tz → {z[c.get_selected()]}"
+                        if r[0] == 0 else "needs sudo"),
+                    timeout=10),
+                css="nyx-pill-ok"))
+        else:
+            tz_grp.add(empty_row("Timezone list unavailable",
+                                  "timedatectl list-timezones returned "
+                                  "empty"))
+
+        # World clock
+        wc = Adw.PreferencesGroup(title="World clock")
+        self.add_group(wc)
+        for label, tz in (("New York", "America/New_York"),
+                          ("London",   "Europe/London"),
+                          ("Berlin",   "Europe/Berlin"),
+                          ("Tokyo",    "Asia/Tokyo"),
+                          ("Sydney",   "Australia/Sydney")):
+            rc, t, _ = sh(["env", f"TZ={tz}", "date", "+%a %H:%M:%S"],
+                          timeout=2)
+            wc.add(kv_row(label, t.strip() or "?", subtitle=tz))
+
+        self.add_pill(status_pill("ntp" if ntp_on else "manual",
+                                  "ok" if ntp_on else "warn"))
+
+    def _on_ntp(self, sw, _pspec) -> None:
+        sh_async(["pkexec", "timedatectl", "set-ntp",
+                  "true" if sw.get_active() else "false"],
+                 lambda r: self.toast("NTP changed" if r[0] == 0
+                                      else "needs sudo"),
+                 timeout=10)
+
+    def _on_rtc_local(self, sw, _pspec) -> None:
+        sh_async(["pkexec", "timedatectl", "set-local-rtc",
+                  "1" if sw.get_active() else "0"],
+                 lambda r: self.toast("RTC mode changed" if r[0] == 0
+                                      else "needs sudo"),
+                 timeout=10)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# KEYBOARD — hyprctl getoption, layout list, repeat rate
+# ──────────────────────────────────────────────────────────────────────
+class KeyboardPage(SectionPage):
+    KEY = "keyboard"
+
+    def build(self) -> None:
+        layout_grp = Adw.PreferencesGroup(
+            title="Layout",
+            description="Live values from hyprctl getoption input:kb_*")
+        self.add_group(layout_grp)
+        if not have("hyprctl"):
+            layout_grp.add(empty_row(
+                "hyprctl not found",
+                "This page expects Hyprland"))
+            self.add_pill(status_pill("no hypr", "danger"))
+            return
+        for label, opt in (("Layout",   "input:kb_layout"),
+                           ("Variant",  "input:kb_variant"),
+                           ("Model",    "input:kb_model"),
+                           ("Options",  "input:kb_options"),
+                           ("Rules",    "input:kb_rules")):
+            rc, out, _ = sh(["hyprctl", "getoption", opt, "-j"], timeout=2)
+            try:
+                val = json.loads(out or "{}").get("str", "") or "(default)"
+            except Exception:
+                val = "?"
+            layout_grp.add(kv_row(label, val))
+
+        # Repeat rate
+        rep = Adw.PreferencesGroup(
+            title="Key repeat",
+            description="Repeat rate (per second) and delay before repeat "
+                        "kicks in")
+        self.add_group(rep)
+        rc, out, _ = sh(["hyprctl", "getoption", "input:repeat_rate", "-j"],
+                        timeout=2)
+        try:
+            cur_rate = int(json.loads(out or "{}").get("int", 25))
+        except Exception:
+            cur_rate = 25
+        rate_row = Adw.ActionRow(title="Repeat rate",
+                                 subtitle=f"current: {cur_rate}/sec")
+        rate_scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 5, 80, 1)
+        rate_scale.set_value(cur_rate)
+        rate_scale.set_size_request(220, -1)
+        rate_scale.set_draw_value(True)
+        debounced(rate_scale,
+                  lambda v: sh_async(
+                      ["hyprctl", "keyword", "input:repeat_rate",
+                       str(int(v))], None, timeout=2))
+        rate_row.add_suffix(rate_scale)
+        rep.add(rate_row)
+
+        rc, out, _ = sh(["hyprctl", "getoption", "input:repeat_delay", "-j"],
+                        timeout=2)
+        try:
+            cur_delay = int(json.loads(out or "{}").get("int", 600))
+        except Exception:
+            cur_delay = 600
+        delay_row = Adw.ActionRow(title="Repeat delay (ms)",
+                                  subtitle=f"current: {cur_delay} ms")
+        delay_scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 100, 2000, 50)
+        delay_scale.set_value(cur_delay)
+        delay_scale.set_size_request(220, -1)
+        delay_scale.set_draw_value(True)
+        debounced(delay_scale,
+                  lambda v: sh_async(
+                      ["hyprctl", "keyword", "input:repeat_delay",
+                       str(int(v))], None, timeout=2))
+        delay_row.add_suffix(delay_scale)
+        rep.add(delay_row)
+
+        # Numlock on boot
+        nl = Adw.PreferencesGroup(title="Modifier behaviour")
+        self.add_group(nl)
+        rc, out, _ = sh(["hyprctl", "getoption", "input:numlock_by_default",
+                         "-j"], timeout=2)
+        try:
+            nl_on = bool(json.loads(out or "{}").get("int", 0))
+        except Exception:
+            nl_on = False
+        nl_sw = Adw.SwitchRow(title="Numlock on by default",
+                              subtitle="Hyprland sets numlock at session "
+                                       "start")
+        nl_sw.set_active(nl_on)
+        nl_sw.connect("notify::active",
+                      lambda sw, _p: sh_async(
+                          ["hyprctl", "keyword",
+                           "input:numlock_by_default",
+                           "true" if sw.get_active() else "false"],
+                          lambda r: self.toast(
+                              "applied" if r[0] == 0 else "failed"),
+                          timeout=2))
+        nl.add(nl_sw)
+
+        # Cheatsheet jump
+        ext = Adw.PreferencesGroup(title="Shortcuts")
+        self.add_group(ext)
+        ext.add(action_row(
+            "Open keyboard cheatsheet",
+            "Full list of system & Hyprland shortcuts",
+            "Open",
+            lambda: fire_and_forget("nyxus-cheatsheet")))
+        self.add_pill(status_pill("hypr", "ok"))
+
+
+# ──────────────────────────────────────────────────────────────────────
+# MOUSE — hyprctl input devices, sensitivity, natural scroll, tap-to-click
+# ──────────────────────────────────────────────────────────────────────
+class MousePage(SectionPage):
+    KEY = "mouse"
+
+    def build(self) -> None:
+        if not have("hyprctl"):
+            grp = Adw.PreferencesGroup(title="Pointer devices")
+            self.add_group(grp)
+            grp.add(empty_row("hyprctl not found",
+                              "This page expects Hyprland"))
+            self.add_pill(status_pill("no hypr", "danger"))
+            return
+
+        # Sensitivity (global input:sensitivity)
+        sens_grp = Adw.PreferencesGroup(
+            title="Pointer",
+            description="Sensitivity is a multiplier from -1.0 (slow) to "
+                        "+1.0 (fast)")
+        self.add_group(sens_grp)
+        rc, out, _ = sh(["hyprctl", "getoption", "input:sensitivity", "-j"],
+                        timeout=2)
+        try:
+            cur = float(json.loads(out or "{}").get("float", 0.0))
+        except Exception:
+            cur = 0.0
+        sens_row = Adw.ActionRow(title="Sensitivity",
+                                 subtitle=f"current: {cur:+.2f}")
+        scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, -1.0, 1.0, 0.05)
+        scale.set_value(cur)
+        scale.set_size_request(240, -1)
+        scale.set_draw_value(True)
+        debounced(scale,
+                  lambda v: sh_async(
+                      ["hyprctl", "keyword", "input:sensitivity",
+                       f"{v:.2f}"], None, timeout=2))
+        sens_row.add_suffix(scale)
+        sens_grp.add(sens_row)
+
+        # Accel profile
+        rc, out, _ = sh(["hyprctl", "getoption",
+                         "input:accel_profile", "-j"], timeout=2)
+        try:
+            cur_p = json.loads(out or "{}").get("str", "") or "default"
+        except Exception:
+            cur_p = "default"
+        sl = Gtk.StringList.new(["", "flat", "adaptive"])
+        prof = Adw.ComboRow(
+            title="Acceleration profile",
+            subtitle="empty = libinput default · flat = no accel · "
+                     "adaptive = libinput accel")
+        prof.set_model(sl)
+        idx = {"": 0, "flat": 1, "adaptive": 2}.get(
+            cur_p if cur_p in ("flat", "adaptive") else "", 0)
+        prof.set_selected(idx)
+        prof.connect("notify::selected",
+                     lambda c, _p: sh_async(
+                         ["hyprctl", "keyword", "input:accel_profile",
+                          ["", "flat", "adaptive"][c.get_selected()]],
+                         None, timeout=2))
+        sens_grp.add(prof)
+
+        # Natural scroll (mouse + touchpad have separate options)
+        scroll_grp = Adw.PreferencesGroup(title="Scrolling")
+        self.add_group(scroll_grp)
+        for label, key in (("Mouse natural scroll",     "input:natural_scroll"),
+                           ("Touchpad natural scroll",
+                            "input:touchpad:natural_scroll")):
+            rc, out, _ = sh(["hyprctl", "getoption", key, "-j"], timeout=2)
+            try:
+                v = bool(json.loads(out or "{}").get("int", 0))
+            except Exception:
+                v = False
+            sw = Adw.SwitchRow(title=label, subtitle=key)
+            sw.set_active(v)
+            sw.connect("notify::active",
+                       lambda s, _p, k=key: sh_async(
+                           ["hyprctl", "keyword", k,
+                            "true" if s.get_active() else "false"],
+                           None, timeout=2))
+            scroll_grp.add(sw)
+
+        # Touchpad
+        tp_grp = Adw.PreferencesGroup(title="Touchpad")
+        self.add_group(tp_grp)
+        for label, key in (
+                ("Tap to click",        "input:touchpad:tap-to-click"),
+                ("Two-finger scroll",   "input:touchpad:scroll_factor"),
+                ("Disable while typing","input:touchpad:disable_while_typing"),
+                ("Drag lock",           "input:touchpad:drag_lock")):
+            rc, out, _ = sh(["hyprctl", "getoption", key, "-j"], timeout=2)
+            j = {}
+            try:
+                j = json.loads(out or "{}")
+            except Exception:
+                pass
+            if "int" in j:
+                v = bool(j.get("int", 0))
+                sw = Adw.SwitchRow(title=label, subtitle=key)
+                sw.set_active(v)
+                sw.connect("notify::active",
+                           lambda s, _p, k=key: sh_async(
+                               ["hyprctl", "keyword", k,
+                                "true" if s.get_active() else "false"],
+                               None, timeout=2))
+                tp_grp.add(sw)
+            else:
+                tp_grp.add(kv_row(label,
+                                  str(j.get("float", j.get("str", "?")))))
+
+        # Live device list
+        dev_grp = Adw.PreferencesGroup(
+            title="Detected devices",
+            description="From hyprctl devices -j")
+        self.add_group(dev_grp)
+        rc, out, _ = sh(["hyprctl", "devices", "-j"], timeout=3)
+        try:
+            d = json.loads(out)
+        except Exception:
+            d = {}
+        for kind in ("mice", "touchpads"):
+            for dev in d.get(kind, []) or []:
+                dev_grp.add(kv_row(dev.get("name", "?"), kind[:-1]))
+        if not d.get("mice") and not d.get("touchpads"):
+            dev_grp.add(empty_row("No mice or touchpads reported", ""))
+        self.add_pill(status_pill("hypr", "ok"))
+
+
+# ──────────────────────────────────────────────────────────────────────
+# PRIVACY — hardware presence, indicators, telemetry audit
+# ──────────────────────────────────────────────────────────────────────
+class PrivacyPage(SectionPage):
+    KEY = "privacy"
+
+    def build(self) -> None:
+        # Hardware presence
+        hw = Adw.PreferencesGroup(
+            title="Capture hardware",
+            description="Read-only — listed devices CAN see/hear you when "
+                        "an app uses them")
+        self.add_group(hw)
+        # Cameras
+        cams = sorted(Path("/dev").glob("video*"))
+        hw.add(kv_row("Cameras", f"{len(cams)} device(s)"
+                                  if cams else "none detected"))
+        for c in cams:
+            hw.add(kv_row(f"  {c.name}", str(c)))
+        # Microphones (via pactl sources, exclude monitors)
+        mics = []
+        if have("pactl"):
+            rc, out, _ = sh(["pactl", "list", "sources", "short"],
+                            timeout=3)
+            for line in out.splitlines():
+                parts = line.split("\t")
+                if len(parts) >= 2 and ".monitor" not in parts[1]:
+                    mics.append(parts[1])
+        hw.add(kv_row("Microphones", f"{len(mics)} input(s)"
+                                      if mics else "none detected"))
+        for m in mics:
+            hw.add(kv_row("  source", m[:60]))
+
+        # Active capture watch (PipeWire)
+        active = Adw.PreferencesGroup(
+            title="Active right now",
+            description="Apps currently holding a microphone or camera "
+                        "stream (best-effort detection via pw-cli / lsof)")
+        self.add_group(active)
+        active_apps = set()
+        if have("pw-cli"):
+            rc, out, _ = sh(["pw-cli", "info", "all"], timeout=4)
+            for m in re.finditer(
+                    r'application\.name\s*=\s*"([^"]+)"', out):
+                active_apps.add(m.group(1))
+        if have("fuser"):
+            for c in cams:
+                rc, out, _ = sh(["fuser", str(c)], timeout=2)
+                if rc == 0 and out.strip():
+                    active.add(kv_row(f"camera {c.name}", "in use"))
+        if active_apps:
+            for a in sorted(active_apps)[:10]:
+                active.add(kv_row("audio client", a))
+        else:
+            active.add(empty_row("No active capture detected",
+                                  "Nothing is recording you right now"))
+
+        # Location services
+        loc = Adw.PreferencesGroup(
+            title="Location",
+            description="GeoClue exposes location to D-Bus consumers")
+        self.add_group(loc)
+        rc, out, _ = sh(["systemctl", "is-active", "geoclue.service"],
+                        timeout=2)
+        loc.add(kv_row("geoclue.service", out.strip() or "?"))
+        rc, out, _ = sh(["systemctl", "is-enabled", "geoclue.service"],
+                        timeout=2)
+        loc.add(kv_row("Auto-start at boot", out.strip() or "?"))
+        loc.add(action_row(
+            "Disable location service",
+            "Stops geoclue and prevents auto-start",
+            "Disable",
+            lambda: sh_async(
+                ["pkexec", "systemctl", "disable", "--now",
+                 "geoclue.service"],
+                lambda r: self.toast("disabled" if r[0] == 0
+                                     else "failed / needs sudo"),
+                timeout=10),
+            css="nyx-pill-warn"))
+
+        # Telemetry audit
+        tel = Adw.PreferencesGroup(
+            title="Telemetry & opt-outs",
+            description="NYXUS itself ships zero telemetry. Listed values "
+                        "show common third-party env opt-outs.")
+        self.add_group(tel)
+        for var, on_val in (("DO_NOT_TRACK",        "1"),
+                            ("DOTNET_CLI_TELEMETRY_OPTOUT", "1"),
+                            ("HOMEBREW_NO_ANALYTICS",      "1"),
+                            ("NEXT_TELEMETRY_DISABLED",    "1"),
+                            ("GATSBY_TELEMETRY_DISABLED",  "1"),
+                            ("VUE_CLI_TELEMETRY_DISABLED", "1")):
+            v = os.environ.get(var, "")
+            ok = (v == on_val)
+            tel.add(kv_row(var, "opted out" if ok else f"unset ({v or '∅'})"))
+        self.add_pill(status_pill(f"{len(cams)} cam · {len(mics)} mic",
+                                  "ok"))
+
+
+# ──────────────────────────────────────────────────────────────────────
+# APPS — installed count, default mime apps, autostart
+# ──────────────────────────────────────────────────────────────────────
+class AppsPage(SectionPage):
+    KEY = "apps"
+
+    def build(self) -> None:
+        # Counts
+        cnt = Adw.PreferencesGroup(title="Installed packages")
+        self.add_group(cnt)
+        if have("pacman"):
+            rc, out, _ = sh(["pacman", "-Qq"], timeout=4)
+            n_total = len(out.splitlines()) if rc == 0 else 0
+            rc, out, _ = sh(["pacman", "-Qqe"], timeout=4)
+            n_explicit = len(out.splitlines()) if rc == 0 else 0
+            rc, out, _ = sh(["pacman", "-Qqm"], timeout=4)
+            n_foreign = len(out.splitlines()) if rc == 0 else 0
+            cnt.add(kv_row("Total", str(n_total)))
+            cnt.add(kv_row("Explicitly installed", str(n_explicit)))
+            cnt.add(kv_row("Foreign / AUR / local", str(n_foreign)))
+        else:
+            cnt.add(empty_row("pacman not available", ""))
+
+        # GUI apps
+        gui = Adw.PreferencesGroup(
+            title="GUI applications",
+            description="Apps that ship a .desktop file in the standard "
+                        "search paths")
+        self.add_group(gui)
+        desktops = []
+        for base in ("/usr/share/applications",
+                     str(Path.home() / ".local/share/applications")):
+            p = Path(base)
+            if p.exists():
+                desktops.extend(p.glob("*.desktop"))
+        gui.add(kv_row("Desktop entries found", str(len(desktops))))
+        gui.add(action_row(
+            "Open application launcher",
+            "rofi / wofi / fuzzel — your configured launcher",
+            "Open",
+            lambda: fire_and_forget(
+                "fuzzel" if have("fuzzel") else
+                ("rofi -show drun" if have("rofi") else "wofi --show drun"))))
+
+        # Default apps (xdg-mime)
+        defs = Adw.PreferencesGroup(
+            title="Default apps",
+            description="Resolved from xdg-mime query default")
+        self.add_group(defs)
+        if have("xdg-mime"):
+            for label, mime in (
+                    ("Web browser",      "x-scheme-handler/https"),
+                    ("Email",            "x-scheme-handler/mailto"),
+                    ("Terminal",         "x-scheme-handler/terminal"),
+                    ("Plain text",       "text/plain"),
+                    ("PDF",              "application/pdf"),
+                    ("Image (PNG)",      "image/png"),
+                    ("Audio (FLAC)",     "audio/flac"),
+                    ("Video (MP4)",      "video/mp4")):
+                rc, out, _ = sh(["xdg-mime", "query", "default", mime],
+                                timeout=2)
+                defs.add(kv_row(label,
+                                (out.strip() or "(unset)").replace(
+                                    ".desktop", "")))
+        else:
+            defs.add(empty_row("xdg-mime not installed",
+                                "Install xdg-utils"))
+
+        # Autostart
+        au = Adw.PreferencesGroup(
+            title="Autostart",
+            description="Anything in ~/.config/autostart starts at session "
+                        "login")
+        self.add_group(au)
+        as_dir = Path.home() / ".config" / "autostart"
+        items = sorted(as_dir.glob("*.desktop")) if as_dir.exists() else []
+        if not items:
+            au.add(empty_row("No autostart entries",
+                              "Drop a .desktop file into "
+                              "~/.config/autostart to add one"))
+        for it in items:
+            au.add(kv_row(it.stem, str(it)))
+        self.add_pill(status_pill(f"{len(desktops)} apps", "ok"))
+
+
+# ──────────────────────────────────────────────────────────────────────
+# STORAGE — df / lsblk / smartctl, pacman cache, journal
+# ──────────────────────────────────────────────────────────────────────
+class StoragePage(SectionPage):
+    KEY = "storage"
+
+    def build(self) -> None:
+        self.mounts_grp = Adw.PreferencesGroup(
+            title="Mounts",
+            description="Filesystem usage from df -h (excluding tmpfs/devfs)")
+        self.add_group(self.mounts_grp)
+        self.disks_grp = Adw.PreferencesGroup(
+            title="Block devices",
+            description="Physical disks and partitions from lsblk")
+        self.add_group(self.disks_grp)
+        self.smart_grp = Adw.PreferencesGroup(
+            title="SMART health",
+            description="Requires smartmontools and root for full data")
+        self.add_group(self.smart_grp)
+
+        # Cleanup actions
+        clean = Adw.PreferencesGroup(title="Cleanup")
+        self.add_group(clean)
+        if have("paccache"):
+            clean.add(action_row(
+                "Trim pacman cache (keep latest 2)",
+                "paccache -rk2 — frees /var/cache/pacman/pkg",
+                "Trim",
+                lambda: sh_async(
+                    ["pkexec", "paccache", "-rk2"],
+                    lambda r: (self.toast("trimmed" if r[0] == 0
+                                          else "failed"),
+                               self._render()), timeout=30)))
+        else:
+            clean.add(empty_row("paccache not installed",
+                                "Install pacman-contrib"))
+        clean.add(action_row(
+            "Vacuum journal (keep 7 days)",
+            "journalctl --vacuum-time=7d",
+            "Vacuum",
+            lambda: sh_async(
+                ["pkexec", "journalctl", "--vacuum-time=7d"],
+                lambda r: self.toast("vacuumed" if r[0] == 0 else "failed"),
+                timeout=30)))
+        if have("baobab"):
+            clean.add(action_row(
+                "Open disk usage analyzer",
+                "GNOME baobab — visualize what's using space",
+                "Open",
+                lambda: fire_and_forget("baobab")))
+
+        self._render()
+        self.add_pill(status_pill("live", "ok"))
+        self.schedule_refresh(15000, self._tick)
+
+    def _tick(self) -> bool:
+        self._render()
+        return True
+
+    def _render(self) -> None:
+        _clear_group(self.mounts_grp)
+        rc, out, _ = sh(
+            ["df", "-h", "--output=target,fstype,size,used,avail,pcent",
+             "-x", "tmpfs", "-x", "devtmpfs", "-x", "squashfs",
+             "-x", "overlay"],
+            timeout=4)
+        lines = out.splitlines()[1:] if out else []
+        if not lines:
+            self.mounts_grp.add(empty_row("No mounts found", ""))
+        for ln in lines[:20]:
+            cols = ln.split()
+            if len(cols) < 6:
+                continue
+            target, fs, size, used, avail, pcent = cols[0], cols[1], \
+                cols[2], cols[3], cols[4], cols[5]
+            row = Adw.ActionRow(
+                title=target,
+                subtitle=f"{fs} · {used}/{size} used · {avail} free")
+            try:
+                pct = int(pcent.rstrip("%"))
+            except ValueError:
+                pct = 0
+            tag_kind = "ok" if pct < 75 else ("warn" if pct < 90
+                                              else "danger")
+            row.add_suffix(status_pill(pcent, tag_kind))
+            self.mounts_grp.add(row)
+
+        # Block devices
+        _clear_group(self.disks_grp)
+        rc, out, _ = sh(["lsblk", "-d", "-o", "NAME,SIZE,MODEL,ROTA",
+                         "-n"], timeout=3)
+        lines = out.splitlines() if out else []
+        if not lines:
+            self.disks_grp.add(empty_row("No block devices found", ""))
+        for ln in lines:
+            parts = ln.split(None, 3)
+            if len(parts) < 2:
+                continue
+            name = parts[0]
+            size = parts[1]
+            model = parts[2] if len(parts) >= 3 else ""
+            rota = parts[3] if len(parts) >= 4 else "?"
+            kind = "HDD" if rota.strip() == "1" else "SSD"
+            self.disks_grp.add(kv_row(
+                f"/dev/{name}", f"{size} · {kind}",
+                subtitle=model.strip() if model.strip() else None))
+
+        # SMART
+        _clear_group(self.smart_grp)
+        if not have("smartctl"):
+            self.smart_grp.add(empty_row(
+                "smartctl not installed",
+                "Install smartmontools to view SMART status"))
+            return
+        # Disks already enumerated above
+        for ln in lines:
+            parts = ln.split(None, 3)
+            if len(parts) < 1:
+                continue
+            name = parts[0]
+            dev = f"/dev/{name}"
+            rc, out, _ = sh(["smartctl", "-H", dev], timeout=4)
+            status = "?"
+            for line in out.splitlines():
+                if "overall-health" in line.lower():
+                    status = line.split(":", 1)[-1].strip()
+                    break
+            kind = "ok" if "PASSED" in status.upper() else "warn"
+            row = Adw.ActionRow(title=dev, subtitle=status)
+            row.add_suffix(status_pill(
+                "PASS" if "PASSED" in status.upper() else "?", kind))
+            self.smart_grp.add(row)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# UPDATES — checkupdates, AUR helpers
+# ──────────────────────────────────────────────────────────────────────
+class UpdatesPage(SectionPage):
+    KEY = "updates"
+
+    def build(self) -> None:
+        self.repo_grp = Adw.PreferencesGroup(
+            title="Official repositories",
+            description="Pending updates from pacman (queried via "
+                        "checkupdates — does not need root)")
+        self.add_group(self.repo_grp)
+        self.aur_grp = Adw.PreferencesGroup(
+            title="AUR / foreign packages",
+            description="Pending updates for packages installed via paru, "
+                        "yay, etc.")
+        self.add_group(self.aur_grp)
+
+        # Reboot required
+        rb_grp = Adw.PreferencesGroup(title="Reboot")
+        self.add_group(rb_grp)
+        running_kernel = sh(["uname", "-r"], timeout=2)[1].strip()
+        rc, installed_kernel, _ = sh(
+            ["pacman", "-Q", "linux"], timeout=2)
+        installed_kernel = installed_kernel.strip().split(" ")[-1] \
+            if installed_kernel else "?"
+        kernel_match = installed_kernel.split("-")[0] in running_kernel
+        rb_grp.add(kv_row("Running kernel", running_kernel))
+        rb_grp.add(kv_row("Installed kernel", installed_kernel))
+        if not kernel_match:
+            rb_grp.add(empty_row(
+                "Reboot recommended",
+                "Installed kernel differs from running kernel — restart "
+                "to load it"))
+
+        # Tools
+        tools = Adw.PreferencesGroup(title="Tools")
+        self.add_group(tools)
+        tools.add(action_row(
+            "Run full system upgrade",
+            "Opens a terminal with sudo pacman -Syu",
+            "Run",
+            lambda: open_terminal("sudo pacman -Syu", self.win),
+            css="nyx-pill-ok"))
+        for helper in ("paru", "yay"):
+            if have(helper):
+                tools.add(action_row(
+                    f"AUR upgrade ({helper})",
+                    f"{helper} -Syu — includes AUR & repos",
+                    "Run",
+                    lambda h=helper: open_terminal(f"{h} -Syu", self.win)))
+        tools.add(action_row(
+            "Refresh mirror list",
+            "reflector --country US --age 6 --sort rate "
+            "--save /etc/pacman.d/mirrorlist",
+            "Refresh",
+            lambda: open_terminal(
+                "sudo reflector --age 6 --sort rate "
+                "--save /etc/pacman.d/mirrorlist",
+                self.win)) if have("reflector") else None)
+
+        self._render()
+        self.add_pill(status_pill("live", "ok"))
+        self.schedule_refresh(60000, self._tick)
+
+    def _tick(self) -> bool:
+        self._render()
+        return True
+
+    def _render(self) -> None:
+        _clear_group(self.repo_grp)
+        if not have("checkupdates"):
+            self.repo_grp.add(empty_row(
+                "checkupdates not installed",
+                "Install pacman-contrib to query pending updates without "
+                "needing root"))
+        else:
+            sh_async(["checkupdates"], self._on_repo, timeout=30)
+
+        _clear_group(self.aur_grp)
+        helper = "paru" if have("paru") else ("yay" if have("yay") else "")
+        if not helper:
+            self.aur_grp.add(empty_row(
+                "No AUR helper installed",
+                "Install paru or yay to track AUR updates"))
+            return
+        sh_async([helper, "-Qua"], self._on_aur, timeout=60)
+
+    def _on_repo(self, result) -> None:
+        rc, out, _ = result
+        _clear_group(self.repo_grp)
+        if rc == 2:  # checkupdates exits 2 when no updates
+            self.repo_grp.add(kv_row("Status", "up to date"))
+            return
+        lines = [l for l in out.splitlines() if l.strip()]
+        self.repo_grp.add(kv_row("Pending", str(len(lines))))
+        for line in lines[:25]:
+            parts = line.split()
+            if len(parts) >= 4:
+                self.repo_grp.add(kv_row(
+                    parts[0], f"{parts[1]} → {parts[3]}"))
+
+    def _on_aur(self, result) -> None:
+        rc, out, _ = result
+        _clear_group(self.aur_grp)
+        lines = [l for l in out.splitlines() if l.strip()]
+        if not lines:
+            self.aur_grp.add(kv_row("Status", "up to date"))
+            return
+        self.aur_grp.add(kv_row("Pending", str(len(lines))))
+        for line in lines[:25]:
+            parts = line.split()
+            if len(parts) >= 4:
+                self.aur_grp.add(kv_row(
+                    parts[0], f"{parts[1]} → {parts[3]}"))
+
+
+# ──────────────────────────────────────────────────────────────────────
+# ACCESSIBILITY — text scale (gsettings/hyprctl), reduced motion
+# ──────────────────────────────────────────────────────────────────────
+class AccessibilityPage(SectionPage):
+    KEY = "accessibility"
+
+    def build(self) -> None:
+        text = Adw.PreferencesGroup(
+            title="Reading",
+            description="Helps visibility on dense panels and small screens")
+        self.add_group(text)
+
+        # Text scale (delegates to Appearance — we mirror it here for
+        # discoverability, just like macOS shows display zoom in two places)
+        prefs = load_prefs()
+        cur_scale = float(prefs.get("font_scale", 1.0))
+        scale_row = Adw.ActionRow(
+            title="Text scale",
+            subtitle=f"current: {cur_scale:.2f}× — also editable in "
+                     f"Appearance")
+        sc = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 0.8, 1.6, 0.05)
+        sc.set_value(cur_scale)
+        sc.set_size_request(220, -1)
+        sc.set_draw_value(True)
+        debounced(sc, lambda v: self._on_scale_value(v))
+        scale_row.add_suffix(sc)
+        text.add(scale_row)
+
+        # Cursor size
+        rc, out, _ = sh(["hyprctl", "getoption", "cursor:size", "-j"],
+                        timeout=2) if have("hyprctl") else (1, "", "")
+        try:
+            cur_csz = int(json.loads(out or "{}").get("int", 24))
+        except Exception:
+            cur_csz = 24
+        if have("hyprctl"):
+            csz_row = Adw.ActionRow(title="Cursor size",
+                                    subtitle=f"current: {cur_csz} px")
+            csz = Gtk.Scale.new_with_range(
+                Gtk.Orientation.HORIZONTAL, 16, 64, 2)
+            csz.set_value(cur_csz)
+            csz.set_size_request(220, -1)
+            csz.set_draw_value(True)
+            debounced(csz,
+                      lambda v: sh_async(
+                          ["hyprctl", "keyword", "cursor:size",
+                           str(int(v))], None, timeout=2))
+            csz_row.add_suffix(csz)
+            text.add(csz_row)
+
+        # Motion (mirrors Appearance toggle)
+        motion = Adw.PreferencesGroup(
+            title="Motion",
+            description="Reduce or disable motion for vestibular comfort")
+        self.add_group(motion)
+        if have("hyprctl"):
+            rc, out, _ = sh(["hyprctl", "getoption",
+                             "animations:enabled", "-j"], timeout=2)
+            try:
+                anims_on = bool(json.loads(out or "{}").get("int", 1))
+            except Exception:
+                anims_on = True
+            sw = Adw.SwitchRow(title="Animations enabled",
+                               subtitle="Window open/close, workspace "
+                                        "transitions, layer slides")
+            sw.set_active(anims_on)
+            sw.connect("notify::active",
+                       lambda s, _p: sh_async(
+                           ["hyprctl", "keyword", "animations:enabled",
+                            "true" if s.get_active() else "false"],
+                           lambda r: self.toast(
+                               "applied" if r[0] == 0 else "failed"),
+                           timeout=2))
+            motion.add(sw)
+        else:
+            motion.add(empty_row("hyprctl not found",
+                                  "Animation toggle requires Hyprland"))
+
+        # High contrast — locked off per DARK MIRROR contract
+        contrast = Adw.PreferencesGroup(
+            title="Contrast",
+            description="DARK MIRROR locks the visual theme; system high "
+                        "contrast is intentionally disabled. Use text "
+                        "scale and cursor size instead.")
+        self.add_group(contrast)
+        contrast.add(kv_row("System theme", "DARK MIRROR (locked)"))
+
+        # Pointers to assistive tools
+        tools = Adw.PreferencesGroup(title="Assistive tools")
+        self.add_group(tools)
+        for label, bin_ in (("Screen magnifier (magnus)", "magnus"),
+                            ("On-screen keyboard (wvkbd)", "wvkbd"),
+                            ("Screen reader (orca)",       "orca")):
+            if have(bin_):
+                tools.add(action_row(label, bin_, "Launch",
+                                      lambda b=bin_: fire_and_forget(b)))
+            else:
+                tools.add(empty_row(label,
+                                     f"{bin_} not installed"))
+        self.add_pill(status_pill("a11y", "ok"))
+
+    def _on_scale_value(self, raw: float) -> None:
+        v = round(raw, 2)
+        prefs = load_prefs()
+        prefs["font_scale"] = v
+        save_prefs(prefs)
+        self.toast(f"text scale → {v:.2f}× (sign out to apply fully)")
+
+
+# ──────────────────────────────────────────────────────────────────────
+# USERS — current user, groups, password change
+# ──────────────────────────────────────────────────────────────────────
+class UsersPage(SectionPage):
+    KEY = "users"
+
+    def build(self) -> None:
+        # Current user
+        cur = Adw.PreferencesGroup(title="Current account")
+        self.add_group(cur)
+        rc, user, _ = sh(["whoami"], timeout=2)
+        user = user.strip()
+        cur.add(kv_row("Username", user))
+        rc, fn, _ = sh(["getent", "passwd", user], timeout=2)
+        if rc == 0 and fn.strip():
+            parts = fn.strip().split(":")
+            if len(parts) >= 7:
+                cur.add(kv_row("UID", parts[2]))
+                cur.add(kv_row("Primary group", parts[3]))
+                cur.add(kv_row("Full name (GECOS)", parts[4] or "(unset)"))
+                cur.add(kv_row("Home", parts[5]))
+                cur.add(kv_row("Shell", parts[6]))
+        rc, groups, _ = sh(["groups"], timeout=2)
+        cur.add(kv_row("Groups",
+                       groups.strip().split(":")[-1].strip()
+                       if ":" in groups else groups.strip()))
+        cur.add(action_row(
+            "Change password",
+            "Opens a terminal with passwd",
+            "Change",
+            lambda: open_terminal("passwd", self.win)))
+        cur.add(action_row(
+            "Edit shell",
+            "Opens chsh in a terminal — pick from /etc/shells",
+            "Edit",
+            lambda: open_terminal("chsh", self.win)))
+
+        # Other users on the system
+        oth = Adw.PreferencesGroup(
+            title="Other accounts",
+            description="Local accounts with UID ≥ 1000 (excluding nobody)")
+        self.add_group(oth)
+        rc, out, _ = sh(["getent", "passwd"], timeout=3)
+        others = []
+        for line in out.splitlines():
+            p = line.split(":")
+            if len(p) < 7:
+                continue
+            try:
+                uid = int(p[2])
+            except ValueError:
+                continue
+            if uid >= 1000 and p[0] != "nobody" and p[0] != user:
+                others.append((p[0], p[2], p[6]))
+        if not others:
+            oth.add(empty_row("No other user accounts",
+                               "This system has only the current user"))
+        for name, uid, shell in others[:10]:
+            oth.add(kv_row(name, f"uid {uid} · {shell}"))
+
+        # Add user (delegates to terminal — useradd needs root)
+        admin = Adw.PreferencesGroup(
+            title="Account management",
+            description="Account creation, removal, and group editing "
+                        "require root and are best done in a terminal")
+        self.add_group(admin)
+        admin.add(action_row(
+            "Add a new user",
+            "Opens useradd interactive helper in a terminal",
+            "Add",
+            lambda: open_terminal(
+                "echo 'Run: sudo useradd -m -G wheel,audio,video,input "
+                "-s /bin/bash USERNAME && sudo passwd USERNAME'; "
+                "$SHELL", self.win)))
+        admin.add(action_row(
+            "Edit /etc/sudoers",
+            "Opens sudo visudo — safest way to change sudo rules",
+            "Open",
+            lambda: open_terminal("sudo visudo", self.win),
+            css="nyx-pill-warn"))
+
+        # Sessions
+        ses = Adw.PreferencesGroup(title="Active sessions")
+        self.add_group(ses)
+        rc, out, _ = sh(["loginctl", "list-sessions", "--no-legend"],
+                        timeout=3)
+        rows = [l for l in out.splitlines() if l.strip()]
+        if not rows:
+            ses.add(empty_row("No active sessions reported", ""))
+        for r in rows[:8]:
+            parts = r.split()
+            if len(parts) >= 4:
+                ses.add(kv_row(parts[2],
+                               f"session {parts[0]} · seat {parts[3]}"))
+
+        self.add_pill(status_pill(user, "ok"))
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Helper: clear all rows from a PreferencesGroup. libadwaita 1.4+
+# provides .remove(); we keep our own list for portability.
+# ──────────────────────────────────────────────────────────────────────
+def _clear_group(grp: Adw.PreferencesGroup) -> None:
+    if not hasattr(grp, "_nyx_rows"):
+        grp._nyx_rows = []
+    # Capture children added via .add() — track on the next .add() call
+    # by replacing it once. Idempotent.
+    if not hasattr(grp, "_nyx_patched"):
+        original_add = grp.add
+        def tracked_add(child):
+            grp._nyx_rows.append(child)
+            return original_add(child)
+        grp.add = tracked_add  # type: ignore[assignment]
+        grp._nyx_patched = True
+    for child in list(grp._nyx_rows):
+        try:
+            grp.remove(child)
+        except Exception:
+            pass
+    grp._nyx_rows = []
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -883,8 +2562,11 @@ class AppearancePage(SectionPage):
         btn.add_css_class("selected")
         # Apply
         if have("swww"):
-            sh_async(f"swww img '{path}' --transition-type fade "
-                     f"--transition-duration 0.6",
+            # List-form to avoid shell injection if the wallpaper filename
+            # contains quotes or shell metacharacters.
+            sh_async(["swww", "img", path,
+                      "--transition-type", "fade",
+                      "--transition-duration", "0.6"],
                      lambda r: self.toast(
                          "wallpaper applied" if r[0] == 0
                          else f"swww failed: {r[2][:60]}"))
@@ -901,7 +2583,8 @@ class AppearancePage(SectionPage):
         self.win.prefs["animations"] = on
         save_prefs(self.win.prefs)
         if have("hyprctl"):
-            sh_async(f"hyprctl keyword animations:enabled {1 if on else 0}",
+            sh_async(["hyprctl", "keyword", "animations:enabled",
+                      "1" if on else "0"],
                      lambda r: self.toast(
                          f"animations {'on' if on else 'off'}"))
 
@@ -1163,7 +2846,9 @@ class NetworkPage(SectionPage):
 
     def _toggle_vpn(self, name: str, up: bool) -> None:
         action = "up" if up else "down"
-        sh_async(f"nmcli connection {action} '{name}'",
+        # List-form: NetworkManager allows arbitrary characters in
+        # connection names; shell-quoting would be unsafe.
+        sh_async(["nmcli", "connection", action, name],
                  lambda r: (self.toast(f"{name} {action}"
                                        if r[0] == 0
                                        else f"{action} failed"),
@@ -1328,53 +3013,69 @@ class BluetoothPage(SectionPage):
                 btn = Gtk.Button(label="Disconnect")
                 btn.add_css_class("destructive-action")
                 btn.connect("clicked",
-                            lambda _b, m=mac: self._do(f"bluetoothctl disconnect {m}",
-                                                       f"disconnected"))
+                            lambda _b, m=mac: self._do(
+                                ["bluetoothctl", "disconnect", m],
+                                "disconnected"))
                 actions.append(btn)
             elif paired:
                 btn = Gtk.Button(label="Connect")
                 btn.add_css_class("nyx-primary")
                 btn.connect("clicked",
-                            lambda _b, m=mac: self._do(f"bluetoothctl connect {m}",
-                                                       f"connecting"))
+                            lambda _b, m=mac: self._do(
+                                ["bluetoothctl", "connect", m],
+                                "connecting"))
                 actions.append(btn)
             else:
                 btn = Gtk.Button(label="Pair")
                 btn.add_css_class("nyx-primary")
                 btn.connect("clicked",
-                            lambda _b, m=mac: self._do(
-                                f"bluetoothctl pair {m} && bluetoothctl trust {m}",
-                                f"pairing"))
+                            lambda _b, m=mac: self._do_pair(m))
                 actions.append(btn)
 
             if paired:
                 rmv = Gtk.Button(label="Forget")
                 rmv.connect("clicked",
-                            lambda _b, m=mac: self._do(f"bluetoothctl remove {m}",
-                                                       f"forgotten"))
+                            lambda _b, m=mac: self._do(
+                                ["bluetoothctl", "remove", m],
+                                "forgotten"))
                 actions.append(rmv)
 
             row.add_suffix(actions)
             self._track(self.dev_group, row)
 
-    def _do(self, cmd: str, label: str) -> None:
+    def _do(self, cmd, label: str) -> None:
+        # Accept either a list or string; list-form preferred for safety
+        # against MAC addresses or device names with shell metacharacters.
         sh_async(cmd, lambda r: (self.toast(
             f"{label}: ok" if r[0] == 0 else f"{label}: failed"),
             self._render()), timeout=12)
 
+    def _do_pair(self, mac: str) -> None:
+        # Pair, then on success trust. Two list-form calls beats
+        # `pair && trust` in a shell string.
+        sh_async(["bluetoothctl", "pair", mac],
+                 lambda r: (sh_async(["bluetoothctl", "trust", mac], None,
+                                     timeout=5)
+                            if r[0] == 0 else None,
+                            self.toast("paired" if r[0] == 0
+                                       else "pair failed"),
+                            self._render()),
+                 timeout=20)
+
     def _on_power(self, row: Adw.SwitchRow, _pspec) -> None:
         on = row.get_active()
-        self._do(f"bluetoothctl power {'on' if on else 'off'}",
+        self._do(["bluetoothctl", "power", "on" if on else "off"],
                  f"power {'on' if on else 'off'}")
 
     def _on_discoverable(self, row: Adw.SwitchRow, _pspec) -> None:
         on = row.get_active()
-        self._do(f"bluetoothctl discoverable {'on' if on else 'off'}",
+        self._do(["bluetoothctl", "discoverable",
+                  "on" if on else "off"],
                  "discoverable")
 
     def _on_scan(self, _btn: Gtk.Button) -> None:
         # Scan in background for 10 s, then re-render.
-        sh_async("bluetoothctl --timeout 10 scan on",
+        sh_async(["bluetoothctl", "--timeout", "10", "scan", "on"],
                  lambda r: (self.toast("scan complete"), self._render()),
                  timeout=15)
         self.toast("scanning…")
