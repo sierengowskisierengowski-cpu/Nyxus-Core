@@ -1115,3 +1115,9 @@ id = "G_0oZTbX4Jf1tfUzo48qj"
 uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-darkmirror-03.png"
 type = "image"
 title = "nyxus-bg-darkmirror-03 (MJ video #3 still frame)"
+
+[[outputs]]
+id = "gIR3-pmmYkrrtIuVAzBJg"
+uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-light-shaft.png"
+type = "image"
+title = "nyxus-bg-light-shaft (1920×1080, blurred-edge fill)"
