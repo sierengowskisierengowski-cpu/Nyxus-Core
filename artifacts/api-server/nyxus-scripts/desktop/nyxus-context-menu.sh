@@ -309,13 +309,31 @@ EOF
       xdg-open "$target" >/dev/null 2>&1 &
       ;;
     *"Open with"*)
-      local app
-      app=$(grep -lE '^Exec=' /usr/share/applications/*.desktop \
-              ~/.local/share/applications/*.desktop 2>/dev/null \
-            | xargs -I{} basename {} .desktop \
-            | sort -u | _menu "open with")
-      [[ -z "$app" ]] && exit 0
-      gtk-launch "$app" "$target" >/dev/null 2>&1 &
+      # Build .desktop catalog with nullglob arrays so missing dirs
+      # don't trip set -e. Pass URI form to be safe across launchers.
+      local app uri
+      shopt -s nullglob
+      local files=( /usr/share/applications/*.desktop \
+                    "$HOME"/.local/share/applications/*.desktop )
+      shopt -u nullglob
+      if (( ${#files[@]} == 0 )); then
+        notify-send "NYXUS" "No applications found"; exit 0
+      fi
+      app=$(printf '%s\n' "${files[@]}" \
+            | xargs -n1 basename \
+            | sed 's/\.desktop$//' \
+            | sort -u | _menu "open with") || true
+      [[ -z "${app:-}" ]] && exit 0
+      uri="file://$(realpath -- "$target" | sed 's| |%20|g')"
+      if _have gio; then
+        gio launch "/usr/share/applications/${app}.desktop" "$uri" \
+          >/dev/null 2>&1 \
+          || gio launch "$HOME/.local/share/applications/${app}.desktop" "$uri" \
+          >/dev/null 2>&1 \
+          || gtk-launch "$app" "$uri" >/dev/null 2>&1 &
+      else
+        gtk-launch "$app" "$uri" >/dev/null 2>&1 &
+      fi
       ;;
     *"Open containing folder")
       _files_app "$(dirname "$target")"
