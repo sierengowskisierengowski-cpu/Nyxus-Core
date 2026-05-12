@@ -32,6 +32,7 @@ import re
 import shutil
 import subprocess
 import sys
+import textwrap
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
@@ -1097,50 +1098,54 @@ class SoundPage(SectionPage):
 # POWER — battery, profiles (powerprofilesctl), CPU governor
 # ──────────────────────────────────────────────────────────────────────
 class PowerPage(SectionPage):
+    """Battery, power profiles, CPU governor, idle/sleep timers, lid &
+    button actions, and low-battery thresholds. All edits are real:
+      · powerprofilesctl       — live profile switching
+      · /sys/.../cpufreq/*     — pkexec write to all cores
+      · ~/.config/hypr/hypridle.conf  — regenerated from prefs
+      · /etc/systemd/logind.conf.d/00-nyxus-power.conf — pkexec
+      · /etc/UPower/UPower.conf — pkexec, restart upower
+      · ~/.config/systemd/user/nyxus-power-autoswitch.service — auto AC/bat
+    """
     KEY = "power"
+    LOGIND_OVERRIDE = "/etc/systemd/logind.conf.d/00-nyxus-power.conf"
+    HYPRIDLE_CONF = str(Path.home() / ".config/hypr/hypridle.conf")
+    LID_ACTIONS = ["suspend", "lock", "hibernate", "poweroff", "ignore"]
+    POWER_KEY_ACTIONS = ["suspend", "poweroff", "reboot", "lock",
+                         "hibernate", "ignore"]
+    IDLE_ACTIONS = ["suspend", "poweroff", "hibernate", "lock", "ignore"]
+    SLEEP_PRESETS = [0, 60, 120, 300, 600, 900, 1800, 3600, 7200]
 
     def build(self) -> None:
         self.bat_grp = Adw.PreferencesGroup(title="Battery")
         self.add_group(self.bat_grp)
         self.prof_grp = Adw.PreferencesGroup(
             title="Power profile",
-            description="Switches the system between power-saver, balanced, "
-                        "and performance modes")
+            description="Live switching via powerprofilesctl, plus optional "
+                        "auto-switch on AC/battery")
         self.add_group(self.prof_grp)
         self.gov_grp = Adw.PreferencesGroup(
             title="CPU governor",
-            description="Per-core scaling strategy (read from "
-                        "/sys/devices/system/cpu)")
+            description="Per-core scaling strategy from /sys/devices/system/cpu")
         self.add_group(self.gov_grp)
-        # Idle / lid behaviour (informational)
-        idle = Adw.PreferencesGroup(
-            title="Idle & lid",
-            description="Runtime values from logind. Edit /etc/systemd/"
-                        "logind.conf to change.")
-        self.add_group(idle)
-        rc, out, _ = sh(["loginctl", "show-session", "self"], timeout=3)
-        info = {k: v for k, v in
-                (line.split("=", 1) for line in out.splitlines()
-                 if "=" in line)}
-        for label, key in (("Idle action",         "IdleAction"),
-                           ("Idle hint timeout",   "IdleSinceHint"),
-                           ("Locked hint",         "LockedHint")):
-            idle.add(kv_row(label, info.get(key, "?")))
-        rc, conf, _ = sh(
-            ["sh", "-c", "grep -E '^(HandleLidSwitch|HandlePowerKey|"
-             "IdleAction)' /etc/systemd/logind.conf 2>/dev/null"], timeout=3)
-        if conf.strip():
-            for line in conf.splitlines():
-                if "=" in line:
-                    k, v = line.split("=", 1)
-                    idle.add(kv_row(k.strip(), v.strip()))
-
-        # Tools
+        self.sleep_grp = Adw.PreferencesGroup(
+            title="Screen & sleep",
+            description="Idle timers (managed by hypridle). 'Never' = disabled.")
+        self.add_group(self.sleep_grp)
+        self.lid_grp = Adw.PreferencesGroup(
+            title="Buttons & lid",
+            description="Logind actions (written to /etc/systemd/logind.conf.d/"
+                        "00-nyxus-power.conf via admin prompt)")
+        self.add_group(self.lid_grp)
+        self.low_grp = Adw.PreferencesGroup(
+            title="Low battery",
+            description="UPower thresholds for warning + critical action")
+        self.add_group(self.low_grp)
         tools = Adw.PreferencesGroup(title="Tools")
         self.add_group(tools)
-        for label, cmd in (("powertop", "sudo powertop"),
-                           ("tlp-stat",   "sudo tlp-stat -s | less"),
-                           ("upower dump", "upower --dump | less")):
+        for label, cmd in (("powertop",     "sudo powertop"),
+                           ("tlp-stat",     "sudo tlp-stat -s | less"),
+                           ("upower dump",  "upower --dump | less")):
             bin0 = label.split()[0]
             if have(bin0):
                 tools.add(action_row(
@@ -1153,63 +1158,224 @@ class PowerPage(SectionPage):
         self.schedule_refresh(8000, self._tick)
 
     def _tick(self) -> bool:
-        self._render()
+        # Only refresh fast-changing data (battery + freq) on the timer.
+        self._render_battery()
+        self._render_governor_freq()
         return True
 
     def _render(self) -> None:
-        # Battery
+        self._render_battery()
+        self._render_profile()
+        self._render_governor()
+        self._render_sleep()
+        self._render_lid()
+        self._render_low_battery()
+
+    # ────────────────────────────────────────────────────────────
+    # Battery
+    # ────────────────────────────────────────────────────────────
+    def _render_battery(self) -> None:
         _clear_group(self.bat_grp)
-        bats = sorted(Path("/sys/class/power_supply").glob("BAT*")) \
-            if Path("/sys/class/power_supply").exists() else []
+        psp = Path("/sys/class/power_supply")
+        bats = sorted(psp.glob("BAT*")) if psp.exists() else []
         if not bats:
             self.bat_grp.add(empty_row(
                 "No battery detected",
                 "This appears to be a desktop or VM"))
+            return
         for b in bats:
             try:
                 cap  = (b / "capacity").read_text().strip()
                 stat = (b / "status").read_text().strip()
                 row  = Adw.ActionRow(title=b.name,
                                      subtitle=f"{cap}%  ·  {stat}")
-                ef = (b / "energy_full")
-                efd = (b / "energy_full_design")
+                # Health: prefer energy_*, fall back to charge_*
+                e1 = e2 = 0
+                ef, efd = b / "energy_full", b / "energy_full_design"
+                cf, cfd = b / "charge_full", b / "charge_full_design"
                 if ef.exists() and efd.exists():
-                    e1 = int(ef.read_text())
-                    e2 = int(efd.read_text())
-                    if e2 > 0:
-                        h = Gtk.Label(label=f"health {e1*100//e2}%")
-                        h.add_css_class("nyx-kv-value")
-                        row.add_suffix(h)
+                    e1, e2 = int(ef.read_text()), int(efd.read_text())
+                elif cf.exists() and cfd.exists():
+                    e1, e2 = int(cf.read_text()), int(cfd.read_text())
+                if e2 > 0:
+                    pct = e1 * 100 // e2
+                    h = Gtk.Label(label=f"health {pct}%")
+                    h.add_css_class("nyx-kv-value")
+                    row.add_suffix(h)
                 self.bat_grp.add(row)
-            except Exception as e:
-                log.warning("battery: %s", e)
 
-        # Power profile
+                # Cycle count
+                cyc = b / "cycle_count"
+                if cyc.exists():
+                    try:
+                        n = int(cyc.read_text().strip())
+                        if n > 0:
+                            self.bat_grp.add(kv_row(
+                                f"{b.name} cycles", str(n),
+                                "lower is better"))
+                    except Exception:
+                        pass
+
+                # Time remaining
+                tr = self._battery_time_remaining(b)
+                if tr:
+                    self.bat_grp.add(kv_row(
+                        f"{b.name} time", tr,
+                        "estimate — refines as load stabilizes"))
+
+                # Charge limit (ASUS / Lenovo / Framework / supported)
+                ccet = b / "charge_control_end_threshold"
+                if ccet.exists():
+                    self._render_charge_limit_row(b, ccet)
+            except Exception as e:
+                log.warning("battery %s: %s", b, e)
+
+    def _render_charge_limit_row(self, bat: Path, ccet_path: Path) -> None:
+        try:
+            cur = int(ccet_path.read_text().strip())
+        except Exception:
+            cur = 100
+        row = Adw.ActionRow(
+            title=f"{bat.name} charge limit",
+            subtitle=f"Stop charging at {cur}% (extends battery longevity)")
+        scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 50, 100, 5)
+        scale.set_value(cur)
+        scale.set_size_request(180, -1)
+        scale.set_draw_value(True)
+        scale.set_value_pos(Gtk.PositionType.RIGHT)
+
+        def _apply(v, p=str(ccet_path)) -> None:
+            sh_async(
+                ["pkexec", "sh", "-c", f"echo {int(v)} > {p}"],
+                lambda r: self.toast(
+                    f"charge limit → {int(v)}%" if r[0] == 0
+                    else "needs admin / unsupported"),
+                timeout=6)
+
+        debounced(scale, _apply, 400)
+        row.add_suffix(scale)
+        self.bat_grp.add(row)
+
+    def _battery_time_remaining(self, b: Path) -> str:
+        try:
+            stat = (b / "status").read_text().strip()
+            if stat not in ("Discharging", "Charging"):
+                return ""
+            for now_n, rate_n, full_n in (
+                    ("energy_now", "power_now",   "energy_full"),
+                    ("charge_now", "current_now", "charge_full")):
+                pn, pr, pf = b / now_n, b / rate_n, b / full_n
+                if pn.exists() and pr.exists():
+                    n = int(pn.read_text())
+                    r = int(pr.read_text())
+                    if r <= 0:
+                        return ""
+                    if stat == "Discharging":
+                        secs = n * 3600 // r
+                        suffix = "until empty"
+                    else:
+                        if not pf.exists():
+                            return ""
+                        f = int(pf.read_text())
+                        secs = max(f - n, 0) * 3600 // r
+                        suffix = "until full"
+                    h, m = secs // 3600, (secs % 3600) // 60
+                    return f"{h}h {m:02d}m {suffix}"
+            return ""
+        except Exception:
+            return ""
+
+    # ────────────────────────────────────────────────────────────
+    # Power profile + auto-switch
+    # ────────────────────────────────────────────────────────────
+    def _render_profile(self) -> None:
         _clear_group(self.prof_grp)
         if not have("powerprofilesctl"):
             self.prof_grp.add(empty_row(
                 "powerprofilesctl not installed",
                 "Install power-profiles-daemon"))
-        else:
-            rc, out, _ = sh(["powerprofilesctl", "get"], timeout=3)
-            cur = out.strip() if rc == 0 else "?"
-            row = Adw.ActionRow(title="Active profile", subtitle=cur)
-            box = Gtk.Box(spacing=6)
-            box.set_valign(Gtk.Align.CENTER)
-            for p in ("power-saver", "balanced", "performance"):
-                btn = Gtk.Button(label=p)
-                btn.add_css_class("nyx-pill"
-                                  if p != cur else "nyx-pill-ok")
-                btn.connect("clicked", lambda _b, p=p: sh_async(
-                    ["powerprofilesctl", "set", p],
-                    lambda r: (self.toast(f"profile → {p}"
-                                          if r[0] == 0 else "failed"),
-                               self._render()), timeout=3))
-                box.append(btn)
-            row.add_suffix(box)
-            self.prof_grp.add(row)
+            return
+        rc, out, _ = sh(["powerprofilesctl", "get"], timeout=3)
+        cur = out.strip() if rc == 0 else "?"
+        row = Adw.ActionRow(title="Active profile", subtitle=cur)
+        box = Gtk.Box(spacing=6)
+        box.set_valign(Gtk.Align.CENTER)
+        for p in ("power-saver", "balanced", "performance"):
+            btn = Gtk.Button(label=p)
+            btn.add_css_class("nyx-pill" if p != cur else "nyx-pill-ok")
+            btn.connect("clicked", lambda _b, p=p: sh_async(
+                ["powerprofilesctl", "set", p],
+                lambda r: (self.toast(
+                    f"profile → {p}" if r[0] == 0 else "failed"),
+                    self._render_profile()),
+                timeout=3))
+            box.append(btn)
+        row.add_suffix(box)
+        self.prof_grp.add(row)
 
-        # CPU governor
+        prefs = load_prefs()
+        autosw = bool(prefs.get("power", {}).get("auto_profile", False))
+        sw_row = Adw.ActionRow(
+            title="Auto-switch on AC / battery",
+            subtitle="performance on AC, power-saver on battery "
+                     "(via systemd --user service)")
+        sw = Gtk.Switch()
+        sw.set_active(autosw)
+        sw.set_valign(Gtk.Align.CENTER)
+        sw.connect("notify::active", self._on_auto_profile_toggled)
+        sw_row.add_suffix(sw)
+        self.prof_grp.add(sw_row)
+
+    def _on_auto_profile_toggled(self, sw, _p) -> None:
+        prefs = load_prefs()
+        prefs.setdefault("power", {})["auto_profile"] = sw.get_active()
+        save_prefs(prefs)
+        self._sync_auto_profile_hook()
+        self.toast("auto-switch " + ("on" if sw.get_active() else "off"))
+
+    def _sync_auto_profile_hook(self) -> None:
+        unit_dir = Path.home() / ".config/systemd/user"
+        unit_dir.mkdir(parents=True, exist_ok=True)
+        unit = unit_dir / "nyxus-power-autoswitch.service"
+        prefs = load_prefs()
+        enabled = bool(prefs.get("power", {}).get("auto_profile", False))
+        if enabled:
+            unit.write_text(textwrap.dedent("""\
+                [Unit]
+                Description=NYXUS auto power profile switcher (AC/battery)
+                After=graphical-session.target
+
+                [Service]
+                Type=simple
+                ExecStart=/bin/sh -c 'while sleep 15; do ac=$(cat /sys/class/power_supply/A*/online 2>/dev/null | head -1); want=power-saver; [ "$ac" = "1" ] && want=performance; cur=$(powerprofilesctl get 2>/dev/null); [ -n "$cur" ] && [ "$cur" != "$want" ] && powerprofilesctl set "$want" 2>/dev/null || true; done'
+                Restart=on-failure
+                RestartSec=10
+
+                [Install]
+                WantedBy=default.target
+                """))
+            sh_async(
+                ["systemctl", "--user", "daemon-reload"],
+                lambda _r: sh_async(
+                    ["systemctl", "--user", "enable", "--now",
+                     "nyxus-power-autoswitch.service"],
+                    None, timeout=4),
+                timeout=4)
+        else:
+            sh_async(
+                ["systemctl", "--user", "disable", "--now",
+                 "nyxus-power-autoswitch.service"],
+                lambda _r: None, timeout=4)
+            try:
+                unit.unlink()
+            except FileNotFoundError:
+                pass
+
+    # ────────────────────────────────────────────────────────────
+    # CPU governor
+    # ────────────────────────────────────────────────────────────
+    def _render_governor(self) -> None:
         _clear_group(self.gov_grp)
         gp = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
         ap = Path("/sys/devices/system/cpu/cpu0/cpufreq/"
@@ -1218,42 +1384,384 @@ class PowerPage(SectionPage):
             self.gov_grp.add(empty_row(
                 "cpufreq not available",
                 "This CPU/kernel does not expose scaling governors"))
-        else:
+            return
+        try:
+            cur = gp.read_text().strip()
+            avail = ap.read_text().split() if ap.exists() else [cur]
+        except Exception:
+            cur, avail = "?", []
+        self.gov_grp.add(Adw.ActionRow(
+            title="Current governor", subtitle=cur))
+        self._freq_row = Adw.ActionRow(
+            title="cpu0 frequency", subtitle="reading…")
+        self.gov_grp.add(self._freq_row)
+        self._render_governor_freq()
+        for g in avail:
+            btn_row = Adw.ActionRow(
+                title=g,
+                subtitle="active" if g == cur
+                else "Click to switch (requires admin)")
+            if g != cur:
+                b = Gtk.Button(label="Use")
+                b.add_css_class("nyx-pill")
+                b.set_valign(Gtk.Align.CENTER)
+                b.connect("clicked", lambda _b, g=g: sh_async(
+                    ["pkexec", "sh", "-c",
+                     f"for f in /sys/devices/system/cpu/cpu*/cpufreq/"
+                     f"scaling_governor; do echo {g} > $f; done"],
+                    lambda r: (self.toast(
+                        f"governor → {g}" if r[0] == 0 else "needs admin"),
+                        self._render_governor()),
+                    timeout=10))
+                btn_row.add_suffix(b)
+            self.gov_grp.add(btn_row)
+
+    def _render_governor_freq(self) -> None:
+        if not hasattr(self, "_freq_row"):
+            return
+        fp = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        if fp.exists():
             try:
-                cur = gp.read_text().strip()
-                avail = ap.read_text().split() if ap.exists() else [cur]
+                f = int(fp.read_text().strip())
+                self._freq_row.set_subtitle(f"{f//1000} MHz")
+                return
             except Exception:
-                cur, avail = "?", []
-            row = Adw.ActionRow(title="Current governor", subtitle=cur)
-            self.gov_grp.add(row)
-            # Frequency
-            fp = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
-            if fp.exists():
-                try:
-                    f = int(fp.read_text().strip())
-                    self.gov_grp.add(kv_row("cpu0 freq", f"{f//1000} MHz"))
-                except Exception:
-                    pass
-            # Picker — uses pkexec to write all CPUs at once
-            for g in avail:
-                btn_row = Adw.ActionRow(
-                    title=g,
-                    subtitle="active" if g == cur
-                            else "Click to switch (requires sudo)")
-                if g != cur:
-                    b = Gtk.Button(label="Use")
-                    b.add_css_class("nyx-pill")
-                    b.set_valign(Gtk.Align.CENTER)
-                    b.connect("clicked", lambda _b, g=g: sh_async(
-                        ["pkexec", "sh", "-c",
-                         f"for f in /sys/devices/system/cpu/cpu*/cpufreq/"
-                         f"scaling_governor; do echo {g} > $f; done"],
-                        lambda r: (self.toast(f"governor → {g}"
-                                              if r[0] == 0 else "needs sudo"),
-                                   self._render()),
-                        timeout=10))
-                    btn_row.add_suffix(b)
-                self.gov_grp.add(btn_row)
+                pass
+        self._freq_row.set_subtitle("unavailable")
+
+    # ────────────────────────────────────────────────────────────
+    # Screen & sleep (hypridle, NYXUS-managed)
+    # ────────────────────────────────────────────────────────────
+    def _hypridle_prefs(self) -> dict:
+        prefs = load_prefs()
+        p = prefs.setdefault("power", {})
+        defaults = {
+            "dim_secs":         300,   # 5 min  — dim screen
+            "lock_secs":        600,   # 10 min — lockscreen
+            "screen_secs":      900,   # 15 min — DPMS off
+            "suspend_secs":    1800,   # 30 min — suspend (battery)
+            "suspend_ac_secs":    0,   # 0 = never on AC
+        }
+        for k, v in defaults.items():
+            p.setdefault(k, v)
+        return p
+
+    def _render_sleep(self) -> None:
+        _clear_group(self.sleep_grp)
+        p = self._hypridle_prefs()
+        for key, title, sub in (
+            ("dim_secs",         "Dim screen after",
+             "lower brightness while still showing the screen"),
+            ("lock_secs",        "Lock screen after",
+             "show the lockscreen (you can keep working)"),
+            ("screen_secs",      "Turn off screen after",
+             "DPMS off — display sleeps but session continues"),
+            ("suspend_secs",     "Suspend after (on battery)",
+             "system suspends to RAM"),
+            ("suspend_ac_secs",  "Suspend after (on AC)",
+             "system suspends while plugged in"),
+        ):
+            cur = int(p.get(key, 0))
+            self.sleep_grp.add(self._duration_row(title, sub, cur, key))
+
+    def _duration_row(self, title: str, sub: str, cur_secs: int,
+                      pref_key: str) -> Adw.ActionRow:
+        row = Adw.ActionRow(title=title, subtitle=sub)
+        try:
+            idx = self.SLEEP_PRESETS.index(cur_secs)
+        except ValueError:
+            idx = min(range(len(self.SLEEP_PRESETS)),
+                      key=lambda i: abs(self.SLEEP_PRESETS[i] - cur_secs))
+        labels = [self._fmt_secs(s) for s in self.SLEEP_PRESETS]
+        dd = Gtk.DropDown.new_from_strings(labels)
+        dd.set_selected(idx)
+        dd.set_valign(Gtk.Align.CENTER)
+        dd.connect("notify::selected",
+                   lambda d, _p, k=pref_key: self._on_duration_changed(d, k))
+        row.add_suffix(dd)
+        return row
+
+    @staticmethod
+    def _fmt_secs(s: int) -> str:
+        if s == 0:
+            return "Never"
+        if s < 60:
+            return f"{s}s"
+        if s < 3600:
+            return f"{s // 60} min"
+        return f"{s // 3600} h"
+
+    def _on_duration_changed(self, dd, pref_key: str) -> None:
+        idx = dd.get_selected()
+        if idx < 0 or idx >= len(self.SLEEP_PRESETS):
+            return
+        secs = self.SLEEP_PRESETS[idx]
+        prefs = load_prefs()
+        prefs.setdefault("power", {})[pref_key] = secs
+        save_prefs(prefs)
+        self._regenerate_hypridle()
+        self.toast(f"{pref_key.replace('_', ' ')} → {self._fmt_secs(secs)}")
+
+    def _regenerate_hypridle(self) -> None:
+        """Rewrite ~/.config/hypr/hypridle.conf from NYXUS prefs.
+
+        Battery-vs-AC suspend is implemented as TWO listeners, each gating
+        on the AC online state at fire time, so one of them is always a
+        no-op depending on power source."""
+        p = self._hypridle_prefs()
+        cfg = Path(self.HYPRIDLE_CONF)
+        cfg.parent.mkdir(parents=True, exist_ok=True)
+        lines = [
+            "# nyxus-managed: regenerated by Settings → Power. "
+            "Manual edits will be overwritten.",
+            "general {",
+            "    lock_cmd = pidof hyprlock || hyprlock",
+            "    before_sleep_cmd = loginctl lock-session",
+            "    after_sleep_cmd  = hyprctl dispatch dpms on",
+            "    ignore_dbus_inhibit = false",
+            "}",
+            "",
+        ]
+        if p["dim_secs"] > 0 and have("brightnessctl"):
+            lines += [
+                "listener {",
+                f"    timeout = {p['dim_secs']}",
+                "    on-timeout = brightnessctl -s set 10%",
+                "    on-resume  = brightnessctl -r",
+                "}",
+                "",
+            ]
+        if p["lock_secs"] > 0:
+            lines += [
+                "listener {",
+                f"    timeout = {p['lock_secs']}",
+                "    on-timeout = loginctl lock-session",
+                "}",
+                "",
+            ]
+        if p["screen_secs"] > 0:
+            lines += [
+                "listener {",
+                f"    timeout = {p['screen_secs']}",
+                "    on-timeout = hyprctl dispatch dpms off",
+                "    on-resume  = hyprctl dispatch dpms on",
+                "}",
+                "",
+            ]
+        if p["suspend_secs"] > 0:
+            lines += [
+                "listener {",
+                f"    timeout = {p['suspend_secs']}",
+                "    on-timeout = sh -c 'ac=$(cat /sys/class/power_supply/A*/online 2>/dev/null | head -1); [ \"$ac\" != \"1\" ] && systemctl suspend'",
+                "}",
+                "",
+            ]
+        if p["suspend_ac_secs"] > 0:
+            lines += [
+                "listener {",
+                f"    timeout = {p['suspend_ac_secs']}",
+                "    on-timeout = sh -c 'ac=$(cat /sys/class/power_supply/A*/online 2>/dev/null | head -1); [ \"$ac\" = \"1\" ] && systemctl suspend'",
+                "}",
+                "",
+            ]
+        try:
+            cfg.write_text("\n".join(lines))
+            sh_async(["systemctl", "--user", "restart", "hypridle.service"],
+                     None, timeout=4)
+        except Exception as e:
+            log.warning("hypridle write: %s", e)
+            self.toast("hypridle write failed")
+
+    # ────────────────────────────────────────────────────────────
+    # Buttons & lid (logind override)
+    # ────────────────────────────────────────────────────────────
+    def _logind_overrides(self) -> dict:
+        try:
+            txt = Path(self.LOGIND_OVERRIDE).read_text()
+        except Exception:
+            return {}
+        out = {}
+        for line in txt.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or line.startswith("["):
+                continue
+            if "=" in line:
+                k, v = line.split("=", 1)
+                out[k.strip()] = v.strip()
+        return out
+
+    def _write_logind_overrides(self, updates: dict, on_done=None) -> None:
+        cur = self._logind_overrides()
+        cur.update(updates)
+        cur = {k: v for k, v in cur.items() if v}  # strip empty → falls back
+        body = ("# nyxus-managed: written by Settings → Power\n"
+                "[Login]\n"
+                + "\n".join(f"{k}={v}" for k, v in sorted(cur.items()))
+                + "\n")
+        cmd = ["pkexec", "sh", "-c",
+               f"mkdir -p /etc/systemd/logind.conf.d && "
+               f"cat > {self.LOGIND_OVERRIDE} <<'NYXUS_EOF'\n{body}NYXUS_EOF\n"
+               f"systemctl kill -s HUP systemd-logind 2>/dev/null || true"]
+        sh_async(cmd, on_done, timeout=8)
+
+    def _render_lid(self) -> None:
+        _clear_group(self.lid_grp)
+        cur = self._logind_overrides()
+        rows = (
+            ("HandleLidSwitch", "When lid closes (on battery)",
+             "system action when laptop lid is closed",
+             self.LID_ACTIONS),
+            ("HandleLidSwitchExternalPower", "When lid closes (on AC)",
+             "system action when lid closed while plugged in",
+             self.LID_ACTIONS),
+            ("HandleLidSwitchDocked", "When lid closes (docked)",
+             "system action when an external monitor is connected",
+             self.LID_ACTIONS),
+            ("HandlePowerKey", "Power button",
+             "system action on a short press of the power key",
+             self.POWER_KEY_ACTIONS),
+            ("IdleAction", "After idle (logind fallback)",
+             "fired only if hypridle isn't already handling it",
+             self.IDLE_ACTIONS),
+        )
+        for key, title, sub, options in rows:
+            current = cur.get(key, "")
+            row = Adw.ActionRow(title=title, subtitle=sub)
+            labels = ["(system default)"] + options
+            dd = Gtk.DropDown.new_from_strings(labels)
+            try:
+                sel = labels.index(current) if current else 0
+            except ValueError:
+                sel = 0
+            dd.set_selected(sel)
+            dd.set_valign(Gtk.Align.CENTER)
+            dd.connect(
+                "notify::selected",
+                lambda d, _p, k=key, ls=labels:
+                    self._on_lid_changed(d, k, ls))
+            row.add_suffix(dd)
+            self.lid_grp.add(row)
+
+        sec_row = Adw.ActionRow(
+            title="Logind idle timeout",
+            subtitle="when to fire the action above (e.g. 30min, 1h, 0 = off)")
+        entry = Gtk.Entry()
+        entry.set_text(cur.get("IdleActionSec", ""))
+        entry.set_placeholder_text("e.g. 30min")
+        entry.set_valign(Gtk.Align.CENTER)
+        entry.set_size_request(120, -1)
+        entry.connect("activate", self._on_idle_sec_set)
+        sec_row.add_suffix(entry)
+        self.lid_grp.add(sec_row)
+
+    def _on_lid_changed(self, dd, key: str, labels: list) -> None:
+        idx = dd.get_selected()
+        val = labels[idx] if 0 <= idx < len(labels) else ""
+        if val == "(system default)":
+            val = ""
+        self._write_logind_overrides(
+            {key: val},
+            lambda r: self.toast(
+                f"{key} → {val or 'default'}" if r[0] == 0
+                else "needs admin / write failed"))
+
+    def _on_idle_sec_set(self, entry) -> None:
+        val = entry.get_text().strip()
+        self._write_logind_overrides(
+            {"IdleActionSec": val},
+            lambda r: self.toast(
+                f"idle timeout → {val or 'default'}" if r[0] == 0
+                else "needs admin / write failed"))
+
+    # ────────────────────────────────────────────────────────────
+    # Low battery (UPower)
+    # ────────────────────────────────────────────────────────────
+    def _render_low_battery(self) -> None:
+        _clear_group(self.low_grp)
+        if not have("upower"):
+            self.low_grp.add(empty_row(
+                "upower not installed",
+                "Install upower for low-battery actions"))
+            return
+        prefs = load_prefs().get("power", {})
+        thr = int(prefs.get("low_pct", 15))
+        crit = int(prefs.get("crit_pct", 5))
+        action = prefs.get("crit_action", "Suspend")
+
+        thr_row = Adw.ActionRow(
+            title="Warn at battery level",
+            subtitle="show a notification when battery falls below this")
+        scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 5, 50, 5)
+        scale.set_value(thr)
+        scale.set_size_request(180, -1)
+        scale.set_draw_value(True)
+        scale.set_value_pos(Gtk.PositionType.RIGHT)
+        debounced(scale,
+                  lambda v: self._set_low_pref("low_pct", int(v)), 400)
+        thr_row.add_suffix(scale)
+        self.low_grp.add(thr_row)
+
+        crit_row = Adw.ActionRow(
+            title="Critical at battery level",
+            subtitle="trigger action below when battery falls to this")
+        cscale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 1, 20, 1)
+        cscale.set_value(crit)
+        cscale.set_size_request(180, -1)
+        cscale.set_draw_value(True)
+        cscale.set_value_pos(Gtk.PositionType.RIGHT)
+        debounced(cscale,
+                  lambda v: self._set_low_pref("crit_pct", int(v)), 400)
+        crit_row.add_suffix(cscale)
+        self.low_grp.add(crit_row)
+
+        action_row_w = Adw.ActionRow(
+            title="At critical level",
+            subtitle="written to /etc/UPower/UPower.conf via admin prompt")
+        opts = ["Suspend", "Hibernate", "PowerOff", "Ignore"]
+        dd = Gtk.DropDown.new_from_strings(opts)
+        try:
+            dd.set_selected(opts.index(action))
+        except ValueError:
+            dd.set_selected(0)
+        dd.set_valign(Gtk.Align.CENTER)
+        dd.connect("notify::selected",
+                   lambda d, _p, o=opts: self._on_crit_action(d, o))
+        action_row_w.add_suffix(dd)
+        self.low_grp.add(action_row_w)
+
+    def _set_low_pref(self, key: str, val) -> None:
+        prefs = load_prefs()
+        prefs.setdefault("power", {})[key] = val
+        save_prefs(prefs)
+        self._sync_upower_conf()
+
+    def _on_crit_action(self, dd, opts: list) -> None:
+        idx = dd.get_selected()
+        if 0 <= idx < len(opts):
+            self._set_low_pref("crit_action", opts[idx])
+            self.toast(f"critical action → {opts[idx]}")
+
+    def _sync_upower_conf(self) -> None:
+        prefs = load_prefs().get("power", {})
+        thr = int(prefs.get("low_pct", 15))
+        crit = int(prefs.get("crit_pct", 5))
+        action = prefs.get("crit_action", "Suspend")
+        body = textwrap.dedent(f"""\
+            # nyxus-managed: written by Settings → Power
+            [UPower]
+            PercentageLow={thr}
+            PercentageCritical={crit}
+            PercentageAction={max(crit - 2, 1)}
+            CriticalPowerAction={action}
+            """)
+        cmd = ["pkexec", "sh", "-c",
+               f"cat > /etc/UPower/UPower.conf <<'NYXUS_EOF'\n{body}"
+               f"NYXUS_EOF\nsystemctl restart upower 2>/dev/null || true"]
+        sh_async(cmd, lambda r: self.toast(
+            "UPower updated" if r[0] == 0
+            else "UPower write failed (admin?)"), timeout=8)
 
 
 # ──────────────────────────────────────────────────────────────────────
