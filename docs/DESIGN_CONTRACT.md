@@ -193,7 +193,7 @@ against §1-12. Score each as PASS / NEEDS-FIX / FAIL.
 
 | Component                       | Status                 | Notes |
 |---------------------------------|------------------------|-------|
-| Bar (EWW main bar)              | TODO audit             | Check spacing on right cluster |
+| Bar (EWW main bar)              | PASS (audited 2026-05-11) | Right cluster spacing 6→8 (§2 tight range), left/center untouched |
 | Quick Settings flyout           | PASS (audited 2026-05-11) | Tile grid + sliders, no list = no empty state needed |
 | WiFi flyout                     | PASS (audited 2026-05-11) | Empty state added: "No networks in range" |
 | Bluetooth flyout                | PASS (audited 2026-05-11) | Empty state added: powered/off-aware copy |
