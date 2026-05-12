@@ -59,7 +59,8 @@ $shadow-rest:    rgba(0, 0, 0, 0.20);
     inset 0 0 24px rgba(160, 107, 255, 0.05);
 }
 
-.bar-bottom { padding: 8px 18px; min-height: 44px; }
+/* .bar-bottom sizing now defined alongside the P3.13d enterprise loadout
+   block at the bottom of this file (search a.search-btn references). */
 .bar-top    { padding: 4px 14px; min-height: 24px; border-radius: 0 0 14px 14px; }
 
 .bar-cluster { padding: 0 6px; }
@@ -1196,3 +1197,90 @@ $shadow-rest:    rgba(0, 0, 0, 0.20);
   border-color: rgba(255, 77, 107, 0.40);
   color: #ff8b9e;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+ * P3.13d · BOTTOM BAR — enterprise loadout (search + dock + taskbar)
+ * Glass parity with the rest of NYXUS; tight, neutral, monochrome.
+ * ═════════════════════════════════════════════════════════════════════ */
+
+/* Spotlight-style search button — sits between Start and Workspaces. */
+.search-btn {
+  background: $glass-deeper;
+  border: 1px solid $hairline-white;
+  border-radius: 8px;
+  padding: 4px 14px;
+  min-width: 200px;
+  transition: all 140ms ease;
+}
+.search-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.search-glyph { color: #c8ccd6; font-size: 12px; padding-right: 2px; }
+.search-text  { color: #8b94a8; font-size: 11px; letter-spacing: 0.06em; }
+
+/* Horizontal pinned dock — Win11/Mac style. */
+.app-rail-h {
+  padding: 0 4px;
+  /* divider on the right separates dock from the live taskbar */
+  border-right: 1px solid $hairline-white;
+  margin-right: 4px;
+  padding-right: 10px;
+}
+.app-rail-h .app-pill {
+  padding: 4px 8px;
+  font-size: 14px;
+  color: #c8ccd6;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition: all 140ms ease;
+}
+.app-rail-h .app-pill:hover {
+  background: $glass-deeper;
+  border-color: $hairline-white;
+  color: #ffffff;
+}
+
+/* Live taskbar — running Hyprland windows. */
+.taskbar {
+  padding: 0 6px;
+  min-height: 36px;
+}
+.taskbar-empty {
+  color: #8b94a8;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 0 14px;
+}
+.taskbar-tile {
+  background: $glass-deeper;
+  border: 1px solid $hairline-white;
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: #c8ccd6;
+  transition: all 140ms ease;
+}
+.taskbar-tile:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+.taskbar-tile-active {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  box-shadow: inset 0 -2px 0 #ffffff;
+}
+.taskbar-glyph { font-size: 12px; font-weight: 700; }
+.taskbar-title { font-size: 10px; letter-spacing: 0.04em; }
+
+/* Tighten the right-cluster tray pills so 13 widgets fit cleanly
+   on a 1366-wide panel even with the new dock + taskbar on the left. */
+.cluster-right > * {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+/* Slightly taller bottom bar so the taskbar tiles don't crowd. */
+.bar-bottom { padding: 6px 14px; min-height: 48px; }
