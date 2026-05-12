@@ -1,0 +1,58 @@
+
+...xXx... Nyxus-Core  main $✘!+?⇣  52s
+❯ git pull                                                                               07:06:39
+remote: Enumerating objects: 11, done.
+remote: Counting objects: 100% (11/11), done.
+remote: Compressing objects: 100% (4/4), done.
+remote: Total 9 (delta 7), reused 7 (delta 5), pack-reused 0 (from 0)
+Unpacking objects: 100% (9/9), 2.22 KiB | 756.00 KiB/s, done.
+From https://github.com/sierengowskisierengowski-cpu/Nyxus-Core
+   b1f3987..07bd150  main       -> origin/main
+Updating c291946..07bd150
+error: Your local changes to the following files would be overwritten by merge:
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+Please commit your changes or stash them before you merge.
+Aborting
+
+...xXx... Nyxus-Core  main $✘!+?⇣
+❯ git stash drop                                                                         07:07:48
+Dropped refs/stash@{0} (89dbdf344b9c816d5bd1f880953010013758e43e)
+
+...xXx... Nyxus-Core  main ✘!+?⇣
+❯ git stash drop                                                                         07:10:25
+No stash entries found.
+
+...xXx... Nyxus-Core  main ✘!+?⇣
+❯ git stash drop                                                                         07:10:47
+No stash entries found.
+
+...xXx... Nyxus-Core  main ✘!+?⇣
+❯ git pull -X ours                                                                       07:10:49
+remote: Enumerating objects: 6, done.
+remote: Counting objects: 100% (6/6), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 4 (delta 2), reused 4 (delta 2), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 1.35 KiB | 461.00 KiB/s, done.
+From https://github.com/sierengowskisierengowski-cpu/Nyxus-Core
+   07bd150..9b7114c  main       -> origin/main
+Updating c291946..9b7114c
+error: Your local changes to the following files would be overwritten by merge:
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+Please commit your changes or stash them before you merge.
+Aborting
+
+...xXx... Nyxus-Core  main ✘!+?⇣  5s
+❯ ./artifacts/api-server/nyxus-scripts/sync-eww.sh                                       07:10:59
+zsh: no such file or directory: ./artifacts/api-server/nyxus-scripts/sync-eww.sh
+
+...xXx... Nyxus-Core  main ✘!+?⇣
+❯ sudo chown -R $USER:$USER ~/Nyxus-Core/iso-builder                                     07:11:06
+[sudo] password for nyx:
+
+...xXx... Nyxus-Core  main ✘!+?⇣  11s
+❯ sudo chown -R $USER:$USER ~/Nyxus-Core/iso-builder                                     07:11:22
+
+...xXx... Nyxus-Core  main ✘!+?⇣
+❯                                           
