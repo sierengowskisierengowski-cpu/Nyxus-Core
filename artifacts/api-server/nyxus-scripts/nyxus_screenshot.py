@@ -349,7 +349,8 @@ window.nyxus-shot {{
 def main() -> int:
     ap = argparse.ArgumentParser(description="NYXUS screenshot")
     ap.add_argument("mode", nargs="?",
-                    choices=["region", "window", "fullscreen", "picker"],
+                    choices=["region", "window", "fullscreen", "picker",
+                             "video", "video-stop", "video-toggle"],
                     default="picker")
     ap.add_argument("--copy-only", action="store_true",
                     dest="copy_only")
@@ -360,6 +361,17 @@ def main() -> int:
     args = ap.parse_args()
     if args.mode == "picker":
         return Picker(args).run([sys.argv[0]])
+    # Video modes delegate to nyxus-record (wf-recorder wrapper).
+    if args.mode in ("video", "video-stop", "video-toggle"):
+        sub = {"video": "region",
+               "video-stop": "stop",
+               "video-toggle": "toggle"}[args.mode]
+        try:
+            subprocess.Popen(["nyxus-record", sub],
+                             start_new_session=True)
+            return 0
+        except FileNotFoundError:
+            notify("nyxus-record not installed"); return 2
     return 0 if capture(args.mode, args) else 1
 
 
