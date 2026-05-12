@@ -206,14 +206,16 @@ fi
 ## on existing users until they re-ran the full installer. Force-refresh
 ## them all here with the same syntax-check guard used for chrome.py.
 step "2.6/6 · REFRESH ~/.nyxus/ user-app Python scripts (force from production)"
-# NOTE (rev r6-eww, 2026-05-11): nyxus_powermenu, nyxus_quicksettings,
-# nyxus_clock, nyxus_calendar, and nyxus_cheatsheet REMOVED — replaced by
-# native EWW windows. EWW config files are refreshed in step 2.7 below.
+# NOTE (rev r6-eww, 2026-05-11): nyxus_quicksettings, nyxus_clock,
+# nyxus_calendar, and nyxus_cheatsheet REMOVED — replaced by native EWW
+# windows. Standalone nyxus_powermenu.py later returned for launcher/menu use.
+# EWW config files are refreshed in step 2.7 below.
 USER_SCRIPTS=(
   nyxus_palette.py        nyxus-palette.css
-  nyxus_notes.py          nyxus_stickies.py       nyxus_terminal.py
-  nyxus_settings.py       nyxus_sysmon_gtk.py     nyxus_control.py
-  nyxus_launcher.py       nyxus_screenshot.py
+  nyxus_notes.py          nyxus_notepad.py        nyxus_stickies.py
+  nyxus_terminal.py       nyxus_settings.py       nyxus_sysmon_gtk.py
+  nyxus_control.py        nyxus_launcher.py       nyxus_screenshot.py
+  nyxus_store.py          nyxus_powermenu.py      nyxus_welcome.py
   nyxus_doctor.py         nyxus_gen_icons.py
 )
 # Validate REAL_USER actually exists before looping, so chown can't silently
@@ -280,13 +282,13 @@ fi
 step "3/6 · INSTALL Hyprland window rules (13-rule baseline) + compositor blur kernel"
 HYPR_DIR="$REAL_HOME/.config/hypr"
 HYPR_CONF_D="$HYPR_DIR/conf.d"
-HYPR_RULES="$HYPR_CONF_D/nyxus-windowrules.conf"
+HYPR_RULES="$HYPR_CONF_D/nyxus-hyprland-rules.conf"
 HYPR_BLUR="$HYPR_CONF_D/nyxus-hyprland-blur.conf"
 HYPR_OPACITY="$HYPR_CONF_D/nyxus-hyprland-opacity.conf"
 HYPR_GENERAL="$HYPR_CONF_D/nyxus-hyprland-general.conf"
 HYPR_FROST_OLD="$HYPR_CONF_D/nyxus-seattle-frost.conf"
 HYPR_MAIN="$HYPR_DIR/hyprland.conf"
-SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-windowrules.conf'
+SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf'
 BLUR_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf'
 OPACITY_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf'
 GENERAL_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-general.conf'
@@ -306,81 +308,18 @@ if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-seattle-frost.conf" "$HYPR_MAIN"; th
   ok "stripped Seattle Frost source line from hyprland.conf"
 fi
 
-# r17/r18 migration — Hyprland 0.49+ removed `windowrulev2` (and
-# `layerrulev2`) in favor of unified `windowrule` / `layerrule`. Stale
-# installs still have the old syntax — rewrite every line in-place
-# RECURSIVELY across the ENTIRE ~/.config/hypr/ tree (main hyprland.conf,
-# conf.d/, hyprland/, anywhere) so reload stops throwing 400+ deprecation
-# errors. Idempotent: if a file is already unified, it's a no-op.
-HYPR_RULES_OLD="$HYPR_CONF_D/nyxus-hyprland-rules.conf"
-v2_total=0
-v2_files=0
-while IFS= read -r -d '' f; do
-  [[ -f "$f" ]] || continue
-  n=$(grep -cE '^[[:space:]]*(window|layer)rulev2[[:space:]]*=' "$f" 2>/dev/null)
-  n=${n:-0}
-  if (( n > 0 )); then
-    sed -i -E 's/^([[:space:]]*)windowrulev2([[:space:]]*=)/\1windowrule\2/; s/^([[:space:]]*)layerrulev2([[:space:]]*=)/\1layerrule\2/' "$f"
-    rel="${f#$HYPR_DIR/}"
-    ok "migrated $n v2 rule(s) → unified syntax in $rel"
-    v2_total=$((v2_total + n))
-    v2_files=$((v2_files + 1))
-  fi
-done < <(find "$HYPR_DIR" -type f -name '*.conf' -print0 2>/dev/null)
-if (( v2_total > 0 )); then
-  ok "total v2 → unified rule rewrites: $v2_total across $v2_files file(s)  (was throwing $v2_total deprecation errors at hyprctl reload)"
-else
-  ok "no deprecated v2 rules found anywhere under $HYPR_DIR — already migrated"
-fi
-
-# r17 PASS-2 — opacity rules with two values (e.g. `opacity 0.92 0.78,
-# class:...`) are rejected by Hyprland 0.49+ unified parser as "invalid
-# field class:...: missing a value" because opacity values stack
-# multiplicatively across rules, and the parser can't disambiguate the
-# two-float form from a single-float-plus-extra-field. Fix: insert the
-# `override` keyword after each float (per Hyprland wiki) which forces
-# absolute values and unambiguous parsing. Idempotent: skips lines that
-# already contain `override`.
-opa_total=0
-opa_files=0
-while IFS= read -r -d '' f; do
-  [[ -f "$f" ]] || continue
-  # Lines we need to touch: windowrule = opacity FLOAT FLOAT[ FLOAT][, ...]
-  # without `override` anywhere on the line.
-  n=$(grep -cE '^[[:space:]]*windowrule[[:space:]]*=[[:space:]]*opacity[[:space:]]+[0-9.]+[[:space:]]+[0-9.]+' "$f" 2>/dev/null)
-  n=${n:-0}
-  if (( n > 0 )) && grep -E '^[[:space:]]*windowrule[[:space:]]*=[[:space:]]*opacity[[:space:]]+[0-9.]+[[:space:]]+[0-9.]+' "$f" | grep -vqE 'override'; then
-    perl -i -pe '
-      if (/^\s*windowrule\s*=\s*opacity/ && !/override/) {
-        s{^(\s*windowrule\s*=\s*opacity\s+)([0-9.]+)(\s+)([0-9.]+)(?:(\s+)([0-9.]+))?(\s*,)}{
-          my $r = "$1$2 override $4 override";
-          $r .= " $6 override" if defined $6;
-          "$r$7"
-        }e;
-      }
-    ' "$f"
-    rel="${f#$HYPR_DIR/}"
-    ok "added 'override' to $n opacity rule(s) in $rel"
-    opa_total=$((opa_total + n))
-    opa_files=$((opa_files + 1))
-  fi
-done < <(find "$HYPR_DIR" -type f -name '*.conf' -print0 2>/dev/null)
-if (( opa_total > 0 )); then
-  ok "total opacity 'override' fixups: $opa_total across $opa_files file(s)  (these were the 'invalid field class: missing a value' errors)"
-else
-  ok "no opacity rules need 'override' keyword — already correct"
-fi
-
-# The shipped rules file has been renamed from nyxus-hyprland-rules.conf
-# to nyxus-windowrules.conf. If the old path still exists, replace it with
-# the freshly-downloaded clean version below AND drop its source line.
+# Current NYXUS builds intentionally ship `windowrulev2` / `layerrulev2`
+# syntax in the canonical conf shards. Older rewrites to unified syntax were
+# corrupting fresh configs, so we only remove the legacy temporary filename
+# from prior resync generations and keep the current source lines intact.
+HYPR_RULES_OLD="$HYPR_CONF_D/nyxus-windowrules.conf"
 if [[ -f "$HYPR_RULES_OLD" ]]; then
   rm -f "$HYPR_RULES_OLD"
-  ok "removed legacy $HYPR_RULES_OLD  (replaced by nyxus-windowrules.conf)"
+  ok "removed legacy $HYPR_RULES_OLD"
 fi
-if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-hyprland-rules.conf" "$HYPR_MAIN"; then
-  sed -i '/nyxus-hyprland-rules.conf/d' "$HYPR_MAIN"
-  ok "stripped legacy nyxus-hyprland-rules.conf source line from hyprland.conf"
+if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-windowrules.conf" "$HYPR_MAIN"; then
+  sed -i '/nyxus-windowrules.conf/d' "$HYPR_MAIN"
+  ok "stripped legacy nyxus-windowrules.conf source line from hyprland.conf"
 fi
 
 # rev r22 — GENERIC strip of ALL legacy non-conf.d source lines from
@@ -427,15 +366,15 @@ fi
 if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-rules.conf" -o "$HYPR_RULES"; then
   chown "$REAL_USER:$REAL_USER" "$HYPR_RULES"
   chmod 644 "$HYPR_RULES"
-  ok "wrote $HYPR_RULES  ($(grep -c '^windowrule' "$HYPR_RULES") rules — proven baseline)"
+  ok "wrote $HYPR_RULES  ($(grep -c '^windowrulev2' "$HYPR_RULES") rules — canonical baseline)"
 else
   fail "could not download nyxus-hyprland-rules.conf — apps may still tile-stretch"
 fi
 
 # Ensure hyprland.conf sources the rules file (idempotent — only appends if missing)
 if [[ -f "$HYPR_MAIN" ]]; then
-  if grep -qF "nyxus-windowrules.conf" "$HYPR_MAIN"; then
-    ok "hyprland.conf already sources nyxus-windowrules.conf"
+  if grep -qF "nyxus-hyprland-rules.conf" "$HYPR_MAIN"; then
+    ok "hyprland.conf already sources nyxus-hyprland-rules.conf"
   else
     {
       echo

@@ -1,0 +1,99 @@
+/* ── NYXUS palette (INLINED rev r14 · 2026-05-12) ─────────────────
+ * wlogout's GTK CSS parser does NOT follow @import — using @import
+ * here causes the entire stylesheet to bail on line 1, falling back
+ * to the default GTK light theme (the white screen). All palette
+ * colors must be inlined as @define-color directly in this file.
+ * Keep in lockstep with nyxus-palette.css.
+ * ──────────────────────────────────────────────────────────────── */
+@define-color nyx_white          #ffffff;
+@define-color nyx_white_off      #e8edf5;
+@define-color nyx_grey_light     #c8ccd6;
+@define-color nyx_grey_mid       #9aa0ad;
+@define-color nyx_glass_dark     rgba(14, 14, 22, 0.55);
+@define-color nyx_glass_deeper   rgba(8,  8,  14, 0.78);
+@define-color nyx_glass_deepest  rgba(0,  0,  0,  0.92);
+@define-color nyx_hairline_white rgba(255, 255, 255, 0.10);
+@define-color nyx_hairline_ink   rgba(0,   0,   0,   0.45);
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NYXUS · wlogout · DARK MIRROR · LOCKED rev 2026-05-07 r13
+   Matches unified DARK MIRROR · UNIFIED FROSTED GLASS spec.
+   Pure monochrome — white / off-white @nyx_white_off / light grey @nyx_grey_light /
+   faded black / ink black. No pink, no purple, no neon, no per-button
+   color fills.
+   © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ════════════════════════════════════════════════════════════════════════════ */
+
+* {
+    font-family: 'Inter', 'JetBrains Mono', sans-serif !important;
+    font-size:   16px !important;
+    font-weight: 700  !important;
+    letter-spacing: 0.18em;
+}
+
+/* ── DARK CANVAS · frosted glass over wallpaper ──────────────────── */
+window {
+    background-color: rgba(8, 12, 20, 0.62) !important;
+    background-image: none                  !important;
+    color: @nyx_white_off                          !important;
+}
+
+/* ── BUTTON BASE · DARK MIRROR pebble ────────────────────────────── */
+button {
+    background-color: @nyx_glass_deeper  !important;
+    background-image: none                    !important;
+    background-repeat: no-repeat;
+    background-position: center 30%;
+    background-size: 26%;
+
+    border-style:  solid                       !important;
+    border-width:  1px                         !important;
+    border-color:  @nyx_hairline_white   !important;
+    border-radius: 16px                        !important;
+
+    color:        @nyx_white_off                      !important;
+    box-shadow:   0 6px 18px @nyx_hairline_ink,
+                  inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    outline:      none                         !important;
+
+    margin:       40px;
+    text-transform: uppercase;
+    transition:     all 220ms ease;
+}
+
+button:focus,
+button:active,
+button:hover {
+    background-color: rgba(8, 12, 20, 0.88)   !important;
+    border-color:     rgba(232, 237, 245, 0.55)!important;
+    color:            @nyx_white                  !important;
+    box-shadow:       0 8px 24px rgba(0, 0, 0, 0.55),
+                      0 0 22px rgba(232, 237, 245, 0.45),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+    outline:          none                     !important;
+}
+
+/* ── All six action buttons share the SAME monochrome treatment ──── */
+#lock,     button#lock,     .lock,     button.lock,
+#logout,   button#logout,   .logout,   button.logout,
+#suspend,  button#suspend,  .suspend,  button.suspend,
+#hibernate,button#hibernate,.hibernate,button.hibernate,
+#reboot,   button#reboot,   .reboot,   button.reboot,
+#shutdown, button#shutdown, .shutdown, button.shutdown {
+    background-color: @nyx_glass_deeper !important;
+    background-image: none                   !important;
+    border-color:     @nyx_hairline_white !important;
+    color:            @nyx_white_off                !important;
+    border-radius:    16px                   !important;
+}
+
+#lock:hover,     button#lock:hover,     .lock:hover,     button.lock:hover,
+#logout:hover,   button#logout:hover,   .logout:hover,   button.logout:hover,
+#suspend:hover,  button#suspend:hover,  .suspend:hover,  button.suspend:hover,
+#hibernate:hover,button#hibernate:hover,.hibernate:hover,button.hibernate:hover,
+#reboot:hover,   button#reboot:hover,   .reboot:hover,   button.reboot:hover,
+#shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
+    background-color: rgba(8, 12, 20, 0.88) !important;
+    border-color:     rgba(232, 237, 245, 0.55) !important;
+    color:            @nyx_white !important;
+}
