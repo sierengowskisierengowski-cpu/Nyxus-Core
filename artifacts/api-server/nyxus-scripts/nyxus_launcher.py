@@ -7,9 +7,12 @@ Fuzzy search across:
   • PATH executables
   • shell commands (with the !cmd prefix)
   • web search (with the ?query prefix → opens xdg-open https://duckduckgo.com/?q=)
+  • calculator (with the =expr prefix, or auto-detect math input)
+  • file search (with the /query prefix — fd if available, else find)
+  • system actions (with the >action prefix: lock/logout/reboot/shutdown/suspend)
 
-GTK4 + the unified NYXUS chrome (DARK MIRROR glass, frosted glass,
-rainbow-markup title, scrambling letters in headings).
+GTK4 + the unified NYXUS chrome (DARK MIRROR + warm gold accent for
+alive states), monochrome dominant.
 
 Bind to a Hyprland keybind in ~/.config/hypr/hyprland.conf:
     bind = SUPER, Space, exec, python3 ~/.local/bin/nyxus_launcher.py
@@ -17,7 +20,7 @@ Bind to a Hyprland keybind in ~/.config/hypr/hyprland.conf:
 Esc closes. Enter launches selected. Up/Down navigate.
 """
 from __future__ import annotations
-import gi, os, sys, subprocess, shlex, configparser, time, threading, re
+import gi, os, sys, subprocess, shlex, configparser, time, threading, re, ast, operator
 
 # ── NYXUS palette (single source of truth · rev r13) ────────────────
 try:
@@ -182,6 +185,120 @@ def scan_path_execs(limit: int = 4000) -> list[dict]:
     return sorted(seen.values(), key=lambda x: x["name"].lower())
 
 
+# ── calculator (safe AST eval, no exec) ──────────────────────────────────
+_CALC_OPS = {
+    ast.Add: operator.add, ast.Sub: operator.sub,
+    ast.Mult: operator.mul, ast.Div: operator.truediv,
+    ast.Mod: operator.mod, ast.Pow: operator.pow,
+    ast.FloorDiv: operator.floordiv,
+    ast.USub: operator.neg, ast.UAdd: operator.pos,
+}
+_CALC_MATH_RE = re.compile(r"^[\d\s\.\+\-\*\/\(\)\%\^]+$")
+
+def _calc_eval(node):
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return node.value
+    if isinstance(node, ast.BinOp) and type(node.op) in _CALC_OPS:
+        return _CALC_OPS[type(node.op)](_calc_eval(node.left),
+                                        _calc_eval(node.right))
+    if isinstance(node, ast.UnaryOp) and type(node.op) in _CALC_OPS:
+        return _CALC_OPS[type(node.op)](_calc_eval(node.operand))
+    raise ValueError("unsupported expression")
+
+def safe_calc(expr: str):
+    """Return (value, formatted_str) or (None, None)."""
+    s = expr.strip().replace("^", "**").replace("×", "*").replace("÷", "/")
+    if not s: return (None, None)
+    try:
+        tree = ast.parse(s, mode="eval")
+        v = _calc_eval(tree.body)
+    except Exception:
+        return (None, None)
+    if isinstance(v, float):
+        if v.is_integer():
+            disp = str(int(v))
+        else:
+            disp = f"{v:.10g}"
+    else:
+        disp = str(v)
+    return (v, disp)
+
+
+# ── file search (fd preferred, find fallback) ────────────────────────────
+def search_files(query: str, limit: int = 30) -> list[dict]:
+    if not query: return []
+    home = str(Path.home())
+    out: list[str] = []
+    if have("fd"):
+        try:
+            r = subprocess.run(
+                ["fd", "--hidden", "--no-ignore-vcs", "-t", "f",
+                 "--max-results", str(limit), query, home],
+                capture_output=True, text=True, timeout=2)
+            out = [l for l in r.stdout.splitlines() if l]
+        except Exception:
+            out = []
+    if not out:
+        try:
+            r = subprocess.run(
+                ["find", home, "-maxdepth", "6", "-type", "f",
+                 "-iname", f"*{query}*"],
+                capture_output=True, text=True, timeout=2)
+            out = [l for l in r.stdout.splitlines() if l][:limit]
+        except Exception:
+            out = []
+    items = []
+    for p in out:
+        items.append({
+            "kind": "file", "name": Path(p).name,
+            "argv": ["xdg-open", p],
+            "exec": f"xdg-open {p}",
+            "comment": p, "icon": "text-x-generic", "term": False,
+        })
+    return items
+
+
+# ── system actions ───────────────────────────────────────────────────────
+def system_actions() -> list[dict]:
+    """Built-in NYXUS power/session actions."""
+    return [
+        {"kind": "sys", "name": "Lock screen",
+         "argv": ["sh", "-c",
+                  "command -v hyprlock >/dev/null && hyprlock "
+                  "|| loginctl lock-session"],
+         "exec": "lock", "comment": "hyprlock / loginctl lock-session",
+         "icon": "system-lock-screen", "term": False},
+        {"kind": "sys", "name": "Suspend",
+         "argv": ["systemctl", "suspend"],
+         "exec": "systemctl suspend", "comment": "sleep, keep RAM",
+         "icon": "system-suspend", "term": False},
+        {"kind": "sys", "name": "Hibernate",
+         "argv": ["systemctl", "hibernate"],
+         "exec": "systemctl hibernate", "comment": "save RAM to disk, power off",
+         "icon": "system-suspend-hibernate", "term": False},
+        {"kind": "sys", "name": "Log out",
+         "argv": ["sh", "-c",
+                  "hyprctl dispatch exit 2>/dev/null "
+                  "|| loginctl terminate-user $USER"],
+         "exec": "logout", "comment": "end Hyprland session",
+         "icon": "system-log-out", "term": False},
+        {"kind": "sys", "name": "Reboot",
+         "argv": ["systemctl", "reboot"],
+         "exec": "systemctl reboot", "comment": "restart system",
+         "icon": "system-reboot", "term": False},
+        {"kind": "sys", "name": "Shutdown",
+         "argv": ["systemctl", "poweroff"],
+         "exec": "systemctl poweroff", "comment": "power off",
+         "icon": "system-shutdown", "term": False},
+        {"kind": "sys", "name": "Open NYXUS Settings",
+         "argv": ["sh", "-c",
+                  "command -v nyxus_settings.py >/dev/null && nyxus_settings.py "
+                  "|| xdg-open about:settings"],
+         "exec": "nyxus_settings.py", "comment": "control panel",
+         "icon": "preferences-system", "term": False},
+    ]
+
+
 # ── fuzzy matching ───────────────────────────────────────────────────────
 def fuzzy_score(needle: str, hay: str) -> int:
     """Return higher = better match. 0 = no match."""
@@ -248,7 +365,7 @@ class Launcher(Adw.Application):
         # search row
         self.search = Gtk.Entry()
         self.search.set_placeholder_text(
-            "type to search · !cmd shell · ?query web")
+            "search · =calc · /files · ?web · !shell · >system")
         self.search.add_css_class("nyxus-search")
         self.search.set_margin_top(10); self.search.set_margin_bottom(10)
         self.search.connect("changed", self._on_changed)
@@ -269,8 +386,10 @@ class Launcher(Adw.Application):
         outer.append(self.scroll)
 
         # footer hint
-        hint = Gtk.Label(label="↑↓ navigate · enter launch · esc close",
-                         xalign=0)
+        hint = Gtk.Label(
+            label="↑↓ navigate · enter launch · esc close · "
+                  "= calc · / files · ? web · ! shell · > system",
+            xalign=0)
         hint.add_css_class("nyxus-hint")
         hint.set_margin_top(8)
         outer.append(hint)
@@ -335,6 +454,57 @@ class Launcher(Adw.Application):
                 "exec": f"xdg-open {url}",
                 "comment": url, "icon": "applications-internet", "term": False,
             }))
+        elif q.startswith("="):
+            expr = q[1:].strip()
+            v, disp = safe_calc(expr)
+            if disp is not None:
+                items.append((10_000, {
+                    "kind": "calc", "name": f"= {disp}",
+                    "argv": ["sh", "-c",
+                             f"printf %s {shlex.quote(disp)} | "
+                             "wl-copy 2>/dev/null || "
+                             f"printf %s {shlex.quote(disp)} | xclip -sel clip"],
+                    "exec": f"copy {disp}",
+                    "comment": f"{expr}  →  press Enter to copy",
+                    "icon": "accessories-calculator", "term": False,
+                }))
+            else:
+                items.append((10_000, {
+                    "kind": "calc", "name": "= (invalid expression)",
+                    "argv": ["true"], "exec": "noop",
+                    "comment": "supports + - * / % ** ( )",
+                    "icon": "accessories-calculator", "term": False,
+                }))
+        elif q.startswith("/"):
+            qq = q[1:].strip()
+            for f in search_files(qq):
+                items.append((9_000, f))
+        elif q.startswith(">"):
+            qq = q[1:].strip().lower()
+            for a in system_actions():
+                s = fuzzy_score(qq, a["name"]) if qq else 5_000
+                if s > 0:
+                    items.append((s, a))
+        elif _CALC_MATH_RE.match(q) and any(op in q for op in "+-*/^%"):
+            # Auto-detect: pure-math input with at least one operator
+            # acts as if user typed "=expr".
+            v, disp = safe_calc(q)
+            if disp is not None:
+                items.append((10_000, {
+                    "kind": "calc", "name": f"= {disp}",
+                    "argv": ["sh", "-c",
+                             f"printf %s {shlex.quote(disp)} | "
+                             "wl-copy 2>/dev/null || "
+                             f"printf %s {shlex.quote(disp)} | xclip -sel clip"],
+                    "exec": f"copy {disp}",
+                    "comment": f"{q}  →  Enter to copy",
+                    "icon": "accessories-calculator", "term": False,
+                }))
+            # also fall through to apps below for short queries like "1+1"
+            for it in self._all:
+                s = fuzzy_score(q, it["name"])
+                if s > 0:
+                    items.append((s, it))
         else:
             for it in self._all:
                 s = max(fuzzy_score(q, it["name"]),
@@ -362,8 +532,13 @@ class Launcher(Adw.Application):
         # kind badge
         badge = Gtk.Label()
         emoji = {"app": "▢", "exec": "▶", "shell": "⌘",
-                 "web": "◯"}.get(it["kind"], "•")
-        badge.set_markup(f"<span foreground='{NEON_PINK}' "
+                 "web": "◯", "calc": "=", "file": "▤",
+                 "sys": "◈"}.get(it["kind"], "•")
+        # Calc/web/sys/file results get the gold accent badge so the
+        # eye snaps to the active mode.
+        gold_kinds = {"calc", "web", "sys", "file", "shell"}
+        col = "#d4b87a" if it["kind"] in gold_kinds else NEON_PINK
+        badge.set_markup(f"<span foreground='{col}' "
                          f"font_weight='bold' size='large'>{emoji}</span>")
         badge.set_size_request(28, -1)
         box.append(badge)
@@ -455,8 +630,8 @@ window.nyxus-launcher {{
     box-shadow: 0 0 14px rgba(8, 12, 20, 0.25);
 }}
 .nyxus-search:focus {{
-    border-color: {WHITE_OFF};
-    box-shadow: 0 0 22px rgba(8, 12, 20, 0.55);
+    border-color: #d4b87a;
+    box-shadow: 0 0 22px rgba(212, 184, 122, 0.30);
 }}
 .nyxus-list {{
     background: rgba(8, 6, 14, 0.55);
@@ -470,8 +645,9 @@ window.nyxus-launcher {{
     padding: 0;
 }}
 .nyxus-list row:selected {{
-    background: rgba(8, 12, 20, 0.22);
-    box-shadow: inset 0 0 0 1px rgba(8, 12, 20, 0.45);
+    background: rgba(212, 184, 122, 0.10);
+    box-shadow: inset 0 0 0 1px rgba(212, 184, 122, 0.45);
+    color: #f0e3c1;
 }}
 .nyxus-list row:hover {{
     background: rgba(8, 12, 20, 0.12);
