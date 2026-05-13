@@ -155,6 +155,14 @@ fi
 if [[ -d "${NS}/eww/scripts" ]]; then
   install -m 0755 "${NS}"/eww/scripts/* "${SKEL}/.config/eww/scripts/" 2>/dev/null || true
 fi
+# _nyxus_accent.scss — MUST exist because eww.scss does @import "_nyxus_accent".
+# If missing the SCSS compiler aborts and no bars render on first boot.
+if [[ -f "${NS}/eww/_nyxus_accent.scss" ]]; then
+  install -m 0644 "${NS}/eww/_nyxus_accent.scss" "${SKEL}/.config/eww/_nyxus_accent.scss"
+else
+  printf '/* NYXUS accent override — empty on first boot; Settings writes colour here. */\n' \
+    > "${SKEL}/.config/eww/_nyxus_accent.scss"
+fi
 
 ok "configs: hypr (+conf.d) / eww / dunst / rofi / wlogout / alacritty"
 
@@ -200,7 +208,15 @@ ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyx
 # rev r6-eww: waybar-stats / waybar-ticker removed. nyxus-eww-launch added.
 install -m 0755 "${NS}/wallpaper-rotate.sh"  "${LBIN}/wallpaper-rotate"
 install -m 0755 "${NS}/nyxus-eww-launch"     "${LBIN}/nyxus-eww-launch"
-ok "helpers: wallpaper-rotate / nyxus-eww-launch"
+# Screen recorder (uses wf-recorder + slurp; bind: Super+Shift+R)
+install -m 0755 "${NS}/nyxus-record"         "${LBIN}/nyxus-record"
+# Sound dispatcher — freedesktop + NYXUS pack events
+install -m 0755 "${NS}/nyxus-sound.sh"       "${LBIN}/nyxus-sound"
+# Hyprland session launcher (used by SDDM wayland session entry)
+[[ -f "${NS}/nyxus-hypr-launch" ]] && install -m 0755 "${NS}/nyxus-hypr-launch" "${LBIN}/nyxus-hypr-launch"
+# Wallpaper helper — IPC-based hot-swap, called by Super+Alt+W bind
+[[ -f "${NS}/nyxus-set-wallpaper.sh" ]] && install -m 0755 "${NS}/nyxus-set-wallpaper.sh" "${LBIN}/nyxus-set-wallpaper.sh"
+ok "helpers: wallpaper-rotate / nyxus-eww-launch / nyxus-record / nyxus-sound / nyxus-hypr-launch"
 
 # ── First-boot bootstrap shims → /usr/local/bin/ ────────────────────────
 # nyxus-bootstrap is the first-run installer wrapper that Hyprland's
@@ -211,6 +227,107 @@ ok "helpers: wallpaper-rotate / nyxus-eww-launch"
 install -m 0755 "${NS}/nyxus-bootstrap"      "${LBIN}/nyxus-bootstrap"
 install -m 0755 "${NS}/nyxus-wait-bootstrap" "${LBIN}/nyxus-wait-bootstrap"
 ok "bootstrap shims: nyxus-bootstrap / nyxus-wait-bootstrap"
+
+# ── Security Center privileged helper → /usr/local/libexec/ ────────────
+# Invoked via pkexec from nyxus_security.py. Needs to be root-owned and
+# executable, but NOT in the PATH so users can't call it directly.
+LIBEXEC="${PROFILE_DIR}/airootfs/usr/local/libexec"
+mkdir -p "${LIBEXEC}"
+if [[ -f "${NS}/nyxus-security-helper" ]]; then
+  install -m 0755 "${NS}/nyxus-security-helper" "${LIBEXEC}/nyxus-security-helper"
+  ok "security helper: /usr/local/libexec/nyxus-security-helper"
+fi
+
+# ── Security daemon Python script → /opt/nyxus/ ────────────────────────
+# nyxus-security-daemon.py uses a hyphen in the filename (not underscore),
+# so it is NOT covered by the nyxus_*.py glob below. Stage it explicitly.
+# The service unit references it as %h/.nyxus/nyxus-security-daemon.py
+# (and ~/.nyxus → /opt/nyxus via the skel symlink).
+if [[ -f "${NS}/nyxus-security-daemon.py" ]]; then
+  install -m 0644 "${NS}/nyxus-security-daemon.py" "${OPT_NYXUS}/nyxus-security-daemon.py"
+  ok "security daemon: /opt/nyxus/nyxus-security-daemon.py"
+fi
+
+# ── Polkit policy for Security Center ───────────────────────────────────
+POLKIT_ACTIONS="${PROFILE_DIR}/airootfs/usr/share/polkit-1/actions"
+mkdir -p "${POLKIT_ACTIONS}"
+if [[ -f "${NS}/com.nyxus.security.policy" ]]; then
+  install -m 0644 "${NS}/com.nyxus.security.policy" "${POLKIT_ACTIONS}/com.nyxus.security.policy"
+  ok "polkit policy: /usr/share/polkit-1/actions/com.nyxus.security.policy"
+fi
+
+# ── GTK theme settings (wiped above with .config; must be re-staged) ────
+# gtk-3.0/settings.ini — forces adw-gtk3-dark theme so GTK3 dialogs
+# (polkit, NM) match GTK4 Adwaita dark. Prevents the white-popup flash.
+# gtk-4.0/settings.ini — same for GTK4 apps opened from a GTK3 host.
+mkdir -p "${SKEL}/.config/gtk-3.0" "${SKEL}/.config/gtk-4.0"
+cat > "${SKEL}/.config/gtk-3.0/settings.ini" <<'GTK3INI'
+[Settings]
+gtk-application-prefer-dark-theme=1
+gtk-theme-name=adw-gtk3-dark
+gtk-icon-theme-name=Papirus-Dark
+gtk-cursor-theme-name=Adwaita
+gtk-font-name=Inter 10
+gtk-decoration-layout=:close
+gtk-enable-animations=1
+gtk-primary-button-warps-slider=1
+GTK3INI
+cat > "${SKEL}/.config/gtk-4.0/settings.ini" <<'GTK4INI'
+[Settings]
+gtk-application-prefer-dark-theme=1
+gtk-theme-name=adw-gtk3-dark
+gtk-icon-theme-name=Papirus-Dark
+gtk-cursor-theme-name=Adwaita
+gtk-font-name=Inter 10
+gtk-decoration-layout=:close
+gtk-enable-animations=1
+GTK4INI
+ok "GTK settings: gtk-3.0 + gtk-4.0 dark theme forced (prevents white flash)"
+
+# ── Systemd user service units → skel/.config/systemd/user/ ────────────
+# These are wiped with .config above and must be re-staged. Without them
+# the EWW daemon and security daemon won't start automatically on login.
+mkdir -p "${SKEL}/.config/systemd/user"
+install -m 0644 "${NS}/nyxus-eww.service" \
+  "${SKEL}/.config/systemd/user/nyxus-eww.service"
+install -m 0644 "${NS}/nyxus-security-daemon.service" \
+  "${SKEL}/.config/systemd/user/nyxus-security-daemon.service"
+# Crash watcher service — ExecStart points to /opt/nyxus/nyxus_crashd.py
+cat > "${SKEL}/.config/systemd/user/nyxus-crashd.service" <<'CRASHDSVC'
+[Unit]
+Description=NYXUS crash watcher (follows systemd-coredump events)
+After=graphical-session.target
+PartOf=graphical-session.target
+ConditionPathExists=!%h/.config/nyxus/crashd.disabled
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.nyxus/nyxus_crashd.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=null
+StandardError=journal
+
+[Install]
+WantedBy=graphical-session.target
+CRASHDSVC
+ok "systemd user units: nyxus-eww / nyxus-security-daemon / nyxus-crashd"
+
+# ── EWW accent stub → skel/.config/eww/ ─────────────────────────────────
+# eww.scss has @import "_nyxus_accent" — the file MUST exist or the EWW
+# SCSS compiler aborts on first launch and no bars render. On first boot
+# it is empty; Settings → Appearance writes a colour override when the
+# user picks a custom accent.
+if [[ -f "${NS}/eww/_nyxus_accent.scss" ]]; then
+  install -m 0644 "${NS}/eww/_nyxus_accent.scss" "${SKEL}/.config/eww/_nyxus_accent.scss"
+else
+  # Fallback: create in-place if the file is missing from nyxus-scripts.
+  cat > "${SKEL}/.config/eww/_nyxus_accent.scss" <<'ACCENTSCSS'
+/* NYXUS accent override — written by Settings → Appearance.
+ * Empty on first boot; default violet (#a06bff) from eww.scss applies. */
+ACCENTSCSS
+fi
+ok "EWW accent stub: ~/.config/eww/_nyxus_accent.scss created"
 
 # ── Offline cache → /opt/nyxus-cache/ ───────────────────────────────────
 # nyxus-bootstrap falls back to this path when the network is unreachable
@@ -266,22 +383,45 @@ ok "SDDM theme staged: /usr/share/sddm/themes/nyxus/ + /etc/sddm.conf.d/nyxus.co
 #  launchers that exec a non-existent file and confuse the menu.
 #  weather/quicksettings/powermenu live in EWW, not as standalone .py
 #  apps, so they are intentionally NOT here.
+#
+#  Icon hints (freedesktop): use descriptive icon names so rofi/GNOME
+#  shell can show recognisable icons even without custom icon assets.
 APPS_LIST=(
-  "notepad:Notepad:NYXUS markdown notepad"
-  "stickies:Stickies:Sticky notes pinned to your desktop"
-  "notes:Notes:Quick scratchpad notes"
-  "sysmon_gtk:System Monitor:Real-time system metrics"
-  "settings:Settings:System control center"
-  "control:Control:Quick toggles & launchers"
-  "terminal:Terminal:NYXUS-themed terminal"
-  "launcher:Launcher:Application launcher"
-  "screenshot:Screenshot:Region & full-screen capture"
-  "store:App Store:Browse, install, and update software"
-  "powermenu:Power:Lock / suspend / logout / restart / shutdown"
-  "doctor:Doctor:NYXUS health audit"
+  # ── Core daily-driver apps ────────────────────────────────────────────
+  "notepad:Notepad:NYXUS markdown notepad:accessories-text-editor"
+  "stickies:Stickies:Sticky notes pinned to your desktop:sticky-notes"
+  "notes:Notes:Quick scratchpad notes:accessories-text-editor"
+  "files:Files:Browse and manage files:system-file-manager"
+  "terminal:Terminal:NYXUS-themed terminal:utilities-terminal"
+  # ── System tools ──────────────────────────────────────────────────────
+  "sysmon_gtk:System Monitor:Real-time system metrics:system-run"
+  "settings:Settings:NYXUS system control center:preferences-system"
+  "control:Control Center:Quick toggles and launchers:preferences-desktop"
+  "updater:System Updater:Update system packages:system-software-update"
+  "store:App Store:Browse, install, and update software:system-software-install"
+  "doctor:System Doctor:NYXUS health audit:help-browser"
+  "backup:Backup:System backup and restore snapshots:backup-utility"
+  "account:Account:User account management:system-users"
+  # ── Utilities ─────────────────────────────────────────────────────────
+  "launcher:Spotlight:Application and command launcher:system-search"
+  "screenshot:Screenshot:Region and full-screen capture:applets-screenshooter"
+  "clipboard:Clipboard:Clipboard history manager:edit-paste"
+  "drop:Drop:Cross-device file transfer:network-wireless"
+  "screensaver:Screensaver:NYXUS idle screensaver:preferences-desktop-screensaver"
+  "palette:Palette:Colour picker and palette manager:preferences-color"
+  # ── Security ──────────────────────────────────────────────────────────
+  "security:Security Center:Firewall, antivirus, privacy and panic mode:security-high"
+  # ── Diagnostics ───────────────────────────────────────────────────────
+  "error:Crash Reporter:Submit diagnostic crash reports:apport"
+  # ── Misc / internal (desktop entry makes them discoverable in menus) ──
+  "powermenu:Power:Lock / suspend / logout / restart / shutdown:system-shutdown"
+  "chrome:NYXUS Chrome:System chrome and decoration manager:preferences-desktop-theme"
+  "demon_wake:Demon Wake:Neural attention visualizer:starred"
 )
 for entry in "${APPS_LIST[@]}"; do
-  IFS=':' read -r mod name comment <<< "${entry}"
+  IFS=':' read -r mod name comment icon _rest <<< "${entry}"
+  # Use a sensible icon fallback if not specified
+  icon="${icon:-preferences-system}"
   # Friendly bin name: nyxus_sysmon_gtk → nyxus-sysmon (special-case),
   # everything else → nyxus-<mod with underscores → dashes>.
   if [[ "${mod}" == "sysmon_gtk" ]]; then
@@ -301,7 +441,7 @@ Type=Application
 Name=NYXUS ${name}
 Comment=${comment}
 Exec=/usr/local/bin/${bin_name}
-Icon=preferences-system
+Icon=${icon}
 Categories=System;Utility;
 Terminal=false
 StartupNotify=true

@@ -36,7 +36,13 @@ file_permissions=(
   ["/usr/local/bin/nyxus-intel"]="0:0:755"
   ["/usr/local/bin/nyxus-bootstrap"]="0:0:755"
   ["/usr/local/bin/nyxus-wait-bootstrap"]="0:0:755"
+  ["/usr/local/bin/nyxus-eww-launch"]="0:0:755"
+  ["/usr/local/bin/nyxus-hypr-launch"]="0:0:755"
+  ["/usr/local/bin/nyxus-sound"]="0:0:755"
+  ["/usr/local/bin/nyxus-record"]="0:0:755"
   ["/usr/local/bin/nyxus-install"]="0:0:755"
   ["/usr/local/bin/nyxus-postinstall"]="0:0:755"
+  ["/usr/local/libexec/nyxus-security-helper"]="0:0:755"
+  ["/usr/local/libexec/nyxus-welcome-helper"]="0:0:755"
   ["/etc/nyxus"]="0:0:755"
 )

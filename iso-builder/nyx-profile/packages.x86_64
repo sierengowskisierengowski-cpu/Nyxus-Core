@@ -95,6 +95,8 @@ wl-clipboard
 grim
 slurp
 cliphist
+# wf-recorder used by nyxus-record screen capture script (Super+Shift+R).
+wf-recorder
 brightnessctl
 playerctl
 pamixer
@@ -122,10 +124,19 @@ pipewire-pulse
 pipewire-jack
 wireplumber
 alsa-utils
+# libcanberra provides canberra-gtk-play binary used by nyxus-sound.sh
+# as the freedesktop fallback event-sound player.
+libcanberra
 
 # ── GTK4 + Python (for NYXUS apps) ────────────────────────────────
 gtk4
 libadwaita
+# adw-gtk3 provides the adw-gtk3-dark GTK3 theme referenced in
+# env = GTK_THEME,adw-gtk3-dark and gtk-3.0/settings.ini.
+# Without it every GTK3 dialog renders Adwaita light (white flash).
+adw-gtk3
+# papirus-icon-theme provides Papirus-Dark used in gtk settings.ini.
+papirus-icon-theme
 vte4
 vte-common
 python
