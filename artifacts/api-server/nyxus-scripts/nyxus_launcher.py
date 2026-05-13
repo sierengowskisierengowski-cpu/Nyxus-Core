@@ -296,6 +296,27 @@ def system_actions() -> list[dict]:
                   "|| xdg-open about:settings"],
          "exec": "nyxus_settings.py", "comment": "control panel",
          "icon": "preferences-system", "term": False},
+        {"kind": "sys", "name": "Open Security Center",
+         "argv": ["sh", "-c",
+                  "command -v nyxus-security >/dev/null && nyxus-security "
+                  "|| python3 ~/.nyxus/nyxus_security.py"],
+         "exec": "nyxus-security",
+         "comment": "firewall, virus, encryption, panic",
+         "icon": "security-high", "term": False},
+        {"kind": "sys", "name": "Run quick virus scan",
+         "argv": ["sh", "-c",
+                  "command -v nyxus-security >/dev/null && nyxus-security --quick-scan "
+                  "|| python3 ~/.nyxus/nyxus_security.py --quick-scan"],
+         "exec": "nyxus-security --quick-scan",
+         "comment": "ClamAV scan of $HOME and /tmp",
+         "icon": "security-medium", "term": False},
+        {"kind": "sys", "name": "Engage PANIC lockdown",
+         "argv": ["sh", "-c",
+                  "command -v nyxus-security >/dev/null && nyxus-security --panic "
+                  "|| python3 ~/.nyxus/nyxus_security.py --panic"],
+         "exec": "nyxus-security --panic",
+         "comment": "lock + clear clipboard + dismount + flush DNS",
+         "icon": "security-low", "term": False},
     ]
 
 

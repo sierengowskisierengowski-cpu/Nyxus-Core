@@ -13,10 +13,19 @@ const app: Express = express();
 function redactUrl(url: string | undefined): string | undefined {
   if (!url) return url;
   const noQuery = url.split("?")[0];
-  return noQuery.replace(
-    /(\/api\/nyxus-account\/profile\/)[^/?]+/i,
-    "$1[redacted]",
-  );
+  return noQuery
+    .replace(
+      /(\/api\/nyxus-account\/profile\/)[^/?]+/i,
+      "$1[redacted]",
+    )
+    // Hash reputation lookups echo a SHA-256 in the path. The hash
+    // itself is not secret, but logging the full 64-char hex string
+    // for every lookup leaks the user's binary fingerprint and
+    // bloats the access log. Truncate to first 8 hex chars.
+    .replace(
+      /(\/api\/security\/hash-reputation\/)([a-f0-9]{8})[a-f0-9]+/i,
+      "$1$2…",
+    );
 }
 
 app.use(
