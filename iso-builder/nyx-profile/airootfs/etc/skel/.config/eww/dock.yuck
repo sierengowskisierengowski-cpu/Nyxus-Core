@@ -1,0 +1,177 @@
+; ╔══════════════════════════════════════════════════════════════════════╗
+; ║  NYXUS · Dock                                                        ║
+; ║  Lives at: ~/.config/eww/dock.yuck (included from eww.yuck)          ║
+; ║                                                                      ║
+; ║  State source: nyxus-dockd → unix socket → `dock-state.sh` (deflisten)║
+; ║  Renders: pinned + recents + running + stacks + trash with hover-    ║
+; ║  cascade magnification, indicators, badges, urgent bounce, drop       ║
+; ║  zones and right-click menu.                                          ║
+; ╚══════════════════════════════════════════════════════════════════════╝
+
+(deflisten DOCK_STATE
+  :initial '{"general":{"size":56,"position":"bottom","magnification_enabled":true,"magnification_max":1.65,"magnification_falloff":2,"auto_hide":false,"show_running_indicator":true,"show_badges":true,"section_dividers":true},"entries":[],"stacks":[],"trash":null}'
+  "bash ~/.config/eww/scripts/dock-state.sh")
+
+; Hovered icon index, -1 when nothing is hovered.
+(defvar DOCK_HOVER -1)
+
+; ── primitive: a single dock icon ─────────────────────────────────────
+(defwidget dock-icon [entry index size hover-index mag-max falloff show-ind show-badge]
+  (eventbox
+    :class "dock-eventbox ${entry.urgent == true ? "urgent" : ""} ${entry.focused == true ? "focused" : ""} ${entry.other_workspace == true ? "other-ws" : ""}"
+    :tooltip "${entry.label}${entry.badge > 0 ? "  •  ${entry.badge} new" : ""}${entry.running == true ? "  ◦ running" : ""}"
+    :cursor "pointer"
+    :onhover  "eww update DOCK_HOVER=${index}"
+    :onhoverlost "eww update DOCK_HOVER=-1"
+    :onclick     "bash ~/.config/eww/scripts/dock-action.sh left  '${entry.id}' '${arraylength(entry.addresses) > 0 ? entry.addresses[0] : ""}'"
+    :onmiddleclick "bash ~/.config/eww/scripts/dock-action.sh middle '${entry.id}'"
+    :onrightclick  "bash ~/.config/eww/scripts/dock-action.sh right '${entry.id}' '${arraylength(entry.addresses) > 0 ? entry.addresses[0] : ""}'"
+    (overlay
+      (box :class "dock-tile" :orientation "v" :space-evenly false :halign "center" :valign "end"
+        ; magnification: scale = 1 + (mag-max - 1) * cos²(pi/2 * d/falloff)
+        ; computed inline because eww has no math.cos; we precompute
+        ; three discrete steps (0,1,2) which is what looks right anyway.
+        (box :class "dock-icon-box"
+             :style "min-width:${
+               hover-index == index ? round(size * mag-max,0) :
+               (hover-index == index - 1 || hover-index == index + 1) && falloff >= 1 ? round(size * (1 + (mag-max - 1) * 0.55),0) :
+               (hover-index == index - 2 || hover-index == index + 2) && falloff >= 2 ? round(size * (1 + (mag-max - 1) * 0.22),0) :
+               size
+             }px;
+             min-height:${
+               hover-index == index ? round(size * mag-max,0) :
+               (hover-index == index - 1 || hover-index == index + 1) && falloff >= 1 ? round(size * (1 + (mag-max - 1) * 0.55),0) :
+               (hover-index == index - 2 || hover-index == index + 2) && falloff >= 2 ? round(size * (1 + (mag-max - 1) * 0.22),0) :
+               size
+             }px;"
+          (overlay
+            (image :path "${entry.icon}"
+                   :icon-size "${
+                     hover-index == index ? round(size * mag-max * 0.78,0) :
+                     (hover-index == index - 1 || hover-index == index + 1) && falloff >= 1 ? round(size * (1 + (mag-max - 1) * 0.55) * 0.78,0) :
+                     (hover-index == index - 2 || hover-index == index + 2) && falloff >= 2 ? round(size * (1 + (mag-max - 1) * 0.22) * 0.78,0) :
+                     round(size * 0.78,0)
+                   }"
+                   :image-width "${
+                     hover-index == index ? round(size * mag-max * 0.78,0) :
+                     (hover-index == index - 1 || hover-index == index + 1) && falloff >= 1 ? round(size * (1 + (mag-max - 1) * 0.55) * 0.78,0) :
+                     (hover-index == index - 2 || hover-index == index + 2) && falloff >= 2 ? round(size * (1 + (mag-max - 1) * 0.22) * 0.78,0) :
+                     round(size * 0.78,0)
+                   }")
+            (label :class "dock-live-overlay" :text "${entry.live_overlay ?: ""}" :visible {entry.live_overlay != null && entry.live_overlay != ""})
+            (label :class "dock-badge" :text "${entry.badge > 99 ? "99+" : entry.badge}" :visible {show-badge == true && entry.badge > 0} :halign "end" :valign "start"))))
+      (box :class "dock-indicator ${entry.focused == true ? "focused" : ""} ${entry.other_workspace == true ? "other-ws" : ""}"
+           :visible {show-ind == true && entry.running == true}
+           :halign "center" :valign "end"))))
+
+; ── divider between sections ──────────────────────────────────────────
+(defwidget dock-divider []
+  (box :class "dock-divider" :vexpand false :hexpand false))
+
+; ── stack (folder fan-out) ────────────────────────────────────────────
+(defwidget dock-stack [stack index size hover-index mag-max]
+  (eventbox
+    :class "dock-eventbox stack"
+    :cursor "pointer"
+    :tooltip "${stack.label} · ${stack.count} items"
+    :onhover  "eww update DOCK_HOVER=${index}"
+    :onhoverlost "eww update DOCK_HOVER=-1"
+    :onclick "bash ~/.config/eww/scripts/dock-stack.sh '${stack.id}'"
+    (box :class "dock-tile stack"
+         :style "min-width:${hover-index == index ? round(size * mag-max,0) : size}px; min-height:${hover-index == index ? round(size * mag-max,0) : size}px;"
+      (overlay
+        (image :path "${stack.icon}"
+               :icon-size "${hover-index == index ? round(size * mag-max * 0.78,0) : round(size * 0.78,0)}"
+               :image-width "${hover-index == index ? round(size * mag-max * 0.78,0) : round(size * 0.78,0)}")
+        (label :class "dock-badge stack" :text "${stack.count > 99 ? "99+" : stack.count}" :visible {stack.count > 0} :halign "end" :valign "start")))))
+
+; ── trash ─────────────────────────────────────────────────────────────
+(defwidget dock-trash [trash index size hover-index mag-max]
+  (eventbox
+    :class "dock-eventbox trash"
+    :cursor "pointer"
+    :tooltip "${trash.label}"
+    :onhover  "eww update DOCK_HOVER=${index}"
+    :onhoverlost "eww update DOCK_HOVER=-1"
+    :onclick      "bash ~/.config/eww/scripts/dock-action.sh trash open"
+    :onrightclick "bash ~/.config/eww/scripts/dock-action.sh trash empty"
+    (box :class "dock-tile trash"
+         :style "min-width:${hover-index == index ? round(size * mag-max,0) : size}px; min-height:${hover-index == index ? round(size * mag-max,0) : size}px;"
+      (overlay
+        (image :path "${trash.icon}"
+               :icon-size "${hover-index == index ? round(size * mag-max * 0.78,0) : round(size * 0.78,0)}"
+               :image-width "${hover-index == index ? round(size * mag-max * 0.78,0) : round(size * 0.78,0)}")
+        (label :class "dock-badge trash" :text "${trash.count > 99 ? "99+" : trash.count}" :visible {trash.count > 0} :halign "end" :valign "start")))))
+
+; ── main row ──────────────────────────────────────────────────────────
+(defwidget dock-row []
+  (box :class "dock-row" :orientation "h" :space-evenly false :spacing 6 :halign "center" :valign "center"
+    ; pinned section
+    (for entry in {DOCK_STATE.entries}
+      (box :visible {entry.section == "pinned"}
+        (dock-icon :entry entry
+                   :index {arrayindex(DOCK_STATE.entries, entry)}
+                   :size {DOCK_STATE.general.size ?: 56}
+                   :hover-index DOCK_HOVER
+                   :mag-max {DOCK_STATE.general.magnification_enabled == true ? DOCK_STATE.general.magnification_max ?: 1.0 : 1.0}
+                   :falloff {DOCK_STATE.general.magnification_falloff ?: 2}
+                   :show-ind {DOCK_STATE.general.show_running_indicator ?: true}
+                   :show-badge {DOCK_STATE.general.show_badges ?: true})))
+
+    ; divider before recents/running
+    (box :visible {DOCK_STATE.general.section_dividers == true && (arraylength(DOCK_STATE.entries) > 0 || arraylength(DOCK_STATE.stacks) > 0)}
+      (dock-divider))
+
+    ; recents + running (non-pinned entries)
+    (for entry in {DOCK_STATE.entries}
+      (box :visible {entry.section != "pinned"}
+        (dock-icon :entry entry
+                   :index {arrayindex(DOCK_STATE.entries, entry)}
+                   :size {DOCK_STATE.general.size ?: 56}
+                   :hover-index DOCK_HOVER
+                   :mag-max {DOCK_STATE.general.magnification_enabled == true ? DOCK_STATE.general.magnification_max ?: 1.0 : 1.0}
+                   :falloff {DOCK_STATE.general.magnification_falloff ?: 2}
+                   :show-ind {DOCK_STATE.general.show_running_indicator ?: true}
+                   :show-badge {DOCK_STATE.general.show_badges ?: true})))
+
+    ; stacks
+    (box :visible {arraylength(DOCK_STATE.stacks) > 0 && DOCK_STATE.general.section_dividers == true}
+      (dock-divider))
+    (for stack in {DOCK_STATE.stacks}
+      (dock-stack :stack stack
+                  :index {1000 + arrayindex(DOCK_STATE.stacks, stack)}
+                  :size {DOCK_STATE.general.size ?: 56}
+                  :hover-index DOCK_HOVER
+                  :mag-max {DOCK_STATE.general.magnification_enabled == true ? DOCK_STATE.general.magnification_max ?: 1.0 : 1.0}))
+
+    ; trash
+    (box :visible {DOCK_STATE.trash != null && DOCK_STATE.general.section_dividers == true}
+      (dock-divider))
+    (box :visible {DOCK_STATE.trash != null}
+      (dock-trash :trash {DOCK_STATE.trash}
+                  :index 9999
+                  :size {DOCK_STATE.general.size ?: 56}
+                  :hover-index DOCK_HOVER
+                  :mag-max {DOCK_STATE.general.magnification_enabled == true ? DOCK_STATE.general.magnification_max ?: 1.0 : 1.0}))))
+
+; ── window definition ─────────────────────────────────────────────────
+(defwindow dock
+  :monitor 0
+  :stacking "overlay"
+  :namespace "nyxus-dock"
+  :exclusive false
+  :focusable false
+  :geometry (geometry :x "0" :y "10" :width "auto" :height "auto" :anchor "bottom center")
+  (box :class "dock-frame" :halign "center" :valign "end"
+    (dock-row)))
+
+; Hidden auto-hide reveal strip (1px tall trigger at the very bottom).
+(defwindow dock-reveal
+  :monitor 0
+  :stacking "overlay"
+  :namespace "nyxus-dock-reveal"
+  :exclusive false
+  :focusable false
+  :geometry (geometry :x "0" :y "0" :width "100%" :height "${DOCK_STATE.general.auto_hide_reveal_px ?: 4}px" :anchor "bottom center")
+  (eventbox :onhover "eww open dock 2>/dev/null || true"
+            :class "dock-reveal-strip"))

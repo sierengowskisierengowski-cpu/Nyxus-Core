@@ -1,0 +1,21 @@
+[Unit]
+Description=NYXUS dock daemon (live state for the dock UI)
+PartOf=graphical-session.target
+After=graphical-session.target hyprland-session.target
+Documentation=man:nyxus-dock(1)
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/nyxus/nyxus_dockd.py --log-level INFO
+Restart=on-failure
+RestartSec=2s
+TimeoutStopSec=5s
+# State sockets live in $XDG_RUNTIME_DIR/nyxus-dock — created by daemon.
+# Slice keeps it inside the user session; killed cleanly on logout.
+Slice=session.slice
+StandardOutput=journal
+StandardError=journal
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=graphical-session.target

@@ -951,3 +951,126 @@
   color: #ff8b9e;
 }
 .notif-dismiss:hover { background: rgba(255, 77, 107, 0.28); color: #ffffff; }
+
+/* ──────────────────────────────────────────────────────────────────────
+ * NYXUS · Dock styles
+ * ────────────────────────────────────────────────────────────────────── */
+
+.dock-frame {
+  background: rgba(5, 6, 10, 0.78);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 18px;
+  padding: 6px 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45),
+              inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  margin: 0 0 8px 0;
+}
+
+.dock-row { padding: 0; }
+
+.dock-eventbox {
+  background: transparent;
+  border-radius: 12px;
+  padding: 2px;
+  transition: background-color 140ms ease, transform 140ms ease;
+}
+.dock-eventbox:hover {
+  background: rgba(160, 107, 255, 0.10);
+}
+.dock-eventbox.urgent {
+  animation: dock-bounce 1.2s ease-in-out infinite;
+}
+.dock-eventbox.focused {
+  background: rgba(58, 216, 255, 0.10);
+}
+
+.dock-tile {
+  border-radius: 12px;
+  padding: 4px;
+  transition: min-width 180ms cubic-bezier(.2,.8,.2,1),
+              min-height 180ms cubic-bezier(.2,.8,.2,1);
+}
+
+.dock-icon-box image {
+  -gtk-icon-effect: none;
+  transition: -gtk-icon-effect 140ms ease;
+}
+.dock-eventbox:hover .dock-icon-box image {
+  -gtk-icon-effect: highlight;
+}
+
+/* Live overlay (e.g. day-of-month on the Calendar icon) */
+.dock-live-overlay {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.65);
+  margin-top: -2px;
+}
+
+/* Notification badge */
+.dock-badge {
+  background: linear-gradient(135deg, #ff4d6b 0%, #ff7a8e 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 10px;
+  min-width: 16px;
+  min-height: 16px;
+  padding: 0 4px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(5, 6, 10, 0.95);
+  margin: -4px -4px 0 0;
+  box-shadow: 0 2px 6px rgba(255, 77, 107, 0.45);
+}
+.dock-badge.stack {
+  background: linear-gradient(135deg, #a06bff 0%, #8c4dff 100%);
+  box-shadow: 0 2px 6px rgba(160, 107, 255, 0.40);
+}
+.dock-badge.trash {
+  background: linear-gradient(135deg, #ffae3a 0%, #ff8a3a 100%);
+  box-shadow: 0 2px 6px rgba(255, 170, 58, 0.40);
+}
+
+/* Running indicator dot */
+.dock-indicator {
+  min-width: 5px;
+  min-height: 5px;
+  border-radius: 3px;
+  background: rgba(160, 107, 255, 0.72);
+  margin-top: 2px;
+  transition: background 140ms ease, min-width 140ms ease;
+}
+.dock-indicator.focused {
+  background: #3ad8ff;
+  min-width: 14px;
+  box-shadow: 0 0 8px rgba(58, 216, 255, 0.72);
+}
+.dock-indicator.other-ws {
+  background: rgba(160, 107, 255, 0.32);
+}
+
+/* Section divider */
+.dock-divider {
+  min-width: 1px;
+  min-height: 36px;
+  background: linear-gradient(to bottom,
+              rgba(160, 107, 255, 0) 0%,
+              rgba(160, 107, 255, 0.32) 50%,
+              rgba(160, 107, 255, 0) 100%);
+  margin: 0 6px;
+}
+
+/* "Other workspace" subtle dim */
+.dock-eventbox.other-ws .dock-icon-box image {
+  opacity: 0.62;
+}
+
+/* Auto-hide reveal strip */
+.dock-reveal-strip {
+  background: transparent;
+}
+
+@keyframes dock-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}

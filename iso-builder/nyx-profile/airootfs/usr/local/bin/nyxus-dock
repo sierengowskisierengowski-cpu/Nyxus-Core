@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+"""
+nyxus-dock — CLI helper for the NYXUS dock daemon.
+
+Usage:
+  nyxus-dock pin <id> [--exec CMD] [--icon NAME] [--label LABEL]
+  nyxus-dock unpin <id>
+  nyxus-dock launch <id>
+  nyxus-dock quit <id>
+  nyxus-dock focus <addr>
+  nyxus-dock reorder <id1> <id2> ...
+  nyxus-dock state
+  nyxus-dock reload
+  nyxus-dock ping
+  nyxus-dock watch          # stream state JSON whenever it changes
+
+Talks to the daemon over $XDG_RUNTIME_DIR/nyxus-dock/cmd.sock.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import socket
+import sys
+import time
+from pathlib import Path
+
+SOCK = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")) \
+       / "nyxus-dock" / "cmd.sock"
+
+
+def call(op: str, **kwargs: object) -> dict:
+    payload = {"op": op, **kwargs}
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+            s.settimeout(3.0)
+            s.connect(str(SOCK))
+            s.sendall(json.dumps(payload).encode())
+            data = b""
+            while True:
+                chunk = s.recv(16384)
+                if not chunk:
+                    break
+                data += chunk
+        try:
+            return json.loads(data.decode().strip() or "{}")
+        except json.JSONDecodeError:
+            return {"ok": False, "error": "bad-response", "raw": data[:200].decode(errors="replace")}
+    except (FileNotFoundError, ConnectionRefusedError) as e:
+        return {"ok": False, "error": f"daemon-not-running:{e.__class__.__name__}"}
+    except OSError as e:
+        return {"ok": False, "error": str(e)}
+
+
+def cmd_pin(args: argparse.Namespace) -> int:
+    r = call("pin", id=args.id, exec=args.exec, icon=args.icon, label=args.label)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_unpin(args: argparse.Namespace) -> int:
+    r = call("unpin", id=args.id)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_launch(args: argparse.Namespace) -> int:
+    r = call("launch", id=args.id)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_quit(args: argparse.Namespace) -> int:
+    r = call("quit-app", id=args.id)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_focus(args: argparse.Namespace) -> int:
+    r = call("focus", address=args.addr)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_reorder(args: argparse.Namespace) -> int:
+    r = call("reorder", ids=args.ids)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_state(_: argparse.Namespace) -> int:
+    r = call("state")
+    print(json.dumps(r, indent=2))
+    return 0
+
+
+def cmd_reload(_: argparse.Namespace) -> int:
+    r = call("reload")
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_ping(_: argparse.Namespace) -> int:
+    r = call("ping")
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_watch(_: argparse.Namespace) -> int:
+    last = ""
+    while True:
+        r = call("state")
+        text = json.dumps(r, separators=(",", ":"))
+        if text != last:
+            print(text, flush=True)
+            last = text
+        try:
+            time.sleep(0.5)
+        except KeyboardInterrupt:
+            return 0
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(prog="nyxus-dock")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    sp = sub.add_parser("pin");    sp.add_argument("id"); sp.add_argument("--exec"); sp.add_argument("--icon"); sp.add_argument("--label"); sp.set_defaults(fn=cmd_pin)
+    sp = sub.add_parser("unpin");  sp.add_argument("id"); sp.set_defaults(fn=cmd_unpin)
+    sp = sub.add_parser("launch"); sp.add_argument("id"); sp.set_defaults(fn=cmd_launch)
+    sp = sub.add_parser("quit");   sp.add_argument("id"); sp.set_defaults(fn=cmd_quit)
+    sp = sub.add_parser("focus");  sp.add_argument("addr"); sp.set_defaults(fn=cmd_focus)
+    sp = sub.add_parser("reorder"); sp.add_argument("ids", nargs="+"); sp.set_defaults(fn=cmd_reorder)
+    sub.add_parser("state").set_defaults(fn=cmd_state)
+    sub.add_parser("reload").set_defaults(fn=cmd_reload)
+    sub.add_parser("ping").set_defaults(fn=cmd_ping)
+    sub.add_parser("watch").set_defaults(fn=cmd_watch)
+
+    args = p.parse_args()
+    return int(args.fn(args))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

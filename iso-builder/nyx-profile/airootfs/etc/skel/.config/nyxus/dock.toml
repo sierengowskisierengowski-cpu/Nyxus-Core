@@ -1,0 +1,89 @@
+# NYXUS dock config — managed by nyxus-dockd
+# Hot-reload: edits are picked up within ~2 seconds, or send SIGHUP to
+# nyxus-dockd, or run `nyxus-dock reload`.
+
+[general]
+position = "bottom"            # bottom | left | right
+size = 56                      # icon px at rest
+magnification_enabled = true
+magnification_max = 1.65       # scale of hovered icon (1.0 = off)
+magnification_falloff = 2      # neighbours that get a partial bump
+auto_hide = false
+auto_hide_reveal_px = 4
+show_recents = true
+recents_limit = 3
+show_trash = true
+show_running_indicator = true
+show_badges = true
+live_icons = true
+follow_cursor_monitor = false
+monitors = ["primary"]         # ["primary"] | ["all"] | ["DP-1","HDMI-A-1"]
+section_dividers = true
+smart_focus_indicator = true
+
+[live_icons.calendar]
+enabled = true
+icon = "io.nyxus.calendar"
+
+[live_icons.clock]
+enabled = false
+icon = "io.nyxus.clock"
+
+[live_icons.weather]
+enabled = false
+icon = "io.nyxus.weather"
+
+[[pinned]]
+id = "nyxus-launcher"
+exec = "python3 ~/.nyxus/nyxus_launcher.py"
+icon = "nyxus-launcher"
+label = "Launcher"
+
+[[pinned]]
+id = "firefox"
+exec = "firefox"
+icon = "firefox"
+label = "Firefox"
+
+[[pinned]]
+id = "nautilus"
+exec = "nautilus"
+icon = "system-file-manager"
+label = "Files"
+
+[[pinned]]
+id = "nyxus-notepad"
+exec = "python3 ~/.nyxus/nyxus_notepad.py"
+icon = "accessories-text-editor"
+label = "Notepad"
+
+[[pinned]]
+id = "nyxus-control"
+exec = "python3 ~/.nyxus/nyxus_control.py"
+icon = "preferences-system"
+label = "Settings"
+
+[[pinned]]
+id = "nyxus-store"
+exec = "python3 ~/.nyxus/nyxus_store.py"
+icon = "system-software-install"
+label = "Store"
+
+[[pinned]]
+id = "alacritty"
+exec = "alacritty"
+icon = "utilities-terminal"
+label = "Terminal"
+
+[[stacks]]
+id = "downloads"
+label = "Downloads"
+path = "~/Downloads"
+view = "fan"
+icon = "folder-download"
+
+[drop_zones.firefox]
+action = "open"
+
+[drop_zones.nyxus-notepad]
+action = "open"
