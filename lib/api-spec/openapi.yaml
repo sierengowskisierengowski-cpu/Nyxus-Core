@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: nyxus-account
+    description: NYXUS Account opt-in sync (binary tar.gz blobs; see route file)
 paths:
   /healthz:
     get:
@@ -24,6 +26,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /nyxus-account/status:
+    get:
+      operationId: nyxusAccountStatus
+      tags: [nyxus-account]
+      summary: NYXUS Account service liveness
+      description: |
+        Returns service descriptor for the NYXUS Account sync server.
+        Used by Settings → NYXUS Account to confirm the configured
+        endpoint is alive before pushing a bundle.
+      responses:
+        "200":
+          description: Service descriptor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NyxusAccountStatus"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +51,17 @@ components:
           type: string
       required:
         - status
+    NyxusAccountStatus:
+      type: object
+      properties:
+        service:
+          type: string
+        version:
+          type: integer
+        max_bundle_bytes:
+          type: integer
+      required:
+        - service
+        - version
+        - max_bundle_bytes
 

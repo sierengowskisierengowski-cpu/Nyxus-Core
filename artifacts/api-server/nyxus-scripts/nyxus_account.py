@@ -280,14 +280,60 @@ class AccountWindow(Adw.ApplicationWindow):
             return None
         return url.rstrip("/"), tok
 
+    def _profile_url(self, base: str, tok: str) -> str:
+        """Compose the server endpoint URL for this token. Server route
+        shape (NYXUS reference impl, api-server/src/routes/nyxus-account.ts):
+
+            BASE/profile/<token>
+
+        where BASE is the user-configured root (e.g.
+        `https://nyxus.example.com/api/nyxus-account`). Token in the
+        path doubles as the storage key; Bearer header authenticates.
+        """
+        return f"{base}/profile/{tok}"
+
+    def _ping_status(self, base: str) -> bool:
+        """Best-effort liveness probe against /status — non-fatal.
+        Returns True only if the endpoint responds with the expected
+        descriptor; logs and toasts on mismatch but does not abort."""
+        if not shutil.which("curl"):
+            return False
+        try:
+            r = subprocess.run(
+                ["curl", "-fsS", "--max-time", "5", f"{base}/status"],
+                capture_output=True, timeout=8)
+            if r.returncode != 0:
+                log.warning("status preflight rc=%d: %s",
+                            r.returncode,
+                            (r.stderr or b"").decode(errors="replace"))
+                return False
+            try:
+                d = json.loads((r.stdout or b"").decode())
+            except Exception:
+                return False
+            ok = d.get("service") == "nyxus-account"
+            if not ok:
+                log.warning("status preflight: unexpected body %r", d)
+            return ok
+        except Exception as e:
+            log.warning("status preflight: %s", e)
+            return False
+
     def push(self) -> None:
         creds = self._need_credentials()
         if creds is None: return
         url, tok = creds
+        # Best-effort liveness ping; warn but proceed so legacy/custom
+        # endpoints without /status still work.
+        if not self._ping_status(url):
+            self.toast.add_toast(Adw.Toast.new(
+                "Endpoint /status unreachable — pushing anyway"))
         body = build_bundle()
         log.info("push %d bytes → %s", len(body), url)
-        rc, err = _curl_put(f"{url}/v1/profile/me", tok, body)
-        msg = "Pushed." if rc == 0 else f"Push failed: {err.splitlines()[-1] if err else rc}"
+        rc, err = _curl_put(self._profile_url(url, tok), tok, body)
+        msg = ("Pushed." if rc == 0
+               else f"Push failed: "
+                    f"{err.splitlines()[-1] if err else rc}")
         self.toast.add_toast(Adw.Toast.new(msg))
 
     def pull(self) -> None:
@@ -295,10 +341,11 @@ class AccountWindow(Adw.ApplicationWindow):
         if creds is None: return
         url, tok = creds
         log.info("pull ← %s", url)
-        rc, body, err = _curl_get(f"{url}/v1/profile/me", tok)
+        rc, body, err = _curl_get(self._profile_url(url, tok), tok)
         if rc != 0 or not body:
             self.toast.add_toast(Adw.Toast.new(
-                f"Pull failed: {err.splitlines()[-1] if err else rc}"))
+                f"Pull failed: "
+                f"{err.splitlines()[-1] if err else rc}"))
             return
         try:
             n = restore_bundle(body)
@@ -334,7 +381,8 @@ def main() -> int:
         if not url or not tok:
             print("not configured", file=sys.stderr); return 2
         body = build_bundle()
-        rc, err = _curl_put(f"{url.rstrip('/')}/v1/profile/me", tok, body)
+        ep = f"{url.rstrip('/')}/profile/{tok}"
+        rc, err = _curl_put(ep, tok, body)
         if rc != 0: print(err, file=sys.stderr)
         return rc
     if "--pull" in sys.argv:
@@ -342,7 +390,8 @@ def main() -> int:
         url = cfg.get("url"); tok = cfg.get("token")
         if not url or not tok:
             print("not configured", file=sys.stderr); return 2
-        rc, body, err = _curl_get(f"{url.rstrip('/')}/v1/profile/me", tok)
+        ep = f"{url.rstrip('/')}/profile/{tok}"
+        rc, body, err = _curl_get(ep, tok)
         if rc != 0: print(err, file=sys.stderr); return rc
         n = restore_bundle(body)
         print(f"restored {n}")

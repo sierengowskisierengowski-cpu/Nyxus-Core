@@ -6,5 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from "./healthStatus";
-export * from "./nyxusAccountStatus";
+export interface NyxusAccountStatus {
+  service: string;
+  version: number;
+  max_bundle_bytes: number;
+}

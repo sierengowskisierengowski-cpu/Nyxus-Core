@@ -8,3 +8,9 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface NyxusAccountStatus {
+  service: string;
+  version: number;
+  max_bundle_bytes: number;
+}
