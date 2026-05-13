@@ -61,7 +61,6 @@ LIVE_PRESETS = {
     "Slow Zoom": ("grow", 2.2),
     "Aurora Shimmer": ("any", 1.6),
 }
-DAYPART_STARTS = (5, 12, 17, 21)  # morning, afternoon, evening, night
 TINT_OVERLAY_ALPHA = 56  # ~22% alpha tint overlay
 
 SLOTS = ("morning", "afternoon", "evening", "night")
@@ -672,11 +671,14 @@ set -euo pipefail
 CFG="{CFG_PATH}"
 if [[ ! -f "$CFG" ]]; then exit 0; fi
 readarray -t vals < <(python3 - <<'PYTHON_SCRIPT'
-import json,datetime,random,sys,pathlib
+import datetime
+import json
+import pathlib
+import random
 p=pathlib.Path("{CFG_PATH}")
 cfg=json.loads(p.read_text(encoding="utf-8"))
 hour=datetime.datetime.now().hour
-morning_start, afternoon_start, evening_start, night_start = {DAYPART_STARTS}
+morning_start, afternoon_start, evening_start, night_start = 5, 12, 17, 21
 if morning_start <= hour < afternoon_start:
     slot = "morning"
 elif afternoon_start <= hour < evening_start:
