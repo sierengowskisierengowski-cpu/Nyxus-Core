@@ -103,6 +103,19 @@ def cmd_reload(_a) -> int:
 
 
 def cmd_test(args: argparse.Namespace) -> int:
+    # The arg is now a COMBO (e.g. "SUPER+RETURN") whose action is looked up
+    # in the daemon's loaded config; arbitrary action strings are no longer
+    # accepted over IPC for safety.
+    combo = args.action
+    if combo and not any(c in combo for c in "+_") and " " in combo:
+        print("note: 'test' now takes a combo like 'SUPER+RETURN', not a shell string",
+              file=sys.stderr)
+    r = rpc("test", combo=combo)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def _cmd_test_legacy(args: argparse.Namespace) -> int:
     if not args.action:
         print("usage: nyxus-hotkey test '<action>'", file=sys.stderr); return 2
     r = rpc("test", action=args.action)
