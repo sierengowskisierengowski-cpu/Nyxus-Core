@@ -1,0 +1,100 @@
+[nyx@nyxus ~]$ ^[[200~ed -i 's/^[[:space:]]*windowrulev2[[:space:]]*=/windowrule =/g' \
+>   ~/.config/hypr/hyprland.conf ~/.config/hypr/conf.d/*.conf
+bash: $'\E[200~ed': command not found
+[nyx@nyxus ~]$ ~
+bash: /home/nyx: Is a directory
+[nyx@nyxus ~]$ ^C
+[nyx@nyxus ~]$ ^C
+[nyx@nyxus ~]$ ed -i 's/^[[:space:]]*windowrulev2[[:space:]]*=/windowrule =/g' \
+  ~/.config/hypr/hyprland.conf ~/.config/hypr/conf.d/*.conf
+bash: ed: command not found
+[nyx@nyxus ~]$ sed -i 's/^[[:space:]]*windowrulev2[[:space:]]*=/windowrule =/g' \
+  ~/.config/hypr/hyprland.conf ~/.config/hypr/conf.d/*.conf
+[nyx@nyxus ~]$ 
+[nyx@nyxus ~]$ mkdir -p ~/.nyxus && touch ~/.nyxus/.bootstrapped
+touch: cannot touch '/home/nyx/.nyxus/.bootstrapped': Permission denied
+[nyx@nyxus ~]$ pkill -x swaybg 2>/dev/null
+swaybg -i ~/.config/hypr/walls/nyxus-void-vortex.png -m fill -c "#000000" &
+pidof eww >/dev/null || eww daemon &
+sleep 1 && nyxus-eww-launch
+systemctl --user restart nyxus-dockd nyxus-hotkeyd 2>/dev/null
+hyprctl reload
+[1] 112403
+[2] 112404
+2026-05-13 21:47:07 - [swaybg-1.2.2/main.c:332] Found config * for output eDP-1 (AU Optronics 0x978F )
+
+
+
+
+[2]+  Done                       pidof eww > /dev/null || eww daemon
+ok
+[nyx@nyxus ~]$ ^C
+[nyx@nyxus ~]$ echo "── desktop entries shipped vs binary present ──"
+for d in /usr/share/applications/nyxus-*.desktop; do
+  name=$(basename "$d" .desktop)
+  exec=$(awk -F= '/^Exec=/{print $2; exit}' "$d" | awk '{print $1}')
+  if ! command -v "$exec" >/dev/null 2>&1 && [ ! -x "$exec" ]; then
+    echo "MISSING BIN  $name  ->  $exec"
+  fi
+── desktop entries shipped vs binary present ──
+> for d in /usr/share/applications/nyxus-*.desktop; do   name=$(basename "$d" .desktop);   exec=$(awk -F= '/^Exec=/{print $2; exit}' "$d" | awk '{print $1}');   if ! command -v "$exec" >/dev/null 2>&1 && [ ! -x "$exec" ]; then     echo "MISSING BIN  $name  ->  $exec";   fi done
+> 
+> 
+> ^C
+[nyx@nyxus ~]$ echo "── desktop entries shipped vs binary present ──"                                                         for d in /usr/share/applications/nyxus-*.desktop; do
+  name=$(basename "$d" .desktop)
+  exec=$(awk -F= '/^Exec=/{print $2; exit}' "$d" | awk '{print $1}')                                                            if ! command -v "$exec" >/dev/null 2>&1 && [ ! -x "$exec" ]; then                                                               echo "MISSING BIN  $name  ->  $exec"
+  fi
+── desktop entries shipped vs binary present ──
+> 
+> 
+> 
+> 
+> ^C
+[nyx@nyxus ~]$ echo "── nyxus-doctor try ──"; nyxus-doctor 2>&1 | head -20
+echo "── nyxus-control try ──"; nyxus-control 2>&1 | head -20
+── nyxus-doctor try ──
+
+  ╔════════════════════════════════════════════════════╗
+  ║         NYXUS DOCTOR — system health audit         ║
+  ╚════════════════════════════════════════════════════╝
+
+  ✓  required: hyprctl             Hyprland IPC
+  ✓  required: eww                 widget toolkit (replaces waybar as of r6)
+  ✓  required: python3             runtime
+  ✓  required: curl                fetch tool
+  ✓  optional: dunst               notifications
+  !  optional: swww                not installed — wallpaper daemon
+  !  optional: hyprpaper           not installed — wallpaper daemon (alt)
+  ✓  optional: hyprlock            screen lock
+  ✓  optional: grim                screenshot capture
+  ✓  optional: slurp               region selector
+  ✓  optional: wl-copy             wayland clipboard
+  ✓  optional: rofi                fuzzy menu (legacy)
+  ✓  optional: gsettings           GNOME schema
+  ✓  optional: pkexec              PolicyKit elevation
+  ✓  optional: timedatectl         time/NTP control
+── nyxus-control try ──
+
+(process:114594): Adwaita-WARNING **: 21:50:06.160: Using GtkSettings:gtk-application-prefer-dark-theme with libadwaita is unsupported. Please use AdwStyleManager:color-scheme instead.
+Traceback (most recent call last):
+  File "/opt/nyxus/nyxus_control.py", line 2122, in <module>
+    app = NyxusControl()
+  File "/opt/nyxus/nyxus_control.py", line 675, in __init__
+    self.hw        = load_hw_profile()
+                     ~~~~~~~~~~~~~~~^^
+  File "/opt/nyxus/nyxus_control.py", line 275, in load_hw_profile
+    return build_hw_profile()
+  File "/opt/nyxus/nyxus_control.py", line 262, in build_hw_profile
+    HW_PROFILE.write_text(json.dumps(profile,indent=2))
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 809, in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: '/home/nyx/.nyxus/hw_profile.json'
+[nyx@nyxus ~]$ ^C
+[nyx@nyxus ~]$ 
+
