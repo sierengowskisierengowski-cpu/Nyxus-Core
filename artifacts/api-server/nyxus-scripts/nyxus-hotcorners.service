@@ -1,0 +1,13 @@
+[Unit]
+Description=NYXUS Hot Corners daemon
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env python3 %h/.local/bin/nyxus_hotcorners.py
+Restart=on-failure
+RestartSec=3s
+
+[Install]
+WantedBy=graphical-session.target

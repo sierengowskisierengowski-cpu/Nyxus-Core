@@ -1,0 +1,58 @@
+# NYXUS · French translation (scaffold)
+msgid ""
+msgstr ""
+"Project-Id-Version: nyxus 1.0\n"
+"PO-Revision-Date: 2026-05-13 00:00+0000\n"
+"Language-Team: fr\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Settings"
+msgstr "Paramètres"
+
+msgid "Appearance"
+msgstr "Apparence"
+
+msgid "Display"
+msgstr "Affichage"
+
+msgid "Sound"
+msgstr "Son"
+
+msgid "Network"
+msgstr "Réseau"
+
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+msgid "Power"
+msgstr "Énergie"
+
+msgid "Privacy & Security"
+msgstr "Confidentialité et sécurité"
+
+msgid "Updates"
+msgstr "Mises à jour"
+
+msgid "About"
+msgstr "À propos"
+
+msgid "Language & Region"
+msgstr "Langue et région"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Apply"
+msgstr "Appliquer"
+
+msgid "Save"
+msgstr "Enregistrer"
+
+msgid "Restart required"
+msgstr "Redémarrage requis"
+
+msgid "Sign out to apply language change"
+msgstr "Déconnectez-vous pour appliquer le changement de langue"

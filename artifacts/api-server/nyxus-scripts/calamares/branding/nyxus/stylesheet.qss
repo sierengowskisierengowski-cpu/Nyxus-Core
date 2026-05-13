@@ -1,0 +1,110 @@
+/*
+ * Calamares stylesheet — DARK MIRROR / NYXUS gold.
+ *
+ * Mirrors the rest of the NYXUS palette: near-black canvas, gold
+ * (#d4b87a) accent, soft text. Loaded automatically by Calamares
+ * when the "nyxus" branding component is active.
+ *
+ * © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ */
+
+#mainApp {
+    background: #0b0b0f;
+    color:      #e8e8ee;
+}
+
+QLabel {
+    color: #e8e8ee;
+}
+
+QPushButton {
+    background-color: #1a1a22;
+    color:            #e8e8ee;
+    border:           1px solid #2a2a35;
+    border-radius:    8px;
+    padding:          7px 14px;
+    min-height:       28px;
+}
+
+QPushButton:hover {
+    background-color: #22222c;
+    border-color:     #d4b87a;
+}
+
+QPushButton:default,
+QPushButton[default="true"] {
+    background-color: #d4b87a;
+    color:            #0b0b0f;
+    border:           none;
+    font-weight:      bold;
+}
+
+QPushButton:default:hover {
+    background-color: #e2c98a;
+}
+
+QPushButton:disabled {
+    background-color: #14141a;
+    color:            #555560;
+    border-color:     #1f1f28;
+}
+
+QLineEdit, QComboBox, QSpinBox, QPlainTextEdit, QTextEdit {
+    background:    #14141a;
+    color:         #e8e8ee;
+    border:        1px solid #2a2a35;
+    border-radius: 6px;
+    padding:       6px 8px;
+    selection-background-color: #d4b87a;
+    selection-color:            #0b0b0f;
+}
+
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus,
+QPlainTextEdit:focus, QTextEdit:focus {
+    border-color: #d4b87a;
+}
+
+QProgressBar {
+    background:    #14141a;
+    border:        1px solid #2a2a35;
+    border-radius: 6px;
+    text-align:    center;
+    color:         #e8e8ee;
+}
+
+QProgressBar::chunk {
+    background-color: #d4b87a;
+    border-radius:    5px;
+}
+
+QListView, QTreeView, QTableView {
+    background:        #14141a;
+    color:             #e8e8ee;
+    alternate-background-color: #181820;
+    border:            1px solid #2a2a35;
+}
+
+QListView::item:selected,
+QTreeView::item:selected,
+QTableView::item:selected {
+    background: #d4b87a;
+    color:      #0b0b0f;
+}
+
+QCheckBox::indicator:checked,
+QRadioButton::indicator:checked {
+    background-color: #d4b87a;
+    border:           1px solid #d4b87a;
+}
+
+QScrollBar:vertical, QScrollBar:horizontal {
+    background:    #0b0b0f;
+    border:        none;
+}
+QScrollBar::handle {
+    background:    #2a2a35;
+    border-radius: 4px;
+    min-height:    24px;
+    min-width:     24px;
+}
+QScrollBar::handle:hover { background: #d4b87a; }

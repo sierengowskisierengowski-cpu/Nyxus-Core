@@ -1,0 +1,49 @@
+# Calamares branding descriptor for NYXUS.
+#
+# Loaded by Calamares when the active branding component is "nyxus".
+# Wired to the "Dark Mirror" gold (#d4b87a) accent and references the
+# slideshow QML in this same directory. The matching system module
+# config lives in /etc/calamares/settings.conf (also shipped here).
+#
+# Build/staging: nyxus-build-iso.sh copies this entire calamares/
+# subtree into /etc/calamares/ on the live ISO.
+#
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+
+---
+componentName: nyxus
+
+welcomeStyleCalamares: true
+welcomeExpandingLogo:  true
+
+windowExpanding: normal
+windowSize:      900px,560px
+windowPlacement: center
+
+strings:
+    productName:         "NYXUS"
+    shortProductName:    "NYXUS"
+    version:             "1.0"
+    shortVersion:        "1.0"
+    versionedName:       "NYXUS 1.0 (Dark Mirror)"
+    shortVersionedName:  "NYXUS 1.0"
+    bootloaderEntryName: "NYXUS"
+    productUrl:          "https://nyxus.replit.app"
+    supportUrl:          "https://nyxus.replit.app/support"
+    releaseNotesUrl:     "https://nyxus.replit.app/release-notes"
+    knownIssuesUrl:      "https://nyxus.replit.app/known-issues"
+    donateUrl:           ""
+
+images:
+    productLogo:         "logo.png"
+    productIcon:         "logo.png"
+    productWelcome:      "welcome.png"
+
+slideshow:               "show.qml"
+slideshowAPI:            2
+
+style:
+    sidebarBackground:   "#0b0b0f"
+    sidebarText:         "#e8e8ee"
+    sidebarTextSelect:   "#0b0b0f"
+    sidebarTextHighlight:"#d4b87a"
