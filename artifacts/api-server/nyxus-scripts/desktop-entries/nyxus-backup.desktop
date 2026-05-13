@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Backup
+GenericName=Backup
+Comment=Snapshots + scheduled backups
+Exec=/usr/local/bin/nyxus backup
+TryExec=/usr/local/bin/nyxus
+Icon=drive-harddisk
+Terminal=false
+Categories=System;Archiving;
+Keywords=NYXUS;NYX;Backup;
+StartupNotify=true
+StartupWMClass=nyxus.backup
+X-NYXUS-Module=nyxus_backup

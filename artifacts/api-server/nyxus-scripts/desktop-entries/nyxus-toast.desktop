@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Toast
+GenericName=Toast
+Comment=Notification debug tester
+Exec=/usr/local/bin/nyxus toast
+TryExec=/usr/local/bin/nyxus
+Icon=dialog-information
+Terminal=false
+Categories=System;
+Keywords=NYXUS;NYX;Toast;
+StartupNotify=true
+StartupWMClass=nyxus.toast
+X-NYXUS-Module=nyxus_toast

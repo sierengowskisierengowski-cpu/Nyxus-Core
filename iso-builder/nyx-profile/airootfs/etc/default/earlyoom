@@ -1,0 +1,3 @@
+# NYXUS · earlyoom defaults · rev 2026-05-13 r1
+# Notify (-N) at 20% RAM/swap free, kill (-M) at 5% RAM / 10% swap free.
+EARLYOOM_ARGS="-r 60 -n -N --avoid '(^|/)(systemd|init|sshd|Xorg|Hyprland|sddm)$' --prefer '(^|/)(chromium|firefox|electron|node|java)$' -m 5,10 -s 5,10"

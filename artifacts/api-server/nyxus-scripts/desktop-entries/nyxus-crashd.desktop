@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Crash Reporter
+GenericName=Crash Reporter
+Comment=Submit a crash report
+Exec=/usr/local/bin/nyxus crashd
+TryExec=/usr/local/bin/nyxus
+Icon=tools-report-bug
+Terminal=false
+Categories=System;
+Keywords=NYXUS;NYX;Reporter;
+StartupNotify=true
+StartupWMClass=nyxus.crashd
+X-NYXUS-Module=nyxus_crashd

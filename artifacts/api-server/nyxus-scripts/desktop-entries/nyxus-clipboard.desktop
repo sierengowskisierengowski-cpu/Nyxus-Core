@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Clipboard
+GenericName=Clipboard
+Comment=Clipboard history viewer
+Exec=/usr/local/bin/nyxus clipboard
+TryExec=/usr/local/bin/nyxus
+Icon=edit-paste
+Terminal=false
+Categories=Utility;
+Keywords=NYXUS;NYX;Clipboard;
+StartupNotify=true
+StartupWMClass=nyxus.clipboard
+X-NYXUS-Module=nyxus_clipboard

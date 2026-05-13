@@ -1,0 +1,7 @@
+[User]
+Language=
+Session=hyprland
+SessionType=wayland
+XSession=hyprland
+Icon=/var/lib/AccountsService/icons/nyx
+SystemAccount=false

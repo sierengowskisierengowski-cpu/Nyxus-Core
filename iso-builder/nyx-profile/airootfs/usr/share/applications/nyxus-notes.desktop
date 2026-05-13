@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Notes
+GenericName=Notes
+Comment=Notebook with markdown + tags
+Exec=/usr/local/bin/nyxus notes
+TryExec=/usr/local/bin/nyxus
+Icon=accessories-text-editor
+Terminal=false
+Categories=Office;
+Keywords=NYXUS;NYX;Notes;
+StartupNotify=true
+StartupWMClass=nyxus.notes
+X-NYXUS-Module=nyxus_notes

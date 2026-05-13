@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Message of the Day
+GenericName=Message of the Day
+Comment=TTY login banner editor
+Exec=/usr/local/bin/nyxus motd
+TryExec=/usr/local/bin/nyxus
+Icon=dialog-information
+Terminal=false
+Categories=System;
+Keywords=NYXUS;NYX;Day;
+StartupNotify=true
+StartupWMClass=nyxus.motd
+X-NYXUS-Module=nyxus_motd

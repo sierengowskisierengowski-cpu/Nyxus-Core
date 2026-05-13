@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Screensaver
+GenericName=Screensaver
+Comment=Screensaver settings + preview
+Exec=/usr/local/bin/nyxus screensaver
+TryExec=/usr/local/bin/nyxus
+Icon=preferences-desktop-screensaver
+Terminal=false
+Categories=Settings;
+Keywords=NYXUS;NYX;Screensaver;
+StartupNotify=true
+StartupWMClass=nyxus.screensaver
+X-NYXUS-Module=nyxus_screensaver
