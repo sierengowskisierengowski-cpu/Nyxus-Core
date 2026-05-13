@@ -155,7 +155,7 @@
       (label :class "flyout-glyph" :text "☼")
       (scale :class "flyout-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
              :onchange "brightnessctl set {}%"))
-    (label :class "flyout-sub" :text "${BACKLIGHT.percent}% · ${BACKLIGHT.tooltip}" :halign "start")
+    (label :class "flyout-sub" :text "${BACKLIGHT.percent}% brightness" :halign "start")
     (button :class "flyout-close" :onclick "eww close brightness-flyout" "Close (Esc)")))
 
 (defwidget powerprof_widget []
@@ -853,6 +853,11 @@
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-notifications"
   :geometry (geometry :x "16" :y "78" :width "440px" :height "640px" :anchor "bottom right")
   (notifications_layout))
+
+(defwindow brightness-flyout
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-brightness"
+  :geometry (geometry :x "16" :y "78" :width "360px" :height "auto" :anchor "bottom right")
+  (brightness_flyout_layout))
 
 ; ── NYXUS Dock module ─────────────────────────────────────────────────
 (include "dock.yuck")
