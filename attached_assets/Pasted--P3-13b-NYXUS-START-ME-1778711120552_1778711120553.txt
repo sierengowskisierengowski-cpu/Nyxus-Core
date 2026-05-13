@@ -1,0 +1,1750 @@
+
+;; ═════════════════════════════════════════════════════════════════════
+;; P3.13b · NYXUS START MENU (Win11-grade launcher)
+;; Bound to bottom-left "✕ NYXUS" brand button. STARTAPPS poller
+;; produces pinned/recents/all/user. STARTQUERY filters `all`.
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget startmenu_tile [name glyph exec]
+  (button :class "startmenu-tile"
+          :onclick "${exec} & disown ; eww close startmenu"
+          :tooltip "${name}"
+    (box :orientation "v" :space-evenly false :spacing 2 :halign "center"
+      (label :class "startmenu-tile-glyph" :text "${glyph}")
+      (label :class "startmenu-tile-label" :text "${name}" :limit-width 12))))
+
+(defwidget startmenu_recent_row [name path exec]
+  (button :class "startmenu-recent-row"
+          :onclick "${exec} & disown ; eww close startmenu"
+    (box :orientation "v" :space-evenly false :spacing 1 :halign "start" :hexpand true
+      (label :class "startmenu-recent-name" :text "${name}" :halign "start" :limit-width 56)
+      (label :class "startmenu-recent-path" :text "${path}" :halign "start" :limit-width 56))))
+
+(defwidget startmenu_layout []
+  (box :class "startmenu-root" :orientation "v" :space-evenly false :spacing 8
+    ;; Search bar — typing updates STARTQUERY which the script re-reads.
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "startmenu-tile-glyph" :text "")
+      (input :class "startmenu-search"
+             :hexpand true
+             :value STARTQUERY
+             :onchange "eww update STARTQUERY={} ; ~/.config/eww/scripts/startmenu-apps.sh search {} >/dev/null &"))
+
+    ;; Pinned grid (4 columns × 3 rows = 12 slots).
+    (label :class "startmenu-section" :text "PINNED" :halign "start"
+           :visible {STARTQUERY == ""})
+    (box :class "startmenu-grid" :orientation "v" :space-evenly false :spacing 4
+         :visible {STARTQUERY == ""}
+      (for row in {STARTAPPS.pinned}
+        (box :orientation "h" :space-evenly true :spacing 6
+          (for app in {row}
+            (startmenu_tile :name {app.name} :glyph {app.glyph} :exec {app.exec})))))
+
+    ;; Recents — most-recent .desktop launches.
+    (label :class "startmenu-section" :text "RECENT" :halign "start"
+           :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0})
+    (box :orientation "v" :space-evenly false :spacing 2
+         :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0}
+      (for r in {STARTAPPS.recents}
+        (startmenu_recent_row :name {r.name} :path {r.path} :exec {r.exec})))
+
+    ;; Search results — flat list when STARTQUERY != "".
+    (label :class "startmenu-section" :text "RESULTS" :halign "start"
+           :visible {STARTQUERY != ""})
+    (scroll :vscroll true :hscroll false :height 320
+            :visible {STARTQUERY != ""}
+      (box :orientation "v" :space-evenly false :spacing 2
+        (for a in {STARTAPPS.all}
+          (startmenu_recent_row :name {a.name} :path {a.exec} :exec {a.exec}))))
+
+    ;; Footer — user identity + power buttons.
+    (box :class "startmenu-footer" :orientation "h" :space-evenly false :spacing 10
+      (label :class "startmenu-user" :text "  ${STARTAPPS.user}@${STARTAPPS.host}"
+             :hexpand true :halign "start")
+      (button :class "startmenu-power-btn"
+              :tooltip "Lock"
+              :onclick "eww close startmenu ; hyprlock &" "")
+      (button :class "startmenu-power-btn"
+              :tooltip "Settings"
+              :onclick "eww close startmenu ; nyxus-settings &" "")
+      (button :class "startmenu-power-btn shutdown"
+              :tooltip "Power"
+              :onclick "eww close startmenu ; eww open --toggle powermenu" ""))))
+
+(defwindow startmenu
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-startmenu"
+  :geometry (geometry :x "16" :y "78" :width "640px" :height "56px" :anchor "bottom left")
+  (startmenu_layout))
+── CSS cap already present ──
+ 2026-05-13T22:21:27.511Z INFO  eww > Initializing Eww server. (/run/user/1000/eww-server_69eff7c8a8c4b43d)
+Run `eww logs` to see any errors while editing your configuration.
+ 2026-05-13T22:21:27.511Z INFO  eww::server > Loading paths: config-dir: /home/nyx/.config/eww, ipc-socket: /run/user/1000/eww-server_69eff7c8a8c4b43d, log-file: /home/nyx/.cache/eww/eww_69eff7c8a8c4b43d.log
+
+
+
+
+
+
+
+
+── bar layer height after restart ──
+		Layer 55cfd69a0ac0: xywh: 20 674 1881 394, namespace: nyxus-bar-bottom, pid: 150196
+
+── eww errors (if any) ──
+^C
+[nyx@nyxus eww]$ grep -n -B1 -A4 "nyxus-bar-bottom" ~/.config/eww/eww.yuck
+564-(defwindow bar-bottom
+565:  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-bottom"
+566-  :geometry (geometry :x "0" :y "12" :width "98%" :height "56px" :anchor "bottom center")
+567-  (bar_bottom_layout))
+568-
+569-(defwindow bar-top
+[nyx@nyxus eww]$ echo "── what does bar_bottom_layout render? ──"
+awk '/defwidget bar_bottom_layout/,/^\)/' ~/.config/eww/eww.yuck
+
+echo
+echo "── did my CSS cap actually land at the bottom of eww.scss? ──"
+tail -15 ~/.config/eww/eww.scss
+
+echo
+echo "── what's the parent box's class? ──"
+grep -n 'centerbox.*bar' ~/.config/eww/eww.yuck | head
+── what does bar_bottom_layout render? ──
+(defwidget bar_bottom_layout []
+  (box :class "bar bar-bottom" :orientation "h" :space-evenly false :spacing 10
+    ;; LEFT
+    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 10 :halign "start"
+      (nyxus_brand)
+      (search_btn)
+      (workspaces_rail)
+      (app_rail_h))
+    ;; CENTER — live taskbar takes all remaining width so the bar
+    ;; reads as one continuous surface, like Win11's centered task list.
+    (box :class "bar-cluster cluster-center" :space-evenly false :spacing 6 :hexpand true
+      (taskbar_widget))
+    ;; RIGHT — system tray + clock + power, tightly packed.
+    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 8 :halign "end"
+      (player_widget)
+      (syspulse_widget)
+      (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
+      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget)
+      (cal_widget) (clock_widget) (power_button))))
+
+(defwidget bar_top_layout []
+  (box :class "bar bar-top" :space-evenly false :spacing 12 :hexpand true
+    (label :class "ticker-label" :text "▌ NYXUS · LIVE")
+    (ticker_widget)
+    (player_widget)))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; DASHBOARD — replaces nyxus_quicksettings + nyxus_clock + nyxus_calendar
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget dash_quick_toggle [glyph label cmd]
+  (button :class "dash-toggle" :onclick "(${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 6 :halign "center"
+      (label :class "dash-toggle-glyph" :text "${glyph}")
+      (label :class "dash-toggle-label" :text "${label}"))))
+
+;; per-core bar — height is driven via inline GTK CSS (`min-height`)
+;; because yuck `box` does not accept a raw numeric :height attribute.
+(defwidget dash_core_bar [pct]
+  (box :class "core-bar" :orientation "v" :space-evenly false :valign "end"
+    (box :class {pct >= 80 ? "core-fill core-hot" :
+                 pct >= 50 ? "core-fill core-warm" : "core-fill"}
+         :style "min-height: ${pct}px;")))
+
+(defwidget dash_player []
+  (box :class "dash-player" :orientation "v" :space-evenly false :spacing 8
+    (label :class "dash-card-title" :text "MEDIA")
+    (label :class "dash-player-title"  :limit-width 32 :text "${PLAYER.title}")
+    (label :class "dash-player-artist" :limit-width 32 :text "${PLAYER.artist}")
+    (box :class "dash-player-controls" :orientation "h" :space-evenly true :spacing 12
+      (button :class "dash-player-btn" :onclick "playerctl previous &" "⏮")
+      (button :class "dash-player-btn" :onclick "playerctl play-pause &" "${PLAYER.icon}")
+      (button :class "dash-player-btn" :onclick "playerctl next &" "⏭"))))
+
+(defwidget dashboard_layout []
+  ;; Wrap entire dashboard in a scroll so it never overflows on small
+  ;; displays (e.g. 1366×768). Inner box keeps the same vertical layout
+  ;; and centred alignment; scroll only kicks in when content exceeds
+  ;; the available height. Per DESIGN_CONTRACT.md §12.
+  (scroll :class "dashboard-scroll" :hscroll false :vscroll true
+          :hexpand true :vexpand true
+  (box :class "dashboard-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 22
+    ;; ── header: clock + date ──────────────────────────────────────────
+    (label :class "dash-clock" :text "${TIME.hm}")
+    (label :class "dash-date"  :text "${TIME.long}")
+
+    ;; ── upper grid: weather / system / power / calendar / media ──────
+    (box :class "dash-grid" :orientation "h" :space-evenly true :spacing 16
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dash-card-title" :text "WEATHER")
+        (label :class "dash-card-big"   :text "${WEATHER.temp}")
+        (label :class "dash-card-sub"   :text "${WEATHER.summary}"))
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dash-card-title" :text "SYSTEM")
+        (label :class "dash-card-big"   :text "${SYSPULSE.cpu}% · ${SYSPULSE.mem}%")
+        (label :class "dash-card-sub"   :text "CPU · MEM · ${SYSPULSE.temp}°C"))
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dash-card-title" :text "POWER")
+        (label :class "dash-card-big"   :text "${BATTERY.capacity}%")
+        (label :class "dash-card-sub"   :text "${BATTERY.status} · ${POWERPROF.label}"))
+      (box :class "dash-card dash-card-cal" :orientation "v" :space-evenly false :spacing 6
+        (label :class "dash-card-title" :text "${CALENDAR.month}")
+        (label :class "dash-cal-grid"   :text "${CALENDAR.grid}"))
+      (dash_player))
+
+    ;; ── per-core CPU graph ───────────────────────────────────────────
+    (box :class "dash-cores-card" :orientation "v" :space-evenly false :spacing 8
+      (label :class "dash-card-title" :text "CPU CORES · ${arraylength(CPUCORES.cores)} threads")
+      (box :class "dash-cores" :orientation "h" :space-evenly true :spacing 4
+        (for core in {CPUCORES.cores}
+          (dash_core_bar :pct {core}))))
+
+    ;; ── sliders ──────────────────────────────────────────────────────
+    (box :class "dash-sliders" :orientation "v" :space-evenly false :spacing 10
+      (box :class "dash-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "dash-slider-label" :text "VOL")
+        (scale :class "dash-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
+      (box :class "dash-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "dash-slider-label" :text "MIC")
+        (scale :class "dash-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%"))
+      (box :class "dash-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "dash-slider-label" :text "BRT")
+        (scale :class "dash-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+               :onchange "brightnessctl set {}%")))
+
+    ;; ── quick toggles ────────────────────────────────────────────────
+    ;; Glyphs use JetBrainsMono Nerd Font code points (matches every
+    ;; other surface — bar, flyouts, OSD). Per DESIGN_CONTRACT.md §6.
+    (box :class "dash-toggles" :orientation "h" :space-evenly true :spacing 12
+      (dash_quick_toggle :glyph "󰖩" :label "Network"   :cmd "alacritty -e nmtui")
+      (dash_quick_toggle :glyph "󰂯" :label "Bluetooth" :cmd "blueman-manager")
+      (dash_quick_toggle :glyph "󰕾" :label "Audio"     :cmd "pavucontrol")
+      (dash_quick_toggle :glyph "󰍹" :label "Displays"  :cmd "wdisplays")
+      (dash_quick_toggle :glyph "󰚰" :label "Updates"   :cmd "alacritty -e sh -c 'sudo pacman -Syu; read'")
+      (dash_quick_toggle :glyph "󰒓" :label "Settings"  :cmd "eww close dashboard && nyxus-settings")
+      (dash_quick_toggle :glyph "󰌾" :label "Lock"      :cmd "eww close dashboard && hyprlock")
+      (dash_quick_toggle :glyph "󰌌" :label "Keys"      :cmd "eww close dashboard && eww open --toggle cheatsheet")
+      (dash_quick_toggle :glyph "󰐥" :label "Power"     :cmd "eww close dashboard && eww open --toggle powermenu"))
+
+    (button :class "dash-close" :onclick "eww close dashboard" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; POWERMENU
+;; ═════════════════════════════════════════════════════════════════════
+
+;; `variant` ∈ "default" | "danger". Danger variants paint the glyph red
+;; and gain a red border so destructive actions (shutdown/restart) read
+;; as obviously different from soft ones (suspend/logout/lock).
+;; Per DESIGN_CONTRACT.md §8.
+(defwidget power_btn [glyph label cmd ?variant]
+  (button :class "power-btn power-btn-${variant ?: "default"}"
+          :onclick "eww close powermenu && (${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 8 :halign "center"
+      (label :class "power-glyph" :text "${glyph}")
+      (label :class "power-label" :text "${label}"))))
+
+(defwidget powermenu_layout []
+  (box :class "powermenu-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 24
+    (label :class "power-title" :text "NYXUS · POWER")
+    (box :class "power-grid" :orientation "h" :space-evenly true :spacing 18
+      (power_btn :glyph "󰐥" :label "Shutdown" :cmd "systemctl poweroff" :variant "danger")
+      (power_btn :glyph "󰜉" :label "Restart"  :cmd "systemctl reboot"   :variant "danger")
+      (power_btn :glyph "󰒲" :label "Suspend"  :cmd "systemctl suspend")
+      (power_btn :glyph "󰗽" :label "Logout"   :cmd "hyprctl dispatch exit")
+      (power_btn :glyph "󰌾" :label "Lock"     :cmd "hyprlock"))
+    (button :class "power-cancel" :onclick "eww close powermenu" "Cancel (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; CHEATSHEET
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget cheatkey [chord action]
+  (box :class "cheat-row" :orientation "h" :space-evenly false :spacing 18
+    (label :class "cheat-chord"  :text "${chord}")
+    (label :class "cheat-action" :text "${action}")))
+
+(defwidget cheatsheet_layout []
+  (box :class "cheatsheet-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 20
+    (label :class "cheat-title" :text "NYXUS · KEY MAP")
+    (box :class "cheat-cols" :orientation "h" :space-evenly true :spacing 36
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "WINDOW")
+        (cheatkey :chord "Super + Q"        :action "Close window")
+        (cheatkey :chord "Super + V"        :action "Toggle floating")
+        (cheatkey :chord "Super + F"        :action "Fullscreen")
+        (cheatkey :chord "Super + T"        :action "Toggle split")
+        (cheatkey :chord "Super + ←/→/↑/↓"  :action "Move focus")
+        (cheatkey :chord "Super + 1..0"     :action "Switch workspace")
+        (cheatkey :chord "Super + Shift +#" :action "Move to workspace"))
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "LAUNCH")
+        (cheatkey :chord "Super + Space"    :action "App launcher")
+        (cheatkey :chord "Super + D"        :action "Rofi drun")
+        (cheatkey :chord "Super + Return"   :action "Terminal")
+        (cheatkey :chord "Super + B"        :action "Firefox")
+        (cheatkey :chord "Super + E"        :action "File manager")
+        (cheatkey :chord "Super + Tab"      :action "Window switcher"))
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "SYSTEM / PANELS")
+        (cheatkey :chord "Super + A"        :action "Quick settings")
+        (cheatkey :chord "Super + N"        :action "Notifications")
+        (cheatkey :chord "Super + W"        :action "WiFi picker")
+        (cheatkey :chord "Super + Shift + B":action "Bluetooth")
+        (cheatkey :chord "Super + M"        :action "Audio mixer")
+        (cheatkey :chord "Super + C"        :action "Calendar")
+        (cheatkey :chord "Super + ` "       :action "Dashboard")
+        (cheatkey :chord "Super + Escape"   :action "Power menu")
+        (cheatkey :chord "Super + L"        :action "Lock screen")
+        (cheatkey :chord "Super + /"        :action "Cheatsheet")
+        (cheatkey :chord "Print"            :action "Screenshot region")))
+    (button :class "cheat-close" :onclick "eww close cheatsheet" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; OSD pop-ups
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget osd_volume_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+       :halign "center" :valign "center"
+    (label :class "osd-glyph" :text "${AUDIO.icon}")
+    (box :orientation "v" :space-evenly false :spacing 6 :hexpand true
+      (label :class "osd-label" :text "VOLUME · ${AUDIO.vol}%")
+      (scale :class "osd-bar" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true :active false))))
+
+(defwidget osd_brightness_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+       :halign "center" :valign "center"
+    (label :class "osd-glyph" :text "☼")
+    (box :orientation "v" :space-evenly false :spacing 6 :hexpand true
+      (label :class "osd-label" :text "BRIGHTNESS · ${BACKLIGHT.percent}%")
+      (scale :class "osd-bar" :value "${BACKLIGHT.percent}" :min 0 :max 100 :hexpand true :active false))))
+
+(defwidget osd_mic_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+       :halign "center" :valign "center"
+    (label :class "osd-glyph" :text "${MIC.icon}")
+    (box :orientation "v" :space-evenly false :spacing 6 :hexpand true
+      (label :class "osd-label" :text "MICROPHONE · ${MIC.mute == 'yes' ? 'MUTED' : '${MIC.vol}%'}")
+      (scale :class "osd-bar" :value "${MIC.vol}" :min 0 :max 100 :hexpand true :active false))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SCREENSAVER
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget screensaver_layout []
+  (box :class "saver-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 28
+    (label :class "saver-clock" :text "${TIME.hm}")
+    (label :class "saver-date"  :text "${TIME.long}")
+    (label :class "saver-brand" :text "NYXUS · DARK MIRROR")
+    (label :class "saver-hint"  :text "move mouse · press any key")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; WINDOWS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwindow bar-bottom
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-bottom"
+  :geometry (geometry :x "0" :y "12" :width "98%" :height "56px" :anchor "bottom center")
+  (bar_bottom_layout))
+
+(defwindow bar-top
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-top"
+  :geometry (geometry :x "0" :y "0" :width "100%" :height "56px" :anchor "top center")
+  (bar_top_layout))
+
+(defwindow bar-left
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-left"
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "56px" :anchor "center left")
+  (workspaces_rail))
+
+(defwindow bar-right
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-right"
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "56px" :anchor "center right")
+  (app_rail))
+
+(defwindow dashboard
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-dashboard"
+  :geometry (geometry :width "100%" :height "56px" :anchor "center")
+  (dashboard_layout))
+
+(defwindow powermenu
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-powermenu"
+  :geometry (geometry :width "100%" :height "56px" :anchor "center")
+  (powermenu_layout))
+
+(defwindow cheatsheet
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-cheatsheet"
+  :geometry (geometry :width "100%" :height "56px" :anchor "center")
+  (cheatsheet_layout))
+
+(defwindow osd-volume
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-osd"
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "56px" :anchor "bottom center")
+  (osd_volume_layout))
+
+(defwindow osd-brightness
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-osd"
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "56px" :anchor "bottom center")
+  (osd_brightness_layout))
+
+(defwindow osd-mic
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-osd"
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "56px" :anchor "bottom center")
+  (osd_mic_layout))
+
+(defwindow screensaver
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-screensaver"
+  :geometry (geometry :width "100%" :height "56px" :anchor "center")
+  (screensaver_layout))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · QUICK SETTINGS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget qs_tile [glyph label state cmd]
+  (button :class {state == "on" ? "qs-tile qs-tile-on" : "qs-tile"}
+          :onclick "(${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 4 :halign "center"
+      (label :class "qs-tile-glyph" :text "${glyph}")
+      (label :class "qs-tile-label" :text "${label}"))))
+
+;; Reusable tile with optional tooltip — keeps backward-compat with the
+;; old (qs_tile glyph label state cmd) callsites by defaulting tooltip
+;; to the empty string when omitted.
+(defwidget qs_tile_t [glyph label state cmd tooltip]
+  (button :class {state == "on" ? "qs-tile qs-tile-on" : "qs-tile"}
+          :tooltip "${tooltip}"
+          :onclick "(${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 4 :halign "center"
+      (label :class "qs-tile-glyph" :text "${glyph}")
+      (label :class "qs-tile-label" :text "${label}"))))
+
+;; Now-playing strip. Hidden when no media player is reporting status,
+;; so the panel doesn't reserve dead space on a system without playerctl.
+(defwidget qs_nowplaying []
+  (box :class "qs-nowplaying" :orientation "h" :space-evenly false :spacing 10
+       :visible {PLAYER.status != "Stopped"}
+    (label :class "qs-np-icon" :text "${PLAYER.icon}")
+    (box :orientation "v" :space-evenly false :spacing 0 :hexpand true :halign "start"
+      (label :class "qs-np-title"  :halign "start" :limit-width 28 :text "${PLAYER.title}")
+      (label :class "qs-np-artist" :halign "start" :limit-width 32 :text "${PLAYER.artist}"
+             :visible {PLAYER.artist != ""}))
+    (button :class "qs-np-btn" :tooltip "Previous" :onclick "playerctl previous &" "⏮")
+    (button :class "qs-np-btn qs-np-btn-primary" :tooltip "Play / Pause"
+            :onclick "playerctl play-pause &"
+      "${PLAYER.status == 'Playing' ? '⏸' : '▶'}")
+    (button :class "qs-np-btn" :tooltip "Next"     :onclick "playerctl next &" "⏭")))
+
+;; Cohesive single-pane Control Center (P2.12). One panel surfaces
+;; everything: identity header, connectivity tiles, system tiles,
+;; sliders, now-playing, and footer shortcuts. No more flipping between
+;; separate WiFi / BT / Mixer windows for the common path — those
+;; windows still exist for advanced lists, reachable from the header.
+(defwidget quicksettings_layout []
+  (box :class "qs-root" :orientation "v" :space-evenly false :spacing 14
+
+    ;; ── Header: title + power-profile pill + Settings shortcut ──────
+    (box :class "qs-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "qs-title" :text "CONTROL CENTER" :hexpand true :halign "start")
+      (button :class "qs-pill" :tooltip "Cycle power profile (saver → balanced → performance)"
+              :onclick "~/.config/eww/scripts/qs-toggle.sh profile &"
+        "⚡ ${QS.profile}")
+      (button :class "qs-settings" :tooltip "Open System Settings"
+              :onclick "eww close quicksettings && nyxus-settings &"
+        "⚙"))
+
+    ;; ── Connectivity row ───────────────────────────────────────────
+    (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
+      (qs_tile_t :glyph "📶" :label "WiFi"      :state "${QS.wifi}"
+                 :tooltip "Toggle WiFi · long-press header opens picker"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh wifi")
+      (qs_tile_t :glyph ""  :label "Bluetooth" :state "${QS.bt}"
+                 :tooltip "Toggle Bluetooth radio"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh bt")
+      (qs_tile_t :glyph "✈" :label "Airplane"  :state "${QS.airplane}"
+                 :tooltip "Airplane mode — block all radios"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh airplane")
+      (qs_tile_t :glyph "🌙" :label "DND"       :state "${QS.dnd}"
+                 :tooltip "Do Not Disturb — silence notifications"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh dnd"))
+
+    ;; ── System row ─────────────────────────────────────────────────
+    ;; P2.12 review fix: dropped the `auto-bright` tile (no native
+    ;; backend on Arch + Hyprland — would have been a flag-only stub).
+    ;; Replaced flag-only `rot_lock` with a real `Rotate` tile that
+    ;; cycles the focused monitor's transform via `hyprctl keyword
+    ;; monitor ,transform,N` and reports the live angle from QS.rotate.
+    (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
+      (qs_tile_t :glyph "☾"  :label "NightLight" :state "${QS.nightlight}"
+                 :tooltip "Warm color temperature for night use"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh nightlight")
+      (qs_tile_t :glyph "🎤" :label "Mic"        :state "${QS.mic_mute}"
+                 :tooltip "Mute / unmute microphone"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh mic")
+      (qs_tile_t :glyph "🔇" :label "Mute"       :state "${QS.audio_mute}"
+                 :tooltip "Mute / unmute audio output"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh audio")
+      (qs_tile_t :glyph "🔄"
+                 :label {QS.rotate == "0" ? "0°"
+                       : QS.rotate == "1" ? "90°"
+                       : QS.rotate == "2" ? "180°"
+                       : "270°"}
+                 :state {QS.rotate == "0" ? "off" : "on"}
+                 :tooltip "Rotate display (cycles 0° → 90° → 180° → 270°)"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh rotate"))
+
+    ;; ── Session row ────────────────────────────────────────────────
+    (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
+      (qs_tile_t :glyph "🔔" :label "Notifs"    :state "off"
+                 :tooltip "Open Notification Center"
+                 :cmd "eww close quicksettings && eww open --toggle notifications")
+      (qs_tile_t :glyph "🔒" :label "Lock"      :state "off"
+                 :tooltip "Lock screen now"
+                 :cmd "eww close quicksettings && hyprlock")
+      (qs_tile_t :glyph "⏻"  :label "Power"     :state "off"
+                 :tooltip "Power menu"
+                 :cmd "eww close quicksettings && eww open --toggle powermenu"))
+
+    ;; ── Sliders ────────────────────────────────────────────────────
+    (box :class "qs-sliders" :orientation "v" :space-evenly false :spacing 10
+      (box :orientation "h" :space-evenly false :spacing 12
+        (label :class "qs-slider-glyph" :text "🔊")
+        (scale :class "qs-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
+               :tooltip "Output volume · ${AUDIO.vol}%"
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
+      (box :orientation "h" :space-evenly false :spacing 12
+        (label :class "qs-slider-glyph" :text "☼")
+        (scale :class "qs-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+               :tooltip "Display brightness · ${BACKLIGHT.percent}%"
+               :onchange "brightnessctl set {}%"))
+      (box :orientation "h" :space-evenly false :spacing 12
+        (label :class "qs-slider-glyph" :text "🎤")
+        (scale :class "qs-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
+               :tooltip "Microphone gain · ${MIC.vol}%"
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%")))
+
+    ;; ── Now-playing strip (auto-hides when no player is active) ────
+    (qs_nowplaying)
+
+    (button :class "qs-close" :onclick "eww close quicksettings" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · WIFI PICKER
+;; ═════════════════════════════════════════════════════════════════════
+
+;; SSID is passed only as the base64 `b64` field, never raw, to prevent
+;; shell injection from malicious access-point names (rev r9-eww).
+(defwidget wifi_row [net]
+  (box :class {net.active ? "wifi-row wifi-row-active" : "wifi-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (label :class "wifi-bars" :text "${net.bars}")
+    (button :class "wifi-name" :hexpand true :halign "start"
+            :onclick "~/.config/eww/scripts/wifi-action.sh connect ${net.b64} &"
+            :tooltip "Click to connect · ${net.security} · ${net.signal}%"
+      "${net.icon}  ${net.ssid}")
+    (label :class "wifi-sig" :text "${net.signal}%")
+    (button :class "wifi-forget"
+            :onclick "~/.config/eww/scripts/wifi-action.sh forget ${net.b64} &"
+            :tooltip "Forget" "✕")))
+
+(defwidget wifi_layout []
+  (box :class "wifi-root" :orientation "v" :space-evenly false :spacing 12
+    (box :class "wifi-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "wifi-title" :text "WIFI" :hexpand true :halign "start")
+      (button :class "wifi-toggle"
+              :onclick "~/.config/eww/scripts/wifi-action.sh toggle &"
+              :tooltip "Toggle WiFi radio"
+        "${WIFILIST.enabled == 'true' ? 'ON' : 'OFF'}")
+      (button :class "wifi-rescan"
+              :onclick "~/.config/eww/scripts/wifi-action.sh rescan &"
+              :tooltip "Rescan" "↻"))
+    (label :class "wifi-current" :text "Connected · ${WIFILIST.current == '' ? '—' : WIFILIST.current}"
+           :halign "start")
+    (scroll :class "wifi-scroll" :hscroll false :vscroll true :height 360
+      (box :orientation "v" :space-evenly false :spacing 4
+        ;; DESIGN_CONTRACT §9 — empty state. Visible only when the
+        ;; networks array is empty so the panel never shows a blank box.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {arraylength(WIFILIST.networks) == 0}
+          (label :class "empty-glyph" :text "📡")
+          (label :class "empty-title" :text "No networks in range")
+          (label :class "empty-hint"  :text "Try Rescan, or move closer to an access point."))
+        (for net in {WIFILIST.networks}
+          (wifi_row :net {net}))))
+    (box :orientation "h" :space-evenly true :spacing 10
+      (button :class "wifi-advanced" :onclick "eww close wifi && alacritty -e nmtui &" "Advanced (nmtui)")
+      (button :class "wifi-close" :onclick "eww close wifi" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · BLUETOOTH MANAGER
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget bt_row [dev]
+  (box :class {dev.connected ? "bt-row bt-row-conn" : "bt-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (label :class "bt-icon" :text "${dev.icon}")
+    (box :orientation "v" :space-evenly false :spacing 2 :hexpand true :halign "start"
+      (label :class "bt-name" :halign "start" :text "${dev.name}")
+      (label :class "bt-mac"  :halign "start"
+             :text "${dev.mac}${dev.battery >= 0 ? '  ·  🔋' + dev.battery + '%' : ''}"))
+    (button :class "bt-act"
+            :onclick "~/.config/eww/scripts/bt-action.sh ${dev.connected ? 'disconnect' : 'connect'} ${dev.mac} &"
+            :tooltip "${dev.connected ? 'Disconnect' : 'Connect'}"
+      "${dev.connected ? 'Disc' : 'Conn'}")
+    (button :class "bt-act" :visible {!dev.paired}
+            :onclick "~/.config/eww/scripts/bt-action.sh pair ${dev.mac} &"
+            :tooltip "Pair" "Pair")
+    (button :class "bt-forget" :visible {dev.paired}
+            :onclick "~/.config/eww/scripts/bt-action.sh unpair ${dev.mac} &"
+            :tooltip "Forget" "✕")))
+
+(defwidget bluetooth_layout []
+  (box :class "bt-root" :orientation "v" :space-evenly false :spacing 12
+    (box :class "bt-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "bt-title" :text "BLUETOOTH" :hexpand true :halign "start")
+      (button :class "bt-toggle"
+              :onclick "~/.config/eww/scripts/bt-action.sh toggle &"
+              :tooltip "Toggle adapter"
+        "${BTLIST.powered == 'true' ? 'ON' : 'OFF'}")
+      (button :class "bt-scan"
+              :onclick "~/.config/eww/scripts/bt-action.sh scan &"
+              :tooltip "Scan 8s"
+        "${BTLIST.scanning == 'true' ? '⟳ scan' : 'Scan'}"))
+    (scroll :class "bt-scroll" :hscroll false :vscroll true :height 360
+      (box :orientation "v" :space-evenly false :spacing 4
+        ;; DESIGN_CONTRACT §9 — empty state.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {arraylength(BTLIST.devices) == 0}
+          (label :class "empty-glyph" :text {BTLIST.powered == 'true' ? "" : ""})
+          (label :class "empty-title" :text {BTLIST.powered == 'true' ? "No devices yet" : "Bluetooth is off"})
+          (label :class "empty-hint"  :text {BTLIST.powered == 'true' ? "Tap Scan to discover nearby devices." : "Toggle the adapter on, then Scan."}))
+        (for dev in {BTLIST.devices}
+          (bt_row :dev {dev}))))
+    (box :orientation "h" :space-evenly true :spacing 10
+      (button :class "bt-advanced" :onclick "eww close bluetooth && blueman-manager &" "Advanced")
+      (button :class "bt-close" :onclick "eww close bluetooth" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · AUDIO MIXER
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget mix_sink_row [s]
+  (box :class {s.default ? "mix-row mix-row-default" : "mix-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (button :class "mix-pick"
+            :onclick "~/.config/eww/scripts/audio-action.sh set-default-sink ${s.id} &"
+            :tooltip "Make default" "${s.default ? '◉' : '○'}")
+    (label :class "mix-name" :hexpand true :halign "start" :limit-width 28
+           :text "${s.description}")
+    (scale :class "mix-scale" :value "${s.vol}" :min 0 :max 150 :hexpand true
+           :onchange "~/.config/eww/scripts/audio-action.sh set-sink-vol ${s.id} {} &")
+    (label :class "mix-pct" :text "${s.vol}%")
+    (button :class "mix-mute"
+            :onclick "~/.config/eww/scripts/audio-action.sh toggle-sink-mute ${s.id} &"
+      "${s.mute ? '✕' : '🔊'}")))
+
+(defwidget mix_app_row [a]
+  (box :class "mix-row" :orientation "h" :space-evenly false :spacing 10
+    (label :class "mix-app-glyph" :text "♫")
+    (label :class "mix-name" :hexpand true :halign "start" :limit-width 28 :text "${a.name}")
+    (scale :class "mix-scale" :value "${a.vol}" :min 0 :max 150 :hexpand true
+           :onchange "~/.config/eww/scripts/audio-action.sh set-app-vol ${a.id} {} &")
+    (label :class "mix-pct" :text "${a.vol}%")
+    (button :class "mix-mute"
+            :onclick "~/.config/eww/scripts/audio-action.sh toggle-app-mute ${a.id} &"
+      "${a.mute ? '✕' : '🔊'}")))
+
+(defwidget mixer_layout []
+  (box :class "mix-root" :orientation "v" :space-evenly false :spacing 14
+    (label :class "mix-title" :text "AUDIO MIXER")
+
+    (label :class "mix-section" :text "OUTPUT DEVICES" :halign "start")
+    (box :orientation "v" :space-evenly false :spacing 4
+      (for s in {AUDIOMIX.sinks}
+        (mix_sink_row :s {s})))
+
+    (label :class "mix-section" :text "PER-APP" :halign "start")
+    (scroll :class "mix-scroll" :vscroll true :hscroll false :height 200
+      (box :orientation "v" :space-evenly false :spacing 4
+        ;; DESIGN_CONTRACT §9 — empty state.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {arraylength(AUDIOMIX.apps) == 0}
+          (label :class "empty-glyph" :text "♪")
+          (label :class "empty-title" :text "No apps playing audio")
+          (label :class "empty-hint"  :text "Open a media app to see per-app volumes here."))
+        (for a in {AUDIOMIX.apps}
+          (mix_app_row :a {a}))))
+
+    (box :orientation "h" :space-evenly true :spacing 10
+      (button :class "mix-advanced" :onclick "eww close mixer && pavucontrol &" "Advanced (pavucontrol)")
+      (button :class "mix-close" :onclick "eww close mixer" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · CALENDAR
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget cal_day [c]
+  (label :class {c.today ? "cal-day cal-day-today" :
+                 c.inmonth ? "cal-day cal-day-in" : "cal-day cal-day-out"}
+         :text "${c.d}"))
+
+(defwidget cal_week [w]
+  (box :class "cal-week" :orientation "h" :space-evenly true :spacing 4
+    (for c in {w}
+      (cal_day :c {c}))))
+
+(defwidget calendar_layout []
+  (box :class "cal-root" :orientation "v" :space-evenly false :spacing 14
+    (label :class "cal-title" :text "${CALMONTH.month} ${CALMONTH.year}")
+    (label :class "cal-today" :text "${TIME.long}")
+    (box :class "cal-dow" :orientation "h" :space-evenly true :spacing 4
+      (label :class "cal-dow-cell" :text "Su") (label :class "cal-dow-cell" :text "Mo")
+      (label :class "cal-dow-cell" :text "Tu") (label :class "cal-dow-cell" :text "We")
+      (label :class "cal-dow-cell" :text "Th") (label :class "cal-dow-cell" :text "Fr")
+      (label :class "cal-dow-cell" :text "Sa"))
+    (box :class "cal-grid" :orientation "v" :space-evenly false :spacing 4
+      (for w in {CALMONTH.weeks}
+        (cal_week :w {w})))
+    (button :class "cal-close" :onclick "eww close calendar" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · NOTIFICATION CENTER
+;; ═════════════════════════════════════════════════════════════════════
+
+;; A single notification row. Two action affordances on the right:
+;; the default action (only rendered when dunst exposes a name) and
+;; the per-row dismiss. Muted rows render at half opacity but are kept
+;; visible so users can still see what was silenced and unmute.
+(defwidget notif_row [n]
+  (box :class {n.muted == true ? "notif-row notif-row-muted" : "notif-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (box :orientation "v" :space-evenly false :spacing 2 :hexpand true :halign "start"
+      (label :class "notif-summary" :halign "start" :limit-width 38 :text "${n.summary}")
+      (label :class "notif-body"    :halign "start" :limit-width 46 :text "${n.body}"
+             :visible {n.body != ""}))
+    (button :class "notif-action"
+            :visible {n.default_action != ""}
+            :tooltip "${n.default_action}"
+            :onclick "~/.config/eww/scripts/notif-action.sh invoke-id ${n.id} &"
+      "↗")
+    (button :class "notif-dismiss"
+            :onclick "~/.config/eww/scripts/notif-action.sh close-id ${n.id} &"
+            :tooltip "Dismiss" "✕")))
+
+;; Per-app group header. The app-name pill toggles mute for the whole
+;; app; the count badge shows in-history total. Click anywhere on the
+;; header to mute/unmute all notifications from that app.
+(defwidget notif_group [g]
+  (box :class {g.muted == true ? "notif-group notif-group-muted" : "notif-group"}
+       :orientation "v" :space-evenly false :spacing 6
+    (box :class "notif-group-header" :orientation "h" :space-evenly false :spacing 8
+      (label :class "notif-app"   :text "${g.app}" :hexpand true :halign "start")
+      (label :class "notif-count" :text "${g.count}")
+      (button :class {g.muted == true ? "notif-mute notif-mute-on" : "notif-mute"}
+              :tooltip {g.muted == true ? "Unmute ${g.app}" : "Mute ${g.app}"}
+              ;; SECURITY: app name is passed as base64 token (b64:<...>)
+              ;; rather than interpolated raw — notification metadata is
+              ;; attacker-influenced and a literal app name like
+              ;;     foo'; rm -rf $HOME; '
+              ;; would otherwise break out of the single-quoted argv.
+              :onclick "~/.config/eww/scripts/notif-action.sh mute-app b64:${g.app_b64} &"
+        "${g.muted == true ? '🔕' : '🔔'}"))
+    (box :orientation "v" :space-evenly false :spacing 4
+      (for n in {g.items}
+        (notif_row :n {n})))))
+
+;; Slide-in is provided at the layer-shell level by Hyprland — see
+;; `nyxus-hyprland-layerblur.conf` for the `layerrule = animation slide,
+;; nyxus-notifications` line. EWW just renders the static contents.
+(defwidget notifications_layout []
+  (box :class "notif-root" :orientation "v" :space-evenly false :spacing 12
+    (box :class "notif-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "notif-title"
+             :text "NOTIFICATIONS · ${NOTIFLIST.shown}/${NOTIFLIST.total}"
+             :hexpand true :halign "start")
+      (button :class {NOTIFLIST.paused == 'true' ? "notif-dnd notif-dnd-on" : "notif-dnd"}
+              :tooltip {NOTIFLIST.paused == 'true' ? "Do Not Disturb is ON — click to resume" : "Silence all notifications"}
+              :onclick "~/.config/eww/scripts/notif-action.sh toggle-dnd &"
+        "${NOTIFLIST.paused == 'true' ? 'DND' : 'ON'}")
+      (button :class "notif-clear"
+              :onclick "~/.config/eww/scripts/notif-action.sh clear-all &"
+              :tooltip "Clear notification history"
+        "Clear all"))
+    (scroll :class "notif-scroll" :vscroll true :hscroll false :height 480
+      (box :orientation "v" :space-evenly false :spacing 10
+        ;; DESIGN_CONTRACT §9 — empty state.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {NOTIFLIST.total == 0}
+          (label :class "empty-glyph" :text "✓")
+          (label :class "empty-title" :text {NOTIFLIST.paused == 'true' ? "Do Not Disturb is on" : "All caught up"})
+          (label :class "empty-hint"  :text {NOTIFLIST.paused == 'true' ? "Notifications are silenced. Toggle DND to resume." : "New notifications will appear here."}))
+        (for g in {NOTIFLIST.groups}
+          (notif_group :g {g}))))
+    (button :class "notif-close" :onclick "eww close notifications" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · WINDOWS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwindow quicksettings
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-quicksettings"
+  :geometry (geometry :x "16" :y "78" :width "420px" :height "56px" :anchor "bottom right")
+  (quicksettings_layout))
+
+(defwindow wifi
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-wifi"
+  :geometry (geometry :x "16" :y "78" :width "440px" :height "56px" :anchor "bottom right")
+  (wifi_layout))
+
+(defwindow bluetooth
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-bluetooth"
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "56px" :anchor "bottom right")
+  (bluetooth_layout))
+
+(defwindow mixer
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-mixer"
+  :geometry (geometry :x "16" :y "78" :width "520px" :height "56px" :anchor "bottom right")
+  (mixer_layout))
+
+(defwindow calendar
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-calendar"
+  :geometry (geometry :x "16" :y "78" :width "380px" :height "56px" :anchor "bottom right")
+  (calendar_layout))
+
+(defwindow notifications
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-notifications"
+  :geometry (geometry :x "16" :y "78" :width "440px" :height "56px" :anchor "bottom right")
+  (notifications_layout))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; P3.13b · NYXUS START MENU (Win11-grade launcher)
+;; Bound to bottom-left "✕ NYXUS" brand button. STARTAPPS poller
+;; produces pinned/recents/all/user. STARTQUERY filters `all`.
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget startmenu_tile [name glyph exec]
+  (button :class "startmenu-tile"
+          :onclick "${exec} & disown ; eww close startmenu"
+          :tooltip "${name}"
+    (box :orientation "v" :space-evenly false :spacing 2 :halign "center"
+      (label :class "startmenu-tile-glyph" :text "${glyph}")
+      (label :class "startmenu-tile-label" :text "${name}" :limit-width 12))))
+
+(defwidget startmenu_recent_row [name path exec]
+  (button :class "startmenu-recent-row"
+          :onclick "${exec} & disown ; eww close startmenu"
+    (box :orientation "v" :space-evenly false :spacing 1 :halign "start" :hexpand true
+      (label :class "startmenu-recent-name" :text "${name}" :halign "start" :limit-width 56)
+      (label :class "startmenu-recent-path" :text "${path}" :halign "start" :limit-width 56))))
+
+(defwidget startmenu_layout []
+  (box :class "startmenu-root" :orientation "v" :space-evenly false :spacing 8
+    ;; Search bar — typing updates STARTQUERY which the script re-reads.
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "startmenu-tile-glyph" :text "")
+      (input :class "startmenu-search"
+             :hexpand true
+             :value STARTQUERY
+             :onchange "eww update STARTQUERY={} ; ~/.config/eww/scripts/startmenu-apps.sh search {} >/dev/null &"))
+
+    ;; Pinned grid (4 columns × 3 rows = 12 slots).
+    (label :class "startmenu-section" :text "PINNED" :halign "start"
+           :visible {STARTQUERY == ""})
+    (box :class "startmenu-grid" :orientation "v" :space-evenly false :spacing 4
+         :visible {STARTQUERY == ""}
+      (for row in {STARTAPPS.pinned}
+        (box :orientation "h" :space-evenly true :spacing 6
+          (for app in {row}
+            (startmenu_tile :name {app.name} :glyph {app.glyph} :exec {app.exec})))))
+
+    ;; Recents — most-recent .desktop launches.
+    (label :class "startmenu-section" :text "RECENT" :halign "start"
+           :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0})
+    (box :orientation "v" :space-evenly false :spacing 2
+         :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0}
+      (for r in {STARTAPPS.recents}
+        (startmenu_recent_row :name {r.name} :path {r.path} :exec {r.exec})))
+
+    ;; Search results — flat list when STARTQUERY != "".
+    (label :class "startmenu-section" :text "RESULTS" :halign "start"
+           :visible {STARTQUERY != ""})
+    (scroll :vscroll true :hscroll false :height 320
+            :visible {STARTQUERY != ""}
+      (box :orientation "v" :space-evenly false :spacing 2
+        (for a in {STARTAPPS.all}
+          (startmenu_recent_row :name {a.name} :path {a.exec} :exec {a.exec}))))
+
+    ;; Footer — user identity + power buttons.
+    (box :class "startmenu-footer" :orientation "h" :space-evenly false :spacing 10
+      (label :class "startmenu-user" :text "  ${STARTAPPS.user}@${STARTAPPS.host}"
+             :hexpand true :halign "start")
+      (button :class "startmenu-power-btn"
+              :tooltip "Lock"
+              :onclick "eww close startmenu ; hyprlock &" "")
+      (button :class "startmenu-power-btn"
+              :tooltip "Settings"
+              :onclick "eww close startmenu ; nyxus-settings &" "")
+      (button :class "startmenu-power-btn shutdown"
+              :tooltip "Power"
+              :onclick "eww close startmenu ; eww open --toggle powermenu" ""))))
+
+(defwindow startmenu
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-startmenu"
+  :geometry (geometry :x "16" :y "78" :width "640px" :height "56px" :anchor "bottom left")
+  (startmenu_layout))
+
+── did my CSS cap actually land at the bottom of eww.scss? ──
+
+/* SysPulse: dim the chrome, gold the values */
+.syspulse-cpu, .syspulse-mem, .syspulse-temp {
+  color: #c8ccd6;
+}
+/* ── EMERGENCY BAR HEIGHT CAP ── */
+.bar-bottom { max-height: 56px; }
+.bar-top    { max-height: 32px; }
+.bar-bottom > * { min-height: 0; }
+.bar-bottom .bar-cluster { min-height: 0; }
+
+/* EMERGENCY-BAR-CAP */
+.bar-bottom { min-height: 0; max-height: 56px; }
+.bar-top    { min-height: 0; max-height: 32px; }
+.bar-bottom *, .bar-bottom .bar-cluster, .bar-bottom .pill { min-height: 0; }
+
+── what's the parent box's class? ──
+[nyx@nyxus eww]$ cho "── what does bar_bottom_layout render? ──"
+awk '/defwidget bar_bottom_layout/,/^\)/' ~/.config/eww/eww.yuck
+echo
+echo "── did my CSS cap actually land at the bottom of eww.scss? ──"
+tail -15 ~/.config/eww/eww.scss
+echo
+echo "── what's the parent box's class? ──"
+grep -n 'centerbox.*bar' ~/.config/eww/eww.yuck | head
+bash: cho: command not found
+(defwidget bar_bottom_layout []
+  (box :class "bar bar-bottom" :orientation "h" :space-evenly false :spacing 10
+    ;; LEFT
+    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 10 :halign "start"
+      (nyxus_brand)
+      (search_btn)
+      (workspaces_rail)
+      (app_rail_h))
+    ;; CENTER — live taskbar takes all remaining width so the bar
+    ;; reads as one continuous surface, like Win11's centered task list.
+    (box :class "bar-cluster cluster-center" :space-evenly false :spacing 6 :hexpand true
+      (taskbar_widget))
+    ;; RIGHT — system tray + clock + power, tightly packed.
+    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 8 :halign "end"
+      (player_widget)
+      (syspulse_widget)
+      (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
+      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget)
+      (cal_widget) (clock_widget) (power_button))))
+
+(defwidget bar_top_layout []
+  (box :class "bar bar-top" :space-evenly false :spacing 12 :hexpand true
+    (label :class "ticker-label" :text "▌ NYXUS · LIVE")
+    (ticker_widget)
+    (player_widget)))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; DASHBOARD — replaces nyxus_quicksettings + nyxus_clock + nyxus_calendar
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget dash_quick_toggle [glyph label cmd]
+  (button :class "dash-toggle" :onclick "(${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 6 :halign "center"
+      (label :class "dash-toggle-glyph" :text "${glyph}")
+      (label :class "dash-toggle-label" :text "${label}"))))
+
+;; per-core bar — height is driven via inline GTK CSS (`min-height`)
+;; because yuck `box` does not accept a raw numeric :height attribute.
+(defwidget dash_core_bar [pct]
+  (box :class "core-bar" :orientation "v" :space-evenly false :valign "end"
+    (box :class {pct >= 80 ? "core-fill core-hot" :
+                 pct >= 50 ? "core-fill core-warm" : "core-fill"}
+         :style "min-height: ${pct}px;")))
+
+(defwidget dash_player []
+  (box :class "dash-player" :orientation "v" :space-evenly false :spacing 8
+    (label :class "dash-card-title" :text "MEDIA")
+    (label :class "dash-player-title"  :limit-width 32 :text "${PLAYER.title}")
+    (label :class "dash-player-artist" :limit-width 32 :text "${PLAYER.artist}")
+    (box :class "dash-player-controls" :orientation "h" :space-evenly true :spacing 12
+      (button :class "dash-player-btn" :onclick "playerctl previous &" "⏮")
+      (button :class "dash-player-btn" :onclick "playerctl play-pause &" "${PLAYER.icon}")
+      (button :class "dash-player-btn" :onclick "playerctl next &" "⏭"))))
+
+(defwidget dashboard_layout []
+  ;; Wrap entire dashboard in a scroll so it never overflows on small
+  ;; displays (e.g. 1366×768). Inner box keeps the same vertical layout
+  ;; and centred alignment; scroll only kicks in when content exceeds
+  ;; the available height. Per DESIGN_CONTRACT.md §12.
+  (scroll :class "dashboard-scroll" :hscroll false :vscroll true
+          :hexpand true :vexpand true
+  (box :class "dashboard-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 22
+    ;; ── header: clock + date ──────────────────────────────────────────
+    (label :class "dash-clock" :text "${TIME.hm}")
+    (label :class "dash-date"  :text "${TIME.long}")
+
+    ;; ── upper grid: weather / system / power / calendar / media ──────
+    (box :class "dash-grid" :orientation "h" :space-evenly true :spacing 16
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dash-card-title" :text "WEATHER")
+        (label :class "dash-card-big"   :text "${WEATHER.temp}")
+        (label :class "dash-card-sub"   :text "${WEATHER.summary}"))
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dash-card-title" :text "SYSTEM")
+        (label :class "dash-card-big"   :text "${SYSPULSE.cpu}% · ${SYSPULSE.mem}%")
+        (label :class "dash-card-sub"   :text "CPU · MEM · ${SYSPULSE.temp}°C"))
+      (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dash-card-title" :text "POWER")
+        (label :class "dash-card-big"   :text "${BATTERY.capacity}%")
+        (label :class "dash-card-sub"   :text "${BATTERY.status} · ${POWERPROF.label}"))
+      (box :class "dash-card dash-card-cal" :orientation "v" :space-evenly false :spacing 6
+        (label :class "dash-card-title" :text "${CALENDAR.month}")
+        (label :class "dash-cal-grid"   :text "${CALENDAR.grid}"))
+      (dash_player))
+
+    ;; ── per-core CPU graph ───────────────────────────────────────────
+    (box :class "dash-cores-card" :orientation "v" :space-evenly false :spacing 8
+      (label :class "dash-card-title" :text "CPU CORES · ${arraylength(CPUCORES.cores)} threads")
+      (box :class "dash-cores" :orientation "h" :space-evenly true :spacing 4
+        (for core in {CPUCORES.cores}
+          (dash_core_bar :pct {core}))))
+
+    ;; ── sliders ──────────────────────────────────────────────────────
+    (box :class "dash-sliders" :orientation "v" :space-evenly false :spacing 10
+      (box :class "dash-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "dash-slider-label" :text "VOL")
+        (scale :class "dash-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
+      (box :class "dash-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "dash-slider-label" :text "MIC")
+        (scale :class "dash-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%"))
+      (box :class "dash-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "dash-slider-label" :text "BRT")
+        (scale :class "dash-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+               :onchange "brightnessctl set {}%")))
+
+    ;; ── quick toggles ────────────────────────────────────────────────
+    ;; Glyphs use JetBrainsMono Nerd Font code points (matches every
+    ;; other surface — bar, flyouts, OSD). Per DESIGN_CONTRACT.md §6.
+    (box :class "dash-toggles" :orientation "h" :space-evenly true :spacing 12
+      (dash_quick_toggle :glyph "󰖩" :label "Network"   :cmd "alacritty -e nmtui")
+      (dash_quick_toggle :glyph "󰂯" :label "Bluetooth" :cmd "blueman-manager")
+      (dash_quick_toggle :glyph "󰕾" :label "Audio"     :cmd "pavucontrol")
+      (dash_quick_toggle :glyph "󰍹" :label "Displays"  :cmd "wdisplays")
+      (dash_quick_toggle :glyph "󰚰" :label "Updates"   :cmd "alacritty -e sh -c 'sudo pacman -Syu; read'")
+      (dash_quick_toggle :glyph "󰒓" :label "Settings"  :cmd "eww close dashboard && nyxus-settings")
+      (dash_quick_toggle :glyph "󰌾" :label "Lock"      :cmd "eww close dashboard && hyprlock")
+      (dash_quick_toggle :glyph "󰌌" :label "Keys"      :cmd "eww close dashboard && eww open --toggle cheatsheet")
+      (dash_quick_toggle :glyph "󰐥" :label "Power"     :cmd "eww close dashboard && eww open --toggle powermenu"))
+
+    (button :class "dash-close" :onclick "eww close dashboard" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; POWERMENU
+;; ═════════════════════════════════════════════════════════════════════
+
+;; `variant` ∈ "default" | "danger". Danger variants paint the glyph red
+;; and gain a red border so destructive actions (shutdown/restart) read
+;; as obviously different from soft ones (suspend/logout/lock).
+;; Per DESIGN_CONTRACT.md §8.
+(defwidget power_btn [glyph label cmd ?variant]
+  (button :class "power-btn power-btn-${variant ?: "default"}"
+          :onclick "eww close powermenu && (${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 8 :halign "center"
+      (label :class "power-glyph" :text "${glyph}")
+      (label :class "power-label" :text "${label}"))))
+
+(defwidget powermenu_layout []
+  (box :class "powermenu-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 24
+    (label :class "power-title" :text "NYXUS · POWER")
+    (box :class "power-grid" :orientation "h" :space-evenly true :spacing 18
+      (power_btn :glyph "󰐥" :label "Shutdown" :cmd "systemctl poweroff" :variant "danger")
+      (power_btn :glyph "󰜉" :label "Restart"  :cmd "systemctl reboot"   :variant "danger")
+      (power_btn :glyph "󰒲" :label "Suspend"  :cmd "systemctl suspend")
+      (power_btn :glyph "󰗽" :label "Logout"   :cmd "hyprctl dispatch exit")
+      (power_btn :glyph "󰌾" :label "Lock"     :cmd "hyprlock"))
+    (button :class "power-cancel" :onclick "eww close powermenu" "Cancel (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; CHEATSHEET
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget cheatkey [chord action]
+  (box :class "cheat-row" :orientation "h" :space-evenly false :spacing 18
+    (label :class "cheat-chord"  :text "${chord}")
+    (label :class "cheat-action" :text "${action}")))
+
+(defwidget cheatsheet_layout []
+  (box :class "cheatsheet-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 20
+    (label :class "cheat-title" :text "NYXUS · KEY MAP")
+    (box :class "cheat-cols" :orientation "h" :space-evenly true :spacing 36
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "WINDOW")
+        (cheatkey :chord "Super + Q"        :action "Close window")
+        (cheatkey :chord "Super + V"        :action "Toggle floating")
+        (cheatkey :chord "Super + F"        :action "Fullscreen")
+        (cheatkey :chord "Super + T"        :action "Toggle split")
+        (cheatkey :chord "Super + ←/→/↑/↓"  :action "Move focus")
+        (cheatkey :chord "Super + 1..0"     :action "Switch workspace")
+        (cheatkey :chord "Super + Shift +#" :action "Move to workspace"))
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "LAUNCH")
+        (cheatkey :chord "Super + Space"    :action "App launcher")
+        (cheatkey :chord "Super + D"        :action "Rofi drun")
+        (cheatkey :chord "Super + Return"   :action "Terminal")
+        (cheatkey :chord "Super + B"        :action "Firefox")
+        (cheatkey :chord "Super + E"        :action "File manager")
+        (cheatkey :chord "Super + Tab"      :action "Window switcher"))
+      (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
+        (label :class "cheat-section" :text "SYSTEM / PANELS")
+        (cheatkey :chord "Super + A"        :action "Quick settings")
+        (cheatkey :chord "Super + N"        :action "Notifications")
+        (cheatkey :chord "Super + W"        :action "WiFi picker")
+        (cheatkey :chord "Super + Shift + B":action "Bluetooth")
+        (cheatkey :chord "Super + M"        :action "Audio mixer")
+        (cheatkey :chord "Super + C"        :action "Calendar")
+        (cheatkey :chord "Super + ` "       :action "Dashboard")
+        (cheatkey :chord "Super + Escape"   :action "Power menu")
+        (cheatkey :chord "Super + L"        :action "Lock screen")
+        (cheatkey :chord "Super + /"        :action "Cheatsheet")
+        (cheatkey :chord "Print"            :action "Screenshot region")))
+    (button :class "cheat-close" :onclick "eww close cheatsheet" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; OSD pop-ups
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget osd_volume_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+       :halign "center" :valign "center"
+    (label :class "osd-glyph" :text "${AUDIO.icon}")
+    (box :orientation "v" :space-evenly false :spacing 6 :hexpand true
+      (label :class "osd-label" :text "VOLUME · ${AUDIO.vol}%")
+      (scale :class "osd-bar" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true :active false))))
+
+(defwidget osd_brightness_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+       :halign "center" :valign "center"
+    (label :class "osd-glyph" :text "☼")
+    (box :orientation "v" :space-evenly false :spacing 6 :hexpand true
+      (label :class "osd-label" :text "BRIGHTNESS · ${BACKLIGHT.percent}%")
+      (scale :class "osd-bar" :value "${BACKLIGHT.percent}" :min 0 :max 100 :hexpand true :active false))))
+
+(defwidget osd_mic_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+       :halign "center" :valign "center"
+    (label :class "osd-glyph" :text "${MIC.icon}")
+    (box :orientation "v" :space-evenly false :spacing 6 :hexpand true
+      (label :class "osd-label" :text "MICROPHONE · ${MIC.mute == 'yes' ? 'MUTED' : '${MIC.vol}%'}")
+      (scale :class "osd-bar" :value "${MIC.vol}" :min 0 :max 100 :hexpand true :active false))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SCREENSAVER
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget screensaver_layout []
+  (box :class "saver-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 28
+    (label :class "saver-clock" :text "${TIME.hm}")
+    (label :class "saver-date"  :text "${TIME.long}")
+    (label :class "saver-brand" :text "NYXUS · DARK MIRROR")
+    (label :class "saver-hint"  :text "move mouse · press any key")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; WINDOWS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwindow bar-bottom
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-bottom"
+  :geometry (geometry :x "0" :y "12" :width "98%" :height "56px" :anchor "bottom center")
+  (bar_bottom_layout))
+
+(defwindow bar-top
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-top"
+  :geometry (geometry :x "0" :y "0" :width "100%" :height "56px" :anchor "top center")
+  (bar_top_layout))
+
+(defwindow bar-left
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-left"
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "56px" :anchor "center left")
+  (workspaces_rail))
+
+(defwindow bar-right
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-right"
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "56px" :anchor "center right")
+  (app_rail))
+
+(defwindow dashboard
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-dashboard"
+  :geometry (geometry :width "100%" :height "56px" :anchor "center")
+  (dashboard_layout))
+
+(defwindow powermenu
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-powermenu"
+  :geometry (geometry :width "100%" :height "56px" :anchor "center")
+  (powermenu_layout))
+
+(defwindow cheatsheet
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-cheatsheet"
+  :geometry (geometry :width "100%" :height "56px" :anchor "center")
+  (cheatsheet_layout))
+
+(defwindow osd-volume
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-osd"
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "56px" :anchor "bottom center")
+  (osd_volume_layout))
+
+(defwindow osd-brightness
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-osd"
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "56px" :anchor "bottom center")
+  (osd_brightness_layout))
+
+(defwindow osd-mic
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-osd"
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "56px" :anchor "bottom center")
+  (osd_mic_layout))
+
+(defwindow screensaver
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-screensaver"
+  :geometry (geometry :width "100%" :height "56px" :anchor "center")
+  (screensaver_layout))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · QUICK SETTINGS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget qs_tile [glyph label state cmd]
+  (button :class {state == "on" ? "qs-tile qs-tile-on" : "qs-tile"}
+          :onclick "(${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 4 :halign "center"
+      (label :class "qs-tile-glyph" :text "${glyph}")
+      (label :class "qs-tile-label" :text "${label}"))))
+
+;; Reusable tile with optional tooltip — keeps backward-compat with the
+;; old (qs_tile glyph label state cmd) callsites by defaulting tooltip
+;; to the empty string when omitted.
+(defwidget qs_tile_t [glyph label state cmd tooltip]
+  (button :class {state == "on" ? "qs-tile qs-tile-on" : "qs-tile"}
+          :tooltip "${tooltip}"
+          :onclick "(${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 4 :halign "center"
+      (label :class "qs-tile-glyph" :text "${glyph}")
+      (label :class "qs-tile-label" :text "${label}"))))
+
+;; Now-playing strip. Hidden when no media player is reporting status,
+;; so the panel doesn't reserve dead space on a system without playerctl.
+(defwidget qs_nowplaying []
+  (box :class "qs-nowplaying" :orientation "h" :space-evenly false :spacing 10
+       :visible {PLAYER.status != "Stopped"}
+    (label :class "qs-np-icon" :text "${PLAYER.icon}")
+    (box :orientation "v" :space-evenly false :spacing 0 :hexpand true :halign "start"
+      (label :class "qs-np-title"  :halign "start" :limit-width 28 :text "${PLAYER.title}")
+      (label :class "qs-np-artist" :halign "start" :limit-width 32 :text "${PLAYER.artist}"
+             :visible {PLAYER.artist != ""}))
+    (button :class "qs-np-btn" :tooltip "Previous" :onclick "playerctl previous &" "⏮")
+    (button :class "qs-np-btn qs-np-btn-primary" :tooltip "Play / Pause"
+            :onclick "playerctl play-pause &"
+      "${PLAYER.status == 'Playing' ? '⏸' : '▶'}")
+    (button :class "qs-np-btn" :tooltip "Next"     :onclick "playerctl next &" "⏭")))
+
+;; Cohesive single-pane Control Center (P2.12). One panel surfaces
+;; everything: identity header, connectivity tiles, system tiles,
+;; sliders, now-playing, and footer shortcuts. No more flipping between
+;; separate WiFi / BT / Mixer windows for the common path — those
+;; windows still exist for advanced lists, reachable from the header.
+(defwidget quicksettings_layout []
+  (box :class "qs-root" :orientation "v" :space-evenly false :spacing 14
+
+    ;; ── Header: title + power-profile pill + Settings shortcut ──────
+    (box :class "qs-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "qs-title" :text "CONTROL CENTER" :hexpand true :halign "start")
+      (button :class "qs-pill" :tooltip "Cycle power profile (saver → balanced → performance)"
+              :onclick "~/.config/eww/scripts/qs-toggle.sh profile &"
+        "⚡ ${QS.profile}")
+      (button :class "qs-settings" :tooltip "Open System Settings"
+              :onclick "eww close quicksettings && nyxus-settings &"
+        "⚙"))
+
+    ;; ── Connectivity row ───────────────────────────────────────────
+    (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
+      (qs_tile_t :glyph "📶" :label "WiFi"      :state "${QS.wifi}"
+                 :tooltip "Toggle WiFi · long-press header opens picker"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh wifi")
+      (qs_tile_t :glyph ""  :label "Bluetooth" :state "${QS.bt}"
+                 :tooltip "Toggle Bluetooth radio"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh bt")
+      (qs_tile_t :glyph "✈" :label "Airplane"  :state "${QS.airplane}"
+                 :tooltip "Airplane mode — block all radios"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh airplane")
+      (qs_tile_t :glyph "🌙" :label "DND"       :state "${QS.dnd}"
+                 :tooltip "Do Not Disturb — silence notifications"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh dnd"))
+
+    ;; ── System row ─────────────────────────────────────────────────
+    ;; P2.12 review fix: dropped the `auto-bright` tile (no native
+    ;; backend on Arch + Hyprland — would have been a flag-only stub).
+    ;; Replaced flag-only `rot_lock` with a real `Rotate` tile that
+    ;; cycles the focused monitor's transform via `hyprctl keyword
+    ;; monitor ,transform,N` and reports the live angle from QS.rotate.
+    (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
+      (qs_tile_t :glyph "☾"  :label "NightLight" :state "${QS.nightlight}"
+                 :tooltip "Warm color temperature for night use"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh nightlight")
+      (qs_tile_t :glyph "🎤" :label "Mic"        :state "${QS.mic_mute}"
+                 :tooltip "Mute / unmute microphone"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh mic")
+      (qs_tile_t :glyph "🔇" :label "Mute"       :state "${QS.audio_mute}"
+                 :tooltip "Mute / unmute audio output"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh audio")
+      (qs_tile_t :glyph "🔄"
+                 :label {QS.rotate == "0" ? "0°"
+                       : QS.rotate == "1" ? "90°"
+                       : QS.rotate == "2" ? "180°"
+                       : "270°"}
+                 :state {QS.rotate == "0" ? "off" : "on"}
+                 :tooltip "Rotate display (cycles 0° → 90° → 180° → 270°)"
+                 :cmd "~/.config/eww/scripts/qs-toggle.sh rotate"))
+
+    ;; ── Session row ────────────────────────────────────────────────
+    (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
+      (qs_tile_t :glyph "🔔" :label "Notifs"    :state "off"
+                 :tooltip "Open Notification Center"
+                 :cmd "eww close quicksettings && eww open --toggle notifications")
+      (qs_tile_t :glyph "🔒" :label "Lock"      :state "off"
+                 :tooltip "Lock screen now"
+                 :cmd "eww close quicksettings && hyprlock")
+      (qs_tile_t :glyph "⏻"  :label "Power"     :state "off"
+                 :tooltip "Power menu"
+                 :cmd "eww close quicksettings && eww open --toggle powermenu"))
+
+    ;; ── Sliders ────────────────────────────────────────────────────
+    (box :class "qs-sliders" :orientation "v" :space-evenly false :spacing 10
+      (box :orientation "h" :space-evenly false :spacing 12
+        (label :class "qs-slider-glyph" :text "🔊")
+        (scale :class "qs-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
+               :tooltip "Output volume · ${AUDIO.vol}%"
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
+      (box :orientation "h" :space-evenly false :spacing 12
+        (label :class "qs-slider-glyph" :text "☼")
+        (scale :class "qs-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+               :tooltip "Display brightness · ${BACKLIGHT.percent}%"
+               :onchange "brightnessctl set {}%"))
+      (box :orientation "h" :space-evenly false :spacing 12
+        (label :class "qs-slider-glyph" :text "🎤")
+        (scale :class "qs-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
+               :tooltip "Microphone gain · ${MIC.vol}%"
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%")))
+
+    ;; ── Now-playing strip (auto-hides when no player is active) ────
+    (qs_nowplaying)
+
+    (button :class "qs-close" :onclick "eww close quicksettings" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · WIFI PICKER
+;; ═════════════════════════════════════════════════════════════════════
+
+;; SSID is passed only as the base64 `b64` field, never raw, to prevent
+;; shell injection from malicious access-point names (rev r9-eww).
+(defwidget wifi_row [net]
+  (box :class {net.active ? "wifi-row wifi-row-active" : "wifi-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (label :class "wifi-bars" :text "${net.bars}")
+    (button :class "wifi-name" :hexpand true :halign "start"
+            :onclick "~/.config/eww/scripts/wifi-action.sh connect ${net.b64} &"
+            :tooltip "Click to connect · ${net.security} · ${net.signal}%"
+      "${net.icon}  ${net.ssid}")
+    (label :class "wifi-sig" :text "${net.signal}%")
+    (button :class "wifi-forget"
+            :onclick "~/.config/eww/scripts/wifi-action.sh forget ${net.b64} &"
+            :tooltip "Forget" "✕")))
+
+(defwidget wifi_layout []
+  (box :class "wifi-root" :orientation "v" :space-evenly false :spacing 12
+    (box :class "wifi-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "wifi-title" :text "WIFI" :hexpand true :halign "start")
+      (button :class "wifi-toggle"
+              :onclick "~/.config/eww/scripts/wifi-action.sh toggle &"
+              :tooltip "Toggle WiFi radio"
+        "${WIFILIST.enabled == 'true' ? 'ON' : 'OFF'}")
+      (button :class "wifi-rescan"
+              :onclick "~/.config/eww/scripts/wifi-action.sh rescan &"
+              :tooltip "Rescan" "↻"))
+    (label :class "wifi-current" :text "Connected · ${WIFILIST.current == '' ? '—' : WIFILIST.current}"
+           :halign "start")
+    (scroll :class "wifi-scroll" :hscroll false :vscroll true :height 360
+      (box :orientation "v" :space-evenly false :spacing 4
+        ;; DESIGN_CONTRACT §9 — empty state. Visible only when the
+        ;; networks array is empty so the panel never shows a blank box.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {arraylength(WIFILIST.networks) == 0}
+          (label :class "empty-glyph" :text "📡")
+          (label :class "empty-title" :text "No networks in range")
+          (label :class "empty-hint"  :text "Try Rescan, or move closer to an access point."))
+        (for net in {WIFILIST.networks}
+          (wifi_row :net {net}))))
+    (box :orientation "h" :space-evenly true :spacing 10
+      (button :class "wifi-advanced" :onclick "eww close wifi && alacritty -e nmtui &" "Advanced (nmtui)")
+      (button :class "wifi-close" :onclick "eww close wifi" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · BLUETOOTH MANAGER
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget bt_row [dev]
+  (box :class {dev.connected ? "bt-row bt-row-conn" : "bt-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (label :class "bt-icon" :text "${dev.icon}")
+    (box :orientation "v" :space-evenly false :spacing 2 :hexpand true :halign "start"
+      (label :class "bt-name" :halign "start" :text "${dev.name}")
+      (label :class "bt-mac"  :halign "start"
+             :text "${dev.mac}${dev.battery >= 0 ? '  ·  🔋' + dev.battery + '%' : ''}"))
+    (button :class "bt-act"
+            :onclick "~/.config/eww/scripts/bt-action.sh ${dev.connected ? 'disconnect' : 'connect'} ${dev.mac} &"
+            :tooltip "${dev.connected ? 'Disconnect' : 'Connect'}"
+      "${dev.connected ? 'Disc' : 'Conn'}")
+    (button :class "bt-act" :visible {!dev.paired}
+            :onclick "~/.config/eww/scripts/bt-action.sh pair ${dev.mac} &"
+            :tooltip "Pair" "Pair")
+    (button :class "bt-forget" :visible {dev.paired}
+            :onclick "~/.config/eww/scripts/bt-action.sh unpair ${dev.mac} &"
+            :tooltip "Forget" "✕")))
+
+(defwidget bluetooth_layout []
+  (box :class "bt-root" :orientation "v" :space-evenly false :spacing 12
+    (box :class "bt-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "bt-title" :text "BLUETOOTH" :hexpand true :halign "start")
+      (button :class "bt-toggle"
+              :onclick "~/.config/eww/scripts/bt-action.sh toggle &"
+              :tooltip "Toggle adapter"
+        "${BTLIST.powered == 'true' ? 'ON' : 'OFF'}")
+      (button :class "bt-scan"
+              :onclick "~/.config/eww/scripts/bt-action.sh scan &"
+              :tooltip "Scan 8s"
+        "${BTLIST.scanning == 'true' ? '⟳ scan' : 'Scan'}"))
+    (scroll :class "bt-scroll" :hscroll false :vscroll true :height 360
+      (box :orientation "v" :space-evenly false :spacing 4
+        ;; DESIGN_CONTRACT §9 — empty state.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {arraylength(BTLIST.devices) == 0}
+          (label :class "empty-glyph" :text {BTLIST.powered == 'true' ? "" : ""})
+          (label :class "empty-title" :text {BTLIST.powered == 'true' ? "No devices yet" : "Bluetooth is off"})
+          (label :class "empty-hint"  :text {BTLIST.powered == 'true' ? "Tap Scan to discover nearby devices." : "Toggle the adapter on, then Scan."}))
+        (for dev in {BTLIST.devices}
+          (bt_row :dev {dev}))))
+    (box :orientation "h" :space-evenly true :spacing 10
+      (button :class "bt-advanced" :onclick "eww close bluetooth && blueman-manager &" "Advanced")
+      (button :class "bt-close" :onclick "eww close bluetooth" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · AUDIO MIXER
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget mix_sink_row [s]
+  (box :class {s.default ? "mix-row mix-row-default" : "mix-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (button :class "mix-pick"
+            :onclick "~/.config/eww/scripts/audio-action.sh set-default-sink ${s.id} &"
+            :tooltip "Make default" "${s.default ? '◉' : '○'}")
+    (label :class "mix-name" :hexpand true :halign "start" :limit-width 28
+           :text "${s.description}")
+    (scale :class "mix-scale" :value "${s.vol}" :min 0 :max 150 :hexpand true
+           :onchange "~/.config/eww/scripts/audio-action.sh set-sink-vol ${s.id} {} &")
+    (label :class "mix-pct" :text "${s.vol}%")
+    (button :class "mix-mute"
+            :onclick "~/.config/eww/scripts/audio-action.sh toggle-sink-mute ${s.id} &"
+      "${s.mute ? '✕' : '🔊'}")))
+
+(defwidget mix_app_row [a]
+  (box :class "mix-row" :orientation "h" :space-evenly false :spacing 10
+    (label :class "mix-app-glyph" :text "♫")
+    (label :class "mix-name" :hexpand true :halign "start" :limit-width 28 :text "${a.name}")
+    (scale :class "mix-scale" :value "${a.vol}" :min 0 :max 150 :hexpand true
+           :onchange "~/.config/eww/scripts/audio-action.sh set-app-vol ${a.id} {} &")
+    (label :class "mix-pct" :text "${a.vol}%")
+    (button :class "mix-mute"
+            :onclick "~/.config/eww/scripts/audio-action.sh toggle-app-mute ${a.id} &"
+      "${a.mute ? '✕' : '🔊'}")))
+
+(defwidget mixer_layout []
+  (box :class "mix-root" :orientation "v" :space-evenly false :spacing 14
+    (label :class "mix-title" :text "AUDIO MIXER")
+
+    (label :class "mix-section" :text "OUTPUT DEVICES" :halign "start")
+    (box :orientation "v" :space-evenly false :spacing 4
+      (for s in {AUDIOMIX.sinks}
+        (mix_sink_row :s {s})))
+
+    (label :class "mix-section" :text "PER-APP" :halign "start")
+    (scroll :class "mix-scroll" :vscroll true :hscroll false :height 200
+      (box :orientation "v" :space-evenly false :spacing 4
+        ;; DESIGN_CONTRACT §9 — empty state.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {arraylength(AUDIOMIX.apps) == 0}
+          (label :class "empty-glyph" :text "♪")
+          (label :class "empty-title" :text "No apps playing audio")
+          (label :class "empty-hint"  :text "Open a media app to see per-app volumes here."))
+        (for a in {AUDIOMIX.apps}
+          (mix_app_row :a {a}))))
+
+    (box :orientation "h" :space-evenly true :spacing 10
+      (button :class "mix-advanced" :onclick "eww close mixer && pavucontrol &" "Advanced (pavucontrol)")
+      (button :class "mix-close" :onclick "eww close mixer" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · CALENDAR
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget cal_day [c]
+  (label :class {c.today ? "cal-day cal-day-today" :
+                 c.inmonth ? "cal-day cal-day-in" : "cal-day cal-day-out"}
+         :text "${c.d}"))
+
+(defwidget cal_week [w]
+  (box :class "cal-week" :orientation "h" :space-evenly true :spacing 4
+    (for c in {w}
+      (cal_day :c {c}))))
+
+(defwidget calendar_layout []
+  (box :class "cal-root" :orientation "v" :space-evenly false :spacing 14
+    (label :class "cal-title" :text "${CALMONTH.month} ${CALMONTH.year}")
+    (label :class "cal-today" :text "${TIME.long}")
+    (box :class "cal-dow" :orientation "h" :space-evenly true :spacing 4
+      (label :class "cal-dow-cell" :text "Su") (label :class "cal-dow-cell" :text "Mo")
+      (label :class "cal-dow-cell" :text "Tu") (label :class "cal-dow-cell" :text "We")
+      (label :class "cal-dow-cell" :text "Th") (label :class "cal-dow-cell" :text "Fr")
+      (label :class "cal-dow-cell" :text "Sa"))
+    (box :class "cal-grid" :orientation "v" :space-evenly false :spacing 4
+      (for w in {CALMONTH.weeks}
+        (cal_week :w {w})))
+    (button :class "cal-close" :onclick "eww close calendar" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · NOTIFICATION CENTER
+;; ═════════════════════════════════════════════════════════════════════
+
+;; A single notification row. Two action affordances on the right:
+;; the default action (only rendered when dunst exposes a name) and
+;; the per-row dismiss. Muted rows render at half opacity but are kept
+;; visible so users can still see what was silenced and unmute.
+(defwidget notif_row [n]
+  (box :class {n.muted == true ? "notif-row notif-row-muted" : "notif-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (box :orientation "v" :space-evenly false :spacing 2 :hexpand true :halign "start"
+      (label :class "notif-summary" :halign "start" :limit-width 38 :text "${n.summary}")
+      (label :class "notif-body"    :halign "start" :limit-width 46 :text "${n.body}"
+             :visible {n.body != ""}))
+    (button :class "notif-action"
+            :visible {n.default_action != ""}
+            :tooltip "${n.default_action}"
+            :onclick "~/.config/eww/scripts/notif-action.sh invoke-id ${n.id} &"
+      "↗")
+    (button :class "notif-dismiss"
+            :onclick "~/.config/eww/scripts/notif-action.sh close-id ${n.id} &"
+            :tooltip "Dismiss" "✕")))
+
+;; Per-app group header. The app-name pill toggles mute for the whole
+;; app; the count badge shows in-history total. Click anywhere on the
+;; header to mute/unmute all notifications from that app.
+(defwidget notif_group [g]
+  (box :class {g.muted == true ? "notif-group notif-group-muted" : "notif-group"}
+       :orientation "v" :space-evenly false :spacing 6
+    (box :class "notif-group-header" :orientation "h" :space-evenly false :spacing 8
+      (label :class "notif-app"   :text "${g.app}" :hexpand true :halign "start")
+      (label :class "notif-count" :text "${g.count}")
+      (button :class {g.muted == true ? "notif-mute notif-mute-on" : "notif-mute"}
+              :tooltip {g.muted == true ? "Unmute ${g.app}" : "Mute ${g.app}"}
+              ;; SECURITY: app name is passed as base64 token (b64:<...>)
+              ;; rather than interpolated raw — notification metadata is
+              ;; attacker-influenced and a literal app name like
+              ;;     foo'; rm -rf $HOME; '
+              ;; would otherwise break out of the single-quoted argv.
+              :onclick "~/.config/eww/scripts/notif-action.sh mute-app b64:${g.app_b64} &"
+        "${g.muted == true ? '🔕' : '🔔'}"))
+    (box :orientation "v" :space-evenly false :spacing 4
+      (for n in {g.items}
+        (notif_row :n {n})))))
+
+;; Slide-in is provided at the layer-shell level by Hyprland — see
+;; `nyxus-hyprland-layerblur.conf` for the `layerrule = animation slide,
+;; nyxus-notifications` line. EWW just renders the static contents.
+(defwidget notifications_layout []
+  (box :class "notif-root" :orientation "v" :space-evenly false :spacing 12
+    (box :class "notif-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "notif-title"
+             :text "NOTIFICATIONS · ${NOTIFLIST.shown}/${NOTIFLIST.total}"
+             :hexpand true :halign "start")
+      (button :class {NOTIFLIST.paused == 'true' ? "notif-dnd notif-dnd-on" : "notif-dnd"}
+              :tooltip {NOTIFLIST.paused == 'true' ? "Do Not Disturb is ON — click to resume" : "Silence all notifications"}
+              :onclick "~/.config/eww/scripts/notif-action.sh toggle-dnd &"
+        "${NOTIFLIST.paused == 'true' ? 'DND' : 'ON'}")
+      (button :class "notif-clear"
+              :onclick "~/.config/eww/scripts/notif-action.sh clear-all &"
+              :tooltip "Clear notification history"
+        "Clear all"))
+    (scroll :class "notif-scroll" :vscroll true :hscroll false :height 480
+      (box :orientation "v" :space-evenly false :spacing 10
+        ;; DESIGN_CONTRACT §9 — empty state.
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {NOTIFLIST.total == 0}
+          (label :class "empty-glyph" :text "✓")
+          (label :class "empty-title" :text {NOTIFLIST.paused == 'true' ? "Do Not Disturb is on" : "All caught up"})
+          (label :class "empty-hint"  :text {NOTIFLIST.paused == 'true' ? "Notifications are silenced. Toggle DND to resume." : "New notifications will appear here."}))
+        (for g in {NOTIFLIST.groups}
+          (notif_group :g {g}))))
+    (button :class "notif-close" :onclick "eww close notifications" "Close (Esc)")))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; SPRINT 1 · WINDOWS
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwindow quicksettings
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-quicksettings"
+  :geometry (geometry :x "16" :y "78" :width "420px" :height "56px" :anchor "bottom right")
+  (quicksettings_layout))
+
+(defwindow wifi
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-wifi"
+  :geometry (geometry :x "16" :y "78" :width "440px" :height "56px" :anchor "bottom right")
+  (wifi_layout))
+
+(defwindow bluetooth
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-bluetooth"
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "56px" :anchor "bottom right")
+  (bluetooth_layout))
+
+(defwindow mixer
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-mixer"
+  :geometry (geometry :x "16" :y "78" :width "520px" :height "56px" :anchor "bottom right")
+  (mixer_layout))
+
+(defwindow calendar
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-calendar"
+  :geometry (geometry :x "16" :y "78" :width "380px" :height "56px" :anchor "bottom right")
+  (calendar_layout))
+
+(defwindow notifications
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-notifications"
+  :geometry (geometry :x "16" :y "78" :width "440px" :height "56px" :anchor "bottom right")
+  (notifications_layout))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; P3.13b · NYXUS START MENU (Win11-grade launcher)
+;; Bound to bottom-left "✕ NYXUS" brand button. STARTAPPS poller
+;; produces pinned/recents/all/user. STARTQUERY filters `all`.
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget startmenu_tile [name glyph exec]
+  (button :class "startmenu-tile"
+          :onclick "${exec} & disown ; eww close startmenu"
+          :tooltip "${name}"
+    (box :orientation "v" :space-evenly false :spacing 2 :halign "center"
+      (label :class "startmenu-tile-glyph" :text "${glyph}")
+      (label :class "startmenu-tile-label" :text "${name}" :limit-width 12))))
+
+(defwidget startmenu_recent_row [name path exec]
+  (button :class "startmenu-recent-row"
+          :onclick "${exec} & disown ; eww close startmenu"
+    (box :orientation "v" :space-evenly false :spacing 1 :halign "start" :hexpand true
+      (label :class "startmenu-recent-name" :text "${name}" :halign "start" :limit-width 56)
+      (label :class "startmenu-recent-path" :text "${path}" :halign "start" :limit-width 56))))
+
+(defwidget startmenu_layout []
+  (box :class "startmenu-root" :orientation "v" :space-evenly false :spacing 8
+    ;; Search bar — typing updates STARTQUERY which the script re-reads.
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "startmenu-tile-glyph" :text "")
+      (input :class "startmenu-search"
+             :hexpand true
+             :value STARTQUERY
+             :onchange "eww update STARTQUERY={} ; ~/.config/eww/scripts/startmenu-apps.sh search {} >/dev/null &"))
+
+    ;; Pinned grid (4 columns × 3 rows = 12 slots).
+    (label :class "startmenu-section" :text "PINNED" :halign "start"
+           :visible {STARTQUERY == ""})
+    (box :class "startmenu-grid" :orientation "v" :space-evenly false :spacing 4
+         :visible {STARTQUERY == ""}
+      (for row in {STARTAPPS.pinned}
+        (box :orientation "h" :space-evenly true :spacing 6
+          (for app in {row}
+            (startmenu_tile :name {app.name} :glyph {app.glyph} :exec {app.exec})))))
+
+    ;; Recents — most-recent .desktop launches.
+    (label :class "startmenu-section" :text "RECENT" :halign "start"
+           :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0})
+    (box :orientation "v" :space-evenly false :spacing 2
+         :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0}
+      (for r in {STARTAPPS.recents}
+        (startmenu_recent_row :name {r.name} :path {r.path} :exec {r.exec})))
+
+    ;; Search results — flat list when STARTQUERY != "".
+    (label :class "startmenu-section" :text "RESULTS" :halign "start"
+           :visible {STARTQUERY != ""})
+    (scroll :vscroll true :hscroll false :height 320
+            :visible {STARTQUERY != ""}
+      (box :orientation "v" :space-evenly false :spacing 2
+        (for a in {STARTAPPS.all}
+          (startmenu_recent_row :name {a.name} :path {a.exec} :exec {a.exec}))))
+
+    ;; Footer — user identity + power buttons.
+    (box :class "startmenu-footer" :orientation "h" :space-evenly false :spacing 10
+      (label :class "startmenu-user" :text "  ${STARTAPPS.user}@${STARTAPPS.host}"
+             :hexpand true :halign "start")
+      (button :class "startmenu-power-btn"
+              :tooltip "Lock"
+              :onclick "eww close startmenu ; hyprlock &" "")
+      (button :class "startmenu-power-btn"
+              :tooltip "Settings"
+              :onclick "eww close startmenu ; nyxus-settings &" "")
+      (button :class "startmenu-power-btn shutdown"
+              :tooltip "Power"
+              :onclick "eww close startmenu ; eww open --toggle powermenu" ""))))
+
+(defwindow startmenu
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-startmenu"
+  :geometry (geometry :x "16" :y "78" :width "640px" :height "56px" :anchor "bottom left")
+  (startmenu_layout))
+
+── did my CSS cap actually land at the bottom of eww.scss? ──
+
+/* SysPulse: dim the chrome, gold the values */
+.syspulse-cpu, .syspulse-mem, .syspulse-temp {
+  color: #c8ccd6;
+}
+/* ── EMERGENCY BAR HEIGHT CAP ── */
+.bar-bottom { max-height: 56px; }
+.bar-top    { max-height: 32px; }
+.bar-bottom > * { min-height: 0; }
+.bar-bottom .bar-cluster { min-height: 0; }
+
+/* EMERGENCY-BAR-CAP */
+.bar-bottom { min-height: 0; max-height: 56px; }
+.bar-top    { min-height: 0; max-height: 32px; }
+.bar-bottom *, .bar-bottom .bar-cluster, .bar-bottom .pill { min-height: 0; }
+
+── what's the parent box's class? ──
+[nyx@nyxus eww]$
