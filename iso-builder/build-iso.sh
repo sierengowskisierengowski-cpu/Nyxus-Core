@@ -176,6 +176,9 @@ install -m 0644 "${NS}"/nyxus_*.py "${OPT_NYXUS}/"
 if [[ -f "${NS}/nyxus-security-daemon.py" ]]; then
   install -m 0644 "${NS}/nyxus-security-daemon.py" "${OPT_NYXUS}/nyxus-security-daemon.py"
 fi
+if [[ -f "${NS}/nyxus-crash-report.py" ]]; then
+  install -m 0644 "${NS}/nyxus-crash-report.py" "${OPT_NYXUS}/nyxus-crash-report.py"
+fi
 if [[ -f "${NS}/desktop/nyxus_desktop.py" ]]; then
   install -Dm0644 "${NS}/desktop/nyxus_desktop.py" "${OPT_NYXUS}/desktop/nyxus_desktop.py"
 fi
@@ -432,6 +435,12 @@ exec python3 /opt/nyxus/nyxus_drop.py "$@"
 LAUNCHER
 chmod 0755 "${LBIN}/nyxus-drop"
 
+cat > "${LBIN}/nyxus-crash-report" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus-crash-report.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-crash-report"
+
 cat > "${LBIN}/nyxus-security" <<'LAUNCHER'
 #!/usr/bin/env bash
 exec python3 /opt/nyxus/nyxus_security.py "$@"
@@ -539,6 +548,14 @@ for h in nyxus-backup-helper nyxus-usbwatch-helper \
     install -Dm755 "${NS}/${h}" "${LIBEXEC}/${h}"
   fi
 done
+
+# Wave-4 desktop entries authored in nyxus-scripts/desktop-entries
+if [[ -d "${NS}/desktop-entries" ]]; then
+  for desk in "${NS}/desktop-entries"/nyxus-*.desktop; do
+    [[ -f "${desk}" ]] || continue
+    install -Dm644 "${desk}" "${PROFILE_DIR}/airootfs/usr/share/applications/$(basename "${desk}")"
+  done
+fi
 
 # Wave-4 polkit policies authored under nyxus-scripts/polkit-policies
 if [[ -d "${NS}/polkit-policies" ]]; then
