@@ -1,0 +1,25 @@
+[Unit]
+Description=NYXUS Security indicator daemon (camera/mic/location/screen)
+Documentation=https://nyxus.os/docs/security
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.nyxus/nyxus-security-daemon.py
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-write
+ReadWritePaths=%h/.cache/nyxus
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictNamespaces=true
+RestrictRealtime=true
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=graphical-session.target

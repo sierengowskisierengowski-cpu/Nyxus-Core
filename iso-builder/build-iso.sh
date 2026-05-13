@@ -111,8 +111,17 @@ WALLS_SYS="${PROFILE_DIR}/airootfs/usr/share/backgrounds/nyxus"
 LBIN="${PROFILE_DIR}/airootfs/usr/local/bin"
 APPS="${PROFILE_DIR}/airootfs/usr/share/applications"
 
-# Wipe & recreate so we never inherit stale files from a prior bake.
-rm -rf "${SKEL}/.config" "${OPT_NYXUS}" "${WALLS_SYS}"
+# Wipe only NYXUS-managed config shards. Do not remove unrelated skel
+# content (gtk settings, user units, app state dirs) needed at first boot.
+rm -rf \
+  "${SKEL}/.config/hypr" \
+  "${SKEL}/.config/eww" \
+  "${SKEL}/.config/dunst" \
+  "${SKEL}/.config/rofi" \
+  "${SKEL}/.config/wlogout" \
+  "${SKEL}/.config/alacritty" \
+  "${OPT_NYXUS}" \
+  "${WALLS_SYS}"
 mkdir -p \
   "${SKEL}/.config/hypr/conf.d" \
   "${SKEL}/.config/hypr/walls" \
@@ -121,6 +130,7 @@ mkdir -p \
   "${SKEL}/.config/rofi" \
   "${SKEL}/.config/wlogout" \
   "${SKEL}/.config/alacritty" \
+  "${SKEL}/.config/systemd/user" \
   "${OPT_NYXUS}" \
   "${WALLS_USER}" \
   "${WALLS_SYS}" \
@@ -163,6 +173,12 @@ ok "configs: hypr (+conf.d) / eww / dunst / rofi / wlogout / alacritty"
 # launch python3 ~/.nyxus/nyxus_*.py to stay compatible with the
 # download-portal install flow that uses ~/.nyxus/) work on the live ISO.
 install -m 0644 "${NS}"/nyxus_*.py "${OPT_NYXUS}/"
+if [[ -f "${NS}/nyxus-security-daemon.py" ]]; then
+  install -m 0644 "${NS}/nyxus-security-daemon.py" "${OPT_NYXUS}/nyxus-security-daemon.py"
+fi
+if [[ -f "${NS}/desktop/nyxus_desktop.py" ]]; then
+  install -Dm0644 "${NS}/desktop/nyxus_desktop.py" "${OPT_NYXUS}/desktop/nyxus_desktop.py"
+fi
 
 # ── Welcome Wizard companion files (rev r9-eww 2026-05-11) ─────────────
 # Stage the three hand-written files into airootfs/root/ where
@@ -179,6 +195,19 @@ done
 ok "Welcome Wizard: staged 3 companion files into airootfs/root/"
 ln -sfn /opt/nyxus "${SKEL}/.nyxus"
 ok "GTK apps: $(ls "${OPT_NYXUS}"/*.py | wc -l) python files in /opt/nyxus/ (~/.nyxus → /opt/nyxus symlink in skel)"
+
+# ── User services + policies (EWW / crashd / security daemon) ─────────────────
+if [[ -f "${NS}/nyxus-eww.service" ]]; then
+  install -m 0644 "${NS}/nyxus-eww.service" "${SKEL}/.config/systemd/user/nyxus-eww.service"
+fi
+if [[ -f "${NS}/nyxus-security-daemon.service" ]]; then
+  install -m 0644 "${NS}/nyxus-security-daemon.service" "${SKEL}/.config/systemd/user/nyxus-security-daemon.service"
+fi
+if [[ -f "${NS}/com.nyxus.security.policy" ]]; then
+  install -Dm644 "${NS}/com.nyxus.security.policy" \
+    "${PROFILE_DIR}/airootfs/usr/share/polkit-1/actions/com.nyxus.security.policy"
+fi
+ok "user units + policy: nyxus-eww / nyxus-security-daemon / com.nyxus.security.policy"
 
 # ── Wallpapers → both user skel (matches hyprland.conf path) and system ─
 # Includes the new void-vortex (default EWW-era wallpaper, replaces drifter).
@@ -200,7 +229,27 @@ ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyx
 # rev r6-eww: waybar-stats / waybar-ticker removed. nyxus-eww-launch added.
 install -m 0755 "${NS}/wallpaper-rotate.sh"  "${LBIN}/wallpaper-rotate"
 install -m 0755 "${NS}/nyxus-eww-launch"     "${LBIN}/nyxus-eww-launch"
+if [[ -f "${NS}/nyxus-set-wallpaper.sh" ]]; then
+  install -m 0755 "${NS}/nyxus-set-wallpaper.sh" "${LBIN}/nyxus-set-wallpaper.sh"
+fi
+if [[ -f "${NS}/nyxus-sound.sh" ]]; then
+  install -m 0755 "${NS}/nyxus-sound.sh" "${LBIN}/nyxus-sound.sh"
+fi
+if [[ -f "${NS}/nyxus-record" ]]; then
+  install -m 0755 "${NS}/nyxus-record" "${LBIN}/nyxus-record"
+fi
+if [[ -f "${NS}/desktop/nyxus-context-menu.sh" ]]; then
+  install -m 0755 "${NS}/desktop/nyxus-context-menu.sh" "${LBIN}/nyxus-context-menu.sh"
+fi
 ok "helpers: wallpaper-rotate / nyxus-eww-launch"
+
+# Sound theme assets used by nyxus-sound.sh (falls back to canberra IDs if missing).
+if [[ -d "${NS}/sounds" ]]; then
+  install -Dm644 "${NS}/sounds/index.theme" \
+    "${PROFILE_DIR}/airootfs/usr/share/sounds/nyxus/index.theme" 2>/dev/null || true
+  install -m 0644 "${NS}"/sounds/*.oga \
+    "${PROFILE_DIR}/airootfs/usr/share/sounds/nyxus/" 2>/dev/null || true
+fi
 
 # ── First-boot bootstrap shims → /usr/local/bin/ ────────────────────────
 # nyxus-bootstrap is the first-run installer wrapper that Hyprland's
@@ -308,6 +357,55 @@ StartupNotify=true
 DESKTOP
 done
 ok "launchers + desktop entries: ${#APPS_LIST[@]} apps"
+
+# Utility wrappers required by Hyprland keybinds/services.
+cat > "${LBIN}/nyxus-clipboard" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_clipboard.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-clipboard"
+
+cat > "${LBIN}/nyxus-files" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_files.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-files"
+
+cat > "${LBIN}/nyxus-updater" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_updater.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-updater"
+
+cat > "${LBIN}/nyxus-backup" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_backup.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-backup"
+
+cat > "${LBIN}/nyxus-drop" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_drop.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-drop"
+
+cat > "${LBIN}/nyxus-security" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_security.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-security"
+
+cat > "${LBIN}/nyxus-crashd" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_crashd.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-crashd"
+
+cat > "${LBIN}/nyxus-desktop" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/desktop/nyxus_desktop.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-desktop"
 
 # ── populate airootfs/opt/nyxus-intel ────────────────────────────────────
 step "stage Phantom into airootfs/opt/nyxus-intel/"
