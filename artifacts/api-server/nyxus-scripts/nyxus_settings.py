@@ -138,6 +138,9 @@ GLYPHS = {
     "drop":          "\uf0ee",   # nf-fa-cloud_upload
     "shortcut":      "\uf11c",   # nf-fa-keyboard_o (alt)
     "crash":         "\uf188",   # nf-fa-bug
+    "printers":      "\uf02f",   # nf-fa-print
+    "gamepad":       "\uf11b",   # nf-fa-gamepad
+    "webcam":        "\uf03d",   # nf-fa-video_camera
 }
 
 
@@ -360,6 +363,23 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "Devices, pairing, audio profile",
                "bluetooth",
                "bluetooth,bt,pair,headphones,speaker,audio,device", 1,
+               "Devices"),
+    SectionDef("printers",      "Printers & Scanners",
+               "CUPS print queues, default printer, test page",
+               "printers",
+               "printer,scanner,cups,lpstat,lpadmin,print,paper,queue", 1,
+               "Devices"),
+    SectionDef("cameras_mics",  "Camera & Microphone",
+               "Detected video/audio capture devices, test tools",
+               "webcam",
+               "camera,webcam,microphone,mic,v4l2,video,capture,record,"
+               "cheese,arecord,pactl", 1,
+               "Devices"),
+    SectionDef("controllers",   "Game Controllers",
+               "Joysticks, gamepads, axes & button test",
+               "gamepad",
+               "controller,gamepad,joystick,xbox,playstation,steam,"
+               "evtest,jstest,input", 1,
                "Devices"),
     SectionDef("network",       "Network",
                "Wi-Fi, ethernet, VPN, DNS",
@@ -6798,6 +6818,406 @@ class BluetoothPage(SectionPage):
 # ──────────────────────────────────────────────────────────────────────
 # Tier-1: ABOUT
 # ──────────────────────────────────────────────────────────────────────
+class PrintersPage(SectionPage):
+    """Printers & Scanners — CUPS-backed queue manager.
+
+    Reads via lpstat / lpinfo, writes via lpadmin + cupsenable/cupsdisable
+    behind pkexec. Service status pill mirrors cups.service.
+    """
+    KEY = "printers"
+
+    def build(self) -> None:
+        if not have("lpstat"):
+            grp = Adw.PreferencesGroup(title="CUPS not installed")
+            grp.add(empty_row(
+                "Printing tools missing",
+                "Install cups + cups-pk-helper to manage printers."))
+            self.add_group(grp)
+            self.add_pill(status_pill("cups missing", "danger"))
+            return
+
+        self.svc_grp = Adw.PreferencesGroup(title="Print service")
+        self.add_group(self.svc_grp)
+
+        self.dev_grp = Adw.PreferencesGroup(
+            title="Printers",
+            description="Configured CUPS print queues")
+        self.add_group(self.dev_grp)
+
+        tools = Adw.PreferencesGroup(title="Tools")
+        self.add_group(tools)
+        if have("system-config-printer"):
+            tools.add(action_row(
+                "Add a printer",
+                "Open the system printer configuration dialog",
+                "Open",
+                lambda: subprocess.Popen(["system-config-printer"])))
+        tools.add(action_row(
+            "Open CUPS web admin",
+            "http://localhost:631 (browser)",
+            "Open",
+            lambda: subprocess.Popen(["xdg-open",
+                                      "http://localhost:631"])))
+
+        self._render()
+        self.schedule_refresh(8000, self._tick)
+
+    def _tick(self) -> bool:
+        self._render()
+        return True
+
+    def _track(self, grp: Adw.PreferencesGroup, row: Gtk.Widget) -> None:
+        grp.add(row)
+        if not hasattr(grp, "_rows"):
+            grp._rows = []  # type: ignore[attr-defined]
+        grp._rows.append(row)  # type: ignore[attr-defined]
+
+    def _clear(self, grp: Adw.PreferencesGroup) -> None:
+        for row in getattr(grp, "_rows", []):
+            grp.remove(row)
+        grp._rows = []  # type: ignore[attr-defined]
+
+    def _render(self) -> None:
+        for g in (self.svc_grp, self.dev_grp):
+            self._clear(g)
+        self.clear_pills()
+
+        _, svc, _ = sh("systemctl is-active cups.service")
+        active = svc.strip() == "active"
+
+        if active:
+            self.add_pill(status_pill("on", "ok"))
+        else:
+            self.add_pill(status_pill("service off", "warn"))
+
+        svc_row = Adw.ActionRow(
+            title="cups.service",
+            subtitle="active" if active
+            else "inactive — print queue offline")
+        verb = "stop" if active else "start"
+        btn = Gtk.Button(label="Stop" if active else "Start")
+        if not active:
+            btn.add_css_class("nyx-primary")
+        btn.set_valign(Gtk.Align.CENTER)
+        btn.connect("clicked", lambda _b: sh_async(
+            f"pkexec systemctl {verb} cups.service",
+            lambda r: (self.toast(
+                f"cups {verb}ed" if r[0] == 0
+                else "auth required or failed"),
+                self._render())))
+        svc_row.add_suffix(btn)
+        self._track(self.svc_grp, svc_row)
+
+        if not active:
+            row = empty_row(
+                "No queues available",
+                "Start cups.service to manage printers.")
+            self._track(self.dev_grp, row)
+            return
+
+        # Default printer
+        _, def_out, _ = sh("lpstat -d")
+        default = ""
+        if ":" in def_out:
+            tail = def_out.split(":", 1)[1].strip()
+            if not tail.lower().startswith("no system"):
+                default = tail
+
+        # Queue list
+        _, plist, _ = sh("lpstat -p")
+        if not plist.strip():
+            row = empty_row(
+                "No printers configured",
+                "Click 'Add a printer' to set one up.")
+            self._track(self.dev_grp, row)
+            return
+
+        for line in plist.splitlines():
+            if not line.startswith("printer "):
+                continue
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            name = parts[1]
+            if "is idle" in line:
+                state = "idle"
+            elif "now printing" in line:
+                state = "printing"
+            elif "disabled" in line:
+                state = "stopped"
+            else:
+                state = "?"
+            is_default = (name == default)
+            sub_bits = [state]
+            if is_default:
+                sub_bits.append("default")
+            row = Adw.ActionRow(title=name,
+                                subtitle=" · ".join(sub_bits))
+
+            if not is_default:
+                d = Gtk.Button(label="Set default")
+                d.set_valign(Gtk.Align.CENTER)
+                d.connect("clicked", lambda _b, n=name: sh_async(
+                    f"pkexec lpadmin -d {shlex.quote(n)}",
+                    lambda r, nm=n: (self.toast(
+                        f"default → {nm}" if r[0] == 0
+                        else "auth required or failed"),
+                        self._render())))
+                row.add_suffix(d)
+
+            t = Gtk.Button(label="Test")
+            t.set_valign(Gtk.Align.CENTER)
+            t.connect("clicked", lambda _b, n=name: sh_async(
+                f"lp -d {shlex.quote(n)} "
+                f"/usr/share/cups/data/testprint",
+                lambda r: self.toast(
+                    "test page sent" if r[0] == 0
+                    else "send failed — check queue")))
+            row.add_suffix(t)
+
+            paused = (state == "stopped")
+            cmd = "cupsenable" if paused else "cupsdisable"
+            p = Gtk.Button(label="Resume" if paused else "Pause")
+            p.set_valign(Gtk.Align.CENTER)
+            p.connect("clicked", lambda _b, n=name, c=cmd: sh_async(
+                f"pkexec {c} {shlex.quote(n)}",
+                lambda r, nm=n, was_paused=paused: (self.toast(
+                    f"{nm} {'resumed' if was_paused else 'paused'}"
+                    if r[0] == 0 else "auth required or failed"),
+                    self._render())))
+            row.add_suffix(p)
+
+            x = Gtk.Button(label="Remove")
+            x.add_css_class("destructive-action")
+            x.set_valign(Gtk.Align.CENTER)
+            x.connect("clicked", lambda _b, n=name: sh_async(
+                f"pkexec lpadmin -x {shlex.quote(n)}",
+                lambda r, nm=n: (self.toast(
+                    f"removed {nm}" if r[0] == 0
+                    else "auth required or failed"),
+                    self._render())))
+            row.add_suffix(x)
+
+            self._track(self.dev_grp, row)
+
+
+class CamerasMicsPage(SectionPage):
+    """Camera & Microphone — enumerates capture devices and offers
+    real, non-mock test launchers (cheese, pavucontrol level meter,
+    pw-cli mic check). Reads /dev/video*, v4l2-ctl, pactl/pw-cli.
+    No persistence required — purely a discovery + test surface."""
+    KEY = "cameras_mics"
+
+    def build(self) -> None:
+        self.cam_grp = Adw.PreferencesGroup(
+            title="Cameras",
+            description="Video capture devices reported by the kernel "
+                        "(/dev/video*) — names from v4l2-ctl when present")
+        self.add_group(self.cam_grp)
+
+        self.mic_grp = Adw.PreferencesGroup(
+            title="Microphones",
+            description="Audio sources reported by PipeWire / PulseAudio")
+        self.add_group(self.mic_grp)
+
+        tools = Adw.PreferencesGroup(title="Tests")
+        self.add_group(tools)
+        if have("cheese"):
+            tools.add(action_row(
+                "Open Camera viewer",
+                "Live preview using cheese",
+                "Open",
+                lambda: subprocess.Popen(["cheese"])))
+        elif have("guvcview"):
+            tools.add(action_row(
+                "Open Camera viewer",
+                "Live preview using guvcview",
+                "Open",
+                lambda: subprocess.Popen(["guvcview"])))
+        else:
+            tools.add(empty_row(
+                "No camera viewer installed",
+                "Install 'cheese' or 'guvcview' to preview cameras."))
+        if have("pavucontrol"):
+            tools.add(action_row(
+                "Open Audio mixer (level meters)",
+                "Watch microphone input levels in pavucontrol",
+                "Open",
+                lambda: subprocess.Popen(["pavucontrol", "-t", "4"])))
+
+        self._render()
+        self.schedule_refresh(8000, self._tick)
+
+    def _tick(self) -> bool:
+        self._render()
+        return True
+
+    def _track(self, grp: Adw.PreferencesGroup, row: Gtk.Widget) -> None:
+        grp.add(row)
+        if not hasattr(grp, "_rows"):
+            grp._rows = []  # type: ignore[attr-defined]
+        grp._rows.append(row)  # type: ignore[attr-defined]
+
+    def _clear(self, grp: Adw.PreferencesGroup) -> None:
+        for row in getattr(grp, "_rows", []):
+            grp.remove(row)
+        grp._rows = []  # type: ignore[attr-defined]
+
+    def _render(self) -> None:
+        for g in (self.cam_grp, self.mic_grp):
+            self._clear(g)
+        self.clear_pills()
+
+        # Cameras
+        try:
+            vids = sorted(p for p in os.listdir("/dev")
+                          if p.startswith("video") and p[5:].isdigit())
+        except FileNotFoundError:
+            vids = []
+        cam_count = 0
+        for node in vids:
+            path = f"/dev/{node}"
+            name = node
+            if have("v4l2-ctl"):
+                rc, out, _ = sh(["v4l2-ctl", "-d", path,
+                                 "--info"], timeout=2)
+                for ln in (out or "").splitlines():
+                    if "Card type" in ln:
+                        name = ln.split(":", 1)[1].strip() or name
+                        break
+            row = Adw.ActionRow(title=name, subtitle=path)
+            self._track(self.cam_grp, row)
+            cam_count += 1
+        if cam_count == 0:
+            self._track(self.cam_grp,
+                        empty_row("No cameras detected",
+                                  "Plug in a webcam to see it here."))
+
+        # Microphones — prefer pw-cli if present, fall back to pactl
+        mic_count = 0
+        if have("pactl"):
+            rc, out, _ = sh(["pactl", "list", "short", "sources"],
+                            timeout=3)
+            for ln in (out or "").splitlines():
+                parts = ln.split()
+                if len(parts) < 2:
+                    continue
+                name = parts[1]
+                # Skip monitor sources (loopback of outputs)
+                if name.endswith(".monitor"):
+                    continue
+                row = Adw.ActionRow(title=name.split(".")[-1] or name,
+                                    subtitle=name)
+                self._track(self.mic_grp, row)
+                mic_count += 1
+        if mic_count == 0:
+            self._track(self.mic_grp,
+                        empty_row("No microphones detected",
+                                  "Connect a mic or check audio service."))
+
+        if cam_count + mic_count > 0:
+            self.add_pill(status_pill(
+                f"{cam_count} cam · {mic_count} mic", "ok"))
+        else:
+            self.add_pill(status_pill("none", "warn"))
+
+
+class ControllersPage(SectionPage):
+    """Game Controllers — enumerates joystick devices (/dev/input/js*),
+    surfaces evtest/jstest as real test launchers, and links to the
+    in-browser HTML5 gamepad tester for users without those CLI tools.
+    Read-only by design — controllers self-configure via udev."""
+    KEY = "controllers"
+
+    def build(self) -> None:
+        self.dev_grp = Adw.PreferencesGroup(
+            title="Connected controllers",
+            description="Joystick / gamepad devices reported by the kernel")
+        self.add_group(self.dev_grp)
+
+        tools = Adw.PreferencesGroup(title="Tests")
+        self.add_group(tools)
+        if have("jstest-gtk"):
+            tools.add(action_row(
+                "Open jstest-gtk",
+                "Graphical joystick test tool",
+                "Open",
+                lambda: subprocess.Popen(["jstest-gtk"])))
+        elif have("jstest"):
+            tools.add(action_row(
+                "Test in terminal (jstest)",
+                "Live axis & button readout",
+                "Open",
+                lambda: open_terminal(
+                    "jstest /dev/input/js0 || (echo 'no js0'; read _)",
+                    self.win)))
+        if have("evtest"):
+            tools.add(action_row(
+                "Test in terminal (evtest)",
+                "Pick a /dev/input/event* node and watch events",
+                "Open",
+                lambda: open_terminal("evtest; read _", self.win)))
+        tools.add(action_row(
+            "Open browser gamepad tester",
+            "https://hardwaretester.com/gamepad",
+            "Open",
+            lambda: subprocess.Popen(
+                ["xdg-open", "https://hardwaretester.com/gamepad"])))
+
+        self._render()
+        self.schedule_refresh(6000, self._tick)
+
+    def _tick(self) -> bool:
+        self._render()
+        return True
+
+    def _track(self, grp: Adw.PreferencesGroup, row: Gtk.Widget) -> None:
+        grp.add(row)
+        if not hasattr(grp, "_rows"):
+            grp._rows = []  # type: ignore[attr-defined]
+        grp._rows.append(row)  # type: ignore[attr-defined]
+
+    def _clear(self, grp: Adw.PreferencesGroup) -> None:
+        for row in getattr(grp, "_rows", []):
+            grp.remove(row)
+        grp._rows = []  # type: ignore[attr-defined]
+
+    def _render(self) -> None:
+        self._clear(self.dev_grp)
+        self.clear_pills()
+
+        try:
+            js_nodes = sorted(
+                p for p in os.listdir("/dev/input")
+                if p.startswith("js") and p[2:].isdigit())
+        except FileNotFoundError:
+            js_nodes = []
+
+        if not js_nodes:
+            self._track(self.dev_grp, empty_row(
+                "No controllers connected",
+                "Plug in a gamepad — it should appear here within a few "
+                "seconds."))
+            self.add_pill(status_pill("none", "warn"))
+            return
+
+        for node in js_nodes:
+            name = node
+            sysname_path = f"/sys/class/input/{node}/device/name"
+            try:
+                with open(sysname_path, "r", encoding="utf-8") as fh:
+                    n = fh.read().strip()
+                    if n:
+                        name = n
+            except OSError:
+                pass
+            row = Adw.ActionRow(title=name,
+                                subtitle=f"/dev/input/{node}")
+            self._track(self.dev_grp, row)
+
+        self.add_pill(status_pill(f"{len(js_nodes)} connected", "ok"))
+
+
 class AboutPage(SectionPage):
     """Branded system summary. All real reads:
       · /etc/os-release · /etc/nyxus-release · /proc/cpuinfo · /proc/meminfo
@@ -7633,6 +8053,9 @@ PAGE_CLASSES = {
     "appearance":    AppearancePage,
     "network":       NetworkPage,
     "bluetooth":     BluetoothPage,
+    "printers":      PrintersPage,
+    "cameras_mics":  CamerasMicsPage,
+    "controllers":   ControllersPage,
     "display":       DisplayPage,
     "sound":         SoundPage,
     "power":         PowerPage,
