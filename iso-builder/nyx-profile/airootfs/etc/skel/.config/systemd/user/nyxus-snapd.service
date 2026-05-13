@@ -1,0 +1,18 @@
+[Unit]
+Description=NYXUS Snap — window tiling daemon
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/nyxus/nyxus_snapd.py
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+ReadWritePaths=%t/nyxus-snap %h/.config/nyxus %h/.local/state/nyxus
+
+[Install]
+WantedBy=graphical-session.target

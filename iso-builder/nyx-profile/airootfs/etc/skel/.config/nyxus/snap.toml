@@ -1,0 +1,90 @@
+# NYXUS Snap — window tiling configuration (DARK MIRROR)
+#
+# Hot-reloads when this file is saved. CLI: `nyxus-snap --help`.
+# Aesthetic note: zone numbering reads left-to-right, top-to-bottom.
+
+[options]
+# Edge-snap drag: when a window's pointer enters within `edge_px` of a
+# screen edge during a move, the snap-ghost preview appears.
+edge_px           = 24
+# Hold this modifier (during drag OR alone) to summon the zone picker.
+picker_modifier   = "SUPER"
+picker_hold_ms    = 250
+# Animate snap commit (eww ghost fade).
+ghost_fade_ms     = 140
+# Snap to layout cell instead of free resize when releasing in zone.
+snap_to_cell      = true
+# Per-output: remember last layout per workspace.
+remember_per_ws   = true
+# Multi-monitor: zones are scoped per output by name.
+per_output_zones  = true
+# When restoring a snapshot, ignore windows that no longer exist.
+ignore_missing    = true
+
+# ─── Built-in layouts ──────────────────────────────────────────────────
+# Zones are normalized rectangles (0.0–1.0) in workspace coordinates.
+# `id` is referenced by per-app rules and CLI snap commands.
+
+[[layout]]
+name = "halves"
+[[layout.zone]]
+id = "left"   ; rect = [0.00, 0.00, 0.50, 1.00]
+[[layout.zone]]
+id = "right"  ; rect = [0.50, 0.00, 0.50, 1.00]
+
+[[layout]]
+name = "quarters"
+[[layout.zone]]
+id = "tl"     ; rect = [0.00, 0.00, 0.50, 0.50]
+[[layout.zone]]
+id = "tr"     ; rect = [0.50, 0.00, 0.50, 0.50]
+[[layout.zone]]
+id = "bl"     ; rect = [0.00, 0.50, 0.50, 0.50]
+[[layout.zone]]
+id = "br"     ; rect = [0.50, 0.50, 0.50, 0.50]
+
+[[layout]]
+name = "thirds"
+[[layout.zone]]
+id = "l3"     ; rect = [0.00, 0.00, 0.333, 1.00]
+[[layout.zone]]
+id = "m3"     ; rect = [0.333, 0.00, 0.334, 1.00]
+[[layout.zone]]
+id = "r3"     ; rect = [0.667, 0.00, 0.333, 1.00]
+
+[[layout]]
+name = "sidebar-main"
+[[layout.zone]]
+id = "side"   ; rect = [0.00, 0.00, 0.30, 1.00]
+[[layout.zone]]
+id = "main"   ; rect = [0.30, 0.00, 0.70, 1.00]
+
+[[layout]]
+name = "dev-3-col"
+[[layout.zone]]
+id = "files"  ; rect = [0.00, 0.00, 0.20, 1.00]
+[[layout.zone]]
+id = "code"   ; rect = [0.20, 0.00, 0.55, 1.00]
+[[layout.zone]]
+id = "tools"  ; rect = [0.75, 0.00, 0.25, 1.00]
+
+[[layout]]
+name = "focus"
+[[layout.zone]]
+id = "stage"  ; rect = [0.10, 0.05, 0.80, 0.90]
+
+# ─── Per-app default zones (regex on window class) ─────────────────────
+[[app_rule]]
+match  = "^kitty$|^Alacritty$|^foot$"
+zone   = "right"
+layout = "halves"
+
+[[app_rule]]
+match  = "^firefox$|^Brave-browser$"
+zone   = "main"
+layout = "sidebar-main"
+
+[[app_rule]]
+match  = "^code$|^code-oss$"
+zone   = "code"
+layout = "dev-3-col"

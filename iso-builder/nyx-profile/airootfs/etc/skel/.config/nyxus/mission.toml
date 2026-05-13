@@ -1,0 +1,20 @@
+# NYXUS Mission Control — workspace/window overview (DARK MIRROR)
+
+[options]
+# How often the daemon refreshes thumbnails when overview is open.
+refresh_ms          = 600
+# Use grim for a true compositor screenshot per workspace (heavier);
+# when false, the overlay shows window metadata only (lightweight).
+use_screenshots     = true
+# Resolution divisor for thumbnails (1=full, 4=quarter, 8=eighth).
+thumb_divisor       = 6
+# Max workspaces to render in the grid.
+max_workspaces      = 16
+# Animate open/close (eww side; this is a hint).
+animate_ms          = 180
+# Group windows by workspace (true) or by application (false).
+group_by_workspace  = true
+# Allow click-to-switch (true) or display-only (false).
+clickable           = true
+# Quit overview when a workspace is chosen.
+close_on_select     = true

@@ -1,0 +1,33 @@
+; ─── NYXUS Snap — picker overlay + snap toast ───────────────────────────
+; The picker is summoned by Super-hold during a window drag. The toast
+; flashes briefly when a snap completes.
+
+(defpoll snap-picker :interval "200ms"
+  `cat ${XDG_RUNTIME_DIR}/nyxus-snap/picker.json 2>/dev/null || echo '{"layout":"halves","zones":[]}'`)
+
+(defwidget snap-zone-cell [zone]
+  (button :class "snap-zone-cell"
+          :onclick "nyxus-snap snap ${snap-picker.layout} ${zone.id}"
+          :tooltip "${zone.id}"
+    (label :text "${zone.id}")))
+
+(defwindow snap-picker
+  :geometry (geometry :x "0%" :y "0%" :width "100%" :height "100%" :anchor "center")
+  :stacking "overlay"
+  :focusable false
+  :namespace "nyxus-snap-picker"
+  (centerbox :class "snap-picker-root"
+    (box)
+    (box :orientation "v" :class "snap-picker-card" :space-evenly false :spacing 8
+      (label :class "snap-picker-title" :text "Snap to ${snap-picker.layout}")
+      (box :orientation "h" :space-evenly true :spacing 8
+        (for z in {snap-picker.zones}
+          (snap-zone-cell :zone z))))
+    (box)))
+
+(defvar snap-toast-text "")
+(defwindow snap-toast
+  :geometry (geometry :x "0" :y "12%" :anchor "top center")
+  :stacking "overlay" :focusable false
+  :namespace "nyxus-snap-toast"
+  (label :class "snap-toast" :text snap-toast-text))
