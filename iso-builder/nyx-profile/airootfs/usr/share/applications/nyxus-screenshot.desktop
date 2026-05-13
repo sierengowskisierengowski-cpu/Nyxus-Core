@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Screenshot
+GenericName=Screenshot
+Comment=Capture region/window/screen
+Exec=/usr/local/bin/nyxus screenshot
+TryExec=/usr/local/bin/nyxus
+Icon=applets-screenshooter
+Terminal=false
+Categories=Graphics;Utility;
+Keywords=NYXUS;NYX;Screenshot;
+StartupNotify=true
+StartupWMClass=nyxus.screenshot
+X-NYXUS-Module=nyxus_screenshot

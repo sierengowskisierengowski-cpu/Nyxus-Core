@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Terminal
+GenericName=Terminal
+Comment=Open a NYXUS terminal
+Exec=/usr/local/bin/nyxus terminal
+TryExec=/usr/local/bin/nyxus
+Icon=utilities-terminal
+Terminal=false
+Categories=System;TerminalEmulator;
+Keywords=NYXUS;NYX;Terminal;
+StartupNotify=true
+StartupWMClass=nyxus.terminal
+X-NYXUS-Module=nyxus_terminal

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Hot Corners
+GenericName=Hot Corners
+Comment=Edge + corner gesture configuration
+Exec=/usr/local/bin/nyxus hotcorners
+TryExec=/usr/local/bin/nyxus
+Icon=preferences-desktop
+Terminal=false
+Categories=Settings;
+Keywords=NYXUS;NYX;Corners;
+StartupNotify=true
+StartupWMClass=nyxus.hotcorners
+X-NYXUS-Module=nyxus_hotcorners

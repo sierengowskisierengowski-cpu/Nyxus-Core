@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# NYXUS · Doctor privileged helper · rev 2026-05-13 r1
+# Installed at /usr/local/libexec/nyxus-doctor-helper.
+# Invoked via pkexec from nyxus_doctor.py for the small set of repair
+# operations that need root: regenerate machine-id, reset ~/.cache/nyxus
+# (per-user, after asking nyxus_doctor.py), restart user service slice,
+# rotate logs.
+set -u
+LOG=/var/log/nyxus/doctor.log
+mkdir -p "$(dirname "$LOG")"
+log()  { printf '%s %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; }
+fail() { echo "nyxus-doctor-helper: $*" >&2; log "FAIL: $*"; exit 2; }
+
+[[ $# -ge 1 ]] || { echo "usage: $0 <action> [args]" >&2; exit 2; }
+ACTION="$1"; shift
+
+case "$ACTION" in
+  regen-machine-id)
+    log "regen-machine-id"
+    rm -f /etc/machine-id /var/lib/dbus/machine-id
+    systemd-machine-id-setup
+    ln -sf /etc/machine-id /var/lib/dbus/machine-id
+    ;;
+  rotate-logs)
+    log "rotate-logs"; exec logrotate -f /etc/logrotate.d/nyxus
+    ;;
+  restart-user-services)
+    [[ $# -eq 1 ]] || fail "usage: restart-user-services <user>"
+    [[ "$1" =~ ^[a-z_][a-z0-9_-]*$ ]] || fail "invalid user"
+    id -u "$1" >/dev/null 2>&1 || fail "no such user: $1"
+    uid=$(id -u "$1")
+    log "restart-user-services $1"
+    exec runuser -u "$1" -- env XDG_RUNTIME_DIR="/run/user/$uid" \
+      systemctl --user restart \
+        nyxus-eww.service nyxus-crashd.service nyxus-security-daemon.service
+    ;;
+  fix-perms)
+    log "fix-perms /opt/nyxus"
+    chown -R root:root /opt/nyxus
+    chmod -R u=rwX,go=rX /opt/nyxus
+    ;;
+  reseed-firstboot)
+    [[ $# -eq 1 ]] || fail "usage: reseed-firstboot <user>"
+    [[ "$1" =~ ^[a-z_][a-z0-9_-]*$ ]] || fail "invalid user"
+    id -u "$1" >/dev/null 2>&1 || fail "no such user: $1"
+    log "reseed-firstboot $1"
+    rm -f "/home/$1/.cache/nyxus/welcome.done" \
+          "/home/$1/.cache/nyxus/.firstboot-done"
+    ;;
+  verify)
+    log "verify"
+    systemctl is-system-running 2>&1 || true
+    systemctl --failed --no-legend
+    ;;
+  *) fail "unknown action: $ACTION" ;;
+esac

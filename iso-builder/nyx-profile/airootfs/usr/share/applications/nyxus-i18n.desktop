@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Language
+GenericName=Language
+Comment=Set the NYXUS interface language
+Exec=/usr/local/bin/nyxus i18n
+TryExec=/usr/local/bin/nyxus
+Icon=preferences-desktop-locale
+Terminal=false
+Categories=Settings;
+Keywords=NYXUS;NYX;Language;
+StartupNotify=true
+StartupWMClass=nyxus.i18n
+X-NYXUS-Module=nyxus_i18n

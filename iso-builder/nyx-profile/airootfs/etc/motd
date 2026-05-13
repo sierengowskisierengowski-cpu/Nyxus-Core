@@ -1,16 +1,8 @@
 
-  ╔═══════════════════════════════════════════════════════════╗
-  ║                                                           ║
-  ║       NYXUS · LIVE                                        ║
-  ║       SIERENGOWSKI · NYX-J5W-2026                         ║
-  ║                                                           ║
-  ║   To install NYXUS to disk:                               ║
-  ║                                                           ║
-  ║       sudo nyxus-install                                  ║
-  ║                                                           ║
-  ║   Live credentials:                                       ║
-  ║       user: nyx     pass: nyx                             ║
-  ║       root          pass: nyx                             ║
-  ║                                                           ║
-  ╚═══════════════════════════════════════════════════════════╝
+  NYXUS · DARK MIRROR
+  --------------------------------
+  - Run `nyxus`     for the CLI dispatcher.
+  - Run `nyxus-doctor`  to diagnose system health.
+  - Logs:  ~/.cache/nyxus/<app>.log
+  - Docs:  /usr/share/doc/nyxus/
 

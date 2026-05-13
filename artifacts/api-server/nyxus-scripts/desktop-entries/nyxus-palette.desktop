@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Palette
+GenericName=Palette
+Comment=Theme + accent colour picker
+Exec=/usr/local/bin/nyxus palette
+TryExec=/usr/local/bin/nyxus
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Settings;
+Keywords=NYXUS;NYX;Palette;
+StartupNotify=true
+StartupWMClass=nyxus.palette
+X-NYXUS-Module=nyxus_palette

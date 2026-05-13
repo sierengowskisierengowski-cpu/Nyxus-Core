@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Stickies
+GenericName=Stickies
+Comment=Sticky notes on the desktop
+Exec=/usr/local/bin/nyxus stickies
+TryExec=/usr/local/bin/nyxus
+Icon=accessories-text-editor
+Terminal=false
+Categories=Office;Utility;
+Keywords=NYXUS;NYX;Stickies;
+StartupNotify=true
+StartupWMClass=nyxus.stickies
+X-NYXUS-Module=nyxus_stickies

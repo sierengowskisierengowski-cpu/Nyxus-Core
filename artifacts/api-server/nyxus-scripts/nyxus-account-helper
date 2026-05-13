@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# NYXUS · Account privileged helper · rev 2026-05-13 r1
+# Installed at /usr/local/libexec/nyxus-account-helper.
+# Invoked via pkexec from nyxus_account.py for the small set of ops that
+# need root: change shell, set avatar, add/remove from groups, lock/unlock.
+set -u
+LOG=/var/log/nyxus/account.log
+mkdir -p "$(dirname "$LOG")"
+log()  { printf '%s %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; }
+fail() { echo "nyxus-account-helper: $*" >&2; log "FAIL: $*"; exit 2; }
+
+[[ $# -ge 2 ]] || { echo "usage: $0 <action> <user> [args]" >&2; exit 2; }
+ACTION="$1"; USER="$2"; shift 2
+
+# Reject non-existent or root user; per-action arg validation below.
+[[ "$USER" =~ ^[a-z_][a-z0-9_-]*\$?$ ]] || fail "invalid user name"
+[[ "$USER" != "root" ]]                  || fail "refusing to operate on root"
+id -u "$USER" >/dev/null 2>&1            || fail "no such user: $USER"
+
+case "$ACTION" in
+  set-shell)
+    [[ $# -eq 1 ]] || fail "usage: set-shell <user> <shell>"
+    grep -qx "$1" /etc/shells || fail "shell not in /etc/shells"
+    log "set-shell $USER $1"; exec chsh -s "$1" "$USER"
+    ;;
+  set-avatar)
+    [[ $# -eq 1 ]] || fail "usage: set-avatar <user> <png-path>"
+    [[ -f "$1" && "$1" =~ \.png$ ]] || fail "avatar must be a .png file"
+    install -Dm644 "$1" "/var/lib/AccountsService/icons/${USER}"
+    log "set-avatar $USER ← $1"
+    ;;
+  add-group)
+    [[ $# -eq 1 ]] || fail "usage: add-group <user> <group>"
+    [[ "$1" =~ ^[a-z_][a-z0-9_-]*$ ]] || fail "invalid group"
+    getent group "$1" >/dev/null || fail "no such group: $1"
+    log "add-group $USER $1"; exec gpasswd -a "$USER" "$1"
+    ;;
+  remove-group)
+    [[ $# -eq 1 ]] || fail "usage: remove-group <user> <group>"
+    [[ "$1" =~ ^[a-z_][a-z0-9_-]*$ ]] || fail "invalid group"
+    getent group "$1" >/dev/null || fail "no such group: $1"
+    log "remove-group $USER $1"; exec gpasswd -d "$USER" "$1"
+    ;;
+  lock)   log "lock $USER";   exec passwd -l "$USER" ;;
+  unlock) log "unlock $USER"; exec passwd -u "$USER" ;;
+  *)      fail "unknown action: $ACTION" ;;
+esac

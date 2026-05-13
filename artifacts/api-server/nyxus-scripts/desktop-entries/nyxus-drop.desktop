@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Drop
+GenericName=Drop
+Comment=Quick file drop / share zone
+Exec=/usr/local/bin/nyxus drop
+TryExec=/usr/local/bin/nyxus
+Icon=folder-download
+Terminal=false
+Categories=Utility;FileTransfer;
+Keywords=NYXUS;NYX;Drop;
+StartupNotify=true
+StartupWMClass=nyxus.drop
+X-NYXUS-Module=nyxus_drop

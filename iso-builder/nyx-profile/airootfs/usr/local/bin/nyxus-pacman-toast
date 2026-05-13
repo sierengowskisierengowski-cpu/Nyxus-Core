@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Pacman PostTransaction hook → notify all logged-in NYXUS users.
+SUMMARY="$(grep -c . </dev/stdin 2>/dev/null || echo 0)"
+for u in $(loginctl list-users --no-legend | awk '{print $2}'); do
+  uid=$(id -u "$u" 2>/dev/null) || continue
+  sudo -u "$u" XDG_RUNTIME_DIR="/run/user/$uid"        DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus"        notify-send -a "NYXUS" -i system-software-update        "System update complete" "${SUMMARY} package transaction(s) processed." 2>/dev/null || true
+done

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Chrome Library
+GenericName=Chrome Library
+Comment=NYXUS UI chrome reference
+Exec=/usr/local/bin/nyxus chrome
+TryExec=/usr/local/bin/nyxus
+Icon=applications-development
+Terminal=false
+Categories=Development;
+Keywords=NYXUS;NYX;Library;
+StartupNotify=true
+StartupWMClass=nyxus.chrome
+X-NYXUS-Module=nyxus_chrome

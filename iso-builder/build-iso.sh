@@ -521,6 +521,43 @@ ok "launcher + desktop entry staged"
 
 rm -rf "${TMP_EXTRACT}"
 
+# ── COMPLETION WAVE 4: install all generated wiring artifacts ────────────
+# (.desktop, polkit, system tuning, plymouth/grub themes, firstboot, helpers)
+# These all live under iso-builder/nyx-profile/airootfs/ already; this step
+# additionally pushes the freshly-authored helper binaries from nyxus-scripts
+# into /usr/local/libexec and ensures the nyxus(1) CLI dispatcher + udev
+# event helper are executable in the bake.
+step "wave-4: install completion wiring (helpers, firstboot, themes)"
+LIBEXEC="${PROFILE_DIR}/airootfs/usr/local/libexec"
+LBIN="${PROFILE_DIR}/airootfs/usr/local/bin"
+mkdir -p "${LIBEXEC}" "${LBIN}"
+
+# Wave-4 helper binaries authored in nyxus-scripts → /usr/local/libexec
+for h in nyxus-backup-helper nyxus-usbwatch-helper \
+         nyxus-account-helper nyxus-doctor-helper; do
+  if [[ -f "${NS}/${h}" ]]; then
+    install -Dm755 "${NS}/${h}" "${LIBEXEC}/${h}"
+  fi
+done
+
+# Wave-4 polkit policies authored under nyxus-scripts/polkit-policies
+if [[ -d "${NS}/polkit-policies" ]]; then
+  for pol in "${NS}/polkit-policies"/com.nyxus.*.policy; do
+    [[ -f "${pol}" ]] || continue
+    install -Dm644 "${pol}" \
+      "${PROFILE_DIR}/airootfs/usr/share/polkit-1/actions/$(basename "${pol}")"
+  done
+fi
+
+# Make sure firstboot.d scripts + nyxus dispatcher + udev event helper
+# carry the executable bit (Python generator already chmod'd them, but
+# git can lose modes on some checkouts).
+chmod 0755 "${PROFILE_DIR}/airootfs/etc/nyxus-firstboot.d/"*.sh 2>/dev/null || true
+chmod 0755 "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus" \
+           "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus-usbwatch-event" \
+           "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus-pacman-toast" 2>/dev/null || true
+ok "wave-4 wiring installed (helpers, polkit, firstboot, dispatcher)"
+
 # ── mirror OS-level docs into /etc/nyxus/ ────────────────────────────────
 step "mirror OS-level docs into airootfs/etc/nyxus/"
 NYXUS_DOCS="${PROFILE_DIR}/airootfs/etc/nyxus"

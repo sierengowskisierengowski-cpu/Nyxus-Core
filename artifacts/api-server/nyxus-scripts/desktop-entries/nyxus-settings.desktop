@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Settings
+GenericName=Settings
+Comment=Configure your NYXUS system
+Exec=/usr/local/bin/nyxus settings
+TryExec=/usr/local/bin/nyxus
+Icon=preferences-system
+Terminal=false
+Categories=Settings;DesktopSettings;
+Keywords=NYXUS;NYX;Settings;
+StartupNotify=true
+StartupWMClass=nyxus.settings
+X-NYXUS-Module=nyxus_settings

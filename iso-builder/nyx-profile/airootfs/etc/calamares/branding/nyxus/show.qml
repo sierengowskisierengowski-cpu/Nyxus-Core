@@ -1,114 +1,171 @@
-// NYXUS · Calamares slideshow (DARK MIRROR)
-// Cycles through 5 cards while the user installs. Uses only QtQuick 2.15
-// to remain compatible with every Calamares 3.3.x build.
-
+/*
+ * NYXUS · Calamares branding slideshow              rev 2026-05-13 r2
+ *
+ * 6-slide installer slideshow. Auto-advances every 8 s while Calamares
+ * runs the install steps in the background. Sharp slab edges, DARK
+ * MIRROR palette, no blur.
+ *
+ *  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ */
 import QtQuick 2.15
 
-Rectangle {
+Item {
     id: root
-    width:  900
-    height: 380
-    color:  "#080a10"
+    width: 800
+    height: 460
 
-    readonly property color clrText:  "#e8edf5"
-    readonly property color clrDim:   "#a8acb6"
-    readonly property color clrAcc:   "#d4b87a"
+    readonly property color accent:  "#C084FC"
+    readonly property color textHi:  "#E9E5F2"
+    readonly property color textLo:  "#7B7390"
+    readonly property color hairline:"#1A1722"
 
-    property int idx: 0
-    property var slides: [
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "#0A0712" }
+            GradientStop { position: 1.0; color: "#000000" }
+        }
+    }
+
+    property int currentSlide: 0
+    readonly property var slides: [
         {
-            "title":  "WELCOME TO NYXUS",
-            "lead":   "DARK MIRROR · Arch-based, Hyprland-native",
-            "body":   "A grade-A desktop with a single visual contract: " +
-                      "deep void, hairline white, restrained gold. No neon, " +
-                      "no per-app colors."
+            title: "Welcome to NYXUS",
+            tagline: "DARK MIRROR · 2026.05",
+            body:  "A fresh take on Arch Linux: every NYXUS app is\nfirst-party, every config is auditable, every default\nis the one we'd ship to ourselves."
         },
         {
-            "title":  "THE SECURITY CENTER",
-            "lead":   "Defender-class privacy and protection",
-            "body":   "Live firewall · ClamAV · LUKS vaults · TPM/Secure " +
-                      "Boot status · USBGuard · privacy indicators · " +
-                      "Super+Ctrl+Alt+L panic lockdown."
+            title: "One Operating System.",
+            tagline: "FIFTY APPS. ZERO COMPROMISE.",
+            body:  "NYXUS Files, Notes, Stickies, Notepad, Doctor,\nUpdater, Backup, Security, Spotlight, and more —\nshipped, themed, and wired together out of the box."
         },
         {
-            "title":  "THE FILE MANAGER",
-            "lead":   "Finder/Explorer parity, NYXUS look",
-            "body":   "Sidebar, breadcrumbs, list+grid, Tab, search, " +
-                      "drag/drop, MIME-aware open, gio-backed trash. " +
-                      "Spotlight finds anything with =calc, /files, ?web."
+            title: "Your Computer. Yours.",
+            tagline: "NO TELEMETRY · NO ACCOUNTS",
+            body:  "Crash reporting and account sync are explicit opt-in.\nNothing leaves the machine unless you said so. Logs\nlive at ~/.cache/nyxus/<app>.log — readable, rotatable."
         },
         {
-            "title":  "BACKUP, ACCOUNT, DROP",
-            "lead":   "Built-in continuity",
-            "body":   "Timeshift snapshots with restore, NYXUS Account " +
-                      "wallpaper/theme sync, KDE Connect-rebrand NYXUS Drop " +
-                      "for instant cross-device file send."
+            title: "Snapshots. Always.",
+            tagline: "TIMESHIFT · BTRFS · SNAP-PAC",
+            body:  "Every system update auto-snapshots before it runs.\nIf an update breaks something, restore the previous\nstate from NYXUS Backup or `nyxus-doctor --rollback`."
         },
         {
-            "title":  "SHIP IT",
-            "lead":   "Welcome wizard runs on first login",
-            "body":   "We'll pick your accent, set your timezone, install " +
-                      "extras from the Software Store, and you're done. " +
-                      "Press F1 anywhere for the cheat sheet."
+            title: "Hardened Defaults.",
+            tagline: "FIREWALLD · APPARMOR · USBGUARD",
+            body:  "firewalld is on. AppArmor confines browsers. USBGuard\nlocks unrecognised USB devices on first plug. Auth\nlockout is OFF by design until you turn it on."
+        },
+        {
+            title: "Make it Yours.",
+            tagline: "OPEN SETTINGS → BEGIN",
+            body:  "Tap Super to launch Spotlight. Open Settings to set\nyour accent, default apps, hot corners, and language.\nWelcome to NYXUS."
         }
     ]
 
-    Column {
-        anchors.fill: parent
-        anchors.margins: 48
-        spacing: 18
+    Timer {
+        interval: 8000
+        running: true
+        repeat: true
+        onTriggered: root.currentSlide = (root.currentSlide + 1) % root.slides.length
+    }
 
+    // ── Brand mark (top-left) ─────────────────────────────────────────
+    Row {
+        x: 40; y: 36
+        spacing: 14
         Text {
-            text: slides[idx].title
-            color: clrAcc
-            font.family: "Inter"
-            font.pixelSize: 26
-            font.weight: Font.DemiBold
-            font.letterSpacing: 4
+            text: "◤ X ◥"
+            color: root.accent
+            font.family: "JetBrains Mono"
+            font.pixelSize: 32
+            font.bold: true
         }
-        Rectangle {
-            width: 60; height: 1; color: clrAcc; opacity: 0.6
-        }
-        Text {
-            text: slides[idx].lead
-            color: clrText
-            font.family: "Inter"
-            font.pixelSize: 18
-            font.weight: Font.Light
-        }
-        Text {
-            width: parent.width
-            text: slides[idx].body
-            color: clrDim
-            wrapMode: Text.WordWrap
-            font.family: "Inter"
-            font.pixelSize: 13
-            lineHeight: 1.5
-        }
-
-        Item { width: 1; height: 8 }
-
-        Row {
-            spacing: 6
-            Repeater {
-                model: slides.length
-                Rectangle {
-                    width: 28; height: 3
-                    radius: 2
-                    color: index === idx ? clrAcc : "#3a3d44"
-                    opacity: index === idx ? 1.0 : 0.6
-                }
+        Column {
+            spacing: 0
+            Text {
+                text: "NYXUS"
+                color: root.accent
+                font.family: "JetBrains Mono"
+                font.pixelSize: 18
+                font.letterSpacing: 6
+                font.bold: true
+            }
+            Text {
+                text: "DARK MIRROR"
+                color: root.textLo
+                font.family: "JetBrains Mono"
+                font.pixelSize: 9
+                font.letterSpacing: 4
             }
         }
     }
 
-    Timer {
-        interval: 9000
-        running:  true
-        repeat:   true
-        onTriggered: idx = (idx + 1) % slides.length
+    // ── Slide content (centre) ────────────────────────────────────────
+    Column {
+        anchors.centerIn: parent
+        spacing: 16
+        width: 640
+
+        Text {
+            text: root.slides[root.currentSlide].tagline
+            color: root.textLo
+            font.family: "JetBrains Mono"
+            font.pixelSize: 11
+            font.letterSpacing: 6
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+        Text {
+            text: root.slides[root.currentSlide].title
+            color: root.textHi
+            font.family: "JetBrains Mono"
+            font.pixelSize: 32
+            font.bold: true
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+        Rectangle {
+            width: 80; height: 1
+            color: root.accent
+            opacity: 0.6
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+        Text {
+            text: root.slides[root.currentSlide].body
+            color: root.textHi
+            opacity: 0.85
+            font.family: "JetBrains Mono"
+            font.pixelSize: 14
+            lineHeight: 1.5
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            width: parent.width
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+
+        Behavior on opacity { NumberAnimation { duration: 350 } }
     }
 
-    function onActivate()   { idx = 0 }
-    function onLeave()      { /* nothing — slideshow is purely visual */ }
+    // ── Pagination dots (bottom) ──────────────────────────────────────
+    Row {
+        spacing: 10
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 36
+        anchors.horizontalCenter: parent.horizontalCenter
+        Repeater {
+            model: root.slides.length
+            Rectangle {
+                width: index === root.currentSlide ? 28 : 8
+                height: 4
+                color: index === root.currentSlide ? root.accent : root.hairline
+                Behavior on width { NumberAnimation { duration: 300 } }
+            }
+        }
+    }
+
+    // ── Footer rule ───────────────────────────────────────────────────
+    Rectangle {
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 1
+        color: root.hairline
+    }
 }

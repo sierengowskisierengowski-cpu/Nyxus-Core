@@ -1,0 +1,21 @@
+[Unit]
+# NYXUS · firstboot orchestrator service · rev 2026-05-13 r1
+# Runs all /etc/nyxus-firstboot.d/*.sh scripts exactly once on the
+# very first boot of an installed system. Marker file lives at
+# /var/lib/nyxus/firstboot.done; if present, the service is a no-op.
+Description=NYXUS first-boot orchestrator
+Documentation=man:nyxus(1)
+ConditionPathExists=!/var/lib/nyxus/firstboot.done
+After=systemd-machine-id-commit.service network.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/nyxus-firstboot
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=180s
+
+[Install]
+WantedBy=multi-user.target

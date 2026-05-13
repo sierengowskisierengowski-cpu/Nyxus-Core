@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS System Monitor
+GenericName=System Monitor
+Comment=Live CPU/RAM/disk/network metrics
+Exec=/usr/local/bin/nyxus sysmon-gtk
+TryExec=/usr/local/bin/nyxus
+Icon=utilities-system-monitor
+Terminal=false
+Categories=System;Monitor;
+Keywords=NYXUS;NYX;Monitor;
+StartupNotify=true
+StartupWMClass=nyxus.sysmon-gtk
+X-NYXUS-Module=nyxus_sysmon_gtk

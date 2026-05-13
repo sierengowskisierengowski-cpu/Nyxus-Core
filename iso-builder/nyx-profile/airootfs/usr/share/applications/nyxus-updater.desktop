@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Updater
+GenericName=Updater
+Comment=Install system + app updates
+Exec=/usr/local/bin/nyxus updater
+TryExec=/usr/local/bin/nyxus
+Icon=system-software-update
+Terminal=false
+Categories=System;PackageManager;
+Keywords=NYXUS;NYX;Updater;
+StartupNotify=true
+StartupWMClass=nyxus.updater
+X-NYXUS-Module=nyxus_updater

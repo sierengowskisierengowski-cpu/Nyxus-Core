@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS USB Watch
+GenericName=USB Watch
+Comment=USB device authorization log
+Exec=/usr/local/bin/nyxus usb-watch
+TryExec=/usr/local/bin/nyxus
+Icon=drive-removable-media
+Terminal=false
+Categories=Settings;Security;
+Keywords=NYXUS;NYX;Watch;
+StartupNotify=true
+StartupWMClass=nyxus.usb-watch
+X-NYXUS-Module=nyxus_usb_watch

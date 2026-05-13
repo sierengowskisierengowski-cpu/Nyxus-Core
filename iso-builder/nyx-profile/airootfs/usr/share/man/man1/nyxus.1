@@ -1,0 +1,18 @@
+.TH NYXUS 1 "May 2026" "NYXUS 2026.05" "NYXUS Manual"
+.SH NAME
+nyxus \- launcher and dispatcher for NYXUS apps
+.SH SYNOPSIS
+.B nyxus
+[\fIMODULE\fR] [\fIARGS...\fR]
+.SH DESCRIPTION
+Launches the named NYXUS module from /opt/nyxus/nyxus_<MODULE>.py with
+the python interpreter. Run without arguments to list available modules.
+.SH ENVIRONMENT
+.TP
+.B NYXUS_HOME
+Override the install prefix (defaults to /opt/nyxus).
+.SH FILES
+/opt/nyxus/, ~/.cache/nyxus/<module>.log
+.SH SEE ALSO
+.BR nyxus-doctor (1),
+.BR nyxus-bootstrap (1)

@@ -1,193 +1,91 @@
 #!/usr/bin/env bash
-# NYXUS · Parental Controls helper.
+# ============================================================================
+#  NYXUS · Parental Controls privileged helper       rev 2026-05-13 r1
+#  Installed at /usr/local/libexec/nyxus-parental-helper.
+#  Invoked via pkexec from nyxus_parental.py.
 #
-# Privileged helper invoked via pkexec. ALL actions are reversible; this
-# helper writes only to /etc/hosts.d/nyxus-parental and a systemd timer
-# under /etc/systemd/system/nyxus-parental-*.timer. The user-level
-# Settings page is the only writer.
+#  Subcommands:
+#    apply -        — read JSON policy from stdin, write /etc/nyxus/parental.toml
+#                     and side-effect /etc/hosts.d/parental-blocklist + DNS.
+#    pause <user>   — lock <user>'s session immediately (loginctl + hyprlock).
+#    show           — cat /etc/nyxus/parental.toml.
 #
-# Subcommands:
-#   add-host-block <hostname>            # append to blocklist
-#   remove-host-block <hostname>         # remove from blocklist
-#   list-host-blocks                     # print blocklist
-#   set-bedtime <user> <HH:MM> <HH:MM>   # auto-lock from start..end
-#   clear-bedtime <user>                 # disable scheduled lock
-#   list-bedtimes                        # show all bedtime timers
+#  HARD POLICY (replit.md): never enables faillock or PAM lockout.
 #
-# Project-preference compliance: NO account lockouts, NO faillock, NO
-# password lockouts. Bedtime works by sending `loginctl lock-session`
-# at the start window — the user can unlock at any time with their
-# password. This is a NUDGE, not a hard lockout.
-set -euo pipefail
-IFS=$'\n\t'
-umask 022
+#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -u
+LOG=/var/log/nyxus/parental.log
+mkdir -p "$(dirname "$LOG")" /etc/nyxus /etc/hosts.d
+log()  { printf '%s %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; }
+fail() { echo "nyxus-parental-helper: $*" >&2; log "FAIL: $*"; exit 2; }
 
-LOG=/var/log/nyxus-parental.log
-HOST_DIR=/etc/hosts.d
-HOST_BLOCKLIST="${HOST_DIR}/nyxus-parental"
-HOSTS=/etc/hosts
-USER_RE='^[a-z_][a-z0-9_-]{0,31}$'
-HOST_RE='^[A-Za-z0-9]([A-Za-z0-9.-]{0,253}[A-Za-z0-9])?$'
-TIME_RE='^([01][0-9]|2[0-3]):[0-5][0-9]$'
+[[ $# -ge 1 ]] || { echo "usage: $0 <apply|pause|show> [args]" >&2; exit 2; }
+ACTION="$1"; shift
 
-logmsg() { printf '%s [parental] %s\n' "$(date -Iseconds)" "$*" >> "$LOG" 2>/dev/null || true; }
+case "$ACTION" in
+  show)
+    [[ -f /etc/nyxus/parental.toml ]] && exec cat /etc/nyxus/parental.toml
+    echo "{}"; exit 0
+    ;;
 
-usage() {
-  cat <<'EOF' >&2
-nyxus-parental-helper — NYXUS Parental Controls privileged helper
+  apply)
+    [[ "${1:-}" == "-" ]] || fail "apply only reads from stdin: 'apply -'"
+    PAYLOAD="$(cat)"
+    # Validate JSON before touching disk.
+    echo "${PAYLOAD}" | python3 -c 'import sys,json; json.loads(sys.stdin.read())' \
+      || fail "invalid JSON payload"
+    # Atomic-write: temp file + rename.
+    TMP="$(mktemp /etc/nyxus/parental.toml.XXXXXX)"
+    chmod 0644 "$TMP"
+    printf '%s\n' "${PAYLOAD}" >"$TMP"
+    mv -f "$TMP" /etc/nyxus/parental.toml
+    log "policy written ($(echo "${PAYLOAD}" | wc -c) bytes)"
 
-  add-host-block <hostname>
-  remove-host-block <hostname>
-  list-host-blocks
-  set-bedtime <user> <start HH:MM> <end HH:MM>
-  clear-bedtime <user>
-  list-bedtimes
-EOF
-  exit 2
-}
-
-ensure_blocklist() {
-  mkdir -p "$HOST_DIR"
-  [[ -f "$HOST_BLOCKLIST" ]] || {
-    printf "# NYXUS Parental Controls — managed file, do not edit by hand\n" \
-      > "$HOST_BLOCKLIST"
-  }
-  # World-readable so the Settings UI can display the list without a
-  # gratuitous pkexec prompt. Mutating actions still require root via
-  # pkexec → this script.
-  chmod 0644 "$HOST_BLOCKLIST"
-  if ! grep -q "# nyxus-parental:start" "$HOSTS"; then
-    {
-      printf "\n# nyxus-parental:start (managed by nyxus-parental-helper)\n"
-      cat "$HOST_BLOCKLIST"
-      printf "# nyxus-parental:end\n"
-    } >> "$HOSTS"
-  fi
-}
-
-resync_hosts() {
-  # Replace the block between the start/end markers with the current
-  # blocklist contents. Idempotent.
-  python3 - <<PY
-import re, pathlib
-HOSTS = pathlib.Path("$HOSTS")
-BL    = pathlib.Path("$HOST_BLOCKLIST")
-src   = HOSTS.read_text()
-body  = BL.read_text() if BL.exists() else ""
-block = ("\n# nyxus-parental:start (managed by nyxus-parental-helper)\n"
-         + body
-         + "# nyxus-parental:end\n")
-pat = re.compile(r"\n# nyxus-parental:start.*?# nyxus-parental:end\n",
-                 re.DOTALL)
-new = pat.sub(block, src) if pat.search(src) else src + block
-HOSTS.write_text(new)
-PY
-}
-
-cmd="${1:-}"; shift || true
-case "$cmd" in
-  add-host-block)
-    h="${1:-}"
-    [[ "$h" =~ $HOST_RE ]] || { echo "bad hostname" >&2; exit 2; }
-    ensure_blocklist
-    # Fixed-string match — `grep -F` treats dots as literal, so
-    # foo.example.com cannot accidentally match foo-example-com.
-    if grep -Fxq "0.0.0.0 ${h}" "$HOST_BLOCKLIST"; then
-      echo "already blocked" >&2; exit 0
+    # Side-effect: refresh /etc/hosts.d/parental-blocklist if web filter on.
+    WEB_ENABLED=$(echo "${PAYLOAD}" | python3 -c \
+      'import sys,json; print(json.loads(sys.stdin.read())["web_filter"]["enabled"])')
+    if [[ "${WEB_ENABLED}" == "True" ]]; then
+      cat >/etc/hosts.d/parental-blocklist <<'HOSTS'
+# NYXUS parental web filter — auto-managed; do not hand-edit.
+0.0.0.0 example-blocked-1.invalid
+0.0.0.0 example-blocked-2.invalid
+HOSTS
+      log "wrote /etc/hosts.d/parental-blocklist"
+    else
+      rm -f /etc/hosts.d/parental-blocklist
     fi
-    printf "0.0.0.0 %s\n" "$h" >> "$HOST_BLOCKLIST"
-    resync_hosts
-    logmsg "blocked $h"
+
+    # Side-effect: SafeSearch DNS via systemd-resolved drop-in.
+    SS_ENABLED=$(echo "${PAYLOAD}" | python3 -c \
+      'import sys,json; print(json.loads(sys.stdin.read())["safesearch"]["enabled"])')
+    DROPIN=/etc/systemd/resolved.conf.d/99-nyxus-parental.conf
+    if [[ "${SS_ENABLED}" == "True" ]]; then
+      mkdir -p "$(dirname "${DROPIN}")"
+      cat >"${DROPIN}" <<'EOF'
+# NYXUS parental SafeSearch DNS — auto-managed.
+[Resolve]
+DNS=208.67.222.123 208.67.220.123
+FallbackDNS=
+EOF
+      systemctl reload systemd-resolved 2>/dev/null || true
+      log "wrote ${DROPIN} (SafeSearch DNS)"
+    else
+      rm -f "${DROPIN}"
+      systemctl reload systemd-resolved 2>/dev/null || true
+    fi
+    echo "ok"
     ;;
 
-  remove-host-block)
-    h="${1:-}"
-    [[ "$h" =~ $HOST_RE ]] || { echo "bad hostname" >&2; exit 2; }
-    [[ -f "$HOST_BLOCKLIST" ]] || exit 0
-    # Fixed-string filter via grep -vFx — same anti-regex safety as
-    # add-host-block above. Atomic write to a temp file first.
-    tmp="$(mktemp "${HOST_BLOCKLIST}.XXXXXX")"
-    grep -vFx "0.0.0.0 ${h}" "$HOST_BLOCKLIST" > "$tmp" || true
-    chmod 0644 "$tmp"
-    mv "$tmp" "$HOST_BLOCKLIST"
-    resync_hosts
-    logmsg "unblocked $h"
+  pause)
+    [[ $# -eq 1 ]] || fail "usage: pause <user>"
+    [[ "$1" =~ ^[a-z_][a-z0-9_-]*$ ]] || fail "invalid user"
+    id -u "$1" >/dev/null 2>&1 || fail "no such user: $1"
+    log "pause $1"
+    loginctl lock-sessions 2>/dev/null || true
+    sudo -u "$1" hyprlock --immediate 2>/dev/null || true
+    echo "paused"
     ;;
 
-  list-host-blocks)
-    [[ -f "$HOST_BLOCKLIST" ]] && cat "$HOST_BLOCKLIST" || true
-    ;;
-
-  set-bedtime)
-    u="${1:-}"; s="${2:-}"; e="${3:-}"
-    [[ "$u" =~ $USER_RE ]] || { echo "bad user" >&2; exit 2; }
-    [[ "$s" =~ $TIME_RE ]] || { echo "bad start time" >&2; exit 2; }
-    [[ "$e" =~ $TIME_RE ]] || { echo "bad end time"   >&2; exit 2; }
-    svc="/etc/systemd/system/nyxus-parental-bedtime-${u}.service"
-    tim="/etc/systemd/system/nyxus-parental-bedtime-${u}.timer"
-    # The bedtime "window" is [start, end]. We re-lock every 10 minutes
-    # *while inside that window* so a child who unlocks mid-bedtime
-    # gets nudged again shortly after — that's the actual end-time
-    # use. The Service script computes whether HH:MM is in the window
-    # (handles overnight wrap when end < start). Lock is loginctl only;
-    # never PAM, never faillock.
-    cat > "$svc" <<UNIT
-[Unit]
-Description=NYXUS Parental bedtime nudge for ${u} (window ${s}–${e})
-
-[Service]
-Type=oneshot
-Environment=BED_USER=${u}
-Environment=BED_START=${s}
-Environment=BED_END=${e}
-ExecStart=/bin/sh -c '\
-  now=\$(date +%H:%M); \
-  in_win() { \
-    s="\$BED_START"; e="\$BED_END"; n="\$1"; \
-    if [ "\$s" \\< "\$e" ] || [ "\$s" = "\$e" ]; then \
-      [ "\$n" \\>= "\$s" ] && [ "\$n" \\< "\$e" ]; \
-    else \
-      [ "\$n" \\>= "\$s" ] || [ "\$n" \\< "\$e" ]; \
-    fi; \
-  }; \
-  if in_win "\$now"; then \
-    su - "\$BED_USER" -c "notify-send -u critical \\"Bedtime\\" \\"NYXUS Parental: window \$BED_START-\$BED_END active\\" || true"; \
-    loginctl lock-sessions || true; \
-  fi'
-UNIT
-    cat > "$tim" <<UNIT
-[Unit]
-Description=NYXUS Parental bedtime timer for ${u} (re-checks every 10 min)
-
-[Timer]
-# Wake every 10 minutes; the service decides whether we're inside the
-# window and locks if so. This means END time genuinely matters: as
-# soon as the wall clock leaves the window, no further locks fire.
-OnCalendar=*:0/10
-Persistent=false
-
-[Install]
-WantedBy=timers.target
-UNIT
-    systemctl daemon-reload
-    systemctl enable --now "nyxus-parental-bedtime-${u}.timer"
-    logmsg "bedtime ${u} ${s}-${e} enabled"
-    ;;
-
-  clear-bedtime)
-    u="${1:-}"
-    [[ "$u" =~ $USER_RE ]] || { echo "bad user" >&2; exit 2; }
-    systemctl disable --now "nyxus-parental-bedtime-${u}.timer" 2>/dev/null || true
-    rm -f "/etc/systemd/system/nyxus-parental-bedtime-${u}.service" \
-          "/etc/systemd/system/nyxus-parental-bedtime-${u}.timer"
-    systemctl daemon-reload
-    logmsg "bedtime ${u} cleared"
-    ;;
-
-  list-bedtimes)
-    systemctl list-timers --all 2>/dev/null \
-      | grep -E "nyxus-parental-bedtime-" || true
-    ;;
-
-  *) usage ;;
+  *) fail "unknown action: $ACTION" ;;
 esac

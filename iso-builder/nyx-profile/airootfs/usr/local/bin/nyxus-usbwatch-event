@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Triggered by /etc/udev/rules.d/99-nyxus-usbwatch.rules.
+ACTION="${1:-?}"; KERNEL="${2:-?}"
+LOGDIR=/var/log/nyxus
+mkdir -p "$LOGDIR"
+echo "$(date -Iseconds) ${ACTION} ${KERNEL}" >>"$LOGDIR/usbwatch.log"
+# Notify any logged-in users so nyxus_usb_watch.py UI refreshes.
+for u in $(loginctl list-users --no-legend | awk '{print $2}'); do
+  uid=$(id -u "$u" 2>/dev/null) || continue
+  sudo -u "$u" XDG_RUNTIME_DIR="/run/user/$uid"        systemctl --user reload nyxus-usb-watch.service 2>/dev/null || true
+done
