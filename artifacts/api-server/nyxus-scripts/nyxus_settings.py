@@ -200,6 +200,7 @@ _BIND_LABELS = {
     "nyxus-record":         "NYXUS Record",
     "nyxus-context-menu.sh":"NYXUS Context menu",
     "nyxus-set-wallpaper.sh":"NYXUS Wallpaper",
+    "nyxus_wallpaper_studio.py":"NYXUS Wallpaper Studio",
     "nyxus_launcher.py":    "NYXUS Spotlight",
     "nyxus_terminal.py":    "NYXUS Terminal",
     "nyxus_doctor.py":      "Doctor (diagnostics)",
@@ -3328,6 +3329,7 @@ class KeyboardPage(SectionPage):
                 ("NYXUS Drop",         "Super + Ctrl + D"),
                 ("NYXUS Record",       "Super + Shift + R"),
                 ("NYXUS Context menu", "Super + Ctrl + M"),
+                ("NYXUS Wallpaper Studio", "Super + W"),
                 ("NYXUS Wallpaper",    "Super + Alt + W"),
                 ("NYXUS Spotlight",    "Super + Space"),
                 ("NYXUS Terminal",     "Super + Return"),
@@ -7076,6 +7078,16 @@ class AppearancePage(SectionPage):
     def _render_wallpaper(self) -> None:
         _clear_group(self.wall_grp)
         prefs = self.win.prefs
+
+        self.wall_grp.add(action_row(
+            "Wallpaper Studio",
+            "Open the dedicated NYXUS Wallpaper Studio app",
+            "Launch",
+            lambda: fire_and_forget(
+                "nyxus wallpaper_studio >/dev/null 2>&1 "
+                "|| python3 /opt/nyxus/nyxus_wallpaper_studio.py >/dev/null 2>&1 "
+                "|| python3 ~/.nyxus/nyxus_wallpaper_studio.py >/dev/null 2>&1"
+            )))
 
         # Rotation toggle
         rot_row = Adw.SwitchRow(
