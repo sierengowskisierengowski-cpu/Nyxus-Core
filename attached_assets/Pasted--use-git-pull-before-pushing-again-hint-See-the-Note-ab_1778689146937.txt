@@ -1,0 +1,42 @@
+ use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+~/workspace$ mkdir -p ~/.ssh && ssh-keyscan github.com 2>/dev/null >> ~/.ssh/known_hosts
+git remote set-url origin https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git
+~/workspace$ git fetch origin main
+git merge FETCH_HEAD --no-edit
+From https://github.com/sierengowskisierengowski-cpu/Nyxus-Core
+ * branch            main       -> FETCH_HEAD
+   16d73c0..7ff4eb9  main       -> origin/main
+Auto-merging iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+Auto-merging iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.intel.desktop
+CONFLICT (content): Merge conflict in iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.intel.desktop
+Auto-merging scripts/iso-build-verify.sh
+CONFLICT (content): Merge conflict in scripts/iso-build-verify.sh
+Automatic merge failed; fix conflicts and then commit the result.
+~/workspace$ cat > iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.intel.desktop <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=NYXUS Phantom
+GenericName=Open Source Intelligence Workstation
+Comment=Professional grade OSINT and investigation app
+Exec=/usr/local/bin/nyxus-intel
+Icon=io.nyxus.intel
+Categories=Network;Security;
+Terminal=false
+StartupNotify=true
+EOF
+sed -i '/^<<<<<<</,/^>>>>>>>/d' scripts/iso-build-verify.sh
+git add iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.intel.desktop scripts/iso-build-verify.sh
+git commit --no-edit
+git push origin main
+[main 12d6e2d] Merge branch 'main' of https://github.com/sierengowskisierengowski-cpu/Nyxus-Core
+Enumerating objects: 195, done.
+Counting objects: 100% (185/185), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (131/131), done.
+Writing objects: 100% (137/137), 314.56 KiB | 20.97 MiB/s, done.
+Total 137 (delta 93), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (93/93), completed with 30 local objects.
+To https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git
+   7ff4eb9..12d6e2d  main -> main
+~/workspace$ 
