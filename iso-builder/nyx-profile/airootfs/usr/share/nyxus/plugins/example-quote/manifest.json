@@ -1,0 +1,10 @@
+{
+  "id":            "example-quote",
+  "name":          "Example: Quote of the Day",
+  "version":       "1.0.0",
+  "author":        "NYXUS",
+  "widget":        "plugin_quote",
+  "slot":          "right",
+  "poll_seconds":  3600,
+  "permissions":   []
+}

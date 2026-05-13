@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# nyxus-bar-plugins {discover|reload|list}
+#
+# Tiny plugin loader for the NYXUS bar. Discovers plugin folders under:
+#   /usr/share/nyxus/plugins/    (system-shipped)
+#   ~/.config/nyxus/plugins/     (user-installed, takes precedence)
+#
+# For each plugin with a manifest.json we:
+#   - cat its widget.yuck into a generated bundle at
+#     ~/.config/eww/plugins.yuck (sourced by the main eww config)
+#   - cat its widget.scss into  ~/.config/eww/plugins.scss
+#   - if poll.sh + poll_seconds are present, write a transient
+#     systemd-run user timer to invoke it (idempotent restart).
+set -u
+
+ACTION="${1:-discover}"
+SYSDIR="/usr/share/nyxus/plugins"
+USRDIR="${HOME}/.config/nyxus/plugins"
+OUT_YUCK="${HOME}/.config/eww/plugins.yuck"
+OUT_SCSS="${HOME}/.config/eww/plugins.scss"
+LOG="${HOME}/.cache/nyxus/bar-plugins.log"
+mkdir -p "$(dirname "${OUT_YUCK}")" "$(dirname "${LOG}")"
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq required for plugin loader" >&2
+  exit 1
+fi
+
+discover() {
+  : > "${OUT_YUCK}"
+  : > "${OUT_SCSS}"
+  local found=0
+  for base in "${SYSDIR}" "${USRDIR}"; do
+    [[ -d "${base}" ]] || continue
+    for plugin in "${base}"/*/; do
+      [[ -d "${plugin}" ]] || continue
+      local manifest="${plugin}manifest.json"
+      [[ -r "${manifest}" ]] || continue
+      local id name yuck scss poll secs
+      id=$(jq -r '.id          // empty' "${manifest}")
+      name=$(jq -r '.name      // empty' "${manifest}")
+      secs=$(jq -r '.poll_seconds // 0'  "${manifest}")
+      [[ -z "${id}" ]] && continue
+      yuck="${plugin}widget.yuck"
+      scss="${plugin}widget.scss"
+      poll="${plugin}poll.sh"
+      if [[ -r "${yuck}" ]]; then
+        printf '\n;; --- nyxus plugin: %s (%s) ---\n' "${id}" "${name}" >> "${OUT_YUCK}"
+        cat "${yuck}" >> "${OUT_YUCK}"
+      fi
+      if [[ -r "${scss}" ]]; then
+        printf '\n/* --- nyxus plugin: %s --- */\n' "${id}" >> "${OUT_SCSS}"
+        cat "${scss}" >> "${OUT_SCSS}"
+      fi
+      if [[ -x "${poll}" && "${secs}" -gt 0 ]]; then
+        systemctl --user stop "nyxus-plugin@${id}.timer" 2>/dev/null || true
+        systemd-run --user --quiet \
+          --unit="nyxus-plugin@${id}" \
+          --on-active="${secs}" \
+          --on-unit-active="${secs}" \
+          --description="NYXUS bar plugin: ${id}" \
+          "${poll}" 2>>"${LOG}" || true
+      fi
+      echo "[$(date -Iseconds)] discovered ${id} (${name})" >> "${LOG}"
+      ((found++))
+    done
+  done
+  echo "${found} plugin(s) discovered → ${OUT_YUCK}, ${OUT_SCSS}"
+}
+
+reload() {
+  discover
+  command -v eww >/dev/null 2>&1 && eww reload 2>/dev/null || true
+}
+
+list() {
+  for base in "${SYSDIR}" "${USRDIR}"; do
+    [[ -d "${base}" ]] || continue
+    for plugin in "${base}"/*/; do
+      local m="${plugin}manifest.json"
+      [[ -r "${m}" ]] || continue
+      jq -r '"\(.id)\t\(.name)\t\(.version // "?")\t\(.slot // "?")\t" + (input_filename | sub(".*plugins/"; "") | sub("/manifest.json$"; ""))' "${m}"
+    done
+  done | column -t -s $'\t' -N "ID,NAME,VERSION,SLOT,PATH"
+}
+
+case "${ACTION}" in
+  discover) discover ;;
+  reload)   reload ;;
+  list)     list ;;
+  *) echo "usage: nyxus-bar-plugins {discover|reload|list}" >&2; exit 2 ;;
+esac

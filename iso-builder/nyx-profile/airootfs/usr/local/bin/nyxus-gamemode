@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# nyxus-gamemode {on|off|toggle|status}
+#
+# Game Mode tunes the session for low-latency / high-FPS play:
+#   - Hyprland: disable animations + blur, allow tearing
+#   - Dunst: pause notifications
+#   - CPU: switch governor to "performance" via cpupower (best-effort, no
+#     sudo prompts; needs the polkit rule shipped with NYXUS)
+#   - Eww: emit a state file so the bar can render the GAME MODE indicator
+#
+# State: ${XDG_RUNTIME_DIR:-/tmp}/nyxus/gamemode.state ("on" or "off")
+set -u
+
+ACTION="${1:-toggle}"
+STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/nyxus"
+STATE="${STATE_DIR}/gamemode.state"
+LOG="${HOME}/.cache/nyxus/gamemode.log"
+mkdir -p "${STATE_DIR}" "$(dirname "${LOG}")"
+
+current() { [[ -f "${STATE}" ]] && cat "${STATE}" || echo "off"; }
+
+apply_on() {
+  {
+    echo "[$(date -Iseconds)] gamemode: ON"
+    if command -v hyprctl >/dev/null 2>&1; then
+      hyprctl --batch "\
+        keyword animations:enabled 0 ;\
+        keyword decoration:blur:enabled false ;\
+        keyword decoration:drop_shadow false ;\
+        keyword general:allow_tearing true ;\
+        keyword misc:vfr false ;\
+        keyword misc:vrr 1" 2>&1 | sed 's/^/  hypr: /'
+    fi
+    command -v dunstctl >/dev/null 2>&1 && dunstctl set-paused true 2>&1 | sed 's/^/  dunst: /' || true
+    command -v cpupower >/dev/null 2>&1 \
+      && cpupower frequency-set -g performance 2>&1 | sed 's/^/  cpu: /' || true
+    command -v makoctl   >/dev/null 2>&1 && makoctl set-mode do-not-disturb 2>&1 | sed 's/^/  mako: /' || true
+  } >> "${LOG}" 2>&1
+  echo "on" > "${STATE}"
+  command -v eww >/dev/null 2>&1 && eww update gamemode=on 2>/dev/null || true
+}
+
+apply_off() {
+  {
+    echo "[$(date -Iseconds)] gamemode: OFF"
+    if command -v hyprctl >/dev/null 2>&1; then
+      hyprctl --batch "\
+        keyword animations:enabled 1 ;\
+        keyword decoration:blur:enabled true ;\
+        keyword decoration:drop_shadow true ;\
+        keyword general:allow_tearing false ;\
+        keyword misc:vfr true" 2>&1 | sed 's/^/  hypr: /'
+      hyprctl reload >/dev/null 2>&1 || true
+    fi
+    command -v dunstctl >/dev/null 2>&1 && dunstctl set-paused false 2>&1 | sed 's/^/  dunst: /' || true
+    command -v cpupower >/dev/null 2>&1 \
+      && cpupower frequency-set -g schedutil 2>&1 | sed 's/^/  cpu: /' || true
+    command -v makoctl   >/dev/null 2>&1 && makoctl set-mode default 2>&1 | sed 's/^/  mako: /' || true
+  } >> "${LOG}" 2>&1
+  echo "off" > "${STATE}"
+  command -v eww >/dev/null 2>&1 && eww update gamemode=off 2>/dev/null || true
+}
+
+case "${ACTION}" in
+  on)     apply_on ;;
+  off)    apply_off ;;
+  status) current ;;
+  toggle)
+    if [[ "$(current)" == "on" ]]; then apply_off; else apply_on; fi
+    ;;
+  *)
+    echo "usage: nyxus-gamemode {on|off|toggle|status}" >&2
+    exit 2
+    ;;
+esac

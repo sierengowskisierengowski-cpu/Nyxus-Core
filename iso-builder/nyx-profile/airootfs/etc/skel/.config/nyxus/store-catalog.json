@@ -1,0 +1,77 @@
+{
+  "_comment": "NYXUS Store curated catalog. Each entry is one app; pkgs[] is passed to pacman/yay/paru. Edited live by /usr/local/bin/nyxus-store-edit and consumed by /opt/nyxus/nyxus_store.py.",
+  "version": 1,
+  "categories": [
+    {
+      "id": "browser",
+      "name": "Browsers",
+      "apps": [
+        { "id": "firefox",     "name": "Firefox",        "summary": "Fast, private browser from Mozilla",    "pkgs": ["firefox"],          "source": "pacman" },
+        { "id": "librewolf",   "name": "LibreWolf",      "summary": "Privacy-hardened Firefox fork",          "pkgs": ["librewolf-bin"],    "source": "aur" },
+        { "id": "brave",       "name": "Brave",          "summary": "Chromium-based browser with shields",    "pkgs": ["brave-bin"],        "source": "aur" },
+        { "id": "tor-browser", "name": "Tor Browser",    "summary": "Anonymity-first browser over Tor",       "pkgs": ["torbrowser-launcher"], "source": "pacman" }
+      ]
+    },
+    {
+      "id": "comms",
+      "name": "Communication",
+      "apps": [
+        { "id": "discord",  "name": "Discord",  "summary": "Voice + text for communities",          "pkgs": ["discord"],   "source": "pacman" },
+        { "id": "signal",   "name": "Signal",   "summary": "Encrypted messaging",                    "pkgs": ["signal-desktop"], "source": "pacman" },
+        { "id": "telegram", "name": "Telegram", "summary": "Cloud-based messenger",                  "pkgs": ["telegram-desktop"], "source": "pacman" },
+        { "id": "thunderbird", "name": "Thunderbird", "summary": "Email + calendar from Mozilla",    "pkgs": ["thunderbird"], "source": "pacman" }
+      ]
+    },
+    {
+      "id": "dev",
+      "name": "Developer Tools",
+      "apps": [
+        { "id": "code",     "name": "VS Code (OSS)", "summary": "Microsoft's open-source code editor build", "pkgs": ["code"],         "source": "pacman" },
+        { "id": "neovim",   "name": "Neovim",        "summary": "Hyperextensible Vim-based editor",          "pkgs": ["neovim"],       "source": "pacman" },
+        { "id": "ghostty",  "name": "Ghostty",       "summary": "GPU-accelerated terminal",                  "pkgs": ["ghostty"],      "source": "aur" },
+        { "id": "git",      "name": "Git",           "summary": "Distributed version control",               "pkgs": ["git", "git-lfs"], "source": "pacman" },
+        { "id": "docker",   "name": "Docker",        "summary": "Containerization toolkit",                  "pkgs": ["docker", "docker-compose"], "source": "pacman" }
+      ]
+    },
+    {
+      "id": "media",
+      "name": "Media",
+      "apps": [
+        { "id": "vlc",       "name": "VLC",        "summary": "Plays everything",                          "pkgs": ["vlc"],          "source": "pacman" },
+        { "id": "mpv",       "name": "mpv",        "summary": "Minimalist video player",                   "pkgs": ["mpv"],          "source": "pacman" },
+        { "id": "spotify",   "name": "Spotify",    "summary": "Music streaming client",                    "pkgs": ["spotify"],      "source": "aur" },
+        { "id": "obs",       "name": "OBS Studio", "summary": "Streaming + recording studio",              "pkgs": ["obs-studio"],   "source": "pacman" },
+        { "id": "audacity",  "name": "Audacity",   "summary": "Multi-track audio editor",                  "pkgs": ["audacity"],     "source": "pacman" }
+      ]
+    },
+    {
+      "id": "creative",
+      "name": "Creative",
+      "apps": [
+        { "id": "gimp",      "name": "GIMP",       "summary": "Raster image editor",                       "pkgs": ["gimp"],         "source": "pacman" },
+        { "id": "krita",     "name": "Krita",      "summary": "Digital painting studio",                   "pkgs": ["krita"],        "source": "pacman" },
+        { "id": "inkscape",  "name": "Inkscape",   "summary": "Vector graphics editor",                    "pkgs": ["inkscape"],     "source": "pacman" },
+        { "id": "blender",   "name": "Blender",    "summary": "3D modeling, animation, rendering",         "pkgs": ["blender"],      "source": "pacman" }
+      ]
+    },
+    {
+      "id": "games",
+      "name": "Games",
+      "apps": [
+        { "id": "steam",      "name": "Steam",         "summary": "Valve's game launcher",                "pkgs": ["steam"],         "source": "pacman" },
+        { "id": "lutris",     "name": "Lutris",        "summary": "Open gaming platform for Linux",       "pkgs": ["lutris"],        "source": "pacman" },
+        { "id": "heroic",     "name": "Heroic Launcher", "summary": "Epic + GOG launcher",                "pkgs": ["heroic-games-launcher-bin"], "source": "aur" },
+        { "id": "retroarch",  "name": "RetroArch",     "summary": "Frontend for emulators",               "pkgs": ["retroarch"],     "source": "pacman" }
+      ]
+    },
+    {
+      "id": "office",
+      "name": "Office",
+      "apps": [
+        { "id": "libreoffice", "name": "LibreOffice", "summary": "Full office suite",                     "pkgs": ["libreoffice-fresh"], "source": "pacman" },
+        { "id": "obsidian",    "name": "Obsidian",    "summary": "Markdown knowledge base",               "pkgs": ["obsidian"],      "source": "aur" },
+        { "id": "okular",      "name": "Okular",      "summary": "Universal document viewer",             "pkgs": ["okular"],        "source": "pacman" }
+      ]
+    }
+  ]
+}

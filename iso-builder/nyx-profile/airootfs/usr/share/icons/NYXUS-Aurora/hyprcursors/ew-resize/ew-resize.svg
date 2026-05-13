@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+<defs><filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.4"/></filter></defs>
+<path d="M10 32 L22 24 L22 40 Z M54 32 L42 24 L42 40 Z M22 32 H42" stroke="#e8edf5" fill="#e8edf5"/>
+</svg>

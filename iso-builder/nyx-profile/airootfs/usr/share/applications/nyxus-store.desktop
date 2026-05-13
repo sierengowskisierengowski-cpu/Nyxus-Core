@@ -1,14 +1,14 @@
 [Desktop Entry]
 Type=Application
 Name=NYXUS Store
-GenericName=Store
-Comment=Install applications from the NYXUS Store
+GenericName=App Store
+Comment=Curated catalog of NYXUS-recommended apps
 Exec=/usr/local/bin/nyxus store
 TryExec=/usr/local/bin/nyxus
 Icon=system-software-install
 Terminal=false
-Categories=Settings;PackageManager;
-Keywords=NYXUS;NYX;Store;
+Categories=System;PackageManager;
+Keywords=NYXUS;Store;Apps;Install;
 StartupNotify=true
 StartupWMClass=nyxus.store
 X-NYXUS-Module=nyxus_store

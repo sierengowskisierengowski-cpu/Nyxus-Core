@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Network Usage
+GenericName=Network Usage
+Comment=Per-process and per-interface bandwidth
+Exec=/usr/local/bin/nyxus netusage
+TryExec=/usr/local/bin/nyxus
+Icon=network-wired
+Terminal=false
+Categories=System;Monitor;Network;
+Keywords=NYXUS;Network;Usage;Bandwidth;
+StartupNotify=true
+StartupWMClass=nyxus.netusage
+X-NYXUS-Module=nyxus_netusage

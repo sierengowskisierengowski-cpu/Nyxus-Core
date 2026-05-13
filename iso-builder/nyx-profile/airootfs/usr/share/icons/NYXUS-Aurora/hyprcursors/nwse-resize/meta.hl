@@ -1,0 +1,6 @@
+resize_algorithm = bilinear
+hotspot_x = 0.5
+hotspot_y = 0.5
+define_override = size_fdiag
+define_override = bd_double_arrow
+define_size = 0, nwse-resize.svg

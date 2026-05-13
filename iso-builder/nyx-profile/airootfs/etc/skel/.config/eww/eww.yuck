@@ -23,7 +23,8 @@
 ;; ── poll variables ────────────────────────────────────────────────────
 (defpoll TIME       :interval "1s"   :initial `date +'{"hms":"%H:%M:%S","hm":"%H:%M","date":"%a %d %b","long":"%A, %B %-d %Y"}'`
                                      `date +'{"hms":"%H:%M:%S","hm":"%H:%M","date":"%a %d %b","long":"%A, %B %-d %Y"}'`)
-(defpoll TICKER     :interval "3s"   :initial '{"text":"NYXUS · DARK MIRROR · LIVE","tooltip":"NYXUS"}'
+;; ticker.sh runs at 10 fps to scroll one column per tick (true marquee).
+(defpoll TICKER     :interval "0.1s" :initial '{"text":"▌ NYXUS · DARK MIRROR · LIVE                                                  ","tooltip":"NYXUS"}'
                                      "~/.config/eww/scripts/ticker.sh")
 (defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0}'
                                      "~/.config/eww/scripts/sys-pulse.sh")
@@ -211,10 +212,15 @@
     (label :class "ticker-player-text" :limit-width 48
            :text "${PLAYER.icon}  ${PLAYER.title}")))
 
+;; Fixed-width 60-column window; ticker.sh emits a precise WINDOW-wide
+;; slice each tick, so we must NOT auto-truncate or wrap here.
+;; Box does NOT hexpand — we want the ticker to occupy ~half the bar
+;; and be centered, leaving open slots on both sides.
 (defwidget ticker_widget []
-  (box :class "ticker-box" :space-evenly false :hexpand true
-    (label :class "ticker"
-           :limit-width 320
+  (box :class "ticker-box" :space-evenly false :hexpand false :halign "center"
+    (label :class "ticker ticker-marquee"
+           :limit-width 60
+           :unindent false
            :text "${TICKER.text}"
            :tooltip "${TICKER.tooltip}")))
 
@@ -275,11 +281,19 @@
       (cal_widget) (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
       (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget) (power_button))))
 
+;; Top bar is a 3-slot centerbox so the ticker stays dead-center and
+;; both flanks remain free for future widgets the user wants to add.
+;; Left  = brand pill
+;; Center= ticker (~half the bar width)
+;; Right = now-playing player (visible only when a player is active)
 (defwidget bar_top_layout []
-  (box :class "bar bar-top" :space-evenly false :spacing 12 :hexpand true
-    (label :class "ticker-label" :text "▌ NYXUS · LIVE")
-    (ticker_widget)
-    (player_widget)))
+  (centerbox :class "bar bar-top" :orientation "h"
+    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 10 :halign "start"
+      (label :class "ticker-label" :text "▌ NYXUS · LIVE"))
+    (box :class "bar-cluster cluster-center" :space-evenly false :halign "center"
+      (ticker_widget))
+    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 10 :halign "end"
+      (player_widget))))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; DASHBOARD — replaces nyxus_quicksettings + nyxus_clock + nyxus_calendar
@@ -824,6 +838,16 @@
 ;; SPRINT 1 · WINDOWS
 ;; ═════════════════════════════════════════════════════════════════════
 
+;; ─── Flyout sizing contract ───────────────────────────────────────────
+;; All bar-anchored flyouts share x=16, y=78, anchor=bottom right so they
+;; line up under the bottom-bar pill cluster regardless of which one the
+;; user opens. Two width buckets:
+;;   * 420px  — compact (single column, short content)
+;;   * 460px  — list-heavy (scrollable rows of devices / items)
+;; Heights cap at 560px so flyouts never exceed the visible workspace
+;; on 1366×768 panels. Internal lists scroll inside the flyout body.
+;; ──────────────────────────────────────────────────────────────────────
+
 (defwindow quicksettings
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-quicksettings"
   :geometry (geometry :x "16" :y "78" :width "420px" :height "auto" :anchor "bottom right")
@@ -831,7 +855,7 @@
 
 (defwindow wifi
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-wifi"
-  :geometry (geometry :x "16" :y "78" :width "440px" :height "560px" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "560px" :anchor "bottom right")
   (wifi_layout))
 
 (defwindow bluetooth
@@ -841,22 +865,22 @@
 
 (defwindow mixer
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-mixer"
-  :geometry (geometry :x "16" :y "78" :width "520px" :height "auto" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "auto" :anchor "bottom right")
   (mixer_layout))
 
 (defwindow calendar
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-calendar"
-  :geometry (geometry :x "16" :y "78" :width "380px" :height "auto" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "420px" :height "auto" :anchor "bottom right")
   (calendar_layout))
 
 (defwindow notifications
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-notifications"
-  :geometry (geometry :x "16" :y "78" :width "440px" :height "640px" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "560px" :anchor "bottom right")
   (notifications_layout))
 
 (defwindow brightness-flyout
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-brightness"
-  :geometry (geometry :x "16" :y "78" :width "360px" :height "auto" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "420px" :height "auto" :anchor "bottom right")
   (brightness_flyout_layout))
 
 ; ── NYXUS Dock module ─────────────────────────────────────────────────

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# nyxus-set-wallpaper PATH
+#
+# Swap the active swaybg instance to a new wallpaper file. Persists the
+# choice via ~/.config/nyxus/wallpaper.conf so the autostart wrapper
+# picks it up after logout.
+set -euo pipefail
+
+PATH_ARG="${1:-}"
+if [[ -z "${PATH_ARG}" ]]; then
+  echo "usage: nyxus-set-wallpaper /path/to/wallpaper" >&2
+  exit 2
+fi
+
+if [[ ! -r "${PATH_ARG}" ]]; then
+  echo "error: cannot read ${PATH_ARG}" >&2
+  exit 1
+fi
+
+CONF="${HOME}/.config/nyxus/wallpaper.conf"
+mkdir -p "$(dirname "${CONF}")"
+SLUG="$(basename "${PATH_ARG}")"
+SLUG="${SLUG%.*}"
+printf 'WALLPAPER="%s"\nWALLPAPER_PATH="%s"\n' "${SLUG}" "${PATH_ARG}" > "${CONF}"
+
+# Replace running swaybg without leaving a black flash:
+#   1. Start the new instance.
+#   2. Give it ~150ms to draw.
+#   3. Kill any older swaybg processes.
+nohup swaybg -i "${PATH_ARG}" -m fill -c "#000000" >/dev/null 2>&1 &
+NEW_PID=$!
+sleep 0.15
+for pid in $(pgrep -x swaybg 2>/dev/null); do
+  if [[ "${pid}" != "${NEW_PID}" ]]; then
+    kill "${pid}" 2>/dev/null || true
+  fi
+done
+
+echo "applied: ${PATH_ARG}"

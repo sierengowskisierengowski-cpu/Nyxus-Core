@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# nyxus-workspace-wallpaperd
+#
+# Listen on the Hyprland IPC events socket and swap the wallpaper when
+# the active workspace changes. Mapping comes from
+# ~/.config/nyxus/workspaces.json (falls back to the system skel copy).
+#
+# This daemon is idempotent; it tracks the last applied wallpaper path
+# and skips redundant swaybg restarts.
+set -u
+
+CONF="${HOME}/.config/nyxus/workspaces.json"
+[[ -r "${CONF}" ]] || CONF="/etc/skel/.config/nyxus/workspaces.json"
+LOG="${HOME}/.cache/nyxus/workspace-wallpaperd.log"
+mkdir -p "$(dirname "${LOG}")"
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq missing — workspace wallpaper daemon disabled" >> "${LOG}"
+  exit 0
+fi
+
+if [[ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+  echo "HYPRLAND_INSTANCE_SIGNATURE unset — not in a Hyprland session, exiting" >> "${LOG}"
+  exit 0
+fi
+
+SOCK="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
+LAST=""
+
+lookup_wallpaper() {
+  local wsid="$1"
+  jq -r --argjson id "${wsid}" \
+    '.workspaces[] | select(.id == $id) | .wallpaper // empty' "${CONF}" 2>/dev/null
+}
+
+handle_workspace() {
+  local wsid="$1"
+  local wp; wp="$(lookup_wallpaper "${wsid}")"
+  if [[ -z "${wp}" || ! -r "${wp}" || "${wp}" == "${LAST}" ]]; then
+    return 0
+  fi
+  if /usr/local/bin/nyxus-set-wallpaper "${wp}" >/dev/null 2>&1; then
+    LAST="${wp}"
+    echo "[$(date -Iseconds)] ws=${wsid} -> ${wp}" >> "${LOG}"
+  fi
+}
+
+# Set the wallpaper for the workspace we boot into.
+INITIAL=$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.id // 1')
+handle_workspace "${INITIAL}"
+
+# Stream events; format is "EVENT>>DATA"
+exec socat -U - UNIX-CONNECT:"${SOCK}" 2>/dev/null | while IFS= read -r line; do
+  case "${line}" in
+    workspace\>\>*)
+      wsid="${line#workspace>>}"
+      handle_workspace "${wsid}"
+      ;;
+  esac
+done

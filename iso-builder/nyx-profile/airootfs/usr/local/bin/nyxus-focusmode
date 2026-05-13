@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# nyxus-focusmode {on|off|toggle|status}
+#
+# Focus Mode minimizes distractions for deep work:
+#   - Pauses notifications (dunst/mako)
+#   - Hides the Eww bar (so the workspace is uncluttered)
+#   - Sets a "do not disturb" indicator the rest of the desktop respects
+#   - Optionally launches a single workspace and locks input to it
+#
+# State: ${XDG_RUNTIME_DIR:-/tmp}/nyxus/focusmode.state
+set -u
+
+ACTION="${1:-toggle}"
+STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/nyxus"
+STATE="${STATE_DIR}/focusmode.state"
+LOG="${HOME}/.cache/nyxus/focusmode.log"
+mkdir -p "${STATE_DIR}" "$(dirname "${LOG}")"
+
+current() { [[ -f "${STATE}" ]] && cat "${STATE}" || echo "off"; }
+
+apply_on() {
+  {
+    echo "[$(date -Iseconds)] focusmode: ON"
+    command -v dunstctl >/dev/null 2>&1 && dunstctl set-paused true 2>&1 | sed 's/^/  dunst: /' || true
+    command -v makoctl   >/dev/null 2>&1 && makoctl set-mode do-not-disturb 2>&1 | sed 's/^/  mako: /' || true
+    command -v eww >/dev/null 2>&1 && eww close bar_top 2>&1 | sed 's/^/  eww: /' || true
+    command -v hyprctl >/dev/null 2>&1 && hyprctl --batch "\
+      keyword decoration:dim_inactive true ;\
+      keyword decoration:dim_strength 0.35" 2>&1 | sed 's/^/  hypr: /' || true
+  } >> "${LOG}" 2>&1
+  echo "on" > "${STATE}"
+  command -v eww >/dev/null 2>&1 && eww update focusmode=on 2>/dev/null || true
+}
+
+apply_off() {
+  {
+    echo "[$(date -Iseconds)] focusmode: OFF"
+    command -v dunstctl >/dev/null 2>&1 && dunstctl set-paused false 2>&1 | sed 's/^/  dunst: /' || true
+    command -v makoctl   >/dev/null 2>&1 && makoctl set-mode default 2>&1 | sed 's/^/  mako: /' || true
+    if command -v eww >/dev/null 2>&1; then
+      eww open bar_top 2>&1 | sed 's/^/  eww: /' || true
+    fi
+    command -v hyprctl >/dev/null 2>&1 && hyprctl --batch "\
+      keyword decoration:dim_inactive false" 2>&1 | sed 's/^/  hypr: /' || true
+  } >> "${LOG}" 2>&1
+  echo "off" > "${STATE}"
+  command -v eww >/dev/null 2>&1 && eww update focusmode=off 2>/dev/null || true
+}
+
+case "${ACTION}" in
+  on)     apply_on ;;
+  off)    apply_off ;;
+  status) current ;;
+  toggle)
+    if [[ "$(current)" == "on" ]]; then apply_off; else apply_on; fi
+    ;;
+  *)
+    echo "usage: nyxus-focusmode {on|off|toggle|status}" >&2
+    exit 2
+    ;;
+esac

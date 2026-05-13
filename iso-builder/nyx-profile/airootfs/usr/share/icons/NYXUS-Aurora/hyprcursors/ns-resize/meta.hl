@@ -1,0 +1,7 @@
+resize_algorithm = bilinear
+hotspot_x = 0.5
+hotspot_y = 0.5
+define_override = size_ver
+define_override = v_double_arrow
+define_override = double_arrow
+define_size = 0, ns-resize.svg
