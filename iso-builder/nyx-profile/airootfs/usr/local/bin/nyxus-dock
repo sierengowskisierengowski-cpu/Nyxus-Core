@@ -108,17 +108,31 @@ def cmd_ping(_: argparse.Namespace) -> int:
 
 
 def cmd_watch(_: argparse.Namespace) -> int:
-    last = ""
+    """Open a streaming subscription and print state JSON as it arrives."""
+    backoff = 0.5
     while True:
-        r = call("state")
-        text = json.dumps(r, separators=(",", ":"))
-        if text != last:
-            print(text, flush=True)
-            last = text
         try:
-            time.sleep(0.5)
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+                s.connect(str(SOCK))
+                s.sendall(b'{"op":"subscribe"}')
+                s.settimeout(None)
+                backoff = 0.5
+                buf = b""
+                while True:
+                    chunk = s.recv(65536)
+                    if not chunk:
+                        break
+                    buf += chunk
+                    while b"\n" in buf:
+                        line, buf = buf.split(b"\n", 1)
+                        if line:
+                            print(line.decode(errors="replace"), flush=True)
+        except (FileNotFoundError, ConnectionRefusedError, OSError):
+            pass
         except KeyboardInterrupt:
             return 0
+        time.sleep(backoff)
+        backoff = min(backoff * 1.5, 5.0)
 
 
 def main() -> int:
