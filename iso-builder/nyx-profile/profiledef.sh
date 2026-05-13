@@ -56,6 +56,28 @@ file_permissions=(
   ["/usr/local/bin/nyxus-sound.sh"]="0:0:755"
   ["/usr/local/bin/nyxus-updater"]="0:0:755"
   ["/usr/local/bin/wallpaper-rotate"]="0:0:755"
+  # ── Dynamically-generated app launchers (build-iso.sh APPS_LIST loop) ─
+  # These are heredoc-emitted by build-iso.sh during bake. Each maps to a
+  # nyxus_<mod>.py in /opt/nyxus/. MUST be locked or the start menu .desktop
+  # entries point at non-executable files and apps refuse to launch.
+  ["/usr/local/bin/nyxus-notepad"]="0:0:755"
+  ["/usr/local/bin/nyxus-stickies"]="0:0:755"
+  ["/usr/local/bin/nyxus-notes"]="0:0:755"
+  ["/usr/local/bin/nyxus-sysmon"]="0:0:755"
+  ["/usr/local/bin/nyxus-settings"]="0:0:755"
+  ["/usr/local/bin/nyxus-control"]="0:0:755"
+  ["/usr/local/bin/nyxus-terminal"]="0:0:755"
+  ["/usr/local/bin/nyxus-launcher"]="0:0:755"
+  ["/usr/local/bin/nyxus-screenshot"]="0:0:755"
+  ["/usr/local/bin/nyxus-store"]="0:0:755"
+  ["/usr/local/bin/nyxus-powermenu"]="0:0:755"
+  ["/usr/local/bin/nyxus-doctor"]="0:0:755"
+  # ── Welcome wizard launcher + privileged helper ──────────────────────
+  # nyxus-welcome is installed by customize_airootfs.sh from /root/ stage.
+  # The auto-generated APPS_LIST wrapper would also have produced one,
+  # but the staged version (with marker-file gating + flock) overrides it.
+  ["/usr/local/bin/nyxus-welcome"]="0:0:755"
+  ["/usr/local/libexec/nyxus-welcome-helper"]="0:0:755"
   # Privileged helpers (libexec) — invoked via polkit, must be executable.
   ["/usr/local/libexec/nyxus-parental-helper"]="0:0:755"
   # Live-session sudoers drop-in: passwordless sudo for nyx user on the
