@@ -37,8 +37,19 @@
     inset 0 0 24px rgba(160, 107, 255, 0.05);
 }
 
-.bar-bottom { padding: 8px 18px; min-height: 44px; }
-.bar-top    { padding: 4px 14px; min-height: 24px; border-radius: 0 0 14px 14px; }
+.bar-bottom {
+  padding: 8px 18px;
+  min-height: 44px;
+  max-height: 56px;
+}
+.bar-top {
+  padding: 4px 14px;
+  min-height: 24px;
+  max-height: 32px;
+  border-radius: 0 0 14px 14px;
+}
+.bar-bottom > * { min-height: 0; }
+.bar-bottom .bar-cluster { min-height: 0; }
 
 .bar-cluster { padding: 0 6px; }
 
