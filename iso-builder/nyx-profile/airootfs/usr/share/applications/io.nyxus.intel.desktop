@@ -5,6 +5,6 @@ GenericName=Open Source Intelligence Workstation
 Comment=Professional grade OSINT and investigation app
 Exec=/usr/local/bin/nyxus-intel
 Icon=preferences-system-search
-Categories=Network;Security;Office;
+Categories=Network;Security;
 Terminal=false
 StartupNotify=true

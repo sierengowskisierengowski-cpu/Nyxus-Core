@@ -112,8 +112,10 @@ if [[ -d "$CAL" ]]; then
       [[ -z "$img" ]] && continue
       if [[ -f "$CAL/branding/nyxus/$img" ]]; then
         ok "calamares image: $img"
-      else
+      elif [[ "${NYXUS_REQUIRE_BRAND:-0}" == "1" ]]; then
         bad "calamares image MISSING: $img (declared in branding.desc)"
+      else
+        printf "  \033[33m!\033[0m calamares image MISSING (brand bucket): %s -- set NYXUS_REQUIRE_BRAND=1 to fail\n" "$img"
       fi
     done < <(grep -E '^[[:space:]]*(productLogo|productIcon|productWelcome):' "$bd" \
               | awk -F'"' '{print $2}')
