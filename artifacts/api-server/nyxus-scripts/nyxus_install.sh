@@ -95,7 +95,8 @@ for f in nyxus_palette.py nyxus-palette.css \
           nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
           nyxus_doctor.py nyxus_launcher.py \
           nyxus_screenshot.py nyxus_chrome.py \
-          nyxus_screensaver.py nyxus_demon_wake.py; do
+          nyxus_screensaver.py nyxus_demon_wake.py \
+          nyxus_usb_watch.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
@@ -368,6 +369,11 @@ fi
 # Optional systemd user service (idempotent — Hyprland exec-once also works)
 mkdir -p "$HOME/.config/systemd/user"
 dl "nyxus-eww.service" "$HOME/.config/systemd/user/nyxus-eww.service" \
+  && systemctl --user daemon-reload 2>/dev/null || true
+# USB plug-in / removal toast notifier — toggle lives in
+# Settings → Notifications → External devices.
+dl "nyxus-usb-watch.service" \
+   "$HOME/.config/systemd/user/nyxus-usb-watch.service" \
   && systemctl --user daemon-reload 2>/dev/null || true
 
 # ── Welcome Wizard launcher / helper / policy ────────────────────────────────

@@ -266,9 +266,11 @@ lib32-libpng
 firefox
 nautilus
 hyprshot
+wf-recorder
 file-roller
 p7zip
 unrar
+libcanberra
 
 # ── archiso runtime requirements ──────────────────────────────────
 arch-install-scripts
@@ -277,3 +279,6 @@ pacman-contrib
 reflector
 rsync
 which
+
+# NYXUS installer
+calamares
