@@ -459,6 +459,12 @@ exec python3 /opt/nyxus/desktop/nyxus_desktop.py "$@"
 LAUNCHER
 chmod 0755 "${LBIN}/nyxus-desktop"
 
+cat > "${LBIN}/nyxus-wallpaper-studio" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_wallpaper_studio.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-wallpaper-studio"
+
 # ── populate airootfs/opt/nyxus-intel ────────────────────────────────────
 step "stage Phantom into airootfs/opt/nyxus-intel/"
 INSTALL_DIR="${PROFILE_DIR}/airootfs/opt/nyxus-intel"

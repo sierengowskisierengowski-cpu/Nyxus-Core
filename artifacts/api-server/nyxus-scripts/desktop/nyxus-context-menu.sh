@@ -188,10 +188,20 @@ _wallpaper_menu() {
     \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) \
     -printf '%f\n' | sort)
   list=$'Browse files…\nOpen Appearance settings…\n'"$list"
+  list=$'Open Wallpaper Studio…\n'"$list"
   local pick
   pick=$(printf '%s' "$list" | _menu "wallpaper")
   [[ -z "${pick:-}" ]] && exit 0
   case "$pick" in
+    "Open Wallpaper Studio"*)
+      if _have nyxus; then
+        nyxus wallpaper_studio &
+      elif _have nyxus-wallpaper-studio; then
+        nyxus-wallpaper-studio &
+      else
+        _settings Appearance
+      fi
+      ;;
     "Browse files"*)
       local f
       f=$(_have zenity && zenity --file-selection --title="Pick wallpaper" \
