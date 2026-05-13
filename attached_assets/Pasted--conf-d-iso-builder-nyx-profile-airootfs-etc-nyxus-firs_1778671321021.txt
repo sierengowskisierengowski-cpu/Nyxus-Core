@@ -1,0 +1,225 @@
+.conf.d/
+?? iso-builder/nyx-profile/airootfs/etc/nyxus-firstboot.d/
+?? iso-builder/nyx-profile/airootfs/etc/pacman.conf.d/
+?? iso-builder/nyx-profile/airootfs/etc/pacman.d/
+?? iso-builder/nyx-profile/airootfs/etc/profile.d/
+?? iso-builder/nyx-profile/airootfs/etc/sddm.conf.d/00-nyxus-live.conf
+?? iso-builder/nyx-profile/airootfs/etc/security/
+
+...xXx... Nyxus-Core  fix/lockfile $!?
+❯ git stash push -u -m "ci-and-fixlockfile-wip"                                          07:20:56
+Saved working directory and index state On fix/lockfile: ci-and-fixlockfile-wip
+
+...xXx... Nyxus-Core  fix/lockfile $
+❯ [200~git checkout main                                                                 07:21:14
+zsh: bad pattern: [200~git
+
+...xXx... Nyxus-Core  fix/lockfile $
+❯ git pull --rebase https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git main~ 07:21:16
+fatal: invalid refspec 'main~'
+
+...xXx... Nyxus-Core  fix/lockfile $
+❯ git checkout main                                                                      07:21:17
+git pull --rebase https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git main
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/notif-mute.sh': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/startmenu-apps.sh': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/taskbar.sh': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-mission.conf': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-01.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-02.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-03.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-04.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-05.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-06.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-07.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-08.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-09.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-10.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-11.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-12.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-13.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-14.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-15.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-16.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-cosmic-dust.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-cosmos-gold.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-darkmirror-02.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-darkmirror-03.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-darkmirror.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-light-shaft.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-moon-crater.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-sepia-watercolor.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-hyprlock-eye.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-login-stars.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-sierengowski-clean.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus-intel/.manifest.sha256': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CHANGELOG.md': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CREDITS.md': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus-intel/README.md': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_account.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_backup.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_chrome.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_clipboard.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_control.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_crashd.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_demon_wake.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_doctor.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_drop.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_error.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_files.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_gen_icons.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_launcher.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_motd.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_notepad.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_notes.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_palette.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_powermenu.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_preboot.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_screensaver.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_screenshot.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_security.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_settings.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_splash.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_stickies.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_store.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_sysmon_gtk.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_terminal.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_toast.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_updater.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/opt/nyxus/nyxus_welcome.py': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-01.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-02.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-03.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-04.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-05.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-06.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-07.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-08.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-09.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-10.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-11.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-12.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-13.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-14.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-15.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-16.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-cosmic-dust.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-cosmos-gold.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-darkmirror-02.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-darkmirror-03.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-darkmirror.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-light-shaft.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-moon-crater.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-sepia-watercolor.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-hyprlock-eye.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-login-stars.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-sierengowski-clean.png': Permission denied
+warning: unable to unlink 'iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-void-vortex.png': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/eww.scss': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/eww.yuck': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/notif-action.sh': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/notif-history.sh': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/qs-toggle.sh': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/quicksettings.sh': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/ticker.sh': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-opacity.conf': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-rules.conf': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf': Permission denied
+error: unable to unlink old 'iso-builder/nyx-profile/airootfs/etc/skel/.config/rofi/nyxus.rasi': Permission denied
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/eww.scss
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/eww.yuck
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/notif-action.sh
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/notif-history.sh
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/qs-toggle.sh
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/quicksettings.sh
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/ticker.sh
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+M	iso-builder/nyx-profile/airootfs/etc/skel/.config/rofi/nyxus.rasi
+Switched to branch 'main'
+Your branch and 'origin/main' have diverged,
+and have 8 and 70 different commits each, respectively.
+  (use "git pull" if you want to integrate the remote branch with yours)
+error: cannot pull with rebase: You have unstaged changes.
+error: Please commit or stash them.
+
+...xXx... Nyxus-Core  main $!?⇕
+❯ git status -sb                                                                         07:21:20
+git add -A
+git commit -m "ci: clean .desktop categories + soften brand-asset check"
+git push https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git main
+## main...origin/main [ahead 8, behind 70]
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/eww.scss
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/eww.yuck
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/notif-action.sh
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/notif-history.sh
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/qs-toggle.sh
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/quicksettings.sh
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/ticker.sh
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/rofi/nyxus.rasi
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/notif-mute.sh
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/startmenu-apps.sh
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/scripts/taskbar.sh
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-mission.conf
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-01.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-02.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-03.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-04.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-05.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-06.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-07.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-08.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-09.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-10.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-11.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-12.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-13.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-14.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-15.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-16.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-cosmic-dust.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-cosmos-gold.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-darkmirror-02.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-darkmirror-03.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-darkmirror.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-light-shaft.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-moon-crater.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-sepia-watercolor.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-hyprlock-eye.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-login-stars.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-sierengowski-clean.png
+?? iso-builder/nyx-profile/airootfs/opt/nyxus-intel/.manifest.sha256
+?? iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CHANGELOG.md
+?? iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CREDITS.md
+?? iso-builder/nyx-profile/airootfs/opt/nyxus-intel/README.md
+?? iso-builder/nyx-profile/airootfs/opt/nyxus/
+?? iso-builder/nyx-profile/airootfs/usr/share/backgrounds/
+error: gpg failed to sign the data:
+[GNUPG:] KEY_CONSIDERED D21582F480C792442181141349B1FAC76EEE64BB 2
+[GNUPG:] BEGIN_SIGNING H10
+[GNUPG:] PINENTRY_LAUNCHED 154892 gnome3 1.3.2 - alacritty :0 - 1000/1000 0
+gpg: signing failed: PIN blocked
+[GNUPG:] FAILURE sign 100663426
+gpg: signing failed: PIN blocked
+
+fatal: failed to write commit object
+To https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+...xXx... Nyxus-Core  main $+⇕  5s
+❯                                                 
