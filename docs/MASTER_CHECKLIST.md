@@ -264,14 +264,26 @@ Settings + menu/keybind · logs to `~/.cache/nyxus/<app>.log` · fails loud
       writer at ~/.config/libinput-gestures.conf: 3-finger L/R =
       workspace, 4-finger up = fullscreen, 4-finger down = float,
       2-finger pinch = killactive)
-- [ ] **Keyboard panel polish** (compose key, switcher tray applet,
-      shortcuts editor that rebinds hyprland binds in place)
+- [x] **Keyboard panel polish** (KeyboardPage compose+switcher group —
+      r10 batch 3; ComboRow Compose key (off/RAlt/RCtrl/RWin/Menu/Caps)
+      and Layout switcher (off/Alt+Shift/Ctrl+Shift/Win+Space/Caps)
+      mutate input:kb_options tokens family-by-family with canonical
+      local state to avoid races; live-apply via `hyprctl keyword
+      input:kb_options`; persist to ~/.config/hypr/nyxus-input.conf
+      with idempotent auto-source line in hyprland.conf; existing
+      parsed shortcut table preserved)
 - [x] **Display arrangement** (DisplayPage._render_monitors — r10
       batch 2; per-monitor ExpanderRow w/ Scale combo (1.00–2.00) and
       Rotation combo (0/90/180/270°), applies live via `hyprctl
       keyword monitor` AND persists to ~/.config/hypr/nyxus-monitors.
       conf with idempotent auto-source line in hyprland.conf)
-- [ ] **Color profiles** (colord/ICC import + per-monitor profile)
+- [x] **Color profiles** (NEW ColorPage — r10 batch 3; wraps colord
+      `colormgr` CLI: lists display devices via get-devices-by-kind +
+      imported profiles via get-profiles, FileChooserNative for .icc/
+      .icm import → import-profile → device-add-profile → device-
+      make-profile-default; fail-loud toast+log on every nonzero rc;
+      registered in SECTIONS/GLYPHS/PAGE_CLASSES, reachable from
+      sidebar under Devices)
 - [x] **External drives & USB arrival** (nyxus_usb_watch.py daemon +
       nyxus-usb-watch.service user unit — r10 batch 2; tails `udevadm monitor
       --subsystem-match=block --property`, toasts add/remove with
@@ -282,7 +294,14 @@ Settings + menu/keybind · logs to `~/.cache/nyxus/<app>.log` · fails loud
 ## Tier 2 — Network & Connectivity
 - [x] **VPN: WireGuard + OpenVPN profiles** (NetworkPage Wave 1 covers;
       verify import flow exists and ship if not)
-- [ ] **Hotspot / Mobile broadband sharing** (NM share)
+- [x] **Hotspot / Mobile broadband sharing** (NetworkPage Mobile
+      hotspot group — r10 batch 3; detects wifi adapter via nmcli,
+      toggle uses `nmcli device wifi hotspot` with secrets-generated
+      SSID NYXUS-XXXX + WPA2 password, reads back creds from saved
+      connection profile, copies password via wl-copy, shows live
+      client count via `iw dev <iface> station dump`; nmcli persists
+      Hotspot connection profile to /etc/NetworkManager/system-
+      connections/ automatically — survives reboot)
 - [ ] **Proxy settings UI** (system + per-app)
 - [ ] **DNS-over-HTTPS toggle** (systemd-resolved, presets)
 - [ ] **Firewall UI** (UFW frontend; lives inside Security Center
@@ -418,6 +437,18 @@ Settings + menu/keybind · logs to `~/.cache/nyxus/<app>.log` · fails loud
 ---
 
 ## Per-batch progress log (newest first)
+
+- **r10 batch 3** (2026-05-13): Tier 1 #7 + #9 + Tier 2 #11 —
+  Keyboard polish (Compose+switcher comboboxes, kb_options token
+  mutation w/ canonical local state, persist via nyxus-input.conf),
+  Color profiles (NEW ColorPage wrapping colormgr; ICC import +
+  per-display assign), Hotspot (NetworkPage Mobile hotspot group;
+  nmcli device wifi hotspot with random WPA2 creds + iw client
+  count + wl-copy password). Architect FAIL→PASS: first pass caught
+  (a) helpers misindented dropping shortcut table out of build, (b)
+  race in _apply_kb_token, (c) silent fallbacks in colormgr/nmcli
+  reads, (d) _icc_dlg never cleared. All four fixed; second pass
+  PASS zero severe. py_compile ✓, api-server typecheck ✓.
 
 - **r10 batch 2** (2026-05-13): Tier 1 #6, #8, #10 — Touchpad
   gestures (MousePage), Display arrangement (DisplayPage scale+
