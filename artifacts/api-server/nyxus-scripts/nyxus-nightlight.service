@@ -1,0 +1,13 @@
+[Unit]
+Description=NYXUS Night Light scheduler
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/nyxus-nightlight.sh
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=graphical-session.target

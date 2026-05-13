@@ -404,6 +404,26 @@ if dl "nyxus-welcome.policy" "/tmp/nyxus-welcome.policy.new"; then
   rm -f /tmp/nyxus-welcome.policy.new
 fi
 
+# ── Parental Controls helper / policy ───────────────────────────────────────
+# Settings → Parental Controls invokes this via:
+#   pkexec /usr/local/libexec/nyxus-parental-helper ...
+if dl "nyxus-parental-helper" "/tmp/nyxus-parental-helper.new"; then
+  if sudo -n install -Dm0755 /tmp/nyxus-parental-helper.new /usr/local/libexec/nyxus-parental-helper 2>/dev/null; then
+    ok "nyxus-parental-helper → /usr/local/libexec/"
+  else
+    printf "  ${DIM}(skip: nyxus-parental-helper — needs sudo for /usr/local/libexec)${R}\n"
+  fi
+  rm -f /tmp/nyxus-parental-helper.new
+fi
+if dl "com.nyxus.parental.policy" "/tmp/com.nyxus.parental.policy.new"; then
+  if sudo -n install -Dm0644 /tmp/com.nyxus.parental.policy.new /usr/share/polkit-1/actions/com.nyxus.parental.policy 2>/dev/null; then
+    ok "com.nyxus.parental.policy → /usr/share/polkit-1/actions/"
+  else
+    printf "  ${DIM}(skip: com.nyxus.parental.policy — needs sudo for polkit actions)${R}\n"
+  fi
+  rm -f /tmp/com.nyxus.parental.policy.new
+fi
+
 # Build EWW from source (v0.6.0 pinned) ONLY if not already installed.
 # Pinning + fail-fast lives in customize_airootfs.sh on the ISO; on existing
 # systems we install via cargo if the binary is missing.
