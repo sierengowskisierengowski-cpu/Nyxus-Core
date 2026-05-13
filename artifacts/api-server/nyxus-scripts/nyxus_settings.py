@@ -29,6 +29,7 @@ import json
 import logging
 import os
 import re
+import secrets
 import shlex
 import shutil
 import subprocess
@@ -141,6 +142,7 @@ GLYPHS = {
     "printers":      "\uf02f",   # nf-fa-print
     "gamepad":       "\uf11b",   # nf-fa-gamepad
     "webcam":        "\uf03d",   # nf-fa-video_camera
+    "color":         "\uf1fb",   # nf-fa-eyedropper
 }
 
 
@@ -381,10 +383,17 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "controller,gamepad,joystick,xbox,playstation,steam,"
                "evtest,jstest,input", 1,
                "Devices"),
+    SectionDef("color",         "Color profiles",
+               "ICC color profiles per display (colord)",
+               "color",
+               "color,colord,icc,profile,calibration,monitor,display,"
+               "colormgr,gamma", 1,
+               "Devices"),
     SectionDef("network",       "Network",
-               "Wi-Fi, ethernet, VPN, DNS",
+               "Wi-Fi, ethernet, VPN, DNS, hotspot",
                "network",
-               "wifi,wireless,ethernet,vpn,dns,internet,connection", 1,
+               "wifi,wireless,ethernet,vpn,dns,internet,connection,"
+               "hotspot,tether,share", 1,
                "Devices"),
     # ── System ──────────────────────────────────────────────────────────
     SectionDef("power",         "Power",
@@ -2528,8 +2537,219 @@ class DateTimePage(SectionPage):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# KEYBOARD — hyprctl getoption, layout list, repeat rate
+# COLOR — colord (`colormgr`) ICC profile import & per-display assign
 # ──────────────────────────────────────────────────────────────────────
+class ColorPage(SectionPage):
+    """Color profile management via colord (`colormgr` CLI).
+
+    Real reads (get-devices-by-kind display, get-profiles), real writes
+    (import-profile, device-add-profile, device-make-profile-default).
+    Profiles persist in ~/.local/share/icc/ via colord, no behind-the-
+    back file edits.
+    """
+    KEY = "color"
+
+    def build(self) -> None:
+        intro = Adw.PreferencesGroup(
+            title="Color management",
+            description="ICC profiles via colord — applied at session "
+                        "start by colord-session.")
+        self.add_group(intro)
+        if not have("colormgr"):
+            intro.add(empty_row(
+                "colormgr not installed",
+                "Install the `colord` package to manage ICC profiles."))
+            self.add_pill(status_pill("colord missing", "danger"))
+            return
+
+        self.dev_group = Adw.PreferencesGroup(
+            title="Display devices",
+            description="Each detected display can hold an assigned ICC "
+                        "profile.")
+        self.add_group(self.dev_group)
+
+        self.prof_group = Adw.PreferencesGroup(
+            title="Imported profiles",
+            description="ICC files registered with colord on this user.")
+        self.add_group(self.prof_group)
+
+        self._render()
+        self.schedule_refresh(15000, self._tick)
+
+    def _tick(self) -> bool:
+        self._render()
+        return True
+
+    def _track(self, grp: Adw.PreferencesGroup, row: Gtk.Widget) -> None:
+        grp.add(row)
+        if not hasattr(grp, "_rows"):
+            grp._rows = []  # type: ignore[attr-defined]
+        grp._rows.append(row)  # type: ignore[attr-defined]
+
+    def _clear(self, grp: Adw.PreferencesGroup) -> None:
+        for row in getattr(grp, "_rows", []):
+            grp.remove(row)
+        grp._rows = []  # type: ignore[attr-defined]
+
+    @staticmethod
+    def _parse_blocks(text: str) -> List[dict]:
+        out: List[dict] = []
+        cur: dict = {}
+        for ln in text.splitlines():
+            s = ln.strip()
+            if not s:
+                if cur:
+                    out.append(cur)
+                    cur = {}
+                continue
+            if ":" in s:
+                k, v = s.split(":", 1)
+                cur[k.strip()] = v.strip()
+        if cur:
+            out.append(cur)
+        return out
+
+    def _list_devices(self) -> List[dict]:
+        rc, out, err = sh(["colormgr", "get-devices-by-kind", "display"],
+                          timeout=4)
+        if rc != 0:
+            log.warning("colormgr get-devices-by-kind display rc=%d "
+                        "err=%r", rc, err)
+            self.toast(f"colormgr device list failed: "
+                       f"{(err or 'see log')[:60]}")
+            return []
+        return self._parse_blocks(out)
+
+    def _list_profiles(self) -> List[dict]:
+        rc, out, err = sh(["colormgr", "get-profiles"], timeout=4)
+        if rc != 0:
+            log.warning("colormgr get-profiles rc=%d err=%r", rc, err)
+            self.toast(f"colormgr profile list failed: "
+                       f"{(err or 'see log')[:60]}")
+            return []
+        return self._parse_blocks(out)
+
+    def _render(self) -> None:
+        self._clear(self.dev_group)
+        self._clear(self.prof_group)
+        self.clear_pills()
+
+        devs = self._list_devices()
+        if not devs:
+            self._track(self.dev_group, empty_row(
+                "No color-managed displays detected",
+                "Make sure colord.service is running and the session is "
+                "registered with colord."))
+            self.add_pill(status_pill("0 devices", "warn"))
+        else:
+            self.add_pill(status_pill(
+                f"{len(devs)} display(s)", "ok"))
+            for d in devs:
+                obj = d.get("Object Path", "")
+                model = (d.get("Model") or d.get("Device ID")
+                         or "Display")
+                cur_prof = (d.get("Default Profile")
+                            or d.get("Profile") or "")
+                cur_label = (Path(cur_prof).name
+                             if cur_prof else "(no profile assigned)")
+                row = Adw.ActionRow(title=model,
+                                    subtitle=f"profile · {cur_label}")
+                btn = Gtk.Button(label="Import & assign ICC")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect("clicked",
+                            lambda _b, dp=obj: self._pick_icc(dp))
+                row.add_suffix(btn)
+                self._track(self.dev_group, row)
+
+        profs = self._list_profiles()
+        if not profs:
+            self._track(self.prof_group, empty_row(
+                "No imported profiles",
+                "Use Import & assign ICC on a display to add a "
+                "profile."))
+        else:
+            for p in profs[:24]:
+                title = (p.get("Title") or p.get("Profile ID")
+                         or "(profile)")
+                fname = Path(p.get("Filename", "")).name
+                sub = fname or p.get("Profile ID", "") or "(no path)"
+                self._track(self.prof_group, Adw.ActionRow(
+                    title=title, subtitle=sub))
+
+    def _pick_icc(self, dev_path: str) -> None:
+        if not dev_path:
+            self.toast("device path missing — refresh and try again")
+            return
+        dlg = Gtk.FileChooserNative(
+            title="Pick an ICC profile",
+            transient_for=self.win,
+            action=Gtk.FileChooserAction.OPEN,
+            accept_label="Import",
+            cancel_label="Cancel")
+        flt = Gtk.FileFilter()
+        flt.set_name("ICC profiles")
+        flt.add_pattern("*.icc")
+        flt.add_pattern("*.icm")
+        flt.add_pattern("*.ICC")
+        flt.add_pattern("*.ICM")
+        dlg.add_filter(flt)
+        dlg.connect("response",
+                    lambda d, r: self._on_icc_picked(d, r, dev_path))
+        dlg.show()
+        self._icc_dlg = dlg
+
+    def _on_icc_picked(self, dlg, resp, dev_path: str) -> None:
+        if resp != Gtk.ResponseType.ACCEPT:
+            dlg.destroy()
+            self._icc_dlg = None
+            return
+        f = dlg.get_file()
+        dlg.destroy()
+        self._icc_dlg = None
+        if not f:
+            return
+        path = f.get_path()
+        if not path:
+            self.toast("could not resolve picked file")
+            return
+        rc, out, err = sh(["colormgr", "import-profile", path], timeout=10)
+        if rc != 0:
+            self.toast(f"import failed: {(err or 'see log')[:80]}")
+            log.warning("colormgr import-profile %s: %s", path, err)
+            return
+        prof_path = ""
+        for ln in out.splitlines():
+            s = ln.strip()
+            if s.lower().startswith("object path"):
+                prof_path = s.split(":", 1)[1].strip()
+                break
+        if not prof_path:
+            for p in self._list_profiles():
+                if p.get("Filename", "").endswith(Path(path).name):
+                    prof_path = p.get("Object Path", "")
+                    break
+        if not prof_path:
+            self.toast("imported, but couldn't locate profile path")
+            log.warning("colormgr import succeeded but Object Path "
+                        "missing in stdout=%r", out)
+            self._render()
+            return
+        rc1, _, e1 = sh(["colormgr", "device-add-profile",
+                         dev_path, prof_path], timeout=5)
+        rc2, _, e2 = sh(["colormgr", "device-make-profile-default",
+                         dev_path, prof_path], timeout=5)
+        if rc1 == 0 and rc2 == 0:
+            self.toast(f"assigned {Path(path).name}")
+        else:
+            err_msg = (e1 or e2 or "see log").strip()
+            self.toast(f"assign failed: {err_msg[:80]}")
+            log.warning(
+                "colormgr add/make-default failed dev=%s prof=%s "
+                "rc=(%d,%d) err=(%r,%r)",
+                dev_path, prof_path, rc1, rc2, e1, e2)
+        self._render()
+
+
 class KeyboardPage(SectionPage):
     KEY = "keyboard"
 
@@ -2625,6 +2845,80 @@ class KeyboardPage(SectionPage):
                           timeout=2))
         nl.add(nl_sw)
 
+        # ── Compose key + layout switcher (writes input:kb_options) ──
+        # Persists via ~/.config/hypr/nyxus-input.conf with auto-source
+        # so settings survive a reboot. Compose and grp tokens are
+        # mutated independently — toggling one never disturbs the other.
+        sw_grp = Adw.PreferencesGroup(
+            title="Compose & layout switcher",
+            description="Token edits to input:kb_options "
+                        "(persisted to nyxus-input.conf)")
+        self.add_group(sw_grp)
+
+        # Canonical local state so back-to-back combo changes don't
+        # race on stale hyprctl reads (architect r10b3 fix).
+        self._kb_csv = self._kb_options_csv()
+        compose_now = self._token_with_prefix(self._kb_csv,
+                                              "compose:") or ""
+        grp_now = self._token_with_prefix(self._kb_csv, "grp:") or ""
+
+        compose_choices: List[Tuple[str, str]] = [
+            ("(off)",       ""),
+            ("Right Alt",   "compose:ralt"),
+            ("Right Ctrl",  "compose:rctrl"),
+            ("Right Win",   "compose:rwin"),
+            ("Menu key",    "compose:menu"),
+            ("Caps Lock",   "compose:caps"),
+        ]
+        compose_row = Adw.ComboRow(
+            title="Compose key",
+            subtitle="Type accented & special characters with a "
+                     "two-key sequence")
+        compose_model = Gtk.StringList()
+        for label, _ in compose_choices:
+            compose_model.append(label)
+        compose_row.set_model(compose_model)
+        try:
+            compose_idx = next(i for i, (_, t)
+                               in enumerate(compose_choices)
+                               if t == compose_now)
+        except StopIteration:
+            compose_idx = 0
+        compose_row.set_selected(compose_idx)
+        compose_row.connect(
+            "notify::selected",
+            lambda r, _p, choices=compose_choices: self._apply_kb_token(
+                "compose:", choices[r.get_selected()][1]))
+        sw_grp.add(compose_row)
+
+        grp_choices: List[Tuple[str, str]] = [
+            ("(off)",          ""),
+            ("Alt + Shift",    "grp:alt_shift_toggle"),
+            ("Ctrl + Shift",   "grp:ctrl_shift_toggle"),
+            ("Win + Space",    "grp:win_space_toggle"),
+            ("Caps Lock",      "grp:caps_toggle"),
+        ]
+        grp_row = Adw.ComboRow(
+            title="Layout switcher shortcut",
+            subtitle="Cycle between active xkb layouts "
+                     "(set kb_layout to a CSV like 'us,de' first)")
+        grp_model = Gtk.StringList()
+        for label, _ in grp_choices:
+            grp_model.append(label)
+        grp_row.set_model(grp_model)
+        try:
+            grp_idx = next(i for i, (_, t)
+                           in enumerate(grp_choices)
+                           if t == grp_now)
+        except StopIteration:
+            grp_idx = 0
+        grp_row.set_selected(grp_idx)
+        grp_row.connect(
+            "notify::selected",
+            lambda r, _p, choices=grp_choices: self._apply_kb_token(
+                "grp:", choices[r.get_selected()][1]))
+        sw_grp.add(grp_row)
+
         # Cheatsheet jump
         ext = Adw.PreferencesGroup(title="Shortcuts")
         self.add_group(ext)
@@ -2638,6 +2932,7 @@ class KeyboardPage(SectionPage):
         # Reads ~/.config/hypr/hyprland.conf, surfaces every NYXUS app
         # bind plus the most useful Hyprland defaults so users can
         # discover (and sanity-check) every key combo from Settings.
+
         nyxus_grp = Adw.PreferencesGroup(
             title="NYXUS app shortcuts",
             description="Launches the named NYXUS application")
@@ -2730,6 +3025,92 @@ class KeyboardPage(SectionPage):
             sys_grp.add(kv_row(label, chord))
 
         self.add_pill(status_pill("hypr", "ok"))
+
+    # ── kb_options helpers (used by Compose + grp comboboxes) ─────────
+    def _kb_options_csv(self) -> str:
+        rc, out, _ = sh(["hyprctl", "getoption", "input:kb_options",
+                         "-j"], timeout=2)
+        try:
+            return (json.loads(out or "{}").get("str", "") or "").strip()
+        except Exception:
+            return ""
+
+    @staticmethod
+    def _token_with_prefix(csv: str, prefix: str) -> Optional[str]:
+        for tok in (t.strip() for t in csv.split(",")):
+            if tok and tok.startswith(prefix):
+                return tok
+        return None
+
+    def _apply_kb_token(self, family_prefix: str, new_token: str) -> None:
+        # Use canonical local state (set in build) instead of re-reading
+        # hyprctl every call — fixes race when user toggles compose +
+        # grp back-to-back before the previous async apply lands.
+        cur = getattr(self, "_kb_csv", None)
+        if cur is None:
+            cur = self._kb_options_csv()
+        keep = [t.strip() for t in cur.split(",")
+                if t.strip() and not t.strip().startswith(family_prefix)]
+        if new_token:
+            keep.append(new_token)
+        csv = ",".join(keep)
+        # Update canonical state synchronously so a follow-up toggle
+        # composes against the up-to-date CSV, not a stale read.
+        self._kb_csv = csv
+        sh_async(
+            ["hyprctl", "keyword", "input:kb_options", csv],
+            lambda r: self.toast(
+                "applied" if r[0] == 0 else "apply failed"),
+            timeout=2)
+        self._persist_kb_options(csv)
+        self._ensure_input_source_line()
+
+    def _persist_kb_options(self, csv: str) -> None:
+        p = Path.home() / ".config" / "hypr" / "nyxus-input.conf"
+        try:
+            p.parent.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            log.warning("mkdir hypr: %s", e)
+            self.toast(f"persist mkdir failed: {e}")
+            return
+        body = ("# Auto-managed by NYXUS Settings — Keyboard page.\n"
+                "input {\n"
+                f"    kb_options = {csv}\n"
+                "}\n")
+        try:
+            tmp = p.with_suffix(".conf.tmp")
+            tmp.write_text(body, encoding="utf-8")
+            os.replace(tmp, p)
+        except OSError as e:
+            log.warning("write nyxus-input.conf: %s", e)
+            self.toast(f"persist write failed: {e}")
+
+    def _ensure_input_source_line(self) -> None:
+        hp = _HYPRLAND_CONF
+        if not hp.exists():
+            self.toast("hyprland.conf missing — kb_options won't persist")
+            return
+        try:
+            text = hp.read_text(encoding="utf-8")
+        except OSError as e:
+            log.warning("read hyprland.conf: %s", e)
+            self.toast(f"can't read hyprland.conf: {e}")
+            return
+        if "nyxus-input.conf" in text:
+            return
+        try:
+            with open(hp, "a", encoding="utf-8") as fh:
+                fh.write("\n# nyxus input overrides "
+                         "(auto-managed by Settings)\n"
+                         "source = ./nyxus-input.conf\n")
+        except OSError as e:
+            log.warning("append input source line: %s", e)
+            self.toast(
+                f"can't persist to hyprland.conf: {e} — "
+                "keyboard options won't survive reboot")
+
+    # NB: the parsed-shortcut table below is unaffected by the helpers
+    # above — they only mutate kb_options tokens, never bind lines.
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -6576,6 +6957,12 @@ class NetworkPage(SectionPage):
         self.wifi_group = Adw.PreferencesGroup(title="Wi-Fi")
         self.add_group(self.wifi_group)
 
+        # ── Mobile hotspot ────────────────────────────────────────────
+        self.hotspot_group = Adw.PreferencesGroup(
+            title="Mobile hotspot",
+            description="Share this machine's connection over Wi-Fi")
+        self.add_group(self.hotspot_group)
+
         # ── Ethernet ──────────────────────────────────────────────────
         self.eth_group = Adw.PreferencesGroup(title="Ethernet")
         self.add_group(self.eth_group)
@@ -6610,7 +6997,8 @@ class NetworkPage(SectionPage):
         grp._rows.append(row)  # type: ignore[attr-defined]
 
     def _render(self) -> None:
-        for g in (self.wifi_group, self.eth_group, self.vpn_group, self.dns_group):
+        for g in (self.wifi_group, self.hotspot_group, self.eth_group,
+                  self.vpn_group, self.dns_group):
             self._clear_group(g)
         self.clear_pills()
 
@@ -6684,6 +7072,9 @@ class NetworkPage(SectionPage):
         scan_btn.connect("clicked", self._on_scan)
         scan_row.add_suffix(scan_btn)
         self._track(self.wifi_group, scan_row)
+
+        # Mobile hotspot
+        self._render_hotspot()
 
         # Ethernet
         rc, dev_out, _ = sh("nmcli -t -f DEVICE,TYPE,STATE device")
@@ -6827,6 +7218,155 @@ class NetworkPage(SectionPage):
                      "internet reachable" if r[0] == 0
                      else "ping failed — no internet"),
                  timeout=10)
+
+    # ── Hotspot helpers ───────────────────────────────────────────────
+    HOTSPOT_CONN = "Hotspot"
+
+    def _wifi_device(self) -> str:
+        rc, dev_out, err = sh("nmcli -t -f DEVICE,TYPE device")
+        if rc != 0:
+            log.warning("nmcli device enum rc=%d err=%r", rc, err)
+            self.toast(f"hotspot device probe failed: "
+                       f"{(err or 'see log')[:60]}")
+            return ""
+        for ln in dev_out.splitlines():
+            p = ln.split(":")
+            if len(p) >= 2 and p[1] == "wifi":
+                return p[0]
+        return ""
+
+    def _hotspot_active(self, dev: str) -> bool:
+        rc, out, err = sh(["nmcli", "-t", "-f",
+                           "NAME,DEVICE,TYPE",
+                           "connection", "show", "--active"])
+        if rc != 0:
+            log.warning("nmcli connection show --active rc=%d err=%r",
+                        rc, err)
+            self.toast(f"hotspot state probe failed: "
+                       f"{(err or 'see log')[:60]}")
+            return False
+        for ln in out.splitlines():
+            p = ln.split(":")
+            if len(p) >= 3 and p[1] == dev and p[2] in (
+                    "802-11-wireless", "wifi"):
+                rc2, mout, _ = sh(["nmcli", "-t", "-f",
+                                   "802-11-wireless.mode",
+                                   "connection", "show", p[0]])
+                if rc2 == 0 and "ap" in mout.lower():
+                    return True
+        return False
+
+    def _hotspot_creds(self) -> Tuple[str, str]:
+        rc, out, err = sh([
+            "nmcli", "-s", "-t", "-f",
+            "802-11-wireless.ssid,802-11-wireless-security.psk",
+            "connection", "show", self.HOTSPOT_CONN])
+        ssid, pwd = "", ""
+        if rc != 0:
+            # Connection may simply not exist yet — that's an expected
+            # cold-start state, not a hard failure. Only log; don't
+            # toast (would spam on every render before first hotspot).
+            log.info("nmcli show %s rc=%d err=%r (likely "
+                     "first-run, no Hotspot connection yet)",
+                     self.HOTSPOT_CONN, rc, err)
+            return ssid, pwd
+        for ln in out.splitlines():
+            if ln.startswith("802-11-wireless.ssid:"):
+                ssid = ln.split(":", 1)[1]
+            elif ln.startswith("802-11-wireless-security.psk:"):
+                pwd = ln.split(":", 1)[1]
+        return ssid, pwd
+
+    def _render_hotspot(self) -> None:
+        if not have("nmcli"):
+            return
+        dev = self._wifi_device()
+        if not dev:
+            row = Adw.ActionRow(
+                title="No Wi-Fi adapter for hotspot",
+                subtitle="Plug in a USB Wi-Fi adapter to share Internet "
+                         "from Ethernet over Wi-Fi.")
+            self._track(self.hotspot_group, row)
+            return
+
+        active = self._hotspot_active(dev)
+        sw = Adw.SwitchRow(
+            title=f"Mobile hotspot on {dev}",
+            subtitle="Generates a random SSID + WPA2 password the first "
+                     "time it's enabled (saved by NetworkManager).")
+        sw.set_active(bool(active))
+        sw.connect("notify::active",
+                   lambda r, _p, d=dev: self._on_hotspot_toggle(r, d))
+        self._track(self.hotspot_group, sw)
+
+        if not active:
+            return
+
+        self.add_pill(status_pill("hotspot on", "ok"))
+        ssid, pwd = self._hotspot_creds()
+        if ssid:
+            self._track(self.hotspot_group,
+                        Adw.ActionRow(title="SSID", subtitle=ssid))
+        if pwd:
+            pwd_row = Adw.ActionRow(title="Password", subtitle=pwd)
+            cpy = Gtk.Button(label="Copy")
+            cpy.set_valign(Gtk.Align.CENTER)
+            cpy.connect("clicked",
+                        lambda _b, t=pwd: self._copy_hotspot_pw(t))
+            pwd_row.add_suffix(cpy)
+            self._track(self.hotspot_group, pwd_row)
+
+        rc, sta, _ = sh(["iw", "dev", dev, "station", "dump"],
+                        timeout=2)
+        n = sta.count("Station ") if rc == 0 else 0
+        self._track(self.hotspot_group, Adw.ActionRow(
+            title="Connected clients",
+            subtitle=f"{n} connected"))
+
+    def _on_hotspot_toggle(self,
+                           row: Adw.SwitchRow,
+                           dev: str) -> None:
+        on = row.get_active()
+        if on:
+            ssid_existing, pwd_existing = self._hotspot_creds()
+            ssid = ssid_existing or f"NYXUS-{secrets.token_hex(2).upper()}"
+            pwd = pwd_existing or secrets.token_urlsafe(10)
+            sh_async(
+                ["nmcli", "device", "wifi", "hotspot",
+                 "ifname", dev,
+                 "con-name", self.HOTSPOT_CONN,
+                 "ssid", ssid,
+                 "password", pwd],
+                lambda r: (self.toast(
+                    f"hotspot up · {ssid}" if r[0] == 0
+                    else f"hotspot failed: "
+                         f"{(r[2] or 'see log')[:80]}"),
+                    self._render()),
+                timeout=15)
+        else:
+            sh_async(
+                ["nmcli", "connection", "down", self.HOTSPOT_CONN],
+                lambda r: (self.toast(
+                    "hotspot stopped" if r[0] == 0
+                    else f"stop failed: "
+                         f"{(r[2] or 'see log')[:60]}"),
+                    self._render()),
+                timeout=10)
+
+    def _copy_hotspot_pw(self, pw: str) -> None:
+        if have("wl-copy"):
+            try:
+                proc = subprocess.Popen(
+                    ["wl-copy"], stdin=subprocess.PIPE,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL)
+                proc.communicate(pw.encode("utf-8"), timeout=2)
+                self.toast("password copied")
+            except (OSError, subprocess.SubprocessError) as e:
+                log.warning("wl-copy hotspot pw: %s", e)
+                self.toast(f"copy failed: {e}")
+        else:
+            self.toast("wl-copy not installed — can't copy")
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -8289,6 +8829,7 @@ PAGE_CLASSES = {
     "printers":      PrintersPage,
     "cameras_mics":  CamerasMicsPage,
     "controllers":   ControllersPage,
+    "color":         ColorPage,
     "display":       DisplayPage,
     "sound":         SoundPage,
     "power":         PowerPage,
