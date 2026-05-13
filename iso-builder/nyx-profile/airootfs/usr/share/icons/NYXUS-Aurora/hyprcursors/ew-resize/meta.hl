@@ -1,0 +1,6 @@
+resize_algorithm = bilinear
+hotspot_x = 0.5
+hotspot_y = 0.5
+define_override = size_hor
+define_override = h_double_arrow
+define_size = 0, ew-resize.svg

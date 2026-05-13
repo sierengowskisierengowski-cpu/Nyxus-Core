@@ -1,0 +1,7 @@
+resize_algorithm = bilinear
+hotspot_x = 0.5
+hotspot_y = 0.5
+define_override = fleur
+define_override = size_all
+define_override = move
+define_size = 0, all-scroll.svg

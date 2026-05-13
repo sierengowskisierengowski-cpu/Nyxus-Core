@@ -306,6 +306,119 @@ else
   fail "NYXUS-Dark icon theme dir missing"
 fi
 
+# ── 13c. NYXUS wallpaper pack ─────────────────────────────────────────
+hd "13c. NYXUS wallpaper pack"
+WP_DIR="${AIROOT}/usr/share/backgrounds/nyxus"
+WP_COUNT=$(find "${WP_DIR}" -maxdepth 1 -name '*.svg' 2>/dev/null | wc -l)
+if (( WP_COUNT >= 8 )); then
+  ok "${WP_COUNT} wallpapers shipped"
+else
+  fail "only ${WP_COUNT} wallpapers (expected >=8)"
+fi
+[[ -f "${WP_DIR}/manifest.tsv" ]] && ok "manifest.tsv present" || fail "manifest.tsv missing"
+[[ -x "${AIROOT}/usr/local/bin/nyxus-set-wallpaper" ]] \
+  && ok "nyxus-set-wallpaper present + executable" \
+  || fail "nyxus-set-wallpaper missing/not-exec"
+[[ -x "${AIROOT}/usr/local/bin/nyxus-wallpaper-autostart" ]] \
+  && ok "nyxus-wallpaper-autostart present + executable" \
+  || fail "nyxus-wallpaper-autostart missing/not-exec"
+[[ -f "${AIROOT}/opt/nyxus/nyxus_wallpaper_studio.py" ]] \
+  && ok "nyxus_wallpaper_studio.py module present" \
+  || fail "wallpaper studio module missing"
+
+# ── 13d. NYXUS Aurora cursor theme ────────────────────────────────────
+hd "13d. NYXUS Aurora cursor theme"
+CT_DIR="${AIROOT}/usr/share/icons/NYXUS-Aurora"
+[[ -f "${CT_DIR}/manifest.hl" ]] && ok "manifest.hl present" || fail "manifest.hl missing"
+[[ -f "${CT_DIR}/index.theme" ]] && ok "XCursor index.theme present" || fail "index.theme missing"
+CT_SHAPES=$(find "${CT_DIR}/hyprcursors" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l)
+if (( CT_SHAPES >= 12 )); then
+  ok "${CT_SHAPES} cursor shapes shipped"
+else
+  fail "only ${CT_SHAPES} cursor shapes (expected >=12)"
+fi
+grep -q "HYPRCURSOR_THEME,NYXUS-Aurora" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+  && ok "Hyprland HYPRCURSOR_THEME wired" \
+  || fail "Hyprland HYPRCURSOR_THEME not set"
+grep -q "gtk-cursor-theme-name=NYXUS-Aurora" "${AIROOT}/etc/skel/.config/gtk-3.0/settings.ini" \
+  && ok "GTK3 cursor wired" || fail "GTK3 cursor not wired"
+grep -q "gtk-cursor-theme-name=NYXUS-Aurora" "${AIROOT}/etc/skel/.config/gtk-4.0/settings.ini" \
+  && ok "GTK4 cursor wired" || fail "GTK4 cursor not wired"
+grep -q "hyprctl setcursor NYXUS-Aurora" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+  && ok "cursor setcursor wired in user session" \
+  || fail "cursor setcursor not wired in hyprland exec-once"
+
+# ── 13e. NYXUS Game Mode + Focus Mode ─────────────────────────────────
+hd "13e. NYXUS Game Mode + Focus Mode"
+[[ -x "${AIROOT}/usr/local/bin/nyxus-gamemode" ]] \
+  && ok "nyxus-gamemode present + executable" \
+  || fail "nyxus-gamemode missing/not-exec"
+[[ -x "${AIROOT}/usr/local/bin/nyxus-focusmode" ]] \
+  && ok "nyxus-focusmode present + executable" \
+  || fail "nyxus-focusmode missing/not-exec"
+[[ -f "${AIROOT}/etc/polkit-1/rules.d/50-nyxus-cpupower.rules" ]] \
+  && ok "cpupower polkit rule present" \
+  || fail "cpupower polkit rule missing"
+grep -q "nyxus-gamemode toggle" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+  && ok "Game Mode hotkey bound" || fail "Game Mode hotkey missing"
+grep -q "nyxus-focusmode toggle" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+  && ok "Focus Mode hotkey bound" || fail "Focus Mode hotkey missing"
+
+# ── 13f. NYXUS workspace names + per-workspace wallpapers ─────────────
+hd "13f. NYXUS workspaces"
+[[ -f "${AIROOT}/etc/skel/.config/nyxus/workspaces.json" ]] \
+  && ok "workspaces.json shipped" || fail "workspaces.json missing"
+[[ -x "${AIROOT}/usr/local/bin/nyxus-workspace-wallpaperd" ]] \
+  && ok "ws wallpaper daemon present + executable" \
+  || fail "ws wallpaper daemon missing/not-exec"
+[[ -f "${AIROOT}/etc/skel/.config/systemd/user/nyxus-ws-wallpaperd.service" ]] \
+  && ok "ws wallpaper systemd unit present" \
+  || fail "ws wallpaper systemd unit missing"
+WS_NAMES=$(grep -c '^workspace = ' "${AIROOT}/etc/skel/.config/hypr/hyprland.conf")
+if (( WS_NAMES >= 10 )); then
+  ok "${WS_NAMES} named workspaces declared"
+else
+  fail "only ${WS_NAMES} named workspaces (expected 10)"
+fi
+
+# ── 13g. NYXUS first-run welcome tour ─────────────────────────────────
+hd "13g. NYXUS welcome tour"
+[[ -f "${AIROOT}/opt/nyxus/nyxus_welcome.py" ]] \
+  && ok "nyxus_welcome.py present" || fail "nyxus_welcome.py missing"
+grep -q "/usr/local/bin/nyxus welcome" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+  && ok "welcome auto-launch wired in user session" \
+  || fail "welcome auto-launch not wired in hyprland exec-once"
+
+# ── 13h. NYXUS Battery Health + Network Usage + Store ─────────────────
+hd "13h. NYXUS Battery / Network / Store"
+[[ -f "${AIROOT}/opt/nyxus/nyxus_battery.py" ]]  && ok "battery module present"  || fail "battery module missing"
+[[ -f "${AIROOT}/opt/nyxus/nyxus_netusage.py" ]] && ok "netusage module present" || fail "netusage module missing"
+[[ -f "${AIROOT}/opt/nyxus/nyxus_store.py" ]]    && ok "store module present"    || fail "store module missing"
+[[ -x "${AIROOT}/usr/local/bin/nyxus-store-install" ]] \
+  && ok "nyxus-store-install present + executable" \
+  || fail "nyxus-store-install missing/not-exec"
+[[ -f "${AIROOT}/etc/skel/.config/nyxus/store-catalog.json" ]] \
+  && ok "store catalog shipped" || fail "store catalog missing"
+
+# ── 13i. NYXUS theming engine (accent picker) ─────────────────────────
+hd "13i. NYXUS theming engine"
+[[ -x "${AIROOT}/usr/local/bin/nyxus-apply-accent" ]] \
+  && ok "nyxus-apply-accent present + executable" \
+  || fail "nyxus-apply-accent missing/not-exec"
+[[ -f "${AIROOT}/etc/skel/.config/nyxus/accent.json" ]] \
+  && ok "accent.json shipped" || fail "accent.json missing"
+
+# ── 13j. NYXUS bar plugin API ─────────────────────────────────────────
+hd "13j. NYXUS bar plugin API"
+[[ -x "${AIROOT}/usr/local/bin/nyxus-bar-plugins" ]] \
+  && ok "nyxus-bar-plugins loader present + executable" \
+  || fail "nyxus-bar-plugins loader missing/not-exec"
+[[ -d "${AIROOT}/etc/skel/.config/nyxus/plugins" ]] \
+  && ok "user plugin dir shipped" || fail "user plugin dir missing"
+EX_DIR="${AIROOT}/usr/share/nyxus/plugins/example-quote"
+[[ -f "${EX_DIR}/manifest.json" && -f "${EX_DIR}/widget.yuck" ]] \
+  && ok "example plugin shipped" || fail "example plugin missing"
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

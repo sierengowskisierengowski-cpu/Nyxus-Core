@@ -1,0 +1,7 @@
+(defpoll plugin_quote_text :interval "3600s"
+  "shuf -n1 /usr/share/nyxus/plugins/example-quote/quotes.txt 2>/dev/null || echo 'NYXUS · DARK MIRROR'")
+
+(defwidget plugin_quote []
+  (box :class "plugin-quote" :orientation "h" :space-evenly false :spacing 6
+    (label :class "plugin-quote-glyph" :text "✶")
+    (label :class "plugin-quote-text"  :text plugin_quote_text :limit-width 64 :truncate true)))

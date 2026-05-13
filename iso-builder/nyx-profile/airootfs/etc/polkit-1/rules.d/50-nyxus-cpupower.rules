@@ -1,0 +1,12 @@
+// NYXUS · allow members of the 'wheel' group to call cpupower without
+// a password prompt. Used by /usr/local/bin/nyxus-gamemode to switch
+// the CPU governor between "performance" and "schedutil" on the fly.
+//
+// Scope is intentionally narrow — only the cpupower frequency-setter
+// action is whitelisted; every other privileged action still prompts.
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.cpupower.set-frequency" &&
+        subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+    }
+});

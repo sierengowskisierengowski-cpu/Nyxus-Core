@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# nyxus-store-install <source> <pkg> [pkg...]
+#
+# Install one or more packages via the appropriate front-end:
+#   source = pacman → sudo pacman -S --needed --noconfirm
+#   source = aur    → yay or paru if available, else fall back to pacman
+# Always opens a terminal so the user sees prompts + transaction summary.
+set -u
+
+if (( $# < 2 )); then
+  echo "usage: nyxus-store-install <pacman|aur> <pkg> [pkg...]" >&2
+  exit 2
+fi
+
+SRC="$1"; shift
+PKGS=("$@")
+
+term() {
+  for t in ghostty kitty alacritty wezterm foot xterm; do
+    if command -v "$t" >/dev/null 2>&1; then
+      echo "$t -e"; return 0
+    fi
+  done
+  echo ""
+}
+
+build_cmd() {
+  case "${SRC}" in
+    pacman)
+      echo "sudo pacman -S --needed ${PKGS[*]}; echo; echo 'Press Enter to close…'; read"
+      ;;
+    aur)
+      if command -v yay >/dev/null 2>&1; then
+        echo "yay -S --needed ${PKGS[*]}; echo; echo 'Press Enter to close…'; read"
+      elif command -v paru >/dev/null 2>&1; then
+        echo "paru -S --needed ${PKGS[*]}; echo; echo 'Press Enter to close…'; read"
+      else
+        echo "echo 'No AUR helper installed (yay/paru). Falling back to pacman.'; sudo pacman -S --needed ${PKGS[*]}; echo; echo 'Press Enter to close…'; read"
+      fi
+      ;;
+    *)
+      echo "echo 'Unknown source: ${SRC}'; sleep 3"
+      ;;
+  esac
+}
+
+CMD="$(build_cmd)"
+TERM_CMD="$(term)"
+if [[ -z "${TERM_CMD}" ]]; then
+  echo "no terminal emulator found on PATH" >&2
+  exit 1
+fi
+
+# shellcheck disable=SC2086
+exec ${TERM_CMD} bash -c "${CMD}"

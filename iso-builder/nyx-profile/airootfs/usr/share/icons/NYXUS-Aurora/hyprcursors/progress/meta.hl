@@ -1,0 +1,11 @@
+resize_algorithm = bilinear
+hotspot_x = 0.1
+hotspot_y = 0.06
+define_override = left_ptr_watch
+define_override = half-busy
+define_size = 0, progress_00.svg, 80
+define_size = 0, progress_01.svg, 80
+define_size = 0, progress_02.svg, 80
+define_size = 0, progress_03.svg, 80
+define_size = 0, progress_04.svg, 80
+define_size = 0, progress_05.svg, 80
