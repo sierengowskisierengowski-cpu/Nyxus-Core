@@ -24,6 +24,7 @@ Hardening
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import os
 import re
@@ -231,6 +232,27 @@ def hypr_cmd(cmd: str) -> str:
         return ""
 
 
+# ─── safety helpers for Hyprland bind dispatch ──────────────────────────
+_COMBO_TOKEN_RE = re.compile(r"^[A-Za-z0-9_+]*$")
+
+def _safe_combo_token(s: str) -> bool:
+    """Hyprland's `bind=MOD,KEY,...` parser splits on commas. Modifier and
+    key tokens must be plain identifiers — no commas, quotes, spaces, or
+    shell metas. Anything else is rejected so a malformed config cannot
+    inject extra hyprctl arguments."""
+    return bool(_COMBO_TOKEN_RE.match(s or ""))
+
+def _hypr_exec(action: str) -> str:
+    """Wrap an arbitrary user shell action so it can be safely embedded as
+    the dispatcher+args portion of a Hyprland `bind` line. The action is
+    base64-encoded, so commas, quotes, newlines, and pipes in the user's
+    command cannot break Hyprland's comma-separated bind parser. Hyprland
+    sees `exec, sh -c '...'` — three structural commas (bind/MOD/KEY then
+    dispatcher) plus opaque base64 in the `args` slot."""
+    b64 = base64.b64encode(action.encode("utf-8", "replace")).decode("ascii")
+    return f"exec, sh -c 'echo {b64} | base64 -d | sh'"
+
+
 def hypr_apply_binds(cfg: Config) -> None:
     """Replace all dynamic binds with current config. Uses keyword bind/unbind."""
     if not HYPR_SIG:
@@ -246,9 +268,14 @@ def hypr_apply_binds(cfg: Config) -> None:
     for b in cfg.binds:
         if not b.key and not b.mods:
             continue
-        # action runs through /bin/sh so user-provided pipelines work
-        action = "exec, " + b.action.replace("\n", " ")
-        cmd = f"keyword bind {b.mods},{b.key},{action}"
+        if not _safe_combo_token(b.mods) or not _safe_combo_token(b.key):
+            log("skip unsafe combo token in mods/key:", repr(b.mods), repr(b.key))
+            continue
+        # Wrap the action through base64 → /bin/sh so commas / quotes / pipes
+        # in the user action cannot break Hyprland's comma-separated bind
+        # parser. The 3 structural commas in `bind=MOD,KEY,DISPATCHER,ARGS`
+        # remain intact; everything user-controlled is opaque base64.
+        cmd = f"keyword bind {b.mods},{b.key},{_hypr_exec(b.action)}"
         hypr_cmd(cmd)
         applied.append(b.combo)
     s = read_state()
@@ -301,27 +328,41 @@ async def hypr_event_loop(state_ref: dict) -> None:
             await asyncio.sleep(1)
 
 
+APP_OVERRIDE_LOCK = threading.Lock()
+
 def apply_app_overrides(state_ref: dict, cls: str) -> None:
-    """Push per-app binds on top of global on focus change."""
-    cfg: Config = state_ref["cfg"]
-    matched: list[Bind] = []
-    for pat, binds in cfg.app_overrides.items():
-        try:
-            if re.search(pat, cls):
-                matched.extend(binds)
-        except re.error:
-            continue
-    # Re-apply: clear app-specific previous, push matched
-    prev = state_ref.get("app_active_combos", [])
-    for combo in prev:
-        mods, _, key = combo.partition("+")
-        hypr_cmd(f"keyword unbind {mods},{key}")
-    new_combos: list[str] = []
-    for b in matched:
-        action = "exec, " + b.action.replace("\n", " ")
-        hypr_cmd(f"keyword bind {b.mods},{b.key},{action}")
-        new_combos.append(b.combo)
-    state_ref["app_active_combos"] = new_combos
+    """Push per-app binds on top of global on focus change.
+
+    Held under APP_OVERRIDE_LOCK so a rapid focus-change burst cannot leave
+    orphaned binds from a half-finished previous apply.
+    """
+    if not APP_OVERRIDE_LOCK.acquire(blocking=False):
+        # Another apply is in flight; the next focus event will reconcile.
+        return
+    try:
+        cfg: Config = state_ref["cfg"]
+        matched: list[Bind] = []
+        for pat, binds in cfg.app_overrides.items():
+            try:
+                if re.search(pat, cls):
+                    matched.extend(binds)
+            except re.error:
+                continue
+        # Re-apply: clear app-specific previous, push matched
+        prev = state_ref.get("app_active_combos", [])
+        for combo in prev:
+            mods, _, key = combo.partition("+")
+            if _safe_combo_token(mods) and _safe_combo_token(key):
+                hypr_cmd(f"keyword unbind {mods},{key}")
+        new_combos: list[str] = []
+        for b in matched:
+            if not _safe_combo_token(b.mods) or not _safe_combo_token(b.key):
+                continue
+            hypr_cmd(f"keyword bind {b.mods},{b.key},{_hypr_exec(b.action)}")
+            new_combos.append(b.combo)
+        state_ref["app_active_combos"] = new_combos
+    finally:
+        APP_OVERRIDE_LOCK.release()
 
 
 # ─── chord engine (driven by hyprctl exec callback wrappers) ────────────
@@ -607,10 +648,26 @@ class IPCServer:
             self.publish("reload", {"binds": len(cfg2.binds)})
             return {"ok": True, "binds": len(cfg2.binds)}
         if op == "test":
-            action = str(req.get("action", ""))
-            if action:
-                subprocess.Popen(["/bin/sh", "-c", action])
-            return {"ok": True}
+            # SECURITY: only fire the action of a bind that is ALREADY in the
+            # user's loaded config. The CLI sends a combo identifier (e.g.
+            # "SUPER+RETURN"); we look up its action ourselves. We do NOT
+            # accept arbitrary action strings over IPC, even though the
+            # socket is 0o600, to keep this RPC from becoming a generic
+            # eval primitive that other local processes could abuse.
+            combo = str(req.get("combo", "")).strip()
+            if not combo:
+                return {"ok": False, "error": "missing combo"}
+            cfg: Config = self.state_ref["cfg"]
+            for b in cfg.binds:
+                if b.combo == combo:
+                    subprocess.Popen(["/bin/sh", "-c", b.action])
+                    return {"ok": True, "combo": combo}
+            for binds in cfg.app_overrides.values():
+                for b in binds:
+                    if b.combo == combo:
+                        subprocess.Popen(["/bin/sh", "-c", b.action])
+                        return {"ok": True, "combo": combo}
+            return {"ok": False, "error": f"unknown combo: {combo}"}
         if op == "active_class":
             return {"ok": True, "active_class": self.state_ref.get("active_class", "")}
         return {"ok": False, "error": f"unknown op: {op}"}
