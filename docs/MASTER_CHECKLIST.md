@@ -272,8 +272,8 @@ Settings + menu/keybind · logs to `~/.cache/nyxus/<app>.log` · fails loud
       keyword monitor` AND persists to ~/.config/hypr/nyxus-monitors.
       conf with idempotent auto-source line in hyprland.conf)
 - [ ] **Color profiles** (colord/ICC import + per-monitor profile)
-- [x] **External drives & USB arrival** (nyxus-usb-watch.py daemon +
-      .service user unit — r10 batch 2; tails `udevadm monitor
+- [x] **External drives & USB arrival** (nyxus_usb_watch.py daemon +
+      nyxus-usb-watch.service user unit — r10 batch 2; tails `udevadm monitor
       --subsystem-match=block --property`, toasts add/remove with
       ID_VENDOR/ID_MODEL via notify-send, logs to ~/.cache/nyxus/
       usb-watch.log; Settings toggle in NotificationsPage →
