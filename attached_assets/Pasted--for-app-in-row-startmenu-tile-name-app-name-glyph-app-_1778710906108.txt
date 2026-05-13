@@ -1,0 +1,55 @@
+
+          (for app in {row}
+            (startmenu_tile :name {app.name} :glyph {app.glyph} :exec {app.exec})))))
+
+    ;; Recents — most-recent .desktop launches.
+    (label :class "startmenu-section" :text "RECENT" :halign "start"
+           :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0})
+    (box :orientation "v" :space-evenly false :spacing 2
+         :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0}
+      (for r in {STARTAPPS.recents}
+        (startmenu_recent_row :name {r.name} :path {r.path} :exec {r.exec})))
+
+    ;; Search results — flat list when STARTQUERY != "".
+    (label :class "startmenu-section" :text "RESULTS" :halign "start"
+           :visible {STARTQUERY != ""})
+    (scroll :vscroll true :hscroll false :height 320
+            :visible {STARTQUERY != ""}
+      (box :orientation "v" :space-evenly false :spacing 2
+        (for a in {STARTAPPS.all}
+          (startmenu_recent_row :name {a.name} :path {a.exec} :exec {a.exec}))))
+
+    ;; Footer — user identity + power buttons.
+    (box :class "startmenu-footer" :orientation "h" :space-evenly false :spacing 10
+      (label :class "startmenu-user" :text "  ${STARTAPPS.user}@${STARTAPPS.host}"
+             :hexpand true :halign "start")
+      (button :class "startmenu-power-btn"
+              :tooltip "Lock"
+              :onclick "eww close startmenu ; hyprlock &" "")
+      (button :class "startmenu-power-btn"
+              :tooltip "Settings"
+              :onclick "eww close startmenu ; nyxus-settings &" "")
+      (button :class "startmenu-power-btn shutdown"
+              :tooltip "Power"
+              :onclick "eww close startmenu ; eww open --toggle powermenu" ""))))
+
+(defwindow startmenu
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-startmenu"
+  :geometry (geometry :x "16" :y "78" :width "640px" :height "56px" :anchor "bottom left")
+  (startmenu_layout))
+── CSS cap already present ──
+ 2026-05-13T22:21:27.511Z INFO  eww > Initializing Eww server. (/run/user/1000/eww-server_69eff7c8a8c4b43d)
+Run `eww logs` to see any errors while editing your configuration.
+ 2026-05-13T22:21:27.511Z INFO  eww::server > Loading paths: config-dir: /home/nyx/.config/eww, ipc-socket: /run/user/1000/eww-server_69eff7c8a8c4b43d, log-file: /home/nyx/.cache/eww/eww_69eff7c8a8c4b43d.log
+
+
+
+
+
+
+
+
+── bar layer height after restart ──
+		Layer 55cfd69a0ac0: xywh: 20 674 1881 394, namespace: nyxus-bar-bottom, pid: 150196
+
+── eww errors (if any) ──
