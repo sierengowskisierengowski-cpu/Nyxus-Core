@@ -121,6 +121,7 @@ if [[ -d "$CAL" ]]; then
       elif [[ "${NYXUS_REQUIRE_BRAND:-0}" == "1" ]]; then
         bad "calamares image MISSING: $img (declared in branding.desc)"
       else
+        printf "  \033[33m!\033[0m calamares image MISSING (brand bucket): %s -- set NYXUS_REQUIRE_BRAND=1 to fail\n" "$img"
       fi
     done < <(grep -E '^[[:space:]]*(productLogo|productIcon|productWelcome):' "$bd" \
               | awk -F'"' '{print $2}')
@@ -138,11 +139,16 @@ if [[ -d "$CAL" ]]; then
       fi
     done < <(awk '/^[[:space:]]*config:/{print $2}' "$sc" | tr -d '"')
   fi
-  # Calamares package declared
+  # Calamares: either declared in packages.x86_64 (pacstrap) OR built
+  # from AUR by customize_airootfs.sh (the project default since calamares
+  # is AUR-only on Arch). Accept either path.
+  CUST="$PROFILE/airootfs/root/customize_airootfs.sh"
   if grep -qE '^calamares$' "$PKG"; then
     ok "calamares declared in packages.x86_64"
+  elif [[ -f "$CUST" ]] && grep -qE 'calamares' "$CUST"; then
+    ok "calamares built from AUR via customize_airootfs.sh"
   else
-    bad "calamares NOT declared in packages.x86_64"
+    bad "calamares NOT declared in packages.x86_64 and NOT built in customize_airootfs.sh"
   fi
 else
   bad "no calamares profile under airootfs/etc/calamares"

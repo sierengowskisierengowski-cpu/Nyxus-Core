@@ -838,3 +838,4 @@
 
 ; ── NYXUS Dock module ─────────────────────────────────────────────────
 (include "dock.yuck")
+(include "hotkey.yuck")
