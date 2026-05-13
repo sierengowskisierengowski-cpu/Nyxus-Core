@@ -509,5 +509,8 @@ systemctl enable ananicy-cpp.service 2>/dev/null || true
 # Distrobox — run other-distro apps in containers.
 _aur_build distrobox
 
+# Calamares installer.
+_aur_build calamares
+
 # AppImageLauncher — AppImage integration in file manager + launcher.
 _aur_build appimagelauncher
