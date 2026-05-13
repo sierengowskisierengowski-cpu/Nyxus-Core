@@ -1,0 +1,19 @@
+
+...xXx... Nyxus-Core  main $⇡  9s
+❯ cd ~/Nyxus-Core && git cherry-pick --abort && git checkout 3202909 -- iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.intel.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-backup.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-control.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-drop.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-files.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-gen-icons.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-launcher.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-notepad.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-powermenu.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-screenshot.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-stickies.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-store.desktop iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-updater.desktop scripts/iso-build-verify.sh && git status -sb && git commit --no-gpg-sign -m "ci: clean .desktop categories + soften brand-asset check" && git push https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git main
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-backup.desktop' did not match any file(s) known to git
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-control.desktop' did not match any file(s) known to git
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-drop.desktop' did not match any file(s) known to git
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-files.desktop' did not match any file(s) known to git
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-gen-icons.desktop' did not match any file(s) known to git
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-launcher.desktop' did not match any file(s) known to git
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-notepad.desktop' did not match any file(s) known to git
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-powermenu.desktop' did not match any file(s) known to git
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-screenshot.desktop' did not match any file(s) known to git
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-stickies.desktop' did not match any file(s) known to git
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-store.desktop' did not match any file(s) known to git
+error: pathspec 'iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-updater.desktop' did not match any file(s) known to git
+error: pathspec 'scripts/iso-build-verify.sh' did not match any file(s) known to git
+
+...xXx... Nyxus-Core  main $⇡  5s
+❯                                        
