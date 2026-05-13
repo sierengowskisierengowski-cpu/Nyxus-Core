@@ -418,6 +418,17 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "about",
                "about,version,kernel,hardware,cpu,gpu,ram,uptime,build", 1,
                "Account"),
+    # ── System (security lives here so it's reachable from the
+    # System bucket users expect; the full Security Center is a
+    # standalone app launched from the embedded SectionPage) ──────────
+    SectionDef("security",      "Security",
+               "Firewall, virus, account, encryption, privacy, panic",
+               "privacy",
+               "security,defender,firewall,virus,clamav,ufw,encryption,"
+               "luks,vault,vpn,doh,tpm,secure boot,usbguard,fwupd,"
+               "panic,lockdown,audit,faillock,pam,recovery,trust,"
+               "permissions,camera,microphone,location,screen", 1,
+               "System"),
 )
 SECTIONS_BY_KEY = {s.key: s for s in SECTIONS}
 
@@ -7034,6 +7045,158 @@ class DropPage(SectionPage):
             "ok" if devices else "warn"))
 
 
+# ──────────────────────────────────────────────────────────────────────
+# SECURITY — embedded summary + launcher for the standalone
+# nyxus_security.py Security Center. Settings is the discovery surface
+# (every page rolled up under one health score); the standalone app is
+# the management surface (10 sections, full CRUD).
+# ──────────────────────────────────────────────────────────────────────
+class SecurityPage(SectionPage):
+    """Inline summary of system security posture + launchers for the
+    full Security Center, the PANIC button, and the quick-scan path.
+
+    Reads:
+      · `ufw status verbose`               → firewall state
+      · `systemctl is-active clamav-*`     → AV engine
+      · `bootctl status` / `mokutil`        → secure boot
+      · `/sys/class/tpm/tpm0`              → TPM presence
+      · `lsblk` for crypto_LUKS volumes
+      · `journalctl -g 'Failed password'`   → recent failed logins
+    Writes: none — all mutations happen in the standalone Security
+    Center via the polkit-elevated nyxus-security-helper.
+    """
+    KEY = "security"
+
+    def build(self) -> None:
+        # Headline group + open-app
+        head = Adw.PreferencesGroup()
+        head.set_title("NYXUS Security Center")
+        head.set_description(
+            "Unified hub for firewall, anti-malware, encryption, account "
+            "protection, device security, privacy indicators, and audit. "
+            "Use the buttons below to open the full center, run a quick "
+            "scan, or engage panic lockdown.")
+        row_open = Adw.ActionRow(title="Open Security Center",
+                                 subtitle="10 sections · live threat tape · panic mode")
+        btn_open = Gtk.Button(label="Open"); btn_open.add_css_class("suggested-action")
+        btn_open.set_valign(Gtk.Align.CENTER)
+        btn_open.connect("clicked",
+                         lambda *_: fire_and_forget("nyxus-security"))
+        row_open.add_suffix(btn_open)
+        row_open.set_activatable_widget(btn_open)
+        head.add(row_open)
+
+        row_scan = Adw.ActionRow(title="Run quick scan",
+                                 subtitle="ClamAV scan of $HOME and /tmp")
+        btn_scan = Gtk.Button(label="Scan")
+        btn_scan.set_valign(Gtk.Align.CENTER)
+        btn_scan.connect("clicked",
+                         lambda *_: fire_and_forget("nyxus-security --quick-scan"))
+        row_scan.add_suffix(btn_scan)
+        head.add(row_scan)
+
+        row_panic = Adw.ActionRow(title="Panic lockdown",
+                                  subtitle="Lock screen, clear clipboard, "
+                                  "dismount removable, flush DNS")
+        btn_panic = Gtk.Button(label="PANIC"); btn_panic.add_css_class("destructive-action")
+        btn_panic.set_valign(Gtk.Align.CENTER)
+        btn_panic.connect("clicked",
+                          lambda *_: fire_and_forget("nyxus-security --panic"))
+        row_panic.add_suffix(btn_panic)
+        head.add(row_panic)
+        self.add_group(head)
+
+        # Subsystem state — read live, no caching
+        sub = Adw.PreferencesGroup()
+        sub.set_title("System posture")
+        sub.set_description("Live status from the kernel, systemd, and ufw.")
+        self.add_group(sub)
+        self._sub = sub
+
+        # Render rows asynchronously so we don't block the Settings UI.
+        self._render_posture_async()
+
+    def _render_posture_async(self) -> None:
+        def worker():
+            posture = self._collect_posture()
+            GLib.idle_add(self._fill_posture, posture)
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _collect_posture(self) -> list[tuple[str, str, str]]:
+        """Returns [(label, kind, detail)]. Subprocess-only, no GTK."""
+        out: list[tuple[str, str, str]] = []
+        # Firewall
+        rc, sout, _ = run(["ufw", "status", "verbose"], timeout=4)
+        if rc == 0:
+            active = "Status: active" in sout
+            deny_in = "deny (incoming" in sout
+            if active and deny_in:
+                out.append(("Firewall", "ok", "active · deny inbound"))
+            elif active:
+                out.append(("Firewall", "warn", "active · permissive"))
+            else:
+                out.append(("Firewall", "danger", "inactive"))
+        else:
+            out.append(("Firewall", "warn", "ufw not installed"))
+        # ClamAV
+        for svc in ("clamav-daemon.service", "clamav-daemon", "clamd@scan"):
+            rc, sout, _ = run(["systemctl", "is-active", svc], timeout=2)
+            if sout == "active":
+                out.append(("Real-time AV", "ok", f"{svc} running"))
+                break
+        else:
+            out.append(("Real-time AV", "warn",
+                        "daemon stopped — on-demand only"))
+        # Secure Boot
+        rc, sout, _ = run(["bootctl", "status"], timeout=3)
+        if "Secure Boot: enabled" in sout:
+            out.append(("Secure Boot", "ok", "enabled"))
+        elif "Secure Boot: disabled" in sout:
+            out.append(("Secure Boot", "warn", "disabled in firmware"))
+        else:
+            out.append(("Secure Boot", "warn", "unknown"))
+        # TPM
+        if Path("/sys/class/tpm/tpm0").exists():
+            out.append(("TPM", "ok", "present"))
+        else:
+            out.append(("TPM", "warn", "not present"))
+        # LUKS
+        rc, sout, _ = run(["lsblk", "-rno", "FSTYPE"], timeout=3)
+        if "crypto_LUKS" in sout:
+            n = sum(1 for l in sout.splitlines() if l.strip() == "crypto_LUKS")
+            out.append(("Disk encryption", "ok", f"{n} LUKS volume(s)"))
+        else:
+            out.append(("Disk encryption", "warn", "no LUKS volumes"))
+        # Failed logins
+        rc, sout, _ = run(["journalctl", "-n", "20", "--no-pager",
+                           "-g", "Failed password|authentication failure"],
+                          timeout=4)
+        n = len(sout.splitlines()) if sout else 0
+        out.append(("Failed logins (24h)",
+                    "ok" if n == 0 else "warn",
+                    f"{n} event(s)"))
+        return out
+
+    def _fill_posture(self, posture: list[tuple[str, str, str]]) -> bool:
+        for label, kind, detail in posture:
+            row = Adw.ActionRow(title=label, subtitle=detail)
+            row.add_suffix(status_pill(kind.upper(), kind))
+            self._sub.add(row)
+        return False
+
+
+# Tiny helper used above — wraps subprocess for the page's posture probe.
+def run(cmd, timeout: int = 5):
+    try:
+        import subprocess as _sp
+        p = _sp.run(cmd, capture_output=True, text=True, timeout=timeout)
+        return p.returncode, (p.stdout or "").strip(), (p.stderr or "").strip()
+    except FileNotFoundError:
+        return 127, "", f"not found: {cmd[0]}"
+    except Exception as e:  # pylint: disable=broad-except
+        return 1, "", str(e)
+
+
 # Map section.key → page class.
 PAGE_CLASSES = {
     "appearance":    AppearancePage,
@@ -7056,6 +7219,7 @@ PAGE_CLASSES = {
     "backup":        BackupPage,
     "sync":          SyncPage,
     "drop":          DropPage,
+    "security":      SecurityPage,
 }
 
 

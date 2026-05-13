@@ -188,21 +188,120 @@ class NyxusTerminal(Adw.Application):
         )
         vte.connect("child-exited", lambda *_: win.close())
 
-        # Ctrl+Shift+C / Ctrl+Shift+V — copy / paste
+        # ── Clipboard helpers ──────────────────────────────────────────
+        def _do_copy(*_a):
+            try:
+                if vte.get_has_selection():
+                    vte.copy_clipboard_format(Vte.Format.TEXT)
+                    return True
+            except Exception:
+                pass
+            return False
+
+        def _do_paste(*_a):
+            try:
+                vte.paste_clipboard()
+                return True
+            except Exception:
+                return False
+
+        def _do_select_all(*_a):
+            try:
+                vte.select_all()
+                return True
+            except Exception:
+                return False
+
+        # ── Keyboard: Ctrl+Shift+C/V (and X11 Ctrl+Insert/Shift+Insert)
+        # Must use CAPTURE phase — VTE handles key-pressed first and
+        # stops propagation by default, so a window controller in the
+        # default BUBBLE phase never sees the keystroke. That's why
+        # copy/paste appeared "broken" in r13. r14 captures first.
         kc = Gtk.EventControllerKey()
+        kc.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+
         def _on_key(_c, keyval, _kc, state):
-            ctrl  = state & Gdk.ModifierType.CONTROL_MASK
-            shift = state & Gdk.ModifierType.SHIFT_MASK
+            ctrl  = bool(state & Gdk.ModifierType.CONTROL_MASK)
+            shift = bool(state & Gdk.ModifierType.SHIFT_MASK)
+            # Ctrl+Shift+C : copy   ·  Ctrl+Shift+V : paste
             if ctrl and shift:
                 if keyval in (Gdk.KEY_c, Gdk.KEY_C):
-                    vte.copy_clipboard_format(Vte.Format.TEXT); return True
+                    return _do_copy()
                 if keyval in (Gdk.KEY_v, Gdk.KEY_V):
-                    vte.paste_clipboard(); return True
+                    return _do_paste()
+                if keyval in (Gdk.KEY_a, Gdk.KEY_A):
+                    return _do_select_all()
                 if keyval in (Gdk.KEY_q, Gdk.KEY_Q):
                     win.close(); return True
+                if keyval in (Gdk.KEY_n, Gdk.KEY_N):
+                    # Ctrl+Shift+N — new terminal
+                    try:
+                        GLib.spawn_async([sys.argv[0]],
+                                         flags=GLib.SpawnFlags.SEARCH_PATH)
+                    except Exception:
+                        pass
+                    return True
+            # X11-style: Ctrl+Insert copy / Shift+Insert paste
+            if keyval == Gdk.KEY_Insert:
+                if ctrl  and not shift: return _do_copy()
+                if shift and not ctrl:  return _do_paste()
             return False
         kc.connect("key-pressed", _on_key)
         win.add_controller(kc)
+
+        # ── Right-click context menu — Copy / Paste / Select All / New
+        # Many users right-click before they learn the Ctrl+Shift pair.
+        # This menu makes the operation discoverable without docs.
+        menu = Gio.Menu()
+        section = Gio.Menu()
+        section.append("Copy",        "win.copy")
+        section.append("Paste",       "win.paste")
+        section.append("Select all",  "win.select-all")
+        menu.append_section(None, section)
+        section2 = Gio.Menu()
+        section2.append("New terminal", "win.new")
+        section2.append("Close",        "win.close")
+        menu.append_section(None, section2)
+
+        # Bind the menu actions to the same helpers used by the keys.
+        def _add_action(name, fn):
+            act = Gio.SimpleAction.new(name, None)
+            act.connect("activate", lambda *_: fn())
+            win.add_action(act)
+        _add_action("copy",       _do_copy)
+        _add_action("paste",      _do_paste)
+        _add_action("select-all", _do_select_all)
+        _add_action("close",      win.close)
+        _add_action("new",
+                    lambda: GLib.spawn_async([sys.argv[0]],
+                                             flags=GLib.SpawnFlags.SEARCH_PATH))
+
+        popover = Gtk.PopoverMenu.new_from_model(menu)
+        popover.set_has_arrow(False)
+        popover.set_parent(vte)
+
+        gesture = Gtk.GestureClick()
+        gesture.set_button(3)  # right click
+        def _on_right_click(_g, _n, x, y):
+            try:
+                popover.set_pointing_to(Gdk.Rectangle(x=int(x), y=int(y),
+                                                     width=1, height=1))
+            except Exception:
+                pass
+            popover.popup()
+        gesture.connect("pressed", _on_right_click)
+        vte.add_controller(gesture)
+
+        # ── Middle-click paste (X11 PRIMARY selection convention)
+        gesture_mid = Gtk.GestureClick()
+        gesture_mid.set_button(2)
+        def _on_middle_click(*_a):
+            try:
+                vte.paste_primary()
+            except Exception:
+                _do_paste()
+        gesture_mid.connect("pressed", _on_middle_click)
+        vte.add_controller(gesture_mid)
 
         win.set_child(vte)
         win.present()
