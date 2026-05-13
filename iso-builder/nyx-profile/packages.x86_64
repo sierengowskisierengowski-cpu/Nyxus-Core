@@ -127,6 +127,8 @@ alsa-utils
 # ── GTK4 + Python (for NYXUS apps) ────────────────────────────────
 gtk4
 libadwaita
+adw-gtk3
+papirus-icon-theme
 vte4
 vte-common
 python
