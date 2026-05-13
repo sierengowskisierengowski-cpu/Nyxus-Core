@@ -1851,11 +1851,11 @@ class PowerPage(SectionPage):
             description="Per-core scaling strategy from /sys/devices/system/cpu")
         self.add_group(self.gov_grp)
         self.sleep_grp = Adw.PreferencesGroup(
-            title="Screen & sleep",
+            title="Screen &amp; sleep",
             description="Idle timers (managed by hypridle). 'Never' = disabled.")
         self.add_group(self.sleep_grp)
         self.lid_grp = Adw.PreferencesGroup(
-            title="Buttons & lid",
+            title="Buttons &amp; lid",
             description="Logind actions (written to /etc/systemd/logind.conf.d/"
                         "00-nyxus-power.conf via admin prompt)")
         self.add_group(self.lid_grp)
@@ -3200,7 +3200,7 @@ class KeyboardPage(SectionPage):
         # so settings survive a reboot. Compose and grp tokens are
         # mutated independently — toggling one never disturbs the other.
         sw_grp = Adw.PreferencesGroup(
-            title="Compose & layout switcher",
+            title="Compose &amp; layout switcher",
             description="Token edits to input:kb_options "
                         "(persisted to nyxus-input.conf)")
         self.add_group(sw_grp)
@@ -3222,7 +3222,7 @@ class KeyboardPage(SectionPage):
         ]
         compose_row = Adw.ComboRow(
             title="Compose key",
-            subtitle="Type accented & special characters with a "
+            subtitle="Type accented &amp; special characters with a "
                      "two-key sequence")
         compose_model = Gtk.StringList()
         for label, _ in compose_choices:
@@ -3288,11 +3288,11 @@ class KeyboardPage(SectionPage):
             description="Launches the named NYXUS application")
         self.add_group(nyxus_grp)
         wm_grp = Adw.PreferencesGroup(
-            title="Window & workspace",
+            title="Window &amp; workspace",
             description="Hyprland window manager bindings")
         self.add_group(wm_grp)
         sys_grp = Adw.PreferencesGroup(
-            title="System & overlays",
+            title="System &amp; overlays",
             description="EWW panels, audio, brightness, screenshots")
         self.add_group(sys_grp)
 
@@ -3688,7 +3688,7 @@ class PrivacyPage(SectionPage):
                         "Mask to fully prevent it from ever starting.")
         self.add_group(self.loc_grp)
         self.activity_grp = Adw.PreferencesGroup(
-            title="Activity & history",
+            title="Activity &amp; history",
             description="Clear traces of what you've done on this system")
         self.add_group(self.activity_grp)
         self.idx_grp = Adw.PreferencesGroup(
@@ -3696,7 +3696,7 @@ class PrivacyPage(SectionPage):
             description="Background indexers that catalog your files for search")
         self.add_group(self.idx_grp)
         self.tel_grp = Adw.PreferencesGroup(
-            title="Telemetry & opt-outs",
+            title="Telemetry &amp; opt-outs",
             description="NYXUS ships zero telemetry. These show third-party "
                         "env-var opt-outs.")
         self.add_group(self.tel_grp)
@@ -4613,8 +4613,8 @@ class StoragePage(SectionPage):
         ("Music",           "Music",                "audio files"),
         ("Desktop",         "Desktop",              "desktop items"),
         ("App data",        ".local/share",         "user-installed app data"),
-        ("Cache",           ".cache",               "browser & app caches (safe to clear)"),
-        ("Config",          ".config",              "settings & preferences"),
+        ("Cache",           ".cache",               "browser &amp; app caches (safe to clear)"),
+        ("Config",          ".config",              "settings &amp; preferences"),
         ("Trash",           ".local/share/Trash",   "files marked for deletion"),
     ]
 
@@ -9064,7 +9064,7 @@ class AboutPage(SectionPage):
         self.add_group(self.net_grp)
         # Boot / session
         self.boot_grp = Adw.PreferencesGroup(
-            title="Boot & session",
+            title="Boot &amp; session",
             description="Firmware, bootloader, init, and session type")
         self.add_group(self.boot_grp)
         # Actions
