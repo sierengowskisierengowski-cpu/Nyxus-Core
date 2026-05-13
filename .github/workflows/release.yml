@@ -1,0 +1,115 @@
+name: release
+
+# Tag-triggered ISO release wrapper. Runs the existing iso-release.sh
+# (checksums + manifest update) on a runner that already has the ISO
+# attached as a workflow artifact. The actual mkarchiso build happens
+# on a self-hosted Arch runner; this workflow finalises the artifacts
+# for distribution.
+#
+# Trigger: push a tag matching v2026.MM.DD or workflow_dispatch.
+# When dispatching manually, supply both `version` and the
+# `iso_artifact_name` of the upstream build job that uploaded the ISO.
+on:
+  push:
+    tags:
+      - "v2026.[0-9][0-9].[0-9][0-9]"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (YYYY.MM.DD)"
+        required: true
+        type: string
+      iso_artifact_name:
+        description: "Name of the prebuilt ISO artifact to download (from the upstream build job). Leave blank to skip download."
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+env:
+  # Default to whatever the dispatcher provides. Tag-triggered runs must
+  # set REPO/ORG VAR `ISO_ARTIFACT_NAME` (Settings → Variables → Actions)
+  # to the canonical artifact name of the build job, otherwise the
+  # download step will be skipped and the workflow will hard-fail at
+  # the release-script step (no silent no-op — see step "Require ISO").
+  ISO_ARTIFACT_NAME: ${{ inputs.iso_artifact_name || vars.ISO_ARTIFACT_NAME }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      # Tag-triggered runs land on a detached HEAD at the tag commit.
+      # We need a real branch checkout so the manifest-commit step can
+      # `git push` cleanly without an explicit refspec dance — pin to
+      # `main` for both tag and dispatch triggers.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [[ -n "${{ inputs.version }}" ]]; then
+            v="${{ inputs.version }}"
+          else
+            v="${GITHUB_REF_NAME#v}"
+          fi
+          if ! [[ "$v" =~ ^[0-9]{4}\.[0-9]{2}\.[0-9]{2}$ ]]; then
+            echo "::error::version must look like YYYY.MM.DD (got: $v)"
+            exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Verify ISO build readiness
+        run: bash scripts/iso-build-verify.sh
+
+      - name: Download prebuilt ISO artifact
+        if: ${{ env.ISO_ARTIFACT_NAME != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ISO_ARTIFACT_NAME }}
+          path: iso-builder/out/
+
+      # Hard-fail rather than silently no-op. If you got here without an
+      # ISO present, the download was either skipped (no artifact name
+      # configured) or empty — both should fail the release.
+      - name: Require ISO present
+        run: |
+          shopt -s nullglob
+          isos=(iso-builder/out/*.iso)
+          if (( ${#isos[@]} == 0 )); then
+            echo "::error::no ISO found in iso-builder/out/. Set the ISO_ARTIFACT_NAME workflow var (or workflow_dispatch input) to the upstream build artifact name, and ensure the upstream build job ran successfully."
+            exit 1
+          fi
+          echo "found ISO: ${isos[0]}"
+
+      - name: Generate checksums + update manifest
+        run: bash scripts/iso-release.sh "${{ steps.ver.outputs.version }}"
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- artifacts/nyxus-web/public/releases.json; then
+            echo "manifest unchanged"
+          else
+            git add artifacts/nyxus-web/public/releases.json
+            git commit -m "release: ${{ steps.ver.outputs.version }} manifest"
+            # Push to main explicitly — works on both tag and branch
+            # triggers because we pinned the checkout to ref: main.
+            git push origin HEAD:main
+          fi
+
+      - name: Upload checksums as workflow artifact
+        if: ${{ hashFiles('iso-builder/out/*.sha256') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: nyxus-${{ steps.ver.outputs.version }}-checksums
+          path: |
+            iso-builder/out/*.sha256
+            iso-builder/out/*.sha512
+            iso-builder/out/*.sig
+          if-no-files-found: ignore

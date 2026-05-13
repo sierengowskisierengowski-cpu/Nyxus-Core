@@ -215,7 +215,18 @@ if [[ -f "${NS}/com.nyxus.parental.policy" ]]; then
   install -Dm644 "${NS}/com.nyxus.parental.policy" \
     "${PROFILE_DIR}/airootfs/usr/share/polkit-1/actions/com.nyxus.parental.policy"
 fi
-ok "user units + policy: nyxus-eww / nyxus-security-daemon / parental helper+policy"
+# Security + welcome helpers — referenced by nyxus_security.py and
+# nyxus_welcome.py via /usr/local/libexec/<name>; without these the
+# helper-mediated polkit calls 404 and the apps fall back to readonly.
+if [[ -f "${NS}/nyxus-security-helper" ]]; then
+  install -Dm755 "${NS}/nyxus-security-helper" \
+    "${PROFILE_DIR}/airootfs/usr/local/libexec/nyxus-security-helper"
+fi
+if [[ -f "${NS}/nyxus-welcome-helper" ]]; then
+  install -Dm755 "${NS}/nyxus-welcome-helper" \
+    "${PROFILE_DIR}/airootfs/usr/local/libexec/nyxus-welcome-helper"
+fi
+ok "user units + policy: nyxus-eww / nyxus-security-daemon / parental + security + welcome helpers"
 
 # ── Wallpapers → both user skel (matches hyprland.conf path) and system ─
 # Includes the new void-vortex (default EWW-era wallpaper, replaces drifter).
@@ -313,6 +324,14 @@ mkdir -p "${SDDM_THEME_DIR}" "${SDDM_CONF_DIR}"
 # Tarball is packed flat (files at root, no wrapper dir) so copy from STAGE root.
 cp -a "${SDDM_TMP_STAGE}/." "${SDDM_THEME_DIR}/"
 rm -f "${SDDM_THEME_DIR}/install.sh"  # not needed at runtime
+# rev 2026-05-13: stale tarball ships a 1024×1024 background that
+# upscales to 1080p as a blurry mush. Override with the real
+# 1920×1080 darkmirror PNG so the greeter is sharp on every display.
+if [[ -f "${NS}/nyxus-bg-darkmirror.png" ]]; then
+  install -m 0644 "${NS}/nyxus-bg-darkmirror.png" \
+    "${SDDM_THEME_DIR}/background.png"
+  ok "SDDM background overridden to 1920×1080 darkmirror (anti-blur)"
+fi
 cat > "${SDDM_CONF_DIR}/nyxus.conf" <<'SDDM'
 [Theme]
 Current=nyxus

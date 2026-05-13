@@ -107,16 +107,26 @@ Rectangle {
     //  BACKGROUND  (full-bleed vortex artwork + heavy void wash)
     // ═════════════════════════════════════════════════════════════════════
     Image {
+        id: bgImage
         anchors.fill: parent
         source: config.background || "background.png"
         fillMode: Image.PreserveAspectCrop
         asynchronous: false
         cache: true
         smooth: true
+        mipmap: true   // crisp downscale on hi-DPI displays
     }
+    // rev 2026-05-13: ink wash dropped from 0.74 → 0.55 so the real
+    // 1920×1080 darkmirror PNG actually reads through. A subtle radial
+    // vignette (top-darker, center-lighter) gives the greeter depth
+    // without burying the wallpaper.
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.74)
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.78) }
+            GradientStop { position: 0.5; color: Qt.rgba(0, 0, 0, 0.45) }
+            GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.82) }
+        }
     }
 
     // ═════════════════════════════════════════════════════════════════════
