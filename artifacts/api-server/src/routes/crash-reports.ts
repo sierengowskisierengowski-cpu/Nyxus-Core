@@ -52,6 +52,87 @@ function denyAuth(res: Response, msg = "missing or malformed bearer token") {
   res.status(401).json({ error: msg });
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// Auth model — INTENTIONAL ANONYMOUS RECEIVER
+//
+// Crash-report tokens are NOT account credentials. They behave like a
+// Sentry "DSN public key": each NYXUS install generates a per-install
+// random token (see nyxus-crash-report.py). The token's only purpose
+// is to NAMESPACE crashes so two installs can't read each other's
+// reports. There is no central token registry to validate against —
+// adding one would force every crash submission online and tie it to
+// an identity, which contradicts the privacy contract printed in
+// Settings → Privacy → Crash Reporting.
+//
+// Therefore the abuse model is: any client with a syntactically-valid
+// token can write into its OWN namespace only. To stop a malicious
+// client from filling the disk, the limits below cap (a) submission
+// rate per token and (b) on-disk file count per token (oldest evicted
+// after the cap).
+// ─────────────────────────────────────────────────────────────────────
+const RATE_WINDOW_MS = 60 * 60 * 1000;     // 1 hour
+const RATE_MAX_PER_TOKEN = 60;             // 60 reports/hour/token
+const RATE_MAX_PER_IP = 200;               // 200 reports/hour/IP
+const QUOTA_MAX_FILES = 100;               // keep newest 100 per token
+const RATE_MAP_CAP = 4096;                 // hard cap on distinct keys
+
+// Bucket has its own `last` for cheap LRU ordering — using the JS Map
+// insertion order would force a re-insertion every hit (delete+set),
+// which is fine, but tracking `last` explicitly makes the eviction
+// scan deterministic regardless of insertion path.
+type Bucket = { hits: number[]; last: number };
+const tokenBuckets = new Map<string, Bucket>();
+const ipBuckets = new Map<string, Bucket>();
+
+function rateCheck(map: Map<string, Bucket>, key: string,
+                   max: number): boolean {
+  const now = Date.now();
+  const b = map.get(key) ?? { hits: [], last: now };
+  // Drop hits outside the sliding window.
+  while (b.hits.length && b.hits[0] < now - RATE_WINDOW_MS) b.hits.shift();
+  if (b.hits.length >= max) return false;
+  b.hits.push(now);
+  b.last = now;
+  // Re-insert to the back of the Map so insertion order doubles as an
+  // LRU queue — the front of the iteration is then the coldest entry.
+  map.delete(key);
+  map.set(key, b);
+  // Hard memory cap. First sweep stale entries (cheap), then if still
+  // over, evict the LRU front of the Map until under cap. This makes
+  // the bound a TRUE upper limit even under high-cardinality flood —
+  // no matter how many distinct tokens/IPs hit us in one window, the
+  // map can never grow past RATE_MAP_CAP.
+  if (map.size > RATE_MAP_CAP) {
+    for (const [k, v] of map) {
+      if (!v.hits.length || v.hits[v.hits.length - 1] < now - RATE_WINDOW_MS) {
+        map.delete(k);
+      }
+    }
+    while (map.size > RATE_MAP_CAP) {
+      const oldest = map.keys().next().value;
+      if (oldest === undefined) break;
+      map.delete(oldest);
+    }
+  }
+  return true;
+}
+
+async function enforceQuota(dir: string): Promise<void> {
+  let names: string[] = [];
+  try { names = await readdir(dir); } catch { return; }
+  if (names.length <= QUOTA_MAX_FILES) return;
+  const stats = await Promise.all(names.map(async (n) => {
+    try { return { n, t: (await stat(join(dir, n))).mtimeMs }; }
+    catch { return null; }
+  }));
+  const sorted = stats.filter(Boolean).sort((a, b) => a!.t - b!.t);
+  const drop = sorted.slice(0, sorted.length - QUOTA_MAX_FILES);
+  const { unlink } = await import("node:fs/promises");
+  for (const e of drop) {
+    try { await unlink(join(dir, e!.n)); } catch { /* best effort */ }
+  }
+}
+
 const rawAny = express.raw({
   type: () => true,
   limit: MAX_BODY_BYTES,
@@ -62,6 +143,19 @@ router.post("/crash-reports", rawAny, async (req, res) => {
   const tok = extractToken(req);
   if (!tok) return denyAuth(res);
   const tokHash = hashToken(tok);
+
+  // Sliding-window rate limits — first per token, then per source IP.
+  // Both must pass; this prevents one rogue token AND one rogue IP
+  // from each filling the disk independently.
+  const ip = (req.ip || req.socket.remoteAddress || "unknown").toString();
+  if (!rateCheck(tokenBuckets, tokHash, RATE_MAX_PER_TOKEN)) {
+    res.setHeader("Retry-After", "3600");
+    return res.status(429).json({ error: "rate limit (per token)" });
+  }
+  if (!rateCheck(ipBuckets, ip, RATE_MAX_PER_IP)) {
+    res.setHeader("Retry-After", "3600");
+    return res.status(429).json({ error: "rate limit (per ip)" });
+  }
 
   const blob = req.body as Buffer;
   if (!Buffer.isBuffer(blob) || blob.length === 0) {
@@ -83,6 +177,11 @@ router.post("/crash-reports", rawAny, async (req, res) => {
   try {
     await mkdir(dir, { recursive: true, mode: 0o700 });
     await writeFile(path, blob, { mode: 0o600 });
+    // Enforce per-token disk quota. Best-effort eviction of oldest
+    // files; a failure here doesn't fail the request because the new
+    // report is already on disk.
+    enforceQuota(dir).catch(
+      (err) => req.log.warn({ err }, "crash-report quota gc failed"));
   } catch (err) {
     req.log.error({ err }, "crash-report write failed");
     return res.status(500).json({ error: "failed to persist report" });
