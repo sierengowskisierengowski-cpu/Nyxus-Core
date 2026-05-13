@@ -284,6 +284,8 @@ rsync
 which
 
 # NYXUS installer
+# Keep package declared for profile/CI coherence; customize_airootfs.sh
+# may still rebuild/upgrade calamares via _aur_build.
 calamares
 
 # ═══════════════════════════════════════════════════════════════════
