@@ -1,0 +1,22 @@
+[Unit]
+Description=NYXUS USB plug-in/removal toast notifier
+Documentation=https://github.com/sierengowskisierengowski-cpu/Nyxus-Core
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+# nyxus_*.py files land in /opt/nyxus and are exposed via the
+# ~/.nyxus → /opt/nyxus skel symlink (see iso-builder/build-iso.sh).
+ExecStart=/usr/bin/python3 %h/.nyxus/nyxus_usb_watch.py
+Restart=on-failure
+RestartSec=5
+# Confine: this only needs to read udev events and exec notify-send.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.cache/nyxus
+PrivateTmp=true
+
+[Install]
+WantedBy=graphical-session.target

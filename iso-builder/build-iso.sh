@@ -261,6 +261,16 @@ install -m 0755 "${NS}/nyxus-bootstrap"      "${LBIN}/nyxus-bootstrap"
 install -m 0755 "${NS}/nyxus-wait-bootstrap" "${LBIN}/nyxus-wait-bootstrap"
 ok "bootstrap shims: nyxus-bootstrap / nyxus-wait-bootstrap"
 
+# ── User systemd units → /usr/lib/systemd/user/ ─────────────────────────
+# Settings toggles ship as user systemd units so non-root users can
+# enable/disable without sudo. Units are global-readable; per-user
+# enablement is via `systemctl --user enable …`.
+USER_SYSD="${PROFILE_DIR}/airootfs/usr/lib/systemd/user"
+install -d -m 0755 "${USER_SYSD}"
+install -m 0644 "${NS}/nyxus-usb-watch.service" \
+                "${USER_SYSD}/nyxus-usb-watch.service"
+ok "user systemd units: nyxus-usb-watch.service"
+
 # ── Offline cache → /opt/nyxus-cache/ ───────────────────────────────────
 # nyxus-bootstrap falls back to this path when the network is unreachable
 # on first boot. Mirroring the entire dist/nyxus-scripts/ payload in here

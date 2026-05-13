@@ -1086,21 +1086,159 @@ class DisplayPage(SectionPage):
             self.mon_grp.add(empty_row("No monitors reported",
                                         "hyprctl returned an empty list"))
             return
+
+        # Make sure hyprland.conf sources our override file so changes
+        # made here survive a logout / reboot.
+        self._ensure_monitor_source_line()
+
+        scales = ["1.00", "1.25", "1.50", "1.75", "2.00"]
+        rots   = ["0°", "90°", "180°", "270°"]
+
         for m in mons:
             name = m.get("name", "?")
             desc = m.get("description", "")
-            sub = (f"{m.get('width','?')}×{m.get('height','?')} "
-                   f"@ {m.get('refreshRate', 0):.0f}Hz · "
-                   f"scale {m.get('scale', 1)} · "
-                   f"transform {m.get('transform', 0)}")
-            row = Adw.ActionRow(title=name, subtitle=sub)
+            cur_w = int(m.get("width", 0) or 0)
+            cur_h = int(m.get("height", 0) or 0)
+            cur_hz = float(m.get("refreshRate", 0) or 0)
+            cur_scale = float(m.get("scale", 1.0) or 1.0)
+            cur_t = int(m.get("transform", 0) or 0)
+            sub = (f"{cur_w}×{cur_h} @ {cur_hz:.0f}Hz · "
+                   f"scale {cur_scale:.2f} · transform {cur_t}")
             if desc:
-                row.set_subtitle(f"{desc} · {sub}")
-            tag = Gtk.Label(label="primary" if m.get("focused") else "")
-            tag.add_css_class("nyx-pill-ok")
+                sub = f"{desc} · {sub}"
+
+            row = Adw.ExpanderRow(title=name, subtitle=sub)
             if m.get("focused"):
+                tag = Gtk.Label(label="primary")
+                tag.add_css_class("nyx-pill-ok")
                 row.add_suffix(tag)
+
+            # Scale
+            sc_combo = Adw.ComboRow(
+                title="Scale",
+                subtitle="HiDPI scaling factor")
+            sc_combo.set_model(Gtk.StringList.new(scales))
+            sc_idx = 0
+            for i, s in enumerate(scales):
+                if abs(float(s) - cur_scale) < 0.005:
+                    sc_idx = i
+                    break
+            sc_combo.set_selected(sc_idx)
+            sc_combo.connect(
+                "notify::selected",
+                lambda c, _p, mn=name: self._apply_monitor(
+                    mn, scale=float(scales[c.get_selected()])))
+            row.add_row(sc_combo)
+
+            # Rotation
+            rt_combo = Adw.ComboRow(
+                title="Rotation",
+                subtitle="Counterclockwise from landscape")
+            rt_combo.set_model(Gtk.StringList.new(rots))
+            rt_combo.set_selected(cur_t if 0 <= cur_t <= 3 else 0)
+            rt_combo.connect(
+                "notify::selected",
+                lambda c, _p, mn=name: self._apply_monitor(
+                    mn, transform=c.get_selected()))
+            row.add_row(rt_combo)
+
             self.mon_grp.add(row)
+
+    # ── Multi-monitor helpers ───────────────────────────────────────
+    def _apply_monitor(self, name: str, *,
+                       scale: Optional[float] = None,
+                       transform: Optional[int] = None) -> None:
+        """Apply a per-monitor change live via hyprctl AND persist it
+        to ~/.config/hypr/nyxus-monitors.conf so it survives reboot."""
+        rc, out, _ = sh(["hyprctl", "monitors", "-j"], timeout=2)
+        try:
+            mons = json.loads(out)
+        except Exception:
+            mons = []
+        cur = next((m for m in mons if m.get("name") == name), None)
+        if cur is None:
+            self.toast(f"monitor {name} not found")
+            return
+        w  = int(cur.get("width", 0) or 0)
+        h  = int(cur.get("height", 0) or 0)
+        hz = float(cur.get("refreshRate", 60) or 60)
+        x  = int(cur.get("x", 0) or 0)
+        y  = int(cur.get("y", 0) or 0)
+        s  = float(scale) if scale is not None \
+             else float(cur.get("scale", 1.0) or 1.0)
+        t  = int(transform) if transform is not None \
+             else int(cur.get("transform", 0) or 0)
+
+        spec = (f"{name},{w}x{h}@{hz:.2f},{x}x{y},{s:.2f},"
+                f"transform,{t}")
+        rc2, _, err = sh(["hyprctl", "keyword", "monitor", spec],
+                         timeout=3)
+        if rc2 != 0:
+            self.toast(f"hyprctl failed: {(err or '').strip()[:60]}")
+            return
+        self._persist_monitor_override(name, spec)
+        self.toast(f"{name}: applied & saved")
+
+    def _persist_monitor_override(self, name: str, spec: str) -> None:
+        """Write/replace 'monitor = <spec>' for `name` in
+        ~/.config/hypr/nyxus-monitors.conf atomically."""
+        p = Path.home() / ".config" / "hypr" / "nyxus-monitors.conf"
+        try:
+            p.parent.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            log.warning("mkdir hypr: %s", e)
+            self.toast(f"persist mkdir failed: {e}")
+            return
+        keep: List[str] = []
+        if p.exists():
+            try:
+                for ln in p.read_text(encoding="utf-8").splitlines():
+                    s = ln.strip()
+                    if s.startswith("monitor") and "=" in s:
+                        body = s.split("=", 1)[1].strip()
+                        if body.split(",", 1)[0].strip() == name:
+                            continue  # drop existing override for this
+                    keep.append(ln)
+            except OSError as e:
+                log.warning("read nyxus-monitors.conf: %s", e)
+        keep.append(f"monitor = {spec}")
+        try:
+            tmp = p.with_suffix(".conf.tmp")
+            tmp.write_text("\n".join(keep) + "\n", encoding="utf-8")
+            os.replace(tmp, p)
+        except OSError as e:
+            log.warning("write nyxus-monitors.conf: %s", e)
+            self.toast(f"persist write failed: {e}")
+
+    def _ensure_monitor_source_line(self) -> None:
+        """Append 'source = ./nyxus-monitors.conf' to hyprland.conf if
+        missing. Idempotent — safe to call every render. Fails loud
+        via toast on read/write errors so persistence problems are
+        explicit rather than silent."""
+        hp = _HYPRLAND_CONF
+        if not hp.exists():
+            self.toast(
+                "hyprland.conf missing — overrides won't persist "
+                "until Hyprland is configured")
+            return
+        try:
+            text = hp.read_text(encoding="utf-8")
+        except OSError as e:
+            log.warning("read hyprland.conf: %s", e)
+            self.toast(f"can't read hyprland.conf: {e}")
+            return
+        if "nyxus-monitors.conf" in text:
+            return
+        try:
+            with open(hp, "a", encoding="utf-8") as fh:
+                fh.write("\n# nyxus monitor overrides "
+                         "(auto-managed by Settings)\n"
+                         "source = ./nyxus-monitors.conf\n")
+        except OSError as e:
+            log.warning("append source line: %s", e)
+            self.toast(
+                f"can't persist to hyprland.conf: {e} — "
+                "monitor changes won't survive reboot")
 
     def _render_brightness(self) -> None:
         _clear_group(self.bri_grp)
@@ -2109,6 +2247,25 @@ class NotificationsPage(SectionPage):
         sw.connect("notify::active", self._on_dnd)
         dnd_grp.add(sw)
 
+        # External-device arrival notifications (USB drives, phones, …)
+        ext_grp = Adw.PreferencesGroup(
+            title="External devices",
+            description="Toast when a USB drive, phone, or media is "
+                        "plugged in or removed (nyxus-usb-watch user "
+                        "systemd unit)")
+        self.add_group(ext_grp)
+        rc_a, _, _ = sh(
+            ["systemctl", "--user", "is-active",
+             "nyxus-usb-watch.service"], timeout=2)
+        active = (rc_a == 0)
+        usb_sw = Adw.SwitchRow(
+            title="Notify on USB plug-in / removal",
+            subtitle="active" if active
+            else "inactive — no toast on plug events")
+        usb_sw.set_active(active)
+        usb_sw.connect("notify::active", self._on_usb_watch_toggle)
+        ext_grp.add(usb_sw)
+
         # Quick controls
         qc = Adw.PreferencesGroup(title="Quick controls")
         self.add_group(qc)
@@ -2243,6 +2400,17 @@ class NotificationsPage(SectionPage):
         elif self.daemon == "swaync":
             sh_async(["swaync-client", "-d"], None, timeout=3)  # toggles
         self.toast(f"DND {'on' if on else 'off'}")
+
+    def _on_usb_watch_toggle(self, sw: Adw.SwitchRow,
+                             _pspec: object) -> None:
+        wanted = sw.get_active()
+        verb = "enable --now" if wanted else "disable --now"
+        sh_async(
+            f"systemctl --user {verb} nyxus-usb-watch.service",
+            lambda r: self.toast(
+                "USB watcher " + ("on" if wanted else "off")
+                if r[0] == 0
+                else f"systemd failed: {(r[2] or '').strip()[:80]}"))
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -2692,6 +2860,71 @@ class MousePage(SectionPage):
         if not d.get("mice") and not d.get("touchpads"):
             dev_grp.add(empty_row("No mice or touchpads reported", ""))
         self.add_pill(status_pill("hypr", "ok"))
+
+        # ── Touchpad gestures (libinput-gestures) ────────────────────
+        gst_grp = Adw.PreferencesGroup(
+            title="Touchpad gestures",
+            description="3- & 4-finger swipes powered by "
+                        "libinput-gestures (user systemd unit)")
+        self.add_group(gst_grp)
+        if not have("libinput-gestures"):
+            gst_grp.add(empty_row(
+                "libinput-gestures not installed",
+                "Install libinput-gestures to enable swipe gestures."))
+        else:
+            rc_a, _, _ = sh(
+                ["systemctl", "--user", "is-active",
+                 "libinput-gestures.service"], timeout=2)
+            active = (rc_a == 0)
+            sw = Adw.SwitchRow(
+                title="Enable swipe gestures",
+                subtitle="3-finger L/R = workspace · 4-finger up = "
+                         "fullscreen · 4-finger down = toggle floating")
+            sw.set_active(active)
+            sw.connect("notify::active", self._on_gestures_toggle)
+            gst_grp.add(sw)
+            gst_grp.add(action_row(
+                "Reset to NYXUS defaults",
+                "~/.config/libinput-gestures.conf",
+                "Reset",
+                lambda: self._write_gestures_conf()))
+
+    def _on_gestures_toggle(self, sw: Adw.SwitchRow,
+                            _pspec: object) -> None:
+        wanted = sw.get_active()
+        # Make sure a config file exists before enabling, else the
+        # service will fail with no gestures defined.
+        cfg = Path.home() / ".config" / "libinput-gestures.conf"
+        if wanted and not cfg.exists():
+            self._write_gestures_conf(silent=True)
+        verb = "enable --now" if wanted \
+               else "disable --now"
+        sh_async(
+            f"systemctl --user {verb} libinput-gestures.service",
+            lambda r: self.toast(
+                "gestures " + ("on" if wanted else "off")
+                if r[0] == 0
+                else f"systemd failed: {(r[2] or '').strip()[:60]}"))
+
+    def _write_gestures_conf(self, *, silent: bool = False) -> None:
+        cfg = Path.home() / ".config" / "libinput-gestures.conf"
+        try:
+            cfg.parent.mkdir(parents=True, exist_ok=True)
+            cfg.write_text(
+                "# nyxus libinput-gestures defaults — "
+                "edit freely, keep header to mark as managed\n"
+                "gesture swipe left  3 hyprctl dispatch workspace +1\n"
+                "gesture swipe right 3 hyprctl dispatch workspace -1\n"
+                "gesture swipe up    4 hyprctl dispatch fullscreen 0\n"
+                "gesture swipe down  4 hyprctl dispatch togglefloating\n"
+                "gesture pinch in    2 hyprctl dispatch killactive\n",
+                encoding="utf-8")
+            if not silent:
+                self.toast("gestures config reset")
+        except OSError as e:
+            log.warning("write gestures conf: %s", e)
+            if not silent:
+                self.toast(f"write failed: {e}")
 
 
 # ──────────────────────────────────────────────────────────────────────
