@@ -61,7 +61,11 @@ LIVE_PRESETS = {
     "Slow Zoom": ("grow", 2.2),
     "Aurora Shimmer": ("any", 1.6),
 }
-TINT_OVERLAY_ALPHA = 56  # ~22% alpha tint overlay
+MORNING_START_HOUR = 5
+AFTERNOON_START_HOUR = 12
+EVENING_START_HOUR = 17
+NIGHT_START_HOUR = 21
+TINT_OVERLAY_ALPHA = 56  # 0-255 alpha channel value (~22% opacity)
 
 SLOTS = ("morning", "afternoon", "evening", "night")
 FIT_MODES = ("Fill", "Fit", "Stretch", "Center", "Tile")
@@ -678,7 +682,12 @@ import random
 p=pathlib.Path("{CFG_PATH}")
 cfg=json.loads(p.read_text(encoding="utf-8"))
 hour=datetime.datetime.now().hour
-morning_start, afternoon_start, evening_start, night_start = 5, 12, 17, 21
+morning_start, afternoon_start, evening_start, night_start = {(
+    MORNING_START_HOUR,
+    AFTERNOON_START_HOUR,
+    EVENING_START_HOUR,
+    NIGHT_START_HOUR,
+)}
 if morning_start <= hour < afternoon_start:
     slot = "morning"
 elif afternoon_start <= hour < evening_start:
