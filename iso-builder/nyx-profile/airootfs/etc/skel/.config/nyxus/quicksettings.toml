@@ -1,0 +1,51 @@
+# NYXUS Quick Settings — control center (DARK MIRROR)
+#
+# Aggregates wifi, bluetooth, audio, brightness, battery, DND, night-light.
+# Hot-reload on save.
+
+[options]
+# How often (ms) the daemon polls system tools.
+poll_ms             = 1500
+# Show battery row even on desktops without a battery (debug).
+always_show_battery = false
+# Brightness backend: "brightnessctl" (default) or "ddcutil".
+brightness_backend  = "brightnessctl"
+# Audio backend: "wpctl" (PipeWire) or "pactl" (PulseAudio fallback).
+audio_backend       = "wpctl"
+# Network backend: only NetworkManager is supported (nmcli).
+# Bluetooth backend: only BlueZ is supported (bluetoothctl).
+# DND toggles dunst pause/resume.
+
+[tiles]
+# Order in the panel. Each must be one of the known tiles below.
+order = [
+  "wifi", "bluetooth", "dnd", "nightlight",
+  "volume", "brightness", "battery",
+]
+
+[tile.wifi]
+enabled = true
+
+[tile.bluetooth]
+enabled = true
+
+[tile.dnd]
+enabled = true
+
+[tile.nightlight]
+enabled = true
+# Color temperature when on (Kelvin). 2500=warm, 4500=neutral.
+temp_k  = 3500
+
+[tile.volume]
+enabled = true
+step    = 5
+
+[tile.brightness]
+enabled = true
+step    = 5
+
+[tile.battery]
+enabled = true
+# Show estimate when discharging.
+show_eta = true

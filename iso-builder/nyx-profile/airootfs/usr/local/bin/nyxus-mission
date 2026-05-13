@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""nyxus-mission — CLI for NYXUS Mission Control."""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import socket
+import sys
+from pathlib import Path
+
+XDG_RUN   = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
+SOCK_PATH = XDG_RUN / "nyxus-mission" / "cmd.sock"
+
+
+def rpc(op: str, **kw) -> dict:
+    if not SOCK_PATH.exists():
+        return {"ok": False, "error": "daemon not running"}
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(4)
+        s.connect(str(SOCK_PATH))
+        s.send((json.dumps({"op": op, **kw}) + "\n").encode())
+        buf = b""
+        while b"\n" not in buf:
+            chunk = s.recv(65536 * 4)
+            if not chunk:
+                break
+            buf += chunk
+        s.close()
+        return json.loads(buf.split(b"\n", 1)[0].decode() or '{"ok":false}')
+    except (OSError, json.JSONDecodeError) as e:
+        return {"ok": False, "error": str(e)}
+
+
+def cmd_open(_a):
+    r = rpc("open")
+    if r.get("ok"):
+        os.system("eww open mission 2>/dev/null")
+    print(json.dumps({"ok": r.get("ok")}, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_close(_a):
+    r = rpc("close")
+    os.system("eww close mission 2>/dev/null")
+    return 0 if r.get("ok") else 1
+
+
+def cmd_toggle(_a):
+    # Lightweight toggle: ask eww if window is up.
+    import subprocess
+    try:
+        out = subprocess.check_output(["eww", "active-windows"], text=True, timeout=1)
+        if "mission" in out.splitlines():
+            return cmd_close(_a)
+    except (OSError, subprocess.TimeoutExpired, subprocess.CalledProcessError):
+        pass
+    return cmd_open(_a)
+
+
+def cmd_select(args):
+    r = rpc("select", workspace=args.workspace)
+    print(json.dumps(r, indent=2))
+    if r.get("ok"):
+        os.system("eww close mission 2>/dev/null")
+    return 0 if r.get("ok") else 1
+
+
+def cmd_focus(args):
+    r = rpc("focus", address=args.address)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_close_window(args):
+    r = rpc("close_window", address=args.address)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_state(args):
+    r = rpc("state")
+    if args.json:
+        print(json.dumps(r, indent=2)); return 0
+    m = r.get("manifest", {})
+    for w in m.get("workspaces", []):
+        print(f"\033[1mws {w['id']}\033[0m  ({w.get('monitor','?')})  "
+              f"— {len(w.get('windows', []))} windows")
+        for win in w.get("windows", []):
+            print(f"   {win.get('class','?'):20s}  {win.get('title','')[:60]}")
+    return 0
+
+
+def cmd_reload(_a):
+    r = rpc("reload"); return 0 if r.get("ok") else 1
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(prog="nyxus-mission")
+    sub = p.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("open").set_defaults(func=cmd_open)
+    sub.add_parser("close").set_defaults(func=cmd_close)
+    sub.add_parser("toggle").set_defaults(func=cmd_toggle)
+    sp = sub.add_parser("select"); sp.add_argument("workspace", type=int); sp.set_defaults(func=cmd_select)
+    sp = sub.add_parser("focus");  sp.add_argument("address"); sp.set_defaults(func=cmd_focus)
+    sp = sub.add_parser("close-window"); sp.add_argument("address"); sp.set_defaults(func=cmd_close_window)
+    sp = sub.add_parser("state");  sp.add_argument("--json", action="store_true"); sp.set_defaults(func=cmd_state)
+    sub.add_parser("reload").set_defaults(func=cmd_reload)
+    args = p.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

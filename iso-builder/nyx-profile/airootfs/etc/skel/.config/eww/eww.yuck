@@ -839,3 +839,6 @@
 ; ── NYXUS Dock module ─────────────────────────────────────────────────
 (include "dock.yuck")
 (include "hotkey.yuck")
+(include "snap.yuck")
+(include "mission.yuck")
+(include "quicksettings.yuck")

@@ -1,0 +1,56 @@
+; ─── NYXUS Quick Settings panel ─────────────────────────────────────────
+; Drops down from the top-right. Polls the daemon's state.json.
+
+(defpoll qs-state :interval "1500ms"
+  `cat ${XDG_RUNTIME_DIR}/nyxus-qs/state.json 2>/dev/null || echo '{"tiles":{}}'`)
+
+(defwidget qs-tile-toggle [icon label on action]
+  (button :class { on ? "qs-tile qs-tile-on" : "qs-tile qs-tile-off" }
+          :onclick action :tooltip label
+    (box :orientation "v" :space-evenly false :spacing 2
+      (label :class "qs-icon"  :text icon)
+      (label :class "qs-label" :text label))))
+
+(defwidget qs-slider [icon label value action]
+  (box :orientation "v" :class "qs-slider" :space-evenly false :spacing 4
+    (box :orientation "h" :space-evenly false :spacing 6
+      (label :class "qs-icon" :text icon)
+      (label :class "qs-label" :text label)
+      (label :class "qs-value" :text "${value}%"))
+    (scale :min 0 :max 100 :value value
+           :onchange action)))
+
+(defwindow quicksettings
+  :geometry (geometry :x "-12px" :y "44px" :anchor "top right"
+                       :width "320px" :height "auto")
+  :stacking "overlay" :focusable true
+  :namespace "nyxus-quicksettings"
+  (box :class "qs-card" :orientation "v" :space-evenly false :spacing 10
+
+    (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 8
+      (qs-tile-toggle :icon "📶" :label "Wi-Fi"
+                       :on   {qs-state.tiles.wifi.on ?: false}
+                       :action "nyxus-qs toggle wifi")
+      (qs-tile-toggle :icon "🔵" :label "Bluetooth"
+                       :on   {qs-state.tiles.bluetooth.on ?: false}
+                       :action "nyxus-qs toggle bluetooth")
+      (qs-tile-toggle :icon "🌙" :label "Do Not Disturb"
+                       :on   {qs-state.tiles.dnd.on ?: false}
+                       :action "nyxus-qs toggle dnd")
+      (qs-tile-toggle :icon "🌅" :label "Night Light"
+                       :on   {qs-state.tiles.nightlight.on ?: false}
+                       :action "nyxus-qs toggle nightlight"))
+
+    (qs-slider :icon "🔊" :label "Volume"
+               :value {qs-state.tiles.volume.pct ?: 0}
+               :action "nyxus-qs set volume {}")
+    (qs-slider :icon "🔆" :label "Brightness"
+               :value {qs-state.tiles.brightness.pct ?: 0}
+               :action "nyxus-qs set brightness {}")
+
+    (box :class "qs-battery" :orientation "h" :space-evenly false :spacing 6
+         :visible { qs-state.tiles.battery.present ?: false }
+      (label :class "qs-icon"  :text "🔋")
+      (label :class "qs-label" :text "Battery")
+      (label :class "qs-value"
+             :text "${qs-state.tiles.battery.pct ?: 0}% · ${qs-state.tiles.battery.status ?: ''}"))))

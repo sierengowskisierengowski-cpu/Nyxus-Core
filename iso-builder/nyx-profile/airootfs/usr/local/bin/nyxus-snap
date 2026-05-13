@@ -1,0 +1,148 @@
+#!/usr/bin/env python3
+"""nyxus-snap — CLI for the NYXUS Snap daemon."""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import socket
+import sys
+from pathlib import Path
+
+XDG_RUN   = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
+SOCK_PATH = XDG_RUN / "nyxus-snap" / "cmd.sock"
+
+
+def rpc(op: str, **kw) -> dict:
+    if not SOCK_PATH.exists():
+        return {"ok": False, "error": "daemon not running (start nyxus-snapd.service)"}
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(3)
+        s.connect(str(SOCK_PATH))
+        s.send((json.dumps({"op": op, **kw}) + "\n").encode())
+        buf = b""
+        while b"\n" not in buf:
+            chunk = s.recv(65536)
+            if not chunk:
+                break
+            buf += chunk
+        s.close()
+        return json.loads(buf.split(b"\n", 1)[0].decode() or '{"ok":false}')
+    except (OSError, json.JSONDecodeError) as e:
+        return {"ok": False, "error": str(e)}
+
+
+def cmd_list(args):
+    r = rpc("list")
+    if args.json:
+        print(json.dumps(r, indent=2)); return 0 if r.get("ok") else 1
+    if not r.get("ok"):
+        print(r.get("error"), file=sys.stderr); return 1
+    for ly in r.get("layouts", []):
+        print(f"\n\033[1m{ly['name']}\033[0m")
+        for z in ly["zones"]:
+            x, y, w, h = z["rect"]
+            print(f"  {z['id']:10s}  x={x:.2f} y={y:.2f} w={w:.2f} h={h:.2f}")
+    rules = r.get("rules", [])
+    if rules:
+        print("\n\033[1mApp rules\033[0m")
+        for ru in rules:
+            print(f"  /{ru['match']}/  →  {ru['layout']}/{ru['zone']}")
+    return 0
+
+
+def cmd_snap(args):
+    r = rpc("snap", layout=args.layout, zone=args.zone)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_save(args):
+    r = rpc("save", name=args.name)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_restore(args):
+    r = rpc("restore", name=args.name)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_snapshots(args):
+    r = rpc("snapshots")
+    if args.json:
+        print(json.dumps(r, indent=2)); return 0
+    for n in r.get("names", []):
+        print(n)
+    return 0
+
+
+def cmd_picker(args):
+    r = rpc("picker", layout=args.layout)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_reload(args):
+    r = rpc("reload")
+    if r.get("ok"):
+        print(f"✓ reloaded ({r.get('layouts',0)} layouts)")
+        return 0
+    print(r.get("error"), file=sys.stderr); return 1
+
+
+def cmd_watch(args):
+    if not SOCK_PATH.exists():
+        print("daemon not running", file=sys.stderr); return 1
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.connect(str(SOCK_PATH))
+    s.send(b'{"op":"subscribe"}\n')
+    f = s.makefile("r")
+    f.readline()  # ack
+    try:
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            print(line.rstrip())
+    except KeyboardInterrupt:
+        pass
+    return 0
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(prog="nyxus-snap")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    sp = sub.add_parser("list", help="show layouts and rules")
+    sp.add_argument("--json", action="store_true"); sp.set_defaults(func=cmd_list)
+
+    sp = sub.add_parser("snap", help="snap active window to a zone")
+    sp.add_argument("layout"); sp.add_argument("zone"); sp.set_defaults(func=cmd_snap)
+
+    sp = sub.add_parser("save", help="save current arrangement as snapshot")
+    sp.add_argument("name"); sp.set_defaults(func=cmd_save)
+
+    sp = sub.add_parser("restore", help="restore a saved snapshot")
+    sp.add_argument("name"); sp.set_defaults(func=cmd_restore)
+
+    sp = sub.add_parser("snapshots", help="list saved snapshots")
+    sp.add_argument("--json", action="store_true"); sp.set_defaults(func=cmd_snapshots)
+
+    sp = sub.add_parser("picker", help="refresh the eww picker overlay payload")
+    sp.add_argument("--layout", default="halves"); sp.set_defaults(func=cmd_picker)
+
+    sp = sub.add_parser("reload", help="reload snap.toml")
+    sp.set_defaults(func=cmd_reload)
+
+    sp = sub.add_parser("watch", help="stream snap events")
+    sp.set_defaults(func=cmd_watch)
+
+    args = p.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

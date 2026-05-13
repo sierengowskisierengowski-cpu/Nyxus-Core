@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""nyxus-qs — CLI for NYXUS Quick Settings."""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import socket
+import sys
+from pathlib import Path
+
+XDG_RUN   = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
+SOCK_PATH = XDG_RUN / "nyxus-qs" / "cmd.sock"
+
+
+def rpc(op: str, **kw) -> dict:
+    if not SOCK_PATH.exists():
+        return {"ok": False, "error": "daemon not running"}
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(3)
+        s.connect(str(SOCK_PATH))
+        s.send((json.dumps({"op": op, **kw}) + "\n").encode())
+        buf = b""
+        while b"\n" not in buf:
+            chunk = s.recv(65536)
+            if not chunk:
+                break
+            buf += chunk
+        s.close()
+        return json.loads(buf.split(b"\n", 1)[0].decode() or '{"ok":false}')
+    except (OSError, json.JSONDecodeError) as e:
+        return {"ok": False, "error": str(e)}
+
+
+def _bool(s: str) -> bool:
+    return str(s).lower() in ("1", "true", "yes", "on")
+
+
+def cmd_state(args):
+    r = rpc("state" if not args.refresh else "probe")
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_set(args):
+    op = args.tile
+    payload: dict = {}
+    if op in ("wifi", "bluetooth", "dnd", "nightlight"):
+        payload["on"] = _bool(args.value)
+    elif op in ("volume", "brightness"):
+        v = args.value
+        if v.startswith(("+", "-")):
+            payload["delta"] = int(v)
+        elif v == "mute":
+            payload["mute"] = True
+        elif v == "unmute":
+            payload["mute"] = False
+        else:
+            payload["pct"] = int(v)
+    else:
+        print(f"unknown tile: {op}", file=sys.stderr); return 2
+    r = rpc(op, **payload)
+    print(json.dumps(r, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_toggle(args):
+    """toggle wifi/bluetooth/dnd/nightlight based on current state."""
+    s = rpc("state").get("state", {}).get("tiles", {}).get(args.tile, {})
+    if not s:
+        print(f"no state for {args.tile}", file=sys.stderr); return 1
+    cur = bool(s.get("on"))
+    r = rpc(args.tile, on=not cur)
+    print(json.dumps({"now": not cur, **r}, indent=2))
+    return 0 if r.get("ok") else 1
+
+
+def cmd_reload(_a):
+    r = rpc("reload"); return 0 if r.get("ok") else 1
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(prog="nyxus-qs")
+    sub = p.add_subparsers(dest="cmd", required=True)
+    sp = sub.add_parser("state", help="show current tile state")
+    sp.add_argument("--refresh", action="store_true"); sp.set_defaults(func=cmd_state)
+    sp = sub.add_parser("set", help="set a tile (e.g. set volume 50, set wifi off)")
+    sp.add_argument("tile"); sp.add_argument("value"); sp.set_defaults(func=cmd_set)
+    sp = sub.add_parser("toggle", help="toggle a boolean tile")
+    sp.add_argument("tile"); sp.set_defaults(func=cmd_toggle)
+    sub.add_parser("reload").set_defaults(func=cmd_reload)
+    args = p.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
