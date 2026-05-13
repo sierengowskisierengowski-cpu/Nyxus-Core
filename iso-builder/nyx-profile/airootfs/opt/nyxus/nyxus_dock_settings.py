@@ -266,7 +266,3 @@ def main() -> int:
     p.add_argument("--focus", help="Highlight an entry by id")
     args = p.parse_args()
     return build_ui(args.focus)
-
-
-if __name__ == "__main__":
-    sys.exit(main())
