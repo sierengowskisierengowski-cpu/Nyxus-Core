@@ -654,12 +654,19 @@ class WallpaperStudio(Adw.Application):
 set -euo pipefail
 CFG="{CFG_PATH}"
 if [[ ! -f "$CFG" ]]; then exit 0; fi
-readarray -t vals < <(python3 - <<'PY'
+readarray -t vals < <(python3 - <<'PYTHON_SCRIPT'
 import json,datetime,random,sys,pathlib
 p=pathlib.Path("{CFG_PATH}")
 cfg=json.loads(p.read_text(encoding="utf-8"))
 hour=datetime.datetime.now().hour
-slot=("morning" if 5<=hour<12 else "afternoon" if 12<=hour<17 else "evening" if 17<=hour<21 else "night")
+if 5 <= hour < 12:
+    slot = "morning"
+elif 12 <= hour < 17:
+    slot = "afternoon"
+elif 17 <= hour < 21:
+    slot = "evening"
+else:
+    slot = "night"
 sched=cfg.get("schedule",{{}})
 shuffle=bool(cfg.get("shuffle_enabled",False))
 target=sched.get(slot,"")
@@ -668,7 +675,7 @@ if shuffle and walls:
     target=random.choice(walls)
 print(target)
 print(cfg.get("monitor_target","All Monitors"))
-PY
+PYTHON_SCRIPT
 )
 IMG="${{vals[0]:-}}"
 OUT="${{vals[1]:-All Monitors}}"
