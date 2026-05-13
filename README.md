@@ -31,7 +31,7 @@ NYXUS is delivered through three coordinated layers:
    - API and web surfaces distribute installers, tarballs, and related assets
    - ISO staging mirrors runtime payloads into the archiso profile
 3. **Runtime**
-   - NYX boots into NYXUS runtime components (desktop stack + app suite + supporting scripts)
+   - NYX boots into NYXUS runtime components: Hyprland + EWW bars + full GTK4 app suite + NYXUS Phantom
 
 See `/docs/architecture/architecture-overview.md` for component relationships and responsibility boundaries.
 
@@ -50,7 +50,7 @@ See `/docs/architecture/architecture-overview.md` for component relationships an
 │   ├── nyxus-widgets/          # Web demo app
 │   └── mockup-sandbox/         # Preview and mockup environment
 ├── iso-builder/                # Archiso profile and NYX ISO build pipeline
-├── lib/                        # Shared TypeScript packages (API spec/client/zod/db)
+├── lib/                        # Shared TypeScript packages (API spec/client/zod/db/i18n)
 ├── scripts/                    # Workspace automation scripts
 ├── docs/                       # Structured project documentation
 ├── CHANGELOG.md
@@ -91,6 +91,8 @@ Operational detail is documented in `/docs/deployment/*`.
 - Build pipeline: [`docs/deployment/build-pipeline.md`](docs/deployment/build-pipeline.md)
 - ISO build pipeline: [`docs/deployment/iso-build.md`](docs/deployment/iso-build.md)
 - Web/API deployment: [`docs/deployment/web-and-api-deployment.md`](docs/deployment/web-and-api-deployment.md)
+- Design contract: [`docs/DESIGN_CONTRACT.md`](docs/DESIGN_CONTRACT.md)
+- Master checklist: [`docs/MASTER_CHECKLIST.md`](docs/MASTER_CHECKLIST.md)
 - Legacy visual history: [`docs/legacy-visuals.md`](docs/legacy-visuals.md)
 
 ---

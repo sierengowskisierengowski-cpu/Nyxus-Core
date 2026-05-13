@@ -17,6 +17,10 @@ This directory contains the canonical project documentation for system scope, ar
 - [`deployment/iso-build.md`](deployment/iso-build.md): NYX ISO pipeline, prerequisites, and outputs.
 - [`deployment/web-and-api-deployment.md`](deployment/web-and-api-deployment.md): API/web deployment behavior and distribution flow.
 
+### Design and Quality
+- [`DESIGN_CONTRACT.md`](DESIGN_CONTRACT.md): Active design quality bar for all NYXUS UI components — layout, typography, color (DARK MIRROR palette), motion, accessibility, and per-component checklists.
+- [`MASTER_CHECKLIST.md`](MASTER_CHECKLIST.md): Master build and feature delivery checklist tracking overall platform progress.
+
 ### Historical Reference
 - [`legacy-visuals.md`](legacy-visuals.md): Superseded visual specifications kept for historical context.
 
