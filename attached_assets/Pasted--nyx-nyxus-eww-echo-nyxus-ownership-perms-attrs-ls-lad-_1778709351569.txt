@@ -1,0 +1,68 @@
+
+[nyx@nyxus eww]$ echo "── ~/.nyxus ownership / perms / attrs ──"
+ls -lad ~/.nyxus
+ls -la ~/.nyxus
+lsattr -d ~/.nyxus 2>&1
+file ~/.nyxus
+echo
+echo "── is /home read-only? ──"
+mount | grep -E " /home| /$"
+echo
+echo "── dock daemon crash log ──"
+journalctl --user -u nyxus-dockd -n 40 --no-pager
+echo
+echo "── try the dock by hand to see the real error ──"
+/usr/bin/python3 /opt/nyxus/nyxus_dockd.py --log-level DEBUG 2>&1 | head -25
+── ~/.nyxus ownership / perms / attrs ──
+lrwxrwxrwx 1 nyx nyx 10 May 13 16:38 /home/nyx/.nyxus -> /opt/nyxus
+lrwxrwxrwx 1 nyx nyx 10 May 13 16:38 /home/nyx/.nyxus -> /opt/nyxus
+lsattr: Operation not supported While reading flags on /home/nyx/.nyxus
+/home/nyx/.nyxus: symbolic link to /opt/nyxus
+
+── is /home read-only? ──
+
+── dock daemon crash log ──
+May 13 21:55:23 nyxus systemd[1188]: nyxus-dockd.service: Scheduled restart job, restart counter is at 31.
+May 13 21:55:23 nyxus systemd[1188]: Started NYXUS dock daemon (live state for the dock UI).
+May 13 21:55:23 nyxus python3[119620]: /usr/bin/python3: can't open file '/opt/nyxus/nyxus_dockd.py': [Errno 2] No such file or directory
+May 13 21:55:23 nyxus systemd[1188]: nyxus-dockd.service: Main process exited, code=exited, status=2/INVALIDARGUMENT
+May 13 21:55:23 nyxus systemd[1188]: nyxus-dockd.service: Failed with result 'exit-code'.
+May 13 21:55:25 nyxus systemd[1188]: nyxus-dockd.service: Scheduled restart job, restart counter is at 32.
+May 13 21:55:25 nyxus systemd[1188]: Started NYXUS dock daemon (live state for the dock UI).
+May 13 21:55:25 nyxus python3[119642]: /usr/bin/python3: can't open file '/opt/nyxus/nyxus_dockd.py': [Errno 2] No such file or directory
+May 13 21:55:25 nyxus systemd[1188]: nyxus-dockd.service: Main process exited, code=exited, status=2/INVALIDARGUMENT
+May 13 21:55:25 nyxus systemd[1188]: nyxus-dockd.service: Failed with result 'exit-code'.
+May 13 21:55:27 nyxus systemd[1188]: nyxus-dockd.service: Scheduled restart job, restart counter is at 33.
+May 13 21:55:27 nyxus systemd[1188]: Started NYXUS dock daemon (live state for the dock UI).
+May 13 21:55:27 nyxus python3[119670]: /usr/bin/python3: can't open file '/opt/nyxus/nyxus_dockd.py': [Errno 2] No such file or directory
+May 13 21:55:27 nyxus systemd[1188]: nyxus-dockd.service: Main process exited, code=exited, status=2/INVALIDARGUMENT
+May 13 21:55:27 nyxus systemd[1188]: nyxus-dockd.service: Failed with result 'exit-code'.
+May 13 21:55:30 nyxus systemd[1188]: nyxus-dockd.service: Scheduled restart job, restart counter is at 34.
+May 13 21:55:30 nyxus systemd[1188]: Started NYXUS dock daemon (live state for the dock UI).
+May 13 21:55:30 nyxus python3[119691]: /usr/bin/python3: can't open file '/opt/nyxus/nyxus_dockd.py': [Errno 2] No such file or directory
+May 13 21:55:30 nyxus systemd[1188]: nyxus-dockd.service: Main process exited, code=exited, status=2/INVALIDARGUMENT
+May 13 21:55:30 nyxus systemd[1188]: nyxus-dockd.service: Failed with result 'exit-code'.
+May 13 21:55:32 nyxus systemd[1188]: nyxus-dockd.service: Scheduled restart job, restart counter is at 35.
+May 13 21:55:32 nyxus systemd[1188]: Started NYXUS dock daemon (live state for the dock UI).
+May 13 21:55:32 nyxus python3[119723]: /usr/bin/python3: can't open file '/opt/nyxus/nyxus_dockd.py': [Errno 2] No such file or directory
+May 13 21:55:32 nyxus systemd[1188]: nyxus-dockd.service: Main process exited, code=exited, status=2/INVALIDARGUMENT
+May 13 21:55:32 nyxus systemd[1188]: nyxus-dockd.service: Failed with result 'exit-code'.
+May 13 21:55:34 nyxus systemd[1188]: nyxus-dockd.service: Scheduled restart job, restart counter is at 36.
+May 13 21:55:34 nyxus systemd[1188]: Started NYXUS dock daemon (live state for the dock UI).
+May 13 21:55:34 nyxus python3[119748]: /usr/bin/python3: can't open file '/opt/nyxus/nyxus_dockd.py': [Errno 2] No such file or directory
+May 13 21:55:34 nyxus systemd[1188]: nyxus-dockd.service: Main process exited, code=exited, status=2/INVALIDARGUMENT
+May 13 21:55:34 nyxus systemd[1188]: nyxus-dockd.service: Failed with result 'exit-code'.
+May 13 21:55:36 nyxus systemd[1188]: nyxus-dockd.service: Scheduled restart job, restart counter is at 37.
+May 13 21:55:36 nyxus systemd[1188]: Started NYXUS dock daemon (live state for the dock UI).
+May 13 21:55:36 nyxus python3[119776]: /usr/bin/python3: can't open file '/opt/nyxus/nyxus_dockd.py': [Errno 2] No such file or directory
+May 13 21:55:36 nyxus systemd[1188]: nyxus-dockd.service: Main process exited, code=exited, status=2/INVALIDARGUMENT
+May 13 21:55:36 nyxus systemd[1188]: nyxus-dockd.service: Failed with result 'exit-code'.
+May 13 21:55:39 nyxus systemd[1188]: nyxus-dockd.service: Scheduled restart job, restart counter is at 38.
+May 13 21:55:39 nyxus systemd[1188]: Started NYXUS dock daemon (live state for the dock UI).
+May 13 21:55:39 nyxus python3[119803]: /usr/bin/python3: can't open file '/opt/nyxus/nyxus_dockd.py': [Errno 2] No such file or directory
+May 13 21:55:39 nyxus systemd[1188]: nyxus-dockd.service: Main process exited, code=exited, status=2/INVALIDARGUMENT
+May 13 21:55:39 nyxus systemd[1188]: nyxus-dockd.service: Failed with result 'exit-code'.
+
+── try the dock by hand to see the real error ──
+/usr/bin/python3: can't open file '/opt/nyxus/nyxus_dockd.py': [Errno 2] No such file or directory
+[nyx@nyxus eww]$
