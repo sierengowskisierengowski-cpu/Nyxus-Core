@@ -30,11 +30,25 @@ log() { printf '[%s] %s\n' "$(ts)" "$*" >> "$LOG"; }
 
 log "launch start — bars=[${BARS}] timeout=${TIMEOUT_SECS}s"
 
-SOCK="${XDG_RUNTIME_DIR:-/tmp}/eww-server_default"
+# Detect daemon: newer eww uses an instance-hash socket name
+# (eww-server_<hex>) instead of the legacy eww-server_default. Probe via
+# `eww ping` which talks to whichever socket the daemon is using; fall back
+# to a glob match if `ping` isn't available on this build.
+RUNDIR="${XDG_RUNTIME_DIR:-/tmp}"
 deadline=$(( $(date +%s) + TIMEOUT_SECS ))
-while [[ ! -S "$SOCK" ]]; do
+SOCK=""
+while :; do
+  if eww ping >/dev/null 2>&1; then
+    SOCK="$(ls -1t "$RUNDIR"/eww-server_* 2>/dev/null | head -1)"
+    [[ -z "$SOCK" ]] && SOCK="(via eww ping)"
+    break
+  fi
+  # Fallback: any matching socket present
+  for s in "$RUNDIR"/eww-server_*; do
+    [[ -S "$s" ]] && SOCK="$s" && break 2
+  done
   if [[ $(date +%s) -ge $deadline ]]; then
-    log "ERROR — daemon socket ${SOCK} never appeared after ${TIMEOUT_SECS}s"
+    log "ERROR — no eww daemon socket in ${RUNDIR} after ${TIMEOUT_SECS}s"
     notify-send -u critical "NYXUS EWW" \
       "Daemon socket never appeared after ${TIMEOUT_SECS}s — bars not started." 2>/dev/null || true
     exit 1
