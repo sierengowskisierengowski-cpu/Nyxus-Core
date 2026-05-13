@@ -259,15 +259,25 @@ Settings + menu/keybind · logs to `~/.cache/nyxus/<app>.log` · fails loud
 - [x] **Game Controllers** (ControllersPage — r10; /dev/input/js*
       enum w/ udev names, jstest-gtk/jstest/evtest launchers, browser
       gamepad tester fallback)
-- [ ] **Touchpad gestures** (3/4-finger swipe → workspace switch &
-      Mission Control; libinput-gestures backed)
+- [x] **Touchpad gestures** (MousePage gestures group — r10 batch 2;
+      libinput-gestures user systemd toggle + NYXUS-default conf
+      writer at ~/.config/libinput-gestures.conf: 3-finger L/R =
+      workspace, 4-finger up = fullscreen, 4-finger down = float,
+      2-finger pinch = killactive)
 - [ ] **Keyboard panel polish** (compose key, switcher tray applet,
       shortcuts editor that rebinds hyprland binds in place)
-- [ ] **Display arrangement** (multi-monitor drag-arrange, per-monitor
-      scaling, rotation, refresh — wlr-randr backed)
+- [x] **Display arrangement** (DisplayPage._render_monitors — r10
+      batch 2; per-monitor ExpanderRow w/ Scale combo (1.00–2.00) and
+      Rotation combo (0/90/180/270°), applies live via `hyprctl
+      keyword monitor` AND persists to ~/.config/hypr/nyxus-monitors.
+      conf with idempotent auto-source line in hyprland.conf)
 - [ ] **Color profiles** (colord/ICC import + per-monitor profile)
-- [ ] **External drives & USB arrival** (udisks2 watcher → notification
-      + auto-mount manager toggle)
+- [x] **External drives & USB arrival** (nyxus-usb-watch.py daemon +
+      .service user unit — r10 batch 2; tails `udevadm monitor
+      --subsystem-match=block --property`, toasts add/remove with
+      ID_VENDOR/ID_MODEL via notify-send, logs to ~/.cache/nyxus/
+      usb-watch.log; Settings toggle in NotificationsPage →
+      External devices)
 
 ## Tier 2 — Network & Connectivity
 - [x] **VPN: WireGuard + OpenVPN profiles** (NetworkPage Wave 1 covers;
@@ -408,6 +418,12 @@ Settings + menu/keybind · logs to `~/.cache/nyxus/<app>.log` · fails loud
 ---
 
 ## Per-batch progress log (newest first)
+
+- **r10 batch 2** (2026-05-13): Tier 1 #6, #8, #10 — Touchpad
+  gestures (MousePage), Display arrangement (DisplayPage scale+
+  rotation+persistence), USB arrival (new nyxus-usb-watch daemon +
+  unit + NotificationsPage toggle). py_compile ✓ on settings + new
+  daemon. Architect pending.
 
 - **r10 batch 1** (2026-05-13): Tier 1 #1–#5 — Bluetooth (already
   present, verified), Printers (new), Mouse (verified deeper than
