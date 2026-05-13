@@ -1,46 +1,56 @@
-# NYXUS · Spanish translation (scaffold)
+# NYXUS · Spanish (es) message catalogue · rev 2026-05-13 r1
 msgid ""
 msgstr ""
-"Project-Id-Version: nyxus 1.0\n"
+"Project-Id-Version: NYXUS 2026.05\n"
+"Report-Msgid-Bugs-To: https://nyxus.os/issues\n"
 "PO-Revision-Date: 2026-05-13 00:00+0000\n"
-"Language-Team: es\n"
+"Language-Team: NYXUS <i18n@nyxus.os>\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "Settings"
-msgstr "Ajustes"
+# ── App names ────────────────────────────────────────────────────────
+msgid "NYXUS Settings"
+msgstr "Configuración de NYXUS"
 
-msgid "Appearance"
-msgstr "Apariencia"
+msgid "NYXUS Files"
+msgstr "Archivos de NYXUS"
 
-msgid "Display"
-msgstr "Pantalla"
+msgid "NYXUS Notepad"
+msgstr "Bloc de notas NYXUS"
 
-msgid "Sound"
-msgstr "Sonido"
+msgid "NYXUS Notes"
+msgstr "Notas NYXUS"
 
-msgid "Network"
-msgstr "Red"
+msgid "NYXUS Stickies"
+msgstr "Notas adhesivas NYXUS"
 
-msgid "Bluetooth"
-msgstr "Bluetooth"
+msgid "NYXUS Backup"
+msgstr "Copias de seguridad NYXUS"
 
-msgid "Power"
-msgstr "Energía"
+msgid "NYXUS Doctor"
+msgstr "Doctor NYXUS"
 
-msgid "Privacy & Security"
-msgstr "Privacidad y seguridad"
+msgid "NYXUS Updater"
+msgstr "Actualizador de NYXUS"
 
-msgid "Updates"
-msgstr "Actualizaciones"
+msgid "NYXUS Security Center"
+msgstr "Centro de seguridad NYXUS"
 
-msgid "About"
-msgstr "Acerca de"
+msgid "NYXUS Spotlight"
+msgstr "Buscador NYXUS"
 
-msgid "Language & Region"
-msgstr "Idioma y región"
+msgid "NYXUS Welcome"
+msgstr "Bienvenida a NYXUS"
+
+msgid "NYXUS Parental Controls"
+msgstr "Controles parentales NYXUS"
+
+# ── Common UI verbs ──────────────────────────────────────────────────
+msgid "Save"
+msgstr "Guardar"
 
 msgid "Cancel"
 msgstr "Cancelar"
@@ -48,11 +58,45 @@ msgstr "Cancelar"
 msgid "Apply"
 msgstr "Aplicar"
 
-msgid "Save"
-msgstr "Guardar"
+msgid "Restart"
+msgstr "Reiniciar"
 
-msgid "Restart required"
-msgstr "Reinicio necesario"
+msgid "Shut down"
+msgstr "Apagar"
 
-msgid "Sign out to apply language change"
-msgstr "Cierra sesión para aplicar el cambio de idioma"
+msgid "Suspend"
+msgstr "Suspender"
+
+msgid "Lock"
+msgstr "Bloquear"
+
+msgid "Log out"
+msgstr "Cerrar sesión"
+
+msgid "Pause now"
+msgstr "Pausar ahora"
+
+msgid "Enabled"
+msgstr "Activado"
+
+msgid "Disabled"
+msgstr "Desactivado"
+
+# ── Common status text ───────────────────────────────────────────────
+msgid "Saved."
+msgstr "Guardado."
+
+msgid "Save failed: %s"
+msgstr "Error al guardar: %s"
+
+msgid "Access denied"
+msgstr "Acceso denegado"
+
+msgid "Welcome to NYXUS"
+msgstr "Bienvenido a NYXUS"
+
+msgid "DARK MIRROR"
+msgstr "DARK MIRROR"
+
+msgid "Silent. Dark. Purely Functional."
+msgstr "Silencioso. Oscuro. Puramente Funcional."

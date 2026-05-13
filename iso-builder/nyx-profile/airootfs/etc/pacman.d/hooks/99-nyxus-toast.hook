@@ -1,0 +1,12 @@
+# NYXUS · post-transaction notification hook · rev 2026-05-13 r1
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = *
+
+[Action]
+Description = Notifying NYXUS Toast about pacman transaction...
+When = PostTransaction
+Exec = /usr/local/bin/nyxus-pacman-toast

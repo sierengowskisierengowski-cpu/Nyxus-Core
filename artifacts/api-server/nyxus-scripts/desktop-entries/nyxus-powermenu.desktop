@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Power
+GenericName=Power
+Comment=Power, suspend, restart, shutdown
+Exec=/usr/local/bin/nyxus powermenu
+TryExec=/usr/local/bin/nyxus
+Icon=system-shutdown
+Terminal=false
+Categories=Settings;System;
+Keywords=NYXUS;NYX;Power;
+StartupNotify=true
+StartupWMClass=nyxus.powermenu
+X-NYXUS-Module=nyxus_powermenu

@@ -1,0 +1,56 @@
+/* NYXUS · swaync DARK MIRROR theme · rev 2026-05-13 r1 */
+* { font-family: "JetBrains Mono", monospace; }
+
+.control-center {
+  background: rgba(10, 7, 18, 0.96);
+  border: 1px solid #1F1B2C;
+  border-radius: 0;
+  color: #E9E5F2;
+  padding: 12px;
+}
+.control-center-list { background: transparent; }
+.notification-row { background: transparent; padding: 4px 0; }
+.notification {
+  background: #050308;
+  border: 1px solid #1A1722;
+  border-radius: 0;
+  margin: 6px 0;
+  padding: 12px;
+}
+.notification:hover  { border-color: #C084FC; }
+.notification.critical { border-color: #F87171; }
+.summary { color: #C084FC; font-weight: bold; font-size: 13px; }
+.body    { color: #E9E5F2; opacity: 0.9; font-size: 12px; }
+.time    { color: #7B7390; font-size: 10px; }
+.close-button {
+  background: transparent; color: #7B7390;
+  border: 1px solid #1A1722; border-radius: 0;
+  min-width: 20px; min-height: 20px;
+}
+.close-button:hover { color: #F87171; border-color: #F87171; }
+
+.widget-title > label {
+  color: #C084FC; font-size: 13px;
+  font-weight: bold; letter-spacing: 4px;
+}
+.widget-title > button {
+  background: transparent; color: #7B7390;
+  border: 1px solid #1A1722; border-radius: 0;
+  padding: 4px 12px;
+}
+.widget-title > button:hover {
+  color: #0A0810; background: #C084FC;
+  border-color: #C084FC;
+}
+
+.widget-dnd > switch                 { background: #1A1722; border-radius: 0; }
+.widget-dnd > switch:checked         { background: #C084FC; }
+.widget-dnd > switch slider          { background: #E9E5F2; border-radius: 0; }
+
+.floating-notifications {
+  background: transparent;
+}
+.floating-notifications.background .notification {
+  background: rgba(5, 3, 8, 0.97);
+  border: 1px solid #C084FC;
+}

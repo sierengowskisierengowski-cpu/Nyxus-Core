@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# NYXUS · CLI dispatcher · rev 2026-05-13 r1
+# Usage:
+#   nyxus                  → list modules
+#   nyxus <mod> [args...]  → run /opt/nyxus/nyxus_<mod>.py
+#   nyxus --version
+set -euo pipefail
+NYXUS_HOME="${NYXUS_HOME:-/opt/nyxus}"
+NYXUS_VERSION="2026.05.13"
+PROG="$(basename "$0")"
+
+case "${1:-}" in
+  ""|"-h"|"--help")
+    echo "NYXUS ${NYXUS_VERSION} — module dispatcher"
+    echo ""
+    echo "Usage:  ${PROG} <module> [args...]"
+    echo ""
+    echo "Available modules (from ${NYXUS_HOME}):"
+    for f in "${NYXUS_HOME}"/nyxus_*.py; do
+      [ -e "$f" ] || continue
+      m="$(basename "$f" .py)"; m="${m#nyxus_}"
+      printf "  %s\n" "$m"
+    done
+    exit 0
+    ;;
+  --version|-V)
+    echo "NYXUS ${NYXUS_VERSION}"
+    exit 0
+    ;;
+esac
+
+MOD="$1"; shift
+TARGET="${NYXUS_HOME}/nyxus_${MOD}.py"
+if [ ! -f "${TARGET}" ]; then
+  echo "${PROG}: unknown module '${MOD}' (no ${TARGET})" >&2
+  exit 2
+fi
+mkdir -p "${HOME}/.cache/nyxus"
+exec python3 "${TARGET}" "$@" 2>>"${HOME}/.cache/nyxus/${MOD}.log"

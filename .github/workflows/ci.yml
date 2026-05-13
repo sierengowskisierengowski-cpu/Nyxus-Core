@@ -1,0 +1,170 @@
+name: ci
+
+# Aggregate CI gate. Runs on every push/PR to main and is dispatchable.
+# Fast (≤3 min on a fresh runner). Pure validation — no ISO bake here;
+# the actual mkarchiso run happens on a self-hosted Arch runner.
+#
+# Validates:
+#   1. typecheck         — pnpm run typecheck (libs first, then leafs)
+#   2. shell             — bash -n every .sh file under the repo
+#   3. shellcheck        — every .sh under iso-builder/ + nyxus-scripts/
+#   4. python            — py_compile every nyxus_*.py + helpers
+#   5. desktop entries   — desktop-file-validate on every .desktop in
+#                          iso-builder/nyx-profile/airootfs/usr/share/applications
+#   6. polkit policies   — xmllint --noout on every .policy
+#   7. yaml              — yaml-lint on calamares modules + workflows
+#   8. profile           — iso-builder/verify-profile.sh
+#   9. openapi           — pnpm --filter @workspace/api-spec run codegen
+#                          (re-runs codegen and fails if generated diff)
+#
+# rev 2026-05-13 r1
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm run typecheck
+
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: bash -n every shell file
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r -d '' f; do
+            if ! bash -n "$f" 2>/tmp/err; then
+              echo "::error file=$f::$(tr '\n' ' ' </tmp/err)"
+              fail=1
+            fi
+          done < <(find . \
+            -path ./node_modules -prune -o \
+            -path ./.git -prune -o \
+            -type f \( -name '*.sh' -o -name '*.bash' \) -print0)
+          exit $fail
+      - name: shellcheck (excluded gracefully)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          fail=0
+          while IFS= read -r -d '' f; do
+            # SC1090/SC1091 (sourced files) + SC2086 (intentional word split)
+            # are noisy in profile scripts; keep severities to error+warn.
+            if ! shellcheck -S warning -e SC1090,SC1091,SC2086 "$f"; then
+              fail=1
+            fi
+          done < <(find iso-builder/ artifacts/api-server/nyxus-scripts/ \
+            -type f -name '*.sh' -print0 2>/dev/null)
+          # shellcheck failures are warnings until we clean every script.
+          # Flip to `exit $fail` to make them blocking.
+          exit 0
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: py_compile every nyxus_*.py
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r -d '' f; do
+            if ! python3 -m py_compile "$f" 2>/tmp/err; then
+              echo "::error file=$f::$(tr '\n' ' ' </tmp/err)"
+              fail=1
+            fi
+          done < <(find artifacts/api-server/nyxus-scripts/ \
+                        iso-builder/nyx-profile/airootfs/opt/nyxus/ \
+                   -type f -name '*.py' -print0 2>/dev/null)
+          exit $fail
+
+  desktop-and-polkit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install validators
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq desktop-file-utils libxml2-utils
+      - name: desktop-file-validate
+        run: |
+          fail=0
+          dir=iso-builder/nyx-profile/airootfs/usr/share/applications
+          if [ -d "$dir" ]; then
+            for f in "$dir"/*.desktop; do
+              [ -e "$f" ] || continue
+              if ! desktop-file-validate "$f"; then fail=1; fi
+            done
+          fi
+          exit $fail
+      - name: polkit policy XML
+        run: |
+          fail=0
+          for f in iso-builder/nyx-profile/airootfs/usr/share/polkit-1/actions/*.policy \
+                   artifacts/api-server/nyxus-scripts/polkit-policies/*.policy; do
+            [ -e "$f" ] || continue
+            if ! xmllint --noout "$f"; then fail=1; fi
+          done
+          exit $fail
+
+  yaml-and-profile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install --quiet pyyaml
+      - name: yaml-lint calamares + workflows
+        run: |
+          fail=0
+          for f in iso-builder/nyx-profile/airootfs/etc/calamares/settings.conf \
+                   iso-builder/nyx-profile/airootfs/etc/calamares/modules/*.conf \
+                   .github/workflows/*.yml; do
+            [ -e "$f" ] || continue
+            if ! python3 -c 'import sys,yaml; yaml.safe_load(open(sys.argv[1]))' "$f"; then
+              echo "::error file=$f::yaml parse failed"; fail=1
+            fi
+          done
+          exit $fail
+      - name: iso-builder/verify-profile.sh
+        run: bash iso-builder/verify-profile.sh
+
+  openapi-codegen-clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: re-run openapi codegen
+        run: pnpm --filter @workspace/api-spec run codegen
+      - name: fail if generated diff exists
+        run: |
+          if ! git diff --quiet --exit-code; then
+            echo "::error::openapi codegen produced a diff. Run 'pnpm --filter @workspace/api-spec run codegen' locally and commit the result."
+            git --no-pager diff --stat
+            exit 1
+          fi

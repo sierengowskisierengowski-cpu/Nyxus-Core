@@ -1,0 +1,5 @@
+# NYXUS · USB watcher signal trigger · rev 2026-05-13 r1
+# Sends a signal to all running nyxus_usb_watch processes when a USB
+# device is plugged in or removed so the UI updates instantly.
+ACTION=="add",    SUBSYSTEM=="usb", RUN+="/usr/local/bin/nyxus-usbwatch-event add %k"
+ACTION=="remove", SUBSYSTEM=="usb", RUN+="/usr/local/bin/nyxus-usbwatch-event remove %k"

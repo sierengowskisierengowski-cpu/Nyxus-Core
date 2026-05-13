@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<zone target="default">
+  <short>NYXUS</short>
+  <description>Default NYXUS zone — outbound permissive, inbound deny except mDNS + SSDP for discovery.</description>
+  <service name="mdns"/>
+  <service name="ssdp"/>
+  <service name="dhcpv6-client"/>
+</zone>

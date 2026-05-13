@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  /usr/local/sbin/nyxus-firstboot                       rev 2026-05-13 r1
+#
+#  Orchestrator for /etc/nyxus-firstboot.d/*.sh. Executed once by
+#  nyxus-firstboot.service on the very first boot of an installed system.
+#  Drops a marker at /var/lib/nyxus/firstboot.done so subsequent boots are
+#  a no-op (the unit also has ConditionPathExists=!).
+#
+#  Each fragment runs in a subshell with `set -e` so a failure in one does
+#  NOT abort the rest. Failures are logged but never block boot.
+#
+#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -u
+
+MARKER=/var/lib/nyxus/firstboot.done
+LOG=/var/log/nyxus/firstboot.log
+
+mkdir -p "$(dirname "${MARKER}")" "$(dirname "${LOG}")"
+{
+  echo
+  echo "=== nyxus-firstboot run $(date -Iseconds) ==="
+
+  if [[ -f "${MARKER}" ]]; then
+    echo "[skip] marker exists at ${MARKER}"
+    exit 0
+  fi
+
+  shopt -s nullglob
+  ran=0; ok=0; err=0
+  for fragment in /etc/nyxus-firstboot.d/*.sh; do
+    ran=$((ran+1))
+    name="$(basename "${fragment}")"
+    echo "[run]  ${name}"
+    if ( set -e; bash "${fragment}" ); then
+      ok=$((ok+1))
+      echo "[ok]   ${name}"
+    else
+      err=$((err+1))
+      echo "[err]  ${name} (rc=$?)"
+    fi
+  done
+  echo "[done] ran=${ran} ok=${ok} err=${err}"
+
+  # Drop marker even on partial failure — we do not want firstboot to
+  # retry forever on a deterministic failing fragment.
+  date -Iseconds >"${MARKER}"
+  echo "[mark] ${MARKER}"
+} >>"${LOG}" 2>&1

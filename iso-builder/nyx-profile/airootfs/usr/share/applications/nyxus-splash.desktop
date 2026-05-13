@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Splash
+GenericName=Splash
+Comment=Boot splash preview
+Exec=/usr/local/bin/nyxus splash
+TryExec=/usr/local/bin/nyxus
+Icon=preferences-desktop-display
+Terminal=false
+Categories=System;
+Keywords=NYXUS;NYX;Splash;
+StartupNotify=true
+StartupWMClass=nyxus.splash
+X-NYXUS-Module=nyxus_splash
