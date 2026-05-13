@@ -113,6 +113,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-welcome":                "nyxus-welcome",
   "nyxus-welcome-helper":         "nyxus-welcome-helper",
   "nyxus-welcome.policy":         "nyxus-welcome.policy",
+  "nyxus-parental-helper":        "nyxus-parental-helper",
+  "com.nyxus.parental.policy":    "com.nyxus.parental.policy",
 
   // ── ★ TGZ APP PACKAGES (heavyweight multi-module apps) ───────────────────
   "nyxus-home.tgz":      "nyxus-home.tgz",       // Home (workspace 0)

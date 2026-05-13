@@ -207,7 +207,15 @@ if [[ -f "${NS}/com.nyxus.security.policy" ]]; then
   install -Dm644 "${NS}/com.nyxus.security.policy" \
     "${PROFILE_DIR}/airootfs/usr/share/polkit-1/actions/com.nyxus.security.policy"
 fi
-ok "user units + policy: nyxus-eww / nyxus-security-daemon / com.nyxus.security.policy"
+if [[ -f "${NS}/nyxus-parental-helper" ]]; then
+  install -Dm755 "${NS}/nyxus-parental-helper" \
+    "${PROFILE_DIR}/airootfs/usr/local/libexec/nyxus-parental-helper"
+fi
+if [[ -f "${NS}/com.nyxus.parental.policy" ]]; then
+  install -Dm644 "${NS}/com.nyxus.parental.policy" \
+    "${PROFILE_DIR}/airootfs/usr/share/polkit-1/actions/com.nyxus.parental.policy"
+fi
+ok "user units + policy: nyxus-eww / nyxus-security-daemon / parental helper+policy"
 
 # ── Wallpapers → both user skel (matches hyprland.conf path) and system ─
 # Includes the new void-vortex (default EWW-era wallpaper, replaces drifter).
