@@ -102,6 +102,7 @@ except Exception:
     FONT_DISPLAY   = "Inter Display"
 
 DANGER_RED = "#ff6464"  # §8 — RESERVED for destructive only
+NYXUS_GOLD = "#d4b87a"  # warm brand accent — selection, focus rings
 
 # Nerd-font glyphs (§6 — never emoji in chrome).
 GLYPHS = {
@@ -172,6 +173,97 @@ def sh_async(cmd, on_done: Optional[Callable[[Tuple[int, str, str]], None]] = No
         return False
     import threading
     threading.Thread(target=worker, daemon=True).start()
+
+
+_HYPRLAND_CONF = Path.home() / ".config" / "hypr" / "hyprland.conf"
+# Recognized launch commands → friendly user-facing label.
+# Anything not in the map falls back to the literal command (truncated)
+# so a drifted bind still shows up rather than disappearing silently.
+_BIND_LABELS = {
+    "nyxus-clipboard":      "NYXUS Clipboard",
+    "nyxus-files":          "NYXUS Files",
+    "nyxus-updater":        "NYXUS Updater",
+    "nyxus-store":          "NYXUS Store",
+    "nyxus-backup":         "NYXUS Backup",
+    "nyxus-drop":           "NYXUS Drop",
+    "nyxus-record":         "NYXUS Record",
+    "nyxus-context-menu.sh":"NYXUS Context menu",
+    "nyxus-set-wallpaper.sh":"NYXUS Wallpaper",
+    "nyxus_launcher.py":    "NYXUS Spotlight",
+    "nyxus_terminal.py":    "NYXUS Terminal",
+    "nyxus_doctor.py":      "Doctor (diagnostics)",
+    "nyxus_screenshot.py":  "Screenshot",
+    "rofi":                 "Start menu (rofi)",
+    "firefox":              "Browser",
+    "alacritty":            "Terminal (alacritty)",
+    "hyprlock":             "Lock screen",
+    "wlogout":              "Logout menu",
+    "hyprshot":             "Screenshot region",
+    "playerctl":            "Media keys",
+    "wpctl":                "Volume",
+    "brightnessctl":        "Brightness",
+}
+
+
+def parse_hypr_binds(path: Path = _HYPRLAND_CONF) -> List[Tuple[str, str, str]]:
+    """Live-parse `bind = MODS, KEY, action, args` from hyprland.conf.
+
+    Returns [(label, chord, raw_command)] in file order. Empty list if
+    the file is missing or unreadable — caller can fall back to a
+    curated table.
+    """
+    if not path.exists():
+        return []
+    try:
+        text = path.read_text(errors="replace")
+    except Exception as e:
+        log.warning("parse_hypr_binds %s: %s", path, e)
+        return []
+    out: List[Tuple[str, str, str]] = []
+    bind_re = re.compile(
+        r"^\s*bind[lermn]*\s*=\s*([^,]*),\s*([^,]+),\s*([^,]+)"
+        r"(?:,\s*(.+))?$")
+    for line in text.splitlines():
+        # strip trailing inline comment
+        line_no_cmt = re.sub(r"\s+#.*$", "", line)
+        m = bind_re.match(line_no_cmt)
+        if not m:
+            continue
+        mods, key, action, args = m.groups()
+        mods = " ".join(mods.split()).replace("$mod", "Super")
+        # Build chord (e.g. "Super + Shift + V")
+        chord_parts = [p.strip().capitalize() for p in mods.split() if p.strip()]
+        chord_parts.append(key.strip())
+        chord = " + ".join(chord_parts) if chord_parts else key.strip()
+        # Build human label
+        action = action.strip()
+        args = (args or "").strip()
+        if action == "exec":
+            # Inspect the first meaningful token of the command
+            tokens = re.findall(r"\S+", args)
+            target = ""
+            for t in tokens:
+                base = Path(t).name
+                if base in _BIND_LABELS:
+                    target = base
+                    break
+                # Some commands are like `python3 ~/.nyxus/foo.py args`
+                if base.endswith(".py") or base.endswith(".sh"):
+                    target = base
+                    break
+                # Skip wrappers
+                if base in ("python3", "bash", "sh", "env", "exec",
+                            "pkexec", "sudo"):
+                    continue
+                if not target:
+                    target = base
+                    break
+            label = _BIND_LABELS.get(target, target or args[:36])
+        else:
+            # Built-in dispatcher (workspace, movefocus, exec-shell, …)
+            label = action if not args else f"{action} {args[:24]}"
+        out.append((label, chord, f"{action} {args}".strip()))
+    return out
 
 
 def fire_and_forget(cmd: str) -> None:
@@ -364,8 +456,8 @@ window, .nyx-bg {{
 .nyx-section-row.selected, .nyx-section-row:selected {{
     background-color: {GLASS_DARK};
     color: {WHITE_PURE};
-    box-shadow: inset 2px 0 0 0 {WHITE_OFF},
-                0 0 14px rgba(255,255,255,0.06);
+    box-shadow: inset 3px 0 0 0 {NYXUS_GOLD},
+                0 0 18px rgba(212,184,122,0.10);
 }}
 .nyx-section-glyph {{
     font-family: 'Symbols Nerd Font', 'Symbols Nerd Font Mono', monospace;
@@ -375,7 +467,12 @@ window, .nyx-bg {{
 }}
 .nyx-section-row.selected .nyx-section-glyph,
 .nyx-section-row:selected .nyx-section-glyph {{
-    color: {WHITE_PURE};
+    color: {NYXUS_GOLD};
+}}
+.nyx-search-count {{
+    font-size: 11px;
+    color: {GREY_MID};
+    padding: 2px 14px 6px;
 }}
 
 /* ── Content panel ────────────────────────────────────────────────── */
@@ -2231,24 +2328,50 @@ class KeyboardPage(SectionPage):
             description="EWW panels, audio, brightness, screenshots")
         self.add_group(sys_grp)
 
-        for label, chord in (
-            ("NYXUS Clipboard",    "Super + V"),
-            ("NYXUS Files",        "Super + E"),
-            ("NYXUS Updater",      "Super + Ctrl + U"),
-            ("NYXUS Store",        "Super + Shift + A"),
-            ("NYXUS Backup",       "Super + Ctrl + B"),
-            ("NYXUS Drop",         "Super + Ctrl + D"),
-            ("NYXUS Record toggle","Super + Shift + R"),
-            ("NYXUS Context menu", "Super + Ctrl + M"),
-            ("NYXUS Wallpaper",    "Super + Alt + W"),
-            ("NYXUS Spotlight",    "Super + Space"),
-            ("NYXUS Terminal",     "Super + Return"),
-            ("Start menu (rofi)",  "Super + D"),
-            ("App switcher",       "Super + Tab"),
-            ("Lock screen",        "Super + L"),
-            ("Logout menu",        "Super + Shift + E"),
-            ("Doctor (diagnostics)","Super + Shift + H"),
-        ):
+        # Live-parse hyprland.conf so this list never drifts from the
+        # real keybind state. Falls back to a curated set if the config
+        # is missing (first-boot, recovery shell, etc.).
+        live = parse_hypr_binds()
+        nyxus_set: List[Tuple[str, str]] = []
+        if live:
+            seen: set = set()
+            for label, chord, _raw in live:
+                # NYXUS app launches → top group; dedupe by chord.
+                if (label.startswith("NYXUS ")
+                        or label in ("Start menu (rofi)",
+                                     "Spotlight", "App switcher",
+                                     "Lock screen", "Logout menu",
+                                     "Doctor (diagnostics)",
+                                     "Screenshot", "Screenshot region")):
+                    if chord not in seen:
+                        nyxus_set.append((label, chord))
+                        seen.add(chord)
+            nyxus_grp.set_description(
+                "Parsed live from ~/.config/hypr/hyprland.conf "
+                f"({len(nyxus_set)} binds)")
+        if not nyxus_set:
+            # Fallback curated list — kept in sync with shipped config.
+            nyxus_set = [
+                ("NYXUS Clipboard",    "Super + V"),
+                ("NYXUS Files",        "Super + E"),
+                ("NYXUS Updater",      "Super + Ctrl + U"),
+                ("NYXUS Store",        "Super + Shift + A"),
+                ("NYXUS Backup",       "Super + Ctrl + B"),
+                ("NYXUS Drop",         "Super + Ctrl + D"),
+                ("NYXUS Record",       "Super + Shift + R"),
+                ("NYXUS Context menu", "Super + Ctrl + M"),
+                ("NYXUS Wallpaper",    "Super + Alt + W"),
+                ("NYXUS Spotlight",    "Super + Space"),
+                ("NYXUS Terminal",     "Super + Return"),
+                ("Start menu (rofi)",  "Super + D"),
+                ("App switcher",       "Super + Tab"),
+                ("Lock screen",        "Super + L"),
+                ("Logout menu",        "Super + Shift + E"),
+                ("Doctor (diagnostics)","Super + Shift + H"),
+            ]
+            nyxus_grp.set_description(
+                "Curated fallback — hyprland.conf not found")
+        for label, chord in nyxus_set:
             nyxus_grp.add(kv_row(label, chord))
 
         for label, chord in (
@@ -6952,9 +7075,14 @@ class SettingsWindow(Adw.ApplicationWindow):
         # Search
         self.search = Gtk.SearchEntry()
         self.search.add_css_class("nyx-search")
-        self.search.set_placeholder_text("Search settings…")
+        self.search.set_placeholder_text("Search settings…   (Ctrl + F)")
         self.search.connect("search-changed", self._on_search)
         sidebar_outer.append(self.search)
+        # Live match counter — hidden when search box is empty
+        self.search_count = Gtk.Label(label="", xalign=0.0)
+        self.search_count.add_css_class("nyx-search-count")
+        self.search_count.set_visible(False)
+        sidebar_outer.append(self.search_count)
 
         # List
         self.listbox = Gtk.ListBox()
@@ -6988,9 +7116,52 @@ class SettingsWindow(Adw.ApplicationWindow):
         self.toast_overlay.set_child(split)
         self.set_content(self.toast_overlay)
 
+        # ── Window-level keyboard shortcuts ──────────────────────────
+        # Ctrl+F  → focus search · Esc → clear search & focus sidebar
+        # Ctrl+L  → focus sidebar list · Ctrl+W/Q → close window
+        kc = Gtk.EventControllerKey()
+        kc.connect("key-pressed", self._on_window_key)
+        self.add_controller(kc)
+
+    def _on_window_key(self, _ctrl, keyval, _kc, state) -> bool:
+        ctrl = bool(state & Gdk.ModifierType.CONTROL_MASK)
+        if ctrl and keyval in (Gdk.KEY_f, Gdk.KEY_F):
+            self.search.grab_focus()
+            return True
+        if ctrl and keyval in (Gdk.KEY_l, Gdk.KEY_L):
+            self.listbox.grab_focus()
+            return True
+        if ctrl and keyval in (Gdk.KEY_w, Gdk.KEY_W,
+                               Gdk.KEY_q, Gdk.KEY_Q):
+            self.close()
+            return True
+        if keyval == Gdk.KEY_Escape:
+            if self.search.get_text():
+                self.search.set_text("")
+                self.listbox.grab_focus()
+                return True
+        return False
+
     # ── search filter ─────────────────────────────────────────────────
     def _on_search(self, _entry: Gtk.SearchEntry) -> None:
         self.listbox.invalidate_filter()
+        # Update the live match counter
+        q = self.search.get_text().strip()
+        if not q:
+            self.search_count.set_visible(False)
+            return
+        total = len(SECTIONS)
+        shown = 0
+        i = 0
+        while True:
+            row = self.listbox.get_row_at_index(i)
+            if row is None:
+                break
+            if isinstance(row, SidebarRow) and self._filter_row(row):
+                shown += 1
+            i += 1
+        self.search_count.set_text(f"{shown} of {total} match")
+        self.search_count.set_visible(True)
 
     def _filter_row(self, row: Gtk.ListBoxRow) -> bool:
         q = self.search.get_text().strip().lower()
