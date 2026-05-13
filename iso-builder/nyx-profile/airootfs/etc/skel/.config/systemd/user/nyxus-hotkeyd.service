@@ -1,0 +1,20 @@
+[Unit]
+Description=NYXUS Hotkeys daemon (keymap, chords, mod-tap, gestures, IPC)
+PartOf=graphical-session.target
+After=graphical-session.target hyprland-session.target
+Requires=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/nyxus/nyxus_hotkeyd.py
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=5
+# Security hardening (user-scoped, no privilege escalation needed)
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=%h/.config/nyxus %h/.cache/nyxus %t/nyxus-hotkey
+PrivateTmp=true
+
+[Install]
+WantedBy=graphical-session.target

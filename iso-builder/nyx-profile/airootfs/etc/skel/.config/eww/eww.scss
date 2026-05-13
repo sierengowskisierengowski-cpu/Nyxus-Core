@@ -1074,3 +1074,59 @@
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-6px); }
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+ * NYXUS Hotkeys cheat-sheet + recorder
+ * ───────────────────────────────────────────────────────────────────── */
+.hk-root {
+  background: rgba(8, 8, 14, 0.92);
+  border: 1px solid rgba(150, 200, 255, 0.18);
+  border-radius: 16px;
+  padding: 18px 20px;
+  color: #d6e2ff;
+  font-family: "Inter", "JetBrains Mono", sans-serif;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6),
+              inset 0 0 60px rgba(80, 130, 255, 0.04);
+}
+.hk-header { margin-bottom: 6px; }
+.hk-title  { font-size: 18px; font-weight: 600; letter-spacing: 0.4px;
+             color: #e8f0ff; }
+.hk-conflict-pip {
+  font-size: 11px; color: #ff6f7a; padding: 2px 10px;
+  border: 1px solid rgba(255, 110, 122, 0.3); border-radius: 999px;
+  background: rgba(60, 0, 6, 0.4);
+}
+.hk-search {
+  background: rgba(20, 22, 34, 0.7);
+  color: #e0e6ff; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid rgba(120, 160, 220, 0.18);
+  font-size: 13px;
+}
+.hk-scroll { padding-top: 4px; }
+.hk-cat-h  { color: #6f8fff; font-weight: 600; font-size: 12px;
+             letter-spacing: 1.5px; text-transform: uppercase;
+             margin: 12px 0 4px 4px; }
+.hk-line   { color: #c8d4ee; font-family: "JetBrains Mono", monospace;
+             font-size: 12px; padding: 2px 4px; }
+.hk-line:hover { background: rgba(80, 130, 255, 0.06); border-radius: 4px; }
+.hk-row    { padding: 4px 6px; border-radius: 6px; }
+.hk-combo  { color: #88a9ff; font-family: "JetBrains Mono", monospace;
+             font-weight: 600; min-width: 180px; }
+.hk-desc   { color: #d6e2ff; }
+.hk-cat    { color: #7d8aab; font-size: 11px; }
+.hk-footer { margin-top: 10px; padding-top: 10px;
+             border-top: 1px solid rgba(120, 160, 220, 0.1); }
+.hk-btn    { background: rgba(40, 50, 80, 0.5); color: #d6e2ff;
+             padding: 6px 14px; border-radius: 8px;
+             border: 1px solid rgba(120, 160, 220, 0.2);
+             font-size: 12px; }
+.hk-btn:hover { background: rgba(80, 110, 200, 0.4); }
+.hk-btn-close { color: #ff9aa3; }
+
+.hk-recorder { padding: 24px; background: rgba(8, 8, 14, 0.95);
+               border: 1px solid rgba(150, 200, 255, 0.18); border-radius: 16px; }
+.hk-rec-title { font-size: 14px; color: #6f8fff;
+                text-transform: uppercase; letter-spacing: 1.5px; }
+.hk-rec-text  { font-size: 22px; color: #e8f0ff;
+                font-family: "JetBrains Mono", monospace;
+                margin: 16px 0; }

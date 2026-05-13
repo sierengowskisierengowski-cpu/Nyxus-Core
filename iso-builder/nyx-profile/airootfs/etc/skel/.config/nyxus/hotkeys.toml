@@ -1,0 +1,279 @@
+# NYXUS Hotkeys — user config (TOML)
+# Hot-reloads on save. Edit via: nyxus-hotkey, Settings → Hotkeys, or directly here.
+#
+# Schema:
+#   [meta]              — version + active preset
+#   [options]           — global behaviour (chord_timeout, tap_threshold, …)
+#   [[bind]]            — global keybind
+#   [[bind.app]]        — per-app override (matches by Hyprland window class)
+#   [[chord]]           — multi-step sequence (Super+K then C → action)
+#   [[mod_tap]]         — tap modifier alone vs hold-as-modifier
+#   [[gesture]]         — libinput touchpad gesture → action
+#
+# `mods` accepts: SUPER, ALT, CTRL, SHIFT (comma list, any order).
+# `key` is xkb keysym name (a, F1, slash, Return, …) or "" for mods-only.
+# `action` is a shell command run via /bin/sh -c. Always quote arguments.
+
+[meta]
+version       = 1
+active_preset = "macos"     # macos | windows | vscode | vim | custom
+
+[options]
+chord_timeout_ms     = 800   # gap allowed between chord steps
+tap_threshold_ms     = 220   # max ms a modifier may be held to register as a tap
+gesture_swipe_min_px = 80    # libinput pixel threshold for swipe binds
+cheatsheet_grouped   = true  # group cheat-sheet by category
+warn_on_conflict     = true
+hot_reload           = true
+
+# ─────────────────────────────────────────────────────────────────────
+# Global binds — macOS preset (overridden when active_preset switches)
+# ─────────────────────────────────────────────────────────────────────
+
+[[bind]]
+mods     = "SUPER"
+key      = "space"
+action   = "nyxus spotlight"
+desc     = "Open Spotlight"
+category = "Launchers"
+
+[[bind]]
+mods     = "SUPER"
+key      = "slash"
+action   = "eww open --toggle hotkey-cheatsheet"
+desc     = "Show keyboard shortcuts"
+category = "System"
+
+[[bind]]
+mods     = "SUPER"
+key      = "comma"
+action   = "nyxus settings"
+desc     = "Open Settings"
+category = "System"
+
+[[bind]]
+mods     = "SUPER"
+key      = "q"
+action   = "hyprctl dispatch killactive"
+desc     = "Quit application"
+category = "Window"
+
+[[bind]]
+mods     = "SUPER"
+key      = "h"
+action   = "hyprctl dispatch movetoworkspacesilent special:hidden"
+desc     = "Hide window"
+category = "Window"
+
+[[bind]]
+mods     = "SUPER,SHIFT"
+key      = "h"
+action   = "hyprctl dispatch movetoworkspace +0"
+desc     = "Show all hidden windows"
+category = "Window"
+
+[[bind]]
+mods     = "SUPER"
+key      = "tab"
+action   = "hyprctl dispatch cyclenext"
+desc     = "Next window"
+category = "Window"
+
+[[bind]]
+mods     = "SUPER,SHIFT"
+key      = "tab"
+action   = "hyprctl dispatch cyclenext prev"
+desc     = "Previous window"
+category = "Window"
+
+[[bind]]
+mods     = "SUPER,CTRL"
+key      = "f"
+action   = "hyprctl dispatch fullscreen 0"
+desc     = "Toggle fullscreen"
+category = "Window"
+
+[[bind]]
+mods     = "SUPER"
+key      = "n"
+action   = "nyxus-notepad"
+desc     = "New note"
+category = "Apps"
+
+[[bind]]
+mods     = "SUPER"
+key      = "Return"
+action   = "alacritty"
+desc     = "Open terminal"
+category = "Apps"
+
+[[bind]]
+mods     = "SUPER,SHIFT"
+key      = "n"
+action   = "nautilus"
+desc     = "Open Files"
+category = "Apps"
+
+[[bind]]
+mods     = "SUPER"
+key      = "l"
+action   = "hyprlock"
+desc     = "Lock screen"
+category = "System"
+
+[[bind]]
+mods     = "SUPER,CTRL"
+key      = "q"
+action   = "wlogout"
+desc     = "Logout menu"
+category = "System"
+
+[[bind]]
+mods     = "SUPER"
+key      = "F3"
+action   = "eww open --toggle mission-control"
+desc     = "Mission Control"
+category = "System"
+
+[[bind]]
+mods     = "SUPER"
+key      = "F4"
+action   = "eww open --toggle quick-settings"
+desc     = "Quick Settings"
+category = "System"
+
+[[bind]]
+mods     = ""
+key      = "Print"
+action   = "grim -g \"$(slurp)\" - | wl-copy"
+desc     = "Screenshot region to clipboard"
+category = "Capture"
+
+[[bind]]
+mods     = "SHIFT"
+key      = "Print"
+action   = "grim - | wl-copy"
+desc     = "Screenshot full screen to clipboard"
+category = "Capture"
+
+[[bind]]
+mods     = "CTRL,SHIFT"
+key      = "Print"
+action   = "wf-recorder -g \"$(slurp)\" -f ~/Videos/screen-$(date +%s).mp4 &"
+desc     = "Record screen region"
+category = "Capture"
+
+# Workspace switching 1-9
+[[bind]]
+mods   = "SUPER"
+key    = "1"
+action = "hyprctl dispatch workspace 1"
+desc   = "Workspace 1"
+category = "Workspaces"
+
+[[bind]]
+mods   = "SUPER"
+key    = "2"
+action = "hyprctl dispatch workspace 2"
+desc   = "Workspace 2"
+category = "Workspaces"
+
+[[bind]]
+mods   = "SUPER"
+key    = "3"
+action = "hyprctl dispatch workspace 3"
+desc   = "Workspace 3"
+category = "Workspaces"
+
+[[bind]]
+mods   = "SUPER"
+key    = "4"
+action = "hyprctl dispatch workspace 4"
+desc   = "Workspace 4"
+category = "Workspaces"
+
+[[bind]]
+mods   = "SUPER"
+key    = "5"
+action = "hyprctl dispatch workspace 5"
+desc   = "Workspace 5"
+category = "Workspaces"
+
+# ─────────────────────────────────────────────────────────────────────
+# Multi-step chords (Super+K then …)
+# ─────────────────────────────────────────────────────────────────────
+
+[[chord]]
+trigger  = "SUPER+k"
+steps    = [{ key = "c", action = "wl-copy < /dev/null && notify-send 'Cleared clipboard'", desc = "Clear clipboard" },
+            { key = "h", action = "swaync-client -t",                                       desc = "Toggle notifications" },
+            { key = "d", action = "nyxus-dock reload",                                      desc = "Reload dock" },
+            { key = "r", action = "nyxus-hotkey reload",                                    desc = "Reload hotkeys" }]
+desc     = "Quick command palette"
+category = "Power"
+
+# ─────────────────────────────────────────────────────────────────────
+# Modifier-tap (Karabiner-style: tap a modifier alone → action)
+# ─────────────────────────────────────────────────────────────────────
+
+[[mod_tap]]
+mod      = "SUPER_L"
+action   = "nyxus launcher"
+desc     = "Tap left Super → Launcher"
+
+[[mod_tap]]
+mod      = "CTRL_R"
+action   = "eww open --toggle hotkey-cheatsheet"
+desc     = "Tap right Ctrl → Cheat-sheet"
+
+# ─────────────────────────────────────────────────────────────────────
+# Touchpad gestures (libinput)
+# ─────────────────────────────────────────────────────────────────────
+
+[[gesture]]
+type     = "swipe"
+fingers  = 3
+direction = "up"
+action   = "eww open --toggle mission-control"
+desc     = "3-finger swipe up → Mission Control"
+
+[[gesture]]
+type     = "swipe"
+fingers  = 3
+direction = "down"
+action   = "hyprctl dispatch togglespecialworkspace"
+desc     = "3-finger swipe down → Show desktop"
+
+[[gesture]]
+type     = "swipe"
+fingers  = 4
+direction = "left"
+action   = "hyprctl dispatch workspace e+1"
+desc     = "4-finger swipe left → Next workspace"
+
+[[gesture]]
+type     = "swipe"
+fingers  = 4
+direction = "right"
+action   = "hyprctl dispatch workspace e-1"
+desc     = "4-finger swipe right → Previous workspace"
+
+# ─────────────────────────────────────────────────────────────────────
+# Per-app overrides — keyed by Hyprland window class (regex match)
+# ─────────────────────────────────────────────────────────────────────
+
+[[app_override]]
+match    = "^(firefox|Firefox)$"
+[[app_override.bind]]
+mods     = "SUPER"
+key      = "t"
+action   = "wtype -M ctrl t"
+desc     = "New tab (Firefox: Cmd+T → Ctrl+T)"
+
+[[app_override]]
+match    = "^code$|^Code$"
+[[app_override.bind]]
+mods     = "SUPER"
+key      = "p"
+action   = "wtype -M ctrl -M shift p"
+desc     = "Command Palette (VSCode)"

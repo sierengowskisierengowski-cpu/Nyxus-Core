@@ -1,0 +1,357 @@
+#!/usr/bin/env python3
+"""nyxus-hotkey — CLI for the NYXUS Hotkeys daemon.
+
+Talks to ~/.config/nyxus/hotkeys.toml and the daemon socket.
+NEVER passes user input through a shell. All daemon RPC is JSON over unix.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import shlex
+import socket
+import subprocess
+import sys
+from pathlib import Path
+
+try:
+    import tomllib  # py311+
+except ImportError:                       # pragma: no cover
+    import tomli as tomllib  # type: ignore
+
+HOME    = Path(os.path.expanduser("~"))
+CFG     = HOME / ".config" / "nyxus" / "hotkeys.toml"
+RUN     = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")) / "nyxus-hotkey"
+SOCK    = RUN / "cmd.sock"
+
+
+def rpc(op: str, **kw) -> dict:
+    if not SOCK.exists():
+        return {"ok": False, "error": "daemon not running (start nyxus-hotkeyd.service)"}
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(str(SOCK))
+        s.send((json.dumps({"op": op, **kw}) + "\n").encode())
+        buf = b""
+        while True:
+            chunk = s.recv(8192)
+            if not chunk: break
+            buf += chunk
+            if buf.endswith(b"\n"): break
+        s.close()
+        line, _, _ = buf.partition(b"\n")
+        return json.loads(line.decode("utf-8", errors="replace"))
+    except (OSError, json.JSONDecodeError) as e:
+        return {"ok": False, "error": str(e)}
+
+
+def cmd_list(args: argparse.Namespace) -> int:
+    r = rpc("list")
+    if not r.get("ok"):
+        print("error:", r.get("error"), file=sys.stderr); return 1
+    binds = r.get("binds", [])
+    if args.json:
+        print(json.dumps(r, indent=2)); return 0
+    if args.category:
+        binds = [b for b in binds if b.get("category", "").lower() == args.category.lower()]
+    cur_cat = None
+    for b in sorted(binds, key=lambda x: (x.get("category",""), x.get("desc",""))):
+        cat = b.get("category", "")
+        if cat != cur_cat:
+            print(f"\n── {cat} ──")
+            cur_cat = cat
+        combo = (b.get("mods","") + "+" + b.get("key","")).strip("+")
+        print(f"  {combo:25s}  {b.get('desc','')}")
+    if r.get("chords"):
+        print("\n── Chords ──")
+        for c in r["chords"]:
+            print(f"  {c.get('trigger','')}  →  {c.get('desc','')}")
+            for s in c.get("steps", []):
+                print(f"     • {s.get('key','')}: {s.get('desc','')}")
+    if r.get("modtaps"):
+        print("\n── Modifier-tap ──")
+        for m in r["modtaps"]:
+            print(f"  tap {m.get('mod',''):10s}  →  {m.get('desc','')}")
+    if r.get("gestures"):
+        print("\n── Gestures ──")
+        for g in r["gestures"]:
+            print(f"  {g.get('fingers','')}-finger {g.get('direction',''):6s} {g.get('type',''):6s}  →  {g.get('desc','')}")
+    return 0
+
+
+def cmd_conflicts(_a) -> int:
+    r = rpc("conflicts")
+    if not r.get("ok"):
+        print("error:", r.get("error"), file=sys.stderr); return 1
+    cs = r.get("conflicts", [])
+    if not cs:
+        print("✓ no conflicts"); return 0
+    for c in cs:
+        print(f"⚠ {c['combo']}  ({c['count']} bindings)")
+        for a in c["actions"]:
+            print(f"    [{a['src']}] {a['desc']} → {a['action']}")
+    return 1 if cs else 0
+
+
+def cmd_reload(_a) -> int:
+    r = rpc("reload")
+    if not r.get("ok"):
+        print("error:", r.get("error"), file=sys.stderr); return 1
+    print(f"✓ reloaded ({r.get('binds',0)} binds)")
+    return 0
+
+
+def cmd_test(args: argparse.Namespace) -> int:
+    if not args.action:
+        print("usage: nyxus-hotkey test '<action>'", file=sys.stderr); return 2
+    r = rpc("test", action=args.action)
+    return 0 if r.get("ok") else 1
+
+
+def _ensure_cfg() -> dict:
+    if not CFG.exists():
+        CFG.parent.mkdir(parents=True, exist_ok=True)
+        CFG.write_text("[meta]\nversion = 1\nactive_preset = \"custom\"\n\n[options]\n\n")
+    with CFG.open("rb") as f:
+        return tomllib.load(f)
+
+
+def _save_cfg_keepfmt(action_lines: list[str]) -> None:
+    """Append-only write to keep formatting; full edit is via Settings UI."""
+    with CFG.open("a") as f:
+        f.write("\n")
+        for line in action_lines:
+            f.write(line + "\n")
+
+
+def cmd_add(args: argparse.Namespace) -> int:
+    if not args.combo or not args.action:
+        print("usage: nyxus-hotkey add SUPER+k '<action>' --desc 'My bind'", file=sys.stderr); return 2
+    mods, _, key = args.combo.rpartition("+")
+    block = [
+        "[[bind]]",
+        f"mods   = {json.dumps(mods)}",
+        f"key    = {json.dumps(key)}",
+        f"action = {json.dumps(args.action)}",
+        f"desc   = {json.dumps(args.desc or '')}",
+        f"category = {json.dumps(args.category or 'Custom')}",
+    ]
+    _save_cfg_keepfmt(block)
+    rpc("reload")
+    print(f"✓ added {args.combo} → {args.action}")
+    return 0
+
+
+def cmd_rm(args: argparse.Namespace) -> int:
+    """Remove a bind by combo. Rewrites TOML preserving structure."""
+    if not args.combo:
+        print("usage: nyxus-hotkey rm SUPER+k", file=sys.stderr); return 2
+    data = _ensure_cfg()
+    mods, _, key = args.combo.rpartition("+")
+    before = len(data.get("bind", []) or [])
+    data["bind"] = [b for b in data.get("bind", []) or []
+                    if not (str(b.get("mods", "")) == mods and str(b.get("key", "")) == key)]
+    after = len(data["bind"])
+    if before == after:
+        print(f"no bind matched {args.combo}", file=sys.stderr); return 1
+    _write_full_toml(data)
+    rpc("reload")
+    print(f"✓ removed {before - after} bind(s) for {args.combo}")
+    return 0
+
+
+def _write_full_toml(data: dict) -> None:
+    """Round-trip via a minimal serializer (avoid extra deps)."""
+    out: list[str] = []
+    if "meta" in data:
+        out.append("[meta]")
+        for k, v in data["meta"].items():
+            out.append(f"{k} = {json.dumps(v)}")
+        out.append("")
+    if "options" in data:
+        out.append("[options]")
+        for k, v in data["options"].items():
+            out.append(f"{k} = {json.dumps(v)}")
+        out.append("")
+    for b in data.get("bind", []) or []:
+        out.append("[[bind]]")
+        for k in ("mods", "key", "action", "desc", "category"):
+            if k in b: out.append(f"{k} = {json.dumps(b[k])}")
+        out.append("")
+    for c in data.get("chord", []) or []:
+        out.append("[[chord]]")
+        if "trigger" in c: out.append(f"trigger = {json.dumps(c['trigger'])}")
+        if "desc" in c:    out.append(f"desc    = {json.dumps(c['desc'])}")
+        if "category" in c:out.append(f"category = {json.dumps(c['category'])}")
+        if "steps" in c:
+            out.append("steps = [")
+            for s in c["steps"]:
+                out.append("  { " + ", ".join(f"{k} = {json.dumps(v)}" for k, v in s.items()) + " },")
+            out.append("]")
+        out.append("")
+    for m in data.get("mod_tap", []) or []:
+        out.append("[[mod_tap]]")
+        for k in ("mod", "action", "desc"):
+            if k in m: out.append(f"{k} = {json.dumps(m[k])}")
+        out.append("")
+    for g in data.get("gesture", []) or []:
+        out.append("[[gesture]]")
+        for k in ("type", "fingers", "direction", "action", "desc"):
+            if k in g: out.append(f"{k} = {json.dumps(g[k])}")
+        out.append("")
+    for ao in data.get("app_override", []) or []:
+        out.append("[[app_override]]")
+        if "match" in ao: out.append(f"match = {json.dumps(ao['match'])}")
+        for b in ao.get("bind", []) or []:
+            out.append("[[app_override.bind]]")
+            for k in ("mods", "key", "action", "desc", "category"):
+                if k in b: out.append(f"{k} = {json.dumps(b[k])}")
+        out.append("")
+    CFG.write_text("\n".join(out) + "\n")
+
+
+def cmd_export(args: argparse.Namespace) -> int:
+    data = _ensure_cfg()
+    fp = sys.stdout if args.out == "-" else open(args.out, "w")
+    json.dump(data, fp, indent=2)
+    if fp is not sys.stdout: fp.close()
+    return 0
+
+
+def cmd_import(args: argparse.Namespace) -> int:
+    if not args.file or not Path(args.file).exists():
+        print("usage: nyxus-hotkey import FILE.json", file=sys.stderr); return 2
+    with open(args.file) as f:
+        data = json.load(f)
+    _write_full_toml(data)
+    rpc("reload")
+    print(f"✓ imported from {args.file}")
+    return 0
+
+
+def cmd_preset(args: argparse.Namespace) -> int:
+    presets = {"macos", "windows", "vscode", "vim", "custom"}
+    if args.name not in presets:
+        print(f"presets: {sorted(presets)}", file=sys.stderr); return 2
+    data = _ensure_cfg()
+    data.setdefault("meta", {})["active_preset"] = args.name
+    _write_full_toml(data)
+    rpc("reload")
+    print(f"✓ active preset → {args.name}")
+    return 0
+
+
+def cmd_record(_a) -> int:
+    """Print the next key combo seen on /dev/input keyboards (best-effort)."""
+    try:
+        import evdev  # type: ignore
+    except ImportError:
+        print("evdev not installed (pacman -S python-evdev)", file=sys.stderr); return 1
+    devs = []
+    try:
+        for path in evdev.list_devices():
+            d = evdev.InputDevice(path)
+            caps = d.capabilities().get(evdev.ecodes.EV_KEY, [])
+            if evdev.ecodes.KEY_A in caps:
+                devs.append(d)
+    except (OSError, PermissionError) as e:
+        print("cannot open /dev/input — need input group:", e, file=sys.stderr); return 1
+    if not devs:
+        print("no keyboards", file=sys.stderr); return 1
+    print("press any key combo …  (Ctrl+C to abort)")
+    held: set[str] = set()
+    from select import select
+    mod_keys = {
+        evdev.ecodes.KEY_LEFTMETA: "SUPER", evdev.ecodes.KEY_RIGHTMETA: "SUPER",
+        evdev.ecodes.KEY_LEFTCTRL: "CTRL",  evdev.ecodes.KEY_RIGHTCTRL: "CTRL",
+        evdev.ecodes.KEY_LEFTSHIFT:"SHIFT", evdev.ecodes.KEY_RIGHTSHIFT:"SHIFT",
+        evdev.ecodes.KEY_LEFTALT:  "ALT",   evdev.ecodes.KEY_RIGHTALT:  "ALT",
+    }
+    try:
+        while True:
+            r, _, _ = select([d.fd for d in devs], [], [])
+            for d in devs:
+                if d.fd not in r: continue
+                for ev in d.read():
+                    if ev.type != evdev.ecodes.EV_KEY: continue
+                    if ev.value == 1:                    # down
+                        if ev.code in mod_keys:
+                            held.add(mod_keys[ev.code])
+                        else:
+                            try:
+                                kn = evdev.ecodes.KEY[ev.code]   # type: ignore
+                            except KeyError:
+                                kn = f"code{ev.code}"
+                            kn = kn.replace("KEY_", "").lower()
+                            mods = ",".join(sorted(held))
+                            print(f"{(mods + '+' if mods else '') + kn}")
+                            return 0
+                    elif ev.value == 0 and ev.code in mod_keys:
+                        held.discard(mod_keys[ev.code])
+    except KeyboardInterrupt:
+        return 130
+
+
+def cmd_show(_a) -> int:
+    """Print the cheat-sheet (categorised, max-width pretty)."""
+    return cmd_list(argparse.Namespace(category=None, json=False))
+
+
+def cmd_watch(_a) -> int:
+    """Subscribe to push events from the daemon."""
+    if not SOCK.exists():
+        print("daemon not running", file=sys.stderr); return 1
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.connect(str(SOCK))
+    s.send(b'{"op":"subscribe"}\n')
+    f = s.makefile("r")
+    try:
+        for line in f:
+            print(line.rstrip())
+    except KeyboardInterrupt:
+        return 130
+    return 0
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(prog="nyxus-hotkey")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    sp = sub.add_parser("list", help="list all binds")
+    sp.add_argument("--category"); sp.add_argument("--json", action="store_true")
+    sp.set_defaults(func=cmd_list)
+
+    sub.add_parser("conflicts", help="show duplicate binds").set_defaults(func=cmd_conflicts)
+    sub.add_parser("reload",    help="hot-reload daemon").set_defaults(func=cmd_reload)
+
+    sp = sub.add_parser("test", help="run an action once")
+    sp.add_argument("action"); sp.set_defaults(func=cmd_test)
+
+    sp = sub.add_parser("add", help="add a bind")
+    sp.add_argument("combo"); sp.add_argument("action")
+    sp.add_argument("--desc"); sp.add_argument("--category")
+    sp.set_defaults(func=cmd_add)
+
+    sp = sub.add_parser("rm", help="remove a bind")
+    sp.add_argument("combo"); sp.set_defaults(func=cmd_rm)
+
+    sp = sub.add_parser("export", help="dump config as JSON")
+    sp.add_argument("--out", default="-"); sp.set_defaults(func=cmd_export)
+
+    sp = sub.add_parser("import", help="overwrite config from JSON")
+    sp.add_argument("file"); sp.set_defaults(func=cmd_import)
+
+    sp = sub.add_parser("preset", help="switch active preset")
+    sp.add_argument("name"); sp.set_defaults(func=cmd_preset)
+
+    sub.add_parser("record", help="press any combo to capture").set_defaults(func=cmd_record)
+    sub.add_parser("show",   help="pretty cheat-sheet").set_defaults(func=cmd_show)
+    sub.add_parser("watch",  help="subscribe to push events").set_defaults(func=cmd_watch)
+
+    args = p.parse_args()
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
