@@ -1,0 +1,66 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shell-and-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: bash -n every shell file
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r -d '' f; do
+            if ! bash -n "$f" 2>/tmp/err; then
+              echo "::error file=$f::$(tr '\n' ' ' </tmp/err)"
+              fail=1
+            fi
+          done < <(find . \
+            -path ./node_modules -prune -o \
+            -path '*/node_modules' -prune -o \
+            -path '*/dist' -prune -o \
+            -path '*/.git' -prune -o \
+            -type f \( -name "*.sh" -o -name "*.bash" -o -name "*.hook" \) -print0)
+          # Also check the bin-style files that have no extension
+          for extra in \
+            artifacts/api-server/nyxus-scripts/nyxus-security-helper \
+            artifacts/api-server/nyxus-scripts/nyxus-bootstrap \
+            artifacts/api-server/nyxus-scripts/nyxus-resync-all.sh; do
+            [[ -f "$extra" ]] || continue
+            if ! bash -n "$extra" 2>/tmp/err; then
+              echo "::error file=$extra::$(tr '\n' ' ' </tmp/err)"
+              fail=1
+            fi
+          done
+          exit "$fail"
+
+      - name: py_compile every python file
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r -d '' f; do
+            if ! python3 -m py_compile "$f" 2>/tmp/err; then
+              echo "::error file=$f::$(tr '\n' ' ' </tmp/err)"
+              fail=1
+            fi
+          done < <(find . \
+            -path ./node_modules -prune -o \
+            -path '*/node_modules' -prune -o \
+            -path '*/dist' -prune -o \
+            -path '*/.git' -prune -o \
+            -type f -name "*.py" -print0)
+          exit "$fail"
+
+      - name: ISO build readiness
+        run: bash scripts/iso-build-verify.sh

@@ -1,0 +1,37 @@
+# NYXUS · Calamares branding descriptor (DARK MIRROR)
+---
+componentName: nyxus
+
+welcomeStyleCalamares: true
+welcomeExpandingLogo:  true
+windowExpanding:       normal
+windowSize:            900px,520px
+windowPlacement:       center
+
+strings:
+    productName:         NYXUS
+    shortProductName:    NYXUS
+    version:             "rolling"
+    shortVersion:        "rolling"
+    versionedName:       "NYXUS Linux"
+    shortVersionedName:  "NYXUS"
+    bootloaderEntryName: NYXUS
+    productUrl:          https://nyxus.replit.app
+    supportUrl:          https://nyxus.replit.app/support
+    knownIssuesUrl:      https://nyxus.replit.app/issues
+    releaseNotesUrl:     https://nyxus.replit.app/releases
+
+# Images intentionally omitted in this revision. Calamares falls back
+# to its built-in artwork when productLogo / productIcon / productWelcome
+# are not declared. The real PNGs are dropped in by nyxus-build-iso.sh
+# on the Arch host where mkarchiso runs (see branding/nyxus/README.md).
+# The verifier (scripts/iso-build-verify.sh §9) will FAIL the build if
+# this section is re-enabled but the PNGs are missing on disk.
+
+slideshow:               "show.qml"
+
+style:
+    sidebarBackground:   "#080a10"
+    sidebarText:         "#e8edf5"
+    sidebarTextSelect:   "#d4b87a"
+    sidebarTextHighlight: "#d4b87a"
