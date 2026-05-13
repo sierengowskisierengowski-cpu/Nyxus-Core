@@ -94,6 +94,7 @@ for f in nyxus_palette.py nyxus-palette.css \
            nyxus_powermenu.py nyxus_welcome.py \
            nyxus_stickies.py nyxus_notes.py nyxus_terminal.py \
            nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
+           nyxus_wallpaper_studio.py \
            nyxus_settings_accessibility.py nyxus_settings_notifications.py \
            nyxus_settings_sandbox.py nyxus_settings_snapshots.py \
            nyxus_doctor.py nyxus_launcher.py \

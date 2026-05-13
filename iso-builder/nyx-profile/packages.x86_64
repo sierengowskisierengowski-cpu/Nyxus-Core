@@ -100,6 +100,7 @@ playerctl
 pamixer
 pavucontrol
 swaybg
+swww
 wdisplays
 # wlogout removed 2026-05-11 — built from upstream source by
 # customize_airootfs.sh (was failing pacstrap on mirrors that don't yet

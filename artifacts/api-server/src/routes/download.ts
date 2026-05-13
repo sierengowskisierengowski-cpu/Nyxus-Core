@@ -58,6 +58,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus_stickies.py":      "nyxus_stickies.py",       //  4. Stickies
   "nyxus_terminal.py":      "nyxus_terminal.py",       //  6. Terminal
   "nyxus_settings.py":      "nyxus_settings.py",       //  7. Settings
+  "nyxus_wallpaper_studio.py": "nyxus_wallpaper_studio.py", //  Wallpaper Studio
   "nyxus_sysmon_gtk.py":    "nyxus_sysmon_gtk.py",     //  8. Sysmon (GTK)
   "nyxus_control.py":       "nyxus_control.py",        //  9. Control
   "nyxus_launcher.py":      "nyxus_launcher.py",       // 10. Launcher (Spotlight)
@@ -184,6 +185,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "desktop-entries/nyxus-screenshot.desktop":   "desktop-entries/nyxus-screenshot.desktop",
   "desktop-entries/nyxus-security.desktop":     "desktop-entries/nyxus-security.desktop",
   "desktop-entries/nyxus-settings.desktop":     "desktop-entries/nyxus-settings.desktop",
+  "desktop-entries/nyxus-wallpaper-studio.desktop":"desktop-entries/nyxus-wallpaper-studio.desktop",
   "desktop-entries/nyxus-splash.desktop":       "desktop-entries/nyxus-splash.desktop",
   "desktop-entries/nyxus-stickies.desktop":     "desktop-entries/nyxus-stickies.desktop",
   "desktop-entries/nyxus-store.desktop":        "desktop-entries/nyxus-store.desktop",
