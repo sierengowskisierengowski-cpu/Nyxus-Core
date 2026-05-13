@@ -281,7 +281,7 @@ rsync
 which
 
 # NYXUS installer
-calamares
+# calamares is AUR-only — built from source by customize_airootfs.sh.
 
 # ═══════════════════════════════════════════════════════════════════
 # COMPLETION WAVE 1+2+3 — backends for half-built UI, hardware /
@@ -293,16 +293,26 @@ calamares
 # ═══════════════════════════════════════════════════════════════════
 
 # ── Wave 1: backends for half-built UI pages ──────────────────────
-flatpak                   # Settings → App Sandbox backend
-xdg-desktop-portal        # flatpak portal base
-swaync                    # Settings → Notifications busctl backend
-fwupd                     # Settings → Firmware Updates backend
-gst-plugins-good          # mpv codec coverage (h264/aac/vorbis)
-gst-plugins-bad           # h265 / mkv / aac+
-gst-plugins-ugly          # mp3 / x264 (proprietary)
-gst-libav                 # ffmpeg-backed gstreamer plugins
-ffmpeg                    # general media transcoding + thumbnails
-chrony                    # accurate system time (TLS sanity)
+# Settings → App Sandbox backend.
+flatpak
+# Flatpak portal base.
+xdg-desktop-portal
+# Settings → Notifications busctl backend.
+swaync
+# Settings → Firmware Updates backend.
+fwupd
+# mpv codec coverage (h264/aac/vorbis).
+gst-plugins-good
+# h265 / mkv / aac+.
+gst-plugins-bad
+# mp3 / x264 (proprietary).
+gst-plugins-ugly
+# ffmpeg-backed gstreamer plugins.
+gst-libav
+# general media transcoding + thumbnails.
+ffmpeg
+# accurate system time (TLS sanity).
+chrony
 
 # ── Wave 2: hardware / network / FS completeness ──────────────────
 # CJK + missing standard font fallbacks.
@@ -342,9 +352,12 @@ nm-connection-editor
 avahi
 nss-mdns
 # Print/scan completeness.
-hplip                     # HP printer drivers (covers ~40% of home printers)
-sane                      # scanner backend
-simple-scan               # scanner GUI
+# HP printer drivers (covers ~40% of home printers).
+hplip
+# Scanner backend.
+sane
+# Scanner GUI.
+simple-scan
 
 # ── Wave 3: stability + security + accessibility ──────────────────
 # Out-of-memory protection (the single biggest stability win).
@@ -379,24 +392,36 @@ at-spi2-core
 # distrobox are AUR — handled by customize_airootfs.sh build step.
 snapper
 restic
-borg                      # encrypted off-site backup alt
+# Encrypted off-site backup alternative.
+borg
 # Dev / containers / power-user.
-flatpak                   # already above; re-listed here for grouping comment
-podman                    # rootless containers
-rustup                    # Rust toolchain (modern AUR builds)
-neovim                    # modern editor
-chromium                  # second browser
-appimagelauncher          # AppImage integration
+# Already listed above; re-listed here for grouping.
+flatpak
+# Rootless containers.
+podman
+# Rust toolchain (modern AUR builds).
+rustup
+# Modern editor.
+neovim
+# Secondary browser.
+chromium
+# appimagelauncher is AUR-only — built from source by customize_airootfs.sh.
 # Wayland tools that back existing services + UI conventions.
-wlsunset                  # blue-light filter (back nyxus-nightlight.service)
-swappy                    # screenshot annotation (chained from grim/slurp)
+# Blue-light filter (backs nyxus-nightlight.service).
+wlsunset
+# Screenshot annotation (chained from grim/slurp).
+swappy
 # Boot-time multi-OS detection (off by default in stock Arch).
 os-prober
 # Lightweight TTY greeter fallback if SDDM ever crashes.
 greetd
 greetd-tuigreet
 # Misc system polish.
-logrotate                 # ~/.cache/nyxus/*.log rotation
-zram-generator            # already above; grouping
-man-db                    # man pages (we ship some)
-man-pages                 # base man-pages corpus
+# ~/.cache/nyxus/*.log rotation.
+logrotate
+# Already listed above; grouping.
+zram-generator
+# man page database.
+man-db
+# base man-pages corpus.
+man-pages
