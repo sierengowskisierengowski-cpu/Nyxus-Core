@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Wallpaper Studio
+GenericName=Wallpaper Studio
+Comment=Browse, preview, and schedule NYXUS wallpapers
+Exec=/usr/local/bin/nyxus wallpaper_studio
+TryExec=/usr/local/bin/nyxus
+Icon=preferences-desktop-wallpaper
+Terminal=false
+Categories=Graphics;Utility;
+Keywords=NYXUS;Wallpaper;Studio;Background;swww;
+StartupNotify=true
+StartupWMClass=nyxus.wallpaperstudio
+X-NYXUS-Module=nyxus_wallpaper_studio

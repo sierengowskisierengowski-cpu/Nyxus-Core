@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
-# NYXUS Intel — launcher (Option A, baked into ISO airootfs)
-# Resolves to /opt/nyxus-intel/main.py per the install.sh INSTALL_DIR convention.
-exec python3 /opt/nyxus-intel/main.py "$@"
+# NYXUS Phantom launcher — Copyright © 2026 Joseph Sierengowski
+exec python3 -c '
+import sys
+sys.path.insert(0, "/opt/nyxus-intel")
+from main import main
+sys.exit(main())
+' "$@"
