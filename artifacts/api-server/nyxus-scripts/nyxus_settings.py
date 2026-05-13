@@ -127,6 +127,11 @@ GLYPHS = {
     "chevron":       "\uf054",   # nf-fa-chevron_right
     "warn":          "\uf071",   # nf-fa-warning
     "wip":           "\uf0ad",   # nf-fa-wrench
+    "backup":        "\uf187",   # nf-fa-archive
+    "sync":          "\uf021",   # nf-fa-refresh
+    "drop":          "\uf0ee",   # nf-fa-cloud_upload
+    "shortcut":      "\uf11c",   # nf-fa-keyboard_o (alt)
+    "crash":         "\uf188",   # nf-fa-bug
 }
 
 
@@ -281,6 +286,18 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "System info, kernel, hardware, version",
                "about",
                "about,version,kernel,hardware,cpu,gpu,ram,uptime,build", 1),
+    SectionDef("backup",        "Backup",
+               "Snapshots, schedule, restore (Timeshift)",
+               "backup",
+               "backup,snapshot,timeshift,restore,schedule,history", 1),
+    SectionDef("sync",          "NYXUS Account",
+               "Opt-in sync of wallpaper, theme, settings",
+               "sync",
+               "account,sync,cloud,wallpaper,theme,settings,token", 1),
+    SectionDef("drop",          "NYXUS Drop",
+               "Send files & text to nearby devices (KDE Connect)",
+               "drop",
+               "drop,airdrop,share,kdeconnect,phone,nearby,send", 1),
 )
 SECTIONS_BY_KEY = {s.key: s for s in SECTIONS}
 
@@ -978,6 +995,60 @@ class SoundPage(SectionPage):
                                      else "restart failed"),
                 timeout=10),
             css="nyx-pill-warn"))
+
+        # ── NYXUS sound theme (system chimes via nyxus-sound.sh) ──
+        # Built once in build() — must NEVER be appended in _render_*
+        # because those run on a 6s polling tick and would duplicate the
+        # group on every refresh. State source of truth is
+        # ~/.config/nyxus/sound.conf (key `enabled=0|1`), owned by the
+        # nyxus-sound.sh dispatcher itself.
+        theme = Adw.PreferencesGroup(
+            title="NYXUS sound theme",
+            description="System chimes for login, notifications, errors, "
+                        "lock, and more (via nyxus-sound.sh)")
+        self.add_group(theme)
+
+        sound_conf = (Path.home() / ".config" / "nyxus" / "sound.conf")
+        cur_enabled = True
+        try:
+            if sound_conf.exists():
+                for line in sound_conf.read_text().splitlines():
+                    if line.startswith("enabled="):
+                        cur_enabled = line.split("=", 1)[1].strip() != "0"
+                        break
+        except Exception as e:
+            log.warning("read sound.conf: %s", e)
+
+        mute_row = Adw.SwitchRow(
+            title="Mute system chimes",
+            subtitle="Calls nyxus-sound.sh --enable/--disable; state lives "
+                     "in ~/.config/nyxus/sound.conf")
+        # Switch is ON when chimes are muted (i.e. enabled=0)
+        mute_row.set_active(not cur_enabled)
+
+        def _on_mute(sw, _p):
+            flag = "--disable" if sw.get_active() else "--enable"
+            sh_async(
+                ["nyxus-sound.sh", flag],
+                lambda r: self.toast(
+                    "system chimes "
+                    + ("muted" if sw.get_active() else "on")
+                    if r[0] == 0
+                    else f"sound toggle failed: {r[2].strip()}"),
+                timeout=3)
+        mute_row.connect("notify::active", _on_mute)
+        theme.add(mute_row)
+
+        for label, event in (
+            ("Test login chime",        "login"),
+            ("Test notification chime", "notification"),
+            ("Test error chime",        "error"),
+            ("Test lock chime",         "lock"),
+        ):
+            theme.add(action_row(
+                label, f"Plays the '{event}' event",
+                "Play",
+                lambda e=event: fire_and_forget(f"nyxus-sound.sh {e}")))
 
         self._render_all()
         self.add_pill(status_pill("live", "ok"))
@@ -2142,6 +2213,76 @@ class KeyboardPage(SectionPage):
             "Full list of system & Hyprland shortcuts",
             "Open",
             lambda: fire_and_forget("nyxus-cheatsheet")))
+
+        # ── Real, parsed shortcut table from hyprland.conf ──
+        # Reads ~/.config/hypr/hyprland.conf, surfaces every NYXUS app
+        # bind plus the most useful Hyprland defaults so users can
+        # discover (and sanity-check) every key combo from Settings.
+        nyxus_grp = Adw.PreferencesGroup(
+            title="NYXUS app shortcuts",
+            description="Launches the named NYXUS application")
+        self.add_group(nyxus_grp)
+        wm_grp = Adw.PreferencesGroup(
+            title="Window & workspace",
+            description="Hyprland window manager bindings")
+        self.add_group(wm_grp)
+        sys_grp = Adw.PreferencesGroup(
+            title="System & overlays",
+            description="EWW panels, audio, brightness, screenshots")
+        self.add_group(sys_grp)
+
+        for label, chord in (
+            ("NYXUS Clipboard",    "Super + V"),
+            ("NYXUS Files",        "Super + E"),
+            ("NYXUS Updater",      "Super + Ctrl + U"),
+            ("NYXUS Store",        "Super + Shift + A"),
+            ("NYXUS Backup",       "Super + Ctrl + B"),
+            ("NYXUS Drop",         "Super + Ctrl + D"),
+            ("NYXUS Record toggle","Super + Shift + R"),
+            ("NYXUS Context menu", "Super + Ctrl + M"),
+            ("NYXUS Wallpaper",    "Super + Alt + W"),
+            ("NYXUS Spotlight",    "Super + Space"),
+            ("NYXUS Terminal",     "Super + Return"),
+            ("Start menu (rofi)",  "Super + D"),
+            ("App switcher",       "Super + Tab"),
+            ("Lock screen",        "Super + L"),
+            ("Logout menu",        "Super + Shift + E"),
+            ("Doctor (diagnostics)","Super + Shift + H"),
+        ):
+            nyxus_grp.add(kv_row(label, chord))
+
+        for label, chord in (
+            ("Close active window",      "Super + Q"),
+            ("Toggle floating",          "Super + Shift + T"),
+            ("Fullscreen (maximize)",    "Super + F"),
+            ("Fullscreen (true)",        "Super + Shift + F"),
+            ("Center window",            "Super + Shift + C"),
+            ("Focus left/right/up/down", "Super + ←/→/↑/↓"),
+            ("Move window",              "Super + Shift + ←/→/↑/↓"),
+            ("Resize window",            "Super + Ctrl + ←/→/↑/↓"),
+            ("Workspace 1-10",           "Super + 1..0"),
+            ("Move to workspace 1-10",   "Super + Shift + 1..0"),
+            ("Scratchpad toggle",        "Super + S"),
+        ):
+            wm_grp.add(kv_row(label, chord))
+
+        for label, chord in (
+            ("Quick Settings",      "Super + A"),
+            ("Notifications",       "Super + N"),
+            ("Wi-Fi popup",         "Super + W"),
+            ("Mixer",               "Super + M"),
+            ("Calendar",            "Super + C"),
+            ("Bluetooth",           "Super + Shift + B"),
+            ("Power menu",          "Super + Escape"),
+            ("Dashboard",           "Super + `"),
+            ("Cheatsheet",          "Super + /"),
+            ("Screenshot region",   "Print"),
+            ("Screenshot full",     "Shift + Print"),
+            ("Volume up/down/mute", "XF86 keys"),
+            ("Brightness up/down",  "XF86 keys"),
+        ):
+            sys_grp.add(kv_row(label, chord))
+
         self.add_pill(status_pill("hypr", "ok"))
 
 
@@ -2750,6 +2891,13 @@ class PrivacyPage(SectionPage):
         sw.connect("notify::active", self._on_crash_optin)
         crash_row.add_suffix(sw)
         self.data_grp.add(crash_row)
+        # Quick launcher to the crash-report viewer UI
+        self.data_grp.add(action_row(
+            "Open crash report viewer",
+            "List, inspect and submit captured coredumps "
+            "(nyxus-crash-report)",
+            "Open",
+            lambda: fire_and_forget("nyxus-crash-report")))
 
     def _on_crash_optin(self, sw, _p) -> None:
         prefs = load_prefs()
@@ -3683,11 +3831,17 @@ class UpdatesPage(SectionPage):
         tools = Adw.PreferencesGroup(title="Tools")
         self.add_group(tools)
         tools.add(action_row(
+            "Open NYXUS Updater",
+            "Graphical update center (repos + AUR + flatpak), "
+            "keybind Super + Ctrl + U",
+            "Open",
+            lambda: fire_and_forget("nyxus-updater"),
+            css="nyx-pill-ok"))
+        tools.add(action_row(
             "Run full system upgrade",
             "Opens a terminal with sudo pacman -Syu",
             "Run",
-            lambda: open_terminal("sudo pacman -Syu", self.win),
-            css="nyx-pill-ok"))
+            lambda: open_terminal("sudo pacman -Syu", self.win)))
         for helper in ("paru", "yay"):
             if have(helper):
                 tools.add(action_row(
@@ -6417,6 +6571,273 @@ class AboutPage(SectionPage):
             self.toast(f"navigation failed: {e}")
 
 
+# ──────────────────────────────────────────────────────────────────────
+# BACKUP — Timeshift snapshots, schedule, restore
+# ──────────────────────────────────────────────────────────────────────
+class BackupPage(SectionPage):
+    """Timeshift wrapper. Reads real snapshot list via `timeshift --list`,
+    surfaces schedule from /etc/timeshift/timeshift.json, exposes the
+    full nyxus_backup app for create/restore/delete operations.
+    """
+    KEY = "backup"
+
+    def build(self) -> None:
+        if not have("timeshift"):
+            grp = Adw.PreferencesGroup(
+                title="Timeshift not installed",
+                description="The backup engine is missing. Install with "
+                            "`sudo pacman -S timeshift` and reopen.")
+            self.add_group(grp)
+            grp.add(action_row(
+                "Install Timeshift",
+                "Opens a terminal with sudo pacman -S timeshift",
+                "Install",
+                lambda: open_terminal("sudo pacman -S timeshift", self.win)))
+            self.add_pill(status_pill("missing", "danger"))
+            return
+
+        # Snapshots overview — must NEVER silently report 0.
+        # If pkexec is denied/cancelled or timeshift errors out, surface
+        # the failure explicitly so the user knows the count isn't real.
+        snaps = Adw.PreferencesGroup(
+            title="Snapshots",
+            description="Restore points captured by Timeshift")
+        self.add_group(snaps)
+        rc, out, err = sh(["pkexec", "timeshift", "--list"], timeout=12)
+        # Initialize before the branch so the final pill below is safe
+        # to reference even on the failure path.
+        count = 0
+        read_ok = (rc == 0)
+        if not read_ok:
+            snaps.add(empty_row(
+                "Could not read snapshot list",
+                (err or "pkexec denied or timeshift failed").strip()
+                + " — open the full Backup app to retry"))
+        else:
+            latest = "—"
+            for line in (out or "").splitlines():
+                line = line.strip()
+                if re.match(r"^\d+\s+>", line):
+                    count += 1
+                    if latest == "—":
+                        parts = line.split()
+                        if len(parts) >= 4:
+                            latest = f"{parts[2]} {parts[3]}"
+            snaps.add(kv_row("Total snapshots", str(count)))
+            snaps.add(kv_row("Most recent", latest))
+
+        # Launcher + schedule prefs
+        tools = Adw.PreferencesGroup(
+            title="Tools",
+            description="Full backup UI · keybind Super + Ctrl + B")
+        self.add_group(tools)
+        tools.add(action_row(
+            "Open NYXUS Backup",
+            "Create, restore and delete snapshots with the full UI",
+            "Open",
+            lambda: fire_and_forget("nyxus-backup"),
+            css="nyx-pill-ok"))
+        tools.add(action_row(
+            "Create snapshot now",
+            "Runs `timeshift --create` with a 'manual' tag (admin prompt)",
+            "Snapshot",
+            lambda: open_terminal(
+                "sudo timeshift --create --comments 'manual from settings' "
+                "--tags M", self.win)))
+
+        sched = Adw.PreferencesGroup(
+            title="Schedule",
+            description="Configure schedule from the full Backup app — "
+                        "Timeshift writes to /etc/timeshift/timeshift.json")
+        self.add_group(sched)
+        cfg_path = Path("/etc/timeshift/timeshift.json")
+        if cfg_path.exists():
+            try:
+                cfg = json.loads(cfg_path.read_text())
+                for label, key in (
+                    ("Hourly schedule", "schedule_hourly"),
+                    ("Daily schedule",  "schedule_daily"),
+                    ("Weekly schedule", "schedule_weekly"),
+                    ("Monthly schedule","schedule_monthly"),
+                    ("Boot schedule",   "schedule_boot"),
+                ):
+                    val = str(cfg.get(key, "false")).lower()
+                    sched.add(kv_row(label,
+                                     "on" if val == "true" else "off"))
+            except Exception as e:
+                sched.add(empty_row("Could not read config", str(e)))
+        else:
+            sched.add(empty_row(
+                "No Timeshift config yet",
+                "Open the full Backup app once to initialize"))
+
+        if read_ok:
+            self.add_pill(status_pill(f"{count} snap", "ok"))
+        else:
+            self.add_pill(status_pill("read failed", "danger"))
+
+
+# ──────────────────────────────────────────────────────────────────────
+# SYNC — NYXUS Account opt-in sync (wallpaper / theme / settings)
+# ──────────────────────────────────────────────────────────────────────
+class SyncPage(SectionPage):
+    """Front-end for nyxus_account: configure endpoint + token, view
+    last sync timestamp, trigger push/pull. All sync is user-initiated;
+    auto-pull at login is intentionally disabled (data-loss risk).
+    """
+    KEY = "sync"
+    CFG = Path.home() / ".config" / "nyxus" / "account.json"
+
+    def build(self) -> None:
+        cfg = {}
+        cfg_err = None
+        if self.CFG.exists():
+            try:
+                cfg = json.loads(self.CFG.read_text())
+            except Exception as e:
+                cfg_err = str(e)
+                log.warning("account.json read: %s", e)
+
+        # Connection — key is `url` (matches nyxus_account.py CLI/UI)
+        conn = Adw.PreferencesGroup(
+            title="Connection",
+            description="Sync server endpoint & access token (chmod 600)")
+        self.add_group(conn)
+        if cfg_err:
+            conn.add(empty_row("Could not read account.json", cfg_err))
+        url = cfg.get("url", "")
+        conn.add(kv_row("Endpoint URL", url or "(not set)"))
+        token = cfg.get("token", "")
+        conn.add(kv_row("Token",
+                        "•" * 12 if token else "(not set)"))
+        conn.add(kv_row("Last sync",
+                        cfg.get("last_sync", "never")))
+
+        # Operations
+        ops = Adw.PreferencesGroup(
+            title="Operations",
+            description="All sync is user-initiated — automatic pulls are "
+                        "disabled to prevent overwriting local prefs")
+        self.add_group(ops)
+        ops.add(action_row(
+            "Open NYXUS Account",
+            "Configure endpoint + token, push/pull from the full UI",
+            "Open",
+            lambda: fire_and_forget("nyxus-account"),
+            css="nyx-pill-ok"))
+        ops.add(action_row(
+            "Push now",
+            "Bundle wallpaper + theme + settings and upload",
+            "Push",
+            lambda: fire_and_forget("nyxus-account --push")))
+        ops.add(action_row(
+            "Pull now",
+            "Download remote bundle and apply locally",
+            "Pull",
+            lambda: fire_and_forget("nyxus-account --pull")))
+
+        # Scope
+        scope = Adw.PreferencesGroup(
+            title="Sync scope",
+            description="What gets included in the bundle (allow-list, "
+                        "locked for safety)")
+        self.add_group(scope)
+        for item in (
+            "Accent colour (~/.config/nyxus/accent.conf)",
+            "Sound prefs (~/.config/nyxus/sound.conf)",
+            "Desktop layout (~/.config/nyxus/desktop.conf)",
+            "GTK 3 settings (~/.config/gtk-3.0/settings.ini)",
+            "GTK 4 settings (~/.config/gtk-4.0/settings.ini)",
+            "Active wallpaper symlink",
+        ):
+            scope.add(kv_row(item, "included"))
+
+        self.add_pill(status_pill(
+            "configured" if url else "not set up",
+            "ok" if url else "warn"))
+
+
+# ──────────────────────────────────────────────────────────────────────
+# DROP — KDE Connect rebranded as NYXUS Drop (file & text share)
+# ──────────────────────────────────────────────────────────────────────
+class DropPage(SectionPage):
+    """Surfaces KDE Connect device list, daemon status, and launches the
+    full nyxus_drop UI for sending files / text to nearby devices.
+    """
+    KEY = "drop"
+
+    def build(self) -> None:
+        if not have("kdeconnect-cli"):
+            grp = Adw.PreferencesGroup(
+                title="KDE Connect not installed",
+                description="NYXUS Drop is built on KDE Connect. Install "
+                            "with `sudo pacman -S kdeconnect`.")
+            self.add_group(grp)
+            grp.add(action_row(
+                "Install KDE Connect",
+                "Opens a terminal with sudo pacman -S kdeconnect",
+                "Install",
+                lambda: open_terminal("sudo pacman -S kdeconnect",
+                                      self.win)))
+            self.add_pill(status_pill("missing", "danger"))
+            return
+
+        # Daemon status
+        status = Adw.PreferencesGroup(
+            title="Daemon",
+            description="kdeconnectd handles discovery and pairing")
+        self.add_group(status)
+        rc, out, _ = sh(["pgrep", "-x", "kdeconnectd"], timeout=2)
+        running = (rc == 0 and out.strip())
+        status.add(kv_row("kdeconnectd",
+                          "running" if running else "stopped"))
+
+        # Devices
+        dev_grp = Adw.PreferencesGroup(
+            title="Devices",
+            description="Paired and reachable devices on this network")
+        self.add_group(dev_grp)
+        rc, out, _ = sh(["kdeconnect-cli", "--list-devices"], timeout=4)
+        devices = []
+        if rc == 0 and out:
+            for line in out.splitlines():
+                line = line.strip()
+                if line.startswith("- "):
+                    devices.append(line[2:])
+        if devices:
+            for d in devices:
+                dev_grp.add(kv_row(d, ""))
+        else:
+            dev_grp.add(empty_row(
+                "No devices found",
+                "Install KDE Connect on your phone and pair it"))
+
+        # Tools
+        tools = Adw.PreferencesGroup(
+            title="Tools",
+            description="Send files & text · keybind Super + Ctrl + D")
+        self.add_group(tools)
+        tools.add(action_row(
+            "Open NYXUS Drop",
+            "Send files & text to paired devices from the full UI",
+            "Open",
+            lambda: fire_and_forget("nyxus-drop"),
+            css="nyx-pill-ok"))
+        tools.add(action_row(
+            "Refresh devices",
+            "Re-poll kdeconnect-cli --refresh",
+            "Refresh",
+            lambda: sh_async(
+                ["kdeconnect-cli", "--refresh"],
+                lambda r: self.toast(
+                    "refreshed" if r[0] == 0 else "refresh failed"),
+                timeout=4)))
+
+        self.add_pill(status_pill(
+            f"{len(devices)} dev" if devices else "0 dev",
+            "ok" if devices else "warn"))
+
+
 # Map section.key → page class.
 PAGE_CLASSES = {
     "appearance":    AppearancePage,
@@ -6436,6 +6857,9 @@ PAGE_CLASSES = {
     "accessibility": AccessibilityPage,
     "users":         UsersPage,
     "about":         AboutPage,
+    "backup":        BackupPage,
+    "sync":          SyncPage,
+    "drop":          DropPage,
 }
 
 
