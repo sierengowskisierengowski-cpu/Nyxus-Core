@@ -327,6 +327,16 @@ if dl "nyxus-eww-launch" "/tmp/nyxus-eww-launch.new"; then
   fi
   rm -f /tmp/nyxus-eww-launch.new
 fi
+if dl "nyxus-mission-control-toggle" "/tmp/nyxus-mission-control-toggle.new"; then
+  if sudo -n install -m 0755 /tmp/nyxus-mission-control-toggle.new /usr/local/bin/nyxus-mission-control-toggle 2>/dev/null; then
+    ok "nyxus-mission-control-toggle → /usr/local/bin/"
+  else
+    install -m 0755 /tmp/nyxus-mission-control-toggle.new "$HOME/.local/bin/nyxus-mission-control-toggle" 2>/dev/null \
+      && ok "nyxus-mission-control-toggle → ~/.local/bin/ (sudo unavailable)" \
+      || failed=$((failed+1))
+  fi
+  rm -f /tmp/nyxus-mission-control-toggle.new
+fi
 
 # ── A4 FIX (2026-05-12): bootstrap shims + welcome wizard parity ─────────────
 # hyprland.conf references nyxus-bootstrap, nyxus-wait-bootstrap, nyxus-welcome,
@@ -369,15 +379,16 @@ fi
 
 # Optional systemd user service (idempotent — Hyprland exec-once also works)
 mkdir -p "$HOME/.config/systemd/user"
-dl "nyxus-eww.service" "$HOME/.config/systemd/user/nyxus-eww.service" \
-  && systemctl --user daemon-reload 2>/dev/null || true
-dl "nyxus-crashd.service" "$HOME/.config/systemd/user/nyxus-crashd.service" \
-  && systemctl --user daemon-reload 2>/dev/null || true
+_any_user_units_updated=0
+dl "nyxus-eww.service" "$HOME/.config/systemd/user/nyxus-eww.service" && _any_user_units_updated=1 || true
+dl "nyxus-crashd.service" "$HOME/.config/systemd/user/nyxus-crashd.service" && _any_user_units_updated=1 || true
 # USB plug-in / removal toast notifier — toggle lives in
 # Settings → Notifications → External devices.
 dl "nyxus-usb-watch.service" \
-   "$HOME/.config/systemd/user/nyxus-usb-watch.service" \
-  && systemctl --user daemon-reload 2>/dev/null || true
+   "$HOME/.config/systemd/user/nyxus-usb-watch.service" && _any_user_units_updated=1 || true
+if [ "$_any_user_units_updated" -eq 1 ]; then
+  systemctl --user daemon-reload 2>/dev/null || true
+fi
 
 # ── Welcome Wizard launcher / helper / policy ────────────────────────────────
 hdr "Welcome Wizard"

@@ -251,6 +251,9 @@ ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyx
 # rev r6-eww: waybar-stats / waybar-ticker removed. nyxus-eww-launch added.
 install -m 0755 "${NS}/wallpaper-rotate.sh"  "${LBIN}/wallpaper-rotate"
 install -m 0755 "${NS}/nyxus-eww-launch"     "${LBIN}/nyxus-eww-launch"
+if [[ -f "${NS}/nyxus-mission-control-toggle" ]]; then
+  install -m 0755 "${NS}/nyxus-mission-control-toggle" "${LBIN}/nyxus-mission-control-toggle"
+fi
 if [[ -f "${NS}/nyxus-set-wallpaper.sh" ]]; then
   install -m 0755 "${NS}/nyxus-set-wallpaper.sh" "${LBIN}/nyxus-set-wallpaper.sh"
 fi

@@ -49,6 +49,7 @@ file_permissions=(
   ["/usr/local/bin/nyxus-desktop"]="0:0:755"
   ["/usr/local/bin/nyxus-drop"]="0:0:755"
   ["/usr/local/bin/nyxus-eww-launch"]="0:0:755"
+  ["/usr/local/bin/nyxus-mission-control-toggle"]="0:0:755"
   ["/usr/local/bin/nyxus-files"]="0:0:755"
   ["/usr/local/bin/nyxus-record"]="0:0:755"
   ["/usr/local/bin/nyxus-security"]="0:0:755"
