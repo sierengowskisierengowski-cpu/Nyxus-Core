@@ -1,0 +1,53 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: nyxus rolling\n"
+"PO-Revision-Date: 2026-05-13 00:00+0000\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "NYXUS Settings"
+msgstr "Paramètres NYXUS"
+
+msgid "NYXUS Security Center"
+msgstr "Centre de sécurité NYXUS"
+
+msgid "NYXUS Backup"
+msgstr "Sauvegarde NYXUS"
+
+msgid "NYXUS Welcome"
+msgstr "Bienvenue dans NYXUS"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Apply"
+msgstr "Appliquer"
+
+msgid "Restart"
+msgstr "Redémarrer"
+
+msgid "Save"
+msgstr "Enregistrer"
+
+msgid "Delete"
+msgstr "Supprimer"
+
+msgid "Restore"
+msgstr "Restaurer"
+
+msgid "Snapshot created"
+msgstr "Instantané créé"
+
+msgid "Firewall"
+msgstr "Pare-feu"
+
+msgid "Privacy"
+msgstr "Confidentialité"
+
+msgid "Updates"
+msgstr "Mises à jour"

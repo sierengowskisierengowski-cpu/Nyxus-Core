@@ -277,3 +277,6 @@ pacman-contrib
 reflector
 rsync
 which
+
+# NYXUS installer
+calamares
