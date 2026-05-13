@@ -19,7 +19,7 @@ set -u
 CONF="${HOME}/.config/eww/nyxus.conf"
 [[ -r "$CONF" ]] && . "$CONF"
 
-BARS="${NYXUS_EWW_BARS:-bar-bottom bar-top bar-left bar-right}"
+BARS="${NYXUS_EWW_BARS:-bar-bottom bar-top bar-left bar-right dock}"
 TIMEOUT_SECS="${NYXUS_EWW_TIMEOUT:-30}"
 LOG_DIR="${NYXUS_EWW_LOG_DIR:-$HOME/.cache/nyxus-eww}"
 mkdir -p "$LOG_DIR"

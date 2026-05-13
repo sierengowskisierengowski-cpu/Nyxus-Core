@@ -5,7 +5,7 @@
 set -u
 
 id="${1:-}"; shift || true
-if [[ -z "$id" || $# -eq 0 ]]; then exit 0; fi
+[[ -z "$id" || $# -eq 0 ]] && exit 0
 
 paths=()
 for arg in "$@"; do
@@ -15,14 +15,14 @@ for arg in "$@"; do
   esac
 done
 
+# Always pass `--` so a path like `-rf` can't be consumed as a flag.
 case "$id" in
   trash)
-    for p in "${paths[@]}"; do gio trash "$p" 2>/dev/null || mv "$p" "$HOME/.local/share/Trash/files/" ; done
+    for p in "${paths[@]}"; do
+      gio trash -- "$p" 2>/dev/null || mv -- "$p" "$HOME/.local/share/Trash/files/"
+    done
     ;;
-  firefox|chromium|brave)        "$id" "${paths[@]}" >/dev/null 2>&1 & ;;
-  nyxus-notepad|gedit|nano|code) ${id##nyxus-} "${paths[@]}" >/dev/null 2>&1 & ;;
-  *)
-    # default: hand off to xdg-open per file (lets the user's MIME assoc decide)
-    for p in "${paths[@]}"; do xdg-open "$p" >/dev/null 2>&1 & done
-    ;;
+  firefox|chromium|brave)         "$id" -- "${paths[@]}" >/dev/null 2>&1 & ;;
+  nyxus-notepad|gedit|nano|code)  "${id##nyxus-}" -- "${paths[@]}" >/dev/null 2>&1 & ;;
+  *) for p in "${paths[@]}"; do xdg-open -- "$p" >/dev/null 2>&1 & done ;;
 esac

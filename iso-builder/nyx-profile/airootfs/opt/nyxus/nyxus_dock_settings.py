@@ -53,12 +53,17 @@ def load_cfg() -> dict:
 
 
 def save_cfg(cfg: dict) -> None:
-    # delegate to daemon's persist via a synthetic pin/unpin or reload — simplest:
-    # write the file ourselves and ask the daemon to reload.
+    """Persist config to disk, then ask the daemon to reload — but do the
+    socket call on a background thread so the GTK main loop never blocks
+    on a missing or hung daemon."""
+    import threading
     from nyxus_dockd import _render_toml  # type: ignore
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     CONFIG_PATH.write_text(_render_toml(cfg))
-    call_daemon("reload")
+    threading.Thread(
+        target=lambda: call_daemon("reload"),
+        daemon=True, name="dock-reload",
+    ).start()
 
 
 # ── GTK UI ─────────────────────────────────────────────────────────────

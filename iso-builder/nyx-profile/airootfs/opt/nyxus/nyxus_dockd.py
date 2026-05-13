@@ -300,8 +300,12 @@ class DockDaemon:
         self.workspaces_active: int = 1
         self.lock = threading.Lock()
         self.stop = threading.Event()
-        self.subscribers: list[Any] = []     # stdout stream consumers (file objs)
+        # Long-lived `op:"subscribe"` connections that get every state
+        # change pushed as a JSON line. cmd_loop adds them; publish()
+        # writes to them; both go through subscribers_lock.
+        self.subscribers: list[socket.socket] = []
         self.subscribers_lock = threading.Lock()
+        self.publish_lock = threading.Lock()  # serialise publish() across threads
         self.last_state_hash: int = 0
         self.last_state_text: str = ""
 
@@ -547,34 +551,42 @@ class DockDaemon:
         }
 
     def publish(self) -> None:
-        state = self.compose_state()
-        text = json.dumps(state, separators=(",", ":"))
-        h = hash(text)
-        if h == self.last_state_hash:
-            return
-        self.last_state_hash = h
-        self.last_state_text = text
-        # atomic write
-        try:
-            STATE_DIR.mkdir(parents=True, exist_ok=True)
-            tmp = STATE_FILE.with_suffix(".tmp")
-            tmp.write_text(text)
-            tmp.replace(STATE_FILE)
-        except OSError as e:
-            LOG.warning("state write failed: %s", e)
-        # fan out to stream subscribers (eww deflisten or `nyxus-dock --watch`)
+        # Serialise across the hypr/event, periodic, and cmd threads. Without
+        # this lock two publishers can both observe stale `last_state_hash`,
+        # race the atomic file write, and double-fan-out to subscribers.
+        with self.publish_lock:
+            state = self.compose_state()
+            text = json.dumps(state, separators=(",", ":"))
+            h = hash(text)
+            if h == self.last_state_hash:
+                return
+            self.last_state_hash = h
+            self.last_state_text = text
+            payload = (text + "\n").encode()
+            # atomic write
+            try:
+                STATE_DIR.mkdir(parents=True, exist_ok=True)
+                tmp = STATE_FILE.with_suffix(".tmp")
+                tmp.write_text(text)
+                tmp.replace(STATE_FILE)
+            except OSError as e:
+                LOG.warning("state write failed: %s", e)
+        # fan-out outside publish_lock so a slow subscriber can't stall publishes.
         with self.subscribers_lock:
-            dead = []
+            dead: list[socket.socket] = []
             for sub in self.subscribers:
                 try:
-                    sub.write(text + "\n")
-                    sub.flush()
-                except (BrokenPipeError, ValueError, OSError):
+                    sub.sendall(payload)
+                except (BrokenPipeError, ConnectionResetError, OSError):
                     dead.append(sub)
             for d in dead:
                 try:
                     self.subscribers.remove(d)
                 except ValueError:
+                    pass
+                try:
+                    d.close()
+                except OSError:
                     pass
 
     # ── periodic refresh (badges/trash/live overlay) ────────────────────
@@ -611,15 +623,37 @@ class DockDaemon:
             try:
                 conn.settimeout(2.0)
                 req = conn.recv(8192).decode().strip()
+                # `op:"subscribe"` opts out of the request/response model:
+                # the connection becomes a long-lived push channel that
+                # `publish()` writes JSON lines to whenever state changes.
+                # We hand it to the subscribers list and DON'T close it.
+                try:
+                    obj = json.loads(req)
+                except json.JSONDecodeError:
+                    obj = {}
+                if obj.get("op") == "subscribe":
+                    initial = self.last_state_text or json.dumps(self.compose_state())
+                    try:
+                        conn.settimeout(None)
+                        conn.sendall((initial + "\n").encode())
+                    except OSError:
+                        try: conn.close()
+                        except OSError: pass
+                        continue
+                    with self.subscribers_lock:
+                        self.subscribers.append(conn)
+                    continue  # do NOT close
                 resp = self._handle_cmd(req)
                 conn.sendall((resp + "\n").encode())
             except OSError as e:
                 LOG.debug("cmd conn: %s", e)
-            finally:
-                try:
-                    conn.close()
-                except OSError:
-                    pass
+                try: conn.close()
+                except OSError: pass
+                continue
+            try:
+                conn.close()
+            except OSError:
+                pass
 
         try:
             srv.close()
@@ -844,30 +878,34 @@ def main() -> int:
 
 
 def _watch_mode() -> int:
-    """For eww deflisten — print state JSON whenever it changes."""
-    last = ""
+    """For eww `deflisten` — open a long-lived subscription to the daemon
+    and print every JSON state line as it arrives. Reconnects on daemon
+    restart with exponential backoff."""
+    backoff = 0.5
     while True:
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
-                s.settimeout(2.0)
                 s.connect(str(CMD_SOCK))
-                s.sendall(b'{"op":"state"}')
-                data = b""
+                s.sendall(b'{"op":"subscribe"}')
+                s.settimeout(None)
+                backoff = 0.5
+                buf = b""
                 while True:
-                    chunk = s.recv(8192)
+                    chunk = s.recv(65536)
                     if not chunk:
-                        break
-                    data += chunk
-                text = data.decode().strip()
-                if text and text != last:
-                    sys.stdout.write(text + "\n")
-                    sys.stdout.flush()
-                    last = text
+                        break  # daemon went away
+                    buf += chunk
+                    while b"\n" in buf:
+                        line, buf = buf.split(b"\n", 1)
+                        if line:
+                            sys.stdout.write(line.decode(errors="replace") + "\n")
+                            sys.stdout.flush()
         except (FileNotFoundError, ConnectionRefusedError, OSError):
             pass
         except KeyboardInterrupt:
             return 0
-        time.sleep(1.0)
+        time.sleep(backoff)
+        backoff = min(backoff * 1.5, 5.0)
 
 
 if __name__ == "__main__":
