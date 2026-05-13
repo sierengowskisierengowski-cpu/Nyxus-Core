@@ -835,3 +835,6 @@
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-notifications"
   :geometry (geometry :x "16" :y "78" :width "440px" :height "640px" :anchor "bottom right")
   (notifications_layout))
+
+; ── NYXUS Dock module ─────────────────────────────────────────────────
+(include "dock.yuck")
