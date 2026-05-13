@@ -1133,15 +1133,75 @@ class AccountPage(SecPage):
                          "/etc/pam.d/system-auth"])
         active = (rc == 0 and bool(out))
         sw3 = Gtk.Switch(); sw3.set_active(active)
+        # Hard two-step confirmation guard — see helper for the matching
+        # --confirm=ENABLE-LOCKOUT-RISK token. The switch is reset to its
+        # previous state until the user clicks through the modal dialog.
+        self._faillock_busy = False
         def toggle_lockout(s, *_):
-            arg = "enable-faillock" if s.get_active() else "disable-faillock"
-            helper_async([arg],
-                on_done=lambda *_: (toast(f"faillock → {arg}", kind="warn"),
-                                    self.refresh()))
+            if self._faillock_busy:
+                return
+            want_on = s.get_active()
+            if want_on == active:
+                return
+            if not want_on:
+                # Disabling is safe — go straight through.
+                helper_async(["disable-faillock"],
+                    on_done=lambda *_: (toast("PAM faillock disabled",
+                                              kind="ok"), self.refresh()))
+                return
+            # Enabling — require explicit modal confirmation. Revert the
+            # switch immediately; only flip back ON after the user clicks
+            # the destructive action in the dialog.
+            self._faillock_busy = True
+            s.set_active(False)
+            self._faillock_busy = False
+            self._confirm_enable_faillock()
         sw3.connect("notify::active", toggle_lockout)
         wb.append(make_row("Enable PAM faillock", sw3,
-            sub="3 fails → 15-minute lockout. OFF by default."))
+            sub="3 fails → 15-minute lockout. OFF by default. Enabling "
+                "requires explicit confirmation; cannot be reset remotely."))
         self.body.append(wcard)
+
+    def _confirm_enable_faillock(self):
+        """Two-step destructive confirmation for PAM faillock.
+
+        Required because enabling faillock has historically locked the
+        user out during install / recovery (see project preferences).
+        Only after the user clicks the destructive action in this modal
+        do we send the helper command — and even then the helper itself
+        re-validates the --confirm token."""
+        win = self.get_root()
+        try:
+            dlg = Adw.AlertDialog.new(
+                "Enable PAM account lockout?",
+                "After 5 failed password attempts within the configured "
+                "window, your account will be locked for 15 minutes.\n\n"
+                "NYXUS support cannot remotely reset your password. If "
+                "you lose access, you will need physical/recovery access "
+                "to clear the lockout state.\n\n"
+                "Only enable this on a fully installed and tested system.")
+            dlg.add_response("cancel", "Cancel")
+            dlg.add_response("enable", "Enable lockout")
+            dlg.set_response_appearance(
+                "enable", Adw.ResponseAppearance.DESTRUCTIVE)
+            dlg.set_default_response("cancel")
+            dlg.set_close_response("cancel")
+            def _on_resp(_d, resp):
+                if resp != "enable":
+                    return
+                helper_async(
+                    ["enable-faillock", "--confirm=ENABLE-LOCKOUT-RISK"],
+                    on_done=lambda rc, *_: (
+                        toast("PAM faillock ENABLED" if rc == 0
+                              else "Enable failed — see security log",
+                              kind="warn" if rc == 0 else "danger"),
+                        self.refresh()))
+            dlg.connect("response", _on_resp)
+            dlg.present(win)
+        except Exception as e:
+            log.warning("AlertDialog unavailable: %s", e)
+            toast("Cannot show confirm dialog — operation cancelled",
+                  kind="danger")
 
 
 # ════════════════════════════════════════════════════════════════════════════

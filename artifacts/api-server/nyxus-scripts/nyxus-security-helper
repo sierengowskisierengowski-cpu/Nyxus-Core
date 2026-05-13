@@ -43,7 +43,7 @@ Account:
   set-sudo-timeout <minutes 0..60>
   set-idle-lock    <seconds 0..1800>
   expire-password  <user>
-  enable-faillock                # OFF by default — see warning
+  enable-faillock  --confirm=ENABLE-LOCKOUT-RISK
   disable-faillock
 USB / Firmware:
   enable-usbguard
@@ -197,8 +197,17 @@ case "$action" in
     chage -d 0 "$u"
     ;;
   enable-faillock)
-    # WARN: this can lock the user out. Logged loudly.
-    logmsg "WARNING enable-faillock requested"
+    # WARN: this can lock the user out. Logged loudly. Hard gate: the
+    # caller MUST pass --confirm=ENABLE-LOCKOUT-RISK as the first arg.
+    # This is enforced both here AND by a two-step UI dialog in the
+    # AccountPage. Project preference: PAM lockout STAYS OFF until the
+    # user has finished install + recovery testing.
+    if [[ "${1:-}" != "--confirm=ENABLE-LOCKOUT-RISK" ]]; then
+      logmsg "REJECT enable-faillock — missing --confirm=ENABLE-LOCKOUT-RISK"
+      echo "refusing: enable-faillock requires --confirm=ENABLE-LOCKOUT-RISK" >&2
+      exit 2
+    fi
+    logmsg "WARNING enable-faillock CONFIRMED"
     f=/etc/security/faillock.conf
     [[ -f "$f" ]] || { echo "no faillock.conf" >&2; exit 1; }
     backup_once "$f"
