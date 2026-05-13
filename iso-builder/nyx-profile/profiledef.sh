@@ -33,10 +33,34 @@ bootstrap_tarball_compression=(zstd -c -T0 --auto-threads=logical --long -19)
 file_permissions=(
   ["/root"]="0:0:750"
   ["/root/customize_airootfs.sh"]="0:0:755"
+  # nyxus-* CLI binaries (root cause of 2026-05-13 outage when missing).
+  # archiso's squashfs only preserves the perms listed here; `install -m 0755`
+  # in build-iso.sh is NOT enough by itself. Every executable shipped to
+  # /usr/local/bin/ MUST be locked here or it boots non-executable.
   ["/usr/local/bin/nyxus-intel"]="0:0:755"
   ["/usr/local/bin/nyxus-bootstrap"]="0:0:755"
   ["/usr/local/bin/nyxus-wait-bootstrap"]="0:0:755"
   ["/usr/local/bin/nyxus-install"]="0:0:755"
   ["/usr/local/bin/nyxus-postinstall"]="0:0:755"
+  ["/usr/local/bin/nyxus-backup"]="0:0:755"
+  ["/usr/local/bin/nyxus-clipboard"]="0:0:755"
+  ["/usr/local/bin/nyxus-context-menu.sh"]="0:0:755"
+  ["/usr/local/bin/nyxus-crashd"]="0:0:755"
+  ["/usr/local/bin/nyxus-desktop"]="0:0:755"
+  ["/usr/local/bin/nyxus-drop"]="0:0:755"
+  ["/usr/local/bin/nyxus-eww-launch"]="0:0:755"
+  ["/usr/local/bin/nyxus-files"]="0:0:755"
+  ["/usr/local/bin/nyxus-record"]="0:0:755"
+  ["/usr/local/bin/nyxus-security"]="0:0:755"
+  ["/usr/local/bin/nyxus-set-wallpaper.sh"]="0:0:755"
+  ["/usr/local/bin/nyxus-sound.sh"]="0:0:755"
+  ["/usr/local/bin/nyxus-updater"]="0:0:755"
+  ["/usr/local/bin/wallpaper-rotate"]="0:0:755"
+  # Privileged helpers (libexec) — invoked via polkit, must be executable.
+  ["/usr/local/libexec/nyxus-parental-helper"]="0:0:755"
+  # Live-session sudoers drop-in: passwordless sudo for nyx user on the
+  # live ISO ONLY. Calamares post-install removes /etc/sudoers.d/10-nyxus-live
+  # so the installed system reverts to standard wheel + password.
+  ["/etc/sudoers.d/10-nyxus-live"]="0:0:440"
   ["/etc/nyxus"]="0:0:755"
 )
