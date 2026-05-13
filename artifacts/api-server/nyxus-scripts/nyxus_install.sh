@@ -264,7 +264,8 @@ for conf in nyxus-hyprland-general.conf \
             nyxus-hyprland-opacity.conf \
             nyxus-hyprland-blur.conf \
             nyxus-hyprland-layerblur.conf \
-            nyxus-hyprland-fog.conf; do
+            nyxus-hyprland-fog.conf \
+            nyxus-hyprland-mission.conf; do
   dl "$conf" "$HYPR_DIR/conf.d/$conf" || failed=$((failed+1))
 done
 
@@ -369,6 +370,8 @@ fi
 # Optional systemd user service (idempotent — Hyprland exec-once also works)
 mkdir -p "$HOME/.config/systemd/user"
 dl "nyxus-eww.service" "$HOME/.config/systemd/user/nyxus-eww.service" \
+  && systemctl --user daemon-reload 2>/dev/null || true
+dl "nyxus-crashd.service" "$HOME/.config/systemd/user/nyxus-crashd.service" \
   && systemctl --user daemon-reload 2>/dev/null || true
 # USB plug-in / removal toast notifier — toggle lives in
 # Settings → Notifications → External devices.
