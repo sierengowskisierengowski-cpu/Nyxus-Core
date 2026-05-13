@@ -1,0 +1,215 @@
+[nyx@nyxus ~]$ mkdir -p /tmp/nyxus-diag && cd /tmp/nyxus-diag
+[nyx@nyxus nyxus-diag]$ ournalctl -b 0 --no-pager > journal.txt 2>&1
+journalctl --user -b 0 --no-pager
+May 13 06:11:43 nyxus systemd[1307]: Queued start job for default target Main User Target.
+May 13 06:11:43 nyxus systemd[1307]: Created slice User Application Slice.
+May 13 06:11:43 nyxus systemd[1307]: Reached target Paths.
+May 13 06:11:43 nyxus systemd[1307]: Reached target Timers.
+May 13 06:11:43 nyxus systemd[1307]: Starting D-Bus User Message Bus Socket...
+May 13 06:11:43 nyxus systemd[1307]: Listening on GnuPG network certificate management daemon.
+May 13 06:11:43 nyxus systemd[1307]: Listening on GnuPG cryptographic agent and passphrase cache (access for web browsers).
+May 13 06:11:43 nyxus systemd[1307]: Listening on GnuPG cryptographic agent and passphrase cache (restricted).
+May 13 06:11:43 nyxus systemd[1307]: Listening on GnuPG cryptographic agent (ssh-agent emulation).
+May 13 06:11:43 nyxus systemd[1307]: Listening on GnuPG cryptographic agent and passphrase cache.
+May 13 06:11:43 nyxus systemd[1307]: Listening on GnuPG public key management service.
+May 13 06:11:43 nyxus systemd[1307]: Listening on p11-kit server.
+May 13 06:11:43 nyxus systemd[1307]: Listening on PipeWire PulseAudio.
+May 13 06:11:43 nyxus systemd[1307]: Listening on PipeWire Multimedia System Sockets.
+May 13 06:11:43 nyxus systemd[1307]: Listening on Query the User Interactively for a Password.
+May 13 06:11:43 nyxus systemd[1307]: Listening on Disk Image Download Service Socket.
+May 13 06:11:43 nyxus systemd[1307]: Listening on Journal Log Access Socket.
+May 13 06:11:43 nyxus systemd[1307]: Listening on Virtual Machine and Container Registration Service Socket.
+May 13 06:11:43 nyxus systemd[1307]: Listening on D-Bus User Message Bus Socket.
+May 13 06:11:43 nyxus systemd[1307]: Reached target Sockets.
+May 13 06:11:43 nyxus systemd[1307]: Reached target Basic System.
+May 13 06:11:43 nyxus systemd[1307]: Reached target Main User Target.
+May 13 06:11:43 nyxus systemd[1307]: Startup finished in 184ms.
+May 13 06:11:43 nyxus systemd[1307]: Reached target Sound Card.
+May 13 06:11:46 nyxus systemd[1307]: Created slice User Core Session Slice.
+May 13 06:11:46 nyxus systemd[1307]: Starting D-Bus User Message Bus...
+May 13 06:11:46 nyxus dbus-broker-launch[1389]: Service file '/usr/share/dbus-1/services/org.knopwob.dunst.service' is not named after the D-Bus name 'org.freedesktop.Notifications'.
+May 13 06:11:46 nyxus systemd[1307]: Started D-Bus User Message Bus.
+May 13 06:11:46 nyxus dbus-broker-launch[1389]: Policy to allow eavesdropping in /usr/share/dbus-1/session.conf +31: Eavesdropping is deprecated and ignored
+May 13 06:11:46 nyxus dbus-broker-launch[1389]: Policy to allow eavesdropping in /usr/share/dbus-1/session.conf +33: Eavesdropping is deprecated and ignored
+May 13 06:11:46 nyxus dbus-broker-launch[1389]: Ready
+May 13 06:11:46 nyxus systemd[1307]: Starting User preferences database...
+May 13 06:11:46 nyxus systemd[1307]: Started User preferences database.
+May 13 06:11:48 nyxus systemd[1307]: Starting Accessibility services bus...
+May 13 06:11:48 nyxus systemd[1307]: Started Accessibility services bus.
+May 13 06:11:48 nyxus dbus-broker-launch[1466]: Ready
+May 13 06:11:48 nyxus systemd[1307]: Starting Virtual filesystem service...
+May 13 06:11:48 nyxus systemd[1307]: Started Virtual filesystem service.
+May 13 06:11:48 nyxus systemd[1307]: Created slice Slice /app/dbus-:1.12-org.a11y.atspi.Registry.
+May 13 06:11:48 nyxus systemd[1307]: Started dbus-:1.12-org.a11y.atspi.Registry@0.service.
+May 13 06:11:48 nyxus at-spi2-registryd[1479]: SpiRegistry daemon is running with well-known name - org.a11y.atspi.Registry
+May 13 06:11:55 nyxus systemd[1307]: Starting Virtual filesystem metadata service...
+May 13 06:11:55 nyxus systemd[1307]: Started Virtual filesystem metadata service.
+May 13 06:12:15 nyxus systemd[1307]: Starting Portal service...
+May 13 06:12:15 nyxus systemd[1307]: Starting sandboxed app permission store...
+May 13 06:12:15 nyxus systemd[1307]: Started sandboxed app permission store.
+May 13 06:12:15 nyxus systemd[1307]: Starting flatpak document portal service...
+May 13 06:12:15 nyxus systemd[1307]: Started flatpak document portal service.
+May 13 06:12:15 nyxus systemd[1307]: Starting Portal service (GTK/GNOME implementation)...
+May 13 06:12:15 nyxus systemd[1307]: Started Portal service (GTK/GNOME implementation).
+May 13 06:12:15 nyxus systemd[1307]: Started PipeWire Multimedia Service.
+May 13 06:12:15 nyxus systemd[1307]: Started Multimedia Service Session Manager.
+May 13 06:12:15 nyxus systemd[1307]: Starting Portal service (Hyprland implementation)...
+May 13 06:12:15 nyxus systemd[1307]: Started Portal service (Hyprland implementation).
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG] Initializing xdph...
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG] XDG_CURRENT_DESKTOP set to Hyprland
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG] Gathering exported interfaces
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wl_seat (ver 9)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wl_data_device_manager (ver 3)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wl_compositor (ver 6)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wl_subcompositor (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wl_shm (ver 2)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_viewporter (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_tearing_control_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_fractional_scale_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zxdg_output_manager_v1 (ver 3)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_cursor_shape_manager_v1 (ver 2)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwp_idle_inhibit_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwp_relative_pointer_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zxdg_decoration_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_alpha_modifier_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwlr_gamma_control_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: ext_foreign_toplevel_list_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwp_pointer_gestures_v1 (ver 3)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwlr_foreign_toplevel_manager_v1 (ver 3)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG] [toplevel] (activate) locks: 1
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwp_keyboard_shortcuts_inhibit_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwp_text_input_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwp_text_input_manager_v3 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwp_pointer_constraints_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwlr_output_power_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: xdg_activation_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: ext_idle_notifier_v1 (ver 2)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: hyprland_lock_notifier_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: ext_session_lock_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwp_input_method_manager_v2 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwp_virtual_keyboard_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwlr_virtual_pointer_manager_v1 (ver 2)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwlr_output_manager_v1 (ver 4)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: org_kde_kwin_server_decoration_manager (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: hyprland_focus_grab_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwp_tablet_manager_v2 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwlr_layer_shell_v1 (ver 5)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_presentation (ver 2)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: xdg_wm_base (ver 7)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwlr_data_control_manager_v1 (ver 2)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwp_primary_selection_device_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: xwayland_shell_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: hyprland_toplevel_mapping_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG] [toplevel mapping] registered manager
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: hyprland_global_shortcuts_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG] [globalshortcuts] registered
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: xdg_wm_dialog_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_single_pixel_buffer_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_security_context_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: hyprland_ctm_control_manager_v1 (ver 2)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: hyprland_surface_manager_v1 (ver 2)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_content_type_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: xdg_toplevel_tag_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: xdg_system_bell_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: ext_workspace_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: ext_data_control_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_pointer_warp_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_fifo_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zxdg_exporter_v2 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zxdg_importer_v2 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_commit_timing_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: zwlr_screencopy_manager_v1 (ver 3)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG] [pipewire] connected
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG] [screencopy] init successful
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: hyprland_toplevel_export_manager_v1 (ver 2)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: ext_output_image_capture_source_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: ext_foreign_toplevel_image_capture_source_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: ext_image_copy_capture_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_color_manager_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_drm_lease_device_v1 (ver 1)
+May 13 06:12:15 nyxus xdg-desktop-portal-hyprland[2075]: [LOG]  | Got interface: wp_linux_drm_syncobj_manager_v1 (ver 1)
+May 13 06:12:15 nyxus systemd[1307]: Started Portal service.
+May 13 06:12:18 nyxus wireplumber[2060]: wp-device: SPA handle 'api.libcamera.enum.manager' could not be loaded; is it installed?
+May 13 06:12:18 nyxus wireplumber[2060]: s-monitors-libcamera: PipeWire's libcamera SPA plugin is missing or broken. Some camera types may not be supported.
+May 13 06:13:15 nyxus hyprlock[4389]: PAM unable to dlopen(/usr/lib/security/pam_python.so): /usr/lib/security/pam_python.so: cannot open shared object file: No such file or directory
+May 13 06:13:15 nyxus hyprlock[4389]: PAM adding faulty module: /usr/lib/security/pam_python.so
+May 13 06:14:36 nyxus systemd[1307]: Started PipeWire PulseAudio.
+May 13 06:14:36 nyxus systemd[1307]: Starting Bluetooth management applet...
+May 13 06:14:36 nyxus blueman-applet[6054]: blueman-applet 06.14.36 WARNING  PluginManager:93 load_plugin: Failed to start plugin GameControllerWakelock: Only X11 platform is supported
+May 13 06:14:36 nyxus blueman-applet[6054]: blueman-applet 06.14.36 WARNING  PluginManager:153 __load_plugin: Not loading DhcpClient because its conflict has higher priority
+May 13 06:14:36 nyxus blueman-applet[6054]: blueman-applet 06.14.36 WARNING  PluginManager:153 __load_plugin: Not loading PPPSupport because its conflict has higher priority
+May 13 06:14:36 nyxus blueman-applet[6054]: blueman-applet 06.14.36 WARNING  TransferService:212 _make_share_path: Failed to get Download dir from XDG
+May 13 06:14:36 nyxus systemd[1307]: Started Bluetooth management applet.
+May 13 06:14:36 nyxus systemd[1307]: Starting Bluetooth OBEX service...
+May 13 06:14:36 nyxus obexd[6124]: OBEX daemon 5.86
+May 13 06:14:36 nyxus systemd[1307]: Started Bluetooth OBEX service.
+May 13 06:14:36 nyxus blueman-tray[6126]: gtk_widget_get_scale_factor: assertion 'GTK_IS_WIDGET (widget)' failed
+May 13 06:16:36 nyxus hyprlock[8992]: PAM unable to dlopen(/usr/lib/security/pam_python.so): /usr/lib/security/pam_python.so: cannot open shared object file: No such file or directory
+May 13 06:16:36 nyxus hyprlock[8992]: PAM adding faulty module: /usr/lib/security/pam_python.so
+May 13 06:16:47 nyxus sudo[1427]: pam_unix(sudo:auth): conversation failed
+May 13 06:16:47 nyxus sudo[1427]: pam_unix(sudo:auth): auth could not identify password for [nyx]
+May 13 06:17:07 nyxus wireplumber[2060]: spa.bluez5.midi: org.bluez.GattManager1.RegisterApplication() failed: GDBus.Error:org.bluez.Error.AlreadyExists: Already Exists
+May 13 06:17:10 nyxus hyprlock[10830]: PAM unable to dlopen(/usr/lib/security/pam_python.so): /usr/lib/security/pam_python.so: cannot open shared object file: No such file or directory
+May 13 06:17:10 nyxus hyprlock[10830]: PAM adding faulty module: /usr/lib/security/pam_python.so
+May 13 06:17:14 nyxus systemd-coredump[15370]: [🡕] Process 9106 (slurp) of user 1000 dumped core.
+
+                                               Stack trace of thread 9106:
+                                               #0  0x00007f9eb79485d1 xkb_state_update_mask (libxkbcommon.so.0 + 0x2b5d1)
+                                               #1  0x00007f9eb71fdac6 n/a (libffi.so.8 + 0x7ac6)
+                                               #2  0x00007f9eb71fa76b n/a (libffi.so.8 + 0x476b)
+                                               #3  0x00007f9eb71fd06e ffi_call (libffi.so.8 + 0x706e)
+                                               #4  0x00007f9eb798777d n/a (libwayland-client.so.0 + 0x477d)
+                                               #5  0x00007f9eb7988609 n/a (libwayland-client.so.0 + 0x5609)
+                                               #6  0x00007f9eb7988a13 wl_display_dispatch_queue_pending (libwayland-client.so.0 + 0x5a13)
+                                               #7  0x00007f9eb798c584 wl_display_dispatch_queue_timeout (libwayland-client.so.0 + 0x9584)
+                                               #8  0x00007f9eb798c660 wl_display_dispatch_queue (libwayland-client.so.0 + 0x9660)
+                                               #9  0x00007f9eb798c74c wl_display_roundtrip_queue (libwayland-client.so.0 + 0x974c)
+                                               #10 0x000055956afcfac1 n/a (/usr/bin/slurp + 0x2ac1)
+                                               #11 0x00007f9eb7727741 n/a (libc.so.6 + 0x27741)
+                                               #12 0x00007f9eb7727879 __libc_start_main (libc.so.6 + 0x27879)
+                                               #13 0x000055956afcffa5 n/a (/usr/bin/slurp + 0x2fa5)
+                                               ELF object binary architecture: AMD x86-64
+May 13 06:17:25 nyxus systemd-coredump[21104]: [🡕] Process 9087 (slurp) of user 1000 dumped core.
+
+                                               Stack trace of thread 9087:
+                                               #0  0x00007fb2013a05d1 xkb_state_update_mask (libxkbcommon.so.0 + 0x2b5d1)
+                                               #1  0x00007fb200c55ac6 n/a (libffi.so.8 + 0x7ac6)
+                                               #2  0x00007fb200c5276b n/a (libffi.so.8 + 0x476b)
+                                               #3  0x00007fb200c5506e ffi_call (libffi.so.8 + 0x706e)
+                                               #4  0x00007fb2013df77d n/a (libwayland-client.so.0 + 0x477d)
+                                               #5  0x00007fb2013e0609 n/a (libwayland-client.so.0 + 0x5609)
+                                               #6  0x00007fb2013e0a13 wl_display_dispatch_queue_pending (libwayland-client.so.0 + 0x5a13)
+                                               #7  0x00007fb2013e4584 wl_display_dispatch_queue_timeout (libwayland-client.so.0 + 0x9584)
+                                               #8  0x00007fb2013e4660 wl_display_dispatch_queue (libwayland-client.so.0 + 0x9660)
+                                               #9  0x00007fb2013e474c wl_display_roundtrip_queue (libwayland-client.so.0 + 0x974c)
+                                               #10 0x000055942a43dac1 n/a (/usr/bin/slurp + 0x2ac1)
+                                               #11 0x00007fb20117f741 n/a (libc.so.6 + 0x27741)
+                                               #12 0x00007fb20117f879 __libc_start_main (libc.so.6 + 0x27879)
+                                               #13 0x000055942a43dfa5 n/a (/usr/bin/slurp + 0x2fa5)
+                                               ELF object binary architecture: AMD x86-64
+May 13 06:20:45 nyxus systemd[1307]: Reached target Smart Card.
+May 13 06:21:49 nyxus sudo[9044]: pam_unix(sudo:auth): conversation failed
+May 13 06:21:49 nyxus sudo[9044]: pam_unix(sudo:auth): auth could not identify password for [nyx]
+May 13 06:26:51 nyxus sudo[24100]: pam_unix(sudo:auth): conversation failed
+May 13 06:26:51 nyxus sudo[24100]: pam_unix(sudo:auth): auth could not identify password for [nyx]
+May 13 06:27:47 nyxus sudo[25494]: pam_unix(sudo:auth): authentication failure; logname=nyx uid=1000 euid=0 tty=/dev/pts/0 ruser=nyx rhost=  user=nyx
+May 13 06:27:47 nyxus sudo[25494]: pam_faillock(sudo:auth): Consecutive login failures for user nyx account temporarily locked
+May 13 06:28:04 nyxus sudo[25494]:      nyx : 3 incorrect password attempts ; TTY=pts/0 ; PWD=/home/nyx ; USER=root ; COMMAND=/usr/bin/grep -rn windowrulev2 /home/nyx/.config/hypr/ /etc/hypr/ /usr/share/hypr/
+May 13 06:31:53 nyxus sudo[25364]: pam_unix(sudo:auth): conversation failed
+May 13 06:31:53 nyxus sudo[25364]: pam_unix(sudo:auth): auth could not identify password for [nyx]
+May 13 06:32:53 nyxus systemd[1307]: Started kitty child process: 26211 launched by: 26191.
+May 13 06:32:58 nyxus systemd[1307]: Started kitty child process: 26238 launched by: 26231.
+May 13 06:34:19 nyxus systemd[1307]: Started kitty child process: 26485 launched by: 26475.
+May 13 06:36:54 nyxus sudo[26866]:      nyx : 3 incorrect password attempts ; TTY=pts/0 ; PWD=/home/nyx ; USER=root ; COMMAND=/usr/bin/pacman -S --needed slurp grim
+May 13 06:43:35 nyxus pkexec[28221]: pam_unix(polkit-1:session): session opened for user root(uid=0) by nyx(uid=1000)
+May 13 06:44:52 nyxus su[28404]: (to root) nyx on pts/0
+May 13 06:44:52 nyxus su[28404]: pam_unix(su:session): session opened for user root(uid=0) by nyx(uid=1000)
+May 13 06:44:52 nyxus su[28404]: pam_unix(su:session): session closed for user root
+May 13 06:50:42 nyxus sudo[31988]: pam_unix(sudo:auth): conversation failed
+May 13 06:50:42 nyxus sudo[31988]: pam_unix(sudo:auth): auth could not identify password for [nyx]
+May 13 07:09:20 nyxus sudo[48538]: pam_unix(sudo:auth): conversation failed
+May 13 07:09:20 nyxus sudo[48538]: pam_unix(sudo:auth): auth could not identify password for [nyx]
+[nyx@nyxus nyxus-diag]$ > journal-user.txt 2>&1
+cat ~/.cache/nyxus/*.log > nyxus-app-logs.txt 2>/dev/null
+pacman -Q hyprland eww swaync dunst sddm calamares > pkg-versions.txt 2>&1
+[nyx@nyxus nyxus-diag]$ hyprctl version > hypr-version.txt
