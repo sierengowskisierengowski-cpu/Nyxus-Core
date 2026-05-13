@@ -200,6 +200,9 @@ ok "GTK apps: $(ls "${OPT_NYXUS}"/*.py | wc -l) python files in /opt/nyxus/ (~/.
 if [[ -f "${NS}/nyxus-eww.service" ]]; then
   install -m 0644 "${NS}/nyxus-eww.service" "${SKEL}/.config/systemd/user/nyxus-eww.service"
 fi
+if [[ -f "${NS}/nyxus-crashd.service" ]]; then
+  install -m 0644 "${NS}/nyxus-crashd.service" "${SKEL}/.config/systemd/user/nyxus-crashd.service"
+fi
 if [[ -f "${NS}/nyxus-security-daemon.service" ]]; then
   install -m 0644 "${NS}/nyxus-security-daemon.service" "${SKEL}/.config/systemd/user/nyxus-security-daemon.service"
 fi
@@ -226,7 +229,7 @@ if [[ -f "${NS}/nyxus-welcome-helper" ]]; then
   install -Dm755 "${NS}/nyxus-welcome-helper" \
     "${PROFILE_DIR}/airootfs/usr/local/libexec/nyxus-welcome-helper"
 fi
-ok "user units + policy: nyxus-eww / nyxus-security-daemon / parental + security + welcome helpers"
+ok "user units + policy: nyxus-eww / nyxus-crashd / nyxus-security-daemon / parental + security + welcome helpers"
 
 # ── Wallpapers → both user skel (matches hyprland.conf path) and system ─
 # Includes the new void-vortex (default EWW-era wallpaper, replaces drifter).
@@ -248,6 +251,9 @@ ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyx
 # rev r6-eww: waybar-stats / waybar-ticker removed. nyxus-eww-launch added.
 install -m 0755 "${NS}/wallpaper-rotate.sh"  "${LBIN}/wallpaper-rotate"
 install -m 0755 "${NS}/nyxus-eww-launch"     "${LBIN}/nyxus-eww-launch"
+if [[ -f "${NS}/nyxus-mission-control-toggle" ]]; then
+  install -m 0755 "${NS}/nyxus-mission-control-toggle" "${LBIN}/nyxus-mission-control-toggle"
+fi
 if [[ -f "${NS}/nyxus-set-wallpaper.sh" ]]; then
   install -m 0755 "${NS}/nyxus-set-wallpaper.sh" "${LBIN}/nyxus-set-wallpaper.sh"
 fi
