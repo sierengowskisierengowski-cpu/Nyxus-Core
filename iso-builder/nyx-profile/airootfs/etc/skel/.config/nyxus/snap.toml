@@ -28,50 +28,65 @@ ignore_missing    = true
 [[layout]]
 name = "halves"
 [[layout.zone]]
-id = "left"   ; rect = [0.00, 0.00, 0.50, 1.00]
+id = "left"
+rect = [0.00, 0.00, 0.50, 1.00]
 [[layout.zone]]
-id = "right"  ; rect = [0.50, 0.00, 0.50, 1.00]
+id = "right"
+rect = [0.50, 0.00, 0.50, 1.00]
 
 [[layout]]
 name = "quarters"
 [[layout.zone]]
-id = "tl"     ; rect = [0.00, 0.00, 0.50, 0.50]
+id = "tl"
+rect = [0.00, 0.00, 0.50, 0.50]
 [[layout.zone]]
-id = "tr"     ; rect = [0.50, 0.00, 0.50, 0.50]
+id = "tr"
+rect = [0.50, 0.00, 0.50, 0.50]
 [[layout.zone]]
-id = "bl"     ; rect = [0.00, 0.50, 0.50, 0.50]
+id = "bl"
+rect = [0.00, 0.50, 0.50, 0.50]
 [[layout.zone]]
-id = "br"     ; rect = [0.50, 0.50, 0.50, 0.50]
+id = "br"
+rect = [0.50, 0.50, 0.50, 0.50]
 
 [[layout]]
 name = "thirds"
 [[layout.zone]]
-id = "l3"     ; rect = [0.00, 0.00, 0.333, 1.00]
+id = "l3"
+rect = [0.00, 0.00, 0.333, 1.00]
 [[layout.zone]]
-id = "m3"     ; rect = [0.333, 0.00, 0.334, 1.00]
+id = "m3"
+rect = [0.333, 0.00, 0.334, 1.00]
 [[layout.zone]]
-id = "r3"     ; rect = [0.667, 0.00, 0.333, 1.00]
+id = "r3"
+rect = [0.667, 0.00, 0.333, 1.00]
 
 [[layout]]
 name = "sidebar-main"
 [[layout.zone]]
-id = "side"   ; rect = [0.00, 0.00, 0.30, 1.00]
+id = "side"
+rect = [0.00, 0.00, 0.30, 1.00]
 [[layout.zone]]
-id = "main"   ; rect = [0.30, 0.00, 0.70, 1.00]
+id = "main"
+rect = [0.30, 0.00, 0.70, 1.00]
 
 [[layout]]
 name = "dev-3-col"
 [[layout.zone]]
-id = "files"  ; rect = [0.00, 0.00, 0.20, 1.00]
+id = "files"
+rect = [0.00, 0.00, 0.20, 1.00]
 [[layout.zone]]
-id = "code"   ; rect = [0.20, 0.00, 0.55, 1.00]
+id = "code"
+rect = [0.20, 0.00, 0.55, 1.00]
 [[layout.zone]]
-id = "tools"  ; rect = [0.75, 0.00, 0.25, 1.00]
+id = "tools"
+rect = [0.75, 0.00, 0.25, 1.00]
 
 [[layout]]
 name = "focus"
 [[layout.zone]]
-id = "stage"  ; rect = [0.10, 0.05, 0.80, 0.90]
+id = "stage"
+rect = [0.10, 0.05, 0.80, 0.90]
 
 # ─── Per-app default zones (regex on window class) ─────────────────────
 [[app_rule]]
