@@ -44,6 +44,15 @@ for f in "${SHFILES[@]}"; do
   fi
 done
 
+hdr "2b. Shipped script text sanity"
+utf8_bad="$(grep -RIn --binary-files=without-match $'\xEF\xBF\xBD' \
+  "$ROOT/artifacts/api-server/nyxus-scripts" --include='*.sh' | head -n1 || true)"
+if [[ -z "$utf8_bad" ]]; then
+  ok "no UTF-8 replacement chars in nyxus-scripts/*.sh"
+else
+  bad "UTF-8 replacement char (U+FFFD) found: $utf8_bad"
+fi
+
 hdr "3. Python syntax (py_compile)"
 mapfile -t PYFILES < <(find "$ROOT/artifacts/api-server/nyxus-scripts" -maxdepth 1 -type f -name "*.py" 2>/dev/null)
 for f in "${PYFILES[@]}"; do
