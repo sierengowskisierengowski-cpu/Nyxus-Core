@@ -135,10 +135,28 @@
 
 (defwidget brightness_widget []
   (button :class "pill"
-          :onclick "brightnessctl set +10% && ~/.config/eww/scripts/osd-show.sh osd-brightness &"
+          :onclick "eww open --toggle brightness-flyout"
           :onrightclick "brightnessctl set 10%- && ~/.config/eww/scripts/osd-show.sh osd-brightness &"
-          :tooltip "Brightness ${BACKLIGHT.percent}% · scroll/right-click to adjust"
+          :tooltip "Brightness ${BACKLIGHT.percent}% · click panel · right-click decrease"
     "☼  ${BACKLIGHT.percent}%"))
+
+;; ── search bar pill (opens start menu, which has its own search input) ──
+(defwidget search_btn []
+  (button :class "search-btn"
+          :onclick "eww open --toggle startmenu"
+          :tooltip "Search NYXUS"
+    "  Search NYXUS"))
+
+;; ── brightness flyout (opened from bar brightness pill) ──
+(defwidget brightness_flyout_layout []
+  (box :class "flyout brightness-flyout" :orientation "v" :space-evenly false :spacing 14
+    (label :class "flyout-title" :text "DISPLAY" :halign "start")
+    (box :orientation "h" :space-evenly false :spacing 12
+      (label :class "flyout-glyph" :text "☼")
+      (scale :class "flyout-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+             :onchange "brightnessctl set {}%"))
+    (label :class "flyout-sub" :text "${BACKLIGHT.percent}% · ${BACKLIGHT.tooltip}" :halign "start")
+    (button :class "flyout-close" :onclick "eww close brightness-flyout" "Close (Esc)")))
 
 (defwidget powerprof_widget []
   (button :class {POWERPROF.active == "performance" ? "pill pp-perf" :
