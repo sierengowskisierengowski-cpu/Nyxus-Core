@@ -88,17 +88,29 @@ mkdir -p "$SCRIPTS_DIR"
 ##   nyxus_cheatsheet.py   → eww open --toggle cheatsheet
 ## See artifacts/api-server/nyxus-scripts/eww/ for the replacements.
 for f in nyxus_palette.py nyxus-palette.css \
-          nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
-          nyxus_sysmon_gtk.py nyxus_notepad.py nyxus_store.py \
-          nyxus_powermenu.py nyxus_welcome.py \
-          nyxus_stickies.py nyxus_notes.py nyxus_terminal.py \
-          nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
-          nyxus_doctor.py nyxus_launcher.py \
-          nyxus_screenshot.py nyxus_chrome.py \
-          nyxus_screensaver.py nyxus_demon_wake.py \
-          nyxus_usb_watch.py; do
+           nyxus_preboot.py nyxus_motd.py nyxus_splash.py nyxus_error.py \
+           nyxus_account.py nyxus_backup.py nyxus_parental.py \
+           nyxus_sysmon_gtk.py nyxus_notepad.py nyxus_store.py \
+           nyxus_powermenu.py nyxus_welcome.py \
+           nyxus_stickies.py nyxus_notes.py nyxus_terminal.py \
+           nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
+           nyxus_settings_accessibility.py nyxus_settings_notifications.py \
+           nyxus_settings_sandbox.py nyxus_settings_snapshots.py \
+           nyxus_doctor.py nyxus_launcher.py \
+           nyxus_screenshot.py nyxus_chrome.py \
+           nyxus_screensaver.py nyxus_demon_wake.py \
+           nyxus_usb_watch.py nyxus-crash-report.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
+
+# Crash report CLI wrapper (nyxus_settings.py / nyxus_crashd.py launch this by name)
+mkdir -p "$HOME/.local/bin"
+cat > "$HOME/.local/bin/nyxus-crash-report" <<'EOF'
+#!/usr/bin/env bash
+exec python3 "$HOME/.nyxus/nyxus-crash-report.py" "$@"
+EOF
+chmod 0755 "$HOME/.local/bin/nyxus-crash-report"
+sudo -n install -Dm0755 "$HOME/.local/bin/nyxus-crash-report" /usr/local/bin/nyxus-crash-report 2>/dev/null || true
 
 # ── GTK4 Python dependencies ──────────────────────────────────────────────────
 hdr "Python GTK4 Dependencies"
@@ -437,6 +449,29 @@ if dl "com.nyxus.parental.policy" "/tmp/com.nyxus.parental.policy.new"; then
   fi
   rm -f /tmp/com.nyxus.parental.policy.new
 fi
+
+# ── Completion wave helpers/policies (account/backup/doctor/usbwatch etc.) ──
+for h in nyxus-account-helper nyxus-backup-helper nyxus-doctor-helper nyxus-usbwatch-helper; do
+  if dl "${h}" "/tmp/${h}.new"; then
+    if sudo -n install -Dm0755 "/tmp/${h}.new" "/usr/local/libexec/${h}" 2>/dev/null; then
+      ok "${h} → /usr/local/libexec/"
+    else
+      printf "  ${DIM}(skip: ${h} — needs sudo for /usr/local/libexec)${R}\n"
+    fi
+    rm -f "/tmp/${h}.new"
+  fi
+done
+for p in com.nyxus.account.policy com.nyxus.backup.policy com.nyxus.doctor.policy \
+         com.nyxus.firewall.policy com.nyxus.updater.policy com.nyxus.usbwatch.policy; do
+  if dl "polkit-policies/${p}" "/tmp/${p}.new"; then
+    if sudo -n install -Dm0644 "/tmp/${p}.new" "/usr/share/polkit-1/actions/${p}" 2>/dev/null; then
+      ok "${p} → /usr/share/polkit-1/actions/"
+    else
+      printf "  ${DIM}(skip: ${p} — needs sudo for polkit actions)${R}\n"
+    fi
+    rm -f "/tmp/${p}.new"
+  fi
+done
 
 # Build EWW from source (v0.6.0 pinned) ONLY if not already installed.
 # Pinning + fail-fast lives in customize_airootfs.sh on the ISO; on existing

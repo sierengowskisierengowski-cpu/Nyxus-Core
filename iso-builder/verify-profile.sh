@@ -31,6 +31,7 @@ set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PROFILE="${HERE}/nyx-profile"
 AIROOT="${PROFILE}/airootfs"
+NS="${HERE}/../artifacts/api-server/nyxus-scripts"
 
 FAIL=0
 ok()   { printf '[ \033[1;32mOK\033[0m  ] %s\n' "$*"; }
@@ -158,6 +159,19 @@ if [[ -d "${AIROOT}/usr/share/applications" ]]; then
   else
     warn "desktop-file-validate not available; skipping"
   fi
+
+  # NYXUS desktop-entry source parity (source-of-truth lives in nyxus-scripts/)
+  SRC_DESK="${NS}/desktop-entries"
+  ISO_DESK="${AIROOT}/usr/share/applications"
+  if [[ -d "${SRC_DESK}" ]]; then
+    src_list="$(find "${SRC_DESK}" -maxdepth 1 -name 'nyxus-*.desktop' -printf '%f\n' | sort)"
+    iso_list="$(find "${ISO_DESK}" -maxdepth 1 -name 'nyxus-*.desktop' -printf '%f\n' | sort)"
+    if [[ "${src_list}" != "${iso_list}" ]]; then
+      fail "desktop parity mismatch between nyxus-scripts/desktop-entries and airootfs/usr/share/applications"
+    else
+      ok "desktop parity: nyxus-scripts/desktop-entries ↔ airootfs/usr/share/applications"
+    fi
+  fi
 fi
 
 # ── 8. calamares yaml ─────────────────────────────────────────────────
@@ -184,6 +198,13 @@ PYEOF
         || warn "yaml: $(basename "$m") — $(head -1 /tmp/nyx-cal.err)"
     fi
   done
+  if [[ -f "${AIROOT}/etc/calamares/modules/timezone.conf" ]]; then
+    if grep -Eq '^[[:space:]]*-[[:space:]]*timezone([[:space:]]|$)' "${CALCONF}"; then
+      ok "calamares timezone module wired in settings.conf"
+    else
+      fail "calamares timezone.conf exists but timezone module is not referenced in settings.conf"
+    fi
+  fi
   ok "calamares modules scanned"
 else
   warn "no calamares settings.conf (installer flow will be welcome→finished)"
@@ -203,6 +224,18 @@ if [[ -d "${AIROOT}/usr/share/polkit-1/actions" ]]; then
     (( PBAD == 0 )) && ok "${PCOUNT} polkit policies validate as XML"
   else
     warn "xmllint not available; skipping XML validation"
+  fi
+
+  SRC_POL="${NS}/polkit-policies"
+  ISO_POL="${AIROOT}/usr/share/polkit-1/actions"
+  if [[ -d "${SRC_POL}" ]]; then
+    src_pol="$(find "${SRC_POL}" -maxdepth 1 -name 'com.nyxus.*.policy' -printf '%f\n' | sort)"
+    iso_pol="$(find "${ISO_POL}" -maxdepth 1 -name 'com.nyxus.*.policy' -printf '%f\n' | sort)"
+    if [[ "${src_pol}" != "${iso_pol}" ]]; then
+      fail "polkit parity mismatch between nyxus-scripts/polkit-policies and airootfs actions"
+    else
+      ok "polkit parity: nyxus-scripts/polkit-policies ↔ airootfs actions"
+    fi
   fi
 fi
 
