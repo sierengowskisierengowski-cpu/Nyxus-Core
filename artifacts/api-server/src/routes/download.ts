@@ -69,6 +69,12 @@ const ALLOWED_FILES: Record<string, string> = {
   // 4 bars + dashboard + powermenu + cheatsheet + 3 OSDs. All real backends.
   "nyxus-eww-launch":           "nyxus-eww-launch",
   "nyxus-eww.service":          "nyxus-eww.service",
+  // USB plug-in / removal toast notifier (Tier 1 batch 2, r10).
+  // Daemon = nyxus_usb_watch.py (under GTK4 USER APPS-style nyxus_*.py
+  // glob); user systemd unit lives at /usr/lib/systemd/user/ on the
+  // ISO and is downloaded to ~/.config/systemd/user/ at runtime.
+  "nyxus_usb_watch.py":         "nyxus_usb_watch.py",
+  "nyxus-usb-watch.service":    "nyxus-usb-watch.service",
   "eww/eww.yuck":               "eww/eww.yuck",
   "eww/eww.scss":               "eww/eww.scss",
   "eww/nyxus.conf":             "eww/nyxus.conf",
