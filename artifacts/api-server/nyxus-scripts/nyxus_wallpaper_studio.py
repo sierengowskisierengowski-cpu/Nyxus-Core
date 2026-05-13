@@ -381,6 +381,12 @@ class WallpaperStudio(Adw.Application):
             color_btn.set_rgba(rgba)
             color_btn.connect("color-set", self._on_tint_color)
             box.append(self._labeled_row("Tint Color", color_btn))
+        else:
+            tint_entry = Gtk.Entry()
+            tint_entry.set_text(self.cfg.get("tint_color", "#7B5EA7"))
+            tint_entry.set_placeholder_text("#7B5EA7")
+            tint_entry.connect("activate", self._on_tint_entry)
+            box.append(self._labeled_row("Tint Color", tint_entry))
 
         self.fit_model = Gtk.StringList.new(FIT_MODES)
         self.fit_combo = Gtk.DropDown(model=self.fit_model)
@@ -540,6 +546,11 @@ class WallpaperStudio(Adw.Application):
         )
         self._set_cfg("tint_color", color)
 
+    def _on_tint_entry(self, entry: Gtk.Entry) -> None:
+        val = (entry.get_text() or "").strip()
+        if len(val) == 7 and val.startswith("#"):
+            self._set_cfg("tint_color", val)
+
     def _is_favorite(self, path: str) -> bool:
         return path in set(self.cfg.get("favorites", []))
 
@@ -574,7 +585,7 @@ class WallpaperStudio(Adw.Application):
 
     def _apply_adjustments(self, src: Path) -> Path:
         out = self._processed_path(src)
-        if out.exists():
+        if out.exists() and out.stat().st_size > 0:
             return out
         img = Image.open(src).convert("RGBA")
         img = ImageEnhance.Brightness(img).enhance(float(self.cfg.get("brightness", 1.0)))
@@ -659,11 +670,12 @@ import json,datetime,random,sys,pathlib
 p=pathlib.Path("{CFG_PATH}")
 cfg=json.loads(p.read_text(encoding="utf-8"))
 hour=datetime.datetime.now().hour
-if 5 <= hour < 12:
+morning_start, afternoon_start, evening_start, night_start = 5, 12, 17, 21
+if morning_start <= hour < afternoon_start:
     slot = "morning"
-elif 12 <= hour < 17:
+elif afternoon_start <= hour < evening_start:
     slot = "afternoon"
-elif 17 <= hour < 21:
+elif evening_start <= hour < night_start:
     slot = "evening"
 else:
     slot = "night"
