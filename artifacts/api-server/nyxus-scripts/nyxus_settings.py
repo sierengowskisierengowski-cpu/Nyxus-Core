@@ -7085,6 +7085,7 @@ class AppearancePage(SectionPage):
             "Launch",
             lambda: fire_and_forget(
                 "nyxus wallpaper_studio >/dev/null 2>&1 "
+                "|| python3 /opt/nyxus/nyxus_wallpaper_studio.py >/dev/null 2>&1 "
                 "|| python3 ~/.nyxus/nyxus_wallpaper_studio.py >/dev/null 2>&1"
             )))
 

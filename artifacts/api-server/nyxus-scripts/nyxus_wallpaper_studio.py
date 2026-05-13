@@ -20,7 +20,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import gi
 from PIL import Image, ImageEnhance, ImageFilter
@@ -61,12 +61,14 @@ LIVE_PRESETS = {
     "Slow Zoom": ("grow", 2.2),
     "Aurora Shimmer": ("any", 1.6),
 }
+DAYPART_STARTS = (5, 12, 17, 21)  # morning, afternoon, evening, night
+TINT_OVERLAY_ALPHA = 56  # ~22% alpha tint overlay
 
 SLOTS = ("morning", "afternoon", "evening", "night")
 FIT_MODES = ("Fill", "Fit", "Stretch", "Center", "Tile")
 
 
-def _run(cmd: List[str], timeout: int = 10) -> tuple[int, str, str]:
+def _run(cmd: List[str], timeout: int = 10) -> Tuple[int, str, str]:
     try:
         p = subprocess.run(
             cmd,
@@ -601,7 +603,7 @@ class WallpaperStudio(Adw.Application):
                 r = int(tint[0:2], 16)
                 g = int(tint[2:4], 16)
                 b = int(tint[4:6], 16)
-                overlay = Image.new("RGBA", img.size, (r, g, b, 56))
+                overlay = Image.new("RGBA", img.size, (r, g, b, TINT_OVERLAY_ALPHA))
                 img = Image.alpha_composite(img, overlay)
         blur = float(self.cfg.get("blur", 0.0))
         if blur > 0:
@@ -674,7 +676,7 @@ import json,datetime,random,sys,pathlib
 p=pathlib.Path("{CFG_PATH}")
 cfg=json.loads(p.read_text(encoding="utf-8"))
 hour=datetime.datetime.now().hour
-morning_start, afternoon_start, evening_start, night_start = 5, 12, 17, 21
+morning_start, afternoon_start, evening_start, night_start = {DAYPART_STARTS}
 if morning_start <= hour < afternoon_start:
     slot = "morning"
 elif afternoon_start <= hour < evening_start:
