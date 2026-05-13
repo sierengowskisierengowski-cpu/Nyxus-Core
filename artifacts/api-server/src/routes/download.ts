@@ -185,7 +185,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "desktop-entries/nyxus-screenshot.desktop":   "desktop-entries/nyxus-screenshot.desktop",
   "desktop-entries/nyxus-security.desktop":     "desktop-entries/nyxus-security.desktop",
   "desktop-entries/nyxus-settings.desktop":     "desktop-entries/nyxus-settings.desktop",
-  "desktop-entries/nyxus-wallpaper-studio.desktop":"desktop-entries/nyxus-wallpaper-studio.desktop",
+  "desktop-entries/nyxus-wallpaper-studio.desktop": "desktop-entries/nyxus-wallpaper-studio.desktop",
   "desktop-entries/nyxus-splash.desktop":       "desktop-entries/nyxus-splash.desktop",
   "desktop-entries/nyxus-stickies.desktop":     "desktop-entries/nyxus-stickies.desktop",
   "desktop-entries/nyxus-store.desktop":        "desktop-entries/nyxus-store.desktop",

@@ -137,6 +137,7 @@ class WallpaperStudio(Adw.Application):
         self.live_model: Optional[Gtk.StringList] = None
         self.schedule_rows: Dict[str, Gtk.DropDown] = {}
         self.schedule_models: Dict[str, Gtk.StringList] = {}
+        self.category_rows: Dict[Gtk.ListBoxRow, str] = {}
 
     def _load_cfg(self) -> dict:
         defaults = {
@@ -188,7 +189,10 @@ class WallpaperStudio(Adw.Application):
 
     def _detect_outputs(self) -> List[TargetOutput]:
         out = [TargetOutput("All Monitors", None)]
-        rc, stdout, _ = _run(["swww", "query"], timeout=3) if shutil.which("swww") else (1, "", "")
+        if shutil.which("swww"):
+            rc, stdout, _ = _run(["swww", "query"], timeout=3)
+        else:
+            rc, stdout = 1, ""
         if rc == 0:
             names: List[str] = []
             for ln in stdout.splitlines():
@@ -278,7 +282,7 @@ class WallpaperStudio(Adw.Application):
             lbl.set_margin_start(8)
             lbl.set_margin_end(8)
             row.set_child(lbl)
-            row._cat_name = cat  # type: ignore[attr-defined]
+            self.category_rows[row] = cat
             listbox.append(row)
             if cat == self.current_category:
                 listbox.select_row(row)
@@ -286,7 +290,7 @@ class WallpaperStudio(Adw.Application):
         def _on_select(_lb: Gtk.ListBox, row: Optional[Gtk.ListBoxRow]) -> None:
             if row is None:
                 return
-            self.current_category = getattr(row, "_cat_name", "All")
+            self.current_category = self.category_rows.get(row, "All")
             self.visible_wallpapers = self._filter_wallpapers(self.current_category)
             self._refresh_grid()
 
