@@ -308,88 +308,116 @@ class SectionDef:
     glyph: str
     keywords: str       # search index (comma-separated)
     tier: int           # 1 = fully built, 2 = honest placeholder
+    category: str = ""  # taxonomy bucket — drives sidebar group headers
 
+# Sidebar order is preserved for category grouping (Mac System Settings
+# style). Each section declares its category; SettingsWindow renders a
+# subtle header above the first row of each new category.
 SECTIONS: Tuple[SectionDef, ...] = (
+    # ── Personal ────────────────────────────────────────────────────────
     SectionDef("appearance",    "Appearance",
                "Wallpaper, theme variant, font scale",
                "appearance",
-               "wallpaper,background,theme,dark,font,scale,accent,style", 1),
-    SectionDef("network",       "Network",
-               "Wi-Fi, ethernet, VPN, DNS",
-               "network",
-               "wifi,wireless,ethernet,vpn,dns,internet,connection", 1),
-    SectionDef("bluetooth",     "Bluetooth",
-               "Devices, pairing, audio profile",
-               "bluetooth",
-               "bluetooth,bt,pair,headphones,speaker,audio,device", 1),
-    SectionDef("display",       "Display",
-               "Resolution, refresh, scale, brightness",
-               "display",
-               "display,monitor,resolution,refresh,scale,brightness,hidpi", 2),
-    SectionDef("sound",         "Sound",
-               "Output, input, per-app volume",
-               "sound",
-               "sound,audio,volume,microphone,mic,speaker,headphone", 2),
-    SectionDef("power",         "Power",
-               "Battery, profiles, sleep, lid behavior",
-               "power",
-               "power,battery,sleep,suspend,lid,profile,energy,charge", 2),
-    SectionDef("notifications", "Notifications",
-               "Do not disturb, history, per-app rules",
-               "notifications",
-               "notification,dnd,quiet,alert,toast,banner", 2),
-    SectionDef("datetime",      "Date & Time",
-               "Timezone, NTP, format",
-               "datetime",
-               "date,time,timezone,clock,ntp,12,24,format", 2),
-    SectionDef("keyboard",      "Keyboard",
-               "Layout, repeat rate, shortcuts",
-               "keyboard",
-               "keyboard,layout,xkb,repeat,shortcut,hotkey,bind", 2),
-    SectionDef("mouse",         "Mouse & Touchpad",
-               "Speed, accel, natural scroll, tap",
-               "mouse",
-               "mouse,touchpad,trackpad,pointer,scroll,tap,acceleration", 2),
-    SectionDef("privacy",       "Privacy & Security",
-               "Location, mic, camera, screen recording",
-               "privacy",
-               "privacy,security,permission,location,microphone,camera", 2),
-    SectionDef("apps",          "Apps & Defaults",
-               "Installed apps, default browser/terminal, autostart",
-               "apps",
-               "apps,application,default,browser,terminal,autostart,mime", 2),
-    SectionDef("storage",       "Storage",
-               "Disks, usage, SMART health, cleanup",
-               "storage",
-               "storage,disk,drive,usage,smart,smartctl,health,clean", 2),
-    SectionDef("updates",       "Updates",
-               "System packages and AUR",
-               "updates",
-               "update,upgrade,pacman,aur,package,version", 2),
+               "wallpaper,background,theme,dark,font,scale,accent,style", 1,
+               "Personal"),
     SectionDef("accessibility", "Accessibility",
                "Large text, reduce motion, sticky keys",
                "accessibility",
-               "accessibility,a11y,zoom,contrast,motion,sticky,screen reader", 2),
+               "accessibility,a11y,zoom,contrast,motion,sticky,screen reader", 2,
+               "Personal"),
+    SectionDef("notifications", "Notifications",
+               "Do not disturb, history, per-app rules",
+               "notifications",
+               "notification,dnd,quiet,alert,toast,banner", 2,
+               "Personal"),
+    # ── Devices ─────────────────────────────────────────────────────────
+    SectionDef("display",       "Display",
+               "Resolution, refresh, scale, brightness",
+               "display",
+               "display,monitor,resolution,refresh,scale,brightness,hidpi", 2,
+               "Devices"),
+    SectionDef("sound",         "Sound",
+               "Output, input, per-app volume",
+               "sound",
+               "sound,audio,volume,microphone,mic,speaker,headphone", 2,
+               "Devices"),
+    SectionDef("keyboard",      "Keyboard",
+               "Layout, repeat rate, shortcuts",
+               "keyboard",
+               "keyboard,layout,xkb,repeat,shortcut,hotkey,bind", 2,
+               "Devices"),
+    SectionDef("mouse",         "Mouse & Touchpad",
+               "Speed, accel, natural scroll, tap",
+               "mouse",
+               "mouse,touchpad,trackpad,pointer,scroll,tap,acceleration", 2,
+               "Devices"),
+    SectionDef("bluetooth",     "Bluetooth",
+               "Devices, pairing, audio profile",
+               "bluetooth",
+               "bluetooth,bt,pair,headphones,speaker,audio,device", 1,
+               "Devices"),
+    SectionDef("network",       "Network",
+               "Wi-Fi, ethernet, VPN, DNS",
+               "network",
+               "wifi,wireless,ethernet,vpn,dns,internet,connection", 1,
+               "Devices"),
+    # ── System ──────────────────────────────────────────────────────────
+    SectionDef("power",         "Power",
+               "Battery, profiles, sleep, lid behavior",
+               "power",
+               "power,battery,sleep,suspend,lid,profile,energy,charge", 2,
+               "System"),
+    SectionDef("datetime",      "Date & Time",
+               "Timezone, NTP, format",
+               "datetime",
+               "date,time,timezone,clock,ntp,12,24,format", 2,
+               "System"),
+    SectionDef("privacy",       "Privacy & Security",
+               "Location, mic, camera, screen recording",
+               "privacy",
+               "privacy,security,permission,location,microphone,camera", 2,
+               "System"),
+    SectionDef("apps",          "Apps & Defaults",
+               "Installed apps, default browser/terminal, autostart",
+               "apps",
+               "apps,application,default,browser,terminal,autostart,mime", 2,
+               "System"),
+    SectionDef("storage",       "Storage",
+               "Disks, usage, SMART health, cleanup",
+               "storage",
+               "storage,disk,drive,usage,smart,smartctl,health,clean", 2,
+               "System"),
+    SectionDef("updates",       "Updates",
+               "System packages and AUR",
+               "updates",
+               "update,upgrade,pacman,aur,package,version", 2,
+               "System"),
+    # ── Account ─────────────────────────────────────────────────────────
     SectionDef("users",         "Users",
                "Account info, password, groups, shell",
                "users",
-               "user,account,password,group,shell,passwd,profile", 2),
-    SectionDef("about",         "About",
-               "System info, kernel, hardware, version",
-               "about",
-               "about,version,kernel,hardware,cpu,gpu,ram,uptime,build", 1),
-    SectionDef("backup",        "Backup",
-               "Snapshots, schedule, restore (Timeshift)",
-               "backup",
-               "backup,snapshot,timeshift,restore,schedule,history", 1),
+               "user,account,password,group,shell,passwd,profile", 2,
+               "Account"),
     SectionDef("sync",          "NYXUS Account",
                "Opt-in sync of wallpaper, theme, settings",
                "sync",
-               "account,sync,cloud,wallpaper,theme,settings,token", 1),
+               "account,sync,cloud,wallpaper,theme,settings,token", 1,
+               "Account"),
+    SectionDef("backup",        "Backup",
+               "Snapshots, schedule, restore (Timeshift)",
+               "backup",
+               "backup,snapshot,timeshift,restore,schedule,history", 1,
+               "Account"),
     SectionDef("drop",          "NYXUS Drop",
                "Send files & text to nearby devices (KDE Connect)",
                "drop",
-               "drop,airdrop,share,kdeconnect,phone,nearby,send", 1),
+               "drop,airdrop,share,kdeconnect,phone,nearby,send", 1,
+               "Account"),
+    SectionDef("about",         "About",
+               "System info, kernel, hardware, version",
+               "about",
+               "about,version,kernel,hardware,cpu,gpu,ram,uptime,build", 1,
+               "Account"),
 )
 SECTIONS_BY_KEY = {s.key: s for s in SECTIONS}
 
@@ -473,6 +501,51 @@ window, .nyx-bg {{
     font-size: 11px;
     color: {GREY_MID};
     padding: 2px 14px 6px;
+}}
+.nyx-cat-header {{
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: {GREY_TERTIARY};
+    padding: 14px 22px 4px;
+    text-transform: uppercase;
+}}
+/* ── Command palette overlay ──────────────────────────────────────── */
+.nyx-palette-window {{
+    background: rgba(8, 9, 12, 0.96);
+}}
+.nyx-palette-card {{
+    background-color: {GLASS_DARK};
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: {RADIUS_CARD}px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.7),
+                0 0 0 1px rgba(212,184,122,0.08);
+    padding: 8px;
+}}
+.nyx-palette-entry {{
+    background: transparent;
+    border: none;
+    color: {WHITE_PURE};
+    font-size: 18px;
+    padding: 12px 14px;
+}}
+.nyx-palette-row {{
+    padding: 10px 14px;
+    border-radius: {RADIUS_PILL}px;
+    color: {GREY_LIGHT};
+}}
+.nyx-palette-row:hover,
+.nyx-palette-row.selected,
+.nyx-palette-row:selected {{
+    background-color: rgba(212,184,122,0.10);
+    color: {WHITE_PURE};
+}}
+.nyx-palette-hint {{
+    font-size: 10px;
+    color: {GREY_TERTIARY};
+    padding: 6px 14px 2px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
 }}
 
 /* ── Content panel ────────────────────────────────────────────────── */
@@ -7090,6 +7163,8 @@ class SettingsWindow(Adw.ApplicationWindow):
         self.listbox.add_css_class("background")
         self.listbox.connect("row-selected", self._on_row_selected)
         self.listbox.set_filter_func(self._filter_row)
+        # Category headers — Mac System Settings style group dividers
+        self.listbox.set_header_func(self._sidebar_header_func)
         for s in SECTIONS:
             self.listbox.append(SidebarRow(s))
 
@@ -7131,6 +7206,9 @@ class SettingsWindow(Adw.ApplicationWindow):
         if ctrl and keyval in (Gdk.KEY_l, Gdk.KEY_L):
             self.listbox.grab_focus()
             return True
+        if ctrl and keyval in (Gdk.KEY_k, Gdk.KEY_K):
+            self.open_command_palette()
+            return True
         if ctrl and keyval in (Gdk.KEY_w, Gdk.KEY_W,
                                Gdk.KEY_q, Gdk.KEY_Q):
             self.close()
@@ -7142,9 +7220,46 @@ class SettingsWindow(Adw.ApplicationWindow):
                 return True
         return False
 
+    # ── Command palette ──────────────────────────────────────────────
+    def open_command_palette(self) -> None:
+        """Open a Spotlight-style overlay (Ctrl+K) to jump to any
+        section by typing. Uses the same keyword/title index as the
+        sidebar search but as a focused overlay window."""
+        try:
+            pal = CommandPalette(self)
+            pal.present()
+        except Exception as e:
+            log.warning("command palette: %s", e)
+            self.toast("Command palette unavailable")
+
+    def _sidebar_header_func(self, row: Gtk.ListBoxRow,
+                             before: Optional[Gtk.ListBoxRow]) -> None:
+        """Show a small-caps category label above the first row of each
+        category, like macOS System Settings. Hidden during search so
+        filtered results stay tightly packed.
+        """
+        if not isinstance(row, SidebarRow):
+            row.set_header(None)
+            return
+        if self.search.get_text().strip():
+            row.set_header(None)
+            return
+        cat = row.section.category or ""
+        prev_cat = ""
+        if isinstance(before, SidebarRow):
+            prev_cat = before.section.category or ""
+        if cat and cat != prev_cat:
+            lbl = Gtk.Label(label=cat.upper(), xalign=0.0)
+            lbl.add_css_class("nyx-cat-header")
+            row.set_header(lbl)
+        else:
+            row.set_header(None)
+
     # ── search filter ─────────────────────────────────────────────────
     def _on_search(self, _entry: Gtk.SearchEntry) -> None:
         self.listbox.invalidate_filter()
+        # Headers are hidden while filtering; force a re-eval.
+        self.listbox.invalidate_headers()
         # Update the live match counter
         q = self.search.get_text().strip()
         if not q:
@@ -7220,6 +7335,137 @@ class SettingsWindow(Adw.ApplicationWindow):
 
 
 # ──────────────────────────────────────────────────────────────────────
+# Command palette — Ctrl+K Spotlight-style jump menu
+# ──────────────────────────────────────────────────────────────────────
+class CommandPalette(Adw.Window):
+    """Modal overlay window. Type to fuzzy-match any section by title,
+    keyword or category. Enter activates the highlighted row.
+    Up/Down navigate; Esc dismisses; click selects.
+    """
+
+    def __init__(self, parent: "SettingsWindow"):
+        super().__init__(transient_for=parent, modal=True,
+                         title="NYXUS Quick Jump")
+        self.parent = parent
+        self.set_default_size(540, 420)
+        self.set_resizable(False)
+        self.add_css_class("nyx-palette-window")
+
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        outer.set_margin_top(12); outer.set_margin_bottom(12)
+        outer.set_margin_start(12); outer.set_margin_end(12)
+        self.set_content(outer)
+
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        card.add_css_class("nyx-palette-card")
+        outer.append(card)
+
+        self.entry = Gtk.SearchEntry()
+        self.entry.set_placeholder_text("Type to jump…   "
+                                        "↑↓ navigate · Enter open · Esc close")
+        self.entry.add_css_class("nyx-palette-entry")
+        self.entry.connect("search-changed", lambda *_: self._refresh())
+        self.entry.connect("activate", lambda *_: self._activate_selected())
+        card.append(self.entry)
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_min_content_height(320)
+        card.append(scroll)
+
+        self.listbox = Gtk.ListBox()
+        self.listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.listbox.add_css_class("background")
+        self.listbox.connect("row-activated",
+                             lambda _lb, _row: self._activate_selected())
+        scroll.set_child(self.listbox)
+
+        hint = Gtk.Label(
+            label="↵ open · ↑/↓ navigate · esc dismiss",
+            xalign=0.0)
+        hint.add_css_class("nyx-palette-hint")
+        card.append(hint)
+
+        # Window-level keyboard navigation
+        kc = Gtk.EventControllerKey()
+        kc.connect("key-pressed", self._on_key)
+        self.add_controller(kc)
+
+        self._refresh()
+        # Focus the entry so the user can type immediately.
+        GLib.idle_add(self.entry.grab_focus)
+
+    def _refresh(self) -> None:
+        """Rebuild the rows from the current query."""
+        # Clear
+        child = self.listbox.get_first_child()
+        while child is not None:
+            nxt = child.get_next_sibling()
+            self.listbox.remove(child)
+            child = nxt
+        q = self.entry.get_text().strip().lower()
+        parts = [p for p in q.split() if p]
+        for s in SECTIONS:
+            hay = (f"{s.title} {s.subtitle} {s.keywords} "
+                   f"{s.category}").lower()
+            if parts and not all(p in hay for p in parts):
+                continue
+            row = Gtk.ListBoxRow()
+            row.add_css_class("nyx-palette-row")
+            row.section_key = s.key  # type: ignore[attr-defined]
+            box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,
+                          spacing=12)
+            glyph = Gtk.Label(label=GLYPHS.get(s.glyph, ""))
+            glyph.add_css_class("nyx-section-glyph")
+            box.append(glyph)
+            text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,
+                           spacing=0)
+            t = Gtk.Label(label=s.title, xalign=0.0)
+            t.add_css_class("body")
+            text.append(t)
+            sub_text = (f"{s.category} · {s.subtitle}"
+                        if s.category else s.subtitle)
+            sub = Gtk.Label(label=sub_text, xalign=0.0)
+            sub.add_css_class("subtitle")
+            sub.set_ellipsize(3)
+            text.append(sub)
+            text.set_hexpand(True)
+            box.append(text)
+            row.set_child(box)
+            self.listbox.append(row)
+        # Auto-select first row so Enter just works
+        first = self.listbox.get_row_at_index(0)
+        if first is not None:
+            self.listbox.select_row(first)
+
+    def _activate_selected(self) -> None:
+        row = self.listbox.get_selected_row()
+        if row is None:
+            row = self.listbox.get_row_at_index(0)
+        if row is None:
+            return
+        key = getattr(row, "section_key", None)
+        if key:
+            self.parent._select_key(key)
+        self.close()
+
+    def _on_key(self, _ctrl, keyval, _kc, _state) -> bool:
+        if keyval == Gdk.KEY_Escape:
+            self.close()
+            return True
+        if keyval in (Gdk.KEY_Down, Gdk.KEY_Up):
+            cur = self.listbox.get_selected_row()
+            cur_idx = cur.get_index() if cur is not None else -1
+            new_idx = cur_idx + (1 if keyval == Gdk.KEY_Down else -1)
+            new_row = self.listbox.get_row_at_index(max(0, new_idx))
+            if new_row is not None:
+                self.listbox.select_row(new_row)
+                new_row.grab_focus()
+            return True
+        return False
+
+
+# ──────────────────────────────────────────────────────────────────────
 # Application
 # ──────────────────────────────────────────────────────────────────────
 class SettingsApp(Adw.Application):
@@ -7237,12 +7483,46 @@ class SettingsApp(Adw.Application):
         win = self.get_active_window()
         if win is None:
             win = SettingsWindow(self)
+            # Honour deep-link argv: `nyxus-settings sound`
+            if self._initial_section:
+                try:
+                    win._select_key(self._initial_section)
+                except Exception as e:
+                    log.warning("deep-link %s: %s",
+                                self._initial_section, e)
         win.present()
+
+    # Set by main() before run()
+    _initial_section: Optional[str] = None
 
 
 def main() -> int:
+    """Entry point. Supports a single positional argv:
+
+        nyxus-settings              → open last visited section
+        nyxus-settings sound        → jump straight to Sound
+        nyxus-settings keyboard     → jump straight to Keyboard
+        nyxus-settings --list       → print all section keys + exit
+
+    Unknown keys print a hint to stderr and continue with default.
+    """
+    argv = list(sys.argv)
+    initial: Optional[str] = None
+    if len(argv) > 1 and argv[1] in ("--list", "-l"):
+        for s in SECTIONS:
+            print(f"  {s.key:14s}  — {s.title}")
+        return 0
+    if len(argv) > 1 and not argv[1].startswith("-"):
+        cand = argv[1].strip().lower()
+        if cand in SECTIONS_BY_KEY:
+            initial = cand
+            argv.pop(1)  # don't pass it down to GApplication
+        else:
+            print(f"nyxus-settings: unknown section '{cand}' "
+                  f"(try --list)", file=sys.stderr)
     app = SettingsApp()
-    return app.run(sys.argv)
+    app._initial_section = initial
+    return app.run(argv)
 
 
 if __name__ == "__main__":
