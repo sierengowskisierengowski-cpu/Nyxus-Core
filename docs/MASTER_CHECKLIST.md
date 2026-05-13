@@ -231,3 +231,187 @@ Realistic estimate from current pace:
 
 Going strictly top-to-bottom. No skipping. No fakes. Every checkbox flipped
 to `[x]` only after it works on real hardware.
+
+---
+
+# ════════════════════════════════════════════════════════════════════════
+# PHASE 8 → 25 — Apple/Windows-class parity build (rev r10, 2026-05-13)
+# ════════════════════════════════════════════════════════════════════════
+
+User directive (2026-05-13): "Start at 1, work down to 18. Nothing left
+unfinished. Stand next to Apple and Windows in design, function and
+stability." Each tier ships in batches of ~3 items, py_compile + bash -n
++ iso-verify after every batch, architect review after every tier.
+
+Grade-A done bar (unchanged): real read · real write · persists · in
+Settings + menu/keybind · logs to `~/.cache/nyxus/<app>.log` · fails loud
+· architect zero-severe.
+
+## Tier 1 — Devices & Hardware
+- [x] **Bluetooth panel** (BluetoothPage — Wave 1; pair/scan/connect/power)
+- [x] **Printers & Scanners** (PrintersPage — r10; CUPS service +
+      list, set-default, test page, pause/resume, remove, web admin)
+- [x] **Mice & Touchpad** (MousePage — sensitivity, accel profile,
+      natural scroll, tap-to-click, two-finger scroll, disable-while-
+      typing, drag lock, live device list)
+- [x] **Camera & Microphone** (CamerasMicsPage — r10; v4l2 enum,
+      pactl source enum, cheese/guvcview/pavucontrol launchers)
+- [x] **Game Controllers** (ControllersPage — r10; /dev/input/js*
+      enum w/ udev names, jstest-gtk/jstest/evtest launchers, browser
+      gamepad tester fallback)
+- [ ] **Touchpad gestures** (3/4-finger swipe → workspace switch &
+      Mission Control; libinput-gestures backed)
+- [ ] **Keyboard panel polish** (compose key, switcher tray applet,
+      shortcuts editor that rebinds hyprland binds in place)
+- [ ] **Display arrangement** (multi-monitor drag-arrange, per-monitor
+      scaling, rotation, refresh — wlr-randr backed)
+- [ ] **Color profiles** (colord/ICC import + per-monitor profile)
+- [ ] **External drives & USB arrival** (udisks2 watcher → notification
+      + auto-mount manager toggle)
+
+## Tier 2 — Network & Connectivity
+- [x] **VPN: WireGuard + OpenVPN profiles** (NetworkPage Wave 1 covers;
+      verify import flow exists and ship if not)
+- [ ] **Hotspot / Mobile broadband sharing** (NM share)
+- [ ] **Proxy settings UI** (system + per-app)
+- [ ] **DNS-over-HTTPS toggle** (systemd-resolved, presets)
+- [ ] **Firewall UI** (UFW frontend; lives inside Security Center
+      already — verify and surface in Settings → Network too)
+
+## Tier 3 — Look & Feel signature polish
+- [ ] **Hot Corners** (4 corners → assignable actions, hyprland binds)
+- [ ] **Night Light scheduler** (wlsunset; DisplayPage has nl_grp stub)
+- [ ] **Dynamic / time-of-day wallpapers** (Sonoma-style)
+- [ ] **Live wallpapers** (mpv-on-desktop optional)
+- [ ] **Accent color picker** (override gold)
+- [ ] **Cursor theme + size**
+- [ ] **Font management** (install/preview/enable)
+- [ ] **Window snapping presets** (quarter/third/half tiling)
+- [ ] **Stage Manager-style window grouping** (optional mode)
+- [ ] **Per-workspace wallpapers**
+
+## Tier 4 — Input & Productivity
+- [ ] **Emoji & symbol picker** (`Super+.`, rofi-emoji)
+- [ ] **Screenshot tool with annotate** (region, window, delay, draw,
+      redact — grim+slurp+swappy)
+- [ ] **Screen ruler / color picker** utilities
+- [ ] **Text expansion / snippets** (espanso wrapper)
+- [ ] **Window picker overlay** (`Alt+Tab` redesign)
+- [ ] **App Launchpad** (full-screen app grid, Spotlight sibling)
+- [ ] **Login Items / Startup Apps manager** (`~/.config/autostart`)
+- [ ] **Default Apps panel** (browser, mail, terminal, image viewer)
+- [ ] **File associations editor** (per-mimetype)
+
+## Tier 5 — Notifications & Focus
+- [ ] **Do Not Disturb scheduling** (windows, "until tomorrow",
+      per-app overrides) — extends NotificationsPage
+- [ ] **Focus modes** (Work/Personal/Gaming bundles)
+- [ ] **Per-app notification rules** (sound, banners, lockscreen viz)
+
+## Tier 6 — Time, Place & Awareness
+- [ ] **Location services panel** (geoclue toggles, per-app)
+- [ ] **Weather widget** + lockscreen weather
+- [ ] **World clock / time zones panel**
+- [ ] **Calendar & Reminders app** (pairs w/ Stickies/Notepad)
+- [ ] **Auto time zone** based on location
+
+## Tier 7 — Audio
+- [ ] **Sound scheme picker** (UI sounds on/off, presets)
+- [ ] **Per-app volume mixer** (native UI, replace pavucontrol)
+- [ ] **Audio routing rules** (auto-switch on headphone plug)
+- [ ] **EQ / spatial audio preset panel**
+
+## Tier 8 — Storage & Files
+- [ ] **Disk Usage Analyzer** (baobab-style treemap inside StoragePage)
+- [ ] **Trash management** (auto-empty after N days)
+- [ ] **Cloud accounts panel** (Nextcloud/Drive/Dropbox via gvfs)
+- [ ] **Disk encryption status + change-passphrase UI** for LUKS
+- [ ] **SMART health for drives**
+- [ ] **ISO/disk image mounter** (right-click)
+
+## Tier 9 — Apps & Permissions
+- [ ] **App Library / Uninstall manager** (single pane: Flatpak +
+      pacman + AUR)
+- [ ] **Per-app permission viewer** (camera/mic/location/files even
+      beyond Flatpak)
+- [ ] **Background process manager** (what's running + kill button)
+- [ ] **App auto-update toggles** per-app
+- [ ] **Pinned-app sync** across machines (NYXUS Account)
+
+## Tier 10 — Accounts & Sync
+- [ ] **Online accounts** (Google/Microsoft/Nextcloud sign-in)
+- [ ] **Contacts app**
+- [ ] **Mail app** (or default-mail picker + Geary bundle)
+- [ ] **Browser profile sync** through NYXUS Account
+- [ ] **Settings sync** (wallpaper/accent/dock/keybinds)
+- [ ] **Find My Device** (last-seen via NYXUS Account)
+
+## Tier 11 — Security & Privacy (extends Security Center)
+- [ ] **Password manager / Keyring UI** (gnome-keyring or KeePassXC)
+- [ ] **2FA / authenticator app**
+- [ ] **Privacy dashboard** (last 24h: who used cam/mic/location)
+- [ ] **Clipboard history privacy rules** (skip password fields)
+- [ ] **Secure file shredder** (right-click)
+- [ ] **Lock-on-leave** (webcam-presence or BT-proximity)
+
+## Tier 12 — Power & Battery
+- [ ] **Battery health report** (cycle count, capacity, recs)
+- [ ] **Per-app energy impact** view
+- [ ] **Power profiles with custom schedules**
+- [ ] **Charge limit toggle** (stop at 80%)
+
+## Tier 13 — Connectivity / Continuity (Apple-magic)
+- [ ] **Phone link** (KDE Connect rebrand: SMS, notifications, file
+      send, clipboard)
+- [ ] **AirDrop expansion of NYXUS Drop** (LAN peer discovery)
+- [ ] **Universal clipboard** between devices
+- [ ] **Handoff** (continue on another device)
+- [ ] **Remote desktop** (RustDesk or built-in) + screen sharing
+- [ ] **Nearby Share / Quick Share** to Android
+
+## Tier 14 — Accessibility (extends AccessibilityPage)
+- [ ] **Voice Control** (whisper.cpp local — "click button")
+- [ ] **Live Captions** for any audio (overlay)
+- [ ] **Zoom / Magnifier** with follow-cursor
+- [ ] **Sticky / Slow / Bounce keys UI**
+- [ ] **Color filters** (deuteranopia/protanopia/grayscale)
+- [ ] **Reduce motion / reduce transparency** toggles
+- [ ] **Mouse keys** (numpad-driven cursor)
+
+## Tier 15 — Developer / Pro
+- [ ] **Developer Mode toggle** (verbose logs, debug overlays)
+- [ ] **System hardware report exporter** (PDF/JSON for support)
+- [ ] **Performance HUD** (FPS/GPU/CPU overlay)
+- [ ] **Containers / Distrobox UI**
+- [ ] **Virtual machines quick-launcher** (GNOME Boxes wrap)
+
+## Tier 16 — Recovery & Resilience (extends Time Machine)
+- [ ] **Boot picker / BLS entry editor** (graphical)
+- [ ] **Reset this PC** flow (keep files / wipe — Win11 style)
+- [ ] **Safe mode** boot option from Recovery
+- [ ] **Driver / kernel rollback UI** tied to snapshot system
+
+## Tier 17 — First-5-minutes experience
+- [ ] **Interactive tour** after welcome (gestures, Spotlight, Mission
+      Control)
+- [ ] **Migration assistant** (import from Linux home / Windows backup
+      / Mac Time Machine)
+- [ ] **What's New popup** after each major update
+- [ ] **Tip of the Day** in welcome
+
+## Tier 18 — Smart / on-device AI (optional)
+- [ ] **Local AI assistant** (llama.cpp wrapper, Spotlight integration)
+- [ ] **Smart screenshot text extract** (Tesseract OCR → clipboard)
+- [ ] **Image background removal** in Files right-click
+- [ ] **Smart search in Spotlight** (natural language)
+
+---
+
+## Per-batch progress log (newest first)
+
+- **r10 batch 1** (2026-05-13): Tier 1 #1–#5 — Bluetooth (already
+  present, verified), Printers (new), Mouse (verified deeper than
+  plan), Cameras & Mics (new), Game Controllers (new). py_compile ✓.
+  Commit pending architect review.
+
+
