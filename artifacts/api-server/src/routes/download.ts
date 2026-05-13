@@ -68,7 +68,9 @@ const ALLOWED_FILES: Record<string, string> = {
   // ── ★ EWW SHELL (rev r6-eww, 2026-05-11 — replaces waybar + 5 py apps) ──
   // 4 bars + dashboard + powermenu + cheatsheet + 3 OSDs. All real backends.
   "nyxus-eww-launch":           "nyxus-eww-launch",
+  "nyxus-mission-control-toggle":"nyxus-mission-control-toggle",
   "nyxus-eww.service":          "nyxus-eww.service",
+  "nyxus-crashd.service":       "nyxus-crashd.service",
   // USB plug-in / removal toast notifier (Tier 1 batch 2, r10).
   // Daemon = nyxus_usb_watch.py (under GTK4 USER APPS-style nyxus_*.py
   // glob); user systemd unit lives at /usr/lib/systemd/user/ on the
@@ -200,6 +202,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-hyprland-opacity.conf":   "nyxus-hyprland-opacity.conf",
   "nyxus-hyprland-general.conf":   "nyxus-hyprland-general.conf",
   "nyxus-hyprland-layerblur.conf": "nyxus-hyprland-layerblur.conf",
+  "nyxus-hyprland-mission.conf":   "nyxus-hyprland-mission.conf",
 
   // ── ★ DESKTOP UI CONFIGS (rofi, alacritty, dunst, wlogout) ───────────────
   // rev r6-eww (2026-05-11): waybar-config.json / waybar-style.css /

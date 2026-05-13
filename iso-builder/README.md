@@ -101,9 +101,9 @@ What gets staged on every `sudo ./build-iso.sh`:
 | `wallpaper-rotate.sh`, `nyxus-eww-launch` | `/usr/local/bin/` (renamed without `.sh`) |
 | 12 launcher wrappers + `.desktop` entries | `/usr/local/bin/nyxus-*` and `/usr/share/applications/io.nyxus.*.desktop` |
 
-The 12 apps with launchers + desktop entries are: notepad, stickies,
-sysmon, settings, control, weather, terminal, quicksettings, launcher,
-powermenu, screenshot, doctor.
+The 12 apps with launchers + desktop entries are:
+notepad, stickies, notes, sysmon (system monitor), settings, control,
+terminal, launcher, screenshot, store (app store), powermenu, doctor.
 
 ## packages.x86_64
 

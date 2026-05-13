@@ -17,7 +17,7 @@ The system is composed of four primary layers:
    - NYXUS script payload source (`artifacts/api-server/nyxus-scripts/`).
 
 3. **Shared package layer** (`lib/`)
-   - Shared API specification, generated client bindings, schema validation, and DB package.
+   - Shared API specification, generated client bindings, schema validation, DB package, and i18n scaffold.
 
 4. **Automation layer** (`scripts/`)
    - Workspace-level helper scripts used during development and maintenance.
