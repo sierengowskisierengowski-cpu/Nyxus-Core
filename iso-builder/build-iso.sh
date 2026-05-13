@@ -196,8 +196,18 @@ for f in nyxus-welcome nyxus-welcome-helper nyxus-welcome.policy; do
   fi
 done
 ok "Welcome Wizard: staged 3 companion files into airootfs/root/"
-ln -sfn /opt/nyxus "${SKEL}/.nyxus"
-ok "GTK apps: $(ls "${OPT_NYXUS}"/*.py | wc -l) python files in /opt/nyxus/ (~/.nyxus → /opt/nyxus symlink in skel)"
+# ~/.nyxus is a REAL user-owned directory containing per-file SYMLINKS
+# to each /opt/nyxus/*.py. This preserves keybind compat
+# (python3 ~/.nyxus/nyxus_launcher.py still resolves) while leaving the
+# directory writable for user-data files like ~/.nyxus/.bootstrapped and
+# ~/.nyxus/hw_profile.json. The previous design symlinked the whole dir
+# to /opt/nyxus which made every user-data write hit root-owned /opt.
+rm -f "${SKEL}/.nyxus"
+mkdir -p "${SKEL}/.nyxus"
+for _f in "${OPT_NYXUS}"/*.py; do
+  ln -sfn "/opt/nyxus/$(basename "${_f}")" "${SKEL}/.nyxus/$(basename "${_f}")"
+done
+ok "GTK apps: $(ls "${OPT_NYXUS}"/*.py | wc -l) python files in /opt/nyxus/ (per-file symlinks in ~/.nyxus/ — dir is user-owned)"
 
 # ── User services + policies (EWW / crashd / security daemon) ─────────────────
 if [[ -f "${NS}/nyxus-eww.service" ]]; then
