@@ -1,0 +1,20 @@
+# ============================================
+# NYXUS — live-session sudoers drop-in
+# Copyright © 2026 Joseph Sierengowski
+# NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+#
+# LIVE ISO ONLY. Grants the `nyx` live user passwordless sudo so the
+# user can run admin commands (pacman, systemctl, cryptsetup, etc.)
+# without having to discover or remember the live password ("nyx").
+#
+# This file is REMOVED by Calamares post-install (see the postinstall
+# step in build-iso.sh / customize_airootfs.sh) so the INSTALLED
+# system reverts to standard wheel-with-password sudo. It exists only
+# to remove friction during live evaluation and recovery.
+#
+# Hard pref (replit.md): NO pam_faillock / pam_tally / fail2ban /
+# account-lockout modules. This file does NOT enable any lockout —
+# it only removes the password prompt for the live user.
+
+nyx ALL=(ALL:ALL) NOPASSWD: ALL
