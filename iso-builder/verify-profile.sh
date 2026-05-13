@@ -279,6 +279,33 @@ if [[ -d "${FB}" ]]; then
   fi
 fi
 
+# ── 13b. NYXUS-Dark icon theme ────────────────────────────────────────
+hd "13b. NYXUS-Dark icon theme"
+ICON_ROOT="${AIROOT}/usr/share/icons/NYXUS-Dark"
+if [[ -d "${ICON_ROOT}" ]]; then
+  if [[ -f "${ICON_ROOT}/index.theme" ]]; then
+    ok "NYXUS-Dark/index.theme present"
+  else
+    fail "NYXUS-Dark/index.theme missing"
+  fi
+  ICON_COUNT=$(find "${ICON_ROOT}/scalable" -name '*.svg' 2>/dev/null | wc -l)
+  if (( ICON_COUNT >= 30 )); then
+    ok "NYXUS-Dark has ${ICON_COUNT} svg icons"
+  else
+    fail "NYXUS-Dark has only ${ICON_COUNT} svg icons (expected >=30)"
+  fi
+  for f in "${AIROOT}/etc/skel/.config/gtk-3.0/settings.ini" \
+           "${AIROOT}/etc/skel/.config/gtk-4.0/settings.ini"; do
+    if grep -q '^gtk-icon-theme-name=NYXUS-Dark$' "$f" 2>/dev/null; then
+      ok "$(basename "$(dirname "$f")")/settings.ini -> NYXUS-Dark"
+    else
+      fail "$(basename "$(dirname "$f")")/settings.ini does not select NYXUS-Dark"
+    fi
+  done
+else
+  fail "NYXUS-Dark icon theme dir missing"
+fi
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \
