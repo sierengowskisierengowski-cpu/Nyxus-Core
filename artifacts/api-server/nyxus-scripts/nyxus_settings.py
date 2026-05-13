@@ -15,7 +15,7 @@
 #       Accessibility · Users
 #
 #  Storage:  ~/.config/nyxus/settings.json
-#  Logs:     /tmp/nyxus-settings.log
+#  Logs:     ~/.cache/nyxus/settings.log
 #  Polkit:   /usr/local/libexec/nyxus-settings-helper (added later)
 #
 #  Design contract refs:
@@ -57,7 +57,12 @@ WIN_H     = 740   # fits inside 768 with EWW bar present (§12)
 HOME      = Path.home()
 CFG_DIR   = HOME / ".config" / "nyxus"
 CFG_FILE  = CFG_DIR / "settings.json"
-LOG_FILE  = Path("/tmp/nyxus-settings.log")
+LOG_DIR   = Path.home() / ".cache" / "nyxus"
+try:
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
+LOG_FILE  = LOG_DIR / "settings.log"
 WALLS_SYS = Path("/usr/share/backgrounds/nyxus")
 WALLS_USR = HOME / "Pictures" / "Wallpapers"
 CFG_DIR.mkdir(parents=True, exist_ok=True)
@@ -418,6 +423,17 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "about",
                "about,version,kernel,hardware,cpu,gpu,ram,uptime,build", 1,
                "Account"),
+    SectionDef("parental",      "Parental Controls",
+               "Bedtime, web blocklist (nudge-only, never lockout)",
+               "users",
+               "parental,kids,family,bedtime,blocklist,filter,limit,lock", 1,
+               "Account"),
+    SectionDef("app_perms",     "App Permissions",
+               "Per-Flatpak camera, mic, network, filesystem access",
+               "apps",
+               "permission,sandbox,flatpak,camera,microphone,network,fs,"
+               "portal,override", 1,
+               "System"),
     # ── System (security lives here so it's reachable from the
     # System bucket users expect; the full Security Center is a
     # standalone app launched from the embedded SectionPage) ──────────
@@ -2142,9 +2158,44 @@ class NotificationsPage(SectionPage):
                 summ = (n.get("summary", {}) or {}).get("data", "?")
                 app  = (n.get("app-name", {}) or {}).get("data", "?")
                 hist.add(kv_row(f"{app}", str(summ)[:60]))
+        elif self.daemon == "swaync":
+            # swaync exposes a JSON-friendly count plus a panel toggle.
+            # There's no public history dump API on stable releases, so
+            # we surface live counters + actions that DO work (toggle
+            # panel, dismiss all, open compositor). Grade-A: real reads,
+            # never a "not implemented" placeholder.
+            rc, n_out, _ = sh(["swaync-client", "--count"], timeout=2)
+            try:
+                n = int((n_out or "0").strip())
+            except ValueError:
+                n = 0
+            rc2, m_out, _ = sh(["swaync-client", "--get-dnd"], timeout=2)
+            dnd_on = "true" in (m_out or "").lower()
+            hist.add(kv_row("Pending notifications", str(n)))
+            hist.add(kv_row("Do Not Disturb",
+                            "ON — silenced" if dnd_on else "OFF"))
+            hist.add(action_row(
+                "Open notification panel",
+                "Toggles the swaync slide-in panel",
+                "Open",
+                lambda: sh_async(["swaync-client", "-t", "-sw"],
+                                 None, timeout=3)))
+            hist.add(action_row(
+                "Dismiss all notifications",
+                "Clears every pending swaync entry",
+                "Clear",
+                lambda: sh_async(["swaync-client", "-C"],
+                                 None, timeout=3)))
+            hist.add(action_row(
+                "Reload swaync config",
+                "Re-reads ~/.config/swaync/config.json",
+                "Reload",
+                lambda: sh_async(["swaync-client", "-R"],
+                                 None, timeout=3)))
         else:
-            hist.add(empty_row("History viewer not implemented for swaync",
-                               "swaync provides its own panel UI"))
+            hist.add(empty_row(
+                f"Notification daemon '{self.daemon}' not recognised",
+                "Install dunst, mako, or swaync — NYXUS auto-detects"))
 
         self.add_pill(status_pill(self.daemon, "ok"))
 
@@ -4528,7 +4579,7 @@ class AccessibilityPage(SectionPage):
         self.add_group(contrast)
         contrast.add(kv_row("System theme", "DARK MIRROR (locked)"))
 
-        # Pointers to assistive tools
+        # Pointers to assistive tools — launch on demand
         tools = Adw.PreferencesGroup(title="Assistive tools")
         self.add_group(tools)
         for label, bin_ in (("Screen magnifier (magnus)", "magnus"),
@@ -4540,7 +4591,387 @@ class AccessibilityPage(SectionPage):
             else:
                 tools.add(empty_row(label,
                                      f"{bin_} not installed"))
+
+        # Persistent autostart — the macOS / Windows pattern is "ON in
+        # accessibility = ON every login". We wire this through the
+        # standard XDG autostart mechanism (~/.config/autostart/*.desktop)
+        # so it survives reboot AND reflects the system state on every
+        # page open. NYXUS does not start an a11y daemon by default;
+        # the user explicitly opts in here.
+        autos = Adw.PreferencesGroup(
+            title="Sign-in autostart",
+            description="Start these helpers automatically on every login")
+        self.add_group(autos)
+        self._autostart_dir = Path.home() / ".config" / "autostart"
+        for label, bin_, fname in (
+            ("Auto-start screen reader (Orca)",    "orca",   "orca.desktop"),
+            ("Auto-start on-screen keyboard",      "wvkbd",  "wvkbd.desktop"),
+            ("Auto-start screen magnifier",        "magnus", "magnus.desktop"),
+        ):
+            if not have(bin_):
+                autos.add(empty_row(label, f"{bin_} not installed"))
+                continue
+            sw_row = Adw.SwitchRow(title=label,
+                                   subtitle=f"~/.config/autostart/{fname}")
+            sw_row.set_active(self._autostart_present(fname))
+            sw_row.connect(
+                "notify::active",
+                lambda s, _p, b=bin_, f=fname, lbl=label:
+                    self._toggle_autostart(s, b, f, lbl))
+            autos.add(sw_row)
+
         self.add_pill(status_pill("a11y", "ok"))
+
+    def _autostart_present(self, fname: str) -> bool:
+        try:
+            return (self._autostart_dir / fname).exists()
+        except Exception:
+            return False
+
+    def _toggle_autostart(self, sw, exe: str, fname: str, label: str) -> None:
+        """Write or remove an XDG autostart .desktop file. Always-on
+        path — no helper required (lives in the user's own home)."""
+        try:
+            path = self._autostart_dir / fname
+            if sw.get_active():
+                self._autostart_dir.mkdir(parents=True, exist_ok=True)
+                path.write_text(
+                    f"[Desktop Entry]\nType=Application\nName={label}\n"
+                    f"Exec={exe}\nX-GNOME-Autostart-enabled=true\n"
+                    f"NoDisplay=false\nTerminal=false\n",
+                    encoding="utf-8")
+                self.toast(f"{label}: auto-start ON")
+            else:
+                if path.exists():
+                    path.unlink()
+                self.toast(f"{label}: auto-start OFF")
+        except Exception as e:
+            log.warning("autostart toggle failed: %s", e)
+            self.toast(f"failed: {e}")
+
+
+# ──────────────────────────────────────────────────────────────────────
+# PARENTAL CONTROLS — bedtime nudge + web hostname blocklist.
+#
+# Hard contract (matches user prefs in replit.md):
+#   · NEVER touches faillock/pam_tally/pam_faillock — bedtime is a
+#     loginctl lock, not a lockout. The user can re-enter their
+#     password at any time.
+#   · OFF by default. The toggle row makes the helper write its first
+#     hosts/timer entry. With no entries, the helper is a no-op.
+#   · Every privileged action goes through nyxus-parental-helper via
+#     pkexec; this Python file never edits /etc/hosts or
+#     /etc/systemd/system itself.
+# ──────────────────────────────────────────────────────────────────────
+class ParentalControlsPage(SectionPage):
+    KEY = "parental"
+    HELPER = "/usr/local/libexec/nyxus-parental-helper"
+
+    def build(self) -> None:
+        warn = Adw.PreferencesGroup(
+            title="Parental Controls",
+            description="Bedtime nudge + web hostname blocklist. "
+                        "These are NUDGES — never account lockouts. "
+                        "The user can always unlock with their password.")
+        self.add_group(warn)
+        warn.add(kv_row("Helper",
+                        "installed" if Path(self.HELPER).exists()
+                        else "not installed — see nyxus-parental-helper"))
+
+        # ── Web blocklist ─────────────────────────────────────────────
+        web = Adw.PreferencesGroup(
+            title="Web blocklist",
+            description="Resolves the host to 0.0.0.0 system-wide via "
+                        "/etc/hosts. Browsers, apps, everything.")
+        self.add_group(web)
+
+        self._blocklist_group = web
+        self._refresh_blocklist()
+
+        add_row = Adw.ActionRow(title="Block a hostname",
+                                subtitle="example: ads.example.com")
+        self._block_entry = Gtk.Entry()
+        self._block_entry.set_placeholder_text("hostname")
+        self._block_entry.set_size_request(220, -1)
+        add_row.add_suffix(self._block_entry)
+        add_btn = Gtk.Button(label="Block")
+        add_btn.add_css_class("suggested-action")
+        add_btn.connect("clicked", lambda *_: self._add_block())
+        add_row.add_suffix(add_btn)
+        web.add(add_row)
+
+        # ── Bedtime ───────────────────────────────────────────────────
+        bed = Adw.PreferencesGroup(
+            title="Bedtime",
+            description="At the start time, the session locks. The user "
+                        "can unlock with their password whenever.")
+        self.add_group(bed)
+
+        bed_row = Adw.ActionRow(
+            title=f"Set bedtime for current user ({Path('~').expanduser().name})",
+            subtitle="HH:MM start, HH:MM end (uses systemd timer)")
+        self._bed_user = Gtk.Entry()
+        self._bed_user.set_text(Path('~').expanduser().name)
+        self._bed_user.set_size_request(120, -1)
+        self._bed_user.set_placeholder_text("user")
+        bed_row.add_suffix(self._bed_user)
+        self._bed_start = Gtk.Entry()
+        self._bed_start.set_size_request(80, -1)
+        self._bed_start.set_placeholder_text("22:00")
+        bed_row.add_suffix(self._bed_start)
+        self._bed_end = Gtk.Entry()
+        self._bed_end.set_size_request(80, -1)
+        self._bed_end.set_placeholder_text("06:00")
+        bed_row.add_suffix(self._bed_end)
+        set_btn = Gtk.Button(label="Set")
+        set_btn.add_css_class("suggested-action")
+        set_btn.connect("clicked", lambda *_: self._set_bedtime())
+        bed_row.add_suffix(set_btn)
+        bed.add(bed_row)
+
+        clear_row = Adw.ActionRow(
+            title="Clear bedtime",
+            subtitle="Disables the bedtime timer for this user")
+        clear_btn = Gtk.Button(label="Clear")
+        clear_btn.add_css_class("destructive-action")
+        clear_btn.connect("clicked", lambda *_: self._clear_bedtime())
+        clear_row.add_suffix(clear_btn)
+        bed.add(clear_row)
+
+        self.add_pill(status_pill("parental", "ok"))
+
+    # Read directly from the public, world-readable blocklist file.
+    # The helper writes it with mode 0644 so a plain read needs no
+    # pkexec — that would gratuitously prompt for a password just to
+    # display the page. ALL mutating actions still go through pkexec.
+    BLOCKLIST_FILE = Path("/etc/hosts.d/nyxus-parental")
+
+    def _refresh_blocklist(self) -> None:
+        for r in getattr(self, "_dyn_block_rows", []):
+            try: self._blocklist_group.remove(r)
+            except Exception: pass
+        self._dyn_block_rows = []
+
+        hosts: list[str] = []
+        try:
+            if self.BLOCKLIST_FILE.exists():
+                for ln in self.BLOCKLIST_FILE.read_text().splitlines():
+                    ln = ln.strip()
+                    if not ln or ln.startswith("#"): continue
+                    parts = ln.split()
+                    if len(parts) >= 2:
+                        hosts.append(parts[1])
+        except Exception as e:
+            log.warning("blocklist read failed: %s", e)
+        if not hosts:
+            row = empty_row("No hosts blocked yet",
+                            "Use the box below to add one")
+            self._blocklist_group.add(row)
+            self._dyn_block_rows.append(row)
+            return
+        for h in hosts:
+            row = Adw.ActionRow(title=h, subtitle="0.0.0.0 → /etc/hosts")
+            btn = Gtk.Button.new_from_icon_name("user-trash-symbolic")
+            btn.add_css_class("flat")
+            btn.connect("clicked",
+                        lambda _b, hh=h: self._remove_block(hh))
+            row.add_suffix(btn)
+            self._blocklist_group.add(row)
+            self._dyn_block_rows.append(row)
+
+    def _add_block(self) -> None:
+        h = (self._block_entry.get_text() or "").strip()
+        if not h:
+            self.toast("Enter a hostname first"); return
+        sh_async(["pkexec", self.HELPER, "add-host-block", h],
+                 lambda r: (self._block_entry.set_text(""),
+                            self._refresh_blocklist(),
+                            self.toast(
+                                "blocked" if r[0] == 0
+                                else f"failed: {r[2][:80]}")),
+                 timeout=10)
+
+    def _remove_block(self, h: str) -> None:
+        sh_async(["pkexec", self.HELPER, "remove-host-block", h],
+                 lambda r: (self._refresh_blocklist(),
+                            self.toast(
+                                "unblocked" if r[0] == 0
+                                else f"failed: {r[2][:80]}")),
+                 timeout=10)
+
+    def _set_bedtime(self) -> None:
+        u = (self._bed_user.get_text() or "").strip()
+        s = (self._bed_start.get_text() or "").strip()
+        e = (self._bed_end.get_text() or "").strip()
+        if not (u and s and e):
+            self.toast("Fill user, start, and end (HH:MM)"); return
+        sh_async(["pkexec", self.HELPER, "set-bedtime", u, s, e],
+                 lambda r: self.toast(
+                     f"bedtime set for {u}: {s}–{e}" if r[0] == 0
+                     else f"failed: {r[2][:80]}"),
+                 timeout=10)
+
+    def _clear_bedtime(self) -> None:
+        u = (self._bed_user.get_text() or "").strip()
+        if not u:
+            self.toast("Enter the user to clear"); return
+        sh_async(["pkexec", self.HELPER, "clear-bedtime", u],
+                 lambda r: self.toast(
+                     f"bedtime cleared for {u}" if r[0] == 0
+                     else f"failed: {r[2][:80]}"),
+                 timeout=10)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# APP PERMISSIONS — per-Flatpak sandbox overrides.
+#
+# Real reads/writes via `flatpak override --show <app>` and
+# `flatpak override --user <app> --(no-)talk-name=…` etc. Lists every
+# installed Flatpak app, exposes the four most-asked toggles
+# (camera, microphone, network, full filesystem). For deeper control
+# the user can launch `flatseal` from the same page.
+# ──────────────────────────────────────────────────────────────────────
+class AppPermissionsPage(SectionPage):
+    KEY = "app_perms"
+
+    # Permission table — the four most-asked Flatpak sandbox toggles.
+    # Each entry maps the user-facing label to:
+    #   · ini_key + ini_val  — the canonical INI form printed by
+    #     `flatpak override --user --show` (e.g. `filesystems=!host`).
+    #   · cli_grant          — flag to RESTORE access (positive).
+    #   · cli_revoke         — flag to REVOKE access (the `--no…`
+    #     form). Using these explicit canonical flags is far more
+    #     robust than the previous string-substitution hack.
+    PERMS = (
+        # label,        subtitle,                  ini_key,      ini_val,     cli_grant,                 cli_revoke
+        ("Camera",      "Webcam (v4l2)",           "devices",    "all",       "--device=all",            "--nodevice=all"),
+        ("Microphone",  "Audio capture",           "sockets",    "pulseaudio", "--socket=pulseaudio",     "--nosocket=pulseaudio"),
+        ("Network",     "Outbound network",        "shared",     "network",   "--share=network",         "--unshare=network"),
+        ("Full filesystem", "Read/write /home AND /", "filesystems", "host",   "--filesystem=host",       "--nofilesystem=host"),
+    )
+
+    def build(self) -> None:
+        if not have("flatpak"):
+            self.add_group(empty_group(
+                "flatpak not installed",
+                "Install flatpak to manage app permissions"))
+            self.add_pill(status_pill("flatpak", "warn"))
+            return
+
+        head = Adw.PreferencesGroup(
+            title="Sandboxed apps",
+            description="Per-app permissions for installed Flatpaks. "
+                        "Toggles below write to the user override store "
+                        "(~/.local/share/flatpak/overrides/<app>).")
+        self.add_group(head)
+        rc, out, _ = sh(["flatpak", "list", "--app",
+                         "--columns=application,name"], timeout=5)
+        apps: list[tuple[str, str]] = []
+        for ln in (out or "").splitlines():
+            ln = ln.strip()
+            if not ln: continue
+            parts = ln.split("\t")
+            if len(parts) >= 2:
+                apps.append((parts[0].strip(), parts[1].strip()))
+            else:
+                apps.append((parts[0], parts[0]))
+        if not apps:
+            self.add_group(empty_group(
+                "No Flatpak apps installed",
+                "Install some from the Software Store first"))
+            self.add_pill(status_pill("flatpak", "ok"))
+            return
+
+        # Quick-launch row for the gold-standard GUI (Flatseal). Open
+        # via xdg-open so we don't care which command name distros use.
+        if have("flatseal") or have("com.github.tchx84.Flatseal"):
+            head.add(action_row(
+                "Open Flatseal",
+                "Full GUI for every Flatpak permission",
+                "Launch",
+                lambda: fire_and_forget(
+                    "flatseal" if have("flatseal")
+                    else "com.github.tchx84.Flatseal")))
+        else:
+            head.add(empty_row(
+                "Install Flatseal for advanced permissions",
+                "flatpak install flathub com.github.tchx84.Flatseal"))
+
+        for app_id, app_name in apps[:30]:  # cap to keep page snappy
+            grp = Adw.PreferencesGroup(title=app_name,
+                                       description=app_id)
+            self.add_group(grp)
+            rc2, ov, _ = sh(
+                ["flatpak", "override", "--user", "--show", app_id],
+                timeout=3)
+            ov_text = ov or ""
+            for label, sub, ini_key, ini_val, grant, revoke in self.PERMS:
+                negated = self._is_perm_blocked(ov_text, ini_key, ini_val)
+                sw = Adw.SwitchRow(title=label, subtitle=sub)
+                # Programmatic-set guard: when the rollback path flips
+                # the switch back to its real value after a failed
+                # `flatpak override`, we MUST NOT re-fire the toggle
+                # handler — otherwise we infinite-loop the failing
+                # command. Plain attribute on the widget; checked at
+                # the top of _toggle_perm.
+                sw._nyxus_suppress = False
+                sw.set_active(not negated)
+                sw.connect(
+                    "notify::active",
+                    lambda s, _p, a=app_id, g=grant, rv=revoke, lbl=label:
+                        self._toggle_perm(s, a, g, rv, lbl))
+                grp.add(sw)
+
+        self.add_pill(status_pill("flatpak", "ok"))
+
+    def _is_perm_blocked(self, ov_text: str, ini_key: str,
+                         ini_val: str) -> bool:
+        """Detect a revocation in the INI text printed by
+        `flatpak override --user --show`. Lines look like:
+            shared=network;
+            sockets=!pulseaudio;wayland;
+        We split each `key=…` line on `;`, strip, and check for the
+        canonical negated form `!ini_val`."""
+        for ln in ov_text.splitlines():
+            ln = ln.strip()
+            if "=" not in ln or not ln.startswith(ini_key + "="):
+                continue
+            vals = [v.strip() for v in ln.split("=", 1)[1].split(";")]
+            if f"!{ini_val}" in vals:
+                return True
+        return False
+
+    def _toggle_perm(self, sw, app_id: str, grant: str,
+                     revoke: str, label: str) -> None:
+        """Apply a single override. Fail-loud: the toast reflects the
+        REAL exit code from flatpak, not just the user's intent."""
+        # Re-entrancy guard. The rollback path below flips the switch
+        # programmatically; we must skip the resulting notify::active
+        # so we don't loop the failing command forever. Lambdas can't
+        # be unblocked via handler_block_by_func, so we use a flag.
+        if getattr(sw, "_nyxus_suppress", False):
+            return
+        active = sw.get_active()
+        flag = grant if active else revoke
+        cmd = ["flatpak", "override", "--user", flag, app_id]
+
+        def done(result: tuple) -> None:
+            rc, _out, err = result
+            if rc == 0:
+                self.toast(f"{label}: {'ON' if active else 'OFF'}")
+            else:
+                msg = (err or "flatpak override failed")[:140]
+                log.warning("flatpak override failed for %s: %s",
+                            app_id, msg)
+                # Revert the switch to match reality without re-firing
+                # the handler.
+                sw._nyxus_suppress = True
+                try:
+                    sw.set_active(not active)
+                finally:
+                    sw._nyxus_suppress = False
+                self.toast(f"{label}: failed — {msg}")
+        sh_async(cmd, done, timeout=8)
 
     def _on_scale_value(self, raw: float) -> None:
         v = round(raw, 2)
@@ -7220,6 +7651,8 @@ PAGE_CLASSES = {
     "sync":          SyncPage,
     "drop":          DropPage,
     "security":      SecurityPage,
+    "parental":      ParentalControlsPage,
+    "app_perms":     AppPermissionsPage,
 }
 
 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>NYXUS</vendor>
+  <vendor_url>https://nyxus.replit.app</vendor_url>
+
+  <action id="com.nyxus.parental.helper">
+    <description>Manage NYXUS Parental Controls</description>
+    <message>Authentication is required to change parental controls (host blocks, bedtime schedules).</message>
+    <icon_name>preferences-desktop-personal</icon_name>
+    <defaults>
+      <allow_any>auth_admin_keep</allow_any>
+      <allow_inactive>auth_admin_keep</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/libexec/nyxus-parental-helper</annotate>
+  </action>
+</policyconfig>

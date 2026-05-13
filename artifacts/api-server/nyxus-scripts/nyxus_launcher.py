@@ -224,12 +224,34 @@ def safe_calc(expr: str):
     return (v, disp)
 
 
-# ── file search (fd preferred, find fallback) ────────────────────────────
+# ── file search (tracker3 → fd → find, in that order) ────────────────────
+# tracker3 gives us full-text and metadata (titles, EXIF, ID3, PDF body)
+# in O(1) once the index is warm — that's the macOS Spotlight feel. fd
+# is the live filesystem walk fallback (fast on cold caches and on dirs
+# tracker3 wasn't told to index). find is the universal last resort.
 def search_files(query: str, limit: int = 30) -> list[dict]:
     if not query: return []
     home = str(Path.home())
     out: list[str] = []
-    if have("fd"):
+    if have("tracker3"):
+        # `tracker3 search -f --limit N -- <q>` returns one file URI per
+        # line. We strip the "file://" prefix and decode percent-escapes.
+        try:
+            from urllib.parse import unquote, urlparse
+            r = subprocess.run(
+                ["tracker3", "search", "-f", "--limit", str(limit),
+                 "--", query],
+                capture_output=True, text=True, timeout=2)
+            for ln in r.stdout.splitlines():
+                ln = ln.strip()
+                if ln.startswith("file://"):
+                    out.append(unquote(urlparse(ln).path))
+                elif ln.startswith("/"):
+                    out.append(ln)
+            out = out[:limit]
+        except Exception:
+            out = []
+    if not out and have("fd"):
         try:
             r = subprocess.run(
                 ["fd", "--hidden", "--no-ignore-vcs", "-t", "f",

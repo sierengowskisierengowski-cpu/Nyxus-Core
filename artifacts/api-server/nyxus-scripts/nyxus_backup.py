@@ -168,6 +168,15 @@ class BackupWindow(Adw.ApplicationWindow):
         btn_settings.connect("clicked", lambda *_: self.open_schedule())
         header.pack_end(btn_settings)
 
+        # Time Machine — open the snapshot scrubber on the selected
+        # snapshot. Discoverable from the main backup window AND it's
+        # the same Adw.Window pattern as Restore so users build muscle
+        # memory.
+        btn_scrub = Gtk.Button.new_from_icon_name("document-open-recent-symbolic")
+        btn_scrub.set_tooltip_text("Browse files inside selected snapshot (Time Machine)")
+        btn_scrub.connect("clicked", lambda *_: self.open_snapshot_browser())
+        header.pack_end(btn_scrub)
+
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         outer.set_margin_start(16); outer.set_margin_end(16)
         outer.set_margin_top(8); outer.set_margin_bottom(12)
@@ -357,6 +366,109 @@ class BackupWindow(Adw.ApplicationWindow):
         except Exception:
             self.toast.add_toast(Adw.Toast.new(
                 "Open Settings → System → Backup to schedule."))
+
+    # ─────────────────────────────────────────────────────────────────
+    # Time Machine snapshot scrubber.
+    #
+    # macOS Time Machine lets the user "fly" through past snapshots and
+    # browse files at that point in time. We surface the same idea with
+    # a list of snapshots + their actual mounted paths (Timeshift mounts
+    # under /run/timeshift/backup/snapshots/<id>/localhost/). When the
+    # user picks one, we open that path in the file manager — same
+    # navigation, same file metadata, copy-out works exactly like
+    # macOS Finder Time Machine.
+    # ─────────────────────────────────────────────────────────────────
+    SNAP_ROOT = Path("/run/timeshift/backup/snapshots")
+
+    def open_snapshot_browser(self) -> None:
+        snap = self._selected_snapshot()
+        if snap is None:
+            self.toast.add_toast(Adw.Toast.new(
+                "Select a snapshot first to browse its files"))
+            return
+        self._present_scrubber(snap)
+
+    def _present_scrubber(self, focus_snap) -> None:
+        win = Adw.Window(transient_for=self, modal=True)
+        win.set_title("Time Machine — Snapshot Scrubber")
+        win.set_default_size(720, 480)
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        win.set_content(outer)
+
+        header = Adw.HeaderBar()
+        outer.append(header)
+
+        body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        body.set_margin_start(16); body.set_margin_end(16)
+        body.set_margin_top(12); body.set_margin_bottom(12)
+        outer.append(body)
+
+        intro = Gtk.Label(
+            label="Pick a moment in time. Each snapshot mounts a "
+                  "complete read-only copy of the system at that "
+                  "instant — copy any file out to restore it without "
+                  "touching the live disk.",
+            xalign=0)
+        intro.set_wrap(True)
+        intro.add_css_class("dim-label")
+        body.append(intro)
+
+        listbox = Gtk.ListBox()
+        listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        listbox.add_css_class("boxed-list")
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_vexpand(True)
+        scroll.set_child(listbox)
+        body.append(scroll)
+
+        if not self.snapshots:
+            empty = Gtk.Label(
+                label="No snapshots — create one from the main window first.",
+                xalign=0.5)
+            empty.add_css_class("backup-empty")
+            listbox.append(empty)
+        else:
+            for s in self.snapshots:
+                mount = self.SNAP_ROOT / s.name / "localhost"
+                mounted = mount.exists()
+                row = Adw.ActionRow(
+                    title=s.name,
+                    subtitle=(str(mount) if mounted
+                              else "not mounted (Timeshift mounts on demand)"))
+                if mounted:
+                    btn = Gtk.Button(label="Browse")
+                    btn.add_css_class("suggested-action")
+                    btn.connect(
+                        "clicked",
+                        lambda _b, m=str(mount): self._open_in_files(m))
+                    row.add_suffix(btn)
+                else:
+                    note = Gtk.Label(label="—")
+                    note.add_css_class("dim-label")
+                    row.add_suffix(note)
+                listbox.append(row)
+
+        actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        actions.set_halign(Gtk.Align.END)
+        body.append(actions)
+        close_btn = Gtk.Button(label="Close")
+        close_btn.connect("clicked", lambda *_: win.close())
+        actions.append(close_btn)
+
+        win.present()
+
+    def _open_in_files(self, path: str) -> None:
+        for fm in ("nyxus-files", "nautilus", "thunar", "xdg-open"):
+            if shutil.which(fm):
+                try:
+                    subprocess.Popen([fm, path], start_new_session=True)
+                    return
+                except Exception as e:
+                    log.warning("scrubber open via %s failed: %s", fm, e)
+                    continue
+        self.toast.add_toast(Adw.Toast.new(
+            f"No file manager available to open {path}"))
 
 
 class BackupApp(Adw.Application):

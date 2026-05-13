@@ -58,12 +58,18 @@ const isNyxusAccountBinary = (req: express.Request): boolean =>
   req.method !== "DELETE" &&
   req.path.startsWith("/api/nyxus-account/profile/");
 
+const isCrashReportBinary = (req: express.Request): boolean =>
+  req.method === "POST" && req.path === "/api/crash-reports";
+
+const skipBodyParser = (req: express.Request): boolean =>
+  isNyxusAccountBinary(req) || isCrashReportBinary(req);
+
 app.use((req, res, next) => {
-  if (isNyxusAccountBinary(req)) return next();
+  if (skipBodyParser(req)) return next();
   return express.json()(req, res, next);
 });
 app.use((req, res, next) => {
-  if (isNyxusAccountBinary(req)) return next();
+  if (skipBodyParser(req)) return next();
   return express.urlencoded({ extended: true })(req, res, next);
 });
 

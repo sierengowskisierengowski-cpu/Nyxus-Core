@@ -4,6 +4,11 @@ NYXUS Crash Reporter UI — list every digest written by nyxus-crashd into
 ~/.cache/nyxus/crashes/, show details, copy stack/text, and (optionally)
 submit to a NYXUS-managed crash endpoint.
 
+Submission is gated by:
+  • ~/.config/nyxus/crashd.endpoint  — base URL (e.g. https://api.nyxus...)
+  • ~/.config/nyxus/account.token    — bearer token from NYXUS Account
+The actual POST goes to <endpoint>/crash-reports as gzipped JSON.
+
 Submission is OFF by default. The endpoint is read from
 ~/.config/nyxus/crashd.endpoint (one line). When absent or empty, the
 "Submit" button is disabled and a friendly note explains why.
@@ -14,6 +19,7 @@ import json
 import logging
 import logging.handlers
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -242,17 +248,49 @@ class ReporterWindow(Adw.ApplicationWindow):
         if not shutil.which("curl"):
             self.toast.add_toast(Adw.Toast.new("curl missing"))
             return
-        log.info("submit %s → %s", self.current, ep)
+        # Bearer token shares the same KV used by NYXUS Account sync —
+        # one device-scoped opaque token, never a password. Reports are
+        # ALWAYS gzipped before submission to halve transit size and to
+        # match the api-server's accepted encodings (gzip OR raw JSON).
+        token = self._read_token()
+        if not token:
+            self.toast.add_toast(Adw.Toast.new(
+                "No NYXUS Account token — open Settings → NYXUS Account"))
+            return
+        url = ep.rstrip("/") + "/crash-reports"
+        log.info("submit %s → %s (gzipped, bearer ****%s)",
+                 self.current, url, token[-4:])
         try:
             subprocess.Popen(
-                ["curl", "-fsS", "-X", "POST",
-                 "-H", "Content-Type: application/json",
-                 "--data-binary", f"@{self.current}",
-                 ep], start_new_session=True)
+                ["sh", "-c",
+                 f"gzip -c {shlex.quote(str(self.current))} | "
+                 f"curl -fsS -X POST "
+                 f"-H 'Authorization: Bearer {token}' "
+                 f"-H 'Content-Type: application/gzip' "
+                 f"--data-binary @- {shlex.quote(url)} "
+                 f">>~/.cache/nyxus/crash-upload.log 2>&1"],
+                start_new_session=True)
             self.toast.add_toast(Adw.Toast.new("Report submitted"))
         except Exception as e:
             log.error("submit failed: %s", e)
             self.toast.add_toast(Adw.Toast.new("Submit failed"))
+
+    def _read_token(self) -> str | None:
+        """Read the NYXUS Account bearer token. Same file used by the
+        sync client; we deliberately do NOT prompt or generate one here
+        — that's the Account page's job. Missing token → loud refusal."""
+        for cand in (
+            HOME / ".config" / "nyxus" / "account.token",
+            HOME / ".config" / "nyxus" / "crashd.token",
+        ):
+            try:
+                if cand.exists():
+                    v = cand.read_text().strip()
+                    if v:
+                        return v
+            except Exception:
+                continue
+        return None
 
     def clear_all(self) -> None:
         for p in list_crashes():
