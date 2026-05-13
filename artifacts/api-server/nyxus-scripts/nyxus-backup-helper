@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  NYXUS · Backup privileged helper            rev 2026-05-13 r1
+#  Installed at /usr/local/libexec/nyxus-backup-helper.
+#  Invoked via pkexec from nyxus_backup.py for the small set of operations
+#  that need root: timeshift list/create/restore/delete, snapper rollback.
+#  Each subcommand is whitelisted; anything else exits rc=2.
+# ============================================================================
+set -u
+LOG=/var/log/nyxus/backup.log
+mkdir -p "$(dirname "$LOG")"
+log()  { printf '%s %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; }
+fail() { echo "nyxus-backup-helper: $*" >&2; log "FAIL: $*"; exit 2; }
+
+usage() { cat <<EOF
+nyxus-backup-helper <action> [args]
+
+  list                          → timeshift --list (parsed)
+  create   <comment>            → timeshift --create --comments <c>
+  restore  <snapshot-name>      → timeshift --restore --snapshot <name> --skip-grub
+  delete   <snapshot-name>      → timeshift --delete --snapshot <name>
+  snapper-list                  → snapper list
+  snapper-rollback <num>        → snapper rollback <num>
+EOF
+}
+
+[[ $# -ge 1 ]] || { usage; exit 2; }
+ACTION="$1"; shift
+
+# Strict subcommand validation — no shell-out string concat anywhere.
+case "$ACTION" in
+  list)
+    command -v timeshift >/dev/null || fail "timeshift not installed"
+    log "list"; exec timeshift --list
+    ;;
+  create)
+    [[ $# -eq 1 ]] || fail "usage: create <comment>"
+    [[ "$1" =~ ^[A-Za-z0-9._\ -]{1,80}$ ]] || fail "invalid comment"
+    command -v timeshift >/dev/null || fail "timeshift not installed"
+    log "create '$1'"; exec timeshift --create --comments "$1" --tags D
+    ;;
+  restore)
+    [[ $# -eq 1 ]] || fail "usage: restore <snapshot>"
+    [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}$ ]] \
+      || fail "invalid snapshot name"
+    command -v timeshift >/dev/null || fail "timeshift not installed"
+    log "restore '$1'"; exec timeshift --restore --snapshot "$1" --skip-grub --yes
+    ;;
+  delete)
+    [[ $# -eq 1 ]] || fail "usage: delete <snapshot>"
+    [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}$ ]] \
+      || fail "invalid snapshot name"
+    command -v timeshift >/dev/null || fail "timeshift not installed"
+    log "delete '$1'"; exec timeshift --delete --snapshot "$1" --yes
+    ;;
+  snapper-list)
+    command -v snapper >/dev/null || fail "snapper not installed"
+    log "snapper-list"; exec snapper list
+    ;;
+  snapper-rollback)
+    [[ $# -eq 1 ]] || fail "usage: snapper-rollback <num>"
+    [[ "$1" =~ ^[0-9]+$ ]] || fail "invalid snapshot number"
+    command -v snapper >/dev/null || fail "snapper not installed"
+    log "snapper-rollback $1"; exec snapper rollback "$1"
+    ;;
+  *) usage; exit 2 ;;
+esac

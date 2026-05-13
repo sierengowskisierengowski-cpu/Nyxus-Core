@@ -110,7 +110,7 @@ geoclue
 power-profiles-daemon
 bluez
 bluez-utils
-networkmanager
+# (dedup) networkmanager
 network-manager-applet
 polkit
 polkit-gnome
@@ -266,9 +266,11 @@ lib32-libpng
 firefox
 nautilus
 hyprshot
+wf-recorder
 file-roller
 p7zip
 unrar
+libcanberra
 
 # ── archiso runtime requirements ──────────────────────────────────
 arch-install-scripts
@@ -277,3 +279,124 @@ pacman-contrib
 reflector
 rsync
 which
+
+# NYXUS installer
+calamares
+
+# ═══════════════════════════════════════════════════════════════════
+# COMPLETION WAVE 1+2+3 — backends for half-built UI, hardware /
+# network / FS completeness, stability + security hardening.
+# Added 2026-05-13 to back the Settings UI pages that previously had
+# frontend-only implementations (App Sandbox, Backup Snapshots,
+# Accessibility, Notifications, Firmware Updates) and to fill the gaps
+# audited in the 121-item completion master list.
+# ═══════════════════════════════════════════════════════════════════
+
+# ── Wave 1: backends for half-built UI pages ──────────────────────
+flatpak                   # Settings → App Sandbox backend
+xdg-desktop-portal        # flatpak portal base
+swaync                    # Settings → Notifications busctl backend
+fwupd                     # Settings → Firmware Updates backend
+gst-plugins-good          # mpv codec coverage (h264/aac/vorbis)
+gst-plugins-bad           # h265 / mkv / aac+
+gst-plugins-ugly          # mp3 / x264 (proprietary)
+gst-libav                 # ffmpeg-backed gstreamer plugins
+ffmpeg                    # general media transcoding + thumbnails
+chrony                    # accurate system time (TLS sanity)
+
+# ── Wave 2: hardware / network / FS completeness ──────────────────
+# CJK + missing standard font fallbacks.
+noto-fonts-cjk
+ttf-liberation
+ttf-dejavu
+cantarell-fonts
+ttf-iosevka-nerd
+adobe-source-code-pro-fonts
+# AMD GPU users were getting software render — ship full vulkan AMD
+# + VA-API Mesa fallback for non-NVIDIA decode.
+vulkan-radeon
+lib32-vulkan-radeon
+libva-mesa-driver
+lib32-libva-mesa-driver
+# Pin input driver explicitly (Hyprland normally pulls it but archiso
+# image-build doesn't always include it).
+xf86-input-libinput
+# Removable media automount + GVFS backends (USB sticks, Android,
+# SMB, iOS via gvfs-afc).
+udisks2
+udiskie
+gvfs
+gvfs-mtp
+gvfs-smb
+gvfs-afc
+gvfs-gphoto2
+gvfs-nfs
+# VPN + mobile broadband + NM full GUI editor.
+wireguard-tools
+openvpn
+networkmanager-openvpn
+modemmanager
+mobile-broadband-provider-info
+nm-connection-editor
+# mDNS / .local hostnames / AirPrint / printer auto-discovery.
+avahi
+nss-mdns
+# Print/scan completeness.
+hplip                     # HP printer drivers (covers ~40% of home printers)
+sane                      # scanner backend
+simple-scan               # scanner GUI
+
+# ── Wave 3: stability + security + accessibility ──────────────────
+# Out-of-memory protection (the single biggest stability win).
+earlyoom
+# Compressed RAM-backed swap (~2x effective RAM on small machines).
+zram-generator
+# Multi-core IRQ distribution + auto-nice.
+irqbalance
+# Sandboxing primitives (bubblewrap is also flatpak's runtime dep).
+bubblewrap
+firejail
+apparmor
+# Per-USB-device authorization (pairs with nyxus_usb_watch.py).
+usbguard
+# Kernel auditing (security daemon backend).
+audit
+# Encryption / keyring / signed packages.
+gnupg
+seahorse
+libsecret
+openssl
+# Stateful firewall + zone-based config.
+firewalld
+# Accessibility stack (Settings → Accessibility backend).
+orca
+speech-dispatcher
+espeak-ng
+brltty
+at-spi2-core
+# Snapshot backups (Settings → Backup → Snapshots tab backend).
+# NOTE: timeshift, snap-pac, snapper-rollback, ananicy-cpp, yay,
+# distrobox are AUR — handled by customize_airootfs.sh build step.
+snapper
+restic
+borg                      # encrypted off-site backup alt
+# Dev / containers / power-user.
+flatpak                   # already above; re-listed here for grouping comment
+podman                    # rootless containers
+rustup                    # Rust toolchain (modern AUR builds)
+neovim                    # modern editor
+chromium                  # second browser
+appimagelauncher          # AppImage integration
+# Wayland tools that back existing services + UI conventions.
+wlsunset                  # blue-light filter (back nyxus-nightlight.service)
+swappy                    # screenshot annotation (chained from grim/slurp)
+# Boot-time multi-OS detection (off by default in stock Arch).
+os-prober
+# Lightweight TTY greeter fallback if SDDM ever crashes.
+greetd
+greetd-tuigreet
+# Misc system polish.
+logrotate                 # ~/.cache/nyxus/*.log rotation
+zram-generator            # already above; grouping
+man-db                    # man pages (we ship some)
+man-pages                 # base man-pages corpus

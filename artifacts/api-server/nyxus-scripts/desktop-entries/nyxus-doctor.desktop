@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Doctor
+GenericName=Doctor
+Comment=Diagnose and repair NYXUS
+Exec=/usr/local/bin/nyxus doctor
+TryExec=/usr/local/bin/nyxus
+Icon=preferences-system
+Terminal=false
+Categories=System;
+Keywords=NYXUS;NYX;Doctor;
+StartupNotify=true
+StartupWMClass=nyxus.doctor
+X-NYXUS-Module=nyxus_doctor

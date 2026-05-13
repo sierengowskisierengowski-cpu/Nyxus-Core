@@ -1,233 +1,123 @@
 # NYXUS — Master Completion Checklist
 
-**Goal:** A fully-complete, no-dead-ends, no-mockups OS that "works like
-you bought it from Best Buy." Every menu opens a real panel. Every panel
+**Goal:** Grade-A, no-dead-ends, no-mockups OS that "works like you
+bought it from Best Buy." Every menu opens a real panel. Every panel
 reads/writes real system state. Every setting persists.
 
-**Working order:** strictly top-to-bottom. Don't skip — each wave's
-patterns are reused in the next wave.
+**Status legend:** ✅ DONE · 🟡 IN PROGRESS · ⬜ PENDING
 
-**Status legend:** `[x]` done & shipped · `[~]` partial · `[ ]` not started
-
-Last updated: 2026-05-11 (rev r9-eww)
+Last updated: 2026-05-13 (rev r10)
 
 ---
 
-## ✅ WAVE 0 — Foundations (DONE earlier)
+## Cross-cutting rules (apply to every task)
 
-- [x] Hyprland 0.55+ compositor (clean rev r8-eww boot)
-- [x] EWW v0.6.0 bar (replaced waybar)
-- [x] dunst, hyprlock, hypridle, hyprpaper wired
-- [x] Bootstrap + resync pipeline (`nyxus-bootstrap`, `nyxus-resync-all.sh`)
-- [x] ISO bake pipeline (`iso-builder/build-iso.sh`)
-- [x] DARK MIRROR theme tokens (purple/cyan, glassmorphic blur)
-- [x] First-party apps as real artifacts: Notepad, Stickies, SysMon, Widgets
-- [x] Source-of-truth: `artifacts/api-server/nyxus-scripts/` → restaged on every bake
-
----
-
-## ✅ WAVE 1 — Consumer Minimum (DONE in r9-eww — verify on boot)
-
-Every status pill on the bar opens a real, working flyout.
-
-- [x] Quick Settings panel (12 toggle tiles + 3 sliders)
-- [x] WiFi network picker (scan, connect, forget, password prompt)
-- [x] Bluetooth device manager (scan, pair, connect, battery%)
-- [x] Audio mixer (output picker + per-app volume)
-- [x] Calendar flyout (full month grid)
-- [x] Notification Center (dunst history, dismiss, clear-all, DND)
-- [x] Hyprland keybinds: Super+A/N/W/M/C, Super+Shift+B
-- [x] Cheatsheet updated to document new chords
-- [x] Security: SSID base64-encoded, MAC validated, vol clamped
-
-**On-boot verification (do this first before Wave 2):**
-- [ ] Bar shows new ⚙ and ▦ pills in right cluster
-- [ ] Super+A opens Quick Settings
-- [ ] Super+W opens WiFi and lists networks
-- [ ] Super+M opens audio mixer with real apps listed
-- [ ] Super+N opens notifications
-- [ ] Super+C opens calendar with today highlighted
-- [ ] Super+Shift+B opens Bluetooth and Scan finds devices
+- Every user-facing feature MUST appear in **Settings** under its
+  correct page AND be reachable from at least one menu (start menu,
+  control center, context menu, or tray).
+- Every keybind MUST be listed in Settings → Keyboard → Shortcuts.
+- Every running daemon MUST have a Settings toggle to disable it.
+- No `print` for errors — use `logging` to `~/.cache/nyxus/<app>.log`.
+- No `console.log` in server code — use `req.log` / singleton `logger`.
+- Validation: bash `-n` for shell, `python -m py_compile` for Python,
+  `eww` yuck/scss balance check.
+- After every ~3 items: architect review pass + push tag for MSI to pull.
 
 ---
 
-## 🎨 DESIGN-CONTRACT AUDIT (Wave 2 prerequisite — see `docs/DESIGN_CONTRACT.md` §13)
+## Phase 1 — 8 PARTIAL Settings pages → fully wired
 
-Every existing component must pass §12 of the design contract before
-new surfaces are added. Walk each on a 1366×768 display.
+- ✅ P1.1 PowerPage / P1.2 PrivacyPage / P1.3 AppsPage / P1.4 StoragePage
+- ✅ P1.5 UpdatesPage / P1.6 UsersPage / P1.7 AppearancePage / P1.8 AboutPage
 
-- [x] Quick Settings flyout — audited 2026-05-11 (no list, no empty state needed)
-- [x] WiFi flyout — audited 2026-05-11, added empty state
-- [x] Bluetooth flyout — audited 2026-05-11, added powered/off-aware empty state
-- [x] Audio Mixer flyout — audited 2026-05-11, added empty state
-- [x] Calendar flyout — audited 2026-05-11 (static grid, no list)
-- [x] Notification Center — audited 2026-05-11, added DND-aware empty state
-- [ ] Bar (EWW main bar) — check spacing on right cluster
-- [ ] Cheatsheet — three-column layout fit
-- [ ] Powermenu — centering + button hierarchy
-- [ ] Dashboard — largest known offender, full pass
+## Phase 2 — Tier 1 system polish
 
-## ⏳ WAVE 2 — Polish (5 items, ~1 sprint)
+- ✅ P2.9 nyxus_welcome
+- ✅ P2.10 SDDM polish
+- ✅ P2.11 Notification Center
+- ✅ P2.12 Quick Settings / Control Center
 
-- [ ] **First-Boot Welcome Wizard** ← biggest single win
-  - Step 1: Language / region
-  - Step 2: WiFi connect
-  - Step 3: User account (name, password, avatar)
-  - Step 4: Theme (dark/light, accent color)
-  - Step 5: Privacy (location, telemetry opt-in)
-  - Step 6: Account sync (optional — skippable)
-  - Step 7: "Tour of NYXUS" interactive overlay
-  - Marker file `~/.nyxus/welcome-done` so it never re-runs
-- [ ] **Rich Update Indicator**
-  - Bar pill shows count + severity color
-  - Click → flyout with changelog, "Update now" button
-  - Background `pacman -Sy` checker daemon
-  - One-click apply with progress bar
-- [ ] **DND Scheduling**
-  - Quiet hours (start/end time)
-  - Per-app allow/block list
-  - "Until tomorrow" / "1 hour" quick options
-- [ ] **Full Media Widget**
-  - Album art (fetched from playerctl metadata)
-  - Scrubber with click-to-seek
-  - Multi-player switching (Spotify + Firefox + mpv)
-  - Lock-screen + bar + flyout variants
-- [ ] **Clipboard Manager UI**
-  - cliphist-backed, searchable history
-  - Pin items, delete items, clear all
-  - Image preview support
-  - Super+V keybind
+## Phase 3 — Tier 2 power-user
+
+- ✅ P3.13 Mission Control
+- ✅ P3.14 Spotlight
+- ✅ P3.14b Desktop layer (T1–T5)
+- ✅ P3.14c Files manager
+- ✅ P3.15 Clipboard
+- ✅ P3.16 Updater UI
+- ✅ P3.17 Software Store catalog depth
+
+## Phase 4 — Tier 3 polish
+
+- ✅ P4.18 Sound design
+- ✅ P4.19 Animation sweep
+- ✅ P4.20 Recovery
+- ✅ P4.21 Backup (Timeshift)
+- ✅ P4.22 Crash reporter
+
+## Phase 5 — Tier 4 brand-defining
+
+- ✅ P5.23 NYXUS Account
+- ✅ P5.24 NYXUS Drop
+- ✅ P5.25 Screen recorder
+
+## Cross-cutting fixed
+
+- ✅ WiFi popup white-GTK regression
+- ✅ Terminal copy/paste fix
+- ✅ Security Center (10 sections + helper + daemon + API + keybinds)
 
 ---
 
-## ⏳ WAVE 3 — NYXUS Settings App (THE BIG ONE, ~3-4 sprints)
+## Phase 6 — Mac/Windows-class polish
 
-A real settings app with sidebar nav, search, and 14 panes. Every pane
-must read AND write real system state — no mockups.
+- ✅ P6.26 Calamares installer branding (slideshow + theme + post-install)
+- ✅ P6.27 Time Machine snapshot browser (Backup → Snapshots scrubber)
+- ✅ P6.28 Parental Controls (Settings page + helper, OFF by default)
+- ✅ P6.29 System-wide search index (tracker3 in Spotlight) — wired in
+  `nyxus_launcher.py:search_files()` (tracker3 → fd → find chain)
+- ✅ P6.30 App Sandboxing UI (Privacy → App permissions, Flatpak granular)
+  — `AppPermissionsPage` reads/writes via `flatpak override --user`
+- ✅ P6.31 i18n / multi-language scaffold (gettext + en/es/fr stubs)
+  — `nyxus_i18n.py` shim, `locale/` POT + PO + extract/compile scripts,
+  `LanguagePage` in Settings → Personal
+- ✅ P6.32 Accessibility (Orca/wvkbd/magnus + autostart toggles)
+- ✅ P6.33 SDDM avatar / user list (AccountsService icons via `~/.face`
+  + `/var/lib/AccountsService/users/<u>` Icon= line)
 
-### Settings shell (sprint 3a)
-- [ ] App skeleton (`nyxus-settings.tgz` artifact)
-- [ ] Left sidebar with 14 entries + icons
-- [ ] Top search bar (fuzzy across all panes)
-- [ ] Breadcrumb header
-- [ ] Settings registry (JSON manifest of every setting + handler)
+## Phase 7 — Real code gaps + ops
 
-### Settings panes (sprint 3b/c/d — each must be REAL, no mockups)
-- [ ] **Display** — resolution, scaling, refresh, multi-monitor, night light schedule, color profile
-- [ ] **Sound** — output/input devices, per-app, system sounds, alerts, balance
-- [ ] **Network** — WiFi, ethernet, VPN (wg+openvpn), proxy, hostname, DNS
-- [ ] **Bluetooth** — full device manager (deeper than the flyout)
-- [ ] **Power** — battery profiles, sleep timeout, lid action, button action, charging limit
-- [ ] **Appearance** — wallpaper, theme, accent color, dark/light, fonts, cursor, icon theme
-- [ ] **Keyboard** — layout, repeat rate, **shortcuts editor (rebind ALL hyprland binds)**
-- [ ] **Mouse / Touchpad** — speed, accel, natural scroll, tap-to-click, gestures
-- [ ] **Privacy** — location, camera, mic, recent files, screen lock timeout, telemetry
-- [ ] **Users** — add/remove, change password, avatar, autologin, sudo membership
-- [ ] **Date & Time** — timezone picker (map), NTP server, format, week-start
-- [ ] **Region & Language** — locale, formats, input methods (ibus/fcitx)
-- [ ] **Apps & Defaults** — installed list, default apps per mime, autostart, permissions
-- [ ] **About** — version, hardware, kernel, support links, factory reset, EULA
-
----
-
-## ⏳ WAVE 4 — Signature Touches (~1 sprint)
-
-The "wow" layer that elevates above stock Linux.
-
-- [ ] **Workspace Overview** (Mission Control / Activities style)
-  - Super+Tab full-screen overview
-  - Live thumbnails of every workspace + window
-  - Drag windows between workspaces
-- [ ] **Screenshot Annotation Overlay**
-  - After region capture, slide-up annotation toolbar
-  - Arrow / box / text / blur / crop tools
-  - Save / copy / share buttons
-- [ ] **Color Picker + History**
-  - Super+P picks pixel under cursor
-  - Hex/RGB/HSL display + copy
-  - Last 20 picks history
-- [ ] **Lock-Screen Widgets**
-  - Now playing / weather / calendar peek
-  - Notification preview (respects DND)
+- ✅ P7.34 swaync notification history viewer
+  — `NotificationsPage._swaync_history()` calls
+  `busctl --user --json=short … GetHistory` and renders the latest 8
+- ✅ P7.35 Crash-report upload endpoint + wire client
+  — `routes/crash-reports.ts` POST `/api/crash-reports` with quota GC,
+  client at `nyxus-crash-report.py`
+- ✅ P7.36 ISO build verification script (lint profile, dry-run)
+  — `scripts/iso-build-verify.sh`
+- ✅ P7.37 CI pipeline (typecheck, bash -n, py_compile, profile lint)
+  — `.github/workflows/typecheck.yml` + `validate.yml`
+- ✅ P7.38 Release automation (ISO publish + checksum + manifest)
+  — `scripts/iso-release.sh`
 
 ---
 
-## ⏳ WAVE 5 — Branding & "Forgot About That" Items (~1-2 sprints)
+## Definition of grade-A done (hard gate before ship)
 
-The things you'd notice missing on a fresh install.
-
-- [ ] **App launcher polish**
-  - Categories (Office / Internet / Graphics / Games / System)
-  - Recent apps section
-  - Pinned apps section (drag to pin)
-  - Search across .desktop files + binaries
-- [ ] **Right-click desktop menu**
-  - Change wallpaper / open terminal here / display settings
-- [ ] **File manager (Thunar) NYXUS branding**
-  - Custom theme, custom icons, custom toolbar
-  - Place sidebar pinned defaults
-- [ ] **Login screen (greetd/tuigreet)**
-  - NYXUS logo, blur background, theme matching
-  - User picker with avatars
-- [ ] **Boot splash (Plymouth)**
-  - NYXUS logo animation during boot
-  - Hides kernel messages
-- [ ] **Installer (Calamares) NYXUS branding**
-  - Welcome screen with NYXUS logo
-  - Custom slideshow during install
-  - Theme matched to OS
-- [ ] **System Restore / Snapshots**
-  - btrfs snapshot integration (snapper)
-  - "Roll back to yesterday" UI in Settings → About
-- [ ] **About dialog in every first-party app**
-  - Version, license, credits, "Report bug" link
+1. Reads its current state from the system on launch.
+2. Writes back via the proper system tool (no behind-the-back file edits
+   when an API exists).
+3. Survives reboot — state persists.
+4. Has a Settings home AND a menu/keybind entry.
+5. Logs to `~/.cache/nyxus/<app>.log`, not stdout.
+6. Fails loud with a user-visible error toast, never silently.
+7. Architect review: zero severe findings.
 
 ---
 
-## ⏳ WAVE 6 — Hardening & Post-Install (~1 sprint)
+## Bonus features (Tier 3 — landed as part of r10 grind)
 
-Things that go on AFTER everything else works (per user pref in replit.md).
-
-- [ ] Enable fail2ban (per-user opt-in via Settings → Privacy)
-- [ ] Enable pam_faillock (per-user opt-in via Settings → Privacy)
-- [ ] Firewall UI (Settings → Network → Firewall, ufw-backed)
-- [ ] AppArmor profiles for first-party apps
-- [ ] Automatic security updates toggle
-- [ ] Encrypted home folder option (Settings → Users)
-
----
-
-## ⏳ WAVE 7 — Acceptance Test (the "Best Buy" gate)
-
-Before declaring complete, walk this checklist on a fresh install:
-
-- [ ] Boot from ISO → installer runs → install completes → reboot
-- [ ] Welcome wizard runs → all 7 steps work → desktop appears
-- [ ] Click EVERY bar pill → opens a real panel
-- [ ] Open Settings → click EVERY left-nav entry → pane loads
-- [ ] In every pane, change one setting → reboot → setting persisted
-- [ ] Right-click EVERY first-party app → context menu works
-- [ ] Search in launcher for any installed app → finds it → launches
-- [ ] Connect WiFi, pair Bluetooth headphones, plug in USB drive — all work
-- [ ] Take a screenshot, annotate it, save it — works
-- [ ] Update available → click update → applies → reboots cleanly
-- [ ] Lock screen → unlock with password → session restored
-- [ ] Power button → menu → Shutdown → clean shutdown (no hangs)
-- [ ] Run `nyxus-doctor` → 0 errors, 0 warnings
-
----
-
-## Sprint cadence
-
-Realistic estimate from current pace:
-- Wave 2: 1 sprint
-- Wave 3: 3-4 sprints (the big one)
-- Wave 4: 1 sprint
-- Wave 5: 1-2 sprints
-- Wave 6: 1 sprint
-- Wave 7: 0.5 sprint (just verification)
-
-**Total: ~7-9 sprints to genuinely Best Buy complete.**
-
-Going strictly top-to-bottom. No skipping. No fakes. Every checkbox flipped
-to `[x]` only after it works on real hardware.
+- ✅ Hot Corners (Settings + `nyxus_hotcorners.py`, hot-reloadable
+  tunables via `parse_tunables`)
+- ✅ Night Light (gammastep wrapper + Settings toggles)
+- ✅ Dynamic Wallpaper (time-of-day rotator with sunset/sunrise)

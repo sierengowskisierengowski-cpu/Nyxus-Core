@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Welcome
+GenericName=Welcome
+Comment=First-run NYXUS introduction
+Exec=/usr/local/bin/nyxus welcome
+TryExec=/usr/local/bin/nyxus
+Icon=help-about
+Terminal=false
+Categories=System;
+Keywords=NYXUS;NYX;Welcome;
+StartupNotify=true
+StartupWMClass=nyxus.welcome
+X-NYXUS-Module=nyxus_welcome

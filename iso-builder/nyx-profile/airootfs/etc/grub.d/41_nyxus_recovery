@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# NYXUS Safe Mode GRUB entry generator (installed system, not the live ISO).
+#
+# Adds a "NYXUS Safe Mode" entry that boots the same kernel/initrd as the
+# default entry but with:
+#   • single-user target (no display manager)
+#   • nomodeset + nokmsboot (works on broken GPU drivers)
+#   • systemd.unit=multi-user.target (no Wayland)
+#   • nyxus.safemode=1 (read by ~/.config/hypr scripts to load the
+#     minimal session if the user manually runs `Hyprland`)
+#   • all custom NYXUS daemons inhibited via systemd.mask=nyxus-*.service
+#
+# Run after install:    sudo grub-mkconfig -o /boot/grub/grub.cfg
+#
+set -e
+prefix="/usr"
+exec_prefix="/usr"
+datarootdir="/usr/share"
+
+. "/usr/share/grub/grub-mkconfig_lib"
+
+# Resolve current kernel + initrd from /boot — pick the highest-versioned
+# vmlinuz that ships with a matching initramfs. Multi-kernel installs
+# (linux + linux-lts) get the freshest one.
+KERNEL=""
+INITRD=""
+for k in /boot/vmlinuz-*; do
+    [[ -e "$k" ]] || continue
+    base="$(basename "$k" | sed 's|^vmlinuz-||')"
+    if [[ -f "/boot/initramfs-${base}.img" ]]; then
+        KERNEL="$k"
+        INITRD="/boot/initramfs-${base}.img"
+    fi
+done
+
+if [[ -z "$KERNEL" ]]; then
+    echo "41_nyxus_recovery: no kernel found in /boot — skipping" >&2
+    exit 0
+fi
+
+# Identify root partition (UUID preferred for resilience across reordering)
+ROOT_UUID="$(findmnt -no UUID /)"
+if [[ -z "$ROOT_UUID" ]]; then
+    echo "41_nyxus_recovery: cannot determine root UUID — skipping" >&2
+    exit 0
+fi
+
+# microcode (optional — included if present)
+UCODE_LINE=""
+[[ -f /boot/intel-ucode.img ]] && UCODE_LINE="/boot/intel-ucode.img "
+[[ -f /boot/amd-ucode.img   ]] && UCODE_LINE="${UCODE_LINE}/boot/amd-ucode.img "
+
+CLASS="--class nyxus --class gnu-linux --class gnu --class os --class recovery"
+
+cat <<EOF
+menuentry 'NYXUS Safe Mode (recovery, no GPU accel, no autostart)' ${CLASS} {
+    load_video
+    insmod gzio
+    insmod part_gpt
+    insmod part_msdos
+    insmod ext2
+    set gfxpayload=keep
+    echo 'Loading NYXUS Safe Mode kernel...'
+    linux  ${KERNEL} root=UUID=${ROOT_UUID} rw nomodeset nokmsboot \\
+        systemd.unit=multi-user.target \\
+        systemd.mask=display-manager.service \\
+        systemd.mask=nyxus-fog.service \\
+        systemd.mask=nyxus-notifier.service \\
+        nyxus.safemode=1 quiet
+    echo 'Loading initial ramdisk...'
+    initrd ${UCODE_LINE}${INITRD}
+}
+EOF

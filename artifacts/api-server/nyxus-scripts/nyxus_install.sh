@@ -95,7 +95,8 @@ for f in nyxus_palette.py nyxus-palette.css \
           nyxus_gen_icons.py nyxus_control.py nyxus_settings.py \
           nyxus_doctor.py nyxus_launcher.py \
           nyxus_screenshot.py nyxus_chrome.py \
-          nyxus_screensaver.py nyxus_demon_wake.py; do
+          nyxus_screensaver.py nyxus_demon_wake.py \
+          nyxus_usb_watch.py; do
   dl "$f" "$SCRIPTS_DIR/$f" && chmod +x "$SCRIPTS_DIR/$f" || failed=$((failed+1))
 done
 
@@ -263,7 +264,8 @@ for conf in nyxus-hyprland-general.conf \
             nyxus-hyprland-opacity.conf \
             nyxus-hyprland-blur.conf \
             nyxus-hyprland-layerblur.conf \
-            nyxus-hyprland-fog.conf; do
+            nyxus-hyprland-fog.conf \
+            nyxus-hyprland-mission.conf; do
   dl "$conf" "$HYPR_DIR/conf.d/$conf" || failed=$((failed+1))
 done
 
@@ -325,6 +327,16 @@ if dl "nyxus-eww-launch" "/tmp/nyxus-eww-launch.new"; then
   fi
   rm -f /tmp/nyxus-eww-launch.new
 fi
+if dl "nyxus-mission-control-toggle" "/tmp/nyxus-mission-control-toggle.new"; then
+  if sudo -n install -m 0755 /tmp/nyxus-mission-control-toggle.new /usr/local/bin/nyxus-mission-control-toggle 2>/dev/null; then
+    ok "nyxus-mission-control-toggle → /usr/local/bin/"
+  else
+    install -m 0755 /tmp/nyxus-mission-control-toggle.new "$HOME/.local/bin/nyxus-mission-control-toggle" 2>/dev/null \
+      && ok "nyxus-mission-control-toggle → ~/.local/bin/ (sudo unavailable)" \
+      || failed=$((failed+1))
+  fi
+  rm -f /tmp/nyxus-mission-control-toggle.new
+fi
 
 # ── A4 FIX (2026-05-12): bootstrap shims + welcome wizard parity ─────────────
 # hyprland.conf references nyxus-bootstrap, nyxus-wait-bootstrap, nyxus-welcome,
@@ -367,8 +379,16 @@ fi
 
 # Optional systemd user service (idempotent — Hyprland exec-once also works)
 mkdir -p "$HOME/.config/systemd/user"
-dl "nyxus-eww.service" "$HOME/.config/systemd/user/nyxus-eww.service" \
-  && systemctl --user daemon-reload 2>/dev/null || true
+_any_user_units_updated=0
+dl "nyxus-eww.service" "$HOME/.config/systemd/user/nyxus-eww.service" && _any_user_units_updated=1 || true
+dl "nyxus-crashd.service" "$HOME/.config/systemd/user/nyxus-crashd.service" && _any_user_units_updated=1 || true
+# USB plug-in / removal toast notifier — toggle lives in
+# Settings → Notifications → External devices.
+dl "nyxus-usb-watch.service" \
+   "$HOME/.config/systemd/user/nyxus-usb-watch.service" && _any_user_units_updated=1 || true
+if [ "$_any_user_units_updated" -eq 1 ]; then
+  systemctl --user daemon-reload 2>/dev/null || true
+fi
 
 # ── Welcome Wizard launcher / helper / policy ────────────────────────────────
 hdr "Welcome Wizard"
@@ -396,6 +416,26 @@ if dl "nyxus-welcome.policy" "/tmp/nyxus-welcome.policy.new"; then
     printf "  ${DIM}(skip: nyxus-welcome.policy — needs sudo for polkit actions)${R}\n"
   fi
   rm -f /tmp/nyxus-welcome.policy.new
+fi
+
+# ── Parental Controls helper / policy ───────────────────────────────────────
+# Settings → Parental Controls invokes this via:
+#   pkexec /usr/local/libexec/nyxus-parental-helper ...
+if dl "nyxus-parental-helper" "/tmp/nyxus-parental-helper.new"; then
+  if sudo -n install -Dm0755 /tmp/nyxus-parental-helper.new /usr/local/libexec/nyxus-parental-helper 2>/dev/null; then
+    ok "nyxus-parental-helper → /usr/local/libexec/"
+  else
+    printf "  ${DIM}(skip: nyxus-parental-helper — needs sudo for /usr/local/libexec)${R}\n"
+  fi
+  rm -f /tmp/nyxus-parental-helper.new
+fi
+if dl "com.nyxus.parental.policy" "/tmp/com.nyxus.parental.policy.new"; then
+  if sudo -n install -Dm0644 /tmp/com.nyxus.parental.policy.new /usr/share/polkit-1/actions/com.nyxus.parental.policy 2>/dev/null; then
+    ok "com.nyxus.parental.policy → /usr/share/polkit-1/actions/"
+  else
+    printf "  ${DIM}(skip: com.nyxus.parental.policy — needs sudo for polkit actions)${R}\n"
+  fi
+  rm -f /tmp/com.nyxus.parental.policy.new
 fi
 
 # Build EWW from source (v0.6.0 pinned) ONLY if not already installed.

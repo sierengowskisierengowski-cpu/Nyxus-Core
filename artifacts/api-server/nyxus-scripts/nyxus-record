@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+# NYXUS Screen Recorder — wf-recorder + slurp wrapper.
+#
+# Modes:
+#   nyxus-record region     # pick region with slurp
+#   nyxus-record fullscreen # active output
+#   nyxus-record window     # focused window via hyprctl
+#   nyxus-record toggle     # if recording, stop; else default to region
+#
+# Flags:
+#   --audio              capture default mic
+#   --no-cursor          omit cursor
+#   --output PATH        explicit destination
+#   --fps N              frame rate (default 30)
+#   --codec h264|av1     encoder pick (default h264)
+#
+# State / IPC:
+#   PID file: $XDG_RUNTIME_DIR/nyxus-record.pid
+#   Stops gracefully via SIGINT (wf-recorder finalizes the file).
+#   Toast on start / stop via notify-send.
+#
+# Logs to ~/.cache/nyxus/record.log.
+set -u
+LOG_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/nyxus"
+mkdir -p "$LOG_DIR"
+LOG="$LOG_DIR/record.log"
+: > /dev/null
+exec 3>>"$LOG"
+log() { printf '%s %s\n' "$(date -Is)" "$*" >&3; }
+
+VID_DIR="$(xdg-user-dir VIDEOS 2>/dev/null || echo "$HOME/Videos")"
+mkdir -p "$VID_DIR"
+PID_FILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-record.pid"
+mode="${1:-region}"; shift || true
+
+audio=0; cursor=1; fps=30; codec=h264; out=""
+while (( $# )); do
+  case "$1" in
+    --audio)     audio=1 ;;
+    --no-cursor) cursor=0 ;;
+    --output)    out="$2"; shift ;;
+    --fps)       fps="$2"; shift ;;
+    --codec)     codec="$2"; shift ;;
+    *) log "unknown flag: $1" ;;
+  esac
+  shift
+done
+
+notify() { command -v notify-send >/dev/null 2>&1 \
+    && notify-send --app-name=NYXUS "$@" || true; }
+
+stop_running() {
+  if [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+    pid=$(cat "$PID_FILE")
+    log "stopping wf-recorder pid=$pid"
+    kill -INT "$pid" 2>/dev/null || true
+    # Wait up to 5s for clean shutdown
+    for _ in 1 2 3 4 5; do
+      kill -0 "$pid" 2>/dev/null || break
+      sleep 1
+    done
+    rm -f "$PID_FILE"
+    notify "Recording stopped" "Saved to $VID_DIR"
+    nyxus-sound.sh screenshot 2>/dev/null || true
+    return 0
+  fi
+  return 1
+}
+
+if [[ "$mode" == "stop" ]]; then
+  stop_running || notify "Nothing to stop" "No active recording."
+  exit 0
+fi
+if [[ "$mode" == "toggle" ]]; then
+  if stop_running; then exit 0; fi
+  mode=region
+fi
+
+if ! command -v wf-recorder >/dev/null 2>&1; then
+  notify "Recorder unavailable" "Install wf-recorder: pacman -S wf-recorder"
+  exit 2
+fi
+
+# Refuse to start a second one
+if [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+  notify "Already recording" "Run again or hit the stop key."
+  exit 0
+fi
+
+geom=""
+case "$mode" in
+  region)
+    command -v slurp >/dev/null 2>&1 || { notify "slurp missing" ""; exit 2; }
+    geom=$(slurp 2>/dev/null) || exit 0
+    [[ -z "$geom" ]] && exit 0
+    ;;
+  window)
+    if command -v hyprctl >/dev/null 2>&1; then
+      geom=$(hyprctl activewindow -j 2>/dev/null \
+        | python3 -c 'import json,sys;d=json.load(sys.stdin);x,y=d["at"];w,h=d["size"];print(f"{x},{y} {w}x{h}")') || true
+    fi
+    ;;
+  fullscreen) geom="" ;;
+  *) notify "Unknown mode" "$mode"; exit 2 ;;
+esac
+
+ts=$(date +%Y%m%d-%H%M%S)
+[[ -z "$out" ]] && out="$VID_DIR/nyxus-rec-$ts.mp4"
+
+cmd=(wf-recorder -f "$out" -F "fps=$fps" -r "$fps")
+case "$codec" in
+  av1)  cmd+=(-c libsvtav1 -p preset=8) ;;
+  h264) cmd+=(-c libx264   -p crf=20 -p preset=veryfast) ;;
+esac
+[[ -n "$geom" ]] && cmd+=(-g "$geom")
+[[ "$audio" -eq 1 ]] && cmd+=(--audio)
+[[ "$cursor" -eq 0 ]] && cmd+=(--no-cursor)
+
+log "starting: ${cmd[*]}"
+nyxus-sound.sh screenshot 2>/dev/null || true
+notify "Recording started" "Press Super+Shift+R again to stop."
+
+"${cmd[@]}" &
+echo $! > "$PID_FILE"
+wait $!
+rc=$?
+rm -f "$PID_FILE"
+log "exit rc=$rc out=$out"
+notify "Recording finished" "Saved: $out"
+exit "$rc"

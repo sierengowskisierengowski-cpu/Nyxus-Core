@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=NYXUS
+Description=NYXUS · DARK MIRROR boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/nyxus
+ScriptFile=/usr/share/plymouth/themes/nyxus/nyxus.script

@@ -68,7 +68,37 @@ const ALLOWED_FILES: Record<string, string> = {
   // ── ★ EWW SHELL (rev r6-eww, 2026-05-11 — replaces waybar + 5 py apps) ──
   // 4 bars + dashboard + powermenu + cheatsheet + 3 OSDs. All real backends.
   "nyxus-eww-launch":           "nyxus-eww-launch",
+  "nyxus-mission-control-toggle":"nyxus-mission-control-toggle",
   "nyxus-eww.service":          "nyxus-eww.service",
+  "nyxus-crashd.service":       "nyxus-crashd.service",
+  // USB plug-in / removal toast notifier (Tier 1 batch 2, r10).
+  // Daemon = nyxus_usb_watch.py (under GTK4 USER APPS-style nyxus_*.py
+  // glob); user systemd unit lives at /usr/lib/systemd/user/ on the
+  // ISO and is downloaded to ~/.config/systemd/user/ at runtime.
+  "nyxus_usb_watch.py":         "nyxus_usb_watch.py",
+  "nyxus-usb-watch.service":    "nyxus-usb-watch.service",
+  // r10 batch 5 (2026-05-13) — Tier 3 #15/#16/#17 helpers
+  "nyxus_hotcorners.py":               "nyxus_hotcorners.py",
+  "nyxus-hotcorners.service":          "nyxus-hotcorners.service",
+  "nyxus-nightlight.sh":               "nyxus-nightlight.sh",
+  "nyxus-nightlight.service":          "nyxus-nightlight.service",
+  "nyxus-dynamic-wallpaper.sh":        "nyxus-dynamic-wallpaper.sh",
+  "nyxus-dynamic-wallpaper.service":   "nyxus-dynamic-wallpaper.service",
+  "nyxus-dynamic-wallpaper.timer":     "nyxus-dynamic-wallpaper.timer",
+  // r10 batch 6 (2026-05-13) — Phase 6.26 Calamares + 6.27 snapshot scrubber
+  "nyxus-postinstall.sh":                       "nyxus-postinstall.sh",
+  "calamares/settings.conf":                    "calamares/settings.conf",
+  "calamares/shellprocess_nyxus.conf":          "calamares/shellprocess_nyxus.conf",
+  "calamares/branding/nyxus/branding.desc":     "calamares/branding/nyxus/branding.desc",
+  "calamares/branding/nyxus/show.qml":          "calamares/branding/nyxus/show.qml",
+  "calamares/branding/nyxus/stylesheet.qss":    "calamares/branding/nyxus/stylesheet.qss",
+  // r10 batch 7 (2026-05-13) — Phase 6.31 i18n scaffold + 7.34 swaync
+  "nyxus_i18n.py":                              "nyxus_i18n.py",
+  "locale/nyxus.pot":                           "locale/nyxus.pot",
+  "locale/extract.sh":                          "locale/extract.sh",
+  "locale/compile.sh":                          "locale/compile.sh",
+  "locale/es/LC_MESSAGES/nyxus.po":             "locale/es/LC_MESSAGES/nyxus.po",
+  "locale/fr/LC_MESSAGES/nyxus.po":             "locale/fr/LC_MESSAGES/nyxus.po",
   "eww/eww.yuck":               "eww/eww.yuck",
   "eww/eww.scss":               "eww/eww.scss",
   "eww/nyxus.conf":             "eww/nyxus.conf",
@@ -107,6 +137,8 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-welcome":                "nyxus-welcome",
   "nyxus-welcome-helper":         "nyxus-welcome-helper",
   "nyxus-welcome.policy":         "nyxus-welcome.policy",
+  "nyxus-parental-helper":        "nyxus-parental-helper",
+  "com.nyxus.parental.policy":    "com.nyxus.parental.policy",
 
   // ── ★ TGZ APP PACKAGES (heavyweight multi-module apps) ───────────────────
   "nyxus-home.tgz":      "nyxus-home.tgz",       // Home (workspace 0)
@@ -170,6 +202,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-hyprland-opacity.conf":   "nyxus-hyprland-opacity.conf",
   "nyxus-hyprland-general.conf":   "nyxus-hyprland-general.conf",
   "nyxus-hyprland-layerblur.conf": "nyxus-hyprland-layerblur.conf",
+  "nyxus-hyprland-mission.conf":   "nyxus-hyprland-mission.conf",
 
   // ── ★ DESKTOP UI CONFIGS (rofi, alacritty, dunst, wlogout) ───────────────
   // rev r6-eww (2026-05-11): waybar-config.json / waybar-style.css /

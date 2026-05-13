@@ -28,6 +28,7 @@ Shared reusable packages:
 - `api-client-react`
 - `api-zod`
 - `db`
+- `i18n` — gettext extraction pipeline and locale scaffolding for NYXUS Python apps
 
 ### `scripts/`
 Repository automation and utility scripts.

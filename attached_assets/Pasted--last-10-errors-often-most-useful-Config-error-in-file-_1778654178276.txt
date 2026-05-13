@@ -1,0 +1,83 @@
+
+
+=== last 10 errors (often most useful) ===
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 90: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 91: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 96: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 97: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 17: invalid field noblur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 19: invalid field noanim: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 21: invalid field ignorezero: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 23: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-mission.conf at line 64: Invalid dispatcher, requested "hyprexpo:expo" does not exist
+
+[nyx@nyxus ~]$ ls -d ~/.config/hypr.bak.* | tail -1
+# verify the path looks right, then:
+
+BAK=$(ls -d ~/.config/hypr.bak.* | tail -1)
+rm -rf ~/.config/hypr
+cp -r "$BAK" ~/.config/hypr
+hyprctl reload
+echo "--- after revert ---"
+hyprctl configerrors | wc -l
+hyprctl configerrors | sed 's/.*: //' | sort | uniq -c | sort -rn | head
+/home/nyx/.config/hypr.bak.1778653616
+rm: cannot remove '/home/nyx/.config/hypr': Directory not empty
+ok
+--- after revert ---
+2
+      2
+[nyx@nyxus ~]$ grep -c '^bind' ~/.config/hypr/hyprland.conf
+hyprctl binds | wc -l
+hyprctl binds | head -10
+hyprctl reload
+hyprctl binds | wc -l
+hyprctl configerrors
+6
+61
+bind
+	modmask: 64
+	submap:
+	key: Q
+	keycode: 0
+	catchall: false
+	description:
+	dispatcher: exec
+	arg: kitty
+
+ok
+61
+
+
+[nyx@nyxus ~]$ # Force a hard reconfigure
+hyprctl keyword exec "hyprctl reload"
+sleep 1
+hyprctl binds | wc -l
+ok
+61
+[nyx@nyxus ~]$ mkdir -p ~/Pictures/Screenshots
+grim ~/Pictures/Screenshots/nyx-$(date +%s).png && \
+  echo "saved: $(ls -t ~/Pictures/Screenshots/ | head -1)"
+saved: nyx-1778654075.png
+[nyx@nyxus ~]$ command -v grim && echo "grim ok"
+command -v hyprshot && echo "hyprshot ok"
+command -v scrot && echo "scrot ok"
+command -v flameshot && echo "flameshot ok"
+/usr/bin/grim
+grim ok
+/usr/bin/hyprshot
+hyprshot ok
+[nyx@nyxus ~]$ ls -la ~/.config/hypr/
+grep -c '^bind' ~/.config/hypr/hyprland.conf
+hyprctl binds | wc -l
+hyprctl configerrors
+total 4
+drwxr-xr-x 1 nyx nyx 160 May 13 06:30 .
+drwxr-xr-x 1 nyx nyx 180 May 13 06:32 ..
+drwxr-xr-x 4 nyx nyx 140 May 13 06:30 hypr.bak.1778653616
+-rw-r--r-- 1 nyx nyx 541 May 13 06:30 hyprland.conf
+6
+61
+
+
+[nyx@nyxus ~]$

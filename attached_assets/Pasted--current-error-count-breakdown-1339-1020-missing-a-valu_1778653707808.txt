@@ -1,0 +1,79 @@
+= current error count + breakdown ===
+1339
+   1020 missing a value
+    160 invalid field type bordersize
+    156 invalid field type ignorealpha
+      2 Invalid dispatcher, requested "hyprexpo:expo" does not exist
+      1
+
+=== any windowrulev2 still anywhere ===
+
+We trust you have received the usual lecture from the local System
+Administrator. It usually boils down to these three things:
+
+    #1) Respect the privacy of others.
+    #2) Think before you type.
+    #3) With great power comes great responsibility.
+
+For security reasons, the password you type will not be visible.
+
+[sudo] password for nyx:
+Sorry, try again.
+[sudo] password for nyx:
+Sorry, try again.
+[sudo] password for nyx:
+
+=== all source/sourced conf files referenced ===
+/home/nyx/.config/hypr/hyprland.conf:443:source = ~/.config/hypr/conf.d/nyxus-hyprland-general.conf
+/home/nyx/.config/hypr/hyprland.conf:444:source = ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+/home/nyx/.config/hypr/hyprland.conf:445:source = ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+/home/nyx/.config/hypr/hyprland.conf:446:source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+/home/nyx/.config/hypr/hyprland.conf:447:source = ~/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf
+/home/nyx/.config/hypr/hyprland.conf:448:source = ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+/home/nyx/.config/hypr/hyprland.conf:449:source = ~/.config/hypr/conf.d/nyxus-hyprland-mission.conf
+/home/nyx/.config/hypr/hyprlock.conf:22:source = ~/.config/hypr/hyprlock-accent.conf
+
+=== first 10 NEW errors (full text) ===
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 421: invalid field class:^([Cc]hromium|[Bb]rave-browser|[Gg]oogle-chrome|[Mm]icrosoft-edge|[Vv]ivaldi-stable|[Ee]lectron|VSCodium|[Cc]ode|code-oss|code-url-handler|discord|vesktop|[Ss]lack|obsidian|[Nn]otion|spotify)$: missing a value
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 422: invalid field noshadow: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 27: invalid field float: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 28: invalid field center: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: invalid field class:^([Nn]yxus.*)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 32: invalid field float: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 33: invalid field center: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: invalid field class:^(godsapp|intel|notepad|notes|passwords|phantom|sage|shield|start|store|studio|weather)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 37: invalid field float: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 38: invalid field center: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: invalid field class:^((io|org|app)\.nyxus\..*)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 42: invalid field float: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 43: invalid field pin: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 44: invalid field class:^(panel|nyxus-panel)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 60: invalid field class:^(io\.nyxus\.sysmon)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: invalid field type bordersize
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 64: invalid field class:^(io\.nyxus\.control)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: invalid field type bordersize
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: invalid field class:^(io\.nyxus\.notepad)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 71: invalid field class:^(io\.nyxus\.stickies)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 72: invalid field type bordersize
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 75: invalid field class:^(io\.nyxus\.weather)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 76: invalid field pin: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 77: invalid field class:^(io\.nyxus\.weather)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 80: invalid field class:^(io\.nyxus\.terminal)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 81: invalid field type bordersize
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 84: invalid field class:^(io\.nyxus\.settings)$: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 85: invalid field type bordersize
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 444: Config error in file /home/nyx/.config/hypr/hyprland.conf at line 421: invalid field class:^([Cc]hromium|[Bb]rave-browser|[Gg]oogle-chrome|[Mm]icrosoft-edge|[Vv]ivaldi-stable|[Ee]lectron|VSCodium|[Cc]ode|code-oss|code-url-handler|discord|vesktop|[Ss]lack|obsidian|[Nn]otion|spotify)$: missing a value
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 422: invalid field noshadow: missing a value
+
+=== last 10 errors (often most useful) ===
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 90: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 91: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 96: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf at line 97: invalid field blur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 17: invalid field noblur: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 19: invalid field noanim: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 21: invalid field ignorezero: missing a value
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf at line 23: invalid field type ignorealpha
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-mission.conf at line 64: Invalid dispatcher, requested "hyprexpo:expo" does not exist
+
+[nyx@nyxus ~]$

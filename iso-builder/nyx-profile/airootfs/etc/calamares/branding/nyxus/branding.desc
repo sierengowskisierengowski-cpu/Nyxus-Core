@@ -1,0 +1,37 @@
+# NYXUS · Calamares branding descriptor             rev 2026-05-13 r2
+---
+componentName: nyxus
+
+welcomeStyleCalamares: true
+welcomeExpandingLogo:  false
+windowExpanding:       normal
+windowSize:            900px,560px
+windowPlacement:       center
+
+strings:
+    productName:         "NYXUS"
+    shortProductName:    "NYXUS"
+    version:             "2026.05 · DARK MIRROR"
+    shortVersion:        "2026.05"
+    versionedName:       "NYXUS 2026.05 · DARK MIRROR"
+    shortVersionedName:  "NYXUS 2026.05"
+    bootloaderEntryName: "NYXUS"
+    productUrl:          "https://nyxus.os"
+    supportUrl:          "https://nyxus.os/support"
+    knownIssuesUrl:      "https://nyxus.os/issues"
+    releaseNotesUrl:     "https://nyxus.os/changelog"
+    donateUrl:           ""
+
+images:
+    productLogo:    "logo.png"
+    productIcon:    "logo.png"
+    productWelcome: "welcome.png"
+
+slideshow:           "show.qml"
+slideshowAPI:        2
+
+style:
+    sidebarBackground:    "#0A0712"
+    sidebarText:          "#E9E5F2"
+    sidebarTextSelect:    "#0A0810"
+    sidebarTextHighlight: "#C084FC"

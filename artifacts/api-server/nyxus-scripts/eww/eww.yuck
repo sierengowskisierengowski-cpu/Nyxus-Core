@@ -294,7 +294,11 @@
         (label :class "taskbar-title" :text "${t.title}" :limit-width 18)))))
 
 (defwidget taskbar_widget []
-  (scroll :hscroll true :vscroll false :hexpand true
+  ;; CRITICAL: scroll widget defaults to vexpand=TRUE in GTK. Without
+  ;; :vexpand false the ScrolledWindow grows vertically and pushes the
+  ;; entire bar-bottom window past its 56px geometry hint, causing the
+  ;; bar to fill the whole screen (rev r30, 2026-05-13 live-ISO bug).
+  (scroll :hscroll true :vscroll false :hexpand true :vexpand false
     (box :class "taskbar" :orientation "h" :space-evenly false :spacing 4 :valign "center"
       ;; Empty-state placeholder so the bar doesn't visually collapse
       ;; when no windows are open.

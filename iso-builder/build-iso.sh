@@ -111,8 +111,17 @@ WALLS_SYS="${PROFILE_DIR}/airootfs/usr/share/backgrounds/nyxus"
 LBIN="${PROFILE_DIR}/airootfs/usr/local/bin"
 APPS="${PROFILE_DIR}/airootfs/usr/share/applications"
 
-# Wipe & recreate so we never inherit stale files from a prior bake.
-rm -rf "${SKEL}/.config" "${OPT_NYXUS}" "${WALLS_SYS}"
+# Wipe only NYXUS-managed config shards. Do not remove unrelated skel
+# content (gtk settings, user units, app state dirs) needed at first boot.
+rm -rf \
+  "${SKEL}/.config/hypr" \
+  "${SKEL}/.config/eww" \
+  "${SKEL}/.config/dunst" \
+  "${SKEL}/.config/rofi" \
+  "${SKEL}/.config/wlogout" \
+  "${SKEL}/.config/alacritty" \
+  "${OPT_NYXUS}" \
+  "${WALLS_SYS}"
 mkdir -p \
   "${SKEL}/.config/hypr/conf.d" \
   "${SKEL}/.config/hypr/walls" \
@@ -121,6 +130,7 @@ mkdir -p \
   "${SKEL}/.config/rofi" \
   "${SKEL}/.config/wlogout" \
   "${SKEL}/.config/alacritty" \
+  "${SKEL}/.config/systemd/user" \
   "${OPT_NYXUS}" \
   "${WALLS_USER}" \
   "${WALLS_SYS}" \
@@ -163,6 +173,12 @@ ok "configs: hypr (+conf.d) / eww / dunst / rofi / wlogout / alacritty"
 # launch python3 ~/.nyxus/nyxus_*.py to stay compatible with the
 # download-portal install flow that uses ~/.nyxus/) work on the live ISO.
 install -m 0644 "${NS}"/nyxus_*.py "${OPT_NYXUS}/"
+if [[ -f "${NS}/nyxus-security-daemon.py" ]]; then
+  install -m 0644 "${NS}/nyxus-security-daemon.py" "${OPT_NYXUS}/nyxus-security-daemon.py"
+fi
+if [[ -f "${NS}/desktop/nyxus_desktop.py" ]]; then
+  install -Dm0644 "${NS}/desktop/nyxus_desktop.py" "${OPT_NYXUS}/desktop/nyxus_desktop.py"
+fi
 
 # ── Welcome Wizard companion files (rev r9-eww 2026-05-11) ─────────────
 # Stage the three hand-written files into airootfs/root/ where
@@ -179,6 +195,41 @@ done
 ok "Welcome Wizard: staged 3 companion files into airootfs/root/"
 ln -sfn /opt/nyxus "${SKEL}/.nyxus"
 ok "GTK apps: $(ls "${OPT_NYXUS}"/*.py | wc -l) python files in /opt/nyxus/ (~/.nyxus → /opt/nyxus symlink in skel)"
+
+# ── User services + policies (EWW / crashd / security daemon) ─────────────────
+if [[ -f "${NS}/nyxus-eww.service" ]]; then
+  install -m 0644 "${NS}/nyxus-eww.service" "${SKEL}/.config/systemd/user/nyxus-eww.service"
+fi
+if [[ -f "${NS}/nyxus-crashd.service" ]]; then
+  install -m 0644 "${NS}/nyxus-crashd.service" "${SKEL}/.config/systemd/user/nyxus-crashd.service"
+fi
+if [[ -f "${NS}/nyxus-security-daemon.service" ]]; then
+  install -m 0644 "${NS}/nyxus-security-daemon.service" "${SKEL}/.config/systemd/user/nyxus-security-daemon.service"
+fi
+if [[ -f "${NS}/com.nyxus.security.policy" ]]; then
+  install -Dm644 "${NS}/com.nyxus.security.policy" \
+    "${PROFILE_DIR}/airootfs/usr/share/polkit-1/actions/com.nyxus.security.policy"
+fi
+if [[ -f "${NS}/nyxus-parental-helper" ]]; then
+  install -Dm755 "${NS}/nyxus-parental-helper" \
+    "${PROFILE_DIR}/airootfs/usr/local/libexec/nyxus-parental-helper"
+fi
+if [[ -f "${NS}/com.nyxus.parental.policy" ]]; then
+  install -Dm644 "${NS}/com.nyxus.parental.policy" \
+    "${PROFILE_DIR}/airootfs/usr/share/polkit-1/actions/com.nyxus.parental.policy"
+fi
+# Security + welcome helpers — referenced by nyxus_security.py and
+# nyxus_welcome.py via /usr/local/libexec/<name>; without these the
+# helper-mediated polkit calls 404 and the apps fall back to readonly.
+if [[ -f "${NS}/nyxus-security-helper" ]]; then
+  install -Dm755 "${NS}/nyxus-security-helper" \
+    "${PROFILE_DIR}/airootfs/usr/local/libexec/nyxus-security-helper"
+fi
+if [[ -f "${NS}/nyxus-welcome-helper" ]]; then
+  install -Dm755 "${NS}/nyxus-welcome-helper" \
+    "${PROFILE_DIR}/airootfs/usr/local/libexec/nyxus-welcome-helper"
+fi
+ok "user units + policy: nyxus-eww / nyxus-crashd / nyxus-security-daemon / parental + security + welcome helpers"
 
 # ── Wallpapers → both user skel (matches hyprland.conf path) and system ─
 # Includes the new void-vortex (default EWW-era wallpaper, replaces drifter).
@@ -200,7 +251,30 @@ ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyx
 # rev r6-eww: waybar-stats / waybar-ticker removed. nyxus-eww-launch added.
 install -m 0755 "${NS}/wallpaper-rotate.sh"  "${LBIN}/wallpaper-rotate"
 install -m 0755 "${NS}/nyxus-eww-launch"     "${LBIN}/nyxus-eww-launch"
+if [[ -f "${NS}/nyxus-mission-control-toggle" ]]; then
+  install -m 0755 "${NS}/nyxus-mission-control-toggle" "${LBIN}/nyxus-mission-control-toggle"
+fi
+if [[ -f "${NS}/nyxus-set-wallpaper.sh" ]]; then
+  install -m 0755 "${NS}/nyxus-set-wallpaper.sh" "${LBIN}/nyxus-set-wallpaper.sh"
+fi
+if [[ -f "${NS}/nyxus-sound.sh" ]]; then
+  install -m 0755 "${NS}/nyxus-sound.sh" "${LBIN}/nyxus-sound.sh"
+fi
+if [[ -f "${NS}/nyxus-record" ]]; then
+  install -m 0755 "${NS}/nyxus-record" "${LBIN}/nyxus-record"
+fi
+if [[ -f "${NS}/desktop/nyxus-context-menu.sh" ]]; then
+  install -m 0755 "${NS}/desktop/nyxus-context-menu.sh" "${LBIN}/nyxus-context-menu.sh"
+fi
 ok "helpers: wallpaper-rotate / nyxus-eww-launch"
+
+# Sound theme assets used by nyxus-sound.sh (falls back to canberra IDs if missing).
+if [[ -d "${NS}/sounds" ]]; then
+  install -Dm644 "${NS}/sounds/index.theme" \
+    "${PROFILE_DIR}/airootfs/usr/share/sounds/nyxus/index.theme" 2>/dev/null || true
+  install -m 0644 "${NS}"/sounds/*.oga \
+    "${PROFILE_DIR}/airootfs/usr/share/sounds/nyxus/" 2>/dev/null || true
+fi
 
 # ── First-boot bootstrap shims → /usr/local/bin/ ────────────────────────
 # nyxus-bootstrap is the first-run installer wrapper that Hyprland's
@@ -211,6 +285,16 @@ ok "helpers: wallpaper-rotate / nyxus-eww-launch"
 install -m 0755 "${NS}/nyxus-bootstrap"      "${LBIN}/nyxus-bootstrap"
 install -m 0755 "${NS}/nyxus-wait-bootstrap" "${LBIN}/nyxus-wait-bootstrap"
 ok "bootstrap shims: nyxus-bootstrap / nyxus-wait-bootstrap"
+
+# ── User systemd units → /usr/lib/systemd/user/ ─────────────────────────
+# Settings toggles ship as user systemd units so non-root users can
+# enable/disable without sudo. Units are global-readable; per-user
+# enablement is via `systemctl --user enable …`.
+USER_SYSD="${PROFILE_DIR}/airootfs/usr/lib/systemd/user"
+install -d -m 0755 "${USER_SYSD}"
+install -m 0644 "${NS}/nyxus-usb-watch.service" \
+                "${USER_SYSD}/nyxus-usb-watch.service"
+ok "user systemd units: nyxus-usb-watch.service"
 
 # ── Offline cache → /opt/nyxus-cache/ ───────────────────────────────────
 # nyxus-bootstrap falls back to this path when the network is unreachable
@@ -246,6 +330,14 @@ mkdir -p "${SDDM_THEME_DIR}" "${SDDM_CONF_DIR}"
 # Tarball is packed flat (files at root, no wrapper dir) so copy from STAGE root.
 cp -a "${SDDM_TMP_STAGE}/." "${SDDM_THEME_DIR}/"
 rm -f "${SDDM_THEME_DIR}/install.sh"  # not needed at runtime
+# rev 2026-05-13: stale tarball ships a 1024×1024 background that
+# upscales to 1080p as a blurry mush. Override with the real
+# 1920×1080 darkmirror PNG so the greeter is sharp on every display.
+if [[ -f "${NS}/nyxus-bg-darkmirror.png" ]]; then
+  install -m 0644 "${NS}/nyxus-bg-darkmirror.png" \
+    "${SDDM_THEME_DIR}/background.png"
+  ok "SDDM background overridden to 1920×1080 darkmirror (anti-blur)"
+fi
 cat > "${SDDM_CONF_DIR}/nyxus.conf" <<'SDDM'
 [Theme]
 Current=nyxus
@@ -308,6 +400,55 @@ StartupNotify=true
 DESKTOP
 done
 ok "launchers + desktop entries: ${#APPS_LIST[@]} apps"
+
+# Utility wrappers required by Hyprland keybinds/services.
+cat > "${LBIN}/nyxus-clipboard" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_clipboard.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-clipboard"
+
+cat > "${LBIN}/nyxus-files" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_files.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-files"
+
+cat > "${LBIN}/nyxus-updater" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_updater.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-updater"
+
+cat > "${LBIN}/nyxus-backup" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_backup.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-backup"
+
+cat > "${LBIN}/nyxus-drop" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_drop.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-drop"
+
+cat > "${LBIN}/nyxus-security" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_security.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-security"
+
+cat > "${LBIN}/nyxus-crashd" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/nyxus_crashd.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-crashd"
+
+cat > "${LBIN}/nyxus-desktop" <<'LAUNCHER'
+#!/usr/bin/env bash
+exec python3 /opt/nyxus/desktop/nyxus_desktop.py "$@"
+LAUNCHER
+chmod 0755 "${LBIN}/nyxus-desktop"
 
 # ── populate airootfs/opt/nyxus-intel ────────────────────────────────────
 step "stage Phantom into airootfs/opt/nyxus-intel/"
@@ -379,6 +520,43 @@ DESKTOP
 ok "launcher + desktop entry staged"
 
 rm -rf "${TMP_EXTRACT}"
+
+# ── COMPLETION WAVE 4: install all generated wiring artifacts ────────────
+# (.desktop, polkit, system tuning, plymouth/grub themes, firstboot, helpers)
+# These all live under iso-builder/nyx-profile/airootfs/ already; this step
+# additionally pushes the freshly-authored helper binaries from nyxus-scripts
+# into /usr/local/libexec and ensures the nyxus(1) CLI dispatcher + udev
+# event helper are executable in the bake.
+step "wave-4: install completion wiring (helpers, firstboot, themes)"
+LIBEXEC="${PROFILE_DIR}/airootfs/usr/local/libexec"
+LBIN="${PROFILE_DIR}/airootfs/usr/local/bin"
+mkdir -p "${LIBEXEC}" "${LBIN}"
+
+# Wave-4 helper binaries authored in nyxus-scripts → /usr/local/libexec
+for h in nyxus-backup-helper nyxus-usbwatch-helper \
+         nyxus-account-helper nyxus-doctor-helper; do
+  if [[ -f "${NS}/${h}" ]]; then
+    install -Dm755 "${NS}/${h}" "${LIBEXEC}/${h}"
+  fi
+done
+
+# Wave-4 polkit policies authored under nyxus-scripts/polkit-policies
+if [[ -d "${NS}/polkit-policies" ]]; then
+  for pol in "${NS}/polkit-policies"/com.nyxus.*.policy; do
+    [[ -f "${pol}" ]] || continue
+    install -Dm644 "${pol}" \
+      "${PROFILE_DIR}/airootfs/usr/share/polkit-1/actions/$(basename "${pol}")"
+  done
+fi
+
+# Make sure firstboot.d scripts + nyxus dispatcher + udev event helper
+# carry the executable bit (Python generator already chmod'd them, but
+# git can lose modes on some checkouts).
+chmod 0755 "${PROFILE_DIR}/airootfs/etc/nyxus-firstboot.d/"*.sh 2>/dev/null || true
+chmod 0755 "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus" \
+           "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus-usbwatch-event" \
+           "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus-pacman-toast" 2>/dev/null || true
+ok "wave-4 wiring installed (helpers, polkit, firstboot, dispatcher)"
 
 # ── mirror OS-level docs into /etc/nyxus/ ────────────────────────────────
 step "mirror OS-level docs into airootfs/etc/nyxus/"

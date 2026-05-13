@@ -1,0 +1,105 @@
+# NYXUS · English (en) message catalogue · rev 2026-05-13 r1
+# This is the source language. Most strings are passthrough; the file
+# exists so the gettext lookup chain has a canonical en target and
+# downstream translators have a baseline reference.
+msgid ""
+msgstr ""
+"Project-Id-Version: NYXUS 2026.05\n"
+"Report-Msgid-Bugs-To: https://nyxus.os/issues\n"
+"PO-Revision-Date: 2026-05-13 00:00+0000\n"
+"Language-Team: NYXUS <i18n@nyxus.os>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# ── App names (mirror .desktop Name=) ────────────────────────────────
+msgid "NYXUS Settings"
+msgstr "NYXUS Settings"
+
+msgid "NYXUS Files"
+msgstr "NYXUS Files"
+
+msgid "NYXUS Notepad"
+msgstr "NYXUS Notepad"
+
+msgid "NYXUS Notes"
+msgstr "NYXUS Notes"
+
+msgid "NYXUS Stickies"
+msgstr "NYXUS Stickies"
+
+msgid "NYXUS Backup"
+msgstr "NYXUS Backup"
+
+msgid "NYXUS Doctor"
+msgstr "NYXUS Doctor"
+
+msgid "NYXUS Updater"
+msgstr "NYXUS Updater"
+
+msgid "NYXUS Security Center"
+msgstr "NYXUS Security Center"
+
+msgid "NYXUS Spotlight"
+msgstr "NYXUS Spotlight"
+
+msgid "NYXUS Welcome"
+msgstr "NYXUS Welcome"
+
+msgid "NYXUS Parental Controls"
+msgstr "NYXUS Parental Controls"
+
+# ── Common UI verbs ──────────────────────────────────────────────────
+msgid "Save"
+msgstr "Save"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Apply"
+msgstr "Apply"
+
+msgid "Restart"
+msgstr "Restart"
+
+msgid "Shut down"
+msgstr "Shut down"
+
+msgid "Suspend"
+msgstr "Suspend"
+
+msgid "Lock"
+msgstr "Lock"
+
+msgid "Log out"
+msgstr "Log out"
+
+msgid "Pause now"
+msgstr "Pause now"
+
+msgid "Enabled"
+msgstr "Enabled"
+
+msgid "Disabled"
+msgstr "Disabled"
+
+# ── Common status text ───────────────────────────────────────────────
+msgid "Saved."
+msgstr "Saved."
+
+msgid "Save failed: %s"
+msgstr "Save failed: %s"
+
+msgid "Access denied"
+msgstr "Access denied"
+
+msgid "Welcome to NYXUS"
+msgstr "Welcome to NYXUS"
+
+msgid "DARK MIRROR"
+msgstr "DARK MIRROR"
+
+msgid "Silent. Dark. Purely Functional."
+msgstr "Silent. Dark. Purely Functional."

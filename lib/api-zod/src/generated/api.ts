@@ -14,3 +14,16 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Returns service descriptor for the NYXUS Account sync server.
+Used by Settings → NYXUS Account to confirm the configured
+endpoint is alive before pushing a bundle.
+
+ * @summary NYXUS Account service liveness
+ */
+export const NyxusAccountStatusResponse = zod.object({
+  service: zod.string(),
+  version: zod.number(),
+  max_bundle_bytes: zod.number(),
+});

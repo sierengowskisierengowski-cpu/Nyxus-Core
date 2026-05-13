@@ -1,0 +1,11 @@
+# NYXUS · per-app log rotation · rev 2026-05-13 r1
+/home/*/.cache/nyxus/*.log /home/*/.cache/nyxus-eww/*.log {
+    weekly
+    rotate 4
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    su root root
+}

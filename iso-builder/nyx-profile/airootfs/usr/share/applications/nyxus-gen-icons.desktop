@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Icon Studio
+GenericName=Icon Studio
+Comment=Regenerate NYXUS app icons
+Exec=/usr/local/bin/nyxus gen-icons
+TryExec=/usr/local/bin/nyxus
+Icon=applications-graphics
+Terminal=false
+Categories=Graphics;Development;
+Keywords=NYXUS;NYX;Studio;
+StartupNotify=true
+StartupWMClass=nyxus.gen-icons
+X-NYXUS-Module=nyxus_gen_icons

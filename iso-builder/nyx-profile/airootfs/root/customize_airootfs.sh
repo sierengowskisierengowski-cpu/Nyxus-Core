@@ -423,3 +423,91 @@ systemctl enable fstrim.timer                2>/dev/null || true
 systemctl enable nvidia-suspend.service      2>/dev/null || true
 systemctl enable nvidia-resume.service       2>/dev/null || true
 systemctl enable nvidia-hibernate.service    2>/dev/null || true
+
+# ─────────────────────────────────────────────────────────────────────
+# COMPLETION WAVE 1+3 — enable the new stability/security/UI services
+# added by the 121-item completion sweep (rev 2026-05-13 r1).
+# Services that don't exist on the live image are silently skipped so
+# this section is idempotent across upstream package updates.
+# ─────────────────────────────────────────────────────────────────────
+for svc in \
+  earlyoom.service \
+  irqbalance.service \
+  systemd-zram-setup@zram0.service \
+  systemd-oomd.service \
+  avahi-daemon.service \
+  chronyd.service \
+  firewalld.service \
+  apparmor.service \
+  usbguard.service \
+  auditd.service \
+  systemd-resolved.service \
+  paccache.timer \
+  reflector.timer \
+  fstrim.timer \
+  nyxus-firstboot.service ; do
+  systemctl enable "${svc}" 2>/dev/null || true
+done
+
+# Stop systemd-timesyncd in favour of chrony (the two conflict).
+systemctl disable systemd-timesyncd.service 2>/dev/null || true
+
+# Bind /etc/nsswitch.conf so .local hostnames resolve via mDNS.
+if [ -f /etc/nsswitch.conf ] && ! grep -q 'mdns_minimal' /etc/nsswitch.conf; then
+  sed -i 's/^hosts:.*/hosts: mymachines mdns_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] files myhostname dns/' \
+      /etc/nsswitch.conf
+fi
+
+# Patch pacman.conf for Color/ILoveCandy/ParallelDownloads if not already.
+if [ -f /etc/pacman.conf ]; then
+  grep -q '^Color'              /etc/pacman.conf || sed -i 's/^#Color/Color/'                           /etc/pacman.conf
+  grep -q '^ILoveCandy'         /etc/pacman.conf || sed -i '/^Color/a ILoveCandy'                       /etc/pacman.conf
+  grep -q '^ParallelDownloads'  /etc/pacman.conf || sed -i 's/^#ParallelDownloads.*/ParallelDownloads = 8/' /etc/pacman.conf
+fi
+
+# ─────────────────────────────────────────────────────────────────────
+# COMPLETION WAVE 4 — AUR builds (yay first, then everything else uses it).
+# These can't be pacstrapped from official repos; we build/install in the
+# chroot so the live ISO + every fresh install ships with them ready.
+# ─────────────────────────────────────────────────────────────────────
+_aur_build() {
+  # _aur_build <repo-name> [extra-makepkg-args...]
+  local pkg="$1"; shift || true
+  if pacman -Qi "$pkg" >/dev/null 2>&1 || command -v "$pkg" >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "[customize_airootfs] AUR: building ${pkg}..."
+  local _bdir; _bdir=$(mktemp -d)
+  if sudo -u nobody git clone --depth 1 "https://aur.archlinux.org/${pkg}.git" "${_bdir}/${pkg}" \
+     && cd "${_bdir}/${pkg}" \
+     && sudo -u nobody makepkg -s --noconfirm "$@" \
+     && pacman -U --noconfirm ./*.pkg.tar.zst ; then
+    echo "[customize_airootfs] AUR: ${pkg} installed"
+  else
+    echo "[customize_airootfs] AUR: ${pkg} build FAILED (non-fatal)"
+  fi
+  cd / && rm -rf "${_bdir}"
+}
+
+# Make /tmp world-writable so nobody-uid makepkg works.
+chmod 1777 /tmp
+
+# yay first (AUR helper) so users can install AUR packages post-install.
+_aur_build yay-bin
+
+# Backup backend (Settings → Backup → Snapshots tab depends on this).
+_aur_build timeshift
+_aur_build snap-pac
+
+# Snapper rollback CLI (one-command rollback if snapper is configured).
+_aur_build snapper-rollback
+
+# Auto-nice for desktop responsiveness.
+_aur_build ananicy-cpp
+systemctl enable ananicy-cpp.service 2>/dev/null || true
+
+# Distrobox — run other-distro apps in containers.
+_aur_build distrobox
+
+# AppImageLauncher — AppImage integration in file manager + launcher.
+_aur_build appimagelauncher
