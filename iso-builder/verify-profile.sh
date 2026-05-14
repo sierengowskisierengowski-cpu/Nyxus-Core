@@ -617,6 +617,38 @@ for key in usb_firewall secboot vpn doh mac_random; do
     || fail "Settings: ${key} not registered"
 done
 
+# ── 13n. Settings Completeness Standard (rev 2026-05-14) ────────────
+hd "13n. Settings Completeness · Dock/Wallpaper/ThemePacks/Clipboard/Record/Assistant"
+# Required helpers for the 6 new pages.
+for h in nyxus-clipboard; do
+  HP="${AIROOT}/usr/local/bin/${h}"
+  if [[ -x "${HP}" ]] && bash -n "${HP}" 2>/dev/null; then
+    ok "${h} present + parses"
+  else
+    fail "${h} missing/not-executable/bad"
+  fi
+done
+# Backing tools (already required elsewhere; checked here so a regression
+# in packages.x86_64 surfaces in the right section).
+for pkg in cliphist wl-clipboard wf-recorder grim slurp; do
+  grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
+    && ok "package: ${pkg}" \
+    || fail "missing package: ${pkg}"
+done
+# Every new section key is registered in PAGE_CLASSES.
+for key in dock wallpaper themepacks clipboard record assistant; do
+  grep -q "\"${key}\":" "${NS}/nyxus_settings.py" \
+    && ok "Settings: ${key} registered" \
+    || fail "Settings: ${key} not registered"
+done
+# Standard-footer foundation must be present in nyxus_settings.py.
+for sym in make_keybinds_group make_reset_group make_advanced_group \
+           _append_standard_footer; do
+  grep -q "${sym}" "${NS}/nyxus_settings.py" \
+    && ok "Standard footer: ${sym} present" \
+    || fail "Standard footer: ${sym} missing"
+done
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \
