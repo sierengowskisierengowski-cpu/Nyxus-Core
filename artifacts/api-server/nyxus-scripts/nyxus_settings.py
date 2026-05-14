@@ -627,7 +627,10 @@ SECTIONS: Tuple[SectionDef, ...] = (
 )
 SECTIONS_BY_KEY = {s.key: s for s in SECTIONS}
 
-# Golden Rule audit scope (21 original Settings hub pages).
+# Golden Rule audit scope (the original 21 always-visible hub pages shown
+# in the legacy baseline Settings navigation prior to Tier B/C expansions).
+# Requirement: these pages must always expose General + Appearance +
+# Behavior, in addition to the shared Keybinds + Reset + Advanced footer.
 GOLDEN_RULE_AUDIT_KEYS = frozenset({
     "appearance", "network", "bluetooth", "printers", "cameras_mics",
     "controllers", "color", "display", "sound", "power", "notifications",
@@ -635,6 +638,7 @@ GOLDEN_RULE_AUDIT_KEYS = frozenset({
     "updates", "accessibility", "users", "about",
 })
 GOLDEN_RULE_REQUIRED_PREFIX = ("General", "Appearance", "Behavior")
+FOOTER_SECTION_TITLES = frozenset({"Keybinds", "Reset", "Advanced"})
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -1053,13 +1057,24 @@ class SectionPage(Adw.Bin):
         except Exception as e:
             log.warning("standard footer for %s: %s", self.section.key, e)
 
+    def _reload_self(self) -> None:
+        self.rebuild()
+
+    def _make_reload_row(self, subtitle: str) -> Adw.ActionRow:
+        return action_row(
+            "Reload this section",
+            subtitle,
+            "Reload",
+            self._reload_self)
+
     def _enforce_golden_rule_sections(self) -> None:
         if self.section.key not in GOLDEN_RULE_AUDIT_KEYS:
             return
         candidates = [g for g in self._tracked_groups
                       if (g.get_title() or "").strip()
-                      not in {"Keybinds", "Reset", "Advanced"}]
+                      not in FOOTER_SECTION_TITLES]
         used: set[Adw.PreferencesGroup] = set()
+        # Bounded by 3 required headings; tiny list keeps this simple.
         for title in GOLDEN_RULE_REQUIRED_PREFIX:
             exact = next((g for g in candidates if g not in used and
                           (g.get_title() or "").strip() == title), None)
@@ -1075,12 +1090,9 @@ class SectionPage(Adw.Bin):
                 continue
             fallback = Adw.PreferencesGroup(
                 title=title,
-                description="Required by the Golden Rule baseline")
-            fallback.add(action_row(
-                "Reload this section",
-                "Rebuild and re-read live state for this page",
-                "Reload",
-                lambda: self.rebuild()))
+                description="This section structure is required. Reload if content is missing")
+            fallback.add(self._make_reload_row(
+                "Refresh this page to load the latest content"))
             self.add_group(fallback)
             candidates.append(fallback)
             used.add(fallback)
@@ -1242,9 +1254,9 @@ def make_keybinds_group(page: "SectionPage",
     else:
         grp.add(action_row(
             "No feature-specific keybinds detected",
-            "Manage global shortcuts in Keyboard settings",
+            "Manage global shortcuts in the Keyboard section",
             "Open Keyboard",
-            lambda: page.win._select_key("keyboard")))
+            lambda: page.win.navigate_to_section("keyboard")))
     grp.add(action_row(
         "Edit hyprland.conf",
         "Open the keybind configuration in your editor",
@@ -1302,17 +1314,16 @@ def make_advanced_group(rows: List[Tuple[str, str, str, Callable[[], None]]],
     """Return an advanced group with caller-supplied action rows.
 
     Each row tuple: (title, subtitle, button_label, on_click).
+    When `page` is provided and rows is empty, inject live fallback
+    actions (reload + open settings store) instead of placeholders.
     """
     grp = Adw.PreferencesGroup(title=title, description=description)
     if not rows:
         if page is None:
             grp.add(kv_row("Settings store", str(CFG_FILE)))
             return grp
-        grp.add(action_row(
-            "Reload this section",
-            "Rebuild and re-read live system state",
-            "Reload",
-            lambda: page.rebuild()))
+        grp.add(page._make_reload_row(
+            "Refresh to load the latest settings"))
         grp.add(action_row(
             "Open settings store",
             str(CFG_FILE),
@@ -13821,6 +13832,12 @@ class SettingsWindow(Adw.ApplicationWindow):
             if isinstance(page, SectionPage):
                 page.stop_refresh()
         return False  # allow close
+
+    def navigate_to_section(self, key: str) -> bool:
+        if key in SECTIONS_BY_KEY:
+            self._select_key(key)
+            return True
+        return False
 
     # ── layout ────────────────────────────────────────────────────────
     def _build_layout(self) -> None:
