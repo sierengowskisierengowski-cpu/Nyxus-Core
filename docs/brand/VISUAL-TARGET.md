@@ -1,10 +1,41 @@
 # NYXUS Visual Target
 
-**Source of truth:** `docs/brand/nyxus-eclipse-reference.png`
+**Sources of truth (in order of authority):**
 
-This image is the single visual reference every NYXUS sprint must
+1. `docs/brand/nyxus-eclipse-reference.png` — the original eclipse
+   reference. Defines mood, palette, materials.
+2. `docs/brand/nyxus-desktop-target.png` — the canonical desktop UI
+   target. Defines layout: slim top bar, right sidebar of icons,
+   eclipse wallpaper centred, pure black surround. Sprint I locks
+   the OS to this composition.
+3. `/usr/share/sddm/themes/nyxus/background.png` — the locked
+   SDDM login background (eclipse ring above plinth scene).
+4. `/usr/share/backgrounds/nyxus/nyxus-eclipse-horizon.png` — the
+   default desktop wallpaper (cinematic eclipse + reflective water +
+   distant terrain). This is what the user sees the second they
+   land on the desktop.
+
+These images are the single visual reference every NYXUS sprint must
 reach toward. If a UI change does not move the OS *closer* to how
-this image feels, it is the wrong change.
+they feel, it is the wrong change.
+
+## Layout target (Sprint I lock)
+
+The desktop composition is fixed by `nyxus-desktop-target.png`:
+
+- **Slim top bar** (eww `bar-top`, 26px tall, 100% wide, hairline
+  bottom edge). One row of small icons left, clock/title centre,
+  small icons right.
+- **Right sidebar** (eww `bar-right`, 56px wide, 70% tall, anchored
+  centre-right) — the app/launcher rail.
+- **No bottom dock by default.** `bar-bottom` is still defined for
+  power users who want a taskbar — opt-in via
+  `~/.config/eww/nyxus.conf` `NYXUS_EWW_BARS`.
+- **No left workspace rail by default.** Same opt-in story.
+- **Eclipse wallpaper as hero**, centred horizontally, halo just above
+  vertical centre, distant terrain at the bottom edge.
+- **Pure black surround** — no padding chrome around the wallpaper,
+  it goes edge-to-edge.
 
 ## What the image is
 

@@ -2,7 +2,7 @@
 @import "_nyxus_accent";
 
 /* ─────────────────────────────────────────────────────────────────────
- * NYXUS · EWW styles — DARK MIRROR · CREAM + HANDWRITTEN
+ * NYXUS · EWW styles — ECLIPSE · CREAM + HANDWRITTEN
  * (LOCKED · rev 2026-05-14 r15)
  *
  * Source-of-truth: nyxus_palette.py / nyxus-palette.css — keep
@@ -905,7 +905,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   box-shadow: 0 0 14px rgba(217, 107, 107, 0.45);
 }
 
-/* ── Shared flyout control buttons ─ DARK MIRROR monochrome ─────────
+/* ── Shared flyout control buttons ─ Eclipse monochrome ─────────
  * P2.12 review fix: this rule used to apply cyan neon to every
  * flyout's secondary action (WiFi toggle/rescan, BT toggle/scan,
  * Notification DND/Clear, advanced shortcuts). Locked palette is
@@ -930,7 +930,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 .wifi-current { color: #8b94a8; font-size: 11px; padding: 2px 4px; }
 
 /* P2.12 review fix (round 2): row base/hover converted to monochrome
- * so Notification Center inherits the locked DARK MIRROR palette.
+ * so Notification Center inherits the locked Eclipse palette.
  * Same neutral applied to wifi/bt/mix rows for system-wide cohesion. */
 .wifi-row, .bt-row, .mix-row, .notif-row {
   padding: 8px 10px;

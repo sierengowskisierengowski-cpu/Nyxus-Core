@@ -47,7 +47,7 @@ TIME=$(date '+%H:%M')
 
 # ── compose stable segment chain (NO shuffle) ────────────────────────
 SEGS=(
-  "▌ NYXUS · DARK MIRROR"
+  "▌ NYXUS · ECLIPSE"
   "▌ TIME ${TIME}"
   "▌ HOST ${HOST:-?}"
   "▌ KERNEL ${KERN:-?}"

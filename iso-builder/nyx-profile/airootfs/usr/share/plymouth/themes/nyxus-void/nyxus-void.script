@@ -1,13 +1,18 @@
 // ═════════════════════════════════════════════════════════════════════════════
-//  NYXUS · Plymouth boot splash · "THE DARKSIDE" · rev 5
+//  NYXUS · Plymouth boot splash · "ECLIPSE" · rev 6 (Sprint I)
 //
 //  SEQUENCE  (10 seconds · 50 fps · 500 ticks)
 //  ─────────────────────────────────────────────────────────────────────────
-//    0 –  60  (0.0 – 1.2 s)  Eye fades in from black
-//   60 – 260  (1.2 – 5.2 s)  "NYXUS" emerges from pupil outward — 4 s slow zoom
-//  260 – 460  (5.2 – 9.2 s)  "WELCOME TO THE DARKSIDE" emerges from pupil — 4 s
+//    0 –  60  (0.0 – 1.2 s)  Eclipse fades in from black
+//   60 – 260  (1.2 – 5.2 s)  "NYXUS" emerges from disc centre outward — 4 s
+//  260 – 460  (5.2 – 9.2 s)  "ECLIPSE · OS" emerges from disc centre — 4 s
 //  460 – 500  (9.2 – 10.0s)  Progress bar fades in
 //  500+                       Steady state · indeterminate sweep until real progress
+//
+//  Background (rev 6): /usr/share/plymouth/themes/nyxus-void/background.png
+//  is the canonical Eclipse Horizon brand image (cream halo over still
+//  reflective water with distant terrain). The "pupil" anchor point in the
+//  zoom helper is now the eclipse-disc centre (~50%, 46% of frame).
 //
 //  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI
 // ═════════════════════════════════════════════════════════════════════════════
@@ -57,12 +62,14 @@ bg.sprite.SetY((screen.h - bg.scaled.GetHeight()) / 2);
 bg.sprite.SetZ(-100);
 bg.sprite.SetOpacity(0);
 
-// ── Pupil anchor ─────────────────────────────────────────────────────────────
-//  The pupil in the eye image sits roughly 43 % across and 40 % down.
-//  These fractions were measured from the image composition; adjust if the
-//  background is swapped for a differently-framed shot.
-pupil.x = screen.w * 0.43;
-pupil.y = screen.h * 0.40;
+// ── Eclipse disc anchor ──────────────────────────────────────────────────────
+//  Sprint I rev 6: background swapped from "the eye" to the canonical
+//  Eclipse Horizon brand image. The eclipse disc sits roughly 50 % across
+//  and 46 % down. Wordmarks zoom out FROM that point — visually they "emerge
+//  from the eclipse" exactly the way the original revs zoomed from the pupil.
+//  Variable name kept for diff-readability against rev 5.
+pupil.x = screen.w * 0.50;
+pupil.y = screen.h * 0.46;
 
 // ── NYXUS wordmark text ──────────────────────────────────────────────────────
 //  Wide letter-spacing gives it that brand weight even when small.
@@ -78,9 +85,12 @@ nyxus.sprite = Sprite();
 nyxus.sprite.SetZ(10);
 nyxus.sprite.SetOpacity(0);
 
-// ── WELCOME TO THE DARKSIDE ───────────────────────────────────────────────────
-dark.full  = Image.Text("W E L C O M E  T O  T H E  D A R K S I D E",
-                         0.78, 0.78, 0.78, 1.0, "Sans 32");
+// ── ECLIPSE · OS subtitle ─────────────────────────────────────────────────────
+// Sprint I rev 6: previous subtitle was off-brand (Dark Mirror era).
+// Replaced with the on-brand subtitle. Cream RGBA (0.957, 0.918, 0.835)
+// matches the locked palette token #f4ead5 used everywhere else in the OS.
+dark.full  = Image.Text("E C L I P S E  ·  O S",
+                         0.957, 0.918, 0.835, 1.0, "Sans 32");
 dark.fw    = dark.full.GetWidth();
 dark.fh    = dark.full.GetHeight();
 
@@ -183,7 +193,7 @@ fun Refresh() {
                    1.0, 1.0, 1.0);
     }
 
-    // ── PHASE 2 · WELCOME TO THE DARKSIDE zooms from pupil (260 → 460) ─────
+    // ── PHASE 2 · "ECLIPSE · OS" zooms from disc centre (260 → 460) ─────────
     if (t >= 260 && t <= 460) {
         local_t = (t - 260) / 200.0;
         eased   = ease_out_quart(local_t);
