@@ -505,3 +505,7 @@ qt5-svg
 kvantum
 qt5ct
 qt6ct
+
+# Sprint K-D rev r16 — browsers (themed via /etc/chromium/* + ~/.mozilla/firefox/nyxus.default/)
+chromium
+firefox

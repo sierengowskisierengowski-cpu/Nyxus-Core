@@ -1,0 +1,90 @@
+/* ~/.mozilla/firefox/nyxus.default/chrome/userContent.css
+ * NYXUS Sprint K-D rev r16 — Firefox built-in pages (locked 2026-05-14)
+ *
+ * Skins Firefox's own internal pages — about:home, about:newtab,
+ * about:preferences, about:addons, view-source: — into the rev r16
+ * brand contract. Web content (rendered websites) is NOT touched here;
+ * only Firefox's own chrome-rendered pages.
+ *
+ * Loaded alongside userChrome.css when
+ * toolkit.legacyUserProfileCustomizations.stylesheets is true.
+ */
+
+@-moz-document url("about:newtab"),
+               url("about:home"),
+               url("about:privatebrowsing"),
+               url("about:welcome") {
+  body, html, .activity-stream {
+    background:        #0a0a0e !important;
+    background-color:  #0a0a0e !important;
+    color:             #f4ead5 !important;
+  }
+  .top-site-outer .tile,
+  .top-site-icon {
+    background-color: #0e0e14 !important;
+    border:           1px solid rgba(244, 234, 213, 0.10) !important;
+    border-radius:    3px !important;
+  }
+  .search-wrapper input {
+    background-color: #0e0e14 !important;
+    color:            #f4ead5 !important;
+    border:           1px solid rgba(244, 234, 213, 0.10) !important;
+    border-radius:    3px !important;
+  }
+  .search-wrapper input:focus {
+    border-color: #f4ead5 !important;
+    box-shadow:   0 0 0 1px #f4ead5 !important;
+  }
+  a, .top-site-title, .icon-pin-small {
+    color: #f4ead5 !important;
+  }
+  a:hover { color: #b8865a !important; }
+  .promo, .info-icon, .privatebrowsing-info, .header-text {
+    color: #c4b491 !important;
+  }
+}
+
+@-moz-document url-prefix("about:preferences"),
+               url-prefix("about:addons"),
+               url-prefix("about:config") {
+  body, html {
+    background-color: #0a0a0e !important;
+    color:            #f4ead5 !important;
+  }
+  .main-content, .pane-container {
+    background-color: #0a0a0e !important;
+  }
+  button, select, input[type="text"], input[type="search"], input[type="url"] {
+    background-color: #0e0e14 !important;
+    color:            #f4ead5 !important;
+    border:           1px solid rgba(244, 234, 213, 0.10) !important;
+    border-radius:    3px !important;
+  }
+  input[type="text"]:focus,
+  input[type="search"]:focus,
+  input[type="url"]:focus {
+    border-color: #f4ead5 !important;
+    box-shadow:   0 0 0 1px #f4ead5 !important;
+    outline:      none !important;
+  }
+  button.primary, button.default {
+    background-color: #b8865a !important;
+    color:            #0a0a0e !important;
+    border:           none !important;
+  }
+  button.primary:hover, button.default:hover {
+    background-color: #c4b491 !important;
+  }
+}
+
+/* view-source: → cream-on-black with copper syntax accents */
+@-moz-document url-prefix("view-source:") {
+  body, pre {
+    background-color: #0a0a0e !important;
+    color:            #f4ead5 !important;
+  }
+  span.html-tag,
+  .html-tag,
+  .html-attribute-name { color: #b8865a !important; }
+  .html-attribute-value, .html-comment { color: #c4b491 !important; }
+}
