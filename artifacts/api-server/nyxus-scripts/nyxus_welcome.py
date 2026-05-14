@@ -80,6 +80,7 @@ CFG_DIR.mkdir(parents=True, exist_ok=True)
 # picker they see in Settings later. No two-palette confusion.
 ACCENTS = [
     ("Eclipse Cream", "#f4ead5"),
+    ("Copper",       "#b8865a"),
     ("Cyan",         "#5fd3f3"),
     ("Lime",         "#a6e22e"),
     ("Amber",        "#f5b342"),
