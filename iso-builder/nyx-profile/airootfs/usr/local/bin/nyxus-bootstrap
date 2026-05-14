@@ -51,6 +51,20 @@ notify() {
 log "starting (user=${USER:-?} home=${HOME:-?} version=${BOOTSTRAP_VERSION})"
 mkdir -p "${NYXUS_DIR}"
 
+# ── Live-session guard ──────────────────────────────────────────────────────
+# When running from the NYXUS live ISO (archiso), the /run/archiso directory
+# is present. In that context we must NOT download or run nyxus_install.sh,
+# because it would overwrite the carefully baked airootfs/skel configs with
+# potentially stale versions from the remote endpoint. The live user's
+# ~/.config already has the canonical configs copied from /etc/skel.
+# We exit 0 so nyxus-wait-bootstrap can proceed to launch the EWW bar and
+# other exec-once services that depend on configs already being in place.
+if [[ -d /run/archiso ]]; then
+  log "LIVE SESSION DETECTED (/run/archiso present) — skipping remote bootstrap, using baked airootfs configs"
+  notify 2 8000 "rgb(e8edf5)" "live session · using baked configs (installer available on desktop)"
+  exit 0
+fi
+
 # Already bootstrapped → version check fast path
 # If marker contains current version → no-op (steady state).
 # If marker contains an older version → fall through and re-run so the
