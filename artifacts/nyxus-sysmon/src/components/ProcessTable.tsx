@@ -35,7 +35,7 @@ export function ProcessTable({ data }: { data: SysmonData | null }) {
       
       <div className="flex-1 overflow-auto">
         <table className="w-full text-xs text-left border-collapse">
-          <thead className="sticky top-0 bg-[#0a0514] border-b border-nyxus-dim/30 text-nyxus-dim text-[10px]">
+          <thead className="sticky top-0 bg-[#0a0a0e] border-b border-nyxus-dim/30 text-nyxus-dim text-[10px]">
             <tr>
               <th className="p-2 cursor-pointer hover:text-white" onClick={() => handleSort('pid')}>PID {sortCol === 'pid' ? (sortDesc ? '↓' : '↑') : ''}</th>
               <th className="p-2">NAME</th>
@@ -55,7 +55,7 @@ export function ProcessTable({ data }: { data: SysmonData | null }) {
                   <span className={`px-1.5 py-0.5 rounded text-[9px] ${
                     p.status === 'running' ? 'bg-nyxus-green/20 text-nyxus-green border border-nyxus-green/30' :
                     p.status === 'sleeping' ? 'bg-nyxus-dim/20 text-nyxus-dim border border-nyxus-dim/30' :
-                    'bg-red-500/20 text-red-500 border border-red-500/30'
+                    'bg-[#b8865a]/20 text-[#b8865a] border border-[#b8865a]/30'
                   }`}>
                     {p.status.toUpperCase()}
                   </span>

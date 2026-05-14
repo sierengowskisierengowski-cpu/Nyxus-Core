@@ -23,5 +23,5 @@ export function getColorForPercent(percent: number): string {
   if (percent < 70) return 'var(--color-nyxus-green)';
   if (percent < 85) return 'var(--color-nyxus-yellow)';
   if (percent < 95) return 'var(--color-nyxus-orange)';
-  return '#ff0000';
+  return '#f4ead5';
 }

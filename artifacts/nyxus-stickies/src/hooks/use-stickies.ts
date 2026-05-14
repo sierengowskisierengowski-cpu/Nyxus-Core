@@ -1,29 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
 
 export type NoteColor =
-  | '#fef08a'
-  | '#fda4af'
-  | '#93c5fd'
-  | '#86efac'
-  | '#e9d5ff'
-  | '#fdba74';
+  | '#f4ead5'
+  | '#d4b89c'
+  | '#c4b491'
+  | '#e8dcc1'
+  | '#a89175'
+  | '#b8865a';
 
 export const NYXUS_COLORS: NoteColor[] = [
-  '#fef08a',
-  '#fda4af',
-  '#93c5fd',
-  '#86efac',
-  '#e9d5ff',
-  '#fdba74',
+  '#f4ead5',
+  '#d4b89c',
+  '#c4b491',
+  '#e8dcc1',
+  '#a89175',
+  '#b8865a',
 ];
 
 export const COLOR_LABELS: Record<NoteColor, string> = {
-  '#fef08a': 'Lemon',
-  '#fda4af': 'Rose',
-  '#93c5fd': 'Sky',
-  '#86efac': 'Mint',
-  '#e9d5ff': 'Lavender',
-  '#fdba74': 'Peach',
+  '#f4ead5': 'Cream',
+  '#d4b89c': 'Warm',
+  '#c4b491': 'Sand',
+  '#e8dcc1': 'Linen',
+  '#a89175': 'Wheat',
+  '#b8865a': 'Copper',
 };
 
 export interface Note {
