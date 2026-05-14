@@ -1837,8 +1837,8 @@ fi
 # source-of-truth file is legacy, it overwrites the airootfs version
 # and silently reverts brand identity on a real ISO build.
 # These guards lock the upstream copies to the same r15 spec.
-section "§15y — Sprint E source-of-truth guards (artifacts/api-server/nyxus-scripts)"
-NS_SRC="${REPO_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}/artifacts/api-server/nyxus-scripts"
+hd "§15y — Sprint E source-of-truth guards (artifacts/api-server/nyxus-scripts)"
+NS_SRC="${REPO_ROOT:-$HERE/..}/artifacts/api-server/nyxus-scripts"
 if [[ -d "$NS_SRC" ]]; then
   # rofi
   R="$NS_SRC/rofi-nyxus.rasi"
@@ -1903,7 +1903,7 @@ fi
 # Premium polish: Calamares slideshow rev r15, Fastfetch branded, Qt
 # platform integration via Kvantum, scratchpads + HyprExpo bind +
 # borders-plus-plus shard, source-of-truth promotion guards.
-section "§15z — Sprint F premium polish (calamares · fastfetch · Qt · plugins)"
+hd "§15z — Sprint F premium polish (calamares · fastfetch · Qt · plugins)"
 
 # (a) Calamares slideshow & branding — DARK MIRROR codename retired,
 #     no cyan #e8edf5 (rev r15 forbids cyan).
@@ -2088,7 +2088,7 @@ done
 
 # (g) Source-of-truth re-promotion (Sprint F edits to hyprland.conf must
 #     also be in artifact source — see §15y for rationale).
-NS_SRC="${REPO_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}/artifacts/api-server/nyxus-scripts"
+NS_SRC="${REPO_ROOT:-$HERE/..}/artifacts/api-server/nyxus-scripts"
 if [[ -f "$NS_SRC/hyprland.conf" ]]; then
   if grep -qE '^\s*special\s*=\s*true' "$NS_SRC/hyprland.conf"; then
     ok "Sprint F src: hyprland.conf source has special blur (Sprint F promoted)"
@@ -2143,7 +2143,7 @@ fi
 # #7b7390 + purple-white #e9e5f2 + cyan #e8edf5). Sprint G round-1
 # fixes both + hooks the dynamic time-of-day wallpaper rotator that
 # was orphaned in artifact source for ~3 sessions.
-section "§15aa — Sprint G round-1 (locked-palette compliance + wallpaper)"
+hd "§15aa — Sprint G round-1 (locked-palette compliance + wallpaper)"
 
 # (a) dunstrc — non-comment lines must contain no banned colors
 DRC="${AIROOT}/etc/skel/.config/dunst/dunstrc"
@@ -2250,7 +2250,7 @@ if [[ -f "$ACC" ]]; then
 fi
 
 # (g) dynamic-wallpaper.sh hardened with graphical-session guard
-WP_SH_SRC="${REPO_ROOT:-$PWD}/../artifacts/api-server/nyxus-scripts/nyxus-dynamic-wallpaper.sh"
+WP_SH_SRC="${REPO_ROOT:-$HERE/..}/artifacts/api-server/nyxus-scripts/nyxus-dynamic-wallpaper.sh"
 [[ -f "$WP_SH" ]] && grep -q 'no graphical session yet' "$WP_SH" \
   && ok "Sprint G round-2: dynamic-wallpaper.sh has session-readiness guard (no early-boot race)" \
   || warn "Sprint G round-2: dynamic-wallpaper.sh missing graphical-session guard"
@@ -2260,7 +2260,7 @@ WP_SH_SRC="${REPO_ROOT:-$PWD}/../artifacts/api-server/nyxus-scripts/nyxus-dynami
 # must ship with the OS as a brand asset and live in docs/brand for
 # every future sprint to reference.
 ECLIPSE_OS="${AIROOT}/usr/share/backgrounds/nyxus/nyxus-eclipse-reference.png"
-ECLIPSE_DOCS="${REPO_ROOT:-$PWD/..}/docs/brand/nyxus-eclipse-reference.png"
+ECLIPSE_DOCS="${REPO_ROOT:-$HERE/..}/docs/brand/nyxus-eclipse-reference.png"
 ECLIPSE_DOCS_REL="../docs/brand/nyxus-eclipse-reference.png"
 [[ -f "$ECLIPSE_OS" ]] \
   && ok "Sprint G round-3: visual target ships in /usr/share/backgrounds/nyxus/" \
@@ -2268,7 +2268,7 @@ ECLIPSE_DOCS_REL="../docs/brand/nyxus-eclipse-reference.png"
 [[ -f "$ECLIPSE_DOCS" || -f "$ECLIPSE_DOCS_REL" ]] \
   && ok "Sprint G round-3: visual target pinned in docs/brand/ (survives ISO rebuilds)" \
   || fail "Sprint G round-3: visual target missing from docs/brand/"
-[[ -f "${REPO_ROOT:-$PWD/..}/docs/brand/VISUAL-TARGET.md" || -f "../docs/brand/VISUAL-TARGET.md" ]] \
+[[ -f "${REPO_ROOT:-$HERE/..}/docs/brand/VISUAL-TARGET.md" || -f "../docs/brand/VISUAL-TARGET.md" ]] \
   && ok "Sprint G round-3: VISUAL-TARGET.md doc present (rules every future sprint follows)" \
   || warn "Sprint G round-3: VISUAL-TARGET.md missing"
 
@@ -2322,7 +2322,7 @@ PLY_SCRIPT="${AIROOT}/usr/share/plymouth/themes/nyxus-void/nyxus-void.script"
 
 # (m) Welcome wizard rebrand sweep — no banned colors / no Mirror branding
 WP="${AIROOT}/opt/nyxus/nyxus_welcome.py"
-WP_SRC="${REPO_ROOT:-$PWD/..}/artifacts/api-server/nyxus-scripts/nyxus_welcome.py"
+WP_SRC="${REPO_ROOT:-$HERE/..}/artifacts/api-server/nyxus-scripts/nyxus_welcome.py"
 [[ -f "$WP_SRC" ]] || WP_SRC="../artifacts/api-server/nyxus-scripts/nyxus_welcome.py"
 for target in "$WP" "$WP_SRC"; do
   [[ -f "$target" ]] || continue
@@ -2338,7 +2338,7 @@ done
   || fail "Sprint I: welcome wizard rev stamp not updated"
 
 # (n) eww source-vs-airootfs drift resolved (slim Eclipse desktop layout)
-EWW_SRC="${REPO_ROOT:-$PWD/..}/artifacts/api-server/nyxus-scripts/eww/eww.yuck"
+EWW_SRC="${REPO_ROOT:-$HERE/..}/artifacts/api-server/nyxus-scripts/eww/eww.yuck"
 [[ -f "$EWW_SRC" ]] || EWW_SRC="../artifacts/api-server/nyxus-scripts/eww/eww.yuck"
 EWW_AIR="${AIROOT}/etc/skel/.config/eww/eww.yuck"
 [[ -f "$EWW_SRC" ]] && grep -q ':y "8" :width "96%" :height "40px"' "$EWW_SRC" \
@@ -2354,14 +2354,14 @@ else
 fi
 
 # (o) Default open-list = "bar-top bar-right" (Eclipse desktop layout)
-EWW_CONF_SRC="${REPO_ROOT:-$PWD/..}/artifacts/api-server/nyxus-scripts/eww/nyxus.conf"
+EWW_CONF_SRC="${REPO_ROOT:-$HERE/..}/artifacts/api-server/nyxus-scripts/eww/nyxus.conf"
 [[ -f "$EWW_CONF_SRC" ]] || EWW_CONF_SRC="../artifacts/api-server/nyxus-scripts/eww/nyxus.conf"
 [[ -f "$EWW_CONF_SRC" ]] && grep -q 'NYXUS_EWW_BARS="bar-top bar-right"' "$EWW_CONF_SRC" \
   && ok "Sprint I: default bar layout is 'bar-top bar-right' (Eclipse desktop)" \
   || fail "Sprint I: default bar layout not set to slim Eclipse desktop"
 
 # (p) Desktop UI target reference image pinned in docs/brand
-DT="${REPO_ROOT:-$PWD/..}/docs/brand/nyxus-desktop-target.png"
+DT="${REPO_ROOT:-$HERE/..}/docs/brand/nyxus-desktop-target.png"
 [[ -f "$DT" ]] || DT="../docs/brand/nyxus-desktop-target.png"
 [[ -f "$DT" ]] \
   && ok "Sprint I: desktop UI target image pinned in docs/brand/" \
@@ -2370,7 +2370,7 @@ DT="${REPO_ROOT:-$PWD/..}/docs/brand/nyxus-desktop-target.png"
 # (q) No "DARK MIRROR" runtime strings in EWW user-visible surfaces
 #     (caught by Sprint I architect review — ticker initial payload + screensaver label
 #     would otherwise greet the user with off-brand wordmark on every boot).
-EWW_TREE_SRC="${REPO_ROOT:-$PWD/..}/artifacts/api-server/nyxus-scripts/eww"
+EWW_TREE_SRC="${REPO_ROOT:-$HERE/..}/artifacts/api-server/nyxus-scripts/eww"
 [[ -d "$EWW_TREE_SRC" ]] || EWW_TREE_SRC="../artifacts/api-server/nyxus-scripts/eww"
 EWW_TREE_AIR="${AIROOT}/etc/skel/.config/eww"
 for tree in "$EWW_TREE_SRC" "$EWW_TREE_AIR"; do
@@ -2386,7 +2386,7 @@ done
 # (r) nyxus-eww-launch fallback BARS only references defined windows
 #     (architect caught airootfs fallback referencing nonexistent 'dock' window —
 #     missing-config users would have launcher exit non-zero on first run).
-LAUNCH_SRC="${REPO_ROOT:-$PWD/..}/artifacts/api-server/nyxus-scripts/nyxus-eww-launch"
+LAUNCH_SRC="${REPO_ROOT:-$HERE/..}/artifacts/api-server/nyxus-scripts/nyxus-eww-launch"
 [[ -f "$LAUNCH_SRC" ]] || LAUNCH_SRC="../artifacts/api-server/nyxus-scripts/nyxus-eww-launch"
 LAUNCH_AIR="${AIROOT}/usr/local/bin/nyxus-eww-launch"
 for f in "$LAUNCH_SRC" "$LAUNCH_AIR"; do
@@ -2746,6 +2746,85 @@ if [[ -d "$ART_DE" ]]; then
   fi
 else
   warn "Sprint K-B parity: artifact desktop-entries dir not found (skipping)"
+fi
+
+# ── §15ah Sprint K-C — web artifact rev r16 palette + frosted glass ──
+# Sprint K-C re-themed all five web artifacts (notepad, stickies, sysmon,
+# widgets, nyxus-web download portal) off the legacy r10/r12 vaporwave
+# palette and onto the locked rev r16 brand contract:
+#   triple-black + cream (#f4ead5) primary + copper (#b8865a) accent.
+# Guards prevent regression on FOUR axes:
+#   (a) zero banned hex literals (#ff00ff/#cc00ff/#0088ff/#39ff14/
+#       #ffff00/#ff5500) anywhere in src/
+#   (b) zero banned rgba() calls for the same palette
+#   (c) every artifact carries the canonical .nyx-glass utility with
+#       blur(14px) saturate(1.6) so frosted glass flows consistently
+#   (d) zero banned HSL :root tokens (300 100% 50%, 288 100% 50%,
+#       260 50% 2%, etc.) so primary/accent never drift back to magenta
+hd "§15ah Sprint K-C — web artifact rev r16 palette + frosted glass"
+
+WEB_ARTS=(nyxus-notepad nyxus-stickies nyxus-sysmon nyxus-widgets nyxus-web)
+ART_ROOT="$(dirname "${PROFILE}")/../artifacts"
+
+KC_TOTAL_HEX=0
+KC_TOTAL_RGBA=0
+KC_TOTAL_HSL=0
+KC_GLASS_OK=0
+KC_GLASS_BAD=""
+
+for slug in "${WEB_ARTS[@]}"; do
+  src="$ART_ROOT/$slug/src"
+  css="$ART_ROOT/$slug/src/index.css"
+  if [[ ! -d "$src" ]]; then
+    warn "Sprint K-C: $slug src/ not found (skipping)"
+    continue
+  fi
+  # (a) banned hex — vaporwave + red + yellow-gold + cyan + sticky pastels +
+  # nyxus-web shared.ts pastels + r15-era purple/cyan/gold drift
+  hex=$(grep -rE '#(ff00ff|cc00ff|0088ff|39ff14|ffff00|ff5500|ff0000|ff8844|ffd700|00eeff|aaaacc|8888aa|fef08a|fda4af|93c5fd|86efac|e9d5ff|fdba74|ec4899|ea7e3c|d4a73a|6aa872|5a8aab|8a6aaa|2a1a3a|2a0a3a|fbbf24|eab308|d4b87a|e8d4a0|8a6f3a|8b6f3a|e8c66b|a06bff|3ad8ff|cc44ff|22d3ee|06b6d4|a78bfa|c084fc|f87171|fcd34d|8800ff|ff3344|ff4d6b|ff4d6d|ec4899|6fffb0|00aaff|bf5cff)' "$src" 2>/dev/null | wc -l)
+  KC_TOTAL_HEX=$((KC_TOTAL_HEX + hex))
+  # (b) banned rgba calls + Tailwind banned color utilities + raw RGB tuple
+  # strings (architect-flagged in K-C round 2: numeric tuples like
+  # "236, 72,153" interpolated later into rgba() bypass hex regex)
+  rgba=$(grep -rE 'rgba\(255,\s*0,\s*255|rgba\(204,\s*0,\s*255|rgba\(0,\s*136,\s*255|rgba\(57,\s*255,\s*20|rgba\(255,\s*85,\s*0|rgba\(255,\s*255,\s*0|rgba\(255,\s*60,\s*80|rgba\(255,\s*0,\s*0|rgba\(6,\s*4,\s*12|rgba\(212,\s*167,\s*58|rgb\(212,\s*167,\s*58|"236,\s*72,\s*153"|"234,\s*126,\s*60"|"212,\s*167,\s*58"|"106,\s*168,\s*114"|"90,\s*138,\s*171"|"138,\s*106,\s*170"|\[212,\s*167,\s*58\]|\[236,\s*72,\s*153\]|text-red-[0-9]|bg-red-[0-9]|border-red-[0-9]|text-yellow-[0-9]|bg-yellow-[0-9]|border-yellow-[0-9]|text-blue-[0-9]|bg-blue-[0-9]|text-cyan-[0-9]|bg-cyan-[0-9]|text-purple-[0-9]|bg-purple-[0-9]|text-pink-[0-9]|bg-pink-[0-9]|text-fuchsia-[0-9]|text-violet-[0-9]|text-magenta-[0-9]' "$src" 2>/dev/null | wc -l)
+  KC_TOTAL_RGBA=$((KC_TOTAL_RGBA + rgba))
+  # (d) banned HSL :root tokens — full vaporwave HSL families
+  hsl=$(grep -rE '(300 100% 50|288 100% 50|260 50% 2|260 66% 4|255 50% 2|257 54% 5|240 50% 4|208 100% 50|111 100% 54|285 100% 50|0 100% 60|20 100% 50|270 100% 85|263 44% 92|263 54% 92|262 50% 92|260 50% 4)' "$css" 2>/dev/null | wc -l)
+  KC_TOTAL_HSL=$((KC_TOTAL_HSL + hsl))
+  # (c) frosted-glass parity — exact canonical match required:
+  # background: rgba(6, 6, 10, 0.55) AND blur(14px) saturate(1.6) AND copper accent
+  if grep -qE 'background:\s*rgba\(6,\s*6,\s*10,\s*0\.55\)' "$css" 2>/dev/null \
+     && grep -q 'blur(14px) saturate(1.6)' "$css" 2>/dev/null \
+     && grep -q '#b8865a' "$css" 2>/dev/null \
+     && grep -q '\.nyx-glass' "$css" 2>/dev/null; then
+    KC_GLASS_OK=$((KC_GLASS_OK + 1))
+  else
+    KC_GLASS_BAD="${KC_GLASS_BAD}${slug} "
+  fi
+done
+
+if (( KC_TOTAL_HEX == 0 )); then
+  ok "Sprint K-C (a): zero banned hex literals across all 5 web artifact src trees"
+else
+  fail "Sprint K-C (a): ${KC_TOTAL_HEX} banned hex literals still in web artifact src/"
+fi
+
+if (( KC_TOTAL_RGBA == 0 )); then
+  ok "Sprint K-C (b): zero banned rgba() calls across all 5 web artifact src trees"
+else
+  fail "Sprint K-C (b): ${KC_TOTAL_RGBA} banned rgba() calls still in web artifact src/"
+fi
+
+if [[ -z "$KC_GLASS_BAD" ]] && (( KC_GLASS_OK == 5 )); then
+  ok "Sprint K-C (c): all 5 web artifacts carry .nyx-glass + blur(14px) saturate(1.6) + copper accent"
+else
+  fail "Sprint K-C (c): frosted-glass parity broken in: ${KC_GLASS_BAD:-<count mismatch ${KC_GLASS_OK}/5>}"
+fi
+
+if (( KC_TOTAL_HSL == 0 )); then
+  ok "Sprint K-C (d): zero banned HSL :root tokens (no magenta primary, no purple bg)"
+else
+  fail "Sprint K-C (d): ${KC_TOTAL_HSL} banned HSL :root tokens still in web artifact index.css"
 fi
 
 # ── final ─────────────────────────────────────────────────────────────

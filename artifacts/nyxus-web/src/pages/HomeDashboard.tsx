@@ -200,7 +200,7 @@ function Card({ tilt, color, title, glyph, span = 1, children, footer }: {
     <div style={{
       gridColumn: `span ${span}`,
       transform: `rotate(${tilt}deg)`,
-      background: "rgba(6,4,12,0.42)",
+      background: "rgba(6,6,10,0.42)",
       border: `1.5px dashed ${color}aa`,
       borderTop: `2px solid ${color}`,
       borderRadius: 8,

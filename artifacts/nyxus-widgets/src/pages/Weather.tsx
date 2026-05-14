@@ -56,24 +56,24 @@ const getDayName = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
 
 const conditionColor: Record<string, string> = {
-  SUNNY:         '#ffd700',
-  CLEAR_NIGHT:   '#0088ff',
-  PARTLY_CLOUDY: '#cc00ff',
-  CLOUDY:        '#aaaacc',
-  FOG:           '#8888aa',
-  RAIN:          '#0088ff',
-  SNOW:          '#00eeff',
-  STORM:         '#ff5500',
-  UNKNOWN:       '#ff00ff',
+  SUNNY:         '#b8865a',
+  CLEAR_NIGHT:   '#8a8068',
+  PARTLY_CLOUDY: '#c4b491',
+  CLOUDY:        '#8a8068',
+  FOG:           '#8a8068',
+  RAIN:          '#8a8068',
+  SNOW:          '#f4ead5',
+  STORM:         '#b8865a',
+  UNKNOWN:       '#f4ead5',
 };
 
 const AnimationLayer = ({ condition }: { condition: string }) =>
   useMemo(() => {
     switch (condition) {
       case 'SUNNY': return (
-        <div className="absolute inset-0 overflow-hidden bg-gradient-to-br from-[#1a0900] via-[#08080e] to-[#08080e]">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-yellow-400/10 rounded-full blur-3xl" />
-          <div className="absolute top-8 right-12 text-yellow-400/60 drop-shadow-[0_0_40px_rgba(255,200,0,0.5)]">
+        <div className="absolute inset-0 overflow-hidden bg-gradient-to-br from-[#1a1408] via-[#08080e] to-[#08080e]">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#b8865a]/10 rounded-full blur-3xl" />
+          <div className="absolute top-8 right-12 text-[#b8865a]/60 drop-shadow-[0_0_40px_rgba(184,134,90,0.5)]">
             <Sun size={220} strokeWidth={0.8} style={{ animation: 'spin 40s linear infinite' }} />
           </div>
         </div>
@@ -87,7 +87,7 @@ const AnimationLayer = ({ condition }: { condition: string }) =>
               '--duration': `${Math.random() * 3 + 1}s`, '--delay': `${Math.random() * 3}s`
             } as React.CSSProperties} />
           ))}
-          <div className="absolute top-10 right-16 text-blue-300/60 drop-shadow-[0_0_30px_rgba(0,136,255,0.4)]">
+          <div className="absolute top-10 right-16 text-nyxus-cream/60 drop-shadow-[0_0_30px_rgba(138,128,104,0.4)]">
             <Moon size={140} strokeWidth={0.8} />
           </div>
         </div>
@@ -134,7 +134,7 @@ const AnimationLayer = ({ condition }: { condition: string }) =>
       case 'PARTLY_CLOUDY': return (
         <div className="absolute inset-0 overflow-hidden bg-[#08080e]">
           {condition === 'PARTLY_CLOUDY' && (
-            <div className="absolute top-10 right-12 text-yellow-400/40">
+            <div className="absolute top-10 right-12 text-[#b8865a]/40">
               <Sun size={160} strokeWidth={0.8} />
             </div>
           )}
@@ -225,8 +225,8 @@ export default function Weather() {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-[#08080e]">
         <div className="flex flex-col items-center gap-5">
-          <div className="h-14 w-14 border-4 border-[#ff00ff] border-t-transparent rounded-full animate-spin" style={{ boxShadow: '0 0 20px #ff00ff88' }} />
-          <span style={{ fontFamily: "'Caveat',cursive", fontSize: 28, color: '#ff00ff', textShadow: '0 0 12px #ff00ff' }}>
+          <div className="h-14 w-14 border-4 border-[#f4ead5] border-t-transparent rounded-full animate-spin" style={{ boxShadow: '0 0 20px #f4ead588' }} />
+          <span style={{ fontFamily: "'Caveat',cursive", fontSize: 28, color: '#f4ead5', textShadow: '0 0 12px #f4ead5' }}>
             LOADING WEATHER...
           </span>
         </div>
@@ -239,10 +239,10 @@ export default function Weather() {
       <div className="flex h-screen w-screen items-center justify-center bg-[#08080e] text-white">
         <div style={{
           width: 380, background: '#000000',
-          border: '2px solid #cc00ff', borderRadius: 16, padding: 32,
-          boxShadow: '0 0 40px #cc00ff44',
+          border: '2px solid #c4b491', borderRadius: 16, padding: 32,
+          boxShadow: '0 0 40px #c4b49144',
         }}>
-          <h2 style={{ fontFamily: "'Caveat',cursive", fontSize: 36, color: '#cc00ff', textShadow: '0 0 12px #cc00ff', marginBottom: 8, textAlign: 'center' }}>
+          <h2 style={{ fontFamily: "'Caveat',cursive", fontSize: 36, color: '#c4b491', textShadow: '0 0 12px #c4b491', marginBottom: 8, textAlign: 'center' }}>
             LOCATION
           </h2>
           <p style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: 24, letterSpacing: '0.1em' }}>
@@ -253,9 +253,9 @@ export default function Weather() {
               placeholder="e.g. DETROIT"
               value={cityInput}
               onChange={e => setCityInput(e.target.value)}
-              style={{ background: '#030206', border: '1px solid #0088ff', color: '#e8e0f5', fontFamily: "'JetBrains Mono',monospace", textAlign: 'center', letterSpacing: '0.2em', boxShadow: '0 0 10px #0088ff44' }}
+              style={{ background: '#030206', border: '1px solid #8a8068', color: '#e8e0f5', fontFamily: "'JetBrains Mono',monospace", textAlign: 'center', letterSpacing: '0.2em', boxShadow: '0 0 10px #8a806844' }}
             />
-            <Button type="submit" disabled={loading} style={{ background: '#ff00ff', color: '#000', fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, letterSpacing: '0.1em', boxShadow: '0 0 14px #ff00ff66' }}>
+            <Button type="submit" disabled={loading} style={{ background: '#f4ead5', color: '#000', fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, letterSpacing: '0.1em', boxShadow: '0 0 14px #f4ead566' }}>
               {loading ? 'SCANNING...' : 'CALIBRATE'}
             </Button>
             {weatherData && (
@@ -263,7 +263,7 @@ export default function Weather() {
                 ← BACK
               </button>
             )}
-            {error && <p style={{ color: '#ff5500', fontSize: 12, textAlign: 'center', fontFamily: "'JetBrains Mono',monospace" }}>{error}</p>}
+            {error && <p style={{ color: '#b8865a', fontSize: 12, textAlign: 'center', fontFamily: "'JetBrains Mono',monospace" }}>{error}</p>}
           </form>
         </div>
       </div>
@@ -273,7 +273,7 @@ export default function Weather() {
   const current   = weatherData.current;
   const daily     = weatherData.daily;
   const condition = getWeatherCondition(current.weather_code, current.is_day);
-  const color     = conditionColor[condition] ?? '#ff00ff';
+  const color     = conditionColor[condition] ?? '#f4ead5';
   const temp      = Math.round(current.temperature_2m);
   const feels     = Math.round(current.apparent_temperature);
   const wind      = Math.round(current.wind_speed_10m);
@@ -344,21 +344,21 @@ export default function Weather() {
 
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div style={{ padding: '16px 18px', background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,85,0,0.35)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
+            <div style={{ padding: '16px 18px', background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(184,134,90,0.35)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                 <Wind size={13} color="rgba(255,255,255,0.3)" />
                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.25em' }}>WIND SPEED</span>
               </div>
-              <span style={{ fontFamily: "'Caveat',cursive", fontSize: 30, fontWeight: 700, color: '#ff5500', textShadow: '0 0 10px #ff550088' }}>
+              <span style={{ fontFamily: "'Caveat',cursive", fontSize: 30, fontWeight: 700, color: '#b8865a', textShadow: '0 0 10px #b8865a88' }}>
                 {wind} <span style={{ fontSize: 16, fontWeight: 500 }}>MPH</span>
               </span>
             </div>
-            <div style={{ padding: '16px 18px', background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(0,136,255,0.35)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
+            <div style={{ padding: '16px 18px', background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(138,128,104,0.35)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                 <Droplets size={13} color="rgba(255,255,255,0.3)" />
                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.25em' }}>HUMIDITY</span>
               </div>
-              <span style={{ fontFamily: "'Caveat',cursive", fontSize: 30, fontWeight: 700, color: '#0088ff', textShadow: '0 0 10px #0088ff88' }}>
+              <span style={{ fontFamily: "'Caveat',cursive", fontSize: 30, fontWeight: 700, color: '#8a8068', textShadow: '0 0 10px #8a806888' }}>
                 {humidity}<span style={{ fontSize: 16, fontWeight: 500 }}>%</span>
               </span>
             </div>
@@ -376,7 +376,7 @@ export default function Weather() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
             {daily.time.slice(0, 5).map((date: string, i: number) => {
               const dc      = getWeatherCondition(daily.weather_code[i], 1);
-              const dc_col  = conditionColor[dc] ?? '#ff00ff';
+              const dc_col  = conditionColor[dc] ?? '#f4ead5';
               const isToday = i === 0;
               const precip  = daily.precipitation_probability_max?.[i] ?? 0;
               return (
@@ -396,15 +396,15 @@ export default function Weather() {
                     {getWeatherIcon(dc, 26)}
                   </span>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                    <span style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: '#ff00ff', textShadow: '0 0 8px #ff00ff66' }}>
+                    <span style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: '#f4ead5', textShadow: '0 0 8px #f4ead566' }}>
                       {Math.round(daily.temperature_2m_max[i])}°
                     </span>
-                    <span style={{ fontFamily: "'Caveat',cursive", fontSize: 17, color: '#0088ff' }}>
+                    <span style={{ fontFamily: "'Caveat',cursive", fontSize: 17, color: '#8a8068' }}>
                       {Math.round(daily.temperature_2m_min[i])}°
                     </span>
                   </div>
                   {precip > 0 && (
-                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, color: '#0088ff', letterSpacing: '0.1em' }}>
+                    <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, color: '#8a8068', letterSpacing: '0.1em' }}>
                       ▼ {precip}%
                     </span>
                   )}
@@ -415,28 +415,28 @@ export default function Weather() {
 
           {/* Precipitation bar */}
           {precip0 > 0 && (
-            <div style={{ marginTop: 20, padding: '16px 20px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,136,255,0.2)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
+            <div style={{ marginTop: 20, padding: '16px 20px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(138,128,104,0.2)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.25em' }}>PRECIP CHANCE TODAY</span>
-                <span style={{ fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: '#0088ff' }}>{precip0}%</span>
+                <span style={{ fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: '#8a8068' }}>{precip0}%</span>
               </div>
               <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${precip0}%`, background: 'linear-gradient(90deg, #0088ff, #cc00ff)', borderRadius: 99, transition: 'width 1s ease' }} />
+                <div style={{ height: '100%', width: `${precip0}%`, background: 'linear-gradient(90deg, #8a8068, #c4b491)', borderRadius: 99, transition: 'width 1s ease' }} />
               </div>
             </div>
           )}
 
           {/* UV / Visibility extra row */}
           <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(57,255,20,0.2)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
+            <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(244,234,213,0.2)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.2em', marginBottom: 4 }}>MAX TEMP</div>
-              <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: '#39ff14', textShadow: '0 0 8px #39ff1466' }}>
+              <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: '#f4ead5', textShadow: '0 0 8px #f4ead566' }}>
                 {Math.round(daily.temperature_2m_max[0])}°F
               </span>
             </div>
-            <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(204,0,255,0.2)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
+            <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(196,180,145,0.2)', borderRadius: 12, backdropFilter: 'blur(14px) saturate(1.6)' }}>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.2em', marginBottom: 4 }}>MIN TEMP</div>
-              <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: '#cc00ff', textShadow: '0 0 8px #cc00ff66' }}>
+              <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: '#c4b491', textShadow: '0 0 8px #c4b49166' }}>
                 {Math.round(daily.temperature_2m_min[0])}°F
               </span>
             </div>
