@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<policyconfig>
+  <vendor>NYXUS</vendor>
+  <vendor_url>https://nyxus-core.replit.app</vendor_url>
+
+  <action id="com.nyxus.plymouth.set-theme">
+    <description>Switch the NYXUS boot splash theme</description>
+    <message>Authentication is required to switch the boot splash and regenerate the initramfs</message>
+    <icon_name>system-os-install</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/env</annotate>
+  </action>
+
+  <action id="com.nyxus.plymouth.regen-initramfs">
+    <description>Regenerate the initramfs (mkinitcpio -P)</description>
+    <message>Authentication is required to regenerate the initramfs</message>
+    <icon_name>system-os-install</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/mkinitcpio</annotate>
+  </action>
+</policyconfig>

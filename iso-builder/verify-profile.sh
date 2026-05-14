@@ -649,6 +649,178 @@ for sym in make_keybinds_group make_reset_group make_advanced_group \
     || fail "Standard footer: ${sym} missing"
 done
 
+# ── 13o. Tier 1 · Welcome / Onboarding wizard (rev 2026-05-14) ──────
+hd "13o. Tier 1 · Welcome wizard"
+# Wizard implementation (Python GTK4) must be present + parse.
+WW_IMPL="${AIROOT}/opt/nyxus/nyxus_welcome.py"
+if [[ -f "${WW_IMPL}" ]] && python3 -c "import ast; ast.parse(open('${WW_IMPL}').read())" 2>/dev/null; then
+  ok "wizard impl present + parses (/opt/nyxus/nyxus_welcome.py)"
+else
+  fail "wizard impl missing or unparseable: ${WW_IMPL}"
+fi
+# Launcher binary must be present + executable + bash-clean.
+WW_BIN="${AIROOT}/usr/local/bin/nyxus-welcome"
+if [[ -x "${WW_BIN}" ]] && bash -n "${WW_BIN}" 2>/dev/null; then
+  ok "nyxus-welcome launcher present + parses"
+else
+  fail "nyxus-welcome launcher missing/not-executable/bad: ${WW_BIN}"
+fi
+# Application .desktop entry must be present and point to nyxus-welcome.
+WW_DSK="${AIROOT}/usr/share/applications/nyxus-welcome.desktop"
+if [[ -f "${WW_DSK}" ]] && grep -q "^Exec=nyxus-welcome" "${WW_DSK}"; then
+  ok "nyxus-welcome.desktop present + Exec wired"
+else
+  fail "nyxus-welcome.desktop missing or Exec= wrong: ${WW_DSK}"
+fi
+# First-boot autostart entry shipped via /etc/skel.
+WW_AS="${AIROOT}/etc/skel/.config/autostart/nyxus-welcome.desktop"
+if [[ -f "${WW_AS}" ]] && grep -q "^Exec=nyxus-welcome" "${WW_AS}"; then
+  ok "first-boot autostart entry present"
+else
+  fail "first-boot autostart entry missing: ${WW_AS}"
+fi
+# Settings hub must register the welcome page.
+if grep -q '"welcome":' "${NS}/nyxus_settings.py" \
+   && grep -q "^class WelcomePage(SectionPage)" "${NS}/nyxus_settings.py"; then
+  ok "Settings: welcome registered + WelcomePage class present"
+else
+  fail "Settings: welcome not registered or WelcomePage class missing"
+fi
+# Required runtime packages for the wizard backend (gtk4, libadwaita,
+# python-gobject) — already in packages.x86_64 for the wallpaper studio,
+# pinned here so a regression surfaces in this section.
+for pkg in gtk4 libadwaita python-gobject; do
+  grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
+    && ok "package: ${pkg}" \
+    || fail "missing package: ${pkg}"
+done
+
+# ── 13p. Tier 1 · Login Screen / SDDM theme (rev 2026-05-14) ────────
+hd "13p. Tier 1 · Login Screen (SDDM)"
+# nyxus-loginscreen helper
+LS_BIN="${AIROOT}/usr/local/bin/nyxus-loginscreen"
+if [[ -x "${LS_BIN}" ]] && bash -n "${LS_BIN}" 2>/dev/null; then
+  ok "nyxus-loginscreen helper present + parses"
+else
+  fail "nyxus-loginscreen helper missing/not-executable/bad: ${LS_BIN}"
+fi
+# Polkit policy
+LS_POL="${AIROOT}/usr/share/polkit-1/actions/com.nyxus.loginscreen.policy"
+if [[ -f "${LS_POL}" ]] \
+   && grep -q "com.nyxus.loginscreen.write" "${LS_POL}"; then
+  ok "polkit policy: com.nyxus.loginscreen.policy present"
+else
+  fail "polkit policy missing: ${LS_POL}"
+fi
+# Defaults file (used by `reset`)
+LS_DEF="${AIROOT}/usr/share/nyxus/sddm.defaults.conf"
+if [[ -f "${LS_DEF}" ]] && grep -q "^\[Theme\]" "${LS_DEF}"; then
+  ok "sddm defaults file present"
+else
+  fail "sddm defaults file missing: ${LS_DEF}"
+fi
+# SDDM theme assets (existing)
+LS_THEME="${AIROOT}/usr/share/sddm/themes/nyxus"
+for f in Main.qml theme.conf metadata.desktop background.png; do
+  if [[ -f "${LS_THEME}/${f}" ]]; then
+    ok "sddm theme asset: ${f}"
+  else
+    fail "sddm theme missing: ${LS_THEME}/${f}"
+  fi
+done
+# At least one background pack image
+BG_COUNT=$(find "${LS_THEME}/backgrounds" -maxdepth 1 -type f \
+            \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \
+               -o -iname '*.webp' \) 2>/dev/null | wc -l)
+if (( BG_COUNT >= 1 )); then
+  ok "sddm background pack: ${BG_COUNT} images"
+else
+  fail "sddm background pack empty: ${LS_THEME}/backgrounds/"
+fi
+# Settings hub registration
+if grep -q '"loginscreen":' "${NS}/nyxus_settings.py" \
+   && grep -q "^class LoginScreenPage(SectionPage)" "${NS}/nyxus_settings.py"; then
+  ok "Settings: loginscreen registered + LoginScreenPage class present"
+else
+  fail "Settings: loginscreen not registered or LoginScreenPage missing"
+fi
+# Required runtime packages — sddm itself + python3 (used by helper).
+for pkg in sddm; do
+  grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
+    && ok "package: ${pkg}" \
+    || fail "missing package: ${pkg}"
+done
+
+# ── 13q. Tier 1 · Plymouth boot splash (rev 2026-05-14) ────────────
+hd "13q. Tier 1 · Plymouth boot splash"
+PL_BIN="${AIROOT}/usr/local/bin/nyxus-plymouth"
+if [[ -x "${PL_BIN}" ]] && bash -n "${PL_BIN}" 2>/dev/null; then
+  ok "nyxus-plymouth helper present + parses"
+else
+  fail "nyxus-plymouth helper missing/not-executable/bad: ${PL_BIN}"
+fi
+PL_POL="${AIROOT}/usr/share/polkit-1/actions/com.nyxus.plymouth.policy"
+if [[ -f "${PL_POL}" ]] \
+   && grep -q "com.nyxus.plymouth.set-theme" "${PL_POL}"; then
+  ok "polkit policy: com.nyxus.plymouth.policy present"
+else
+  fail "polkit policy missing: ${PL_POL}"
+fi
+PL_THEME="${AIROOT}/usr/share/plymouth/themes/nyxus"
+for f in nyxus.plymouth nyxus.script logo.png bar-track.png bar-fill.png; do
+  if [[ -f "${PL_THEME}/${f}" ]]; then
+    ok "plymouth theme asset: ${f}"
+  else
+    fail "plymouth theme missing: ${PL_THEME}/${f}"
+  fi
+done
+# Manifest sanity: ModuleName=script + ScriptFile points to nyxus.script
+if grep -q '^ModuleName=script' "${PL_THEME}/nyxus.plymouth" \
+   && grep -q 'ScriptFile=.*nyxus.script' "${PL_THEME}/nyxus.plymouth"; then
+  ok "plymouth manifest references script module + nyxus.script"
+else
+  fail "plymouth manifest malformed: ${PL_THEME}/nyxus.plymouth"
+fi
+# Plymouth Script lint: catch invented syntax (C-style ternary,
+# arity-mismatched SetUpdateStatusFunction handler) — these silently
+# degrade to fallback behavior at boot, so guard them at build time.
+# Strip comment lines first (Plymouth Script comments start with `#`),
+# then look for `<expr> ? <expr> : <expr>` patterns. We tolerate `?:`
+# inside string literals by requiring at least one identifier-like
+# character before the `?`.
+if sed -E 's/[[:space:]]*#.*$//' "${PL_THEME}/nyxus.script" \
+     | grep -E '[A-Za-z0-9_)][[:space:]]*\?[^?:]+:[^=]' >/dev/null; then
+  fail "plymouth script uses C-style ternary — Plymouth Script does not support \`?:\`"
+else
+  ok "plymouth script: no ternary"
+fi
+if grep -qE 'SetUpdateStatusFunction *\( *progress_callback' \
+     "${PL_THEME}/nyxus.script"; then
+  fail "plymouth script: SetUpdateStatusFunction wired to (duration,progress) callback — wrong arity"
+else
+  ok "plymouth script: SetUpdateStatusFunction handler arity sound"
+fi
+# Pkexec safety lint for nyxus-loginscreen — never `bash -c` interpolated user paths.
+if grep -nE "pkexec[^#]*bash -c[^|]*\\\$\\{" \
+     "${AIROOT}/usr/local/bin/nyxus-loginscreen" >/dev/null; then
+  fail "nyxus-loginscreen still has pkexec bash -c with shell interpolation"
+else
+  ok "nyxus-loginscreen: no pkexec shell-interpolation injection"
+fi
+# Settings hub registration
+if grep -q '"plymouth":' "${NS}/nyxus_settings.py" \
+   && grep -q "^class PlymouthPage(SectionPage)" "${NS}/nyxus_settings.py"; then
+  ok "Settings: plymouth registered + PlymouthPage class present"
+else
+  fail "Settings: plymouth not registered or PlymouthPage missing"
+fi
+# Required runtime packages
+for pkg in plymouth mkinitcpio; do
+  grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
+    && ok "package: ${pkg}" \
+    || fail "missing package: ${pkg}"
+done
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \
