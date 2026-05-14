@@ -8,6 +8,15 @@
 # digiKam, Telegram, etc.) renders with stock Breeze and looks alien
 # inside the NYXUS shell. With them, qt5ct/qt6ct route through Kvantum,
 # which renders the NYXUS Kvantum theme matching GTK NYXUS-Dark.
+# Note on Qt5 vs Qt6 routing: pam_env sets ONE value per var, so we can't
+# set qt5ct for Qt5 apps AND qt6ct for Qt6 apps. We pick qt5ct (Qt5 has
+# the larger user-facing app surface — Krita, qBittorrent, Telegram,
+# OBS, VLC, digiKam). Qt6 apps fall back to QT_STYLE_OVERRIDE=kvantum
+# below, which still applies the NYXUS Kvantum widget style — they
+# just don't pick up qt6ct's icon-theme/font routing. Power users can
+# override per-session by setting QT_QPA_PLATFORMTHEME=qt6ct in their
+# shell rc; both qt5ct and qt6ct configs are pre-shipped under
+# /etc/skel/.config/.
 QT_QPA_PLATFORMTHEME=qt5ct
 QT_STYLE_OVERRIDE=kvantum
 QT_AUTO_SCREEN_SCALE_FACTOR=1

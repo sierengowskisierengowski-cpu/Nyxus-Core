@@ -1888,6 +1888,243 @@ else
   warn "Sprint E src: $NS_SRC dir not found — skipping pipeline guards"
 fi
 
+# ──────────────────────────────────────────────────────────────────────
+# §15z — Sprint F premium-pass assertions
+# ──────────────────────────────────────────────────────────────────────
+# Premium polish: Calamares slideshow rev r15, Fastfetch branded, Qt
+# platform integration via Kvantum, scratchpads + HyprExpo bind +
+# borders-plus-plus shard, source-of-truth promotion guards.
+section "§15z — Sprint F premium polish (calamares · fastfetch · Qt · plugins)"
+
+# (a) Calamares slideshow & branding — DARK MIRROR codename retired,
+#     no cyan #e8edf5 (rev r15 forbids cyan).
+QML="${AIROOT}/etc/calamares/branding/nyxus/show.qml"
+DESC="${AIROOT}/etc/calamares/branding/nyxus/branding.desc"
+if [[ -f "$QML" ]]; then
+  grep -qi 'DARK MIRROR'  "$QML" && fail "Sprint F: show.qml still has DARK MIRROR text" \
+    || ok "Sprint F: show.qml clean of DARK MIRROR codename"
+  grep -qi 'e8edf5'       "$QML" && fail "Sprint F: show.qml still uses cyan e8edf5 (rev r15 violation)" \
+    || ok "Sprint F: show.qml uses cream-only palette (no cyan)"
+  grep -q  'Inter'        "$QML" && ok "Sprint F: show.qml uses Inter typography" \
+    || warn "Sprint F: show.qml missing Inter font reference"
+  grep -q  '◐'            "$QML" && ok "Sprint F: show.qml has Eclipse mark" \
+    || warn "Sprint F: show.qml missing Eclipse glyph"
+else
+  fail "Sprint F: $QML MISSING"
+fi
+if [[ -f "$DESC" ]]; then
+  grep -qi 'DARK MIRROR'  "$DESC" && fail "Sprint F: branding.desc still references DARK MIRROR" \
+    || ok "Sprint F: branding.desc clean of DARK MIRROR"
+  grep -qE 'versionedName:\s*"NYXUS 2026\.05"' "$DESC" \
+    && ok "Sprint F: branding.desc versionedName clean" \
+    || fail "Sprint F: branding.desc versionedName not clean"
+else
+  fail "Sprint F: $DESC MISSING"
+fi
+
+# (b) Fastfetch — branded config + Eclipse ASCII art shipped
+FF="${AIROOT}/etc/skel/.config/fastfetch/config.jsonc"
+ASCII="${AIROOT}/usr/share/nyxus/brand/ascii/eclipse.txt"
+if [[ -f "$FF" ]]; then
+  ok "Sprint F: fastfetch config.jsonc present"
+  grep -q 'NYXUS' "$FF" && ok "Sprint F: fastfetch shows NYXUS branding (hides Arch)" \
+    || fail "Sprint F: fastfetch config doesn't brand as NYXUS"
+else
+  fail "Sprint F: fastfetch config.jsonc MISSING"
+fi
+[[ -f "$ASCII" ]] && ok "Sprint F: Eclipse ASCII art shipped" \
+  || fail "Sprint F: Eclipse ASCII art MISSING ($ASCII)"
+
+# (c) Qt platform integration — Kvantum theme + qt5ct/qt6ct + env vars
+KV="${AIROOT}/usr/share/Kvantum/NYXUS"
+[[ -f "$KV/NYXUS.kvconfig" ]] && ok "Sprint F: Kvantum NYXUS theme kvconfig present" \
+  || fail "Sprint F: Kvantum NYXUS.kvconfig MISSING"
+[[ -f "$KV/NYXUS.svg" ]]      && ok "Sprint F: Kvantum NYXUS theme svg present" \
+  || fail "Sprint F: Kvantum NYXUS.svg MISSING"
+[[ -f "${AIROOT}/etc/skel/.config/Kvantum/kvantum.kvconfig" ]] \
+  && ok "Sprint F: skel Kvantum theme = NYXUS" \
+  || fail "Sprint F: skel Kvantum theme pin MISSING"
+[[ -f "${AIROOT}/etc/skel/.config/qt5ct/qt5ct.conf" ]] \
+  && ok "Sprint F: qt5ct config shipped (Kvantum routed)" \
+  || fail "Sprint F: qt5ct config MISSING"
+[[ -f "${AIROOT}/etc/skel/.config/qt6ct/qt6ct.conf" ]] \
+  && ok "Sprint F: qt6ct config shipped (Kvantum routed)" \
+  || fail "Sprint F: qt6ct config MISSING"
+
+ENVF="${AIROOT}/etc/environment"
+if [[ -f "$ENVF" ]]; then
+  grep -q 'QT_QPA_PLATFORMTHEME=qt5ct' "$ENVF" \
+    && ok "Sprint F: /etc/environment routes Qt to qt5ct" \
+    || fail "Sprint F: /etc/environment QT_QPA_PLATFORMTHEME not set"
+  grep -q 'QT_STYLE_OVERRIDE=kvantum' "$ENVF" \
+    && ok "Sprint F: /etc/environment overrides Qt style to kvantum" \
+    || fail "Sprint F: /etc/environment QT_STYLE_OVERRIDE not set"
+  grep -q 'XCURSOR_THEME=NYXUS-Aurora' "$ENVF" \
+    && ok "Sprint F: /etc/environment pins NYXUS-Aurora cursor system-wide" \
+    || fail "Sprint F: /etc/environment cursor pin MISSING"
+  grep -q 'GTK_THEME=NYXUS-Dark' "$ENVF" \
+    && ok "Sprint F: /etc/environment pins NYXUS-Dark GTK theme" \
+    || fail "Sprint F: /etc/environment GTK theme pin MISSING"
+else
+  fail "Sprint F: /etc/environment MISSING"
+fi
+
+# (d) Hyprland premium polish — special blur + scratchpads + plugin shard
+HC="${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
+if [[ -f "$HC" ]]; then
+  grep -qE '^\s*special\s*=\s*true' "$HC" \
+    && ok "Sprint F: hyprland blur 'special = true' (special workspaces blurred)" \
+    || fail "Sprint F: hyprland special-workspace blur not enabled"
+  grep -qE 'togglespecialworkspace, term' "$HC" \
+    && ok "Sprint F: hyprland scratchpad term keybind present" \
+    || fail "Sprint F: hyprland scratchpad term keybind MISSING"
+  grep -q 'hyprexpo:expo, toggle' "$HC" \
+    && ok "Sprint F: hyprland HyprExpo overview keybind present" \
+    || fail "Sprint F: hyprland HyprExpo keybind MISSING"
+  grep -q 'nyxus-hyprland-plugins.conf' "$HC" \
+    && ok "Sprint F: hyprland sources plugins shard" \
+    || fail "Sprint F: hyprland plugin shard not sourced"
+  # Border colors must NOT use the deprecated cyan-grey gradient
+  if grep -qE 'col\.active_border.*e8edf5' "$HC"; then
+    fail "Sprint F: hyprland border still uses deprecated cyan-grey e8edf5"
+  else
+    ok "Sprint F: hyprland border free of cyan-grey (cream-only gradient)"
+  fi
+fi
+[[ -f "${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-hyprland-plugins.conf" ]] \
+  && ok "Sprint F: nyxus-hyprland-plugins.conf shard shipped" \
+  || fail "Sprint F: plugins shard MISSING"
+
+# (e) hyprpm plugin builder — user-session unit (NOT system firstboot)
+# rev2: original draft put this at /etc/nyxus-firstboot.d/15-hyprpm-plugins.sh
+# but that runs as root before any Hyprland session exists, so hyprctl is
+# unreachable and the orchestrator's marker prevents retry. Architect review
+# caught it. Now lives at /usr/local/bin/nyxus-hyprpm-plugins triggered by
+# user systemd unit. Guard against the broken pattern returning.
+LEGACY="${AIROOT}/etc/nyxus-firstboot.d/15-hyprpm-plugins.sh"
+[[ -e "$LEGACY" ]] && fail "Sprint F rev2: legacy firstboot hyprpm script reappeared at $LEGACY (must be user-service)" \
+  || ok "Sprint F rev2: legacy /etc/nyxus-firstboot.d/15-hyprpm-plugins.sh purged"
+
+HPM_BIN="${AIROOT}/usr/local/bin/nyxus-hyprpm-plugins"
+HPM_SVC="${AIROOT}/etc/skel/.config/systemd/user/nyxus-hyprpm-plugins.service"
+if [[ -x "$HPM_BIN" ]]; then
+  ok "Sprint F rev2: nyxus-hyprpm-plugins binary present + executable"
+  grep -q 'borders-plus-plus' "$HPM_BIN" && ok "Sprint F: builder installs borders-plus-plus" \
+    || fail "Sprint F: builder doesn't install borders-plus-plus"
+  grep -q 'hyprexpo' "$HPM_BIN" && ok "Sprint F: builder installs hyprexpo" \
+    || fail "Sprint F: builder doesn't install hyprexpo"
+  # Sentinel-on-full-success policy must be enforced
+  grep -q 'ok_bpp == 1 && ok_expo == 1' "$HPM_BIN" \
+    && ok "Sprint F rev2: sentinel only writes on FULL plugin success (architect fix)" \
+    || fail "Sprint F rev2: sentinel policy regression — must require both plugins"
+  # User-context check (HYPRLAND_INSTANCE_SIGNATURE) must be present
+  grep -q 'HYPRLAND_INSTANCE_SIGNATURE' "$HPM_BIN" \
+    && ok "Sprint F rev2: builder verifies user-session context" \
+    || fail "Sprint F rev2: builder doesn't check Hyprland session"
+else
+  fail "Sprint F rev2: hyprpm builder MISSING or not +x ($HPM_BIN)"
+fi
+if [[ -f "$HPM_SVC" ]]; then
+  ok "Sprint F rev2: user systemd unit shipped"
+  grep -q 'WantedBy=graphical-session.target' "$HPM_SVC" \
+    && ok "Sprint F rev2: user unit hooks graphical-session.target" \
+    || fail "Sprint F rev2: user unit missing graphical-session hook"
+  grep -q 'ConditionPathExists=!.*plugins.done' "$HPM_SVC" \
+    && ok "Sprint F rev2: user unit gated on sentinel" \
+    || fail "Sprint F rev2: user unit missing sentinel gate"
+else
+  fail "Sprint F rev2: user systemd unit MISSING ($HPM_SVC)"
+fi
+# Hyprland.conf must trigger the user service via exec-once
+grep -q 'systemctl --user start nyxus-hyprpm-plugins' "$HC" \
+  && ok "Sprint F rev2: hyprland.conf exec-once triggers plugin builder" \
+  || fail "Sprint F rev2: hyprland.conf doesn't start plugin builder service"
+
+# (e2) Scratchpad keybinds must use SUPER+ALT zone (no collision with eww
+# dashboard $mod+grave or notification drawer $mod+N)
+if grep -qE '^bind\s+= \$mod,\s+grave,\s+togglespecialworkspace' "$HC"; then
+  fail "Sprint F rev2: \$mod+grave scratchpad bind COLLIDES with eww dashboard"
+else
+  ok "Sprint F rev2: scratchpad bind moved off \$mod+grave (no eww collision)"
+fi
+if grep -qE 'bind\s+= \$mod ALT, T,\s+togglespecialworkspace' "$HC"; then
+  ok "Sprint F rev2: term scratchpad → SUPER+ALT+T (collision-free)"
+else
+  fail "Sprint F rev2: term scratchpad bind missing or in wrong zone"
+fi
+if grep -qE 'bind\s+= \$mod ALT, P,\s+togglespecialworkspace' "$HC"; then
+  ok "Sprint F rev2: notes scratchpad → SUPER+ALT+P (collision-free)"
+else
+  fail "Sprint F rev2: notes scratchpad bind missing or in wrong zone"
+fi
+# HyprExpo bind must live in shard (not main config) per architect feedback
+if grep -qE 'bind\s+= \$mod,\s+F1,\s+hyprexpo' "$HC"; then
+  fail "Sprint F rev2: HyprExpo bind still in main hyprland.conf (must be in shard)"
+else
+  ok "Sprint F rev2: HyprExpo bind moved out of main config"
+fi
+if grep -q 'hyprexpo:expo' "${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-hyprland-plugins.conf"; then
+  ok "Sprint F rev2: HyprExpo bind in plugin shard (gates with plugin presence)"
+else
+  fail "Sprint F rev2: HyprExpo bind missing from plugin shard"
+fi
+
+# (f) Packages — kvantum + qt5ct + qt6ct must be in packages.x86_64
+PKGS="$(dirname "${AIROOT}")/packages.x86_64"
+for pkg in kvantum qt5ct qt6ct; do
+  grep -qE "^${pkg}$" "$PKGS" \
+    && ok "Sprint F: package shipped: $pkg" \
+    || fail "Sprint F: package MISSING from packages.x86_64: $pkg"
+done
+
+# (g) Source-of-truth re-promotion (Sprint F edits to hyprland.conf must
+#     also be in artifact source — see §15y for rationale).
+NS_SRC="${REPO_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}/artifacts/api-server/nyxus-scripts"
+if [[ -f "$NS_SRC/hyprland.conf" ]]; then
+  if grep -qE '^\s*special\s*=\s*true' "$NS_SRC/hyprland.conf"; then
+    ok "Sprint F src: hyprland.conf source has special blur (Sprint F promoted)"
+  else
+    fail "Sprint F src: hyprland.conf source missing special blur — Sprint F NOT promoted (will revert at bake)"
+  fi
+  if grep -q 'nyxus-hyprland-plugins.conf' "$NS_SRC/hyprland.conf"; then
+    ok "Sprint F src: hyprland.conf source sources plugins shard"
+  else
+    fail "Sprint F src: hyprland.conf source missing plugins shard source"
+  fi
+fi
+[[ -f "$NS_SRC/nyxus-hyprland-plugins.conf" ]] \
+  && ok "Sprint F src: nyxus-hyprland-plugins.conf in artifact source-of-truth" \
+  || fail "Sprint F src: nyxus-hyprland-plugins.conf NOT promoted to artifact source"
+
+# (g2) Calamares artifact source-of-truth — was stale "NYXUS 1.0 (Dark Mirror)"
+# pre-rev2. Architect review flagged drift risk. Re-promoted; guard here
+# prevents future regression.
+CAL_SRC="$NS_SRC/calamares/branding/nyxus"
+if [[ -d "$CAL_SRC" ]]; then
+  if [[ -f "$CAL_SRC/branding.desc" ]]; then
+    grep -qi 'DARK MIRROR' "$CAL_SRC/branding.desc" \
+      && fail "Sprint F src: calamares branding.desc artifact source still has DARK MIRROR (drift)" \
+      || ok "Sprint F src: calamares branding.desc artifact source clean"
+    grep -qE 'versionedName:\s*"NYXUS 2026\.05"' "$CAL_SRC/branding.desc" \
+      && ok "Sprint F src: calamares versionedName synced to airootfs" \
+      || fail "Sprint F src: calamares versionedName drifted from airootfs"
+  fi
+  if [[ -f "$CAL_SRC/show.qml" ]] && [[ -f "${AIROOT}/etc/calamares/branding/nyxus/show.qml" ]]; then
+    if cmp -s "$CAL_SRC/show.qml" "${AIROOT}/etc/calamares/branding/nyxus/show.qml"; then
+      ok "Sprint F src: calamares show.qml in sync with airootfs"
+    else
+      fail "Sprint F src: calamares show.qml DRIFTED — re-promote to artifact source"
+    fi
+  fi
+fi
+
+# (h) /etc/environment Qt6 trade-off documented (architect feedback)
+if grep -q 'Note on Qt5 vs Qt6 routing' "$ENVF"; then
+  ok "Sprint F rev2: /etc/environment documents Qt6 routing trade-off"
+else
+  fail "Sprint F rev2: /etc/environment missing Qt6 trade-off comment"
+fi
+
 # ── final ─────────────────────────────────────────────────────────────
 echo
 if (( FAIL == 0 )); then
