@@ -60,9 +60,12 @@
 }
 
 :root {
-  /* Sprint K-C rev r16: every color is HSL of the locked rev r16 palette.
-     background/card = triple-black; foreground/primary = cream; secondary +
-     accent + destructive = copper. NO purple/cyan/red/yellow-gold. */
+  /* Sprint K-E rev r16: palette block is auto-rendered from
+     iso-builder/tokens/nyxus.tokens.json by nyxus-render-tokens.
+     DO NOT HAND-EDIT lines between the START/END markers — your
+     change will be overwritten on the next render. To change a brand
+     color, edit tokens.json and run `nyxus-render-tokens --render`. */
+  /* NYXUS-TOKENS-START palette */
   --background: 0 0% 2%;
   --foreground: 40 38% 89%;
   --border: 40 18% 18%;
@@ -92,6 +95,7 @@
   --destructive-foreground: 0 0% 2%;
   --input: 0 0% 8%;
   --ring: 40 38% 89%;
+/* NYXUS-TOKENS-END palette */
 
   --app-font-sans: 'Caveat', 'Patrick Hand', cursive;
   --app-font-serif: 'Caveat', cursive;
