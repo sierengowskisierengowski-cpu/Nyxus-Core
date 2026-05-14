@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Weather from "@/pages/Weather";
+import BuddyPage from "@/pages/Buddy";
 
 const queryClient = new QueryClient();
 
@@ -11,6 +12,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Weather} />
+      <Route path="/buddy" component={BuddyPage} />
       <Route component={NotFound} />
     </Switch>
   );
