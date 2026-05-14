@@ -16,6 +16,21 @@ NYXUS combines:
 - Web/API distribution surfaces for platform artifacts
 - DARK MIRROR · TRIPLE-BLACK LAYERED visual design system shared across all GUI components
 
+### Shipped chrome (r10)
+
+- **Icon theme**: NYXUS-Dark (31 custom SVGs, inherits Papirus-Dark)
+- **Cursor theme**: NYXUS-Aurora (Hyprcursor + XCursor, 12+ shapes)
+- **Wallpaper pack**: 92 backgrounds (9 vector originals + 83 cosmic PNGs across `void` / `deepspace` / `blackhole` / `nebula` categories) — auto-mirrored to SDDM lockscreen, default `nyxus-nebula-01`
+- **Top bar**: live ticker marquee, per-flyout sized panels (network, audio, calendar, notifications, quick settings)
+- **Modes**: Game Mode and Focus Mode toggles (per-output blur/animation/notification policy)
+- **Workspaces**: named workspaces with per-workspace wallpaper via `nyxus-ws-wallpaperd`
+- **Onboarding**: first-run welcome tour (sentinel-gated)
+- **Power**: battery health page, network usage tracker per-app
+- **Apps**: NYXUS Store curated catalog, accent picker theming engine, plugin/extension API for the bar
+- **System polish**: hot corners, night light (gammastep), dynamic wallpaper rotator (sunrise/sunset)
+- **Recovery**: Time Machine snapshot browser, Timeshift backup, crash reporter with upload endpoint
+- **Brand-defining**: NYXUS Account, NYXUS Drop, screen recorder, Calamares installer with NYXUS branding
+
 ## What This Repository Contains
 
 Nyxus-Core is a monorepo that centralizes:

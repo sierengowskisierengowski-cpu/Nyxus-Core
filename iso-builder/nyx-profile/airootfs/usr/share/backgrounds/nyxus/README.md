@@ -1,34 +1,49 @@
-# NYXUS · default wallpaper bucket
+# NYXUS · wallpaper pack
 
-This directory ships with the NYXUS profile and is the canonical location
-for wallpapers referenced by the skel `~/.config/hypr/hyprpaper.conf`.
+Canonical wallpaper directory shipped with the NYXUS profile. Consumed
+by `nyxus-wallpaper-autostart`, `nyxus_wallpaper_studio.py`, and the
+SDDM lockscreen mirror.
 
-## Required files (added before ISO bake)
+## Contents
 
-| File | Resolution | Purpose |
-|------|-----------|---------|
-| `nyxus-bg-darkmirror.png` | 3840×2160 | Default desktop wallpaper (DARK MIRROR aesthetic). Loaded by `hyprpaper` on first session via skel config. |
-| `nyxus-lock-darkmirror.png` | 3840×2160 | Hyprlock background (referenced by skel `hyprlock.conf`). Optional — falls back to the desktop wall if absent. |
-| `nyxus-sddm-darkmirror.png` | 3840×2160 | SDDM theme background (referenced by `Main.qml`). Optional — falls back to the solid `#0A0810` panel if absent. |
+- 9 vector originals (`*.svg`) — DARK MIRROR brand wallpapers
+- 83 cosmic PNGs auto-categorized into four families:
+  - `nyxus-void-NN.png` — deepest black / minimal noise
+  - `nyxus-deepspace-NN.png` — low-light starfields
+  - `nyxus-blackhole-NN.png` — dark structured swirls
+  - `nyxus-nebula-NN.png` — colorful galactic shots
 
-## Why these aren't in git
+Total: 92 wallpapers. All listed in `manifest.tsv`
+(tab-delimited `slug<TAB>display name`, one per file, strict 1:1 parity
+enforced by `iso-builder/verify-profile.sh` section 13c).
 
-NYX repository policy keeps binary art assets in the release artifact
-bucket, not in source control. The CI release workflow
-(`.github/workflows/release.yml`) downloads the brand pack from the
-NYXUS release bucket and drops the PNGs into this directory before
-`mkarchiso` is invoked.
+## Default
 
-For local ISO bakes:
+The shipped default is set in `/etc/skel/.config/nyxus/wallpaper.conf`
+using the runtime schema:
 
-```bash
-# from repo root
-mkdir -p iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus
-curl -fL "https://assets.nyxus.os/brand/2026.05/nyxus-bg-darkmirror.png" \
-  -o iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-darkmirror.png
+```sh
+WALLPAPER="nyxus-nebula-01"
+WALLPAPER_PATH="/usr/share/backgrounds/nyxus/nyxus-nebula-01.png"
 ```
 
-If the file is missing at bake time, `iso-builder/verify-profile.sh`
-emits a WARNING (not a hard error) so users without the brand bucket
-can still bake; first-boot will then show a flat black background until
-the user picks a wallpaper from Settings → Appearance.
+Both keys are required — `nyxus-wallpaper-autostart` reads
+`WALLPAPER_PATH` to launch swaybg, and `nyxus_wallpaper_studio.py`
+reads `WALLPAPER` to highlight the active tile.
+
+## SDDM mirror
+
+PNGs are mirrored to
+`iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/backgrounds/`
+so the lockscreen and login picker can show the same pack. Verify
+ensures parity at build time.
+
+## Adding a wallpaper
+
+1. Drop the file into this directory (PNG ≥1024px or SVG).
+2. Append a line to `manifest.tsv` — `slug<TAB>Display Name`, where
+   slug matches the filename without extension.
+3. Mirror the PNG to the SDDM `backgrounds/` dir.
+4. Re-run `bash iso-builder/verify-profile.sh` — section 13c will
+   enforce parity, slug uniqueness, default validity, and SDDM mirror
+   coverage.
