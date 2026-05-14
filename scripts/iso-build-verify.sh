@@ -45,7 +45,7 @@ for f in "${SHFILES[@]}"; do
 done
 
 hdr "2b. Shipped script text sanity"
-utf8_bad="$(grep -RIn --binary-files=without-match $'\xEF\xBF\xBD' \
+utf8_bad="$(grep -RIn --binary-files=without-match $'\uFFFD' \
   "$ROOT/artifacts/api-server/nyxus-scripts" --include='*.sh' | head -n1 || true)"
 if [[ -z "$utf8_bad" ]]; then
   ok "no UTF-8 replacement chars in nyxus-scripts/*.sh"
