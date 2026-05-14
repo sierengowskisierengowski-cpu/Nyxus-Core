@@ -249,12 +249,18 @@ else
 fi
 
 # ── 11. plymouth ──────────────────────────────────────────────────────
+# Active theme is `nyxus-void` (DARKSIDE rev5). The legacy `nyxus` theme
+# (full DARK MIRROR purple+cyan) was retired in Sprint E.
 hd "11. plymouth theme"
-PT="${AIROOT}/usr/share/plymouth/themes/nyxus"
-if [[ -f "${PT}/nyxus.plymouth" && -f "${PT}/nyxus.script" ]]; then
-  ok "plymouth nyxus theme present"
+PT="${AIROOT}/usr/share/plymouth/themes/nyxus-void"
+if [[ -f "${PT}/nyxus-void.plymouth" && -f "${PT}/nyxus-void.script" ]]; then
+  ok "plymouth nyxus-void (DARKSIDE rev5) theme present"
 else
-  fail "plymouth nyxus theme incomplete"
+  fail "plymouth nyxus-void theme incomplete"
+fi
+# Make sure the legacy DARK MIRROR theme stays purged
+if [[ -d "${AIROOT}/usr/share/plymouth/themes/nyxus" ]]; then
+  fail "legacy plymouth nyxus theme dir reappeared (must stay PURGED)"
 fi
 
 # ── 12. grub theme ────────────────────────────────────────────────────
@@ -766,36 +772,33 @@ if [[ -f "${PL_POL}" ]] \
 else
   fail "polkit policy missing: ${PL_POL}"
 fi
-PL_THEME="${AIROOT}/usr/share/plymouth/themes/nyxus"
-for f in nyxus.plymouth nyxus.script logo.png bar-track.png bar-fill.png; do
+# Active plymouth theme is `nyxus-void` (DARKSIDE rev5). Sprint E retired
+# the legacy `nyxus` theme dir (full DARK MIRROR purple+cyan progress bar).
+PL_THEME="${AIROOT}/usr/share/plymouth/themes/nyxus-void"
+for f in nyxus-void.plymouth nyxus-void.script background.png; do
   if [[ -f "${PL_THEME}/${f}" ]]; then
     ok "plymouth theme asset: ${f}"
   else
     fail "plymouth theme missing: ${PL_THEME}/${f}"
   fi
 done
-# Manifest sanity: ModuleName=script + ScriptFile points to nyxus.script
-if grep -q '^ModuleName=script' "${PL_THEME}/nyxus.plymouth" \
-   && grep -q 'ScriptFile=.*nyxus.script' "${PL_THEME}/nyxus.plymouth"; then
-  ok "plymouth manifest references script module + nyxus.script"
+# Manifest sanity: ModuleName=script + ScriptFile points to nyxus-void.script
+if grep -q '^ModuleName=script' "${PL_THEME}/nyxus-void.plymouth" \
+   && grep -q 'ScriptFile=.*nyxus-void.script' "${PL_THEME}/nyxus-void.plymouth"; then
+  ok "plymouth manifest references script module + nyxus-void.script"
 else
-  fail "plymouth manifest malformed: ${PL_THEME}/nyxus.plymouth"
+  fail "plymouth manifest malformed: ${PL_THEME}/nyxus-void.plymouth"
 fi
-# Plymouth Script lint: catch invented syntax (C-style ternary,
-# arity-mismatched SetUpdateStatusFunction handler) — these silently
-# degrade to fallback behavior at boot, so guard them at build time.
-# Strip comment lines first (Plymouth Script comments start with `#`),
-# then look for `<expr> ? <expr> : <expr>` patterns. We tolerate `?:`
-# inside string literals by requiring at least one identifier-like
-# character before the `?`.
-if sed -E 's/[[:space:]]*#.*$//' "${PL_THEME}/nyxus.script" \
+# Plymouth Script lint: nyxus-void uses // C++-style comments, so the
+# ternary check needs to strip those (and `#` legacy) before scanning.
+if sed -E 's|//.*$||; s|[[:space:]]*#.*$||' "${PL_THEME}/nyxus-void.script" \
      | grep -E '[A-Za-z0-9_)][[:space:]]*\?[^?:]+:[^=]' >/dev/null; then
   fail "plymouth script uses C-style ternary — Plymouth Script does not support \`?:\`"
 else
   ok "plymouth script: no ternary"
 fi
 if grep -qE 'SetUpdateStatusFunction *\( *progress_callback' \
-     "${PL_THEME}/nyxus.script"; then
+     "${PL_THEME}/nyxus-void.script"; then
   fail "plymouth script: SetUpdateStatusFunction wired to (duration,progress) callback — wrong arity"
 else
   ok "plymouth script: SetUpdateStatusFunction handler arity sound"
@@ -1065,9 +1068,9 @@ fi
 grep -qi 'JetBrains Mono' "${DUNST_RC}" 2>/dev/null \
   && ok "dunst: JetBrains Mono font set" \
   || fail "dunst: JetBrains Mono font not set (off-brand typography)"
-grep -qi 'corner_radius = 0' "${DUNST_RC}" 2>/dev/null \
-  && ok "dunst: sharp slab corners (corner_radius=0)" \
-  || fail "dunst: corners not flat — DARK MIRROR requires sharp edges"
+grep -qiE 'corner_radius[[:space:]]*=[[:space:]]*3' "${DUNST_RC}" 2>/dev/null \
+  && ok "dunst: 3px corners (rev r15 spec)" \
+  || fail "dunst: corner_radius not 3 (rev r15 requires 3px corners, not sharp slab)"
 
 if [[ -f "${SWAYNC_CSS}" ]] \
    && grep -q '\.notification' "${SWAYNC_CSS}" \
@@ -1084,9 +1087,9 @@ if grep -qiE '#a06bff|#3ad8ff|#d4b87a|#ff4d6b' "${SWAYNC_CSS}" 2>/dev/null; then
 else
   ok "swaync: zero banned palette literals (rev r15)"
 fi
-grep -qi 'border-radius: 0' "${SWAYNC_CSS}" 2>/dev/null \
-  && ok "swaync: sharp slab corners (border-radius:0)" \
-  || fail "swaync: rounded corners present — DARK MIRROR requires sharp edges"
+grep -qE 'border-radius:[[:space:]]*3px' "${SWAYNC_CSS}" 2>/dev/null \
+  && ok "swaync: 3px corners (rev r15 spec)" \
+  || fail "swaync: border-radius not 3px (rev r15 requires 3px corners, not sharp slab)"
 
 for pkg in dunst swaync; do
   grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
@@ -1660,6 +1663,229 @@ if [[ -f "${SPRINT_D_ICONS}/index.theme" ]]; then
       fail "Sprint D: icon theme dir ${d} missing (declared in index.theme)"
     fi
   done
+fi
+
+
+# ──────────────────────────────────────────────────────────────────────
+# §15x · Sprint E — Total Identity assertions
+#   Every brand surface checked here. Drift = FAIL.
+# ──────────────────────────────────────────────────────────────────────
+hd "§15x  Sprint E — Total Identity"
+
+ICN_DIR="${AIROOT}/usr/share/icons/NYXUS-Dark/scalable/apps"
+DESK_DIR="${AIROOT}/usr/share/applications"
+
+# (a) all 12 NYXUS app icons present
+for app in nyxus-settings nyxus-store nyxus-capture nyxus-notification-center \
+           nyxus-sysmon nyxus-notepad nyxus-stickies nyxus-widgets \
+           nyxus-ghost-auth nyxus-files nyxus-terminal nyxus-browser; do
+  if [[ -f "${ICN_DIR}/${app}.svg" ]]; then
+    ok "Sprint E: app icon ${app}.svg present"
+  else
+    fail "Sprint E: app icon ${app}.svg MISSING"
+  fi
+done
+
+# (b) every nyxus-NAME icon must use the chassis (radial bg + cream ring)
+for f in "${ICN_DIR}"/nyxus-*.svg; do
+  [[ -f "$f" ]] || continue
+  bn=$(basename "$f")
+  if ! grep -q 'radialGradient' "$f"; then
+    fail "Sprint E: ${bn} missing radialGradient chassis"
+  fi
+  if ! grep -q '#f4ead5' "$f"; then
+    fail "Sprint E: ${bn} missing cream #f4ead5 (off-brand)"
+  fi
+done
+
+# (c) .desktop entries point at the brand icons (sample of must-haves)
+declare -A WANT=(
+  [nyxus-capture.desktop]=nyxus-capture
+  [nyxus-files.desktop]=nyxus-files
+  [nyxus-notepad.desktop]=nyxus-notepad
+  [nyxus-notification-center.desktop]=nyxus-notification-center
+  [nyxus-stickies.desktop]=nyxus-stickies
+  [nyxus-store.desktop]=nyxus-store
+  [nyxus-sysmon-gtk.desktop]=nyxus-sysmon
+  [nyxus-terminal.desktop]=nyxus-terminal
+)
+for d in "${!WANT[@]}"; do
+  p="${DESK_DIR}/${d}"
+  [[ -f "$p" ]] || { warn "Sprint E: ${d} not present (skipped)"; continue; }
+  got=$(grep -m1 -E '^Icon=' "$p" | cut -d= -f2)
+  if [[ "$got" == "${WANT[$d]}" ]]; then
+    ok "Sprint E: ${d} → Icon=${WANT[$d]}"
+  else
+    fail "Sprint E: ${d} Icon=${got} (expected ${WANT[$d]})"
+  fi
+done
+
+# (d) swaync style.css — cream + 3px + glass + no DARK MIRROR
+SWAY="${AIROOT}/etc/skel/.config/swaync/style.css"
+if [[ -f "$SWAY" ]]; then
+  grep -q '#f4ead5'            "$SWAY" && ok "Sprint E: swaync uses cream #f4ead5" \
+                                       || fail "Sprint E: swaync missing cream"
+  grep -q 'border-radius: 3px' "$SWAY" && ok "Sprint E: swaync uses 3px corners" \
+                                       || fail "Sprint E: swaync NOT 3px corners"
+  if grep -qiE 'dark[ _]mirror|splat-' "$SWAY"; then
+    fail "Sprint E: swaync still references legacy DARK MIRROR / splat-*"
+  else
+    ok "Sprint E: swaync free of legacy DARK MIRROR / splat residue"
+  fi
+  if grep -qE 'C084FC|c084fc|7C3AED|a06bff|3ad8ff|06b6d4' "$SWAY"; then
+    fail "Sprint E: swaync still has forbidden purple/cyan hex"
+  else
+    ok "Sprint E: swaync free of forbidden purple/cyan"
+  fi
+fi
+
+# (e) rofi nyxus.rasi — cream + 3px + no splat-* + no purple
+ROFI="${AIROOT}/etc/skel/.config/rofi/nyxus.rasi"
+if [[ -f "$ROFI" ]]; then
+  grep -q '#f4ead5'            "$ROFI" && ok "Sprint E: rofi uses cream #f4ead5" \
+                                       || fail "Sprint E: rofi missing cream"
+  grep -q 'border-radius:    3px' "$ROFI" && ok "Sprint E: rofi uses 3px corners" \
+                                          || fail "Sprint E: rofi NOT 3px corners"
+  if grep -qE 'splat-|purple wash|C084FC|c084fc|a06bff|3ad8ff' "$ROFI"; then
+    fail "Sprint E: rofi still has splat-* / purple residue"
+  else
+    ok "Sprint E: rofi clean of splat-* / purple residue"
+  fi
+fi
+
+# (f) GTK depth pass — both gtk-3 and gtk-4 must have ≥10 depth occurrences
+G3="${AIROOT}/usr/share/themes/NYXUS-Dark/gtk-3.0"
+G4="${AIROOT}/usr/share/themes/NYXUS-Dark/gtk-4.0"
+G3CNT=$(grep -hcE 'box-shadow|linear-gradient|outline:|transition' "${G3}/gtk.css" "${G3}/nyxus-depth.css" 2>/dev/null | awk '{s+=$1} END{print s+0}')
+G4CNT=$(grep -cE 'box-shadow|linear-gradient|outline:|transition' "${G4}/gtk.css" 2>/dev/null)
+if (( G3CNT >= 10 )); then ok "Sprint E: gtk-3.0 depth=${G3CNT} (≥10)"; else fail "Sprint E: gtk-3.0 depth=${G3CNT} (<10)"; fi
+if (( G4CNT >= 10 )); then ok "Sprint E: gtk-4.0 depth=${G4CNT} (≥10)"; else fail "Sprint E: gtk-4.0 depth=${G4CNT} (<10)"; fi
+[[ -f "${G3}/nyxus-depth.css" ]] && ok "Sprint E: gtk-3.0/nyxus-depth.css present" \
+                                 || fail "Sprint E: gtk-3.0/nyxus-depth.css missing"
+
+# (g) hyprland active border is cream, not pure white
+HYP="${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
+if grep -qE 'col\.active_border\s*=\s*rgba\(f4ead5' "$HYP"; then
+  ok "Sprint E: hyprland col.active_border is cream f4ead5"
+elif grep -qE 'col\.active_border\s*=\s*rgba\(ffffff' "$HYP"; then
+  fail "Sprint E: hyprland col.active_border still pure white"
+else
+  warn "Sprint E: hyprland border colour unverified"
+fi
+
+# (h) legacy plymouth nyxus theme PURGED (active is nyxus-void)
+if [[ -d "${AIROOT}/usr/share/plymouth/themes/nyxus" ]]; then
+  fail "Sprint E: legacy plymouth nyxus dir still present (must be PURGED — active is nyxus-void)"
+else
+  ok "Sprint E: legacy plymouth nyxus PURGED"
+fi
+[[ -f "${AIROOT}/usr/share/plymouth/themes/nyxus-void/nyxus-void.script" ]] \
+  && ok "Sprint E: plymouth nyxus-void DARKSIDE theme present" \
+  || fail "Sprint E: plymouth nyxus-void script MISSING"
+
+# (i) GRUB theme rebrand — no false "purple+cyan" comment, no DARK MIRROR label
+GRUB="${AIROOT}/usr/share/grub/themes/nyxus/theme.txt"
+if [[ -f "$GRUB" ]]; then
+  if grep -qiE 'purple|cyan|DARK MIRROR' "$GRUB"; then
+    fail "Sprint E: GRUB theme.txt still references DARK MIRROR / purple / cyan"
+  else
+    ok "Sprint E: GRUB theme.txt rebranded clean"
+  fi
+fi
+
+# (j) MOTD branded with Eclipse + no DARK MIRROR
+MOTD="${AIROOT}/etc/motd"
+if [[ -f "$MOTD" ]]; then
+  if grep -qE 'DARK MIRROR' "$MOTD"; then
+    fail "Sprint E: /etc/motd still says DARK MIRROR"
+  else
+    ok "Sprint E: /etc/motd rebranded"
+  fi
+  grep -q 'Darkside' "$MOTD" && ok "Sprint E: /etc/motd has Darkside tagline" || warn "Sprint E: /etc/motd missing Darkside tagline"
+fi
+
+# (k) fontconfig — Inter+JBM+Caveat locked
+FC="${AIROOT}/etc/fonts/conf.d/75-nyxus.conf"
+if [[ -f "$FC" ]]; then
+  ok "Sprint E: fontconfig 75-nyxus.conf present"
+  grep -q 'Inter'                   "$FC" && ok "Sprint E: fontconfig pins Inter"     || fail "Sprint E: fontconfig missing Inter"
+  grep -q 'JetBrainsMono Nerd Font' "$FC" && ok "Sprint E: fontconfig pins JBM Nerd"  || fail "Sprint E: fontconfig missing JBM Nerd"
+  grep -q 'Caveat'                  "$FC" && ok "Sprint E: fontconfig pins Caveat"    || fail "Sprint E: fontconfig missing Caveat"
+else
+  fail "Sprint E: fontconfig 75-nyxus.conf MISSING"
+fi
+
+# (l) cursor X11 fallback — NYXUS-Aurora cursors/default symlink present
+CUR="${AIROOT}/usr/share/icons/NYXUS-Aurora/cursors/default"
+if [[ -L "$CUR" || -e "$CUR" ]]; then
+  ok "Sprint E: NYXUS-Aurora cursors/default fallback present (X11 apps get branded cursor)"
+else
+  warn "Sprint E: NYXUS-Aurora cursors/default fallback missing (X11 apps fall back to white)"
+fi
+
+# ──────────────────────────────────────────────────────────────────────
+# §15y — Sprint E pipeline guards (artifact source-of-truth)
+# ──────────────────────────────────────────────────────────────────────
+# build-iso.sh stages several runtime configs from
+# `artifacts/api-server/nyxus-scripts/` INTO `airootfs/` at bake time.
+# That means an in-spec airootfs/ tree is NOT enough — if the artifact
+# source-of-truth file is legacy, it overwrites the airootfs version
+# and silently reverts brand identity on a real ISO build.
+# These guards lock the upstream copies to the same r15 spec.
+section "§15y — Sprint E source-of-truth guards (artifacts/api-server/nyxus-scripts)"
+NS_SRC="${REPO_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}/artifacts/api-server/nyxus-scripts"
+if [[ -d "$NS_SRC" ]]; then
+  # rofi
+  R="$NS_SRC/rofi-nyxus.rasi"
+  if [[ -f "$R" ]]; then
+    grep -q 'splat-purple' "$R" && fail "Sprint E src: rofi-nyxus.rasi still references splat-purple" \
+      || ok "Sprint E src: rofi-nyxus.rasi free of splat-purple"
+    grep -qi 'purple wash\|dark mirror' "$R" && fail "Sprint E src: rofi-nyxus.rasi has DARK MIRROR / purple wash text" \
+      || ok "Sprint E src: rofi-nyxus.rasi clean of legacy brand text"
+    grep -q 'f4ead5' "$R" && ok "Sprint E src: rofi-nyxus.rasi uses cream f4ead5" \
+      || fail "Sprint E src: rofi-nyxus.rasi missing cream accent"
+  else
+    fail "Sprint E src: $R MISSING (build-iso.sh will fail)"
+  fi
+  # hyprland
+  H="$NS_SRC/hyprland.conf"
+  if [[ -f "$H" ]]; then
+    grep -qE 'col\.active_border\s*=\s*rgba\(f4ead5' "$H" \
+      && ok "Sprint E src: hyprland.conf col.active_border = cream" \
+      || fail "Sprint E src: hyprland.conf col.active_border NOT cream f4ead5"
+    grep -qE 'col\.active_border\s*=\s*rgba\(ffffff' "$H" \
+      && fail "Sprint E src: hyprland.conf still has white border (will overwrite cream airootfs at bake)" \
+      || ok "Sprint E src: hyprland.conf free of legacy white border"
+  else
+    fail "Sprint E src: $H MISSING"
+  fi
+  # dunst
+  D="$NS_SRC/nyxus-dunstrc"
+  if [[ -f "$D" ]]; then
+    if grep -qE '^\s*corner_radius\s*=\s*3\b' "$D"; then
+      ok "Sprint E src: nyxus-dunstrc corner_radius = 3 (rev r15)"
+    else
+      fail "Sprint E src: nyxus-dunstrc corner_radius != 3 (sharp slab violates rev r15)"
+    fi
+  else
+    fail "Sprint E src: $D MISSING"
+  fi
+  # desktop entries — must use Icon=nyxus-* (not generic Papirus fallbacks)
+  if [[ -d "$NS_SRC/desktop-entries" ]]; then
+    BAD_ICONS=0
+    for d in "$NS_SRC"/desktop-entries/nyxus-{capture,files,notepad,notes,notification-center,screenshot,stickies,store,software,sysmon-gtk,terminal}.desktop; do
+      [[ -f "$d" ]] || continue
+      if ! grep -qE '^Icon=nyxus-' "$d"; then
+        fail "Sprint E src: $(basename "$d") Icon= is not branded nyxus-*"
+        BAD_ICONS=$((BAD_ICONS+1))
+      fi
+    done
+    (( BAD_ICONS == 0 )) && ok "Sprint E src: all 11 promoted .desktop entries use Icon=nyxus-*"
+  else
+    fail "Sprint E src: $NS_SRC/desktop-entries dir MISSING"
+  fi
+else
+  warn "Sprint E src: $NS_SRC dir not found — skipping pipeline guards"
 fi
 
 # ── final ─────────────────────────────────────────────────────────────
