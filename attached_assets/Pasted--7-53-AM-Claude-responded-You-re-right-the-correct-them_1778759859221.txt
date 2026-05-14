@@ -1,0 +1,82 @@
+
+7:53 AM
+Claude responded: You're right — the correct theme name based on what Replit has been building is NYXUS-Dark with the copper ring, cream accents, and the locked palette.
+You're right — the correct theme name based on what Replit has been building is NYXUS-Dark with the copper ring, cream accents, and the locked palette. That IS the custom theme.
+
+But the problem is in the live session GTK_THEME is showing adw-gtk3-dark which is a generic Adwaita dark theme — not your custom one. So the custom theme exists in the repo but isn't being applied on boot.
+
+The gtk theme name should match exactly what's in /usr/share/themes/ in the airootfs. Run this to see what's actually there in the live session:
+
+bash
+ls /usr/share/themes/
+That will show us what theme names are actually available and we can make sure the right one is being set.
+
+You said: ❯ ls ~/.
+❯ ls ~/.local/share/icons/                                                           07:51:13
+ Bibata-Modern-Ice   NyX-Cursor   nyx-os
+ hicolor             NyX-Icons    nyx-os-cursors
+...xXx... ~
+❯ ls /usr/share/themes/                                                              07:51:17
+ Adwaita
+ Adwaita-dark
+ catppuccin-mocha-blue-standard+default
+ catppuccin-mocha-blue-standard+default-hdpi
+ catppuccin-mocha-blue-standard+default-xhdpi
+ catppuccin-mocha-flamingo-standard+default
+ catppuccin-mocha-flamingo-standard+default-hdpi
+ catppuccin-mocha-flamingo-standard+default-xhdpi
+ catppuccin-mocha-green-standard+default
+ catppuccin-mocha-green-standard+default-hdpi
+ catppuccin-mocha-green-standard+default-xhdpi
+ catppuccin-mocha-lavender-standard+default
+ catppuccin-mocha-lavender-standard+default-hdpi
+ catppuccin-mocha-lavender-standard+default-xhdpi
+ catppuccin-mocha-maroon-standard+default
+ catppuccin-mocha-maroon-standard+default-hdpi
+ catppuccin-mocha-maroon-standard+default-xhdpi
+ catppuccin-mocha-mauve-standard+default
+ catppuccin-mocha-mauve-standard+default-hdpi
+ catppuccin-mocha-mauve-standard+default-xhdpi
+ catppuccin-mocha-peach-standard+default
+ catppuccin-mocha-peach-standard+default-hdpi
+ catppuccin-mocha-peach-standard+default-xhdpi
+ catppuccin-mocha-pink-standard+default
+ catppuccin-mocha-pink-standard+default-hdpi
+ catppuccin-mocha-pink-standard+default-xhdpi
+ catppuccin-mocha-red-standard+default
+ catppuccin-mocha-red-standard+default-hdpi
+ catppuccin-mocha-red-standard+default-xhdpi
+ catppuccin-mocha-rosewater-standard+default
+ catppuccin-mocha-rosewater-standard+default-hdpi
+ catppuccin-mocha-rosewater-standard+default-xhdpi
+ catppuccin-mocha-sapphire-standard+default
+ catppuccin-mocha-sapphire-standard+default-hdpi
+ catppuccin-mocha-sapphire-standard+default-xhdpi
+ catppuccin-mocha-sky-standard+default
+ catppuccin-mocha-sky-standard+default-hdpi
+ catppuccin-mocha-sky-standard+default-xhdpi
+ catppuccin-mocha-teal-standard+default
+ catppuccin-mocha-teal-standard+default-hdpi
+ catppuccin-mocha-teal-standard+default-xhdpi
+ catppuccin-mocha-yellow-standard+default
+ catppuccin-mocha-yellow-standard+default-hdpi
+ catppuccin-mocha-yellow-standard+default-xhdpi
+ Default
+ Emacs
+ Granite
+ HighContrast
+ NyX-Dark
+ NyX-OS
+...xXx... ~
+❯
+
+Show less
+7:56 AM
+Claude responded: There's the problem — your custom theme is called NyX-Dark not NYXUS-Dark.
+There's the problem — your custom theme is called NyX-Dark not NYXUS-Dark. And there's also NyX-OS. But the system is set to adw-gtk3-dark which is none of those.
+
+Also you have a ton of Catppuccin themes in there that shouldn't be in the build at all — those are someone else's theme pack and they don't belong in NyX.
+
+Tell Copilot:
+
+"sierengowskisierengowski-cpu/Nyxus-Core — Critical fixes: 1) GTK theme is set to adw-gtk3-dark but the correct theme is NyX-Dark — fix every place that sets GTK_THEME, gtk-theme in settings.ini, and gsettings to use NyX-Dark instead. 2) Remove all catppuccin themes from packages.x86_64 and airootfs — they don't belong in this build and are taking up space. 3) Create ~/.config/gtk-3.0/settings.ini and ~/.config/gtk-4.0/settings.ini in airootfs skel with correct values — gtk-theme=NyX-Dark, icon-theme=NYXUS-Glyph, cursor-theme=NYXUS-Aurora. 4) Wire default wallpaper to load on boot via swww or hyprpaper exec-once. 5) Verify EWW bar starts and renders correctly. Fix all of these. Verify-profile green before PR. Full changelog and green checklist."
