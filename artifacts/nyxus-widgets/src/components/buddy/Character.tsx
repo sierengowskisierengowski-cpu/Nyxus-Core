@@ -281,14 +281,27 @@ export function Character({ state, mood, mouthOpen, facing }: CharacterProps) {
     >
       <defs>
         <radialGradient id="cloakGrad" cx="0.5" cy="0.2" r="0.95">
-          <stop offset="0%" stopColor="#16161c" />
+          <stop offset="0%" stopColor="#1a1a22" />
           <stop offset="55%" stopColor={INK} />
           <stop offset="100%" stopColor={INK_DEEP} />
         </radialGradient>
-        <radialGradient id="hoodVoid" cx="0.5" cy="0.45" r="0.55">
+        <radialGradient id="hoodVoid" cx="0.5" cy="0.5" r="0.6">
           <stop offset="0%" stopColor="#000" />
-          <stop offset="60%" stopColor="#000" stopOpacity="0.85" />
+          <stop offset="75%" stopColor="#000" stopOpacity="0.95" />
           <stop offset="100%" stopColor="#000" stopOpacity="0" />
+        </radialGradient>
+        {/* Gold speckle pattern — tiny copper flecks like the reference */}
+        <pattern id="goldFleck" x="0" y="0" width="22" height="22" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="5" r="0.45" fill={COPPER_BRIGHT} opacity="0.55" />
+          <circle cx="15" cy="9" r="0.3" fill={COPPER} opacity="0.4" />
+          <circle cx="8" cy="17" r="0.55" fill={COPPER_BRIGHT} opacity="0.5" />
+          <circle cx="19" cy="3" r="0.35" fill={COPPER} opacity="0.45" />
+          <circle cx="11" cy="11" r="0.25" fill={COPPER_BRIGHT} opacity="0.3" />
+        </pattern>
+        {/* Smoke wisps */}
+        <radialGradient id="smokeGrad" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stopColor="#3a3a44" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#3a3a44" stopOpacity="0" />
         </radialGradient>
         <radialGradient id="eyeGrad" cx="0.5" cy="0.5" r="0.5">
           <stop offset="0%" stopColor={CREAM} />
@@ -332,6 +345,17 @@ export function Character({ state, mood, mouthOpen, facing }: CharacterProps) {
         <ellipse cx="0" cy="222" rx="44" ry="5" fill="#000" />
       </motion.g>
 
+      {/* Smoke wisps drifting up around the cloak base */}
+      <motion.g
+        animate={{ opacity: [0.35, 0.6, 0.35], y: [0, -10, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" as const }}
+      >
+        <ellipse cx="-58" cy="200" rx="22" ry="34" fill="url(#smokeGrad)" />
+        <ellipse cx="62" cy="195" rx="20" ry="38" fill="url(#smokeGrad)" />
+        <ellipse cx="-32" cy="218" rx="30" ry="14" fill="url(#smokeGrad)" />
+        <ellipse cx="38" cy="220" rx="28" ry="14" fill="url(#smokeGrad)" />
+      </motion.g>
+
       {/* LIFT layer — applies vertical hover for `float` state */}
       <motion.g animate={lift}>
         {/* BODY (cloak silhouette) — anchor for hood + sleeves + hem */}
@@ -341,18 +365,49 @@ export function Character({ state, mood, mouthOpen, facing }: CharacterProps) {
           <path
             d="
               M -32 50
-              Q -42 90 -50 150
-              Q -62 200 -56 220
-              L 56 220
-              Q 62 200 50 150
-              Q 42 90 32 50
+              Q -44 90 -52 150
+              Q -66 200 -58 220
+              L 58 220
+              Q 66 200 52 150
+              Q 44 90 32 50
               Q 0 36 -32 50
               Z
             "
             fill="url(#cloakGrad)"
             stroke={COPPER}
-            strokeOpacity="0.35"
+            strokeOpacity="0.32"
             strokeWidth="1"
+          />
+          {/* Gold speckle wash over cloak */}
+          <path
+            d="
+              M -32 50
+              Q -44 90 -52 150
+              Q -66 200 -58 220
+              L 58 220
+              Q 66 200 52 150
+              Q 44 90 32 50
+              Q 0 36 -32 50
+              Z
+            "
+            fill="url(#goldFleck)"
+            opacity="0.7"
+          />
+          {/* Wrapped scarf folds across the chest — like the reference */}
+          <path
+            d="M -50 110 Q -20 132 30 118 Q 50 114 56 130 Q 30 150 -10 148 Q -42 146 -54 132 Z"
+            fill={INK_DEEP}
+            stroke={COPPER}
+            strokeOpacity="0.35"
+            strokeWidth="0.8"
+          />
+          <path
+            d="M -42 140 Q 0 158 48 142 Q 36 168 -6 168 Q -38 166 -42 140 Z"
+            fill={INK}
+            stroke={COPPER}
+            strokeOpacity="0.25"
+            strokeWidth="0.6"
+            opacity="0.85"
           />
 
           {/* Inner cloak fold — vertical seam catching cream highlight */}
@@ -399,23 +454,26 @@ export function Character({ state, mood, mouthOpen, facing }: CharacterProps) {
             />
           </motion.g>
 
-          {/* HEM — bottom edge wave that flows */}
+          {/* HEM — torn, jagged bottom edge that flows */}
           <motion.g animate={hem} style={{ transformOrigin: "0px 220px" }}>
             <path
               d="
-                M -56 220
-                Q -42 214 -28 220
-                Q -14 226 0 220
-                Q 14 214 28 220
-                Q 42 226 56 220
-                L 56 224
-                L -56 224 Z
+                M -58 220
+                L -52 232 L -46 222 L -40 234 L -34 224
+                L -26 236 L -20 226 L -14 234 L -8 224
+                L 0 236 L 8 226 L 16 234 L 22 224
+                L 30 236 L 38 226 L 46 234 L 52 224 L 58 232
+                L 58 240 L -58 240 Z
               "
               fill={INK_DEEP}
               stroke={COPPER}
               strokeOpacity="0.4"
-              strokeWidth="0.8"
+              strokeWidth="0.7"
             />
+            {/* Loose threads dangling */}
+            <path d="M -28 232 L -29 240" stroke={COPPER} strokeOpacity="0.4" strokeWidth="0.5" />
+            <path d="M 12 234 L 11 242" stroke={COPPER} strokeOpacity="0.4" strokeWidth="0.5" />
+            <path d="M 36 230 L 38 240" stroke={COPPER} strokeOpacity="0.4" strokeWidth="0.5" />
           </motion.g>
 
           {/* Cross-legged hint when sitting / sleeping */}
@@ -444,64 +502,84 @@ export function Character({ state, mood, mouthOpen, facing }: CharacterProps) {
             </g>
           )}
 
-          {/* HOOD — large rounded drape that hides the head */}
+          {/* HOOD — large draped fabric that hides the head, torn front edge */}
           <motion.g animate={hood} style={{ transformOrigin: "0px 70px" }}>
-            {/* Hood shell */}
+            {/* Hood shell — slightly asymmetric, draped */}
             <path
               d="
-                M -38 50
-                Q -50 30 -42 8
-                Q -22 -10 0 -10
-                Q 22 -10 42 8
-                Q 50 30 38 50
-                Q 28 62 12 62
-                L -12 62
-                Q -28 62 -38 50 Z
+                M -42 52
+                Q -54 30 -46 6
+                Q -38 -8 -22 -12
+                Q 0 -14 22 -12
+                Q 40 -8 46 8
+                Q 52 32 40 54
+                Q 32 64 14 62
+                L -14 62
+                Q -30 62 -42 52 Z
               "
               fill="url(#cloakGrad)"
               stroke={COPPER}
               strokeOpacity="0.55"
-              strokeWidth="1.2"
+              strokeWidth="1.1"
             />
-            {/* Hood opening — void where face should be */}
-            <ellipse cx="0" cy="40" rx="26" ry="20" fill="url(#hoodVoid)" />
-            <ellipse
-              cx="0"
-              cy="40"
-              rx="26"
-              ry="20"
-              fill="none"
-              stroke="url(#copperRim)"
-              strokeOpacity="0.5"
-              strokeWidth="1"
+            {/* Gold flecks on hood */}
+            <path
+              d="
+                M -42 52
+                Q -54 30 -46 6
+                Q -38 -8 -22 -12
+                Q 0 -14 22 -12
+                Q 40 -8 46 8
+                Q 52 32 40 54
+                Q 32 64 14 62
+                L -14 62
+                Q -30 62 -42 52 Z
+              "
+              fill="url(#goldFleck)"
+              opacity="0.75"
+            />
+            {/* Hood opening — deep void where face should be */}
+            <ellipse cx="0" cy="42" rx="24" ry="18" fill="url(#hoodVoid)" />
+            {/* Inner solid void — pure black so eyes pop */}
+            <ellipse cx="0" cy="42" rx="18" ry="13" fill="#000" />
+            {/* Torn front edge of hood — jagged drape over forehead */}
+            <path
+              d="
+                M -28 32
+                L -22 38 L -16 30 L -10 36 L -2 28
+                L 4 36 L 12 30 L 20 38 L 28 32
+                L 28 24 L -28 24 Z
+              "
+              fill={INK_DEEP}
+              opacity="0.95"
             />
 
             {/* EYES — the ONLY visible face feature.
-                Outer soft glow + inner bright slit. */}
+                Outer soft glow + inner bright slit. Amber-cream like the reference. */}
             <motion.g animate={eyeGlow} style={{ opacity: talkBoost }}>
               {/* outer halo (blurred) */}
               <g filter="url(#eyeBlurSoft)">
-                <ellipse cx="-9" cy="42" rx="9" ry="5" fill={eyeTint} opacity="0.55" />
-                <ellipse cx="9" cy="42" rx="9" ry="5" fill={eyeTint} opacity="0.55" />
+                <ellipse cx="-8" cy="44" rx="9" ry="5" fill={eyeTint} opacity="0.6" />
+                <ellipse cx="8" cy="44" rx="9" ry="5" fill={eyeTint} opacity="0.6" />
               </g>
-              {/* mid glow */}
+              {/* mid glow — copper-amber tint */}
               <g filter="url(#eyeBlur)">
-                <ellipse cx="-9" cy="42" rx="6" ry="3.2" fill={eyeTint} opacity="0.85" />
-                <ellipse cx="9" cy="42" rx="6" ry="3.2" fill={eyeTint} opacity="0.85" />
+                <ellipse cx="-8" cy="44" rx="6" ry="3.2" fill={COPPER_BRIGHT} opacity="0.9" />
+                <ellipse cx="8" cy="44" rx="6" ry="3.2" fill={COPPER_BRIGHT} opacity="0.9" />
               </g>
               {/* sharp eye shape — narrows for curious / smug / sleepy / sleep */}
-              <motion.g animate={eyeShape} style={{ transformOrigin: "0px 42px" }}>
+              <motion.g animate={eyeShape} style={{ transformOrigin: "0px 44px" }}>
                 <g style={{ transform: `scaleY(${baseEyeScale})`, transformOrigin: "center" }}>
                   <ellipse
-                    cx="-9"
-                    cy="42"
+                    cx="-8"
+                    cy="44"
                     rx="4.2"
                     ry="2.1"
                     fill={CREAM}
                   />
                   <ellipse
-                    cx="9"
-                    cy="42"
+                    cx="8"
+                    cy="44"
                     rx="4.2"
                     ry="2.1"
                     fill={CREAM}
@@ -509,18 +587,22 @@ export function Character({ state, mood, mouthOpen, facing }: CharacterProps) {
                 </g>
               </motion.g>
               {/* hot core */}
-              <ellipse cx="-9" cy="42" rx="1.4" ry="0.9" fill="#fffaea" />
-              <ellipse cx="9" cy="42" rx="1.4" ry="0.9" fill="#fffaea" />
+              <ellipse cx="-8" cy="44" rx="1.4" ry="0.9" fill="#fffaea" />
+              <ellipse cx="8" cy="44" rx="1.4" ry="0.9" fill="#fffaea" />
             </motion.g>
 
-            {/* Hood front lip — copper line catching the light */}
+            {/* Hood front lip — torn, frayed edge with copper glint */}
             <path
-              d="M -38 50 Q 0 60 38 50"
+              d="M -42 52 Q -20 62 0 60 Q 20 62 42 54"
               fill="none"
               stroke="url(#copperRim)"
-              strokeOpacity="0.55"
-              strokeWidth="1"
+              strokeOpacity="0.5"
+              strokeWidth="0.9"
             />
+            {/* Loose threads dangling from hood edge */}
+            <path d="M -22 60 L -23 68" stroke={COPPER} strokeOpacity="0.45" strokeWidth="0.5" />
+            <path d="M 18 60 L 19 67" stroke={COPPER} strokeOpacity="0.45" strokeWidth="0.5" />
+            <path d="M 4 62 L 5 69" stroke={COPPER} strokeOpacity="0.4" strokeWidth="0.5" />
           </motion.g>
 
           {/* Subtle sleep mark — slow Z fades in */}
