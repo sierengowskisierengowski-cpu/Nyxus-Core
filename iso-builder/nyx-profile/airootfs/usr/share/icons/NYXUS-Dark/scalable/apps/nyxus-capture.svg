@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#0a0a14"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f4ead5"/>
+      <stop offset="100%" stop-color="#e8edf5"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="29" fill="url(#bg)" stroke="url(#ring)" stroke-width="1.5"/>
+  <g fill="none" stroke="#f4ead5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- crop brackets -->
+    <path d="M16 22 V16 H22"/><path d="M48 22 V16 H42"/>
+    <path d="M16 42 V48 H22"/><path d="M48 42 V48 H42"/>
+    <!-- camera body -->
+    <rect x="22" y="24" width="20" height="16" rx="3"/>
+    <circle cx="32" cy="32" r="4" fill="#f4ead5"/>
+  </g>
+</svg>
