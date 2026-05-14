@@ -1,0 +1,21 @@
+{
+  "_comment": "NYXUS Sprint K-D rev r16 — Chromium managed policy. Loaded by every Chromium-family browser at launch. Forces dark UI, hides 'set as default' nag, suppresses sign-in promo, disables built-in metrics so the browser fits the locked NYXUS triple-black + cream + copper brand contract.",
+  "BrowserThemeColor": "#0a0a0e",
+  "ForceDarkMode": true,
+  "ColorScheme": 1,
+  "BrowserSignin": 0,
+  "SyncDisabled": true,
+  "MetricsReportingEnabled": false,
+  "DefaultBrowserSettingEnabled": false,
+  "PromotionalTabsEnabled": false,
+  "WelcomePageOnOSUpgradeEnabled": false,
+  "DefaultSearchProviderEnabled": true,
+  "DefaultSearchProviderName": "DuckDuckGo",
+  "DefaultSearchProviderSearchURL": "https://duckduckgo.com/?q={searchTerms}",
+  "HideWebStoreIcon": false,
+  "BookmarkBarEnabled": true,
+  "ShowAppsShortcutInBookmarkBar": false,
+  "BackgroundModeEnabled": false,
+  "HardwareAccelerationModeEnabled": true,
+  "TranslateEnabled": true
+}
