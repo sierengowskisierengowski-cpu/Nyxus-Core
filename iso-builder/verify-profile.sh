@@ -302,10 +302,12 @@ if [[ -d "${ICON_ROOT}" ]]; then
   fi
   for f in "${AIROOT}/etc/skel/.config/gtk-3.0/settings.ini" \
            "${AIROOT}/etc/skel/.config/gtk-4.0/settings.ini"; do
-    if grep -q '^gtk-icon-theme-name=NYXUS-Dark$' "$f" 2>/dev/null; then
-      ok "$(basename "$(dirname "$f")")/settings.ini -> NYXUS-Dark"
+    # Sprint J rev r16: default GTK icon theme is now NYXUS-Glyph;
+    # NYXUS-Dark remains a valid fallback (inherited by NYXUS-Glyph).
+    if grep -Eq '^gtk-icon-theme-name=NYXUS-(Glyph|Dark)$' "$f" 2>/dev/null; then
+      ok "$(basename "$(dirname "$f")")/settings.ini -> $(grep -E '^gtk-icon-theme-name=' "$f" | cut -d= -f2)"
     else
-      fail "$(basename "$(dirname "$f")")/settings.ini does not select NYXUS-Dark"
+      fail "$(basename "$(dirname "$f")")/settings.ini does not select NYXUS-Glyph or NYXUS-Dark"
     fi
   done
 else
@@ -2392,6 +2394,141 @@ for f in "$LAUNCH_SRC" "$LAUNCH_AIR"; do
     fail "Sprint I: nyxus-eww-launch ($(basename $(dirname $f))) fallback references undefined 'dock' window"
   fi
 done
+
+# ── §15ac Sprint J: Copper accent + thin-ring eclipse + NYXUS-Glyph icon pack (rev r16 — 2026-05-14) ──
+# Sprint J introduces the SECOND canonical accent (copper #b8865a) and the
+# SECOND canonical brand mark (thin-ring eclipse) without disturbing the
+# locked primaries (cream #f4ead5 + filled-disc Eclipse). It also ships
+# the NYXUS-Glyph icon theme — the unified black-puck + thin-copper-ring
+# + cream-glyph contract for every shipped NYXUS app — and switches the
+# default GTK icon theme to it.
+hd "§15ac Sprint J — Copper accent + thin-ring + NYXUS-Glyph (rev r16)"
+
+# (a) Copper token defined in eww source AND mirrored to airootfs
+for f in "$(dirname "${PROFILE}")/../artifacts/api-server/nyxus-scripts/eww/eww.scss" \
+         "${AIROOT}/etc/skel/.config/eww/eww.scss"; do
+  if grep -q '^\$copper:[[:space:]]*#b8865a;' "$f" 2>/dev/null; then
+    ok "Sprint J: \$copper #b8865a token present in $(basename $(dirname $f))/eww.scss"
+  else
+    fail "Sprint J: \$copper #b8865a token MISSING from $f"
+  fi
+done
+
+# (b) accent.json registers 'copper' preset with primary=#b8865a
+ACC="${AIROOT}/etc/skel/.config/nyxus/accent.json"
+if grep -Eq '"copper"[[:space:]]*:[[:space:]]*\{[^}]*"primary"[[:space:]]*:[[:space:]]*"#b8865a"' "$ACC"; then
+  ok "Sprint J: accent.json registers 'copper' preset (#b8865a)"
+else
+  fail "Sprint J: accent.json missing 'copper' preset with #b8865a primary"
+fi
+
+# (c) welcome wizard ACCENTS list includes Copper
+WW="$(dirname "${PROFILE}")/../artifacts/api-server/nyxus-scripts/nyxus_welcome.py"
+if grep -Eq '\("Copper",[[:space:]]*"#b8865a"\)' "$WW"; then
+  ok "Sprint J: nyxus_welcome ACCENTS list includes Copper #b8865a"
+else
+  fail "Sprint J: nyxus_welcome ACCENTS list missing Copper preset"
+fi
+
+# (d) NYXUS-Glyph icon theme installed
+GLYPH="${AIROOT}/usr/share/icons/NYXUS-Glyph"
+if [[ -f "${GLYPH}/index.theme" ]] && grep -q '^Name=NYXUS-Glyph' "${GLYPH}/index.theme"; then
+  ok "Sprint J: NYXUS-Glyph icon theme index.theme present"
+else
+  fail "Sprint J: NYXUS-Glyph icon theme index.theme missing or malformed"
+fi
+
+# (e) Every required app icon is shipped as a puck-and-ring SVG
+for app in nyxus-settings nyxus-notepad nyxus-stickies nyxus-sysmon nyxus-widgets \
+           nyxus-files nyxus-store nyxus-capture nyxus-notification-center nyxus-ghost-auth; do
+  ICON="${GLYPH}/scalable/apps/${app}.svg"
+  if [[ ! -f "${ICON}" ]]; then
+    fail "Sprint J: NYXUS-Glyph missing icon ${app}.svg"; continue
+  fi
+  # Each icon must contain: black puck (radial gradient), copper ring (#b8865a), cream glyph stroke (#f4ead5)
+  if grep -q '#b8865a' "${ICON}" && grep -q '#f4ead5' "${ICON}" && grep -q 'radialGradient' "${ICON}"; then
+    ok "Sprint J: NYXUS-Glyph ${app}.svg = puck + copper ring + cream glyph"
+  else
+    fail "Sprint J: NYXUS-Glyph ${app}.svg missing required elements (puck/copper/cream)"
+  fi
+done
+
+# (f) Thin-ring eclipse mark shipped as places/ glyph
+if [[ -f "${GLYPH}/scalable/places/nyxus-eclipse-thinring.svg" ]]; then
+  ok "Sprint J: thin-ring eclipse mark (places/nyxus-eclipse-thinring.svg) shipped"
+else
+  fail "Sprint J: thin-ring eclipse mark SVG missing from NYXUS-Glyph/scalable/places"
+fi
+
+# (g) GTK 3 + 4 default icon theme switched to NYXUS-Glyph
+for v in 3.0 4.0; do
+  GTK="${AIROOT}/etc/skel/.config/gtk-${v}/settings.ini"
+  if grep -q '^gtk-icon-theme-name=NYXUS-Glyph$' "$GTK"; then
+    ok "Sprint J: GTK ${v} default icon theme = NYXUS-Glyph"
+  else
+    fail "Sprint J: GTK ${v} default icon theme is NOT NYXUS-Glyph (settings.ini drift)"
+  fi
+done
+
+# (h) Eclipse Flare wallpaper staged + manifest entry
+FLARE="${AIROOT}/usr/share/backgrounds/nyxus/nyxus-eclipse-flare.png"
+if [[ -f "${FLARE}" ]] && grep -q '^nyxus-eclipse-flare' "${AIROOT}/usr/share/backgrounds/nyxus/manifest.tsv"; then
+  ok "Sprint J: nyxus-eclipse-flare.png wallpaper staged + manifest entry present"
+else
+  fail "Sprint J: nyxus-eclipse-flare wallpaper missing or unmanifested"
+fi
+
+# (i) Brand reference images committed to docs/brand
+for ref in nyxus-eclipse-thinring-mark nyxus-icon-style-reference nyxus-icon-grid-reference; do
+  if [[ -f "$(dirname "${PROFILE}")/../docs/brand/${ref}.png" ]]; then
+    ok "Sprint J: docs/brand/${ref}.png brand reference pinned"
+  else
+    fail "Sprint J: docs/brand/${ref}.png brand reference missing"
+  fi
+done
+
+# (k) Live-runtime drift: opt/nyxus/nyxus_welcome.py is the file the user
+#     actually executes; it MUST contain Copper too, not just the artifact source.
+SHIP_WW="${AIROOT}/opt/nyxus/nyxus_welcome.py"
+if grep -Eq '\("Copper",[[:space:]]*"#b8865a"\)' "${SHIP_WW}"; then
+  ok "Sprint J: SHIPPED welcome wizard (/opt/nyxus/nyxus_welcome.py) has Copper preset"
+else
+  fail "Sprint J: SHIPPED welcome wizard MISSING Copper — artifact source drift not synced to /opt/nyxus"
+fi
+
+# (l) Three additional NYXUS-Glyph icons that .desktop entries reference
+for app in nyxus nyxus-terminal nyxus-browser; do
+  ICON="${GLYPH}/scalable/apps/${app}.svg"
+  if [[ -f "${ICON}" ]] && grep -q '#b8865a' "${ICON}" && grep -q 'radialGradient' "${ICON}"; then
+    ok "Sprint J: NYXUS-Glyph ${app}.svg shipped (puck + copper ring)"
+  else
+    fail "Sprint J: NYXUS-Glyph ${app}.svg missing or non-conforming"
+  fi
+done
+
+# (m) Accent pipeline integrity: nyxus-apply-accent must write the SCSS
+#     fragment that eww.scss actually @imports (_nyxus_accent.scss), and
+#     must accept the 2-hex form that nyxus_settings.py invokes it with.
+APPLY="${AIROOT}/usr/local/bin/nyxus-apply-accent"
+if grep -q 'EWW_OUT="\${HOME}/\.config/eww/_nyxus_accent\.scss"' "${APPLY}"; then
+  ok "Sprint J: nyxus-apply-accent writes _nyxus_accent.scss (matches eww @import target)"
+else
+  fail "Sprint J: nyxus-apply-accent output filename does NOT match eww @import target — accent picker silently broken"
+fi
+if grep -q 'set -- "_custom"' "${APPLY}" && grep -q '\$# -eq 2' "${APPLY}"; then
+  ok "Sprint J: nyxus-apply-accent accepts 2-hex form (matches Settings → Appearance call signature)"
+else
+  fail "Sprint J: nyxus-apply-accent rejects 2-hex form — Settings accent picker non-functional"
+fi
+
+# (j) Copper hex MUST NOT have been added to the banned list (sanity guard).
+# Look only at the BANNED_HEX line itself, not the whole script — every
+# copper guard above naturally contains "#b8865a" and would false-positive.
+if grep -E '^BANNED_HEX=' "${0}" | grep -q 'b8865a'; then
+  fail "Sprint J: copper #b8865a was added to BANNED_HEX — that's a contradiction with the rev r16 contract"
+else
+  ok "Sprint J: copper #b8865a is NOT in the banned palette list (correct)"
+fi
 
 # ── final ─────────────────────────────────────────────────────────────
 echo
