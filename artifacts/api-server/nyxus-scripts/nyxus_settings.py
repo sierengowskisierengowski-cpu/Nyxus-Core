@@ -165,6 +165,7 @@ GLYPHS = {
     "welcome":       "\uf164",   # nf-fa-thumbs_up    (welcome / onboarding)
     "loginscreen":   "\uf023",   # nf-fa-lock         (login screen / SDDM)
     "plymouth":      "\uf135",   # nf-fa-rocket       (boot splash)
+    "sounds":        "\uf001",   # nf-fa-music        (system sound theme)
 }
 
 
@@ -364,6 +365,12 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "plymouth",
                "plymouth,boot,splash,bootsplash,initramfs,initrd,"
                "mkinitcpio,startup,logo,animation", 1,
+               "Personal"),
+    SectionDef("sounds",        "Sound Pack",
+               "System sounds, alerts, per-event toggles, NYXUS theme",
+               "sounds",
+               "sound,sounds,audio,alert,alerts,bell,chime,notification,"
+               "login,logout,lock,unlock,beep,theme,canberra,freedesktop", 1,
                "Personal"),
     SectionDef("appearance",    "Appearance",
                "Wallpaper, theme variant, font scale",
@@ -13357,6 +13364,292 @@ class PlymouthPage(SectionPage):
         ]
 
 
+class SoundsPage(SectionPage):
+    """NYXUS sound theme — alerts, system events, per-event mute.
+
+    Backed by /usr/local/bin/nyxus-sound. Per-user actions go through
+    gsettings (no privilege). Setting NYXUS as the system-wide default
+    requires pkexec (com.nyxus.sound.policy).
+
+    Theme dir : /usr/share/sounds/nyxus/
+    Events dir: /usr/share/sounds/nyxus/stereo/
+    Override  : ~/.local/share/sounds/nyxus/stereo/<event>.disabled
+    """
+    KEY = "sounds"
+    STANDARD_KEYBIND_TOKENS = ["nyxus-sound", "canberra"]
+    STANDARD_RESET_NS = ["sounds"]
+
+    HELPER = "nyxus-sound"
+    THEME_ROOT = Path("/usr/share/sounds")
+    NYXUS_DIR = Path("/usr/share/sounds/nyxus")
+    EVENTS_DIR = Path("/usr/share/sounds/nyxus/stereo")
+
+    EVENT_LABELS = {
+        "service-login":       ("Login",            "Plays after the desktop session starts"),
+        "service-logout":      ("Logout",           "Plays just before the session ends"),
+        "screen-locked":       ("Screen lock",      "Plays when the session is locked"),
+        "screen-unlocked":     ("Screen unlock",    "Plays when the session is unlocked"),
+        "message":             ("New message",      "Chat / mail notifications"),
+        "complete":            ("Task complete",    "Long-running operations finishing"),
+        "dialog-error":        ("Error",            "Modal error dialogs"),
+        "dialog-warning":      ("Warning",          "Modal warnings"),
+        "dialog-information":  ("Info",             "Soft informational chime"),
+        "audio-volume-change": ("Volume tick",      "60ms tick on volume key press"),
+        "power-plug":          ("Plug in",          "Charger connected"),
+        "power-unplug":        ("Plug out",         "Charger disconnected"),
+        "device-added":        ("Device added",     "USB / bluetooth attached"),
+        "device-removed":      ("Device removed",   "USB / bluetooth detached"),
+        "bell-terminal":       ("Terminal bell",    "Short wood-block tick"),
+    }
+
+    # ── helpers ──────────────────────────────────────────────────────
+    def _status(self) -> dict:
+        if not have(self.HELPER):
+            return {}
+        rc, out, _ = sh([self.HELPER, "status"], timeout=4)
+        if rc != 0:
+            return {}
+        try:
+            return json.loads(out)
+        except Exception:
+            return {}
+
+    def _list_themes(self) -> List[str]:
+        if not have(self.HELPER):
+            return []
+        rc, out, _ = sh([self.HELPER, "list"], timeout=4)
+        return [l.strip() for l in (out or "").splitlines() if l.strip()] \
+            if rc == 0 else []
+
+    def _get_volume(self) -> int:
+        try:
+            return int(
+                (Path.home() / ".config/nyxus/sound-volume")
+                .read_text().strip())
+        except Exception:
+            return 80
+
+    def _async(self, args: List[str], success: str) -> None:
+        sh_async(
+            [self.HELPER, *args],
+            lambda res: self.toast(
+                success if res[0] == 0
+                else f"sounds: failed (rc={res[0]})"),
+            timeout=15)
+
+    def standard_extra_reset(self) -> None:
+        if have(self.HELPER):
+            self._async(["reset"], "sound settings reset")
+
+    # ── page build ───────────────────────────────────────────────────
+    def build(self) -> None:
+        if not have(self.HELPER):
+            grp = Adw.PreferencesGroup(title="Sound helper missing")
+            grp.add(empty_row(
+                "nyxus-sound not installed",
+                "Expected at /usr/local/bin/nyxus-sound — shipped by "
+                "the iso-builder profile."))
+            self.add_group(grp)
+            self.add_pill(status_pill("missing", "warn"))
+            return
+
+        st = self._status()
+        events = st.get("events", [])
+        themes = self._list_themes() or ["nyxus", "freedesktop"]
+        cur_theme = st.get("current_theme", "nyxus")
+        vol = self._get_volume()
+
+        # General
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="Pick a sound theme and play a quick test")
+        self.add_group(gen)
+        gen.add(kv_row("Active theme", cur_theme))
+        gen.add(kv_row("Theme directory", str(self.NYXUS_DIR)))
+        gen.add(kv_row("Events shipped", str(len(events))))
+
+        tr = Adw.ComboRow(
+            title="Sound theme",
+            subtitle="Per-user (gsettings org.gnome.desktop.sound)")
+        mdl = Gtk.StringList()
+        for t in themes:
+            mdl.append(t)
+        tr.set_model(mdl)
+        try:
+            tr.set_selected(themes.index(cur_theme))
+        except ValueError:
+            tr.set_selected(0)
+        tr.connect(
+            "notify::selected",
+            lambda r, _p: self._async(
+                ["set-theme", themes[r.get_selected()]],
+                f"theme → {themes[r.get_selected()]}"))
+        gen.add(tr)
+
+        test_row = Adw.ActionRow(
+            title="Play test sound",
+            subtitle="Plays the login chime (service-login)")
+        tbtn = Gtk.Button(label="Play")
+        tbtn.add_css_class("suggested-action")
+        tbtn.set_valign(Gtk.Align.CENTER)
+        tbtn.connect("clicked",
+                     lambda _b: sh_async([self.HELPER, "test"]))
+        test_row.add_suffix(tbtn)
+        gen.add(test_row)
+
+        prev_row = Adw.ActionRow(
+            title="Preview every event",
+            subtitle="Plays all 15 events with a 600 ms gap "
+                     "(~5 seconds total)")
+        pbtn = Gtk.Button(label="Play all")
+        pbtn.set_valign(Gtk.Align.CENTER)
+        pbtn.connect("clicked",
+                     lambda _b: sh_async([self.HELPER, "preview-all"]))
+        prev_row.add_suffix(pbtn)
+        gen.add(prev_row)
+
+        sysd_row = Adw.ActionRow(
+            title="Make NYXUS the system-wide default",
+            subtitle="Writes /etc/dconf/db/local.d/00-nyxus-sound "
+                     "(requires admin password)")
+        sbtn = Gtk.Button(label="Apply")
+        sbtn.set_valign(Gtk.Align.CENTER)
+        sbtn.connect(
+            "clicked",
+            lambda _b: self._async(
+                ["set-system-default"],
+                "system-wide default applied"))
+        sysd_row.add_suffix(sbtn)
+        gen.add(sysd_row)
+
+        # Appearance — volume / mute master
+        app = Adw.PreferencesGroup(
+            title="Appearance",
+            description="How loud and how present sounds feel in NYXUS")
+        self.add_group(app)
+        vol_row = Adw.ActionRow(
+            title="Playback volume",
+            subtitle=(
+                f"Currently {vol}% — applies when sounds are played "
+                "through nyxus-sound (paplay scaled). App-triggered "
+                "canberra sounds inherit your per-stream volume."))
+        scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL, 0, 100, 5)
+        scale.set_value(vol)
+        scale.set_size_request(220, -1)
+        scale.set_draw_value(True)
+        scale.set_value_pos(Gtk.PositionType.RIGHT)
+        scale.set_valign(Gtk.Align.CENTER)
+
+        # GTK4-safe debounced commit: every drag tick fires
+        # "value-changed", we coalesce into a single helper call after
+        # 350ms of quiet so we don't spam paplay/gsettings.
+        self._vol_commit_id = 0
+
+        def _commit_vol():
+            v = int(scale.get_value())
+            self._async(["set-volume", str(v)], f"volume → {v}%")
+            self._vol_commit_id = 0
+            return GLib.SOURCE_REMOVE
+
+        def _on_vol_changed(_s):
+            if self._vol_commit_id:
+                GLib.source_remove(self._vol_commit_id)
+            self._vol_commit_id = GLib.timeout_add(350, _commit_vol)
+
+        scale.connect("value-changed", _on_vol_changed)
+        vol_row.add_suffix(scale)
+        app.add(vol_row)
+
+        mute_row = Adw.SwitchRow(
+            title="Mute all NYXUS event sounds",
+            subtitle="Disables every event in this theme via per-user "
+                     ".disabled overrides — leaves system theme intact")
+        # If any user-side .disabled exists, treat as muted.
+        any_disabled = any(e.get("disabled") for e in events)
+        mute_row.set_active(any_disabled and len(events) > 0)
+        mute_row.connect(
+            "notify::active",
+            lambda s, _p: (
+                self._async(["mute-events"], "all events muted")
+                if s.get_active() else
+                self._async(["unmute-events"], "all events unmuted")))
+        app.add(mute_row)
+
+        # Behavior — per-event toggles, organised in a single group
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="Toggle individual events. "
+                        "Click the speaker to preview.")
+        self.add_group(beh)
+        # Stable presentation order matching EVENT_LABELS dict
+        for evt_key in self.EVENT_LABELS:
+            label, desc = self.EVENT_LABELS[evt_key]
+            ev_state = next(
+                (e for e in events if e.get("event") == evt_key),
+                {"event": evt_key, "disabled": False})
+            row = Adw.SwitchRow(
+                title=label,
+                subtitle=f"{desc} — {evt_key}.wav")
+            row.set_active(not ev_state.get("disabled", False))
+            row.connect(
+                "notify::active",
+                lambda s, _p, k=evt_key: self._async(
+                    ["enable-event" if s.get_active()
+                     else "disable-event", k],
+                    f"{k} {'enabled' if s.get_active() else 'disabled'}"))
+            play_btn = Gtk.Button.new_from_icon_name(
+                "media-playback-start-symbolic")
+            play_btn.set_valign(Gtk.Align.CENTER)
+            play_btn.add_css_class("flat")
+            play_btn.set_tooltip_text(f"Play {label}")
+            play_btn.connect(
+                "clicked",
+                lambda _b, k=evt_key: sh_async([self.HELPER, "play", k]))
+            row.add_suffix(play_btn)
+            beh.add(row)
+
+        # Footer (Keybinds + Reset + Advanced) auto-injected.
+
+    @property
+    def STANDARD_ADVANCED(self):
+        return [
+            ("Open the events directory",
+             f"{self.EVENTS_DIR} (system-wide WAV files)",
+             "Open",
+             lambda: fire_and_forget(
+                 f"xdg-open {self.EVENTS_DIR}")),
+            ("Open user override directory",
+             "~/.local/share/sounds/nyxus/stereo/ "
+             "(per-user .disabled markers)",
+             "Open",
+             lambda: fire_and_forget(
+                 "xdg-open "
+                 f"{Path.home()}/.local/share/sounds/nyxus/stereo")),
+            ("Show full status (JSON)",
+             "Dump current sound state for debugging",
+             "Show",
+             lambda: open_terminal(
+                 f"{self.HELPER} status | less", self.win)),
+            ("Re-cache canberra sounds",
+             "Force libcanberra to rescan the theme directory",
+             "Run",
+             lambda: fire_and_forget(
+                 "rm -rf ~/.cache/event-sound-cache.tdb."
+                 "$(uname -m).$(echo $LANG)")),
+            ("Make NYXUS system-wide default",
+             "Same as the Apply button above — kept here for discoverability",
+             "Apply",
+             lambda: self._async(
+                 ["set-system-default"],
+                 "system-wide default applied")),
+            ("Restore shipped defaults",
+             "Theme=NYXUS, volume=80, all events enabled",
+             "Reset",
+             lambda: (self.standard_extra_reset(), self.rebuild())),
+        ]
+
+
 # Map section.key → page class.
 PAGE_CLASSES = {
     "appearance":    AppearancePage,
@@ -13410,6 +13703,7 @@ PAGE_CLASSES = {
     "welcome":       WelcomePage,
     "loginscreen":   LoginScreenPage,
     "plymouth":      PlymouthPage,
+    "sounds":        SoundsPage,
 }
 
 

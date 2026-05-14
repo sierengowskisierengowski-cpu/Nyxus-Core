@@ -821,6 +821,264 @@ for pkg in plymouth mkinitcpio; do
     || fail "missing package: ${pkg}"
 done
 
+# ── 13r. Tier 1 · Sound Pack (rev 2026-05-14) ──────────────────────
+hd "13r. Tier 1 · Sound Pack"
+SD_BIN="${AIROOT}/usr/local/bin/nyxus-sound"
+if [[ -x "${SD_BIN}" ]] && bash -n "${SD_BIN}" 2>/dev/null; then
+  ok "nyxus-sound helper present + parses"
+else
+  fail "nyxus-sound helper missing/not-executable/bad: ${SD_BIN}"
+fi
+SD_POL="${AIROOT}/usr/share/polkit-1/actions/com.nyxus.sound.policy"
+SD_SYSDEF="${AIROOT}/usr/local/libexec/nyxus-sound-system-default"
+if [[ -f "${SD_POL}" ]] \
+   && grep -q "com.nyxus.sound.set-system-default" "${SD_POL}"; then
+  ok "polkit policy: com.nyxus.sound.policy present"
+else
+  fail "polkit policy missing: ${SD_POL}"
+fi
+# Polkit must target the dedicated root helper, NOT a generic shell
+# (architect blocker: previously bound to /usr/bin/env bash -c).
+if grep -q "exec.path.*nyxus-sound-system-default" "${SD_POL}"; then
+  ok "polkit policy narrowly targets dedicated helper"
+else
+  fail "polkit policy must target /usr/local/libexec/nyxus-sound-system-default"
+fi
+# Dedicated root helper must exist + parse + reject arguments
+if [[ -x "${SD_SYSDEF}" ]] && bash -n "${SD_SYSDEF}" 2>/dev/null \
+   && grep -q "this helper takes no arguments" "${SD_SYSDEF}"; then
+  ok "system-default helper present + parses + rejects args"
+else
+  fail "system-default helper missing/invalid: ${SD_SYSDEF}"
+fi
+# nyxus-sound must call into the dedicated helper, not ad-hoc shell
+if grep -q '/usr/local/libexec/nyxus-sound-system-default' "${SD_BIN}" \
+   && ! grep -q 'pkexec /usr/bin/env' "${SD_BIN}"; then
+  ok "nyxus-sound delegates set-system-default to root helper"
+else
+  fail "nyxus-sound still uses pkexec env shell pattern"
+fi
+SD_THEME="${AIROOT}/usr/share/sounds/nyxus"
+if [[ -f "${SD_THEME}/index.theme" ]] \
+   && grep -q '^\[Sound Theme\]' "${SD_THEME}/index.theme" \
+   && grep -q '^Inherits=freedesktop' "${SD_THEME}/index.theme"; then
+  ok "sound theme manifest present + valid"
+else
+  fail "sound theme manifest missing/invalid: ${SD_THEME}/index.theme"
+fi
+# Required event coverage — every NYXUS event must exist as a real
+# WAV file (no zero-byte files, no fake silence).
+SD_EVENTS=(
+  service-login service-logout screen-locked screen-unlocked
+  message complete dialog-error dialog-warning dialog-information
+  audio-volume-change power-plug power-unplug
+  device-added device-removed bell-terminal
+)
+SD_FAILED=0
+for evt in "${SD_EVENTS[@]}"; do
+  f="${SD_THEME}/stereo/${evt}.wav"
+  if [[ -f "${f}" ]] && (( $(stat -c%s "${f}") > 1024 )); then
+    :
+  else
+    fail "sound event missing or empty: ${f}"
+    SD_FAILED=1
+  fi
+done
+(( SD_FAILED == 0 )) && ok "all 15 NYXUS sound events present (>1KB each)"
+# WAV header sanity: every file must start with RIFF/WAVE
+for f in "${SD_THEME}"/stereo/*.wav; do
+  head -c 12 "${f}" | grep -q 'WAVE' \
+    || { fail "not a valid WAV: ${f}"; SD_FAILED=1; }
+done
+(( SD_FAILED == 0 )) && ok "all WAV headers valid (RIFF/WAVE)"
+# Settings hub registration
+if grep -q '"sounds":' "${NS}/nyxus_settings.py" \
+   && grep -q "^class SoundsPage(SectionPage)" "${NS}/nyxus_settings.py"; then
+  ok "Settings: sounds registered + SoundsPage class present"
+else
+  fail "Settings: sounds not registered or SoundsPage missing"
+fi
+# Required runtime packages
+for pkg in libcanberra libcanberra-pulse sound-theme-freedesktop pipewire-pulse; do
+  grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
+    && ok "package: ${pkg}" \
+    || fail "missing package: ${pkg}"
+done
+
+# ── 13s. Tier 1 · Calamares Branding (rev 2026-05-14) ───────────────
+hd "13s. Tier 1 · Calamares Branding"
+CAL_BRAND="${AIROOT}/etc/calamares/branding/nyxus"
+CAL_SETTINGS="${AIROOT}/etc/calamares/settings.conf"
+CAL_LAUNCHER="${AIROOT}/usr/share/applications/install-nyxus.desktop"
+CAL_DESKTOP="${AIROOT}/etc/skel/Desktop/install-nyxus.desktop"
+
+[[ -f "${CAL_BRAND}/branding.desc" ]] \
+  && ok "calamares: branding.desc present" \
+  || fail "calamares: branding.desc missing"
+grep -q '^componentName: nyxus' "${CAL_BRAND}/branding.desc" 2>/dev/null \
+  && ok "calamares: componentName=nyxus" \
+  || fail "calamares: componentName not 'nyxus'"
+# Canonical DARK MIRROR colors must be present in branding.desc
+grep -qi '#a06bff' "${CAL_BRAND}/branding.desc" \
+  && ok "calamares: canonical accent #a06bff present" \
+  || fail "calamares: canonical accent #a06bff missing"
+
+[[ -f "${CAL_BRAND}/show.qml" ]] \
+  && ok "calamares: show.qml slideshow present" \
+  || fail "calamares: show.qml missing"
+# Slideshow sanity — must import QtQuick and define slides array
+grep -q 'import QtQuick' "${CAL_BRAND}/show.qml" 2>/dev/null \
+  && ok "calamares: show.qml imports QtQuick" \
+  || fail "calamares: show.qml missing QtQuick import"
+grep -q 'readonly property var slides' "${CAL_BRAND}/show.qml" 2>/dev/null \
+  && ok "calamares: slideshow has slides[] array" \
+  || fail "calamares: slideshow missing slides[] array"
+
+[[ -f "${CAL_BRAND}/logo.png" ]] && (( $(stat -c%s "${CAL_BRAND}/logo.png") > 256 )) \
+  && ok "calamares: logo.png present (>256B)" \
+  || fail "calamares: logo.png missing/empty"
+[[ -f "${CAL_BRAND}/welcome.png" ]] && (( $(stat -c%s "${CAL_BRAND}/welcome.png") > 256 )) \
+  && ok "calamares: welcome.png present (>256B)" \
+  || fail "calamares: welcome.png missing/empty"
+
+[[ -f "${CAL_SETTINGS}" ]] \
+  && grep -q '^branding: nyxus' "${CAL_SETTINGS}" \
+  && ok "calamares: settings.conf points to branding=nyxus" \
+  || fail "calamares: settings.conf missing or wrong branding"
+
+# Required module configs (skip 'summary' / 'mount' / 'partition' /
+# 'umount' / 'unpackfs' / 'machineid' / 'localecfg' — these are built-in
+# views or accept zero-config defaults).
+for m in welcome locale timezone keyboard users \
+         fstab displaymanager networkcfg hwclock \
+         services-systemd grubcfg bootloader \
+         packages shellprocess finished; do
+  [[ -f "${AIROOT}/etc/calamares/modules/${m}.conf" ]] \
+    || fail "calamares: missing module config ${m}.conf"
+done
+
+# Launcher (.desktop) — both system-wide and live-session desktop copy
+if [[ -f "${CAL_LAUNCHER}" ]] \
+   && grep -q '^Exec=pkexec calamares' "${CAL_LAUNCHER}" \
+   && grep -q '^TryExec=calamares' "${CAL_LAUNCHER}"; then
+  ok "calamares: install-nyxus.desktop launcher (system) valid"
+else
+  fail "calamares: install-nyxus.desktop launcher missing/wrong Exec"
+fi
+if [[ -f "${CAL_DESKTOP}" ]] \
+   && grep -q '^Exec=pkexec calamares' "${CAL_DESKTOP}"; then
+  ok "calamares: live-session desktop launcher present"
+else
+  fail "calamares: live-session desktop launcher missing"
+fi
+
+# Required Arch packages
+for pkg in calamares ckbcomp; do
+  grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
+    && ok "package: ${pkg}" \
+    || fail "missing package: ${pkg}"
+done
+
+# ── 13t. Tier 1 · GRUB Theme (rev 2026-05-14) ──────────────────────
+hd "13t. Tier 1 · GRUB Theme"
+GRUB_THEME_DIR="${AIROOT}/usr/share/grub/themes/nyxus"
+GRUB_DEFAULT="${AIROOT}/etc/default/grub"
+
+if [[ -f "${GRUB_THEME_DIR}/theme.txt" ]] \
+   && grep -q '^desktop-image:' "${GRUB_THEME_DIR}/theme.txt" \
+   && grep -q 'boot_menu' "${GRUB_THEME_DIR}/theme.txt"; then
+  ok "GRUB: theme.txt valid (desktop-image + boot_menu)"
+else
+  fail "GRUB: theme.txt missing/incomplete"
+fi
+grep -qi '#a06bff' "${GRUB_THEME_DIR}/theme.txt" 2>/dev/null \
+  && ok "GRUB: canonical accent #a06bff present" \
+  || fail "GRUB: canonical accent #a06bff missing from theme.txt"
+grep -qi '#3ad8ff' "${GRUB_THEME_DIR}/theme.txt" 2>/dev/null \
+  && ok "GRUB: canonical cyan #3ad8ff present" \
+  || fail "GRUB: canonical cyan #3ad8ff missing from theme.txt"
+
+# Required theme assets
+for f in background.png select_c.png select_e.png select_w.png \
+         terminal_box_c.png terminal_box_n.png terminal_box_s.png \
+         terminal_box_e.png terminal_box_w.png \
+         terminal_box_ne.png terminal_box_nw.png \
+         terminal_box_se.png terminal_box_sw.png; do
+  if [[ -f "${GRUB_THEME_DIR}/${f}" ]] \
+     && head -c 8 "${GRUB_THEME_DIR}/${f}" | grep -q $'\x89PNG'; then
+    :
+  else
+    fail "GRUB asset missing/not-PNG: ${f}"
+  fi
+done
+ok "GRUB: all 13 theme assets present + valid PNG"
+
+if [[ -f "${GRUB_DEFAULT}" ]] \
+   && grep -q '^GRUB_THEME=.*nyxus/theme.txt' "${GRUB_DEFAULT}" \
+   && grep -q 'splash' "${GRUB_DEFAULT}"; then
+  ok "GRUB: /etc/default/grub references nyxus theme + splash"
+else
+  fail "GRUB: /etc/default/grub missing theme/splash"
+fi
+
+# Calamares must propagate the theme to installed systems
+if grep -q 'GRUB_THEME.*nyxus' \
+   "${AIROOT}/etc/calamares/modules/grubcfg.conf" 2>/dev/null; then
+  ok "GRUB: calamares grubcfg propagates nyxus theme to install"
+else
+  fail "GRUB: calamares grubcfg does not propagate theme"
+fi
+
+grep -Eq '^grub$' "${PROFILE}/packages.x86_64" \
+  && ok "package: grub" \
+  || fail "missing package: grub"
+
+# ── 13u. Tier 1 · Notification Toasts (rev 2026-05-14) ─────────────
+hd "13u. Tier 1 · Notification Toasts"
+DUNST_RC="${AIROOT}/etc/skel/.config/dunst/dunstrc"
+SWAYNC_CSS="${AIROOT}/etc/skel/.config/swaync/style.css"
+
+if [[ -f "${DUNST_RC}" ]] \
+   && grep -q '^\[urgency_low\]'      "${DUNST_RC}" \
+   && grep -q '^\[urgency_normal\]'   "${DUNST_RC}" \
+   && grep -q '^\[urgency_critical\]' "${DUNST_RC}"; then
+  ok "dunst: dunstrc present with all 3 urgency sections"
+else
+  fail "dunst: dunstrc missing or incomplete"
+fi
+grep -qi '#a06bff' "${DUNST_RC}" 2>/dev/null \
+  && ok "dunst: canonical accent #a06bff present" \
+  || fail "dunst: canonical accent #a06bff missing"
+grep -qi 'JetBrains Mono' "${DUNST_RC}" 2>/dev/null \
+  && ok "dunst: JetBrains Mono font set" \
+  || fail "dunst: JetBrains Mono font not set (off-brand typography)"
+grep -qi 'corner_radius = 0' "${DUNST_RC}" 2>/dev/null \
+  && ok "dunst: sharp slab corners (corner_radius=0)" \
+  || fail "dunst: corners not flat — DARK MIRROR requires sharp edges"
+
+if [[ -f "${SWAYNC_CSS}" ]] \
+   && grep -q '\.notification' "${SWAYNC_CSS}" \
+   && grep -q '\.control-center' "${SWAYNC_CSS}"; then
+  ok "swaync: style.css present with .notification + .control-center"
+else
+  fail "swaync: style.css missing or incomplete"
+fi
+grep -qi '#a06bff' "${SWAYNC_CSS}" 2>/dev/null \
+  && ok "swaync: canonical accent #a06bff present" \
+  || fail "swaync: canonical accent #a06bff missing"
+grep -qi '#3ad8ff' "${SWAYNC_CSS}" 2>/dev/null \
+  && ok "swaync: canonical cyan #3ad8ff present" \
+  || fail "swaync: canonical cyan #3ad8ff missing"
+grep -qi 'border-radius: 0' "${SWAYNC_CSS}" 2>/dev/null \
+  && ok "swaync: sharp slab corners (border-radius:0)" \
+  || fail "swaync: rounded corners present — DARK MIRROR requires sharp edges"
+
+for pkg in dunst swaync; do
+  grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
+    && ok "package: ${pkg}" \
+    || fail "missing package: ${pkg}"
+done
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \
