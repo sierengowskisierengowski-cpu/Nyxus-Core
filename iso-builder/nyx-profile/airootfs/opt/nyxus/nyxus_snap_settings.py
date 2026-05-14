@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import socket
 import threading
 from pathlib import Path
@@ -29,11 +30,23 @@ except (ValueError, ImportError):
     HAVE_ADW = False
 from gi.repository import Gtk, GLib  # type: ignore
 
+try:
+    import tomllib
+except ImportError:  # pragma: no cover
+    import tomli as tomllib  # type: ignore
+
 
 HOME      = Path(os.environ.get("HOME", "/root"))
 XDG_RUN   = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
 SOCK_PATH = XDG_RUN / "nyxus-snap" / "cmd.sock"
 CFG_PATH  = HOME / ".config/nyxus/snap.toml"
+DEFAULT_OPTIONS: dict[str, Any] = {
+    "edge_px": 24,
+    "picker_hold_ms": 250,
+    "ghost_fade_ms": 140,
+    "snap_to_cell": True,
+    "remember_per_ws": True,
+}
 
 
 def rpc(op: str, **kw) -> dict:
@@ -71,6 +84,8 @@ class SnapSettingsPage(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.set_margin_start(16); self.set_margin_end(16)
         self.set_margin_top(16); self.set_margin_bottom(16)
+        self._loading_controls = False
+        self._option_widgets: dict[str, Gtk.Widget] = {}
 
         title = Gtk.Label(label="<span size='x-large' weight='bold'>NYXUS Snap</span>",
                           use_markup=True, xalign=0)
@@ -134,16 +149,21 @@ class SnapSettingsPage(Gtk.Box):
 
     def _spin(self, key: str, mn: int, mx: int, step: int) -> Gtk.SpinButton:
         sb = Gtk.SpinButton.new_with_range(mn, mx, step)
-        sb.set_value(0)
-        sb._key = key  # type: ignore[attr-defined]
+        sb.set_value(float(DEFAULT_OPTIONS.get(key, mn)))
+        sb.connect("value-changed", lambda s, k=key: self._on_option_changed(k, int(s.get_value())))
+        self._option_widgets[key] = sb
         return sb
 
     def _switch(self, key: str) -> Gtk.Switch:
-        sw = Gtk.Switch(); sw._key = key  # type: ignore[attr-defined]
+        sw = Gtk.Switch()
+        sw.set_active(bool(DEFAULT_OPTIONS.get(key, False)))
+        sw.connect("state-set", lambda _s, st, k=key: self._on_option_changed(k, bool(st)) or False)
+        self._option_widgets[key] = sw
         return sw
 
     # ── data ──
     def _refresh_all(self):
+        self._refresh_options()
         run_async(lambda: rpc("list"),       self._populate_layouts)
         run_async(lambda: rpc("snapshots"),  self._populate_snapshots)
 
@@ -189,6 +209,85 @@ class SnapSettingsPage(Gtk.Box):
 
     def _on_reload(self, _btn):
         run_async(lambda: rpc("reload"), lambda _r: self._refresh_all() or False)
+
+    def _load_options(self) -> dict[str, Any]:
+        opts = dict(DEFAULT_OPTIONS)
+        if not CFG_PATH.is_file():
+            return opts
+        try:
+            data = tomllib.loads(CFG_PATH.read_text())
+            raw = data.get("options", {}) if isinstance(data, dict) else {}
+            if isinstance(raw, dict):
+                for k in opts:
+                    if k in raw:
+                        opts[k] = raw[k]
+        except Exception:
+            pass
+        return opts
+
+    @staticmethod
+    def _toml_value(value: Any) -> str:
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        return str(int(value))
+
+    def _write_option(self, key: str, value: Any) -> None:
+        CFG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        text = CFG_PATH.read_text() if CFG_PATH.exists() else ""
+        lines = text.splitlines()
+        if not lines:
+            lines = ["[options]"]
+        in_options = False
+        options_seen = False
+        insert_at = len(lines)
+        key_pat = re.compile(rf"^\s*{re.escape(key)}\s*=")
+        key_line = f"{key} = {self._toml_value(value)}"
+        for i, ln in enumerate(lines):
+            st = ln.strip()
+            if st.startswith("[") and st.endswith("]"):
+                if st == "[options]":
+                    in_options = True
+                    options_seen = True
+                    insert_at = i + 1
+                    continue
+                if in_options:
+                    insert_at = i
+                    in_options = False
+            if in_options:
+                if key_pat.match(ln):
+                    lines[i] = key_line
+                    CFG_PATH.write_text("\n".join(lines).rstrip() + "\n")
+                    return
+                insert_at = i + 1
+        if options_seen:
+            lines.insert(insert_at, key_line)
+        else:
+            if lines and lines[-1].strip():
+                lines.append("")
+            lines.append("[options]")
+            lines.append(key_line)
+        CFG_PATH.write_text("\n".join(lines).rstrip() + "\n")
+
+    def _refresh_options(self) -> None:
+        self._loading_controls = True
+        try:
+            opts = self._load_options()
+            for k, widget in self._option_widgets.items():
+                v = opts.get(k, DEFAULT_OPTIONS.get(k))
+                if isinstance(widget, Gtk.SpinButton):
+                    widget.set_value(float(v))
+                elif isinstance(widget, Gtk.Switch):
+                    widget.set_active(bool(v))
+        finally:
+            self._loading_controls = False
+
+    def _on_option_changed(self, key: str, value: Any) -> None:
+        if self._loading_controls:
+            return
+        run_async(
+            lambda: (self._write_option(key, value), rpc("reload")),
+            lambda _r: False,
+        )
 
 
 def main():
