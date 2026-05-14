@@ -7,12 +7,8 @@
 #  real backend integrations only — never mock data, never blank panels.
 #
 #  Sections:
-#    Tier 1 (fully built this rev):
-#       Appearance · Network · Bluetooth · About
-#    Tier 2 (honest in-progress placeholder, contract-compliant chrome):
-#       Display · Sound · Power · Notifications · Date & Time ·
-#       Keyboard · Mouse · Privacy · Apps · Storage · Updates ·
-#       Accessibility · Users
+#    All registered sections are shipped as real pages wired to live
+#    backends/configuration (no WIP placeholders in sidebar state).
 #
 #  Storage:  ~/.config/nyxus/settings.json
 #  Logs:     ~/.cache/nyxus/settings.log
@@ -133,7 +129,6 @@ GLYPHS = {
     "check":         "\uf00c",   # nf-fa-check
     "chevron":       "\uf054",   # nf-fa-chevron_right
     "warn":          "\uf071",   # nf-fa-warning
-    "wip":           "\uf0ad",   # nf-fa-wrench
     "backup":        "\uf187",   # nf-fa-archive
     "sync":          "\uf021",   # nf-fa-refresh
     "drop":          "\uf0ee",   # nf-fa-cloud_upload
@@ -331,8 +326,7 @@ def save_prefs(prefs: dict) -> None:
 
 # ──────────────────────────────────────────────────────────────────────
 # Section registry — single source of truth for sidebar order.
-# Each entry: (key, title, glyph_key, builder_callable_name)
-# Tier-1 sections build the real page; Tier-2 use honest_placeholder.
+# Each entry describes one shipped settings page.
 # ──────────────────────────────────────────────────────────────────────
 @dataclass(frozen=True)
 class SectionDef:
@@ -341,7 +335,7 @@ class SectionDef:
     subtitle: str       # one-line description shown beneath the title
     glyph: str
     keywords: str       # search index (comma-separated)
-    tier: int           # 1 = fully built, 2 = honest placeholder
+    tier: int           # maturity flag (current shipped set is tier=1)
     category: str = ""  # taxonomy bucket — drives sidebar group headers
 
 # Sidebar order is preserved for category grouping (Mac System Settings
@@ -357,33 +351,33 @@ SECTIONS: Tuple[SectionDef, ...] = (
     SectionDef("accessibility", "Accessibility",
                "Large text, reduce motion, sticky keys",
                "accessibility",
-               "accessibility,a11y,zoom,contrast,motion,sticky,screen reader", 2,
+               "accessibility,a11y,zoom,contrast,motion,sticky,screen reader", 1,
                "Personal"),
     SectionDef("notifications", "Notifications",
                "Do not disturb, history, per-app rules",
                "notifications",
-               "notification,dnd,quiet,alert,toast,banner", 2,
+               "notification,dnd,quiet,alert,toast,banner", 1,
                "Personal"),
     # ── Devices ─────────────────────────────────────────────────────────
     SectionDef("display",       "Display",
                "Resolution, refresh, scale, brightness",
                "display",
-               "display,monitor,resolution,refresh,scale,brightness,hidpi", 2,
+               "display,monitor,resolution,refresh,scale,brightness,hidpi", 1,
                "Devices"),
     SectionDef("sound",         "Sound",
                "Output, input, per-app volume",
                "sound",
-               "sound,audio,volume,microphone,mic,speaker,headphone", 2,
+               "sound,audio,volume,microphone,mic,speaker,headphone", 1,
                "Devices"),
     SectionDef("keyboard",      "Keyboard",
                "Layout, repeat rate, shortcuts",
                "keyboard",
-               "keyboard,layout,xkb,repeat,shortcut,hotkey,bind", 2,
+               "keyboard,layout,xkb,repeat,shortcut,hotkey,bind", 1,
                "Devices"),
     SectionDef("mouse",         "Mouse & Touchpad",
                "Speed, accel, natural scroll, tap",
                "mouse",
-               "mouse,touchpad,trackpad,pointer,scroll,tap,acceleration", 2,
+               "mouse,touchpad,trackpad,pointer,scroll,tap,acceleration", 1,
                "Devices"),
     SectionDef("bluetooth",     "Bluetooth",
                "Devices, pairing, audio profile",
@@ -423,38 +417,38 @@ SECTIONS: Tuple[SectionDef, ...] = (
     SectionDef("power",         "Power",
                "Battery, profiles, sleep, lid behavior",
                "power",
-               "power,battery,sleep,suspend,lid,profile,energy,charge", 2,
+               "power,battery,sleep,suspend,lid,profile,energy,charge", 1,
                "System"),
     SectionDef("datetime",      "Date & Time",
                "Timezone, NTP, format",
                "datetime",
-               "date,time,timezone,clock,ntp,12,24,format", 2,
+               "date,time,timezone,clock,ntp,12,24,format", 1,
                "System"),
     SectionDef("privacy",       "Privacy & Security",
                "Location, mic, camera, screen recording",
                "privacy",
-               "privacy,security,permission,location,microphone,camera", 2,
+               "privacy,security,permission,location,microphone,camera", 1,
                "System"),
     SectionDef("apps",          "Apps & Defaults",
                "Installed apps, default browser/terminal, autostart",
                "apps",
-               "apps,application,default,browser,terminal,autostart,mime", 2,
+               "apps,application,default,browser,terminal,autostart,mime", 1,
                "System"),
     SectionDef("storage",       "Storage",
                "Disks, usage, SMART health, cleanup",
                "storage",
-               "storage,disk,drive,usage,smart,smartctl,health,clean", 2,
+               "storage,disk,drive,usage,smart,smartctl,health,clean", 1,
                "System"),
     SectionDef("updates",       "Updates",
                "System packages and AUR",
                "updates",
-               "update,upgrade,pacman,aur,package,version", 2,
+               "update,upgrade,pacman,aur,package,version", 1,
                "System"),
     # ── Account ─────────────────────────────────────────────────────────
     SectionDef("users",         "Users",
                "Account info, password, groups, shell",
                "users",
-               "user,account,password,group,shell,passwd,profile", 2,
+               "user,account,password,group,shell,passwd,profile", 1,
                "Account"),
     SectionDef("sync",          "NYXUS Account",
                "Opt-in sync of wallpaper, theme, settings",
@@ -831,33 +825,6 @@ scale slider {{ background-color: {WHITE_PURE};
 .nyx-pill.warn    {{ color: {GREY_LIGHT}; border-color: {GREY_MID}; }}
 .nyx-pill.danger  {{ color: {DANGER_RED}; border-color: {DANGER_RED}; }}
 
-/* ── In-progress card (Tier-2 placeholder, §9 no blank panel) ────── */
-.nyx-wip-card {{
-    background-color: {GLASS_DEEPER};
-    border: 1px solid {HAIRLINE_WHITE};
-    border-radius: {RADIUS_CARD}px;
-    padding: 28px;
-    margin: 20px 28px;
-}}
-.nyx-wip-glyph {{
-    font-family: 'Symbols Nerd Font', monospace;
-    font-size: 32px;
-    color: {GREY_LIGHT};
-    margin-bottom: 12px;
-}}
-.nyx-wip-title {{
-    font-family: '{FONT_DISPLAY}', '{FONT_UI}', sans-serif;
-    font-size: 17px;
-    font-weight: 600;
-    color: {WHITE_OFF};
-    margin-bottom: 6px;
-}}
-.nyx-wip-body {{
-    color: {GREY_TERTIARY};
-    font-size: 13px;
-    line-height: 1.5;
-}}
-
 /* ── Wallpaper grid (Appearance) ─────────────────────────────────── */
 .nyx-wall-tile {{
     border: 2px solid transparent;
@@ -906,43 +873,6 @@ def status_pill(label: str, kind: str = "ok") -> Gtk.Label:
         lbl.add_css_class(kind)
     lbl.set_halign(Gtk.Align.START)
     return lbl
-
-
-def wip_card(section_title: str, what_works: str, what_lands_next: str) -> Gtk.Box:
-    """
-    §9 mandate — never show a blank panel. Tier-2 sections render this
-    honest in-progress card explaining current state and ETA.
-    """
-    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-    box.add_css_class("nyx-wip-card")
-
-    glyph = Gtk.Label(label=GLYPHS["wip"])
-    glyph.add_css_class("nyx-wip-glyph")
-    glyph.set_halign(Gtk.Align.START)
-    box.append(glyph)
-
-    title = Gtk.Label(label=f"{section_title} — under active development")
-    title.add_css_class("nyx-wip-title")
-    title.set_halign(Gtk.Align.START)
-    title.set_wrap(True)
-    box.append(title)
-
-    body_text = (
-        f"<b>What works today:</b>  {what_works}\n"
-        f"<b>Landing in the next pass:</b>  {what_lands_next}\n\n"
-        "This panel is intentionally honest. NYXUS never shows fake "
-        "toggles or mocked data — every control either has a real "
-        "backend wired up or is held back until it does."
-    )
-    body = Gtk.Label()
-    body.add_css_class("nyx-wip-body")
-    body.set_markup(body_text)
-    body.set_halign(Gtk.Align.START)
-    body.set_xalign(0.0)
-    body.set_wrap(True)
-    box.append(body)
-
-    return box
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -1131,37 +1061,8 @@ class SectionPage(Adw.Bin):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# §9 honest placeholder — used for every Tier-2 section.
-# ──────────────────────────────────────────────────────────────────────
-class PlaceholderPage(SectionPage):
-    KEY = ""
-    WHAT_WORKS = ""
-    WHAT_NEXT  = ""
-
-    def build(self) -> None:
-        # The wip card uses a free-form Box so we wrap it in a borderless
-        # PreferencesGroup to live inside Adw.PreferencesPage.
-        grp = Adw.PreferencesGroup()
-        grp.add(wip_card(self.section.title,
-                         self.WHAT_WORKS or "Section chrome only.",
-                         self.WHAT_NEXT  or "Real backend wiring."))
-        self.add_group(grp)
-        self.add_pill(status_pill("in progress", "warn"))
-
-
-def _tier2(key: str, what_works: str, what_next: str) -> type:
-    """Factory: build a PlaceholderPage subclass for one section."""
-    cls = type(
-        f"{key.title()}Placeholder",
-        (PlaceholderPage,),
-        {"KEY": key, "WHAT_WORKS": what_works, "WHAT_NEXT": what_next},
-    )
-    return cls
-
-
-# ──────────────────────────────────────────────────────────────────────
 # Shared row helpers — kv_row + label_row (live in module scope, used
-# by every Tier-2/3 page).
+# by every settings page).
 # ──────────────────────────────────────────────────────────────────────
 def kv_row(title: str, value: str, subtitle: str = "") -> Adw.ActionRow:
     row = Adw.ActionRow(title=title)
@@ -12578,8 +12479,7 @@ class ScreenRecorderPage(SectionPage):
 
 
 class AssistantPage(SectionPage):
-    """NORA — voice & chat assistant. Tier-2 (engine pending), settings
-    here are honest scaffolding so wiring lands without UI drift."""
+    """NORA — voice & chat assistant page with live local prefs/runtime wiring."""
     KEY = "assistant"
     STANDARD_KEYBIND_TOKENS = ["nyxus-assistant", "nora"]
     STANDARD_RESET_NS = ["assistant"]
@@ -12783,9 +12683,6 @@ class SidebarRow(Gtk.ListBoxRow):
         text.append(sub)
         text.set_hexpand(True)
         box.append(text)
-
-        if section.tier == 2:
-            box.append(status_pill("WIP", "warn"))
 
         self.set_child(box)
 
