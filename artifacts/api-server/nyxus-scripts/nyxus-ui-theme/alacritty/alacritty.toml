@@ -1,11 +1,3 @@
-# ============================================================
-#  NYXUS — Alacritty Terminal Config
-#  ~/.config/alacritty/alacritty.toml
-#
-#  Silent. Dark. Purely Functional.
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
-# ============================================================
-
 [window]
 opacity            = 0.88
 padding.x          = 16
@@ -23,7 +15,6 @@ general  = "Alacritty"
 history    = 10000
 multiplier = 5
 
-# ── Font ─────────────────────────────────────────────────────
 [font]
 size = 11.5
 
@@ -47,11 +38,6 @@ style  = "Bold Italic"
 x = 0
 y = 2
 
-[font.glyph_offset]
-x = 0
-y = 0
-
-# ── Cursor ───────────────────────────────────────────────────
 [cursor]
 style.shape      = "Block"
 style.blinking   = "Always"
@@ -59,96 +45,88 @@ blink_interval   = 500
 unfocused_hollow = true
 thickness        = 0.15
 
-# ── Selection ────────────────────────────────────────────────
 [selection]
 save_to_clipboard = true
 semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
 
-# ── Mouse ────────────────────────────────────────────────────
 [mouse]
 hide_when_typing = true
 
-# ── Bell ─────────────────────────────────────────────────────
 [bell]
 animation = "EaseOutExpo"
 duration  = 0
-color     = "#c8ccd6"
+color     = "#f4ead5"
 
-# ── Color Scheme — NYXUS ─────────────────────────────────────
 [colors]
 draw_bold_text_with_bright_colors = true
 
 [colors.primary]
-background = "#0a0e16"
-foreground = "#C8C0C0"
-dim_foreground = "#888090"
+background     = "#0a0a14"
+foreground     = "#f4ead5"
+dim_foreground = "#f4ead58c"
 
 [colors.cursor]
-text   = "#0a0e16"
-cursor = "#c8ccd6"
+text   = "#050308"
+cursor = "#f4ead5"
 
 [colors.vi_mode_cursor]
-text   = "#0a0e16"
-cursor = "#e8edf5"
+text   = "#050308"
+cursor = "#f4ead5"
 
 [colors.selection]
-text       = "#0a0e16"
-background = "#7B5EA7"
+text       = "#050308"
+background = "#f4ead5"
 
 [colors.search.matches]
-foreground = "#0a0e16"
-background = "#c8ccd6"
+foreground = "#050308"
+background = "#f4ead5"
 
 [colors.search.focused_match]
-foreground = "#0a0e16"
-background = "#e8edf5"
+foreground = "#050308"
+background = "#f4ead5"
 
 [colors.footer_bar]
-background = "#0d0a12"
-foreground = "#888090"
+background = "#050308"
+foreground = "#f4ead58c"
 
 [colors.hints.start]
-foreground = "#0a0e16"
-background = "#e8edf5"
+foreground = "#050308"
+background = "#f4ead5"
 
 [colors.hints.end]
-foreground = "#0a0e16"
-background = "#e8edf5"
+foreground = "#050308"
+background = "#f4ead5"
 
-# ── Normal palette ───────────────────────────────────────────
 [colors.normal]
-black   = "#0d0a12"
+black   = "#050308"
 red     = "#f87171"
-green   = "#c8ccd6"
-yellow  = "#e8edf5"
-blue    = "#818cf8"
-magenta = "#c8ccd6"
-cyan    = "#c8ccd6"
-white   = "#C8C0C0"
+green   = "#f4ead5"
+yellow  = "#f4ead5"
+blue    = "#1a1a28"
+magenta = "#f4ead5"
+cyan    = "#f4ead5"
+white   = "#f4ead5"
 
-# ── Bright palette ───────────────────────────────────────────
 [colors.bright]
-black   = "#3a3248"
-red     = "#fca5a5"
-green   = "#6ee7b7"
-yellow  = "#fcd34d"
-blue    = "#a5b4fc"
-magenta = "#c8ccd6"
-cyan    = "#67e8f9"
-white   = "#e8e4f0"
+black   = "#0a0a14"
+red     = "#f87171"
+green   = "#f4ead5"
+yellow  = "#f4ead5"
+blue    = "#1a1a28"
+magenta = "#f4ead5"
+cyan    = "#f4ead5"
+white   = "#f4ead5"
 
-# ── Dim palette ──────────────────────────────────────────────
 [colors.dim]
-black   = "#050408"
-red     = "#7f1d1d"
-green   = "#064e3b"
-yellow  = "#78350f"
-blue    = "#1e1b4b"
-magenta = "#4a1d7a"
-cyan    = "#164e63"
-white   = "#555060"
+black   = "#000000"
+red     = "#f87171"
+green   = "#f4ead58c"
+yellow  = "#f4ead58c"
+blue    = "#1a1a28"
+magenta = "#f4ead58c"
+cyan    = "#f4ead58c"
+white   = "#f4ead58c"
 
-# ── Key bindings ─────────────────────────────────────────────
 [[keyboard.bindings]]
 key    = "V"
 mods   = "Control|Shift"

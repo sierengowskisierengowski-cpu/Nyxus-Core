@@ -1,11 +1,4 @@
-# NYXUS · dunst configuration · rev 2026-05-14 r2
-#
-# Canonical DARK MIRROR palette: #a06bff purple + #3ad8ff cyan +
-# #f87171 critical. JetBrains Mono throughout — matches every other
-# NYXUS surface. Sharp slab edges (no border radius), top-right
-# anchor, 6 simultaneous notifications, urgency-aware timeouts.
-#
-# Reload: pkill -USR1 dunst   |   systemctl --user restart dunst
+# NYXUS dunst configuration · Sprint E Total Identity
 
 [global]
     monitor = 0
@@ -23,22 +16,22 @@
     progress_bar_frame_width = 1
     progress_bar_min_width = 240
     progress_bar_max_width = 420
-    progress_bar_corner_radius = 0
+    progress_bar_corner_radius = 3
 
     indicate_hidden = yes
     transparency = 4
-    separator_height = 2
+    separator_height = 1
     padding = 14
     horizontal_padding = 16
     text_icon_padding = 12
     frame_width = 1
-    frame_color = "#1f1b2c"
+    frame_color = "#f4ead540"
     gap_size = 6
-    separator_color = frame
+    separator_color = "#1a1a28"
     sort = yes
 
-    font = JetBrains Mono 11
-    line_height = 4
+    font = Inter 11
+    line_height = 3
     markup = full
     format = "<b>%a · %s</b>\n%b"
     alignment = left
@@ -53,7 +46,7 @@
     icon_position = left
     min_icon_size = 32
     max_icon_size = 64
-    icon_corner_radius = 0
+    icon_corner_radius = 3
     icon_path = /usr/share/icons/Adwaita/32x32/status/:/usr/share/icons/Adwaita/32x32/devices/:/usr/share/icons/hicolor/32x32/apps/
 
     sticky_history = yes
@@ -64,7 +57,7 @@
     always_run_script = true
     title = NYXUS Notifications
     class = Dunst
-    corner_radius = 0
+    corner_radius = 3
     ignore_dbusclose = false
 
     force_xwayland = false
@@ -77,55 +70,24 @@
     per_monitor_dpi = false
 
 [urgency_low]
-    background    = "#0a0a14"
-    foreground    = "#7b7390"
-    frame_color   = "#1f1b2c"
+    background    = "#0a0a14f7"
+    foreground    = "#f4ead58c"
+    frame_color   = "#f4ead540"
     timeout       = 5
     default_icon  = dialog-information
 
 [urgency_normal]
-    background    = "#0a0a14"
-    foreground    = "#e9e5f2"
-    frame_color   = "#a06bff"
+    background    = "#0a0a14f7"
+    foreground    = "#f4ead5"
+    frame_color   = "#f4ead540"
     timeout       = 8
     override_pause_level = 30
     default_icon  = dialog-information
 
 [urgency_critical]
-    background    = "#0a0a14"
-    foreground    = "#e9e5f2"
+    background    = "#0a0a14f7"
+    foreground    = "#f4ead5"
     frame_color   = "#f87171"
     timeout       = 0
     override_pause_level = 60
     default_icon  = dialog-warning
-
-# ─── Per-app overrides — match NYXUS app classes ─────────────────────
-[nyxus_terminal]
-    appname     = nyxus-terminal
-    foreground  = "#e9e5f2"
-    frame_color = "#3ad8ff"
-
-[nyxus_settings]
-    appname     = nyxus-settings
-    foreground  = "#e9e5f2"
-    frame_color = "#a06bff"
-
-[nyxus_control]
-    appname     = nyxus-control
-    foreground  = "#e9e5f2"
-    frame_color = "#a06bff"
-
-[nyxus_doctor]
-    appname     = nyxus-doctor
-    foreground  = "#e9e5f2"
-    frame_color = "#3ad8ff"
-
-[nyxus_updater]
-    appname     = nyxus-updater
-    foreground  = "#e9e5f2"
-    frame_color = "#a06bff"
-
-[nyxus_sound]
-    appname     = nyxus-sound
-    foreground  = "#e9e5f2"
-    frame_color = "#3ad8ff"
