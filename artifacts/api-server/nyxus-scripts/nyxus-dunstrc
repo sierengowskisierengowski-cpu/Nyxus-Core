@@ -104,7 +104,10 @@
 [urgency_critical]
     background    = "#0a0a0a"
     foreground    = "#fff8e0"
-    frame_color   = "#fff8e0"
+    # Sprint K-A rev r16: critical urgency frame is copper #b8865a so it
+    # reads distinct from the cream-framed normal alerts WITHOUT using red.
+    # Keep in sync with airootfs copy — verify-profile §15ad+parity guard.
+    frame_color   = "#b8865a"
     frame_width   = 3
     timeout       = 0
     override_pause_level = 60
