@@ -12,7 +12,7 @@
 | Path | Purpose |
 |---|---|
 | `eww.yuck` | Widget tree, windows, defpoll variables |
-| `eww.scss` | DARK MIRROR theme (violet `#a06bff`, cyan `#3ad8ff`) |
+| `eww.scss` | DARK MIRROR theme (violet `#f4ead5`, cyan `#e8edf5`) |
 | `nyxus.conf` | User-tunable config (sourced by launcher + service) |
 | `scripts/*.sh` | Data probes called by `defpoll` |
 | `~/.config/systemd/user/nyxus-eww.service` | Auto-start + restart-on-failure |
@@ -101,8 +101,8 @@ The Python modules **remain installed** until the audit confirms parity, then th
 ## 8. Theme tokens
 
 ```
---violet  #a06bff
---cyan    #3ad8ff
+--violet  #f4ead5
+--cyan    #e8edf5
 --ink     #05060a
 --paper   #c8ccd6
 --mute    #5a6278

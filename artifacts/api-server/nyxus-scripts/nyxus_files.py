@@ -45,7 +45,7 @@ _h = logging.handlers.RotatingFileHandler(LOG_FILE, maxBytes=512_000,
 _h.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
 log.addHandler(_h)
 
-GOLD = "#d4b87a"
+GOLD = "#f4ead5"
 INK = "#080a10"
 
 

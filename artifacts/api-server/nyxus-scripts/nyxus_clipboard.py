@@ -119,7 +119,7 @@ def cliphist_status() -> int:
     return 0
 
 
-GOLD = "#d4b87a"
+GOLD = "#f4ead5"
 INK = "#080a10"
 INK2 = "#10131c"
 TXT = "#e6e8ee"
@@ -146,8 +146,8 @@ CSS = f"""
     border: 1px solid transparent;
 }}
 .nyxus-clip-row:hover {{
-    border-color: rgba(212, 184, 122, 0.55);
-    background: rgba(212, 184, 122, 0.10);
+    border-color: rgba(244, 234, 213, 0.55);
+    background: rgba(244, 234, 213, 0.10);
 }}
 .nyxus-clip-row.selected {{
     background: {GOLD};

@@ -273,7 +273,7 @@ entry.welcome-input:focus, dropdown.welcome-input > button:focus {
 }
 .welcome-error {
   font-size: 11px;
-  color: #ff8b9e;
+  color: #d96b6b;
   margin: 6px 2px 0 2px;
 }
 

@@ -116,7 +116,7 @@ C_BLUE   = (0.91,  0.93,  0.96 )   # #e8edf5 white-off (was azure)
 C_GREEN  = (0.91,  0.93,  0.96 )   # #e8edf5 white-off (was lime)
 C_YELLOW = (1.00,  1.00,  1.00 )   # #ffffff white-pure (was sodium)
 C_ORANGE = (0.78,  0.80,  0.84 )   # #c8ccd6 grey-light (was amber)
-C_RED    = (1.00,  0.39,  0.39 )   # #ff6464 red — RESERVED for errors only
+C_RED    = (1.00,  0.39,  0.39 )   # #d96b6b red — RESERVED for errors only
 PALETTE  = [C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE]
 HIST     = 360
 

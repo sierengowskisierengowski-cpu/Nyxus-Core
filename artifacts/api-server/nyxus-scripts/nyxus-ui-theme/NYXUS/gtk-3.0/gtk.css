@@ -1,591 +1,260 @@
 /* ============================================================
-   NYXUS GTK3 Theme
+   NYXUS GTK3 Theme — DARK MIRROR · CREAM + HANDWRITTEN
    ~/.themes/NYXUS/gtk-3.0/gtk.css
+   (LOCKED · rev 2026-05-14 r15)
 
-   Background: #0f1420  Text: #c8ccd6  Accent: #6a6e78
-   Pink Hover: #6a6e78  Font: JetBrains Mono Nerd Font
+   Mirror of the GTK4 theme. Keep palette + radii + fonts in
+   lockstep with gtk-4.0/gtk.css and nyxus-palette.css. GTK3
+   selector vocabulary differs subtly — this file ports the
+   visual contract, not the literal CSS rules.
 
-   Silent. Dark. Purely Functional.
    © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ============================================================ */
 
-/* ── Color variables ───────────────────────────────────────── */
-@define-color bg_color       #0f1420;
-@define-color bg_alt         #0a0a0a;
-@define-color bg_hover       #0f1420;
-@define-color bg_active      #1a1e2a;
-@define-color bg_selected    #6a6e78;
-@define-color accent         #6a6e78;
-@define-color accent_light   #9aa0ad;
-@define-color pink           #6a6e78;
-@define-color pink_glow      rgba(8, 12, 20, 0.15);
-@define-color accent_glow    rgba(8, 12, 20, 0.18);
-@define-color text           #c8ccd6;
-@define-color text_dim       #6a6e78;
-@define-color text_disabled  #3a3e4a;
-@define-color border         #1a1e2a;
-@define-color border_accent  #2a2e3a;
-@define-color red            #9aa0ad;
-@define-color green          #c8ccd6;
-@define-color yellow         #e8edf5;
-@define-color cyan           #c8ccd6;
+/* ── INLINED nyxus-palette.css (rev r15) — keep in lockstep ─ */
+@define-color nyx_white         #ffffff;
+@define-color nyx_white_off     #e8edf5;
+@define-color nyx_grey_light    #c8ccd6;
+@define-color nyx_grey_mid      #9aa0ad;
+@define-color nyx_grey_tertiary #6a6e78;
+@define-color nyx_ink_faded     #0a0a0a;
+@define-color nyx_ink_black     #000000;
+@define-color nyx_cream         #f4ead5;
+@define-color nyx_cream_soft    #fbf3e2;
+@define-color nyx_cream_deep    #c4b491;
+@define-color nyx_cream_glow_15 rgba(244, 234, 213, 0.15);
+@define-color nyx_cream_glow_28 rgba(244, 234, 213, 0.28);
+@define-color nyx_cream_glow_45 rgba(244, 234, 213, 0.45);
+@define-color nyx_cream_edge_55 rgba(244, 234, 213, 0.55);
+@define-color nyx_danger        #d96b6b;
+@define-color nyx_black_smoke   rgba(14, 14, 22, 0.55);
+@define-color nyx_black_ink     rgba(8,  8,  14, 0.78);
+@define-color nyx_black_void    rgba(0,  0,  0,  0.92);
+@define-color nyx_black_smoke_solid #0e0e16;
+@define-color nyx_black_ink_solid   #08080e;
+@define-color nyx_black_void_solid  #000000;
+@define-color nyx_glow_soft     rgba(255, 255, 255, 0.45);
+@define-color nyx_glow_bright   rgba(255, 255, 255, 0.85);
+@define-color nyx_hairline_white rgba(255, 255, 255, 0.10);
+@define-color nyx_hairline_cream rgba(244, 234, 213, 0.22);
 
-/* ── Reset & Base ──────────────────────────────────────────── */
+@define-color theme_bg_color           @nyx_black_smoke_solid;
+@define-color theme_fg_color           @nyx_white_off;
+@define-color theme_base_color         @nyx_black_smoke_solid;
+@define-color theme_text_color         @nyx_white_off;
+@define-color theme_selected_bg_color  @nyx_cream;
+@define-color theme_selected_fg_color  @nyx_ink_black;
+@define-color insensitive_bg_color     @nyx_black_smoke_solid;
+@define-color insensitive_fg_color     @nyx_grey_tertiary;
+@define-color borders                  @nyx_hairline_white;
+
 * {
-  font-family: "JetBrains Mono Nerd Font", "JetBrains Mono", monospace;
-  font-size: 11px;
-  -gtk-outline-radius: 4px;
-  outline-color: transparent;
-  box-shadow: none;
-  text-shadow: none;
+  font-family: "Inter", "Inter Display", "DejaVu Sans", sans-serif;
+  font-size: 12px;
   -gtk-icon-shadow: none;
-  transition: all 120ms ease;
-}
-
-/* ── Window & Base ─────────────────────────────────────────── */
-window,
-.background,
-.base {
-  background-color: @bg_color;
-  color: @text;
-}
-
-.window-frame {
-  border: 1px solid @border;
-  border-radius: 6px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.8);
-}
-
-/* ── Header Bar / Title Bar ────────────────────────────────── */
-headerbar,
-.titlebar {
-  background-color: @bg_alt;
-  color: @text;
-  border-bottom: 1px solid @border;
-  padding: 4px 8px;
-  min-height: 36px;
-}
-
-headerbar .title {
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: @text;
-}
-
-headerbar .subtitle {
-  font-size: 10px;
-  color: @text_dim;
-}
-
-/* Headerbar window controls */
-headerbar button.titlebutton {
-  background: transparent;
-  border: 1px solid @border_accent;
-  border-radius: 50%;
-  padding: 4px;
-  min-width: 14px;
-  min-height: 14px;
-  color: @text_dim;
-}
-
-headerbar button.titlebutton:hover {
-  background-color: @pink;
-  border-color: @pink;
-  color: @bg_color;
-}
-
-headerbar button.titlebutton.close:hover {
-  background-color: @red;
-  border-color: @red;
-}
-
-/* ── Buttons ────────────────────────────────────────────────── */
-button {
-  background-color: @bg_alt;
-  color: @text;
-  border: 1px solid @border_accent;
-  border-radius: 4px;
-  padding: 5px 14px;
+  text-shadow: none;
   outline: none;
 }
 
-button:hover {
-  background-color: @bg_hover;
-  border-color: @pink;
-  color: @pink;
+window, .background {
+  background-color: @theme_bg_color;
+  color: @theme_fg_color;
 }
 
-button:active,
-button:checked {
-  background-color: @bg_active;
-  border-color: @accent;
-  color: @accent_light;
+headerbar {
+  background-color: @nyx_black_ink_solid;
+  color: @nyx_white_off;
+  border-bottom: 1px solid @nyx_hairline_white;
+  padding: 4px 8px;
+  min-height: 40px;
+}
+headerbar .title {
+  font-family: "Caveat", "Caveat Brush", cursive;
+  font-size: 18px;
+  font-weight: 700;
+  color: @nyx_white_off;
 }
 
-button.suggested-action {
-  background-color: @accent;
-  border-color: @accent;
-  color: #ffffff;
-}
-
-button.suggested-action:hover {
-  background-color: @pink;
-  border-color: @pink;
-  color: #ffffff;
-}
-
-button.destructive-action {
-  background-color: rgba(255, 255, 255, 0.12);
-  border-color: @red;
-  color: @red;
-}
-
-button.destructive-action:hover {
-  background-color: @red;
-  color: @bg_color;
-}
-
-button:disabled,
-button.flat:disabled {
-  background-color: transparent;
-  border-color: @border;
-  color: @text_disabled;
-}
-
-button.flat {
-  background-color: transparent;
-  border-color: transparent;
-  color: @text_dim;
-}
-
-button.flat:hover {
-  background-color: @bg_hover;
-  border-color: transparent;
-  color: @pink;
-}
-
-/* ── Text Entry ─────────────────────────────────────────────── */
-entry,
-spinbutton entry {
-  background-color: @bg_alt;
-  color: @text;
-  border: 1px solid @border_accent;
-  border-radius: 4px;
-  padding: 6px 10px;
-  caret-color: @accent;
-}
-
-entry:focus,
-entry:focus-within {
-  border-color: @accent;
-  box-shadow: 0 0 0 2px rgba(8, 12, 20, 0.25);
-}
-
-entry:disabled {
-  background-color: @bg_color;
-  color: @text_disabled;
-  border-color: @border;
-}
-
-entry selection {
-  background-color: @bg_selected;
-  color: @bg_color;
-}
-
-entry.error {
-  border-color: @red;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
-}
-
-/* ── Labels ─────────────────────────────────────────────────── */
-label {
-  color: @text;
-}
-
-label.dim-label,
-label.caption,
-.caption {
-  color: @text_dim;
-  font-size: 10px;
-}
-
-label:disabled {
-  color: @text_disabled;
-}
-
-/* ── Menus ──────────────────────────────────────────────────── */
-menu,
-.menu,
-.context-menu {
-  background-color: @bg_alt;
-  color: @text;
-  border: 1px solid @border_accent;
-  border-radius: 4px;
-  padding: 4px 0;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
-}
-
-menuitem {
-  padding: 5px 14px;
-  color: @text;
-  border-radius: 0;
-}
-
-menuitem:hover {
-  background-color: @bg_hover;
-  color: @pink;
-}
-
-menuitem:disabled,
-menuitem label:disabled {
-  color: @text_disabled;
-}
-
-separator,
-menuitem separator {
-  background-color: @border;
-  min-height: 1px;
-  margin: 4px 0;
-}
-
-/* ── Scrollbars ─────────────────────────────────────────────── */
-scrollbar {
-  background-color: transparent;
-  border: none;
-}
-
-scrollbar slider {
-  background-color: @border_accent;
-  border-radius: 8px;
-  min-width: 4px;
-  min-height: 4px;
-  margin: 2px;
-}
-
-scrollbar slider:hover {
-  background-color: @accent;
-}
-
-scrollbar slider:active {
-  background-color: @accent_light;
-}
-
-scrollbar.horizontal slider {
-  min-height: 4px;
-}
-
-scrollbar.vertical slider {
-  min-width: 4px;
-}
-
-/* ── Notebook / Tabs ────────────────────────────────────────── */
-notebook {
-  background-color: @bg_color;
-}
-
-notebook header,
-notebook tabs {
-  background-color: @bg_alt;
-  border-bottom: 1px solid @border;
-}
-
-notebook tab {
-  padding: 6px 16px;
-  color: @text_dim;
-  border-bottom: 2px solid transparent;
-}
-
-notebook tab:hover {
-  color: @pink;
-  background-color: @bg_hover;
-}
-
-notebook tab:checked {
-  color: @accent_light;
-  border-bottom: 2px solid @accent;
-  background-color: @bg_color;
-}
-
-/* ── Check & Radio ──────────────────────────────────────────── */
-checkbutton check,
-radiobutton radio {
-  background-color: @bg_alt;
-  border: 1px solid @border_accent;
+button {
+  background-image: none;
+  background-color: @nyx_black_ink_solid;
+  color: @nyx_white_off;
+  border: 1px solid @nyx_hairline_white;
   border-radius: 3px;
-  min-width: 16px;
-  min-height: 16px;
+  padding: 6px 16px;
+  font-family: "Inter", sans-serif;
+}
+button:hover {
+  background-color: @nyx_black_void_solid;
+  border-color: @nyx_cream_edge_55;
+  color: @nyx_cream_soft;
+  box-shadow: 0 0 14px @nyx_cream_glow_15;
+}
+button:active, button:checked {
+  background-color: @nyx_cream;
+  border-color: @nyx_cream;
+  color: @nyx_ink_black;
+}
+button.suggested-action {
+  background-color: @nyx_cream;
+  border-color: @nyx_cream;
+  color: @nyx_ink_black;
+  font-weight: 600;
+}
+button.destructive-action {
+  background-color: rgba(217, 107, 107, 0.12);
+  border-color: @nyx_danger;
+  color: @nyx_danger;
+}
+button:disabled {
+  background-color: transparent;
+  color: @nyx_grey_tertiary;
+  border-color: @nyx_hairline_white;
 }
 
-checkbutton check:hover,
-radiobutton radio:hover {
-  border-color: @pink;
+entry {
+  background-color: @nyx_black_ink_solid;
+  color: @nyx_white_off;
+  border: 1px solid @nyx_hairline_white;
+  border-radius: 3px;
+  padding: 6px 10px;
+  caret-color: @nyx_cream;
+}
+entry:focus {
+  border-color: @nyx_cream;
+  box-shadow: 0 0 14px @nyx_cream_glow_28;
+}
+entry selection {
+  background-color: @nyx_cream;
+  color: @nyx_ink_black;
 }
 
-checkbutton check:checked,
-radiobutton radio:checked {
-  background-color: @accent;
-  border-color: @accent;
-  color: #ffffff;
+treeview, .view, textview {
+  background-color: @nyx_black_smoke_solid;
+  color: @nyx_white_off;
+}
+treeview:selected,
+.view:selected,
+textview:selected {
+  background-color: @nyx_cream;
+  color: @nyx_ink_black;
 }
 
-checkbutton label,
-radiobutton label {
-  color: @text;
-  padding-left: 6px;
-}
-
-/* ── Switch ─────────────────────────────────────────────────── */
-switch {
-  background-color: @bg_active;
-  border: 1px solid @border_accent;
-  border-radius: 14px;
-  min-width: 40px;
-  min-height: 20px;
-}
-
-switch:checked {
-  background-color: @accent;
-  border-color: @accent;
-}
-
-switch:hover {
-  border-color: @pink;
-}
-
-switch slider {
-  background-color: @text_dim;
-  border-radius: 50%;
-  min-width: 14px;
-  min-height: 14px;
+scrollbar { background-color: transparent; }
+scrollbar slider {
+  background-color: @nyx_hairline_white;
+  border-radius: 3px;
+  min-width: 4px;
+  min-height: 4px;
   margin: 2px;
 }
+scrollbar slider:hover  { background-color: @nyx_cream_edge_55; }
+scrollbar slider:active { background-color: @nyx_cream; }
 
-switch:checked slider {
-  background-color: #ffffff;
+menu, menubar, .menu {
+  background-color: @nyx_black_void_solid;
+  color: @nyx_white_off;
+  border: 1px solid @nyx_hairline_cream;
+  border-radius: 3px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.65),
+              0 0 12px @nyx_cream_glow_15;
+}
+menuitem {
+  padding: 5px 12px;
+  border-radius: 3px;
+}
+menuitem:hover {
+  background-color: @nyx_cream_glow_15;
+  color: @nyx_cream_soft;
 }
 
-/* ── Progress & Scale ───────────────────────────────────────── */
+tooltip, .tooltip {
+  background-color: @nyx_black_void_solid;
+  color: @nyx_white_off;
+  border: 1px solid @nyx_hairline_cream;
+  border-radius: 3px;
+  padding: 5px 9px;
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+}
+
 progressbar trough {
-  background-color: @bg_active;
-  border-radius: 4px;
+  background-color: @nyx_black_void_solid;
+  border-radius: 3px;
   min-height: 6px;
 }
-
 progressbar progress {
-  background-color: @accent;
-  border-radius: 4px;
-}
-
-progressbar progress.pulse {
-  background-color: @pink;
+  background-color: @nyx_cream;
+  border-radius: 3px;
+  box-shadow: 0 0 10px @nyx_cream_glow_28;
 }
 
 scale trough {
-  background-color: @bg_active;
-  border-radius: 6px;
+  background-color: @nyx_black_void_solid;
+  border-radius: 3px;
   min-height: 4px;
 }
-
-scale highlight {
-  background-color: @accent;
-  border-radius: 6px;
+scale trough highlight {
+  background-color: @nyx_cream;
+  border-radius: 3px;
 }
-
 scale slider {
-  background-color: @accent_light;
-  border: 1px solid @accent;
+  background-color: @nyx_cream_soft;
+  border: 1px solid @nyx_cream;
   border-radius: 50%;
   min-width: 14px;
   min-height: 14px;
 }
 
-scale slider:hover {
-  background-color: @pink;
-  border-color: @pink;
+switch {
+  background-color: @nyx_black_void_solid;
+  border: 1px solid @nyx_hairline_white;
+  border-radius: 14px;
+}
+switch:checked {
+  background-color: @nyx_cream;
+  border-color: @nyx_cream;
+}
+switch slider {
+  background-color: @nyx_white_off;
+  border-radius: 50%;
+}
+switch:checked slider {
+  background-color: @nyx_ink_black;
 }
 
-/* ── Listbox / Treeview ─────────────────────────────────────── */
-list,
-treeview,
-listview {
-  background-color: @bg_color;
-  color: @text;
+separator {
+  background-color: @nyx_hairline_white;
 }
 
-list row,
-treeview row {
-  padding: 4px 6px;
-  border-radius: 0;
+/* ════════════════════════════════════════════════════════════
+   NYXUS EFFECT VOCABULARY (rev r15) — GTK3 mirror
+   ════════════════════════════════════════════════════════════ */
+.nyx-glow {
+  box-shadow: 0 0 16px @nyx_cream_glow_28,
+              0 0 4px @nyx_glow_soft;
 }
-
-list row:hover,
-treeview row:hover {
-  background-color: @bg_hover;
-  color: @pink;
-}
-
-list row:selected,
-treeview row:selected,
-treeview:selected {
-  background-color: @bg_selected;
-  color: #ffffff;
-}
-
-treeview header button {
-  background-color: @bg_alt;
-  border: none;
-  border-right: 1px solid @border;
-  border-bottom: 1px solid @border;
-  border-radius: 0;
-  color: @text_dim;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-/* ── Tooltips ───────────────────────────────────────────────── */
-tooltip {
-  background-color: @bg_alt;
-  color: @text;
-  border: 1px solid @border_accent;
-  border-radius: 4px;
-  padding: 4px 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-}
-
-tooltip label {
-  color: @text;
-  font-size: 10px;
-}
-
-/* ── Sidebar ────────────────────────────────────────────────── */
-.sidebar {
-  background-color: @bg_alt;
-  border-right: 1px solid @border;
-}
-
-.sidebar row {
+.nyx-glow-soft { box-shadow: 0 0 10px @nyx_cream_glow_15; }
+.nyx-tilt-l    { -gtk-icon-transform: rotate(-1.5deg); }
+.nyx-tilt-r    { -gtk-icon-transform: rotate( 1.5deg); }
+.nyx-handdrawn {
+  border: 2px dashed @nyx_cream_edge_55;
+  border-radius: 3px;
   padding: 6px 12px;
-  color: @text_dim;
+  background-color: @nyx_black_ink;
 }
-
-.sidebar row:hover {
-  background-color: @bg_hover;
-  color: @pink;
+.nyx-hand {
+  font-family: "Caveat", "Caveat Brush", cursive;
+  font-size: 18px;
+  font-weight: 600;
+  color: @nyx_cream_soft;
 }
-
-.sidebar row:selected,
-.sidebar row:checked {
-  background-color: rgba(8, 12, 20, 0.18);
-  color: @accent_light;
-  border-left: 2px solid @accent;
+.nyx-mono {
+  font-family: "JetBrains Mono Nerd Font", monospace;
+  letter-spacing: 0.02em;
 }
-
-/* ── Toolbar ────────────────────────────────────────────────── */
-toolbar {
-  background-color: @bg_alt;
-  border-bottom: 1px solid @border;
-  padding: 4px;
+.nyx-frosted {
+  background-color: @nyx_black_smoke;
+  border: 1px solid @nyx_hairline_white;
+  border-radius: 3px;
 }
-
-/* ── Popover ────────────────────────────────────────────────── */
-popover {
-  background-color: @bg_alt;
-  border: 1px solid @border_accent;
-  border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
-}
-
-popover contents {
-  padding: 6px;
-}
-
-/* ── Expander ───────────────────────────────────────────────── */
-expander title {
-  color: @text_dim;
-  padding: 4px;
-}
-
-expander title:hover {
-  color: @pink;
-}
-
-expander title:checked {
-  color: @accent_light;
-}
-
-/* ── Info bars ──────────────────────────────────────────────── */
-infobar {
-  background-color: @bg_alt;
-  border-bottom: 1px solid @border;
-  color: @text;
-}
-
-infobar.info    { border-color: @cyan; }
-infobar.warning { border-color: @yellow; }
-infobar.error   { border-color: @red; }
-infobar.success { border-color: @green; }
-
-/* ── Spinner ────────────────────────────────────────────────── */
-spinner {
-  color: @accent;
-}
-
-/* ── Link buttons ───────────────────────────────────────────── */
-*:link {
-  color: @accent_light;
-}
-
-*:link:hover {
-  color: @pink;
-}
-
-*:visited {
-  color: @text_dim;
-}
-
-/* ── Frames & Borders ───────────────────────────────────────── */
-frame,
-.frame {
-  border: 1px solid @border;
-  border-radius: 4px;
-}
-
-/* ── Paned ──────────────────────────────────────────────────── */
-paned separator {
-  background-color: @border;
-  min-width: 1px;
-  min-height: 1px;
-}
-
-/* ── Statusbar ──────────────────────────────────────────────── */
-statusbar {
-  background-color: @bg_alt;
-  color: @text_dim;
-  border-top: 1px solid @border;
-  font-size: 10px;
-}
-
-/* ── File Chooser ───────────────────────────────────────────── */
-filechooser .sidebar-row,
-placessidebar row {
-  padding: 5px 10px;
-  color: @text_dim;
-}
-
-filechooser .sidebar-row:hover,
-placessidebar row:hover {
-  background-color: @bg_hover;
-  color: @pink;
-}
-
-filechooser .sidebar-row:selected,
-placessidebar row:selected {
-  background-color: rgba(8, 12, 20, 0.18);
-  color: @accent_light;
-}
-
-/* ── Nautilus / FM specifics ────────────────────────────────── */
-.nautilus-window .sidebar { background-color: @bg_alt; }
-.nautilus-canvas-item label { color: @text; }
-.nautilus-canvas-item:hover label { color: @pink; }
-.nautilus-canvas-item:selected label { color: #ffffff; }

@@ -2,36 +2,66 @@
 @import "_nyxus_accent";
 
 /* ─────────────────────────────────────────────────────────────────────
- * NYXUS GLASS SYSTEM (rev 2026-05-12)
- * Source-of-truth promoted from godsapp/ui.py — propagated across
- * every translucent surface in NYXUS so flyouts, popovers, the
- * start menu, and modals all share the same "deep slate, soft
- * glow" feel users have flagged as the signature look.
- * Do not redefine these values elsewhere; reference the variables.
+ * NYXUS · EWW styles — DARK MIRROR · CREAM + HANDWRITTEN
+ * (LOCKED · rev 2026-05-14 r15)
+ *
+ * Source-of-truth: nyxus_palette.py / nyxus-palette.css — keep
+ * these SCSS variables in lockstep with that module. Never
+ * introduce new colors here.
+ *
+ * Effects: glow on hover, tilt on brand marks, hand-drawn
+ * dashed borders on callouts, matrix-scramble class hook.
+ * Sprinkled, not blanket — the rule is "never on every widget,
+ * never on none."
+ *
+ * © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
  * ───────────────────────────────────────────────────────────────────── */
-$glass-dark:     rgba(8, 12, 20, 0.55);    /* main panel */
-$glass-deeper:   rgba(15, 20, 32, 0.72);   /* inner sections */
-$glass-deepest:  rgba(5, 7, 12, 0.92);     /* modals / heavy */
+
+/* ── TRIPLE-BLACK SURFACE STACK (canonical) ──────────────────────────── */
+$glass-dark:     rgba(14, 14, 22, 0.55);   /* smoke — bars / panels */
+$glass-deeper:   rgba(8,  8,  14, 0.78);   /* ink   — raised cards */
+$glass-deepest:  rgba(0,  0,  0,  0.92);   /* void  — popovers/modals */
 $hairline-white: rgba(255, 255, 255, 0.10);
 $hairline-ink:   rgba(0, 0, 0, 0.45);
+$hairline-cream: rgba(244, 234, 213, 0.22);
 $shadow-active:  rgba(0, 0, 0, 0.65);
 $shadow-rest:    rgba(0, 0, 0, 0.20);
 
-/* ── NYXUS WARM ACCENT (rev 2026-05-12) ────────────────────────────────
-   Pure mono read as flat at low light — user fed in cosmic/sepia
-   reference imagery (gold dust, aged amber, warm celestial). Soft
-   gold accent restores legibility on hover/active/badge states
-   without breaking the enterprise-dark feel. Gold is RESERVED for
-   "alive" states only: active task, focused control, current
-   workspace, hover edges, brand. Default text + chrome stay
-   monochrome. */
-$gold:           #d4b87a;                  /* primary warm accent */
-$gold-soft:      #e8d4a0;                  /* hover text */
-$gold-deep:      #8a6f3a;                  /* tooltips / dim */
-$gold-glow:      rgba(212, 184, 122, 0.35);
-$gold-edge:      rgba(212, 184, 122, 0.55);
-$gold-bg-soft:   rgba(212, 184, 122, 0.10);
-$gold-bg-active: rgba(212, 184, 122, 0.18);
+/* ── CREAM WARM ACCENT (rev r15 — replaces gold/violet/cyan) ────────── */
+$cream:           #f4ead5;
+$cream-soft:      #fbf3e2;
+$cream-deep:      #c4b491;
+$cream-glow:      rgba(244, 234, 213, 0.35);
+$cream-edge:      rgba(244, 234, 213, 0.55);
+$cream-bg-soft:   rgba(244, 234, 213, 0.10);
+$cream-bg-active: rgba(244, 234, 213, 0.18);
+
+/* Backward-compat aliases — every old $gold-* reference resolves to
+   cream. Keep both vocabularies until the codebase fully migrates. */
+$gold:           $cream;
+$gold-soft:      $cream-soft;
+$gold-deep:      $cream-deep;
+$gold-glow:      $cream-glow;
+$gold-edge:      $cream-edge;
+$gold-bg-soft:   $cream-bg-soft;
+$gold-bg-active: $cream-bg-active;
+
+/* ── DESTRUCTIVE / SIGNAL (RESERVED) ─────────────────────────────────── */
+$danger:         #d96b6b;
+$danger-bg-12:   rgba(217, 107, 107, 0.12);
+$danger-bg-22:   rgba(217, 107, 107, 0.22);
+
+/* ── CORNER RADII (near-sharp slightly rounded) ──────────────────────── */
+$radius:         3px;
+$radius-tight:   3px;
+$radius-pill:    3px;
+$radius-panel:   3px;
+
+/* ── FONT STACKS (three-font canonical) ──────────────────────────────── */
+$font-body:      "Inter", "Inter Display", "DejaVu Sans", sans-serif;
+$font-hand:      "Caveat", "Caveat Brush", "Comic Neue", cursive;
+$font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
+                 "Cascadia Code", "DejaVu Sans Mono", monospace;
 
 /* Marquee animation for the top-bar ticker (smooth scroll). */
 @keyframes nyx-marquee {
@@ -39,25 +69,9 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
   to   { margin-left: -100%; }
 }
 
-/* ─────────────────────────────────────────────────────────────────────
- * NYXUS · EWW styles — DARK MIRROR aesthetic
- * © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
- *
- * Palette:
- *   void-0     #05060a   (deep background)
- *   void-1     #0a0d14   (panel)
- *   void-2     #11151f   (raised)
- *   text       #e8edf5
- *   dim        #7a8298
- *   violet     #8b6f3a   (primary accent — vortex glow)
- *   cyan       #d4b87a   (secondary accent — live signal)
- *   gold       #e8c66b   (warning / highlight)
- *   crimson    #ff4d6b   (critical / low)
- * ───────────────────────────────────────────────────────────────────── */
-
 * {
   all: unset;
-  font-family: "Inter Display", "Inter", "JetBrainsMono Nerd Font", sans-serif;
+  font-family: $font-body;
   font-size: 12px;
   color: #e8edf5;
 }
@@ -71,7 +85,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
   color: #ffffff;
   font-weight: 500;
   border: 1px solid $gold-edge;
-  border-radius: 14px;
+  border-radius: 3px;
   padding: 6px 14px;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.6),
@@ -83,7 +97,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 
 /* .bar-bottom sizing now defined alongside the P3.13d enterprise loadout
    block at the bottom of this file (search a.search-btn references). */
-.bar-top    { padding: 4px 14px; min-height: 24px; border-radius: 0 0 14px 14px; }
+.bar-top    { padding: 4px 14px; min-height: 24px; border-radius: 0 0 3px 3px; }
 
 .bar-cluster { padding: 0 6px; }
 
@@ -91,84 +105,84 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 
 .pill {
   padding: 4px 12px;
-  border-radius: 10px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.6);
-  border: 1px solid rgba(160, 107, 255, 0.10);
+  border: 1px solid rgba(244, 234, 213, 0.10);
   color: #e8edf5;
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .pill:hover {
-  background: rgba(160, 107, 255, 0.14);
-  border-color: rgba(160, 107, 255, 0.45);
+  background: rgba(244, 234, 213, 0.14);
+  border-color: rgba(244, 234, 213, 0.45);
   color: #ffffff;
 }
 
 .batt-charge {
-  border-color: rgba(212, 184, 122, 0.45);
-  color: #d4b87a;
+  border-color: rgba(244, 234, 213, 0.45);
+  color: #f4ead5;
 }
 .batt-low {
-  border-color: rgba(255, 77, 107, 0.55);
-  color: #ff4d6b;
+  border-color: rgba(217, 107, 107, 0.55);
+  color: #d96b6b;
 }
 
 .power-pill {
-  background: rgba(255, 77, 107, 0.10);
-  border-color: rgba(255, 77, 107, 0.35);
-  color: #ff8b9e;
+  background: rgba(217, 107, 107, 0.10);
+  border-color: rgba(217, 107, 107, 0.35);
+  color: #d96b6b;
 }
 .power-pill:hover {
-  background: rgba(255, 77, 107, 0.22);
+  background: rgba(217, 107, 107, 0.22);
   color: #ffffff;
-  box-shadow: 0 0 18px rgba(255, 77, 107, 0.45);
+  box-shadow: 0 0 18px rgba(217, 107, 107, 0.45);
 }
 
 /* ── BRAND ────────────────────────────────────────────────────────── */
 
 .brand {
   padding: 4px 14px;
-  border-radius: 10px;
+  border-radius: 3px;
   font-weight: 700;
   letter-spacing: 0.18em;
   background: linear-gradient(135deg,
-    rgba(160, 107, 255, 0.22),
-    rgba(212, 184, 122, 0.10));
-  border: 1px solid rgba(160, 107, 255, 0.45);
+    rgba(244, 234, 213, 0.22),
+    rgba(244, 234, 213, 0.10));
+  border: 1px solid rgba(244, 234, 213, 0.45);
   color: #ffffff;
   box-shadow:
-    inset 0 0 12px rgba(160, 107, 255, 0.18),
-    0 0 16px rgba(160, 107, 255, 0.20);
+    inset 0 0 12px rgba(244, 234, 213, 0.18),
+    0 0 16px rgba(244, 234, 213, 0.20);
 }
 .brand:hover {
   background: linear-gradient(135deg,
-    rgba(160, 107, 255, 0.40),
-    rgba(212, 184, 122, 0.22));
+    rgba(244, 234, 213, 0.40),
+    rgba(244, 234, 213, 0.22));
   box-shadow:
-    inset 0 0 18px rgba(160, 107, 255, 0.30),
-    0 0 28px rgba(160, 107, 255, 0.45);
+    inset 0 0 18px rgba(244, 234, 213, 0.30),
+    0 0 28px rgba(244, 234, 213, 0.45);
 }
 
 /* ── HEARTBEAT ────────────────────────────────────────────────────── */
 
 .heartbeat {
-  color: #d4b87a;
+  color: #f4ead5;
   font-size: 10px;
   letter-spacing: 0.18em;
   padding: 0 8px;
-  text-shadow: 0 0 8px rgba(212, 184, 122, 0.65);
+  text-shadow: 0 0 8px rgba(244, 234, 213, 0.65);
 }
 
 /* ── SYS PULSE ────────────────────────────────────────────────────── */
 
 .syspulse {
   padding: 2px 10px;
-  border-radius: 8px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(160, 107, 255, 0.10);
+  border: 1px solid rgba(244, 234, 213, 0.10);
 }
-.syspulse-cpu  { color: #d4b87a; letter-spacing: 0.08em; }
-.syspulse-mem  { color: #8b6f3a; letter-spacing: 0.08em; }
-.syspulse-temp { color: #e8c66b; letter-spacing: 0.08em; }
+.syspulse-cpu  { color: #f4ead5; letter-spacing: 0.08em; }
+.syspulse-mem  { color: #c4b491; letter-spacing: 0.08em; }
+.syspulse-temp { color: #f4ead5; letter-spacing: 0.08em; }
 
 .tray-dummy {
   color: #7a8298;
@@ -180,21 +194,21 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 
 .clock {
   padding: 4px 16px;
-  border-radius: 12px;
+  border-radius: 3px;
   background: linear-gradient(135deg,
-    rgba(160, 107, 255, 0.10),
-    rgba(212, 184, 122, 0.06));
-  border: 1px solid rgba(160, 107, 255, 0.22);
+    rgba(244, 234, 213, 0.10),
+    rgba(244, 234, 213, 0.06));
+  border: 1px solid rgba(244, 234, 213, 0.22);
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .clock:hover {
   background: linear-gradient(135deg,
-    rgba(160, 107, 255, 0.25),
-    rgba(212, 184, 122, 0.14));
-  border-color: rgba(160, 107, 255, 0.55);
-  box-shadow: 0 0 24px rgba(160, 107, 255, 0.35);
+    rgba(244, 234, 213, 0.25),
+    rgba(244, 234, 213, 0.14));
+  border-color: rgba(244, 234, 213, 0.55);
+  box-shadow: 0 0 24px rgba(244, 234, 213, 0.35);
 }
-.clock-glyph { color: #8b6f3a; font-size: 14px; }
+.clock-glyph { color: #c4b491; font-size: 14px; }
 .clock-hms   { font-weight: 700; font-size: 13px; letter-spacing: 0.06em; }
 .clock-date  { color: #b8bfd0; }
 
@@ -215,7 +229,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 }
 .ticker {
   color: #c8ccd6;
-  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-family: "JetBrains Mono Nerd Font", monospace;
   font-size: 11px;
   letter-spacing: 0.04em;
   /* Smooth horizontal scroll — text starts off-screen right and
@@ -227,64 +241,64 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 
 .ws-rail {
   background: rgba(5, 6, 10, 0.78);
-  border: 1px solid rgba(160, 107, 255, 0.18);
-  border-radius: 18px;
+  border: 1px solid rgba(244, 234, 213, 0.18);
+  border-radius: 3px;
   padding: 14px 6px;
   box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.55),
-    inset 0 0 20px rgba(160, 107, 255, 0.05);
+    inset 0 0 20px rgba(244, 234, 213, 0.05);
 }
 .ws-pill {
   min-width: 36px;
   min-height: 36px;
-  border-radius: 12px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(160, 107, 255, 0.10);
+  border: 1px solid rgba(244, 234, 213, 0.10);
   color: #7a8298;
   font-weight: 700;
   font-size: 13px;
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .ws-pill:hover {
-  background: rgba(160, 107, 255, 0.14);
+  background: rgba(244, 234, 213, 0.14);
   color: #e8edf5;
 }
 .ws-pill-active {
-  background: linear-gradient(135deg, #8b6f3a, #d4b87a);
-  color: #05060a;
-  border-color: rgba(212, 184, 122, 0.65);
-  box-shadow: 0 0 18px rgba(160, 107, 255, 0.55);
+  background: linear-gradient(135deg, #c4b491, #f4ead5);
+  color: #000000;
+  border-color: rgba(244, 234, 213, 0.65);
+  box-shadow: 0 0 18px rgba(244, 234, 213, 0.55);
 }
 
 /* ── APP RAIL (right) ─────────────────────────────────────────────── */
 
 .app-rail {
   background: rgba(5, 6, 10, 0.78);
-  border: 1px solid rgba(160, 107, 255, 0.18);
-  border-radius: 18px;
+  border: 1px solid rgba(244, 234, 213, 0.18);
+  border-radius: 3px;
   padding: 14px 6px;
   box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.55),
-    inset 0 0 20px rgba(160, 107, 255, 0.05);
+    inset 0 0 20px rgba(244, 234, 213, 0.05);
 }
 .app-pill {
   min-width: 38px;
   min-height: 38px;
-  border-radius: 12px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(160, 107, 255, 0.10);
+  border: 1px solid rgba(244, 234, 213, 0.10);
   color: #c8ccd6;
-  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-family: "JetBrains Mono Nerd Font", monospace;
   font-size: 16px;
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .app-pill:hover {
   background: linear-gradient(135deg,
-    rgba(160, 107, 255, 0.22),
-    rgba(212, 184, 122, 0.12));
-  border-color: rgba(160, 107, 255, 0.55);
+    rgba(244, 234, 213, 0.22),
+    rgba(244, 234, 213, 0.12));
+  border-color: rgba(244, 234, 213, 0.55);
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(160, 107, 255, 0.40);
+  box-shadow: 0 0 16px rgba(244, 234, 213, 0.40);
 }
 
 /* ── DASHBOARD overlay ────────────────────────────────────────────── */
@@ -293,7 +307,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
   background: $glass-deepest;
   padding: 80px 60px;
   border: 1px solid $hairline-white;
-  border-radius: 28px;
+  border-radius: 3px;
   box-shadow:
     0 1px 0 $hairline-white inset,
     0 40px 120px $shadow-active,
@@ -311,18 +325,18 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
   border: none;
 }
 .dashboard-scroll scrollbar slider {
-  background: rgba(160, 107, 255, 0.35);
-  border-radius: 4px;
+  background: rgba(244, 234, 213, 0.35);
+  border-radius: 3px;
   min-width: 6px;
   min-height: 24px;
 }
-.dashboard-scroll scrollbar slider:hover { background: rgba(160, 107, 255, 0.65); }
+.dashboard-scroll scrollbar slider:hover { background: rgba(244, 234, 213, 0.65); }
 .dash-clock {
   font-size: 88px;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: #ffffff;
-  text-shadow: 0 0 32px rgba(160, 107, 255, 0.55);
+  text-shadow: 0 0 32px rgba(244, 234, 213, 0.55);
 }
 .dash-date {
   font-size: 16px;
@@ -332,13 +346,13 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .dash-grid { padding: 24px 0; }
 .dash-card {
   padding: 24px 32px;
-  border-radius: 18px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.65);
-  border: 1px solid rgba(160, 107, 255, 0.15);
+  border: 1px solid rgba(244, 234, 213, 0.15);
   min-width: 200px;
 }
 .dash-card-title {
-  color: #8b6f3a;
+  color: #c4b491;
   letter-spacing: 0.30em;
   font-size: 10px;
   font-weight: 700;
@@ -355,22 +369,22 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 }
 .dash-toggle {
   padding: 12px 20px;
-  border-radius: 12px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.65);
-  border: 1px solid rgba(160, 107, 255, 0.15);
+  border: 1px solid rgba(244, 234, 213, 0.15);
   letter-spacing: 0.16em;
   font-size: 11px;
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .dash-toggle:hover {
-  background: rgba(160, 107, 255, 0.20);
-  border-color: rgba(160, 107, 255, 0.55);
-  box-shadow: 0 0 18px rgba(160, 107, 255, 0.35);
+  background: rgba(244, 234, 213, 0.20);
+  border-color: rgba(244, 234, 213, 0.55);
+  box-shadow: 0 0 18px rgba(244, 234, 213, 0.35);
 }
 .dash-close {
   margin-top: 16px;
   padding: 8px 18px;
-  border-radius: 10px;
+  border-radius: 3px;
   border: 1px solid rgba(255, 255, 255, 0.10);
   color: #7a8298;
   letter-spacing: 0.16em;
@@ -383,47 +397,47 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .powermenu-root {
   background: rgba(5, 6, 10, 0.94);
   padding: 60px 80px;
-  border: 1px solid rgba(255, 77, 107, 0.28);
-  border-radius: 28px;
+  border: 1px solid rgba(217, 107, 107, 0.28);
+  border-radius: 3px;
   box-shadow:
-    0 0 0 1px rgba(255, 77, 107, 0.06),
+    0 0 0 1px rgba(217, 107, 107, 0.06),
     0 40px 120px rgba(0, 0, 0, 0.85),
-    inset 0 0 80px rgba(255, 77, 107, 0.05);
+    inset 0 0 80px rgba(217, 107, 107, 0.05);
 }
 .power-title {
-  color: #ff8b9e;
+  color: #d96b6b;
   font-size: 13px;
   letter-spacing: 0.40em;
   font-weight: 700;
   padding-bottom: 16px;
-  text-shadow: 0 0 16px rgba(255, 77, 107, 0.55);
+  text-shadow: 0 0 16px rgba(217, 107, 107, 0.55);
 }
 .power-btn {
   min-width: 130px;
   min-height: 130px;
-  border-radius: 20px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.65);
-  border: 1px solid rgba(160, 107, 255, 0.15);
+  border: 1px solid rgba(244, 234, 213, 0.15);
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .power-btn:hover {
   background: linear-gradient(135deg,
-    rgba(255, 77, 107, 0.20),
-    rgba(160, 107, 255, 0.18));
-  border-color: rgba(255, 77, 107, 0.55);
-  box-shadow: 0 0 32px rgba(255, 77, 107, 0.40);
+    rgba(217, 107, 107, 0.20),
+    rgba(244, 234, 213, 0.18));
+  border-color: rgba(217, 107, 107, 0.55);
+  box-shadow: 0 0 32px rgba(217, 107, 107, 0.40);
 }
 /* Destructive variants (Shutdown/Restart) — red border + glyph in
    resting state so they read as obviously different from soft actions
    (Suspend/Logout/Lock). Per DESIGN_CONTRACT.md §8. */
 .power-btn-danger {
-  border-color: rgba(255, 77, 107, 0.45);
+  border-color: rgba(217, 107, 107, 0.45);
   background: rgba(40, 12, 22, 0.55);
 }
-.power-btn-danger .power-glyph { color: #ff8b9e; }
+.power-btn-danger .power-glyph { color: #d96b6b; }
 .power-btn-danger:hover {
-  border-color: rgba(255, 77, 107, 0.85);
-  box-shadow: 0 0 36px rgba(255, 77, 107, 0.55);
+  border-color: rgba(217, 107, 107, 0.85);
+  box-shadow: 0 0 36px rgba(217, 107, 107, 0.55);
 }
 .power-glyph {
   font-size: 40px;
@@ -437,7 +451,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .power-cancel {
   margin-top: 16px;
   padding: 8px 18px;
-  border-radius: 10px;
+  border-radius: 3px;
   border: 1px solid rgba(255, 255, 255, 0.10);
   color: #7a8298;
   letter-spacing: 0.16em;
@@ -449,7 +463,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 
 .dash-card-cal { min-width: 240px; }
 .dash-cal-grid {
-  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-family: "JetBrains Mono Nerd Font", monospace;
   font-size: 12px;
   color: #c8ccd6;
   letter-spacing: 0.04em;
@@ -458,7 +472,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .dash-sliders { padding: 12px 0; min-width: 480px; }
 .dash-slider-row { padding: 0 8px; }
 .dash-slider-label {
-  color: #8b6f3a;
+  color: #c4b491;
   letter-spacing: 0.20em;
   font-weight: 700;
   font-size: 10px;
@@ -466,20 +480,20 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 }
 .dash-scale trough {
   min-height: 6px;
-  border-radius: 6px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.85);
-  border: 1px solid rgba(160, 107, 255, 0.18);
+  border: 1px solid rgba(244, 234, 213, 0.18);
 }
 .dash-scale highlight {
-  border-radius: 6px;
-  background: linear-gradient(90deg, #8b6f3a, #d4b87a);
-  box-shadow: 0 0 12px rgba(160, 107, 255, 0.55);
+  border-radius: 3px;
+  background: linear-gradient(90deg, #c4b491, #f4ead5);
+  box-shadow: 0 0 12px rgba(244, 234, 213, 0.55);
 }
 .dash-scale slider {
   background: #ffffff;
   min-width: 14px;
   min-height: 14px;
-  border-radius: 14px;
+  border-radius: 3px;
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.55);
   margin: -6px;
 }
@@ -495,12 +509,12 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .cheatsheet-root {
   background: rgba(5, 6, 10, 0.92);
   padding: 60px 80px;
-  border: 1px solid rgba(160, 107, 255, 0.28);
-  border-radius: 28px;
+  border: 1px solid rgba(244, 234, 213, 0.28);
+  border-radius: 3px;
   box-shadow:
-    0 0 0 1px rgba(212, 184, 122, 0.06),
+    0 0 0 1px rgba(244, 234, 213, 0.06),
     0 40px 120px rgba(0, 0, 0, 0.85),
-    inset 0 0 80px rgba(160, 107, 255, 0.06);
+    inset 0 0 80px rgba(244, 234, 213, 0.06);
 }
 .cheat-title {
   color: #ffffff;
@@ -508,10 +522,10 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
   letter-spacing: 0.40em;
   font-weight: 700;
   padding-bottom: 12px;
-  text-shadow: 0 0 16px rgba(160, 107, 255, 0.55);
+  text-shadow: 0 0 16px rgba(244, 234, 213, 0.55);
 }
 .cheat-section {
-  color: #8b6f3a;
+  color: #c4b491;
   letter-spacing: 0.30em;
   font-size: 10px;
   font-weight: 700;
@@ -519,15 +533,15 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 }
 .cheat-col {
   padding: 16px 24px;
-  border-radius: 14px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(160, 107, 255, 0.12);
+  border: 1px solid rgba(244, 234, 213, 0.12);
   min-width: 280px;
 }
 .cheat-row { padding: 3px 0; }
 .cheat-chord {
-  font-family: "JetBrainsMono Nerd Font", monospace;
-  color: #d4b87a;
+  font-family: "JetBrains Mono Nerd Font", monospace;
+  color: #f4ead5;
   font-size: 11px;
   min-width: 130px;
   letter-spacing: 0.04em;
@@ -539,7 +553,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .cheat-close {
   margin-top: 16px;
   padding: 8px 18px;
-  border-radius: 10px;
+  border-radius: 3px;
   border: 1px solid rgba(255, 255, 255, 0.10);
   color: #7a8298;
   letter-spacing: 0.16em;
@@ -551,17 +565,17 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 
 .osd-root {
   background: rgba(5, 6, 10, 0.92);
-  border: 1px solid rgba(160, 107, 255, 0.30);
-  border-radius: 18px;
+  border: 1px solid rgba(244, 234, 213, 0.30);
+  border-radius: 3px;
   padding: 14px 22px;
   box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.65),
-    0 0 28px rgba(160, 107, 255, 0.20);
+    0 0 28px rgba(244, 234, 213, 0.20);
 }
 .osd-glyph {
   font-size: 24px;
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(160, 107, 255, 0.65);
+  text-shadow: 0 0 10px rgba(244, 234, 213, 0.65);
 }
 .osd-label {
   color: #c8ccd6;
@@ -571,14 +585,14 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 }
 .osd-bar trough {
   min-height: 6px;
-  border-radius: 6px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.85);
-  border: 1px solid rgba(160, 107, 255, 0.18);
+  border: 1px solid rgba(244, 234, 213, 0.18);
 }
 .osd-bar highlight {
-  border-radius: 6px;
-  background: linear-gradient(90deg, #8b6f3a, #d4b87a);
-  box-shadow: 0 0 12px rgba(160, 107, 255, 0.55);
+  border-radius: 3px;
+  background: linear-gradient(90deg, #c4b491, #f4ead5);
+  box-shadow: 0 0 12px rgba(244, 234, 213, 0.55);
 }
 
 /* ── SCREENSAVER ───────────────────────────────────────────────────── */
@@ -591,7 +605,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
   font-size: 140px;
   font-weight: 700;
   color: #ffffff;
-  text-shadow: 0 0 48px rgba(160, 107, 255, 0.65);
+  text-shadow: 0 0 48px rgba(244, 234, 213, 0.65);
   letter-spacing: 0.04em;
 }
 .saver-date {
@@ -601,10 +615,10 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 }
 .saver-brand {
   font-size: 12px;
-  color: #8b6f3a;
+  color: #c4b491;
   letter-spacing: 0.50em;
   font-weight: 700;
-  text-shadow: 0 0 16px rgba(160, 107, 255, 0.45);
+  text-shadow: 0 0 16px rgba(244, 234, 213, 0.45);
 }
 .saver-hint {
   color: #5a6278;
@@ -618,8 +632,8 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 /* Mic mute / bluetooth / power-profile / updates / notifications color states */
 .mic-mute   { color: #ff5577; border-color: rgba(255, 85, 119, 0.45); }
 .bt-off     { color: #5a6278; border-color: rgba(255, 255, 255, 0.06); }
-.bt-conn    { color: #d4b87a; border-color: rgba(212, 184, 122, 0.45);
-              box-shadow: 0 0 12px rgba(212, 184, 122, 0.30); }
+.bt-conn    { color: #f4ead5; border-color: rgba(244, 234, 213, 0.45);
+              box-shadow: 0 0 12px rgba(244, 234, 213, 0.30); }
 .pp-perf    { color: #ffb04a; border-color: rgba(255, 176, 74, 0.55);
               text-shadow: 0 0 8px rgba(255, 176, 74, 0.50); }
 .pp-save    { color: #4ade80; border-color: rgba(74, 222, 128, 0.45); }
@@ -631,18 +645,18 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 /* Top-bar player (right-aligned) */
 .ticker-player {
   background: rgba(17, 21, 31, 0.6);
-  border: 1px solid rgba(160, 107, 255, 0.18);
-  border-radius: 8px;
+  border: 1px solid rgba(244, 234, 213, 0.18);
+  border-radius: 3px;
   padding: 2px 12px;
   margin-right: 12px;
   color: #ffffff;
 }
 .ticker-player:hover {
-  border-color: rgba(212, 184, 122, 0.45);
-  box-shadow: 0 0 10px rgba(212, 184, 122, 0.25);
+  border-color: rgba(244, 234, 213, 0.45);
+  box-shadow: 0 0 10px rgba(244, 234, 213, 0.25);
 }
 .ticker-player-text {
-  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-family: "JetBrains Mono Nerd Font", monospace;
   font-size: 10px;
   letter-spacing: 0.06em;
   color: #c8ccd6;
@@ -650,18 +664,18 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 
 /* Workspace pill: occupied state */
 .ws-pill-occupied {
-  border-color: rgba(160, 107, 255, 0.45) !important;
+  border-color: rgba(244, 234, 213, 0.45) !important;
   color: #c8ccd6 !important;
-  background: rgba(160, 107, 255, 0.06) !important;
+  background: rgba(244, 234, 213, 0.06) !important;
 }
 .ws-pill-occupied:hover { color: #ffffff !important; }
 
 /* Per-core CPU graph */
 .dash-cores-card {
   padding: 18px 24px;
-  border-radius: 16px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(160, 107, 255, 0.16);
+  border: 1px solid rgba(244, 234, 213, 0.16);
   min-width: 720px;
 }
 .dash-cores {
@@ -671,14 +685,14 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .core-bar {
   min-width: 14px;
   background: rgba(17, 21, 31, 0.85);
-  border-radius: 4px;
-  border: 1px solid rgba(160, 107, 255, 0.10);
+  border-radius: 3px;
+  border: 1px solid rgba(244, 234, 213, 0.10);
   padding: 2px;
 }
 .core-fill {
-  background: linear-gradient(180deg, #d4b87a, #8b6f3a);
+  background: linear-gradient(180deg, #f4ead5, #c4b491);
   border-radius: 3px;
-  box-shadow: 0 0 6px rgba(160, 107, 255, 0.40);
+  box-shadow: 0 0 6px rgba(244, 234, 213, 0.40);
   min-width: 8px;
 }
 .core-warm { background: linear-gradient(180deg, #ffb04a, #ff7a3a); }
@@ -688,16 +702,16 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 /* Dashboard media player card */
 .dash-player {
   padding: 18px 22px;
-  border-radius: 14px;
+  border-radius: 3px;
   background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(160, 107, 255, 0.16);
+  border: 1px solid rgba(244, 234, 213, 0.16);
   min-width: 240px;
 }
 .dash-player-title {
   color: #ffffff;
   font-size: 13px;
   font-weight: 600;
-  text-shadow: 0 0 8px rgba(160, 107, 255, 0.35);
+  text-shadow: 0 0 8px rgba(244, 234, 213, 0.35);
 }
 .dash-player-artist {
   color: #8b94a8;
@@ -706,17 +720,17 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 }
 .dash-player-controls { padding-top: 8px; }
 .dash-player-btn {
-  background: rgba(160, 107, 255, 0.10);
-  border: 1px solid rgba(160, 107, 255, 0.28);
-  border-radius: 999px;
+  background: rgba(244, 234, 213, 0.10);
+  border: 1px solid rgba(244, 234, 213, 0.28);
+  border-radius: 3px;
   padding: 6px 14px;
   color: #ffffff;
   font-size: 14px;
 }
 .dash-player-btn:hover {
-  background: rgba(160, 107, 255, 0.22);
-  border-color: rgba(212, 184, 122, 0.55);
-  box-shadow: 0 0 14px rgba(160, 107, 255, 0.50);
+  background: rgba(244, 234, 213, 0.22);
+  border-color: rgba(244, 234, 213, 0.55);
+  box-shadow: 0 0 14px rgba(244, 234, 213, 0.50);
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -727,7 +741,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .qs-root, .wifi-root, .bt-root, .mix-root, .cal-root, .notif-root {
   background: $glass-dark;
   border: 1px solid $hairline-white;
-  border-radius: 16px;
+  border-radius: 3px;
   padding: 18px 20px;
   box-shadow:
     0 1px 0 $hairline-white inset,
@@ -746,7 +760,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .qs-pill, .cal-pill {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
+  border-radius: 3px;
   padding: 4px 12px;
   color: #c8ccd6;
   font-size: 10px;
@@ -763,7 +777,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .qs-settings {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  border-radius: 3px;
   padding: 4px 10px;
   color: #e8edf5;
   font-size: 14px;
@@ -776,8 +790,8 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .qs-tile {
   padding: 12px 8px;
   min-width: 78px;
-  border-radius: 12px;
-  background: rgba(15, 20, 32, 0.72);
+  border-radius: 3px;
+  background: rgba(8, 8, 14, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.08);
   transition: all 160ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
@@ -803,18 +817,18 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .qs-sliders { padding-top: 8px; }
 .qs-slider-glyph { font-size: 14px; color: #c8ccd6; min-width: 22px; }
 .qs-scale trough {
-  background: rgba(15, 20, 32, 0.85);
+  background: rgba(8, 8, 14, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 999px;
+  border-radius: 3px;
   min-height: 6px;
 }
 .qs-scale highlight {
   background: #e8edf5;
-  border-radius: 999px;
+  border-radius: 3px;
 }
 .qs-scale slider {
   background: #ffffff;
-  border-radius: 999px;
+  border-radius: 3px;
   min-width: 14px; min-height: 14px;
   box-shadow: 0 0 8px rgba(232, 237, 245, 0.40);
 }
@@ -824,9 +838,9 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .qs-nowplaying {
   margin-top: 10px;
   padding: 10px 12px;
-  background: rgba(15, 20, 32, 0.72);
+  background: rgba(8, 8, 14, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 3px;
 }
 .qs-np-icon  { font-size: 18px; color: #ffffff; min-width: 22px; }
 .qs-np-title { color: #e8edf5; font-size: 12px; font-weight: 600; }
@@ -834,7 +848,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .qs-np-btn {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 8px;
+  border-radius: 3px;
   color: #c8ccd6;
   padding: 2px 8px;
   font-size: 12px;
@@ -855,13 +869,13 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
   padding: 28px 16px;
   margin: 8px 0;
   background: rgba(17, 21, 31, 0.45);
-  border: 1px dashed rgba(160, 107, 255, 0.18);
-  border-radius: 12px;
+  border: 1px dashed rgba(244, 234, 213, 0.18);
+  border-radius: 3px;
 }
 .empty-glyph {
   font-size: 28px;
-  color: #8b6f3a;
-  text-shadow: 0 0 14px rgba(160, 107, 255, 0.35);
+  color: #c4b491;
+  text-shadow: 0 0 14px rgba(244, 234, 213, 0.35);
   padding-bottom: 4px;
 }
 .empty-title {
@@ -878,17 +892,17 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 
 .qs-close, .wifi-close, .bt-close, .mix-close, .cal-close, .notif-close {
   padding: 8px 14px;
-  border-radius: 10px;
-  background: rgba(255, 77, 107, 0.12);
-  border: 1px solid rgba(255, 77, 107, 0.30);
-  color: #ff8b9e;
+  border-radius: 3px;
+  background: rgba(217, 107, 107, 0.12);
+  border: 1px solid rgba(217, 107, 107, 0.30);
+  color: #d96b6b;
   letter-spacing: 0.12em;
 }
 .qs-close:hover, .wifi-close:hover, .bt-close:hover, .mix-close:hover,
 .cal-close:hover, .notif-close:hover {
-  background: rgba(255, 77, 107, 0.28);
+  background: rgba(217, 107, 107, 0.28);
   color: #ffffff;
-  box-shadow: 0 0 14px rgba(255, 77, 107, 0.45);
+  box-shadow: 0 0 14px rgba(217, 107, 107, 0.45);
 }
 
 /* ── Shared flyout control buttons ─ DARK MIRROR monochrome ─────────
@@ -899,7 +913,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .wifi-toggle, .wifi-rescan, .bt-toggle, .bt-scan, .notif-dnd, .notif-clear,
 .wifi-advanced, .bt-advanced, .mix-advanced {
   padding: 6px 12px;
-  border-radius: 10px;
+  border-radius: 3px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #c8ccd6;
@@ -920,8 +934,8 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
  * Same neutral applied to wifi/bt/mix rows for system-wide cohesion. */
 .wifi-row, .bt-row, .mix-row, .notif-row {
   padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(15, 20, 32, 0.55);
+  border-radius: 3px;
+  background: rgba(8, 8, 14, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 .wifi-row:hover, .bt-row:hover, .mix-row:hover, .notif-row:hover {
@@ -930,43 +944,43 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 }
 .wifi-row-active, .bt-row-conn, .mix-row-default {
   background: linear-gradient(90deg,
-    rgba(160, 107, 255, 0.18),
-    rgba(212, 184, 122, 0.08));
-  border-color: rgba(212, 184, 122, 0.45);
-  box-shadow: inset 0 0 12px rgba(160, 107, 255, 0.18);
+    rgba(244, 234, 213, 0.18),
+    rgba(244, 234, 213, 0.08));
+  border-color: rgba(244, 234, 213, 0.45);
+  box-shadow: inset 0 0 12px rgba(244, 234, 213, 0.18);
 }
 
-.wifi-bars { color: #d4b87a; font-family: "JetBrainsMono Nerd Font", monospace; min-width: 44px; }
+.wifi-bars { color: #f4ead5; font-family: "JetBrains Mono Nerd Font", monospace; min-width: 44px; }
 .wifi-name { background: transparent; border: none; color: #e8edf5; font-size: 12px; }
-.wifi-name:hover { color: #ffffff; text-shadow: 0 0 8px rgba(212, 184, 122, 0.55); }
+.wifi-name:hover { color: #ffffff; text-shadow: 0 0 8px rgba(244, 234, 213, 0.55); }
 .wifi-sig { color: #8b94a8; font-size: 10px; min-width: 36px; }
 .wifi-forget {
-  padding: 2px 8px; border-radius: 6px;
-  background: rgba(255, 77, 107, 0.10);
-  border: 1px solid rgba(255, 77, 107, 0.25);
-  color: #ff8b9e;
+  padding: 2px 8px; border-radius: 3px;
+  background: rgba(217, 107, 107, 0.10);
+  border: 1px solid rgba(217, 107, 107, 0.25);
+  color: #d96b6b;
 }
-.wifi-forget:hover { background: rgba(255, 77, 107, 0.30); color: #ffffff; }
+.wifi-forget:hover { background: rgba(217, 107, 107, 0.30); color: #ffffff; }
 
 /* ── BLUETOOTH ──────────────────────────────────────────────────────── */
-.bt-icon { font-size: 16px; color: #d4b87a; min-width: 24px; }
+.bt-icon { font-size: 16px; color: #f4ead5; min-width: 24px; }
 .bt-name { color: #ffffff; font-size: 12px; font-weight: 600; }
 .bt-mac  { color: #6b7388; font-size: 10px; letter-spacing: 0.04em; }
 .bt-act, .bt-forget {
-  padding: 4px 10px; border-radius: 8px;
-  background: rgba(160, 107, 255, 0.10);
-  border: 1px solid rgba(160, 107, 255, 0.25);
+  padding: 4px 10px; border-radius: 3px;
+  background: rgba(244, 234, 213, 0.10);
+  border: 1px solid rgba(244, 234, 213, 0.25);
   color: #d0c4ff;
   font-size: 10px;
   letter-spacing: 0.10em;
 }
-.bt-act:hover { background: rgba(212, 184, 122, 0.22); color: #ffffff; }
+.bt-act:hover { background: rgba(244, 234, 213, 0.22); color: #ffffff; }
 .bt-forget {
-  background: rgba(255, 77, 107, 0.10);
-  border-color: rgba(255, 77, 107, 0.25);
-  color: #ff8b9e;
+  background: rgba(217, 107, 107, 0.10);
+  border-color: rgba(217, 107, 107, 0.25);
+  color: #d96b6b;
 }
-.bt-forget:hover { background: rgba(255, 77, 107, 0.30); color: #ffffff; }
+.bt-forget:hover { background: rgba(217, 107, 107, 0.30); color: #ffffff; }
 
 /* ── AUDIO MIXER ────────────────────────────────────────────────────── */
 .mix-section {
@@ -978,34 +992,34 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
   padding: 0 8px;
   background: transparent;
   border: none;
-  color: #d4b87a;
+  color: #f4ead5;
   font-size: 14px;
   min-width: 22px;
 }
-.mix-pick:hover { color: #ffffff; text-shadow: 0 0 10px rgba(212, 184, 122, 0.65); }
+.mix-pick:hover { color: #ffffff; text-shadow: 0 0 10px rgba(244, 234, 213, 0.65); }
 .mix-name { color: #e8edf5; font-size: 12px; }
 .mix-pct { color: #8b94a8; font-size: 10px; min-width: 38px; }
 .mix-mute {
-  padding: 2px 8px; border-radius: 6px;
+  padding: 2px 8px; border-radius: 3px;
   background: rgba(17, 21, 31, 0.85);
-  border: 1px solid rgba(160, 107, 255, 0.20);
+  border: 1px solid rgba(244, 234, 213, 0.20);
   color: #d0c4ff;
 }
-.mix-mute:hover { background: rgba(160, 107, 255, 0.22); color: #ffffff; }
-.mix-app-glyph { color: #8b6f3a; font-size: 14px; min-width: 22px; }
+.mix-mute:hover { background: rgba(244, 234, 213, 0.22); color: #ffffff; }
+.mix-app-glyph { color: #c4b491; font-size: 14px; min-width: 22px; }
 .mix-scale trough {
   background: rgba(17, 21, 31, 0.85);
-  border: 1px solid rgba(160, 107, 255, 0.20);
-  border-radius: 999px;
+  border: 1px solid rgba(244, 234, 213, 0.20);
+  border-radius: 3px;
   min-height: 5px;
 }
 .mix-scale highlight {
-  background: linear-gradient(90deg, #8b6f3a, #d4b87a);
-  border-radius: 999px;
+  background: linear-gradient(90deg, #c4b491, #f4ead5);
+  border-radius: 3px;
 }
 .mix-scale slider {
   background: #ffffff;
-  border-radius: 999px;
+  border-radius: 3px;
   min-width: 12px; min-height: 12px;
 }
 
@@ -1021,17 +1035,17 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .cal-day {
   min-width: 36px;
   padding: 6px 0;
-  border-radius: 8px;
+  border-radius: 3px;
   font-size: 12px;
   color: #e8edf5;
 }
-.cal-day-in:hover { background: rgba(160, 107, 255, 0.16); }
+.cal-day-in:hover { background: rgba(244, 234, 213, 0.16); }
 .cal-day-out { color: #3a4055; }
 .cal-day-today {
-  background: linear-gradient(135deg, #8b6f3a, #d4b87a);
-  color: #05060a;
+  background: linear-gradient(135deg, #c4b491, #f4ead5);
+  color: #000000;
   font-weight: 700;
-  box-shadow: 0 0 14px rgba(160, 107, 255, 0.55);
+  box-shadow: 0 0 14px rgba(244, 234, 213, 0.55);
 }
 
 /* ── NOTIFICATIONS ──────────────────────────────────────────────────── */
@@ -1041,7 +1055,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .notif-group {
   background: rgba(20, 24, 36, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: 3px;
   padding: 8px 10px;
 }
 .notif-group-muted { opacity: 0.55; }
@@ -1054,7 +1068,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
   color: #c8ccd6;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 1px 8px;
   font-size: 10px;
   font-weight: 700;
@@ -1063,7 +1077,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .notif-mute {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 1px 6px;
   color: #c8ccd6;
   font-size: 11px;
@@ -1079,7 +1093,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .notif-action {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 0 8px;
   color: #c8ccd6;
   font-size: 12px;
@@ -1106,12 +1120,12 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .notif-summary { color: #ffffff; font-size: 12px; font-weight: 600; }
 .notif-body    { color: #8b94a8; font-size: 10px; }
 .notif-dismiss {
-  padding: 2px 8px; border-radius: 6px;
-  background: rgba(255, 77, 107, 0.08);
-  border: 1px solid rgba(255, 77, 107, 0.20);
-  color: #ff8b9e;
+  padding: 2px 8px; border-radius: 3px;
+  background: rgba(217, 107, 107, 0.08);
+  border: 1px solid rgba(217, 107, 107, 0.20);
+  color: #d96b6b;
 }
-.notif-dismiss:hover { background: rgba(255, 77, 107, 0.28); color: #ffffff; }
+.notif-dismiss:hover { background: rgba(217, 107, 107, 0.28); color: #ffffff; }
 
 /* ═════════════════════════════════════════════════════════════════════
  * P3.13b · NYXUS START MENU (Win11-grade launcher, glass aesthetic)
@@ -1121,7 +1135,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .startmenu-root {
   background: $glass-dark;
   border: 1px solid $hairline-white;
-  border-radius: 18px;
+  border-radius: 3px;
   padding: 22px 24px;
   box-shadow:
     0 1px 0 $hairline-white inset,
@@ -1133,7 +1147,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .startmenu-search {
   background: $glass-deeper;
   border: 1px solid $hairline-white;
-  border-radius: 10px;
+  border-radius: 3px;
   padding: 8px 14px;
   color: #e8edf5;
   font-size: 12px;
@@ -1157,7 +1171,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .startmenu-tile {
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 3px;
   padding: 14px 8px;
   min-width: 90px;
   transition: all 160ms cubic-bezier(0.32, 0.72, 0.24, 1);
@@ -1179,7 +1193,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 
 .startmenu-recent-row {
   background: transparent;
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 8px 10px;
   transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
@@ -1190,7 +1204,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .startmenu-footer {
   background: $glass-deeper;
   border: 1px solid $hairline-white;
-  border-radius: 10px;
+  border-radius: 3px;
   padding: 10px 14px;
   margin-top: 14px;
 }
@@ -1203,7 +1217,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .startmenu-power-btn {
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 6px 10px;
   font-size: 14px;
   color: #c8ccd6;
@@ -1215,9 +1229,9 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
   color: #ffffff;
 }
 .startmenu-power-btn.shutdown:hover {
-  background: rgba(255, 77, 107, 0.18);
-  border-color: rgba(255, 77, 107, 0.40);
-  color: #ff8b9e;
+  background: rgba(217, 107, 107, 0.18);
+  border-color: rgba(217, 107, 107, 0.40);
+  color: #d96b6b;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -1229,7 +1243,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .search-btn {
   background: $glass-deeper;
   border: 1px solid $hairline-white;
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 4px 14px;
   min-width: 200px;
   transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
@@ -1255,7 +1269,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
   color: #c8ccd6;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 3px;
   transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .app-rail-h .app-pill:hover {
@@ -1278,7 +1292,7 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 .taskbar-tile {
   background: $glass-deeper;
   border: 1px solid $hairline-white;
-  border-radius: 6px;
+  border-radius: 3px;
   padding: 4px 10px;
   color: #c8ccd6;
   transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
@@ -1378,7 +1392,7 @@ tooltip {
   background: $glass-deepest;
   color: #e8edf5;
   border: 1px solid $gold-edge;
-  border-radius: 6px;
+  border-radius: 3px;
   padding: 4px 8px;
 }
 
@@ -1388,4 +1402,56 @@ tooltip {
 /* SysPulse: dim the chrome, gold the values */
 .syspulse-cpu, .syspulse-mem, .syspulse-temp {
   color: #c8ccd6;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NYXUS EFFECT VOCABULARY (rev r15) — opt-in helper classes for EWW widgets
+   Sprinkled across the system, not blanket. Mirror of the GTK helpers so the
+   look is system-wide consistent.
+   ════════════════════════════════════════════════════════════════════════════ */
+.nyx-glow {
+  box-shadow: 0 0 16px $cream-glow,
+              0 0 4px rgba(255, 255, 255, 0.45);
+}
+.nyx-glow:hover {
+  box-shadow: 0 0 22px rgba(244, 234, 213, 0.45),
+              0 0 6px rgba(255, 255, 255, 0.85);
+}
+.nyx-glow-soft { box-shadow: 0 0 10px $cream-bg-active; }
+
+.nyx-tilt-l { transform: rotate(-1.5deg); }
+.nyx-tilt-r { transform: rotate( 1.5deg); }
+
+.nyx-handdrawn {
+  border: 2px dashed $cream-edge;
+  border-radius: 3px;
+  padding: 6px 12px;
+  background-color: $glass-deeper;
+}
+
+.nyx-hand {
+  font-family: $font-hand;
+  font-size: 18px;
+  font-weight: 600;
+  color: $cream-soft;
+}
+
+.nyx-mono {
+  font-family: $font-mono;
+  letter-spacing: 0.02em;
+}
+
+.nyx-scramble {
+  font-family: $font-mono;
+  letter-spacing: 0.04em;
+}
+.nyx-scramble:hover {
+  color: $cream;
+  text-shadow: 0 0 6px $cream-glow;
+}
+
+.nyx-frosted {
+  background-color: $glass-dark;
+  border: 1px solid $hairline-white;
+  border-radius: 3px;
 }

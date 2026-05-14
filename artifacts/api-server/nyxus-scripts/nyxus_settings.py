@@ -84,6 +84,7 @@ try:
         FONT_UI, FONT_MONO, FONT_DISPLAY,
     )
 except Exception:
+    # Fallback palette (rev r15) — keep in lockstep with nyxus_palette.py.
     WHITE_PURE     = "#ffffff"
     WHITE_OFF      = "#e8edf5"
     GREY_LIGHT     = "#c8ccd6"
@@ -91,20 +92,26 @@ except Exception:
     GREY_TERTIARY  = "#6a6e78"
     INK_FADED      = "#0a0a0a"
     INK_BLACK      = "#000000"
-    GLASS_DARK     = "#14141a"
-    GLASS_DEEPER   = "#0a0a0e"
-    GLASS_DEEPEST  = "#000000"
+    GLASS_DARK     = "rgba(14, 14, 22, 0.55)"
+    GLASS_DEEPER   = "rgba(8, 8, 14, 0.78)"
+    GLASS_DEEPEST  = "rgba(0, 0, 0, 0.92)"
     HAIRLINE_WHITE = "rgba(255,255,255,0.10)"
     HAIRLINE_INK   = "rgba(0,0,0,0.45)"
-    RADIUS_CARD    = 14
-    RADIUS_PILL    = 12
-    RADIUS_INPUT   = 10
+    RADIUS_CARD    = 3
+    RADIUS_PILL    = 3
+    RADIUS_INPUT   = 3
     FONT_UI        = "Inter"
-    FONT_MONO      = "JetBrains Mono"
-    FONT_DISPLAY   = "Inter Display"
+    FONT_MONO      = "JetBrains Mono Nerd Font"
+    FONT_DISPLAY   = "Caveat"
 
-DANGER_RED = "#ff6464"  # §8 — RESERVED for destructive only
-NYXUS_GOLD = "#d4b87a"  # warm brand accent — selection, focus rings
+# Cream warm accent (rev r15) — used for selection, focus rings, active
+# workspace, brand marks. Replaces the prior NYXUS_GOLD constant; kept
+# as alias so legacy references continue to resolve.
+NYXUS_CREAM = "#f4ead5"
+NYXUS_GOLD  = NYXUS_CREAM
+DANGER_RED  = "#d96b6b"  # §8 — RESERVED for destructive only
+FONT_HAND   = "Caveat"   # handwritten accent font (badges/brand marks)
+FONT_BODY   = "Inter"    # primary chrome / body text font
 
 # Nerd-font glyphs (§6 — never emoji in chrome).
 GLYPHS = {
@@ -691,7 +698,7 @@ window, .nyx-bg {{
     background-color: {GLASS_DARK};
     color: {WHITE_PURE};
     box-shadow: inset 3px 0 0 0 {NYXUS_GOLD},
-                0 0 18px rgba(212,184,122,0.10);
+                0 0 18px rgba(244,234,213,0.10);
 }}
 .nyx-section-glyph {{
     font-family: 'Symbols Nerd Font', 'Symbols Nerd Font Mono', monospace;
@@ -725,7 +732,7 @@ window, .nyx-bg {{
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: {RADIUS_CARD}px;
     box-shadow: 0 24px 64px rgba(0,0,0,0.7),
-                0 0 0 1px rgba(212,184,122,0.08);
+                0 0 0 1px rgba(244,234,213,0.08);
     padding: 8px;
 }}
 .nyx-palette-entry {{
@@ -743,7 +750,7 @@ window, .nyx-bg {{
 .nyx-palette-row:hover,
 .nyx-palette-row.selected,
 .nyx-palette-row:selected {{
-    background-color: rgba(212,184,122,0.10);
+    background-color: rgba(244,234,213,0.10);
     color: {WHITE_PURE};
 }}
 .nyx-palette-hint {{
@@ -11986,7 +11993,7 @@ class ThemePacksPage(SectionPage):
     # Each pack: id, label, accent hex, secondary hex, description
     PACKS = (
         ("dark_mirror",   "DARK MIRROR (default)",
-            "#a06bff", "#3ad8ff",
+            "#f4ead5", "#e8edf5",
             "Purple primary + cyan secondary — the canonical NYXUS look"),
         ("inferno",       "INFERNO",
             "#ff3a5c", "#ffae3a",
@@ -13271,8 +13278,8 @@ class PlymouthPage(SectionPage):
             description="The shipped NYXUS theme — DARK MIRROR palette")
         self.add_group(app)
         app.add(kv_row("Background", "#0a0a14 (ink black)"))
-        app.add(kv_row("Primary", "#a06bff (purple)"))
-        app.add(kv_row("Secondary", "#3ad8ff (cyan)"))
+        app.add(kv_row("Primary", "#f4ead5 (cream)"))
+        app.add(kv_row("Secondary", "#e8edf5 (off-white)"))
         app.add(kv_row("Logo source",
                        str(self.THEMES_DIR / self.DEFAULT_THEME / "logo.png")))
         app.add(empty_row(
