@@ -36,6 +36,21 @@ $cream-edge:      rgba(244, 234, 213, 0.55);
 $cream-bg-soft:   rgba(244, 234, 213, 0.10);
 $cream-bg-active: rgba(244, 234, 213, 0.18);
 
+// Sprint J rev r16 — Copper, the second canonical accent. Cream stays
+// primary for prose, brand wordmarks, and most surfaces. Copper is
+// reserved for icon ring outlines, micro-accents (toggle thumbs,
+// progress fills, focus rings), and high-contrast highlights.
+// Hex #b8865a is intentionally desaturated — it must read as "warm
+// metal" not "yellow gold". Bright golds (#d4b87a, #ffd700) stay
+// banned. See docs/brand/VISUAL-TARGET.md.
+$copper:          #b8865a;
+$copper-soft:     #d4a978;
+$copper-deep:     #8a6444;
+$copper-glow:     rgba(184, 134, 90, 0.35);
+$copper-edge:     rgba(184, 134, 90, 0.55);
+$copper-bg-soft:  rgba(184, 134, 90, 0.10);
+$copper-bg-active:rgba(184, 134, 90, 0.18);
+
 /* Backward-compat aliases — every old $gold-* reference resolves to
    cream. Keep both vocabularies until the codebase fully migrates. */
 $gold:           $cream;
