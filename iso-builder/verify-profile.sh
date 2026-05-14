@@ -946,16 +946,28 @@ grep -q 'readonly property var slides' "${CAL_BRAND}/show.qml" 2>/dev/null \
   && ok "calamares: settings.conf points to branding=nyxus" \
   || fail "calamares: settings.conf missing or wrong branding"
 
-# Required module configs (skip 'summary' / 'mount' / 'partition' /
+# Required module configs (skip 'summary' / 'mount' /
 # 'umount' / 'unpackfs' / 'machineid' / 'localecfg' — these are built-in
 # views or accept zero-config defaults).
-for m in welcome locale timezone keyboard users \
+for m in welcome locale timezone keyboard partition users \
          fstab displaymanager networkcfg hwclock \
          services-systemd grubcfg bootloader \
          packages shellprocess finished; do
   [[ -f "${AIROOT}/etc/calamares/modules/${m}.conf" ]] \
     || fail "calamares: missing module config ${m}.conf"
 done
+
+# Required modules must be wired in settings.conf
+for m in partition locale users timezone bootloader fstab services-systemd; do
+  grep -Eq "^[[:space:]]*-[[:space:]]*${m}([[:space:]]|$)" "${CAL_SETTINGS}" \
+    && ok "calamares: module '${m}' wired in settings.conf" \
+    || fail "calamares: module '${m}' missing from settings.conf"
+done
+
+# Post-install hook must be wired
+grep -Eq '^[[:space:]]*-[[:space:]]*shellprocess([[:space:]]|$)' "${CAL_SETTINGS}" \
+  && ok "calamares: post-install shellprocess hook wired" \
+  || fail "calamares: post-install shellprocess hook missing"
 
 # Launcher (.desktop) — both system-wide and live-session desktop copy
 if [[ -f "${CAL_LAUNCHER}" ]] \
