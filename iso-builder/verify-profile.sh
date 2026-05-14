@@ -1356,6 +1356,119 @@ if [[ -f "${DESK}" ]]; then
 fi
 
 
+# ── 13x. Sprint C · Top 3 Apps full Build Standard (rev r15 — 2026-05-14) ──
+# Software Center · NYXUS Capture · Notification Center must each ship with:
+#   1. .desktop entry whose Exec= path actually exists in airootfs
+#   2. Hyprland keybind in skel/.config/hypr/hyprland.conf
+#   3. SectionDef + PAGE_CLASSES registration in nyxus_settings.py
+#   4. Notification Center drawer mode + matching windowrule
+echo
+echo "── 13x. Sprint C · Top 3 Apps full Build Standard ─────────────────"
+
+SPRINT_C_HYPR="${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
+SPRINT_C_RULES="${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-windowrules.conf"
+SPRINT_C_SETTINGS="${ART_SRC}/nyxus_settings.py"
+SPRINT_C_NOTIF="${AIROOT}/opt/nyxus/nyxus_settings_notifications.py"
+
+# (a) .desktop entries + their Exec= targets exist
+for spec in \
+    "nyxus-software.desktop|opt/nyxus/nyxus_store.py|software" \
+    "nyxus-capture.desktop|opt/nyxus/nyxus_screenshot.py|capture" \
+    "nyxus-notification-center.desktop|opt/nyxus/nyxus_settings_notifications.py|notif_center"; do
+  IFS='|' read -r dfile target key <<< "${spec}"
+  dpath="${AIROOT}/usr/share/applications/${dfile}"
+  if [[ -f "${dpath}" ]]; then
+    ok "Sprint C: ${dfile} present"
+    if [[ -f "${AIROOT}/${target}" ]]; then
+      ok "Sprint C: Exec target /${target} exists in airootfs"
+    else
+      fail "Sprint C: ${dfile} references /${target} but file is missing"
+    fi
+  else
+    fail "Sprint C: ${dfile} missing from /usr/share/applications/"
+  fi
+done
+
+# (b) Hyprland binds present (Super+Shift+A → software, Super+Shift+S
+#     → capture, Super+N → notif drawer)
+if [[ -f "${SPRINT_C_HYPR}" ]]; then
+  grep -qE '^bind = \$mod SHIFT, A,.*nyxus_store' "${SPRINT_C_HYPR}" \
+    && ok "Sprint C: Super+Shift+A → nyxus_store bind present" \
+    || fail "Sprint C: Super+Shift+A → nyxus_store bind missing"
+  grep -qE '^bind = \$mod SHIFT, S,.*nyxus_screenshot' "${SPRINT_C_HYPR}" \
+    && ok "Sprint C: Super+Shift+S → nyxus_screenshot bind present" \
+    || fail "Sprint C: Super+Shift+S → nyxus_screenshot bind missing"
+  grep -qE '^bind = \$mod, +N,.*nyxus_settings_notifications.*--drawer' "${SPRINT_C_HYPR}" \
+    && ok "Sprint C: Super+N → notification drawer bind present" \
+    || fail "Sprint C: Super+N → notification drawer bind missing"
+else
+  fail "Sprint C: ${SPRINT_C_HYPR} missing — cannot verify keybinds"
+fi
+
+# (c) Notification Center drawer mode wired in standalone main()
+if [[ -f "${SPRINT_C_NOTIF}" ]]; then
+  grep -q '"--drawer" in sys.argv' "${SPRINT_C_NOTIF}" \
+    && ok "Sprint C: notif center main() handles --drawer flag" \
+    || fail "Sprint C: notif center main() missing --drawer handling"
+  grep -q 'Gtk4LayerShell' "${SPRINT_C_NOTIF}" \
+    && ok "Sprint C: notif drawer attempts gtk4-layer-shell anchoring" \
+    || fail "Sprint C: notif drawer missing layer-shell anchor"
+fi
+
+# (d) Drawer windowrule fallback present
+if [[ -f "${SPRINT_C_RULES}" ]]; then
+  grep -qE '^windowrulev2 = float,.*class:\^\(com\\\.nyxus\\\.notifications\)\$' "${SPRINT_C_RULES}" \
+    && ok "Sprint C: drawer fallback windowrule (float) present" \
+    || fail "Sprint C: drawer fallback windowrule (float) missing"
+  grep -qE '^windowrulev2 = move .*class:\^\(com\\\.nyxus\\\.notifications\)\$' "${SPRINT_C_RULES}" \
+    && ok "Sprint C: drawer fallback windowrule (right-edge move) present" \
+    || fail "Sprint C: drawer fallback windowrule (move) missing"
+fi
+
+# (e) Three settings hub pages registered (SectionDef + PAGE_CLASSES + glyph)
+if [[ -f "${SPRINT_C_SETTINGS}" ]]; then
+  for key in software capture notif_center; do
+    grep -qE "^[[:space:]]*SectionDef\(\"${key}\"," "${SPRINT_C_SETTINGS}" \
+      && ok "Sprint C: SectionDef('${key}') registered" \
+      || fail "Sprint C: SectionDef('${key}') missing from SECTIONS tuple"
+    grep -qE "^[[:space:]]*\"${key}\":[[:space:]]+(Software|Capture|NotifCenter)Page," \
+         "${SPRINT_C_SETTINGS}" \
+      && ok "Sprint C: PAGE_CLASSES['${key}'] wired to its page class" \
+      || fail "Sprint C: PAGE_CLASSES['${key}'] missing or wrong class"
+    grep -qE "^[[:space:]]*\"${key}\":[[:space:]]+\"\\\\u" "${SPRINT_C_SETTINGS}" \
+      && ok "Sprint C: glyph icon for '${key}' present" \
+      || fail "Sprint C: glyph icon for '${key}' missing from glyph map"
+  done
+
+  # 6-section Build Standard: General + Appearance + Behavior present
+  # in each new page. (Keybinds + Reset + Advanced are auto-injected
+  # by SectionPage's footer — guaranteed structurally.)
+  for cls in SoftwarePage CapturePage NotifCenterPage; do
+    cls_block=$(awk -v c="${cls}" '
+      $0 ~ "^class " c "\\(SectionPage\\):" { in_cls = 1; print; next }
+      in_cls && /^class / { in_cls = 0 }
+      in_cls { print }
+    ' "${SPRINT_C_SETTINGS}")
+    fails=0
+    for needed in "title=\"General\"" "title=\"Appearance\"" "title=\"Behavior\""; do
+      grep -qF "${needed}" <<< "${cls_block}" || fails=1
+    done
+    if (( fails == 0 )); then
+      ok "Sprint C: ${cls} ships General+Appearance+Behavior groups"
+    else
+      fail "Sprint C: ${cls} missing one of General/Appearance/Behavior"
+    fi
+
+    # NYXUS Build Standard: no stub markers in shipped page code
+    if grep -qE "TODO|FIXME|placeholder|coming soon|not implemented" \
+         <<< "${cls_block}"; then
+      fail "Sprint C: ${cls} contains stub markers (TODO/FIXME/placeholder)"
+    else
+      ok "Sprint C: ${cls} has no stub markers"
+    fi
+  done
+fi
+
 # ── final ─────────────────────────────────────────────────────────────
 echo
 if (( FAIL == 0 )); then

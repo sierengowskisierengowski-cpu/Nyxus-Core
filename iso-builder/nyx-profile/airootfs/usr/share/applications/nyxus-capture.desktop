@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Capture
+GenericName=Screenshot Tool
+Comment=Capture region, window, or full screen with annotation, OCR, and clipboard
+Exec=python3 /opt/nyxus/nyxus_screenshot.py
+TryExec=python3
+Icon=accessories-screenshot
+Terminal=false
+Categories=Graphics;Utility;
+Keywords=NYXUS;Capture;Screenshot;Snip;Region;Annotate;OCR;
+StartupNotify=true
+StartupWMClass=io.nyxus.screenshot
+X-NYXUS-Module=nyxus_screenshot
