@@ -490,6 +490,133 @@ EX_DIR="${AIROOT}/usr/share/nyxus/plugins/example-quote"
 [[ -f "${EX_DIR}/manifest.json" && -f "${EX_DIR}/widget.yuck" ]] \
   && ok "example plugin shipped" || fail "example plugin missing"
 
+# ── 13k. Tier A polish (Plymouth/GRUB/Sync/KDE Connect/EQ) ────────────
+hd "13k. Tier A · Plymouth + GRUB + Sync + KDE Connect + EQ"
+# Plymouth HOOK must precede autodetect for kms early splash to work.
+if grep -Eq '^HOOKS=\([^)]*\budev\s+plymouth\b' "${AIROOT}/etc/mkinitcpio.conf"; then
+  ok "plymouth HOOK inserted in mkinitcpio.conf"
+else
+  fail "plymouth HOOK missing from mkinitcpio.conf HOOKS=(...)"
+fi
+# GRUB theme — theme.txt + ALL pixmaps it references.
+GTH="${AIROOT}/usr/share/grub/themes/nyxus"
+[[ -f "${GTH}/theme.txt" ]] && ok "grub theme.txt present" \
+  || fail "grub theme.txt missing"
+[[ -s "${GTH}/background.png" ]] && ok "grub background.png present" \
+  || fail "grub background.png missing (run scripts/generate-grub-theme.py)"
+for pm in select_c.png select_e.png select_w.png \
+          terminal_box_c.png terminal_box_n.png terminal_box_s.png \
+          terminal_box_e.png terminal_box_w.png \
+          terminal_box_ne.png terminal_box_nw.png \
+          terminal_box_se.png terminal_box_sw.png; do
+  [[ -s "${GTH}/${pm}" ]] || fail "grub pixmap missing: ${pm}"
+done
+ok "grub pixmaps complete (12 files)"
+# /etc/default/grub references our theme + splash cmdline.
+GD="${AIROOT}/etc/default/grub"
+if [[ -f "${GD}" ]] && grep -q 'GRUB_THEME=.*nyxus' "${GD}" \
+   && grep -q 'splash' "${GD}"; then
+  ok "/etc/default/grub wired to nyxus theme + splash cmdline"
+else
+  fail "/etc/default/grub missing or not wired (theme + splash)"
+fi
+# NYXUS Sync — nyxus-account helper exists + parses + supports CLI flags.
+NA="${AIROOT}/usr/local/bin/nyxus-account"
+if [[ -x "${NA}" ]] && bash -n "${NA}" 2>/dev/null \
+   && grep -q -- '--push' "${NA}" && grep -q -- '--pull' "${NA}"; then
+  ok "nyxus-account helper present + parses + supports --push/--pull"
+else
+  fail "nyxus-account helper missing/broken (SyncPage will dangle)"
+fi
+# KDE Connect package + autostart.
+grep -Eq '^kdeconnect$' "${PROFILE}/packages.x86_64" \
+  && ok "kdeconnect in packages.x86_64" \
+  || fail "kdeconnect not in packages.x86_64"
+grep -q 'kdeconnect-indicator' "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+  && ok "kdeconnect-indicator autostart wired" \
+  || fail "kdeconnect-indicator autostart missing in hyprland.conf"
+# EasyEffects package + presets + autostart.
+grep -Eq '^easyeffects$' "${PROFILE}/packages.x86_64" \
+  && ok "easyeffects in packages.x86_64" \
+  || fail "easyeffects not in packages.x86_64"
+EE_DIR="${AIROOT}/etc/skel/.config/easyeffects/output"
+COUNT=0
+[[ -d "${EE_DIR}" ]] && COUNT=$(ls "${EE_DIR}"/*.json 2>/dev/null | wc -l)
+if (( COUNT >= 3 )); then
+  ok "easyeffects presets shipped (${COUNT} files)"
+else
+  fail "easyeffects presets missing (have ${COUNT}, need >=3)"
+fi
+grep -q 'easyeffects --gapplication-service' \
+  "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+  && ok "easyeffects autostart wired" \
+  || fail "easyeffects autostart missing in hyprland.conf"
+
+# ── 13l. Tier B (Virt / Containers / Kernel / Gaming / Editors) ──────
+hd "13l. Tier B · Virt + Containers + Kernel + Gaming + Editors"
+for pkg in qemu-desktop libvirt virt-manager virt-viewer edk2-ovmf swtpm \
+           buildah skopeo distrobox \
+           linux-lts linux-zen linux-hardened \
+           steam mangohud \
+           code helix micro gnome-text-editor; do
+  grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
+    && ok "package: ${pkg}" \
+    || fail "missing package: ${pkg}"
+done
+for h in nyxus-virt-setup nyxus-distrobox-helper \
+         nyxus-kernel-switch nyxus-protonup; do
+  HP="${AIROOT}/usr/local/bin/${h}"
+  if [[ -x "${HP}" ]] && bash -n "${HP}" 2>/dev/null; then
+    ok "${h} present + parses"
+  else
+    fail "${h} missing/not-executable/bad"
+  fi
+done
+# Settings page registration: every Tier B key must be in PAGE_CLASSES
+# AND in SECTIONS AND have a glyph.
+NSS="${NS}/nyxus_settings.py"
+for key in virt containers kernel gaming editors; do
+  grep -q "\"${key}\":" "${NSS}" \
+    && ok "Settings: ${key} registered" \
+    || fail "Settings: ${key} not registered"
+done
+
+# ── 13m. Tier C (USB / Secure Boot / VPN / DoH / MAC) ────────────────
+hd "13m. Tier C · USB firewall + SecBoot + VPN + DoH + MAC random"
+for pkg in usbguard wireguard-tools openvpn networkmanager-openvpn \
+           networkmanager-strongswan sbctl tpm2-tools macchanger \
+           dnscrypt-proxy; do
+  grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
+    && ok "package: ${pkg}" \
+    || fail "missing package: ${pkg}"
+done
+for h in nyxus-usbguard-helper nyxus-secboot nyxus-vpn nyxus-doh \
+         nyxus-mac-randomize; do
+  HP="${AIROOT}/usr/local/bin/${h}"
+  if [[ -x "${HP}" ]] && bash -n "${HP}" 2>/dev/null; then
+    ok "${h} present + parses"
+  else
+    fail "${h} missing/not-executable/bad"
+  fi
+done
+# usbguard ships PERMISSIVE — verify safe defaults so user doesn't get locked out
+UG_CONF="${AIROOT}/etc/usbguard/usbguard-daemon.conf"
+if [[ -f "${UG_CONF}" ]] \
+   && grep -q '^PresentDevicePolicy=allow' "${UG_CONF}" \
+   && grep -q '^ImplicitPolicyTarget=allow' "${UG_CONF}"; then
+  ok "usbguard ships permissive (PresentDevicePolicy=allow)"
+else
+  fail "usbguard daemon.conf missing or not permissive (lockout risk!)"
+fi
+[[ -f "${AIROOT}/etc/usbguard/rules.conf" ]] \
+  && ok "usbguard rules.conf present (empty by design)" \
+  || fail "usbguard rules.conf missing"
+for key in usb_firewall secboot vpn doh mac_random; do
+  grep -q "\"${key}\":" "${NS}/nyxus_settings.py" \
+    && ok "Settings: ${key} registered" \
+    || fail "Settings: ${key} not registered"
+done
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

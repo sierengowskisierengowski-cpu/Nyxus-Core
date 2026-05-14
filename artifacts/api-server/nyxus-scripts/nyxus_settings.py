@@ -137,6 +137,21 @@ GLYPHS = {
     "backup":        "\uf187",   # nf-fa-archive
     "sync":          "\uf021",   # nf-fa-refresh
     "drop":          "\uf0ee",   # nf-fa-cloud_upload
+    # Tier B glyphs (2026-05-14)
+    "virt":          "\uf109",   # nf-fa-laptop      (VM)
+    "containers":    "\uf1b3",   # nf-fa-cubes       (containers)
+    "kernel":        "\uf17c",   # nf-fa-linux       (kernel)
+    "gaming":        "\uf11b",   # nf-fa-gamepad     (gaming)
+    "editors":       "\uf040",   # nf-fa-pencil      (editors)
+    # Tier C glyphs (2026-05-14)
+    "usb_firewall":  "\uf287",   # nf-fa-usb         (USB firewall)
+    "secboot":       "\uf023",   # nf-fa-lock        (Secure Boot/TPM)
+    "vpn":           "\uf132",   # nf-fa-shield      (VPN)
+    "doh":           "\uf0ac",   # nf-fa-globe       (DoH)
+    "mac_random":    "\uf109",   # nf-fa-laptop      (MAC randomize)
+    "webcam":        "\uf030",   # nf-fa-camera      (used by cameras_mics)
+    "gamepad":       "\uf11b",   # nf-fa-gamepad     (controllers alias)
+    "color":         "\uf53f",   # nf-mdi-palette    (color profiles)
     "language":      "\uf1ab",   # nf-fa-language
     "shortcut":      "\uf11c",   # nf-fa-keyboard_o (alt)
     "crash":         "\uf188",   # nf-fa-bug
@@ -481,6 +496,66 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "luks,vault,vpn,doh,tpm,secure boot,usbguard,fwupd,"
                "panic,lockdown,audit,faillock,pam,recovery,trust,"
                "permissions,camera,microphone,location,screen", 1,
+               "System"),
+    # ── Tier B (2026-05-14) — Virt / Containers / Kernel / Gaming / Editors ──
+    SectionDef("virt",          "Virtualization",
+               "QEMU/KVM + libvirt + virt-manager",
+               "virt",
+               "vm,virtual,virt,qemu,kvm,libvirt,virtmanager,"
+               "windows,guest,hypervisor,uefi,ovmf,tpm,swtpm", 1,
+               "System"),
+    SectionDef("containers",    "Containers",
+               "Podman + Distrobox dev containers",
+               "containers",
+               "container,podman,docker,buildah,skopeo,distrobox,"
+               "dev,sandbox,oci,image,registry", 1,
+               "System"),
+    SectionDef("kernel",        "Kernel",
+               "Switch default boot kernel (linux/lts/zen/hardened)",
+               "kernel",
+               "kernel,linux,lts,zen,hardened,grub,boot,uname,version", 1,
+               "System"),
+    SectionDef("gaming",        "Gaming",
+               "Steam, Proton-GE, GameMode, MangoHud",
+               "gaming",
+               "gaming,game,steam,proton,proton-ge,gamemode,mangohud,"
+               "gamescope,fps,wine,dxvk,vkd3d", 1,
+               "Devices"),
+    SectionDef("editors",       "Editors",
+               "Curated editor bundle + default text-editor picker",
+               "editors",
+               "editor,code,vscode,vscodium,helix,neovim,vim,micro,"
+               "gnome,text,nano,ide,xdg-mime,default", 1,
+               "Personal"),
+    # ── Tier C (2026-05-14) — USB firewall / Secure Boot / VPN / DoH / MAC ──
+    SectionDef("usb_firewall",  "USB Firewall",
+               "usbguard — permissive default, opt-in lockdown",
+               "usb_firewall",
+               "usb,firewall,usbguard,device,allowlist,blocklist,"
+               "lockdown,audit,permissive,security", 1,
+               "System"),
+    SectionDef("secboot",       "Secure Boot · TPM",
+               "sbctl + tpm2-tools status, key enrollment, PCR read",
+               "secboot",
+               "secure boot,sbctl,tpm,tpm2,uefi,enroll,sign,measured boot,"
+               "pcr,attestation,microsoft keys", 1,
+               "System"),
+    SectionDef("vpn",           "VPN",
+               "WireGuard + OpenVPN via NetworkManager",
+               "vpn",
+               "vpn,wireguard,openvpn,nm,nmcli,tunnel,private,"
+               "import,ovpn,conf", 1,
+               "System"),
+    SectionDef("doh",           "DNS-over-HTTPS",
+               "dnscrypt-proxy: off / Cloudflare / Quad9",
+               "doh",
+               "dns,doh,dnscrypt,cloudflare,quad9,encrypted,resolver,privacy", 1,
+               "System"),
+    SectionDef("mac_random",    "MAC Randomization",
+               "NetworkManager wifi.cloned-mac-address policy",
+               "mac_random",
+               "mac,randomize,random,wifi,cloned,nmcli,network manager,"
+               "privacy,tracking,anonymity,macchanger", 1,
                "System"),
 )
 SECTIONS_BY_KEY = {s.key: s for s in SECTIONS}
@@ -1700,6 +1775,54 @@ class SoundPage(SectionPage):
                 label, f"Plays the '{event}' event",
                 "Play",
                 lambda e=event: fire_and_forget(f"nyxus-sound.sh {e}")))
+
+        # ── EasyEffects EQ preset switcher (Tier A · 2026-05-14) ────
+        # Reads /etc/skel/.config/easyeffects/output/*.json (shipped) +
+        # ~/.config/easyeffects/output/*.json (user-added). Activating
+        # a preset calls `easyeffects -l <name>` which is the documented
+        # CLI for live preset load. State source of truth is the
+        # EasyEffects daemon itself; we only display + dispatch.
+        eq = Adw.PreferencesGroup(
+            title="Audio EQ presets",
+            description="Live preset switcher for EasyEffects (output bus). "
+                        "Requires the easyeffects --gapplication-service "
+                        "autostart in hyprland.conf.")
+        self.add_group(eq)
+        if not have("easyeffects"):
+            eq.add(empty_row(
+                "EasyEffects not installed",
+                "Install with `sudo pacman -S easyeffects lsp-plugins-lv2`"))
+        else:
+            preset_dirs = [
+                Path("/etc/skel/.config/easyeffects/output"),
+                Path.home() / ".config" / "easyeffects" / "output",
+            ]
+            seen: dict[str, Path] = {}
+            for d in preset_dirs:
+                if d.is_dir():
+                    for p in sorted(d.glob("*.json")):
+                        seen.setdefault(p.stem, p)
+            if not seen:
+                eq.add(empty_row(
+                    "No presets found",
+                    "Add JSON presets to ~/.config/easyeffects/output/"))
+            else:
+                for name in sorted(seen):
+                    eq.add(action_row(
+                        name.replace("-", " "),
+                        f"Load via `easyeffects -l {name}`",
+                        "Apply",
+                        lambda n=name: sh_async(
+                            ["easyeffects", "-l", n],
+                            lambda r, nm=n: self.toast(
+                                f"applied {nm}" if r[0] == 0
+                                else f"apply failed: {nm}"),
+                            timeout=4)))
+            eq.add(action_row(
+                "Open EasyEffects",
+                "Full UI for editing + saving presets",
+                "Launch",
+                lambda: fire_and_forget("easyeffects")))
 
         self._render_all()
         self.add_pill(status_pill("live", "ok"))
@@ -10197,6 +10320,771 @@ class LanguagePage(SectionPage):
         sh_async(cmd, done, timeout=10)
 
 
+# ──────────────────────────────────────────────────────────────────────
+# Tier B (rev 2026-05-14): Virt / Containers / Kernel / Gaming / Editors
+# Each page reads real system state and dispatches real commands; no
+# stubs. Helpers live at /usr/local/bin/nyxus-{virt-setup,kernel-switch,
+# protonup,distrobox-helper}.
+# ──────────────────────────────────────────────────────────────────────
+class VirtPage(SectionPage):
+    """QEMU/KVM + libvirt + virt-manager front door."""
+    KEY = "virt"
+
+    def build(self) -> None:
+        # Status (read by nyxus-virt-setup status)
+        self._status_grp = Adw.PreferencesGroup(
+            title="Virtualization status",
+            description="libvirtd socket + group membership + default net/pool")
+        self.add_group(self._status_grp)
+        self._render_status()
+
+        # Setup
+        setup = Adw.PreferencesGroup(
+            title="Setup",
+            description="One-shot: enable libvirtd, add you to libvirt group, "
+                        "autostart default net + pool. Idempotent.")
+        self.add_group(setup)
+        if not have("nyxus-virt-setup"):
+            setup.add(empty_row(
+                "nyxus-virt-setup missing",
+                "Reinstall the nyxus-scripts package"))
+        else:
+            setup.add(action_row(
+                "Set up virtualization",
+                "Runs nyxus-virt-setup --setup (asks for admin password)",
+                "Run setup",
+                lambda: sh_async(
+                    ["nyxus-virt-setup", "--setup"],
+                    lambda r: (self.toast("setup OK" if r[0] == 0
+                                          else "setup failed"),
+                               self._render_status()),
+                    timeout=30),
+                css="nyx-pill-ok"))
+
+        # Tools
+        tools = Adw.PreferencesGroup(title="Tools")
+        self.add_group(tools)
+        if have("virt-manager"):
+            tools.add(action_row(
+                "Open Virt Manager",
+                "Full GUI for VM creation, snapshots, networking",
+                "Launch",
+                lambda: fire_and_forget("virt-manager")))
+        if have("virt-viewer"):
+            tools.add(action_row(
+                "Open Virt Viewer",
+                "Standalone SPICE/VNC console viewer",
+                "Launch",
+                lambda: fire_and_forget("virt-viewer")))
+        if have("virsh"):
+            tools.add(action_row(
+                "List domains (virsh list --all)",
+                "Show every defined VM via virsh in a terminal",
+                "Show",
+                lambda: open_terminal(
+                    "virsh -c qemu:///system list --all; read -p 'enter to close'",
+                    self.win)))
+
+        ok_running = self._libvirt_active()
+        self.add_pill(status_pill(
+            "ready" if ok_running else "needs setup",
+            "ok" if ok_running else "warn"))
+
+    def _libvirt_active(self) -> bool:
+        rc, _, _ = sh(["systemctl", "is-active", "libvirtd.socket"], timeout=2)
+        return rc == 0
+
+    def _render_status(self) -> None:
+        # clear
+        child = self._status_grp.get_first_child()
+        # Adw.PreferencesGroup wraps rows in a list box; use remove() per row
+        rows = []
+        # collect rows we added (skip None / non-rows)
+        for r in getattr(self, "_status_rows", []):
+            self._status_grp.remove(r)
+        self._status_rows = []
+        rc, out, _ = sh(["nyxus-virt-setup", "status"], timeout=4) \
+            if have("nyxus-virt-setup") else (1, "", "")
+        if rc == 0 and out:
+            for line in out.splitlines():
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    row = kv_row(k.strip(), v.strip())
+                    self._status_grp.add(row)
+                    self._status_rows.append(row)
+        else:
+            row = empty_row("status unavailable",
+                            "nyxus-virt-setup not installed or libvirt missing")
+            self._status_grp.add(row)
+            self._status_rows.append(row)
+
+
+class ContainersPage(SectionPage):
+    """Podman + Distrobox container manager."""
+    KEY = "containers"
+
+    def build(self) -> None:
+        # Engine status
+        eng = Adw.PreferencesGroup(
+            title="Engine",
+            description="Rootless podman + buildah/skopeo for image build")
+        self.add_group(eng)
+        for tool in ("podman", "buildah", "skopeo", "distrobox"):
+            eng.add(kv_row(tool,
+                           "installed" if have(tool) else "missing"))
+
+        # Distrobox
+        db = Adw.PreferencesGroup(
+            title="Distroboxes",
+            description="One-command rootless dev containers "
+                        "(via nyxus-distrobox-helper)")
+        self.add_group(db)
+        if not have("distrobox"):
+            db.add(empty_row("distrobox not installed",
+                             "Install with `sudo pacman -S distrobox`"))
+        else:
+            rc, out, _ = sh(["distrobox", "list", "--no-color"], timeout=6)
+            rows = []
+            if rc == 0 and out:
+                for line in out.splitlines():
+                    line = line.strip()
+                    if not line or line.startswith("ID"):
+                        continue
+                    parts = [p.strip() for p in line.split("|")]
+                    if len(parts) >= 4:
+                        rows.append(parts)
+            if rows:
+                for r in rows:
+                    db.add(kv_row(r[1], f"{r[2]} · {r[3]}"))
+            else:
+                db.add(empty_row("No containers yet",
+                                 "Use a quick template below to create one"))
+
+        # Quick create
+        quick = Adw.PreferencesGroup(
+            title="Quick create",
+            description="Curated images — runs in a terminal so you see pull "
+                        "progress")
+        self.add_group(quick)
+        for tpl, label in (
+            ("ubuntu", "Ubuntu 24.04"),
+            ("fedora", "Fedora latest"),
+            ("debian", "Debian stable"),
+            ("arch",   "Arch latest"),
+            ("kali",   "Kali rolling"),
+        ):
+            quick.add(action_row(
+                label,
+                f"Creates 'nyx-{tpl}' via nyxus-distrobox-helper --quick {tpl}",
+                "Create",
+                lambda t=tpl: open_terminal(
+                    f"nyxus-distrobox-helper --quick {t}; read -p 'done. enter to close'",
+                    self.win)))
+
+        # Tools
+        tools = Adw.PreferencesGroup(title="Tools")
+        self.add_group(tools)
+        if have("podman"):
+            tools.add(action_row(
+                "Podman info",
+                "Show podman engine info in a terminal",
+                "Show",
+                lambda: open_terminal(
+                    "podman info; read -p 'enter to close'", self.win)))
+
+        self.add_pill(status_pill(
+            "ready" if have("podman") else "missing",
+            "ok" if have("podman") else "danger"))
+
+
+class KernelPage(SectionPage):
+    """Switch the GRUB default kernel between linux/lts/zen/hardened."""
+    KEY = "kernel"
+
+    def build(self) -> None:
+        active = "?"
+        try:
+            rc, out, _ = sh(["uname", "-r"], timeout=2)
+            if rc == 0:
+                active = out.strip()
+        except Exception as e:
+            log.warning("uname: %s", e)
+
+        cur = Adw.PreferencesGroup(title="Active kernel")
+        self.add_group(cur)
+        cur.add(kv_row("uname -r", active))
+
+        inst = Adw.PreferencesGroup(
+            title="Installed kernels",
+            description="Click 'Make default' to set GRUB_DEFAULT and "
+                        "regenerate grub.cfg (asks for admin password)")
+        self.add_group(inst)
+        if not have("nyxus-kernel-switch"):
+            inst.add(empty_row("nyxus-kernel-switch missing",
+                               "Reinstall the nyxus-scripts package"))
+        else:
+            rc, out, _ = sh(["nyxus-kernel-switch", "--json"], timeout=4)
+            if rc == 0 and out:
+                try:
+                    data = json.loads(out)
+                except Exception:
+                    data = {"installed": []}
+                rows = data.get("installed", []) or []
+                if not rows:
+                    inst.add(empty_row("No kernels detected",
+                                       "Install one with `sudo pacman -S linux-lts`"))
+                for k in rows:
+                    name = k.get("name", "?")
+                    ver  = k.get("version", "?")
+                    is_active = (active.endswith("-lts") and name == "linux-lts") \
+                        or (active.endswith("-zen") and name == "linux-zen") \
+                        or (active.endswith("-hardened") and name == "linux-hardened") \
+                        or (name == "linux" and not any(
+                            active.endswith(s) for s in ("-lts","-zen","-hardened")))
+                    sub = ver + (" · ACTIVE" if is_active else "")
+                    inst.add(action_row(
+                        name, sub,
+                        "Make default",
+                        lambda n=name: sh_async(
+                            ["nyxus-kernel-switch", "--set", n],
+                            lambda r, nm=n: self.toast(
+                                f"default → {nm} · reboot to apply"
+                                if r[0] == 0 else "set failed (admin denied?)"),
+                            timeout=30)))
+
+        self.add_pill(status_pill(active.split(".")[0] + ".x", "ok"))
+
+
+class GamingPage(SectionPage):
+    """Steam + Proton-GE + GameMode + MangoHud."""
+    KEY = "gaming"
+
+    def build(self) -> None:
+        # Stack
+        stack = Adw.PreferencesGroup(title="Gaming stack")
+        self.add_group(stack)
+        for t in ("steam", "gamemoded", "mangohud", "gamescope"):
+            stack.add(kv_row(t,
+                             "installed" if have(t) else "missing"))
+
+        # Steam
+        steam_grp = Adw.PreferencesGroup(title="Steam")
+        self.add_group(steam_grp)
+        if have("steam"):
+            steam_grp.add(action_row(
+                "Open Steam",
+                "Launches the Steam client",
+                "Launch",
+                lambda: fire_and_forget("steam")))
+        else:
+            steam_grp.add(empty_row(
+                "Steam not installed",
+                "Install with `sudo pacman -S steam` (multilib repo)"))
+
+        # Proton-GE
+        ge_grp = Adw.PreferencesGroup(
+            title="Proton-GE",
+            description="GloriousEggroll's Proton fork. Installs into "
+                        "~/.steam/root/compatibilitytools.d/")
+        self.add_group(ge_grp)
+        if not have("nyxus-protonup"):
+            ge_grp.add(empty_row("nyxus-protonup missing",
+                                 "Reinstall the nyxus-scripts package"))
+        else:
+            installed = []
+            ge_dir = Path.home() / ".steam/root/compatibilitytools.d"
+            if ge_dir.is_dir():
+                installed = sorted(p.name for p in ge_dir.iterdir() if p.is_dir())
+            if installed:
+                for v in installed:
+                    ge_grp.add(kv_row(v, "installed"))
+            else:
+                ge_grp.add(empty_row(
+                    "No Proton-GE versions installed",
+                    "Click 'Install latest' below"))
+            ge_grp.add(action_row(
+                "Install latest Proton-GE",
+                "Downloads from GitHub releases (~400 MB)",
+                "Install",
+                lambda: open_terminal(
+                    "nyxus-protonup --install; read -p 'done. enter to close'",
+                    self.win),
+                css="nyx-pill-ok"))
+            ge_grp.add(action_row(
+                "List available releases",
+                "Newest 10 GE-Proton tags from GitHub",
+                "List",
+                lambda: open_terminal(
+                    "nyxus-protonup --available; read -p 'enter to close'",
+                    self.win)))
+
+        self.add_pill(status_pill(
+            "ready" if have("steam") else "needs steam",
+            "ok" if have("steam") else "warn"))
+
+
+class EditorsPage(SectionPage):
+    """Curated editors bundle: code, helix, micro, gnome-text-editor,
+    neovim, vim. Click to launch; long-press to set default for *.txt."""
+    KEY = "editors"
+
+    EDITORS = (
+        ("code",                "VS Code (OSS)",       "Code editor"),
+        ("helix",               "Helix",               "Modal terminal editor"),
+        ("nvim",                "Neovim",              "Hyperextensible vim"),
+        ("vim",                 "Vim",                 "Classic modal editor"),
+        ("micro",               "Micro",               "Beginner-friendly TUI"),
+        ("gnome-text-editor",   "GNOME Text Editor",   "Simple GUI editor"),
+    )
+
+    def build(self) -> None:
+        bundle = Adw.PreferencesGroup(
+            title="Editor bundle",
+            description="Click 'Launch' to open. Set default below.")
+        self.add_group(bundle)
+        for binname, label, sub in self.EDITORS:
+            present = have(binname)
+            bundle.add(action_row(
+                label,
+                f"{sub}{' · not installed' if not present else ''}",
+                "Launch" if present else "Install",
+                (lambda b=binname: fire_and_forget(b)) if present
+                else (lambda b=binname: open_terminal(
+                    f"sudo pacman -S {b}; read -p 'enter to close'", self.win))))
+
+        # Default editor for text/* via xdg-mime
+        default = Adw.PreferencesGroup(
+            title="Default text editor",
+            description="Sets text/plain handler via xdg-mime "
+                        "(per-user, no admin needed)")
+        self.add_group(default)
+        cur_default = ""
+        try:
+            rc, out, _ = sh(["xdg-mime", "query", "default", "text/plain"],
+                            timeout=3)
+            if rc == 0:
+                cur_default = out.strip()
+        except Exception as e:
+            log.warning("xdg-mime: %s", e)
+        default.add(kv_row("Current handler",
+                           cur_default or "(none)"))
+        for binname, label, _sub in self.EDITORS:
+            if not have(binname):
+                continue
+            desktop = f"{binname}.desktop"
+            # GNOME Text Editor uses a different desktop ID
+            if binname == "gnome-text-editor":
+                desktop = "org.gnome.TextEditor.desktop"
+            elif binname == "code":
+                desktop = "code-oss.desktop"
+            default.add(action_row(
+                f"Set {label} as default",
+                desktop,
+                "Set",
+                lambda d=desktop: sh_async(
+                    ["xdg-mime", "default", d, "text/plain"],
+                    lambda r, dd=d: self.toast(
+                        f"default → {dd}" if r[0] == 0
+                        else "xdg-mime failed"),
+                    timeout=4)))
+
+        any_present = any(have(b) for b, _, _ in self.EDITORS)
+        self.add_pill(status_pill(
+            "ready" if any_present else "none installed",
+            "ok" if any_present else "warn"))
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Tier C (rev 2026-05-14): USB / Secure Boot+TPM / VPN / DoH / MAC
+# Helpers live at /usr/local/bin/nyxus-{usbguard-helper,secboot,vpn,
+# doh,mac-randomize}. Every page reads + writes real state; all
+# privileged ops go through pkexec.
+# ──────────────────────────────────────────────────────────────────────
+class UsbPage(SectionPage):
+    """USB device firewall (usbguard) — permissive default, opt-in lockdown."""
+    KEY = "usb_firewall"
+
+    def build(self) -> None:
+        if not have("usbguard"):
+            grp = Adw.PreferencesGroup(title="usbguard not installed")
+            self.add_group(grp)
+            grp.add(action_row(
+                "Install usbguard",
+                "sudo pacman -S usbguard",
+                "Install",
+                lambda: open_terminal("sudo pacman -S usbguard", self.win)))
+            self.add_pill(status_pill("missing", "danger"))
+            return
+
+        # Status
+        st = Adw.PreferencesGroup(
+            title="Status",
+            description="Service + current mode + known devices")
+        self.add_group(st)
+        rc, out, _ = sh(["nyxus-usbguard-helper", "--json"], timeout=4) \
+            if have("nyxus-usbguard-helper") else (1, "", "")
+        data = {}
+        if rc == 0 and out:
+            try: data = json.loads(out)
+            except Exception: data = {}
+        mode = data.get("mode", "unknown")
+        active = data.get("active", "inactive")
+        st.add(kv_row("Mode", mode))
+        st.add(kv_row("Service", f"{active} ({data.get('enabled','?')})"))
+        st.add(kv_row("Known devices", str(data.get("devices", 0))))
+
+        # Service
+        svc = Adw.PreferencesGroup(title="Service")
+        self.add_group(svc)
+        svc.add(action_row(
+            "Enable usbguard.service",
+            "Starts + enables the daemon (admin password)",
+            "Enable",
+            lambda: sh_async(["nyxus-usbguard-helper", "--enable"],
+                lambda r: self.toast("enabled" if r[0] == 0 else "enable failed"),
+                timeout=10),
+            css="nyx-pill-ok"))
+        svc.add(action_row(
+            "Disable usbguard.service",
+            "Stops + disables (admin password)",
+            "Disable",
+            lambda: sh_async(["nyxus-usbguard-helper", "--disable"],
+                lambda r: self.toast("disabled" if r[0] == 0 else "disable failed"),
+                timeout=10),
+            css="nyx-pill-warn"))
+
+        # Mode
+        m = Adw.PreferencesGroup(
+            title="Mode",
+            description="Per user pref, ships permissive — opt in to "
+                        "audit/lockdown only when you understand the risk")
+        self.add_group(m)
+        for mname, msub in (
+            ("permissive",
+                "All USB devices allowed (default · safe for live install)"),
+            ("audit",
+                "Apply policy but rules are empty — telemetry only, "
+                "nothing blocked"),
+            ("lockdown",
+                "Allow-list seeded from currently-attached devices · "
+                "new devices BLOCKED until you add a rule"),
+        ):
+            m.add(action_row(
+                f"Switch to {mname}", msub,
+                "Apply",
+                lambda mn=mname: sh_async(
+                    ["nyxus-usbguard-helper", "--mode", mn],
+                    lambda r, x=mn: self.toast(
+                        f"mode → {x}" if r[0] == 0 else "switch failed"),
+                    timeout=15),
+                css=("nyx-pill-warn" if mname == "lockdown" else "")))
+
+        # Devices
+        if have("usbguard"):
+            dv = Adw.PreferencesGroup(title="Known devices")
+            self.add_group(dv)
+            rc, out, _ = sh(["usbguard", "list-devices"], timeout=3)
+            shown = 0
+            if rc == 0 and out:
+                for line in out.splitlines()[:12]:
+                    line = line.strip()
+                    if not line: continue
+                    parts = line.split(":", 1)
+                    if len(parts) == 2:
+                        dv.add(kv_row(parts[0].strip(), parts[1].strip()[:80]))
+                        shown += 1
+            if shown == 0:
+                dv.add(empty_row("No devices visible",
+                                 "(daemon may be inactive)"))
+
+        self.add_pill(status_pill(
+            mode,
+            "ok" if mode == "permissive"
+            else ("warn" if mode == "audit" else "danger")))
+
+
+class SecBootPage(SectionPage):
+    """Secure Boot + TPM2 status + sbctl enrollment."""
+    KEY = "secboot"
+
+    def build(self) -> None:
+        st = Adw.PreferencesGroup(
+            title="Firmware status",
+            description="Reads sbctl status + tpm2_pcrread (sha256 0,7)")
+        self.add_group(st)
+        if not have("nyxus-secboot"):
+            st.add(empty_row("nyxus-secboot missing",
+                             "Reinstall nyxus-scripts package"))
+            self.add_pill(status_pill("n/a", "warn")); return
+        rc, out, _ = sh(["nyxus-secboot", "--json"], timeout=4)
+        data = {}
+        if rc == 0 and out:
+            try: data = json.loads(out)
+            except Exception: data = {}
+        for k, label in (
+            ("secure_boot", "Secure Boot"),
+            ("setup_mode",  "Setup Mode"),
+            ("enrolled",    "sbctl enrolled"),
+            ("tpm_present", "TPM 2.0 chip"),
+            ("pcr0",        "PCR 0 (firmware)"),
+            ("pcr7",        "PCR 7 (Secure Boot policy)"),
+        ):
+            st.add(kv_row(label, str(data.get(k, "?"))))
+
+        # Operations
+        if have("sbctl"):
+            ops = Adw.PreferencesGroup(
+                title="sbctl operations",
+                description="Create + enrol Secure Boot keys, sign installed "
+                            "binaries. Reboot into firmware setup AFTER "
+                            "enrolling.")
+            self.add_group(ops)
+            ops.add(action_row(
+                "Enrol Secure Boot keys (with Microsoft)",
+                "sbctl create-keys + enroll-keys --microsoft + sign-all",
+                "Enrol",
+                lambda: open_terminal(
+                    "nyxus-secboot --enroll; read -p 'enter to close'",
+                    self.win),
+                css="nyx-pill-ok"))
+            ops.add(action_row(
+                "Re-sign installed binaries",
+                "sbctl sign-all (run after kernel/UKI updates)",
+                "Sign",
+                lambda: open_terminal(
+                    "nyxus-secboot --sign-all; read -p 'enter to close'",
+                    self.win)))
+
+        # TPM
+        if have("tpm2_pcrread"):
+            tp = Adw.PreferencesGroup(title="TPM tools")
+            self.add_group(tp)
+            tp.add(action_row(
+                "Read PCR0/PCR7 (sha256)",
+                "tpm2_pcrread sha256:0,7",
+                "Read",
+                lambda: open_terminal(
+                    "nyxus-secboot --tpm-test; read -p 'enter to close'",
+                    self.win)))
+
+        sb = data.get("secure_boot", "unknown")
+        self.add_pill(status_pill(
+            sb,
+            "ok" if sb == "enabled"
+            else ("warn" if sb == "disabled" else "danger")))
+
+
+class VpnPage(SectionPage):
+    """WireGuard + OpenVPN via NetworkManager + nmcli."""
+    KEY = "vpn"
+
+    def build(self) -> None:
+        if not have("nmcli"):
+            grp = Adw.PreferencesGroup(title="NetworkManager required")
+            self.add_group(grp)
+            grp.add(empty_row("nmcli not found",
+                              "Install with `sudo pacman -S networkmanager`"))
+            self.add_pill(status_pill("missing", "danger")); return
+
+        # Connections
+        conn = Adw.PreferencesGroup(
+            title="VPN connections",
+            description="Read from `nmcli connection show` (vpn + wireguard)")
+        self.add_group(conn)
+        rc, out, _ = sh(["nyxus-vpn", "--json"], timeout=4) \
+            if have("nyxus-vpn") else (1, "", "")
+        rows = []
+        if rc == 0 and out:
+            try: rows = json.loads(out)
+            except Exception: rows = []
+        if rows:
+            for r in rows:
+                name  = r.get("name", "?")
+                typ   = r.get("type", "?")
+                state = r.get("state", "down")
+                up = state and state not in ("", "down", "deactivated")
+                row = action_row(
+                    name,
+                    f"{typ} · {state or 'down'}",
+                    "Disconnect" if up else "Connect",
+                    (lambda n=name: sh_async(["nyxus-vpn", "--down", n],
+                        lambda r, x=n: self.toast(
+                            f"down: {x}" if r[0] == 0 else "down failed"),
+                        timeout=15)) if up
+                    else (lambda n=name: sh_async(["nyxus-vpn", "--up", n],
+                        lambda r, x=n: self.toast(
+                            f"up: {x}" if r[0] == 0 else "up failed"),
+                        timeout=20)),
+                    css=("nyx-pill-ok" if up else ""))
+                conn.add(row)
+        else:
+            conn.add(empty_row("No VPN connections",
+                               "Import a config below to get started"))
+
+        # Import
+        imp = Adw.PreferencesGroup(
+            title="Import",
+            description="Drop a config file via terminal (uses nmcli import)")
+        self.add_group(imp)
+        imp.add(action_row(
+            "Import OpenVPN .ovpn",
+            "nyxus-vpn --import-ovpn /path/to/file.ovpn",
+            "Open Terminal",
+            lambda: open_terminal(
+                "echo 'Run: nyxus-vpn --import-ovpn /path/to/file.ovpn'; "
+                "exec $SHELL", self.win)))
+        imp.add(action_row(
+            "Import WireGuard .conf",
+            "nyxus-vpn --import-wg /path/to/file.conf",
+            "Open Terminal",
+            lambda: open_terminal(
+                "echo 'Run: nyxus-vpn --import-wg /path/to/file.conf'; "
+                "exec $SHELL", self.win)))
+
+        self.add_pill(status_pill(
+            f"{len(rows)} conn",
+            "ok" if rows else "warn"))
+
+
+class DohPage(SectionPage):
+    """DNS-over-HTTPS toggle (off / cloudflare / quad9)."""
+    KEY = "doh"
+
+    def build(self) -> None:
+        if not have("dnscrypt-proxy") or not have("nyxus-doh"):
+            grp = Adw.PreferencesGroup(title="dnscrypt-proxy missing")
+            self.add_group(grp)
+            grp.add(action_row(
+                "Install dnscrypt-proxy",
+                "sudo pacman -S dnscrypt-proxy",
+                "Install",
+                lambda: open_terminal(
+                    "sudo pacman -S dnscrypt-proxy", self.win)))
+            self.add_pill(status_pill("missing", "danger"))
+            return
+
+        rc, out, _ = sh(["nyxus-doh", "--json"], timeout=3)
+        data = {}
+        if rc == 0 and out:
+            try: data = json.loads(out)
+            except Exception: data = {}
+        mode = data.get("mode", "off")
+
+        st = Adw.PreferencesGroup(title="Status")
+        self.add_group(st)
+        st.add(kv_row("Mode", mode))
+        st.add(kv_row("dnscrypt-proxy",
+                      data.get("service", "inactive")))
+        st.add(kv_row("NM override",
+                      "present" if data.get("override_present") else "none"))
+
+        sw = Adw.PreferencesGroup(
+            title="Resolver",
+            description="dnscrypt-proxy listens on 127.0.0.53; "
+                        "NetworkManager override pins all interfaces to it")
+        self.add_group(sw)
+        for m, label, sub in (
+            ("off",
+             "Off (system DNS)",
+             "Whatever DHCP / systemd-resolved hands out"),
+            ("cloudflare",
+             "Cloudflare 1.1.1.1 (DoH)",
+             "Privacy-first, no logging, fast"),
+            ("quad9",
+             "Quad9 9.9.9.9 (DoH + DNSSEC)",
+             "Malware-blocking + DNSSEC validation"),
+        ):
+            active = (m == mode)
+            sw.add(action_row(
+                f"{label}{' · ACTIVE' if active else ''}",
+                sub,
+                "Apply" if not active else "Re-apply",
+                lambda mn=m: sh_async(
+                    ["nyxus-doh", "--set", mn],
+                    lambda r, x=mn: self.toast(
+                        f"DoH → {x}" if r[0] == 0 else "switch failed"),
+                    timeout=20),
+                css=("nyx-pill-ok" if active else "")))
+
+        self.add_pill(status_pill(mode, "ok" if mode != "off" else "warn"))
+
+
+class MacRandomPage(SectionPage):
+    """MAC address randomization (off / per-scan / always)."""
+    KEY = "mac_random"
+
+    def build(self) -> None:
+        if not have("nmcli") or not have("nyxus-mac-randomize"):
+            grp = Adw.PreferencesGroup(title="Required tools missing")
+            self.add_group(grp)
+            grp.add(empty_row("nmcli + nyxus-mac-randomize",
+                              "Install NetworkManager + reinstall nyxus-scripts"))
+            self.add_pill(status_pill("n/a", "warn")); return
+
+        rc, out, _ = sh(["nyxus-mac-randomize", "--json"], timeout=3)
+        data = {}
+        if rc == 0 and out:
+            try: data = json.loads(out)
+            except Exception: data = {}
+        mode = data.get("mode", "off")
+
+        st = Adw.PreferencesGroup(
+            title="Status",
+            description="NetworkManager wifi.cloned-mac-address policy")
+        self.add_group(st)
+        st.add(kv_row("Mode", mode))
+        st.add(kv_row("Override",
+                      "present" if data.get("override_present") else "none"))
+        for ifc in (data.get("interfaces") or [])[:8]:
+            st.add(kv_row(ifc.get("name","?"), ifc.get("mac","?")))
+
+        sw = Adw.PreferencesGroup(
+            title="Mode",
+            description="Per-scan rotates only during scans (recommended); "
+                        "Always assigns a fresh MAC on every association")
+        self.add_group(sw)
+        for m, label, sub in (
+            ("off",     "Off (real hardware MAC)",
+                "Use the permanent factory MAC"),
+            ("perscan", "Per-scan (stable per SSID)",
+                "Random MAC during scans, stable per network"),
+            ("always",  "Always (new MAC per connection)",
+                "New random MAC every association · highest privacy"),
+        ):
+            active = (m == mode)
+            sw.add(action_row(
+                f"{label}{' · ACTIVE' if active else ''}",
+                sub,
+                "Apply" if not active else "Re-apply",
+                lambda mn=m: sh_async(
+                    ["nyxus-mac-randomize", "--set", mn],
+                    lambda r, x=mn: self.toast(
+                        f"MAC → {x}" if r[0] == 0 else "switch failed"),
+                    timeout=15),
+                css=("nyx-pill-ok" if active else "")))
+
+        if have("macchanger"):
+            once = Adw.PreferencesGroup(
+                title="One-shot",
+                description="Force a single random MAC for a specific iface "
+                            "via macchanger (admin password required)")
+            self.add_group(once)
+            for ifc in (data.get("interfaces") or [])[:6]:
+                name = ifc.get("name", "")
+                if not name: continue
+                once.add(action_row(
+                    f"Randomize {name} now",
+                    "macchanger -r " + name,
+                    "Run",
+                    lambda n=name: sh_async(
+                        ["nyxus-mac-randomize", "--once", n],
+                        lambda r, x=n: self.toast(
+                            f"randomized {x}" if r[0] == 0 else "failed"),
+                        timeout=10)))
+
+        self.add_pill(status_pill(mode, "ok" if mode != "off" else "warn"))
+
+
 # Map section.key → page class.
 PAGE_CLASSES = {
     "appearance":    AppearancePage,
@@ -10227,6 +11115,18 @@ PAGE_CLASSES = {
     "parental":      ParentalControlsPage,
     "app_perms":     AppPermissionsPage,
     "language":      LanguagePage,
+    # Tier B (rev 2026-05-14)
+    "virt":          VirtPage,
+    "containers":    ContainersPage,
+    "kernel":        KernelPage,
+    "gaming":        GamingPage,
+    "editors":       EditorsPage,
+    # Tier C (rev 2026-05-14)
+    "usb_firewall":  UsbPage,
+    "secboot":       SecBootPage,
+    "vpn":           VpnPage,
+    "doh":           DohPage,
+    "mac_random":    MacRandomPage,
 }
 
 

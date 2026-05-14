@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  /usr/local/bin/nyxus-virt-setup                          rev 2026-05-14 r1
+#
+#  One-shot first-run for NYXUS Virt Manager:
+#    1. Enable + start libvirtd.socket (system-wide, via pkexec)
+#    2. Add the invoking user to the libvirt group (via pkexec)
+#    3. Start the default storage pool + default network (autostart)
+#
+#  Idempotent — safe to re-run. VirtPage in nyxus_settings.py invokes
+#  this once when the user clicks "Set up virtualization".
+#
+#  Logs to ~/.cache/nyxus/virt-setup.log
+#
+#  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -euo pipefail
+
+LOG_DIR="${HOME}/.cache/nyxus"
+LOG="${LOG_DIR}/virt-setup.log"
+mkdir -p "${LOG_DIR}"; touch "${LOG}"
+ts()   { date '+%Y-%m-%dT%H:%M:%S%z'; }
+log()  { printf '[%s] %s\n' "$(ts)" "$*" >>"${LOG}"; }
+die()  { log "FATAL: $*"; printf 'nyxus-virt-setup: %s\n' "$*" >&2; exit 1; }
+
+USER_NAME="${USER:-$(id -un)}"
+
+cmd_status() {
+  local running="no" enabled="no" in_grp="no" net="-" pool="-"
+  systemctl is-active libvirtd.socket &>/dev/null && running="yes"
+  systemctl is-enabled libvirtd.socket &>/dev/null && enabled="yes"
+  id -nG "${USER_NAME}" | tr ' ' '\n' | grep -qx libvirt && in_grp="yes"
+  if command -v virsh &>/dev/null; then
+    net="$(virsh -c qemu:///system net-info default 2>/dev/null \
+            | awk -F: '/Active/ {gsub(/ /,"",$2); print $2}')" || true
+    pool="$(virsh -c qemu:///system pool-info default 2>/dev/null \
+            | awk -F: '/State/ {gsub(/ /,"",$2); print $2}')" || true
+  fi
+  printf 'libvirtd.socket: active=%s enabled=%s\n' "${running}" "${enabled}"
+  printf 'user in libvirt group: %s\n' "${in_grp}"
+  printf 'default network: %s\n' "${net:-unknown}"
+  printf 'default pool:    %s\n' "${pool:-unknown}"
+}
+
+cmd_setup() {
+  log "setup begin (user=${USER_NAME})"
+  command -v pkexec >/dev/null || die "pkexec not found"
+  command -v virsh  >/dev/null || die "virsh not found (libvirt installed?)"
+  pkexec sh -c "
+    set -e
+    systemctl enable --now libvirtd.socket
+    if ! getent group libvirt >/dev/null; then groupadd -r libvirt; fi
+    if ! id -nG '${USER_NAME}' | tr ' ' '\n' | grep -qx libvirt; then
+      gpasswd -a '${USER_NAME}' libvirt
+    fi
+    # Start + autostart the default network if defined.
+    if virsh -c qemu:///system net-info default >/dev/null 2>&1; then
+      virsh -c qemu:///system net-autostart default || true
+      virsh -c qemu:///system net-start    default || true
+    fi
+    if virsh -c qemu:///system pool-info default >/dev/null 2>&1; then
+      virsh -c qemu:///system pool-autostart default || true
+      virsh -c qemu:///system pool-start    default || true
+    fi
+  " || die "pkexec failed (admin denied?)"
+  log "setup OK"
+  printf 'virtualization configured.\n'
+  printf 'log out + back in for libvirt group membership to take effect.\n'
+}
+
+case "${1:-status}" in
+  status|"")  cmd_status ;;
+  --setup|-s) cmd_setup ;;
+  --help|-h)  sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *)          die "unknown arg: $1" ;;
+esac

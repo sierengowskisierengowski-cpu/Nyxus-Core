@@ -1,0 +1,177 @@
+
+sierengowskisierengowski-cpu/Nyxus-Core — Build NYXUS Assistant
+This is one of the most important features in the entire NyX operating system. It must be built to stand next to Apple and Microsoft — enterprise grade, highly polished to the maximum, visually stunning, fully functional, nothing stubbed, nothing placeholder, nothing half-built. Every single piece must be wired and working. This is a flagship feature and must feel like it.
+
+What it is:
+NYXUS Assistant is the AI brain of the NyX operating system. It lives inside the OS as a floating overlay panel. It understands natural language, executes real system commands, holds full conversations, listens to your voice, and speaks back. It is the centerpiece feature that makes NyX feel alive and intelligent. Think Siri meets Spotlight meets a terminal meets Claude — but darker, more powerful, more NyX.
+
+Activation:
+
+Ctrl+Space — opens the full NYXUS Assistant overlay panel
+Hold Ctrl+Space — activates voice input mode, speak command, release to send
+Voice output is toggleable on or off by the user
+Escape or clicking outside closes the overlay
+Keybind wired in hyprland.conf
+Bar icon showing assistant status at all times
+Accessible from Spotlight launcher and app menu
+
+
+Visual Design — Must be Apple and Windows tier or better:
+The overlay is a centered floating panel. It must look and feel premium — frosted glass blur behind the panel, subtle animated border glow in the active theme pack color, smooth fade or slide in animation on open. Nothing jarring, nothing basic. The NYXUS name sits at the top of the panel in the brand font. Below is a scrollable conversation history area. At the bottom is the input area — a clean single line text field with a microphone icon on the right that pulses when listening. When voice is active an animated waveform appears. When the assistant is thinking a subtle animated typing indicator shows. Everything is pixel perfect, every spacing, every radius, every shadow, every animation. This panel must look like it cost a million dollars to design.
+Conversation area:
+
+Full scrollable chat log
+User messages appear on the right in themed bubbles
+Assistant messages appear on the left in themed bubbles
+Timestamps on every message
+Copy button on every assistant response
+Scroll to bottom button when scrolled up in history
+Typing indicator animation while waiting for response
+Error states styled and on-brand — never a raw error message shown to user
+Loading animation while processing
+Multi-line input support
+Clear conversation button inside the panel
+Minimize to bar widget option
+Resizable panel with drag handle
+Pin overlay toggle so it stays open
+
+
+AI Backend:
+
+Claude API as the default engine
+Full conversation context sent with every message — not just the last message, the entire history
+System prompt tells the assistant it is NYXUS Assistant, the AI of the NyX operating system, and gives it full knowledge of installed apps, keybinds, available system commands, and NyX features
+Assistant has a name and personality consistent with NyX — dark, intelligent, minimal, gets things done, feels like it belongs in this OS. Name: NORA (NyX Operating Response Agent)
+Separate command parser layer that intercepts system action requests before or alongside Claude
+Action executor layer that actually runs the system commands
+Permission system — destructive actions require confirmation before executing
+Token management — conversation history truncated intelligently if context gets too long
+Rate limiting to prevent API spam
+Full error handling for every failure mode — API down, no internet, bad response, command fails
+Logging system for debugging
+Security layer — all commands sanitized before execution
+Fallback: if no internet detected, falls back to Ollama local model if installed, or shows a clear styled offline message
+API key stored in ~/.config/nyxus/assistant.json
+Conversation history saved to ~/.config/nyxus/assistant-history.json
+
+
+Voice Input:
+
+Hold Ctrl+Space to activate mic
+Animated waveform shows while listening
+Release key to send spoken command
+Speech to text via whisper.cpp running locally — fast, private, no cloud needed for voice capture
+Transcribed text appears in input field before sending so user sees what was heard
+Confidence threshold — if recognition is unsure ask user to confirm
+Noise cancellation applied
+Visual mic sensitivity indicator
+Language selection in settings
+Optional wake word mode — say "Hey NyX" without pressing anything — toggleable in settings
+
+
+Voice Output:
+
+Toggleable on or off in settings
+When on, responses spoken via espeak-ng or speech-dispatcher
+Speaking indicator animates in panel while talking
+Voice speed slider in settings
+Response length preference affects spoken length
+Interruption support — new input while speaking stops current speech
+
+
+System Actions — All must be fully wired and working:
+
+Open, close, or focus any installed app by name
+Volume — set level, mute, unmute, per-app volume
+Brightness — set level
+Bluetooth — connect, disconnect, list paired devices
+WiFi — connect, disconnect, list available networks
+Screenshot — region, fullscreen, or active window, save to specified location
+Screen record — start and stop
+Theme pack switcher — switch to any installed theme pack by name
+Wallpaper changer — switch to specific wallpaper or random from category
+Game Mode toggle
+Focus Mode toggle
+Do Not Disturb toggle
+Lock screen
+Suspend, shutdown, reboot
+File operations — open, find, move, copy by name or path
+Clipboard — read current clipboard, write to clipboard
+Send custom notification
+Set timer or reminder — fires a notification when done
+Pull GowskiNet honeypot stats and report them
+Read battery health and percentage
+Read system info — CPU usage, RAM usage, temperature
+Kill a running process or app by name
+Switch workspace by number or name
+Window management — snap left, right, fullscreen, float
+Read and summarize recent notifications
+Open specific Settings pages by name
+Toggle Night Mode or any theme feature
+
+
+Panel Widget Features:
+
+Persistent bar icon showing assistant status — idle, listening, thinking, speaking
+Notification badge on bar icon when assistant has a proactive message
+Quick action buttons at bottom of panel — 6-8 most used commands as one-click buttons, customizable
+Suggested commands shown on open based on time of day and recent usage
+Recent commands history dropdown on input field
+Favorite commands — pin commands used often
+Search through conversation history
+Export conversation as text file
+
+
+Settings Page — Full, registered in Settings hub:
+
+API key input with test button
+Voice output toggle
+Voice speed slider
+Voice language selector
+Wake word toggle and sensitivity
+Ollama local model toggle with model selector
+Custom system prompt editor for advanced users
+Conversation auto-save toggle
+Privacy mode toggle — no history saved
+Export full conversation history button
+Clear all history button
+Command whitelist and blacklist editor
+Response length preference — brief, normal, detailed
+Personality setting — professional, casual, NyX persona
+Test microphone button with live level meter
+Test voice output button
+Hotkey display and reassignment
+
+
+Accessibility:
+
+Full keyboard navigation of the entire panel
+Screen reader compatible
+High contrast mode support
+Font size follows system setting
+All interactive elements have proper focus indicators
+
+
+Integration and Wiring — Everything must be connected:
+
+Ctrl+Space keybind in hyprland.conf
+.desktop entry created and registered
+Accessible from Spotlight launcher by name
+Settings page registered in Settings hub under its own section
+espeak-ng, speech-dispatcher, whisper.cpp added to packages.x86_64
+python-anthropic or direct API calls wired correctly
+systemd user service if background daemon needed for wake word or bar icon
+Fully staged in airootfs at correct paths
+Wired into build-iso.sh
+Polkit policy if any actions need elevation
+All system action scripts exist and are executable
+Bar icon wired into EWW config
+All imports satisfiable from packages.x86_64
+No hardcoded usernames, hostnames, or paths that break in live session
+
+
+Quality Standard:
+This feature must be indistinguishable in quality from what Apple or Microsoft ships. Every animation smooth. Every error handled gracefully. Every edge case covered. Every pixel intentional. When someone opens this panel for the first time it must make them stop and say wow. This is the feature that defines NyX as a serious operating system and not just another Linux rice. Build it to that standard. No compromises.
+
+Deliverable:
+Complete fully working implementation in a PR. Change log of every file created or modified. Confirmation that all system actions are wired and tested. Confirmation that voice input and output work. Confirmation that Claude API integration is complete. Final green checklist.

@@ -1,0 +1,9 @@
+{
+  "output": {
+    "blocklist": [],
+    "plugins_order": [],
+    "bass_enhancer": {
+      "amount": 0.0
+    }
+  }
+}

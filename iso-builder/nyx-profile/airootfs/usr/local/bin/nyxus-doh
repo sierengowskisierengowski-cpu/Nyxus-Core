@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  /usr/local/bin/nyxus-doh                                 rev 2026-05-14 r1
+#
+#  DNS-over-HTTPS toggle. Switches NetworkManager between:
+#    off       — system DNS (whatever DHCP/systemd-resolved hands out)
+#    cloudflare — dnscrypt-proxy → 1.1.1.1 / 1.0.0.1 (DoH)
+#    quad9      — dnscrypt-proxy → 9.9.9.9 / 149.112.112.112 (DoH+DNSSEC)
+#
+#  Implementation: dnscrypt-proxy listens on 127.0.0.53:53 with the
+#  selected resolver; nm.conf override pins NetworkManager to that
+#  upstream so all interfaces inherit it.
+#
+#  Usage:
+#    nyxus-doh status                Pretty status
+#    nyxus-doh --json                Machine-readable
+#    nyxus-doh --set off|cloudflare|quad9
+#    nyxus-doh --help
+#
+#  Logs to ~/.cache/nyxus/doh.log
+#
+#  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -euo pipefail
+
+LOG_DIR="${HOME}/.cache/nyxus"
+LOG="${LOG_DIR}/doh.log"
+mkdir -p "${LOG_DIR}"; touch "${LOG}"
+ts()  { date '+%Y-%m-%dT%H:%M:%S%z'; }
+log() { printf '[%s] %s\n' "$(ts)" "$*" >>"${LOG}"; }
+die() { log "FATAL: $*"; printf 'nyxus-doh: %s\n' "$*" >&2; exit 1; }
+
+CONF=/etc/dnscrypt-proxy/dnscrypt-proxy.toml
+NM_OV=/etc/NetworkManager/conf.d/99-nyxus-doh.conf
+
+cmd_status() {
+  local mode="off" active="inactive"
+  if [[ -f "${NM_OV}" ]]; then
+    if grep -q 'cloudflare' "${NM_OV}" 2>/dev/null; then mode="cloudflare"
+    elif grep -q 'quad9' "${NM_OV}" 2>/dev/null; then mode="quad9"
+    fi
+  fi
+  active="$(systemctl is-active dnscrypt-proxy 2>/dev/null || echo inactive)"
+  printf 'mode:        %s\n' "${mode}"
+  printf 'dnscrypt:    %s\n' "${active}"
+  printf 'override:    %s\n' "$([[ -f "${NM_OV}" ]] && echo present || echo none)"
+}
+
+cmd_json() {
+  python3 - <<'PY'
+import json, subprocess, os
+mode = "off"
+ov = "/etc/NetworkManager/conf.d/99-nyxus-doh.conf"
+if os.path.exists(ov):
+    txt = open(ov).read()
+    if "cloudflare" in txt: mode = "cloudflare"
+    elif "quad9" in txt:    mode = "quad9"
+active = subprocess.run(["systemctl","is-active","dnscrypt-proxy"],
+                        capture_output=True, text=True).stdout.strip() or "inactive"
+print(json.dumps({"mode": mode, "service": active,
+                  "override_present": os.path.exists(ov)}))
+PY
+}
+
+cmd_set() {
+  local mode="$1"
+  case "${mode}" in off|cloudflare|quad9) ;; *) die "bad mode: ${mode}";; esac
+  log "set mode -> ${mode}"
+  command -v pkexec >/dev/null || die "pkexec not found"
+  if [[ "${mode}" == "off" ]]; then
+    pkexec sh -c "
+      set -e
+      systemctl disable --now dnscrypt-proxy 2>/dev/null || true
+      rm -f '${NM_OV}'
+      chattr -i /etc/resolv.conf 2>/dev/null || true
+      systemctl reload NetworkManager 2>/dev/null || systemctl restart NetworkManager
+    " || die "pkexec failed"
+  else
+    local servers
+    case "${mode}" in
+      cloudflare) servers="['cloudflare', 'cloudflare-ipv6']" ;;
+      quad9)      servers="['quad9-doh-ip4-port443-filter-pri', 'quad9-doh-ip6-port443-filter-pri']" ;;
+    esac
+    pkexec sh -c "
+      set -e
+      # Drop immutability FIRST so subsequent resolv.conf write doesn't
+      # die under set -e. Architect 2026-05-14.
+      chattr -i /etc/resolv.conf 2>/dev/null || true
+      install -d -m 0755 /etc/dnscrypt-proxy
+      cat > '${CONF}' <<TOML
+listen_addresses = ['127.0.0.53:53']
+server_names = ${servers}
+ipv6_servers = true
+require_dnssec = false
+require_nolog = true
+require_nofilter = false
+cache = true
+cache_size = 4096
+cache_min_ttl = 600
+cache_max_ttl = 86400
+cache_neg_min_ttl = 60
+cache_neg_max_ttl = 600
+[sources]
+[sources.public-resolvers]
+urls = ['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md']
+cache_file = '/var/cache/dnscrypt-proxy/public-resolvers.md'
+minisign_key = 'RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3'
+refresh_delay = 72
+prefix = ''
+TOML
+      systemctl enable --now dnscrypt-proxy
+      cat > '${NM_OV}' <<NM
+# nyxus-doh ${mode} — auto-managed; do not edit by hand
+[main]
+dns=none
+[connection]
+ipv4.dns=127.0.0.53
+ipv4.ignore-auto-dns=true
+ipv6.dns=::1
+ipv6.ignore-auto-dns=true
+NM
+      printf 'nameserver 127.0.0.53\n' > /etc/resolv.conf
+      systemctl reload NetworkManager 2>/dev/null || systemctl restart NetworkManager
+    " || die "pkexec failed"
+  fi
+  printf 'mode -> %s\n' "${mode}"
+}
+
+case "${1:-status}" in
+  status|"")    cmd_status ;;
+  --json|-j)    cmd_json ;;
+  --set|-s)     [[ $# -ge 2 ]] || die "usage: --set MODE"; cmd_set "$2" ;;
+  --help|-h)    sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *)            die "unknown arg: $1" ;;
+esac

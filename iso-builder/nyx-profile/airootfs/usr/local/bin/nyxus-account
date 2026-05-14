@@ -1,0 +1,292 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  /usr/local/bin/nyxus-account                              rev 2026-05-14 r1
+#
+#  NYXUS Sync helper. Bundles an allow-listed set of user prefs into a
+#  tar.gz and pushes/pulls them against an HTTP endpoint with bearer-token
+#  auth. Used by:
+#    - SettingsHub > SyncPage  (artifacts/.../nyxus_settings.py SyncPage)
+#    - .desktop:               nyxus-account.desktop
+#
+#  Usage:
+#    nyxus-account                  Open interactive GTK config UI (default)
+#    nyxus-account --status         Print last_sync + endpoint
+#    nyxus-account --init URL TOK   Write account.json (chmod 600)
+#    nyxus-account --push           Bundle + PUT to <URL>/bundle
+#    nyxus-account --pull           GET <URL>/bundle + extract
+#    nyxus-account --bundle PATH    Just write the tar.gz to PATH (offline)
+#    nyxus-account --help
+#
+#  Endpoint contract (HTTP server-side, anything that speaks this works):
+#    PUT  <URL>/bundle    Body: tar.gz   Header: Authorization: Bearer <TOK>
+#    GET  <URL>/bundle    Header: Authorization: Bearer <TOK>
+#
+#  Allow-list (locked for safety; matches SyncPage 'scope' display):
+#    ~/.config/nyxus/accent.conf
+#    ~/.config/nyxus/sound.conf
+#    ~/.config/nyxus/desktop.conf
+#    ~/.config/gtk-3.0/settings.ini
+#    ~/.config/gtk-4.0/settings.ini
+#    ~/.config/hypr/walls/active           (symlink — preserved as link)
+#
+#  All output to ~/.cache/nyxus/account.log; nothing to stdout unless asked.
+#  No automatic pulls at login (data-loss risk) — must be user-initiated.
+#
+#  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -euo pipefail
+
+CFG_DIR="${HOME}/.config/nyxus"
+CFG="${CFG_DIR}/account.json"
+LOG_DIR="${HOME}/.cache/nyxus"
+LOG="${LOG_DIR}/account.log"
+mkdir -p "${CFG_DIR}" "${LOG_DIR}"
+touch "${LOG}"
+
+ts()   { date '+%Y-%m-%dT%H:%M:%S%z'; }
+log()  { printf '[%s] %s\n' "$(ts)" "$*" >>"${LOG}"; }
+die()  { log "FATAL: $*"; printf 'nyxus-account: %s\n' "$*" >&2; exit 1; }
+
+ALLOWLIST=(
+  ".config/nyxus/accent.conf"
+  ".config/nyxus/sound.conf"
+  ".config/nyxus/desktop.conf"
+  ".config/gtk-3.0/settings.ini"
+  ".config/gtk-4.0/settings.ini"
+  ".config/hypr/walls/active"
+)
+
+read_cfg() {
+  if [[ ! -f "${CFG}" ]]; then
+    URL=""; TOKEN=""; LAST_SYNC="never"
+    return
+  fi
+  URL="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("url",""))' "${CFG}" 2>/dev/null || echo "")"
+  TOKEN="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("token",""))' "${CFG}" 2>/dev/null || echo "")"
+  LAST_SYNC="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("last_sync","never"))' "${CFG}" 2>/dev/null || echo "never")"
+}
+
+write_cfg() {
+  python3 - "$CFG" "$URL" "$TOKEN" "$LAST_SYNC" <<'PY'
+import json, os, sys
+path, url, tok, last = sys.argv[1:5]
+data = {}
+if os.path.exists(path):
+    try: data = json.load(open(path))
+    except Exception: data = {}
+data["url"] = url
+data["token"] = tok
+data["last_sync"] = last
+with open(path, "w") as f:
+    json.dump(data, f, indent=2)
+os.chmod(path, 0o600)
+PY
+  log "wrote ${CFG} (url=${URL:+set} token=${TOKEN:+set} last=${LAST_SYNC})"
+}
+
+build_bundle() {
+  local out="$1"
+  local files=()
+  for rel in "${ALLOWLIST[@]}"; do
+    if [[ -e "${HOME}/${rel}" || -L "${HOME}/${rel}" ]]; then
+      files+=("${rel}")
+    fi
+  done
+  if (( ${#files[@]} == 0 )); then
+    die "no allow-listed files found under ~/ — nothing to bundle"
+  fi
+  log "bundle: $(printf '%s ' "${files[@]}")-> ${out}"
+  tar -C "${HOME}" -czf "${out}" "${files[@]}"
+}
+
+extract_bundle() {
+  local in="$1"
+  if [[ ! -s "${in}" ]]; then die "empty bundle: ${in}"; fi
+  local stamp; stamp="$(date +%s)"
+  local backup="${LOG_DIR}/account-backup-${stamp}.tar.gz"
+  build_bundle "${backup}" || true
+  log "extract: ${in} (backup: ${backup})"
+  tar -C "${HOME}" -xzf "${in}"
+}
+
+cmd_push() {
+  read_cfg
+  [[ -n "${URL}" ]]   || die "endpoint not configured (run --init URL TOKEN)"
+  [[ -n "${TOKEN}" ]] || die "token not configured (run --init URL TOKEN)"
+  command -v curl >/dev/null || die "curl not found"
+  local tmp; tmp="$(mktemp --suffix=.tgz)"; trap 'rm -f "$tmp"' EXIT
+  build_bundle "${tmp}"
+  local code
+  code="$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' \
+            -X PUT "${URL%/}/bundle" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/gzip" \
+            --data-binary "@${tmp}" || echo "000")"
+  if [[ "${code}" =~ ^2 ]]; then
+    LAST_SYNC="$(ts)"; write_cfg
+    log "push OK (${code})"; printf 'pushed (%s)\n' "${code}"
+  else
+    die "push failed: HTTP ${code}"
+  fi
+}
+
+cmd_pull() {
+  read_cfg
+  [[ -n "${URL}" ]]   || die "endpoint not configured (run --init URL TOKEN)"
+  [[ -n "${TOKEN}" ]] || die "token not configured (run --init URL TOKEN)"
+  command -v curl >/dev/null || die "curl not found"
+  local tmp; tmp="$(mktemp --suffix=.tgz)"; trap 'rm -f "$tmp"' EXIT
+  local code
+  code="$(curl -sS --max-time 30 -o "${tmp}" -w '%{http_code}' \
+            -X GET "${URL%/}/bundle" \
+            -H "Authorization: Bearer ${TOKEN}" || echo "000")"
+  if [[ "${code}" =~ ^2 ]]; then
+    extract_bundle "${tmp}"
+    LAST_SYNC="$(ts)"; write_cfg
+    log "pull OK (${code})"; printf 'pulled (%s)\n' "${code}"
+  else
+    die "pull failed: HTTP ${code}"
+  fi
+}
+
+cmd_init() {
+  URL="$1"; TOKEN="$2"; LAST_SYNC="never"
+  write_cfg
+  printf 'configured: %s\n' "${URL}"
+}
+
+cmd_status() {
+  read_cfg
+  printf 'endpoint:  %s\n' "${URL:-(not set)}"
+  printf 'token:     %s\n' "$([[ -n "${TOKEN}" ]] && echo set || echo "(not set)")"
+  printf 'last_sync: %s\n' "${LAST_SYNC}"
+  printf 'log:       %s\n' "${LOG}"
+}
+
+cmd_bundle() {
+  local out="$1"
+  build_bundle "${out}"
+  printf 'wrote %s\n' "${out}"
+}
+
+cmd_help() {
+  sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+# ── GTK UI (default — opens when no args) ────────────────────────────
+launch_ui() {
+  if ! command -v python3 >/dev/null; then
+    cmd_status; return
+  fi
+  python3 - <<'PY' 2>>"${LOG}"
+import json, os, subprocess, sys
+from pathlib import Path
+import gi
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+from gi.repository import Gtk, Adw, GLib
+
+CFG = Path.home() / ".config" / "nyxus" / "account.json"
+
+def read_cfg():
+    if CFG.exists():
+        try: return json.loads(CFG.read_text())
+        except Exception: return {}
+    return {}
+
+def write_cfg(d):
+    CFG.parent.mkdir(parents=True, exist_ok=True)
+    CFG.write_text(json.dumps(d, indent=2))
+    os.chmod(CFG, 0o600)
+
+class App(Adw.Application):
+    def __init__(self):
+        super().__init__(application_id="io.nyxus.account")
+    def do_activate(self):
+        cfg = read_cfg()
+        win = Adw.ApplicationWindow(application=self,
+            title="NYXUS Account · Sync", default_width=560,
+            default_height=520)
+        tb = Adw.ToolbarView()
+        hb = Adw.HeaderBar()
+        tb.add_top_bar(hb)
+        win.set_content(tb)
+
+        page = Adw.PreferencesPage()
+        tb.set_content(page)
+
+        grp = Adw.PreferencesGroup(title="Endpoint",
+            description="HTTP server with bearer-token auth")
+        page.add(grp)
+        url = Adw.EntryRow(title="URL")
+        url.set_text(cfg.get("url",""))
+        grp.add(url)
+        tok = Adw.PasswordEntryRow(title="Token")
+        tok.set_text(cfg.get("token",""))
+        grp.add(tok)
+
+        info = Adw.PreferencesGroup(title="Status")
+        page.add(info)
+        last = Adw.ActionRow(title="Last sync",
+            subtitle=cfg.get("last_sync","never"))
+        info.add(last)
+
+        ops = Adw.PreferencesGroup(title="Operations")
+        page.add(ops)
+
+        def toast(msg):
+            d = Adw.MessageDialog(transient_for=win, heading=msg)
+            d.add_response("ok","OK"); d.present()
+
+        def on_save(_b):
+            cfg = {"url": url.get_text().strip(),
+                   "token": tok.get_text().strip(),
+                   "last_sync": (read_cfg().get("last_sync","never"))}
+            write_cfg(cfg); toast("saved")
+
+        def run(args, after):
+            def go():
+                rc = subprocess.run(args, capture_output=True).returncode
+                GLib.idle_add(after, rc); return False
+            GLib.Thread.new(None, go)
+
+        def on_push(_b):
+            on_save(None)
+            run(["nyxus-account","--push"],
+                lambda rc: (toast("pushed" if rc==0 else "push failed"),
+                            last.set_subtitle(read_cfg().get("last_sync","never"))))
+        def on_pull(_b):
+            on_save(None)
+            run(["nyxus-account","--pull"],
+                lambda rc: (toast("pulled" if rc==0 else "pull failed"),
+                            last.set_subtitle(read_cfg().get("last_sync","never"))))
+
+        for label, css, cb in (
+            ("Save credentials", "suggested-action", on_save),
+            ("Push now",         "",                 on_push),
+            ("Pull now",         "destructive-action",on_pull),
+        ):
+            r = Adw.ActionRow(title=label)
+            b = Gtk.Button(label=label, valign=Gtk.Align.CENTER)
+            if css: b.add_css_class(css)
+            b.connect("clicked", cb)
+            r.add_suffix(b); ops.add(r)
+
+        win.present()
+
+App().run(None)
+PY
+}
+
+case "${1:-ui}" in
+  ui|"")          launch_ui ;;
+  --status|-s)    cmd_status ;;
+  --push|-p)      cmd_push ;;
+  --pull|-P)      cmd_pull ;;
+  --init|-i)      [[ $# -ge 3 ]] || die "usage: nyxus-account --init URL TOKEN"
+                  cmd_init "$2" "$3" ;;
+  --bundle|-b)    [[ $# -ge 2 ]] || die "usage: nyxus-account --bundle PATH"
+                  cmd_bundle "$2" ;;
+  --help|-h)      cmd_help ;;
+  *)              die "unknown arg: $1 (try --help)" ;;
+esac
