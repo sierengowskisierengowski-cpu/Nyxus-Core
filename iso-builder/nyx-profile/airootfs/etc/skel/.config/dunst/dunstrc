@@ -104,7 +104,9 @@
 [urgency_critical]
     background    = "#0a0a0a"
     foreground    = "#fff8e0"
-    frame_color   = "#fff8e0"
+    # Sprint K-A rev r16: copper frame distinguishes critical alerts from
+    # normal cream-framed notifications without resorting to red.
+    frame_color   = "#b8865a"
     frame_width   = 3
     timeout       = 0
     override_pause_level = 60
