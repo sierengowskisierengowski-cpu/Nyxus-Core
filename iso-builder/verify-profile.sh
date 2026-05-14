@@ -2245,6 +2245,23 @@ WP_SH_SRC="${REPO_ROOT:-$PWD}/../artifacts/api-server/nyxus-scripts/nyxus-dynami
   && ok "Sprint G round-2: dynamic-wallpaper.sh has session-readiness guard (no early-boot race)" \
   || warn "Sprint G round-2: dynamic-wallpaper.sh missing graphical-session guard"
 
+# (h) Sprint G round-3: visual target reference image LOCKED.
+# User-provided canonical brand image (eclipse + cream halo + reflection)
+# must ship with the OS as a brand asset and live in docs/brand for
+# every future sprint to reference.
+ECLIPSE_OS="${AIROOT}/usr/share/backgrounds/nyxus/nyxus-eclipse-reference.png"
+ECLIPSE_DOCS="${REPO_ROOT:-$PWD/..}/docs/brand/nyxus-eclipse-reference.png"
+ECLIPSE_DOCS_REL="../docs/brand/nyxus-eclipse-reference.png"
+[[ -f "$ECLIPSE_OS" ]] \
+  && ok "Sprint G round-3: visual target ships in /usr/share/backgrounds/nyxus/" \
+  || fail "Sprint G round-3: visual target reference image missing from OS assets"
+[[ -f "$ECLIPSE_DOCS" || -f "$ECLIPSE_DOCS_REL" ]] \
+  && ok "Sprint G round-3: visual target pinned in docs/brand/ (survives ISO rebuilds)" \
+  || fail "Sprint G round-3: visual target missing from docs/brand/"
+[[ -f "${REPO_ROOT:-$PWD/..}/docs/brand/VISUAL-TARGET.md" || -f "../docs/brand/VISUAL-TARGET.md" ]] \
+  && ok "Sprint G round-3: VISUAL-TARGET.md doc present (rules every future sprint follows)" \
+  || warn "Sprint G round-3: VISUAL-TARGET.md missing"
+
 # ── final ─────────────────────────────────────────────────────────────
 echo
 if (( FAIL == 0 )); then
