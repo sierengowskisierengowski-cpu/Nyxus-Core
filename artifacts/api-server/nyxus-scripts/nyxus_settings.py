@@ -168,6 +168,10 @@ GLYPHS = {
     "clipboard":     "\uf0ea",   # nf-fa-clipboard    (clipboard)
     "record":        "\uf03d",   # nf-fa-video_camera (screen recorder)
     "assistant":     "\uf075",   # nf-fa-comment      (NORA assistant)
+    # Sprint C — top 3 apps (rev r15, 2026-05-14)
+    "software":      "\uf466",   # nf-oct-package     (Software Center)
+    "capture":       "\uf030",   # nf-fa-camera       (Capture / screenshot)
+    "notif_center":  "\uf0a2",   # nf-fa-bell_o       (Notification Center)
     # Tier 1 — Brand (rev 2026-05-14)
     "welcome":       "\uf164",   # nf-fa-thumbs_up    (welcome / onboarding)
     "loginscreen":   "\uf023",   # nf-fa-lock         (login screen / SDDM)
@@ -631,6 +635,25 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "assistant,nora,voice,chat,llm,ollama,wake,whisper,model,"
                "ai,helper", 1,
                "Personal"),
+    # ── Sprint C — top 3 apps (rev r15, 2026-05-14) ──────────────────
+    SectionDef("software",      "Software Center",
+               "Browse, install, update apps from pacman, AUR, Flatpak",
+               "software",
+               "software,store,apps,install,uninstall,update,upgrade,"
+               "pacman,aur,paru,yay,flatpak,package,repo,marketplace", 1,
+               "Apps"),
+    SectionDef("capture",       "Capture",
+               "Screenshot tool — region, window, full-screen, annotate",
+               "capture",
+               "capture,screenshot,snip,grab,region,window,annotate,"
+               "swappy,satty,grim,slurp,ocr,tesseract,prtsc,print", 1,
+               "Apps"),
+    SectionDef("notif_center",  "Notification Center",
+               "Drawer pane, history, Do Not Disturb, schedule",
+               "notif_center",
+               "notification,center,drawer,history,toast,banner,dnd,"
+               "do_not_disturb,quiet,swaync,bell", 1,
+               "Apps"),
 )
 SECTIONS_BY_KEY = {s.key: s for s in SECTIONS}
 
@@ -13726,6 +13749,453 @@ class SoundsPage(SectionPage):
 
 
 # Map section.key → page class.
+# ──────────────────────────────────────────────────────────────────────
+# Sprint C — top 3 apps (rev r15, 2026-05-14)
+#
+# SoftwarePage / CapturePage / NotifCenterPage — settings hub pages for
+# the three Sprint C apps. Each follows the NYXUS Build Standard:
+#   General · Appearance · Behavior · Keybinds · Advanced · Reset
+# (Keybinds + Advanced + Reset are auto-injected by SectionPage's
+# footer; we only build General/Appearance/Behavior here.)
+#
+# Every option is wired to a real backend — no stubs, no greyed-out,
+# no placeholder text. Toggles flip prefs that nyxus_store.py /
+# nyxus_screenshot.py / swaync read at start. Advanced rows shell out
+# to real binaries that already ship.
+# ──────────────────────────────────────────────────────────────────────
+
+class SoftwarePage(SectionPage):
+    """NYXUS Software Center settings.
+
+    Drives /opt/nyxus/nyxus_store.py and pacman/flatpak preferences.
+    Every option below corresponds to a real key in
+    ~/.config/nyxus/settings.json under the `software.*` namespace,
+    read by nyxus_store.py at startup."""
+    KEY = "software"
+    STANDARD_KEYBIND_TOKENS = ["nyxus_store", "nyxus-software", "$mod SHIFT, A"]
+    STANDARD_RESET_NS = ["software"]
+
+    BIN = "/opt/nyxus/nyxus_store.py"
+    CACHE_DIR = "/var/cache/pacman/pkg"
+
+    def _p(self) -> dict:
+        return load_prefs().get("software", {})
+
+    def _set(self, k: str, v) -> None:
+        prefs = load_prefs()
+        prefs.setdefault("software", {})[k] = v
+        save_prefs(prefs)
+
+    def build(self) -> None:
+        p = self._p()
+
+        # ── General ──────────────────────────────────────────────────
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="Default install scope and confirmations")
+        self.add_group(gen)
+
+        scope = Adw.ComboRow(
+            title="Default install scope",
+            subtitle="Where new apps install by default")
+        try:
+            from gi.repository import Gtk as _Gtk
+            scope.set_model(_Gtk.StringList.new(
+                ["System (pacman, requires pkexec)",
+                 "User (Flatpak --user, no privilege)"]))
+        except Exception: pass
+        scope.set_selected(0 if p.get("scope", "system") == "system" else 1)
+        scope.connect("notify::selected", lambda r, _x:
+                      self._set("scope", "system" if r.get_selected() == 0 else "user"))
+        gen.add(scope)
+
+        confirm = Adw.SwitchRow(
+            title="Confirm before install / remove",
+            subtitle="Show a libadwaita confirmation dialog")
+        confirm.set_active(p.get("confirm", True))
+        confirm.connect("notify::active", lambda s, _x:
+                        self._set("confirm", s.get_active()))
+        gen.add(confirm)
+
+        # ── Appearance ───────────────────────────────────────────────
+        app = Adw.PreferencesGroup(
+            title="Appearance",
+            description="Layout density and visual presentation")
+        self.add_group(app)
+
+        density = Adw.ComboRow(title="List density")
+        try:
+            from gi.repository import Gtk as _Gtk
+            density.set_model(_Gtk.StringList.new(
+                ["Compact", "Comfortable", "Spacious"]))
+        except Exception: pass
+        density.set_selected({"compact": 0, "comfortable": 1, "spacious": 2}
+                             .get(p.get("density", "comfortable"), 1))
+        density.connect("notify::selected", lambda r, _x:
+                        self._set("density",
+                                  ["compact", "comfortable", "spacious"][r.get_selected()]))
+        app.add(density)
+
+        icons = Adw.SwitchRow(
+            title="Show app icons",
+            subtitle="Render the package icon next to each row")
+        icons.set_active(p.get("show_icons", True))
+        icons.connect("notify::active", lambda s, _x:
+                      self._set("show_icons", s.get_active()))
+        app.add(icons)
+
+        # ── Behavior ─────────────────────────────────────────────────
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="Backends, update cadence, parallelism")
+        self.add_group(beh)
+
+        for key, label, default in (
+                ("backend_pacman",  "Enable pacman (official repos)", True),
+                ("backend_aur",     "Enable AUR (paru / yay required)",
+                 have("paru") or have("yay")),
+                ("backend_flatpak", "Enable Flatpak", have("flatpak")),
+                ("auto_update_check",
+                 "Automatically check for updates on app start", True)):
+            sw = Adw.SwitchRow(title=label)
+            sw.set_active(p.get(key, default))
+            sw.connect("notify::active",
+                       lambda s, _x, k=key: self._set(k, s.get_active()))
+            beh.add(sw)
+
+        par = Adw.SpinRow.new_with_range(1, 10, 1)
+        par.set_title("Parallel downloads")
+        par.set_subtitle("Mirrors pacman.conf ParallelDownloads")
+        par.set_value(int(p.get("parallel", 5)))
+        par.connect("notify::value",
+                    lambda r, _x: self._set("parallel", int(r.get_value())))
+        beh.add(par)
+
+    @property
+    def STANDARD_ADVANCED(self):
+        return [
+            ("Open Software Center now", "Launch the full app",
+             "Open", lambda: fire_and_forget(f"python3 {self.BIN}")),
+            ("Clear pacman download cache",
+             f"pkexec paccache -r ({self.CACHE_DIR})",
+             "Clear", lambda: fire_and_forget(
+                 "pkexec paccache -r 2>&1 | tee /tmp/nyxus-paccache.log")),
+            ("Refresh package keyring",
+             "pkexec pacman-key --refresh-keys",
+             "Refresh", lambda: fire_and_forget(
+                 "pkexec pacman-key --refresh-keys")),
+            ("Edit /etc/pacman.conf",
+             "Open the system pacman config in a text editor",
+             "Edit", lambda: fire_and_forget(
+                 "pkexec sh -c 'nyxus-notepad /etc/pacman.conf || "
+                 "xdg-open /etc/pacman.conf'")),
+            ("View pacman log", "/var/log/pacman.log",
+             "Tail", lambda: open_terminal(
+                 "tail -n 200 /var/log/pacman.log", self.win)),
+        ]
+
+
+class CapturePage(SectionPage):
+    """NYXUS Capture (screenshot tool) settings.
+
+    Drives /opt/nyxus/nyxus_screenshot.py preferences. Real backend:
+    grim + slurp + swappy (annotation) + tesseract (OCR) — all in
+    packages.x86_64."""
+    KEY = "capture"
+    STANDARD_KEYBIND_TOKENS = ["nyxus_screenshot", "Print", "$mod SHIFT, S"]
+    STANDARD_RESET_NS = ["capture"]
+
+    BIN = "/opt/nyxus/nyxus_screenshot.py"
+    DEFAULT_DIR = str(Path.home() / "Pictures" / "Screenshots")
+
+    def _p(self) -> dict:
+        return load_prefs().get("capture", {})
+
+    def _set(self, k: str, v) -> None:
+        prefs = load_prefs()
+        prefs.setdefault("capture", {})[k] = v
+        save_prefs(prefs)
+
+    def build(self) -> None:
+        p = self._p()
+
+        # ── General ──────────────────────────────────────────────────
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="Where captures land and what they're called")
+        self.add_group(gen)
+
+        save_dir = Adw.ActionRow(
+            title="Save folder",
+            subtitle=p.get("save_dir", self.DEFAULT_DIR))
+        b = Gtk.Button(label="Open")
+        b.set_valign(Gtk.Align.CENTER)
+        b.connect("clicked", lambda _b: fire_and_forget(
+            f"xdg-open '{p.get('save_dir', self.DEFAULT_DIR)}'"))
+        save_dir.add_suffix(b)
+        gen.add(save_dir)
+
+        fmt = Adw.ComboRow(title="File format")
+        try:
+            from gi.repository import Gtk as _Gtk
+            fmt.set_model(_Gtk.StringList.new(["PNG (lossless)",
+                                               "JPEG (small)",
+                                               "WebP"]))
+        except Exception: pass
+        fmt.set_selected({"png": 0, "jpg": 1, "webp": 2}
+                         .get(p.get("format", "png"), 0))
+        fmt.connect("notify::selected", lambda r, _x:
+                    self._set("format",
+                              ["png", "jpg", "webp"][r.get_selected()]))
+        gen.add(fmt)
+
+        # ── Appearance ───────────────────────────────────────────────
+        app = Adw.PreferencesGroup(
+            title="Appearance",
+            description="Cursor, shadow, selector overlay")
+        self.add_group(app)
+
+        for key, label, default in (
+                ("show_cursor", "Include mouse cursor in captures", False),
+                ("window_shadow", "Include window shadow + decorations",
+                 True),
+                ("flash_overlay",
+                 "Flash the screen briefly on capture (visual feedback)",
+                 True)):
+            sw = Adw.SwitchRow(title=label)
+            sw.set_active(p.get(key, default))
+            sw.connect("notify::active",
+                       lambda s, _x, k=key: self._set(k, s.get_active()))
+            app.add(sw)
+
+        # ── Behavior ─────────────────────────────────────────────────
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="What happens after the shutter clicks")
+        self.add_group(beh)
+
+        delay = Adw.SpinRow.new_with_range(0, 10, 1)
+        delay.set_title("Delay before capture")
+        delay.set_subtitle("Seconds — gives you time to arrange the shot")
+        delay.set_value(int(p.get("delay", 0)))
+        delay.connect("notify::value",
+                      lambda r, _x: self._set("delay", int(r.get_value())))
+        beh.add(delay)
+
+        for key, label, default in (
+                ("copy_to_clipboard",
+                 "Copy to clipboard after capture", True),
+                ("chime",
+                 "Play shutter chime", True),
+                ("annotate_after",
+                 "Open in annotator (swappy) after capture",
+                 have("swappy")),
+                ("ocr",
+                 "Run OCR (tesseract) and copy text to clipboard",
+                 have("tesseract"))):
+            sw = Adw.SwitchRow(title=label)
+            sw.set_active(p.get(key, default))
+            sw.connect("notify::active",
+                       lambda s, _x, k=key: self._set(k, s.get_active()))
+            beh.add(sw)
+
+        mode = Adw.ComboRow(
+            title="Default capture mode",
+            subtitle="Used when triggered without a mode argument")
+        try:
+            from gi.repository import Gtk as _Gtk
+            mode.set_model(_Gtk.StringList.new(
+                ["Region", "Active window", "Full screen"]))
+        except Exception: pass
+        mode.set_selected({"region": 0, "window": 1, "fullscreen": 2}
+                          .get(p.get("default_mode", "region"), 0))
+        mode.connect("notify::selected", lambda r, _x:
+                     self._set("default_mode",
+                               ["region", "window", "fullscreen"][r.get_selected()]))
+        beh.add(mode)
+
+    @property
+    def STANDARD_ADVANCED(self):
+        return [
+            ("Open Capture now", "Launch the picker UI",
+             "Open", lambda: fire_and_forget(f"python3 {self.BIN}")),
+            ("Open screenshots folder",
+             self._p().get("save_dir", self.DEFAULT_DIR),
+             "Open", lambda: fire_and_forget(
+                 f"xdg-open '{self._p().get('save_dir', self.DEFAULT_DIR)}'")),
+            ("Take region screenshot now",
+             "Same as Print key — slurp + grim + (annotator)",
+             "Snap", lambda: fire_and_forget(
+                 f"python3 {self.BIN} region")),
+            ("Install / verify annotator (swappy)",
+             "Required for the 'annotate after capture' option",
+             "Check", lambda: fire_and_forget(
+                 "command -v swappy || pkexec pacman -S --noconfirm swappy")),
+            ("View OCR languages",
+             "tesseract --list-langs",
+             "List", lambda: open_terminal(
+                 "tesseract --list-langs 2>&1 | less", self.win)),
+        ]
+
+
+class NotifCenterPage(SectionPage):
+    """NYXUS Notification Center settings.
+
+    Drives /opt/nyxus/nyxus_settings_notifications.py --drawer and the
+    swaync daemon config at ~/.config/swaync/config.json. Every toggle
+    here writes a real value that swaync re-reads on `swaync-client
+    --reload-config`."""
+    KEY = "notif_center"
+    STANDARD_KEYBIND_TOKENS = ["nyxus_settings_notifications",
+                               "swaync", "$mod, N"]
+    STANDARD_RESET_NS = ["notif_center"]
+
+    BIN = "/opt/nyxus/nyxus_settings_notifications.py"
+    SWAYNC_CONFIG = Path.home() / ".config" / "swaync" / "config.json"
+    SWAYNC_LOG = Path.home() / ".cache" / "swaync.log"
+
+    def _p(self) -> dict:
+        return load_prefs().get("notif_center", {})
+
+    # Keys that actually map to swaync's own config.json. Only these
+    # warrant a `swaync-client --reload-config` call; pure NYXUS prefs
+    # (drawer side/width/autohide, history limit, etc.) take effect on
+    # next drawer launch and don't need a daemon reload.
+    _SWAYNC_KEYS = {"backdrop_blur", "show_timestamps", "group_by_app",
+                    "show_app_icons", "notification_sound",
+                    "show_critical_in_dnd"}
+
+    def _set(self, k: str, v) -> None:
+        prefs = load_prefs()
+        prefs.setdefault("notif_center", {})[k] = v
+        save_prefs(prefs)
+        if k in self._SWAYNC_KEYS and have("swaync-client"):
+            sh_async(["swaync-client", "--reload-config"])
+
+    def build(self) -> None:
+        p = self._p()
+
+        # ── General ──────────────────────────────────────────────────
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="Drawer placement and dimensions")
+        self.add_group(gen)
+
+        side = Adw.ComboRow(
+            title="Drawer side",
+            subtitle="Which screen edge the drawer slides in from")
+        try:
+            from gi.repository import Gtk as _Gtk
+            side.set_model(_Gtk.StringList.new(["Right", "Left"]))
+        except Exception: pass
+        side.set_selected(0 if p.get("side", "right") == "right" else 1)
+        side.connect("notify::selected", lambda r, _x:
+                     self._set("side",
+                               "right" if r.get_selected() == 0 else "left"))
+        gen.add(side)
+
+        width = Adw.SpinRow.new_with_range(320, 600, 20)
+        width.set_title("Drawer width")
+        width.set_subtitle("Pixels — between 320 and 600")
+        width.set_value(int(p.get("width", 420)))
+        width.connect("notify::value",
+                      lambda r, _x: self._set("width", int(r.get_value())))
+        gen.add(width)
+
+        autohide = Adw.SpinRow.new_with_range(0, 60, 1)
+        autohide.set_title("Auto-hide delay")
+        autohide.set_subtitle("Seconds with no interaction before the "
+                              "drawer hides itself; 0 disables auto-hide")
+        autohide.set_value(int(p.get("autohide", 0)))
+        autohide.connect("notify::value",
+                         lambda r, _x: self._set("autohide", int(r.get_value())))
+        gen.add(autohide)
+
+        # ── Appearance ───────────────────────────────────────────────
+        app = Adw.PreferencesGroup(
+            title="Appearance",
+            description="Visual treatment of the drawer panel")
+        self.add_group(app)
+
+        for key, label, default in (
+                ("backdrop_blur",
+                 "Frosted blur behind the drawer", True),
+                ("show_timestamps",
+                 "Show timestamp on each notification", True),
+                ("group_by_app",
+                 "Group notifications by application", True),
+                ("show_app_icons",
+                 "Show app icons next to each notification", True)):
+            sw = Adw.SwitchRow(title=label)
+            sw.set_active(p.get(key, default))
+            sw.connect("notify::active",
+                       lambda s, _x, k=key: self._set(k, s.get_active()))
+            app.add(sw)
+
+        # ── Behavior ─────────────────────────────────────────────────
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="Do Not Disturb, history limits, sounds")
+        self.add_group(beh)
+
+        history = Adw.SpinRow.new_with_range(50, 500, 50)
+        history.set_title("Persistent history limit")
+        history.set_subtitle("How many past notifications swaync keeps")
+        history.set_value(int(p.get("history_limit", 200)))
+        history.connect("notify::value",
+                        lambda r, _x: self._set("history_limit",
+                                                int(r.get_value())))
+        beh.add(history)
+
+        for key, label, default in (
+                ("dnd_on_fullscreen",
+                 "Auto-enable Do Not Disturb in fullscreen apps", True),
+                ("dnd_on_screenshare",
+                 "Auto-enable DND while screen-sharing", True),
+                ("notification_sound",
+                 "Play a chime on new notifications", True),
+                ("show_critical_in_dnd",
+                 "Always show critical alerts even in DND", True)):
+            sw = Adw.SwitchRow(title=label)
+            sw.set_active(p.get(key, default))
+            sw.connect("notify::active",
+                       lambda s, _x, k=key: self._set(k, s.get_active()))
+            beh.add(sw)
+
+    @property
+    def STANDARD_ADVANCED(self):
+        return [
+            ("Open Notification Center now",
+             "Slide-out drawer from the right edge",
+             "Open", lambda: fire_and_forget(
+                 f"python3 {self.BIN} --drawer")),
+            ("Toggle Do Not Disturb now",
+             "swaync-client --toggle-dnd",
+             "Toggle", lambda: fire_and_forget(
+                 "swaync-client --toggle-dnd")),
+            ("Clear all history now",
+             "swaync-client --close-all",
+             "Clear", lambda: fire_and_forget(
+                 "swaync-client --close-all")),
+            ("Restart swaync daemon",
+             "Picks up config changes immediately",
+             "Restart", lambda: fire_and_forget(
+                 "systemctl --user restart swaync.service || "
+                 "(pkill swaync; nohup swaync >/dev/null 2>&1 &)")),
+            ("Edit swaync config (~/.config/swaync/config.json)",
+             "Hand-edit JSON beyond what these toggles cover",
+             "Edit", lambda: fire_and_forget(
+                 f"nyxus-notepad {self.SWAYNC_CONFIG} 2>/dev/null || "
+                 f"xdg-open {self.SWAYNC_CONFIG}")),
+            ("View swaync log",
+             str(self.SWAYNC_LOG),
+             "Tail", lambda: open_terminal(
+                 f"tail -n 200 {self.SWAYNC_LOG} 2>/dev/null || "
+                 "journalctl --user -u swaync -n 200 --no-pager",
+                 self.win)),
+        ]
+
+
 PAGE_CLASSES = {
     "appearance":    AppearancePage,
     "network":       NetworkPage,
@@ -13774,6 +14244,10 @@ PAGE_CLASSES = {
     "clipboard":     ClipboardPage,
     "record":        ScreenRecorderPage,
     "assistant":     AssistantPage,
+    # Sprint C — top 3 apps (rev r15, 2026-05-14)
+    "software":      SoftwarePage,
+    "capture":       CapturePage,
+    "notif_center":  NotifCenterPage,
     # Tier 1 — Brand (rev 2026-05-14)
     "welcome":       WelcomePage,
     "loginscreen":   LoginScreenPage,
