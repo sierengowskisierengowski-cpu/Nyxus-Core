@@ -308,10 +308,14 @@ if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-seattle-frost.conf" "$HYPR_MAIN"; th
   ok "stripped Seattle Frost source line from hyprland.conf"
 fi
 
-# Current NYXUS builds intentionally ship `windowrulev2` / `layerrulev2`
-# syntax in the canonical conf shards. Older rewrites to unified syntax were
-# corrupting fresh configs, so we only remove the legacy temporary filename
-# from prior resync generations and keep the current source lines intact.
+# Current NYXUS builds ship the unified `windowrule =` / `layerrule =`
+# syntax in the canonical conf shards. Hyprland 0.54.3 hyprlang does
+# NOT parse `windowrulev2 = RULE, class:REGEX` — it cascades 535+
+# on-screen "invalid field RULE: missing a value" errors and bricks
+# the entire visual layer (confirmed live 2026-05-14). The unified
+# `windowrule =` keyword emits a forward-looking deprecation warning
+# into `hyprctl configerrors` but the rules are applied cleanly and
+# the on-screen overlay stays clean. NEVER flip back to v2.
 # (audit A8: replaces 60 lines of disabled v1-migration + override-insertion)
 HYPR_RULES_OLD="$HYPR_CONF_D/nyxus-windowrules.conf"
 if [[ -f "$HYPR_RULES_OLD" ]]; then
@@ -367,7 +371,7 @@ fi
 if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-rules.conf" -o "$HYPR_RULES"; then
   chown "$REAL_USER:$REAL_USER" "$HYPR_RULES"
   chmod 644 "$HYPR_RULES"
-  ok "wrote $HYPR_RULES  ($(grep -c '^windowrulev2' "$HYPR_RULES") rules — canonical baseline)"
+  ok "wrote $HYPR_RULES  ($(grep -c '^windowrule =' "$HYPR_RULES") rules — canonical baseline)"
 else
   fail "could not download nyxus-hyprland-rules.conf — apps may still tile-stretch"
 fi

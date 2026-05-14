@@ -1316,10 +1316,10 @@ fi
 WRULE="${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-windowrules.conf"
 if [[ -f "${WRULE}" ]]; then
   ok "windowrules: nyxus-windowrules.conf present"
-  grep -qE 'windowrulev2 = float, *class:\^\(nyxus' "${WRULE}" \
+  grep -qE 'windowrule = float, *class:\^\(nyxus' "${WRULE}" \
     && ok "windowrules: NYXUS apps float by default" \
     || fail "windowrules: NYXUS apps not set to float"
-  grep -qE 'windowrulev2 = center' "${WRULE}" \
+  grep -qE 'windowrule = center' "${WRULE}" \
     && ok "windowrules: NYXUS apps center on open" \
     || fail "windowrules: NYXUS apps not centered on open"
   grep -q 'ALT,.*F4.*killactive' "${WRULE}" \
@@ -1422,10 +1422,10 @@ fi
 
 # (d) Drawer windowrule fallback present
 if [[ -f "${SPRINT_C_RULES}" ]]; then
-  grep -qE '^windowrulev2 = float,.*class:\^\(com\\\.nyxus\\\.notifications\)\$' "${SPRINT_C_RULES}" \
+  grep -qE '^windowrule = float,.*class:\^\(com\\\.nyxus\\\.notifications\)\$' "${SPRINT_C_RULES}" \
     && ok "Sprint C: drawer fallback windowrule (float) present" \
     || fail "Sprint C: drawer fallback windowrule (float) missing"
-  grep -qE '^windowrulev2 = move .*class:\^\(com\\\.nyxus\\\.notifications\)\$' "${SPRINT_C_RULES}" \
+  grep -qE '^windowrule = move .*class:\^\(com\\\.nyxus\\\.notifications\)\$' "${SPRINT_C_RULES}" \
     && ok "Sprint C: drawer fallback windowrule (right-edge move) present" \
     || fail "Sprint C: drawer fallback windowrule (move) missing"
 fi
@@ -2996,6 +2996,38 @@ if [[ -x "$KE_RENDERER" ]]; then
   fi
 else
   fail "Sprint K-E (b): cannot run --check (renderer missing or not executable)"
+fi
+
+# ── §15ak Sprint K-F — Hyprland windowrulev2 ban (regression guard) ──
+#
+# Hyprland 0.54.3 hyprlang DOES NOT PARSE `windowrulev2 = RULE, class:REGEX`
+# for class-matched rules — it cascades 535+ on-screen "invalid field RULE:
+# missing a value" errors and bricks the entire visual layer (confirmed
+# live on 2026-05-14, IdeaPad live ISO). The unified `windowrule =` form
+# is the only safe choice on this Hyprland version.
+#
+# This guard makes any reintroduction of active `windowrulev2 =` lines a
+# hard build failure — covers BOTH the live ISO airootfs tree AND the
+# artifact mirror that nyxus-resync-all.sh serves to installed systems,
+# so a future "modernization" sweep can't quietly brick installed users.
+# Comments are exempt (only matches lines starting with the keyword).
+hd "§15ak Sprint K-F — Hyprland windowrulev2 ban (regression guard)"
+KF_PATHS=(
+  "${AIROOT}/etc/skel/.config/hypr"
+  "$(dirname "$0")/../artifacts/api-server/nyxus-scripts"
+)
+KF_HITS=""
+for KF_DIR in "${KF_PATHS[@]}"; do
+  [[ -d "$KF_DIR" ]] || continue
+  while IFS= read -r KF_LINE; do
+    KF_HITS+="    ${KF_LINE}"$'\n'
+  done < <(grep -RHnE '^windowrulev2 = ' "$KF_DIR" --include='*.conf' 2>/dev/null || true)
+done
+if [[ -z "$KF_HITS" ]]; then
+  ok "Sprint K-F: zero active windowrulev2 lines (Hyprland 0.54.3 compatible)"
+else
+  fail "Sprint K-F: active windowrulev2 lines detected — Hyprland 0.54.3 will throw 535+ on-screen errors:"
+  printf '%s' "$KF_HITS"
 fi
 
 # ── final ─────────────────────────────────────────────────────────────
