@@ -1,0 +1,8 @@
+[Unit]
+Description=NYXUS dynamic time-of-day wallpaper
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/nyxus-dynamic-wallpaper.sh

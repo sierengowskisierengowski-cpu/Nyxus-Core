@@ -2,7 +2,7 @@
   "_comment": "Source-of-truth for the NYXUS accent palette. Edited via Quick Settings → Accent or `nyxus accent set <name>`. /usr/local/bin/nyxus-apply-accent regenerates the live CSS for eww and any other consumer.",
   "active": "aurora",
   "presets": {
-    "aurora":  { "primary": "#f4ead5", "secondary": "#e8edf5", "warn": "#d96b6b", "ok": "#82ffd2" },
+    "aurora":  { "primary": "#f4ead5", "secondary": "#f4ead5", "warn": "#fff8e0", "ok": "#f4ead5" },
     "ember":   { "primary": "#ff7849", "secondary": "#ffd166", "warn": "#d96b6b", "ok": "#82ffd2" },
     "verdant": { "primary": "#82ffd2", "secondary": "#e8edf5", "warn": "#d96b6b", "ok": "#f4ead5" },
     "violet":  { "primary": "#c084fc", "secondary": "#7c3aed", "warn": "#d96b6b", "ok": "#82ffd2" },

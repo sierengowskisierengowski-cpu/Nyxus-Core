@@ -6,7 +6,7 @@
  * Keep in lockstep with nyxus-palette.css.
  * ──────────────────────────────────────────────────────────────── */
 @define-color nyx_white          #ffffff;
-@define-color nyx_white_off      #e8edf5;
+@define-color nyx_white_off      #f4ead5;
 @define-color nyx_grey_light     #c8ccd6;
 @define-color nyx_grey_mid       #9aa0ad;
 @define-color nyx_glass_dark     rgba(14, 14, 22, 0.55);

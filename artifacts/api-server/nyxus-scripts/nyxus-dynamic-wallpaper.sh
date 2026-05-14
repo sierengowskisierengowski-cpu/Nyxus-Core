@@ -29,6 +29,15 @@ mkdir -p "$LOG_DIR"
 ts() { date '+%Y-%m-%d %H:%M:%S'; }
 say() { printf '%s dyn-wp: %s\n' "$(ts)" "$*" >> "$LOG"; }
 
+# Sprint G hardening: timer can fire ~1min after boot, before the user
+# has a graphical session. Without WAYLAND_DISPLAY/DISPLAY the wallpaper
+# backends (swww/swaybg/hyprpaper/feh) will fail. No-op cleanly so the
+# next hourly tick can do the actual work once the session is up.
+if [ -z "${WAYLAND_DISPLAY:-}" ] && [ -z "${DISPLAY:-}" ]; then
+  say "no graphical session yet — skipping (will retry next tick)"
+  exit 0
+fi
+
 [ -f "$CONF" ] || { say "no config — exiting"; exit 0; }
 
 set_name="cosmos"

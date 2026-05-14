@@ -264,6 +264,24 @@ ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyx
 # rev r6-eww: waybar-stats / waybar-ticker removed. nyxus-eww-launch added.
 install -m 0755 "${NS}/wallpaper-rotate.sh"  "${LBIN}/wallpaper-rotate"
 install -m 0755 "${NS}/nyxus-eww-launch"     "${LBIN}/nyxus-eww-launch"
+
+# Sprint G: stage dynamic time-of-day wallpaper picker (sh + service +
+# timer). 94 wallpapers ship in /usr/share/backgrounds/nyxus/ but
+# nothing was rotating them. The .sh delegates to nyxus-set-wallpaper.sh
+# (which tries swww first, then swaybg/hyprpaper/feh) so this is
+# backend-agnostic. Timer fires hourly + on boot.
+install -Dm755 "${NS}/nyxus-dynamic-wallpaper.sh" \
+  "${SKEL}/.local/bin/nyxus-dynamic-wallpaper.sh"
+install -Dm644 "${NS}/nyxus-dynamic-wallpaper.service" \
+  "${SKEL}/.config/systemd/user/nyxus-dynamic-wallpaper.service"
+install -Dm644 "${NS}/nyxus-dynamic-wallpaper.timer" \
+  "${SKEL}/.config/systemd/user/nyxus-dynamic-wallpaper.timer"
+# Auto-enable the timer for new users via skel symlink (systemd reads
+# ~/.config/systemd/user/timers.target.wants/ at session start).
+mkdir -p "${SKEL}/.config/systemd/user/timers.target.wants"
+ln -sf ../nyxus-dynamic-wallpaper.timer \
+  "${SKEL}/.config/systemd/user/timers.target.wants/nyxus-dynamic-wallpaper.timer"
+ok "wallpaper rotation: dynamic-wallpaper.{sh,service,timer} staged + timer auto-enabled"
 if [[ -f "${NS}/nyxus-mission-control-toggle" ]]; then
   install -m 0755 "${NS}/nyxus-mission-control-toggle" "${LBIN}/nyxus-mission-control-toggle"
 fi

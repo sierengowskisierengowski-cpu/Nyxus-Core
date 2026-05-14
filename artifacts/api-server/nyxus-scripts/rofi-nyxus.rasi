@@ -21,7 +21,7 @@
     nx-line:       #1a1a28;
     nx-line-soft:  rgba(244, 234, 213, 0.10);
 
-    nx-critical:   #f87171;
+    nx-critical:   #fff8e0;
 
     background-color: transparent;
     text-color:       @nx-cream;
