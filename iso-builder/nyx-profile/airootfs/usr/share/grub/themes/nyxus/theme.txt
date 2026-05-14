@@ -40,7 +40,7 @@ terminal-box:  "terminal_box_*.png"
 
 + boot_menu {
     left   = 15%
-    top    = 30%
+    top    = 25%
     width  = 70%
     height = 50%
 

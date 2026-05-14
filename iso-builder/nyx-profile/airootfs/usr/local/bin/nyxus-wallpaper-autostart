@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # nyxus-wallpaper-autostart
 #
-# Read the user's persisted wallpaper choice and exec swaybg. Falls back
+# Read the user's persisted wallpaper choice and set it through
+# nyxus-set-wallpaper (swww/hyprpaper backend aware). Falls back
 # to the shipped default if the config is missing or points at a file
 # that no longer exists. Sourced by hyprland.conf exec-once and the
 # bound $mod+ALT+W key.
 set -u
 
 CONF="${HOME}/.config/nyxus/wallpaper.conf"
-DEFAULT="/usr/share/backgrounds/nyxus/nyxus-void-vortex.svg"
+DEFAULT="/usr/share/backgrounds/nyxus/nyxus-nebula-01.png"
 LEGACY_PNG="${HOME}/.config/hypr/walls/nyxus-void-vortex.png"
 
 WALLPAPER_PATH=""
@@ -26,6 +27,10 @@ if [[ -z "${WALLPAPER_PATH:-}" || ! -r "${WALLPAPER_PATH}" ]]; then
     echo "nyxus-wallpaper-autostart: no readable wallpaper found" >&2
     exit 1
   fi
+fi
+
+if command -v nyxus-set-wallpaper >/dev/null 2>&1; then
+  exec nyxus-set-wallpaper "${WALLPAPER_PATH}"
 fi
 
 pkill -x swaybg 2>/dev/null || true
