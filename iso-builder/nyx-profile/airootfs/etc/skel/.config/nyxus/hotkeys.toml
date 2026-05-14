@@ -33,7 +33,7 @@ hot_reload           = true
 [[bind]]
 mods     = "SUPER"
 key      = "space"
-action   = "nyxus spotlight"
+action   = "nyxus launcher"
 desc     = "Open Spotlight"
 category = "Launchers"
 
@@ -96,7 +96,7 @@ category = "Window"
 [[bind]]
 mods     = "SUPER"
 key      = "n"
-action   = "nyxus-notepad"
+action   = "nyxus notepad"
 desc     = "New note"
 category = "Apps"
 
