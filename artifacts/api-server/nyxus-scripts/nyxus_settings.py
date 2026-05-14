@@ -129,7 +129,6 @@ GLYPHS = {
     "check":         "\uf00c",   # nf-fa-check
     "chevron":       "\uf054",   # nf-fa-chevron_right
     "warn":          "\uf071",   # nf-fa-warning
-    "wip":           "\uf0ad",   # nf-fa-wrench
     "backup":        "\uf187",   # nf-fa-archive
     "sync":          "\uf021",   # nf-fa-refresh
     "drop":          "\uf0ee",   # nf-fa-cloud_upload
@@ -826,33 +825,6 @@ scale slider {{ background-color: {WHITE_PURE};
 .nyx-pill.warn    {{ color: {GREY_LIGHT}; border-color: {GREY_MID}; }}
 .nyx-pill.danger  {{ color: {DANGER_RED}; border-color: {DANGER_RED}; }}
 
-/* ── In-progress card (Tier-2 placeholder, §9 no blank panel) ────── */
-.nyx-wip-card {{
-    background-color: {GLASS_DEEPER};
-    border: 1px solid {HAIRLINE_WHITE};
-    border-radius: {RADIUS_CARD}px;
-    padding: 28px;
-    margin: 20px 28px;
-}}
-.nyx-wip-glyph {{
-    font-family: 'Symbols Nerd Font', monospace;
-    font-size: 32px;
-    color: {GREY_LIGHT};
-    margin-bottom: 12px;
-}}
-.nyx-wip-title {{
-    font-family: '{FONT_DISPLAY}', '{FONT_UI}', sans-serif;
-    font-size: 17px;
-    font-weight: 600;
-    color: {WHITE_OFF};
-    margin-bottom: 6px;
-}}
-.nyx-wip-body {{
-    color: {GREY_TERTIARY};
-    font-size: 13px;
-    line-height: 1.5;
-}}
-
 /* ── Wallpaper grid (Appearance) ─────────────────────────────────── */
 .nyx-wall-tile {{
     border: 2px solid transparent;
@@ -901,43 +873,6 @@ def status_pill(label: str, kind: str = "ok") -> Gtk.Label:
         lbl.add_css_class(kind)
     lbl.set_halign(Gtk.Align.START)
     return lbl
-
-
-def wip_card(section_title: str, what_works: str, what_lands_next: str) -> Gtk.Box:
-    """
-    §9 mandate — never show a blank panel. Tier-2 sections render this
-    honest in-progress card explaining current state and ETA.
-    """
-    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-    box.add_css_class("nyx-wip-card")
-
-    glyph = Gtk.Label(label=GLYPHS["wip"])
-    glyph.add_css_class("nyx-wip-glyph")
-    glyph.set_halign(Gtk.Align.START)
-    box.append(glyph)
-
-    title = Gtk.Label(label=f"{section_title} — under active development")
-    title.add_css_class("nyx-wip-title")
-    title.set_halign(Gtk.Align.START)
-    title.set_wrap(True)
-    box.append(title)
-
-    body_text = (
-        f"<b>What works today:</b>  {what_works}\n"
-        f"<b>Landing in the next pass:</b>  {what_lands_next}\n\n"
-        "This panel is intentionally honest. NYXUS never shows fake "
-        "toggles or mocked data — every control either has a real "
-        "backend wired up or is held back until it does."
-    )
-    body = Gtk.Label()
-    body.add_css_class("nyx-wip-body")
-    body.set_markup(body_text)
-    body.set_halign(Gtk.Align.START)
-    body.set_xalign(0.0)
-    body.set_wrap(True)
-    box.append(body)
-
-    return box
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -1126,37 +1061,8 @@ class SectionPage(Adw.Bin):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# §9 honest placeholder — used for every Tier-2 section.
-# ──────────────────────────────────────────────────────────────────────
-class PlaceholderPage(SectionPage):
-    KEY = ""
-    WHAT_WORKS = ""
-    WHAT_NEXT  = ""
-
-    def build(self) -> None:
-        # The wip card uses a free-form Box so we wrap it in a borderless
-        # PreferencesGroup to live inside Adw.PreferencesPage.
-        grp = Adw.PreferencesGroup()
-        grp.add(wip_card(self.section.title,
-                         self.WHAT_WORKS or "Section chrome only.",
-                         self.WHAT_NEXT  or "Real backend wiring."))
-        self.add_group(grp)
-        self.add_pill(status_pill("in progress", "warn"))
-
-
-def _tier2(key: str, what_works: str, what_next: str) -> type:
-    """Factory: build a PlaceholderPage subclass for one section."""
-    cls = type(
-        f"{key.title()}Placeholder",
-        (PlaceholderPage,),
-        {"KEY": key, "WHAT_WORKS": what_works, "WHAT_NEXT": what_next},
-    )
-    return cls
-
-
-# ──────────────────────────────────────────────────────────────────────
 # Shared row helpers — kv_row + label_row (live in module scope, used
-# by every Tier-2/3 page).
+# by every settings page).
 # ──────────────────────────────────────────────────────────────────────
 def kv_row(title: str, value: str, subtitle: str = "") -> Adw.ActionRow:
     row = Adw.ActionRow(title=title)
@@ -12573,8 +12479,7 @@ class ScreenRecorderPage(SectionPage):
 
 
 class AssistantPage(SectionPage):
-    """NORA — voice & chat assistant. Tier-2 (engine pending), settings
-    here are honest scaffolding so wiring lands without UI drift."""
+    """NORA — voice & chat assistant page with live local prefs/runtime wiring."""
     KEY = "assistant"
     STANDARD_KEYBIND_TOKENS = ["nyxus-assistant", "nora"]
     STANDARD_RESET_NS = ["assistant"]
