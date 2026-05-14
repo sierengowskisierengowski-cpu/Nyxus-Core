@@ -7,12 +7,8 @@
 #  real backend integrations only — never mock data, never blank panels.
 #
 #  Sections:
-#    Tier 1 (fully built this rev):
-#       Appearance · Network · Bluetooth · About
-#    Tier 2 (honest in-progress placeholder, contract-compliant chrome):
-#       Display · Sound · Power · Notifications · Date & Time ·
-#       Keyboard · Mouse · Privacy · Apps · Storage · Updates ·
-#       Accessibility · Users
+#    All registered sections are shipped as real pages wired to live
+#    backends/configuration (no WIP placeholders in sidebar state).
 #
 #  Storage:  ~/.config/nyxus/settings.json
 #  Logs:     ~/.cache/nyxus/settings.log
@@ -331,8 +327,7 @@ def save_prefs(prefs: dict) -> None:
 
 # ──────────────────────────────────────────────────────────────────────
 # Section registry — single source of truth for sidebar order.
-# Each entry: (key, title, glyph_key, builder_callable_name)
-# Tier-1 sections build the real page; Tier-2 use honest_placeholder.
+# Each entry describes one shipped settings page.
 # ──────────────────────────────────────────────────────────────────────
 @dataclass(frozen=True)
 class SectionDef:
@@ -341,7 +336,7 @@ class SectionDef:
     subtitle: str       # one-line description shown beneath the title
     glyph: str
     keywords: str       # search index (comma-separated)
-    tier: int           # 1 = fully built, 2 = honest placeholder
+    tier: int           # maturity flag (current shipped set is tier=1)
     category: str = ""  # taxonomy bucket — drives sidebar group headers
 
 # Sidebar order is preserved for category grouping (Mac System Settings
@@ -357,33 +352,33 @@ SECTIONS: Tuple[SectionDef, ...] = (
     SectionDef("accessibility", "Accessibility",
                "Large text, reduce motion, sticky keys",
                "accessibility",
-               "accessibility,a11y,zoom,contrast,motion,sticky,screen reader", 2,
+                "accessibility,a11y,zoom,contrast,motion,sticky,screen reader", 1,
                "Personal"),
     SectionDef("notifications", "Notifications",
                "Do not disturb, history, per-app rules",
                "notifications",
-               "notification,dnd,quiet,alert,toast,banner", 2,
+                "notification,dnd,quiet,alert,toast,banner", 1,
                "Personal"),
     # ── Devices ─────────────────────────────────────────────────────────
     SectionDef("display",       "Display",
                "Resolution, refresh, scale, brightness",
                "display",
-               "display,monitor,resolution,refresh,scale,brightness,hidpi", 2,
+                "display,monitor,resolution,refresh,scale,brightness,hidpi", 1,
                "Devices"),
     SectionDef("sound",         "Sound",
                "Output, input, per-app volume",
                "sound",
-               "sound,audio,volume,microphone,mic,speaker,headphone", 2,
+                "sound,audio,volume,microphone,mic,speaker,headphone", 1,
                "Devices"),
     SectionDef("keyboard",      "Keyboard",
                "Layout, repeat rate, shortcuts",
                "keyboard",
-               "keyboard,layout,xkb,repeat,shortcut,hotkey,bind", 2,
+                "keyboard,layout,xkb,repeat,shortcut,hotkey,bind", 1,
                "Devices"),
     SectionDef("mouse",         "Mouse & Touchpad",
                "Speed, accel, natural scroll, tap",
                "mouse",
-               "mouse,touchpad,trackpad,pointer,scroll,tap,acceleration", 2,
+                "mouse,touchpad,trackpad,pointer,scroll,tap,acceleration", 1,
                "Devices"),
     SectionDef("bluetooth",     "Bluetooth",
                "Devices, pairing, audio profile",
@@ -423,38 +418,38 @@ SECTIONS: Tuple[SectionDef, ...] = (
     SectionDef("power",         "Power",
                "Battery, profiles, sleep, lid behavior",
                "power",
-               "power,battery,sleep,suspend,lid,profile,energy,charge", 2,
+                "power,battery,sleep,suspend,lid,profile,energy,charge", 1,
                "System"),
     SectionDef("datetime",      "Date & Time",
                "Timezone, NTP, format",
                "datetime",
-               "date,time,timezone,clock,ntp,12,24,format", 2,
+                "date,time,timezone,clock,ntp,12,24,format", 1,
                "System"),
     SectionDef("privacy",       "Privacy & Security",
                "Location, mic, camera, screen recording",
                "privacy",
-               "privacy,security,permission,location,microphone,camera", 2,
+                "privacy,security,permission,location,microphone,camera", 1,
                "System"),
     SectionDef("apps",          "Apps & Defaults",
                "Installed apps, default browser/terminal, autostart",
                "apps",
-               "apps,application,default,browser,terminal,autostart,mime", 2,
+                "apps,application,default,browser,terminal,autostart,mime", 1,
                "System"),
     SectionDef("storage",       "Storage",
                "Disks, usage, SMART health, cleanup",
                "storage",
-               "storage,disk,drive,usage,smart,smartctl,health,clean", 2,
+                "storage,disk,drive,usage,smart,smartctl,health,clean", 1,
                "System"),
     SectionDef("updates",       "Updates",
                "System packages and AUR",
                "updates",
-               "update,upgrade,pacman,aur,package,version", 2,
+                "update,upgrade,pacman,aur,package,version", 1,
                "System"),
     # ── Account ─────────────────────────────────────────────────────────
     SectionDef("users",         "Users",
                "Account info, password, groups, shell",
                "users",
-               "user,account,password,group,shell,passwd,profile", 2,
+                "user,account,password,group,shell,passwd,profile", 1,
                "Account"),
     SectionDef("sync",          "NYXUS Account",
                "Opt-in sync of wallpaper, theme, settings",
@@ -12783,9 +12778,6 @@ class SidebarRow(Gtk.ListBoxRow):
         text.append(sub)
         text.set_hexpand(True)
         box.append(text)
-
-        if section.tier == 2:
-            box.append(status_pill("WIP", "warn"))
 
         self.set_child(box)
 
