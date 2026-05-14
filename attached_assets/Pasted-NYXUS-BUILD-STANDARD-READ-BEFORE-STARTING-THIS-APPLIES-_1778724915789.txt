@@ -1,0 +1,34 @@
+NYXUS BUILD STANDARD — READ BEFORE STARTING. THIS APPLIES TO EVERYTHING PAST, PRESENT, AND FUTURE.
+This is a professional enterprise-grade operating system build. Every single feature, app, component, widget, helper, daemon, and addition — everything already built and everything being built now — must meet this standard completely. No exceptions, no stubs, no placeholders, no greyed out options, no toggles that do nothing, no empty pages, no "we'll wire it later." If it is not complete it does not get merged.
+Retroactive standard — everything already built must also meet this:
+Before building anything new, verify that everything previously shipped in this repo also meets this standard. If any existing feature, app, settings page, helper, keybind, or widget is incomplete, stubbed, empty, or not fully wired — fix it as part of this session before moving on to new work. Nothing old gets left behind. The entire build must be at the same level of completeness at all times.
+Every feature — new and existing — must have:
+
+Its own fully populated settings page registered in the main Settings hub
+A General section, Appearance section, Behavior section, Keybinds section, Advanced section, and a Reset to Defaults button
+Every option wired to a real function that actually does what it says
+Every toggle toggling something real
+Every slider connected to something real
+Every keybind pointing to a real existing binary or script
+A valid .desktop entry with a correct Exec= path
+All binaries existing and executable
+All systemd units with valid ExecStart paths
+All polkit policies in place
+All Python imports satisfiable from packages.x86_64
+No hardcoded usernames, hostnames, or paths that break in a live session
+
+Every settings page — new and existing — must have:
+
+General section
+Appearance section
+Behavior section
+Keybinds section
+Advanced section
+Reset to Defaults button
+All options populated and working — nothing empty, nothing greyed out
+
+The quality standard:
+If you opened System Preferences on macOS or Settings on Windows 11 and looked at any feature, NYXUS must match or exceed that depth for every equivalent feature. A person coming from macOS or Windows must open NYXUS Settings and feel like nothing is missing. Every option they would expect to find must be there and must work.
+Before closing any session:
+Run verify-profile.sh and confirm it passes. Run the full CI suite. Confirm every new and modified file is properly staged in airootfs. Confirm every new feature has a complete settings page. Confirm nothing is empty, stubbed, or placeholder. Only then open the PR.
+The rule is simple — if it ships incomplete it goes back. Every time. No exceptions.
