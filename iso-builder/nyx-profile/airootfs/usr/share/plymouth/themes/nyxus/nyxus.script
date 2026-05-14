@@ -1,18 +1,153 @@
-# NYXUS Plymouth script · rev 2026-05-13 r1
-# Minimal black-with-pulsing-NYXUS-wordmark splash. Bg.png + logo.png
-# are seeded by build-iso.sh (logo = nyxus-logo.png; bg = darkmirror).
-Window.SetBackgroundTopColor(0.02, 0.02, 0.04);
-Window.SetBackgroundBottomColor(0.0, 0.0, 0.0);
+# NYXUS · Plymouth boot splash · DARK MIRROR
+# ------------------------------------------------------------------
+# Centred pulsing logo over an ink-black backdrop with a thin
+# purple → cyan progress bar at the bottom. Runs at boot AND
+# shutdown via the standard Plymouth Script module.
+#
+# Plymouth Script notes (intentional):
+#   * NO C-style ternary — Plymouth Script does not support `?:`.
+#     Use `if (...) { ... } else { ... }`.
+#   * Callback signatures we use:
+#       refresh_callback ()                           # no args
+#       progress_callback (duration, progress)        # boot progress
+#       status_callback   (status_string)             # update status
+#       message_callback  (text)                      # plymouth message
+#       password_callback (prompt, bullets)           # luks unlock
+#       quit_callback     ()                          # tear down
+#   * Bar is drawn by scaling tiny 1×1 RGBA PNGs (bar-track / bar-fill)
+#     to the desired pixel size — recolouring a logo PNG is NOT
+#     possible from Plymouth Script.
+#
+# Visual contract (DARK MIRROR):
+#   background  : #0a0a14
+#   primary     : #a06bff (purple, in bar-track tint)
+#   secondary   : #3ad8ff (cyan, in bar-fill)
+# ------------------------------------------------------------------
 
-logo.image = Image("logo.png");
+# ---- canvas -------------------------------------------------------
+W = Window.GetWidth();
+H = Window.GetHeight();
+Window.SetBackgroundTopColor   (0.039, 0.039, 0.078);  # #0a0a14
+Window.SetBackgroundBottomColor(0.000, 0.000, 0.000);
+
+# ---- logo ---------------------------------------------------------
+logo.image  = Image("logo.png");
 logo.sprite = Sprite(logo.image);
-logo.sprite.SetX(Window.GetWidth() / 2 - logo.image.GetWidth() / 2);
-logo.sprite.SetY(Window.GetHeight() / 2 - logo.image.GetHeight() / 2);
+logo.w = logo.image.GetWidth();
+logo.h = logo.image.GetHeight();
+logo.sprite.SetX((W - logo.w) / 2);
+logo.sprite.SetY((H - logo.h) / 2 - 30);
+logo.sprite.SetZ(10);
+logo.sprite.SetOpacity(1.0);
 
-progress = 0;
-fun refresh_callback() {
-  progress += 0.02;
-  alpha = (1 + Math.Sin(progress)) * 0.35 + 0.30;
-  logo.sprite.SetOpacity(alpha);
+# ---- progress bar -------------------------------------------------
+bar.w = 320;
+bar.h = 4;
+bar.x = (W - bar.w) / 2;
+bar.y = H * 0.78;
+
+# Track (dim purple, full width, low opacity)
+track.image  = Image("bar-track.png").Scale(bar.w, bar.h);
+track.sprite = Sprite(track.image);
+track.sprite.SetX(bar.x);
+track.sprite.SetY(bar.y);
+track.sprite.SetZ(5);
+track.sprite.SetOpacity(0.55);
+
+# Fill (cyan, width animates with progress). Start with 1px width
+# and replace the image when progress updates.
+fill.full   = Image("bar-fill.png");
+fill.image  = fill.full.Scale(1, bar.h);
+fill.sprite = Sprite(fill.image);
+fill.sprite.SetX(bar.x);
+fill.sprite.SetY(bar.y);
+fill.sprite.SetZ(7);
+fill.sprite.SetOpacity(0.92);
+
+global.message_sprite = NULL;
+global.prompt_sprite  = NULL;
+
+# ---- callbacks ----------------------------------------------------
+fun refresh_callback ()
+{
+  # Pulse the logo (sin-based opacity 0.7..1.0)
+  pulse = 0.85 + 0.15 * Math.Sin(Plymouth.GetTime() * 2.0);
+  logo.sprite.SetOpacity(pulse);
 }
-Plymouth.SetRefreshFunction(refresh_callback);
+
+fun progress_callback (duration, progress)
+{
+  # Width in pixels, clamped to [1, bar.w]
+  px = Math.Int(bar.w * progress);
+  if (px < 1) { px = 1; }
+  if (px > bar.w) { px = bar.w; }
+  scaled = fill.full.Scale(px, bar.h);
+  fill.sprite.SetImage(scaled);
+}
+
+fun status_callback (status)
+{
+  # Status strings (boot:initialize, boot:shutdown, …) — we don't
+  # render them, but the handler must exist with a 1-arg signature.
+}
+
+fun message_callback (text)
+{
+  if (global.message_sprite != NULL)
+    {
+      global.message_sprite.SetOpacity(0);
+    }
+  msg = Image.Text(text, 0.90, 0.90, 0.95, 1.0, "Inter 11");
+  s = Sprite(msg);
+  s.SetX((W - msg.GetWidth()) / 2);
+  s.SetY(bar.y + 20);
+  s.SetZ(20);
+  global.message_sprite = s;
+}
+
+fun display_password_callback (prompt, bullets)
+{
+  # LUKS unlock prompt — render the prompt + bullet count under the bar.
+  if (global.prompt_sprite != NULL)
+    {
+      global.prompt_sprite.SetOpacity(0);
+    }
+  txt = prompt;
+  i = 0;
+  while (i < bullets)
+    {
+      txt = txt + " *";
+      i = i + 1;
+    }
+  img = Image.Text(txt, 0.227, 0.847, 1.0, 1.0, "Inter 12");
+  s = Sprite(img);
+  s.SetX((W - img.GetWidth()) / 2);
+  s.SetY(bar.y + 50);
+  s.SetZ(30);
+  global.prompt_sprite = s;
+}
+
+fun display_normal_callback ()
+{
+  if (global.prompt_sprite != NULL)
+    {
+      global.prompt_sprite.SetOpacity(0);
+      global.prompt_sprite = NULL;
+    }
+}
+
+fun quit_callback ()
+{
+  logo.sprite.SetOpacity(0);
+  fill.sprite.SetOpacity(0);
+  track.sprite.SetOpacity(0);
+}
+
+# ---- registration -------------------------------------------------
+Plymouth.SetRefreshFunction         (refresh_callback);
+Plymouth.SetBootProgressFunction    (progress_callback);
+Plymouth.SetUpdateStatusFunction    (status_callback);
+Plymouth.SetMessageFunction         (message_callback);
+Plymouth.SetDisplayPasswordFunction (display_password_callback);
+Plymouth.SetDisplayNormalFunction   (display_normal_callback);
+Plymouth.SetQuitFunction            (quit_callback);

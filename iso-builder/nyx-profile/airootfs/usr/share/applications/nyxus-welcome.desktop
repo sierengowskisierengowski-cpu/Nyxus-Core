@@ -1,14 +1,13 @@
 [Desktop Entry]
 Type=Application
+Version=1.0
 Name=NYXUS Welcome
-GenericName=First-run Tour
-Comment=Tour the NYXUS desktop
-Exec=/usr/local/bin/nyxus welcome
-TryExec=/usr/local/bin/nyxus
-Icon=help-about
+GenericName=Onboarding Wizard
+Comment=Set up your NYXUS desktop
+Exec=nyxus-welcome
+Icon=nyxus
 Terminal=false
-Categories=System;Documentation;
-Keywords=NYXUS;Welcome;Tour;Help;
+Categories=System;Settings;
+Keywords=welcome;onboarding;wizard;setup;first-run;nyxus;
 StartupNotify=true
-StartupWMClass=nyxus.welcome
-X-NYXUS-Module=nyxus_welcome
+StartupWMClass=com.nyxus.Welcome

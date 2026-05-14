@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# nyxus-plymouth — manage the Plymouth boot splash.
+#
+# Writes go through pkexec (policy: com.nyxus.plymouth.policy).
+#
+# Usage:
+#   nyxus-plymouth status                Print current theme + initramfs hook state
+#   nyxus-plymouth list                  List installed themes
+#   nyxus-plymouth set-theme NAME        Switch active theme + regen initramfs
+#   nyxus-plymouth regen                 Regenerate initramfs (mkinitcpio -P)
+#   nyxus-plymouth ensure-hook           Add 'plymouth' to mkinitcpio HOOKS if missing
+#   nyxus-plymouth remove-hook           Remove 'plymouth' from HOOKS
+#   nyxus-plymouth test                  Render the splash in a window (plymouthd test mode)
+#   nyxus-plymouth reset                 Reset to nyxus + ensure hook + regen
+#
+# Exit: 0 ok, 2 bad args, 3 missing dep, 4 write denied.
+set -euo pipefail
+
+THEMES_DIR="/usr/share/plymouth/themes"
+ACTIVE_THEME="nyxus"
+MKINITCPIO_CONF="/etc/mkinitcpio.conf"
+
+require() { command -v "$1" >/dev/null 2>&1 || { echo "missing: $1" >&2; exit 3; }; }
+
+current_theme() {
+  if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+    plymouth-set-default-theme 2>/dev/null || echo "(unset)"
+  else
+    awk -F= '/^Theme=/{print $2; exit}' /etc/plymouth/plymouthd.conf \
+      2>/dev/null || echo "(unset)"
+  fi
+}
+
+hook_present() {
+  grep -E '^HOOKS=.*\bplymouth\b' "${MKINITCPIO_CONF}" >/dev/null 2>&1
+}
+
+cmd="${1:-status}"
+shift || true
+
+case "${cmd}" in
+  status)
+    require python3
+    python3 - "${MKINITCPIO_CONF}" "$(current_theme)" "${THEMES_DIR}/${ACTIVE_THEME}" <<'PY'
+import json, os, sys, re
+mkconf, cur_theme, theme_dir = sys.argv[1], sys.argv[2], sys.argv[3]
+hook_in = False
+hooks_line = ""
+try:
+    for ln in open(mkconf):
+        if ln.startswith("HOOKS="):
+            hooks_line = ln.strip()
+            hook_in = bool(re.search(r"\bplymouth\b", ln))
+            break
+except FileNotFoundError:
+    pass
+out = {
+  "current_theme":  cur_theme,
+  "theme_dir":      theme_dir,
+  "theme_present":  os.path.isdir(theme_dir),
+  "mkinitcpio_conf": mkconf,
+  "hooks_line":     hooks_line,
+  "plymouth_hook_present": hook_in,
+}
+print(json.dumps(out, indent=2))
+PY
+    ;;
+  list)
+    find "${THEMES_DIR}" -maxdepth 2 -name '*.plymouth' \
+      -printf '%h\n' 2>/dev/null | sed "s,^${THEMES_DIR}/,," | sort -u
+    ;;
+  set-theme)
+    name="${1:?usage: set-theme NAME}"
+    [[ -d "${THEMES_DIR}/${name}" ]] \
+      || { echo "no such theme: ${name}" >&2; exit 2; }
+    pkexec /usr/bin/env bash -c "
+      plymouth-set-default-theme -R '${name}' 2>/dev/null \
+        || { plymouth-set-default-theme '${name}' && mkinitcpio -P; }
+    " || exit 4
+    ;;
+  regen)
+    pkexec mkinitcpio -P || exit 4
+    ;;
+  ensure-hook)
+    pkexec /usr/bin/env python3 - "${MKINITCPIO_CONF}" <<'PY' || exit 4
+import re, sys, pathlib
+p = pathlib.Path(sys.argv[1])
+text = p.read_text()
+out = []
+changed = False
+for ln in text.splitlines():
+    if ln.startswith("HOOKS=") and "plymouth" not in ln:
+        # insert plymouth right after `udev` (preferred ordering)
+        ln_new = re.sub(r"\budev\b", "udev plymouth", ln, count=1)
+        if ln_new == ln:  # udev not found, append before encrypt or end
+            ln_new = re.sub(r"\bencrypt\b",
+                             "plymouth encrypt", ln, count=1)
+        if ln_new == ln:
+            ln_new = ln.rstrip(")\n") + " plymouth)"
+        out.append(ln_new); changed = True
+    else:
+        out.append(ln)
+if changed:
+    p.write_text("\n".join(out) + ("\n" if text.endswith("\n") else ""))
+print("changed" if changed else "already present")
+PY
+    ;;
+  remove-hook)
+    pkexec /usr/bin/env python3 - "${MKINITCPIO_CONF}" <<'PY' || exit 4
+import re, sys, pathlib
+p = pathlib.Path(sys.argv[1])
+text = p.read_text()
+out = []
+changed = False
+for ln in text.splitlines():
+    if ln.startswith("HOOKS=") and "plymouth" in ln:
+        ln_new = re.sub(r"\s*\bplymouth\b\s*", " ", ln)
+        ln_new = re.sub(r"\s+", " ", ln_new).replace("( ", "(").replace(" )", ")")
+        out.append(ln_new); changed = True
+    else:
+        out.append(ln)
+if changed:
+    p.write_text("\n".join(out) + ("\n" if text.endswith("\n") else ""))
+print("changed" if changed else "no-op")
+PY
+    ;;
+  test)
+    require plymouthd
+    pkexec /usr/bin/env bash -c "
+      plymouthd --debug --no-daemon --tty=tty7 --mode=boot &
+      P=\$!; sleep 1
+      plymouth show-splash; sleep 4; plymouth quit
+      kill \$P 2>/dev/null || true
+    "
+    ;;
+  reset)
+    pkexec /usr/bin/env bash -c "
+      plymouth-set-default-theme -R nyxus && \
+      grep -q '^HOOKS=.*\bplymouth\b' '${MKINITCPIO_CONF}' || { \
+        sed -i.bak -E 's/(^HOOKS=\([^)]*udev)/\1 plymouth/' '${MKINITCPIO_CONF}' && \
+        mkinitcpio -P; \
+      }
+    " || exit 4
+    ;;
+  -h|--help|help)
+    sed -n '2,/^set -euo/p' "$0" | sed 's/^# \{0,1\}//;/^set -euo/d'
+    ;;
+  *)
+    echo "unknown command: ${cmd}" >&2
+    echo "try: nyxus-plymouth --help" >&2
+    exit 2
+    ;;
+esac

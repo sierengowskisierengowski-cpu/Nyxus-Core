@@ -1,0 +1,200 @@
+#!/usr/bin/env bash
+# nyxus-loginscreen — manage the SDDM (login screen) configuration.
+#
+# All write operations require admin privilege via pkexec; the polkit
+# policy that governs them is com.nyxus.loginscreen.policy.
+#
+# Usage:
+#   nyxus-loginscreen status                   Print current state as JSON
+#   nyxus-loginscreen list-backgrounds         List shipped wallpaper images
+#   nyxus-loginscreen list-themes              List installed sddm themes
+#   nyxus-loginscreen set-background PATH      Switch the login background
+#   nyxus-loginscreen set-theme NAME           Switch the active sddm theme
+#   nyxus-loginscreen set-cursor-theme NAME    Set the cursor theme
+#   nyxus-loginscreen set-font NAME            Set the greeter font
+#   nyxus-loginscreen set-numlock on|off       Toggle numlock on greeter
+#   nyxus-loginscreen set-autologin USER|none  Configure autologin
+#   nyxus-loginscreen set-session SESSION      Set autologin session
+#   nyxus-loginscreen set-remember on|off      Remember last user
+#   nyxus-loginscreen reset                    Restore shipped defaults
+#   nyxus-loginscreen test                     Render a one-shot greeter preview
+#
+# Exit codes: 0 ok, 2 bad args, 3 missing dep, 4 write denied.
+set -euo pipefail
+
+THEME_ROOT="/usr/share/sddm/themes"
+ACTIVE_THEME_DIR="${THEME_ROOT}/nyxus"
+SDDM_CONF_DIR="/etc/sddm.conf.d"
+CONF="${SDDM_CONF_DIR}/nyxus.conf"
+DEFAULTS="/usr/share/nyxus/sddm.defaults.conf"
+
+require() {
+  command -v "$1" >/dev/null 2>&1 || { echo "missing: $1" >&2; exit 3; }
+}
+
+# Read a [Section] Key=Value pair (best-effort, no awk wizardry needed).
+read_kv() {
+  local section="$1" key="$2"
+  [[ -f "${CONF}" ]] || return 0
+  python3 - "$section" "$key" "${CONF}" <<'PY'
+import configparser, sys
+s,k,p = sys.argv[1], sys.argv[2], sys.argv[3]
+c = configparser.ConfigParser(strict=False); c.optionxform=str
+try: c.read(p)
+except Exception: pass
+print(c.get(s, k, fallback=""))
+PY
+}
+
+# Set [Section] Key=Value via python (preserves other keys + comments handled
+# best-effort). Runs through pkexec so the policy authorises it.
+write_kv() {
+  local section="$1" key="$2" value="$3"
+  pkexec /usr/bin/env python3 - "$section" "$key" "$value" "${CONF}" <<'PY' || exit 4
+import configparser, os, sys, pathlib
+s,k,v,p = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+pathlib.Path(p).parent.mkdir(parents=True, exist_ok=True)
+c = configparser.ConfigParser(strict=False); c.optionxform=str
+if pathlib.Path(p).exists():
+    try: c.read(p)
+    except Exception: pass
+if s not in c.sections(): c.add_section(s)
+c.set(s, k, v)
+with open(p, "w") as f:
+    c.write(f, space_around_delimiters=False)
+os.chmod(p, 0o644)
+PY
+}
+
+# Unset key (for autologin user=none)
+unset_kv() {
+  local section="$1" key="$2"
+  pkexec /usr/bin/env python3 - "$section" "$key" "${CONF}" <<'PY' || exit 4
+import configparser, os, sys, pathlib
+s,k,p = sys.argv[1], sys.argv[2], sys.argv[3]
+c = configparser.ConfigParser(strict=False); c.optionxform=str
+if not pathlib.Path(p).exists(): sys.exit(0)
+try: c.read(p)
+except Exception: pass
+if s in c.sections() and c.has_option(s, k):
+    c.remove_option(s, k)
+with open(p, "w") as f:
+    c.write(f, space_around_delimiters=False)
+os.chmod(p, 0o644)
+PY
+}
+
+cmd="${1:-status}"
+shift || true
+
+case "${cmd}" in
+  status)
+    require python3
+    python3 - "${CONF}" "${ACTIVE_THEME_DIR}" <<'PY'
+import configparser, json, os, pathlib, sys
+conf, theme_dir = sys.argv[1], sys.argv[2]
+c = configparser.ConfigParser(strict=False); c.optionxform=str
+if os.path.exists(conf):
+    try: c.read(conf)
+    except Exception: pass
+def g(s,k,d=""): return c.get(s,k,fallback=d)
+bg = pathlib.Path(theme_dir) / "background.png"
+out = {
+  "conf_path":         conf,
+  "conf_exists":       os.path.exists(conf),
+  "theme":             g("Theme","Current","nyxus"),
+  "cursor_theme":      g("Theme","CursorTheme","Adwaita"),
+  "font":              g("Theme","Font","Inter"),
+  "autologin_user":    g("Autologin","User",""),
+  "autologin_session": g("Autologin","Session","hyprland.desktop"),
+  "remember_user":     g("General","RememberLastUser","true"),
+  "remember_session":  g("General","RememberLastSession","true"),
+  "numlock":           g("General","Numlock","none"),
+  "active_background": str(os.path.realpath(bg)) if bg.exists() else "",
+}
+print(json.dumps(out, indent=2))
+PY
+    ;;
+  list-backgrounds)
+    find "${ACTIVE_THEME_DIR}/backgrounds" -maxdepth 1 -type f \
+      \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \
+         -o -iname '*.webp' \) 2>/dev/null | sort
+    ;;
+  list-themes)
+    find "${THEME_ROOT}" -maxdepth 2 -name metadata.desktop \
+      -printf '%h\n' 2>/dev/null | sed "s,^${THEME_ROOT}/,,"
+    ;;
+  set-background)
+    src="${1:-}"
+    [[ -n "${src}" ]] || { echo "usage: set-background PATH" >&2; exit 2; }
+    [[ -f "${src}" ]] || { echo "not a file: ${src}" >&2; exit 2; }
+    # NEVER interpolate paths into a shell string under pkexec —
+    # quoted filenames could break out and run arbitrary root commands.
+    # Pass argv directly to /usr/bin/install via pkexec.
+    pkexec /usr/bin/install -m 0644 -- \
+      "${src}" "${ACTIVE_THEME_DIR}/background.png" \
+      || exit 4
+    echo "background set: ${src}"
+    ;;
+  set-theme)
+    name="${1:-}"
+    [[ -n "${name}" ]] || { echo "usage: set-theme NAME" >&2; exit 2; }
+    [[ -d "${THEME_ROOT}/${name}" ]] \
+      || { echo "no such theme: ${name}" >&2; exit 2; }
+    write_kv "Theme" "Current" "${name}"
+    ;;
+  set-cursor-theme)
+    write_kv "Theme" "CursorTheme" "${1:?usage: set-cursor-theme NAME}"
+    ;;
+  set-font)
+    write_kv "Theme" "Font" "${1:?usage: set-font NAME}"
+    ;;
+  set-numlock)
+    case "${1:-}" in
+      on)  write_kv "General" "Numlock" "on" ;;
+      off) write_kv "General" "Numlock" "off" ;;
+      "")  echo "usage: set-numlock on|off" >&2; exit 2 ;;
+      *)   write_kv "General" "Numlock" "none" ;;
+    esac
+    ;;
+  set-autologin)
+    user="${1:-}"
+    [[ -n "${user}" ]] || { echo "usage: set-autologin USER|none" >&2; exit 2; }
+    if [[ "${user}" == "none" ]]; then
+      unset_kv "Autologin" "User"
+    else
+      write_kv "Autologin" "User" "${user}"
+    fi
+    ;;
+  set-session)
+    write_kv "Autologin" "Session" "${1:?usage: set-session SESSION}"
+    ;;
+  set-remember)
+    case "${1:-}" in
+      on)  write_kv "General" "RememberLastUser" "true"
+           write_kv "General" "RememberLastSession" "true" ;;
+      off) write_kv "General" "RememberLastUser" "false"
+           write_kv "General" "RememberLastSession" "false" ;;
+      *)   echo "usage: set-remember on|off" >&2; exit 2 ;;
+    esac
+    ;;
+  reset)
+    [[ -f "${DEFAULTS}" ]] \
+      || { echo "no defaults at ${DEFAULTS}" >&2; exit 3; }
+    pkexec /usr/bin/install -m 0644 -- "${DEFAULTS}" "${CONF}" \
+      || exit 4
+    echo "restored: ${DEFAULTS} -> ${CONF}"
+    ;;
+  test)
+    require sddm-greeter
+    sddm-greeter --test-mode --theme "${ACTIVE_THEME_DIR}"
+    ;;
+  -h|--help|help)
+    sed -n '2,/^set -euo/p' "$0" | sed 's/^# \{0,1\}//;/^set -euo/d'
+    ;;
+  *)
+    echo "unknown command: ${cmd}" >&2
+    echo "try: nyxus-loginscreen --help" >&2
+    exit 2
+    ;;
+esac

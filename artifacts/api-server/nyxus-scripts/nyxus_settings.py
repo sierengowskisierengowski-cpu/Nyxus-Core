@@ -161,6 +161,10 @@ GLYPHS = {
     "clipboard":     "\uf0ea",   # nf-fa-clipboard    (clipboard)
     "record":        "\uf03d",   # nf-fa-video_camera (screen recorder)
     "assistant":     "\uf075",   # nf-fa-comment      (NORA assistant)
+    # Tier 1 — Brand (rev 2026-05-14)
+    "welcome":       "\uf164",   # nf-fa-thumbs_up    (welcome / onboarding)
+    "loginscreen":   "\uf023",   # nf-fa-lock         (login screen / SDDM)
+    "plymouth":      "\uf135",   # nf-fa-rocket       (boot splash)
 }
 
 
@@ -343,6 +347,24 @@ class SectionDef:
 # subtle header above the first row of each new category.
 SECTIONS: Tuple[SectionDef, ...] = (
     # ── Personal ────────────────────────────────────────────────────────
+    SectionDef("welcome",       "Welcome",
+               "Re-run the onboarding wizard, first-boot autostart",
+               "welcome",
+               "welcome,onboarding,wizard,first run,first boot,setup,"
+               "tour,intro,getting started", 1,
+               "Personal"),
+    SectionDef("loginscreen",   "Login Screen",
+               "SDDM theme, background, autologin, numlock",
+               "loginscreen",
+               "sddm,login,greeter,lock,autologin,numlock,background,"
+               "wallpaper,session,user", 1,
+               "Personal"),
+    SectionDef("plymouth",      "Boot Splash",
+               "Plymouth theme, animation, initramfs hook",
+               "plymouth",
+               "plymouth,boot,splash,bootsplash,initramfs,initrd,"
+               "mkinitcpio,startup,logo,animation", 1,
+               "Personal"),
     SectionDef("appearance",    "Appearance",
                "Wallpaper, theme variant, font scale",
                "appearance",
@@ -12602,6 +12624,739 @@ class AssistantPage(SectionPage):
         ]
 
 
+class WelcomePage(SectionPage):
+    """First-run onboarding wizard control panel.
+
+    Real wizard binary: /usr/local/bin/nyxus-welcome
+    Real wizard impl  : /opt/nyxus/nyxus_welcome.py
+    Done marker       : ~/.config/nyxus/welcome.done
+    First-boot trigger: ~/.config/autostart/nyxus-welcome.desktop
+    """
+    KEY = "welcome"
+    STANDARD_KEYBIND_TOKENS = ["nyxus-welcome"]
+    STANDARD_RESET_NS = ["welcome"]
+
+    DONE = Path.home() / ".config/nyxus/welcome.done"
+    AUTOSTART = Path.home() / ".config/autostart/nyxus-welcome.desktop"
+    LOG = Path.home() / ".cache/nyxus/welcome.log"
+    WIZARD_IMPL = Path("/opt/nyxus/nyxus_welcome.py")
+    WIZARD_BIN = "/usr/local/bin/nyxus-welcome"
+
+    # ── helpers ───────────────────────────────────────────────────────
+    def _is_done(self) -> bool:
+        return self.DONE.exists()
+
+    def _autostart_armed(self) -> bool:
+        return self.AUTOSTART.exists()
+
+    def _set_pref(self, key: str, value) -> None:
+        prefs = load_prefs()
+        prefs.setdefault("welcome", {})[key] = value
+        save_prefs(prefs)
+
+    def _arm_autostart(self) -> None:
+        try:
+            self.AUTOSTART.parent.mkdir(parents=True, exist_ok=True)
+            self.AUTOSTART.write_text(
+                "[Desktop Entry]\n"
+                "Type=Application\n"
+                "Name=NYXUS Welcome\n"
+                "Exec=nyxus-welcome\n"
+                "X-GNOME-Autostart-enabled=true\n"
+                "NoDisplay=true\n")
+            self._set_pref("autostart", True)
+        except Exception as e:
+            log.warning("welcome arm autostart: %s", e)
+
+    def _disarm_autostart(self) -> None:
+        try:
+            if self.AUTOSTART.exists():
+                self.AUTOSTART.unlink()
+        except Exception as e:
+            log.warning("welcome disarm: %s", e)
+        self._set_pref("autostart", False)
+
+    def _force_run(self) -> None:
+        if not have("nyxus-welcome"):
+            return
+        sh_async(["nyxus-welcome", "--force"])
+
+    def _mark_done(self) -> None:
+        if have("nyxus-welcome"):
+            sh_async(["nyxus-welcome", "--mark-done"])
+        else:
+            try:
+                self.DONE.parent.mkdir(parents=True, exist_ok=True)
+                self.DONE.write_text("{}")
+            except Exception as e:
+                log.warning("welcome mark-done: %s", e)
+
+    def standard_extra_reset(self) -> None:
+        # Wipe done marker AND re-arm autostart so the wizard runs again
+        try:
+            if self.DONE.exists():
+                self.DONE.unlink()
+        except Exception as e:
+            log.warning("welcome reset: %s", e)
+        self._arm_autostart()
+
+    # ── page build ────────────────────────────────────────────────────
+    def build(self) -> None:
+        prefs = load_prefs().get("welcome", {})
+        wizard_present = self.WIZARD_IMPL.exists() and have("nyxus-welcome")
+
+        # General
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="Wizard status and quick actions")
+        self.add_group(gen)
+        gen.add(kv_row("Wizard binary",
+                       self.WIZARD_BIN if have("nyxus-welcome")
+                       else "missing"))
+        gen.add(kv_row("Implementation",
+                       str(self.WIZARD_IMPL) if self.WIZARD_IMPL.exists()
+                       else "missing"))
+        gen.add(kv_row("Completed",
+                       "yes — " + self._done_summary()
+                       if self._is_done() else "no"))
+        gen.add(kv_row("First-boot autostart",
+                       "armed" if self._autostart_armed()
+                       else "disarmed"))
+
+        run_row = Adw.ActionRow(
+            title="Run wizard now",
+            subtitle="Launch the onboarding wizard immediately")
+        run_btn = Gtk.Button(label="Launch")
+        run_btn.add_css_class("suggested-action")
+        run_btn.set_valign(Gtk.Align.CENTER)
+        run_btn.set_sensitive(wizard_present)
+        run_btn.connect("clicked", lambda _b: self._force_run())
+        run_row.add_suffix(run_btn)
+        gen.add(run_row)
+        if not wizard_present:
+            self.add_pill(status_pill("missing", "warn"))
+
+        # Appearance
+        app = Adw.PreferencesGroup(
+            title="Appearance",
+            description="The wizard inherits the system color scheme. "
+                        "Theme packs and accents are picked inside the "
+                        "wizard itself (page 3).")
+        self.add_group(app)
+        # Show current scheme so the page is not empty
+        try:
+            sm = Adw.StyleManager.get_default()
+            scheme = "dark" if sm.get_dark() else "light"
+        except Exception:
+            scheme = "unknown"
+        app.add(kv_row("Active scheme", scheme))
+        app.add(kv_row("Window size", "880×640 (fixed)"))
+        app.add(kv_row("Logo source",
+                       "/usr/share/icons/nyxus/nyxus.png"))
+
+        # Behavior
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="When the wizard runs, and which pages it shows")
+        self.add_group(beh)
+        sw_auto = Adw.SwitchRow(
+            title="Show on next login (until completed)",
+            subtitle="Arms the autostart entry. Auto-removes once the "
+                     "wizard reaches Finish.")
+        sw_auto.set_active(self._autostart_armed())
+        sw_auto.connect(
+            "notify::active",
+            lambda s, _p: (self._arm_autostart() if s.get_active()
+                           else self._disarm_autostart()))
+        beh.add(sw_auto)
+
+        skip = prefs.get("skip_pages", [])
+        for pid, lbl in (
+                ("profile",   "Skip profile page (display name + avatar)"),
+                ("theme",     "Skip theme & accent page"),
+                ("wallpaper", "Skip wallpaper page"),
+                ("dock",      "Skip dock setup page"),
+                ("apps",      "Skip recommended apps page"),
+                ("cloud",     "Skip cloud sync page"),
+                ("privacy",   "Skip privacy page")):
+            sw = Adw.SwitchRow(
+                title=lbl,
+                subtitle=f"Pref key: welcome.skip_pages contains '{pid}'")
+            sw.set_active(pid in skip)
+            sw.connect(
+                "notify::active",
+                lambda s, _p, k=pid: self._toggle_skip(k, s.get_active()))
+            beh.add(sw)
+
+        # Keybinds + Reset + Advanced auto-injected by SectionPage footer.
+
+    def _done_summary(self) -> str:
+        try:
+            d = json.loads(self.DONE.read_text() or "{}")
+            return d.get("completed_at", "(no timestamp)")
+        except Exception:
+            return "(unparseable)"
+
+    def _toggle_skip(self, page_id: str, on: bool) -> None:
+        prefs = load_prefs()
+        skip = list(prefs.get("welcome", {}).get("skip_pages", []))
+        if on and page_id not in skip:
+            skip.append(page_id)
+        if not on and page_id in skip:
+            skip.remove(page_id)
+        prefs.setdefault("welcome", {})["skip_pages"] = skip
+        save_prefs(prefs)
+
+    # Custom Advanced rows
+    @property
+    def STANDARD_ADVANCED(self):
+        return [
+            ("Force re-run wizard now",
+             "Ignore welcome.done and launch immediately",
+             "Run",
+             lambda: self._force_run()),
+            ("Mark wizard complete (skip future runs)",
+             f"Writes {self.DONE}",
+             "Mark",
+             lambda: self._mark_done()),
+            ("Edit welcome prefs (JSON)",
+             "Inspect / hand-edit welcome.* keys in settings.json",
+             "Open",
+             lambda: fire_and_forget(
+                 f"xdg-open {Path.home() / '.config/nyxus/settings.json'}")),
+            ("View welcome log",
+             f"{self.LOG}",
+             "Tail",
+             lambda: open_terminal(
+                 f"tail -n 200 {self.LOG} 2>/dev/null || "
+                 f"echo 'no log yet'", self.win)),
+            ("Reset and re-arm for next login",
+             "Delete welcome.done and put autostart entry back",
+             "Reset",
+             lambda: (self.standard_extra_reset(), self.rebuild())),
+        ]
+
+
+class LoginScreenPage(SectionPage):
+    """SDDM (login screen / greeter) configuration.
+
+    Backed by /usr/local/bin/nyxus-loginscreen which wraps every write
+    in pkexec (policy: com.nyxus.loginscreen.policy). Reads are local.
+
+    Conf file        : /etc/sddm.conf.d/nyxus.conf
+    Active theme dir : /usr/share/sddm/themes/<name>/
+    Background image : /usr/share/sddm/themes/nyxus/background.png
+    Background pack  : /usr/share/sddm/themes/nyxus/backgrounds/*.png
+    Defaults file    : /usr/share/nyxus/sddm.defaults.conf
+    """
+    KEY = "loginscreen"
+    STANDARD_KEYBIND_TOKENS = ["nyxus-loginscreen", "sddm"]
+    STANDARD_RESET_NS = ["loginscreen"]
+
+    HELPER = "nyxus-loginscreen"
+    THEME_ROOT = Path("/usr/share/sddm/themes")
+    ACTIVE_THEME_DIR = Path("/usr/share/sddm/themes/nyxus")
+    CONF = Path("/etc/sddm.conf.d/nyxus.conf")
+    LOG = Path.home() / ".cache/nyxus/loginscreen.log"
+
+    # ── helpers ───────────────────────────────────────────────────────
+    def _status(self) -> dict:
+        if not have(self.HELPER):
+            return {}
+        rc, out, _ = sh([self.HELPER, "status"], timeout=4)
+        if rc != 0:
+            return {}
+        try:
+            return json.loads(out)
+        except Exception:
+            return {}
+
+    def _list_backgrounds(self) -> List[str]:
+        if not have(self.HELPER):
+            return []
+        rc, out, _ = sh([self.HELPER, "list-backgrounds"], timeout=4)
+        return [l.strip() for l in (out or "").splitlines() if l.strip()] \
+            if rc == 0 else []
+
+    def _list_themes(self) -> List[str]:
+        if not have(self.HELPER):
+            return []
+        rc, out, _ = sh([self.HELPER, "list-themes"], timeout=4)
+        return [l.strip() for l in (out or "").splitlines() if l.strip()] \
+            if rc == 0 else []
+
+    def _list_users(self) -> List[str]:
+        # Real human users (UID >= 1000) excluding nobody/sddm.
+        try:
+            import pwd
+            return sorted({
+                p.pw_name for p in pwd.getpwall()
+                if 1000 <= p.pw_uid < 65000
+                and p.pw_name not in ("nobody", "sddm")})
+        except Exception:
+            return []
+
+    def _list_sessions(self) -> List[str]:
+        out: List[str] = []
+        for d in ("/usr/share/wayland-sessions",
+                  "/usr/share/xsessions"):
+            p = Path(d)
+            if p.exists():
+                out.extend(sorted(f.name for f in p.iterdir()
+                                  if f.suffix == ".desktop"))
+        return out
+
+    def _async_apply(self, args: List[str], success: str) -> None:
+        sh_async(
+            [self.HELPER, *args],
+            lambda res: self.toast(
+                success if res[0] == 0
+                else f"login screen: failed (rc={res[0]})"),
+            timeout=20)
+
+    def standard_extra_reset(self) -> None:
+        # Restore shipped sddm defaults
+        if have(self.HELPER):
+            self._async_apply(["reset"], "login screen reset")
+
+    # ── page build ────────────────────────────────────────────────────
+    def build(self) -> None:
+        if not have(self.HELPER):
+            grp = Adw.PreferencesGroup(title="Login screen helper missing")
+            grp.add(empty_row(
+                "nyxus-loginscreen not installed",
+                "Expected at /usr/local/bin/nyxus-loginscreen — this is "
+                "shipped by the iso-builder profile."))
+            self.add_group(grp)
+            self.add_pill(status_pill("missing", "warn"))
+            return
+
+        st = self._status()
+        themes = self._list_themes()
+        users = self._list_users()
+        sessions = self._list_sessions()
+
+        # General
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="What runs at boot, who logs in, what session")
+        self.add_group(gen)
+        gen.add(kv_row("Active theme", st.get("theme", "?")))
+        gen.add(kv_row("Config file", str(self.CONF)))
+        gen.add(kv_row("Theme directory", str(self.ACTIVE_THEME_DIR)))
+
+        # Theme picker
+        if themes:
+            tr = Adw.ComboRow(title="Greeter theme",
+                              subtitle="Sets [Theme] Current=…")
+            mdl = Gtk.StringList()
+            for t in themes:
+                mdl.append(t)
+            tr.set_model(mdl)
+            try:
+                tr.set_selected(themes.index(st.get("theme", "nyxus")))
+            except ValueError:
+                tr.set_selected(0)
+            tr.connect(
+                "notify::selected",
+                lambda r, _p: self._async_apply(
+                    ["set-theme", themes[r.get_selected()]],
+                    f"theme → {themes[r.get_selected()]}"))
+            gen.add(tr)
+
+        # Autologin
+        if users:
+            choices = ["(prompt for password)"] + users
+            ar = Adw.ComboRow(title="Autologin user",
+                              subtitle="Skip the password prompt for one user")
+            mdl = Gtk.StringList()
+            for c in choices:
+                mdl.append(c)
+            ar.set_model(mdl)
+            cur = st.get("autologin_user", "")
+            try:
+                ar.set_selected(choices.index(cur)
+                                if cur in users else 0)
+            except ValueError:
+                ar.set_selected(0)
+            def _on_alo(r, _p):
+                idx = r.get_selected()
+                if idx == 0:
+                    self._async_apply(
+                        ["set-autologin", "none"],
+                        "autologin disabled")
+                else:
+                    self._async_apply(
+                        ["set-autologin", choices[idx]],
+                        f"autologin → {choices[idx]}")
+            ar.connect("notify::selected", _on_alo)
+            gen.add(ar)
+
+        if sessions:
+            sr = Adw.ComboRow(title="Default session",
+                              subtitle="Used by autologin and remembered for users")
+            mdl = Gtk.StringList()
+            for s in sessions:
+                mdl.append(s)
+            sr.set_model(mdl)
+            try:
+                sr.set_selected(sessions.index(
+                    st.get("autologin_session", "hyprland.desktop")))
+            except ValueError:
+                sr.set_selected(0)
+            sr.connect(
+                "notify::selected",
+                lambda r, _p: self._async_apply(
+                    ["set-session", sessions[r.get_selected()]],
+                    f"session → {sessions[r.get_selected()]}"))
+            gen.add(sr)
+
+        # Appearance
+        app = Adw.PreferencesGroup(
+            title="Appearance",
+            description="Background, font, cursor")
+        self.add_group(app)
+        # Background
+        bgs = self._list_backgrounds()
+        active_bg = st.get("active_background", "")
+        bg_row = Adw.ComboRow(
+            title="Background",
+            subtitle="Pick from the shipped pack — copies into "
+                     "background.png via pkexec")
+        if bgs:
+            mdl = Gtk.StringList()
+            labels = [Path(b).name for b in bgs]
+            for lb in labels:
+                mdl.append(lb)
+            bg_row.set_model(mdl)
+            try:
+                bg_row.set_selected(
+                    [Path(b).resolve() for b in bgs].index(
+                        Path(active_bg).resolve()) if active_bg
+                    else 0)
+            except ValueError:
+                bg_row.set_selected(0)
+            bg_row.connect(
+                "notify::selected",
+                lambda r, _p: self._async_apply(
+                    ["set-background", bgs[r.get_selected()]],
+                    f"background → {labels[r.get_selected()]}"))
+            app.add(bg_row)
+        else:
+            app.add(empty_row("No background pack found",
+                              f"Drop images into {self.ACTIVE_THEME_DIR}/backgrounds/"))
+        # Font
+        font_row = Adw.EntryRow(title="Greeter font")
+        font_row.set_text(st.get("font", "Inter"))
+        font_btn = Gtk.Button(label="Save")
+        font_btn.add_css_class("suggested-action")
+        font_btn.set_valign(Gtk.Align.CENTER)
+        font_btn.connect(
+            "clicked",
+            lambda _b: self._async_apply(
+                ["set-font", font_row.get_text().strip() or "Inter"],
+                "font saved"))
+        font_row.add_suffix(font_btn)
+        app.add(font_row)
+        # Cursor theme
+        cur_row = Adw.EntryRow(title="Cursor theme")
+        cur_row.set_text(st.get("cursor_theme", "Adwaita"))
+        cur_btn = Gtk.Button(label="Save")
+        cur_btn.add_css_class("suggested-action")
+        cur_btn.set_valign(Gtk.Align.CENTER)
+        cur_btn.connect(
+            "clicked",
+            lambda _b: self._async_apply(
+                ["set-cursor-theme",
+                 cur_row.get_text().strip() or "Adwaita"],
+                "cursor theme saved"))
+        cur_row.add_suffix(cur_btn)
+        app.add(cur_row)
+
+        # Behavior
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="What the greeter remembers and how it behaves")
+        self.add_group(beh)
+        sw_remember = Adw.SwitchRow(
+            title="Remember last user and session",
+            subtitle="Keeps RememberLastUser=true / RememberLastSession=true")
+        sw_remember.set_active(
+            str(st.get("remember_user", "true")).lower() == "true")
+        sw_remember.connect(
+            "notify::active",
+            lambda s, _p: self._async_apply(
+                ["set-remember", "on" if s.get_active() else "off"],
+                "remember updated"))
+        beh.add(sw_remember)
+
+        nl_row = Adw.ComboRow(title="Numlock at greeter",
+                              subtitle="On / Off / leave alone")
+        nl_choices = ["none", "on", "off"]
+        mdl = Gtk.StringList()
+        for x in nl_choices:
+            mdl.append(x)
+        nl_row.set_model(mdl)
+        try:
+            nl_row.set_selected(nl_choices.index(
+                str(st.get("numlock", "none"))))
+        except ValueError:
+            nl_row.set_selected(0)
+        nl_row.connect(
+            "notify::selected",
+            lambda r, _p: self._async_apply(
+                ["set-numlock", nl_choices[r.get_selected()]],
+                f"numlock → {nl_choices[r.get_selected()]}"))
+        beh.add(nl_row)
+
+        # Test button
+        test_row = Adw.ActionRow(
+            title="Preview the greeter (test mode)",
+            subtitle="Renders sddm-greeter --test-mode against the "
+                     "current theme. Close the preview window when done.")
+        tbtn = Gtk.Button(label="Preview")
+        tbtn.set_valign(Gtk.Align.CENTER)
+        tbtn.connect(
+            "clicked",
+            lambda _b: sh_async([self.HELPER, "test"]))
+        test_row.add_suffix(tbtn)
+        beh.add(test_row)
+
+        # Keybinds + Reset + Advanced auto-injected by SectionPage footer.
+
+    @property
+    def STANDARD_ADVANCED(self):
+        return [
+            ("Edit raw sddm.conf.d snippet",
+             f"Open {self.CONF} in your terminal editor (sudoedit)",
+             "Open",
+             lambda: open_terminal(
+                 f"sudoedit {self.CONF}", self.win)),
+            ("Open theme directory",
+             f"{self.ACTIVE_THEME_DIR} (Main.qml + backgrounds/)",
+             "Open",
+             lambda: fire_and_forget(
+                 f"xdg-open {self.ACTIVE_THEME_DIR}")),
+            ("Restart SDDM service",
+             "Logs everyone out and restarts the greeter",
+             "Restart",
+             lambda: fire_and_forget(
+                 "pkexec systemctl restart sddm")),
+            ("Show full status (JSON)",
+             "Dump current parsed configuration to a terminal",
+             "Show",
+             lambda: open_terminal(
+                 f"{self.HELPER} status | less", self.win)),
+            ("Restore shipped defaults",
+             "Same as the Reset button below — kept here for discoverability",
+             "Reset",
+             lambda: (self.standard_extra_reset(), self.rebuild())),
+        ]
+
+
+class PlymouthPage(SectionPage):
+    """Plymouth boot splash configuration.
+
+    Backed by /usr/local/bin/nyxus-plymouth. Theme switches and
+    initramfs regen require pkexec (com.nyxus.plymouth.policy).
+
+    Theme dir: /usr/share/plymouth/themes/<name>/
+    Conf:      /etc/plymouth/plymouthd.conf
+    Hook in:   /etc/mkinitcpio.conf (HOOKS=… udev plymouth …)
+    """
+    KEY = "plymouth"
+    STANDARD_KEYBIND_TOKENS = ["nyxus-plymouth", "plymouth"]
+    STANDARD_RESET_NS = ["plymouth"]
+
+    HELPER = "nyxus-plymouth"
+    THEMES_DIR = Path("/usr/share/plymouth/themes")
+    DEFAULT_THEME = "nyxus"
+    MKINITCPIO_CONF = Path("/etc/mkinitcpio.conf")
+
+    # ── helpers ───────────────────────────────────────────────────────
+    def _status(self) -> dict:
+        if not have(self.HELPER):
+            return {}
+        rc, out, _ = sh([self.HELPER, "status"], timeout=4)
+        if rc != 0:
+            return {}
+        try:
+            return json.loads(out)
+        except Exception:
+            return {}
+
+    def _list_themes(self) -> List[str]:
+        if not have(self.HELPER):
+            return []
+        rc, out, _ = sh([self.HELPER, "list"], timeout=4)
+        return [l.strip() for l in (out or "").splitlines() if l.strip()] \
+            if rc == 0 else []
+
+    def _async_apply(self, args: List[str], success: str) -> None:
+        sh_async(
+            [self.HELPER, *args],
+            lambda res: self.toast(
+                success if res[0] == 0
+                else f"plymouth: failed (rc={res[0]})"),
+            timeout=120)  # mkinitcpio -P can take a while
+
+    def standard_extra_reset(self) -> None:
+        if have(self.HELPER):
+            self._async_apply(
+                ["reset"],
+                "boot splash reset to NYXUS")
+
+    # ── page build ────────────────────────────────────────────────────
+    def build(self) -> None:
+        if not have(self.HELPER):
+            grp = Adw.PreferencesGroup(title="Plymouth helper missing")
+            grp.add(empty_row(
+                "nyxus-plymouth not installed",
+                "Expected at /usr/local/bin/nyxus-plymouth — "
+                "shipped by the iso-builder profile."))
+            self.add_group(grp)
+            self.add_pill(status_pill("missing", "warn"))
+            return
+
+        st = self._status()
+        themes = self._list_themes() or [self.DEFAULT_THEME]
+        cur = st.get("current_theme", self.DEFAULT_THEME)
+
+        # General
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="What plays at boot, before the login screen")
+        self.add_group(gen)
+        gen.add(kv_row("Active theme", cur))
+        gen.add(kv_row("Theme directory", str(self.THEMES_DIR / cur)))
+        gen.add(kv_row("Initramfs config", str(self.MKINITCPIO_CONF)))
+        gen.add(kv_row(
+            "Plymouth hook in initramfs",
+            "yes" if st.get("plymouth_hook_present") else "no"))
+
+        # Theme picker
+        tr = Adw.ComboRow(
+            title="Boot splash theme",
+            subtitle="Switching the theme regenerates the initramfs "
+                     "(takes ~10 s). Requires admin password.")
+        mdl = Gtk.StringList()
+        for t in themes:
+            mdl.append(t)
+        tr.set_model(mdl)
+        try:
+            tr.set_selected(themes.index(cur))
+        except ValueError:
+            tr.set_selected(0)
+
+        def _on_theme(r, _p):
+            picked = themes[r.get_selected()]
+            if picked == cur:
+                return
+            self._async_apply(
+                ["set-theme", picked],
+                f"theme → {picked} (initramfs regenerated)")
+        tr.connect("notify::selected", _on_theme)
+        gen.add(tr)
+
+        # Appearance / Visual
+        app = Adw.PreferencesGroup(
+            title="Appearance",
+            description="The shipped NYXUS theme — DARK MIRROR palette")
+        self.add_group(app)
+        app.add(kv_row("Background", "#0a0a14 (ink black)"))
+        app.add(kv_row("Primary", "#a06bff (purple)"))
+        app.add(kv_row("Secondary", "#3ad8ff (cyan)"))
+        app.add(kv_row("Logo source",
+                       str(self.THEMES_DIR / self.DEFAULT_THEME / "logo.png")))
+        app.add(empty_row(
+            "Custom branding",
+            "Drop a square PNG over /usr/share/plymouth/themes/nyxus/"
+            "logo.png and re-run \"Regenerate initramfs\"."))
+
+        # Behavior
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="Initramfs hook + manual actions")
+        self.add_group(beh)
+
+        sw_hook = Adw.SwitchRow(
+            title="Enable Plymouth at boot",
+            subtitle="Adds the 'plymouth' hook to mkinitcpio.conf "
+                     "(needed for the splash to render before SDDM)")
+        sw_hook.set_active(bool(st.get("plymouth_hook_present")))
+
+        def _on_hook(s, _p):
+            cmd = ["ensure-hook"] if s.get_active() else ["remove-hook"]
+            msg = ("hook added — regenerating initramfs"
+                   if s.get_active() else
+                   "hook removed — regenerating initramfs")
+            self._async_apply(cmd, msg)
+            # follow up with regen
+            sh_async([self.HELPER, "regen"],
+                     lambda r: self.toast(
+                         "initramfs regenerated"
+                         if r[0] == 0 else
+                         f"initramfs regen failed (rc={r[0]})"),
+                     timeout=180)
+        sw_hook.connect("notify::active", _on_hook)
+        beh.add(sw_hook)
+
+        regen_row = Adw.ActionRow(
+            title="Regenerate initramfs",
+            subtitle="Runs mkinitcpio -P (covers all installed kernels)")
+        rbtn = Gtk.Button(label="Run")
+        rbtn.set_valign(Gtk.Align.CENTER)
+        rbtn.connect(
+            "clicked",
+            lambda _b: self._async_apply(
+                ["regen"], "initramfs regenerated"))
+        regen_row.add_suffix(rbtn)
+        beh.add(regen_row)
+
+        test_row = Adw.ActionRow(
+            title="Preview the splash",
+            subtitle="Renders the boot splash on tty7 for 4 s "
+                     "(switch back with Ctrl+Alt+F1)")
+        tbtn = Gtk.Button(label="Preview")
+        tbtn.set_valign(Gtk.Align.CENTER)
+        tbtn.connect(
+            "clicked",
+            lambda _b: sh_async([self.HELPER, "test"]))
+        test_row.add_suffix(tbtn)
+        beh.add(test_row)
+
+        # Keybinds + Reset + Advanced auto-injected by SectionPage footer.
+
+    @property
+    def STANDARD_ADVANCED(self):
+        return [
+            ("Open theme directory",
+             f"{self.THEMES_DIR / self.DEFAULT_THEME} (script + assets)",
+             "Open",
+             lambda: fire_and_forget(
+                 f"xdg-open {self.THEMES_DIR / self.DEFAULT_THEME}")),
+            ("Edit mkinitcpio.conf",
+             f"{self.MKINITCPIO_CONF} (controls boot HOOKS)",
+             "Open",
+             lambda: open_terminal(
+                 f"sudoedit {self.MKINITCPIO_CONF}", self.win)),
+            ("Show full status (JSON)",
+             "Dump current parsed config",
+             "Show",
+             lambda: open_terminal(
+                 f"{self.HELPER} status | less", self.win)),
+            ("Manually regenerate initramfs",
+             "Same as the button above — kept here for discoverability",
+             "Run",
+             lambda: self._async_apply(
+                 ["regen"], "initramfs regenerated")),
+            ("Restore shipped defaults",
+             "Reset theme to NYXUS, ensure hook, regen initramfs",
+             "Reset",
+             lambda: (self.standard_extra_reset(), self.rebuild())),
+        ]
+
+
 # Map section.key → page class.
 PAGE_CLASSES = {
     "appearance":    AppearancePage,
@@ -12651,6 +13406,10 @@ PAGE_CLASSES = {
     "clipboard":     ClipboardPage,
     "record":        ScreenRecorderPage,
     "assistant":     AssistantPage,
+    # Tier 1 — Brand (rev 2026-05-14)
+    "welcome":       WelcomePage,
+    "loginscreen":   LoginScreenPage,
+    "plymouth":      PlymouthPage,
 }
 
 

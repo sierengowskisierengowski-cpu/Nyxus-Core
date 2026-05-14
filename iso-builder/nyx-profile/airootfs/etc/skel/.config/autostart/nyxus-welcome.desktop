@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=NYXUS Welcome
+Comment=First-boot onboarding wizard (self-removes after completion)
+Exec=nyxus-welcome
+X-GNOME-Autostart-enabled=true
+NoDisplay=true
+StartupNotify=false
+OnlyShowIn=NYXUS;GNOME;KDE;Hyprland;

@@ -37,29 +37,47 @@ For canonical project architecture and deployment documentation, use:
   custom helpers (e.g. the 1.5s sleep in `nyxus-ghost-auth`) are fine —
   no account state is changed.
 
-- **Settings Completeness Standard (NON-NEGOTIABLE).** Every feature,
-  app, addon, widget, and component shipped in NYXUS must include its
-  own fully populated settings section wired into the main Settings hub
-  (`artifacts/api-server/nyxus-scripts/nyxus_settings.py`).
+- **NYXUS BUILD STANDARD — THE GOLDEN RULE (NON-NEGOTIABLE).**
+  This supersedes the older "Settings Completeness Standard". It applies
+  to EVERY feature, app, addon, widget, helper, daemon, and component —
+  past, present, and future. If something is incomplete it does NOT
+  ship.
 
-  Required for EVERY page, no exceptions:
-    * General options relevant to the feature (enable/disable, autostart, etc.)
-    * Appearance options where applicable (theme, sizing, position, animations)
-    * Behavior options (triggers, defaults, what it does)
-    * Keybind configuration for that feature
-    * "Reset to defaults" button
-    * Feature-specific advanced options a power user would expect
+  Every feature must have:
+    * A fully populated Settings page registered in the main Settings
+      hub (`artifacts/api-server/nyxus-scripts/nyxus_settings.py`)
+    * Six required sections on EVERY page:
+        General · Appearance · Behavior · Keybinds · Advanced · Reset
+    * Every option wired to a real function that actually does what it
+      says — every toggle toggles real state, every slider mutates real
+      state, every keybind points to a real existing binary or script.
+    * A valid `.desktop` entry with a correct `Exec=` path (if user-launchable)
+    * All binaries existing and executable in `/usr/local/bin/` or `/opt/nyxus/`
+    * All systemd units with valid `ExecStart` paths
+    * All polkit policies in place where privileged operations are used
+    * All Python imports satisfiable from `packages.x86_64`
+    * No hardcoded usernames, hostnames, or absolute paths that break
+      in a live session — always derive from `$HOME`, `$USER`, etc.
 
   Hard rules:
     * NO empty pages, NO greyed-out options, NO placeholder text.
-    * NO toggles that do nothing — every switch must call a real helper.
-    * NO sliders that go nowhere — every slider must mutate real state.
-    * If a feature exists in the OS but has no settings page → add one.
-    * If a settings option exists but does nothing → wire it or delete it.
-    * Benchmark: macOS System Preferences / Windows 11 Settings depth.
-      A user coming from those platforms must open NYXUS Settings and
-      feel nothing is missing.
+    * NO toggles that do nothing.
+    * NO sliders that go nowhere.
+    * NO `# TODO`, `# FIXME`, or `pass  # implement later` in shipped code.
+    * NO mockups — if it's in the build, it works.
 
-  Applies retroactively (audit + fix existing sparse pages) AND going
-  forward (no new feature merges without its settings page complete).
-  Code review will reject any PR with empty / non-functional settings.
+  Quality benchmark: open System Preferences on macOS or Settings on
+  Windows 11 — NYXUS must match or exceed that depth for every
+  equivalent feature. A user coming from those platforms must open
+  NYXUS Settings and feel nothing is missing.
+
+  Pre-merge checklist (every session, every PR):
+    1. `verify-profile.sh` passes
+    2. Full CI suite passes
+    3. Every new and modified file is properly staged in `airootfs/`
+    4. Every new feature has its complete Settings page
+    5. Nothing is empty, stubbed, placeholder, or greyed-out
+
+  Applies retroactively AND going forward. Code review will reject any
+  PR that violates this standard. The rule is simple: if it ships
+  incomplete, it goes back. Every time. No exceptions.
