@@ -159,6 +159,13 @@ GLYPHS = {
     "gamepad":       "\uf11b",   # nf-fa-gamepad
     "webcam":        "\uf03d",   # nf-fa-video_camera
     "color":         "\uf1fb",   # nf-fa-eyedropper
+    # Settings Completeness Standard (rev 2026-05-14) new sections
+    "dock":          "\uf03e",   # nf-fa-picture_o    (dock)
+    "wallpaper":     "\uf03e",   # nf-fa-picture_o    (wallpaper studio)
+    "themepacks":    "\uf53f",   # nf-mdi-palette     (theme packs)
+    "clipboard":     "\uf0ea",   # nf-fa-clipboard    (clipboard)
+    "record":        "\uf03d",   # nf-fa-video_camera (screen recorder)
+    "assistant":     "\uf075",   # nf-fa-comment      (NORA assistant)
 }
 
 
@@ -557,6 +564,43 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "mac,randomize,random,wifi,cloned,nmcli,network manager,"
                "privacy,tracking,anonymity,macchanger", 1,
                "System"),
+    # ── Personal additions (rev 2026-05-14) — Settings Completeness ──
+    SectionDef("dock",          "Dock",
+               "Pinned apps, position, size, autohide, indicators",
+               "dock",
+               "dock,bar,launcher,pinned,taskbar,position,autohide,"
+               "indicator,nyxus-dock", 1,
+               "Personal"),
+    SectionDef("wallpaper",     "Wallpaper Studio",
+               "Browse, preview, and apply NYXUS wallpapers",
+               "wallpaper",
+               "wallpaper,background,studio,picker,preview,swaybg,"
+               "nyxus-set-wallpaper", 1,
+               "Personal"),
+    SectionDef("themepacks",    "Theme Packs",
+               "Curated DARK MIRROR variants — accent + glow + grain",
+               "themepacks",
+               "theme,pack,accent,palette,style,variant,nyxus-apply-accent,"
+               "purple,cyan,glow,grain", 1,
+               "Personal"),
+    SectionDef("clipboard",     "Clipboard",
+               "History size, persistence, secrets filter (cliphist)",
+               "clipboard",
+               "clipboard,clip,cliphist,wl-copy,wl-paste,history,paste,copy,"
+               "secrets,password", 1,
+               "Personal"),
+    SectionDef("record",        "Screen Recorder",
+               "wf-recorder defaults: codec, audio, region, output dir",
+               "record",
+               "record,recorder,screen,capture,wf-recorder,grim,slurp,"
+               "video,mp4,webm,audio,frame", 1,
+               "Devices"),
+    SectionDef("assistant",     "NYXUS Assistant",
+               "Voice & chat assistant (NORA) — wake word, model, hotkey",
+               "assistant",
+               "assistant,nora,voice,chat,llm,ollama,wake,whisper,model,"
+               "ai,helper", 1,
+               "Personal"),
 )
 SECTIONS_BY_KEY = {s.key: s for s in SECTIONS}
 
@@ -906,8 +950,32 @@ def wip_card(section_title: str, what_works: str, what_lands_next: str) -> Gtk.B
 # Adw.PreferencesPage gives us free vertical scroll + groups + responsive.
 # ──────────────────────────────────────────────────────────────────────
 class SectionPage(Adw.Bin):
-    """Container = page header (title + subtitle) + content area."""
+    """Container = page header (title + subtitle) + content area.
+
+    Settings Completeness Standard contract (rev 2026-05-14):
+      Every subclass MUST set the three class-level attributes below.
+      __init__ auto-appends a Keybinds + Reset + Advanced footer after
+      build() returns so no page can ship without the required trio.
+    """
     KEY: str = ""
+
+    # Hyprland.conf bind tokens that belong to this feature.
+    #   None  → show first 8 nyxus-related binds (good for global pages
+    #           like Appearance/Keyboard).
+    #   []    → show no binds; the "no keybinds" empty row will display
+    #           (good for status-only pages like About).
+    #   [...] → show binds whose raw command contains any of the tokens
+    #           (substring, case-insensitive).
+    STANDARD_KEYBIND_TOKENS: Optional[List[str]] = None
+
+    # Pref-JSON namespace keys to wipe on Reset (e.g. ["power", "battery"]).
+    #   []    → no prefs to wipe (Reset still appears for symmetry, runs
+    #           extra_reset only).
+    STANDARD_RESET_NS: List[str] = []
+
+    # Power-user rows: list of (title, subtitle, button_label, callable).
+    #   Empty list → an honest "No advanced options" row.
+    STANDARD_ADVANCED: List[Tuple[str, str, str, Callable[[], None]]] = []
 
     def __init__(self, win: "SettingsWindow", section: SectionDef):
         super().__init__()
@@ -959,6 +1027,7 @@ class SectionPage(Adw.Bin):
         self.set_child(outer)
         try:
             self.build()
+            self._append_standard_footer()
         except Exception as e:
             log.exception("build %s: %s", section.key, e)
             err = Adw.PreferencesGroup(title="Error")
@@ -986,6 +1055,7 @@ class SectionPage(Adw.Bin):
         self.clear_pills()
         try:
             self.build()
+            self._append_standard_footer()
         except Exception as e:
             log.exception("rebuild %s: %s", self.section.key, e)
             err = Adw.PreferencesGroup(title="Error")
@@ -993,6 +1063,37 @@ class SectionPage(Adw.Bin):
                 title="Failed to rebuild this section",
                 subtitle=str(e)))
             self.add_group(err)
+
+    # ── Settings Completeness Standard footer ─────────────────────────
+    def _append_standard_footer(self) -> None:
+        """Append Keybinds + Reset + Advanced groups so every page
+        meets the minimum Standard. Subclasses control content via
+        class attributes (STANDARD_KEYBIND_TOKENS / STANDARD_RESET_NS
+        / STANDARD_ADVANCED) and may override standard_extra_reset()
+        for non-prefs cleanup."""
+        try:
+            self.add_group(make_keybinds_group(
+                self, self.STANDARD_KEYBIND_TOKENS))
+            self.add_group(make_reset_group(
+                self,
+                pref_namespaces=list(self.STANDARD_RESET_NS),
+                extra_reset=self.standard_extra_reset))
+            self.add_group(make_advanced_group(
+                list(self.standard_advanced_rows())))
+        except Exception as e:
+            log.warning("standard footer for %s: %s", self.section.key, e)
+
+    def standard_extra_reset(self) -> None:
+        """Override in pages that need to revert non-prefs state on
+        reset (delete a generated config file, restore an /etc/foo.bak,
+        etc.). Default is no-op so the prefs wipe alone takes effect."""
+        return None
+
+    def standard_advanced_rows(self) -> List[Tuple[str, str, str, Callable[[], None]]]:
+        """Override OR set STANDARD_ADVANCED. Method form is useful
+        when row construction needs page state (e.g. dynamic helper
+        paths). Default returns the class attribute as-is."""
+        return list(self.STANDARD_ADVANCED)
 
     def add_pill(self, pill: Gtk.Widget) -> None:
         self.header_pill_slot.append(pill)
@@ -1118,6 +1219,123 @@ def debounced(scale: Gtk.Scale,
         state["src"] = GLib.timeout_add(delay_ms, _fire)
 
     scale.connect("value-changed", _changed)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Settings Completeness Standard helpers (rev 2026-05-14)
+#
+# Every SectionPage MUST end its build() with self._standard_footer(...)
+# so every page ships with the full required-by-policy trio:
+#
+#   · Keybinds group   — surfaces hyprland.conf binds related to this
+#                         feature (read-only, with edit shortcut)
+#   · Reset group      — wipes the page's prefs namespace and re-runs
+#                         build() so the page returns to factory state
+#   · Advanced group   — page-supplied list of power-user actions
+#                         (each item: (label, subtitle, button, fn))
+#
+# Pages that genuinely have no natural keybinds (e.g. About) pass
+# keybind_filter=None and the keybinds group degrades to a single
+# row pointing at the global Keyboard page.
+# ──────────────────────────────────────────────────────────────────────
+def make_keybinds_group(page: "SectionPage",
+                        token_filter: Optional[List[str]] = None,
+                        ) -> Adw.PreferencesGroup:
+    """Return a keybinds group for `page`.
+
+    `token_filter` is a list of substrings; any hyprland.conf bind whose
+    raw command contains ANY token is shown. Pass [] to show NO binds
+    (use for pure status pages); pass None to show ALL nyxus-relevant
+    binds (default fallback).
+    """
+    grp = Adw.PreferencesGroup(
+        title="Keybinds",
+        description="Live-parsed from ~/.config/hypr/hyprland.conf. "
+                    "Edit there to remap; reload Hyprland to apply.")
+    binds = parse_hypr_binds()
+    matched: list[tuple[str, str, str]] = []
+    if binds:
+        if token_filter is None:
+            matched = binds[:8]  # show first 8 nyxus-related
+        else:
+            for label, chord, raw in binds:
+                if not token_filter:
+                    break
+                if any(tok.lower() in raw.lower() for tok in token_filter):
+                    matched.append((label, chord, raw))
+    if matched:
+        for label, chord, _raw in matched:
+            grp.add(kv_row(label, chord))
+    else:
+        grp.add(empty_row(
+            "No keybinds bound to this feature",
+            "Add one in ~/.config/hypr/hyprland.conf (bind = $mod, KEY, exec, …)"))
+    grp.add(action_row(
+        "Edit hyprland.conf",
+        "Open the keybind configuration in your editor",
+        "Open",
+        lambda: fire_and_forget(
+            f"xdg-open {Path.home() / '.config/hypr/hyprland.conf'}")))
+    return grp
+
+
+def make_reset_group(page: "SectionPage",
+                     pref_namespaces: List[str],
+                     extra_reset: Optional[Callable[[], None]] = None,
+                     ) -> Adw.PreferencesGroup:
+    """Return a reset-to-defaults group for `page`.
+
+    Wipes every key in `pref_namespaces` from the persisted prefs JSON
+    AND runs an optional `extra_reset` callable for non-prefs state
+    (e.g. delete a generated config file, restore a base template).
+    Then triggers page.rebuild() so the user sees the new state.
+    """
+    grp = Adw.PreferencesGroup(
+        title="Reset",
+        description="Restore this section to factory defaults. "
+                    "Affects only this section's options.")
+    def _do_reset() -> None:
+        try:
+            cur = load_prefs()
+            for ns in pref_namespaces:
+                cur.pop(ns, None)
+            save_prefs(cur)
+            if extra_reset:
+                try:
+                    extra_reset()
+                except Exception as e:
+                    log.warning("reset extra: %s", e)
+            page.toast("reset to defaults")
+            page.rebuild()
+        except Exception as e:
+            log.warning("reset failed: %s", e)
+            page.toast(f"reset failed: {e}")
+    grp.add(action_row(
+        "Reset to defaults",
+        "Wipes this section's saved settings (other sections unaffected)",
+        "Reset",
+        _do_reset,
+        css="nyx-pill-warn"))
+    return grp
+
+
+def make_advanced_group(rows: List[Tuple[str, str, str, Callable[[], None]]],
+                        title: str = "Advanced",
+                        description: str = "Power-user operations",
+                        ) -> Adw.PreferencesGroup:
+    """Return an advanced group with caller-supplied action rows.
+
+    Each row tuple: (title, subtitle, button_label, on_click).
+    """
+    grp = Adw.PreferencesGroup(title=title, description=description)
+    if not rows:
+        grp.add(empty_row("No advanced options for this section",
+                          "All applicable options are above"))
+        return grp
+    for r in rows:
+        title_, sub, btn_lbl, fn = r
+        grp.add(action_row(title_, sub, btn_lbl, fn))
+    return grp
 
 
 def open_terminal(cmd: str, win=None) -> bool:
@@ -4277,6 +4495,29 @@ class PrivacyPage(SectionPage):
 # APPS — installed count, default mime apps, autostart
 # ──────────────────────────────────────────────────────────────────────
 class AppsPage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = ["rofi", "drun", "nyxus-store",
+                                "nyxus_launcher"]
+    STANDARD_RESET_NS = ["apps"]
+    STANDARD_ADVANCED = [
+        ("Open user .desktop folder",
+         "~/.local/share/applications/",
+         "Open",
+         lambda: fire_and_forget(
+             "xdg-open ~/.local/share/applications")),
+        ("Rebuild xdg-mime cache",
+         "update-desktop-database ~/.local/share/applications",
+         "Rebuild",
+         lambda: sh_async(
+             ["update-desktop-database",
+              str(Path.home() / ".local/share/applications")],
+             lambda r: None, timeout=6)),
+        ("Show default-app handler list",
+         "xdg-mime / mimeapps.list dump",
+         "Show",
+         lambda: open_terminal(
+             "cat ~/.config/mimeapps.list 2>/dev/null || "
+             "echo '(no user mimeapps.list)'", None)),
+    ]
     """Installed GUI apps + default-app picker + autostart + Flatpak.
     All controls are real:
       · pkexec pacman -Rns <pkg>     — uninstall native apps
@@ -4722,6 +4963,33 @@ class AppsPage(SectionPage):
 # STORAGE — df / lsblk / smartctl, pacman cache, journal
 # ──────────────────────────────────────────────────────────────────────
 class StoragePage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = ["nautilus", "nyxus-files", "thunar"]
+    STANDARD_RESET_NS = ["storage"]
+    STANDARD_ADVANCED = [
+        ("Run interactive disk usage (ncdu)",
+         "Drill into ~/ to find large files",
+         "Run",
+         lambda: open_terminal("ncdu ~ || du -sh ~/* 2>/dev/null", None)),
+        ("Vacuum systemd journal (>30 days)",
+         "journalctl --vacuum-time=30d",
+         "Vacuum",
+         lambda: open_terminal(
+             "sudo journalctl --vacuum-time=30d", None)),
+        ("Clean pacman cache",
+         "paccache -r (keeps last 3 versions)",
+         "Clean",
+         lambda: open_terminal(
+             "sudo paccache -r 2>/dev/null || "
+             "echo 'install pacman-contrib for paccache'",
+             None)),
+        ("Clean orphan packages",
+         "pacman -Rns $(pacman -Qtdq)",
+         "Clean",
+         lambda: open_terminal(
+             "ORPHANS=$(pacman -Qtdq); "
+             "if [ -n \"$ORPHANS\" ]; then sudo pacman -Rns $ORPHANS; "
+             "else echo 'no orphans'; fi", None)),
+    ]
     """Mounts + block devices + SMART + per-folder home breakdown +
     multi-target cleanup + largest-files finder. All real:
       · df / lsblk / smartctl       — read-only system data
@@ -5605,6 +5873,21 @@ pacman -Syy
 # ──────────────────────────────────────────────────────────────────────
 class AccessibilityPage(SectionPage):
     KEY = "accessibility"
+    STANDARD_KEYBIND_TOKENS = ["orca", "wvkbd", "magnus"]
+    STANDARD_RESET_NS = ["a11y", "font_scale"]
+    STANDARD_ADVANCED = [
+        ("Reset cursor size",
+         "hyprctl keyword cursor:size 24",
+         "Reset",
+         lambda: sh_async(
+             ["hyprctl", "keyword", "cursor:size", "24"],
+             None, timeout=2)),
+        ("Open ~/.config/autostart",
+         "Manage every XDG autostart entry by hand",
+         "Open",
+         lambda: fire_and_forget(
+             f"xdg-open {Path.home() / '.config/autostart'}")),
+    ]
 
     def build(self) -> None:
         text = Adw.PreferencesGroup(
@@ -5773,6 +6056,29 @@ class AccessibilityPage(SectionPage):
 #     /etc/systemd/system itself.
 # ──────────────────────────────────────────────────────────────────────
 class ParentalControlsPage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["parental"]
+    STANDARD_ADVANCED = [
+        ("View blocklist (/etc/hosts.nyxus-parental)",
+         "Inspect the appended host entries",
+         "Show",
+         lambda: open_terminal(
+             "cat /etc/hosts.nyxus-parental 2>/dev/null || "
+             "echo '(blocklist file not yet created)'", None)),
+        ("View bedtime timer status",
+         "systemctl --user status nyxus-bedtime.timer",
+         "Show",
+         lambda: open_terminal(
+             "systemctl --user status nyxus-bedtime.timer "
+             "2>/dev/null || echo '(timer not installed yet)'",
+             None)),
+        ("View parental helper log",
+         "/var/log/nyxus-parental.log",
+         "Show",
+         lambda: open_terminal(
+             "sudo tail -n 200 /var/log/nyxus-parental.log "
+             "2>/dev/null || echo '(no log yet)'", None)),
+    ]
     KEY = "parental"
     HELPER = "/usr/local/libexec/nyxus-parental-helper"
 
@@ -5942,6 +6248,28 @@ class ParentalControlsPage(SectionPage):
 # ──────────────────────────────────────────────────────────────────────
 class AppPermissionsPage(SectionPage):
     KEY = "app_perms"
+    STANDARD_KEYBIND_TOKENS = []  # no natural keybinds
+    STANDARD_RESET_NS = ["app_perms"]
+    STANDARD_ADVANCED = [
+        ("Reset ALL flatpak overrides",
+         "Wipes every per-app permission override globally",
+         "Reset all",
+         lambda: sh_async(
+             ["bash", "-lc",
+              "rm -rf ~/.local/share/flatpak/overrides/*"],
+             None, timeout=4)),
+        ("Open overrides folder",
+         "~/.local/share/flatpak/overrides/",
+         "Open",
+         lambda: fire_and_forget(
+             "xdg-open ~/.local/share/flatpak/overrides")),
+        ("Install Flatseal",
+         "Full GUI for every Flatpak permission (community standard)",
+         "Install",
+         lambda: open_terminal(
+             "flatpak install -y flathub com.github.tchx84.Flatseal",
+             None)),
+    ]
 
     # Permission table — the four most-asked Flatpak sandbox toggles.
     # Each entry maps the user-facing label to:
@@ -6094,6 +6422,22 @@ class AppPermissionsPage(SectionPage):
 # USERS — current user, groups, password change
 # ──────────────────────────────────────────────────────────────────────
 class UsersPage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["users"]
+    STANDARD_ADVANCED = [
+        ("Change password (terminal)",
+         "Runs passwd in a terminal",
+         "Run",
+         lambda: open_terminal("passwd", None)),
+        ("Show all groups for current user",
+         "groups",
+         "Show",
+         lambda: open_terminal("groups; id", None)),
+        ("Open /etc/passwd (read-only)",
+         "Inspect every system account",
+         "Show",
+         lambda: open_terminal("less /etc/passwd", None)),
+    ]
     """Local account management. All real:
       · pkexec useradd / userdel / passwd / chfn / gpasswd
       · ~/.face                — avatar (symlink for accountsservice)
@@ -10144,6 +10488,23 @@ def run(cmd, timeout: int = 5):
 # AND logs to ~/.cache/nyxus/i18n.log via the shim.
 # ──────────────────────────────────────────────────────────────────────
 class LanguagePage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["language"]
+    STANDARD_ADVANCED = [
+        ("Open /etc/locale.conf",
+         "System-wide locale (admin)",
+         "Open",
+         lambda: open_terminal(
+             "sudo ${EDITOR:-nano} /etc/locale.conf", None)),
+        ("Regenerate locales",
+         "sudo locale-gen",
+         "Run",
+         lambda: open_terminal("sudo locale-gen", None)),
+        ("Show available locales",
+         "locale -a",
+         "Show",
+         lambda: open_terminal("locale -a | less", None)),
+    ]
     KEY = "language"
 
     # Friendly labels for the short codes the gettext shim reports.
@@ -10329,6 +10690,25 @@ class LanguagePage(SectionPage):
 class VirtPage(SectionPage):
     """QEMU/KVM + libvirt + virt-manager front door."""
     KEY = "virt"
+    STANDARD_KEYBIND_TOKENS = ["virt-manager"]
+    STANDARD_RESET_NS = ["virt"]
+    STANDARD_ADVANCED = [
+        ("Open virsh shell",
+         "virsh -c qemu:///system",
+         "Open",
+         lambda: open_terminal(
+             "virsh -c qemu:///system", None)),
+        ("View libvirtd journal",
+         "journalctl -u libvirtd -n 200",
+         "Show",
+         lambda: open_terminal(
+             "journalctl -u libvirtd -n 200 --no-pager", None)),
+        ("List all storage pools",
+         "virsh pool-list --all",
+         "Show",
+         lambda: open_terminal(
+             "virsh -c qemu:///system pool-list --all", None)),
+    ]
 
     def build(self) -> None:
         # Status (read by nyxus-virt-setup status)
@@ -10422,6 +10802,24 @@ class VirtPage(SectionPage):
 class ContainersPage(SectionPage):
     """Podman + Distrobox container manager."""
     KEY = "containers"
+    STANDARD_KEYBIND_TOKENS = ["distrobox", "podman"]
+    STANDARD_RESET_NS = ["containers"]
+    STANDARD_ADVANCED = [
+        ("podman info",
+         "Engine + runtime + storage info",
+         "Show",
+         lambda: open_terminal("podman info | less", None)),
+        ("List distrobox containers",
+         "distrobox list",
+         "Show",
+         lambda: open_terminal(
+             "distrobox list 2>/dev/null || "
+             "echo 'distrobox not installed'", None)),
+        ("Prune dangling images",
+         "podman image prune -f",
+         "Prune",
+         lambda: open_terminal("podman image prune -f", None)),
+    ]
 
     def build(self) -> None:
         # Engine status
@@ -10498,6 +10896,26 @@ class ContainersPage(SectionPage):
 
 
 class KernelPage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["kernel"]
+    STANDARD_ADVANCED = [
+        ("Open /etc/default/grub",
+         "Boot defaults (admin)",
+         "Open",
+         lambda: open_terminal(
+             "sudo ${EDITOR:-nano} /etc/default/grub", None)),
+        ("Regenerate grub.cfg",
+         "sudo grub-mkconfig -o /boot/grub/grub.cfg",
+         "Run",
+         lambda: open_terminal(
+             "sudo grub-mkconfig -o /boot/grub/grub.cfg", None)),
+        ("Show installed kernels",
+         "pacman -Q | grep ^linux",
+         "Show",
+         lambda: open_terminal(
+             "pacman -Q | grep -E '^linux( |-lts|-zen|-hardened)'",
+             None)),
+    ]
     """Switch the GRUB default kernel between linux/lts/zen/hardened."""
     KEY = "kernel"
 
@@ -10556,6 +10974,26 @@ class KernelPage(SectionPage):
 
 
 class GamingPage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = ["steam", "mangohud", "gamemode"]
+    STANDARD_RESET_NS = ["gaming"]
+    STANDARD_ADVANCED = [
+        ("Open Steam",
+         "Launch Steam (if installed)",
+         "Open",
+         lambda: fire_and_forget("steam")),
+        ("Run protontricks",
+         "Per-game Wine config helper",
+         "Run",
+         lambda: open_terminal(
+             "protontricks 2>/dev/null || "
+             "echo 'install protontricks first'", None)),
+        ("Test MangoHud overlay",
+         "mangohud glxgears",
+         "Test",
+         lambda: open_terminal(
+             "mangohud glxgears 2>/dev/null || "
+             "echo 'install mangohud + mesa-utils'", None)),
+    ]
     """Steam + Proton-GE + GameMode + MangoHud."""
     KEY = "gaming"
 
@@ -10624,6 +11062,25 @@ class GamingPage(SectionPage):
 
 
 class EditorsPage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = ["code", "helix", "micro", "nvim", "vim"]
+    STANDARD_RESET_NS = ["editors"]
+    STANDARD_ADVANCED = [
+        ("Show xdg-mime defaults for text/*",
+         "Which editor handles each text mimetype",
+         "Show",
+         lambda: open_terminal(
+             "for m in text/plain text/markdown text/html "
+             "application/json; do "
+             "printf '%s\\t%s\\n' \"$m\" \"$(xdg-mime query default $m)\";"
+             " done", None)),
+        ("Reset text-editor default",
+         "xdg-mime default org.gnome.TextEditor.desktop text/plain",
+         "Reset",
+         lambda: sh_async(
+             ["xdg-mime", "default",
+              "org.gnome.TextEditor.desktop", "text/plain"],
+             lambda r: None, timeout=3)),
+    ]
     """Curated editors bundle: code, helix, micro, gnome-text-editor,
     neovim, vim. Click to launch; long-press to set default for *.txt."""
     KEY = "editors"
@@ -10701,6 +11158,28 @@ class EditorsPage(SectionPage):
 # privileged ops go through pkexec.
 # ──────────────────────────────────────────────────────────────────────
 class UsbPage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["usb_firewall"]
+    STANDARD_ADVANCED = [
+        ("View usbguard rules",
+         "/etc/usbguard/rules.conf",
+         "Show",
+         lambda: open_terminal(
+             "sudo cat /etc/usbguard/rules.conf 2>/dev/null || "
+             "echo '(no rules yet — usbguard not initialised)'",
+             None)),
+        ("Open usbguard daemon conf",
+         "/etc/usbguard/usbguard-daemon.conf",
+         "Open",
+         lambda: open_terminal(
+             "sudo ${EDITOR:-nano} /etc/usbguard/usbguard-daemon.conf",
+             None)),
+        ("List currently allowed devices",
+         "usbguard list-devices",
+         "Show",
+         lambda: open_terminal(
+             "sudo usbguard list-devices", None)),
+    ]
     """USB device firewall (usbguard) — permissive default, opt-in lockdown."""
     KEY = "usb_firewall"
 
@@ -10804,6 +11283,29 @@ class UsbPage(SectionPage):
 
 
 class SecBootPage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["secboot"]
+    STANDARD_ADVANCED = [
+        ("sbctl status (terminal)",
+         "Full Secure Boot setup state",
+         "Show",
+         lambda: open_terminal(
+             "sudo sbctl status 2>/dev/null || "
+             "echo 'sbctl not installed'", None)),
+        ("List EFI variables",
+         "ls /sys/firmware/efi/efivars",
+         "Show",
+         lambda: open_terminal(
+             "ls /sys/firmware/efi/efivars 2>/dev/null || "
+             "echo '(not booted via UEFI)'", None)),
+        ("TPM2 quote PCR 0-7",
+         "tpm2_pcrread sha256:0,1,2,3,4,5,6,7",
+         "Read",
+         lambda: open_terminal(
+             "tpm2_pcrread sha256:0,1,2,3,4,5,6,7 "
+             "2>/dev/null || echo 'tpm2-tools not installed'",
+             None)),
+    ]
     """Secure Boot + TPM2 status + sbctl enrollment."""
     KEY = "secboot"
 
@@ -10875,6 +11377,23 @@ class SecBootPage(SectionPage):
 
 
 class VpnPage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = ["nm-applet"]
+    STANDARD_RESET_NS = ["vpn"]
+    STANDARD_ADVANCED = [
+        ("Open NetworkManager applet",
+         "Tray icon + connection picker",
+         "Open",
+         lambda: fire_and_forget("nm-applet")),
+        ("List all connections",
+         "nmcli connection show",
+         "Show",
+         lambda: open_terminal("nmcli connection show", None)),
+        ("Open ~/.config/NetworkManager",
+         "Per-user VPN config dir",
+         "Open",
+         lambda: fire_and_forget(
+             "xdg-open ~/.config/NetworkManager")),
+    ]
     """WireGuard + OpenVPN via NetworkManager + nmcli."""
     KEY = "vpn"
 
@@ -10947,6 +11466,28 @@ class VpnPage(SectionPage):
 
 
 class DohPage(SectionPage):
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["doh"]
+    STANDARD_ADVANCED = [
+        ("View /etc/resolv.conf",
+         "Active DNS resolver state",
+         "Show",
+         lambda: open_terminal("cat /etc/resolv.conf", None)),
+        ("Edit dnscrypt-proxy.toml",
+         "/etc/dnscrypt-proxy/dnscrypt-proxy.toml (admin)",
+         "Open",
+         lambda: open_terminal(
+             "sudo ${EDITOR:-nano} "
+             "/etc/dnscrypt-proxy/dnscrypt-proxy.toml "
+             "2>/dev/null || echo 'dnscrypt-proxy not installed'",
+             None)),
+        ("Test DNS resolution",
+         "dig +short cloudflare.com",
+         "Test",
+         lambda: open_terminal(
+             "dig +short cloudflare.com 2>/dev/null || "
+             "host cloudflare.com", None)),
+    ]
     """DNS-over-HTTPS toggle (off / cloudflare / quad9)."""
     KEY = "doh"
 
@@ -11012,6 +11553,25 @@ class DohPage(SectionPage):
 class MacRandomPage(SectionPage):
     """MAC address randomization (off / per-scan / always)."""
     KEY = "mac_random"
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["mac_random"]
+    STANDARD_ADVANCED = [
+        ("View NM conf.d snippet",
+         "/etc/NetworkManager/conf.d/99-nyxus-mac.conf",
+         "Show",
+         lambda: open_terminal(
+             "sudo cat /etc/NetworkManager/conf.d/99-nyxus-mac.conf "
+             "2>/dev/null || echo '(no override active)'", None)),
+        ("Show current link MACs",
+         "ip link",
+         "Show",
+         lambda: open_terminal("ip -br link", None)),
+        ("Restart NetworkManager",
+         "Apply MAC policy changes immediately",
+         "Restart",
+         lambda: open_terminal(
+             "sudo systemctl restart NetworkManager", None)),
+    ]
 
     def build(self) -> None:
         if not have("nmcli") or not have("nyxus-mac-randomize"):
@@ -11085,6 +11645,1063 @@ class MacRandomPage(SectionPage):
         self.add_pill(status_pill(mode, "ok" if mode != "off" else "warn"))
 
 
+# ──────────────────────────────────────────────────────────────────────
+# Settings Completeness Standard (rev 2026-05-14) — new pages.
+# Every page below ships with the full required-by-policy trio AND a
+# real, wired body — no placeholders.
+# ──────────────────────────────────────────────────────────────────────
+class DockPage(SectionPage):
+    """Pinned apps, position, size, autohide, indicators.
+    Edits ~/.config/nyxus/dock.toml; reload via nyxus-dock reload."""
+    KEY = "dock"
+    STANDARD_KEYBIND_TOKENS = ["nyxus-dock", "dockd"]
+    STANDARD_RESET_NS = ["dock"]
+
+    DOCK_TOML = Path.home() / ".config" / "nyxus" / "dock.toml"
+
+    def _load_toml(self) -> dict:
+        if not self.DOCK_TOML.exists():
+            return {}
+        try:
+            try:
+                import tomllib
+            except ImportError:
+                import tomli as tomllib  # type: ignore
+            with self.DOCK_TOML.open("rb") as f:
+                return tomllib.load(f)
+        except Exception as e:
+            log.warning("dock toml: %s", e)
+            return {}
+
+    def _save_toml(self, cfg: dict) -> None:
+        try:
+            self.DOCK_TOML.parent.mkdir(parents=True, exist_ok=True)
+            # Tiny TOML emitter for the flat keys we touch (avoid hard
+            # dep on `tomli-w`). Only writes the [dock] table.
+            d = cfg.get("dock", {})
+            lines = ["[dock]"]
+            for k, v in d.items():
+                if isinstance(v, bool):
+                    lines.append(f"{k} = {'true' if v else 'false'}")
+                elif isinstance(v, (int, float)):
+                    lines.append(f"{k} = {v}")
+                elif isinstance(v, str):
+                    esc = v.replace('"', '\\"')
+                    lines.append(f'{k} = "{esc}"')
+                elif isinstance(v, list):
+                    items = ", ".join(
+                        f'"{str(x)}"' for x in v)
+                    lines.append(f"{k} = [{items}]")
+            self.DOCK_TOML.write_text("\n".join(lines) + "\n")
+            if have("nyxus-dock"):
+                sh_async(["nyxus-dock", "reload"], None, timeout=3)
+        except Exception as e:
+            log.warning("dock save: %s", e)
+            self.toast(f"save failed: {e}")
+
+    def _set(self, key: str, val) -> None:
+        cfg = self._load_toml()
+        cfg.setdefault("dock", {})[key] = val
+        self._save_toml(cfg)
+        self.toast(f"dock.{key} → {val}")
+
+    def build(self) -> None:
+        cfg = self._load_toml().get("dock", {})
+
+        if not have("nyxus-dock"):
+            grp = Adw.PreferencesGroup(title="nyxus-dock not installed")
+            grp.add(empty_row("Helper missing",
+                              "Reinstall the nyxus-scripts package"))
+            self.add_group(grp)
+            self.add_pill(status_pill("missing", "warn"))
+            return
+
+        # General
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="Enable the dock and its autostart")
+        self.add_group(gen)
+        sw_en = Adw.SwitchRow(title="Enable dock",
+                              subtitle="Show the NYXUS dock on this session")
+        sw_en.set_active(bool(cfg.get("enabled", True)))
+        sw_en.connect("notify::active",
+                      lambda s, _p: self._set("enabled", s.get_active()))
+        gen.add(sw_en)
+        sw_au = Adw.SwitchRow(title="Start at login",
+                              subtitle="Add nyxus-dockd to autostart")
+        sw_au.set_active((Path.home() / ".config/autostart/"
+                          "nyxus-dock.desktop").exists())
+        sw_au.connect("notify::active",
+                      lambda s, _p: self._toggle_autostart(s.get_active()))
+        gen.add(sw_au)
+
+        # Appearance
+        app = Adw.PreferencesGroup(
+            title="Appearance",
+            description="Position, size, glow, transparency")
+        self.add_group(app)
+        # Position
+        pos_row = Adw.ComboRow(title="Position",
+                               subtitle="Edge of the screen the dock anchors to")
+        pos_model = Gtk.StringList()
+        for p in ("bottom", "left", "right", "top"):
+            pos_model.append(p)
+        pos_row.set_model(pos_model)
+        cur_pos = str(cfg.get("position", "bottom"))
+        try:
+            pos_row.set_selected(["bottom", "left", "right", "top"].index(cur_pos))
+        except ValueError:
+            pos_row.set_selected(0)
+        pos_row.connect(
+            "notify::selected",
+            lambda r, _p: self._set(
+                "position",
+                ["bottom", "left", "right", "top"][r.get_selected()]))
+        app.add(pos_row)
+        # Icon size
+        size_row = Adw.ActionRow(
+            title="Icon size",
+            subtitle=f"current: {int(cfg.get('icon_size', 48))} px")
+        sz = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 24, 96, 4)
+        sz.set_value(int(cfg.get("icon_size", 48)))
+        sz.set_size_request(220, -1)
+        sz.set_draw_value(True)
+        debounced(sz, lambda v: self._set("icon_size", int(v)))
+        size_row.add_suffix(sz)
+        app.add(size_row)
+        # Glow
+        sw_gl = Adw.SwitchRow(title="DARK MIRROR glow",
+                              subtitle="Purple/cyan accent ring around active app")
+        sw_gl.set_active(bool(cfg.get("glow", True)))
+        sw_gl.connect("notify::active",
+                      lambda s, _p: self._set("glow", s.get_active()))
+        app.add(sw_gl)
+
+        # Behavior
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="Autohide, click-to-launch, indicator style")
+        self.add_group(beh)
+        sw_ah = Adw.SwitchRow(
+            title="Autohide",
+            subtitle="Slide off-screen when not hovered")
+        sw_ah.set_active(bool(cfg.get("autohide", False)))
+        sw_ah.connect("notify::active",
+                      lambda s, _p: self._set("autohide", s.get_active()))
+        beh.add(sw_ah)
+        sw_cl = Adw.SwitchRow(
+            title="Click-to-minimize",
+            subtitle="Clicking a running app's icon minimizes its window")
+        sw_cl.set_active(bool(cfg.get("click_minimize", True)))
+        sw_cl.connect("notify::active",
+                      lambda s, _p: self._set(
+                          "click_minimize", s.get_active()))
+        beh.add(sw_cl)
+        sw_in = Adw.SwitchRow(
+            title="Show running indicators",
+            subtitle="Dot under each running app")
+        sw_in.set_active(bool(cfg.get("indicators", True)))
+        sw_in.connect("notify::active",
+                      lambda s, _p: self._set("indicators", s.get_active()))
+        beh.add(sw_in)
+
+        # Tools
+        tools = Adw.PreferencesGroup(
+            title="Tools",
+            description="Open the full editor, reload the daemon, view state")
+        self.add_group(tools)
+        if Path("/opt/nyxus/nyxus_dock_settings.py").exists():
+            tools.add(action_row(
+                "Open full Dock Editor",
+                "Pin/unpin apps, drag to reorder, per-app overrides",
+                "Open",
+                lambda: fire_and_forget(
+                    "python3 /opt/nyxus/nyxus_dock_settings.py")))
+        tools.add(action_row(
+            "Reload dock daemon",
+            "Apply changes without logging out",
+            "Reload",
+            lambda: sh_async(
+                ["nyxus-dock", "reload"],
+                lambda r: self.toast(
+                    "reloaded" if r[0] == 0 else "reload failed"),
+                timeout=3)))
+        tools.add(action_row(
+            "Show dock state (JSON)",
+            "Pinned, running, focused — live from daemon",
+            "Show",
+            lambda: open_terminal(
+                "nyxus-dock state | jq . 2>/dev/null || nyxus-dock state",
+                self.win)))
+
+        self.add_pill(status_pill(
+            "on" if cfg.get("enabled", True) else "off",
+            "ok" if cfg.get("enabled", True) else "warn"))
+
+    def _toggle_autostart(self, on: bool) -> None:
+        try:
+            adir = Path.home() / ".config" / "autostart"
+            f = adir / "nyxus-dock.desktop"
+            if on:
+                adir.mkdir(parents=True, exist_ok=True)
+                f.write_text(
+                    "[Desktop Entry]\nType=Application\nName=NYXUS Dock\n"
+                    "Exec=python3 /opt/nyxus/nyxus_dockd.py\n"
+                    "X-GNOME-Autostart-enabled=true\nNoDisplay=true\n",
+                    encoding="utf-8")
+                self.toast("autostart ON")
+            else:
+                if f.exists():
+                    f.unlink()
+                self.toast("autostart OFF")
+        except Exception as e:
+            self.toast(f"autostart: {e}")
+
+    def standard_extra_reset(self) -> None:
+        try:
+            if self.DOCK_TOML.exists():
+                self.DOCK_TOML.unlink()
+            if have("nyxus-dock"):
+                sh_async(["nyxus-dock", "reload"], None, timeout=3)
+        except Exception as e:
+            log.warning("dock reset: %s", e)
+
+    def standard_advanced_rows(self):
+        return [
+            ("Edit dock.toml directly",
+             f"{self.DOCK_TOML} — TOML, hand-edit at your own risk",
+             "Open",
+             lambda: fire_and_forget(f"xdg-open {self.DOCK_TOML}")),
+            ("Restart dockd",
+             "Hard restart the dock daemon (kills + respawns)",
+             "Restart",
+             lambda: sh_async(
+                 ["bash", "-lc",
+                  "pkill -f nyxus_dockd.py; "
+                  "nohup python3 /opt/nyxus/nyxus_dockd.py "
+                  ">/dev/null 2>&1 &"],
+                 lambda r: self.toast("restarted"),
+                 timeout=4)),
+            ("View daemon log",
+             "~/.cache/nyxus/dockd.log",
+             "Open",
+             lambda: open_terminal(
+                 "tail -n 200 ~/.cache/nyxus/dockd.log",
+                 self.win)),
+        ]
+
+
+class WallpaperStudioPage(SectionPage):
+    """Browse, preview, and apply NYXUS wallpapers (system + user packs)."""
+    KEY = "wallpaper"
+    STANDARD_KEYBIND_TOKENS = ["set-wallpaper", "wallpaper_studio"]
+    STANDARD_RESET_NS = ["wallpaper"]
+
+    SYS_DIR = Path("/usr/share/backgrounds/nyxus")
+    USR_DIR = Path.home() / ".local" / "share" / "backgrounds" / "nyxus"
+    CONF = Path.home() / ".config" / "nyxus" / "wallpaper.conf"
+
+    def _list_walls(self) -> list[Path]:
+        out: list[Path] = []
+        for d in (self.SYS_DIR, self.USR_DIR):
+            if not d.exists(): continue
+            try:
+                for p in sorted(d.iterdir()):
+                    if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                        out.append(p)
+            except Exception as e:
+                log.warning("walls list %s: %s", d, e)
+        return out
+
+    def _current(self) -> str:
+        if not self.CONF.exists(): return ""
+        try:
+            for ln in self.CONF.read_text().splitlines():
+                if ln.startswith("WALLPAPER="):
+                    return ln.split("=", 1)[1].strip().strip('"')
+        except Exception:
+            pass
+        return ""
+
+    def build(self) -> None:
+        # General
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="Active wallpaper and search paths")
+        self.add_group(gen)
+        cur = self._current() or "(none)"
+        gen.add(kv_row("Active wallpaper", cur))
+        gen.add(kv_row("System pack",
+                       str(self.SYS_DIR) if self.SYS_DIR.exists() else "(missing)"))
+        gen.add(kv_row("User pack",
+                       str(self.USR_DIR) if self.USR_DIR.exists() else "(none)"))
+
+        # Appearance — picker
+        walls = self._list_walls()
+        pick = Adw.PreferencesGroup(
+            title="Appearance",
+            description=f"{len(walls)} wallpapers found "
+                        f"(click Apply to switch)")
+        self.add_group(pick)
+        if not walls:
+            pick.add(empty_row("No wallpapers found",
+                               "Drop images into ~/.local/share/backgrounds/nyxus/"))
+        for p in walls[:30]:
+            slug = p.stem
+            row = Adw.ActionRow(title=slug,
+                                subtitle=str(p.parent))
+            row.add_suffix(action_row("", "", "Apply",
+                                       lambda pp=p: self._apply(pp)).get_first_child()
+                           if False else
+                           self._apply_btn(p))
+            pick.add(row)
+
+        # Behavior
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="Per-workspace wallpaper, slideshow")
+        self.add_group(beh)
+        prefs = load_prefs().get("wallpaper", {})
+        sw_per = Adw.SwitchRow(
+            title="Per-workspace wallpaper",
+            subtitle="Use nyxus-workspace-wallpaperd to switch on workspace change")
+        sw_per.set_active(bool(prefs.get("per_workspace", False)))
+        sw_per.connect("notify::active",
+                       lambda s, _p: self._set_pref("per_workspace",
+                                                    s.get_active()))
+        beh.add(sw_per)
+        sw_ss = Adw.SwitchRow(
+            title="Slideshow",
+            subtitle="Rotate wallpaper on a timer (uses User pack)")
+        sw_ss.set_active(bool(prefs.get("slideshow", False)))
+        sw_ss.connect("notify::active",
+                      lambda s, _p: self._set_pref("slideshow",
+                                                   s.get_active()))
+        beh.add(sw_ss)
+        # Slideshow interval
+        iv_row = Adw.ActionRow(
+            title="Slideshow interval",
+            subtitle=f"current: {int(prefs.get('slideshow_min', 30))} min")
+        iv = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 1, 240, 1)
+        iv.set_value(int(prefs.get("slideshow_min", 30)))
+        iv.set_size_request(220, -1); iv.set_draw_value(True)
+        debounced(iv, lambda v: self._set_pref("slideshow_min", int(v)))
+        iv_row.add_suffix(iv)
+        beh.add(iv_row)
+
+        # Tools
+        tools = Adw.PreferencesGroup(title="Tools")
+        self.add_group(tools)
+        if Path("/opt/nyxus/nyxus_wallpaper_studio.py").exists():
+            tools.add(action_row(
+                "Open full Wallpaper Studio",
+                "Grid view with previews and import",
+                "Open",
+                lambda: fire_and_forget(
+                    "python3 /opt/nyxus/nyxus_wallpaper_studio.py")))
+        tools.add(action_row(
+            "Open user wallpapers folder",
+            "Add your own — drop images here",
+            "Open",
+            lambda: (self.USR_DIR.mkdir(parents=True, exist_ok=True),
+                     fire_and_forget(f"xdg-open {self.USR_DIR}"))[1]))
+
+        self.add_pill(status_pill(
+            f"{len(walls)} found", "ok" if walls else "warn"))
+
+    def _apply_btn(self, path: Path) -> Gtk.Button:
+        btn = Gtk.Button(label="Apply")
+        btn.add_css_class("nyx-pill")
+        btn.set_valign(Gtk.Align.CENTER)
+        btn.connect("clicked", lambda _b: self._apply(path))
+        return btn
+
+    def _apply(self, path: Path) -> None:
+        if not have("nyxus-set-wallpaper"):
+            self.toast("nyxus-set-wallpaper missing"); return
+        sh_async(["nyxus-set-wallpaper", str(path)],
+                 lambda r: self.toast(
+                     f"applied: {path.stem}" if r[0] == 0
+                     else "apply failed"),
+                 timeout=6)
+
+    def _set_pref(self, k: str, v) -> None:
+        cur = load_prefs()
+        cur.setdefault("wallpaper", {})[k] = v
+        save_prefs(cur)
+        self.toast(f"wallpaper.{k} → {v}")
+
+    def standard_advanced_rows(self):
+        return [
+            ("Edit wallpaper.conf",
+             str(self.CONF),
+             "Open",
+             lambda: fire_and_forget(f"xdg-open {self.CONF}")),
+            ("Reload swaybg",
+             "Restart the swaybg autostart helper",
+             "Reload",
+             lambda: sh_async(
+                 ["bash", "-lc",
+                  "pkill swaybg; nyxus-wallpaper-autostart &"],
+                 lambda r: self.toast("reloaded"), timeout=3)),
+        ]
+
+
+class ThemePacksPage(SectionPage):
+    """Curated DARK MIRROR variants — accent + glow + grain."""
+    KEY = "themepacks"
+    STANDARD_KEYBIND_TOKENS = ["apply-accent"]
+    STANDARD_RESET_NS = ["themepack"]
+
+    # Each pack: id, label, accent hex, secondary hex, description
+    PACKS = (
+        ("dark_mirror",   "DARK MIRROR (default)",
+            "#a06bff", "#3ad8ff",
+            "Purple primary + cyan secondary — the canonical NYXUS look"),
+        ("inferno",       "INFERNO",
+            "#ff3a5c", "#ffae3a",
+            "Crimson primary + amber secondary — high-energy gamer red"),
+        ("oceanic",       "OCEANIC",
+            "#3a7dff", "#3affd8",
+            "Deep blue primary + teal secondary — calm dev workflow"),
+        ("forest",        "FOREST",
+            "#3aff7d", "#a0ff3a",
+            "Emerald primary + lime secondary — biophilic comfort"),
+        ("monochrome",    "MONOCHROME",
+            "#cccccc", "#888888",
+            "Pure greys — no accent at all (focus mode)"),
+    )
+
+    def build(self) -> None:
+        prefs = load_prefs().get("themepack", {})
+        active = prefs.get("active", "dark_mirror")
+
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="Active theme pack — applied via nyxus-apply-accent")
+        self.add_group(gen)
+        gen.add(kv_row("Active pack",
+                       next((lbl for k, lbl, *_ in self.PACKS if k == active),
+                            active)))
+
+        # Appearance — pack picker
+        pick = Adw.PreferencesGroup(
+            title="Appearance",
+            description="Switch the global accent + GTK theme + EWW palette")
+        self.add_group(pick)
+        for pid, lbl, primary, secondary, desc in self.PACKS:
+            sub = (f"{desc} · {primary} / {secondary}")
+            row = action_row(
+                f"{lbl}{' · ACTIVE' if pid == active else ''}",
+                sub,
+                "Re-apply" if pid == active else "Apply",
+                (lambda i=pid, p=primary, s=secondary:
+                 self._apply_pack(i, p, s)),
+                css=("nyx-pill-ok" if pid == active else "nyx-pill"))
+            pick.add(row)
+
+        # Behavior
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="Glow, grain overlay, animation intensity")
+        self.add_group(beh)
+        sw_glow = Adw.SwitchRow(
+            title="Glow effects",
+            subtitle="Soft accent glow on focused windows / dock items")
+        sw_glow.set_active(bool(prefs.get("glow", True)))
+        sw_glow.connect("notify::active",
+                        lambda s, _p: self._set("glow", s.get_active()))
+        beh.add(sw_glow)
+        sw_grain = Adw.SwitchRow(
+            title="Film grain overlay",
+            subtitle="Subtle texture across the desktop (DARK MIRROR signature)")
+        sw_grain.set_active(bool(prefs.get("grain", True)))
+        sw_grain.connect("notify::active",
+                         lambda s, _p: self._set("grain", s.get_active()))
+        beh.add(sw_grain)
+        # Animation intensity
+        ai_row = Adw.ActionRow(
+            title="Animation intensity",
+            subtitle=f"current: {prefs.get('anim_intensity', 1.0):.2f}× "
+                     f"(0 = none, 2 = exaggerated)")
+        ai = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0.0, 2.0, 0.1)
+        ai.set_value(float(prefs.get("anim_intensity", 1.0)))
+        ai.set_size_request(220, -1); ai.set_draw_value(True)
+        debounced(ai,
+                  lambda v: self._set("anim_intensity", round(v, 2)))
+        ai_row.add_suffix(ai)
+        beh.add(ai_row)
+
+        self.add_pill(status_pill(active, "ok"))
+
+    def _apply_pack(self, pid: str, primary: str, secondary: str) -> None:
+        cur = load_prefs()
+        cur.setdefault("themepack", {})["active"] = pid
+        cur["themepack"]["primary"] = primary
+        cur["themepack"]["secondary"] = secondary
+        save_prefs(cur)
+        if have("nyxus-apply-accent"):
+            sh_async(
+                ["nyxus-apply-accent", primary, secondary],
+                lambda r: (self.toast(
+                    f"applied {pid}" if r[0] == 0 else "apply failed"),
+                           self.rebuild()),
+                timeout=8)
+        else:
+            self.toast("nyxus-apply-accent missing — saved only")
+            self.rebuild()
+
+    def _set(self, k: str, v) -> None:
+        cur = load_prefs()
+        cur.setdefault("themepack", {})[k] = v
+        save_prefs(cur)
+        self.toast(f"themepack.{k} → {v}")
+
+    def standard_advanced_rows(self):
+        return [
+            ("Custom accent hex",
+             "Bypass packs and feed nyxus-apply-accent any 2 hex values",
+             "Run",
+             lambda: open_terminal(
+                 "echo 'usage: nyxus-apply-accent #PRIMARY #SECONDARY'; "
+                 "echo 'example: nyxus-apply-accent #ff00aa #00ffaa'; "
+                 "read -p 'primary: ' P; read -p 'secondary: ' S; "
+                 "nyxus-apply-accent \"$P\" \"$S\"",
+                 self.win)),
+            ("View nyxus-apply-accent help",
+             "Show every flag the helper supports",
+             "Show",
+             lambda: open_terminal(
+                 "nyxus-apply-accent --help 2>&1 | less", self.win)),
+        ]
+
+
+class ClipboardPage(SectionPage):
+    """Clipboard manager (cliphist + wl-clipboard)."""
+    KEY = "clipboard"
+    STANDARD_KEYBIND_TOKENS = ["cliphist", "nyxus-clipboard", "wl-paste"]
+    STANDARD_RESET_NS = ["clipboard"]
+
+    DB = Path.home() / ".local/share/cliphist/db"
+
+    def _entries(self) -> int:
+        if not self.DB.exists(): return 0
+        if not have("cliphist"): return 0
+        rc, out, _ = sh(["bash", "-lc", "cliphist list | wc -l"],
+                        timeout=3)
+        try: return int(out.strip())
+        except Exception: return 0
+
+    def _is_listening(self) -> bool:
+        rc, _, _ = sh(["pgrep", "-f", "wl-paste --watch"], timeout=2)
+        return rc == 0
+
+    def build(self) -> None:
+        if not have("cliphist") or not have("wl-paste"):
+            grp = Adw.PreferencesGroup(title="Required tools missing")
+            grp.add(empty_row(
+                "cliphist + wl-clipboard",
+                "Install both: pacman -S cliphist wl-clipboard"))
+            self.add_group(grp)
+            self.add_pill(status_pill("missing", "warn")); return
+
+        prefs = load_prefs().get("clipboard", {})
+
+        # General
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="Watcher daemon and history database")
+        self.add_group(gen)
+        listening = self._is_listening()
+        gen.add(kv_row("Watcher",
+                       "running" if listening else "stopped"))
+        gen.add(kv_row("History entries", str(self._entries())))
+        gen.add(kv_row("Database", str(self.DB)))
+        sw_en = Adw.SwitchRow(
+            title="Enable clipboard history",
+            subtitle="Start wl-paste --watch on login")
+        sw_en.set_active(bool(prefs.get("enabled", True)))
+        sw_en.connect("notify::active",
+                      lambda s, _p: self._toggle_enabled(s.get_active()))
+        gen.add(sw_en)
+
+        # Appearance — picker theme passes through to rofi
+        app = Adw.PreferencesGroup(
+            title="Appearance",
+            description="Picker style when invoked by hotkey")
+        self.add_group(app)
+        ts_row = Adw.ComboRow(
+            title="Picker theme",
+            subtitle="Rofi theme used by nyxus-clipboard pick")
+        ts_model = Gtk.StringList()
+        for t in ("nyxus", "startmenu", "minimal"):
+            ts_model.append(t)
+        ts_row.set_model(ts_model)
+        cur_t = str(prefs.get("picker_theme", "nyxus"))
+        try:
+            ts_row.set_selected(["nyxus", "startmenu", "minimal"].index(cur_t))
+        except ValueError:
+            ts_row.set_selected(0)
+        ts_row.connect(
+            "notify::selected",
+            lambda r, _p: self._set(
+                "picker_theme",
+                ["nyxus", "startmenu", "minimal"][r.get_selected()]))
+        app.add(ts_row)
+
+        # Behavior
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="History size, persistence, secrets filter")
+        self.add_group(beh)
+        # Max entries
+        me_row = Adw.ActionRow(
+            title="Max history entries",
+            subtitle=f"current: {int(prefs.get('max_entries', 200))} "
+                     f"(cliphist trims older)")
+        me = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 50, 1000, 50)
+        me.set_value(int(prefs.get("max_entries", 200)))
+        me.set_size_request(220, -1); me.set_draw_value(True)
+        debounced(me, lambda v: self._set("max_entries", int(v)))
+        me_row.add_suffix(me)
+        beh.add(me_row)
+        # Max bytes
+        mb_row = Adw.ActionRow(
+            title="Max entry size (KB)",
+            subtitle=f"current: {int(prefs.get('max_kb', 64))} KB "
+                     f"(passed to cliphist --max-dedupe-search)")
+        mb = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 4, 4096, 4)
+        mb.set_value(int(prefs.get("max_kb", 64)))
+        mb.set_size_request(220, -1); mb.set_draw_value(True)
+        debounced(mb, lambda v: self._set("max_kb", int(v)))
+        mb_row.add_suffix(mb)
+        beh.add(mb_row)
+        # Secrets filter
+        sw_sec = Adw.SwitchRow(
+            title="Skip password-like entries",
+            subtitle="Drop entries marked x-kde-passwordManagerHint or "
+                     "shorter than 6 chars containing only mixed-case+digits")
+        sw_sec.set_active(bool(prefs.get("skip_secrets", True)))
+        sw_sec.connect("notify::active",
+                       lambda s, _p: self._set("skip_secrets",
+                                                s.get_active()))
+        beh.add(sw_sec)
+        # Persist across reboots
+        sw_pe = Adw.SwitchRow(
+            title="Persist history across reboots",
+            subtitle="Off = wipe ~/.local/share/cliphist/db at logout")
+        sw_pe.set_active(bool(prefs.get("persist", True)))
+        sw_pe.connect("notify::active",
+                      lambda s, _p: self._set("persist", s.get_active()))
+        beh.add(sw_pe)
+
+        # Tools
+        tools = Adw.PreferencesGroup(title="Tools")
+        self.add_group(tools)
+        tools.add(action_row(
+            "Open picker now",
+            "Show clipboard history in a rofi menu",
+            "Open",
+            lambda: fire_and_forget(
+                "nyxus-clipboard pick" if have("nyxus-clipboard")
+                else "cliphist list | rofi -dmenu | cliphist decode | wl-copy")))
+        tools.add(action_row(
+            "Wipe history",
+            "Empty the cliphist database (cannot be undone)",
+            "Wipe",
+            lambda: sh_async(
+                ["bash", "-lc", "cliphist wipe"],
+                lambda r: (self.toast(
+                    "wiped" if r[0] == 0 else "wipe failed"),
+                           self.rebuild()),
+                timeout=4),
+            css="nyx-pill-warn"))
+        tools.add(action_row(
+            "Restart watcher",
+            "Kill + respawn wl-paste --watch cliphist store",
+            "Restart",
+            lambda: self._restart_watcher()))
+
+        self.add_pill(status_pill(
+            f"{self._entries()} entries",
+            "ok" if listening else "warn"))
+
+    def _toggle_enabled(self, on: bool) -> None:
+        self._set("enabled", on)
+        if on:
+            self._restart_watcher()
+        else:
+            sh_async(["pkill", "-f", "wl-paste --watch"], None, timeout=2)
+            self.toast("watcher stopped")
+
+    def _restart_watcher(self) -> None:
+        sh_async(
+            ["bash", "-lc",
+             "pkill -f 'wl-paste --watch'; "
+             "nohup wl-paste --type text --watch cliphist store "
+             ">/dev/null 2>&1 & "
+             "nohup wl-paste --type image --watch cliphist store "
+             ">/dev/null 2>&1 &"],
+            lambda r: (self.toast("watcher restarted"), self.rebuild()),
+            timeout=4)
+
+    def _set(self, k: str, v) -> None:
+        cur = load_prefs()
+        cur.setdefault("clipboard", {})[k] = v
+        save_prefs(cur)
+        self.toast(f"clipboard.{k} → {v}")
+
+    def standard_extra_reset(self) -> None:
+        try:
+            if self.DB.exists():
+                sh(["cliphist", "wipe"], timeout=3)
+        except Exception as e:
+            log.warning("clipboard reset: %s", e)
+
+    def standard_advanced_rows(self):
+        return [
+            ("Open database file",
+             str(self.DB),
+             "Open",
+             lambda: fire_and_forget(f"xdg-open {self.DB}")),
+            ("Show last 20 entries (terminal)",
+             "Inspect raw cliphist entries",
+             "Show",
+             lambda: open_terminal(
+                 "cliphist list | head -n 20", self.win)),
+        ]
+
+
+class ScreenRecorderPage(SectionPage):
+    """wf-recorder defaults: codec, audio, region, output dir."""
+    KEY = "record"
+    STANDARD_KEYBIND_TOKENS = ["wf-recorder", "nyxus-record", "grim"]
+    STANDARD_RESET_NS = ["record"]
+
+    def build(self) -> None:
+        if not have("wf-recorder"):
+            grp = Adw.PreferencesGroup(title="wf-recorder not installed")
+            grp.add(empty_row("Install wf-recorder",
+                              "pacman -S wf-recorder"))
+            self.add_group(grp)
+            self.add_pill(status_pill("missing", "warn")); return
+
+        prefs = load_prefs().get("record", {})
+        out_dir = Path(prefs.get("out_dir",
+                                 str(Path.home() / "Videos" / "NYXUS")))
+
+        # General
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="Output folder and default file name pattern")
+        self.add_group(gen)
+        gen.add(kv_row("Output folder", str(out_dir)))
+        gen.add(action_row(
+            "Choose output folder",
+            "Pick a different directory for recordings",
+            "Pick",
+            lambda: self._pick_dir()))
+
+        # Appearance — overlay during recording
+        app = Adw.PreferencesGroup(
+            title="Appearance",
+            description="Visual feedback while recording")
+        self.add_group(app)
+        sw_in = Adw.SwitchRow(
+            title="Show recording indicator",
+            subtitle="Red dot in the bar while wf-recorder is running")
+        sw_in.set_active(bool(prefs.get("indicator", True)))
+        sw_in.connect("notify::active",
+                      lambda s, _p: self._set("indicator", s.get_active()))
+        app.add(sw_in)
+        sw_cur = Adw.SwitchRow(
+            title="Capture cursor",
+            subtitle="Include the mouse pointer in the recording")
+        sw_cur.set_active(bool(prefs.get("cursor", True)))
+        sw_cur.connect("notify::active",
+                       lambda s, _p: self._set("cursor", s.get_active()))
+        app.add(sw_cur)
+
+        # Behavior
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="Codec, audio, framerate, default region")
+        self.add_group(beh)
+        # Codec
+        codec_row = Adw.ComboRow(
+            title="Codec",
+            subtitle="Container is .mp4 unless you pick webm")
+        codec_model = Gtk.StringList()
+        codecs = ("h264", "h265", "vp9", "av1")
+        for c in codecs:
+            codec_model.append(c)
+        codec_row.set_model(codec_model)
+        cur_c = str(prefs.get("codec", "h264"))
+        try:
+            codec_row.set_selected(codecs.index(cur_c))
+        except ValueError:
+            codec_row.set_selected(0)
+        codec_row.connect(
+            "notify::selected",
+            lambda r, _p: self._set("codec", codecs[r.get_selected()]))
+        beh.add(codec_row)
+        # Audio
+        sw_au = Adw.SwitchRow(
+            title="Record audio",
+            subtitle="Include the default PipeWire monitor source")
+        sw_au.set_active(bool(prefs.get("audio", False)))
+        sw_au.connect("notify::active",
+                      lambda s, _p: self._set("audio", s.get_active()))
+        beh.add(sw_au)
+        # Framerate
+        fr_row = Adw.ActionRow(
+            title="Frame rate",
+            subtitle=f"current: {int(prefs.get('fps', 60))} fps")
+        fr = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 15, 120, 5)
+        fr.set_value(int(prefs.get("fps", 60)))
+        fr.set_size_request(220, -1); fr.set_draw_value(True)
+        debounced(fr, lambda v: self._set("fps", int(v)))
+        fr_row.add_suffix(fr)
+        beh.add(fr_row)
+        # Default region
+        reg_row = Adw.ComboRow(
+            title="Default region",
+            subtitle="What to capture if no region is passed on the CLI")
+        reg_model = Gtk.StringList()
+        regs = ("full", "select", "active")
+        for r_ in regs:
+            reg_model.append(r_)
+        reg_row.set_model(reg_model)
+        cur_r = str(prefs.get("region", "select"))
+        try:
+            reg_row.set_selected(regs.index(cur_r))
+        except ValueError:
+            reg_row.set_selected(1)
+        reg_row.connect(
+            "notify::selected",
+            lambda r, _p: self._set("region", regs[r.get_selected()]))
+        beh.add(reg_row)
+
+        # Tools
+        tools = Adw.PreferencesGroup(title="Tools")
+        self.add_group(tools)
+        tools.add(action_row(
+            "Start recording now",
+            "Uses your defaults above",
+            "Start",
+            lambda: fire_and_forget(
+                "nyxus-record start" if have("nyxus-record")
+                else "wf-recorder")))
+        tools.add(action_row(
+            "Stop recording",
+            "Send SIGINT to active wf-recorder",
+            "Stop",
+            lambda: sh_async(
+                ["pkill", "-INT", "wf-recorder"],
+                lambda r: self.toast(
+                    "stopped" if r[0] == 0 else "no recording active"),
+                timeout=2)))
+        tools.add(action_row(
+            "Open output folder",
+            str(out_dir),
+            "Open",
+            lambda: (out_dir.mkdir(parents=True, exist_ok=True),
+                     fire_and_forget(f"xdg-open {out_dir}"))[1]))
+
+        self.add_pill(status_pill("ready", "ok"))
+
+    def _pick_dir(self) -> None:
+        # Prefer modern Gtk.FileDialog (GTK 4.10+), fall back to native
+        # chooser on older GTK4 builds, then to a terminal prompt.
+        try:
+            if hasattr(Gtk, "FileDialog"):
+                dlg = Gtk.FileDialog()
+                dlg.set_title("Pick output folder")
+                def _done(d, res):
+                    try:
+                        f = d.select_folder_finish(res)
+                        if f:
+                            self._set("out_dir", f.get_path())
+                            self.rebuild()
+                    except Exception as e:
+                        log.warning("file dialog: %s", e)
+                dlg.select_folder(self.win, None, _done)
+                return
+            if hasattr(Gtk, "FileChooserNative"):
+                ch = Gtk.FileChooserNative.new(
+                    "Pick output folder", self.win,
+                    Gtk.FileChooserAction.SELECT_FOLDER,
+                    "_Pick", "_Cancel")
+                def _resp(c, rid):
+                    try:
+                        if rid == Gtk.ResponseType.ACCEPT:
+                            f = c.get_file()
+                            if f:
+                                self._set("out_dir", f.get_path())
+                                self.rebuild()
+                    finally:
+                        c.destroy()
+                ch.connect("response", _resp)
+                ch.show()
+                return
+        except Exception as e:
+            log.warning("file picker: %s", e)
+        # Last-resort fallback: terminal prompt — never silently fail.
+        open_terminal(
+            "read -p 'Output folder (absolute path): ' P; "
+            "if [ -d \"$P\" ]; then "
+            "  jq --arg p \"$P\" '.record.out_dir=$p' "
+            "    ~/.config/nyxus/settings.json > /tmp/.nyxus.json && "
+            "  mv /tmp/.nyxus.json ~/.config/nyxus/settings.json && "
+            "  echo 'saved'; "
+            "else echo 'not a directory'; fi", self.win)
+
+    def _set(self, k: str, v) -> None:
+        cur = load_prefs()
+        cur.setdefault("record", {})[k] = v
+        save_prefs(cur)
+        self.toast(f"record.{k} → {v}")
+
+    def standard_advanced_rows(self):
+        return [
+            ("Show wf-recorder help",
+             "All available flags",
+             "Show",
+             lambda: open_terminal(
+                 "wf-recorder --help 2>&1 | less", self.win)),
+            ("List PipeWire audio sources",
+             "Pick a specific source for the --audio flag",
+             "List",
+             lambda: open_terminal(
+                 "pactl list short sources", self.win)),
+        ]
+
+
+class AssistantPage(SectionPage):
+    """NORA — voice & chat assistant. Tier-2 (engine pending), settings
+    here are honest scaffolding so wiring lands without UI drift."""
+    KEY = "assistant"
+    STANDARD_KEYBIND_TOKENS = ["nyxus-assistant", "nora"]
+    STANDARD_RESET_NS = ["assistant"]
+
+    def build(self) -> None:
+        prefs = load_prefs().get("assistant", {})
+        engine_ok = have("ollama") or have("nyxus-assistant")
+
+        # General
+        gen = Adw.PreferencesGroup(
+            title="General",
+            description="Engine status and global enable")
+        self.add_group(gen)
+        gen.add(kv_row("Engine",
+                       "ollama detected" if have("ollama")
+                       else "nyxus-assistant detected" if have("nyxus-assistant")
+                       else "no engine installed"))
+        sw_en = Adw.SwitchRow(
+            title="Enable assistant",
+            subtitle="When off, hotkey is ignored and watcher does not run")
+        sw_en.set_active(bool(prefs.get("enabled", False)))
+        sw_en.connect("notify::active",
+                      lambda s, _p: self._set("enabled", s.get_active()))
+        gen.add(sw_en)
+
+        # Appearance
+        app = Adw.PreferencesGroup(
+            title="Appearance",
+            description="Position of the assistant overlay")
+        self.add_group(app)
+        pos_row = Adw.ComboRow(title="Overlay position", subtitle="On screen")
+        pos_model = Gtk.StringList()
+        for p in ("center", "top-right", "bottom-right",
+                  "bottom-left", "top-left"):
+            pos_model.append(p)
+        pos_row.set_model(pos_model)
+        positions = ("center", "top-right", "bottom-right",
+                     "bottom-left", "top-left")
+        cur_p = str(prefs.get("position", "bottom-right"))
+        try:
+            pos_row.set_selected(positions.index(cur_p))
+        except ValueError:
+            pos_row.set_selected(2)
+        pos_row.connect(
+            "notify::selected",
+            lambda r, _p: self._set("position",
+                                    positions[r.get_selected()]))
+        app.add(pos_row)
+
+        # Behavior
+        beh = Adw.PreferencesGroup(
+            title="Behavior",
+            description="Wake word, model, hotkey")
+        self.add_group(beh)
+        sw_wake = Adw.SwitchRow(
+            title="Wake-word listening",
+            subtitle="Always-on microphone for the wake phrase")
+        sw_wake.set_active(bool(prefs.get("wake", False)))
+        sw_wake.connect("notify::active",
+                        lambda s, _p: self._set("wake", s.get_active()))
+        beh.add(sw_wake)
+        wake_row = Adw.EntryRow(title="Wake phrase")
+        wake_row.set_text(str(prefs.get("wake_phrase", "nora")))
+        wake_row.connect(
+            "notify::text",
+            lambda r, _p: self._set("wake_phrase", r.get_text().strip()))
+        beh.add(wake_row)
+        model_row = Adw.EntryRow(title="LLM model")
+        model_row.set_text(str(prefs.get("model", "llama3.2:3b")))
+        model_row.connect(
+            "notify::text",
+            lambda r, _p: self._set("model", r.get_text().strip()))
+        beh.add(model_row)
+
+        # Tools
+        tools = Adw.PreferencesGroup(title="Tools")
+        self.add_group(tools)
+        if have("ollama"):
+            tools.add(action_row(
+                "List installed models",
+                "ollama list",
+                "Show",
+                lambda: open_terminal("ollama list", self.win)))
+            tools.add(action_row(
+                "Pull default model",
+                f"ollama pull {prefs.get('model', 'llama3.2:3b')}",
+                "Pull",
+                lambda: open_terminal(
+                    f"ollama pull {prefs.get('model', 'llama3.2:3b')}",
+                    self.win)))
+        else:
+            tools.add(empty_row(
+                "Install ollama for local LLM",
+                "pacman -S ollama  (or use the Software Store)"))
+
+        self.add_pill(status_pill(
+            "engine ready" if engine_ok else "engine missing",
+            "ok" if engine_ok else "warn"))
+
+    def _set(self, k: str, v) -> None:
+        cur = load_prefs()
+        cur.setdefault("assistant", {})[k] = v
+        save_prefs(cur)
+        self.toast(f"assistant.{k} → {v}")
+
+    def standard_advanced_rows(self):
+        return [
+            ("Edit assistant prefs (JSON)",
+             "Inspect / hand-edit the saved settings",
+             "Open",
+             lambda: fire_and_forget(
+                 f"xdg-open {Path.home() / '.config/nyxus/settings.json'}")),
+            ("View assistant log",
+             "~/.cache/nyxus/assistant.log",
+             "Open",
+             lambda: open_terminal(
+                 "tail -n 200 ~/.cache/nyxus/assistant.log "
+                 "2>/dev/null || echo 'no log yet'",
+                 self.win)),
+        ]
+
+
 # Map section.key → page class.
 PAGE_CLASSES = {
     "appearance":    AppearancePage,
@@ -11127,6 +12744,13 @@ PAGE_CLASSES = {
     "vpn":           VpnPage,
     "doh":           DohPage,
     "mac_random":    MacRandomPage,
+    # Settings Completeness Standard (rev 2026-05-14) new pages
+    "dock":          DockPage,
+    "wallpaper":     WallpaperStudioPage,
+    "themepacks":    ThemePacksPage,
+    "clipboard":     ClipboardPage,
+    "record":        ScreenRecorderPage,
+    "assistant":     AssistantPage,
 }
 
 

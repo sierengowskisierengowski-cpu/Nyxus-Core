@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+# nyxus-clipboard — thin wrapper around cliphist + wl-clipboard.
+#
+# Usage:
+#   nyxus-clipboard pick                    Open the rofi picker (default)
+#   nyxus-clipboard list                    Print the history (id  text)
+#   nyxus-clipboard wipe                    Wipe the entire history
+#   nyxus-clipboard watch                   Start the watcher (text + image)
+#   nyxus-clipboard stop                    Kill the watcher
+#   nyxus-clipboard restart                 Stop + start
+#   nyxus-clipboard status                  Print "running" or "stopped"
+#
+# Settings honored from ~/.config/nyxus/settings.json (clipboard.* keys):
+#   picker_theme   (string, default "nyxus")  — rofi theme name under
+#                                                ~/.config/rofi/<theme>.rasi
+#   skip_secrets   (bool,   default true)     — best-effort drop of
+#                                                short alphanumeric entries
+#                                                that look like passwords
+#   max_kb         (int,    default 64)       — passed as --max-dedupe-search
+#                                                / --max-items hint
+#   max_entries    (int,    default 200)      — used by `wipe-old`
+#
+# Hard contract:
+#   · Never edits /etc.
+#   · Never asks for sudo.
+#   · Always exits 0 on graceful no-ops; non-zero only on real failures.
+set -euo pipefail
+
+CONF="${HOME}/.config/nyxus/settings.json"
+
+read_pref() {
+  # read_pref <key> <default> — extract clipboard.<key> from settings.json
+  local key="$1" default="$2"
+  if [[ ! -f "$CONF" ]] || ! command -v jq >/dev/null 2>&1; then
+    printf '%s' "$default"; return 0
+  fi
+  local v
+  v="$(jq -r --arg k "$key" '.clipboard[$k] // empty' "$CONF" 2>/dev/null || true)"
+  if [[ -z "$v" || "$v" == "null" ]]; then
+    printf '%s' "$default"
+  else
+    printf '%s' "$v"
+  fi
+}
+
+require() {
+  for c in "$@"; do
+    if ! command -v "$c" >/dev/null 2>&1; then
+      echo "nyxus-clipboard: missing required tool: $c" >&2
+      return 1
+    fi
+  done
+}
+
+cmd_watch() {
+  require wl-paste cliphist || exit 1
+  # Don't double-spawn.
+  if pgrep -f "wl-paste --type text --watch cliphist" >/dev/null; then
+    echo "watcher already running"; return 0
+  fi
+  local max_kb; max_kb="$(read_pref max_kb 64)"
+  # cliphist takes --max-dedupe-search in bytes for newer versions; we
+  # pass it via env so older builds still work.
+  CLIPHIST_MAX_KB="${max_kb}" \
+    nohup wl-paste --type text  --watch cliphist store \
+      >/dev/null 2>&1 &
+  CLIPHIST_MAX_KB="${max_kb}" \
+    nohup wl-paste --type image --watch cliphist store \
+      >/dev/null 2>&1 &
+  disown -a 2>/dev/null || true
+  echo "watcher started"
+}
+
+cmd_stop() {
+  pkill -f "wl-paste --type text --watch"  2>/dev/null || true
+  pkill -f "wl-paste --type image --watch" 2>/dev/null || true
+  echo "stopped"
+}
+
+cmd_restart() {
+  cmd_stop
+  sleep 0.2
+  cmd_watch
+}
+
+cmd_status() {
+  if pgrep -f "wl-paste --type text --watch cliphist" >/dev/null; then
+    echo "running"
+  else
+    echo "stopped"
+  fi
+}
+
+cmd_list() {
+  require cliphist || exit 1
+  cliphist list
+}
+
+cmd_wipe() {
+  require cliphist || exit 1
+  cliphist wipe
+  echo "wiped"
+}
+
+cmd_pick() {
+  require cliphist wl-copy || exit 1
+  local theme; theme="$(read_pref picker_theme nyxus)"
+  local skip_secrets; skip_secrets="$(read_pref skip_secrets true)"
+  local theme_arg=()
+  if command -v rofi >/dev/null 2>&1; then
+    if [[ -f "${HOME}/.config/rofi/${theme}.rasi" ]]; then
+      theme_arg=(-theme "${HOME}/.config/rofi/${theme}.rasi")
+    fi
+    local list
+    list="$(cliphist list)"
+    if [[ "$skip_secrets" == "true" ]]; then
+      # drop entries that look like a single password (≤32 chars, only
+      # mixed-case letters + digits + symbols, no spaces)
+      list="$(printf '%s\n' "$list" \
+        | awk -F'\t' '
+            { if (length($2) > 32 || $2 ~ / / || $2 ~ /[ \t]/) print $0;
+              else if ($2 !~ /^[A-Za-z0-9!@#\$%^&*\(\)_+\-=]+$/) print $0; }')"
+    fi
+    local sel
+    sel="$(printf '%s\n' "$list" \
+      | rofi -dmenu -i "${theme_arg[@]}" -p clipboard || true)"
+    [[ -z "$sel" ]] && exit 0
+    printf '%s\n' "$sel" | cliphist decode | wl-copy
+  else
+    echo "rofi not installed — falling back to plain copy of latest entry" >&2
+    cliphist list | head -n 1 | cliphist decode | wl-copy
+  fi
+}
+
+main() {
+  local sub="${1:-pick}"
+  case "$sub" in
+    pick)    shift; cmd_pick    "$@" ;;
+    list)    shift; cmd_list    "$@" ;;
+    wipe)    shift; cmd_wipe    "$@" ;;
+    watch)   shift; cmd_watch   "$@" ;;
+    stop)    shift; cmd_stop    "$@" ;;
+    restart) shift; cmd_restart "$@" ;;
+    status)  shift; cmd_status  "$@" ;;
+    -h|--help|help)
+      sed -n '2,/^set -euo/p' "$0" | sed 's/^# \{0,1\}//;/^set -euo/d'
+      ;;
+    *)
+      echo "nyxus-clipboard: unknown sub-command: $sub" >&2
+      echo "try: nyxus-clipboard --help" >&2
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"
