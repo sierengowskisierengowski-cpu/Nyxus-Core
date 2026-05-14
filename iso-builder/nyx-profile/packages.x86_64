@@ -441,7 +441,7 @@ calf
 rnnoise
 
 # ── NYXUS Virt Manager (Tier B · 2026-05-14) ───────────────────────
-# Full QEMU/KVM stack + libvirt + virt-manager UI + UEFI fw + network
+# Full QEMU/KVM stack + libvirt + virt-manager UI + UEFI fw + bridged networking
 # helpers + swtpm so Win 11 guests Just Work. nyxus-virt-setup runs
 # on first launch from VirtPage to enable libvirtd + add user to grp.
 qemu-desktop
