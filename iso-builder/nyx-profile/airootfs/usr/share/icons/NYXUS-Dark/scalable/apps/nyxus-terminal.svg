@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#0a0a14"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f4ead5"/>
+      <stop offset="100%" stop-color="#e8edf5"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="29" fill="url(#bg)" stroke="url(#ring)" stroke-width="1.5"/>
+  <g fill="none" stroke="#f4ead5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- terminal window -->
+    <rect x="14" y="18" width="36" height="28" rx="3"/>
+    <line x1="14" y1="24" x2="50" y2="24"/>
+    <!-- prompt > and cursor _ -->
+    <path d="M20 32 L25 36 L20 40"/>
+    <line x1="29" y1="40" x2="38" y2="40" stroke-width="3"/>
+  </g>
+</svg>
