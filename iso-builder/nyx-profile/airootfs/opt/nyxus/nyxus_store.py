@@ -138,7 +138,7 @@ class StoreApp(Adw.Application):
         css.load_from_data(
             b"""
             .nyxus-store-cat  { color:#cfd6e2; font-weight:600; }
-            .nyxus-store-card { background:rgba(10,13,20,0.85); border:1px solid rgba(58,216,255,0.18);
+            .nyxus-store-card { background:rgba(10,13,20,0.85); border:1px solid rgba(244,234,213,0.18);
                                 border-radius:12px; padding:12px; }
             .nyxus-store-name { color:#e8edf5; font-weight:700; font-size:14px; }
             .nyxus-store-sub  { color:#cfd6e2; font-size:12px; }

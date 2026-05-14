@@ -66,10 +66,10 @@ WIN_W   = 1180
 WIN_H   = 760
 
 # ── Palette (DARK MIRROR + status semantics) ────────────────────────────────
-NYXUS_GOLD = "#d4b87a"
+NYXUS_GOLD = "#f4ead5"
 SUCCESS    = "#7ad99e"
 WARN       = "#e8c46a"
-DANGER     = "#ff6464"
+DANGER     = "#d96b6b"
 INFO       = "#7ab3e8"
 GLASS_DEEP = "rgba(8, 12, 20, 0.92)"
 GLASS_MED  = "rgba(15, 20, 32, 0.78)"
@@ -518,8 +518,8 @@ window, .background {{ background: {GLASS_DEEP}; color: {TEXT_PRIM}; }}
 }}
 .nyx-nav-row:hover {{ background: rgba(255,255,255,0.04); }}
 .nyx-nav-row.selected {{
-  background: rgba(212,184,122,0.10);
-  border: 1px solid rgba(212,184,122,0.35);
+  background: rgba(244,234,213,0.10);
+  border: 1px solid rgba(244,234,213,0.35);
 }}
 .nyx-nav-glyph {{
   font-family: "JetBrainsMono Nerd Font","FiraCode Nerd Font",monospace;
@@ -560,11 +560,11 @@ window, .background {{ background: {GLASS_DEEP}; color: {TEXT_PRIM}; }}
   border: 1px solid {HAIR_W};
   border-radius: 10px; padding: 7px 16px; font-weight: 500;
 }}
-.nyx-btn:hover {{ background: rgba(212,184,122,0.10);
-                  border-color: rgba(212,184,122,0.40); }}
+.nyx-btn:hover {{ background: rgba(244,234,213,0.10);
+                  border-color: rgba(244,234,213,0.40); }}
 .nyx-btn.primary {{
-  background: rgba(212,184,122,0.18);
-  border-color: rgba(212,184,122,0.55); color: {NYXUS_GOLD};
+  background: rgba(244,234,213,0.18);
+  border-color: rgba(244,234,213,0.55); color: {NYXUS_GOLD};
 }}
 .nyx-btn.danger {{
   background: rgba(255,100,100,0.10);
@@ -593,8 +593,8 @@ window, .background {{ background: {GLASS_DEEP}; color: {TEXT_PRIM}; }}
   font-size: 11.5px; color: {TEXT_DIM};
 }}
 .nyx-banner {{
-  background: rgba(212,184,122,0.08);
-  border: 1px solid rgba(212,184,122,0.35);
+  background: rgba(244,234,213,0.08);
+  border: 1px solid rgba(244,234,213,0.35);
   border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;
   color: {TEXT_PRIM};
 }}

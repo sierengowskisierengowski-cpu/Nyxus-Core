@@ -77,8 +77,8 @@ except (ValueError, ImportError):
 from gi.repository import Gtk, Gdk, Gio, GLib, Pango, Adw
 
 APP_ID  = "io.nyxus.terminal"
-WIN_W   = 700
-WIN_H   = 480
+WIN_W   = 1000  # rev r15 — comfortable for code/log reading
+WIN_H   = 640   # rev r15 — comfortable vertical
 
 # DARK MIRROR palette
 BG_RGBA       = (0.031, 0.047, 0.078, 0.55)   # rgba(8,12,20,0.55) dark glass

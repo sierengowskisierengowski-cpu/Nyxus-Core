@@ -285,7 +285,7 @@ class GraffitiBackground(Gtk.DrawingArea):
 # mural shows through, translucent dark inner panels, semi-opaque entries
 # /textviews where text needs to be readable, and rainbow-cycling neon
 # button outlines with handwritten Inter labels. We promote godsapp's
-# `* { font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif}` universal rule across every NYXUS app, with
+# `* { font-family: 'Inter', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif}` universal rule across every NYXUS app, with
 # a `.nyx-mono` opt-out class for places that genuinely need a monospace
 # face (terminals, code editors, log views). This CSS is loaded at
 # Gtk.STYLE_PROVIDER_PRIORITY_USER so it overrides each app's own
@@ -382,7 +382,7 @@ vte-terminal, vte-terminal * {
 .nyx-headline, .nyx-headline *,
 .nyx-app-title, .nyx-section-title,
 .nyx-rainbow-title, .nyx-h1, .nyx-h2, .nyx-h3 {
-    font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
+    font-family: 'Inter', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
 }
 .nyx-h1 { font-size: 28px; color: #ffffff; }
 .nyx-h2 { font-size: 22px; color: #e8edf5; }
@@ -402,7 +402,7 @@ headerbar, .titlebar {
 headerbar label, headerbar label.title,
 .titlebar label, .titlebar label.title {
     color: #e8edf5;
-    font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
+    font-family: 'Inter', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
     text-shadow: 0  1px 0 rgba(0, 0, 0, 0.65),
                  0 -1px 0 rgba(255, 255, 255, 0.10);
 }
@@ -437,7 +437,7 @@ frame {
     background-image: none;
     color: #e8edf5;
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 14px;
+    border-radius: 3px;
     padding: 12px 14px;
     box-shadow: inset 0  1px 0 rgba(255, 255, 255, 0.08),
                 inset 0 -1px 0 rgba(0,   0,  0,  0.45),
@@ -486,7 +486,7 @@ textview {
     background-color: rgba(15, 20, 32, 0.62);
     color: #e8edf5;
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 10px;
+    border-radius: 3px;
     padding: 10px 12px;
 }
 textview text { background-color: transparent; color: #e8edf5; }
@@ -526,7 +526,7 @@ entry, spinbutton,
     background-image: none;
     color: #e8edf5;
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 10px;
+    border-radius: 3px;
     padding: 8px 14px;
     font-size: 14px;
     caret-color: #ffffff;
@@ -554,7 +554,7 @@ button,
     background-image: none;
     color: #e8edf5;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 10px;
+    border-radius: 3px;
     padding: 6px 14px;
     font-size: 14px;
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.65);
@@ -653,14 +653,14 @@ dropdown, dropdown > button {
     background-color: rgba(15, 20, 32, 0.72);
     color: #e8edf5;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 10px;
+    border-radius: 3px;
     padding: 4px 10px;
 }
 popover, popover > contents, popover > arrow {
     background-color: rgba(5, 7, 12, 0.92);
     background-image: none;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 12px;
+    border-radius: 3px;
     color: #e8edf5;
 }
 tooltip, tooltip.background {
@@ -688,14 +688,14 @@ tooltip, tooltip.background {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
     font-size: 13px;
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 10px;
+    border-radius: 3px;
     padding: 10px 14px;
 }
 
 /* -- The signature outer frame (collapses to a single white hairline) ---- */
 .nyx-chrome-edge, .nyx-godsapp-frame {
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 14px;
+    border-radius: 3px;
     box-shadow:
         inset 0 0 0 1px rgba(255, 255, 255, 0.06),
         0 6px 20px rgba(0, 0, 0, 0.45);
@@ -931,30 +931,70 @@ def _is_adw_app_window(window) -> bool:
 
 
 def _apply_size_policy(window: Gtk.Window) -> None:
-    """r5: open SMALL and let GTK auto-grow to natural content size.
-    Default 480x320 is intentionally small; min 320x240 so the user can
-    shrink further. resizable=True + setting size_request to the small
-    minimum (not the default) means content can request more space and
-    the window will naturally expand to fit it. Universal NYXUS rule:
-    every app + every flyout opens compact, then grows to its content."""
+    """rev r15 — INTELLIGENT DEFAULTS + UNIVERSAL RESPONSIVENESS.
+
+    Each app declares its own *intelligent* default size via
+    set_default_size(); this hook does NOT clobber it. We instead
+    enforce three universal rules so every window in the build feels
+    designed:
+
+      1. **Sane minimum.** A window can never shrink below a usable
+         floor (320x240). Each app may override by setting the
+         attribute ``_nyxus_min_size = (w, h)`` before present().
+      2. **Resizable by default.** Every window is resizable so the
+         user can grow it. Apps may opt out by setting
+         ``_nyxus_fixed_layout = True`` on the window (launcher,
+         power menu, screenshot HUD — short-lived popups whose layout
+         is intentionally fixed).
+      3. **Responsive root.** The window's root child is forced to
+         hexpand+vexpand so when the user resizes, content reflows to
+         fill the available space — no dead borders, no orphaned
+         padding.
+
+    Pre-existing fullscreen/maximize state is also cleared so apps
+    always open at their intelligent default, never sticky-maximized
+    from a previous session.
+    """
     try:
         window.unmaximize()
     except Exception: pass
     try:
         window.unfullscreen()
     except Exception: pass
+
+    # Resizability: only fixed-layout popups stay non-resizable.
+    fixed = bool(getattr(window, "_nyxus_fixed_layout", False))
     try:
-        window.set_resizable(True)
+        window.set_resizable(not fixed)
+    except Exception: pass
+
+    # Sensible minimum so windows can't be dragged into uselessness.
+    # Per-app override via window._nyxus_min_size = (w, h).
+    if not fixed:
+        try:
+            mw, mh = getattr(window, "_nyxus_min_size", (320, 240))
+            window.set_size_request(int(mw), int(mh))
+        except Exception as e:
+            log.debug("set_size_request floor: %s", e)
+
+    # Make the root child fully expand so resizing reflows content.
+    # Gtk.Window uses get_child(); Adw.ApplicationWindow uses get_content().
+    # We try BOTH so reflow enforcement covers every window class shipped
+    # in NYXUS, not just plain Gtk.Window.
+    roots = []
+    try:
+        c = window.get_child()
+        if c is not None: roots.append(c)
     except Exception: pass
     try:
-        window.set_default_size(480, 320)
-    except Exception as e:
-        log.debug("set_default_size: %s", e)
-    try:
-        # Min size only — natural request from content drives the actual size.
-        window.set_size_request(320, 240)
-    except Exception as e:
-        log.debug("set_size_request: %s", e)
+        c = window.get_content() if hasattr(window, "get_content") else None
+        if c is not None: roots.append(c)
+    except Exception: pass
+    for child in roots:
+        try: child.set_hexpand(True)
+        except Exception: pass
+        try: child.set_vexpand(True)
+        except Exception: pass
 
 
 def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
@@ -1060,25 +1100,31 @@ def _make_window_transparent(window: Gtk.Window) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# UNIVERSAL ENFORCEMENT (rev 2026-05-07 r13)
+# UNIVERSAL ENFORCEMENT (rev r15 — 2026-05-14)
 # ──────────────────────────────────────────────────────────────────────────────
-# Until now, install_chrome() had to be called explicitly by every app — and
-# any per-app set_default_size(900, 700) call would override the small-size
-# policy. r13 fixes both by monkey-patching at module import time:
+# rev r13 used to *clamp* every window's default size to 700×480 to enforce a
+# small-by-default policy. rev r15 reverses that decision: per the user-locked
+# "Intelligent Defaults & Universal Responsiveness" rule, every app must open
+# at the size that makes the most sense for its content (Terminal wide for
+# reading, Calculator compact, File Manager wider, Settings standard system-
+# settings size, etc.). We therefore:
 #
-#   1. Gtk.Window.set_default_size  → clamped to NYXUS_MAX_DEFAULT (700x480)
-#      so no app can open larger than the universal NYXUS default. Apps can
-#      still be resized larger BY THE USER via the resizable window edge.
-#   2. Gtk.Window.present / Adw.ApplicationWindow.present → wrapped to
-#      auto-call install_chrome(self) on first present, so apps that forgot
-#      to import or call install_chrome still get DARK MIRROR styling, the
-#      small default size, and the transparent surface.
+#   1. **Do NOT clamp set_default_size.** Each app declares its own
+#      intelligent default; we trust it. We only enforce a generous CEILING
+#      (NYXUS_MAX_DEFAULT_W/H) so a typo can't open a window larger than any
+#      reasonable monitor, and a SANE FLOOR via _apply_size_policy.
+#   2. **Auto-install chrome on first present()** so apps that forget to
+#      import or call install_chrome still get DARK MIRROR styling, the
+#      responsiveness policy, and the transparent surface.
 #
-# Both patches are idempotent + crash-proof (each call is wrapped in try).
+# Both patches are idempotent + crash-proof.
 # ──────────────────────────────────────────────────────────────────────────────
 
-NYXUS_MAX_DEFAULT_W = 700
-NYXUS_MAX_DEFAULT_H = 480
+# Generous ceiling — anything larger than this is almost certainly a typo.
+# Real intelligent defaults should be 1600×1000 or smaller; 2400×1600 leaves
+# headroom for ultra-wide monitors and explicit large layouts.
+NYXUS_MAX_DEFAULT_W = 2400
+NYXUS_MAX_DEFAULT_H = 1600
 
 _NYX_PATCHED_FLAG = "_nyxus_universal_patched"
 
@@ -1090,15 +1136,15 @@ def _nyx_install_universal_patches():
     except Exception:
         return
 
-    # ── 1. Clamp set_default_size on EVERY Gtk.Window subclass ──────────────
+    # ── 1. Sanity-cap set_default_size (NOT clamp) ──────────────────────────
+    # rev r15: honor intelligent per-app defaults; only cap absurd values.
     try:
         _orig_sds = Gtk.Window.set_default_size
         def _nyx_set_default_size(self, w, h):
             try:
-                cw = min(int(w) if w and w > 0 else NYXUS_MAX_DEFAULT_W,
-                         NYXUS_MAX_DEFAULT_W)
-                ch = min(int(h) if h and h > 0 else NYXUS_MAX_DEFAULT_H,
-                         NYXUS_MAX_DEFAULT_H)
+                # Cap only to prevent typos (e.g., 99999) opening offscreen.
+                cw = min(int(w), NYXUS_MAX_DEFAULT_W) if (w and w > 0) else -1
+                ch = min(int(h), NYXUS_MAX_DEFAULT_H) if (h and h > 0) else -1
                 return _orig_sds(self, cw, ch)
             except Exception:
                 return _orig_sds(self, w, h)

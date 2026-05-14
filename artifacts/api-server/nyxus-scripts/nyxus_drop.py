@@ -114,7 +114,7 @@ def send_text(device_id: str, text: str) -> tuple[int, str]:
 
 
 # ---------- GUI ----------
-GOLD = "#d4b87a"; INK = "#080a10"
+GOLD = "#f4ead5"; INK = "#080a10"
 CSS = f"""
 .drop-window {{ background: {INK}; }}
 .drop-header {{ color: {GOLD}; font-weight: 700; font-size: 18px;

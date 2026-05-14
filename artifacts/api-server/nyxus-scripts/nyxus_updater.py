@@ -159,7 +159,7 @@ def _terminal_run(title: str, sh_cmd: str) -> None:
 
 
 # ---------- GUI ----------
-GOLD = "#d4b87a"
+GOLD = "#f4ead5"
 INK = "#080a10"
 INK2 = "#10131c"
 

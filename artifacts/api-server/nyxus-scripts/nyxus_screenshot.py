@@ -232,6 +232,7 @@ class Picker(Adw.Application):
         self.win.set_default_size(520, 360)
         self.win.set_decorated(False)
         self.win.set_resizable(False)
+        self.win._nyxus_fixed_layout = True  # Screenshot tool HUD (compact, fixed)
         self.win.add_css_class("nyxus-shot")
         if HAS_CHROME:
             try: install_chrome(self.win, key="_screenshot")

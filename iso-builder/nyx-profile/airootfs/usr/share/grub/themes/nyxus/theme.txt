@@ -1,8 +1,13 @@
+# NYXUS · GRUB theme · rev 2026-05-14 r2
+# Canonical DARK MIRROR palette: #f4ead5 purple + #e8edf5 cyan.
+# Sharp slab edges, monospace, no rounded corners. The terminal_box_*
+# nine-patch and select_* horizontal stretch atlases are intentionally
+# 1px tall so GRUB stretches them cleanly at any resolution.
 
 title-text: ""
 title-color: "#f4ead5"
 title-font:  "Unifont Regular 16"
-message-color: "#f4ead58c"
+message-color: "#7b7390"
 message-font:  "Unifont Regular 14"
 
 desktop-image: "background.png"
@@ -12,7 +17,7 @@ terminal-font: "Unifont Regular 16"
 terminal-box:  "terminal_box_*.png"
 
 + label {
-    text     = "NYXUS · Sprint E"
+    text     = "NYXUS · DARK MIRROR"
     left     = 50%-160
     top      = 18%
     width    = 320
@@ -29,18 +34,18 @@ terminal-box:  "terminal_box_*.png"
     width    = 100%
     height   = 20
     align    = "center"
-    color    = "#f4ead58c"
+    color    = "#7b7390"
     font     = "Unifont Regular 14"
 }
 
 + boot_menu {
     left   = 15%
-    top    = 25%
+    top    = 30%
     width  = 70%
     height = 50%
 
     item_font          = "Unifont Regular 16"
-    item_color         = "#f4ead5"
+    item_color         = "#e9e5f2"
     selected_item_color = "#0a0a14"
     selected_item_pixmap_style = "select_*.png"
     item_height  = 36
@@ -59,8 +64,8 @@ terminal-box:  "terminal_box_*.png"
     height       = 12
     fg_color     = "#f4ead5"
     bg_color     = "#1a1a28"
-    border_color = "#f4ead5"
+    border_color = "#e8edf5"
     text         = "@TIMEOUT_NOTIFICATION_LONG@"
-    text_color   = "#f4ead5"
+    text_color   = "#e9e5f2"
     font         = "Unifont Regular 12"
 }

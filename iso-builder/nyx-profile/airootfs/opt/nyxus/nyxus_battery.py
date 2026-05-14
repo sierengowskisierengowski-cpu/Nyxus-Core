@@ -152,12 +152,12 @@ class BatteryApp(Adw.Application):
         css = Gtk.CssProvider()
         css.load_from_data(
             b"""
-            .nyxus-bh-card { background: rgba(10,13,20,0.85); border:1px solid rgba(58,216,255,0.18);
+            .nyxus-bh-card { background: rgba(10,13,20,0.85); border:1px solid rgba(244,234,213,0.18);
                              border-radius:12px; padding:14px; }
             .nyxus-bh-title { color:#e8edf5; font-weight:700; font-size:14px; }
-            .nyxus-bh-status { color:#3ad8ff; font-weight:600; font-size:11px; letter-spacing:0.12em;
+            .nyxus-bh-status { color:#e8edf5; font-weight:600; font-size:11px; letter-spacing:0.12em;
                                text-transform:uppercase; padding:2px 8px; border-radius:8px;
-                               background:rgba(58,216,255,0.10); }
+                               background:rgba(244,234,213,0.10); }
             .nyxus-bh-meta { color:#cfd6e2; font-size:12px; padding-top:2px; }
             .nyxus-bh-k { color:#7e8794; font-size:12px; }
             .nyxus-bh-v { color:#e8edf5; font-size:12px; font-family:monospace; }

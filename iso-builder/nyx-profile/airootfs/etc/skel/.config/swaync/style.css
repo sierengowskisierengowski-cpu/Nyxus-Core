@@ -1,76 +1,109 @@
-/* NYXUS · swaync · Sprint E Total Identity */
+/* NYXUS · swaync · DARK MIRROR theme · rev 2026-05-14 r2
+ *
+ * Canonical palette:
+ *   --bg-deep    #0a0a14   --bg-card    #050308
+ *   --accent     #f4ead5   --cyan       #e8edf5
+ *   --text-hi    #e9e5f2   --text-lo    #7b7390
+ *   --critical   #f87171   --hairline   #1a1a28
+ *
+ * Sharp slab edges (no border-radius), JetBrains Mono throughout,
+ * top-right anchor matches dunst.
+ */
 
 * {
-    font-family: "Inter", sans-serif;
-    border-radius: 3px;
+    font-family: "JetBrains Mono", monospace;
+    border-radius: 0;
     box-shadow: none;
     text-shadow: none;
 }
 
+/* ─── Notification Center panel ────────────────────────────────── */
 .control-center {
     background: rgba(10, 10, 20, 0.97);
-    border: 1px solid rgba(244, 234, 213, 0.22);
-    color: #f4ead5;
+    border: 1px solid #1a1a28;
+    color: #e9e5f2;
     padding: 14px;
     margin: 6px;
 }
-
 .control-center-list { background: transparent; }
-.notification-row { background: transparent; padding: 4px 0; }
+.notification-row     { background: transparent; padding: 4px 0; }
 
+/* ─── Notification cards ──────────────────────────────────────── */
 .notification {
-    background: rgba(10, 10, 20, 0.97);
-    border: 1px solid rgba(244, 234, 213, 0.22);
+    background: #050308;
+    border: 1px solid #1a1a28;
     margin: 6px 0;
     padding: 12px;
+    transition: border-color 140ms ease;
 }
-.notification.low { border-left: 2px solid #1a1a28; }
-.notification.normal { border-left: 2px solid #f4ead5; }
-.notification.critical { border-color: #f87171; border-left: 2px solid #f87171; }
+.notification:hover           { border-color: #f4ead5; }
+.notification.low             { border-left: 2px solid #1f1b2c; }
+.notification.normal          { border-left: 2px solid #f4ead5; }
+.notification.critical        { border-color: #f87171; border-left: 2px solid #f87171; }
 
-.summary { color: #f4ead5; font-weight: 700; font-size: 13px; letter-spacing: 1px; }
-.body { color: #f4ead5; opacity: 0.92; font-size: 12px; margin-top: 4px; }
-.time { color: rgba(244, 234, 213, 0.55); font-size: 10px; letter-spacing: 1px; }
+.summary {
+    color: #f4ead5;
+    font-weight: bold;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+.body {
+    color: #e9e5f2;
+    opacity: 0.92;
+    font-size: 12px;
+    margin-top: 4px;
+}
+.time {
+    color: #7b7390;
+    font-size: 10px;
+    letter-spacing: 1px;
+}
 
+/* ─── Close button ─────────────────────────────────────────────── */
 .close-button {
     background: transparent;
-    color: rgba(244, 234, 213, 0.55);
+    color: #7b7390;
     border: 1px solid #1a1a28;
     min-width: 22px;
     min-height: 22px;
+    transition: all 140ms ease;
 }
 .close-button:hover {
-    color: #050308;
+    color: #0a0a14;
     background: #f87171;
     border-color: #f87171;
 }
 
+/* ─── Title bar ───────────────────────────────────────────────── */
 .widget-title > label {
     color: #f4ead5;
     font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
+    font-weight: bold;
+    letter-spacing: 4px;
 }
 .widget-title > button {
     background: transparent;
-    color: rgba(244, 234, 213, 0.55);
+    color: #7b7390;
     border: 1px solid #1a1a28;
     padding: 4px 14px;
+    transition: all 140ms ease;
 }
 .widget-title > button:hover {
-    color: #050308;
+    color: #0a0a14;
     background: #f4ead5;
     border-color: #f4ead5;
 }
 
-.widget-dnd > switch { background: #1a1a28; }
-.widget-dnd > switch:checked { background: #f4ead5; }
-.widget-dnd > switch slider { background: #050308; }
+/* ─── Do Not Disturb switch ───────────────────────────────────── */
+.widget-dnd > switch          { background: #1a1a28; }
+.widget-dnd > switch:checked  { background: #f4ead5; }
+.widget-dnd > switch slider   { background: #e9e5f2; }
 
-.floating-notifications { background: transparent; }
+/* ─── Floating notification toasts ─────────────────────────────── */
+.floating-notifications        { background: transparent; }
 .floating-notifications.background .notification {
-    background: rgba(10, 10, 20, 0.97);
-    border: 1px solid rgba(244, 234, 213, 0.22);
+    background: rgba(5, 3, 8, 0.97);
+    border: 1px solid #f4ead5;
     border-left: 3px solid #f4ead5;
 }
 .floating-notifications.background .notification.critical {
@@ -78,20 +111,32 @@
     border-left: 3px solid #f87171;
 }
 
-.widget-mpris,
-.widget-volume,
-.widget-backlight {
+/* ─── MPRIS / media player widget ──────────────────────────────── */
+.widget-mpris {
     background: #050308;
     border: 1px solid #1a1a28;
-    padding: 10px 12px;
-    color: #f4ead5;
+    padding: 12px;
+    color: #e9e5f2;
 }
-.widget-mpris-title { color: #f4ead5; font-weight: 700; }
-.widget-mpris-subtitle { color: rgba(244, 234, 213, 0.55); font-size: 11px; }
+.widget-mpris-player          { padding: 4px; }
+.widget-mpris-title           { color: #f4ead5; font-weight: bold; }
+.widget-mpris-subtitle        { color: #7b7390; font-size: 11px; }
 
+/* ─── Volume / brightness sliders (if shown) ───────────────────── */
+.widget-volume, .widget-backlight {
+    background: #050308;
+    border: 1px solid #1a1a28;
+    padding: 8px 12px;
+    color: #e9e5f2;
+}
 slider trough {
     background: #1a1a28;
     min-height: 4px;
 }
-slider trough highlight { background: #f4ead5; }
-slider { background: transparent; color: #f4ead5; }
+slider trough highlight {
+    background: #e8edf5;
+}
+slider {
+    background: transparent;
+    color: #f4ead5;
+}
