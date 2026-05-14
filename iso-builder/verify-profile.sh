@@ -1855,9 +1855,13 @@ if [[ -d "$NS_SRC" ]]; then
   # hyprland
   H="$NS_SRC/hyprland.conf"
   if [[ -f "$H" ]]; then
-    grep -qE 'col\.active_border\s*=\s*rgba\(f4ead5' "$H" \
-      && ok "Sprint E src: hyprland.conf col.active_border = cream" \
-      || fail "Sprint E src: hyprland.conf col.active_border NOT cream f4ead5"
+    # Sprint K-A rev r16 pivot: active border now leads with copper
+    # #b8865a as the dominant 1st stop, cream as a softer 2nd stop.
+    # Either is acceptable as "off white/cyan/purple"; the K-A guard
+    # in §15ad+§15ae asserts copper specifically.
+    grep -qE 'col\.active_border\s*=\s*rgba\((f4ead5|b8865a)' "$H" \
+      && ok "Sprint E src: hyprland.conf col.active_border = cream-or-copper (rev r16 ok)" \
+      || fail "Sprint E src: hyprland.conf col.active_border NOT cream f4ead5 or copper b8865a"
     grep -qE 'col\.active_border\s*=\s*rgba\(ffffff' "$H" \
       && fail "Sprint E src: hyprland.conf still has white border (will overwrite cream airootfs at bake)" \
       || ok "Sprint E src: hyprland.conf free of legacy white border"
@@ -2154,8 +2158,12 @@ if [[ -f "$DRC" ]]; then
   grep -qE 'frame_color\s*=\s*"#f4ead5"' "$DRC" \
     && ok "Sprint G: dunstrc uses cream frame for normal urgency" \
     || fail "Sprint G: dunstrc normal urgency missing cream frame"
-  grep -qE 'frame_color\s*=\s*"#fff8e0"' "$DRC" \
-    && ok "Sprint G: dunstrc critical urgency uses brighter cream (no red)" \
+  # Sprint K-A rev r16 pivot: critical urgency frame moved from cream-bright
+  # #fff8e0 to copper #b8865a so it stands distinct from normal cream-framed
+  # alerts WITHOUT resorting to red. Either is acceptable as "off red"; the
+  # K-A-specific guard in §15ad asserts copper specifically.
+  grep -qE 'frame_color\s*=\s*"(#fff8e0|#b8865a)"' "$DRC" \
+    && ok "Sprint G: dunstrc critical urgency frame is off-red (cream-bright or copper)" \
     || fail "Sprint G: dunstrc critical urgency not converted off red"
   grep -qE 'frame_width\s*=\s*3' "$DRC" \
     && ok "Sprint G: dunstrc critical urgency thicker frame (visual hierarchy w/o red)" \
@@ -2528,6 +2536,95 @@ if grep -E '^BANNED_HEX=' "${0}" | grep -q 'b8865a'; then
   fail "Sprint J: copper #b8865a was added to BANNED_HEX — that's a contradiction with the rev r16 contract"
 else
   ok "Sprint J: copper #b8865a is NOT in the banned palette list (correct)"
+fi
+
+# ── §15ad Sprint K-A: copper goes live (rev r16 — 2026-05-14) ────────
+# Sprint J shipped the copper TOKEN. Sprint K-A actually USES it on
+# the 5 highest-visibility surfaces so the second accent is not just
+# a value in a config file but something the user can see when they
+# focus a window, lock the screen, get a critical alert, drag a
+# slider, or open any libadwaita app that picks up accent_blue.
+hd "§15ad Sprint K-A — copper goes live (rev r16)"
+
+# (a) Hyprland active window border now leads with copper #b8865a
+HY="${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
+if grep -Eq '^\s*col\.active_border\s*=\s*rgba\(b8865aff\)' "$HY"; then
+  ok "Sprint K-A: Hyprland active-border leads with copper #b8865a"
+else
+  fail "Sprint K-A: Hyprland active-border does NOT lead with copper"
+fi
+
+# (b) Hyprlock indicator outer ring uses copper rgba(184, 134, 90, ...)
+HL="${AIROOT}/etc/skel/.config/hypr/hyprlock.conf"
+if grep -Eq '^\s*outer_color\s*=\s*rgba\(184,\s*134,\s*90,' "$HL"; then
+  ok "Sprint K-A: Hyprlock indicator outer_color = copper"
+else
+  fail "Sprint K-A: Hyprlock indicator outer_color is NOT copper"
+fi
+
+# (c) dunst urgency_critical frame uses copper #b8865a
+DR="${AIROOT}/etc/skel/.config/dunst/dunstrc"
+if awk '/^\[urgency_critical\]/{f=1; next} /^\[/{f=0} f && /frame_color.*#b8865a/{found=1} END{exit !found}' "$DR"; then
+  ok "Sprint K-A: dunst urgency_critical frame_color = copper"
+else
+  fail "Sprint K-A: dunst urgency_critical frame_color is NOT copper"
+fi
+
+# (d) GTK accent_blue mapped to copper in NYXUS-Dark gtk-4.0
+G4="${AIROOT}/usr/share/themes/NYXUS-Dark/gtk-4.0/gtk.css"
+if grep -Eq '@define-color\s+accent_blue\s+#b8865a' "$G4" && grep -Eq '@define-color\s+nyxus_copper\s+#b8865a' "$G4"; then
+  ok "Sprint K-A: GTK NYXUS-Dark exposes accent_blue + nyxus_copper as copper"
+else
+  fail "Sprint K-A: GTK NYXUS-Dark does NOT expose copper via accent_blue/nyxus_copper"
+fi
+
+# (e) eww .dash-scale + .qs-scale highlights warm cream → copper
+for f in "$(dirname "${PROFILE}")/../artifacts/api-server/nyxus-scripts/eww/eww.scss" \
+         "${AIROOT}/etc/skel/.config/eww/eww.scss"; do
+  TAG="$(basename $(dirname $f))/eww.scss"
+  if grep -B1 -A2 '^\.dash-scale highlight' "$f" 2>/dev/null | grep -q '#b8865a'; then
+    ok "Sprint K-A: ${TAG} .dash-scale highlight warms into copper"
+  else
+    fail "Sprint K-A: ${TAG} .dash-scale highlight missing copper"
+  fi
+  if grep -B1 -A2 '^\.qs-scale highlight' "$f" 2>/dev/null | grep -q '#b8865a'; then
+    ok "Sprint K-A: ${TAG} .qs-scale highlight warms into copper"
+  else
+    fail "Sprint K-A: ${TAG} .qs-scale highlight missing copper"
+  fi
+done
+
+# ── §15ae Sprint K-A parity: artifact source ↔ airootfs (rev r16) ────
+# Architect-flagged in K-A review: the 5 K-A landings live in BOTH
+# `artifacts/api-server/nyxus-scripts/*` (source-of-truth) and the
+# corresponding `airootfs/etc/skel/.config/*` paths. If they drift,
+# a future build sync could silently regress copper. Mirror the
+# existing eww parity guard for the 3 hypr/dunst surfaces.
+hd "§15ae Sprint K-A parity — artifact ↔ airootfs (rev r16)"
+
+ART_HY="$(dirname "${PROFILE}")/../artifacts/api-server/nyxus-scripts/hyprland.conf"
+ART_HL="$(dirname "${PROFILE}")/../artifacts/api-server/nyxus-scripts/hyprlock.conf"
+ART_DR="$(dirname "${PROFILE}")/../artifacts/api-server/nyxus-scripts/nyxus-dunstrc"
+
+# (a) hyprland.conf active border copper parity
+if grep -Eq '^\s*col\.active_border\s*=\s*rgba\(b8865aff\)' "$ART_HY"; then
+  ok "Sprint K-A parity: artifact hyprland.conf active-border = copper"
+else
+  fail "Sprint K-A parity: artifact hyprland.conf active-border drifted off copper"
+fi
+
+# (b) hyprlock.conf outer copper parity
+if grep -Eq '^\s*outer_color\s*=\s*rgba\(184,\s*134,\s*90,' "$ART_HL"; then
+  ok "Sprint K-A parity: artifact hyprlock.conf outer_color = copper"
+else
+  fail "Sprint K-A parity: artifact hyprlock.conf outer_color drifted off copper"
+fi
+
+# (c) nyxus-dunstrc critical frame copper parity
+if awk '/^\[urgency_critical\]/{f=1; next} /^\[/{f=0} f && /frame_color.*#b8865a/{found=1} END{exit !found}' "$ART_DR"; then
+  ok "Sprint K-A parity: artifact nyxus-dunstrc critical frame = copper"
+else
+  fail "Sprint K-A parity: artifact nyxus-dunstrc critical frame drifted off copper"
 fi
 
 # ── final ─────────────────────────────────────────────────────────────

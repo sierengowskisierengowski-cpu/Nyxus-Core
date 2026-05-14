@@ -500,10 +500,13 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   background: rgba(17, 21, 31, 0.85);
   border: 1px solid rgba(244, 234, 213, 0.18);
 }
+/* Sprint K-A rev r16: slider fill warms from cream-deep into copper as
+   the value rises — a literal "second accent activates as you progress"
+   moment. Cream still owns the low end; copper takes over the high end. */
 .dash-scale highlight {
   border-radius: 3px;
-  background: linear-gradient(90deg, #c4b491, #f4ead5);
-  box-shadow: 0 0 12px rgba(244, 234, 213, 0.55);
+  background: linear-gradient(90deg, #c4b491, #b8865a);
+  box-shadow: 0 0 12px rgba(184, 134, 90, 0.55);
 }
 .dash-scale slider {
   background: #ffffff;
@@ -838,8 +841,10 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   border-radius: 3px;
   min-height: 6px;
 }
+/* Sprint K-A rev r16: Quick-Settings slider fill shifts cream → copper
+   as the value rises (matches dashboard slider warming effect). */
 .qs-scale highlight {
-  background: #f4ead5;
+  background: linear-gradient(90deg, #c4b491, #b8865a);
   border-radius: 3px;
 }
 .qs-scale slider {
