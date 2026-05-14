@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# nyxus-sound-system-default — root-only helper.
+#
+# Sets NYXUS as the system-wide GNOME sound theme by writing a fixed
+# dconf snippet under /etc/dconf/db/local.d/ and refreshing the dconf
+# database. Hard-coded body, no arguments accepted (rejected even if
+# passed) — the polkit policy authorizes THIS exact path only.
+#
+# Invoked exclusively via:
+#   pkexec /usr/local/libexec/nyxus-sound-system-default
+#
+# The user-facing wrapper (/usr/local/bin/nyxus-sound) calls into us;
+# never invoke directly outside that path.
+set -euo pipefail
+
+if (( $# > 0 )); then
+  echo "nyxus-sound-system-default: this helper takes no arguments" >&2
+  exit 2
+fi
+
+DB_DIR="/etc/dconf/db/local.d"
+PROFILE="/etc/dconf/profile/user"
+SNIPPET="${DB_DIR}/00-nyxus-sound"
+
+install -d -m 0755 "${DB_DIR}" /etc/dconf/profile
+
+cat > "${SNIPPET}" <<'EOF'
+[org/gnome/desktop/sound]
+theme-name='nyxus'
+event-sounds=true
+EOF
+chmod 0644 "${SNIPPET}"
+
+if ! grep -q '^system-db:local' "${PROFILE}" 2>/dev/null; then
+  printf 'user-db:user\nsystem-db:local\n' > "${PROFILE}"
+  chmod 0644 "${PROFILE}"
+fi
+
+dconf update
+echo "NYXUS sound theme set as system-wide default"

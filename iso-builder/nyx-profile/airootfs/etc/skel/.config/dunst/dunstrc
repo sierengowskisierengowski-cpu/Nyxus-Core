@@ -1,44 +1,48 @@
-# NYXUS dunst configuration
-# Matches the system-wide graffiti chrome: black frosted backgrounds,
-# neon-pink frame, hand-written font. Drop into ~/.config/dunst/dunstrc
-# and run: pkill -USR1 dunst (or systemctl --user restart dunst).
+# NYXUS · dunst configuration · rev 2026-05-14 r2
+#
+# Canonical DARK MIRROR palette: #a06bff purple + #3ad8ff cyan +
+# #f87171 critical. JetBrains Mono throughout — matches every other
+# NYXUS surface. Sharp slab edges (no border radius), top-right
+# anchor, 6 simultaneous notifications, urgency-aware timeouts.
+#
+# Reload: pkill -USR1 dunst   |   systemctl --user restart dunst
 
 [global]
     monitor = 0
     follow = mouse
 
-    width = (200, 460)
-    height = 220
+    width = (320, 460)
+    height = (60, 220)
     origin = top-right
     offset = 18x80
     scale = 0
     notification_limit = 6
 
     progress_bar = true
-    progress_bar_height = 12
-    progress_bar_frame_width = 2
-    progress_bar_min_width = 200
+    progress_bar_height = 10
+    progress_bar_frame_width = 1
+    progress_bar_min_width = 240
     progress_bar_max_width = 420
-    progress_bar_corner_radius = 4
+    progress_bar_corner_radius = 0
 
     indicate_hidden = yes
-    transparency = 12
-    separator_height = 3
+    transparency = 4
+    separator_height = 2
     padding = 14
     horizontal_padding = 16
-    text_icon_padding = 10
-    frame_width = 3
-    frame_color = "#e8edf5"
+    text_icon_padding = 12
+    frame_width = 1
+    frame_color = "#1f1b2c"
     gap_size = 6
     separator_color = frame
     sort = yes
 
-    font = Caveat 14
-    line_height = 2
+    font = JetBrains Mono 11
+    line_height = 4
     markup = full
     format = "<b>%a · %s</b>\n%b"
     alignment = left
-    vertical_alignment = center
+    vertical_alignment = top
     show_age_threshold = 60
     ellipsize = middle
     ignore_newline = no
@@ -48,8 +52,8 @@
 
     icon_position = left
     min_icon_size = 32
-    max_icon_size = 96
-    icon_corner_radius = 4
+    max_icon_size = 64
+    icon_corner_radius = 0
     icon_path = /usr/share/icons/Adwaita/32x32/status/:/usr/share/icons/Adwaita/32x32/devices/:/usr/share/icons/hicolor/32x32/apps/
 
     sticky_history = yes
@@ -60,7 +64,7 @@
     always_run_script = true
     title = NYXUS Notifications
     class = Dunst
-    corner_radius = 6
+    corner_radius = 0
     ignore_dbusclose = false
 
     force_xwayland = false
@@ -73,40 +77,55 @@
     per_monitor_dpi = false
 
 [urgency_low]
-    background = "#0a0a12"
-    foreground = "#c8ccd6"
-    frame_color = "#c8ccd6"
-    timeout = 6
-    default_icon = dialog-information
+    background    = "#0a0a14"
+    foreground    = "#7b7390"
+    frame_color   = "#1f1b2c"
+    timeout       = 5
+    default_icon  = dialog-information
 
 [urgency_normal]
-    background = "#0a0a12"
-    foreground = "#ffffff"
-    frame_color = "#e8edf5"
-    timeout = 8
+    background    = "#0a0a14"
+    foreground    = "#e9e5f2"
+    frame_color   = "#a06bff"
+    timeout       = 8
     override_pause_level = 30
-    default_icon = dialog-information
+    default_icon  = dialog-information
 
 [urgency_critical]
-    background = "#0a0a12"
-    foreground = "#e8edf5"
-    frame_color = "#ff3030"
-    timeout = 0
+    background    = "#0a0a14"
+    foreground    = "#e9e5f2"
+    frame_color   = "#f87171"
+    timeout       = 0
     override_pause_level = 60
-    default_icon = dialog-warning
+    default_icon  = dialog-warning
 
-# Per-app overrides — match NYXUS app classes
+# ─── Per-app overrides — match NYXUS app classes ─────────────────────
 [nyxus_terminal]
-    appname = nyxus-terminal
-    foreground = "#c8ccd6"
-    frame_color = "#c8ccd6"
+    appname     = nyxus-terminal
+    foreground  = "#e9e5f2"
+    frame_color = "#3ad8ff"
 
 [nyxus_settings]
-    appname = nyxus-settings
-    foreground = "#e8edf5"
-    frame_color = "#e8edf5"
+    appname     = nyxus-settings
+    foreground  = "#e9e5f2"
+    frame_color = "#a06bff"
 
 [nyxus_control]
-    appname = nyxus-control
-    foreground = "#c8ccd6"
-    frame_color = "#c8ccd6"
+    appname     = nyxus-control
+    foreground  = "#e9e5f2"
+    frame_color = "#a06bff"
+
+[nyxus_doctor]
+    appname     = nyxus-doctor
+    foreground  = "#e9e5f2"
+    frame_color = "#3ad8ff"
+
+[nyxus_updater]
+    appname     = nyxus-updater
+    foreground  = "#e9e5f2"
+    frame_color = "#a06bff"
+
+[nyxus_sound]
+    appname     = nyxus-sound
+    foreground  = "#e9e5f2"
+    frame_color = "#3ad8ff"

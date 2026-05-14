@@ -1,0 +1,247 @@
+#!/usr/bin/env bash
+# nyxus-sound — manage and trigger the NYXUS sound theme.
+#
+# All reads are local, no privileges required.
+# `set-system-default` writes /etc/dconf/db/local.d/00-nyxus-sound and
+# runs `dconf update`, which IS privileged → wrapped in pkexec
+# (policy: com.nyxus.sound.policy).
+#
+# Per-user settings are written to gsettings (no pkexec).
+#
+# Usage:
+#   nyxus-sound status                   Print theme + per-event state
+#   nyxus-sound list                     List installed sound themes
+#   nyxus-sound list-events              List the 15 NYXUS events
+#   nyxus-sound play EVENT               Play one event (canberra-gtk-play)
+#   nyxus-sound test                     Play service-login as a smoke test
+#   nyxus-sound preview-all              Play every event with 600ms gap
+#   nyxus-sound set-theme NAME           Set per-user sound theme (gsettings)
+#   nyxus-sound set-volume 0..100        Per-user event volume (gsettings)
+#   nyxus-sound enable-event NAME        Re-enable a single event
+#   nyxus-sound disable-event NAME       Disable a single event (rename to .disabled)
+#   nyxus-sound mute-events              Disable every NYXUS event at once
+#   nyxus-sound unmute-events            Re-enable every NYXUS event
+#   nyxus-sound set-system-default       (pkexec) Make NYXUS the system-wide default
+#   nyxus-sound reset                    Restore defaults (theme=NYXUS, vol=80, all enabled)
+#
+# Exit: 0 ok, 2 bad args, 3 missing dep, 4 write denied.
+set -euo pipefail
+
+THEME_ROOT="/usr/share/sounds"
+NYXUS_THEME_DIR="${THEME_ROOT}/nyxus"
+EVENTS_DIR="${NYXUS_THEME_DIR}/stereo"
+USER_OVERRIDE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/sounds/nyxus/stereo"
+GS_SCHEMA="org.gnome.desktop.sound"
+VOL_FILE="${HOME}/.config/nyxus/sound-volume"
+SYSDEF_HELPER="/usr/local/libexec/nyxus-sound-system-default"
+
+require() {
+  command -v "$1" >/dev/null 2>&1 \
+    || { echo "missing: $1" >&2; exit 3; }
+}
+
+# Read 0..100 volume from $VOL_FILE (default 80) and emit a paplay-style
+# 0..65536 integer. paplay treats 65536 as 100% (no gain change).
+read_pa_volume() {
+  local pct=80
+  if [[ -r "${VOL_FILE}" ]]; then
+    local raw
+    raw=$(<"${VOL_FILE}")
+    if [[ "${raw}" =~ ^[0-9]+$ ]] && (( raw >= 0 && raw <= 100 )); then
+      pct="${raw}"
+    fi
+  fi
+  echo $(( pct * 65536 / 100 ))
+}
+
+# Resolve which file to play for an event:
+#   1. user override .disabled  → silent (return non-zero)
+#   2. user override .wav       → play that
+#   3. system .wav              → play that
+#   4. else                     → fall back to canberra-gtk-play (theme-aware)
+resolve_event_file() {
+  local name="$1"
+  if [[ -f "${USER_OVERRIDE_DIR}/${name}.disabled" ]]; then
+    return 1
+  fi
+  if [[ -f "${USER_OVERRIDE_DIR}/${name}.wav" ]]; then
+    echo "${USER_OVERRIDE_DIR}/${name}.wav"; return 0
+  fi
+  if [[ -f "${EVENTS_DIR}/${name}.wav" ]]; then
+    echo "${EVENTS_DIR}/${name}.wav"; return 0
+  fi
+  return 2
+}
+
+# Real volume-aware player. Uses paplay (PipeWire-pulse compat) so the
+# user's slider value genuinely scales playback gain. Falls back to
+# canberra-gtk-play if paplay is unavailable, in which case volume
+# applies via the user's per-application stream volume.
+play_event() {
+  local name="$1" file vol
+  if file=$(resolve_event_file "${name}"); then
+    if command -v paplay >/dev/null 2>&1; then
+      vol=$(read_pa_volume)
+      paplay --volume="${vol}" --client-name="nyxus-sound" \
+             --stream-name="${name}" "${file}"
+      return $?
+    fi
+  fi
+  # Theme-aware fallback (no manual volume control)
+  if command -v canberra-gtk-play >/dev/null 2>&1; then
+    canberra-gtk-play -i "${name}" -V "NYXUS event: ${name}"
+    return $?
+  fi
+  echo "no audio backend available (paplay, canberra-gtk-play)" >&2
+  return 3
+}
+
+# Per-event enable state lives as files (symlinks/renames) on disk in
+# the user override dir, mirroring the upstream files. This keeps the
+# state machine boring and survives gsettings being unavailable.
+list_events() {
+  find "${EVENTS_DIR}" -maxdepth 1 -type f -name '*.wav' \
+    -printf '%f\n' 2>/dev/null | sed 's/\.wav$//' | sort
+}
+
+cmd="${1:-status}"
+shift || true
+
+case "${cmd}" in
+  status)
+    require python3
+    python3 - "${EVENTS_DIR}" "${USER_OVERRIDE_DIR}" "${GS_SCHEMA}" <<'PY'
+import json, os, subprocess, sys
+events_dir, user_dir, schema = sys.argv[1], sys.argv[2], sys.argv[3]
+def gs(key, default=""):
+    try:
+        r = subprocess.run(["gsettings", "get", schema, key],
+                           capture_output=True, text=True, timeout=2)
+        if r.returncode == 0:
+            return r.stdout.strip().strip("'")
+    except Exception:
+        pass
+    return default
+events = []
+if os.path.isdir(events_dir):
+    for fn in sorted(os.listdir(events_dir)):
+        if fn.endswith(".wav") or fn.endswith(".disabled"):
+            name = fn.rsplit(".", 1)[0]
+            disabled_user = os.path.exists(
+                os.path.join(user_dir, name + ".disabled"))
+            events.append({"event": name, "disabled": disabled_user})
+print(json.dumps({
+    "events_dir":    events_dir,
+    "user_dir":      user_dir,
+    "current_theme": gs("theme-name", "(unset)"),
+    "event_volume":  gs("event-sounds", "true"),
+    "events":        events,
+}, indent=2))
+PY
+    ;;
+  list)
+    find "${THEME_ROOT}" -maxdepth 2 -name index.theme \
+      -printf '%h\n' 2>/dev/null | sed "s,^${THEME_ROOT}/,," | sort
+    ;;
+  list-events)
+    list_events
+    ;;
+  play)
+    name="${1:?usage: play EVENT}"
+    play_event "${name}"
+    ;;
+  test)
+    play_event "service-login"
+    ;;
+  preview-all)
+    while read -r evt; do
+      [[ -n "${evt}" ]] || continue
+      play_event "${evt}" || true
+      sleep 0.6
+    done < <(list_events)
+    ;;
+  set-theme)
+    name="${1:?usage: set-theme NAME}"
+    [[ -d "${THEME_ROOT}/${name}" ]] \
+      || { echo "no such theme: ${name}" >&2; exit 2; }
+    require gsettings
+    gsettings set "${GS_SCHEMA}" theme-name "${name}"
+    echo "per-user sound theme → ${name}"
+    ;;
+  set-volume)
+    pct="${1:?usage: set-volume 0..100}"
+    [[ "${pct}" =~ ^[0-9]+$ ]] && (( pct >= 0 && pct <= 100 )) \
+      || { echo "volume must be 0..100" >&2; exit 2; }
+    require gsettings
+    # 0 → mute event sounds entirely, otherwise enable + leave volume to
+    # the audio server (gsettings doesn't expose a per-event multiplier
+    # in the legacy schema; we honour the boolean here).
+    if (( pct == 0 )); then
+      gsettings set "${GS_SCHEMA}" event-sounds false
+    else
+      gsettings set "${GS_SCHEMA}" event-sounds true
+    fi
+    # Also store the numeric value in our own dconf path for the
+    # SoundsPage to display.
+    gsettings set org.gnome.desktop.sound input-feedback-sounds true 2>/dev/null || true
+    mkdir -p "${HOME}/.config/nyxus"
+    echo "${pct}" > "${HOME}/.config/nyxus/sound-volume"
+    echo "event volume → ${pct}%"
+    ;;
+  enable-event)
+    name="${1:?usage: enable-event NAME}"
+    mkdir -p "${USER_OVERRIDE_DIR}"
+    rm -f -- "${USER_OVERRIDE_DIR}/${name}.disabled"
+    echo "enabled: ${name}"
+    ;;
+  disable-event)
+    name="${1:?usage: disable-event NAME}"
+    [[ -f "${EVENTS_DIR}/${name}.wav" ]] \
+      || { echo "no such event: ${name}" >&2; exit 2; }
+    mkdir -p "${USER_OVERRIDE_DIR}"
+    # An empty .disabled file in the user override path takes priority
+    # over the system .wav per the freedesktop sound-theme spec.
+    : > "${USER_OVERRIDE_DIR}/${name}.disabled"
+    echo "disabled: ${name}"
+    ;;
+  mute-events)
+    mkdir -p "${USER_OVERRIDE_DIR}"
+    while read -r evt; do
+      [[ -n "${evt}" ]] || continue
+      : > "${USER_OVERRIDE_DIR}/${evt}.disabled"
+    done < <(list_events)
+    echo "all NYXUS events muted (per-user override)"
+    ;;
+  unmute-events)
+    if [[ -d "${USER_OVERRIDE_DIR}" ]]; then
+      find "${USER_OVERRIDE_DIR}" -maxdepth 1 -name '*.disabled' -delete
+    fi
+    echo "all NYXUS events unmuted"
+    ;;
+  set-system-default)
+    [[ -x "${SYSDEF_HELPER}" ]] \
+      || { echo "missing: ${SYSDEF_HELPER}" >&2; exit 3; }
+    # polkit policy com.nyxus.sound.set-system-default targets exactly
+    # this binary path — no shell, no arguments, no env injection.
+    pkexec "${SYSDEF_HELPER}" || exit 4
+    ;;
+  reset)
+    require gsettings
+    gsettings set "${GS_SCHEMA}" theme-name "nyxus"
+    gsettings set "${GS_SCHEMA}" event-sounds true
+    if [[ -d "${USER_OVERRIDE_DIR}" ]]; then
+      find "${USER_OVERRIDE_DIR}" -maxdepth 1 -name '*.disabled' -delete
+    fi
+    mkdir -p "${HOME}/.config/nyxus"
+    echo "80" > "${HOME}/.config/nyxus/sound-volume"
+    echo "sound settings reset to NYXUS defaults"
+    ;;
+  -h|--help|help)
+    sed -n '2,/^set -euo/p' "$0" | sed 's/^# \{0,1\}//;/^set -euo/d'
+    ;;
+  *)
+    echo "unknown command: ${cmd}" >&2
+    echo "try: nyxus-sound --help" >&2
+    exit 2
+    ;;
+esac
