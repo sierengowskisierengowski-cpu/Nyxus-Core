@@ -1,87 +1,214 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NYXUS · rofi launcher (Super+D, Super+Tab) · rev 2026-05-14 r15-spec-locked
+   Triple-black frosted glass · CREAM #f4ead5 accent · 3px corners
+   JetBrains Mono Nerd Font throughout
+   © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 * {
-    bg-deep:   #080808;
-    bg-card:   #080808;
-    text-hi:   #C8C0C0;
-    text-lo:   rgba(200, 192, 192, 0.62);
-    hairline:  #7B5EA7;
-    accent:    #C4607A;
-    glass-bg:  rgba(8, 8, 8, 0.97);
-    glass-line: rgba(123, 94, 167, 0.42);
+    /* triple-black glass */
+    nx-bg-deep:    rgba(10, 10, 20, 0.97);
+    nx-bg-card:    rgba(5, 3, 8, 0.92);
+    nx-bg-row:     rgba(20, 20, 32, 0.85);
+
+    /* cream — the brand accent */
+    nx-cream:      #f4ead5;
+    nx-cream-18:   rgba(244, 234, 213, 0.18);
+    nx-cream-32:   rgba(244, 234, 213, 0.32);
+    nx-cream-55:   rgba(244, 234, 213, 0.55);
+
+    /* hairlines */
+    nx-line:       #1a1a28;
+    nx-line-soft:  rgba(244, 234, 213, 0.10);
+
+    nx-critical:   #f87171;
 
     background-color: transparent;
-    text-color: @text-hi;
+    text-color:       @nx-cream;
+    spacing: 0; padding: 0; margin: 0;
 }
 
+/* ── Window — frosted glass card ─────────────────────────────────── */
 window {
-    width: 560px;
-    background-color: @glass-bg;
-    border: 1px;
-    border-color: @glass-line;
-    border-radius: 3px;
-    padding: 0;
-    location: center;
-    anchor: center;
+    width:            560px;
+    background-color: @nx-bg-deep;
+    border:           1px;
+    border-color:     @nx-line-soft;
+    border-radius:    3px;
+    padding:          0;
+    location:         center;
+    anchor:           center;
+    fullscreen:       false;
 }
 
 mainbox {
     background-color: transparent;
-    children: [ inputbar, listview ];
+    border:           0;
+    padding:          0;
+    spacing:          0;
+    children:         [ inputbar, message, mode-switcher, listview ];
 }
 
+/* ── Input bar — cream Eclipse prompt + hairline divider ─────────── */
 inputbar {
     background-color: transparent;
-    border: 0 0 1px 0;
-    border-color: @hairline;
-    padding: 12px 14px;
-    spacing: 10px;
-    children: [ prompt, entry ];
+    border:           0 0 1px 0;
+    border-color:     @nx-line;
+    border-radius:    3px 3px 0 0;
+    padding:          16px 20px;
+    spacing:          12px;
+    children:         [ prompt, entry ];
 }
 
 prompt {
-    text-color: @accent;
-    font: "JetBrains Mono Nerd Font Bold 12";
+    background-color: transparent;
+    text-color:       @nx-cream;
+    font:             "JetBrainsMono Nerd Font Bold 13";
+    padding:          0 8px 0 0;
+    vertical-align:   0.5;
+    /* Eclipse mark glyph (◐) renders via Nerd Font */
+    str:              "◐";
 }
 
 entry {
-    text-color: @text-hi;
-    placeholder: "type to search...";
-    placeholder-color: @text-lo;
-    font: "JetBrains Mono Nerd Font 12";
+    background-color: transparent;
+    text-color:       @nx-cream;
+    placeholder:      "search…";
+    placeholder-color: @nx-cream-55;
+    font:             "JetBrainsMono Nerd Font 12";
+    cursor:           text;
+    vertical-align:   0.5;
 }
 
+/* ── Mode switcher — cream-outline pills ─────────────────────────── */
+mode-switcher {
+    background-color: transparent;
+    border:           0 0 1px 0;
+    border-color:     @nx-line;
+    padding:          8px 14px;
+    spacing:          6px;
+}
+
+button {
+    background-color: transparent;
+    text-color:       @nx-cream-55;
+    border:           1px;
+    border-color:     @nx-cream-18;
+    border-radius:    3px;
+    padding:          5px 14px;
+    font:             "JetBrainsMono Nerd Font Bold 10";
+    cursor:           pointer;
+}
+
+button selected {
+    background-color: @nx-cream-18;
+    text-color:       @nx-cream;
+    border:           1px;
+    border-color:     @nx-cream;
+    border-radius:    3px;
+}
+
+/* ── List ─────────────────────────────────────────────────────────── */
 listview {
     background-color: transparent;
-    padding: 6px;
-    spacing: 2px;
-    lines: 10;
-    columns: 1;
-    cycle: true;
-    dynamic: true;
-    scrollbar: false;
+    padding:          6px 0;
+    spacing:          1px;
+    lines:            10;
+    columns:          1;
+    cycle:            true;
+    dynamic:          true;
+    scrollbar:        false;
 }
 
 element {
     background-color: transparent;
-    text-color: @text-hi;
-    padding: 9px 12px;
-    spacing: 10px;
-    border-radius: 3px;
+    text-color:       @nx-cream-55;
+    border:           0;
+    padding:          10px 20px;
+    spacing:          12px;
+    border-radius:    3px;
+    cursor:           pointer;
+    orientation:      horizontal;
 }
 
-element selected.normal,
-element selected.alternate.normal,
-element selected.active,
+element.normal {
+    background-color: transparent;
+    text-color:       @nx-cream-55;
+}
+
+element.alternate.normal {
+    background-color: rgba(244, 234, 213, 0.025);
+    text-color:       @nx-cream-55;
+}
+
+element.urgent {
+    background-color: rgba(248, 113, 113, 0.08);
+    text-color:       @nx-critical;
+}
+
+element.active {
+    background-color: rgba(244, 234, 213, 0.04);
+    text-color:       @nx-cream;
+}
+
+/* ── Selected — cream stripe + halo ──────────────────────────────── */
+element selected.normal {
+    background-color: @nx-cream-18;
+    text-color:       @nx-cream;
+    border:           0 0 0 3px;
+    border-color:     @nx-cream;
+    border-radius:    3px;
+}
+
+element selected.alternate.normal {
+    background-color: @nx-cream-18;
+    text-color:       @nx-cream;
+    border:           0 0 0 3px;
+    border-color:     @nx-cream;
+    border-radius:    3px;
+}
+
 element selected.urgent {
-    background-color: @accent;
-    text-color: #080808;
-    border-radius: 3px;
+    background-color: rgba(248, 113, 113, 0.20);
+    text-color:       @nx-critical;
+    border:           0 0 0 3px;
+    border-color:     @nx-critical;
+    border-radius:    3px;
+}
+
+element selected.active {
+    background-color: @nx-cream-18;
+    text-color:       @nx-cream;
+    border:           0 0 0 3px;
+    border-color:     @nx-cream;
+    border-radius:    3px;
+}
+
+/* ── Icon + text ─────────────────────────────────────────────────── */
+element-icon {
+    background-color: transparent;
+    size:             24px;
+    vertical-align:   0.5;
 }
 
 element-text {
-    text-color: inherit;
-    font: "JetBrains Mono Nerd Font 11";
+    background-color: transparent;
+    text-color:       inherit;
+    vertical-align:   0.5;
+    font:             "JetBrainsMono Nerd Font 11";
+    highlight:        bold @nx-cream;
 }
 
-element-icon {
-    size: 22px;
+/* ── Messages ────────────────────────────────────────────────────── */
+message {
+    background-color: transparent;
+    border:           0 0 1px 0;
+    border-color:     @nx-line;
+    padding:          10px 20px;
+}
+
+textbox {
+    background-color: transparent;
+    text-color:       @nx-cream-55;
+    font:             "JetBrainsMono Nerd Font 10";
 }

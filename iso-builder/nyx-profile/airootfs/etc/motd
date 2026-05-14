@@ -1,8 +1,20 @@
 
-  NYXUS · DARK MIRROR
-  --------------------------------
-  - Run `nyxus`     for the CLI dispatcher.
-  - Run `nyxus-doctor`  to diagnose system health.
-  - Logs:  ~/.cache/nyxus/<app>.log
-  - Docs:  /usr/share/doc/nyxus/
+   ███╗   ██╗██╗   ██╗██╗  ██╗██╗   ██╗███████╗
+   ████╗  ██║╚██╗ ██╔╝╚██╗██╔╝██║   ██║██╔════╝
+   ██╔██╗ ██║ ╚████╔╝  ╚███╔╝ ██║   ██║███████╗
+   ██║╚██╗██║  ╚██╔╝   ██╔██╗ ██║   ██║╚════██║
+   ██║ ╚████║   ██║   ██╔╝ ██╗╚██████╔╝███████║
+   ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+                  ◐  Welcome to the Darkside  ◐
+
+   ─────────────────────────────────────────────
+     nyxus            · CLI dispatcher
+     nyxus-doctor     · diagnose system health
+     nyxus-settings   · open Settings hub
+     nyxus-store      · browse the NYXUS Store
+   ─────────────────────────────────────────────
+     logs    ~/.cache/nyxus/<app>.log
+     docs    /usr/share/doc/nyxus/
+     help    nyxus help <command>
+   ─────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 # NYXUS · GRUB theme · rev 2026-05-14 r2
-# Canonical DARK MIRROR palette: #f4ead5 purple + #e8edf5 cyan.
+# Canonical r15 palette: #f4ead5 cream accent + #e8edf5 off-white.
 # Sharp slab edges, monospace, no rounded corners. The terminal_box_*
 # nine-patch and select_* horizontal stretch atlases are intentionally
 # 1px tall so GRUB stretches them cleanly at any resolution.
@@ -17,7 +17,7 @@ terminal-font: "Unifont Regular 16"
 terminal-box:  "terminal_box_*.png"
 
 + label {
-    text     = "NYXUS · DARK MIRROR"
+    text     = "NYXUS"
     left     = 50%-160
     top      = 18%
     width    = 320
