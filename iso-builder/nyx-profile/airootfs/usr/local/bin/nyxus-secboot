@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  /usr/local/bin/nyxus-secboot                             rev 2026-05-14 r1
+#
+#  Secure Boot + TPM2 status surface used by SecBootPage.
+#  - Reads sbctl status (or falls back to mokutil/efivars)
+#  - Reads TPM2 PCR0/PCR7 + chip presence via tpm2-tools
+#  - Provides --enroll for sbctl create-keys + enroll-keys (pkexec)
+#
+#  Usage:
+#    nyxus-secboot                Pretty summary (default)
+#    nyxus-secboot --json         Machine-readable
+#    nyxus-secboot --enroll       sbctl create-keys + enroll-keys (admin)
+#    nyxus-secboot --sign-all     sbctl sign-all (re-sign installed)
+#    nyxus-secboot --tpm-test     tpm2_pcrread sha256:0,7
+#    nyxus-secboot --help
+#
+#  Logs to ~/.cache/nyxus/secboot.log
+#
+#  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -euo pipefail
+
+LOG_DIR="${HOME}/.cache/nyxus"
+LOG="${LOG_DIR}/secboot.log"
+mkdir -p "${LOG_DIR}"; touch "${LOG}"
+ts()  { date '+%Y-%m-%dT%H:%M:%S%z'; }
+log() { printf '[%s] %s\n' "$(ts)" "$*" >>"${LOG}"; }
+die() { log "FATAL: $*"; printf 'nyxus-secboot: %s\n' "$*" >&2; exit 1; }
+
+sb_state() {
+  # Each field is parsed from its OWN labelled line so we never confuse
+  # e.g. "Setup Mode: Enabled" with "Secure Boot: Enabled". Architect
+  # 2026-05-14.
+  local sb="unknown" setup="unknown" enrolled="unknown"
+  if command -v sbctl >/dev/null; then
+    local out; out="$(sbctl status 2>/dev/null || true)"
+    # sbctl prints rows as "Label: value". Use anchored regex per row.
+    local sb_row setup_row inst_row
+    sb_row="$(awk -F: '/^[[:space:]]*Secure[[:space:]]+Boot[[:space:]]*:/ {sub(/^[^:]+:[[:space:]]*/,""); print; exit}' <<<"$out")"
+    setup_row="$(awk -F: '/^[[:space:]]*Setup[[:space:]]+Mode[[:space:]]*:/ {sub(/^[^:]+:[[:space:]]*/,""); print; exit}' <<<"$out")"
+    inst_row="$(awk -F: '/^[[:space:]]*Installed[[:space:]]*:/ {sub(/^[^:]+:[[:space:]]*/,""); print; exit}' <<<"$out")"
+    case "${sb_row,,}" in
+      *enabled*|*'✓'*|*true*)  sb="enabled" ;;
+      *disabled*|*'✗'*|*false*) sb="disabled" ;;
+    esac
+    case "${setup_row,,}" in
+      *enabled*|*'✓'*|*true*)  setup="yes" ;;
+      *disabled*|*'✗'*|*false*|"") setup="no" ;;
+    esac
+    case "${inst_row,,}" in
+      *'✓'*|*installed*|*true*) enrolled="yes" ;;
+      *'✗'*|*'not installed'*|*false*|"") enrolled="no" ;;
+    esac
+  fi
+  # Fallback: efivars SecureBoot byte (last byte of the 5-byte var).
+  if [[ "${sb}" == "unknown" ]]; then
+    local efivar
+    efivar="$(ls /sys/firmware/efi/efivars/SecureBoot-* 2>/dev/null | head -1)"
+    if [[ -n "${efivar}" ]]; then
+      local last
+      last="$(od -An -t u1 "${efivar}" 2>/dev/null | tr -s ' \n' '\n' \
+              | grep -E '^[0-9]+$' | tail -1)"
+      [[ "${last}" == "1" ]] && sb="enabled" || sb="disabled"
+    fi
+  fi
+  printf '%s|%s|%s' "${sb}" "${setup}" "${enrolled}"
+}
+
+tpm_state() {
+  local present="no" pcr0="-" pcr7="-"
+  if [[ -e /dev/tpmrm0 || -e /dev/tpm0 ]]; then
+    present="yes"
+  fi
+  if [[ "${present}" == "yes" ]] && command -v tpm2_pcrread >/dev/null; then
+    local out
+    out="$(tpm2_pcrread sha256:0,7 2>/dev/null || true)"
+    pcr0="$(awk '/^[[:space:]]*0[[:space:]]*:/ {print $3}' <<<"$out")"
+    pcr7="$(awk '/^[[:space:]]*7[[:space:]]*:/ {print $3}' <<<"$out")"
+    pcr0="${pcr0:-?}"; pcr7="${pcr7:-?}"
+  fi
+  printf '%s|%s|%s' "${present}" "${pcr0}" "${pcr7}"
+}
+
+cmd_status() {
+  IFS='|' read -r sb setup enrolled <<<"$(sb_state)"
+  IFS='|' read -r tpm pcr0 pcr7 <<<"$(tpm_state)"
+  printf 'Secure Boot:    %s\n' "${sb}"
+  printf 'Setup Mode:     %s\n' "${setup}"
+  printf 'sbctl enrolled: %s\n' "${enrolled}"
+  printf 'TPM 2.0:        %s\n' "${tpm}"
+  printf 'PCR0 (sha256):  %s\n' "${pcr0}"
+  printf 'PCR7 (sha256):  %s\n' "${pcr7}"
+}
+
+cmd_json() {
+  IFS='|' read -r sb setup enrolled <<<"$(sb_state)"
+  IFS='|' read -r tpm pcr0 pcr7 <<<"$(tpm_state)"
+  python3 -c '
+import json, sys
+print(json.dumps({"secure_boot": sys.argv[1], "setup_mode": sys.argv[2],
+                  "enrolled": sys.argv[3], "tpm_present": sys.argv[4],
+                  "pcr0": sys.argv[5], "pcr7": sys.argv[6]}))
+' "${sb}" "${setup}" "${enrolled}" "${tpm}" "${pcr0}" "${pcr7}"
+}
+
+cmd_enroll() {
+  command -v sbctl >/dev/null || die "sbctl not installed"
+  pkexec sh -c "
+    set -e
+    sbctl create-keys
+    sbctl enroll-keys --microsoft
+    sbctl sign-all
+  " || die "pkexec failed (admin denied or sbctl errored)"
+  printf 'sbctl keys created + enrolled (incl. Microsoft) + binaries signed.\n'
+  printf 'Reboot into firmware setup, ensure Secure Boot is ENABLED, and verify with `sbctl status`.\n'
+}
+
+cmd_sign_all() {
+  command -v sbctl >/dev/null || die "sbctl not installed"
+  pkexec sbctl sign-all || die "pkexec/sbctl failed"
+  printf 'sbctl: re-signed installed binaries.\n'
+}
+
+cmd_tpm_test() {
+  command -v tpm2_pcrread >/dev/null || die "tpm2-tools not installed"
+  tpm2_pcrread sha256:0,7
+}
+
+case "${1:-status}" in
+  status|"")    cmd_status ;;
+  --json|-j)    cmd_json ;;
+  --enroll|-e)  cmd_enroll ;;
+  --sign-all)   cmd_sign_all ;;
+  --tpm-test|-t) cmd_tpm_test ;;
+  --help|-h)    sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *)            die "unknown arg: $1" ;;
+esac

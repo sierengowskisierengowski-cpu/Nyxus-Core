@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  /usr/local/bin/nyxus-distrobox-helper                    rev 2026-05-14 r1
+#
+#  Thin wrapper around `distrobox` that ContainersPage in nyxus_settings
+#  calls. Provides JSON listing for the UI and a curated quick-create
+#  menu (ubuntu / fedora / debian / archlinux / kali).
+#
+#  Usage:
+#    nyxus-distrobox-helper list           Print container table
+#    nyxus-distrobox-helper --json         Machine-readable list
+#    nyxus-distrobox-helper --create NAME IMAGE
+#    nyxus-distrobox-helper --enter NAME
+#    nyxus-distrobox-helper --rm NAME
+#    nyxus-distrobox-helper --quick TEMPLATE
+#       templates: ubuntu, fedora, debian, arch, kali
+#
+#  Logs to ~/.cache/nyxus/distrobox-helper.log
+#
+#  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -euo pipefail
+
+LOG_DIR="${HOME}/.cache/nyxus"
+LOG="${LOG_DIR}/distrobox-helper.log"
+mkdir -p "${LOG_DIR}"; touch "${LOG}"
+ts()   { date '+%Y-%m-%dT%H:%M:%S%z'; }
+log()  { printf '[%s] %s\n' "$(ts)" "$*" >>"${LOG}"; }
+die()  { log "FATAL: $*"; printf 'nyxus-distrobox-helper: %s\n' "$*" >&2; exit 1; }
+
+command -v distrobox >/dev/null || die "distrobox not installed"
+command -v podman    >/dev/null || die "podman not installed"
+
+declare -A QUICK=(
+  [ubuntu]="docker.io/library/ubuntu:24.04"
+  [fedora]="registry.fedoraproject.org/fedora:latest"
+  [debian]="docker.io/library/debian:stable"
+  [arch]="docker.io/library/archlinux:latest"
+  [kali]="docker.io/kalilinux/kali-rolling:latest"
+)
+
+cmd_list() {
+  distrobox list 2>/dev/null || true
+}
+
+cmd_json() {
+  python3 - <<'PY'
+import json, subprocess
+try:
+    out = subprocess.run(["distrobox","list","--no-color"],
+        capture_output=True, text=True, timeout=10).stdout
+except Exception:
+    print("[]"); raise SystemExit
+rows = []
+for line in out.splitlines():
+    line = line.strip()
+    if not line or line.startswith("ID"): continue
+    parts = [p.strip() for p in line.split("|")]
+    if len(parts) >= 4:
+        rows.append({"id": parts[0], "name": parts[1],
+                     "status": parts[2], "image": parts[3]})
+print(json.dumps(rows))
+PY
+}
+
+cmd_create() {
+  local name="$1" image="$2"
+  log "create name=${name} image=${image}"
+  distrobox create --yes --name "${name}" --image "${image}"
+  printf 'created: %s (image %s)\n' "${name}" "${image}"
+}
+
+cmd_quick() {
+  local tpl="$1"
+  local img="${QUICK[$tpl]:-}"
+  [[ -n "${img}" ]] || die "unknown template: ${tpl} (have: ${!QUICK[*]})"
+  cmd_create "nyx-${tpl}" "${img}"
+}
+
+cmd_enter() {
+  local name="$1"
+  log "enter ${name}"
+  exec distrobox enter "${name}"
+}
+
+cmd_rm() {
+  local name="$1"
+  log "rm ${name}"
+  distrobox stop --yes "${name}" 2>/dev/null || true
+  distrobox rm   --yes "${name}"
+  printf 'removed: %s\n' "${name}"
+}
+
+case "${1:-list}" in
+  list|"")        cmd_list ;;
+  --json|-j)      cmd_json ;;
+  --create|-c)    [[ $# -ge 3 ]] || die "usage: --create NAME IMAGE"; cmd_create "$2" "$3" ;;
+  --quick|-q)     [[ $# -ge 2 ]] || die "usage: --quick TEMPLATE"; cmd_quick "$2" ;;
+  --enter|-e)     [[ $# -ge 2 ]] || die "usage: --enter NAME"; cmd_enter "$2" ;;
+  --rm|-r)        [[ $# -ge 2 ]] || die "usage: --rm NAME"; cmd_rm "$2" ;;
+  --help|-h)      sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *)              die "unknown arg: $1 (try --help)" ;;
+esac

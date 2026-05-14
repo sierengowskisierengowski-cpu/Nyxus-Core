@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  /usr/local/bin/nyxus-kernel-switch                       rev 2026-05-14 r1
+#
+#  NYXUS Kernel Switcher.
+#
+#  Lists installed kernels (linux, linux-lts, linux-zen, linux-hardened),
+#  prints the currently-active one (uname -r), and lets the user set the
+#  default boot kernel by editing /etc/default/grub:GRUB_DEFAULT and
+#  re-running grub-mkconfig. Privileged steps go through pkexec.
+#
+#  Usage:
+#    nyxus-kernel-switch                List installed kernels + active
+#    nyxus-kernel-switch --json         Same, machine-readable
+#    nyxus-kernel-switch --set linux-lts  Make linux-lts the default
+#    nyxus-kernel-switch --help
+#
+#  Logs to ~/.cache/nyxus/kernel-switch.log
+#
+#  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -euo pipefail
+
+LOG_DIR="${HOME}/.cache/nyxus"
+LOG="${LOG_DIR}/kernel-switch.log"
+mkdir -p "${LOG_DIR}"; touch "${LOG}"
+ts()   { date '+%Y-%m-%dT%H:%M:%S%z'; }
+log()  { printf '[%s] %s\n' "$(ts)" "$*" >>"${LOG}"; }
+die()  { log "FATAL: $*"; printf 'nyxus-kernel-switch: %s\n' "$*" >&2; exit 1; }
+
+KNOWN=(linux linux-lts linux-zen linux-hardened)
+
+list_installed() {
+  local out=()
+  for k in "${KNOWN[@]}"; do
+    if pacman -Q "$k" &>/dev/null; then
+      ver="$(pacman -Q "$k" | awk '{print $2}')"
+      out+=("${k}|${ver}")
+    fi
+  done
+  printf '%s\n' "${out[@]}"
+}
+
+cmd_list() {
+  local active; active="$(uname -r)"
+  printf 'active: %s\n' "${active}"
+  printf 'installed:\n'
+  list_installed | while IFS='|' read -r name ver; do
+    [[ -z "${name}" ]] && continue
+    printf '  %-16s %s\n' "${name}" "${ver}"
+  done
+}
+
+cmd_json() {
+  local active rows="["
+  active="$(uname -r)"
+  local first=1
+  while IFS='|' read -r name ver; do
+    [[ -z "${name}" ]] && continue
+    [[ ${first} -eq 0 ]] && rows+=","
+    rows+="{\"name\":\"${name}\",\"version\":\"${ver}\"}"
+    first=0
+  done < <(list_installed)
+  rows+="]"
+  printf '{"active":"%s","installed":%s}\n' "${active}" "${rows}"
+}
+
+cmd_set() {
+  local target="$1"
+  case "${target}" in
+    linux|linux-lts|linux-zen|linux-hardened) ;;
+    *) die "unknown kernel: ${target} (allowed: ${KNOWN[*]})" ;;
+  esac
+  pacman -Q "${target}" &>/dev/null || die "not installed: ${target}"
+  log "set default kernel: ${target}"
+
+  # Derive the EXACT GRUB submenu entry id by scanning the live grub.cfg.
+  # Different distros / GRUB versions produce slightly different
+  # menuentry strings (e.g. "with Linux linux-lts" vs "with Linux-lts"
+  # vs "with linux-lts kernel"). We grep for menuentry lines mentioning
+  # the kernel package and pick the FIRST non-fallback one. Architect
+  # 2026-05-14.
+  local entry=""
+  if [[ "${target}" == "linux" ]]; then
+    entry="0"  # Top-level default entry; works for stock kernel.
+  else
+    local cfg=/boot/grub/grub.cfg
+    [[ -r "${cfg}" ]] || die "${cfg} unreadable (run as root or after grub-install)"
+    # Capture the submenu label (first arg of `submenu '...'`)
+    local submenu
+    submenu="$(awk -F\' '/^submenu / {print $2; exit}' "${cfg}")"
+    [[ -n "${submenu}" ]] || die "no submenu found in grub.cfg"
+    # Capture the matching menuentry inside that submenu, skipping
+    # fallback / recovery entries.
+    local menu
+    menu="$(awk -F\' -v t="${target}" '
+      /^submenu / {in_sub=1; next}
+      in_sub && /^[[:space:]]*menuentry / {
+        if ($2 ~ t && $2 !~ /fallback/ && $2 !~ /recovery/) {
+          print $2; exit
+        }
+      }
+    ' "${cfg}")"
+    [[ -n "${menu}" ]] || die "no menuentry for ${target} found in ${cfg}"
+    entry="${submenu}>${menu}"
+  fi
+
+  # Stage entry value to a temp file to avoid sed-quoting hell with
+  # menuentry strings that may contain special chars.
+  local tmp; tmp="$(mktemp -t nyxus-grub-XXXXXX)"
+  printf 'GRUB_DEFAULT="%s"\n' "${entry}" >"${tmp}"
+  pkexec sh -c "
+    set -e
+    [ -f /etc/default/grub.bak.nyxus ] \
+      || cp /etc/default/grub /etc/default/grub.bak.nyxus
+    # Replace any existing GRUB_DEFAULT, then append the staged line.
+    grep -v '^GRUB_DEFAULT=' /etc/default/grub > /etc/default/grub.tmp.nyxus
+    cat '${tmp}' >> /etc/default/grub.tmp.nyxus
+    install -m 0644 -o root -g root /etc/default/grub.tmp.nyxus /etc/default/grub
+    rm -f /etc/default/grub.tmp.nyxus
+    grub-mkconfig -o /boot/grub/grub.cfg
+  "
+  local rc=$?
+  rm -f "${tmp}"
+  [[ ${rc} -eq 0 ]] || die "pkexec failed (admin denied or grub-mkconfig errored)"
+  printf 'default kernel set: %s (entry: %s)\n' "${target}" "${entry}"
+  printf 'reboot to apply.\n'
+}
+
+case "${1:-list}" in
+  list|"")        cmd_list ;;
+  --json|-j)      cmd_json ;;
+  --set|-s)       [[ $# -ge 2 ]] || die "usage: --set <kernel>"; cmd_set "$2" ;;
+  --help|-h)      sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *)              die "unknown arg: $1 (try --help)" ;;
+esac

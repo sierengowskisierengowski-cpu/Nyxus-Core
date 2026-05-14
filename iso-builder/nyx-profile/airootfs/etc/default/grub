@@ -1,0 +1,18 @@
+# NYXUS · /etc/default/grub · rev 2026-05-14
+# Sourced by grub-mkconfig. Boot splash + theme + kernel cmdline.
+# `splash quiet` activates Plymouth; `loglevel=3` keeps the journal
+# from spraying the splash. Do NOT add `nomodeset` — kills KMS + theme.
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="NYXUS"
+GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet splash"
+GRUB_CMDLINE_LINUX=""
+GRUB_PRELOAD_MODULES="part_gpt part_msdos"
+GRUB_TIMEOUT_STYLE=menu
+GRUB_TERMINAL_INPUT=console
+GRUB_GFXMODE=1920x1080,1366x768,auto
+GRUB_GFXPAYLOAD_LINUX=keep
+GRUB_DISABLE_RECOVERY=false
+GRUB_THEME="/usr/share/grub/themes/nyxus/theme.txt"
+GRUB_BACKGROUND="/usr/share/grub/themes/nyxus/background.png"
+GRUB_DISABLE_OS_PROBER=false

@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  /usr/local/bin/nyxus-usbguard-helper                     rev 2026-05-14 r1
+#
+#  USB device firewall control surface used by UsbPage in nyxus_settings.
+#
+#  Modes:
+#    permissive  — InsertedDevicePolicy=allow,        rules.conf empty
+#    audit       — InsertedDevicePolicy=apply-policy, rules.conf empty
+#                  (logs but never blocks — for users who want telemetry)
+#    lockdown    — InsertedDevicePolicy=apply-policy, rules.conf seeded
+#                  with a snapshot of currently-attached devices
+#                  (effectively allow-list only what's plugged in NOW)
+#
+#  Usage:
+#    nyxus-usbguard-helper status       Pretty status
+#    nyxus-usbguard-helper --json       Machine-readable status + counts
+#    nyxus-usbguard-helper --mode MODE  Switch mode (permissive/audit/lockdown)
+#    nyxus-usbguard-helper --list       Currently-known devices
+#    nyxus-usbguard-helper --enable     systemctl enable --now usbguard
+#    nyxus-usbguard-helper --disable    systemctl disable --now usbguard
+#    nyxus-usbguard-helper --help
+#
+#  All mutations go through pkexec. Logs to ~/.cache/nyxus/usbguard.log.
+#
+#  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -euo pipefail
+
+LOG_DIR="${HOME}/.cache/nyxus"
+LOG="${LOG_DIR}/usbguard.log"
+mkdir -p "${LOG_DIR}"; touch "${LOG}"
+ts()  { date '+%Y-%m-%dT%H:%M:%S%z'; }
+log() { printf '[%s] %s\n' "$(ts)" "$*" >>"${LOG}"; }
+die() { log "FATAL: $*"; printf 'nyxus-usbguard-helper: %s\n' "$*" >&2; exit 1; }
+
+CONF=/etc/usbguard/usbguard-daemon.conf
+RULES=/etc/usbguard/rules.conf
+
+cur_mode() {
+  local pol imp
+  pol="$(grep -E '^InsertedDevicePolicy=' "${CONF}" 2>/dev/null \
+          | head -1 | cut -d= -f2)"
+  imp="$(grep -E '^ImplicitPolicyTarget=' "${CONF}" 2>/dev/null \
+          | head -1 | cut -d= -f2)"
+  case "${pol}:${imp}" in
+    allow:*)                  echo "permissive" ;;
+    apply-policy:block)       echo "lockdown" ;;
+    apply-policy:allow)       echo "audit" ;;
+    apply-policy:reject)      echo "lockdown" ;;
+    *)                        echo "unknown" ;;
+  esac
+}
+
+cmd_status() {
+  local mode active enabled count
+  mode="$(cur_mode)"
+  active="$(systemctl is-active usbguard 2>/dev/null || echo inactive)"
+  enabled="$(systemctl is-enabled usbguard 2>/dev/null || echo disabled)"
+  count="$(usbguard list-devices 2>/dev/null | wc -l)"
+  printf 'mode:     %s\n' "${mode}"
+  printf 'service:  %s (%s)\n' "${active}" "${enabled}"
+  printf 'devices:  %s known\n' "${count}"
+}
+
+cmd_json() {
+  local mode active enabled count
+  mode="$(cur_mode)"
+  active="$(systemctl is-active usbguard 2>/dev/null || echo inactive)"
+  enabled="$(systemctl is-enabled usbguard 2>/dev/null || echo disabled)"
+  count="$(usbguard list-devices 2>/dev/null | grep -c '^' || echo 0)"
+  printf '{"mode":"%s","active":"%s","enabled":"%s","devices":%s}\n' \
+    "${mode}" "${active}" "${enabled}" "${count}"
+}
+
+cmd_list() { usbguard list-devices 2>/dev/null || die "usbguard not running"; }
+
+cmd_enable() {
+  pkexec systemctl enable --now usbguard \
+    || die "pkexec failed (admin denied?)"
+  printf 'usbguard enabled.\n'
+}
+
+cmd_disable() {
+  pkexec systemctl disable --now usbguard \
+    || die "pkexec failed (admin denied?)"
+  printf 'usbguard disabled.\n'
+}
+
+cmd_mode() {
+  local mode="$1"
+  # NOTE: ImplicitPolicyTarget is the default action for devices NOT
+  # matched by any rule. Lockdown REQUIRES implicit=block, otherwise
+  # apply-policy + empty/partial rules + implicit=allow == still allow.
+  # See architect review 2026-05-14.
+  local policy implicit seed
+  case "${mode}" in
+    permissive) policy="allow";        implicit="allow"; seed=0 ;;
+    audit)      policy="apply-policy"; implicit="allow"; seed=0 ;;
+    lockdown)   policy="apply-policy"; implicit="block"; seed=1 ;;
+    *) die "unknown mode: ${mode} (permissive/audit/lockdown)" ;;
+  esac
+  log "switch mode -> ${mode} (Inserted=${policy}, Implicit=${implicit})"
+  local tmp_rules=""
+  if [[ ${seed} -eq 1 ]]; then
+    command -v usbguard >/dev/null || die "usbguard not installed"
+    # Snapshot rules to a temp file so we can hand a clean path to pkexec
+    # without quoting hell.
+    tmp_rules="$(mktemp -t nyxus-usbguard-XXXXXX.rules)"
+    {
+      printf '# auto-seeded by nyxus-usbguard-helper --mode lockdown · %s\n' \
+        "$(date -Iseconds)"
+      usbguard generate-policy 2>/dev/null || true
+    } >"${tmp_rules}"
+    if ! grep -qE '^[[:space:]]*allow' "${tmp_rules}"; then
+      rm -f "${tmp_rules}"
+      die "could not snapshot devices (usbguard daemon down? run --enable first)"
+    fi
+  else
+    tmp_rules="$(mktemp -t nyxus-usbguard-XXXXXX.rules)"
+    printf '# %s mode · no rules (managed by nyxus-usbguard-helper)\n' \
+      "${mode}" >"${tmp_rules}"
+  fi
+  # Hand the prepared file to pkexec; pkexec only needs to mutate /etc.
+  pkexec sh -c "
+    set -e
+    sed -i 's|^InsertedDevicePolicy=.*|InsertedDevicePolicy=${policy}|' '${CONF}'
+    sed -i 's|^ImplicitPolicyTarget=.*|ImplicitPolicyTarget=${implicit}|' '${CONF}'
+    install -m 0600 -o root -g root '${tmp_rules}' '${RULES}'
+    if systemctl is-active --quiet usbguard; then
+      systemctl reload usbguard 2>/dev/null \
+        || systemctl restart usbguard
+    fi
+  "
+  local rc=$?
+  rm -f "${tmp_rules}"
+  [[ ${rc} -eq 0 ]] || die "pkexec failed"
+  printf 'mode -> %s (Inserted=%s, Implicit=%s)\n' "${mode}" "${policy}" "${implicit}"
+}
+
+case "${1:-status}" in
+  status|"")    cmd_status ;;
+  --json|-j)    cmd_json ;;
+  --list|-l)    cmd_list ;;
+  --enable|-e)  cmd_enable ;;
+  --disable|-d) cmd_disable ;;
+  --mode|-m)    [[ $# -ge 2 ]] || die "usage: --mode MODE"; cmd_mode "$2" ;;
+  --help|-h)    sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *)            die "unknown arg: $1" ;;
+esac

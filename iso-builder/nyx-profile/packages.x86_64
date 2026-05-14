@@ -428,3 +428,79 @@ zram-generator
 man-db
 # base man-pages corpus.
 man-pages
+
+# ── NYXUS Drop / KDE Connect (cross-device file + text share) ──────
+# DropPage in nyxus_settings.py auto-detects this and offers an install
+# fallback if missing. Shipping it stock so first-boot is zero-config.
+kdeconnect
+
+# ── NYXUS Audio EQ (EasyEffects + LV2 plug-ins) ────────────────────
+# SoundPage exposes preset switcher; presets ship in /etc/skel/.config
+# /easyeffects/output/. Autostarted as a gapplication-service so the
+# pipeline is hot before the user opens anything.
+easyeffects
+lsp-plugins-lv2
+calf
+# rnnoise model used by EasyEffects "Noise Reduction" preset.
+rnnoise
+
+# ── NYXUS Virt Manager (Tier B · 2026-05-14) ───────────────────────
+# Full QEMU/KVM stack + libvirt + virt-manager UI + UEFI fw + bridge
+# helpers + swtpm so Win 11 guests Just Work. nyxus-virt-setup runs
+# on first launch from VirtPage to enable libvirtd + add user to grp.
+qemu-desktop
+libvirt
+virt-manager
+virt-viewer
+edk2-ovmf
+dnsmasq
+swtpm
+bridge-utils
+iptables-nft
+
+# ── NYXUS Containers (Tier B) ──────────────────────────────────────
+# podman is already shipped above. Add buildah/skopeo for image build
+# + transfer, distrobox for one-command rootless dev containers.
+buildah
+skopeo
+distrobox
+
+# ── NYXUS Kernel Switcher (Tier B) ─────────────────────────────────
+# Ship LTS + ZEN + HARDENED alongside stock so users can pick at the
+# GRUB menu. nyxus-kernel-switch sets GRUB_DEFAULT and regenerates
+# grub.cfg via pkexec.
+linux-lts
+linux-lts-headers
+linux-zen
+linux-zen-headers
+linux-hardened
+linux-hardened-headers
+
+# ── NYXUS Gaming / Proton-GE (Tier B) ──────────────────────────────
+# Steam (multilib) + nyxus-protonup downloads Proton-GE releases into
+# ~/.steam/root/compatibilitytools.d/ — no AUR dependency.
+steam
+mangohud
+
+# ── NYXUS Editors bundle (Tier B) ──────────────────────────────────
+# code = open-source VS Code build. helix = modern modal editor.
+# micro = nano replacement. gnome-text-editor = simple GUI default.
+code
+helix
+micro
+gnome-text-editor
+
+# ── NYXUS Tier C (rev 2026-05-14): security & network polish ───────
+# usbguard already shipped above (line 377). Adding strongSwan plug-in,
+# Secure Boot manager (sbctl), TPM2 userspace tools, MAC randomizer,
+# and dnscrypt-proxy for DNS-over-HTTPS.
+#
+# IMPORTANT: usbguard daemon ships with PresentDevicePolicy=allow and
+# an EMPTY rules.conf so it never locks the user out of their own USB
+# keyboard at install time. Per user pref: account-lockout / hardening
+# policies are opt-in post-install only. UsbPage exposes the toggle.
+networkmanager-strongswan
+sbctl
+tpm2-tools
+macchanger
+dnscrypt-proxy

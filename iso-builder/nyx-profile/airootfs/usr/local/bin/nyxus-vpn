@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  /usr/local/bin/nyxus-vpn                                 rev 2026-05-14 r1
+#
+#  Thin wrapper around nmcli for VpnPage. Importing .ovpn / .conf files,
+#  listing connections, and toggling them on/off without leaving the
+#  Settings UI. NetworkManager already speaks WireGuard natively (since
+#  1.16) and OpenVPN via networkmanager-openvpn.
+#
+#  Usage:
+#    nyxus-vpn list                      List VPN connections + state
+#    nyxus-vpn --json                    Machine-readable
+#    nyxus-vpn --import-ovpn FILE        Import OpenVPN .ovpn config
+#    nyxus-vpn --import-wg   FILE        Import WireGuard .conf
+#    nyxus-vpn --up   NAME               Bring up
+#    nyxus-vpn --down NAME               Bring down
+#    nyxus-vpn --rm   NAME               Delete
+#    nyxus-vpn --help
+#
+#  Logs to ~/.cache/nyxus/vpn.log
+#
+#  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -euo pipefail
+
+LOG_DIR="${HOME}/.cache/nyxus"
+LOG="${LOG_DIR}/vpn.log"
+mkdir -p "${LOG_DIR}"; touch "${LOG}"
+ts()  { date '+%Y-%m-%dT%H:%M:%S%z'; }
+log() { printf '[%s] %s\n' "$(ts)" "$*" >>"${LOG}"; }
+die() { log "FATAL: $*"; printf 'nyxus-vpn: %s\n' "$*" >&2; exit 1; }
+
+command -v nmcli >/dev/null || die "nmcli not found (NetworkManager required)"
+
+cmd_list() {
+  nmcli -t -f NAME,TYPE,STATE connection show \
+    | awk -F: '$2 ~ /vpn|wireguard/ { printf "%-30s %-12s %s\n",$1,$2,$3 }'
+}
+
+cmd_json() {
+  python3 - <<'PY'
+import json, subprocess
+out = subprocess.run(["nmcli","-t","-f","NAME,TYPE,STATE","connection","show"],
+                     capture_output=True, text=True).stdout
+rows = []
+for line in out.splitlines():
+    parts = line.split(":")
+    if len(parts) < 3: continue
+    name, typ, state = parts[0], parts[1], parts[2]
+    if typ in ("vpn","wireguard"):
+        rows.append({"name": name, "type": typ, "state": state or "down"})
+print(json.dumps(rows))
+PY
+}
+
+cmd_import_ovpn() {
+  local f="$1"; [[ -f "$f" ]] || die "no such file: $f"
+  log "import ovpn: $f"
+  nmcli connection import type openvpn file "$f" \
+    || die "nmcli import failed"
+  printf 'imported.\n'
+}
+
+cmd_import_wg() {
+  local f="$1"; [[ -f "$f" ]] || die "no such file: $f"
+  log "import wg: $f"
+  nmcli connection import type wireguard file "$f" \
+    || die "nmcli import failed"
+  printf 'imported.\n'
+}
+
+cmd_up()   { nmcli connection up   "$1" || die "up failed"  ; printf 'up: %s\n' "$1" ; }
+cmd_down() { nmcli connection down "$1" || die "down failed"; printf 'down: %s\n' "$1" ; }
+cmd_rm()   { nmcli connection delete "$1" || die "rm failed"; printf 'removed: %s\n' "$1"; }
+
+case "${1:-list}" in
+  list|"")          cmd_list ;;
+  --json|-j)        cmd_json ;;
+  --import-ovpn)    [[ $# -ge 2 ]] || die "usage: --import-ovpn FILE"; cmd_import_ovpn "$2" ;;
+  --import-wg)      [[ $# -ge 2 ]] || die "usage: --import-wg FILE";   cmd_import_wg   "$2" ;;
+  --up|-u)          [[ $# -ge 2 ]] || die "usage: --up NAME";   cmd_up   "$2" ;;
+  --down|-d)        [[ $# -ge 2 ]] || die "usage: --down NAME"; cmd_down "$2" ;;
+  --rm|-r)          [[ $# -ge 2 ]] || die "usage: --rm NAME";   cmd_rm   "$2" ;;
+  --help|-h)        sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *)                die "unknown arg: $1" ;;
+esac
