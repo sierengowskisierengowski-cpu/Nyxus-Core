@@ -8,6 +8,7 @@
  *  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
  * ========================================================================= */
 
+/* NYXUS-TOKENS-START accent */
 @define-color accent_color           #f4ead5;
 @define-color accent_bg_color        #f4ead5;
 @define-color accent_fg_color        #06060a;
@@ -28,6 +29,7 @@
 @define-color card_fg_color          #f4ead5;
 @define-color popover_bg_color       alpha(#06060a, 0.92);
 @define-color popover_fg_color       #f4ead5;
+/* NYXUS-TOKENS-END accent */
 
 button,
 entry,

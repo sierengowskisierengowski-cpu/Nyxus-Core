@@ -82,6 +82,20 @@ COMMENT_STYLES: Dict[str, Tuple[str, str]] = {
 }
 
 
+# ── Format helpers ────────────────────────────────────────────────────
+
+def _hypr_rgba(hex_color: str, alpha_hex: str) -> str:
+    """Hyprland's idiosyncratic `rgba(<hex><alphahex>)` format — no '#',
+    alpha appended as 2 hex digits. e.g. _hypr_rgba('#b8865a', 'ff')
+    → 'rgba(b8865aff)'."""
+    return f"rgba({hex_color.lstrip('#')}{alpha_hex})"
+
+
+def _css_rgba(rgb: list, alpha: float) -> str:
+    """Standard CSS rgba(R, G, B, A). Used by hyprlock + GTK surfaces."""
+    return f"rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, {alpha})"
+
+
 # ── Generators (one per consumer block) ──────────────────────────────
 # Each generator takes the loaded tokens dict and returns the exact
 # string that should sit between the START / END markers. Trailing
@@ -151,6 +165,105 @@ def gen_web_artifact_root_hsl(t: dict) -> str:
         f"  --destructive-foreground: {p['ink_black']['hsl']};\n"
         f"  --input: 0 0% 8%;\n"
         f"  --ring: {p['cream']['hsl']};\n"
+    )
+
+
+def gen_hyprland_borders(t: dict) -> str:
+    """Hyprland col.active_border + col.inactive_border lines.
+
+    Both use Hyprland's `rgba(<hex><alpha>)` non-standard format. The
+    leading 4-space indent matches the surrounding `general {}` block.
+    The active border is a 5-stop gradient: copper → cream → copper-deep
+    → ink → pure-black so the focused window reads as a warm-metal
+    halo. Inactive is a faded 3-stop cream-to-black so unfocused
+    windows recede into the wallpaper.
+    """
+    p = t["palette"]
+    return (
+        f"    col.active_border   = "
+        f"{_hypr_rgba(p['copper']['hex'], 'ff')} "
+        f"{_hypr_rgba(p['cream']['hex'], 'ee')} "
+        f"{_hypr_rgba(p['copper_deep']['hex'], 'cc')} "
+        f"{_hypr_rgba(p['ink_black']['hex'], '99')} "
+        f"{_hypr_rgba(p['pure_black']['hex'], 'ff')} 135deg\n"
+        f"    col.inactive_border = "
+        f"{_hypr_rgba(p['cream_inactive']['hex'], '22')} "
+        f"{_hypr_rgba(p['cream_mute']['hex'], '11')} "
+        f"{_hypr_rgba(p['pure_black']['hex'], '44')} 135deg\n"
+    )
+
+
+def gen_hyprlock_indicator(t: dict) -> str:
+    """Hyprlock PIN-entry indicator outer/inner/font colors."""
+    p = t["palette"]
+    return (
+        f"    outer_color = {_css_rgba(p['copper']['rgb'], 0.55)}\n"
+        f"    inner_color = {_css_rgba(p['ink_void']['rgb'], 0.78)}\n"
+        f"    font_color  = {_css_rgba(p['cream']['rgb'], 1.0)}\n"
+    )
+
+
+def gen_dunst_critical_frame(t: dict) -> str:
+    """dunstrc [urgency_critical] frame_color line.
+
+    Conservative scope: only the brand-distinguishing copper frame is
+    rendered. Background/foreground stay as the user's existing
+    high-legibility tuning (#0a0a0a / #fff8e0) — those slightly-off
+    variants exist for notification readability and aren't a brand-
+    drift concern. Adding them later is a one-line addition.
+    """
+    return f"    frame_color   = \"{t['palette']['copper']['hex']}\"\n"
+
+
+def gen_gtk_accent_block(t: dict) -> str:
+    """NYXUS-Dark gtk-4.0/gtk.css top @define-color block.
+
+    These are libadwaita's named accent slots — every Adwaita-aware app
+    (Files, Calendar, Calculator, etc.) reads these names. Binding them
+    to the rev r16 palette guarantees the entire GTK4 ecosystem
+    inherits the brand without per-app theming.
+    """
+    p = t["palette"]
+    cream    = p['cream']['hex']
+    ink_void = p['ink_void']['hex']
+    return (
+        f"@define-color accent_color           {cream};\n"
+        f"@define-color accent_bg_color        {cream};\n"
+        f"@define-color accent_fg_color        {ink_void};\n"
+        f"/* Sprint K-A rev r16: accent_blue is the libadwaita \"alternative accent\"\n"
+        f"   slot used by some apps for secondary highlights — bind it to copper\n"
+        f"   so those surfaces pick up the second accent without further work. */\n"
+        f"@define-color accent_blue            {p['copper']['hex']};\n"
+        f"@define-color nyxus_copper           {p['copper']['hex']};\n"
+        f"\n"
+        f"@define-color window_bg_color        {ink_void};\n"
+        f"@define-color window_fg_color        {cream};\n"
+        f"@define-color view_bg_color          {ink_void};\n"
+        f"@define-color view_fg_color          {cream};\n"
+        f"@define-color headerbar_bg_color     {p['ink_black']['hex']};\n"
+        f"@define-color headerbar_fg_color     {cream};\n"
+        f"@define-color headerbar_border_color alpha({cream}, 0.10);\n"
+        f"@define-color card_bg_color          {p['ink_black']['hex']};\n"
+        f"@define-color card_fg_color          {cream};\n"
+        f"@define-color popover_bg_color       alpha({ink_void}, 0.92);\n"
+        f"@define-color popover_fg_color       {cream};\n"
+    )
+
+
+def gen_eww_accent(t: dict) -> str:
+    """Build-time default for eww's _nyxus_accent.scss partial.
+
+    Overridden at runtime by /usr/local/bin/nyxus-apply-accent when the
+    user picks an accent preset. This default is what eww sees on
+    first boot before the user has chosen anything — the canonical
+    rev r16 copper-on-cream pairing.
+    """
+    p = t["palette"]
+    return (
+        f"$nyxus-accent-primary:   {p['copper']['hex']};\n"
+        f"$nyxus-accent-secondary: {p['cream']['hex']};\n"
+        f"$nyxus-accent-warn:      {p['cream_dim']['hex']};\n"
+        f"$nyxus-accent-ok:        {p['copper']['hex']};\n"
     )
 
 
@@ -258,6 +371,60 @@ def _build_targets(tokens_path: Path) -> List[Target]:
             kind="marker",
             description="nyxus-notepad index.css :root HSL block",
             marker="palette", comment="css", generator=gen_web_artifact_root_hsl,
+        ),
+        Target(
+            path=W / "nyxus-stickies/src/index.css",
+            kind="marker",
+            description="nyxus-stickies index.css :root HSL block",
+            marker="palette", comment="css", generator=gen_web_artifact_root_hsl,
+        ),
+        Target(
+            path=W / "nyxus-sysmon/src/index.css",
+            kind="marker",
+            description="nyxus-sysmon index.css :root HSL block",
+            marker="palette", comment="css", generator=gen_web_artifact_root_hsl,
+        ),
+        Target(
+            path=W / "nyxus-widgets/src/index.css",
+            kind="marker",
+            description="nyxus-widgets index.css :root HSL block",
+            marker="palette", comment="css", generator=gen_web_artifact_root_hsl,
+        ),
+        Target(
+            path=W / "nyxus-web/src/index.css",
+            kind="marker",
+            description="nyxus-web index.css :root HSL block",
+            marker="palette", comment="css", generator=gen_web_artifact_root_hsl,
+        ),
+        Target(
+            path=A / "etc/skel/.config/hypr/hyprland.conf",
+            kind="marker",
+            description="Hyprland col.active_border + col.inactive_border",
+            marker="borders", comment="hash", generator=gen_hyprland_borders,
+        ),
+        Target(
+            path=A / "etc/skel/.config/hypr/hyprlock.conf",
+            kind="marker",
+            description="Hyprlock PIN indicator outer/inner/font colors",
+            marker="indicator", comment="hash", generator=gen_hyprlock_indicator,
+        ),
+        Target(
+            path=A / "etc/skel/.config/dunst/dunstrc",
+            kind="marker",
+            description="dunst [urgency_critical] frame_color (copper)",
+            marker="critical-frame", comment="hash", generator=gen_dunst_critical_frame,
+        ),
+        Target(
+            path=A / "usr/share/themes/NYXUS-Dark/gtk-4.0/gtk.css",
+            kind="marker",
+            description="NYXUS-Dark gtk-4 @define-color accent block",
+            marker="accent", comment="css", generator=gen_gtk_accent_block,
+        ),
+        Target(
+            path=A / "etc/skel/.config/eww/_nyxus_accent.scss",
+            kind="marker",
+            description="eww build-time accent default (overridden by nyxus-apply-accent)",
+            marker="accent", comment="slash", generator=gen_eww_accent,
         ),
     ]
 

@@ -55,6 +55,25 @@
       "hsl":   "27 34% 40%"
     },
 
+    "ink_void": {
+      "_role": "deeper black — frosted-glass surfaces, GTK window_bg, hyprlock inner",
+      "hex":   "#06060a",
+      "rgb":   [6, 6, 10],
+      "hsl":   "240 25% 3%"
+    },
+    "cream_inactive": {
+      "_role": "Hyprland inactive-border faded cream stop (only used for unfocused window bezels)",
+      "hex":   "#d4caa8",
+      "rgb":   [212, 202, 168],
+      "hsl":   "45 36% 75%"
+    },
+    "pure_black": {
+      "_role": "absolute black — Hyprland border end-stop, deepest shadow anchor",
+      "hex":   "#000000",
+      "rgb":   [0, 0, 0],
+      "hsl":   "0 0% 0%"
+    },
+
     "border_dark": {
       "_role": "dark on-surface borders",
       "hex":   "#1a1814",
