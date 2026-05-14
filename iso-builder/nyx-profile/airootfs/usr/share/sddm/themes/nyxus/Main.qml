@@ -55,7 +55,9 @@ Rectangle {
     readonly property color edgeHi:    Qt.rgba(0.957, 0.918, 0.835, 0.22)
     readonly property color textHi:    "#f4ead5"
     readonly property color textLo:    Qt.rgba(0.957, 0.918, 0.835, 0.55)
-    readonly property color danger:    "#f87171"
+    // Sprint I rev r15: brighter cream + bold weight communicates urgency
+    // without the banned red. Matches dunst critical-urgency pattern.
+    readonly property color danger:    "#fff8e0"
 
     // Theme-relative — Eclipse PNG ships inside the SDDM tarball itself so
     // we never depend on the qt-svg plugin or the brand PNG render step
@@ -64,16 +66,26 @@ Rectangle {
     readonly property string brandDir: "."
     readonly property string eclipseSrc: "eclipse.png"
 
-    // ── BACKGROUND: layered atmospheric gradient ────────────────────────
-    // No purple. Pure black with a subtle warm cream wash high-left and a
-    // colder near-black wash bottom-right to imply depth.
-    Rectangle {
+    // ── BACKGROUND: eclipse reference image + atmospheric veil ──────────
+    // Sprint I rev r15: the canonical visual target ships as background.png
+    // (the eclipse over reflective water). A semi-transparent gradient veil
+    // over it preserves card readability while letting the brand image show.
+    // The veil is darker at bottom (where the card sits) so the disc and
+    // halo high-centre remain visible.
+    Image {
+        anchors.fill: parent
+        source: "background.png"
+        fillMode: Image.PreserveAspectCrop
+        smooth: true
+        cache: true
+    }
+    Rectangle {                                       // veil
         anchors.fill: parent
         gradient: Gradient {
             orientation: Gradient.Vertical
-            GradientStop { position: 0.00; color: "#070608" }
-            GradientStop { position: 0.55; color: "#030305" }
-            GradientStop { position: 1.00; color: "#000000" }
+            GradientStop { position: 0.00; color: Qt.rgba(0.027, 0.024, 0.031, 0.40) }
+            GradientStop { position: 0.55; color: Qt.rgba(0.012, 0.012, 0.020, 0.62) }
+            GradientStop { position: 1.00; color: Qt.rgba(0.000, 0.000, 0.000, 0.85) }
         }
     }
     Rectangle {                               // soft cream wash, top-left
@@ -332,6 +344,8 @@ Rectangle {
             }
 
             // Error text (hidden when empty — never reserves space).
+            // Sprint I rev r15: brighter cream + bold weight for urgency
+            // hierarchy without using banned red. Matches dunst pattern.
             Text {
                 id: errorText
                 Layout.fillWidth: true
@@ -340,6 +354,7 @@ Rectangle {
                 font.family: "Inter"
                 font.pixelSize: 11
                 font.letterSpacing: 4
+                font.bold: true
                 text: ""
                 visible: text.length > 0
             }

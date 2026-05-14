@@ -2262,6 +2262,137 @@ ECLIPSE_DOCS_REL="../docs/brand/nyxus-eclipse-reference.png"
   && ok "Sprint G round-3: VISUAL-TARGET.md doc present (rules every future sprint follows)" \
   || warn "Sprint G round-3: VISUAL-TARGET.md missing"
 
+# ── §15ab Sprint I: Brand-moment polish (login + welcome + Plymouth) ──
+# Sprint I matches docs/brand/nyxus-desktop-target.png — slim top bar +
+# right sidebar + eclipse wallpaper as hero + pure black surround.
+
+# (i) SDDM login uses the locked plinth-eclipse background (image 2)
+SDDM_BG="${AIROOT}/usr/share/sddm/themes/nyxus/background.png"
+SDDM_QML="${AIROOT}/usr/share/sddm/themes/nyxus/Main.qml"
+[[ -f "$SDDM_BG" ]] \
+  && ok "Sprint I: SDDM background.png present (eclipse plinth scene)" \
+  || fail "Sprint I: SDDM background.png missing"
+[[ -f "$SDDM_QML" ]] && ! grep -q '"#f87171"' "$SDDM_QML" \
+  && ok "Sprint I: SDDM Main.qml has no banned red (#f87171 purged)" \
+  || fail "Sprint I: SDDM Main.qml still references banned red #f87171"
+[[ -f "$SDDM_QML" ]] && grep -q 'source: "background.png"' "$SDDM_QML" \
+  && ok "Sprint I: SDDM Main.qml shows background.png (eclipse visible behind veil)" \
+  || warn "Sprint I: SDDM Main.qml may be hiding background.png with opaque overlay"
+
+# (j) Eclipse Horizon default wallpaper present + manifested + mirrored
+EH="${AIROOT}/usr/share/backgrounds/nyxus/nyxus-eclipse-horizon.png"
+EH_SDDM="${AIROOT}/usr/share/sddm/themes/nyxus/backgrounds/nyxus-eclipse-horizon.png"
+[[ -f "$EH" ]] \
+  && ok "Sprint I: Eclipse Horizon wallpaper present (default desktop bg)" \
+  || fail "Sprint I: Eclipse Horizon wallpaper missing"
+[[ -f "$EH_SDDM" ]] \
+  && ok "Sprint I: Eclipse Horizon mirrored to SDDM backgrounds dir" \
+  || fail "Sprint I: Eclipse Horizon not mirrored to SDDM backgrounds"
+grep -qP '^nyxus-eclipse-horizon\t' "${AIROOT}/usr/share/backgrounds/nyxus/manifest.tsv" \
+  && ok "Sprint I: Eclipse Horizon registered in wallpaper manifest" \
+  || fail "Sprint I: Eclipse Horizon missing from wallpaper manifest"
+
+# (k) Wallpaper autostart promotes Eclipse Horizon to DEFAULT
+WAS="${AIROOT}/usr/local/bin/nyxus-wallpaper-autostart"
+[[ -f "$WAS" ]] && grep -q 'DEFAULT="/usr/share/backgrounds/nyxus/nyxus-eclipse-horizon.png"' "$WAS" \
+  && ok "Sprint I: nyxus-wallpaper-autostart DEFAULT is Eclipse Horizon" \
+  || fail "Sprint I: nyxus-wallpaper-autostart DEFAULT not set to Eclipse Horizon"
+
+# (l) Plymouth uses the new Eclipse Horizon brand image + on-brand copy
+PLY_SCRIPT="${AIROOT}/usr/share/plymouth/themes/nyxus-void/nyxus-void.script"
+[[ -f "$PLY_SCRIPT" ]] && ! grep -qiE 'darkside|DARKSIDE' "$PLY_SCRIPT" \
+  && ok "Sprint I: Plymouth script purged of off-brand 'DARKSIDE' copy" \
+  || fail "Sprint I: Plymouth script still contains DARKSIDE references"
+[[ -f "$PLY_SCRIPT" ]] && grep -q 'E C L I P S E' "$PLY_SCRIPT" \
+  && ok "Sprint I: Plymouth script displays on-brand 'ECLIPSE · OS' subtitle" \
+  || fail "Sprint I: Plymouth script missing ECLIPSE subtitle"
+[[ -f "$PLY_SCRIPT" ]] && grep -q 'pupil.x = screen.w \* 0.50' "$PLY_SCRIPT" \
+  && ok "Sprint I: Plymouth disc anchor updated for Eclipse Horizon bg" \
+  || warn "Sprint I: Plymouth disc anchor may be misaligned with new bg"
+
+# (m) Welcome wizard rebrand sweep — no banned colors / no Mirror branding
+WP="${AIROOT}/opt/nyxus/nyxus_welcome.py"
+WP_SRC="${REPO_ROOT:-$PWD/..}/artifacts/api-server/nyxus-scripts/nyxus_welcome.py"
+[[ -f "$WP_SRC" ]] || WP_SRC="../artifacts/api-server/nyxus-scripts/nyxus_welcome.py"
+for target in "$WP" "$WP_SRC"; do
+  [[ -f "$target" ]] || continue
+  banned=$(grep -cE '#e8edf5|#d96b6b|232,237,245|232, 237, 245|Mirror White|DARK MIRROR|DARK · MIRROR' "$target" || true)
+  if [[ "$banned" == "0" ]]; then
+    ok "Sprint I: welcome wizard ($(basename $(dirname $target))) rev r15-eclipse compliant"
+  else
+    fail "Sprint I: welcome wizard ($(basename $(dirname $target))) still has $banned banned token(s)"
+  fi
+done
+[[ -f "$WP" ]] && grep -q 'r15-eclipse' "$WP" \
+  && ok "Sprint I: welcome wizard rev stamp updated to r15-eclipse" \
+  || fail "Sprint I: welcome wizard rev stamp not updated"
+
+# (n) eww source-vs-airootfs drift resolved (slim Eclipse desktop layout)
+EWW_SRC="${REPO_ROOT:-$PWD/..}/artifacts/api-server/nyxus-scripts/eww/eww.yuck"
+[[ -f "$EWW_SRC" ]] || EWW_SRC="../artifacts/api-server/nyxus-scripts/eww/eww.yuck"
+EWW_AIR="${AIROOT}/etc/skel/.config/eww/eww.yuck"
+[[ -f "$EWW_SRC" ]] && grep -q ':y "8" :width "96%" :height "40px"' "$EWW_SRC" \
+  && ok "Sprint I: eww source has slim bar-bottom (40px y:8 96%) — drift resolved" \
+  || fail "Sprint I: eww source still has pre-Sprint-I bar-bottom values"
+[[ -f "$EWW_SRC" ]] && grep -q ':height "26px" :anchor "top center"' "$EWW_SRC" \
+  && ok "Sprint I: eww source has slim bar-top (26px) — drift resolved" \
+  || fail "Sprint I: eww source still has pre-Sprint-I bar-top values"
+if [[ -f "$EWW_SRC" && -f "$EWW_AIR" ]] && diff -q "$EWW_SRC" "$EWW_AIR" >/dev/null; then
+  ok "Sprint I: eww source ↔ airootfs are byte-identical (no drift)"
+else
+  fail "Sprint I: eww source and airootfs disagree (build-iso would silently revert)"
+fi
+
+# (o) Default open-list = "bar-top bar-right" (Eclipse desktop layout)
+EWW_CONF_SRC="${REPO_ROOT:-$PWD/..}/artifacts/api-server/nyxus-scripts/eww/nyxus.conf"
+[[ -f "$EWW_CONF_SRC" ]] || EWW_CONF_SRC="../artifacts/api-server/nyxus-scripts/eww/nyxus.conf"
+[[ -f "$EWW_CONF_SRC" ]] && grep -q 'NYXUS_EWW_BARS="bar-top bar-right"' "$EWW_CONF_SRC" \
+  && ok "Sprint I: default bar layout is 'bar-top bar-right' (Eclipse desktop)" \
+  || fail "Sprint I: default bar layout not set to slim Eclipse desktop"
+
+# (p) Desktop UI target reference image pinned in docs/brand
+DT="${REPO_ROOT:-$PWD/..}/docs/brand/nyxus-desktop-target.png"
+[[ -f "$DT" ]] || DT="../docs/brand/nyxus-desktop-target.png"
+[[ -f "$DT" ]] \
+  && ok "Sprint I: desktop UI target image pinned in docs/brand/" \
+  || fail "Sprint I: desktop UI target image missing from docs/brand/"
+
+# (q) No "DARK MIRROR" runtime strings in EWW user-visible surfaces
+#     (caught by Sprint I architect review — ticker initial payload + screensaver label
+#     would otherwise greet the user with off-brand wordmark on every boot).
+EWW_TREE_SRC="${REPO_ROOT:-$PWD/..}/artifacts/api-server/nyxus-scripts/eww"
+[[ -d "$EWW_TREE_SRC" ]] || EWW_TREE_SRC="../artifacts/api-server/nyxus-scripts/eww"
+EWW_TREE_AIR="${AIROOT}/etc/skel/.config/eww"
+for tree in "$EWW_TREE_SRC" "$EWW_TREE_AIR"; do
+  [[ -d "$tree" ]] || continue
+  hits=$(grep -rcE 'DARK MIRROR|DARK · MIRROR' "$tree" 2>/dev/null | grep -vE ':0$' | wc -l)
+  if [[ "$hits" == "0" ]]; then
+    ok "Sprint I: EWW tree at $(basename $(dirname $tree))/$(basename $tree) has no DARK MIRROR runtime strings"
+  else
+    fail "Sprint I: EWW tree at $(basename $(dirname $tree))/$(basename $tree) still has DARK MIRROR strings ($hits file(s))"
+  fi
+done
+
+# (r) nyxus-eww-launch fallback BARS only references defined windows
+#     (architect caught airootfs fallback referencing nonexistent 'dock' window —
+#     missing-config users would have launcher exit non-zero on first run).
+LAUNCH_SRC="${REPO_ROOT:-$PWD/..}/artifacts/api-server/nyxus-scripts/nyxus-eww-launch"
+[[ -f "$LAUNCH_SRC" ]] || LAUNCH_SRC="../artifacts/api-server/nyxus-scripts/nyxus-eww-launch"
+LAUNCH_AIR="${AIROOT}/usr/local/bin/nyxus-eww-launch"
+for f in "$LAUNCH_SRC" "$LAUNCH_AIR"; do
+  [[ -f "$f" ]] || continue
+  if grep -q 'NYXUS_EWW_BARS:-bar-top bar-right}' "$f"; then
+    ok "Sprint I: nyxus-eww-launch ($(basename $(dirname $f))) fallback = Eclipse desktop layout"
+  else
+    fail "Sprint I: nyxus-eww-launch ($(basename $(dirname $f))) fallback not 'bar-top bar-right'"
+  fi
+  if ! grep -qE 'NYXUS_EWW_BARS:-[^}]*\bdock\b' "$f"; then
+    ok "Sprint I: nyxus-eww-launch ($(basename $(dirname $f))) fallback has no phantom 'dock' window"
+  else
+    fail "Sprint I: nyxus-eww-launch ($(basename $(dirname $f))) fallback references undefined 'dock' window"
+  fi
+done
+
 # ── final ─────────────────────────────────────────────────────────────
 echo
 if (( FAIL == 0 )); then
