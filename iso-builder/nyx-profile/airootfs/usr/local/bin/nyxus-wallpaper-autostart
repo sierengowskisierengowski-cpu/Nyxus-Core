@@ -8,7 +8,11 @@
 set -u
 
 CONF="${HOME}/.config/nyxus/wallpaper.conf"
-DEFAULT="/usr/share/backgrounds/nyxus/nyxus-void-vortex.svg"
+# Sprint I rev r15: default wallpaper is the canonical Eclipse Horizon
+# image (cinematic eclipse ring + reflective water + distant terrain).
+# nyxus-void-vortex.svg is preserved as a 2nd fallback for now.
+DEFAULT="/usr/share/backgrounds/nyxus/nyxus-eclipse-horizon.png"
+DEFAULT_FALLBACK="/usr/share/backgrounds/nyxus/nyxus-void-vortex.svg"
 LEGACY_PNG="${HOME}/.config/hypr/walls/nyxus-void-vortex.png"
 
 WALLPAPER_PATH=""
@@ -20,6 +24,8 @@ fi
 if [[ -z "${WALLPAPER_PATH:-}" || ! -r "${WALLPAPER_PATH}" ]]; then
   if [[ -r "${DEFAULT}" ]]; then
     WALLPAPER_PATH="${DEFAULT}"
+  elif [[ -r "${DEFAULT_FALLBACK}" ]]; then
+    WALLPAPER_PATH="${DEFAULT_FALLBACK}"
   elif [[ -r "${LEGACY_PNG}" ]]; then
     WALLPAPER_PATH="${LEGACY_PNG}"
   else
