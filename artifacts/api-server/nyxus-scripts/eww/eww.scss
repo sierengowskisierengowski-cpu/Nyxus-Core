@@ -41,8 +41,9 @@ $cream-bg-active: rgba(244, 234, 213, 0.18);
 // reserved for icon ring outlines, micro-accents (toggle thumbs,
 // progress fills, focus rings), and high-contrast highlights.
 // Hex #b8865a is intentionally desaturated — it must read as "warm
-// metal" not "yellow gold". Bright golds (#d4b87a, #ffd700) stay
-// banned. See docs/brand/VISUAL-TARGET.md.
+// metal" not "yellow gold". Bright yellow-golds stay banned (see
+// the banned-palette list in iso-builder/verify-profile.sh §13v).
+// See docs/brand/VISUAL-TARGET.md for the full rev r16 contract.
 $copper:          #b8865a;
 $copper-soft:     #d4a978;
 $copper-deep:     #8a6444;
