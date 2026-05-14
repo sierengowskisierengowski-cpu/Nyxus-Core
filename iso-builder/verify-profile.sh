@@ -918,10 +918,16 @@ CAL_DESKTOP="${AIROOT}/etc/skel/Desktop/install-nyxus.desktop"
 grep -q '^componentName: nyxus' "${CAL_BRAND}/branding.desc" 2>/dev/null \
   && ok "calamares: componentName=nyxus" \
   || fail "calamares: componentName not 'nyxus'"
-# Canonical DARK MIRROR colors must be present in branding.desc
-grep -qi '#a06bff' "${CAL_BRAND}/branding.desc" \
-  && ok "calamares: canonical accent #a06bff present" \
-  || fail "calamares: canonical accent #a06bff missing"
+# rev r15 — canonical CREAM (#f4ead5) accent must be present in branding.desc
+grep -qi '#f4ead5' "${CAL_BRAND}/branding.desc" \
+  && ok "calamares: canonical CREAM accent #f4ead5 present (rev r15)" \
+  || fail "calamares: canonical CREAM accent #f4ead5 missing (rev r15)"
+# Banned palette literals must NOT appear (rev r15 brand contract)
+if grep -qiE '#a06bff|#3ad8ff|#d4b87a|#ff4d6b' "${CAL_BRAND}/branding.desc"; then
+  fail "calamares: branding.desc still contains banned palette literal (rev r15)"
+else
+  ok "calamares: zero banned palette literals (rev r15)"
+fi
 
 [[ -f "${CAL_BRAND}/show.qml" ]] \
   && ok "calamares: show.qml slideshow present" \
@@ -991,12 +997,14 @@ if [[ -f "${GRUB_THEME_DIR}/theme.txt" ]] \
 else
   fail "GRUB: theme.txt missing/incomplete"
 fi
-grep -qi '#a06bff' "${GRUB_THEME_DIR}/theme.txt" 2>/dev/null \
-  && ok "GRUB: canonical accent #a06bff present" \
-  || fail "GRUB: canonical accent #a06bff missing from theme.txt"
-grep -qi '#3ad8ff' "${GRUB_THEME_DIR}/theme.txt" 2>/dev/null \
-  && ok "GRUB: canonical cyan #3ad8ff present" \
-  || fail "GRUB: canonical cyan #3ad8ff missing from theme.txt"
+grep -qi '#f4ead5' "${GRUB_THEME_DIR}/theme.txt" 2>/dev/null \
+  && ok "GRUB: canonical CREAM #f4ead5 present (rev r15)" \
+  || fail "GRUB: canonical CREAM #f4ead5 missing from theme.txt (rev r15)"
+if grep -qiE '#a06bff|#3ad8ff|#d4b87a|#ff4d6b' "${GRUB_THEME_DIR}/theme.txt" 2>/dev/null; then
+  fail "GRUB: theme.txt still contains banned palette literal (rev r15)"
+else
+  ok "GRUB: zero banned palette literals in theme.txt (rev r15)"
+fi
 
 # Required theme assets
 for f in background.png select_c.png select_e.png select_w.png \
@@ -1046,9 +1054,14 @@ if [[ -f "${DUNST_RC}" ]] \
 else
   fail "dunst: dunstrc missing or incomplete"
 fi
-grep -qi '#a06bff' "${DUNST_RC}" 2>/dev/null \
-  && ok "dunst: canonical accent #a06bff present" \
-  || fail "dunst: canonical accent #a06bff missing"
+grep -qi '#f4ead5' "${DUNST_RC}" 2>/dev/null \
+  && ok "dunst: canonical CREAM accent #f4ead5 present (rev r15)" \
+  || fail "dunst: canonical CREAM accent #f4ead5 missing (rev r15)"
+if grep -qiE '#a06bff|#3ad8ff|#d4b87a|#ff4d6b' "${DUNST_RC}" 2>/dev/null; then
+  fail "dunst: dunstrc still contains banned palette literal (rev r15)"
+else
+  ok "dunst: zero banned palette literals (rev r15)"
+fi
 grep -qi 'JetBrains Mono' "${DUNST_RC}" 2>/dev/null \
   && ok "dunst: JetBrains Mono font set" \
   || fail "dunst: JetBrains Mono font not set (off-brand typography)"
@@ -1063,12 +1076,14 @@ if [[ -f "${SWAYNC_CSS}" ]] \
 else
   fail "swaync: style.css missing or incomplete"
 fi
-grep -qi '#a06bff' "${SWAYNC_CSS}" 2>/dev/null \
-  && ok "swaync: canonical accent #a06bff present" \
-  || fail "swaync: canonical accent #a06bff missing"
-grep -qi '#3ad8ff' "${SWAYNC_CSS}" 2>/dev/null \
-  && ok "swaync: canonical cyan #3ad8ff present" \
-  || fail "swaync: canonical cyan #3ad8ff missing"
+grep -qi '#f4ead5' "${SWAYNC_CSS}" 2>/dev/null \
+  && ok "swaync: canonical CREAM accent #f4ead5 present (rev r15)" \
+  || fail "swaync: canonical CREAM accent #f4ead5 missing (rev r15)"
+if grep -qiE '#a06bff|#3ad8ff|#d4b87a|#ff4d6b' "${SWAYNC_CSS}" 2>/dev/null; then
+  fail "swaync: style.css still contains banned palette literal (rev r15)"
+else
+  ok "swaync: zero banned palette literals (rev r15)"
+fi
 grep -qi 'border-radius: 0' "${SWAYNC_CSS}" 2>/dev/null \
   && ok "swaync: sharp slab corners (border-radius:0)" \
   || fail "swaync: rounded corners present — DARK MIRROR requires sharp edges"
@@ -1084,6 +1099,167 @@ hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \
   && ok "mksquashfs available ($(mksquashfs -version | head -1))" \
   || warn "mksquashfs not on PATH (host can't bake; CI is fine)"
+
+# ── 13v. Tier 1 · Brand Contract (rev r15 — 2026-05-14) ────────────
+# Locks the DARK MIRROR rev r15 contract:
+#   • CREAM (#f4ead5) is the only warm accent
+#   • Caveat + Inter + JetBrains Mono Nerd Font is the type system
+#   • 3px corners (near-sharp) on every surface
+#   • Banned palette literals (purple #a06bff, cyan #3ad8ff,
+#     gold #d4b87a, strobe red #ff4d6b) must not appear anywhere
+#     in airootfs CSS / SCSS / SVG / QML / JSON / Python / config.
+#   • Intelligent window sizing: nyxus_chrome.py must not clamp
+#     set_default_size; each app declares its own intelligent default.
+hd "13v. Tier 1 · Brand Contract (rev r15)"
+
+# Banned palette literals — hex AND rgba() equivalents — across BOTH
+# the airootfs surface and the artifacts/api-server/nyxus-scripts source
+# of truth (both are part of the shipped contract).
+BANNED_HEX='#a06bff|#3ad8ff|#d4b87a|#8b6f3a|#8a6f3a|#e8c66b|#ff4d6b|#ff4d6d|#bf5cff|#ffd700|#7B5EA7'
+BANNED_RGBA='rgba\(\s*160\s*,\s*107\s*,\s*255|rgba\(\s*58\s*,\s*216\s*,\s*255|rgba\(\s*212\s*,\s*184\s*,\s*122|rgba\(\s*255\s*,\s*77\s*,\s*107|rgba\(\s*123\s*,\s*94\s*,\s*167'
+BANNED_PATTERN="${BANNED_HEX}|${BANNED_RGBA}"
+
+HITS_FILE="$(mktemp)"
+# airootfs (installed surface) — exclude nothing here, contract is total.
+grep -rEli --include='*.css' --include='*.scss' --include='*.qml' --include='*.svg' \
+     --include='*.desc' --include='*.json' --include='*.txt' --include='*.cfg' \
+     --include='*.md' --include='dunstrc' --include='*.py' \
+     "${BANNED_PATTERN}" "${AIROOT}" >> "${HITS_FILE}" 2>/dev/null || true
+
+# artifacts source — exclude nyxus_palette.py (legitimately holds the
+# FORBIDDEN test data) and any cached/__pycache__ output.
+ART_SRC="$(dirname "${PROFILE}")/../artifacts/api-server/nyxus-scripts"
+if [[ -d "${ART_SRC}" ]]; then
+  grep -rEli --include='*.css' --include='*.scss' --include='*.py' \
+       --exclude='nyxus_palette.py' \
+       --exclude-dir='__pycache__' \
+       "${BANNED_PATTERN}" "${ART_SRC}" >> "${HITS_FILE}" 2>/dev/null || true
+fi
+
+if [[ -s "${HITS_FILE}" ]]; then
+  fail "rev r15: $(wc -l < "${HITS_FILE}") files contain banned palette literals — see ${HITS_FILE}"
+else
+  ok "rev r15: zero banned palette literals across airootfs + artifacts source"
+  rm -f "${HITS_FILE}"
+fi
+
+# Cream accent must be present in the canonical palette.css mirror.
+NYXUS_PAL="${AIROOT}/usr/share/nyxus/css/nyxus-palette.css"
+if [[ -f "${NYXUS_PAL}" ]]; then
+  grep -qi '#f4ead5' "${NYXUS_PAL}" \
+    && ok "palette.css: CREAM #f4ead5 defined" \
+    || fail "palette.css: CREAM #f4ead5 missing — rev r15 contract broken"
+  grep -qE '@define-color\s+(nyx-)?cream' "${NYXUS_PAL}" \
+    && ok "palette.css: @define-color cream alias present" \
+    || fail "palette.css: @define-color cream alias missing"
+fi
+
+# Type system — Caveat must be bundled OR scheduled for bundling.
+CAVEAT_DIR="${AIROOT}/usr/share/fonts/nyxus-display"
+if [[ -d "${CAVEAT_DIR}" ]]; then
+  if [[ -f "${CAVEAT_DIR}/Caveat-Regular.ttf" ]]; then
+    ok "fonts: Caveat-Regular.ttf bundled"
+  elif [[ -f "${CAVEAT_DIR}/Caveat-Regular.ttf.placeholder" ]]; then
+    warn "fonts: Caveat-Regular.ttf placeholder present (build host must drop real OFL binary)"
+  else
+    fail "fonts: Caveat-Regular.ttf missing AND no placeholder — rev r15 type system broken"
+  fi
+else
+  fail "fonts: ${CAVEAT_DIR} missing — Caveat font dir required"
+fi
+grep -Eq '^inter-font$' "${PROFILE}/packages.x86_64" \
+  && ok "fonts: inter-font package present" \
+  || fail "fonts: inter-font package missing — rev r15 body font"
+grep -Eq '^ttf-jetbrains-mono-nerd$' "${PROFILE}/packages.x86_64" \
+  && ok "fonts: ttf-jetbrains-mono-nerd present" \
+  || fail "fonts: ttf-jetbrains-mono-nerd missing — rev r15 mono font"
+
+# 3px radius — near-sharp corners must be the default in palette.css.
+if [[ -f "${NYXUS_PAL}" ]]; then
+  grep -Eq 'radius[-_]?(card|tight|input|pill)?:?\s*3px' "${NYXUS_PAL}" \
+    && ok "palette.css: 3px radius defined" \
+    || fail "palette.css: 3px radius missing (rev r15 near-sharp corners)"
+fi
+
+# Intelligent window sizing — chrome must NOT clamp set_default_size.
+# A clamp is detectable by the literal "min(int(w)" pattern coupled with
+# NYXUS_MAX_DEFAULT_W <= 1024 (rev r13 used 700). rev r15 uses 2400.
+# Check both the installed location AND the artifacts source of truth.
+CHROME_PY="${AIROOT}/opt/nyxus/nyxus_chrome.py"
+[[ -f "${CHROME_PY}" ]] || CHROME_PY="${ART_SRC}/nyxus_chrome.py"
+if [[ -f "${CHROME_PY}" ]]; then
+  if grep -Eq 'NYXUS_MAX_DEFAULT_W\s*=\s*[0-9]+' "${CHROME_PY}"; then
+    cap=$(grep -Eo 'NYXUS_MAX_DEFAULT_W\s*=\s*[0-9]+' "${CHROME_PY}" | head -1 | grep -Eo '[0-9]+')
+    if (( cap >= 2000 )); then
+      ok "chrome: set_default_size ceiling = ${cap} (rev r15 honors per-app defaults)"
+    else
+      fail "chrome: set_default_size ceiling = ${cap} — rev r15 requires >= 2000 (no clamping)"
+    fi
+  else
+    fail "chrome: NYXUS_MAX_DEFAULT_W not declared"
+  fi
+  grep -q 'INTELLIGENT DEFAULTS' "${CHROME_PY}" \
+    && ok "chrome: rev r15 INTELLIGENT DEFAULTS policy block present" \
+    || fail "chrome: rev r15 INTELLIGENT DEFAULTS policy block missing"
+  grep -q '_nyxus_fixed_layout' "${CHROME_PY}" \
+    && ok "chrome: _nyxus_fixed_layout opt-out implemented" \
+    || fail "chrome: _nyxus_fixed_layout opt-out missing"
+fi
+
+# Intelligent default-size table — each app must declare a sensible
+# default for its content. Failures here mean the app would feel wrong
+# at first launch (terminal too narrow, file manager too small, etc).
+# Format: <file>:<expected_min_w>:<expected_min_h>:<role>
+INTELLIGENT_TABLE=(
+  "nyxus_terminal.py:900:600:terminal — comfortable code/log reading"
+  "nyxus_files.py:1024:640:file manager — wider for browsing"
+  "nyxus_notepad.py:1024:640:notepad — writing-friendly width"
+  "nyxus_settings.py:1100:680:settings — standard system-settings size"
+  "nyxus_security.py:1100:680:security center — standard system-settings size"
+  "nyxus_control.py:1024:640:control center — wider for tiles"
+  "nyxus_sysmon_gtk.py:1024:640:system monitor — wider for graphs"
+)
+for entry in "${INTELLIGENT_TABLE[@]}"; do
+  IFS=':' read -r fname min_w min_h role <<< "${entry}"
+  fpath="${ART_SRC}/${fname}"
+  if [[ -f "${fpath}" ]]; then
+    # rev r15 — robust main-window detection:
+    #   1. If the file declares WIN_W/WIN_H constants, prefer those
+    #      (the main window is the one that uses set_default_size(WIN_W,WIN_H)).
+    #   2. Otherwise pick the LARGEST set_default_size(N,N) call —
+    #      the main window is almost always the biggest, while small
+    #      numeric defaults (e.g. 540x420) are dialog children.
+    w=""; h=""
+    if grep -qE '^WIN_W\s*=' "${fpath}"; then
+      w=$(grep -oE '^WIN_W\s*=\s*[0-9]+' "${fpath}" | head -1 | grep -oE '[0-9]+' | head -1)
+      h=$(grep -oE '^WIN_H\s*=\s*[0-9]+' "${fpath}" | head -1 | grep -oE '[0-9]+' | head -1)
+    elif grep -qE 'WIN_W,\s*WIN_H\s*=\s*[0-9]+,\s*[0-9]+' "${fpath}"; then
+      pair=$(grep -oE 'WIN_W,\s*WIN_H\s*=\s*[0-9]+,\s*[0-9]+' "${fpath}" | head -1)
+      w=$(echo "${pair}" | grep -oE '[0-9]+' | head -1)
+      h=$(echo "${pair}" | grep -oE '[0-9]+' | tail -1)
+    fi
+    if [[ -z "${w}" || -z "${h}" ]]; then
+      # Largest set_default_size(N,N) — sort by width desc, take winner.
+      best=$(grep -oE 'set_default_size\([0-9]+,\s*[0-9]+\)' "${fpath}" \
+        | awk -F'[(),]' '{print $2"x"$3}' \
+        | sort -t'x' -k1,1nr -k2,2nr | head -1)
+      if [[ -n "${best}" ]]; then
+        w="${best%x*}"; h="${best#*x}"
+        w="${w// /}"; h="${h// /}"
+      fi
+    fi
+    if [[ -n "${w}" && -n "${h}" ]]; then
+      if (( w >= min_w )) && (( h >= min_h )); then
+        ok "intelligent-default ${fname}: ${w}x${h} >= ${min_w}x${min_h} (${role})"
+      else
+        fail "intelligent-default ${fname}: ${w}x${h} TOO SMALL — needs >= ${min_w}x${min_h} (${role})"
+      fi
+    else
+      warn "intelligent-default ${fname}: could not parse default size"
+    fi
+  fi
+done
+
 
 # ── final ─────────────────────────────────────────────────────────────
 echo

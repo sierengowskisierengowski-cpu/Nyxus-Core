@@ -168,6 +168,7 @@ class PowermenuWindow(Adw.ApplicationWindow):
         super().__init__(application=app, title="NYXUS Power")
         self.set_default_size(680, 540)
         self.set_resizable(False)
+        self._nyxus_fixed_layout = True  # Power menu HUD (compact, fixed)
         self.add_css_class("pm-window")
 
         if HAS_CHROME:

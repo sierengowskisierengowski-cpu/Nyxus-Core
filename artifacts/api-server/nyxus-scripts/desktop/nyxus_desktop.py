@@ -1051,12 +1051,12 @@ CSS = b"""
     transition: background-color 120ms ease, border-color 120ms ease;
 }
 .nyxus-desktop-icon:hover {
-    background: rgba(212, 184, 122, 0.10);
-    border-color: rgba(212, 184, 122, 0.35);
+    background: rgba(244, 234, 213, 0.10);
+    border-color: rgba(244, 234, 213, 0.35);
 }
 .nyxus-desktop-icon.selected {
-    background: rgba(212, 184, 122, 0.22);
-    border-color: #d4b87a;
+    background: rgba(244, 234, 213, 0.22);
+    border-color: #f4ead5;
 }
 
 .nyxus-desktop-icon-label {
@@ -1070,7 +1070,7 @@ CSS = b"""
     border-radius: 4px;
 }
 .nyxus-desktop-icon.selected .nyxus-desktop-icon-label {
-    background: rgba(212, 184, 122, 0.95);
+    background: rgba(244, 234, 213, 0.95);
     color: #080a10;
     text-shadow: none;
 }
@@ -1082,13 +1082,13 @@ CSS = b"""
     padding: 1px 4px;
     background: #ffffff;
     color: #080a10;
-    border: 1px solid #d4b87a;
+    border: 1px solid #f4ead5;
     border-radius: 4px;
     font-size: 11px;
 }
 .nyxus-desktop-marquee {
-    background: rgba(212, 184, 122, 0.18);
-    border: 1px solid rgba(212, 184, 122, 0.85);
+    background: rgba(244, 234, 213, 0.18);
+    border: 1px solid rgba(244, 234, 213, 0.85);
     border-radius: 2px;
 }
 """

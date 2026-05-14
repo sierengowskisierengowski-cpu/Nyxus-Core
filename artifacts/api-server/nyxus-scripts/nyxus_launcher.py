@@ -386,6 +386,7 @@ class Launcher(Adw.Application):
         self.win.set_default_size(WIN_W, WIN_H)
         self.win.set_decorated(False)
         self.win.set_resizable(False)
+        self.win._nyxus_fixed_layout = True  # Spotlight-style command launcher (compact, fixed)
         self.win.add_css_class("nyxus-launcher")
 
         # NYXUS unified chrome (graffiti + frosted glass behind everything)
@@ -580,7 +581,7 @@ class Launcher(Adw.Application):
         # Calc/web/sys/file results get the gold accent badge so the
         # eye snaps to the active mode.
         gold_kinds = {"calc", "web", "sys", "file", "shell"}
-        col = "#d4b87a" if it["kind"] in gold_kinds else NEON_PINK
+        col = "#f4ead5" if it["kind"] in gold_kinds else NEON_PINK
         badge.set_markup(f"<span foreground='{col}' "
                          f"font_weight='bold' size='large'>{emoji}</span>")
         badge.set_size_request(28, -1)
@@ -673,8 +674,8 @@ window.nyxus-launcher {{
     box-shadow: 0 0 14px rgba(8, 12, 20, 0.25);
 }}
 .nyxus-search:focus {{
-    border-color: #d4b87a;
-    box-shadow: 0 0 22px rgba(212, 184, 122, 0.30);
+    border-color: #f4ead5;
+    box-shadow: 0 0 22px rgba(244, 234, 213, 0.30);
 }}
 .nyxus-list {{
     background: rgba(8, 6, 14, 0.55);
@@ -688,8 +689,8 @@ window.nyxus-launcher {{
     padding: 0;
 }}
 .nyxus-list row:selected {{
-    background: rgba(212, 184, 122, 0.10);
-    box-shadow: inset 0 0 0 1px rgba(212, 184, 122, 0.45);
+    background: rgba(244, 234, 213, 0.10);
+    box-shadow: inset 0 0 0 1px rgba(244, 234, 213, 0.45);
     color: #f0e3c1;
 }}
 .nyxus-list row:hover {{

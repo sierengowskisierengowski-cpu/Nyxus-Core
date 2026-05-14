@@ -2,7 +2,7 @@
  *
  * Canonical palette:
  *   --bg-deep    #0a0a14   --bg-card    #050308
- *   --accent     #a06bff   --cyan       #3ad8ff
+ *   --accent     #f4ead5   --cyan       #e8edf5
  *   --text-hi    #e9e5f2   --text-lo    #7b7390
  *   --critical   #f87171   --hairline   #1a1a28
  *
@@ -36,13 +36,13 @@
     padding: 12px;
     transition: border-color 140ms ease;
 }
-.notification:hover           { border-color: #a06bff; }
+.notification:hover           { border-color: #f4ead5; }
 .notification.low             { border-left: 2px solid #1f1b2c; }
-.notification.normal          { border-left: 2px solid #a06bff; }
+.notification.normal          { border-left: 2px solid #f4ead5; }
 .notification.critical        { border-color: #f87171; border-left: 2px solid #f87171; }
 
 .summary {
-    color: #a06bff;
+    color: #f4ead5;
     font-weight: bold;
     font-size: 13px;
     letter-spacing: 1px;
@@ -76,7 +76,7 @@
 
 /* ─── Title bar ───────────────────────────────────────────────── */
 .widget-title > label {
-    color: #a06bff;
+    color: #f4ead5;
     font-size: 13px;
     font-weight: bold;
     letter-spacing: 4px;
@@ -90,21 +90,21 @@
 }
 .widget-title > button:hover {
     color: #0a0a14;
-    background: #a06bff;
-    border-color: #a06bff;
+    background: #f4ead5;
+    border-color: #f4ead5;
 }
 
 /* ─── Do Not Disturb switch ───────────────────────────────────── */
 .widget-dnd > switch          { background: #1a1a28; }
-.widget-dnd > switch:checked  { background: #a06bff; }
+.widget-dnd > switch:checked  { background: #f4ead5; }
 .widget-dnd > switch slider   { background: #e9e5f2; }
 
 /* ─── Floating notification toasts ─────────────────────────────── */
 .floating-notifications        { background: transparent; }
 .floating-notifications.background .notification {
     background: rgba(5, 3, 8, 0.97);
-    border: 1px solid #a06bff;
-    border-left: 3px solid #a06bff;
+    border: 1px solid #f4ead5;
+    border-left: 3px solid #f4ead5;
 }
 .floating-notifications.background .notification.critical {
     border: 1px solid #f87171;
@@ -119,7 +119,7 @@
     color: #e9e5f2;
 }
 .widget-mpris-player          { padding: 4px; }
-.widget-mpris-title           { color: #a06bff; font-weight: bold; }
+.widget-mpris-title           { color: #f4ead5; font-weight: bold; }
 .widget-mpris-subtitle        { color: #7b7390; font-size: 11px; }
 
 /* ─── Volume / brightness sliders (if shown) ───────────────────── */
@@ -134,9 +134,9 @@ slider trough {
     min-height: 4px;
 }
 slider trough highlight {
-    background: #3ad8ff;
+    background: #e8edf5;
 }
 slider {
     background: transparent;
-    color: #a06bff;
+    color: #f4ead5;
 }

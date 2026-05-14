@@ -3,7 +3,7 @@
  *
  * 6-slide installer slideshow. Auto-advances every 8 s with a real
  * cross-fade transition between slides (no snap). Sharp slab edges,
- * canonical DARK MIRROR palette (#a06bff purple + #3ad8ff cyan), no
+ * canonical DARK MIRROR palette (#f4ead5 purple + #e8edf5 cyan), no
  * blur, monospace typography.
  *
  *  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
@@ -15,8 +15,8 @@ Item {
     width: 800
     height: 460
 
-    readonly property color accent:   "#a06bff"
-    readonly property color cyan:     "#3ad8ff"
+    readonly property color accent:   "#f4ead5"
+    readonly property color cyan:     "#e8edf5"
     readonly property color textHi:   "#e9e5f2"
     readonly property color textLo:   "#7b7390"
     readonly property color hairline: "#1a1a28"

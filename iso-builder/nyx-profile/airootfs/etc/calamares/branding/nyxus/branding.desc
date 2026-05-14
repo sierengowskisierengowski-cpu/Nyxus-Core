@@ -34,5 +34,5 @@ style:
     sidebarBackground:    "#0a0a14"
     sidebarText:          "#e9e5f2"
     sidebarTextSelect:    "#0a0a14"
-    sidebarTextHighlight: "#a06bff"
-    sidebarBackgroundSelected: "#a06bff"
+    sidebarTextHighlight: "#f4ead5"
+    sidebarBackgroundSelected: "#f4ead5"

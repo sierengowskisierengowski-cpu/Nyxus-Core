@@ -6,8 +6,8 @@
       <stop offset="100%" stop-color="#000000"/>
     </radialGradient>
     <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#a06bff"/>
-      <stop offset="100%" stop-color="#3ad8ff"/>
+      <stop offset="0%" stop-color="#f4ead5"/>
+      <stop offset="100%" stop-color="#e8edf5"/>
     </linearGradient>
   </defs>
   <circle cx="32" cy="32" r="29" fill="url(#bg)" stroke="url(#ring)" stroke-width="1.5"/>

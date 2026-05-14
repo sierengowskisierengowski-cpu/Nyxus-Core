@@ -284,7 +284,9 @@ rsync
 which
 
 # NYXUS installer
-# calamares is AUR-only — built from source by customize_airootfs.sh.
+# Keep package declared for profile/CI coherence; customize_airootfs.sh
+# may still rebuild/upgrade calamares via _aur_build.
+calamares
 
 # ═══════════════════════════════════════════════════════════════════
 # COMPLETION WAVE 1+2+3 — backends for half-built UI, hardware /

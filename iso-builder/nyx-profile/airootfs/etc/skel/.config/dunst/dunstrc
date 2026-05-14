@@ -1,6 +1,6 @@
 # NYXUS · dunst configuration · rev 2026-05-14 r2
 #
-# Canonical DARK MIRROR palette: #a06bff purple + #3ad8ff cyan +
+# Canonical DARK MIRROR palette: #f4ead5 purple + #e8edf5 cyan +
 # #f87171 critical. JetBrains Mono throughout — matches every other
 # NYXUS surface. Sharp slab edges (no border radius), top-right
 # anchor, 6 simultaneous notifications, urgency-aware timeouts.
@@ -86,7 +86,7 @@
 [urgency_normal]
     background    = "#0a0a14"
     foreground    = "#e9e5f2"
-    frame_color   = "#a06bff"
+    frame_color   = "#f4ead5"
     timeout       = 8
     override_pause_level = 30
     default_icon  = dialog-information
@@ -103,29 +103,29 @@
 [nyxus_terminal]
     appname     = nyxus-terminal
     foreground  = "#e9e5f2"
-    frame_color = "#3ad8ff"
+    frame_color = "#e8edf5"
 
 [nyxus_settings]
     appname     = nyxus-settings
     foreground  = "#e9e5f2"
-    frame_color = "#a06bff"
+    frame_color = "#f4ead5"
 
 [nyxus_control]
     appname     = nyxus-control
     foreground  = "#e9e5f2"
-    frame_color = "#a06bff"
+    frame_color = "#f4ead5"
 
 [nyxus_doctor]
     appname     = nyxus-doctor
     foreground  = "#e9e5f2"
-    frame_color = "#3ad8ff"
+    frame_color = "#e8edf5"
 
 [nyxus_updater]
     appname     = nyxus-updater
     foreground  = "#e9e5f2"
-    frame_color = "#a06bff"
+    frame_color = "#f4ead5"
 
 [nyxus_sound]
     appname     = nyxus-sound
     foreground  = "#e9e5f2"
-    frame_color = "#3ad8ff"
+    frame_color = "#e8edf5"
