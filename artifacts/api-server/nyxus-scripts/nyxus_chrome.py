@@ -997,6 +997,144 @@ def _apply_size_policy(window: Gtk.Window) -> None:
         except Exception: pass
 
 
+def _ensure_titlebar(window: Gtk.Window) -> None:
+    """rev r15 — Real-OS title-bar contract.
+
+    Per the user-locked Sprint B "Real-OS desktop" contract, every
+    NYXUS window must:
+
+      • Be **freely movable** by clicking and dragging the title bar
+        (no $mod required) — Windows / macOS-style.
+      • Toggle **maximize on double-click** of the title bar.
+      • Show a **window menu on right-click** of the title bar
+        (Move / Resize / Minimize / Maximize / Close).
+
+    GTK4 windows in Wayland are CSD-only (no server-side decoration),
+    so a window with no Gtk.HeaderBar / Adw.HeaderBar widget has NO
+    drag region — clicking anywhere on it does nothing. This helper
+    auto-installs a minimal Adw.HeaderBar (with window controls) on
+    plain Gtk.Window / Gtk.ApplicationWindow that lack one, and
+    attaches the double-click + right-click handlers.
+
+    Adw.ApplicationWindow is left alone (those use Adw.ToolbarView with
+    their own HeaderBar inside the content; injecting at the window
+    level would conflict).
+
+    Apps that intentionally want NO title bar (launcher / powermenu /
+    screenshot HUD popups) opt out by setting the window attribute
+    ``_nyxus_no_titlebar = True`` before present(). Those windows are
+    typically also tagged ``_nyxus_fixed_layout = True``.
+    """
+    if window is None:
+        return
+    if getattr(window, "_nyxus_no_titlebar", False):
+        return
+    if getattr(window, "_nyxus_fixed_layout", False):
+        # Fixed-layout popups don't get a title bar by default.
+        return
+    if getattr(window, "_nyxus_titlebar_installed", False):
+        return
+
+    # Skip Adw.ApplicationWindow — they manage their own header inside
+    # Adw.ToolbarView and we mustn't double-install.
+    try:
+        if _is_adw_app_window(window):
+            window._nyxus_titlebar_installed = True
+            _attach_titlebar_handlers(window, target=None)
+            return
+    except Exception:
+        pass
+
+    # Skip if the window already has a titlebar set.
+    try:
+        if window.get_titlebar() is not None:
+            window._nyxus_titlebar_installed = True
+            _attach_titlebar_handlers(window, target=window.get_titlebar())
+            return
+    except Exception:
+        pass
+
+    # Build a minimal Adw.HeaderBar (preferred — gives us the matching
+    # NYXUS frosted styling for free) or fall back to Gtk.HeaderBar.
+    header = None
+    try:
+        import gi as _gi
+        _gi.require_version("Adw", "1")
+        from gi.repository import Adw as _Adw
+        header = _Adw.HeaderBar()
+        header.set_show_end_title_buttons(True)
+        header.set_show_start_title_buttons(True)
+    except Exception:
+        try:
+            header = Gtk.HeaderBar()
+            header.set_show_title_buttons(True)
+        except Exception:
+            header = None
+
+    if header is None:
+        return
+
+    try:
+        # Title text mirrors the window title so the bar feels native.
+        try:
+            title_label = Gtk.Label(label=window.get_title() or "")
+            title_label.add_css_class("nyx-titlebar-title")
+            header.set_title_widget(title_label)
+        except Exception:
+            pass
+        header.add_css_class("nyx-titlebar")
+        window.set_titlebar(header)
+        window._nyxus_titlebar_installed = True
+        _attach_titlebar_handlers(window, target=header)
+    except Exception as e:
+        log.debug("titlebar install: %s", e)
+
+
+def _attach_titlebar_handlers(window: Gtk.Window,
+                              target: Optional[Gtk.Widget]) -> None:
+    """Wire double-click → maximize toggle and right-click → window menu.
+
+    `target` is the HeaderBar widget when we have one; otherwise the
+    handlers are attached to the window itself (Adw.ApplicationWindow
+    case) so the user still gets double-click / right-click on the
+    visible header inside the content."""
+    if getattr(window, "_nyxus_titlebar_handlers", False):
+        return
+    sink = target if target is not None else window
+    try:
+        # ── Double-click → toggle maximize ───────────────────────
+        dbl = Gtk.GestureClick()
+        dbl.set_button(1)  # left button
+        def _on_dbl(gesture, n_press, x, y):
+            if n_press == 2:
+                try:
+                    if window.is_maximized():
+                        window.unmaximize()
+                    else:
+                        window.maximize()
+                except Exception: pass
+        dbl.connect("pressed", _on_dbl)
+        sink.add_controller(dbl)
+
+        # ── Right-click → invoke nyxus-window-menu.sh ────────────
+        rmb = Gtk.GestureClick()
+        rmb.set_button(3)  # right button
+        def _on_rmb(gesture, n_press, x, y):
+            try:
+                import subprocess, shutil
+                cmd = shutil.which("nyxus-window-menu.sh") \
+                      or "/usr/local/bin/nyxus-window-menu.sh"
+                subprocess.Popen([cmd], start_new_session=True)
+            except Exception as e:
+                log.debug("window-menu invoke: %s", e)
+        rmb.connect("pressed", _on_rmb)
+        sink.add_controller(rmb)
+
+        window._nyxus_titlebar_handlers = True
+    except Exception as e:
+        log.debug("titlebar handlers: %s", e)
+
+
 def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
                    title_label: Optional[Gtk.Label] = None) -> None:
     """Install NYXUS chrome on `window`.
@@ -1028,6 +1166,7 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
         return None
     _install_global_css()
     _apply_size_policy(window)
+    _ensure_titlebar(window)
     _make_window_transparent(window)
 
     # Re-entrancy guard. Use a plain attribute on the window itself —

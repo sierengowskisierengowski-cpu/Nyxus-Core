@@ -140,7 +140,10 @@ class NyxusTerminal(Adw.Application):
 
         win = Gtk.ApplicationWindow(application=self, title="NYXUS Terminal")
         win.set_default_size(WIN_W, WIN_H)
-        win.set_decorated(False)            # no titlebar — Hyprland glow IS the frame
+        try:
+            from nyxus_chrome import install_chrome
+            install_chrome(win)
+        except Exception: pass
         win.set_resizable(True)
         win.add_css_class("background")
 

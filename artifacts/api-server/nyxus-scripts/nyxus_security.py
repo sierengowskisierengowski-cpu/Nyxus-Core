@@ -1828,7 +1828,10 @@ class SecurityWindow(Gtk.ApplicationWindow):
     def __init__(self, app, initial: str = "overview"):
         super().__init__(application=app, title="NYXUS Security Center")
         self.set_default_size(WIN_W, WIN_H)
-        self.set_decorated(False)
+        try:
+            from nyxus_chrome import install_chrome
+            install_chrome(self)
+        except Exception: pass
         self.add_css_class("background")
 
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
