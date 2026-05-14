@@ -202,7 +202,7 @@ ok "Welcome Wizard: staged 3 companion files into airootfs/root/"
 # directory writable for user-data files like ~/.nyxus/.bootstrapped and
 # ~/.nyxus/hw_profile.json. The previous design symlinked the whole dir
 # to /opt/nyxus which made every user-data write hit root-owned /opt.
-rm -f "${SKEL}/.nyxus"
+rm -rf "${SKEL}/.nyxus"
 mkdir -p "${SKEL}/.nyxus"
 for _f in "${OPT_NYXUS}"/*.py; do
   ln -sfn "/opt/nyxus/$(basename "${_f}")" "${SKEL}/.nyxus/$(basename "${_f}")"
