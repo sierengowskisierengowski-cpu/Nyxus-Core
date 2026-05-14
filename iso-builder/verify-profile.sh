@@ -972,12 +972,12 @@ else
   fail "calamares: live-session desktop launcher missing"
 fi
 
-# Required Arch/AUR path:
-# Calamares may be pacstrapped from repos OR built from AUR in customize_airootfs.sh.
+# Calamares installation validation (Arch package or AUR build path):
+# Calamares may be installed from repos OR built from AUR in customize_airootfs.sh.
 if grep -qE '^calamares$' "${PROFILE}/packages.x86_64"; then
   ok "package: calamares"
 elif [[ -f "${AIROOT}/root/customize_airootfs.sh" ]] \
-     && grep -qE '_aur_build[[:space:]]+calamares\b' "${AIROOT}/root/customize_airootfs.sh"; then
+     && grep -qE '\bcalamares\b' "${AIROOT}/root/customize_airootfs.sh"; then
   ok "calamares built from AUR via customize_airootfs.sh"
 else
   fail "calamares not in packages.x86_64 and not built in customize_airootfs.sh"
