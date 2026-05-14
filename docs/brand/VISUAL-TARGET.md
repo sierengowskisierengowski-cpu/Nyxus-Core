@@ -96,3 +96,66 @@ ink with the cream-warm light bias.
   materials, not minimal content.
 
 — Locked rev r15 · 2026-05-14
+
+---
+
+## Sprint J update — rev r16 · 2026-05-14
+
+Sprint J adds a **second** accent and a **second** brand mark. The
+primaries from rev r15 stay locked exactly as they are; rev r16 is
+purely additive.
+
+### Second accent: COPPER `#b8865a`
+- **Primary stays cream** (`#f4ead5`) — prose, brand wordmarks, most
+  surfaces, the warm-light-source feeling of the Eclipse reference.
+- **Copper is reserved for**:
+  - Icon ring outlines (every NYXUS-Glyph app icon)
+  - Micro-accents: toggle thumbs, progress fills, focus rings
+  - High-contrast highlights where cream would lose against bright
+    cream backgrounds
+- Hex `#b8865a` is intentionally desaturated. It must read as **warm
+  metal**, never **yellow gold**. Bright golds (`#d4b87a`, `#ffd700`)
+  remain BANNED.
+- SCSS tokens: `$copper, $copper-soft, $copper-deep, $copper-glow,
+  $copper-edge, $copper-bg-soft, $copper-bg-active`.
+- Accent registry: `accent.json` "copper" preset is now selectable
+  alongside "aurora" (cream).
+- Welcome wizard: "Copper" is the second option in the accent picker,
+  right after "Eclipse Cream".
+
+### Second mark: THIN-RING ECLIPSE
+- **Primary stays the filled-disc Eclipse** (`docs/brand/nyxus-eclipse-reference.png`)
+  — boot, login, lock, welcome hero, dock-launcher.
+- **Thin-ring is reserved for small-context UI**:
+  - Login glyph (small SDDM avatar)
+  - Plymouth subtle states (low-contrast progress)
+  - Icon-grid centre symbols where filled disc would dominate
+  - Welcome wizard step glyphs
+- Reference: `docs/brand/nyxus-eclipse-thinring-mark.png` (image 6 —
+  "NYUS" monolith with pencil-stroke circle + water reflection).
+- Live SVG: `usr/share/icons/NYXUS-Glyph/scalable/places/nyxus-eclipse-thinring.svg`
+  — single 0.7px cream stroke at r=18 with a small bright-spot
+  diamond suggestion at top-right.
+
+### Icon contract: NYXUS-Glyph
+The **unified app-icon contract** for every shipped NYXUS app:
+- Black puck (radial gradient `#1c1c1c → #000`)
+- Thin copper ring at r=23.5 (stroke 0.9, copper `#b8865a` at 92% opacity)
+- Centred cream glyph (`#f4ead5`, stroke 1.4, line-cap round)
+- Reference mood: `docs/brand/nyxus-icon-style-reference.png` and
+  `docs/brand/nyxus-icon-grid-reference.png`
+- Theme directory: `usr/share/icons/NYXUS-Glyph/`
+- Default GTK icon theme (gtk-3.0 + gtk-4.0) switched to NYXUS-Glyph;
+  inherits NYXUS-Dark → Papirus-Dark → Adwaita → hicolor for every
+  non-NYXUS app.
+
+### What this does NOT change
+- The cream `#f4ead5` lock from rev r15 is still in force. Nothing
+  cream-coloured becomes copper without an explicit design decision.
+- The filled-disc Eclipse stays the primary brand mark. Boot, login,
+  lock, welcome, and dock-launcher still use it — unchanged.
+- The banned palette (`#a06bff, #3ad8ff, #d4b87a, #ff4d6b, ...`)
+  stays banned. Copper `#b8865a` is a NEW token, not a relaxation
+  of the ban.
+
+— Updated rev r16 · 2026-05-14
