@@ -2344,9 +2344,16 @@ EWW_AIR="${AIROOT}/etc/skel/.config/eww/eww.yuck"
 [[ -f "$EWW_SRC" ]] && grep -q ':y "8" :width "96%" :height "40px"' "$EWW_SRC" \
   && ok "Sprint I: eww source has slim bar-bottom (40px y:8 96%) — drift resolved" \
   || fail "Sprint I: eww source still has pre-Sprint-I bar-bottom values"
-[[ -f "$EWW_SRC" ]] && grep -q ':height "26px" :anchor "top center"' "$EWW_SRC" \
-  && ok "Sprint I: eww source has slim bar-top (26px) — drift resolved" \
-  || fail "Sprint I: eww source still has pre-Sprint-I bar-top values"
+# rev 2026-05-14 r17 — bar-top is now FLOATING: exclusive=false, x=12 y=8
+# width=98% height=32px, with frosted-chip styling in eww.scss. Lock the
+# new geometry so a future drift attempt to revert to the edge-anchored
+# 26px strip fails verify.
+[[ -f "$EWW_SRC" ]] \
+  && grep -q ':x "12" :y "8" :width "98%" :height "32px" :anchor "top center"' "$EWW_SRC" \
+  && grep -q 'defwindow bar-top' "$EWW_SRC" \
+  && grep -q ':exclusive false :namespace "nyxus-bar-top"' "$EWW_SRC" \
+  && ok "Sprint I: eww source has slim FLOATING bar-top (32px, x12 y8 w98%, non-exclusive)" \
+  || fail "Sprint I: eww source bar-top is not the r17 slim-floating geometry"
 if [[ -f "$EWW_SRC" && -f "$EWW_AIR" ]] && diff -q "$EWW_SRC" "$EWW_AIR" >/dev/null; then
   ok "Sprint I: eww source ↔ airootfs are byte-identical (no drift)"
 else

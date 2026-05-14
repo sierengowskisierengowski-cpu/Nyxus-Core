@@ -51,6 +51,28 @@ notify() {
 log "starting (user=${USER:-?} home=${HOME:-?} version=${BOOTSTRAP_VERSION})"
 mkdir -p "${NYXUS_DIR}"
 
+# ── Live ISO short-circuit (rev 2026-05-14 r17) ─────────────────────────────
+# Inside an Arch live ISO, the airootfs is the source of truth — every
+# config nyxus-bootstrap would normally pull from production is ALREADY
+# baked into / by mkarchiso at build time. Pulling again would:
+#   * stall the EWW bar for 120s (nyxus-wait-bootstrap blocks on the
+#     marker), leaving the user with a bare wallpaper-less desktop
+#   * potentially CLOBBER the airootfs configs with a stale production
+#     snapshot, undoing fresh fixes shipped in this very ISO
+#   * emit a confusing "first-boot setup starting" splash on a session
+#     the user doesn't intend to keep
+#
+# Detection: archiso always mounts /run/archiso/{bootmnt,airootfs} during
+# the live session. Either path is a definitive signal we are NOT on an
+# installed disk. Write the marker so nyxus-wait-bootstrap proceeds, log
+# what we did, and exit clean.
+if [[ -d /run/archiso/bootmnt || -d /run/archiso/airootfs ]]; then
+  log "live ISO detected (/run/archiso present) — airootfs is canonical, skipping pull"
+  echo "${BOOTSTRAP_VERSION}-liveiso" > "${MARK}"
+  notify 5 5000 "rgb(e8edf5)" "live session ready (no install needed) · welcome"
+  exit 0
+fi
+
 # Already bootstrapped → version check fast path
 # If marker contains current version → no-op (steady state).
 # If marker contains an older version → fall through and re-run so the
