@@ -73,7 +73,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   all: unset;
   font-family: $font-body;
   font-size: 12px;
-  color: #e8edf5;
+  color: #f4ead5;
 }
 
 /* ── BARS ─────────────────────────────────────────────────────────── */
@@ -108,7 +108,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   border-radius: 3px;
   background: rgba(17, 21, 31, 0.6);
   border: 1px solid rgba(244, 234, 213, 0.10);
-  color: #e8edf5;
+  color: #f4ead5;
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .pill:hover {
@@ -215,7 +215,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 /* ── TICKER (top bar) ─────────────────────────────────────────────── */
 
 .ticker-label {
-  color: #e8edf5;
+  color: #f4ead5;
   font-weight: 700;
   letter-spacing: 0.20em;
   font-size: 10px;
@@ -261,7 +261,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 }
 .ws-pill:hover {
   background: rgba(244, 234, 213, 0.14);
-  color: #e8edf5;
+  color: #f4ead5;
 }
 .ws-pill-active {
   background: linear-gradient(135deg, #c4b491, #f4ead5);
@@ -639,7 +639,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 .pp-save    { color: #4ade80; border-color: rgba(74, 222, 128, 0.45); }
 .upd-many   { color: #ffb04a; border-color: rgba(255, 176, 74, 0.55); }
 /* P2.12 review fix — locked monochrome (no neon accent in notif state). */
-.notif-on   { color: #e8edf5; border-color: rgba(232, 237, 245, 0.55); }
+.notif-on   { color: #f4ead5; border-color: rgba(232, 237, 245, 0.55); }
 .notif-dnd  { color: #5a6278; border-color: rgba(255, 255, 255, 0.06); }
 
 /* Top-bar player (right-aligned) */
@@ -753,7 +753,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.22em;
-  color: #e8edf5;
+  color: #f4ead5;
   padding-bottom: 4px;
 }
 
@@ -779,7 +779,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 3px;
   padding: 4px 10px;
-  color: #e8edf5;
+  color: #f4ead5;
   font-size: 14px;
 }
 .qs-settings:hover { background: rgba(255, 255, 255, 0.14); }
@@ -823,7 +823,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   min-height: 6px;
 }
 .qs-scale highlight {
-  background: #e8edf5;
+  background: #f4ead5;
   border-radius: 3px;
 }
 .qs-scale slider {
@@ -843,7 +843,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   border-radius: 3px;
 }
 .qs-np-icon  { font-size: 18px; color: #ffffff; min-width: 22px; }
-.qs-np-title { color: #e8edf5; font-size: 12px; font-weight: 600; }
+.qs-np-title { color: #f4ead5; font-size: 12px; font-weight: 600; }
 .qs-np-artist { color: #8b94a8; font-size: 10px; }
 .qs-np-btn {
   background: transparent;
@@ -879,7 +879,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   padding-bottom: 4px;
 }
 .empty-title {
-  color: #e8edf5;
+  color: #f4ead5;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -909,7 +909,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
  * P2.12 review fix: this rule used to apply cyan neon to every
  * flyout's secondary action (WiFi toggle/rescan, BT toggle/scan,
  * Notification DND/Clear, advanced shortcuts). Locked palette is
- * white #e8edf5 / grey #c8ccd6 / black, no cyan/violet. */
+ * white #f4ead5 / grey #c8ccd6 / black, no cyan/violet. */
 .wifi-toggle, .wifi-rescan, .bt-toggle, .bt-scan, .notif-dnd, .notif-clear,
 .wifi-advanced, .bt-advanced, .mix-advanced {
   padding: 6px 12px;
@@ -951,7 +951,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 }
 
 .wifi-bars { color: #f4ead5; font-family: "JetBrains Mono Nerd Font", monospace; min-width: 44px; }
-.wifi-name { background: transparent; border: none; color: #e8edf5; font-size: 12px; }
+.wifi-name { background: transparent; border: none; color: #f4ead5; font-size: 12px; }
 .wifi-name:hover { color: #ffffff; text-shadow: 0 0 8px rgba(244, 234, 213, 0.55); }
 .wifi-sig { color: #8b94a8; font-size: 10px; min-width: 36px; }
 .wifi-forget {
@@ -997,7 +997,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   min-width: 22px;
 }
 .mix-pick:hover { color: #ffffff; text-shadow: 0 0 10px rgba(244, 234, 213, 0.65); }
-.mix-name { color: #e8edf5; font-size: 12px; }
+.mix-name { color: #f4ead5; font-size: 12px; }
 .mix-pct { color: #8b94a8; font-size: 10px; min-width: 38px; }
 .mix-mute {
   padding: 2px 8px; border-radius: 3px;
@@ -1037,7 +1037,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   padding: 6px 0;
   border-radius: 3px;
   font-size: 12px;
-  color: #e8edf5;
+  color: #f4ead5;
 }
 .cal-day-in:hover { background: rgba(244, 234, 213, 0.16); }
 .cal-day-out { color: #3a4055; }
@@ -1084,7 +1084,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 }
 .notif-mute:hover { background: rgba(255, 255, 255, 0.08); color: #ffffff; }
 .notif-mute-on {
-  color: #e8edf5;
+  color: #f4ead5;
   border-color: rgba(232, 237, 245, 0.45);
   background: rgba(232, 237, 245, 0.08);
 }
@@ -1103,8 +1103,8 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
    notice that notifications are being suppressed. */
 .notif-dnd-on {
   color: #050810;
-  background: #e8edf5;
-  border-color: #e8edf5;
+  background: #f4ead5;
+  border-color: #f4ead5;
 }
 .notif-row-muted { opacity: 0.6; }
 
@@ -1149,7 +1149,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   border: 1px solid $hairline-white;
   border-radius: 3px;
   padding: 8px 14px;
-  color: #e8edf5;
+  color: #f4ead5;
   font-size: 12px;
   letter-spacing: 0.04em;
 }
@@ -1182,7 +1182,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 }
 .startmenu-tile-glyph {
   font-size: 24px;
-  color: #e8edf5;
+  color: #f4ead5;
   padding-bottom: 4px;
 }
 .startmenu-tile-label {
@@ -1198,7 +1198,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .startmenu-recent-row:hover { background: $glass-deeper; }
-.startmenu-recent-name { font-size: 11px; color: #e8edf5; }
+.startmenu-recent-name { font-size: 11px; color: #f4ead5; }
 .startmenu-recent-path { font-size: 9px;  color: #8b94a8; }
 
 .startmenu-footer {
@@ -1211,7 +1211,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 .startmenu-user {
   font-size: 12px;
   font-weight: 600;
-  color: #e8edf5;
+  color: #f4ead5;
   letter-spacing: 0.04em;
 }
 .startmenu-power-btn {
@@ -1319,7 +1319,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 }
 
 /* Slightly taller bottom bar so the taskbar tiles don't crowd. */
-.bar-bottom { padding: 6px 14px; min-height: 48px; }
+.bar-bottom { padding: 4px 12px; min-height: 32px; }
 
 /* ═════════════════════════════════════════════════════════════════════
  * NYXUS WARM ACCENT OVERLAY (rev 2026-05-12)
@@ -1390,7 +1390,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 /* Tooltips — keep mono but tint border so they feel "of the system" */
 tooltip {
   background: $glass-deepest;
-  color: #e8edf5;
+  color: #f4ead5;
   border: 1px solid $gold-edge;
   border-radius: 3px;
   padding: 4px 8px;

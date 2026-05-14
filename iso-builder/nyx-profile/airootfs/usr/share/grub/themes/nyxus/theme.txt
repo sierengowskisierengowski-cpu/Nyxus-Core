@@ -1,5 +1,7 @@
-# NYXUS · GRUB theme · rev 2026-05-14 r2
-# Canonical r15 palette: #f4ead5 cream accent + #e8edf5 off-white.
+# NYXUS · GRUB theme · rev 2026-05-14 r3 (Sprint G)
+# Locked rev r15 palette: cream #f4ead5 + bronze-dim #8a8068 + true
+# triple-black #0a0a0a. Old rev shipped purple-grey #7b7390 +
+# purple-white #e9e5f2 + cyan #e8edf5 — all rev r15 violations.
 # Sharp slab edges, monospace, no rounded corners. The terminal_box_*
 # nine-patch and select_* horizontal stretch atlases are intentionally
 # 1px tall so GRUB stretches them cleanly at any resolution.
@@ -7,11 +9,11 @@
 title-text: ""
 title-color: "#f4ead5"
 title-font:  "Unifont Regular 16"
-message-color: "#7b7390"
+message-color: "#8a8068"
 message-font:  "Unifont Regular 14"
 
 desktop-image: "background.png"
-desktop-color: "#0a0a14"
+desktop-color: "#0a0a0a"
 
 terminal-font: "Unifont Regular 16"
 terminal-box:  "terminal_box_*.png"
@@ -34,7 +36,7 @@ terminal-box:  "terminal_box_*.png"
     width    = 100%
     height   = 20
     align    = "center"
-    color    = "#7b7390"
+    color    = "#8a8068"
     font     = "Unifont Regular 14"
 }
 
@@ -45,8 +47,8 @@ terminal-box:  "terminal_box_*.png"
     height = 50%
 
     item_font          = "Unifont Regular 16"
-    item_color         = "#e9e5f2"
-    selected_item_color = "#0a0a14"
+    item_color         = "#f4ead5"
+    selected_item_color = "#0a0a0a"
     selected_item_pixmap_style = "select_*.png"
     item_height  = 36
     item_padding = 8
@@ -63,9 +65,9 @@ terminal-box:  "terminal_box_*.png"
     width        = 50%
     height       = 12
     fg_color     = "#f4ead5"
-    bg_color     = "#1a1a28"
-    border_color = "#e8edf5"
+    bg_color     = "#1a1a1a"
+    border_color = "#f4ead5"
     text         = "@TIMEOUT_NOTIFICATION_LONG@"
-    text_color   = "#e9e5f2"
+    text_color   = "#8a8068"
     font         = "Unifont Regular 12"
 }
