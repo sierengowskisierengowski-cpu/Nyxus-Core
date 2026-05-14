@@ -100,8 +100,9 @@ playerctl
 pamixer
 pavucontrol
 swaybg
-# `awww` provides/replaces `swww` in current Arch repos.
-awww
+# `swww` is the Wayland animated wallpaper daemon (official Arch extra).
+# (Previously listed as `awww` which is a different, unrelated project.)
+swww
 wdisplays
 # wlogout removed 2026-05-11 — built from upstream source by
 # customize_airootfs.sh (was failing pacstrap on mirrors that don't yet
@@ -128,9 +129,9 @@ alsa-utils
 # ── GTK4 + Python (for NYXUS apps) ────────────────────────────────
 gtk4
 libadwaita
-adw-gtk-theme
+adw-gtk3
 papirus-icon-theme
-vte4
+vte3
 vte-common
 python
 python-gobject
@@ -148,8 +149,10 @@ python-dnspython
 # first-run fallback inside install.sh.
 python-bcrypt
 python-reportlab
-python-shodan
-python-piexif
+# NOTE: `python-shodan` is AUR-only — install.sh handles it as a pip
+# fallback at first run if needed (nyxus-phantom threat-intel feature).
+# NOTE: `python-piexif` is AUR-only — install.sh handles it as a pip
+# fallback at first run (EXIF metadata editing for the media library).
 # NOTE: `python-whois` is AUR-only — install.sh handles it as a pip
 # fallback at first run. The `whois` C binary below covers the CLI need.
 whois
@@ -245,7 +248,10 @@ yubikey-manager
 python-opencv
 # python-dlib removed 2026-05-11 — AUR-only, pulled in transitively by
 # howdy's own debian/install.sh during the customize_airootfs.sh build.
-v4l2loopback-dkms
+# v4l2loopback — virtual V4L2 loopback device kernel module (official Arch
+# extra; replaces the AUR `v4l2loopback-dkms` name which is not in
+# official repos).
+v4l2loopback
 # oath-toolkit ships oathtool (TOTP code generator/verifier) and pam_oath.
 # Used by the backdoor stack as the 4th factor (rotating 30-second OTP).
 oath-toolkit

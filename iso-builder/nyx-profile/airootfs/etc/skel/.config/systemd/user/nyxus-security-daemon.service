@@ -1,6 +1,7 @@
 [Unit]
 Description=NYXUS Security indicator daemon (camera/mic/location/screen)
 Documentation=https://nyxus.os/docs/security
+After=graphical-session.target
 PartOf=graphical-session.target
 
 [Service]
