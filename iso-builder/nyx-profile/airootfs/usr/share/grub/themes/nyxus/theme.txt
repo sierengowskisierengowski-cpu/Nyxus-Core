@@ -1,32 +1,71 @@
-# NYXUS GRUB theme · rev 2026-05-13 r1
+# NYXUS · GRUB theme · rev 2026-05-14 r2
+# Canonical DARK MIRROR palette: #a06bff purple + #3ad8ff cyan.
+# Sharp slab edges, monospace, no rounded corners. The terminal_box_*
+# nine-patch and select_* horizontal stretch atlases are intentionally
+# 1px tall so GRUB stretches them cleanly at any resolution.
+
 title-text: ""
+title-color: "#a06bff"
+title-font:  "Unifont Regular 16"
+message-color: "#7b7390"
+message-font:  "Unifont Regular 14"
+
 desktop-image: "background.png"
-desktop-color: "#050505"
+desktop-color: "#0a0a14"
+
 terminal-font: "Unifont Regular 16"
-terminal-box: "terminal_box_*.png"
+terminal-box:  "terminal_box_*.png"
+
++ label {
+    text     = "NYXUS · DARK MIRROR"
+    left     = 50%-160
+    top      = 18%
+    width    = 320
+    height   = 24
+    align    = "center"
+    color    = "#a06bff"
+    font     = "Unifont Regular 16"
+}
+
++ label {
+    text     = "Use ↑↓ to choose · Enter to boot · E to edit · C for console"
+    left     = 0
+    top      = 92%
+    width    = 100%
+    height   = 20
+    align    = "center"
+    color    = "#7b7390"
+    font     = "Unifont Regular 14"
+}
+
 + boot_menu {
-    left = 15%
-    top = 30%
-    width = 70%
+    left   = 15%
+    top    = 30%
+    width  = 70%
     height = 50%
-    item_font = "Unifont Regular 16"
-    item_color = "#c8ccd6"
-    selected_item_color = "#ffffff"
+
+    item_font          = "Unifont Regular 16"
+    item_color         = "#e9e5f2"
+    selected_item_color = "#0a0a14"
     selected_item_pixmap_style = "select_*.png"
-    item_height = 36
+    item_height  = 36
     item_padding = 8
     item_spacing = 4
-    icon_width = 0
-    icon_height = 0
+    icon_width   = 0
+    icon_height  = 0
+    menu_pixmap_style = ""
 }
+
 + progress_bar {
-    id = "__timeout__"
-    left = 25%
-    top = 85%
-    width = 50%
-    height = 12
-    fg_color = "#e8edf5"
-    bg_color = "#1a1a22"
-    border_color = "#2a2a36"
-    text = "@TIMEOUT_NOTIFICATION_LONG@"
+    id           = "__timeout__"
+    left         = 25%
+    top          = 85%
+    width        = 50%
+    height       = 12
+    fg_color     = "#a06bff"
+    bg_color     = "#1a1a28"
+    border_color = "#3ad8ff"
+    text         = "@TIMEOUT_NOTIFICATION_LONG@"
+    text_color   = "#e9e5f2"
+    font         = "Unifont Regular 12"
 }
