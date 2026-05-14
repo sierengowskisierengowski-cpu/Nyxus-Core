@@ -499,8 +499,4 @@ tpm2-tools
 macchanger
 dnscrypt-proxy
 sound-theme-freedesktop
-libcanberra-pulse
-libcanberra-gstreamer
-calamares
-ckbcomp
 qt5-svg

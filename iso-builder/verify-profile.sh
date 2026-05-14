@@ -899,7 +899,7 @@ else
   fail "Settings: sounds not registered or SoundsPage missing"
 fi
 # Required runtime packages
-for pkg in libcanberra libcanberra-pulse sound-theme-freedesktop pipewire-pulse; do
+for pkg in libcanberra sound-theme-freedesktop pipewire-pulse; do
   grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
     && ok "package: ${pkg}" \
     || fail "missing package: ${pkg}"
@@ -972,12 +972,27 @@ else
   fail "calamares: live-session desktop launcher missing"
 fi
 
-# Required Arch packages
-for pkg in calamares ckbcomp; do
-  grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
-    && ok "package: ${pkg}" \
-    || fail "missing package: ${pkg}"
-done
+# Calamares installation validation (Arch package or AUR build path):
+# Calamares may be installed from repos OR built from AUR in customize_airootfs.sh.
+# Matches either "_aur_build calamares" helpers or direct "yay/paru -S ... calamares" installs.
+CALAMARES_AUR_PATTERN='(_aur_build[[:space:]]+calamares|((yay|paru)[[:space:]]+-S([^#\n]*[[:space:]])?calamares))([[:space:]]|$)'
+if grep -qE '^calamares$' "${PROFILE}/packages.x86_64"; then
+  ok "package: calamares"
+elif [[ -f "${AIROOT}/root/customize_airootfs.sh" ]] \
+     && grep -Eq "${CALAMARES_AUR_PATTERN}" "${AIROOT}/root/customize_airootfs.sh"; then
+  ok "calamares built from AUR via customize_airootfs.sh"
+else
+  fail "calamares not in packages.x86_64 and not built in customize_airootfs.sh"
+fi
+# ckbcomp package was removed from official Arch repos; ensure we don't
+# carry a hardcoded runtime dependency on it in shipped Calamares configs.
+# Include *.desc because Calamares branding metadata lives in branding.desc.
+if [[ -d "${AIROOT}/etc/calamares" ]] \
+   && grep -rlq --include='*.conf' --include='*.desc' --include='*.qml' '\bckbcomp\b' "${AIROOT}/etc/calamares"; then
+  fail "calamares config still references ckbcomp directly"
+else
+  ok "calamares config has no direct ckbcomp dependency"
+fi
 
 # ── 13t. Tier 1 · GRUB Theme (rev 2026-05-14) ──────────────────────
 hd "13t. Tier 1 · GRUB Theme"
