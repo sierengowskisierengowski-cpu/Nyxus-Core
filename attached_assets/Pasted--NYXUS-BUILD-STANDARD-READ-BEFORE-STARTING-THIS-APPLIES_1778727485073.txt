@@ -1,0 +1,51 @@
+
+NYXUS BUILD STANDARD — READ BEFORE STARTING. THIS APPLIES TO EVERYTHING PAST, PRESENT, AND FUTURE.
+This is a professional enterprise-grade operating system build. Every single feature, app, component, widget, and UI element — everything already built and everything being built now — must meet this standard completely. No exceptions, no stubs, no placeholders, no greyed out options, no toggles that do nothing, no empty pages. If it is not complete it does not get merged.
+Every feature must be highly designed, fully polished, maxed out, and feel like it belongs in a system that stands next to macOS and Windows 11. Nothing basic, nothing boring, nothing generic. Every pixel intentional. Every animation smooth. Every interaction satisfying. Stay within the existing NYXUS brand identity already established in the codebase — do not change any existing colors, fonts, or brand elements. Only enhance and polish what is already there and build new things to match it exactly.
+
+YOUR ROLE — Frontend, Visual Design, and UI Layer
+You are responsible for everything the user sees and interacts with. Copilot handles the backend wiring, system binaries, and ISO staging. You handle the visual layer — making everything look and feel premium, polished, and cohesive. When you finish a UI component Copilot will wire it to the real backend functions. Your job is to make it look and behave exactly right so the wiring is straightforward.
+Do not change any existing brand colors, fonts, or established design tokens. Match everything you build to what already exists in the codebase exactly.
+
+PHASE 1 — Upgrade everything already built to maximum visual polish:
+Go through every existing UI component, app, widget, and settings page in the repo. For each one upgrade it to the absolute maximum visual standard using the existing brand identity. Nothing should look unfinished, generic, or inconsistent. Everything must feel like it was designed by the same hand at the same time.
+Specifically upgrade these:
+All GTK4 Python apps — audit every single one for visual consistency. Every app must match the established brand exactly. No app should look different from any other. They must all feel like one cohesive product.
+Settings hub — must look premium, organized, and intuitive. Every section clearly labeled, every page beautifully laid out, every option visually distinct and readable. Search bar at the top filtering options in real time. Sidebar navigation with icons and labels. Smooth transition animations between pages. Must feel like macOS System Preferences but in the NyX aesthetic.
+EWW bar and widgets — bar must look sharp and premium. Clock, workspace indicators, system tray all perfectly spaced and styled. Quick Settings flyout must be gorgeous — frosted glass, perfect padding, icons for every toggle, smooth slide animation. Notification center polished with clear grouping, app icons, timestamps, action buttons. Clipboard manager overlay premium. Mission control smooth animations and clean workspace thumbnails.
+SDDM login screen — must be stunning. Full wallpaper background, frosted glass login panel centered, NYXUS logo at top, clean input fields, smooth focus animations, clock and date displayed elegantly. First thing anyone sees — must make a statement.
+GRUB boot menu — branded, clean, dark, NyX themed. Not stock.
+Plymouth boot splash — smooth animated NYXUS logo or owl mascot on pure black. Clean and premium.
+Notification toasts — beautiful. Rounded, frosted glass, app icon, title, message, action buttons, smooth slide-in and slide-out animation.
+Wallpaper Studio UI — must be the most visually impressive app in the build. Grid view with beautiful thumbnails, smooth hover effects, category sidebar, preview panel with adjustment sliders, all perfectly laid out and animated.
+Dock — must look stunning. Smooth magnification on hover, clean app icons with badges, indicator dots, blur and transparency, smooth animations. Must feel premium.
+Theme Pack selector in Appearance — must show beautiful previews of each pack, smooth switching animation, color swatches displayed elegantly.
+
+PHASE 2 — Build the visual layer for everything not yet built:
+After phase 1 is complete build the UI for every new feature in this priority order. Match the existing brand exactly for everything. Premium, polished, cohesive.
+
+Download Portal — hero section, screenshot carousel, what's new, verified ISO checksum, mirror selector, clean download button. Real product website energy.
+Documentation site — handbook, app docs, keybind cheat sheet, troubleshooting. Clean readable typography, sidebar navigation, search, branded throughout.
+Dashboard Today view — weather, calendar, mail, music, system stats, recent files cards. Beautiful frosted glass card design. Smooth load animations.
+NYXUS Calendar UI — week/month/agenda views, event cards, today highlight, smooth transitions, add event panel, reminder UI.
+NYXUS Music UI — library grid, now-playing bar, album art prominent, playlist sidebar, beautiful playback controls.
+NYXUS Photos UI — fast image grid, hover zoom preview, EXIF panel, album sidebar, full screen viewer.
+NYXUS Reader UI — clean reading view, night mode, annotation toolbar, collections sidebar, progress bar, beautiful typography.
+NYXUS Disks UI — partition map visualization, SMART health color coded indicators, benchmark charts, action buttons clearly organized.
+NYXUS Password Vault UI — clean list view, category sidebar, search, entry detail panel, generator UI, security score.
+NYXUS Mail UI — three pane layout, conversation threading, compose window, folder sidebar, search bar.
+NYXUS Maps UI — map view, smooth pan and zoom, search bar, route display, offline region manager.
+NYXUS Drivers UI — device list with status indicators, recommended driver cards, install progress, kernel module status.
+Permissions inspector — app list with permission badges, toggle per permission per app, clear visual language.
+Camera and microphone indicator dots — subtle, always visible when active, click to see which app is using them.
+Changelog What's New pane — styled beautifully, fires on first boot after upgrade, release highlights with icons and descriptions.
+Crash reporter UI — clean dialog, expandable details, send/cancel, privacy assurance message.
+Telemetry opt-in pane — plain readable language, toggle per category, completely transparent.
+Press kit and marketing assets — logo lockup, color palette reference, screenshot templates, tagline variations.
+Launch trailer — 60 second cinematic, motion graphics, real desktop footage, subtitles.
+
+
+After every phase:
+Every UI component must match the existing NYXUS brand exactly before pushing. Ask yourself — does this look like it belongs on a system worth a thousand dollars? Does it match everything else already in the build? Is every animation smooth? Is every interaction satisfying? If the answer is no — fix it before pushing.
+Push all visual work to the repo so Copilot can pull it and wire the backend. Include clear comments explaining what each UI element connects to so Copilot knows exactly how to wire it.
+This must ship complete, polished, and premium. If it does not match the existing brand and quality level it goes back. No compromises.
