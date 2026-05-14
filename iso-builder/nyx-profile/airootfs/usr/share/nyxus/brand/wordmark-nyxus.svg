@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  NYXUS — Wordmark lockup (cream on transparent)
+  Uses Inter Bold geometry approximation; renderers without Inter
+  installed fall back to the embedded Inter Bold from the system.
+  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 96" width="480" height="96">
+  <text x="240" y="64"
+        font-family="Inter, 'Inter Bold', sans-serif"
+        font-weight="800"
+        font-size="56"
+        letter-spacing="14"
+        text-anchor="middle"
+        fill="#f4ead5">NYXUS</text>
+</svg>

@@ -1,0 +1,73 @@
+/* ============================================================================
+ *  NYXUS-Dark — GTK 4 / libadwaita overlay  (rev r15)
+ *  ----------------------------------------------------------------------------
+ *  Re-routes libadwaita's named accent slots to the NYXUS cream brand and
+ *  tightens corner radii to the 3px brand spec. libadwaita already provides
+ *  the dark palette via prefer-dark; this file only retunes accents/radii.
+ *
+ *  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ * ========================================================================= */
+
+@define-color accent_color           #f4ead5;
+@define-color accent_bg_color        #f4ead5;
+@define-color accent_fg_color        #06060a;
+@define-color accent_blue            #f4ead5;
+
+@define-color window_bg_color        #06060a;
+@define-color window_fg_color        #f4ead5;
+@define-color view_bg_color          #06060a;
+@define-color view_fg_color          #f4ead5;
+@define-color headerbar_bg_color     #0a0a0e;
+@define-color headerbar_fg_color     #f4ead5;
+@define-color headerbar_border_color alpha(#f4ead5, 0.10);
+@define-color card_bg_color          #0a0a0e;
+@define-color card_fg_color          #f4ead5;
+@define-color popover_bg_color       alpha(#06060a, 0.92);
+@define-color popover_fg_color       #f4ead5;
+
+button,
+entry,
+.toggle,
+.linked > button,
+.linked > entry,
+.osd,
+popover > contents,
+menu,
+.card,
+toast {
+  border-radius: 3px;
+}
+
+button.suggested-action,
+button.opaque {
+  background-color: #f4ead5;
+  color: #06060a;
+}
+
+button.destructive-action {
+  background-color: alpha(#f87171, 0.15);
+  color: #f87171;
+  border: 1px solid alpha(#f87171, 0.5);
+}
+
+entry:focus,
+entry:focus-within {
+  outline: 1px solid alpha(#f4ead5, 0.5);
+  outline-offset: -1px;
+}
+
+switch:checked        { background-color: #f4ead5; }
+switch:checked slider { background-color: #06060a; }
+
+scrollbar slider {
+  background: alpha(#f4ead5, 0.18);
+  min-width: 6px;
+  min-height: 6px;
+}
+scrollbar slider:hover { background: alpha(#f4ead5, 0.32); }
+
+windowhandle,
+headerbar {
+  background: linear-gradient(to bottom, #0a0a0e 0%, #06060a 100%);
+  border-bottom: 1px solid alpha(#f4ead5, 0.10);
+}

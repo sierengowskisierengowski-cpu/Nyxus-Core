@@ -79,25 +79,31 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 /* ── BARS ─────────────────────────────────────────────────────────── */
 
 .bar {
-  /* High-contrast readable surface — bars are NOT glass.
-     Wallpaper must NOT bleed through here, only through flyouts. */
-  background: rgba(8, 10, 16, 0.96);
-  color: #ffffff;
+  /* rev r15 — slim floating glass bar. Layered transparency + cream hairline
+     edge gives the glass feel; deep box-shadow keeps text readable above any
+     wallpaper. The wallpaper is allowed to bleed through ~25% so the bar
+     visibly floats. */
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 14, 0.78) 0%,
+    rgba(6,  6,  10, 0.82) 100%);
+  color: #f4ead5;
   font-weight: 500;
-  border: 1px solid $gold-edge;
+  border: 1px solid rgba(244, 234, 213, 0.12);
   border-radius: 3px;
-  padding: 6px 14px;
+  padding: 4px 12px;
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.6),
-    0 14px 44px rgba(0, 0, 0, 0.75),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 0 0 1px rgba(0, 0, 0, 0.55),
+    0 10px 32px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(244, 234, 213, 0.06);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
 }
 .bar label,
-.bar button { color: #ffffff; font-weight: 500; }
+.bar button { color: #f4ead5; font-weight: 500; }
 
 /* .bar-bottom sizing now defined alongside the P3.13d enterprise loadout
    block at the bottom of this file (search a.search-btn references). */
-.bar-top    { padding: 4px 14px; min-height: 24px; border-radius: 0 0 3px 3px; }
+.bar-top    { padding: 3px 12px; min-height: 20px; border-radius: 0 0 3px 3px; }
 
 .bar-cluster { padding: 0 6px; }
 
@@ -1318,8 +1324,9 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   padding-right: 2px;
 }
 
-/* Slightly taller bottom bar so the taskbar tiles don't crowd. */
-.bar-bottom { padding: 6px 14px; min-height: 48px; }
+/* rev r15 — slim floating bar. 32px target height (down from 48) keeps
+   taskbar tiles legible while reclaiming screen real estate. */
+.bar-bottom { padding: 4px 12px; min-height: 32px; }
 
 /* ═════════════════════════════════════════════════════════════════════
  * NYXUS WARM ACCENT OVERLAY (rev 2026-05-12)
