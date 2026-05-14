@@ -229,7 +229,15 @@ class SnapSettingsPage(Gtk.Box):
     def _toml_value(value: Any) -> str:
         if isinstance(value, bool):
             return "true" if value else "false"
-        return str(int(value))
+        if isinstance(value, int):
+            return str(value)
+        if isinstance(value, float):
+            return str(value)
+        return json.dumps(str(value))
+
+    @staticmethod
+    def _write_cfg_lines(lines: list[str]) -> None:
+        CFG_PATH.write_text("\n".join(lines).rstrip() + "\n")
 
     def _write_option(self, key: str, value: Any) -> None:
         CFG_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -256,7 +264,7 @@ class SnapSettingsPage(Gtk.Box):
             if in_options:
                 if key_pat.match(ln):
                     lines[i] = key_line
-                    CFG_PATH.write_text("\n".join(lines).rstrip() + "\n")
+                    self._write_cfg_lines(lines)
                     return
                 insert_at = i + 1
         if options_seen:
@@ -266,7 +274,7 @@ class SnapSettingsPage(Gtk.Box):
                 lines.append("")
             lines.append("[options]")
             lines.append(key_line)
-        CFG_PATH.write_text("\n".join(lines).rstrip() + "\n")
+        self._write_cfg_lines(lines)
 
     def _refresh_options(self) -> None:
         self._loading_controls = True
@@ -285,9 +293,18 @@ class SnapSettingsPage(Gtk.Box):
         if self._loading_controls:
             return
         run_async(
-            lambda: (self._write_option(key, value), rpc("reload")),
-            lambda _r: False,
+            lambda: self._apply_option_change(key, value),
+            self._after_option_change,
         )
+
+    def _apply_option_change(self, key: str, value: Any) -> dict:
+        self._write_option(key, value)
+        return rpc("reload")
+
+    def _after_option_change(self, result: dict) -> bool:
+        if not result.get("ok"):
+            self._refresh_options()
+        return False
 
 
 def main():
