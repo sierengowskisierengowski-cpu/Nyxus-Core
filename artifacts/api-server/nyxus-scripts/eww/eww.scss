@@ -113,7 +113,21 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 
 /* .bar-bottom sizing now defined alongside the P3.13d enterprise loadout
    block at the bottom of this file (search a.search-btn references). */
-.bar-top    { padding: 4px 14px; min-height: 24px; border-radius: 0 0 3px 3px; }
+/* Slim FLOATING bar (rev 2026-05-14 r17) — frosted-glass chip with
+   side margins, full corner radius, copper-touched border, and a
+   soft drop-shadow so it reads as a discrete element floating over
+   the wallpaper instead of an edge-anchored strip. Pairs with the
+   bar-top defwindow change in eww.yuck (exclusive=false, x=12 y=8
+   width=98%). */
+.bar-top {
+  padding: 4px 14px;
+  min-height: 24px;
+  border-radius: 14px;
+  background: rgba(10, 10, 14, 0.72);
+  border: 1px solid rgba(184, 134, 90, 0.22);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45),
+              inset 0 1px 0 rgba(244, 234, 213, 0.04);
+}
 
 .bar-cluster { padding: 0 6px; }
 
