@@ -317,12 +317,49 @@ if (( WP_COUNT >= 50 )); then
 else
   fail "only ${WP_COUNT} wallpapers (expected >=50)"
 fi
-[[ -f "${WP_DIR}/manifest.tsv" ]] && ok "manifest.tsv present" || fail "manifest.tsv missing"
-MAN_LINES=$(grep -c . "${WP_DIR}/manifest.tsv" 2>/dev/null || echo 0)
-if (( MAN_LINES >= WP_COUNT )); then
-  ok "manifest.tsv has ${MAN_LINES} entries (>= ${WP_COUNT} files)"
+if [[ -f "${WP_DIR}/manifest.tsv" ]]; then
+  ok "manifest.tsv present"
+  # Strict TSV: every non-empty line must be exactly slug<TAB>display, both non-empty.
+  MAN_BAD=$(awk -F'\t' 'NF>0 && (NF!=2 || $1=="" || $2=="")' "${WP_DIR}/manifest.tsv" | wc -l)
+  if (( MAN_BAD == 0 )); then
+    ok "manifest.tsv is well-formed (slug<TAB>display)"
+  else
+    fail "manifest.tsv has ${MAN_BAD} malformed line(s)"
+  fi
+  MAN_SLUGS=$(awk -F'\t' 'NF>0{print $1}' "${WP_DIR}/manifest.tsv" | sort -u | wc -l)
+  MAN_LINES=$(grep -c . "${WP_DIR}/manifest.tsv")
+  if (( MAN_SLUGS == MAN_LINES )); then
+    ok "manifest slugs are unique (${MAN_SLUGS})"
+  else
+    fail "manifest has duplicate slugs (${MAN_LINES} lines, ${MAN_SLUGS} unique)"
+  fi
+  # Exact 1:1 parity: every manifest slug resolves to a shipped file (.png or .svg),
+  # and every shipped file has a manifest entry.
+  PARITY_FAIL=0
+  while IFS=$'\t' read -r slug _; do
+    [[ -z "${slug}" ]] && continue
+    if [[ ! -f "${WP_DIR}/${slug}.png" && ! -f "${WP_DIR}/${slug}.svg" ]]; then
+      PARITY_FAIL=$((PARITY_FAIL+1))
+    fi
+  done < "${WP_DIR}/manifest.tsv"
+  if (( PARITY_FAIL == 0 )); then
+    ok "every manifest slug resolves to a shipped wallpaper"
+  else
+    fail "${PARITY_FAIL} manifest slug(s) have no matching .png/.svg"
+  fi
+  ORPHAN=0
+  for f in "${WP_DIR}"/*.png "${WP_DIR}"/*.svg; do
+    [[ -f "${f}" ]] || continue
+    base=$(basename "${f}"); slug=${base%.*}
+    grep -qP "^${slug}\t" "${WP_DIR}/manifest.tsv" || ORPHAN=$((ORPHAN+1))
+  done
+  if (( ORPHAN == 0 )); then
+    ok "no orphan wallpaper files (every file has a manifest entry)"
+  else
+    fail "${ORPHAN} wallpaper file(s) missing from manifest"
+  fi
 else
-  fail "manifest.tsv has ${MAN_LINES} entries, expected >= ${WP_COUNT}"
+  fail "manifest.tsv missing"
 fi
 SDDM_BG="${AIROOT}/usr/share/sddm/themes/nyxus/backgrounds"
 SDDM_PNG=$(find "${SDDM_BG}" -maxdepth 1 -name '*.png' 2>/dev/null | wc -l)
@@ -333,11 +370,19 @@ else
 fi
 WP_CONF="${AIROOT}/etc/skel/.config/nyxus/wallpaper.conf"
 if [[ -f "${WP_CONF}" ]]; then
-  WP_DEFAULT=$(grep -oP '^path=\K.*' "${WP_CONF}" | head -1)
+  # Runtime schema: WALLPAPER="slug" + WALLPAPER_PATH="/abs/path" (consumed by
+  # nyxus-wallpaper-autostart and nyxus_wallpaper_studio.py).
+  WP_DEFAULT=$(grep -oP '^WALLPAPER_PATH="?\K[^"]+' "${WP_CONF}" | head -1)
+  WP_SLUG=$(grep -oP '^WALLPAPER="?\K[^"]+' "${WP_CONF}" | head -1)
   if [[ -n "${WP_DEFAULT}" && -f "${AIROOT}${WP_DEFAULT}" ]]; then
     ok "default wallpaper present: ${WP_DEFAULT}"
   else
-    fail "default wallpaper path invalid: ${WP_DEFAULT}"
+    fail "default WALLPAPER_PATH invalid or missing: '${WP_DEFAULT}'"
+  fi
+  if [[ -n "${WP_SLUG}" ]] && grep -qP "^${WP_SLUG}\t" "${WP_DIR}/manifest.tsv"; then
+    ok "default WALLPAPER slug listed in manifest: ${WP_SLUG}"
+  else
+    fail "default WALLPAPER slug missing or not in manifest: '${WP_SLUG}'"
   fi
 else
   fail "wallpaper.conf missing"
