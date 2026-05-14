@@ -1,221 +1,122 @@
-/* ============================================================
-   NYXUS — Start Menu  (Taskbar grid launcher)
-   Pure White Canvas · Neon Paint Splatter Grid
-   © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
-   ============================================================ */
-
 * {
-    canvas:  rgba(255, 252, 255, 0.97);
-    bg1:     rgba(248, 243, 255, 0.99);
-    bg2:     rgba(238, 230, 252, 0.99);
-
-    fg0:     #120820;
-    fg1:     #3b2060;
-    fg2:     rgba(80, 50, 130, 0.45);
-
-    splat-pink:   #e8edf5;
-    splat-purple: #e8edf5;
-    splat-blue:   #c8ccd6;
-    splat-green:  #c8ccd6;
-    splat-yellow: #e6b800;
-    splat-orange: #e8edf5;
+    bg-deep:   #0a0a14;
+    bg-card:   #050308;
+    text-hi:   #f4ead5;
+    text-lo:   rgba(244, 234, 213, 0.55);
+    hairline:  #1a1a28;
+    accent:    #f4ead5;
+    glass-bg:  rgba(10, 10, 20, 0.97);
+    glass-line: rgba(244, 234, 213, 0.22);
 
     background-color: transparent;
-    text-color:       @fg0;
-    border-color:     rgba(255, 0, 255, 0.40);
-    spacing: 0; padding: 0; margin: 0;
+    text-color: @text-hi;
 }
 
-/* ── Window — white card, pink splatter border ──────────── */
 window {
-    width:            720px;
-    background-color: @canvas;
-    border:           3px;
-    border-color:     @splat-pink;
-    border-radius:    12px;
-    padding:          0;
-    location:         center;
-    anchor:           center;
-    y-offset:         60px;
-    fullscreen:       false;
+    width: 720px;
+    background-color: @glass-bg;
+    border: 1px;
+    border-color: @glass-line;
+    border-radius: 3px;
+    padding: 0;
+    location: center;
+    anchor: center;
+    y-offset: 60px;
 }
 
 mainbox {
     background-color: transparent;
-    border:           0;
-    padding:          0;
-    spacing:          0;
-    children:         [ inputbar, message, listview, mode-switcher ];
+    children: [ inputbar, listview, mode-switcher ];
 }
 
-/* ── Search — white glass + pink accent ─────────────────── */
 inputbar {
-    background-color: @bg1;
-    border:           0 0 3px 0;
-    border-color:     @splat-pink;
-    border-radius:    9px 9px 0 0;
-    padding:          18px 22px;
-    spacing:          14px;
-    children:         [ prompt, entry ];
+    background-color: transparent;
+    border: 0 0 1px 0;
+    border-color: @hairline;
+    padding: 14px 16px;
+    spacing: 10px;
+    children: [ prompt, entry ];
 }
 
 prompt {
-    background-color: transparent;
-    text-color:       @splat-pink;
-    font:             "JetBrains Mono Bold 14";
-    padding:          0 10px 0 0;
-    vertical-align:   0.5;
+    text-color: @accent;
+    font: "JetBrains Mono Nerd Font Bold 12";
 }
 
 entry {
-    background-color: transparent;
-    text-color:       @fg0;
-    placeholder:      "Search apps, files, settings...";
-    placeholder-color: @fg2;
-    font:             "JetBrains Mono 13";
-    cursor:           text;
-    vertical-align:   0.5;
+    text-color: @text-hi;
+    placeholder: "Search apps, files, settings...";
+    placeholder-color: @text-lo;
+    font: "JetBrains Mono Nerd Font 12";
 }
 
-/* ── App grid — 4 columns ────────────────────────────────── */
 listview {
-    background-color: @canvas;
-    padding:          16px 14px;
-    spacing:          6px;
-    lines:            4;
-    columns:          4;
-    cycle:            true;
-    dynamic:          true;
-    scrollbar:        false;
-    layout:           vertical;
-}
-
-/* ── App tile — white card with subtle purple border ─────── */
-element {
-    background-color: rgba(255, 255, 255, 0.96);
-    text-color:       @fg1;
-    border:           2px;
-    border-color:     rgba(204, 0, 255, 0.15);
-    padding:          12px 6px 10px;
-    spacing:          5px;
-    border-radius:    10px;
-    cursor:           pointer;
-    orientation:      vertical;
-}
-
-element.normal {
-    background-color: rgba(255, 255, 255, 0.90);
-    text-color:       @fg1;
-    border-color:     rgba(204, 0, 255, 0.12);
-}
-
-element.alternate.normal {
-    background-color: rgba(248, 243, 255, 0.92);
-    text-color:       @fg1;
-    border-color:     rgba(255, 0, 255, 0.12);
-}
-
-element.urgent {
-    background-color: rgba(255, 85, 0, 0.06);
-    text-color:       @splat-orange;
-    border-color:     rgba(255, 85, 0, 0.35);
-}
-
-element.active {
-    background-color: rgba(255, 0, 255, 0.06);
-    text-color:       @splat-pink;
-    border-color:     rgba(255, 0, 255, 0.30);
-}
-
-/* ── SELECTED — full neon paint splatter blob ────────────── */
-element selected.normal {
-    background-color: @splat-pink;
-    text-color:       #ffffff;
-    border:           2px;
-    border-color:     @splat-pink;
-    border-radius:    12px;
-}
-
-element selected.alternate.normal {
-    background-color: @splat-purple;
-    text-color:       #ffffff;
-    border:           2px;
-    border-color:     @splat-purple;
-    border-radius:    12px;
-}
-
-element selected.urgent {
-    background-color: @splat-orange;
-    text-color:       #ffffff;
-    border:           2px;
-    border-color:     @splat-orange;
-    border-radius:    12px;
-}
-
-element selected.active {
-    background-color: @splat-blue;
-    text-color:       #ffffff;
-    border:           2px;
-    border-color:     @splat-blue;
-    border-radius:    12px;
-}
-
-/* ── Icon ────────────────────────────────────────────────── */
-element-icon {
     background-color: transparent;
-    size:             44px;
+    padding: 12px;
+    spacing: 4px;
+    lines: 4;
+    columns: 4;
+    cycle: true;
+    dynamic: true;
+    scrollbar: false;
+    layout: vertical;
+}
+
+element {
+    background-color: rgba(5, 3, 8, 0.97);
+    text-color: @text-hi;
+    border: 1px;
+    border-color: @hairline;
+    padding: 10px 6px;
+    spacing: 5px;
+    border-radius: 3px;
+    orientation: vertical;
+}
+
+element selected.normal,
+element selected.alternate.normal,
+element selected.urgent,
+element selected.active {
+    background-color: @accent;
+    text-color: #050308;
+    border: 1px;
+    border-color: @accent;
+    border-radius: 3px;
+}
+
+element-icon {
+    size: 38px;
     horizontal-align: 0.5;
-    vertical-align:   0.5;
 }
 
 element-text {
-    background-color: transparent;
-    text-color:       inherit;
+    text-color: inherit;
     horizontal-align: 0.5;
-    vertical-align:   0.5;
-    font:             "JetBrains Mono 9";
-    highlight:        bold #e8edf5;
+    font: "JetBrains Mono Nerd Font 9";
 }
 
-/* ── Mode bar — splatter pill buttons ───────────────────── */
 mode-switcher {
-    background-color: @bg2;
-    border:           3px 0 0 0;
-    border-color:     rgba(255, 0, 255, 0.25);
-    border-radius:    0 0 12px 12px;
-    padding:          10px 16px;
-    spacing:          6px;
+    background-color: transparent;
+    border: 1px 0 0 0;
+    border-color: @hairline;
+    border-radius: 0 0 3px 3px;
+    padding: 8px 12px;
+    spacing: 6px;
 }
 
 button {
-    background-color: rgba(255, 255, 255, 0.80);
-    text-color:       @fg2;
-    border:           2px;
-    border-color:     rgba(204, 0, 255, 0.20);
-    border-radius:    6px;
-    padding:          6px 20px;
-    font:             "JetBrains Mono Bold 10";
-    cursor:           pointer;
+    background-color: rgba(5, 3, 8, 0.97);
+    text-color: @text-lo;
+    border: 1px;
+    border-color: @hairline;
+    border-radius: 3px;
+    padding: 6px 14px;
+    font: "JetBrains Mono Nerd Font Bold 10";
 }
 
 button selected {
-    background-color: @splat-pink;
-    text-color:       #ffffff;
-    border:           2px;
-    border-color:     @splat-pink;
-    border-radius:    6px;
-}
-
-/* ── Message ─────────────────────────────────────────────── */
-message {
-    background-color: rgba(255, 85, 0, 0.06);
-    border:           0 0 1px 0;
-    border-color:     rgba(255, 85, 0, 0.25);
-    padding:          8px 18px;
-}
-
-textbox {
-    background-color: transparent;
-    text-color:       @splat-orange;
-    font:             "JetBrains Mono 10";
+    background-color: @accent;
+    text-color: #050308;
+    border-color: @accent;
+    border-radius: 3px;
 }

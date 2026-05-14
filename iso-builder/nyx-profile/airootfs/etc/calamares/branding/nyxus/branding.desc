@@ -11,9 +11,9 @@ windowPlacement:       center
 strings:
     productName:         "NYXUS"
     shortProductName:    "NYXUS"
-    version:             "2026.05 · DARK MIRROR"
+    version:             "2026.05 · Sprint E"
     shortVersion:        "2026.05"
-    versionedName:       "NYXUS 2026.05 · DARK MIRROR"
+    versionedName:       "NYXUS 2026.05 · Sprint E"
     shortVersionedName:  "NYXUS 2026.05"
     bootloaderEntryName: "NYXUS"
     productUrl:          "https://nyxus.os"
@@ -32,7 +32,7 @@ slideshowAPI:        2
 
 style:
     sidebarBackground:    "#0a0a14"
-    sidebarText:          "#e9e5f2"
+    sidebarText:          "#f4ead5"
     sidebarTextSelect:    "#0a0a14"
-    sidebarTextHighlight: "#a06bff"
-    sidebarBackgroundSelected: "#a06bff"
+    sidebarTextHighlight: "#f4ead5"
+    sidebarBackgroundSelected: "#f4ead5"
