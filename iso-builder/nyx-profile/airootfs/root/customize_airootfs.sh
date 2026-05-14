@@ -510,7 +510,21 @@ systemctl enable ananicy-cpp.service 2>/dev/null || true
 _aur_build distrobox
 
 # Calamares installer.
+# FAIL-FAST: calamares is the primary GUI installer for the live ISO.
+# A silent _aur_build failure here = no installer = the live ISO can't
+# install NYXUS to disk (the user falls back to nyxus-install/archinstall
+# which then explodes on empty mirrorlists or AUR network flakes).
+# Confirmed 2026-05-14: calamares missing from a shipped ISO bricked the
+# entire install path. Treat as a hard build requirement — if the AUR
+# build fails, abort the whole ISO bake so we notice at build time
+# instead of at install time.
 _aur_build calamares
+if ! command -v calamares >/dev/null 2>&1; then
+  echo "[customize_airootfs] FATAL: calamares AUR build failed — refusing to ship a live ISO without an installer."
+  echo "[customize_airootfs] retry with network connectivity, or temporarily comment this guard if intentionally testing."
+  exit 1
+fi
+echo "[customize_airootfs] calamares verified at $(command -v calamares)"
 
 # AppImageLauncher — AppImage integration in file manager + launcher.
 _aur_build appimagelauncher
