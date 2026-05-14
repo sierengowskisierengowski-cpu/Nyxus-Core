@@ -1,0 +1,50 @@
+/* ============================================================================
+ *  NYXUS — user-level GTK 3 overlay  (~/.config/gtk-3.0/gtk.css)
+ *  ----------------------------------------------------------------------------
+ *  Always-on cream accent + 3px radius overlay. Loaded by GTK 3 AFTER the
+ *  system theme (adw-gtk3-dark / Adwaita-Dark), so even when environment.d
+ *  forces a different base theme this overlay still applies.
+ *
+ *  Mirrors /usr/share/themes/NYXUS-Dark/gtk-3.0/gtk.css with a smaller
+ *  surface area — only the tokens that survive an Adwaita base.
+ *
+ *  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ * ========================================================================= */
+
+@define-color theme_selected_bg_color #f4ead5;
+@define-color theme_selected_fg_color #06060a;
+@define-color accent_bg_color         #f4ead5;
+@define-color accent_fg_color         #06060a;
+@define-color accent_color            #f4ead5;
+
+button, entry, combobox button, popover.background, menu, tooltip,
+notebook tab, .linked > button, .linked > entry {
+  border-radius: 3px;
+}
+
+button.suggested-action {
+  background: #f4ead5;
+  color: #06060a;
+  border: 1px solid #bfa97a;
+}
+
+entry:focus {
+  box-shadow: inset 0 0 0 1px alpha(#f4ead5, 0.5);
+  border-color: #f4ead5;
+}
+
+switch:checked        { background-color: #f4ead5; }
+switch:checked slider { background-color: #06060a; }
+
+selection, *:selected, row:selected {
+  background-color: alpha(#f4ead5, 0.18);
+  color: #f4ead5;
+}
+
+scrollbar slider {
+  background: alpha(#f4ead5, 0.20);
+  border-radius: 3px;
+  min-width: 6px;
+  min-height: 6px;
+}
+scrollbar slider:hover { background: alpha(#f4ead5, 0.34); }

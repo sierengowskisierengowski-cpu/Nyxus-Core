@@ -1469,6 +1469,199 @@ if [[ -f "${SPRINT_C_SETTINGS}" ]]; then
   done
 fi
 
+# ══════════════════════════════════════════════════════════════════════
+# §14x — Sprint D: brand asset library + chrome redesign (rev r15)
+# ----------------------------------------------------------------------
+# Asserts the locked rev r15 cream brand is consistently applied across
+# every chrome surface (SDDM, hyprlock, EWW bar, GTK theme, icons),
+# and that no purple/Dark-Mirror residue from earlier specs survives.
+# ══════════════════════════════════════════════════════════════════════
+
+# (a) Brand asset library exists with all four marks + wordmark + README
+SPRINT_D_BRAND="${PROFILE}/airootfs/usr/share/nyxus/brand"
+if [[ -d "${SPRINT_D_BRAND}" ]]; then
+  for mark in eclipse.svg eclipse-cream.svg constellation-n.svg \
+              eye-of-nyx.svg wordmark-nyxus.svg README.md; do
+    [[ -f "${SPRINT_D_BRAND}/${mark}" ]] \
+      && ok "Sprint D: brand asset ${mark} present" \
+      || fail "Sprint D: brand asset ${mark} missing"
+  done
+else
+  fail "Sprint D: brand asset directory ${SPRINT_D_BRAND} missing"
+fi
+
+# Render script exists and is executable. PROFILE is iso-builder/nyx-profile,
+# so the script lives one level up at ../scripts/render-brand-pngs.sh.
+SPRINT_D_RENDER="${PROFILE}/../scripts/render-brand-pngs.sh"
+if [[ -x "${SPRINT_D_RENDER}" ]]; then
+  ok "Sprint D: brand PNG renderer is executable"
+else
+  fail "Sprint D: brand PNG renderer missing or not executable"
+fi
+
+# build-iso.sh invokes the renderer
+SPRINT_D_BUILD="${PROFILE}/../build-iso.sh"
+if [[ -f "${SPRINT_D_BUILD}" ]] && grep -q 'render-brand-pngs.sh' "${SPRINT_D_BUILD}"; then
+  ok "Sprint D: build-iso.sh wires the brand PNG renderer"
+else
+  fail "Sprint D: build-iso.sh does NOT invoke render-brand-pngs.sh"
+fi
+
+# (b₀) SDDM tarball is the BUILD-TIME source of truth — build-iso.sh
+# extracts it over airootfs at line 339. If the tarball still ships the
+# old DARK MIRROR purple Main.qml, the airootfs r3 file gets clobbered
+# at bake time and the live ISO ships the wrong greeter regardless of
+# what verify-profile says about the airootfs source. Assert the tarball
+# itself contains the r3 cream content.
+SPRINT_D_SDDM_TGZ="${PROFILE}/../../artifacts/api-server/nyxus-scripts/nyxus-sddm-theme.tar.gz"
+if [[ -f "${SPRINT_D_SDDM_TGZ}" ]]; then
+  # Tarball stores paths with leading "./" — try both forms.
+  tarball_qml="$(tar -xzOf "${SPRINT_D_SDDM_TGZ}" ./Main.qml 2>/dev/null \
+                 || tar -xzOf "${SPRINT_D_SDDM_TGZ}" Main.qml 2>/dev/null \
+                 || echo "")"
+  if grep -q '#f4ead5' <<< "${tarball_qml}"; then
+    ok "Sprint D: SDDM tarball Main.qml is cream r3 (won't clobber)"
+  else
+    fail "Sprint D: SDDM tarball Main.qml is STALE — will clobber r3 at bake time"
+  fi
+  if grep -q 'DARK MIRROR' <<< "${tarball_qml}"; then
+    fail "Sprint D: SDDM tarball Main.qml still contains DARK MIRROR branding"
+  else
+    ok "Sprint D: SDDM tarball Main.qml DARK MIRROR purged"
+  fi
+  if tar -tzf "${SPRINT_D_SDDM_TGZ}" 2>/dev/null | grep -q '^\./eclipse\.png$'; then
+    ok "Sprint D: SDDM tarball bundles eclipse.png (self-contained mark)"
+  else
+    fail "Sprint D: SDDM tarball missing bundled eclipse.png"
+  fi
+else
+  fail "Sprint D: SDDM tarball ${SPRINT_D_SDDM_TGZ} missing"
+fi
+
+# Hyprlock NS source must also be the cream r3 — build-iso.sh installs
+# it from artifacts/api-server/nyxus-scripts/hyprlock.conf, clobbering
+# the airootfs version if the NS source still says DARK MIRROR.
+SPRINT_D_HYPRLOCK_NS="${PROFILE}/../../artifacts/api-server/nyxus-scripts/hyprlock.conf"
+if [[ -f "${SPRINT_D_HYPRLOCK_NS}" ]]; then
+  if grep -q 'DARK MIRROR' "${SPRINT_D_HYPRLOCK_NS}"; then
+    fail "Sprint D: NS hyprlock.conf still STALE DARK MIRROR — will clobber r3"
+  else
+    ok "Sprint D: NS hyprlock.conf is r3 cream (won't clobber airootfs)"
+  fi
+fi
+
+# (b) SDDM r3: cream accent, Eclipse mark, no purple, no ◤ X ◥, no dup clock
+SPRINT_D_SDDM="${PROFILE}/airootfs/usr/share/sddm/themes/nyxus/Main.qml"
+if [[ -f "${SPRINT_D_SDDM}" ]]; then
+  grep -q '#f4ead5' "${SPRINT_D_SDDM}" \
+    && ok "Sprint D: SDDM uses cream accent (#f4ead5)" \
+    || fail "Sprint D: SDDM missing cream accent"
+  grep -qE 'eclipse\.(svg|png)' "${SPRINT_D_SDDM}" \
+    && ok "Sprint D: SDDM references Eclipse mark" \
+    || fail "Sprint D: SDDM does NOT reference Eclipse mark"
+  if grep -qE 'C084FC|c084fc|7C3AED|5B21B6' "${SPRINT_D_SDDM}"; then
+    fail "Sprint D: SDDM still contains purple accent residue"
+  else
+    ok "Sprint D: SDDM purple residue purged"
+  fi
+  if grep -qF '◤ X ◥' "${SPRINT_D_SDDM}"; then
+    fail "Sprint D: SDDM still contains deprecated ◤ X ◥ glyph"
+  else
+    ok "Sprint D: SDDM ◤ X ◥ glyph purged"
+  fi
+  if grep -q 'DARK MIRROR' "${SPRINT_D_SDDM}"; then
+    fail "Sprint D: SDDM still contains Dark Mirror legacy branding"
+  else
+    ok "Sprint D: SDDM Dark Mirror branding purged"
+  fi
+  # Single clock: exactly one Qt.formatDateTime that emits HH:mm
+  clock_count=$(grep -cE 'Qt\.formatDateTime.*HH:mm' "${SPRINT_D_SDDM}" || true)
+  if (( clock_count == 1 )); then
+    ok "Sprint D: SDDM has exactly one HH:mm clock (no dup)"
+  else
+    fail "Sprint D: SDDM has ${clock_count} HH:mm clocks (must be 1)"
+  fi
+else
+  fail "Sprint D: SDDM Main.qml missing"
+fi
+
+# (c) Hyprlock r3: cream, Eclipse PNG via image{}, 3px rounding, no purple
+SPRINT_D_HYPRLOCK="${PROFILE}/airootfs/etc/skel/.config/hypr/hyprlock.conf"
+if [[ -f "${SPRINT_D_HYPRLOCK}" ]]; then
+  grep -q '244, 234, 213' "${SPRINT_D_HYPRLOCK}" \
+    && ok "Sprint D: hyprlock uses cream accent (rgba 244,234,213)" \
+    || fail "Sprint D: hyprlock missing cream accent"
+  grep -q 'eclipse-128.png' "${SPRINT_D_HYPRLOCK}" \
+    && ok "Sprint D: hyprlock references Eclipse PNG mark" \
+    || fail "Sprint D: hyprlock does NOT reference Eclipse PNG mark"
+  grep -qE '^[[:space:]]*rounding[[:space:]]*=[[:space:]]*3' "${SPRINT_D_HYPRLOCK}" \
+    && ok "Sprint D: hyprlock input rounding = 3 (brand spec)" \
+    || fail "Sprint D: hyprlock input rounding not 3"
+  if grep -qE '192,\s*132,\s*252' "${SPRINT_D_HYPRLOCK}"; then
+    fail "Sprint D: hyprlock still contains purple residue (192,132,252)"
+  else
+    ok "Sprint D: hyprlock purple residue purged"
+  fi
+  if grep -qF '◤ X ◥' "${SPRINT_D_HYPRLOCK}"; then
+    fail "Sprint D: hyprlock still contains deprecated ◤ X ◥ glyph"
+  else
+    ok "Sprint D: hyprlock ◤ X ◥ glyph purged"
+  fi
+else
+  fail "Sprint D: hyprlock.conf missing"
+fi
+
+# (d) EWW bar: slim (min-height 32) + cream + glass
+SPRINT_D_EWW_SCSS="${PROFILE}/airootfs/etc/skel/.config/eww/eww.scss"
+SPRINT_D_EWW_YUCK="${PROFILE}/airootfs/etc/skel/.config/eww/eww.yuck"
+if [[ -f "${SPRINT_D_EWW_SCSS}" ]]; then
+  grep -qE '\.bar-bottom \{ padding: 4px 12px; min-height: 32px; \}' \
+       "${SPRINT_D_EWW_SCSS}" \
+    && ok "Sprint D: EWW bar-bottom is slim (32px)" \
+    || fail "Sprint D: EWW bar-bottom not slimmed to 32px"
+  grep -q '#f4ead5' "${SPRINT_D_EWW_SCSS}" \
+    && ok "Sprint D: EWW bar uses cream accent" \
+    || fail "Sprint D: EWW bar missing cream accent"
+fi
+if [[ -f "${SPRINT_D_EWW_YUCK}" ]]; then
+  grep -q ':height "40px"' "${SPRINT_D_EWW_YUCK}" \
+    && ok "Sprint D: EWW bar-bottom window is 40px (down from 56)" \
+    || fail "Sprint D: EWW bar-bottom window not 40px"
+fi
+
+# (e) NYXUS-Dark GTK theme is no longer empty
+SPRINT_D_GTK_THEME="${PROFILE}/airootfs/usr/share/themes/NYXUS-Dark"
+if [[ -d "${SPRINT_D_GTK_THEME}" ]]; then
+  for f in index.theme gtk-3.0/gtk.css gtk-4.0/gtk.css; do
+    [[ -f "${SPRINT_D_GTK_THEME}/${f}" ]] \
+      && ok "Sprint D: NYXUS-Dark/${f} exists" \
+      || fail "Sprint D: NYXUS-Dark/${f} missing"
+  done
+fi
+
+# Skel-level user overlays so cream applies even when env forces Adwaita
+for f in gtk-3.0/gtk.css gtk-4.0/gtk.css; do
+  p="${PROFILE}/airootfs/etc/skel/.config/${f}"
+  if [[ -f "${p}" ]] && grep -q '#f4ead5' "${p}"; then
+    ok "Sprint D: skel ${f} ships cream-accent overlay"
+  else
+    fail "Sprint D: skel ${f} missing or lacks cream overlay"
+  fi
+done
+
+# (f) Icon theme dirs exist for every Directories= entry in index.theme
+SPRINT_D_ICONS="${PROFILE}/airootfs/usr/share/icons/NYXUS-Dark"
+if [[ -f "${SPRINT_D_ICONS}/index.theme" ]]; then
+  for d in scalable/apps scalable/places scalable/devices scalable/status \
+           scalable/actions symbolic/apps; do
+    if [[ -d "${SPRINT_D_ICONS}/${d}" ]]; then
+      ok "Sprint D: icon theme dir ${d} exists"
+    else
+      fail "Sprint D: icon theme dir ${d} missing (declared in index.theme)"
+    fi
+  done
+fi
+
 # ── final ─────────────────────────────────────────────────────────────
 echo
 if (( FAIL == 0 )); then

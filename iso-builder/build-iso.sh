@@ -355,6 +355,26 @@ cat > "${SDDM_CONF_DIR}/nyxus.conf" <<'SDDM'
 [Theme]
 Current=nyxus
 SDDM
+
+# ── Brand asset PNG renders ─────────────────────────────────────────────
+# rev r15 (2026-05-14): SDDM r3 + hyprlock r3 reference
+# /usr/share/nyxus/brand/png/eclipse-128.png. The SVGs live in
+# airootfs/usr/share/nyxus/brand/, the PNGs are generated at bake time
+# via librsvg (always present on an Arch build host as a GTK dep).
+# Hyprlock falls back gracefully if a PNG is missing, so this step is
+# warn-but-continue rather than fail-hard.
+step "render NYXUS brand SVGs → PNG sizes"
+RENDER_SCRIPT="${SCRIPT_DIR}/scripts/render-brand-pngs.sh"
+BRAND_AIROOT="${PROFILE_DIR}/airootfs/usr/share/nyxus/brand"
+if [[ -x "${RENDER_SCRIPT}" && -d "${BRAND_AIROOT}" ]]; then
+  if "${RENDER_SCRIPT}" "${BRAND_AIROOT}"; then
+    ok "brand PNGs: $(ls "${BRAND_AIROOT}/png" 2>/dev/null | wc -l) renders staged"
+  else
+    warn "brand PNG render failed — chrome will fall back to wordmark only"
+  fi
+else
+  warn "render-brand-pngs.sh missing or brand dir absent — skipped"
+fi
 # DisplayServer is intentionally NOT set — SDDM defaults to X11 for the
 # greeter, which is the only setting that works reliably across NVIDIA,
 # Intel, and AMD hardware. The user's actual session (Hyprland) is still
