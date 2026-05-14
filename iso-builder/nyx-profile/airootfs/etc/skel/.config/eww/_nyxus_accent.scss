@@ -1,0 +1,18 @@
+// NYXUS Sprint K-E rev r16 (2026-05-14)
+// eww accent partial — build-time default.
+//
+// The values between the START / END markers are auto-rendered from
+// `iso-builder/tokens/nyxus.tokens.json` by nyxus-render-tokens.
+// DO NOT HAND-EDIT inside the markers.
+//
+// At runtime, /usr/local/bin/nyxus-apply-accent overwrites THIS WHOLE
+// FILE when the user picks an accent preset (no markers preserved).
+// That's intentional — runtime is user-driven, build-time is brand-
+// canonical. First boot reads the build-time default below.
+//
+// NYXUS-TOKENS-START accent
+$nyxus-accent-primary:   #b8865a;
+$nyxus-accent-secondary: #f4ead5;
+$nyxus-accent-warn:      #c4b491;
+$nyxus-accent-ok:        #b8865a;
+// NYXUS-TOKENS-END accent
