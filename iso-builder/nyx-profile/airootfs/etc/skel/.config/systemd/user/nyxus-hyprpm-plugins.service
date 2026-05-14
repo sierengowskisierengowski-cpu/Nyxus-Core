@@ -1,0 +1,27 @@
+[Unit]
+# NYXUS · Hyprland plugin builder (user session)        rev 2026-05-14 r2
+# Started by Hyprland at session bring-up via:
+#   exec-once = systemctl --user start nyxus-hyprpm-plugins.service
+# Builds borders-plus-plus + hyprexpo via hyprpm against the running
+# Hyprland version. Self-gates with ~/.config/nyxus/plugins.done so it
+# only runs until both plugins succeed; soft-fails otherwise.
+Description=NYXUS · build Hyprland plugins (borders-plus-plus + hyprexpo)
+Documentation=man:nyxus(1)
+After=graphical-session.target
+PartOf=graphical-session.target
+ConditionPathExists=!%h/.config/nyxus/plugins.done
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/nyxus-hyprpm-plugins
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600s
+# Plugins build with cmake + g++; cap CPU/IO so it doesn't choke first-
+# session UI responsiveness.
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=6
+
+[Install]
+WantedBy=graphical-session.target
