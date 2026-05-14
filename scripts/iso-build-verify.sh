@@ -50,7 +50,7 @@ utf8_bad="$(grep -RIn --binary-files=without-match $'\uFFFD' \
 if [[ -z "$utf8_bad" ]]; then
   ok "no UTF-8 replacement chars in nyxus-scripts/*.sh"
 else
-  bad "UTF-8 replacement char (U+FFFD) found: $utf8_bad"
+  bad "UTF-8 replacement char (U+FFFD) found in script file: $utf8_bad -- verify file encoding and fix corrupted characters"
 fi
 
 hdr "3. Python syntax (py_compile)"
