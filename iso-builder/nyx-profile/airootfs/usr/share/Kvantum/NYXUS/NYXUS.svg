@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ NYXUS · Kvantum theme SVG                rev 2026-05-14 r1 (Sprint F)
+
+ Minimal Kvantum SVG. Kvantum reads named element ids ("button-normal",
+ "lineedit-normal", etc.) and 9-slices them. We ship the canonical set
+ with rev r15 brand: triple-black fills, cream #f4ead5 borders/accents,
+ 3px corner radius, frosted-glass inner surface.
+
+ Names follow Kvantum convention:
+  *-normal / *-focused / *-pressed / *-toggled / *-disabled
+  Variants: button, lineedit, combo, scrollbar slider/groove, tab,
+  progressbar groove/contents, slider groove/cursor, menu, tooltip,
+  groupbox, splitter, toolbar, spin.
+
+ © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="640" height="640">
+  <defs>
+    <linearGradient id="glassGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16140f" stop-opacity="0.96"/>
+      <stop offset="1" stop-color="#0a0a08" stop-opacity="0.96"/>
+    </linearGradient>
+    <linearGradient id="creamGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8f0dc"/>
+      <stop offset="1" stop-color="#e8dec0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ─── BUTTON ─── -->
+  <g id="button-normal">
+    <rect x="2" y="2" width="60" height="28" rx="3" ry="3"
+          fill="url(#glassGrad)" stroke="#332e22" stroke-width="1"/>
+  </g>
+  <g id="button-focused" transform="translate(80,0)">
+    <rect x="2" y="2" width="60" height="28" rx="3" ry="3"
+          fill="url(#glassGrad)" stroke="#f4ead5" stroke-width="1.2" stroke-opacity="0.9"/>
+  </g>
+  <g id="button-pressed" transform="translate(160,0)">
+    <rect x="2" y="2" width="60" height="28" rx="3" ry="3"
+          fill="#0a0a08" stroke="#f4ead5" stroke-width="1.2"/>
+  </g>
+  <g id="button-toggled" transform="translate(240,0)">
+    <rect x="2" y="2" width="60" height="28" rx="3" ry="3"
+          fill="#1c1810" stroke="#f4ead5" stroke-width="1.2"/>
+  </g>
+  <g id="button-disabled" transform="translate(320,0)">
+    <rect x="2" y="2" width="60" height="28" rx="3" ry="3"
+          fill="#0c0b08" stroke="#1f1c14" stroke-width="1" stroke-opacity="0.6"/>
+  </g>
+
+  <!-- ─── LINEEDIT ─── -->
+  <g id="lineedit-normal" transform="translate(0,40)">
+    <rect x="2" y="2" width="160" height="28" rx="3" ry="3"
+          fill="#06060a" stroke="#2a261c" stroke-width="1"/>
+  </g>
+  <g id="lineedit-focused" transform="translate(180,40)">
+    <rect x="2" y="2" width="160" height="28" rx="3" ry="3"
+          fill="#06060a" stroke="#f4ead5" stroke-width="1.4"/>
+  </g>
+  <g id="lineedit-pressed" transform="translate(360,40)">
+    <rect x="2" y="2" width="160" height="28" rx="3" ry="3"
+          fill="#06060a" stroke="#f4ead5" stroke-width="1.4"/>
+  </g>
+  <g id="lineedit-disabled" transform="translate(0,80)">
+    <rect x="2" y="2" width="160" height="28" rx="3" ry="3"
+          fill="#08080b" stroke="#1a1812" stroke-width="1" stroke-opacity="0.6"/>
+  </g>
+
+  <!-- ─── COMBO ─── -->
+  <g id="combo-normal" transform="translate(0,120)">
+    <rect x="2" y="2" width="120" height="28" rx="3" ry="3"
+          fill="url(#glassGrad)" stroke="#332e22" stroke-width="1"/>
+  </g>
+  <g id="combo-focused" transform="translate(140,120)">
+    <rect x="2" y="2" width="120" height="28" rx="3" ry="3"
+          fill="url(#glassGrad)" stroke="#f4ead5" stroke-width="1.2"/>
+  </g>
+  <g id="combo-pressed" transform="translate(280,120)">
+    <rect x="2" y="2" width="120" height="28" rx="3" ry="3"
+          fill="#0a0a08" stroke="#f4ead5" stroke-width="1.2"/>
+  </g>
+  <g id="combo-disabled" transform="translate(420,120)">
+    <rect x="2" y="2" width="120" height="28" rx="3" ry="3"
+          fill="#0c0b08" stroke="#1f1c14" stroke-width="1"/>
+  </g>
+
+  <!-- ─── MENU / TOOLTIP / GROUPBOX ─── -->
+  <g id="menu-normal" transform="translate(0,160)">
+    <rect x="2" y="2" width="200" height="120" rx="3" ry="3"
+          fill="#0a0a08" fill-opacity="0.96" stroke="#332e22" stroke-width="1"/>
+  </g>
+  <g id="tooltip-normal" transform="translate(220,160)">
+    <rect x="2" y="2" width="200" height="60" rx="3" ry="3"
+          fill="#0a0a08" fill-opacity="0.97" stroke="#f4ead5" stroke-width="1" stroke-opacity="0.4"/>
+  </g>
+  <g id="groupbox-normal" transform="translate(0,300)">
+    <rect x="2" y="2" width="220" height="100" rx="3" ry="3"
+          fill="none" stroke="#2a261c" stroke-width="1"/>
+  </g>
+
+  <!-- ─── SCROLLBAR ─── -->
+  <g id="scrollbar-groove" transform="translate(240,300)">
+    <rect x="2" y="2" width="14" height="100" rx="2" ry="2"
+          fill="#06060a"/>
+  </g>
+  <g id="scrollbar-slider-normal" transform="translate(260,300)">
+    <rect x="2" y="6" width="10" height="50" rx="2" ry="2"
+          fill="#332e22"/>
+  </g>
+  <g id="scrollbar-slider-focused" transform="translate(280,300)">
+    <rect x="2" y="6" width="10" height="50" rx="2" ry="2"
+          fill="#f4ead5" fill-opacity="0.8"/>
+  </g>
+  <g id="scrollbar-slider-pressed" transform="translate(300,300)">
+    <rect x="2" y="6" width="10" height="50" rx="2" ry="2"
+          fill="#f4ead5"/>
+  </g>
+
+  <!-- ─── PROGRESSBAR ─── -->
+  <g id="progressbar-groove" transform="translate(0,420)">
+    <rect x="2" y="2" width="200" height="6" rx="2" ry="2"
+          fill="#08080b" stroke="#1a1812" stroke-width="0.5"/>
+  </g>
+  <g id="progressbar-contents" transform="translate(0,440)">
+    <rect x="2" y="2" width="120" height="6" rx="2" ry="2"
+          fill="url(#creamGrad)"/>
+  </g>
+
+  <!-- ─── SLIDER ─── -->
+  <g id="slider-groove" transform="translate(220,420)">
+    <rect x="2" y="2" width="160" height="4" rx="2" ry="2"
+          fill="#1a1812"/>
+  </g>
+  <g id="slider-cursor-normal" transform="translate(220,440)">
+    <circle cx="14" cy="8" r="6"
+            fill="#f4ead5" stroke="#000" stroke-width="0.5"/>
+  </g>
+  <g id="slider-cursor-focused" transform="translate(260,440)">
+    <circle cx="14" cy="8" r="7"
+            fill="#f4ead5" stroke="#f4ead5" stroke-width="1.5" stroke-opacity="0.4"/>
+  </g>
+
+  <!-- ─── TAB ─── -->
+  <g id="tab-normal" transform="translate(0,480)">
+    <rect x="2" y="2" width="100" height="26" rx="3" ry="3"
+          fill="#0a0a08" stroke="#1f1c14" stroke-width="1"/>
+  </g>
+  <g id="tab-focused" transform="translate(120,480)">
+    <rect x="2" y="2" width="100" height="26" rx="3" ry="3"
+          fill="#16140f" stroke="#f4ead5" stroke-width="1.2"/>
+  </g>
+  <g id="tab-toggled" transform="translate(240,480)">
+    <rect x="2" y="2" width="100" height="26" rx="3" ry="3"
+          fill="#16140f" stroke="#f4ead5" stroke-width="1.2"/>
+    <rect x="2" y="2" width="100" height="2" fill="#f4ead5"/>
+  </g>
+
+  <!-- ─── TOOLBAR / SPLITTER / SPIN ─── -->
+  <g id="toolbar-normal" transform="translate(0,520)">
+    <rect x="2" y="2" width="300" height="32" rx="3" ry="3"
+          fill="url(#glassGrad)" stroke="#1f1c14" stroke-width="1"/>
+  </g>
+  <g id="splitter-normal" transform="translate(320,520)">
+    <rect x="2" y="2" width="6" height="60" fill="#1a1812"/>
+  </g>
+  <g id="spin-normal" transform="translate(0,580)">
+    <rect x="2" y="2" width="60" height="28" rx="3" ry="3"
+          fill="url(#glassGrad)" stroke="#332e22" stroke-width="1"/>
+  </g>
+</svg>

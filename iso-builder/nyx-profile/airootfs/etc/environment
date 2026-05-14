@@ -1,0 +1,31 @@
+# NYXUS · system-wide environment           rev 2026-05-14 r1 (Sprint F)
+# Loaded by PAM (pam_env) early in every login session — covers Wayland,
+# X11, login shell, and SDDM. Keep this minimal: PAM doesn't run a shell,
+# so no expansion is performed (literal values only).
+
+# ── Qt platform integration (Sprint F) ────────────────────────────────
+# Without these, every Qt app (Krita, Kdenlive, qBittorrent, OBS, VLC,
+# digiKam, Telegram, etc.) renders with stock Breeze and looks alien
+# inside the NYXUS shell. With them, qt5ct/qt6ct route through Kvantum,
+# which renders the NYXUS Kvantum theme matching GTK NYXUS-Dark.
+QT_QPA_PLATFORMTHEME=qt5ct
+QT_STYLE_OVERRIDE=kvantum
+QT_AUTO_SCREEN_SCALE_FACTOR=1
+QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+
+# ── GTK polish ────────────────────────────────────────────────────────
+GTK_THEME=NYXUS-Dark
+GTK_USE_PORTAL=1
+
+# ── Cursor ────────────────────────────────────────────────────────────
+XCURSOR_THEME=NYXUS-Aurora
+XCURSOR_SIZE=24
+
+# ── Wayland defaults ──────────────────────────────────────────────────
+MOZ_ENABLE_WAYLAND=1
+ELECTRON_OZONE_PLATFORM_HINT=auto
+_JAVA_AWT_WM_NONREPARENTING=1
+
+# ── XDG ───────────────────────────────────────────────────────────────
+XDG_CURRENT_DESKTOP=Hyprland
+XDG_SESSION_TYPE=wayland
