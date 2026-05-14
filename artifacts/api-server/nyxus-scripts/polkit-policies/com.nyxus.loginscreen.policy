@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<policyconfig>
+  <vendor>NYXUS</vendor>
+  <vendor_url>https://nyxus-core.replit.app</vendor_url>
+
+  <action id="com.nyxus.loginscreen.write">
+    <description>Modify the NYXUS login screen configuration</description>
+    <message>Authentication is required to change the login screen settings (theme, background, autologin, etc.)</message>
+    <icon_name>system-lock-screen</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/env</annotate>
+  </action>
+
+  <action id="com.nyxus.loginscreen.install-background">
+    <description>Replace the NYXUS login screen background image</description>
+    <message>Authentication is required to change the login screen wallpaper</message>
+    <icon_name>system-lock-screen</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/env</annotate>
+  </action>
+</policyconfig>
