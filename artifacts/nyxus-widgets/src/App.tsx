@@ -11,8 +11,9 @@ const queryClient = new QueryClient();
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Weather} />
+      <Route path="/" component={BuddyPage} />
       <Route path="/buddy" component={BuddyPage} />
+      <Route path="/weather" component={Weather} />
       <Route component={NotFound} />
     </Switch>
   );
