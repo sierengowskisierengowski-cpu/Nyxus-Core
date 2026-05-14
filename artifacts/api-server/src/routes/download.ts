@@ -89,7 +89,8 @@ const ALLOWED_FILES: Record<string, string> = {
   // r10 batch 6 (2026-05-13) — Phase 6.26 Calamares + 6.27 snapshot scrubber
   "nyxus-postinstall.sh":                       "nyxus-postinstall.sh",
   "calamares/settings.conf":                    "calamares/settings.conf",
-  "calamares/shellprocess_nyxus.conf":          "calamares/shellprocess_nyxus.conf",
+  "calamares/modules/shellprocess_nyxus.conf":  "calamares/modules/shellprocess_nyxus.conf",
+  "calamares/shellprocess_nyxus.conf":          "calamares/modules/shellprocess_nyxus.conf",
   "calamares/branding/nyxus/branding.desc":     "calamares/branding/nyxus/branding.desc",
   "calamares/branding/nyxus/show.qml":          "calamares/branding/nyxus/show.qml",
   "calamares/branding/nyxus/stylesheet.qss":    "calamares/branding/nyxus/stylesheet.qss",
