@@ -14,7 +14,7 @@
 @define-color nx_cream_55    rgba(244, 234, 213, 0.55);
 @define-color nx_hairline    #1a1a28;
 @define-color nx_hairline_2  rgba(244, 234, 213, 0.10);
-@define-color nx_critical    #f87171;
+@define-color nx_critical    #fff8e0;  /* rev r15: brighter cream replaces red (brand-locked, NO red) */
 
 * {
   font-family: "Inter", "JetBrainsMono Nerd Font", sans-serif;

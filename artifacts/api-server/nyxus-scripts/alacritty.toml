@@ -85,7 +85,7 @@ cursor = "#c8ccd6"
 
 [colors.vi_mode_cursor]
 text   = "#0a0e16"
-cursor = "#e8edf5"
+cursor = "#f4ead5"
 
 [colors.selection]
 text       = "#0a0e16"
@@ -97,7 +97,7 @@ background = "#c8ccd6"
 
 [colors.search.focused_match]
 foreground = "#0a0e16"
-background = "#e8edf5"
+background = "#f4ead5"
 
 [colors.footer_bar]
 background = "#0d0a12"
@@ -105,18 +105,18 @@ foreground = "#888090"
 
 [colors.hints.start]
 foreground = "#0a0e16"
-background = "#e8edf5"
+background = "#f4ead5"
 
 [colors.hints.end]
 foreground = "#0a0e16"
-background = "#e8edf5"
+background = "#f4ead5"
 
 # ── Normal palette ───────────────────────────────────────────
 [colors.normal]
 black   = "#0d0a12"
-red     = "#f87171"
+red     = "#fff8e0"  # rev r15: brighter cream replaces ANSI red (brand-locked palette, NO red)
 green   = "#c8ccd6"
-yellow  = "#e8edf5"
+yellow  = "#f4ead5"
 blue    = "#818cf8"
 magenta = "#c8ccd6"
 cyan    = "#c8ccd6"

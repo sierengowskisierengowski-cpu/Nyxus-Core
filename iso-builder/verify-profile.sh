@@ -1786,8 +1786,11 @@ fi
 # (i) GRUB theme rebrand — no false "purple+cyan" comment, no DARK MIRROR label
 GRUB="${AIROOT}/usr/share/grub/themes/nyxus/theme.txt"
 if [[ -f "$GRUB" ]]; then
-  if grep -qiE 'purple|cyan|DARK MIRROR' "$GRUB"; then
-    fail "Sprint E: GRUB theme.txt still references DARK MIRROR / purple / cyan"
+  # Sprint G: only inspect ACTIVE config (non-comment lines). The Sprint G
+  # rebrand comment legitimately mentions the old palette to explain what
+  # was removed, which used to trip this check.
+  if grep -vE '^\s*#|^\s*$' "$GRUB" | grep -qiE 'purple|cyan|DARK MIRROR'; then
+    fail "Sprint E: GRUB theme.txt still references DARK MIRROR / purple / cyan in ACTIVE config"
   else
     ok "Sprint E: GRUB theme.txt rebranded clean"
   fi
@@ -2124,6 +2127,123 @@ if grep -q 'Note on Qt5 vs Qt6 routing' "$ENVF"; then
 else
   fail "Sprint F rev2: /etc/environment missing Qt6 trade-off comment"
 fi
+
+# ──────────────────────────────────────────────────────────────────────
+# §15aa — Sprint G round-1 (palette violations + wallpaper rotation)
+# ──────────────────────────────────────────────────────────────────────
+# Sprint E shipped brand cohesion but TWO surfaces escaped the palette
+# audit: dunstrc (every notification — purple #1f1b2c, banned cyan
+# #e8edf5, banned red #f87171) and grub theme.txt (purple-grey
+# #7b7390 + purple-white #e9e5f2 + cyan #e8edf5). Sprint G round-1
+# fixes both + hooks the dynamic time-of-day wallpaper rotator that
+# was orphaned in artifact source for ~3 sessions.
+section "§15aa — Sprint G round-1 (locked-palette compliance + wallpaper)"
+
+# (a) dunstrc — non-comment lines must contain no banned colors
+DRC="${AIROOT}/etc/skel/.config/dunst/dunstrc"
+if [[ -f "$DRC" ]]; then
+  # Strip comments + blank lines, then look for banned hexes
+  banned=$(grep -vE '^\s*#|^\s*$' "$DRC" | grep -ioE '#(1f1b2c|0a0a14|7b7390|e9e5f2|e8edf5|f87171)' | sort -u | tr '\n' ' ')
+  if [[ -n "$banned" ]]; then
+    fail "Sprint G: dunstrc has banned rev r15 colors in active config: $banned"
+  else
+    ok "Sprint G: dunstrc active config uses only locked rev r15 palette"
+  fi
+  grep -qE 'frame_color\s*=\s*"#f4ead5"' "$DRC" \
+    && ok "Sprint G: dunstrc uses cream frame for normal urgency" \
+    || fail "Sprint G: dunstrc normal urgency missing cream frame"
+  grep -qE 'frame_color\s*=\s*"#fff8e0"' "$DRC" \
+    && ok "Sprint G: dunstrc critical urgency uses brighter cream (no red)" \
+    || fail "Sprint G: dunstrc critical urgency not converted off red"
+  grep -qE 'frame_width\s*=\s*3' "$DRC" \
+    && ok "Sprint G: dunstrc critical urgency thicker frame (visual hierarchy w/o red)" \
+    || warn "Sprint G: dunstrc critical thicker frame not present"
+  grep -q 'JetBrainsMono Nerd Font' "$DRC" \
+    && ok "Sprint G: dunstrc uses NYXUS canonical font (JBM Nerd)" \
+    || warn "Sprint G: dunstrc not using JBM Nerd Font"
+fi
+
+# (b) GRUB theme.txt — non-comment palette compliance
+GTX="${AIROOT}/usr/share/grub/themes/nyxus/theme.txt"
+if [[ -f "$GTX" ]]; then
+  banned=$(grep -vE '^\s*#|^\s*$' "$GTX" | grep -ioE '#(7b7390|e9e5f2|e8edf5|0a0a14|1a1a28)' | sort -u | tr '\n' ' ')
+  if [[ -n "$banned" ]]; then
+    fail "Sprint G: grub theme.txt has banned rev r15 colors in active config: $banned"
+  else
+    ok "Sprint G: grub theme.txt uses only locked rev r15 palette"
+  fi
+  grep -qE 'item_color\s*=\s*"#f4ead5"' "$GTX" \
+    && ok "Sprint G: grub menu item color = cream (was purple-white)" \
+    || fail "Sprint G: grub menu item color not cream"
+fi
+
+# (c) Wallpaper rotation infrastructure hooked end-to-end
+WP_SH="${AIROOT}/etc/skel/.local/bin/nyxus-dynamic-wallpaper.sh"
+WP_SVC="${AIROOT}/etc/skel/.config/systemd/user/nyxus-dynamic-wallpaper.service"
+WP_TMR="${AIROOT}/etc/skel/.config/systemd/user/nyxus-dynamic-wallpaper.timer"
+WP_LNK="${AIROOT}/etc/skel/.config/systemd/user/timers.target.wants/nyxus-dynamic-wallpaper.timer"
+[[ -x "$WP_SH" ]]  && ok "Sprint G: dynamic-wallpaper.sh shipped + executable" \
+                   || fail "Sprint G: dynamic-wallpaper.sh missing or not +x"
+[[ -f "$WP_SVC" ]] && ok "Sprint G: dynamic-wallpaper.service shipped" \
+                   || fail "Sprint G: dynamic-wallpaper.service missing"
+[[ -f "$WP_TMR" ]] && ok "Sprint G: dynamic-wallpaper.timer shipped" \
+                   || fail "Sprint G: dynamic-wallpaper.timer missing"
+[[ -L "$WP_LNK" ]] && ok "Sprint G: timer auto-enabled via skel symlink" \
+                   || fail "Sprint G: timer NOT enabled (no timers.target.wants symlink)"
+
+# (d) Wallpaper count sanity — 94 was the baseline
+WP_COUNT=$(ls "${AIROOT}/usr/share/backgrounds/nyxus/" 2>/dev/null | wc -l)
+if (( WP_COUNT >= 90 )); then
+  ok "Sprint G: wallpaper library populated ($WP_COUNT files)"
+else
+  warn "Sprint G: wallpaper library shrunk ($WP_COUNT files, baseline 94)"
+fi
+
+# (e) Sprint G round-2: BROAD palette compliance across UI configs.
+# Architect findings: dunst+grub were only 2 of 9 violating files. eww,
+# alacritty, rofi (nyxus + startmenu), wlogout, swaync all shipped
+# active uses of #e8edf5 (cyan) and/or #f87171 (red). All converted to
+# cream variants in round-2.
+ROUND2_FILES=(
+  "${AIROOT}/etc/skel/.config/eww/eww.scss"
+  "${AIROOT}/etc/skel/.config/alacritty/alacritty.toml"
+  "${AIROOT}/etc/skel/.config/rofi/nyxus.rasi"
+  "${AIROOT}/etc/skel/.config/rofi/startmenu.rasi"
+  "${AIROOT}/etc/skel/.config/wlogout/style.css"
+  "${AIROOT}/etc/skel/.config/swaync/style.css"
+)
+r2_violations=0
+for f in "${ROUND2_FILES[@]}"; do
+  [[ ! -f "$f" ]] && continue
+  # Strip line/block comments (//, #, /*, *, --) then look for banned hexes
+  banned=$(grep -vE '^\s*(//|#|/\*|\*|--)' "$f" 2>/dev/null | grep -ioE '#(7b7390|e9e5f2|e8edf5|1f1b2c|f87171)' | sort -u | tr '\n' ' ')
+  if [[ -n "$banned" ]]; then
+    fail "Sprint G round-2: $(basename "$f") still has active banned hex: $banned"
+    r2_violations=$((r2_violations + 1))
+  fi
+done
+if (( r2_violations == 0 )); then
+  ok "Sprint G round-2: all 6 UI surfaces (eww/alacritty/rofi×2/wlogout/swaync) clean of banned palette"
+fi
+
+# (f) accent.json — aurora (default) preset must be rev r15 compliant.
+# Other presets (ember/verdant/violet/rose/ice/noir) are intentional
+# alternate themes the user can opt into via Quick Settings — leave them.
+ACC="${AIROOT}/etc/skel/.config/nyxus/accent.json"
+if [[ -f "$ACC" ]]; then
+  aurora_banned=$(grep -A1 '"aurora"' "$ACC" | grep -ioE '#(7b7390|e9e5f2|e8edf5|1f1b2c|f87171)' | sort -u | tr '\n' ' ')
+  if [[ -n "$aurora_banned" ]]; then
+    fail "Sprint G round-2: accent.json default 'aurora' preset has banned hex: $aurora_banned"
+  else
+    ok "Sprint G round-2: accent.json 'aurora' default preset rev r15 compliant"
+  fi
+fi
+
+# (g) dynamic-wallpaper.sh hardened with graphical-session guard
+WP_SH_SRC="${REPO_ROOT:-$PWD}/../artifacts/api-server/nyxus-scripts/nyxus-dynamic-wallpaper.sh"
+[[ -f "$WP_SH" ]] && grep -q 'no graphical session yet' "$WP_SH" \
+  && ok "Sprint G round-2: dynamic-wallpaper.sh has session-readiness guard (no early-boot race)" \
+  || warn "Sprint G round-2: dynamic-wallpaper.sh missing graphical-session guard"
 
 # ── final ─────────────────────────────────────────────────────────────
 echo
