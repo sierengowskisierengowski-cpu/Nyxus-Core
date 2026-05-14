@@ -239,18 +239,25 @@ mkdir -p "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
 cat > "$HOME/.config/gtk-3.0/settings.ini" <<'GTK3'
 [Settings]
 gtk-theme-name=adw-gtk3-dark
-gtk-icon-theme-name=Adwaita
+gtk-icon-theme-name=NYXUS-Dark
 gtk-application-prefer-dark-theme=1
+gtk-font-name=Inter 11
+gtk-cursor-theme-name=NYXUS-Aurora
 gtk-cursor-theme-size=24
+gtk-decoration-layout=icon:minimize,maximize,close
+gtk-enable-animations=true
 GTK3
 cat > "$HOME/.config/gtk-4.0/settings.ini" <<'GTK4'
 [Settings]
 gtk-theme-name=adw-gtk3-dark
-gtk-icon-theme-name=Adwaita
+gtk-icon-theme-name=NYXUS-Dark
 gtk-application-prefer-dark-theme=1
+gtk-font-name=Inter 11
+gtk-cursor-theme-name=NYXUS-Aurora
 gtk-cursor-theme-size=24
+gtk-decoration-layout=icon:minimize,maximize,close
 GTK4
-ok "GTK 3 + 4 settings.ini written (prefer-dark)"
+ok "GTK 3 + 4 settings.ini written (NYXUS-Dark icon theme, prefer-dark)"
 
 # gsettings handles libadwaita apps that ignore both env and settings.ini
 if command -v gsettings >/dev/null 2>&1; then
