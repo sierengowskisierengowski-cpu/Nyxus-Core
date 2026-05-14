@@ -1,142 +1,192 @@
-/* NYXUS · swaync · DARK MIRROR theme · rev 2026-05-14 r2
- *
- * Canonical palette:
- *   --bg-deep    #0a0a14   --bg-card    #050308
- *   --accent     #f4ead5   --cyan       #e8edf5
- *   --text-hi    #e9e5f2   --text-lo    #7b7390
- *   --critical   #f87171   --hairline   #1a1a28
- *
- * Sharp slab edges (no border-radius), JetBrains Mono throughout,
- * top-right anchor matches dunst.
- */
+/* ═══════════════════════════════════════════════════════════════════════════
+   NYXUS · swaync notification centre · rev 2026-05-14 r15-spec-locked
+   Triple-black + frosted glass · CREAM #f4ead5 accent · 3px corners
+   Inter primary · JetBrains Mono Nerd for timestamps
+   © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Palette tokens (mirrors GTK + rofi shared variables) ─────────────── */
+@define-color nx_bg_deep     rgba(10, 10, 20, 0.97);
+@define-color nx_bg_card     rgba(5, 3, 8, 0.92);
+@define-color nx_cream       #f4ead5;
+@define-color nx_cream_18    rgba(244, 234, 213, 0.18);
+@define-color nx_cream_32    rgba(244, 234, 213, 0.32);
+@define-color nx_cream_55    rgba(244, 234, 213, 0.55);
+@define-color nx_hairline    #1a1a28;
+@define-color nx_hairline_2  rgba(244, 234, 213, 0.10);
+@define-color nx_critical    #f87171;
 
 * {
-    font-family: "JetBrains Mono", monospace;
-    border-radius: 0;
-    box-shadow: none;
-    text-shadow: none;
+  font-family: "Inter", "JetBrainsMono Nerd Font", sans-serif;
+  font-size: 13px;
+  border-radius: 3px;
+  text-shadow: none;
+  outline: none;
 }
 
-/* ─── Notification Center panel ────────────────────────────────── */
+/* ── Notification Centre panel (triple-black glass) ──────────────────── */
 .control-center {
-    background: rgba(10, 10, 20, 0.97);
-    border: 1px solid #1a1a28;
-    color: #e9e5f2;
-    padding: 14px;
-    margin: 6px;
-}
-.control-center-list { background: transparent; }
-.notification-row     { background: transparent; padding: 4px 0; }
-
-/* ─── Notification cards ──────────────────────────────────────── */
-.notification {
-    background: #050308;
-    border: 1px solid #1a1a28;
-    margin: 6px 0;
-    padding: 12px;
-    transition: border-color 140ms ease;
-}
-.notification:hover           { border-color: #f4ead5; }
-.notification.low             { border-left: 2px solid #1f1b2c; }
-.notification.normal          { border-left: 2px solid #f4ead5; }
-.notification.critical        { border-color: #f87171; border-left: 2px solid #f87171; }
-
-.summary {
-    color: #f4ead5;
-    font-weight: bold;
-    font-size: 13px;
-    letter-spacing: 1px;
-}
-.body {
-    color: #e9e5f2;
-    opacity: 0.92;
-    font-size: 12px;
-    margin-top: 4px;
-}
-.time {
-    color: #7b7390;
-    font-size: 10px;
-    letter-spacing: 1px;
+  background: @nx_bg_deep;
+  border: 1px solid @nx_hairline_2;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85),
+              0 0 0 1px rgba(0, 0, 0, 0.6),
+              inset 0 1px 0 rgba(244, 234, 213, 0.04);
+  color: @nx_cream;
+  padding: 16px;
+  margin: 8px;
+  border-radius: 3px;
 }
 
-/* ─── Close button ─────────────────────────────────────────────── */
-.close-button {
-    background: transparent;
-    color: #7b7390;
-    border: 1px solid #1a1a28;
-    min-width: 22px;
-    min-height: 22px;
-    transition: all 140ms ease;
-}
-.close-button:hover {
-    color: #0a0a14;
-    background: #f87171;
-    border-color: #f87171;
+.control-center-list { background: transparent; padding: 4px 0; }
+.control-center-list-placeholder {
+  color: @nx_cream_55;
+  font-style: italic;
+  padding: 32px 0;
 }
 
-/* ─── Title bar ───────────────────────────────────────────────── */
-.widget-title > label {
-    color: #f4ead5;
-    font-size: 13px;
-    font-weight: bold;
-    letter-spacing: 4px;
+/* Header: "Notifications" title row */
+.widget-title {
+  color: @nx_cream;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  padding: 6px 4px 10px 4px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid @nx_hairline;
 }
 .widget-title > button {
-    background: transparent;
-    color: #7b7390;
-    border: 1px solid #1a1a28;
-    padding: 4px 14px;
-    transition: all 140ms ease;
+  background: transparent;
+  border: 1px solid @nx_cream_18;
+  color: @nx_cream;
+  padding: 4px 12px;
+  border-radius: 3px;
+  transition: all 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .widget-title > button:hover {
-    color: #0a0a14;
-    background: #f4ead5;
-    border-color: #f4ead5;
+  background: @nx_cream_18;
+  border-color: @nx_cream;
+  box-shadow: 0 0 12px @nx_cream_32;
 }
 
-/* ─── Do Not Disturb switch ───────────────────────────────────── */
-.widget-dnd > switch          { background: #1a1a28; }
-.widget-dnd > switch:checked  { background: #f4ead5; }
-.widget-dnd > switch slider   { background: #e9e5f2; }
+/* ── Individual notification card ────────────────────────────────────── */
+.notification-row { background: transparent; padding: 4px 0; }
 
-/* ─── Floating notification toasts ─────────────────────────────── */
-.floating-notifications        { background: transparent; }
-.floating-notifications.background .notification {
-    background: rgba(5, 3, 8, 0.97);
-    border: 1px solid #f4ead5;
-    border-left: 3px solid #f4ead5;
+.notification {
+  background: @nx_bg_card;
+  border: 1px solid @nx_hairline;
+  border-left: 3px solid @nx_cream;        /* the cream accent stripe */
+  border-radius: 3px;
+  margin: 4px 0;
+  padding: 0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: all 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
-.floating-notifications.background .notification.critical {
-    border: 1px solid #f87171;
-    border-left: 3px solid #f87171;
+.notification:hover {
+  background: rgba(20, 20, 32, 0.92);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55),
+              0 0 0 1px @nx_cream_18,
+              -3px 0 14px rgba(244, 234, 213, 0.15);
 }
 
-/* ─── MPRIS / media player widget ──────────────────────────────── */
-.widget-mpris {
-    background: #050308;
-    border: 1px solid #1a1a28;
-    padding: 12px;
-    color: #e9e5f2;
+.notification-content {
+  background: transparent;
+  padding: 12px 14px;
 }
-.widget-mpris-player          { padding: 4px; }
-.widget-mpris-title           { color: #f4ead5; font-weight: bold; }
-.widget-mpris-subtitle        { color: #7b7390; font-size: 11px; }
 
-/* ─── Volume / brightness sliders (if shown) ───────────────────── */
-.widget-volume, .widget-backlight {
-    background: #050308;
-    border: 1px solid #1a1a28;
-    padding: 8px 12px;
-    color: #e9e5f2;
+.summary {
+  color: @nx_cream;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.01em;
 }
-slider trough {
-    background: #1a1a28;
-    min-height: 4px;
+.body {
+  color: @nx_cream_55;
+  font-size: 12px;
+  margin-top: 3px;
 }
-slider trough highlight {
-    background: #e8edf5;
+.time {
+  color: @nx_cream_55;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  margin-left: 10px;
 }
-slider {
-    background: transparent;
-    color: #f4ead5;
+
+/* App icon column */
+.notification image,
+.app-icon { -gtk-icon-effect: none; padding-right: 8px; }
+
+/* Critical urgency — soft coral left stripe */
+.notification.critical { border-left-color: @nx_critical; }
+.notification.critical .summary { color: @nx_critical; }
+
+/* Inline action buttons */
+.notification-action {
+  background: transparent;
+  border: 1px solid @nx_cream_18;
+  color: @nx_cream;
+  border-radius: 3px;
+  padding: 4px 10px;
+  margin: 2px 4px 6px 4px;
+  transition: all 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.notification-action:hover {
+  background: @nx_cream_18;
+  border-color: @nx_cream;
+  box-shadow: 0 0 10px @nx_cream_32;
+}
+
+/* Close (×) button */
+.close-button {
+  background: transparent;
+  color: @nx_cream_55;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 3px;
+}
+.close-button:hover {
+  background: @nx_cream_18;
+  color: @nx_cream;
+}
+
+/* ── Floating popup (in-corner toast, not the centre) ────────────────── */
+.notification-row .floating-notifications.background .notification {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7),
+              -3px 0 18px rgba(244, 234, 213, 0.18);
+}
+
+/* ── DND / mute toggle ───────────────────────────────────────────────── */
+.notification-group-icon { color: @nx_cream; }
+.notification-group { background: transparent; padding: 4px 0; }
+.notification-group-collapse-button {
+  background: transparent;
+  color: @nx_cream_55;
+  border: none;
+}
+.notification-group-collapse-button:hover { color: @nx_cream; }
+
+/* ── Widgets row (mpris, dnd, etc.) ──────────────────────────────────── */
+.widget-mpris,
+.widget-dnd,
+.widget-buttons-grid {
+  background: @nx_bg_card;
+  border: 1px solid @nx_hairline;
+  border-radius: 3px;
+  padding: 10px;
+  margin: 6px 0;
+}
+.widget-mpris-title { color: @nx_cream; font-weight: 600; }
+.widget-mpris-subtitle { color: @nx_cream_55; }
+
+/* MPRIS / quick-action buttons */
+.widget-buttons-grid > flowbox > flowboxchild > button {
+  background: transparent;
+  color: @nx_cream;
+  border: 1px solid @nx_cream_18;
+  border-radius: 3px;
+  padding: 8px 14px;
+  transition: all 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.widget-buttons-grid > flowbox > flowboxchild > button:hover {
+  background: @nx_cream_18;
+  box-shadow: 0 0 12px @nx_cream_32;
 }

@@ -64,7 +64,7 @@
     always_run_script = true
     title = NYXUS Notifications
     class = Dunst
-    corner_radius = 0
+    corner_radius = 3
     ignore_dbusclose = false
 
     force_xwayland = false
