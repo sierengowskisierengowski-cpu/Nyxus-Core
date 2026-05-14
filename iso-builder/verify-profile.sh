@@ -2627,6 +2627,127 @@ else
   fail "Sprint K-A parity: artifact nyxus-dunstrc critical frame drifted off copper"
 fi
 
+# ── §15af Sprint K-B: full NYXUS-Glyph .desktop coverage (rev r16) ────
+# Sprint J shipped 13 NYXUS-Glyph SVGs covering the headline apps. K-B
+# closes the long tail: 24 new puck SVGs + 30 .desktop Icon= re-points
+# so every shipped NYXUS .desktop entry uses an on-brand black-puck +
+# copper-ring + cream-glyph icon — no Adwaita fallthrough remains for
+# anything in the NYXUS surface.
+hd "§15af Sprint K-B — full NYXUS-Glyph .desktop coverage (rev r16)"
+
+# (a) Every shipped NYXUS-flavored .desktop must use a NYXUS-Glyph icon
+#     name. Allowed forms: `nyxus-*` (the 99% case), bare `nyxus` (the
+#     welcome wizard's brand-mark exception), or `io.nyxus.*` (Intel
+#     app's reverse-DNS ID). No raw Adwaita generic names like
+#     `preferences-system`, `dialog-error`, etc.
+GLYPH_APPS="${AIROOT}/usr/share/icons/NYXUS-Glyph/scalable/apps"
+LEFTOVER=$(find "${AIROOT}" -name '*.desktop' -type f -exec grep -lE '^Icon=(applications-|battery$|calamares$|dialog-|drive-|edit-|folder-|network-|preferences-|security-|system-|tools-|user-)' {} \; 2>/dev/null)
+if [[ -z "$LEFTOVER" ]]; then
+  ok "Sprint K-B: zero shipped .desktop files use generic Adwaita icon names"
+else
+  fail "Sprint K-B: still using generic icons in: $(echo "$LEFTOVER" | xargs -n1 basename | tr '\n' ' ')"
+fi
+
+# (b) Every Icon=nyxus* value referenced by any .desktop must have a
+#     matching SVG in the NYXUS-Glyph theme — no broken icon refs.
+#     (Includes both `nyxus-*` and the bare `nyxus` brand-mark form.)
+MISSING=""
+while IFS= read -r icon; do
+  [[ -z "$icon" ]] && continue
+  [[ -f "${GLYPH_APPS}/${icon}.svg" ]] || MISSING="${MISSING}${icon} "
+done < <(find "${AIROOT}" -name '*.desktop' -type f -exec grep -hE '^Icon=nyxus(-|$)' {} \; | sed 's/^Icon=//' | sort -u)
+if [[ -z "$MISSING" ]]; then
+  ok "Sprint K-B: every Icon=nyxus* has a matching SVG in NYXUS-Glyph"
+else
+  fail "Sprint K-B: missing NYXUS-Glyph SVGs for: ${MISSING}"
+fi
+
+# (c) Every new K-B SVG must follow the recipe: copper ring at r=23.5
+#     and cream #f4ead5 stroke (no drift back to white/yellow/red).
+KB_NEW=(nyxus-account nyxus-backup nyxus-battery nyxus-clipboard
+        nyxus-control nyxus-crashd nyxus-display nyxus-doctor
+        nyxus-drop nyxus-error nyxus-hotcorners nyxus-icons-gen
+        nyxus-info nyxus-installer nyxus-launcher nyxus-locale
+        nyxus-network nyxus-palette nyxus-power nyxus-run
+        nyxus-screensaver nyxus-security nyxus-updater nyxus-usb
+        nyxus-wallpaper)
+RECIPE_OK=0; RECIPE_BAD=""
+for n in "${KB_NEW[@]}"; do
+  f="${GLYPH_APPS}/${n}.svg"
+  if [[ -f "$f" ]] \
+     && grep -q 'stroke="#b8865a"' "$f" \
+     && grep -q 'r="23.5"' "$f" \
+     && grep -q '#f4ead5' "$f"; then
+    RECIPE_OK=$((RECIPE_OK+1))
+  else
+    RECIPE_BAD="${RECIPE_BAD}${n} "
+  fi
+done
+if [[ -z "$RECIPE_BAD" ]]; then
+  ok "Sprint K-B: all ${RECIPE_OK} new puck SVGs follow the copper-ring + cream-glyph recipe"
+else
+  fail "Sprint K-B: recipe drift in: ${RECIPE_BAD}"
+fi
+
+# (d) NYXUS-Glyph apps directory must now hold ≥37 SVGs (13 from J + 24 from K-B)
+SVG_COUNT=$(ls "${GLYPH_APPS}/"*.svg 2>/dev/null | wc -l)
+if (( SVG_COUNT >= 37 )); then
+  ok "Sprint K-B: NYXUS-Glyph apps directory holds ${SVG_COUNT} SVGs (≥37 expected)"
+else
+  fail "Sprint K-B: NYXUS-Glyph apps directory only has ${SVG_COUNT} SVGs (need ≥37)"
+fi
+
+# (e) None of the new SVGs may use banned palette colors (red/cyan/purple/yellow-gold)
+BANNED=""
+for n in "${KB_NEW[@]}"; do
+  f="${GLYPH_APPS}/${n}.svg"
+  [[ -f "$f" ]] || continue
+  if grep -qiE '#(f87171|ef4444|dc2626|22d3ee|06b6d4|7b7390|a78bfa|fbbf24|fcd34d|eab308)' "$f"; then
+    BANNED="${BANNED}${n} "
+  fi
+done
+if [[ -z "$BANNED" ]]; then
+  ok "Sprint K-B: no banned palette colors (red/cyan/purple/yellow-gold) in any new SVG"
+else
+  fail "Sprint K-B: banned palette colors found in: ${BANNED}"
+fi
+
+# ── §15ag Sprint K-B parity: artifact desktop-entries ↔ airootfs ─────
+# Architect-flagged in K-B review: K-A's parity-drift pattern repeats
+# for the desktop entries. `artifacts/api-server/nyxus-scripts/
+# desktop-entries/*.desktop` is the artifact-side source-of-truth and
+# must match the Icon= line of its airootfs counterpart, otherwise a
+# future build sync could silently revert all 30 K-B Icon= updates.
+hd "§15ag Sprint K-B parity — artifact desktop-entries ↔ airootfs"
+
+ART_DE="$(dirname "${PROFILE}")/../artifacts/api-server/nyxus-scripts/desktop-entries"
+AIR_DE="${AIROOT}/usr/share/applications"
+
+if [[ -d "$ART_DE" ]]; then
+  PARITY_BAD=""
+  PARITY_OK=0
+  for f in "$ART_DE"/*.desktop; do
+    [[ -f "$f" ]] || continue
+    bn=$(basename "$f")
+    src="$AIR_DE/$bn"
+    [[ -f "$src" ]] || continue
+    a=$(grep -m1 '^Icon=' "$f" || true)
+    b=$(grep -m1 '^Icon=' "$src" || true)
+    if [[ "$a" == "$b" ]]; then
+      PARITY_OK=$((PARITY_OK+1))
+    else
+      PARITY_BAD="${PARITY_BAD}${bn} "
+    fi
+  done
+  if [[ -z "$PARITY_BAD" ]]; then
+    ok "Sprint K-B parity: all ${PARITY_OK} artifact desktop-entries match airootfs Icon= lines"
+  else
+    fail "Sprint K-B parity: Icon= drift in artifact desktop-entries: ${PARITY_BAD}"
+  fi
+else
+  warn "Sprint K-B parity: artifact desktop-entries dir not found (skipping)"
+fi
+
 # ── final ─────────────────────────────────────────────────────────────
 echo
 if (( FAIL == 0 )); then
