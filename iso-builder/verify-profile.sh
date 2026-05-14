@@ -1261,6 +1261,101 @@ for entry in "${INTELLIGENT_TABLE[@]}"; do
 done
 
 
+
+# ── 13w. Tier 1 · Real-OS Desktop Contract (rev r15 — 2026-05-14) ──
+# Locks the Sprint B "Real-OS desktop" requirements so the system feels
+# natural to anyone coming from Windows or macOS:
+#   • Desktop right-click context menu (Change Wallpaper, New Folder,
+#     New File, Open Terminal Here, Display Settings, Refresh)
+#   • Title-bar right-click window menu (Move, Resize, Minimize,
+#     Maximize, Close)
+#   • Every NYXUS app opens floating + draggable + resizable
+#   • chrome.py auto-installs a HeaderBar on plain Gtk.Window /
+#     Gtk.ApplicationWindow that lack one
+hd "13w. Tier 1 · Real-OS Desktop Contract (rev r15)"
+
+# (a) nyxus-context-menu.sh exists, executable, has all 6 entries.
+CTX="${AIROOT}/usr/local/bin/nyxus-context-menu.sh"
+if [[ -x "${CTX}" ]]; then
+  ok "context-menu: nyxus-context-menu.sh present + executable"
+  for entry in "Change Wallpaper" "New Folder" "New File" "Open Terminal" "Display Settings" "Refresh"; do
+    if grep -q "${entry}" "${CTX}"; then
+      ok "context-menu: entry present — ${entry}"
+    else
+      fail "context-menu: missing entry — ${entry}"
+    fi
+  done
+else
+  fail "context-menu: ${CTX} missing or not executable"
+fi
+
+# (b) nyxus-window-menu.sh exists, executable, has all 5 entries.
+WM="${AIROOT}/usr/local/bin/nyxus-window-menu.sh"
+if [[ -x "${WM}" ]]; then
+  ok "window-menu: nyxus-window-menu.sh present + executable"
+  for entry in "Move" "Resize" "Minimize" "Maximize" "Close"; do
+    if grep -qE "[\"' ]${entry}[\"' ]" "${WM}"; then
+      ok "window-menu: entry present — ${entry}"
+    else
+      fail "window-menu: missing entry — ${entry}"
+    fi
+  done
+  grep -q "hyprctl" "${WM}" \
+    && ok "window-menu: dispatches via hyprctl" \
+    || fail "window-menu: missing hyprctl dispatch"
+else
+  fail "window-menu: ${WM} missing or not executable"
+fi
+
+# (c) Hyprland windowrules — NYXUS apps must float + center.
+WRULE="${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-windowrules.conf"
+if [[ -f "${WRULE}" ]]; then
+  ok "windowrules: nyxus-windowrules.conf present"
+  grep -qE 'windowrulev2 = float, *class:\^\(nyxus' "${WRULE}" \
+    && ok "windowrules: NYXUS apps float by default" \
+    || fail "windowrules: NYXUS apps not set to float"
+  grep -qE 'windowrulev2 = center' "${WRULE}" \
+    && ok "windowrules: NYXUS apps center on open" \
+    || fail "windowrules: NYXUS apps not centered on open"
+  grep -q 'ALT,.*F4.*killactive' "${WRULE}" \
+    && ok "windowrules: ALT+F4 close binding (Windows-style)" \
+    || fail "windowrules: ALT+F4 close binding missing"
+  grep -qE 'SUPER,.*M.*fullscreen.*1' "${WRULE}" \
+    && ok "windowrules: SUPER+M maximize binding (macOS-style)" \
+    || fail "windowrules: SUPER+M maximize binding missing"
+else
+  fail "windowrules: ${WRULE} missing"
+fi
+
+# (d) chrome.py installs a HeaderBar + double-click + right-click handlers.
+if [[ -f "${CHROME_PY}" ]]; then
+  grep -q 'def _ensure_titlebar' "${CHROME_PY}" \
+    && ok "chrome: _ensure_titlebar() helper installed" \
+    || fail "chrome: _ensure_titlebar() helper missing — windows won't be draggable"
+  grep -q 'def _attach_titlebar_handlers' "${CHROME_PY}" \
+    && ok "chrome: _attach_titlebar_handlers() (double-click + RMB) present" \
+    || fail "chrome: title-bar handlers missing"
+  grep -q 'window.maximize\|is_maximized' "${CHROME_PY}" \
+    && ok "chrome: double-click toggles maximize" \
+    || fail "chrome: double-click maximize logic missing"
+  grep -q 'nyxus-window-menu' "${CHROME_PY}" \
+    && ok "chrome: title-bar RMB invokes nyxus-window-menu.sh" \
+    || fail "chrome: title-bar RMB → nyxus-window-menu wiring missing"
+fi
+
+# (e) Desktop right-click is wired in nyxus_desktop.py.
+DESK="${AIROOT}/opt/nyxus/desktop/nyxus_desktop.py"
+[[ -f "${DESK}" ]] || DESK="${ART_SRC}/desktop/nyxus_desktop.py"
+if [[ -f "${DESK}" ]]; then
+  grep -q "BUTTON_SECONDARY" "${DESK}" \
+    && ok "desktop: BUTTON_SECONDARY (right-click) handler wired" \
+    || fail "desktop: right-click handler missing in nyxus_desktop.py"
+  grep -q "nyxus-context-menu" "${DESK}" \
+    && ok "desktop: invokes nyxus-context-menu.sh on right-click" \
+    || fail "desktop: nyxus-context-menu.sh dispatch missing"
+fi
+
+
 # ── final ─────────────────────────────────────────────────────────────
 echo
 if (( FAIL == 0 )); then
