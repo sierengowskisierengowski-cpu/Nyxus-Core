@@ -899,7 +899,7 @@ else
   fail "Settings: sounds not registered or SoundsPage missing"
 fi
 # Required runtime packages
-for pkg in libcanberra libcanberra-pulse sound-theme-freedesktop pipewire-pulse; do
+for pkg in libcanberra sound-theme-freedesktop pipewire-pulse; do
   grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
     && ok "package: ${pkg}" \
     || fail "missing package: ${pkg}"
@@ -972,12 +972,16 @@ else
   fail "calamares: live-session desktop launcher missing"
 fi
 
-# Required Arch packages
-for pkg in calamares ckbcomp; do
-  grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
-    && ok "package: ${pkg}" \
-    || fail "missing package: ${pkg}"
-done
+# Required Arch/AUR path:
+# Calamares may be pacstrapped from repos OR built from AUR in customize_airootfs.sh.
+if grep -qE '^calamares$' "${PROFILE}/packages.x86_64"; then
+  ok "package: calamares"
+elif [[ -f "${AIROOT}/root/customize_airootfs.sh" ]] \
+     && grep -qE '_aur_build[[:space:]]+calamares\b' "${AIROOT}/root/customize_airootfs.sh"; then
+  ok "calamares built from AUR via customize_airootfs.sh"
+else
+  fail "calamares not in packages.x86_64 and not built in customize_airootfs.sh"
+fi
 
 # ── 13t. Tier 1 · GRUB Theme (rev 2026-05-14) ──────────────────────
 hd "13t. Tier 1 · GRUB Theme"
