@@ -309,13 +309,39 @@ fi
 # ── 13c. NYXUS wallpaper pack ─────────────────────────────────────────
 hd "13c. NYXUS wallpaper pack"
 WP_DIR="${AIROOT}/usr/share/backgrounds/nyxus"
-WP_COUNT=$(find "${WP_DIR}" -maxdepth 1 -name '*.svg' 2>/dev/null | wc -l)
-if (( WP_COUNT >= 8 )); then
-  ok "${WP_COUNT} wallpapers shipped"
+WP_SVG=$(find "${WP_DIR}" -maxdepth 1 -name '*.svg' 2>/dev/null | wc -l)
+WP_PNG=$(find "${WP_DIR}" -maxdepth 1 -name '*.png' 2>/dev/null | wc -l)
+WP_COUNT=$((WP_SVG + WP_PNG))
+if (( WP_COUNT >= 50 )); then
+  ok "${WP_COUNT} wallpapers shipped (${WP_SVG} svg + ${WP_PNG} png)"
 else
-  fail "only ${WP_COUNT} wallpapers (expected >=8)"
+  fail "only ${WP_COUNT} wallpapers (expected >=50)"
 fi
 [[ -f "${WP_DIR}/manifest.tsv" ]] && ok "manifest.tsv present" || fail "manifest.tsv missing"
+MAN_LINES=$(grep -c . "${WP_DIR}/manifest.tsv" 2>/dev/null || echo 0)
+if (( MAN_LINES >= WP_COUNT )); then
+  ok "manifest.tsv has ${MAN_LINES} entries (>= ${WP_COUNT} files)"
+else
+  fail "manifest.tsv has ${MAN_LINES} entries, expected >= ${WP_COUNT}"
+fi
+SDDM_BG="${AIROOT}/usr/share/sddm/themes/nyxus/backgrounds"
+SDDM_PNG=$(find "${SDDM_BG}" -maxdepth 1 -name '*.png' 2>/dev/null | wc -l)
+if (( SDDM_PNG >= WP_PNG )); then
+  ok "${SDDM_PNG} wallpapers mirrored to SDDM theme"
+else
+  fail "SDDM wallpaper mirror has ${SDDM_PNG}, expected >= ${WP_PNG}"
+fi
+WP_CONF="${AIROOT}/etc/skel/.config/nyxus/wallpaper.conf"
+if [[ -f "${WP_CONF}" ]]; then
+  WP_DEFAULT=$(grep -oP '^path=\K.*' "${WP_CONF}" | head -1)
+  if [[ -n "${WP_DEFAULT}" && -f "${AIROOT}${WP_DEFAULT}" ]]; then
+    ok "default wallpaper present: ${WP_DEFAULT}"
+  else
+    fail "default wallpaper path invalid: ${WP_DEFAULT}"
+  fi
+else
+  fail "wallpaper.conf missing"
+fi
 [[ -x "${AIROOT}/usr/local/bin/nyxus-set-wallpaper" ]] \
   && ok "nyxus-set-wallpaper present + executable" \
   || fail "nyxus-set-wallpaper missing/not-exec"
