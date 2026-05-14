@@ -510,14 +510,18 @@
 ;; WINDOWS
 ;; ═════════════════════════════════════════════════════════════════════
 
+;; rev r15 — slim floating bar. 40px window (was 56) gives the .bar 32px of
+;; effective height after padding; 8px Y-offset (was 12) keeps it close to the
+;; screen edge while still visibly floating. Width 96% (was 98%) for the same
+;; reason.
 (defwindow bar-bottom
   :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-bottom"
-  :geometry (geometry :x "0" :y "12" :width "98%" :height "56px" :anchor "bottom center")
+  :geometry (geometry :x "0" :y "8" :width "96%" :height "40px" :anchor "bottom center")
   (bar_bottom_layout))
 
 (defwindow bar-top
   :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-top"
-  :geometry (geometry :x "0" :y "0" :width "100%" :height "32px" :anchor "top center")
+  :geometry (geometry :x "0" :y "0" :width "100%" :height "26px" :anchor "top center")
   (bar_top_layout))
 
 (defwindow bar-left

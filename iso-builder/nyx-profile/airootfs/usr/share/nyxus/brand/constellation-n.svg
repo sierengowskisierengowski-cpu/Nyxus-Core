@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  NYXUS — The Constellation N  (boot/transition mark, rev r15)
+  Five stars positioned as the letter N, joined by hairlines.
+  Use: Plymouth boot animation, splash transitions, loading states.
+  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="star-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#f4ead5" stop-opacity="1"/>
+      <stop offset="40%"  stop-color="#f4ead5" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#f4ead5" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Hairline connections (drawn first, behind stars). -->
+  <g stroke="#f4ead5" stroke-opacity="0.35" stroke-width="1" fill="none" stroke-linecap="round">
+    <line x1="128" y1="384" x2="128" y2="128"/>   <!-- left vertical -->
+    <line x1="128" y1="128" x2="384" y2="384"/>   <!-- diagonal -->
+    <line x1="384" y1="384" x2="384" y2="128"/>   <!-- right vertical -->
+  </g>
+
+  <!-- Five stars at the N corners + diagonal midpoint. -->
+  <g fill="url(#star-glow)">
+    <circle cx="128" cy="384" r="18"/>            <!-- bottom-left -->
+    <circle cx="128" cy="128" r="14"/>            <!-- top-left -->
+    <circle cx="256" cy="256" r="10"/>            <!-- midpoint -->
+    <circle cx="384" cy="384" r="14"/>            <!-- bottom-right -->
+    <circle cx="384" cy="128" r="18"/>            <!-- top-right -->
+  </g>
+
+  <!-- Hard star centers for crispness at small sizes. -->
+  <g fill="#f4ead5">
+    <circle cx="128" cy="384" r="5"/>
+    <circle cx="128" cy="128" r="4"/>
+    <circle cx="256" cy="256" r="3"/>
+    <circle cx="384" cy="384" r="4"/>
+    <circle cx="384" cy="128" r="5"/>
+  </g>
+</svg>
