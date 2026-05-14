@@ -2827,6 +2827,130 @@ else
   fail "Sprint K-C (d): ${KC_TOTAL_HSL} banned HSL :root tokens still in web artifact index.css"
 fi
 
+# ── §15ai Sprint K-D — full browser theming (Chromium + Firefox) ─────
+# Locks the rev r16 brand contract into both browser families. Guards on
+# FIVE axes:
+#   (a) every browser config file is staged in airootfs at the canonical
+#       path so Arch picks it up at install time
+#   (b) every airootfs file has an artifact-side mirror under
+#       artifacts/api-server/nyxus-scripts/browser/ and the bytes match
+#       (parity guard — same pattern as §15ae artifact↔airootfs hyprland)
+#   (c) Hyprland sources nyxus-browser-blur.conf in artifact hyprland.conf
+#   (d) packages.x86_64 carries `firefox` AND `chromium` as installed pkgs
+#   (e) every theme file carries the rev r16 palette (#f4ead5 + #b8865a +
+#       #0a0a0e) AND zero banned hex (#ff00ff/#cc00ff/#0088ff/#ffff00/
+#       #ff5500/#39ff14) — so Chromium initial_preferences can't drift to
+#       a non-NYXUS theme.colors block and userChrome can't ship a
+#       magenta accent.
+hd "§15ai Sprint K-D — full browser theming (Chromium + Firefox)"
+
+KD_AIROOTFS=(
+  "airootfs/etc/chromium-flags.conf"
+  "airootfs/etc/chromium/policies/managed/nyxus-policy.json"
+  "airootfs/etc/chromium/initial_preferences"
+  "airootfs/etc/skel/.config/hypr/conf.d/nyxus-browser-blur.conf"
+  "airootfs/etc/skel/.mozilla/firefox/profiles.ini"
+  "airootfs/etc/skel/.mozilla/firefox/installs.ini"
+  "airootfs/etc/skel/.mozilla/firefox/nyxus.default/user.js"
+  "airootfs/etc/skel/.mozilla/firefox/nyxus.default/chrome/userChrome.css"
+  "airootfs/etc/skel/.mozilla/firefox/nyxus.default/chrome/userContent.css"
+)
+KD_MIRRORS=(
+  "browser/chromium-flags.conf"
+  "browser/chromium-policy.json"
+  "browser/chromium-initial_preferences.json"
+  "browser/nyxus-browser-blur.conf"
+  "browser/firefox-profiles.ini"
+  "browser/firefox-installs.ini"
+  "browser/firefox-user.js"
+  "browser/firefox-userChrome.css"
+  "browser/firefox-userContent.css"
+)
+ART_BROWSER_ROOT="${REPO_ROOT:-$HERE/..}/artifacts/api-server/nyxus-scripts"
+
+# (a) all 9 airootfs files exist
+KD_MISSING=""
+for rel in "${KD_AIROOTFS[@]}"; do
+  if [[ ! -f "$PROFILE/$rel" ]]; then
+    KD_MISSING+="$rel "
+  fi
+done
+if [[ -z "$KD_MISSING" ]]; then
+  ok "Sprint K-D (a): all 9 browser theme files staged in airootfs"
+else
+  fail "Sprint K-D (a): missing browser theme files: $KD_MISSING"
+fi
+
+# (b) artifact-side mirrors exist and bytes match airootfs
+KD_PARITY_FAIL=""
+for i in "${!KD_AIROOTFS[@]}"; do
+  src="$PROFILE/${KD_AIROOTFS[$i]}"
+  dst="$ART_BROWSER_ROOT/${KD_MIRRORS[$i]}"
+  if [[ ! -f "$src" ]] || [[ ! -f "$dst" ]]; then
+    KD_PARITY_FAIL+="missing(${KD_MIRRORS[$i]}) "
+    continue
+  fi
+  if ! cmp -s "$src" "$dst"; then
+    KD_PARITY_FAIL+="drift(${KD_MIRRORS[$i]}) "
+  fi
+done
+if [[ -z "$KD_PARITY_FAIL" ]]; then
+  ok "Sprint K-D (b): artifact ↔ airootfs parity holds for all 9 browser files"
+else
+  fail "Sprint K-D (b): parity broken: $KD_PARITY_FAIL"
+fi
+
+# (c) artifact hyprland.conf sources the new browser-blur shard
+HYPR_ART="$ART_BROWSER_ROOT/hyprland.conf"
+if grep -q '^source = ~/.config/hypr/conf.d/nyxus-browser-blur.conf' "$HYPR_ART" 2>/dev/null; then
+  ok "Sprint K-D (c): artifact hyprland.conf sources nyxus-browser-blur.conf"
+else
+  fail "Sprint K-D (c): nyxus-browser-blur.conf not sourced from artifact hyprland.conf"
+fi
+
+# (d) packages.x86_64 declares firefox + chromium
+PKG_FILE="$PROFILE/packages.x86_64"
+KD_PKG_MISS=""
+for pkg in firefox chromium; do
+  if ! grep -qE "^${pkg}\$" "$PKG_FILE" 2>/dev/null; then
+    KD_PKG_MISS+="$pkg "
+  fi
+done
+if [[ -z "$KD_PKG_MISS" ]]; then
+  ok "Sprint K-D (d): packages.x86_64 carries firefox + chromium"
+else
+  fail "Sprint K-D (d): packages.x86_64 missing: $KD_PKG_MISS"
+fi
+
+# (e) palette compliance — every theme file carries rev r16 palette AND
+#     zero banned hex. Banned set matches §15ah's banned set so K-D can't
+#     reintroduce a magenta/cyan/yellow accent the web artifacts already
+#     forbid.
+KD_PALETTE_FAIL=""
+KD_BANNED_RE='#(ff00ff|cc00ff|0088ff|ffff00|ff5500|39ff14|00ffff|ff00cc)'
+KD_THEMED_FILES=(
+  "$PROFILE/airootfs/etc/chromium/initial_preferences"
+  "$PROFILE/airootfs/etc/skel/.mozilla/firefox/nyxus.default/chrome/userChrome.css"
+  "$PROFILE/airootfs/etc/skel/.mozilla/firefox/nyxus.default/chrome/userContent.css"
+)
+for f in "${KD_THEMED_FILES[@]}"; do
+  base="$(basename "$f")"
+  if ! grep -qiE '#f4ead5|244, 234, 213' "$f"; then
+    KD_PALETTE_FAIL+="cream-missing($base) "
+  fi
+  if ! grep -qiE '#b8865a|184, 134, 90' "$f"; then
+    KD_PALETTE_FAIL+="copper-missing($base) "
+  fi
+  if grep -qiE "$KD_BANNED_RE" "$f"; then
+    KD_PALETTE_FAIL+="banned-hex($base) "
+  fi
+done
+if [[ -z "$KD_PALETTE_FAIL" ]]; then
+  ok "Sprint K-D (e): palette compliance — cream + copper present, zero banned hex"
+else
+  fail "Sprint K-D (e): palette violations: $KD_PALETTE_FAIL"
+fi
+
 # ── final ─────────────────────────────────────────────────────────────
 echo
 if (( FAIL == 0 )); then
