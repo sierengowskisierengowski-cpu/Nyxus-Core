@@ -1,19 +1,21 @@
-# NYXUS · Calamares branding descriptor             rev 2026-05-13 r2
+# NYXUS · Calamares branding descriptor             rev 2026-05-14 r3
+# Sprint F: rev r15 compliance — DARK MIRROR codename retired,
+# cream-only sidebar, premium glass slideshow palette.
 ---
 componentName: nyxus
 
 welcomeStyleCalamares: true
 welcomeExpandingLogo:  false
 windowExpanding:       normal
-windowSize:            900px,560px
+windowSize:            960px,600px
 windowPlacement:       center
 
 strings:
     productName:         "NYXUS"
     shortProductName:    "NYXUS"
-    version:             "2026.05 · DARK MIRROR"
+    version:             "2026.05"
     shortVersion:        "2026.05"
-    versionedName:       "NYXUS 2026.05 · DARK MIRROR"
+    versionedName:       "NYXUS 2026.05"
     shortVersionedName:  "NYXUS 2026.05"
     bootloaderEntryName: "NYXUS"
     productUrl:          "https://nyxus.os"
@@ -30,9 +32,10 @@ images:
 slideshow:           "show.qml"
 slideshowAPI:        2
 
+# Sprint F sidebar — triple-black + cream highlight, matches show.qml.
 style:
-    sidebarBackground:    "#0a0a14"
-    sidebarText:          "#e9e5f2"
-    sidebarTextSelect:    "#0a0a14"
-    sidebarTextHighlight: "#f4ead5"
+    sidebarBackground:         "#0a0a0a"
+    sidebarText:               "#cfc6b3"
+    sidebarTextSelect:         "#0a0a0a"
+    sidebarTextHighlight:      "#f4ead5"
     sidebarBackgroundSelected: "#f4ead5"
