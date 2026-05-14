@@ -250,6 +250,31 @@ def gen_gtk_accent_block(t: dict) -> str:
     )
 
 
+def gen_firefox_userContent_palette(t: dict) -> str:
+    """userContent.css `:root` block — defines --nyx-* vars for Firefox's
+    own chrome-rendered pages (about:newtab, about:preferences, etc.).
+
+    Wrapped in an @-moz-document covering all chrome URL patterns at
+    the top of userContent.css; the 3 existing scoped blocks below
+    consume these via var() refs. CSS custom properties cascade into
+    nested :root selectors of the same document, so this single wrapper
+    feeds every NYXUS-skinned chrome surface without polluting web
+    content.
+    """
+    p = t["palette"]
+    cream = p['cream']
+    return (
+        f"  :root {{\n"
+        f"    --nyx-bg:        {p['ink_black']['hex']};\n"
+        f"    --nyx-bg-raised: {p['surface_raised']['hex']};\n"
+        f"    --nyx-cream:     {cream['hex']};\n"
+        f"    --nyx-cream-dim: {p['cream_dim']['hex']};\n"
+        f"    --nyx-copper:    {p['copper']['hex']};\n"
+        f"    --nyx-hairline:  rgba({cream['rgb'][0]}, {cream['rgb'][1]}, {cream['rgb'][2]}, 0.10);\n"
+        f"  }}\n"
+    )
+
+
 def gen_eww_accent(t: dict) -> str:
     """Build-time default for eww's _nyxus_accent.scss partial.
 
@@ -349,6 +374,12 @@ def _build_targets(tokens_path: Path) -> List[Target]:
             kind="marker",
             description="Firefox userChrome.css :root palette block",
             marker="palette", comment="css", generator=gen_firefox_root,
+        ),
+        Target(
+            path=A / "etc/skel/.mozilla/firefox/nyxus.default/chrome/userContent.css",
+            kind="marker",
+            description="Firefox userContent.css chrome-pages :root vars",
+            marker="palette", comment="css", generator=gen_firefox_userContent_palette,
         ),
         Target(
             path=A / "etc/chromium/initial_preferences",
