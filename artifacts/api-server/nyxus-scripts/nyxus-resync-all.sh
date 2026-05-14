@@ -308,10 +308,10 @@ if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-seattle-frost.conf" "$HYPR_MAIN"; th
   ok "stripped Seattle Frost source line from hyprland.conf"
 fi
 
-# Current NYXUS builds intentionally ship `windowrulev2` / `layerrulev2`
-# syntax in the canonical conf shards. Older rewrites to unified syntax were
-# corrupting fresh configs, so we only remove the legacy temporary filename
-# from prior resync generations and keep the current source lines intact.
+# NYXUS builds use the unified `windowrule` / `layerrule` syntax.
+# `windowrulev2` was deprecated in Hyprland 0.42+ and removed from all
+# NYXUS conf shards. Only remove the legacy temporary filename from prior
+# resync generations and keep the current source lines intact.
 # (audit A8: replaces 60 lines of disabled v1-migration + override-insertion)
 HYPR_RULES_OLD="$HYPR_CONF_D/nyxus-windowrules.conf"
 if [[ -f "$HYPR_RULES_OLD" ]]; then
@@ -367,7 +367,7 @@ fi
 if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-rules.conf" -o "$HYPR_RULES"; then
   chown "$REAL_USER:$REAL_USER" "$HYPR_RULES"
   chmod 644 "$HYPR_RULES"
-  ok "wrote $HYPR_RULES  ($(grep -c '^windowrulev2' "$HYPR_RULES") rules — canonical baseline)"
+  ok "wrote $HYPR_RULES  ($(grep -c '^windowrule' "$HYPR_RULES") rules — canonical baseline)"
 else
   fail "could not download nyxus-hyprland-rules.conf — apps may still tile-stretch"
 fi
