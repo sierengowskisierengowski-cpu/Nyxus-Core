@@ -33,7 +33,7 @@ export const C = {
   dim:           "#6a6e78",  // alias
 
   // workspace identity stripes — ONLY allowed color, ONLY on bottom waybar
-  ws: ["#ec4899", "#ea7e3c", "#d4a73a", "#6aa872", "#5a8aab", "#8a6aaa", "#ec4899", "#ea7e3c", "#d4a73a"],
+  ws: ["#f4ead5", "#b8865a", "#c4b491", "#8a8068", "#d4b89c", "#a89175", "#f4ead5", "#b8865a", "#c4b491"],
 };
 
 // Back-compat NEONS export — now monochrome (used by LeftBar workspace pips)
