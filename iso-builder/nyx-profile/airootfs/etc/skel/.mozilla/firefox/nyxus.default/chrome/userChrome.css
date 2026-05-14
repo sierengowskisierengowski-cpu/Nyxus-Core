@@ -26,6 +26,7 @@
 
 :root,
 :root:-moz-lwtheme {
+  /* NYXUS-TOKENS-START palette */
   --nyx-bg:        #0a0a0e !important;
   --nyx-bg-alt:    #0e0e14 !important;
   --nyx-cream:     #f4ead5 !important;
@@ -34,6 +35,7 @@
   --nyx-hairline:  rgba(244, 234, 213, 0.10) !important;
   --nyx-glass:     rgba(6, 6, 10, 0.55) !important;
   --nyx-radius:    3px !important;
+/* NYXUS-TOKENS-END palette */
 
   /* Override Firefox's built-in lwtheme tokens so every internal widget
      that reads them picks up our palette without us styling it directly. */

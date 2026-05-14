@@ -2951,6 +2951,53 @@ else
   fail "Sprint K-D (e): palette violations: $KD_PALETTE_FAIL"
 fi
 
+# ── §15aj Sprint K-E — design-tokens renderer (drift guard) ──────────
+# Phase 1 of the design-token system. The renderer at
+# `iso-builder/scripts/nyxus-render-tokens` reads
+# `iso-builder/tokens/nyxus.tokens.json` and emits per-consumer brand
+# files (Firefox userChrome.css :root, Chromium initial_preferences
+# theme.colors via JSON-mode, web artifact src/index.css :root via HSL
+# vars). This guard runs the renderer in --check mode; if any consumer
+# file drifted from the canonical render, fail the build.
+#
+# Phase 2 will add the remaining consumers (4 more web artifacts,
+# Hyprland active-border, hyprlock outer_color, dunst frame_color, GTK
+# accent, eww accent, userContent.css). Adding a consumer = append to
+# TARGETS in the renderer + add markers to the consumer file. This guard
+# automatically picks up any new target without modification.
+#
+# Two axes:
+#   (a) tokens.json + renderer script both staged at canonical paths
+#   (b) `nyxus-render-tokens --check` exits 0 (every consumer in sync
+#       with the canonical render of tokens.json)
+hd "§15aj Sprint K-E — design-tokens renderer (drift guard)"
+
+KE_TOKENS="${REPO_ROOT:-$HERE/..}/iso-builder/tokens/nyxus.tokens.json"
+KE_RENDERER="${REPO_ROOT:-$HERE/..}/iso-builder/scripts/nyxus-render-tokens"
+
+# (a) tokens.json + renderer exist + renderer is executable
+KE_FOUND_FAIL=""
+[[ -f "$KE_TOKENS"   ]] || KE_FOUND_FAIL+="tokens.json "
+[[ -f "$KE_RENDERER" ]] || KE_FOUND_FAIL+="renderer-script "
+[[ -x "$KE_RENDERER" ]] || KE_FOUND_FAIL+="renderer-not-executable "
+if [[ -z "$KE_FOUND_FAIL" ]]; then
+  ok "Sprint K-E (a): tokens.json + nyxus-render-tokens staged + executable"
+else
+  fail "Sprint K-E (a): missing or non-executable: $KE_FOUND_FAIL"
+fi
+
+# (b) renderer --check passes (every consumer file matches canonical render)
+if [[ -x "$KE_RENDERER" ]]; then
+  if KE_OUT="$("$KE_RENDERER" --check 2>&1)"; then
+    ok "Sprint K-E (b): renderer --check PASS (all consumers in sync with tokens.json)"
+  else
+    fail "Sprint K-E (b): renderer --check FAILED (drift):"
+    echo "$KE_OUT" | sed 's/^/    /'
+  fi
+else
+  fail "Sprint K-E (b): cannot run --check (renderer missing or not executable)"
+fi
+
 # ── final ─────────────────────────────────────────────────────────────
 echo
 if (( FAIL == 0 )); then
