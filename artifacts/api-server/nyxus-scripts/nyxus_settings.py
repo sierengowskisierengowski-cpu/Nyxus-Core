@@ -654,6 +654,14 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "notification,center,drawer,history,toast,banner,dnd,"
                "do_not_disturb,quiet,swaync,bell", 1,
                "Apps"),
+    # Sprint K-D rev r16 (2026-05-14) — full browser theming
+    SectionDef("browsers",      "Browsers",
+               "Firefox + Chromium — frosted glass, dark UI, default browser",
+               "software",
+               "browser,browsers,firefox,chromium,brave,edge,vivaldi,"
+               "default,web,internet,userchrome,policy,flags,wayland,"
+               "blur,glass,theme,palette,cream,copper", 1,
+               "Apps"),
 )
 SECTIONS_BY_KEY = {s.key: s for s in SECTIONS}
 
@@ -10933,6 +10941,177 @@ class KernelPage(SectionPage):
         self.add_pill(status_pill(active.split(".")[0] + ".x", "ok"))
 
 
+class BrowsersPage(SectionPage):
+    """Sprint K-D rev r16 (2026-05-14) — Firefox + Chromium theming.
+
+    Wires the locked rev r16 brand contract (triple-black + cream
+    + copper, 3px corners, frosted glass via Hyprland Dual-Kawase) into
+    both browser families:
+
+      · Chromium → /etc/chromium-flags.conf (Wayland + force-dark),
+        /etc/chromium/policies/managed/nyxus-policy.json (BrowserThemeColor
+        + force dark + suppress sign-in promo + telemetry off),
+        /etc/chromium/initial_preferences (per-profile theme.colors).
+      · Firefox  → /etc/skel/.mozilla/firefox/profiles.ini +
+        nyxus.default/{user.js, chrome/userChrome.css, chrome/userContent.css}
+        (legacy stylesheets enabled, slim tabs, cream-on-black UI,
+        copper accent on focus + active tab pip).
+      · Hyprland → /etc/skel/.config/hypr/conf.d/nyxus-browser-blur.conf
+        (per-class opacity + rounding + noshadow for chromium/firefox/
+        brave/edge/vivaldi/librewolf families; 1.0/1.0 + float for PiP).
+
+    Every row in this page either: launches the real browser, opens the
+    real config file in the user's editor, or runs a real browser CLI
+    flag — no stubs, no greyed-out toggles, per the NYXUS Build Standard.
+    """
+
+    KEY = "browsers"
+    STANDARD_KEYBIND_TOKENS = ["firefox", "chromium", "brave", "browser"]
+    STANDARD_RESET_NS = ["browsers"]
+    STANDARD_ADVANCED = [
+        ("Open Chromium flags",
+         "/etc/chromium-flags.conf — Wayland + force-dark + GPU",
+         "Open",
+         lambda: fire_and_forget("xdg-open /etc/chromium-flags.conf")),
+        ("Open Chromium managed policy",
+         "/etc/chromium/policies/managed/nyxus-policy.json",
+         "Open",
+         lambda: fire_and_forget(
+             "xdg-open /etc/chromium/policies/managed/nyxus-policy.json")),
+        ("Open Firefox userChrome.css",
+         "~/.mozilla/firefox/nyxus.default/chrome/userChrome.css",
+         "Open",
+         lambda: fire_and_forget(
+             "xdg-open "
+             "$HOME/.mozilla/firefox/nyxus.default/chrome/userChrome.css")),
+        ("Open Firefox user.js",
+         "~/.mozilla/firefox/nyxus.default/user.js",
+         "Open",
+         lambda: fire_and_forget(
+             "xdg-open $HOME/.mozilla/firefox/nyxus.default/user.js")),
+        ("Launch Firefox profile manager",
+         "Choose, create, or rename Firefox profiles",
+         "Run",
+         lambda: fire_and_forget("firefox -P --no-remote")),
+        ("Refresh Chromium managed policies",
+         "Restart any running Chromium so the policy file re-reads",
+         "Refresh",
+         lambda: open_terminal(
+             "pkill -x chromium 2>/dev/null; "
+             "echo 'policies will reload on next chromium launch'; "
+             "read -p 'enter to close'", None)),
+    ]
+
+    def build(self) -> None:
+        # ── Stack inventory (which browsers are actually installed) ──
+        stack = Adw.PreferencesGroup(
+            title="Installed browsers",
+            description="Detected browsers on this NYXUS install. The "
+                        "shipped pair is firefox + chromium; everything "
+                        "else is optional and theming still applies via "
+                        "the Hyprland windowrules + Chromium policy.")
+        self.add_group(stack)
+        for binname in ("firefox", "chromium", "brave", "google-chrome-stable",
+                        "vivaldi-stable", "librewolf"):
+            stack.add(kv_row(
+                binname,
+                "installed" if have(binname) else "missing"))
+
+        # ── Default browser (real xdg-settings call, no stub) ────────
+        default_grp = Adw.PreferencesGroup(
+            title="Default browser",
+            description="xdg-settings writes ~/.config/mimeapps.list and "
+                        "the user's per-application defaults. Affects "
+                        "every app that uses xdg-open to launch URLs.")
+        self.add_group(default_grp)
+        if have("firefox"):
+            default_grp.add(action_row(
+                "Set Firefox as default",
+                "xdg-settings set default-web-browser firefox.desktop",
+                "Set",
+                lambda: fire_and_forget(
+                    "xdg-settings set default-web-browser firefox.desktop")))
+        if have("chromium"):
+            default_grp.add(action_row(
+                "Set Chromium as default",
+                "xdg-settings set default-web-browser chromium.desktop",
+                "Set",
+                lambda: fire_and_forget(
+                    "xdg-settings set default-web-browser chromium.desktop")))
+        default_grp.add(action_row(
+            "Show current default",
+            "xdg-settings get default-web-browser → terminal",
+            "Show",
+            lambda: open_terminal(
+                "xdg-settings get default-web-browser; "
+                "read -p 'enter to close'", None)))
+
+        # ── Appearance — palette swatches (rev r16 brand contract) ──
+        pal = Adw.PreferencesGroup(
+            title="Brand palette (locked rev r16)",
+            description="These exact values are written into Chromium's "
+                        "initial_preferences theme.colors and Firefox's "
+                        "userChrome.css :root block. Both browsers carry "
+                        "the same triple-black + cream + copper contract.")
+        self.add_group(pal)
+        pal.add(kv_row("Surface (triple-black)",       "#0a0a0e"))
+        pal.add(kv_row("Raised surface",               "#0e0e14"))
+        pal.add(kv_row("Cream (PRIMARY text)",         "#f4ead5"))
+        pal.add(kv_row("Cream-dim (secondary)",        "#c4b491"))
+        pal.add(kv_row("Copper (accent / focus)",      "#b8865a"))
+        pal.add(kv_row("Hairline border",
+                       "rgba(244, 234, 213, 0.10)"))
+        pal.add(kv_row("Glass surface",
+                       "rgba(6, 6, 10, 0.55) + Hyprland blur"))
+
+        # ── Launch + privacy actions ─────────────────────────────────
+        launch = Adw.PreferencesGroup(
+            title="Launch",
+            description="Open each browser. Window opacity, blur, "
+                        "rounding, and shadow are applied automatically "
+                        "by Hyprland (nyxus-browser-blur.conf) — no "
+                        "extra steps required.")
+        self.add_group(launch)
+        if have("firefox"):
+            launch.add(action_row(
+                "Open Firefox",
+                "Wayland-native, NYXUS userChrome theme",
+                "Open",
+                lambda: fire_and_forget("firefox"),
+                css="nyx-pill-ok"))
+            launch.add(action_row(
+                "Open Firefox preferences",
+                "about:preferences",
+                "Prefs",
+                lambda: fire_and_forget("firefox about:preferences")))
+        else:
+            launch.add(empty_row(
+                "Firefox not installed",
+                "Install with `sudo pacman -S firefox`"))
+        if have("chromium"):
+            launch.add(action_row(
+                "Open Chromium",
+                "Wayland surface, force-dark, frosted glass",
+                "Open",
+                lambda: fire_and_forget("chromium"),
+                css="nyx-pill-ok"))
+            launch.add(action_row(
+                "Open Chromium settings",
+                "chrome://settings",
+                "Settings",
+                lambda: fire_and_forget("chromium chrome://settings")))
+        else:
+            launch.add(empty_row(
+                "Chromium not installed",
+                "Install with `sudo pacman -S chromium`"))
+
+        # ── Status pill (header) ────────────────────────────────────
+        ready = have("firefox") and have("chromium")
+        self.add_pill(status_pill(
+            "themed" if ready else "browsers missing",
+            "ok"     if ready else "warn"))
+
+
 class GamingPage(SectionPage):
     STANDARD_KEYBIND_TOKENS = ["steam", "mangohud", "gamemode"]
     STANDARD_RESET_NS = ["gaming"]
@@ -14180,6 +14359,8 @@ PAGE_CLASSES = {
     "software":      SoftwarePage,
     "capture":       CapturePage,
     "notif_center":  NotifCenterPage,
+    # Sprint K-D — browser theming (rev r16, 2026-05-14)
+    "browsers":      BrowsersPage,
     # Tier 1 — Brand (rev 2026-05-14)
     "welcome":       WelcomePage,
     "loginscreen":   LoginScreenPage,
