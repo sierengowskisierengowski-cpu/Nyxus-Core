@@ -1,0 +1,336 @@
+──  NYXUS Icon Generator  ──────────────────────────────────
+   Target dir: /home/nyx/.local/share/icons/hicolor/256x256/apps
+   Generating 18 icons...
+
+  ✓  SYSMON      /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.sysmon.png  (31520 bytes)
+  ✓  STICKIES    /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.stickies.png  (31382 bytes)
+  ✓  WEATHER     /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.weather.png  (31509 bytes)
+  ✓  NOTEPAD     /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.notepad.png  (33025 bytes)
+  ✓  TERMINAL    /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.terminal.png  (30060 bytes)
+  ✓  CONTROL     /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.control.png  (30486 bytes)
+  ✓  GODSAPP     /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.godsapp.png  (33154 bytes)
+  ✓  STUDIO      /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.studio.png  (31512 bytes)
+  ✓  SAGE        /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.sage.png  (32096 bytes)
+  ✓  SHIELD      /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.shield.png  (31607 bytes)
+  ✓  SETTINGS    /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.settings.png  (35625 bytes)
+  ✓  PASSWD      /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.passwords.png  (30959 bytes)
+  ✓  PANEL       /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.panel.png  (29402 bytes)
+  ✓  INTEL       /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.intel.png  (29042 bytes)
+  ✓  START       /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.start.png  (30854 bytes)
+  ✓  HOME        /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.home.png  (32249 bytes)
+  ✓  PHANTOM     /home/nyx/.local/share/icons/hicolor/256x256/apps/io.nyxus.phantom.png  (31347 bytes)
+  ✓  HOME        /home/nyx/.local/share/icons/hicolor/256x256/apps/nyxus-home.png  (31514 bytes)
+gtk-update-icon-cache: Cache file created successfully.
+
+   gtk-update-icon-cache exit: 0
+
+Final disk state:
+total 596
+drwxr-xr-x 2 nyx nyx  4096 May 15 01:04 .
+drwxr-xr-x 3 nyx nyx  4096 Apr 28 23:09 ..
+-rw-r--r-- 1 nyx nyx 30486 May 15 01:04 io.nyxus.control.png
+-rw-r--r-- 1 nyx nyx 33154 May 15 01:04 io.nyxus.godsapp.png
+-rw-r--r-- 1 nyx nyx 32249 May 15 01:04 io.nyxus.home.png
+-rw-r--r-- 1 nyx nyx 29042 May 15 01:04 io.nyxus.intel.png
+-rw-r--r-- 1 nyx nyx 33025 May 15 01:04 io.nyxus.notepad.png
+-rw-r--r-- 1 nyx nyx 29402 May 15 01:04 io.nyxus.panel.png
+-rw-r--r-- 1 nyx nyx 30959 May 15 01:04 io.nyxus.passwords.png
+-rw-r--r-- 1 nyx nyx 31347 May 15 01:04 io.nyxus.phantom.png
+-rw-r--r-- 1 nyx nyx 32096 May 15 01:04 io.nyxus.sage.png
+-rw-r--r-- 1 nyx nyx 35625 May 15 01:04 io.nyxus.settings.png
+-rw-r--r-- 1 nyx nyx 31607 May 15 01:04 io.nyxus.shield.png
+-rw-r--r-- 1 nyx nyx 30854 May 15 01:04 io.nyxus.start.png
+-rw-r--r-- 1 nyx nyx 31382 May 15 01:04 io.nyxus.stickies.png
+-rw-r--r-- 1 nyx nyx 31512 May 15 01:04 io.nyxus.studio.png
+-rw-r--r-- 1 nyx nyx 31520 May 15 01:04 io.nyxus.sysmon.png
+-rw-r--r-- 1 nyx nyx 30060 May 15 01:04 io.nyxus.terminal.png
+-rw-r--r-- 1 nyx nyx 31509 May 15 01:04 io.nyxus.weather.png
+-rw-r--r-- 1 nyx nyx 31514 May 15 01:04 nyxus-home.png
+
+Icons installed. Now run:  pkill eww; sleep 1; setsid nyxus-eww-launch &
+
+  ✓  NYXUS icons: 17 painted → ~/.local/share/icons/hicolor/256x256/apps/
+
+── GTK Dark Theme (adw-gtk3-dark) ────────────────────────────────────────────
+ there is nothing to do
+  ✓  adw-gtk3 installed via yay (AUR fallback)
+  ✓  GTK 3 + 4 settings.ini written (prefer-dark)
+  ✓  gsettings color-scheme=prefer-dark, gtk-theme=adw-gtk3-dark
+
+── Hyprland ────────────────────────────────────────────
+  ✓  hyprland.conf → /home/nyx/.config/hypr/hyprland.conf
+  ✓  hyprlock.conf → /home/nyx/.config/hypr/hyprlock.conf
+  ✓  hypridle.conf → /home/nyx/.config/hypr/hypridle.conf
+  ✓  nyxus-hyprland-general.conf → /home/nyx/.config/hypr/conf.d/nyxus-hyprland-general.conf
+  ✓  nyxus-hyprland-rules.conf → /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+  ✓  nyxus-hyprland-opacity.conf → /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+  ✓  nyxus-hyprland-blur.conf → /home/nyx/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+  ✓  nyxus-hyprland-layerblur.conf → /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf
+  ✓  nyxus-hyprland-fog.conf → /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+  ✓  nyxus-hyprland-mission.conf → /home/nyx/.config/hypr/conf.d/nyxus-hyprland-mission.conf
+
+── Wallpaper (SIERENGOWSKI) ────────────────────────────────────────────
+  ✓  nyxus-void-vortex.png → /home/nyx/.config/hypr/walls/nyxus-void-vortex.png
+  ✓  nyxus-ink-swirl.png → /home/nyx/.config/hypr/walls/nyxus-ink-swirl.png
+  ✓  nyxus-void-wallpaper.mp4 → /home/nyx/.config/hypr/walls/nyxus-void-wallpaper.mp4
+  ✓  nyxus-starfield-wall.png → /home/nyx/.config/hypr/walls/nyxus-starfield-wall.png
+  ✓  nyxus-drifter-wall.png → /home/nyx/.config/hypr/walls/nyxus-drifter-wall.png
+  ✓  nyxus-taskbar-bg.png → /home/nyx/.config/hypr/walls/nyxus-taskbar-bg.png
+  ✓  nyxus-rightbar-bg.png → /home/nyx/.config/hypr/walls/nyxus-rightbar-bg.png
+  ✓  nyxus-starlight.png → /home/nyx/.config/hypr/walls/nyxus-starlight.png
+  ✓  nyxus-monogram-mist.png → /home/nyx/.config/hypr/walls/nyxus-monogram-mist.png
+  ✓  nyxus-topbar-mist.png → /home/nyx/.config/hypr/walls/nyxus-topbar-mist.png
+  ✓  nyxus-hyprlock-eye.png → /home/nyx/.config/hypr/walls/nyxus-hyprlock-eye.png
+  ✓  nyxus-login-stars.png → /home/nyx/.config/hypr/walls/nyxus-login-stars.png
+  ✓  nyxus-bar-stone.png → /home/nyx/.config/hypr/walls/nyxus-bar-stone.png
+
+── App Backgrounds (neon splat panels) ────────────────────────────────────────────
+  ✓  nyxus-bg-01.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-01.png
+  ✓  nyxus-bg-02.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-02.png
+  ✓  nyxus-bg-03.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-03.png
+  ✓  nyxus-bg-04.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-04.png
+  ✓  nyxus-bg-05.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-05.png
+  ✓  nyxus-bg-06.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-06.png
+  ✓  nyxus-bg-07.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-07.png
+  ✓  nyxus-bg-08.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-08.png
+  ✓  nyxus-bg-09.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-09.png
+  ✓  nyxus-bg-10.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-10.png
+  ✓  nyxus-bg-11.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-11.png
+  ✓  nyxus-bg-12.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-12.png
+  ✓  nyxus-bg-13.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-13.png
+  ✓  nyxus-bg-14.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-14.png
+  ✓  nyxus-bg-15.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-15.png
+  ✓  nyxus-bg-16.png → /home/nyx/.nyxus/backgrounds/nyxus-bg-16.png
+
+── EWW (ElKowar's Wacky Widgets) ────────────────────────────────────────────
+
+── EWW Shell (bars · dashboard · powermenu · cheatsheet · OSDs) ────────────────────────────────────────────
+  ✓  eww/eww.yuck → /home/nyx/.config/eww/eww.yuck
+  ✓  eww/eww.scss → /home/nyx/.config/eww/eww.scss
+  ✓  eww/nyxus.conf → /home/nyx/.config/eww/nyxus.conf
+  ✓  eww/README.md → /home/nyx/.config/eww/README.md
+  ✓  eww/scripts/audio.sh → /home/nyx/.config/eww/scripts/audio.sh
+  ✓  eww/scripts/audio-action.sh → /home/nyx/.config/eww/scripts/audio-action.sh
+  ✓  eww/scripts/audio-sinks.sh → /home/nyx/.config/eww/scripts/audio-sinks.sh
+  ✓  eww/scripts/battery.sh → /home/nyx/.config/eww/scripts/battery.sh
+  ✓  eww/scripts/bluetooth.sh → /home/nyx/.config/eww/scripts/bluetooth.sh
+  ✓  eww/scripts/brightness.sh → /home/nyx/.config/eww/scripts/brightness.sh
+  ✓  eww/scripts/bt-action.sh → /home/nyx/.config/eww/scripts/bt-action.sh
+  ✓  eww/scripts/bt-list.sh → /home/nyx/.config/eww/scripts/bt-list.sh
+  ✓  eww/scripts/calendar.sh → /home/nyx/.config/eww/scripts/calendar.sh
+  ✓  eww/scripts/calendar-month.sh → /home/nyx/.config/eww/scripts/calendar-month.sh
+  ✓  eww/scripts/cpu-bars.sh → /home/nyx/.config/eww/scripts/cpu-bars.sh
+  ✓  eww/scripts/mic.sh → /home/nyx/.config/eww/scripts/mic.sh
+  ✓  eww/scripts/network.sh → /home/nyx/.config/eww/scripts/network.sh
+  ✓  eww/scripts/notif-action.sh → /home/nyx/.config/eww/scripts/notif-action.sh
+  ✓  eww/scripts/notif-history.sh → /home/nyx/.config/eww/scripts/notif-history.sh
+  ✓  eww/scripts/notifications.sh → /home/nyx/.config/eww/scripts/notifications.sh
+  ✓  eww/scripts/osd-show.sh → /home/nyx/.config/eww/scripts/osd-show.sh
+  ✓  eww/scripts/player.sh → /home/nyx/.config/eww/scripts/player.sh
+  ✓  eww/scripts/power-profile.sh → /home/nyx/.config/eww/scripts/power-profile.sh
+  ✓  eww/scripts/qs-toggle.sh → /home/nyx/.config/eww/scripts/qs-toggle.sh
+  ✓  eww/scripts/quicksettings.sh → /home/nyx/.config/eww/scripts/quicksettings.sh
+  ✓  eww/scripts/sys-pulse.sh → /home/nyx/.config/eww/scripts/sys-pulse.sh
+  ✓  eww/scripts/ticker.sh → /home/nyx/.config/eww/scripts/ticker.sh
+  ✓  eww/scripts/updates.sh → /home/nyx/.config/eww/scripts/updates.sh
+  ✓  eww/scripts/weather.sh → /home/nyx/.config/eww/scripts/weather.sh
+  ✓  eww/scripts/wifi-action.sh → /home/nyx/.config/eww/scripts/wifi-action.sh
+  ✓  eww/scripts/wifi-list.sh → /home/nyx/.config/eww/scripts/wifi-list.sh
+  ✓  eww/scripts/workspaces.sh → /home/nyx/.config/eww/scripts/workspaces.sh
+  ✓  nyxus-eww-launch → /var/tmp/nyxus-install/nyxus-eww-launch.new
+  ✓  nyxus-eww-launch → /usr/local/bin/
+  ✓  nyxus-mission-control-toggle → /var/tmp/nyxus-install/nyxus-mission-control-toggle.new
+  ✓  nyxus-mission-control-toggle → /usr/local/bin/
+
+── Bootstrap shims + Welcome wizard ────────────────────────────────────────────
+  ✓  nyxus-bootstrap → /var/tmp/nyxus-install/nyxus-bootstrap.new
+  ✓  nyxus-bootstrap → /usr/local/bin/
+  ✓  nyxus-wait-bootstrap → /var/tmp/nyxus-install/nyxus-wait-bootstrap.new
+  ✓  nyxus-wait-bootstrap → /usr/local/bin/
+  ✓  nyxus-welcome → /var/tmp/nyxus-install/nyxus-welcome.new
+  ✓  nyxus-welcome → /usr/local/bin/
+  ✓  nyxus_welcome.py → /home/nyx/.nyxus/nyxus_welcome.py
+  ✓  nyxus-welcome-helper → /var/tmp/nyxus-install/nyxus-welcome-helper.new
+  ✓  nyxus-welcome-helper → /usr/local/bin/
+  ✓  nyxus-welcome.policy → /var/tmp/nyxus-install/nyxus-welcome.policy.new
+  ✓  nyxus-welcome.policy → /usr/share/polkit-1/actions/
+  ✓  nyxus-eww.service → /home/nyx/.config/systemd/user/nyxus-eww.service
+  ✓  nyxus-crashd.service → /home/nyx/.config/systemd/user/nyxus-crashd.service
+  ✓  nyxus-usb-watch.service → /home/nyx/.config/systemd/user/nyxus-usb-watch.service
+
+── Welcome Wizard ────────────────────────────────────────────
+  ✓  nyxus-welcome → /var/tmp/nyxus-install/nyxus-welcome.new
+  ✓  nyxus-welcome → ~/.local/bin/
+  ✓  nyxus-welcome → /usr/local/bin/
+  ✓  nyxus-welcome-helper → /var/tmp/nyxus-install/nyxus-welcome-helper.new
+  ✓  nyxus-welcome-helper → /usr/local/libexec/
+  ✓  nyxus-welcome.policy → /var/tmp/nyxus-install/nyxus-welcome.policy.new
+  ✓  nyxus-welcome.policy → /usr/share/polkit-1/actions/
+  ✓  nyxus-parental-helper → /var/tmp/nyxus-install/nyxus-parental-helper.new
+  ✓  nyxus-parental-helper → /usr/local/libexec/
+  ✓  com.nyxus.parental.policy → /var/tmp/nyxus-install/com.nyxus.parental.policy.new
+  ✓  com.nyxus.parental.policy → /usr/share/polkit-1/actions/
+  ✓  nyxus-account-helper → /var/tmp/nyxus-install/nyxus-account-helper.new
+  ✓  nyxus-account-helper → /usr/local/libexec/
+  ✓  nyxus-backup-helper → /var/tmp/nyxus-install/nyxus-backup-helper.new
+  ✓  nyxus-backup-helper → /usr/local/libexec/
+  ✓  nyxus-doctor-helper → /var/tmp/nyxus-install/nyxus-doctor-helper.new
+  ✓  nyxus-doctor-helper → /usr/local/libexec/
+  ✓  nyxus-usbwatch-helper → /var/tmp/nyxus-install/nyxus-usbwatch-helper.new
+  ✓  nyxus-usbwatch-helper → /usr/local/libexec/
+  ✓  polkit-policies/com.nyxus.account.policy → /var/tmp/nyxus-install/com.nyxus.account.policy.new
+  ✓  com.nyxus.account.policy → /usr/share/polkit-1/actions/
+  ✓  polkit-policies/com.nyxus.backup.policy → /var/tmp/nyxus-install/com.nyxus.backup.policy.new
+  ✓  com.nyxus.backup.policy → /usr/share/polkit-1/actions/
+  ✓  polkit-policies/com.nyxus.doctor.policy → /var/tmp/nyxus-install/com.nyxus.doctor.policy.new
+  ✓  com.nyxus.doctor.policy → /usr/share/polkit-1/actions/
+  ✓  polkit-policies/com.nyxus.firewall.policy → /var/tmp/nyxus-install/com.nyxus.firewall.policy.new
+  ✓  com.nyxus.firewall.policy → /usr/share/polkit-1/actions/
+  ✓  polkit-policies/com.nyxus.updater.policy → /var/tmp/nyxus-install/com.nyxus.updater.policy.new
+  ✓  com.nyxus.updater.policy → /usr/share/polkit-1/actions/
+  ✓  polkit-policies/com.nyxus.usbwatch.policy → /var/tmp/nyxus-install/com.nyxus.usbwatch.policy.new
+  ✓  com.nyxus.usbwatch.policy → /usr/share/polkit-1/actions/
+  ✓  eww binary already installed: eww 0.5.0 d87c2fdbfdc012e76d229e4e9ea3325bc0f23e89
+
+── Rofi ────────────────────────────────────────────
+  ✓  rofi-config.rasi → /home/nyx/.config/rofi/config.rasi
+  ✓  rofi-nyxus.rasi → /home/nyx/.config/rofi/nyxus.rasi
+  ✓  rofi-startmenu.rasi → /home/nyx/.config/rofi/startmenu.rasi
+
+── Wlogout Power Menu ────────────────────────────────────────────
+  ✓  wlogout-style.css → /home/nyx/.config/wlogout/style.css
+  ✓  wlogout-layout → /home/nyx/.config/wlogout/layout
+
+── Palette CSS (mirroring to all consumer dirs) ────────────────────────────────────────────
+  · mirrored to /home/nyx/.config/eww/
+  · mirrored to /home/nyx/.config/wlogout/
+  · mirrored to /home/nyx/.config/dunst/
+  · mirrored to /home/nyx/.config/rofi/
+  · mirrored to /home/nyx/.config/hypr/
+
+── Dunst Notifications (NYXUS theme) ────────────────────────────────────────────
+  ✓  nyxus-dunstrc → /home/nyx/.config/dunst/dunstrc
+
+── Alacritty ────────────────────────────────────────────
+  ✓  alacritty.toml → /home/nyx/.config/alacritty/alacritty.toml
+
+── GTK4 Tarball Apps ────────────────────────────────────────────
+  ✓  home (nyxus-home)
+  ✓  weather (nyxus-weather)
+  ✓  notepad (nyxus-notepad)
+  ✓  passwords (nyxus-passwords)
+  ✓  intel (nyxus-intel)
+  ✓  panel (nyxus-panel)
+  ✓  start (nyxus-start)
+  ✓  sage (nyxus-sage)
+  ✓  studio (nyxus-studio)
+  ✓  security (nyxus-security)
+
+── Cleanup (legacy apps + duplicate symlinks) ────────────────────────────────────────────
+  ✓  cleanup complete
+
+── App Launcher Entries (Rofi / .desktop) ────────────────────────────────────────────
+  ✓  nyxus-sysmon.desktop
+  ✓  nyxus-stickies.desktop
+  ✓  nyxus-settings.desktop
+  ✓  nyxus-notes.desktop
+  ✓  /usr/local/bin/nyxus-notes (launcher)
+  ✓  nyxus-terminal.desktop
+  ✓  nyxus-control.desktop
+  ✓  nyxus-launcher.desktop
+  ✓  nyxus-powermenu.desktop
+  ✓  nyxus-store.desktop
+  ✓  nyxus-screenshot.desktop
+  ✓  nyxus-doctor.desktop
+
+── SDDM Login Theme (NYXUS) ────────────────────────────────────────────
+  ✓  nyxus-sddm-theme.tar.gz → /tmp/tmp.O0N2QEo011/theme.tar.gz
+  ✓  NYXUS SDDM theme → /usr/share/sddm/themes/nyxus/
+  ✓  sddm.service enabled (display-manager.service → sddm)
+  Reboot or 'sudo systemctl start sddm' to see the NYXUS login screen
+
+── Applying Changes ────────────────────────────────────────────
+  ✓  Hyprland config reloaded
+  ✓  EWW shell active — 4 bars + dashboard + powermenu + cheatsheet + OSDs
+  ✓  Wallpaper set — nyxus-void-vortex.png (swaybg · EWW-era default)
+  ✓  Dunst restarted with new config
+
+── OS Name ────────────────────────────────────────────
+  ✓  /etc/os-release already correct (NYXUS)
+
+──────────────────────────────────────────────────────────────────────
+
+  NYXUS fully installed.
+
+  Wallpaper: SIERENGOWSKI (permanent — set at boot)
+    Super+Alt+W  → reload wallpaper if it ever clears
+
+  Lock your screen:  Super+L
+  Open launcher:    Super+D
+  Screenshot:       Super+Print  (region)
+  Logout menu:      Super+Shift+E
+
+  S I L E N T · D A R K · P U R E L Y   F U N C T I O N A L
+
+
+...xXx... ~  2m3s 
+❯ hyprctl reload && pkill eww; sleep 1; setsid nyxus-eww-launch & disown  01:06:26 
+ok
+[1] 165789
+
+...xXx... ~ 
+❯ Run `eww logs` to see any errors while editing your configuration.      01:06:42 
+
+
+
+...xXx... ~ 
+❯                                                                         01:08:15 
+
+...xXx... ~ 
+❯ hyprctl reload                                                          01:08:15 
+ok
+
+...xXx... ~ 
+❯ echo "=== files in conf.d ===" && ls ~/.config/hypr/conf.d/ && echo "=== v2 hits anywhere in ~/.config/hypr ===" && grep -rn "windowrulev2" ~/.config/hypr/ 2>/dev/null && echo "=== last-modified of rules file ===" && stat -c "%y %n" ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf ~/.config/hypr/hyprland.conf && echo "=== what the server actually returns right now ===" && curl -s "https://7d45d4aa-bc2d-4fae-a4a4-a672ca904937-00-2ixlfhdaz3p4i.kirk.replit.dev/api/download/nyxus/nyxus-hyprland-rules.conf" | head -25
+=== files in conf.d ===
+󱁻 nyxus-hyprland-blur.conf       󱁻 nyxus-hyprland-mission.conf
+󱁻 nyxus-hyprland-fog.conf        󱁻 nyxus-hyprland-opacity.conf
+󱁻 nyxus-hyprland-general.conf    󱁻 nyxus-hyprland-rules.conf
+󱁻 nyxus-hyprland-layerblur.conf
+=== v2 hits anywhere in ~/.config/hypr ===
+/home/nyx/.config/hypr/hyprland.conf:414:# Hyprland 0.54.3 hyprlang, `windowrulev2 = RULE, class:REGEX` DOES NOT
+/home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf:8:#  `windowrulev2` is itself deprecated. The 0.54.3 lock-in is
+/home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf:6:#                     `windowrulev2` is now deprecated (emits a
+=== last-modified of rules file ===
+2026-05-15 01:04:52.825622371 -0400 /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+2026-05-15 01:04:51.440059355 -0400 /home/nyx/.config/hypr/hyprland.conf
+=== what the server actually returns right now ===
+# ============================================================
+#  NYXUS — Hyprland window rules (DARK MIRROR rev 2026-05-07 r16)
+#  ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+#
+#  r13 · 2026-05-13 — Hyprland past 0.55 unified the rules grammar.
+#                     `windowrulev2` is now deprecated (emits a
+#                     non-fatal warning per line — 1300+ noise on a
+#                     full NYXUS profile) and the unified `windowrule
+#                     = RULE, class:REGEX` form is the correct
+#                     replacement. The "cascading invalid field"
+#                     failure that locked us to v2 on 0.54.3 was fixed
+#                     in 0.55. All rules below migrated.
+#
+#  All 11 godsapp-family apps + the flyout (panel) + the catch-alls
+#  float, center, and size to a consistent 900x650.
+#
+#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================
+
+# -- NYXUS class apps (anything starting with "nyxus") --
+windowrule = float, class:^((nyxus|Nyxus).*)$
+windowrule = center, class:^((nyxus|Nyxus).*)$
+windowrule = size 900 650, class:^((nyxus|Nyxus).*)$
+
+# -- 11 godsapp-family product launchers (`home` excluded — desktop dashboard) --
+
+...xXx... ~ 
+❯                                                                         01:08:44 
+
