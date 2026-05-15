@@ -20,6 +20,13 @@ EWW_DIR="$HOME/.config/eww"
 ROFI_DIR="$HOME/.config/rofi"
 DUNST_DIR="$HOME/.config/dunst"
 
+# Stage downloads on real disk (NOT /tmp tmpfs) so the installer doesn't
+# fill up RAM-backed /tmp on small-memory systems and start failing with
+# "No space left on device" partway through. Override with NYXUS_STAGE_DIR.
+STAGE_DIR="${NYXUS_STAGE_DIR:-/var/tmp/nyxus-install}"
+mkdir -p "$STAGE_DIR"
+trap 'rm -rf "$STAGE_DIR"' EXIT
+
 # ── COLORS ────────────────────────────────────────────────────────────────────
 R="\033[0m"
 B="\033[1m"
@@ -337,25 +344,25 @@ done
 chmod +x "$EWW_SCRIPTS_DIR"/*.sh 2>/dev/null || true
 
 # nyxus-eww-launch (deadline-bounded launcher) → /usr/local/bin/
-if dl "nyxus-eww-launch" "/tmp/nyxus-eww-launch.new"; then
-  if sudo -n install -m 0755 /tmp/nyxus-eww-launch.new /usr/local/bin/nyxus-eww-launch 2>/dev/null; then
+if dl "nyxus-eww-launch" "${STAGE_DIR}/nyxus-eww-launch.new"; then
+  if sudo -n install -m 0755 ${STAGE_DIR}/nyxus-eww-launch.new /usr/local/bin/nyxus-eww-launch 2>/dev/null; then
     ok "nyxus-eww-launch → /usr/local/bin/"
   else
-    install -m 0755 /tmp/nyxus-eww-launch.new "$HOME/.local/bin/nyxus-eww-launch" 2>/dev/null \
+    install -m 0755 ${STAGE_DIR}/nyxus-eww-launch.new "$HOME/.local/bin/nyxus-eww-launch" 2>/dev/null \
       && ok "nyxus-eww-launch → ~/.local/bin/ (sudo unavailable)" \
       || failed=$((failed+1))
   fi
-  rm -f /tmp/nyxus-eww-launch.new
+  rm -f ${STAGE_DIR}/nyxus-eww-launch.new
 fi
-if dl "nyxus-mission-control-toggle" "/tmp/nyxus-mission-control-toggle.new"; then
-  if sudo -n install -m 0755 /tmp/nyxus-mission-control-toggle.new /usr/local/bin/nyxus-mission-control-toggle 2>/dev/null; then
+if dl "nyxus-mission-control-toggle" "${STAGE_DIR}/nyxus-mission-control-toggle.new"; then
+  if sudo -n install -m 0755 ${STAGE_DIR}/nyxus-mission-control-toggle.new /usr/local/bin/nyxus-mission-control-toggle 2>/dev/null; then
     ok "nyxus-mission-control-toggle → /usr/local/bin/"
   else
-    install -m 0755 /tmp/nyxus-mission-control-toggle.new "$HOME/.local/bin/nyxus-mission-control-toggle" 2>/dev/null \
+    install -m 0755 ${STAGE_DIR}/nyxus-mission-control-toggle.new "$HOME/.local/bin/nyxus-mission-control-toggle" 2>/dev/null \
       && ok "nyxus-mission-control-toggle → ~/.local/bin/ (sudo unavailable)" \
       || failed=$((failed+1))
   fi
-  rm -f /tmp/nyxus-mission-control-toggle.new
+  rm -f ${STAGE_DIR}/nyxus-mission-control-toggle.new
 fi
 
 # ── A4 FIX (2026-05-12): bootstrap shims + welcome wizard parity ─────────────
@@ -367,15 +374,15 @@ fi
 hdr "Bootstrap shims + Welcome wizard"
 mkdir -p "$HOME/.local/bin"
 for helper in nyxus-bootstrap nyxus-wait-bootstrap nyxus-welcome; do
-  if dl "$helper" "/tmp/${helper}.new"; then
-    if sudo -n install -m 0755 "/tmp/${helper}.new" "/usr/local/bin/${helper}" 2>/dev/null; then
+  if dl "$helper" "${STAGE_DIR}/${helper}.new"; then
+    if sudo -n install -m 0755 "${STAGE_DIR}/${helper}.new" "/usr/local/bin/${helper}" 2>/dev/null; then
       ok "$helper → /usr/local/bin/"
     else
-      install -m 0755 "/tmp/${helper}.new" "$HOME/.local/bin/${helper}" 2>/dev/null \
+      install -m 0755 "${STAGE_DIR}/${helper}.new" "$HOME/.local/bin/${helper}" 2>/dev/null \
         && ok "$helper → ~/.local/bin/ (sudo unavailable)" \
         || failed=$((failed+1))
     fi
-    rm -f "/tmp/${helper}.new"
+    rm -f "${STAGE_DIR}/${helper}.new"
   fi
 done
 # Welcome wizard python module → ~/.nyxus/ (run by /usr/local/bin/nyxus-welcome)
@@ -383,15 +390,15 @@ mkdir -p "$HOME/.nyxus"
 dl "nyxus_welcome.py" "$HOME/.nyxus/nyxus_welcome.py" || failed=$((failed+1))
 # Polkit helper + policy — root-only; only stage when sudo is non-interactive
 if sudo -n true 2>/dev/null; then
-  if dl "nyxus-welcome-helper" "/tmp/nyxus-welcome-helper.new"; then
-    sudo -n install -m 0755 /tmp/nyxus-welcome-helper.new /usr/local/bin/nyxus-welcome-helper 2>/dev/null \
+  if dl "nyxus-welcome-helper" "${STAGE_DIR}/nyxus-welcome-helper.new"; then
+    sudo -n install -m 0755 ${STAGE_DIR}/nyxus-welcome-helper.new /usr/local/bin/nyxus-welcome-helper 2>/dev/null \
       && ok "nyxus-welcome-helper → /usr/local/bin/"
-    rm -f /tmp/nyxus-welcome-helper.new
+    rm -f ${STAGE_DIR}/nyxus-welcome-helper.new
   fi
-  if dl "nyxus-welcome.policy" "/tmp/nyxus-welcome.policy.new"; then
-    sudo -n install -m 0644 /tmp/nyxus-welcome.policy.new /usr/share/polkit-1/actions/dev.nyxus.welcome.policy 2>/dev/null \
+  if dl "nyxus-welcome.policy" "${STAGE_DIR}/nyxus-welcome.policy.new"; then
+    sudo -n install -m 0644 ${STAGE_DIR}/nyxus-welcome.policy.new /usr/share/polkit-1/actions/dev.nyxus.welcome.policy 2>/dev/null \
       && ok "nyxus-welcome.policy → /usr/share/polkit-1/actions/"
-    rm -f /tmp/nyxus-welcome.policy.new
+    rm -f ${STAGE_DIR}/nyxus-welcome.policy.new
   fi
 else
   warn "skipping nyxus-welcome-helper + .policy (no passwordless sudo) — run installer with sudo to enable polkit elevation"
@@ -413,71 +420,71 @@ fi
 # ── Welcome Wizard launcher / helper / policy ────────────────────────────────
 hdr "Welcome Wizard"
 mkdir -p "$HOME/.local/bin"
-if dl "nyxus-welcome" "/tmp/nyxus-welcome.new"; then
-  install -m 0755 /tmp/nyxus-welcome.new "$HOME/.local/bin/nyxus-welcome" \
+if dl "nyxus-welcome" "${STAGE_DIR}/nyxus-welcome.new"; then
+  install -m 0755 ${STAGE_DIR}/nyxus-welcome.new "$HOME/.local/bin/nyxus-welcome" \
     && ok "nyxus-welcome → ~/.local/bin/"
-  sudo -n install -m 0755 /tmp/nyxus-welcome.new /usr/local/bin/nyxus-welcome 2>/dev/null \
+  sudo -n install -m 0755 ${STAGE_DIR}/nyxus-welcome.new /usr/local/bin/nyxus-welcome 2>/dev/null \
     && ok "nyxus-welcome → /usr/local/bin/" \
     || printf "  ${DIM}(sudo unavailable — keeping nyxus-welcome in ~/.local/bin)${R}\n"
-  rm -f /tmp/nyxus-welcome.new
+  rm -f ${STAGE_DIR}/nyxus-welcome.new
 fi
-if dl "nyxus-welcome-helper" "/tmp/nyxus-welcome-helper.new"; then
-  if sudo -n install -Dm0755 /tmp/nyxus-welcome-helper.new /usr/local/libexec/nyxus-welcome-helper 2>/dev/null; then
+if dl "nyxus-welcome-helper" "${STAGE_DIR}/nyxus-welcome-helper.new"; then
+  if sudo -n install -Dm0755 ${STAGE_DIR}/nyxus-welcome-helper.new /usr/local/libexec/nyxus-welcome-helper 2>/dev/null; then
     ok "nyxus-welcome-helper → /usr/local/libexec/"
   else
     printf "  ${DIM}(skip: nyxus-welcome-helper — needs sudo for /usr/local/libexec)${R}\n"
   fi
-  rm -f /tmp/nyxus-welcome-helper.new
+  rm -f ${STAGE_DIR}/nyxus-welcome-helper.new
 fi
-if dl "nyxus-welcome.policy" "/tmp/nyxus-welcome.policy.new"; then
-  if sudo -n install -Dm0644 /tmp/nyxus-welcome.policy.new /usr/share/polkit-1/actions/dev.nyxus.welcome.policy 2>/dev/null; then
+if dl "nyxus-welcome.policy" "${STAGE_DIR}/nyxus-welcome.policy.new"; then
+  if sudo -n install -Dm0644 ${STAGE_DIR}/nyxus-welcome.policy.new /usr/share/polkit-1/actions/dev.nyxus.welcome.policy 2>/dev/null; then
     ok "nyxus-welcome.policy → /usr/share/polkit-1/actions/"
   else
     printf "  ${DIM}(skip: nyxus-welcome.policy — needs sudo for polkit actions)${R}\n"
   fi
-  rm -f /tmp/nyxus-welcome.policy.new
+  rm -f ${STAGE_DIR}/nyxus-welcome.policy.new
 fi
 
 # ── Parental Controls helper / policy ───────────────────────────────────────
 # Settings → Parental Controls invokes this via:
 #   pkexec /usr/local/libexec/nyxus-parental-helper ...
-if dl "nyxus-parental-helper" "/tmp/nyxus-parental-helper.new"; then
-  if sudo -n install -Dm0755 /tmp/nyxus-parental-helper.new /usr/local/libexec/nyxus-parental-helper 2>/dev/null; then
+if dl "nyxus-parental-helper" "${STAGE_DIR}/nyxus-parental-helper.new"; then
+  if sudo -n install -Dm0755 ${STAGE_DIR}/nyxus-parental-helper.new /usr/local/libexec/nyxus-parental-helper 2>/dev/null; then
     ok "nyxus-parental-helper → /usr/local/libexec/"
   else
     printf "  ${DIM}(skip: nyxus-parental-helper — needs sudo for /usr/local/libexec)${R}\n"
   fi
-  rm -f /tmp/nyxus-parental-helper.new
+  rm -f ${STAGE_DIR}/nyxus-parental-helper.new
 fi
-if dl "com.nyxus.parental.policy" "/tmp/com.nyxus.parental.policy.new"; then
-  if sudo -n install -Dm0644 /tmp/com.nyxus.parental.policy.new /usr/share/polkit-1/actions/com.nyxus.parental.policy 2>/dev/null; then
+if dl "com.nyxus.parental.policy" "${STAGE_DIR}/com.nyxus.parental.policy.new"; then
+  if sudo -n install -Dm0644 ${STAGE_DIR}/com.nyxus.parental.policy.new /usr/share/polkit-1/actions/com.nyxus.parental.policy 2>/dev/null; then
     ok "com.nyxus.parental.policy → /usr/share/polkit-1/actions/"
   else
     printf "  ${DIM}(skip: com.nyxus.parental.policy — needs sudo for polkit actions)${R}\n"
   fi
-  rm -f /tmp/com.nyxus.parental.policy.new
+  rm -f ${STAGE_DIR}/com.nyxus.parental.policy.new
 fi
 
 # ── Completion wave helpers/policies (account/backup/doctor/usbwatch etc.) ──
 for h in nyxus-account-helper nyxus-backup-helper nyxus-doctor-helper nyxus-usbwatch-helper; do
-  if dl "${h}" "/tmp/${h}.new"; then
-    if sudo -n install -Dm0755 "/tmp/${h}.new" "/usr/local/libexec/${h}" 2>/dev/null; then
+  if dl "${h}" "${STAGE_DIR}/${h}.new"; then
+    if sudo -n install -Dm0755 "${STAGE_DIR}/${h}.new" "/usr/local/libexec/${h}" 2>/dev/null; then
       ok "${h} → /usr/local/libexec/"
     else
       printf "  ${DIM}(skip: ${h} — needs sudo for /usr/local/libexec)${R}\n"
     fi
-    rm -f "/tmp/${h}.new"
+    rm -f "${STAGE_DIR}/${h}.new"
   fi
 done
 for p in com.nyxus.account.policy com.nyxus.backup.policy com.nyxus.doctor.policy \
          com.nyxus.firewall.policy com.nyxus.updater.policy com.nyxus.usbwatch.policy; do
-  if dl "polkit-policies/${p}" "/tmp/${p}.new"; then
-    if sudo -n install -Dm0644 "/tmp/${p}.new" "/usr/share/polkit-1/actions/${p}" 2>/dev/null; then
+  if dl "polkit-policies/${p}" "${STAGE_DIR}/${p}.new"; then
+    if sudo -n install -Dm0644 "${STAGE_DIR}/${p}.new" "/usr/share/polkit-1/actions/${p}" 2>/dev/null; then
       ok "${p} → /usr/share/polkit-1/actions/"
     else
       printf "  ${DIM}(skip: ${p} — needs sudo for polkit actions)${R}\n"
     fi
-    rm -f "/tmp/${p}.new"
+    rm -f "${STAGE_DIR}/${p}.new"
   fi
 done
 
@@ -492,9 +499,9 @@ if ! command -v eww &>/dev/null; then
     sudo -n rustup default stable 2>/dev/null || rustup default stable 2>/dev/null || true
     if command -v cargo &>/dev/null; then
       printf "  ${DIM}building eww v0.6.0 (this takes ~3-5 min)…${R}\n"
-      cargo install --git https://github.com/elkowar/eww --tag v0.6.0 --root "$HOME/.local" eww 2>/tmp/nyxus-eww-build.log \
+      cargo install --git https://github.com/elkowar/eww --tag v0.6.0 --root "$HOME/.local" eww 2>${STAGE_DIR}/nyxus-eww-build.log \
         && ok "eww v0.6.0 built → ~/.local/bin/eww" \
-        || { fail "eww build (see /tmp/nyxus-eww-build.log)"; failed=$((failed+1)); }
+        || { fail "eww build (see ${STAGE_DIR}/nyxus-eww-build.log)"; failed=$((failed+1)); }
     else
       fail "cargo missing — cannot build eww (re-run installer after rustup setup)"
       failed=$((failed+1))
@@ -581,10 +588,10 @@ hdr "GTK4 Tarball Apps"
 TARBALL_APPS=(home weather notepad passwords intel panel start sage studio security)
 for app in "${TARBALL_APPS[@]}"; do
   installer="nyxus_${app}_install.sh"
-  if curl -fsSL "${API}/${installer}" | bash >/tmp/nyxus-${app}-install.log 2>&1; then
+  if curl -fsSL "${API}/${installer}" | bash >${STAGE_DIR}/nyxus-${app}-install.log 2>&1; then
     ok "${app} (nyxus-${app})"
   else
-    fail "${app} — see /tmp/nyxus-${app}-install.log"
+    fail "${app} — see ${STAGE_DIR}/nyxus-${app}-install.log"
     failed=$((failed+1))
     failed_items+=("nyxus-${app}")
   fi
@@ -884,12 +891,12 @@ if ! command -v sddm &>/dev/null; then
     # sudo -n: don't prompt — when piped from curl, prompts are swallowed
     # and sudo returns failure instantly. Cleaner to skip with guidance.
     if sudo -n pacman -S --needed --noconfirm sddm qt5-quickcontrols2 qt5-graphicaleffects qt5-declarative \
-        >/tmp/nyxus-sddm-pacman.log 2>&1; then
+        >${STAGE_DIR}/nyxus-sddm-pacman.log 2>&1; then
       ok "sddm + qt5 deps installed"
     elif ! sudo -n true 2>/dev/null; then
       printf "  ${DIM}(skip: sddm install — needs sudo; run 'sudo -v' first then re-run)${R}\n"
     else
-      fail "sddm package install (see /tmp/nyxus-sddm-pacman.log)"
+      fail "sddm package install (see ${STAGE_DIR}/nyxus-sddm-pacman.log)"
       failed_items+=("sddm package"); failed=$((failed+1))
     fi
   else
@@ -906,14 +913,14 @@ if command -v sddm &>/dev/null; then
     if tar -xzf "${SDDM_TMP}/theme.tar.gz" -C "${SDDM_TMP}/sddm-theme" 2>/dev/null \
        && [[ -f "${SDDM_TMP}/sddm-theme/install.sh" ]]; then
       # Theme installer (writes to /usr/share/sddm/themes/) needs sudo
-      if sudo -n bash "${SDDM_TMP}/sddm-theme/install.sh" >/tmp/nyxus-sddm-install.log 2>&1; then
+      if sudo -n bash "${SDDM_TMP}/sddm-theme/install.sh" >${STAGE_DIR}/nyxus-sddm-install.log 2>&1; then
         ok "NYXUS SDDM theme → /usr/share/sddm/themes/nyxus/"
         _sddm_theme_ok=1
       elif ! sudo -n true 2>/dev/null; then
         printf "  ${DIM}(skip: SDDM theme — needs sudo; run 'sudo -v' first then re-run)${R}\n"
         _sddm_theme_ok=0
       else
-        fail "SDDM theme installer (see /tmp/nyxus-sddm-install.log)"
+        fail "SDDM theme installer (see ${STAGE_DIR}/nyxus-sddm-install.log)"
         failed_items+=("SDDM theme installer"); failed=$((failed+1))
         _sddm_theme_ok=0
       fi
@@ -941,7 +948,7 @@ if command -v sddm &>/dev/null; then
             # the display-manager.service symlink so SDDM wins cleanly.
             sudo -n rm -f /etc/systemd/system/display-manager.service 2>/dev/null
             sudo -n systemctl enable --force sddm.service \
-                >/tmp/nyxus-sddm-enable.log 2>&1
+                >${STAGE_DIR}/nyxus-sddm-enable.log 2>&1
           }; then
           ok "sddm.service enabled (display-manager.service → sddm)"
           if systemctl is-enabled gdm.service &>/dev/null; then
@@ -961,9 +968,9 @@ if command -v sddm &>/dev/null; then
           # Real failure — show the captured systemctl error so the user can
           # see WHY (conflicting DM, masked unit, missing dep, etc.).
           printf "  ${RED}✗${R}  could not enable sddm.service — leaving gdm in place to keep you logged in\n"
-          if [[ -s /tmp/nyxus-sddm-enable.log ]]; then
+          if [[ -s ${STAGE_DIR}/nyxus-sddm-enable.log ]]; then
             printf "  ${DIM}    systemctl said:${R}\n"
-            sed 's/^/      /' /tmp/nyxus-sddm-enable.log | head -5
+            sed 's/^/      /' ${STAGE_DIR}/nyxus-sddm-enable.log | head -5
           fi
           printf "  ${DIM}    Manual fix:  sudo systemctl enable sddm.service && sudo systemctl disable gdm.service${R}\n"
           failed_items+=("sddm.service enable"); failed=$((failed+1))
@@ -992,11 +999,11 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   pkill -x eww 2>/dev/null || true
   sleep 0.6
   if command -v eww &>/dev/null; then
-    nohup eww daemon > /tmp/nyxus-eww-daemon.log 2>&1 &
+    nohup eww daemon > ${STAGE_DIR}/nyxus-eww-daemon.log 2>&1 &
     disown
     sleep 0.8
     if command -v nyxus-eww-launch &>/dev/null; then
-      nohup nyxus-eww-launch > /tmp/nyxus-eww-launch.log 2>&1 &
+      nohup nyxus-eww-launch > ${STAGE_DIR}/nyxus-eww-launch.log 2>&1 &
       disown
       sleep 1.0
     else
@@ -1008,7 +1015,7 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
     if pgrep -x eww > /dev/null; then
       ok "EWW shell active — 4 bars + dashboard + powermenu + cheatsheet + OSDs"
     else
-      fail "EWW daemon failed to start — check /tmp/nyxus-eww-daemon.log"
+      fail "EWW daemon failed to start — check ${STAGE_DIR}/nyxus-eww-daemon.log"
       failed=$((failed+1))
       failed_items+=("eww-start")
     fi
@@ -1037,17 +1044,17 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   # to drifter, then starfield, then ink-swirl if any are missing.
   if command -v swaybg >/dev/null 2>&1 && [[ -s "$VORTEX_PNG" ]]; then
     nohup swaybg -i "$VORTEX_PNG" -m fill -c "#000000" \
-      >/tmp/nyxus-swaybg.log 2>&1 &
+      >${STAGE_DIR}/nyxus-swaybg.log 2>&1 &
     disown
     ok "Wallpaper set — nyxus-void-vortex.png (swaybg · EWW-era default)"
   elif command -v swaybg >/dev/null 2>&1 && [[ -s "$DRIFTER_PNG" ]]; then
     nohup swaybg -i "$DRIFTER_PNG" -m fill -c "#000000" \
-      >/tmp/nyxus-swaybg.log 2>&1 &
+      >${STAGE_DIR}/nyxus-swaybg.log 2>&1 &
     disown
     warn "void-vortex missing — fell back to drifter portrait"
   elif command -v swaybg >/dev/null 2>&1 && [[ -s "$STAR_PNG" ]]; then
     nohup swaybg -i "$STAR_PNG" -m fill -c "#000000" \
-      >/tmp/nyxus-swaybg.log 2>&1 &
+      >${STAGE_DIR}/nyxus-swaybg.log 2>&1 &
     disown
     warn "void-vortex+drifter missing — fell back to static starfield"
   elif command -v swaybg >/dev/null 2>&1; then
@@ -1103,7 +1110,7 @@ else
     printf "    ${RED}✗${R}  ${DIM}${item}${R}\n"
   done
   echo ""
-  printf "  ${DIM}If EWW failed, run:  cat /tmp/nyxus-eww.log${R}\n"
+  printf "  ${DIM}If EWW failed, run:  cat ${STAGE_DIR}/nyxus-eww.log${R}\n"
   printf "  ${DIM}Otherwise re-run:  curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | bash${R}\n"
   exit 1
 fi
