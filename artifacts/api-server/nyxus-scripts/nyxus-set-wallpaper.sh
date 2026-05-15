@@ -17,7 +17,7 @@ set -u
 export LC_ALL=C.UTF-8
 
 WALL_DIR="$HOME/.config/hypr/walls"
-DEFAULT_NAME="cosmos-gold"
+DEFAULT_NAME="eclipse"
 
 # ── resolve the target image ──────────────────────────────────────────
 ARG="${1:-$DEFAULT_NAME}"
