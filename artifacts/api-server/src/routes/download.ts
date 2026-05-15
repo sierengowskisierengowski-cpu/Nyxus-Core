@@ -2,10 +2,12 @@ import { Router, type IRouter } from "express";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+import { spawn } from "child_process";
 
 const router: IRouter = Router();
 
 const SCRIPTS_DIR = path.resolve(__dirname, "nyxus-scripts");
+const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 
 // ── SHA256 manifest cache ────────────────────────────────────────────────
 // Hashes every served file at request time, but only re-hashes when the
@@ -398,6 +400,61 @@ router.get("/download/nyxus/manifest.txt", (_req, res) => {
   res.setHeader("Content-Type", "text/plain");
   res.setHeader("Cache-Control", "no-store");
   res.send(lines.join("\n") + "\n");
+});
+
+// ── ISO build source tarball (streamed) ─────────────────────────────────
+// Packs the three directories build-iso.sh needs into a single tar.gz on
+// the fly, so a user on an Arch live ISO can run ONE curl to bootstrap a
+// fresh NYXUS ISO bake. Streams directly from `tar` stdout so memory cost
+// is constant regardless of payload size.
+router.get("/download/nyxus/iso-source.tar.gz", (_req, res) => {
+  const subdirs = [
+    "iso-builder",
+    "artifacts/api-server/nyxus-scripts",
+    "artifacts/api-server/dist/nyxus-scripts",
+  ];
+  for (const d of subdirs) {
+    if (!fs.existsSync(path.join(REPO_ROOT, d))) {
+      res.status(500).json({ error: `Missing source dir: ${d}` });
+      return;
+    }
+  }
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Content-Type", "application/gzip");
+  res.setHeader("Content-Disposition", `attachment; filename="nyx-iso-source.tar.gz"`);
+
+  // --transform rewrites paths so the tarball extracts to a single
+  // top-level "nyx-iso-source/" dir, matching what build-nyx-iso-on-arch.sh
+  // expects when it cd's into ${TMP}/nyx-iso-source/iso-builder/.
+  const tar = spawn(
+    "tar",
+    [
+      "-czf", "-",
+      "--transform", "s,^,nyx-iso-source/,",
+      "-C", REPO_ROOT,
+      ...subdirs,
+    ],
+    { stdio: ["ignore", "pipe", "pipe"] },
+  );
+  tar.stdout.pipe(res);
+  tar.stderr.on("data", (chunk) => {
+    // Don't crash the response on warnings — just log
+    process.stderr.write(`[iso-source tar] ${chunk}`);
+  });
+  tar.on("error", (err) => {
+    if (!res.headersSent) {
+      res.status(500).json({ error: `tar spawn failed: ${err.message}` });
+    } else {
+      res.destroy(err);
+    }
+  });
+  tar.on("exit", (code) => {
+    if (code !== 0 && !res.writableEnded) {
+      res.destroy(new Error(`tar exited with code ${code}`));
+    }
+  });
 });
 
 // Express 5 wildcard splat — matches nested paths like `eww/scripts/audio.sh`.
