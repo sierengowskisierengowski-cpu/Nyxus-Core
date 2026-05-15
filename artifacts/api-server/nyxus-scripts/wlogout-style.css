@@ -65,10 +65,10 @@ button:focus,
 button:active,
 button:hover {
     background-color: rgba(8, 12, 20, 0.88)   !important;
-    border-color:     rgba(232, 237, 245, 0.55)!important;
-    color:            @nyx_white                  !important;
+    border-color:     @nyx_copper             !important;
+    color:            @nyx_cream              !important;
     box-shadow:       0 8px 24px rgba(0, 0, 0, 0.55),
-                      0 0 22px rgba(232, 237, 245, 0.45),
+                      0 0 22px @nyx_copper_glow_55,
                       inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
     outline:          none                     !important;
 }
@@ -94,6 +94,6 @@ button:hover {
 #reboot:hover,   button#reboot:hover,   .reboot:hover,   button.reboot:hover,
 #shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
     background-color: rgba(8, 12, 20, 0.88) !important;
-    border-color:     rgba(232, 237, 245, 0.55) !important;
-    color:            @nyx_white !important;
+    border-color:     @nyx_copper !important;
+    color:            @nyx_cream !important;
 }

@@ -294,10 +294,11 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   color: #f4ead5;
 }
 .ws-pill-active {
-  background: linear-gradient(135deg, #c4b491, #f4ead5);
+  background: linear-gradient(135deg, #b8865a, #f4ead5);
   color: #000000;
-  border-color: rgba(244, 234, 213, 0.65);
-  box-shadow: 0 0 18px rgba(244, 234, 213, 0.55);
+  border-color: rgba(184, 134, 90, 0.78);
+  box-shadow: 0 0 18px rgba(184, 134, 90, 0.55),
+              0 0 6px  rgba(244, 234, 213, 0.32);
 }
 
 /* ── APP RAIL (right) ─────────────────────────────────────────────── */
