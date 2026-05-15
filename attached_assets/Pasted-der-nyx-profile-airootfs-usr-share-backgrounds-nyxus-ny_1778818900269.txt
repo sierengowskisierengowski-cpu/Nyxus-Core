@@ -1,0 +1,40 @@
+der/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-08.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-09.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-10.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-11.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-12.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-13.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-14.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-15.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-16.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-cosmic-dust.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-cosmos-gold.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-darkmirror-02.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-darkmirror-03.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-darkmirror.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-light-shaft.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-moon-crater.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-bg-sepia-watercolor.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-hyprlock-eye.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-login-stars.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-sierengowski-clean.png
+Removing iso-builder/nyx-profile/airootfs/usr/share/backgrounds/nyxus/nyxus-void-vortex.png
+From https://github.com/sierengowskisierengowski-cpu/Nyxus-Core
+ * branch            main       -> FETCH_HEAD
+Updating a409949..56e6db4
+error: Your local changes to the following files would be overwritten by merge:
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/systemd/user/nyxus-security-daemon.service
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-bootstrap
+Please commit your changes or stash them before you merge.
+Aborting
+To https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+...xXx... Nyxus-Core  main $⇣  10s
+❯                   
