@@ -411,7 +411,6 @@ router.get("/download/nyxus/iso-source.tar.gz", (_req, res) => {
   const subdirs = [
     "iso-builder",
     "artifacts/api-server/nyxus-scripts",
-    "artifacts/api-server/dist/nyxus-scripts",
   ];
   for (const d of subdirs) {
     if (!fs.existsSync(path.join(REPO_ROOT, d))) {
@@ -455,6 +454,20 @@ router.get("/download/nyxus/iso-source.tar.gz", (_req, res) => {
       res.destroy(new Error(`tar exited with code ${code}`));
     }
   });
+
+  // If the client disconnects mid-stream, kill tar so it doesn't keep
+  // running and pinning CPU/disk on a 250MB+ archive nobody will read.
+  const cleanup = () => {
+    if (tar.exitCode === null && !tar.killed) {
+      tar.kill("SIGTERM");
+      // Escalate if tar ignores SIGTERM (rare but possible on slow IO)
+      setTimeout(() => {
+        if (tar.exitCode === null && !tar.killed) tar.kill("SIGKILL");
+      }, 2000).unref();
+    }
+  };
+  res.on("close", cleanup);
+  res.on("error", cleanup);
 });
 
 // Express 5 wildcard splat — matches nested paths like `eww/scripts/audio.sh`.
