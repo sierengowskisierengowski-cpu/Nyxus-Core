@@ -48,7 +48,7 @@ jobs:
               pacman-key --init
               pacman-key --populate archlinux
               pacman -Sy --noconfirm archlinux-keyring
-              pacman -Syu --noconfirm --needed archiso git base-devel grep coreutils
+              pacman -Syu --noconfirm --needed archiso git base-devel grep coreutils grub edk2-shell mtools dosfstools
               cd iso-builder
               ./build-iso.sh
               ls -lh out/
