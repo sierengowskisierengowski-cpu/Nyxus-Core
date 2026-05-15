@@ -19,10 +19,21 @@ echo "── 2/6  Installing required packages (hyprland, kitty, sddm, swaybg)..
 sudo pacman -S --noconfirm --needed hyprland kitty sddm swaybg \
      qt6-svg qt6-declarative qt6-virtualkeyboard 2>&1 | tail -5
 
-echo "── 3/6  Downloading cream NYXUS wallpaper..."
+echo "── 3/6  Selecting Hyprland default wallpaper..."
 mkdir -p ~/Pictures ~/.config/hypr
-curl -fsSL "$API/nyxus-bg-03.png" -o ~/Pictures/wall.png \
-  && echo "  ok  ~/Pictures/wall.png"
+# User asked for the stock Hyprland wallpaper. Try common paths in order;
+# fall back to NYXUS cream if none exist on this Hyprland version.
+WALL_SRC=""
+for p in /usr/share/hyprland/wall2.png /usr/share/hyprland/wall0.png \
+         /usr/share/hyprland/wall.png /usr/share/backgrounds/hyprland/wall2.png; do
+  [ -f "$p" ] && WALL_SRC="$p" && break
+done
+if [ -n "$WALL_SRC" ]; then
+  cp "$WALL_SRC" ~/Pictures/wall.png && echo "  ok  $WALL_SRC -> ~/Pictures/wall.png"
+else
+  curl -fsSL "$API/nyxus-bg-03.png" -o ~/Pictures/wall.png \
+    && echo "  ok  fallback NYXUS cream -> ~/Pictures/wall.png"
+fi
 
 echo "── 4/6  Writing minimal hyprland.conf (auto-launch kitty + binds)..."
 cat > ~/.config/hypr/hyprland.conf << 'HYPRCONF'
