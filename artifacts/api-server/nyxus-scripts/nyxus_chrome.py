@@ -57,8 +57,8 @@ DM_INK        = (0.00, 0.00, 0.00)   # #000000
 
 # Mono ramp used by rainbow_markup (was a 7-color neon cycle, now a
 # monochrome white→grey→ink shimmer matching DARK MIRROR).
-_RAINBOW_HEX = ("#ffffff", "#e8edf5", "#c8ccd6", "#9aa0ad",
-                "#c8ccd6", "#e8edf5", "#ffffff", "#e8edf5")
+_RAINBOW_HEX = ("#f4ead5", "#f4ead5", "#f4ead5", "#f4ead5",
+                "#f4ead5", "#f4ead5", "#f4ead5", "#f4ead5")
 
 
 def rainbow_markup(text: str) -> str:
