@@ -41,6 +41,19 @@
 @define-color nyx_gold_bg_soft  rgba(244, 234, 213, 0.10);
 @define-color nyx_gold_bg_active rgba(244, 234, 213, 0.18);
 
+/* ── COPPER WARM SECONDARY (rev r16 · 2026-05-15) ─────────── */
+/* Eclipse-corona rim accent. Use ONLY for selection stripes,    */
+/* active window borders, hover glows on dark surfaces. Cream is */
+/* the diffuse light, copper is the rim-light edge. Never use    */
+/* copper for body text or large fill areas.                     */
+@define-color nyx_copper        #b8865a;
+@define-color nyx_copper_soft   #d4a978;
+@define-color nyx_copper_deep   #8a6444;
+@define-color nyx_copper_glow_18 rgba(184, 134, 90, 0.18);
+@define-color nyx_copper_glow_32 rgba(184, 134, 90, 0.32);
+@define-color nyx_copper_glow_55 rgba(184, 134, 90, 0.55);
+@define-color nyx_copper_edge_88 rgba(184, 134, 90, 0.88);
+
 /* ── DESTRUCTIVE / SIGNAL (RESERVED) ──────────────────────── */
 @define-color nyx_danger        #d96b6b;
 @define-color nyx_danger_bg_18  rgba(217, 107, 107, 0.18);
