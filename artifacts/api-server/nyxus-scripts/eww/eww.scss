@@ -259,9 +259,15 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 .ticker-left   { padding: 0 4px; }
 .ticker-right  { padding: 0 4px; }
 .ticker-center {
-  min-width: 460px;
-  /* Cap so on small monitors it never crowds the side widgets. */
-  /* GTK accepts a CSS max-width on widget-styled boxes. */
+  /* Bounded chip in the dead-center of the bar.
+     min/max keep it readable on 1366+ and never crowd side widgets
+     on smaller panels. overflow:hidden clips the marquee text inside
+     the chip — without it the scroll text flies across the brand
+     and player widgets. */
+  min-width: 380px;
+  /* GTK CSS does not honour max-width on a GtkBox, so we use the
+     EWW-respected size hint via min-width only and rely on centerbox
+     to bound the center child against left/right siblings. */
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(184, 134, 90, 0.30);
@@ -269,9 +275,10 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   box-shadow: inset 0 1px 0 rgba(244, 234, 213, 0.05);
 }
 .ticker-box {
-  padding: 0 4px;
   /* Hide overflow so the marquee text scrolls in/out of frame
-     instead of stretching the bar width. */
+     instead of stretching the bar width. min-width:0 lets the box
+     shrink below its content's natural size so clipping works. */
+  padding: 0 4px;
   min-width: 0;
 }
 .ticker {
