@@ -1,9 +1,4 @@
-import express, {
-  Router,
-  type IRouter,
-  type Request,
-  type Response,
-} from "express";
+import express, { Router, type IRouter, type Request, type Response } from "express";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, writeFile, readdir, stat, readFile } from "node:fs/promises";
 import { tmpdir, homedir } from "node:os";
@@ -70,11 +65,11 @@ function denyAuth(res: Response, msg = "missing or malformed bearer token") {
 // rate per token and (b) on-disk file count per token (oldest evicted
 // after the cap).
 // ─────────────────────────────────────────────────────────────────────
-const RATE_WINDOW_MS = 60 * 60 * 1000;     // 1 hour
-const RATE_MAX_PER_TOKEN = 60;             // 60 reports/hour/token
-const RATE_MAX_PER_IP = 200;               // 200 reports/hour/IP
-const QUOTA_MAX_FILES = 100;               // keep newest 100 per token
-const RATE_MAP_CAP = 4096;                 // hard cap on distinct keys
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_MAX_PER_TOKEN = 60; // 60 reports/hour/token
+const RATE_MAX_PER_IP = 200; // 200 reports/hour/IP
+const QUOTA_MAX_FILES = 100; // keep newest 100 per token
+const RATE_MAP_CAP = 4096; // hard cap on distinct keys
 
 // Bucket has its own `last` for cheap LRU ordering — using the JS Map
 // insertion order would force a re-insertion every hit (delete+set),
@@ -84,8 +79,7 @@ type Bucket = { hits: number[]; last: number };
 const tokenBuckets = new Map<string, Bucket>();
 const ipBuckets = new Map<string, Bucket>();
 
-function rateCheck(map: Map<string, Bucket>, key: string,
-                   max: number): boolean {
+function rateCheck(map: Map<string, Bucket>, key: string, max: number): boolean {
   const now = Date.now();
   const b = map.get(key) ?? { hits: [], last: now };
   // Drop hits outside the sliding window.
@@ -119,17 +113,30 @@ function rateCheck(map: Map<string, Bucket>, key: string,
 
 async function enforceQuota(dir: string): Promise<void> {
   let names: string[] = [];
-  try { names = await readdir(dir); } catch { return; }
+  try {
+    names = await readdir(dir);
+  } catch {
+    return;
+  }
   if (names.length <= QUOTA_MAX_FILES) return;
-  const stats = await Promise.all(names.map(async (n) => {
-    try { return { n, t: (await stat(join(dir, n))).mtimeMs }; }
-    catch { return null; }
-  }));
+  const stats = await Promise.all(
+    names.map(async (n) => {
+      try {
+        return { n, t: (await stat(join(dir, n))).mtimeMs };
+      } catch {
+        return null;
+      }
+    }),
+  );
   const sorted = stats.filter(Boolean).sort((a, b) => a!.t - b!.t);
   const drop = sorted.slice(0, sorted.length - QUOTA_MAX_FILES);
   const { unlink } = await import("node:fs/promises");
   for (const e of drop) {
-    try { await unlink(join(dir, e!.n)); } catch { /* best effort */ }
+    try {
+      await unlink(join(dir, e!.n));
+    } catch {
+      /* best effort */
+    }
   }
 }
 
@@ -166,9 +173,7 @@ router.post("/crash-reports", rawAny, async (req, res) => {
   const isGzip = blob.length >= 2 && blob[0] === 0x1f && blob[1] === 0x8b;
   const isJson = !isGzip && blob[0] === 0x7b;
   if (!isGzip && !isJson) {
-    return res
-      .status(415)
-      .json({ error: "expected gzipped JSON (1f 8b) or raw JSON ({)" });
+    return res.status(415).json({ error: "expected gzipped JSON (1f 8b) or raw JSON ({)" });
   }
   const id = randomUUID();
   const dir = join(CRASH_DIR, tokHash);
@@ -180,8 +185,7 @@ router.post("/crash-reports", rawAny, async (req, res) => {
     // Enforce per-token disk quota. Best-effort eviction of oldest
     // files; a failure here doesn't fail the request because the new
     // report is already on disk.
-    enforceQuota(dir).catch(
-      (err) => req.log.warn({ err }, "crash-report quota gc failed"));
+    enforceQuota(dir).catch((err) => req.log.warn({ err }, "crash-report quota gc failed"));
   } catch (err) {
     req.log.error({ err }, "crash-report write failed");
     return res.status(500).json({ error: "failed to persist report" });
