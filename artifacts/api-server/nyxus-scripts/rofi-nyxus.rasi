@@ -17,6 +17,12 @@
     nx-cream-32:   rgba(244, 234, 213, 0.32);
     nx-cream-55:   rgba(244, 234, 213, 0.55);
 
+    /* copper — the warm secondary accent (selection / hover glow) */
+    nx-copper:     #b8865a;
+    nx-copper-18:  rgba(184, 134, 90, 0.18);
+    nx-copper-32:  rgba(184, 134, 90, 0.32);
+    nx-copper-55:  rgba(184, 134, 90, 0.55);
+
     /* hairlines */
     nx-line:       #1a1a28;
     nx-line-soft:  rgba(244, 234, 213, 0.10);
@@ -151,20 +157,20 @@ element.active {
     text-color:       @nx-cream;
 }
 
-/* ── Selected — cream stripe + halo ──────────────────────────────── */
+/* ── Selected — copper stripe + halo (warm Eclipse glow) ─────────── */
 element selected.normal {
-    background-color: @nx-cream-18;
+    background-color: @nx-copper-18;
     text-color:       @nx-cream;
     border:           0 0 0 3px;
-    border-color:     @nx-cream;
+    border-color:     @nx-copper;
     border-radius:    3px;
 }
 
 element selected.alternate.normal {
-    background-color: @nx-cream-18;
+    background-color: @nx-copper-18;
     text-color:       @nx-cream;
     border:           0 0 0 3px;
-    border-color:     @nx-cream;
+    border-color:     @nx-copper;
     border-radius:    3px;
 }
 
@@ -177,10 +183,10 @@ element selected.urgent {
 }
 
 element selected.active {
-    background-color: @nx-cream-18;
+    background-color: @nx-copper-18;
     text-color:       @nx-cream;
     border:           0 0 0 3px;
-    border-color:     @nx-cream;
+    border-color:     @nx-copper;
     border-radius:    3px;
 }
 
