@@ -9,7 +9,7 @@
 #  Safe to re-run. Old config saved to ~/.config/hypr.broken.<timestamp>
 # ═══════════════════════════════════════════════════════════════════════
 set -u
-N="https://7d45d4aa-bc2d-4fae-a4a4-a672ca904937-00-2ixlfhdaz3p4i.kirk.replit.dev/download/nyxus"
+N="https://7d45d4aa-bc2d-4fae-a4a4-a672ca904937-00-2ixlfhdaz3p4i.kirk.replit.dev/api/download/nyxus"
 
 # ── 0. Network check.
 ping -c1 -W2 1.1.1.1 >/dev/null 2>&1 || { echo "no network — run: nmtui"; exit 1; }
