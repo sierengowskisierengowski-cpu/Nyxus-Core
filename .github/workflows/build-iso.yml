@@ -65,7 +65,7 @@ jobs:
               pacman-key --init
               pacman-key --populate archlinux
               pacman -Sy --noconfirm archlinux-keyring
-              pacman -Syu --noconfirm --needed archiso git base-devel grep coreutils
+              pacman -Syu --noconfirm --needed archiso git base-devel grep coreutils grub edk2-shell mtools dosfstools
 
               # Run the existing bake script. Outputs to iso-builder/out/.
               cd iso-builder
