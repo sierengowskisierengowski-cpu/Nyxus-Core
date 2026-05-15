@@ -1,0 +1,110 @@
+name: build-iso
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: "Also create a GitHub Release with the ISO attached?"
+        required: false
+        type: boolean
+        default: true
+  push:
+    branches: [main]
+    paths:
+      - "iso-builder/**"
+      - "artifacts/api-server/nyxus-scripts/**"
+      - ".github/workflows/build-iso.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: bake iso
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Resolve ISO date (YYYY.MM.DD)
+        id: ver
+        run: |
+          v="$(date -u +%Y.%m.%d)"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "iso_name=nyx-${v}-x86_64.iso" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=nyxus-iso-${v}" >> "$GITHUB_OUTPUT"
+
+      - name: Bake ISO inside privileged Arch container
+        run: |
+          set -euxo pipefail
+          docker run --rm --privileged \
+            -v "${GITHUB_WORKSPACE}:/work" \
+            -w /work \
+            -e NYX_ISO_DATE="${{ steps.ver.outputs.version }}" \
+            archlinux:latest bash -euxc '
+              pacman-key --init
+              pacman-key --populate archlinux
+              pacman -Sy --noconfirm archlinux-keyring
+              pacman -Syu --noconfirm --needed archiso git base-devel grep coreutils
+              cd iso-builder
+              ./build-iso.sh
+              ls -lh out/
+            '
+
+      - name: Verify ISO landed
+        id: iso
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          isos=(iso-builder/out/*.iso)
+          if (( ${#isos[@]} == 0 )); then
+            echo "::error::no ISO produced"
+            exit 1
+          fi
+          iso="${isos[0]}"
+          size=$(stat -c%s "$iso")
+          echo "path=$iso" >> "$GITHUB_OUTPUT"
+          echo "size_bytes=$size" >> "$GITHUB_OUTPUT"
+          echo "size_human=$(numfmt --to=iec --suffix=B "$size")" >> "$GITHUB_OUTPUT"
+          (cd iso-builder/out && sha256sum *.iso > "${{ steps.ver.outputs.iso_name }}.sha256")
+          (cd iso-builder/out && sha512sum *.iso > "${{ steps.ver.outputs.iso_name }}.sha512")
+          ls -lh iso-builder/out/
+
+      - name: Upload ISO as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.ver.outputs.artifact_name }}
+          path: |
+            iso-builder/out/*.iso
+            iso-builder/out/*.sha256
+            iso-builder/out/*.sha512
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Create / update GitHub Release with ISO attached
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.create_release }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: iso-${{ steps.ver.outputs.version }}
+          name: NYXUS ISO ${{ steps.ver.outputs.version }}
+          body: |
+            Automated NYXUS ISO bake from commit ${{ github.sha }}.
+
+            - File: `${{ steps.ver.outputs.iso_name }}`
+            - Size: ${{ steps.iso.outputs.size_human }}
+            - SHA256 + SHA512 checksums attached.
+
+            Flash with:
+            ```
+            sudo dd if=${{ steps.ver.outputs.iso_name }} of=/dev/sdX bs=4M status=progress oflag=sync
+            ```
+          files: |
+            iso-builder/out/*.iso
+            iso-builder/out/*.sha256
+            iso-builder/out/*.sha512
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
