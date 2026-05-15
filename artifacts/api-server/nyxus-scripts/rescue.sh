@@ -68,7 +68,7 @@ done
 
 # ── 6. Required packages (no-op if already installed).
 sudo pacman -S --noconfirm --needed hyprland hyprlock hypridle eww-wayland \
-     swww swaybg grim slurp wl-clipboard hyprshot alacritty rofi-wayland \
+     swww swaybg grim slurp wl-clipboard hyprshot alacritty kitty rofi-wayland \
      dunst wlogout playerctl nm-connection-editor sddm qt6-svg qt6-declarative \
      qt6-virtualkeyboard 2>/dev/null
 
