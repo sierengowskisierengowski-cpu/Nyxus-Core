@@ -48,6 +48,11 @@ function _hashOrCached(name: string, p: string): CacheEntry | null {
 //   When you add a new GTK4 app, add it to "GTK4 USER APPS" only.
 // ═══════════════════════════════════════════════════════════════════════════
 const ALLOWED_FILES: Record<string, string> = {
+  // ── ★ ONE-LINER TTY RESCUE (rev 2026-05-15) ─────────────────────────────
+  // From a TTY (Ctrl+Alt+F2, log in as `nyx`):
+  //   curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/rescue.sh | bash
+  // Restores Hyprland + apps + wallpaper + EWW bar without reinstalling.
+  "rescue.sh":              "rescue.sh",
   // ── ★ MASTER PALETTE — single source of truth (rev r13) ─────────────────
   "nyxus_palette.py":       "nyxus_palette.py",        //  Python palette constants
   "nyxus-palette.css":      "nyxus-palette.css",       //  CSS @define-color palette
