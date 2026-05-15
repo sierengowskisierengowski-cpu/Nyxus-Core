@@ -55,6 +55,21 @@ CREAM_EDGE_55     = "rgba(244, 234, 213, 0.55)"
 # Code still importing NYXUS_GOLD continues to work and now reads cream.
 NYXUS_GOLD        = CREAM
 
+# ── COPPER WARM SECONDARY (rev r16 · 2026-05-15) ────────────────────────────
+# The Eclipse halo's warmer "edge of the corona" — used for selection
+# stripes, active window borders, hover glows on dark surfaces. Sits
+# one octave warmer than CREAM and reads against triple-black without
+# ever crossing into red/orange. CREAM is the diffuse light, COPPER is
+# the rim-light. Use COPPER ONLY for accent edges / active state /
+# selection — never for body text or large fill areas.
+COPPER            = "#b8865a"   # primary copper accent
+COPPER_SOFT       = "#d4a978"   # hover halo (12% lighter)
+COPPER_DEEP       = "#8a6444"   # pressed / dim badge (22% darker)
+COPPER_GLOW_18    = "rgba(184, 134, 90, 0.18)"
+COPPER_GLOW_32    = "rgba(184, 134, 90, 0.32)"
+COPPER_GLOW_55    = "rgba(184, 134, 90, 0.55)"
+COPPER_EDGE_88    = "rgba(184, 134, 90, 0.88)"
+
 # ── DESTRUCTIVE / SIGNAL (RESERVED) ─────────────────────────────────────────
 # Only legitimate non-cream chroma in the system. Use ONLY for
 # destructive confirmations, alarm/critical state. Never decorative.
@@ -221,6 +236,9 @@ _PALETTE_DICT = {
     "CREAM_GLOW_15": CREAM_GLOW_15, "CREAM_GLOW_28": CREAM_GLOW_28,
     "CREAM_GLOW_45": CREAM_GLOW_45, "CREAM_EDGE_55": CREAM_EDGE_55,
     "NYXUS_GOLD": NYXUS_GOLD,
+    "COPPER": COPPER, "COPPER_SOFT": COPPER_SOFT, "COPPER_DEEP": COPPER_DEEP,
+    "COPPER_GLOW_18": COPPER_GLOW_18, "COPPER_GLOW_32": COPPER_GLOW_32,
+    "COPPER_GLOW_55": COPPER_GLOW_55, "COPPER_EDGE_88": COPPER_EDGE_88,
     "DANGER_RED": DANGER_RED, "DANGER_BG_18": DANGER_BG_18,
     "BLACK_SMOKE": BLACK_SMOKE, "BLACK_INK": BLACK_INK, "BLACK_VOID": BLACK_VOID,
     "BLACK_SMOKE_SOLID": BLACK_SMOKE_SOLID,
@@ -261,7 +279,10 @@ __all__ = [
     "INK_FADED", "INK_BLACK",
     "CREAM", "CREAM_SOFT", "CREAM_DEEP",
     "CREAM_GLOW_15", "CREAM_GLOW_28", "CREAM_GLOW_45", "CREAM_EDGE_55",
-    "NYXUS_GOLD", "DANGER_RED", "DANGER_BG_18",
+    "NYXUS_GOLD",
+    "COPPER", "COPPER_SOFT", "COPPER_DEEP",
+    "COPPER_GLOW_18", "COPPER_GLOW_32", "COPPER_GLOW_55", "COPPER_EDGE_88",
+    "DANGER_RED", "DANGER_BG_18",
     "BLACK_SMOKE", "BLACK_INK", "BLACK_VOID",
     "BLACK_SMOKE_SOLID", "BLACK_INK_SOLID", "BLACK_VOID_SOLID",
     "GLOW_SOFT", "GLOW_BRIGHT",
