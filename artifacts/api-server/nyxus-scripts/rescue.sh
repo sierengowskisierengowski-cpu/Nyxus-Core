@@ -29,6 +29,20 @@ for f in nyxus-hyprland-rules.conf nyxus-hyprland-blur.conf nyxus-hyprland-gener
   curl -fsSL "$N/$f" -o ~/.config/hypr/conf.d/$f 2>/dev/null && echo "  ok  conf.d/$f"
 done
 
+# ── 2b. Failsafe: guarantee a terminal auto-launches and Super+Return works,
+#       even if the NYXUS exec-once chain errors out due to missing helpers.
+cat >> ~/.config/hypr/hyprland.conf << 'FAILSAFE'
+
+# === NYXUS rescue failsafe (appended by rescue.sh) ===
+# Guarantees a terminal exists no matter which NYXUS helpers are missing.
+exec-once = kitty
+bind = SUPER, Return, exec, kitty
+bind = SUPER, Q,      exec, kitty
+bind = SUPER, C,      killactive
+bind = SUPER SHIFT, E, exit
+FAILSAFE
+echo "  ok  appended failsafe (auto-kitty + Super+Return)"
+
 # ── 3. NYXUS apps -> ~/.nyxus/  (where every keybind looks).
 for f in nyxus_palette.py nyxus_chrome.py nyxus_settings.py nyxus_notepad.py \
          nyxus_notes.py nyxus_stickies.py nyxus_terminal.py nyxus_control.py \
@@ -78,6 +92,11 @@ sudo systemctl enable sddm 2>/dev/null && echo "  ok  sddm enabled"
 # ── 7. Done.
 echo ""
 echo "=== rescue complete ==="
-echo "Switch back to SDDM:  sudo systemctl restart sddm"
-echo "Then log in as nyx — Hyprland will load the fresh config,"
-echo "the wallpaper auto-starts, and the EWW bar comes up."
+echo ""
+echo "NEXT STEP — pick ONE based on where you are right now:"
+echo ""
+echo "  If you are in a TTY (text login):   hyprland"
+echo "  If you are already in Hyprland:     hyprctl reload"
+echo ""
+echo "DO NOT run 'systemctl restart sddm' — it kills your live session."
+echo "Kitty will auto-open and Super+Return will always spawn a terminal."
