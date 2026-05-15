@@ -330,6 +330,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-bg-14.png": "nyxus-bg-14.png",
   "nyxus-bg-15.png": "nyxus-bg-15.png",
   "nyxus-bg-16.png": "nyxus-bg-16.png",
+  "nyxus-bg-eclipse.png": "nyxus-bg-eclipse.png",
 
   // ── ★ GRAFFITI ASSETS (24 chrome backgrounds) ────────────────────────────
   "nyxus-graffiti-01.png": "nyxus-graffiti-01.png",
