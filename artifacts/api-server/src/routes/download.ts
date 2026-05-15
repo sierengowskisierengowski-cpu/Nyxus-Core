@@ -53,6 +53,12 @@ const ALLOWED_FILES: Record<string, string> = {
   //   curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/rescue.sh | bash
   // Restores Hyprland + apps + wallpaper + EWW bar without reinstalling.
   "rescue.sh":              "rescue.sh",
+  // ── ★ ONE-SHOT BARE HYPRLAND (rev 2026-05-15) ───────────────────────────
+  // Minimal "give me a working Hyprland + auto-opening kitty terminal +
+  // cream wallpaper" setup. No NYXUS configs/apps. Use when the full
+  // NYXUS configs are crashing Hyprland and you need a stable base.
+  //   curl -fsSL https://<api>/api/download/nyxus/bare.sh | bash
+  "bare.sh":                "bare.sh",
   // ── ★ MASTER PALETTE — single source of truth (rev r13) ─────────────────
   "nyxus_palette.py":       "nyxus_palette.py",        //  Python palette constants
   "nyxus-palette.css":      "nyxus-palette.css",       //  CSS @define-color palette
