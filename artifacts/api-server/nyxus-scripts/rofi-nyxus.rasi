@@ -196,7 +196,7 @@ element-text {
     text-color:       inherit;
     vertical-align:   0.5;
     font:             "JetBrainsMono Nerd Font 11";
-    highlight:        bold @nx-cream;
+    highlight:        bold #f4ead5;
 }
 
 /* ── Messages ────────────────────────────────────────────────────── */
