@@ -69,7 +69,11 @@ done
 # ── 6. Required packages (no-op if already installed).
 sudo pacman -S --noconfirm --needed hyprland hyprlock hypridle eww-wayland \
      swww swaybg grim slurp wl-clipboard hyprshot alacritty rofi-wayland \
-     dunst wlogout playerctl nm-connection-editor 2>/dev/null
+     dunst wlogout playerctl nm-connection-editor sddm qt6-svg qt6-declarative \
+     qt6-virtualkeyboard 2>/dev/null
+
+# ── 6b. SDDM display manager — enable so graphical login comes up on boot.
+sudo systemctl enable sddm 2>/dev/null && echo "  ok  sddm enabled"
 
 # ── 7. Done.
 echo ""
