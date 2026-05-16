@@ -126,6 +126,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "locale/fr/LC_MESSAGES/nyxus.po":             "locale/fr/LC_MESSAGES/nyxus.po",
   "eww/eww.yuck":               "eww/eww.yuck",
   "eww/eww.scss":               "eww/eww.scss",
+  "eww/_nyxus_accent.scss":     "eww/_nyxus_accent.scss",
   "eww/nyxus.conf":             "eww/nyxus.conf",
   "eww/README.md":              "eww/README.md",
   "eww/scripts/audio.sh":         "eww/scripts/audio.sh",
