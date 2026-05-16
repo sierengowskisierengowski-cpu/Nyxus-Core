@@ -70,7 +70,8 @@ scdoc
 rust
 wayland-protocols
 hyprcursor
-sddm
+greetd
+tuigreet
 plymouth
 qt5-quickcontrols2
 qt5-graphicaleffects

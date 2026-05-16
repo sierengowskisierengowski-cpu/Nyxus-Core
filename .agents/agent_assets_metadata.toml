@@ -1132,4 +1132,22 @@ title = "nyxus-bg-light-shaft (NEW — native 16:9 widescreen)"
 id = "vHuN5kwtjRgvxATGYSyY3"
 uri = "file://.local/unpushed/README-HOW-TO-PUSH.md"
 type = "text"
-title = "README — push instructions (3 options)"
+title = "README — push instructions"
+
+[[outputs]]
+id = "AxhfVJ6CD9CoBE9bXDhxm"
+uri = "file://.local/unpushed/nyxus-source.tar.gz"
+type = "unspecified"
+title = "nyxus-source.tar.gz — ALL source code, docs, configs (438 MB, 1877 files)"
+
+[[outputs]]
+id = "USK2lDGDipCIaJiGSWGAu"
+uri = "file://.local/unpushed/nyxus-unpushed-essentials.tar.gz"
+type = "unspecified"
+title = "nyxus-unpushed-essentials.tar.gz — the 188-commit patch + manifests (486 KB)"
+
+[[outputs]]
+id = "1qSxgCxutVddPlUn8k8Uu"
+uri = "file://.local/unpushed/nyxus-assets.tar.gz"
+type = "unspecified"
+title = "nyxus-assets.tar.gz — attached_assets (all reference images & screenshots, 821 MB)"
