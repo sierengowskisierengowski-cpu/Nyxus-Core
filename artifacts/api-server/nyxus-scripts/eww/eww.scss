@@ -290,9 +290,9 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   font-family: "JetBrains Mono Nerd Font", monospace;
   font-size: 11px;
   letter-spacing: 0.04em;
-  /* Smooth horizontal scroll — text starts off-screen right and
-     drifts to off-screen left over 60s, looping forever. */
-  animation: nyx-marquee 60s linear infinite;
+  /* rev 2026-05-16: scroll is now driven by ticker.sh shifting the
+     substring window each 150ms poll. No CSS animation needed.
+     GTK3 @keyframes margin-left was unreliable across drivers. */
 }
 
 /* ── WORKSPACES (left rail) ───────────────────────────────────────── */
