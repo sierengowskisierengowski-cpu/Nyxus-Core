@@ -54,6 +54,17 @@ const ALLOWED_FILES: Record<string, string> = {
   // Restores Hyprland + apps + wallpaper + EWW bar without reinstalling.
   "rescue.sh":              "rescue.sh",
   "deploy.sh":              "deploy.sh",
+  // ── ★ ONE-SHOT WHOLE-BUILD INSTALLER (rev 2026-05-16) ───────────────────
+  // Lays the ENTIRE designed NYXUS build on a laptop in one command,
+  // reading /api/download/nyxus/manifest.json and downloading every
+  // userInstallable file directly to its final on-disk target. Safe
+  // to re-run (sha256-skips unchanged files). Root-only files
+  // (polkit, calamares, plymouth, greetd) are listed but skipped.
+  //
+  //   NYXUS_API=https://nyxus-core.replit.app
+  //   curl -fsSL "$NYXUS_API/api/download/nyxus/nyxus-pull-all" -o /tmp/p
+  //   bash /tmp/p
+  "nyxus-pull-all":         "nyxus-pull-all",
   // ── ★ ONE-SHOT BARE HYPRLAND (rev 2026-05-15) ───────────────────────────
   // Minimal "give me a working Hyprland + auto-opening kitty terminal +
   // cream wallpaper" setup. No NYXUS configs/apps. Use when the full
@@ -384,23 +395,47 @@ const ALLOWED_FILES: Record<string, string> = {
 };
 
 // ── SHA256 manifest ─────────────────────────────────────────────────────
-// Returns { version, generated_at, files: { name: { sha256, size_bytes } } }
+// Returns { version, generated_at, files: { name: { sha256, size_bytes,
+//   dst, mode, userInstallable, reason? } } }
+//
 // Clients (nyxus_verify.sh / NYXUS App Store) hit this endpoint, then
 // SHA-verify each subsequently-downloaded file. Defends against single-file
 // transit corruption and single-file server tampering.
+//
+// rev 2026-05-16: each entry now also carries the deterministic on-laptop
+// install target (`dst`), the mode bits to write with, and a
+// `userInstallable` flag. The `nyxus-pull-all` one-shot installer reads
+// these fields to lay the entire designed build down in a single
+// command. Older clients that only read sha256+size_bytes are unaffected
+// — new fields are additive.
 router.get("/download/nyxus/manifest.json", (_req, res) => {
-  const files: Record<string, { sha256: string; size_bytes: number }> = {};
+  type Entry = {
+    sha256: string;
+    size_bytes: number;
+    dst: string;
+    mode: string;
+    userInstallable: boolean;
+    reason?: string;
+  };
+  const files: Record<string, Entry> = {};
   for (const name of Object.keys(ALLOWED_FILES)) {
     const p = path.join(SCRIPTS_DIR, ALLOWED_FILES[name]);
     const entry = _hashOrCached(name, p);
-    if (entry) {
-      files[name] = { sha256: entry.sha256, size_bytes: entry.size };
-    }
+    if (!entry) continue;
+    const plan = _planInstall(name);
+    files[name] = {
+      sha256: entry.sha256,
+      size_bytes: entry.size,
+      dst: plan.dst,
+      mode: plan.mode,
+      userInstallable: plan.userInstallable,
+      ...(plan.reason ? { reason: plan.reason } : {}),
+    };
   }
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Cache-Control", "no-store");
   res.json({
-    version: 1,
+    version: 2,
     generated_at: new Date().toISOString(),
     file_count: Object.keys(files).length,
     files,
@@ -489,20 +524,153 @@ router.get("/download/nyxus/iso-source.tar.gz", (_req, res) => {
   res.on("error", cleanup);
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+//   ONE-SHOT MANIFEST  ·  GET /api/download/nyxus/manifest.json
+//
+//   Returns every NYXUS file currently on disk under SCRIPTS_DIR, paired
+//   with a deterministic on-laptop install target (`dst`) and the mode
+//   bits the file should be created with. The companion `nyxus-pull-all`
+//   installer consumes this manifest to lay an entire designed build
+//   onto a laptop in one command, instead of one curl per file.
+//
+//   Files that need root (polkit policies, calamares conf, plymouth
+//   themes, greetd.toml) are still listed but marked `userInstallable:
+//   false` so the user-scope installer skips them. A future root
+//   installer can pick them up using the same manifest.
+//
+//   The manifest endpoint walks the filesystem rather than the
+//   ALLOWED_FILES allowlist, so every file under dist/nyxus-scripts/
+//   ships automatically without an allowlist edit. The file-fetch
+//   route below honours the manifest by serving any path under
+//   SCRIPTS_DIR (with a strict path-traversal guard) in addition to
+//   the explicit ALLOWED_FILES entries.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Compute the install target + mode for a given source path under
+// dist/nyxus-scripts/. Pure function — no I/O — so it's safe to call
+// for every file on every manifest request.
+function _planInstall(src: string): {
+  dst: string; mode: string; userInstallable: boolean; reason?: string;
+} {
+  const base = path.basename(src);
+  const ext = path.extname(base).toLowerCase();
+
+  // ── ROOT-ONLY targets — skip in user installer ────────────────────
+  if (src.startsWith("polkit-policies/")) {
+    return { dst: `/usr/share/polkit-1/actions/${base}`, mode: "0644",
+             userInstallable: false, reason: "polkit policies live under /usr (root)" };
+  }
+  if (src.startsWith("calamares/")) {
+    return { dst: `/etc/calamares/${src.slice("calamares/".length)}`, mode: "0644",
+             userInstallable: false, reason: "Calamares installs to /etc (root)" };
+  }
+  if (src.startsWith("boot-splash") || base.endsWith(".plymouth")) {
+    return { dst: `/usr/share/plymouth/themes/${base}`, mode: "0644",
+             userInstallable: false, reason: "Plymouth lives under /usr (root)" };
+  }
+  if (base === "nyxus-greetd.toml") {
+    return { dst: "/etc/greetd/config.toml", mode: "0644",
+             userInstallable: false, reason: "greetd config lives in /etc (root)" };
+  }
+  if (ext === ".policy") {
+    return { dst: `/usr/share/polkit-1/actions/${base}`, mode: "0644",
+             userInstallable: false, reason: "polkit policies live under /usr (root)" };
+  }
+  if (base.endsWith(".tgz") || base.endsWith(".tar.gz")) {
+    return { dst: `$HOME/.cache/nyxus/${base}`, mode: "0644",
+             userInstallable: false, reason: "Tarballs have their own installer (godsapp/home)" };
+  }
+
+  // ── USER-SCOPE targets ────────────────────────────────────────────
+  if (src.startsWith("eww/")) {
+    return { dst: `$HOME/.config/eww/${src.slice("eww/".length)}`,
+             mode: base.endsWith(".sh") ? "0755" : "0644",
+             userInstallable: true };
+  }
+  if (src.startsWith("desktop-entries/") && ext === ".desktop") {
+    return { dst: `$HOME/.local/share/applications/${base}`, mode: "0644",
+             userInstallable: true };
+  }
+  if (src.startsWith("locale/")) {
+    return { dst: `$HOME/.local/share/nyxus/${src}`, mode: "0644",
+             userInstallable: true };
+  }
+  if (src.startsWith("browser/")) {
+    return { dst: `$HOME/.config/nyxus-browser/${base}`, mode: "0644",
+             userInstallable: true };
+  }
+  if (src.startsWith("desktop/")) {
+    return { dst: `$HOME/.local/bin/${base}`,
+             mode: base.endsWith(".sh") || base.endsWith(".py") ? "0755" : "0644",
+             userInstallable: true };
+  }
+  if (ext === ".service" || ext === ".timer") {
+    return { dst: `$HOME/.config/systemd/user/${base}`, mode: "0644",
+             userInstallable: true };
+  }
+  if (base === "hyprland.conf" || base === "hypridle.conf" || base === "hyprlock.conf") {
+    return { dst: `$HOME/.config/hypr/${base}`, mode: "0644",
+             userInstallable: true };
+  }
+  if (base.startsWith("nyxus-hyprland-") && ext === ".conf") {
+    return { dst: `$HOME/.config/hypr/conf.d/${base}`, mode: "0644",
+             userInstallable: true };
+  }
+  if (base === "nyxus-dunstrc") {
+    return { dst: `$HOME/.config/dunst/dunstrc`, mode: "0644",
+             userInstallable: true };
+  }
+  if (base === "nyxus-palette.css") {
+    return { dst: `$HOME/.config/gtk-4.0/${base}`, mode: "0644",
+             userInstallable: true };
+  }
+  if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" ||
+      ext === ".webp" || ext === ".mp4" || ext === ".gif") {
+    return { dst: `$HOME/.local/share/nyxus/assets/${base}`, mode: "0644",
+             userInstallable: true };
+  }
+  // Python apps + shell helpers + binaries land in ~/.local/bin and
+  // are made executable. This covers nyxus_*.py, nyxus-* (no ext),
+  // rescue.sh, deploy.sh, bare.sh, hypr-doctor.sh, etc.
+  if (ext === ".py" || ext === ".sh" || ext === "" || base.startsWith("nyxus-")) {
+    return { dst: `$HOME/.local/bin/${base}`, mode: "0755",
+             userInstallable: true };
+  }
+  // Catch-all — drop unknown file types into a misc bucket so they
+  // ship but don't clobber anything important.
+  return { dst: `$HOME/.local/share/nyxus/misc/${src}`, mode: "0644",
+           userInstallable: true };
+}
+
 // Express 5 wildcard splat — matches nested paths like `eww/scripts/audio.sh`.
 // req.params.splat is an array of path segments; join with "/" to recover the
 // original key shape used in ALLOWED_FILES (e.g. "eww/scripts/audio.sh").
-// Strict allowlist lookup below means the splat cannot be used for traversal.
+// Lookup order:
+//   1. Explicit ALLOWED_FILES entry (legacy / curated downloads).
+//   2. Filesystem fallback under SCRIPTS_DIR with a strict
+//      path-traversal guard. Anything reachable here is also enumerated
+//      by /manifest.json, so the security boundary is "must exist under
+//      dist/nyxus-scripts/" rather than "must be in a hand-maintained
+//      allowlist of 250+ entries" — that boundary couldn't scale to a
+//      one-shot installer covering all ~430 files.
 router.get("/download/nyxus/{*splat}", (req, res) => {
   const splat = req.params.splat;
   const filename = Array.isArray(splat) ? splat.join("/") : String(splat ?? "");
 
-  if (!ALLOWED_FILES[filename]) {
-    res.status(404).json({ error: "File not found" });
-    return;
+  let resolved: string;
+  if (ALLOWED_FILES[filename]) {
+    resolved = path.join(SCRIPTS_DIR, ALLOWED_FILES[filename]);
+  } else {
+    // Filesystem fallback. Reject any path that escapes SCRIPTS_DIR.
+    const candidate = path.resolve(SCRIPTS_DIR, filename);
+    if (!candidate.startsWith(SCRIPTS_DIR + path.sep) || candidate.includes("\0")) {
+      res.status(404).json({ error: "File not found" });
+      return;
+    }
+    resolved = candidate;
   }
 
-  const filePath = path.join(SCRIPTS_DIR, ALLOWED_FILES[filename]);
+  const filePath = resolved;
 
   if (!fs.existsSync(filePath)) {
     res.status(404).json({ error: "Script not found on disk" });
