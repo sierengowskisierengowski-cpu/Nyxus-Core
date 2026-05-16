@@ -30,7 +30,7 @@
     separator_color = "#080808"
     sort = yes
 
-    font = JetBrains Mono Nerd Font 11
+    font = "JetBrains Mono Nerd Font 11"
     line_height = 3
     markup = full
     format = "<b>%a · %s</b>\n%b"

@@ -25,7 +25,7 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 * {
-    font-family: 'JetBrains Mono Nerd Font', 'JetBrains Mono', monospace !important;
+    font-family: 'JetBrains Mono Nerd Font', monospace !important;
     font-size:   16px !important;
     font-weight: 700  !important;
     letter-spacing: 0.18em;
