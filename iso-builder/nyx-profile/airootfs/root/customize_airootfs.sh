@@ -451,6 +451,9 @@ done
 
 # Stop systemd-timesyncd in favour of chrony (the two conflict).
 systemctl disable systemd-timesyncd.service 2>/dev/null || true
+# Keep greetd installed only as a manual emergency fallback to avoid
+# conflicting display-manager startup paths with SDDM.
+systemctl disable greetd.service 2>/dev/null || true
 
 # Bind /etc/nsswitch.conf so .local hostnames resolve via mDNS.
 if [ -f /etc/nsswitch.conf ] && ! grep -q 'mdns_minimal' /etc/nsswitch.conf; then
