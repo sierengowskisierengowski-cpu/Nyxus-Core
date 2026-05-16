@@ -983,6 +983,12 @@ if [[ -f "${CAL_DESKTOP}" ]] \
 else
   fail "calamares: live-session desktop launcher missing"
 fi
+if [[ -f "${AIROOT}/etc/calamares/modules/shellprocess.conf" ]] \
+   && grep -q 'rm -f /etc/sddm.conf.d/00-nyxus-live.conf' "${AIROOT}/etc/calamares/modules/shellprocess.conf"; then
+  ok "calamares: shellprocess removes live-only sddm autologin override"
+else
+  fail "calamares: shellprocess must remove /etc/sddm.conf.d/00-nyxus-live.conf"
+fi
 
 # Calamares installation validation (Arch package or AUR build path):
 # Calamares may be installed from repos OR built from AUR in customize_airootfs.sh.

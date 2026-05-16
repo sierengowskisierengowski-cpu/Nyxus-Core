@@ -129,7 +129,7 @@ alsa-utils
 # ── GTK4 + Python (for NYXUS apps) ────────────────────────────────
 gtk4
 libadwaita
-adw-gtk3
+adw-gtk-theme
 papirus-icon-theme
 vte3
 vte-common
@@ -248,10 +248,9 @@ yubikey-manager
 python-opencv
 # python-dlib removed 2026-05-11 — AUR-only, pulled in transitively by
 # howdy's own debian/install.sh during the customize_airootfs.sh build.
-# v4l2loopback — virtual V4L2 loopback device kernel module (official Arch
-# extra; replaces the AUR `v4l2loopback-dkms` name which is not in
-# official repos).
-v4l2loopback
+# v4l2loopback-dkms — virtual V4L2 loopback device kernel module.
+# Provides the v4l2loopback kernel module across the shipped kernel set.
+v4l2loopback-dkms
 # oath-toolkit ships oathtool (TOTP code generator/verifier) and pam_oath.
 # Used by the backdoor stack as the 4th factor (rotating 30-second OTP).
 oath-toolkit
@@ -291,10 +290,7 @@ rsync
 which
 
 # NYXUS installer
-# calamares is also built from AUR in customize_airootfs.sh for the latest
-# version, but the official-repo package ensures it is always present in the
-# live session even if the AUR build step is skipped or fails.
-calamares
+# Calamares is AUR-only on current Arch and is built in customize_airootfs.sh.
 
 # ═══════════════════════════════════════════════════════════════════
 # COMPLETION WAVE 1+2+3 — backends for half-built UI, hardware /

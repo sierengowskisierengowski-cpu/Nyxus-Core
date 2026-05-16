@@ -117,10 +117,14 @@ for svc in \
   power-profiles-daemon.service \
   cups.service \
   acpid.service \
-  systemd-timesyncd.service \
+  chronyd.service \
   ; do
   systemctl enable "$svc" 2>/dev/null && ok "enabled $svc" || warn "skip $svc (not installed)"
 done
+# chrony and systemd-timesyncd conflict — keep chrony only.
+systemctl disable systemd-timesyncd.service 2>/dev/null || true
+# greetd is shipped as a manual TTY fallback and must not race SDDM at boot.
+systemctl disable greetd.service 2>/dev/null || true
 
 # fstrim weekly for SSD longevity
 systemctl enable fstrim.timer 2>/dev/null && ok "enabled fstrim.timer" || true
