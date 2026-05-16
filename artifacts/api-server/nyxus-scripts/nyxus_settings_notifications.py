@@ -154,15 +154,43 @@ class NotificationsPanel(Gtk.Box):
             open_log.set_valign(Gtk.Align.CENTER)
             open_log.add_css_class("pill")
             log_path = str(LOG_DIR / "notifications.log")
-            open_log.connect(
-                "clicked",
-                lambda _b: subprocess.Popen(
-                    ["xdg-open", log_path],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                ),
-            )
+
+            def _open_log(_b: Gtk.Button) -> None:
+                opener = shutil.which("xdg-open") or shutil.which("gio")
+                if not opener:
+                    self.banner.set_label(
+                        "Cannot open log: xdg-open / gio not installed "
+                        f"({log_path})")
+                    return
+                argv = ([opener, "open", log_path]
+                        if opener.endswith("gio")
+                        else [opener, log_path])
+                try:
+                    subprocess.Popen(
+                        argv,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                except Exception as exc:  # pragma: no cover
+                    self.banner.set_label(f"open log failed: {exc}")
+
+            open_log.connect("clicked", _open_log)
             row.add_suffix(open_log)
+            # Also offer to open the swaync control center, which is the
+            # canonical "history viewer" surface when swaync is alive.
+            if shutil.which("swaync-client"):
+                open_cc = Gtk.Button(label="Open swaync history")
+                open_cc.set_valign(Gtk.Align.CENTER)
+                open_cc.add_css_class("pill")
+                open_cc.connect(
+                    "clicked",
+                    lambda _b: subprocess.Popen(
+                        ["swaync-client", "-t", "-sw"],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    ),
+                )
+                row.add_suffix(open_cc)
             self.list.append(row)
             return
 
@@ -174,11 +202,12 @@ class NotificationsPanel(Gtk.Box):
 
         items = doc if isinstance(doc, list) else doc.get("data", [])
         if not items:
-            placeholder = Adw.ActionRow(
+            empty = Adw.ActionRow(
                 title="No notifications in history",
                 subtitle="When swaync sends a notification, it lands here.",
             )
-            self.list.append(placeholder)
+            empty.add_css_class("nyx-empty-row")
+            self.list.append(empty)
             return
 
         self.banner.set_label(f"{len(items)} notification(s).")
