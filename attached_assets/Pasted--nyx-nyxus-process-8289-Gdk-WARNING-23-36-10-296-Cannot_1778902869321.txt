@@ -1,0 +1,43 @@
+[nyx@nyxus ~]$ 
+(process:8289): Gdk-WARNING **: 23:36:10.296: Cannot get portal org.freedesktop.portal.Settings version: GDBus.Error:org.freedesktop.DBus.Error.InvalidArgs: No such interface “org.freedesktop.portal.Settings”
+
+(nyxus_launcher.py:8289): Gdk-WARNING **: 23:36:10.331: Cannot get portal org.freedesktop.portal.Inhibit version: GDBus.Error:org.freedesktop.DBus.Error.InvalidArgs: No such interface “org.freedesktop.portal.Inhibit”
+
+[nyx@nyxus ~]$ hyprctl keyword windowrulev2 "opacity 0.85 0.75,class:^(Chromium)$"
+hyprctl keyword windowrulev2 "noblur,class:^(Chromium)$"
+hyprctl keyword layerrule "blur,launcher"
+windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+invalid field blur: missing a value
+[nyx@nyxus ~]$ hyprctl keyword windowrulev2 "opacity 0.45 0.35,class:^(Chromium)$"
+windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+[nyx@nyxus ~]$ hyprctl keyword windowrulev2 "opacity 0.45 0.35,class:^([Cc]hromium)$"
+hyprctl keyword windowrulev2 "opacity 0.45 0.35,class:^(Chromium-browser)$"
+hyprctl keyword windowrulev2 "opacity 0.45 0.35,initialClass:^([Cc]hromium)$"
+windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+[nyx@nyxus ~]$ hyprctl keyword windowrulev2 "opacity 0.25 0.15,class:^([Cc]hromium.*)$"
+windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+[nyx@nyxus ~]$ hyprctl clients | grep -iE "class|title" | head -20
+	class: wev
+	title: wev
+	initialClass: wev
+	initialTitle: wev
+	class: io.nyxus.launcher
+	title: NYXUS Launcher
+	initialClass: io.nyxus.launcher
+	initialTitle: NYXUS Launcher
+	class: kitty
+	title: wev
+	initialClass: kitty
+	initialTitle: kitty
+	class: chromium
+	title: Nyxus Core - Replit - Chromium
+	initialClass: chromium
+	initialTitle: New Tab - Chromium
+Window 564f0eea1b90 -> hyprctl clients | grep -iE "class|title" | head -20:
+	class: kitty
+	title: hyprctl clients | grep -iE "class|title" | head -20
+	initialClass: kitty
+[nyx@nyxus ~]$ 
