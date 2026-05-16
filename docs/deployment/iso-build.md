@@ -88,3 +88,8 @@ NYX_ISO_DATE=2026.05.11 sudo ./build-iso.sh
 - Building without API dist cache produces an online-only first-boot path; run `pnpm --filter @workspace/api-server run build` first to enable offline fallback.
 - Build host must be treated as part of release-chain integrity.
 - Set `NYXUS_INTEL_SHA256` in the environment to enforce tarball SHA verification (fail-closed).
+
+
+---
+
+© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

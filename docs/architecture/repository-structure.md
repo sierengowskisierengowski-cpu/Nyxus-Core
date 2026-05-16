@@ -39,3 +39,8 @@ Canonical architecture, deployment, and system reference documentation.
 ## Why `artifacts/` Exists
 
 Although the directory name can appear ambiguous, in this repository it is a primary source area for deployable platform surfaces and payload staging inputs. It is documented as a stable project structure rather than treated as disposable output.
+
+
+---
+
+© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
