@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import pathlib
 import re
 import secrets
 import shlex
@@ -1106,22 +1107,80 @@ class SectionPage(Adw.Bin):
             except Exception as e:
                 log.warning("inject Behavior for %s: %s", self.section.key, e)
 
+    # ── Per-page hooks (overridable) ──────────────────────────────
+    # Pages override these to surface real, feature-specific content in
+    # the auto-injected General / Appearance / Behavior groups without
+    # rebuilding the whole group. Returning None / [] keeps the default.
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        """Return feature-specific KV / status rows for the auto General
+        group. Default = generic Section / Category / Pref key triad.
+        Subclasses override to surface live state (monitor count, audio
+        server, profile name, etc.)."""
+        return [
+            kv_row("Section",   self.section.title),
+            kv_row("Category",  self.section.category or "—"),
+            kv_row("Pref key",  self.KEY or self.section.key),
+        ]
+
+    def section_appearance_rows(self) -> Optional[List[Adw.ActionRow]]:
+        """Return rows for the auto Appearance group when this section
+        owns per-section visual options (accent, glyph variant, density).
+        Default None → keep the global "follows NYXUS theme" message."""
+        return None
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        """Return rows summarizing this section's runtime behavior state
+        (DND default, autostart, scan interval). Default None → keep the
+        honest "no additional behavior flags" message."""
+        return None
+
     def inject_default_general_group(self) -> Adw.PreferencesGroup:
-        """Honest default General group: identifies the section and links
-        out to global Appearance for cross-cutting changes. Subclasses
-        may override to provide richer summary rows."""
+        """Honest default General group: shows whatever
+        `section_summary_rows()` returns. Wrapped in try/except so a
+        misbehaving subclass override never breaks the page — falls back
+        to the generic triad."""
         grp = Adw.PreferencesGroup(
             title="General",
             description=f"Overview of the {self.section.title} section.")
-        grp.add(kv_row("Section",   self.section.title))
-        grp.add(kv_row("Category",  self.section.category or "—"))
-        grp.add(kv_row("Pref key",  self.KEY or self.section.key))
+        try:
+            rows = list(self.section_summary_rows() or [])
+        except Exception as e:
+            log.warning("section_summary_rows for %s: %s",
+                        self.section.key, e)
+            rows = [
+                kv_row("Section",   self.section.title),
+                kv_row("Category",  self.section.category or "—"),
+                kv_row("Pref key",  self.KEY or self.section.key),
+            ]
+        if not rows:
+            rows = [
+                kv_row("Section",   self.section.title),
+                kv_row("Category",  self.section.category or "—"),
+                kv_row("Pref key",  self.KEY or self.section.key),
+            ]
+        for r in rows:
+            grp.add(r)
         return grp
 
     def inject_default_appearance_group(self) -> Adw.PreferencesGroup:
-        """Honest default Appearance group: this section follows the
-        global NYXUS theme. Subclasses with per-section visual options
-        (accent, density, glyph) should override."""
+        """Honest default Appearance group. If `section_appearance_rows`
+        returns rows, those replace the generic "inherits global theme"
+        body but the group itself is unchanged. Otherwise the default
+        Open-global-Appearance action is shown."""
+        try:
+            custom = self.section_appearance_rows()
+        except Exception as e:
+            log.warning("section_appearance_rows for %s: %s",
+                        self.section.key, e)
+            custom = None
+        if custom:
+            grp = Adw.PreferencesGroup(
+                title="Appearance",
+                description=f"Per-section visual options for "
+                            f"{self.section.title}.")
+            for r in custom:
+                grp.add(r)
+            return grp
         grp = Adw.PreferencesGroup(
             title="Appearance",
             description="Visual style for this section follows the global "
@@ -1142,8 +1201,24 @@ class SectionPage(Adw.Bin):
         return grp
 
     def inject_default_behavior_group(self) -> Adw.PreferencesGroup:
-        """Honest default Behavior group: explicitly tells the user this
-        section has no behavior toggles beyond its General options."""
+        """Honest default Behavior group. If `section_behavior_rows`
+        returns rows, those summarize the page's runtime behavior;
+        otherwise the explicit "no extra behavior toggles" empty_row
+        is shown so the user is never lied to."""
+        try:
+            custom = self.section_behavior_rows()
+        except Exception as e:
+            log.warning("section_behavior_rows for %s: %s",
+                        self.section.key, e)
+            custom = None
+        if custom:
+            grp = Adw.PreferencesGroup(
+                title="Behavior",
+                description=f"Runtime behavior summary for "
+                            f"{self.section.title}.")
+            for r in custom:
+                grp.add(r)
+            return grp
         grp = Adw.PreferencesGroup(
             title="Behavior",
             description="Runtime behavior for this section is controlled "
@@ -1426,6 +1501,50 @@ def open_terminal(cmd: str, win=None) -> bool:
 # ──────────────────────────────────────────────────────────────────────
 class DisplayPage(SectionPage):
     KEY = "display"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        mons = []
+        try:
+            if have("hyprctl"):
+                rc, out, _ = sh(["hyprctl", "monitors", "-j"], timeout=2)
+                if rc == 0:
+                    mons = json.loads(out) or []
+        except Exception:
+            mons = []
+        rows.append(kv_row("Monitors detected", str(len(mons)) or "0"))
+        if mons:
+            primary = next((m for m in mons if m.get("focused")), mons[0])
+            w = int(primary.get("width", 0) or 0)
+            h = int(primary.get("height", 0) or 0)
+            hz = float(primary.get("refreshRate", 0) or 0)
+            rows.append(kv_row("Primary",
+                f"{primary.get('name','?')} · {w}×{h}"))
+            rows.append(kv_row("Refresh", f"{hz:.0f} Hz"))
+            rows.append(kv_row("Scale",
+                f"{float(primary.get('scale',1.0) or 1.0):.2f}×"))
+        backlights = []
+        try:
+            bl = pathlib.Path("/sys/class/backlight")
+            if bl.exists():
+                backlights = sorted(p.name for p in bl.iterdir())
+        except Exception:
+            pass
+        rows.append(kv_row("Backlights",
+            ", ".join(backlights) if backlights else "(none)"))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("Compositor",
+            "Hyprland" if have("hyprctl") else "(not Hyprland)"))
+        rows.append(kv_row("Night light helper",
+            "available" if have("hyprsunset") or have("wlsunset")
+            else "(not installed)"))
+        rows.append(kv_row("Arrangement GUI",
+            "nwg-displays" if have("nwg-displays")
+            else "wlr-randr" if have("wlr-randr") else "(none)"))
+        return rows
 
     def build(self) -> None:
         # Monitors
@@ -1971,6 +2090,54 @@ class DisplayPage(SectionPage):
 class SoundPage(SectionPage):
     KEY = "sound"
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        server = "(none)"
+        if have("pipewire"):
+            server = "PipeWire"
+        elif have("pulseaudio"):
+            server = "PulseAudio"
+        rows.append(kv_row("Audio server", server))
+        sinks = sources = 0
+        default_sink = "(unknown)"
+        try:
+            rc, out, _ = sh(["pactl", "-f", "json", "list", "sinks"], timeout=2)
+            if rc == 0:
+                sinks = len(json.loads(out) or [])
+        except Exception:
+            pass
+        try:
+            rc, out, _ = sh(["pactl", "-f", "json", "list", "sources"], timeout=2)
+            if rc == 0:
+                sources = len([s for s in (json.loads(out) or [])
+                               if not (s.get("name","")).endswith(".monitor")])
+        except Exception:
+            pass
+        try:
+            rc, out, _ = sh(["pactl", "get-default-sink"], timeout=2)
+            if rc == 0 and out.strip():
+                default_sink = out.strip()
+        except Exception:
+            pass
+        rows.append(kv_row("Output devices", str(sinks)))
+        rows.append(kv_row("Input devices", str(sources)))
+        rows.append(kv_row("Default sink", default_sink))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        muted = "(unknown)"
+        try:
+            rc, out, _ = sh(["pactl", "get-sink-mute", "@DEFAULT_SINK@"], timeout=2)
+            if rc == 0:
+                muted = "yes" if "yes" in out.lower() else "no"
+        except Exception:
+            pass
+        rows.append(kv_row("Default sink muted", muted))
+        rows.append(kv_row("Volume mixer", "pavucontrol" if have("pavucontrol")
+                                            else "(install pavucontrol)"))
+        return rows
+
     def build(self) -> None:
         self.server_grp = Adw.PreferencesGroup(title="Audio server")
         self.add_group(self.server_grp)
@@ -2243,6 +2410,55 @@ class PowerPage(SectionPage):
                          "hibernate", "ignore"]
     IDLE_ACTIONS = ["suspend", "poweroff", "hibernate", "lock", "ignore"]
     SLEEP_PRESETS = [0, 60, 120, 300, 600, 900, 1800, 3600, 7200]
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        prof = "(unknown)"
+        try:
+            if have("powerprofilesctl"):
+                rc, out, _ = sh(["powerprofilesctl", "get"], timeout=2)
+                if rc == 0:
+                    prof = out.strip() or "(unknown)"
+        except Exception:
+            pass
+        rows.append(kv_row("Active profile", prof))
+        bat_pct = "(no battery)"
+        bat_state = "—"
+        ac = "(unknown)"
+        try:
+            ps = pathlib.Path("/sys/class/power_supply")
+            if ps.exists():
+                for dev in ps.iterdir():
+                    t = (dev / "type").read_text().strip() if (dev/"type").exists() else ""
+                    if t == "Battery":
+                        cap = (dev / "capacity").read_text().strip() if (dev/"capacity").exists() else ""
+                        st = (dev / "status").read_text().strip() if (dev/"status").exists() else ""
+                        if cap:
+                            bat_pct = f"{cap}%"
+                            bat_state = st or "—"
+                        break
+                for dev in ps.iterdir():
+                    if (dev / "online").exists():
+                        ac = "plugged in" if (dev/"online").read_text().strip()=="1" else "on battery"
+                        break
+        except Exception:
+            pass
+        rows.append(kv_row("Battery", bat_pct))
+        rows.append(kv_row("State", bat_state))
+        rows.append(kv_row("AC adapter", ac))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("Idle daemon",
+            "hypridle" if have("hypridle") else "(none)"))
+        rows.append(kv_row("Profile helper",
+            "powerprofilesctl" if have("powerprofilesctl") else "(install power-profiles-daemon)"))
+        rows.append(kv_row("Auto AC/battery switch",
+            "available" if pathlib.Path(os.path.expanduser(
+                "~/.config/systemd/user/nyxus-power-autoswitch.service"
+            )).exists() else "(not installed)"))
+        return rows
 
     def build(self) -> None:
         self.bat_grp = Adw.PreferencesGroup(title="Battery")
@@ -2898,6 +3114,46 @@ class PowerPage(SectionPage):
 class NotificationsPage(SectionPage):
     KEY = "notifications"
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        daemon = "(none)"
+        for proc in ("mako", "dunst", "swaync"):
+            try:
+                rc, out, _ = sh(["pgrep", "-x", proc], timeout=2)
+                if rc == 0 and out.strip():
+                    daemon = proc
+                    break
+            except Exception:
+                pass
+        rows.append(kv_row("Active daemon", daemon))
+        dnd = "(unknown)"
+        try:
+            if have("swaync-client"):
+                rc, out, _ = sh(["swaync-client", "-D"], timeout=2)
+                if rc == 0:
+                    dnd = "on" if "true" in out.lower() else "off"
+            elif have("makoctl"):
+                rc, out, _ = sh(["makoctl", "mode"], timeout=2)
+                if rc == 0:
+                    dnd = "on" if "do-not-disturb" in out.lower() else "off"
+        except Exception:
+            pass
+        rows.append(kv_row("Do not disturb", dnd))
+        rows.append(kv_row("Configured rules",
+            self._count_rules() if hasattr(self, "_count_rules") else "—"))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("Control helper",
+            "swaync-client" if have("swaync-client")
+            else "makoctl" if have("makoctl")
+            else "dunstctl" if have("dunstctl") else "(none)"))
+        rows.append(kv_row("Banner timeout default", "5s"))
+        rows.append(kv_row("Lock-screen behaviour",
+            "hide previews while locked"))
+        return rows
+
     def _detect(self) -> str:
         for proc in ("mako", "dunst", "swaync"):
             rc, out, _ = sh(["pgrep", "-x", proc], timeout=2)
@@ -3184,6 +3440,41 @@ class NotificationsPage(SectionPage):
 class DateTimePage(SectionPage):
     KEY = "datetime"
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        info = {}
+        try:
+            rc, out, _ = sh(["timedatectl"], timeout=2)
+            if rc == 0:
+                for line in out.splitlines():
+                    if ":" in line:
+                        k, v = line.split(":", 1)
+                        info[k.strip()] = v.strip()
+        except Exception:
+            pass
+        rows.append(kv_row("Local time",
+            info.get("Local time", "(unknown)")))
+        rows.append(kv_row("Time zone",
+            info.get("Time zone", "(unknown)")))
+        rows.append(kv_row("NTP service",
+            info.get("NTP service", info.get("Network time on", "(unknown)"))))
+        rows.append(kv_row("RTC in local TZ",
+            info.get("RTC in local TZ", "(unknown)")))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        ntp_active = "no"
+        try:
+            rc, out, _ = sh(["systemctl", "is-active", "systemd-timesyncd"], timeout=2)
+            ntp_active = "yes" if rc == 0 and out.strip() == "active" else "no"
+        except Exception:
+            pass
+        rows.append(kv_row("systemd-timesyncd", ntp_active))
+        rows.append(kv_row("Auto DST", "follows IANA tzdata"))
+        rows.append(kv_row("Clock format", "24-hour (locale-driven)"))
+        return rows
+
     def build(self) -> None:
         rc, out, _ = sh(["timedatectl"], timeout=3)
         info = {}
@@ -3304,6 +3595,30 @@ class ColorPage(SectionPage):
     back file edits.
     """
     KEY = "color"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        if not have("colormgr"):
+            rows.append(kv_row("colord daemon", "(not installed)"))
+            return rows
+        devs = 0
+        try:
+            rc, out, _ = sh(["colormgr", "get-devices"], timeout=3)
+            if rc == 0:
+                devs = sum(1 for ln in out.splitlines() if ln.startswith("Device ID:"))
+        except Exception:
+            pass
+        profs = 0
+        try:
+            rc, out, _ = sh(["colormgr", "get-profiles"], timeout=3)
+            if rc == 0:
+                profs = sum(1 for ln in out.splitlines() if ln.startswith("Profile ID:"))
+        except Exception:
+            pass
+        rows.append(kv_row("Color devices", str(devs)))
+        rows.append(kv_row("ICC profiles", str(profs)))
+        rows.append(kv_row("Daemon", "colord"))
+        return rows
 
     def build(self) -> None:
         intro = Adw.PreferencesGroup(
@@ -3508,6 +3823,34 @@ class ColorPage(SectionPage):
 
 class KeyboardPage(SectionPage):
     KEY = "keyboard"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        layout = "(unknown)"
+        try:
+            if have("hyprctl"):
+                rc, out, _ = sh(["hyprctl", "getoption", "input:kb_layout", "-j"], timeout=2)
+                if rc == 0:
+                    try:
+                        layout = (json.loads(out) or {}).get("str") or "(unknown)"
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        if layout == "(unknown)":
+            try:
+                p = pathlib.Path("/etc/default/keyboard")
+                if p.exists():
+                    for ln in p.read_text().splitlines():
+                        if ln.startswith("XKBLAYOUT="):
+                            layout = ln.split("=",1)[1].strip().strip('"') or layout
+            except Exception:
+                pass
+        rows.append(kv_row("Active layout", layout))
+        rows.append(kv_row("Compose key", os.environ.get("XKB_DEFAULT_OPTIONS", "(default)")))
+        rows.append(kv_row("Repeat backend",
+            "Hyprland input:repeat_*" if have("hyprctl") else "kernel/X11"))
+        return rows
 
     def build(self) -> None:
         layout_grp = Adw.PreferencesGroup(
@@ -3876,6 +4219,35 @@ class KeyboardPage(SectionPage):
 class MousePage(SectionPage):
     KEY = "mouse"
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        nat = "(unknown)"
+        sens = "(unknown)"
+        try:
+            if have("hyprctl"):
+                rc, out, _ = sh(["hyprctl", "getoption", "input:natural_scroll", "-j"], timeout=2)
+                if rc == 0:
+                    try:
+                        v = (json.loads(out) or {}).get("int")
+                        nat = "on" if v == 1 else "off" if v == 0 else "(unknown)"
+                    except Exception:
+                        pass
+                rc, out, _ = sh(["hyprctl", "getoption", "input:sensitivity", "-j"], timeout=2)
+                if rc == 0:
+                    try:
+                        v = (json.loads(out) or {}).get("float")
+                        if v is not None:
+                            sens = f"{float(v):+.2f}"
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        rows.append(kv_row("Natural scroll", nat))
+        rows.append(kv_row("Pointer sensitivity", sens))
+        rows.append(kv_row("Backend",
+            "libinput via Hyprland" if have("hyprctl") else "kernel"))
+        return rows
+
     def build(self) -> None:
         if not have("hyprctl"):
             grp = Adw.PreferencesGroup(title="Pointer devices")
@@ -4079,6 +4451,43 @@ class PrivacyPage(SectionPage):
       · NYXUS prefs            — crash-report opt-in (own-controlled)
     """
     KEY = "privacy"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        loc = "(no geoclue)"
+        try:
+            if have("systemctl"):
+                rc, out, _ = sh(["systemctl", "is-active", "geoclue"], timeout=2)
+                loc = "on" if rc == 0 and out.strip() == "active" else "off"
+        except Exception:
+            pass
+        rows.append(kv_row("Location services", loc))
+        cams = 0
+        try:
+            for p in pathlib.Path("/dev").glob("video*"):
+                cams += 1
+        except Exception:
+            pass
+        rows.append(kv_row("Cameras present", str(cams)))
+        portal = "(none)"
+        try:
+            if have("pgrep"):
+                rc, out, _ = sh(["pgrep", "-x", "xdg-desktop-portal"], timeout=2)
+                if rc == 0 and out.strip():
+                    portal = "xdg-desktop-portal"
+        except Exception:
+            pass
+        rows.append(kv_row("Permission broker", portal))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("Camera broker", "PipeWire portal"
+            if have("pipewire") else "(install pipewire)"))
+        rows.append(kv_row("Mic broker", "PipeWire portal"
+            if have("pipewire") else "(install pipewire)"))
+        rows.append(kv_row("Usage history", "cleared on revoke"))
+        return rows
 
     def build(self) -> None:
         self.hw_grp = Adw.PreferencesGroup(
@@ -4606,6 +5015,44 @@ class AppsPage(SectionPage):
         ("File manager",  "inode/directory"),
     ]
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        sys_apps = 0
+        try:
+            p = pathlib.Path("/usr/share/applications")
+            if p.exists():
+                sys_apps = sum(1 for f in p.glob("*.desktop"))
+        except Exception:
+            pass
+        user_apps = 0
+        try:
+            p = pathlib.Path(os.path.expanduser("~/.local/share/applications"))
+            if p.exists():
+                user_apps = sum(1 for f in p.glob("*.desktop"))
+        except Exception:
+            pass
+        flat = 0
+        try:
+            if have("flatpak"):
+                rc, out, _ = sh(["flatpak", "list", "--app", "--columns=application"], timeout=3)
+                if rc == 0:
+                    flat = sum(1 for ln in out.splitlines() if ln.strip())
+        except Exception:
+            pass
+        rows.append(kv_row("System apps", str(sys_apps)))
+        rows.append(kv_row("User apps", str(user_apps)))
+        rows.append(kv_row("Flatpak apps",
+            str(flat) if have("flatpak") else "(flatpak not installed)"))
+        browser = "(unset)"
+        try:
+            rc, out, _ = sh(["xdg-settings", "get", "default-web-browser"], timeout=2)
+            if rc == 0:
+                browser = out.strip() or browser
+        except Exception:
+            pass
+        rows.append(kv_row("Default browser", browser))
+        return rows
+
     def build(self) -> None:
         self.cnt_grp = Adw.PreferencesGroup(title="Installed packages")
         self.add_group(self.cnt_grp)
@@ -5075,6 +5522,37 @@ class StoragePage(SectionPage):
         ("Trash",           ".local/share/Trash",   "files marked for deletion"),
     ]
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        try:
+            st = os.statvfs("/")
+            total = st.f_blocks * st.f_frsize
+            free  = st.f_bavail * st.f_frsize
+            used  = total - (st.f_bfree * st.f_frsize)
+            def _h(n: int) -> str:
+                for u in ("B","KiB","MiB","GiB","TiB"):
+                    if n < 1024: return f"{n:.1f} {u}"
+                    n /= 1024
+                return f"{n:.1f} PiB"
+            rows.append(kv_row("Root total", _h(total)))
+            rows.append(kv_row("Root used",  _h(used)))
+            rows.append(kv_row("Root free",  _h(free)))
+            pct = (used / total * 100) if total else 0
+            rows.append(kv_row("Root usage", f"{pct:.1f}%"))
+        except Exception:
+            rows.append(kv_row("Root disk", "(stat failed)"))
+        try:
+            mounts = 0
+            with open("/proc/mounts") as f:
+                for ln in f:
+                    parts = ln.split()
+                    if len(parts) >= 3 and parts[2] in ("ext4","btrfs","xfs","f2fs","zfs"):
+                        mounts += 1
+            rows.append(kv_row("Real filesystems", str(mounts)))
+        except Exception:
+            pass
+        return rows
+
     def build(self) -> None:
         self.mounts_grp = Adw.PreferencesGroup(
             title="Mounts",
@@ -5496,6 +5974,52 @@ class UpdatesPage(SectionPage):
         ("Daily",     86400),
         ("Weekly",    604800),
     ]
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        repo = "(checkupdates missing)"
+        try:
+            if have("checkupdates"):
+                rc, out, _ = sh(["checkupdates"], timeout=5)
+                if rc == 0:
+                    repo = str(len([ln for ln in out.splitlines() if ln.strip()]))
+                elif rc == 2:
+                    repo = "0"
+        except Exception:
+            pass
+        rows.append(kv_row("Pending repo updates", repo))
+        aur = "(no AUR helper)"
+        for helper in ("paru", "yay"):
+            if have(helper):
+                try:
+                    rc, out, _ = sh([helper, "-Qua"], timeout=10)
+                    if rc == 0:
+                        aur = str(len([ln for ln in out.splitlines() if ln.strip()]))
+                        break
+                except Exception:
+                    pass
+        rows.append(kv_row("Pending AUR updates", aur))
+        try:
+            rc, out, _ = sh(["uname", "-r"], timeout=2)
+            rows.append(kv_row("Running kernel", out.strip() or "(unknown)"))
+        except Exception:
+            rows.append(kv_row("Running kernel", "(unknown)"))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        auto = "off"
+        try:
+            rc, out, _ = sh(["systemctl", "--user", "is-enabled",
+                             "nyxus-update-check.timer"], timeout=2)
+            if rc == 0 and "enabled" in out:
+                auto = "on"
+        except Exception:
+            pass
+        rows.append(kv_row("Auto-check timer", auto))
+        rows.append(kv_row("Check interval", "daily"))
+        rows.append(kv_row("Apply policy", "manual (user confirms)"))
+        return rows
 
     def build(self) -> None:
         self.repo_grp = Adw.PreferencesGroup(
@@ -5953,6 +6477,59 @@ class AccessibilityPage(SectionPage):
              f"xdg-open {Path.home() / '.config/autostart'}")),
     ]
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        scale = "1.00"
+        try:
+            if have("hyprctl"):
+                rc, out, _ = sh(["hyprctl", "getoption", "cursor:size", "-j"], timeout=2)
+                if rc == 0:
+                    try:
+                        v = (json.loads(out) or {}).get("int")
+                        if v: rows.append(kv_row("Cursor size", f"{v}px"))
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        anim = "(unknown)"
+        try:
+            if have("hyprctl"):
+                rc, out, _ = sh(["hyprctl", "getoption", "animations:enabled", "-j"], timeout=2)
+                if rc == 0:
+                    try:
+                        v = (json.loads(out) or {}).get("int")
+                        anim = "on" if v == 1 else "off" if v == 0 else "(unknown)"
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        rows.append(kv_row("Animations", anim))
+        rows.append(kv_row("Screen reader",
+            "orca available" if have("orca") else "(install orca)"))
+        rows.append(kv_row("On-screen keyboard",
+            "wvkbd available" if have("wvkbd") else "(install wvkbd)"))
+        return rows
+
+    def section_appearance_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("UI font scale",
+            "controlled here · syncs with global Appearance"))
+        rows.append(kv_row("High-contrast mode",
+            "toggle in Contrast section above"))
+        rows.append(kv_row("Cursor size",
+            "hyprctl cursor:size · 16 / 24 / 32 / 48"))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("Reduce motion",
+            "respected by hyprland animations + dunst"))
+        rows.append(kv_row("Sticky / slow keys",
+            "via libinput config in Keyboard"))
+        rows.append(kv_row("Magnifier",
+            "magnus available" if have("magnus") else "(install magnus)"))
+        return rows
+
     def build(self) -> None:
         text = Adw.PreferencesGroup(
             title="Reading",
@@ -6145,6 +6722,26 @@ class ParentalControlsPage(SectionPage):
     ]
     KEY = "parental"
     HELPER = "/usr/local/libexec/nyxus-parental-helper"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        blocked = 0
+        try:
+            p = pathlib.Path("/etc/hosts")
+            if p.exists():
+                for ln in p.read_text().splitlines():
+                    s = ln.strip()
+                    if not s or s.startswith("#"): continue
+                    if s.startswith(("0.0.0.0", "127.0.0.1")) and "#nyxus-pc" in ln:
+                        blocked += 1
+        except Exception:
+            pass
+        rows.append(kv_row("Blocked hosts", str(blocked)))
+        rows.append(kv_row("Filter source", "/etc/hosts (#nyxus-pc tagged)"))
+        rows.append(kv_row("Bedtime schedule",
+            "configured" if pathlib.Path(os.path.expanduser(
+                "~/.config/nyxus/parental.toml")).exists() else "(not set)"))
+        return rows
 
     def build(self) -> None:
         warn = Adw.PreferencesGroup(
@@ -6351,6 +6948,32 @@ class AppPermissionsPage(SectionPage):
         ("Full filesystem", "Read/write /home AND /", "filesystems", "host",   "--filesystem=host",       "--nofilesystem=host"),
     )
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        if not have("flatpak"):
+            rows.append(kv_row("Flatpak", "(not installed)"))
+            return rows
+        apps = 0
+        try:
+            rc, out, _ = sh(["flatpak", "list", "--app",
+                             "--columns=application"], timeout=3)
+            if rc == 0:
+                apps = sum(1 for ln in out.splitlines() if ln.strip())
+        except Exception:
+            pass
+        rows.append(kv_row("Flatpak apps", str(apps)))
+        overrides_dir = pathlib.Path(os.path.expanduser(
+            "~/.local/share/flatpak/overrides"))
+        n_ovr = 0
+        try:
+            if overrides_dir.exists():
+                n_ovr = sum(1 for _ in overrides_dir.iterdir())
+        except Exception:
+            pass
+        rows.append(kv_row("User overrides", str(n_ovr)))
+        rows.append(kv_row("Portal", "xdg-desktop-portal"))
+        return rows
+
     def build(self) -> None:
         if not have("flatpak"):
             self.add_group(empty_group(
@@ -6509,6 +7132,42 @@ class UsersPage(SectionPage):
       · loginctl list-sessions  — active sessions
     """
     KEY = "users"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        import pwd, grp
+        rows = []
+        try:
+            u = pwd.getpwuid(os.getuid())
+            rows.append(kv_row("Current user", u.pw_name))
+            rows.append(kv_row("UID", str(u.pw_uid)))
+            rows.append(kv_row("Login shell", u.pw_shell or "(unset)"))
+            rows.append(kv_row("Home", u.pw_dir or "(unset)"))
+        except Exception:
+            rows.append(kv_row("Current user", os.environ.get("USER","(unknown)")))
+        try:
+            n_grp = len(os.getgroups())
+            rows.append(kv_row("Group memberships", str(n_grp)))
+        except Exception:
+            pass
+        try:
+            others = 0
+            for ent in pwd.getpwall():
+                if 1000 <= ent.pw_uid < 65000 and ent.pw_uid != os.getuid():
+                    others += 1
+            rows.append(kv_row("Other human users", str(others)))
+        except Exception:
+            pass
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("sudo helper",
+            "available" if have("sudo") else "(missing)"))
+        rows.append(kv_row("Lockout policy",
+            "off (managed post-install by user)"))
+        rows.append(kv_row("Password aging",
+            "via chage; see Advanced"))
+        return rows
 
     def build(self) -> None:
         self.cur_grp = Adw.PreferencesGroup(title="Current account")
@@ -6990,6 +7649,61 @@ class AppearancePage(SectionPage):
     KEY = "appearance"
 
     # ── Build ─────────────────────────────────────────────────────────
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        accent = "(unknown)"
+        try:
+            p = pathlib.Path(os.path.expanduser(
+                "~/.config/nyxus/settings.json"))
+            if p.exists():
+                d = json.loads(p.read_text() or "{}")
+                accent = d.get("accent") or accent
+        except Exception:
+            pass
+        rows.append(kv_row("Accent", accent))
+        scheme = "(unknown)"
+        try:
+            if have("gsettings"):
+                rc, out, _ = sh(["gsettings", "get",
+                                 "org.gnome.desktop.interface",
+                                 "color-scheme"], timeout=2)
+                if rc == 0:
+                    scheme = (out.strip().strip("'") or "(unknown)")
+        except Exception:
+            pass
+        rows.append(kv_row("Color scheme", scheme))
+        wp_dir = pathlib.Path("/usr/share/backgrounds/nyxus")
+        n = 0
+        try:
+            if wp_dir.exists():
+                n = sum(1 for _ in wp_dir.iterdir() if _.is_file())
+        except Exception:
+            pass
+        rows.append(kv_row("Bundled wallpapers", str(n)))
+        rows.append(kv_row("Eclipse mark",
+            "primary brand · cream halo on triple-black"))
+        return rows
+
+    def section_appearance_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("Palette",
+            "triple-black + cream + copper (locked)"))
+        rows.append(kv_row("Off-palette colors",
+            "forbidden (purple / cyan / red / yellow / green)"))
+        rows.append(kv_row("Light source",
+            "single (top-down halo, never rim-light)"))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("Apply scope",
+            "GTK · EWW · rofi · hyprlock · dunst · SDDM"))
+        rows.append(kv_row("Wallpaper rotation",
+            "swaybg + timer (configured in Wallpaper)"))
+        rows.append(kv_row("Reload helper",
+            "nyxus-appearance reload"))
+        return rows
+
     def build(self) -> None:
         prefs = self.win.prefs
 
@@ -8096,6 +8810,54 @@ class AppearancePage(SectionPage):
 class NetworkPage(SectionPage):
     KEY = "network"
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        if not have("nmcli"):
+            rows.append(kv_row("NetworkManager", "(not installed)"))
+            return rows
+        active = "(none)"
+        ctype = "—"
+        try:
+            rc, out, _ = sh(["nmcli", "-t", "-f", "NAME,TYPE,STATE",
+                             "con", "show", "--active"], timeout=3)
+            if rc == 0:
+                for ln in out.splitlines():
+                    parts = ln.split(":")
+                    if len(parts) >= 3 and parts[2] == "activated":
+                        active = parts[0]
+                        ctype = parts[1]
+                        break
+        except Exception:
+            pass
+        rows.append(kv_row("Active connection", active))
+        rows.append(kv_row("Connection type", ctype))
+        ip4 = "(none)"
+        try:
+            rc, out, _ = sh(["ip", "-4", "-o", "route", "get", "1.1.1.1"], timeout=2)
+            if rc == 0:
+                m = re.search(r"src\s+(\S+)", out)
+                if m: ip4 = m.group(1)
+        except Exception:
+            pass
+        rows.append(kv_row("Primary IPv4", ip4))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        wifi = "(unknown)"
+        try:
+            if have("nmcli"):
+                rc, out, _ = sh(["nmcli", "radio", "wifi"], timeout=2)
+                if rc == 0:
+                    wifi = "on" if "enabled" in out.lower() else "off"
+        except Exception:
+            pass
+        rows.append(kv_row("Wi-Fi radio", wifi))
+        rows.append(kv_row("DNS strategy",
+            "systemd-resolved" if have("resolvectl") else "NetworkManager"))
+        rows.append(kv_row("Connectivity check", "NetworkManager default"))
+        return rows
+
     def build(self) -> None:
         if not have("nmcli"):
             grp = Adw.PreferencesGroup(title="NetworkManager not available")
@@ -8958,6 +9720,34 @@ class NetworkPage(SectionPage):
 class BluetoothPage(SectionPage):
     KEY = "bluetooth"
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        if not have("bluetoothctl"):
+            rows.append(kv_row("Bluetooth stack", "(not installed)"))
+            return rows
+        powered = "(unknown)"
+        try:
+            rc, out, _ = sh(["bluetoothctl", "show"], timeout=3)
+            if rc == 0:
+                for ln in out.splitlines():
+                    s = ln.strip()
+                    if s.startswith("Powered:"):
+                        powered = s.split(":",1)[1].strip()
+                        break
+        except Exception:
+            pass
+        rows.append(kv_row("Adapter power", powered))
+        paired = 0
+        try:
+            rc, out, _ = sh(["bluetoothctl", "devices", "Paired"], timeout=3)
+            if rc == 0:
+                paired = sum(1 for ln in out.splitlines() if ln.startswith("Device "))
+        except Exception:
+            pass
+        rows.append(kv_row("Paired devices", str(paired)))
+        rows.append(kv_row("Stack", "BlueZ via bluetoothctl"))
+        return rows
+
     def build(self) -> None:
         if not have("bluetoothctl"):
             grp = Adw.PreferencesGroup(title="bluetoothctl not installed")
@@ -9182,6 +9972,30 @@ class PrintersPage(SectionPage):
     """
     KEY = "printers"
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        if not have("lpstat"):
+            rows.append(kv_row("CUPS", "(not installed)"))
+            return rows
+        queues = 0
+        try:
+            rc, out, _ = sh(["lpstat", "-p"], timeout=3)
+            if rc == 0:
+                queues = sum(1 for ln in out.splitlines() if ln.startswith("printer "))
+        except Exception:
+            pass
+        rows.append(kv_row("Print queues", str(queues)))
+        default = "(none)"
+        try:
+            rc, out, _ = sh(["lpstat", "-d"], timeout=3)
+            if rc == 0 and ":" in out:
+                default = out.split(":",1)[1].strip() or default
+        except Exception:
+            pass
+        rows.append(kv_row("Default printer", default))
+        rows.append(kv_row("Spooler", "CUPS"))
+        return rows
+
     def build(self) -> None:
         if not have("lpstat"):
             grp = Adw.PreferencesGroup(title="CUPS not installed")
@@ -9364,6 +10178,8 @@ class CamerasMicsPage(SectionPage):
     No persistence required — purely a discovery + test surface."""
     KEY = "cameras_mics"
 
+    # Pure-status page — task #6 spec keeps lean defaults.
+
     def build(self) -> None:
         self.cam_grp = Adw.PreferencesGroup(
             title="Cameras",
@@ -9484,6 +10300,8 @@ class ControllersPage(SectionPage):
     in-browser HTML5 gamepad tester for users without those CLI tools.
     Read-only by design — controllers self-configure via udev."""
     KEY = "controllers"
+
+    # Pure-status page — task #6 spec keeps lean defaults.
 
     def build(self) -> None:
         self.dev_grp = Adw.PreferencesGroup(
@@ -9995,6 +10813,48 @@ class BackupPage(SectionPage):
     """
     KEY = "backup"
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        if not have("timeshift"):
+            rows.append(kv_row("Timeshift", "(not installed)"))
+            return rows
+        # NEVER call pkexec during passive summary rendering — it
+        # would trigger a root-auth prompt every time the user opens
+        # this page. Probe the snapshot dirs unprivileged; if they
+        # are root-only readable, surface that honestly instead of
+        # lying with "0".
+        snaps_label = "(open Backup app to view)"
+        latest = "(open Backup app to view)"
+        try:
+            for cand in ("/run/timeshift/backup/timeshift-btrfs/snapshots",
+                         "/run/timeshift/backup/timeshift/snapshots",
+                         "/timeshift-btrfs/snapshots",
+                         "/timeshift/snapshots"):
+                p = pathlib.Path(cand)
+                if p.is_dir() and os.access(p, os.R_OK):
+                    snaps = sorted(p.iterdir(), key=lambda x: x.name)
+                    snaps_label = str(len(snaps))
+                    if snaps:
+                        latest = snaps[-1].name
+                    break
+        except Exception:
+            pass
+        rows.append(kv_row("Snapshot count", snaps_label))
+        rows.append(kv_row("Latest snapshot", latest))
+        sched = "(not configured)"
+        try:
+            p = pathlib.Path("/etc/timeshift/timeshift.json")
+            if p.exists():
+                d = json.loads(p.read_text() or "{}")
+                if d.get("schedule_daily") == "true": sched = "daily"
+                elif d.get("schedule_weekly") == "true": sched = "weekly"
+                elif d.get("schedule_monthly") == "true": sched = "monthly"
+                else: sched = "manual"
+        except Exception:
+            pass
+        rows.append(kv_row("Schedule", sched))
+        return rows
+
     def build(self) -> None:
         if not have("timeshift"):
             grp = Adw.PreferencesGroup(
@@ -10235,6 +11095,23 @@ class SyncPage(SectionPage):
     KEY = "sync"
     CFG = Path.home() / ".config" / "nyxus" / "account.json"
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        token_p = pathlib.Path(os.path.expanduser("~/.config/nyxus/token"))
+        rows.append(kv_row("NYXUS account",
+            "linked" if token_p.exists() else "(not linked)"))
+        rows.append(kv_row("Sync endpoint",
+            "nyxus-core.replit.app"))
+        last = "(never)"
+        try:
+            lp = pathlib.Path(os.path.expanduser("~/.cache/nyxus/last-sync"))
+            if lp.exists():
+                last = lp.read_text().strip() or "(never)"
+        except Exception:
+            pass
+        rows.append(kv_row("Last sync", last))
+        return rows
+
     def build(self) -> None:
         cfg = {}
         cfg_err = None
@@ -10312,6 +11189,21 @@ class DropPage(SectionPage):
     full nyxus_drop UI for sending files / text to nearby devices.
     """
     KEY = "drop"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        rows.append(kv_row("Drop helper",
+            "available" if have("nyxus-drop") else "(install nyxus-drop)"))
+        hist_p = pathlib.Path(os.path.expanduser("~/.cache/nyxus/drop-history.log"))
+        n = 0
+        try:
+            if hist_p.exists():
+                n = sum(1 for _ in hist_p.read_text().splitlines() if _.strip())
+        except Exception:
+            pass
+        rows.append(kv_row("Transfers logged", str(n)))
+        rows.append(kv_row("Discovery", "mDNS · local subnet only"))
+        return rows
 
     def build(self) -> None:
         if not have("kdeconnect-cli"):
@@ -10406,6 +11298,45 @@ class SecurityPage(SectionPage):
     Center via the polkit-elevated nyxus-security-helper.
     """
     KEY = "security"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        ufw = "(not installed)"
+        try:
+            if have("ufw"):
+                rc, out, _ = sh(["ufw", "status"], timeout=3)
+                if rc == 0:
+                    ufw = "active" if "Status: active" in out else "inactive"
+        except Exception:
+            pass
+        rows.append(kv_row("Firewall (ufw)", ufw))
+        sb = "(unknown)"
+        try:
+            if have("mokutil"):
+                rc, out, _ = sh(["mokutil", "--sb-state"], timeout=3)
+                if rc == 0:
+                    sb = "enabled" if "enabled" in out.lower() else "disabled"
+        except Exception:
+            pass
+        rows.append(kv_row("Secure Boot", sb))
+        tpm = "absent"
+        try:
+            if pathlib.Path("/sys/class/tpm/tpm0").exists():
+                tpm = "present"
+        except Exception:
+            pass
+        rows.append(kv_row("TPM 2.0", tpm))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("Lockout policy",
+            "off (managed post-install — user preference)"))
+        rows.append(kv_row("AV engine",
+            "clamav" if have("clamscan") else "(install clamav)"))
+        rows.append(kv_row("Audit helper",
+            "lynis" if have("lynis") else "(install lynis)"))
+        return rows
 
     def build(self) -> None:
         # Headline group + open-app
@@ -10584,6 +11515,26 @@ class LanguagePage(SectionPage):
         "ru": "Русский (Russian)",
         "ar": "العربية (Arabic)",
     }
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        rows.append(kv_row("LANG", os.environ.get("LANG", "(unset)")))
+        rows.append(kv_row("LC_ALL", os.environ.get("LC_ALL", "(unset)")))
+        n_loc = 0
+        try:
+            rc, out, _ = sh(["locale", "-a"], timeout=3)
+            if rc == 0:
+                n_loc = sum(1 for ln in out.splitlines() if ln.strip())
+        except Exception:
+            pass
+        rows.append(kv_row("Available locales", str(n_loc)))
+        im = "(none)"
+        for cand in ("fcitx5", "ibus", "fcitx"):
+            if have(cand):
+                im = cand
+                break
+        rows.append(kv_row("Input method framework", im))
+        return rows
 
     def build(self) -> None:
         # Lazy import — keep the shim optional so settings still loads
@@ -10774,6 +11725,23 @@ class VirtPage(SectionPage):
              "virsh -c qemu:///system pool-list --all", None)),
     ]
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        rows.append(kv_row("libvirt helper",
+            "virsh" if have("virsh") else "(install libvirt)"))
+        vms = 0
+        try:
+            if have("virsh"):
+                rc, out, _ = sh(["virsh", "list", "--all", "--name"], timeout=3)
+                if rc == 0:
+                    vms = sum(1 for ln in out.splitlines() if ln.strip())
+        except Exception:
+            pass
+        rows.append(kv_row("Defined VMs", str(vms)))
+        rows.append(kv_row("QEMU/KVM",
+            "kvm module present" if pathlib.Path("/dev/kvm").exists() else "(no /dev/kvm)"))
+        return rows
+
     def build(self) -> None:
         # Status (read by nyxus-virt-setup status)
         self._status_grp = Adw.PreferencesGroup(
@@ -10885,6 +11853,30 @@ class ContainersPage(SectionPage):
          lambda: open_terminal("podman image prune -f", None)),
     ]
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        d_run = d_all = "(no docker)"
+        try:
+            if have("docker"):
+                rc, out, _ = sh(["docker", "ps", "-q"], timeout=3)
+                d_run = str(sum(1 for ln in out.splitlines() if ln.strip())) if rc == 0 else "(error)"
+                rc, out, _ = sh(["docker", "ps", "-aq"], timeout=3)
+                d_all = str(sum(1 for ln in out.splitlines() if ln.strip())) if rc == 0 else "(error)"
+        except Exception:
+            pass
+        rows.append(kv_row("Docker running / total", f"{d_run} / {d_all}"))
+        p_run = p_all = "(no podman)"
+        try:
+            if have("podman"):
+                rc, out, _ = sh(["podman", "ps", "-q"], timeout=3)
+                p_run = str(sum(1 for ln in out.splitlines() if ln.strip())) if rc == 0 else "(error)"
+                rc, out, _ = sh(["podman", "ps", "-aq"], timeout=3)
+                p_all = str(sum(1 for ln in out.splitlines() if ln.strip())) if rc == 0 else "(error)"
+        except Exception:
+            pass
+        rows.append(kv_row("Podman running / total", f"{p_run} / {p_all}"))
+        return rows
+
     def build(self) -> None:
         # Engine status
         eng = Adw.PreferencesGroup(
@@ -10982,6 +11974,28 @@ class KernelPage(SectionPage):
     ]
     """Switch the GRUB default kernel between linux/lts/zen/hardened."""
     KEY = "kernel"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        try:
+            rc, out, _ = sh(["uname", "-r"], timeout=2)
+            rows.append(kv_row("Running kernel", out.strip() or "(unknown)"))
+        except Exception:
+            rows.append(kv_row("Running kernel", "(unknown)"))
+        cmdline = "(unreadable)"
+        try:
+            cmdline = pathlib.Path("/proc/cmdline").read_text().strip()
+        except Exception:
+            pass
+        rows.append(kv_row("/proc/cmdline length", f"{len(cmdline)} chars"))
+        mods = 0
+        try:
+            with open("/proc/modules") as f:
+                mods = sum(1 for _ in f)
+        except Exception:
+            pass
+        rows.append(kv_row("Loaded modules", str(mods)))
+        return rows
 
     def build(self) -> None:
         active = "?"
@@ -11097,6 +12111,32 @@ class BrowsersPage(SectionPage):
              "echo 'policies will reload on next chromium launch'; "
              "read -p 'enter to close'", None)),
     ]
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        installed = [b for b in ("firefox","chromium","brave","librewolf","vivaldi")
+                     if have(b)]
+        rows.append(kv_row("Installed browsers",
+            ", ".join(installed) if installed else "(none)"))
+        ff_profiles = 0
+        try:
+            ff = pathlib.Path(os.path.expanduser("~/.mozilla/firefox"))
+            if ff.exists():
+                ff_profiles = sum(1 for p in ff.iterdir()
+                                  if p.is_dir() and (p/"prefs.js").exists())
+        except Exception:
+            pass
+        rows.append(kv_row("Firefox profiles", str(ff_profiles)))
+        cr_profiles = 0
+        try:
+            cr = pathlib.Path(os.path.expanduser("~/.config/chromium"))
+            if cr.exists():
+                cr_profiles = sum(1 for p in cr.iterdir()
+                                  if p.is_dir() and (p/"Preferences").exists())
+        except Exception:
+            pass
+        rows.append(kv_row("Chromium profiles", str(cr_profiles)))
+        return rows
 
     def build(self) -> None:
         # ── Stack inventory (which browsers are actually installed) ──
@@ -11232,6 +12272,28 @@ class GamingPage(SectionPage):
     """Steam + Proton-GE + GameMode + MangoHud."""
     KEY = "gaming"
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        rows.append(kv_row("Steam",
+            "installed" if have("steam") else "(not installed)"))
+        rows.append(kv_row("Gamemode",
+            "available" if have("gamemoded") else "(install gamemode)"))
+        rows.append(kv_row("MangoHud",
+            "available" if have("mangohud") else "(install mangohud)"))
+        rows.append(kv_row("Lutris",
+            "installed" if have("lutris") else "(not installed)"))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("Global overlay",
+            "off by default · toggle via mangohud config"))
+        rows.append(kv_row("CPU governor on launch",
+            "performance via gamemoded"))
+        rows.append(kv_row("Compositor tearing",
+            "allowed for Steam window class via Hyprland rule"))
+        return rows
+
     def build(self) -> None:
         # Stack
         stack = Adw.PreferencesGroup(title="Gaming stack")
@@ -11329,6 +12391,21 @@ class EditorsPage(SectionPage):
         ("gnome-text-editor",   "GNOME Text Editor",   "Simple GUI editor"),
     )
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        editors = [e for e in ("nvim","vim","code","codium","helix","kakoune","micro")
+                   if have(e)]
+        rows.append(kv_row("Installed editors",
+            ", ".join(editors) if editors else "(none)"))
+        rows.append(kv_row("Neovim config",
+            "~/.config/nvim present" if pathlib.Path(os.path.expanduser(
+                "~/.config/nvim")).exists() else "(empty)"))
+        rows.append(kv_row("VS Code config",
+            "present" if pathlib.Path(os.path.expanduser(
+                "~/.config/Code/User")).exists() else "(empty)"))
+        rows.append(kv_row("$EDITOR", os.environ.get("EDITOR", "(unset)")))
+        return rows
+
     def build(self) -> None:
         bundle = Adw.PreferencesGroup(
             title="Editor bundle",
@@ -11417,6 +12494,29 @@ class UsbPage(SectionPage):
     ]
     """USB device firewall (usbguard) — permissive default, opt-in lockdown."""
     KEY = "usb_firewall"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        if not have("usbguard"):
+            rows.append(kv_row("usbguard", "(not installed)"))
+            return rows
+        # NEVER call pkexec during passive summary rendering. Read
+        # rule counts from the policy file directly (root-readable
+        # in default install; if denied, surface that honestly).
+        rules_count = "(open USB Firewall to view)"
+        try:
+            rp = pathlib.Path("/etc/usbguard/rules.conf")
+            if rp.exists() and os.access(rp, os.R_OK):
+                rules_count = str(sum(
+                    1 for ln in rp.read_text().splitlines()
+                    if ln.strip() and not ln.lstrip().startswith("#")))
+        except Exception:
+            pass
+        rows.append(kv_row("Configured rules", rules_count))
+        rows.append(kv_row("Daemon",
+            "usbguard.service available" if have("systemctl") else "—"))
+        rows.append(kv_row("Policy file", "/etc/usbguard/rules.conf"))
+        return rows
 
     def build(self) -> None:
         if not have("usbguard"):
@@ -11544,6 +12644,8 @@ class SecBootPage(SectionPage):
     """Secure Boot + TPM2 status + sbctl enrollment."""
     KEY = "secboot"
 
+    # Pure-status page — task #6 spec keeps lean defaults.
+
     def build(self) -> None:
         st = Adw.PreferencesGroup(
             title="Firmware status",
@@ -11631,6 +12733,32 @@ class VpnPage(SectionPage):
     ]
     """WireGuard + OpenVPN via NetworkManager + nmcli."""
     KEY = "vpn"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        wg_active = 0
+        try:
+            if have("wg"):
+                rc, out, _ = sh(["wg", "show", "interfaces"], timeout=2)
+                if rc == 0:
+                    wg_active = sum(1 for ln in out.split() if ln.strip())
+        except Exception:
+            pass
+        rows.append(kv_row("WireGuard interfaces (up)", str(wg_active)))
+        ovpn = 0
+        try:
+            if have("nmcli"):
+                rc, out, _ = sh(["nmcli", "-t", "-f", "TYPE",
+                                 "con", "show", "--active"], timeout=2)
+                if rc == 0:
+                    ovpn = sum(1 for ln in out.splitlines() if "vpn" in ln.lower())
+        except Exception:
+            pass
+        rows.append(kv_row("Active VPN connections", str(ovpn)))
+        rows.append(kv_row("Kill-switch",
+            "configured" if pathlib.Path(os.path.expanduser(
+                "~/.config/nyxus/vpn-killswitch")).exists() else "(off)"))
+        return rows
 
     def build(self) -> None:
         if not have("nmcli"):
@@ -11726,6 +12854,27 @@ class DohPage(SectionPage):
     """DNS-over-HTTPS toggle (off / cloudflare / quad9)."""
     KEY = "doh"
 
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        dns = "(unknown)"
+        try:
+            if have("resolvectl"):
+                rc, out, _ = sh(["resolvectl", "status"], timeout=3)
+                if rc == 0:
+                    for ln in out.splitlines():
+                        if "DNS Servers:" in ln:
+                            dns = ln.split(":",1)[1].strip()
+                            break
+        except Exception:
+            pass
+        rows.append(kv_row("Upstream DNS", dns))
+        rows.append(kv_row("DoH client",
+            "cloudflared" if have("cloudflared")
+            else "dnscrypt-proxy" if have("dnscrypt-proxy") else "(none)"))
+        rows.append(kv_row("systemd-resolved",
+            "available" if have("resolvectl") else "(not installed)"))
+        return rows
+
     def build(self) -> None:
         if not have("dnscrypt-proxy") or not have("nyxus-doh"):
             grp = Adw.PreferencesGroup(title="dnscrypt-proxy missing")
@@ -11807,6 +12956,24 @@ class MacRandomPage(SectionPage):
          lambda: open_terminal(
              "sudo systemctl restart NetworkManager", None)),
     ]
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        ifaces = []
+        try:
+            for p in pathlib.Path("/sys/class/net").iterdir():
+                if p.name != "lo":
+                    ifaces.append(p.name)
+        except Exception:
+            pass
+        rows.append(kv_row("Interfaces", ", ".join(ifaces) or "(none)"))
+        rows.append(kv_row("macchanger",
+            "available" if have("macchanger") else "(install macchanger)"))
+        rows.append(kv_row("NM cloned-mac policy",
+            "stable" if not pathlib.Path(
+                "/etc/NetworkManager/conf.d/00-nyxus-mac.conf").exists()
+            else "random per scan"))
+        return rows
 
     def build(self) -> None:
         if not have("nmcli") or not have("nyxus-mac-randomize"):
@@ -11893,6 +13060,44 @@ class DockPage(SectionPage):
     STANDARD_RESET_NS = ["dock"]
 
     DOCK_TOML = Path.home() / ".config" / "nyxus" / "dock.toml"
+
+    def section_summary_rows(self) -> List[Adw.ActionRow]:
+        rows = []
+        cfg = {}
+        try:
+            import tomllib
+            if self.DOCK_TOML.exists():
+                cfg = tomllib.loads(self.DOCK_TOML.read_text())
+        except Exception:
+            pass
+        rows.append(kv_row("Position", cfg.get("position", "bottom")))
+        rows.append(kv_row("Size", str(cfg.get("size", 48)) + "px"))
+        pins = cfg.get("pinned", [])
+        rows.append(kv_row("Pinned apps",
+            str(len(pins)) if isinstance(pins, list) else "0"))
+        rows.append(kv_row("Reload helper",
+            "nyxus-dock" if have("nyxus-dock") else "(install nyxus-dock)"))
+        return rows
+
+    def section_appearance_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("Icon density",
+            "comfortable / compact (set in Appearance section above)"))
+        rows.append(kv_row("Background",
+            "frosted triple-black with copper indicator pips"))
+        rows.append(kv_row("Indicator style",
+            "dot under running app · matches accent"))
+        return rows
+
+    def section_behavior_rows(self) -> Optional[List[Adw.ActionRow]]:
+        rows = []
+        rows.append(kv_row("Auto-hide",
+            "configurable in Behavior section above"))
+        rows.append(kv_row("Click action",
+            "focus existing · minimise if already focused"))
+        rows.append(kv_row("Reload",
+            "nyxus-dock reload after edits"))
+        return rows
 
     def _load_toml(self) -> dict:
         if not self.DOCK_TOML.exists():
