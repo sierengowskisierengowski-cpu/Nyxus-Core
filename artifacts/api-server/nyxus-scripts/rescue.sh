@@ -99,7 +99,7 @@ for s in audio battery bluetooth brightness calendar cpu-bars mic network \
 done
 
 # ── 6. Required packages (no-op if already installed).
-sudo pacman -S --noconfirm --needed hyprland hyprlock hypridle eww-wayland \
+sudo pacman -S --noconfirm --needed hyprland hyprlock hypridle eww \
      swww swaybg grim slurp wl-clipboard hyprshot alacritty kitty rofi-wayland \
      dunst wlogout playerctl nm-connection-editor sddm qt6-svg qt6-declarative \
      qt6-virtualkeyboard \
