@@ -29,10 +29,7 @@
 ;; time so eww only redraws when something actually changes, which
 ;; preserves the smooth horizontal scroll. The chain is doubled inside
 ;; the script so the loop seam is invisible.
-;; rev 2026-05-16: ticker scroll is now SCRIPT-DRIVEN (ticker.sh shifts
-;; the substring window each call). Poll interval 150ms gives ~13 chars/s
-;; horizontal scroll. CSS @keyframes are no longer used for marquee.
-(defpoll TICKER     :interval "150ms" :initial '{"text":"NYXUS · ECLIPSE · LIVE     ▌ STARTING SYSTEM PROBES …","tooltip":"NYXUS"}'
+(defpoll TICKER     :interval "30s"  :initial '{"text":"NYXUS · ECLIPSE · LIVE     ▌ STARTING SYSTEM PROBES …     NYXUS · ECLIPSE · LIVE     ▌ STARTING SYSTEM PROBES …","tooltip":"NYXUS"}'
                                      "~/.config/eww/scripts/ticker.sh")
 (defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0}'
                                      "~/.config/eww/scripts/sys-pulse.sh")
