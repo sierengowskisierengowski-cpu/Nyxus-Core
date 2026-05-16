@@ -744,12 +744,25 @@ if grep -q '"loginscreen":' "${NS}/nyxus_settings.py" \
 else
   fail "Settings: loginscreen not registered or LoginScreenPage missing"
 fi
-# Required runtime packages — sddm itself + python3 (used by helper).
-for pkg in sddm; do
+# Required runtime packages — greetd + tuigreet (display manager for live ISO).
+for pkg in greetd tuigreet; do
   grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
     && ok "package: ${pkg}" \
     || fail "missing package: ${pkg}"
 done
+# Ensure SDDM is not present (greetd is the sole display manager).
+if grep -Eq "^sddm\$" "${PROFILE}/packages.x86_64"; then
+  fail "conflicting package: sddm must not be listed when greetd is chosen"
+else
+  ok "sddm absent (greetd is sole display manager)"
+fi
+# greetd config.toml must be present.
+GREETD_CONF="${AIROOT}/etc/greetd/config.toml"
+if [[ -f "${GREETD_CONF}" ]]; then
+  ok "greetd config.toml present"
+else
+  fail "greetd config.toml missing: ${GREETD_CONF}"
+fi
 
 # ── 13q. Tier 1 · Plymouth boot splash (rev 2026-05-14) ────────────
 hd "13q. Tier 1 · Plymouth boot splash"

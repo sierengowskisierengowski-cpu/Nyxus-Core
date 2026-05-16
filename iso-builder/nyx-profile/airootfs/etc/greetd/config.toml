@@ -1,0 +1,22 @@
+# ============================================
+# NYXUS — greetd configuration
+# Copyright © 2026 Joseph Sierengowski
+# All Rights Reserved
+# NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+#
+# greetd is the sole display manager for the NYX live ISO session.
+# tuigreet is used as the greeter with auto-login to the `nyx` user,
+# launching directly into Hyprland on the Wayland compositor.
+# SDDM and all other display managers must NOT be active alongside this.
+
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --time --remember --remember-session --sessions /usr/share/wayland-sessions"
+user = "greeter"
+
+[initial_session]
+command = "Hyprland"
+user = "nyx"
