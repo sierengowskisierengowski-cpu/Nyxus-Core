@@ -121,3 +121,8 @@ Last updated: 2026-05-13 (rev r10)
   tunables via `parse_tunables`)
 - ✅ Night Light (gammastep wrapper + Settings toggles)
 - ✅ Dynamic Wallpaper (time-of-day rotator with sunset/sunrise)
+
+
+---
+
+© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

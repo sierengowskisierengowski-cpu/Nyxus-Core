@@ -30,3 +30,8 @@ This directory contains the canonical project documentation for system scope, ar
 - **NYXUS** = OS/platform/application ecosystem
 
 This naming is enforced throughout repository documentation.
+
+
+---
+
+© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
