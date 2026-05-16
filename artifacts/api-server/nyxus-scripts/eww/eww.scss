@@ -79,10 +79,14 @@ $font-hand:      "Caveat", "Caveat Brush", "Comic Neue", cursive;
 $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
                  "Cascadia Code", "DejaVu Sans Mono", monospace;
 
-/* Marquee animation for the top-bar ticker (smooth scroll). */
+/* Marquee animation for the top-bar ticker (smooth scroll).
+ * GTK3 CSS does NOT compute percentage margins against parent width
+ * (unlike browser CSS) so the animation must use pixel values.
+ * 2400px covers screen widths up to 4K — text fully off-frame on both
+ * ends so the loop seam is invisible. */
 @keyframes nyx-marquee {
-  from { margin-left:  100%; }
-  to   { margin-left: -100%; }
+  from { margin-left:  2400px; }
+  to   { margin-left: -2400px; }
 }
 
 * {
