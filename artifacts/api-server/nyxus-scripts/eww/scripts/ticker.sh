@@ -34,8 +34,13 @@ if [[ -r $UPDATER_PID ]]; then
     need_spawn=0
   fi
 fi
-if (( need_spawn )) && [[ -x $UPDATER_BIN ]]; then
-  nohup "$UPDATER_BIN" >/dev/null 2>&1 &
+if (( need_spawn )) && [[ -r $UPDATER_BIN ]]; then
+  # Invoked via `bash` so a missing +x bit on the file (which can
+  # happen on first download / cross-platform sync) does not stop
+  # the updater from running. Best-effort chmod for direct exec
+  # by other tooling.
+  chmod +x "$UPDATER_BIN" 2>/dev/null || true
+  nohup bash "$UPDATER_BIN" >/dev/null 2>&1 &
   echo $! > "$UPDATER_PID"
 fi
 
