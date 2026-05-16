@@ -306,23 +306,29 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
     0 12px 40px rgba(0, 0, 0, 0.55),
     inset 0 0 20px rgba(244, 234, 213, 0.05);
 }
+button.ws-pill,
 .ws-pill {
   min-width: 36px;
   min-height: 36px;
   border-radius: 3px;
-  background: rgba(17, 21, 31, 0.55);
+  background-image: none;
+  background-color: rgba(17, 21, 31, 0.55);
   border: 1px solid rgba(244, 234, 213, 0.10);
+  box-shadow: none;
   color: #7a8298;
   font-weight: 700;
   font-size: 13px;
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
+button.ws-pill:hover,
 .ws-pill:hover {
-  background: rgba(244, 234, 213, 0.14);
+  background-image: none;
+  background-color: rgba(244, 234, 213, 0.14);
   color: #f4ead5;
 }
+button.ws-pill-active,
 .ws-pill-active {
-  background: linear-gradient(135deg, #b8865a, #f4ead5);
+  background-image: linear-gradient(135deg, #b8865a, #f4ead5);
   color: #000000;
   border-color: rgba(184, 134, 90, 0.78);
   box-shadow: 0 0 18px rgba(184, 134, 90, 0.55),
@@ -340,19 +346,29 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
     0 12px 40px rgba(0, 0, 0, 0.55),
     inset 0 0 20px rgba(244, 234, 213, 0.05);
 }
+/* GTK3 NOTE: bare `.app-pill` doesn't override the system GTK button
+   theme (Adwaita's white-gradient fills) because eww's `* { all: unset }`
+   is incomplete in GTK3 — button widgets retain their default
+   background-image and box-shadow. We force a higher-specificity
+   selector + explicit `background-image: none` + `box-shadow: none`
+   to fully strip the GTK chrome. Same pattern is needed for .ws-pill. */
+button.app-pill,
 .app-pill {
   min-width: 38px;
   min-height: 38px;
   border-radius: 3px;
-  background: rgba(17, 21, 31, 0.55);
+  background-image: none;
+  background-color: rgba(17, 21, 31, 0.55);
   border: 1px solid rgba(244, 234, 213, 0.10);
+  box-shadow: none;
   color: #c8ccd6;
   font-family: "JetBrains Mono Nerd Font", monospace;
   font-size: 16px;
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
+button.app-pill:hover,
 .app-pill:hover {
-  background: linear-gradient(135deg,
+  background-image: linear-gradient(135deg,
     rgba(244, 234, 213, 0.22),
     rgba(244, 234, 213, 0.12));
   border-color: rgba(244, 234, 213, 0.55);
