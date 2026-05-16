@@ -67,6 +67,24 @@ install  -Dm644 /tmp/eclipse.png ~/.config/hypr/walls/nyxus-bg-eclipse.png
 echo "WALLPAPER_PATH=\"/usr/share/backgrounds/nyxus/nyxus-eclipse-horizon.png\"" \
      > ~/.config/nyxus/wallpaper.conf
 
+# ── 4b. Rofi launcher configs (Super+D start menu, Super+Tab window switcher).
+mkdir -p ~/.config/rofi
+for f in rofi-config.rasi rofi-nyxus.rasi rofi-startmenu.rasi; do
+  curl -fsSL "$N/$f" -o ~/.config/rofi/${f#rofi-} 2>/dev/null && echo "  ok  rofi/${f#rofi-}"
+done
+# Also expose under the names the keybinds use.
+[ -f ~/.config/rofi/startmenu.rasi ] || cp ~/.config/rofi/config.rasi ~/.config/rofi/startmenu.rasi 2>/dev/null
+
+# ── 4c. SDDM theme (NYXUS Eclipse login screen).
+curl -fsSL "$N/nyxus-sddm-theme.tar.gz" -o /tmp/nyxus-sddm.tar.gz 2>/dev/null
+if [ -s /tmp/nyxus-sddm.tar.gz ]; then
+  sudo mkdir -p /usr/share/sddm/themes/nyxus
+  sudo tar xzf /tmp/nyxus-sddm.tar.gz -C /usr/share/sddm/themes/nyxus
+  sudo mkdir -p /etc/sddm.conf.d
+  echo -e "[Theme]\nCurrent=nyxus" | sudo tee /etc/sddm.conf.d/10-nyxus-theme.conf >/dev/null
+  echo "  ok  sddm theme installed (nyxus)"
+fi
+
 # ── 5. EWW shell (top bar + dashboard + OSDs).
 curl -fsSL "$N/eww/eww.yuck"   -o ~/.config/eww/eww.yuck
 curl -fsSL "$N/eww/eww.scss"   -o ~/.config/eww/eww.scss
