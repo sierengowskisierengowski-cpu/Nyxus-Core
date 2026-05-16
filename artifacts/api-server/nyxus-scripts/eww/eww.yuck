@@ -29,7 +29,12 @@
 ;; time so eww only redraws when something actually changes, which
 ;; preserves the smooth horizontal scroll. The chain is doubled inside
 ;; the script so the loop seam is invisible.
-(defpoll TICKER     :interval "30s"  :initial '{"text":"NYXUS · ECLIPSE · LIVE     ▌ STARTING SYSTEM PROBES …     NYXUS · ECLIPSE · LIVE     ▌ STARTING SYSTEM PROBES …","tooltip":"NYXUS"}'
+;; rev 2026-05-16 r19: ticker scroll is now SCRIPT-DRIVEN. ticker.sh
+;; maintains its own offset in /tmp and emits a shifted substring each
+;; call. Poll at 500ms = ~6 chars/sec smooth horizontal scroll. Live
+;; notifications are pulled from /tmp/nyxus-notifications.log (any app
+;; can append a line; the ticker injects the most recent 5).
+(defpoll TICKER     :interval "500ms" :initial '{"text":"NYXUS · ECLIPSE · LIVE · STARTING SYSTEM PROBES …","tooltip":"NYXUS"}'
                                      "~/.config/eww/scripts/ticker.sh")
 (defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0}'
                                      "~/.config/eww/scripts/sys-pulse.sh")
@@ -583,14 +588,13 @@
   :geometry (geometry :x "0" :y "8" :width "96%" :height "40px" :anchor "bottom center")
   (bar_bottom_layout))
 
-;; Slim FLOATING bar (rev 2026-05-14 r17) — exclusive=false so the bar
-;; floats *over* content instead of pushing the workspace down by 26px.
-;; Side-margin via :x 12 + width 98% gives the bar 12px breathing room
-;; on both edges; :y 8 lifts it off the top edge so the rounded corners
-;; in eww.scss read as a discrete chip, not a docked strip.
+;; Slim FLOATING bar (rev 2026-05-16 r18) — Apple-notch / Win11-pill
+;; aesthetic: centered chip, 60% screen width, lifted 10px off the top
+;; edge so rounded corners read as a discrete floating object, not a
+;; docked strip. exclusive=false so the bar floats *over* content.
 (defwindow bar-top
   :monitor 0 :stacking "fg" :exclusive false :namespace "nyxus-bar-top"
-  :geometry (geometry :x "12" :y "8" :width "98%" :height "32px" :anchor "top center")
+  :geometry (geometry :x "0" :y "10" :width "60%" :height "32px" :anchor "top center")
   (bar_top_layout))
 
 (defwindow bar-left
