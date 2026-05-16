@@ -102,7 +102,10 @@ done
 sudo pacman -S --noconfirm --needed hyprland hyprlock hypridle eww-wayland \
      swww swaybg grim slurp wl-clipboard hyprshot alacritty kitty rofi-wayland \
      dunst wlogout playerctl nm-connection-editor sddm qt6-svg qt6-declarative \
-     qt6-virtualkeyboard 2>/dev/null
+     qt6-virtualkeyboard \
+     gtk4 libadwaita python-gobject gobject-introspection \
+     python-pillow python-cairo 2>/dev/null
+echo "  ok  gtk4 + libadwaita + python-gobject (launcher/screenshot deps)"
 
 # ── 6b. SDDM display manager — enable so graphical login comes up on boot.
 sudo systemctl enable sddm 2>/dev/null && echo "  ok  sddm enabled"
