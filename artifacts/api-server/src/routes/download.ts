@@ -53,6 +53,7 @@ const ALLOWED_FILES: Record<string, string> = {
   //   curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/rescue.sh | bash
   // Restores Hyprland + apps + wallpaper + EWW bar without reinstalling.
   "rescue.sh":              "rescue.sh",
+  "deploy.sh":              "deploy.sh",
   // ── ★ ONE-SHOT BARE HYPRLAND (rev 2026-05-15) ───────────────────────────
   // Minimal "give me a working Hyprland + auto-opening kitty terminal +
   // cream wallpaper" setup. No NYXUS configs/apps. Use when the full
