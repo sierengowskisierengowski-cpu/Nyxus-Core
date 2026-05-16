@@ -1076,22 +1076,118 @@ class SectionPage(Adw.Bin):
                 subtitle=str(e)))
             self.add_group(err)
 
+    # ── Golden Rule six-section enforcement ──────────────────────────
+    # Every NYXUS Settings page MUST present six sections, in this order:
+    #   General · Appearance · Behavior · Keybinds · Advanced · Reset
+    # The first three come from the page's own build(); the last three
+    # are auto-appended below. If build() omitted any of {General,
+    # Appearance, Behavior}, an honest default group is injected so the
+    # page still satisfies the contract instead of silently shipping
+    # incomplete. Subclasses can override the inject_* hooks below to
+    # provide a richer default for their feature.
+    GOLDEN_CORE_SECTIONS: Tuple[str, ...] = ("General", "Appearance", "Behavior")
+
+    def _has_group_titled(self, *prefixes: str) -> bool:
+        """True if any tracked group's title starts with one of `prefixes`
+        (case-insensitive). Used to detect whether build() already
+        produced a General / Appearance / Behavior group."""
+        wanted = tuple(p.lower() for p in prefixes)
+        for g in self._tracked_groups:
+            try:
+                t = (g.get_title() or "").strip().lower()
+            except Exception:
+                t = ""
+            if any(t.startswith(w) for w in wanted):
+                return True
+        return False
+
+    def _inject_missing_core_sections(self) -> None:
+        """Inject default General / Appearance / Behavior groups for any
+        section the page's build() didn't already produce, so every page
+        meets the Golden Rule six-section minimum."""
+        if not self._has_group_titled("General"):
+            try:
+                self.add_group(self.inject_default_general_group())
+            except Exception as e:
+                log.warning("inject General for %s: %s", self.section.key, e)
+        if not self._has_group_titled("Appearance", "Look", "Theme"):
+            try:
+                self.add_group(self.inject_default_appearance_group())
+            except Exception as e:
+                log.warning("inject Appearance for %s: %s", self.section.key, e)
+        if not self._has_group_titled("Behavior", "Behaviour"):
+            try:
+                self.add_group(self.inject_default_behavior_group())
+            except Exception as e:
+                log.warning("inject Behavior for %s: %s", self.section.key, e)
+
+    def inject_default_general_group(self) -> Adw.PreferencesGroup:
+        """Honest default General group: identifies the section and links
+        out to global Appearance for cross-cutting changes. Subclasses
+        may override to provide richer summary rows."""
+        grp = Adw.PreferencesGroup(
+            title="General",
+            description=f"Overview of the {self.section.title} section.")
+        grp.add(kv_row("Section",   self.section.title))
+        grp.add(kv_row("Category",  self.section.category or "—"))
+        grp.add(kv_row("Pref key",  self.KEY or self.section.key))
+        return grp
+
+    def inject_default_appearance_group(self) -> Adw.PreferencesGroup:
+        """Honest default Appearance group: this section follows the
+        global NYXUS theme. Subclasses with per-section visual options
+        (accent, density, glyph) should override."""
+        grp = Adw.PreferencesGroup(
+            title="Appearance",
+            description="Visual style for this section follows the global "
+                        "NYXUS theme. Change accent, font scale, or wallpaper "
+                        "in Settings → Appearance.")
+        def _open_appearance() -> None:
+            # SettingsWindow exposes _select_key(key) for programmatic
+            # sidebar navigation. Guarded with hasattr so a future rename
+            # silently no-ops instead of raising AttributeError.
+            fn = getattr(self.win, "_select_key", None)
+            if callable(fn):
+                fn("appearance")
+        grp.add(action_row(
+            "Open global Appearance",
+            "Theme, accent, wallpaper, font scale",
+            "Open",
+            _open_appearance))
+        return grp
+
+    def inject_default_behavior_group(self) -> Adw.PreferencesGroup:
+        """Honest default Behavior group: explicitly tells the user this
+        section has no behavior toggles beyond its General options."""
+        grp = Adw.PreferencesGroup(
+            title="Behavior",
+            description="Runtime behavior for this section is controlled "
+                        "by the options above. No additional behavior "
+                        "flags ship with this page.")
+        grp.add(empty_row(
+            "No additional behavior options",
+            "Behavior for this section is fully expressed by the General "
+            "and Appearance options above."))
+        return grp
+
     # ── Settings Completeness Standard footer ─────────────────────────
     def _append_standard_footer(self) -> None:
-        """Append Keybinds + Reset + Advanced groups so every page
-        meets the minimum Standard. Subclasses control content via
-        class attributes (STANDARD_KEYBIND_TOKENS / STANDARD_RESET_NS
-        / STANDARD_ADVANCED) and may override standard_extra_reset()
-        for non-prefs cleanup."""
+        """Append Keybinds + Advanced + Reset groups so every page meets
+        the Golden Rule six-section minimum. First runs
+        _inject_missing_core_sections() to backfill any of General /
+        Appearance / Behavior that build() skipped. Subclasses control
+        keybinds/reset/advanced content via the STANDARD_* class
+        attributes."""
         try:
+            self._inject_missing_core_sections()
             self.add_group(make_keybinds_group(
                 self, self.STANDARD_KEYBIND_TOKENS))
+            self.add_group(make_advanced_group(
+                list(self.standard_advanced_rows())))
             self.add_group(make_reset_group(
                 self,
                 pref_namespaces=list(self.STANDARD_RESET_NS),
                 extra_reset=self.standard_extra_reset))
-            self.add_group(make_advanced_group(
-                list(self.standard_advanced_rows()), page=self))
         except Exception as e:
             log.warning("standard footer for %s: %s", self.section.key, e)
 
