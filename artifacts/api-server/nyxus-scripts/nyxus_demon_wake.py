@@ -221,10 +221,13 @@ class JumpscareWindow(Gtk.ApplicationWindow):
             pic.set_vexpand(True)
             self.set_child(pic)
         else:
-            placeholder = Gtk.Label(label="\u2620")
-            placeholder.set_hexpand(True)
-            placeholder.set_vexpand(True)
-            self.set_child(placeholder)
+            # Asset missing — fall back to a triple-black blackout pane
+            # (no glyphs, no placeholder text). The fade-out still runs so
+            # the resume path stays consistent: brief blackout, then reveal.
+            blackout = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+            blackout.set_hexpand(True)
+            blackout.set_vexpand(True)
+            self.set_child(blackout)
 
         self._opacity = 1.0
         self.set_opacity(1.0)

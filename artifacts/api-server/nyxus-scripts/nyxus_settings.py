@@ -6094,14 +6094,42 @@ class AccessibilityPage(SectionPage):
             motion.add(empty_row("hyprctl not found",
                                   "Animation toggle requires Hyprland"))
 
-        # High contrast — locked off per DARK MIRROR contract
+        # High contrast — real GNOME a11y schema toggle. DARK MIRROR
+        # still owns the wallpaper/window-decoration palette; this
+        # flips the GTK high-contrast variant for legibility-critical
+        # workflows. Persisted via gsettings so it survives reboot and
+        # is honored by every GTK app, not just Settings.
         contrast = Adw.PreferencesGroup(
             title="Contrast",
-            description="DARK MIRROR locks the visual theme; system high "
-                        "contrast is intentionally disabled. Use text "
-                        "scale and cursor size instead.")
+            description="High-contrast GTK theme variant for legibility. "
+                        "DARK MIRROR wallpaper and chrome are unchanged.")
         self.add_group(contrast)
-        contrast.add(kv_row("System theme", "DARK MIRROR (locked)"))
+        if have("gsettings"):
+            rc_hc, hc_out, _ = sh(
+                ["gsettings", "get",
+                 "org.gnome.desktop.a11y.interface", "high-contrast"],
+                timeout=2)
+            hc_active = (rc_hc == 0 and "true" in (hc_out or "").lower())
+            hc_row = Adw.SwitchRow(
+                title="High-contrast theme",
+                subtitle="Forces the high-contrast GTK variant for all apps")
+            hc_row.set_active(hc_active)
+            hc_row.connect(
+                "notify::active",
+                lambda s, _p: sh_async(
+                    ["gsettings", "set",
+                     "org.gnome.desktop.a11y.interface", "high-contrast",
+                     "true" if s.get_active() else "false"],
+                    lambda r: self.toast(
+                        "high-contrast on" if s.get_active()
+                        else "high-contrast off")
+                    if r[0] == 0 else self.toast("gsettings failed"),
+                    timeout=3))
+            contrast.add(hc_row)
+        else:
+            contrast.add(empty_row(
+                "High-contrast theme",
+                "gsettings not installed — install gsettings-desktop-schemas"))
 
         # Pointers to assistive tools — launch on demand
         tools = Adw.PreferencesGroup(title="Assistive tools")

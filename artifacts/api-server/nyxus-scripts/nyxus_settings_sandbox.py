@@ -199,11 +199,44 @@ class SandboxPanel(Gtk.Box):
 
         apps = list_installed()
         if not apps:
-            placeholder = Adw.ActionRow(
+            row = Adw.ActionRow(
                 title="No flatpak apps installed",
-                subtitle="Install an app from NYXUS Store to manage its permissions here.",
+                subtitle=(
+                    "Open NYXUS Store to install apps, or refresh after "
+                    "installing one from the command line."
+                ),
             )
-            self.list.append(placeholder)
+            store = Gtk.Button(label="Open NYXUS Store")
+            store.set_valign(Gtk.Align.CENTER)
+            store.add_css_class("pill")
+            store.add_css_class("suggested-action")
+
+            def _open_store(_b: Gtk.Button) -> None:
+                for argv in (
+                    ["nyxus-store"],
+                    ["xdg-open", "appstream://org.nyxus.Store"],
+                    ["xdg-open", "https://flathub.org"],
+                ):
+                    if argv[0] == "xdg-open" or shutil.which(argv[0]):
+                        try:
+                            subprocess.Popen(
+                                argv,
+                                stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL,
+                            )
+                            return
+                        except Exception as exc:  # pragma: no cover
+                            log.warning("store launch %s: %s", argv, exc)
+                self.banner.set_label("No store launcher found")
+
+            store.connect("clicked", _open_store)
+            row.add_suffix(store)
+            refresh = Gtk.Button(label="Refresh")
+            refresh.set_valign(Gtk.Align.CENTER)
+            refresh.add_css_class("pill")
+            refresh.connect("clicked", lambda _b: self.refresh())
+            row.add_suffix(refresh)
+            self.list.append(row)
             return
 
         for app in apps:

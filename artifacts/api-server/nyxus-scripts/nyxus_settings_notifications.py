@@ -141,11 +141,29 @@ class NotificationsPanel(Gtk.Box):
         if not ok:
             self.banner.set_label(
                 f"Could not read swaync history: {payload}")
-            placeholder = Adw.ActionRow(
-                title="No history yet",
-                subtitle="Notifications will appear here once swaync receives any.",
+            row = Adw.ActionRow(
+                title="swaync history unavailable",
+                subtitle=payload or "swaync-client did not respond",
             )
-            self.list.append(placeholder)
+            retry = Gtk.Button(label="Retry")
+            retry.set_valign(Gtk.Align.CENTER)
+            retry.add_css_class("pill")
+            retry.connect("clicked", lambda _b: self.refresh())
+            row.add_suffix(retry)
+            open_log = Gtk.Button(label="Open log")
+            open_log.set_valign(Gtk.Align.CENTER)
+            open_log.add_css_class("pill")
+            log_path = str(LOG_DIR / "notifications.log")
+            open_log.connect(
+                "clicked",
+                lambda _b: subprocess.Popen(
+                    ["xdg-open", log_path],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                ),
+            )
+            row.add_suffix(open_log)
+            self.list.append(row)
             return
 
         try:

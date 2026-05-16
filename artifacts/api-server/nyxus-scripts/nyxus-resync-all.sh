@@ -597,7 +597,7 @@ if curl -fsSL --max-time 30 "$PROD/nyxus-demon.png" -o "$DEMON_DST.new"; then
   chmod 644 "$DEMON_DST"
   ok "wrote $DEMON_DST ($(stat -c%s "$DEMON_DST" 2>/dev/null || echo "?") bytes)"
 else
-  fail "could not download nyxus-demon.png — demon wake will show ☠ glyph fallback"
+  fail "could not download nyxus-demon.png — demon wake will fall back to a silent blackout pane"
 fi
 
 # 4e. /usr/local/bin wrappers so hypridle on-timeout/on-resume can find them
@@ -940,7 +940,7 @@ done
 if [[ -f "$DEMON_DST" ]]; then
   ok "$DEMON_DST present ($(stat -c%s "$DEMON_DST" 2>/dev/null || echo "?") bytes)"
 else
-  warn "$DEMON_DST missing — jumpscare will fall back to ☠ glyph"
+  warn "$DEMON_DST missing — jumpscare will fall back to a silent blackout pane"
 fi
 
 # Hypridle running
