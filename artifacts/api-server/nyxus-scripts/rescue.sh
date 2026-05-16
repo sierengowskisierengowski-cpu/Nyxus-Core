@@ -118,10 +118,18 @@ if ! command -v eww >/dev/null 2>&1; then
     sudo pacman -S --noconfirm --needed rust cargo pkgconf base-devel \
          glib2 gtk3 gtk-layer-shell pango gdk-pixbuf2 cairo \
          libdbusmenu-gtk3 2>/dev/null
+    # NOTE: --no-default-features avoids broken dbusmenu-glib systray dep
+    # (incompatible with current Arch glib2). NYXUS bar uses its own
+    # custom audio/wifi/bt widgets — no systray needed.
     cargo install eww --git https://github.com/elkowar/eww \
-          --features wayland --root /usr/local 2>/dev/null \
+          --no-default-features --features wayland \
+          --root /usr/local 2>/dev/null \
       || cargo install eww --git https://github.com/elkowar/eww \
-          --features wayland --root "$HOME/.local"
+          --no-default-features --features wayland \
+          --root "$HOME/.local"
+    # Symlink so plain `eww` works even when installed under ~/.local
+    [ -x "$HOME/.local/bin/eww" ] && [ ! -e /usr/local/bin/eww ] && \
+      sudo ln -sf "$HOME/.local/bin/eww" /usr/local/bin/eww 2>/dev/null
   fi
   command -v eww >/dev/null 2>&1 \
     && echo "  ok  eww installed: $(eww --version 2>&1 | head -1)" \
