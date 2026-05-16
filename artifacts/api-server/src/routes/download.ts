@@ -538,12 +538,13 @@ router.get("/download/nyxus/iso-source.tar.gz", (_req, res) => {
 //   false` so the user-scope installer skips them. A future root
 //   installer can pick them up using the same manifest.
 //
-//   The manifest endpoint walks the filesystem rather than the
-//   ALLOWED_FILES allowlist, so every file under dist/nyxus-scripts/
-//   ships automatically without an allowlist edit. The file-fetch
-//   route below honours the manifest by serving any path under
-//   SCRIPTS_DIR (with a strict path-traversal guard) in addition to
-//   the explicit ALLOWED_FILES entries.
+//   The manifest enumerates every entry in ALLOWED_FILES (the curated
+//   set above) and pairs each with an install plan from _planInstall().
+//   The file-fetch route below additionally serves any path under
+//   SCRIPTS_DIR via a path-traversal-guarded filesystem fallback, so
+//   raw asset fetches (wallpapers, etc.) work for ad-hoc clients —
+//   but the one-shot installer's scope is intentionally limited to
+//   ALLOWED_FILES so the surface ships only what's been audited.
 // ═══════════════════════════════════════════════════════════════════════════
 
 // Compute the install target + mode for a given source path under
