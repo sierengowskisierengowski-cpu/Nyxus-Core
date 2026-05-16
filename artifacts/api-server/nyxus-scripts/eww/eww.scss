@@ -9,9 +9,9 @@
  * glow" feel users have flagged as the signature look.
  * Do not redefine these values elsewhere; reference the variables.
  * ───────────────────────────────────────────────────────────────────── */
-$glass-dark:     rgba(8, 12, 20, 0.55);    /* main panel */
-$glass-deeper:   rgba(15, 20, 32, 0.72);   /* inner sections */
-$glass-deepest:  rgba(5, 7, 12, 0.92);     /* modals / heavy */
+$glass-dark:     rgba(8, 8, 8, 0.72);      /* main panel */
+$glass-deeper:   rgba(8, 8, 8, 0.86);      /* inner sections */
+$glass-deepest:  rgba(8, 8, 8, 0.96);      /* modals / heavy */
 $hairline-white: rgba(255, 255, 255, 0.10);
 $hairline-ink:   rgba(0, 0, 0, 0.45);
 $shadow-active:  rgba(0, 0, 0, 0.65);
@@ -25,13 +25,13 @@ $shadow-rest:    rgba(0, 0, 0, 0.20);
    "alive" states only: active task, focused control, current
    workspace, hover edges, brand. Default text + chrome stay
    monochrome. */
-$gold:           #d4b87a;                  /* primary warm accent */
-$gold-soft:      #e8d4a0;                  /* hover text */
-$gold-deep:      #8a6f3a;                  /* tooltips / dim */
-$gold-glow:      rgba(212, 184, 122, 0.35);
-$gold-edge:      rgba(212, 184, 122, 0.55);
-$gold-bg-soft:   rgba(212, 184, 122, 0.10);
-$gold-bg-active: rgba(212, 184, 122, 0.18);
+$gold:           #7B5EA7;                  /* primary accent */
+$gold-soft:      #C4607A;                  /* hover text */
+$gold-deep:      #8B4040;                  /* tooltips / dim */
+$gold-glow:      rgba(123, 94, 167, 0.35);
+$gold-edge:      rgba(123, 94, 167, 0.55);
+$gold-bg-soft:   rgba(196, 96, 122, 0.10);
+$gold-bg-active: rgba(196, 96, 122, 0.20);
 
 /* Marquee animation for the top-bar ticker (smooth scroll). */
 @keyframes nyx-marquee {
@@ -57,9 +57,9 @@ $gold-bg-active: rgba(212, 184, 122, 0.18);
 
 * {
   all: unset;
-  font-family: "Inter Display", "Inter", "JetBrainsMono Nerd Font", sans-serif;
+  font-family: "JetBrains Mono Nerd Font", monospace;
   font-size: 12px;
-  color: #e8edf5;
+  color: #C8C0C0;
 }
 
 /* ── BARS ─────────────────────────────────────────────────────────── */

@@ -25,12 +25,12 @@
     horizontal_padding = 16
     text_icon_padding = 12
     frame_width = 1
-    frame_color = "#f4ead540"
+    frame_color = "#7B5EA766"
     gap_size = 6
-    separator_color = "#1a1a28"
+    separator_color = "#080808"
     sort = yes
 
-    font = Inter 11
+    font = "JetBrains Mono Nerd Font 11"
     line_height = 3
     markup = full
     format = "<b>%a · %s</b>\n%b"
@@ -70,24 +70,24 @@
     per_monitor_dpi = false
 
 [urgency_low]
-    background    = "#0a0a14f7"
-    foreground    = "#f4ead58c"
-    frame_color   = "#f4ead540"
+    background    = "#080808f7"
+    foreground    = "#C8C0C0cc"
+    frame_color   = "#7B5EA766"
     timeout       = 5
     default_icon  = dialog-information
 
 [urgency_normal]
-    background    = "#0a0a14f7"
-    foreground    = "#f4ead5"
-    frame_color   = "#f4ead540"
+    background    = "#080808f7"
+    foreground    = "#C8C0C0"
+    frame_color   = "#7B5EA766"
     timeout       = 8
     override_pause_level = 30
     default_icon  = dialog-information
 
 [urgency_critical]
-    background    = "#0a0a14f7"
-    foreground    = "#f4ead5"
-    frame_color   = "#f87171"
+    background    = "#080808f7"
+    foreground    = "#C8C0C0"
+    frame_color   = "#8B4040"
     timeout       = 0
     override_pause_level = 60
     default_icon  = dialog-warning

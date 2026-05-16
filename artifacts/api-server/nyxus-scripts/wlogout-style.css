@@ -5,13 +5,13 @@
  * colors must be inlined as @define-color directly in this file.
  * Keep in lockstep with nyxus-palette.css.
  * ──────────────────────────────────────────────────────────────── */
-@define-color nyx_white          #ffffff;
-@define-color nyx_white_off      #e8edf5;
-@define-color nyx_grey_light     #c8ccd6;
-@define-color nyx_grey_mid       #9aa0ad;
-@define-color nyx_glass_dark     rgba(14, 14, 22, 0.55);
-@define-color nyx_glass_deeper   rgba(8,  8,  14, 0.78);
-@define-color nyx_glass_deepest  rgba(0,  0,  0,  0.92);
+@define-color nyx_white          #C8C0C0;
+@define-color nyx_white_off      #C8C0C0;
+@define-color nyx_grey_light     #7B5EA7;
+@define-color nyx_grey_mid       #C4607A;
+@define-color nyx_glass_dark     rgba(8, 8, 8, 0.72);
+@define-color nyx_glass_deeper   rgba(8, 8, 8, 0.86);
+@define-color nyx_glass_deepest  rgba(8, 8, 8, 0.96);
 @define-color nyx_hairline_white rgba(255, 255, 255, 0.10);
 @define-color nyx_hairline_ink   rgba(0,   0,   0,   0.45);
 
@@ -25,7 +25,7 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 * {
-    font-family: 'Inter', 'JetBrains Mono', sans-serif !important;
+    font-family: 'JetBrains Mono Nerd Font', monospace !important;
     font-size:   16px !important;
     font-weight: 700  !important;
     letter-spacing: 0.18em;
@@ -33,7 +33,7 @@
 
 /* ── DARK CANVAS · frosted glass over wallpaper ──────────────────── */
 window {
-    background-color: rgba(8, 12, 20, 0.62) !important;
+    background-color: rgba(8, 8, 8, 0.72) !important;
     background-image: none                  !important;
     color: @nyx_white_off                          !important;
 }
@@ -65,10 +65,10 @@ button:focus,
 button:active,
 button:hover {
     background-color: rgba(8, 12, 20, 0.88)   !important;
-    border-color:     rgba(232, 237, 245, 0.55)!important;
+    border-color:     rgba(123, 94, 167, 0.65)!important;
     color:            @nyx_white                  !important;
     box-shadow:       0 8px 24px rgba(0, 0, 0, 0.55),
-                      0 0 22px rgba(232, 237, 245, 0.45),
+                      0 0 22px rgba(196, 96, 122, 0.42),
                       inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
     outline:          none                     !important;
 }
@@ -94,6 +94,6 @@ button:hover {
 #reboot:hover,   button#reboot:hover,   .reboot:hover,   button.reboot:hover,
 #shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
     background-color: rgba(8, 12, 20, 0.88) !important;
-    border-color:     rgba(232, 237, 245, 0.55) !important;
+    border-color:     rgba(123, 94, 167, 0.65) !important;
     color:            @nyx_white !important;
 }

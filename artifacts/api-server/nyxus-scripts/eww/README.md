@@ -12,7 +12,7 @@
 | Path | Purpose |
 |---|---|
 | `eww.yuck` | Widget tree, windows, defpoll variables |
-| `eww.scss` | DARK MIRROR theme (violet `#a06bff`, cyan `#3ad8ff`) |
+| `eww.scss` | NYXUS core palette theme (`#080808`, `#7B5EA7`, `#C4607A`, `#C8C0C0`, `#8B4040`) |
 | `nyxus.conf` | User-tunable config (sourced by launcher + service) |
 | `scripts/*.sh` | Data probes called by `defpoll` |
 | `~/.config/systemd/user/nyxus-eww.service` | Auto-start + restart-on-failure |
