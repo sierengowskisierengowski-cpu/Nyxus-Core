@@ -1,12 +1,12 @@
 * {
-    bg-deep:   #0a0a14;
-    bg-card:   #050308;
-    text-hi:   #f4ead5;
-    text-lo:   rgba(244, 234, 213, 0.55);
-    hairline:  #1a1a28;
-    accent:    #f4ead5;
-    glass-bg:  rgba(10, 10, 20, 0.97);
-    glass-line: rgba(244, 234, 213, 0.22);
+    bg-deep:   #080808;
+    bg-card:   #080808;
+    text-hi:   #C8C0C0;
+    text-lo:   rgba(200, 192, 192, 0.62);
+    hairline:  #7B5EA7;
+    accent:    #C4607A;
+    glass-bg:  rgba(8, 8, 8, 0.97);
+    glass-line: rgba(123, 94, 167, 0.42);
 
     background-color: transparent;
     text-color: @text-hi;
@@ -73,7 +73,7 @@ element selected.alternate.normal,
 element selected.active,
 element selected.urgent {
     background-color: @accent;
-    text-color: #050308;
+    text-color: #080808;
     border-radius: 3px;
 }
 
