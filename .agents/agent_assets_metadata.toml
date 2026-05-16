@@ -1127,3 +1127,9 @@ id = "gIR3-pmmYkrrtIuVAzBJg"
 uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-light-shaft.png"
 type = "image"
 title = "nyxus-bg-light-shaft (NEW — native 16:9 widescreen)"
+
+[[outputs]]
+id = "vHuN5kwtjRgvxATGYSyY3"
+uri = "file://.local/unpushed/README-HOW-TO-PUSH.md"
+type = "text"
+title = "README — push instructions (3 options)"
