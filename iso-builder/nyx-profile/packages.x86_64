@@ -248,7 +248,8 @@ yubikey-manager
 python-opencv
 # python-dlib removed 2026-05-11 — AUR-only, pulled in transitively by
 # howdy's own debian/install.sh during the customize_airootfs.sh build.
-# v4l2loopback-dkms — virtual V4L2 loopback kernel module.
+# v4l2loopback-dkms — virtual V4L2 loopback device kernel module.
+# Provides the v4l2loopback kernel module across the shipped kernel set.
 v4l2loopback-dkms
 # oath-toolkit ships oathtool (TOTP code generator/verifier) and pam_oath.
 # Used by the backdoor stack as the 4th factor (rotating 30-second OTP).
