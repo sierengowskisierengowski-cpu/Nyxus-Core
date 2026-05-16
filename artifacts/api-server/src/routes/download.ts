@@ -144,6 +144,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "eww/scripts/power-profile.sh": "eww/scripts/power-profile.sh",
   "eww/scripts/sys-pulse.sh":     "eww/scripts/sys-pulse.sh",
   "eww/scripts/ticker.sh":        "eww/scripts/ticker.sh",
+  "eww/scripts/ticker-updater.sh":"eww/scripts/ticker-updater.sh",
   "eww/scripts/updates.sh":       "eww/scripts/updates.sh",
   "eww/scripts/weather.sh":       "eww/scripts/weather.sh",
   "eww/scripts/workspaces.sh":    "eww/scripts/workspaces.sh",
