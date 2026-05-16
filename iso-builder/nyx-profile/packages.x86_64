@@ -289,8 +289,7 @@ reflector
 rsync
 which
 
-# NYXUS installer
-# Calamares is AUR-only on current Arch and is built in customize_airootfs.sh.
+# NYXUS installer (AUR-only; built in customize_airootfs.sh).
 
 # ═══════════════════════════════════════════════════════════════════
 # COMPLETION WAVE 1+2+3 — backends for half-built UI, hardware /
@@ -418,9 +417,6 @@ wlsunset
 swappy
 # Boot-time multi-OS detection (off by default in stock Arch).
 os-prober
-# Lightweight TTY greeter fallback if SDDM ever crashes.
-greetd
-greetd-tuigreet
 # Misc system polish.
 # ~/.cache/nyxus/*.log rotation.
 logrotate

@@ -1,7 +1,0 @@
-# NYXUS · greetd TTY-greeter fallback · rev 2026-05-13 r1
-# tuigreet runs only if SDDM fails. Default boot path is still SDDM.
-[terminal]
-vt = 7
-[default_session]
-command = "tuigreet --greeting 'Welcome to NYXUS' --asterisks --remember --time --user-menu --cmd 'dbus-run-session Hyprland'"
-user = "greeter"
