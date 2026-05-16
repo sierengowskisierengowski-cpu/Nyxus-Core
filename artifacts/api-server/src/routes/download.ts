@@ -1,14 +1,11 @@
-
 import { Router, type IRouter } from "express";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
-import { spawn } from "child_process";
 
 const router: IRouter = Router();
 
 const SCRIPTS_DIR = path.resolve(__dirname, "nyxus-scripts");
-const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 
 // ── SHA256 manifest cache ────────────────────────────────────────────────
 // Hashes every served file at request time, but only re-hashes when the
@@ -48,29 +45,6 @@ function _hashOrCached(name: string, p: string): CacheEntry | null {
 //   When you add a new GTK4 app, add it to "GTK4 USER APPS" only.
 // ═══════════════════════════════════════════════════════════════════════════
 const ALLOWED_FILES: Record<string, string> = {
-  // ── ★ ONE-LINER TTY RESCUE (rev 2026-05-15) ─────────────────────────────
-  // From a TTY (Ctrl+Alt+F2, log in as `nyx`):
-  //   curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/rescue.sh | bash
-  // Restores Hyprland + apps + wallpaper + EWW bar without reinstalling.
-  "rescue.sh":              "rescue.sh",
-  "deploy.sh":              "deploy.sh",
-  // ── ★ ONE-SHOT WHOLE-BUILD INSTALLER (rev 2026-05-16) ───────────────────
-  // Lays the ENTIRE designed NYXUS build on a laptop in one command,
-  // reading /api/download/nyxus/manifest.json and downloading every
-  // userInstallable file directly to its final on-disk target. Safe
-  // to re-run (sha256-skips unchanged files). Root-only files
-  // (polkit, calamares, plymouth, greetd) are listed but skipped.
-  //
-  //   NYXUS_API=https://nyxus-core.replit.app
-  //   curl -fsSL "$NYXUS_API/api/download/nyxus/nyxus-pull-all" -o /tmp/p
-  //   bash /tmp/p
-  "nyxus-pull-all":         "nyxus-pull-all",
-  // ── ★ ONE-SHOT BARE HYPRLAND (rev 2026-05-15) ───────────────────────────
-  // Minimal "give me a working Hyprland + auto-opening kitty terminal +
-  // cream wallpaper" setup. No NYXUS configs/apps. Use when the full
-  // NYXUS configs are crashing Hyprland and you need a stable base.
-  //   curl -fsSL https://<api>/api/download/nyxus/bare.sh | bash
-  "bare.sh":                "bare.sh",
   // ── ★ MASTER PALETTE — single source of truth (rev r13) ─────────────────
   "nyxus_palette.py":       "nyxus_palette.py",        //  Python palette constants
   "nyxus-palette.css":      "nyxus-palette.css",       //  CSS @define-color palette
@@ -115,7 +89,8 @@ const ALLOWED_FILES: Record<string, string> = {
   // r10 batch 6 (2026-05-13) — Phase 6.26 Calamares + 6.27 snapshot scrubber
   "nyxus-postinstall.sh":                       "nyxus-postinstall.sh",
   "calamares/settings.conf":                    "calamares/settings.conf",
-  "calamares/shellprocess_nyxus.conf":          "calamares/shellprocess_nyxus.conf",
+  "calamares/modules/shellprocess_nyxus.conf":  "calamares/modules/shellprocess_nyxus.conf",
+  "calamares/shellprocess_nyxus.conf":          "calamares/modules/shellprocess_nyxus.conf",
   "calamares/branding/nyxus/branding.desc":     "calamares/branding/nyxus/branding.desc",
   "calamares/branding/nyxus/show.qml":          "calamares/branding/nyxus/show.qml",
   "calamares/branding/nyxus/stylesheet.qss":    "calamares/branding/nyxus/stylesheet.qss",
@@ -138,7 +113,6 @@ const ALLOWED_FILES: Record<string, string> = {
   "locale/fr/LC_MESSAGES/nyxus.po":             "locale/fr/LC_MESSAGES/nyxus.po",
   "eww/eww.yuck":               "eww/eww.yuck",
   "eww/eww.scss":               "eww/eww.scss",
-  "eww/_nyxus_accent.scss":     "eww/_nyxus_accent.scss",
   "eww/nyxus.conf":             "eww/nyxus.conf",
   "eww/README.md":              "eww/README.md",
   "eww/scripts/audio.sh":         "eww/scripts/audio.sh",
@@ -155,7 +129,6 @@ const ALLOWED_FILES: Record<string, string> = {
   "eww/scripts/power-profile.sh": "eww/scripts/power-profile.sh",
   "eww/scripts/sys-pulse.sh":     "eww/scripts/sys-pulse.sh",
   "eww/scripts/ticker.sh":        "eww/scripts/ticker.sh",
-  "eww/scripts/ticker-updater.sh":"eww/scripts/ticker-updater.sh",
   "eww/scripts/updates.sh":       "eww/scripts/updates.sh",
   "eww/scripts/weather.sh":       "eww/scripts/weather.sh",
   "eww/scripts/workspaces.sh":    "eww/scripts/workspaces.sh",
@@ -355,11 +328,6 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-bg-14.png": "nyxus-bg-14.png",
   "nyxus-bg-15.png": "nyxus-bg-15.png",
   "nyxus-bg-16.png": "nyxus-bg-16.png",
-  "nyxus-bg-eclipse.png": "nyxus-bg-eclipse.png",
-  "nyxus-wallpaper-autostart": "nyxus-wallpaper-autostart",
-  "nyxus-set-wallpaper.sh":    "nyxus-set-wallpaper.sh",
-  "nyxus-lock-eclipse.png": "nyxus-lock-eclipse.png",
-  "nyxus-login-eclipse.png": "nyxus-login-eclipse.png",
 
   // ── ★ GRAFFITI ASSETS (24 chrome backgrounds) ────────────────────────────
   "nyxus-graffiti-01.png": "nyxus-graffiti-01.png",
@@ -395,47 +363,23 @@ const ALLOWED_FILES: Record<string, string> = {
 };
 
 // ── SHA256 manifest ─────────────────────────────────────────────────────
-// Returns { version, generated_at, files: { name: { sha256, size_bytes,
-//   dst, mode, userInstallable, reason? } } }
-//
+// Returns { version, generated_at, files: { name: { sha256, size_bytes } } }
 // Clients (nyxus_verify.sh / NYXUS App Store) hit this endpoint, then
 // SHA-verify each subsequently-downloaded file. Defends against single-file
 // transit corruption and single-file server tampering.
-//
-// rev 2026-05-16: each entry now also carries the deterministic on-laptop
-// install target (`dst`), the mode bits to write with, and a
-// `userInstallable` flag. The `nyxus-pull-all` one-shot installer reads
-// these fields to lay the entire designed build down in a single
-// command. Older clients that only read sha256+size_bytes are unaffected
-// — new fields are additive.
 router.get("/download/nyxus/manifest.json", (_req, res) => {
-  type Entry = {
-    sha256: string;
-    size_bytes: number;
-    dst: string;
-    mode: string;
-    userInstallable: boolean;
-    reason?: string;
-  };
-  const files: Record<string, Entry> = {};
+  const files: Record<string, { sha256: string; size_bytes: number }> = {};
   for (const name of Object.keys(ALLOWED_FILES)) {
     const p = path.join(SCRIPTS_DIR, ALLOWED_FILES[name]);
     const entry = _hashOrCached(name, p);
-    if (!entry) continue;
-    const plan = _planInstall(name);
-    files[name] = {
-      sha256: entry.sha256,
-      size_bytes: entry.size,
-      dst: plan.dst,
-      mode: plan.mode,
-      userInstallable: plan.userInstallable,
-      ...(plan.reason ? { reason: plan.reason } : {}),
-    };
+    if (entry) {
+      files[name] = { sha256: entry.sha256, size_bytes: entry.size };
+    }
   }
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Cache-Control", "no-store");
   res.json({
-    version: 2,
+    version: 1,
     generated_at: new Date().toISOString(),
     file_count: Object.keys(files).length,
     files,
@@ -456,222 +400,20 @@ router.get("/download/nyxus/manifest.txt", (_req, res) => {
   res.send(lines.join("\n") + "\n");
 });
 
-// ── ISO build source tarball (streamed) ─────────────────────────────────
-// Packs the three directories build-iso.sh needs into a single tar.gz on
-// the fly, so a user on an Arch live ISO can run ONE curl to bootstrap a
-// fresh NYXUS ISO bake. Streams directly from `tar` stdout so memory cost
-// is constant regardless of payload size.
-router.get("/download/nyxus/iso-source.tar.gz", (_req, res) => {
-  const subdirs = [
-    "iso-builder",
-    "artifacts/api-server/nyxus-scripts",
-  ];
-  for (const d of subdirs) {
-    if (!fs.existsSync(path.join(REPO_ROOT, d))) {
-      res.status(500).json({ error: `Missing source dir: ${d}` });
-      return;
-    }
-  }
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
-  res.setHeader("Content-Type", "application/gzip");
-  res.setHeader("Content-Disposition", `attachment; filename="nyx-iso-source.tar.gz"`);
-
-  // --transform rewrites paths so the tarball extracts to a single
-  // top-level "nyx-iso-source/" dir, matching what build-nyx-iso-on-arch.sh
-  // expects when it cd's into ${TMP}/nyx-iso-source/iso-builder/.
-  const tar = spawn(
-    "tar",
-    [
-      "-czf", "-",
-      "--transform", "s,^,nyx-iso-source/,",
-      "-C", REPO_ROOT,
-      ...subdirs,
-    ],
-    { stdio: ["ignore", "pipe", "pipe"] },
-  );
-  tar.stdout.pipe(res);
-  tar.stderr.on("data", (chunk) => {
-    // Don't crash the response on warnings — just log
-    process.stderr.write(`[iso-source tar] ${chunk}`);
-  });
-  tar.on("error", (err) => {
-    if (!res.headersSent) {
-      res.status(500).json({ error: `tar spawn failed: ${err.message}` });
-    } else {
-      res.destroy(err);
-    }
-  });
-  tar.on("exit", (code) => {
-    if (code !== 0 && !res.writableEnded) {
-      res.destroy(new Error(`tar exited with code ${code}`));
-    }
-  });
-
-  // If the client disconnects mid-stream, kill tar so it doesn't keep
-  // running and pinning CPU/disk on a 250MB+ archive nobody will read.
-  const cleanup = () => {
-    if (tar.exitCode === null && !tar.killed) {
-      tar.kill("SIGTERM");
-      // Escalate if tar ignores SIGTERM (rare but possible on slow IO)
-      setTimeout(() => {
-        if (tar.exitCode === null && !tar.killed) tar.kill("SIGKILL");
-      }, 2000).unref();
-    }
-  };
-  res.on("close", cleanup);
-  res.on("error", cleanup);
-});
-
-// ═══════════════════════════════════════════════════════════════════════════
-//   ONE-SHOT MANIFEST  ·  GET /api/download/nyxus/manifest.json
-//
-//   Returns every NYXUS file currently on disk under SCRIPTS_DIR, paired
-//   with a deterministic on-laptop install target (`dst`) and the mode
-//   bits the file should be created with. The companion `nyxus-pull-all`
-//   installer consumes this manifest to lay an entire designed build
-//   onto a laptop in one command, instead of one curl per file.
-//
-//   Files that need root (polkit policies, calamares conf, plymouth
-//   themes, greetd.toml) are still listed but marked `userInstallable:
-//   false` so the user-scope installer skips them. A future root
-//   installer can pick them up using the same manifest.
-//
-//   The manifest enumerates every entry in ALLOWED_FILES (the curated
-//   set above) and pairs each with an install plan from _planInstall().
-//   The file-fetch route below additionally serves any path under
-//   SCRIPTS_DIR via a path-traversal-guarded filesystem fallback, so
-//   raw asset fetches (wallpapers, etc.) work for ad-hoc clients —
-//   but the one-shot installer's scope is intentionally limited to
-//   ALLOWED_FILES so the surface ships only what's been audited.
-// ═══════════════════════════════════════════════════════════════════════════
-
-// Compute the install target + mode for a given source path under
-// dist/nyxus-scripts/. Pure function — no I/O — so it's safe to call
-// for every file on every manifest request.
-function _planInstall(src: string): {
-  dst: string; mode: string; userInstallable: boolean; reason?: string;
-} {
-  const base = path.basename(src);
-  const ext = path.extname(base).toLowerCase();
-
-  // ── ROOT-ONLY targets — skip in user installer ────────────────────
-  if (src.startsWith("polkit-policies/")) {
-    return { dst: `/usr/share/polkit-1/actions/${base}`, mode: "0644",
-             userInstallable: false, reason: "polkit policies live under /usr (root)" };
-  }
-  if (src.startsWith("calamares/")) {
-    return { dst: `/etc/calamares/${src.slice("calamares/".length)}`, mode: "0644",
-             userInstallable: false, reason: "Calamares installs to /etc (root)" };
-  }
-  if (src.startsWith("boot-splash") || base.endsWith(".plymouth")) {
-    return { dst: `/usr/share/plymouth/themes/${base}`, mode: "0644",
-             userInstallable: false, reason: "Plymouth lives under /usr (root)" };
-  }
-  if (base === "nyxus-greetd.toml") {
-    return { dst: "/etc/greetd/config.toml", mode: "0644",
-             userInstallable: false, reason: "greetd config lives in /etc (root)" };
-  }
-  if (ext === ".policy") {
-    return { dst: `/usr/share/polkit-1/actions/${base}`, mode: "0644",
-             userInstallable: false, reason: "polkit policies live under /usr (root)" };
-  }
-  if (base.endsWith(".tgz") || base.endsWith(".tar.gz")) {
-    return { dst: `$HOME/.cache/nyxus/${base}`, mode: "0644",
-             userInstallable: false, reason: "Tarballs have their own installer (godsapp/home)" };
-  }
-
-  // ── USER-SCOPE targets ────────────────────────────────────────────
-  if (src.startsWith("eww/")) {
-    return { dst: `$HOME/.config/eww/${src.slice("eww/".length)}`,
-             mode: base.endsWith(".sh") ? "0755" : "0644",
-             userInstallable: true };
-  }
-  if (src.startsWith("desktop-entries/") && ext === ".desktop") {
-    return { dst: `$HOME/.local/share/applications/${base}`, mode: "0644",
-             userInstallable: true };
-  }
-  if (src.startsWith("locale/")) {
-    return { dst: `$HOME/.local/share/nyxus/${src}`, mode: "0644",
-             userInstallable: true };
-  }
-  if (src.startsWith("browser/")) {
-    return { dst: `$HOME/.config/nyxus-browser/${base}`, mode: "0644",
-             userInstallable: true };
-  }
-  if (src.startsWith("desktop/")) {
-    return { dst: `$HOME/.local/bin/${base}`,
-             mode: base.endsWith(".sh") || base.endsWith(".py") ? "0755" : "0644",
-             userInstallable: true };
-  }
-  if (ext === ".service" || ext === ".timer") {
-    return { dst: `$HOME/.config/systemd/user/${base}`, mode: "0644",
-             userInstallable: true };
-  }
-  if (base === "hyprland.conf" || base === "hypridle.conf" || base === "hyprlock.conf") {
-    return { dst: `$HOME/.config/hypr/${base}`, mode: "0644",
-             userInstallable: true };
-  }
-  if (base.startsWith("nyxus-hyprland-") && ext === ".conf") {
-    return { dst: `$HOME/.config/hypr/conf.d/${base}`, mode: "0644",
-             userInstallable: true };
-  }
-  if (base === "nyxus-dunstrc") {
-    return { dst: `$HOME/.config/dunst/dunstrc`, mode: "0644",
-             userInstallable: true };
-  }
-  if (base === "nyxus-palette.css") {
-    return { dst: `$HOME/.config/gtk-4.0/${base}`, mode: "0644",
-             userInstallable: true };
-  }
-  if (ext === ".png" || ext === ".jpg" || ext === ".jpeg" ||
-      ext === ".webp" || ext === ".mp4" || ext === ".gif") {
-    return { dst: `$HOME/.local/share/nyxus/assets/${base}`, mode: "0644",
-             userInstallable: true };
-  }
-  // Python apps + shell helpers + binaries land in ~/.local/bin and
-  // are made executable. This covers nyxus_*.py, nyxus-* (no ext),
-  // rescue.sh, deploy.sh, bare.sh, hypr-doctor.sh, etc.
-  if (ext === ".py" || ext === ".sh" || ext === "" || base.startsWith("nyxus-")) {
-    return { dst: `$HOME/.local/bin/${base}`, mode: "0755",
-             userInstallable: true };
-  }
-  // Catch-all — drop unknown file types into a misc bucket so they
-  // ship but don't clobber anything important.
-  return { dst: `$HOME/.local/share/nyxus/misc/${src}`, mode: "0644",
-           userInstallable: true };
-}
-
 // Express 5 wildcard splat — matches nested paths like `eww/scripts/audio.sh`.
 // req.params.splat is an array of path segments; join with "/" to recover the
 // original key shape used in ALLOWED_FILES (e.g. "eww/scripts/audio.sh").
-// Lookup order:
-//   1. Explicit ALLOWED_FILES entry (legacy / curated downloads).
-//   2. Filesystem fallback under SCRIPTS_DIR with a strict
-//      path-traversal guard. Anything reachable here is also enumerated
-//      by /manifest.json, so the security boundary is "must exist under
-//      dist/nyxus-scripts/" rather than "must be in a hand-maintained
-//      allowlist of 250+ entries" — that boundary couldn't scale to a
-//      one-shot installer covering all ~430 files.
+// Strict allowlist lookup below means the splat cannot be used for traversal.
 router.get("/download/nyxus/{*splat}", (req, res) => {
   const splat = req.params.splat;
   const filename = Array.isArray(splat) ? splat.join("/") : String(splat ?? "");
 
-  let resolved: string;
-  if (ALLOWED_FILES[filename]) {
-    resolved = path.join(SCRIPTS_DIR, ALLOWED_FILES[filename]);
-  } else {
-    // Filesystem fallback. Reject any path that escapes SCRIPTS_DIR.
-    const candidate = path.resolve(SCRIPTS_DIR, filename);
-    if (!candidate.startsWith(SCRIPTS_DIR + path.sep) || candidate.includes("\0")) {
-      res.status(404).json({ error: "File not found" });
-      return;
-    }
-    resolved = candidate;
+  if (!ALLOWED_FILES[filename]) {
+    res.status(404).json({ error: "File not found" });
+    return;
   }
 
-  const filePath = resolved;
+  const filePath = path.join(SCRIPTS_DIR, ALLOWED_FILES[filename]);
 
   if (!fs.existsSync(filePath)) {
     res.status(404).json({ error: "Script not found on disk" });

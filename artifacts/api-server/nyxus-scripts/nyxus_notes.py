@@ -181,8 +181,6 @@ class NotesWindow(Gtk.ApplicationWindow):
     def __init__(self, app: Gtk.Application):
         super().__init__(application=app, title="notes")
         self.set_default_size(720, 800)
-        try: install_chrome(self)
-        except Exception: pass
         self._save_id = 0
 
         # ── CSS (one provider for the whole display) ─────────────────────

@@ -1,15 +1,5 @@
 name: build-iso
 
-# Bakes the NYXUS ISO inside a privileged Arch Linux container running on
-# a standard ubuntu-latest GitHub runner. Uploads the resulting ISO as a
-# workflow artifact and (optionally) attaches it to a GitHub release for
-# direct download — so a fresh, working ISO is always one click away,
-# without needing an Arch host.
-#
-# Triggers:
-#   - workflow_dispatch (manual "Run workflow" button)
-#   - push to main when iso-builder/ or artifacts/api-server/nyxus-scripts/
-#     change (so every fix automatically produces a new ISO)
 on:
   workflow_dispatch:
     inputs:
@@ -47,10 +37,6 @@ jobs:
           echo "iso_name=nyx-${v}-x86_64.iso" >> "$GITHUB_OUTPUT"
           echo "artifact_name=nyxus-iso-${v}" >> "$GITHUB_OUTPUT"
 
-      # mkarchiso needs root + overlayfs + loop devices + chroot. The
-      # cleanest way on a stock ubuntu-latest runner is to launch a
-      # privileged Arch container and bake inside it. GitHub-hosted
-      # runners support --privileged via plain `docker run`.
       - name: Bake ISO inside privileged Arch container
         run: |
           set -euxo pipefail
@@ -59,15 +45,10 @@ jobs:
             -w /work \
             -e NYX_ISO_DATE="${{ steps.ver.outputs.version }}" \
             archlinux:latest bash -euxc '
-              # Initialise + populate pacman keyring (the base archlinux
-              # container ships with no trusted keys), then refresh keyring
-              # package, then install archiso prereqs.
               pacman-key --init
               pacman-key --populate archlinux
               pacman -Sy --noconfirm archlinux-keyring
               pacman -Syu --noconfirm --needed archiso git base-devel grep coreutils grub edk2-shell mtools dosfstools
-
-              # Run the existing bake script. Outputs to iso-builder/out/.
               cd iso-builder
               ./build-iso.sh
               ls -lh out/
@@ -88,7 +69,6 @@ jobs:
           echo "path=$iso" >> "$GITHUB_OUTPUT"
           echo "size_bytes=$size" >> "$GITHUB_OUTPUT"
           echo "size_human=$(numfmt --to=iec --suffix=B "$size")" >> "$GITHUB_OUTPUT"
-          # Generate checksums alongside the ISO so the release has them too
           (cd iso-builder/out && sha256sum *.iso > "${{ steps.ver.outputs.iso_name }}.sha256")
           (cd iso-builder/out && sha512sum *.iso > "${{ steps.ver.outputs.iso_name }}.sha512")
           ls -lh iso-builder/out/
@@ -104,9 +84,6 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      # Create a GitHub Release so the ISO has a STABLE public download URL
-      # the user can curl from any live USB or fresh Arch box. Skipped on
-      # auto push if the dispatch input is false.
       - name: Create / update GitHub Release with ISO attached
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.create_release }}
         uses: softprops/action-gh-release@v2

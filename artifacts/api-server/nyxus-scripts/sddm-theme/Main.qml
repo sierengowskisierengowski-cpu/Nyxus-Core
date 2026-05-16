@@ -1,4 +1,4 @@
-// NYXUS · SDDM greeter · ECLIPSE r3 cream login (rev 2026-05-15)
+// NYXUS · SDDM greeter · DARK MIRROR void login (rev 2026-05-12 r14)
 // P2.10 polish: user avatar from ~/.face via UserModel, SUSPEND power
 // action, focus rings on power buttons, screen-reader accessibility
 // labels on every interactive control.
@@ -8,7 +8,7 @@
 // back to the default blue Breeze theme. This rewrite is intentionally
 // lean (~200 lines) and uses only well-supported QtQuick.Controls 2 API.
 //
-// Visual System lock (ECLIPSE r3 rev r13):
+// Visual System lock (DARK MIRROR rev r13):
 //   - Pure void: black base + 78% black wash over background.png, so the
 //     existing cosmic-ink artwork barely whispers through as faint silver.
 //   - Login card: rgba(8,12,20,0.55) dark glass, 1px white hairline at
@@ -32,8 +32,7 @@ Rectangle {
     height: 1080
     color: "#000000"
 
-    // ── ECLIPSE r3 palette tokens ───────────────────────────────────────
-    readonly property color clrCream:        "#f4ead5"  // ECLIPSE r3 halo
+    // ── DARK MIRROR palette tokens ───────────────────────────────────────
     readonly property color clrBgVoid:       "#000000"
     readonly property color clrGlass:        Qt.rgba(8/255, 12/255, 20/255, 0.55)
     readonly property color clrGlassDeep:    Qt.rgba(15/255, 20/255, 32/255, 0.72)

@@ -19,8 +19,8 @@ export function MemoryCard({ data }: { data: SysmonData | null }) {
         </div>
         <div className="h-4 w-full bg-nyxus-dim/20 rounded-sm overflow-hidden border border-nyxus-dim/30">
           <div 
-            className="h-full bg-nyxus-cream transition-all duration-500 ease-in-out relative"
-            style={{ width: `${ramPercent}%`, boxShadow: '0 0 10px rgba(244,234,213,0.8)' }}
+            className="h-full bg-nyxus-purple transition-all duration-500 ease-in-out relative"
+            style={{ width: `${ramPercent}%`, boxShadow: '0 0 10px rgba(204,0,255,0.8)' }}
           >
             <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(255,255,255,0.5)_4px,rgba(255,255,255,0.5)_8px)]" />
           </div>
@@ -37,8 +37,8 @@ export function MemoryCard({ data }: { data: SysmonData | null }) {
         </div>
         <div className="h-3 w-full bg-nyxus-dim/20 rounded-sm overflow-hidden border border-nyxus-dim/30">
           <div 
-            className="h-full bg-nyxus-copper transition-all duration-500 ease-in-out"
-            style={{ width: `${swapPercent}%`, boxShadow: '0 0 8px rgba(184,134,90,0.6)' }}
+            className="h-full bg-nyxus-blue transition-all duration-500 ease-in-out"
+            style={{ width: `${swapPercent}%`, boxShadow: '0 0 8px rgba(0,136,255,0.6)' }}
           />
         </div>
       </div>

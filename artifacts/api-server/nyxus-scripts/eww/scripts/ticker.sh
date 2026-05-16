@@ -1,75 +1,81 @@
 #!/usr/bin/env bash
-# NYXUS · EWW · top-bar ticker  (fast scroll reader)
+# NYXUS · EWW · top-bar ticker  (live system data, JSON for eww)
+# Outputs a single-line JSON {"text":"…","tooltip":"…"} consumed by the
+# marquee `.ticker` label in eww.yuck (CSS @keyframes nyx-marquee).
 #
-# rev 2026-05-16 r6 — SAFE FOR 500ms POLL.
-#
-# Design:
-#   * This script is the *fast path* called by eww every 500ms.
-#     It NEVER calls slow tools (pacman, nmcli, top). It only:
-#       1. reads the current cached source string,
-#       2. advances a scroll offset,
-#       3. emits a fixed-width substring window.
-#     Each call completes in <20ms.
-#   * A separate background updater (ticker-updater.sh) refreshes
-#     the cache every 5s with full live probes. This script spawns
-#     the updater on demand if it isn't already running.
-#   * Live notifications are read from /tmp/nyxus-notifications.log
-#     by the updater (any app can append "EPOCH|message" lines).
-
+# Design note (rev 2026-05-12): the previous version shuffled segments
+# every 3s which RESET the CSS animation each tick, killing the smooth
+# scroll. This version emits a STABLE ordered string and is polled
+# infrequently (TICKER defpoll lowered to 30s in eww.yuck), so the
+# marquee animation runs uninterrupted between updates. Time-of-day
+# is intentionally rendered down to minutes (HH:MM) so the string
+# stays identical across consecutive seconds — eww only redraws when
+# the JSON actually changes.
 set -u
 export LC_ALL=C.UTF-8
 
-CACHE_SRC="/tmp/nyxus-ticker.src"
-CACHE_OFF="/tmp/nyxus-ticker.off"
-UPDATER_PID="/tmp/nyxus-ticker.updater.pid"
-UPDATER_BIN="${HOME}/.config/eww/scripts/ticker-updater.sh"
-STEP=3        # chars to advance per call (~6 chars/sec at 500ms)
-WINDOW=200    # chars visible in the bar at once
+# ── fast probes ──────────────────────────────────────────────────────
+UP=$(uptime -p 2>/dev/null | sed 's/^up //')
+LOAD=$(awk '{print $1, $2, $3}' /proc/loadavg 2>/dev/null)
+PROCS=$(ps -e --no-headers 2>/dev/null | wc -l)
+USERS=$(who | wc -l)
+KERN=$(uname -r 2>/dev/null)
+HOST=$(hostname 2>/dev/null)
+DISK=$(df -h --output=pcent / 2>/dev/null | tail -1 | tr -d ' %')
+INET=$(ip -4 addr show 2>/dev/null | awk '/inet /{print $2}' | grep -v '^127' | head -1)
+GW=$(ip route 2>/dev/null | awk '/default/{print $3; exit}')
 
-# ── make sure the background updater is alive ──────────────────────
-need_spawn=1
-if [[ -r $UPDATER_PID ]]; then
-  pid=$(cat "$UPDATER_PID" 2>/dev/null || echo "")
-  if [[ -n $pid ]] && kill -0 "$pid" 2>/dev/null; then
-    need_spawn=0
-  fi
-fi
-if (( need_spawn )) && [[ -r $UPDATER_BIN ]]; then
-  # Invoked via `bash` so a missing +x bit on the file (which can
-  # happen on first download / cross-platform sync) does not stop
-  # the updater from running. Best-effort chmod for direct exec
-  # by other tooling.
-  chmod +x "$UPDATER_BIN" 2>/dev/null || true
-  nohup bash "$UPDATER_BIN" >/dev/null 2>&1 &
-  echo $! > "$UPDATER_PID"
+cpu=$(top -bn1 2>/dev/null | awk '/Cpu\(s\)/{printf "%d", $2+$4}')
+mem=$(free -m 2>/dev/null | awk '/Mem:/{printf "%d", $3/$2*100}')
+temp_file="/sys/class/thermal/thermal_zone0/temp"
+[[ -r $temp_file ]] && TEMP="$(awk '{printf "%d", $1/1000}' "$temp_file")°C" || TEMP="--"
+
+WIFI=""
+if command -v nmcli >/dev/null 2>&1; then
+  WIFI=$(nmcli -t -f IN-USE,SSID,SIGNAL device wifi list 2>/dev/null \
+         | awk -F: '/^\*/{print $2 " " $3 "%"; exit}')
 fi
 
-# ── emit a substring of the cache (or a startup placeholder) ────────
-if [[ ! -r $CACHE_SRC ]] || [[ ! -s $CACHE_SRC ]]; then
-  TIME=$(date '+%H:%M')
-  printf '{"text":"▌ NYXUS · ECLIPSE · LIVE   ▌ TIME %s   ▌ INITIALIZING SYSTEM PROBES …     ","tooltip":"NYXUS LIVE · starting"}\n' "$TIME"
-  exit 0
+PKG=""
+if command -v pacman >/dev/null 2>&1; then
+  PKG=$(pacman -Qq 2>/dev/null | wc -l)
 fi
 
-src=$(cat "$CACHE_SRC")
-src_len=${#src}
-if (( src_len == 0 )); then
-  printf '{"text":"NYXUS · ECLIPSE · LIVE","tooltip":"NYXUS"}\n'
-  exit 0
-fi
-
-src_doubled="${src}${src}"
-off=$(cat "$CACHE_OFF" 2>/dev/null || echo 0)
-[[ $off =~ ^[0-9]+$ ]] || off=0
-off=$(( (off + STEP) % src_len ))
-printf '%s' "$off" > "$CACHE_OFF"
-
-view="${src_doubled:$off:$WINDOW}"
-view="${view//\\/\\\\}"
-view="${view//\"/\\\"}"
-
+# Minute-resolution clock — keeps the string stable across seconds so
+# eww doesn't redraw and reset the marquee animation 30 times a minute.
 TIME=$(date '+%H:%M')
-tooltip="NYXUS LIVE · ${TIME} · scrolling system probes + notifications"
+
+# ── compose stable segment chain (NO shuffle) ────────────────────────
+SEGS=(
+  "▌ NYXUS · DARK MIRROR"
+  "▌ TIME ${TIME}"
+  "▌ HOST ${HOST:-?}"
+  "▌ KERNEL ${KERN:-?}"
+  "▌ UPTIME ${UP:-?}"
+  "▌ LOAD ${LOAD:-? ? ?}"
+  "▌ CPU ${cpu:-?}%"
+  "▌ MEM ${mem:-?}%"
+  "▌ TEMP ${TEMP}"
+  "▌ DISK ${DISK:-?}%"
+  "▌ PROCS ${PROCS:-?}"
+  "▌ USERS ${USERS:-?}"
+  "▌ NET ${INET:-offline}"
+  "▌ GW ${GW:-—}"
+  "▌ WIFI ${WIFI:-—}"
+  "▌ PKGS ${PKG:-?}"
+)
+
+text=""
+for s in "${SEGS[@]}"; do text+="${s}     "; done
+# Duplicate the chain so when the marquee scrolls past the end there's
+# no visible gap before the loop restarts — the second copy fills the
+# void while the animation rewinds via @keyframes margin-left reset.
+text="${text}${text}"
+
+# JSON-escape minimally (eww label only needs " and \ escaped).
+text="${text//\\/\\\\}"
+text="${text//\"/\\\"}"
+tooltip="NYXUS LIVE · ${TIME} · CPU ${cpu}% · MEM ${mem}% · TEMP ${TEMP} · NET ${INET:-offline}"
 tooltip="${tooltip//\"/\\\"}"
 
-printf '{"text":"%s","tooltip":"%s"}\n' "$view" "$tooltip"
+printf '{"text":"%s","tooltip":"%s"}\n' "$text" "$tooltip"

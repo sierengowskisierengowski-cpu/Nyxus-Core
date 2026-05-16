@@ -1,41 +1,49 @@
-# NYXUS · Calamares branding descriptor             rev 2026-05-14 r3
-# Sprint F: rev r15 compliance — old release codename retired,
-# cream-only sidebar, premium glass slideshow palette.
+# Calamares branding descriptor for NYXUS.
+#
+# Loaded by Calamares when the active branding component is "nyxus".
+# Wired to the "Sprint E Total Identity" gold (#f4ead5) accent and references the
+# slideshow QML in this same directory. The matching system module
+# config lives in /etc/calamares/settings.conf (also shipped here).
+#
+# Build/staging: nyxus-build-iso.sh copies this entire calamares/
+# subtree into /etc/calamares/ on the live ISO.
+#
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+
 ---
 componentName: nyxus
 
 welcomeStyleCalamares: true
-welcomeExpandingLogo:  false
-windowExpanding:       normal
-windowSize:            960px,600px
-windowPlacement:       center
+welcomeExpandingLogo:  true
+
+windowExpanding: normal
+windowSize:      900px,560px
+windowPlacement: center
 
 strings:
     productName:         "NYXUS"
     shortProductName:    "NYXUS"
-    version:             "2026.05"
-    shortVersion:        "2026.05"
-    versionedName:       "NYXUS 2026.05"
-    shortVersionedName:  "NYXUS 2026.05"
+    version:             "1.0"
+    shortVersion:        "1.0"
+    versionedName:       "NYXUS 1.0 (Sprint E Total Identity)"
+    shortVersionedName:  "NYXUS 1.0"
     bootloaderEntryName: "NYXUS"
-    productUrl:          "https://nyxus.os"
-    supportUrl:          "https://nyxus.os/support"
-    knownIssuesUrl:      "https://nyxus.os/issues"
-    releaseNotesUrl:     "https://nyxus.os/changelog"
+    productUrl:          "https://nyxus.replit.app"
+    supportUrl:          "https://nyxus.replit.app/support"
+    releaseNotesUrl:     "https://nyxus.replit.app/release-notes"
+    knownIssuesUrl:      "https://nyxus.replit.app/known-issues"
     donateUrl:           ""
 
 images:
-    productLogo:    "logo.png"
-    productIcon:    "logo.png"
-    productWelcome: "welcome.png"
+    productLogo:         "logo.png"
+    productIcon:         "logo.png"
+    productWelcome:      "welcome.png"
 
-slideshow:           "show.qml"
-slideshowAPI:        2
+slideshow:               "show.qml"
+slideshowAPI:            2
 
-# Sprint F sidebar — triple-black + cream highlight, matches show.qml.
 style:
-    sidebarBackground:         "#0a0a0a"
-    sidebarText:               "#cfc6b3"
-    sidebarTextSelect:         "#0a0a0a"
-    sidebarTextHighlight:      "#f4ead5"
-    sidebarBackgroundSelected: "#f4ead5"
+    sidebarBackground:   "#0a0a14"
+    sidebarText:         "#f4ead5"
+    sidebarTextSelect:   "#0a0a14"
+    sidebarTextHighlight:"#f4ead5"

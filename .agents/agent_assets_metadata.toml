@@ -606,30 +606,6 @@ uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-light-shaft.png"
 type = "image"
 title = "tattooed man light shaft cathedral widescreen"
 
-[[generated]]
-id = "UWsrsw7plfLP2LHl8kZJi"
-uri = "file://attached_assets/generated_images/eye_variant_A.png"
-type = "image"
-title = "calm cream iris"
-
-[[generated]]
-id = "V5F7q8kwvlYx_0gDu_2Xm"
-uri = "file://attached_assets/generated_images/eye_variant_B.png"
-type = "image"
-title = "copper accent iris"
-
-[[generated]]
-id = "a5GjwuJx2IzaIZ5TFTeaX"
-uri = "file://attached_assets/generated_images/eye_variant_C.png"
-type = "image"
-title = "pure eclipse orb eye"
-
-[[generated]]
-id = "CqA9sZ1LXwXWMfZ4hTTxL"
-uri = "file://attached_assets/generated_images/eye_variant_D.png"
-type = "image"
-title = "suspended cream dust eye"
-
 [[outputs]]
 id = "jM4hqh5aV4f7WaZ9t_iQZ"
 uri = "file://artifacts/nyxus-web/public/nyxus-wallpaper.png"
@@ -1151,3 +1127,9 @@ id = "gIR3-pmmYkrrtIuVAzBJg"
 uri = "file://artifacts/api-server/nyxus-scripts/nyxus-bg-light-shaft.png"
 type = "image"
 title = "nyxus-bg-light-shaft (NEW — native 16:9 widescreen)"
+
+[[outputs]]
+id = "vHuN5kwtjRgvxATGYSyY3"
+uri = "file://.local/unpushed/README-HOW-TO-PUSH.md"
+type = "text"
+title = "README — push instructions (3 options)"

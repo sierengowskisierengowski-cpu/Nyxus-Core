@@ -36,15 +36,15 @@ export function CpuCoreGrid({ data, history }: { data: SysmonData | null, histor
           <AreaChart data={history} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="cpuGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#b8865a" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#b8865a" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#ff00ff" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#ff00ff" stopOpacity={0}/>
               </linearGradient>
             </defs>
             <YAxis domain={[0, 100]} hide />
             <Area 
               type="monotone" 
               dataKey="percent" 
-              stroke="#b8865a" 
+              stroke="#ff00ff" 
               strokeWidth={2}
               fillOpacity={1} 
               fill="url(#cpuGradient)" 

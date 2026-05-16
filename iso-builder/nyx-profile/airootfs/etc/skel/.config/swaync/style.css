@@ -1,192 +1,97 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   NYXUS · swaync notification centre · rev 2026-05-14 r15-spec-locked
-   Triple-black + frosted glass · CREAM #f4ead5 accent · 3px corners
-   Inter primary · JetBrains Mono Nerd for timestamps
-   © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── Palette tokens (mirrors GTK + rofi shared variables) ─────────────── */
-@define-color nx_bg_deep     rgba(10, 10, 20, 0.97);
-@define-color nx_bg_card     rgba(5, 3, 8, 0.92);
-@define-color nx_cream       #f4ead5;
-@define-color nx_cream_18    rgba(244, 234, 213, 0.18);
-@define-color nx_cream_32    rgba(244, 234, 213, 0.32);
-@define-color nx_cream_55    rgba(244, 234, 213, 0.55);
-@define-color nx_hairline    #1a1a28;
-@define-color nx_hairline_2  rgba(244, 234, 213, 0.10);
-@define-color nx_critical    #fff8e0;  /* rev r15: brighter cream replaces red (brand-locked, NO red) */
+/* NYXUS · swaync · Sprint E Total Identity */
 
 * {
-  font-family: "Inter", "JetBrainsMono Nerd Font", sans-serif;
-  font-size: 13px;
-  border-radius: 3px;
-  text-shadow: none;
-  outline: none;
+    font-family: "Inter", sans-serif;
+    border-radius: 3px;
+    box-shadow: none;
+    text-shadow: none;
 }
 
-/* ── Notification Centre panel (triple-black glass) ──────────────────── */
 .control-center {
-  background: @nx_bg_deep;
-  border: 1px solid @nx_hairline_2;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85),
-              0 0 0 1px rgba(0, 0, 0, 0.6),
-              inset 0 1px 0 rgba(244, 234, 213, 0.04);
-  color: @nx_cream;
-  padding: 16px;
-  margin: 8px;
-  border-radius: 3px;
+    background: rgba(10, 10, 20, 0.97);
+    border: 1px solid rgba(244, 234, 213, 0.22);
+    color: #f4ead5;
+    padding: 14px;
+    margin: 6px;
 }
 
-.control-center-list { background: transparent; padding: 4px 0; }
-.control-center-list-placeholder {
-  color: @nx_cream_55;
-  font-style: italic;
-  padding: 32px 0;
-}
-
-/* Header: "Notifications" title row */
-.widget-title {
-  color: @nx_cream;
-  font-weight: 600;
-  font-size: 15px;
-  letter-spacing: 0.02em;
-  padding: 6px 4px 10px 4px;
-  margin-bottom: 6px;
-  border-bottom: 1px solid @nx_hairline;
-}
-.widget-title > button {
-  background: transparent;
-  border: 1px solid @nx_cream_18;
-  color: @nx_cream;
-  padding: 4px 12px;
-  border-radius: 3px;
-  transition: all 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.widget-title > button:hover {
-  background: @nx_cream_18;
-  border-color: @nx_cream;
-  box-shadow: 0 0 12px @nx_cream_32;
-}
-
-/* ── Individual notification card ────────────────────────────────────── */
+.control-center-list { background: transparent; }
 .notification-row { background: transparent; padding: 4px 0; }
 
 .notification {
-  background: @nx_bg_card;
-  border: 1px solid @nx_hairline;
-  border-left: 3px solid @nx_cream;        /* the cream accent stripe */
-  border-radius: 3px;
-  margin: 4px 0;
-  padding: 0;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  transition: all 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    background: rgba(10, 10, 20, 0.97);
+    border: 1px solid rgba(244, 234, 213, 0.22);
+    margin: 6px 0;
+    padding: 12px;
 }
-.notification:hover {
-  background: rgba(20, 20, 32, 0.92);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55),
-              0 0 0 1px @nx_cream_18,
-              -3px 0 14px rgba(244, 234, 213, 0.15);
-}
+.notification.low { border-left: 2px solid #1a1a28; }
+.notification.normal { border-left: 2px solid #f4ead5; }
+.notification.critical { border-color: #f87171; border-left: 2px solid #f87171; }
 
-.notification-content {
-  background: transparent;
-  padding: 12px 14px;
-}
+.summary { color: #f4ead5; font-weight: 700; font-size: 13px; letter-spacing: 1px; }
+.body { color: #f4ead5; opacity: 0.92; font-size: 12px; margin-top: 4px; }
+.time { color: rgba(244, 234, 213, 0.55); font-size: 10px; letter-spacing: 1px; }
 
-.summary {
-  color: @nx_cream;
-  font-weight: 600;
-  font-size: 13px;
-  letter-spacing: 0.01em;
-}
-.body {
-  color: @nx_cream_55;
-  font-size: 12px;
-  margin-top: 3px;
-}
-.time {
-  color: @nx_cream_55;
-  font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 10px;
-  margin-left: 10px;
-}
-
-/* App icon column */
-.notification image,
-.app-icon { -gtk-icon-effect: none; padding-right: 8px; }
-
-/* Critical urgency — soft coral left stripe */
-.notification.critical { border-left-color: @nx_critical; }
-.notification.critical .summary { color: @nx_critical; }
-
-/* Inline action buttons */
-.notification-action {
-  background: transparent;
-  border: 1px solid @nx_cream_18;
-  color: @nx_cream;
-  border-radius: 3px;
-  padding: 4px 10px;
-  margin: 2px 4px 6px 4px;
-  transition: all 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.notification-action:hover {
-  background: @nx_cream_18;
-  border-color: @nx_cream;
-  box-shadow: 0 0 10px @nx_cream_32;
-}
-
-/* Close (×) button */
 .close-button {
-  background: transparent;
-  color: @nx_cream_55;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 3px;
+    background: transparent;
+    color: rgba(244, 234, 213, 0.55);
+    border: 1px solid #1a1a28;
+    min-width: 22px;
+    min-height: 22px;
 }
 .close-button:hover {
-  background: @nx_cream_18;
-  color: @nx_cream;
+    color: #050308;
+    background: #f87171;
+    border-color: #f87171;
 }
 
-/* ── Floating popup (in-corner toast, not the centre) ────────────────── */
-.notification-row .floating-notifications.background .notification {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7),
-              -3px 0 18px rgba(244, 234, 213, 0.18);
+.widget-title > label {
+    color: #f4ead5;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+.widget-title > button {
+    background: transparent;
+    color: rgba(244, 234, 213, 0.55);
+    border: 1px solid #1a1a28;
+    padding: 4px 14px;
+}
+.widget-title > button:hover {
+    color: #050308;
+    background: #f4ead5;
+    border-color: #f4ead5;
 }
 
-/* ── DND / mute toggle ───────────────────────────────────────────────── */
-.notification-group-icon { color: @nx_cream; }
-.notification-group { background: transparent; padding: 4px 0; }
-.notification-group-collapse-button {
-  background: transparent;
-  color: @nx_cream_55;
-  border: none;
-}
-.notification-group-collapse-button:hover { color: @nx_cream; }
+.widget-dnd > switch { background: #1a1a28; }
+.widget-dnd > switch:checked { background: #f4ead5; }
+.widget-dnd > switch slider { background: #050308; }
 
-/* ── Widgets row (mpris, dnd, etc.) ──────────────────────────────────── */
+.floating-notifications { background: transparent; }
+.floating-notifications.background .notification {
+    background: rgba(10, 10, 20, 0.97);
+    border: 1px solid rgba(244, 234, 213, 0.22);
+    border-left: 3px solid #f4ead5;
+}
+.floating-notifications.background .notification.critical {
+    border: 1px solid #f87171;
+    border-left: 3px solid #f87171;
+}
+
 .widget-mpris,
-.widget-dnd,
-.widget-buttons-grid {
-  background: @nx_bg_card;
-  border: 1px solid @nx_hairline;
-  border-radius: 3px;
-  padding: 10px;
-  margin: 6px 0;
+.widget-volume,
+.widget-backlight {
+    background: #050308;
+    border: 1px solid #1a1a28;
+    padding: 10px 12px;
+    color: #f4ead5;
 }
-.widget-mpris-title { color: @nx_cream; font-weight: 600; }
-.widget-mpris-subtitle { color: @nx_cream_55; }
+.widget-mpris-title { color: #f4ead5; font-weight: 700; }
+.widget-mpris-subtitle { color: rgba(244, 234, 213, 0.55); font-size: 11px; }
 
-/* MPRIS / quick-action buttons */
-.widget-buttons-grid > flowbox > flowboxchild > button {
-  background: transparent;
-  color: @nx_cream;
-  border: 1px solid @nx_cream_18;
-  border-radius: 3px;
-  padding: 8px 14px;
-  transition: all 160ms cubic-bezier(0.22, 0.61, 0.36, 1);
+slider trough {
+    background: #1a1a28;
+    min-height: 4px;
 }
-.widget-buttons-grid > flowbox > flowboxchild > button:hover {
-  background: @nx_cream_18;
-  box-shadow: 0 0 12px @nx_cream_32;
-}
+slider trough highlight { background: #f4ead5; }
+slider { background: transparent; color: #f4ead5; }

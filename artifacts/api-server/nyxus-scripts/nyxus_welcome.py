@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ──────────────────────────────────────────────────────────────────────
-#  NYXUS · Welcome Wizard          rev 2026.05.14-r15-eclipse
+#  NYXUS · Welcome Wizard          rev 2026.05.12-r10-mirror
 # ──────────────────────────────────────────────────────────────────────
 #  First-boot setup. Seven steps, single fullscreen window, no decoration.
 #  Every step writes real system state — never mock data.
@@ -18,7 +18,7 @@
 #  Helper:   /usr/local/libexec/nyxus-welcome-helper (polkit-elevated
 #            for /etc/locale.conf, timedatectl, passwd, useradd GECOS)
 #
-#  Design contract:  premium / enterprise / ECLIPSE.
+#  Design contract:  premium / enterprise / DARK MIRROR.
 #    • Pure black background, single accent gradient.
 #    • Inter for UI, Inter Display for display, JetBrains Mono for code.
 #    • Generous whitespace; one focused action per step.
@@ -74,13 +74,12 @@ WALLS_SYS = Path("/usr/share/backgrounds/nyxus")
 NYXUS_DIR.mkdir(parents=True, exist_ok=True)
 CFG_DIR.mkdir(parents=True, exist_ok=True)
 
-# ── ECLIPSE design tokens ─────────────────────────────────────────
+# ── DARK MIRROR design tokens ─────────────────────────────────────────
 # Canonical accent palette — IDENTICAL to nyxus_settings.py
 # AppearancePage so the picker the user sees on first boot is the same
 # picker they see in Settings later. No two-palette confusion.
 ACCENTS = [
-    ("Eclipse Cream", "#f4ead5"),
-    ("Copper",       "#b8865a"),
+    ("Mirror White", "#e8edf5"),
     ("Cyan",         "#5fd3f3"),
     ("Lime",         "#a6e22e"),
     ("Amber",        "#f5b342"),
@@ -89,7 +88,7 @@ ACCENTS = [
     ("Iris",         "#9c8cff"),
     ("Mint",         "#5ff3b8"),
 ]
-DEFAULT_ACCENT = "#f4ead5"
+DEFAULT_ACCENT = "#e8edf5"
 
 
 def discover_wallpapers() -> list[tuple[str, str]]:
@@ -115,8 +114,8 @@ def discover_wallpapers() -> list[tuple[str, str]]:
             title = stem.replace("-", " ").replace("_", " ").title()
             found.append((title, str(p)))
     if not found:
-        found = [("Eclipse Horizon",
-                  "/usr/share/backgrounds/nyxus/nyxus-eclipse-horizon.png")]
+        found = [("Quiet Black",
+                  "/usr/share/backgrounds/nyxus/nyxus-quiet-black.png")]
     return found[:6]
 
 
@@ -125,11 +124,11 @@ def hex_to_rgb(h: str) -> tuple[int, int, int]:
     if len(s) == 3:
         s = "".join(c * 2 for c in s)
     if len(s) != 6:
-        return (244, 234, 213)
+        return (232, 237, 245)
     try:
         return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
     except ValueError:
-        return (244, 234, 213)
+        return (232, 237, 245)
 
 LOCALES = [
     ("English (US)",        "en_US.UTF-8"),
@@ -150,10 +149,10 @@ window.welcome {
 }
 
 .welcome-root {
-  /* Pure ECLIPSE — monochrome ambient field. White wash top-left,
+  /* Pure DARK MIRROR — monochrome ambient field. White wash top-left,
    * faint cool grey wash bottom-right. No neon, no gradients of saturation. */
   background: radial-gradient(ellipse at top left,
-              rgba(244,234,213,0.06), transparent 55%),
+              rgba(232,237,245,0.06), transparent 55%),
               radial-gradient(ellipse at bottom right,
               rgba(200,204,214,0.04), transparent 55%),
               #05060a;
@@ -162,7 +161,7 @@ window.welcome {
 /* ── left rail ─────────────────────────────────────────────────── */
 .welcome-rail {
   background: rgba(8,10,16,0.66);
-  border-right: 1px solid rgba(244,234,213,0.10);
+  border-right: 1px solid rgba(232,237,245,0.10);
   padding: 56px 28px 36px 36px;
   min-width: 320px;
 }
@@ -195,9 +194,9 @@ window.welcome {
   margin-right: 14px;
 }
 .welcome-step.current {
-  background: rgba(244,234,213,0.06);
+  background: rgba(232,237,245,0.06);
   color: #ffffff;
-  border-left: 2px solid #f4ead5;
+  border-left: 2px solid #e8edf5;
 }
 .welcome-step.current .num { color: #c8ccd6; }
 .welcome-step.done { color: #8b94a8; }
@@ -250,16 +249,16 @@ window.welcome {
 /* ── inputs ────────────────────────────────────────────────────── */
 entry.welcome-input, dropdown.welcome-input > button {
   background: rgba(17,21,31,0.85);
-  border: 1px solid rgba(244,234,213,0.16);
+  border: 1px solid rgba(232,237,245,0.16);
   border-radius: 10px;
   padding: 12px 14px;
   color: #ffffff;
   font-size: 14px;
-  caret-color: #f4ead5;
+  caret-color: #e8edf5;
 }
 entry.welcome-input:focus, dropdown.welcome-input > button:focus {
-  border-color: #f4ead5;
-  box-shadow: 0 0 0 3px rgba(244,234,213,0.18);
+  border-color: #e8edf5;
+  box-shadow: 0 0 0 3px rgba(232,237,245,0.18);
 }
 .welcome-label {
   font-size: 11px;
@@ -274,7 +273,7 @@ entry.welcome-input:focus, dropdown.welcome-input > button:focus {
 }
 .welcome-error {
   font-size: 11px;
-  color: #fff8e0;
+  color: #ff8b9e;
   margin: 6px 2px 0 2px;
 }
 
@@ -282,16 +281,16 @@ entry.welcome-input:focus, dropdown.welcome-input > button:focus {
 button.w-primary {
   padding: 12px 28px;
   border-radius: 10px;
-  background: #f4ead5;
+  background: #e8edf5;
   color: #05060a;
   font-weight: 700;
   letter-spacing: 0.10em;
   border: 1px solid #ffffff;
-  box-shadow: 0 8px 26px rgba(244,234,213,0.18);
+  box-shadow: 0 8px 26px rgba(232,237,245,0.18);
 }
 button.w-primary:hover {
   background: #ffffff;
-  box-shadow: 0 10px 32px rgba(244,234,213,0.28);
+  box-shadow: 0 10px 32px rgba(232,237,245,0.28);
 }
 button.w-primary:disabled {
   background: rgba(60,66,82,0.55);
@@ -304,11 +303,11 @@ button.w-ghost {
   border-radius: 10px;
   background: transparent;
   color: #c8ccd6;
-  border: 1px solid rgba(244,234,213,0.18);
+  border: 1px solid rgba(232,237,245,0.18);
   letter-spacing: 0.10em;
 }
 button.w-ghost:hover {
-  background: rgba(244,234,213,0.06);
+  background: rgba(232,237,245,0.06);
   color: #ffffff;
 }
 button.w-link {
@@ -331,22 +330,22 @@ button.w-link:hover { color: #ffffff; }
 }
 .swatch.selected {
   border-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(244,234,213,0.32),
-              0 8px 22px rgba(244,234,213,0.22);
+  box-shadow: 0 0 0 3px rgba(232,237,245,0.32),
+              0 8px 22px rgba(232,237,245,0.22);
 }
 .tile {
   border-radius: 12px;
-  border: 1px solid rgba(244,234,213,0.10);
+  border: 1px solid rgba(232,237,245,0.10);
   background: rgba(17,21,31,0.65);
   padding: 14px;
   margin: 6px;
   min-width: 200px;
 }
 .tile.selected {
-  border-color: #f4ead5;
-  background: rgba(244,234,213,0.08);
-  box-shadow: 0 0 0 1px rgba(244,234,213,0.40),
-              0 8px 28px rgba(244,234,213,0.14);
+  border-color: #e8edf5;
+  background: rgba(232,237,245,0.08);
+  box-shadow: 0 0 0 1px rgba(232,237,245,0.40),
+              0 8px 28px rgba(232,237,245,0.14);
 }
 .tile-title {
   color: #ffffff;
@@ -362,19 +361,19 @@ button.w-link:hover { color: #ffffff; }
   padding: 16px 18px;
   border-radius: 12px;
   background: rgba(17,21,31,0.6);
-  border: 1px solid rgba(244,234,213,0.08);
+  border: 1px solid rgba(232,237,245,0.08);
   margin: 6px 0;
 }
 .toggle-row .name { color: #ffffff; font-size: 14px; font-weight: 600; }
 .toggle-row .desc { color: #8b94a8; font-size: 11px; margin-top: 2px; }
 switch slider { background: #ffffff; }
-switch:checked { background: #f4ead5; }
+switch:checked { background: #e8edf5; }
 switch { background: rgba(60,66,82,0.85); }
 
 /* ── footer nav ────────────────────────────────────────────────── */
 .welcome-footer {
   padding: 20px 88px 28px 88px;
-  border-top: 1px solid rgba(244,234,213,0.10);
+  border-top: 1px solid rgba(232,237,245,0.10);
   background: rgba(5,6,10,0.55);
 }
 
@@ -382,8 +381,8 @@ switch { background: rgba(60,66,82,0.85); }
 .welcome-complete-glyph {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 96px;
-  color: #f4ead5;
-  text-shadow: 0 0 40px rgba(244,234,213,0.35);
+  color: #e8edf5;
+  text-shadow: 0 0 40px rgba(232,237,245,0.35);
 }
 """
 
@@ -471,7 +470,7 @@ class StepRail(Gtk.Box):
 
         brand = Gtk.Label(label="NYXUS", xalign=0)
         brand.add_css_class("welcome-brand")
-        sub = Gtk.Label(label="ECLIPSE · OS", xalign=0)
+        sub = Gtk.Label(label="DARK · MIRROR · OS", xalign=0)
         sub.add_css_class("welcome-brand-sub")
         self.append(brand); self.append(sub)
 
@@ -487,7 +486,7 @@ class StepRail(Gtk.Box):
 
         spacer = Gtk.Box(vexpand=True)
         self.append(spacer)
-        foot = Gtk.Label(label="REV r15-ECLIPSE · 2026.05.14", xalign=0)
+        foot = Gtk.Label(label="REV r10-MIRROR · 2026.05.12", xalign=0)
         foot.add_css_class("welcome-rail-foot")
         self.append(foot)
 
@@ -1039,7 +1038,7 @@ class AppearanceStep(Step):
         accent_hex = self.wizard.cfg.get("accent_hex", DEFAULT_ACCENT).lower()
         accent_name = next((n for n, h in ACCENTS
                             if h.lower() == accent_hex),
-                           "Eclipse Cream")
+                           "Mirror White")
         self.wizard.cfg["accent_hex"] = accent_hex
         self.wizard.cfg["accent"]     = accent_name
         self._propagate_accent(accent_hex)
@@ -1120,7 +1119,7 @@ class ReadyStep(Step):
         # whether the user picked an accent or accepted the default.
         ah = (c.get("accent_hex") or DEFAULT_ACCENT).lower()
         accent_name = c.get("accent") or next(
-            (n for n, h in ACCENTS if h.lower() == ah), "Eclipse Cream")
+            (n for n, h in ACCENTS if h.lower() == ah), "Mirror White")
         return [
             f"  •  Region    {c.get('locale','en_US.UTF-8')}  ·  {c.get('timezone','UTC')}",
             f"  •  Network   {c.get('wifi') or 'wired / not connected'}",

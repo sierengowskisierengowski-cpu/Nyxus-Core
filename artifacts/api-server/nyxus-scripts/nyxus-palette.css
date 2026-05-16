@@ -1,15 +1,13 @@
 /* ============================================================
  *  NYXUS PALETTE — CSS source of truth for DARK MIRROR
- *  (LOCKED · rev 2026-05-14 r15 — CREAM + HANDWRITTEN)
+ *  (LOCKED · rev 2026-05-07 r13)
  *
- *  Every NYXUS GTK / eww / waybar / rofi CSS must @import this file
+ *  Every NYXUS GTK4 / waybar / rofi CSS must @import this file
  *  and reference the @define-color names below — never hard-code
  *  hex values inline.
  *
  *  Mirrors nyxus_palette.py exactly. When the visual lock changes,
  *  edit BOTH files in lockstep.
- *
- *  rev r15 (2026-05-14) — see nyxus_palette.py for full notes.
  *
  *  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
  * ============================================================ */
@@ -23,67 +21,28 @@
 @define-color nyx_ink_faded     #0a0a0a;
 @define-color nyx_ink_black     #000000;
 
-/* ── CREAM WARM ACCENT (rev r15 — replaces gold/purple/cyan) */
-@define-color nyx_cream         #f4ead5;
-@define-color nyx_cream_soft    #fbf3e2;
-@define-color nyx_cream_deep    #c4b491;
-@define-color nyx_cream_glow_15 rgba(244, 234, 213, 0.15);
-@define-color nyx_cream_glow_28 rgba(244, 234, 213, 0.28);
-@define-color nyx_cream_glow_45 rgba(244, 234, 213, 0.45);
-@define-color nyx_cream_edge_55 rgba(244, 234, 213, 0.55);
-
-/* Backward-compat: nyx_gold == nyx_cream so old CSS keeps working */
-@define-color nyx_gold          #f4ead5;
-@define-color nyx_gold_soft     #fbf3e2;
-@define-color nyx_gold_deep     #c4b491;
-@define-color nyx_gold_glow     rgba(244, 234, 213, 0.35);
-@define-color nyx_gold_edge     rgba(244, 234, 213, 0.55);
-@define-color nyx_gold_bg_soft  rgba(244, 234, 213, 0.10);
-@define-color nyx_gold_bg_active rgba(244, 234, 213, 0.18);
-
-/* ── COPPER WARM SECONDARY (rev r16 · 2026-05-15) ─────────── */
-/* Eclipse-corona rim accent. Use ONLY for selection stripes,    */
-/* active window borders, hover glows on dark surfaces. Cream is */
-/* the diffuse light, copper is the rim-light edge. Never use    */
-/* copper for body text or large fill areas.                     */
-@define-color nyx_copper        #b8865a;
-@define-color nyx_copper_soft   #d4a978;
-@define-color nyx_copper_deep   #8a6444;
-@define-color nyx_copper_glow_18 rgba(184, 134, 90, 0.18);
-@define-color nyx_copper_glow_32 rgba(184, 134, 90, 0.32);
-@define-color nyx_copper_glow_55 rgba(184, 134, 90, 0.55);
-@define-color nyx_copper_edge_88 rgba(184, 134, 90, 0.88);
-
-/* ── DESTRUCTIVE / SIGNAL (RESERVED) ──────────────────────── */
-@define-color nyx_danger        #d96b6b;
-@define-color nyx_danger_bg_18  rgba(217, 107, 107, 0.18);
-
-/* ── TRIPLE-BLACK SURFACE STACK ───────────────────────────── */
-/* smoke = base/bars/panels (lightest, most blur shows through) */
-/* ink   = raised cards/pebbles/buttons (mid)                   */
-/* void  = popovers/tooltips/modals/active (deepest, max pop)   */
+/* ── TRIPLE-BLACK SURFACE STACK (rev r14 · 2026-05-09) ────── */
+/* Three layered shades of black. Each tier is distinct but    */
+/* harmonious — together they "pop" without color, just depth. */
+/*   smoke = base/bars/panels (lightest, most blur shows through) */
+/*   ink   = raised cards/pebbles/buttons (mid)                   */
+/*   void  = popovers/tooltips/modals/active (deepest, maximum pop)*/
 @define-color nyx_black_smoke   rgba(14, 14, 22, 0.55);
 @define-color nyx_black_ink     rgba(8,  8,  14, 0.78);
 @define-color nyx_black_void    rgba(0,  0,  0,  0.92);
 
-/* Solid (non-alpha) fallbacks */
-@define-color nyx_black_smoke_solid #0e0e16;
-@define-color nyx_black_ink_solid   #08080e;
-@define-color nyx_black_void_solid  #000000;
-
-/* Backward-compat aliases */
+/* Backward-compat aliases — legacy names map to new tiers.   */
 @define-color nyx_glass_dark    rgba(14, 14, 22, 0.55);
 @define-color nyx_glass_deeper  rgba(8,  8,  14, 0.78);
 @define-color nyx_glass_deepest rgba(0,  0,  0,  0.92);
 
-/* ── WHITE GLOW HALO ──────────────────────────────────────── */
+/* ── WHITE GLOW ACCENT (use sparingly on wordmarks/key labels) */
 @define-color nyx_glow_soft     rgba(255, 255, 255, 0.45);
 @define-color nyx_glow_bright   rgba(255, 255, 255, 0.85);
 
 /* ── HAIRLINES ─────────────────────────────────────────────── */
 @define-color nyx_hairline_white rgba(255, 255, 255, 0.10);
 @define-color nyx_hairline_ink   rgba(0, 0, 0, 0.45);
-@define-color nyx_hairline_cream rgba(244, 234, 213, 0.22);
 
 /* ── DROP SHADOW INK ───────────────────────────────────────── */
 @define-color nyx_shadow_active   rgba(0, 0, 0, 0.65);
@@ -93,14 +52,10 @@
 @define-color nyx_text        @nyx_white_off;
 @define-color nyx_text_dim    @nyx_grey_light;
 @define-color nyx_text_ghost  @nyx_grey_tertiary;
-@define-color nyx_accent      @nyx_cream;
-@define-color nyx_accent_soft @nyx_cream_soft;
-@define-color nyx_accent_deep @nyx_cream_deep;
 @define-color nyx_bg          @nyx_black_smoke;
 @define-color nyx_bg_hover    @nyx_black_ink;
 @define-color nyx_bg_popover  @nyx_black_void;
 @define-color nyx_border      @nyx_hairline_white;
-@define-color nyx_border_hot  @nyx_hairline_cream;
 @define-color nyx_caret       @nyx_white;
-@define-color nyx_select_bg   @nyx_cream;
+@define-color nyx_select_bg   @nyx_grey_light;
 @define-color nyx_select_fg   @nyx_ink_black;

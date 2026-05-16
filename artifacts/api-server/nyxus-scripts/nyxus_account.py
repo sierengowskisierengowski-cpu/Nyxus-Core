@@ -180,7 +180,7 @@ def _curl_get(url: str, token: str) -> tuple[int, bytes, str]:
 
 
 # ---------- GUI ----------
-GOLD = "#f4ead5"; INK = "#080a10"
+GOLD = "#d4b87a"; INK = "#080a10"
 CSS = f"""
 .acct-window {{ background: {INK}; }}
 .acct-header {{ color: {GOLD}; font-weight: 700; font-size: 18px;

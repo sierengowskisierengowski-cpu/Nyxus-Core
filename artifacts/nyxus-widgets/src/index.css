@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -44,19 +44,16 @@
   --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
 
-  /* Sprint K-C rev r16: legacy nyxus-* tokens remapped to safe cream/copper. */
-  --color-nyxus-pink:   #f4ead5;
-  --color-nyxus-purple: #c4b491;
-  --color-nyxus-blue:   #8a8068;
-  --color-nyxus-green:  #f4ead5;
-  --color-nyxus-yellow: #b8865a;
-  --color-nyxus-orange: #b8865a;
-  --color-nyxus-bg:     #06060a;
-  --color-nyxus-panel:  #0e0e14;
-  --color-nyxus-text:   #f4ead5;
-  --color-nyxus-dim:    #8a8068;
-  --color-nyxus-cream:  #f4ead5;
-  --color-nyxus-copper: #b8865a;
+  --color-nyxus-pink:   #ff00ff;
+  --color-nyxus-purple: #cc00ff;
+  --color-nyxus-blue:   #0088ff;
+  --color-nyxus-green:  #39ff14;
+  --color-nyxus-yellow: #ffff00;
+  --color-nyxus-orange: #ff5500;
+  --color-nyxus-bg:     #06040c;
+  --color-nyxus-panel:  #0d0d1a;
+  --color-nyxus-text:   #e8e0f5;
+  --color-nyxus-dim:    #7060a0;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -65,70 +62,74 @@
 }
 
 :root {
-  /* Sprint K-E rev r16: palette block auto-rendered from
-     iso-builder/tokens/nyxus.tokens.json by nyxus-render-tokens.
-     DO NOT HAND-EDIT lines between START/END markers. */
-  /* NYXUS-TOKENS-START palette */
-  --background: 0 0% 2%;
-  --foreground: 40 38% 89%;
-  --border: 40 18% 18%;
-  --card: 0 0% 4%;
-  --card-foreground: 40 38% 89%;
-  --card-border: 40 18% 22%;
-  --sidebar: 0 0% 4%;
-  --sidebar-foreground: 40 38% 89%;
-  --sidebar-border: 40 18% 22%;
-  --sidebar-primary: 40 38% 89%;
-  --sidebar-primary-foreground: 0 0% 2%;
-  --sidebar-accent: 28 38% 54%;
-  --sidebar-accent-foreground: 0 0% 2%;
-  --sidebar-ring: 40 38% 89%;
-  --popover: 0 0% 4%;
-  --popover-foreground: 40 38% 89%;
-  --popover-border: 40 18% 22%;
-  --primary: 40 38% 89%;
-  --primary-foreground: 0 0% 2%;
-  --secondary: 28 38% 54%;
-  --secondary-foreground: 0 0% 2%;
-  --muted: 0 0% 8%;
-  --muted-foreground: 40 12% 53%;
-  --accent: 28 38% 54%;
-  --accent-foreground: 0 0% 2%;
-  --destructive: 28 38% 54%;
-  --destructive-foreground: 0 0% 2%;
-  --input: 0 0% 8%;
-  --ring: 40 38% 89%;
-/* NYXUS-TOKENS-END palette */
+  /* NYXUS BRAND PALETTE */
+  --background: 260 50% 2%; /* #030206 */
+  --foreground: 263 44% 92%; /* #e8e0f5 */
+  
+  --primary: 300 100% 50%; /* #ff00ff */
+  --primary-foreground: 260 50% 2%;
+  
+  --secondary: 208 100% 50%; /* #0088ff */
+  --secondary-foreground: 260 50% 2%;
+  
+  --accent: 288 100% 50%; /* #cc00ff */
+  --accent-foreground: 260 50% 2%;
+  
+  --destructive: 20 100% 50%; /* #ff5500 */
+  --destructive-foreground: 260 50% 2%;
+  
+  --muted: 260 20% 15%;
+  --muted-foreground: 263 20% 65%;
+  
+  --card: 260 50% 4%;
+  --card-foreground: 263 44% 92%;
+  --card-border: 300 100% 50%;
+  
+  --popover: 260 50% 4%;
+  --popover-foreground: 263 44% 92%;
+  --popover-border: 300 100% 50%;
+  
+  --border: 288 100% 50%;
+  --input: 260 20% 25%;
+  --ring: 300 100% 50%;
 
-  --app-font-sans: 'Inter', 'Helvetica Neue', system-ui, sans-serif;
-  --app-font-serif: 'Inter', sans-serif;
+  --app-font-sans: 'Caveat', 'Patrick Hand', cursive;
+  --app-font-serif: 'Caveat', cursive;
   --app-font-mono: 'JetBrains Mono', 'Courier New', monospace;
-
+  
   --radius: 0.5rem;
 }
 
 .dark {
-  --background: 0 0% 2%;
-  --foreground: 40 38% 89%;
-  --primary: 40 38% 89%;
-  --primary-foreground: 0 0% 2%;
-  --secondary: 28 38% 54%;
-  --secondary-foreground: 0 0% 2%;
-  --accent: 28 38% 54%;
-  --accent-foreground: 0 0% 2%;
-  --destructive: 28 38% 54%;
-  --destructive-foreground: 0 0% 2%;
-  --muted: 0 0% 8%;
-  --muted-foreground: 40 12% 53%;
-  --card: 0 0% 4%;
-  --card-foreground: 40 38% 89%;
-  --card-border: 40 18% 22%;
-  --popover: 0 0% 4%;
-  --popover-foreground: 40 38% 89%;
-  --popover-border: 40 18% 22%;
-  --border: 40 18% 18%;
-  --input: 0 0% 8%;
-  --ring: 40 38% 89%;
+  --background: 260 50% 2%; /* #030206 */
+  --foreground: 263 44% 92%; /* #e8e0f5 */
+  
+  --primary: 300 100% 50%; /* #ff00ff */
+  --primary-foreground: 260 50% 2%;
+  
+  --secondary: 208 100% 50%; /* #0088ff */
+  --secondary-foreground: 260 50% 2%;
+  
+  --accent: 288 100% 50%; /* #cc00ff */
+  --accent-foreground: 260 50% 2%;
+  
+  --destructive: 20 100% 50%; /* #ff5500 */
+  --destructive-foreground: 260 50% 2%;
+  
+  --muted: 260 20% 15%;
+  --muted-foreground: 263 20% 65%;
+  
+  --card: 260 50% 4%;
+  --card-foreground: 263 44% 92%;
+  --card-border: 300 100% 50%;
+  
+  --popover: 260 50% 4%;
+  --popover-foreground: 263 44% 92%;
+  --popover-border: 300 100% 50%;
+  
+  --border: 288 100% 50%;
+  --input: 260 20% 25%;
+  --ring: 300 100% 50%;
 }
 
 @layer base {
@@ -141,33 +142,25 @@
   }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #06060a; }
-  ::-webkit-scrollbar-thumb { background: #1a1814; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #b8865a; }
+  ::-webkit-scrollbar-track { background: #06040c; }
+  ::-webkit-scrollbar-thumb { background: #2a1a3a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #ff00ff; }
 }
 
 .nyx-glass {
-  background: rgba(6, 6, 10, 0.55) !important;
+  background: rgba(6, 4, 12, 0.55) !important;
   backdrop-filter: blur(14px) saturate(1.6);
   -webkit-backdrop-filter: blur(14px) saturate(1.6);
 }
 
-/* ─────────────────────────────────────────────────────────────────
- * Sprint K-C rev r16 weather animations
- * ─ Stars: cream twinkle (was cyan/blue glow)
- * ─ Rain: cream streak (was bright blue)
- * ─ Snow: cream drift (was cyan glow)
- * ─ Clouds: warm-grey drift (kept neutral, very faint)
- * ─ Lightning: cream/copper flash (was pure white + yellow)
- * ─ Fog: warm-grey band (kept neutral)
- * ───────────────────────────────────────────────────────────────── */
+/* Weather Animation CSS */
 .star {
   position: absolute;
-  background-color: #f4ead5;
+  background-color: white;
   border-radius: 50%;
   animation: twinkle var(--duration, 2s) infinite ease-in-out alternate;
   animation-delay: var(--delay, 0s);
-  box-shadow: 0 0 4px rgba(244, 234, 213, 0.7), 0 0 8px rgba(244, 234, 213, 0.4);
+  box-shadow: 0 0 4px #0088ff, 0 0 8px #0088ff;
 }
 
 @keyframes twinkle {
@@ -177,7 +170,7 @@
 
 .rain-streak {
   position: absolute;
-  background: linear-gradient(to bottom, rgba(244, 234, 213, 0), rgba(244, 234, 213, 0.7));
+  background: linear-gradient(to bottom, rgba(0, 136, 255, 0), rgba(0, 136, 255, 0.8));
   width: 2px;
   height: var(--length, 40px);
   animation: fall var(--speed, 0.6s) linear infinite;
@@ -194,13 +187,13 @@
 
 .snowflake {
   position: absolute;
-  background: #f4ead5;
+  background: white;
   border-radius: 50%;
   width: var(--size, 4px);
   height: var(--size, 4px);
   animation: drift var(--speed, 3s) linear infinite;
   animation-delay: var(--delay, 0s);
-  box-shadow: 0 0 6px rgba(244, 234, 213, 0.7);
+  box-shadow: 0 0 6px rgba(0, 255, 255, 0.8);
 }
 
 @keyframes drift {
@@ -212,7 +205,7 @@
 
 .cloud {
   position: absolute;
-  background: rgba(120, 110, 95, 0.55);
+  background: rgba(100, 100, 120, 0.6);
   border-radius: 50%;
   filter: blur(8px);
   animation: float var(--speed, 20s) linear infinite;
@@ -227,7 +220,7 @@
 .lightning {
   position: absolute;
   inset: 0;
-  background: #f4ead5;
+  background: white;
   opacity: 0;
   pointer-events: none;
   z-index: 10;
@@ -235,10 +228,10 @@
 }
 
 @keyframes flash {
-  0%, 94%, 98%, 100% { opacity: 0; background: #f4ead5; }
-  95% { opacity: 0.8; background: #f4ead5; }
-  96% { opacity: 0.2; background: #b8865a; }
-  97% { opacity: 0.9; background: #f4ead5; }
+  0%, 94%, 98%, 100% { opacity: 0; background: white; }
+  95% { opacity: 0.8; background: white; }
+  96% { opacity: 0.2; background: #ffff00; }
+  97% { opacity: 0.9; background: white; }
 }
 
 .widget-shake {
@@ -257,7 +250,7 @@
   position: absolute;
   width: 200%;
   height: 40px;
-  background: linear-gradient(to right, transparent, rgba(180, 170, 150, 0.18), transparent);
+  background: linear-gradient(to right, transparent, rgba(150, 150, 180, 0.2), transparent);
   filter: blur(10px);
   animation: fog-drift var(--speed, 15s) linear infinite alternate;
   animation-delay: var(--delay, 0s);
@@ -268,23 +261,31 @@
   100% { transform: translateX(-50%); }
 }
 
-/* Sprint K-C rev r16: legacy neon-text-* + neon-box-* utilities remapped
-   to cream/copper so any component still using them stays on-brand. */
-.neon-text-primary   { text-shadow: 0 0 12px rgba(244, 234, 213, 0.55); }
-.neon-text-secondary { text-shadow: 0 0 12px rgba(196, 180, 145, 0.55); }
-.neon-text-accent    { text-shadow: 0 0 12px rgba(184, 134, 90, 0.55); }
-.neon-text-green     { text-shadow: 0 0 12px rgba(244, 234, 213, 0.55); }
-.neon-text-yellow    { text-shadow: 0 0 12px rgba(184, 134, 90, 0.55); }
-.neon-text-orange    { text-shadow: 0 0 12px rgba(184, 134, 90, 0.55); }
-.neon-text-cream     { text-shadow: 0 0 12px rgba(244, 234, 213, 0.55); }
-.neon-text-copper    { text-shadow: 0 0 12px rgba(184, 134, 90, 0.55); }
+.neon-text-primary {
+  text-shadow: 0 0 12px rgba(255, 0, 255, 0.6);
+}
+.neon-text-secondary {
+  text-shadow: 0 0 12px rgba(0, 136, 255, 0.6);
+}
+.neon-text-accent {
+  text-shadow: 0 0 12px rgba(204, 0, 255, 0.6);
+}
+.neon-text-green {
+  text-shadow: 0 0 12px rgba(57, 255, 20, 0.6);
+}
+.neon-text-yellow {
+  text-shadow: 0 0 12px rgba(255, 255, 0, 0.6);
+}
+.neon-text-orange {
+  text-shadow: 0 0 12px rgba(255, 85, 0, 0.6);
+}
 
 .neon-box-primary {
-  box-shadow: 0 0 12px rgba(244, 234, 213, 0.45);
-  border: 1px solid rgba(244, 234, 213, 0.35);
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.6);
+  border: 1px solid rgba(255, 0, 255, 0.4);
 }
 
 .neon-box-secondary {
-  box-shadow: 0 0 12px rgba(184, 134, 90, 0.50);
-  border: 1px solid rgba(184, 134, 90, 0.35);
+  box-shadow: 0 0 12px rgba(0, 136, 255, 0.6);
+  border: 1px solid rgba(0, 136, 255, 0.4);
 }

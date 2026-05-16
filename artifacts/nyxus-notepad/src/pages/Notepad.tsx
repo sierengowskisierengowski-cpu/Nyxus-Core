@@ -12,16 +12,12 @@ const BG       = '#0a0a0a';
 const PANEL    = '#0f0f0f';
 const BORDER   = 'rgba(255,255,255,0.08)';
 const RULED    = 'rgba(255,255,255,0.11)';
-const MARGIN   = 'rgba(184,134,90,0.35)';
-// Sprint K-C rev r16: legacy color names retained as constants for
-// minimal-diff component code, but every value is now on-brand
-// (cream + copper). PINK/GREEN map to cream; PURPLE to cream-deep;
-// BLUE to cream-dim; ORANGE to copper. NO purple/cyan/red/yellow-gold.
-const PINK     = '#f4ead5';
-const PURPLE   = '#c4b491';
-const BLUE     = '#8a8068';
-const GREEN    = '#f4ead5';
-const ORANGE   = '#b8865a';
+const MARGIN   = 'rgba(255,60,80,0.22)';
+const PINK     = '#ff00ff';
+const PURPLE   = '#cc00ff';
+const BLUE     = '#0088ff';
+const GREEN    = '#39ff14';
+const ORANGE   = '#ff5500';
 const DIM      = 'rgba(255,255,255,0.35)';
 const TEXT     = 'rgba(255,255,255,0.88)';
 const FONT     = "'Caveat', 'Patrick Hand', cursive";
@@ -216,8 +212,8 @@ export default function Notepad() {
       .replace(/^# (.*)$/gim,   `<h1 style="color:${GREEN};font-size:32px;margin:24px 0 10px;font-family:${FONT};text-shadow:0 0 12px ${GREEN}66">$1</h1>`)
       .replace(/\*\*(.*?)\*\*/gim, `<strong style="color:${TEXT}">$1</strong>`)
       .replace(/\*(.*?)\*/gim,     `<em>$1</em>`)
-      .replace(/```([\s\S]*?)```/gim, `<pre style="background:#0e0e14;border:1px solid ${PURPLE}44;padding:12px;margin:10px 0;border-radius:4px;overflow-x:auto"><code style="font-family:monospace;font-size:14px;color:${GREEN}">$1</code></pre>`)
-      .replace(/`(.*?)`/gim, `<code style="background:rgba(184,134,90,0.15);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:14px;color:${PURPLE}">$1</code>`)
+      .replace(/```([\s\S]*?)```/gim, `<pre style="background:#0d0020;border:1px solid ${PURPLE}44;padding:12px;margin:10px 0;border-radius:4px;overflow-x:auto"><code style="font-family:monospace;font-size:14px;color:${GREEN}">$1</code></pre>`)
+      .replace(/`(.*?)`/gim, `<code style="background:rgba(204,0,255,0.15);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:14px;color:${PURPLE}">$1</code>`)
       .replace(/^\- (.*)$/gim, `<li style="margin-left:16px;list-style:disc;color:${TEXT}">$1</li>`)
       .replace(/^\> (.*)$/gim, `<blockquote style="border-left:3px solid ${PINK};padding-left:12px;color:${DIM};font-style:italic;margin:8px 0">$1</blockquote>`)
       .replace(/\n/g, '<br/>');
@@ -316,7 +312,7 @@ export default function Notepad() {
           {/* Editor toolbar */}
           <div style={{
             height: 54, borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center',
-            padding: '0 16px', gap: 8, background: 'rgba(6,6,10,0.55)', backdropFilter: 'blur(14px) saturate(1.6)', WebkitBackdropFilter: 'blur(14px) saturate(1.6)', flexShrink: 0,
+            padding: '0 16px', gap: 8, background: 'rgba(6,4,12,0.55)', backdropFilter: 'blur(14px) saturate(1.6)', WebkitBackdropFilter: 'blur(14px) saturate(1.6)', flexShrink: 0,
           }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <input id="note-title-input" value={title} onChange={e => setTitle(e.target.value)}
@@ -376,7 +372,7 @@ export default function Notepad() {
           <div style={{
             height: 32, borderTop: `1px solid ${BORDER}`, display: 'flex',
             alignItems: 'center', justifyContent: 'space-between', padding: '0 16px',
-            background: 'rgba(6,6,10,0.55)', backdropFilter: 'blur(14px) saturate(1.6)', WebkitBackdropFilter: 'blur(14px) saturate(1.6)', fontSize: 13, color: DIM, flexShrink: 0,
+            background: 'rgba(6,4,12,0.55)', backdropFilter: 'blur(14px) saturate(1.6)', WebkitBackdropFilter: 'blur(14px) saturate(1.6)', fontSize: 13, color: DIM, flexShrink: 0,
           }}>
             <div style={{ display: 'flex', gap: 16 }}>
               <span><span style={{ color: PINK }}>{wordCount}</span> words</span>

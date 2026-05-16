@@ -57,8 +57,8 @@ DM_INK        = (0.00, 0.00, 0.00)   # #000000
 
 # Mono ramp used by rainbow_markup (was a 7-color neon cycle, now a
 # monochrome white→grey→ink shimmer matching DARK MIRROR).
-_RAINBOW_HEX = ("#f4ead5", "#f4ead5", "#f4ead5", "#f4ead5",
-                "#f4ead5", "#f4ead5", "#f4ead5", "#f4ead5")
+_RAINBOW_HEX = ("#ffffff", "#e8edf5", "#c8ccd6", "#9aa0ad",
+                "#c8ccd6", "#e8edf5", "#ffffff", "#e8edf5")
 
 
 def rainbow_markup(text: str) -> str:
@@ -285,7 +285,7 @@ class GraffitiBackground(Gtk.DrawingArea):
 # mural shows through, translucent dark inner panels, semi-opaque entries
 # /textviews where text needs to be readable, and rainbow-cycling neon
 # button outlines with handwritten Inter labels. We promote godsapp's
-# `* { font-family: 'Inter', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif}` universal rule across every NYXUS app, with
+# `* { font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif}` universal rule across every NYXUS app, with
 # a `.nyx-mono` opt-out class for places that genuinely need a monospace
 # face (terminals, code editors, log views). This CSS is loaded at
 # Gtk.STYLE_PROVIDER_PRIORITY_USER so it overrides each app's own
@@ -382,7 +382,7 @@ vte-terminal, vte-terminal * {
 .nyx-headline, .nyx-headline *,
 .nyx-app-title, .nyx-section-title,
 .nyx-rainbow-title, .nyx-h1, .nyx-h2, .nyx-h3 {
-    font-family: 'Inter', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
+    font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
 }
 .nyx-h1 { font-size: 28px; color: #ffffff; }
 .nyx-h2 { font-size: 22px; color: #e8edf5; }
@@ -402,7 +402,7 @@ headerbar, .titlebar {
 headerbar label, headerbar label.title,
 .titlebar label, .titlebar label.title {
     color: #e8edf5;
-    font-family: 'Inter', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
+    font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
     text-shadow: 0  1px 0 rgba(0, 0, 0, 0.65),
                  0 -1px 0 rgba(255, 255, 255, 0.10);
 }
@@ -437,7 +437,7 @@ frame {
     background-image: none;
     color: #e8edf5;
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 3px;
+    border-radius: 14px;
     padding: 12px 14px;
     box-shadow: inset 0  1px 0 rgba(255, 255, 255, 0.08),
                 inset 0 -1px 0 rgba(0,   0,  0,  0.45),
@@ -486,7 +486,7 @@ textview {
     background-color: rgba(15, 20, 32, 0.62);
     color: #e8edf5;
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 3px;
+    border-radius: 10px;
     padding: 10px 12px;
 }
 textview text { background-color: transparent; color: #e8edf5; }
@@ -526,7 +526,7 @@ entry, spinbutton,
     background-image: none;
     color: #e8edf5;
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 3px;
+    border-radius: 10px;
     padding: 8px 14px;
     font-size: 14px;
     caret-color: #ffffff;
@@ -554,7 +554,7 @@ button,
     background-image: none;
     color: #e8edf5;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 3px;
+    border-radius: 10px;
     padding: 6px 14px;
     font-size: 14px;
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.65);
@@ -653,14 +653,14 @@ dropdown, dropdown > button {
     background-color: rgba(15, 20, 32, 0.72);
     color: #e8edf5;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 3px;
+    border-radius: 10px;
     padding: 4px 10px;
 }
 popover, popover > contents, popover > arrow {
     background-color: rgba(5, 7, 12, 0.92);
     background-image: none;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 3px;
+    border-radius: 12px;
     color: #e8edf5;
 }
 tooltip, tooltip.background {
@@ -688,14 +688,14 @@ tooltip, tooltip.background {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
     font-size: 13px;
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 3px;
+    border-radius: 10px;
     padding: 10px 14px;
 }
 
 /* -- The signature outer frame (collapses to a single white hairline) ---- */
 .nyx-chrome-edge, .nyx-godsapp-frame {
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 3px;
+    border-radius: 14px;
     box-shadow:
         inset 0 0 0 1px rgba(255, 255, 255, 0.06),
         0 6px 20px rgba(0, 0, 0, 0.45);
@@ -931,208 +931,30 @@ def _is_adw_app_window(window) -> bool:
 
 
 def _apply_size_policy(window: Gtk.Window) -> None:
-    """rev r15 — INTELLIGENT DEFAULTS + UNIVERSAL RESPONSIVENESS.
-
-    Each app declares its own *intelligent* default size via
-    set_default_size(); this hook does NOT clobber it. We instead
-    enforce three universal rules so every window in the build feels
-    designed:
-
-      1. **Sane minimum.** A window can never shrink below a usable
-         floor (320x240). Each app may override by setting the
-         attribute ``_nyxus_min_size = (w, h)`` before present().
-      2. **Resizable by default.** Every window is resizable so the
-         user can grow it. Apps may opt out by setting
-         ``_nyxus_fixed_layout = True`` on the window (launcher,
-         power menu, screenshot HUD — short-lived popups whose layout
-         is intentionally fixed).
-      3. **Responsive root.** The window's root child is forced to
-         hexpand+vexpand so when the user resizes, content reflows to
-         fill the available space — no dead borders, no orphaned
-         padding.
-
-    Pre-existing fullscreen/maximize state is also cleared so apps
-    always open at their intelligent default, never sticky-maximized
-    from a previous session.
-    """
+    """r5: open SMALL and let GTK auto-grow to natural content size.
+    Default 480x320 is intentionally small; min 320x240 so the user can
+    shrink further. resizable=True + setting size_request to the small
+    minimum (not the default) means content can request more space and
+    the window will naturally expand to fit it. Universal NYXUS rule:
+    every app + every flyout opens compact, then grows to its content."""
     try:
         window.unmaximize()
     except Exception: pass
     try:
         window.unfullscreen()
     except Exception: pass
-
-    # Resizability: only fixed-layout popups stay non-resizable.
-    fixed = bool(getattr(window, "_nyxus_fixed_layout", False))
     try:
-        window.set_resizable(not fixed)
-    except Exception: pass
-
-    # Sensible minimum so windows can't be dragged into uselessness.
-    # Per-app override via window._nyxus_min_size = (w, h).
-    if not fixed:
-        try:
-            mw, mh = getattr(window, "_nyxus_min_size", (320, 240))
-            window.set_size_request(int(mw), int(mh))
-        except Exception as e:
-            log.debug("set_size_request floor: %s", e)
-
-    # Make the root child fully expand so resizing reflows content.
-    # Gtk.Window uses get_child(); Adw.ApplicationWindow uses get_content().
-    # We try BOTH so reflow enforcement covers every window class shipped
-    # in NYXUS, not just plain Gtk.Window.
-    roots = []
-    try:
-        c = window.get_child()
-        if c is not None: roots.append(c)
+        window.set_resizable(True)
     except Exception: pass
     try:
-        c = window.get_content() if hasattr(window, "get_content") else None
-        if c is not None: roots.append(c)
-    except Exception: pass
-    for child in roots:
-        try: child.set_hexpand(True)
-        except Exception: pass
-        try: child.set_vexpand(True)
-        except Exception: pass
-
-
-def _ensure_titlebar(window: Gtk.Window) -> None:
-    """rev r15 — Real-OS title-bar contract.
-
-    Per the user-locked Sprint B "Real-OS desktop" contract, every
-    NYXUS window must:
-
-      • Be **freely movable** by clicking and dragging the title bar
-        (no $mod required) — Windows / macOS-style.
-      • Toggle **maximize on double-click** of the title bar.
-      • Show a **window menu on right-click** of the title bar
-        (Move / Resize / Minimize / Maximize / Close).
-
-    GTK4 windows in Wayland are CSD-only (no server-side decoration),
-    so a window with no Gtk.HeaderBar / Adw.HeaderBar widget has NO
-    drag region — clicking anywhere on it does nothing. This helper
-    auto-installs a minimal Adw.HeaderBar (with window controls) on
-    plain Gtk.Window / Gtk.ApplicationWindow that lack one, and
-    attaches the double-click + right-click handlers.
-
-    Adw.ApplicationWindow is left alone (those use Adw.ToolbarView with
-    their own HeaderBar inside the content; injecting at the window
-    level would conflict).
-
-    Apps that intentionally want NO title bar (launcher / powermenu /
-    screenshot HUD popups) opt out by setting the window attribute
-    ``_nyxus_no_titlebar = True`` before present(). Those windows are
-    typically also tagged ``_nyxus_fixed_layout = True``.
-    """
-    if window is None:
-        return
-    if getattr(window, "_nyxus_no_titlebar", False):
-        return
-    if getattr(window, "_nyxus_fixed_layout", False):
-        # Fixed-layout popups don't get a title bar by default.
-        return
-    if getattr(window, "_nyxus_titlebar_installed", False):
-        return
-
-    # Skip Adw.ApplicationWindow — they manage their own header inside
-    # Adw.ToolbarView and we mustn't double-install.
-    try:
-        if _is_adw_app_window(window):
-            window._nyxus_titlebar_installed = True
-            _attach_titlebar_handlers(window, target=None)
-            return
-    except Exception:
-        pass
-
-    # Skip if the window already has a titlebar set.
-    try:
-        if window.get_titlebar() is not None:
-            window._nyxus_titlebar_installed = True
-            _attach_titlebar_handlers(window, target=window.get_titlebar())
-            return
-    except Exception:
-        pass
-
-    # Build a minimal Adw.HeaderBar (preferred — gives us the matching
-    # NYXUS frosted styling for free) or fall back to Gtk.HeaderBar.
-    header = None
-    try:
-        import gi as _gi
-        _gi.require_version("Adw", "1")
-        from gi.repository import Adw as _Adw
-        header = _Adw.HeaderBar()
-        header.set_show_end_title_buttons(True)
-        header.set_show_start_title_buttons(True)
-    except Exception:
-        try:
-            header = Gtk.HeaderBar()
-            header.set_show_title_buttons(True)
-        except Exception:
-            header = None
-
-    if header is None:
-        return
-
-    try:
-        # Title text mirrors the window title so the bar feels native.
-        try:
-            title_label = Gtk.Label(label=window.get_title() or "")
-            title_label.add_css_class("nyx-titlebar-title")
-            header.set_title_widget(title_label)
-        except Exception:
-            pass
-        header.add_css_class("nyx-titlebar")
-        window.set_titlebar(header)
-        window._nyxus_titlebar_installed = True
-        _attach_titlebar_handlers(window, target=header)
+        window.set_default_size(480, 320)
     except Exception as e:
-        log.debug("titlebar install: %s", e)
-
-
-def _attach_titlebar_handlers(window: Gtk.Window,
-                              target: Optional[Gtk.Widget]) -> None:
-    """Wire double-click → maximize toggle and right-click → window menu.
-
-    `target` is the HeaderBar widget when we have one; otherwise the
-    handlers are attached to the window itself (Adw.ApplicationWindow
-    case) so the user still gets double-click / right-click on the
-    visible header inside the content."""
-    if getattr(window, "_nyxus_titlebar_handlers", False):
-        return
-    sink = target if target is not None else window
+        log.debug("set_default_size: %s", e)
     try:
-        # ── Double-click → toggle maximize ───────────────────────
-        dbl = Gtk.GestureClick()
-        dbl.set_button(1)  # left button
-        def _on_dbl(gesture, n_press, x, y):
-            if n_press == 2:
-                try:
-                    if window.is_maximized():
-                        window.unmaximize()
-                    else:
-                        window.maximize()
-                except Exception: pass
-        dbl.connect("pressed", _on_dbl)
-        sink.add_controller(dbl)
-
-        # ── Right-click → invoke nyxus-window-menu.sh ────────────
-        rmb = Gtk.GestureClick()
-        rmb.set_button(3)  # right button
-        def _on_rmb(gesture, n_press, x, y):
-            try:
-                import subprocess, shutil
-                cmd = shutil.which("nyxus-window-menu.sh") \
-                      or "/usr/local/bin/nyxus-window-menu.sh"
-                subprocess.Popen([cmd], start_new_session=True)
-            except Exception as e:
-                log.debug("window-menu invoke: %s", e)
-        rmb.connect("pressed", _on_rmb)
-        sink.add_controller(rmb)
-
-        window._nyxus_titlebar_handlers = True
+        # Min size only — natural request from content drives the actual size.
+        window.set_size_request(320, 240)
     except Exception as e:
-        log.debug("titlebar handlers: %s", e)
+        log.debug("set_size_request: %s", e)
 
 
 def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
@@ -1166,7 +988,6 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
         return None
     _install_global_css()
     _apply_size_policy(window)
-    _ensure_titlebar(window)
     _make_window_transparent(window)
 
     # Re-entrancy guard. Use a plain attribute on the window itself —
@@ -1239,31 +1060,25 @@ def _make_window_transparent(window: Gtk.Window) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# UNIVERSAL ENFORCEMENT (rev r15 — 2026-05-14)
+# UNIVERSAL ENFORCEMENT (rev 2026-05-07 r13)
 # ──────────────────────────────────────────────────────────────────────────────
-# rev r13 used to *clamp* every window's default size to 700×480 to enforce a
-# small-by-default policy. rev r15 reverses that decision: per the user-locked
-# "Intelligent Defaults & Universal Responsiveness" rule, every app must open
-# at the size that makes the most sense for its content (Terminal wide for
-# reading, Calculator compact, File Manager wider, Settings standard system-
-# settings size, etc.). We therefore:
+# Until now, install_chrome() had to be called explicitly by every app — and
+# any per-app set_default_size(900, 700) call would override the small-size
+# policy. r13 fixes both by monkey-patching at module import time:
 #
-#   1. **Do NOT clamp set_default_size.** Each app declares its own
-#      intelligent default; we trust it. We only enforce a generous CEILING
-#      (NYXUS_MAX_DEFAULT_W/H) so a typo can't open a window larger than any
-#      reasonable monitor, and a SANE FLOOR via _apply_size_policy.
-#   2. **Auto-install chrome on first present()** so apps that forget to
-#      import or call install_chrome still get DARK MIRROR styling, the
-#      responsiveness policy, and the transparent surface.
+#   1. Gtk.Window.set_default_size  → clamped to NYXUS_MAX_DEFAULT (700x480)
+#      so no app can open larger than the universal NYXUS default. Apps can
+#      still be resized larger BY THE USER via the resizable window edge.
+#   2. Gtk.Window.present / Adw.ApplicationWindow.present → wrapped to
+#      auto-call install_chrome(self) on first present, so apps that forgot
+#      to import or call install_chrome still get DARK MIRROR styling, the
+#      small default size, and the transparent surface.
 #
-# Both patches are idempotent + crash-proof.
+# Both patches are idempotent + crash-proof (each call is wrapped in try).
 # ──────────────────────────────────────────────────────────────────────────────
 
-# Generous ceiling — anything larger than this is almost certainly a typo.
-# Real intelligent defaults should be 1600×1000 or smaller; 2400×1600 leaves
-# headroom for ultra-wide monitors and explicit large layouts.
-NYXUS_MAX_DEFAULT_W = 2400
-NYXUS_MAX_DEFAULT_H = 1600
+NYXUS_MAX_DEFAULT_W = 700
+NYXUS_MAX_DEFAULT_H = 480
 
 _NYX_PATCHED_FLAG = "_nyxus_universal_patched"
 
@@ -1275,15 +1090,15 @@ def _nyx_install_universal_patches():
     except Exception:
         return
 
-    # ── 1. Sanity-cap set_default_size (NOT clamp) ──────────────────────────
-    # rev r15: honor intelligent per-app defaults; only cap absurd values.
+    # ── 1. Clamp set_default_size on EVERY Gtk.Window subclass ──────────────
     try:
         _orig_sds = Gtk.Window.set_default_size
         def _nyx_set_default_size(self, w, h):
             try:
-                # Cap only to prevent typos (e.g., 99999) opening offscreen.
-                cw = min(int(w), NYXUS_MAX_DEFAULT_W) if (w and w > 0) else -1
-                ch = min(int(h), NYXUS_MAX_DEFAULT_H) if (h and h > 0) else -1
+                cw = min(int(w) if w and w > 0 else NYXUS_MAX_DEFAULT_W,
+                         NYXUS_MAX_DEFAULT_W)
+                ch = min(int(h) if h and h > 0 else NYXUS_MAX_DEFAULT_H,
+                         NYXUS_MAX_DEFAULT_H)
                 return _orig_sds(self, cw, ch)
             except Exception:
                 return _orig_sds(self, w, h)

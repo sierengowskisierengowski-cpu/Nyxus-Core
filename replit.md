@@ -26,16 +26,6 @@ For canonical project architecture and deployment documentation, use:
 - **NYX** = ISO image only
 - **NYXUS** = operating system/platform/application ecosystem
 
-## Visual Target (LOCKED)
-
-Single canonical visual reference for every sprint:
-`docs/brand/nyxus-eclipse-reference.png` — black Eclipse mark with
-cream halo over a still reflective surface. Read `docs/brand/VISUAL-TARGET.md`
-for the rules this image enforces (single light source, reflection
-not shadow, triple-black ink, no red/cyan/purple ever, Eclipse as
-primary brand mark). Every UI change must move the OS *closer* to
-how this image feels.
-
 ## User preferences
 
 - **Auth lockout policies stay OFF until post-install.** Do NOT add or

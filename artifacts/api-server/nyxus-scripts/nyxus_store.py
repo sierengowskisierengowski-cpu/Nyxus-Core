@@ -1139,58 +1139,7 @@ class StoreApp(Adw.Application):
         self._toast("Updating Flatpaks…")
 
 
-# ── User preferences (Sprint C, rev r15) ─────────────────────────────
-# Settings → Software Center writes ~/.config/nyxus/settings.json
-# `software.*`. Honor user-facing keys at launch so every Settings
-# toggle produces a real behavior change (Build Standard: no-op
-# toggles forbidden).
-_PREFS_FILE = Path.home() / ".config" / "nyxus" / "settings.json"
-SOFTWARE_PREFS: dict = {}
-
-
-def _apply_software_prefs() -> None:
-    """Load software.* prefs and apply backend toggles to the
-    process. Currently honored:
-
-      - software.parallel        → pacman ParallelDownloads override
-                                   via PACMAN_PARALLEL_DOWNLOADS env
-                                   (consumed by nyxus install helper).
-      - software.scope           → default install scope
-                                   (NYXUS_INSTALL_SCOPE env).
-      - software.backend_pacman  → NYXUS_BACKEND_PACMAN={1,0}
-      - software.backend_aur     → NYXUS_BACKEND_AUR={1,0}
-      - software.backend_flatpak → NYXUS_BACKEND_FLATPAK={1,0}
-      - software.confirm         → NYXUS_CONFIRM_OPS={1,0}
-      - software.show_icons,
-        software.density         → exposed as env so the StoreApp
-                                   chrome can pick them up at build.
-    """
-    global SOFTWARE_PREFS
-    try:
-        if not _PREFS_FILE.exists():
-            return
-        data = json.loads(_PREFS_FILE.read_text() or "{}")
-        SOFTWARE_PREFS = (data or {}).get("software", {}) or {}
-    except Exception:
-        return
-    p = SOFTWARE_PREFS
-    if "parallel" in p:
-        os.environ["PACMAN_PARALLEL_DOWNLOADS"] = str(int(p.get("parallel", 5)))
-    if "scope" in p:
-        os.environ["NYXUS_INSTALL_SCOPE"] = str(p.get("scope", "system"))
-    for key, env in (("backend_pacman",  "NYXUS_BACKEND_PACMAN"),
-                     ("backend_aur",     "NYXUS_BACKEND_AUR"),
-                     ("backend_flatpak", "NYXUS_BACKEND_FLATPAK"),
-                     ("confirm",         "NYXUS_CONFIRM_OPS"),
-                     ("show_icons",      "NYXUS_SHOW_APP_ICONS")):
-        if key in p:
-            os.environ[env] = "1" if bool(p[key]) else "0"
-    if "density" in p:
-        os.environ["NYXUS_LIST_DENSITY"] = str(p.get("density", "comfortable"))
-
-
 def main() -> int:
-    _apply_software_prefs()
     return StoreApp().run(sys.argv)
 
 

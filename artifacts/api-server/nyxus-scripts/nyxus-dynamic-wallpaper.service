@@ -6,3 +6,6 @@ PartOf=graphical-session.target
 [Service]
 Type=oneshot
 ExecStart=%h/.local/bin/nyxus-dynamic-wallpaper.sh
+
+[Install]
+WantedBy=graphical-session.target

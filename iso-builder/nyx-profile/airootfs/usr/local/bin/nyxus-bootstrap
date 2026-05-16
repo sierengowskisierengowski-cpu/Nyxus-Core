@@ -51,25 +51,17 @@ notify() {
 log "starting (user=${USER:-?} home=${HOME:-?} version=${BOOTSTRAP_VERSION})"
 mkdir -p "${NYXUS_DIR}"
 
-# ── Live ISO short-circuit (rev 2026-05-14 r17) ─────────────────────────────
-# Inside an Arch live ISO, the airootfs is the source of truth — every
-# config nyxus-bootstrap would normally pull from production is ALREADY
-# baked into / by mkarchiso at build time. Pulling again would:
-#   * stall the EWW bar for 120s (nyxus-wait-bootstrap blocks on the
-#     marker), leaving the user with a bare wallpaper-less desktop
-#   * potentially CLOBBER the airootfs configs with a stale production
-#     snapshot, undoing fresh fixes shipped in this very ISO
-#   * emit a confusing "first-boot setup starting" splash on a session
-#     the user doesn't intend to keep
-#
-# Detection: archiso always mounts /run/archiso/{bootmnt,airootfs} during
-# the live session. Either path is a definitive signal we are NOT on an
-# installed disk. Write the marker so nyxus-wait-bootstrap proceeds, log
-# what we did, and exit clean.
-if [[ -d /run/archiso/bootmnt || -d /run/archiso/airootfs ]]; then
-  log "live ISO detected (/run/archiso present) — airootfs is canonical, skipping pull"
-  echo "${BOOTSTRAP_VERSION}-liveiso" > "${MARK}"
-  notify 5 5000 "rgb(e8edf5)" "live session ready (no install needed) · welcome"
+# ── Live-session guard ──────────────────────────────────────────────────────
+# When running from the NYXUS live ISO (archiso), the /run/archiso directory
+# is present. In that context we must NOT download or run nyxus_install.sh,
+# because it would overwrite the carefully baked airootfs/skel configs with
+# potentially stale versions from the remote endpoint. The live user's
+# ~/.config already has the canonical configs copied from /etc/skel.
+# We exit 0 so nyxus-wait-bootstrap can proceed to launch the EWW bar and
+# other exec-once services that depend on configs already being in place.
+if [[ -d /run/archiso ]]; then
+  log "LIVE SESSION DETECTED (/run/archiso present) — skipping remote bootstrap, using baked airootfs configs"
+  notify 2 8000 "rgb(e8edf5)" "live session · using baked configs (installer available on desktop)"
   exit 0
 fi
 

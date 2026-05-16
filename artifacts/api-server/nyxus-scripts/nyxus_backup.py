@@ -123,7 +123,7 @@ def load_schedule() -> dict[str, str]:
 
 
 # ---------- GUI ----------
-GOLD = "#f4ead5"; INK = "#080a10"
+GOLD = "#d4b87a"; INK = "#080a10"
 
 CSS = f"""
 .backup-window  {{ background: {INK}; }}

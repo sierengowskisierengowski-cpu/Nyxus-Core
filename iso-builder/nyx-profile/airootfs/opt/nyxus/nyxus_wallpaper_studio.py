@@ -162,12 +162,12 @@ class WallpaperApp(Adw.Application):
             b"""
             .nyxus-wp-tile {
               background: rgba(10, 13, 20, 0.85);
-              border: 1px solid rgba(244, 234, 213, 0.18);
+              border: 1px solid rgba(58, 216, 255, 0.18);
               border-radius: 14px;
               padding: 0;
             }
             .nyxus-wp-tile:hover {
-              border-color: rgba(244, 234, 213, 0.55);
+              border-color: rgba(58, 216, 255, 0.55);
               background: rgba(15, 18, 28, 0.95);
             }
             .nyxus-wp-preview {

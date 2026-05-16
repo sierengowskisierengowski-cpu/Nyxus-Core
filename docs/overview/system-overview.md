@@ -49,3 +49,8 @@ Nyxus-Core is a monorepo that centralizes:
 4. NYX ISO is baked and released as the canonical distribution image.
 
 The live ISO boots into NYXUS with a full chrome layer — Hyprland, EWW bars, Dunst notifications, SDDM login theme, the complete Python GTK4 app suite, and NYXUS Phantom (`nyxus-intel`) — all staged at build time from `artifacts/api-server/nyxus-scripts/`.
+
+
+---
+
+© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

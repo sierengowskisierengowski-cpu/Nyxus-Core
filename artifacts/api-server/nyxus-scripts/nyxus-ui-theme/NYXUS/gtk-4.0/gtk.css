@@ -1,98 +1,77 @@
 /* ============================================================
-   NYXUS GTK4 Theme — DARK MIRROR · CREAM + HANDWRITTEN
+   NYXUS GTK4 Theme
    ~/.themes/NYXUS/gtk-4.0/gtk.css
-   (LOCKED · rev 2026-05-14 r15)
 
-   Triple-black surfaces · off-white text · cream warm accent.
-   Caveat (handwritten) for accents · Inter for body · JetBrains
-   Mono Nerd Font for code/glyphs. Near-sharp 3px corners.
-   Glow on hover, tilt + handdrawn helper classes.
+   Background: #0f1420  Text: #c8ccd6  Accent: #6a6e78
+   Pink Hover: #6a6e78  Font: JetBrains Mono Nerd Font
 
-   Palette tokens MUST stay in lockstep with nyxus-palette.css —
-   GTK CSS parser does not follow @import reliably across the
-   theme dirs, so the @define-color block is inlined verbatim.
-
+   Silent. Dark. Purely Functional.
    © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ============================================================ */
 
-/* ── INLINED nyxus-palette.css (rev r15) — keep in lockstep ─ */
-@define-color nyx_white         #ffffff;
-@define-color nyx_white_off     #e8edf5;
-@define-color nyx_grey_light    #c8ccd6;
-@define-color nyx_grey_mid      #9aa0ad;
-@define-color nyx_grey_tertiary #6a6e78;
-@define-color nyx_ink_faded     #0a0a0a;
-@define-color nyx_ink_black     #000000;
-@define-color nyx_cream         #f4ead5;
-@define-color nyx_cream_soft    #fbf3e2;
-@define-color nyx_cream_deep    #c4b491;
-@define-color nyx_cream_glow_15 rgba(244, 234, 213, 0.15);
-@define-color nyx_cream_glow_28 rgba(244, 234, 213, 0.28);
-@define-color nyx_cream_glow_45 rgba(244, 234, 213, 0.45);
-@define-color nyx_cream_edge_55 rgba(244, 234, 213, 0.55);
-@define-color nyx_danger        #d96b6b;
-@define-color nyx_black_smoke   rgba(14, 14, 22, 0.55);
-@define-color nyx_black_ink     rgba(8,  8,  14, 0.78);
-@define-color nyx_black_void    rgba(0,  0,  0,  0.92);
-@define-color nyx_black_smoke_solid #0e0e16;
-@define-color nyx_black_ink_solid   #08080e;
-@define-color nyx_black_void_solid  #000000;
-@define-color nyx_glow_soft     rgba(255, 255, 255, 0.45);
-@define-color nyx_glow_bright   rgba(255, 255, 255, 0.85);
-@define-color nyx_hairline_white rgba(255, 255, 255, 0.10);
-@define-color nyx_hairline_ink   rgba(0, 0, 0, 0.45);
-@define-color nyx_hairline_cream rgba(244, 234, 213, 0.22);
-@define-color nyx_shadow_active   rgba(0, 0, 0, 0.65);
-@define-color nyx_shadow_inactive rgba(0, 0, 0, 0.20);
+/* GTK4 uses custom properties */
+:root {
+  --bg:          #0f1420;
+  --bg-alt:      #0a0a0a;
+  --bg-hover:    #000000;
+  --bg-active:   #0a0a0a;
+  --accent:      #6a6e78;
+  --accent-light:#9aa0ad;
+  --pink:        #6a6e78;
+  --text:        #c8ccd6;
+  --text-dim:    #6a6e78;
+  --text-off:    #3a3e4a;
+  --border:      #0a0a0a;
+  --border-a:    #2a2e3a;
+  --red:         #9aa0ad;
+  --green:       #c8ccd6;
+  --yellow:      #e8edf5;
+  --cyan:        #c8ccd6;
+}
 
-/* GTK4 / libadwaita semantic bindings — must use the standard names */
-@define-color accent_color           @nyx_cream;
-@define-color accent_bg_color        @nyx_cream;
-@define-color accent_fg_color        @nyx_ink_black;
-@define-color destructive_color      @nyx_danger;
-@define-color destructive_bg_color   rgba(217, 107, 107, 0.18);
-@define-color destructive_fg_color   @nyx_danger;
-@define-color success_color          @nyx_white_off;
-@define-color success_bg_color       rgba(255, 255, 255, 0.12);
-@define-color success_fg_color       @nyx_white_off;
-@define-color warning_color          @nyx_cream;
-@define-color warning_bg_color       rgba(244, 234, 213, 0.12);
-@define-color warning_fg_color       @nyx_cream;
-@define-color error_color            @nyx_danger;
-@define-color error_bg_color         rgba(217, 107, 107, 0.12);
-@define-color error_fg_color         @nyx_danger;
-@define-color window_bg_color        @nyx_black_smoke_solid;
-@define-color window_fg_color        @nyx_white_off;
-@define-color view_bg_color          @nyx_black_smoke_solid;
-@define-color view_fg_color          @nyx_white_off;
-@define-color headerbar_bg_color     @nyx_black_ink_solid;
-@define-color headerbar_fg_color     @nyx_white_off;
-@define-color headerbar_border_color @nyx_hairline_white;
-@define-color sidebar_bg_color       @nyx_black_ink_solid;
-@define-color sidebar_fg_color       @nyx_white_off;
-@define-color card_bg_color          @nyx_black_ink_solid;
-@define-color card_fg_color          @nyx_white_off;
-@define-color dialog_bg_color        @nyx_black_smoke_solid;
-@define-color dialog_fg_color        @nyx_white_off;
-@define-color popover_bg_color       @nyx_black_void_solid;
-@define-color popover_fg_color       @nyx_white_off;
-@define-color thumbnail_bg_color     @nyx_black_smoke_solid;
-@define-color thumbnail_fg_color     @nyx_white_off;
-@define-color shade_color            rgba(0, 0, 0, 0.5);
+/* ── GTK4 color definitions ─────────────────────────────────── */
+@define-color accent_color          #6a6e78;
+@define-color accent_bg_color       #6a6e78;
+@define-color accent_fg_color       #ffffff;
+@define-color destructive_color     #9aa0ad;
+@define-color destructive_bg_color  rgba(255, 255, 255, 0.18);
+@define-color destructive_fg_color  #9aa0ad;
+@define-color success_color         #c8ccd6;
+@define-color success_bg_color      rgba(255, 255, 255, 0.12);
+@define-color success_fg_color      #c8ccd6;
+@define-color warning_color         #e8edf5;
+@define-color warning_bg_color      rgba(255, 255, 255, 0.12);
+@define-color warning_fg_color      #e8edf5;
+@define-color error_color           #9aa0ad;
+@define-color error_bg_color        rgba(255, 255, 255, 0.12);
+@define-color error_fg_color        #9aa0ad;
+@define-color window_bg_color       #0f1420;
+@define-color window_fg_color       #c8ccd6;
+@define-color view_bg_color         #0f1420;
+@define-color view_fg_color         #c8ccd6;
+@define-color headerbar_bg_color    #0a0a0a;
+@define-color headerbar_fg_color    #c8ccd6;
+@define-color headerbar_border_color #0a0a0a;
+@define-color sidebar_bg_color      #0a0a0a;
+@define-color sidebar_fg_color      #c8ccd6;
+@define-color card_bg_color         #0a0a0a;
+@define-color card_fg_color         #c8ccd6;
+@define-color dialog_bg_color       #0f1420;
+@define-color dialog_fg_color       #c8ccd6;
+@define-color popover_bg_color      #0a0a0a;
+@define-color popover_fg_color      #c8ccd6;
+@define-color thumbnail_bg_color    #0f1420;
+@define-color thumbnail_fg_color    #c8ccd6;
+@define-color shade_color           rgba(0,0,0,0.5);
 @define-color scrollbar_outline_color transparent;
 
-/* ── Base ────────────────────────────────────────────────── */
+/* ── Base ───────────────────────────────────────────────────── */
 * {
-  font-family: "Inter", "Inter Display", "DejaVu Sans",
-               system-ui, sans-serif;
-  font-size: 12px;
+  font-family: "JetBrains Mono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 11px;
   -gtk-icon-shadow: none;
   text-shadow: none;
-  transition: background-color 140ms ease,
-              border-color 140ms ease,
-              color 140ms ease,
-              box-shadow 180ms ease,
-              transform 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
+  transition: all 120ms ease;
 }
 
 window,
@@ -101,148 +80,134 @@ window,
   color: @window_fg_color;
 }
 
-/* ── Header Bar ───────────────────────────────────────────── */
+/* ── Header Bar ─────────────────────────────────────────────── */
 headerbar {
   background-color: @headerbar_bg_color;
   color: @headerbar_fg_color;
-  border-bottom: 1px solid @nyx_hairline_white;
+  border-bottom: 1px solid @headerbar_border_color;
   padding: 4px 8px;
   min-height: 40px;
 }
 
 headerbar .title {
-  font-family: "Caveat", "Caveat Brush", "Comic Neue", cursive;
-  font-size: 18px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: @nyx_white_off;
+  letter-spacing: 0.06em;
 }
 
-/* Window controls — minimal hairline circles */
+/* Window controls */
 headerbar windowcontrols button {
   background: transparent;
-  border: 1px solid @nyx_hairline_white;
+  border: 1px solid #2a2e3a;
   border-radius: 50%;
   padding: 4px;
   min-width: 16px;
   min-height: 16px;
-  color: @nyx_grey_light;
+  color: #6a6e78;
 }
 
 headerbar windowcontrols button:hover {
-  background-color: @nyx_cream_glow_15;
-  border-color: @nyx_cream_edge_55;
-  color: @nyx_white;
-  box-shadow: 0 0 12px @nyx_cream_glow_28;
+  background-color: #6a6e78;
+  border-color: #6a6e78;
+  color: #ffffff;
 }
 
 headerbar windowcontrols button.close:hover {
-  background-color: rgba(217, 107, 107, 0.22);
-  border-color: @nyx_danger;
-  color: @nyx_white;
-  box-shadow: 0 0 14px rgba(217, 107, 107, 0.45);
+  background-color: #9aa0ad;
+  border-color: #9aa0ad;
 }
 
-/* ── Buttons ─────────────────────────────────────────────── */
+/* ── Buttons ────────────────────────────────────────────────── */
 button {
   background-color: @card_bg_color;
-  color: @nyx_white_off;
-  border: 1px solid @nyx_hairline_white;
-  border-radius: 3px;
+  color: @window_fg_color;
+  border: 1px solid #2a2e3a;
+  border-radius: 4px;
   padding: 6px 16px;
-  font-family: "Inter", "Inter Display", sans-serif;
 }
 
 button:hover {
-  background-color: @nyx_black_void_solid;
-  border-color: @nyx_cream_edge_55;
-  color: @nyx_cream_soft;
-  box-shadow: 0 0 14px @nyx_cream_glow_15;
+  background-color: #000000;
+  border-color: #6a6e78;
+  color: #6a6e78;
 }
 
 button:active {
-  background-color: @nyx_black_ink_solid;
-  border-color: @nyx_cream;
-  color: @nyx_cream;
+  background-color: #0a0a0a;
+  border-color: #6a6e78;
+  color: #9aa0ad;
 }
 
 button.suggested-action {
-  background-color: @nyx_cream;
-  border-color: @nyx_cream;
-  color: @nyx_ink_black;
-  font-weight: 600;
+  background-color: #6a6e78;
+  border-color: #6a6e78;
+  color: #ffffff;
 }
 
 button.suggested-action:hover {
-  background-color: @nyx_cream_soft;
-  border-color: @nyx_cream_soft;
-  box-shadow: 0 0 18px @nyx_cream_glow_45;
+  background-color: #6a6e78;
+  border-color: #6a6e78;
 }
 
 button.destructive-action {
-  background-color: rgba(217, 107, 107, 0.12);
-  border-color: @nyx_danger;
-  color: @nyx_danger;
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: #9aa0ad;
+  color: #9aa0ad;
 }
 
 button.destructive-action:hover {
-  background-color: @nyx_danger;
-  color: @nyx_white;
-  box-shadow: 0 0 16px rgba(217, 107, 107, 0.45);
+  background-color: #9aa0ad;
+  color: #0f1420;
 }
 
 button:disabled {
   background-color: transparent;
-  border-color: @nyx_hairline_white;
-  color: @nyx_grey_tertiary;
+  border-color: #0a0a0a;
+  color: #3a3e4a;
 }
 
 button.flat,
 button.circular {
   background-color: transparent;
   border-color: transparent;
-  color: @nyx_grey_light;
+  color: #6a6e78;
 }
 
 button.flat:hover,
 button.circular:hover {
-  background-color: @nyx_cream_glow_15;
-  color: @nyx_cream_soft;
+  background-color: #000000;
+  color: #6a6e78;
 }
 
-/* ── Entry / SearchEntry ─────────────────────────────────── */
+/* ── Entry ──────────────────────────────────────────────────── */
 entry,
 searchentry,
 spinbutton {
   background-color: @card_bg_color;
-  color: @nyx_white_off;
-  border: 1px solid @nyx_hairline_white;
-  border-radius: 3px;
+  color: @window_fg_color;
+  border: 1px solid #2a2e3a;
+  border-radius: 4px;
   padding: 6px 10px;
-  caret-color: @nyx_cream;
-  font-family: "Inter", sans-serif;
+  caret-color: #6a6e78;
 }
 
 entry:focus,
-searchentry:focus,
-spinbutton:focus {
-  border-color: @nyx_cream;
-  outline: 2px solid @nyx_cream_glow_28;
+searchentry:focus {
+  border-color: #6a6e78;
+  outline: 2px solid rgba(8, 12, 20, 0.25);
   outline-offset: -1px;
-  box-shadow: 0 0 14px @nyx_cream_glow_28;
 }
 
 entry:disabled {
-  color: @nyx_grey_tertiary;
-  border-color: @nyx_hairline_ink;
+  color: #3a3e4a;
+  border-color: #0a0a0a;
 }
 
 entry selection {
-  background-color: @nyx_cream;
-  color: @nyx_ink_black;
+  background-color: #6a6e78;
+  color: #ffffff;
 }
 
-/* ── Lists & Rows ────────────────────────────────────────── */
+/* ── Lists & Rows ───────────────────────────────────────────── */
 listview,
 columnview,
 treeview {
@@ -252,62 +217,57 @@ treeview {
 
 listview > row,
 columnview > row {
-  padding: 5px 10px;
-  border-radius: 3px;
+  padding: 4px 8px;
 }
 
 listview > row:hover,
 columnview > row:hover {
-  background-color: @nyx_cream_glow_15;
-  color: @nyx_white;
+  background-color: #000000;
+  color: #6a6e78;
 }
 
 listview > row:selected,
 columnview > row:selected {
-  background-color: @nyx_cream;
-  color: @nyx_ink_black;
+  background-color: #6a6e78;
+  color: #ffffff;
 }
 
-/* ── Check & Radio ───────────────────────────────────────── */
+/* ── Check & Radio ──────────────────────────────────────────── */
 checkbutton check,
 radiobutton radio {
-  background-color: @nyx_black_void_solid;
-  border: 1px solid @nyx_hairline_white;
+  background-color: #0a0a0a;
+  border: 1px solid #2a2e3a;
   border-radius: 3px;
   min-width: 16px;
   min-height: 16px;
 }
 
 checkbutton check:hover,
-radiobutton radio:hover {
-  border-color: @nyx_cream_edge_55;
-  box-shadow: 0 0 8px @nyx_cream_glow_15;
-}
+radiobutton radio:hover { border-color: #6a6e78; }
 
 checkbutton check:checked,
 radiobutton radio:checked {
-  background-color: @nyx_cream;
-  border-color: @nyx_cream;
-  color: @nyx_ink_black;
+  background-color: #6a6e78;
+  border-color: #6a6e78;
+  color: #ffffff;
 }
 
-/* ── Switch ──────────────────────────────────────────────── */
+/* ── Switch ─────────────────────────────────────────────────── */
 switch {
-  background-color: @nyx_black_void_solid;
+  background-color: #0a0a0a;
   border-radius: 14px;
-  border: 1px solid @nyx_hairline_white;
+  border: 1px solid #2a2e3a;
   min-width: 44px;
   min-height: 22px;
 }
 
 switch:checked {
-  background-color: @nyx_cream;
-  border-color: @nyx_cream;
-  box-shadow: 0 0 10px @nyx_cream_glow_28;
+  background-color: #6a6e78;
+  border-color: #6a6e78;
 }
 
 switch > slider {
-  background-color: @nyx_white_off;
+  background-color: #6a6e78;
   border-radius: 50%;
   min-width: 16px;
   min-height: 16px;
@@ -315,145 +275,140 @@ switch > slider {
 }
 
 switch:checked > slider {
-  background-color: @nyx_ink_black;
+  background-color: #ffffff;
 }
 
-/* ── Scale ───────────────────────────────────────────────── */
+/* ── Scale ──────────────────────────────────────────────────── */
 scale trough {
-  background-color: @nyx_black_void_solid;
-  border-radius: 3px;
+  background-color: #0a0a0a;
+  border-radius: 6px;
   min-height: 4px;
 }
 
 scale trough highlight {
-  background-color: @nyx_cream;
-  border-radius: 3px;
-  box-shadow: 0 0 8px @nyx_cream_glow_28;
+  background-color: #6a6e78;
+  border-radius: 6px;
 }
 
 scale slider {
-  background-color: @nyx_cream_soft;
-  border: 1px solid @nyx_cream;
+  background-color: #9aa0ad;
+  border: 1px solid #6a6e78;
   border-radius: 50%;
   min-width: 14px;
   min-height: 14px;
 }
 
 scale slider:hover {
-  background-color: @nyx_white;
-  border-color: @nyx_cream;
-  box-shadow: 0 0 10px @nyx_cream_glow_45;
+  background-color: #6a6e78;
+  border-color: #6a6e78;
 }
 
-/* ── Scrollbar ───────────────────────────────────────────── */
-scrollbar { background-color: transparent; }
+/* ── Scrollbar ──────────────────────────────────────────────── */
+scrollbar {
+  background-color: transparent;
+}
 
 scrollbar slider {
-  background-color: @nyx_hairline_white;
-  border-radius: 3px;
+  background-color: #2a2e3a;
+  border-radius: 8px;
   min-width: 4px;
   min-height: 4px;
   margin: 2px;
 }
 
-scrollbar slider:hover  { background-color: @nyx_cream_edge_55; }
-scrollbar slider:active { background-color: @nyx_cream; }
+scrollbar slider:hover { background-color: #6a6e78; }
+scrollbar slider:active { background-color: #9aa0ad; }
 
-/* ── Sidebar ─────────────────────────────────────────────── */
+/* ── Sidebar ────────────────────────────────────────────────── */
 .sidebar,
 stacksidebar,
 navigationview {
   background-color: @sidebar_bg_color;
-  border-right: 1px solid @nyx_hairline_white;
+  border-right: 1px solid #0a0a0a;
 }
 
 .sidebar row,
 stacksidebar row {
   padding: 6px 12px;
-  color: @nyx_grey_light;
-  border-radius: 3px;
+  color: #6a6e78;
 }
 
 .sidebar row:hover,
 stacksidebar row:hover {
-  background-color: @nyx_cream_glow_15;
-  color: @nyx_white_off;
+  background-color: #000000;
+  color: #6a6e78;
 }
 
 .sidebar row:selected,
 stacksidebar row:selected {
-  background-color: @nyx_cream_glow_28;
-  color: @nyx_white;
-  border-left: 2px solid @nyx_cream;
+  background-color: rgba(8, 12, 20, 0.15);
+  color: #9aa0ad;
+  border-left: 2px solid #6a6e78;
 }
 
-/* ── Popover / Menu ──────────────────────────────────────── */
+/* ── Popover / Menu ─────────────────────────────────────────── */
 popover {
   background-color: @popover_bg_color;
-  border: 1px solid @nyx_hairline_cream;
-  border-radius: 3px;
-  box-shadow: 0 8px 28px @nyx_shadow_active,
-              0 0 14px @nyx_cream_glow_15;
+  border: 1px solid #2a2e3a;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.75);
   padding: 4px;
 }
 
 popover modelbutton {
   padding: 5px 12px;
-  color: @nyx_white_off;
-  border-radius: 3px;
-  font-family: "Inter", sans-serif;
+  color: #c8ccd6;
+  border-radius: 4px;
 }
 
 popover modelbutton:hover {
-  background-color: @nyx_cream_glow_15;
-  color: @nyx_cream_soft;
+  background-color: #000000;
+  color: #6a6e78;
 }
 
-/* ── Tooltip ─────────────────────────────────────────────── */
+/* ── Tooltip ────────────────────────────────────────────────── */
 tooltip {
   background-color: @popover_bg_color;
-  color: @nyx_white_off;
-  border: 1px solid @nyx_hairline_cream;
-  border-radius: 3px;
-  padding: 5px 9px;
-  font-family: "Inter", sans-serif;
-  font-size: 11px;
-  box-shadow: 0 4px 14px @nyx_shadow_active;
+  color: @window_fg_color;
+  border: 1px solid #2a2e3a;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.7);
 }
 
-/* ── Progress Bar ────────────────────────────────────────── */
+/* ── Progress Bar ───────────────────────────────────────────── */
 progressbar trough {
-  background-color: @nyx_black_void_solid;
-  border-radius: 3px;
+  background-color: #0a0a0a;
+  border-radius: 4px;
   min-height: 6px;
 }
 
 progressbar progress {
-  background-color: @nyx_cream;
-  border-radius: 3px;
-  box-shadow: 0 0 10px @nyx_cream_glow_28;
+  background-color: #6a6e78;
+  border-radius: 4px;
 }
 
-/* ── Card ────────────────────────────────────────────────── */
+/* ── Card ───────────────────────────────────────────────────── */
 .card {
   background-color: @card_bg_color;
-  border: 1px solid @nyx_hairline_white;
-  border-radius: 3px;
+  border: 1px solid #0a0a0a;
+  border-radius: 6px;
 }
 
-/* ── Separator ───────────────────────────────────────────── */
+/* ── Separator ──────────────────────────────────────────────── */
 separator {
-  background-color: @nyx_hairline_white;
+  background-color: #0a0a0a;
   min-width: 1px;
   min-height: 1px;
 }
 
-/* ── Link ────────────────────────────────────────────────── */
-*:link         { color: @nyx_cream; }
-*:link:hover   { color: @nyx_cream_soft; text-shadow: 0 0 8px @nyx_cream_glow_28; }
-*:visited      { color: @nyx_cream_deep; }
+/* ── Link ───────────────────────────────────────────────────── */
+*:link { color: #9aa0ad; }
+*:link:hover { color: #6a6e78; }
+*:visited { color: #6a6e78; }
 
-/* ── GNOME Shell / Libadwaita overrides ──────────────────── */
+/* ── GNOME Shell / Libadwaita overrides ─────────────────────── */
 .view,
 .content-view {
   background-color: @view_bg_color;
@@ -466,95 +421,20 @@ dialog {
 }
 
 .tag {
-  background-color: @nyx_cream_glow_15;
-  color: @nyx_cream_soft;
-  border: 1px solid @nyx_hairline_cream;
-  border-radius: 3px;
+  background-color: rgba(8, 12, 20, 0.2);
+  color: #9aa0ad;
+  border-radius: 10px;
   padding: 2px 8px;
-  font-family: "JetBrains Mono Nerd Font", monospace;
   font-size: 10px;
-  letter-spacing: 0.06em;
 }
 
-.pill { border-radius: 3px; }
+.pill {
+  border-radius: 14px;
+}
 
-/* ── Toolbar View ────────────────────────────────────────── */
+/* ── Toolbar View ───────────────────────────────────────────── */
 toolbarview > .top-bar,
 toolbarview > .bottom-bar {
   background-color: @headerbar_bg_color;
-  border-color: @nyx_hairline_white;
-}
-
-/* ════════════════════════════════════════════════════════════
-   NYXUS EFFECT VOCABULARY (rev r15) — opt-in helper classes
-   that any widget can attach to via `widget.add_css_class()`.
-   Sprinkled across the system, not blanket — the rule is
-   "never on every widget, never on none."
-   ════════════════════════════════════════════════════════════ */
-
-/* .nyx-glow — soft cream halo around the widget */
-.nyx-glow {
-  box-shadow: 0 0 16px @nyx_cream_glow_28,
-              0 0 4px @nyx_glow_soft;
-}
-.nyx-glow:hover {
-  box-shadow: 0 0 22px @nyx_cream_glow_45,
-              0 0 6px @nyx_glow_bright;
-}
-
-/* .nyx-glow-soft — half-strength version for ambient widgets */
-.nyx-glow-soft {
-  box-shadow: 0 0 10px @nyx_cream_glow_15;
-}
-
-/* .nyx-tilt-l / .nyx-tilt-r — slight rotation on brand marks
-   and sticky-note labels. Hand-placed, never on chrome. */
-.nyx-tilt-l { transform: rotate(-1.5deg); }
-.nyx-tilt-r { transform: rotate( 1.5deg); }
-
-/* .nyx-handdrawn — sketchy dashed border, like a sharpie
-   marker outline. Used on tip cards / callouts / badges. */
-.nyx-handdrawn {
-  border: 2px dashed @nyx_cream_edge_55;
-  border-radius: 3px;
-  padding: 6px 12px;
-  background-color: @nyx_black_ink;
-}
-
-/* .nyx-hand — handwritten Caveat for accent labels and
-   personal-feel text (welcome banner, motd, notepad title). */
-.nyx-hand {
-  font-family: "Caveat", "Caveat Brush", "Comic Neue", cursive;
-  font-size: 18px;
-  font-weight: 600;
-  color: @nyx_cream_soft;
-}
-
-/* .nyx-mono — JetBrains Mono Nerd for code, status, glyphs */
-.nyx-mono {
-  font-family: "JetBrains Mono Nerd Font", "JetBrains Mono", monospace;
-  letter-spacing: 0.02em;
-}
-
-/* .nyx-scramble — visual cue that this widget supports the
-   matrix-scramble hover effect (animation is driven by the
-   nyxus-scramble.js helper bound at app boot). The class
-   itself sets the typography to mono so glyph swaps stay
-   visually aligned during the scramble. */
-.nyx-scramble {
-  font-family: "JetBrains Mono Nerd Font", monospace;
-  letter-spacing: 0.04em;
-}
-.nyx-scramble:hover {
-  color: @nyx_cream;
-  text-shadow: 0 0 6px @nyx_cream_glow_28;
-}
-
-/* .nyx-frosted — apply frosted-glass surface look (smoke tier)
-   to any container. Used by popover spotlight, dock background,
-   eww panels via shared eww utility. */
-.nyx-frosted {
-  background-color: @nyx_black_smoke;
-  border: 1px solid @nyx_hairline_white;
-  border-radius: 3px;
+  border-color: #0a0a0a;
 }

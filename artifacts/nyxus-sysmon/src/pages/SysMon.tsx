@@ -17,9 +17,9 @@ export default function SysMon() {
       {isDemoMode && (
         <div style={{
           position: 'fixed', top: 8, right: 12, zIndex: 9999,
-          background: 'rgba(184,134,90,0.18)', border: '1.5px solid #b8865a',
+          background: 'rgba(255,85,0,0.18)', border: '1.5px solid #ff5500',
           borderRadius: 5, padding: '2px 12px',
-          fontFamily: "'Caveat', cursive", fontSize: 14, color: '#b8865a',
+          fontFamily: "'Caveat', cursive", fontSize: 14, color: '#ff8844',
           letterSpacing: '0.08em',
         }}>
           ◉ DEMO MODE — start nyxus_sysmon.py for live data

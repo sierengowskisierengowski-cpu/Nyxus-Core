@@ -23,12 +23,12 @@ export function NetworkChart({ history, currentUp, currentDown }: { history: Net
           <AreaChart data={history} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="upGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#b8865a" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#b8865a" stopOpacity={0.1}/>
+                <stop offset="5%" stopColor="#ff5500" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#ff5500" stopOpacity={0.1}/>
               </linearGradient>
               <linearGradient id="downGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f4ead5" stopOpacity={0.5}/>
-                <stop offset="95%" stopColor="#f4ead5" stopOpacity={0.1}/>
+                <stop offset="5%" stopColor="#0088ff" stopOpacity={0.5}/>
+                <stop offset="95%" stopColor="#0088ff" stopOpacity={0.1}/>
               </linearGradient>
             </defs>
             <YAxis hide domain={['auto', 'auto']} />
@@ -40,7 +40,7 @@ export function NetworkChart({ history, currentUp, currentDown }: { history: Net
             <Area 
               type="monotone" 
               dataKey="download" 
-              stroke="#f4ead5" 
+              stroke="#0088ff" 
               strokeWidth={2}
               fillOpacity={1} 
               fill="url(#downGrad)" 
@@ -49,7 +49,7 @@ export function NetworkChart({ history, currentUp, currentDown }: { history: Net
             <Area 
               type="monotone" 
               dataKey="upload" 
-              stroke="#b8865a" 
+              stroke="#ff5500" 
               strokeWidth={2}
               fillOpacity={1} 
               fill="url(#upGrad)" 

@@ -45,8 +45,8 @@ _DEFAULT_TIMEOUT = {
 TOAST_CSS = """
 .nyx-toast-ok     toastbox { box-shadow: inset 3px 0 0 0 #5ff3b8; }
 .nyx-toast-warn   toastbox { box-shadow: inset 3px 0 0 0 #f5b342; }
-.nyx-toast-danger toastbox { box-shadow: inset 3px 0 0 0 #d96b6b; }
-.nyx-toast-info   toastbox { box-shadow: inset 3px 0 0 0 #f4ead5; }
+.nyx-toast-danger toastbox { box-shadow: inset 3px 0 0 0 #ff6464; }
+.nyx-toast-info   toastbox { box-shadow: inset 3px 0 0 0 #d4b87a; }
 """
 
 

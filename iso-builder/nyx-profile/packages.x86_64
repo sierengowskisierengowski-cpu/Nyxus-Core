@@ -100,6 +100,8 @@ playerctl
 pamixer
 pavucontrol
 swaybg
+# `swww` is the Wayland animated wallpaper daemon (official Arch extra).
+# (Previously listed as `awww` which is a different, unrelated project.)
 swww
 wdisplays
 # wlogout removed 2026-05-11 — built from upstream source by
@@ -127,9 +129,9 @@ alsa-utils
 # ── GTK4 + Python (for NYXUS apps) ────────────────────────────────
 gtk4
 libadwaita
-adw-gtk3
+adw-gtk-theme
 papirus-icon-theme
-vte4
+vte3
 vte-common
 python
 python-gobject
@@ -147,8 +149,10 @@ python-dnspython
 # first-run fallback inside install.sh.
 python-bcrypt
 python-reportlab
-python-shodan
-python-piexif
+# NOTE: `python-shodan` is AUR-only — install.sh handles it as a pip
+# fallback at first run if needed (nyxus-phantom threat-intel feature).
+# NOTE: `python-piexif` is AUR-only — install.sh handles it as a pip
+# fallback at first run (EXIF metadata editing for the media library).
 # NOTE: `python-whois` is AUR-only — install.sh handles it as a pip
 # fallback at first run. The `whois` C binary below covers the CLI need.
 whois
@@ -159,7 +163,7 @@ ttf-firacode-nerd
 inter-font
 noto-fonts
 noto-fonts-emoji
-ttf-font-awesome
+otf-font-awesome
 
 # ── terminal emulators (alacritty is NYXUS default) ───────────────
 alacritty
@@ -179,11 +183,11 @@ ranger
 
 # ── GPU drivers — NVIDIA hybrid stack (LOCKED · 2026-05-10 r5) ────
 # Target hw: MSI GS77 i9-12900H + RTX 3060 (Intel iGPU + NVIDIA dGPU).
-# nvidia-dkms rebuilds the module against any kernel; linux-headers is
+# nvidia-open-dkms rebuilds the module against any kernel; linux-headers is
 # required for DKMS to compile. egl-wayland + libva-nvidia-driver are
 # required for proper Wayland + hardware video decode under Hyprland.
 linux-headers
-nvidia-dkms
+nvidia-open-dkms
 nvidia-utils
 nvidia-settings
 lib32-nvidia-utils
@@ -244,6 +248,8 @@ yubikey-manager
 python-opencv
 # python-dlib removed 2026-05-11 — AUR-only, pulled in transitively by
 # howdy's own debian/install.sh during the customize_airootfs.sh build.
+# v4l2loopback-dkms — virtual V4L2 loopback device kernel module.
+# Provides the v4l2loopback kernel module across the shipped kernel set.
 v4l2loopback-dkms
 # oath-toolkit ships oathtool (TOTP code generator/verifier) and pam_oath.
 # Used by the backdoor stack as the 4th factor (rotating 30-second OTP).
@@ -271,7 +277,7 @@ nautilus
 hyprshot
 wf-recorder
 file-roller
-p7zip
+7zip
 unrar
 libcanberra
 
@@ -283,10 +289,7 @@ reflector
 rsync
 which
 
-# NYXUS installer
-# Keep package declared for profile/CI coherence; customize_airootfs.sh
-# may still rebuild/upgrade calamares via _aur_build.
-calamares
+# NYXUS installer (AUR-only; built in customize_airootfs.sh).
 
 # ═══════════════════════════════════════════════════════════════════
 # COMPLETION WAVE 1+2+3 — backends for half-built UI, hardware /
@@ -331,8 +334,6 @@ adobe-source-code-pro-fonts
 # + VA-API Mesa fallback for non-NVIDIA decode.
 vulkan-radeon
 lib32-vulkan-radeon
-libva-mesa-driver
-lib32-libva-mesa-driver
 # Pin input driver explicitly (Hyprland normally pulls it but archiso
 # image-build doesn't always include it).
 xf86-input-libinput
@@ -400,8 +401,6 @@ restic
 # Encrypted off-site backup alternative.
 borg
 # Dev / containers / power-user.
-# Already listed above; re-listed here for grouping.
-flatpak
 # Rootless containers.
 podman
 # Rust toolchain (modern AUR builds).
@@ -418,14 +417,10 @@ wlsunset
 swappy
 # Boot-time multi-OS detection (off by default in stock Arch).
 os-prober
-# Lightweight TTY greeter fallback if SDDM ever crashes.
-greetd
-greetd-tuigreet
 # Misc system polish.
 # ~/.cache/nyxus/*.log rotation.
 logrotate
 # Already listed above; grouping.
-zram-generator
 # man page database.
 man-db
 # base man-pages corpus.
@@ -447,7 +442,7 @@ calf
 rnnoise
 
 # ── NYXUS Virt Manager (Tier B · 2026-05-14) ───────────────────────
-# Full QEMU/KVM stack + libvirt + virt-manager UI + UEFI fw + bridge
+# Full QEMU/KVM stack + libvirt + virt-manager UI + UEFI fw + bridged networking
 # helpers + swtpm so Win 11 guests Just Work. nyxus-virt-setup runs
 # on first launch from VirtPage to enable libvirtd + add user to grp.
 qemu-desktop
@@ -457,8 +452,7 @@ virt-viewer
 edk2-ovmf
 dnsmasq
 swtpm
-bridge-utils
-iptables-nft
+iptables
 
 # ── NYXUS Containers (Tier B) ──────────────────────────────────────
 # podman is already shipped above. Add buildah/skopeo for image build
@@ -482,7 +476,6 @@ linux-hardened-headers
 # Steam (multilib) + nyxus-protonup downloads Proton-GE releases into
 # ~/.steam/root/compatibilitytools.d/ — no AUR dependency.
 steam
-mangohud
 
 # ── NYXUS Editors bundle (Tier B) ──────────────────────────────────
 # code = open-source VS Code build. helix = modern modal editor.
@@ -507,15 +500,4 @@ tpm2-tools
 macchanger
 dnscrypt-proxy
 sound-theme-freedesktop
-libcanberra-pulse
-libcanberra-gstreamer
-calamares
-ckbcomp
 qt5-svg
-kvantum
-qt5ct
-qt6ct
-
-# Sprint K-D rev r16 — browsers (themed via /etc/chromium/* + ~/.mozilla/firefox/nyxus.default/)
-chromium
-firefox

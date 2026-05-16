@@ -81,6 +81,53 @@ Operational detail is documented in `/docs/deployment/*`.
 
 ---
 
+## Codebase Size Snapshot (Build Footprint)
+
+Snapshot date: **2026-05-16**
+
+This section shows the current tracked code size for the NYXUS build in this repository.
+
+### Total code lines (tracked source)
+
+- **Total LOC:** **112,905**
+
+### Breakdown by platform area
+
+| Area | LOC |
+|---|---:|
+| `artifacts/api-server/nyxus-scripts` | 49,492 |
+| `artifacts/` (other packages) | 40,129 |
+| `iso-builder/` | 20,263 |
+| `artifacts/api-server` (service code excluding `nyxus-scripts`) | 1,171 |
+| `scripts/` | 1,082 |
+| `lib/` | 768 |
+| **Total** | **112,905** |
+
+### Breakdown by language
+
+| Language | LOC |
+|---|---:|
+| Python | 51,279 |
+| TypeScript | 41,157 |
+| Shell | 11,874 |
+| SCSS | 2,639 |
+| Eww Yuck | 2,411 |
+| CSS | 2,349 |
+| QML | 1,196 |
+| **Total** | **112,905** |
+
+### Handwritten creator code total
+
+- **Handwritten by Joseph Sierengowski (creator declaration):** **112,905 LOC**
+
+### Measurement method
+
+- Count source lines from tracked code files (`.py`, `.ts`, `.tsx`, `.js`, `.jsx`, `.sh`, `.yuck`, `.scss`, `.css`, `.qml`).
+- Exclude generated/output/vendor paths (for example: `node_modules/`, `dist/`, `build/`, `coverage/`, `attached_assets/`, `artifacts/_tmp/`, `iso-builder/out/`).
+- Recalculate this snapshot whenever major build content changes.
+
+---
+
 ## Documentation Index
 
 - Documentation hub: [`docs/README.md`](docs/README.md)

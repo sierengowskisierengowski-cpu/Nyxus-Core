@@ -163,3 +163,8 @@ floating waybar modules.
 - **Forbidden**: neon colors, glow effects, gradient backgrounds, dark
   mode, sharp 90° corners under 8px radius, sans-serif-only mockups,
   raster icons that aren't nerd-font / Phosphor / hand-drawn.
+
+
+---
+
+© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

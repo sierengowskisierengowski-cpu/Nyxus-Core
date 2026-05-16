@@ -2,98 +2,64 @@
 @import "_nyxus_accent";
 
 /* ─────────────────────────────────────────────────────────────────────
- * NYXUS · EWW styles — ECLIPSE · CREAM + HANDWRITTEN
- * (LOCKED · rev 2026-05-14 r15)
- *
- * Source-of-truth: nyxus_palette.py / nyxus-palette.css — keep
- * these SCSS variables in lockstep with that module. Never
- * introduce new colors here.
- *
- * Effects: glow on hover, tilt on brand marks, hand-drawn
- * dashed borders on callouts, matrix-scramble class hook.
- * Sprinkled, not blanket — the rule is "never on every widget,
- * never on none."
- *
- * © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ * NYXUS GLASS SYSTEM (rev 2026-05-12)
+ * Source-of-truth promoted from godsapp/ui.py — propagated across
+ * every translucent surface in NYXUS so flyouts, popovers, the
+ * start menu, and modals all share the same "deep slate, soft
+ * glow" feel users have flagged as the signature look.
+ * Do not redefine these values elsewhere; reference the variables.
  * ───────────────────────────────────────────────────────────────────── */
-
-/* ── TRIPLE-BLACK SURFACE STACK (canonical) ──────────────────────────── */
-$glass-dark:     rgba(14, 14, 22, 0.55);   /* smoke — bars / panels */
-$glass-deeper:   rgba(8,  8,  14, 0.78);   /* ink   — raised cards */
-$glass-deepest:  rgba(0,  0,  0,  0.92);   /* void  — popovers/modals */
+$glass-dark:     rgba(8, 8, 8, 0.72);      /* main panel */
+$glass-deeper:   rgba(8, 8, 8, 0.86);      /* inner sections */
+$glass-deepest:  rgba(8, 8, 8, 0.96);      /* modals / heavy */
 $hairline-white: rgba(255, 255, 255, 0.10);
 $hairline-ink:   rgba(0, 0, 0, 0.45);
-$hairline-cream: rgba(244, 234, 213, 0.22);
 $shadow-active:  rgba(0, 0, 0, 0.65);
 $shadow-rest:    rgba(0, 0, 0, 0.20);
 
-/* ── CREAM WARM ACCENT (rev r15 — replaces gold/violet/cyan) ────────── */
-$cream:           #f4ead5;
-$cream-soft:      #fbf3e2;
-$cream-deep:      #c4b491;
-$cream-glow:      rgba(244, 234, 213, 0.35);
-$cream-edge:      rgba(244, 234, 213, 0.55);
-$cream-bg-soft:   rgba(244, 234, 213, 0.10);
-$cream-bg-active: rgba(244, 234, 213, 0.18);
+/* ── NYXUS WARM ACCENT (rev 2026-05-12) ────────────────────────────────
+   Pure mono read as flat at low light — user fed in cosmic/sepia
+   reference imagery (gold dust, aged amber, warm celestial). Soft
+   gold accent restores legibility on hover/active/badge states
+   without breaking the enterprise-dark feel. Gold is RESERVED for
+   "alive" states only: active task, focused control, current
+   workspace, hover edges, brand. Default text + chrome stay
+   monochrome. */
+$gold:           #7B5EA7;                  /* primary accent */
+$gold-soft:      #C4607A;                  /* hover text */
+$gold-deep:      #8B4040;                  /* tooltips / dim */
+$gold-glow:      rgba(123, 94, 167, 0.35);
+$gold-edge:      rgba(123, 94, 167, 0.55);
+$gold-bg-soft:   rgba(196, 96, 122, 0.10);
+$gold-bg-active: rgba(196, 96, 122, 0.20);
 
-// Sprint J rev r16 — Copper, the second canonical accent. Cream stays
-// primary for prose, brand wordmarks, and most surfaces. Copper is
-// reserved for icon ring outlines, micro-accents (toggle thumbs,
-// progress fills, focus rings), and high-contrast highlights.
-// Hex #b8865a is intentionally desaturated — it must read as "warm
-// metal" not "yellow gold". Bright yellow-golds stay banned (see
-// the banned-palette list in iso-builder/verify-profile.sh §13v).
-// See docs/brand/VISUAL-TARGET.md for the full rev r16 contract.
-$copper:          #b8865a;
-$copper-soft:     #d4a978;
-$copper-deep:     #8a6444;
-$copper-glow:     rgba(184, 134, 90, 0.35);
-$copper-edge:     rgba(184, 134, 90, 0.55);
-$copper-bg-soft:  rgba(184, 134, 90, 0.10);
-$copper-bg-active:rgba(184, 134, 90, 0.18);
-
-/* Backward-compat aliases — every old $gold-* reference resolves to
-   cream. Keep both vocabularies until the codebase fully migrates. */
-$gold:           $cream;
-$gold-soft:      $cream-soft;
-$gold-deep:      $cream-deep;
-$gold-glow:      $cream-glow;
-$gold-edge:      $cream-edge;
-$gold-bg-soft:   $cream-bg-soft;
-$gold-bg-active: $cream-bg-active;
-
-/* ── DESTRUCTIVE / SIGNAL (RESERVED) ─────────────────────────────────── */
-$danger:         #d96b6b;
-$danger-bg-12:   rgba(217, 107, 107, 0.12);
-$danger-bg-22:   rgba(217, 107, 107, 0.22);
-
-/* ── CORNER RADII (near-sharp slightly rounded) ──────────────────────── */
-$radius:         3px;
-$radius-tight:   3px;
-$radius-pill:    3px;
-$radius-panel:   3px;
-
-/* ── FONT STACKS (three-font canonical) ──────────────────────────────── */
-$font-body:      "Inter", "Inter Display", "DejaVu Sans", sans-serif;
-$font-hand:      "Caveat", "Caveat Brush", "Comic Neue", cursive;
-$font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
-                 "Cascadia Code", "DejaVu Sans Mono", monospace;
-
-/* Marquee animation for the top-bar ticker (smooth scroll).
- * GTK3 CSS does NOT compute percentage margins against parent width
- * (unlike browser CSS) so the animation must use pixel values.
- * 2400px covers screen widths up to 4K — text fully off-frame on both
- * ends so the loop seam is invisible. */
+/* Marquee animation for the top-bar ticker (smooth scroll). */
 @keyframes nyx-marquee {
-  from { margin-left:  2400px; }
-  to   { margin-left: -2400px; }
+  from { margin-left:  100%; }
+  to   { margin-left: -100%; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+ * NYXUS · EWW styles — DARK MIRROR aesthetic
+ * © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ *
+ * Palette:
+ *   void-0     #05060a   (deep background)
+ *   void-1     #0a0d14   (panel)
+ *   void-2     #11151f   (raised)
+ *   text       #e8edf5
+ *   dim        #7a8298
+ *   violet     #8b6f3a   (primary accent — vortex glow)
+ *   cyan       #d4b87a   (secondary accent — live signal)
+ *   gold       #e8c66b   (warning / highlight)
+ *   crimson    #ff4d6b   (critical / low)
+ * ───────────────────────────────────────────────────────────────────── */
 
 * {
   all: unset;
-  font-family: $font-body;
+  font-family: "JetBrains Mono Nerd Font", monospace;
   font-size: 12px;
-  color: #f4ead5;
+  color: #C8C0C0;
 }
 
 /* ── BARS ─────────────────────────────────────────────────────────── */
@@ -105,8 +71,8 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
   color: #ffffff;
   font-weight: 500;
   border: 1px solid $gold-edge;
-  border-radius: 3px;
-  padding: 6px 14px;
+  border-radius: 14px;
+  padding: 3px 10px;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.6),
     0 14px 44px rgba(0, 0, 0, 0.75),
@@ -117,21 +83,7 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 
 /* .bar-bottom sizing now defined alongside the P3.13d enterprise loadout
    block at the bottom of this file (search a.search-btn references). */
-/* Slim FLOATING bar (rev 2026-05-14 r17) — frosted-glass chip with
-   side margins, full corner radius, copper-touched border, and a
-   soft drop-shadow so it reads as a discrete element floating over
-   the wallpaper instead of an edge-anchored strip. Pairs with the
-   bar-top defwindow change in eww.yuck (exclusive=false, x=12 y=8
-   width=98%). */
-.bar-top {
-  padding: 4px 14px;
-  min-height: 24px;
-  border-radius: 14px;
-  background: rgba(10, 10, 14, 0.72);
-  border: 1px solid rgba(184, 134, 90, 0.22);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45),
-              inset 0 1px 0 rgba(244, 234, 213, 0.04);
-}
+.bar-top    { padding: 2px 10px; min-height: 20px; border-radius: 0 0 14px 14px; }
 
 .bar-cluster { padding: 0 6px; }
 
@@ -139,84 +91,84 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 
 .pill {
   padding: 4px 12px;
-  border-radius: 3px;
+  border-radius: 10px;
   background: rgba(17, 21, 31, 0.6);
-  border: 1px solid rgba(244, 234, 213, 0.10);
-  color: #f4ead5;
+  border: 1px solid rgba(160, 107, 255, 0.10);
+  color: #e8edf5;
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .pill:hover {
-  background: rgba(244, 234, 213, 0.14);
-  border-color: rgba(244, 234, 213, 0.45);
+  background: rgba(160, 107, 255, 0.14);
+  border-color: rgba(160, 107, 255, 0.45);
   color: #ffffff;
 }
 
 .batt-charge {
-  border-color: rgba(244, 234, 213, 0.45);
-  color: #f4ead5;
+  border-color: rgba(212, 184, 122, 0.45);
+  color: #d4b87a;
 }
 .batt-low {
-  border-color: rgba(217, 107, 107, 0.55);
-  color: #d96b6b;
+  border-color: rgba(255, 77, 107, 0.55);
+  color: #ff4d6b;
 }
 
 .power-pill {
-  background: rgba(217, 107, 107, 0.10);
-  border-color: rgba(217, 107, 107, 0.35);
-  color: #d96b6b;
+  background: rgba(255, 77, 107, 0.10);
+  border-color: rgba(255, 77, 107, 0.35);
+  color: #ff8b9e;
 }
 .power-pill:hover {
-  background: rgba(217, 107, 107, 0.22);
+  background: rgba(255, 77, 107, 0.22);
   color: #ffffff;
-  box-shadow: 0 0 18px rgba(217, 107, 107, 0.45);
+  box-shadow: 0 0 18px rgba(255, 77, 107, 0.45);
 }
 
 /* ── BRAND ────────────────────────────────────────────────────────── */
 
 .brand {
   padding: 4px 14px;
-  border-radius: 3px;
+  border-radius: 10px;
   font-weight: 700;
   letter-spacing: 0.18em;
   background: linear-gradient(135deg,
-    rgba(244, 234, 213, 0.22),
-    rgba(244, 234, 213, 0.10));
-  border: 1px solid rgba(244, 234, 213, 0.45);
+    rgba(160, 107, 255, 0.22),
+    rgba(212, 184, 122, 0.10));
+  border: 1px solid rgba(160, 107, 255, 0.45);
   color: #ffffff;
   box-shadow:
-    inset 0 0 12px rgba(244, 234, 213, 0.18),
-    0 0 16px rgba(244, 234, 213, 0.20);
+    inset 0 0 12px rgba(160, 107, 255, 0.18),
+    0 0 16px rgba(160, 107, 255, 0.20);
 }
 .brand:hover {
   background: linear-gradient(135deg,
-    rgba(244, 234, 213, 0.40),
-    rgba(244, 234, 213, 0.22));
+    rgba(160, 107, 255, 0.40),
+    rgba(212, 184, 122, 0.22));
   box-shadow:
-    inset 0 0 18px rgba(244, 234, 213, 0.30),
-    0 0 28px rgba(244, 234, 213, 0.45);
+    inset 0 0 18px rgba(160, 107, 255, 0.30),
+    0 0 28px rgba(160, 107, 255, 0.45);
 }
 
 /* ── HEARTBEAT ────────────────────────────────────────────────────── */
 
 .heartbeat {
-  color: #f4ead5;
+  color: #d4b87a;
   font-size: 10px;
   letter-spacing: 0.18em;
   padding: 0 8px;
-  text-shadow: 0 0 8px rgba(244, 234, 213, 0.65);
+  text-shadow: 0 0 8px rgba(212, 184, 122, 0.65);
 }
 
 /* ── SYS PULSE ────────────────────────────────────────────────────── */
 
 .syspulse {
   padding: 2px 10px;
-  border-radius: 3px;
+  border-radius: 8px;
   background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(244, 234, 213, 0.10);
+  border: 1px solid rgba(160, 107, 255, 0.10);
 }
-.syspulse-cpu  { color: #f4ead5; letter-spacing: 0.08em; }
-.syspulse-mem  { color: #c4b491; letter-spacing: 0.08em; }
-.syspulse-temp { color: #f4ead5; letter-spacing: 0.08em; }
+.syspulse-cpu  { color: #d4b87a; letter-spacing: 0.08em; }
+.syspulse-mem  { color: #8b6f3a; letter-spacing: 0.08em; }
+.syspulse-temp { color: #e8c66b; letter-spacing: 0.08em; }
 
 .tray-dummy {
   color: #7a8298;
@@ -228,152 +180,111 @@ $font-mono:      "JetBrains Mono Nerd Font", "JetBrains Mono",
 
 .clock {
   padding: 4px 16px;
-  border-radius: 3px;
+  border-radius: 12px;
   background: linear-gradient(135deg,
-    rgba(244, 234, 213, 0.10),
-    rgba(244, 234, 213, 0.06));
-  border: 1px solid rgba(244, 234, 213, 0.22);
+    rgba(160, 107, 255, 0.10),
+    rgba(212, 184, 122, 0.06));
+  border: 1px solid rgba(160, 107, 255, 0.22);
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .clock:hover {
   background: linear-gradient(135deg,
-    rgba(244, 234, 213, 0.25),
-    rgba(244, 234, 213, 0.14));
-  border-color: rgba(244, 234, 213, 0.55);
-  box-shadow: 0 0 24px rgba(244, 234, 213, 0.35);
+    rgba(160, 107, 255, 0.25),
+    rgba(212, 184, 122, 0.14));
+  border-color: rgba(160, 107, 255, 0.55);
+  box-shadow: 0 0 24px rgba(160, 107, 255, 0.35);
 }
-.clock-glyph { color: #c4b491; font-size: 14px; }
+.clock-glyph { color: #8b6f3a; font-size: 14px; }
 .clock-hms   { font-weight: 700; font-size: 13px; letter-spacing: 0.06em; }
 .clock-date  { color: #b8bfd0; }
 
 /* ── TICKER (top bar) ─────────────────────────────────────────────── */
 
 .ticker-label {
-  color: #f4ead5;
+  color: #e8edf5;
   font-weight: 700;
   letter-spacing: 0.20em;
   font-size: 10px;
   padding: 0 8px;
 }
-/* Center-anchored ticker chip (rev 2026-05-15).
-   The bar_top_layout uses a centerbox; .ticker-center is the middle
-   slot. We give it a fixed pixel width + min/max so the ticker reads
-   as a discrete chip in the middle of the bar — not a full-width
-   strip — and the marquee scrolls cleanly inside that bounded box. */
-.ticker-left   { padding: 0 4px; }
-.ticker-right  { padding: 0 4px; }
-.ticker-center {
-  /* Bounded chip in the dead-center of the bar.
-     min/max keep it readable on 1366+ and never crowd side widgets
-     on smaller panels. overflow:hidden clips the marquee text inside
-     the chip — without it the scroll text flies across the brand
-     and player widgets. */
-  min-width: 380px;
-  /* GTK CSS does not honour max-width on a GtkBox, so we use the
-     EWW-respected size hint via min-width only and rely on centerbox
-     to bound the center child against left/right siblings. */
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(184, 134, 90, 0.30);
-  padding: 2px 12px;
-  box-shadow: inset 0 1px 0 rgba(244, 234, 213, 0.05);
-}
 .ticker-box {
-  /* Hide overflow so the marquee text scrolls in/out of frame
-     instead of stretching the bar width. min-width:0 lets the box
-     shrink below its content's natural size so clipping works. */
   padding: 0 4px;
+  /* Hide overflow so the marquee text scrolls in/out of frame
+     instead of stretching the bar width. */
   min-width: 0;
 }
 .ticker {
   color: #c8ccd6;
-  font-family: "JetBrains Mono Nerd Font", monospace;
+  font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 11px;
   letter-spacing: 0.04em;
-  /* rev 2026-05-16: scroll is now driven by ticker.sh shifting the
-     substring window each 150ms poll. No CSS animation needed.
-     GTK3 @keyframes margin-left was unreliable across drivers. */
+  /* Smooth horizontal scroll — text starts off-screen right and
+     drifts to off-screen left over 60s, looping forever. */
+  animation: nyx-marquee 60s linear infinite;
 }
 
 /* ── WORKSPACES (left rail) ───────────────────────────────────────── */
 
 .ws-rail {
   background: rgba(5, 6, 10, 0.78);
-  border: 1px solid rgba(244, 234, 213, 0.18);
-  border-radius: 3px;
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 18px;
   padding: 14px 6px;
   box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.55),
-    inset 0 0 20px rgba(244, 234, 213, 0.05);
+    inset 0 0 20px rgba(160, 107, 255, 0.05);
 }
-button.ws-pill,
 .ws-pill {
   min-width: 36px;
   min-height: 36px;
-  border-radius: 3px;
-  background-image: none;
-  background-color: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(244, 234, 213, 0.10);
-  box-shadow: none;
+  border-radius: 12px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.10);
   color: #7a8298;
   font-weight: 700;
   font-size: 13px;
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
-button.ws-pill:hover,
 .ws-pill:hover {
-  background-image: none;
-  background-color: rgba(244, 234, 213, 0.14);
-  color: #f4ead5;
+  background: rgba(160, 107, 255, 0.14);
+  color: #e8edf5;
 }
-button.ws-pill-active,
 .ws-pill-active {
-  background-image: linear-gradient(135deg, #b8865a, #f4ead5);
-  color: #000000;
-  border-color: rgba(184, 134, 90, 0.78);
-  box-shadow: 0 0 18px rgba(184, 134, 90, 0.55),
-              0 0 6px  rgba(244, 234, 213, 0.32);
+  background: linear-gradient(135deg, #8b6f3a, #d4b87a);
+  color: #05060a;
+  border-color: rgba(212, 184, 122, 0.65);
+  box-shadow: 0 0 18px rgba(160, 107, 255, 0.55);
 }
 
 /* ── APP RAIL (right) ─────────────────────────────────────────────── */
 
 .app-rail {
   background: rgba(5, 6, 10, 0.78);
-  border: 1px solid rgba(244, 234, 213, 0.18);
-  border-radius: 3px;
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 18px;
   padding: 14px 6px;
   box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.55),
-    inset 0 0 20px rgba(244, 234, 213, 0.05);
+    inset 0 0 20px rgba(160, 107, 255, 0.05);
 }
-/* GTK3 NOTE: bare `.app-pill` doesn't override the system GTK button
-   theme (Adwaita's white-gradient fills) because eww's `* { all: unset }`
-   is incomplete in GTK3 — button widgets retain their default
-   background-image and box-shadow. We force a higher-specificity
-   selector + explicit `background-image: none` + `box-shadow: none`
-   to fully strip the GTK chrome. Same pattern is needed for .ws-pill. */
-button.app-pill,
 .app-pill {
   min-width: 38px;
   min-height: 38px;
-  border-radius: 3px;
-  background-image: none;
-  background-color: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(244, 234, 213, 0.10);
-  box-shadow: none;
+  border-radius: 12px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.10);
   color: #c8ccd6;
-  font-family: "JetBrains Mono Nerd Font", monospace;
+  font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 16px;
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
-button.app-pill:hover,
 .app-pill:hover {
-  background-image: linear-gradient(135deg,
-    rgba(244, 234, 213, 0.22),
-    rgba(244, 234, 213, 0.12));
-  border-color: rgba(244, 234, 213, 0.55);
+  background: linear-gradient(135deg,
+    rgba(160, 107, 255, 0.22),
+    rgba(212, 184, 122, 0.12));
+  border-color: rgba(160, 107, 255, 0.55);
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(244, 234, 213, 0.40);
+  box-shadow: 0 0 16px rgba(160, 107, 255, 0.40);
 }
 
 /* ── DASHBOARD overlay ────────────────────────────────────────────── */
@@ -382,7 +293,7 @@ button.app-pill:hover,
   background: $glass-deepest;
   padding: 80px 60px;
   border: 1px solid $hairline-white;
-  border-radius: 3px;
+  border-radius: 28px;
   box-shadow:
     0 1px 0 $hairline-white inset,
     0 40px 120px $shadow-active,
@@ -400,18 +311,18 @@ button.app-pill:hover,
   border: none;
 }
 .dashboard-scroll scrollbar slider {
-  background: rgba(244, 234, 213, 0.35);
-  border-radius: 3px;
+  background: rgba(160, 107, 255, 0.35);
+  border-radius: 4px;
   min-width: 6px;
   min-height: 24px;
 }
-.dashboard-scroll scrollbar slider:hover { background: rgba(244, 234, 213, 0.65); }
+.dashboard-scroll scrollbar slider:hover { background: rgba(160, 107, 255, 0.65); }
 .dash-clock {
   font-size: 88px;
   font-weight: 700;
   letter-spacing: 0.04em;
   color: #ffffff;
-  text-shadow: 0 0 32px rgba(244, 234, 213, 0.55);
+  text-shadow: 0 0 32px rgba(160, 107, 255, 0.55);
 }
 .dash-date {
   font-size: 16px;
@@ -421,13 +332,13 @@ button.app-pill:hover,
 .dash-grid { padding: 24px 0; }
 .dash-card {
   padding: 24px 32px;
-  border-radius: 3px;
+  border-radius: 18px;
   background: rgba(17, 21, 31, 0.65);
-  border: 1px solid rgba(244, 234, 213, 0.15);
+  border: 1px solid rgba(160, 107, 255, 0.15);
   min-width: 200px;
 }
 .dash-card-title {
-  color: #c4b491;
+  color: #8b6f3a;
   letter-spacing: 0.30em;
   font-size: 10px;
   font-weight: 700;
@@ -444,22 +355,22 @@ button.app-pill:hover,
 }
 .dash-toggle {
   padding: 12px 20px;
-  border-radius: 3px;
+  border-radius: 12px;
   background: rgba(17, 21, 31, 0.65);
-  border: 1px solid rgba(244, 234, 213, 0.15);
+  border: 1px solid rgba(160, 107, 255, 0.15);
   letter-spacing: 0.16em;
   font-size: 11px;
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .dash-toggle:hover {
-  background: rgba(244, 234, 213, 0.20);
-  border-color: rgba(244, 234, 213, 0.55);
-  box-shadow: 0 0 18px rgba(244, 234, 213, 0.35);
+  background: rgba(160, 107, 255, 0.20);
+  border-color: rgba(160, 107, 255, 0.55);
+  box-shadow: 0 0 18px rgba(160, 107, 255, 0.35);
 }
 .dash-close {
   margin-top: 16px;
   padding: 8px 18px;
-  border-radius: 3px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.10);
   color: #7a8298;
   letter-spacing: 0.16em;
@@ -472,47 +383,47 @@ button.app-pill:hover,
 .powermenu-root {
   background: rgba(5, 6, 10, 0.94);
   padding: 60px 80px;
-  border: 1px solid rgba(217, 107, 107, 0.28);
-  border-radius: 3px;
+  border: 1px solid rgba(255, 77, 107, 0.28);
+  border-radius: 28px;
   box-shadow:
-    0 0 0 1px rgba(217, 107, 107, 0.06),
+    0 0 0 1px rgba(255, 77, 107, 0.06),
     0 40px 120px rgba(0, 0, 0, 0.85),
-    inset 0 0 80px rgba(217, 107, 107, 0.05);
+    inset 0 0 80px rgba(255, 77, 107, 0.05);
 }
 .power-title {
-  color: #d96b6b;
+  color: #ff8b9e;
   font-size: 13px;
   letter-spacing: 0.40em;
   font-weight: 700;
   padding-bottom: 16px;
-  text-shadow: 0 0 16px rgba(217, 107, 107, 0.55);
+  text-shadow: 0 0 16px rgba(255, 77, 107, 0.55);
 }
 .power-btn {
   min-width: 130px;
   min-height: 130px;
-  border-radius: 3px;
+  border-radius: 20px;
   background: rgba(17, 21, 31, 0.65);
-  border: 1px solid rgba(244, 234, 213, 0.15);
+  border: 1px solid rgba(160, 107, 255, 0.15);
   transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .power-btn:hover {
   background: linear-gradient(135deg,
-    rgba(217, 107, 107, 0.20),
-    rgba(244, 234, 213, 0.18));
-  border-color: rgba(217, 107, 107, 0.55);
-  box-shadow: 0 0 32px rgba(217, 107, 107, 0.40);
+    rgba(255, 77, 107, 0.20),
+    rgba(160, 107, 255, 0.18));
+  border-color: rgba(255, 77, 107, 0.55);
+  box-shadow: 0 0 32px rgba(255, 77, 107, 0.40);
 }
 /* Destructive variants (Shutdown/Restart) — red border + glyph in
    resting state so they read as obviously different from soft actions
    (Suspend/Logout/Lock). Per DESIGN_CONTRACT.md §8. */
 .power-btn-danger {
-  border-color: rgba(217, 107, 107, 0.45);
+  border-color: rgba(255, 77, 107, 0.45);
   background: rgba(40, 12, 22, 0.55);
 }
-.power-btn-danger .power-glyph { color: #d96b6b; }
+.power-btn-danger .power-glyph { color: #ff8b9e; }
 .power-btn-danger:hover {
-  border-color: rgba(217, 107, 107, 0.85);
-  box-shadow: 0 0 36px rgba(217, 107, 107, 0.55);
+  border-color: rgba(255, 77, 107, 0.85);
+  box-shadow: 0 0 36px rgba(255, 77, 107, 0.55);
 }
 .power-glyph {
   font-size: 40px;
@@ -526,7 +437,7 @@ button.app-pill:hover,
 .power-cancel {
   margin-top: 16px;
   padding: 8px 18px;
-  border-radius: 3px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.10);
   color: #7a8298;
   letter-spacing: 0.16em;
@@ -538,7 +449,7 @@ button.app-pill:hover,
 
 .dash-card-cal { min-width: 240px; }
 .dash-cal-grid {
-  font-family: "JetBrains Mono Nerd Font", monospace;
+  font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 12px;
   color: #c8ccd6;
   letter-spacing: 0.04em;
@@ -547,7 +458,7 @@ button.app-pill:hover,
 .dash-sliders { padding: 12px 0; min-width: 480px; }
 .dash-slider-row { padding: 0 8px; }
 .dash-slider-label {
-  color: #c4b491;
+  color: #8b6f3a;
   letter-spacing: 0.20em;
   font-weight: 700;
   font-size: 10px;
@@ -555,23 +466,20 @@ button.app-pill:hover,
 }
 .dash-scale trough {
   min-height: 6px;
-  border-radius: 3px;
+  border-radius: 6px;
   background: rgba(17, 21, 31, 0.85);
-  border: 1px solid rgba(244, 234, 213, 0.18);
+  border: 1px solid rgba(160, 107, 255, 0.18);
 }
-/* Sprint K-A rev r16: slider fill warms from cream-deep into copper as
-   the value rises — a literal "second accent activates as you progress"
-   moment. Cream still owns the low end; copper takes over the high end. */
 .dash-scale highlight {
-  border-radius: 3px;
-  background: linear-gradient(90deg, #c4b491, #b8865a);
-  box-shadow: 0 0 12px rgba(184, 134, 90, 0.55);
+  border-radius: 6px;
+  background: linear-gradient(90deg, #8b6f3a, #d4b87a);
+  box-shadow: 0 0 12px rgba(160, 107, 255, 0.55);
 }
 .dash-scale slider {
   background: #ffffff;
   min-width: 14px;
   min-height: 14px;
-  border-radius: 3px;
+  border-radius: 14px;
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.55);
   margin: -6px;
 }
@@ -587,12 +495,12 @@ button.app-pill:hover,
 .cheatsheet-root {
   background: rgba(5, 6, 10, 0.92);
   padding: 60px 80px;
-  border: 1px solid rgba(244, 234, 213, 0.28);
-  border-radius: 3px;
+  border: 1px solid rgba(160, 107, 255, 0.28);
+  border-radius: 28px;
   box-shadow:
-    0 0 0 1px rgba(244, 234, 213, 0.06),
+    0 0 0 1px rgba(212, 184, 122, 0.06),
     0 40px 120px rgba(0, 0, 0, 0.85),
-    inset 0 0 80px rgba(244, 234, 213, 0.06);
+    inset 0 0 80px rgba(160, 107, 255, 0.06);
 }
 .cheat-title {
   color: #ffffff;
@@ -600,10 +508,10 @@ button.app-pill:hover,
   letter-spacing: 0.40em;
   font-weight: 700;
   padding-bottom: 12px;
-  text-shadow: 0 0 16px rgba(244, 234, 213, 0.55);
+  text-shadow: 0 0 16px rgba(160, 107, 255, 0.55);
 }
 .cheat-section {
-  color: #c4b491;
+  color: #8b6f3a;
   letter-spacing: 0.30em;
   font-size: 10px;
   font-weight: 700;
@@ -611,15 +519,15 @@ button.app-pill:hover,
 }
 .cheat-col {
   padding: 16px 24px;
-  border-radius: 3px;
+  border-radius: 14px;
   background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(244, 234, 213, 0.12);
+  border: 1px solid rgba(160, 107, 255, 0.12);
   min-width: 280px;
 }
 .cheat-row { padding: 3px 0; }
 .cheat-chord {
-  font-family: "JetBrains Mono Nerd Font", monospace;
-  color: #f4ead5;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  color: #d4b87a;
   font-size: 11px;
   min-width: 130px;
   letter-spacing: 0.04em;
@@ -631,7 +539,7 @@ button.app-pill:hover,
 .cheat-close {
   margin-top: 16px;
   padding: 8px 18px;
-  border-radius: 3px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.10);
   color: #7a8298;
   letter-spacing: 0.16em;
@@ -643,17 +551,17 @@ button.app-pill:hover,
 
 .osd-root {
   background: rgba(5, 6, 10, 0.92);
-  border: 1px solid rgba(244, 234, 213, 0.30);
-  border-radius: 3px;
+  border: 1px solid rgba(160, 107, 255, 0.30);
+  border-radius: 18px;
   padding: 14px 22px;
   box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.65),
-    0 0 28px rgba(244, 234, 213, 0.20);
+    0 0 28px rgba(160, 107, 255, 0.20);
 }
 .osd-glyph {
   font-size: 24px;
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(244, 234, 213, 0.65);
+  text-shadow: 0 0 10px rgba(160, 107, 255, 0.65);
 }
 .osd-label {
   color: #c8ccd6;
@@ -663,14 +571,14 @@ button.app-pill:hover,
 }
 .osd-bar trough {
   min-height: 6px;
-  border-radius: 3px;
+  border-radius: 6px;
   background: rgba(17, 21, 31, 0.85);
-  border: 1px solid rgba(244, 234, 213, 0.18);
+  border: 1px solid rgba(160, 107, 255, 0.18);
 }
 .osd-bar highlight {
-  border-radius: 3px;
-  background: linear-gradient(90deg, #c4b491, #f4ead5);
-  box-shadow: 0 0 12px rgba(244, 234, 213, 0.55);
+  border-radius: 6px;
+  background: linear-gradient(90deg, #8b6f3a, #d4b87a);
+  box-shadow: 0 0 12px rgba(160, 107, 255, 0.55);
 }
 
 /* ── SCREENSAVER ───────────────────────────────────────────────────── */
@@ -683,7 +591,7 @@ button.app-pill:hover,
   font-size: 140px;
   font-weight: 700;
   color: #ffffff;
-  text-shadow: 0 0 48px rgba(244, 234, 213, 0.65);
+  text-shadow: 0 0 48px rgba(160, 107, 255, 0.65);
   letter-spacing: 0.04em;
 }
 .saver-date {
@@ -693,10 +601,10 @@ button.app-pill:hover,
 }
 .saver-brand {
   font-size: 12px;
-  color: #c4b491;
+  color: #8b6f3a;
   letter-spacing: 0.50em;
   font-weight: 700;
-  text-shadow: 0 0 16px rgba(244, 234, 213, 0.45);
+  text-shadow: 0 0 16px rgba(160, 107, 255, 0.45);
 }
 .saver-hint {
   color: #5a6278;
@@ -710,31 +618,31 @@ button.app-pill:hover,
 /* Mic mute / bluetooth / power-profile / updates / notifications color states */
 .mic-mute   { color: #ff5577; border-color: rgba(255, 85, 119, 0.45); }
 .bt-off     { color: #5a6278; border-color: rgba(255, 255, 255, 0.06); }
-.bt-conn    { color: #f4ead5; border-color: rgba(244, 234, 213, 0.45);
-              box-shadow: 0 0 12px rgba(244, 234, 213, 0.30); }
+.bt-conn    { color: #d4b87a; border-color: rgba(212, 184, 122, 0.45);
+              box-shadow: 0 0 12px rgba(212, 184, 122, 0.30); }
 .pp-perf    { color: #ffb04a; border-color: rgba(255, 176, 74, 0.55);
               text-shadow: 0 0 8px rgba(255, 176, 74, 0.50); }
 .pp-save    { color: #4ade80; border-color: rgba(74, 222, 128, 0.45); }
 .upd-many   { color: #ffb04a; border-color: rgba(255, 176, 74, 0.55); }
 /* P2.12 review fix — locked monochrome (no neon accent in notif state). */
-.notif-on   { color: #f4ead5; border-color: rgba(232, 237, 245, 0.55); }
+.notif-on   { color: #e8edf5; border-color: rgba(232, 237, 245, 0.55); }
 .notif-dnd  { color: #5a6278; border-color: rgba(255, 255, 255, 0.06); }
 
 /* Top-bar player (right-aligned) */
 .ticker-player {
   background: rgba(17, 21, 31, 0.6);
-  border: 1px solid rgba(244, 234, 213, 0.18);
-  border-radius: 3px;
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 8px;
   padding: 2px 12px;
   margin-right: 12px;
   color: #ffffff;
 }
 .ticker-player:hover {
-  border-color: rgba(244, 234, 213, 0.45);
-  box-shadow: 0 0 10px rgba(244, 234, 213, 0.25);
+  border-color: rgba(212, 184, 122, 0.45);
+  box-shadow: 0 0 10px rgba(212, 184, 122, 0.25);
 }
 .ticker-player-text {
-  font-family: "JetBrains Mono Nerd Font", monospace;
+  font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 10px;
   letter-spacing: 0.06em;
   color: #c8ccd6;
@@ -742,18 +650,18 @@ button.app-pill:hover,
 
 /* Workspace pill: occupied state */
 .ws-pill-occupied {
-  border-color: rgba(244, 234, 213, 0.45) !important;
+  border-color: rgba(160, 107, 255, 0.45) !important;
   color: #c8ccd6 !important;
-  background: rgba(244, 234, 213, 0.06) !important;
+  background: rgba(160, 107, 255, 0.06) !important;
 }
 .ws-pill-occupied:hover { color: #ffffff !important; }
 
 /* Per-core CPU graph */
 .dash-cores-card {
   padding: 18px 24px;
-  border-radius: 3px;
+  border-radius: 16px;
   background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(244, 234, 213, 0.16);
+  border: 1px solid rgba(160, 107, 255, 0.16);
   min-width: 720px;
 }
 .dash-cores {
@@ -763,14 +671,14 @@ button.app-pill:hover,
 .core-bar {
   min-width: 14px;
   background: rgba(17, 21, 31, 0.85);
-  border-radius: 3px;
-  border: 1px solid rgba(244, 234, 213, 0.10);
+  border-radius: 4px;
+  border: 1px solid rgba(160, 107, 255, 0.10);
   padding: 2px;
 }
 .core-fill {
-  background: linear-gradient(180deg, #f4ead5, #c4b491);
+  background: linear-gradient(180deg, #d4b87a, #8b6f3a);
   border-radius: 3px;
-  box-shadow: 0 0 6px rgba(244, 234, 213, 0.40);
+  box-shadow: 0 0 6px rgba(160, 107, 255, 0.40);
   min-width: 8px;
 }
 .core-warm { background: linear-gradient(180deg, #ffb04a, #ff7a3a); }
@@ -780,16 +688,16 @@ button.app-pill:hover,
 /* Dashboard media player card */
 .dash-player {
   padding: 18px 22px;
-  border-radius: 3px;
+  border-radius: 14px;
   background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(244, 234, 213, 0.16);
+  border: 1px solid rgba(160, 107, 255, 0.16);
   min-width: 240px;
 }
 .dash-player-title {
   color: #ffffff;
   font-size: 13px;
   font-weight: 600;
-  text-shadow: 0 0 8px rgba(244, 234, 213, 0.35);
+  text-shadow: 0 0 8px rgba(160, 107, 255, 0.35);
 }
 .dash-player-artist {
   color: #8b94a8;
@@ -798,17 +706,17 @@ button.app-pill:hover,
 }
 .dash-player-controls { padding-top: 8px; }
 .dash-player-btn {
-  background: rgba(244, 234, 213, 0.10);
-  border: 1px solid rgba(244, 234, 213, 0.28);
-  border-radius: 3px;
+  background: rgba(160, 107, 255, 0.10);
+  border: 1px solid rgba(160, 107, 255, 0.28);
+  border-radius: 999px;
   padding: 6px 14px;
   color: #ffffff;
   font-size: 14px;
 }
 .dash-player-btn:hover {
-  background: rgba(244, 234, 213, 0.22);
-  border-color: rgba(244, 234, 213, 0.55);
-  box-shadow: 0 0 14px rgba(244, 234, 213, 0.50);
+  background: rgba(160, 107, 255, 0.22);
+  border-color: rgba(212, 184, 122, 0.55);
+  box-shadow: 0 0 14px rgba(160, 107, 255, 0.50);
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -819,7 +727,7 @@ button.app-pill:hover,
 .qs-root, .wifi-root, .bt-root, .mix-root, .cal-root, .notif-root {
   background: $glass-dark;
   border: 1px solid $hairline-white;
-  border-radius: 3px;
+  border-radius: 16px;
   padding: 18px 20px;
   box-shadow:
     0 1px 0 $hairline-white inset,
@@ -831,14 +739,14 @@ button.app-pill:hover,
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.22em;
-  color: #f4ead5;
+  color: #e8edf5;
   padding-bottom: 4px;
 }
 
 .qs-pill, .cal-pill {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 3px;
+  border-radius: 999px;
   padding: 4px 12px;
   color: #c8ccd6;
   font-size: 10px;
@@ -855,9 +763,9 @@ button.app-pill:hover,
 .qs-settings {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 3px;
+  border-radius: 10px;
   padding: 4px 10px;
-  color: #f4ead5;
+  color: #e8edf5;
   font-size: 14px;
 }
 .qs-settings:hover { background: rgba(255, 255, 255, 0.14); }
@@ -868,8 +776,8 @@ button.app-pill:hover,
 .qs-tile {
   padding: 12px 8px;
   min-width: 78px;
-  border-radius: 3px;
-  background: rgba(8, 8, 14, 0.72);
+  border-radius: 12px;
+  background: rgba(15, 20, 32, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.08);
   transition: all 160ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
@@ -895,20 +803,18 @@ button.app-pill:hover,
 .qs-sliders { padding-top: 8px; }
 .qs-slider-glyph { font-size: 14px; color: #c8ccd6; min-width: 22px; }
 .qs-scale trough {
-  background: rgba(8, 8, 14, 0.85);
+  background: rgba(15, 20, 32, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 3px;
+  border-radius: 999px;
   min-height: 6px;
 }
-/* Sprint K-A rev r16: Quick-Settings slider fill shifts cream → copper
-   as the value rises (matches dashboard slider warming effect). */
 .qs-scale highlight {
-  background: linear-gradient(90deg, #c4b491, #b8865a);
-  border-radius: 3px;
+  background: #e8edf5;
+  border-radius: 999px;
 }
 .qs-scale slider {
   background: #ffffff;
-  border-radius: 3px;
+  border-radius: 999px;
   min-width: 14px; min-height: 14px;
   box-shadow: 0 0 8px rgba(232, 237, 245, 0.40);
 }
@@ -918,17 +824,17 @@ button.app-pill:hover,
 .qs-nowplaying {
   margin-top: 10px;
   padding: 10px 12px;
-  background: rgba(8, 8, 14, 0.72);
+  background: rgba(15, 20, 32, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
+  border-radius: 12px;
 }
 .qs-np-icon  { font-size: 18px; color: #ffffff; min-width: 22px; }
-.qs-np-title { color: #f4ead5; font-size: 12px; font-weight: 600; }
+.qs-np-title { color: #e8edf5; font-size: 12px; font-weight: 600; }
 .qs-np-artist { color: #8b94a8; font-size: 10px; }
 .qs-np-btn {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 3px;
+  border-radius: 8px;
   color: #c8ccd6;
   padding: 2px 8px;
   font-size: 12px;
@@ -949,17 +855,17 @@ button.app-pill:hover,
   padding: 28px 16px;
   margin: 8px 0;
   background: rgba(17, 21, 31, 0.45);
-  border: 1px dashed rgba(244, 234, 213, 0.18);
-  border-radius: 3px;
+  border: 1px dashed rgba(160, 107, 255, 0.18);
+  border-radius: 12px;
 }
 .empty-glyph {
   font-size: 28px;
-  color: #c4b491;
-  text-shadow: 0 0 14px rgba(244, 234, 213, 0.35);
+  color: #8b6f3a;
+  text-shadow: 0 0 14px rgba(160, 107, 255, 0.35);
   padding-bottom: 4px;
 }
 .empty-title {
-  color: #f4ead5;
+  color: #e8edf5;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -972,28 +878,28 @@ button.app-pill:hover,
 
 .qs-close, .wifi-close, .bt-close, .mix-close, .cal-close, .notif-close {
   padding: 8px 14px;
-  border-radius: 3px;
-  background: rgba(217, 107, 107, 0.12);
-  border: 1px solid rgba(217, 107, 107, 0.30);
-  color: #d96b6b;
+  border-radius: 10px;
+  background: rgba(255, 77, 107, 0.12);
+  border: 1px solid rgba(255, 77, 107, 0.30);
+  color: #ff8b9e;
   letter-spacing: 0.12em;
 }
 .qs-close:hover, .wifi-close:hover, .bt-close:hover, .mix-close:hover,
 .cal-close:hover, .notif-close:hover {
-  background: rgba(217, 107, 107, 0.28);
+  background: rgba(255, 77, 107, 0.28);
   color: #ffffff;
-  box-shadow: 0 0 14px rgba(217, 107, 107, 0.45);
+  box-shadow: 0 0 14px rgba(255, 77, 107, 0.45);
 }
 
-/* ── Shared flyout control buttons ─ Eclipse monochrome ─────────
+/* ── Shared flyout control buttons ─ DARK MIRROR monochrome ─────────
  * P2.12 review fix: this rule used to apply cyan neon to every
  * flyout's secondary action (WiFi toggle/rescan, BT toggle/scan,
  * Notification DND/Clear, advanced shortcuts). Locked palette is
- * white #f4ead5 / grey #c8ccd6 / black, no cyan/violet. */
+ * white #e8edf5 / grey #c8ccd6 / black, no cyan/violet. */
 .wifi-toggle, .wifi-rescan, .bt-toggle, .bt-scan, .notif-dnd, .notif-clear,
 .wifi-advanced, .bt-advanced, .mix-advanced {
   padding: 6px 12px;
-  border-radius: 3px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: #c8ccd6;
@@ -1010,12 +916,12 @@ button.app-pill:hover,
 .wifi-current { color: #8b94a8; font-size: 11px; padding: 2px 4px; }
 
 /* P2.12 review fix (round 2): row base/hover converted to monochrome
- * so Notification Center inherits the locked Eclipse palette.
+ * so Notification Center inherits the locked DARK MIRROR palette.
  * Same neutral applied to wifi/bt/mix rows for system-wide cohesion. */
 .wifi-row, .bt-row, .mix-row, .notif-row {
   padding: 8px 10px;
-  border-radius: 3px;
-  background: rgba(8, 8, 14, 0.55);
+  border-radius: 10px;
+  background: rgba(15, 20, 32, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 .wifi-row:hover, .bt-row:hover, .mix-row:hover, .notif-row:hover {
@@ -1024,43 +930,43 @@ button.app-pill:hover,
 }
 .wifi-row-active, .bt-row-conn, .mix-row-default {
   background: linear-gradient(90deg,
-    rgba(244, 234, 213, 0.18),
-    rgba(244, 234, 213, 0.08));
-  border-color: rgba(244, 234, 213, 0.45);
-  box-shadow: inset 0 0 12px rgba(244, 234, 213, 0.18);
+    rgba(160, 107, 255, 0.18),
+    rgba(212, 184, 122, 0.08));
+  border-color: rgba(212, 184, 122, 0.45);
+  box-shadow: inset 0 0 12px rgba(160, 107, 255, 0.18);
 }
 
-.wifi-bars { color: #f4ead5; font-family: "JetBrains Mono Nerd Font", monospace; min-width: 44px; }
-.wifi-name { background: transparent; border: none; color: #f4ead5; font-size: 12px; }
-.wifi-name:hover { color: #ffffff; text-shadow: 0 0 8px rgba(244, 234, 213, 0.55); }
+.wifi-bars { color: #d4b87a; font-family: "JetBrainsMono Nerd Font", monospace; min-width: 44px; }
+.wifi-name { background: transparent; border: none; color: #e8edf5; font-size: 12px; }
+.wifi-name:hover { color: #ffffff; text-shadow: 0 0 8px rgba(212, 184, 122, 0.55); }
 .wifi-sig { color: #8b94a8; font-size: 10px; min-width: 36px; }
 .wifi-forget {
-  padding: 2px 8px; border-radius: 3px;
-  background: rgba(217, 107, 107, 0.10);
-  border: 1px solid rgba(217, 107, 107, 0.25);
-  color: #d96b6b;
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(255, 77, 107, 0.10);
+  border: 1px solid rgba(255, 77, 107, 0.25);
+  color: #ff8b9e;
 }
-.wifi-forget:hover { background: rgba(217, 107, 107, 0.30); color: #ffffff; }
+.wifi-forget:hover { background: rgba(255, 77, 107, 0.30); color: #ffffff; }
 
 /* ── BLUETOOTH ──────────────────────────────────────────────────────── */
-.bt-icon { font-size: 16px; color: #f4ead5; min-width: 24px; }
+.bt-icon { font-size: 16px; color: #d4b87a; min-width: 24px; }
 .bt-name { color: #ffffff; font-size: 12px; font-weight: 600; }
 .bt-mac  { color: #6b7388; font-size: 10px; letter-spacing: 0.04em; }
 .bt-act, .bt-forget {
-  padding: 4px 10px; border-radius: 3px;
-  background: rgba(244, 234, 213, 0.10);
-  border: 1px solid rgba(244, 234, 213, 0.25);
+  padding: 4px 10px; border-radius: 8px;
+  background: rgba(160, 107, 255, 0.10);
+  border: 1px solid rgba(160, 107, 255, 0.25);
   color: #d0c4ff;
   font-size: 10px;
   letter-spacing: 0.10em;
 }
-.bt-act:hover { background: rgba(244, 234, 213, 0.22); color: #ffffff; }
+.bt-act:hover { background: rgba(212, 184, 122, 0.22); color: #ffffff; }
 .bt-forget {
-  background: rgba(217, 107, 107, 0.10);
-  border-color: rgba(217, 107, 107, 0.25);
-  color: #d96b6b;
+  background: rgba(255, 77, 107, 0.10);
+  border-color: rgba(255, 77, 107, 0.25);
+  color: #ff8b9e;
 }
-.bt-forget:hover { background: rgba(217, 107, 107, 0.30); color: #ffffff; }
+.bt-forget:hover { background: rgba(255, 77, 107, 0.30); color: #ffffff; }
 
 /* ── AUDIO MIXER ────────────────────────────────────────────────────── */
 .mix-section {
@@ -1072,34 +978,34 @@ button.app-pill:hover,
   padding: 0 8px;
   background: transparent;
   border: none;
-  color: #f4ead5;
+  color: #d4b87a;
   font-size: 14px;
   min-width: 22px;
 }
-.mix-pick:hover { color: #ffffff; text-shadow: 0 0 10px rgba(244, 234, 213, 0.65); }
-.mix-name { color: #f4ead5; font-size: 12px; }
+.mix-pick:hover { color: #ffffff; text-shadow: 0 0 10px rgba(212, 184, 122, 0.65); }
+.mix-name { color: #e8edf5; font-size: 12px; }
 .mix-pct { color: #8b94a8; font-size: 10px; min-width: 38px; }
 .mix-mute {
-  padding: 2px 8px; border-radius: 3px;
+  padding: 2px 8px; border-radius: 6px;
   background: rgba(17, 21, 31, 0.85);
-  border: 1px solid rgba(244, 234, 213, 0.20);
+  border: 1px solid rgba(160, 107, 255, 0.20);
   color: #d0c4ff;
 }
-.mix-mute:hover { background: rgba(244, 234, 213, 0.22); color: #ffffff; }
-.mix-app-glyph { color: #c4b491; font-size: 14px; min-width: 22px; }
+.mix-mute:hover { background: rgba(160, 107, 255, 0.22); color: #ffffff; }
+.mix-app-glyph { color: #8b6f3a; font-size: 14px; min-width: 22px; }
 .mix-scale trough {
   background: rgba(17, 21, 31, 0.85);
-  border: 1px solid rgba(244, 234, 213, 0.20);
-  border-radius: 3px;
+  border: 1px solid rgba(160, 107, 255, 0.20);
+  border-radius: 999px;
   min-height: 5px;
 }
 .mix-scale highlight {
-  background: linear-gradient(90deg, #c4b491, #f4ead5);
-  border-radius: 3px;
+  background: linear-gradient(90deg, #8b6f3a, #d4b87a);
+  border-radius: 999px;
 }
 .mix-scale slider {
   background: #ffffff;
-  border-radius: 3px;
+  border-radius: 999px;
   min-width: 12px; min-height: 12px;
 }
 
@@ -1115,17 +1021,17 @@ button.app-pill:hover,
 .cal-day {
   min-width: 36px;
   padding: 6px 0;
-  border-radius: 3px;
+  border-radius: 8px;
   font-size: 12px;
-  color: #f4ead5;
+  color: #e8edf5;
 }
-.cal-day-in:hover { background: rgba(244, 234, 213, 0.16); }
+.cal-day-in:hover { background: rgba(160, 107, 255, 0.16); }
 .cal-day-out { color: #3a4055; }
 .cal-day-today {
-  background: linear-gradient(135deg, #c4b491, #f4ead5);
-  color: #000000;
+  background: linear-gradient(135deg, #8b6f3a, #d4b87a);
+  color: #05060a;
   font-weight: 700;
-  box-shadow: 0 0 14px rgba(244, 234, 213, 0.55);
+  box-shadow: 0 0 14px rgba(160, 107, 255, 0.55);
 }
 
 /* ── NOTIFICATIONS ──────────────────────────────────────────────────── */
@@ -1135,7 +1041,7 @@ button.app-pill:hover,
 .notif-group {
   background: rgba(20, 24, 36, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 3px;
+  border-radius: 12px;
   padding: 8px 10px;
 }
 .notif-group-muted { opacity: 0.55; }
@@ -1148,7 +1054,7 @@ button.app-pill:hover,
   color: #c8ccd6;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
+  border-radius: 8px;
   padding: 1px 8px;
   font-size: 10px;
   font-weight: 700;
@@ -1157,14 +1063,14 @@ button.app-pill:hover,
 .notif-mute {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 3px;
+  border-radius: 8px;
   padding: 1px 6px;
   color: #c8ccd6;
   font-size: 11px;
 }
 .notif-mute:hover { background: rgba(255, 255, 255, 0.08); color: #ffffff; }
 .notif-mute-on {
-  color: #f4ead5;
+  color: #e8edf5;
   border-color: rgba(232, 237, 245, 0.45);
   background: rgba(232, 237, 245, 0.08);
 }
@@ -1173,7 +1079,7 @@ button.app-pill:hover,
 .notif-action {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 3px;
+  border-radius: 8px;
   padding: 0 8px;
   color: #c8ccd6;
   font-size: 12px;
@@ -1183,8 +1089,8 @@ button.app-pill:hover,
    notice that notifications are being suppressed. */
 .notif-dnd-on {
   color: #050810;
-  background: #f4ead5;
-  border-color: #f4ead5;
+  background: #e8edf5;
+  border-color: #e8edf5;
 }
 .notif-row-muted { opacity: 0.6; }
 
@@ -1200,12 +1106,12 @@ button.app-pill:hover,
 .notif-summary { color: #ffffff; font-size: 12px; font-weight: 600; }
 .notif-body    { color: #8b94a8; font-size: 10px; }
 .notif-dismiss {
-  padding: 2px 8px; border-radius: 3px;
-  background: rgba(217, 107, 107, 0.08);
-  border: 1px solid rgba(217, 107, 107, 0.20);
-  color: #d96b6b;
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(255, 77, 107, 0.08);
+  border: 1px solid rgba(255, 77, 107, 0.20);
+  color: #ff8b9e;
 }
-.notif-dismiss:hover { background: rgba(217, 107, 107, 0.28); color: #ffffff; }
+.notif-dismiss:hover { background: rgba(255, 77, 107, 0.28); color: #ffffff; }
 
 /* ═════════════════════════════════════════════════════════════════════
  * P3.13b · NYXUS START MENU (Win11-grade launcher, glass aesthetic)
@@ -1215,7 +1121,7 @@ button.app-pill:hover,
 .startmenu-root {
   background: $glass-dark;
   border: 1px solid $hairline-white;
-  border-radius: 3px;
+  border-radius: 18px;
   padding: 22px 24px;
   box-shadow:
     0 1px 0 $hairline-white inset,
@@ -1227,9 +1133,9 @@ button.app-pill:hover,
 .startmenu-search {
   background: $glass-deeper;
   border: 1px solid $hairline-white;
-  border-radius: 3px;
+  border-radius: 10px;
   padding: 8px 14px;
-  color: #f4ead5;
+  color: #e8edf5;
   font-size: 12px;
   letter-spacing: 0.04em;
 }
@@ -1251,7 +1157,7 @@ button.app-pill:hover,
 .startmenu-tile {
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: 10px;
   padding: 14px 8px;
   min-width: 90px;
   transition: all 160ms cubic-bezier(0.32, 0.72, 0.24, 1);
@@ -1262,7 +1168,7 @@ button.app-pill:hover,
 }
 .startmenu-tile-glyph {
   font-size: 24px;
-  color: #f4ead5;
+  color: #e8edf5;
   padding-bottom: 4px;
 }
 .startmenu-tile-label {
@@ -1273,31 +1179,31 @@ button.app-pill:hover,
 
 .startmenu-recent-row {
   background: transparent;
-  border-radius: 3px;
+  border-radius: 8px;
   padding: 8px 10px;
   transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .startmenu-recent-row:hover { background: $glass-deeper; }
-.startmenu-recent-name { font-size: 11px; color: #f4ead5; }
+.startmenu-recent-name { font-size: 11px; color: #e8edf5; }
 .startmenu-recent-path { font-size: 9px;  color: #8b94a8; }
 
 .startmenu-footer {
   background: $glass-deeper;
   border: 1px solid $hairline-white;
-  border-radius: 3px;
+  border-radius: 10px;
   padding: 10px 14px;
   margin-top: 14px;
 }
 .startmenu-user {
   font-size: 12px;
   font-weight: 600;
-  color: #f4ead5;
+  color: #e8edf5;
   letter-spacing: 0.04em;
 }
 .startmenu-power-btn {
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: 8px;
   padding: 6px 10px;
   font-size: 14px;
   color: #c8ccd6;
@@ -1309,9 +1215,9 @@ button.app-pill:hover,
   color: #ffffff;
 }
 .startmenu-power-btn.shutdown:hover {
-  background: rgba(217, 107, 107, 0.18);
-  border-color: rgba(217, 107, 107, 0.40);
-  color: #d96b6b;
+  background: rgba(255, 77, 107, 0.18);
+  border-color: rgba(255, 77, 107, 0.40);
+  color: #ff8b9e;
 }
 
 /* ═════════════════════════════════════════════════════════════════════
@@ -1323,7 +1229,7 @@ button.app-pill:hover,
 .search-btn {
   background: $glass-deeper;
   border: 1px solid $hairline-white;
-  border-radius: 3px;
+  border-radius: 8px;
   padding: 4px 14px;
   min-width: 200px;
   transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
@@ -1349,7 +1255,7 @@ button.app-pill:hover,
   color: #c8ccd6;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: 6px;
   transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 .app-rail-h .app-pill:hover {
@@ -1372,7 +1278,7 @@ button.app-pill:hover,
 .taskbar-tile {
   background: $glass-deeper;
   border: 1px solid $hairline-white;
-  border-radius: 3px;
+  border-radius: 6px;
   padding: 4px 10px;
   color: #c8ccd6;
   transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
@@ -1399,7 +1305,7 @@ button.app-pill:hover,
 }
 
 /* Slightly taller bottom bar so the taskbar tiles don't crowd. */
-.bar-bottom { padding: 4px 12px; min-height: 32px; }
+.bar-bottom { padding: 4px 12px; min-height: 30px; }
 
 /* ═════════════════════════════════════════════════════════════════════
  * NYXUS WARM ACCENT OVERLAY (rev 2026-05-12)
@@ -1470,9 +1376,9 @@ button.app-pill:hover,
 /* Tooltips — keep mono but tint border so they feel "of the system" */
 tooltip {
   background: $glass-deepest;
-  color: #f4ead5;
+  color: #e8edf5;
   border: 1px solid $gold-edge;
-  border-radius: 3px;
+  border-radius: 6px;
   padding: 4px 8px;
 }
 
@@ -1482,56 +1388,4 @@ tooltip {
 /* SysPulse: dim the chrome, gold the values */
 .syspulse-cpu, .syspulse-mem, .syspulse-temp {
   color: #c8ccd6;
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
-   NYXUS EFFECT VOCABULARY (rev r15) — opt-in helper classes for EWW widgets
-   Sprinkled across the system, not blanket. Mirror of the GTK helpers so the
-   look is system-wide consistent.
-   ════════════════════════════════════════════════════════════════════════════ */
-.nyx-glow {
-  box-shadow: 0 0 16px $cream-glow,
-              0 0 4px rgba(255, 255, 255, 0.45);
-}
-.nyx-glow:hover {
-  box-shadow: 0 0 22px rgba(244, 234, 213, 0.45),
-              0 0 6px rgba(255, 255, 255, 0.85);
-}
-.nyx-glow-soft { box-shadow: 0 0 10px $cream-bg-active; }
-
-.nyx-tilt-l { transform: rotate(-1.5deg); }
-.nyx-tilt-r { transform: rotate( 1.5deg); }
-
-.nyx-handdrawn {
-  border: 2px dashed $cream-edge;
-  border-radius: 3px;
-  padding: 6px 12px;
-  background-color: $glass-deeper;
-}
-
-.nyx-hand {
-  font-family: $font-hand;
-  font-size: 18px;
-  font-weight: 600;
-  color: $cream-soft;
-}
-
-.nyx-mono {
-  font-family: $font-mono;
-  letter-spacing: 0.02em;
-}
-
-.nyx-scramble {
-  font-family: $font-mono;
-  letter-spacing: 0.04em;
-}
-.nyx-scramble:hover {
-  color: $cream;
-  text-shadow: 0 0 6px $cream-glow;
-}
-
-.nyx-frosted {
-  background-color: $glass-dark;
-  border: 1px solid $hairline-white;
-  border-radius: 3px;
 }

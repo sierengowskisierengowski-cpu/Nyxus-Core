@@ -230,74 +230,11 @@ class NotificationsPanel(Gtk.Box):
 
 
 def main() -> int:
-    """Standalone Notification Center.
-
-    Usage:
-        nyxus_settings_notifications.py            → centered window
-        nyxus_settings_notifications.py --drawer   → right-edge slide-out
-                                                     panel (macOS / Win 11
-                                                     Notification Center
-                                                     UX). Anchored to the
-                                                     right edge with full
-                                                     screen height.
-    """
-    import sys, json as _json
-    from pathlib import Path as _Path
-    drawer = "--drawer" in sys.argv
-
-    # ── User preferences (Sprint C, rev r15) ─────────────────────────
-    # Settings → Notification Center writes notif_center.* to
-    # ~/.config/nyxus/settings.json. Read them so every Settings option
-    # produces a real behavior change on next launch.
-    _prefs: dict = {}
-    try:
-        _pf = _Path.home() / ".config" / "nyxus" / "settings.json"
-        if _pf.exists():
-            _prefs = (_json.loads(_pf.read_text() or "{}") or {}
-                      ).get("notif_center", {}) or {}
-    except Exception:
-        _prefs = {}
-    _side = str(_prefs.get("side", "right"))
-    _width = max(320, min(600, int(_prefs.get("width", 420))))
-    _autohide = max(0, min(60, int(_prefs.get("autohide", 0))))
-
     app = Adw.Application(application_id="com.nyxus.notifications")
     def on_activate(_a: Adw.Application) -> None:
         win = Adw.ApplicationWindow(application=_a,
-                                    title="NYXUS · Notification Center")
-        if drawer:
-            # Right-edge drawer mode — narrow + tall, anchored on the
-            # user-chosen side. Try gtk4-layer-shell first (proper
-            # anchored panel); fall back to a tall borderless floating
-            # window that Hyprland rules will pin to the chosen edge.
-            win.set_default_size(_width, 1000)
-            win._nyxus_no_titlebar = True
-            try:
-                import gi as _gi
-                _gi.require_version("Gtk4LayerShell", "1.0")
-                from gi.repository import Gtk4LayerShell as LS  # type: ignore
-                LS.init_for_window(win)
-                LS.set_layer(win, LS.Layer.TOP)
-                LS.set_anchor(win, LS.Edge.TOP, True)
-                LS.set_anchor(win, LS.Edge.BOTTOM, True)
-                _edge = LS.Edge.LEFT if _side == "left" else LS.Edge.RIGHT
-                LS.set_anchor(win, _edge, True)
-                LS.set_margin(win, _edge, 8)
-                LS.set_keyboard_mode(win, LS.KeyboardMode.ON_DEMAND)
-            except Exception:
-                # Hyprland windowrule will pull it to the chosen edge.
-                pass
-            win.add_css_class("nyx-notif-drawer")
-            # Auto-hide after N seconds of inactivity, if configured.
-            if _autohide > 0:
-                from gi.repository import GLib as _GLib  # type: ignore
-                def _hide():
-                    try: win.close()
-                    except Exception: pass
-                    return False
-                _GLib.timeout_add_seconds(_autohide, _hide)
-        else:
-            win.set_default_size(720, 600)
+                                    title="NYXUS · Notifications")
+        win.set_default_size(720, 600)
         win.set_content(NotificationsPanel())
         win.present()
     app.connect("activate", on_activate)

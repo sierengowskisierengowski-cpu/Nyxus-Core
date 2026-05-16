@@ -1,5 +1,5 @@
 ;; ─────────────────────────────────────────────────────────────────────
-;; NYXUS · EWW configuration — ECLIPSE aesthetic · rev r15
+;; NYXUS · EWW configuration — DARK MIRROR aesthetic · ENTERPRISE BUILD
 ;; © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 ;;
 ;; Layout matrix:
@@ -29,12 +29,7 @@
 ;; time so eww only redraws when something actually changes, which
 ;; preserves the smooth horizontal scroll. The chain is doubled inside
 ;; the script so the loop seam is invisible.
-;; rev 2026-05-16 r19: ticker scroll is now SCRIPT-DRIVEN. ticker.sh
-;; maintains its own offset in /tmp and emits a shifted substring each
-;; call. Poll at 500ms = ~6 chars/sec smooth horizontal scroll. Live
-;; notifications are pulled from /tmp/nyxus-notifications.log (any app
-;; can append a line; the ticker injects the most recent 5).
-(defpoll TICKER     :interval "500ms" :initial '{"text":"NYXUS · ECLIPSE · LIVE · STARTING SYSTEM PROBES …","tooltip":"NYXUS"}'
+(defpoll TICKER     :interval "30s"  :initial '{"text":"NYXUS · DARK MIRROR · LIVE     ▌ STARTING SYSTEM PROBES …     NYXUS · DARK MIRROR · LIVE     ▌ STARTING SYSTEM PROBES …","tooltip":"NYXUS"}'
                                      "~/.config/eww/scripts/ticker.sh")
 (defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0}'
                                      "~/.config/eww/scripts/sys-pulse.sh")
@@ -345,22 +340,11 @@
       (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget)
       (cal_widget) (clock_widget) (power_button))))
 
-;; Top bar = 3-zone centerbox: LEFT brand chip · CENTER ticker chip · RIGHT player.
-;; The ticker is constrained to a fixed center width (.ticker-center in
-;; eww.scss) so it sits as a chip in the middle of the bar — not the
-;; whole top span. centerbox keeps the center child anchored to true
-;; bar-center regardless of left/right widget widths.
-;; centerbox takes EXACTLY 3 children and ignores :class/:orientation,
-;; so we wrap it in a styled box that owns the .bar .bar-top class.
 (defwidget bar_top_layout []
-  (box :class "bar bar-top" :hexpand true
-    (centerbox :orientation "h"
-      (box :class "ticker-left" :space-evenly false :halign "start" :spacing 8
-        (label :class "ticker-label" :text "▌ NYXUS · LIVE"))
-      (box :class "ticker-center" :space-evenly false :halign "center"
-        (ticker_widget))
-      (box :class "ticker-right" :space-evenly false :halign "end" :spacing 8
-        (player_widget)))))
+  (box :class "bar bar-top" :space-evenly false :spacing 12 :hexpand true
+    (label :class "ticker-label" :text "▌ NYXUS · LIVE")
+    (ticker_widget)
+    (player_widget)))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; DASHBOARD — replaces nyxus_quicksettings + nyxus_clock + nyxus_calendar
@@ -570,31 +554,21 @@
        :space-evenly false :spacing 28
     (label :class "saver-clock" :text "${TIME.hm}")
     (label :class "saver-date"  :text "${TIME.long}")
-    (label :class "saver-brand" :text "NYXUS · ECLIPSE")
+    (label :class "saver-brand" :text "NYXUS · DARK MIRROR")
     (label :class "saver-hint"  :text "move mouse · press any key")))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; WINDOWS
 ;; ═════════════════════════════════════════════════════════════════════
 
-;; Sprint I rev r15 — slim "Eclipse desktop" geometry. Bar windows are
-;; still defined so opt-in via nyxus.conf NYXUS_EWW_BARS works, but the
-;; default open list is "bar-top bar-right" (see nyxus.conf). Slim
-;; values: bar-bottom 40px (was 56), y:8 (was 12), w:96% (was 98%);
-;; bar-top 26px (was 32). These were the airootfs hand-tuned values
-;; that were not promoted to source until Sprint I.
 (defwindow bar-bottom
   :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-bottom"
-  :geometry (geometry :x "0" :y "8" :width "96%" :height "40px" :anchor "bottom center")
+  :geometry (geometry :x "0" :y "12" :width "98%" :height "40px" :anchor "bottom center")
   (bar_bottom_layout))
 
-;; Slim FLOATING bar (rev 2026-05-16 r18) — Apple-notch / Win11-pill
-;; aesthetic: centered chip, 60% screen width, lifted 10px off the top
-;; edge so rounded corners read as a discrete floating object, not a
-;; docked strip. exclusive=false so the bar floats *over* content.
 (defwindow bar-top
-  :monitor 0 :stacking "fg" :exclusive false :namespace "nyxus-bar-top"
-  :geometry (geometry :x "0" :y "10" :width "60%" :height "32px" :anchor "top center")
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-top"
+  :geometry (geometry :x "0" :y "0" :width "100%" :height "24px" :anchor "top center")
   (bar_top_layout))
 
 (defwindow bar-left

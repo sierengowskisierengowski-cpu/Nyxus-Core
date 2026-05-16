@@ -153,7 +153,7 @@ class WallpaperStudio(Adw.Application):
             "saturation": 1.0,
             "contrast": 1.0,
             "tint_enabled": False,
-            "tint_color": "#f4ead5",
+            "tint_color": "#7B5EA7",
             "blur": 0.0,
             "fit_mode": "Fill",
             "live_preset": "Particle Drift",
@@ -243,7 +243,7 @@ class WallpaperStudio(Adw.Application):
             b"""
             .nyx-tile { border: 1px solid rgba(255,255,255,0.10); border-radius: 10px; padding: 4px; }
             .nyx-tile:hover { border-color: rgba(255,255,255,0.28); }
-            .nyx-tile.selected { border: 2px solid #f4ead5; }
+            .nyx-tile.selected { border: 2px solid #7B5EA7; }
             .nyx-sidebar { padding: 8px; }
             """
         )
@@ -386,14 +386,14 @@ class WallpaperStudio(Adw.Application):
         if hasattr(Gtk, "ColorButton"):
             color_btn = Gtk.ColorButton()
             rgba = Gdk.RGBA()
-            rgba.parse(self.cfg.get("tint_color", "#f4ead5"))
+            rgba.parse(self.cfg.get("tint_color", "#7B5EA7"))
             color_btn.set_rgba(rgba)
             color_btn.connect("color-set", self._on_tint_color)
             box.append(self._labeled_row("Tint Color", color_btn))
         else:
             tint_entry = Gtk.Entry()
-            tint_entry.set_text(self.cfg.get("tint_color", "#f4ead5"))
-            tint_entry.set_placeholder_text("#f4ead5")
+            tint_entry.set_text(self.cfg.get("tint_color", "#7B5EA7"))
+            tint_entry.set_placeholder_text("#7B5EA7")
             tint_entry.connect("activate", self._on_tint_entry)
             box.append(self._labeled_row("Tint Color", tint_entry))
 
@@ -584,7 +584,7 @@ class WallpaperStudio(Adw.Application):
                 "s": self.cfg.get("saturation", 1.0),
                 "c": self.cfg.get("contrast", 1.0),
                 "t": self.cfg.get("tint_enabled", False),
-                "tc": self.cfg.get("tint_color", "#f4ead5"),
+                "tc": self.cfg.get("tint_color", "#7B5EA7"),
                 "bl": self.cfg.get("blur", 0.0),
             },
             sort_keys=True,
@@ -601,7 +601,7 @@ class WallpaperStudio(Adw.Application):
         img = ImageEnhance.Color(img).enhance(float(self.cfg.get("saturation", 1.0)))
         img = ImageEnhance.Contrast(img).enhance(float(self.cfg.get("contrast", 1.0)))
         if self.cfg.get("tint_enabled", False):
-            tint = self.cfg.get("tint_color", "#f4ead5").lstrip("#")
+            tint = self.cfg.get("tint_color", "#7B5EA7").lstrip("#")
             if len(tint) == 6:
                 r = int(tint[0:2], 16)
                 g = int(tint[2:4], 16)

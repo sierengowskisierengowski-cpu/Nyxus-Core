@@ -27,3 +27,8 @@ From repository root:
 - Missing required environment variables causes Vite build-time failures.
 - Building all packages from root may fail until per-package deployment environment variables are provided.
 - For ISO offline cache staging, API server dist output should be built before ISO baking.
+
+
+---
+
+© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

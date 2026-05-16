@@ -1,6 +1,6 @@
 # NYXUS · EWW Widget Stack
 
-**ElKowar's Wacky Widgets** powering the NYXUS Eclipse shell.
+**ElKowar's Wacky Widgets** powering the NYXUS DARK MIRROR shell.
 
 > © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 > Replaces waybar entirely. 4 bars + 4 overlays + 3 OSD pop-ups.
@@ -12,7 +12,7 @@
 | Path | Purpose |
 |---|---|
 | `eww.yuck` | Widget tree, windows, defpoll variables |
-| `eww.scss` | Eclipse theme (cream `#f4ead5` on triple-black) |
+| `eww.scss` | DARK MIRROR theme (violet `#a06bff`, cyan `#3ad8ff`) |
 | `nyxus.conf` | User-tunable config (sourced by launcher + service) |
 | `scripts/*.sh` | Data probes called by `defpoll` |
 | `~/.config/systemd/user/nyxus-eww.service` | Auto-start + restart-on-failure |
@@ -101,8 +101,8 @@ The Python modules **remain installed** until the audit confirms parity, then th
 ## 8. Theme tokens
 
 ```
---cream   #f4ead5
---ink     #000000
+--violet  #a06bff
+--cyan    #3ad8ff
 --ink     #05060a
 --paper   #c8ccd6
 --mute    #5a6278

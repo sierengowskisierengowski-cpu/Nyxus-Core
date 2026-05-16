@@ -4,29 +4,27 @@ import { Pin, X, Plus, Trash2, Search } from "lucide-react";
 
 // Ink color for each sticky background (dark for readability)
 const INK: Record<string, string> = {
-  '#f4ead5': '#1a1408',
-  '#d4b89c': '#1f1208',
-  '#c4b491': '#1a1408',
-  '#e8dcc1': '#1a1408',
-  '#a89175': '#1a1208',
-  '#b8865a': '#1a0e04',
+  '#fef08a': '#2a2000',
+  '#fda4af': '#2a0008',
+  '#93c5fd': '#001428',
+  '#86efac': '#002214',
+  '#e9d5ff': '#1a0030',
+  '#fdba74': '#2a1200',
 };
 
 const LINE_COLOR: Record<string, string> = {
-  '#f4ead5': 'rgba(0,0,0,0.08)',
-  '#d4b89c': 'rgba(0,0,0,0.07)',
-  '#c4b491': 'rgba(0,0,0,0.07)',
-  '#e8dcc1': 'rgba(0,0,0,0.07)',
-  '#a89175': 'rgba(0,0,0,0.07)',
-  '#b8865a': 'rgba(0,0,0,0.08)',
+  '#fef08a': 'rgba(0,0,0,0.08)',
+  '#fda4af': 'rgba(0,0,0,0.07)',
+  '#93c5fd': 'rgba(0,0,0,0.07)',
+  '#86efac': 'rgba(0,0,0,0.07)',
+  '#e9d5ff': 'rgba(0,0,0,0.07)',
+  '#fdba74': 'rgba(0,0,0,0.08)',
 };
 
 // Neon glow colors for the app chrome
-// Sprint K-C rev r16: legacy NEON_* names retained for minimal-diff
-// component code, all values remapped to brand cream/copper.
-const NEON_PINK  = '#f4ead5';
-const NEON_BLUE  = '#8a8068';
-const NEON_GREEN = '#b8865a';
+const NEON_PINK  = '#ff00ff';
+const NEON_BLUE  = '#0088ff';
+const NEON_GREEN = '#39ff14';
 
 function StickyNote({ note, updateNote, deleteNote, togglePin }:
   { note: Note; updateNote: (id: string, u: Partial<Note>) => void;
@@ -208,10 +206,10 @@ export default function Stickies() {
         display: 'flex', alignItems: 'center', gap: 12, padding: '0 18px',
         height: 56, flexShrink: 0,
         borderBottom: `2px solid ${NEON_PINK}33`,
-        background: 'rgba(6,6,10,0.65)',
+        background: 'rgba(6,4,12,0.65)',
         backdropFilter: 'blur(14px) saturate(1.6)',
         WebkitBackdropFilter: 'blur(14px) saturate(1.6)',
-        boxShadow: `0 0 24px rgba(244,234,213,0.08)`,
+        boxShadow: `0 0 24px rgba(255,0,255,0.08)`,
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 4 }}>
@@ -291,7 +289,7 @@ export default function Stickies() {
       {/* ── Color key strip ─────────────────────────────────────── */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8, padding: '6px 20px',
-        background: 'rgba(6,6,10,0.5)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(255,255,255,0.05)',
+        background: 'rgba(6,4,12,0.5)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(255,255,255,0.05)',
         flexShrink: 0,
       }}>
         <span style={{ color: 'rgba(255,255,255,0.3)', fontFamily: "'Caveat', cursive", fontSize: 14 }}>Colors:</span>

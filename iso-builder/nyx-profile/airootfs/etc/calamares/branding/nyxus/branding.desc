@@ -1,21 +1,19 @@
-# NYXUS · Calamares branding descriptor             rev 2026-05-14 r3
-# Sprint F: rev r15 compliance — old release codename retired,
-# cream-only sidebar, premium glass slideshow palette.
+# NYXUS · Calamares branding descriptor             rev 2026-05-13 r2
 ---
 componentName: nyxus
 
 welcomeStyleCalamares: true
 welcomeExpandingLogo:  false
 windowExpanding:       normal
-windowSize:            960px,600px
+windowSize:            900px,560px
 windowPlacement:       center
 
 strings:
     productName:         "NYXUS"
     shortProductName:    "NYXUS"
-    version:             "2026.05"
+    version:             "2026.05 · Sprint E"
     shortVersion:        "2026.05"
-    versionedName:       "NYXUS 2026.05"
+    versionedName:       "NYXUS 2026.05 · Sprint E"
     shortVersionedName:  "NYXUS 2026.05"
     bootloaderEntryName: "NYXUS"
     productUrl:          "https://nyxus.os"
@@ -32,10 +30,9 @@ images:
 slideshow:           "show.qml"
 slideshowAPI:        2
 
-# Sprint F sidebar — triple-black + cream highlight, matches show.qml.
 style:
-    sidebarBackground:         "#0a0a0a"
-    sidebarText:               "#cfc6b3"
-    sidebarTextSelect:         "#0a0a0a"
-    sidebarTextHighlight:      "#f4ead5"
+    sidebarBackground:    "#0a0a14"
+    sidebarText:          "#f4ead5"
+    sidebarTextSelect:    "#0a0a14"
+    sidebarTextHighlight: "#f4ead5"
     sidebarBackgroundSelected: "#f4ead5"

@@ -31,3 +31,8 @@ Minimum expected release outputs:
 - Deployment environment should preserve naming contract:
   - NYX = ISO
   - NYXUS = platform/system/apps
+
+
+---
+
+© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

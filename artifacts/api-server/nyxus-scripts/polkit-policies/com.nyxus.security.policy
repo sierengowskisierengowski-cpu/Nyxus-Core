@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<!--
+  NYXUS Security Center polkit policy   rev 2026-05-13 r1
+
+  Authorizes the privileged helper at /usr/local/libexec/nyxus-security-helper.
+  The helper itself enforces strict subcommand whitelisting and argument
+  validation; this policy controls the auth UX (require admin password,
+  cache for 5 minutes per session).
+
+  Installed at /usr/share/polkit-1/actions/com.nyxus.security.policy.
+-->
+<policyconfig>
+  <vendor>NYXUS</vendor>
+  <vendor_url>https://nyxus.os</vendor_url>
+  <icon_name>security-high</icon_name>
+
+  <action id="com.nyxus.security.helper">
+    <description>NYXUS Security Center privileged action</description>
+    <message>NYXUS Security needs administrator access to apply this change.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/libexec/nyxus-security-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>

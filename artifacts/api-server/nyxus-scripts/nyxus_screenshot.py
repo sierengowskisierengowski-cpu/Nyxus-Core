@@ -84,65 +84,6 @@ except Exception:
 
 PIC_DIR = Path.home() / "Pictures" / "Screenshots"
 
-# ── User preferences (Sprint C, rev r15) ─────────────────────────────
-# Settings → Capture writes ~/.config/nyxus/settings.json `capture.*`.
-# We honor the user-facing keys at startup so every Settings toggle
-# produces a real behavior change on next launch (Build Standard:
-# no-op toggles forbidden).
-_PREFS_FILE = Path.home() / ".config" / "nyxus" / "settings.json"
-PREFS_DEFAULT_DELAY = 0
-PREFS_DEFAULT_MODE: str | None = None
-PREFS_FORMAT = "png"
-PREFS_COPY_TO_CLIPBOARD = True
-PREFS_CHIME = True
-PREFS_FLASH = True
-PREFS_SHOW_CURSOR = False
-PREFS_ANNOTATE_AFTER = False
-PREFS_OCR = False
-
-
-def _apply_user_prefs() -> None:
-    """Load capture.* prefs from settings.json and update module
-    globals so command-line defaults reflect what the user picked in
-    NYXUS Settings → Capture."""
-    global PIC_DIR, PREFS_DEFAULT_DELAY, PREFS_DEFAULT_MODE, PREFS_FORMAT
-    global PREFS_COPY_TO_CLIPBOARD, PREFS_CHIME, PREFS_FLASH
-    global PREFS_SHOW_CURSOR, PREFS_ANNOTATE_AFTER, PREFS_OCR
-    try:
-        if not _PREFS_FILE.exists():
-            return
-        data = json.loads(_PREFS_FILE.read_text() or "{}")
-        cap = (data or {}).get("capture", {}) or {}
-    except Exception:
-        return
-    sd = cap.get("save_dir")
-    if sd:
-        try:
-            p = Path(str(sd)).expanduser()
-            p.mkdir(parents=True, exist_ok=True)
-            PIC_DIR = p
-        except Exception:
-            pass
-    PREFS_DEFAULT_DELAY = int(cap.get("delay", PREFS_DEFAULT_DELAY))
-    dm = cap.get("default_mode")
-    if dm in ("region", "window", "fullscreen"):
-        PREFS_DEFAULT_MODE = dm
-    fmt = cap.get("format")
-    if fmt in ("png", "jpg", "webp"):
-        PREFS_FORMAT = fmt
-    PREFS_COPY_TO_CLIPBOARD = bool(cap.get("copy_to_clipboard",
-                                           PREFS_COPY_TO_CLIPBOARD))
-    PREFS_CHIME = bool(cap.get("chime", PREFS_CHIME))
-    PREFS_FLASH = bool(cap.get("flash_overlay", PREFS_FLASH))
-    PREFS_SHOW_CURSOR = bool(cap.get("show_cursor", PREFS_SHOW_CURSOR))
-    PREFS_ANNOTATE_AFTER = bool(cap.get("annotate_after",
-                                        PREFS_ANNOTATE_AFTER))
-    PREFS_OCR = bool(cap.get("ocr", PREFS_OCR))
-
-
-# Apply at import time so every entry point (CLI + .desktop) honors them.
-_apply_user_prefs()
-
 
 def have(cmd: str) -> bool:
     return any((Path(p) / cmd).exists()
@@ -150,8 +91,7 @@ def have(cmd: str) -> bool:
 
 
 def shutter_path() -> str:
-    ext = {"png": "png", "jpg": "jpg", "webp": "webp"}.get(PREFS_FORMAT, "png")
-    return f"{PIC_DIR}/nyxus-{datetime.now():%Y%m%d-%H%M%S}.{ext}"
+    return f"{PIC_DIR}/nyxus-{datetime.now():%Y%m%d-%H%M%S}.png"
 
 
 def notify(msg: str, title: str = "NYXUS Screenshot") -> None:
@@ -292,7 +232,6 @@ class Picker(Adw.Application):
         self.win.set_default_size(520, 360)
         self.win.set_decorated(False)
         self.win.set_resizable(False)
-        self.win._nyxus_fixed_layout = True  # Screenshot tool HUD (compact, fixed)
         self.win.add_css_class("nyxus-shot")
         if HAS_CHROME:
             try: install_chrome(self.win, key="_screenshot")
@@ -415,16 +354,11 @@ def main() -> int:
                     default="picker")
     ap.add_argument("--copy-only", action="store_true",
                     dest="copy_only")
-    ap.add_argument("--annotate", action="store_true",
-                    default=PREFS_ANNOTATE_AFTER)
-    ap.add_argument("--ocr", action="store_true", default=PREFS_OCR)
-    ap.add_argument("--delay", type=int, default=PREFS_DEFAULT_DELAY)
-    ap.add_argument("--no-sound", action="store_true", dest="no_sound",
-                    default=not PREFS_CHIME)
+    ap.add_argument("--annotate", action="store_true")
+    ap.add_argument("--ocr", action="store_true")
+    ap.add_argument("--delay", type=int, default=0)
+    ap.add_argument("--no-sound", action="store_true", dest="no_sound")
     args = ap.parse_args()
-    # Settings → Capture default mode applies when launched with no args.
-    if args.mode == "picker" and PREFS_DEFAULT_MODE:
-        args.mode = PREFS_DEFAULT_MODE
     if args.mode == "picker":
         return Picker(args).run([sys.argv[0]])
     # Video modes delegate to nyxus-record (wf-recorder wrapper).

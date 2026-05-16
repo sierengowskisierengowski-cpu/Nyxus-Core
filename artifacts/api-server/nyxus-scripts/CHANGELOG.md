@@ -11,7 +11,7 @@ NYX-J5W-2026-SIERENGOWSKI-LOCKED
 ### System
 - Full naming canonicalized: NYX (ISO) and NYXUS (OS + apps) — all legacy names removed
 - Hyprland config updated: `windowrulev2` syntax fixed, `GTK_THEME=NYXUS` set, polkit-gnome replaced with `lxpolkit` for bare-Hyprland compatibility
-- GTK theme renamed from NyXxOS → NYXUS, install path updated to `~/.themes/NYXUS`
+- GTK theme canonicalized to NYXUS, install path updated to `~/.themes/NYXUS`
 - All configs stamped: `© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED`
 
 ### Applications

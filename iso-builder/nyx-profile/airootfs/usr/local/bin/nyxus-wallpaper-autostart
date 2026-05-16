@@ -1,24 +1,15 @@
 #!/usr/bin/env bash
-# ╔══════════════════════════════════════════════════════════════════════╗
-# ║  NYXUS — wallpaper autostart                                         ║
-# ║  Lives at: /usr/local/bin/nyxus-wallpaper-autostart                  ║
-# ║                                                                      ║
-# ║  rev 2026-05-14 r17 — switched from swaybg to swww. swww supports    ║
-# ║  cross-fade transitions, animated backgrounds, and a daemon socket   ║
-# ║  the Settings → Appearance → Wallpaper page can talk to live without ║
-# ║  killing the previous wallpaper process. swaybg required a pkill +   ║
-# ║  re-exec on every change which produced a black flash.               ║
-# ║                                                                      ║
-# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
-# ╚══════════════════════════════════════════════════════════════════════╝
+# nyxus-wallpaper-autostart
+#
+# Read the user's persisted wallpaper choice and set it through
+# nyxus-set-wallpaper (swww/hyprpaper backend aware). Falls back
+# to the shipped default if the config is missing or points at a file
+# that no longer exists. Sourced by hyprland.conf exec-once and the
+# bound $mod+ALT+W key.
 set -u
 
 CONF="${HOME}/.config/nyxus/wallpaper.conf"
-# Default = canonical Eclipse Horizon image (cinematic eclipse ring +
-# reflective water + distant terrain). Matches the SDDM background and
-# the Visual Target locked in docs/brand/VISUAL-TARGET.md.
-DEFAULT="/usr/share/backgrounds/nyxus/nyxus-eclipse-horizon.png"
-DEFAULT_FALLBACK="/usr/share/backgrounds/nyxus/nyxus-eclipse-reference.png"
+DEFAULT="/usr/share/backgrounds/nyxus/nyxus-nebula-01.png"
 LEGACY_PNG="${HOME}/.config/hypr/walls/nyxus-void-vortex.png"
 
 WALLPAPER_PATH=""
@@ -28,57 +19,19 @@ if [[ -r "${CONF}" ]]; then
 fi
 
 if [[ -z "${WALLPAPER_PATH:-}" || ! -r "${WALLPAPER_PATH}" ]]; then
-  if   [[ -r "${DEFAULT}" ]];          then WALLPAPER_PATH="${DEFAULT}"
-  elif [[ -r "${DEFAULT_FALLBACK}" ]]; then WALLPAPER_PATH="${DEFAULT_FALLBACK}"
-  elif [[ -r "${LEGACY_PNG}" ]];       then WALLPAPER_PATH="${LEGACY_PNG}"
+  if [[ -r "${DEFAULT}" ]]; then
+    WALLPAPER_PATH="${DEFAULT}"
+  elif [[ -r "${LEGACY_PNG}" ]]; then
+    WALLPAPER_PATH="${LEGACY_PNG}"
   else
     echo "nyxus-wallpaper-autostart: no readable wallpaper found" >&2
     exit 1
   fi
 fi
 
-# ── 1. Ensure swww-daemon is up AND HEALTHY ─────────────────────────────────
-# rev r17b — `pgrep swww-daemon` alone is insufficient: a previous Hyprland
-# session can leave a daemon process whose IPC socket is gone or dead, and
-# the next `swww img` call then hangs/errors. Architect-flagged. Use
-# `swww query` as the health check — it's a no-op IPC roundtrip that
-# returns success only if the daemon is actually serving requests. If the
-# probe fails we kill any stale process, restart cleanly, and re-probe.
-if command -v swww >/dev/null 2>&1; then
-  swww_healthy() { swww query >/dev/null 2>&1; }
-
-  if ! swww_healthy; then
-    pkill -x swww-daemon 2>/dev/null || true
-    sleep 0.2
-    if command -v swww-daemon >/dev/null 2>&1; then
-      swww-daemon >/dev/null 2>&1 &
-    else
-      # very old swww packaged the daemon as `swww init`
-      swww init >/dev/null 2>&1 || true
-    fi
-    # Poll up to 3s for the socket to come up. swww typically opens it
-    # within ~200ms but we grant headroom for slow disks.
-    for _ in $(seq 1 15); do
-      swww_healthy && break
-      sleep 0.2
-    done
-  fi
-
-  # ── 2. Apply wallpaper with a soft 600ms cross-fade ───────────────────────
-  if swww_healthy; then
-    exec swww img "${WALLPAPER_PATH}" \
-          --transition-type fade \
-          --transition-duration 0.6 \
-          --transition-fps 60
-  fi
-  # daemon never came up — fall through to swaybg fallback below
-  echo "nyxus-wallpaper-autostart: swww-daemon failed health check after restart" >&2
+if command -v nyxus-set-wallpaper >/dev/null 2>&1; then
+  exec nyxus-set-wallpaper "${WALLPAPER_PATH}"
 fi
 
-# ── Fallback: swww missing → swaybg keeps the old behavior ──────────────────
-# Lets the script ship in environments where swww is temporarily unavailable
-# (e.g. a chroot test) without a black screen. Logged so the next bake can
-# investigate why swww isn't installed.
-echo "nyxus-wallpaper-autostart: swww not on PATH — falling back to swaybg" >&2
 pkill -x swaybg 2>/dev/null || true
 exec swaybg -i "${WALLPAPER_PATH}" -m fill -c "#000000"

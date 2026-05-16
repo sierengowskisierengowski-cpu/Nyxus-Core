@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -26,63 +26,41 @@
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
 
-  /* Sprint K-C rev r16: sysmon is OS-chrome, not a handwriting context.
-     Default to Inter sans + JBM mono. */
-  --font-sans: 'Inter', 'Helvetica Neue', system-ui, sans-serif;
+  --font-sans: 'Caveat', 'Patrick Hand', 'Comic Sans MS', cursive;
   --font-mono: 'JetBrains Mono', monospace;
-  --font-serif: 'Inter', sans-serif;
+  --font-serif: 'Caveat', cursive;
 
-  /* Legacy nyxus-* tokens remapped to safe cream/copper variants. */
-  --color-nyxus-pink:   #f4ead5;
-  --color-nyxus-purple: #c4b491;
-  --color-nyxus-blue:   #8a8068;
-  --color-nyxus-green:  #f4ead5;
-  --color-nyxus-yellow: #b8865a;
-  --color-nyxus-orange: #b8865a;
-  --color-nyxus-bg:     #06060a;
-  --color-nyxus-panel:  #0e0e14;
-  --color-nyxus-text:   #f4ead5;
-  --color-nyxus-dim:    #8a8068;
-  --color-nyxus-cream:  #f4ead5;
-  --color-nyxus-copper: #b8865a;
+  --color-nyxus-pink:   #ff00ff;
+  --color-nyxus-purple: #cc00ff;
+  --color-nyxus-blue:   #0088ff;
+  --color-nyxus-green:  #39ff14;
+  --color-nyxus-yellow: #ffff00;
+  --color-nyxus-orange: #ff5500;
+  --color-nyxus-bg:     #08080e;
+  --color-nyxus-panel:  #0d0d1a;
+  --color-nyxus-text:   #e8e0f5;
+  --color-nyxus-dim:    #7060a0;
 }
 
 :root {
-  /* Sprint K-E rev r16: palette block auto-rendered from
-     iso-builder/tokens/nyxus.tokens.json by nyxus-render-tokens.
-     DO NOT HAND-EDIT lines between START/END markers. */
-  /* NYXUS-TOKENS-START palette */
-  --background: 0 0% 2%;
-  --foreground: 40 38% 89%;
-  --border: 40 18% 18%;
-  --card: 0 0% 4%;
-  --card-foreground: 40 38% 89%;
-  --card-border: 40 18% 22%;
-  --sidebar: 0 0% 4%;
-  --sidebar-foreground: 40 38% 89%;
-  --sidebar-border: 40 18% 22%;
-  --sidebar-primary: 40 38% 89%;
-  --sidebar-primary-foreground: 0 0% 2%;
-  --sidebar-accent: 28 38% 54%;
-  --sidebar-accent-foreground: 0 0% 2%;
-  --sidebar-ring: 40 38% 89%;
-  --popover: 0 0% 4%;
-  --popover-foreground: 40 38% 89%;
-  --popover-border: 40 18% 22%;
-  --primary: 40 38% 89%;
-  --primary-foreground: 0 0% 2%;
-  --secondary: 28 38% 54%;
-  --secondary-foreground: 0 0% 2%;
-  --muted: 0 0% 8%;
-  --muted-foreground: 40 12% 53%;
-  --accent: 28 38% 54%;
-  --accent-foreground: 0 0% 2%;
-  --destructive: 28 38% 54%;
-  --destructive-foreground: 0 0% 2%;
-  --input: 0 0% 8%;
-  --ring: 40 38% 89%;
-/* NYXUS-TOKENS-END palette */
-
+  --background: 260 50% 2%;
+  --foreground: 262 50% 92%;
+  --border: 260 50% 20%;
+  --card: 260 66% 4%;
+  --card-foreground: 262 50% 92%;
+  --card-border: 260 50% 30%;
+  --primary: 300 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 211 100% 50%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 260 30% 15%;
+  --muted-foreground: 255 25% 50%;
+  --accent: 285 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 20 100% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 260 50% 20%;
+  --ring: 300 100% 50%;
   --radius: 0.25rem;
 }
 
@@ -90,59 +68,52 @@
   * { @apply border-border; }
   body {
     @apply antialiased bg-nyxus-bg text-nyxus-text overflow-hidden h-screen w-screen m-0 p-0;
-    font-family: 'Inter', 'Helvetica Neue', system-ui, sans-serif;
+    font-family: 'Caveat', 'Patrick Hand', cursive;
   }
   ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #06060a; }
-  ::-webkit-scrollbar-thumb { background: #1a1814; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #b8865a; }
+  ::-webkit-scrollbar-track { background: #08080e; }
+  ::-webkit-scrollbar-thumb { background: #2a1a3a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #ff00ff; }
 }
 
-/* Sprint K-C rev r16: panel = triple-black plinth + cream-dim ruled lines. */
 .panel {
   @apply border border-nyxus-dim/30 rounded-sm relative overflow-hidden;
-  background: rgba(6, 6, 10, 0.55);
+  background: rgba(6, 4, 12, 0.55);
   backdrop-filter: blur(14px) saturate(1.6);
   -webkit-backdrop-filter: blur(14px) saturate(1.6);
   box-shadow: 0 0 20px rgba(0,0,0,0.6);
   background-image: repeating-linear-gradient(
     transparent, transparent 27px,
-    rgba(244, 234, 213, 0.03) 27px, rgba(244, 234, 213, 0.03) 28px
+    rgba(255,255,255,0.03) 27px, rgba(255,255,255,0.03) 28px
   );
 }
 
 .nyx-glass {
-  background: rgba(6, 6, 10, 0.55);
+  background: rgba(6, 4, 12, 0.55);
   backdrop-filter: blur(14px) saturate(1.6);
   -webkit-backdrop-filter: blur(14px) saturate(1.6);
 }
 
-/* Sprint K-C rev r16: pulse-border now breathes copper, not magenta.
-   offline-border breathes a copper-warning instead of red (red banned). */
 @keyframes pulse-border {
-  0%,100% { border-color: rgba(184, 134, 90, 0.20); box-shadow: 0 0 5px rgba(184, 134, 90, 0.10); }
-  50%      { border-color: rgba(184, 134, 90, 0.50); box-shadow: 0 0 14px rgba(184, 134, 90, 0.30); }
+  0%,100% { border-color: rgba(255,0,255,0.2); box-shadow: 0 0 5px rgba(255,0,255,0.1); }
+  50%      { border-color: rgba(255,0,255,0.5); box-shadow: 0 0 14px rgba(255,0,255,0.3); }
 }
 @keyframes pulse-border-red {
-  0%,100% { border-color: rgba(184, 134, 90, 0.40); box-shadow: 0 0 10px rgba(184, 134, 90, 0.20); }
-  50%      { border-color: rgba(184, 134, 90, 1);    box-shadow: 0 0 30px rgba(184, 134, 90, 0.60); }
+  0%,100% { border-color: rgba(255,0,0,0.4); box-shadow: 0 0 10px rgba(255,0,0,0.2); }
+  50%      { border-color: rgba(255,0,0,1);   box-shadow: 0 0 30px rgba(255,0,0,0.6); }
 }
 
 .neon-border { animation: pulse-border 4s infinite ease-in-out; }
 .offline-border { animation: pulse-border-red 2s infinite ease-in-out; }
 
-/* Sprint K-C rev r16: glow-text-* legacy classes remapped to cream/copper
-   so any component referencing them stays on-brand. */
-.glow-text-pink   { text-shadow: 0 0 10px rgba(244, 234, 213, 0.7); }
-.glow-text-green  { text-shadow: 0 0 10px rgba(244, 234, 213, 0.7); }
-.glow-text-blue   { text-shadow: 0 0 10px rgba(138, 128, 104, 0.6); }
-.glow-text-yellow { text-shadow: 0 0 10px rgba(184, 134, 90, 0.7); }
-.glow-text-orange { text-shadow: 0 0 10px rgba(184, 134, 90, 0.7); }
-.glow-text-red    { text-shadow: 0 0 14px rgba(184, 134, 90, 0.9); }
-.glow-text-cream  { text-shadow: 0 0 10px rgba(244, 234, 213, 0.7); }
-.glow-text-copper { text-shadow: 0 0 10px rgba(184, 134, 90, 0.7); }
+.glow-text-pink   { text-shadow: 0 0 10px rgba(255,0,255,0.7); }
+.glow-text-green  { text-shadow: 0 0 10px rgba(57,255,20,0.7); }
+.glow-text-blue   { text-shadow: 0 0 10px rgba(0,136,255,0.7); }
+.glow-text-yellow { text-shadow: 0 0 10px rgba(255,255,0,0.7); }
+.glow-text-orange { text-shadow: 0 0 10px rgba(255,85,0,0.7); }
+.glow-text-red    { text-shadow: 0 0 14px rgba(255,0,0,0.9); }
 
-/* ── NYXUS stamp (cream-dim, no purple) ───────────────────────────── */
+/* ── NYXUS stamp ───────────────────────────────────────────────────── */
 body::after {
   content: "© 2026 NYX-J5W-2026-SIERENGOWSKI-LOCKED";
   position: fixed;
@@ -151,7 +122,7 @@ body::after {
   font-family: 'JetBrains Mono', monospace;
   font-size: 7px;
   letter-spacing: 0.18em;
-  color: rgba(244, 234, 213, 0.18);
+  color: rgba(255, 0, 255, 0.18);
   pointer-events: none;
   z-index: 9999;
   white-space: nowrap;

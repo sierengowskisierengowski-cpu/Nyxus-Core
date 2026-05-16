@@ -169,11 +169,11 @@ class NetUsageApp(Adw.Application):
         css = Gtk.CssProvider()
         css.load_from_data(
             b"""
-            .nyxus-nu-banner { color:#e8edf5; font-weight:600; letter-spacing:0.06em; padding:6px 4px; }
-            .nyxus-nu-list  row { background: rgba(10,13,20,0.55); border-bottom:1px solid rgba(244,234,213,0.08); }
+            .nyxus-nu-banner { color:#3ad8ff; font-weight:600; letter-spacing:0.06em; padding:6px 4px; }
+            .nyxus-nu-list  row { background: rgba(10,13,20,0.55); border-bottom:1px solid rgba(58,216,255,0.08); }
             .nyxus-nu-name  { color:#e8edf5; font-family:monospace; font-size:12px; }
-            .nyxus-nu-up    { color:#f4ead5; font-family:monospace; font-size:12px; }
-            .nyxus-nu-dn    { color:#e8edf5; font-family:monospace; font-size:12px; }
+            .nyxus-nu-up    { color:#a06bff; font-family:monospace; font-size:12px; }
+            .nyxus-nu-dn    { color:#3ad8ff; font-family:monospace; font-size:12px; }
             """
         )
         Gtk.StyleContext.add_provider_for_display(

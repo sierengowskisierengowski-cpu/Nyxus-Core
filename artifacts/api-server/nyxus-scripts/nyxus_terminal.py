@@ -77,8 +77,8 @@ except (ValueError, ImportError):
 from gi.repository import Gtk, Gdk, Gio, GLib, Pango, Adw
 
 APP_ID  = "io.nyxus.terminal"
-WIN_W   = 1000  # rev r15 — comfortable for code/log reading
-WIN_H   = 640   # rev r15 — comfortable vertical
+WIN_W   = 700
+WIN_H   = 480
 
 # DARK MIRROR palette
 BG_RGBA       = (0.031, 0.047, 0.078, 0.55)   # rgba(8,12,20,0.55) dark glass
@@ -140,10 +140,7 @@ class NyxusTerminal(Adw.Application):
 
         win = Gtk.ApplicationWindow(application=self, title="NYXUS Terminal")
         win.set_default_size(WIN_W, WIN_H)
-        try:
-            from nyxus_chrome import install_chrome
-            install_chrome(win)
-        except Exception: pass
+        win.set_decorated(False)            # no titlebar — Hyprland glow IS the frame
         win.set_resizable(True)
         win.add_css_class("background")
 

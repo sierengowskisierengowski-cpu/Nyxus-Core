@@ -51,13 +51,13 @@ CONF = Path.home() / ".config" / "nyxus" / "hotcorners.conf"
 # them in the Settings UI.
 ACTIONS: Dict[str, list[str]] = {
     "none":            [],
-    "mission_control": ["nyxus-mission-control"],
-    "spotlight":       ["nyxus-spotlight"],
+    "mission_control": ["nyxus-mission-control-toggle"],
+    "spotlight":       ["nyxus", "launcher"],
     "show_desktop":    ["hyprctl", "dispatch",
                         "togglespecialworkspace", "scratch"],
     "lock":            ["hyprlock"],
-    "menu":            ["nyxus-start-menu"],
-    "control_center":  ["nyxus-control-center"],
+    "menu":            ["rofi", "-show", "drun", "-theme", str(Path.home() / ".config" / "rofi" / "startmenu.rasi")],
+    "control_center":  ["eww", "open", "--toggle", "quicksettings"],
     "notifications":   ["swaync-client", "-t"],
 }
 

@@ -7,16 +7,16 @@ const CREAM_BASE      = "#f5f3ef";
 const CREAM_RAISED    = "#fbfaf6";
 const CHARCOAL        = "#1a1816";
 const PENCIL_LIGHT    = "#58524c";
-const GOLD            = "#b8865a";
-const GOLD_GLOW       = "rgba(184,134,90,0.55)";
+const GOLD            = "#d4a73a";
+const GOLD_GLOW       = "rgba(212,167,58,0.55)";
 
 const STRIPES = [
-  { name: "cream",  rgb: "244,234,213" },
-  { name: "copper", rgb: "184,134, 90" },
-  { name: "sand",   rgb: "196,180,145" },
-  { name: "linen",  rgb: "232,220,193" },
-  { name: "wheat",  rgb: "168,145,117" },
-  { name: "dim",    rgb: "138,128,104" },
+  { name: "pink",   rgb: "236, 72,153" },
+  { name: "orange", rgb: "234,126, 60" },
+  { name: "gold",   rgb: "212,167, 58" },
+  { name: "green",  rgb: "106,168,114" },
+  { name: "blue",   rgb: " 90,138,171" },
+  { name: "purple", rgb: "138,106,170" },
 ];
 
 const EMBOSS_OUT =
@@ -115,7 +115,7 @@ type RGB = [number, number, number];
 const COLOR_WHITE: RGB      = [255, 255, 255];
 const COLOR_OFFWHITE: RGB   = [251, 250, 246];
 const COLOR_CREAM_BASE: RGB = [245, 243, 239];
-const COLOR_GOLD: RGB       = [184, 134, 90];
+const COLOR_GOLD: RGB       = [212, 167, 58];
 const COLOR_BAG: RGB[] = [
   ...Array(5).fill(COLOR_WHITE),
   ...Array(4).fill(COLOR_OFFWHITE),
