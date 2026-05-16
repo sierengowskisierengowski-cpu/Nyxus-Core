@@ -99,13 +99,33 @@ for s in audio battery bluetooth brightness calendar cpu-bars mic network \
 done
 
 # ── 6. Required packages (no-op if already installed).
-sudo pacman -S --noconfirm --needed hyprland hyprlock hypridle eww \
+sudo pacman -S --noconfirm --needed hyprland hyprlock hypridle \
      swww swaybg grim slurp wl-clipboard hyprshot alacritty kitty rofi-wayland \
      dunst wlogout playerctl nm-connection-editor sddm qt6-svg qt6-declarative \
      qt6-virtualkeyboard \
      gtk4 libadwaita python-gobject gobject-introspection \
      python-pillow python-cairo 2>/dev/null
 echo "  ok  gtk4 + libadwaita + python-gobject (launcher/screenshot deps)"
+
+# ── 6a. EWW (not in official Arch repos — try AUR helper, fall back to source build).
+if ! command -v eww >/dev/null 2>&1; then
+  echo "  .. installing eww (not in official repos — using AUR/source)"
+  if command -v paru >/dev/null 2>&1; then
+    paru -S --noconfirm --needed eww
+  elif command -v yay >/dev/null 2>&1; then
+    yay -S --noconfirm --needed eww
+  else
+    sudo pacman -S --noconfirm --needed rust cargo gtk3 gtk-layer-shell \
+         pango gdk-pixbuf2 libdbusmenu-gtk3 2>/dev/null
+    cargo install eww --git https://github.com/elkowar/eww \
+          --features wayland --root /usr/local 2>/dev/null \
+      || cargo install eww --git https://github.com/elkowar/eww \
+          --features wayland --root "$HOME/.local"
+  fi
+  command -v eww >/dev/null 2>&1 \
+    && echo "  ok  eww installed: $(eww --version 2>&1 | head -1)" \
+    || echo "  WARN eww install failed — bar will not start"
+fi
 
 # ── 6b. SDDM display manager — enable so graphical login comes up on boot.
 sudo systemctl enable sddm 2>/dev/null && echo "  ok  sddm enabled"
