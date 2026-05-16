@@ -100,7 +100,7 @@ done
 
 hdr "7. Required packages declared"
 PKG="$PROFILE/packages.x86_64"
-for p in base linux linux-firmware hyprland sddm networkmanager; do
+for p in base linux linux-firmware hyprland greetd tuigreet networkmanager; do
   if grep -qE "^${p}$" "$PKG" 2>/dev/null; then ok "package: $p"
   else                                          bad "missing package: $p"; fi
 done
@@ -163,12 +163,17 @@ else
   bad "no calamares profile under airootfs/etc/calamares"
 fi
 
-hdr "8. SDDM theme bundled"
-if [[ -d "$PROFILE/airootfs/usr/share/sddm/themes/nyxus" ]] || \
-   [[ -f "$ROOT/artifacts/api-server/nyxus-scripts/nyxus-sddm-theme.tar.gz" ]]; then
-  ok "SDDM nyxus theme present"
+hdr "8. greetd config bundled"
+if [[ -f "$PROFILE/airootfs/etc/greetd/config.toml" ]]; then
+  ok "greetd config.toml present"
 else
-  bad "no SDDM nyxus theme found"
+  bad "greetd config.toml missing: airootfs/etc/greetd/config.toml"
+fi
+# Ensure SDDM is not listed alongside greetd.
+if grep -qE '^sddm$' "$PKG" 2>/dev/null; then
+  bad "conflicting package: sddm must not be listed when greetd is the display manager"
+else
+  ok "sddm absent (greetd is sole display manager)"
 fi
 
 printf "\n"
