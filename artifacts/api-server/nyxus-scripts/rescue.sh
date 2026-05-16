@@ -122,7 +122,7 @@ if ! command -v eww >/dev/null 2>&1; then
          libdbusmenu-gtk3 2>/dev/null
     rm -rf /tmp/eww-aur
     git clone https://aur.archlinux.org/eww.git /tmp/eww-aur 2>/dev/null
-    ( cd /tmp/eww-aur && makepkg -si --noconfirm )
+    ( cd /tmp/eww-aur && makepkg -si --noconfirm --skippgpcheck )
   fi
   command -v eww >/dev/null 2>&1 \
     && echo "  ok  eww installed: $(eww --version 2>&1 | head -1)" \
