@@ -86,9 +86,10 @@ if [ -s /tmp/nyxus-sddm.tar.gz ]; then
 fi
 
 # ── 5. EWW shell (top bar + dashboard + OSDs).
-curl -fsSL "$N/eww/eww.yuck"   -o ~/.config/eww/eww.yuck
-curl -fsSL "$N/eww/eww.scss"   -o ~/.config/eww/eww.scss
-curl -fsSL "$N/eww/nyxus.conf" -o ~/.config/eww/nyxus.conf
+curl -fsSL "$N/eww/eww.yuck"            -o ~/.config/eww/eww.yuck
+curl -fsSL "$N/eww/eww.scss"            -o ~/.config/eww/eww.scss
+curl -fsSL "$N/eww/_nyxus_accent.scss"  -o ~/.config/eww/_nyxus_accent.scss
+curl -fsSL "$N/eww/nyxus.conf"          -o ~/.config/eww/nyxus.conf
 for s in audio battery bluetooth brightness calendar cpu-bars mic network \
          notifications osd-show player power-profile sys-pulse ticker updates \
          weather workspaces quicksettings qs-toggle wifi-list wifi-action \
