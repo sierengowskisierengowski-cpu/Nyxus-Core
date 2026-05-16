@@ -115,8 +115,9 @@ if ! command -v eww >/dev/null 2>&1; then
   elif command -v yay >/dev/null 2>&1; then
     yay -S --noconfirm --needed eww
   else
-    sudo pacman -S --noconfirm --needed rust cargo gtk3 gtk-layer-shell \
-         pango gdk-pixbuf2 libdbusmenu-gtk3 2>/dev/null
+    sudo pacman -S --noconfirm --needed rust cargo pkgconf base-devel \
+         glib2 gtk3 gtk-layer-shell pango gdk-pixbuf2 cairo \
+         libdbusmenu-gtk3 2>/dev/null
     cargo install eww --git https://github.com/elkowar/eww \
           --features wayland --root /usr/local 2>/dev/null \
       || cargo install eww --git https://github.com/elkowar/eww \
