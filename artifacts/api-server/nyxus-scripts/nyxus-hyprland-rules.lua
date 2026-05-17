@@ -1,27 +1,27 @@
-# ============================================================
-#  NYXUS — Hyprland window rules (DARK MIRROR rev 2026-05-14 r17)
-#  ~/.config/hypr/conf.d/nyxus-hyprland-rules.lua
-# ============================================================
+-- ============================================================
+--  NYXUS — Hyprland window rules (DARK MIRROR rev 2026-05-14 r17)
+--  ~/.config/hypr/conf.d/nyxus-hyprland-rules.lua
+-- ============================================================
 
-# Floating-first desktop: default every mapped app window to floating.
-# Tiling stays opt-in via the existing Super+Shift+T toggle.
+-- Floating-first desktop: default every mapped app window to floating.
+-- Tiling stays opt-in via the existing Super+Shift+T toggle.
 windowrule = float, class:^.+$
 
-# NYXUS class catch-alls (both legacy and GTK app_id forms).
+-- NYXUS class catch-alls (both legacy and GTK app_id forms).
 windowrule = center, class:^[Nn]yxus.*$
 windowrule = size 960 680, class:^[Nn]yxus.*$
 windowrule = center, class:^((io|org|app)\.nyxus\..*)$
 windowrule = size 960 680, class:^((io|org|app)\.nyxus\..*)$
 
-# godsapp-family product launchers (`home` excluded — desktop dashboard).
+-- godsapp-family product launchers (`home` excluded — desktop dashboard).
 windowrule = center, class:^(godsapp|intel|notepad|notes|passwords|phantom|sage|shield|start|store|studio|weather)$
 windowrule = size 960 680, class:^(godsapp|intel|notepad|notes|passwords|phantom|sage|shield|start|store|studio|weather)$
 
-# Flyout panel.
+-- Flyout panel.
 windowrule = pin, class:^(panel|nyxus-panel)$
 windowrule = size 460 680, class:^(panel|nyxus-panel)$
 
-# NYXUS app sizing overrides (workflow-tuned defaults).
+-- NYXUS app sizing overrides (workflow-tuned defaults).
 windowrule = size 1280 800, class:^(((io|org|app)\.)?nyxus\.(sysmon|control|terminal|settings|security|wallpaperstudio))$
 windowrule = size 1240 820, class:^(((io|org|app)\.)?nyxus\.(store|files|updater))$
 windowrule = size 1040 720, class:^(((io|org|app)\.)?nyxus\.(backup|drop))$
@@ -29,7 +29,7 @@ windowrule = size 980 700, class:^(((io|org|app)\.)?nyxus\.(screenshot|doctor))$
 windowrule = size 920 640, class:^(((io|org|app)\.)?nyxus\.(notepad|notes|clipboard))$
 windowrule = size 760 540, class:^(((io|org|app)\.)?nyxus\.(launcher|powermenu))$
 
-# NYXUS Weather widget.
+-- NYXUS Weather widget.
 windowrule = size 380 560, class:^(((io|org|app)\.)?nyxus\.weather)$
 windowrule = pin, class:^(((io|org|app)\.)?nyxus\.weather)$
 windowrule = move 20 100, class:^(((io|org|app)\.)?nyxus\.weather)$

@@ -1,32 +1,32 @@
-# ============================================================
-#  NYXUS — Window edges / gaps / rounding (Sprint E Total Identity rev 2026-05-07)
-#  ~/.config/hypr/conf.d/nyxus-hyprland-general.lua
-#
-#  r2 · 2026.05.07 — Sprint E Total Identity active border (white→black).
-#
-#  ── ACTIVE BORDER ─────────────────────────────────────────
-#  Pure white → off-white → black gradient. Reads as starlight
-#  rim-light on the focused window's top-left edge fading into
-#  inky black on the bottom-right. Matches the dark-mirror glass
-#  treatment now applied to every NYXUS app + flyout via
-#  nyxus_chrome.py r12.
-#
-#  ── INACTIVE BORDER ───────────────────────────────────────
-#  Faded off-white → faded black, low alpha so unfocused windows
-#  recede.
-#
-#  ── REVERT IF YOU HATE IT ─────────────────────────────────
-#    rm ~/.config/hypr/conf.d/nyxus-hyprland-general.lua
-#    hyprctl reload
-#
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
-# ============================================================
+-- ============================================================
+--  NYXUS — Window edges / gaps / rounding (Sprint E Total Identity rev 2026-05-07)
+--  ~/.config/hypr/conf.d/nyxus-hyprland-general.lua
+--
+--  r2 · 2026.05.07 — Sprint E Total Identity active border (white→black).
+--
+--  ── ACTIVE BORDER ─────────────────────────────────────────
+--  Pure white → off-white → black gradient. Reads as starlight
+--  rim-light on the focused window's top-left edge fading into
+--  inky black on the bottom-right. Matches the dark-mirror glass
+--  treatment now applied to every NYXUS app + flyout via
+--  nyxus_chrome.py r12.
+--
+--  ── INACTIVE BORDER ───────────────────────────────────────
+--  Faded off-white → faded black, low alpha so unfocused windows
+--  recede.
+--
+--  ── REVERT IF YOU HATE IT ─────────────────────────────────
+--    rm ~/.config/hypr/conf.d/nyxus-hyprland-general.lua
+--    hyprctl reload
+--
+--  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+-- ============================================================
 
 general {
-    # Sprint E Total Identity rim — pure white at the highlight, deep black at the shadow.
-    # Locked rev 2026-05-07 r13 — Sprint E Total Identity rim-light:
-    # white → off-white → light grey → faded black → ink black, 135°.
-    # No legacy accent colors; Sprint E palette only.
+    -- Sprint E Total Identity rim — pure white at the highlight, deep black at the shadow.
+    -- Locked rev 2026-05-07 r13 — Sprint E Total Identity rim-light:
+    -- white → off-white → light grey → faded black → ink black, 135°.
+    -- No legacy accent colors; Sprint E palette only.
     col.active_border   = rgba(f4ead5ff) rgba(f4ead5cc) rgba(1a1a28ff) rgba(050308ff) rgba(000000ff) 135deg
     col.inactive_border = rgba(e8edf544) rgba(c8ccd633) rgba(0a0a0a77) 135deg
 
@@ -37,30 +37,30 @@ general {
     resize_on_border    = true
 }
 
-# ── SMART GAPS (rev r15 · 2026-05-10) ────────────────────────────────────
-# When a workspace contains exactly one TILED VISIBLE window (`w[tv1]`),
-# OR has a fullscreen window (`f[1]`), kill the gaps so the window goes
-# edge-to-edge. Border stays — we keep the Sprint E Total Identity rim-light glow,
-# which is the signature. Multi-window workspaces keep the 10/20 gaps.
+-- ── SMART GAPS (rev r15 · 2026-05-10) ────────────────────────────────────
+-- When a workspace contains exactly one TILED VISIBLE window (`w[tv1]`),
+-- OR has a fullscreen window (`f[1]`), kill the gaps so the window goes
+-- edge-to-edge. Border stays — we keep the Sprint E Total Identity rim-light glow,
+-- which is the signature. Multi-window workspaces keep the 10/20 gaps.
 workspace = w[tv1], gapsout:0, gapsin:0
 workspace = f[1],   gapsout:0, gapsin:0
 
-# ── NAMED + PERSISTENT WORKSPACES (rev r15 · 2026-05-10) ────────────────
-# Give workspaces 1-6 semantic identity (WEB / CODE / TERM / FILES /
-# MEDIA / COMMS) and pin them so they're ALWAYS visible in waybar, not
-# just when populated. Workspace 0 (NYXUS Home) is named in the main
-# hyprland.lua and stays outside this numbered range. Workspaces 7-10
-# remain unnamed/lazy — created on demand for ad-hoc work.
-#
-# `persistent:true` keeps the workspace alive even when empty (so the
-# waybar pebble doesn't disappear).
-# `defaultName` is the friendly label shown by waybar's
-# `format-window-separator` template.
-#
-# Auto-launch is INTENTIONALLY DISABLED here. To enable per slot, add:
-#     on-created-empty = firefox
-# to the matching workspace rule. Skipped by default because a fresh
-# login would launch every pinned app at once; user should opt-in.
+-- ── NAMED + PERSISTENT WORKSPACES (rev r15 · 2026-05-10) ────────────────
+-- Give workspaces 1-6 semantic identity (WEB / CODE / TERM / FILES /
+-- MEDIA / COMMS) and pin them so they're ALWAYS visible in waybar, not
+-- just when populated. Workspace 0 (NYXUS Home) is named in the main
+-- hyprland.lua and stays outside this numbered range. Workspaces 7-10
+-- remain unnamed/lazy — created on demand for ad-hoc work.
+--
+-- `persistent:true` keeps the workspace alive even when empty (so the
+-- waybar pebble doesn't disappear).
+-- `defaultName` is the friendly label shown by waybar's
+-- `format-window-separator` template.
+--
+-- Auto-launch is INTENTIONALLY DISABLED here. To enable per slot, add:
+--     on-created-empty = firefox
+-- to the matching workspace rule. Skipped by default because a fresh
+-- login would launch every pinned app at once; user should opt-in.
 workspace = 1, persistent:true, defaultName:WEB
 workspace = 2, persistent:true, defaultName:CODE
 workspace = 3, persistent:true, defaultName:TERM
@@ -70,9 +70,9 @@ workspace = 6, persistent:true, defaultName:COMMS
 
 decoration {
     rounding            = 12           # Sprint E exception: Hyprland window rounding remains 12px
-    # NOTE: blur params live in nyxus-hyprland-blur.lua (don't dupe here)
+    -- NOTE: blur params live in nyxus-hyprland-blur.lua (don't dupe here)
 
-    # Drop shadow stays ink-black (real shadow on the wallpaper, not bloom).
+    -- Drop shadow stays ink-black (real shadow on the wallpaper, not bloom).
     shadow {
         enabled        = true
         range          = 36
