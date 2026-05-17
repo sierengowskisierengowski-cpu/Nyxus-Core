@@ -918,6 +918,46 @@ if command -v sddm &>/dev/null; then
         _sddm_theme_ok=0
       fi
 
+      # ── SDDM theme fail-safe (rev r1-sddm-heal · 2026-05-17) ────────────
+      # Root cause of the 2026-05-17 "blank login / TTY-only" incident:
+      # the SDDM theme installer can write /etc/sddm.conf.d/nyxus.conf
+      # (pinning Current=nyxus) BEFORE it finishes copying theme files.
+      # If anything fails mid-install — partial tarball, disk full, sudo
+      # timeout, killed process — the conf is left pointing at an empty
+      # or incomplete /usr/share/sddm/themes/nyxus/ dir. On next boot
+      # SDDM tries to load the empty theme, fails with
+      # HELPER_DISPLAYSERVER_ERROR, and dies — user gets a black screen
+      # with a blinking cursor and is locked out except via TTY rescue.
+      #
+      # Fail-safe: after the installer runs (success OR failure), verify
+      # the theme dir is complete (theme.conf + metadata.desktop + Main.qml).
+      # If anything is missing AND the conf was written, remove the conf
+      # so SDDM falls back to its built-in theme on next start. The user
+      # gets the default SDDM login screen instead of a brick — recovery
+      # without TTY rescue.
+      _SDDM_CONF_PATH="/etc/sddm.conf.d/nyxus.conf"
+      _SDDM_THEME_PATH="/usr/share/sddm/themes/nyxus"
+      _sddm_theme_complete=1
+      if [[ -f "$_SDDM_CONF_PATH" ]] \
+         && grep -q '^Current=nyxus' "$_SDDM_CONF_PATH" 2>/dev/null; then
+        [[ ! -f "$_SDDM_THEME_PATH/theme.conf" ]]      && _sddm_theme_complete=0
+        [[ ! -f "$_SDDM_THEME_PATH/metadata.desktop" ]] && _sddm_theme_complete=0
+        [[ ! -f "$_SDDM_THEME_PATH/Main.qml" \
+           && ! -f "$_SDDM_THEME_PATH/main.qml" ]]     && _sddm_theme_complete=0
+
+        if [[ $_sddm_theme_complete -eq 0 ]]; then
+          warn "SDDM theme is incomplete but $_SDDM_CONF_PATH pins Current=nyxus"
+          warn "removing the conf so SDDM falls back to default theme (no login brick)"
+          if sudo -n rm -f "$_SDDM_CONF_PATH" 2>/dev/null; then
+            ok "$_SDDM_CONF_PATH removed — SDDM will use built-in theme"
+            _sddm_theme_ok=0
+          else
+            fail "could not remove $_SDDM_CONF_PATH (no sudo) — MANUAL FIX REQUIRED:"
+            fail "  sudo rm -f $_SDDM_CONF_PATH  (otherwise next boot may brick login)"
+          fi
+        fi
+      fi
+
       # Atomic DM swap: ONLY disable GDM if SDDM was successfully enabled.
       # Doing it the other way around can leave the user with NO active
       # display manager and a TTY-only boot — never acceptable.
