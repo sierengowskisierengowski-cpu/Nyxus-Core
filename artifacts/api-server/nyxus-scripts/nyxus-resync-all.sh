@@ -308,10 +308,13 @@ if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-seattle-frost.conf" "$HYPR_MAIN"; th
   ok "stripped Seattle Frost source line from hyprland.conf"
 fi
 
-# NYXUS builds use the unified `windowrule` / `layerrule` syntax.
-# `windowrulev2` was deprecated in Hyprland 0.42+ and removed from all
-# NYXUS conf shards. Only remove the legacy temporary filename from prior
-# resync generations and keep the current source lines intact.
+# NYXUS builds use `windowrulev2` / `layerrulev2` for any rule that uses
+# a `class:` / `title:` / `namespace:` matcher. Hyprland 0.50+ mis-parses
+# the v1 `windowrule = RULE, class:REGEX` form as "invalid field class:..."
+# because matcher prefixes are only valid with the v2 keyword. The previous
+# comment claiming v2 was deprecated was backwards — it's the v1 matcher
+# form that doesn't work. Only remove the legacy temporary filename from
+# prior resync generations and keep the current source lines intact.
 # (audit A8: replaces 60 lines of disabled v1-migration + override-insertion)
 HYPR_RULES_OLD="$HYPR_CONF_D/nyxus-windowrules.conf"
 if [[ -f "$HYPR_RULES_OLD" ]]; then
