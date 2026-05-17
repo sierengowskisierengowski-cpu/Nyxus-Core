@@ -8,10 +8,10 @@
 # surface that lives outside /usr/local/bin.
 #
 # Files copied (canonical → installed):
-#   hyprland.lua              → ~/.config/hypr/hyprland.lua
+#   hyprland.conf              → ~/.config/hypr/hyprland.conf
 #   hyprlock.conf              → ~/.config/hypr/hyprlock.conf
 #   hypridle.conf              → ~/.config/hypr/hypridle.conf
-#   nyxus-hyprland-*.lua       → ~/.config/hypr/conf.d/
+#   nyxus-hyprland-*.conf      → ~/.config/hypr/conf.d/
 #
 # Usage (from anywhere on the MSI host):
 #   ~/Nyxus-Core/artifacts/api-server/nyxus-scripts/sync-hypr.sh
@@ -44,17 +44,17 @@ done
 
 # Required top-level files. If any is missing in the source we abort
 # rather than silently shipping a half-config.
-required=(hyprland.lua hyprlock.conf hypridle.conf)
+required=(hyprland.conf hyprlock.conf hypridle.conf)
 for f in "${required[@]}"; do
   [[ -f "$src_dir/$f" ]] || { echo "sync-hypr: missing canonical $f in $src_dir" >&2; exit 4; }
 done
 
-# Confd shards (required by hyprland.lua). At least one must exist.
+# Confd shards (sourced by hyprland.conf). At least one must exist.
 shopt -s nullglob
-shards=( "$src_dir"/nyxus-hyprland-*.lua )
+shards=( "$src_dir"/nyxus-hyprland-*.conf )
 shopt -u nullglob
 [[ ${#shards[@]} -gt 0 ]] || {
-  echo "sync-hypr: no nyxus-hyprland-*.lua shards found in $src_dir" >&2
+  echo "sync-hypr: no nyxus-hyprland-*.conf shards found in $src_dir" >&2
   exit 5
 }
 

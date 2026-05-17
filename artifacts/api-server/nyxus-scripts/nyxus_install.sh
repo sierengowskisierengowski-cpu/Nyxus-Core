@@ -270,22 +270,22 @@ fi
 hdr "Hyprland"
 mkdir -p "$HYPR_DIR"
 mkdir -p "$HYPR_DIR/conf.d"
-dl "hyprland.lua" "$HYPR_DIR/hyprland.lua" || failed=$((failed+1))
+dl "hyprland.conf" "$HYPR_DIR/hyprland.conf" || failed=$((failed+1))
 dl "hyprlock.conf" "$HYPR_DIR/hyprlock.conf"  || failed=$((failed+1))
 dl "hypridle.conf"  "$HYPR_DIR/hypridle.conf"  || failed=$((failed+1))
 
-# ── Modular DARK MIRROR confs (sourced by hyprland.lua) ─────────────────────
-# Without these, hyprland.lua's `source = ~/.config/hypr/conf.d/...` lines
+# ── Modular DARK MIRROR confs (sourced by hyprland.conf) ─────────────────────
+# Without these, hyprland.conf's `source = ~/.config/hypr/conf.d/...` lines
 # silently no-op and apps render fully opaque / unblurred. These six files
 # carry the locked NYXUS window opacity, blur tuning, layer-shell blur,
 # float/center/size rules, fog daemon hooks, and general behavior.
-for conf in nyxus-hyprland-general.lua \
-            nyxus-hyprland-rules.lua \
-            nyxus-hyprland-opacity.lua \
-            nyxus-hyprland-blur.lua \
-            nyxus-hyprland-layerblur.lua \
-            nyxus-hyprland-fog.lua \
-            nyxus-hyprland-mission.lua; do
+for conf in nyxus-hyprland-general.conf \
+            nyxus-hyprland-rules.conf \
+            nyxus-hyprland-opacity.conf \
+            nyxus-hyprland-blur.conf \
+            nyxus-hyprland-layerblur.conf \
+            nyxus-hyprland-fog.conf \
+            nyxus-hyprland-mission.conf; do
   dl "$conf" "$HYPR_DIR/conf.d/$conf" || failed=$((failed+1))
 done
 
@@ -359,7 +359,7 @@ if dl "nyxus-mission-control-toggle" "/tmp/nyxus-mission-control-toggle.new"; th
 fi
 
 # ── A4 FIX (2026-05-12): bootstrap shims + welcome wizard parity ─────────────
-# hyprland.lua references nyxus-bootstrap, nyxus-wait-bootstrap, nyxus-welcome,
+# hyprland.conf references nyxus-bootstrap, nyxus-wait-bootstrap, nyxus-welcome,
 # and nyxus_welcome.py. The ISO build installs them; the per-user installer
 # was missing them — leaving fresh installs unable to complete first-boot
 # bootstrap (the wait-shim would block 120s and the welcome wizard would
@@ -513,7 +513,7 @@ fi
 #   1. install waybar from pacman: sudo pacman -S waybar
 #   2. write their own ~/.config/waybar/config + style.css (the upstream
 #      NYXUS waybar theme is no longer maintained or shipped via the API)
-#   3. comment out the EWW exec-once lines in ~/.config/hypr/hyprland.lua
+#   3. comment out the EWW exec-once lines in ~/.config/hypr/hyprland.conf
 #      and add: exec-once = waybar
 # History of removed pieces (deleted from nyxus-scripts/ source-of-truth):
 #   waybar-config.json, waybar-style.css, waybar-stats.sh, waybar-ticker.sh,
@@ -1033,7 +1033,7 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   DRIFTER_PNG="$WALLS_DIR/nyxus-drifter-wall.png"
   STAR_PNG="$WALLS_DIR/nyxus-starfield-wall.png"
   # rev r6-eww (2026-05-11) — VOID-VORTEX is the locked-in default wallpaper
-  # for the EWW era. Matches hyprland.lua swaybg autostart line. Falls back
+  # for the EWW era. Matches hyprland.conf swaybg autostart line. Falls back
   # to drifter, then starfield, then ink-swirl if any are missing.
   if command -v swaybg >/dev/null 2>&1 && [[ -s "$VORTEX_PNG" ]]; then
     nohup swaybg -i "$VORTEX_PNG" -m fill -c "#000000" \

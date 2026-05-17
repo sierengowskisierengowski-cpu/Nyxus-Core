@@ -4,7 +4,7 @@
 # Read the user's persisted wallpaper choice and set it through
 # nyxus-set-wallpaper (swww/hyprpaper backend aware). Falls back
 # to the shipped default if the config is missing or points at a file
-# that no longer exists. Sourced by hyprland.lua exec-once and the
+# that no longer exists. Sourced by hyprland.conf exec-once and the
 # bound $mod+ALT+W key.
 set -u
 

@@ -55,7 +55,7 @@ were all collapsed to the same monochrome glass.
   wallpaper behind the dark glass), vibrancy 0.18, noise 0.06.
 - **Hyprland window opacity**: 0.92 focused / 0.78 unfocused, applied
   uniformly to every NYXUS class (`org.nyxus.*`, `nyxus-*`, the 11 apps,
-  the flyout) via `nyxus-hyprland-opacity.lua`.
+  the flyout) via `nyxus-hyprland-opacity.conf`.
 - **No gold, no pink, no cyan, no green, no purple anywhere in apps**.
   Monochrome only. Every accent is white / off-white / black.
 

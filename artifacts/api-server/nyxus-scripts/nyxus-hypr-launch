@@ -10,12 +10,12 @@ LOG="${XDG_CACHE_HOME:-$HOME/.cache}/nyxus/session.log"
 mkdir -p "$(dirname "$LOG")"
 
 if grep -qw 'nyxus.safemode=1' /proc/cmdline 2>/dev/null; then
-    cfg="$HOME/.config/hypr/conf.d/nyxus-safemode.lua"
-    [[ -f "$cfg" ]] || cfg="/etc/skel/.config/hypr/conf.d/nyxus-safemode.lua"
+    cfg="$HOME/.config/hypr/conf.d/nyxus-safemode.conf"
+    [[ -f "$cfg" ]] || cfg="/etc/skel/.config/hypr/conf.d/nyxus-safemode.conf"
     echo "$(date -Is) safe-mode session ($cfg)" >> "$LOG"
     exec Hyprland --config "$cfg"
 fi
 
-cfg="$HOME/.config/hypr/hyprland.lua"
+cfg="$HOME/.config/hypr/hyprland.conf"
 echo "$(date -Is) normal session ($cfg)" >> "$LOG"
 exec Hyprland --config "$cfg"

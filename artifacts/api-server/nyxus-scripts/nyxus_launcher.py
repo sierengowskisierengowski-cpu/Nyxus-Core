@@ -14,7 +14,7 @@ Fuzzy search across:
 GTK4 + the unified NYXUS chrome (DARK MIRROR + warm gold accent for
 alive states), monochrome dominant.
 
-Bind to a Hyprland keybind in ~/.config/hypr/hyprland.lua:
+Bind to a Hyprland keybind in ~/.config/hypr/hyprland.conf:
     bind = SUPER, Space, exec, python3 ~/.local/bin/nyxus_launcher.py
 
 Esc closes. Enter launches selected. Up/Down navigate.

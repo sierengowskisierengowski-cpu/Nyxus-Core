@@ -74,7 +74,7 @@ nyx-profile/
     │   │   └── CREDITS.md
     │   └── skel/                 # default config for new users
     │       └── .config/
-    │           └── hypr/hyprland.lua  # placeholder
+    │           └── hypr/hyprland.conf  # placeholder
     └── opt/nyxus-intel/          # populated by build-iso.sh
 ```
 
@@ -90,7 +90,7 @@ What gets staged on every `sudo ./build-iso.sh`:
 
 | Source (in `nyxus-scripts/`) | Destination in airootfs |
 |---|---|
-| `hyprland.lua`, `hyprlock.conf`, `hypridle.conf` | `/etc/skel/.config/hypr/` |
+| `hyprland.conf`, `hyprlock.conf`, `hypridle.conf` | `/etc/skel/.config/hypr/` |
 | `eww/eww.yuck`, `eww/eww.scss`, `eww/nyxus.conf`, `eww/scripts/*.sh` | `/etc/skel/.config/eww/` (rev r7-eww — replaces waybar) |
 | `nyxus-dunstrc` → `dunstrc` | `/etc/skel/.config/dunst/` |
 | `rofi-config.rasi`, `rofi-nyxus.rasi`, `rofi-startmenu.rasi` | `/etc/skel/.config/rofi/` |
