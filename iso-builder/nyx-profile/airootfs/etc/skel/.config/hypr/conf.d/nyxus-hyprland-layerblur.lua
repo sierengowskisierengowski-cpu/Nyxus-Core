@@ -1,6 +1,6 @@
 # ============================================================
 #  NYXUS — Hyprland LAYER blur (DARK MIRROR rev 2026-05-11 r7-eww)
-#  ~/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf
+#  ~/.config/hypr/conf.d/nyxus-hyprland-layerblur.lua
 #
 #  Hyprland's `decoration { blur }` block enables blur globally
 #  for *windows* (xdg-toplevels). Layer-shell surfaces (EWW bars,

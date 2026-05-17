@@ -1,6 +1,6 @@
 # ============================================================
 #  NYXUS — Window edges / gaps / rounding (Sprint E Total Identity rev 2026-05-07)
-#  ~/.config/hypr/conf.d/nyxus-hyprland-general.conf
+#  ~/.config/hypr/conf.d/nyxus-hyprland-general.lua
 #
 #  r2 · 2026.05.07 — Sprint E Total Identity active border (white→black).
 #
@@ -16,7 +16,7 @@
 #  recede.
 #
 #  ── REVERT IF YOU HATE IT ─────────────────────────────────
-#    rm ~/.config/hypr/conf.d/nyxus-hyprland-general.conf
+#    rm ~/.config/hypr/conf.d/nyxus-hyprland-general.lua
 #    hyprctl reload
 #
 #  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
@@ -49,7 +49,7 @@ workspace = f[1],   gapsout:0, gapsin:0
 # Give workspaces 1-6 semantic identity (WEB / CODE / TERM / FILES /
 # MEDIA / COMMS) and pin them so they're ALWAYS visible in waybar, not
 # just when populated. Workspace 0 (NYXUS Home) is named in the main
-# hyprland.conf and stays outside this numbered range. Workspaces 7-10
+# hyprland.lua and stays outside this numbered range. Workspaces 7-10
 # remain unnamed/lazy — created on demand for ad-hoc work.
 #
 # `persistent:true` keeps the workspace alive even when empty (so the
@@ -70,7 +70,7 @@ workspace = 6, persistent:true, defaultName:COMMS
 
 decoration {
     rounding            = 12           # Sprint E exception: Hyprland window rounding remains 12px
-    # NOTE: blur params live in nyxus-hyprland-blur.conf (don't dupe here)
+    # NOTE: blur params live in nyxus-hyprland-blur.lua (don't dupe here)
 
     # Drop shadow stays ink-black (real shadow on the wallpaper, not bloom).
     shadow {

@@ -12,7 +12,7 @@ Launch:
     nyxus-clipboard --clear  # wipe history
     nyxus-clipboard --status # quick health check (exit 0 = OK)
 
-Hyprland keybind (set in hyprland.conf):
+Hyprland keybind (set in hyprland.lua):
     bind = SUPER, V, exec, nyxus-clipboard
 
 Log:
@@ -287,7 +287,7 @@ def main() -> int:
         sys.stderr.write(
             "nyxus-clipboard: cliphist not installed.\n"
             "  sudo pacman -S cliphist wl-clipboard\n"
-            "Then add to hyprland.conf:\n"
+            "Then add to hyprland.lua:\n"
             "  exec-once = wl-paste --type text  --watch cliphist store\n"
             "  exec-once = wl-paste --type image --watch cliphist store\n")
         return 1

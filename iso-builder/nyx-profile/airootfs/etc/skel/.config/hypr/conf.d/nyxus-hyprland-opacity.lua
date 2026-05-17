@@ -1,6 +1,6 @@
 # ============================================================
 #  NYXUS — Window opacity (DARK MIRROR rev r30 · 2026-05-14)
-#  ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+#  ~/.config/hypr/conf.d/nyxus-hyprland-opacity.lua
 #
 #  rev r30 · 2026-05-14 — All rules migrated to `windowrule`
 #  (not `windowrulev2`). The v2 form is deprecated in Hyprland

@@ -1,6 +1,6 @@
 # NYXUS Desktop install (MSI host)
 
-Symlinks needed so the wrapper command names in `hyprland.conf` resolve.
+Symlinks needed so the wrapper command names in `hyprland.lua` resolve.
 
 ```bash
 # Arch package dep (one-time)

@@ -31,7 +31,7 @@ echo 'nyx:nyx' | chpasswd
 sed -i 's/^# *%wheel ALL=(ALL:ALL) ALL$/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
 sed -i 's/^# *%wheel ALL=(ALL) ALL$/%wheel ALL=(ALL) ALL/' /etc/sudoers
 
-# ── Skel → /home/nyx (wallpapers, hyprland.conf, etc.) ─────────────────
+# ── Skel → /home/nyx (wallpapers, hyprland.lua, etc.) ─────────────────
 # /etc/skel was already populated at airootfs build time; copy any files
 # that landed AFTER useradd ran. Owner is fixed below.
 if [ -d /etc/skel ]; then

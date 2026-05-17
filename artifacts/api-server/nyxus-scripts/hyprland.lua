@@ -19,45 +19,38 @@ exec-once = nyxus-bootstrap >>/tmp/nyxus-bootstrap.log 2>&1
 # and opens every bar listed in ~/.config/eww/nyxus.conf.
 exec-once = nyxus-wait-bootstrap sh -c 'pidof eww >/dev/null || eww daemon'
 exec-once = nyxus-wait-bootstrap nyxus-eww-launch
-# NYXUS dock daemon — feeds live state (pinned + running + badges + trash)
-# to the eww `dock` window. Auto-restarts via the user systemd unit.
-exec-once = systemctl --user start nyxus-dockd.service
-exec-once = systemctl --user start nyxus-hotkeyd.service
-exec-once = systemctl --user start nyxus-snapd.service
-exec-once = systemctl --user start nyxus-missiond.service
-exec-once = systemctl --user start nyxus-qsd.service
-
-# ── Tier A polish (rev 2026-05-14): KDE Connect tray + EasyEffects EQ ──
-# kdeconnectd: device discovery & file/text share daemon (NYXUS Drop)
-# kdeconnect-indicator: tray icon w/ device list
-# easyeffects --gapplication-service: keeps the audio pipeline pre-warmed
-# so SoundPage's preset switcher applies instantly.
-exec-once = /usr/lib/kdeconnectd
-exec-once = kdeconnect-indicator
-exec-once = easyeffects --gapplication-service
-
 exec-once = hypridle
 exec-once = dunst
 exec-once = sh -c 'sleep 1; for p in $(pgrep -x hyprlock 2>/dev/null); do kill "$p" 2>/dev/null || true; done'
-exec-once = /usr/local/bin/nyxus-wallpaper-autostart &
+exec-once = nyxus-wait-bootstrap sh -c 'if command -v nyxus-wallpaper-autostart >/dev/null 2>&1; then nyxus-wallpaper-autostart >/tmp/nyxus-wallpaper.log 2>&1 || true; fi'
+exec-once = nyxus-wait-bootstrap sh -c 'if ! pgrep -x swaybg >/dev/null 2>&1 && ! pgrep -x swww-daemon >/dev/null 2>&1 && ! pgrep -x hyprpaper >/dev/null 2>&1; then nyxus-set-wallpaper ~/.config/hypr/walls/nyxus-void-vortex.png >/tmp/nyxus-wallpaper-fallback.log 2>&1 || true; fi'
 exec-once = systemctl --user start nyxus-ws-wallpaperd.service
-exec-once = nyxus-wait-bootstrap sh -c 'hyprctl setcursor NYXUS-Aurora 24'
+exec-once = nm-applet --indicator
+# Clipboard history daemons (cliphist) — text + images. Required for Super+V.
+exec-once = wl-paste --type text  --watch cliphist store
+exec-once = wl-paste --type image --watch cliphist store
+# NYXUS Desktop layer (Path C T1) — replaces swaybg.
+# Paints wallpaper per-monitor, catches right-click → context menu.
+# Falls back to swaybg if nyxus_desktop.py missing or gtk4-layer-shell absent.
+exec-once = nyxus-wait-bootstrap sh -c 'fallback_wallpaper(){ swaybg -i ~/.config/hypr/walls/nyxus-void-vortex.png -m fill -c "#000000"; }; launch_desktop_layer(){ desktop_pid=""; if command -v nyxus-desktop >/dev/null 2>&1; then nyxus-desktop & desktop_pid=$!; elif [ -x "$HOME/.nyxus/desktop/nyxus_desktop.py" ]; then python3 "$HOME/.nyxus/desktop/nyxus_desktop.py" & desktop_pid=$!; else return 1; fi; sleep 2; [ -n "$desktop_pid" ] && kill -0 "$desktop_pid" 2>/dev/null; }; launch_desktop_layer || fallback_wallpaper'
 exec-once = /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+exec-once = systemctl --user start nyxus-security-daemon.service
 
 # ── NYXUS Native GTK4 Apps — launch at startup ───────────────────────────────
 # SysMon is on-click only (waybar icon launches it). No auto-launch on workspace 6.
 # NYXUS Home — dashboard on named workspace "0" (its OWN page, completely
 # outside the numbered 1-10 range so the user keeps every numbered slot free
 # for future pages they're planning to add).
-# Pin the home window to workspace name:0 no matter where it spawns from.
-exec-once = [workspace name:0 silent] sh -c 'sleep 1 && ~/.local/bin/nyxus-home'
+# Pin NYXUS Home to workspace name:0 when the launcher exists; otherwise no-op.
+# Small delay avoids a race where workspace names are not fully initialized.
+exec-once = [workspace name:0 silent] sh -c 'sleep 1; command -v nyxus-home >/dev/null 2>&1 && nyxus-home || true'
 
 # ── First-Boot Welcome Wizard (rev r9-eww · Wave 2 / Sprint 2a) ─────────────
 # Runs ONCE on first interactive login. The launcher script self-gates
 # via ~/.nyxus/welcome-done — once that file exists, this becomes a no-op.
 # Quietly exits in 2s on subsequent boots (no startup-time penalty).
-exec-once = nyxus-wait-bootstrap sh -c '[ -f "$HOME/.config/nyxus/welcome.done" ] || (sleep 3; /usr/local/bin/nyxus welcome)'
+exec-once = nyxus-wait-bootstrap nyxus-welcome
 
 # ── NYXUS Floating Widgets — uncomment to pin to desktop ─────────────────────
 # exec-once = /usr/local/bin/nyxus-weather &
@@ -67,9 +60,6 @@ exec-once = nyxus-wait-bootstrap sh -c '[ -f "$HOME/.config/nyxus/welcome.done" 
 # ── Environment ──────────────────────────────────────────────────────────────
 env = GTK_THEME,adw-gtk3-dark
 env = XCURSOR_SIZE,24
-env = XCURSOR_THEME,NYXUS-Aurora
-env = HYPRCURSOR_THEME,NYXUS-Aurora
-env = HYPRCURSOR_SIZE,24
 env = QT_AUTO_SCREEN_SCALE_FACTOR,1
 env = MOZ_ENABLE_WAYLAND,1
 env = GDK_BACKEND,wayland,x11
@@ -108,8 +98,8 @@ general {
     # faded black -> matte ink. No legacy accent colors; Sprint E palette only.
     # Slow 240-frame revolution = lazy starlight breathing around the
     # focused window, matching the dark-glass app chrome.
-    col.active_border   = rgba(f4ead5ff) rgba(f4ead5cc) rgba(1a1a28ff) rgba(050308ff) rgba(000000ff) 135deg
-    col.inactive_border = rgba(e8edf522) rgba(c8ccd611) rgba(00000044) 135deg
+    col.active_border   = rgba(7b5ea7ff) rgba(c4607aff) rgba(8b4040ff) rgba(080808ff) 135deg
+    col.inactive_border = rgba(c8c0c033) rgba(08080899) 135deg
 
     layout           = dwindle
     resize_on_border = true
@@ -204,12 +194,16 @@ dwindle {
 # rev r8-eww 2026-05-11 — Hyprland 0.55+ removed `misc:vfr` (VFR is now
 # always-on, controlled per-monitor). Other options survive.
 misc {
-    force_default_wallpaper  = 0
-    disable_hyprland_logo    = true
-    disable_splash_rendering = true
-    mouse_move_enables_dpms  = true
-    key_press_enables_dpms   = true
-    focus_on_activate        = true
+    force_default_wallpaper       = 0
+    disable_hyprland_logo         = true
+    disable_splash_rendering      = true
+    mouse_move_enables_dpms       = true
+    key_press_enables_dpms        = true
+    focus_on_activate             = true
+    # NYXUS rev r11 · 2026-05-13 — Hyprland 0.55.0 removed the
+    # `disable_config_error_overlay` option entirely (kept removed).
+    # Window rules are fully migrated to unified `windowrule =` syntax.
+    disable_autoreload            = false
 }
 
 # Apps come to front when clicked via misc.focus_on_activate=true (above).
@@ -226,8 +220,13 @@ bind = $mod,       Return,      exec, python3 ~/.nyxus/nyxus_terminal.py
 bind = $mod SHIFT, Return,      exec, alacritty
 bind = $mod,       D,       exec, rofi -show drun -theme ~/.config/rofi/startmenu.rasi
 bind = $mod SHIFT, D,       exec, rofi -show run
+# (NYXUS Drop intentionally rebound below to Super+CTRL+D to avoid
+# colliding with the rofi run launcher.)
 bind = $mod,       Tab,     exec, rofi -show window -theme ~/.config/rofi/nyxus.rasi
-bind = $mod,       E,       exec, nautilus
+# Super+E is owned by NYXUS Files (defined further down). Nautilus is no
+# longer the default file manager; users who want it can launch via
+# Spotlight or `nautilus &`.
+# bind = $mod,       E,       exec, nautilus
 bind = $mod,       B,       exec, firefox
 
 # ── Lock / logout ─────────────────────────────────────────────────────────────
@@ -237,7 +236,10 @@ bind = $mod SHIFT, M,       exit
 
 # ── Window management ────────────────────────────────────────────────────────
 bind = $mod,       Q,       killactive
-bind = $mod,       V,       togglefloating
+# Super+V is owned by NYXUS Clipboard (Win+V parity, defined further
+# down). Toggle-floating moved to Super+Shift+T to free V for clipboard
+# without colliding with the Super+Shift+F fullscreen bind below.
+bind = $mod SHIFT, T,       togglefloating
 bind = $mod,       P,       pseudo
 # rev r8-eww 2026-05-11 — `togglesplit` dispatcher removed in Hyprland
 # 0.55+. The dwindle layout still alternates split direction
@@ -268,6 +270,8 @@ bind = $mod SHIFT, slash,   exec, eww open --toggle cheatsheet
 
 # ── NYXUS Sprint 1 — EWW flyouts (rev r9-eww, 2026-05-11) ────────────────────
 bind = $mod,       A,       exec, eww open --toggle quicksettings
+# (NYXUS Store intentionally rebound below to Super+SHIFT+A to keep
+# Super+A for the Quick Settings panel that ships in Phase 2.)
 bind = $mod,       N,       exec, eww open --toggle notifications
 bind = $mod,       W,       exec, eww open --toggle wifi
 bind = $mod,       M,       exec, eww open --toggle mixer
@@ -350,36 +354,57 @@ bind = , XF86MonBrightnessDown, exec, brightnessctl set 10%- && ~/.config/eww/sc
 bind = $mod SHIFT, W,    exec, hyprshot -m region
 
 # ── Wallpaper (permanent — SIERENGOWSKI) ──────────────────────────────────────
-# Set via exec-once at startup; use Super+Alt+W to reload if needed
-bind = $mod ALT, W, exec, /usr/local/bin/nyxus wallpaper_studio &
+# Wallpaper reload — now goes through the desktop IPC socket so the live
+# nyxus-desktop process hot-swaps without restart. Falls back to swaybg.
+bind = $mod ALT, W, exec, nyxus-set-wallpaper.sh ~/.config/hypr/walls/nyxus-void-vortex.png
+# Super+W is reserved for Wi-Fi quicksettings, so wallpaper studio uses Super+Ctrl+W.
+bind = $mod CTRL, W, exec, python3 ~/.nyxus/nyxus_wallpaper_studio.py
 
-# ── Game Mode / Focus Mode toggles ────────────────────────────────────────────
-bind = $mod ALT, G, exec, /usr/local/bin/nyxus-gamemode toggle
-bind = $mod ALT, F, exec, /usr/local/bin/nyxus-focusmode toggle
+# Desktop context menu — global keyboard shortcut equivalent of right-clicking
+# on the wallpaper. Useful when no clean wallpaper area is visible.
+# NOTE: $mod SHIFT M is reserved for `exit` (line 227); using $mod CTRL M
+# instead to avoid the collision flagged by architect review.
+bind = $mod CTRL, M, exec, nyxus-context-menu.sh main
 
-# ── Named workspaces (NYXUS conventional layout) ──────────────────────────────
-workspace = 1,  defaultName:Main
-workspace = 2,  defaultName:Web
-workspace = 3,  defaultName:Code
-workspace = 4,  defaultName:Chat
-workspace = 5,  defaultName:Media
-workspace = 6,  defaultName:Game
-workspace = 7,  defaultName:Files
-workspace = 8,  defaultName:System
-workspace = 9,  defaultName:Notes
-workspace = 10, defaultName:Misc
-bind = $mod, W, exec, python3 ~/.nyxus/nyxus_wallpaper_studio.py
+# Clipboard history (Win+V parity) — overlay popup with cliphist entries.
+bind = $mod, V, exec, nyxus-clipboard
+
+# Files — Finder/Explorer parity, Super+E like Windows.
+bind = $mod, E, exec, nyxus files
+
+# System Updater — Super+Ctrl+U opens the pacman/AUR/flatpak update center.
+bind = $mod CTRL, U, exec, nyxus updater
+
+# Software Store — Super+SHIFT+A (Super+A reserved for Quick Settings).
+bind = $mod SHIFT, A, exec, nyxus store
+
+# Boot chime — fires once when the desktop session is fully up.
+exec-once = sh -c 'sleep 2 && nyxus-sound.sh boot'
+
+# Backup — Super+Ctrl+B opens the Timeshift snapshots GUI.
+bind = $mod CTRL, B, exec, nyxus backup
+
+# Crash watcher — user systemd unit (started once per graphical session).
+exec-once = systemctl --user start nyxus-crashd.service
+
+# Screen recorder — Super+Shift+R to start/stop region recording.
+bind = $mod SHIFT, R, exec, nyxus-record toggle
+
+# NYXUS Drop (KDE Connect rebrand) — Super+CTRL+D opens device picker.
+# (Super+Shift+D is the rofi run launcher.)
+bind = $mod CTRL, D, exec, nyxus drop
+
+# NOTE: account sync is a deliberate user action (Settings → Account →
+# Push/Pull, or `nyxus-account --push`). Auto-pulling at every login
+# would silently overwrite local preferences from the cloud — disabled
+# by design to prevent that data-loss class of bug.
 
 # ── Quick Settings panel — positioned by the Python script via hyprctl IPC ────
 # (window rules handled at runtime; no static rules needed here)
 
 # ── NYXUS per-app window rules ───────────────────────────────────────────────
-# MOVED to ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf (sourced at end of
-# this file). The unified `windowrule =` form misparses `bordersize N` and
-# certain rule combos in Hyprland 0.51+ — every line below this point would
-# cascade into 30+ "invalid field" errors on screen. The shard uses the
-# current `windowrule =` keyword which parses cleanly on every version.
-# DO NOT re-add per-app rules here — they belong in the shard.
+# MOVED to ~/.config/hypr/conf.d/nyxus-hyprland-rules.lua (sourced at end of
+# this file). Per-app rules live in the shard; do not re-add them here.
 
 # ── Chromium / Electron translucency (LOCKED · 2026-05-10 · Sprint E Total Identity) ─────
 # Apply system-level opacity + Dual-Kawase blur to every Chromium-class and
@@ -402,7 +427,7 @@ windowrule = noshadow, class:^([Cc]hromium|[Bb]rave-browser|[Gg]oogle-chrome|[Mm
 # REMOVED: previously had `layerrule = blur, namespace:^waybar$` etc. but
 # Hyprland 0.54.3 mis-parses the `namespace:^X$` matcher form ("invalid field
 # blur: missing a value"). The bare-regex form is the only working syntax,
-# and the nyxus-hyprland-layerblur.conf shard already covers waybar / rofi /
+# and the nyxus-hyprland-layerblur.lua shard already covers waybar / rofi /
 # launcher / notifications / wlogout / hyprlock with the correct syntax —
 # duplicating here just creates 4 more red errors on screen for nothing.
 
@@ -414,10 +439,10 @@ windowrule = noshadow, class:^([Cc]hromium|[Bb]rave-browser|[Gg]oogle-chrome|[Mm
 # the modular confs are orphaned and Hyprland never applies the NYXUS
 # transparency / frost / opacity policy — apps render flat and opaque.
 # ─────────────────────────────────────────────────────────────────────────────
-source = ~/.config/hypr/conf.d/nyxus-hyprland-general.conf
-source = ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf
-source = ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
-source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf
-source = ~/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf
-source = ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf
-source = ~/.config/hypr/conf.d/nyxus-hyprland-mission.conf
+require("conf.d.nyxus-hyprland-general")
+require("conf.d.nyxus-hyprland-rules")
+require("conf.d.nyxus-hyprland-opacity")
+require("conf.d.nyxus-hyprland-blur")
+require("conf.d.nyxus-hyprland-layerblur")
+require("conf.d.nyxus-hyprland-fog")
+require("conf.d.nyxus-hyprland-mission")

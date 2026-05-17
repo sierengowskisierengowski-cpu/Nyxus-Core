@@ -56,6 +56,7 @@ mtools
 
 # ── Hyprland / Wayland ────────────────────────────────────────────
 hyprland
+lua
 hyprlock
 hypridle
 # mpvpaper is AUR-only — built from source by customize_airootfs.sh.

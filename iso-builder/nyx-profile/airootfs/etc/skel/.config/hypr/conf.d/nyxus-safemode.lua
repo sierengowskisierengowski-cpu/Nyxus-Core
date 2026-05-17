@@ -3,7 +3,7 @@
 # Sourced ONLY when the user manually launches Hyprland from a Safe Mode
 # multi-user target. The wrapper script /usr/bin/nyxus-hypr-launch checks
 # /proc/cmdline for `nyxus.safemode=1` and, when present, points
-# HYPRLAND_CONFIG at this file instead of the full hyprland.conf.
+# HYPRLAND_CONFIG at this file instead of the full hyprland.lua.
 #
 # Goals: get the user a usable session with NO custom daemons, NO GPU
 # acceleration features, and ONLY the keybinds needed to recover.

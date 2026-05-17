@@ -1,6 +1,6 @@
 # ============================================================
 #  NYXUS — Hyprland window rules (DARK MIRROR rev 2026-05-07 r16)
-#  ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+#  ~/.config/hypr/conf.d/nyxus-hyprland-rules.lua
 #
 #  r11 · 2026-05-10 — DEFINITIVE Hyprland 0.54.3 reality, proven by
 #                     four `hyprctl configerrors` round-trips on a
@@ -53,11 +53,11 @@ windowrule = float, class:^(panel|nyxus-panel)$
 windowrule = pin, class:^(panel|nyxus-panel)$
 windowrule = size 460 680, class:^(panel|nyxus-panel)$
 
-# -- NYXUS Home (pinned to workspace 0 by main hyprland.conf; no overrides here) --
+# -- NYXUS Home (pinned to workspace 0 by main hyprland.lua; no overrides here) --
 
 # ============================================================
 #  PER-APP SIZE OVERRIDES (rev r8 · 2026-05-10)
-#  Migrated out of main hyprland.conf where the unified
+#  Migrated out of main hyprland.lua where the unified
 #  `windowrule =` form was misparsing `bordersize N` and
 #  cascading 30+ "invalid field" errors on screen.
 #  Using `windowrule =` here — the current keyword that

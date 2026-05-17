@@ -1,6 +1,6 @@
 # ============================================================
 #  NYXUS — Hyprland window rules (DARK MIRROR rev 2026-05-14 r17)
-#  ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+#  ~/.config/hypr/conf.d/nyxus-hyprland-rules.lua
 # ============================================================
 
 # Floating-first desktop: default every mapped app window to floating.

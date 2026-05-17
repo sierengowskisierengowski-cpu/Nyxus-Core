@@ -1,14 +1,14 @@
 # ============================================================
 #  NYXUS — Hyprland fog daemon layerrules (rev 2026-05-06k)
-#  ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+#  ~/.config/hypr/conf.d/nyxus-hyprland-fog.lua
 #
 #  Companion config for nyxus-fog.py (the Cairo particle daemon
 #  that paints swirling fog under each waybar). Without these
 #  rules the fog window inherits the global compositor blur and
 #  gets smeared into a uniform haze.
 #
-#  Source from your hyprland.conf:
-#    source = ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+#  Source from your hyprland.lua:
+#    require("conf.d.nyxus-hyprland-fog")
 #
 #  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================

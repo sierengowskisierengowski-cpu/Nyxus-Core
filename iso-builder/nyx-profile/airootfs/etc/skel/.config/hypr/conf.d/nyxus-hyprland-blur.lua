@@ -1,6 +1,6 @@
 # ============================================================
 #  NYXUS — Hyprland compositor blur (DARK MIRROR rev 2026-05-07)
-#  ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+#  ~/.config/hypr/conf.d/nyxus-hyprland-blur.lua
 #
 #  r3 · 2026.05.07 — Re-tuned for DARK MIRROR glass.
 #
@@ -17,7 +17,7 @@
 #
 #  ── REVERT IF SCREEN GOES TOO DARK ──────────────────────
 #    sudo sed -i 's/brightness = 0.92/brightness = 1.0/' \
-#       ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+#       ~/.config/hypr/conf.d/nyxus-hyprland-blur.lua
 #    hyprctl reload
 #
 #  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

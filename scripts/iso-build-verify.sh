@@ -64,16 +64,16 @@ for f in "${PYFILES[@]}"; do
 done
 
 hdr "4. Hyprland config sanity"
-HC="$PROFILE/airootfs/etc/skel/.config/hypr/hyprland.conf"
+HC="$PROFILE/airootfs/etc/skel/.config/hypr/hyprland.lua"
 if [[ -f "$HC" ]]; then
-  ok "skel hyprland.conf present"
+  ok "skel hyprland.lua present"
   # Detect duplicate bind chords — same modifier+key on two lines is
   # almost always an unintentional collision (real source of bugs).
   dup=$(grep -E '^bind\s*=' "$HC" | awk -F',' '{print $1","$2}' | sort | uniq -d || true)
   if [[ -z "$dup" ]]; then ok "no duplicate keybind chords"
   else                     bad "duplicate keybind chords: $dup"; fi
 else
-  bad "missing skel hyprland.conf"
+  bad "missing skel hyprland.lua"
 fi
 
 hdr "5. Polkit policies (XML well-formed)"

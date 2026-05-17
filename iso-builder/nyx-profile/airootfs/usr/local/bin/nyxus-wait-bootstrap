@@ -8,7 +8,7 @@
 # ║  swaybg / nyxus-home race nyxus-bootstrap on first login and crash   ║
 # ║  because their config files don't exist yet.                         ║
 # ║                                                                      ║
-# ║  Usage in hyprland.conf:                                             ║
+# ║  Usage in hyprland.lua:                                             ║
 # ║    exec-once = nyxus-wait-bootstrap waybar --config ... --style ...  ║
 # ║    exec-once = nyxus-wait-bootstrap swaybg -i ... -m fill ...        ║
 # ║                                                                      ║

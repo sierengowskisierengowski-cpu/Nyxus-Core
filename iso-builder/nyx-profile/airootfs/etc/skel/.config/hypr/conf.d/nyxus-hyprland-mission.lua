@@ -1,6 +1,6 @@
 # ============================================================
 #  NYXUS — Mission Control (DARK MIRROR rev r1 · 2026-05-12)
-#  ~/.config/hypr/conf.d/nyxus-hyprland-mission.conf
+#  ~/.config/hypr/conf.d/nyxus-hyprland-mission.lua
 #
 #  P3.13 · Mission Control
 #  ─────────────────────────────────────────────────────────
