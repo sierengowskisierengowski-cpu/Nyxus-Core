@@ -152,7 +152,11 @@ if [[ -f "$MAINCFG" ]]; then
       req="${req%%)*}"
       req="$(trim "$(echo "$req" | sed 's/#.*$//; s/--.*$//' | xargs)")"
       [[ -z "$req" ]] && continue
-      req_path="${req//./\/}.lua"
+      if [[ "$req" == conf.d.* ]]; then
+        req_path="conf.d/${req#conf.d.}.lua"
+      else
+        req_path="${req//./\/}.lua"
+      fi
       resolved="${HYPRDIR}/${req_path}"
       matches=( "$resolved" )
       src="require(${req})"
