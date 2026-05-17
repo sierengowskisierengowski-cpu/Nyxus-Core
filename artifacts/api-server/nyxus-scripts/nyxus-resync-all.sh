@@ -80,7 +80,7 @@ APPS=(
 )
 
 # ── header ────────────────────────────────────────────────────────────────────
-NYXUS_RESYNC_VERSION="2026.05.11-r9-eww"
+NYXUS_RESYNC_VERSION="2026.05.17-r10-sddm-heal"
 echo
 hr
 printf "  ${B}${CYAN}NYXUS · Bulk Resync All Apps${R}    ${DIM}(script version:${R} ${B}%s${R}${DIM})${R}\n" "$NYXUS_RESYNC_VERSION"
@@ -822,6 +822,97 @@ if ! pgrep -x eww >/dev/null 2>&1; then
       warn "eww failed to respawn — run \`eww daemon && nyxus-eww-launch\` manually"
     fi
   fi
+fi
+
+# ── 5.5/6  SDDM THEME SELF-HEAL  (rev r1-sddm-heal · 2026-05-17) ────────────
+# Root cause of the 2026-05-17 "blank login / TTY-only" incident:
+# the SDDM theme installer (sddm-theme/install.sh) is a SEPARATE script
+# that this resync never called. So if /etc/sddm.conf.d/nyxus.conf says
+# `Current=nyxus` but /usr/share/sddm/themes/nyxus/ is empty or missing
+# theme.conf, SDDM loads an empty theme, panics with
+# HELPER_DISPLAYSERVER_ERROR, and dies — user gets a black screen with
+# a blinking cursor and no way back in except TTY rescue.
+#
+# This block makes resync idempotent for SDDM too:
+#   1. If nyxus.conf doesn't exist → nothing to heal, skip silently.
+#   2. If nyxus.conf points at a theme dir that's missing/empty/has no
+#      theme.conf → try to download + reinstall the theme tarball.
+#   3. If the reinstall fails (no network, server down, etc.) → REMOVE
+#      the broken nyxus.conf so SDDM falls back to its built-in theme
+#      on next start. The user gets the default SDDM login screen
+#      instead of a black screen — way better than a brick.
+#   4. Restart sddm only if it's currently failed/inactive (don't kick
+#      a working session out from under the user mid-resync).
+step "5.5/6 · SDDM theme self-heal"
+
+SDDM_CONF="/etc/sddm.conf.d/nyxus.conf"
+SDDM_THEME_DIR="/usr/share/sddm/themes/nyxus"
+SDDM_TARBALL_URL="${PROD}/nyxus-sddm-theme.tar.gz"
+
+sddm_theme_broken() {
+  # True if conf says Current=nyxus but the theme dir is unusable.
+  [[ -f "$SDDM_CONF" ]] || return 1
+  grep -q '^Current=nyxus' "$SDDM_CONF" 2>/dev/null || return 1
+  [[ ! -d "$SDDM_THEME_DIR" ]] && return 0
+  [[ ! -f "$SDDM_THEME_DIR/theme.conf" ]] && return 0
+  [[ ! -f "$SDDM_THEME_DIR/metadata.desktop" ]] && return 0
+  [[ ! -f "$SDDM_THEME_DIR/Main.qml" && ! -f "$SDDM_THEME_DIR/main.qml" ]] && return 0
+  return 1
+}
+
+if [[ ! -f "$SDDM_CONF" ]]; then
+  ok "no nyxus SDDM conf present — nothing to heal"
+elif sddm_theme_broken; then
+  warn "nyxus SDDM theme is broken (conf points at empty/incomplete theme dir)"
+
+  # Try to download + reinstall the theme tarball
+  TARBALL="$TMP/nyxus-sddm-theme.tar.gz"
+  EXTRACT_DIR="$TMP/nyxus-sddm-theme-extract"
+  mkdir -p "$EXTRACT_DIR"
+
+  if curl -fsSL -o "$TARBALL" "$SDDM_TARBALL_URL" 2>/dev/null \
+     && tar -xzf "$TARBALL" -C "$EXTRACT_DIR" 2>/dev/null; then
+    THEME_INSTALLER=$(find "$EXTRACT_DIR" -maxdepth 4 -name install.sh -printf '%d %p\n' 2>/dev/null \
+                      | sort -n | head -1 | awk '{print $2}')
+    if [[ -n "$THEME_INSTALLER" && -f "$THEME_INSTALLER" ]]; then
+      if bash "$THEME_INSTALLER" >"$TMP/sddm-theme-install.log" 2>&1; then
+        ok "nyxus SDDM theme reinstalled from production tarball"
+      else
+        fail "SDDM theme installer exited non-zero — see $TMP/sddm-theme-install.log"
+        warn "removing broken $SDDM_CONF so SDDM falls back to default theme"
+        rm -f "$SDDM_CONF"
+        ok "$SDDM_CONF removed — SDDM will use built-in theme on next start"
+      fi
+    else
+      warn "no install.sh inside the SDDM theme tarball — falling back"
+      rm -f "$SDDM_CONF"
+      ok "$SDDM_CONF removed — SDDM will use built-in theme on next start"
+    fi
+  else
+    warn "could not download SDDM theme tarball from $SDDM_TARBALL_URL"
+    warn "removing broken $SDDM_CONF so SDDM falls back to default theme"
+    rm -f "$SDDM_CONF"
+    ok "$SDDM_CONF removed — SDDM will use built-in theme on next start"
+  fi
+
+  # Only restart SDDM if it's currently in a bad state. We never kick a
+  # working graphical session out from under a logged-in user.
+  if command -v systemctl >/dev/null 2>&1; then
+    SDDM_STATE=$(systemctl is-active sddm.service 2>/dev/null || true)
+    SDDM_FAILED=$(systemctl is-failed sddm.service 2>/dev/null || true)
+    if [[ "$SDDM_STATE" != "active" || "$SDDM_FAILED" == "failed" ]]; then
+      systemctl reset-failed sddm.service >/dev/null 2>&1 || true
+      if systemctl restart sddm.service >/dev/null 2>&1; then
+        ok "sddm.service restarted (was: $SDDM_STATE)"
+      else
+        warn "sddm restart failed — run \`sudo journalctl -u sddm -n 50\` to debug"
+      fi
+    else
+      ok "sddm.service is active — skipping restart (don't kick out live session)"
+    fi
+  fi
+else
+  ok "nyxus SDDM theme looks healthy"
 fi
 
 # ── 6/6 VERIFY ──────────────────────────────────────────────────────────────
