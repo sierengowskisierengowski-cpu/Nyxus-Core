@@ -208,7 +208,7 @@ def sh_async(cmd, on_done: Optional[Callable[[Tuple[int, str, str]], None]] = No
     threading.Thread(target=worker, daemon=True).start()
 
 
-_HYPRLAND_CONF = Path.home() / ".config" / "hypr" / "hyprland.lua"
+_HYPRLAND_CONF = Path.home() / ".config" / "hypr" / "hyprland.conf"
 # Recognized launch commands → friendly user-facing label.
 # Anything not in the map falls back to the literal command (truncated)
 # so a drifted bind still shows up rather than disappearing silently.
@@ -240,7 +240,7 @@ _BIND_LABELS = {
 
 
 def parse_hypr_binds(path: Path = _HYPRLAND_CONF) -> List[Tuple[str, str, str]]:
-    """Live-parse `bind = MODS, KEY, action, args` from hyprland.lua.
+    """Live-parse `bind = MODS, KEY, action, args` from hyprland.conf.
 
     Returns [(label, chord, raw_command)] in file order. Empty list if
     the file is missing or unreadable — caller can fall back to a
@@ -1212,7 +1212,7 @@ def debounced(scale: Gtk.Scale,
 # Every SectionPage MUST end its build() with self._standard_footer(...)
 # so every page ships with the full required-by-policy trio:
 #
-#   · Keybinds group   — surfaces hyprland.lua binds related to this
+#   · Keybinds group   — surfaces hyprland.conf binds related to this
 #                         feature (read-only, with edit shortcut)
 #   · Reset group      — wipes the page's prefs namespace and re-runs
 #                         build() so the page returns to factory state
@@ -1228,14 +1228,14 @@ def make_keybinds_group(page: "SectionPage",
                         ) -> Adw.PreferencesGroup:
     """Return a keybinds group for `page`.
 
-    `token_filter` is a list of substrings; any hyprland.lua bind whose
+    `token_filter` is a list of substrings; any hyprland.conf bind whose
     raw command contains ANY token is shown. Pass [] to show NO binds
     (use for pure status pages); pass None to show ALL nyxus-relevant
     binds (default fallback).
     """
     grp = Adw.PreferencesGroup(
         title="Keybinds",
-        description="Live-parsed from ~/.config/hypr/hyprland.lua. "
+        description="Live-parsed from ~/.config/hypr/hyprland.conf. "
                     "Edit there to remap; reload Hyprland to apply.")
     binds = parse_hypr_binds()
     matched: list[tuple[str, str, str]] = []
@@ -1258,11 +1258,11 @@ def make_keybinds_group(page: "SectionPage",
             "Open Keyboard",
             lambda: page.win.navigate_to_section("keyboard")))
     grp.add(action_row(
-        "Edit hyprland.lua",
+        "Edit hyprland.conf",
         "Open the keybind configuration in your editor",
         "Open",
         lambda: fire_and_forget(
-            f"xdg-open {Path.home() / '.config/hypr/hyprland.lua'}")))
+            f"xdg-open {Path.home() / '.config/hypr/hyprland.conf'}")))
     return grp
 
 
@@ -1423,7 +1423,7 @@ class DisplayPage(SectionPage):
                                         "hyprctl returned an empty list"))
             return
 
-        # Make sure hyprland.lua sources our override file so changes
+        # Make sure hyprland.conf sources our override file so changes
         # made here survive a logout / reboot.
         self._ensure_monitor_source_line()
 
@@ -1485,7 +1485,7 @@ class DisplayPage(SectionPage):
                        scale: Optional[float] = None,
                        transform: Optional[int] = None) -> None:
         """Apply a per-monitor change live via hyprctl AND persist it
-        to ~/.config/hypr/nyxus-monitors.lua so it survives reboot."""
+        to ~/.config/hypr/nyxus-monitors.conf so it survives reboot."""
         rc, out, _ = sh(["hyprctl", "monitors", "-j"], timeout=2)
         try:
             mons = json.loads(out)
@@ -1517,8 +1517,8 @@ class DisplayPage(SectionPage):
 
     def _persist_monitor_override(self, name: str, spec: str) -> None:
         """Write/replace 'monitor = <spec>' for `name` in
-        ~/.config/hypr/nyxus-monitors.lua atomically."""
-        p = Path.home() / ".config" / "hypr" / "nyxus-monitors.lua"
+        ~/.config/hypr/nyxus-monitors.conf atomically."""
+        p = Path.home() / ".config" / "hypr" / "nyxus-monitors.conf"
         try:
             p.parent.mkdir(parents=True, exist_ok=True)
         except OSError as e:
@@ -1536,44 +1536,44 @@ class DisplayPage(SectionPage):
                             continue  # drop existing override for this
                     keep.append(ln)
             except OSError as e:
-                log.warning("read nyxus-monitors.lua: %s", e)
+                log.warning("read nyxus-monitors.conf: %s", e)
         keep.append(f"monitor = {spec}")
         try:
-            tmp = p.with_suffix(".lua.tmp")
+            tmp = p.with_suffix(".conf.tmp")
             tmp.write_text("\n".join(keep) + "\n", encoding="utf-8")
             os.replace(tmp, p)
         except OSError as e:
-            log.warning("write nyxus-monitors.lua: %s", e)
+            log.warning("write nyxus-monitors.conf: %s", e)
             self.toast(f"persist write failed: {e}")
 
     def _ensure_monitor_source_line(self) -> None:
-        """Append 'require("nyxus-monitors")' to hyprland.lua if
+        """Append 'source = ./nyxus-monitors.conf' to hyprland.conf if
         missing. Idempotent — safe to call every render. Fails loud
         via toast on read/write errors so persistence problems are
         explicit rather than silent."""
         hp = _HYPRLAND_CONF
         if not hp.exists():
             self.toast(
-                "hyprland.lua missing — overrides won't persist "
+                "hyprland.conf missing — overrides won't persist "
                 "until Hyprland is configured")
             return
         try:
             text = hp.read_text(encoding="utf-8")
         except OSError as e:
-            log.warning("read hyprland.lua: %s", e)
-            self.toast(f"can't read hyprland.lua: {e}")
+            log.warning("read hyprland.conf: %s", e)
+            self.toast(f"can't read hyprland.conf: {e}")
             return
-        if "nyxus-monitors" in text:
+        if "nyxus-monitors.conf" in text:
             return
         try:
             with open(hp, "a", encoding="utf-8") as fh:
                 fh.write("\n# nyxus monitor overrides "
                          "(auto-managed by Settings)\n"
-                         "require(\"nyxus-monitors\")\n")
+                         "source = ./nyxus-monitors.conf\n")
         except OSError as e:
             log.warning("append source line: %s", e)
             self.toast(
-                f"can't persist to hyprland.lua: {e} — "
+                f"can't persist to hyprland.conf: {e} — "
                 "monitor changes won't survive reboot")
 
     def _render_brightness(self) -> None:
@@ -2002,7 +2002,7 @@ class SoundPage(SectionPage):
             title="Audio EQ presets",
             description="Live preset switcher for EasyEffects (output bus). "
                         "Requires the easyeffects --gapplication-service "
-                        "autostart in hyprland.lua.")
+                        "autostart in hyprland.conf.")
         self.add_group(eq)
         if not have("easyeffects"):
             eq.add(empty_row(
@@ -3536,13 +3536,13 @@ class KeyboardPage(SectionPage):
         nl.add(nl_sw)
 
         # ── Compose key + layout switcher (writes input:kb_options) ──
-        # Persists via ~/.config/hypr/nyxus-input.lua with auto-require
+        # Persists via ~/.config/hypr/nyxus-input.conf with auto-source
         # so settings survive a reboot. Compose and grp tokens are
         # mutated independently — toggling one never disturbs the other.
         sw_grp = Adw.PreferencesGroup(
             title="Compose &amp; layout switcher",
             description="Token edits to input:kb_options "
-                        "(persisted to nyxus-input.lua)")
+                        "(persisted to nyxus-input.conf)")
         self.add_group(sw_grp)
 
         # Canonical local state so back-to-back combo changes don't
@@ -3618,8 +3618,8 @@ class KeyboardPage(SectionPage):
             "Open",
             lambda: fire_and_forget("nyxus-cheatsheet")))
 
-        # ── Real, parsed shortcut table from hyprland.lua ──
-        # Reads ~/.config/hypr/hyprland.lua, surfaces every NYXUS app
+        # ── Real, parsed shortcut table from hyprland.conf ──
+        # Reads ~/.config/hypr/hyprland.conf, surfaces every NYXUS app
         # bind plus the most useful Hyprland defaults so users can
         # discover (and sanity-check) every key combo from Settings.
 
@@ -3636,7 +3636,7 @@ class KeyboardPage(SectionPage):
             description="EWW panels, audio, brightness, screenshots")
         self.add_group(sys_grp)
 
-        # Live-parse hyprland.lua so this list never drifts from the
+        # Live-parse hyprland.conf so this list never drifts from the
         # real keybind state. Falls back to a curated set if the config
         # is missing (first-boot, recovery shell, etc.).
         live = parse_hypr_binds()
@@ -3655,7 +3655,7 @@ class KeyboardPage(SectionPage):
                         nyxus_set.append((label, chord))
                         seen.add(chord)
             nyxus_grp.set_description(
-                "Parsed live from ~/.config/hypr/hyprland.lua "
+                "Parsed live from ~/.config/hypr/hyprland.conf "
                 f"({len(nyxus_set)} binds)")
         if not nyxus_set:
             # Fallback curated list — kept in sync with shipped config.
@@ -3679,7 +3679,7 @@ class KeyboardPage(SectionPage):
                 ("Doctor (diagnostics)","Super + Shift + H"),
             ]
             nyxus_grp.set_description(
-                "Curated fallback — hyprland.lua not found")
+                "Curated fallback — hyprland.conf not found")
         for label, chord in nyxus_set:
             nyxus_grp.add(kv_row(label, chord))
 
@@ -3757,7 +3757,7 @@ class KeyboardPage(SectionPage):
         self._ensure_input_source_line()
 
     def _persist_kb_options(self, csv: str) -> None:
-        p = Path.home() / ".config" / "hypr" / "nyxus-input.lua"
+        p = Path.home() / ".config" / "hypr" / "nyxus-input.conf"
         try:
             p.parent.mkdir(parents=True, exist_ok=True)
         except OSError as e:
@@ -3769,35 +3769,35 @@ class KeyboardPage(SectionPage):
                 f"    kb_options = {csv}\n"
                 "}\n")
         try:
-            tmp = p.with_suffix(".lua.tmp")
+            tmp = p.with_suffix(".conf.tmp")
             tmp.write_text(body, encoding="utf-8")
             os.replace(tmp, p)
         except OSError as e:
-            log.warning("write nyxus-input.lua: %s", e)
+            log.warning("write nyxus-input.conf: %s", e)
             self.toast(f"persist write failed: {e}")
 
     def _ensure_input_source_line(self) -> None:
         hp = _HYPRLAND_CONF
         if not hp.exists():
-            self.toast("hyprland.lua missing — kb_options won't persist")
+            self.toast("hyprland.conf missing — kb_options won't persist")
             return
         try:
             text = hp.read_text(encoding="utf-8")
         except OSError as e:
-            log.warning("read hyprland.lua: %s", e)
-            self.toast(f"can't read hyprland.lua: {e}")
+            log.warning("read hyprland.conf: %s", e)
+            self.toast(f"can't read hyprland.conf: {e}")
             return
-        if "nyxus-input" in text:
+        if "nyxus-input.conf" in text:
             return
         try:
             with open(hp, "a", encoding="utf-8") as fh:
                 fh.write("\n# nyxus input overrides "
                          "(auto-managed by Settings)\n"
-                         "require(\"nyxus-input\")\n")
+                         "source = ./nyxus-input.conf\n")
         except OSError as e:
             log.warning("append input source line: %s", e)
             self.toast(
-                f"can't persist to hyprland.lua: {e} — "
+                f"can't persist to hyprland.conf: {e} — "
                 "keyboard options won't survive reboot")
 
     # NB: the parsed-shortcut table below is unaffected by the helpers

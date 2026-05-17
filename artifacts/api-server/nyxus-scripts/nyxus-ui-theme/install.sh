@@ -54,8 +54,8 @@ if command -v gsettings &>/dev/null; then
         && echo "  [OK]  GTK theme activated via gsettings" || true
 fi
 
-# Hyprland: set via hyprland.lua env / environment block
-# Add these to hyprland.lua:
+# Hyprland: set via hyprland.conf env / environment block
+# Add these to hyprland.conf:
 #   env = GTK_THEME,NYXUS
 #   env = QT_QPA_PLATFORMTHEME,gtk3
 
@@ -63,7 +63,7 @@ sep
 echo ""
 echo "  ✓  All configs installed."
 echo ""
-echo "  Hyprland: add to hyprland.lua to activate GTK theme:"
+echo "  Hyprland: add to hyprland.conf to activate GTK theme:"
 echo "    env = GTK_THEME,NYXUS"
 echo "    env = QT_QPA_PLATFORMTHEME,gtk3"
 echo ""

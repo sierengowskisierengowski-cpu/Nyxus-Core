@@ -8,7 +8,7 @@ Timeshift's own JSON config (/etc/timeshift/timeshift.json) using its
 official `--btrfs|--rsync` flags through pkexec.
 
 Wired into Settings → System → Backup (page key "backup").
-Keybind: Super+Ctrl+B (added in hyprland.lua).
+Keybind: Super+Ctrl+B (added in hyprland.conf).
 Logs to ~/.cache/nyxus/backup.log.
 """
 from __future__ import annotations

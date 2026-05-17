@@ -10,7 +10,7 @@
 # Install once:  pacman -S mpvpaper
 # Drop clips:    cp *.mp4 ~/.config/hypr/walls/animated/
 # Autostart:     add  exec-once = ~/.local/bin/nyxus-animated-bg.sh
-#                to ~/.config/hypr/hyprland.lua
+#                to ~/.config/hypr/hyprland.conf
 #
 # Usage:
 #   nyxus-animated-bg.sh                       # rotate all clips in WALL_DIR

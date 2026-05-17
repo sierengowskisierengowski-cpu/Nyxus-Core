@@ -976,7 +976,7 @@
         (notif_row :n {n})))))
 
 ;; Slide-in is provided at the layer-shell level by Hyprland — see
-;; `nyxus-hyprland-layerblur.lua` for the `layerrule = animation slide,
+;; `nyxus-hyprland-layerblur.conf` for the `layerrule = animation slide,
 ;; nyxus-notifications` line. EWW just renders the static contents.
 (defwidget notifications_layout []
   (box :class "notif-root" :orientation "v" :space-evenly false :spacing 12
