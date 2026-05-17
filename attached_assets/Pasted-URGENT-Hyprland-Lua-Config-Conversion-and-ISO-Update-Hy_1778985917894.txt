@@ -1,0 +1,63 @@
+URGENT - Hyprland Lua Config Conversion and ISO Update
+
+Hyprland 0.55+ dropped hyprlang in favor of Lua 
+configuration. Our entire Hyprland config is in the 
+old .conf syntax causing 535 errors on the live 
+machine. Joey has been saying this needed to be done 
+from the start and it was not addressed in the audits. 
+That ends now.
+
+Your job is the ISO builder side and the system level 
+config deployment side.
+
+Do the following without missing anything:
+
+1. ISO BUILDER UPDATES
+- Update iso-builder to deploy hyprland.lua instead 
+  of hyprland.conf
+- Make sure the airootfs profile copies .lua config 
+  files not .conf files to the correct locations
+- Update any scripts in the ISO builder that reference 
+  hyprland.conf to reference hyprland.lua
+- Make sure the post-install script sets up the Lua 
+  config correctly on first boot
+
+2. SYSTEM SERVICE UPDATES  
+- Check every systemd service file that references 
+  Hyprland config paths and update them
+- Check nyxus-postinstall.sh and update any references 
+  to .conf files
+- Check nyxus-bootstrap and update any references
+- Check hypr-doctor.sh and update for Lua configs
+- Check sync-hypr.sh and update to sync .lua files 
+  not .conf files
+
+3. DEPENDENCY CHECK
+- Make sure the packages.x86_64 includes lua and 
+  any Lua dependencies that Hyprland needs
+- Check if lua51 or lua54 is needed and add it
+
+4. FULL AUDIT OF ALL REFERENCES
+- Search the entire repo for any reference to 
+  hyprland.conf and update to hyprland.lua
+- Search for any reference to .conf files in the 
+  conf.d directory and update to .lua
+- Search for source = in any remaining conf files 
+  and convert to require() in Lua
+
+5. VERIFY
+- After all changes verify no .conf references 
+  remain anywhere in the repo
+- Verify the ISO builder will produce a system that 
+  boots directly into a working Hyprland Lua config
+- Verify all paths are correct
+
+Open a PR titled:
+fix: update ISO builder and system scripts for 
+Hyprland Lua config migration
+
+Do not merge until Replit's PR is also ready so 
+both can be reviewed together.
+
+This should have been caught in the audit. Make 
+sure it is done completely and correctly this time.
