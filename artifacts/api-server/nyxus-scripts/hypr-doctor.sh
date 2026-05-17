@@ -132,7 +132,7 @@ if [[ -f "$MAINCFG" ]]; then
       src="${line#*:source}"
       src="${src#*source}"
       src="${src#*=}"
-      src="$(echo "$src" | sed 's/#.*$//' | xargs)"
+      src="$(echo "$src" | sed 's/#.*$//; s/--.*$//' | xargs)"
       src="$(trim "$src")"
       [[ -z "$src" ]] && continue
 
@@ -150,7 +150,7 @@ if [[ -f "$MAINCFG" ]]; then
       req="${req#*require}"
       req="${req#*(}"
       req="${req%%)*}"
-      req="$(trim "$(echo "$req" | sed 's/#.*$//' | xargs)")"
+      req="$(trim "$(echo "$req" | sed 's/#.*$//; s/--.*$//' | xargs)")"
       [[ -z "$req" ]] && continue
       req_path="${req//./\/}.lua"
       resolved="${HYPRDIR}/${req_path}"
