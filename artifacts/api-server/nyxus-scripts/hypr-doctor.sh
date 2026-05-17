@@ -90,7 +90,7 @@ echo
 # --- Config discovery ---
 echo "[4] Config locations"
 HYPRDIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
-MAINCFG="$HYPRDIR/hyprland.conf"
+MAINCFG="$HYPRDIR/hyprland.lua"
 echo "HYPRDIR: $HYPRDIR"
 echo "MAINCFG: $MAINCFG"
 if [[ -f "$MAINCFG" ]]; then
@@ -100,7 +100,7 @@ else
 fi
 echo
 
-# Collect config files (main + any sourced confs we can resolve)
+# Collect config files (main + any required modules we can resolve)
 declare -a FILES=()
 if [[ -f "$MAINCFG" ]]; then
   FILES+=("$MAINCFG")
@@ -114,35 +114,53 @@ trim() {
   echo "$s"
 }
 
-echo "[5] Source chain check"
+echo "[5] Include chain check"
 if [[ -f "$MAINCFG" ]]; then
-  mapfile -t sources < <(grep -REn '^[[:space:]]*source[[:space:]]*=' "$MAINCFG" 2>/dev/null || true)
-  if [[ ${#sources[@]} -eq 0 ]]; then
-    echo "No 'source =' lines found in main config (that's fine if you keep it monolithic)."
+  mapfile -t includes < <(grep -REn '^[[:space:]]*(source[[:space:]]*=|require[[:space:]]*\()' "$MAINCFG" 2>/dev/null || true)
+  if [[ ${#includes[@]} -eq 0 ]]; then
+    echo "No source/require include lines found in main config (that's fine if you keep it monolithic)."
   else
-    echo "Found sources:"
-    printf '%s\n' "${sources[@]}"
+    echo "Found includes:"
+    printf '%s\n' "${includes[@]}"
   fi
 
   echo
-  echo "Resolved source targets:"
+  echo "Resolved include targets:"
   while IFS= read -r line; do
-    src="${line#*:source}"
-    src="${src#*source}"
-    src="${src#*=}"
-    src="$(echo "$src" | sed 's/#.*$//' | xargs)"
-    src="$(trim "$src")"
-    [[ -z "$src" ]] && continue
+    resolved=""
+    if [[ "$line" == *"source"* ]]; then
+      src="${line#*:source}"
+      src="${src#*source}"
+      src="${src#*=}"
+      src="$(echo "$src" | sed 's/#.*$//; s/--.*$//' | xargs)"
+      src="$(trim "$src")"
+      [[ -z "$src" ]] && continue
 
-    # Expand leading ~ to $HOME first (tilde expansion does NOT happen
-    # inside double quotes via eval — that was the bug that falsely
-    # reported every NYXUS source line as missing).
-    src_expanded="${src/#\~/$HOME}"
-    eval "resolved=\"$src_expanded\"" 2>/dev/null || resolved="$src_expanded"
+      # Expand leading ~ to $HOME first (tilde expansion does NOT happen
+      # inside double quotes via eval — that was the bug that falsely
+      # reported every NYXUS source line as missing).
+      src_expanded="${src/#\~/$HOME}"
+      eval "resolved=\"$src_expanded\"" 2>/dev/null || resolved="$src_expanded"
 
-    shopt -s nullglob
-    matches=( $resolved )
-    shopt -u nullglob
+      shopt -s nullglob
+      matches=( $resolved )
+      shopt -u nullglob
+    else
+      req="${line#*:}"
+      req="${req#*require}"
+      req="${req#*(}"
+      req="${req%%)*}"
+      req="$(trim "$(echo "$req" | sed 's/#.*$//; s/--.*$//' | xargs)")"
+      [[ -z "$req" ]] && continue
+      if [[ "$req" == conf.d.* ]]; then
+        req_path="conf.d/${req#conf.d.}.lua"
+      else
+        req_path="${req//./\/}.lua"
+      fi
+      resolved="${HYPRDIR}/${req_path}"
+      matches=( "$resolved" )
+      src="require(${req})"
+    fi
 
     if [[ ${#matches[@]} -eq 0 ]]; then
       echo "ERROR: source target does not exist / glob matched nothing: $src  (resolved: $resolved)"
@@ -156,7 +174,7 @@ if [[ -f "$MAINCFG" ]]; then
         fi
       done
     fi
-  done < <(printf '%s\n' "${sources[@]}")
+  done < <(printf '%s\n' "${includes[@]}")
 else
   echo "Skipping source check (main config missing)."
 fi
@@ -295,7 +313,7 @@ if [[ -n "$HLOG" ]]; then
   echo "── End ──"
 else
   echo "WARN: no Hyprland log found at $HLOG_CACHE or \$XDG_RUNTIME_DIR/hypr/<sig>/hyprland.log"
-  echo "Tip: enable verbose logging by setting in hyprland.conf:"
+  echo "Tip: enable verbose logging by setting in hyprland.lua:"
   echo "    debug { disable_logs = false }"
 fi
 echo

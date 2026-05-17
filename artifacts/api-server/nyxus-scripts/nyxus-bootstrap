@@ -19,7 +19,7 @@
 #
 # Bumping BOOTSTRAP_VERSION:
 #   When you ship a bake that needs to refresh installed systems
-#   (new hyprland.conf, new app, new package list, etc.), bump this number.
+#   (new hyprland.lua, new app, new package list, etc.), bump this number.
 #   Existing installs will detect the mismatch on next login and self-heal.
 #
 # Logs: /tmp/nyxus-bootstrap.log (Hyprland tee already wraps the call)
@@ -62,7 +62,7 @@ mkdir -p "${NYXUS_DIR}"
 # Currently managed plugins:
 #   hyprexpo  — Mission Control overview (P3.13). Triggered by SUPER+F3
 #               and the 4-finger touchpad swipe defined in the
-#               nyxus-hyprland-mission.conf shard.
+#               nyxus-hyprland-mission.lua shard.
 ensure_hyprland_plugins() {
   command -v hyprpm >/dev/null 2>&1 || {
     log "hyprpm not on PATH — skipping plugin sync (Hyprland too old?)"
@@ -99,7 +99,7 @@ ensure_hyprland_plugins || true
 # Already bootstrapped → version check fast path
 # If marker contains current version → no-op (steady state).
 # If marker contains an older version → fall through and re-run so the
-# new bake's hyprland.conf, packages, and apps land automatically.
+# new bake's hyprland.lua, packages, and apps land automatically.
 if [[ -f "${MARK}" ]]; then
   INSTALLED_VERSION="$(cat "${MARK}" 2>/dev/null | head -1 | tr -d '[:space:]')"
   if [[ "${INSTALLED_VERSION}" == "${BOOTSTRAP_VERSION}" ]]; then

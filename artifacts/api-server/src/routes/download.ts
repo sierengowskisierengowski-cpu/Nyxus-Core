@@ -248,19 +248,19 @@ const ALLOWED_FILES: Record<string, string> = {
   "hypr-doctor.sh":      "hypr-doctor.sh",
 
   // ── ★ HYPRLAND CONFIGS ───────────────────────────────────────────────────
-  "hyprland.conf":               "hyprland.conf",
+  "hyprland.lua":               "hyprland.lua",
   "hyprlock.conf":               "hyprlock.conf",
   // A6 (2026-05-12): nyxus-hyprlock.conf was merged INTO hyprlock.conf
   // (one canonical filename, branded variant with login-stars wallpaper).
   // Allowlist entry removed — file no longer exists in nyxus-scripts/.
   "hypridle.conf":               "hypridle.conf",
-  "nyxus-hyprland-rules.conf":   "nyxus-hyprland-rules.conf",
-  "nyxus-hyprland-blur.conf":    "nyxus-hyprland-blur.conf",
-  "nyxus-hyprland-fog.conf":     "nyxus-hyprland-fog.conf",
-  "nyxus-hyprland-opacity.conf":   "nyxus-hyprland-opacity.conf",
-  "nyxus-hyprland-general.conf":   "nyxus-hyprland-general.conf",
-  "nyxus-hyprland-layerblur.conf": "nyxus-hyprland-layerblur.conf",
-  "nyxus-hyprland-mission.conf":   "nyxus-hyprland-mission.conf",
+  "nyxus-hyprland-rules.lua":   "nyxus-hyprland-rules.lua",
+  "nyxus-hyprland-blur.lua":    "nyxus-hyprland-blur.lua",
+  "nyxus-hyprland-fog.lua":     "nyxus-hyprland-fog.lua",
+  "nyxus-hyprland-opacity.lua":   "nyxus-hyprland-opacity.lua",
+  "nyxus-hyprland-general.lua":   "nyxus-hyprland-general.lua",
+  "nyxus-hyprland-layerblur.lua": "nyxus-hyprland-layerblur.lua",
+  "nyxus-hyprland-mission.lua":   "nyxus-hyprland-mission.lua",
 
   // ── ★ DESKTOP UI CONFIGS (rofi, alacritty, dunst, wlogout) ───────────────
   // rev r6-eww (2026-05-11): waybar-config.json / waybar-style.css /
@@ -440,7 +440,7 @@ router.get("/download/nyxus/{*splat}", (req, res) => {
   // After this, every GET hits this server fresh — there is no way for any
   // intermediary to serve an older copy of a NYXUS file. Pairs with the
   // X-File-SHA256 header so curl can verify the bytes after download:
-  //     curl -fsSL .../nyxus-hyprland-blur.conf -D /tmp/h
+  //     curl -fsSL .../nyxus-hyprland-blur.lua -D /tmp/h
   //     grep -i x-file-sha256 /tmp/h
   // and matches the value in /api/download/nyxus/manifest.json.
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");

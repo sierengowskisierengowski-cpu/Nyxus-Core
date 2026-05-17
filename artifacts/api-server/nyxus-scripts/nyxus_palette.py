@@ -49,7 +49,7 @@ HAIRLINE_WHITE    = "rgba(255, 255, 255, 0.10)"  # 1px white border on cards
 HAIRLINE_INK      = "rgba(0, 0, 0, 0.45)"        # 1px black border on hovers
 
 # ── HYPRLAND ACTIVE-BORDER RIM-LIGHT ────────────────────────────────────────
-# Used by hyprland.conf col.active_border. 5-stop gradient at 135deg.
+# Used by hyprland.lua col.active_border. 5-stop gradient at 135deg.
 RIM_GRADIENT_135 = (
     "rgba(ffffffff) rgba(e8edf5ee) rgba(c8ccd6cc) "
     "rgba(0a0a0a99) rgba(000000ff) 135deg"

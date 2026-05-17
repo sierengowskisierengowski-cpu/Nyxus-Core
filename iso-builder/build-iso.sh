@@ -140,7 +140,7 @@ mkdir -p \
 # ── Configs → /etc/skel/.config/ ────────────────────────────────────────
 # rev r6-eww (2026-05-11): waybar replaced by EWW. waybar-config.json,
 # waybar-style.css, waybar-stats.sh, waybar-ticker.sh deleted from source.
-install -m 0644 "${NS}/hyprland.conf"        "${SKEL}/.config/hypr/hyprland.conf"
+install -m 0644 "${NS}/hyprland.lua"        "${SKEL}/.config/hypr/hyprland.lua"
 install -m 0644 "${NS}/hyprlock.conf"        "${SKEL}/.config/hypr/hyprlock.conf"
 install -m 0644 "${NS}/hypridle.conf"        "${SKEL}/.config/hypr/hypridle.conf"
 install -m 0644 "${NS}/nyxus-dunstrc"        "${SKEL}/.config/dunst/dunstrc"
@@ -152,7 +152,7 @@ install -m 0644 "${NS}/wlogout-layout"       "${SKEL}/.config/wlogout/layout"
 install -m 0644 "${NS}/alacritty.toml"       "${SKEL}/.config/alacritty/alacritty.toml"
 
 # ── Hyprland conf.d/ overlays (blur/fog/general/opacity/rules/layerblur) ────
-install -m 0644 "${NS}"/nyxus-hyprland-*.conf "${SKEL}/.config/hypr/conf.d/"
+install -m 0644 "${NS}"/nyxus-hyprland-*.lua "${SKEL}/.config/hypr/conf.d/"
 
 # ── EWW (replaces waybar as of rev r6-eww) ──────────────────────────────────
 # Top-level eww.yuck / eww.scss / nyxus.conf + scripts/ subdir.
@@ -169,7 +169,7 @@ fi
 ok "configs: hypr (+conf.d) / eww / dunst / rofi / wlogout / alacritty"
 
 # ── GTK apps + chrome library + helpers → /opt/nyxus/ ───────────────────
-# Plus skel symlink ~/.nyxus → /opt/nyxus so hyprland.conf keybinds (which
+# Plus skel symlink ~/.nyxus → /opt/nyxus so hyprland.lua keybinds (which
 # launch python3 ~/.nyxus/nyxus_*.py to stay compatible with the
 # download-portal install flow that uses ~/.nyxus/) work on the live ISO.
 install -m 0644 "${NS}"/nyxus_*.py "${OPT_NYXUS}/"
@@ -244,7 +244,7 @@ if [[ -f "${NS}/nyxus-welcome-helper" ]]; then
 fi
 ok "user units + policy: nyxus-eww / nyxus-crashd / nyxus-security-daemon / parental + security + welcome helpers"
 
-# ── Wallpapers → both user skel (matches hyprland.conf path) and system ─
+# ── Wallpapers → both user skel (matches hyprland.lua path) and system ─
 # Includes the new void-vortex (default EWW-era wallpaper, replaces drifter).
 install -m 0644 "${NS}"/nyxus-bg-*.png            "${WALLS_USER}/" 2>/dev/null || true
 install -m 0644 "${NS}"/nyxus-sierengowski-*.png  "${WALLS_USER}/" 2>/dev/null || true

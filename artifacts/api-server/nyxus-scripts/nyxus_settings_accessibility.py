@@ -134,7 +134,7 @@ class A11yPanel(Gtk.Box):
         ))
         hm.add(Adw.ActionRow(
             title="Visual bell",
-            subtitle="Edit ~/.config/hypr/hyprland.conf → general.flash.",
+            subtitle="Edit ~/.config/hypr/hyprland.lua → general.flash.",
         ))
         page.add(hm)
 

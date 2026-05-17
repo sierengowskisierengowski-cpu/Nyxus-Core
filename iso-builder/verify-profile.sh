@@ -408,14 +408,14 @@ if (( CT_SHAPES >= 12 )); then
 else
   fail "only ${CT_SHAPES} cursor shapes (expected >=12)"
 fi
-grep -q "HYPRCURSOR_THEME,NYXUS-Aurora" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+grep -q "HYPRCURSOR_THEME,NYXUS-Aurora" "${AIROOT}/etc/skel/.config/hypr/hyprland.lua" \
   && ok "Hyprland HYPRCURSOR_THEME wired" \
   || fail "Hyprland HYPRCURSOR_THEME not set"
 grep -q "gtk-cursor-theme-name=NYXUS-Aurora" "${AIROOT}/etc/skel/.config/gtk-3.0/settings.ini" \
   && ok "GTK3 cursor wired" || fail "GTK3 cursor not wired"
 grep -q "gtk-cursor-theme-name=NYXUS-Aurora" "${AIROOT}/etc/skel/.config/gtk-4.0/settings.ini" \
   && ok "GTK4 cursor wired" || fail "GTK4 cursor not wired"
-grep -q "hyprctl setcursor NYXUS-Aurora" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+grep -q "hyprctl setcursor NYXUS-Aurora" "${AIROOT}/etc/skel/.config/hypr/hyprland.lua" \
   && ok "cursor setcursor wired in user session" \
   || fail "cursor setcursor not wired in hyprland exec-once"
 
@@ -430,9 +430,9 @@ hd "13e. NYXUS Game Mode + Focus Mode"
 [[ -f "${AIROOT}/etc/polkit-1/rules.d/50-nyxus-cpupower.rules" ]] \
   && ok "cpupower polkit rule present" \
   || fail "cpupower polkit rule missing"
-grep -q "nyxus-gamemode toggle" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+grep -q "nyxus-gamemode toggle" "${AIROOT}/etc/skel/.config/hypr/hyprland.lua" \
   && ok "Game Mode hotkey bound" || fail "Game Mode hotkey missing"
-grep -q "nyxus-focusmode toggle" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+grep -q "nyxus-focusmode toggle" "${AIROOT}/etc/skel/.config/hypr/hyprland.lua" \
   && ok "Focus Mode hotkey bound" || fail "Focus Mode hotkey missing"
 
 # ── 13f. NYXUS workspace names + per-workspace wallpapers ─────────────
@@ -445,7 +445,7 @@ hd "13f. NYXUS workspaces"
 [[ -f "${AIROOT}/etc/skel/.config/systemd/user/nyxus-ws-wallpaperd.service" ]] \
   && ok "ws wallpaper systemd unit present" \
   || fail "ws wallpaper systemd unit missing"
-WS_NAMES=$(grep -c '^workspace = ' "${AIROOT}/etc/skel/.config/hypr/hyprland.conf")
+WS_NAMES=$(grep -c '^workspace = ' "${AIROOT}/etc/skel/.config/hypr/hyprland.lua")
 if (( WS_NAMES >= 10 )); then
   ok "${WS_NAMES} named workspaces declared"
 else
@@ -456,7 +456,7 @@ fi
 hd "13g. NYXUS welcome tour"
 [[ -f "${AIROOT}/opt/nyxus/nyxus_welcome.py" ]] \
   && ok "nyxus_welcome.py present" || fail "nyxus_welcome.py missing"
-grep -q "/usr/local/bin/nyxus welcome" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+grep -q "/usr/local/bin/nyxus welcome" "${AIROOT}/etc/skel/.config/hypr/hyprland.lua" \
   && ok "welcome auto-launch wired in user session" \
   || fail "welcome auto-launch not wired in hyprland exec-once"
 
@@ -532,9 +532,9 @@ fi
 grep -Eq '^kdeconnect$' "${PROFILE}/packages.x86_64" \
   && ok "kdeconnect in packages.x86_64" \
   || fail "kdeconnect not in packages.x86_64"
-grep -q 'kdeconnect-indicator' "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+grep -q 'kdeconnect-indicator' "${AIROOT}/etc/skel/.config/hypr/hyprland.lua" \
   && ok "kdeconnect-indicator autostart wired" \
-  || fail "kdeconnect-indicator autostart missing in hyprland.conf"
+  || fail "kdeconnect-indicator autostart missing in hyprland.lua"
 # EasyEffects package + presets + autostart.
 grep -Eq '^easyeffects$' "${PROFILE}/packages.x86_64" \
   && ok "easyeffects in packages.x86_64" \
@@ -548,9 +548,9 @@ else
   fail "easyeffects presets missing (have ${COUNT}, need >=3)"
 fi
 grep -q 'easyeffects --gapplication-service' \
-  "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+  "${AIROOT}/etc/skel/.config/hypr/hyprland.lua" \
   && ok "easyeffects autostart wired" \
-  || fail "easyeffects autostart missing in hyprland.conf"
+  || fail "easyeffects autostart missing in hyprland.lua"
 
 # ── 13l. Tier B (Virt / Containers / Kernel / Gaming / Editors) ──────
 hd "13l. Tier B · Virt + Containers + Kernel + Gaming + Editors"
@@ -1128,8 +1128,8 @@ done
 # ── 13v. Sprint E palette/token compliance (chrome configs) ────────────────
 hd "13v. Sprint E palette/token compliance"
 CHROME_SCAN=(
-  "${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
-  "${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-hyprland-general.conf"
+  "${AIROOT}/etc/skel/.config/hypr/hyprland.lua"
+  "${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-hyprland-general.lua"
   "${AIROOT}/etc/skel/.config/dunst/dunstrc"
   "${AIROOT}/etc/skel/.config/alacritty/alacritty.toml"
   "${AIROOT}/etc/skel/.config/rofi/config.rasi"

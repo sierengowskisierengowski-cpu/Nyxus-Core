@@ -9,7 +9,7 @@
 #  All visual presence (rim-light, glow, shadow, blur) is supplied
 #  by Hyprland's system-wide DARK MIRROR active-border gradient
 #  (white -> off-white #e8edf5 -> light grey #c8ccd6 -> faded
-#  black -> ink black) defined in hyprland.conf. The terminal
+#  black -> ink black) defined in hyprland.lua. The terminal
 #  itself contributes nothing — exactly what the user asked for.
 #
 #  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED

@@ -1,0 +1,90 @@
+-- ============================================================
+--  NYXUS — Hyprland LAYER blur (DARK MIRROR rev 2026-05-11 r7-eww)
+--  ~/.config/hypr/conf.d/nyxus-hyprland-layerblur.lua
+--
+--  Hyprland's `decoration { blur }` block enables blur globally
+--  for *windows* (xdg-toplevels). Layer-shell surfaces (EWW bars,
+--  panels, popovers, notifications, launcher overlays) are
+--  rendered on a separate layer and need explicit `layerrule =
+--  blur` to receive the same frosted-glass effect.
+--
+--  Without this file, the EWW bars/dashboard/powermenu/cheatsheet/OSDs,
+--  dunst notification toasts, and any wlr-layer-shell overlay show as
+--  flat dark glass with NO frost behind them — the wallpaper is visible
+--  through the alpha channel but the colors aren't blurred, breaking the
+--  DARK MIRROR illusion.
+--
+--  As of 2026-05-11 (EWW migration r7-eww) waybar is removed entirely.
+--  Coverage is provided by the explicit per-namespace rules below for
+--  every EWW window declared in eww.yuck, plus the generic `^(nyxus.*)$`
+--  catch-all for any future NYXUS-namespaced layer surface.
+--
+--  Rule order: `blur` enables the effect, `ignorealpha` raises
+--  the threshold so fully-transparent pixels don't get blurred
+--  (otherwise the blur leaks past window edges).
+--
+--  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+-- ============================================================
+
+-- ── EWW bar surfaces (rev r7-eww — canonical, replaces all waybar rules) ──
+-- EWW windows expose distinct namespaces declared in eww.yuck:
+--   nyxus-bar-bottom · nyxus-bar-top · nyxus-bar-left · nyxus-bar-right
+--   nyxus-dashboard · nyxus-powermenu · nyxus-cheatsheet
+--   nyxus-osd-volume · nyxus-osd-brightness · nyxus-osd-mic · nyxus-osd
+--   nyxus-screensaver
+-- Each gets the same Dual-Kawase blur + alpha-clip.
+layerrule = blur,            nyxus-bar-bottom
+layerrule = ignorealpha 0.2, nyxus-bar-bottom
+layerrule = blur,            nyxus-bar-top
+layerrule = ignorealpha 0.2, nyxus-bar-top
+layerrule = blur,            nyxus-bar-left
+layerrule = ignorealpha 0.2, nyxus-bar-left
+layerrule = blur,            nyxus-bar-right
+layerrule = ignorealpha 0.2, nyxus-bar-right
+layerrule = blur,            nyxus-dashboard
+layerrule = ignorealpha 0.2, nyxus-dashboard
+layerrule = blur,            nyxus-powermenu
+layerrule = ignorealpha 0.2, nyxus-powermenu
+layerrule = blur,            nyxus-cheatsheet
+layerrule = ignorealpha 0.2, nyxus-cheatsheet
+layerrule = blur,            nyxus-osd-volume
+layerrule = ignorealpha 0.2, nyxus-osd-volume
+layerrule = blur,            nyxus-osd-brightness
+layerrule = ignorealpha 0.2, nyxus-osd-brightness
+layerrule = blur,            nyxus-osd-mic
+layerrule = ignorealpha 0.2, nyxus-osd-mic
+layerrule = blur,            nyxus-osd
+layerrule = ignorealpha 0.2, nyxus-osd
+layerrule = blur,            nyxus-screensaver
+layerrule = ignorealpha 0.2, nyxus-screensaver
+
+-- ── Dunst notification toasts ─────────────────────────────────────────────
+layerrule = blur,            notifications
+layerrule = ignorealpha 0.2, notifications
+
+-- ── Wofi / launcher / rofi overlays ───────────────────────────────────────
+layerrule = blur,            launcher
+layerrule = ignorealpha 0.2, launcher
+layerrule = blur,            wofi
+layerrule = ignorealpha 0.2, wofi
+layerrule = blur,            rofi
+layerrule = ignorealpha 0.2, rofi
+
+-- ── Generic NYXUS layer namespaces (catch-all for future surfaces) ────────
+layerrule = blur,            ^(nyxus.*)$
+layerrule = ignorealpha 0.2, ^(nyxus.*)$
+
+-- ── Hyprland's own popups (workspace switcher, etc.) ──────────────────────
+layerrule = blur,            hyprland
+layerrule = ignorealpha 0.2, hyprland
+
+-- ── Logout / lock / power-menu overlays ───────────────────────────────────
+layerrule = blur,            logout_dialog
+layerrule = ignorealpha 0.2, logout_dialog
+layerrule = blur,            hyprlock
+
+-- ── GTK4 popovers that promote to layer surfaces ──────────────────────────
+-- (libadwaita popovers fall back to xdg-popup, but some compositors
+--  treat them as layer-shell — rule is a safe no-op if not matched.)
+layerrule = blur,            gtk4-layer-shell
+layerrule = blur,            gtk-layer-shell

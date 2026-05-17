@@ -1,0 +1,423 @@
+-- ─────────────────────────────────────────────────────────────────────────────
+-- NYXUS Hyprland Config — Signature Edition
+-- © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+-- ─────────────────────────────────────────────────────────────────────────────
+
+monitor=,preferred,auto,1
+
+-- ── Autostart ────────────────────────────────────────────────────────────────
+-- A2 FIX (2026-05-12): nyxus-bootstrap MUST be started before any
+-- nyxus-wait-bootstrap-gated line, otherwise the marker file
+-- ~/.nyxus/.bootstrapped never gets written and every gated exec-once
+-- below blocks for 120s then runs against a half-installed system.
+-- Run unconditionally (it self-gates via marker + version check).
+exec-once = nyxus-bootstrap >>/tmp/nyxus-bootstrap.log 2>&1
+-- EWW (ElKowar's Wacky Widgets) replaces waybar as of 2026-05-11.
+-- Single source of truth: start the daemon only if it isn't already
+-- running, so the optional `nyxus-eww.service` user unit can coexist
+-- without colliding. `nyxus-eww-launch` then waits for the IPC socket
+-- and opens every bar listed in ~/.config/eww/nyxus.conf.
+exec-once = nyxus-wait-bootstrap sh -c 'pidof eww >/dev/null || eww daemon'
+exec-once = nyxus-wait-bootstrap nyxus-eww-launch
+-- NYXUS dock daemon — feeds live state (pinned + running + badges + trash)
+-- to the eww `dock` window. Auto-restarts via the user systemd unit.
+exec-once = systemctl --user start nyxus-dockd.service
+exec-once = systemctl --user start nyxus-hotkeyd.service
+exec-once = systemctl --user start nyxus-snapd.service
+exec-once = systemctl --user start nyxus-missiond.service
+exec-once = systemctl --user start nyxus-qsd.service
+
+-- ── Tier A polish (rev 2026-05-14): KDE Connect tray + EasyEffects EQ ──
+-- kdeconnectd: device discovery & file/text share daemon (NYXUS Drop)
+-- kdeconnect-indicator: tray icon w/ device list
+-- easyeffects --gapplication-service: keeps the audio pipeline pre-warmed
+-- so SoundPage's preset switcher applies instantly.
+exec-once = /usr/lib/kdeconnectd
+exec-once = kdeconnect-indicator
+exec-once = easyeffects --gapplication-service
+
+exec-once = hypridle
+exec-once = dunst
+exec-once = sh -c 'sleep 1; for p in $(pgrep -x hyprlock 2>/dev/null); do kill "$p" 2>/dev/null || true; done'
+exec-once = /usr/local/bin/nyxus-wallpaper-autostart &
+exec-once = systemctl --user start nyxus-ws-wallpaperd.service
+exec-once = nyxus-wait-bootstrap sh -c 'hyprctl setcursor NYXUS-Aurora 24'
+exec-once = /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+
+-- ── NYXUS Native GTK4 Apps — launch at startup ───────────────────────────────
+-- SysMon is on-click only (waybar icon launches it). No auto-launch on workspace 6.
+-- NYXUS Home — dashboard on named workspace "0" (its OWN page, completely
+-- outside the numbered 1-10 range so the user keeps every numbered slot free
+-- for future pages they're planning to add).
+-- Pin the home window to workspace name:0 no matter where it spawns from.
+exec-once = [workspace name:0 silent] sh -c 'sleep 1 && ~/.local/bin/nyxus-home'
+
+-- ── First-Boot Welcome Wizard (rev r9-eww · Wave 2 / Sprint 2a) ─────────────
+-- Runs ONCE on first interactive login. The launcher script self-gates
+-- via ~/.nyxus/welcome-done — once that file exists, this becomes a no-op.
+-- Quietly exits in 2s on subsequent boots (no startup-time penalty).
+exec-once = nyxus-wait-bootstrap sh -c '[ -f "$HOME/.config/nyxus/welcome.done" ] || (sleep 3; /usr/local/bin/nyxus welcome)'
+
+-- ── NYXUS Floating Widgets — uncomment to pin to desktop ─────────────────────
+-- exec-once = /usr/local/bin/nyxus-weather &
+-- exec-once = python3 ~/.nyxus/nyxus_stickies.py &
+-- exec-once = /usr/local/bin/nyxus-notepad &
+
+-- ── Environment ──────────────────────────────────────────────────────────────
+env = GTK_THEME,adw-gtk3-dark
+env = XCURSOR_SIZE,24
+env = XCURSOR_THEME,NYXUS-Aurora
+env = HYPRCURSOR_THEME,NYXUS-Aurora
+env = HYPRCURSOR_SIZE,24
+env = QT_AUTO_SCREEN_SCALE_FACTOR,1
+env = MOZ_ENABLE_WAYLAND,1
+env = GDK_BACKEND,wayland,x11
+env = SDL_VIDEODRIVER,wayland
+
+-- ── NVIDIA hybrid-graphics env (LOCKED · 2026-05-10 · MSI GS77 i9+RTX3060) ──
+-- Per Hyprland Nvidia wiki. Required for proper Wayland + Electron support
+-- on Intel-iGPU + NVIDIA-dGPU hybrid laptops. Pairs with the i915-first
+-- MODULES order in /etc/mkinitcpio.conf — both must be present.
+env = LIBVA_DRIVER_NAME,nvidia
+env = __GLX_VENDOR_LIBRARY_NAME,nvidia
+env = ELECTRON_OZONE_PLATFORM_HINT,auto
+env = NVD_BACKEND,direct
+
+-- ── Input ────────────────────────────────────────────────────────────────────
+input {
+    kb_layout    = us
+    follow_mouse = 1
+    sensitivity  = 0
+
+    touchpad {
+        natural_scroll       = true
+        disable_while_typing = true
+        tap-to-click         = true
+    }
+}
+
+-- ── General ──────────────────────────────────────────────────────────────────
+general {
+    gaps_in     = 6
+    gaps_out    = 14
+    border_size = 3
+
+    -- NYXUS Sprint E Total Identity active glow (locked rev 2026-05-07 r13)
+    -- System-wide rim-light: pure white -> off-white -> light grey ->
+    -- faded black -> matte ink. No legacy accent colors; Sprint E palette only.
+    -- Slow 240-frame revolution = lazy starlight breathing around the
+    -- focused window, matching the dark-glass app chrome.
+    col.active_border   = rgba(f4ead5ff) rgba(f4ead5cc) rgba(1a1a28ff) rgba(050308ff) rgba(000000ff) 135deg
+    col.inactive_border = rgba(e8edf522) rgba(c8ccd611) rgba(00000044) 135deg
+
+    layout           = dwindle
+    resize_on_border = true
+}
+
+-- ── Decoration ───────────────────────────────────────────────────────────────
+decoration {
+    rounding = 12
+
+    -- Inactive opacity kept light so stacked windows stay legible. The old
+    -- 0.88 combined with passes=3 below caused the "blurred soup" effect
+    -- where browser tabs underneath an active window became unreadable.
+    -- HIGH BLUR mode (rev 2026-05-06w): big Dual-Kawase kernel + 4 passes
+    -- for deep frosted-glass behind every window. Inactive opacity dropped
+    -- to 0.85 so the cosmic wallpaper reads strongly through stacked windows.
+    active_opacity   = 0.96
+    inactive_opacity = 0.85
+
+    blur {
+        enabled           = true
+        size              = 14     # kernel radius per pass — HIGH
+        passes            = 4      # 4 passes = deep frosted glass
+        new_optimizations = true
+        xray              = true   # sample wallpaper only, no smear
+        noise             = 0.015
+        contrast          = 1.05   # crisp text through deep frost
+        brightness        = 0.92
+        vibrancy          = 0.30   # cool cosmic shimmer
+        vibrancy_darkness = 0.10
+        popups            = true
+        popups_ignorealpha = 0.20
+        ignore_opacity    = true   # blur even fully-opaque windows
+    }
+
+    -- Sprint E Total Identity drop shadow — pure ink, no bloom, no color.
+    -- Sits behind every window as real shadow on the wallpaper.
+    shadow {
+        enabled        = true
+        range          = 36
+        render_power   = 3
+        sharp          = false
+        color          = rgba(000000aa)
+        color_inactive = rgba(00000033)
+        offset         = 2 4
+    }
+}
+
+-- ── Animations ───────────────────────────────────────────────────────────────
+animations {
+    enabled = true
+
+    -- ── Spring-approximating beziers (rev r15 · 2026-05-10) ─────────────
+    -- Hyprlang has no native spring curves (those landed in the new Lua
+    -- API in 0.55); these beziers fake spring physics by using overshoot
+    -- control points, so windows "land" onto the desktop with a subtle
+    -- settle instead of a flat ease-out. Tuned conservatively to stay on
+    -- the Sprint E Total Identity side of polished — no clownish bounce.
+    bezier = nyx-spring, 0.34, 1.36, 0.64, 1.0
+    -- ↑ gentle back.out — ~6% overshoot, settles in one motion
+    bezier = nyx-glass,  0.16, 1.0,  0.2,  1.0
+    -- ↑ critically-damped settle — feels like landing on glass, no bounce
+    bezier = nyxus,      0.05, 0.9,  0.1,  1.05
+    bezier = nyx-out,    0.4,  0.0,  1.0,  1.0
+    bezier = overshoot,  0.1,  0.85, 0.1,  1.18
+    bezier = nyx-soft,   0.25, 0.46, 0.45, 0.94
+    bezier = nyx-sharp,  0.16, 1.0,  0.3,  1.0
+    bezier = linear,     0.0,  0.0,  1.0,  1.0
+
+    animation = windows,          1, 4,  nyx-glass,  slide
+    animation = windowsIn,        1, 5,  nyx-spring, popin 92%
+    animation = windowsOut,       1, 3,  nyx-out,    popin 60%
+    animation = windowsMove,      1, 4,  nyx-glass,  slide
+    animation = border,           1, 10, default
+    animation = borderangle,      1, 240, linear, loop
+    animation = fade,             1, 5,  nyx-out
+    animation = fadeIn,           1, 4,  nyx-glass
+    animation = fadeOut,          1, 3,  nyx-out
+    animation = workspaces,       1, 5,  nyx-spring, slidefade 15%
+    animation = specialWorkspace, 1, 5,  nyx-glass,  slidevert
+}
+
+-- ── Layout ───────────────────────────────────────────────────────────────────
+-- rev r8-eww 2026-05-11 — Hyprland 0.55+ removed `dwindle:pseudotile`
+-- (the pseudotile *dispatcher* still exists; only the config option was
+-- dropped). `preserve_split` survives. Empty `master {}` block also
+-- removed — 0.55+ rejects empty plugin blocks with a parse error.
+dwindle {
+    preserve_split = true
+}
+
+-- ── Misc ─────────────────────────────────────────────────────────────────────
+-- rev r8-eww 2026-05-11 — Hyprland 0.55+ removed `misc:vfr` (VFR is now
+-- always-on, controlled per-monitor). Other options survive.
+misc {
+    force_default_wallpaper  = 0
+    disable_hyprland_logo    = true
+    disable_splash_rendering = true
+    mouse_move_enables_dpms  = true
+    key_press_enables_dpms   = true
+    focus_on_activate        = true
+}
+
+-- Apps come to front when clicked via misc.focus_on_activate=true (above).
+-- Note: bringactivetotop is NOT a valid hyprland windowrule keyword.
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- KEY BINDINGS
+-- ─────────────────────────────────────────────────────────────────────────────
+$mod = SUPER
+
+-- ── Apps ─────────────────────────────────────────────────────────────────────
+bind = $mod,       Return,      exec, python3 ~/.nyxus/nyxus_terminal.py
+bind = $mod SHIFT, Return,      exec, alacritty
+bind = $mod,       D,       exec, rofi -show drun -theme ~/.config/rofi/startmenu.rasi
+bind = $mod SHIFT, D,       exec, rofi -show run
+bind = $mod,       Tab,     exec, rofi -show window -theme ~/.config/rofi/nyxus.rasi
+bind = $mod,       E,       exec, nautilus
+bind = $mod,       B,       exec, firefox
+
+-- ── Lock / logout ─────────────────────────────────────────────────────────────
+bind = $mod,       L,       exec, hyprlock
+bind = $mod SHIFT, E,       exec, wlogout --protocol layer-shell --layout ~/.config/wlogout/layout --css ~/.config/wlogout/style.css -b 3 -c 0 -r 0 -L 0
+bind = $mod SHIFT, M,       exit
+
+-- ── Window management ────────────────────────────────────────────────────────
+bind = $mod,       Q,       killactive
+bind = $mod,       V,       togglefloating
+bind = $mod,       P,       pseudo
+-- rev r8-eww 2026-05-11 — `togglesplit` dispatcher removed in Hyprland
+-- 0.55+. The dwindle layout still alternates split direction
+-- automatically; if you want explicit control, use `layoutmsg, togglesplit`
+-- (now namespaced under the layout dispatcher).
+bind = $mod,       T,       layoutmsg, togglesplit
+bind = $mod,       F,       fullscreen, 0
+bind = $mod SHIFT, F,       fullscreen, 1
+bind = $mod SHIFT, C,       centerwindow
+
+-- ── NYXUS Phase 2 — launcher / powermenu / screenshot / doctor ───────────────
+bind = $mod,       Space,   exec, python3 ~/.nyxus/nyxus_launcher.py
+bind = $mod,       Escape,  exec, eww open --toggle powermenu
+bind = $mod,       grave,   exec, eww open --toggle dashboard
+bind = ,           Print,   exec, python3 ~/.nyxus/nyxus_screenshot.py region
+bind = SHIFT,      Print,   exec, python3 ~/.nyxus/nyxus_screenshot.py
+bind = $mod SHIFT, H,       exec, alacritty -e python3 ~/.nyxus/nyxus_doctor.py
+-- ── NYXUS Security Center ────────────────────────────────────────────────────
+-- Super+Shift+Y       opens the full Security Center (firewall, AV,
+--                     encryption, account, audit, panic).  (Super+Shift+S
+--                     is reserved for the Hyprland scratchpad.)
+-- Super+Ctrl+Alt+L    PANIC LOCKDOWN — lock screen + clear clipboard
+--                     + dismount removable media + flush DNS cache.
+bind = $mod SHIFT, Y,       exec, sh -c 'command -v nyxus-security >/dev/null && nyxus-security || python3 ~/.nyxus/nyxus_security.py'
+bind = $mod CTRL ALT, L,    exec, sh -c 'command -v nyxus-security >/dev/null && nyxus-security --panic || python3 ~/.nyxus/nyxus_security.py --panic'
+bind = $mod,       slash,   exec, eww open --toggle cheatsheet
+bind = $mod SHIFT, slash,   exec, eww open --toggle cheatsheet
+
+-- ── NYXUS Sprint 1 — EWW flyouts (rev r9-eww, 2026-05-11) ────────────────────
+bind = $mod,       A,       exec, eww open --toggle quicksettings
+bind = $mod,       N,       exec, eww open --toggle notifications
+bind = $mod,       W,       exec, eww open --toggle wifi
+bind = $mod,       M,       exec, eww open --toggle mixer
+bind = $mod,       C,       exec, eww open --toggle calendar
+bind = $mod SHIFT, B,       exec, eww open --toggle bluetooth
+
+-- ── Focus (arrow keys + WASD-style) ──────────────────────────────────────────
+bind = $mod, left,  movefocus, l
+bind = $mod, right, movefocus, r
+bind = $mod, up,    movefocus, u
+bind = $mod, down,  movefocus, d
+bind = $mod, H,     movefocus, l
+bind = $mod, K,     movefocus, u
+bind = $mod, semicolon, movefocus, r
+
+-- ── Move windows ─────────────────────────────────────────────────────────────
+bind = $mod SHIFT, left,  movewindow, l
+bind = $mod SHIFT, right, movewindow, r
+bind = $mod SHIFT, up,    movewindow, u
+bind = $mod SHIFT, down,  movewindow, d
+
+-- ── Resize ───────────────────────────────────────────────────────────────────
+bind = $mod CTRL, left,  resizeactive, -40  0
+bind = $mod CTRL, right, resizeactive,  40  0
+bind = $mod CTRL, up,    resizeactive,   0 -40
+bind = $mod CTRL, down,  resizeactive,   0  40
+
+-- ── Workspaces ───────────────────────────────────────────────────────────────
+bind = $mod, 1, workspace, 1
+bind = $mod, 2, workspace, 2
+bind = $mod, 3, workspace, 3
+bind = $mod, 4, workspace, 4
+bind = $mod, 5, workspace, 5
+bind = $mod, 6, workspace, 6
+bind = $mod, 7, workspace, 7
+bind = $mod, 8, workspace, 8
+bind = $mod, 9, workspace, 9
+bind = $mod, 0, workspace, 10
+
+bind = $mod SHIFT, 1, movetoworkspace, 1
+bind = $mod SHIFT, 2, movetoworkspace, 2
+bind = $mod SHIFT, 3, movetoworkspace, 3
+bind = $mod SHIFT, 4, movetoworkspace, 4
+bind = $mod SHIFT, 5, movetoworkspace, 5
+bind = $mod SHIFT, 6, movetoworkspace, 6
+bind = $mod SHIFT, 7, movetoworkspace, 7
+bind = $mod SHIFT, 8, movetoworkspace, 8
+bind = $mod SHIFT, 9, movetoworkspace, 9
+bind = $mod SHIFT, 0, movetoworkspace, 10
+
+bind = $mod, mouse_down, workspace, e+1
+bind = $mod, mouse_up,   workspace, e-1
+
+-- ── Scratchpad ────────────────────────────────────────────────────────────────
+bind = $mod,       S, togglespecialworkspace, magic
+bind = $mod SHIFT, S, movetoworkspace,        special:magic
+
+-- ── Mouse ────────────────────────────────────────────────────────────────────
+bindm = $mod, mouse:272, movewindow
+bindm = $mod, mouse:273, resizewindow
+
+-- ── Media / Volume ───────────────────────────────────────────────────────────
+bind = , XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ && ~/.config/eww/scripts/osd-show.sh osd-volume
+bind = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && ~/.config/eww/scripts/osd-show.sh osd-volume
+bind = , XF86AudioMute,        exec, wpctl set-mute   @DEFAULT_AUDIO_SINK@ toggle && ~/.config/eww/scripts/osd-show.sh osd-volume
+bind = , XF86AudioMicMute,     exec, wpctl set-mute   @DEFAULT_AUDIO_SOURCE@ toggle && ~/.config/eww/scripts/osd-show.sh osd-mic
+bind = , XF86AudioPlay,        exec, playerctl play-pause
+bind = , XF86AudioNext,        exec, playerctl next
+bind = , XF86AudioPrev,        exec, playerctl previous
+
+-- ── Brightness ───────────────────────────────────────────────────────────────
+bind = , XF86MonBrightnessUp,   exec, brightnessctl set 10%+ && ~/.config/eww/scripts/osd-show.sh osd-brightness
+bind = , XF86MonBrightnessDown, exec, brightnessctl set 10%- && ~/.config/eww/scripts/osd-show.sh osd-brightness
+
+-- ── Screenshot ───────────────────────────────────────────────────────────────
+-- Print / SHIFT+Print are bound earlier (NYXUS Phase 2 block) to the Python
+-- screenshot helper. Keep one extra binding for the hyprshot fallback under
+-- a non-conflicting chord ($mod SHIFT W) — useful before the Python apps
+-- are installed on a fresh first boot.
+bind = $mod SHIFT, W,    exec, hyprshot -m region
+
+-- ── Wallpaper (permanent — SIERENGOWSKI) ──────────────────────────────────────
+-- Set via exec-once at startup; use Super+Alt+W to reload if needed
+bind = $mod ALT, W, exec, /usr/local/bin/nyxus wallpaper_studio &
+
+-- ── Game Mode / Focus Mode toggles ────────────────────────────────────────────
+bind = $mod ALT, G, exec, /usr/local/bin/nyxus-gamemode toggle
+bind = $mod ALT, F, exec, /usr/local/bin/nyxus-focusmode toggle
+
+-- ── Named workspaces (NYXUS conventional layout) ──────────────────────────────
+workspace = 1,  defaultName:Main
+workspace = 2,  defaultName:Web
+workspace = 3,  defaultName:Code
+workspace = 4,  defaultName:Chat
+workspace = 5,  defaultName:Media
+workspace = 6,  defaultName:Game
+workspace = 7,  defaultName:Files
+workspace = 8,  defaultName:System
+workspace = 9,  defaultName:Notes
+workspace = 10, defaultName:Misc
+bind = $mod, W, exec, python3 ~/.nyxus/nyxus_wallpaper_studio.py
+
+-- ── Quick Settings panel — positioned by the Python script via hyprctl IPC ────
+-- (window rules handled at runtime; no static rules needed here)
+
+-- ── NYXUS per-app window rules ───────────────────────────────────────────────
+-- MOVED to ~/.config/hypr/conf.d/nyxus-hyprland-rules.lua (sourced at end of
+-- this file). The unified `windowrule =` form misparses `bordersize N` and
+-- certain rule combos in Hyprland 0.51+ — every line below this point would
+-- cascade into 30+ "invalid field" errors on screen. The shard uses the
+-- current `windowrule =` keyword which parses cleanly on every version.
+-- DO NOT re-add per-app rules here — they belong in the shard.
+
+-- ── Chromium / Electron translucency (LOCKED · 2026-05-10 · Sprint E Total Identity) ─────
+-- Apply system-level opacity + Dual-Kawase blur to every Chromium-class and
+-- Electron-class window. The compositor handles this — apps don't need to
+-- know they're being made translucent. Pairs with the triple-black surface
+-- stack (BLACK_SMOKE / INK / VOID) so chromium chrome blends into the
+-- wallpaper/wallpaper-blur layer instead of slamming a solid white panel
+-- over everything.
+--
+-- Numbers: active 0.92 / inactive 0.82 — slightly more opaque than the
+-- wlogout/popover pebbles because a browser tab needs to stay readable.
+-- If text becomes hard to read on a busy wallpaper, raise these toward 1.0.
+windowrule = opacity 0.92 0.82, class:^([Cc]hromium|[Bb]rave-browser|[Gg]oogle-chrome|[Mm]icrosoft-edge|[Vv]ivaldi-stable|[Ee]lectron|VSCodium|[Cc]ode|code-oss|code-url-handler|discord|vesktop|[Ss]lack|obsidian|[Nn]otion|spotify)$
+windowrule = noshadow, class:^([Cc]hromium|[Bb]rave-browser|[Gg]oogle-chrome|[Mm]icrosoft-edge|[Vv]ivaldi-stable|[Ee]lectron|VSCodium|[Cc]ode|code-oss|code-url-handler|discord|vesktop|[Ss]lack|obsidian|[Nn]otion|spotify)$
+-- Note: window-level blur is enabled globally via `decoration { blur { ... } }`
+-- above — these rules just adjust opacity. To opt OUT of blur for a specific
+-- class, add  `windowrule = noblur, class:^foo$`  here.
+
+-- ── Layer blur ───────────────────────────────────────────────────────────────
+-- REMOVED: previously had `layerrule = blur, namespace:^waybar$` etc. but
+-- Hyprland 0.54.3 mis-parses the `namespace:^X$` matcher form ("invalid field
+-- blur: missing a value"). The bare-regex form is the only working syntax,
+-- and the nyxus-hyprland-layerblur.lua shard already covers waybar / rofi /
+-- launcher / notifications / wlogout / hyprlock with the correct syntax —
+-- duplicating here just creates 4 more red errors on screen for nothing.
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- NYXUS modular configs (Sprint E Total Identity rev 2026-05-07 r14)
+-- These six files live in ~/.config/hypr/conf.d/ and carry the locked
+-- Sprint E Total Identity window rules, opacity, blur tuning, fog daemon hooks,
+-- layer-shell blur, and general behavior. Without these `source =` lines,
+-- the modular confs are orphaned and Hyprland never applies the NYXUS
+-- transparency / frost / opacity policy — apps render flat and opaque.
+-- ─────────────────────────────────────────────────────────────────────────────
+require("conf.d.nyxus-hyprland-general")
+require("conf.d.nyxus-hyprland-rules")
+require("conf.d.nyxus-hyprland-opacity")
+require("conf.d.nyxus-hyprland-blur")
+require("conf.d.nyxus-hyprland-layerblur")
+require("conf.d.nyxus-hyprland-fog")
+require("conf.d.nyxus-hyprland-mission")

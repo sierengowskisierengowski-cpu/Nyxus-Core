@@ -282,30 +282,30 @@ fi
 step "3/6 · INSTALL Hyprland window rules (13-rule baseline) + compositor blur kernel"
 HYPR_DIR="$REAL_HOME/.config/hypr"
 HYPR_CONF_D="$HYPR_DIR/conf.d"
-HYPR_RULES="$HYPR_CONF_D/nyxus-hyprland-rules.conf"
-HYPR_BLUR="$HYPR_CONF_D/nyxus-hyprland-blur.conf"
-HYPR_OPACITY="$HYPR_CONF_D/nyxus-hyprland-opacity.conf"
-HYPR_GENERAL="$HYPR_CONF_D/nyxus-hyprland-general.conf"
+HYPR_RULES="$HYPR_CONF_D/nyxus-hyprland-rules.lua"
+HYPR_BLUR="$HYPR_CONF_D/nyxus-hyprland-blur.lua"
+HYPR_OPACITY="$HYPR_CONF_D/nyxus-hyprland-opacity.lua"
+HYPR_GENERAL="$HYPR_CONF_D/nyxus-hyprland-general.lua"
 HYPR_FROST_OLD="$HYPR_CONF_D/nyxus-seattle-frost.conf"
-HYPR_MAIN="$HYPR_DIR/hyprland.conf"
-SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf'
-BLUR_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf'
-OPACITY_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf'
-GENERAL_SOURCE_LINE='source = ~/.config/hypr/conf.d/nyxus-hyprland-general.conf'
+HYPR_MAIN="$HYPR_DIR/hyprland.lua"
+SOURCE_LINE='require("conf.d.nyxus-hyprland-rules")'
+BLUR_SOURCE_LINE='require("conf.d.nyxus-hyprland-blur")'
+OPACITY_SOURCE_LINE='require("conf.d.nyxus-hyprland-opacity")'
+GENERAL_SOURCE_LINE='require("conf.d.nyxus-hyprland-general")'
 
 mkdir -p "$HYPR_CONF_D"
 chown -R "$REAL_USER:$REAL_USER" "$HYPR_DIR"
 
 # r15 cleanup — remove the Seattle Frost decoration conf that whitewashed
 # the system (brightness=1.4 + opacity 0.85/0.70 made everything look milky)
-# and stripped its source line from hyprland.conf so reload picks up clean.
+# and stripped its source line from hyprland.lua so reload picks up clean.
 if [[ -f "$HYPR_FROST_OLD" ]]; then
   rm -f "$HYPR_FROST_OLD"
   ok "removed stale $HYPR_FROST_OLD  (was whitewashing the screen)"
 fi
 if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-seattle-frost.conf" "$HYPR_MAIN"; then
   sed -i '/nyxus-seattle-frost.conf/d;/Seattle Frost decoration/d' "$HYPR_MAIN"
-  ok "stripped Seattle Frost source line from hyprland.conf"
+  ok "stripped Seattle Frost source line from hyprland.lua"
 fi
 
 # NYXUS builds use the unified `windowrule` / `layerrule` syntax.
@@ -320,43 +320,43 @@ if [[ -f "$HYPR_RULES_OLD" ]]; then
 fi
 if [[ -f "$HYPR_MAIN" ]] && grep -qF "nyxus-windowrules.conf" "$HYPR_MAIN"; then
   sed -i '/nyxus-windowrules.conf/d' "$HYPR_MAIN"
-  ok "stripped legacy nyxus-windowrules.conf source line from hyprland.conf"
+  ok "stripped legacy nyxus-windowrules.conf source line from hyprland.lua"
 fi
 
 # rev r22 — GENERIC strip of ALL legacy non-conf.d source lines from
-# hyprland.conf. Old ISO builds shipped any of:
-#     source = ~/.config/hypr/nyxus-hyprland-general.conf
-#     source = ~/.config/hypr/nyxus-hyprland-blur.conf
-#     source = ~/.config/hypr/nyxus-hyprland-opacity.conf
-#     source = ~/.config/hypr/nyxus-hyprland-rules.conf
-#     source = ~/.config/hypr/nyxus-hyprland-layerblur.conf
-#     source = ~/.config/hypr/nyxus-hyprland-fog.conf
+# hyprland.lua. Old ISO builds shipped any of:
+#     source = ~/.config/hypr/nyxus-hyprland-general.lua
+#     source = ~/.config/hypr/nyxus-hyprland-blur.lua
+#     source = ~/.config/hypr/nyxus-hyprland-opacity.lua
+#     source = ~/.config/hypr/nyxus-hyprland-rules.lua
+#     source = ~/.config/hypr/nyxus-hyprland-layerblur.lua
+#     source = ~/.config/hypr/nyxus-hyprland-fog.lua
 # all WITHOUT the conf.d/ subdir. Those files no longer exist at that path
 # and Hyprland throws "globbing error: found no match" on every reload,
 # blocking the entire chrome (EWW styling, opacity, blur) from loading.
-# rev r22 fix: strip ANY `source = ~/.config/hypr/nyxus-hyprland-*.conf`
+# rev r22 fix: strip ANY `source = ~/.config/hypr/nyxus-hyprland-*.lua`
 # without `conf.d/` regardless of suffix — catches future variants too.
 if [[ -f "$HYPR_MAIN" ]]; then
   before=$(wc -l < "$HYPR_MAIN")
-  # Match `source = ~/.config/hypr/nyxus-hyprland-<anything>.conf` BUT
+  # Match `source = ~/.config/hypr/nyxus-hyprland-<anything>.lua` BUT
   # only when the path does NOT contain `conf.d/`. Allows optional spaces
   # around `=` and trailing whitespace.
-  sed -i -E '/^[[:space:]]*source[[:space:]]*=[[:space:]]*~\/\.config\/hypr\/nyxus-hyprland-[^\/]+\.conf[[:space:]]*$/d' "$HYPR_MAIN"
+  sed -i -E '/^[[:space:]]*source[[:space:]]*=[[:space:]]*~\/\.config\/hypr\/nyxus-hyprland-[^\/]+\.lua[[:space:]]*$/d' "$HYPR_MAIN"
   after=$(wc -l < "$HYPR_MAIN")
   legacy_stripped=$((before - after))
   if (( legacy_stripped > 0 )); then
-    ok "stripped $legacy_stripped legacy non-conf.d source line(s) from hyprland.conf — globbing errors fixed (rev r22)"
+    ok "stripped $legacy_stripped legacy non-conf.d source line(s) from hyprland.lua — globbing errors fixed (rev r22)"
   fi
 fi
 
-# rev r19 — overwrite the user's hyprland.conf with the canonical version
+# rev r19 — overwrite the user's hyprland.lua with the canonical version
 # IF it still references the old non-conf.d paths (defensive belt-and-braces
 # in case the per-line strip above missed something the user hand-edited).
-# We do NOT touch hyprland.conf if it already looks clean — preserves any
+# We do NOT touch hyprland.lua if it already looks clean — preserves any
 # custom keybinds the user has added.
 if [[ -f "$HYPR_MAIN" ]] && grep -qE "^\s*source\s*=\s*~/.config/hypr/nyxus-hyprland-" "$HYPR_MAIN"; then
   cp -f "$HYPR_MAIN" "${HYPR_MAIN}.bak.$(date +%s)" 2>/dev/null || true
-  if curl -fsSL --max-time 30 "$PROD/hyprland.conf" -o "$HYPR_MAIN.new" 2>/dev/null; then
+  if curl -fsSL --max-time 30 "$PROD/hyprland.lua" -o "$HYPR_MAIN.new" 2>/dev/null; then
     mv -f "$HYPR_MAIN.new" "$HYPR_MAIN"
     chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
     chmod 644 "$HYPR_MAIN"
@@ -364,18 +364,18 @@ if [[ -f "$HYPR_MAIN" ]] && grep -qE "^\s*source\s*=\s*~/.config/hypr/nyxus-hypr
   fi
 fi
 
-if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-rules.conf" -o "$HYPR_RULES"; then
+if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-rules.lua" -o "$HYPR_RULES"; then
   chown "$REAL_USER:$REAL_USER" "$HYPR_RULES"
   chmod 644 "$HYPR_RULES"
   ok "wrote $HYPR_RULES  ($(grep -c '^windowrule' "$HYPR_RULES") rules — canonical baseline)"
 else
-  fail "could not download nyxus-hyprland-rules.conf — apps may still tile-stretch"
+  fail "could not download nyxus-hyprland-rules.lua — apps may still tile-stretch"
 fi
 
-# Ensure hyprland.conf sources the rules file (idempotent — only appends if missing)
+# Ensure hyprland.lua requires the rules module (idempotent — only appends if missing)
 if [[ -f "$HYPR_MAIN" ]]; then
-  if grep -qF "nyxus-hyprland-rules.conf" "$HYPR_MAIN"; then
-    ok "hyprland.conf already sources nyxus-hyprland-rules.conf"
+  if grep -qF "conf.d.nyxus-hyprland-rules" "$HYPR_MAIN"; then
+    ok "hyprland.lua already requires conf.d.nyxus-hyprland-rules"
   else
     {
       echo
@@ -383,10 +383,10 @@ if [[ -f "$HYPR_MAIN" ]]; then
       echo "$SOURCE_LINE"
     } >> "$HYPR_MAIN"
     chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
-    ok "appended source line to $HYPR_MAIN"
+    ok "appended require line to $HYPR_MAIN"
   fi
 else
-  warn "$HYPR_MAIN not found — drop this line into your hyprland.conf manually:"
+  warn "$HYPR_MAIN not found — add this line to your hyprland.lua manually:"
   printf "      ${DIM}%s${R}\n" "$SOURCE_LINE"
 fi
 
@@ -395,17 +395,17 @@ fi
 # yet — that arrives with feature 2 (per-app opacity rules) and feature 3
 # (chrome.py rgba backgrounds). Shipping it standalone first proves Hyprland
 # parses a decoration{} block without the brightness=1.4 whitewash bug.
-if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-blur.conf" -o "$HYPR_BLUR"; then
+if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-blur.lua" -o "$HYPR_BLUR"; then
   chown "$REAL_USER:$REAL_USER" "$HYPR_BLUR"
   chmod 644 "$HYPR_BLUR"
   ok "wrote $HYPR_BLUR  (compositor blur kernel — no opacity yet)"
 else
-  warn "could not download nyxus-hyprland-blur.conf — frosted-white feature 1 skipped"
+  warn "could not download nyxus-hyprland-blur.lua — frosted-white feature 1 skipped"
 fi
 
 if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_BLUR" ]]; then
-  if grep -qF "nyxus-hyprland-blur.conf" "$HYPR_MAIN"; then
-    ok "hyprland.conf already sources nyxus-hyprland-blur.conf"
+  if grep -qF "conf.d.nyxus-hyprland-blur" "$HYPR_MAIN"; then
+    ok "hyprland.lua already requires conf.d.nyxus-hyprland-blur"
   else
     {
       echo
@@ -413,7 +413,7 @@ if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_BLUR" ]]; then
       echo "$BLUR_SOURCE_LINE"
     } >> "$HYPR_MAIN"
     chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
-    ok "appended blur source line to $HYPR_MAIN"
+    ok "appended blur require line to $HYPR_MAIN"
   fi
 fi
 
@@ -422,17 +422,17 @@ fi
 # the whitewash that 0.85/0.70 + brightness=1.4 caused before. Only one
 # app's class is in the rule for now — if notepad looks right, the same
 # rule's regex gets expanded to all 11 NYXUS apps.
-if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-opacity.conf" -o "$HYPR_OPACITY"; then
+if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-opacity.lua" -o "$HYPR_OPACITY"; then
   chown "$REAL_USER:$REAL_USER" "$HYPR_OPACITY"
   chmod 644 "$HYPR_OPACITY"
   ok "wrote $HYPR_OPACITY  (canary: nyxus-notepad only)"
 else
-  warn "could not download nyxus-hyprland-opacity.conf — frosted-white feature 2 skipped"
+  warn "could not download nyxus-hyprland-opacity.lua — frosted-white feature 2 skipped"
 fi
 
 if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_OPACITY" ]]; then
-  if grep -qF "nyxus-hyprland-opacity.conf" "$HYPR_MAIN"; then
-    ok "hyprland.conf already sources nyxus-hyprland-opacity.conf"
+  if grep -qF "conf.d.nyxus-hyprland-opacity" "$HYPR_MAIN"; then
+    ok "hyprland.lua already requires conf.d.nyxus-hyprland-opacity"
   else
     {
       echo
@@ -440,7 +440,7 @@ if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_OPACITY" ]]; then
       echo "$OPACITY_SOURCE_LINE"
     } >> "$HYPR_MAIN"
     chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
-    ok "appended opacity source line to $HYPR_MAIN"
+    ok "appended opacity require line to $HYPR_MAIN"
   fi
 fi
 
@@ -449,17 +449,17 @@ fi
 # Combined with blur + opacity, every window reads as a starlight-rimmed
 # dark glass tile floating above the wallpaper. Without this file the
 # Hyprland default hot-pink border bleeds through and breaks the look.
-if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-general.conf" -o "$HYPR_GENERAL"; then
+if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-general.lua" -o "$HYPR_GENERAL"; then
   chown "$REAL_USER:$REAL_USER" "$HYPR_GENERAL"
   chmod 644 "$HYPR_GENERAL"
   ok "wrote $HYPR_GENERAL  (DARK MIRROR window edges)"
 else
-  warn "could not download nyxus-hyprland-general.conf — DARK MIRROR border skipped"
+  warn "could not download nyxus-hyprland-general.lua — DARK MIRROR border skipped"
 fi
 
 if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_GENERAL" ]]; then
-  if grep -qF "nyxus-hyprland-general.conf" "$HYPR_MAIN"; then
-    ok "hyprland.conf already sources nyxus-hyprland-general.conf"
+  if grep -qF "conf.d.nyxus-hyprland-general" "$HYPR_MAIN"; then
+    ok "hyprland.lua already requires conf.d.nyxus-hyprland-general"
   else
     {
       echo
@@ -467,18 +467,17 @@ if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_GENERAL" ]]; then
       echo "$GENERAL_SOURCE_LINE"
     } >> "$HYPR_MAIN"
     chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
-    ok "appended general source line to $HYPR_MAIN"
+    ok "appended general require line to $HYPR_MAIN"
   fi
 fi
 
 # 3.5/6  EXTRA conf.d shards (rev r7-eww — was missing in r6-eww;
 # without this, layerblur/fog/rules updates never reached existing
 # installs and EWW bars rendered as flat dark glass with no frost).
-# These shards are sourced by hyprland.conf via wildcard, so we only
-# need to ship the file — no source-line append required.
-for shard in nyxus-hyprland-layerblur.conf \
-             nyxus-hyprland-fog.conf \
-             nyxus-hyprland-rules.conf; do
+# These shards are required by hyprland.lua, so we only need to ship files.
+for shard in nyxus-hyprland-layerblur.lua \
+             nyxus-hyprland-fog.lua \
+             nyxus-hyprland-rules.lua; do
   dest="$HYPR_CONF_D/$shard"
   if curl -fsSL --max-time 30 "$PROD/$shard" -o "${dest}.new"; then
     if [[ -s "${dest}.new" ]]; then
@@ -547,7 +546,7 @@ done
 # That path is provisioned by the 4b.6 block immediately below.
 
 # 4b.6  Hyprland walls/ refresh — keeps the lockscreen + default desktop bg
-# in sync. hyprland.conf points swaybg at nyxus-void-vortex.png, and
+# in sync. hyprland.lua points swaybg at nyxus-void-vortex.png, and
 # hyprlock.conf points its background at nyxus-login-stars.png. Both must
 # live in ~/.config/hypr/walls/ or the session boots to a black screen
 # and Hyprlock 404s into a blank lock surface.
@@ -838,7 +837,7 @@ if [[ -z "$CHROME_ON_DISK" ]]; then
   warn "could not find nyxus_chrome.py on disk in any standard location"
 fi
 # rev r6-eww — VOID-VORTEX wallpaper (replaces the rev r29 starfield).
-# Static PNG via swaybg fill-mode — matches hyprland.conf swaybg autostart.
+# Static PNG via swaybg fill-mode — matches hyprland.lua swaybg autostart.
 # Falls back to starfield if void-vortex is missing.
 VORTEX_PNG="$NYX_BG_DIR/nyxus-void-vortex.png"
 STAR_PNG="$NYX_BG_DIR/nyxus-starfield-wall.png"
