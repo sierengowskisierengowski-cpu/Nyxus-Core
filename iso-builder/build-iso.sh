@@ -45,11 +45,47 @@ step "preflight"
 if [[ $EUID -ne 0 ]]; then
   fail "must be run as root"; exit 1
 fi
-if ! command -v mkarchiso >/dev/null 2>&1; then
-  fail "mkarchiso not found — install archiso: pacman -S archiso"; exit 1
-fi
 if [[ ! -f /etc/arch-release ]]; then
   fail "this script must run on Arch Linux (mkarchiso requires it)"; exit 1
+fi
+
+# ── auto-install required host packages ─────────────────────────────────
+# rev r24 (2026-05-18) — self-healing preflight: every tool mkarchiso
+# needs to bake a UEFI+BIOS ISO is installed here in one shot so the user
+# never has to play whack-a-mole with "X not found" failures.
+HOST_DEPS=(archiso squashfs-tools libisoburn dosfstools grub mtools edk2-ovmf)
+MISSING_DEPS=()
+for pkg in "${HOST_DEPS[@]}"; do
+  if ! pacman -Q "${pkg}" >/dev/null 2>&1; then
+    MISSING_DEPS+=("${pkg}")
+  fi
+done
+if (( ${#MISSING_DEPS[@]} > 0 )); then
+  step "installing missing host packages: ${MISSING_DEPS[*]}"
+  pacman -Sy --needed --noconfirm "${MISSING_DEPS[@]}" || {
+    fail "failed to install host packages: ${MISSING_DEPS[*]}"; exit 1; }
+  ok "host packages installed"
+fi
+
+# ── strip any leftover chaotic-aur config from prior bakes ──────────────
+# NYX no longer uses chaotic-aur — the greeter is `agreety` (built into
+# the `greetd` package in official Arch `extra`), so no AUR access is
+# needed. Earlier bake attempts may have appended a [chaotic-aur] block
+# to the profile pacman.conf; strip it idempotently so the build chroot
+# does not try to resolve from a repo that may be unreachable.
+PROFILE_PACMAN="${PROFILE_DIR}/pacman.conf"
+if [[ -f "${PROFILE_PACMAN}" ]] && grep -q "^\[chaotic-aur\]" "${PROFILE_PACMAN}"; then
+  awk '
+    /^\[chaotic-aur\]/ { skip=1; next }
+    skip && /^\[/      { skip=0 }
+    !skip              { print }
+  ' "${PROFILE_PACMAN}" > "${PROFILE_PACMAN}.tmp" && mv "${PROFILE_PACMAN}.tmp" "${PROFILE_PACMAN}"
+  ok "stripped legacy chaotic-aur block from profile pacman.conf"
+fi
+
+# Final sanity: mkarchiso must now exist.
+if ! command -v mkarchiso >/dev/null 2>&1; then
+  fail "mkarchiso still not found after install — aborting"; exit 1
 fi
 ok "running on Arch as root with mkarchiso available"
 ok "iso version: ${ISO_DATE} → ${ISO_NAME}"
