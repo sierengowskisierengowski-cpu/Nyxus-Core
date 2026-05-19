@@ -6,15 +6,17 @@
 # ============================================
 #
 # greetd is the sole display manager for the NYX live ISO session.
-# tuigreet is used as the greeter with auto-login to the `nyx` user,
-# launching directly into Hyprland on the Wayland compositor.
+# agreety (greetd's built-in default greeter, shipped with the greetd
+# package in the official Arch `extra` repo) is used so the build does
+# NOT need chaotic-aur or AUR access. The live session auto-logs the
+# `nyx` user directly into Hyprland.
 # SDDM and all other display managers must NOT be active alongside this.
 
 [terminal]
 vt = 1
 
 [default_session]
-command = "tuigreet --time --remember --remember-session --sessions /usr/share/wayland-sessions"
+command = "agreety --cmd Hyprland"
 user = "greeter"
 
 [initial_session]

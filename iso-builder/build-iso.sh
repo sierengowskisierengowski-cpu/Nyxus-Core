@@ -67,45 +67,20 @@ if (( ${#MISSING_DEPS[@]} > 0 )); then
   ok "host packages installed"
 fi
 
-# ── auto-enable chaotic-aur (for tuigreet, greetd, and AUR-only deps) ───
-# chaotic-aur is a trusted unofficial Arch repo that ships pre-built
-# AUR binaries. We use it instead of building tuigreet/greetd from
-# source on every bake (saves 5+ min and avoids rust toolchain pulls).
-# Only added if not already present in /etc/pacman.conf.
-if ! grep -q "^\[chaotic-aur\]" /etc/pacman.conf; then
-  step "enabling chaotic-aur repo on host (one-time)"
-  pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com 2>/dev/null || \
-    pacman-key --recv-key 3056513887B78AEB --keyserver hkps://keyserver.ubuntu.com:443 || {
-      fail "failed to receive chaotic-aur key"; exit 1; }
-  pacman-key --lsign-key 3056513887B78AEB
-  pacman -U --noconfirm \
-    'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' \
-    'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst' || {
-      fail "failed to install chaotic-aur keyring/mirrorlist"; exit 1; }
-  printf '\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n' >> /etc/pacman.conf
-  pacman -Sy
-  ok "chaotic-aur enabled on host"
-else
-  ok "chaotic-aur already enabled on host"
-fi
-
-# Mirror chaotic-aur into the PROFILE's pacman.conf so mkarchiso (which
-# uses --config profile/pacman.conf) can resolve tuigreet/greetd inside
-# the bake chroot. Idempotent — always rewrites to known-good state.
-# SigLevel = Never is required because the freshly-initialised pacman
-# keyring in the build chroot does not trust chaotic-aur's signing keys,
-# which would otherwise cause "target not found" during pacstrap.
+# ── strip any leftover chaotic-aur config from prior bakes ──────────────
+# NYX no longer uses chaotic-aur — the greeter is `agreety` (built into
+# the `greetd` package in official Arch `extra`), so no AUR access is
+# needed. Earlier bake attempts may have appended a [chaotic-aur] block
+# to the profile pacman.conf; strip it idempotently so the build chroot
+# does not try to resolve from a repo that may be unreachable.
 PROFILE_PACMAN="${PROFILE_DIR}/pacman.conf"
-if [[ -f "${PROFILE_PACMAN}" ]]; then
-  # Strip any prior chaotic-aur block (handles old/broken versions)
+if [[ -f "${PROFILE_PACMAN}" ]] && grep -q "^\[chaotic-aur\]" "${PROFILE_PACMAN}"; then
   awk '
     /^\[chaotic-aur\]/ { skip=1; next }
     skip && /^\[/      { skip=0 }
     !skip              { print }
   ' "${PROFILE_PACMAN}" > "${PROFILE_PACMAN}.tmp" && mv "${PROFILE_PACMAN}.tmp" "${PROFILE_PACMAN}"
-  # Append the correct, signature-skipping block
-  printf '\n[chaotic-aur]\nSigLevel = Never\nInclude = /etc/pacman.d/chaotic-mirrorlist\n' >> "${PROFILE_PACMAN}"
-  ok "chaotic-aur configured in profile pacman.conf (SigLevel=Never for build chroot)"
+  ok "stripped legacy chaotic-aur block from profile pacman.conf"
 fi
 
 # Final sanity: mkarchiso must now exist.
