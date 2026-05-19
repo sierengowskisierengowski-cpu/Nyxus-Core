@@ -91,11 +91,21 @@ fi
 
 # Mirror chaotic-aur into the PROFILE's pacman.conf so mkarchiso (which
 # uses --config profile/pacman.conf) can resolve tuigreet/greetd inside
-# the bake chroot. Idempotent.
+# the bake chroot. Idempotent — always rewrites to known-good state.
+# SigLevel = Never is required because the freshly-initialised pacman
+# keyring in the build chroot does not trust chaotic-aur's signing keys,
+# which would otherwise cause "target not found" during pacstrap.
 PROFILE_PACMAN="${PROFILE_DIR}/pacman.conf"
-if [[ -f "${PROFILE_PACMAN}" ]] && ! grep -q "^\[chaotic-aur\]" "${PROFILE_PACMAN}"; then
-  printf '\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n' >> "${PROFILE_PACMAN}"
-  ok "chaotic-aur added to profile pacman.conf"
+if [[ -f "${PROFILE_PACMAN}" ]]; then
+  # Strip any prior chaotic-aur block (handles old/broken versions)
+  awk '
+    /^\[chaotic-aur\]/ { skip=1; next }
+    skip && /^\[/      { skip=0 }
+    !skip              { print }
+  ' "${PROFILE_PACMAN}" > "${PROFILE_PACMAN}.tmp" && mv "${PROFILE_PACMAN}.tmp" "${PROFILE_PACMAN}"
+  # Append the correct, signature-skipping block
+  printf '\n[chaotic-aur]\nSigLevel = Never\nInclude = /etc/pacman.d/chaotic-mirrorlist\n' >> "${PROFILE_PACMAN}"
+  ok "chaotic-aur configured in profile pacman.conf (SigLevel=Never for build chroot)"
 fi
 
 # Final sanity: mkarchiso must now exist.
