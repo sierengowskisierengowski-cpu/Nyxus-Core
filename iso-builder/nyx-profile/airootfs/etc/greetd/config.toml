@@ -6,17 +6,29 @@
 # ============================================
 #
 # greetd is the sole display manager for the NYX live ISO session.
-# agreety (greetd's built-in default greeter, shipped with the greetd
-# package in the official Arch `extra` repo) is used so the build does
-# NOT need chaotic-aur or AUR access. The live session auto-logs the
-# `nyx` user directly into Hyprland.
-# SDDM and all other display managers must NOT be active alongside this.
+#
+# THREE-LAYER FALLBACK so the system can NEVER be locked out:
+#
+#   1. default_session → /usr/local/bin/nyxus-greeter
+#      A defensive wrapper that prefers tuigreet (built from source
+#      during the bake — polished TUI greeter), falls back to agreety
+#      (built into greetd), and as an absolute last resort launches
+#      Hyprland directly. So even if every greeter binary is missing,
+#      the user still gets a desktop.
+#
+#   2. initial_session → autologin `nyx` straight into Hyprland on
+#      first boot. Bypasses greetd entirely for the first login of
+#      every greetd start (i.e. live ISO + first post-install boot).
+#      Guarantees you can ALWAYS get in at least once.
+#
+#   3. SDDM and all other display managers must NOT be active
+#      alongside this. greetd is sole DM.
 
 [terminal]
 vt = 1
 
 [default_session]
-command = "agreety --cmd Hyprland"
+command = "/usr/local/bin/nyxus-greeter"
 user = "greeter"
 
 [initial_session]

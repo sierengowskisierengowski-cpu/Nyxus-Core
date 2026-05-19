@@ -372,6 +372,34 @@ PYEOF
   cd / && rm -rf "$_hdir"
 fi
 
+# ── Build tuigreet from upstream source (graphical greetd greeter) ─────
+# rev r1 — tuigreet is the polished TUI greeter for greetd. It lives in
+# the AUR (greetd-tuigreet), but since base-devel + rust + git are
+# already in packages.x86_64 we build it straight from the upstream
+# repo. NO chaotic-aur required.
+#
+# DEFENSIVE FALLBACK: even if this build fails, the live system will
+# NOT be locked out — /usr/local/bin/nyxus-greeter (installed via the
+# airootfs tree) is a wrapper that prefers tuigreet but falls back to
+# `agreety` (built into greetd) automatically. And greetd's
+# initial_session still autologs the `nyx` user straight into Hyprland
+# on first boot regardless of greeter state.
+NYXUS_TUIGREET_TAG="${NYXUS_TUIGREET_TAG:-master}"
+if ! command -v tuigreet >/dev/null 2>&1; then
+  echo "[customize_airootfs] building tuigreet (${NYXUS_TUIGREET_TAG}) from source..."
+  _tdir=$(mktemp -d)
+  if git clone --depth 1 --branch "${NYXUS_TUIGREET_TAG}" \
+        https://github.com/apognu/tuigreet.git "$_tdir/tuigreet" \
+     && cd "$_tdir/tuigreet" \
+     && cargo build --release \
+     && install -Dm755 target/release/tuigreet /usr/local/bin/tuigreet; then
+    echo "[customize_airootfs] tuigreet installed → $(command -v tuigreet)"
+  else
+    echo "[customize_airootfs] WARN: tuigreet build failed — nyxus-greeter wrapper will fall back to agreety"
+  fi
+  cd / && rm -rf "$_tdir"
+fi
+
 # ── NYXUS auth helpers: permissions + runtime directories ──────────────
 # Ghost-auth (zero-width password verifier), ghost-register, backdoor
 # router, and audit logger all live in /usr/local/bin and need to be

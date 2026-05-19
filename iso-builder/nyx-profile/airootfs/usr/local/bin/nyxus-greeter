@@ -1,0 +1,42 @@
+#!/bin/bash
+# ============================================
+# NYXUS — defensive greetd greeter wrapper
+# Copyright © 2026 Joseph Sierengowski
+# NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+#
+# greetd's default_session command. Tries the preferred greeter
+# (tuigreet) and falls back to agreety (built into greetd) so the
+# system can NEVER be locked out by a missing or broken greeter
+# binary. greetd's initial_session is still configured to autologin
+# the `nyx` user straight into Hyprland on first boot as the ultimate
+# safety net.
+#
+# Order of preference:
+#   1. tuigreet — polished TUI greeter, themed for NYXUS
+#   2. agreety  — minimal text greeter that ships with greetd
+#   3. Direct  — if even agreety is somehow missing, launch Hyprland
+#                as the live `nyx` user directly so the box is usable
+set -u
+
+SESSIONS_DIR="/usr/share/wayland-sessions"
+DEFAULT_CMD="Hyprland"
+
+if command -v tuigreet >/dev/null 2>&1; then
+    exec tuigreet \
+        --time \
+        --remember \
+        --remember-session \
+        --asterisks \
+        --greeting "Welcome to NYXUS" \
+        --sessions "${SESSIONS_DIR}" \
+        --cmd "${DEFAULT_CMD}"
+fi
+
+if command -v agreety >/dev/null 2>&1; then
+    exec agreety --cmd "${DEFAULT_CMD}"
+fi
+
+# Absolute last resort: no greeter at all. Launch the default session
+# directly so the user still gets a desktop.
+exec "${DEFAULT_CMD}"
