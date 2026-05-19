@@ -45,11 +45,62 @@ step "preflight"
 if [[ $EUID -ne 0 ]]; then
   fail "must be run as root"; exit 1
 fi
-if ! command -v mkarchiso >/dev/null 2>&1; then
-  fail "mkarchiso not found — install archiso: pacman -S archiso"; exit 1
-fi
 if [[ ! -f /etc/arch-release ]]; then
   fail "this script must run on Arch Linux (mkarchiso requires it)"; exit 1
+fi
+
+# ── auto-install required host packages ─────────────────────────────────
+# rev r24 (2026-05-18) — self-healing preflight: every tool mkarchiso
+# needs to bake a UEFI+BIOS ISO is installed here in one shot so the user
+# never has to play whack-a-mole with "X not found" failures.
+HOST_DEPS=(archiso squashfs-tools libisoburn dosfstools grub mtools edk2-ovmf)
+MISSING_DEPS=()
+for pkg in "${HOST_DEPS[@]}"; do
+  if ! pacman -Q "${pkg}" >/dev/null 2>&1; then
+    MISSING_DEPS+=("${pkg}")
+  fi
+done
+if (( ${#MISSING_DEPS[@]} > 0 )); then
+  step "installing missing host packages: ${MISSING_DEPS[*]}"
+  pacman -Sy --needed --noconfirm "${MISSING_DEPS[@]}" || {
+    fail "failed to install host packages: ${MISSING_DEPS[*]}"; exit 1; }
+  ok "host packages installed"
+fi
+
+# ── auto-enable chaotic-aur (for tuigreet, greetd, and AUR-only deps) ───
+# chaotic-aur is a trusted unofficial Arch repo that ships pre-built
+# AUR binaries. We use it instead of building tuigreet/greetd from
+# source on every bake (saves 5+ min and avoids rust toolchain pulls).
+# Only added if not already present in /etc/pacman.conf.
+if ! grep -q "^\[chaotic-aur\]" /etc/pacman.conf; then
+  step "enabling chaotic-aur repo on host (one-time)"
+  pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com 2>/dev/null || \
+    pacman-key --recv-key 3056513887B78AEB --keyserver hkps://keyserver.ubuntu.com:443 || {
+      fail "failed to receive chaotic-aur key"; exit 1; }
+  pacman-key --lsign-key 3056513887B78AEB
+  pacman -U --noconfirm \
+    'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' \
+    'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst' || {
+      fail "failed to install chaotic-aur keyring/mirrorlist"; exit 1; }
+  printf '\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n' >> /etc/pacman.conf
+  pacman -Sy
+  ok "chaotic-aur enabled on host"
+else
+  ok "chaotic-aur already enabled on host"
+fi
+
+# Mirror chaotic-aur into the PROFILE's pacman.conf so mkarchiso (which
+# uses --config profile/pacman.conf) can resolve tuigreet/greetd inside
+# the bake chroot. Idempotent.
+PROFILE_PACMAN="${PROFILE_DIR}/pacman.conf"
+if [[ -f "${PROFILE_PACMAN}" ]] && ! grep -q "^\[chaotic-aur\]" "${PROFILE_PACMAN}"; then
+  printf '\n[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist\n' >> "${PROFILE_PACMAN}"
+  ok "chaotic-aur added to profile pacman.conf"
+fi
+
+# Final sanity: mkarchiso must now exist.
+if ! command -v mkarchiso >/dev/null 2>&1; then
+  fail "mkarchiso still not found after install — aborting"; exit 1
 fi
 ok "running on Arch as root with mkarchiso available"
 ok "iso version: ${ISO_DATE} → ${ISO_NAME}"
