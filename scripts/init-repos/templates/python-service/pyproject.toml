@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "{{REPO_NAME}}"
+version = "0.1.0"
+description = "{{REPO_DESCRIPTION}}"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "Joseph Sierengowski" }]
+
+[tool.black]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
