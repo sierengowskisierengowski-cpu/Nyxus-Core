@@ -1,0 +1,31 @@
+# © 2026 Joseph Sierengowski
+name: Dependency Update
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm update --latest
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: 'chore: weekly dependency updates'
+          title: 'chore: weekly dependency updates'
+          body: 'Automated dependency update for {{REPO_NAME}}.'
+          branch: chore/weekly-dependency-updates

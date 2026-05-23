@@ -1,0 +1,20 @@
+{
+  "Nyxus-API-Server": "api-server",
+  "Nyxus-Web": "web-app",
+  "Nyxus-Notepad": "web-app",
+  "Nyxus-Stickies": "web-app",
+  "Nyxus-Sysmon": "web-app",
+  "Nyxus-Widgets": "web-app",
+  "Nyxus-Mockup-Sandbox": "web-app",
+  "Nyxus-Store": "web-app",
+  "Nyxus-Welcome": "web-app",
+  "Nyxus-ISO-Builder": "scripts",
+  "Nyxus-Scripts": "scripts",
+  "Nyxus-Libs": "libs",
+  "Nyxus-Intel": "python-service",
+  "Nyxus-Dockd": "python-service",
+  "Nyxus-Hotkeyd": "python-service",
+  "Nyxus-Snapd": "python-service",
+  "Nyxus-QSD": "python-service",
+  "Nyxus-Wallpaper-Studio": "python-service"
+}
