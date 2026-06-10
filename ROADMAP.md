@@ -129,7 +129,7 @@ boot from bare metal, and have a fully working desktop environment within
 - `SHIPPING.md`: print-before-flash checklist for ISO releases.
 - `docs/` hierarchy: architecture overview, deployment guides, design
   contract, master checklist.
-- Contributor guide (`CONTRIBUTING.md`) — not yet written.
+- Contributor guide (`CONTRIBUTING.md`) — published.
 - Hardware compatibility matrix — not yet written.
 
 ---
@@ -165,7 +165,7 @@ boot from bare metal, and have a fully working desktop environment within
 - NYXUS Account + NYXUS Drop backends shipped
 - Full i18n coverage (beyond en stub)
 - Hardware compatibility matrix published
-- Contributor guide published
+- Contributor guide kept current
 
 ---
 

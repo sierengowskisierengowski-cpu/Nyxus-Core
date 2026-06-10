@@ -155,6 +155,8 @@ This section shows the current tracked code size for the NYXUS build in this rep
 - Documentation hub: [`docs/README.md`](docs/README.md)
 - **Project status:** [`STATUS.md`](STATUS.md)
 - **Roadmap:** [`ROADMAP.md`](ROADMAP.md)
+- **Contributing:** [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- **Release readiness:** [`SHIPPING.md`](SHIPPING.md)
 - System overview: [`docs/overview/system-overview.md`](docs/overview/system-overview.md)
 - Creator and authorship: [`docs/overview/creator.md`](docs/overview/creator.md)
 - Architecture overview: [`docs/architecture/architecture-overview.md`](docs/architecture/architecture-overview.md)
