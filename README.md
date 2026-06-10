@@ -8,6 +8,28 @@ Canonical source repository for the NYXUS platform and NYX image pipeline.
 
 ---
 
+## What works today
+
+> A quick-scan summary — see [`STATUS.md`](STATUS.md) for the full breakdown.
+
+| Area | Status |
+|------|--------|
+| `pnpm run typecheck` / `pnpm run build` | ✅ Passes |
+| CI pipeline (typecheck + validate + codegen-clean) | ✅ Passes |
+| ISO profile lint (`verify-profile.sh` + `iso-build-verify.sh`) | ✅ Passes |
+| Shared TypeScript libraries (`lib/`) | ✅ Build cleanly |
+| API server + download routes | ✅ Operational at nyxus-core.replit.app |
+| Web surfaces (web, notepad, stickies, sysmon, widgets) | ✅ Vite builds pass |
+| archiso profile (`profiledef.sh`, `packages.x86_64`, greetd config) | ✅ Validated |
+| ISO bake (`build-iso.sh`) | 🟡 Requires Arch Linux host + root + `mkarchiso` |
+| Hyprland desktop + EWW bars + GTK4 app suite | 🟡 Source staged; live-boot required for end-to-end test |
+| Calamares disk installer | 🟡 Branding present; AUR-built; full install flow not yet verified |
+| Automated ISO CI artifact + signed release | ⬜ Not yet implemented |
+
+See [`ROADMAP.md`](ROADMAP.md) for the NyXxOS v2 phased plan.
+
+---
+
 ## System Overview
 
 Nyxus-Core contains the end-to-end platform implementation:
@@ -131,6 +153,8 @@ This section shows the current tracked code size for the NYXUS build in this rep
 ## Documentation Index
 
 - Documentation hub: [`docs/README.md`](docs/README.md)
+- **Project status:** [`STATUS.md`](STATUS.md)
+- **Roadmap:** [`ROADMAP.md`](ROADMAP.md)
 - System overview: [`docs/overview/system-overview.md`](docs/overview/system-overview.md)
 - Creator and authorship: [`docs/overview/creator.md`](docs/overview/creator.md)
 - Architecture overview: [`docs/architecture/architecture-overview.md`](docs/architecture/architecture-overview.md)
