@@ -6,6 +6,9 @@
 > in this repository today, what is partially wired, and what remains
 > planned. It is intentionally conservative: if something has not been
 > confirmed in a live boot or a passing CI run it is marked accordingly.
+>
+> **Documentation freshness note:** this file is a point-in-time verified
+> snapshot. Update it whenever repository reality changes.
 
 ---
 
@@ -42,7 +45,7 @@
 | archiso profile definition (`profiledef.sh`) | ✅ | Uses modern `bios.syslinux` + `uefi.grub` bootmodes |
 | Package list (`packages.x86_64`) | ✅ | greetd, tuigreet present; sddm excluded from ISO packages |
 | Display manager — greetd + tuigreet | ✅ | `config.toml` boots `Hyprland` for the `nyx` user |
-| Hyprland Lua config staging | ✅ | `/etc/skel/.config/hypr/hyprland.lua` + `conf.d` shards in place |
+| Hyprland config staging | ✅ | `/etc/skel/.config/hypr/hyprland.conf` + `conf.d` shards in place |
 | File permission locking (`profiledef.sh`) | ✅ | All `nyxus-*` binaries and helpers locked at `0755` |
 | ISO bake (`build-iso.sh`) | 🟡 | Requires Arch Linux host + root + `mkarchiso`; not runnable in CI |
 | Calamares installer branding | 🟡 | Profile files and settings present; Calamares built from AUR in `customize_airootfs.sh`, not from `packages.x86_64` |
@@ -103,14 +106,6 @@
 | Hardware compatibility matrix | ⬜ | Not documented yet |
 | OTA / package update channel | ⬜ | Update UI exists; update channel infra not defined |
 | AUR package / PKGBUILD for NYXUS | ⬜ | Not created yet |
-
----
-
-## Open Pull Requests
-
-| PR | Title | State |
-|----|-------|-------|
-| [#42](https://github.com/sierengowskisierengowski-cpu/Nyxus-Core/pull/42) | Copilot/resolve merge conflicts config toml packages | Open — merge conflicts resolved by Copilot in commit `4c8b7f4`; ready for owner review and merge |
 
 ---
 

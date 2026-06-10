@@ -4,6 +4,13 @@ This directory contains the canonical project documentation for system scope, ar
 
 ## Documentation Structure
 
+### Repository-Level Docs
+- [`../README.md`](../README.md): High-level project overview and documentation index.
+- [`../STATUS.md`](../STATUS.md): Point-in-time verified status snapshot.
+- [`../ROADMAP.md`](../ROADMAP.md): NyXxOS v2 direction and phased milestones.
+- [`../SHIPPING.md`](../SHIPPING.md): Release and pre-flash checklist.
+- [`../CONTRIBUTING.md`](../CONTRIBUTING.md): Contributor workflow and expectations.
+
 ### Overview
 - [`overview/system-overview.md`](overview/system-overview.md): What NYXUS is, what NYX is, and what this repository contains.
 - [`overview/creator.md`](overview/creator.md): Creator and authorship context.

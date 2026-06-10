@@ -74,7 +74,12 @@ nyx-profile/
     │   │   └── CREDITS.md
     │   └── skel/                 # default config for new users
     │       └── .config/
-    │           └── hypr/hyprland.conf  # placeholder
+    │           └── hypr/
+    │               ├── hyprland.conf  # staged from nyxus-scripts
+    │               ├── hyprlock.conf
+    │               ├── hypridle.conf
+    │               ├── conf.d/        # nyxus-hyprland-*.conf overlays
+    │               └── walls/
     └── opt/nyxus-intel/          # populated by build-iso.sh
 ```
 
@@ -91,6 +96,7 @@ What gets staged on every `sudo ./build-iso.sh`:
 | Source (in `nyxus-scripts/`) | Destination in airootfs |
 |---|---|
 | `hyprland.conf`, `hyprlock.conf`, `hypridle.conf` | `/etc/skel/.config/hypr/` |
+| `nyxus-hyprland-*.conf` | `/etc/skel/.config/hypr/conf.d/` |
 | `eww/eww.yuck`, `eww/eww.scss`, `eww/nyxus.conf`, `eww/scripts/*.sh` | `/etc/skel/.config/eww/` (rev r7-eww — replaces waybar) |
 | `nyxus-dunstrc` → `dunstrc` | `/etc/skel/.config/dunst/` |
 | `rofi-config.rasi`, `rofi-nyxus.rasi`, `rofi-startmenu.rasi` | `/etc/skel/.config/rofi/` |
@@ -98,7 +104,7 @@ What gets staged on every `sudo ./build-iso.sh`:
 | `alacritty.toml` | `/etc/skel/.config/alacritty/` |
 | `nyxus_*.py` (all 19 GTK apps + chrome library + helpers) | `/opt/nyxus/` |
 | `nyxus-bg-*.png`, `nyxus-sierengowski-*.png`, `nyxus-void-vortex.png` (default wallpaper) | `/etc/skel/.config/hypr/walls/` AND `/usr/share/backgrounds/nyxus/` |
-| `wallpaper-rotate.sh`, `nyxus-eww-launch` | `/usr/local/bin/` (renamed without `.sh`) |
+| `wallpaper-rotate.sh`, `nyxus-eww-launch`, `nyxus-bootstrap`, `nyxus-wait-bootstrap` | `/usr/local/bin/` (`wallpaper-rotate.sh` installed as `wallpaper-rotate`) |
 | 12 launcher wrappers + `.desktop` entries | `/usr/local/bin/nyxus-*` and `/usr/share/applications/io.nyxus.*.desktop` |
 
 The 12 apps with launchers + desktop entries are:
