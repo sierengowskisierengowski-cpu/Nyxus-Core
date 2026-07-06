@@ -58,7 +58,7 @@
                      (hover-index == index - 2 || hover-index == index + 2) && falloff >= 2 ? round(size * (1 + (mag-max - 1) * 0.22) * 0.78,0) :
                      round(size * 0.78,0)
                    }")
-            (label :class "dock-live-overlay" :text "${entry.live_overlay ?: ""}" :visible {entry.live_overlay != null && entry.live_overlay != ""})
+            (label :class "dock-live-overlay" :text "${entry.live_overlay ?: ""}" :visible {entry.live_overlay != "null" && entry.live_overlay != ""})
             (label :class "dock-badge" :text "${entry.badge > 99 ? "99+" : entry.badge}" :visible {show-badge == true && entry.badge > 0} :halign "end" :valign "start"))))
       (box :class "dock-indicator ${entry.focused == true ? "focused" : ""} ${entry.other_workspace == true ? "other-ws" : ""}"
            :visible {show-ind == true && entry.running == true}
@@ -145,9 +145,9 @@
                   :mag-max {DOCK_STATE.general.magnification_enabled == true ? DOCK_STATE.general.magnification_max ?: 1.0 : 1.0}))
 
     ; trash
-    (box :visible {DOCK_STATE.trash != null && DOCK_STATE.general.section_dividers == true}
+    (box :visible {DOCK_STATE.trash != "null" && DOCK_STATE.general.section_dividers == true}
       (dock-divider))
-    (box :visible {DOCK_STATE.trash != null}
+    (box :visible {DOCK_STATE.trash != "null"}
       (dock-trash :trash {DOCK_STATE.trash}
                   :index 9999
                   :size {DOCK_STATE.general.size ?: 56}

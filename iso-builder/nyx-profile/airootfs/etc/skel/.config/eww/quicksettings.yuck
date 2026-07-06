@@ -2,7 +2,7 @@
 ; Drops down from the top-right. Polls the daemon's state.json.
 
 (defpoll qs-state :interval "1500ms"
-  `cat ${XDG_RUNTIME_DIR}/nyxus-qs/state.json 2>/dev/null || echo '{"tiles":{}}'`)
+  `cat "$XDG_RUNTIME_DIR/nyxus-qs/state.json" 2>/dev/null || echo '{"tiles":{}}'`)
 
 (defwidget qs-tile-toggle [icon label on action]
   (button :class { on ? "qs-tile qs-tile-on" : "qs-tile qs-tile-off" }

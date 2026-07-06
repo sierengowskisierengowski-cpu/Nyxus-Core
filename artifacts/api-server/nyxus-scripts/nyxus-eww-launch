@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════════════╗
-# ║  NYXUS — EWW launcher                                                ║
+# ║  NYXUS — EWW launcher (rev r2 — self-starting daemon)                ║
 # ║  Lives at: /usr/local/bin/nyxus-eww-launch                           ║
 # ║                                                                      ║
-# ║  Waits for the eww IPC socket to appear (daemon up), then opens the  ║
-# ║  configured bars. Closing first guards against duplicate windows on  ║
-# ║  Hyprland config-reload.                                             ║
+# ║  Starts the eww daemon itself if it isn't running (rev r2: the old   ║
+# ║  version only *waited* for a socket that a separate exec-once was    ║
+# ║  supposed to create — if that line lost the race or died, no bars).  ║
+# ║  Then opens the configured bars. Retries once on failure.            ║
 # ║                                                                      ║
 # ║  Reads ~/.config/eww/nyxus.conf for:                                 ║
 # ║    NYXUS_EWW_BARS      — space-separated subset to open              ║
-# ║    NYXUS_EWW_TIMEOUT   — wall-clock socket-wait timeout (s)          ║
+# ║    NYXUS_EWW_TIMEOUT   — socket-wait timeout (s)                     ║
 # ║    NYXUS_EWW_LOG_DIR   — log destination                             ║
 # ║                                                                      ║
 # ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
@@ -19,54 +20,70 @@ set -u
 CONF="${HOME}/.config/eww/nyxus.conf"
 [[ -r "$CONF" ]] && . "$CONF"
 
-BARS="${NYXUS_EWW_BARS:-bar-bottom bar-top bar-left bar-right}"
+BARS="${NYXUS_EWW_BARS:-bar-bottom bar-top bar-left bar-right dock}"
 TIMEOUT_SECS="${NYXUS_EWW_TIMEOUT:-30}"
 LOG_DIR="${NYXUS_EWW_LOG_DIR:-$HOME/.cache/nyxus-eww}"
 mkdir -p "$LOG_DIR"
 LOG="${LOG_DIR}/launch.log"
 
-ts() { date '+%F %T'; }
+ts()  { date '+%F %T'; }
 log() { printf '[%s] %s\n' "$(ts)" "$*" >> "$LOG"; }
+
+EWW_BIN="$(command -v eww || echo /usr/bin/eww)"
+RUNTIME="${XDG_RUNTIME_DIR:-/tmp}"
+
+socket_present() {
+  # eww names its socket from a hash of the config path; match any.
+  compgen -G "${RUNTIME}/eww-server_*" > /dev/null
+}
+
+start_daemon() {
+  if socket_present && "$EWW_BIN" ping >/dev/null 2>&1; then
+    log "daemon already up"
+    return 0
+  fi
+  log "starting eww daemon ($EWW_BIN)"
+  setsid -f "$EWW_BIN" daemon >>"$LOG" 2>&1 || "$EWW_BIN" daemon >>"$LOG" 2>&1 &
+  local deadline=$(( $(date +%s) + TIMEOUT_SECS ))
+  while ! "$EWW_BIN" ping >/dev/null 2>&1; do
+    if [[ $(date +%s) -ge $deadline ]]; then
+      return 1
+    fi
+    sleep 0.3
+  done
+  return 0
+}
 
 log "launch start — bars=[${BARS}] timeout=${TIMEOUT_SECS}s"
 
-# Detect daemon: newer eww uses an instance-hash socket name
-# (eww-server_<hex>) instead of the legacy eww-server_default. Probe via
-# `eww ping` which talks to whichever socket the daemon is using; fall back
-# to a glob match if `ping` isn't available on this build.
-RUNDIR="${XDG_RUNTIME_DIR:-/tmp}"
-deadline=$(( $(date +%s) + TIMEOUT_SECS ))
-SOCK=""
-while :; do
-  if eww ping >/dev/null 2>&1; then
-    SOCK="$(ls -1t "$RUNDIR"/eww-server_* 2>/dev/null | head -1)"
-    [[ -z "$SOCK" ]] && SOCK="(via eww ping)"
-    break
-  fi
-  # Fallback: any matching socket present
-  for s in "$RUNDIR"/eww-server_*; do
-    [[ -S "$s" ]] && SOCK="$s" && break 2
-  done
-  if [[ $(date +%s) -ge $deadline ]]; then
-    log "ERROR — no eww daemon socket in ${RUNDIR} after ${TIMEOUT_SECS}s"
+if ! start_daemon; then
+  log "first daemon start failed — killing strays and retrying once"
+  pkill -x eww 2>/dev/null; sleep 1
+  if ! start_daemon; then
+    log "ERROR — eww daemon would not start after retry"
     notify-send -u critical "NYXUS EWW" \
-      "Daemon socket never appeared after ${TIMEOUT_SECS}s — bars not started." 2>/dev/null || true
+      "eww daemon would not start — bars not started. See ${LOG}" 2>/dev/null || true
     exit 1
   fi
-  sleep 0.3
-done
-log "socket ready · ${SOCK}"
+fi
+log "daemon ready"
 
-eww close-all 2>/dev/null && log "closed pre-existing windows"
+"$EWW_BIN" close-all 2>/dev/null && log "closed pre-existing windows"
 sleep 0.2
 
 failed=0
 for bar in $BARS; do
-  if eww open "$bar" 2>>"$LOG"; then
+  if "$EWW_BIN" open "$bar" 2>>"$LOG"; then
     log "opened · ${bar}"
   else
-    log "ERROR opening · ${bar}"
-    failed=$((failed + 1))
+    log "ERROR opening · ${bar} — retrying in 1s"
+    sleep 1
+    if "$EWW_BIN" open "$bar" 2>>"$LOG"; then
+      log "opened on retry · ${bar}"
+    else
+      log "ERROR opening · ${bar} (retry failed)"
+      failed=$((failed + 1))
+    fi
   fi
 done
 

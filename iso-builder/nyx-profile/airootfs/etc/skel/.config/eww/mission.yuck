@@ -3,7 +3,7 @@
 ; (when use_screenshots is enabled) and per-window chips.
 
 (defpoll mission-state :interval "600ms"
-  `cat ${XDG_RUNTIME_DIR}/nyxus-mission/state.json 2>/dev/null || echo '{"workspaces":[],"monitors":[]}'`)
+  `cat "$XDG_RUNTIME_DIR/nyxus-mission/state.json" 2>/dev/null || echo '{"workspaces":[],"monitors":[]}'`)
 
 (defwidget mission-window-chip [w]
   (button :class "mission-window-chip"

@@ -3,7 +3,7 @@
 ; flashes briefly when a snap completes.
 
 (defpoll snap-picker :interval "200ms"
-  `cat ${XDG_RUNTIME_DIR}/nyxus-snap/picker.json 2>/dev/null || echo '{"layout":"halves","zones":[]}'`)
+  `cat "$XDG_RUNTIME_DIR/nyxus-snap/picker.json" 2>/dev/null || echo '{"layout":"halves","zones":[]}'`)
 
 (defwidget snap-zone-cell [zone]
   (button :class "snap-zone-cell"
