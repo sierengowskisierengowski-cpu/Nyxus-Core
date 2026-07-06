@@ -5,6 +5,7 @@ After=graphical-session.target
 
 [Service]
 Type=simple
+RuntimeDirectory=nyxus-qs
 ExecStart=/usr/bin/python3 /opt/nyxus/nyxus_qsd.py
 Restart=on-failure
 RestartSec=2

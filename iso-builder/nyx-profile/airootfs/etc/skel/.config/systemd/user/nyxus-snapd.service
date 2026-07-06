@@ -5,6 +5,7 @@ After=graphical-session.target
 
 [Service]
 Type=simple
+RuntimeDirectory=nyxus-snap
 ExecStart=/usr/bin/python3 /opt/nyxus/nyxus_snapd.py
 Restart=on-failure
 RestartSec=2
