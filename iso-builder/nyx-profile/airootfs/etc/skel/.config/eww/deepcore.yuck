@@ -1,0 +1,55 @@
+;; ─── NYXUS DEEP CORE ──────────────────────────────────────────────────
+;; Kernel + security-stack observatory. Super+G toggles it.
+;; Three columns: KERNEL (what you're running on), SENTINELS (jeTT /
+;; Bifrost / Meli / honeypot fleet), TELEMETRY (scheduler truth).
+
+(defpoll DEEPCORE :interval "3s"
+  :initial '{"kver":"...","kname":"...","taint":"...","lsm":"...","gov":"...","vuln":0,"safe":0,"load":"...","procs":"...","entropy":"...","uptime":"...","ctx":"...","jett":false,"bifrost":false,"meli":false,"docker":false,"pots":0,"ebpf":"..."}'
+  "~/.config/eww/scripts/deepcore.sh")
+
+(defwidget dc-row [label value ?good]
+  (box :class "dc-row" :orientation "h" :space-evenly false :spacing 12
+    (label :class "dc-key" :text label)
+    (label :class {(good ?: true) ? "dc-val" : "dc-val dc-bad"} :text value :limit-width 34)))
+
+(defwidget dc-sentinel [name on detail]
+  (box :class "dc-row" :orientation "h" :space-evenly false :spacing 12
+    (label :class {on ? "dc-dot dc-dot-on" : "dc-dot dc-dot-off"} :text {on ? "●" : "○"})
+    (label :class "dc-key" :text name)
+    (label :class {on ? "dc-val dc-live" : "dc-val dc-bad"} :text detail)))
+
+(defwidget deepcore_layout []
+  (box :class "deepcore-root" :orientation "v" :halign "center" :valign "center"
+       :space-evenly false :spacing 20
+    (label :class "dc-title" :text "NYXUS · DEEP CORE")
+    (label :class "dc-sub" :text "kernel observatory · sentinel grid · scheduler truth")
+    (box :class "dc-cols" :orientation "h" :space-evenly false :spacing 30
+      (box :class "dc-col" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dc-section" :text "KERNEL")
+        (dc-row :label "IMAGE"      :value "${DEEPCORE.kver}")
+        (dc-row :label "FLAVOR"     :value "${DEEPCORE.kname}")
+        (dc-row :label "TAINT"      :value "${DEEPCORE.taint}" :good {DEEPCORE.taint == "CLEAN"})
+        (dc-row :label "LSM STACK"  :value "${DEEPCORE.lsm}")
+        (dc-row :label "GOVERNOR"   :value "${DEEPCORE.gov}" :good {DEEPCORE.gov == "performance"})
+        (dc-row :label "MITIGATED"  :value "${DEEPCORE.safe} safe · ${DEEPCORE.vuln} exposed" :good {DEEPCORE.vuln == 0}))
+      (box :class "dc-col" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dc-section" :text "SENTINELS")
+        (dc-sentinel :name "jeTT AI EDR"    :on {DEEPCORE.jett}    :detail {DEEPCORE.jett ? "watching" : "down"})
+        (dc-sentinel :name "eBPF SENSOR"    :on {DEEPCORE.ebpf == "hooked"} :detail "${DEEPCORE.ebpf}")
+        (dc-sentinel :name "BIFROST GUARD"  :on {DEEPCORE.bifrost} :detail {DEEPCORE.bifrost ? "guarding" : "down"})
+        (dc-sentinel :name "MELI INGEST"    :on {DEEPCORE.meli}    :detail {DEEPCORE.meli ? "ingesting" : "down"})
+        (dc-sentinel :name "HONEYPOT FLEET" :on {DEEPCORE.pots > 0} :detail "${DEEPCORE.pots}/6 pots live")
+        (dc-sentinel :name "DOCKER"         :on {DEEPCORE.docker}  :detail {DEEPCORE.docker ? "running" : "down"}))
+      (box :class "dc-col" :orientation "v" :space-evenly false :spacing 8
+        (label :class "dc-section" :text "TELEMETRY")
+        (dc-row :label "LOAD"       :value "${DEEPCORE.load}")
+        (dc-row :label "THREADS"    :value "${DEEPCORE.procs} runnable/total")
+        (dc-row :label "CTX SWITCH" :value "${DEEPCORE.ctx}")
+        (dc-row :label "ENTROPY"    :value "${DEEPCORE.entropy} bits")
+        (dc-row :label "UPTIME"     :value "${DEEPCORE.uptime}")))
+    (button :class "dc-close" :onclick "eww close deepcore" "Close (Super+G)")))
+
+(defwindow deepcore
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-deepcore"
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  (box :class "overlay-backdrop" (deepcore_layout)))

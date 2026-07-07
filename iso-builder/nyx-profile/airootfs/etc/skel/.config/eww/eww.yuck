@@ -463,6 +463,7 @@
       (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
         (label :class "cheat-section" :text "SYSTEM / PANELS")
         (cheatkey :chord "Super + A"        :action "Quick settings")
+        (cheatkey :chord "Super + G"        :action "DEEP CORE monitor")
         (cheatkey :chord "Super + N"        :action "Notifications")
         (cheatkey :chord "Super + W"        :action "WiFi picker")
         (cheatkey :chord "Super + Shift + B":action "Bluetooth")
@@ -906,4 +907,5 @@
 (include "hotkey.yuck")
 (include "snap.yuck")
 (include "mission.yuck")
+(include "deepcore.yuck")
 (include "quicksettings.yuck")
