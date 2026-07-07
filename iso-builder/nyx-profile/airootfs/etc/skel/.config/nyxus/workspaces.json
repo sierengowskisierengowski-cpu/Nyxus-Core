@@ -1,15 +1,15 @@
 {
   "_comment": "NYXUS workspace name + wallpaper map. Edited live via Quick Settings → Workspaces. The daemon /usr/local/bin/nyxus-workspace-wallpaperd watches Hyprland IPC and swaps the active wallpaper when the active workspace changes. Obsidian Prism rev 2026-07-07: every workspace shares the prism monolith wall so the session reads as one continuous world.",
   "workspaces": [
-    { "id": 1,  "name": "Main",   "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-eye-mosaic.png" },
-    { "id": 2,  "name": "Web",    "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-eye-mosaic.png" },
-    { "id": 3,  "name": "Code",   "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-eye-mosaic.png" },
-    { "id": 4,  "name": "Chat",   "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-eye-mosaic.png" },
-    { "id": 5,  "name": "Media",  "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-eye-mosaic.png" },
-    { "id": 6,  "name": "Game",   "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-eye-mosaic.png" },
-    { "id": 7,  "name": "Files",  "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-eye-mosaic.png" },
-    { "id": 8,  "name": "System", "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-eye-mosaic.png" },
-    { "id": 9,  "name": "Notes",  "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-eye-mosaic.png" },
-    { "id": 10, "name": "Misc",   "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-eye-mosaic.png" }
+    { "id": 1,  "name": "Main",   "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-graffiti-space.png" },
+    { "id": 2,  "name": "Web",    "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-graffiti-space.png" },
+    { "id": 3,  "name": "Code",   "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-graffiti-space.png" },
+    { "id": 4,  "name": "Chat",   "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-graffiti-space.png" },
+    { "id": 5,  "name": "Media",  "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-graffiti-space.png" },
+    { "id": 6,  "name": "Game",   "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-graffiti-space.png" },
+    { "id": 7,  "name": "Files",  "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-graffiti-space.png" },
+    { "id": 8,  "name": "System", "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-graffiti-space.png" },
+    { "id": 9,  "name": "Notes",  "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-graffiti-space.png" },
+    { "id": 10, "name": "Misc",   "wallpaper": "/home/cosmic/.config/hypr/walls/nyxus-graffiti-space.png" }
   ]
 }
