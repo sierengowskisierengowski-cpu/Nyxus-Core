@@ -30,7 +30,7 @@
   :focusable true
   :namespace "nyxus-mission"
   (eventbox :onkeydown "[ '{}' = 'Escape' ] && nyxus-mission close"
-    (centerbox :class "mission-root"
+    (centerbox :class "mission-root overlay-backdrop"
       (box)
       (box :orientation "v" :class "mission-card" :space-evenly false :spacing 12
         (label :class "mission-title" :text "Mission Control")
