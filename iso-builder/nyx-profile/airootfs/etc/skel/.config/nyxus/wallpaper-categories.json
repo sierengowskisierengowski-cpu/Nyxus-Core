@@ -1,0 +1,31 @@
+{
+  "categories": {
+    "All": [
+      "*"
+    ],
+    "Dark & Moody": [
+      "dark-moody"
+    ],
+    "Cosmic & Psychedelic": [
+      "cosmic-psychedelic"
+    ],
+    "Eyes": [
+      "eyes"
+    ],
+    "Nature & Landscapes": [
+      "nature-landscapes"
+    ],
+    "Abstract & Geometric": [
+      "abstract-geometric"
+    ],
+    "Urban & Atmospheric": [
+      "urban-atmospheric"
+    ],
+    "Art & Portraits": [
+      "art-portraits"
+    ],
+    "Live Wallpapers": [
+      "live-wallpapers"
+    ]
+  }
+}

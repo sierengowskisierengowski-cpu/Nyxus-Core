@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# NYXUS · Welcome Wizard privileged helper  rev 2026.05.11-r9-eww
+#
+# Installed at /usr/local/libexec/nyxus-welcome-helper, executed via
+# pkexec from the Welcome Wizard. Performs the small set of operations
+# that need root: locale, timezone, NTP, GECOS, password.
+#
+# Each action is its own subcommand with strict argument validation.
+# Anything not whitelisted is rejected.
+set -u
+
+usage() {
+  cat <<EOF
+nyxus-welcome-helper <action> [args...]
+
+  set-locale    <locale>            e.g. en_US.UTF-8
+  set-timezone  <tz>                e.g. America/New_York
+  enable-ntp                        timedatectl set-ntp true
+  set-gecos     <user> <fullname>
+  set-password  <user> <pw on stdin or arg2>
+EOF
+  exit 2
+}
+
+[[ $# -ge 1 ]] || usage
+action="$1"; shift
+
+[[ "$EUID" -eq 0 ]] || { echo "nyxus-welcome-helper: must be root" >&2; exit 1; }
+
+case "$action" in
+  set-locale)
+    loc="${1:-}"
+    [[ "$loc" =~ ^[a-zA-Z_]+\.[A-Za-z0-9-]+$ ]] || { echo "bad locale" >&2; exit 2; }
+    # ensure locale is generated
+    if ! grep -qE "^${loc}\b" /etc/locale.gen 2>/dev/null; then
+      sed -i -E "s/^#\s*(${loc//./\\.}.*)/\1/" /etc/locale.gen 2>/dev/null || \
+        echo "$loc UTF-8" >> /etc/locale.gen
+      locale-gen >/dev/null 2>&1 || true
+    fi
+    echo "LANG=$loc" > /etc/locale.conf
+    echo "ok"
+    ;;
+  set-timezone)
+    tz="${1:-}"
+    # validate against /usr/share/zoneinfo
+    [[ -f "/usr/share/zoneinfo/$tz" ]] || { echo "bad timezone" >&2; exit 2; }
+    timedatectl set-timezone "$tz"
+    echo "ok"
+    ;;
+  enable-ntp)
+    timedatectl set-ntp true 2>/dev/null || true
+    echo "ok"
+    ;;
+  set-gecos)
+    user="${1:-}"; full="${2:-}"
+    [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || { echo "bad user" >&2; exit 2; }
+    id "$user" >/dev/null 2>&1 || { echo "no such user" >&2; exit 2; }
+    # strip dangerous chars from gecos
+    full="$(printf '%s' "$full" | tr -d ':\n\r')"
+    chfn -f "$full" "$user" >/dev/null 2>&1 || \
+      usermod -c "$full" "$user"
+    echo "ok"
+    ;;
+  set-password)
+    user="${1:-}"; pw="${2:-}"
+    [[ "$user" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || { echo "bad user" >&2; exit 2; }
+    id "$user" >/dev/null 2>&1 || { echo "no such user" >&2; exit 2; }
+    if [[ -z "$pw" ]]; then read -r pw; fi
+    [[ ${#pw} -ge 8 ]] || { echo "weak pw" >&2; exit 2; }
+    printf '%s:%s' "$user" "$pw" | chpasswd
+    echo "ok"
+    ;;
+  *)
+    usage
+    ;;
+esac

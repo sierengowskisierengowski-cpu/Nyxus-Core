@@ -1,55 +1,32 @@
 #!/usr/bin/env bash
-# nyxus-welcome — launcher for the NYXUS onboarding wizard.
+# NYXUS · Welcome Wizard launcher  rev 2026.05.11-r9-eww
 #
-# Usage:
-#   nyxus-welcome              Launch (skips if ~/.config/nyxus/welcome.done exists)
-#   nyxus-welcome --force      Launch even if already completed
-#   nyxus-welcome --mark-done  Just mark complete (used by --skip flow)
-#   nyxus-welcome --reset      Wipe welcome.done and re-arm autostart
+# Gating logic (so this only ever runs once unless forced):
+#   • Skips silently if ~/.nyxus/welcome-done exists.
+#   • Skips if NYXUS_NO_WELCOME=1.
+#   • Re-runs if NYXUS_WELCOME_FORCE=1.
 #
-# The wizard itself lives at /opt/nyxus/nyxus_welcome.py.
-set -euo pipefail
+# Hyprland exec-once line installs this so it fires on first interactive
+# login.  Wait briefly for the bar / wallpaper to settle so the wizard
+# doesn't paint over an in-progress compositor scene.
+set -u
 
-WIZARD="/opt/nyxus/nyxus_welcome.py"
-DONE="${HOME}/.config/nyxus/welcome.done"
-AUTOSTART="${HOME}/.config/autostart/nyxus-welcome.desktop"
+MARKER="$HOME/.nyxus/welcome-done"
+LOCK="/tmp/nyxus-welcome.lock"
 
-if [[ ! -f "${WIZARD}" ]]; then
-  echo "nyxus-welcome: wizard missing at ${WIZARD}" >&2
-  exit 1
-fi
+[[ -f "$MARKER" && -z "${NYXUS_WELCOME_FORCE:-}" ]] && exit 0
+[[ -n "${NYXUS_NO_WELCOME:-}" ]] && exit 0
 
-case "${1:-}" in
-  --reset)
-    rm -f "${DONE}"
-    mkdir -p "$(dirname "${AUTOSTART}")"
-    cat > "${AUTOSTART}" <<EOF
-[Desktop Entry]
-Type=Application
-Name=NYXUS Welcome
-Exec=nyxus-welcome
-X-GNOME-Autostart-enabled=true
-NoDisplay=true
-EOF
-    echo "welcome reset — will re-run on next login"
-    exit 0
-    ;;
-  --mark-done)
-    exec python3 "${WIZARD}" --mark-done
-    ;;
-  --force)
-    exec python3 "${WIZARD}" --force
-    ;;
-  ""|--help|-h)
-    if [[ "${1:-}" =~ ^(-h|--help)$ ]]; then
-      sed -n '2,/^set -euo/p' "$0" | sed 's/^# \{0,1\}//;/^set -euo/d'
-      exit 0
-    fi
-    exec python3 "${WIZARD}"
-    ;;
-  *)
-    echo "nyxus-welcome: unknown flag: $1" >&2
-    echo "try: nyxus-welcome --help" >&2
-    exit 2
-    ;;
-esac
+# single-instance lock
+exec 9>"$LOCK"
+flock -n 9 || exit 0
+
+# settle delay so swaybg + eww are up
+sleep 2
+
+# Locate the python module (installed by customize_airootfs into ~/.nyxus)
+PY="$HOME/.nyxus/nyxus_welcome.py"
+[[ -x "$PY" ]] || PY="$HOME/.nyxus/nyxus_welcome.py"
+[[ -f "$PY" ]] || { echo "nyxus-welcome: script missing at $PY" >&2; exit 1; }
+
+exec python3 "$PY" "$@"

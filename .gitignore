@@ -54,3 +54,7 @@ __pycache__/
 *.pyo
 *.py.archive
 *.legacy.py.archive
+
+# never commit live-machine credentials or session junk synced by mistake
+/.config/
+/.gowskinet-organized

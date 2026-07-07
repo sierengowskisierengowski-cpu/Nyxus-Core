@@ -1,0 +1,23 @@
+{
+  "wallpaper": "",
+  "favorites": [
+    "/usr/share/backgrounds/nyxus/nyxus-blackhole-01.png"
+  ],
+  "monitor_target": "All Monitors",
+  "brightness": 1.0,
+  "saturation": 1.0,
+  "contrast": 1.0,
+  "tint_enabled": true,
+  "tint_color": "#C061CB",
+  "blur": 0.0,
+  "fit_mode": "Fill",
+  "live_preset": "Particle Drift",
+  "schedule": {
+    "morning": "",
+    "afternoon": "",
+    "evening": "",
+    "night": ""
+  },
+  "shuffle_enabled": false,
+  "shuffle_interval_minutes": 30
+}

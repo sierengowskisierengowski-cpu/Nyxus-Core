@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# NYXUS SAGE — GUI launcher
+export PYTHONPATH="/opt/nyxus-sage:${PYTHONPATH:-}"
+export GTK_THEME="${GTK_THEME:-Adwaita:dark}"
+if [[ -z "${NYXUS_DEBUG:-}" ]]; then
+  exec python3 -m sage.main "$@" 2> >(grep -vE "Theme parser error|gtk-dark\.css|adwaita.*does not exist" >&2)
+else
+  exec python3 -m sage.main "$@"
+fi
