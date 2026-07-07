@@ -116,6 +116,8 @@ CONSUMERS=(
   "${HOME}/.config/btop/themes/nyxus-prism.theme"
   "${HOME}/.config/qt5ct/colors/nyxus-prism.conf"
   "${HOME}/.config/qt6ct/colors/nyxus-prism.conf"
+  "${HOME}/.nyxus/nyxus-home/style.py"
+  "${HOME}/.nyxus/nyxus-home/widgets.py"
 )
 
 CANON="prism"
