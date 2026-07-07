@@ -164,6 +164,20 @@ $nyxus-accent-ok:        #784bff;
 .syspulse-mem  { color: #ff3cac; letter-spacing: 0.08em; }
 .syspulse-temp { color: #ffb84d; letter-spacing: 0.08em; }
 
+/* -- CAVA VISUALIZER ------------------------------------------------- */
+
+.cava-box {
+  padding: 0 10px;
+  border-radius: 8px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(43, 210, 255, 0.14);
+}
+.cava-label {
+  color: #2bd2ff;
+  font-size: 13px;
+  text-shadow: 0 0 8px rgba(120, 75, 255, 0.75);
+}
+
 .tray-dummy {
   color: #7a8298;
   letter-spacing: 0.5em;
@@ -197,7 +211,8 @@ $nyxus-accent-ok:        #784bff;
 .ticker-label {
   color: #ff3cac;
   font-weight: 700;
-  letter-spacing: 0.20em;
+  /* letter-spacing removed: it ellipsizes the fixed label in the
+     centerbox slot ("NYXUS - LI..."). */
   font-size: 10px;
   padding: 0 8px;
   text-shadow: 0 0 10px rgba(255, 60, 172, 0.55);
@@ -214,12 +229,11 @@ $nyxus-accent-ok:        #784bff;
   color: #c8ccd6;
   font-family: "JetBrainsMono Nerd Font", "JetBrainsMono", monospace;
   font-size: 11px;
-  letter-spacing: 0.04em;
-  /* Sized to roughly half a 1280-1366 px bar; 60 monospace cols at
-     ~7 px each ~ 420 px. Sides of bar_top_layout stay open for the
-     user to drop more widgets in. */
-  min-width: 420px;
-  /* max-width: 460px; unsupported by GTK CSS */
+  /* NO letter-spacing: the marquee is a fixed-column ribbon and
+     letter-spacing makes GTK ellipsize the sliding window. */
+  /* Full-length ribbon: 180 monospace cols at ~7px each ~ 1260px on a
+     1920px bar. The box hexpands; min-width just guards small screens. */
+  min-width: 900px;
 }
 
 /* -- WORKSPACES (left rail) ----------------------------------------- */

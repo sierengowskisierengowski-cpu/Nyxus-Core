@@ -71,6 +71,11 @@
 (defpoll NOTIFLIST  :interval "3s"   :initial '{"items":[],"total":0,"paused":"false"}'
                                      "~/.config/eww/scripts/notif-history.sh")
 
+;; ── audio visualizer ─────────────────────────────────────────────────
+;; cava.sh streams one line of block glyphs per frame (30 fps).
+(deflisten CAVA :initial "▁▁▁▁▁▁▁▁▁▁▁▁▁▁"
+                "~/.config/eww/scripts/cava.sh")
+
 ;; ═════════════════════════════════════════════════════════════════════
 ;; CORE BAR WIDGETS
 ;; ═════════════════════════════════════════════════════════════════════
@@ -83,6 +88,10 @@
 
 (defwidget heartbeat []
   (label :class "heartbeat" :text "● SYS·LIVE" :tooltip "Session is alive"))
+
+(defwidget cava_widget []
+  (box :class "cava-box" :space-evenly false :tooltip "Audio visualizer"
+    (label :class "cava-label" :text CAVA)))
 
 (defwidget syspulse_widget []
   (box :class "syspulse" :space-evenly false :spacing 8
@@ -212,14 +221,14 @@
     (label :class "ticker-player-text" :limit-width 48
            :text "${PLAYER.icon}  ${PLAYER.title}")))
 
-;; Fixed-width 60-column window; ticker.sh emits a precise WINDOW-wide
+;; Fixed-width 180-column window; ticker.sh emits a precise WINDOW-wide
 ;; slice each tick, so we must NOT auto-truncate or wrap here.
-;; Box does NOT hexpand — we want the ticker to occupy ~half the bar
-;; and be centered, leaving open slots on both sides.
+;; Spans nearly the whole top bar (full-length ribbon) — keep the
+;; limit-width in sync with WINDOW/NYXUS_TICKER_COLS in ticker.sh.
 (defwidget ticker_widget []
-  (box :class "ticker-box" :space-evenly false :hexpand false :halign "center"
+  (box :class "ticker-box" :space-evenly false :hexpand true :halign "center"
     (label :class "ticker ticker-marquee"
-           :limit-width 60
+           :limit-width 180
            :unindent false
            :text "${TICKER.text}"
            :tooltip "${TICKER.tooltip}")))
@@ -272,7 +281,7 @@
     (box :class "bar-cluster cluster-left" :space-evenly false :spacing 12 :halign "start"
       (nyxus_brand) (heartbeat))
     (box :class "bar-cluster cluster-center" :space-evenly false :spacing 14 :halign "center"
-      (syspulse_widget) (tray_dummy) (clock_widget))
+      (syspulse_widget) (cava_widget) (tray_dummy) (clock_widget))
     ;; Right cluster carries 12 status pills — the most of any cluster.
     ;; :spacing 8 keeps it at the high end of the contract's "tight"
     ;; range (§2: 6–10px) without overflowing 1366px width. Left/center
