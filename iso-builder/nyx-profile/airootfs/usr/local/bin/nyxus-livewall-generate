@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-livewall-generate [still.png] [out.mp4] · rev 2026-07-07
+#
+# Render a SEAMLESS subtle-motion loop from a still wallpaper without
+# touching the art itself:
+#   · per-star twinkle — the brightest points pulse on their own phase
+#     (spatial-coordinate phase offsets), like real starlight
+#   · breathing drift — a slow ±0.6% zoom + few-pixel orbit so the
+#     whole scene (spaceman included) gently floats
+# All oscillators complete integer cycles over the loop, so the video
+# loops with zero visible seam.
+#
+# Defaults: current still from ~/.config/nyxus/wallpaper.conf (or the
+# graffiti-space wall), output walls/live/<stem>-live.mp4, 24s @ 25fps,
+# sized to the active monitor.
+# © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -euo pipefail
+
+STILL="${1:-}"
+if [[ -z "${STILL}" ]]; then
+  STILL="$HOME/.config/hypr/walls/nyxus-graffiti-space.png"
+  [[ -f "$HOME/.config/nyxus/wallpaper.conf" ]] && \
+    . "$HOME/.config/nyxus/wallpaper.conf" 2>/dev/null && \
+    STILL="${WALLPAPER_PATH:-$STILL}"
+fi
+[[ -f "${STILL}" ]] || { echo "no such still: ${STILL}" >&2; exit 1; }
+
+STEM="$(basename "${STILL}")"; STEM="${STEM%.*}"
+OUT="${2:-$HOME/.config/hypr/walls/live/${STEM}-live.mp4}"
+mkdir -p "$(dirname "${OUT}")"
+
+DUR=24; FPS=25; FRAMES=$((DUR * FPS))
+
+# active monitor size (fallback 1920x1080)
+read -r W H < <(hyprctl monitors -j 2>/dev/null | \
+  python3 -c "import json,sys;m=json.load(sys.stdin)[0];print(m['width'],m['height'])" \
+  2>/dev/null || echo "1920 1080")
+
+# twinkle layer at quarter res (geq is per-pixel; blur hides the scale-up)
+TW=$((W / 2)); TH=$((H / 2))
+
+# highlight gate: only the brightest points twinkle (stars, glints)
+GATE=205
+# per-pixel phase → neighbouring stars pulse out of sync; period 4s
+# (integer 6 cycles per 24s loop → seamless)
+TWK="(0.5+0.5*sin(2*PI*T/4+X*0.11+Y*0.17))"
+
+ffmpeg -hide_banner -loglevel error -y \
+  -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${STILL}" \
+  -filter_complex "
+    [0:v]scale=${W}:${H}:flags=lanczos,format=gbrp,split=2[base][hl];
+    [hl]scale=${TW}:${TH},
+        geq=r='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,${GATE}),r(X,Y)*${TWK},0)':g='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,${GATE}),g(X,Y)*${TWK},0)':b='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,${GATE}),b(X,Y)*${TWK},0)',
+        gblur=sigma=2,
+        scale=${W}:${H}[tw];
+    [base][tw]blend=all_mode=screen:all_opacity=0.9,format=yuv420p,
+    zoompan=z='1.010+0.006*sin(2*PI*on/${FRAMES})':x='iw/2-(iw/zoom/2)+4*sin(2*PI*2*on/${FRAMES})':y='ih/2-(ih/zoom/2)+3*cos(2*PI*3*on/${FRAMES})':d=1:fps=${FPS}:s=${W}x${H}
+  " \
+  -c:v libx264 -preset medium -crf 20 -movflags +faststart -an \
+  "${OUT}"
+
+echo "living wallpaper rendered: ${OUT}"

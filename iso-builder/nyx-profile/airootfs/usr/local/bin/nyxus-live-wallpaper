@@ -9,9 +9,16 @@
 # not installed, so this is always safe to call.
 set -u
 STATE="$HOME/.config/nyxus/livewall.conf"
-VIDEO="$HOME/.config/hypr/walls/live/nyxus-live-idle.mp4"
 STILL="$HOME/.config/hypr/walls/nyxus-graffiti-space.png"
 [ -f "$HOME/.config/nyxus/wallpaper.conf" ] && . "$HOME/.config/nyxus/wallpaper.conf" 2>/dev/null && STILL="${WALLPAPER_PATH:-$STILL}"
+
+# Per-wallpaper living loop (rendered by nyxus-livewall-generate):
+# walls/live/<stem>-live.mp4 for the CURRENT still, so the animated
+# wallpaper is always your actual background — falls back to the
+# generic idle loop if none has been rendered yet.
+_stem="$(basename "$STILL")"; _stem="${_stem%.*}"
+VIDEO="$HOME/.config/hypr/walls/live/${_stem}-live.mp4"
+[ -f "$VIDEO" ] || VIDEO="$HOME/.config/hypr/walls/live/nyxus-live-idle.mp4"
 
 enabled() { [ -f "$STATE" ] && grep -q "LIVE=on" "$STATE"; }
 
