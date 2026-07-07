@@ -1,15 +1,15 @@
 {
   "_comment": "NYXUS workspace name + wallpaper map. Edited live via Quick Settings → Workspaces. The daemon /usr/local/bin/nyxus-workspace-wallpaperd watches Hyprland IPC and swaps the active wallpaper when the active workspace changes.",
   "workspaces": [
-    { "id": 1,  "name": "Main",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-obsidian-prism-4k.png" },
-    { "id": 2,  "name": "Web",    "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-obsidian-prism-4k.png" },
-    { "id": 3,  "name": "Code",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-obsidian-prism-4k.png" },
-    { "id": 4,  "name": "Chat",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-obsidian-prism-4k.png" },
-    { "id": 5,  "name": "Media",  "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-obsidian-prism-4k.png" },
-    { "id": 6,  "name": "Game",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-obsidian-prism-4k.png" },
-    { "id": 7,  "name": "Files",  "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-obsidian-prism-4k.png" },
-    { "id": 8,  "name": "System", "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-obsidian-prism-4k.png" },
-    { "id": 9,  "name": "Notes",  "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-obsidian-prism-4k.png" },
-    { "id": 10, "name": "Misc",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-obsidian-prism-4k.png" }
+    { "id": 1,  "name": "Main",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-prism-illusion.png" },
+    { "id": 2,  "name": "Web",    "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-prism-illusion.png" },
+    { "id": 3,  "name": "Code",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-prism-illusion.png" },
+    { "id": 4,  "name": "Chat",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-prism-illusion.png" },
+    { "id": 5,  "name": "Media",  "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-prism-illusion.png" },
+    { "id": 6,  "name": "Game",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-prism-illusion.png" },
+    { "id": 7,  "name": "Files",  "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-prism-illusion.png" },
+    { "id": 8,  "name": "System", "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-prism-illusion.png" },
+    { "id": 9,  "name": "Notes",  "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-prism-illusion.png" },
+    { "id": 10, "name": "Misc",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-prism-illusion.png" }
   ]
 }
