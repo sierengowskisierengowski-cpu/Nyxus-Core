@@ -230,7 +230,7 @@
 ;; WORKSPACES.occN field emitted by scripts/workspaces.sh.
 (defwidget workspace_pill [id occ]
   (button :class {WORKSPACES.active == id ? "ws-pill ws-pill-active" :
-                  occ                     ? "ws-pill ws-pill-occupied" :
+                  (occ ?: false)          ? "ws-pill ws-pill-occupied" :
                                             "ws-pill"}
           :onclick "hyprctl dispatch workspace ${id}"
           :tooltip "Workspace ${id}"

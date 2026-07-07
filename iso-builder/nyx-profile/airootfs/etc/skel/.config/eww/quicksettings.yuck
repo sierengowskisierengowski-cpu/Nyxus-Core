@@ -2,6 +2,7 @@
 ; Drops down from the top-right. Polls the daemon's state.json.
 
 (defpoll qs-state :interval "1500ms"
+  :initial "{\"tiles\":{}}"
   `cat "$XDG_RUNTIME_DIR/nyxus-qs/state.json" 2>/dev/null || echo '{"tiles":{}}'`)
 
 (defwidget qs-tile-toggle [icon label on action]
@@ -27,6 +28,8 @@
   :stacking "overlay" :focusable true
   :namespace "nyxus-quicksettings"
   (box :class "qs-card" :orientation "v" :space-evenly false :spacing 10
+
+    (label :class "qs-card-title" :text "QUICK SETTINGS")
 
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 8
       (qs-tile-toggle :icon "📶" :label "Wi-Fi"

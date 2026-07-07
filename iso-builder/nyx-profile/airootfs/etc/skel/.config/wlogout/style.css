@@ -1,100 +1,84 @@
-/* ── NYXUS palette (INLINED rev r14 · 2026-05-12) ─────────────────
- * wlogout's GTK CSS parser does NOT follow @import — using @import
- * here causes the entire stylesheet to bail on line 1, falling back
- * to the default GTK light theme (the white screen). All palette
- * colors must be inlined as @define-color directly in this file.
- * Keep in lockstep with nyxus-palette.css.
- * ──────────────────────────────────────────────────────────────── */
-@define-color nyx_white          #C8C0C0;
-@define-color nyx_white_off      #C8C0C0;
-@define-color nyx_grey_light     #784bff;
-@define-color nyx_grey_mid       #ff3cac;
-@define-color nyx_glass_dark     rgba(8, 8, 8, 0.72);
-@define-color nyx_glass_deeper   rgba(8, 8, 8, 0.86);
-@define-color nyx_glass_deepest  rgba(8, 8, 8, 0.96);
-@define-color nyx_hairline_white rgba(255, 255, 255, 0.10);
-@define-color nyx_hairline_ink   rgba(0,   0,   0,   0.45);
-
 /* ════════════════════════════════════════════════════════════════════════════
-   NYXUS · wlogout · DARK MIRROR · LOCKED rev 2026-05-07 r13
-   Matches unified DARK MIRROR · UNIFIED FROSTED GLASS spec.
-   Pure monochrome — white / off-white @nyx_white_off / light grey @nyx_grey_light /
-   faded black / ink black. No pink, no purple, no neon, no per-button
-   color fills.
+   NYXUS · wlogout · OBSIDIAN PRISM · rev 2026-07-07
+   Palette: #ff3cac magenta · #2bd2ff cyan · #784bff violet · #ffb84d gold
+   Deep-void frosted glass with iridescent prism rims. Matches the EWW
+   powermenu overlay, rofi power.rasi, and the Hyprland prism border loop.
+   NOTE: wlogout's GTK CSS parser does NOT follow @import — all colors
+   are inlined below. Keep in lockstep with the prism accent set.
    © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ════════════════════════════════════════════════════════════════════════════ */
 
 * {
-    font-family: 'JetBrains Mono Nerd Font', monospace !important;
-    font-size:   16px !important;
-    font-weight: 700  !important;
+    font-family: 'JetBrains Mono Nerd Font', monospace;
+    font-size:   15px;
+    font-weight: 700 ;
     letter-spacing: 0.18em;
 }
 
-/* ── DARK CANVAS · frosted glass over wallpaper ──────────────────── */
+/* ── DEEP VOID CANVAS · frosted glass over wallpaper ─────────────── */
 window {
-    background-color: rgba(8, 8, 8, 0.72) !important;
-    background-image: none                  !important;
-    color: @nyx_white_off                          !important;
+    background-color: rgba(5, 6, 10, 0.82) ;
+    background-image: none                  ;
+    color: #eef2fa                          ;
 }
 
-/* ── BUTTON BASE · DARK MIRROR pebble ────────────────────────────── */
+/* ── BUTTON BASE · prism glass tile ──────────────────────────────── */
 button {
-    background-color: @nyx_glass_deeper  !important;
-    background-image: none                    !important;
+    background-color: rgba(10, 13, 20, 0.88)         ;
+    background-image: none;
     background-repeat: no-repeat;
     background-position: center 30%;
     background-size: 26%;
 
-    border-style:  solid                       !important;
-    border-width:  1px                         !important;
-    border-color:  @nyx_hairline_white   !important;
-    border-radius: 16px                        !important;
+    border-style:  solid                              ;
+    border-width:  1px                                ;
+    border-color:  rgba(120, 75, 255, 0.35)           ;
+    border-radius: 20px                               ;
 
-    color:        @nyx_white_off                      !important;
-    box-shadow:   0 6px 18px @nyx_hairline_ink,
-                  inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-    outline:      none                         !important;
+    color:        #c8ccd6                             ;
+    box-shadow:   0 10px 32px rgba(0, 0, 0, 0.55),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    outline:      none                                ;
 
-    margin:       40px;
-    text-transform: uppercase;
-    transition:     all 220ms ease;
+    margin:       36px;
+    transition:     all 200ms ease;
 }
 
 button:focus,
 button:active,
 button:hover {
-    background-color: rgba(8, 12, 20, 0.88)   !important;
-    border-color:     rgba(120, 75, 255, 0.65)!important;
-    color:            @nyx_white                  !important;
-    box-shadow:       0 8px 24px rgba(0, 0, 0, 0.55),
-                      0 0 22px rgba(255, 60, 172, 0.42),
-                      0 0 18px rgba(43, 210, 255, 0.28),
-                      inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
-    outline:          none                     !important;
+    background-color: rgba(12, 16, 26, 0.92)  ;
+    border-color:     rgba(43, 210, 255, 0.60);
+    color:            #ffffff                 ;
+    box-shadow:       0 12px 36px rgba(0, 0, 0, 0.60),
+                      0 0 26px rgba(43, 210, 255, 0.35),
+                      0 0 34px rgba(255, 60, 172, 0.25),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    outline:          none                    ;
 }
 
-/* ── All six action buttons share the SAME monochrome treatment ──── */
-#lock,     button#lock,     .lock,     button.lock,
-#logout,   button#logout,   .logout,   button.logout,
-#suspend,  button#suspend,  .suspend,  button.suspend,
-#hibernate,button#hibernate,.hibernate,button.hibernate,
-#reboot,   button#reboot,   .reboot,   button.reboot,
-#shutdown, button#shutdown, .shutdown, button.shutdown {
-    background-color: @nyx_glass_deeper !important;
-    background-image: none                   !important;
-    border-color:     @nyx_hairline_white !important;
-    color:            @nyx_white_off                !important;
-    border-radius:    16px                   !important;
-}
-
+/* ── SOFT ACTIONS · lock / logout / suspend / hibernate ──────────── */
 #lock:hover,     button#lock:hover,     .lock:hover,     button.lock:hover,
-#logout:hover,   button#logout:hover,   .logout:hover,   button.logout:hover,
 #suspend:hover,  button#suspend:hover,  .suspend:hover,  button.suspend:hover,
 #hibernate:hover,button#hibernate:hover,.hibernate:hover,button.hibernate:hover,
+#logout:hover,   button#logout:hover,   .logout:hover,   button.logout:hover {
+    border-color: rgba(43, 210, 255, 0.60);
+    color:        #2bd2ff                 ;
+}
+
+/* ── DESTRUCTIVE · reboot / shutdown read as danger ──────────────── */
+#reboot, button#reboot, .reboot, button.reboot,
+#shutdown, button#shutdown, .shutdown, button.shutdown {
+    border-color: rgba(255, 84, 112, 0.35) ;
+    background-color: rgba(24, 9, 16, 0.88);
+}
+
 #reboot:hover,   button#reboot:hover,   .reboot:hover,   button.reboot:hover,
 #shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
-    background-color: rgba(8, 12, 20, 0.88) !important;
-    border-color:     rgba(120, 75, 255, 0.65) !important;
-    color:            @nyx_white !important;
+    border-color:     rgba(255, 84, 112, 0.85);
+    background-color: rgba(34, 10, 18, 0.94)  ;
+    color:            #ff5470                 ;
+    box-shadow:       0 12px 36px rgba(0, 0, 0, 0.60),
+                      0 0 34px rgba(255, 84, 112, 0.45),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
