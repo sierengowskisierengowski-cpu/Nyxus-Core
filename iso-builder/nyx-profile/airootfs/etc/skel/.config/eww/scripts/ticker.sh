@@ -20,7 +20,12 @@ CACHE_TS="${CACHE_DIR}/ts"
 CACHE_OFFSET="${CACHE_DIR}/offset"
 CACHE_TIP="${CACHE_DIR}/tooltip"
 REGEN_SECS=30
-WINDOW=60   # column count — keep ~half of typical 1366px bar (see eww.scss .ticker min-width)
+# Column count — full-length ribbon. 180 monospace cols at ~7px each
+# ≈ 1260px, filling a 1920px top bar minus the brand pill (left) and
+# now-playing pill (right). Override per-machine via NYXUS_TICKER_COLS
+# in ~/.config/eww/nyxus.conf.
+[[ -r "${HOME}/.config/eww/nyxus.conf" ]] && . "${HOME}/.config/eww/nyxus.conf" 2>/dev/null || true
+WINDOW="${NYXUS_TICKER_COLS:-180}"
 mkdir -p "${CACHE_DIR}"
 
 now=$(date +%s)
