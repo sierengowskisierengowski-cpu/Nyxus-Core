@@ -257,9 +257,9 @@
     (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal")
     (app_launcher :glyph "" :cmd "firefox"        :label "Firefox")
     (app_launcher :glyph "" :cmd "nautilus"       :label "Files")
-    (app_launcher :glyph "" :cmd "nyxus-sysmon"   :label "SysMon")
-    (app_launcher :glyph "" :cmd "nyxus-notepad"  :label "Notepad")
-    (app_launcher :glyph "" :cmd "nyxus-stickies" :label "Stickies")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'" :label "SysMon")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies")
     (app_launcher :glyph "" :cmd "pavucontrol"    :label "Audio")
     (app_launcher :glyph "" :cmd "blueman-manager":label "Bluetooth")))
 
@@ -386,7 +386,7 @@
       (dash_quick_toggle :glyph "󰕾" :label "Audio"     :cmd "pavucontrol")
       (dash_quick_toggle :glyph "󰍹" :label "Displays"  :cmd "wdisplays")
       (dash_quick_toggle :glyph "󰚰" :label "Updates"   :cmd "alacritty -e sh -c 'sudo pacman -Syu; read'")
-      (dash_quick_toggle :glyph "󰒓" :label "Settings"  :cmd "eww close dashboard && nyxus-settings")
+      (dash_quick_toggle :glyph "󰒓" :label "Settings"  :cmd "eww close dashboard && (command -v nyxus-settings >/dev/null && nyxus-settings || python3 ~/.nyxus/nyxus_settings.py)")
       (dash_quick_toggle :glyph "󰌾" :label "Lock"      :cmd "eww close dashboard && hyprlock")
       (dash_quick_toggle :glyph "󰌌" :label "Keys"      :cmd "eww close dashboard && eww open --toggle cheatsheet")
       (dash_quick_toggle :glyph "󰐥" :label "Power"     :cmd "eww close dashboard && eww open --toggle powermenu"))
@@ -850,7 +850,7 @@
 
 (defwindow quicksettings
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-quicksettings"
-  :geometry (geometry :x "16" :y "78" :width "420px" :height "auto" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "420px" :height "520px" :anchor "bottom right")
   (quicksettings_layout))
 
 (defwindow wifi
@@ -865,12 +865,12 @@
 
 (defwindow mixer
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-mixer"
-  :geometry (geometry :x "16" :y "78" :width "460px" :height "auto" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "480px" :anchor "bottom right")
   (mixer_layout))
 
 (defwindow calendar
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-calendar"
-  :geometry (geometry :x "16" :y "78" :width "420px" :height "auto" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "420px" :height "480px" :anchor "bottom right")
   (calendar_layout))
 
 (defwindow notifications
@@ -880,7 +880,7 @@
 
 (defwindow brightness-flyout
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-brightness"
-  :geometry (geometry :x "16" :y "78" :width "420px" :height "auto" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "420px" :height "200px" :anchor "bottom right")
   (brightness_flyout_layout))
 
 ; ── NYXUS Dock module ─────────────────────────────────────────────────

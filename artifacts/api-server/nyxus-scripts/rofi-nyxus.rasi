@@ -1,12 +1,12 @@
 * {
-    bg-deep:   #080808;
-    bg-card:   #080808;
-    text-hi:   #C8C0C0;
-    text-lo:   rgba(200, 192, 192, 0.62);
-    hairline:  #7B5EA7;
-    accent:    #C4607A;
-    glass-bg:  rgba(8, 8, 8, 0.97);
-    glass-line: rgba(123, 94, 167, 0.42);
+    bg-deep:   #05060a;
+    bg-card:   #05060a;
+    text-hi:   #eef2fa;
+    text-lo:   rgba(238, 242, 250, 0.62);
+    hairline:  rgba(255, 60, 172, 0.35);
+    accent:    #ff3cac;
+    glass-bg:  rgba(5, 6, 10, 0.88);
+    glass-line: rgba(43, 210, 255, 0.35);
 
     background-color: transparent;
     text-color: @text-hi;
@@ -17,7 +17,7 @@ window {
     background-color: @glass-bg;
     border: 1px;
     border-color: @glass-line;
-    border-radius: 3px;
+    border-radius: 10px;
     padding: 0;
     location: center;
     anchor: center;
@@ -65,7 +65,7 @@ element {
     text-color: @text-hi;
     padding: 9px 12px;
     spacing: 10px;
-    border-radius: 3px;
+    border-radius: 10px;
 }
 
 element selected.normal,
@@ -73,8 +73,8 @@ element selected.alternate.normal,
 element selected.active,
 element selected.urgent {
     background-color: @accent;
-    text-color: #080808;
-    border-radius: 3px;
+    text-color: #05060a;
+    border-radius: 10px;
 }
 
 element-text {

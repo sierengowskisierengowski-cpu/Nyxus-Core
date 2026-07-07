@@ -306,6 +306,8 @@ dl "nyxus-topbar-mist.png"        "$WALLS_DIR/nyxus-topbar-mist.png"        || f
 dl "nyxus-hyprlock-eye.png"       "$WALLS_DIR/nyxus-hyprlock-eye.png"       || failed=$((failed+1))
 dl "nyxus-login-stars.png"        "$WALLS_DIR/nyxus-login-stars.png"        || failed=$((failed+1))
 dl "nyxus-bar-stone.png"          "$WALLS_DIR/nyxus-bar-stone.png"          || failed=$((failed+1))
+dl "walls/nyxus-prism.svg"        "$WALLS_DIR/nyxus-prism.svg"              || failed=$((failed+1))
+dl "walls/nyxus-prism-4k.png"     "$WALLS_DIR/nyxus-prism-4k.png"           || failed=$((failed+1))
 
 # ── APP BACKGROUNDS (neon splat panels — used by all GTK apps) ────────────────
 hdr "App Backgrounds (neon splat panels)"
@@ -525,12 +527,18 @@ mkdir -p "$ROFI_DIR"
 dl "rofi-config.rasi"    "$ROFI_DIR/config.rasi"     || failed=$((failed+1))
 dl "rofi-nyxus.rasi"     "$ROFI_DIR/nyxus.rasi"      || failed=$((failed+1))
 dl "rofi-startmenu.rasi" "$ROFI_DIR/startmenu.rasi"  || failed=$((failed+1))
+dl "rofi-launcher.rasi"  "$ROFI_DIR/launcher.rasi"   || failed=$((failed+1))
+dl "rofi-power.rasi"     "$ROFI_DIR/power.rasi"      || failed=$((failed+1))
 
 # ── WLOGOUT ──────────────────────────────────────────────────────────────────
 hdr "Wlogout Power Menu"
 mkdir -p "$HOME/.config/wlogout"
 dl "wlogout-style.css" "$HOME/.config/wlogout/style.css" || failed=$((failed+1))
 dl "wlogout-layout"    "$HOME/.config/wlogout/layout"    || failed=$((failed+1))
+
+# ── SWAYNC (notification center theme) ───────────────────────────────────────
+mkdir -p "$HOME/.config/swaync"
+dl "swaync/style.css" "$HOME/.config/swaync/style.css" || failed=$((failed+1))
 
 # ── PALETTE.CSS COPY-ALONGSIDE (rev r13) ─────────────────────────────────────
 # Every CSS file that @imports nyxus-palette.css needs the file resolvable

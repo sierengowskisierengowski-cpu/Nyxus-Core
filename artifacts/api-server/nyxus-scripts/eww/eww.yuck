@@ -23,13 +23,8 @@
 ;; ── poll variables ────────────────────────────────────────────────────
 (defpoll TIME       :interval "1s"   :initial `date +'{"hms":"%H:%M:%S","hm":"%H:%M","date":"%a %d %b","long":"%A, %B %-d %Y"}'`
                                      `date +'{"hms":"%H:%M:%S","hm":"%H:%M","date":"%a %d %b","long":"%A, %B %-d %Y"}'`)
-;; TICKER — polled every 30s. The marquee animation lives in CSS
-;; (@keyframes nyx-marquee, eww.scss) and runs uninterrupted between
-;; updates. ticker.sh emits a STABLE string with minute-resolution
-;; time so eww only redraws when something actually changes, which
-;; preserves the smooth horizontal scroll. The chain is doubled inside
-;; the script so the loop seam is invisible.
-(defpoll TICKER     :interval "30s"  :initial '{"text":"NYXUS · DARK MIRROR · LIVE     ▌ STARTING SYSTEM PROBES …     NYXUS · DARK MIRROR · LIVE     ▌ STARTING SYSTEM PROBES …","tooltip":"NYXUS"}'
+;; ticker.sh runs at 10 fps to scroll one column per tick (true marquee).
+(defpoll TICKER     :interval "0.1s" :initial '{"text":"▌ NYXUS · DARK MIRROR · LIVE                                                  ","tooltip":"NYXUS"}'
                                      "~/.config/eww/scripts/ticker.sh")
 (defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0}'
                                      "~/.config/eww/scripts/sys-pulse.sh")
@@ -63,7 +58,7 @@
                                      "~/.config/eww/scripts/notifications.sh")
 
 ;; ── Sprint 1 flyouts ─────────────────────────────────────────────────
-(defpoll QS         :interval "3s"   :initial '{"wifi":"off","bt":"off","airplane":"off","dnd":"off","nightlight":"off","profile":"balanced","mic_mute":"off","audio_mute":"off","rotate":"0"}'
+(defpoll QS         :interval "3s"   :initial '{"wifi":"off","bt":"off","airplane":"off","dnd":"off","nightlight":"off","profile":"balanced","mic_mute":"off","audio_mute":"off","rot_lock":"off","auto_bright":"off"}'
                                      "~/.config/eww/scripts/quicksettings.sh")
 (defpoll WIFILIST   :interval "8s"   :initial '{"networks":[],"enabled":"false","current":""}'
                                      "~/.config/eww/scripts/wifi-list.sh")
@@ -73,19 +68,8 @@
                                      "~/.config/eww/scripts/audio-sinks.sh")
 (defpoll CALMONTH   :interval "300s" :initial '{"month":"—","year":"—","today":"","weeks":[]}'
                                      "~/.config/eww/scripts/calendar-month.sh")
-(defpoll NOTIFLIST  :interval "3s"   :initial '{"items":[],"groups":[],"muted":[],"total":0,"shown":0,"paused":"false"}'
+(defpoll NOTIFLIST  :interval "3s"   :initial '{"items":[],"total":0,"paused":"false"}'
                                      "~/.config/eww/scripts/notif-history.sh")
-;; P3.13b · NYXUS Start Menu — pinned + recent apps + user identity.
-;; Polled every 30s (apps don't churn) but re-runs immediately on
-;; window open via `eww update STARTAPPS=...` from the brand button.
-(defpoll STARTAPPS  :interval "30s"  :initial '{"pinned":[],"recents":[],"all":[],"user":"nyx","host":"nyxus","avatar":""}'
-                                     "~/.config/eww/scripts/startmenu-apps.sh")
-;; P3.13d · live taskbar (running windows from hyprctl).
-(defpoll TASKBAR    :interval "1s"   :initial '{"items":[]}'
-                                     "~/.config/eww/scripts/taskbar.sh")
-;; Search query buffer. literal="" means show pinned/recents; any
-;; other value filters `all` apps by case-insensitive substring.
-(defvar STARTQUERY "")
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; CORE BAR WIDGETS
@@ -93,7 +77,7 @@
 
 (defwidget nyxus_brand []
   (button :class "brand"
-          :onclick "eww open --toggle startmenu"
+          :onclick "rofi -show drun -theme ~/.config/rofi/startmenu.rasi 2>/dev/null || wofi --show drun"
           :tooltip "NYXUS · Start menu"
     "✕ NYXUS"))
 
@@ -152,10 +136,28 @@
 
 (defwidget brightness_widget []
   (button :class "pill"
-          :onclick "brightnessctl set +10% && ~/.config/eww/scripts/osd-show.sh osd-brightness &"
+          :onclick "eww open --toggle brightness-flyout"
           :onrightclick "brightnessctl set 10%- && ~/.config/eww/scripts/osd-show.sh osd-brightness &"
-          :tooltip "Brightness ${BACKLIGHT.percent}% · scroll/right-click to adjust"
+          :tooltip "Brightness ${BACKLIGHT.percent}% · click panel · right-click decrease"
     "☼  ${BACKLIGHT.percent}%"))
+
+;; ── search bar pill (opens start menu, which has its own search input) ──
+(defwidget search_btn []
+  (button :class "search-btn"
+          :onclick "eww open --toggle startmenu"
+          :tooltip "Search NYXUS"
+    "  Search NYXUS"))
+
+;; ── brightness flyout (opened from bar brightness pill) ──
+(defwidget brightness_flyout_layout []
+  (box :class "flyout brightness-flyout" :orientation "v" :space-evenly false :spacing 14
+    (label :class "flyout-title" :text "DISPLAY" :halign "start")
+    (box :orientation "h" :space-evenly false :spacing 12
+      (label :class "flyout-glyph" :text "☼")
+      (scale :class "flyout-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+             :onchange "brightnessctl set {}%"))
+    (label :class "flyout-sub" :text "${BACKLIGHT.percent}% brightness" :halign "start")
+    (button :class "flyout-close" :onclick "eww close brightness-flyout" "Close (Esc)")))
 
 (defwidget powerprof_widget []
   (button :class {POWERPROF.active == "performance" ? "pill pp-perf" :
@@ -210,13 +212,15 @@
     (label :class "ticker-player-text" :limit-width 48
            :text "${PLAYER.icon}  ${PLAYER.title}")))
 
-;; P3.13c · marquee ticker. The label overflows the box; CSS animation
-;; on `.ticker` (margin-left 100% → -100% over 60s) gives a smooth
-;; horizontal scroll. Removing :limit-width lets the full segment
-;; string render so the marquee actually has content to slide.
+;; Fixed-width 60-column window; ticker.sh emits a precise WINDOW-wide
+;; slice each tick, so we must NOT auto-truncate or wrap here.
+;; Box does NOT hexpand — we want the ticker to occupy ~half the bar
+;; and be centered, leaving open slots on both sides.
 (defwidget ticker_widget []
-  (box :class "ticker-box" :space-evenly false :hexpand true
-    (label :class "ticker"
+  (box :class "ticker-box" :space-evenly false :hexpand false :halign "center"
+    (label :class "ticker ticker-marquee"
+           :limit-width 60
+           :unindent false
            :text "${TICKER.text}"
            :tooltip "${TICKER.tooltip}")))
 
@@ -253,98 +257,43 @@
     (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal")
     (app_launcher :glyph "" :cmd "firefox"        :label "Firefox")
     (app_launcher :glyph "" :cmd "nautilus"       :label "Files")
-    (app_launcher :glyph "" :cmd "nyxus-sysmon"   :label "SysMon")
-    (app_launcher :glyph "" :cmd "nyxus-notepad"  :label "Notepad")
-    (app_launcher :glyph "" :cmd "nyxus-stickies" :label "Stickies")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'" :label "SysMon")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies")
     (app_launcher :glyph "" :cmd "pavucontrol"    :label "Audio")
     (app_launcher :glyph "" :cmd "blueman-manager":label "Bluetooth")))
-
-;; Horizontal pinned launcher rail — Win11/Mac dock style. Lives in
-;; the bottom bar between the start button and the live taskbar.
-(defwidget app_rail_h []
-  (box :class "app-rail-h" :orientation "h" :space-evenly false :spacing 6 :valign "center"
-    (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal")
-    (app_launcher :glyph "" :cmd "firefox"        :label "Firefox")
-    (app_launcher :glyph "" :cmd "nautilus"       :label "Files")
-    (app_launcher :glyph "" :cmd "nyxus-sysmon"   :label "SysMon")
-    (app_launcher :glyph "" :cmd "nyxus-notepad"  :label "Notepad")
-    (app_launcher :glyph "" :cmd "nyxus-settings" :label "Settings")))
-
-;; Search button — Spotlight-style. Opens rofi (P3.14 will replace
-;; with a custom EWW spotlight; keeping rofi as the live entry point
-;; until then so the bar slot is real, not a stub).
-(defwidget search_btn []
-  (button :class "search-btn"
-          :onclick "(command -v nyxus_launcher.py >/dev/null && nyxus_launcher.py &) || (python3 ~/.local/bin/nyxus_launcher.py &) || rofi -show drun &"
-          :tooltip "Search apps, files, calc, web (Super+Space)"
-    (box :orientation "h" :space-evenly false :spacing 6 :valign "center"
-      (label :class "search-glyph" :text "")
-      (label :class "search-text"  :text "Search NYXUS"))))
-
-;; Live taskbar — one tile per running Hyprland window. Click to focus.
-;; Right-click closes (via dispatch killactive after focus). Active
-;; window gets `.taskbar-tile-active`.
-(defwidget taskbar_tile [t]
-  (eventbox :class "taskbar-tile-box"
-    (button :class {t.active == true ? "taskbar-tile taskbar-tile-active" : "taskbar-tile"}
-            :onclick "hyprctl dispatch focuswindow address:${t.address}"
-            :tooltip "${t.title} · ws ${t.workspace}"
-      (box :orientation "h" :space-evenly false :spacing 6 :valign "center"
-        (label :class "taskbar-glyph" :text "${t.glyph}")
-        (label :class "taskbar-title" :text "${t.title}" :limit-width 18)))))
-
-(defwidget taskbar_widget []
-  ;; CRITICAL: scroll widget defaults to vexpand=TRUE in GTK. Without
-  ;; :vexpand false the ScrolledWindow grows vertically and pushes the
-  ;; entire bar-bottom window past its 56px geometry hint, causing the
-  ;; bar to fill the whole screen (rev r30, 2026-05-13 live-ISO bug).
-  (scroll :hscroll true :vscroll false :hexpand true :vexpand false
-    (box :class "taskbar" :orientation "h" :space-evenly false :spacing 4 :valign "center"
-      ;; Empty-state placeholder so the bar doesn't visually collapse
-      ;; when no windows are open.
-      (label :class "taskbar-empty"
-             :text "No windows open · use ✕ NYXUS or Search to launch"
-             :visible {arraylength(TASKBAR.items) == 0})
-      (for t in {TASKBAR.items}
-        (taskbar_tile :t {t})))))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; BARS
 ;; ═════════════════════════════════════════════════════════════════════
 
-;; ─────────────────────────────────────────────────────────────────────
-;; BOTTOM BAR — enterprise loadout (rev 2026-05-12)
-;; LEFT   · Start (✕ NYXUS) · Search · Workspaces · Pinned dock
-;; CENTER · Live taskbar (running Hyprland windows) — hexpands
-;; RIGHT  · Now-playing · SysPulse · Quick-settings cluster · Tray
-;;          (cal · brightness · audio · mic · net · bt · battery ·
-;;           powerprof · updates · notifs · qs) · Clock · Power
-;; ─────────────────────────────────────────────────────────────────────
 (defwidget bar_bottom_layout []
-  (box :class "bar bar-bottom" :orientation "h" :space-evenly false :spacing 10
-    ;; LEFT
-    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 10 :halign "start"
-      (nyxus_brand)
-      (search_btn)
-      (workspaces_rail)
-      (app_rail_h))
-    ;; CENTER — live taskbar takes all remaining width so the bar
-    ;; reads as one continuous surface, like Win11's centered task list.
-    (box :class "bar-cluster cluster-center" :space-evenly false :spacing 6 :hexpand true
-      (taskbar_widget))
-    ;; RIGHT — system tray + clock + power, tightly packed.
+  (centerbox :class "bar bar-bottom" :orientation "h"
+    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 12 :halign "start"
+      (nyxus_brand) (heartbeat))
+    (box :class "bar-cluster cluster-center" :space-evenly false :spacing 14 :halign "center"
+      (syspulse_widget) (tray_dummy) (clock_widget))
+    ;; Right cluster carries 12 status pills — the most of any cluster.
+    ;; :spacing 8 keeps it at the high end of the contract's "tight"
+    ;; range (§2: 6–10px) without overflowing 1366px width. Left/center
+    ;; use higher values because they carry fewer, larger widgets.
     (box :class "bar-cluster cluster-right" :space-evenly false :spacing 8 :halign "end"
-      (player_widget)
-      (syspulse_widget)
-      (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
-      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget)
-      (cal_widget) (clock_widget) (power_button))))
+      (cal_widget) (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
+      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget) (power_button))))
 
+;; Top bar is a 3-slot centerbox so the ticker stays dead-center and
+;; both flanks remain free for future widgets the user wants to add.
+;; Left  = brand pill
+;; Center= ticker (~half the bar width)
+;; Right = now-playing player (visible only when a player is active)
 (defwidget bar_top_layout []
-  (box :class "bar bar-top" :space-evenly false :spacing 12 :hexpand true
-    (label :class "ticker-label" :text "▌ NYXUS · LIVE")
-    (ticker_widget)
-    (player_widget)))
+  (centerbox :class "bar bar-top" :orientation "h"
+    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 10 :halign "start"
+      (label :class "ticker-label" :text "▌ NYXUS · LIVE"))
+    (box :class "bar-cluster cluster-center" :space-evenly false :halign "center"
+      (ticker_widget))
+    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 10 :halign "end"
+      (player_widget))))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; DASHBOARD — replaces nyxus_quicksettings + nyxus_clock + nyxus_calendar
@@ -437,7 +386,7 @@
       (dash_quick_toggle :glyph "󰕾" :label "Audio"     :cmd "pavucontrol")
       (dash_quick_toggle :glyph "󰍹" :label "Displays"  :cmd "wdisplays")
       (dash_quick_toggle :glyph "󰚰" :label "Updates"   :cmd "alacritty -e sh -c 'sudo pacman -Syu; read'")
-      (dash_quick_toggle :glyph "󰒓" :label "Settings"  :cmd "eww close dashboard && nyxus-settings")
+      (dash_quick_toggle :glyph "󰒓" :label "Settings"  :cmd "eww close dashboard && (command -v nyxus-settings >/dev/null && nyxus-settings || python3 ~/.nyxus/nyxus_settings.py)")
       (dash_quick_toggle :glyph "󰌾" :label "Lock"      :cmd "eww close dashboard && hyprlock")
       (dash_quick_toggle :glyph "󰌌" :label "Keys"      :cmd "eww close dashboard && eww open --toggle cheatsheet")
       (dash_quick_toggle :glyph "󰐥" :label "Power"     :cmd "eww close dashboard && eww open --toggle powermenu"))
@@ -627,123 +576,41 @@
       (label :class "qs-tile-glyph" :text "${glyph}")
       (label :class "qs-tile-label" :text "${label}"))))
 
-;; Reusable tile with optional tooltip — keeps backward-compat with the
-;; old (qs_tile glyph label state cmd) callsites by defaulting tooltip
-;; to the empty string when omitted.
-(defwidget qs_tile_t [glyph label state cmd tooltip]
-  (button :class {state == "on" ? "qs-tile qs-tile-on" : "qs-tile"}
-          :tooltip "${tooltip}"
-          :onclick "(${cmd}) &"
-    (box :orientation "v" :space-evenly false :spacing 4 :halign "center"
-      (label :class "qs-tile-glyph" :text "${glyph}")
-      (label :class "qs-tile-label" :text "${label}"))))
-
-;; Now-playing strip. Hidden when no media player is reporting status,
-;; so the panel doesn't reserve dead space on a system without playerctl.
-(defwidget qs_nowplaying []
-  (box :class "qs-nowplaying" :orientation "h" :space-evenly false :spacing 10
-       :visible {PLAYER.status != "Stopped"}
-    (label :class "qs-np-icon" :text "${PLAYER.icon}")
-    (box :orientation "v" :space-evenly false :spacing 0 :hexpand true :halign "start"
-      (label :class "qs-np-title"  :halign "start" :limit-width 28 :text "${PLAYER.title}")
-      (label :class "qs-np-artist" :halign "start" :limit-width 32 :text "${PLAYER.artist}"
-             :visible {PLAYER.artist != ""}))
-    (button :class "qs-np-btn" :tooltip "Previous" :onclick "playerctl previous &" "⏮")
-    (button :class "qs-np-btn qs-np-btn-primary" :tooltip "Play / Pause"
-            :onclick "playerctl play-pause &"
-      "${PLAYER.status == 'Playing' ? '⏸' : '▶'}")
-    (button :class "qs-np-btn" :tooltip "Next"     :onclick "playerctl next &" "⏭")))
-
-;; Cohesive single-pane Control Center (P2.12). One panel surfaces
-;; everything: identity header, connectivity tiles, system tiles,
-;; sliders, now-playing, and footer shortcuts. No more flipping between
-;; separate WiFi / BT / Mixer windows for the common path — those
-;; windows still exist for advanced lists, reachable from the header.
 (defwidget quicksettings_layout []
   (box :class "qs-root" :orientation "v" :space-evenly false :spacing 14
+    (label :class "qs-title" :text "QUICK SETTINGS")
 
-    ;; ── Header: title + power-profile pill + Settings shortcut ──────
-    (box :class "qs-header" :orientation "h" :space-evenly false :spacing 10
-      (label :class "qs-title" :text "CONTROL CENTER" :hexpand true :halign "start")
-      (button :class "qs-pill" :tooltip "Cycle power profile (saver → balanced → performance)"
-              :onclick "~/.config/eww/scripts/qs-toggle.sh profile &"
-        "⚡ ${QS.profile}")
-      (button :class "qs-settings" :tooltip "Open System Settings"
-              :onclick "eww close quicksettings && nyxus-settings &"
-        "⚙"))
-
-    ;; ── Connectivity row ───────────────────────────────────────────
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
-      (qs_tile_t :glyph "📶" :label "WiFi"      :state "${QS.wifi}"
-                 :tooltip "Toggle WiFi · long-press header opens picker"
-                 :cmd "~/.config/eww/scripts/qs-toggle.sh wifi")
-      (qs_tile_t :glyph ""  :label "Bluetooth" :state "${QS.bt}"
-                 :tooltip "Toggle Bluetooth radio"
-                 :cmd "~/.config/eww/scripts/qs-toggle.sh bt")
-      (qs_tile_t :glyph "✈" :label "Airplane"  :state "${QS.airplane}"
-                 :tooltip "Airplane mode — block all radios"
-                 :cmd "~/.config/eww/scripts/qs-toggle.sh airplane")
-      (qs_tile_t :glyph "🌙" :label "DND"       :state "${QS.dnd}"
-                 :tooltip "Do Not Disturb — silence notifications"
-                 :cmd "~/.config/eww/scripts/qs-toggle.sh dnd"))
+      (qs_tile :glyph "📶" :label "WiFi"      :state "${QS.wifi}"       :cmd "~/.config/eww/scripts/qs-toggle.sh wifi")
+      (qs_tile :glyph ""  :label "Bluetooth" :state "${QS.bt}"         :cmd "~/.config/eww/scripts/qs-toggle.sh bt")
+      (qs_tile :glyph "✈" :label "Airplane"  :state "${QS.airplane}"   :cmd "~/.config/eww/scripts/qs-toggle.sh airplane")
+      (qs_tile :glyph "🌙" :label "DND"       :state "${QS.dnd}"        :cmd "~/.config/eww/scripts/qs-toggle.sh dnd"))
 
-    ;; ── System row ─────────────────────────────────────────────────
-    ;; P2.12 review fix: dropped the `auto-bright` tile (no native
-    ;; backend on Arch + Hyprland — would have been a flag-only stub).
-    ;; Replaced flag-only `rot_lock` with a real `Rotate` tile that
-    ;; cycles the focused monitor's transform via `hyprctl keyword
-    ;; monitor ,transform,N` and reports the live angle from QS.rotate.
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
-      (qs_tile_t :glyph "☾"  :label "NightLight" :state "${QS.nightlight}"
-                 :tooltip "Warm color temperature for night use"
-                 :cmd "~/.config/eww/scripts/qs-toggle.sh nightlight")
-      (qs_tile_t :glyph "🎤" :label "Mic"        :state "${QS.mic_mute}"
-                 :tooltip "Mute / unmute microphone"
-                 :cmd "~/.config/eww/scripts/qs-toggle.sh mic")
-      (qs_tile_t :glyph "🔇" :label "Mute"       :state "${QS.audio_mute}"
-                 :tooltip "Mute / unmute audio output"
-                 :cmd "~/.config/eww/scripts/qs-toggle.sh audio")
-      (qs_tile_t :glyph "🔄"
-                 :label {QS.rotate == "0" ? "0°"
-                       : QS.rotate == "1" ? "90°"
-                       : QS.rotate == "2" ? "180°"
-                       : "270°"}
-                 :state {QS.rotate == "0" ? "off" : "on"}
-                 :tooltip "Rotate display (cycles 0° → 90° → 180° → 270°)"
-                 :cmd "~/.config/eww/scripts/qs-toggle.sh rotate"))
+      (qs_tile :glyph "☾"  :label "NightLight":state "${QS.nightlight}" :cmd "~/.config/eww/scripts/qs-toggle.sh nightlight")
+      (qs_tile :glyph "⚡" :label "${QS.profile}" :state "on"           :cmd "~/.config/eww/scripts/qs-toggle.sh profile")
+      (qs_tile :glyph "🎤" :label "Mic"        :state "${QS.mic_mute}"   :cmd "~/.config/eww/scripts/qs-toggle.sh mic")
+      (qs_tile :glyph "🔇" :label "Mute"       :state "${QS.audio_mute}" :cmd "~/.config/eww/scripts/qs-toggle.sh audio"))
 
-    ;; ── Session row ────────────────────────────────────────────────
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
-      (qs_tile_t :glyph "🔔" :label "Notifs"    :state "off"
-                 :tooltip "Open Notification Center"
-                 :cmd "eww close quicksettings && eww open --toggle notifications")
-      (qs_tile_t :glyph "🔒" :label "Lock"      :state "off"
-                 :tooltip "Lock screen now"
-                 :cmd "eww close quicksettings && hyprlock")
-      (qs_tile_t :glyph "⏻"  :label "Power"     :state "off"
-                 :tooltip "Power menu"
-                 :cmd "eww close quicksettings && eww open --toggle powermenu"))
+      (qs_tile :glyph "🔄" :label "RotLock"   :state "${QS.rot_lock}"    :cmd "~/.config/eww/scripts/qs-toggle.sh rot")
+      (qs_tile :glyph "☼"  :label "AutoBrt"  :state "${QS.auto_bright}" :cmd "~/.config/eww/scripts/qs-toggle.sh auto-bright")
+      (qs_tile :glyph "🔒" :label "Lock"      :state "off" :cmd "eww close quicksettings && hyprlock")
+      (qs_tile :glyph "⏻"  :label "Power"    :state "off" :cmd "eww close quicksettings && eww open --toggle powermenu"))
 
-    ;; ── Sliders ────────────────────────────────────────────────────
     (box :class "qs-sliders" :orientation "v" :space-evenly false :spacing 10
       (box :orientation "h" :space-evenly false :spacing 12
         (label :class "qs-slider-glyph" :text "🔊")
         (scale :class "qs-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
-               :tooltip "Output volume · ${AUDIO.vol}%"
                :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
       (box :orientation "h" :space-evenly false :spacing 12
         (label :class "qs-slider-glyph" :text "☼")
         (scale :class "qs-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
-               :tooltip "Display brightness · ${BACKLIGHT.percent}%"
                :onchange "brightnessctl set {}%"))
       (box :orientation "h" :space-evenly false :spacing 12
         (label :class "qs-slider-glyph" :text "🎤")
         (scale :class "qs-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
-               :tooltip "Microphone gain · ${MIC.vol}%"
                :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%")))
-
-    ;; ── Now-playing strip (auto-hides when no player is active) ────
-    (qs_nowplaying)
 
     (button :class "qs-close" :onclick "eww close quicksettings" "Close (Esc)")))
 
@@ -933,90 +800,62 @@
 ;; SPRINT 1 · NOTIFICATION CENTER
 ;; ═════════════════════════════════════════════════════════════════════
 
-;; A single notification row. Two action affordances on the right:
-;; the default action (only rendered when dunst exposes a name) and
-;; the per-row dismiss. Muted rows render at half opacity but are kept
-;; visible so users can still see what was silenced and unmute.
 (defwidget notif_row [n]
-  (box :class {n.muted == true ? "notif-row notif-row-muted" : "notif-row"}
-       :orientation "h" :space-evenly false :spacing 10
+  (box :class "notif-row" :orientation "h" :space-evenly false :spacing 10
+    (label :class "notif-app" :text "${n.app}")
     (box :orientation "v" :space-evenly false :spacing 2 :hexpand true :halign "start"
-      (label :class "notif-summary" :halign "start" :limit-width 38 :text "${n.summary}")
-      (label :class "notif-body"    :halign "start" :limit-width 46 :text "${n.body}"
-             :visible {n.body != ""}))
-    (button :class "notif-action"
-            :visible {n.default_action != ""}
-            :tooltip "${n.default_action}"
-            :onclick "~/.config/eww/scripts/notif-action.sh invoke-id ${n.id} &"
-      "↗")
+      (label :class "notif-summary" :halign "start" :limit-width 36 :text "${n.summary}")
+      (label :class "notif-body"    :halign "start" :limit-width 44 :text "${n.body}"))
     (button :class "notif-dismiss"
             :onclick "~/.config/eww/scripts/notif-action.sh close-id ${n.id} &"
             :tooltip "Dismiss" "✕")))
 
-;; Per-app group header. The app-name pill toggles mute for the whole
-;; app; the count badge shows in-history total. Click anywhere on the
-;; header to mute/unmute all notifications from that app.
-(defwidget notif_group [g]
-  (box :class {g.muted == true ? "notif-group notif-group-muted" : "notif-group"}
-       :orientation "v" :space-evenly false :spacing 6
-    (box :class "notif-group-header" :orientation "h" :space-evenly false :spacing 8
-      (label :class "notif-app"   :text "${g.app}" :hexpand true :halign "start")
-      (label :class "notif-count" :text "${g.count}")
-      (button :class {g.muted == true ? "notif-mute notif-mute-on" : "notif-mute"}
-              :tooltip {g.muted == true ? "Unmute ${g.app}" : "Mute ${g.app}"}
-              ;; SECURITY: app name is passed as base64 token (b64:<...>)
-              ;; rather than interpolated raw — notification metadata is
-              ;; attacker-influenced and a literal app name like
-              ;;     foo'; rm -rf $HOME; '
-              ;; would otherwise break out of the single-quoted argv.
-              :onclick "~/.config/eww/scripts/notif-action.sh mute-app b64:${g.app_b64} &"
-        "${g.muted == true ? '🔕' : '🔔'}"))
-    (box :orientation "v" :space-evenly false :spacing 4
-      (for n in {g.items}
-        (notif_row :n {n})))))
-
-;; Slide-in is provided at the layer-shell level by Hyprland — see
-;; `nyxus-hyprland-layerblur.conf` for the `layerrule = animation slide,
-;; nyxus-notifications` line. EWW just renders the static contents.
 (defwidget notifications_layout []
   (box :class "notif-root" :orientation "v" :space-evenly false :spacing 12
     (box :class "notif-header" :orientation "h" :space-evenly false :spacing 10
-      (label :class "notif-title"
-             :text "NOTIFICATIONS · ${NOTIFLIST.shown}/${NOTIFLIST.total}"
-             :hexpand true :halign "start")
-      (button :class {NOTIFLIST.paused == 'true' ? "notif-dnd notif-dnd-on" : "notif-dnd"}
-              :tooltip {NOTIFLIST.paused == 'true' ? "Do Not Disturb is ON — click to resume" : "Silence all notifications"}
+      (label :class "notif-title" :text "NOTIFICATIONS · ${NOTIFLIST.total}" :hexpand true :halign "start")
+      (button :class "notif-dnd"
               :onclick "~/.config/eww/scripts/notif-action.sh toggle-dnd &"
         "${NOTIFLIST.paused == 'true' ? 'DND' : 'ON'}")
       (button :class "notif-clear"
               :onclick "~/.config/eww/scripts/notif-action.sh clear-all &"
-              :tooltip "Clear notification history"
         "Clear all"))
-    (scroll :class "notif-scroll" :vscroll true :hscroll false :height 480
-      (box :orientation "v" :space-evenly false :spacing 10
-        ;; DESIGN_CONTRACT §9 — empty state.
+    (scroll :class "notif-scroll" :vscroll true :hscroll false :height 460
+      (box :orientation "v" :space-evenly false :spacing 6
+        ;; DESIGN_CONTRACT §9 — empty state. NOTIFLIST.total is already
+        ;; surfaced by notif-history.sh so we don't need arraylength here.
         (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
              :valign "center" :halign "center"
              :visible {NOTIFLIST.total == 0}
           (label :class "empty-glyph" :text "✓")
           (label :class "empty-title" :text {NOTIFLIST.paused == 'true' ? "Do Not Disturb is on" : "All caught up"})
           (label :class "empty-hint"  :text {NOTIFLIST.paused == 'true' ? "Notifications are silenced. Toggle DND to resume." : "New notifications will appear here."}))
-        (for g in {NOTIFLIST.groups}
-          (notif_group :g {g}))))
+        (for n in {NOTIFLIST.items}
+          (notif_row :n {n}))))
     (button :class "notif-close" :onclick "eww close notifications" "Close (Esc)")))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; SPRINT 1 · WINDOWS
 ;; ═════════════════════════════════════════════════════════════════════
 
+;; ─── Flyout sizing contract ───────────────────────────────────────────
+;; All bar-anchored flyouts share x=16, y=78, anchor=bottom right so they
+;; line up under the bottom-bar pill cluster regardless of which one the
+;; user opens. Two width buckets:
+;;   * 420px  — compact (single column, short content)
+;;   * 460px  — list-heavy (scrollable rows of devices / items)
+;; Heights cap at 560px so flyouts never exceed the visible workspace
+;; on 1366×768 panels. Internal lists scroll inside the flyout body.
+;; ──────────────────────────────────────────────────────────────────────
+
 (defwindow quicksettings
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-quicksettings"
-  :geometry (geometry :x "16" :y "78" :width "420px" :height "auto" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "420px" :height "520px" :anchor "bottom right")
   (quicksettings_layout))
 
 (defwindow wifi
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-wifi"
-  :geometry (geometry :x "16" :y "78" :width "440px" :height "560px" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "560px" :anchor "bottom right")
   (wifi_layout))
 
 (defwindow bluetooth
@@ -1026,92 +865,27 @@
 
 (defwindow mixer
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-mixer"
-  :geometry (geometry :x "16" :y "78" :width "520px" :height "auto" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "480px" :anchor "bottom right")
   (mixer_layout))
 
 (defwindow calendar
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-calendar"
-  :geometry (geometry :x "16" :y "78" :width "380px" :height "auto" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "420px" :height "480px" :anchor "bottom right")
   (calendar_layout))
 
 (defwindow notifications
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-notifications"
-  :geometry (geometry :x "16" :y "78" :width "440px" :height "640px" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "560px" :anchor "bottom right")
   (notifications_layout))
 
-;; ═════════════════════════════════════════════════════════════════════
-;; P3.13b · NYXUS START MENU (Win11-grade launcher)
-;; Bound to bottom-left "✕ NYXUS" brand button. STARTAPPS poller
-;; produces pinned/recents/all/user. STARTQUERY filters `all`.
-;; ═════════════════════════════════════════════════════════════════════
+(defwindow brightness-flyout
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-brightness"
+  :geometry (geometry :x "16" :y "78" :width "420px" :height "200px" :anchor "bottom right")
+  (brightness_flyout_layout))
 
-(defwidget startmenu_tile [name glyph exec]
-  (button :class "startmenu-tile"
-          :onclick "${exec} & disown ; eww close startmenu"
-          :tooltip "${name}"
-    (box :orientation "v" :space-evenly false :spacing 2 :halign "center"
-      (label :class "startmenu-tile-glyph" :text "${glyph}")
-      (label :class "startmenu-tile-label" :text "${name}" :limit-width 12))))
-
-(defwidget startmenu_recent_row [name path exec]
-  (button :class "startmenu-recent-row"
-          :onclick "${exec} & disown ; eww close startmenu"
-    (box :orientation "v" :space-evenly false :spacing 1 :halign "start" :hexpand true
-      (label :class "startmenu-recent-name" :text "${name}" :halign "start" :limit-width 56)
-      (label :class "startmenu-recent-path" :text "${path}" :halign "start" :limit-width 56))))
-
-(defwidget startmenu_layout []
-  (box :class "startmenu-root" :orientation "v" :space-evenly false :spacing 8
-    ;; Search bar — typing updates STARTQUERY which the script re-reads.
-    (box :orientation "h" :space-evenly false :spacing 8
-      (label :class "startmenu-tile-glyph" :text "")
-      (input :class "startmenu-search"
-             :hexpand true
-             :value STARTQUERY
-             :onchange "eww update STARTQUERY={} ; ~/.config/eww/scripts/startmenu-apps.sh search {} >/dev/null &"))
-
-    ;; Pinned grid (4 columns × 3 rows = 12 slots).
-    (label :class "startmenu-section" :text "PINNED" :halign "start"
-           :visible {STARTQUERY == ""})
-    (box :class "startmenu-grid" :orientation "v" :space-evenly false :spacing 4
-         :visible {STARTQUERY == ""}
-      (for row in {STARTAPPS.pinned}
-        (box :orientation "h" :space-evenly true :spacing 6
-          (for app in {row}
-            (startmenu_tile :name {app.name} :glyph {app.glyph} :exec {app.exec})))))
-
-    ;; Recents — most-recent .desktop launches.
-    (label :class "startmenu-section" :text "RECENT" :halign "start"
-           :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0})
-    (box :orientation "v" :space-evenly false :spacing 2
-         :visible {STARTQUERY == "" && arraylength(STARTAPPS.recents) > 0}
-      (for r in {STARTAPPS.recents}
-        (startmenu_recent_row :name {r.name} :path {r.path} :exec {r.exec})))
-
-    ;; Search results — flat list when STARTQUERY != "".
-    (label :class "startmenu-section" :text "RESULTS" :halign "start"
-           :visible {STARTQUERY != ""})
-    (scroll :vscroll true :hscroll false :height 320
-            :visible {STARTQUERY != ""}
-      (box :orientation "v" :space-evenly false :spacing 2
-        (for a in {STARTAPPS.all}
-          (startmenu_recent_row :name {a.name} :path {a.exec} :exec {a.exec}))))
-
-    ;; Footer — user identity + power buttons.
-    (box :class "startmenu-footer" :orientation "h" :space-evenly false :spacing 10
-      (label :class "startmenu-user" :text "  ${STARTAPPS.user}@${STARTAPPS.host}"
-             :hexpand true :halign "start")
-      (button :class "startmenu-power-btn"
-              :tooltip "Lock"
-              :onclick "eww close startmenu ; hyprlock &" "")
-      (button :class "startmenu-power-btn"
-              :tooltip "Settings"
-              :onclick "eww close startmenu ; nyxus-settings &" "")
-      (button :class "startmenu-power-btn shutdown"
-              :tooltip "Power"
-              :onclick "eww close startmenu ; eww open --toggle powermenu" ""))))
-
-(defwindow startmenu
-  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-startmenu"
-  :geometry (geometry :x "16" :y "78" :width "640px" :height "auto" :anchor "bottom left")
-  (startmenu_layout))
+; ── NYXUS Dock module ─────────────────────────────────────────────────
+(include "dock.yuck")
+(include "hotkey.yuck")
+(include "snap.yuck")
+(include "mission.yuck")
+(include "quicksettings.yuck")

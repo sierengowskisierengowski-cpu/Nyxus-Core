@@ -7,8 +7,8 @@
  * ──────────────────────────────────────────────────────────────── */
 @define-color nyx_white          #C8C0C0;
 @define-color nyx_white_off      #C8C0C0;
-@define-color nyx_grey_light     #7B5EA7;
-@define-color nyx_grey_mid       #C4607A;
+@define-color nyx_grey_light     #784bff;
+@define-color nyx_grey_mid       #ff3cac;
 @define-color nyx_glass_dark     rgba(8, 8, 8, 0.72);
 @define-color nyx_glass_deeper   rgba(8, 8, 8, 0.86);
 @define-color nyx_glass_deepest  rgba(8, 8, 8, 0.96);
@@ -65,10 +65,11 @@ button:focus,
 button:active,
 button:hover {
     background-color: rgba(8, 12, 20, 0.88)   !important;
-    border-color:     rgba(123, 94, 167, 0.65)!important;
+    border-color:     rgba(120, 75, 255, 0.65)!important;
     color:            @nyx_white                  !important;
     box-shadow:       0 8px 24px rgba(0, 0, 0, 0.55),
-                      0 0 22px rgba(196, 96, 122, 0.42),
+                      0 0 22px rgba(255, 60, 172, 0.42),
+                      0 0 18px rgba(43, 210, 255, 0.28),
                       inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
     outline:          none                     !important;
 }
@@ -94,6 +95,6 @@ button:hover {
 #reboot:hover,   button#reboot:hover,   .reboot:hover,   button.reboot:hover,
 #shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
     background-color: rgba(8, 12, 20, 0.88) !important;
-    border-color:     rgba(123, 94, 167, 0.65) !important;
+    border-color:     rgba(120, 75, 255, 0.65) !important;
     color:            @nyx_white !important;
 }
