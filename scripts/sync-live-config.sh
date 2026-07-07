@@ -63,5 +63,12 @@ for f in /usr/local/bin/nyxus*; do
 done
 echo "synced: /usr/local/bin/nyxus*"
 
+# ── theme fonts (graffiti type system: Permanent Marker/Caveat/Orbitron) ──
+if [[ -d "${HOME}/.local/share/fonts/nyxus" ]]; then
+  mkdir -p "${ROOTFS}/usr/share/fonts/nyxus"
+  rsync -a --delete "${HOME}/.local/share/fonts/nyxus/" "${ROOTFS}/usr/share/fonts/nyxus/"
+  echo "synced: usr/share/fonts/nyxus"
+fi
+
 echo
 echo "done — review with:  git -C ${REPO} status"

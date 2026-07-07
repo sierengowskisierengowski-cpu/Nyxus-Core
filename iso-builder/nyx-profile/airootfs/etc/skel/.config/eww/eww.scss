@@ -29,38 +29,71 @@ $nyxus-accent-ok:        #784bff;
 }
 
 /* -- BARS . PRISM EYE CANDY ------------------------------------------- */
+/* Every bar is a glass slab wrapped in a full prism rim: two stacked
+   backgrounds, the glass painted on padding-box and the gradient on
+   border-box, showing only through the transparent border. Alphas sit
+   at .70-.86 so Hyprland's dual-kawase layer blur reads through the
+   glass (the DARK MIRROR frosted look) without killing legibility. */
 
 .bar {
-  background: linear-gradient(180deg,
-    rgba(12, 14, 24, 0.94) 0%,
-    rgba(5, 6, 10, 0.88) 100%);
-  border: 1px solid rgba(255, 60, 172, 0.28);
+  border: 1px solid transparent;
   border-radius: 16px;
   padding: 4px 12px;
-  box-shadow:
-    0 -1px 0 rgba(43, 210, 255, 0.35),
-    0 0 0 1px rgba(120, 75, 255, 0.12),
-    0 16px 48px rgba(0, 0, 0, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 0 32px rgba(255, 60, 172, 0.06);
-}
-
-.bar-bottom {
-  padding: 6px 14px;
-  min-height: 36px;
-  /* max-height: 44px; unsupported by GTK CSS */
-  border-top: 2px solid transparent;
   background-image:
-    linear-gradient(180deg, rgba(12, 14, 24, 0.94), rgba(5, 6, 10, 0.88)),
-    linear-gradient(90deg, #ff3cac, #2bd2ff, #784bff, #ffb84d);
+    linear-gradient(180deg,
+      rgba(13, 16, 28, 0.84) 0%,
+      rgba(5, 6, 10, 0.72) 100%),
+    linear-gradient(100deg,
+      rgba(255, 60, 172, 0.70) 0%,
+      rgba(120, 75, 255, 0.55) 32%,
+      rgba(43, 210, 255, 0.70) 64%,
+      rgba(255, 184, 77, 0.60) 100%);
   background-origin: border-box;
   background-clip: padding-box, border-box;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 36px rgba(120, 75, 255, 0.10);
 }
+
+/* Window surface is 100% wide; this margin cuts the symmetric floating
+   inset. (The old 98% surface was wider than the space between the
+   rails' exclusive zones, so layer-shell shoved it 53px right and
+   clipped 14px off the right edge - the "left gap" bug.) */
+.bar-bottom {
+  margin: 0 12px;
+  padding: 5px 12px;
+  min-height: 36px;
+  border-top: 2px solid transparent;
+  background-image:
+    linear-gradient(180deg,
+      rgba(13, 16, 28, 0.86),
+      rgba(5, 6, 10, 0.74)),
+    linear-gradient(90deg,
+      #ff3cac 0%, #784bff 26%, #2bd2ff 52%, #ffb84d 78%, #ff3cac 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -16px 34px rgba(255, 60, 172, 0.10),
+    inset 0 16px 34px rgba(43, 210, 255, 0.06);
+}
+
+/* Floating ticker ribbon - mirrors the bottom bar's inset, thinner rim
+   running teal->violet->magenta so top and bottom bookend the spectrum. */
 .bar-top {
+  margin: 0 12px;
   padding: 2px 10px;
   min-height: 20px;
-  /* max-height: 24px; unsupported by GTK CSS */
-  border-radius: 0 0 14px 14px;
+  border-radius: 12px;
+  background-image:
+    linear-gradient(180deg,
+      rgba(10, 13, 24, 0.82),
+      rgba(5, 6, 10, 0.70)),
+    linear-gradient(90deg,
+      rgba(43, 210, 255, 0.65) 0%,
+      rgba(120, 75, 255, 0.55) 45%,
+      rgba(255, 60, 172, 0.65) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -10px 24px rgba(120, 75, 255, 0.08);
 }
 .bar-bottom > * { min-height: 0; }
 .bar-bottom .bar-cluster { min-height: 0; }
@@ -70,19 +103,20 @@ $nyxus-accent-ok:        #784bff;
 /* -- PILLS . glass capsules ----------------------------------------- */
 
 .pill {
-  padding: 5px 13px;
+  padding: 4px 11px;
   border-radius: 999px;
   background: linear-gradient(160deg,
-    rgba(22, 26, 38, 0.92),
-    rgba(10, 12, 20, 0.88));
+    rgba(22, 26, 38, 0.82),
+    rgba(9, 11, 18, 0.74));
   border: 1px solid rgba(255, 60, 172, 0.22);
   color: #eef2fa;
   font-weight: 600;
   font-size: 11px;
-  letter-spacing: 0.04em;
+  /* no letter-spacing: it widened pills past their allocation and GTK
+     ellipsized the whole right cluster ("v...", "x...") */
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 4px 14px rgba(0, 0, 0, 0.35);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.22);
   transition: all 180ms ease;
 }
 .pill:hover {
@@ -93,9 +127,33 @@ $nyxus-accent-ok:        #784bff;
   color: #ffffff;
   box-shadow:
     0 0 20px rgba(255, 60, 172, 0.35),
-    0 0 12px rgba(43, 210, 255, 0.22);
+    0 0 12px rgba(43, 210, 255, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
   text-shadow: 0 0 10px rgba(255, 60, 172, 0.45);
 }
+
+/* -- PILL SPECTRUM . per-widget prism hues ---------------------------- */
+/* Each status pill carries its own accent so the right cluster reads
+   like light split through a prism. Declared BEFORE the state classes
+   (mic-mute, bt-conn, batt-low, ...) so live states still win. */
+.p-brt   { color: #ffca7a; border-color: rgba(255, 184, 77, 0.32);
+           text-shadow: 0 0 8px rgba(255, 184, 77, 0.35); }
+.p-audio { color: #7fe3ff; border-color: rgba(43, 210, 255, 0.32);
+           text-shadow: 0 0 8px rgba(43, 210, 255, 0.35); }
+.p-mic   { color: #ff9ae8; border-color: rgba(255, 60, 172, 0.30);
+           text-shadow: 0 0 8px rgba(255, 60, 172, 0.35); }
+.p-net   { color: #9db9ff; border-color: rgba(120, 130, 255, 0.32);
+           text-shadow: 0 0 8px rgba(120, 130, 255, 0.35); }
+.p-bt    { color: #8fd4ff; border-color: rgba(43, 210, 255, 0.26);
+           text-shadow: 0 0 8px rgba(43, 210, 255, 0.30); }
+.p-batt  { color: #9ef0c0; border-color: rgba(74, 222, 128, 0.30);
+           text-shadow: 0 0 8px rgba(74, 222, 128, 0.32); }
+.p-pp    { color: #d8c9ff; border-color: rgba(120, 75, 255, 0.34);
+           text-shadow: 0 0 8px rgba(120, 75, 255, 0.38); }
+.p-upd   { color: #ffd9a3; border-color: rgba(255, 184, 77, 0.28);
+           text-shadow: 0 0 8px rgba(255, 184, 77, 0.30); }
+.p-notif { color: #ffb3d9; border-color: rgba(255, 60, 172, 0.30);
+           text-shadow: 0 0 8px rgba(255, 60, 172, 0.32); }
 
 .batt-charge {
   border-color: rgba(43, 210, 255, 0.45);
@@ -123,15 +181,22 @@ $nyxus-accent-ok:        #784bff;
   padding: 4px 14px;
   border-radius: 10px;
   font-weight: 700;
-  letter-spacing: 0.18em;
-  background: linear-gradient(135deg,
-    rgba(255, 60, 172, 0.22),
-    rgba(43, 210, 255, 0.10));
-  border: 1px solid rgba(255, 60, 172, 0.45);
+  /* letter-spacing pulled way down: 0.18em + Permanent Marker widened
+     the label past its slot and GTK ellipsized it ("x NYX...") */
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(135deg,
+      rgba(46, 16, 40, 0.88),
+      rgba(12, 20, 34, 0.84)),
+    linear-gradient(120deg, #ff3cac, #784bff 55%, #2bd2ff);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
   color: #ffffff;
+  text-shadow: 0 0 12px rgba(255, 60, 172, 0.55);
   box-shadow:
-    inset 0 0 12px rgba(255, 60, 172, 0.18),
-    0 0 16px rgba(255, 60, 172, 0.20);
+    inset 0 0 14px rgba(255, 60, 172, 0.20),
+    0 0 14px rgba(255, 60, 172, 0.22);
 }
 .brand:hover {
   background: linear-gradient(135deg,
@@ -147,35 +212,49 @@ $nyxus-accent-ok:        #784bff;
 .heartbeat {
   color: #2bd2ff;
   font-size: 10px;
-  letter-spacing: 0.18em;
+  /* 0.18em ellipsized this label in the centerbox slot ("SYS:LI...") */
+  letter-spacing: 0.08em;
   padding: 0 8px;
-  text-shadow: 0 0 8px rgba(43, 210, 255, 0.65);
+  text-shadow:
+    0 0 8px rgba(43, 210, 255, 0.75),
+    0 0 18px rgba(43, 210, 255, 0.35);
 }
 
 /* -- SYS PULSE ------------------------------------------------------ */
 
 .syspulse {
   padding: 2px 10px;
-  border-radius: 8px;
-  background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(255, 60, 172, 0.10);
+  border-radius: 999px;
+  background: rgba(13, 16, 26, 0.55);
+  border: 1px solid rgba(120, 75, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
-.syspulse-cpu  { color: #2bd2ff; letter-spacing: 0.08em; }
-.syspulse-mem  { color: #ff3cac; letter-spacing: 0.08em; }
-.syspulse-temp { color: #ffb84d; letter-spacing: 0.08em; }
+.syspulse-cpu  { color: #2bd2ff; letter-spacing: 0.06em;
+                 text-shadow: 0 0 8px rgba(43, 210, 255, 0.45); }
+.syspulse-mem  { color: #ff3cac; letter-spacing: 0.06em;
+                 text-shadow: 0 0 8px rgba(255, 60, 172, 0.45); }
+.syspulse-temp { color: #ffb84d; letter-spacing: 0.06em;
+                 text-shadow: 0 0 8px rgba(255, 184, 77, 0.45); }
 
 /* -- CAVA VISUALIZER ------------------------------------------------- */
 
 .cava-box {
   padding: 0 10px;
-  border-radius: 8px;
-  background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(43, 210, 255, 0.14);
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+    rgba(255, 60, 172, 0.10),
+    rgba(13, 16, 26, 0.55) 30%,
+    rgba(13, 16, 26, 0.55) 70%,
+    rgba(43, 210, 255, 0.10));
+  border: 1px solid rgba(43, 210, 255, 0.22);
+  box-shadow: inset 0 0 12px rgba(120, 75, 255, 0.14);
 }
 .cava-label {
   color: #2bd2ff;
   font-size: 13px;
-  text-shadow: 0 0 8px rgba(120, 75, 255, 0.75);
+  text-shadow:
+    0 0 8px rgba(120, 75, 255, 0.85),
+    0 0 16px rgba(43, 210, 255, 0.40);
 }
 
 .tray-dummy {
@@ -187,23 +266,37 @@ $nyxus-accent-ok:        #784bff;
 /* -- CLOCK ---------------------------------------------------------- */
 
 .clock {
-  padding: 4px 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg,
-    rgba(255, 60, 172, 0.10),
-    rgba(43, 210, 255, 0.06));
-  border: 1px solid rgba(255, 60, 172, 0.22);
+  padding: 3px 15px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(160deg,
+      rgba(24, 20, 40, 0.88),
+      rgba(9, 12, 22, 0.82)),
+    linear-gradient(100deg,
+      rgba(255, 60, 172, 0.60),
+      rgba(120, 75, 255, 0.50) 50%,
+      rgba(43, 210, 255, 0.60));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   transition: all 180ms ease;
 }
 .clock:hover {
-  background: linear-gradient(135deg,
-    rgba(255, 60, 172, 0.25),
-    rgba(43, 210, 255, 0.14));
-  border-color: rgba(255, 60, 172, 0.55);
-  box-shadow: 0 0 24px rgba(255, 60, 172, 0.35);
+  background-image:
+    linear-gradient(160deg,
+      rgba(58, 22, 48, 0.90),
+      rgba(14, 30, 46, 0.86)),
+    linear-gradient(100deg, #ff3cac, #784bff 50%, #2bd2ff);
+  box-shadow:
+    0 0 22px rgba(255, 60, 172, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
-.clock-glyph { color: #ff3cac; font-size: 14px; }
-.clock-hms   { font-weight: 700; font-size: 13px; letter-spacing: 0.06em; }
+.clock-glyph { color: #ff3cac; font-size: 14px;
+               text-shadow: 0 0 10px rgba(255, 60, 172, 0.65); }
+.clock-hms   { font-weight: 700; font-size: 13px; letter-spacing: 0.06em;
+               color: #ffffff;
+               text-shadow: 0 0 12px rgba(43, 210, 255, 0.45); }
 .clock-date  { color: #b8bfd0; }
 
 /* -- TICKER (top bar) ----------------------------------------------- */
@@ -238,66 +331,97 @@ $nyxus-accent-ok:        #784bff;
 
 /* -- WORKSPACES (left rail) ----------------------------------------- */
 
+/* Vertical prism rim: magenta pours down into teal, mirrored on the
+   app rail so the two rails bracket the screen like a split spectrum. */
 .ws-rail {
-  background: rgba(5, 6, 10, 0.78);
-  border: 1px solid rgba(255, 60, 172, 0.18);
+  border: 1px solid transparent;
   border-radius: 18px;
-  padding: 14px 6px;
+  padding: 12px 6px;
+  background-image:
+    linear-gradient(170deg,
+      rgba(11, 14, 24, 0.84),
+      rgba(5, 6, 10, 0.72)),
+    linear-gradient(180deg,
+      rgba(255, 60, 172, 0.72) 0%,
+      rgba(120, 75, 255, 0.55) 50%,
+      rgba(43, 210, 255, 0.72) 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
   box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.55),
-    inset 0 0 20px rgba(255, 60, 172, 0.05);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 26px rgba(255, 60, 172, 0.08);
 }
 .ws-pill {
   min-width: 36px;
   min-height: 36px;
-  border-radius: 12px;
-  background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(255, 60, 172, 0.10);
+  border-radius: 11px;
+  background: rgba(15, 19, 30, 0.50);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   color: #7a8298;
+  font-family: "Orbitron", "Inter Display", sans-serif;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   transition: all 180ms ease;
 }
 .ws-pill:hover {
-  background: rgba(255, 60, 172, 0.14);
-  color: #e8edf5;
+  background: rgba(255, 60, 172, 0.16);
+  border-color: rgba(255, 60, 172, 0.45);
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 60, 172, 0.55);
 }
 .ws-pill-active {
-  background: linear-gradient(135deg, #ff3cac, #2bd2ff);
+  background: linear-gradient(135deg, #ff3cac, #784bff 55%, #2bd2ff);
   color: #05060a;
-  border-color: rgba(43, 210, 255, 0.65);
-  box-shadow: 0 0 18px rgba(255, 60, 172, 0.55);
+  border-color: rgba(255, 255, 255, 0.40);
+  box-shadow:
+    0 0 14px rgba(255, 60, 172, 0.60),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 /* -- APP RAIL (right) ----------------------------------------------- */
 
 .app-rail {
-  background: rgba(5, 6, 10, 0.78);
-  border: 1px solid rgba(255, 60, 172, 0.18);
+  border: 1px solid transparent;
   border-radius: 18px;
-  padding: 14px 6px;
+  padding: 12px 6px;
+  background-image:
+    linear-gradient(190deg,
+      rgba(11, 14, 24, 0.84),
+      rgba(5, 6, 10, 0.72)),
+    linear-gradient(180deg,
+      rgba(43, 210, 255, 0.72) 0%,
+      rgba(120, 75, 255, 0.55) 50%,
+      rgba(255, 60, 172, 0.72) 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
   box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.55),
-    inset 0 0 20px rgba(255, 60, 172, 0.05);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 26px rgba(43, 210, 255, 0.08);
 }
 .app-pill {
   min-width: 38px;
   min-height: 38px;
-  border-radius: 12px;
-  background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(255, 60, 172, 0.10);
-  color: #c8ccd6;
+  border-radius: 11px;
+  background: rgba(15, 19, 30, 0.50);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #d7ddeb;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 16px;
+  text-shadow: 0 0 8px rgba(43, 210, 255, 0.25);
   transition: all 180ms ease;
 }
 .app-pill:hover {
   background: linear-gradient(135deg,
-    rgba(255, 60, 172, 0.22),
-    rgba(43, 210, 255, 0.12));
-  border-color: rgba(255, 60, 172, 0.55);
+    rgba(255, 60, 172, 0.24),
+    rgba(43, 210, 255, 0.14));
+  border-color: rgba(43, 210, 255, 0.55);
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(255, 60, 172, 0.40);
+  text-shadow:
+    0 0 10px rgba(255, 60, 172, 0.65),
+    0 0 18px rgba(43, 210, 255, 0.45);
+  box-shadow:
+    0 0 14px rgba(255, 60, 172, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 /* -- OVERLAY BACKDROP ------------------------------------------------ */
@@ -777,8 +901,10 @@ $nyxus-accent-ok:        #784bff;
 /* Workspace pill: occupied state */
 .ws-pill-occupied {
   border-color: rgba(255, 60, 172, 0.45);
-  color: #c8ccd6;
-  background: rgba(255, 60, 172, 0.06);
+  color: #e8d5f2;
+  background: rgba(255, 60, 172, 0.09);
+  box-shadow: inset 0 0 10px rgba(255, 60, 172, 0.14);
+  text-shadow: 0 0 8px rgba(255, 60, 172, 0.35);
 }
 .ws-pill-occupied:hover { color: #ffffff; }
 
@@ -1769,4 +1895,90 @@ scale slider {
   border-color: rgba(43, 210, 255, 0.55);
   color: #ffffff;
   box-shadow: 0 0 18px rgba(255, 60, 172, 0.40);
+}
+
+/* =====================================================================
+   GRAFFITI TYPE SYSTEM - rev 2026-07-07
+   Three-voice mix that matches the graffiti-space wallpaper:
+     - "Permanent Marker" - graffiti marker hand -> titles & brand
+     - "Caveat"           - loose handwriting  -> dates, subs, hints
+     - "Orbitron"         - sci-fi display     -> the big clocks
+   Data/readouts stay on JetBrainsMono Nerd Font for legibility.
+   NOTE: hand fonts hate wide tracking - letter-spacing is pulled way
+   down from the old all-caps values wherever a marker face lands.
+   =================================================================== */
+
+/* -- brand voice: marker titles -------------------------------------- */
+.brand,
+.ticker-label,
+.saver-brand,
+.power-title,
+.cheat-title,
+.dc-title,
+.dash-card-title,
+.cheat-section,
+.dc-section,
+.qs-title, .wifi-title, .bt-title, .mix-title, .cal-title, .notif-title,
+.qs-card-title,
+.dash-toggle-label,
+.power-label,
+.flyout-title,
+.empty-title {
+  font-family: "Permanent Marker", "Inter", sans-serif;
+  font-weight: 400;            /* the marker face has one weight */
+}
+.power-title  { font-size: 20px; letter-spacing: 0.14em; }
+.cheat-title  { font-size: 20px; letter-spacing: 0.12em; }
+.dc-title     { font-size: 24px; letter-spacing: 0.10em; }
+.dash-card-title { font-size: 13px; letter-spacing: 0.10em; }
+.cheat-section, .dc-section { letter-spacing: 0.10em; font-size: 12px; }
+.qs-title, .wifi-title, .bt-title, .mix-title, .cal-title, .notif-title {
+  font-size: 16px; letter-spacing: 0.10em;
+}
+.brand        { font-size: 13px; }
+.ticker-label { font-size: 12px; }
+.saver-brand  { font-size: 16px; letter-spacing: 0.20em; }
+.dash-toggle-label { font-size: 12px; }
+.power-label  { font-size: 13px; }
+.empty-title  { font-size: 15px; }
+
+/* -- handwritten voice: Caveat --------------------------------------- */
+.dash-date,
+.saver-date,
+.saver-hint,
+.dash-card-sub,
+.dc-sub,
+.cal-today,
+.wifi-current,
+.empty-hint,
+.clock-date {
+  font-family: "Caveat", "Inter", sans-serif;
+}
+.dash-date    { font-size: 26px; letter-spacing: 0.06em; color: #d7ddeb; }
+.saver-date   { font-size: 30px; letter-spacing: 0.08em; }
+.saver-hint   { font-size: 18px; letter-spacing: 0.10em; }
+.dash-card-sub{ font-size: 16px; letter-spacing: 0.04em; }
+.dc-sub       { font-size: 16px; letter-spacing: 0.06em; }
+.cal-today    { font-size: 18px; }
+.wifi-current { font-size: 16px; }
+.empty-hint   { font-size: 16px; }
+.clock-date   { font-size: 14px; }
+
+/* -- sci-fi voice: Orbitron on the hero clocks ------------------------ */
+.dash-clock {
+  font-family: "Orbitron", "Inter Display", sans-serif;
+  font-weight: 800;
+  font-size: 76px;             /* Orbitron runs wide - trim to fit */
+  letter-spacing: 0.06em;
+}
+.saver-clock {
+  font-family: "Orbitron", "Inter Display", sans-serif;
+  font-weight: 800;
+  font-size: 120px;
+  letter-spacing: 0.06em;
+}
+.clock-hms {
+  font-family: "Orbitron", "Inter Display", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
 }

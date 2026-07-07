@@ -109,42 +109,42 @@
       (label :class "clock-date"  :text "·  ${TIME.date}"))))
 
 (defwidget audio_widget []
-  (button :class "pill"
+  (button :class "pill p-audio"
           :onclick "eww open --toggle mixer"
           :onrightclick "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && ~/.config/eww/scripts/osd-show.sh osd-volume &"
           :tooltip "${AUDIO.tooltip} · click mixer · right-click mute"
     "${AUDIO.icon}  ${AUDIO.vol}%"))
 
 (defwidget mic_widget []
-  (button :class {MIC.mute == "yes" ? "pill mic-mute" : "pill"}
+  (button :class {MIC.mute == "yes" ? "pill p-mic mic-mute" : "pill p-mic"}
           :onclick "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle &"
           :tooltip "${MIC.tooltip} · click to toggle"
     "${MIC.icon}"))
 
 (defwidget net_widget []
-  (button :class "pill"
+  (button :class "pill p-net"
           :onclick "eww open --toggle wifi"
           :onrightclick "alacritty -e nmtui &"
           :tooltip "${NETWORK.tooltip} · click wifi panel · right-click nmtui"
     "${NETWORK.icon}  ${NETWORK.label}"))
 
 (defwidget bluetooth_widget []
-  (button :class {BLUETOOTH.powered == "off" ? "pill bt-off" :
-                  BLUETOOTH.connected > 0    ? "pill bt-conn" : "pill"}
+  (button :class {BLUETOOTH.powered == "off" ? "pill p-bt bt-off" :
+                  BLUETOOTH.connected > 0    ? "pill p-bt bt-conn" : "pill p-bt"}
           :onclick "eww open --toggle bluetooth"
           :onrightclick "${BLUETOOTH.powered == 'off' ? 'bluetoothctl power on' : 'bluetoothctl power off'} &"
           :tooltip "${BLUETOOTH.tooltip} · click panel · right-click toggle"
     "  ${BLUETOOTH.label}"))
 
 (defwidget battery_widget []
-  (button :class {BATTERY.status == "Charging" ? "pill batt-charge" :
-                  BATTERY.capacity < 20        ? "pill batt-low"    :
-                                                 "pill"}
+  (button :class {BATTERY.status == "Charging" ? "pill p-batt batt-charge" :
+                  BATTERY.capacity < 20        ? "pill p-batt batt-low"    :
+                                                 "pill p-batt"}
           :tooltip "${BATTERY.tooltip}"
     "${BATTERY.icon}  ${BATTERY.capacity}%"))
 
 (defwidget brightness_widget []
-  (button :class "pill"
+  (button :class "pill p-brt"
           :onclick "eww open --toggle brightness-flyout"
           :onrightclick "brightnessctl set 10%- && ~/.config/eww/scripts/osd-show.sh osd-brightness &"
           :tooltip "Brightness ${BACKLIGHT.percent}% · click panel · right-click decrease"
@@ -169,21 +169,21 @@
     (button :class "flyout-close" :onclick "eww close brightness-flyout" "Close (Esc)")))
 
 (defwidget powerprof_widget []
-  (button :class {POWERPROF.active == "performance" ? "pill pp-perf" :
-                  POWERPROF.active == "power-saver" ? "pill pp-save" : "pill"}
+  (button :class {POWERPROF.active == "performance" ? "pill p-pp pp-perf" :
+                  POWERPROF.active == "power-saver" ? "pill p-pp pp-save" : "pill p-pp"}
           :onclick "powerprofilesctl set $(powerprofilesctl list 2>/dev/null | awk '/Profiles/{f=1;next} f && /:/{gsub(/[*: ]/,\"\",$1); print $1}' | grep -v '^${POWERPROF.active}$' | head -1) &"
           :tooltip "${POWERPROF.tooltip} · click to cycle"
     "${POWERPROF.icon}  ${POWERPROF.label}"))
 
 (defwidget updates_widget []
-  (button :class {UPDATES.count > 24 ? "pill upd-many" : "pill"}
+  (button :class {UPDATES.count > 24 ? "pill p-upd upd-many" : "pill p-upd"}
           :onclick "alacritty -e sh -c 'sudo pacman -Syu; read -p \"press enter\"' &"
           :tooltip "${UPDATES.tooltip} · click to sync"
     "${UPDATES.icon}  ${UPDATES.label}"))
 
 (defwidget notifs_widget []
-  (button :class {NOTIFS.paused == "true" ? "pill notif-dnd" :
-                  NOTIFS.total > 0        ? "pill notif-on"  : "pill"}
+  (button :class {NOTIFS.paused == "true" ? "pill p-notif notif-dnd" :
+                  NOTIFS.total > 0        ? "pill p-notif notif-on"  : "pill p-notif"}
           :onclick "eww open --toggle notifications"
           :onrightclick "dunstctl set-paused toggle &"
           :onmiddleclick "dunstctl close-all &"
@@ -280,13 +280,12 @@
   (centerbox :class "bar bar-bottom" :orientation "h"
     (box :class "bar-cluster cluster-left" :space-evenly false :spacing 12 :halign "start"
       (nyxus_brand) (heartbeat))
-    (box :class "bar-cluster cluster-center" :space-evenly false :spacing 14 :halign "center"
+    (box :class "bar-cluster cluster-center" :space-evenly false :spacing 12 :halign "center"
       (syspulse_widget) (cava_widget) (tray_dummy) (clock_widget))
     ;; Right cluster carries 12 status pills — the most of any cluster.
-    ;; :spacing 8 keeps it at the high end of the contract's "tight"
-    ;; range (§2: 6–10px) without overflowing 1366px width. Left/center
-    ;; use higher values because they carry fewer, larger widgets.
-    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 8 :halign "end"
+    ;; :spacing 6 (low end of the contract's "tight" range, §2: 6–10px)
+    ;; because at 8 the cluster overflowed and GTK ellipsized pill labels.
+    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 6 :halign "end"
       (cal_widget) (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
       (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget) (power_button))))
 
@@ -389,12 +388,16 @@
     ;; ── quick toggles ────────────────────────────────────────────────
     ;; Glyphs use JetBrainsMono Nerd Font code points (matches every
     ;; other surface — bar, flyouts, OSD). Per DESIGN_CONTRACT.md §6.
+    ;; Every toggle closes the fullscreen overlay FIRST — anything
+    ;; launched while the dashboard is up opens BEHIND it and looks
+    ;; like a dead button. Net/BT/Audio route to the native NYXUS
+    ;; panels so the whole flow stays in-theme.
     (box :class "dash-toggles" :orientation "h" :space-evenly true :spacing 12
-      (dash_quick_toggle :glyph "󰖩" :label "Network"   :cmd "alacritty -e nmtui")
-      (dash_quick_toggle :glyph "󰂯" :label "Bluetooth" :cmd "blueman-manager")
-      (dash_quick_toggle :glyph "󰕾" :label "Audio"     :cmd "pavucontrol")
-      (dash_quick_toggle :glyph "󰍹" :label "Displays"  :cmd "wdisplays")
-      (dash_quick_toggle :glyph "󰚰" :label "Updates"   :cmd "alacritty -e sh -c 'sudo pacman -Syu; read'")
+      (dash_quick_toggle :glyph "󰖩" :label "Network"   :cmd "eww close dashboard && eww open wifi")
+      (dash_quick_toggle :glyph "󰂯" :label "Bluetooth" :cmd "eww close dashboard && eww open bluetooth")
+      (dash_quick_toggle :glyph "󰕾" :label "Audio"     :cmd "eww close dashboard && eww open mixer")
+      (dash_quick_toggle :glyph "󰍹" :label "Displays"  :cmd "eww close dashboard && wdisplays")
+      (dash_quick_toggle :glyph "󰚰" :label "Updates"   :cmd "eww close dashboard && alacritty -e sh -c 'sudo pacman -Syu; read -p \"press enter\"'")
       (dash_quick_toggle :glyph "󰒓" :label "Settings"  :cmd "eww close dashboard && (command -v nyxus-settings >/dev/null && nyxus-settings || python3 ~/.nyxus/nyxus_settings.py)")
       (dash_quick_toggle :glyph "󰌾" :label "Lock"      :cmd "eww close dashboard && hyprlock")
       (dash_quick_toggle :glyph "󰌌" :label "Keys"      :cmd "eww close dashboard && eww open --toggle cheatsheet")
@@ -520,11 +523,27 @@
 ;; WINDOWS
 ;; ═════════════════════════════════════════════════════════════════════
 
-;; NOTE: rails (left/right) are defined BEFORE the horizontal bars on
-;; purpose — eww reload/open recreates windows in definition order, and
-;; layer-shell positions each surface against the exclusive zones that
-;; exist at creation time. If bar-top opens before the rails it gets
-;; shoved sideways and clipped. Do not reorder.
+;; NOTE: the horizontal bars are defined BEFORE the rails on purpose.
+;; Hyprland arranges layer surfaces in creation order, applying each
+;; exclusive zone cumulatively. If the rails go first, their 66px side
+;; zones shrink the area the full-width bars are centred in, and a
+;; fixed-width surface wider than that area gets shoved sideways and
+;; clipped (the old "bottom bar doesn't reach the left edge" bug:
+;; x=53 with 14px off-screen right). Bars first → they get the true
+;; monitor width at x=0; the rails then centre themselves vertically
+;; in the strip left between the bars' zones. Do not reorder.
+;; The symmetric floating inset on both bars comes from the CSS margin
+;; on .bar-bottom / .bar-top, NOT from a <100% surface width.
+(defwindow bar-bottom
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-bottom"
+  :geometry (geometry :x "0" :y "12" :width "100%" :height "40px" :anchor "bottom center")
+  (bar_bottom_layout))
+
+(defwindow bar-top
+  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-top"
+  :geometry (geometry :x "0" :y "6" :width "100%" :height "24px" :anchor "top center")
+  (bar_top_layout))
+
 (defwindow bar-left
   :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-left"
   :geometry (geometry :x "10" :y "0" :width "56px" :height "70%" :anchor "center left")
@@ -534,16 +553,6 @@
   :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-right"
   :geometry (geometry :x "10" :y "0" :width "56px" :height "70%" :anchor "center right")
   (app_rail))
-
-(defwindow bar-bottom
-  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-bottom"
-  :geometry (geometry :x "0" :y "12" :width "98%" :height "40px" :anchor "bottom center")
-  (bar_bottom_layout))
-
-(defwindow bar-top
-  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-top"
-  :geometry (geometry :x "0" :y "0" :width "100%" :height "24px" :anchor "top center")
-  (bar_top_layout))
 
 ;; Fullscreen overlays sit inside .overlay-backdrop — a tinted sheet
 ;; whose alpha (0.34) clears the layerrule ignore_alpha threshold (0.2),

@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════
-# nyxus-livewall-generate [still.png] [out.mp4] · rev 2026-07-07
+# nyxus-livewall-generate [still.png] [out.mp4] · rev 2026-07-07 r2
 #
-# Render a SEAMLESS subtle-motion loop from a still wallpaper without
-# touching the art itself:
-#   · per-star twinkle — the brightest points pulse on their own phase
-#     (spatial-coordinate phase offsets), like real starlight
-#   · breathing drift — a slow ±0.6% zoom + few-pixel orbit so the
-#     whole scene (spaceman included) gently floats
-# All oscillators complete integer cycles over the loop, so the video
-# loops with zero visible seam.
+# Renders a SEAMLESS subtle-motion loop from a still wallpaper.
+#
+# Two engines:
+#   · SCENE engine — hand-tuned per-wallpaper animation. The flagship
+#     nyxus-graffiti-space wall gets true feature animation:
+#       - galaxy swirls slowly around its own core
+#       - isolated point-stars twinkle on individual phases
+#         (big white doodles/text stay still — only true stars pulse)
+#       - the spaceman drifts in zero-G with a slight body sway
+#       - rocket flame + comet fireballs flicker like real fire
+#       - paint drips creep downward on two offset phases
+#       - the whole scene breathes (±0.6% zoom + tiny orbit)
+#   · GENERIC engine — highlight twinkle + breathing drift for any
+#     other still (previous behaviour).
+#
+# Every oscillator completes an integer number of cycles over the
+# loop duration, so the video loops with zero visible seam.
 #
 # Defaults: current still from ~/.config/nyxus/wallpaper.conf (or the
 # graffiti-space wall), output walls/live/<stem>-live.mp4, 24s @ 25fps,
@@ -38,27 +47,197 @@ read -r W H < <(hyprctl monitors -j 2>/dev/null | \
   python3 -c "import json,sys;m=json.load(sys.stdin)[0];print(m['width'],m['height'])" \
   2>/dev/null || echo "1920 1080")
 
-# twinkle layer at quarter res (geq is per-pixel; blur hides the scale-up)
-TW=$((W / 2)); TH=$((H / 2))
-
-# highlight gate: only the brightest points twinkle (stars, glints)
-GATE=205
+# ── point-star twinkle expression (shared by both engines) ──────────
 # per-pixel phase → neighbouring stars pulse out of sync; period 4s
 # (integer 6 cycles per 24s loop → seamless)
-TWK="(0.5+0.5*sin(2*PI*T/4+X*0.11+Y*0.17))"
+TWK="(0.45+0.55*sin(2*PI*T/4+X*0.13+Y*0.19))"
 
-ffmpeg -hide_banner -loglevel error -y \
-  -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${STILL}" \
-  -filter_complex "
-    [0:v]scale=${W}:${H}:flags=lanczos,format=gbrp,split=2[base][hl];
-    [hl]scale=${TW}:${TH},
-        geq=r='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,${GATE}),r(X,Y)*${TWK},0)':g='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,${GATE}),g(X,Y)*${TWK},0)':b='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,${GATE}),b(X,Y)*${TWK},0)',
-        gblur=sigma=2,
-        scale=${W}:${H}[tw];
-    [base][tw]blend=all_mode=screen:all_opacity=0.9,format=yuv420p,
-    zoompan=z='1.010+0.006*sin(2*PI*on/${FRAMES})':x='iw/2-(iw/zoom/2)+4*sin(2*PI*2*on/${FRAMES})':y='ih/2-(ih/zoom/2)+3*cos(2*PI*3*on/${FRAMES})':d=1:fps=${FPS}:s=${W}x${H}
-  " \
-  -c:v libx264 -preset medium -crf 20 -movflags +faststart -an \
-  "${OUT}"
+# ════════════════════════════════════════════════════════════════════
+# SCENE ENGINE · nyxus-graffiti-space
+# All coordinates are tuned on a 1920×1080 grid and scaled to the
+# render size, so the scene works on any monitor resolution.
+# ════════════════════════════════════════════════════════════════════
+scene_graffiti() {
+  local MDIR; MDIR="$(mktemp -d /tmp/nyxus-livewall.XXXXXX)"
+
+  # scale factors from the 1920×1080 tuning grid to the render size
+  local SX SY
+  SX=$(python3 -c "print($W/1920)"); SY=$(python3 -c "print($H/1080)")
+  px()  { python3 -c "print(round($1*$SX))"; }
+  py()  { python3 -c "print(round($1*$SY))"; }
+
+  # ── region geometry (1920×1080 grid) ──────────────────────────────
+  # galaxy crop box 640×640 @ (1200,235), core at box-center
+  local GBX GBY GBS GCX GCY GRX GRY
+  GBX=$(px 1200); GBY=$(py 235); GBS=$(px 640)
+  GCX=$((GBS/2)); GCY=$((GBS/2)); GRX=$(px 240); GRY=$(py 185)
+
+  # astronaut — union of four soft ellipses
+  # (raised hand · helmet/arm · torso · legs)
+  local A0X A0Y A0RX A0RY A1X A1Y A1RX A1RY A2X A2Y A2RX A2RY A3X A3Y A3RX A3RY
+  A0X=$(px 930);  A0Y=$(py 190); A0RX=$(px 70);  A0RY=$(py 80)
+  A1X=$(px 1114); A1Y=$(py 384); A1RX=$(px 192); A1RY=$(py 192)
+  A2X=$(px 1008); A2Y=$(py 557); A2RX=$(px 240); A2RY=$(py 211)
+  A3X=$(px 864);  A3Y=$(py 749); A3RX=$(px 221); A3RY=$(py 269)
+
+  # paint-drip clusters: A = under the saturn ring · B = FAR-OUT drips
+  # top-left + graffiti-moon drips top-right (opposite phase)
+  local D1X D1Y D1RX D1RY D2AX D2AY D2ARX D2ARY D2BX D2BY D2BRX D2BRY
+  D1X=$(px 595);  D1Y=$(py 518); D1RX=$(px 192); D1RY=$(py 134)
+  D2AX=$(px 134); D2AY=$(py 173); D2ARX=$(px 86); D2ARY=$(py 77)
+  D2BX=$(px 1400); D2BY=$(py 255); D2BRX=$(px 110); D2BRY=$(py 65)
+
+  # flame/fireball boxes: rocket exhaust + three comets
+  local F1X F1Y F1W F1H F2X F2Y F2W F2H F3X F3Y F3W F3H F4X F4Y F4W F4H
+  F1X=$(px 910);  F1Y=$(py 850); F1W=$(px 240); F1H=$(py 200)   # rocket
+  F2X=$(px 889);  F2Y=0;         F2W=$(px 200); F2H=$(py 140)   # comet top
+  F3X=$(px 1140); F3Y=$(py 765); F3W=$(px 200); F3H=$(py 160)   # comet right
+  F4X=$(px 1540); F4Y=$(py 680); F4W=$(px 260); F4H=$(py 200)   # gold comet BR
+
+  # ── soft masks (white = animated, feathered edges) ────────────────
+  magick -size "${GBS}x${GBS}" xc:black -fill white \
+    -draw "ellipse $GCX,$GCY $GRX,$GRY 0,360" -blur 0x25 "$MDIR/galaxy.png"
+
+  magick -size "${W}x${H}" xc:black -fill white \
+    -draw "ellipse $A0X,$A0Y $A0RX,$A0RY 0,360" \
+    -draw "ellipse $A1X,$A1Y $A1RX,$A1RY 0,360" \
+    -draw "ellipse $A2X,$A2Y $A2RX,$A2RY 0,360" \
+    -draw "ellipse $A3X,$A3Y $A3RX,$A3RY 0,360" \
+    -blur 0x35 "$MDIR/astro.png"
+
+  magick -size "${W}x${H}" xc:black -fill white \
+    -draw "ellipse $D1X,$D1Y $D1RX,$D1RY 0,360" -blur 0x25 "$MDIR/dripA.png"
+
+  magick -size "${W}x${H}" xc:black -fill white \
+    -draw "ellipse $D2AX,$D2AY $D2ARX,$D2ARY 0,360" \
+    -draw "ellipse $D2BX,$D2BY $D2BRX,$D2BRY 0,360" \
+    -blur 0x20 "$MDIR/dripB.png"
+
+  magick -size "${F1W}x${F1H}" xc:black -fill white \
+    -draw "ellipse $((F1W/2)),$((F1H/2)) $(px 86),$(py 67) 0,360" \
+    -blur 0x18 "$MDIR/flame1.png"
+  magick -size "${F2W}x${F2H}" xc:black -fill white \
+    -draw "ellipse $((F2W/2)),$(py 53) $(px 58),$(py 44) 0,360" \
+    -blur 0x14 "$MDIR/flame2.png"
+  magick -size "${F3W}x${F3H}" xc:black -fill white \
+    -draw "ellipse $((F3W/2)),$((F3H/2)) $(px 70),$(py 50) 0,360" \
+    -blur 0x14 "$MDIR/flame3.png"
+  magick -size "${F4W}x${F4H}" xc:black -fill white \
+    -draw "ellipse $((F4W/2)),$((F4H/2)) $(px 90),$(py 70) 0,360" \
+    -blur 0x16 "$MDIR/flame4.png"
+
+  # ── shooting-star sprite: bright head + fading tail, tilted to the
+  # flight path (≈4.5°). Rendered once, flown twice per loop.
+  magick -size 8x240 gradient:"rgba(180,230,255,0)"-"rgba(255,255,255,0.95)" \
+    -rotate 90 "$MDIR/tail.png"
+  magick -size 44x44 radial-gradient:"white"-"rgba(255,255,255,0)" "$MDIR/head.png"
+  magick -size 300x48 xc:none \
+    "$MDIR/tail.png" -geometry +20+20 -composite \
+    "$MDIR/head.png" -geometry +246+2  -composite \
+    -blur 0x1 -background none -rotate 4.5 "$MDIR/star.png"
+
+  # half-res twinkle plane
+  local TW TH
+  TW=$((W / 2)); TH=$((H / 2))
+
+  # ── motion (every frequency = integer cycles / 24s → seamless) ────
+  # galaxy   : ±2.2° swirl, one full breath per loop
+  # astronaut: 4px/5px lissajous drift + ±0.7° sway
+  # drips    : 0→3px downward creep, clusters half a period apart
+  # flames   : 3/5/7 Hz brightness+saturation flicker
+  ffmpeg -hide_banner -loglevel error -y \
+    -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${STILL}" \
+    -i "$MDIR/galaxy.png" -i "$MDIR/astro.png" \
+    -i "$MDIR/dripA.png" -i "$MDIR/dripB.png" \
+    -i "$MDIR/flame1.png" -i "$MDIR/flame2.png" -i "$MDIR/flame3.png" \
+    -i "$MDIR/flame4.png" -i "$MDIR/star.png" \
+    -filter_complex "
+      [0:v]scale=${W}:${H}:flags=lanczos,format=rgba,
+           split=9[base][galS][astS][drAS][drBS][f1S][f2S][f3S][f4S];
+
+      [galS]crop=${GBS}:${GBS}:${GBX}:${GBY}[galC];
+      [galC][1:v]alphamerge,
+        rotate=a='0.038*sin(2*PI*t/${DUR})':c=black@0:ow=${GBS}:oh=${GBS}[gal];
+      [base][gal]overlay=${GBX}:${GBY}:format=auto[v1];
+
+      [drAS][3:v]alphamerge[drA];
+      [v1][drA]overlay=x=0:y='1.5-1.5*cos(2*PI*t/${DUR})':format=auto[v2];
+      [drBS][4:v]alphamerge[drB];
+      [v2][drB]overlay=x=0:y='1.5-1.5*cos(2*PI*t/${DUR}+PI)':format=auto[v3];
+
+      [astS][2:v]alphamerge,
+        rotate=a='0.012*sin(2*PI*t/${DUR}+0.5)':c=black@0:ow=${W}:oh=${H}[ast];
+      [v3][ast]overlay=x='4*sin(2*PI*t/${DUR})':y='5*sin(2*PI*2*t/${DUR}+1.0)':format=auto[v4];
+
+      [f1S]crop=${F1W}:${F1H}:${F1X}:${F1Y},
+        hue=b='0.30*(0.6*sin(2*PI*3*t)+0.4*sin(2*PI*7*t+2))':s='1+0.15*sin(2*PI*5*t+1)'[f1C];
+      [f1C][5:v]alphamerge[f1];
+      [v4][f1]overlay=${F1X}:${F1Y}:format=auto[v5];
+
+      [f2S]crop=${F2W}:${F2H}:${F2X}:${F2Y},
+        hue=b='0.24*(0.6*sin(2*PI*3*t+0.7)+0.4*sin(2*PI*5*t))':s='1+0.12*sin(2*PI*4*t+2)'[f2C];
+      [f2C][6:v]alphamerge[f2];
+      [v5][f2]overlay=${F2X}:${F2Y}:format=auto[v6];
+
+      [f3S]crop=${F3W}:${F3H}:${F3X}:${F3Y},
+        hue=b='0.24*(0.6*sin(2*PI*5*t+1.4)+0.4*sin(2*PI*7*t))':s='1+0.12*sin(2*PI*3*t)'[f3C];
+      [f3C][7:v]alphamerge[f3];
+      [v6][f3]overlay=${F3X}:${F3Y}:format=auto[v7];
+
+      [f4S]crop=${F4W}:${F4H}:${F4X}:${F4Y},
+        hue=b='0.26*(0.6*sin(2*PI*4*t+0.4)+0.4*sin(2*PI*6*t+2.6))':s='1+0.13*sin(2*PI*5*t+0.9)'[f4C];
+      [f4C][8:v]alphamerge[f4];
+      [v7][f4]overlay=${F4X}:${F4Y}:format=auto[v8];
+
+      [9:v]format=rgba,split=2[st1][st2p];
+      [st2p]scale=iw*0.6:ih*0.6,hflip[st2];
+      [v8][st1]overlay=
+        x='-320+(${W}+640)*(t-11)/2.6':y='${H}*0.10+${H}*0.16*(t-11)/2.6':
+        enable='between(t,11,13.6)':format=auto[v8a];
+      [v8a][st2]overlay=
+        x='${W}+200-(${W}+400)*(t-18.5)/2.4':y='${H}*0.72-${H}*0.10*(t-18.5)/2.4':
+        enable='between(t,18.5,20.9)':format=auto[v9];
+
+      [v9]format=gbrp,split=2[comp][twS];
+      [twS]scale=${TW}:${TH},split=2[twA][twB];
+      [twB]gblur=sigma=10[twBlur];
+      [twA][twBlur]blend=all_mode=subtract[pts];
+      [pts]geq=r='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,30),r(X,Y)*${TWK},0)':g='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,30),g(X,Y)*${TWK},0)':b='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,30),b(X,Y)*${TWK},0)',
+        gblur=sigma=1.6,scale=${W}:${H}[tw];
+      [comp][tw]blend=all_mode=screen:all_opacity=0.85,format=yuv420p,
+      zoompan=z='1.010+0.006*sin(2*PI*on/${FRAMES})':x='iw/2-(iw/zoom/2)+4*sin(2*PI*2*on/${FRAMES})':y='ih/2-(ih/zoom/2)+3*cos(2*PI*3*on/${FRAMES})':d=1:fps=${FPS}:s=${W}x${H}
+    " \
+    -c:v libx264 -preset medium -crf 20 -movflags +faststart -an \
+    "${OUT}"
+
+  rm -rf "$MDIR"
+}
+
+# ════════════════════════════════════════════════════════════════════
+# GENERIC ENGINE · highlight twinkle + breathing drift (any still)
+# ════════════════════════════════════════════════════════════════════
+scene_generic() {
+  local TW TH GATE
+  TW=$((W / 2)); TH=$((H / 2)); GATE=205
+
+  ffmpeg -hide_banner -loglevel error -y \
+    -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${STILL}" \
+    -filter_complex "
+      [0:v]scale=${W}:${H}:flags=lanczos,format=gbrp,split=2[base][hl];
+      [hl]scale=${TW}:${TH},
+          geq=r='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,${GATE}),r(X,Y)*${TWK},0)':g='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,${GATE}),g(X,Y)*${TWK},0)':b='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,${GATE}),b(X,Y)*${TWK},0)',
+          gblur=sigma=2,
+          scale=${W}:${H}[tw];
+      [base][tw]blend=all_mode=screen:all_opacity=0.9,format=yuv420p,
+      zoompan=z='1.010+0.006*sin(2*PI*on/${FRAMES})':x='iw/2-(iw/zoom/2)+4*sin(2*PI*2*on/${FRAMES})':y='ih/2-(ih/zoom/2)+3*cos(2*PI*3*on/${FRAMES})':d=1:fps=${FPS}:s=${W}x${H}
+    " \
+    -c:v libx264 -preset medium -crf 20 -movflags +faststart -an \
+    "${OUT}"
+}
+
+case "${STEM}" in
+  nyxus-graffiti-space) echo "engine: SCENE (graffiti-space)"; scene_graffiti ;;
+  *)                    echo "engine: GENERIC";                scene_generic ;;
+esac
 
 echo "living wallpaper rendered: ${OUT}"
