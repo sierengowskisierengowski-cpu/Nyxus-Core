@@ -82,11 +82,17 @@ cat > "${HOME}/.config/hypr/hyprlock-accent.conf" <<EOF
 \$nyxus_accent_rgba = rgba(${R}, ${G}, ${B}, 1.0)
 EOF
 
-# ── 4. old → new substitution across every registered consumer ──────
+# ── 4. baseline-driven re-skin of every registered consumer ─────────
+# Every consumer file has a pristine PRISM-form snapshot under
+# ~/.config/nyxus/accent-baseline/. Applying a preset always renders
+# live files FROM the baseline (prism → preset substitution), so any
+# preset → any preset is exact and reversible — no cascade collisions
+# (e.g. aurora warn #ff4d6b vs the fixed crimson palette constant).
+# The baseline auto-refreshes whenever files are edited while the
+# active preset is prism (the canonical form we hand-edit in).
 # Handles three encodings per accent slot:
 #   #rrggbb / rrggbb   (CSS, rasi, toml, hyprland rgba(rrggbbaa), qt #aarrggbb)
 #   "R, G, B" and "R,G,B" decimal triplets (rgba() in CSS/SCSS)
-# Two-phase placeholder swap so preset color collisions can't cascade.
 CONSUMERS=(
   "${HOME}/.config/eww/eww.scss"
   "${HOME}/.config/hypr/hyprland.conf"
@@ -112,10 +118,16 @@ CONSUMERS=(
   "${HOME}/.config/qt6ct/colors/nyxus-prism.conf"
 )
 
-if [[ "${OLD_NAME}" != "${NAME}" ]]; then
-  OLD_P="${OLD_P}" OLD_S="${OLD_S}" OLD_W="${OLD_W}" OLD_O="${OLD_O}" \
-  NEW_P="${NEW_P}" NEW_S="${NEW_S}" NEW_W="${NEW_W}" NEW_O="${NEW_O}" \
-  python3 - "${CONSUMERS[@]}" <<'PYEOF'
+CANON="prism"
+CAN_P=$(get "${CANON}" primary); CAN_S=$(get "${CANON}" secondary)
+CAN_W=$(get "${CANON}" warn);    CAN_O=$(get "${CANON}" ok)
+
+OLD_NAME="${OLD_NAME}" NAME="${NAME}" CANON="${CANON}" \
+CAN_P="${CAN_P}" CAN_S="${CAN_S}" CAN_W="${CAN_W}" CAN_O="${CAN_O}" \
+NEW_P="${NEW_P}" NEW_S="${NEW_S}" NEW_W="${NEW_W}" NEW_O="${NEW_O}" \
+OLD_P="${OLD_P}" OLD_S="${OLD_S}" OLD_W="${OLD_W}" OLD_O="${OLD_O}" \
+BASE="${HOME}/.config/nyxus/accent-baseline" \
+python3 - "${CONSUMERS[@]}" <<'PYEOF'
 import os, re, sys
 
 def forms(hexcol):
@@ -124,45 +136,81 @@ def forms(hexcol):
     r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
     return h, f"{r}, {g}, {b}", f"{r},{g},{b}"
 
-slots = []
-for key in ("P", "S", "W", "O"):
-    old, new = os.environ[f"OLD_{key}"], os.environ[f"NEW_{key}"]
-    if old and new and old.lower() != new.lower():
-        slots.append((key, forms(old), forms(new)))
+def substitute(text, pairs):
+    """two-phase placeholder swap: [(from_forms, to_forms), ...]"""
+    for i, (src, _) in enumerate(pairs):
+        text = re.sub(re.escape(src[0]), f"\x00H{i}\x00", text, flags=re.I)
+        text = text.replace(src[1], f"\x00D{i}\x00").replace(src[2], f"\x00E{i}\x00")
+    for i, (_, dst) in enumerate(pairs):
+        text = (text.replace(f"\x00H{i}\x00", dst[0])
+                    .replace(f"\x00D{i}\x00", dst[1])
+                    .replace(f"\x00E{i}\x00", dst[2]))
+    return text
 
+env = os.environ
+base_root = env["BASE"]
+canonical = [forms(env[k]) for k in ("CAN_P", "CAN_S", "CAN_W", "CAN_O")]
+target    = [forms(env[k]) for k in ("NEW_P", "NEW_S", "NEW_W", "NEW_O")]
+old_name, new_name, canon = env["OLD_NAME"], env["NAME"], env["CANON"]
+
+# fixed LOCKED palette constants — a slot whose *current* color equals one
+# of these is ambiguous when deriving a baseline, so it is skipped there
+RESERVED = {"ff4d6b", "05060a", "0a0d14", "11151f", "eef2fa", "e8edf5",
+            "ffffff", "000000", "c8ccd6", "9aa0ad", "6a6e78", "7a8298"}
+
+canon_pairs = [(c, t) for c, t in zip(canonical, target) if c[0] != t[0]]
 changed = 0
+
 for path in sys.argv[1:]:
     if not os.path.isfile(path):
         continue
-    try:
-        text = orig = open(path, encoding="utf-8", errors="surrogateescape").read()
-    except OSError:
-        continue
-    # phase 1: old forms -> unique placeholders
-    for key, (ohex, od1, od2), _ in slots:
-        text = re.sub(re.escape(ohex), f"\x00HEX{key}\x00", text, flags=re.I)
-        text = text.replace(od1, f"\x00DC1{key}\x00").replace(od2, f"\x00DC2{key}\x00")
-    # phase 2: placeholders -> new forms
-    for key, _, (nhex, nd1, nd2) in slots:
-        text = (text.replace(f"\x00HEX{key}\x00", nhex)
-                    .replace(f"\x00DC1{key}\x00", nd1)
-                    .replace(f"\x00DC2{key}\x00", nd2))
-    if text != orig:
-        open(path, "w", encoding="utf-8", errors="surrogateescape").write(text)
+    bpath = os.path.join(base_root, path.lstrip("/"))
+    live = open(path, encoding="utf-8", errors="surrogateescape").read()
+
+    # ── keep the canonical baseline fresh ────────────────────────────
+    if old_name == canon:
+        # live files ARE canonical — snapshot them
+        os.makedirs(os.path.dirname(bpath), exist_ok=True)
+        open(bpath, "w", encoding="utf-8", errors="surrogateescape").write(live)
+        baseline = live
+    elif os.path.isfile(bpath):
+        baseline = open(bpath, encoding="utf-8", errors="surrogateescape").read()
+    else:
+        # derive baseline: current-preset → canonical, skipping slots whose
+        # current color collides with a reserved fixed-palette constant
+        cur = [forms(v) for v in (env.get("OLD_P") or env["CAN_P"],
+                                  env.get("OLD_S") or env["CAN_S"],
+                                  env.get("OLD_W") or env["CAN_W"],
+                                  env.get("OLD_O") or env["CAN_O"])]
+        pairs = [(c, k) for c, k in zip(cur, canonical)
+                 if c[0] != k[0] and c[0] not in RESERVED]
+        baseline = substitute(live, pairs)
+        os.makedirs(os.path.dirname(bpath), exist_ok=True)
+        open(bpath, "w", encoding="utf-8", errors="surrogateescape").write(baseline)
+
+    # ── render live file from baseline ───────────────────────────────
+    out = substitute(baseline, canon_pairs) if canon_pairs else baseline
+    if out != live:
+        open(path, "w", encoding="utf-8", errors="surrogateescape").write(out)
         changed += 1
-print(f"accent: re-skinned {changed} consumer file(s)")
+
+print(f"accent: re-skinned {changed} consumer file(s) from canonical baseline")
 PYEOF
-fi
 
 # ── 5. persist + live reload ─────────────────────────────────────────
 TMP="$(mktemp)"
 jq --arg n "${NAME}" '.active = $n' "${CONF}" > "${TMP}" && \
   mv "${TMP}" "${HOME}/.config/nyxus/accent.json"
 
-command -v eww      >/dev/null && eww reload            2>/dev/null || true
-command -v hyprctl  >/dev/null && hyprctl reload        >/dev/null 2>&1 || true
-command -v dunstctl >/dev/null && dunstctl reload       2>/dev/null || true
-command -v swaync-client >/dev/null && swaync-client -rs 2>/dev/null || true
+# every reload is timeout-guarded: a client tool that blocks waiting for
+# a daemon that isn't running (e.g. swaync-client with dunst active) must
+# never wedge the accent switch
+command -v eww      >/dev/null && timeout 10 eww reload      2>/dev/null || true
+command -v hyprctl  >/dev/null && timeout 5 hyprctl reload   >/dev/null 2>&1 || true
+pgrep -x dunst  >/dev/null && command -v dunstctl >/dev/null && \
+  timeout 5 dunstctl reload 2>/dev/null || true
+pgrep -x swaync >/dev/null && command -v swaync-client >/dev/null && \
+  timeout 5 swaync-client -rs 2>/dev/null || true
 pkill -USR1 -x cava 2>/dev/null || true
 
 echo "accent: applied '${NAME}' (primary=${NEW_P}, secondary=${NEW_S})"

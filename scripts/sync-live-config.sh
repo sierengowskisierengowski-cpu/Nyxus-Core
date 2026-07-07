@@ -23,6 +23,7 @@ RSYNC=(rsync -a --delete
   --exclude '*.bak*' --exclude '*.log' --exclude '__pycache__'
   --exclude '*.pyc'  --exclude 'welcome.done' --exclude 'theme-backups'
   --exclude '.claude' --exclude '*.mp4'
+  --exclude 'accent-baseline'   # per-machine cache; regenerates on first accent apply
 )
 
 # ── ~/.config surfaces that define the NYXUS look ────────────────────
