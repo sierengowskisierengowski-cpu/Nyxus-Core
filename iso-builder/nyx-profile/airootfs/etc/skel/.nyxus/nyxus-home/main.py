@@ -75,7 +75,7 @@ from style import install_css, PALETTE                                # noqa: E4
 from graffiti import GraffitiArea                                     # noqa: E402
 from tilt import TiltBox                                              # noqa: E402
 from widgets import (                                                  # noqa: E402
-    ClockCard, WeatherCard, CalendarCard,
+    ClockCard, WeatherCard, CalendarCard, MusicCard,
     NotificationsCard, NotepadCard, PasswordManagerCard,
 )
 from hud import (                                                      # noqa: E402
@@ -86,6 +86,7 @@ from hud import (                                                      # noqa: E
 CARD_TILTS = {
     "Clock":         -1.2,
     "Weather":        0.8,
+    "Music":          0.7,
     "Notifications":  1.0,
     "Calendar":      -0.5,
     "Core":           0.0,
@@ -108,7 +109,7 @@ def _header_strip():
     box.set_margin_bottom(8)
 
     left = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-    tag = Gtk.Label(label="NYXUS \u00b7 WORKSPACE 0 \u00b7 HOME", xalign=0.0)
+    tag = Gtk.Label(label="NYXUS \u00b7 WORKSPACE 0 \u00b7 SUPER+0 \u00b7 HOME", xalign=0.0)
     tag.add_css_class("header-tag")
     left.append(tag)
     title = Gtk.Label(xalign=0.0)
@@ -138,12 +139,13 @@ def _header_strip():
 
 
 def _build_grid():
-    """4-column ghost HUD grid:
-       Row 0: Clock | Weather | Notifications | Calendar   (1 col each)
+    """4-column ghost HUD grid — the SUPER+0 command deck:
+       Row 0: Clock | Weather | Music (2 cols, MPRIS live deck)
        Row 1: SYSTEM CORE — rings + per-core bars + temps  (spans 4)
        Row 2: Fans | Network (2 cols) | Storage
        Row 3: Notepad (2 cols) | Top Procs (2 cols)
-       Row 4: Password Manager (spans 4)
+       Row 4: Calendar | Notifications (3 cols, live dunst feed)
+       Row 5: Password Manager (spans 4)
     """
     grid = Gtk.Grid()
     grid.set_valign(Gtk.Align.START)
@@ -157,15 +159,16 @@ def _build_grid():
         # (name,            card,                       col, row, w, h)
         ("Clock",           ClockCard(),                0, 0, 1, 1),
         ("Weather",         WeatherCard(),              1, 0, 1, 1),
-        ("Notifications",   NotificationsCard(),        2, 0, 1, 1),
-        ("Calendar",        CalendarCard(),             3, 0, 1, 1),
+        ("Music",           MusicCard(),                2, 0, 2, 1),
         ("Core",            SystemCoreCard(),           0, 1, 4, 1),
         ("Fans",            FansCard(),                 0, 2, 1, 1),
         ("Network",         NetworkCard(),              1, 2, 2, 1),
         ("Storage",         StorageCard(),              3, 2, 1, 1),
         ("Notepad",         NotepadCard(),              0, 3, 2, 1),
         ("Procs",           ProcessesCard(),            2, 3, 2, 1),
-        ("Passwords",       PasswordManagerCard(),      0, 4, 4, 1),
+        ("Calendar",        CalendarCard(),             0, 4, 1, 1),
+        ("Notifications",   NotificationsCard(),        1, 4, 3, 1),
+        ("Passwords",       PasswordManagerCard(),      0, 5, 4, 1),
     ]
     for name, c, col, row, w, h in layout:
         tilt = CARD_TILTS.get(name, 0.0)
@@ -204,14 +207,20 @@ class HomeWindow(Gtk.ApplicationWindow):
         overlay.add_overlay(content_outer)
         self.set_child(overlay)
 
-        # Esc closes
+        # Esc leaves the dashboard (back to the previous workspace) —
+        # the home page itself stays alive on name:0 permanently.
         kc = Gtk.EventControllerKey()
         kc.connect("key-pressed", self._on_key)
         self.add_controller(kc)
 
     def _on_key(self, _ctrl, keyval, _kc, _state):
         if keyval == Gdk.KEY_Escape:
-            self.close()
+            import subprocess
+            try:
+                subprocess.Popen(
+                    ["hyprctl", "dispatch", "workspace", "previous"])
+            except OSError:
+                pass
             return True
         return False
 
