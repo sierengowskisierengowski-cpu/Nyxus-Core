@@ -21,7 +21,10 @@
     (scale :min 0 :max 100 :value value
            :onchange action)))
 
-(defwindow quicksettings
+; Renamed from "quicksettings" 2026-07-07: the duplicate defwindow name
+; shadowed the themed qs-root panel in eww.yuck (includes load last), so
+; Super+A / the bar pill opened this off-theme daemon card instead.
+(defwindow quicksettings-daemon
   :monitor 0 :stacking "overlay" :focusable true
   :geometry (geometry :x "-12px" :y "44px" :anchor "top right"
                        :width "320px" :height "420px")

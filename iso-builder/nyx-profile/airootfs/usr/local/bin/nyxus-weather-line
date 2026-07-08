@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-weather-line   ·   rev 2026-07-07 r1 (Signature)
+#
+# One-line weather for the lock screen (wttr.in). Serve-stale design:
+# ALWAYS prints the cached line instantly (hyprlock never waits on
+# the network), then refreshes the cache in the background when it's
+# older than 30 minutes. First run / no network → empty output, and
+# the label just doesn't render.
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+CACHE="${HOME}/.cache/nyxus/weather.txt"
+mkdir -p "${HOME}/.cache/nyxus"
+
+refresh() {
+  L="$(curl -fsL -m 6 'https://wttr.in/?format=%c+%t+%C' 2>/dev/null | tr -d '\n')"
+  # wttr returns HTML/garbage on some failures — only keep short sane lines
+  if [[ -n "${L}" && ${#L} -lt 60 && "${L}" != *"<"* ]]; then
+    printf '%s' "${L}" > "${CACHE}"
+  fi
+}
+
+AGE=9999999
+[[ -f "${CACHE}" ]] && AGE=$(( $(date +%s) - $(stat -c %Y "${CACHE}") ))
+(( AGE > 1800 )) && ( refresh & ) >/dev/null 2>&1
+
+[[ -f "${CACHE}" ]] && cat "${CACHE}"

@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-lock-art   ·   rev 2026-07-07 r1 (Signature)
+#
+# Prints a path to the current track's album art for the hyprlock
+# now-playing card (image widget reload_cmd). Sources, in order:
+#   file:// art straight from MPRIS · http(s) art cached by URL hash
+#   · branded placeholder when silent/offline.
+# Never blocks the lock screen: remote fetches are capped at 3s and
+# any failure falls through to the placeholder.
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+
+CACHE="${HOME}/.cache/nyxus"
+PLACEHOLDER="${CACHE}/lock-art-placeholder.png"
+mkdir -p "${CACHE}"
+
+# branded fallback card, generated once
+if [[ ! -f "${PLACEHOLDER}" ]] && command -v magick >/dev/null; then
+  magick -size 296x296 radial-gradient:'#241539'-'#06050A' \
+    -stroke '#ff3cac' -strokewidth 2 -fill none \
+    -draw 'rectangle 20,20 275,275' \
+    -stroke '#2bd2ff' -strokewidth 1 \
+    -draw 'line 20,148 100,148' -draw 'line 195,148 275,148' \
+    -draw 'polygon 148,108 188,148 148,188 108,148' \
+    "${PLACEHOLDER}" 2>/dev/null
+fi
+
+fallback() { echo "${PLACEHOLDER}"; exit 0; }
+
+command -v playerctl >/dev/null || fallback
+ART="$(playerctl metadata mpris:artUrl 2>/dev/null | head -n 1)"
+[[ -z "${ART}" ]] && fallback
+
+case "${ART}" in
+  file://*)
+    F="${ART#file://}"
+    # crude URL-decode for the common %20 case
+    F="${F//%20/ }"
+    [[ -r "${F}" ]] && echo "${F}" || fallback
+    ;;
+  http://*|https://*)
+    HASH="$(printf '%s' "${ART}" | md5sum | cut -d' ' -f1)"
+    F="${CACHE}/art-${HASH}"
+    if [[ ! -s "${F}" ]]; then
+      curl -fsL -m 3 -o "${F}" "${ART}" 2>/dev/null || { rm -f "${F}"; fallback; }
+    fi
+    [[ -s "${F}" ]] && echo "${F}" || fallback
+    ;;
+  *)
+    fallback
+    ;;
+esac

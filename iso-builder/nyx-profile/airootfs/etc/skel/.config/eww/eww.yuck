@@ -76,6 +76,15 @@
 (deflisten CAVA :initial "▁▁▁▁▁▁▁▁▁▁▁▁▁▁"
                 "~/.config/eww/scripts/cava.sh")
 
+;; ── prism rim animator ───────────────────────────────────────────────
+;; prism-anim.sh streams {a,b,p,g} frames (~15 fps): rotating rim
+;; angles + breathing glow factors for the four bar borders. The bars
+;; consume it via inline :style so the gradient painted on border-box
+;; (the visible rim) sweeps around the frame while the inset neon
+;; pulses. NYXUS_BAR_FX=off in nyxus.conf freezes it at zero CPU.
+(deflisten PRISM :initial '{"a":100,"b":280,"p":0.5,"g":0.5}'
+                 "~/.config/eww/scripts/prism-anim.sh")
+
 ;; ═════════════════════════════════════════════════════════════════════
 ;; CORE BAR WIDGETS
 ;; ═════════════════════════════════════════════════════════════════════
@@ -134,7 +143,7 @@
           :onclick "eww open --toggle bluetooth"
           :onrightclick "${BLUETOOTH.powered == 'off' ? 'bluetoothctl power on' : 'bluetoothctl power off'} &"
           :tooltip "${BLUETOOTH.tooltip} · click panel · right-click toggle"
-    "  ${BLUETOOTH.label}"))
+    "  ${BLUETOOTH.label}"))
 
 (defwidget battery_widget []
   (button :class {BATTERY.status == "Charging" ? "pill p-batt batt-charge" :
@@ -245,8 +254,13 @@
           :tooltip "Workspace ${id}"
     "${id}"))
 
+;; Rails carry the same live prism rim as the horizontal bars (see the
+;; :style note above bar_bottom_layout): left rail sweeps with PRISM.a,
+;; the app rail counter-rotates on PRISM.b so the two frames spin in
+;; opposite directions around the screen.
 (defwidget workspaces_rail []
   (box :class "ws-rail" :orientation "v" :space-evenly false :spacing 6 :valign "center"
+    :style "background-image: linear-gradient(170deg, rgba(11,14,24,0.84), rgba(5,6,10,0.72)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.p * 14, 1)}px rgba(255,60,172,${round(0.05 + PRISM.p * 0.10, 3)});"
     (workspace_pill :id 1  :occ {WORKSPACES.occ1})
     (workspace_pill :id 2  :occ {WORKSPACES.occ2})
     (workspace_pill :id 3  :occ {WORKSPACES.occ3})
@@ -263,21 +277,28 @@
 
 (defwidget app_rail []
   (box :class "app-rail" :orientation "v" :space-evenly false :spacing 10 :valign "center"
-    (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal")
-    (app_launcher :glyph "" :cmd "firefox"        :label "Firefox")
-    (app_launcher :glyph "" :cmd "nautilus"       :label "Files")
-    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'" :label "SysMon")
-    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad")
-    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies")
-    (app_launcher :glyph "" :cmd "pavucontrol"    :label "Audio")
-    (app_launcher :glyph "" :cmd "blueman-manager":label "Bluetooth")))
+    :style "background-image: linear-gradient(190deg, rgba(11,14,24,0.84), rgba(5,6,10,0.72)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.g * 14, 1)}px rgba(43,210,255,${round(0.05 + PRISM.g * 0.10, 3)});"
+    (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal")
+    (app_launcher :glyph "" :cmd "firefox"        :label "Firefox")
+    (app_launcher :glyph "" :cmd "nautilus"       :label "Files")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'" :label "SysMon")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies")
+    (app_launcher :glyph "" :cmd "eww open --toggle mixer" :label "Audio")
+    (app_launcher :glyph "" :cmd "eww open --toggle bluetooth" :label "Bluetooth")))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; BARS
 ;; ═════════════════════════════════════════════════════════════════════
 
+;; The :style blocks below re-paint each bar's two stacked backgrounds
+;; (glass on padding-box + rim gradient on border-box) with the live
+;; PRISM angle, so the rim colors chase around the frame; the inset
+;; glows breathe with PRISM.p/.g. Class CSS keeps origin/clip/static
+;; fallback, inline only overrides background-image + box-shadow.
 (defwidget bar_bottom_layout []
   (centerbox :class "bar bar-bottom" :orientation "h"
+    :style "background-image: linear-gradient(180deg, rgba(13,16,28,0.86), rgba(5,6,10,0.74)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 26%, #2bd2ff 52%, #ffb84d 78%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.06 + PRISM.p * 0.06, 3)}), inset 0 -16px ${round(26 + PRISM.p * 16, 1)}px rgba(255,60,172,${round(0.07 + PRISM.p * 0.11, 3)}), inset 0 16px ${round(26 + PRISM.g * 16, 1)}px rgba(43,210,255,${round(0.04 + PRISM.g * 0.09, 3)});"
     (box :class "bar-cluster cluster-left" :space-evenly false :spacing 12 :halign "start"
       (nyxus_brand) (heartbeat))
     (box :class "bar-cluster cluster-center" :space-evenly false :spacing 12 :halign "center"
@@ -296,6 +317,7 @@
 ;; Right = now-playing player (visible only when a player is active)
 (defwidget bar_top_layout []
   (centerbox :class "bar bar-top" :orientation "h"
+    :style "background-image: linear-gradient(180deg, rgba(10,13,24,0.82), rgba(5,6,10,0.70)), linear-gradient(${PRISM.b}deg, rgba(43,210,255,0.80) 0%, rgba(120,75,255,0.62) 33%, rgba(255,60,172,0.80) 66%, rgba(43,210,255,0.80) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.05 + PRISM.g * 0.05, 3)}), inset 0 -10px ${round(18 + PRISM.p * 14, 1)}px rgba(120,75,255,${round(0.06 + PRISM.p * 0.10, 3)});"
     (box :class "bar-cluster cluster-left" :space-evenly false :spacing 10 :halign "start"
       (label :class "ticker-label" :text "▌ NYXUS · LIVE"))
     (box :class "bar-cluster cluster-center" :space-evenly false :halign "center"
@@ -523,25 +545,26 @@
 ;; WINDOWS
 ;; ═════════════════════════════════════════════════════════════════════
 
-;; NOTE: the horizontal bars are defined BEFORE the rails on purpose.
-;; Hyprland arranges layer surfaces in creation order, applying each
-;; exclusive zone cumulatively. If the rails go first, their 66px side
-;; zones shrink the area the full-width bars are centred in, and a
-;; fixed-width surface wider than that area gets shoved sideways and
-;; clipped (the old "bottom bar doesn't reach the left edge" bug:
-;; x=53 with 14px off-screen right). Bars first → they get the true
-;; monitor width at x=0; the rails then centre themselves vertically
-;; in the strip left between the bars' zones. Do not reorder.
+;; NOTE: the horizontal bars live on the BOTTOM layer-shell level
+;; (:stacking "bottom") while the rails stay on top ("fg"). Hyprland
+;; arranges levels background→bottom→top→overlay, applying exclusive
+;; zones cumulatively, so the full-width bars are ALWAYS placed before
+;; the rails' 66px side zones exist — x=0, true monitor width, every
+;; time. When all four shared one level the arrangement followed
+;; surface creation order, which reshuffles on every `eww reload` and
+;; kept shoving the 1920px bars sideways (x=53, x=33, x=-33 — the
+;; "bottom bar doesn't reach the left edge" bug). Do not put the
+;; horizontal bars back on "fg".
 ;; The symmetric floating inset on both bars comes from the CSS margin
 ;; on .bar-bottom / .bar-top, NOT from a <100% surface width.
 (defwindow bar-bottom
-  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-bottom"
-  :geometry (geometry :x "0" :y "12" :width "100%" :height "40px" :anchor "bottom center")
+  :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
+  :geometry (geometry :x "0" :y "12" :width "100%" :height "49px" :anchor "bottom center")
   (bar_bottom_layout))
 
 (defwindow bar-top
-  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-top"
-  :geometry (geometry :x "0" :y "6" :width "100%" :height "24px" :anchor "top center")
+  :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-top"
+  :geometry (geometry :x "0" :y "6" :width "100%" :height "26px" :anchor "top center")
   (bar_top_layout))
 
 (defwindow bar-left
@@ -610,7 +633,7 @@
 
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
       (qs_tile :glyph "📶" :label "WiFi"      :state "${QS.wifi}"       :cmd "~/.config/eww/scripts/qs-toggle.sh wifi")
-      (qs_tile :glyph ""  :label "Bluetooth" :state "${QS.bt}"         :cmd "~/.config/eww/scripts/qs-toggle.sh bt")
+      (qs_tile :glyph ""  :label "Bluetooth" :state "${QS.bt}"         :cmd "~/.config/eww/scripts/qs-toggle.sh bt")
       (qs_tile :glyph "✈" :label "Airplane"  :state "${QS.airplane}"   :cmd "~/.config/eww/scripts/qs-toggle.sh airplane")
       (qs_tile :glyph "🌙" :label "DND"       :state "${QS.dnd}"        :cmd "~/.config/eww/scripts/qs-toggle.sh dnd"))
 
@@ -918,3 +941,5 @@
 (include "mission.yuck")
 (include "deepcore.yuck")
 (include "quicksettings.yuck")
+(include "osd-extra.yuck")
+(include "splash.yuck")

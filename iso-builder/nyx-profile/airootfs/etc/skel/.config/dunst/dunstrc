@@ -1,5 +1,5 @@
 # NYXUS dunst · Obsidian Prism (rev 2026-07-06)
-# Palette: #ff3cac · #2bd2ff · #784bff · #ffb84d
+# Palette: #fe42ae · #36ff26 · #26ffb7 · #ff7a26
 
 [global]
     monitor = 0
@@ -26,7 +26,7 @@
     horizontal_padding = 16
     text_icon_padding = 12
     frame_width = 2
-    frame_color = "#2bd2ff59"
+    frame_color = "#36ff2659"
     gap_size = 6
     separator_color = "#05060a"
     sort = yes
@@ -73,14 +73,14 @@
 [urgency_low]
     background    = "#05060ae6"
     foreground    = "#eef2facc"
-    frame_color   = "#784bff66"
+    frame_color   = "#26ffb766"
     timeout       = 5
     default_icon  = dialog-information
 
 [urgency_normal]
     background    = "#05060ae6"
     foreground    = "#eef2fa"
-    frame_color   = "#ff3cac66"
+    frame_color   = "#fe42ae66"
     timeout       = 8
     override_pause_level = 30
     default_icon  = dialog-information

@@ -245,12 +245,12 @@
 # rev 2026-07-07 · keep in lockstep with nyxus accent set
 gradient = 1
 gradient_count = 6
-gradient_color_1 = '#784bff'
+gradient_color_1 = '#26ffb7'
 gradient_color_2 = '#4d9fff'
-gradient_color_3 = '#2bd2ff'
-gradient_color_4 = '#ff3cac'
+gradient_color_3 = '#36ff26'
+gradient_color_4 = '#fe42ae'
 gradient_color_5 = '#ff7ae5'
-gradient_color_6 = '#ffb84d'
+gradient_color_6 = '#ff7a26'
 
 # Colors can be one of seven predefined: black, blue, cyan, green, magenta, red, white, yellow.
 # Or defined by hex code '#xxxxxx' (hex code must be within ''). User defined colors requires

@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-shader <night|vignette|crt|noir|off|next|status>
+#                                    ·   rev 2026-07-07 r1 (Signature)
+#
+# NYXUS Filters — full-screen GLSL post-processing via Hyprland's
+# decoration:screen_shader. Pure compositor: no daemon, no plugin,
+# nothing to break on update.
+#
+#   night     warm 3800K color temperature
+#   vignette  cinematic edge falloff
+#   crt       scanlines + chromatic aberration (emulation workspace)
+#   noir      DARK MIRROR: blue-steel grayscale, lifted contrast
+#   off       back to clean output
+#   next      cycle off → night → vignette → crt → noir → off
+#   status    print the active filter
+#
+# State persists in ~/.config/nyxus/shader.state and is reapplied at
+# session start by nyxus-signature.conf.
+#
+# Bound: Super+O = next · Super+Shift+O = off
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+
+SHADER_DIR="${HOME}/.config/hypr/shaders"
+STATE="${HOME}/.config/nyxus/shader.state"
+CYCLE=(off night vignette crt noir)
+
+current() { cat "${STATE}" 2>/dev/null || echo off; }
+
+apply() {
+  local name="$1"
+  if [[ "${name}" == "off" ]]; then
+    hyprctl keyword decoration:screen_shader "[[EMPTY]]" >/dev/null
+  else
+    [[ -r "${SHADER_DIR}/${name}.glsl" ]] || {
+      echo "nyxus-shader: no shader '${name}'" >&2; exit 1; }
+    hyprctl keyword decoration:screen_shader "${SHADER_DIR}/${name}.glsl" >/dev/null
+  fi
+  echo "${name}" > "${STATE}"
+  notify-send -u low -t 2000 "◤ NYXUS ◥ FILTER" \
+    "$([[ ${name} == off ]] && echo 'filters off' || echo "${name^^} engaged")" 2>/dev/null
+  echo "filter: ${name}"
+}
+
+case "${1:-status}" in
+  status) current ;;
+  restore) apply "$(current)" ;;
+  next)
+    cur="$(current)"; idx=0
+    for i in "${!CYCLE[@]}"; do [[ "${CYCLE[$i]}" == "${cur}" ]] && idx=$i; done
+    apply "${CYCLE[$(( (idx + 1) % ${#CYCLE[@]} ))]}"
+    ;;
+  night|vignette|crt|noir|off) apply "$1" ;;
+  *) echo "usage: nyxus-shader <night|vignette|crt|noir|off|next|status|restore>" >&2; exit 2 ;;
+esac

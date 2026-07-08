@@ -102,6 +102,7 @@ CONSUMERS=(
   "${HOME}/.config/hypr/conf.d/nyxus-hyprland-fog.conf"
   "${HOME}/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf"
   "${HOME}/.config/hypr/conf.d/nyxus-hyprland-mission.conf"
+  "${HOME}/.config/hypr/conf.d/nyxus-hyprland-flair.conf"
   "${HOME}/.config/rofi/config.rasi"
   "${HOME}/.config/rofi/launcher.rasi"
   "${HOME}/.config/rofi/nyxus.rasi"

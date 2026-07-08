@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-shot <area|screen|active|edit>   ·   rev 2026-07-07 r1 (Signature)
+#
+# Screenshot front-end over grimblast. Every capture is BOTH copied
+# to the clipboard AND saved to ~/Pictures/NYXUS-Shots, then announced
+# with a branded notification. `edit` grabs an area and drops straight
+# into satty for arrows/blur/redaction (if satty is installed).
+#
+# Bound: Super+Print (area) · Super+Shift+Print (screen)
+#        Super+Ctrl+Print (active window)
+# The plain Print / Shift+Print binds still run the legacy
+# ~/.nyxus/nyxus_screenshot.py and are untouched.
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+
+MODE="${1:-area}"
+DIR="${HOME}/Pictures/NYXUS-Shots"
+mkdir -p "${DIR}"
+FILE="${DIR}/nyxus-$(date +%Y%m%d-%H%M%S).png"
+
+note() { notify-send -u low -t 3500 -i "${FILE}" "◤ NYXUS ◥ SHOT" "$1" 2>/dev/null; }
+fail() { notify-send -u critical -t 4000 "◤ NYXUS ◥ SHOT" "$1" 2>/dev/null; exit 1; }
+
+command -v grimblast >/dev/null || fail "grimblast missing from ~/.local/bin"
+
+case "${MODE}" in
+  area)
+    grimblast --freeze copysave area "${FILE}" || exit 1
+    note "area captured → clipboard + $(basename "${FILE}")"
+    ;;
+  screen)
+    grimblast copysave screen "${FILE}" || exit 1
+    note "full screen → clipboard + $(basename "${FILE}")"
+    ;;
+  active)
+    grimblast copysave active "${FILE}" || exit 1
+    note "active window → clipboard + $(basename "${FILE}")"
+    ;;
+  edit)
+    if command -v satty >/dev/null; then
+      grimblast --freeze save area "${FILE}" || exit 1
+      satty --filename "${FILE}" \
+            --output-filename "${DIR}/nyxus-$(date +%Y%m%d-%H%M%S)-marked.png" \
+            --copy-command wl-copy --early-exit &
+    else
+      # graceful degradation: plain area shot until satty is installed
+      grimblast --freeze copysave area "${FILE}" || exit 1
+      note "satty not installed (sudo pacman -S satty) — plain capture saved"
+    fi
+    ;;
+  *)
+    echo "usage: nyxus-shot <area|screen|active|edit>" >&2
+    exit 2
+    ;;
+esac

@@ -29,11 +29,15 @@ start_live() {
     return 1
   fi
   pkill -x swaybg 2>/dev/null; pkill -x mpvpaper 2>/dev/null; sleep 0.3
-  setsid mpvpaper -o "no-audio loop-file=inf hwdec=auto" '*' "$VIDEO" >/dev/null 2>&1 &
+  # input-ipc-server lets nyxus-wall-fx drive hue/saturation/speed live
+  # (audio-reactive pulse + per-workspace tints).
+  setsid mpvpaper -o "no-audio loop-file=inf hwdec=auto input-ipc-server=${XDG_RUNTIME_DIR:-/tmp}/nyxus-mpv.sock" '*' "$VIDEO" >/dev/null 2>&1 &
   echo "LIVE=on" > "$STATE"
+  command -v nyxus-wall-fx >/dev/null && nyxus-wall-fx auto
 }
 
 start_still() {
+  command -v nyxus-wall-fx >/dev/null && nyxus-wall-fx stop-quiet
   pkill -x mpvpaper 2>/dev/null; pkill -x swaybg 2>/dev/null; sleep 0.3
   # Delegate to the stock autostart when present (swww/hyprpaper aware),
   # otherwise plain swaybg.

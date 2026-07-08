@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-plymouth-install   ·   rev 2026-07-07 r1 (Signature)
+#
+# One-shot ROOT installer wiring the already-present NYXUS Plymouth
+# theme into the boot chain. Everything else is already in place:
+#   · plymouth 26.x installed
+#   · /usr/share/plymouth/themes/nyxus/ shipped
+#   · /etc/plymouth/plymouthd.conf has Theme=nyxus, ShowDelay=0
+# What's missing (and what this does):
+#   1. add the `plymouth` hook to mkinitcpio HOOKS (after kms)
+#   2. add `quiet splash` to /etc/kernel/cmdline (UKI setup)
+#   3. rebuild the UKI (mkinitcpio -P)
+# Originals are backed up as *.nyxus-bak. Idempotent — safe to rerun.
+#
+#   usage:  sudo nyxus-plymouth-install
+#
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -eu
+
+[[ ${EUID} -eq 0 ]] || { echo "run me with sudo: sudo $(basename "$0")" >&2; exit 1; }
+
+MKCONF=/etc/mkinitcpio.conf
+CMDLINE=/etc/kernel/cmdline
+
+# ── 1 · mkinitcpio hook ─────────────────────────────────────────────
+if grep -E '^HOOKS=' "${MKCONF}" | grep -qw plymouth; then
+  echo "hook: plymouth already in HOOKS — skipping"
+else
+  cp -n "${MKCONF}" "${MKCONF}.nyxus-bak"
+  sed -i -E '/^HOOKS=/ s/\bkms\b/kms plymouth/' "${MKCONF}"
+  grep -E '^HOOKS=' "${MKCONF}" | grep -qw plymouth \
+    || { echo "hook: FAILED to insert (no kms hook?) — edit HOOKS manually" >&2; exit 1; }
+  echo "hook: inserted after kms"
+fi
+grep -E '^HOOKS=' "${MKCONF}"
+
+# ── 2 · kernel cmdline ──────────────────────────────────────────────
+if grep -qw splash "${CMDLINE}"; then
+  echo "cmdline: splash already present — skipping"
+else
+  cp -n "${CMDLINE}" "${CMDLINE}.nyxus-bak"
+  printf '%s quiet splash\n' "$(tr -d '\n' < "${CMDLINE}")" > "${CMDLINE}"
+  echo "cmdline: appended 'quiet splash'"
+fi
+cat "${CMDLINE}"
+
+# ── 3 · rebuild the UKI ─────────────────────────────────────────────
+echo "rebuilding UKI (mkinitcpio -P)…"
+mkinitcpio -P
+
+echo
+echo "◤ NYXUS ◥ boot cinematics armed — reboot to watch it."
+echo "  revert: restore ${MKCONF}.nyxus-bak and ${CMDLINE}.nyxus-bak, rerun mkinitcpio -P"

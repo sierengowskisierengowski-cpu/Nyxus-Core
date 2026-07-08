@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-eww-cinematic   ·   rev 2026-07-07 r1 (Signature)
+#
+# Cinematic session entrance. Replaces the plain nyxus-eww-launch in
+# the exec-once chain (the original at /usr/local/bin is untouched
+# and still works as a fallback):
+#
+#   1. curtain UP    — opaque NYXUS splash covers the session's
+#                      messy first moments (windows restoring, walls
+#                      loading), holds ~1.6s
+#   2. curtain DOWN  — splash fades out to the bare wallpaper
+#   3. bars enter    — bottom → top → left → right, 0.35s apart,
+#                      each sliding in from its own edge (layerrules)
+#
+# Fail-safe by design: the splash is force-closed on ANY exit path
+# plus a detached 12s watchdog, so a crash can never leave the screen
+# covered.
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+
+CONF="${HOME}/.config/eww/nyxus.conf"
+[[ -r "${CONF}" ]] && . "${CONF}"
+BARS="${NYXUS_EWW_BARS:-bar-bottom bar-top bar-left bar-right}"
+TIMEOUT_SECS="${NYXUS_EWW_TIMEOUT:-30}"
+
+# wait for the eww daemon socket
+deadline=$(( $(date +%s) + TIMEOUT_SECS ))
+until eww ping >/dev/null 2>&1; do
+  if (( $(date +%s) >= deadline )); then
+    # daemon never came up — fall back to the stock launcher's error path
+    exec /usr/local/bin/nyxus-eww-launch
+  fi
+  sleep 0.3
+done
+
+# ── 1 · curtain up ──────────────────────────────────────────────────
+eww open nyxus-splash 2>/dev/null
+trap 'eww close nyxus-splash 2>/dev/null' EXIT INT TERM
+( sleep 12; eww close nyxus-splash 2>/dev/null ) & disown   # watchdog
+
+# bars must be down before the reveal
+for bar in ${BARS}; do
+  eww close "${bar}" 2>/dev/null
+done
+
+# ── 2 · hold, then curtain down to the bare wallpaper ───────────────
+sleep 1.6
+eww close nyxus-splash 2>/dev/null
+
+# ── 3 · bars slide in one edge at a time ────────────────────────────
+sleep 0.4
+for bar in ${BARS}; do
+  eww open "${bar}" 2>/dev/null
+  sleep 0.35
+done
+exit 0

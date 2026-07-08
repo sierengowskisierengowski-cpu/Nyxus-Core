@@ -31,6 +31,16 @@ new_deadline=$(awk -v d="$duration" 'BEGIN{
 }')
 echo "$new_deadline" > "$deadline_file"
 
+# INSTANT VALUE (rev 2026-07-07): the OSD widgets read defpoll vars with
+# 2-5s intervals, so a rapid volume-key burst used to show stale values.
+# Force-refresh the backing var synchronously before the window opens.
+scripts="${HOME}/.config/eww/scripts"
+case "$window" in
+  osd-volume)     eww update AUDIO="$("$scripts/audio.sh")"          2>/dev/null || true ;;
+  osd-brightness) eww update BACKLIGHT="$("$scripts/brightness.sh")" 2>/dev/null || true ;;
+  osd-mic)        eww update MIC="$("$scripts/mic.sh")"              2>/dev/null || true ;;
+esac
+
 # Open (idempotent) — re-opening triggers a value refresh on the bar.
 eww open "$window" 2>/dev/null || true
 

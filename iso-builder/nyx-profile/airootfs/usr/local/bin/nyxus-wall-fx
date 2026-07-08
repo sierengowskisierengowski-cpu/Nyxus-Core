@@ -1,0 +1,268 @@
+#!/usr/bin/env python3
+# NYXUS wall-fx - makes the living wallpaper react to the world.
+#   * audio pulse : cava feeds an amplitude that swells the wallpaper's
+#                   saturation/gamma and speeds the loop up on the beat,
+#                   so the galaxy swirls harder when music plays and the
+#                   whole thing eases back to neutral in silence.
+#   * workspace tint : each Hyprland workspace nudges the mpv hue, so
+#                   every desk has its own color temperature of the same
+#                   scene (ws1 native, ws2 cyan, ws3 magenta, ...).
+# Talks to mpvpaper over its JSON IPC socket - requires the wallpaper to
+# have been started by nyxus-live-wallpaper (which passes
+# input-ipc-server). Safe to run when the socket is missing: it waits.
+#
+#   nyxus-wall-fx on|off|toggle|auto|status   - control the daemon
+#   nyxus-wall-fx run                         - foreground engine (internal)
+import json, math, os, select, signal, socket, subprocess, sys, tempfile, time
+
+RUNTIME = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+MPV_SOCK = os.path.join(RUNTIME, "nyxus-mpv.sock")
+PIDFILE = os.path.join(RUNTIME, "nyxus-wall-fx.pid")
+STATE = os.path.expanduser("~/.config/nyxus/wallfx.conf")
+
+BARS = 10
+FPS = 30
+# hue targets per workspace ID (NYXUS names them: 1 WEB, 2 CODE, 3 TERM,
+# 4 FILES, 5 MEDIA, 6 COMMS). Subtle shifts keep DARK MIRROR intact while
+# giving every desk its own temperature. Special workspaces keep current.
+WS_HUE = {"1": 0.0, "2": 12.0, "3": -14.0, "4": 22.0, "5": -24.0,
+          "6": 8.0, "7": -8.0, "8": 26.0, "9": -18.0, "10": 6.0}
+
+CAVA_CFG = """[general]
+bars = %d
+framerate = %d
+autosens = 1
+[output]
+method = raw
+raw_target = /dev/stdout
+data_format = ascii
+ascii_max_range = 100
+[smoothing]
+noise_reduction = 60
+""" % (BARS, FPS)
+
+
+def alive():
+    try:
+        with open(PIDFILE) as f:
+            pid = int(f.read().strip())
+        os.kill(pid, 0)
+        with open("/proc/%d/cmdline" % pid, "rb") as f:
+            if b"nyxus-wall-fx" in f.read():
+                return pid
+    except (OSError, ValueError):
+        pass
+    return None
+
+
+def save_state(on):
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    with open(STATE, "w") as f:
+        f.write("FX=%s\n" % ("on" if on else "off"))
+
+
+def stored_on():
+    try:
+        with open(STATE) as f:
+            return "FX=on" in f.read()
+    except OSError:
+        return False
+
+
+def start():
+    if alive():
+        return
+    subprocess.Popen(["setsid", sys.argv[0], "run"],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     stdin=subprocess.DEVNULL)
+
+
+def stop():
+    pid = alive()
+    if pid:
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except OSError:
+            pass
+
+
+def mpv_connect():
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.connect(MPV_SOCK)
+    s.setblocking(False)
+    return s
+
+
+def mpv_set(s, prop, val):
+    s.sendall((json.dumps({"command": ["set_property", prop, val]}) + "\n")
+              .encode())
+
+
+def hypr_events():
+    sig = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE")
+    if not sig:
+        return None
+    path = os.path.join(RUNTIME, "hypr", sig, ".socket2.sock")
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(path)
+        s.setblocking(False)
+        return s
+    except OSError:
+        return None
+
+
+def current_ws():
+    try:
+        out = subprocess.run(["hyprctl", "activeworkspace", "-j"],
+                             capture_output=True, text=True, timeout=2)
+        return str(json.loads(out.stdout).get("id", "1"))
+    except Exception:
+        return "1"
+
+
+def ws_hue(wsid, fallback=0.0):
+    try:
+        n = int(wsid)
+    except ValueError:
+        return 0.0
+    if n < 0:          # special/scratchpad - keep whatever tint we had
+        return fallback
+    return WS_HUE.get(str((n - 1) % 10 + 1), 0.0)
+
+
+def run():
+    with open(PIDFILE, "w") as f:
+        f.write(str(os.getpid()))
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+
+    cfg = tempfile.NamedTemporaryFile("w", suffix=".cava", delete=False)
+    cfg.write(CAVA_CFG)
+    cfg.close()
+    cava = subprocess.Popen(["cava", "-p", cfg.name],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.DEVNULL)
+    os.set_blocking(cava.stdout.fileno(), False)
+
+    hue_now = 0.0
+    hue_goal = ws_hue(current_ws())
+    level = 0.0
+    last = {}
+    mpv = None
+    hypr = hypr_events()
+    buf = b""
+    hbuf = b""
+
+    try:
+        while True:
+            t0 = time.time()
+            if mpv is None:
+                try:
+                    mpv = mpv_connect()
+                except OSError:
+                    time.sleep(1.0)
+                    continue
+
+            rl = [cava.stdout]
+            if hypr:
+                rl.append(hypr)
+            ready, _, _ = select.select(rl, [], [], 1.0 / FPS)
+
+            if cava.stdout in ready:
+                try:
+                    buf += os.read(cava.stdout.fileno(), 65536)
+                except BlockingIOError:
+                    pass
+                *lines, buf = buf.split(b"\n")
+                if lines:
+                    parts = lines[-1].strip(b";").split(b";")
+                    try:
+                        vals = [int(p) for p in parts if p]
+                        raw = sum(vals) / (len(vals) * 100.0) if vals else 0.0
+                    except ValueError:
+                        raw = 0.0
+                    # fast attack, slow release
+                    k = 0.5 if raw > level else 0.06
+                    level += (raw - level) * k
+
+            if hypr and hypr in ready:
+                try:
+                    hbuf += hypr.recv(65536)
+                except OSError:
+                    hypr = None
+                if hbuf is not None:
+                    *evs, hbuf = hbuf.split(b"\n")
+                    for ev in evs:
+                        # workspacev2>>ID,NAME - names are custom (WEB, CODE,
+                        # ...) so key tints off the numeric ID
+                        if ev.startswith(b"workspacev2>>"):
+                            wsid = (ev.split(b">>", 1)[1].split(b",", 1)[0]
+                                    .decode(errors="ignore"))
+                            hue_goal = ws_hue(wsid, hue_goal)
+
+            hue_now += (hue_goal - hue_now) * 0.10
+            level *= 0.995  # slow drift to zero even without cava frames
+
+            targets = {
+                "saturation": round(min(level, 1.0) * 34, 1),
+                "gamma": round(min(level, 1.0) * 8, 1),
+                "speed": round(1.0 + min(level, 1.0) * 0.30, 3),
+                "hue": round(hue_now, 1),
+            }
+            try:
+                for prop, val in targets.items():
+                    if last.get(prop) != val:
+                        mpv_set(mpv, prop, val)
+                        last[prop] = val
+                # drain replies so the socket buffer never fills
+                try:
+                    while mpv.recv(65536):
+                        pass
+                except (BlockingIOError, OSError):
+                    pass
+            except OSError:
+                try:
+                    mpv.close()
+                except OSError:
+                    pass
+                mpv, last = None, {}
+
+            dt = 1.0 / FPS - (time.time() - t0)
+            if dt > 0:
+                time.sleep(dt)
+    finally:
+        cava.terminate()
+        try:
+            os.unlink(cfg.name)
+            os.unlink(PIDFILE)
+        except OSError:
+            pass
+
+
+def main():
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "toggle"
+    if cmd == "run":
+        run()
+    elif cmd == "on":
+        save_state(True); start()
+    elif cmd == "off":
+        save_state(False); stop()
+    elif cmd == "toggle":
+        if alive():
+            save_state(False); stop(); print("wall-fx: off")
+        else:
+            save_state(True); start(); print("wall-fx: on")
+    elif cmd == "auto":
+        if stored_on():
+            start()
+    elif cmd == "status":
+        print("running" if alive() else "stopped")
+    elif cmd == "stop-quiet":  # used by nyxus-live-wallpaper off (keeps FX=on)
+        stop()
+    else:
+        print("usage: nyxus-wall-fx {on|off|toggle|auto|status}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

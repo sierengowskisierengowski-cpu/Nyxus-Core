@@ -214,6 +214,73 @@ scene_graffiti() {
 }
 
 # ════════════════════════════════════════════════════════════════════
+# SCENE ENGINE · nyxus-void-vortex
+# Monochrome starfield with a big spiral vortex at (935,545)/1920×1080.
+#   - the vortex churns: inner disc and outer ring counter-rotate
+#   - isolated point stars twinkle on individual phases
+#   - the whole scene breathes like the graffiti wall
+# ════════════════════════════════════════════════════════════════════
+scene_vortex() {
+  local MDIR; MDIR="$(mktemp -d /tmp/nyxus-livewall.XXXXXX)"
+  local SX SY
+  SX=$(python3 -c "print($W/1920)"); SY=$(python3 -c "print($H/1080)")
+  px()  { python3 -c "print(round($1*$SX))"; }
+  py()  { python3 -c "print(round($1*$SY))"; }
+
+  # outer swirl: 760×760 box @ (555,165) → vortex core at box center
+  local OBX OBY OBS ORX ORY
+  OBX=$(px 555); OBY=$(py 165); OBS=$(px 760)
+  ORX=$(px 330); ORY=$(py 300)
+  # inner disc: 400×400 box @ (735,345), counter-rotates
+  local IBX IBY IBS IRX IRY
+  IBX=$(px 735); IBY=$(py 345); IBS=$(px 400)
+  IRX=$(px 168); IRY=$(py 155)
+
+  magick -size "${OBS}x${OBS}" xc:black -fill white \
+    -draw "ellipse $((OBS/2)),$((OBS/2)) $ORX,$ORY 0,360" \
+    -blur 0x30 "$MDIR/outer.png"
+  magick -size "${IBS}x${IBS}" xc:black -fill white \
+    -draw "ellipse $((IBS/2)),$((IBS/2)) $IRX,$IRY 0,360" \
+    -blur 0x22 "$MDIR/inner.png"
+
+  local TW TH
+  TW=$((W / 2)); TH=$((H / 2))
+
+  # outer ring sways -2.9°, inner disc +4.0° half a beat later —
+  # the spiral visibly churns against itself; both integer-cycle
+  ffmpeg -hide_banner -loglevel error -y \
+    -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${STILL}" \
+    -i "$MDIR/outer.png" -i "$MDIR/inner.png" \
+    -filter_complex "
+      [0:v]scale=${W}:${H}:flags=lanczos,format=rgba,
+           split=3[base][outS][innS];
+
+      [outS]crop=${OBS}:${OBS}:${OBX}:${OBY}[outC];
+      [outC][1:v]alphamerge,
+        rotate=a='-0.050*sin(2*PI*t/${DUR})':c=black@0:ow=${OBS}:oh=${OBS}[outR];
+      [base][outR]overlay=${OBX}:${OBY}:format=auto[v1];
+
+      [innS]crop=${IBS}:${IBS}:${IBX}:${IBY}[innC];
+      [innC][2:v]alphamerge,
+        rotate=a='0.070*sin(2*PI*t/${DUR}+0.9)':c=black@0:ow=${IBS}:oh=${IBS}[innR];
+      [v1][innR]overlay=${IBX}:${IBY}:format=auto[v2];
+
+      [v2]format=gbrp,split=2[comp][twS];
+      [twS]scale=${TW}:${TH},split=2[twA][twB];
+      [twB]gblur=sigma=10[twBlur];
+      [twA][twBlur]blend=all_mode=subtract[pts];
+      [pts]geq=r='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,26),r(X,Y)*${TWK},0)':g='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,26),g(X,Y)*${TWK},0)':b='if(gt((r(X,Y)+g(X,Y)+b(X,Y))/3,26),b(X,Y)*${TWK},0)',
+        gblur=sigma=1.6,scale=${W}:${H}[tw];
+      [comp][tw]blend=all_mode=screen:all_opacity=0.9,format=yuv420p,
+      zoompan=z='1.010+0.006*sin(2*PI*on/${FRAMES})':x='iw/2-(iw/zoom/2)+4*sin(2*PI*2*on/${FRAMES})':y='ih/2-(ih/zoom/2)+3*cos(2*PI*3*on/${FRAMES})':d=1:fps=${FPS}:s=${W}x${H}
+    " \
+    -c:v libx264 -preset medium -crf 20 -movflags +faststart -an \
+    "${OUT}"
+
+  rm -rf "$MDIR"
+}
+
+# ════════════════════════════════════════════════════════════════════
 # GENERIC ENGINE · highlight twinkle + breathing drift (any still)
 # ════════════════════════════════════════════════════════════════════
 scene_generic() {
@@ -237,6 +304,7 @@ scene_generic() {
 
 case "${STEM}" in
   nyxus-graffiti-space) echo "engine: SCENE (graffiti-space)"; scene_graffiti ;;
+  nyxus-void-vortex)    echo "engine: SCENE (void-vortex)";    scene_vortex ;;
   *)                    echo "engine: GENERIC";                scene_generic ;;
 esac
 

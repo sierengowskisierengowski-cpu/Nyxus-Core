@@ -1,6 +1,6 @@
 {
   "_comment": "Source-of-truth for the NYXUS accent palette. Edited via Quick Settings → Accent or `nyxus accent set <name>`. /usr/local/bin/nyxus-apply-accent regenerates the live CSS for eww and any other consumer.",
-  "active": "prism",
+  "active": "wallpaper",
   "presets": {
     "prism": {
       "primary": "#ff3cac",
@@ -49,6 +49,13 @@
       "secondary": "#7e8794",
       "warn": "#ff4d6b",
       "ok": "#82ffd2"
+    },
+    "wallpaper": {
+      "primary": "#fe42ae",
+      "secondary": "#36ff26",
+      "warn": "#ff7a26",
+      "ok": "#26ffb7"
     }
-  }
+  },
+  "follow_wallpaper": true
 }
