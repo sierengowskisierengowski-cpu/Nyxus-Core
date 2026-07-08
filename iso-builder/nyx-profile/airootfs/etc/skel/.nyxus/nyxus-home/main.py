@@ -77,18 +77,24 @@ from tilt import TiltBox                                              # noqa: E4
 from widgets import (                                                  # noqa: E402
     ClockCard, WeatherCard, CalendarCard,
     NotificationsCard, NotepadCard, PasswordManagerCard,
-    SystemPulseCard,
+)
+from hud import (                                                      # noqa: E402
+    SystemCoreCard, FansCard, NetworkCard, StorageCard, ProcessesCard,
 )
 
-# Per-card tilt angles (degrees) — exact values from web HomeDashboard.tsx
+# Per-card tilt angles (degrees) — the centerpiece HUD stays dead level
 CARD_TILTS = {
     "Clock":         -1.2,
     "Weather":        0.8,
     "Notifications":  1.0,
     "Calendar":      -0.5,
+    "Core":           0.0,
+    "Fans":           0.7,
+    "Network":       -0.4,
+    "Storage":        0.5,
     "Notepad":       -0.8,
-    "Pulse":          0.6,
-    "Passwords":      0.5,
+    "Procs":          0.6,
+    "Passwords":      0.3,
 }
 
 APP_ID = "io.nyxus.home"
@@ -116,18 +122,28 @@ def _header_strip():
     left.set_hexpand(True)
     box.append(left)
 
-    right = Gtk.Label(label="NYX-J5W-2026\nSIERENGOWSKI-LOCKED", xalign=1.0)
-    right.add_css_class("header-stamp")
-    right.set_justify(Gtk.Justification.RIGHT)
+    right = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+    import platform
+    import socket
+    info = Gtk.Label(
+        label=f"{socket.gethostname().upper()} · {platform.release()}",
+        xalign=1.0)
+    info.add_css_class("header-info")
+    right.append(info)
+    stamp = Gtk.Label(label="NYX-J5W-2026 · SIERENGOWSKI-LOCKED", xalign=1.0)
+    stamp.add_css_class("header-stamp")
+    right.append(stamp)
     box.append(right)
     return box
 
 
 def _build_grid():
-    """4-column Gtk.Grid mirroring the web HomeDashboard layout exactly:
-       Row 0: Clock | Weather | Notifications | Calendar  (each 1 col)
-       Row 1: Notepad spans 2 cols (left half)
-       Row 2: Password Manager spans full 4 cols
+    """4-column ghost HUD grid:
+       Row 0: Clock | Weather | Notifications | Calendar   (1 col each)
+       Row 1: SYSTEM CORE — rings + per-core bars + temps  (spans 4)
+       Row 2: Fans | Network (2 cols) | Storage
+       Row 3: Notepad (2 cols) | Top Procs (2 cols)
+       Row 4: Password Manager (spans 4)
     """
     grid = Gtk.Grid()
     grid.set_valign(Gtk.Align.START)
@@ -143,9 +159,13 @@ def _build_grid():
         ("Weather",         WeatherCard(),              1, 0, 1, 1),
         ("Notifications",   NotificationsCard(),        2, 0, 1, 1),
         ("Calendar",        CalendarCard(),             3, 0, 1, 1),
-        ("Notepad",         NotepadCard(),              0, 1, 2, 1),
-        ("Pulse",           SystemPulseCard(),          2, 1, 2, 1),
-        ("Passwords",       PasswordManagerCard(),      0, 2, 4, 1),
+        ("Core",            SystemCoreCard(),           0, 1, 4, 1),
+        ("Fans",            FansCard(),                 0, 2, 1, 1),
+        ("Network",         NetworkCard(),              1, 2, 2, 1),
+        ("Storage",         StorageCard(),              3, 2, 1, 1),
+        ("Notepad",         NotepadCard(),              0, 3, 2, 1),
+        ("Procs",           ProcessesCard(),            2, 3, 2, 1),
+        ("Passwords",       PasswordManagerCard(),      0, 4, 4, 1),
     ]
     for name, c, col, row, w, h in layout:
         tilt = CARD_TILTS.get(name, 0.0)
