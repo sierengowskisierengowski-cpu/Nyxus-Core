@@ -58,3 +58,4 @@ __pycache__/
 # never commit live-machine credentials or session junk synced by mistake
 /.config/
 /.gowskinet-organized
+.claude/
