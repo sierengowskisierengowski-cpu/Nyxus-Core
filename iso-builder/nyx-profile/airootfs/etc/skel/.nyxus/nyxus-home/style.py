@@ -79,16 +79,15 @@ NEONS = ["#ff3cac", "#2bd2ff", "#784bff", "#ffb84d", "#6dffcf",
 
 
 def _card_css(name, color):
+    # GHOST HUD rev — cards are borderless + fully transparent; the
+    # graphs/text ARE the chrome. Readability comes from text glow.
     return f"""
 .card-{name} {{
-    background: rgba(6, 4, 12, 0.62);
-    border: 1px dashed alpha({color}, 0.66);
-    border-top: 2px solid {color};
-    border-radius: 8px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
     padding: 12px 14px;
-    box-shadow: 0 0 18px alpha({color}, 0.34),
-                0 6px 22px rgba(0,0,0,0.55),
-                inset 0 0 24px rgba(0,0,0,0.18);
+    box-shadow: none;
 }}
 .card-{name}-header-glyph {{
     color: {color};
@@ -110,7 +109,8 @@ def _card_css(name, color):
     letter-spacing: 0.22em;
 }}
 .card-{name}-header-rule {{
-    background: alpha({color}, 0.20);
+    background: linear-gradient(to right, {color},
+                alpha({color}, 0.25) 40%, transparent 85%);
     min-height: 1px;
 }}
 .card-{name}-footer {{
@@ -119,7 +119,6 @@ def _card_css(name, color):
     color: alpha({color}, 0.55);
     letter-spacing: 0.16em;
     padding-top: 6px;
-    border-top: 1px dashed alpha({color}, 0.13);
 }}
 .btn-nav-{name} {{
     background: transparent;
@@ -165,9 +164,10 @@ def _card_css(name, color):
     background: alpha({color}, 0.13);
 }}
 .input-{name} {{
-    background: rgba(0, 0, 0, 0.45);
-    border: 1px dashed alpha({color}, 0.34);
-    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.40);
+    border: none;
+    border-bottom: 1px solid alpha({color}, 0.40);
+    border-radius: 3px 3px 0 0;
     color: #e8edf5;
     padding: 5px 8px;
     font-family: "JetBrains Mono", monospace;
@@ -175,15 +175,49 @@ def _card_css(name, color):
     min-height: 0;
 }}
 .input-{name}:focus {{
-    border-color: {color};
-    box-shadow: 0 0 12px alpha({color}, 0.40);
+    border-bottom-color: {color};
+    box-shadow: 0 6px 14px -8px alpha({color}, 0.60);
 }}
 .notif-{name} {{
-    border: 1px dashed alpha({color}, 0.20);
+    border: none;
     border-left: 3px solid {color};
     background: alpha({color}, 0.06);
     padding: 7px 9px;
-    border-radius: 3px;
+    border-radius: 0 3px 3px 0;
+}}
+.ghost-title-{name} {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: {color};
+    letter-spacing: 0.34em;
+    text-shadow: 0 0 10px alpha({color}, 0.75),
+                 0 0 22px alpha({color}, 0.35);
+}}
+.ghost-glyph-{name} {{
+    color: {color};
+    font-size: 15px;
+    text-shadow: 0 0 10px {color}, 0 0 20px alpha({color}, 0.55);
+}}
+.ghost-rule-{name} {{
+    background: linear-gradient(to right, {color},
+                alpha({color}, 0.25) 40%, transparent 85%);
+    min-height: 1px;
+}}
+.ghost-footer-{name} {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8px;
+    color: alpha({color}, 0.50);
+    letter-spacing: 0.20em;
+    padding-top: 4px;
+}}
+.ring-title-{name} {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: {color};
+    letter-spacing: 0.30em;
+    text-shadow: 0 0 8px alpha({color}, 0.70);
 }}
 """
 
@@ -335,9 +369,9 @@ window, .home-root {{
     font-size: 18px;
     letter-spacing: 0.02em;
     color: {WHITE_OFF};
-    background: rgba(0, 0, 0, 0.55);
-    border: 1px dashed alpha({GREY_LIGHT}, 0.27);
-    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.42);
+    border: none;
+    border-radius: 6px;
     padding: 10px 13px;
 }}
 .np-textarea text {{
@@ -345,13 +379,12 @@ window, .home-root {{
     color: {WHITE_OFF};
 }}
 .np-textarea:focus {{
-    border-color: alpha({GREY_LIGHT}, 0.66);
-    box-shadow: inset 0 0 16px alpha({GREY_LIGHT}, 0.13),
-                0 0 18px alpha({GREY_LIGHT}, 0.27);
+    box-shadow: inset 0 0 16px alpha({GREY_LIGHT}, 0.10),
+                0 0 18px alpha({GREY_LIGHT}, 0.20);
 }}
 .pw-section {{
-    border: 1px dashed alpha({WHITE_OFF}, 0.27);
-    border-radius: 4px;
+    border: none;
+    border-radius: 6px;
     background: alpha({WHITE_OFF}, 0.04);
     padding: 9px 11px;
 }}
@@ -377,8 +410,8 @@ window, .home-root {{
     letter-spacing: 0.02em;
 }}
 .pw-row {{
-    border: 1px dashed alpha({WHITE_OFF}, 0.20);
-    background: rgba(0, 0, 0, 0.35);
+    border: none;
+    background: rgba(0, 0, 0, 0.30);
     border-radius: 3px;
     padding: 6px 9px;
 }}
@@ -425,22 +458,104 @@ scale slider {{
     border-radius: 50%;
 }}
 """)
-    for name in ("pink", "cyan", "purple", "gold", "green", "orange", "red", "mono"):
+    for name in ("pink", "cyan", "purple", "gold", "green", "orange",
+                 "red", "blue", "mono"):
         css += _card_css(name, PALETTE[name])
 
-    # System Pulse metric labels
+    # ── SYSTEM HUD (ghost instrumentation) ──────────────────────────
     css += f"""
-.pulse-metric-title {{
+.ghost-card {{
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 12px 14px;
+}}
+.ring-value {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 24px;
+    font-weight: 800;
+    color: {PALETTE['text']};
+    text-shadow: 0 0 12px alpha({PALETTE['text']}, 0.60),
+                 0 2px 6px rgba(0,0,0,0.9);
+}}
+.ring-sub {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8px;
+    color: {PALETTE['dim']};
+    letter-spacing: 0.14em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+}}
+.fan-rpm {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: {PALETTE['text']};
+    text-shadow: 0 0 10px alpha({PALETTE['text']}, 0.45),
+                 0 2px 5px rgba(0,0,0,0.9);
+}}
+.fan-name {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8px;
+    color: {PALETTE['dim']};
+    letter-spacing: 0.24em;
+}}
+.hud-mini-title {{
     font-family: "JetBrains Mono", monospace;
     font-size: 9px;
     font-weight: 700;
     color: {PALETTE['dim']};
-    letter-spacing: 0.22em;
+    letter-spacing: 0.28em;
 }}
-.pulse-metric-value {{
+.hud-mini-value {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: {PALETTE['text']};
+    letter-spacing: 0.08em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+}}
+.hud-temp-strip {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.95);
+}}
+.hud-dim-note {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    color: {PALETTE['dim']};
+}}
+.net-rate {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(43,210,255,0.30),
+                 0 2px 5px rgba(0,0,0,0.9);
+}}
+.net-ifaces {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.10em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+}}
+.proc-name {{
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;
     color: {PALETTE['text']};
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+}}
+.proc-pct {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: {PALETTE['blue']};
+    text-shadow: 0 0 8px alpha({PALETTE['blue']}, 0.55);
+}}
+.header-info {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    color: {PALETTE['dim']};
+    letter-spacing: 0.16em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
 }}
 """
     return css
