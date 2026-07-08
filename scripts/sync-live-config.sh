@@ -63,6 +63,22 @@ for f in /usr/local/bin/nyxus*; do
 done
 echo "synced: /usr/local/bin/nyxus*"
 
+# ── UI sound pack (nyxus-sfx plays from ~/.local/share/nyxus/sounds) ──
+if [[ -d "${HOME}/.local/share/nyxus/sounds" ]]; then
+  mkdir -p "${SKEL}/.local/share/nyxus/sounds"
+  rsync -a --delete "${HOME}/.local/share/nyxus/sounds/" "${SKEL}/.local/share/nyxus/sounds/"
+  echo "synced: .local/share/nyxus/sounds"
+fi
+
+# ── Hyprland plugins (built against the pinned 0.55.4 — nyxus-plugins
+#    loads them from ~/.local/lib/nyxus-plugins; rebuild after any
+#    Hyprland bump) ──
+if [[ -d "${HOME}/.local/lib/nyxus-plugins" ]]; then
+  mkdir -p "${SKEL}/.local/lib/nyxus-plugins"
+  rsync -a --delete "${HOME}/.local/lib/nyxus-plugins/" "${SKEL}/.local/lib/nyxus-plugins/"
+  echo "synced: .local/lib/nyxus-plugins"
+fi
+
 # ── theme fonts (graffiti type system: Permanent Marker/Caveat/Orbitron) ──
 if [[ -d "${HOME}/.local/share/fonts/nyxus" ]]; then
   mkdir -p "${ROOTFS}/usr/share/fonts/nyxus"

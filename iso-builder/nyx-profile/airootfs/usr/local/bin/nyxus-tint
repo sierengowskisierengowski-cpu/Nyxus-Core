@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-tint <on|off|toggle|status>   ·   rev 2026-07-08 r1 (Signature)
+# Front door for the per-app border tint daemon (nyxus-tintd): every
+# app class gets its own deterministic neon on the focus ring.
+# Bound: Super+T. Runs happily alongside nyxus-beat (Super+Alt+B).
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-tintd.pid"
+
+running() { [[ -r "${PIDFILE}" ]] && kill -0 "$(cat "${PIDFILE}")" 2>/dev/null; }
+
+start() {
+  running && { echo "tint: already on"; return; }
+  nohup nyxus-tintd >/dev/null 2>&1 &
+  notify-send -u low -t 2200 "◤ NYXUS ◥ TINT" "every app wears its own neon" 2>/dev/null
+  echo "tint: on"
+}
+
+stop() {
+  running || { echo "tint: already off"; return; }
+  kill "$(cat "${PIDFILE}")" 2>/dev/null
+  notify-send -u low -t 2200 "◤ NYXUS ◥ TINT" "back to the house accent" 2>/dev/null
+  echo "tint: off"
+}
+
+case "${1:-toggle}" in
+  on)     start ;;
+  off)    stop ;;
+  toggle) running && stop || start ;;
+  status) running && echo on || echo off ;;
+  *) echo "usage: nyxus-tint <on|off|toggle|status>" >&2; exit 2 ;;
+esac

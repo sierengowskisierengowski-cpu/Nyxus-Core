@@ -55,7 +55,7 @@ hide_when_typing = true
 [bell]
 animation = "EaseOutExpo"
 duration  = 0
-color     = "#fe42ae"
+color     = "#ff4994"
 
 # ── PRISM terminal palette (rev 2026-07-06) ─────────────────
 # Neon-on-void: full 16-color ANSI ramp so syntax highlighting,
@@ -70,23 +70,23 @@ dim_foreground = "#eef2fa8c"
 
 [colors.cursor]
 text   = "#05060a"
-cursor = "#fe42ae"
+cursor = "#ff4994"
 
 [colors.vi_mode_cursor]
 text   = "#05060a"
-cursor = "#36ff26"
+cursor = "#26ff39"
 
 [colors.selection]
 text       = "#05060a"
-background = "#36ff26"
+background = "#26ff39"
 
 [colors.search.matches]
 foreground = "#05060a"
-background = "#ff7a26"
+background = "#ff8b26"
 
 [colors.search.focused_match]
 foreground = "#05060a"
-background = "#fe42ae"
+background = "#ff4994"
 
 [colors.footer_bar]
 background = "#05060a"
@@ -94,20 +94,20 @@ foreground = "#eef2fa8c"
 
 [colors.hints.start]
 foreground = "#05060a"
-background = "#fe42ae"
+background = "#ff4994"
 
 [colors.hints.end]
 foreground = "#05060a"
-background = "#36ff26"
+background = "#26ff39"
 
 [colors.normal]
 black   = "#05060a"
 red     = "#ff5470"
 green   = "#26ffb7"
-yellow  = "#ff7a26"
+yellow  = "#ff8b26"
 blue    = "#4d9fff"
-magenta = "#fe42ae"
-cyan    = "#36ff26"
+magenta = "#ff4994"
+cyan    = "#26ff39"
 white   = "#eef2fa"
 
 [colors.bright]

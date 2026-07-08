@@ -11,6 +11,11 @@
 # only the trailing NNNdeg angle is rewritten, and the original
 # border is restored exactly on exit.
 #
+# (r2) coexists with nyxus-tintd: if the per-app tint daemon has
+# published colors in $XDG_RUNTIME_DIR/nyxus-border-colors, each spin
+# uses THOSE stops instead of the startup snapshot — beat keeps the
+# angle, tint keeps the colors, nobody stomps anybody.
+#
 # Not run directly — use `nyxus-beat on|off|toggle`.
 # © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
@@ -19,6 +24,7 @@ export PATH="${HOME}/.local/bin:${PATH}"
 
 CAVA_CONF="${HOME}/.config/nyxus/cava-beat.conf"
 PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-beatd.pid"
+COLORFILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-border-colors"   # tintd handoff
 
 command -v cava >/dev/null || { echo "beatd: cava not installed" >&2; exit 1; }
 
@@ -45,9 +51,14 @@ done
 BASE="${NORM% }"
 
 restore() {
-  hyprctl keyword general:col.active_border "${BASE}" >/dev/null 2>&1
-  rm -f "${PIDFILE}"
+  # children first, so no in-flight beat respins after the restore.
+  # if tintd is live, hand its colors back with the resting angle;
+  # otherwise restore the exact startup snapshot.
   pkill -P $$ 2>/dev/null
+  local cols="${BASE% *}"
+  [[ -r "${COLORFILE}" ]] && cols="$(<"${COLORFILE}")"
+  hyprctl keyword general:col.active_border "${cols} ${BASE##* }" >/dev/null 2>&1
+  rm -f "${PIDFILE}"
 }
 trap restore EXIT INT TERM
 
@@ -58,6 +69,9 @@ ANGLE="${BASE##* }"; ANGLE="${ANGLE%deg}"
 # beat detection over the two lowest bars: exponential moving average
 # baseline; a frame beats when bass > 1.35x EMA, above an absolute
 # floor, with a 180ms refractory window.
+# (r2) pipeline is backgrounded + wait'ed: a foreground pipeline makes
+# bash defer the TERM trap until the pipe exits, so `nyxus-beat off`
+# would never restore. `wait` is signal-interruptible.
 cava -p "${CAVA_CONF}" 2>/dev/null | {
   ema=10; last_beat=0
   while IFS=';' read -r b1 b2 _; do
@@ -68,8 +82,10 @@ cava -p "${CAVA_CONF}" 2>/dev/null | {
     if (( bass > 25 && bass * 100 > ema * 135 && now - last_beat > 180 )); then
       last_beat=${now}
       ANGLE=$(( (ANGLE + 45) % 360 ))
+      [[ -r "${COLORFILE}" ]] && COLORS="$(<"${COLORFILE}")"   # tintd handoff
       hyprctl keyword general:col.active_border \
         "${COLORS} ${ANGLE}deg" >/dev/null 2>&1
     fi
   done
-}
+} &
+wait $!

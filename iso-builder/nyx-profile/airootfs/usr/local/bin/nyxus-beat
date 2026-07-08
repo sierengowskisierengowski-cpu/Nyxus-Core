@@ -2,7 +2,7 @@
 # ════════════════════════════════════════════════════════════════════
 # nyxus-beat <on|off|toggle|status>   ·   rev 2026-07-07 r1 (Signature)
 # Front door for the audio-reactive border daemon (nyxus-beatd).
-# Bound: Super+Shift+P ("pulse"). Quicksettings-friendly.
+# Bound: Super+Alt+B ("beat"). Quicksettings-friendly.
 # © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
@@ -20,7 +20,12 @@ start() {
 
 stop() {
   running || { echo "beat: already off"; return; }
-  kill "$(cat "${PIDFILE}")" 2>/dev/null
+  local pid; pid="$(cat "${PIDFILE}")"
+  # bash defers the TERM trap while it waits on the cava pipeline, so
+  # signal the children first — cava's exit unblocks the daemon, which
+  # then runs its restore trap and exits.
+  pkill -P "${pid}" 2>/dev/null
+  kill "${pid}" 2>/dev/null
   notify-send -u low -t 2200 "◤ NYXUS ◥ BEAT" "border ring at rest" 2>/dev/null
   echo "beat: off"
 }

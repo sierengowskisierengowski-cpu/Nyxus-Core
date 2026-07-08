@@ -1,19 +1,19 @@
 /* NYXUS · Obsidian Prism — window switcher (Super+Tab)
- * Palette: #fe42ae · #36ff26 · #26ffb7 · #ff7a26 */
+ * Palette: #ff4994 · #26ff39 · #26ffb7 · #ff8b26 */
 
 * {
     bg:         #05060a;
     bar-bg:     rgba(5, 6, 10, 0.90);
     widget-bg:  rgba(10, 13, 20, 0.85);
-    active:     #36ff26;
+    active:     #26ff39;
     inactive:   rgba(238, 242, 250, 0.35);
-    highlight:  #fe42ae;
+    highlight:  #ff4994;
     violet:     #26ffb7;
-    gold:       #ff7a26;
+    gold:       #ff8b26;
     text:       #eef2fa;
     sep:        rgba(38, 255, 183, 0.35);
-    selected-bg:rgba(254, 66, 174, 0.18);
-    glass-line: rgba(54, 255, 38, 0.35);
+    selected-bg:rgba(255, 73, 148, 0.18);
+    glass-line: rgba(38, 255, 57, 0.35);
 
     font:                   "JetBrainsMono Nerd Font 12";
     background-color:       transparent;

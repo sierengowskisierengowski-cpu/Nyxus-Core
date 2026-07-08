@@ -51,9 +51,9 @@
       "ok": "#82ffd2"
     },
     "wallpaper": {
-      "primary": "#fe42ae",
-      "secondary": "#36ff26",
-      "warn": "#ff7a26",
+      "primary": "#ff4994",
+      "secondary": "#26ff39",
+      "warn": "#ff8b26",
       "ok": "#26ffb7"
     }
   },

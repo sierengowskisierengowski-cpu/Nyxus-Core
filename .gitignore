@@ -44,9 +44,10 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Replit
-.cache/
-.local/
+# Replit (repo root only — skel ships .local content in the ISO)
+/.cache/
+/.local/
+artifacts/**/.local/
 
 # Python compiled artifacts
 __pycache__/

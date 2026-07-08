@@ -55,12 +55,21 @@ apply_swaybg() {
   done
 }
 
-if command -v swww >/dev/null 2>&1 && command -v swww-daemon >/dev/null 2>&1; then
+# swww was forked/renamed to awww; Arch ships the fork. Same CLI, so
+# just pick whichever client+daemon pair is actually complete.
+SWWW=""
+if command -v awww >/dev/null 2>&1 && command -v awww-daemon >/dev/null 2>&1; then
+  SWWW="awww"
+elif command -v swww >/dev/null 2>&1 && command -v swww-daemon >/dev/null 2>&1; then
+  SWWW="swww"
+fi
+
+if [[ -n "${SWWW}" ]]; then
   # ── swww path: ripple out from the cursor ──────────────────────────
-  if ! pgrep -x swww-daemon >/dev/null 2>&1; then
-    nohup swww-daemon --format xrgb >/dev/null 2>&1 &
+  if ! pgrep -x "${SWWW}-daemon" >/dev/null 2>&1; then
+    nohup "${SWWW}-daemon" --format xrgb >/dev/null 2>&1 &
     for _ in $(seq 1 40); do
-      swww query >/dev/null 2>&1 && break
+      "${SWWW}" query >/dev/null 2>&1 && break
       sleep 0.1
     done
   fi
@@ -72,7 +81,7 @@ if command -v swww >/dev/null 2>&1 && command -v swww-daemon >/dev/null 2>&1; th
   fi
   FPS="$(hyprctl monitors -j 2>/dev/null | jq -r '.[0].refreshRate // 60 | round' 2>/dev/null || echo 60)"
 
-  swww img "${PATH_ARG}" \
+  "${SWWW}" img "${PATH_ARG}" \
     --transition-type grow \
     --transition-pos "${POS}" \
     --transition-duration 1.1 \

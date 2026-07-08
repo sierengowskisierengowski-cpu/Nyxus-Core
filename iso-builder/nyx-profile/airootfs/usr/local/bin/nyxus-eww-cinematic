@@ -38,6 +38,7 @@ done
 
 # ── 1 · curtain up ──────────────────────────────────────────────────
 eww open nyxus-splash 2>/dev/null
+nyxus-sfx boot
 trap 'eww close nyxus-splash 2>/dev/null' EXIT INT TERM
 ( sleep 12; eww close nyxus-splash 2>/dev/null ) & disown   # watchdog
 

@@ -9,7 +9,7 @@
 
 .control-center {
     background: rgba(5, 6, 10, 0.94);
-    border: 2px solid rgba(54, 255, 38, 0.35);
+    border: 2px solid rgba(38, 255, 57, 0.35);
     color: #eef2fa;
     padding: 14px;
     margin: 6px;
@@ -20,12 +20,12 @@
 
 .notification {
     background: rgba(5, 6, 10, 0.94);
-    border: 2px solid rgba(254, 66, 174, 0.40);
+    border: 2px solid rgba(255, 73, 148, 0.40);
     margin: 6px 0;
     padding: 12px;
 }
 .notification.low { border-left: 3px solid #26ffb7; }
-.notification.normal { border-left: 3px solid #fe42ae; }
+.notification.normal { border-left: 3px solid #ff4994; }
 .notification.critical { border-color: #ff5470; border-left: 3px solid #ff5470; }
 
 .summary { color: #eef2fa; font-weight: 700; font-size: 13px; letter-spacing: 0.04em; }
@@ -41,8 +41,8 @@
 }
 .close-button:hover {
     color: #05060a;
-    background: #fe42ae;
-    border-color: #fe42ae;
+    background: #ff4994;
+    border-color: #ff4994;
 }
 
 .widget-title > label {
@@ -59,8 +59,8 @@
 }
 .widget-title > button:hover {
     color: #05060a;
-    background: #36ff26;
-    border-color: #36ff26;
+    background: #26ff39;
+    border-color: #26ff39;
 }
 
 .widget-dnd > switch { background: #11151f; }
@@ -70,8 +70,8 @@
 .floating-notifications { background: transparent; }
 .floating-notifications.background .notification {
     background: rgba(5, 6, 10, 0.94);
-    border: 2px solid rgba(54, 255, 38, 0.35);
-    border-left: 3px solid #fe42ae;
+    border: 2px solid rgba(38, 255, 57, 0.35);
+    border-left: 3px solid #ff4994;
 }
 .floating-notifications.background .notification.critical {
     border: 2px solid #ff5470;
@@ -93,5 +93,5 @@ slider trough {
     background: #11151f;
     min-height: 4px;
 }
-slider trough highlight { background: linear-gradient(90deg, #fe42ae, #36ff26); }
-slider { background: transparent; color: #ff7a26; }
+slider trough highlight { background: linear-gradient(90deg, #ff4994, #26ff39); }
+slider { background: transparent; color: #ff8b26; }

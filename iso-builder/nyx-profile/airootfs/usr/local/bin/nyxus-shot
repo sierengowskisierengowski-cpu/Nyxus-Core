@@ -21,7 +21,7 @@ DIR="${HOME}/Pictures/NYXUS-Shots"
 mkdir -p "${DIR}"
 FILE="${DIR}/nyxus-$(date +%Y%m%d-%H%M%S).png"
 
-note() { notify-send -u low -t 3500 -i "${FILE}" "◤ NYXUS ◥ SHOT" "$1" 2>/dev/null; }
+note() { nyxus-sfx shot; notify-send -u low -t 3500 -i "${FILE}" "◤ NYXUS ◥ SHOT" "$1" 2>/dev/null; }
 fail() { notify-send -u critical -t 4000 "◤ NYXUS ◥ SHOT" "$1" 2>/dev/null; exit 1; }
 
 command -v grimblast >/dev/null || fail "grimblast missing from ~/.local/bin"

@@ -247,10 +247,10 @@ gradient = 1
 gradient_count = 6
 gradient_color_1 = '#26ffb7'
 gradient_color_2 = '#4d9fff'
-gradient_color_3 = '#36ff26'
-gradient_color_4 = '#fe42ae'
+gradient_color_3 = '#26ff39'
+gradient_color_4 = '#ff4994'
 gradient_color_5 = '#ff7ae5'
-gradient_color_6 = '#ff7a26'
+gradient_color_6 = '#ff8b26'
 
 # Colors can be one of seven predefined: black, blue, cyan, green, magenta, red, white, yellow.
 # Or defined by hex code '#xxxxxx' (hex code must be within ''). User defined colors requires
