@@ -79,7 +79,7 @@ Canonical picks locked in and implemented:
 |---|---|---|
 | `Super+Return` | `alacritty` (canonical terminal) | was `nyxus_terminal.py` → kitty fallback chain |
 | `Super+Shift+Return` | `[float] alacritty` | floating variant — distinct, not a duplicate |
-| `Super+Space` | `~/.nyxus/nyxus_launcher.py` — **CANONICAL launcher** | rofi drun duplicates removed: `Super+D`, `Super+R`, `Super+Shift+D` (launcher has `!cmd` prefix for run mode) |
+| `Super+Space` | `~/.nyxus/nyxus_launcher.py` — **CANONICAL launcher** | rofi drun duplicates removed: `Super+D`, `Super+Shift+D`; `Super+R` re-added as a muscle-memory alias of Super+Space (launcher has `!cmd` prefix for run mode) |
 | `Super+Tab` | rofi window switcher | KEPT — distinct function, not a duplicate |
 | `Print` family | `~/.nyxus/nyxus_screenshot.py` — **CANONICAL screenshots** | see §6 |
 | `Super+Shift+H` | `alacritty -e ~/.nyxus/nyxus_doctor.py` | no duplicate — intentional keep |

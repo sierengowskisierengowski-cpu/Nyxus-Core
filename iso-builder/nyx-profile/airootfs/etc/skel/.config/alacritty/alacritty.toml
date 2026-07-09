@@ -57,65 +57,72 @@ animation = "EaseOutExpo"
 duration  = 0
 color     = "#ff4994"
 
-# ── PRISM terminal palette (rev 2026-07-06) ─────────────────
+# ── PRISM terminal palette (rev 2026-07-09, HUD-aligned) ────
 # Neon-on-void: full 16-color ANSI ramp so syntax highlighting,
 # ls, git, htop etc. actually read in color instead of mono cream.
+# Alacritty colors must be 6-digit hex — no alpha channel. Window
+# translucency lives in window.opacity; "dim" shades are pre-blended
+# against the background instead of using an alpha suffix.
 [colors]
 draw_bold_text_with_bright_colors = true
 
 [colors.primary]
-background     = "#05060a"
+background     = "#07050e"
 foreground     = "#eef2fa"
-dim_foreground = "#eef2fa8c"
+# was #eef2fa8c (invalid 8-digit hex) — ~55% fg blended over bg
+dim_foreground = "#8b93a8"
 
 [colors.cursor]
-text   = "#05060a"
+text   = "#07050e"
 cursor = "#ff4994"
 
 [colors.vi_mode_cursor]
-text   = "#05060a"
+text   = "#07050e"
 cursor = "#26ff39"
 
 [colors.selection]
-text       = "#05060a"
+text       = "#07050e"
 background = "#26ff39"
 
 [colors.search.matches]
-foreground = "#05060a"
+foreground = "#07050e"
 background = "#ff8b26"
 
 [colors.search.focused_match]
-foreground = "#05060a"
+foreground = "#07050e"
 background = "#ff4994"
 
 [colors.footer_bar]
-background = "#05060a"
-foreground = "#eef2fa8c"
+background = "#07050e"
+# was #eef2fa8c (invalid 8-digit hex)
+foreground = "#8b93a8"
 
 [colors.hints.start]
-foreground = "#05060a"
+foreground = "#07050e"
 background = "#ff4994"
 
 [colors.hints.end]
-foreground = "#05060a"
+foreground = "#07050e"
 background = "#26ff39"
 
+# ANSI ramp mapped to the HUD neons: pink #ff4994/#ff3cac, green
+# #26ff39, orange #ff8b26, gold, cyan #2bd2ff, purple #784bff.
 [colors.normal]
-black   = "#05060a"
+black   = "#07050e"
 red     = "#ff5470"
-green   = "#26ffb7"
+green   = "#26ff39"
 yellow  = "#ff8b26"
-blue    = "#4d9fff"
+blue    = "#784bff"
 magenta = "#ff4994"
-cyan    = "#26ff39"
+cyan    = "#2bd2ff"
 white   = "#eef2fa"
 
 [colors.bright]
 black   = "#3a4152"
 red     = "#ff7a93"
-green   = "#6dffcf"
+green   = "#7dff8a"
 yellow  = "#ffce85"
-blue    = "#7ab8ff"
+blue    = "#9d7bff"
 magenta = "#ff7ae5"
 cyan    = "#66efff"
 white   = "#ffffff"
@@ -123,11 +130,11 @@ white   = "#ffffff"
 [colors.dim]
 black   = "#000000"
 red     = "#b23a4f"
-green   = "#00b37d"
+green   = "#12a626"
 yellow  = "#b37e3b"
-blue    = "#366fb3"
+blue    = "#52349e"
 magenta = "#b23797"
-cyan    = "#00a0b3"
+cyan    = "#1b86ad"
 white   = "#a6adbd"
 
 [[keyboard.bindings]]
