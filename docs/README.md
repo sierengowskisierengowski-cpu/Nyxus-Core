@@ -16,6 +16,7 @@ This directory contains the canonical project documentation for system scope, ar
 - [`deployment/build-pipeline.md`](deployment/build-pipeline.md): Workspace build/typecheck flow and packaging expectations.
 - [`deployment/iso-build.md`](deployment/iso-build.md): NYX ISO pipeline, prerequisites, and outputs.
 - [`deployment/web-and-api-deployment.md`](deployment/web-and-api-deployment.md): API/web deployment behavior and distribution flow.
+- [`deployment/login-and-boot-splash.md`](deployment/login-and-boot-splash.md): Lock screen (hyprlock), greetd + regreet login stack with its fallback chain, and the GALAXY EYE Plymouth splash — wiring, history, and how to enable on installed systems.
 
 ### Design and Quality
 - [`DESIGN_CONTRACT.md`](DESIGN_CONTRACT.md): Active design quality bar for all NYXUS UI components — layout, typography, color (DARK MIRROR palette), motion, accessibility, and per-component checklists.

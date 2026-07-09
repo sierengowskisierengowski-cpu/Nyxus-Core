@@ -5,24 +5,27 @@
 # NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================
 #
-# greetd is the sole display manager for the NYX live ISO session.
+# greetd is the sole display manager for NYXUS (live ISO + installed).
+# rev 2026-07-09 r2 — themed regreet chain, all official repo packages.
 #
-# THREE-LAYER FALLBACK so the system can NEVER be locked out:
+# FOUR-LAYER FALLBACK so the system can NEVER be locked out:
 #
 #   1. default_session → /usr/local/bin/nyxus-greeter
-#      A defensive wrapper that prefers tuigreet (built from source
-#      during the bake — polished TUI greeter), falls back to agreety
-#      (built into greetd), and as an absolute last resort launches
-#      Hyprland directly. So even if every greeter binary is missing,
-#      the user still gets a desktop.
+#      A defensive wrapper that walks: regreet under cage (the themed
+#      NYXUS login screen — /etc/greetd/regreet.toml + regreet.css),
+#      then tuigreet (packaged TUI greeter, prism --theme), then
+#      agreety (built into greetd), then launches Hyprland directly.
+#      Greeters that crash at startup are demoted for the rest of the
+#      boot, so greetd's respawn loop converges on a working layer.
 #
 #   2. initial_session → autologin `nyx` straight into Hyprland on
-#      first boot. Bypasses greetd entirely for the first login of
-#      every greetd start (i.e. live ISO + first post-install boot).
-#      Guarantees you can ALWAYS get in at least once.
+#      the first greetd start of every boot (live ISO safety net).
+#      nyxus-postinstall STRIPS this block on installed systems so
+#      real installs always prompt.
 #
 #   3. SDDM and all other display managers must NOT be active
-#      alongside this. greetd is sole DM.
+#      alongside this. greetd is sole DM (customize_airootfs.sh
+#      enables greetd.service; display-manager.service aliases it).
 
 [terminal]
 vt = 1

@@ -1,8 +1,17 @@
-# NYXUS · Plymouth boot splash · DARK MIRROR
+# NYXUS · Plymouth boot splash · GALAXY EYE (Obsidian Prism)
 # ------------------------------------------------------------------
-# Centred pulsing logo over an ink-black backdrop with a thin
-# purple → cyan progress bar at the bottom. Runs at boot AND
-# shutdown via the standard Plymouth Script module.
+# The signature NYXUS eye-mosaic — a cosmic eye with a spiral galaxy
+# iris and the wordmark glowing inside the pupil — full-bleed over
+# ink black, with a thin purple → cyan prism progress bar at the
+# bottom. Runs at boot AND shutdown via the Plymouth Script module.
+#
+# History: the galaxy-eye background shipped in the original
+# "Cosmic Ink Swirl" theme (attached via artifacts boot-splash,
+# commit 8c7672e "NYXUS eye mosaic backgrounds for Plymouth+GRUB")
+# but the ISO rootfs theme had regressed to a logo-only DARK MIRROR
+# variant without it. rev 2026-07-09 r2 merges the two: eye artwork
+# from the artifacts theme + the hardened callbacks/progress bar of
+# the Build Standard script.
 #
 # Plymouth Script notes (intentional):
 #   * NO C-style ternary — Plymouth Script does not support `?:`.
@@ -15,36 +24,42 @@
 #       password_callback (prompt, bullets)           # luks unlock
 #       quit_callback     ()                          # tear down
 #   * Bar is drawn by scaling tiny 1×1 RGBA PNGs (bar-track / bar-fill)
-#     to the desired pixel size — recolouring a logo PNG is NOT
-#     possible from Plymouth Script.
+#     to the desired pixel size — recolouring a PNG is NOT possible
+#     from Plymouth Script.
+#   * logo.png (graffiti wordmark) intentionally stays in the theme
+#     dir for tooling/verify-profile compat but is no longer drawn —
+#     the eye artwork carries the brand.
 #
-# Visual contract (DARK MIRROR):
-#   background  : #0a0a14
-#   primary     : #a06bff (purple, in bar-track tint)
-#   secondary   : #3ad8ff (cyan, in bar-fill)
+# Visual contract (OBSIDIAN PRISM):
+#   background  : galaxy-eye mosaic over #05010d ink
+#   bar track   : #2a1a55 (dim purple)
+#   bar fill    : #3ad8ff (cyan)
 # ------------------------------------------------------------------
 
 # ---- canvas -------------------------------------------------------
 W = Window.GetWidth();
 H = Window.GetHeight();
-Window.SetBackgroundTopColor   (0.039, 0.039, 0.078);  # #0a0a14
+Window.SetBackgroundTopColor   (0.020, 0.004, 0.051);  # #05010d
 Window.SetBackgroundBottomColor(0.000, 0.000, 0.000);
 
-# ---- logo ---------------------------------------------------------
-logo.image  = Image("logo.png");
-logo.sprite = Sprite(logo.image);
-logo.w = logo.image.GetWidth();
-logo.h = logo.image.GetHeight();
-logo.sprite.SetX((W - logo.w) / 2);
-logo.sprite.SetY((H - logo.h) / 2 - 30);
-logo.sprite.SetZ(10);
-logo.sprite.SetOpacity(1.0);
+# ---- galaxy-eye background (cover-scaled, centred) ----------------
+bg.image = Image("background.png");
+bg.sx = W / bg.image.GetWidth();
+bg.sy = H / bg.image.GetHeight();
+if (bg.sx > bg.sy) { bg.scale = bg.sx; } else { bg.scale = bg.sy; }
+bg.scaled  = bg.image.Scale(bg.image.GetWidth()  * bg.scale,
+                            bg.image.GetHeight() * bg.scale);
+bg.sprite  = Sprite(bg.scaled);
+bg.sprite.SetX((W - bg.scaled.GetWidth())  / 2);
+bg.sprite.SetY((H - bg.scaled.GetHeight()) / 2);
+bg.sprite.SetZ(-10);
+bg.sprite.SetOpacity(1.0);
 
 # ---- progress bar -------------------------------------------------
 bar.w = 320;
 bar.h = 4;
 bar.x = (W - bar.w) / 2;
-bar.y = H * 0.78;
+bar.y = H * 0.86;
 
 # Track (dim purple, full width, low opacity)
 track.image  = Image("bar-track.png").Scale(bar.w, bar.h);
@@ -70,9 +85,10 @@ global.prompt_sprite  = NULL;
 # ---- callbacks ----------------------------------------------------
 fun refresh_callback ()
 {
-  # Pulse the logo (sin-based opacity 0.7..1.0)
-  pulse = 0.85 + 0.15 * Math.Sin(Plymouth.GetTime() * 2.0);
-  logo.sprite.SetOpacity(pulse);
+  # Slow breathing pulse on the bar fill (opacity 0.72..1.0) so the
+  # splash reads as alive without re-scaling the eye every frame.
+  pulse = 0.86 + 0.14 * Math.Sin(Plymouth.GetTime() * 2.0);
+  fill.sprite.SetOpacity(pulse);
 }
 
 fun progress_callback (duration, progress)
@@ -138,7 +154,7 @@ fun display_normal_callback ()
 
 fun quit_callback ()
 {
-  logo.sprite.SetOpacity(0);
+  bg.sprite.SetOpacity(0);
   fill.sprite.SetOpacity(0);
   track.sprite.SetOpacity(0);
 }

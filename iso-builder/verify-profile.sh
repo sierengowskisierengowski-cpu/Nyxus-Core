@@ -744,8 +744,10 @@ if grep -q '"loginscreen":' "${NS}/nyxus_settings.py" \
 else
   fail "Settings: loginscreen not registered or LoginScreenPage missing"
 fi
-# Required runtime packages — greetd + tuigreet (display manager for live ISO).
-for pkg in greetd tuigreet; do
+# Required runtime packages — greetd + themed greeter chain (rev 2026-07-09:
+# regreet under cage is the themed greeter; tuigreet is the packaged TUI
+# fallback — all official repo packages, no source builds).
+for pkg in greetd greetd-regreet greetd-tuigreet cage; do
   grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
     && ok "package: ${pkg}" \
     || fail "missing package: ${pkg}"
@@ -762,6 +764,19 @@ if [[ -f "${GREETD_CONF}" ]]; then
   ok "greetd config.toml present"
 else
   fail "greetd config.toml missing: ${GREETD_CONF}"
+fi
+# Themed regreet assets (rev 2026-07-09): toml + css + eye backdrop.
+for f in regreet.toml regreet.css nyxus-eye.png; do
+  [[ -f "${AIROOT}/etc/greetd/${f}" ]] \
+    && ok "regreet asset: ${f}" \
+    || fail "regreet asset missing: ${AIROOT}/etc/greetd/${f}"
+done
+# display-manager alias must point at greetd (sole DM).
+DM_LINK="${AIROOT}/etc/systemd/system/display-manager.service"
+if [[ -L "${DM_LINK}" && "$(readlink "${DM_LINK}")" == *greetd.service ]]; then
+  ok "display-manager.service → greetd.service"
+else
+  fail "display-manager.service does not alias greetd: ${DM_LINK}"
 fi
 
 # ── 13q. Tier 1 · Plymouth boot splash (rev 2026-05-14) ────────────

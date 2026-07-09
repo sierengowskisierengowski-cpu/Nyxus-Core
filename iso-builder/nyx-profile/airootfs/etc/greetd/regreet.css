@@ -1,0 +1,120 @@
+/* ============================================
+ * NYXUS — ReGreet stylesheet · Prism HUD login
+ * rev 2026-07-09 r1
+ * © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ * ============================================
+ * Mirrors the nyxus-home HUD card language: near-black ink surfaces,
+ * 1px neon hairline borders (dashed) with a solid neon top rule,
+ * small-caps mono labels, prism accent hues:
+ *   pink  #ff4994   green #26ff39   gold #ff8b26   cyan #66efff
+ *   ink   rgba(7,5,14,…)            text #e8edf5   dim  #c8ccd6
+ * Fonts: Inter Display (UI), JetBrains Mono (data/labels); the
+ * graffiti pack (Permanent Marker/Caveat/Orbitron) ships at
+ * /usr/share/fonts/nyxus for the wordmark flourish.
+ */
+
+window {
+    background-color: rgba(5, 1, 13, 0.55);
+    color: #e8edf5;
+    font-family: "Inter Display", "JetBrains Mono", sans-serif;
+}
+
+/* the login card */
+frame, .frame {
+    background-color: rgba(7, 5, 14, 0.93);
+    border: 1px dashed rgba(255, 73, 148, 0.75);
+    border-top: 2px solid #ff4994;
+    border-radius: 8px;
+    padding: 18px 22px;
+    box-shadow: 0 0 18px rgba(255, 73, 148, 0.34),
+                0 6px 22px rgba(0, 0, 0, 0.55);
+}
+frame > border { border: none; }
+
+label {
+    color: #e8edf5;
+    text-shadow: 0 0 8px rgba(232, 237, 245, 0.25);
+}
+
+/* greeting ("welcome back, operator") — script flourish */
+#greeting_label, .greeting {
+    font-family: "Caveat", "Permanent Marker", "Inter Display", cursive;
+    font-size: 30px;
+    color: #ff4994;
+    text-shadow: 0 0 10px rgba(255, 73, 148, 0.55),
+                 0 0 20px rgba(255, 73, 148, 0.30);
+}
+
+/* clock — chunky display numerals */
+#clock_label, .clock {
+    font-family: "Orbitron", "JetBrains Mono", monospace;
+    font-weight: 800;
+    font-size: 22px;
+    color: #e8edf5;
+    text-shadow: 0 0 14px rgba(232, 237, 245, 0.45);
+}
+
+/* password / answer entry — neon input */
+entry {
+    background-color: rgba(0, 0, 0, 0.45);
+    border: 1px dashed rgba(38, 255, 57, 0.34);
+    border-radius: 3px;
+    color: #e8edf5;
+    caret-color: #26ff39;
+    font-family: "JetBrains Mono", monospace;
+    padding: 8px 10px;
+    min-height: 20px;
+}
+entry:focus, entry:focus-within {
+    border-color: #26ff39;
+    box-shadow: 0 0 12px rgba(38, 255, 57, 0.40);
+}
+
+/* buttons — HUD primary button */
+button {
+    background-color: rgba(255, 73, 148, 0.13);
+    background-image: none;
+    border: 1px solid #ff4994;
+    border-radius: 3px;
+    color: #ff4994;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-shadow: 0 0 6px rgba(255, 73, 148, 0.55);
+    padding: 6px 14px;
+}
+button:hover, button:focus {
+    background-color: rgba(255, 73, 148, 0.25);
+    box-shadow: 0 0 14px rgba(255, 73, 148, 0.55);
+}
+button:active {
+    background-color: rgba(255, 73, 148, 0.40);
+}
+
+/* session / user selectors — cyan family so they read as secondary */
+combobox button, dropdown button, combobox entry, dropdown entry {
+    background-color: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(102, 239, 255, 0.34);
+    color: #66efff;
+    text-shadow: 0 0 6px rgba(102, 239, 255, 0.45);
+}
+combobox button:hover, dropdown button:hover {
+    border-color: #66efff;
+    box-shadow: 0 0 12px rgba(102, 239, 255, 0.40);
+}
+
+popover, popover.background {
+    background-color: rgba(7, 5, 14, 0.97);
+    border: 1px solid rgba(102, 239, 255, 0.34);
+    border-radius: 8px;
+    color: #e8edf5;
+}
+popover modelbutton:hover, popover row:hover {
+    background-color: rgba(255, 73, 148, 0.13);
+}
+
+/* error bar — locked red */
+.error, infobar.error, label.error {
+    color: #ff4d6b;
+    text-shadow: 0 0 8px rgba(255, 77, 107, 0.5);
+}

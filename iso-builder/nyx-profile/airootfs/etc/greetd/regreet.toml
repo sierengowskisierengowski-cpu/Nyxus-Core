@@ -1,0 +1,32 @@
+# ============================================
+# NYXUS — ReGreet configuration (themed greeter)
+# rev 2026-07-09 r1 · Prism HUD login
+# Copyright © 2026 Joseph Sierengowski
+# NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+# Launched by /usr/local/bin/nyxus-greeter as:  cage -s -- regreet
+# Styling lives in /etc/greetd/regreet.css (loaded automatically).
+# Background must live under /etc/greetd/ — the `greeter` user cannot
+# read user homes.
+
+[background]
+path = "/etc/greetd/nyxus-eye.png"
+# Needs GTK 4.8+ (Arch ships far newer) — cover keeps the eye centred.
+fit = "Cover"
+
+[GTK]
+application_prefer_dark_theme = true
+cursor_theme_name = "Adwaita"
+font_name = "Inter Display 12"
+icon_theme_name = "Adwaita"
+
+[appearance]
+greeting_msg = "welcome back, operator"
+
+[commands]
+reboot = [ "systemctl", "reboot" ]
+poweroff = [ "systemctl", "poweroff" ]
+
+[widget.clock]
+format = "%H:%M · %A · %B %d"
+resolution = "1000ms"

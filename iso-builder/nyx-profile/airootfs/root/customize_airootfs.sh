@@ -372,32 +372,15 @@ PYEOF
   cd / && rm -rf "$_hdir"
 fi
 
-# ── Build tuigreet from upstream source (graphical greetd greeter) ─────
-# rev r1 — tuigreet is the polished TUI greeter for greetd. It lives in
-# the AUR (greetd-tuigreet), but since base-devel + rust + git are
-# already in packages.x86_64 we build it straight from the upstream
-# repo. NO chaotic-aur required.
-#
-# DEFENSIVE FALLBACK: even if this build fails, the live system will
-# NOT be locked out — /usr/local/bin/nyxus-greeter (installed via the
-# airootfs tree) is a wrapper that prefers tuigreet but falls back to
-# `agreety` (built into greetd) automatically. And greetd's
-# initial_session still autologs the `nyx` user straight into Hyprland
-# on first boot regardless of greeter state.
-NYXUS_TUIGREET_TAG="${NYXUS_TUIGREET_TAG:-master}"
-if ! command -v tuigreet >/dev/null 2>&1; then
-  echo "[customize_airootfs] building tuigreet (${NYXUS_TUIGREET_TAG}) from source..."
-  _tdir=$(mktemp -d)
-  if git clone --depth 1 --branch "${NYXUS_TUIGREET_TAG}" \
-        https://github.com/apognu/tuigreet.git "$_tdir/tuigreet" \
-     && cd "$_tdir/tuigreet" \
-     && cargo build --release \
-     && install -Dm755 target/release/tuigreet /usr/local/bin/tuigreet; then
-    echo "[customize_airootfs] tuigreet installed → $(command -v tuigreet)"
-  else
-    echo "[customize_airootfs] WARN: tuigreet build failed — nyxus-greeter wrapper will fall back to agreety"
-  fi
-  cd / && rm -rf "$_tdir"
+# ── Login greeters ──────────────────────────────────────────────────────
+# rev r2 (2026-07-09): tuigreet is NO LONGER built from source — it is in
+# the official Arch `extra` repo now (greetd-tuigreet), alongside
+# greetd-regreet + cage which form the themed NYXUS login screen. All
+# three are pacstrapped via packages.x86_64. /usr/local/bin/nyxus-greeter
+# walks the chain regreet(cage) → tuigreet → agreety → direct Hyprland,
+# so a missing/broken greeter can never brick the login path.
+if ! command -v regreet >/dev/null 2>&1; then
+  echo "[customize_airootfs] WARN: regreet missing — nyxus-greeter will fall back to tuigreet/agreety"
 fi
 
 # ── NYXUS auth helpers: permissions + runtime directories ──────────────
@@ -438,7 +421,13 @@ chmod 700 /var/log/nyxus
 # ── Enable display + network + hardware services on the LIVE ISO ───────
 # These are also re-enabled by nyxus-postinstall on the installed system,
 # but enabling them in the live image means hardware works for live demos.
-systemctl enable sddm.service                2>/dev/null || true
+# greetd is the sole display manager (rev 2026-07-09). The old flow
+# enabled sddm here — but sddm is not in packages.x86_64, so the enable
+# silently no-oped and the explicit `systemctl disable greetd` below
+# left the ISO with NO display manager at all (black screen → tty).
+# That was the historical login-screen failure. greetd + the
+# nyxus-greeter fallback chain is the fix.
+systemctl enable greetd.service              2>/dev/null || true
 systemctl enable NetworkManager.service      2>/dev/null || true
 systemctl enable systemd-timesyncd.service   2>/dev/null || true
 systemctl enable bluetooth.service           2>/dev/null || true
@@ -479,9 +468,10 @@ done
 
 # Stop systemd-timesyncd in favour of chrony (the two conflict).
 systemctl disable systemd-timesyncd.service 2>/dev/null || true
-# Keep greetd installed only as a manual emergency fallback to avoid
-# conflicting display-manager startup paths with SDDM.
-systemctl disable greetd.service 2>/dev/null || true
+# (rev 2026-07-09) greetd stays ENABLED — it is the sole display
+# manager. The old `systemctl disable greetd` here (paired with an
+# enable of the never-shipped sddm) is what produced the historical
+# no-login-screen boots. Do not reintroduce it.
 
 # Bind /etc/nsswitch.conf so .local hostnames resolve via mDNS.
 if [ -f /etc/nsswitch.conf ] && ! grep -q 'mdns_minimal' /etc/nsswitch.conf; then

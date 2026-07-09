@@ -71,6 +71,12 @@ rust
 wayland-protocols
 hyprcursor
 greetd
+# themed login stack (rev 2026-07-09): regreet (GTK4 greeter) runs in a
+# cage kiosk compositor; tuigreet is the TUI fallback. All official repo
+# packages — nyxus-greeter walks the chain regreet→tuigreet→agreety.
+greetd-regreet
+greetd-tuigreet
+cage
 plymouth
 qt5-quickcontrols2
 qt5-graphicaleffects

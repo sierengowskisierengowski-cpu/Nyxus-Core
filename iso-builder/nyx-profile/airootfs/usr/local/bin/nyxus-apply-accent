@@ -73,13 +73,23 @@ EOF
 done
 
 # ── 3. hyprlock accent shard ─────────────────────────────────────────
-R=$((16#${NEW_P:1:2})); G=$((16#${NEW_P:3:2})); B=$((16#${NEW_P:5:2}))
+# Emits primary + secondary accent tokens (full / glow / dim alphas) so
+# hyprlock.conf can ride the live accent without hardcoding. Keep the
+# legacy $nyxus_accent_r/g/b names — older configs source them.
+R=$((16#${NEW_P:1:2}));  G=$((16#${NEW_P:3:2}));  B=$((16#${NEW_P:5:2}))
+R2=$((16#${NEW_S:1:2})); G2=$((16#${NEW_S:3:2})); B2=$((16#${NEW_S:5:2}))
 cat > "${HOME}/.config/hypr/hyprlock-accent.conf" <<EOF
 # generated for ${NAME^^} accent — sourced by hyprlock.conf
 \$nyxus_accent_r = ${R}
 \$nyxus_accent_g = ${G}
 \$nyxus_accent_b = ${B}
 \$nyxus_accent_rgba = rgba(${R}, ${G}, ${B}, 1.0)
+\$nyxus_accent_glow = rgba(${R}, ${G}, ${B}, 0.45)
+\$nyxus_accent_dim  = rgba(${R}, ${G}, ${B}, 0.75)
+\$nyxus_accent_faint = rgba(${R}, ${G}, ${B}, 0.20)
+\$nyxus_accent2_rgba = rgba(${R2}, ${G2}, ${B2}, 1.0)
+\$nyxus_accent2_glow = rgba(${R2}, ${G2}, ${B2}, 0.45)
+\$nyxus_accent2_dim  = rgba(${R2}, ${G2}, ${B2}, 0.75)
 EOF
 
 # ── 4. baseline-driven re-skin of every registered consumer ─────────
