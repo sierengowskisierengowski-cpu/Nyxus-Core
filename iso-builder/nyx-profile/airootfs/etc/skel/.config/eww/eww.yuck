@@ -82,7 +82,7 @@
 ;; consume it via inline :style so the gradient painted on border-box
 ;; (the visible rim) sweeps around the frame while the inset neon
 ;; pulses. NYXUS_BAR_FX=off in nyxus.conf freezes it at zero CPU.
-(deflisten PRISM :initial '{"a":100,"b":280,"p":0.5,"g":0.5}'
+(deflisten PRISM :initial '{"a":100,"b":280,"p":0.5,"g":0.5,"pr":255,"pg":60,"pb":172,"ps":0,"fr":43,"fg":210,"fb":255,"fs":0}'
                  "~/.config/eww/scripts/prism-anim.sh")
 
 ;; ═════════════════════════════════════════════════════════════════════
@@ -260,7 +260,7 @@
 ;; opposite directions around the screen.
 (defwidget workspaces_rail []
   (box :class "ws-rail" :orientation "v" :space-evenly false :spacing 6 :valign "center"
-    :style "background-image: linear-gradient(170deg, rgba(11,14,24,0.84), rgba(5,6,10,0.72)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.p * 14, 1)}px rgba(255,60,172,${round(0.05 + PRISM.p * 0.10, 3)});"
+    :style "background-image: linear-gradient(170deg, rgba(11,14,24,0.84), rgba(5,6,10,0.72)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.p * 14, 1)}px rgba(255,60,172,${round(0.05 + PRISM.p * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
     (workspace_pill :id 1  :occ {WORKSPACES.occ1})
     (workspace_pill :id 2  :occ {WORKSPACES.occ2})
     (workspace_pill :id 3  :occ {WORKSPACES.occ3})
@@ -277,7 +277,7 @@
 
 (defwidget app_rail []
   (box :class "app-rail" :orientation "v" :space-evenly false :spacing 10 :valign "center"
-    :style "background-image: linear-gradient(190deg, rgba(11,14,24,0.84), rgba(5,6,10,0.72)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.g * 14, 1)}px rgba(43,210,255,${round(0.05 + PRISM.g * 0.10, 3)});"
+    :style "background-image: linear-gradient(190deg, rgba(11,14,24,0.84), rgba(5,6,10,0.72)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.g * 14, 1)}px rgba(43,210,255,${round(0.05 + PRISM.g * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
     (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal")
     (app_launcher :glyph "" :cmd "firefox"        :label "Firefox")
     (app_launcher :glyph "" :cmd "nautilus"       :label "Files")
@@ -298,7 +298,7 @@
 ;; fallback, inline only overrides background-image + box-shadow.
 (defwidget bar_bottom_layout []
   (centerbox :class "bar bar-bottom" :orientation "h"
-    :style "background-image: linear-gradient(180deg, rgba(13,16,28,0.86), rgba(5,6,10,0.74)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 26%, #2bd2ff 52%, #ffb84d 78%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.06 + PRISM.p * 0.06, 3)}), inset 0 -16px ${round(26 + PRISM.p * 16, 1)}px rgba(255,60,172,${round(0.07 + PRISM.p * 0.11, 3)}), inset 0 16px ${round(26 + PRISM.g * 16, 1)}px rgba(43,210,255,${round(0.04 + PRISM.g * 0.09, 3)});"
+    :style "background-image: linear-gradient(180deg, rgba(13,16,28,0.86), rgba(5,6,10,0.74)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 26%, #2bd2ff 52%, #ffb84d 78%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.06 + PRISM.p * 0.06, 3)}), inset 0 -16px ${round(26 + PRISM.p * 16, 1)}px rgba(255,60,172,${round(0.07 + PRISM.p * 0.11, 3)}), inset 0 16px ${round(26 + PRISM.g * 16, 1)}px rgba(43,210,255,${round(0.04 + PRISM.g * 0.09, 3)}), inset 0 0 ${round(16 + PRISM.ps * 40, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.60, 3)}), inset 0 0 ${round(12 + PRISM.fs * 18, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.15, 3)});"
     (box :class "bar-cluster cluster-left" :space-evenly false :spacing 12 :halign "start"
       (nyxus_brand) (heartbeat))
     (box :class "bar-cluster cluster-center" :space-evenly false :spacing 12 :halign "center"
@@ -317,7 +317,7 @@
 ;; Right = now-playing player (visible only when a player is active)
 (defwidget bar_top_layout []
   (centerbox :class "bar bar-top" :orientation "h"
-    :style "background-image: linear-gradient(180deg, rgba(10,13,24,0.82), rgba(5,6,10,0.70)), linear-gradient(${PRISM.b}deg, rgba(43,210,255,0.80) 0%, rgba(120,75,255,0.62) 33%, rgba(255,60,172,0.80) 66%, rgba(43,210,255,0.80) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.05 + PRISM.g * 0.05, 3)}), inset 0 -10px ${round(18 + PRISM.p * 14, 1)}px rgba(120,75,255,${round(0.06 + PRISM.p * 0.10, 3)});"
+    :style "background-image: linear-gradient(180deg, rgba(10,13,24,0.82), rgba(5,6,10,0.70)), linear-gradient(${PRISM.b}deg, rgba(43,210,255,0.80) 0%, rgba(120,75,255,0.62) 33%, rgba(255,60,172,0.80) 66%, rgba(43,210,255,0.80) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.05 + PRISM.g * 0.05, 3)}), inset 0 -10px ${round(18 + PRISM.p * 14, 1)}px rgba(120,75,255,${round(0.06 + PRISM.p * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
     (box :class "bar-cluster cluster-left" :space-evenly false :spacing 10 :halign "start"
       (label :class "ticker-label" :text "▌ NYXUS · LIVE"))
     (box :class "bar-cluster cluster-center" :space-evenly false :halign "center"

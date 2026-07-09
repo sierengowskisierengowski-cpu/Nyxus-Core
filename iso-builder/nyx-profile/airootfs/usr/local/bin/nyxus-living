@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-living <on|off|toggle|status>   ·   rev 2026-07-08 r1 (Signature)
+#
+# Front door for the NYXUS LIVING THEME — one switch, whole ensemble:
+#
+#   nyxus-tintd    per-app border neon (colors follow the app you're
+#                  on; follow_mouse=1 makes it hover-reactive)
+#   nyxus-pulsed   event engine: notifications/email/chat/alerts →
+#                  color pulses across borders + eww bars; workspace
+#                  sweeps; focus tint published to the bars
+#
+# The music layers stay on their own switches (they're moods, not
+# plumbing): nyxus-beat (Super+Alt+B) · wall-fx (Super+Shift+P).
+# Bound: Super+Alt+L ("living").
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+PULSE_PID="${XDG_RUNTIME_DIR:-/tmp}/nyxus-pulsed.pid"
+
+pulsed_up() { [[ -r "${PULSE_PID}" ]] && kill -0 "$(cat "${PULSE_PID}")" 2>/dev/null; }
+
+start() {
+  nyxus-tint on >/dev/null 2>&1
+  if ! pulsed_up; then
+    nohup nyxus-pulsed >/dev/null 2>&1 &
+  fi
+  notify-send -u low -t 2600 "◤ NYXUS ◥ LIVING THEME" \
+    "the shell is alive — borders and bars now follow you" 2>/dev/null
+  echo "living: on"
+}
+
+stop() {
+  if pulsed_up; then
+    kill "$(cat "${PULSE_PID}")" 2>/dev/null
+  fi
+  nyxus-tint off >/dev/null 2>&1
+  notify-send -u low -t 2600 "◤ NYXUS ◥ LIVING THEME" \
+    "back to stillness" 2>/dev/null
+  echo "living: off"
+}
+
+case "${1:-toggle}" in
+  on)     start ;;
+  off)    stop ;;
+  toggle) pulsed_up && stop || start ;;
+  status) pulsed_up && echo on || echo off ;;
+  *) echo "usage: nyxus-living <on|off|toggle|status>" >&2; exit 2 ;;
+esac
