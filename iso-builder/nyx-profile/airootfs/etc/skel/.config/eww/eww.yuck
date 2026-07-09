@@ -26,7 +26,7 @@
 ;; ticker.sh runs at 10 fps to scroll one column per tick (true marquee).
 (defpoll TICKER     :interval "0.1s" :initial '{"text":"▌ NYXUS · DARK MIRROR · LIVE                                                  ","tooltip":"NYXUS"}'
                                      "~/.config/eww/scripts/ticker.sh")
-(defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0}'
+(defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0,"load":"0","swap":0}'
                                      "~/.config/eww/scripts/sys-pulse.sh")
 (defpoll CPUCORES   :interval "3s"   :initial '{"cores":[]}'
                                      "~/.config/eww/scripts/cpu-bars.sh")
@@ -74,9 +74,26 @@
                                      "~/.config/eww/scripts/wifi-saved.sh")
 (defpoll UPDATESLIST :interval "3600s" :initial '{"count":0,"checked":"—","source":"","packages":[]}'
                                      "~/.config/eww/scripts/updates-list.sh")
+;; slow system facts for the bar-top HUD tiles (host/kernel/disk/net/...)
+(defpoll BARTILES   :interval "30s"  :initial '{"host":"…","kern":"…","up":"…","disk":"…","ip":"…","gw":"…","users":"…","pkgs":"…","user":"operator"}'
+                                     "~/.config/eww/scripts/bar-tiles.sh")
 
 ;; wifi panel view: "nearby" (scan results) | "saved" (profiles + link info)
 (defvar WIFI_VIEW "nearby")
+
+;; ── overlay shields ──────────────────────────────────────────────────
+;; eww only runs a poll while a window referencing it is open, so each
+;; fullscreen overlay references its own shield var: opening the window
+;; fires overlay-shield.sh, which hides the bars (their exclusive zones
+;; block true fullscreen) and restores them when the overlay closes.
+(defpoll DASH_SHIELD  :interval "2s" :initial ""
+  "~/.config/eww/scripts/overlay-shield.sh dashboard")
+(defpoll POWER_SHIELD :interval "2s" :initial ""
+  "~/.config/eww/scripts/overlay-shield.sh powermenu")
+(defpoll CHEAT_SHIELD :interval "2s" :initial ""
+  "~/.config/eww/scripts/overlay-shield.sh cheatsheet")
+(defpoll DEEP_SHIELD  :interval "2s" :initial ""
+  "~/.config/eww/scripts/overlay-shield.sh deepcore")
 ;; mixer panel: show input devices section
 (defvar MIX_SHOW_INPUTS false)
 
@@ -94,12 +111,21 @@
 (deflisten PRISM :initial '{"a":100,"b":280,"p":0.5,"g":0.5,"pr":255,"pg":60,"pb":172,"ps":0,"fr":43,"fg":210,"fb":255,"fs":0}'
                  "~/.config/eww/scripts/prism-anim.sh")
 
+;; ── neon-sign flicker driver ─────────────────────────────────────────
+;; neon-flicker.sh streams an opacity value (1 = steady) with rare,
+;; short, irregular double-blinks so wordmark text buzzes like a real
+;; neon tube. GTK3-in-eww ignores CSS @keyframes, so this rides the
+;; same inline-:style mechanism as PRISM. NYXUS_NEON_FLICKER=off in
+;; nyxus.conf disables it.
+(deflisten NEONFLICK :initial "1" "~/.config/eww/scripts/neon-flicker.sh")
+
 ;; ═════════════════════════════════════════════════════════════════════
 ;; CORE BAR WIDGETS
 ;; ═════════════════════════════════════════════════════════════════════
 
 (defwidget nyxus_brand []
   (button :class "brand"
+          :style "opacity: ${NEONFLICK};"
           :onclick "rofi -show drun -theme ~/.config/rofi/startmenu.rasi 2>/dev/null || wofi --show drun"
           :tooltip "NYXUS · Start menu"
     "✕ NYXUS"))
@@ -107,15 +133,27 @@
 (defwidget heartbeat []
   (label :class "heartbeat" :text "● SYS·LIVE" :tooltip "Session is alive"))
 
+;; ── HOME-HUD mini tile: glyph + small-caps neon label + mono value ───
+;; `hue` picks the neon via .hud-tile-<hue> (pink/green/purple/gold/
+;; orange/blue/red — all mapped to shared tokens in eww.scss).
+(defwidget hud_tile [hue glyph label value ?tip]
+  (box :class "hud-tile hud-tile-${hue}" :space-evenly false :spacing 5
+       :tooltip "${tip ?: label}"
+    (label :class "hud-tile-glyph" :text glyph)
+    (label :class "hud-tile-label" :text label)
+    (label :class "hud-tile-value" :text value)))
+
 (defwidget cava_widget []
   (box :class "cava-box" :space-evenly false :tooltip "Audio visualizer"
     (label :class "cava-label" :text CAVA)))
 
+;; per-metric HUD tiles (cpu=pink, mem=purple, temp=orange) instead of
+;; one flat capsule — HOME-HUD reference language (rev 2026-07-09).
 (defwidget syspulse_widget []
-  (box :class "syspulse" :space-evenly false :spacing 8
-    (label :class "syspulse-cpu"  :text "CPU ${SYSPULSE.cpu}%")
-    (label :class "syspulse-mem"  :text "MEM ${SYSPULSE.mem}%")
-    (label :class "syspulse-temp" :text "${SYSPULSE.temp}°C")))
+  (box :class "syspulse" :space-evenly false :spacing 6
+    (hud_tile :hue "pink"   :glyph "󰘚" :label "CPU"  :value "${SYSPULSE.cpu}%"  :tip "CPU load")
+    (hud_tile :hue "purple" :glyph "󰍛" :label "MEM"  :value "${SYSPULSE.mem}%"  :tip "Memory used")
+    (hud_tile :hue "orange" :glyph "󰔏" :label "TMP"  :value "${SYSPULSE.temp}°" :tip "CPU temperature")))
 
 (defwidget clock_widget []
   (button :class "clock"
@@ -248,7 +286,7 @@
 (defwidget ticker_widget []
   (box :class "ticker-box" :space-evenly false :hexpand true :halign "center"
     (label :class "ticker ticker-marquee"
-           :limit-width 180
+           :limit-width 120
            :unindent false
            :text "${TICKER.text}"
            :tooltip "${TICKER.tooltip}")))
@@ -271,7 +309,7 @@
 ;; opposite directions around the screen.
 (defwidget workspaces_rail []
   (box :class "ws-rail" :orientation "v" :space-evenly false :spacing 6 :valign "center"
-    :style "background-image: linear-gradient(170deg, rgba(11,14,24,0.84), rgba(5,6,10,0.72)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.p * 14, 1)}px rgba(255,60,172,${round(0.05 + PRISM.p * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
+    :style "background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px), radial-gradient(circle at 50% ${round(PRISM.a / 3.6, 1)}%, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.24 + PRISM.p * 0.12 + PRISM.ps * 0.30, 3)}) 0%, rgba(0,0,0,0) 30%), linear-gradient(${PRISM.a}deg, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.05 + PRISM.p * 0.07, 3)}) 0%, rgba(0,0,0,0) 50%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.04 + PRISM.g * 0.06, 3)}) 100%), linear-gradient(170deg, rgba(7,4,14,0.91), rgba(3,2,8,0.85)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.p * 14, 1)}px rgba(255,60,172,${round(0.05 + PRISM.p * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
     (workspace_pill :id 1  :occ {WORKSPACES.occ1})
     (workspace_pill :id 2  :occ {WORKSPACES.occ2})
     (workspace_pill :id 3  :occ {WORKSPACES.occ3})
@@ -283,20 +321,22 @@
     (workspace_pill :id 9  :occ {WORKSPACES.occ9})
     (workspace_pill :id 10 :occ {WORKSPACES.occ10})))
 
-(defwidget app_launcher [glyph cmd label]
-  (button :class "app-pill" :onclick "${cmd} &" :tooltip "${label}" "${glyph}"))
+;; `hue` gives every rail icon its own neon hover identity
+;; (.app-pill-<hue> in eww.scss — HOME-HUD language, rev 2026-07-09).
+(defwidget app_launcher [glyph cmd label ?hue]
+  (button :class "app-pill app-pill-${hue ?: 'pink'}" :onclick "${cmd} &" :tooltip "${label}" "${glyph}"))
 
 (defwidget app_rail []
   (box :class "app-rail" :orientation "v" :space-evenly false :spacing 10 :valign "center"
-    :style "background-image: linear-gradient(190deg, rgba(11,14,24,0.84), rgba(5,6,10,0.72)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.g * 14, 1)}px rgba(43,210,255,${round(0.05 + PRISM.g * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
-    (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal")
-    (app_launcher :glyph "" :cmd "firefox"        :label "Firefox")
-    (app_launcher :glyph "" :cmd "thunar"         :label "Files")
-    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'" :label "SysMon")
-    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad")
-    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies")
-    (app_launcher :glyph "" :cmd "eww open --toggle mixer" :label "Audio")
-    (app_launcher :glyph "" :cmd "eww open --toggle bluetooth" :label "Bluetooth")))
+    :style "background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px), radial-gradient(circle at 50% ${round(100 - PRISM.b / 3.6, 1)}%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.22 + PRISM.g * 0.12 + PRISM.fs * 0.28, 3)}) 0%, rgba(0,0,0,0) 30%), linear-gradient(${PRISM.b}deg, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.05 + PRISM.g * 0.07, 3)}) 0%, rgba(0,0,0,0) 50%, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.04 + PRISM.p * 0.06, 3)}) 100%), linear-gradient(190deg, rgba(7,4,14,0.91), rgba(3,2,8,0.85)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.g * 14, 1)}px rgba(43,210,255,${round(0.05 + PRISM.g * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
+    (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
+    (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
+    (app_launcher :glyph "" :cmd "thunar"         :label "Files" :hue "gold")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'" :label "SysMon" :hue "pink")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad" :hue "purple")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies" :hue "gold")
+    (app_launcher :glyph "" :cmd "eww open --toggle mixer" :label "Audio" :hue "purple")
+    (app_launcher :glyph "" :cmd "eww open --toggle bluetooth" :label "Bluetooth" :hue "blue")))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; BARS
@@ -309,7 +349,7 @@
 ;; fallback, inline only overrides background-image + box-shadow.
 (defwidget bar_bottom_layout []
   (centerbox :class "bar bar-bottom" :orientation "h"
-    :style "background-image: linear-gradient(180deg, rgba(13,16,28,0.86), rgba(5,6,10,0.74)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 26%, #2bd2ff 52%, #ffb84d 78%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.06 + PRISM.p * 0.06, 3)}), inset 0 -16px ${round(26 + PRISM.p * 16, 1)}px rgba(255,60,172,${round(0.07 + PRISM.p * 0.11, 3)}), inset 0 16px ${round(26 + PRISM.g * 16, 1)}px rgba(43,210,255,${round(0.04 + PRISM.g * 0.09, 3)}), inset 0 0 ${round(16 + PRISM.ps * 40, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.60, 3)}), inset 0 0 ${round(12 + PRISM.fs * 18, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.15, 3)});"
+    :style "background-image: radial-gradient(circle at ${round(PRISM.a / 3.6, 1)}% 50%, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.28 + PRISM.p * 0.12 + PRISM.ps * 0.30, 3)}) 0%, rgba(0,0,0,0) 22%), radial-gradient(circle at ${round(100 - PRISM.b / 3.6, 1)}% 50%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.20 + PRISM.g * 0.10 + PRISM.fs * 0.25, 3)}) 0%, rgba(0,0,0,0) 26%), linear-gradient(${PRISM.a}deg, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.06 + PRISM.p * 0.08, 3)}) 0%, rgba(0,0,0,0) 35%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.05 + PRISM.g * 0.07, 3)}) 65%, rgba(0,0,0,0) 100%), linear-gradient(180deg, rgba(7,4,14,0.93), rgba(3,2,8,0.88)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 26%, #2bd2ff 52%, #ffb84d 78%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.06 + PRISM.p * 0.06, 3)}), inset 0 -16px ${round(26 + PRISM.p * 16, 1)}px rgba(255,60,172,${round(0.07 + PRISM.p * 0.11, 3)}), inset 0 16px ${round(26 + PRISM.g * 16, 1)}px rgba(43,210,255,${round(0.04 + PRISM.g * 0.09, 3)}), inset 0 0 ${round(16 + PRISM.ps * 40, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.60, 3)}), inset 0 0 ${round(12 + PRISM.fs * 18, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.15, 3)});"
     (box :class "bar-cluster cluster-left" :space-evenly false :spacing 12 :halign "start"
       (nyxus_brand) (heartbeat))
     (box :class "bar-cluster cluster-center" :space-evenly false :spacing 12 :halign "center"
@@ -321,27 +361,33 @@
       (cal_widget) (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
       (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget) (power_button))))
 
-;; Top bar is a 3-slot centerbox so the ticker stays dead-center and
-;; both flanks remain free for future widgets the user wants to add.
-;; Left  = brand pill
-;; Center= ticker (~half the bar width)
-;; Right = now-playing player (visible only when a player is active)
+;; Top bar is a 3-slot centerbox:
+;; Left  = brand wordmark + HOST tile
+;; Center= the signature scrolling ticker (STAYS per user), dressed in
+;;         HUD tile chrome (.ticker-box card, neon mono text)
+;; Right = HUD mini tiles (uptime/disk/net) + now-playing player
 (defwidget bar_top_layout []
   (centerbox :class "bar bar-top" :orientation "h"
-    :style "background-image: linear-gradient(180deg, rgba(10,13,24,0.82), rgba(5,6,10,0.70)), linear-gradient(${PRISM.b}deg, rgba(43,210,255,0.80) 0%, rgba(120,75,255,0.62) 33%, rgba(255,60,172,0.80) 66%, rgba(43,210,255,0.80) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.05 + PRISM.g * 0.05, 3)}), inset 0 -10px ${round(18 + PRISM.p * 14, 1)}px rgba(120,75,255,${round(0.06 + PRISM.p * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
-    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 10 :halign "start"
-      (label :class "ticker-label" :text "▌ NYXUS · LIVE"))
+    :style "background-image: radial-gradient(circle at ${round(PRISM.b / 3.6, 1)}% 50%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.16 + PRISM.g * 0.08 + PRISM.fs * 0.25, 3)}) 0%, rgba(0,0,0,0) 26%), linear-gradient(${PRISM.b}deg, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.05 + PRISM.p * 0.06, 3)}) 0%, rgba(0,0,0,0) 40%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.04 + PRISM.g * 0.06, 3)}) 75%, rgba(0,0,0,0) 100%), linear-gradient(180deg, rgba(7,4,14,0.91), rgba(3,2,8,0.85)), linear-gradient(${PRISM.b}deg, rgba(43,210,255,0.80) 0%, rgba(120,75,255,0.62) 33%, rgba(255,60,172,0.80) 66%, rgba(43,210,255,0.80) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.05 + PRISM.g * 0.05, 3)}), inset 0 -10px ${round(18 + PRISM.p * 14, 1)}px rgba(120,75,255,${round(0.06 + PRISM.p * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
+    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 8 :halign "start"
+      (label :class "ticker-label" :style "opacity: ${NEONFLICK};" :text "▌ NYXUS · LIVE")
+      (hud_tile :hue "pink" :glyph "󰇅" :label "HOST" :value "${BARTILES.host}" :tip "Hostname"))
     (box :class "bar-cluster cluster-center" :space-evenly false :halign "center"
       (ticker_widget))
-    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 10 :halign "end"
+    (box :class "bar-cluster cluster-right hud-tile-strip" :space-evenly false :spacing 8 :halign "end"
+      (hud_tile :hue "gold"   :glyph "󰔟" :label "UP"   :value "${BARTILES.up}"    :tip "Uptime")
+      (hud_tile :hue "orange" :glyph "󰋊" :label "DISK" :value "${BARTILES.disk}%" :tip "Root filesystem used")
+      (hud_tile :hue "green"  :glyph "󰩟" :label "NET"  :value "${BARTILES.ip}"    :tip "Primary IPv4")
       (player_widget))))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; DASHBOARD — replaces nyxus_quicksettings + nyxus_clock + nyxus_calendar
 ;; ═════════════════════════════════════════════════════════════════════
 
-(defwidget dash_quick_toggle [glyph label cmd]
-  (button :class "dash-toggle" :onclick "(${cmd}) &"
+;; `hue` maps to .dash-toggle-<hue> so the action grid reads as a
+;; multi-neon HUD strip (rev 2026-07-09).
+(defwidget dash_quick_toggle [glyph label cmd ?hue]
+  (button :class "dash-toggle dash-toggle-${hue ?: 'green'}" :onclick "(${cmd}) &"
     (box :orientation "v" :space-evenly false :spacing 6 :halign "center"
       (label :class "dash-toggle-glyph" :text "${glyph}")
       (label :class "dash-toggle-label" :truncate false :text "${label}"))))
@@ -354,15 +400,35 @@
                  pct >= 50 ? "core-fill core-warm" : "core-fill"}
          :style "min-height: ${pct}px;")))
 
+;; ── HOME-HUD card header: glyph + title + hairline rule + rev stamp ──
+(defwidget dash_card_header [glyph title stamp]
+  (box :orientation "v" :space-evenly false :spacing 4
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "dash-hdr-glyph" :text glyph)
+      (label :class "dash-hdr-title" :text title :hexpand true :halign "start")
+      (label :class "dash-hdr-stamp" :text stamp))
+    (box :class "dash-hdr-rule")))
+
+;; ── HOME-HUD ring gauge (SYSTEM CORE style): neon arc + mono value ──
+(defwidget dash_ring [hue value label]
+  (box :orientation "v" :space-evenly false :spacing 4 :halign "center"
+    (circular-progress :class "dash-ring dash-ring-${hue}"
+                       :width 78 :height 78
+                       :value value :thickness 5 :start-at 75 :clockwise true
+      (label :class "dash-ring-value" :text "${value}%"))
+    (label :class "dash-ring-label dash-ring-label-${hue}" :text label)))
+
 (defwidget dash_player []
   (box :class "dash-player" :orientation "v" :space-evenly false :spacing 8
-    (label :class "dash-card-title" :halign "start" :text "♫ MEDIA")
+    (dash_card_header :glyph "♫" :title "Music" :stamp "MPRIS")
     (label :class "dash-player-title"  :limit-width 32 :text "${PLAYER.title}")
     (label :class "dash-player-artist" :limit-width 32 :text "${PLAYER.artist}")
     (box :class "dash-player-controls" :orientation "h" :space-evenly true :spacing 12
       (button :class "dash-player-btn" :onclick "playerctl previous &" "⏮")
       (button :class "dash-player-btn" :onclick "playerctl play-pause &" "${PLAYER.icon}")
-      (button :class "dash-player-btn" :onclick "playerctl next &" "⏭"))))
+      (button :class "dash-player-btn" :onclick "playerctl next &" "⏭"))
+    (label :class "dash-card-foot dash-foot-red" :halign "start"
+           :text "ARTIST · PLAYERCTL · ${PLAYER.status}")))
 
 (defwidget dashboard_layout []
   ;; Wrap entire dashboard in a scroll so it never overflows on small
@@ -372,33 +438,56 @@
   (scroll :class "dashboard-scroll" :hscroll false :vscroll true
           :hexpand true :vexpand true
   (box :class "dashboard-root" :orientation "v" :halign "center" :valign "center"
-       :space-evenly false :spacing 22
-    ;; ── header: clock + date ──────────────────────────────────────────
-    (label :class "dash-clock" :text "${TIME.hm}")
+       :space-evenly false :spacing 18
+    ;; overlay shield hook — hides bars while this overlay is up
+    (label :visible false :text DASH_SHIELD)
+    ;; ── HUD header strip: mono tag · graffiti greeting · host stamp ──
+    (box :orientation "h" :space-evenly false
+      (label :class "dash-tag" :halign "start" :hexpand true
+             :text "NYXUS · CONTROL CENTER · SUPER+GRAVE")
+      (label :class "dash-stamp" :halign "end"
+             :text "${BARTILES.host} · ${BARTILES.kern}-arch · ${BARTILES.ip}"))
+    (box :orientation "h" :space-evenly false :spacing 8 :halign "start"
+      (label :class "dash-greet"        :text "welcome back,")
+      (label :class "dash-greet-accent" :style "opacity: ${NEONFLICK};" :text "${BARTILES.user}"))
+
+    ;; ── hero clock: dot-matrix numerals + script date ────────────────
+    (label :class "dash-clock" :style "opacity: ${NEONFLICK};" :text "${TIME.hm}")
     (label :class "dash-date"  :text "${TIME.long}")
 
-    ;; ── upper grid: weather / system / power / calendar / media ──────
+    ;; ── upper grid: weather / system rings / power / calendar / music ─
     (box :class "dash-grid" :orientation "h" :space-evenly true :spacing 16
       (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
-        (label :class "dash-card-title" :halign "start" :text "☀ WEATHER")
-        (label :class "dash-card-big"   :text "${WEATHER.temp}")
-        (label :class "dash-card-sub"   :text "${WEATHER.summary}"))
+        (dash_card_header :glyph "☀" :title "Weather" :stamp "OPEN-METEO")
+        (label :class "dash-card-big dash-big-gold" :text "${WEATHER.temp}")
+        (label :class "dash-card-script" :text "${WEATHER.summary}")
+        (label :class "dash-card-foot dash-foot-gold" :halign "start"
+               :text "LIVE · 15 MIN REFRESH"))
       (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
-        (label :class "dash-card-title" :halign "start" :text "◉ SYSTEM")
-        (label :class "dash-card-big"   :text "${SYSPULSE.cpu}% · ${SYSPULSE.mem}%")
-        (label :class "dash-card-sub"   :text "CPU · MEM · ${SYSPULSE.temp}°C"))
+        (dash_card_header :glyph "◉" :title "System Core" :stamp "LIVE")
+        (box :orientation "h" :space-evenly true :spacing 10
+          (dash_ring :hue "pink"   :value {SYSPULSE.cpu}  :label "CPU")
+          (dash_ring :hue "purple" :value {SYSPULSE.mem}  :label "RAM")
+          (dash_ring :hue "orange" :value {SYSPULSE.temp} :label "TMP°"))
+        (label :class "dash-card-foot dash-foot-pink" :halign "start"
+               :text "LOAD ${SYSPULSE.load} · SWAP ${SYSPULSE.swap}%"))
       (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
-        (label :class "dash-card-title" :halign "start" :text "⚡ POWER")
-        (label :class "dash-card-big"   :text "${BATTERY.capacity}%")
-        (label :class "dash-card-sub"   :text "${BATTERY.status} · ${POWERPROF.label}"))
+        (dash_card_header :glyph "⚡" :title "Power" :stamp "UPOWER")
+        (box :halign "center"
+          (dash_ring :hue "gold" :value {BATTERY.capacity} :label "PWR"))
+        (label :class "dash-card-foot dash-foot-orange" :halign "start"
+               :text "${BATTERY.status} · ${POWERPROF.label} PROFILE"))
       (box :class "dash-card dash-card-cal" :orientation "v" :space-evenly false :spacing 6
-        (label :class "dash-card-title" :halign "start" :text "▦ ${CALENDAR.month}")
-        (label :class "dash-cal-grid"   :text "${CALENDAR.grid}"))
+        (dash_card_header :glyph "▦" :title "${CALENDAR.month}" :stamp "TODAY")
+        (label :class "dash-cal-grid"   :text "${CALENDAR.grid}")
+        (label :class "dash-card-foot dash-foot-purple" :halign "start"
+               :text "UPTIME ${BARTILES.up}"))
       (dash_player))
 
     ;; ── per-core CPU graph ───────────────────────────────────────────
     (box :class "dash-cores-card" :orientation "v" :space-evenly false :spacing 8
-      (label :class "dash-card-title" :halign "start" :text "◈ CPU CORES · ${arraylength(CPUCORES.cores)} threads")
+      (dash_card_header :glyph "◈" :title "CPU Cores"
+                        :stamp "${arraylength(CPUCORES.cores)} THREADS · LOAD ${SYSPULSE.load}")
       (box :class "dash-cores" :orientation "h" :space-evenly true :spacing 4
         (for core in {CPUCORES.cores}
           (dash_core_bar :pct {core}))))
@@ -426,15 +515,15 @@
     ;; like a dead button. Net/BT/Audio route to the native NYXUS
     ;; panels so the whole flow stays in-theme.
     (box :class "dash-toggles" :orientation "h" :space-evenly true :spacing 12
-      (dash_quick_toggle :glyph "󰖩" :label "Network"   :cmd "eww close dashboard && eww open wifi")
-      (dash_quick_toggle :glyph "󰂯" :label "Bluetooth" :cmd "eww close dashboard && eww open bluetooth")
-      (dash_quick_toggle :glyph "󰕾" :label "Audio"     :cmd "eww close dashboard && eww open mixer")
-      (dash_quick_toggle :glyph "󰍹" :label "Displays"  :cmd "eww close dashboard && wdisplays")
-      (dash_quick_toggle :glyph "󰚰" :label "Updates"   :cmd "eww close dashboard && eww open updates")
-      (dash_quick_toggle :glyph "󰒓" :label "Settings"  :cmd "eww close dashboard && nyxus-settings")
-      (dash_quick_toggle :glyph "󰌾" :label "Lock"      :cmd "eww close dashboard && hyprlock")
-      (dash_quick_toggle :glyph "󰌌" :label "Keys"      :cmd "eww close dashboard && eww open --toggle hotkey-cheatsheet")
-      (dash_quick_toggle :glyph "󰐥" :label "Power"     :cmd "eww close dashboard && eww open --toggle powermenu"))
+      (dash_quick_toggle :glyph "󰖩" :label "Network"   :hue "green"  :cmd "eww close dashboard && eww open wifi")
+      (dash_quick_toggle :glyph "󰂯" :label "Bluetooth" :hue "blue"   :cmd "eww close dashboard && eww open bluetooth")
+      (dash_quick_toggle :glyph "󰕾" :label "Audio"     :hue "purple" :cmd "eww close dashboard && eww open mixer")
+      (dash_quick_toggle :glyph "󰍹" :label "Displays"  :hue "pink"   :cmd "eww close dashboard && wdisplays")
+      (dash_quick_toggle :glyph "󰚰" :label "Updates"   :hue "gold"   :cmd "eww close dashboard && eww open updates")
+      (dash_quick_toggle :glyph "󰒓" :label "Settings"  :hue "pink"   :cmd "eww close dashboard && nyxus-settings")
+      (dash_quick_toggle :glyph "󰌾" :label "Lock"      :hue "green"  :cmd "eww close dashboard && hyprlock")
+      (dash_quick_toggle :glyph "󰌌" :label "Keys"      :hue "orange" :cmd "eww close dashboard && eww open --toggle hotkey-cheatsheet")
+      (dash_quick_toggle :glyph "󰐥" :label "Power"     :hue "red"    :cmd "eww close dashboard && eww open --toggle powermenu"))
 
     (button :class "dash-close" :onclick "eww close dashboard" "Close (Esc)"))))
 
@@ -456,7 +545,8 @@
 (defwidget powermenu_layout []
   (box :class "powermenu-root" :orientation "v" :halign "center" :valign "center"
        :space-evenly false :spacing 24
-    (label :class "power-title" :text "NYXUS · POWER")
+    (label :visible false :text POWER_SHIELD)
+    (label :class "power-title" :style "opacity: ${NEONFLICK};" :text "NYXUS · POWER")
     (box :class "power-grid" :orientation "h" :space-evenly true :spacing 18
       (power_btn :glyph "󰐥" :label "Shutdown" :cmd "systemctl poweroff" :variant "danger")
       (power_btn :glyph "󰜉" :label "Restart"  :cmd "systemctl reboot"   :variant "danger")
@@ -477,7 +567,8 @@
 (defwidget cheatsheet_layout []
   (box :class "cheatsheet-root" :orientation "v" :halign "center" :valign "center"
        :space-evenly false :spacing 20
-    (label :class "cheat-title" :text "NYXUS · KEY MAP")
+    (label :visible false :text CHEAT_SHIELD)
+    (label :class "cheat-title" :style "opacity: ${NEONFLICK};" :text "NYXUS · KEY MAP")
     (box :class "cheat-cols" :orientation "h" :space-evenly true :spacing 36
       (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
         (label :class "cheat-section" :text "WINDOW")
@@ -575,7 +666,7 @@
 
 (defwindow bar-top
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-top"
-  :geometry (geometry :x "0" :y "6" :width "100%" :height "26px" :anchor "top center")
+  :geometry (geometry :x "0" :y "6" :width "100%" :height "32px" :anchor "top center")
   (bar_top_layout))
 
 (defwindow bar-left

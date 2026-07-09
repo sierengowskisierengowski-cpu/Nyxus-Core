@@ -128,58 +128,65 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
 
 /* -- PILLS . glass capsules ----------------------------------------- */
 
+/* HOME-HUD micro buttons: near-black fill, 1px neon hairline, square-ish
+   radius, mono type, hover bloom (mirrors style.py btn-nav/btn-icon). */
 .pill {
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: linear-gradient(160deg,
-    rgba(22, 26, 38, 0.82),
-    rgba(9, 11, 18, 0.74));
-  border: 1px solid rgba($nyxus-accent-primary, 0.22);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: $void-card;
+  border: 1px solid rgba($nyxus-accent-primary, 0.38);
   color: $text;
-  font-weight: 600;
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-weight: 700;
   font-size: 10px;
   /* no letter-spacing: it widened pills past their allocation and GTK
      ellipsized the whole right cluster ("v...", "x...") */
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -6px 12px rgba(0, 0, 0, 0.22);
+    0 0 8px rgba($nyxus-accent-primary, 0.10),
+    inset 0 0 8px rgba(0, 0, 0, 0.30);
   transition: all 180ms ease;
 }
 .pill:hover {
-  background: linear-gradient(145deg,
-    rgba($nyxus-accent-primary, 0.28),
-    rgba($nyxus-accent-secondary, 0.14));
-  border-color: rgba($nyxus-accent-secondary, 0.55);
+  background: rgba($nyxus-accent-primary, 0.13);
+  border-color: $nyxus-accent-primary;
   color: #ffffff;
   box-shadow:
-    0 0 20px rgba($nyxus-accent-primary, 0.35),
-    0 0 12px rgba($nyxus-accent-secondary, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.10);
-  text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.45);
+    0 0 16px rgba($nyxus-accent-primary, 0.45),
+    0 0 30px rgba($nyxus-accent-secondary, 0.18);
+  text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.55);
 }
 
 /* -- PILL SPECTRUM . per-widget prism hues ---------------------------- */
 /* Each status pill carries its own accent so the right cluster reads
    like light split through a prism. Declared BEFORE the state classes
    (mic-mute, bt-conn, batt-low, ...) so live states still win. */
-.p-brt   { color: $accent-warn-soft; border-color: rgba($nyxus-accent-warn, 0.32);
-           text-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.35); }
-.p-audio { color: $accent-secondary-soft; border-color: rgba($nyxus-accent-secondary, 0.32);
-           text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.35); }
-.p-mic   { color: $accent-primary-soft; border-color: rgba($nyxus-accent-primary, 0.30);
-           text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.35); }
-.p-net   { color: $neon-blue-soft; border-color: rgba($neon-blue, 0.32);
-           text-shadow: 0 0 8px rgba($neon-blue, 0.35); }
-.p-bt    { color: $accent-secondary-soft; border-color: rgba($nyxus-accent-secondary, 0.26);
-           text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.30); }
-.p-batt  { color: $neon-green-soft; border-color: rgba($neon-green, 0.30);
-           text-shadow: 0 0 8px rgba($neon-green, 0.32); }
-.p-pp    { color: $accent-ok-soft; border-color: rgba($nyxus-accent-ok, 0.34);
-           text-shadow: 0 0 8px rgba($nyxus-accent-ok, 0.38); }
-.p-upd   { color: $accent-warn-soft; border-color: rgba($nyxus-accent-warn, 0.28);
-           text-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.30); }
-.p-notif { color: $accent-primary-soft; border-color: rgba($nyxus-accent-primary, 0.30);
-           text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.32); }
+.p-brt   { color: $accent-warn-soft; border-color: rgba($nyxus-accent-warn, 0.48);
+           text-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.50);
+           box-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
+.p-audio { color: $accent-secondary-soft; border-color: rgba($nyxus-accent-secondary, 0.48);
+           text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.50);
+           box-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
+.p-mic   { color: $accent-primary-soft; border-color: rgba($nyxus-accent-primary, 0.48);
+           text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.50);
+           box-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
+.p-net   { color: $neon-blue-soft; border-color: rgba($neon-blue, 0.48);
+           text-shadow: 0 0 8px rgba($neon-blue, 0.50);
+           box-shadow: 0 0 8px rgba($neon-blue, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
+.p-bt    { color: $neon-blue-soft; border-color: rgba($neon-blue, 0.42);
+           text-shadow: 0 0 8px rgba($neon-blue, 0.45);
+           box-shadow: 0 0 8px rgba($neon-blue, 0.12), inset 0 0 8px rgba(0,0,0,0.30); }
+.p-batt  { color: $neon-green-soft; border-color: rgba($neon-green, 0.48);
+           text-shadow: 0 0 8px rgba($neon-green, 0.50);
+           box-shadow: 0 0 8px rgba($neon-green, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
+.p-pp    { color: $accent-ok-soft; border-color: rgba($nyxus-accent-ok, 0.48);
+           text-shadow: 0 0 8px rgba($nyxus-accent-ok, 0.50);
+           box-shadow: 0 0 8px rgba($nyxus-accent-ok, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
+.p-upd   { color: $accent-warn-soft; border-color: rgba($nyxus-accent-warn, 0.44);
+           text-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.45);
+           box-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.12), inset 0 0 8px rgba(0,0,0,0.30); }
+.p-notif { color: $accent-primary-soft; border-color: rgba($nyxus-accent-primary, 0.48);
+           text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.50);
+           box-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
 
 .batt-charge {
   border-color: rgba($nyxus-accent-secondary, 0.45);
@@ -248,19 +255,13 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
 
 /* -- SYS PULSE ------------------------------------------------------ */
 
+/* container is transparent - the per-metric .hud-tile cards inside
+   carry the HOME-HUD look (rev 2026-07-09) */
 .syspulse {
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: rgba(13, 16, 26, 0.55);
-  border: 1px solid rgba($nyxus-accent-ok, 0.22);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: 0;
+  background: transparent;
+  border: none;
 }
-.syspulse-cpu  { color: $nyxus-accent-secondary; letter-spacing: 0.06em;
-                 text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.45); }
-.syspulse-mem  { color: $nyxus-accent-primary; letter-spacing: 0.06em;
-                 text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.45); }
-.syspulse-temp { color: $nyxus-accent-warn; letter-spacing: 0.06em;
-                 text-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.45); }
 
 /* -- CAVA VISUALIZER ------------------------------------------------- */
 
@@ -284,45 +285,42 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
 }
 
 .tray-dummy {
-  color: $grey-mid;
+  color: $grey-ghost;
   letter-spacing: 0.3em;
   padding: 0 8px;
+  border-radius: 4px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
 }
 
 /* -- CLOCK ---------------------------------------------------------- */
 
+/* HOME-HUD clock card: hairline shell + solid accent top rule, chunky
+   mono numerals with white bloom (the dot-matrix voice). */
 .clock {
-  padding: 3px 15px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  background-image:
-    linear-gradient(160deg,
-      rgba(24, 20, 40, 0.88),
-      rgba(9, 12, 22, 0.82)),
-    linear-gradient(100deg,
-      rgba($nyxus-accent-primary, 0.60),
-      rgba($nyxus-accent-ok, 0.50) 50%,
-      rgba($nyxus-accent-secondary, 0.60));
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  padding: 2px 14px;
+  border-radius: 4px;
+  background: $void-card;
+  border: 1px solid rgba($nyxus-accent-primary, 0.45);
+  border-top: 2px solid $nyxus-accent-primary;
+  box-shadow:
+    0 0 12px rgba($nyxus-accent-primary, 0.18),
+    inset 0 0 10px rgba(0, 0, 0, 0.30);
   transition: all 180ms ease;
 }
 .clock:hover {
-  background-image:
-    linear-gradient(160deg,
-      rgba(58, 22, 48, 0.90),
-      rgba(14, 30, 46, 0.86)),
-    linear-gradient(100deg, $nyxus-accent-primary, $nyxus-accent-ok 50%, $nyxus-accent-secondary);
+  background: rgba($nyxus-accent-primary, 0.10);
+  border-color: $nyxus-accent-primary;
   box-shadow:
-    0 0 22px rgba($nyxus-accent-primary, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    0 0 22px rgba($nyxus-accent-primary, 0.45),
+    inset 0 0 10px rgba(0, 0, 0, 0.25);
 }
 .clock-glyph { color: $nyxus-accent-primary; font-size: 14px;
                text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.65); }
-.clock-hms   { font-weight: 700; font-size: 13px; letter-spacing: 0.06em;
+.clock-hms   { font-weight: 800; font-size: 15px; letter-spacing: 0.05em;
                color: #ffffff;
-               text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.45); }
+               text-shadow:
+                 0 0 10px rgba(255, 255, 255, 0.55),
+                 0 0 20px rgba($nyxus-accent-primary, 0.45); }
 .clock-date  { color: $dim; }
 
 /* -- TICKER (top bar) ----------------------------------------------- */
@@ -334,25 +332,31 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
      centerbox slot ("NYXUS - LI..."). */
   font-size: 10px;
   padding: 0 8px;
-  text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.55);
+  text-shadow:
+    0 0 10px rgba($nyxus-accent-primary, 0.85),
+    0 0 22px rgba($nyxus-accent-primary, 0.40);
 }
+/* signature scrolling marquee, dressed as a HUD tile card
+   (hairline border + neon mono text - rev 2026-07-09) */
 .ticker-box {
-  padding: 0 4px;
-  /* Inner gradient mask hint - fades the marquee edges so the slide
-     never looks like it's "popping" letters in/out at the boundary. */
-  background:
-    linear-gradient(90deg, rgba(5,6,10,0.95) 0%, rgba(5,6,10,0) 6%, rgba(5,6,10,0) 94%, rgba(5,6,10,0.95) 100%);
-  border-radius: 6px;
+  padding: 1px 12px;
+  background: $void-card;
+  border: 1px solid rgba($nyxus-accent-secondary, 0.45);
+  border-radius: 4px;
+  box-shadow:
+    0 0 10px rgba($nyxus-accent-secondary, 0.16),
+    inset 0 0 8px rgba(0, 0, 0, 0.30);
 }
 .ticker {
-  color: $dim;
+  color: $nyxus-accent-secondary;
   font-family: "JetBrainsMono Nerd Font", "JetBrainsMono", monospace;
   font-size: 11px;
+  text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.45);
   /* NO letter-spacing: the marquee is a fixed-column ribbon and
      letter-spacing makes GTK ellipsize the sliding window. */
-  /* Full-length ribbon: 180 monospace cols at ~7px each ~ 1260px on a
-     1920px bar. The box hexpands; min-width just guards small screens. */
-  min-width: 900px;
+  /* 120 monospace cols at ~7px each ~ 840px; keep in sync with
+     NYXUS_TICKER_COLS in nyxus.conf and :limit-width in eww.yuck. */
+  min-width: 700px;
 }
 
 /* -- WORKSPACES (left rail) ----------------------------------------- */
@@ -461,10 +465,13 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
    Alpha 0.34 clears Hyprland's layerrule ignore_alpha 0.2 so the
    compositor frosts the ENTIRE screen behind the overlay - desktop,
    windows and their shadows all melt into blurred glass. */
+/* Near-opaque ink sheet (rev 2026-07-09): the user wants overlays to
+   read as a solid dimmed backdrop - no desktop bleed. Alpha stays a
+   hair under 1.0 so the Hyprland layerrule blur still catches edges. */
 .overlay-backdrop {
   background: radial-gradient(circle at 50% 42%,
-    rgba(18, 12, 30, 0.30),
-    rgba(6, 5, 10, 0.44));
+    rgba(10, 5, 20, 0.94),
+    rgba(3, 1, 7, 0.985));
 }
 
 /* -- DEEP CORE overlay ----------------------------------------------- */
@@ -2160,4 +2167,351 @@ scale slider {
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
   font-weight: 700;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+}
+
+/* =====================================================================
+   HOME-HUD BAR MODULES - rev 2026-07-09
+   Mini neon tile cards for the bars (top strip + syspulse cluster),
+   per-app rail hover hues, and dramatic workspace pill states.
+   All hues via the shared tokens at the top of this file.
+   =================================================================== */
+
+/* -- mini HUD tile: glyph + small-caps neon label + mono value -------- */
+.hud-tile {
+  padding: 1px 8px;
+  border-radius: 4px;
+  background: $void-card;
+  border: 1px solid $hairline;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.30);
+  transition: all 180ms ease;
+}
+.hud-tile-glyph {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+}
+.hud-tile-label {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 8px;
+  font-weight: 700;
+  /* NO letter-spacing: tracking ellipsizes these tiny labels */
+}
+.hud-tile-value {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: $text;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.30);
+}
+
+/* per-domain hue variants - border, glyph and label take the neon */
+.hud-tile-pink   { border-color: rgba($nyxus-accent-primary, 0.55);
+                   box-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-pink   .hud-tile-glyph, .hud-tile-pink .hud-tile-label {
+                   color: $nyxus-accent-primary; text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.55); }
+.hud-tile-green  { border-color: rgba($nyxus-accent-secondary, 0.55);
+                   box-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-green  .hud-tile-glyph, .hud-tile-green .hud-tile-label {
+                   color: $nyxus-accent-secondary; text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.55); }
+.hud-tile-purple { border-color: rgba($nyxus-accent-ok, 0.55);
+                   box-shadow: 0 0 10px rgba($nyxus-accent-ok, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-purple .hud-tile-glyph, .hud-tile-purple .hud-tile-label {
+                   color: $nyxus-accent-ok; text-shadow: 0 0 8px rgba($nyxus-accent-ok, 0.55); }
+.hud-tile-gold   { border-color: rgba($nyxus-accent-warn, 0.55);
+                   box-shadow: 0 0 10px rgba($nyxus-accent-warn, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-gold   .hud-tile-glyph, .hud-tile-gold .hud-tile-label {
+                   color: $nyxus-accent-warn; text-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.55); }
+.hud-tile-orange { border-color: rgba($neon-orange, 0.55);
+                   box-shadow: 0 0 10px rgba($neon-orange, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-orange .hud-tile-glyph, .hud-tile-orange .hud-tile-label {
+                   color: $neon-orange; text-shadow: 0 0 8px rgba($neon-orange, 0.55); }
+.hud-tile-blue   { border-color: rgba($neon-blue, 0.55);
+                   box-shadow: 0 0 10px rgba($neon-blue, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-blue   .hud-tile-glyph, .hud-tile-blue .hud-tile-label {
+                   color: $neon-blue; text-shadow: 0 0 8px rgba($neon-blue, 0.55); }
+.hud-tile-red    { border-color: rgba($neon-red, 0.55);
+                   box-shadow: 0 0 10px rgba($neon-red, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-red    .hud-tile-glyph, .hud-tile-red .hud-tile-label {
+                   color: $neon-red; text-shadow: 0 0 8px rgba($neon-red, 0.55); }
+
+.hud-tile-strip { padding: 0 6px; }
+
+/* -- app rail: per-app neon hover identities -------------------------- */
+.app-pill-pink:hover   { border-color: $nyxus-accent-primary; color: #ffffff;
+  background: rgba($nyxus-accent-primary, 0.14);
+  text-shadow: 0 0 12px rgba($nyxus-accent-primary, 0.85);
+  box-shadow: 0 0 16px rgba($nyxus-accent-primary, 0.50), inset 0 1px 0 rgba(255,255,255,0.15); }
+.app-pill-green:hover  { border-color: $nyxus-accent-secondary; color: #ffffff;
+  background: rgba($nyxus-accent-secondary, 0.14);
+  text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.85);
+  box-shadow: 0 0 16px rgba($nyxus-accent-secondary, 0.50), inset 0 1px 0 rgba(255,255,255,0.15); }
+.app-pill-purple:hover { border-color: $nyxus-accent-ok; color: #ffffff;
+  background: rgba($nyxus-accent-ok, 0.14);
+  text-shadow: 0 0 12px rgba($nyxus-accent-ok, 0.85);
+  box-shadow: 0 0 16px rgba($nyxus-accent-ok, 0.50), inset 0 1px 0 rgba(255,255,255,0.15); }
+.app-pill-gold:hover   { border-color: $nyxus-accent-warn; color: #ffffff;
+  background: rgba($nyxus-accent-warn, 0.14);
+  text-shadow: 0 0 12px rgba($nyxus-accent-warn, 0.85);
+  box-shadow: 0 0 16px rgba($nyxus-accent-warn, 0.50), inset 0 1px 0 rgba(255,255,255,0.15); }
+.app-pill-orange:hover { border-color: $neon-orange; color: #ffffff;
+  background: rgba($neon-orange, 0.14);
+  text-shadow: 0 0 12px rgba($neon-orange, 0.85);
+  box-shadow: 0 0 16px rgba($neon-orange, 0.50), inset 0 1px 0 rgba(255,255,255,0.15); }
+.app-pill-blue:hover   { border-color: $neon-blue; color: #ffffff;
+  background: rgba($neon-blue, 0.14);
+  text-shadow: 0 0 12px rgba($neon-blue, 0.85);
+  box-shadow: 0 0 16px rgba($neon-blue, 0.50), inset 0 1px 0 rgba(255,255,255,0.15); }
+/* resting tint per hue - faint neon identity even before hover */
+.app-pill-pink   { color: $accent-primary-soft; }
+.app-pill-green  { color: $accent-secondary-soft; }
+.app-pill-purple { color: $accent-ok-soft; }
+.app-pill-gold   { color: $accent-warn-soft; }
+.app-pill-orange { color: $neon-orange-soft; }
+.app-pill-blue   { color: $neon-blue-soft; }
+
+/* -- workspace pills: crank the states (final word in the cascade) ---- */
+.ws-pill {
+  color: rgba(232, 237, 245, 0.28);           /* empty = ghost numeral */
+}
+.ws-pill-occupied {
+  color: $accent-primary-soft;
+  border: 1px solid rgba($nyxus-accent-primary, 0.60);
+  background: rgba($nyxus-accent-primary, 0.12);
+  box-shadow:
+    inset 0 0 12px rgba($nyxus-accent-primary, 0.22),
+    0 0 10px rgba($nyxus-accent-primary, 0.28);
+  text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.55);
+}
+.ws-pill-active {
+  background: linear-gradient(135deg, $nyxus-accent-primary, $nyxus-accent-secondary);
+  color: #05060a;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 0 20px rgba($nyxus-accent-primary, 0.90),
+    0 0 42px rgba($nyxus-accent-secondary, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+/* =====================================================================
+   HOME-HUD DASHBOARD v2 - rev 2026-07-09
+   Graffiti greeting, card headers with rule + stamp, ring gauges,
+   colored card numerals, per-hue action toggles, micro footers.
+   =================================================================== */
+
+/* -- header strip ------------------------------------------------------ */
+.dash-tag {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: $grey-mid;
+  letter-spacing: 0.22em;
+}
+.dash-stamp {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 9px;
+  color: $grey-ghost;
+  letter-spacing: 0.14em;
+}
+.dash-greet {
+  font-family: "Caveat", "Inter", sans-serif;
+  font-size: 38px;
+  color: $text;
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.35);
+}
+.dash-greet-accent {
+  font-family: "Caveat", "Inter", sans-serif;
+  font-size: 38px;
+  color: $nyxus-accent-primary;
+  text-shadow:
+    0 0 14px rgba($nyxus-accent-primary, 0.85),
+    0 0 30px rgba($nyxus-accent-primary, 0.40);
+}
+
+/* -- card header: glyph + Inter Display title + rule + mono stamp ----- */
+.dash-hdr-glyph  { font-size: 15px; }
+.dash-hdr-title  {
+  font-family: "Inter Display", "Inter", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.dash-hdr-stamp  {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 7px;
+  color: $grey-ghost;
+  /* NO letter-spacing: tracking ellipsizes these micro stamps */
+}
+.dash-hdr-rule   { min-height: 1px; background: rgba(255, 255, 255, 0.10); }
+
+/* per-card hue on header glyph/title/rule via the nth-child hue map */
+.dash-grid .dash-card:nth-child(1) .dash-hdr-glyph,
+.dash-grid .dash-card:nth-child(1) .dash-hdr-title { color: $nyxus-accent-warn; text-shadow: 0 0 10px rgba($nyxus-accent-warn, 0.55); }
+.dash-grid .dash-card:nth-child(1) .dash-hdr-rule  { background: rgba($nyxus-accent-warn, 0.25); }
+.dash-grid .dash-card:nth-child(2) .dash-hdr-glyph,
+.dash-grid .dash-card:nth-child(2) .dash-hdr-title { color: $nyxus-accent-primary; text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.55); }
+.dash-grid .dash-card:nth-child(2) .dash-hdr-rule  { background: rgba($nyxus-accent-primary, 0.25); }
+.dash-grid .dash-card:nth-child(3) .dash-hdr-glyph,
+.dash-grid .dash-card:nth-child(3) .dash-hdr-title { color: $neon-orange; text-shadow: 0 0 10px rgba($neon-orange, 0.55); }
+.dash-grid .dash-card:nth-child(3) .dash-hdr-rule  { background: rgba($neon-orange, 0.25); }
+.dash-grid .dash-card:nth-child(4) .dash-hdr-glyph,
+.dash-grid .dash-card:nth-child(4) .dash-hdr-title { color: $nyxus-accent-ok; text-shadow: 0 0 10px rgba($nyxus-accent-ok, 0.55); }
+.dash-grid .dash-card:nth-child(4) .dash-hdr-rule  { background: rgba($nyxus-accent-ok, 0.25); }
+.dash-player .dash-hdr-glyph,
+.dash-player .dash-hdr-title { color: $neon-red; text-shadow: 0 0 10px rgba($neon-red, 0.55); }
+.dash-player .dash-hdr-rule  { background: rgba($neon-red, 0.25); }
+.dash-cores-card .dash-hdr-glyph,
+.dash-cores-card .dash-hdr-title { color: $nyxus-accent-primary; text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.55); }
+.dash-cores-card .dash-hdr-rule  { background: rgba($nyxus-accent-primary, 0.25); }
+
+/* -- colored big numerals (reference: values carry the card hue) ------ */
+.dash-big-gold   { color: $nyxus-accent-warn;
+                   text-shadow: 0 0 14px rgba($nyxus-accent-warn, 0.55), 0 0 28px rgba($nyxus-accent-warn, 0.25); }
+.dash-big-pink   { color: $nyxus-accent-primary;
+                   text-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.55), 0 0 28px rgba($nyxus-accent-primary, 0.25); }
+.dash-big-orange { color: $neon-orange;
+                   text-shadow: 0 0 14px rgba($neon-orange, 0.55), 0 0 28px rgba($neon-orange, 0.25); }
+
+/* script accent line inside cards (weather summary etc.) */
+.dash-card-script {
+  font-family: "Caveat", "Inter", sans-serif;
+  font-size: 17px;
+  color: $dim;
+}
+
+/* dashed micro footer (style.py card-footer voice) */
+.dash-card-foot {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  padding-top: 5px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.10);
+}
+.dash-foot-gold   { color: rgba($nyxus-accent-warn, 0.60);   border-top-color: rgba($nyxus-accent-warn, 0.16); }
+.dash-foot-pink   { color: rgba($nyxus-accent-primary, 0.60); border-top-color: rgba($nyxus-accent-primary, 0.16); }
+.dash-foot-orange { color: rgba($neon-orange, 0.60);          border-top-color: rgba($neon-orange, 0.16); }
+.dash-foot-purple { color: rgba($nyxus-accent-ok, 0.60);      border-top-color: rgba($nyxus-accent-ok, 0.16); }
+.dash-foot-red    { color: rgba($neon-red, 0.60);             border-top-color: rgba($neon-red, 0.16); }
+
+/* -- ring gauges (HUD SYSTEM CORE voice) ------------------------------- */
+.dash-ring {
+  min-width: 74px;
+  min-height: 74px;
+  background-color: rgba(255, 255, 255, 0.07);   /* track */
+  border-radius: 999px;
+}
+.dash-ring-value {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: $text;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.40);
+}
+.dash-ring-label {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.dash-ring-pink        { color: $nyxus-accent-primary; }
+.dash-ring-label-pink  { color: $nyxus-accent-primary; text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.55); }
+.dash-ring-purple      { color: $nyxus-accent-ok; }
+.dash-ring-label-purple{ color: $nyxus-accent-ok; text-shadow: 0 0 8px rgba($nyxus-accent-ok, 0.55); }
+.dash-ring-orange      { color: $neon-orange; }
+.dash-ring-label-orange{ color: $neon-orange; text-shadow: 0 0 8px rgba($neon-orange, 0.55); }
+.dash-ring-gold        { color: $nyxus-accent-warn; }
+.dash-ring-label-gold  { color: $nyxus-accent-warn; text-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.55); }
+
+/* -- multi-neon action toggles ----------------------------------------- */
+.dash-toggle-green  { border-color: rgba($nyxus-accent-secondary, 0.45); }
+.dash-toggle-green  .dash-toggle-glyph { color: $nyxus-accent-secondary; text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.55); }
+.dash-toggle-green:hover  { background: rgba($nyxus-accent-secondary, 0.13); border-color: $nyxus-accent-secondary;
+                            box-shadow: 0 0 24px rgba($nyxus-accent-secondary, 0.40); }
+.dash-toggle-blue   { border-color: rgba($neon-blue, 0.45); }
+.dash-toggle-blue   .dash-toggle-glyph { color: $neon-blue; text-shadow: 0 0 12px rgba($neon-blue, 0.55); }
+.dash-toggle-blue:hover   { background: rgba($neon-blue, 0.13); border-color: $neon-blue;
+                            box-shadow: 0 0 24px rgba($neon-blue, 0.40); }
+.dash-toggle-purple { border-color: rgba($nyxus-accent-ok, 0.45); }
+.dash-toggle-purple .dash-toggle-glyph { color: $nyxus-accent-ok; text-shadow: 0 0 12px rgba($nyxus-accent-ok, 0.55); }
+.dash-toggle-purple:hover { background: rgba($nyxus-accent-ok, 0.13); border-color: $nyxus-accent-ok;
+                            box-shadow: 0 0 24px rgba($nyxus-accent-ok, 0.40); }
+.dash-toggle-pink   { border-color: rgba($nyxus-accent-primary, 0.45); }
+.dash-toggle-pink   .dash-toggle-glyph { color: $nyxus-accent-primary; text-shadow: 0 0 12px rgba($nyxus-accent-primary, 0.55); }
+.dash-toggle-pink:hover   { background: rgba($nyxus-accent-primary, 0.13); border-color: $nyxus-accent-primary;
+                            box-shadow: 0 0 24px rgba($nyxus-accent-primary, 0.40); }
+.dash-toggle-gold   { border-color: rgba($nyxus-accent-warn, 0.45); }
+.dash-toggle-gold   .dash-toggle-glyph { color: $nyxus-accent-warn; text-shadow: 0 0 12px rgba($nyxus-accent-warn, 0.55); }
+.dash-toggle-gold:hover   { background: rgba($nyxus-accent-warn, 0.13); border-color: $nyxus-accent-warn;
+                            box-shadow: 0 0 24px rgba($nyxus-accent-warn, 0.40); }
+.dash-toggle-orange { border-color: rgba($neon-orange, 0.45); }
+.dash-toggle-orange .dash-toggle-glyph { color: $neon-orange; text-shadow: 0 0 12px rgba($neon-orange, 0.55); }
+.dash-toggle-orange:hover { background: rgba($neon-orange, 0.13); border-color: $neon-orange;
+                            box-shadow: 0 0 24px rgba($neon-orange, 0.40); }
+.dash-toggle-red    { border-color: rgba($neon-red, 0.45); }
+.dash-toggle-red    .dash-toggle-glyph { color: $neon-red; text-shadow: 0 0 12px rgba($neon-red, 0.55); }
+.dash-toggle-red:hover    { background: rgba($neon-red, 0.13); border-color: $neon-red;
+                            box-shadow: 0 0 24px rgba($neon-red, 0.40); }
+
+/* =====================================================================
+   GRAFFITI VOICE - rev 2026-07-09 (ingredient 3: street-art energy)
+   Marker wordmarks with spray-halo glow on the big overlay titles,
+   heavier neon bloom on the brand pill. Tasteful - titles only.
+   =================================================================== */
+.power-title, .cheat-title, .dc-title {
+  font-family: "Permanent Marker", "Inter Display", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.10em;
+}
+.power-title {
+  color: $nyxus-accent-primary;
+  text-shadow:
+    0 0 12px rgba($nyxus-accent-primary, 0.90),
+    0 0 30px rgba($nyxus-accent-primary, 0.45),
+    0 0 60px rgba($nyxus-accent-secondary, 0.25);
+}
+.cheat-title {
+  color: $nyxus-accent-secondary;
+  text-shadow:
+    0 0 12px rgba($nyxus-accent-secondary, 0.90),
+    0 0 30px rgba($nyxus-accent-secondary, 0.45),
+    0 0 60px rgba($nyxus-accent-primary, 0.25);
+}
+.dc-title {
+  color: $nyxus-accent-warn;
+  text-shadow:
+    0 0 12px rgba($nyxus-accent-warn, 0.90),
+    0 0 30px rgba($nyxus-accent-warn, 0.45),
+    0 0 60px rgba($neon-orange, 0.25);
+}
+.brand {
+  text-shadow:
+    0 0 12px rgba($nyxus-accent-primary, 0.85),
+    0 0 26px rgba($nyxus-accent-primary, 0.40);
+}
+/* spray-halo on the hero clock - pink/green double bloom like the wall */
+.dash-clock {
+  text-shadow:
+    0 0 12px rgba(255, 255, 255, 0.60),
+    0 0 34px rgba($nyxus-accent-primary, 0.55),
+    0 0 70px rgba($nyxus-accent-secondary, 0.30);
+}
+
+/* =====================================================================
+   AURORA BAR FILLS - rev 2026-07-09
+   The inline :style strings paint 5-6 stacked background layers per
+   bar (scanline texture / sliding pulse + focus halos / aurora drift /
+   legibility glass / prism rim). Origin+clip lists below MUST match
+   the layer counts in the yuck :style strings: every layer clips to
+   the padding box except the final prism rim, which paints the
+   transparent border ring (border-box).
+   =================================================================== */
+.bar-bottom {
+  background-origin: padding-box, padding-box, padding-box, padding-box, border-box;
+  background-clip:   padding-box, padding-box, padding-box, padding-box, border-box;
+}
+.bar-top {
+  background-origin: padding-box, padding-box, padding-box, border-box;
+  background-clip:   padding-box, padding-box, padding-box, border-box;
+}
+.ws-rail, .app-rail {
+  background-origin: padding-box, padding-box, padding-box, padding-box, border-box;
+  background-clip:   padding-box, padding-box, padding-box, padding-box, border-box;
 }

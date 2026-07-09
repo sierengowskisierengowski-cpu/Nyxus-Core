@@ -21,7 +21,8 @@
 (defwidget deepcore_layout []
   (box :class "deepcore-root" :orientation "v" :halign "center" :valign "center"
        :space-evenly false :spacing 20
-    (label :class "dc-title" :text "NYXUS · DEEP CORE")
+    (label :visible false :text DEEP_SHIELD)
+    (label :class "dc-title" :style "opacity: ${NEONFLICK};" :text "NYXUS · DEEP CORE")
     (label :class "dc-sub" :text "kernel observatory · sentinel grid · scheduler truth")
     (box :class "dc-cols" :orientation "h" :space-evenly false :spacing 30
       (box :class "dc-col" :orientation "v" :space-evenly false :spacing 8
