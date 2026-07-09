@@ -70,6 +70,15 @@
                                      "~/.config/eww/scripts/calendar-month.sh")
 (defpoll NOTIFLIST  :interval "3s"   :initial '{"items":[],"total":0,"paused":"false"}'
                                      "~/.config/eww/scripts/notif-history.sh")
+(defpoll WIFISAVED  :interval "10s"  :initial '{"saved":[],"details":{"iface":"","ip":"","gw":"","dns":""}}'
+                                     "~/.config/eww/scripts/wifi-saved.sh")
+(defpoll UPDATESLIST :interval "3600s" :initial '{"count":0,"checked":"—","source":"","packages":[]}'
+                                     "~/.config/eww/scripts/updates-list.sh")
+
+;; wifi panel view: "nearby" (scan results) | "saved" (profiles + link info)
+(defvar WIFI_VIEW "nearby")
+;; mixer panel: show input devices section
+(defvar MIX_SHOW_INPUTS false)
 
 ;; ── audio visualizer ─────────────────────────────────────────────────
 ;; cava.sh streams one line of block glyphs per frame (30 fps).
@@ -133,8 +142,8 @@
 (defwidget net_widget []
   (button :class "pill p-net"
           :onclick "eww open --toggle wifi"
-          :onrightclick "alacritty -e nmtui &"
-          :tooltip "${NETWORK.tooltip} · click wifi panel · right-click nmtui"
+          :onrightclick "~/.config/eww/scripts/wifi-action.sh toggle &"
+          :tooltip "${NETWORK.tooltip} · click wifi panel · right-click toggle radio"
     "${NETWORK.icon}  ${NETWORK.label}"))
 
 (defwidget bluetooth_widget []
@@ -159,10 +168,12 @@
           :tooltip "Brightness ${BACKLIGHT.percent}% · click panel · right-click decrease"
     "☼  ${BACKLIGHT.percent}%"))
 
-;; ── search bar pill (opens start menu, which has its own search input) ──
+;; ── search bar pill (opens the NYXUS start menu, which has its own
+;;    search input). NOTE: there is no eww `startmenu` window — the
+;;    start menu is the nyxus-start app.
 (defwidget search_btn []
   (button :class "search-btn"
-          :onclick "eww open --toggle startmenu"
+          :onclick "nyxus-start &"
           :tooltip "Search NYXUS"
     "  Search NYXUS"))
 
@@ -180,14 +191,14 @@
 (defwidget powerprof_widget []
   (button :class {POWERPROF.active == "performance" ? "pill p-pp pp-perf" :
                   POWERPROF.active == "power-saver" ? "pill p-pp pp-save" : "pill p-pp"}
-          :onclick "powerprofilesctl set $(powerprofilesctl list 2>/dev/null | awk '/Profiles/{f=1;next} f && /:/{gsub(/[*: ]/,\"\",$1); print $1}' | grep -v '^${POWERPROF.active}$' | head -1) &"
+          :onclick "~/.config/eww/scripts/qs-toggle.sh profile &"
           :tooltip "${POWERPROF.tooltip} · click to cycle"
     "${POWERPROF.icon}  ${POWERPROF.label}"))
 
 (defwidget updates_widget []
   (button :class {UPDATES.count > 24 ? "pill p-upd upd-many" : "pill p-upd"}
-          :onclick "alacritty -e sh -c 'sudo pacman -Syu; read -p \"press enter\"' &"
-          :tooltip "${UPDATES.tooltip} · click to sync"
+          :onclick "eww open --toggle updates"
+          :tooltip "${UPDATES.tooltip} · click for update center"
     "${UPDATES.icon}  ${UPDATES.label}"))
 
 (defwidget notifs_widget []
@@ -280,7 +291,7 @@
     :style "background-image: linear-gradient(190deg, rgba(11,14,24,0.84), rgba(5,6,10,0.72)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.g * 14, 1)}px rgba(43,210,255,${round(0.05 + PRISM.g * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
     (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal")
     (app_launcher :glyph "" :cmd "firefox"        :label "Firefox")
-    (app_launcher :glyph "" :cmd "nautilus"       :label "Files")
+    (app_launcher :glyph "" :cmd "thunar"         :label "Files")
     (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'" :label "SysMon")
     (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad")
     (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies")
@@ -345,7 +356,7 @@
 
 (defwidget dash_player []
   (box :class "dash-player" :orientation "v" :space-evenly false :spacing 8
-    (label :class "dash-card-title" :text "MEDIA")
+    (label :class "dash-card-title" :halign "start" :text "♫ MEDIA")
     (label :class "dash-player-title"  :limit-width 32 :text "${PLAYER.title}")
     (label :class "dash-player-artist" :limit-width 32 :text "${PLAYER.artist}")
     (box :class "dash-player-controls" :orientation "h" :space-evenly true :spacing 12
@@ -369,25 +380,25 @@
     ;; ── upper grid: weather / system / power / calendar / media ──────
     (box :class "dash-grid" :orientation "h" :space-evenly true :spacing 16
       (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
-        (label :class "dash-card-title" :text "WEATHER")
+        (label :class "dash-card-title" :halign "start" :text "☀ WEATHER")
         (label :class "dash-card-big"   :text "${WEATHER.temp}")
         (label :class "dash-card-sub"   :text "${WEATHER.summary}"))
       (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
-        (label :class "dash-card-title" :text "SYSTEM")
+        (label :class "dash-card-title" :halign "start" :text "◉ SYSTEM")
         (label :class "dash-card-big"   :text "${SYSPULSE.cpu}% · ${SYSPULSE.mem}%")
         (label :class "dash-card-sub"   :text "CPU · MEM · ${SYSPULSE.temp}°C"))
       (box :class "dash-card" :orientation "v" :space-evenly false :spacing 8
-        (label :class "dash-card-title" :text "POWER")
+        (label :class "dash-card-title" :halign "start" :text "⚡ POWER")
         (label :class "dash-card-big"   :text "${BATTERY.capacity}%")
         (label :class "dash-card-sub"   :text "${BATTERY.status} · ${POWERPROF.label}"))
       (box :class "dash-card dash-card-cal" :orientation "v" :space-evenly false :spacing 6
-        (label :class "dash-card-title" :text "${CALENDAR.month}")
+        (label :class "dash-card-title" :halign "start" :text "▦ ${CALENDAR.month}")
         (label :class "dash-cal-grid"   :text "${CALENDAR.grid}"))
       (dash_player))
 
     ;; ── per-core CPU graph ───────────────────────────────────────────
     (box :class "dash-cores-card" :orientation "v" :space-evenly false :spacing 8
-      (label :class "dash-card-title" :text "CPU CORES · ${arraylength(CPUCORES.cores)} threads")
+      (label :class "dash-card-title" :halign "start" :text "◈ CPU CORES · ${arraylength(CPUCORES.cores)} threads")
       (box :class "dash-cores" :orientation "h" :space-evenly true :spacing 4
         (for core in {CPUCORES.cores}
           (dash_core_bar :pct {core}))))
@@ -419,10 +430,10 @@
       (dash_quick_toggle :glyph "󰂯" :label "Bluetooth" :cmd "eww close dashboard && eww open bluetooth")
       (dash_quick_toggle :glyph "󰕾" :label "Audio"     :cmd "eww close dashboard && eww open mixer")
       (dash_quick_toggle :glyph "󰍹" :label "Displays"  :cmd "eww close dashboard && wdisplays")
-      (dash_quick_toggle :glyph "󰚰" :label "Updates"   :cmd "eww close dashboard && alacritty -e sh -c 'sudo pacman -Syu; read -p \"press enter\"'")
-      (dash_quick_toggle :glyph "󰒓" :label "Settings"  :cmd "eww close dashboard && (command -v nyxus-settings >/dev/null && nyxus-settings || python3 ~/.nyxus/nyxus_settings.py)")
+      (dash_quick_toggle :glyph "󰚰" :label "Updates"   :cmd "eww close dashboard && eww open updates")
+      (dash_quick_toggle :glyph "󰒓" :label "Settings"  :cmd "eww close dashboard && nyxus-settings")
       (dash_quick_toggle :glyph "󰌾" :label "Lock"      :cmd "eww close dashboard && hyprlock")
-      (dash_quick_toggle :glyph "󰌌" :label "Keys"      :cmd "eww close dashboard && eww open --toggle cheatsheet")
+      (dash_quick_toggle :glyph "󰌌" :label "Keys"      :cmd "eww close dashboard && eww open --toggle hotkey-cheatsheet")
       (dash_quick_toggle :glyph "󰐥" :label "Power"     :cmd "eww close dashboard && eww open --toggle powermenu"))
 
     (button :class "dash-close" :onclick "eww close dashboard" "Close (Esc)"))))
@@ -632,26 +643,26 @@
     (label :class "qs-title" :text "QUICK SETTINGS")
 
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
-      (qs_tile :glyph "📶" :label "WiFi"      :state "${QS.wifi}"       :cmd "~/.config/eww/scripts/qs-toggle.sh wifi")
-      (qs_tile :glyph ""  :label "Bluetooth" :state "${QS.bt}"         :cmd "~/.config/eww/scripts/qs-toggle.sh bt")
-      (qs_tile :glyph "✈" :label "Airplane"  :state "${QS.airplane}"   :cmd "~/.config/eww/scripts/qs-toggle.sh airplane")
-      (qs_tile :glyph "🌙" :label "DND"       :state "${QS.dnd}"        :cmd "~/.config/eww/scripts/qs-toggle.sh dnd"))
+      (qs_tile :glyph "󰖩" :label "WiFi"      :state "${QS.wifi}"       :cmd "~/.config/eww/scripts/qs-toggle.sh wifi")
+      (qs_tile :glyph "󰂯" :label "Bluetooth" :state "${QS.bt}"         :cmd "~/.config/eww/scripts/qs-toggle.sh bt")
+      (qs_tile :glyph "󰀝" :label "Airplane"  :state "${QS.airplane}"   :cmd "~/.config/eww/scripts/qs-toggle.sh airplane")
+      (qs_tile :glyph "󰂛" :label "DND"       :state "${QS.dnd}"        :cmd "~/.config/eww/scripts/qs-toggle.sh dnd"))
 
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
-      (qs_tile :glyph "☾"  :label "NightLight":state "${QS.nightlight}" :cmd "~/.config/eww/scripts/qs-toggle.sh nightlight")
-      (qs_tile :glyph "⚡" :label "${QS.profile}" :state "on"           :cmd "~/.config/eww/scripts/qs-toggle.sh profile")
-      (qs_tile :glyph "🎤" :label "Mic"        :state "${QS.mic_mute}"   :cmd "~/.config/eww/scripts/qs-toggle.sh mic")
-      (qs_tile :glyph "🔇" :label "Mute"       :state "${QS.audio_mute}" :cmd "~/.config/eww/scripts/qs-toggle.sh audio"))
+      (qs_tile :glyph "󰖔"  :label "NightLight":state "${QS.nightlight}" :cmd "~/.config/eww/scripts/qs-toggle.sh nightlight")
+      (qs_tile :glyph "󰓅" :label "${QS.profile}" :state "on"           :cmd "~/.config/eww/scripts/qs-toggle.sh profile")
+      (qs_tile :glyph "󰍬" :label "Mic"        :state "${QS.mic_mute}"   :cmd "~/.config/eww/scripts/qs-toggle.sh mic")
+      (qs_tile :glyph "󰝟" :label "Mute"       :state "${QS.audio_mute}" :cmd "~/.config/eww/scripts/qs-toggle.sh audio"))
 
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 10
-      (qs_tile :glyph "🔄" :label "RotLock"   :state "${QS.rot_lock}"    :cmd "~/.config/eww/scripts/qs-toggle.sh rot")
+      (qs_tile :glyph "󰑵" :label "RotLock"   :state "${QS.rot_lock}"    :cmd "~/.config/eww/scripts/qs-toggle.sh rot")
       (qs_tile :glyph "☼"  :label "AutoBrt"  :state "${QS.auto_bright}" :cmd "~/.config/eww/scripts/qs-toggle.sh auto-bright")
-      (qs_tile :glyph "🔒" :label "Lock"      :state "off" :cmd "eww close quicksettings && hyprlock")
-      (qs_tile :glyph "⏻"  :label "Power"    :state "off" :cmd "eww close quicksettings && eww open --toggle powermenu"))
+      (qs_tile :glyph "󰌾" :label "Lock"      :state "off" :cmd "eww close quicksettings && hyprlock")
+      (qs_tile :glyph "󰐥"  :label "Power"    :state "off" :cmd "eww close quicksettings && eww open --toggle powermenu"))
 
     (box :class "qs-sliders" :orientation "v" :space-evenly false :spacing 10
       (box :orientation "h" :space-evenly false :spacing 12
-        (label :class "qs-slider-glyph" :text "🔊")
+        (label :class "qs-slider-glyph" :text "󰕾")
         (scale :class "qs-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
                :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
       (box :orientation "h" :space-evenly false :spacing 12
@@ -659,7 +670,7 @@
         (scale :class "qs-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
                :onchange "brightnessctl set {}%"))
       (box :orientation "h" :space-evenly false :spacing 12
-        (label :class "qs-slider-glyph" :text "🎤")
+        (label :class "qs-slider-glyph" :text "󰍬")
         (scale :class "qs-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
                :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%")))
 
@@ -684,10 +695,30 @@
             :onclick "~/.config/eww/scripts/wifi-action.sh forget ${net.b64} &"
             :tooltip "Forget" "✕")))
 
+;; Saved profile row — connect/disconnect + autoconnect + forget, all
+;; in-panel via nmcli (no nmtui escape hatch; rev 2026-07-09).
+(defwidget wifi_saved_row [net]
+  (box :class {net.active ? "wifi-row wifi-row-active" : "wifi-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (label :class "wifi-bars" :text "${net.active ? '◉' : '○'}")
+    (label :class "wifi-name" :hexpand true :halign "start" :limit-width 22
+           :text "${net.name}")
+    (button :class {net.autoconnect ? "wifi-auto wifi-auto-on" : "wifi-auto"}
+            :onclick "~/.config/eww/scripts/wifi-action.sh autoconnect ${net.b64} &"
+            :tooltip "Autoconnect ${net.autoconnect ? 'on — click to disable' : 'off — click to enable'}"
+      "AUTO")
+    (button :class "wifi-act"
+            :onclick "~/.config/eww/scripts/wifi-action.sh ${net.active ? 'disconnect' : 'connect'} ${net.b64} &"
+            :tooltip "${net.active ? 'Disconnect' : 'Connect'}"
+      "${net.active ? 'Disc' : 'Conn'}")
+    (button :class "wifi-forget"
+            :onclick "~/.config/eww/scripts/wifi-action.sh forget ${net.b64} &"
+            :tooltip "Forget profile" "✕")))
+
 (defwidget wifi_layout []
   (box :class "wifi-root" :orientation "v" :space-evenly false :spacing 12
     (box :class "wifi-header" :orientation "h" :space-evenly false :spacing 10
-      (label :class "wifi-title" :text "WIFI" :hexpand true :halign "start")
+      (label :class "wifi-title" :text "󰖩 WIFI" :hexpand true :halign "start")
       (button :class "wifi-toggle"
               :onclick "~/.config/eww/scripts/wifi-action.sh toggle &"
               :tooltip "Toggle WiFi radio"
@@ -695,9 +726,17 @@
       (button :class "wifi-rescan"
               :onclick "~/.config/eww/scripts/wifi-action.sh rescan &"
               :tooltip "Rescan" "↻"))
+    ;; view switch: nearby scan results ↔ saved profiles / link details
+    (box :class "panel-tabs" :orientation "h" :space-evenly true :spacing 8
+      (button :class {WIFI_VIEW == "nearby" ? "panel-tab panel-tab-on" : "panel-tab"}
+              :onclick "eww update WIFI_VIEW=nearby" "NEARBY")
+      (button :class {WIFI_VIEW == "saved" ? "panel-tab panel-tab-on" : "panel-tab"}
+              :onclick "eww update WIFI_VIEW=saved" "SAVED · ${arraylength(WIFISAVED.saved)}"))
     (label :class "wifi-current" :text "Connected · ${WIFILIST.current == '' ? '—' : WIFILIST.current}"
            :halign "start")
-    (scroll :class "wifi-scroll" :hscroll false :vscroll true :height 360
+    ;; ── nearby view ──
+    (scroll :class "wifi-scroll" :hscroll false :vscroll true :height 330
+            :visible {WIFI_VIEW == "nearby"}
       (box :orientation "v" :space-evenly false :spacing 4
         ;; DESIGN_CONTRACT §9 — empty state. Visible only when the
         ;; networks array is empty so the panel never shows a blank box.
@@ -709,8 +748,29 @@
           (label :class "empty-hint"  :text "Try Rescan, or move closer to an access point."))
         (for net in {WIFILIST.networks}
           (wifi_row :net {net}))))
+    ;; ── saved profiles + link details view ──
+    (scroll :class "wifi-scroll" :hscroll false :vscroll true :height 330
+            :visible {WIFI_VIEW == "saved"}
+      (box :orientation "v" :space-evenly false :spacing 4
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {arraylength(WIFISAVED.saved) == 0}
+          (label :class "empty-glyph" :text "󰤯")
+          (label :class "empty-title" :text "No saved networks")
+          (label :class "empty-hint"  :text "Connect to a network once and it lands here."))
+        (for net in {WIFISAVED.saved}
+          (wifi_saved_row :net {net}))
+        (box :class "wifi-details" :orientation "v" :space-evenly false :spacing 2
+             :visible {WIFISAVED.details.iface != ""}
+          (label :class "wifi-detail-line" :halign "start" :text "IFACE  ${WIFISAVED.details.iface}")
+          (label :class "wifi-detail-line" :halign "start" :text "IP     ${WIFISAVED.details.ip}")
+          (label :class "wifi-detail-line" :halign "start" :text "GW     ${WIFISAVED.details.gw}")
+          (label :class "wifi-detail-line" :halign "start" :text "DNS    ${WIFISAVED.details.dns}"))))
     (box :orientation "h" :space-evenly true :spacing 10
-      (button :class "wifi-advanced" :onclick "eww close wifi && alacritty -e nmtui &" "Advanced (nmtui)")
+      (button :class "wifi-advanced"
+              :onclick "eww close wifi && nyxus-settings &"
+              :tooltip "VPN & deeper network config in NYXUS Settings"
+        "VPN & More")
       (button :class "wifi-close" :onclick "eww close wifi" "Close (Esc)"))))
 
 ;; ═════════════════════════════════════════════════════════════════════
@@ -732,6 +792,10 @@
     (button :class "bt-act" :visible {!dev.paired}
             :onclick "~/.config/eww/scripts/bt-action.sh pair ${dev.mac} &"
             :tooltip "Pair" "Pair")
+    (button :class {dev.trusted ? "bt-act bt-trusted" : "bt-act"} :visible {dev.paired}
+            :onclick "~/.config/eww/scripts/bt-action.sh trust-toggle ${dev.mac} &"
+            :tooltip "${dev.trusted ? 'Trusted — click to untrust' : 'Trust (auto-reconnect)'}"
+      "${dev.trusted ? '✓Trust' : 'Trust'}")
     (button :class "bt-forget" :visible {dev.paired}
             :onclick "~/.config/eww/scripts/bt-action.sh unpair ${dev.mac} &"
             :tooltip "Forget" "✕")))
@@ -760,7 +824,10 @@
         (for dev in {BTLIST.devices}
           (bt_row :dev {dev}))))
     (box :orientation "h" :space-evenly true :spacing 10
-      (button :class "bt-advanced" :onclick "eww close bluetooth && blueman-manager &" "Advanced")
+      (button :class "bt-advanced"
+              :onclick "eww close bluetooth && nyxus-settings &"
+              :tooltip "Deeper bluetooth config in NYXUS Settings"
+        "More")
       (button :class "bt-close" :onclick "eww close bluetooth" "Close (Esc)"))))
 
 ;; ═════════════════════════════════════════════════════════════════════
@@ -793,17 +860,46 @@
             :onclick "~/.config/eww/scripts/audio-action.sh toggle-app-mute ${a.id} &"
       "${a.mute ? '✕' : '🔊'}")))
 
+;; Input-device row — default-source pick + volume + mute, in-panel via
+;; pactl/wpctl (no pavucontrol escape hatch; rev 2026-07-09).
+(defwidget mix_source_row [s]
+  (box :class {s.default ? "mix-row mix-row-default" : "mix-row"}
+       :orientation "h" :space-evenly false :spacing 10
+    (button :class "mix-pick"
+            :onclick "~/.config/eww/scripts/audio-action.sh set-default-source ${s.id} &"
+            :tooltip "Make default input" "${s.default ? '◉' : '○'}")
+    (label :class "mix-name" :hexpand true :halign "start" :limit-width 28
+           :text "${s.description}")
+    (scale :class "mix-scale" :value "${s.vol}" :min 0 :max 150 :hexpand true
+           :onchange "~/.config/eww/scripts/audio-action.sh set-source-vol ${s.id} {} &")
+    (label :class "mix-pct" :text "${s.vol}%")
+    (button :class "mix-mute"
+            :onclick "~/.config/eww/scripts/audio-action.sh toggle-source-mute ${s.id} &"
+      "${s.mute ? '✕' : ''}")))
+
 (defwidget mixer_layout []
   (box :class "mix-root" :orientation "v" :space-evenly false :spacing 14
-    (label :class "mix-title" :text "AUDIO MIXER")
+    (label :class "mix-title" :text "󰕾 AUDIO MIXER")
 
     (label :class "mix-section" :text "OUTPUT DEVICES" :halign "start")
+    (scroll :class "mix-scroll" :vscroll true :hscroll false :height 150
+      (box :orientation "v" :space-evenly false :spacing 4
+        (for s in {AUDIOMIX.sinks}
+          (mix_sink_row :s {s}))))
+
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "mix-section" :text "INPUT DEVICES" :halign "start" :hexpand true)
+      (button :class {MIX_SHOW_INPUTS ? "panel-tab panel-tab-on" : "panel-tab"}
+              :onclick "eww update MIX_SHOW_INPUTS=${MIX_SHOW_INPUTS ? 'false' : 'true'}"
+              :tooltip "Show/hide input devices"
+        "${MIX_SHOW_INPUTS ? 'HIDE' : 'SHOW'}"))
     (box :orientation "v" :space-evenly false :spacing 4
-      (for s in {AUDIOMIX.sinks}
-        (mix_sink_row :s {s})))
+         :visible {MIX_SHOW_INPUTS}
+      (for s in {AUDIOMIX.sources}
+        (mix_source_row :s {s})))
 
     (label :class "mix-section" :text "PER-APP" :halign "start")
-    (scroll :class "mix-scroll" :vscroll true :hscroll false :height 200
+    (scroll :class "mix-scroll" :vscroll true :hscroll false :height 150
       (box :orientation "v" :space-evenly false :spacing 4
         ;; DESIGN_CONTRACT §9 — empty state.
         (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
@@ -816,7 +912,10 @@
           (mix_app_row :a {a}))))
 
     (box :orientation "h" :space-evenly true :spacing 10
-      (button :class "mix-advanced" :onclick "eww close mixer && pavucontrol &" "Advanced (pavucontrol)")
+      (button :class "mix-advanced"
+              :onclick "eww close mixer && nyxus-settings &"
+              :tooltip "Deeper audio config in NYXUS Settings"
+        "More")
       (button :class "mix-close" :onclick "eww close mixer" "Close (Esc)"))))
 
 ;; ═════════════════════════════════════════════════════════════════════
@@ -886,6 +985,47 @@
     (button :class "notif-close" :onclick "eww close notifications" "Close (Esc)")))
 
 ;; ═════════════════════════════════════════════════════════════════════
+;; UPDATE CENTER — themed pending-updates surface (rev 2026-07-09).
+;; Replaces the old raw `alacritty -e sudo pacman -Syu` bar/dashboard
+;; click target. The terminal only appears for the interactive sudo
+;; sync itself, launched explicitly from here.
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget upd_row [p]
+  (box :class "upd-row" :orientation "h" :space-evenly false :spacing 10
+    (label :class "upd-name"  :hexpand true :halign "start" :limit-width 26 :text "${p.name}")
+    (label :class "upd-old"   :text "${p.old}")
+    (label :class "upd-arrow" :text "")
+    (label :class "upd-new"   :text "${p.new}")))
+
+(defwidget updates_layout []
+  (box :class "upd-root" :orientation "v" :space-evenly false :spacing 12
+    (box :class "upd-header" :orientation "h" :space-evenly false :spacing 10
+      (label :class "upd-title" :text "󰚰 UPDATES · ${UPDATESLIST.count}" :hexpand true :halign "start")
+      (button :class "upd-refresh"
+              :onclick "rm -f ~/.cache/nyxus-updates.json && eww update UPDATESLIST=\"$(~/.config/eww/scripts/updates-list.sh)\" && eww update UPDATES=\"$(~/.config/eww/scripts/updates.sh)\" &"
+              :tooltip "Re-check now" "↻"))
+    (label :class "upd-sub" :halign "start"
+           :text "checked ${UPDATESLIST.checked} · via ${UPDATESLIST.source}")
+    (scroll :class "upd-scroll" :hscroll false :vscroll true :height 380
+      (box :orientation "v" :space-evenly false :spacing 4
+        (box :class "empty-state" :orientation "v" :space-evenly false :spacing 6
+             :valign "center" :halign "center"
+             :visible {UPDATESLIST.count == 0}
+          (label :class "empty-glyph" :text "✓")
+          (label :class "empty-title" :text "System is up to date")
+          (label :class "empty-hint"  :text "Nothing pending. Check again any time."))
+        (for p in {UPDATESLIST.packages}
+          (upd_row :p {p}))))
+    (box :orientation "h" :space-evenly true :spacing 10
+      (button :class "upd-sync"
+              :onclick "eww close updates && alacritty -e sh -c 'sudo pacman -Syu; rm -f ~/.cache/nyxus-updates.json; echo; read -p \"done — press enter\"' &"
+              :tooltip "Run the full system upgrade (interactive sudo)"
+              :visible {UPDATESLIST.count > 0}
+        "Sync Now")
+      (button :class "upd-close" :onclick "eww close updates" "Close (Esc)"))))
+
+;; ═════════════════════════════════════════════════════════════════════
 ;; SPRINT 1 · WINDOWS
 ;; ═════════════════════════════════════════════════════════════════════
 
@@ -916,7 +1056,7 @@
 
 (defwindow mixer
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-mixer"
-  :geometry (geometry :x "16" :y "78" :width "460px" :height "480px" :anchor "bottom right")
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "560px" :anchor "bottom right")
   (mixer_layout))
 
 (defwindow calendar
@@ -933,6 +1073,11 @@
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-brightness"
   :geometry (geometry :x "16" :y "78" :width "420px" :height "200px" :anchor "bottom right")
   (brightness_flyout_layout))
+
+(defwindow updates
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-updates"
+  :geometry (geometry :x "16" :y "78" :width "460px" :height "560px" :anchor "bottom right")
+  (updates_layout))
 
 ; ── NYXUS Dock module ─────────────────────────────────────────────────
 (include "dock.yuck")

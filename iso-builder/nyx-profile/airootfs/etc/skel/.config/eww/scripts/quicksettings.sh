@@ -31,9 +31,11 @@ if command -v dunstctl >/dev/null 2>&1; then
   [[ "$(dunstctl is-paused 2>/dev/null)" == "true" ]] && dnd="on"
 fi
 
-# Night Light (gammastep / wlsunset)
+# Night Light (gammastep / wlsunset / nyxus-shader night filter)
 nightlight="off"
 if pgrep -x gammastep >/dev/null 2>&1 || pgrep -x wlsunset >/dev/null 2>&1; then
+  nightlight="on"
+elif [[ "$(cat "$HOME/.config/nyxus/shader.state" 2>/dev/null)" == "night" ]]; then
   nightlight="on"
 fi
 

@@ -86,11 +86,14 @@
         (label :class "dock-badge stack" :text "${stack.count > 99 ? "99+" : stack.count}" :visible {stack.count > 0} :halign "end" :valign "start")))))
 
 ; ── trash ─────────────────────────────────────────────────────────────
+; NOTE: `trash` may be JSON null while the daemon is starting — every
+; field access below is null-safe (?.) so the log doesn't fill with
+; "Unable to index into value null" errors (rev 2026-07-09).
 (defwidget dock-trash [trash index size hover-index mag-max]
   (eventbox
     :class "dock-eventbox trash"
     :cursor "pointer"
-    :tooltip "${trash.label}"
+    :tooltip "${trash?.label ?: 'Trash'}"
     :onhover  "eww update DOCK_HOVER=${index}"
     :onhoverlost "eww update DOCK_HOVER=-1"
     :onclick      "bash ~/.config/eww/scripts/dock-action.sh trash open"
@@ -98,10 +101,10 @@
     (box :class "dock-tile trash"
          :style "min-width:${hover-index == index ? round(size * mag-max,0) : size}px; min-height:${hover-index == index ? round(size * mag-max,0) : size}px;"
       (overlay
-        (image :path "${trash.icon_path != "" && trash.icon_path != "null" ? trash.icon_path : ""}"
+        (image :path "${(trash?.icon_path ?: '') != "" && trash?.icon_path != "null" ? trash?.icon_path : ""}"
                :image-width "${hover-index == index ? round(size * mag-max * 0.78,0) : round(size * 0.78,0)}"
                :image-height "${hover-index == index ? round(size * mag-max * 0.78,0) : round(size * 0.78,0)}")
-        (label :class "dock-badge trash" :text "${trash.count > 99 ? "99+" : trash.count}" :visible {trash.count > 0} :halign "end" :valign "start")))))
+        (label :class "dock-badge trash" :text "${(trash?.count ?: 0) > 99 ? "99+" : (trash?.count ?: 0)}" :visible {(trash?.count ?: 0) > 0} :halign "end" :valign "start")))))
 
 ; ── main row ──────────────────────────────────────────────────────────
 (defwidget dock-row []

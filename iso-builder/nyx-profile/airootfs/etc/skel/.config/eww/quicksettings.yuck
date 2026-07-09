@@ -35,29 +35,29 @@
     (label :class "qs-card-title" :text "QUICK SETTINGS")
 
     (box :class "qs-grid" :orientation "h" :space-evenly true :spacing 8
-      (qs-tile-toggle :icon "📶" :label "Wi-Fi"
+      (qs-tile-toggle :icon "󰖩" :label "Wi-Fi"
                        :on   {qs-state.tiles.wifi.on ?: false}
                        :action "nyxus-qs toggle wifi")
-      (qs-tile-toggle :icon "🔵" :label "Bluetooth"
+      (qs-tile-toggle :icon "󰂯" :label "Bluetooth"
                        :on   {qs-state.tiles.bluetooth.on ?: false}
                        :action "nyxus-qs toggle bluetooth")
-      (qs-tile-toggle :icon "🌙" :label "Do Not Disturb"
+      (qs-tile-toggle :icon "󰂛" :label "Do Not Disturb"
                        :on   {qs-state.tiles.dnd.on ?: false}
                        :action "nyxus-qs toggle dnd")
-      (qs-tile-toggle :icon "🌅" :label "Night Light"
+      (qs-tile-toggle :icon "󰖔" :label "Night Light"
                        :on   {qs-state.tiles.nightlight.on ?: false}
                        :action "nyxus-qs toggle nightlight"))
 
-    (qs-slider :icon "🔊" :label "Volume"
+    (qs-slider :icon "󰕾" :label "Volume"
                :value {qs-state.tiles.volume.pct ?: 0}
                :action "nyxus-qs set volume {}")
-    (qs-slider :icon "🔆" :label "Brightness"
+    (qs-slider :icon "󰃠" :label "Brightness"
                :value {qs-state.tiles.brightness.pct ?: 0}
                :action "nyxus-qs set brightness {}")
 
     (box :class "qs-battery" :orientation "h" :space-evenly false :spacing 6
          :visible { qs-state.tiles.battery.present ?: false }
-      (label :class "qs-icon"  :text "🔋")
+      (label :class "qs-icon"  :text "󰁹")
       (label :class "qs-label" :text "Battery")
       (label :class "qs-value"
              :text "${qs-state.tiles.battery.pct ?: 0}% · ${qs-state.tiles.battery.status ?: ''}"))))

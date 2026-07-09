@@ -37,6 +37,9 @@ case "$cmd" in
   toggle-sink-mute)
     if command -v pactl >/dev/null 2>&1; then pactl set-sink-mute "$arg1" toggle
     else wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle 2>/dev/null; fi ;;
+  toggle-source-mute)
+    if command -v pactl >/dev/null 2>&1; then pactl set-source-mute "$arg1" toggle
+    else wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle 2>/dev/null; fi ;;
   toggle-app-mute)
     if command -v pactl >/dev/null 2>&1; then pactl set-sink-input-mute "$arg1" toggle
     else wpctl set-mute "$arg1" toggle 2>/dev/null; fi ;;

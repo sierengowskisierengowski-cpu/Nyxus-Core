@@ -6,15 +6,18 @@
 
 (defvar hotkey-search "")
 
-(defpoll hotkey-data
-  :interval "30s"
-  :initial "{}"
-  `nyxus-hotkey list --json 2>/dev/null || echo '{}'`)
+;; rendered widget-literal body (labels per hotkey line), pushed live by
+;; hotkey-cheatsheet.sh `set <query>` when the user types in the search
+;; box, and refreshed on a slow poll otherwise.
+(defpoll HK_CONTENT
+  :interval "60s"
+  :initial '(label :class "hk-line" :xalign 0 :text "loading hotkeys…")'
+  `~/.config/eww/scripts/hotkey-cheatsheet.sh`)
 
 (defpoll hotkey-conflicts
   :interval "60s"
   :initial "0"
-  `nyxus-hotkey conflicts 2>/dev/null | grep -c '^⚠' || echo 0`)
+  `nyxus-hotkey conflicts 2>/dev/null | grep -c '^⚠' || true`)
 
 (defwidget hotkey-row [combo desc category]
   (box :class "hk-row" :orientation "h" :space-evenly false :spacing 12
@@ -31,20 +34,20 @@
              :visible {hotkey-conflicts != "0"}
              :text "${hotkey-conflicts} conflict(s)"))
     (input :class "hk-search"
-           :onchange "echo {} | xargs -I% echo %"
+           :onchange "~/.config/eww/scripts/hotkey-cheatsheet.sh set {} &"
            :value hotkey-search
-           :timeout "200ms")
+           :timeout "1000ms")
     (scroll :class "hk-scroll" :hscroll false :vscroll true :height 520
-      (literal :content `eww update hotkey-search="${hotkey-search}"; nyxus-hotkey list 2>/dev/null | sed 's/^/(label :class "hk-line" :xalign 0 :text "/' | sed 's/$/")/' | tr '\n' ' '`))
+      (literal :content HK_CONTENT))
     (box :class "hk-footer" :orientation "h" :space-evenly true :spacing 8
       (button :class "hk-btn"
-              :onclick "nyxus-hotkey reload && eww update hotkey-data=$(nyxus-hotkey list --json 2>/dev/null || echo '{}')"
+              :onclick "nyxus-hotkey reload && eww update HK_CONTENT=\"$(~/.config/eww/scripts/hotkey-cheatsheet.sh)\" &"
               "↻  Reload")
       (button :class "hk-btn"
-              :onclick "nyxus-hotkey conflicts | wl-copy && notify-send 'Conflicts copied'"
+              :onclick "nyxus-hotkey conflicts | wl-copy && notify-send 'Conflicts copied' &"
               "⚠  Conflicts")
       (button :class "hk-btn"
-              :onclick "nyxus settings hotkeys &"
+              :onclick "eww close hotkey-cheatsheet && nyxus-settings &"
               "⚙  Edit")
       (button :class "hk-btn hk-btn-close"
               :onclick "eww close hotkey-cheatsheet"
@@ -74,7 +77,7 @@
               :onclick "RES=$(nyxus-hotkey record 2>/dev/null); eww update recorder-text=\"$RES\""
               "● Record")
       (button :class "hk-btn"
-              :onclick "wl-copy < <(echo \"$recorder-text\"); notify-send 'Combo copied'"
+              :onclick "printf '%s' '${recorder-text}' | wl-copy && notify-send 'Combo copied' &"
               "Copy")
       (button :class "hk-btn hk-btn-close"
               :onclick "eww close hotkey-recorder"
