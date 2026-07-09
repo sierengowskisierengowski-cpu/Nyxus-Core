@@ -1,29 +1,20 @@
 #!/usr/bin/env bash
-# NYXUS Settings — standalone launcher for the unified settings window.
-# Note: we import _install_css from main.py so the standalone window gets
-# the same DARK MIRROR theme (sidebar nav, hero header, Inter font, etc.)
-# that it would inherit if launched from the Panel.
-exec python3 -c '
-import sys
-sys.path.insert(0, "/home/cosmic/.nyxus/nyxus-panel")
-import gi
-gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk
-from settings import SettingsWindow, load_config
-from main import _install_css
-
-def _main():
-    app = Gtk.Application(application_id="io.nyxus.settings")
-    def _on_activate(a):
-        # CSS must be installed AFTER a Gdk display exists (i.e. after
-        # the GtkApplication is activated) so the StyleContext call has
-        # a valid display target.
-        _install_css(load_config())
-        win = SettingsWindow()
-        win.set_application(a)
-        win.present()
-    app.connect("activate", _on_activate)
-    app.run(sys.argv)
-
-_main()
-' "$@"
+# NYXUS Settings — canonical launcher for the main control center.
+#
+# Launches the unified NYXUS Settings app (~/.nyxus/nyxus_settings.py,
+# GTK4 + libadwaita, DARK MIRROR + live accent). This is THE settings
+# surface: the eww dashboard/quicksettings buttons, the dock, and any
+# `nyxus settings` dispatch all land here.
+#
+# The old target (nyxus-panel/settings.py SettingsWindow) is the Panel's
+# own preferences window — it is NOT a system settings surface and is
+# reachable from inside the Panel app only.
+#
+# If a window is already open, focus it instead of spawning a twin.
+if command -v hyprctl >/dev/null 2>&1; then
+  if hyprctl clients -j 2>/dev/null | grep -q '"io.nyxus.settings"'; then
+    hyprctl dispatch focuswindow 'class:io.nyxus.settings' >/dev/null 2>&1
+    exit 0
+  fi
+fi
+exec python3 "$HOME/.nyxus/nyxus_settings.py" "$@"

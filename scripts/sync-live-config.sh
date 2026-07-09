@@ -48,6 +48,28 @@ for q in qt5ct qt6ct; do
   [[ -f "$f" ]] && sed -i '/^\[SettingsWindow\]/,/^\[/{/^\[SettingsWindow\]/d;/^\[/!d}' "$f"
 done
 
+# ── legacy ~/.nyxus GTK app tree (settings control center, launcher,
+#    screenshot, doctor, palette, panel/home/start apps). These ship in
+#    skel so every install gets the canonical NYXUS Settings app that
+#    the `nyxus-settings` wrapper launches. Only code ships — state
+#    files (hw_profile.json, backgrounds cache, shield state) stay
+#    per-machine. ──
+mkdir -p "${SKEL}/.nyxus"
+for f in "${HOME}/.nyxus/"*.py "${HOME}/.nyxus/nyxus-palette.css"; do
+  [[ -f "$f" ]] || continue
+  install -m 644 "$f" "${SKEL}/.nyxus/$(basename "$f")"
+done
+# executables keep their bit (they're launched directly from binds)
+chmod 755 "${SKEL}/.nyxus/"*.py 2>/dev/null || true
+echo "synced: .nyxus/*.py + nyxus-palette.css"
+for d in nyxus-panel nyxus-home nyxus-start; do
+  SRC="${HOME}/.nyxus/${d}"
+  [[ -d "${SRC}" ]] || { echo "skip (missing): .nyxus/${d}"; continue; }
+  mkdir -p "${SKEL}/.nyxus/${d}"
+  "${RSYNC[@]}" "${SRC}/" "${SKEL}/.nyxus/${d}/"
+  echo "synced: .nyxus/${d}"
+done
+
 # ── user + system scripts ────────────────────────────────────────────
 mkdir -p "${ROOTFS}/usr/local/bin"
 for f in "${HOME}/.local/bin/"nyxus-*; do
