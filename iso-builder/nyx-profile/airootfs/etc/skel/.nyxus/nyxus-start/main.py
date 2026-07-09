@@ -136,14 +136,28 @@ BG_DIR    = Path(os.path.expanduser("~/.cache/nyxus-start"))
 BG_DIR.mkdir(parents=True, exist_ok=True)
 BG_PATH   = BG_DIR / f"bg-matte-{PANEL_W}x{PANEL_H}.png"
 
+# HUD neon family — accent.json-live via the shared palette helpers.
+try:
+    from nyxus_palette import (HUD_PALETTE, hud_css_bundle,
+                               install_hud_css, neon_flicker_css)
+except Exception:
+    HUD_PALETTE = {"pink": "#ff3cac", "cyan": "#2bd2ff", "gold": "#ffb84d",
+                   "purple": "#784bff", "green": "#6dffcf",
+                   "red": "#ff4d6b", "mono": "#e8edf5"}
+    def hud_css_bundle(sel="window", hues=()):  # noqa: E704
+        return ""
+    def neon_flicker_css():  # noqa: E704
+        return ""
+    install_hud_css = None
+
 C_TEXT    = "#e8edf5"
 C_DIM     = "#c8ccd6"
-C_PINK    = "#e8edf5"
-C_PURPLE  = "#e8edf5"
-C_CYAN    = "#c8ccd6"
-C_GOLD    = "#e8edf5"
-C_GREEN   = "#c8ccd6"
-C_RED     = "#c8ccd6"
+C_PINK    = HUD_PALETTE["pink"]
+C_PURPLE  = HUD_PALETTE["purple"]
+C_CYAN    = HUD_PALETTE["cyan"]
+C_GOLD    = HUD_PALETTE["gold"]
+C_GREEN   = HUD_PALETTE["green"]
+C_RED     = HUD_PALETTE["red"]
 
 
 # ──────────────────────────────────────────────── PID toggle
@@ -215,77 +229,85 @@ def _install_css(cfg: Dict[str, Any]) -> None:
         color:       {C_TEXT};
     }}
 
-    /* ── GodsApp aesthetic: pure-black plates, chalky white sketched borders,
-       big handwritten Inter Display headings, neon kept only as a faint accent.
-       Background graffiti collage is preserved (the .nyxus-start image). */
+    /* ── HOME HUD language: void background, near-black cards with neon
+       dashed hairlines + solid accent top rules, spray-paint brand,
+       mono small-caps labels (see nyxus-home/style.py + nyxus_palette). */
     .nyxus-start {{
         background-image:    url("file://{bg}");
         background-size:     cover;
         background-position: center;
-        background-color:    #0f1420;
+        background-color:    rgba(5, 1, 13, 0.97);
     }}
 
-    /* every floating section sits on a near-black plate with a chalky white
-       hand-drawn border (mimics the GodsApp pencil-sketch frames). */
+    /* every floating section is a HUD card in the cyan family */
     .nyxus-section {{
-        background-color: #000000;
-        border:           1.5px solid rgba(255, 255, 255, 0.65);
+        background-color: rgba(7, 5, 14, 0.93);
+        border:           1px dashed alpha({C_CYAN}, 0.45);
+        border-top:       2px solid {C_CYAN};
         border-radius:    8px;
         margin:           4px 8px;
         padding:          8px 10px;
-        box-shadow:       inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+        box-shadow:       0 0 14px alpha({C_CYAN}, 0.18),
+                          inset 0 0 24px rgba(0, 0, 0, 0.18);
+        transition:       box-shadow 320ms ease, border-color 320ms ease;
+    }}
+    .nyxus-section:hover {{
+        border-color:     alpha({C_CYAN}, 0.80);
+        box-shadow:       0 0 22px alpha({C_CYAN}, 0.30),
+                          inset 0 0 24px rgba(0, 0, 0, 0.18);
     }}
 
     .nyxus-section-title {{
-        font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
-        font-size:      14px;
-        font-style:     italic;
-        font-weight:    normal;
-        color:          rgba(255, 255, 255, 0.78);
-        text-shadow:    none;
+        font-family:    "JetBrains Mono", monospace;
+        font-size:      10px;
+        font-weight:    bold;
+        color:          {C_CYAN};
+        text-shadow:    0 0 8px alpha({C_CYAN}, 0.45);
         margin:         0 4px 6px 4px;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.26em;
     }}
 
     .nyxus-header {{
-        background-color: #000000;
-        border-bottom:    1.5px solid rgba(255, 255, 255, 0.70);
+        background-color: rgba(0, 0, 0, 0.55);
+        border-bottom:    1px solid alpha({C_PINK}, 0.35);
         padding:          10px 14px;
     }}
     .nyxus-brand {{
-        font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
-        font-size:      32px;
-        font-weight:    bold;
-        color:          #ffffff;
-        text-shadow:    0 0 1px rgba(255, 255, 255, 0.40);
-        letter-spacing: 1px;
+        font-family:    "Permanent Marker", cursive;
+        font-size:      30px;
+        color:          {C_PINK};
+        text-shadow:    0 0 10px alpha({C_PINK}, 0.70),
+                        0 0 26px alpha({C_PINK}, 0.40);
+        letter-spacing: 0.03em;
     }}
     .nyxus-username {{
-        font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
-        font-size:   18px;
+        font-family: "Caveat", cursive;
+        font-size:   22px;
         color:       #ffffff;
-        text-shadow: none;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
     }}
     .nyxus-time {{
         font-family: "JetBrains Mono Nerd Font", monospace;
-        font-size:   12px;
+        font-size:   11px;
         color:       rgba(255, 255, 255, 0.60);
-        text-shadow: none;
+        letter-spacing: 0.14em;
     }}
 
     entry.nyxus-search {{
-        background-color: #000000;
-        border:           1.5px solid rgba(255, 255, 255, 0.60);
-        border-radius:    6px;
+        background-color: rgba(0, 0, 0, 0.45);
+        border:           1px dashed alpha({C_PINK}, 0.34);
+        border-radius:    3px;
         color:            #ffffff;
+        caret-color:      {C_PINK};
         font-family:      "JetBrains Mono Nerd Font", monospace;
         font-size:        13px;
         padding:          5px 12px;
         min-height:       28px;
     }}
     entry.nyxus-search:focus {{
-        border-color: rgba(8, 12, 20, 0.85);
-        box-shadow:   0 0 6px rgba(8, 12, 20, 0.45);
+        border-color: {C_PINK};
+        border-style: solid;
+        box-shadow:   0 0 12px alpha({C_PINK}, 0.40);
     }}
 
     /* generic item row (recent / search results / all apps) — looks like the
@@ -293,33 +315,37 @@ def _install_css(cfg: Dict[str, Any]) -> None:
     button.nyxus-row {{
         background:    transparent;
         border:        none;
-        border-radius: 4px;
+        border-left:   3px solid transparent;
+        border-radius: 3px;
         padding:       5px 8px;
         color:         #ffffff;
     }}
     button.nyxus-row:hover {{
-        background-color: rgba(255, 255, 255, 0.08);
-        text-shadow:      none;
+        background-color: alpha({C_CYAN}, 0.08);
+        border-left:      3px solid {C_CYAN};
     }}
     .nyxus-row-title {{ font-size: 15px; color: #ffffff; }}
-    .nyxus-row-sub   {{ font-size: 11px; color: rgba(255,255,255,0.55);
+    .nyxus-row-sub   {{ font-size: 10px; color: {C_DIM};
+                        letter-spacing: 0.06em;
                         font-family: "JetBrains Mono Nerd Font", monospace; }}
 
-    /* pinned grid tiles — chalky white frame, dark fill, soft hover. */
+    /* pinned grid tiles — mini HUD cards in the purple family. */
     button.nyxus-tile {{
-        background-color: #0a0a0e;
-        border:           1.5px solid rgba(255, 255, 255, 0.55);
-        border-radius:    6px;
+        background-color: rgba(0, 0, 0, 0.45);
+        border:           1px dashed alpha({C_PURPLE}, 0.40);
+        border-top:       2px solid alpha({C_PURPLE}, 0.75);
+        border-radius:    5px;
         padding:          4px 2px;
         margin:           3px;
         color:            #ffffff;
         min-width:        62px;
         min-height:       62px;
+        transition:       box-shadow 320ms ease, border-color 320ms ease;
     }}
     button.nyxus-tile:hover {{
-        border-color:     #ffffff;
-        background-color: rgba(255, 255, 255, 0.10);
-        box-shadow:       0 0 8px rgba(8, 12, 20, 0.40);
+        border-color:     {C_PURPLE};
+        background-color: alpha({C_PURPLE}, 0.10);
+        box-shadow:       0 0 16px alpha({C_PURPLE}, 0.40);
     }}
     .nyxus-tile-name {{
         font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
@@ -327,27 +353,29 @@ def _install_css(cfg: Dict[str, Any]) -> None:
         color:       #ffffff;
     }}
 
-    /* profile button — chalky frame, hover gives a subtle violet glow. */
+    /* profile button — neon HUD chip in the pink family. */
     button.nyxus-profile-btn {{
-        background:    #14141a;
-        border:        1.5px solid rgba(255, 255, 255, 0.65);
+        background:    rgba(0, 0, 0, 0.45);
+        border:        1px dashed alpha({C_PINK}, 0.40);
         border-radius: 8px;
         padding:       4px 8px;
         min-width:     0;
+        transition:    box-shadow 320ms ease, border-color 320ms ease;
     }}
     button.nyxus-profile-btn:hover {{
-        border-color:     #ffffff;
-        background-color: rgba(255, 255, 255, 0.10);
-        box-shadow:       0 0 8px rgba(8, 12, 20, 0.40);
+        border-color:     {C_PINK};
+        background-color: alpha({C_PINK}, 0.10);
+        box-shadow:       0 0 14px alpha({C_PINK}, 0.40);
     }}
     .nyxus-avatar-frame {{
         background-color: #000000;
-        border:           1.5px solid rgba(255, 255, 255, 0.85);
+        border:           1.5px solid {C_PINK};
         border-radius:    50%;
         min-width:        38px;
         min-height:       38px;
         padding:          0;
         background-clip:  padding-box;
+        box-shadow:       0 0 12px alpha({C_PINK}, 0.45);
     }}
     .nyxus-avatar-frame > * {{
         border-radius: 50%;
@@ -372,35 +400,36 @@ def _install_css(cfg: Dict[str, Any]) -> None:
         color:       rgba(255, 255, 255, 0.55);
     }}
 
-    /* notepad sidebar — chalky divider, monospace status, handwritten body. */
+    /* notepad sidebar — HUD card in the gold family, script body. */
     .nyxus-notepad-sidebar {{
-        background-color: rgba(0, 0, 0, 0.88);
-        border-left:      1.5px solid rgba(255, 255, 255, 0.65);
+        background-color: rgba(7, 5, 14, 0.93);
+        border-left:      1px dashed alpha({C_GOLD}, 0.45);
         padding:          12px 10px 10px 10px;
     }}
     .nyxus-notepad-title {{
-        font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
-        font-size:   24px;
-        font-weight: bold;
-        color:       #ffffff;
-        text-shadow: none;
+        font-family: "Permanent Marker", cursive;
+        font-size:   22px;
+        color:       {C_GOLD};
+        text-shadow: 0 0 10px alpha({C_GOLD}, 0.70),
+                     0 0 24px alpha({C_GOLD}, 0.35);
     }}
     .nyxus-notepad-saved {{
         font-family: "JetBrains Mono Nerd Font", monospace;
-        font-size:   10px;
-        color:       rgba(255, 255, 255, 0.55);
+        font-size:   9px;
+        color:       alpha({C_GOLD}, 0.55);
+        letter-spacing: 0.16em;
     }}
     textview.nyxus-notepad,
     textview.nyxus-notepad text {{
-        background-color: #000000;
+        background-color: rgba(0, 0, 0, 0.55);
         color:            #ffffff;
-        font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
-        font-size:        16px;
+        font-family:      "Caveat", cursive;
+        font-size:        20px;
         padding:          8px;
     }}
     .nyxus-notepad-frame {{
-        border:        1.5px solid rgba(255, 255, 255, 0.55);
-        border-radius: 6px;
+        border:        1px dashed alpha({C_GOLD}, 0.34);
+        border-radius: 4px;
     }}
 
     /* status row — small monospace line, like GodsApp's "ready" footer. */
@@ -409,43 +438,51 @@ def _install_css(cfg: Dict[str, Any]) -> None:
     .nyxus-status-ok  {{ color: rgba(255, 255, 255, 0.85); text-shadow: none; }}
     .nyxus-status-bad {{ color: {C_RED};   text-shadow: 0 0 4px rgba(8, 12, 20, 0.45); }}
 
-    /* power buttons — same chalky frame, subtle gold/red hover only. */
+    /* power buttons — neon HUD pills; danger goes red. */
     button.nyxus-power {{
         font-family:   "JetBrains Mono Nerd Font", monospace;
         font-size:     18px;
-        background:    #14141a;
-        border:        1.5px solid rgba(255, 255, 255, 0.55);
-        border-radius: 6px;
-        color:         #ffffff;
+        background:    transparent;
+        border:        1px solid alpha({C_GOLD}, 0.40);
+        border-radius: 3px;
+        color:         {C_GOLD};
         padding:       6px 12px;
         margin:        0 3px;
+        text-shadow:   0 0 8px alpha({C_GOLD}, 0.40);
     }}
     button.nyxus-power:hover {{
-        border-color: #ffffff;
-        background-color: rgba(255, 255, 255, 0.08);
+        border-color:     {C_GOLD};
+        background-color: alpha({C_GOLD}, 0.12);
+        box-shadow:       0 0 14px alpha({C_GOLD}, 0.40);
+    }}
+    button.nyxus-power-danger {{
+        border-color: alpha({C_RED}, 0.40);
+        color:        {C_RED};
+        text-shadow:  0 0 8px alpha({C_RED}, 0.40);
     }}
     button.nyxus-power-danger:hover {{
-        border-color: {C_RED};
-        color:        {C_RED};
-        text-shadow:  0 0 6px rgba(8, 12, 20, 0.45);
+        border-color:     {C_RED};
+        background-color: alpha({C_RED}, 0.12);
+        box-shadow:       0 0 14px alpha({C_RED}, 0.40);
     }}
 
-    /* category chip — chalky pill (matches GodsApp's "Full sweep" buttons). */
+    /* category chip — neon mono pill. */
     button.nyxus-chip {{
-        background:    rgba(0, 0, 0, 0.65);
-        border:        1.5px solid rgba(255, 255, 255, 0.55);
-        border-radius: 6px;
-        color:         #ffffff;
-        font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
-        font-size:     14px;
+        background:    rgba(0, 0, 0, 0.45);
+        border:        1px solid alpha({C_CYAN}, 0.34);
+        border-radius: 999px;
+        color:         {C_CYAN};
+        font-family:   "JetBrains Mono", monospace;
+        font-size:     11px;
+        letter-spacing: 0.12em;
         padding:       3px 12px;
         margin:        0 3px;
     }}
     button.nyxus-chip.active,
     button.nyxus-chip:hover {{
-        border-color:     #ffffff;
-        background-color: rgba(255, 255, 255, 0.10);
-        box-shadow:       0 0 6px rgba(8, 12, 20, 0.40);
+        border-color:     {C_CYAN};
+        background-color: alpha({C_CYAN}, 0.13);
+        box-shadow:       0 0 10px alpha({C_CYAN}, 0.40);
     }}
 
     /* small ghost button — dim white, lights up on hover. */
@@ -528,10 +565,11 @@ def _install_css(cfg: Dict[str, Any]) -> None:
         background:  rgba(255, 255, 255, 0.08);
     }}
     .nyxus-store-title {{
-        font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
-        font-size:   24px; font-weight: bold;
-        color:       {C_PINK};
-        text-shadow: 0 0 6px rgba(255, 255, 255, 0.55);
+        font-family: "Permanent Marker", cursive;
+        font-size:   24px;
+        color:       {C_GOLD};
+        text-shadow: 0 0 10px alpha({C_GOLD}, 0.70),
+                     0 0 24px alpha({C_GOLD}, 0.35);
     }}
     .nyxus-store-sub {{
         font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
@@ -592,13 +630,18 @@ def _install_css(cfg: Dict[str, Any]) -> None:
         text-shadow: 0 0 6px rgba(255, 255, 255, 0.65);
     }}
     """
-    provider = Gtk.CssProvider()
-    provider.load_from_data(css.encode("utf-8"))
-    display = Gdk.Display.get_default()
-    if display is not None:
-        Gtk.StyleContext.add_provider_for_display(
-            display, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
+    css += neon_flicker_css()
+    # PRIORITY_USER + 1 so the HUD cards outrank the universal
+    # nyxus_chrome glass layer (same trick as nyxus-home/style.py).
+    if install_hud_css is None or not install_hud_css(css):
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css.encode("utf-8"))
+        display = Gdk.Display.get_default()
+        if display is not None:
+            Gtk.StyleContext.add_provider_for_display(
+                display, provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_USER + 1
+            )
 
 
 # ──────────────────────────────────────────────── helpers

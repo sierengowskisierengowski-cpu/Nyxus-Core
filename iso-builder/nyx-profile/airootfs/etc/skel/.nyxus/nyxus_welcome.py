@@ -149,13 +149,13 @@ window.welcome {
 }
 
 .welcome-root {
-  /* Pure DARK MIRROR — monochrome ambient field. White wash top-left,
-   * faint cool grey wash bottom-right. No neon, no gradients of saturation. */
+  /* HUD void with faint neon spray washes — pink breathes top-left,
+   * cyan bottom-right (graffiti energy, kept ambient). */
   background: radial-gradient(ellipse at top left,
-              rgba(232,237,245,0.06), transparent 55%),
+              alpha(@PINK@, 0.07), transparent 55%),
               radial-gradient(ellipse at bottom right,
-              rgba(200,204,214,0.04), transparent 55%),
-              #05060a;
+              alpha(@CYAN@, 0.05), transparent 55%),
+              rgb(5, 1, 13);
 }
 
 /* ── left rail ─────────────────────────────────────────────────── */
@@ -166,11 +166,12 @@ window.welcome {
   min-width: 320px;
 }
 .welcome-brand {
-  font-family: "Inter Display", "Inter", sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: #ffffff;
+  font-family: "Permanent Marker", cursive;
+  font-size: 24px;
+  letter-spacing: 0.06em;
+  color: @PINK@;
+  text-shadow: 0 0 10px alpha(@PINK@, 0.70),
+               0 0 26px alpha(@PINK@, 0.40);
   margin-bottom: 6px;
 }
 .welcome-brand-sub {
@@ -194,11 +195,12 @@ window.welcome {
   margin-right: 14px;
 }
 .welcome-step.current {
-  background: rgba(232,237,245,0.06);
+  background: alpha(@CYAN@, 0.08);
   color: #ffffff;
-  border-left: 2px solid #e8edf5;
+  border-left: 2px solid @CYAN@;
+  box-shadow: 0 0 12px alpha(@CYAN@, 0.20);
 }
-.welcome-step.current .num { color: #c8ccd6; }
+.welcome-step.current .num { color: @CYAN@; }
 .welcome-step.done { color: #8b94a8; }
 .welcome-step.done .num { color: #c8ccd6; }
 .welcome-rail-foot {
@@ -222,12 +224,14 @@ window.welcome {
    * the parent ScrolledWindow's policy + the fixed inner padding above.
    * Visual max ~ 760px is enforced by the fixed-width title/lede labels. */
 }
-.welcome-title  { max-width: 760px; }
-.welcome-lede   { max-width: 720px; }
+/* (max-width is not a GTK CSS property — width is constrained by the
+   label wrap widths set in code) */
 .welcome-eyebrow {
-  font-size: 11px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
   letter-spacing: 0.32em;
-  color: #c8ccd6;
+  color: @CYAN@;
+  text-shadow: 0 0 8px alpha(@CYAN@, 0.45);
   margin-bottom: 14px;
 }
 .welcome-title {
@@ -241,8 +245,6 @@ window.welcome {
 .welcome-lede {
   font-size: 16px;
   color: #9aa2b3;
-  line-height: 1.55;
-  max-width: 640px;
   margin-bottom: 40px;
 }
 
@@ -257,8 +259,8 @@ entry.welcome-input, dropdown.welcome-input > button {
   caret-color: #e8edf5;
 }
 entry.welcome-input:focus, dropdown.welcome-input > button:focus {
-  border-color: #e8edf5;
-  box-shadow: 0 0 0 3px rgba(232,237,245,0.18);
+  border-color: @PINK@;
+  box-shadow: 0 0 12px alpha(@PINK@, 0.40);
 }
 .welcome-label {
   font-size: 11px;
@@ -280,17 +282,19 @@ entry.welcome-input:focus, dropdown.welcome-input > button:focus {
 /* ── buttons ───────────────────────────────────────────────────── */
 button.w-primary {
   padding: 12px 28px;
-  border-radius: 10px;
-  background: #e8edf5;
-  color: #05060a;
+  border-radius: 4px;
+  background: alpha(@PINK@, 0.15);
+  color: @PINK@;
+  font-family: "JetBrains Mono", monospace;
   font-weight: 700;
-  letter-spacing: 0.10em;
-  border: 1px solid #ffffff;
-  box-shadow: 0 8px 26px rgba(232,237,245,0.18);
+  letter-spacing: 0.16em;
+  border: 1px solid @PINK@;
+  text-shadow: 0 0 6px alpha(@PINK@, 0.55);
+  box-shadow: 0 0 18px alpha(@PINK@, 0.28);
 }
 button.w-primary:hover {
-  background: #ffffff;
-  box-shadow: 0 10px 32px rgba(232,237,245,0.28);
+  background: alpha(@PINK@, 0.28);
+  box-shadow: 0 0 26px alpha(@PINK@, 0.50);
 }
 button.w-primary:disabled {
   background: rgba(60,66,82,0.55);
@@ -381,10 +385,19 @@ switch { background: rgba(60,66,82,0.85); }
 .welcome-complete-glyph {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 96px;
-  color: #e8edf5;
-  text-shadow: 0 0 40px rgba(232,237,245,0.35);
+  color: @PINK@;
+  text-shadow: 0 0 40px alpha(@PINK@, 0.45),
+               0 0 80px alpha(@PINK@, 0.20);
 }
 """
+
+# Live HUD accents + shared neon flicker (single source: nyxus_palette).
+try:
+    from nyxus_palette import HUD_PALETTE as _HP, neon_flicker_css as _nfc
+    CSS = CSS.replace("@PINK@", _HP["pink"]).replace("@CYAN@", _HP["cyan"])
+    CSS += _nfc()
+except Exception:
+    CSS = CSS.replace("@PINK@", "#ff3cac").replace("@CYAN@", "#2bd2ff")
 
 STEPS = [
     ("hello",      "Hello"),
@@ -470,7 +483,8 @@ class StepRail(Gtk.Box):
 
         brand = Gtk.Label(label="NYXUS", xalign=0)
         brand.add_css_class("welcome-brand")
-        sub = Gtk.Label(label="DARK · MIRROR · OS", xalign=0)
+        brand.add_css_class("neon-flicker")
+        sub = Gtk.Label(label="PRISM · HUD · OS", xalign=0)
         sub.add_css_class("welcome-brand-sub")
         self.append(brand); self.append(sub)
 
@@ -815,12 +829,16 @@ class AccountStep(Step):
         self.body.append(self.disp)
 
         self.body.append(self.label("Change password (optional)"))
+        # Gtk.PasswordEntry has no set_placeholder_text() method — the
+        # placeholder is a GObject property (this used to crash the
+        # whole wizard on the Account step).
         self.pw1 = Gtk.PasswordEntry(); self.pw1.add_css_class("welcome-input")
         self.pw1.set_show_peek_icon(True)
-        self.pw1.set_placeholder_text("New password (leave blank to keep current)")
+        self.pw1.set_property(
+            "placeholder-text", "New password (leave blank to keep current)")
         self.pw2 = Gtk.PasswordEntry(); self.pw2.add_css_class("welcome-input")
         self.pw2.set_show_peek_icon(True)
-        self.pw2.set_placeholder_text("Confirm new password")
+        self.pw2.set_property("placeholder-text", "Confirm new password")
         self.body.append(self.pw1); self.body.append(self.pw2)
 
         self.err = Gtk.Label(label="", xalign=0); self.err.add_css_class("welcome-error")
@@ -1189,12 +1207,13 @@ class WelcomeWizard(Adw.ApplicationWindow):
             try: nyxus_chrome.install_chrome(self, page_key="_welcome")
             except Exception: pass
 
-    # CSS
+    # CSS — PRIORITY_USER + 1 so the HUD language outranks the
+    # universal nyxus_chrome glass layer (PRIORITY_USER).
     def _inject_css(self):
         prov = Gtk.CssProvider(); prov.load_from_data(CSS.encode())
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(), prov,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 10)
+            Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
 
     def _on_key(self, _c, keyval, _kc, _state):
         if keyval == Gdk.KEY_Escape and os.environ.get("NYXUS_WELCOME_DEV"):

@@ -789,34 +789,46 @@ class StickiesWindow(Gtk.ApplicationWindow):
         return False
 
     def _build_css(self):
-        css = b"""
-* { font-family: 'Inter Display', 'Inter Display', cursive; }
-window, .nyx-bg { background-color: #000000; color: #e8edf5; }
-.nyx-toolbar { background-color: rgba(10,10,18,0.96); padding: 4px 10px;
-    border-bottom: 1px solid rgba(8, 12, 20, 0.12); }
-.nyx-headline { color: #e8edf5; text-shadow: 0 0 10px rgba(8, 12, 20, 0.55);
-    font-size: 18px; font-weight: bold; }
-.nyx-meta { color: rgba(240,235,250,0.45); font-size: 12px; }
-.nyx-sticky-text, .nyx-sticky-text text {
+        # HOME HUD language + graffiti voice from the shared palette.
+        try:
+            from nyxus_palette import HUD_PALETTE as _hp, \
+                install_hud_css as _ihc, neon_flicker_css as _nfc
+        except Exception:
+            _hp = {"pink": "#ff3cac", "gold": "#ffb84d"}
+            _ihc = None
+            def _nfc(): return ""
+        pink, gold = _hp.get("pink", "#ff3cac"), _hp.get("gold", "#ffb84d")
+        css = f"""
+* {{ font-family: 'Inter Display', 'Inter Display', cursive; }}
+window, .nyx-bg {{ background-color: rgba(5, 1, 13, 0.98); color: #e8edf5; }}
+.nyx-toolbar {{ background-color: rgba(7, 5, 14, 0.93); padding: 4px 10px;
+    border-bottom: 1px solid alpha({gold}, 0.40); }}
+.nyx-headline {{ font-family: 'Permanent Marker', cursive; color: {gold};
+    text-shadow: 0 0 10px alpha({gold}, 0.70), 0 0 24px alpha({gold}, 0.35);
+    font-size: 18px; }}
+.nyx-meta {{ font-family: 'JetBrains Mono', monospace;
+    color: rgba(240,235,250,0.45); font-size: 10px;
+    letter-spacing: 0.14em; }}
+.nyx-sticky-text, .nyx-sticky-text text {{
     background-color: transparent;
     background-image: none;
     color: #0f1420;
     caret-color: #0f1420;
-    font-family: 'Inter Display', 'Inter Display', cursive;
-    font-size: 18px;
-}
-.nyx-sticky-text { border: none; }
-scrollbar slider { background-color: rgba(8, 12, 20, 0.30);
-    border: 1px solid rgba(8, 12, 20, 0.45); border-radius: 6px;
-    min-width: 8px; min-height: 8px; }
-scrollbar { background-color: transparent; }
-"""
-        prov = Gtk.CssProvider()
-        try: prov.load_from_data(css)
-        except TypeError: prov.load_from_data(css.decode())
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(), prov,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+    font-family: 'Caveat', 'Inter Display', cursive;
+    font-size: 20px;
+}}
+.nyx-sticky-text {{ border: none; }}
+scrollbar slider {{ background-color: alpha({pink}, 0.35);
+    border-radius: 6px;
+    min-width: 6px; min-height: 6px; }}
+scrollbar {{ background-color: transparent; }}
+""" + _nfc()
+        if _ihc is None or not _ihc(css):
+            prov = Gtk.CssProvider()
+            prov.load_from_data(css.encode())
+            Gtk.StyleContext.add_provider_for_display(
+                Gdk.Display.get_default(), prov,
+                Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
 
     def _build_layout(self):
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
@@ -825,6 +837,7 @@ scrollbar { background-color: transparent; }
         bar = Gtk.Box(spacing=10); bar.add_css_class("nyx-toolbar")
         root.append(bar)
         logo = Gtk.Label(label="🗒  Stickies"); logo.add_css_class("nyx-headline")
+        logo.add_css_class("neon-flicker")
         bar.append(logo)
         new = SketchButton("＋ New note", width=120, height=28,
                            color=NEON_GREEN, primary=True,

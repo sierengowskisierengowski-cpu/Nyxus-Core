@@ -69,72 +69,91 @@ ACTIONS = [
      None, None),
 ]
 
-CSS = b"""
-window.pm-window { background: rgba(8, 12, 20, 0.92); }
+# ── HOME HUD visual language + graffiti voice, from the shared
+#    nyxus_palette helpers. Tiles wear per-action HUD hues:
+#    safe = cyan · warn = gold · danger = red · cancel = mono.
+try:
+    from nyxus_palette import (HUD_PALETTE, hud_css_bundle,
+                               install_hud_css)
+except Exception:
+    HUD_PALETTE = {"pink": "#ff3cac", "cyan": "#2bd2ff", "gold": "#ffb84d",
+                   "red": "#ff4d6b", "mono": "#e8edf5"}
+    def hud_css_bundle(sel="window", hues=()):  # noqa: E704
+        return ""
+    install_hud_css = None
 
-.pm-title {
-    font-family: "Inter Display", "Inter", sans-serif;
-    font-weight: 600;
-    font-size: 22px;
-    color: #ffffff;
-    letter-spacing: 0.18em;
-    margin: 28px 0 8px 0;
-}
-.pm-subtitle {
+
+def _pm_css() -> str:
+    pink = HUD_PALETTE.get("pink", "#ff3cac")
+    css = hud_css_bundle("window.pm-window", ("pink",))
+    css += f"""
+window.pm-window {{
+    background: rgba(5, 1, 13, 0.96);
+}}
+.pm-title {{
+    font-family: "Permanent Marker", cursive;
+    font-size: 30px;
+    color: {pink};
+    text-shadow: 0 0 10px alpha({pink}, 0.70),
+                 0 0 26px alpha({pink}, 0.40);
+    letter-spacing: 0.06em;
+    margin: 28px 0 4px 0;
+}}
+.pm-subtitle {{
     font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
+    font-size: 10px;
     color: #9aa0ad;
+    letter-spacing: 0.26em;
+    margin-bottom: 26px;
+}}
+.pm-hint {{
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    color: #6a6e78;
     letter-spacing: 0.22em;
-    margin-bottom: 28px;
-}
-
-.pm-tile {
-    background: rgba(15, 20, 32, 0.72);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 14px;
+    margin-top: 22px;
+    margin-bottom: 18px;
+}}
+"""
+    # Per-action hue tiles — HUD cards with solid top rule + bloom.
+    for cls, hue in (("pm-safe", "cyan"), ("pm-warn", "gold"),
+                     ("pm-danger", "red"), ("pm-cancel", "mono")):
+        c = HUD_PALETTE.get(hue, "#e8edf5")
+        css += f"""
+.pm-tile.{cls} {{
+    background: rgba(7, 5, 14, 0.93);
+    border: 1px dashed alpha({c}, 0.45);
+    border-top: 2px solid {c};
+    border-radius: 8px;
     min-width: 180px;
     min-height: 160px;
     padding: 22px;
-    transition: all 160ms ease-out;
-}
-.pm-tile:hover {
-    background: rgba(28, 36, 56, 0.85);
-    border-color: rgba(255, 255, 255, 0.22);
-}
-.pm-tile.pm-warn:hover {
-    border-color: rgba(255, 200, 80, 0.55);
-}
-.pm-tile.pm-danger:hover {
-    border-color: rgba(255, 90, 90, 0.65);
-}
-.pm-tile.pm-cancel { background: rgba(8, 12, 20, 0.55); }
-
-.pm-glyph {
+    transition: box-shadow 320ms ease, border-color 320ms ease;
+}}
+.pm-tile.{cls}:hover {{
+    background: alpha({c}, 0.08);
+    border-color: {c};
+    box-shadow: 0 0 26px alpha({c}, 0.45);
+}}
+.pm-tile.{cls} .pm-glyph {{
     font-family: "Symbols Nerd Font", "JetBrainsMono Nerd Font", monospace;
     font-size: 38px;
-    color: #e8edf5;
-}
-.pm-tile.pm-warn   .pm-glyph { color: #ffd07a; }
-.pm-tile.pm-danger .pm-glyph { color: #ff7a7a; }
-
-.pm-label {
-    font-family: "Inter", sans-serif;
-    font-weight: 500;
-    font-size: 14px;
-    color: #e8edf5;
-    letter-spacing: 0.10em;
-    margin-top: 14px;
-}
-
-.pm-hint {
+    color: {c};
+    text-shadow: 0 0 12px alpha({c}, 0.60),
+                 0 0 26px alpha({c}, 0.30);
+}}
+.pm-tile.{cls} .pm-label {{
     font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    color: #6a6e78;
-    letter-spacing: 0.18em;
-    margin-top: 22px;
-    margin-bottom: 18px;
-}
+    font-weight: 700;
+    font-size: 11px;
+    color: {c};
+    letter-spacing: 0.22em;
+    margin-top: 14px;
+}}
 """
+    return css
+
+CSS = _pm_css()
 
 
 def _run(cmd: list[str]) -> bool:
@@ -185,8 +204,9 @@ class PowermenuWindow(Adw.ApplicationWindow):
         root.set_margin_top(24); root.set_margin_bottom(24)
         root.set_margin_start(24); root.set_margin_end(24)
 
-        title = Gtk.Label(label="POWER")
+        title = Gtk.Label(label="Power")
         title.add_css_class("pm-title")
+        title.add_css_class("neon-flicker")
         title.set_xalign(0.5)
 
         subtitle = Gtk.Label(label="WHAT DO YOU WANT TO DO")
@@ -294,14 +314,14 @@ class PowermenuApp(Adw.Application):
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
         except Exception: pass
 
-        prov = Gtk.CssProvider()
-        try: prov.load_from_data(CSS)
-        except Exception:
-            try: prov.load_from_string(CSS.decode())
+        # PRIORITY_USER + 1 so the HUD tiles outrank nyxus_chrome glass.
+        if install_hud_css is None or not install_hud_css(CSS):
+            prov = Gtk.CssProvider()
+            try: prov.load_from_data(CSS.encode())
             except Exception: pass
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(), prov,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            Gtk.StyleContext.add_provider_for_display(
+                Gdk.Display.get_default(), prov,
+                Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
 
         win = PowermenuWindow(self)
         win.present()

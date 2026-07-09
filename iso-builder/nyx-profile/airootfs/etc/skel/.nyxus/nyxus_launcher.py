@@ -96,12 +96,42 @@ except Exception:
 WIN_W, WIN_H = 720, 520
 MAX_RESULTS  = 40
 
-# Live PRISM accent (from accent.json via nyxus_palette). Monochrome
-# stays dominant; the accent marks the active mode / focus only.
-NEON_PINK  = ACCENT_PRIMARY
-NEON_BLUE  = ACCENT_SECONDARY
-NEON_GREEN = ACCENT_OK
-GOLD       = ACCENT_PRIMARY
+# HUD neon family (accent.json-live via nyxus_palette.HUD_PALETTE).
+try:
+    from nyxus_palette import HUD_PALETTE, hud_css_bundle, install_hud_css
+except Exception:
+    HUD_PALETTE = {"pink": ACCENT_PRIMARY, "cyan": ACCENT_SECONDARY,
+                   "gold": ACCENT_WARN, "purple": ACCENT_OK,
+                   "green": "#6dffcf", "orange": "#ff7849",
+                   "blue": "#4d9fff", "red": "#ff4d6b",
+                   "mono": WHITE_OFF}
+    def hud_css_bundle(sel="window", hues=()):  # noqa: E704
+        return ""
+    install_hud_css = None
+
+NEON_PINK  = HUD_PALETTE["pink"]
+NEON_BLUE  = HUD_PALETTE["cyan"]
+NEON_GREEN = HUD_PALETTE["green"]
+GOLD       = HUD_PALETTE["gold"]
+
+# Result-category → HUD hue (mirrors the per-card hues of the HOME HUD).
+KIND_HUE = {
+    "app":   "pink",
+    "exec":  "cyan",
+    "shell": "gold",
+    "web":   "blue",
+    "calc":  "green",
+    "file":  "orange",
+    "sys":   "red",
+}
+KIND_GLYPH = {
+    "app": "▢", "exec": "▶", "shell": "⌘",
+    "web": "◯", "calc": "=", "file": "▤", "sys": "◈",
+}
+KIND_LABEL = {
+    "app": "APP", "exec": "BIN", "shell": "SH",
+    "web": "WEB", "calc": "CALC", "file": "FILE", "sys": "SYS",
+}
 
 
 def have(cmd: str) -> bool:
@@ -382,12 +412,16 @@ class Launcher(Adw.Application):
             sm = Adw.StyleManager.get_default()
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
         except Exception: pass
-        # CSS
-        prov = Gtk.CssProvider()
-        prov.load_from_data(CSS.encode("utf-8"))
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(), prov,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        # CSS — PRIORITY_USER + 1 so the HUD language outranks the
+        # universal nyxus_chrome glass layer (PRIORITY_USER). At the old
+        # APPLICATION priority the chrome flattened every card back to
+        # monochrome and the launcher kept its legacy look.
+        if install_hud_css is None or not install_hud_css(CSS):
+            prov = Gtk.CssProvider()
+            prov.load_from_data(CSS.encode("utf-8"))
+            Gtk.StyleContext.add_provider_for_display(
+                Gdk.Display.get_default(), prov,
+                Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
 
         self.win = Gtk.ApplicationWindow(application=self,
                                          title="NYXUS Launcher")
@@ -406,18 +440,39 @@ class Launcher(Adw.Application):
         outer.set_margin_start(20); outer.set_margin_end(20)
         self.win.set_child(outer)
 
-        # ── header with rainbow title ────────────────────────────────
-        title = Gtk.Label()
-        title.set_markup(rainbow_markup("NYXUS LAUNCHER"))
-        title.set_halign(Gtk.Align.START)
-        title.add_css_class("nyxus-title")
-        outer.append(title)
+        # ── HUD header: glyph + small-caps neon title + stamp + rule ──
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        glyph = Gtk.Label(label="◈")
+        glyph.add_css_class("hud-glyph-pink")
+        head.append(glyph)
+        # spray-paint wordmark (graffiti voice) + small-caps mono echo
+        title = Gtk.Label(label="Launcher")
+        title.add_css_class("hud-spray-pink")
+        title.add_css_class("neon-flicker")
+        head.append(title)
+        echo = Gtk.Label(label="SPOTLIGHT")
+        echo.add_css_class("hud-title-cyan")
+        echo.add_css_class("neon-flicker-slow")
+        echo.set_valign(Gtk.Align.END)
+        echo.set_margin_bottom(4)
+        head.append(echo)
+        spacer = Gtk.Box(); spacer.set_hexpand(True)
+        head.append(spacer)
+        stamp = Gtk.Label(label="NYX · SUPER+SPACE")
+        stamp.add_css_class("hud-stamp")
+        head.append(stamp)
+        outer.append(head)
+        rule = Gtk.Box()
+        rule.add_css_class("hud-rule-pink")
+        rule.set_margin_top(6)
+        outer.append(rule)
 
         # search row
         self.search = Gtk.Entry()
         self.search.set_placeholder_text(
             "search · =calc · /files · ?web · !shell · >system")
         self.search.add_css_class("nyxus-search")
+        self.search.add_css_class("hud-input-pink")
         self.search.set_margin_top(10); self.search.set_margin_bottom(10)
         self.search.connect("changed", self._on_changed)
         self.search.connect("activate", lambda _e: self._launch_selected())
@@ -576,32 +631,41 @@ class Launcher(Adw.Application):
             self.list.select_row(self.list.get_row_at_index(0))
 
     def _row(self, it: dict) -> Gtk.ListBoxRow:
+        hue = KIND_HUE.get(it["kind"], "pink")
+        color = HUD_PALETTE.get(hue, NEON_PINK)
         row = Gtk.ListBoxRow()
+        row.add_css_class(f"nyxus-row-{hue}")
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        box.set_margin_top(6); box.set_margin_bottom(6)
-        box.set_margin_start(10); box.set_margin_end(10)
-        # kind badge
-        badge = Gtk.Label()
-        emoji = {"app": "▢", "exec": "▶", "shell": "⌘",
-                 "web": "◯", "calc": "=", "file": "▤",
-                 "sys": "◈"}.get(it["kind"], "•")
-        # Calc/web/sys/file results get the gold accent badge so the
-        # eye snaps to the active mode.
-        gold_kinds = {"calc", "web", "sys", "file", "shell"}
-        col = ACCENT_SECONDARY if it["kind"] in gold_kinds else NEON_PINK
-        badge.set_markup(f"<span foreground='{col}' "
-                         f"font_weight='bold' size='large'>{emoji}</span>")
-        badge.set_size_request(28, -1)
+        box.set_margin_top(7); box.set_margin_bottom(7)
+        box.set_margin_start(10); box.set_margin_end(12)
+        # neon kind badge: glyph + small-caps category tag in its hue
+        badge = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+        g = Gtk.Label()
+        g.set_markup(f"<span foreground='{color}' font_weight='bold' "
+                     f"size='large'>{KIND_GLYPH.get(it['kind'], '•')}</span>")
+        g.add_css_class(f"hud-glyph-{hue}")
+        badge.append(g)
+        tag = Gtk.Label()
+        tag.set_markup(
+            f"<span foreground='{color}' size='6800' "
+            f"font_family='JetBrains Mono' font_weight='bold' "
+            f"letter_spacing='2048'>{KIND_LABEL.get(it['kind'], '·')}</span>")
+        badge.append(tag)
+        badge.set_size_request(44, -1)
         box.append(badge)
         # name + comment
         v = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        v.set_valign(Gtk.Align.CENTER)
         nl = Gtk.Label(label=it["name"], xalign=0)
         nl.add_css_class("nyxus-name")
+        nl.set_ellipsize(Pango.EllipsizeMode.END)
         v.append(nl)
         if it.get("comment"):
             cl = Gtk.Label(label=it["comment"][:96], xalign=0)
             cl.add_css_class("nyxus-cmt")
+            cl.set_ellipsize(Pango.EllipsizeMode.END)
             v.append(cl)
+        v.set_hexpand(True)
         box.append(v)
         row.set_child(box)
         return row
@@ -657,56 +721,40 @@ class Launcher(Adw.Application):
             print(f"launch error: {e}", file=sys.stderr)
 
 
-# ── CSS — NYXUS HUD language (matches nyxus-home style.py tokens):
-#    near-black card, 1px dashed neon hairline + solid top rule in the
-#    live accent hue, mono small-caps micro-labels, subtle neon glow.
-CSS = format_css("""
+# ── CSS — HOME HUD visual language, composed from the shared
+#    nyxus_palette HUD helpers (single source; no duplicated card CSS).
+#    Window = one big neon HUD card; every result category wears its
+#    own hue like the HUD cards do (pink/cyan/gold/blue/green/orange/red).
+def _launcher_css() -> str:
+    pink = HUD_PALETTE["pink"]
+    css = hud_css_bundle("window.nyxus-launcher", ("pink",))
+    css += format_css("""
 window.nyxus-launcher {{
-    background: rgba(7, 5, 14, 0.93);
+    background: rgba(7, 5, 14, 0.95);
+    border: 1px dashed alpha(@PINK@, 0.75);
+    border-top: 2px solid @PINK@;
     border-radius: 8px;
-}}
-.nyxus-title {{
-    font-family: 'Inter Display', cursive;
-    font-size: 28px;
-    margin-bottom: 4px;
-    color: {ACCENT_PRIMARY};
-    text-shadow: 0 0 8px alpha({ACCENT_PRIMARY}, 0.40);
-    letter-spacing: 0.02em;
+    box-shadow: 0 0 30px alpha(@PINK@, 0.40),
+                0 10px 34px rgba(0,0,0,0.65);
 }}
 .nyxus-search {{
     font-family: '{FONT_MONO}', monospace;
     font-size: 20px;
-    background: rgba(0, 0, 0, 0.45);
     color: {WHITE_PURE};
-    caret-color: {ACCENT_PRIMARY};
-    border: 1px dashed alpha({ACCENT_PRIMARY}, 0.34);
-    border-radius: 3px;
+    caret-color: @PINK@;
     padding: 10px 14px;
 }}
-.nyxus-search:focus {{
-    border-color: {ACCENT_PRIMARY};
-    border-style: solid;
-    box-shadow: 0 0 12px alpha({ACCENT_PRIMARY}, 0.40);
-}}
 .nyxus-list {{
-    background: rgba(6, 3, 13, 0.91);
-    border: 1px dashed alpha({ACCENT_PRIMARY}, 0.20);
-    border-top: 2px solid {ACCENT_PRIMARY};
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px dashed alpha({WHITE_OFF}, 0.13);
     border-radius: 4px;
     padding: 4px;
-    box-shadow: 0 0 18px alpha({ACCENT_PRIMARY}, 0.18),
-                inset 0 0 24px rgba(0,0,0,0.18);
 }}
 .nyxus-list row {{
     background: transparent;
     border-radius: 3px;
+    border-left: 3px solid transparent;
     padding: 0;
-}}
-.nyxus-list row:selected {{
-    background: alpha({ACCENT_PRIMARY}, 0.06);
-    border-left: 3px solid {ACCENT_PRIMARY};
-    box-shadow: inset 0 0 0 1px alpha({ACCENT_PRIMARY}, 0.20);
-    color: {WHITE_PURE};
 }}
 .nyxus-list row:hover {{
     background: rgba(255, 255, 255, 0.04);
@@ -729,7 +777,34 @@ window.nyxus-launcher {{
     color: {GREY_MID};
     letter-spacing: 0.14em;
 }}
-""")
+""").replace("@PINK@", pink)
+    # Per-category row hues — selected row becomes a glowing slab in
+    # the category's neon, exactly like an active HUD card.
+    for kind, hue in KIND_HUE.items():
+        c = HUD_PALETTE.get(hue, pink)
+        css += f"""
+.nyxus-list row.nyxus-row-{hue}:selected {{
+    background: alpha({c}, 0.10);
+    border-left: 3px solid {c};
+    box-shadow: inset 0 0 0 1px alpha({c}, 0.30),
+                0 0 16px alpha({c}, 0.25);
+}}
+.nyxus-list row.nyxus-row-{hue}:selected .nyxus-name {{
+    color: {c};
+    text-shadow: 0 0 8px alpha({c}, 0.45);
+}}
+"""
+        # glyph header css per hue for the badges
+        css += hud_header_css(hue, c) if hue != "pink" else ""
+    return css
+
+try:
+    from nyxus_palette import hud_header_css
+except Exception:
+    def hud_header_css(n, c):  # noqa: E704
+        return ""
+
+CSS = _launcher_css()
 
 
 if __name__ == "__main__":

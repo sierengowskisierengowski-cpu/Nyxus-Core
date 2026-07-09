@@ -137,11 +137,23 @@ BG_PATH   = BG_DIR / f"bg-matte-{PANEL_W}x{PANEL_H}.png"
 # NYXUS palette
 C_BG       = (0.020, 0.020, 0.024)
 C_PANEL    = "#000000"
-C_PINK     = "#ffffff"
-C_PURPLE   = "#ffffff"
-C_CYAN     = "#c8ccd6"
-C_GOLD     = "#e8edf5"
-C_GREEN    = "#c8ccd6"
+# HUD neon family — accent.json-live via the shared palette helpers.
+try:
+    from nyxus_palette import (HUD_PALETTE, install_hud_css,
+                               neon_flicker_css)
+except Exception:
+    HUD_PALETTE = {"pink": "#ff3cac", "cyan": "#2bd2ff", "gold": "#ffb84d",
+                   "purple": "#784bff", "green": "#6dffcf",
+                   "red": "#ff4d6b", "mono": "#e8edf5"}
+    def neon_flicker_css():  # noqa: E704
+        return ""
+    install_hud_css = None
+
+C_PINK     = HUD_PALETTE["pink"]
+C_PURPLE   = HUD_PALETTE["purple"]
+C_CYAN     = HUD_PALETTE["cyan"]
+C_GOLD     = HUD_PALETTE["gold"]
+C_GREEN    = HUD_PALETTE["green"]
 C_TEXT     = "#e8edf5"
 C_DIM      = "#c8ccd6"
 
@@ -224,28 +236,35 @@ def _install_css(cfg: Dict[str, Any]) -> None:
         background-position: center;
     }}
 
-    /* every floating panel sits on a semi-transparent dark plate */
+    /* every floating panel is a near-black HUD card (nyxus-home voice) */
     .nyxus-tile,
     .nyxus-card,
     .nyxus-header,
     .nyxus-footer,
     .nyxus-feed {{
-        background-color: #0a0a0e;
-        border:           2px solid rgba(255, 255, 255, 0.55);
-        border-radius:    14px;
+        background-color: rgba(7, 5, 14, 0.93);
+        border:           1px dashed alpha({C_CYAN}, 0.45);
+        border-top:       2px solid {C_CYAN};
+        border-radius:    8px;
+        box-shadow:       0 0 14px alpha({C_CYAN}, 0.16),
+                          inset 0 0 24px rgba(0, 0, 0, 0.18);
     }}
 
-    /* HEADER */
+    /* HEADER — pink family + spray wordmark */
     .nyxus-header {{
         margin: 8px 8px 4px 8px;
         padding: 6px 10px;
+        border-color: alpha({C_PINK}, 0.45);
+        border-top-color: {C_PINK};
+        box-shadow: 0 0 14px alpha({C_PINK}, 0.20),
+                    inset 0 0 24px rgba(0, 0, 0, 0.18);
     }}
     .nyxus-header-loc {{
-        font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
-        font-size:   22px;
-        font-weight: bold;
+        font-family: "Permanent Marker", cursive;
+        font-size:   21px;
         color:       {C_PINK};
-        text-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+        text-shadow: 0 0 10px alpha({C_PINK}, 0.70),
+                     0 0 24px alpha({C_PINK}, 0.35);
     }}
     .nyxus-header-icon {{
         font-family: "JetBrains Mono Nerd Font", "Symbols Nerd Font", monospace;
@@ -267,10 +286,12 @@ def _install_css(cfg: Dict[str, Any]) -> None:
         margin: 4px;
     }}
     .nyxus-tile-title {{
-        font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
-        font-size:   18px;
+        font-family: "JetBrains Mono", monospace;
+        font-size:   11px;
         font-weight: bold;
-        color:       {C_TEXT};
+        letter-spacing: 0.24em;
+        color:       {C_CYAN};
+        text-shadow: 0 0 8px alpha({C_CYAN}, 0.45);
     }}
     .nyxus-tile-icon {{
         font-family: "JetBrains Mono Nerd Font", monospace;
@@ -293,11 +314,12 @@ def _install_css(cfg: Dict[str, Any]) -> None:
         text-shadow: 0 0 6px rgba(255, 255, 255, 0.55);
     }}
     .nyxus-weather-temp {{
-        font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
-        font-size:   42px;
+        font-family: "Orbitron", "JetBrains Mono", monospace;
+        font-size:   40px;
         font-weight: bold;
         color:       {C_CYAN};
-        text-shadow: 0 0 6px rgba(255, 255, 255, 0.55);
+        text-shadow: 0 0 12px alpha({C_CYAN}, 0.55),
+                     0 0 26px alpha({C_CYAN}, 0.25);
     }}
     .nyxus-weather-cond {{
         font-size:   16px; color: {C_TEXT};
@@ -344,14 +366,16 @@ def _install_css(cfg: Dict[str, Any]) -> None:
     .nyxus-card {{
         margin: 4px 2px;
         padding: 0;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.50);
-        background-color: #000000;
-        transition: all 0.18s ease;
+        border-radius: 8px;
+        border: 1px dashed alpha({C_PURPLE}, 0.40);
+        border-top: 2px solid alpha({C_PURPLE}, 0.80);
+        background-color: rgba(0, 0, 0, 0.55);
+        transition: box-shadow 320ms ease, border-color 320ms ease;
     }}
     .nyxus-card:hover {{
-        border-color: {C_GOLD};
-        background-color: rgba(255,255,255,0.10);
+        border-color: {C_PURPLE};
+        background-color: alpha({C_PURPLE}, 0.07);
+        box-shadow: 0 0 18px alpha({C_PURPLE}, 0.35);
     }}
     .nyxus-card-img,
     .nyxus-card-img-placeholder {{
@@ -548,13 +572,16 @@ def _install_css(cfg: Dict[str, Any]) -> None:
         font-size: 13px; color: {C_DIM};
     }}
     """
-    provider = Gtk.CssProvider()
-    provider.load_from_data(css.encode("utf-8"))
-    Gtk.StyleContext.add_provider_for_display(
-        Gdk.Display.get_default(),
-        provider,
-        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
-    )
+    css += neon_flicker_css()
+    # PRIORITY_USER + 1 so HUD cards outrank the nyxus_chrome layer.
+    if install_hud_css is None or not install_hud_css(css):
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css.encode("utf-8"))
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_USER + 1,
+        )
 
 
 # ──────────────────────────────────────────────── helpers

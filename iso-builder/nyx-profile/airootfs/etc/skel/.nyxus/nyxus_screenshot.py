@@ -71,6 +71,17 @@ except Exception:
         }
         return t.format_map(_d)
     def assert_no_forbidden(*a, **k): pass
+
+# Shared HUD helpers (single source of the HOME HUD language).
+try:
+    from nyxus_palette import (HUD_PALETTE, hud_css_bundle,
+                               install_hud_css)
+except Exception:
+    HUD_PALETTE = {"pink": ACCENT_PRIMARY, "cyan": ACCENT_SECONDARY,
+                   "gold": ACCENT_WARN, "purple": ACCENT_OK}
+    def hud_css_bundle(sel="window", hues=()):  # noqa: E704
+        return ""
+    install_hud_css = None
 # ─────────────────────────────────────────────────────────────────────
 
 
@@ -227,11 +238,14 @@ class Picker(Adw.Application):
             sm = Adw.StyleManager.get_default()
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
         except Exception: pass
-        prov = Gtk.CssProvider()
-        prov.load_from_data(CSS.encode("utf-8"))
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(), prov,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        # PRIORITY_USER + 1 beats the universal nyxus_chrome layer so
+        # the HUD card actually renders (see nyxus-home/style.py).
+        if install_hud_css is None or not install_hud_css(CSS):
+            prov = Gtk.CssProvider()
+            prov.load_from_data(CSS.encode("utf-8"))
+            Gtk.StyleContext.add_provider_for_display(
+                Gdk.Display.get_default(), prov,
+                Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
 
         self.win = Gtk.ApplicationWindow(application=self,
                                          title="NYXUS Screenshot")
@@ -250,32 +264,46 @@ class Picker(Adw.Application):
         outer.set_valign(Gtk.Align.CENTER)
         self.win.set_child(outer)
 
-        title = Gtk.Label()
-        title.set_markup(rainbow_markup("SCREENSHOT · NYXUS"))
-        title.add_css_class("nyxus-title")
-        outer.append(title)
+        # HUD header: glyph + small-caps neon title + stamp + laser rule
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        hg = Gtk.Label(label="▣"); hg.add_css_class("hud-glyph-cyan")
+        head.append(hg)
+        ht = Gtk.Label(label="Screenshot"); ht.add_css_class("hud-spray-cyan")
+        ht.add_css_class("neon-flicker")
+        head.append(ht)
+        sp = Gtk.Box(); sp.set_hexpand(True); head.append(sp)
+        stamp = Gtk.Label(label="NYX · GRIM+SLURP")
+        stamp.add_css_class("hud-stamp")
+        head.append(stamp)
+        outer.append(head)
+        rule = Gtk.Box(); rule.add_css_class("hud-rule-cyan")
+        outer.append(rule)
 
-        # mode buttons
+        # mode buttons — one HUD hue per capture mode
         modes = [
-            ("Region",     "region",     "▭", ACCENT_SECONDARY),
-            ("Window",     "window",     "🗖", ACCENT_OK),
-            ("Full screen","fullscreen", "▣", ACCENT_PRIMARY),
+            ("REGION",      "region",     "▭", "cyan"),
+            ("WINDOW",      "window",     "🗖", "purple"),
+            ("FULL SCREEN", "fullscreen", "▣", "pink"),
         ]
         row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         row.set_halign(Gtk.Align.CENTER)
         outer.append(row)
-        for label, mode, glyph, color in modes:
+        for label, mode, glyph, hue in modes:
+            color = HUD_PALETTE.get(hue, ACCENT_PRIMARY)
             b = Gtk.Button()
-            b.set_size_request(130, 90)
-            b.add_css_class("nyxus-shotbtn")
-            inner = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+            b.set_size_request(140, 96)
+            b.add_css_class(f"nyxus-shotbtn-{hue}")
+            inner = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
             g = Gtk.Label()
             g.set_markup(f"<span foreground='{color}' size='xx-large' "
                          f"font_weight='bold'>{glyph}</span>")
+            g.add_css_class(f"hud-glyph-{hue}")
             inner.append(g)
             l = Gtk.Label()
-            l.set_markup(f"<span foreground='{color}' size='large' "
-                         f"font_weight='bold'>{label}</span>")
+            l.set_markup(
+                f"<span foreground='{color}' size='9500' "
+                f"font_family='JetBrains Mono' font_weight='bold' "
+                f"letter_spacing='2048'>{label}</span>")
             inner.append(l)
             b.set_child(inner)
             b.connect("clicked", lambda _b, m=mode: self._do(m))
@@ -319,34 +347,20 @@ class Picker(Adw.Application):
                                        self.quit(), False)[2])
 
 
-# NYXUS HUD language (matches nyxus-home style.py tokens): near-black
-# card, dashed neon hairline + solid top rule, mono micro-labels.
-CSS = format_css("""
+# HOME HUD visual language — composed from the shared nyxus_palette
+# helpers; window is one neon HUD card, each capture mode has its hue.
+def _shot_css() -> str:
+    cyan = HUD_PALETTE.get("cyan", ACCENT_SECONDARY)
+    css = hud_css_bundle("window.nyxus-shot",
+                         ("cyan", "purple", "pink"))
+    css += format_css("""
 window.nyxus-shot {{
-    background: rgba(7, 5, 14, 0.93);
+    background: rgba(7, 5, 14, 0.95);
+    border: 1px dashed alpha(@CYAN@, 0.75);
+    border-top: 2px solid @CYAN@;
     border-radius: 8px;
-}}
-.nyxus-title {{
-    font-family: 'Inter Display', cursive;
-    font-size: 28px;
-    color: {ACCENT_PRIMARY};
-    text-shadow: 0 0 8px alpha({ACCENT_PRIMARY}, 0.40);
-    letter-spacing: 0.02em;
-}}
-.nyxus-shotbtn {{
-    background: rgba(6, 3, 13, 0.91);
-    border: 1px dashed alpha({ACCENT_PRIMARY}, 0.34);
-    border-radius: 3px;
-    transition: box-shadow 320ms ease, border-color 320ms ease;
-}}
-.nyxus-shotbtn:hover {{
-    background: alpha({ACCENT_PRIMARY}, 0.06);
-    border-color: {ACCENT_PRIMARY};
-    border-style: solid;
-    box-shadow: 0 0 14px alpha({ACCENT_PRIMARY}, 0.34);
-}}
-.nyxus-shotbtn:focus {{
-    border-color: {ACCENT_SECONDARY};
+    box-shadow: 0 0 30px alpha(@CYAN@, 0.40),
+                0 10px 34px rgba(0,0,0,0.65);
 }}
 .nyxus-cb {{
     font-family: '{FONT_MONO}', monospace;
@@ -360,7 +374,26 @@ window.nyxus-shot {{
     color: {GREY_MID};
     letter-spacing: 0.14em;
 }}
-""")
+""").replace("@CYAN@", cyan)
+    for hue in ("cyan", "purple", "pink"):
+        c = HUD_PALETTE.get(hue, cyan)
+        css += f"""
+.nyxus-shotbtn-{hue} {{
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px dashed alpha({c}, 0.45);
+    border-top: 2px solid {c};
+    border-radius: 4px;
+    transition: box-shadow 320ms ease, border-color 320ms ease;
+}}
+.nyxus-shotbtn-{hue}:hover {{
+    background: alpha({c}, 0.10);
+    border-color: {c};
+    box-shadow: 0 0 18px alpha({c}, 0.45);
+}}
+"""
+    return css
+
+CSS = _shot_css()
 
 
 def main() -> int:

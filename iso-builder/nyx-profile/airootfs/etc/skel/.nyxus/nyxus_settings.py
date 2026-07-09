@@ -687,6 +687,13 @@ def _refresh_accent_tokens() -> None:
     SEC_GLOW_SOFT  = rgba_str(ACCENT_SECONDARY, 0.14)
 
 
+try:
+    from nyxus_palette import neon_flicker_css as _nfc
+    _flicker_css = _nfc()
+except Exception:
+    _flicker_css = ""
+
+
 def build_css() -> str:
     # Visual language = the nyxus-home HUD (style.py): near-black cards,
     # 1px neon hairlines with a solid accent top rule on key surfaces,
@@ -710,14 +717,14 @@ window, .nyx-bg {{
     border-bottom: 1px solid {HAIRLINE_WHITE};
 }}
 .nyx-sidebar-title {{
-    font-family: '{FONT_DISPLAY}', '{FONT_UI}', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
+    font-family: 'Permanent Marker', '{FONT_DISPLAY}', cursive;
+    font-size: 19px;
     letter-spacing: 0.4px;
     color: {ACCENT_PRIMARY};
     text-shadow: 0 0 8px {ACC_GLOW_RING},
                  0 0 18px {ACC_GLOW_SOFT};
 }}
+{_flicker_css}
 .nyx-sidebar-rev {{
     font-family: '{FONT_MONO}', monospace;
     font-size: 8px;
@@ -840,7 +847,8 @@ window, .nyx-bg {{
 }}
 
 /* libadwaita primitive overrides */
-preferencesgroup > box > label.heading {{
+preferencesgroup > box > label.heading,
+preferencesgroup label.heading {{
     color: {ACCENT_SECONDARY};
     font-family: '{FONT_MONO}', monospace;
     font-size: 12px;
@@ -849,7 +857,8 @@ preferencesgroup > box > label.heading {{
     text-transform: uppercase;
     text-shadow: 0 0 8px {SEC_GLOW_SOFT};
 }}
-preferencesgroup > box > label.description {{
+preferencesgroup > box > label.description,
+preferencesgroup label.description {{
     font-family: '{FONT_MONO}', monospace;
     font-size: 10px;
     letter-spacing: 0.06em;
@@ -14133,6 +14142,7 @@ class SettingsWindow(Adw.ApplicationWindow):
         header.add_css_class("nyx-sidebar-header")
         title = Gtk.Label(label="NYXUS Settings")
         title.add_css_class("nyx-sidebar-title")
+        title.add_css_class("neon-flicker")
         title.set_halign(Gtk.Align.START)
         header.append(title)
         rev = Gtk.Label(label=APP_REV)
