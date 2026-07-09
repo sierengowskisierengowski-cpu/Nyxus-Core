@@ -204,6 +204,22 @@ class HomeWindow(Gtk.ApplicationWindow):
         scroller.set_hexpand(True)
         content_outer.append(scroller)
 
+        # NYXUS_HOME_SCROLL=0..1 — open pre-scrolled to that fraction
+        # (debug/screenshot aid; no effect when the var is unset).
+        frac = os.environ.get("NYXUS_HOME_SCROLL")
+        if frac:
+            def _pre_scroll():
+                adj = scroller.get_vadjustment()
+                try:
+                    f = min(1.0, max(0.0, float(frac)))
+                except ValueError:
+                    return False
+                adj.set_value(adj.get_lower()
+                              + f * (adj.get_upper() - adj.get_page_size()
+                                     - adj.get_lower()))
+                return False
+            GLib.timeout_add(600, _pre_scroll)
+
         overlay.add_overlay(content_outer)
         self.set_child(overlay)
 

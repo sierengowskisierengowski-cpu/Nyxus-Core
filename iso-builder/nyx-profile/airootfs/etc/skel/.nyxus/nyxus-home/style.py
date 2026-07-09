@@ -81,8 +81,8 @@ NEONS = ["#ff4994", "#26ff39", "#26ffb7", "#ff8b26", "#6dffcf",
 def _card_css(name, color):
     return f"""
 .card-{name} {{
-    background: rgba(6, 4, 12, 0.62);
-    border: 1px dashed alpha({color}, 0.66);
+    background: rgba(7, 5, 14, 0.93);
+    border: 1px dashed alpha({color}, 0.75);
     border-top: 2px solid {color};
     border-radius: 8px;
     padding: 12px 14px;
@@ -93,7 +93,7 @@ def _card_css(name, color):
                 background-color 320ms ease;
 }}
 .card-{name}:hover {{
-    background: rgba(8, 5, 16, 0.72);
+    background: rgba(9, 6, 18, 0.97);
     border-color: alpha({color}, 0.95);
     box-shadow: 0 0 30px alpha({color}, 0.55),
                 0 10px 34px rgba(0,0,0,0.65),
@@ -238,7 +238,7 @@ def _ghost_css(name, color):
 def build_css():
     css = format_css("""
 window, .home-root {{
-    background: rgba(6, 0, 16, 0.65);
+    background: rgba(5, 1, 13, 0.97);
     color: {WHITE_OFF};
     font-family: "Inter Display", "JetBrains Mono", sans-serif;
 }}
@@ -481,7 +481,8 @@ scale slider {{
     # GHOST HUD chrome (hud.py) — borderless glass, laser rule, neon rings
     css += f"""
 .ghost-card {{
-    background: rgba(4, 2, 10, 0.48);
+    background: rgba(6, 3, 13, 0.91);
+    border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 10px;
     padding: 14px 18px;
     box-shadow: 0 6px 24px rgba(0,0,0,0.45),
@@ -489,7 +490,8 @@ scale slider {{
     transition: background-color 320ms ease, box-shadow 320ms ease;
 }}
 .ghost-card:hover {{
-    background: rgba(7, 4, 16, 0.62);
+    background: rgba(8, 4, 16, 0.96);
+    border-color: rgba(255, 255, 255, 0.14);
     box-shadow: 0 8px 30px rgba(0,0,0,0.60),
                 inset 0 0 30px rgba(0,0,0,0.22);
 }}
@@ -646,9 +648,16 @@ def install_css():
     provider.load_from_data(build_css().encode("utf-8"))
     display = Gdk.Display.get_default()
     if display is not None:
+        # PRIORITY_USER + 1: nyxus_chrome.py installs its universal
+        # monochrome-glass CSS at PRIORITY_USER, and in GTK4 provider
+        # priority beats selector specificity — at APPLICATION priority
+        # every card/ghost background here was silently collapsed to the
+        # chrome's 0.55 glass and the dashboard blended into the graffiti.
+        # The home page owns its full design system, so it outranks chrome.
+        # (Providers are per-process: this cannot leak into other apps.)
         Gtk.StyleContext.add_provider_for_display(
             display, provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+            Gtk.STYLE_PROVIDER_PRIORITY_USER + 1,
         )
 
 # ── palette guard (rev r13) ─────────────────────────────────────────

@@ -92,7 +92,7 @@ def _layout(seed_words=20260502, seed_drips=60606060, seed_splats=31415927):
             "rot_deg": -28 + rw.random() * 56,
             "size":    0.85 + rw.random() * 1.95,      # rem -> px later
             "color":   NEONS[int(rw.random() * len(NEONS))],
-            "opacity": 0.10 + rw.random() * 0.22,
+            "opacity": 0.06 + rw.random() * 0.13,
             "weight":  Pango.Weight.BOLD if rw.random() > 0.55 else Pango.Weight.NORMAL,
             "is_display": rw.random() > 0.30,
         })
@@ -104,7 +104,7 @@ def _layout(seed_words=20260502, seed_drips=60606060, seed_splats=31415927):
             "y":       rd.random() * 90,
             "len":     8 + rd.random() * 30,
             "color":   NEONS[int(rd.random() * len(NEONS))],
-            "opacity": 0.10 + rd.random() * 0.20,
+            "opacity": 0.07 + rd.random() * 0.12,
         })
     rs = random.Random(seed_splats)
     splats = []
@@ -116,7 +116,7 @@ def _layout(seed_words=20260502, seed_drips=60606060, seed_splats=31415927):
             "ry":      4 + rs.random() * 12,
             "rot_deg": rs.random() * 360,
             "color":   NEONS[int(rs.random() * len(NEONS))],
-            "opacity": 0.05 + rs.random() * 0.10,
+            "opacity": 0.04 + rs.random() * 0.07,
         })
     return words, drips, splats
 
