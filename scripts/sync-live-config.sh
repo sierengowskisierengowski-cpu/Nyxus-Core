@@ -28,7 +28,7 @@ RSYNC=(rsync -a --delete
 
 # ── ~/.config surfaces that define the NYXUS look ────────────────────
 CONFIG_DIRS=(
-  eww hypr rofi dunst swaync wlogout alacritty kitty cava btop
+  eww hypr rofi dunst wlogout alacritty kitty cava btop
   qt5ct qt6ct gtk-3.0 gtk-4.0 nyxus
 )
 for d in "${CONFIG_DIRS[@]}"; do

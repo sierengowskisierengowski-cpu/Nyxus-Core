@@ -3,9 +3,10 @@
 Date: 2026-07-09 · Branch: `nyxus-hyprland-055-fixes` · Hyprland 0.55.4 · eww 0.5.0
 
 This is the "what exists today" baseline: local machine vs. GitHub, plus every
-duplicate, orphan, and stale reference found. **Identify only — nothing here
-has been fixed yet.** Decisions on what stays canonical happen in the next
-session (see brief §8, Session 2).
+duplicate, orphan, and stale reference found. **Update 2026-07-09 (Session 2):
+the keybind de-dup / orphan-removal decisions were made and implemented** —
+§4–§7 and §10 now reflect the *resolved* state; §5b lists intentional keeps
+that must never be re-flagged as legacy/orphans.
 
 ---
 
@@ -58,65 +59,84 @@ Live `~/.config` has moved past the last synced snapshot (`7fd20b1`):
   `~/.config/systemd/user/` but are **not in repo skel** (repo has 8 units,
   live has 10 nyxus units)
 
-## 4. Duplicate keybinds — CONFIRMED LIVE (both actions fire on one press)
+## 4. Duplicate keybinds — RESOLVED (2026-07-09 de-dup pass)
 
-Verified via `hyprctl binds`:
+All three double-fire conflicts fixed; `hyprctl binds -j` piped through a
+duplicate checker confirms **0 duplicate (modmask,key) pairs** across all
+118 live binds.
 
-| Keys | Binding A (hyprland.conf) | Binding B (nyxus-signature.conf) |
+| Keys | Winner (kept) | Loser (moved/removed) |
 |---|---|---|
-| `Super+T` | `layoutmsg togglesplit` | `nyxus-tint toggle` |
-| `Super+Shift+W` | `hyprshot -m region` | `nyxus-accent-from-wallpaper` |
-| `Super+Alt+W` | `nyxus wallpaper_studio` | `nyxus-wall-next` |
+| `Super+T` | `nyxus-tint toggle` (signature) | `layoutmsg togglesplit` → **moved to `Super+J`** |
+| `Super+Shift+W` | `nyxus-accent-from-wallpaper` (signature) | `hyprshot -m region` → **removed** (screenshots consolidated, §6) |
+| `Super+Alt+W` | `nyxus-wall-next` (signature) | `nyxus wallpaper_studio` → **moved to `Super+Alt+S`** |
 
-These are real conflicts — Hyprland executes *both* dispatchers.
+## 5. Legacy-vs-current-gen bindings — RESOLVED (2026-07-09)
 
-## 5. Legacy `~/.nyxus` GTK layer still wired into current binds
+Canonical picks locked in and implemented:
 
-Old-generation Python/GTK apps still bound alongside their replacements:
-
-| Key | Legacy target | Current-gen equivalent |
+| Key | Canonical (live) | What changed |
 |---|---|---|
-| `Super+Return` | `~/.nyxus/nyxus_terminal.py` (falls back kitty→alacritty) | plain terminal (`Super+Shift+Return` = alacritty) |
-| `Super+Space` | `~/.nyxus/nyxus_launcher.py` | rofi (`Super+D` / `Super+R`) |
-| `Print` / `Shift+Print` | `~/.nyxus/nyxus_screenshot.py` | `nyxus-shot` (`Super+Print` family) |
-| `Super+Shift+H` | `alacritty -e ~/.nyxus/nyxus_doctor.py` | (none — may be intentional keep) |
-| eww app_rail SysMon/Notepad/Stickies | fall back to `~/.nyxus/*.py` if new binary missing | `nyxus-sysmon` / `nyxus-notepad` / `nyxus-stickies` |
+| `Super+Return` | `alacritty` (canonical terminal) | was `nyxus_terminal.py` → kitty fallback chain |
+| `Super+Shift+Return` | `[float] alacritty` | floating variant — distinct, not a duplicate |
+| `Super+Space` | `~/.nyxus/nyxus_launcher.py` — **CANONICAL launcher** | rofi drun duplicates removed: `Super+D`, `Super+R`, `Super+Shift+D` (launcher has `!cmd` prefix for run mode) |
+| `Super+Tab` | rofi window switcher | KEPT — distinct function, not a duplicate |
+| `Print` family | `~/.nyxus/nyxus_screenshot.py` — **CANONICAL screenshots** | see §6 |
+| `Super+Shift+H` | `alacritty -e ~/.nyxus/nyxus_doctor.py` | no duplicate — intentional keep |
+| eww app_rail SysMon/Notepad/Stickies | fall back to `~/.nyxus/*.py` if new binary missing | untouched (theming pass owns `~/.nyxus`) |
 
-Commented-out but still present: `nyxus-fog.py` autostart (file **missing**
-from `~/.nyxus` — dead reference), `nyxus_stickies.py` / `nyxus-notepad`
-autostarts.
+Dead comment references cleaned: `nyxus-fog.py` autostart comment removed
+from `nyxus-hyprland-fog.conf`; commented legacy autostarts (nyxus-weather,
+`nyxus_stickies.py`, nyxus-notepad) removed from hyprland.conf.
 
-## 6. Duplicate / parallel subsystems
+### 5b. INTENTIONAL KEEPS — do not re-flag as legacy/orphans
 
-- **Terminals:** alacritty AND kitty both installed and both referenced.
-  Dock + eww app_rail + safemode use **alacritty**; `Super+Return` prefers
-  legacy `nyxus_terminal.py` then **kitty**. No single canonical terminal.
-- **Launchers:** rofi (3 themed modes) AND legacy `nyxus_launcher.py`
-  (`Super+Space`) AND `nyxus-start` (start-menu — `~/.config/nyxus-start/`).
-- **Screenshots:** `nyxus-shot` AND legacy `nyxus_screenshot.py` AND raw
-  `hyprshot` bind (`Super+Shift+W`) — three paths.
-- **Notifications:** **dunst is the live daemon** (exec-once + eww
-  notifications window reads it). `~/.config/swaync/` + a disabled
-  `swaync.service` still exist — orphaned unless deliberately kept as spare.
-- **Wallpaper engines:** `hyprpaper.conf` + disabled `hyprpaper.service`
-  still present, but live path is `nyxus-live-wallpaper auto` (swww/mpvpaper)
-  + `nyxus-ws-wallpaperd` per-workspace daemon. hyprpaper looks orphaned.
-- **Settings:** `nyxus-settings` (main settings app) + quicksettings eww
-  panel (`nyxus-qsd` daemon) — *intentional* per user, but needs the
+- `~/.nyxus/nyxus_launcher.py` — `Super+Space`, the canonical launcher.
+- `~/.nyxus/nyxus_screenshot.py` — canonical screenshot app (grim+slurp GTK:
+  region/window/fullscreen/picker, `--annotate`, `--ocr`, `--delay`). Bound
+  on `Print`, `Shift+Print`, and the whole `Super+Print` family.
+- `~/.nyxus/nyxus_doctor.py` — `Super+Shift+H`, no duplicate exists.
+- `conf.d/nyxus-safemode.conf` — recovery profile, **unsourced by design**
+  (header now says so explicitly).
+- `Super+Tab` rofi window switcher — distinct function; rofi configs/themes
+  stay (used by the window switcher and various scripts).
+- grimblast binary stays installed (harmless; only the `nyxus-shot` wrapper
+  was removed).
+
+## 6. Duplicate / parallel subsystems — RESOLVED (2026-07-09)
+
+- **Terminals:** **alacritty is canonical.** `Super+Return` → alacritty,
+  `Super+Shift+Return` → floating alacritty. kitty remains installed but is
+  no longer bound anywhere.
+- **Launchers:** **`nyxus_launcher.py` is canonical** (`Super+Space`). The
+  rofi drun binds are gone; rofi survives only as the `Super+Tab` window
+  switcher. `nyxus-start` (start-menu) is a separate surface, untouched.
+- **Screenshots:** **`nyxus_screenshot.py` is canonical** — all five binds
+  point at it: `Print` (region), `Shift+Print` (picker), `Super+Print`
+  (region), `Super+Shift+Print` (fullscreen), `Super+Ctrl+Print` (window).
+  The `nyxus-shot` grimblast wrapper is **deleted** (live + repo rootfs);
+  the `hyprshot` bind is removed.
+- **Notifications:** dunst only. `~/.config/swaync/` **deleted** (live +
+  skel), removed from sync-script CONFIG_DIRS; `swaync.service` verified
+  disabled (vendor unit, no user unit present).
+- **Wallpaper engines:** swww/mpvpaper stack only. `hyprpaper.conf`
+  **deleted**; `hyprpaper.service` verified disabled (vendor unit).
+- **Settings:** `nyxus-settings` (main app) + quicksettings eww panel
+  (`nyxus-qsd`) — *intentional* per user; still needs the
   canonical-vs-quick-access relationship documented and both themed.
-- **Wallpaper accent:** `nyxus-waybar-state` script exists in `~/.local/bin`
-  but no waybar is in use (eww build) — likely orphaned.
+- **Wallpaper accent:** `nyxus-waybar-state` **deleted** (live + repo
+  rootfs) — no waybar in this build, zero references.
 
-## 7. Orphaned / unsourced config fragments
+## 7. Orphaned / unsourced config fragments — RESOLVED (2026-07-09)
 
-- `hypr/conf.d/nyxus-fx.conf` — **NOT sourced** by hyprland.conf. Its binds
-  (`Super+G` spray, `Super+Shift+P` wall-fx) are inactive. Note: `Super+G` in
-  it would collide with the live `Super+G → deepcore` bind if ever sourced.
-  wall-fx/spray shipped in commit `7375c3e` — determine where they're meant
-  to be bound.
-- `hypr/conf.d/nyxus-safemode.conf` — not sourced; **intentional** (recovery
-  profile referencing mako/waybar fallbacks). Keep, but document.
-- `~/.config/swaync/` (see §6), `hyprpaper.conf` (see §6).
+- `hypr/conf.d/nyxus-fx.conf` — **deleted**; its binds folded into
+  nyxus-signature.conf (§9c): spray moved `Super+G` → **`Super+Z`** (G
+  collides with the live deepcore bind), wall-fx toggle kept on
+  `Super+Shift+P` (verified free — beat vacated it for `Super+Alt+B`).
+  Both binds are now live for the first time.
+- `hypr/conf.d/nyxus-safemode.conf` — kept; header now explicitly marks it
+  as intentionally unsourced (recovery profile). See §5b.
+- `~/.config/swaync/`, `hyprpaper.conf` — deleted (see §6).
 - VBox log files and `db-old/`, backup dirs in various repos — outside Nyxus
   scope, ignore.
 
@@ -154,17 +174,18 @@ called out in the brief §3.
   nyxus-start, nyxus-stickies, nyxus-notepad, nyxus-sysmon, nyxus-store,
   nyxus-settings, nyxus-welcome, nyxus-intel, nyxus-sage, wallpaper-studio.
 
-## 10. Open questions for Session 2 (decisions, not yet made)
+## 10. Session 2 decisions — status
 
-1. Canonical terminal: alacritty or kitty? (everything except `Super+Return`
-   already points at alacritty)
-2. Legacy `~/.nyxus` GTK apps: retire terminal/launcher/screenshot bindings
-   in favor of current-gen, or keep any deliberately?
-3. Keybind conflicts (§4): which side of each pair wins?
-4. swaync + hyprpaper leftovers: delete or archive?
+1. ~~Canonical terminal~~ → **DECIDED + IMPLEMENTED: alacritty** (§5/§6).
+2. ~~Legacy `~/.nyxus` bindings~~ → **DECIDED + IMPLEMENTED:** terminal
+   retired in favor of alacritty; launcher/screenshot/doctor are canonical
+   keeps (§5b).
+3. ~~Keybind conflicts~~ → **DECIDED + IMPLEMENTED:** signature layer wins
+   all three; losers moved to `Super+J` / `Super+Alt+S` or removed (§4).
+4. ~~swaync + hyprpaper~~ → **DECIDED + IMPLEMENTED: deleted** (§6).
 5. Advanced escape hatches (§8): replace with themed in-panel pages, or
-   theme-wrap the external tools?
+   theme-wrap the external tools? — **still open**.
 6. Should `nyxus-home/-panel/-start/-stickies` config dirs be added to
-   `sync-live-config.sh` CONFIG_DIRS?
-7. `nyxus-fx.conf`: source it (rebinding spray off `Super+G`) or fold its
-   binds into nyxus-signature.conf?
+   `sync-live-config.sh` CONFIG_DIRS? — **still open**.
+7. ~~`nyxus-fx.conf`~~ → **DECIDED + IMPLEMENTED: folded into
+   nyxus-signature.conf** (spray on `Super+Z`), file deleted (§7).
