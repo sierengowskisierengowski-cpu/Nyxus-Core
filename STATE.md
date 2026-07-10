@@ -206,15 +206,18 @@ living-theme animation (pulse/tint/beat), **(3)** graffiti wallpaper energy
 | GTK apps HUD sweep | `9719c38` | Launcher, start, panel, welcome, etc.; fixed nyxus_chrome override bug |
 | Bars polish + graffiti assets | `43a3b33` | Graffiti PNG strips, mascot sprite sheet (128 frames), bar session sync |
 
-### In progress / needs polish (user feedback)
+### Four-bar cohesion pass (2026-07-10, live `~/.config/eww/`)
 
-- **Bars eye-candy** — user wants more "one of a kind"; end-cap doubling artifact
-  on top/bottom bar corners reported; signature moves (marquee chase, event
-  comets, music-reactive glow) may need another pass.
-- **Bar mascot** — sprite assets + `gen-mascot-sprites.py` ship in repo; **`mascot.py`
-  deflisten + eww widget not wired on live yet** (stick figure not visible).
-- **Visual parity QA** — user still comparing against HOME HUD reference; iterate
-  until bars/dashboard/apps all read as unmistakably transformed.
+| Task | Status | Notes |
+|---|---|---|
+| T1 Fonts + NEONFLICK wordmarks | **done** | Permanent Marker on `.ticker-label`/`.brand`; 13px + bloom; flicker dips to ~0.5 |
+| T2 Rainbow Pango ticker | **done** | `ticker.sh` emits per-segment accent colors; `:markup true` on marquee label |
+| T3 Mascot on bottom bar | **done** | `mascot.py` deflisten; 44×48 sprite; bar-bottom height 56px; `.bar-mascot` overflow |
+| T4 Unified four-bar ink | **done** | 408830e ink + graffiti on all bars; rails `rgba(7,5,14)`; unified 38px rail pills |
+| T5 Top-left cluster polish | **done** | Marker NYXUS·LIVE + NEONFLICK; HOST hud_tile unchanged |
+| Liquid fills / comets | **deferred** | Next pass after cohesion QA |
+
+**Test on NYXUS TTY:** `eww reload` then reopen bars if needed. `fc-match "Permanent Marker"` must not fall back to DejaVu.
 
 ### Not started / deferred
 
@@ -239,5 +242,5 @@ living-theme animation (pulse/tint/beat), **(3)** graffiti wallpaper energy
 
 ### GitHub sync
 
-- **Nyxus-Core** `nyxus-hyprland-055-fixes`: **fully pushed** (HEAD `43a3b33`).
+- **Nyxus-Core** `nyxus-hyprland-055-fixes`: sync pending commit (Session 3 eye-candy live).
 - **Bifrost** (`~/Projects/bifrost`): separate project; has local uncommitted edits only (README, RELEASE_NOTES, screenshot) — not part of NYXUS build.

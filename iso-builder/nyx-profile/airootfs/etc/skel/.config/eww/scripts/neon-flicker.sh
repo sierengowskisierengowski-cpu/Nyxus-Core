@@ -19,12 +19,13 @@ if [[ "${NYXUS_NEON_FLICKER:-on}" == "off" ]]; then
   exec sleep infinity
 fi
 
-# a burst is a quick irregular dip-recover sequence
+# a burst is a quick irregular dip-recover sequence (dips to ~0.5 for visibility)
 BURSTS=(
-  "0.45 1 0.70 1"
-  "0.35 0.90 0.55 1"
-  "0.60 1 0.40 0.85 1"
-  "0.50 1"
+  "0.50 1 0.65 1"
+  "0.35 0.90 0.50 1"
+  "0.45 1 0.40 0.85 1"
+  "0.55 0.50 1"
+  "0.30 1 0.55 1"
 )
 
 while :; do
