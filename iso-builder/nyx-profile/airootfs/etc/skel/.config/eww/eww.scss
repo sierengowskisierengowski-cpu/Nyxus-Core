@@ -67,8 +67,8 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
   padding: 4px 12px;
   background-image:
     linear-gradient(180deg,
-      rgba(13, 16, 28, 0.84) 0%,
-      rgba(5, 6, 10, 0.72) 100%),
+      rgba(9, 5, 16, 0.93) 0%,
+      rgba(5, 1, 13, 0.90) 100%),
     linear-gradient(100deg,
       rgba($nyxus-accent-primary, 0.70) 0%,
       rgba($nyxus-accent-ok, 0.55) 32%,
@@ -92,8 +92,8 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
   border-top: 2px solid transparent;
   background-image:
     linear-gradient(180deg,
-      rgba(13, 16, 28, 0.86),
-      rgba(5, 6, 10, 0.74)),
+      rgba(9, 5, 16, 0.93),
+      rgba(5, 1, 13, 0.90)),
     linear-gradient(90deg,
       $nyxus-accent-primary 0%, $nyxus-accent-ok 26%, $nyxus-accent-secondary 52%, $nyxus-accent-warn 78%, $nyxus-accent-primary 100%);
   box-shadow:
@@ -111,8 +111,8 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
   border-radius: 12px;
   background-image:
     linear-gradient(180deg,
-      rgba(10, 13, 24, 0.82),
-      rgba(5, 6, 10, 0.70)),
+      rgba(9, 5, 16, 0.93),
+      rgba(5, 1, 13, 0.90)),
     linear-gradient(90deg,
       rgba($nyxus-accent-secondary, 0.65) 0%,
       rgba($nyxus-accent-ok, 0.55) 45%,
