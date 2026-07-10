@@ -1,12 +1,12 @@
 # NYXUS — STATE.md (Phase 0 Reconciliation Inventory)
 
-Date: 2026-07-09 · Branch: `nyxus-hyprland-055-fixes` · Hyprland 0.55.4 · eww 0.5.0
+Date: 2026-07-10 · Branch: `nyxus-hyprland-055-fixes` · Hyprland 0.55.4 · eww 0.5.0
 
 This is the "what exists today" baseline: local machine vs. GitHub, plus every
-duplicate, orphan, and stale reference found. **Update 2026-07-09 (Session 2):
-the keybind de-dup / orphan-removal decisions were made and implemented** —
-§4–§7 and §10 now reflect the *resolved* state; §5b lists intentional keeps
-that must never be re-flagged as legacy/orphans.
+duplicate, orphan, and stale reference found. **Update 2026-07-10 (Session 3):
+theming + wiring pass largely complete; GitHub matches machine** (HEAD
+`43a3b33`, 0 ahead / 0 behind origin). See §11 for done / in-progress / plan.
+§5b lists intentional keeps that must never be re-flagged as legacy/orphans.
 
 ---
 
@@ -16,9 +16,9 @@ that must never be re-flagged as legacy/orphans.
   `~/Projects/nyxus-core`), remote
   `github.com/sierengowskisierengowski-cpu/Nyxus-Core`.
 - **Active branch:** `nyxus-hyprland-055-fixes` — working tree clean, **in
-  sync with `origin/nyxus-hyprland-055-fixes`** (0 ahead / 0 behind as of this
-  pass). `main` is stale/divergent (189 ahead, 181 behind) — the hyprland
-  branch is the real line of development.
+  sync with `origin/nyxus-hyprland-055-fixes`** (0 ahead / 0 behind, verified
+  2026-07-10). `main` is stale/divergent — the hyprland branch is the real line
+  of development.
 - **Sync mechanism:** live configs live in `~/.config/*` + `~/.local/bin/nyxus-*`;
   `scripts/sync-live-config.sh` rsyncs them into
   `iso-builder/nyx-profile/airootfs/` (skel + `/usr/local/bin`). The repo is a
@@ -28,23 +28,17 @@ that must never be re-flagged as legacy/orphans.
 - The Cursor workspace repo `~/Projects/bifrost` is a **separate project**
   (Bifrost ops-center screensaver) — not part of the Nyxus build itself.
 
-## 2. Live vs. repo drift (uncommitted since last live-sync)
+## 2. Live vs. repo drift
 
-Live `~/.config` has moved past the last synced snapshot (`7fd20b1`):
+**Resolved** for the major surfaces (living theme, eww, hypr, settings, apps)
+via commits `b8b3d03` → `43a3b33`. Remaining benign drift only:
 
-| Surface | Drift |
+| Surface | Status |
 |---|---|
-| `eww/eww.yuck` | Live adds **living-theme pulse fields** (`pr/pg/pb/ps/fr/fg/fb/fs`) to the PRISM deflisten + all four bar `:style` strings |
-| `eww/scripts/prism-anim.sh` | Live adds living-theme frame mixer (reads `$XDG_RUNTIME_DIR/nyxus-pulse.json`) |
-| `hypr/conf.d/nyxus-signature.conf` | Live adds §9b LIVING THEME: `Super+Alt+L` bind + `exec-once nyxus-living on`; removes old commented `nyxus-tintd` autostart |
-| `~/.local/bin/nyxus-living` | **Live-only, not in repo at all** |
-| `~/.local/bin/nyxus-pulsed` | **Live-only, not in repo at all** |
-| `hypr/walls/live/nyxus-void-vortex-live.mp4` | Live-only wallpaper (note: `*.mp4` is excluded by sync script — decide if intentional) |
-| `nyxus/settings.json` | Trivial (`last_section` cursor) |
-
-→ **Action next session:** run `scripts/sync-live-config.sh`, verify
-`nyxus-living`/`nyxus-pulsed` get picked up (they will — script globs
-`~/.local/bin/nyxus-*`), commit as "living theme live-sync".
+| `~/.config/eww/*.bak*` | Local editor backups — not synced (correct) |
+| `~/.nyxus/__pycache__` | Bytecode only — not synced (correct) |
+| `hypr/walls/live/*.mp4` | Excluded by sync script (`--exclude '*.mp4'`) — intentional |
+| `nyxus/settings.json` | Per-user cursor (`last_section`) — may differ per machine |
 
 ## 3. Sync-script coverage gaps (things that can silently drift)
 
@@ -54,7 +48,8 @@ Live `~/.config` has moved past the last synced snapshot (`7fd20b1`):
   (app state/config for Nyxus apps)
 - `~/.config/nyxus-intel/`, `nyxus-sage/` (data dirs — probably correct to
   exclude, but should be an explicit decision)
-- `~/.nyxus/` legacy GTK app tree (see §5) is not synced at all
+- `~/.nyxus/` GTK app tree — **now synced** (added in commit `35af614`); app
+  state dirs (`nyxus-home/`, `nyxus-panel/`, etc.) still not in CONFIG_DIRS
 - Live user units `nyxus-eww.service` and `nyxus-usb-watch.service` exist in
   `~/.config/systemd/user/` but are **not in repo skel** (repo has 8 units,
   live has 10 nyxus units)
@@ -121,9 +116,9 @@ from `nyxus-hyprland-fog.conf`; commented legacy autostarts (nyxus-weather,
   disabled (vendor unit, no user unit present).
 - **Wallpaper engines:** swww/mpvpaper stack only. `hyprpaper.conf`
   **deleted**; `hyprpaper.service` verified disabled (vendor unit).
-- **Settings:** `nyxus-settings` (main app) + quicksettings eww panel
-  (`nyxus-qsd`) — *intentional* per user; still needs the
-  canonical-vs-quick-access relationship documented and both themed.
+- **Settings:** `nyxus-settings` → canonical 14k-line control center
+  (`~/.nyxus/nyxus_settings.py`, fixed in `35af614`); quicksettings eww panel
+  (`nyxus-qsd`) = deliberate quick-access layer. Both themed to HUD language.
 - **Wallpaper accent:** `nyxus-waybar-state` **deleted** (live + repo
   rootfs) — no waybar in this build, zero references.
 
@@ -140,16 +135,11 @@ from `nyxus-hyprland-fog.conf`; commented legacy autostarts (nyxus-weather,
 - VBox log files and `db-old/`, backup dirs in various repos — outside Nyxus
   scope, ignore.
 
-## 8. Escape hatches that break theming (reference-image violations)
+## 8. Escape hatches — RESOLVED (2026-07-09, commit `913a3ee`)
 
-Quicksettings sub-panels shell out to foreign-styled tools:
-
-- WiFi → "Advanced (nmtui)" → `alacritty -e nmtui`
-- Bluetooth → "Advanced" → `blueman-manager`
-- Mixer → "Advanced (pavucontrol)" → `pavucontrol`
-
-These are exactly the "second, separately-styled settings surface" problem
-called out in the brief §3.
+WiFi / Bluetooth / Mixer flyouts now use **themed in-panel pages** (saved
+networks, trust/pair controls, input-device mixer). Deeper cases fall back to
+`nyxus-settings`, not nmtui/blueman/pavucontrol.
 
 ## 9. Current surface inventory (for the theming pass)
 
@@ -183,9 +173,71 @@ called out in the brief §3.
 3. ~~Keybind conflicts~~ → **DECIDED + IMPLEMENTED:** signature layer wins
    all three; losers moved to `Super+J` / `Super+Alt+S` or removed (§4).
 4. ~~swaync + hyprpaper~~ → **DECIDED + IMPLEMENTED: deleted** (§6).
-5. Advanced escape hatches (§8): replace with themed in-panel pages, or
-   theme-wrap the external tools? — **still open**.
-6. Should `nyxus-home/-panel/-start/-stickies` config dirs be added to
-   `sync-live-config.sh` CONFIG_DIRS? — **still open**.
-7. ~~`nyxus-fx.conf`~~ → **DECIDED + IMPLEMENTED: folded into
-   nyxus-signature.conf** (spray on `Super+Z`), file deleted (§7).
+5. ~~Advanced escape hatches~~ → **IMPLEMENTED** (§8).
+6. Should `nyxus-home/-panel/-start/-stickies` **config state dirs** be added
+   to `sync-live-config.sh` CONFIG_DIRS? — **still open** (app *code* syncs;
+   per-user pins/recent JSON does not).
+7. ~~`nyxus-fx.conf`~~ → **DECIDED + IMPLEMENTED** (§7).
+
+---
+
+## 11. Session 3 — build status (2026-07-10)
+
+### Theme target (locked)
+
+Fusion of three ingredients: **(1)** HOME HUD card language (`rgba(7,5,14)`
+ink, per-card neon hues, dot-matrix numerals, hairline borders), **(2)** prism
+living-theme animation (pulse/tint/beat), **(3)** graffiti wallpaper energy
+(script flourishes, spray glow, faint bar textures). Accent source of truth:
+`~/.config/nyxus/accent.json` → `nyxus-apply-accent` → shared tokens.
+
+### Done (committed + pushed to `origin/nyxus-hyprland-055-fixes`)
+
+| Area | Commit(s) | Notes |
+|---|---|---|
+| Phase 0 inventory | `ce390be` | This file |
+| Living theme sync | `b8b3d03` | nyxus-living/pulsed, pulse-reactive rims |
+| Keybind de-dup | `f08cd73` | 118 binds, 0 duplicates; alacritty canonical |
+| Settings control center | `35af614` | Wrapper fix, 48 sections audited, dead buttons fixed |
+| Flyouts + click audit | `913a3ee` | In-panel WiFi/BT/mixer/updates; 12 dead clicks fixed |
+| Lock / login / splash | `1a10b3e` | hyprlock HUD; greetd login chain for ISO; galaxy-eye plymouth restored in rootfs |
+| Bars + dashboard v1 | `96d6fc2` | HUD tiles, aurora fills, overlay bleed fix, neon flicker |
+| Alacritty + Super+R | `8d35dbc` | Config error fixed; HUD ANSI palette |
+| GTK apps HUD sweep | `9719c38` | Launcher, start, panel, welcome, etc.; fixed nyxus_chrome override bug |
+| Bars polish + graffiti assets | `43a3b33` | Graffiti PNG strips, mascot sprite sheet (128 frames), bar session sync |
+
+### In progress / needs polish (user feedback)
+
+- **Bars eye-candy** — user wants more "one of a kind"; end-cap doubling artifact
+  on top/bottom bar corners reported; signature moves (marquee chase, event
+  comets, music-reactive glow) may need another pass.
+- **Bar mascot** — sprite assets + `gen-mascot-sprites.py` ship in repo; **`mascot.py`
+  deflisten + eww widget not wired on live yet** (stick figure not visible).
+- **Visual parity QA** — user still comparing against HOME HUD reference; iterate
+  until bars/dashboard/apps all read as unmistakably transformed.
+
+### Not started / deferred
+
+| Item | Notes |
+|---|---|
+| Full QA checklist (brief §6) | Every bar click, every keybind, fresh relogin test |
+| Fresh-login / greeter test on this machine | ISO login stack built; cosmic-greeter still active here |
+| `sudo nyxus-plymouth-install` | Arms galaxy-eye boot splash on **this** machine (user action) |
+| Ecosystem adopt/skip picks | Research delivered; user to confirm (hyprlang migration ~Aug 2026 urgent) |
+| Terminal netinstall script | "Download like a real distro" — nyxus-installer bones exist |
+| Swap this machine to NYXUS-only login | After QA green; replace cosmic-greeter |
+| Workspaces eye-candy pass | Indicators improved; full animation/showcase pass deferred |
+| Notifications / rofi / wlogout / lock idle unified token audit | Partially done via accent engine |
+| Bottom-bar access consolidation | Most modules reachable; audit vs brief §4.7 remaining |
+| `main` branch reconciliation | 189 ahead / 181 behind — do not merge blindly |
+
+### How to launch / test
+
+- **Side-by-side (current):** COSMIC on tty1; NYXUS Hyprland on spare TTY (`Hyprland`).
+- **Full session test:** Log out → greeter → pick **NYXUS Hyprland** (cosmic-greeter remembers last choice).
+- **Key surfaces:** `Super+Space` launcher · `Super+grave` dashboard · `Super+A` quicksettings · `Super+0` HOME HUD · `nyxus-settings` main settings.
+
+### GitHub sync
+
+- **Nyxus-Core** `nyxus-hyprland-055-fixes`: **fully pushed** (HEAD `43a3b33`).
+- **Bifrost** (`~/Projects/bifrost`): separate project; has local uncommitted edits only (README, RELEASE_NOTES, screenshot) — not part of NYXUS build.
