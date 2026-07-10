@@ -242,5 +242,5 @@ living-theme animation (pulse/tint/beat), **(3)** graffiti wallpaper energy
 
 ### GitHub sync
 
-- **Nyxus-Core** `nyxus-hyprland-055-fixes`: sync pending commit (Session 3 eye-candy live).
+- **Nyxus-Core** `nyxus-hyprland-055-fixes`: **pushed** (HEAD `a6e0b52` — four-bar cohesion pass).
 - **Bifrost** (`~/Projects/bifrost`): separate project; has local uncommitted edits only (README, RELEASE_NOTES, screenshot) — not part of NYXUS build.
