@@ -1,0 +1,29 @@
+# ── NYXUS bars · Hyprland layer rules ────────────────────────────────────────
+# Source this (or paste into ~/.config/hypr/hyprland.conf). These give the eww
+# bars their frosted-glass depth so the wallpaper bleeds through the translucent
+# module backgrounds.
+#
+# NOTE: `xray` is a GLOBAL blur setting, not a per-layer rule — it is enabled once
+# in the decoration block (below), NOT per namespace. Per-bar rules only control
+# blur on/off and the alpha-clip threshold.
+
+# Global blur must be on for layer blur to apply:
+decoration {
+    blur {
+        enabled           = true
+        xray              = true   # sample the wallpaper only (no smear from windows)
+        new_optimizations = true
+    }
+}
+
+# Per-bar frosted glass. `ignore_alpha` raises the transparency threshold so fully
+# transparent pixels (the gaps around the floating islands) don't get blurred —
+# this is the eww equivalent of "ignorezero".
+layerrule = blur on,          match:namespace nyxus-bar-bottom
+layerrule = ignore_alpha 0.2, match:namespace nyxus-bar-bottom
+layerrule = blur on,          match:namespace nyxus-bar-top
+layerrule = ignore_alpha 0.2, match:namespace nyxus-bar-top
+layerrule = blur on,          match:namespace nyxus-bar-left
+layerrule = ignore_alpha 0.2, match:namespace nyxus-bar-left
+layerrule = blur on,          match:namespace nyxus-bar-right
+layerrule = ignore_alpha 0.2, match:namespace nyxus-bar-right

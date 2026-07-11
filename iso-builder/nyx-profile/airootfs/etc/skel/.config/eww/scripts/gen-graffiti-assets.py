@@ -50,8 +50,8 @@ def spray_blob(draw, cx, cy, r, color, alpha, n=140):
         ang = random.uniform(0, math.tau)
         dist = abs(random.gauss(0, r / 2.2))
         x, y = cx + dist * math.cos(ang), cy + dist * math.sin(ang)
-        s = random.uniform(0.4, 1.6)
-        a = int(alpha * max(0.15, 1 - dist / (r + 1)))
+        s = random.uniform(0.6, 2.2)
+        a = int(alpha * max(0.18, 1 - dist / (r + 1)))
         draw.ellipse((x - s, y - s, x + s, y + s), fill=color + (a,))
 
 def marker_tag(img, text, xy, size, color, alpha, angle=0, font="PermanentMarker-Regular.ttf"):
@@ -77,47 +77,47 @@ def strip(path, w, h, tags, blobs, drips, edge_boost=True):
     for _ in range(blobs):
         col = random.choice(PALETTE)
         # denser near the end caps where content is sparse
-        if edge_boost and random.random() < 0.65:
+        if edge_boost and random.random() < 0.55:
             cx = random.choice([random.uniform(0, w * 0.16), random.uniform(w * 0.84, w)])
         else:
             cx = random.uniform(0, w)
-        spray_blob(draw, cx, random.uniform(0, h), random.uniform(h * 0.25, h * 0.7),
-                   col, random.randint(10, 20))
+        spray_blob(draw, cx, random.uniform(0, h), random.uniform(h * 0.25, h * 0.85),
+                   col, random.randint(34, 58), n=260)
     for text, rel_x, size, angle in tags:
         col = random.choice(PALETTE)
         marker_tag(img, text, (rel_x * w, random.uniform(-h * 0.15, h * 0.25)),
-                   size, col, random.randint(12, 20), angle)
+                   size, col, random.randint(44, 72), angle)
     for _ in range(drips):
         col = random.choice(PALETTE)
         x = random.choice([random.uniform(6, w * 0.14), random.uniform(w * 0.86, w - 6)]) if edge_boost else random.uniform(0, w)
-        drip(draw, x, random.uniform(0, h * 0.4), random.randint(int(h * 0.3), int(h * 0.8)),
-             col, random.randint(14, 24))
-    img = img.filter(ImageFilter.GaussianBlur(0.6))
+        drip(draw, x, random.uniform(0, h * 0.4), random.randint(int(h * 0.3), int(h * 0.85)),
+             col, random.randint(34, 56), w=3)
+    img = img.filter(ImageFilter.GaussianBlur(0.5))
     img.save(path)
     print("wrote", path)
 
 # bottom bar underlay
 strip(os.path.join(OUT, "graffiti-strip.png"), 1896, 49,
-      tags=[("NYXUS", 0.015, 22, 4), ("✕", 0.10, 26, -8), ("VOID", 0.885, 20, -5), ("✕", 0.965, 24, 10)],
-      blobs=26, drips=7)
+      tags=[("NYXUS", 0.015, 28, 4), ("✕", 0.10, 32, -8), ("VOID", 0.885, 26, -5), ("✕", 0.965, 30, 10)],
+      blobs=52, drips=14)
 
 # top bar underlay
 strip(os.path.join(OUT, "graffiti-top.png"), 1896, 32,
-      tags=[("✕", 0.02, 18, -6), ("nyx", 0.94, 16, 6)],
-      blobs=16, drips=4)
+      tags=[("✕", 0.02, 22, -6), ("NYXUS", 0.42, 20, 3), ("nyx", 0.94, 20, 6)],
+      blobs=42, drips=10)
 
 # vertical rail underlay
 img = Image.new("RGBA", (56, 760), (0, 0, 0, 0))
 d = ImageDraw.Draw(img)
-for _ in range(18):
+for _ in range(46):
     col = random.choice(PALETTE)
-    spray_blob(d, random.uniform(0, 56), random.uniform(0, 760), random.uniform(14, 30),
-               col, random.randint(10, 18))
-for _ in range(5):
+    spray_blob(d, random.uniform(0, 56), random.uniform(0, 760), random.uniform(16, 36),
+               col, random.randint(32, 54), n=240)
+for _ in range(12):
     col = random.choice(PALETTE)
-    drip(d, random.uniform(8, 48), random.uniform(20, 640), random.randint(30, 90),
-         col, random.randint(12, 20))
-img = img.filter(ImageFilter.GaussianBlur(0.6))
+    drip(d, random.uniform(8, 48), random.uniform(20, 640), random.randint(40, 110),
+         col, random.randint(32, 54), w=3)
+img = img.filter(ImageFilter.GaussianBlur(0.5))
 img.save(os.path.join(OUT, "graffiti-rail.png"))
 print("wrote", os.path.join(OUT, "graffiti-rail.png"))
 

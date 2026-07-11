@@ -22,7 +22,7 @@ FX="${NYXUS_BAR_FX:-on}"
 FPS="${NYXUS_BAR_FX_FPS:-15}"
 
 if [ "$FX" != "on" ]; then
-  echo '{"a":100,"b":280,"p":0.5,"g":0.5,"pr":255,"pg":60,"pb":172,"ps":0,"fr":43,"fg":210,"fb":255,"fs":0}'
+  echo '{"a":100,"b":280,"p":0.5,"g":0.5,"pr":255,"pg":60,"pb":172,"ps":0,"fr":43,"fg":210,"fb":255,"fs":0,"ctop":-60,"cright":-60,"cbot":-60,"cleft":-60}'
   exec sleep infinity
 fi
 
@@ -42,11 +42,26 @@ last_mtime = 0.0
 while True:
     t = time.monotonic() - t0
     a = (t * 42.0) % 360.0
+    # Perimeter comet: ONE light travels clockwise around the screen edge,
+    # handed off bar-to-bar at the corners. ~7s lap. Off-quadrant bars get
+    # -60 (off-canvas) so only one bar shows the comet at a time.
+    cang = (t * (360.0 / 10.0)) % 360.0
+    ctop = cright = cbot = cleft = -60.0
+    if cang < 90.0:
+        ctop = cang / 0.9                       # left -> right across top
+    elif cang < 180.0:
+        cright = (cang - 90.0) / 0.9            # top -> bottom, right rail
+    elif cang < 270.0:
+        cbot = 100.0 - (cang - 180.0) / 0.9     # right -> left across bottom
+    else:
+        cleft = 100.0 - (cang - 270.0) / 0.9    # bottom -> top, left rail
     frame = {
         "a": round(a, 1),
         "b": round((a + 180.0) % 360.0, 1),
         "p": round((math.sin(t * math.tau / 3.4) + 1.0) / 2.0, 3),
         "g": round((math.sin(t * math.tau / 5.2 + 1.7) + 1.0) / 2.0, 3),
+        "ctop": round(ctop, 1), "cright": round(cright, 1),
+        "cbot": round(cbot, 1), "cleft": round(cleft, 1),
     }
     try:
         mt = os.stat(state_path).st_mtime

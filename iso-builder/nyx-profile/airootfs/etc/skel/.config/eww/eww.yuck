@@ -26,7 +26,7 @@
 ;; ticker.sh runs at 10 fps to scroll one column per tick (true marquee).
 (defpoll TICKER     :interval "0.1s" :initial '{"text":"▌ NYXUS · DARK MIRROR · LIVE                                                  ","tooltip":"NYXUS"}'
                                      "~/.config/eww/scripts/ticker.sh")
-(defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0,"load":"0","swap":0}'
+(defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0,"load":"0","swap":0,"gpu":"--","gputemp":"--","fan":"--","netrx":"--","nettx":"--"}'
                                      "~/.config/eww/scripts/sys-pulse.sh")
 (defpoll CPUCORES   :interval "3s"   :initial '{"cores":[]}'
                                      "~/.config/eww/scripts/cpu-bars.sh")
@@ -108,7 +108,7 @@
 ;; consume it via inline :style so the gradient painted on border-box
 ;; (the visible rim) sweeps around the frame while the inset neon
 ;; pulses. NYXUS_BAR_FX=off in nyxus.conf freezes it at zero CPU.
-(deflisten PRISM :initial '{"a":100,"b":280,"p":0.5,"g":0.5,"pr":255,"pg":60,"pb":172,"ps":0,"fr":43,"fg":210,"fb":255,"fs":0}'
+(deflisten PRISM :initial '{"a":100,"b":280,"p":0.5,"g":0.5,"pr":255,"pg":60,"pb":172,"ps":0,"fr":43,"fg":210,"fb":255,"fs":0,"ctop":-60,"cright":-60,"cbot":-60,"cleft":-60}'
                  "~/.config/eww/scripts/prism-anim.sh")
 
 ;; ── neon-sign flicker driver ─────────────────────────────────────────
@@ -119,9 +119,17 @@
 ;; nyxus.conf disables it.
 (deflisten NEONFLICK :initial "1" "~/.config/eww/scripts/neon-flicker.sh")
 
-;; ── bar mascot co-pilot (128 pre-rendered sprites) ─────────────────
-(deflisten MASCOT :initial '{"path":"/home/cosmic/.config/eww/assets/mascot/idle0_happy.png"}'
-                "~/.config/eww/scripts/mascot.py")
+;; ── starlight headliner twinkle ──────────────────────────────────────
+;; starlight-anim.sh cycles pre-rendered twinkle overlays so the
+;; fiber-optic stars breathe like a Rolls-Royce headliner roof; `tw`
+;; drives the aurora curtain intensity.
+(deflisten STARLIGHT :initial '{"f":0,"tw":0.5}'
+                 "~/.config/eww/scripts/starlight-anim.sh")
+
+;; ── live moon phase (starlight top bar tile) ─────────────────────────
+(defpoll MOON :interval "1800s"
+              :initial '{"glyph":"󰽢","name":"Moon","pct":0}'
+  "~/.config/eww/scripts/moon.sh")
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; CORE BAR WIDGETS
@@ -156,8 +164,11 @@
 (defwidget syspulse_widget []
   (box :class "syspulse" :space-evenly false :spacing 6
     (hud_tile :hue "pink"   :glyph "󰘚" :label "CPU"  :value "${SYSPULSE.cpu}%"  :tip "CPU load")
-    (hud_tile :hue "purple" :glyph "󰍛" :label "MEM"  :value "${SYSPULSE.mem}%"  :tip "Memory used")
-    (hud_tile :hue "orange" :glyph "󰔏" :label "TMP"  :value "${SYSPULSE.temp}°" :tip "CPU temperature")))
+    (hud_tile :hue "purple" :glyph "󰍛" :label "RAM"  :value "${SYSPULSE.mem}%"  :tip "Memory used")
+    (hud_tile :hue "blue"   :glyph "󰢮" :label "GPU"  :value "${SYSPULSE.gpu}%"  :tip "GPU · ${SYSPULSE.gputemp}°C")
+    (hud_tile :hue "orange" :glyph "󰔏" :label "TMP"  :value "${SYSPULSE.temp}°" :tip "CPU temperature")
+    (hud_tile :hue "green"  :glyph "󰈐" :label "FAN"  :value "${SYSPULSE.fan}"   :tip "Fan speed (RPM)")
+    (hud_tile :hue "gold"   :glyph "󰛳" :label "NET"  :value "↓${SYSPULSE.netrx} ↑${SYSPULSE.nettx}" :tip "Network rx / tx per second")))
 
 (defwidget clock_widget []
   (button :class "clock"
@@ -290,7 +301,6 @@
 (defwidget ticker_widget []
   (box :class "ticker-box" :space-evenly false :hexpand true :halign "center"
     (label :class "ticker ticker-marquee"
-           :markup true
            :limit-width 120
            :unindent false
            :text "${TICKER.text}"
@@ -314,7 +324,7 @@
 ;; opposite directions around the screen.
 (defwidget workspaces_rail []
   (box :class "ws-rail" :orientation "v" :space-evenly false :spacing 6 :valign "center"
-    :style "background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px), radial-gradient(circle at 50% ${round(PRISM.a / 3.6, 1)}%, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.10 + PRISM.p * 0.06 + PRISM.ps * 0.15, 3)}) 0%, rgba(0,0,0,0) 30%), linear-gradient(${PRISM.a}deg, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.05 + PRISM.p * 0.07, 3)}) 0%, rgba(0,0,0,0) 50%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.02 + PRISM.g * 0.03, 3)}) 100%), linear-gradient(170deg, rgba(7,5,14,0.97), rgba(4,2,8,0.96)), url('assets/graffiti-rail.png'), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.p * 14, 1)}px rgba(255,60,172,${round(0.05 + PRISM.p * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
+    :style "background-image: linear-gradient(180deg, rgba(150,90,255,0) ${round(PRISM.cleft - 2, 1)}%, rgba(255,255,255,0.98) ${PRISM.cleft}%, rgba(200,165,255,0.78) ${round(PRISM.cleft + 3, 1)}%, rgba(150,90,255,0.42) ${round(PRISM.cleft + 9, 1)}%, rgba(120,75,255,0.16) ${round(PRISM.cleft + 16, 1)}%, rgba(150,90,255,0) ${round(PRISM.cleft + 24, 1)}%), linear-gradient(${PRISM.a}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.02 + STARLIGHT.tw * 0.045, 3)}) 32%, rgba(150,90,255,${round(0.025 + STARLIGHT.tw * 0.055, 3)}) 58%, rgba(255,73,148,${round(0.01 + STARLIGHT.tw * 0.02, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/starlight-twinkle-rail-${STARLIGHT.f}.png'), url('assets/starlight-rail.png'), linear-gradient(170deg, rgba(7,3,16,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.p * 14, 1)}px rgba(150,90,255,${round(0.04 + PRISM.p * 0.07, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
     (workspace_pill :id 1  :occ {WORKSPACES.occ1})
     (workspace_pill :id 2  :occ {WORKSPACES.occ2})
     (workspace_pill :id 3  :occ {WORKSPACES.occ3})
@@ -333,7 +343,7 @@
 
 (defwidget app_rail []
   (box :class "app-rail" :orientation "v" :space-evenly false :spacing 10 :valign "center"
-    :style "background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px), radial-gradient(circle at 50% ${round(100 - PRISM.b / 3.6, 1)}%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.09 + PRISM.g * 0.05 + PRISM.fs * 0.14, 3)}) 0%, rgba(0,0,0,0) 30%), linear-gradient(${PRISM.b}deg, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.02 + PRISM.g * 0.04, 3)}) 0%, rgba(0,0,0,0) 50%, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.04 + PRISM.p * 0.06, 3)}) 100%), linear-gradient(190deg, rgba(7,5,14,0.97), rgba(4,2,8,0.96)), url('assets/graffiti-rail.png'), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.g * 14, 1)}px rgba(43,210,255,${round(0.05 + PRISM.g * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
+    :style "background-image: linear-gradient(180deg, rgba(150,90,255,0) ${round(PRISM.cright - 24, 1)}%, rgba(120,75,255,0.16) ${round(PRISM.cright - 16, 1)}%, rgba(150,90,255,0.42) ${round(PRISM.cright - 9, 1)}%, rgba(200,165,255,0.78) ${round(PRISM.cright - 3, 1)}%, rgba(255,255,255,0.98) ${PRISM.cright}%, rgba(150,90,255,0) ${round(PRISM.cright + 2, 1)}%), linear-gradient(${PRISM.b}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.02 + STARLIGHT.tw * 0.045, 3)}) 32%, rgba(150,90,255,${round(0.025 + STARLIGHT.tw * 0.055, 3)}) 58%, rgba(255,73,148,${round(0.01 + STARLIGHT.tw * 0.02, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/starlight-twinkle-rail-${STARLIGHT.f}.png'), url('assets/starlight-rail.png'), linear-gradient(190deg, rgba(7,3,16,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 ${round(20 + PRISM.g * 14, 1)}px rgba(150,90,255,${round(0.04 + PRISM.g * 0.07, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
     (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
     (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
     (app_launcher :glyph "" :cmd "thunar"         :label "Files" :hue "gold")
@@ -354,9 +364,8 @@
 ;; fallback, inline only overrides background-image + box-shadow.
 (defwidget bar_bottom_layout []
   (centerbox :class "bar bar-bottom" :orientation "h"
-    :style "background-image: radial-gradient(circle at ${round(PRISM.a / 3.6, 1)}% 50%, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.04 + PRISM.p * 0.03 + PRISM.ps * 0.18, 3)}) 0%, rgba(0,0,0,0) 22%), radial-gradient(circle at ${round(100 - PRISM.b / 3.6, 1)}% 50%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.g * 0.025 + PRISM.fs * 0.12, 3)}) 0%, rgba(0,0,0,0) 26%), linear-gradient(${PRISM.a}deg, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.02 + PRISM.p * 0.04, 3)}) 0%, rgba(0,0,0,0) 35%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.02 + PRISM.g * 0.04, 3)}) 65%, rgba(0,0,0,0) 100%), linear-gradient(180deg, rgba(7,5,14,0.97), rgba(4,2,8,0.96)), url('assets/graffiti-strip.png'), linear-gradient(${PRISM.a}deg, #ff4994 0%, #26ffb7 26%, #26ff39 52%, #ff8b26 78%, #ff4994 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.06 + PRISM.p * 0.06, 3)}), inset 0 -16px ${round(26 + PRISM.p * 16, 1)}px rgba(255,60,172,${round(0.07 + PRISM.p * 0.11, 3)}), inset 0 16px ${round(26 + PRISM.g * 16, 1)}px rgba(43,210,255,${round(0.04 + PRISM.g * 0.09, 3)}), inset 0 0 ${round(16 + PRISM.ps * 40, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.60, 3)}), inset 0 0 ${round(12 + PRISM.fs * 18, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.15, 3)});"
-    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 8 :halign "start"
-      (image :class "bar-mascot" :path "${MASCOT.path}" :image-width 44 :image-height 48)
+    :style "background-image: linear-gradient(90deg, rgba(150,90,255,0) ${round(PRISM.cbot - 2.5, 1)}%, rgba(255,255,255,0.98) ${PRISM.cbot}%, rgba(200,165,255,0.78) ${round(PRISM.cbot + 4, 1)}%, rgba(150,90,255,0.42) ${round(PRISM.cbot + 13, 1)}%, rgba(120,75,255,0.16) ${round(PRISM.cbot + 25, 1)}%, rgba(150,90,255,0) ${round(PRISM.cbot + 36, 1)}%), linear-gradient(${PRISM.a}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.02 + STARLIGHT.tw * 0.045, 3)}) 32%, rgba(150,90,255,${round(0.025 + STARLIGHT.tw * 0.055, 3)}) 58%, rgba(255,73,148,${round(0.01 + STARLIGHT.tw * 0.02, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/starlight-twinkle-strip-${STARLIGHT.f}.png'), url('assets/starlight-strip.png'), linear-gradient(180deg, rgba(7,3,16,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.a}deg, #ff4994 0%, #26ffb7 26%, #26ff39 52%, #ff8b26 78%, #ff4994 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.06 + PRISM.p * 0.06, 3)}), inset 0 -16px ${round(26 + PRISM.p * 16, 1)}px rgba(120,75,255,${round(0.05 + PRISM.p * 0.08, 3)}), inset 0 16px ${round(26 + PRISM.g * 16, 1)}px rgba(150,90,255,${round(0.03 + PRISM.g * 0.06, 3)}), inset 0 0 ${round(16 + PRISM.ps * 40, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.60, 3)}), inset 0 0 ${round(12 + PRISM.fs * 18, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.15, 3)});"
+    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 12 :halign "start"
       (nyxus_brand) (heartbeat))
     (box :class "bar-cluster cluster-center" :space-evenly false :spacing 12 :halign "center"
       (syspulse_widget) (cava_widget) (tray_dummy) (clock_widget))
@@ -374,13 +383,14 @@
 ;; Right = HUD mini tiles (uptime/disk/net) + now-playing player
 (defwidget bar_top_layout []
   (centerbox :class "bar bar-top" :orientation "h"
-    :style "background-image: radial-gradient(circle at ${round(PRISM.b / 3.6, 1)}% 50%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.g * 0.02 + PRISM.fs * 0.12, 3)}) 0%, rgba(0,0,0,0) 26%), linear-gradient(${PRISM.b}deg, rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(0.02 + PRISM.p * 0.03, 3)}) 0%, rgba(0,0,0,0) 40%, rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.02 + PRISM.g * 0.03, 3)}) 75%, rgba(0,0,0,0) 100%), linear-gradient(180deg, rgba(7,5,14,0.97), rgba(4,2,8,0.96)), url('assets/graffiti-top.png'), linear-gradient(${PRISM.b}deg, rgba(38,255,183,0.80) 0%, rgba(38,255,57,0.62) 33%, rgba(255,73,148,0.80) 66%, rgba(38,255,183,0.80) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.05 + PRISM.g * 0.05, 3)}), inset 0 -10px ${round(18 + PRISM.p * 14, 1)}px rgba(120,75,255,${round(0.06 + PRISM.p * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
+    :style "background-image: linear-gradient(90deg, rgba(150,90,255,0) ${round(PRISM.ctop - 36, 1)}%, rgba(120,75,255,0.16) ${round(PRISM.ctop - 25, 1)}%, rgba(150,90,255,0.42) ${round(PRISM.ctop - 13, 1)}%, rgba(200,165,255,0.78) ${round(PRISM.ctop - 4, 1)}%, rgba(255,255,255,0.98) ${PRISM.ctop}%, rgba(150,90,255,0) ${round(PRISM.ctop + 2.5, 1)}%), linear-gradient(${PRISM.b}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.02 + STARLIGHT.tw * 0.045, 3)}) 32%, rgba(150,90,255,${round(0.025 + STARLIGHT.tw * 0.055, 3)}) 58%, rgba(255,73,148,${round(0.01 + STARLIGHT.tw * 0.02, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/starlight-twinkle-top-${STARLIGHT.f}.png'), url('assets/starlight-top.png'), linear-gradient(180deg, rgba(7,3,16,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.b}deg, rgba(38,255,183,0.80) 0%, rgba(38,255,57,0.62) 33%, rgba(255,73,148,0.80) 66%, rgba(38,255,183,0.80) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.05 + PRISM.g * 0.05, 3)}), inset 0 -10px ${round(18 + PRISM.p * 14, 1)}px rgba(120,75,255,${round(0.06 + PRISM.p * 0.10, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
     (box :class "bar-cluster cluster-left" :space-evenly false :spacing 8 :halign "start"
       (label :class "ticker-label" :style "opacity: ${NEONFLICK};" :text "▌ NYXUS · LIVE")
       (hud_tile :hue "pink" :glyph "󰇅" :label "HOST" :value "${BARTILES.host}" :tip "Hostname"))
     (box :class "bar-cluster cluster-center" :space-evenly false :halign "center"
       (ticker_widget))
     (box :class "bar-cluster cluster-right hud-tile-strip" :space-evenly false :spacing 8 :halign "end"
+      (hud_tile :hue "purple" :glyph "${MOON.glyph}" :label "MOON" :value "${MOON.pct}%" :tip "${MOON.name} · ${MOON.pct}% illuminated")
       (hud_tile :hue "gold"   :glyph "󰔟" :label "UP"   :value "${BARTILES.up}"    :tip "Uptime")
       (hud_tile :hue "orange" :glyph "󰋊" :label "DISK" :value "${BARTILES.disk}%" :tip "Root filesystem used")
       (hud_tile :hue "green"  :glyph "󰩟" :label "NET"  :value "${BARTILES.ip}"    :tip "Primary IPv4")
@@ -667,7 +677,7 @@
 ;; on .bar-bottom / .bar-top, NOT from a <100% surface width.
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
-  :geometry (geometry :x "0" :y "12" :width "100%" :height "56px" :anchor "bottom center")
+  :geometry (geometry :x "0" :y "12" :width "100%" :height "49px" :anchor "bottom center")
   (bar_bottom_layout))
 
 (defwindow bar-top
