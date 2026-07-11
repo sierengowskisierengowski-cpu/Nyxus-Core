@@ -154,52 +154,69 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
     inset 0 0 8px rgba(0, 0, 0, 0.30);
   transition: all 180ms ease;
 }
+/* hover = the gem catches starlight: white-crystal flare, hue keeps its
+   identity (no forced pink - border/nebula colors stay per-gem) */
 .pill:hover {
-  background:
+  background-image:
+    radial-gradient(circle at 50% 130%,
+      rgba(232, 228, 255, 0.30) 0%,
+      rgba(180, 150, 255, 0.12) 45%,
+      rgba(0, 0, 0, 0) 72%),
+    linear-gradient(120deg,
+      rgba(255, 255, 255, 0.00) 4%,
+      rgba(255, 255, 255, 0.26) 12%,
+      rgba(255, 255, 255, 0.00) 22%),
     linear-gradient(180deg,
-      rgba(232, 228, 255, 0.20) 0%,
-      rgba($nyxus-accent-primary, 0.22) 30%,
+      rgba(232, 228, 255, 0.18) 0%,
+      rgba(30, 18, 56, 0.58) 22%,
       rgba(6, 3, 14, 0.92) 100%);
-  border-color: $nyxus-accent-primary;
   color: #ffffff;
   box-shadow:
-    0 0 18px rgba($nyxus-accent-primary, 0.55),
-    0 0 36px rgba(180, 150, 255, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.30);
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.60);
+    0 0 18px rgba(232, 228, 255, 0.40),
+    0 0 38px rgba(180, 150, 255, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.70);
 }
 
-/* -- PILL SPECTRUM . per-widget prism hues ---------------------------- */
-/* Each status pill carries its own accent so the right cluster reads
-   like light split through a prism. Declared BEFORE the state classes
-   (mic-mute, bt-conn, batt-low, ...) so live states still win. */
-.p-brt   { color: $accent-warn-soft; border-color: rgba($nyxus-accent-warn, 0.48);
-           text-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.50);
-           box-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
-.p-audio { color: $accent-secondary-soft; border-color: rgba($nyxus-accent-secondary, 0.48);
-           text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.50);
-           box-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
-.p-mic   { color: $accent-primary-soft; border-color: rgba($nyxus-accent-primary, 0.48);
-           text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.50);
-           box-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
-.p-net   { color: $neon-blue-soft; border-color: rgba($neon-blue, 0.48);
-           text-shadow: 0 0 8px rgba($neon-blue, 0.50);
-           box-shadow: 0 0 8px rgba($neon-blue, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
-.p-bt    { color: $neon-blue-soft; border-color: rgba($neon-blue, 0.42);
-           text-shadow: 0 0 8px rgba($neon-blue, 0.45);
-           box-shadow: 0 0 8px rgba($neon-blue, 0.12), inset 0 0 8px rgba(0,0,0,0.30); }
-.p-batt  { color: $neon-green-soft; border-color: rgba($neon-green, 0.48);
-           text-shadow: 0 0 8px rgba($neon-green, 0.50);
-           box-shadow: 0 0 8px rgba($neon-green, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
-.p-pp    { color: $accent-ok-soft; border-color: rgba($nyxus-accent-ok, 0.48);
-           text-shadow: 0 0 8px rgba($nyxus-accent-ok, 0.50);
-           box-shadow: 0 0 8px rgba($nyxus-accent-ok, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
-.p-upd   { color: $accent-warn-soft; border-color: rgba($nyxus-accent-warn, 0.44);
-           text-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.45);
-           box-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.12), inset 0 0 8px rgba(0,0,0,0.30); }
-.p-notif { color: $accent-primary-soft; border-color: rgba($nyxus-accent-primary, 0.48);
-           text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.50);
-           box-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.14), inset 0 0 8px rgba(0,0,0,0.30); }
+/* -- PILL SPECTRUM . gem vials ---------------------------------------- */
+/* STARLIGHT rev 2026-07-11: each status pill is a cut-crystal gem holding
+   a tiny nebula of its own hue - colored radial glow rising from the base
+   of the glass, diagonal facet light-streak, moonlit top sheen, colored
+   bloom outside. The cluster reads as a jewel row set into the night sky.
+   Declared BEFORE the state classes (mic-mute, bt-conn, batt-low, ...)
+   so live states still win. */
+@mixin gem($c) {
+  background-image:
+    radial-gradient(circle at 50% 130%,
+      rgba($c, 0.40) 0%,
+      rgba($c, 0.12) 45%,
+      rgba(0, 0, 0, 0) 72%),
+    linear-gradient(120deg,
+      rgba(255, 255, 255, 0.00) 6%,
+      rgba(255, 255, 255, 0.15) 12%,
+      rgba(255, 255, 255, 0.00) 20%),
+    linear-gradient(180deg,
+      rgba(222, 216, 255, 0.12) 0%,
+      rgba(26, 15, 48, 0.58) 20%,
+      rgba(6, 3, 14, 0.94) 100%);
+  border: 1px solid rgba($c, 0.58);
+  text-shadow: 0 0 8px rgba($c, 0.65);
+  box-shadow:
+    0 0 10px rgba($c, 0.26),
+    0 0 24px rgba($c, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -7px 12px rgba($c, 0.20),
+    inset 0 0 8px rgba(0, 0, 0, 0.22);
+}
+.p-brt   { @include gem($nyxus-accent-warn);      color: $accent-warn-soft; }
+.p-audio { @include gem($nyxus-accent-secondary); color: $accent-secondary-soft; }
+.p-mic   { @include gem($nyxus-accent-primary);   color: $accent-primary-soft; }
+.p-net   { @include gem($neon-blue);              color: $neon-blue-soft; }
+.p-bt    { @include gem($neon-blue);              color: $neon-blue-soft; }
+.p-batt  { @include gem($neon-green);             color: $neon-green-soft; }
+.p-pp    { @include gem($nyxus-accent-ok);        color: $accent-ok-soft; }
+.p-upd   { @include gem($nyxus-accent-warn);      color: $accent-warn-soft; }
+.p-notif { @include gem($nyxus-accent-primary);   color: $accent-primary-soft; }
 
 .batt-charge {
   border-color: rgba($nyxus-accent-secondary, 0.45);
@@ -210,15 +227,13 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
   color: $neon-red;
 }
 
-.power-pill {
-  background: rgba($neon-red, 0.10);
-  border-color: rgba($neon-red, 0.35);
-  color: $neon-red-soft;
-}
+.power-pill { @include gem($neon-red); color: $neon-red-soft; }
 .power-pill:hover {
-  background: rgba($neon-red, 0.22);
+  border-color: rgba($neon-red, 0.85);
   color: #ffffff;
-  box-shadow: 0 0 18px rgba($neon-red, 0.45);
+  box-shadow:
+    0 0 18px rgba($neon-red, 0.50),
+    0 0 36px rgba($neon-red, 0.22);
 }
 
 /* -- BRAND ---------------------------------------------------------- */
@@ -1304,15 +1319,13 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
 }
 
 /* Bar-specific pill accents */
-.qs-pill, .cal-pill {
-  background: linear-gradient(145deg, rgba($nyxus-accent-ok, 0.18), rgba($nyxus-accent-secondary, 0.08));
-  border-color: rgba($nyxus-accent-ok, 0.38);
-  color: $accent-ok-soft;
-}
+.qs-pill  { @include gem($nyxus-accent-ok);  color: $accent-ok-soft; }
+.cal-pill { @include gem($neon-blue);        color: $neon-blue-soft; }
 .qs-pill:hover, .cal-pill:hover {
-  background: linear-gradient(145deg, rgba($nyxus-accent-primary, 0.30), rgba($nyxus-accent-secondary, 0.18));
-  border-color: rgba($nyxus-accent-secondary, 0.62);
-  box-shadow: 0 0 18px rgba($nyxus-accent-ok, 0.40);
+  border-color: rgba(232, 228, 255, 0.70);
+  box-shadow:
+    0 0 18px rgba(232, 228, 255, 0.38),
+    0 0 36px rgba(180, 150, 255, 0.24);
   color: #ffffff;
 }
 
@@ -2243,33 +2256,27 @@ scale slider {
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.30);
 }
 
-/* per-domain hue variants - border, glyph and label take the neon */
-.hud-tile-pink   { border-color: rgba($nyxus-accent-primary, 0.55);
-                   box-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+/* per-domain hue variants - each tile is a gem vial holding a nebula of
+   its own hue (same @mixin gem language as the status pills) */
+.hud-tile-pink   { @include gem($nyxus-accent-primary); }
 .hud-tile-pink   .hud-tile-glyph, .hud-tile-pink .hud-tile-label {
                    color: $nyxus-accent-primary; text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.55); }
-.hud-tile-green  { border-color: rgba($nyxus-accent-secondary, 0.55);
-                   box-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-green  { @include gem($nyxus-accent-secondary); }
 .hud-tile-green  .hud-tile-glyph, .hud-tile-green .hud-tile-label {
                    color: $nyxus-accent-secondary; text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.55); }
-.hud-tile-purple { border-color: rgba($nyxus-accent-ok, 0.55);
-                   box-shadow: 0 0 10px rgba($nyxus-accent-ok, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-purple { @include gem($nyxus-accent-ok); }
 .hud-tile-purple .hud-tile-glyph, .hud-tile-purple .hud-tile-label {
                    color: $nyxus-accent-ok; text-shadow: 0 0 8px rgba($nyxus-accent-ok, 0.55); }
-.hud-tile-gold   { border-color: rgba($nyxus-accent-warn, 0.55);
-                   box-shadow: 0 0 10px rgba($nyxus-accent-warn, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-gold   { @include gem($nyxus-accent-warn); }
 .hud-tile-gold   .hud-tile-glyph, .hud-tile-gold .hud-tile-label {
                    color: $nyxus-accent-warn; text-shadow: 0 0 8px rgba($nyxus-accent-warn, 0.55); }
-.hud-tile-orange { border-color: rgba($neon-orange, 0.55);
-                   box-shadow: 0 0 10px rgba($neon-orange, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-orange { @include gem($neon-orange); }
 .hud-tile-orange .hud-tile-glyph, .hud-tile-orange .hud-tile-label {
                    color: $neon-orange; text-shadow: 0 0 8px rgba($neon-orange, 0.55); }
-.hud-tile-blue   { border-color: rgba($neon-blue, 0.55);
-                   box-shadow: 0 0 10px rgba($neon-blue, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-blue   { @include gem($neon-blue); }
 .hud-tile-blue   .hud-tile-glyph, .hud-tile-blue .hud-tile-label {
                    color: $neon-blue; text-shadow: 0 0 8px rgba($neon-blue, 0.55); }
-.hud-tile-red    { border-color: rgba($neon-red, 0.55);
-                   box-shadow: 0 0 10px rgba($neon-red, 0.16), inset 0 0 8px rgba(0,0,0,0.30); }
+.hud-tile-red    { @include gem($neon-red); }
 .hud-tile-red    .hud-tile-glyph, .hud-tile-red .hud-tile-label {
                    color: $neon-red; text-shadow: 0 0 8px rgba($neon-red, 0.55); }
 
