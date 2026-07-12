@@ -140,40 +140,53 @@ window, window.background, decoration {
    at .70-.86 so Hyprland's dual-kawase layer blur reads through the
    glass (the DARK MIRROR frosted look) without killing legibility. */
 
-/* Structural shell only: starfield + prism rim paint via inline :style
-   in eww.yuck. A second background here stacked a ghost rim (the
-   "double bar at the ends" bug). */
+/* Structural shell: animated starfield + prism rim paint via inline :style
+   in eww.yuck. Static fallbacks below keep bars obsidian if inline hiccups. */
 .bar {
   border: 1px solid transparent;
   border-radius: 16px;
   padding: 4px 12px;
-  background: transparent;
-  background-image: none;
   box-shadow: none;
 }
 
-/* Floating inset clears both 56px rails (+10px anchor) so the bars
-   sit centered between the side vessels — kills the ghost vertical
-   line where the bar rim met the app rail. */
 .bar-bottom {
   margin: 0 86px;
   padding: 5px 16px;
   min-height: 36px;
   border-top: 2px solid transparent;
-  background: transparent;
-  background-image: none;
-  box-shadow: none;
+  background-image:
+    url('assets/starlight-twinkle-strip-0.png'),
+    url('assets/starlight-strip.png'),
+    linear-gradient(180deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
+    linear-gradient(100deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%);
 }
 
-/* Floating ticker ribbon - mirrors the bottom bar's inset. */
 .bar-top {
   margin: 0 86px;
   padding: 2px 16px;
   min-height: 20px;
   border-radius: 12px;
-  background: transparent;
-  background-image: none;
-  box-shadow: none;
+  background-image:
+    url('assets/starlight-twinkle-top-0.png'),
+    url('assets/starlight-top.png'),
+    linear-gradient(180deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
+    linear-gradient(280deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%);
+}
+
+.ws-rail {
+  background-image:
+    url('assets/starlight-twinkle-rail-0.png'),
+    url('assets/starlight-rail.png'),
+    linear-gradient(170deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
+    linear-gradient(100deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%);
+}
+
+.app-rail {
+  background-image:
+    url('assets/starlight-twinkle-rail-0.png'),
+    url('assets/starlight-rail.png'),
+    linear-gradient(190deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
+    linear-gradient(280deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%);
 }
 .bar-bottom > *, .bar-top > * { min-height: 0; min-width: 0; }
 .bar-bottom .bar-cluster { min-height: 0; }
@@ -447,8 +460,6 @@ window, window.background, decoration {
   border: 1px solid transparent;
   border-radius: 18px;
   padding: 12px 6px;
-  background: transparent;
-  background-image: none;
   box-shadow: none;
 }
 /* Workspace pills: same machined obsidian + per-hue neon ring as app rail. */
@@ -468,8 +479,6 @@ window, window.background, decoration {
   border: 1px solid transparent;
   border-radius: 18px;
   padding: 12px 6px;
-  background: transparent;
-  background-image: none;
   box-shadow: none;
   min-width: 56px;
 }
