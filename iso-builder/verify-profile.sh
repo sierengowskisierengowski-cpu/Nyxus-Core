@@ -445,7 +445,13 @@ hd "13f. NYXUS workspaces"
 [[ -f "${AIROOT}/etc/skel/.config/systemd/user/nyxus-ws-wallpaperd.service" ]] \
   && ok "ws wallpaper systemd unit present" \
   || fail "ws wallpaper systemd unit missing"
-WS_NAMES=$(grep -c '^workspace = ' "${AIROOT}/etc/skel/.config/hypr/hyprland.conf")
+WS_CONF="${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-stations.conf"
+if grep -q 'source = ~/.config/hypr/conf.d/nyxus-stations.conf' "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+   && [[ -f "${WS_CONF}" ]]; then
+  WS_NAMES=$(grep -cE '^workspace = [0-9]+,.*defaultName:' "${WS_CONF}")
+else
+  WS_NAMES=$(grep -c '^workspace = ' "${AIROOT}/etc/skel/.config/hypr/hyprland.conf")
+fi
 if (( WS_NAMES >= 10 )); then
   ok "${WS_NAMES} named workspaces declared"
 else
