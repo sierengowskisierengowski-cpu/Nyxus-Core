@@ -581,6 +581,21 @@ hdr "GTK4 Tarball Apps"
 TARBALL_APPS=(home weather notepad passwords intel panel start sage studio security)
 for app in "${TARBALL_APPS[@]}"; do
   installer="nyxus_${app}_install.sh"
+  ## Offline mode: run the pre-staged installer from the cache instead of
+  ## curl-piping from production. NYXUS_OFFLINE_DIR is exported so the
+  ## per-app installer can also pick its .tgz payload from the cache —
+  ## without this every tarball app hard-fails with zero network and the
+  ## whole install exits 1, leaving the session half-configured.
+  if [ -n "${NYXUS_OFFLINE_DIR:-}" ] && [ -f "${NYXUS_OFFLINE_DIR}/${installer}" ]; then
+    if NYXUS_OFFLINE_DIR="${NYXUS_OFFLINE_DIR}" bash "${NYXUS_OFFLINE_DIR}/${installer}" >/tmp/nyxus-${app}-install.log 2>&1; then
+      ok "${app} (nyxus-${app})  ${DIM}(offline)${R}"
+    else
+      fail "${app} — see /tmp/nyxus-${app}-install.log"
+      failed=$((failed+1))
+      failed_items+=("nyxus-${app}")
+    fi
+    continue
+  fi
   if curl -fsSL "${API}/${installer}" | bash >/tmp/nyxus-${app}-install.log 2>&1; then
     ok "${app} (nyxus-${app})"
   else

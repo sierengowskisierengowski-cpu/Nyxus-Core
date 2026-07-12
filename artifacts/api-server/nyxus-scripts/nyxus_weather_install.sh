@@ -28,7 +28,11 @@ TGZ_URL="${BASE}/nyxus-weather.tgz"
 step "fetch nyxus-weather.tgz"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-if command -v curl >/dev/null; then
+## Offline mode: nyxus_install.sh exports NYXUS_OFFLINE_DIR when running
+## from the pre-staged ISO cache — copy the payload instead of curling.
+if [[ -n "${NYXUS_OFFLINE_DIR:-}" && -f "${NYXUS_OFFLINE_DIR}/nyxus-weather.tgz" ]]; then
+  cp -f "${NYXUS_OFFLINE_DIR}/nyxus-weather.tgz" "$TMP/nyxus-weather.tgz"
+elif command -v curl >/dev/null; then
   curl -fsSL "$TGZ_URL" -o "$TMP/nyxus-weather.tgz" || { fail "download failed"; exit 1; }
 elif command -v wget >/dev/null; then
   wget -q -O "$TMP/nyxus-weather.tgz" "$TGZ_URL" || { fail "download failed"; exit 1; }

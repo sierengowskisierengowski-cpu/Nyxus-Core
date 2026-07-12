@@ -47,7 +47,11 @@ step "fetch nyxus-start.tgz"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-if command -v curl >/dev/null; then
+## Offline mode: nyxus_install.sh exports NYXUS_OFFLINE_DIR when running
+## from the pre-staged ISO cache — copy the payload instead of curling.
+if [[ -n "${NYXUS_OFFLINE_DIR:-}" && -f "${NYXUS_OFFLINE_DIR}/nyxus-start.tgz" ]]; then
+  cp -f "${NYXUS_OFFLINE_DIR}/nyxus-start.tgz" "$TMP/nyxus-start.tgz"
+elif command -v curl >/dev/null; then
   curl -fsSL "$TGZ_URL" -o "$TMP/nyxus-start.tgz" || { fail "download failed"; exit 1; }
 elif command -v wget >/dev/null; then
   wget -q -O "$TMP/nyxus-start.tgz" "$TGZ_URL" || { fail "download failed"; exit 1; }

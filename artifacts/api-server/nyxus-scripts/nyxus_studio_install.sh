@@ -40,7 +40,13 @@ done
 ok "curl, tar, bash present"
 
 step "fetch ${TGZ}"
-curl -fsSL "${BASE_URL}/api/download/nyxus/${TGZ}" -o "${WORK}/${TGZ}"
+## Offline mode: nyxus_install.sh exports NYXUS_OFFLINE_DIR when running
+## from the pre-staged ISO cache — copy the payload instead of curling.
+if [[ -n "${NYXUS_OFFLINE_DIR:-}" && -f "${NYXUS_OFFLINE_DIR}/${TGZ}" ]]; then
+  cp -f "${NYXUS_OFFLINE_DIR}/${TGZ}" "${WORK}/${TGZ}"
+else
+  curl -fsSL "${BASE_URL}/api/download/nyxus/${TGZ}" -o "${WORK}/${TGZ}"
+fi
 ok "downloaded → ${WORK}/${TGZ}"
 
 step "extract"
