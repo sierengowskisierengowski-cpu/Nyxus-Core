@@ -26,7 +26,7 @@
 set -uo pipefail
 
 # ── Version stamp: BUMP ON EVERY RELEASE THAT TOUCHES INSTALLED FILES ───────
-BOOTSTRAP_VERSION="2026.05.12-r10-mission"
+BOOTSTRAP_VERSION="2026.05.12-r11-mission"
 
 PROD_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/download/nyxus/nyxus_install.sh"
 OFFLINE_CACHE="${NYXUS_OFFLINE_DIR:-/opt/nyxus-cache}"
@@ -69,6 +69,30 @@ ensure_hyprland_plugins() {
     return 0
   }
 
+  # `hyprpm update`/`add` escalate privileges internally (sudo/doas/pkexec)
+  # to install Hyprland headers. On systems with pam_fprintd (or any
+  # interactive PAM stack) that pops a fingerprint/password prompt and
+  # parks bootstrap forever — on EVERY login, before the marker fast-path.
+  # Bootstrap runs unattended (exec-once), so it must NEVER be allowed to
+  # prompt. Two layers of defense:
+  #   1. Gate the install path on `sudo -n true`: only attempt the
+  #      privileged steps when escalation can succeed without any prompt
+  #      (NOPASSWD or a valid cached ticket). Otherwise skip and tell the
+  #      user how to do it manually from a real terminal.
+  #   2. Run every hyprpm step via `run_hyprpm` — detached from the
+  #      controlling terminal (setsid) with stdin closed and a hard
+  #      timeout — so even if hyprpm still tries an interactive auth
+  #      path (e.g. pkexec → fprintd), it fails fast instead of hanging.
+  #
+  # setsid → no controlling tty, so sudo/pkexec inside hyprpm cannot open
+  # /dev/tty to prompt; </dev/null → nothing to read; timeout → compile or
+  # network stalls can't wedge login either. `timeout` and `setsid` are
+  # both coreutils/util-linux — present on any Arch install.
+  run_hyprpm() {
+    local secs="$1"; shift
+    timeout "${secs}" setsid -w hyprpm "$@" </dev/null >/dev/null 2>&1
+  }
+
   # `hyprpm list` prints "Plugin <name>" lines for every installed plugin
   # regardless of enabled/disabled state. Match case-insensitively because
   # hyprpm has shifted the casing across versions.
@@ -76,23 +100,28 @@ ensure_hyprland_plugins() {
   installed="$(hyprpm list 2>/dev/null || true)"
 
   if ! grep -qi 'hyprexpo' <<<"${installed}"; then
+    if ! sudo -n true 2>/dev/null; then
+      log "hyprexpo not installed and passwordless sudo unavailable — skipping plugin sync"
+      log "to install manually, run in a terminal:  hyprpm update && hyprpm add https://github.com/hyprwm/hyprland-plugins && hyprpm enable hyprexpo"
+      return 0
+    fi
     log "installing hyprexpo plugin (first time)"
     # `hyprpm update` ensures the headers cache is fresh for the running
     # Hyprland version — required before `add` will compile cleanly.
-    hyprpm update >/dev/null 2>&1 \
+    run_hyprpm 300 update \
       || log "hyprpm update failed (continuing — add may still work)"
-    hyprpm add https://github.com/hyprwm/hyprland-plugins >/dev/null 2>&1 \
+    run_hyprpm 600 add https://github.com/hyprwm/hyprland-plugins \
       || { log "hyprpm add failed — Mission Control unavailable until next boot"; return 0; }
   fi
 
   # `enable` is idempotent — re-running while enabled is a no-op.
-  hyprpm enable hyprexpo >/dev/null 2>&1 \
+  run_hyprpm 60 enable hyprexpo \
     || log "hyprpm enable hyprexpo failed (plugin may not have compiled)"
 
   # Reload so the just-loaded plugin is picked up by the running compositor
   # without requiring a logout. Safe even on cold boot — Hyprland will be
   # alive by the time exec-once nyxus-bootstrap runs.
-  hyprpm reload >/dev/null 2>&1 || true
+  run_hyprpm 60 reload || true
 }
 ensure_hyprland_plugins || true
 
