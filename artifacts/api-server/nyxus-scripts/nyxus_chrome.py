@@ -1012,6 +1012,21 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
     except Exception as e:
         log.debug("install_chrome get content: %s", e)
 
+    # Cosmic scene backdrops (rev 2026-07-12): selected apps get a live
+    # deep-space vista behind glass cards instead of bare transparency.
+    try:
+        from nyxus_cosmic_bg import CosmicSceneArea, scene_for, APP_SCENES
+        if page_key in APP_SCENES and cur is not None:
+            overlay = Gtk.Overlay()
+            overlay.set_child(CosmicSceneArea(scene_for(page_key)))
+            overlay.add_overlay(cur)
+            if _is_adw_app_window(window):
+                window.set_content(overlay)
+            else:
+                window.set_child(overlay)
+    except Exception as e:
+        log.debug("install_chrome cosmic wrap: %s", e)
+
     # Optional rainbow markup on a passed-in hero title.
     if title_label is not None:
         try:

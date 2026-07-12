@@ -133,9 +133,13 @@ class HomeWindow(Gtk.ApplicationWindow):
         self.set_title("NYXUS Home")
         self.set_default_size(1280, 820)
 
-        # Overlay: animated reactor BG underneath, content on top
+        # Overlay: animated cosmic BG underneath, content on top
         overlay = Gtk.Overlay()
-        bg = AuroraArea()
+        try:
+            from nyxus_cosmic_bg import CosmicSceneArea
+            bg = CosmicSceneArea("milky_way")
+        except Exception:
+            bg = AuroraArea()
         overlay.set_child(bg)
 
         content_outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,
