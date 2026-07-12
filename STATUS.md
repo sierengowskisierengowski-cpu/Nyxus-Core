@@ -109,6 +109,8 @@
 | Dock daemon | ✅ | Disabled on live + ISO skel (bar-only layout) |
 | Dunst notification stack | ✅ | EWW notif flyout uses `dunstctl` (history + DND) |
 | Accent pipeline | ✅ | `nyxus-apply-accent` → `_nyxus_accent.scss` imported by EWW |
+| Obsidian prism theme unification | ✅ | Cosmic flyout/overlay backdrops (splash, deepcore, mission, QS); rofi/wlogout starfall; `nyxus-gen-backdrop` + `nyxus-panel` CosmicSceneArea — commit `11e319b` |
+| Live → canonical backport | ✅ | Full EWW/hypr/apps stack in `artifacts/` via `nyxus-backport-live.sh` — commit `471c1c5` |
 
 ---
 
