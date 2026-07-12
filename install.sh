@@ -6,6 +6,11 @@
 # ║  Usage (run on a live NYXUS session or compatible Arch/Hyprland setup): ║
 # ║    curl -fsSL https://raw.githubusercontent.com/sierengowskisierengowski-cpu/Nyxus-Core/main/install.sh | bash
 # ║                                                                          ║
+# ║  SECURITY NOTE: piping curl output to bash executes downloaded code.    ║
+# ║  This script is served over HTTPS from GitHub (TLS-verified). For       ║
+# ║  maximum safety, download and inspect before running:                   ║
+# ║    curl -fsSL <url> -o /tmp/nyxus-install.sh && less /tmp/nyxus-install.sh && bash /tmp/nyxus-install.sh
+# ║                                                                          ║
 # ║  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED          ║
 # ╚══════════════════════════════════════════════════════════════════════════╝
 set -euo pipefail
