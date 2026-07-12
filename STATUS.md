@@ -1,6 +1,6 @@
 # NyXxOS / Nyxus-Core — Status
 
-> **Last updated:** 2026-06-10
+> **Last updated:** 2026-07-12
 >
 > This document is a ground-truth snapshot of what is real and verifiable
 > in this repository today, what is partially wired, and what remains
@@ -90,6 +90,25 @@
 | Night light (gammastep) | 🟡 | Wrapper present; live-boot required |
 | Dynamic wallpaper rotator | 🟡 | Script present; live-boot required |
 | Game Mode / Focus Mode | 🟡 | Source present; live-boot required |
+
+---
+
+## Station Matrix & Desktop Unification (2026-07-12)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Station matrix `stations.json` (HOME + 1–10) | ✅ | Single source of truth: `artifacts/nyxus-config/stations.json` |
+| Hyprland persistent stations | ✅ | `nyxus-stations.conf` — OPS/FORGE/GHOST/PULSE/WAVE/CORE/MESH/SCRIBE/BLAST/EDGE |
+| EWW left rail (HOME ◈ + station codes) | ✅ | `workspaces.sh` polls stations + occupancy; live on bar-left |
+| NYXUS Home (Obsidian Reactor) | ✅ | Workspace `name:0` · Super+0 · live jeTT/honeypot/sys data |
+| Slim quick-control overlay (Super+`) | ✅ | Hub links to Home/Deepcore/Mission + sliders/toggles |
+| DEEP CORE jeTT verdicts + honeypot feed | ✅ | `deepcore.sh` + `deepcore.yuck` — live docker/jett data |
+| Mission Control (nyxus-missiond) | ✅ | Super+F3 → `nyxus-mission toggle` (hyprexpo bind retired) |
+| Unified launcher (nyxus-start) | ✅ | Brand pill + Super+Space → `nyxus-start` |
+| nyxus-panel / nyxus-store binds | ✅ | Super+Alt+P / Super+Alt+S |
+| Dock daemon | ✅ | Disabled on live + ISO skel (bar-only layout) |
+| Dunst notification stack | ✅ | EWW notif flyout uses `dunstctl` (history + DND) |
+| Accent pipeline | ✅ | `nyxus-apply-accent` → `_nyxus_accent.scss` imported by EWW |
 
 ---
 

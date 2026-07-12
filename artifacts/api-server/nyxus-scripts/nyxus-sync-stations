@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Sync stations.json → workspaces.json (for wallpaper daemon + QS)
+set -euo pipefail
+CONF="${HOME}/.config/nyxus/stations.json"
+OUT="${HOME}/.config/nyxus/workspaces.json"
+jq -n --slurpfile s "$CONF" '
+  {
+    "_comment": "Auto-generated from stations.json by nyxus-sync-stations. Do not hand-edit.",
+    "workspaces": [
+      $s[0].stations[] | {
+        id: .id,
+        name: .name,
+        wallpaper: ($s[0].wall_dir + "/" + .wallpaper)
+      }
+    ]
+  }
+' > "$OUT"
+echo "synced $(jq '.workspaces | length' "$OUT") stations → $OUT"
