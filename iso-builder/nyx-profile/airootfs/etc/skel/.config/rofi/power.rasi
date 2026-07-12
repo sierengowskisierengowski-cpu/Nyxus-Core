@@ -1,21 +1,21 @@
-/* NYXUS · Obsidian Prism — power menu
- * Palette: #7949f2 · #ff2667 · #26ffb7 · #ffb026 */
+/* NYXUS · DARK MIRROR — power menu
+ * Palette: #a06bff violet · #3ad8ff cyan · #0c0c12 obsidian · #e8e8f0 text */
 
 * {
     bg:         #05060a;
     bar-bg:     rgba(5, 6, 10, 0.90);
     widget-bg:  rgba(10, 13, 20, 0.85);
-    active:     #ff2667;
+    active:     #3ad8ff;
     inactive:   rgba(238, 242, 250, 0.35);
-    highlight:  #7949f2;
-    violet:     #26ffb7;
-    gold:       #ffb026;
+    highlight:  #a06bff;
+    violet:     #a06bff;
+    gold:       #3ad8ff;
     text:       #eef2fa;
     clock:      #eef2fa;
     urgent:     #ff5470;
-    sep:        rgba(38, 255, 183, 0.35);
-    selected-bg:rgba(121, 73, 242, 0.18);
-    glass-line: rgba(255, 38, 103, 0.35);
+    sep:        rgba(160, 107, 255, 0.30);
+    selected-bg:rgba(160, 107, 255, 0.15);
+    glass-line: rgba(160, 107, 255, 0.40);
 
     font:                   "JetBrainsMono Nerd Font 13";
     background-color:       transparent;

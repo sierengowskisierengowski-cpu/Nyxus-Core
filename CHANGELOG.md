@@ -4,6 +4,28 @@ NYX-J5W-2026-SIERENGOWSKI-LOCKED
 
 ---
 
+## [2026-07-12] - Audit & Polish Pass
+
+### Removed
+- `attached_assets/` — pasted-log clutter (dead weight)
+- `artifacts/_tmp/` scratch contents (directory kept with `.gitkeep`)
+- `artifacts/api-server/nyxus-scripts/eww/eww.yuck.bak2-20260710-*` — EWW backup files
+- `.canvas/` — Replit tool state directory
+
+### Added
+- `install.sh` — curl-able one-command terminal installer with DARK MIRROR ASCII banner
+- `scripts/nyxus-update` — auto-update script with rollback safety, pacman -Syu, notifications
+- `scripts/nyxus-update.service` + `scripts/nyxus-update.timer` — systemd user auto-update timer (daily 04:00)
+- `scripts/nyxus-sync` — live-sync one-liner: git pull + config deploy + hot-reload EWW/Hyprland
+
+### Fixed
+- dunst DARK MIRROR theme: violet frame (#a06bff), cyan critical border (#3ad8ff), obsidian bg (#0c0c12), progress bar cyan
+- wlogout DARK MIRROR theme: updated from old prism palette to canonical #a06bff/#3ad8ff
+- `.gitignore`: permanently excludes `attached_assets/`, `.canvas/`, `artifacts/_tmp/`, `*.bak`, `*.bak2-*`
+- All shell scripts updated to use 24-bit DARK MIRROR ANSI colors (#a06bff violet, #3ad8ff cyan)
+
+---
+
 ## v2.0 — 2026 (ISO Bake / Final Build)
 
 **Build codename: SIGNATURE EDITION**

@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║  NYXUS Auto-Update Script                                                ║
+# ║  Pulls latest Nyxus-Core configs, updates system packages, hot-reloads   ║
+# ║                                                                          ║
+# ║  Usage:   nyxus-update [--no-packages] [--no-reload]                    ║
+# ║  Auto:    systemctl --user enable --now nyxus-update.timer              ║
+# ║                                                                          ║
+# ║  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED          ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+set -euo pipefail
+
+# ── Config ────────────────────────────────────────────────────────────────────
+NYXUS_DIR="${HOME}/.nyxus"
+LOG_DIR="${NYXUS_DIR}/logs"
+LOG_FILE="${LOG_DIR}/update-$(date +%Y%m%d).log"
+BACKUP_DIR="${NYXUS_DIR}/backups/$(date +%Y%m%d-%H%M%S)"
+REPO_FILE="${NYXUS_DIR}/repo"
+INSTALL_SCRIPT_URL="https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh"
+RAW_INSTALL_URL="https://raw.githubusercontent.com/sierengowskisierengowski-cpu/Nyxus-Core/main/artifacts/api-server/nyxus-scripts/nyxus_install.sh"
+MAX_LOGS=14  # keep 2 weeks of logs
+
+# ── Parse args ────────────────────────────────────────────────────────────────
+DO_PACKAGES=1
+DO_RELOAD=1
+for arg in "$@"; do
+  case "${arg}" in
+    --no-packages) DO_PACKAGES=0 ;;
+    --no-reload)   DO_RELOAD=0 ;;
+    --help|-h)
+      printf "Usage: nyxus-update [--no-packages] [--no-reload]\n"
+      printf "  --no-packages  Skip pacman -Syu\n"
+      printf "  --no-reload    Skip EWW/Hyprland hot-reload\n"
+      exit 0
+      ;;
+  esac
+done
+
+# ── Setup logging ─────────────────────────────────────────────────────────────
+mkdir -p "${LOG_DIR}"
+exec > >(tee -a "${LOG_FILE}") 2>&1
+
+# ── Design tokens (for terminal output) ──────────────────────────────────────
+R="\033[0m"; B="\033[1m"; DIM="\033[2m"
+VIOLET="\033[38;2;160;107;255m"   # #a06bff — obsidian prism violet
+CYAN="\033[38;2;58;216;255m"      # #3ad8ff — starlight cyan
+GOLD="\033[38;5;220m"; GREEN="\033[92m"; RED="\033[91m"
+
+ok()   { printf "  ${GREEN}${B}✓${R}  %s\n" "$1"; }
+fail() { printf "  ${RED}${B}✗${R}  %s\n" "$1" >&2; }
+warn() { printf "  ${GOLD}${B}!${R}  %s\n" "$1"; }
+hdr()  { printf "\n${VIOLET}${B}── %s${R}\n" "$1"; }
+
+notify() {
+  local urgency="${1:-normal}" msg="${2:-}"
+  if command -v notify-send &>/dev/null; then
+    notify-send --urgency="${urgency}" \
+      --icon=system-software-update \
+      "NYXUS Update" "${msg}" 2>/dev/null || true
+  fi
+}
+
+# ── Banner ────────────────────────────────────────────────────────────────────
+printf "\n"
+printf "${VIOLET}${B}  NYXUS AUTO-UPDATE${R}  ${DIM}$(date '+%Y-%m-%d %H:%M:%S')${R}\n"
+printf "${DIM}  Log: ${LOG_FILE}${R}\n\n"
+
+# ── Backup key configs before updating ───────────────────────────────────────
+hdr "Backup"
+mkdir -p "${BACKUP_DIR}"
+for dir in \
+  "${HOME}/.config/eww" \
+  "${HOME}/.config/hypr" \
+  "${HOME}/.config/dunst" \
+  "${HOME}/.config/rofi" \
+  "${HOME}/.config/wlogout"
+do
+  if [[ -d "${dir}" ]]; then
+    target="${BACKUP_DIR}/$(basename "${dir}")"
+    cp -r "${dir}" "${target}" 2>/dev/null && ok "Backed up $(basename "${dir}")" || warn "Could not back up ${dir}"
+  fi
+done
+ok "Backup saved to ${BACKUP_DIR}"
+
+# ── Pull latest repo changes ──────────────────────────────────────────────────
+hdr "Pulling latest Nyxus-Core"
+
+REPO_DIR=""
+if [[ -f "${REPO_FILE}" ]]; then
+  REPO_DIR="$(cat "${REPO_FILE}")"
+fi
+
+if [[ -n "${REPO_DIR}" && -d "${REPO_DIR}/.git" ]]; then
+  cd "${REPO_DIR}"
+  if git pull --ff-only origin main 2>&1; then
+    ok "git pull succeeded: ${REPO_DIR}"
+  else
+    warn "git pull failed (network or conflict) — using cached configs"
+    notify normal "git pull failed — using cached configs"
+  fi
+  INSTALL_SCRIPT="${REPO_DIR}/artifacts/api-server/nyxus-scripts/nyxus_install.sh"
+else
+  warn "No local repo at ${REPO_DIR:-<unset>} — will fetch script from network"
+  warn "Network fetch: script is served over HTTPS (TLS-verified). Set NYXUS_REPO_DIR to use a local clone."
+  INSTALL_SCRIPT="$(mktemp /tmp/nyxus_install_update.XXXXXX.sh)"
+  # shellcheck disable=SC2064
+  trap "rm -f ${INSTALL_SCRIPT}" EXIT
+
+  if curl -fsSL --connect-timeout 15 -o "${INSTALL_SCRIPT}" "${INSTALL_SCRIPT_URL}" 2>/dev/null \
+  || curl -fsSL --connect-timeout 15 -o "${INSTALL_SCRIPT}" "${RAW_INSTALL_URL}" 2>/dev/null; then
+    chmod +x "${INSTALL_SCRIPT}"
+    ok "Fetched nyxus_install.sh from network"
+  else
+    fail "Could not fetch nyxus_install.sh — aborting update"
+    notify critical "NYXUS update failed: could not fetch install script"
+    exit 1
+  fi
+fi
+
+# ── Run nyxus_install.sh ──────────────────────────────────────────────────────
+hdr "Deploying configs"
+if bash "${INSTALL_SCRIPT}"; then
+  ok "nyxus_install.sh completed"
+else
+  INSTALL_EXIT=$?
+  fail "nyxus_install.sh exited with code ${INSTALL_EXIT}"
+  notify critical "NYXUS config deploy failed (exit ${INSTALL_EXIT})"
+  exit "${INSTALL_EXIT}"
+fi
+
+# ── System package update ─────────────────────────────────────────────────────
+if [[ "${DO_PACKAGES}" -eq 1 ]]; then
+  hdr "System packages (pacman -Syu)"
+  if command -v pacman &>/dev/null; then
+    if sudo pacman -Syu --noconfirm 2>&1; then
+      ok "System packages updated"
+    else
+      warn "pacman update failed — configs still deployed"
+    fi
+  else
+    warn "pacman not found — skipping system package update"
+  fi
+fi
+
+# ── Hot-reload running session ────────────────────────────────────────────────
+if [[ "${DO_RELOAD}" -eq 1 ]]; then
+  hdr "Hot-reloading session"
+
+  # Reload EWW bars
+  if command -v eww &>/dev/null; then
+    eww close-all 2>/dev/null || true
+    sleep 0.5
+    eww open-many bar-top bar-bottom bar-left bar-right 2>/dev/null \
+      && ok "EWW bars reloaded" \
+      || warn "EWW reload partial — check eww daemon"
+  else
+    warn "eww not found — skipping bar reload"
+  fi
+
+  # Reload Hyprland config
+  if command -v hyprctl &>/dev/null && hyprctl version &>/dev/null 2>&1; then
+    if hyprctl reload 2>/dev/null; then
+      ok "Hyprland config reloaded"
+    else
+      warn "hyprctl reload failed"
+    fi
+  else
+    warn "Hyprland not running — skipping hyprctl reload"
+  fi
+
+  # Restart dunst if running
+  if pgrep -x dunst &>/dev/null; then
+    pkill -x dunst 2>/dev/null || true
+    sleep 0.3
+    setsid -f dunst &>/dev/null || { dunst &>/dev/null & disown; }
+    ok "Dunst restarted"
+  fi
+fi
+
+# ── Rotate old logs ───────────────────────────────────────────────────────────
+hdr "Log maintenance"
+LOG_COUNT="$(find "${LOG_DIR}" -name "update-*.log" | wc -l)"
+if (( LOG_COUNT > MAX_LOGS )); then
+  find "${LOG_DIR}" -name "update-*.log" -printf '%T+ %p\n' \
+    | sort | head -n $(( LOG_COUNT - MAX_LOGS )) | awk '{print $2}' \
+    | xargs rm -f
+  ok "Trimmed old logs (kept ${MAX_LOGS} most recent)"
+fi
+
+# ── Done ──────────────────────────────────────────────────────────────────────
+printf "\n${DIM}──────────────────────────────────────────────────────────────────────${R}\n"
+printf "  ${GREEN}${B}✓ NYXUS update complete.${R}  ${DIM}$(date '+%H:%M:%S')${R}\n\n"
+notify normal "NYXUS updated and reloaded — $(date '+%H:%M')"

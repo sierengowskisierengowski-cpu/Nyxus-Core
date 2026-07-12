@@ -1,0 +1,14 @@
+[Unit]
+Description=NYXUS Auto-Update — pull latest configs and packages
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Installation: the nyxus_install.sh installer copies nyxus-update to ~/.local/bin/
+# Manually: cp scripts/nyxus-update ~/.local/bin/nyxus-update && chmod +x ~/.local/bin/nyxus-update
+ExecStart=%h/.local/bin/nyxus-update
+StandardOutput=journal
+StandardError=journal
+# Give it up to 10 minutes (package downloads can be slow)
+TimeoutStartSec=600

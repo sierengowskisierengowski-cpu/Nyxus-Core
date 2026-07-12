@@ -1,4 +1,5 @@
-# NYXUS dunst configuration · Sprint E Total Identity
+# NYXUS dunst configuration · DARK MIRROR theme
+# Palette: #a06bff violet · #3ad8ff cyan · #0c0c12 obsidian · #e8e8f0 text
 
 [global]
     monitor = 0
@@ -17,6 +18,7 @@
     progress_bar_min_width = 240
     progress_bar_max_width = 420
     progress_bar_corner_radius = 3
+    progress_bar_color = "#3ad8ff"
 
     indicate_hidden = yes
     transparency = 4
@@ -24,10 +26,10 @@
     padding = 14
     horizontal_padding = 16
     text_icon_padding = 12
-    frame_width = 1
-    frame_color = "#f4ead540"
+    frame_width = 2
+    frame_color = "#a06bff"
     gap_size = 6
-    separator_color = "#1a1a28"
+    separator_color = "#1a1a2e"
     sort = yes
 
     font = Inter 11
@@ -70,24 +72,24 @@
     per_monitor_dpi = false
 
 [urgency_low]
-    background    = "#0a0a14f7"
-    foreground    = "#f4ead58c"
-    frame_color   = "#f4ead540"
+    background    = "#0c0c18eb"
+    foreground    = "#e8e8f0"
+    frame_color   = "#a06bff"
     timeout       = 5
     default_icon  = dialog-information
 
 [urgency_normal]
-    background    = "#0a0a14f7"
-    foreground    = "#f4ead5"
-    frame_color   = "#f4ead540"
+    background    = "#0c0c18eb"
+    foreground    = "#e8e8f0"
+    frame_color   = "#a06bff"
     timeout       = 8
     override_pause_level = 30
     default_icon  = dialog-information
 
 [urgency_critical]
-    background    = "#0a0a14f7"
-    foreground    = "#f4ead5"
-    frame_color   = "#f87171"
+    background    = "#100c1aee"
+    foreground    = "#e8e8f0"
+    frame_color   = "#3ad8ff"
     timeout       = 0
     override_pause_level = 60
     default_icon  = dialog-warning
