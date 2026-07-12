@@ -958,6 +958,7 @@ def _apply_size_policy(window: Gtk.Window) -> None:
 
 
 def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
+                   key: Optional[str] = None,
                    title_label: Optional[Gtk.Label] = None) -> None:
     """Install NYXUS chrome on `window`.
 
@@ -986,6 +987,8 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
     selection (no more embedded images). Returns None."""
     if window is None:
         return None
+    if key is not None:
+        page_key = key
     _install_global_css()
     _apply_size_policy(window)
     _make_window_transparent(window)
