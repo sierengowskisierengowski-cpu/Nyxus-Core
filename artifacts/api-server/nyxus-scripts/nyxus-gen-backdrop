@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+# ════════════════════════════════════════════════════════════════════
+# nyxus-gen-backdrop · STARFALL rev 2026-07-11
+#
+# Bake the CURRENT wallpaper into the shared surface backdrop that
+# every clickable NYXUS surface (rofi, wlogout, eww flyouts/overlays)
+# paints behind its glass. Heavy blur + ink-void darken + violet
+# moonstone tint, so popups read as slabs cut from the same night sky
+# as the bars — the wallpaper's own colors ghost through.
+#
+# Wallpaper source order:
+#   1. $1 (explicit path)
+#   2. swaybg/swww/mpvpaper cmdline (live backend)
+#   3. ~/.config/nyxus/wallpaper.json  ("wallpaper" key / first favorite)
+#
+# Outputs:
+#   ~/.config/nyxus/backdrops/starfall-backdrop.png       (1920x1080)
+#   ~/.config/nyxus/backdrops/starfall-backdrop-card.png  (960x640, darker,
+#                                                          for small panels)
+#   ~/.config/eww/assets/starfall-backdrop-card.png       (copy — eww url()
+#                                                          stays config-relative)
+#
+# Re-run after every wallpaper change (nyxus-set-wallpaper hooks in).
+# © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+import json
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+from PIL import Image, ImageEnhance, ImageFilter
+
+HOME = Path.home()
+OUT_DIR = HOME / ".config/nyxus/backdrops"
+EWW_ASSETS = HOME / ".config/eww/assets"
+VIOLET = (120, 75, 210)          # moonstone nebula tint
+INK = (7, 3, 16)                 # bar ink void
+
+
+def find_wallpaper() -> Path | None:
+    if len(sys.argv) > 1 and Path(sys.argv[1]).is_file():
+        return Path(sys.argv[1])
+    # live backend cmdline (swaybg -i <path> / [as]www img <path> / mpvpaper)
+    try:
+        out = subprocess.run(["pgrep", "-a", "-f", "swaybg|swww|awww|mpvpaper"],
+                             capture_output=True, text=True).stdout
+        m = re.search(r"(?:-i|img)\s+(\S+\.(?:png|jpg|jpeg|webp))", out)
+        if m and Path(m.group(1)).is_file():
+            return Path(m.group(1))
+    except OSError:
+        pass
+    # workspace wallpaper daemon logs the last applied path
+    log = HOME / ".cache/nyxus/workspace-wallpaperd.log"
+    if log.is_file():
+        for line in reversed(log.read_text().splitlines()):
+            m = re.search(r"-> (\S+\.(?:png|jpg|jpeg|webp))$", line)
+            if m and Path(m.group(1)).is_file():
+                return Path(m.group(1))
+    cfg = HOME / ".config/nyxus/wallpaper.json"
+    if cfg.is_file():
+        data = json.loads(cfg.read_text())
+        for cand in [data.get("wallpaper", "")] + data.get("favorites", []):
+            if cand and Path(cand).is_file():
+                return Path(cand)
+    return None
+
+
+def bake(src: Image.Image, size: tuple[int, int], blur: int,
+         brightness: float, tint_alpha: float) -> Image.Image:
+    img = src.convert("RGB")
+    # cover-fit crop to target aspect
+    tw, th = size
+    sw, sh = img.size
+    scale = max(tw / sw, th / sh)
+    img = img.resize((int(sw * scale) + 1, int(sh * scale) + 1),
+                     Image.LANCZOS)
+    left = (img.width - tw) // 2
+    top = (img.height - th) // 2
+    img = img.crop((left, top, left + tw, top + th))
+
+    img = img.filter(ImageFilter.GaussianBlur(blur))
+    img = ImageEnhance.Brightness(img).enhance(brightness)
+    img = ImageEnhance.Color(img).enhance(0.82)   # pull saturation toward ink
+
+    tint = Image.new("RGB", img.size, VIOLET)
+    img = Image.blend(img, tint, tint_alpha)
+    ink = Image.new("RGB", img.size, INK)
+    img = Image.blend(img, ink, 0.30)
+
+    # vertical ink falloff — darker at the base like the bar glass
+    grad = Image.new("L", (1, th))
+    for y in range(th):
+        grad.putpixel((0, y), int(40 + (y / th) * 90))
+    grad = grad.resize(img.size)
+    img = Image.composite(Image.new("RGB", img.size, (2, 1, 6)), img, grad)
+    return img
+
+
+def main() -> int:
+    wall = find_wallpaper()
+    if wall is None:
+        print("nyxus-gen-backdrop: no wallpaper found", file=sys.stderr)
+        return 1
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    src = Image.open(wall)
+
+    full = bake(src, (1920, 1080), blur=42, brightness=0.42, tint_alpha=0.16)
+    full.save(OUT_DIR / "starfall-backdrop.png", optimize=True)
+
+    card = bake(src, (960, 640), blur=34, brightness=0.62, tint_alpha=0.18)
+    card.save(OUT_DIR / "starfall-backdrop-card.png", optimize=True)
+
+    if EWW_ASSETS.is_dir():
+        shutil.copy2(OUT_DIR / "starfall-backdrop-card.png",
+                     EWW_ASSETS / "starfall-backdrop-card.png")
+
+    # wlogout GTK CSS cannot expand ~ — stamp the live home path
+    wlg = HOME / ".config/wlogout/style.css"
+    if wlg.is_file():
+        backdrop_uri = f"file://{OUT_DIR / 'starfall-backdrop.png'}"
+        text = wlg.read_text()
+        import re as _re
+        text = text.replace("file://BACKDROP_HOME", f"file://{HOME}")
+        text = _re.sub(
+            r'background-image:\s*url\("[^"]+"\)\s*;',
+            f'background-image: url("{backdrop_uri}");',
+            text, count=1)
+        wlg.write_text(text)
+
+    print(f"nyxus-gen-backdrop: baked from {wall}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

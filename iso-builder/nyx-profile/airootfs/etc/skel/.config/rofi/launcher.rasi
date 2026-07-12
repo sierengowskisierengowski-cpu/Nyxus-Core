@@ -1,4 +1,4 @@
-/* NYXUS · Obsidian Prism — window switcher (Super+Tab)
+/* NYXUS · Obsidian Prism — app launcher
  * Palette: #7949f2 · #ff2667 · #26ffb7 · #ffb026 */
 
 * {
@@ -21,12 +21,12 @@
 }
 
 window {
-    width:                  560px;
     background-color:       @bar-bg;
     background-image:       url("~/.config/nyxus/backdrops/starfall-backdrop-card.png", both);
     border:                 2px;
     border-color:           @glass-line;
     border-radius:          16px;
+    width:                  520px;
     padding:                16px;
     location:               center;
     anchor:                 center;
@@ -51,58 +51,73 @@ inputbar {
 prompt {
     background-color:       transparent;
     text-color:             @gold;
-    font:                   "JetBrainsMono Nerd Font Bold 12";
+    font:                   "JetBrainsMono Nerd Font 13";
     vertical-align:         0.5;
 }
 
 entry {
     background-color:       transparent;
     text-color:             @text;
-    placeholder:            "switch to...";
     placeholder-color:      @inactive;
+    placeholder:            "search apps...";
     vertical-align:         0.5;
     cursor:                 text;
 }
 
 listview {
     background-color:       transparent;
-    padding:                2px;
-    spacing:                2px;
-    lines:                  10;
     columns:                1;
-    cycle:                  true;
+    lines:                  8;
+    spacing:                2px;
+    scrollbar:              true;
+    border:                 0;
+    cycle:                  false;
     dynamic:                true;
-    scrollbar:              false;
+    layout:                 vertical;
 }
 
 element {
     background-color:       transparent;
     text-color:             @text;
-    padding:                9px 12px;
-    spacing:                10px;
     border-radius:          10px;
+    padding:                8px 12px;
     cursor:                 pointer;
-}
-
-element selected.normal,
-element selected.alternate.normal,
-element selected.active,
-element selected.urgent {
-    background-color:       @selected-bg;
-    text-color:             @active;
-    border:                 1px;
-    border-color:           @sep;
-    border-radius:          10px;
-}
-
-element-text {
-    background-color:       transparent;
-    text-color:             inherit;
-    font:                   "JetBrainsMono Nerd Font 11";
-    vertical-align:         0.5;
+    orientation:            horizontal;
+    spacing:                10px;
 }
 
 element-icon {
     background-color:       transparent;
     size:                   22px;
+}
+
+element-text {
+    background-color:       transparent;
+    text-color:             inherit;
+    vertical-align:         0.5;
+}
+
+element normal.normal {
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+element selected.normal {
+    background-color:       @selected-bg;
+    text-color:             @active;
+    border:                 1px;
+    border-color:           @sep;
+}
+
+element alternate.normal {
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+scrollbar {
+    background-color:       @widget-bg;
+    handle-color:           @violet;
+    handle-width:           3px;
+    border-radius:          2px;
+    padding:                2px;
 }

@@ -1,0 +1,21 @@
+;; ─────────────────────────────────────────────────────────────────────
+;; NYXUS · OSD extras (rev 2026-07-07 r1 · Signature)
+;;   osd-capslock — transient caps-lock state pop-up. Same .osd-* skin
+;;   as the volume/brightness/mic OSDs; state pushed by
+;;   scripts/osd-capslock.sh via a bindn in nyxus-signature.conf.
+;; © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+;; ─────────────────────────────────────────────────────────────────────
+
+(defvar CAPSSTATE '{"on":false}')
+
+(defwidget osd_capslock_layout []
+  (box :class "osd-root" :orientation "h" :space-evenly false :spacing 16
+    (label :class "osd-glyph" :text "⇪")
+    (box :orientation "v" :valign "center" :spacing 6 :hexpand true
+      (label :class "osd-label" :halign "start"
+             :text "CAPS LOCK · ${CAPSSTATE.on ? 'ON' : 'OFF'}"))))
+
+(defwindow osd-capslock
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-osd"
+  :geometry (geometry :x "0" :y "120" :width "420px" :height "70px" :anchor "bottom center")
+  (osd_capslock_layout))

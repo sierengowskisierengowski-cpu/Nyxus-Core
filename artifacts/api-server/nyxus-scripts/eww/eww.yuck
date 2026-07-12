@@ -3,8 +3,8 @@
 ;; © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 ;;
 ;; Layout matrix:
-;;   bar-bottom       — brand · syspulse · clock/date · essential pills
-;;   bar-top          — live ticker (NYXUS watermark) + HUD tiles + player
+;;   bar-bottom       — brand (left) · clock/date (center) · essential pills
+;;   bar-top          — NYXUS (left) · live ticker · now-playing (right)
 ;;   bar-left         — HOME ◈ + station pills OP..ED (stations.json)
 ;;   bar-right        — quick-launch app rail (8 apps)
 ;;   dashboard        — slim quick control: hub links · sliders · toggles
@@ -136,7 +136,7 @@
 ;; ═════════════════════════════════════════════════════════════════════
 
 (defwidget nyxus_brand []
-  (button :class "brand"
+  (button :class "brand brand-bottom"
           :style "background-position: ${FOG.x}% ${FOG.y}%, center; opacity: ${NEONFLICK};"
           :onclick "nyxus-start &"
           :tooltip "NYXUS Start · Search · Apps · Stations"
@@ -145,6 +145,15 @@
       (box :orientation "v" :space-evenly false :spacing 0
         (label :class "brand-word" :text "NYXUS")
         (label :class "brand-stamp" :text "SIGNATURE")))))
+
+(defwidget nyxus_brand_compact []
+  (button :class "brand brand-top"
+          :style "background-position: ${FOG.x}% ${FOG.y}%, center; opacity: ${NEONFLICK};"
+          :onclick "nyxus-start &"
+          :tooltip "NYXUS Start"
+    (box :orientation "h" :space-evenly false :spacing 6
+      (label :class "brand-gem" :text "◆")
+      (label :class "brand-word" :text "NYXUS"))))
 
 ;; Reusable status pill with live trapped-fog interior drift.
 (defwidget pill_btn [class text ?onclick ?onrightclick ?onmiddleclick ?tooltip]
@@ -315,23 +324,14 @@
     (label :class "ticker-player-text" :limit-width 48
            :text "${PLAYER.icon}  ${PLAYER.title}")))
 
-;; Fixed-width ribbon; ticker.sh emits a precise WINDOW-wide slice each
-;; tick. A static NYXUS watermark sits centered on top (overlay) while
-;; the marquee scrolls underneath.
+;; Scrolling ticker ribbon — no center watermark; NYXUS lives on the left.
 (defwidget ticker_widget []
-  (overlay :class "ticker-overlay" :hexpand true :halign "center"
-    (box :class "ticker-box" :space-evenly false :hexpand true :halign "center"
-      (label :class "ticker ticker-marquee"
-             :limit-width 120
-             :unindent false
-             :text "${TICKER.text}"
-             :tooltip "${TICKER.tooltip}"))
-    (label :class "ticker-watermark"
-           :style "opacity: ${NEONFLICK};"
-           :text "NYXUS"
-           :halign "center"
-           :valign "center"
-           :tooltip "NYXUS · DARK MIRROR")))
+  (box :class "ticker-box" :space-evenly false :hexpand true :halign "fill"
+    (label :class "ticker ticker-marquee"
+           :limit-width 120
+           :unindent false
+           :text "${TICKER.text}"
+           :tooltip "${TICKER.tooltip}")))
 
 ;; ── workspaces: HOME + stations 1..10 (from stations.json) ─────────
 (defwidget workspace_home_pill []
@@ -391,31 +391,22 @@
 (defwidget bar_bottom_layout []
   (box :class "bar bar-bottom" :orientation "h"
     :style "background-image: url('assets/starlight-twinkle-strip-${STARLIGHT.f}.png'), url('assets/starlight-strip.png'), linear-gradient(180deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 26px rgba(0,0,0,0.45);"
-    (box :class "bar-cluster cluster-left" :hexpand true :space-evenly false :spacing 10 :halign "end" :valign "center"
-      (nyxus_brand) (heartbeat) (syspulse_widget))
-    (box :class "bar-cluster cluster-center" :hexpand false :space-evenly false :spacing 12 :halign "center" :valign "center"
-      (cava_widget) (clock_widget))
-    (box :class "bar-cluster cluster-right" :hexpand true :space-evenly false :spacing 6 :halign "start" :valign "center"
-      (cal_widget) (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
-      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget) (power_button))))
+    (box :class "bar-cluster cluster-left" :hexpand true :space-evenly false :halign "start" :valign "center"
+      (nyxus_brand))
+    (box :class "bar-cluster cluster-center" :hexpand true :space-evenly false :halign "center" :valign "center"
+      (clock_widget))
+    (box :class "bar-cluster cluster-right" :hexpand true :space-evenly false :spacing 6 :halign "end" :valign "center"
+      (brightness_widget) (audio_widget) (net_widget) (battery_widget) (notifs_widget) (qs_widget) (power_button))))
 
-;; Top bar: HUD tiles flank a full-width scrolling ticker. NYXUS sits
-;; pinned dead-center inside the marquee (overlay watermark).
+;; Top bar: NYXUS flush-left · live ticker · now-playing only.
 (defwidget bar_top_layout []
   (box :class "bar bar-top" :orientation "h"
     :style "background-image: url('assets/starlight-twinkle-top-${STARLIGHT.f}.png'), url('assets/starlight-top.png'), linear-gradient(180deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 20px rgba(0,0,0,0.45);"
-    (box :class "bar-cluster cluster-left" :hexpand true :space-evenly false :spacing 8 :halign "end" :valign "center"
-      (label :class "ticker-label" :style "opacity: ${NEONFLICK};" :text "▌ NYXUS · LIVE")
-      (hud_tile :hue "pink"   :glyph "󰇅" :label "HOST" :value "${BARTILES.host}" :tip "Hostname")
-      (hud_tile :hue "purple" :glyph "󰌽" :label "KRN"  :value "${BARTILES.kern}" :tip "Kernel release")
-      (hud_tile :hue "blue"   :glyph "󰏖" :label "PKGS" :value "${BARTILES.pkgs}" :tip "Installed pacman packages"))
-    (box :class "bar-cluster cluster-center" :hexpand true :space-evenly false :halign "center" :valign "center"
+    (box :class "bar-cluster cluster-left" :hexpand false :space-evenly false :halign "start" :valign "center"
+      (nyxus_brand_compact))
+    (box :class "bar-cluster cluster-center" :hexpand true :space-evenly false :halign "fill" :valign "center"
       (ticker_widget))
-    (box :class "bar-cluster cluster-right hud-tile-strip" :hexpand true :space-evenly false :spacing 8 :halign "start" :valign "center"
-      (hud_tile :hue "purple" :glyph "${MOON.glyph}" :label "MOON" :value "${MOON.pct}%" :tip "${MOON.name} · ${MOON.pct}% illuminated")
-      (hud_tile :hue "gold"   :glyph "󰔟" :label "UP"   :value "${BARTILES.up}"    :tip "Uptime")
-      (hud_tile :hue "orange" :glyph "󰋊" :label "DISK" :value "${BARTILES.disk}%" :tip "Root filesystem used")
-      (hud_tile :hue "green"  :glyph "󰩟" :label "NET"  :value "${BARTILES.ip}"    :tip "Primary IPv4 · gw ${BARTILES.gw}")
+    (box :class "bar-cluster cluster-right" :hexpand false :space-evenly false :halign "end" :valign "center"
       (player_widget))))
 
 ;; ═════════════════════════════════════════════════════════════════════
@@ -535,11 +526,11 @@
     ;; like a dead button. Net/BT/Audio route to the native NYXUS
     ;; panels so the whole flow stays in-theme.
     (box :class "dash-toggles" :orientation "h" :space-evenly true :spacing 12
-      (dash_quick_toggle :glyph "󰖩" :label "Network"   :hue "green"  :cmd "eww close dashboard && eww open wifi")
-      (dash_quick_toggle :glyph "󰂯" :label "Bluetooth" :hue "blue"   :cmd "eww close dashboard && eww open bluetooth")
-      (dash_quick_toggle :glyph "󰕾" :label "Audio"     :hue "purple" :cmd "eww close dashboard && eww open mixer")
+      (dash_quick_toggle :glyph "󰖩" :label "Network"   :hue "green"  :cmd "eww close dashboard && eww open --toggle wifi")
+      (dash_quick_toggle :glyph "󰂯" :label "Bluetooth" :hue "blue"   :cmd "eww close dashboard && eww open --toggle bluetooth")
+      (dash_quick_toggle :glyph "󰕾" :label "Audio"     :hue "purple" :cmd "eww close dashboard && eww open --toggle mixer")
       (dash_quick_toggle :glyph "󰍹" :label "Displays"  :hue "pink"   :cmd "eww close dashboard && wdisplays")
-      (dash_quick_toggle :glyph "󰚰" :label "Updates"   :hue "gold"   :cmd "eww close dashboard && eww open updates")
+      (dash_quick_toggle :glyph "󰚰" :label "Updates"   :hue "gold"   :cmd "eww close dashboard && eww open --toggle updates")
       (dash_quick_toggle :glyph "󰒓" :label "Settings"  :hue "pink"   :cmd "eww close dashboard && nyxus-settings")
       (dash_quick_toggle :glyph "󰌾" :label "Lock"      :hue "green"  :cmd "eww close dashboard && hyprlock")
       (dash_quick_toggle :glyph "󰌌" :label "Keys"      :hue "orange" :cmd "eww close dashboard && eww open --toggle hotkey-cheatsheet")

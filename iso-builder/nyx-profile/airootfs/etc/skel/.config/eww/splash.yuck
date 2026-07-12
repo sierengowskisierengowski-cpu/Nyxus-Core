@@ -1,0 +1,32 @@
+;; ==================================================================
+;;  NYXUS - boot splash curtain (rev 2026-07-07 r1, Signature)
+;;
+;;  Fullscreen opaque overlay shown for the first ~3s of the session
+;;  while the bars slide in behind it, then faded out (Hyprland
+;;  layerrule animation on namespace "nyxus-splash"). Opened and
+;;  closed ONLY by nyxus-eww-cinematic at startup.
+;;
+;;  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+;; ==================================================================
+
+(defwidget splash_layout []
+  (box :class "splash-root"
+       :orientation "v"
+       :space-evenly false
+       :hexpand true
+       :vexpand true
+    (box :vexpand true)
+    (label :class "splash-glyph" :text "◤ X ◥")
+    (label :class "splash-word"  :text "NYXUS")
+    (label :class "splash-tag"   :text "Obsidian Prism · Iridescent Void")
+    (box :vexpand true)
+    (label :class "splash-foot"  :text "© 2026 JOSEPH SIERENGOWSKI")))
+
+(defwindow nyxus-splash
+  :monitor 0
+  :geometry (geometry :x "0px" :y "0px" :width "100%" :height "100%" :anchor "center")
+  :stacking "overlay"
+  :exclusive false
+  :focusable false
+  :namespace "nyxus-splash"
+  (splash_layout))

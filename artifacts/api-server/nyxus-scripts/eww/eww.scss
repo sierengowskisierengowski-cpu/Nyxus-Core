@@ -8,7 +8,7 @@
 $neon-orange: #ff7849;   // HUD "orange"  (fans / power)
 $neon-green:  #6dffcf;   // HUD "green"   (network)
 $neon-blue:   #4d9fff;   // HUD "blue"    (bluetooth)
-$neon-cyan:   #2bd2ff;   // HUD "cyan"    (HOME station)
+$neon-cyan:   #ff2667;   // HUD "cyan"    (HOME station)
 $neon-red:    #ff4d6b;   // HUD "red"     (music / danger)
 
 $text:       #e8edf5;    // nyx_white_off
@@ -152,42 +152,50 @@ window, window.background, decoration {
 
 .bar-bottom {
   margin: 0 86px;
-  padding: 5px 16px;
+  padding: 5px 12px;
   min-height: 36px;
   border-top: 2px solid transparent;
+  background-blend-mode: screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-image:
     url('assets/starlight-twinkle-strip-0.png'),
     url('assets/starlight-strip.png'),
     linear-gradient(180deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
-    linear-gradient(100deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%);
+    linear-gradient(100deg, #7949f2 0%, #26ffb7 33%, #ff2667 66%, #7949f2 100%);
 }
 
 .bar-top {
   margin: 0 86px;
-  padding: 2px 16px;
+  padding: 2px 10px;
   min-height: 20px;
   border-radius: 12px;
+  background-blend-mode: screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-image:
     url('assets/starlight-twinkle-top-0.png'),
     url('assets/starlight-top.png'),
     linear-gradient(180deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
-    linear-gradient(280deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%);
+    linear-gradient(280deg, #ff2667 0%, #26ffb7 33%, #7949f2 66%, #ff2667 100%);
 }
 
 .ws-rail {
+  background-blend-mode: screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-image:
     url('assets/starlight-twinkle-rail-0.png'),
     url('assets/starlight-rail.png'),
     linear-gradient(170deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
-    linear-gradient(100deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%);
+    linear-gradient(100deg, #7949f2 0%, #26ffb7 33%, #ff2667 66%, #7949f2 100%);
 }
 
 .app-rail {
+  background-blend-mode: screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-image:
     url('assets/starlight-twinkle-rail-0.png'),
     url('assets/starlight-rail.png'),
     linear-gradient(190deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
-    linear-gradient(280deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%);
+    linear-gradient(280deg, #ff2667 0%, #26ffb7 33%, #7949f2 66%, #ff2667 100%);
 }
 .bar-bottom > *, .bar-top > * { min-height: 0; min-width: 0; }
 .bar-bottom .bar-cluster { min-height: 0; }
@@ -195,8 +203,14 @@ window, window.background, decoration {
 .cluster-left, .cluster-right { min-width: 0; }
 
 .bar-cluster { padding: 0 4px; }
-.cluster-left  { padding-left: 2px; }
-.cluster-right { padding-right: 2px; }
+.cluster-left  { padding-left: 0; }
+.cluster-right { padding-right: 0; }
+.bar-bottom .cluster-left  { margin-right: auto; }
+.bar-bottom .cluster-center { flex: 1 1 auto; }
+.bar-bottom .cluster-right { margin-left: auto; }
+.bar-top .cluster-left  { flex: 0 0 auto; min-width: 0; }
+.bar-top .cluster-center { flex: 1 1 auto; min-width: 0; }
+.bar-top .cluster-right { flex: 0 0 auto; min-width: 0; }
 
 /* -- PILLS . glass capsules ----------------------------------------- */
 
@@ -327,7 +341,17 @@ window, window.background, decoration {
   box-shadow:
     0 0 28px rgba($neon-red, 0.55),
     0 0 48px rgba($nyxus-accent-primary, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 6px 18px rgba(0, 0, 0, 0.62);
+}
+.brand-top {
+  padding: 2px 10px 2px 6px;
+  min-height: 22px;
+  .brand-gem { font-size: 11px; }
+  .brand-word { font-size: 11px; letter-spacing: 0.08em; }
+}
+.brand-bottom {
+  flex-shrink: 0;
+  margin-left: 0;
 }
 
 /* -- HEARTBEAT ------------------------------------------------------ */
@@ -399,58 +423,34 @@ window, window.background, decoration {
 .clock:hover { @include obsidian-vessel-hover($nyxus-accent-primary); }
 .clock-glyph { color: $nyxus-accent-primary; font-size: 14px;
                text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.65); }
-.clock-hms   { font-weight: 800; font-size: 16px; letter-spacing: 0.06em;
+.clock-hms   { font-weight: 800; font-size: 18px; letter-spacing: 0.06em;
                color: #ffffff;
                text-shadow:
-                 0 0 10px rgba(255, 255, 255, 0.55),
-                 0 0 20px rgba($nyxus-accent-primary, 0.45); }
-.clock-date  { color: $dim; font-size: 10px; letter-spacing: 0.14em; }
+                 0 0 12px rgba(255, 255, 255, 0.70),
+                 0 0 24px rgba($nyxus-accent-primary, 0.50); }
+.clock-date  { color: $dim; font-size: 11px; letter-spacing: 0.16em; font-weight: 600; }
+.bar-bottom .clock {
+  min-width: 148px;
+  padding: 2px 18px;
+}
 
 /* -- TICKER (top bar) ----------------------------------------------- */
 
-.ticker-label {
-  color: $nyxus-accent-primary;
-  font-weight: 700;
-  font-size: 10px;
-  padding: 0 8px;
-  text-shadow:
-    0 0 10px rgba($nyxus-accent-primary, 0.85),
-    0 0 22px rgba($nyxus-accent-primary, 0.40);
-}
-/* full-width ribbon + dead-center NYXUS watermark (rev 2026-07-12) */
-.ticker-overlay {
-  min-width: 700px;
-}
-.ticker-watermark {
-  color: $nyxus-accent-primary;
-  font-family: "Inter Display", "Inter", sans-serif;
-  font-weight: 800;
-  font-size: 10px;
-  letter-spacing: 0.32em;
-  padding: 1px 14px;
-  background: linear-gradient(180deg, rgba(7, 3, 14, 0.97), rgba(4, 2, 10, 0.94));
-  border: 1px solid rgba($nyxus-accent-primary, 0.48);
-  border-radius: 5px;
-  text-shadow:
-    0 0 10px rgba($nyxus-accent-primary, 0.90),
-    0 0 22px rgba($nyxus-accent-primary, 0.45);
-}
-/* signature scrolling marquee, dressed as a HUD tile card */
+/* full-width scrolling ribbon — NYXUS brand is flush-left, not centered */
 .ticker-box {
-  padding: 1px 12px;
-  border-radius: 6px;
-  @include obsidian-vessel($nyxus-accent-secondary);
+  padding: 0 10px;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  min-width: 0;
 }
 .ticker {
-  color: $nyxus-accent-secondary;
+  color: rgba($nyxus-accent-secondary, 0.92);
   font-family: "JetBrainsMono Nerd Font", "JetBrainsMono", monospace;
-  font-size: 11px;
-  text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.45);
-  /* NO letter-spacing: the marquee is a fixed-column ribbon and
-     letter-spacing makes GTK ellipsize the sliding window. */
-  /* 120 monospace cols at ~7px each ~ 840px; keep in sync with
-     NYXUS_TICKER_COLS in nyxus.conf and :limit-width in eww.yuck. */
-  min-width: 700px;
+  font-size: 10px;
+  text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.55);
+  min-width: 0;
 }
 
 /* -- WORKSPACES (left rail) ----------------------------------------- */
@@ -476,7 +476,7 @@ window, window.background, decoration {
   min-height: 1px;
   min-width: 28px;
   margin: 2px 4px;
-  background: linear-gradient(90deg, transparent, rgba(43, 210, 255, 0.45), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 38, 103, 0.45), transparent);
   opacity: 0.7;
 }
 
@@ -500,6 +500,49 @@ window, window.background, decoration {
 }
 .app-pill:active { @include obsidian-press($nyxus-accent-primary); }
 
+/* -- BOOT SPLASH (nyxus-splash namespace) ---------------------------- */
+
+.splash-root {
+  background-color: rgba(3, 1, 7, 0.98);
+  background-image:
+    linear-gradient(180deg, rgba(4, 2, 10, 0.35), rgba(2, 1, 6, 0.72)),
+    url('assets/cosmic-overlay-splash.png');
+  background-size: cover;
+  background-position: center;
+}
+.splash-glyph {
+  font-size: 48px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow:
+    0 0 24px rgba($nyxus-accent-primary, 0.75),
+    0 0 48px rgba($nyxus-accent-secondary, 0.45);
+}
+.splash-word {
+  font-family: "Permanent Marker", "Inter Display", sans-serif;
+  font-size: 72px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: #ffffff;
+  text-shadow:
+    0 0 20px rgba($nyxus-accent-primary, 0.85),
+    0 0 40px rgba($nyxus-accent-secondary, 0.45);
+}
+.splash-tag {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  color: $grey-mid;
+  padding-top: 8px;
+}
+.splash-foot {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: $grey-ghost;
+  padding-bottom: 24px;
+}
+
 /* -- OVERLAY BACKDROP ------------------------------------------------ */
 /* Fullscreen tinted sheet behind dashboard / powermenu / cheatsheet.
    Alpha 0.34 clears Hyprland's layerrule ignore_alpha 0.2 so the
@@ -517,9 +560,15 @@ window, window.background, decoration {
 /* -- DEEP CORE overlay ----------------------------------------------- */
 
 .deepcore-root {
-  background: $void-deep;
+  background-color: rgba(5, 1, 13, 0.94);
+  background-image:
+    linear-gradient(180deg, rgba(4, 2, 10, 0.45), rgba(2, 1, 6, 0.72)),
+    url('assets/cosmic-overlay-deepcore.png');
+  background-size: cover;
+  background-position: center;
   padding: 48px 56px;
   border: 1px solid rgba($nyxus-accent-secondary, 0.42);
+  border-top: 2px solid $nyxus-accent-secondary;
   border-radius: 12px;
   box-shadow:
     0 0 0 1px rgba($nyxus-accent-secondary, 0.08),
@@ -578,22 +627,6 @@ window, window.background, decoration {
   transition: all 180ms ease;
 }
 .dc-close:hover { color: $nyxus-accent-secondary; border-color: rgba($nyxus-accent-secondary, 0.55); }
-.dc-col-feed { min-width: 340px; border-color: rgba($neon-cyan, 0.35); border-top-color: $neon-cyan; }
-.dc-feed { max-height: 220px; }
-.dc-feed-line {
-  color: $dim;
-  font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 9px;
-  letter-spacing: 0.02em;
-  padding: 3px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-}
-.dc-feed-empty {
-  color: $grey-ghost;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  padding-top: 8px;
-}
 
 /* -- DASHBOARD overlay ---------------------------------------------- */
 
@@ -1017,7 +1050,6 @@ window, window.background, decoration {
   padding: 16px 24px;
   border-radius: 8px;
   @include flyout-glass($nyxus-accent-primary, 0.65);
-}
   min-width: 720px;
 }
 .dash-cores {
@@ -1826,9 +1858,15 @@ window, window.background, decoration {
 /* mission uses the shared .overlay-backdrop tint (see DASHBOARD section)
    so the whole screen frosts behind Mission Control too. */
 .mission-root      { background-color: transparent; }
-.mission-card      { background-color: $void-deep;
+.mission-card      { background-color: rgba(5, 1, 13, 0.94);
+                     background-image:
+                       linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
+                       url('assets/cosmic-overlay-mission.png');
+                     background-size: cover;
+                     background-position: center;
                      padding: 22px 26px; border-radius: 12px;
                      border: 1px solid rgba($nyxus-accent-secondary, 0.42);
+                     border-top: 2px solid $nyxus-accent-secondary;
                      box-shadow:
                        0 0 0 1px rgba($nyxus-accent-secondary, 0.08),
                        0 24px 64px rgba(0,0,0,0.78),
@@ -1837,8 +1875,9 @@ window, window.background, decoration {
                      letter-spacing: 0.22em;
                      text-shadow: 0 0 16px rgba($nyxus-accent-warn, 0.45); }
 .mission-grid      { padding: 8px 0; }
-.mission-ws-card   { background: rgba(10, 13, 20, 0.85);
+.mission-ws-card   { background: rgba(6, 4, 12, 0.78);
                      border: 1px solid rgba($nyxus-accent-ok, 0.35);
+                     border-top: 2px solid rgba($nyxus-accent-ok, 0.62);
                      border-radius: 14px; padding: 12px;
                      min-width: 296px;
                      transition: all 140ms ease; }
@@ -1973,7 +2012,12 @@ scale slider {
 }
 
 .qs-card {
-  background: $void-card;
+  background-color: rgba(6, 4, 12, 0.88);
+  background-image:
+    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
+    url('assets/cosmic-flyout-qs.png');
+  background-size: cover;
+  background-position: center;
   border: 1px dashed rgba($nyxus-accent-primary, 0.60);
   border-top: 2px solid $nyxus-accent-primary;
   border-radius: 8px;
@@ -2460,20 +2504,8 @@ scale slider {
                    text-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.55), 0 0 28px rgba($nyxus-accent-primary, 0.25); }
 .dash-big-orange { color: $neon-orange;
                    text-shadow: 0 0 14px rgba($neon-orange, 0.55), 0 0 28px rgba($neon-orange, 0.25); }
-.dash-big-cyan   { color: $neon-cyan;
-                   text-shadow: 0 0 14px rgba($neon-cyan, 0.55), 0 0 28px rgba($neon-cyan, 0.25); }
-.dash-big-green  { color: $neon-green;
-                   text-shadow: 0 0 14px rgba($neon-green, 0.55), 0 0 28px rgba($neon-green, 0.25); }
-.dash-big-purple { color: $nyxus-accent-ok;
-                   text-shadow: 0 0 14px rgba($nyxus-accent-ok, 0.55), 0 0 28px rgba($nyxus-accent-ok, 0.25); }
-.dash-hub-card {
-  cursor: pointer;
-  transition: all 200ms ease;
-}
-.dash-hub-card:hover {
-  border-color: rgba($nyxus-accent-secondary, 0.65);
-  box-shadow: 0 0 24px rgba($nyxus-accent-secondary, 0.18);
-}
+
+/* script accent line inside cards (weather summary etc.) */
 .dash-card-script {
   font-family: "Caveat", "Inter", sans-serif;
   font-size: 17px;
@@ -2492,8 +2524,6 @@ scale slider {
 .dash-foot-pink   { color: rgba($nyxus-accent-primary, 0.60); border-top-color: rgba($nyxus-accent-primary, 0.16); }
 .dash-foot-orange { color: rgba($neon-orange, 0.60);          border-top-color: rgba($neon-orange, 0.16); }
 .dash-foot-purple { color: rgba($nyxus-accent-ok, 0.60);      border-top-color: rgba($nyxus-accent-ok, 0.16); }
-.dash-foot-cyan   { color: rgba($neon-cyan, 0.60);            border-top-color: rgba($neon-cyan, 0.16); }
-.dash-foot-green  { color: rgba($neon-green, 0.60);           border-top-color: rgba($neon-green, 0.16); }
 .dash-foot-red    { color: rgba($neon-red, 0.60);             border-top-color: rgba($neon-red, 0.16); }
 
 /* -- ring gauges (HUD SYSTEM CORE voice) ------------------------------- */
