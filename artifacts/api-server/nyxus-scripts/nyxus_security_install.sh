@@ -91,10 +91,20 @@ install_app() {
   fi
 
   step "${app}"
-  printf "  ${DIM}downloading ${pkg}…${R}\n"
-  if ! curl -fsSL --retry 3 --retry-delay 2 -o "$pkg" "$BASE_URL/api/download/nyxus/$pkg"; then
-    fail "download failed: $pkg"
-    return 1
+  ## Offline mode: nyxus_install.sh exports NYXUS_OFFLINE_DIR when running
+  ## from the pre-staged ISO cache — copy the payload instead of curling.
+  if [[ -n "${NYXUS_OFFLINE_DIR:-}" && -f "${NYXUS_OFFLINE_DIR}/${pkg}" ]]; then
+    printf "  ${DIM}using offline cache: ${pkg}…${R}\n"
+    if ! cp -f "${NYXUS_OFFLINE_DIR}/${pkg}" "$pkg"; then
+      fail "offline copy failed: $pkg"
+      return 1
+    fi
+  else
+    printf "  ${DIM}downloading ${pkg}…${R}\n"
+    if ! curl -fsSL --retry 3 --retry-delay 2 -o "$pkg" "$BASE_URL/api/download/nyxus/$pkg"; then
+      fail "download failed: $pkg"
+      return 1
+    fi
   fi
   ok "downloaded $(du -h "$pkg" | cut -f1)"
 
