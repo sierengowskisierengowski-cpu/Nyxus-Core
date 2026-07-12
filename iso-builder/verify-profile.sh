@@ -448,9 +448,9 @@ hd "13f. NYXUS workspaces"
 WS_MAIN="${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
 WS_STATIONS="${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-stations.conf"
 if [[ -f "${WS_STATIONS}" ]]; then
-  WS_NAMES=$(grep -c '^workspace = [0-9]\+,' "${WS_STATIONS}")
+  WS_NAMES=$(grep -Ec '^workspace = [0-9]+,' "${WS_STATIONS}")
 else
-  WS_NAMES=$(grep -c '^workspace = [0-9]\+,' "${WS_MAIN}")
+  WS_NAMES=$(grep -Ec '^workspace = [0-9]+,' "${WS_MAIN}")
 fi
 if (( WS_NAMES >= 10 )); then
   ok "${WS_NAMES} named workspaces declared"
