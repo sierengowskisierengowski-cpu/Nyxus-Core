@@ -8,6 +8,7 @@
 $neon-orange: #ff7849;   // HUD "orange"  (fans / power)
 $neon-green:  #6dffcf;   // HUD "green"   (network)
 $neon-blue:   #4d9fff;   // HUD "blue"    (bluetooth)
+$neon-cyan:   #2bd2ff;   // HUD "cyan"    (HOME station)
 $neon-red:    #ff4d6b;   // HUD "red"     (music / danger)
 
 $text:       #e8edf5;    // nyx_white_off
@@ -462,7 +463,6 @@ window, window.background, decoration {
   padding: 12px 6px;
   box-shadow: none;
 }
-/* Workspace pills: same machined obsidian + per-hue neon ring as app rail. */
 .ws-pill {
   min-width: 38px;
   min-height: 38px;
@@ -471,6 +471,13 @@ window, window.background, decoration {
   font-weight: 700;
   font-size: 12px;
   transition: all 180ms ease;
+}
+.ws-rail-divider {
+  min-height: 1px;
+  min-width: 28px;
+  margin: 2px 4px;
+  background: linear-gradient(90deg, transparent, rgba(43, 210, 255, 0.45), transparent);
+  opacity: 0.7;
 }
 
 /* -- APP RAIL (right) ----------------------------------------------- */
@@ -571,11 +578,32 @@ window, window.background, decoration {
   transition: all 180ms ease;
 }
 .dc-close:hover { color: $nyxus-accent-secondary; border-color: rgba($nyxus-accent-secondary, 0.55); }
+.dc-col-feed { min-width: 340px; border-color: rgba($neon-cyan, 0.35); border-top-color: $neon-cyan; }
+.dc-feed { max-height: 220px; }
+.dc-feed-line {
+  color: $dim;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.dc-feed-empty {
+  color: $grey-ghost;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  padding-top: 8px;
+}
 
 /* -- DASHBOARD overlay ---------------------------------------------- */
 
 .dashboard-root {
-  background: rgba(5, 6, 10, 0.94);
+  background-color: rgba(5, 6, 10, 0.92);
+  background-image:
+    linear-gradient(180deg, rgba(4, 2, 10, 0.38), rgba(2, 1, 6, 0.62)),
+    url('assets/cosmic-overlay-dashboard.png');
+  background-size: cover;
+  background-position: center;
   padding: 80px 60px;
   border: 2px solid rgba($nyxus-accent-secondary, 0.35);
   border-radius: 28px;
@@ -620,22 +648,12 @@ window, window.background, decoration {
 .dash-card {
   padding: 20px 28px;
   border-radius: 8px;
-  background: $void-card;
-  border: 1px dashed rgba($nyxus-accent-primary, 0.55);
-  border-top: 2px solid $nyxus-accent-primary;
+  @include flyout-glass($nyxus-accent-primary, 0.72);
   min-width: 200px;
-  box-shadow:
-    0 0 18px rgba($nyxus-accent-primary, 0.20),
-    0 6px 22px rgba(0, 0, 0, 0.55),
-    inset 0 0 24px rgba(0, 0, 0, 0.18);
   transition: all 320ms ease;
 }
 .dash-card:hover {
-  background: rgba(9, 6, 18, 0.97);
-  box-shadow:
-    0 0 30px rgba($nyxus-accent-primary, 0.40),
-    0 10px 34px rgba(0, 0, 0, 0.65),
-    inset 0 0 24px rgba(0, 0, 0, 0.18);
+  @include flyout-glass-hover($nyxus-accent-primary);
 }
 /* Each card carries its own neon (HUD: Clock=pink, Weather=gold,
    Music=red, System=pink, Fans=orange, Network=green, Storage=gold):
@@ -702,10 +720,14 @@ window, window.background, decoration {
 /* -- POWERMENU overlay . Obsidian Prism ----------------------------- */
 
 .powermenu-root {
-  background: $void-deep;
+  background-color: rgba(5, 1, 13, 0.94);
+  background-image:
+    linear-gradient(180deg, rgba(4, 2, 10, 0.45), rgba(2, 1, 6, 0.72)),
+    url('assets/cosmic-overlay-powermenu.png');
+  background-size: cover;
+  background-position: center;
   padding: 60px 80px;
   min-width: 720px;
-  /* max-width: 920px; unsupported by GTK CSS */
   border: 1px solid rgba($nyxus-accent-secondary, 0.42);
   border-radius: 12px;
   box-shadow:
@@ -724,20 +746,12 @@ window, window.background, decoration {
 .power-btn {
   min-width: 150px;
   min-height: 130px;
-  border-radius: 8px;
-  background: $void-card;
-  border: 1px dashed rgba($nyxus-accent-ok, 0.55);
-  border-top: 2px solid $nyxus-accent-ok;
+  border-radius: 10px;
+  @include obsidian-vessel($nyxus-accent-ok, 0.85);
   transition: all 180ms ease;
 }
 .power-btn:hover {
-  background: linear-gradient(135deg,
-    rgba($nyxus-accent-secondary, 0.18),
-    rgba($nyxus-accent-primary, 0.16));
-  border-color: rgba($nyxus-accent-secondary, 0.55);
-  box-shadow:
-    0 0 24px rgba($nyxus-accent-secondary, 0.35),
-    0 0 32px rgba($nyxus-accent-primary, 0.25);
+  @include obsidian-vessel-hover($nyxus-accent-ok);
 }
 /* Destructive variants (Shutdown/Restart) - red border + glyph in
    resting state so they read as obviously different from soft actions
@@ -824,9 +838,12 @@ window, window.background, decoration {
 /* -- CHEATSHEET ------------------------------------------------------ */
 
 .cheatsheet-root {
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba($nyxus-accent-primary, 0.10), transparent 70%),
-    $void-deep;
+  background-color: rgba(5, 1, 13, 0.94);
+  background-image:
+    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
+    url('assets/cosmic-overlay-cheatsheet.png');
+  background-size: cover;
+  background-position: center;
   padding: 60px 80px;
   border: 1px solid rgba($nyxus-accent-secondary, 0.42);
   border-radius: 12px;
@@ -854,10 +871,8 @@ window, window.background, decoration {
 .cheat-col {
   padding: 16px 24px;
   border-radius: 8px;
-  background: $void-card;
-  border: 1px dashed rgba($nyxus-accent-ok, 0.45);
-  border-top: 2px solid $nyxus-accent-ok;
   min-width: 280px;
+  @include flyout-glass($nyxus-accent-ok, 0.65);
 }
 .cheat-row { padding: 3px 0; }
 .cheat-chord {
@@ -1001,13 +1016,8 @@ window, window.background, decoration {
 .dash-cores-card {
   padding: 16px 24px;
   border-radius: 8px;
-  background: $void-card;
-  border: 1px dashed rgba($nyxus-accent-primary, 0.55);
-  border-top: 2px solid $nyxus-accent-primary;
-  box-shadow:
-    0 0 18px rgba($nyxus-accent-primary, 0.20),
-    0 6px 22px rgba(0, 0, 0, 0.55),
-    inset 0 0 24px rgba(0, 0, 0, 0.18);
+  @include flyout-glass($nyxus-accent-primary, 0.65);
+}
   min-width: 720px;
 }
 .dash-cores {
@@ -1856,7 +1866,12 @@ window, window.background, decoration {
  * ===================================================================== */
 
 .flyout, .brightness-flyout {
-  background: $void-card;
+  background-color: rgba(6, 4, 12, 0.88);
+  background-image:
+    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
+    url('assets/cosmic-flyout-brightness.png');
+  background-size: cover;
+  background-position: center;
   border: 1px dashed rgba($nyxus-accent-warn, 0.60);
   border-top: 2px solid $nyxus-accent-warn;
   border-radius: 8px;
@@ -2339,6 +2354,7 @@ scale slider {
 .ws-pill-gold   { @include obsidian-vessel($nyxus-accent-warn, 0.65); color: $accent-warn-soft; }
 .ws-pill-orange { @include obsidian-vessel($neon-orange, 0.65); color: $neon-orange-soft; }
 .ws-pill-blue   { @include obsidian-vessel($neon-blue, 0.65); color: $neon-blue-soft; }
+.ws-pill-cyan   { @include obsidian-vessel($neon-cyan, 0.65); color: rgba($neon-cyan, 0.88); }
 .ws-pill-occupied {
   text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.55);
 }
@@ -2354,6 +2370,8 @@ scale slider {
   text-shadow: 0 0 12px rgba($neon-orange, 0.85); }
 .ws-pill-blue:hover   { @include obsidian-vessel-hover($neon-blue); color: #ffffff;
   text-shadow: 0 0 12px rgba($neon-blue, 0.85); }
+.ws-pill-cyan:hover   { @include obsidian-vessel-hover($neon-cyan); color: #ffffff;
+  text-shadow: 0 0 12px rgba($neon-cyan, 0.85); }
 .ws-pill-active {
   background: linear-gradient(135deg, $nyxus-accent-primary, $nyxus-accent-secondary);
   color: #05060a;
@@ -2442,8 +2460,20 @@ scale slider {
                    text-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.55), 0 0 28px rgba($nyxus-accent-primary, 0.25); }
 .dash-big-orange { color: $neon-orange;
                    text-shadow: 0 0 14px rgba($neon-orange, 0.55), 0 0 28px rgba($neon-orange, 0.25); }
-
-/* script accent line inside cards (weather summary etc.) */
+.dash-big-cyan   { color: $neon-cyan;
+                   text-shadow: 0 0 14px rgba($neon-cyan, 0.55), 0 0 28px rgba($neon-cyan, 0.25); }
+.dash-big-green  { color: $neon-green;
+                   text-shadow: 0 0 14px rgba($neon-green, 0.55), 0 0 28px rgba($neon-green, 0.25); }
+.dash-big-purple { color: $nyxus-accent-ok;
+                   text-shadow: 0 0 14px rgba($nyxus-accent-ok, 0.55), 0 0 28px rgba($nyxus-accent-ok, 0.25); }
+.dash-hub-card {
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+.dash-hub-card:hover {
+  border-color: rgba($nyxus-accent-secondary, 0.65);
+  box-shadow: 0 0 24px rgba($nyxus-accent-secondary, 0.18);
+}
 .dash-card-script {
   font-family: "Caveat", "Inter", sans-serif;
   font-size: 17px;
@@ -2462,6 +2492,8 @@ scale slider {
 .dash-foot-pink   { color: rgba($nyxus-accent-primary, 0.60); border-top-color: rgba($nyxus-accent-primary, 0.16); }
 .dash-foot-orange { color: rgba($neon-orange, 0.60);          border-top-color: rgba($neon-orange, 0.16); }
 .dash-foot-purple { color: rgba($nyxus-accent-ok, 0.60);      border-top-color: rgba($nyxus-accent-ok, 0.16); }
+.dash-foot-cyan   { color: rgba($neon-cyan, 0.60);            border-top-color: rgba($neon-cyan, 0.16); }
+.dash-foot-green  { color: rgba($neon-green, 0.60);           border-top-color: rgba($neon-green, 0.16); }
 .dash-foot-red    { color: rgba($neon-red, 0.60);             border-top-color: rgba($neon-red, 0.16); }
 
 /* -- ring gauges (HUD SYSTEM CORE voice) ------------------------------- */

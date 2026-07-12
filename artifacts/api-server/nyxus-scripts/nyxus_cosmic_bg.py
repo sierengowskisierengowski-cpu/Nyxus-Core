@@ -201,6 +201,8 @@ APP_SCENES = {
     "_launcher": "diamond_field",
     "_screenshot": "twin_moons",
     "_panel": "black_hole",
+    "_settings": "nebula_moon",
+    "_powermenu": "black_hole",
     "display": "nebula_moon",
     "wallpaper": "milky_way",
     "about": "twin_moons",

@@ -82,6 +82,8 @@ try:
         HAIRLINE_WHITE, HAIRLINE_INK,
         RADIUS_CARD, RADIUS_PILL, RADIUS_INPUT,
         FONT_UI, FONT_MONO, FONT_DISPLAY,
+        ACCENT_PRIMARY, ACCENT_SECONDARY, ACCENT_WARN, ACCENT_OK,
+        rgba_str,
     )
 except Exception:
     WHITE_PURE     = "#ffffff"
@@ -102,9 +104,25 @@ except Exception:
     FONT_UI        = "Inter"
     FONT_MONO      = "JetBrains Mono"
     FONT_DISPLAY   = "Inter Display"
+    ACCENT_PRIMARY   = "#ff3cac"   # PRISM canonical fallback
+    ACCENT_SECONDARY = "#2bd2ff"
+    ACCENT_WARN      = "#ffb84d"
+    ACCENT_OK        = "#784bff"
+
+    def rgba_str(h: str, a: float = 1.0) -> str:
+        h = h.lstrip("#")
+        return (f"rgba({int(h[0:2], 16)}, {int(h[2:4], 16)}, "
+                f"{int(h[4:6], 16)}, {a})")
 
 DANGER_RED = "#ff6464"  # §8 — RESERVED for destructive only
-NYXUS_GOLD = "#d4b87a"  # warm brand accent — selection, focus rings
+# Interactive-highlight accent — follows the live accent.json preset
+# (loaded by nyxus_palette at import). NYXUS_GOLD kept as an alias so
+# older call sites keep working; it now points at the live accent.
+NYXUS_GOLD = ACCENT_PRIMARY
+ACC_GLOW_SOFT   = rgba_str(ACCENT_PRIMARY, 0.16)   # halos / row selection
+ACC_GLOW_FAINT  = rgba_str(ACCENT_PRIMARY, 0.10)   # hover ghosts
+ACC_GLOW_RING   = rgba_str(ACCENT_PRIMARY, 0.35)   # focus rings / knobs
+SEC_GLOW_SOFT   = rgba_str(ACCENT_SECONDARY, 0.14)
 
 # Nerd-font glyphs (§6 — never emoji in chrome).
 GLYPHS = {
@@ -642,13 +660,48 @@ FOOTER_SECTION_TITLES = frozenset({"Keybinds", "Reset", "Advanced"})
 
 
 # ──────────────────────────────────────────────────────────────────────
-# DARK MIRROR stylesheet — libadwaita CSS overrides.
-# Keep this small: we lean on Adw built-ins (preferences groups, action
-# rows, switches, sliders) and only override colour + radius + glow.
+# PRISM stylesheet — libadwaita CSS overrides.
+# Dark glass cards + hairline borders + live neon accent from
+# accent.json (via nyxus_palette). Built by a function so the app can
+# restyle itself in-place after `nyxus-apply-accent` runs.
 # ──────────────────────────────────────────────────────────────────────
-CSS = f"""
+def _refresh_accent_tokens() -> None:
+    """Re-read the live accent from accent.json and recompute the
+    module-level accent tokens the stylesheet is built from."""
+    global ACCENT_PRIMARY, ACCENT_SECONDARY, ACCENT_WARN, ACCENT_OK
+    global NYXUS_GOLD, ACC_GLOW_SOFT, ACC_GLOW_FAINT, ACC_GLOW_RING
+    global SEC_GLOW_SOFT
+    try:
+        import nyxus_palette as _pal
+        _pal.reload_accent()
+        ACCENT_PRIMARY   = _pal.ACCENT_PRIMARY
+        ACCENT_SECONDARY = _pal.ACCENT_SECONDARY
+        ACCENT_WARN      = _pal.ACCENT_WARN
+        ACCENT_OK        = _pal.ACCENT_OK
+    except Exception as e:
+        log.warning("accent token refresh: %s", e)
+    NYXUS_GOLD     = ACCENT_PRIMARY
+    ACC_GLOW_SOFT  = rgba_str(ACCENT_PRIMARY, 0.16)
+    ACC_GLOW_FAINT = rgba_str(ACCENT_PRIMARY, 0.10)
+    ACC_GLOW_RING  = rgba_str(ACCENT_PRIMARY, 0.35)
+    SEC_GLOW_SOFT  = rgba_str(ACCENT_SECONDARY, 0.14)
+
+
+try:
+    from nyxus_palette import neon_flicker_css as _nfc
+    _flicker_css = _nfc()
+except Exception:
+    _flicker_css = ""
+
+
+def build_css() -> str:
+    # Visual language = the nyxus-home HUD (style.py): near-black cards,
+    # 1px neon hairlines with a solid accent top rule on key surfaces,
+    # small-caps JetBrains Mono micro-labels, dim-gray mono metadata,
+    # subtle neon glow. Accent hues come live from accent.json.
+    return f"""
 window, .nyx-bg {{
-    background-color: {INK_BLACK};
+    background-color: rgb(5, 1, 13);
     color: {WHITE_OFF};
     font-family: '{FONT_UI}', 'Inter', sans-serif;
 }}
@@ -664,18 +717,19 @@ window, .nyx-bg {{
     border-bottom: 1px solid {HAIRLINE_WHITE};
 }}
 .nyx-sidebar-title {{
-    font-family: '{FONT_DISPLAY}', '{FONT_UI}', sans-serif;
-    font-size: 18px;
-    font-weight: 600;
+    font-family: 'Permanent Marker', '{FONT_DISPLAY}', cursive;
+    font-size: 19px;
     letter-spacing: 0.4px;
-    color: {WHITE_PURE};
-    text-shadow: 0 0 14px rgba(255,255,255,0.18);
+    color: {ACCENT_PRIMARY};
+    text-shadow: 0 0 8px {ACC_GLOW_RING},
+                 0 0 18px {ACC_GLOW_SOFT};
 }}
+{_flicker_css}
 .nyx-sidebar-rev {{
     font-family: '{FONT_MONO}', monospace;
-    font-size: 11px;
+    font-size: 8px;
     color: {GREY_TERTIARY};
-    letter-spacing: 0.4px;
+    letter-spacing: 0.22em;
 }}
 .nyx-search {{
     margin: 10px 14px;
@@ -686,8 +740,8 @@ window, .nyx-bg {{
     padding: 6px 10px;
 }}
 .nyx-search:focus-within {{
-    border-color: {WHITE_OFF};
-    box-shadow: 0 0 18px rgba(255,255,255,0.10);
+    border-color: {ACCENT_PRIMARY};
+    box-shadow: 0 0 18px {ACC_GLOW_SOFT};
 }}
 .nyx-section-row {{
     padding: 10px 14px;
@@ -703,8 +757,8 @@ window, .nyx-bg {{
 .nyx-section-row.selected, .nyx-section-row:selected {{
     background-color: {GLASS_DARK};
     color: {WHITE_PURE};
-    box-shadow: inset 3px 0 0 0 {NYXUS_GOLD},
-                0 0 18px rgba(212,184,122,0.10);
+    box-shadow: inset 3px 0 0 0 {ACCENT_PRIMARY},
+                0 0 18px {ACC_GLOW_SOFT};
 }}
 .nyx-section-glyph {{
     font-family: 'Symbols Nerd Font', 'Symbols Nerd Font Mono', monospace;
@@ -722,10 +776,11 @@ window, .nyx-bg {{
     padding: 2px 14px 6px;
 }}
 .nyx-cat-header {{
-    font-size: 10px;
+    font-family: '{FONT_MONO}', monospace;
+    font-size: 9px;
     font-weight: 700;
-    letter-spacing: 0.18em;
-    color: {GREY_TERTIARY};
+    letter-spacing: 0.24em;
+    color: {rgba_str(ACCENT_SECONDARY, 0.75)};
     padding: 14px 22px 4px;
     text-transform: uppercase;
 }}
@@ -738,7 +793,7 @@ window, .nyx-bg {{
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: {RADIUS_CARD}px;
     box-shadow: 0 24px 64px rgba(0,0,0,0.7),
-                0 0 0 1px rgba(212,184,122,0.08);
+                0 0 0 1px {ACC_GLOW_FAINT};
     padding: 8px;
 }}
 .nyx-palette-entry {{
@@ -756,7 +811,7 @@ window, .nyx-bg {{
 .nyx-palette-row:hover,
 .nyx-palette-row.selected,
 .nyx-palette-row:selected {{
-    background-color: rgba(212,184,122,0.10);
+    background-color: {ACC_GLOW_SOFT};
     color: {WHITE_PURE};
 }}
 .nyx-palette-hint {{
@@ -773,69 +828,111 @@ window, .nyx-bg {{
 }}
 .nyx-page-header {{
     padding: 22px 28px 12px;
-    border-bottom: 1px solid {HAIRLINE_WHITE};
+    border-bottom: 1px solid {rgba_str(ACCENT_PRIMARY, 0.22)};
 }}
 .nyx-page-title {{
     font-family: '{FONT_DISPLAY}', '{FONT_UI}', sans-serif;
     font-size: 28px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.3px;
-    color: {WHITE_PURE};
-    text-shadow: 0 0 16px rgba(255,255,255,0.16);
+    color: {ACCENT_PRIMARY};
+    text-shadow: 0 0 8px {ACC_GLOW_RING};
 }}
 .nyx-page-sub {{
+    font-family: '{FONT_MONO}', monospace;
     color: {GREY_MID};
-    font-size: 13px;
+    font-size: 10px;
     margin-top: 2px;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.14em;
 }}
 
 /* libadwaita primitive overrides */
-preferencesgroup > box > label.heading {{
-    color: {WHITE_OFF};
-    font-weight: 600;
-    letter-spacing: 0.3px;
+preferencesgroup > box > label.heading,
+preferencesgroup label.heading {{
+    color: {ACCENT_SECONDARY};
+    font-family: '{FONT_MONO}', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px {SEC_GLOW_SOFT};
 }}
-preferencesgroup > box > label.description {{
+preferencesgroup > box > label.description,
+preferencesgroup label.description {{
+    font-family: '{FONT_MONO}', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
     color: {GREY_TERTIARY};
 }}
 row.action, row.entry, row.combo, row.switch, row.expander {{
-    background-color: {GLASS_DEEPER};
-    border: 1px solid {HAIRLINE_WHITE};
-    border-radius: {RADIUS_CARD}px;
+    background-color: rgba(6, 3, 13, 0.91);
+    border: 1px solid {rgba_str(ACCENT_PRIMARY, 0.16)};
+    border-radius: 8px;
     margin-bottom: 1px;
+    transition: box-shadow 320ms ease, border-color 320ms ease;
 }}
 row.action:hover, row.entry:hover, row.combo:hover,
 row.switch:hover, row.expander:hover {{
-    background-color: {GLASS_DARK};
+    background-color: rgba(9, 6, 18, 0.97);
+    border-color: {rgba_str(ACCENT_PRIMARY, 0.40)};
+    box-shadow: 0 0 14px {ACC_GLOW_FAINT};
+}}
+row.action:focus-within, row.entry:focus-within, row.combo:focus-within,
+row.switch:focus-within, row.expander:focus-within {{
+    border-color: {ACC_GLOW_RING};
+    box-shadow: 0 0 14px {ACC_GLOW_SOFT};
 }}
 row label.title {{ color: {WHITE_OFF}; }}
-row label.subtitle {{ color: {GREY_TERTIARY}; font-size: 12px; }}
+row label.subtitle {{
+    font-family: '{FONT_MONO}', monospace;
+    color: {GREY_TERTIARY};
+    font-size: 10px;
+    letter-spacing: 0.05em;
+}}
+
+entry:focus-within, spinbutton:focus-within {{
+    border-color: {ACCENT_PRIMARY};
+    box-shadow: 0 0 10px {ACC_GLOW_FAINT};
+}}
+checkbutton check:checked, checkbutton radio:checked {{
+    background-color: {ACCENT_PRIMARY};
+    border-color: {ACCENT_PRIMARY};
+    color: {INK_BLACK};
+}}
+progressbar progress {{ background-color: {ACCENT_SECONDARY}; }}
+selection {{ background-color: {ACC_GLOW_RING}; color: {WHITE_PURE}; }}
 
 switch {{ background-color: {GLASS_DARK};
          border: 1px solid {HAIRLINE_WHITE}; }}
-switch:checked {{ background-color: {WHITE_OFF};
-                  border-color: {WHITE_PURE}; }}
+switch:checked {{ background-color: {ACCENT_PRIMARY};
+                  border-color: {ACCENT_PRIMARY};
+                  box-shadow: 0 0 12px {ACC_GLOW_RING}; }}
 switch slider {{ background-color: {GREY_LIGHT}; }}
 switch:checked slider {{ background-color: {INK_BLACK}; }}
 
 button {{
-    background-color: {GLASS_DEEPER};
-    border: 1px solid {HAIRLINE_WHITE};
-    color: {WHITE_OFF};
-    border-radius: {RADIUS_PILL}px;
-    padding: 6px 14px;
+    background-color: transparent;
+    border: 1px solid {rgba_str(ACCENT_PRIMARY, 0.34)};
+    color: {ACCENT_PRIMARY};
+    font-family: '{FONT_MONO}', monospace;
+    font-size: 11px;
+    letter-spacing: 0.10em;
+    border-radius: 3px;
+    padding: 5px 12px;
     transition: background-color 160ms ease, border-color 160ms ease;
 }}
 button:hover {{
-    background-color: {GLASS_DARK};
-    border-color: {WHITE_OFF};
+    background-color: {ACC_GLOW_FAINT};
+    border-color: {ACCENT_PRIMARY};
+    box-shadow: 0 0 10px {ACC_GLOW_FAINT};
 }}
 button.suggested-action, button.nyx-primary {{
-    background-color: {WHITE_OFF};
-    color: {INK_BLACK};
-    border-color: {WHITE_PURE};
-    font-weight: 600;
+    background-color: {ACC_GLOW_SOFT};
+    color: {ACCENT_PRIMARY};
+    border-color: {ACCENT_PRIMARY};
+    font-weight: 700;
+    text-shadow: 0 0 6px {ACC_GLOW_RING};
+    box-shadow: 0 0 16px {ACC_GLOW_SOFT};
 }}
 button.destructive-action, button.nyx-danger {{
     background-color: transparent;
@@ -848,10 +945,10 @@ button.destructive-action:hover {{
 
 scale trough {{ background-color: {GLASS_DARK};
                 border: 1px solid {HAIRLINE_WHITE}; }}
-scale highlight {{ background-color: {WHITE_OFF}; }}
+scale highlight {{ background-color: {ACCENT_PRIMARY}; }}
 scale slider {{ background-color: {WHITE_PURE};
-                border: 1px solid {WHITE_PURE};
-                box-shadow: 0 0 8px rgba(255,255,255,0.30); }}
+                border: 1px solid {ACCENT_PRIMARY};
+                box-shadow: 0 0 10px {ACC_GLOW_RING}; }}
 
 /* ── Status pill ─────────────────────────────────────────────────── */
 .nyx-pill {{
@@ -863,8 +960,8 @@ scale slider {{ background-color: {WHITE_PURE};
     font-family: '{FONT_MONO}', monospace;
     font-size: 11px;
 }}
-.nyx-pill.ok      {{ color: {WHITE_PURE}; border-color: {WHITE_OFF}; }}
-.nyx-pill.warn    {{ color: {GREY_LIGHT}; border-color: {GREY_MID}; }}
+.nyx-pill.ok      {{ color: {ACCENT_OK}; border-color: {ACCENT_OK}; }}
+.nyx-pill.warn    {{ color: {ACCENT_WARN}; border-color: {ACCENT_WARN}; }}
 .nyx-pill.danger  {{ color: {DANGER_RED}; border-color: {DANGER_RED}; }}
 
 /* ── Wallpaper grid (Appearance) ─────────────────────────────────── */
@@ -879,29 +976,57 @@ scale slider {{ background-color: {WHITE_PURE};
     border-color: {GREY_LIGHT};
 }}
 .nyx-wall-tile.selected {{
-    border-color: {WHITE_PURE};
-    box-shadow: 0 0 18px rgba(255,255,255,0.18);
+    border-color: {ACCENT_PRIMARY};
+    box-shadow: 0 0 18px {ACC_GLOW_RING};
+}}
+
+/* ── KV values + empty states (HUD mono data language) ──────────── */
+.nyx-kv-value {{
+    font-family: '{FONT_MONO}', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: {WHITE_OFF};
+    text-shadow: 0 0 8px rgba(232,237,245,0.25);
+    letter-spacing: 0.04em;
+}}
+.nyx-empty-row label.title {{
+    color: {GREY_MID};
 }}
 
 /* ── Toast ───────────────────────────────────────────────────────── */
 toast {{
-    background-color: {GLASS_DEEPEST};
+    background-color: rgba(6, 3, 13, 0.96);
     color: {WHITE_OFF};
-    border: 1px solid {HAIRLINE_WHITE};
+    border: 1px solid {rgba_str(ACCENT_PRIMARY, 0.34)};
     border-radius: {RADIUS_PILL}px;
+    box-shadow: 0 0 18px {ACC_GLOW_SOFT};
 }}
 """
 
 
+_css_provider: Optional[Gtk.CssProvider] = None
+
+
 def install_css() -> None:
-    provider = Gtk.CssProvider()
-    provider.load_from_data(CSS.encode("utf-8"))
+    global _css_provider
     display = Gdk.Display.get_default()
-    if display is not None:
-        Gtk.StyleContext.add_provider_for_display(
-            display, provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 100,
-        )
+    if display is None:
+        return
+    if _css_provider is not None:
+        Gtk.StyleContext.remove_provider_for_display(display, _css_provider)
+    provider = Gtk.CssProvider()
+    provider.load_from_data(build_css().encode("utf-8"))
+    Gtk.StyleContext.add_provider_for_display(
+        display, provider,
+        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 100,
+    )
+    _css_provider = provider
+
+
+def refresh_theme() -> None:
+    """Re-read accent.json and restyle the running app in place."""
+    _refresh_accent_tokens()
+    install_css()
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -1177,6 +1302,15 @@ def empty_row(title: str, subtitle: str = "") -> Adw.ActionRow:
     row = Adw.ActionRow(title=title, subtitle=subtitle)
     row.add_css_class("nyx-empty-row")
     return row
+
+
+def empty_group(title: str, subtitle: str = "") -> Adw.PreferencesGroup:
+    """Honest §9 empty-state group — a single explanatory row.
+    (Was referenced by app_perms/language but never defined → NameError
+    on those code paths; fixed 2026-07-09.)"""
+    grp = Adw.PreferencesGroup()
+    grp.add(empty_row(title, subtitle))
+    return grp
 
 
 def debounced(scale: Gtk.Scale,
@@ -6861,65 +6995,50 @@ def _clear_group(grp: Adw.PreferencesGroup) -> None:
 # ──────────────────────────────────────────────────────────────────────
 # Curated DARK MIRROR accent palette.  The "Mirror White" preset is the
 # brand default and matches the locked SDDM/hyprlock palette tokens.
-ACCENT_PRESETS: List[Tuple[str, str]] = [
-    ("Mirror White", "#e8edf5"),
-    ("Cyan",         "#5fd3f3"),
-    ("Lime",         "#a6e22e"),
-    ("Amber",        "#f5b342"),
-    ("Magenta",      "#ff5fa7"),
-    ("Crimson",      "#ff5f6d"),
-    ("Iris",         "#9c8cff"),
-    ("Mint",         "#5ff3b8"),
-]
-DEFAULT_ACCENT = "#e8edf5"
-
-# Files we own for accent propagation. Each is a small idempotent fragment
-# included by the parent config (so we never mangle hand-written files).
-ACCENT_FRAG_DIR = HOME / ".config" / "nyxus" / "accent"
-GTK3_FRAG  = HOME / ".config" / "gtk-3.0" / "nyxus-accent.css"
-GTK4_FRAG  = HOME / ".config" / "gtk-4.0" / "nyxus-accent.css"
-EWW_FRAG   = HOME / ".config" / "eww" / "_nyxus_accent.scss"
-ROFI_FRAG  = HOME / ".config" / "rofi" / "nyxus-accent.rasi"
-DUNST_FRAG = HOME / ".config" / "dunst" / "nyxus-accent.conf"   # informative
-HYPRLOCK_ACCENT = HOME / ".config" / "hypr" / "hyprlock-accent.conf"
-SDDM_THEME_USER = Path("/usr/share/sddm/themes/nyxus/theme.conf.user")
+# Accent is owned by ~/.config/nyxus/accent.json and applied desktop-wide
+# by nyxus-apply-accent (eww, GTK, hyprland borders, rofi, dunst, kitty,
+# hyprlock, qt, cava, btop — the works). Settings is just a front end:
+# it lists the presets from the json and shells out to the pipeline.
+ACCENT_CONF = CFG_DIR / "accent.json"
 
 
-def _hex_to_rgb(hex_str: str) -> Tuple[int, int, int]:
-    s = hex_str.lstrip("#")
-    if len(s) == 3:
-        s = "".join(c * 2 for c in s)
-    if len(s) != 6:
-        return (232, 237, 245)
+def load_accent_conf() -> dict:
     try:
-        return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
-    except ValueError:
-        return (232, 237, 245)
+        return json.loads(ACCENT_CONF.read_text(encoding="utf-8"))
+    except Exception as e:
+        log.warning("read %s: %s", ACCENT_CONF, e)
+        return {}
 
 
-def _atomic_write(path: Path, text: str) -> bool:
+def save_accent_conf_key(key: str, value) -> bool:
+    """Edit one top-level key of accent.json, preserving everything else."""
+    data = load_accent_conf()
+    if not data:
+        return False
+    data[key] = value
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(path.suffix + ".nyxtmp")
-        tmp.write_text(text)
-        tmp.replace(path)
+        tmp = ACCENT_CONF.with_suffix(".json.nyxtmp")
+        tmp.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        tmp.replace(ACCENT_CONF)
         return True
     except Exception as e:
-        log.warning("accent write %s failed: %s", path, e)
+        log.warning("write %s: %s", ACCENT_CONF, e)
         return False
 
 
 class AppearancePage(SectionPage):
     """Single source of truth for accent + theme. All fully wired:
-      · accent picker → GTK3/4 frag, EWW scss, rofi rasi, hyprlock accent,
-        dunst frame_color, SDDM theme.conf.user (pkexec)
-      · color scheme  → gsettings org.gnome.desktop.interface color-scheme
-      · cursor theme  → ~/.icons/default + gsettings + GTK_CURSOR_THEME
-      · icon theme    → gsettings icon-theme
-      · fonts         → gsettings font-name + monospace-font-name
-      · wallpaper     → swaybg (existing) + rotation timer
-      · text scale    → font_scale pref + GTK_DPI hint
-      · motion        → hyprctl keyword animations:enabled
+      · accent picker  → accent.json presets via nyxus-apply-accent
+        (eww, hyprland, rofi, dunst, kitty, cava, btop, qt, hyprlock)
+      · living desktop → nyxus-living / nyxus-beat / nyxus-live-wallpaper
+        / nyxus-wall-fx / nyxus-sounds / nyxus-shader / nyxus-wall-next
+      · color scheme   → gsettings org.gnome.desktop.interface color-scheme
+      · cursor theme   → ~/.icons/default + gsettings + GTK_CURSOR_THEME
+      · icon theme     → gsettings icon-theme
+      · fonts          → gsettings font-name + monospace-font-name
+      · wallpaper      → nyxus-set-wallpaper (swww ripple) + rotation timer
+      · text scale     → font_scale pref + GTK_DPI hint
+      · motion         → hyprctl keyword animations:enabled
     """
     KEY = "appearance"
 
@@ -6939,9 +7058,17 @@ class AppearancePage(SectionPage):
         # Accent picker
         self.accent_grp = Adw.PreferencesGroup(
             title="Accent",
-            description="Single source of truth — propagates to GTK, EWW, "
-                        "rofi, hyprlock, dunst, SDDM")
+            description="Presets from ~/.config/nyxus/accent.json — "
+                        "applied desktop-wide by nyxus-apply-accent")
         self.add_group(self.accent_grp)
+
+        # Living Desktop — the signature reactive layers
+        self.living_grp = Adw.PreferencesGroup(
+            title="Living Desktop",
+            description="The reactive layers that make NYXUS feel alive — "
+                        "each one is an independent daemon or compositor "
+                        "effect")
+        self.add_group(self.living_grp)
 
         # Color scheme
         self.scheme_grp = Adw.PreferencesGroup(
@@ -6971,7 +7098,8 @@ class AppearancePage(SectionPage):
         # Wallpaper grid (kept from previous + rotation switch)
         self.wall_grp = Adw.PreferencesGroup(
             title="Wallpaper",
-            description="Click a wallpaper to apply it system-wide via swaybg")
+            description="Click a wallpaper to apply it with the "
+                        "grow-from-cursor ripple (nyxus-set-wallpaper)")
         self.add_group(self.wall_grp)
 
         # Text size
@@ -6995,6 +7123,7 @@ class AppearancePage(SectionPage):
 
     def _render(self) -> None:
         self._render_accent()
+        self._render_living()
         self._render_scheme()
         self._render_cursor()
         self._render_icons()
@@ -7006,259 +7135,276 @@ class AppearancePage(SectionPage):
 
         self.clear_pills()
         backends = []
-        if have("swaybg"):  backends.append("swaybg")
+        for b in ("swww", "awww", "mpvpaper", "swaybg"):
+            if have(b):
+                backends.append(b)
+                break
         if have("hyprctl"): backends.append("hyprctl")
         if have("gsettings"): backends.append("gsettings")
         kind = "ok" if len(backends) >= 2 else "warn"
         self.add_pill(status_pill(
             " · ".join(backends) if backends else "no backends", kind))
 
-    # ── Accent ────────────────────────────────────────────────────────
+    # ── Accent — canonical nyxus-apply-accent pipeline ────────────────
+    # Presets live in ~/.config/nyxus/accent.json; nyxus-apply-accent
+    # re-skins every registered consumer (eww, hyprland, rofi, dunst,
+    # kitty, alacritty, cava, btop, qt, hyprlock) from its baseline.
+    ACCENT_ORDER = ("prism", "aurora", "ember", "verdant", "violet",
+                    "rose", "ice", "noir", "wallpaper")
+
     def _render_accent(self) -> None:
         _clear_group(self.accent_grp)
-        prefs = self.win.prefs
-        current = prefs.get("accent_hex", DEFAULT_ACCENT)
+        conf = load_accent_conf()
+        presets: dict = conf.get("presets", {})
+        active = conf.get("active", "prism")
 
-        # Swatch row — flowbox of preset chips
+        if not presets:
+            self.accent_grp.add(empty_row(
+                "accent.json missing",
+                "~/.config/nyxus/accent.json not found — run nyxus-bootstrap"))
+            return
+        if not have("nyxus-apply-accent"):
+            self.accent_grp.add(empty_row(
+                "nyxus-apply-accent missing",
+                "the accent pipeline script is not on PATH"))
+            return
+
+        # Preset chips — primary→secondary gradient pads, active ringed
         chip_row = Adw.PreferencesRow()
         chip_row.set_activatable(False)
         chip_row.set_selectable(False)
         flow = Gtk.FlowBox()
         flow.set_selection_mode(Gtk.SelectionMode.NONE)
-        flow.set_max_children_per_line(8)
-        flow.set_min_children_per_line(4)
+        flow.set_max_children_per_line(5)
+        flow.set_min_children_per_line(3)
         flow.set_homogeneous(True)
         flow.set_column_spacing(8)
         flow.set_row_spacing(8)
-        flow.set_margin_start(8)
-        flow.set_margin_end(8)
-        flow.set_margin_top(10)
-        flow.set_margin_bottom(10)
+        for m in ("start", "end", "top", "bottom"):
+            getattr(flow, f"set_margin_{m}")(10)
 
-        for name, hex_val in ACCENT_PRESETS:
+        ordered = [n for n in self.ACCENT_ORDER if n in presets]
+        ordered += [n for n in presets if n not in ordered]
+        for name in ordered:
+            pal = presets[name]
+            p = pal.get("primary", "#ff3cac")
+            s = pal.get("secondary", "#2bd2ff")
             chip = Gtk.Button()
-            chip.set_size_request(64, 48)
-            chip.set_tooltip_text(f"{name}  ·  {hex_val}")
+            chip.set_size_request(96, 56)
+            chip.set_tooltip_text(f"{name}  ·  {p} / {s}")
             chip.add_css_class("nyx-accent-chip")
-            if hex_val.lower() == current.lower():
+            if name == active:
                 chip.add_css_class("selected")
-            # Inline CSS provider for the chip color (per-widget)
             css = Gtk.CssProvider()
             css.load_from_data(
                 f"button.nyx-accent-chip {{"
-                f"  background: {hex_val};"
+                f"  background: linear-gradient(135deg, {p} 0%, {s} 100%);"
                 f"  border: 1px solid rgba(255,255,255,0.18);"
-                f"  border-radius: 10px;"
-                f"  min-width: 60px; min-height: 44px;"
+                f"  border-radius: 12px;"
+                f"  color: rgba(0,0,0,0.85);"
+                f"  font-weight: 700; font-size: 11px;"
                 f"}}"
                 f"button.nyx-accent-chip.selected {{"
                 f"  border: 2px solid #ffffff;"
+                f"  box-shadow: 0 0 14px {rgba_str(p, 0.45)};"
                 f"}}".encode())
             chip.get_style_context().add_provider(
                 css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            chip.set_child(Gtk.Label(label=name.upper()))
             chip.connect("clicked",
-                         lambda _b, h=hex_val: self._set_accent(h))
+                         lambda _b, n=name: self._apply_accent_preset(n))
             flow.append(chip)
 
         chip_row.set_child(flow)
         self.accent_grp.add(chip_row)
 
-        # Custom hex entry
-        hex_row = Adw.ActionRow(
-            title="Custom",
-            subtitle=f"Currently: {current}  ·  enter a #RRGGBB value")
-        entry = Gtk.Entry()
-        entry.set_placeholder_text("#5fd3f3")
-        entry.set_text(current)
-        entry.set_max_length(7)
-        entry.set_size_request(110, -1)
-        entry.set_valign(Gtk.Align.CENTER)
-        entry.connect("activate", lambda e: self._set_accent(e.get_text()))
-        hex_row.add_suffix(entry)
-        apply_btn = Gtk.Button(label="Apply")
-        apply_btn.add_css_class("nyx-pill-ok")
-        apply_btn.set_valign(Gtk.Align.CENTER)
-        apply_btn.connect("clicked",
-                          lambda _b: self._set_accent(entry.get_text()))
-        hex_row.add_suffix(apply_btn)
-        self.accent_grp.add(hex_row)
-
-        # Reset
-        reset = action_row(
-            "Reset to default",
-            f"Restores Mirror White ({DEFAULT_ACCENT})",
-            "Reset",
-            lambda: self._set_accent(DEFAULT_ACCENT))
-        self.accent_grp.add(reset)
-
-        # Status: which propagation targets are present
-        targets = []
-        if (HOME / ".config" / "gtk-3.0").exists() or \
-           (HOME / ".config" / "gtk-4.0").exists():
-            targets.append("GTK")
-        if (HOME / ".config" / "eww").exists():
-            targets.append("EWW")
-        if (HOME / ".config" / "rofi").exists():
-            targets.append("rofi")
-        if (HOME / ".config" / "hypr").exists():
-            targets.append("hyprlock")
-        if (HOME / ".config" / "dunst").exists():
-            targets.append("dunst")
-        if SDDM_THEME_USER.parent.exists():
-            targets.append("SDDM")
-        info = Adw.ActionRow(
-            title="Propagates to",
-            subtitle=", ".join(targets) if targets
-                     else "no theme dirs found yet — first apply will create them")
+        # Active preset summary
+        act = presets.get(active, {})
+        info = kv_row(
+            "Active preset",
+            active.upper(),
+            f"primary {act.get('primary', '?')} · "
+            f"secondary {act.get('secondary', '?')} · "
+            f"warn {act.get('warn', '?')} · ok {act.get('ok', '?')}")
         self.accent_grp.add(info)
 
-    def _set_accent(self, hex_str: str) -> None:
-        h = (hex_str or "").strip()
-        if not re.fullmatch(r"#?[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?", h):
-            self.toast("invalid hex — use #RRGGBB")
-            return
-        if not h.startswith("#"):
-            h = "#" + h
-        # Expand 3-digit to 6-digit
-        if len(h) == 4:
-            h = "#" + "".join(c * 2 for c in h[1:])
-        h = h.lower()
+        # Follow-wallpaper switch — nyxus-set-wallpaper re-extracts the
+        # accent from every new wall when this flag is on.
+        follow = Adw.SwitchRow(
+            title="Follow wallpaper",
+            subtitle="Re-skin the desktop to match each new wallpaper "
+                     "(nyxus-accent-from-wallpaper)")
+        follow.set_active(bool(conf.get("follow_wallpaper", False)))
+        follow.connect("notify::active", self._on_follow_wallpaper)
+        self.accent_grp.add(follow)
 
-        # Persist
-        self.win.prefs["accent_hex"] = h
-        save_prefs(self.win.prefs)
+        # One-shot: extract accent from what's on screen right now
+        if have("nyxus-accent-from-wallpaper"):
+            self.accent_grp.add(action_row(
+                "Match wallpaper now",
+                "Extract a 4-slot neon palette from the current wallpaper "
+                "and apply it desktop-wide",
+                "Extract",
+                self._match_wallpaper_now))
 
-        results = self._apply_accent(h)
-        ok = [k for k, v in results.items() if v]
-        fail = [k for k, v in results.items() if not v]
-        if fail:
-            self.toast(f"accent {h}  ·  ok: {', '.join(ok) or '—'}  "
-                       f"·  failed: {', '.join(fail)}")
+    def _apply_accent_preset(self, name: str) -> None:
+        self.toast(f"applying accent '{name}'…")
+        sh_async(["nyxus-apply-accent", name],
+                 lambda r: self._after_accent(name, r),
+                 timeout=45)
+
+    def _after_accent(self, name: str, r: Tuple[int, str, str]) -> None:
+        if r[0] == 0:
+            refresh_theme()          # restyle this app in place
+            self.toast(f"accent '{name}' applied desktop-wide")
         else:
-            self.toast(f"accent {h} applied to {', '.join(ok)}")
+            self.toast(f"accent apply failed: {(r[2] or r[1])[:80]}")
         self._render_accent()
 
-    def _apply_accent(self, h: str) -> dict:
-        """Write accent fragments + reload the apps that read them.
-        Each target is independent; one failure does not block the rest."""
-        r, g, b = _hex_to_rgb(h)
-        results: dict = {}
-
-        # 1) GTK3 — @define-color override
-        gtk3_text = textwrap.dedent(f"""\
-            /* nyxus accent — auto-generated by Settings, do not edit */
-            @define-color nyxus_accent {h};
-            @define-color accent_color {h};
-            @define-color accent_bg_color {h};
-            @define-color theme_selected_bg_color {h};
-            """)
-        results["gtk-3"] = _atomic_write(GTK3_FRAG, gtk3_text)
-        # Try to ensure gtk.css imports the fragment
-        self._ensure_gtk_import(HOME / ".config" / "gtk-3.0" / "gtk.css",
-                                "nyxus-accent.css")
-
-        # 2) GTK4
-        results["gtk-4"] = _atomic_write(GTK4_FRAG, gtk3_text)
-        self._ensure_gtk_import(HOME / ".config" / "gtk-4.0" / "gtk.css",
-                                "nyxus-accent.css")
-
-        # 3) EWW — SCSS variable
-        eww_text = (f"// nyxus accent — auto-generated\n"
-                    f"$nyxus-accent: {h};\n"
-                    f"$accent: {h};\n")
-        results["eww"] = _atomic_write(EWW_FRAG, eww_text)
-
-        # 4) rofi — rasi color block
-        rofi_text = (f"/* nyxus accent — auto-generated */\n"
-                     f"* {{\n"
-                     f"  nyxus-accent: {h};\n"
-                     f"  selected-normal-background: {h};\n"
-                     f"  active-foreground: {h};\n"
-                     f"}}\n")
-        results["rofi"] = _atomic_write(ROFI_FRAG, rofi_text)
-
-        # 5) hyprlock — separate accent file the user can $source from
-        # hyprlock.conf, OR we patch the inner_color/outer_color directly.
-        hl_text = textwrap.dedent(f"""\
-            # nyxus accent — auto-generated. $source = ~/.config/hypr/hyprlock-accent.conf
-            $nyxus_accent_r = {r}
-            $nyxus_accent_g = {g}
-            $nyxus_accent_b = {b}
-            $nyxus_accent_rgba = rgba({r}, {g}, {b}, 0.85)
-            """)
-        results["hyprlock"] = _atomic_write(HYPRLOCK_ACCENT, hl_text)
-
-        # 6) dunst — frame_color in fragment + signal reload
-        dunst_text = (f"# nyxus accent — auto-generated.\n"
-                      f"# include this from your dunstrc [global] section, e.g.:\n"
-                      f"#   frame_color = \"{h}\"\n"
-                      f"frame_color = \"{h}\"\n")
-        results["dunst"] = _atomic_write(DUNST_FRAG, dunst_text)
-        self._patch_dunstrc(h)
-
-        # 7) SDDM — needs root, dispatch async; report real outcome via toast.
-        # We mark it "pending" synchronously so the immediate UI message
-        # doesn't lie about success.
-        if SDDM_THEME_USER.parent.exists():
-            sddm_text = (f"[General]\n"
-                         f"background=background.png\n"
-                         f"# nyxus accent\n"
-                         f"Accent={h}\n")
-            sh_async(
-                ["pkexec", "sh", "-c",
-                 f"cat > {SDDM_THEME_USER} <<'NYXUS_EOF'\n"
-                 f"{sddm_text}NYXUS_EOF\n"],
-                lambda res: self.toast(
-                    "SDDM accent applied" if res[0] == 0
-                    else "SDDM accent denied (admin auth required)"),
-                timeout=15)
-            results["sddm"] = "pending"  # truthful: not-yet-confirmed
+    def _on_follow_wallpaper(self, row: Adw.SwitchRow, _ps) -> None:
+        on = row.get_active()
+        if save_accent_conf_key("follow_wallpaper", on):
+            self.toast("accent follows wallpaper"
+                       if on else "accent pinned to preset")
         else:
-            results["sddm"] = False
+            self.toast("could not update accent.json")
 
-        # 8) Reload apps that read these files
-        if have("dunstify") or have("dunst"):
-            sh_async(["sh", "-c",
-                      "pkill -SIGUSR2 dunst 2>/dev/null || true"],
-                     lambda r: None, timeout=3)
-        if have("eww"):
-            sh_async(["eww", "reload"], lambda r: None, timeout=4)
-        if have("hyprctl"):
-            sh_async(["hyprctl", "reload"], lambda r: None, timeout=4)
+    def _match_wallpaper_now(self) -> None:
+        self.toast("extracting palette from wallpaper…")
+        sh_async(["nyxus-accent-from-wallpaper"],
+                 lambda r: self._after_accent("wallpaper", r),
+                 timeout=60)
 
-        return results
+    # ── Living Desktop — signature reactive layers ────────────────────
+    # Each switch reads REAL state (daemon pidfiles / pgrep / state
+    # files via the tools' own `status` verbs) and drives the exact
+    # front-door script the keybinds use, so Settings and hotkeys can
+    # never disagree.
+    SHADER_CHOICES = ("off", "night", "vignette", "crt", "noir")
 
-    @staticmethod
-    def _ensure_gtk_import(gtk_css: Path, frag_name: str) -> None:
-        """Idempotently add @import url("nyxus-accent.css"); to gtk.css."""
-        try:
-            gtk_css.parent.mkdir(parents=True, exist_ok=True)
-            existing = gtk_css.read_text() if gtk_css.exists() else ""
-            line = f'@import url("{frag_name}");'
-            if line in existing:
-                return
-            new = line + "\n" + existing
-            gtk_css.write_text(new)
-        except Exception as e:
-            log.warning("ensure_gtk_import %s: %s", gtk_css, e)
+    def _living_state(self) -> dict:
+        st = {}
+        st["living"] = sh(["nyxus-living", "status"],
+                          timeout=3)[1].strip() == "on" \
+            if have("nyxus-living") else None
+        st["tint"] = sh(["nyxus-tint", "status"],
+                        timeout=3)[1].strip() == "on" \
+            if have("nyxus-tint") else None
+        st["beat"] = sh(["nyxus-beat", "status"],
+                        timeout=3)[1].strip() == "on" \
+            if have("nyxus-beat") else None
+        st["livewall"] = (sh(["pgrep", "-x", "mpvpaper"],
+                             timeout=2)[0] == 0) \
+            if have("nyxus-live-wallpaper") else None
+        st["wallfx"] = sh(["nyxus-wall-fx", "status"],
+                          timeout=3)[1].strip() in ("on", "running") \
+            if have("nyxus-wall-fx") else None
+        st["sounds"] = sh(["nyxus-sounds", "status"],
+                          timeout=3)[1].strip() == "on" \
+            if have("nyxus-sounds") else None
+        st["shader"] = sh(["nyxus-shader", "status"],
+                          timeout=3)[1].strip() \
+            if have("nyxus-shader") else None
+        return st
 
-    @staticmethod
-    def _patch_dunstrc(h: str) -> None:
-        """Best-effort in-place patch of frame_color in ~/.config/dunst/dunstrc.
-        Idempotent — only rewrites the matching line."""
-        rc = HOME / ".config" / "dunst" / "dunstrc"
-        if not rc.exists():
+    def _living_switch(self, title: str, subtitle: str, state,
+                       tool: str) -> None:
+        """One toggle row driving `<tool> on|off`. state=None → tool
+        missing, row shown insensitive so the gap is visible, not
+        silent."""
+        row = Adw.SwitchRow(title=title, subtitle=subtitle)
+        if state is None:
+            row.set_sensitive(False)
+            row.set_subtitle(f"{tool} not found on PATH")
+            self.living_grp.add(row)
             return
-        try:
-            txt = rc.read_text()
-            new = re.sub(
-                r'^(\s*frame_color\s*=\s*)"[^"]*"',
-                lambda m: f'{m.group(1)}"{h}"',
-                txt, flags=re.MULTILINE)
-            if new != txt:
-                rc.write_text(new)
-        except Exception as e:
-            log.warning("patch dunstrc: %s", e)
+        row.set_active(bool(state))
+
+        def on_toggle(r: Adw.SwitchRow, _ps) -> None:
+            if self._living_syncing:
+                return
+            want = "on" if r.get_active() else "off"
+            sh_async([tool, want],
+                     lambda res, t=title, w=want: self.toast(
+                         f"{t} {w}" if res[0] == 0
+                         else f"{t}: {(res[2] or res[1])[:70]}"),
+                     timeout=15)
+        row.connect("notify::active", on_toggle)
+        self.living_grp.add(row)
+
+    def _render_living(self) -> None:
+        _clear_group(self.living_grp)
+        self._living_syncing = True
+        st = self._living_state()
+
+        self._living_switch(
+            "Living theme",
+            "Borders and bar rims follow the focused app and pulse on "
+            "events (nyxus-tintd + nyxus-pulsed)",
+            st["living"], "nyxus-living")
+        self._living_switch(
+            "Per-app focus tint",
+            "Every app class wears its own deterministic neon on the "
+            "focus ring (nyxus-tintd · Super+T)",
+            st["tint"], "nyxus-tint")
+        self._living_switch(
+            "Beat sync",
+            "Window border ring reacts to the music (nyxus-beatd)",
+            st["beat"], "nyxus-beat")
+        self._living_switch(
+            "Live wallpaper",
+            "Animated wallpaper loop rendered from the current still "
+            "(mpvpaper)",
+            st["livewall"], "nyxus-live-wallpaper")
+        self._living_switch(
+            "Wallpaper FX",
+            "Live wallpaper swells with audio and tints per workspace "
+            "(needs live wallpaper on)",
+            st["wallfx"], "nyxus-wall-fx")
+        self._living_switch(
+            "UI sounds",
+            "Interface sound effects for open/close/workspace/screenshot "
+            "(nyxus-sounds)",
+            st["sounds"], "nyxus-sounds")
+
+        # Screen shader — compositor-level GLSL filter
+        if st["shader"] is not None:
+            cur = st["shader"] if st["shader"] in self.SHADER_CHOICES \
+                else "off"
+            combo = Adw.ComboRow(
+                title="Screen filter",
+                subtitle="Full-screen GLSL shader via Hyprland "
+                         "(night · vignette · crt · noir)")
+            combo.set_model(Gtk.StringList.new(list(self.SHADER_CHOICES)))
+            combo.set_selected(self.SHADER_CHOICES.index(cur))
+
+            def on_shader(c: Adw.ComboRow, _p) -> None:
+                if self._living_syncing:
+                    return
+                name = self.SHADER_CHOICES[c.get_selected()]
+                sh_async(["nyxus-shader", name],
+                         lambda r, n=name: self.toast(
+                             f"screen filter → {n}" if r[0] == 0
+                             else f"shader: {(r[2] or r[1])[:70]}"),
+                         timeout=8)
+            combo.connect("notify::selected", on_shader)
+            self.living_grp.add(combo)
+
+        # Wallpaper cycling — one-keystroke re-theme
+        if have("nyxus-wall-next"):
+            self.living_grp.add(action_row(
+                "Next wallpaper",
+                "Random wallpaper with the grow-from-cursor ripple — "
+                "accent follows when Follow wallpaper is on",
+                "Cycle",
+                lambda: sh_async(
+                    ["nyxus-wall-next"],
+                    lambda r: self.toast(
+                        "wallpaper cycled" if r[0] == 0
+                        else f"cycle failed: {(r[2] or r[1])[:70]}"),
+                    timeout=20)))
+
+        self._living_syncing = False
 
     # ── Color scheme ──────────────────────────────────────────────────
     def _render_scheme(self) -> None:
@@ -7652,7 +7798,15 @@ class AppearancePage(SectionPage):
                     inner.remove_css_class("selected")
                 child = child.get_next_sibling()
         btn.add_css_class("selected")
-        if have("swaybg"):
+        if have("nyxus-set-wallpaper"):
+            # swww ripple + accent-follow + wallpaper.conf persistence
+            sh_async(
+                ["nyxus-set-wallpaper", str(path)],
+                lambda r: self.toast(
+                    "wallpaper applied" if r[0] == 0
+                    else f"nyxus-set-wallpaper failed: {r[2][:60]}"),
+                timeout=30)
+        elif have("swaybg"):
             sh_async(
                 ["sh", "-c",
                  f"pkill -x swaybg 2>/dev/null; "
@@ -7662,7 +7816,7 @@ class AppearancePage(SectionPage):
                     "wallpaper applied" if r[0] == 0
                     else f"swaybg failed: {r[2][:60]}"))
         else:
-            self.toast("swaybg not installed — saved selection only")
+            self.toast("no wallpaper backend — saved selection only")
 
     def _on_wall_rotate(self, row: Adw.SwitchRow, _ps) -> None:
         on = row.get_active()
@@ -7679,11 +7833,19 @@ class AppearancePage(SectionPage):
             helper.write_text(textwrap.dedent(f"""\
                 #!/usr/bin/env bash
                 set -eu
+                export PATH="$HOME/.local/bin:$PATH"
+                # Prefer the signature cycler (swww ripple + accent follow)
+                if command -v nyxus-wall-next >/dev/null 2>&1; then
+                    exec nyxus-wall-next
+                fi
                 shopt -s nullglob
                 walls=( "{WALLS_USR}"/*.{{png,jpg,jpeg,webp}} \\
                         "{WALLS_SYS}"/*.{{png,jpg,jpeg,webp}} )
                 [ ${{#walls[@]}} -eq 0 ] && exit 0
                 pick="${{walls[RANDOM % ${{#walls[@]}}]}}"
+                if command -v nyxus-set-wallpaper >/dev/null 2>&1; then
+                    exec nyxus-set-wallpaper "$pick"
+                fi
                 pkill -x swaybg 2>/dev/null || true
                 swaybg -i "$pick" -m fill -c '#000000' >/dev/null 2>&1 &
                 """))
@@ -8815,7 +8977,7 @@ class NetworkPage(SectionPage):
             btn.set_valign(Gtk.Align.CENTER)
             btn.connect(
                 "clicked",
-                lambda *_: fire_and_forget("nyxus-security"))
+                lambda *_: fire_and_forget("nyxus-shield"))
             row.add_suffix(btn)
             self._track(self.fw_group, row)
             return
@@ -8867,7 +9029,7 @@ class NetworkPage(SectionPage):
         btn = Gtk.Button(label="Open")
         btn.set_valign(Gtk.Align.CENTER)
         btn.connect("clicked",
-                    lambda *_: fire_and_forget("nyxus-security"))
+                    lambda *_: fire_and_forget("nyxus-shield"))
         link.add_suffix(btn)
         self._track(self.fw_group, link)
 
@@ -10032,11 +10194,15 @@ class BackupPage(SectionPage):
             title="Tools",
             description="Full backup UI · keybind Super + Ctrl + B")
         self.add_group(tools)
+        # nyxus-backup wrapper may not be installed — the app itself
+        # ships at ~/.nyxus/nyxus_backup.py, so fall back to that.
+        backup_cmd = ("nyxus-backup" if have("nyxus-backup")
+                      else f"python3 {HOME / '.nyxus' / 'nyxus_backup.py'}")
         tools.add(action_row(
             "Open NYXUS Backup",
             "Create, restore and delete snapshots with the full UI",
             "Open",
-            lambda: fire_and_forget("nyxus-backup"),
+            lambda c=backup_cmd: fire_and_forget(c),
             css="nyx-pill-ok"))
         tools.add(action_row(
             "Create snapshot now",
@@ -10350,32 +10516,46 @@ class SecurityPage(SectionPage):
             "protection, device security, privacy indicators, and audit. "
             "Use the buttons below to open the full center, run a quick "
             "scan, or engage panic lockdown.")
+        # The Security Center app is nyxus-shield (the old `nyxus-security`
+        # name never shipped — every button pointing at it was dead).
         row_open = Adw.ActionRow(title="Open Security Center",
-                                 subtitle="10 sections · live threat tape · panic mode")
+                                 subtitle="NYXUS Shield — scan, firewall, "
+                                          "alerts, VPN quick controls")
         btn_open = Gtk.Button(label="Open"); btn_open.add_css_class("suggested-action")
         btn_open.set_valign(Gtk.Align.CENTER)
-        btn_open.connect("clicked",
-                         lambda *_: fire_and_forget("nyxus-security"))
+        if have("nyxus-shield"):
+            btn_open.connect("clicked",
+                             lambda *_: fire_and_forget("nyxus-shield"))
+        else:
+            btn_open.set_sensitive(False)
+            row_open.set_subtitle("nyxus-shield not found on PATH")
         row_open.add_suffix(btn_open)
         row_open.set_activatable_widget(btn_open)
         head.add(row_open)
 
         row_scan = Adw.ActionRow(title="Run quick scan",
-                                 subtitle="ClamAV scan of $HOME and /tmp")
+                                 subtitle="ClamAV scan of $HOME and /tmp "
+                                          "(in a terminal)")
         btn_scan = Gtk.Button(label="Scan")
         btn_scan.set_valign(Gtk.Align.CENTER)
-        btn_scan.connect("clicked",
-                         lambda *_: fire_and_forget("nyxus-security --quick-scan"))
+        if have("clamscan"):
+            btn_scan.connect(
+                "clicked",
+                lambda *_: open_terminal(
+                    "clamscan -r -i --bell ~ /tmp; "
+                    "echo; read -p 'scan done — press enter' _", self.win))
+        else:
+            btn_scan.set_sensitive(False)
+            row_scan.set_subtitle("clamav not installed (pacman -S clamav)")
         row_scan.add_suffix(btn_scan)
         head.add(row_scan)
 
         row_panic = Adw.ActionRow(title="Panic lockdown",
                                   subtitle="Lock screen, clear clipboard, "
-                                  "dismount removable, flush DNS")
+                                  "flush DNS cache")
         btn_panic = Gtk.Button(label="PANIC"); btn_panic.add_css_class("destructive-action")
         btn_panic.set_valign(Gtk.Align.CENTER)
-        btn_panic.connect("clicked",
-                          lambda *_: fire_and_forget("nyxus-security --panic"))
+        btn_panic.connect("clicked", lambda *_: self._panic())
         row_panic.add_suffix(btn_panic)
         head.add(row_panic)
         self.add_group(head)
@@ -10389,6 +10569,25 @@ class SecurityPage(SectionPage):
 
         # Render rows asynchronously so we don't block the Settings UI.
         self._render_posture_async()
+
+    def _panic(self) -> None:
+        """Real, immediate lockdown chain — no external wrapper:
+        clear the wayland clipboard, flush systemd-resolved DNS cache,
+        then lock the screen. Each step independent; missing tools skip."""
+        steps = []
+        if have("wl-copy"):
+            steps.append("wl-copy --clear")
+        if have("resolvectl"):
+            steps.append("resolvectl flush-caches")
+        if have("hyprlock"):
+            steps.append("hyprlock")
+        elif have("loginctl"):
+            steps.append("loginctl lock-session")
+        if not steps:
+            self.toast("no lockdown tools found (hyprlock/wl-copy)")
+            return
+        self.toast("panic lockdown engaged")
+        fire_and_forget(" ; ".join(steps))
 
     def _render_posture_async(self) -> None:
         def worker():
@@ -10520,16 +10719,15 @@ class LanguagePage(SectionPage):
     }
 
     def build(self) -> None:
-        # Lazy import — keep the shim optional so settings still loads
-        # if someone deletes the locale tree.
+        # Lazy import — the gettext shim is optional. When it's absent
+        # (it never shipped on this build) fall back to an inline
+        # backend with the same 4 calls so the page keeps doing real
+        # reads/writes: env for the active language, `locale -a` for
+        # the available set, ~/.config/nyxus/locale.conf for the pick.
         try:
             import nyxus_i18n as i18n  # noqa: WPS433 (runtime import OK)
-        except Exception as e:  # pylint: disable=broad-except
-            self.add_group(empty_group(
-                "i18n shim missing",
-                f"nyxus_i18n.py failed to import: {e}"))
-            self.add_pill(status_pill("i18n", "warn"))
-            return
+        except Exception:
+            i18n = self._fallback_i18n()
 
         cur_lang = i18n.current_language()
         ldir = i18n.localedir()
@@ -10622,28 +10820,76 @@ class LanguagePage(SectionPage):
             # the page-load value forever.)
             lambda: self._apply_system_lang(self._selected_lang)))
 
-        # ── Translator tools ───────────────────────────────────
-        tools = Adw.PreferencesGroup(
-            title="Translator tools",
-            description="Re-extract template strings or compile .po → "
-                        ".mo after editing translations.")
-        self.add_group(tools)
+        # ── Translator tools (only if the locale scripts shipped) ──
         scripts_dir = Path(ldir).parent if Path(ldir).name == "locale" \
             else Path(__file__).resolve().parent
         ex = scripts_dir / "locale" / "extract.sh"
         co = scripts_dir / "locale" / "compile.sh"
-        tools.add(action_row(
-            "Extract strings → nyxus.pot",
-            str(ex),
-            "Run",
-            lambda p=ex: open_terminal(f"bash {p}", self.win)))
-        tools.add(action_row(
-            "Compile *.po → *.mo",
-            str(co),
-            "Run",
-            lambda p=co: open_terminal(f"bash {p}", self.win)))
+        if ex.exists() or co.exists():
+            tools = Adw.PreferencesGroup(
+                title="Translator tools",
+                description="Re-extract template strings or compile .po → "
+                            ".mo after editing translations.")
+            self.add_group(tools)
+            if ex.exists():
+                tools.add(action_row(
+                    "Extract strings → nyxus.pot",
+                    str(ex),
+                    "Run",
+                    lambda p=ex: open_terminal(f"bash {p}", self.win)))
+            if co.exists():
+                tools.add(action_row(
+                    "Compile *.po → *.mo",
+                    str(co),
+                    "Run",
+                    lambda p=co: open_terminal(f"bash {p}", self.win)))
 
         self.add_pill(status_pill("i18n", "ok"))
+
+    @staticmethod
+    def _fallback_i18n():
+        """Inline stand-in for the optional nyxus_i18n shim. Same call
+        surface, real backends: env vars, `locale -a`, and the user
+        locale conf at ~/.config/nyxus/locale.conf."""
+        class _I18n:
+            @staticmethod
+            def current_language() -> str:
+                conf = HOME / ".config" / "nyxus" / "locale.conf"
+                try:
+                    for ln in conf.read_text().splitlines():
+                        if ln.strip().startswith("LANGUAGE="):
+                            v = ln.split("=", 1)[1].strip().strip('"')
+                            if v:
+                                return v.split("_")[0].split(":")[0]
+                except Exception:
+                    pass
+                for var in ("NYXUS_LANG", "LANGUAGE", "LANG"):
+                    v = os.environ.get(var, "")
+                    if v:
+                        return v.split("_")[0].split(".")[0].split(":")[0]
+                return "en"
+
+            @staticmethod
+            def localedir() -> str:
+                return str(Path(__file__).resolve().parent / "locale")
+
+            @staticmethod
+            def available_locales() -> list:
+                rc, out, _ = sh(["locale", "-a"], timeout=4)
+                codes = set()
+                if rc == 0:
+                    for ln in out.splitlines():
+                        ln = ln.strip()
+                        if ln.lower().endswith(("utf-8", "utf8")):
+                            codes.add(ln.split("_")[0].split(".")[0].lower())
+                return sorted(codes or {"en"})
+
+            @staticmethod
+            def write_user_locale(code: str) -> None:
+                conf = HOME / ".config" / "nyxus" / "locale.conf"
+                conf.parent.mkdir(parents=True, exist_ok=True)
+                conf.write_text(f"LANGUAGE={code}\n")
+        return _I18n()
 
     def _read_system_lang(self) -> str:
         try:
@@ -12046,55 +12292,58 @@ class WallpaperStudioPage(SectionPage):
 
 
 class ThemePacksPage(SectionPage):
-    """Curated DARK MIRROR variants — accent + glow + grain."""
+    """Curated PRISM accent presets — one apply re-skins the desktop."""
     KEY = "themepacks"
     STANDARD_KEYBIND_TOKENS = ["apply-accent"]
     STANDARD_RESET_NS = ["themepack"]
 
-    # Each pack: id, label, accent hex, secondary hex, description
-    PACKS = (
-        ("dark_mirror",   "DARK MIRROR (default)",
-            "#a06bff", "#3ad8ff",
-            "Purple primary + cyan secondary — the canonical NYXUS look"),
-        ("inferno",       "INFERNO",
-            "#ff3a5c", "#ffae3a",
-            "Crimson primary + amber secondary — high-energy gamer red"),
-        ("oceanic",       "OCEANIC",
-            "#3a7dff", "#3affd8",
-            "Deep blue primary + teal secondary — calm dev workflow"),
-        ("forest",        "FOREST",
-            "#3aff7d", "#a0ff3a",
-            "Emerald primary + lime secondary — biophilic comfort"),
-        ("monochrome",    "MONOCHROME",
-            "#cccccc", "#888888",
-            "Pure greys — no accent at all (focus mode)"),
-    )
+    # Human blurbs for the accent.json presets (the json is the source
+    # of truth for the colors — these are just descriptions).
+    PACK_BLURBS = {
+        "prism":     "Magenta + electric cyan — the canonical PRISM look",
+        "aurora":    "Purple + ice blue — northern-lights calm",
+        "ember":     "Burnt orange + gold — warm high-energy",
+        "verdant":   "Mint + cyan — biophilic comfort",
+        "violet":    "Orchid + deep violet — moody synth",
+        "rose":      "Hot rose + coral — bold and loud",
+        "ice":       "Sky + powder blue — cold precision",
+        "noir":      "Off-white + steel grey — monochrome focus mode",
+        "wallpaper": "Extracted from your current wallpaper",
+    }
 
     def build(self) -> None:
         prefs = load_prefs().get("themepack", {})
-        active = prefs.get("active", "dark_mirror")
+        conf = load_accent_conf()
+        presets: dict = conf.get("presets", {})
+        active = conf.get("active", "prism")
 
         gen = Adw.PreferencesGroup(
             title="General",
-            description="Active theme pack — applied via nyxus-apply-accent")
+            description="Active accent preset — applied via "
+                        "nyxus-apply-accent from ~/.config/nyxus/accent.json")
         self.add_group(gen)
-        gen.add(kv_row("Active pack",
-                       next((lbl for k, lbl, *_ in self.PACKS if k == active),
-                            active)))
+        gen.add(kv_row("Active pack", active.upper()))
 
-        # Appearance — pack picker
+        # Appearance — preset picker
         pick = Adw.PreferencesGroup(
             title="Appearance",
-            description="Switch the global accent + GTK theme + EWW palette")
+            description="Switch the global accent — eww bars, Hyprland "
+                        "borders, rofi, dunst, terminals, hyprlock, qt")
         self.add_group(pick)
-        for pid, lbl, primary, secondary, desc in self.PACKS:
-            sub = (f"{desc} · {primary} / {secondary}")
+        if not presets:
+            pick.add(empty_row(
+                "accent.json missing",
+                "~/.config/nyxus/accent.json not found"))
+        for pid, pal in presets.items():
+            primary = pal.get("primary", "?")
+            secondary = pal.get("secondary", "?")
+            desc = self.PACK_BLURBS.get(pid, "Custom preset")
+            sub = f"{desc} · {primary} / {secondary}"
             row = action_row(
-                f"{lbl}{' · ACTIVE' if pid == active else ''}",
+                f"{pid.upper()}{' · ACTIVE' if pid == active else ''}",
                 sub,
                 "Re-apply" if pid == active else "Apply",
-                (lambda i=pid, p=primary, s=secondary:
-                 self._apply_pack(i, p, s)),
+                (lambda i=pid: self._apply_pack(i)),
                 css=("nyx-pill-ok" if pid == active else "nyx-pill"))
             pick.add(row)
 
@@ -12105,17 +12354,28 @@ class ThemePacksPage(SectionPage):
         self.add_group(beh)
         sw_glow = Adw.SwitchRow(
             title="Glow effects",
-            subtitle="Soft accent glow on focused windows / dock items")
-        sw_glow.set_active(bool(prefs.get("glow", True)))
+            subtitle="Window drop shadows (hyprctl "
+                     "decoration:shadow:enabled — runtime)")
+        rc, out, _ = sh(["hyprctl", "getoption",
+                         "decoration:shadow:enabled"], timeout=2)
+        sw_glow.set_active("int: 1" in out if rc == 0
+                           else bool(prefs.get("glow", True)))
         sw_glow.connect("notify::active",
-                        lambda s, _p: self._set("glow", s.get_active()))
+                        lambda s, _p: self._set_glow(s.get_active()))
         beh.add(sw_glow)
         sw_grain = Adw.SwitchRow(
             title="Film grain overlay",
-            subtitle="Subtle texture across the desktop (DARK MIRROR signature)")
-        sw_grain.set_active(bool(prefs.get("grain", True)))
+            subtitle="Blur noise texture across glass surfaces "
+                     "(hyprctl decoration:blur:noise — runtime)")
+        rc, out, _ = sh(["hyprctl", "getoption",
+                         "decoration:blur:noise"], timeout=2)
+        try:
+            grain_on = float(out.split("float:")[1].split()[0]) > 0.0
+        except Exception:
+            grain_on = bool(prefs.get("grain", True))
+        sw_grain.set_active(grain_on)
         sw_grain.connect("notify::active",
-                         lambda s, _p: self._set("grain", s.get_active()))
+                         lambda s, _p: self._set_grain(s.get_active()))
         beh.add(sw_grain)
         # Animation intensity
         ai_row = Adw.ActionRow(
@@ -12125,26 +12385,26 @@ class ThemePacksPage(SectionPage):
         ai = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0.0, 2.0, 0.1)
         ai.set_value(float(prefs.get("anim_intensity", 1.0)))
         ai.set_size_request(220, -1); ai.set_draw_value(True)
-        debounced(ai,
-                  lambda v: self._set("anim_intensity", round(v, 2)))
+        debounced(ai, self._set_anim_intensity)
         ai_row.add_suffix(ai)
         beh.add(ai_row)
 
         self.add_pill(status_pill(active, "ok"))
 
-    def _apply_pack(self, pid: str, primary: str, secondary: str) -> None:
+    def _apply_pack(self, pid: str) -> None:
         cur = load_prefs()
         cur.setdefault("themepack", {})["active"] = pid
-        cur["themepack"]["primary"] = primary
-        cur["themepack"]["secondary"] = secondary
         save_prefs(cur)
         if have("nyxus-apply-accent"):
+            self.toast(f"applying {pid}…")
             sh_async(
-                ["nyxus-apply-accent", primary, secondary],
+                ["nyxus-apply-accent", pid],
                 lambda r: (self.toast(
-                    f"applied {pid}" if r[0] == 0 else "apply failed"),
+                    f"applied {pid}" if r[0] == 0
+                    else f"apply failed: {(r[2] or r[1])[:70]}"),
+                           refresh_theme() if r[0] == 0 else None,
                            self.rebuild()),
-                timeout=8)
+                timeout=45)
         else:
             self.toast("nyxus-apply-accent missing — saved only")
             self.rebuild()
@@ -12155,22 +12415,48 @@ class ThemePacksPage(SectionPage):
         save_prefs(cur)
         self.toast(f"themepack.{k} → {v}")
 
+    def _set_glow(self, on: bool) -> None:
+        self._set("glow", on)
+        if have("hyprctl"):
+            sh_async(["hyprctl", "keyword",
+                      "decoration:shadow:enabled", "1" if on else "0"],
+                     lambda r: None, timeout=3)
+
+    def _set_grain(self, on: bool) -> None:
+        self._set("grain", on)
+        if have("hyprctl"):
+            sh_async(["hyprctl", "keyword", "decoration:blur:noise",
+                      "0.06" if on else "0.0"],
+                     lambda r: None, timeout=3)
+
+    def _set_anim_intensity(self, v: float) -> None:
+        v = round(v, 2)
+        self._set("anim_intensity", v)
+        # 0 = animations fully off; anything above re-enables them.
+        # (Hyprland has no global speed multiplier keyword, so the
+        # in-between values are stored for NYXUS apps to read.)
+        if have("hyprctl"):
+            sh_async(["hyprctl", "keyword", "animations:enabled",
+                      "0" if v == 0 else "1"],
+                     lambda r: None, timeout=3)
+
     def standard_advanced_rows(self):
         return [
-            ("Custom accent hex",
-             "Bypass packs and feed nyxus-apply-accent any 2 hex values",
+            ("Edit accent presets",
+             "Open ~/.config/nyxus/accent.json — add or tweak presets, "
+             "then apply by name",
+             "Edit",
+             lambda: open_terminal(
+                 f"${{EDITOR:-nano}} {str(ACCENT_CONF)!r}; "
+                 "echo; echo 'apply with: nyxus-apply-accent <name>'; "
+                 "read -p 'press enter to close'",
+                 self.win)),
+            ("Re-apply active preset",
+             "Re-render every consumer file from the accent baseline",
              "Run",
              lambda: open_terminal(
-                 "echo 'usage: nyxus-apply-accent #PRIMARY #SECONDARY'; "
-                 "echo 'example: nyxus-apply-accent #ff00aa #00ffaa'; "
-                 "read -p 'primary: ' P; read -p 'secondary: ' S; "
-                 "nyxus-apply-accent \"$P\" \"$S\"",
+                 "nyxus-apply-accent; read -p 'press enter to close'",
                  self.win)),
-            ("View nyxus-apply-accent help",
-             "Show every flag the helper supports",
-             "Show",
-             lambda: open_terminal(
-                 "nyxus-apply-accent --help 2>&1 | less", self.win)),
         ]
 
 
@@ -12848,7 +13134,7 @@ class WelcomePage(SectionPage):
         skip = prefs.get("skip_pages", [])
         for pid, lbl in (
                 ("profile",   "Skip profile page (display name + avatar)"),
-                ("theme",     "Skip theme & accent page"),
+                ("theme",     "Skip theme &amp; accent page"),
                 ("wallpaper", "Skip wallpaper page"),
                 ("dock",      "Skip dock setup page"),
                 ("apps",      "Skip recommended apps page"),
@@ -13819,6 +14105,11 @@ class SettingsWindow(Adw.ApplicationWindow):
         self._pages: dict = {}
         self._current_key: Optional[str] = None
         self._build_layout()
+        try:
+            from nyxus_chrome import install_chrome
+            install_chrome(self, page_key="_settings")
+        except Exception as e:
+            log.debug("settings chrome: %s", e)
         # Land on Appearance first time, otherwise last visited.
         initial = self.prefs.get("last_section", "appearance")
         self._select_key(initial if initial in SECTIONS_BY_KEY else "appearance")
@@ -13856,6 +14147,7 @@ class SettingsWindow(Adw.ApplicationWindow):
         header.add_css_class("nyx-sidebar-header")
         title = Gtk.Label(label="NYXUS Settings")
         title.add_css_class("nyx-sidebar-title")
+        title.add_css_class("neon-flicker")
         title.set_halign(Gtk.Align.START)
         header.append(title)
         rev = Gtk.Label(label=APP_REV)
