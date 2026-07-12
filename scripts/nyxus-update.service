@@ -1,0 +1,12 @@
+[Unit]
+Description=NYXUS Auto-Update — pull latest configs and packages
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/nyxus-update
+StandardOutput=journal
+StandardError=journal
+# Give it up to 10 minutes (package downloads can be slow)
+TimeoutStartSec=600

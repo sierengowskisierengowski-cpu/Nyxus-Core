@@ -5,8 +5,8 @@
     text-hi:   #eef2fa;
     text-lo:   rgba(238, 242, 250, 0.55);
     hairline:  rgba(121, 73, 242, 0.35);
-    accent:    #7949f2;
-    accent2:   #ff2667;
+    accent:    #a06bff;
+    accent2:   #3ad8ff;
     glass-bg:  rgba(5, 6, 10, 0.88);
     glass-line: rgba(255, 38, 103, 0.35);
 

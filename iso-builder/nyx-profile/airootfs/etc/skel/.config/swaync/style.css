@@ -1,4 +1,5 @@
-/* NYXUS · swaync · Sprint E Total Identity */
+/* NYXUS · swaync · DARK MIRROR theme · rev 2026-07-12
+ * Palette: #a06bff violet · #3ad8ff cyan · #0c0c18 obsidian · #e8e8f0 text */
 
 * {
     font-family: "Inter", sans-serif;
@@ -8,9 +9,9 @@
 }
 
 .control-center {
-    background: rgba(10, 10, 20, 0.97);
-    border: 1px solid rgba(244, 234, 213, 0.22);
-    color: #f4ead5;
+    background: rgba(12, 12, 24, 0.97);
+    border: 1px solid rgba(160, 107, 255, 0.25);
+    color: #e8e8f0;
     padding: 14px;
     margin: 6px;
 }
@@ -19,79 +20,79 @@
 .notification-row { background: transparent; padding: 4px 0; }
 
 .notification {
-    background: rgba(10, 10, 20, 0.97);
-    border: 1px solid rgba(244, 234, 213, 0.22);
+    background: rgba(12, 12, 24, 0.97);
+    border: 1px solid rgba(160, 107, 255, 0.22);
     margin: 6px 0;
     padding: 12px;
 }
-.notification.low { border-left: 2px solid #1a1a28; }
-.notification.normal { border-left: 2px solid #f4ead5; }
-.notification.critical { border-color: #f87171; border-left: 2px solid #f87171; }
+.notification.low { border-left: 2px solid rgba(160, 107, 255, 0.25); }
+.notification.normal { border-left: 2px solid #a06bff; }
+.notification.critical { border-color: #3ad8ff; border-left: 2px solid #3ad8ff; }
 
-.summary { color: #f4ead5; font-weight: 700; font-size: 13px; letter-spacing: 1px; }
-.body { color: #f4ead5; opacity: 0.92; font-size: 12px; margin-top: 4px; }
-.time { color: rgba(244, 234, 213, 0.55); font-size: 10px; letter-spacing: 1px; }
+.summary { color: #e8e8f0; font-weight: 700; font-size: 13px; letter-spacing: 1px; }
+.body { color: #e8e8f0; opacity: 0.92; font-size: 12px; margin-top: 4px; }
+.time { color: rgba(232, 232, 240, 0.55); font-size: 10px; letter-spacing: 1px; }
 
 .close-button {
     background: transparent;
-    color: rgba(244, 234, 213, 0.55);
-    border: 1px solid #1a1a28;
+    color: rgba(232, 232, 240, 0.55);
+    border: 1px solid #1a1a2e;
     min-width: 22px;
     min-height: 22px;
 }
 .close-button:hover {
-    color: #050308;
-    background: #f87171;
-    border-color: #f87171;
+    color: #0c0c18;
+    background: #a06bff;
+    border-color: #a06bff;
 }
 
 .widget-title > label {
-    color: #f4ead5;
+    color: #e8e8f0;
     font-size: 13px;
     font-weight: 700;
     letter-spacing: 2px;
 }
 .widget-title > button {
     background: transparent;
-    color: rgba(244, 234, 213, 0.55);
-    border: 1px solid #1a1a28;
+    color: rgba(232, 232, 240, 0.55);
+    border: 1px solid #1a1a2e;
     padding: 4px 14px;
 }
 .widget-title > button:hover {
-    color: #050308;
-    background: #f4ead5;
-    border-color: #f4ead5;
+    color: #0c0c18;
+    background: #a06bff;
+    border-color: #a06bff;
 }
 
-.widget-dnd > switch { background: #1a1a28; }
-.widget-dnd > switch:checked { background: #f4ead5; }
-.widget-dnd > switch slider { background: #050308; }
+.widget-dnd > switch { background: #1a1a2e; }
+.widget-dnd > switch:checked { background: #a06bff; }
+.widget-dnd > switch slider { background: #0c0c18; }
 
 .floating-notifications { background: transparent; }
 .floating-notifications.background .notification {
-    background: rgba(10, 10, 20, 0.97);
-    border: 1px solid rgba(244, 234, 213, 0.22);
-    border-left: 3px solid #f4ead5;
+    background: rgba(12, 12, 24, 0.97);
+    border: 1px solid rgba(160, 107, 255, 0.22);
+    border-left: 3px solid #a06bff;
 }
 .floating-notifications.background .notification.critical {
-    border: 1px solid #f87171;
-    border-left: 3px solid #f87171;
+    border: 1px solid #3ad8ff;
+    border-left: 3px solid #3ad8ff;
 }
 
 .widget-mpris,
 .widget-volume,
 .widget-backlight {
-    background: #050308;
-    border: 1px solid #1a1a28;
+    background: #0a0a14;
+    border: 1px solid #1a1a2e;
     padding: 10px 12px;
-    color: #f4ead5;
+    color: #e8e8f0;
 }
-.widget-mpris-title { color: #f4ead5; font-weight: 700; }
-.widget-mpris-subtitle { color: rgba(244, 234, 213, 0.55); font-size: 11px; }
+.widget-mpris-title { color: #e8e8f0; font-weight: 700; }
+.widget-mpris-subtitle { color: rgba(232, 232, 240, 0.55); font-size: 11px; }
 
 slider trough {
-    background: #1a1a28;
+    background: #1a1a2e;
     min-height: 4px;
 }
-slider trough highlight { background: #f4ead5; }
-slider { background: transparent; color: #f4ead5; }
+slider trough highlight { background: #a06bff; }
+slider { background: transparent; color: #a06bff; }

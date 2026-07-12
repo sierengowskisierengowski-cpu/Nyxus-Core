@@ -1,2 +1,0 @@
-PyGObject>=3.42
-psutil>=5.9

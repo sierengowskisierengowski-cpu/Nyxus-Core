@@ -1,0 +1,11 @@
+[Unit]
+Description=NYXUS Auto-Update Timer — daily at 04:00
+Requires=nyxus-update.service
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+Persistent=true
+RandomizedDelaySec=30min
+
+[Install]
+WantedBy=timers.target
