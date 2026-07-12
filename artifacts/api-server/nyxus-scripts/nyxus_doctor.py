@@ -24,6 +24,7 @@ try:
         SHADOW_INK_ACTIVE, SHADOW_INK_INACTIVE,
         RADIUS_CARD, RADIUS_PILL, RADIUS_INPUT,
         FONT_UI, FONT_MONO, FONT_DISPLAY,
+        ACCENT_PRIMARY, ACCENT_SECONDARY, ACCENT_WARN, ACCENT_OK,
         format_css, assert_no_forbidden,
     )
 except Exception:
@@ -42,6 +43,8 @@ except Exception:
     SHADOW_INK_INACTIVE='rgba(0, 0, 0, 0.20)'
     RADIUS_CARD=14; RADIUS_PILL=12; RADIUS_INPUT=10
     FONT_UI='Inter'; FONT_MONO='JetBrains Mono'; FONT_DISPLAY='Inter Display'
+    ACCENT_PRIMARY='#ff3cac'; ACCENT_SECONDARY='#2bd2ff'
+    ACCENT_WARN='#ffb84d'; ACCENT_OK='#784bff'
     def format_css(t):
         _d = {
             'WHITE_PURE': WHITE_PURE, 'WHITE_OFF': WHITE_OFF,
@@ -74,11 +77,21 @@ CFG_HYPR   = HOME / ".config" / "hypr"
 CFG_EWW    = HOME / ".config" / "eww"
 CFG_DUNST  = HOME / ".config" / "dunst"
 
-# (label, ansi-fg) — all printed with reset at end
-GREEN  = "\033[1;32m"
-YELLOW = "\033[1;33m"
+# (label, ansi-fg) — all printed with reset at end.
+# OK / warn / banner colors follow the live PRISM accent (accent.json
+# via nyxus_palette); error red stays reserved semantic danger.
+def _ansi_fg(hex_color: str, bold: bool = True) -> str:
+    try:
+        h = hex_color.lstrip("#")
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+        return f"\033[{'1;' if bold else ''}38;2;{r};{g};{b}m"
+    except Exception:
+        return "\033[1m"
+
+GREEN  = _ansi_fg(ACCENT_OK)
+YELLOW = _ansi_fg(ACCENT_WARN)
 RED    = "\033[1;31m"
-BOLD   = "\033[1m"
+BOLD   = _ansi_fg(ACCENT_PRIMARY)
 DIM    = "\033[2m"
 RESET  = "\033[0m"
 

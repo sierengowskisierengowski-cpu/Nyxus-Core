@@ -1,4 +1,5 @@
-# NYXUS dunst configuration · Sprint E Total Identity
+# NYXUS dunst · Obsidian Prism (rev 2026-07-06)
+# Palette: #7949f2 · #ff2667 · #26ffb7 · #ffb026
 
 [global]
     monitor = 0
@@ -13,10 +14,10 @@
 
     progress_bar = true
     progress_bar_height = 10
-    progress_bar_frame_width = 1
+    progress_bar_frame_width = 2
     progress_bar_min_width = 240
     progress_bar_max_width = 420
-    progress_bar_corner_radius = 3
+    progress_bar_corner_radius = 5
 
     indicate_hidden = yes
     transparency = 4
@@ -24,10 +25,10 @@
     padding = 14
     horizontal_padding = 16
     text_icon_padding = 12
-    frame_width = 1
-    frame_color = "#7B5EA766"
+    frame_width = 2
+    frame_color = "#ff266759"
     gap_size = 6
-    separator_color = "#080808"
+    separator_color = "#05060a"
     sort = yes
 
     font = "JetBrains Mono Nerd Font 11"
@@ -46,7 +47,7 @@
     icon_position = left
     min_icon_size = 32
     max_icon_size = 64
-    icon_corner_radius = 3
+    icon_corner_radius = 8
     icon_path = /usr/share/icons/Adwaita/32x32/status/:/usr/share/icons/Adwaita/32x32/devices/:/usr/share/icons/hicolor/32x32/apps/
 
     sticky_history = yes
@@ -55,9 +56,9 @@
     dmenu = /usr/bin/rofi -dmenu -p dunst:
     browser = /usr/bin/xdg-open
     always_run_script = true
-    title = NYXUS Notifications
+    title = NYXUS · Obsidian Prism
     class = Dunst
-    corner_radius = 3
+    corner_radius = 12
     ignore_dbusclose = false
 
     force_xwayland = false
@@ -70,24 +71,24 @@
     per_monitor_dpi = false
 
 [urgency_low]
-    background    = "#080808f7"
-    foreground    = "#C8C0C0cc"
-    frame_color   = "#7B5EA766"
+    background    = "#05060ae6"
+    foreground    = "#eef2facc"
+    frame_color   = "#26ffb766"
     timeout       = 5
     default_icon  = dialog-information
 
 [urgency_normal]
-    background    = "#080808f7"
-    foreground    = "#C8C0C0"
-    frame_color   = "#7B5EA766"
+    background    = "#05060ae6"
+    foreground    = "#eef2fa"
+    frame_color   = "#7949f266"
     timeout       = 8
     override_pause_level = 30
     default_icon  = dialog-information
 
 [urgency_critical]
-    background    = "#080808f7"
-    foreground    = "#C8C0C0"
-    frame_color   = "#8B4040"
+    background    = "#05060ae6"
+    foreground    = "#eef2fa"
+    frame_color   = "#ff5470"
     timeout       = 0
     override_pause_level = 60
     default_icon  = dialog-warning

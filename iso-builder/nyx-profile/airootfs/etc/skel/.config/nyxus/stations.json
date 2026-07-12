@@ -1,6 +1,7 @@
 {
   "_comment": "NYXUS Station Matrix — single source of truth for workspace 0 (HOME) + stations 1–10. Synced to workspaces.json, Hyprland defaultName rules, EWW left rail, and nyxus-workspace-wallpaperd.",
-  "wall_dir": "/home/cosmic/.config/hypr/walls",
+  "wall_dir": "~/.config/hypr/walls",
+  "unified_wallpaper": "nyxus-cosmic-galaxy.png",
   "home": {
     "id": 0,
     "hypr": "name:0",
@@ -8,7 +9,7 @@
     "code": "◈",
     "hue": "cyan",
     "tagline": "Obsidian Reactor · Command Deck",
-    "wallpaper": "nyxus-obsidian-prism-4k.png"
+    "wallpaper": "nyxus-cosmic-galaxy.png"
   },
   "stations": [
     {
@@ -17,7 +18,7 @@
       "code": "OP",
       "hue": "pink",
       "tagline": "Command · Terminal · Control",
-      "wallpaper": "nyxus-starfield-wall.png",
+      "wallpaper": "nyxus-cosmic-galaxy.png",
       "launch": "alacritty"
     },
     {
@@ -26,7 +27,7 @@
       "code": "FG",
       "hue": "purple",
       "tagline": "Build · Code · Ship",
-      "wallpaper": "nyxus-ink-swirl.png",
+      "wallpaper": "nyxus-cosmic-galaxy.png",
       "launch": "cursor"
     },
     {
@@ -35,7 +36,7 @@
       "code": "GH",
       "hue": "green",
       "tagline": "Security · Intel · Recon",
-      "wallpaper": "nyxus-eye-mosaic.png",
+      "wallpaper": "nyxus-cosmic-galaxy.png",
       "launch": "sh -c 'command -v nyxus-security >/dev/null && nyxus-security || alacritty -e btop'"
     },
     {
@@ -44,7 +45,7 @@
       "code": "PL",
       "hue": "gold",
       "tagline": "Comms · Signal · Chat",
-      "wallpaper": "nyxus-space-collage.png",
+      "wallpaper": "nyxus-cosmic-galaxy.png",
       "launch": "firefox"
     },
     {
@@ -53,7 +54,7 @@
       "code": "WV",
       "hue": "orange",
       "tagline": "Media · Sound · Stream",
-      "wallpaper": "nyxus-graffiti-space.png",
+      "wallpaper": "nyxus-cosmic-galaxy.png",
       "launch": "sh -c 'playerctl play-pause 2>/dev/null; true'"
     },
     {
@@ -62,7 +63,7 @@
       "code": "CR",
       "hue": "blue",
       "tagline": "Files · Data · Vault",
-      "wallpaper": "nyxus-drifter-wall.png",
+      "wallpaper": "nyxus-cosmic-galaxy.png",
       "launch": "thunar"
     },
     {
@@ -71,7 +72,7 @@
       "code": "MS",
       "hue": "pink",
       "tagline": "Network · NOC · Mesh",
-      "wallpaper": "nyxus-starlight.png",
+      "wallpaper": "nyxus-cosmic-galaxy.png",
       "launch": "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'"
     },
     {
@@ -80,7 +81,7 @@
       "code": "SC",
       "hue": "purple",
       "tagline": "Notes · Docs · Scribe",
-      "wallpaper": "nyxus-prism-illusion.png",
+      "wallpaper": "nyxus-cosmic-galaxy.png",
       "launch": "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'"
     },
     {
@@ -98,7 +99,7 @@
       "code": "ED",
       "hue": "green",
       "tagline": "Lab · Edge · Experimental",
-      "wallpaper": "nyxus-galaxy.png",
+      "wallpaper": "nyxus-cosmic-galaxy.png",
       "launch": ""
     }
   ]

@@ -95,25 +95,26 @@ def _stamp(color):
 def make_card(color_key: str, title: str, glyph: str, footer_text: str):
     """Create a card frame -> (root_box, content_box, footer_label_setter)."""
     root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-    root.add_css_class("ghost-card")
+    root.add_css_class(f"card-{color_key}")
     root.set_hexpand(True)
 
-    # Header row: glyph + title (OBSIDIAN REACTOR ghost chrome)
+    # Header row: glyph + title + spacer + stamp
     header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
     glyph_lbl = Gtk.Label(label=glyph)
-    glyph_lbl.add_css_class(f"ghost-glyph-{color_key}")
-    title_lbl = Gtk.Label(label=title.upper(), xalign=0.0)
-    title_lbl.add_css_class(f"ghost-title-{color_key}")
+    glyph_lbl.add_css_class(f"card-{color_key}-header-glyph")
+    title_lbl = Gtk.Label(label=title, xalign=0.0)
+    title_lbl.add_css_class(f"card-{color_key}-header-title")
     header.append(glyph_lbl)
     header.append(title_lbl)
     spacer = Gtk.Box()
     spacer.set_hexpand(True)
     header.append(spacer)
+    header.append(_stamp(color_key))
     root.append(header)
 
-    # laser under-rule
+    # dashed under-rule
     rule = Gtk.Box()
-    rule.add_css_class(f"ghost-rule-{color_key}")
+    rule.add_css_class(f"card-{color_key}-header-rule")
     rule.set_size_request(-1, 1)
     root.append(rule)
 
@@ -125,7 +126,7 @@ def make_card(color_key: str, title: str, glyph: str, footer_text: str):
     # footer
     footer_lbl = Gtk.Label(label=footer_text, xalign=0.0)
     footer_lbl.set_wrap(True)
-    footer_lbl.add_css_class(f"ghost-footer-{color_key}")
+    footer_lbl.add_css_class(f"card-{color_key}-footer")
     root.append(footer_lbl)
 
     def set_footer(t: str):

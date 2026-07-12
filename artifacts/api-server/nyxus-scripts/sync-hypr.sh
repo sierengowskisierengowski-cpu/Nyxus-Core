@@ -50,11 +50,22 @@ for f in "${required[@]}"; do
 done
 
 # Confd shards (sourced by hyprland.conf). At least one must exist.
+# Includes nyxus-hyprland-* plus station/signature/safemode/freeform/cometfire.
 shopt -s nullglob
-shards=( "$src_dir"/nyxus-hyprland-*.conf )
+shards=( "$src_dir"/nyxus-hyprland-*.conf "$src_dir"/nyxus-*.conf )
 shopt -u nullglob
+# Deduplicate (nyxus-hyprland-* also matches nyxus-*.conf glob on some shells)
+declare -A _seen=()
+deduped=()
+for f in "${shards[@]}"; do
+  base="$(basename "$f")"
+  [[ -n "${_seen[$base]:-}" ]] && continue
+  _seen[$base]=1
+  deduped+=( "$f" )
+done
+shards=( "${deduped[@]}" )
 [[ ${#shards[@]} -gt 0 ]] || {
-  echo "sync-hypr: no nyxus-hyprland-*.conf shards found in $src_dir" >&2
+  echo "sync-hypr: no nyxus-*.conf shards found in $src_dir" >&2
   exit 5
 }
 

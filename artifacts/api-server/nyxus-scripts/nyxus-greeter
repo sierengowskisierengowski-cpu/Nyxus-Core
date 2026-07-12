@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# ============================================
+# NYXUS — defensive greetd greeter wrapper
+# rev 2026-07-09 r2 (Prism HUD login stack)
+# Copyright © 2026 Joseph Sierengowski
+# NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+#
+# greetd's default_session command. Four-layer chain, so the system
+# can NEVER be locked out by a missing or broken greeter binary:
+#
+#   1. regreet under cage — the themed NYXUS login screen
+#      (GTK4 greeter, /etc/greetd/regreet.toml + regreet.css,
+#      galaxy-eye backdrop, prism neon styling). Both ship from
+#      the official Arch repos (greetd-regreet, cage).
+#   2. tuigreet — packaged TUI greeter (greetd-tuigreet), themed
+#      via --theme to stay on-brand even in text mode.
+#   3. agreety  — minimal text greeter built into greetd itself.
+#   4. Direct   — launch the default session so the box is usable
+#      even with no greeter at all.
+#
+# Crash containment: a greeter that dies within STARTUP_OK_SECS is
+# treated as broken and we fall through to the next layer. A greeter
+# that crashes twice in one boot is demoted for the rest of the boot
+# (markers in /tmp) so greetd's respawn loop converges on a working
+# layer instead of flapping on a broken one.
+#
+# greetd's initial_session (live ISO) additionally autologs the
+# `nyx` user straight into Hyprland on first start as the ultimate
+# safety net. On installed systems nyxus-postinstall strips that
+# block so the machine always prompts.
+set -u
+
+SESSIONS_DIR="/usr/share/wayland-sessions"
+DEFAULT_CMD="Hyprland"
+STARTUP_OK_SECS=5
+MAX_CRASHES=2
+STATE_DIR="/tmp/nyxus-greeter"
+mkdir -p "${STATE_DIR}" 2>/dev/null || STATE_DIR="/tmp"
+
+crashes() { # crashes NAME → count so far this boot
+  local f="${STATE_DIR}/crash-${1}"
+  [[ -f "${f}" ]] && wc -l < "${f}" || echo 0
+}
+
+# try NAME CMD... — run a greeter layer.
+#  * exit 0            → normal teardown after a successful login: stop.
+#  * ran ≥ STARTUP_OK  → it was a real session that ended: stop (greetd
+#                        will respawn us for the next login).
+#  * fast non-zero exit→ broken greeter: record the crash, fall through.
+try() {
+  local name="$1"; shift
+  [[ "$(crashes "${name}")" -ge "${MAX_CRASHES}" ]] && return 0
+  local start=${SECONDS} rc=0
+  "$@" || rc=$?
+  local ran=$(( SECONDS - start ))
+  if [[ ${rc} -eq 0 || ${ran} -ge ${STARTUP_OK_SECS} ]]; then
+    exit "${rc}"
+  fi
+  printf '%s %s rc=%s after=%ss\n' "$(date -Is 2>/dev/null)" "${name}" "${rc}" "${ran}" \
+    >> "${STATE_DIR}/crash-${name}" 2>/dev/null || true
+}
+
+# ── 1 · regreet (themed NYXUS greeter) under the cage compositor ────
+if command -v cage >/dev/null 2>&1 && command -v regreet >/dev/null 2>&1; then
+  try regreet cage -s -- regreet
+fi
+
+# ── 2 · tuigreet (TUI, themed to the prism palette) ─────────────────
+if command -v tuigreet >/dev/null 2>&1; then
+  try tuigreet tuigreet \
+    --time \
+    --remember \
+    --remember-session \
+    --asterisks \
+    --greeting "welcome back, operator — NYXUS" \
+    --sessions "${SESSIONS_DIR}" \
+    --theme 'border=magenta;text=white;prompt=green;time=magenta;action=cyan;button=magenta;container=black;input=magenta' \
+    --cmd "${DEFAULT_CMD}"
+fi
+
+# ── 3 · agreety (ships inside the greetd package) ───────────────────
+if command -v agreety >/dev/null 2>&1; then
+  try agreety agreety --cmd "${DEFAULT_CMD}"
+fi
+
+# ── 4 · absolute last resort: no greeter at all ─────────────────────
+exec "${DEFAULT_CMD}"

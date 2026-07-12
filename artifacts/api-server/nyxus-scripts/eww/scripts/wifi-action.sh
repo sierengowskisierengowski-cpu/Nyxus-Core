@@ -8,7 +8,9 @@
 #   cannot escape into shell.
 #
 # Usage:
-#   wifi-action.sh connect <BASE64_SSID>
+#   wifi-action.sh connect    <BASE64_SSID>
+#   wifi-action.sh disconnect <BASE64_SSID>   (take saved connection down)
+#   wifi-action.sh autoconnect <BASE64_SSID>  (toggle autoconnect flag)
 #   wifi-action.sh forget  <BASE64_SSID>
 #   wifi-action.sh rescan
 #   wifi-action.sh toggle
@@ -49,6 +51,21 @@ case "$cmd" in
       command -v notify-send >/dev/null 2>&1 \
         && notify-send "WiFi" "$out" \
         || printf '%s\n' "$out"
+    fi
+    ;;
+  disconnect)
+    ssid=$(decode_b64 "$arg")
+    [[ -z "$ssid" ]] && { echo "wifi-action: invalid b64 ssid" >&2; exit 2; }
+    nmcli connection down "$ssid" 2>/dev/null || true
+    ;;
+  autoconnect)
+    ssid=$(decode_b64 "$arg")
+    [[ -z "$ssid" ]] && { echo "wifi-action: invalid b64 ssid" >&2; exit 2; }
+    cur=$(nmcli -g connection.autoconnect connection show "$ssid" 2>/dev/null)
+    if [[ "$cur" == "yes" ]]; then
+      nmcli connection modify "$ssid" connection.autoconnect no 2>/dev/null || true
+    else
+      nmcli connection modify "$ssid" connection.autoconnect yes 2>/dev/null || true
     fi
     ;;
   forget)

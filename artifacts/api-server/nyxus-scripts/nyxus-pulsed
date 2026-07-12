@@ -1,0 +1,429 @@
+#!/usr/bin/env python3
+# ════════════════════════════════════════════════════════════════════
+# nyxus-pulsed   ·   rev 2026-07-08 r1 (Signature)
+#
+# LIVING THEME event engine — the desktop reacts to EVERYTHING.
+# One daemon watches the session's event streams and translates each
+# into a color pulse with its own personality, rendered live onto the
+# Hyprland window borders and published to the eww bars (via the
+# prism-anim frame stream), so the whole shell breathes as one organism:
+#
+#   notifications (D-Bus Notify) ──► classified pulses:
+#       critical urgency   → red strobe
+#       email              → cyan slow wave
+#       chat / social      → magenta double pulse
+#       power / battery    → amber flicker
+#       everything else    → soft pulse in the CURRENT accent color
+#   Hyprland socket2 ──►
+#       activewindow  → focus tint follows the app you're on (reads
+#                       tintd's published gradient, so bar + border
+#                       always agree; follow_mouse=1 makes this
+#                       effectively hover-reactive)
+#       workspacev2   → quick accent-secondary sweep
+#
+# Coexistence contract (nobody stomps anybody):
+#   · tintd owns the border COLORS   (handoff file, per focus change)
+#   · beatd owns the gradient ANGLE  (spins with the music)
+#   · pulsed borrows both for the duration of a pulse — it re-reads
+#     the live angle every frame (so beat spins survive mid-pulse) and
+#     restores the handoff colors (or its startup snapshot) when the
+#     envelope closes. It NEVER writes the handoff file.
+#
+# Output for the bars: $XDG_RUNTIME_DIR/nyxus-pulse.json, atomically
+# replaced; prism-anim.sh folds it into the PRISM deflisten frames.
+#
+# Not run directly — use `nyxus-living on|off|toggle|status`.
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+import json
+import math
+import os
+import random
+import re
+import signal
+import socket
+import subprocess
+import sys
+import threading
+import time
+
+RUNTIME   = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+PIDFILE   = os.path.join(RUNTIME, "nyxus-pulsed.pid")
+STATEFILE = os.path.join(RUNTIME, "nyxus-pulse.json")
+COLORFILE = os.path.join(RUNTIME, "nyxus-border-colors")   # tintd → beatd/pulsed
+HYPR_DIR  = os.path.join(RUNTIME, "hypr",
+                         os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", ""))
+LOGFILE   = os.path.expanduser("~/.cache/nyxus/pulsed.log")
+CONFFILE  = os.path.expanduser("~/.config/nyxus/pulse.conf")
+ACCENTSCSS = os.path.expanduser("~/.config/eww/accent.scss")
+
+FPS = 20.0
+
+def log(msg):
+    try:
+        os.makedirs(os.path.dirname(LOGFILE), exist_ok=True)
+        with open(LOGFILE, "a") as f:
+            f.write("%s %s\n" % (time.strftime("%H:%M:%S"), msg))
+    except OSError:
+        pass
+
+# ── config (KEY=VALUE, all optional) ─────────────────────────────────
+CONF = {
+    "PULSE_CRITICAL": "#ff2b4d",
+    "PULSE_EMAIL":    "#2bd2ff",
+    "PULSE_CHAT":     "#ff3cac",
+    "PULSE_POWER":    "#ffb84d",
+    "PULSE_WORKSPACE": "",          # empty = accent secondary
+    "PULSE_DEFAULT":   "",          # empty = accent primary
+    "BORDER_BLEND":    "0.85",      # how far stops lean into the pulse color
+    "MIN_GAP_MS":      "350",       # rate limit between pulse starts
+}
+def load_conf():
+    try:
+        with open(CONFFILE) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    CONF[k.strip()] = v.strip().strip('"')
+    except OSError:
+        pass
+
+# ── color helpers ────────────────────────────────────────────────────
+def hex_rgb(hx):
+    hx = hx.lstrip("#")
+    return (int(hx[0:2], 16), int(hx[2:4], 16), int(hx[4:6], 16))
+
+def accent(which):
+    """Current palette straight from the generated accent.scss."""
+    fallback = {"primary": "#ff3cac", "secondary": "#2bd2ff",
+                "warn": "#ffb84d", "ok": "#26ffb7"}
+    try:
+        with open(ACCENTSCSS) as f:
+            for line in f:
+                m = re.match(r"\$nyxus-accent-%s:\s*(#[0-9a-fA-F]{6})" % which, line)
+                if m:
+                    return m.group(1)
+    except OSError:
+        pass
+    return fallback.get(which, "#ff3cac")
+
+# ── Hyprland IPC (socket1: commands · socket2: events) ───────────────
+def hypr_request(cmd, timeout=1.0):
+    path = os.path.join(HYPR_DIR, ".socket.sock")
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+        s.settimeout(timeout)
+        s.connect(path)
+        s.sendall(cmd.encode())
+        out = b""
+        while True:
+            chunk = s.recv(8192)
+            if not chunk:
+                break
+            out += chunk
+        return out.decode(errors="replace")
+
+def get_border():
+    """→ (stops:[0xaarrggbb,...], angle:int) from the compositor."""
+    try:
+        data = json.loads(hypr_request("j/getoption general:col.active_border"))
+        custom = (data.get("custom") or "").split()
+    except (OSError, ValueError):
+        custom = []
+    stops, angle = [], 270
+    for tok in custom:
+        t = tok[2:] if tok.startswith("0x") else tok
+        if re.fullmatch(r"[0-9a-fA-F]{8}", t):
+            stops.append(t.lower())
+        elif t.endswith("deg") and t[:-3].isdigit():
+            angle = int(t[:-3])
+    if not stops:
+        stops = ["ff3cacff", "2bd2ffff", "784bffff", "ffb84dff"]
+    return stops, angle
+
+def base_stops():
+    """Colors the pulse decays back to: tintd's handoff if live, else
+    whatever the compositor holds right now (argb, no 0x)."""
+    try:
+        with open(COLORFILE) as f:
+            toks = f.read().split()
+        stops = [t[2:].lower() for t in toks
+                 if re.fullmatch(r"0x[0-9a-fA-F]{8}", t)]
+        if stops:
+            return stops
+    except OSError:
+        pass
+    return get_border()[0]
+
+def set_border(stops, angle):
+    cmd = "keyword general:col.active_border " + \
+          " ".join("0x" + s for s in stops) + " %ddeg" % angle
+    try:
+        hypr_request(cmd)
+    except OSError:
+        pass
+
+def blend_stop(stop, rgb, k):
+    """stop 'aarrggbb' leaned k∈[0,1] toward rgb, alpha preserved."""
+    a = stop[0:2]
+    r = int(stop[2:4], 16); g = int(stop[4:6], 16); b = int(stop[6:8], 16)
+    r = round(r + (rgb[0] - r) * k)
+    g = round(g + (rgb[1] - g) * k)
+    b = round(b + (rgb[2] - b) * k)
+    return "%s%02x%02x%02x" % (a, r, g, b)
+
+# ── eww state (consumed by prism-anim.sh) ────────────────────────────
+class EwwState:
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.pc = (255, 60, 172); self.ps = 0.0
+        self.fc = (43, 210, 255); self.fs = 0.0
+        self.write()
+    def write(self):
+        data = {"pc": list(self.pc), "ps": round(self.ps, 3),
+                "fc": list(self.fc), "fs": round(self.fs, 3)}
+        tmp = STATEFILE + ".tmp"
+        try:
+            with open(tmp, "w") as f:
+                json.dump(data, f)
+            os.replace(tmp, STATEFILE)
+        except OSError:
+            pass
+    def pulse(self, rgb, strength):
+        with self.lock:
+            self.pc, self.ps = rgb, max(0.0, min(1.0, strength))
+            self.write()
+    def focus(self, rgb, strength):
+        with self.lock:
+            self.fc, self.fs = rgb, max(0.0, min(1.0, strength))
+            self.write()
+
+EWW = EwwState()
+
+# ── envelopes ────────────────────────────────────────────────────────
+def env_pulse(x):                       # one smooth breath
+    return math.sin(math.pi * x)
+def env_wave(x):                        # slow swell, longer tail
+    return math.sin(math.pi * x) ** 2
+def env_double(x):                      # two beats
+    return abs(math.sin(2 * math.pi * x)) * (1.0 - 0.35 * x)
+def env_strobe(x):                      # three hard flashes
+    return 1.0 if (x * 3.0) % 1.0 < 0.45 else 0.15
+def env_flicker(x):                     # decaying jitter
+    return (1.0 - x) * random.uniform(0.25, 1.0)
+ENVELOPES = {"pulse": env_pulse, "wave": env_wave, "double": env_double,
+             "strobe": env_strobe, "flicker": env_flicker}
+
+# ── the pulse engine ─────────────────────────────────────────────────
+class Engine(threading.Thread):
+    """Renders at FPS only while a pulse is alive; dead idle otherwise."""
+    def __init__(self):
+        super().__init__(daemon=True)
+        self.kick = threading.Event()
+        self.lock = threading.Lock()
+        self.cur = None                 # (rgb, env, dur, amp, t0)
+        self.blend = max(0.0, min(1.0, float(CONF["BORDER_BLEND"])))
+        self.last_start = 0.0
+        self.running = True
+    def trigger(self, rgb, shape, dur, amp, critical=False):
+        now = time.monotonic()
+        gap = float(CONF["MIN_GAP_MS"]) / 1000.0
+        with self.lock:
+            if self.cur is not None and not critical:
+                return                  # let the active envelope finish
+            if now - self.last_start < gap and not critical:
+                return
+            self.last_start = now
+            self.cur = (rgb, ENVELOPES.get(shape, env_pulse), dur, amp, now)
+        self.kick.set()
+    def run(self):
+        frame = 1.0 / FPS
+        while self.running:
+            self.kick.wait()
+            self.kick.clear()
+            with self.lock:
+                cur = self.cur
+            if cur is None:
+                continue
+            rgb, env, dur, amp, t0 = cur
+            base = base_stops()
+            try:
+                while self.running:
+                    x = (time.monotonic() - t0) / dur
+                    if x >= 1.0:
+                        break
+                    s = max(0.0, min(1.0, env(x))) * amp
+                    k = s * self.blend
+                    stops = [blend_stop(st, rgb, k) for st in base]
+                    _, angle = get_border()      # live angle: beatd spins on
+                    set_border(stops, angle)
+                    EWW.pulse(rgb, s)
+                    time.sleep(frame)
+            finally:
+                # decay back to whoever owns the colors now
+                _, angle = get_border()
+                set_border(base_stops(), angle)
+                EWW.pulse(rgb, 0.0)
+                with self.lock:
+                    self.cur = None
+
+ENGINE = Engine()
+
+# ── notification classification ──────────────────────────────────────
+RE_EMAIL = re.compile(r"thunderbird|evolution|geary|kmail|mailspring|"
+                      r"\bmail\b|gmail|outlook|proton", re.I)
+RE_CHAT  = re.compile(r"discord|telegram|signal|slack|matrix|element|"
+                      r"whatsapp|messenger|irc|vesktop", re.I)
+RE_POWER = re.compile(r"upower|battery|power|charg", re.I)
+
+def classify(app, summary, urgency):
+    text = "%s %s" % (app, summary)
+    if urgency == 2:
+        return (hex_rgb(CONF["PULSE_CRITICAL"]), "strobe", 1.6, 1.0)
+    if RE_EMAIL.search(text):
+        return (hex_rgb(CONF["PULSE_EMAIL"]), "wave", 2.4, 0.9)
+    if RE_CHAT.search(text):
+        return (hex_rgb(CONF["PULSE_CHAT"]), "double", 1.6, 0.9)
+    if RE_POWER.search(text):
+        return (hex_rgb(CONF["PULSE_POWER"]), "flicker", 1.4, 0.9)
+    col = CONF["PULSE_DEFAULT"] or accent("primary")
+    amp = 0.45 if urgency == 0 else 0.7          # low urgency = whisper
+    return (hex_rgb(col), "pulse", 1.2, amp)
+
+# ── D-Bus notification watcher ───────────────────────────────────────
+def dbus_thread():
+    rule = "type='method_call',interface='org.freedesktop.Notifications'," \
+           "member='Notify'"
+    while ENGINE.running:
+        try:
+            proc = subprocess.Popen(["dbus-monitor", rule],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.DEVNULL, text=True)
+        except OSError as e:
+            log("dbus-monitor unavailable: %s" % e)
+            return
+        strings, urgency, collecting = [], 1, False
+        want_urgency_byte = False
+        for line in proc.stdout:
+            if "member=Notify" in line and "method call" in line:
+                collecting, strings, urgency = True, [], 1
+                continue
+            if not collecting:
+                continue
+            m = re.match(r'\s+string "(.*)"$', line)
+            if m and len(strings) < 4:
+                strings.append(m.group(1))
+                continue
+            if re.search(r'string "urgency"', line):
+                want_urgency_byte = True
+                continue
+            if want_urgency_byte:
+                mb = re.search(r"byte (\d+)", line)
+                if mb:
+                    urgency = int(mb.group(1))
+                    want_urgency_byte = False
+                continue
+            # last top-level arg of Notify is the int32 expire timeout
+            if re.match(r"   int32 ", line):
+                collecting = False
+                app = strings[0] if strings else ""
+                summary = strings[2] if len(strings) > 2 else ""
+                spec = classify(app, summary, urgency)
+                if spec:
+                    ENGINE.trigger(*spec, critical=(urgency == 2))
+        proc.wait()
+        if ENGINE.running:
+            time.sleep(2)               # bus hiccup — reconnect
+
+# ── Hyprland event watcher (focus tint + workspace sweep) ────────────
+def focus_rgb():
+    """First stop of tintd's published gradient = the app's neon."""
+    try:
+        with open(COLORFILE) as f:
+            tok = f.read().split()[0]
+        if re.fullmatch(r"0x[0-9a-fA-F]{8}", tok):
+            return (int(tok[4:6], 16), int(tok[6:8], 16), int(tok[8:10], 16))
+    except (OSError, IndexError):
+        pass
+    return None
+
+def socket2_thread():
+    path = os.path.join(HYPR_DIR, ".socket2.sock")
+    while ENGINE.running:
+        try:
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.connect(path)
+            buf = b""
+            while ENGINE.running:
+                chunk = s.recv(4096)
+                if not chunk:
+                    break
+                buf += chunk
+                while b"\n" in buf:
+                    line, buf = buf.split(b"\n", 1)
+                    ev = line.decode(errors="replace")
+                    if ev.startswith("activewindow>>"):
+                        time.sleep(0.05)          # let tintd publish first
+                        rgb = focus_rgb()
+                        if rgb:
+                            EWW.focus(rgb, 0.85)
+                        else:                      # tintd off → accent
+                            EWW.focus(hex_rgb(accent("secondary")), 0.35)
+                    elif ev.startswith("workspacev2>>"):
+                        col = CONF["PULSE_WORKSPACE"] or accent("secondary")
+                        ENGINE.trigger(hex_rgb(col), "pulse", 0.7, 0.55)
+        except OSError:
+            pass
+        if ENGINE.running:
+            time.sleep(2)
+        try:
+            s.close()
+        except OSError:
+            pass
+
+# ── lifecycle ────────────────────────────────────────────────────────
+def main():
+    # single instance
+    try:
+        with open(PIDFILE) as f:
+            old = int(f.read().strip())
+        os.kill(old, 0)
+        print("pulsed: already running", file=sys.stderr)
+        return 0
+    except (OSError, ValueError):
+        pass
+    with open(PIDFILE, "w") as f:
+        f.write(str(os.getpid()))
+
+    load_conf()
+    if not os.path.isdir(HYPR_DIR):
+        print("pulsed: no hyprland instance", file=sys.stderr)
+        os.unlink(PIDFILE)
+        return 1
+
+    snapshot = get_border()             # exact restore target on exit
+
+    def shutdown(*_):
+        ENGINE.running = False
+        EWW.pulse(EWW.pc, 0.0)
+        EWW.focus(EWW.fc, 0.0)
+        stops = base_stops()
+        set_border(stops, snapshot[1])
+        try:
+            os.unlink(PIDFILE)
+        except OSError:
+            pass
+        os._exit(0)
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, shutdown)
+
+    ENGINE.start()
+    threading.Thread(target=dbus_thread, daemon=True).start()
+    threading.Thread(target=socket2_thread, daemon=True).start()
+    log("pulsed up (pid %d)" % os.getpid())
+
+    while True:                          # threads do the work
+        time.sleep(3600)
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)

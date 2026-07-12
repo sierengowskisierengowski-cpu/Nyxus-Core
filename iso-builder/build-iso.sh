@@ -189,12 +189,46 @@ install -m 0644 "${NS}/alacritty.toml"       "${SKEL}/.config/alacritty/alacritt
 
 # ── Hyprland conf.d/ overlays (blur/fog/general/opacity/rules/layerblur) ────
 install -m 0644 "${NS}"/nyxus-hyprland-*.conf "${SKEL}/.config/hypr/conf.d/"
+# Station matrix + safemode + signature shards (not matched by nyxus-hyprland-*.conf)
+for _shard in nyxus-stations.conf nyxus-safemode.conf nyxus-signature.conf nyxus-freeform.conf nyxus-cometfire.conf; do
+  if [[ -f "${NS}/${_shard}" ]]; then
+    install -m 0644 "${NS}/${_shard}" "${SKEL}/.config/hypr/conf.d/${_shard}"
+  fi
+done
+
+# ── NYXUS station matrix (stations.json → workspaces.json) ───────────────
+NYXUS_CFG="${REPO_ROOT}/artifacts/nyxus-config"
+mkdir -p "${SKEL}/.config/nyxus"
+if [[ -f "${NYXUS_CFG}/stations.json" ]]; then
+  install -m 0644 "${NYXUS_CFG}/stations.json" "${SKEL}/.config/nyxus/stations.json"
+  # Bake-time sync: use system wallpaper dir so skel paths survive first login.
+  CONF="${SKEL}/.config/nyxus/stations.json" OUT="${SKEL}/.config/nyxus/workspaces.json" \
+    bash -c '
+      set -euo pipefail
+      jq -n --slurpfile s "$CONF" --arg wall_dir "/usr/share/backgrounds/nyxus" "
+        {
+          \"_comment\": \"Auto-generated from stations.json at ISO bake. Do not hand-edit.\",
+          \"workspaces\": [
+            \$s[0].stations[] | {
+              id: .id,
+              name: .name,
+              wallpaper: (\$wall_dir + \"/\" + .wallpaper)
+            }
+          ]
+        }
+      " > "$OUT"
+    '
+  ok "stations.json + workspaces.json staged"
+fi
 
 # ── EWW (replaces waybar as of rev r6-eww) ──────────────────────────────────
-# Top-level eww.yuck / eww.scss / nyxus.conf + scripts/ subdir.
+# Top-level eww.yuck / eww.scss / nyxus.conf + all *.yuck modules + scripts/
 install -m 0644 "${NS}/eww/eww.yuck"   "${SKEL}/.config/eww/eww.yuck"
 install -m 0644 "${NS}/eww/eww.scss"   "${SKEL}/.config/eww/eww.scss"
 install -m 0644 "${NS}/eww/nyxus.conf" "${SKEL}/.config/eww/nyxus.conf"
+if compgen -G "${NS}/eww/*.yuck" >/dev/null; then
+  install -m 0644 "${NS}"/eww/*.yuck "${SKEL}/.config/eww/" 2>/dev/null || true
+fi
 if [[ -f "${NS}/eww/README.md" ]]; then
   install -m 0644 "${NS}/eww/README.md" "${SKEL}/.config/eww/README.md"
 fi
@@ -281,30 +315,32 @@ fi
 ok "user units + policy: nyxus-eww / nyxus-crashd / nyxus-security-daemon / parental + security + welcome helpers"
 
 # ── Wallpapers → both user skel (matches hyprland.conf path) and system ─
-# Includes the new void-vortex (default EWW-era wallpaper, replaces drifter).
-install -m 0644 "${NS}"/nyxus-bg-*.png            "${WALLS_USER}/" 2>/dev/null || true
-install -m 0644 "${NS}"/nyxus-sierengowski-*.png  "${WALLS_USER}/" 2>/dev/null || true
-install -m 0644 "${NS}"/nyxus-void-vortex.png     "${WALLS_USER}/" 2>/dev/null || true
-# A6 (2026-05-12): canonical hyprlock.conf reads ~/.config/hypr/walls/nyxus-login-stars.png.
-# Must be staged into BOTH user skel and system walls or hyprlock 404s on the lock screen.
-install -m 0644 "${NS}"/nyxus-login-stars.png     "${WALLS_USER}/" 2>/dev/null || true
-install -m 0644 "${NS}"/nyxus-hyprlock-eye.png    "${WALLS_USER}/" 2>/dev/null || true
-install -m 0644 "${NS}"/nyxus-bg-*.png            "${WALLS_SYS}/"  2>/dev/null || true
-install -m 0644 "${NS}"/nyxus-sierengowski-*.png  "${WALLS_SYS}/"  2>/dev/null || true
-install -m 0644 "${NS}"/nyxus-void-vortex.png     "${WALLS_SYS}/"  2>/dev/null || true
-install -m 0644 "${NS}"/nyxus-login-stars.png     "${WALLS_SYS}/"  2>/dev/null || true
-install -m 0644 "${NS}"/nyxus-hyprlock-eye.png    "${WALLS_SYS}/"  2>/dev/null || true
+# Stage every nyxus-*.png from the canonical scripts dir (station matrix,
+# lock screen, signature walls, etc.). Partial globs silently dropped walls
+# on prior bakes — ship the full set every time.
+if compgen -G "${NS}/nyxus-*.png" >/dev/null; then
+  install -m 0644 "${NS}"/nyxus-*.png "${WALLS_USER}/"
+  install -m 0644 "${NS}"/nyxus-*.png "${WALLS_SYS}/"
+fi
 ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyxus/ + skel"
 
 # ── Helper scripts → /usr/local/bin/ ────────────────────────────────────
 # rev r6-eww: waybar-stats / waybar-ticker removed. nyxus-eww-launch added.
 install -m 0755 "${NS}/wallpaper-rotate.sh"  "${LBIN}/wallpaper-rotate"
-install -m 0755 "${NS}/nyxus-eww-launch"     "${LBIN}/nyxus-eww-launch"
+if [[ -f "${NS}/nyxus-eww-launch" ]]; then
+  install -m 0755 "${NS}/nyxus-eww-launch" "${LBIN}/nyxus-eww-launch"
+fi
+if [[ -f "${NS}/nyxus-eww-launch-safe" ]]; then
+  install -m 0755 "${NS}/nyxus-eww-launch-safe" "${LBIN}/nyxus-eww-launch-safe"
+fi
 if [[ -f "${NS}/nyxus-mission-control-toggle" ]]; then
   install -m 0755 "${NS}/nyxus-mission-control-toggle" "${LBIN}/nyxus-mission-control-toggle"
 fi
 if [[ -f "${NS}/nyxus-set-wallpaper.sh" ]]; then
   install -m 0755 "${NS}/nyxus-set-wallpaper.sh" "${LBIN}/nyxus-set-wallpaper.sh"
+fi
+if [[ -f "${NS}/nyxus-sync-stations" ]]; then
+  install -m 0755 "${NS}/nyxus-sync-stations" "${LBIN}/nyxus-sync-stations"
 fi
 if [[ -f "${NS}/nyxus-sound.sh" ]]; then
   install -m 0755 "${NS}/nyxus-sound.sh" "${LBIN}/nyxus-sound.sh"

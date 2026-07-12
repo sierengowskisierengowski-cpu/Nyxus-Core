@@ -79,9 +79,33 @@ STATE_FILE  = CONFIG_DIR / "state.json"
 MAX_RECENT  = 12
 AUTOSAVE_MS = 2000
 
+# Shared HUD helpers (HOME HUD language + graffiti voice).
+try:
+    from nyxus_palette import (HUD_PALETTE as _HP,
+                               install_hud_css as _NYX_IHC,
+                               neon_flicker_css as _nfc)
+    _HUD_EXTRA = _nfc()
+except Exception:
+    _HP = {"pink": "#ff3cac", "cyan": "#2bd2ff", "green": "#6dffcf",
+           "gold": "#ffb84d"}
+    _NYX_IHC = None
+    _HUD_EXTRA = ""
+
 CSS = format_css("""
 * {{ font-family: 'Inter Display', 'Inter', 'Sans'; }}
-window {{ background-color: #0a0a0a; color: rgba(232,224,245,0.92); }}
+window {{ background-color: rgba(5, 1, 13, 0.98);
+          color: rgba(232,224,245,0.92); }}
+headerbar {{
+    background-color: rgba(7, 5, 14, 0.93);
+    border-bottom: 1px solid alpha(@GREEN@, 0.40);
+}}
+.nyx-notepad-title {{
+    font-family: 'Permanent Marker', cursive;
+    font-size: 15px;
+    color: @GREEN@;
+    text-shadow: 0 0 10px alpha(@GREEN@, 0.65),
+                 0 0 22px alpha(@GREEN@, 0.30);
+}}
 
 .editor-pane textview text {{
     background-color: rgba(0, 0, 0, 0.55);
@@ -89,7 +113,7 @@ window {{ background-color: #0a0a0a; color: rgba(232,224,245,0.92); }}
     font-family: 'JetBrains Mono', monospace;
     font-size: 14px;
     padding: 16px;
-    caret-color: {WHITE_OFF};
+    caret-color: @PINK@;
 }}
 .editor-pane textview {{ background-color: transparent; }}
 
@@ -103,19 +127,22 @@ window {{ background-color: #0a0a0a; color: rgba(232,224,245,0.92); }}
 .preview-pane textview {{ background-color: transparent; }}
 
 .statusbar {{
-    background-color: {INK_BLACK};
+    background-color: rgba(7, 5, 14, 0.93);
     color: rgba(255, 255, 255, 0.65);
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid alpha(@GREEN@, 0.30);
     padding: 4px 14px;
-    font-size: 12px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
     font-family: 'JetBrains Mono', monospace;
 }}
 .statusbar .dirty-dot {{
-    color: #f0a060;
+    color: @GOLD@;
     font-weight: bold;
+    text-shadow: 0 0 8px alpha(@GOLD@, 0.55);
 }}
 .statusbar .clean-dot {{
-    color: #90b890;
+    color: @GREEN@;
+    text-shadow: 0 0 8px alpha(@GREEN@, 0.45);
 }}
 
 .recent-row {{
@@ -129,7 +156,9 @@ window {{ background-color: #0a0a0a; color: rgba(232,224,245,0.92); }}
     font-size: 16px;
     padding: 60px;
 }}
-""")
+""").replace("@PINK@", _HP.get("pink", "#ff3cac")) \
+    .replace("@GREEN@", _HP.get("green", "#6dffcf")) \
+    .replace("@GOLD@", _HP.get("gold", "#ffb84d")) + _HUD_EXTRA
 
 
 # ── Markdown → Pango markup (lightweight subset) ──────────────────────────
@@ -298,14 +327,16 @@ class NyxusNotepad(Adw.Application):
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
         except Exception: pass
 
-        prov = Gtk.CssProvider()
-        try: prov.load_from_string(CSS)
-        except Exception:
-            try: prov.load_from_data(CSS.encode())
-            except Exception: pass
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(), prov,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        # PRIORITY_USER + 1 so the HUD language outranks nyxus_chrome.
+        if _NYX_IHC is None or not _NYX_IHC(CSS):
+            prov = Gtk.CssProvider()
+            try: prov.load_from_string(CSS)
+            except Exception:
+                try: prov.load_from_data(CSS.encode())
+                except Exception: pass
+            Gtk.StyleContext.add_provider_for_display(
+                Gdk.Display.get_default(), prov,
+                Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
 
         self.win = Adw.ApplicationWindow(application=self, title="NYXUS Notepad")
         self.win.set_default_size(1200, 780)
@@ -319,7 +350,7 @@ class NyxusNotepad(Adw.Application):
         # Header bar
         hdr = Adw.HeaderBar()
         self._title_lbl = Gtk.Label(label="Untitled")
-        self._title_lbl.add_css_class("title-3")
+        self._title_lbl.add_css_class("nyx-notepad-title")
         hdr.set_title_widget(self._title_lbl)
 
         # Left side: new / open

@@ -28,7 +28,7 @@ if command -v nmcli >/dev/null 2>&1; then
         ;;
       *ethernet*|*wired*)
         icon="⌁"
-        label="WIRED"
+        label="ETH"
         tooltip="Ethernet · $name · $dev"
         ;;
       *)

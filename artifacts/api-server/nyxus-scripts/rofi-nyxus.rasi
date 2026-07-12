@@ -1,87 +1,108 @@
-* {
-    bg-deep:   #080808;
-    bg-card:   #080808;
-    text-hi:   #C8C0C0;
-    text-lo:   rgba(200, 192, 192, 0.62);
-    hairline:  #7B5EA7;
-    accent:    #C4607A;
-    glass-bg:  rgba(8, 8, 8, 0.97);
-    glass-line: rgba(123, 94, 167, 0.42);
+/* NYXUS · Obsidian Prism — window switcher (Super+Tab)
+ * Palette: #7949f2 · #ff2667 · #26ffb7 · #ffb026 */
 
-    background-color: transparent;
-    text-color: @text-hi;
+* {
+    bg:         #05060a;
+    bar-bg:     rgba(5, 6, 10, 0.90);
+    widget-bg:  rgba(10, 13, 20, 0.85);
+    active:     #ff2667;
+    inactive:   rgba(238, 242, 250, 0.35);
+    highlight:  #7949f2;
+    violet:     #26ffb7;
+    gold:       #ffb026;
+    text:       #eef2fa;
+    sep:        rgba(38, 255, 183, 0.35);
+    selected-bg:rgba(121, 73, 242, 0.18);
+    glass-line: rgba(255, 38, 103, 0.35);
+
+    font:                   "JetBrainsMono Nerd Font 12";
+    background-color:       transparent;
+    text-color:             @text;
 }
 
 window {
-    width: 560px;
-    background-color: @glass-bg;
-    border: 1px;
-    border-color: @glass-line;
-    border-radius: 3px;
-    padding: 0;
-    location: center;
-    anchor: center;
+    width:                  560px;
+    background-color:       @bar-bg;
+    background-image:       url("~/.config/nyxus/backdrops/starfall-backdrop-card.png", both);
+    border:                 2px;
+    border-color:           @glass-line;
+    border-radius:          16px;
+    padding:                16px;
+    location:               center;
+    anchor:                 center;
 }
 
 mainbox {
-    background-color: transparent;
-    children: [ inputbar, listview ];
+    background-color:       transparent;
+    spacing:                10px;
+    children:               [ inputbar, listview ];
 }
 
 inputbar {
-    background-color: transparent;
-    border: 0 0 1px 0;
-    border-color: @hairline;
-    padding: 12px 14px;
-    spacing: 10px;
-    children: [ prompt, entry ];
+    background-color:       @widget-bg;
+    border-radius:          10px;
+    border:                 1px;
+    border-color:           @glass-line;
+    padding:                10px 14px;
+    spacing:                8px;
+    children:               [ prompt, entry ];
 }
 
 prompt {
-    text-color: @accent;
-    font: "JetBrains Mono Nerd Font Bold 12";
+    background-color:       transparent;
+    text-color:             @gold;
+    font:                   "JetBrainsMono Nerd Font Bold 12";
+    vertical-align:         0.5;
 }
 
 entry {
-    text-color: @text-hi;
-    placeholder: "type to search...";
-    placeholder-color: @text-lo;
-    font: "JetBrains Mono Nerd Font 12";
+    background-color:       transparent;
+    text-color:             @text;
+    placeholder:            "switch to...";
+    placeholder-color:      @inactive;
+    vertical-align:         0.5;
+    cursor:                 text;
 }
 
 listview {
-    background-color: transparent;
-    padding: 6px;
-    spacing: 2px;
-    lines: 10;
-    columns: 1;
-    cycle: true;
-    dynamic: true;
-    scrollbar: false;
+    background-color:       transparent;
+    padding:                2px;
+    spacing:                2px;
+    lines:                  10;
+    columns:                1;
+    cycle:                  true;
+    dynamic:                true;
+    scrollbar:              false;
 }
 
 element {
-    background-color: transparent;
-    text-color: @text-hi;
-    padding: 9px 12px;
-    spacing: 10px;
-    border-radius: 3px;
+    background-color:       transparent;
+    text-color:             @text;
+    padding:                9px 12px;
+    spacing:                10px;
+    border-radius:          10px;
+    cursor:                 pointer;
 }
 
 element selected.normal,
 element selected.alternate.normal,
 element selected.active,
 element selected.urgent {
-    background-color: @accent;
-    text-color: #080808;
-    border-radius: 3px;
+    background-color:       @selected-bg;
+    text-color:             @active;
+    border:                 1px;
+    border-color:           @sep;
+    border-radius:          10px;
 }
 
 element-text {
-    text-color: inherit;
-    font: "JetBrains Mono Nerd Font 11";
+    background-color:       transparent;
+    text-color:             inherit;
+    font:                   "JetBrainsMono Nerd Font 11";
+    vertical-align:         0.5;
 }
 
 element-icon {
-    size: 22px;
+    background-color:       transparent;
+    size:                   22px;
 }

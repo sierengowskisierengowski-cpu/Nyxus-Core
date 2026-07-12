@@ -1,15 +1,55 @@
 {
-  "_comment": "NYXUS workspace name + wallpaper map. Edited live via Quick Settings → Workspaces. The daemon /usr/local/bin/nyxus-workspace-wallpaperd watches Hyprland IPC and swaps the active wallpaper when the active workspace changes.",
+  "_comment": "Auto-generated from stations.json. Do not hand-edit.",
   "workspaces": [
-    { "id": 1,  "name": "Main",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-void-vortex.svg" },
-    { "id": 2,  "name": "Web",    "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-aurora-drift.svg" },
-    { "id": 3,  "name": "Code",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-dark-mirror-grid.svg" },
-    { "id": 4,  "name": "Chat",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-cyan-pulse.svg" },
-    { "id": 5,  "name": "Media",  "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-phantom-mesh.svg" },
-    { "id": 6,  "name": "Game",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-crimson-eclipse.svg" },
-    { "id": 7,  "name": "Files",  "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-carbon-weave.svg" },
-    { "id": 8,  "name": "System", "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-deep-static.svg" },
-    { "id": 9,  "name": "Notes",  "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-sigil.svg" },
-    { "id": 10, "name": "Misc",   "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-void-vortex.svg" }
+    {
+      "id": 1,
+      "name": "OPS",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-cosmic-galaxy.png"
+    },
+    {
+      "id": 2,
+      "name": "FORGE",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-cosmic-galaxy.png"
+    },
+    {
+      "id": 3,
+      "name": "GHOST",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-cosmic-galaxy.png"
+    },
+    {
+      "id": 4,
+      "name": "PULSE",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-cosmic-galaxy.png"
+    },
+    {
+      "id": 5,
+      "name": "WAVE",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-cosmic-galaxy.png"
+    },
+    {
+      "id": 6,
+      "name": "CORE",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-cosmic-galaxy.png"
+    },
+    {
+      "id": 7,
+      "name": "MESH",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-cosmic-galaxy.png"
+    },
+    {
+      "id": 8,
+      "name": "SCRIBE",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-cosmic-galaxy.png"
+    },
+    {
+      "id": 9,
+      "name": "BLAST",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-cosmic-galaxy.png"
+    },
+    {
+      "id": 10,
+      "name": "EDGE",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-cosmic-galaxy.png"
+    }
   ]
 }

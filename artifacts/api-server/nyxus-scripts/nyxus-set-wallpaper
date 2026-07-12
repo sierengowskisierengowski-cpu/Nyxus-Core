@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-set-wallpaper PATH [--no-accent]   ·   rev 2026-07-07 r2 (Signature)
+#
+# Shadows /usr/local/bin/nyxus-set-wallpaper (~/.local/bin wins in PATH)
+# and upgrades the still-image backend from swaybg to swww:
+#
+#   · the new wallpaper RIPPLES OUT FROM THE CURSOR (swww "grow"
+#     transition seeded with `hyprctl cursorpos`), at the monitor's
+#     real refresh rate
+#   · if accent.json has "follow_wallpaper": true, the whole desktop
+#     re-skins to match the new wall (nyxus-accent-from-wallpaper)
+#     the moment the transition starts
+#   · swaybg fallback if swww is not installed — same call signature,
+#     nothing else needs to know
+#
+# Persists the choice in ~/.config/nyxus/wallpaper.conf exactly like
+# the stock script (and keeps any extra keys such as LIVE= intact).
+#
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -euo pipefail
+
+# Hyprland binds exec with a bare PATH that lacks ~/.local/bin.
+export PATH="${HOME}/.local/bin:${PATH}"
+
+PATH_ARG="${1:-}"
+NO_ACCENT="${2:-}"
+if [[ -z "${PATH_ARG}" ]]; then
+  echo "usage: nyxus-set-wallpaper /path/to/wallpaper [--no-accent]" >&2
+  exit 2
+fi
+if [[ ! -r "${PATH_ARG}" ]]; then
+  echo "error: cannot read ${PATH_ARG}" >&2
+  exit 1
+fi
+
+# ── persist (preserve any keys beyond WALLPAPER/WALLPAPER_PATH) ──────
+CONF="${HOME}/.config/nyxus/wallpaper.conf"
+mkdir -p "$(dirname "${CONF}")"
+SLUG="$(basename "${PATH_ARG}")"; SLUG="${SLUG%.*}"
+EXTRA=""
+[[ -r "${CONF}" ]] && EXTRA="$(grep -v '^WALLPAPER=\|^WALLPAPER_PATH=' "${CONF}" || true)"
+{
+  printf 'WALLPAPER="%s"\nWALLPAPER_PATH="%s"\n' "${SLUG}" "${PATH_ARG}"
+  [[ -n "${EXTRA}" ]] && printf '%s\n' "${EXTRA}"
+} > "${CONF}"
+
+apply_swaybg() {
+  nohup swaybg -i "${PATH_ARG}" -m fill -c "#000000" >/dev/null 2>&1 &
+  local new_pid=$!
+  sleep 0.15
+  for pid in $(pgrep -x swaybg 2>/dev/null); do
+    [[ "${pid}" != "${new_pid}" ]] && kill "${pid}" 2>/dev/null || true
+  done
+}
+
+# swww was forked/renamed to awww; Arch ships the fork. Same CLI, so
+# just pick whichever client+daemon pair is actually complete.
+SWWW=""
+if command -v awww >/dev/null 2>&1 && command -v awww-daemon >/dev/null 2>&1; then
+  SWWW="awww"
+elif command -v swww >/dev/null 2>&1 && command -v swww-daemon >/dev/null 2>&1; then
+  SWWW="swww"
+fi
+
+if [[ -n "${SWWW}" ]]; then
+  # ── swww path: ripple out from the cursor ──────────────────────────
+  if ! pgrep -x "${SWWW}-daemon" >/dev/null 2>&1; then
+    nohup "${SWWW}-daemon" --format xrgb >/dev/null 2>&1 &
+    for _ in $(seq 1 40); do
+      "${SWWW}" query >/dev/null 2>&1 && break
+      sleep 0.1
+    done
+  fi
+
+  POS="center"
+  if command -v hyprctl >/dev/null 2>&1; then
+    P="$(hyprctl cursorpos 2>/dev/null | tr -d ' ')"
+    [[ "${P}" =~ ^-?[0-9]+,-?[0-9]+$ ]] && POS="${P}"
+  fi
+  FPS="$(hyprctl monitors -j 2>/dev/null | jq -r '.[0].refreshRate // 60 | round' 2>/dev/null || echo 60)"
+
+  # Comet-Fire r3 (2026-07-11): the cycler daemon (nyxus-wall-cycle)
+  # varies the ripple per swap via env — manual swaps keep the
+  # signature grow-from-cursor.
+  TTYPE="${NYXUS_WALL_TRANSITION:-grow}"
+  TDUR="${NYXUS_WALL_TRANSITION_DURATION:-1.1}"
+
+  "${SWWW}" img "${PATH_ARG}" \
+    --transition-type "${TTYPE}" \
+    --transition-pos "${POS}" \
+    --transition-duration "${TDUR}" \
+    --transition-fps "${FPS}" \
+    --transition-bezier .1,.9,.2,1
+
+  # the still backend is now swww — retire any lingering swaybg/hyprpaper
+  sleep 0.2
+  pkill -x swaybg 2>/dev/null || true
+  pkill -x hyprpaper 2>/dev/null || true
+else
+  apply_swaybg
+fi
+
+# ── follow-wallpaper accent sync ─────────────────────────────────────
+ACCENT_CONF="${HOME}/.config/nyxus/accent.json"
+if [[ "${NO_ACCENT}" != "--no-accent" && -r "${ACCENT_CONF}" ]] \
+   && command -v nyxus-accent-from-wallpaper >/dev/null 2>&1 \
+   && [[ "$(jq -r '.follow_wallpaper // false' "${ACCENT_CONF}")" == "true" ]]; then
+  nohup nyxus-accent-from-wallpaper >/dev/null 2>&1 &
+fi
+
+# ── STARFALL surface backdrops (rev 2026-07-11) ──────────────────────
+# Re-bake the blurred/ink-tinted wallpaper slab that rofi, wlogout and
+# the eww flyouts paint behind their glass, so every popup follows the
+# wallpaper the moment it changes.
+if command -v nyxus-gen-backdrop >/dev/null 2>&1; then
+  nohup nyxus-gen-backdrop "${PATH_ARG}" >/dev/null 2>&1 &
+fi
+
+echo "applied: ${PATH_ARG}"

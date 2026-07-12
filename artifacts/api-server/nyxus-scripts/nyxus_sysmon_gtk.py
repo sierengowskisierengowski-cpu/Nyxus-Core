@@ -100,13 +100,29 @@ except ImportError:
 
 HIST = 120  # 2 minutes at 1Hz
 
+# HUD neon family (accent.json-live via nyxus_palette) as Cairo floats.
+try:
+    from nyxus_palette import HUD_PALETTE as _HP, \
+        install_hud_css as _NYX_IHC, neon_flicker_css as _NYX_NFC
+except Exception:
+    _HP = {"pink": "#ff3cac", "purple": "#784bff", "blue": "#4d9fff",
+           "green": "#6dffcf", "gold": "#ffb84d", "orange": "#ff7849",
+           "cyan": "#2bd2ff", "red": "#ff4d6b"}
+    _NYX_IHC = None
+    def _NYX_NFC(): return ""
+
+def _f(hexc):
+    h = hexc.lstrip("#")
+    return (int(h[0:2], 16) / 255.0, int(h[2:4], 16) / 255.0,
+            int(h[4:6], 16) / 255.0)
+
 PALETTE = [
-    (1.0,  0.0,  1.0 ),  # C_PINK
-    (0.8,  0.0,  1.0 ),  # C_PURPLE
-    (0.0,  0.53, 1.0 ),  # C_BLUE
-    (0.22, 1.0,  0.08),  # C_GREEN
-    (1.0,  1.0,  0.0 ),  # C_YELLOW
-    (1.0,  0.33, 0.0 ),  # C_ORANGE
+    _f(_HP["pink"]),
+    _f(_HP["purple"]),
+    _f(_HP["blue"]),
+    _f(_HP["green"]),
+    _f(_HP["gold"]),
+    _f(_HP["orange"]),
 ]
 C_PINK, C_PURPLE, C_BLUE, C_GREEN, C_YELLOW, C_ORANGE = PALETTE
 C_BG    = (0.031, 0.031, 0.055)   # #0a0a0a deep dark
@@ -452,92 +468,114 @@ def collect(st):
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
 
-CSS = format_css("""
+def _sysmon_css() -> str:
+    css = format_css("""
 * {{ font-family: 'Inter Display', 'Inter Display', 'Inter', 'Sans'; }}
-window {{ background-color: #0a0a0a; color: rgba(232,224,245,0.92); }}
+window {{ background-color: rgba(5, 1, 13, 0.98);
+          color: rgba(232,224,245,0.92); }}
 
-/* ── Nav sidebar ─────────────────────────────────────────────────────── */
+/* ── Nav sidebar — HUD card rail ─────────────────────────────────────── */
 .nav-bar {{
-    background-color: {INK_BLACK};
-    border-right: 3px solid rgba(8, 12, 20, 0.30);
+    background-color: rgba(7, 5, 14, 0.93);
+    border-right: 1px dashed rgba(255, 255, 255, 0.13);
     min-width: 168px;
 }}
 .nav-btn {{
-    background-color: rgba(255,255,255,0.03);
+    background-color: rgba(0,0,0,0.35);
     color: rgba(255, 255, 255, 0.75);
-    border: 1px solid rgba(8, 12, 20, 0.14);
+    border: 1px dashed rgba(255, 255, 255, 0.10);
     border-left: 5px solid transparent;
     border-radius: 4px;
     padding: 13px 14px 13px 15px;
     margin: 3px 8px;
-    font-size: 17px; font-weight: bold; letter-spacing: 2px; min-height: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: bold; letter-spacing: 0.18em; min-height: 0;
 }}
 .nav-btn:hover {{
-    background-color: rgba(8, 12, 20, 0.11);
+    background-color: rgba(255, 255, 255, 0.06);
     color: rgba(255, 255, 255, 0.96);
-    border-color: rgba(8, 12, 20, 0.38);
 }}
-.nav-active-pink   {{ background: rgba(8, 12, 20, 0.14); color: #c8ccd6;
-                     border-left: 5px solid {WHITE_OFF};
-                     border-color: rgba(8, 12, 20, 0.45); }}
-.nav-active-orange {{ background: rgba(8, 12, 20, 0.14); color: #9aa0ad;
-                     border-left: 5px solid {WHITE_OFF};
-                     border-color: rgba(8, 12, 20, 0.45); }}
-.nav-active-purple {{ background: rgba(8, 12, 20, 0.14); color: #9aa0ad;
-                     border-left: 5px solid {WHITE_OFF};
-                     border-color: rgba(8, 12, 20, 0.45); }}
-.nav-active-blue   {{ background: rgba(8, 12, 20, 0.14); color: #c8ccd6;
-                     border-left: 5px solid {GREY_LIGHT};
-                     border-color: rgba(8, 12, 20, 0.45); }}
-.nav-active-green  {{ background: rgba(255, 255, 255, 0.11); color: #e8edf5;
-                     border-left: 5px solid {GREY_LIGHT};
-                     border-color: rgba(255, 255, 255, 0.45); }}
-.nav-active-yellow {{ background: rgba(255, 255, 255, 0.11); color: #ffffff;
-                     border-left: 5px solid {WHITE_OFF};
-                     border-color: rgba(255, 255, 255, 0.45); }}
 
 /* ── Search input ────────────────────────────────────────────────────── */
 .search-e {{
-    background-color: rgba(255,255,255,0.06);
+    background-color: rgba(0,0,0,0.45);
     color: rgba(232,224,245,0.88);
-    border: 2px solid rgba(8, 12, 20, 0.30); border-radius: 4px;
-    padding: 5px 12px; font-size: 15px; box-shadow: none; caret-color: {WHITE_OFF};
+    border: 1px dashed @PINKA@; border-radius: 3px;
+    padding: 5px 12px; font-size: 15px; box-shadow: none;
+    caret-color: @PINK@;
+    font-family: 'JetBrains Mono', monospace;
 }}
 .search-e text {{ background-color: transparent; }}
-.search-e:focus {{ border-color: {WHITE_OFF}; }}
+.search-e:focus {{ border-color: @PINK@; border-style: solid;
+                   box-shadow: 0 0 12px @PINKG@; }}
 
 /* ── Process action buttons ──────────────────────────────────────────── */
 .kill-btn {{
-    background-color: rgba(8, 12, 20, 0.18); color: #9aa0ad;
-    border: 2px solid rgba(8, 12, 20, 0.45); border-radius: 4px;
-    padding: 5px 12px; font-size: 14px; font-weight: bold;
+    background-color: transparent; color: @RED@;
+    border: 1px solid @REDA@; border-radius: 3px;
+    padding: 5px 12px; font-size: 12px; font-weight: bold;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.10em;
 }}
-.kill-btn:hover {{ background-color: rgba(8, 12, 20, 0.32); }}
+.kill-btn:hover {{ background-color: @REDG@; border-color: @RED@;
+                   box-shadow: 0 0 12px @REDG@; }}
 .sort-btn {{
-    background-color: rgba(255,255,255,0.06); color: rgba(255, 255, 255, 0.80);
-    border: 1px solid rgba(255,255,255,0.12); border-radius: 4px;
-    padding: 4px 10px; font-size: 13px;
+    background-color: rgba(0,0,0,0.45); color: @CYAN@;
+    border: 1px solid @CYANA@; border-radius: 999px;
+    padding: 4px 10px; font-size: 11px;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.10em;
 }}
-.sort-btn:hover {{ background-color: rgba(255,255,255,0.12); }}
+.sort-btn:hover {{ background-color: @CYANG@; }}
 .sort-active {{
-    color: #ffffff; border-color: rgba(255, 255, 255, 0.50);
-    background-color: rgba(255, 255, 255, 0.10);
+    color: @CYAN@; border-color: @CYAN@;
+    background-color: @CYANG@;
+    box-shadow: 0 0 10px @CYANG@;
 }}
 
 /* ── Process treeview ────────────────────────────────────────────────── */
 treeview {{
-    background-color: #0a0a0a; color: rgba(255, 255, 255, 0.88);
-    font-size: 14px; font-family: 'Inter Display', 'Sans';
+    background-color: rgba(5, 1, 13, 0.98); color: rgba(255, 255, 255, 0.88);
+    font-size: 13px; font-family: 'JetBrains Mono', 'Sans';
 }}
 treeview:selected {{
-    background-color: rgba(8, 12, 20, 0.18); color: #c8ccd6;
+    background-color: @PINKG@; color: #ffffff;
 }}
 treeview header button {{
-    background-color: {INK_BLACK}; color: rgba(255, 255, 255, 0.80);
-    border: none; font-size: 13px; font-weight: bold;
-    border-bottom: 2px solid rgba(8, 12, 20, 0.18);
+    background-color: {INK_BLACK}; color: @CYAN@;
+    border: none; font-size: 11px; font-weight: bold;
+    letter-spacing: 0.14em;
+    font-family: 'JetBrains Mono', monospace;
+    border-bottom: 1px solid @CYANA@;
 }}
 """)
+
+    def _a(hexc, alpha):
+        h = hexc.lstrip("#")
+        return (f"rgba({int(h[0:2],16)}, {int(h[2:4],16)}, "
+                f"{int(h[4:6],16)}, {alpha})")
+
+    css = (css
+           .replace("@PINKA@", _a(_HP["pink"], 0.34))
+           .replace("@PINKG@", _a(_HP["pink"], 0.15))
+           .replace("@PINK@", _HP["pink"])
+           .replace("@REDA@", _a(_HP["red"], 0.40))
+           .replace("@REDG@", _a(_HP["red"], 0.14))
+           .replace("@RED@", _HP["red"])
+           .replace("@CYANA@", _a(_HP["cyan"], 0.34))
+           .replace("@CYANG@", _a(_HP["cyan"], 0.13))
+           .replace("@CYAN@", _HP["cyan"]))
+    # per-page neon active states (pink/orange/purple/blue/green/yellow)
+    for name, hexc in (("pink", _HP["pink"]), ("orange", _HP["orange"]),
+                       ("purple", _HP["purple"]), ("blue", _HP["blue"]),
+                       ("green", _HP["green"]), ("yellow", _HP["gold"])):
+        css += f"""
+.nav-active-{name} {{ background: {_a(hexc, 0.10)}; color: {hexc};
+                     border-left: 5px solid {hexc};
+                     border-color: {_a(hexc, 0.45)};
+                     box-shadow: 0 0 14px {_a(hexc, 0.25)}; }}
+"""
+    return css + _NYX_NFC()
+
+CSS = _sysmon_css()
 
 COLOR_NAMES = {
     C_PINK:"pink", C_ORANGE:"orange", C_PURPLE:"purple",
@@ -575,12 +613,16 @@ class NyxusSysmonGtk(Adw.Application):
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
         except Exception: pass
 
-        prov=Gtk.CssProvider()
-        try: prov.load_from_string(CSS)
-        except Exception:
-            try: prov.load_from_data(CSS.encode())
-            except Exception: pass
-        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(),prov,Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        # PRIORITY_USER + 1 so the HUD language outranks nyxus_chrome.
+        if _NYX_IHC is None or not _NYX_IHC(CSS):
+            prov=Gtk.CssProvider()
+            try: prov.load_from_string(CSS)
+            except Exception:
+                try: prov.load_from_data(CSS.encode())
+                except Exception: pass
+            Gtk.StyleContext.add_provider_for_display(
+                Gdk.Display.get_default(),prov,
+                Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
 
         self.win=Adw.ApplicationWindow(application=self,title="NYXUS SysMon")
         self.win.set_default_size(1280,800)

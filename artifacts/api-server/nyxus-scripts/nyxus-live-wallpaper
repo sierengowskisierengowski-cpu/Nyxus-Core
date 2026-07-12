@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# NYXUS living wallpaper controller
+#   nyxus-live-wallpaper on      - start the animated wallpaper (mpvpaper)
+#   nyxus-live-wallpaper off     - stop it and restore the still wallpaper
+#   nyxus-live-wallpaper toggle  - flip between the two
+#   nyxus-live-wallpaper auto    - used by autostart: start only if enabled
+# State persists in ~/.config/nyxus/livewall.conf so the choice
+# survives reboots. Falls back to the still image if mpvpaper is
+# not installed, so this is always safe to call.
+set -u
+STATE="$HOME/.config/nyxus/livewall.conf"
+STILL="$HOME/.config/hypr/walls/nyxus-graffiti-space.png"
+[ -f "$HOME/.config/nyxus/wallpaper.conf" ] && . "$HOME/.config/nyxus/wallpaper.conf" 2>/dev/null && STILL="${WALLPAPER_PATH:-$STILL}"
+
+# Per-wallpaper living loop (rendered by nyxus-livewall-generate):
+# walls/live/<stem>-live.mp4 for the CURRENT still, so the animated
+# wallpaper is always your actual background — falls back to the
+# generic idle loop if none has been rendered yet.
+_stem="$(basename "$STILL")"; _stem="${_stem%.*}"
+VIDEO="$HOME/.config/hypr/walls/live/${_stem}-live.mp4"
+[ -f "$VIDEO" ] || VIDEO="$HOME/.config/hypr/walls/live/nyxus-live-idle.mp4"
+
+enabled() { [ -f "$STATE" ] && grep -q "LIVE=on" "$STATE"; }
+
+start_live() {
+  if ! command -v mpvpaper >/dev/null || [ ! -f "$VIDEO" ]; then
+    notify-send "NYXUS Live Wallpaper" "mpvpaper not installed or video missing - staying on still image" 2>/dev/null
+    start_still
+    return 1
+  fi
+  pkill -x swaybg 2>/dev/null; pkill -x mpvpaper 2>/dev/null; sleep 0.3
+  # input-ipc-server lets nyxus-wall-fx drive hue/saturation/speed live
+  # (audio-reactive pulse + per-workspace tints).
+  setsid mpvpaper -o "no-audio loop-file=inf hwdec=auto input-ipc-server=${XDG_RUNTIME_DIR:-/tmp}/nyxus-mpv.sock" '*' "$VIDEO" >/dev/null 2>&1 &
+  echo "LIVE=on" > "$STATE"
+  command -v nyxus-wall-fx >/dev/null && nyxus-wall-fx auto
+}
+
+start_still() {
+  command -v nyxus-wall-fx >/dev/null && nyxus-wall-fx stop-quiet
+  pkill -x mpvpaper 2>/dev/null; pkill -x swaybg 2>/dev/null; sleep 0.3
+  # Delegate to the stock autostart when present (swww/hyprpaper aware),
+  # otherwise plain swaybg.
+  if [ -x /usr/local/bin/nyxus-wallpaper-autostart ]; then
+    setsid /usr/local/bin/nyxus-wallpaper-autostart >/dev/null 2>&1 &
+  else
+    setsid swaybg -m fill -i "$STILL" >/dev/null 2>&1 &
+  fi
+  echo "LIVE=off" > "$STATE"
+}
+
+case "${1:-toggle}" in
+  on)     start_live ;;
+  off)    start_still ;;
+  toggle) if pgrep -x mpvpaper >/dev/null; then start_still; else start_live; fi ;;
+  auto)   if enabled; then start_live; else start_still; fi ;;
+  *)      echo "usage: nyxus-live-wallpaper {on|off|toggle|auto}"; exit 1 ;;
+esac

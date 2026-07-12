@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-sfx <name>   ·   rev 2026-07-07 r1 (Signature)
+# Plays one NYXUS UI sound (open/close/workspace/shot/on/off/boot),
+# asynchronously, honoring the global mute flag. Everything that
+# makes noise in NYXUS goes through here, so one file silences all.
+#   mute flag: ~/.config/nyxus/sounds.muted  (exists = silent)
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+[[ -e "${HOME}/.config/nyxus/sounds.muted" ]] && exit 0
+F="${HOME}/.local/share/nyxus/sounds/${1:-open}.wav"
+[[ -r "${F}" ]] || exit 0
+if command -v pw-play >/dev/null; then
+  pw-play "${F}" >/dev/null 2>&1 &
+elif command -v paplay >/dev/null; then
+  paplay "${F}" >/dev/null 2>&1 &
+fi
+exit 0

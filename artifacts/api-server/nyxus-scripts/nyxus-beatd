@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-beatd   ·   rev 2026-07-07 r1 (Signature)
+#
+# Audio-reactive border daemon — the prism ring around the focused
+# window rotates WITH THE MUSIC. cava (raw mode, 8 bars @ 30fps)
+# feeds bass energy; every detected beat swings the border gradient
+# angle forward, so the ring spins in time and rests in silence.
+#
+# The gradient colors are never touched (accent engine owns those) —
+# only the trailing NNNdeg angle is rewritten, and the original
+# border is restored exactly on exit.
+#
+# (r2) coexists with nyxus-tintd: if the per-app tint daemon has
+# published colors in $XDG_RUNTIME_DIR/nyxus-border-colors, each spin
+# uses THOSE stops instead of the startup snapshot — beat keeps the
+# angle, tint keeps the colors, nobody stomps anybody.
+#
+# Not run directly — use `nyxus-beat on|off|toggle`.
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+
+CAVA_CONF="${HOME}/.config/nyxus/cava-beat.conf"
+PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-beatd.pid"
+COLORFILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-border-colors"   # tintd handoff
+
+command -v cava >/dev/null || { echo "beatd: cava not installed" >&2; exit 1; }
+
+# single instance
+if [[ -r "${PIDFILE}" ]] && kill -0 "$(cat "${PIDFILE}")" 2>/dev/null; then
+  echo "beatd: already running" >&2
+  exit 0
+fi
+echo $$ > "${PIDFILE}"
+
+BASE="$(hyprctl getoption general:col.active_border -j 2>/dev/null | jq -r '.custom // empty')"
+[[ -z "${BASE}" ]] && BASE="rgba(ff3cacff) rgba(2bd2ffff) rgba(784bffff) rgba(ffb84dff) 270deg"
+
+# getoption reports colors as bare argb hex ("fffe42ae"), which the
+# keyword parser REJECTS — every color token must go back 0x-prefixed.
+NORM=""
+for tok in ${BASE}; do
+  if [[ "${tok}" =~ ^[0-9a-fA-F]{8}$ ]]; then
+    NORM+="0x${tok} "
+  else
+    NORM+="${tok} "
+  fi
+done
+BASE="${NORM% }"
+
+restore() {
+  # children first, so no in-flight beat respins after the restore.
+  # if tintd is live, hand its colors back with the resting angle;
+  # otherwise restore the exact startup snapshot.
+  pkill -P $$ 2>/dev/null
+  local cols="${BASE% *}"
+  [[ -r "${COLORFILE}" ]] && cols="$(<"${COLORFILE}")"
+  hyprctl keyword general:col.active_border "${cols} ${BASE##* }" >/dev/null 2>&1
+  rm -f "${PIDFILE}"
+}
+trap restore EXIT INT TERM
+
+COLORS="${BASE% *}"                 # everything before the trailing angle
+ANGLE="${BASE##* }"; ANGLE="${ANGLE%deg}"
+[[ "${ANGLE}" =~ ^[0-9]+$ ]] || ANGLE=270
+
+# beat detection over the two lowest bars: exponential moving average
+# baseline; a frame beats when bass > 1.35x EMA, above an absolute
+# floor, with a 180ms refractory window.
+# (r2) pipeline is backgrounded + wait'ed: a foreground pipeline makes
+# bash defer the TERM trap until the pipe exits, so `nyxus-beat off`
+# would never restore. `wait` is signal-interruptible.
+cava -p "${CAVA_CONF}" 2>/dev/null | {
+  ema=10; last_beat=0
+  while IFS=';' read -r b1 b2 _; do
+    [[ "${b1}" =~ ^[0-9]+$ && "${b2}" =~ ^[0-9]+$ ]] || continue
+    bass=$(( (b1 + b2) / 2 ))
+    ema=$(( (ema * 85 + bass * 15) / 100 ))
+    now=$(( $(date +%s%3N) ))
+    if (( bass > 25 && bass * 100 > ema * 135 && now - last_beat > 180 )); then
+      last_beat=${now}
+      ANGLE=$(( (ANGLE + 45) % 360 ))
+      [[ -r "${COLORFILE}" ]] && COLORS="$(<"${COLORFILE}")"   # tintd handoff
+      hyprctl keyword general:col.active_border \
+        "${COLORS} ${ANGLE}deg" >/dev/null 2>&1
+    fi
+  done
+} &
+wait $!

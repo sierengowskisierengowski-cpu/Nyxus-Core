@@ -1,12 +1,14 @@
+/* PRISM glass — magenta/cyan iridescent on deep void */
 * {
-    bg-deep:   #080808;
-    bg-card:   #080808;
-    text-hi:   #C8C0C0;
-    text-lo:   rgba(200, 192, 192, 0.62);
-    hairline:  #7B5EA7;
-    accent:    #C4607A;
-    glass-bg:  rgba(8, 8, 8, 0.97);
-    glass-line: rgba(123, 94, 167, 0.42);
+    bg-deep:   #05060a;
+    bg-card:   #0a0d14;
+    text-hi:   #eef2fa;
+    text-lo:   rgba(238, 242, 250, 0.55);
+    hairline:  rgba(121, 73, 242, 0.35);
+    accent:    #7949f2;
+    accent2:   #ff2667;
+    glass-bg:  rgba(5, 6, 10, 0.88);
+    glass-line: rgba(255, 38, 103, 0.35);
 
     background-color: transparent;
     text-color: @text-hi;
@@ -15,9 +17,10 @@
 window {
     width: 720px;
     background-color: @glass-bg;
-    border: 1px;
+    background-image: url("~/.config/nyxus/backdrops/starfall-backdrop-card.png", both);
+    border: 2px;
     border-color: @glass-line;
-    border-radius: 3px;
+    border-radius: 16px;
     padding: 0;
     location: center;
     anchor: center;
@@ -40,14 +43,14 @@ inputbar {
 
 prompt {
     text-color: @accent;
-    font: "JetBrains Mono Nerd Font Bold 12";
+    font: "Permanent Marker 13";
 }
 
 entry {
     text-color: @text-hi;
     placeholder: "Search apps, files, settings...";
     placeholder-color: @text-lo;
-    font: "JetBrains Mono Nerd Font 12";
+    font: "Caveat 15";
 }
 
 listview {
@@ -63,13 +66,13 @@ listview {
 }
 
 element {
-    background-color: rgba(8, 8, 8, 0.97);
+    background-color: rgba(10, 13, 20, 0.85);
     text-color: @text-hi;
     border: 1px;
     border-color: @hairline;
     padding: 10px 6px;
     spacing: 5px;
-    border-radius: 3px;
+    border-radius: 10px;
     orientation: vertical;
 }
 
@@ -78,10 +81,10 @@ element selected.alternate.normal,
 element selected.urgent,
 element selected.active {
     background-color: @accent;
-    text-color: #080808;
+    text-color: #05060a;
     border: 1px;
     border-color: @accent;
-    border-radius: 3px;
+    border-radius: 10px;
 }
 
 element-icon {
@@ -99,24 +102,24 @@ mode-switcher {
     background-color: transparent;
     border: 1px 0 0 0;
     border-color: @hairline;
-    border-radius: 0 0 3px 3px;
+    border-radius: 0 0 16px 16px;
     padding: 8px 12px;
     spacing: 6px;
 }
 
 button {
-    background-color: rgba(8, 8, 8, 0.97);
+    background-color: rgba(10, 13, 20, 0.85);
     text-color: @text-lo;
     border: 1px;
     border-color: @hairline;
-    border-radius: 3px;
+    border-radius: 10px;
     padding: 6px 14px;
-    font: "JetBrains Mono Nerd Font Bold 10";
+    font: "Permanent Marker 10";
 }
 
 button selected {
     background-color: @accent;
-    text-color: #080808;
+    text-color: #05060a;
     border-color: @accent;
-    border-radius: 3px;
+    border-radius: 10px;
 }

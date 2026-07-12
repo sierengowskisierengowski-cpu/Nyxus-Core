@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+# ════════════════════════════════════════════════════════════════════
+# nyxus-palette-extract <image>   ·   rev 2026-07-07 r1 (Signature)
+#
+# Extracts a 4-slot NYXUS accent palette (primary/secondary/warn/ok)
+# from a wallpaper image and prints it as JSON, ready to be merged
+# into ~/.config/nyxus/accent.json as the "wallpaper" preset.
+#
+# Seed hues come from matugen (Material-You quantizer, scheme-vibrant)
+# when it is installed; otherwise from an ImageMagick dominant-color
+# histogram. Either way the seeds are then NORMALIZED to the Nyxus
+# neon spec so the result sits next to the prism/aurora presets
+# instead of looking like a pastel Android theme:
+#
+#   · saturation clamped into [0.70, 0.92]
+#   · value clamped into [0.95, 1.00]
+#   · primary/secondary hue separation forced to >= 40 deg
+#   · warn   = warmest seed hue in the amber band (15-55 deg),
+#              else fixed amber 38 deg
+#   · ok     = primary hue rotated +120 deg (or -120 if that would
+#              collide with secondary)
+#   · near-grayscale wallpapers (max seed chroma < 0.12) fall back
+#              to the noir-style desaturated palette
+#
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+import colorsys
+import json
+import re
+import shutil
+import subprocess
+import sys
+
+def hex_to_hsv(h):
+    h = h.lstrip("#")
+    r, g, b = (int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    return colorsys.rgb_to_hsv(r, g, b)
+
+def hsv_to_hex(h, s, v):
+    r, g, b = colorsys.hsv_to_rgb(h % 1.0, s, v)
+    return "#{:02x}{:02x}{:02x}".format(round(r * 255), round(g * 255), round(b * 255))
+
+def seeds_from_matugen(img):
+    out = subprocess.run(
+        ["matugen", "image", img, "--dry-run", "--json", "hex",
+         "--prefer", "saturation", "-t", "scheme-vibrant", "-q"],
+        capture_output=True, text=True, timeout=30)
+    if out.returncode != 0:
+        return None
+    data = json.loads(out.stdout)
+    pals = data.get("palettes", {})
+    seeds = []
+    # NOTE: the "error" family is deliberately excluded — Material's error
+    # palette is a fixed red that ignores the wallpaper entirely.
+    for fam in ("primary", "tertiary", "secondary", "neutral_variant"):
+        tones = pals.get(fam, {})
+        for tone in ("60", "70", "50"):
+            c = tones.get(tone, {}).get("color")
+            if c:
+                seeds.append(c)
+                break
+    return seeds or None
+
+def seeds_from_magick(img):
+    out = subprocess.run(
+        ["magick", img, "-resize", "128x128!", "-colors", "12",
+         "-depth", "8", "-format", "%c", "histogram:info:"],
+        capture_output=True, text=True, timeout=30)
+    rows = []
+    for line in out.stdout.splitlines():
+        m = re.search(r"^\s*(\d+):.*(#[0-9A-Fa-f]{6})", line)
+        if m:
+            count, hexcol = int(m.group(1)), m.group(2).lower()
+            hue, sat, val = hex_to_hsv(hexcol)
+            rows.append((count * (sat ** 2) * val, hexcol))
+    rows.sort(reverse=True)
+    return [c for _, c in rows[:6]] or None
+
+def hue_dist(a, b):
+    d = abs(a - b) % 1.0
+    return min(d, 1.0 - d)
+
+def norm(hue, s_seed=0.85, v_seed=1.0):
+    return hsv_to_hex(hue, min(max(s_seed, 0.70), 0.92), min(max(v_seed, 0.95), 1.0))
+
+def main():
+    if len(sys.argv) != 2:
+        print("usage: nyxus-palette-extract <image>", file=sys.stderr)
+        return 1
+    img = sys.argv[1]
+
+    seeds = None
+    if shutil.which("matugen"):
+        try:
+            seeds = seeds_from_matugen(img)
+        except Exception:
+            seeds = None
+    if not seeds:
+        seeds = seeds_from_magick(img)
+    if not seeds:
+        print("could not extract any colors from " + img, file=sys.stderr)
+        return 1
+
+    hsv = [hex_to_hsv(c) for c in seeds]
+
+    # near-grayscale wallpaper -> noir-style palette
+    if max(s for _, s, _ in hsv) < 0.12:
+        print(json.dumps({"primary": "#e8edf5", "secondary": "#7e8794",
+                          "warn": "#ff4d6b", "ok": "#82ffd2"}))
+        return 0
+
+    # primary: most saturated seed
+    hsv.sort(key=lambda t: t[1] * t[2], reverse=True)
+    p_h, p_s, p_v = hsv[0]
+
+    def in_amber(h):
+        return 15 / 360 <= h <= 55 / 360
+
+    # warn: warmest seed in the amber band, else fixed amber
+    w_h = 38 / 360
+    for h, s, v in hsv:
+        if in_amber(h) and s > 0.15:
+            w_h = h
+            break
+
+    # secondary: most saturated seed >= 40 deg from primary, outside the
+    # amber band (that slot belongs to warn), else +150 deg from primary
+    s_h = None
+    for h, s, v in hsv[1:]:
+        if hue_dist(h, p_h) >= 40 / 360 and s > 0.10 and not in_amber(h):
+            s_h = h
+            break
+    if s_h is None:
+        s_h = (p_h + 150 / 360) % 1.0
+
+    # ok: a cool seed (100-200 deg) clear of secondary, else nyxus mint
+    o_h = None
+    for h, s, v in hsv:
+        if 100 / 360 <= h <= 200 / 360 and s > 0.10 and hue_dist(h, s_h) >= 30 / 360:
+            o_h = h
+            break
+    if o_h is None:
+        o_h = 160 / 360
+        if hue_dist(o_h, s_h) < 30 / 360:
+            o_h = (p_h - 120 / 360) % 1.0
+
+    print(json.dumps({
+        "primary":   norm(p_h, p_s, p_v),
+        "secondary": norm(s_h),
+        "warn":      norm(w_h),
+        "ok":        norm(o_h),
+    }))
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
