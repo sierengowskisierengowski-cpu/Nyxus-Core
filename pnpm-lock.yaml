@@ -329,6 +329,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: 'catalog:'
         version: 5.1.4(vite@7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0)(yaml@2.8.2))
+      '@workspace/web-preset':
+        specifier: workspace:*
+        version: link:../../lib/web-preset
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
@@ -531,6 +534,9 @@ importers:
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
+      '@workspace/web-preset':
+        specifier: workspace:*
+        version: link:../../lib/web-preset
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -723,6 +729,9 @@ importers:
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
+      '@workspace/web-preset':
+        specifier: workspace:*
+        version: link:../../lib/web-preset
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -915,6 +924,9 @@ importers:
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
+      '@workspace/web-preset':
+        specifier: workspace:*
+        version: link:../../lib/web-preset
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -1107,6 +1119,9 @@ importers:
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
+      '@workspace/web-preset':
+        specifier: workspace:*
+        version: link:../../lib/web-preset
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -1299,6 +1314,9 @@ importers:
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
+      '@workspace/web-preset':
+        specifier: workspace:*
+        version: link:../../lib/web-preset
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -1414,6 +1432,37 @@ importers:
       drizzle-kit:
         specifier: ^0.31.9
         version: 0.31.9
+
+  lib/web-preset:
+    dependencies:
+      clsx:
+        specifier: 'catalog:'
+        version: 2.1.1
+      tailwind-merge:
+        specifier: 'catalog:'
+        version: 3.5.0
+    devDependencies:
+      '@replit/vite-plugin-cartographer':
+        specifier: 'catalog:'
+        version: 0.5.1
+      '@replit/vite-plugin-dev-banner':
+        specifier: 'catalog:'
+        version: 0.1.2
+      '@replit/vite-plugin-runtime-error-modal':
+        specifier: 'catalog:'
+        version: 0.0.6
+      '@tailwindcss/vite':
+        specifier: 'catalog:'
+        version: 4.2.1(vite@7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0)(yaml@2.8.2))
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.3.5
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 5.1.4(vite@7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0)(yaml@2.8.2))
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.2(@types/node@25.3.5)(jiti@2.6.1)(lightningcss@1.31.1)(tsx@4.21.0)(yaml@2.8.2)
 
   scripts:
     devDependencies:
