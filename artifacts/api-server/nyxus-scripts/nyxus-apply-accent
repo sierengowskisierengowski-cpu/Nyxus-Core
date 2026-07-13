@@ -132,7 +132,7 @@ CONSUMERS=(
   "${HOME}/.nyxus/nyxus_settings.py"
 )
 
-CANON="aurora"
+CANON="prism"
 CAN_P=$(get "${CANON}" primary); CAN_S=$(get "${CANON}" secondary)
 CAN_W=$(get "${CANON}" warn);    CAN_O=$(get "${CANON}" ok)
 

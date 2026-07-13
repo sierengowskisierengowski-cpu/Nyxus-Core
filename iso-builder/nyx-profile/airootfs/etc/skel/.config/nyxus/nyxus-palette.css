@@ -1,0 +1,61 @@
+/* ============================================================
+ *  NYXUS PALETTE — CSS source of truth for DARK MIRROR
+ *  (LOCKED · rev 2026-05-07 r13)
+ *
+ *  Every NYXUS GTK4 / waybar / rofi CSS must @import this file
+ *  and reference the @define-color names below — never hard-code
+ *  hex values inline.
+ *
+ *  Mirrors nyxus_palette.py exactly. When the visual lock changes,
+ *  edit BOTH files in lockstep.
+ *
+ *  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ * ============================================================ */
+
+/* ── PRIMARY RAMP ─────────────────────────────────────────── */
+@define-color nyx_white         #ffffff;
+@define-color nyx_white_off     #e8edf5;
+@define-color nyx_grey_light    #c8ccd6;
+@define-color nyx_grey_mid      #9aa0ad;
+@define-color nyx_grey_tertiary #6a6e78;
+@define-color nyx_ink_faded     #0a0a0a;
+@define-color nyx_ink_black     #000000;
+
+/* ── TRIPLE-BLACK SURFACE STACK (rev r14 · 2026-05-09) ────── */
+/* Three layered shades of black. Each tier is distinct but    */
+/* harmonious — together they "pop" without color, just depth. */
+/*   smoke = base/bars/panels (lightest, most blur shows through) */
+/*   ink   = raised cards/pebbles/buttons (mid)                   */
+/*   void  = popovers/tooltips/modals/active (deepest, maximum pop)*/
+@define-color nyx_black_smoke   rgba(14, 14, 22, 0.55);
+@define-color nyx_black_ink     rgba(8,  8,  14, 0.78);
+@define-color nyx_black_void    rgba(0,  0,  0,  0.92);
+
+/* Backward-compat aliases — legacy names map to new tiers.   */
+@define-color nyx_glass_dark    rgba(14, 14, 22, 0.55);
+@define-color nyx_glass_deeper  rgba(8,  8,  14, 0.78);
+@define-color nyx_glass_deepest rgba(0,  0,  0,  0.92);
+
+/* ── WHITE GLOW ACCENT (use sparingly on wordmarks/key labels) */
+@define-color nyx_glow_soft     rgba(255, 255, 255, 0.45);
+@define-color nyx_glow_bright   rgba(255, 255, 255, 0.85);
+
+/* ── HAIRLINES ─────────────────────────────────────────────── */
+@define-color nyx_hairline_white rgba(255, 255, 255, 0.10);
+@define-color nyx_hairline_ink   rgba(0, 0, 0, 0.45);
+
+/* ── DROP SHADOW INK ───────────────────────────────────────── */
+@define-color nyx_shadow_active   rgba(0, 0, 0, 0.65);
+@define-color nyx_shadow_inactive rgba(0, 0, 0, 0.20);
+
+/* ── SEMANTIC ALIASES (preferred in app CSS) ──────────────── */
+@define-color nyx_text        @nyx_white_off;
+@define-color nyx_text_dim    @nyx_grey_light;
+@define-color nyx_text_ghost  @nyx_grey_tertiary;
+@define-color nyx_bg          @nyx_black_smoke;
+@define-color nyx_bg_hover    @nyx_black_ink;
+@define-color nyx_bg_popover  @nyx_black_void;
+@define-color nyx_border      @nyx_hairline_white;
+@define-color nyx_caret       @nyx_white;
+@define-color nyx_select_bg   @nyx_grey_light;
+@define-color nyx_select_fg   @nyx_ink_black;

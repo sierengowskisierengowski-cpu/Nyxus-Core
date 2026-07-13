@@ -210,9 +210,7 @@
           :onclick "eww open --toggle dashboard &"
           :tooltip "${TIME.long} · click for dashboard"
     (box :orientation "v" :space-evenly false :spacing 0 :halign "center"
-      (box :orientation "h" :space-evenly false :spacing 2 :halign "center"
-        (label :class "clock-hms"  :text "${TIME.hm}" :style "opacity: ${NEONFLICK};")
-        (label :class "clock-sec"  :text ":${TIME.sec}"))
+      (label :class "clock-hms"  :text "${TIME.hm}" :style "opacity: ${NEONFLICK};")
       (label :class "clock-date" :text "${TIME.date}"))))
 
 (defwidget audio_widget []
@@ -360,7 +358,7 @@
 
 (defwidget workspaces_rail []
   (box :class "ws-rail" :orientation "v" :space-evenly false :spacing 5 :valign "center"
-    :style "background-image: radial-gradient(circle at 50% ${PRISM.cleft}%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(180deg, rgba(150,90,255,0) ${round(PRISM.cleft - 2, 1)}%, rgba(255,250,240,0.95) ${PRISM.cleft}%, rgba(255,200,120,0.66) ${round(PRISM.cleft + 3, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.cleft + 9, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.cleft + 16, 1)}%, rgba(255,60,172,0) ${round(PRISM.cleft + 24, 1)}%), linear-gradient(${PRISM.a}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/graffiti-rail.png'), url('assets/starlight-twinkle-rail-${STARLIGHT.f}.png'), url('assets/starlight-rail.png'), linear-gradient(170deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.p * 0.03, 3)}), inset 0 0 ${round(20 + PRISM.p * 14, 1)}px rgba(150,90,255,${round(0.04 + PRISM.p * 0.06, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
+    :style "background-image: radial-gradient(circle at 50% ${PRISM.cleft}%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(180deg, rgba(150,90,255,0) ${round(PRISM.cleft - 2, 1)}%, rgba(255,250,240,0.95) ${PRISM.cleft}%, rgba(255,200,120,0.66) ${round(PRISM.cleft + 3, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.cleft + 9, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.cleft + 16, 1)}%, rgba(255,60,172,0) ${round(PRISM.cleft + 24, 1)}%), linear-gradient(${PRISM.a}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/starlight-twinkle-rail-${STARLIGHT.f}.png'), url('assets/starlight-rail.png'), linear-gradient(170deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.p * 0.03, 3)}), inset 0 0 ${round(20 + PRISM.p * 14, 1)}px rgba(150,90,255,${round(0.04 + PRISM.p * 0.06, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
     (workspace_home_pill)
     (box :class "ws-rail-divider")
     (for st in {WORKSPACES.stations}
@@ -375,7 +373,7 @@
 
 (defwidget app_rail []
   (box :class "app-rail" :orientation "v" :space-evenly false :spacing 10 :valign "center"
-    :style "background-image: radial-gradient(circle at 50% ${PRISM.cright}%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(180deg, rgba(255,60,172,0) ${round(PRISM.cright - 24, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.cright - 16, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.cright - 9, 1)}%, rgba(255,200,120,0.66) ${round(PRISM.cright - 3, 1)}%, rgba(255,250,240,0.95) ${PRISM.cright}%, rgba(150,90,255,0) ${round(PRISM.cright + 2, 1)}%), linear-gradient(${PRISM.b}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/graffiti-rail.png'), url('assets/starlight-twinkle-rail-${STARLIGHT.f}.png'), url('assets/starlight-rail.png'), linear-gradient(190deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.g * 0.03, 3)}), inset 0 0 ${round(20 + PRISM.g * 14, 1)}px rgba(150,90,255,${round(0.04 + PRISM.g * 0.06, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
+    :style "background-image: radial-gradient(circle at 50% ${PRISM.cright}%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(180deg, rgba(255,60,172,0) ${round(PRISM.cright - 24, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.cright - 16, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.cright - 9, 1)}%, rgba(255,200,120,0.66) ${round(PRISM.cright - 3, 1)}%, rgba(255,250,240,0.95) ${PRISM.cright}%, rgba(150,90,255,0) ${round(PRISM.cright + 2, 1)}%), linear-gradient(${PRISM.b}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/starlight-twinkle-rail-${STARLIGHT.f}.png'), url('assets/starlight-rail.png'), linear-gradient(190deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.g * 0.03, 3)}), inset 0 0 ${round(20 + PRISM.g * 14, 1)}px rgba(150,90,255,${round(0.04 + PRISM.g * 0.06, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
     (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
     (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
     (app_launcher :glyph "" :cmd "thunar"         :label "Files" :hue "gold")
@@ -394,25 +392,21 @@
 ;; PRISM angle, so the rim colors chase around the frame; the inset
 ;; glows breathe with PRISM.p/.g. Class CSS keeps origin/clip/static
 ;; fallback, inline only overrides background-image + box-shadow.
-;; OBSIDIAN SPECTRUM COMMAND BRIDGE (rev 2026-07-12)
-;; Bottom: brand · reactor HUD · cava · hero clock · full status rail.
-;; Top:    system tiles · signature ticker · cosmos telemetry · player.
+;; STARFALL eye-candy bars — perimeter comet · starlight · aurora · HUD
 (defwidget bar_bottom_layout []
   (centerbox :class "bar bar-bottom" :orientation "h"
-    :style "background-image: radial-gradient(circle at ${PRISM.cbot}% 50%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(90deg, rgba(150,90,255,0) ${round(PRISM.cbot - 2, 1)}%, rgba(255,250,240,0.95) ${PRISM.cbot}%, rgba(255,200,120,0.66) ${round(PRISM.cbot + 4, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.cbot + 13, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.cbot + 25, 1)}%, rgba(255,60,172,0) ${round(PRISM.cbot + 36, 1)}%), linear-gradient(${PRISM.a}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/graffiti-strip.png'), url('assets/starlight-twinkle-strip-${STARLIGHT.f}.png'), url('assets/starlight-strip.png'), linear-gradient(180deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.p * 0.04, 3)}), inset 0 -16px ${round(26 + PRISM.p * 16, 1)}px rgba(120,75,255,${round(0.04 + PRISM.p * 0.06, 3)}), inset 0 16px ${round(26 + PRISM.g * 16, 1)}px rgba(150,90,255,${round(0.03 + PRISM.g * 0.05, 3)}), inset 0 0 ${round(16 + PRISM.ps * 40, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.60, 3)}), inset 0 0 ${round(12 + PRISM.fs * 18, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.15, 3)});"
-    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 8 :halign "start" :valign "center"
-      (label :class "bar-bracket bar-bracket-l" :text "⟨")
-      (nyxus_brand) (heartbeat) (bar_divider) (syspulse_widget))
+    :style "background-image: radial-gradient(circle at ${PRISM.cbot}% 50%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(90deg, rgba(150,90,255,0) ${round(PRISM.cbot - 2, 1)}%, rgba(255,250,240,0.95) ${PRISM.cbot}%, rgba(255,200,120,0.66) ${round(PRISM.cbot + 4, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.cbot + 13, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.cbot + 25, 1)}%, rgba(255,60,172,0) ${round(PRISM.cbot + 36, 1)}%), linear-gradient(${PRISM.a}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/starlight-twinkle-strip-${STARLIGHT.f}.png'), url('assets/starlight-strip.png'), linear-gradient(180deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.p * 0.04, 3)}), inset 0 -16px ${round(26 + PRISM.p * 16, 1)}px rgba(120,75,255,${round(0.04 + PRISM.p * 0.06, 3)}), inset 0 16px ${round(26 + PRISM.g * 16, 1)}px rgba(150,90,255,${round(0.03 + PRISM.g * 0.05, 3)}), inset 0 0 ${round(16 + PRISM.ps * 40, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.60, 3)}), inset 0 0 ${round(12 + PRISM.fs * 18, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.15, 3)});"
+    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 10 :halign "start" :valign "center"
+      (nyxus_brand) (heartbeat))
     (box :class "bar-cluster cluster-center" :space-evenly false :spacing 10 :halign "center" :valign "center"
-      (cava_widget) (bar_divider) (clock_widget))
+      (syspulse_widget) (cava_widget) (clock_widget))
     (box :class "bar-cluster cluster-right" :space-evenly false :spacing 6 :halign "end" :valign "center"
       (cal_widget) (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
-      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget) (power_button)
-      (label :class "bar-bracket bar-bracket-r" :text "⟩"))))
+      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget) (power_button))))
 
 (defwidget bar_top_layout []
   (centerbox :class "bar bar-top" :orientation "h"
-    :style "background-image: radial-gradient(circle at ${PRISM.ctop}% 50%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(90deg, rgba(255,60,172,0) ${round(PRISM.ctop - 36, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.ctop - 25, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.ctop - 13, 1)}%, rgba(255,200,120,0.66) ${round(PRISM.ctop - 4, 1)}%, rgba(255,250,240,0.95) ${PRISM.ctop}%, rgba(150,90,255,0) ${round(PRISM.ctop + 2.5, 1)}%), linear-gradient(${PRISM.b}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/graffiti-top.png'), url('assets/starlight-twinkle-top-${STARLIGHT.f}.png'), url('assets/starlight-top.png'), linear-gradient(180deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.g * 0.04, 3)}), inset 0 -10px ${round(18 + PRISM.p * 14, 1)}px rgba(120,75,255,${round(0.05 + PRISM.p * 0.08, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
+    :style "background-image: radial-gradient(circle at ${PRISM.ctop}% 50%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(90deg, rgba(255,60,172,0) ${round(PRISM.ctop - 36, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.ctop - 25, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.ctop - 13, 1)}%, rgba(255,200,120,0.66) ${round(PRISM.ctop - 4, 1)}%, rgba(255,250,240,0.95) ${PRISM.ctop}%, rgba(150,90,255,0) ${round(PRISM.ctop + 2.5, 1)}%), linear-gradient(${PRISM.b}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/starlight-twinkle-top-${STARLIGHT.f}.png'), url('assets/starlight-top.png'), linear-gradient(180deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.g * 0.04, 3)}), inset 0 -10px ${round(18 + PRISM.p * 14, 1)}px rgba(120,75,255,${round(0.05 + PRISM.p * 0.08, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
     (box :class "bar-cluster cluster-left hud-tile-strip" :space-evenly false :spacing 6 :halign "start" :valign "center"
       (label :class "ticker-label" :style "opacity: ${NEONFLICK};" :text "▌ NYXUS · LIVE")
       (hud_tile :hue "pink"   :glyph "󰇅" :label "HOST" :value "${BARTILES.host}" :tip "Hostname")
@@ -422,7 +416,6 @@
       (ticker_widget))
     (box :class "bar-cluster cluster-right hud-tile-strip" :space-evenly false :spacing 6 :halign "end" :valign "center"
       (hud_tile :hue "purple" :glyph "${MOON.glyph}" :label "MOON" :value "${MOON.pct}%" :tip "${MOON.name} · ${MOON.pct}% illuminated")
-      (hud_tile :hue "gold"   :glyph "󰖕" :label "WX"   :value "${WEATHER.temp}" :tip "${WEATHER.summary}")
       (hud_tile :hue "gold"   :glyph "󰔟" :label "UP"   :value "${BARTILES.up}"    :tip "System uptime")
       (hud_tile :hue "orange" :glyph "󰋊" :label "DISK" :value "${BARTILES.disk}%" :tip "Root filesystem used")
       (hud_tile :hue "green"  :glyph "󰩟" :label "NET"  :value "${BARTILES.ip}"    :tip "IPv4 · gw ${BARTILES.gw}")
@@ -694,12 +687,12 @@
 ;; on .bar-bottom / .bar-top, NOT from a <100% surface width.
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
-  :geometry (geometry :x "0" :y "10" :width "100%" :height "54px" :anchor "bottom center")
+  :geometry (geometry :x "0" :y "12" :width "100%" :height "49px" :anchor "bottom center")
   (bar_bottom_layout))
 
 (defwindow bar-top
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-top"
-  :geometry (geometry :x "0" :y "6" :width "100%" :height "36px" :anchor "top center")
+  :geometry (geometry :x "0" :y "6" :width "100%" :height "32px" :anchor "top center")
   (bar_top_layout))
 
 (defwindow bar-left

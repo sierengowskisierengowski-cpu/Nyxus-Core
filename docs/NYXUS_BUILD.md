@@ -3,6 +3,42 @@
 This document defines the **one unified NYXUS desktop build** for development,
 live runtime, and ISO baking. Everything lives in **Nyxus-Core** on GitHub.
 
+## Build status (2026-07-13)
+
+| Layer | Status |
+|-------|--------|
+| **Bars** | Restored — obsidian starlight, `box` layout, 86px margins, all 4 bars |
+| **Flyouts** | Working — dashboard, quicksettings, wifi, bt, mixer, calendar, notif, updates, brightness, powermenu |
+| **Theme** | Unified — `nyxus-palette.css` mirrored across eww/rofi/wlogout/dunst/hypr |
+| **Wallpaper** | `nyxus-cosmic-galaxy.png` via swaybg |
+| **Canonical git** | `Nyxus-Core` @ `artifacts/api-server/nyxus-scripts/` |
+| **Recovery** | `~/nyxus-build-recovery/GOLD-LATEST` (local, not in git) |
+
+### Known GTK/EWW rules (do not break)
+
+- No non-ASCII in `eww.scss`
+- No `height:`, `max-width:`, `flex-shrink`, `margin: auto` in EWW CSS
+- Bars use `box` not `centerbox`; keep starlight CSS fallbacks on bar classes
+- `TIME` poll must use `scripts/time.sh` (never inline `date +` in yuck)
+- One EWW daemon only — use `nyxus-eww-launch-safe`
+
+## Recovery (if the desktop breaks)
+
+```bash
+# Restore from the pinned GOLD snapshot + relaunch bars:
+~/Nyxus-Core/scripts/nyxus-recovery.sh
+
+# Create a new GOLD snapshot after polishing:
+~/Nyxus-Core/scripts/nyxus-snapshot.sh --label my-label
+
+# Quick bar-only fix (daemon died):
+nyxus-eww-launch-safe
+```
+
+Recovery lives at `~/nyxus-build-recovery/`:
+- `GOLD-LATEST` → symlink to current known-good snapshot
+- `archive-pre-gold-*.tar.gz` → compressed history (safe to delete after verifying GOLD)
+
 ## Canonical paths
 
 | Role | Path |
@@ -42,8 +78,8 @@ nyxus-eww-launch-safe
 |------|--------|
 | `~/sharkdash/nyxus/` | Personal backup only — do not edit product here |
 | `~/Projects/bifrost` | Separate EDR project — only referenced by deepcore widget |
-| `~/nyxus-build-recovery/` | Local timestamped snapshots — not in git |
-| `~/.config/eww/.restore-points/` | Local EWW rollback — prune periodically |
+| `~/nyxus-build-recovery/GOLD-LATEST` | Local recovery snapshots — not in git |
+| `~/.config/eww/.restore-points/` | Deprecated — use `nyxus-snapshot.sh` instead |
 
 ## Theme consistency
 
@@ -66,10 +102,11 @@ cp ~/.config/eww/eww.scss \
 ## EWW critical rules
 
 1. **Never** put non-ASCII in `eww.scss` — kills the entire GTK stylesheet
-2. **Never** use `height:` or `max-width:` in EWW CSS — invalid in GTK CSS
+2. **Never** use `height:`, `max-width:`, `flex-shrink`, `flex-grow`, or `margin: auto` in EWW CSS
 3. Bars must use `box` not `centerbox` for background `:style` to render
 4. Bar CSS must keep static starlight/prism fallbacks — do not set `background-image: none` on bar classes
 5. `nyxus-eww-launch-safe` must NOT start a second daemon — only kill strays + exec `nyxus-eww-launch`
+6. `TIME` defpoll must call `~/.config/eww/scripts/time.sh` — never inline `` `date +...` ``
 
 ## Package layout in artifacts
 
@@ -100,10 +137,11 @@ Test flyouts: quicksettings, wifi, mixer, calendar, notifications, updates, brig
 
 ## Stale file cleanup
 
-Safe to remove after backport:
+Do **not** keep in the product repo:
 
-- `~/.nyxus/nyxus-home.bak-*`
-- `~/.config/eww/*.bak*`
-- Old entries in `~/.config/eww/.restore-points/` (keep latest 3)
+- `**/.restore-points/` — use `nyxus-snapshot.sh` instead
+- `~/.nyxus/nyxus-home.bak-*`, `~/.config/eww/*.bak*`
+- `attached_assets/` (Replit scratch — already gitignored)
+- `artifacts/_tmp/` except `.gitkeep`
 
-Archive before deleting: `~/nyxus-build-recovery/`
+Archive old local recovery before deleting: `~/nyxus-build-recovery/archive-pre-gold-*.tar.gz`

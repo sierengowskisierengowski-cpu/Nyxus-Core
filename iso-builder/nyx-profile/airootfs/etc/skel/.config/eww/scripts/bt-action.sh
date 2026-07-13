@@ -30,5 +30,15 @@ case "$cmd" in
   pair)       [[ -n "$mac" ]] && bluetoothctl pair "$mac"       >/dev/null 2>&1 ;;
   unpair)     [[ -n "$mac" ]] && bluetoothctl remove "$mac"     >/dev/null 2>&1 ;;
   trust)      [[ -n "$mac" ]] && bluetoothctl trust "$mac"      >/dev/null 2>&1 ;;
+  untrust)    [[ -n "$mac" ]] && bluetoothctl untrust "$mac"    >/dev/null 2>&1 ;;
+  trust-toggle)
+    if [[ -n "$mac" ]]; then
+      if bluetoothctl info "$mac" 2>/dev/null | grep -q 'Trusted: yes'; then
+        bluetoothctl untrust "$mac" >/dev/null 2>&1
+      else
+        bluetoothctl trust "$mac" >/dev/null 2>&1
+      fi
+    fi
+    ;;
   *) echo "bt-action: unknown command '$cmd'" >&2; exit 2 ;;
 esac

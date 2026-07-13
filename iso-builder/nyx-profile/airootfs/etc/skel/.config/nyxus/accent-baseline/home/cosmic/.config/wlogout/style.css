@@ -1,0 +1,84 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   NYXUS · wlogout · OBSIDIAN PRISM · rev 2026-07-07
+   Palette: #ff3cac magenta · #2bd2ff cyan · #784bff violet · #ffb84d gold
+   Deep-void frosted glass with iridescent prism rims. Matches the EWW
+   powermenu overlay, rofi power.rasi, and the Hyprland prism border loop.
+   NOTE: wlogout's GTK CSS parser does NOT follow @import — all colors
+   are inlined below. Keep in lockstep with the prism accent set.
+   © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ════════════════════════════════════════════════════════════════════════════ */
+
+* {
+    font-family: 'JetBrains Mono Nerd Font', monospace;
+    font-size:   15px;
+    font-weight: 700 ;
+    letter-spacing: 0.18em;
+}
+
+/* ── DEEP VOID CANVAS · frosted glass over wallpaper ─────────────── */
+window {
+    background-color: rgba(5, 6, 10, 0.82) ;
+    background-image: none                  ;
+    color: #eef2fa                          ;
+}
+
+/* ── BUTTON BASE · prism glass tile ──────────────────────────────── */
+button {
+    background-color: rgba(10, 13, 20, 0.88)         ;
+    background-image: none;
+    background-repeat: no-repeat;
+    background-position: center 30%;
+    background-size: 26%;
+
+    border-style:  solid                              ;
+    border-width:  1px                                ;
+    border-color:  rgba(120, 75, 255, 0.35)           ;
+    border-radius: 20px                               ;
+
+    color:        #c8ccd6                             ;
+    box-shadow:   0 10px 32px rgba(0, 0, 0, 0.55),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    outline:      none                                ;
+
+    margin:       36px;
+    transition:     all 200ms ease;
+}
+
+button:focus,
+button:active,
+button:hover {
+    background-color: rgba(12, 16, 26, 0.92)  ;
+    border-color:     rgba(43, 210, 255, 0.60);
+    color:            #ffffff                 ;
+    box-shadow:       0 12px 36px rgba(0, 0, 0, 0.60),
+                      0 0 26px rgba(43, 210, 255, 0.35),
+                      0 0 34px rgba(255, 60, 172, 0.25),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    outline:          none                    ;
+}
+
+/* ── SOFT ACTIONS · lock / logout / suspend / hibernate ──────────── */
+#lock:hover,     button#lock:hover,     .lock:hover,     button.lock:hover,
+#suspend:hover,  button#suspend:hover,  .suspend:hover,  button.suspend:hover,
+#hibernate:hover,button#hibernate:hover,.hibernate:hover,button.hibernate:hover,
+#logout:hover,   button#logout:hover,   .logout:hover,   button.logout:hover {
+    border-color: rgba(43, 210, 255, 0.60);
+    color:        #2bd2ff                 ;
+}
+
+/* ── DESTRUCTIVE · reboot / shutdown read as danger ──────────────── */
+#reboot, button#reboot, .reboot, button.reboot,
+#shutdown, button#shutdown, .shutdown, button.shutdown {
+    border-color: rgba(255, 84, 112, 0.35) ;
+    background-color: rgba(24, 9, 16, 0.88);
+}
+
+#reboot:hover,   button#reboot:hover,   .reboot:hover,   button.reboot:hover,
+#shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
+    border-color:     rgba(255, 84, 112, 0.85);
+    background-color: rgba(34, 10, 18, 0.94)  ;
+    color:            #ff5470                 ;
+    box-shadow:       0 12px 36px rgba(0, 0, 0, 0.60),
+                      0 0 34px rgba(255, 84, 112, 0.45),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}

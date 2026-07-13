@@ -11,4 +11,4 @@ pkill -9 -f '/eww (daemon|open|open-many|reload|close)' 2>/dev/null
 sleep 0.5
 rm -f "${XDG_RUNTIME_DIR:-/tmp}"/eww-server_* 2>/dev/null
 
-exec /usr/local/bin/nyxus-eww-launch
+exec "$(command -v nyxus-eww-launch || echo /usr/local/bin/nyxus-eww-launch)"

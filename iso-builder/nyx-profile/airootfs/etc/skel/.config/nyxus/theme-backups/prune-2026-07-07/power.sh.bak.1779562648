@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# ============================================================
+#  GowskiNet Rofi Power Menu Script
+#  Location: ~/.config/rofi/power.sh
+#  Triggered by Super+Shift+P or the top-bar power button
+# ============================================================
+
+MENU_THEME="$HOME/.config/rofi/power.rasi"
+
+# Options with icons (Nerd Font glyphs)
+SHUTDOWN="  Shutdown"
+REBOOT="  Reboot"
+SUSPEND="  Suspend"
+LOGOUT="  Logout"
+LOCK="  Lock"
+CANCEL="  Cancel"
+
+# Prompt rofi
+CHOICE=$(printf "%s\n%s\n%s\n%s\n%s\n%s" \
+    "$SHUTDOWN" \
+    "$REBOOT" \
+    "$SUSPEND" \
+    "$LOCK" \
+    "$LOGOUT" \
+    "$CANCEL" \
+    | rofi \
+        -dmenu \
+        -i \
+        -no-fixed-num-lines \
+        -p "Power" \
+        -theme "$MENU_THEME" \
+        -selected-row 2)
+
+case "$CHOICE" in
+    "$SHUTDOWN")
+        systemctl poweroff
+        ;;
+    "$REBOOT")
+        systemctl reboot
+        ;;
+    "$SUSPEND")
+        systemctl suspend
+        ;;
+    "$LOCK")
+        if command -v i3lock &>/dev/null; then
+            i3lock --color=1a1a18 --nofork --ignore-empty-password
+        elif command -v slock &>/dev/null; then
+            slock
+        else
+            xdg-screensaver lock
+        fi
+        ;;
+    "$LOGOUT")
+        if command -v qtile &>/dev/null; then
+            qtile cmd-obj -o cmd -f shutdown
+        else
+            pkill -KILL -u "$USER"
+        fi
+        ;;
+    "$CANCEL"|"")
+        exit 0
+        ;;
+esac

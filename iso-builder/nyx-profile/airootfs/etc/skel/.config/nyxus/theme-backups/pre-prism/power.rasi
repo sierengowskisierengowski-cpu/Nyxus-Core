@@ -1,0 +1,119 @@
+/* APEX RIG Rofi Power Menu — Deep Hunt */
+
+* {
+    bg:         #070d12;
+    bar-bg:     #0a1219;
+    widget-bg:  #0f1c28;
+    active:     #5eb3cc;
+    inactive:   #2a4558;
+    highlight:  #3d8cba;
+    text:       #a8c8dc;
+    clock:      #d8eef8;
+    urgent:     #c62828;
+    sep:        #1a2d3d;
+    selected-bg:#14202e;
+
+    font:                   "JetBrainsMono Nerd Font 13";
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+window {
+    background-color:       @bar-bg;
+    border:                 1px;
+    border-color:           @sep;
+    border-radius:          10px;
+    width:                  220px;
+    padding:                12px;
+    location:               center;
+    anchor:                 center;
+}
+
+mainbox {
+    background-color:       transparent;
+    spacing:                8px;
+    padding:                4px;
+    children:               [ inputbar, listview ];
+}
+
+inputbar {
+    background-color:       transparent;
+    children:               [ prompt ];
+    spacing:                0;
+    padding:                0 0 8px 0;
+}
+
+prompt {
+    background-color:       transparent;
+    text-color:             @highlight;
+    font:                   "JetBrainsMono Nerd Font Bold 11";
+    horizontal-align:       0.5;
+    padding:                4px 0;
+}
+
+listview {
+    background-color:       transparent;
+    columns:                1;
+    lines:                  4;
+    spacing:                4px;
+    scrollbar:              false;
+    border:                 0;
+}
+
+element {
+    background-color:       transparent;
+    text-color:             @text;
+    border-radius:          6px;
+    padding:                10px 16px;
+    cursor:                 pointer;
+    orientation:            horizontal;
+    spacing:                12px;
+}
+
+element-icon {
+    background-color:       transparent;
+    size:                   18px;
+}
+
+element-text {
+    background-color:       transparent;
+    text-color:             inherit;
+    vertical-align:         0.5;
+    horizontal-align:       0.0;
+}
+
+element normal.normal {
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+element selected.normal {
+    background-color:       @selected-bg;
+    text-color:             @active;
+    border:                 1px;
+    border-color:           @sep;
+}
+
+element alternate.normal {
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+element normal.urgent {
+    background-color:       transparent;
+    text-color:             @urgent;
+}
+
+element selected.urgent {
+    background-color:       @selected-bg;
+    text-color:             @urgent;
+    border:                 1px;
+    border-color:           @urgent;
+}
+
+scrollbar {
+    background-color:       @widget-bg;
+    handle-color:           @highlight;
+    handle-width:           4px;
+    border-radius:          2px;
+}

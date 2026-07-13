@@ -152,54 +152,50 @@ window, window.background, decoration {
 
 .bar-bottom {
   margin: 0 86px;
-  padding: 5px 14px;
-  min-height: 40px;
+  padding: 5px 12px;
+  min-height: 36px;
   border-top: 2px solid transparent;
-  background-blend-mode: screen, screen, screen, screen, screen, normal, normal, normal;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-blend-mode: screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-image:
     url('assets/starlight-twinkle-strip-0.png'),
     url('assets/starlight-strip.png'),
-    url('assets/graffiti-strip.png'),
-    linear-gradient(180deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)),
-    linear-gradient(100deg, #7949f2 0%, #26ffb7 33%, #ff2667 66%, #7949f2 100%);
+    linear-gradient(180deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
+    linear-gradient(100deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%);
 }
 
 .bar-top {
   margin: 0 86px;
-  padding: 3px 12px;
-  min-height: 26px;
+  padding: 2px 10px;
+  min-height: 20px;
   border-radius: 12px;
-  background-blend-mode: screen, screen, screen, screen, screen, normal, normal, normal;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-blend-mode: screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-image:
     url('assets/starlight-twinkle-top-0.png'),
     url('assets/starlight-top.png'),
-    url('assets/graffiti-top.png'),
-    linear-gradient(180deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)),
-    linear-gradient(280deg, #ff2667 0%, #26ffb7 33%, #7949f2 66%, #ff2667 100%);
+    linear-gradient(180deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
+    linear-gradient(280deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%);
 }
 
 .ws-rail {
-  background-blend-mode: screen, screen, screen, screen, screen, normal, normal, normal;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-blend-mode: screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-image:
-    url('assets/graffiti-rail.png'),
     url('assets/starlight-twinkle-rail-0.png'),
     url('assets/starlight-rail.png'),
-    linear-gradient(170deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)),
-    linear-gradient(100deg, #7949f2 0%, #26ffb7 33%, #ff2667 66%, #7949f2 100%);
+    linear-gradient(170deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
+    linear-gradient(100deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%);
 }
 
 .app-rail {
-  background-blend-mode: screen, screen, screen, screen, screen, normal, normal, normal;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-blend-mode: screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-image:
-    url('assets/graffiti-rail.png'),
     url('assets/starlight-twinkle-rail-0.png'),
     url('assets/starlight-rail.png'),
-    linear-gradient(190deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)),
-    linear-gradient(280deg, #ff2667 0%, #26ffb7 33%, #7949f2 66%, #ff2667 100%);
+    linear-gradient(190deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
+    linear-gradient(280deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%);
 }
 .bar-bottom > *, .bar-top > * { min-height: 0; min-width: 0; }
 .bar-bottom .bar-cluster { min-height: 0; }
@@ -209,30 +205,6 @@ window, window.background, decoration {
 .bar-cluster { padding: 0 4px; }
 .cluster-left  { padding-left: 0; }
 .cluster-right { padding-right: 0; }
-
-/* Command-bridge cluster separators + HUD corner brackets */
-.bar-cluster-divider {
-  min-width: 1px;
-  min-height: 22px;
-  margin: 0 4px;
-  background: linear-gradient(180deg,
-    transparent 0%,
-    rgba($nyxus-accent-primary, 0.55) 35%,
-    rgba($nyxus-accent-secondary, 0.55) 65%,
-    transparent 100%);
-  box-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.25);
-}
-.bar-bracket {
-  font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 14px;
-  font-weight: 700;
-  color: rgba($nyxus-accent-secondary, 0.55);
-  text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.45);
-  padding: 0 2px;
-}
-.bar-bracket-l { margin-right: 2px; }
-.bar-bracket-r { margin-left: 2px; color: rgba($nyxus-accent-primary, 0.55);
-  text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.45); }
 
 /* -- PILLS . glass capsules ----------------------------------------- */
 
@@ -372,7 +344,6 @@ window, window.background, decoration {
   .brand-word { font-size: 11px; letter-spacing: 0.08em; }
 }
 .brand-bottom {
-  flex-shrink: 0;
   margin-left: 0;
 }
 
@@ -462,6 +433,24 @@ window, window.background, decoration {
 
 /* -- TICKER (top bar) ----------------------------------------------- */
 
+/* full-width ribbon + dead-center NYXUS watermark (rev 2026-07-12) */
+.ticker-overlay {
+  min-width: 700px;
+}
+.ticker-watermark {
+  color: $nyxus-accent-primary;
+  font-family: "Inter Display", "Inter", sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  padding: 1px 14px;
+  background: linear-gradient(180deg, rgba(7, 3, 14, 0.97), rgba(4, 2, 10, 0.94));
+  border: 1px solid rgba($nyxus-accent-primary, 0.48);
+  border-radius: 5px;
+  text-shadow:
+    0 0 10px rgba($nyxus-accent-primary, 0.90),
+    0 0 22px rgba($nyxus-accent-primary, 0.45);
+}
 /* full-width scrolling ribbon - dressed as obsidian HUD marquee card */
 .ticker-box {
   padding: 2px 14px;
@@ -2675,11 +2664,13 @@ scale slider {
    the padding box except the final prism rim, which paints the
    transparent border ring (border-box).
    =================================================================== */
-/* 8 layers per bar/rail: comet head, comet tail, aurora, graffiti,
-   twinkle png, star png, legibility glass, prism rim. */
+/* 7 layers per bar/rail: comet head, comet tail, aurora, twinkle png,
+   star png, legibility glass, prism rim (must match eww.yuck :style). */
 .bar-bottom, .bar-top, .ws-rail, .app-rail {
-  background-origin: padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, border-box;
-  background-clip:   padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, border-box;
+  background-blend-mode: normal, normal, screen, screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-origin: padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, border-box;
+  background-clip:   padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, border-box;
 }
 
 /* STARFALL ember alert - stressed metrics burn gold (keep LAST). */

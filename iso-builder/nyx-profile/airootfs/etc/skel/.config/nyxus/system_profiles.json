@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Silent",
+    "governor": "powersave",
+    "boost": false,
+    "fan_pwm_pct": 20,
+    "description": "Quiet & cool \u2014 minimal fan noise"
+  },
+  {
+    "name": "Balanced",
+    "governor": "schedutil",
+    "boost": true,
+    "fan_pwm_pct": 50,
+    "description": "Smart everyday performance"
+  },
+  {
+    "name": "Performance",
+    "governor": "performance",
+    "boost": true,
+    "fan_pwm_pct": 80,
+    "description": "Full speed for demanding tasks"
+  },
+  {
+    "name": "Beast Mode",
+    "governor": "performance",
+    "boost": true,
+    "fan_pwm_pct": 100,
+    "description": "Maximum everything \u2014 hold on"
+  }
+]

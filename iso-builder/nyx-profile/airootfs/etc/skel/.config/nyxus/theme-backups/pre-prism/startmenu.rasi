@@ -1,0 +1,122 @@
+* {
+    bg-deep:   #080808;
+    bg-card:   #080808;
+    text-hi:   #C8C0C0;
+    text-lo:   rgba(200, 192, 192, 0.62);
+    hairline:  #7B5EA7;
+    accent:    #C4607A;
+    glass-bg:  rgba(8, 8, 8, 0.97);
+    glass-line: rgba(123, 94, 167, 0.42);
+
+    background-color: transparent;
+    text-color: @text-hi;
+}
+
+window {
+    width: 720px;
+    background-color: @glass-bg;
+    border: 1px;
+    border-color: @glass-line;
+    border-radius: 3px;
+    padding: 0;
+    location: center;
+    anchor: center;
+    y-offset: 60px;
+}
+
+mainbox {
+    background-color: transparent;
+    children: [ inputbar, listview, mode-switcher ];
+}
+
+inputbar {
+    background-color: transparent;
+    border: 0 0 1px 0;
+    border-color: @hairline;
+    padding: 14px 16px;
+    spacing: 10px;
+    children: [ prompt, entry ];
+}
+
+prompt {
+    text-color: @accent;
+    font: "JetBrains Mono Nerd Font Bold 12";
+}
+
+entry {
+    text-color: @text-hi;
+    placeholder: "Search apps, files, settings...";
+    placeholder-color: @text-lo;
+    font: "JetBrains Mono Nerd Font 12";
+}
+
+listview {
+    background-color: transparent;
+    padding: 12px;
+    spacing: 4px;
+    lines: 4;
+    columns: 4;
+    cycle: true;
+    dynamic: true;
+    scrollbar: false;
+    layout: vertical;
+}
+
+element {
+    background-color: rgba(8, 8, 8, 0.97);
+    text-color: @text-hi;
+    border: 1px;
+    border-color: @hairline;
+    padding: 10px 6px;
+    spacing: 5px;
+    border-radius: 3px;
+    orientation: vertical;
+}
+
+element selected.normal,
+element selected.alternate.normal,
+element selected.urgent,
+element selected.active {
+    background-color: @accent;
+    text-color: #080808;
+    border: 1px;
+    border-color: @accent;
+    border-radius: 3px;
+}
+
+element-icon {
+    size: 38px;
+    horizontal-align: 0.5;
+}
+
+element-text {
+    text-color: inherit;
+    horizontal-align: 0.5;
+    font: "JetBrains Mono Nerd Font 9";
+}
+
+mode-switcher {
+    background-color: transparent;
+    border: 1px 0 0 0;
+    border-color: @hairline;
+    border-radius: 0 0 3px 3px;
+    padding: 8px 12px;
+    spacing: 6px;
+}
+
+button {
+    background-color: rgba(8, 8, 8, 0.97);
+    text-color: @text-lo;
+    border: 1px;
+    border-color: @hairline;
+    border-radius: 3px;
+    padding: 6px 14px;
+    font: "JetBrains Mono Nerd Font Bold 10";
+}
+
+button selected {
+    background-color: @accent;
+    text-color: #080808;
+    border-color: @accent;
+    border-radius: 3px;
+}

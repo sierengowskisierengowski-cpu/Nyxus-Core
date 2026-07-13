@@ -1,0 +1,138 @@
+# ============================================================
+#  GowskiNet Dunst Configuration
+#  Palette: Sun-faded vintage
+# ============================================================
+
+[global]
+    # ── Position & geometry ──────────────────────────────────
+    origin = bottom-right
+    offset = 16x16
+    width = 340
+    height = 160
+    padding = 14
+    horizontal_padding = 16
+    frame_width = 1
+    gap_size = 8
+    corner_radius = 6
+    notification_limit = 5
+
+    # ── Monitor ───────────────────────────────────────────────
+    monitor = 0
+    follow = none
+
+    # ── Timeout (ms) ─────────────────────────────────────────
+    timeout = 5000
+
+    # ── Font ─────────────────────────────────────────────────
+    font = JetBrainsMono Nerd Font 11
+
+    # ── Text ─────────────────────────────────────────────────
+    markup = full
+    format = "<b>%s</b>\n%b"
+    word_wrap = true
+    ellipsize = middle
+    ignore_newline = false
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = true
+
+    # ── Icons ────────────────────────────────────────────────
+    icon_theme = Papirus-Dark, hicolor
+    enable_recursive_icon_lookup = true
+    icon_position = left
+    min_icon_size = 32
+    max_icon_size = 48
+    icon_corner_radius = 4
+
+    # ── History ──────────────────────────────────────────────
+    sticky_history = true
+    history_length = 20
+
+    # ── Misc ─────────────────────────────────────────────────
+    always_run_script = true
+    title = Dunst
+    class = Dunst
+    force_xwayland = false
+    layer = overlay
+    force_xinerama = false
+
+    # ── Progress bar ─────────────────────────────────────────
+    progress_bar = true
+    progress_bar_height = 10
+    progress_bar_frame_width = 1
+    progress_bar_min_width = 150
+    progress_bar_max_width = 300
+    progress_bar_corner_radius = 4
+
+    # ── Separators ───────────────────────────────────────────
+    separator_height = 1
+    separator_color = frame
+
+    # ── Mouse actions ─────────────────────────────────────────
+    mouse_left_click = close_current
+    mouse_middle_click = do_action, close_current
+    mouse_right_click = close_all
+
+    # ── Keyboard ─────────────────────────────────────────────
+    close = ctrl+space
+    close_all = ctrl+shift+space
+    history = ctrl+grave
+    context = ctrl+shift+period
+
+    # ── dmenu / rofi integration ──────────────────────────────
+    dmenu = /usr/bin/rofi -dmenu -p dunst
+
+    # ── Browser for URLs ─────────────────────────────────────
+    browser = /usr/bin/xdg-open
+
+    # ── Idle ─────────────────────────────────────────────────
+    idle_threshold = 120
+
+[urgency_low]
+    background = "#1e1c19"
+    foreground = "#d4ccb8"
+    frame_color = "#3a3830"
+    timeout = 4000
+
+[urgency_normal]
+    background = "#1e1c19"
+    foreground = "#d4ccb8"
+    frame_color = "#6b6558"
+    timeout = 5000
+
+[urgency_critical]
+    background = "#252420"
+    foreground = "#e8dcc8"
+    frame_color = "#c87a5a"
+    timeout = 0
+
+# ── Per-app rules ─────────────────────────────────────────────
+
+[discord]
+    appname = Discord
+    timeout = 8000
+    icon = discord
+
+[spotify]
+    appname = Spotify
+    timeout = 6000
+    icon = spotify
+
+[volume]
+    summary = "Volume*"
+    timeout = 2000
+    history_ignore = true
+
+[brightness]
+    summary = "Brightness*"
+    timeout = 1500
+    history_ignore = true
+
+[screenshot]
+    summary = "Screenshot*"
+    timeout = 3000
+
+[battery_low]
+    summary = "Battery*"
+    urgency = critical
+    timeout = 0
