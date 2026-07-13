@@ -1,4 +1,9 @@
-import express, { type Express } from "express";
+import express, {
+  type Express,
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
@@ -77,6 +82,18 @@ app.use("/api", router);
 
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "Not found" });
+});
+
+// Terminal error handler. Express 5 forwards both thrown synchronous
+// errors and rejected async-handler promises here. Without it those errors
+// fall through to Express's built-in finalhandler, which bypasses our pino
+// logger (so the failure is effectively swallowed from structured logs) and
+// replies with an HTML body instead of the JSON shape every other route
+// uses. Log through the request logger and return a consistent JSON 500.
+app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
+  (req.log ?? logger).error({ err }, "unhandled request error");
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: "internal server error" });
 });
 
 export default app;

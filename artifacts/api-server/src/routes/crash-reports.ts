@@ -48,6 +48,13 @@ function hashToken(tok: string): string {
   return createHash("sha256").update(tok, "utf8").digest("hex");
 }
 
+// A missing per-token directory just means "no reports yet" and is an
+// expected, non-error state. Any other fs error (EACCES, EIO, …) is a real
+// failure that must be surfaced rather than reported as "empty".
+function isNotFound(err: unknown): boolean {
+  return (err as NodeJS.ErrnoException)?.code === "ENOENT";
+}
+
 function denyAuth(res: Response, msg = "missing or malformed bearer token") {
   res.status(401).json({ error: msg });
 }
@@ -200,8 +207,10 @@ router.get("/crash-reports", async (req, res) => {
   let names: string[] = [];
   try {
     names = await readdir(dir);
-  } catch {
-    return res.json({ reports: [] });
+  } catch (err) {
+    if (isNotFound(err)) return res.json({ reports: [] });
+    req.log.error({ err }, "crash-report list failed");
+    return res.status(500).json({ error: "failed to list reports" });
   }
   const reports = await Promise.all(
     names.map(async (name) => {
@@ -228,8 +237,10 @@ router.get("/crash-reports/:id", async (req, res) => {
     const buf = await readFile(join(dir, id));
     res.type(id.endsWith(".gz") ? "application/gzip" : "application/json");
     res.send(buf);
-  } catch {
-    res.status(404).json({ error: "not found" });
+  } catch (err) {
+    if (isNotFound(err)) return res.status(404).json({ error: "not found" });
+    req.log.error({ err }, "crash-report read failed");
+    res.status(500).json({ error: "failed to read report" });
   }
 });
 
