@@ -1,0 +1,298 @@
+
+VISUAL STYLE — THIS IS REQUIRED:
+Every single element inside and outside the app must have a 
+hand drawn hand written feel throughout. This means:
+- All buttons look hand drawn — slightly imperfect borders, 
+  sketch-like outlines, not perfect rectangles
+- All panels and containers have hand drawn borders — 
+  like someone drew them with a marker
+- All fonts are handwritten style throughout — titles, 
+  labels, buttons, everything
+- Dividers and separators look hand drawn — like a pen line
+- Icons are hand drawn sketch style — not Material icons
+- Input fields look like lined notebook paper or sketch pads
+- The entire app feels like a physical notebook or sketchpad 
+  that has been brought to life digitally
+- Scrollbars styled to look hand drawn
+- Tab indicators look like sticky tab labels
+- Nothing looks like a standard GTK app — every widget 
+  must be custom drawn to match the hand drawn aesthetic
+- Use Cairo custom drawing for all non-standard elements
+
+CORE EDITOR:
+- Full rich text editor — bold, italic, underline, 
+  strikethrough, all working
+- Markdown support — write markdown, toggle preview mode
+- Code block support — syntax highlighted code blocks 
+  for all major languages
+- Inline code formatting
+- Heading levels H1 through H6
+- Bullet lists — ordered and unordered
+- Checkbox lists — clickable checkboxes inline
+- Tables — create and edit tables inline
+- Horizontal rules
+- Links — clickable, openable
+- Image insertion — embed images inline
+- Font size control — per selection
+- Font family selector — includes handwritten fonts
+- Text alignment — left, center, right, justify
+- Text color picker — per selection
+- Highlight color picker — per selection
+- Indent and outdent
+- Find and replace — with regex support
+- Word count, character count, line count — live updating
+- Reading time estimate — live updating
+- Zoom in and out — editor zoom level control
+- Distraction free mode — hides everything except editor
+- Typewriter mode — cursor stays centered vertically
+- Line numbers — toggleable
+- Word wrap toggle
+- Spell check — with suggestions on right click
+- Grammar check integration
+- Auto correct — toggleable
+- Auto capitalize — toggleable
+- Smart quotes — toggleable
+
+NOTES ORGANIZATION:
+- Left sidebar — full notes list
+- Notes sorted by: date created, date modified, title, 
+  word count, custom order
+- Search notes — searches title and full content 
+  simultaneously, results highlighted in note
+- Filter by tag, notebook, date range, color
+- Note cards in sidebar show: title, preview, date, 
+  word count, tags, color indicator
+- Star/favorite notes — starred notes section at top
+- Pin notes — pinned notes always at top of list
+- Color coding — assign any color to any note
+- Tags — add unlimited tags to any note
+- Multi select notes — for bulk operations
+- Drag and drop reorder notes
+- Notebooks — organize notes into named notebooks
+- Sub-notebooks — nested folder structure unlimited depth
+- Note templates — save any note as a template
+- Duplicate note
+- Merge notes — combine multiple notes into one
+- Split note — divide one note into multiple
+- Note history — see every version of every note
+
+CLIPBOARD MANAGER — built in:
+- Anything copied anywhere on system automatically 
+  captured to clipboard history
+- Clipboard history panel — right side of app
+- Unlimited clipboard history entries
+- Search clipboard history
+- Pin important clipboard items so they never expire
+- One click paste any clipboard item into current note
+- Preview clipboard items — text, images, code
+- Delete individual clipboard items
+- Clear all clipboard history
+- Clipboard items categorized automatically — 
+  text, code, URLs, images
+- Capture screenshot to clipboard with hotkey
+
+DRAFTS SYSTEM:
+- Every note auto-saved as draft every 30 seconds
+- Drafts indicator — shows unsaved changes
+- Manual save draft button
+- Draft history — see all drafts for current note
+- Restore any previous draft
+- Compare drafts — diff view between any two versions
+- Auto-save interval configurable in settings
+- Crash recovery — restore unsaved work after crash
+- Draft sync — drafts survive app close and reopen
+
+LOCKED NOTES:
+- Lock any note with a password
+- Locked notes show only title in sidebar — content hidden
+- Unlock with password to view or edit
+- Biometric unlock hook — YubiKey touch to unlock
+- Lock all notes button — locks all locked notes 
+  simultaneously
+- Auto-lock after configurable inactivity timeout
+- Locked note indicator in sidebar — padlock icon, 
+  hand drawn style
+- Master password for all locked notes
+- Individual passwords per note option
+- Encrypted storage — AES-256 for all locked note content
+
+EXPORT AND IMPORT:
+- Export any note as: markdown .md, plain text .txt, 
+  HTML .html, PDF .pdf, DOCX .docx, RTF .rtf, 
+  EPUB .epub for long notes
+- Export entire notebook as ZIP archive
+- Export all notes as single PDF
+- Bulk export selected notes
+- Import from: markdown, plain text, HTML, DOCX, RTF
+- Import from other note apps — Obsidian, Notion export,
+  Bear export, Standard Notes export
+- Drag and drop file import
+
+SHARING AND COLLABORATION:
+- Copy note as formatted markdown
+- Copy note as plain text
+- Copy note as HTML
+- Share via email — opens mail client with note as body
+- Generate shareable link if server configured
+- Export and encrypt for secure sharing
+- QR code generation for short notes
+
+FOCUS AND PRODUCTIVITY:
+- Pomodoro timer built in — configurable work and break 
+  intervals, visual timer in editor
+- Focus mode — hides everything, only editor visible, 
+  ambient sound options
+- Daily word goal — set target, progress shown
+- Writing streak tracker — consecutive days written
+- Statistics dashboard — total notes, words, characters, 
+  writing time, most productive hours
+- Quick capture mode — small floating window for fast 
+  note capture without opening full app
+- Global hotkey to open quick capture from anywhere
+- Daily note — automatically creates dated note each day
+- Morning pages mode — full screen, no formatting, 
+  just write
+
+TEMPLATES:
+- Built in templates:
+  Meeting notes, Project plan, Daily journal, 
+  Bug report, Code review, Research notes,
+  Shopping list, Recipe, Book notes, Weekly review,
+  Sprint planning, Retrospective, Interview notes,
+  Reading notes, Travel itinerary
+- Create custom templates from any note
+- Template variables — date, time, title auto-filled
+- Template library browser
+
+CODE SUPPORT — for coding use:
+- Syntax highlighting for all languages:
+  Python, JavaScript, TypeScript, Bash, Zsh, 
+  HTML, CSS, JSON, YAML, TOML, Markdown,
+  C, C++, Rust, Go, Java, Kotlin, Swift,
+  SQL, GraphQL, XML, Dockerfile, and more
+- Code blocks with language selector
+- Line numbers in code blocks
+- Copy code block button — one click copies just the code
+- Run code blocks — execute Python and Bash inline 
+  and show output below block
+- Code folding — collapse and expand code blocks
+- Multiple cursors in code blocks
+- Code snippets library — save and reuse code snippets
+- Git diff view — paste a diff and it renders colored
+- Terminal output block — styled differently from code
+- File path detection — auto-formats file paths as links
+
+KEYBOARD SHORTCUTS — complete set:
+- Ctrl+N — new note
+- Ctrl+S — save
+- Ctrl+Shift+S — save as
+- Ctrl+F — find
+- Ctrl+H — find and replace
+- Ctrl+B — bold
+- Ctrl+I — italic
+- Ctrl+U — underline
+- Ctrl+Z — undo unlimited
+- Ctrl+Y — redo unlimited
+- Ctrl+A — select all
+- Ctrl+D — duplicate line
+- Ctrl+L — lock note
+- Ctrl+E — export
+- Ctrl+P — print
+- Ctrl+, — settings
+- Ctrl+Shift+F — distraction free mode
+- Ctrl+Shift+P — command palette
+- Ctrl+K — insert link
+- Ctrl+Shift+K — delete line
+- Ctrl+/ — toggle comment in code blocks
+- All shortcuts configurable in settings
+
+COMMAND PALETTE:
+- Ctrl+Shift+P opens floating command palette
+- Search and execute any action by typing
+- Recent commands shown first
+- Fuzzy search — partial matches work
+- Every feature accessible from command palette
+
+SETTINGS — fully configurable:
+- Editor font family and size
+- Line spacing
+- Paragraph spacing
+- Editor width — narrow or full
+- Theme — follows NyX system theme
+- Auto-save interval
+- Spell check language
+- Grammar check on/off
+- Default export format
+- Clipboard capture on/off
+- Pomodoro intervals
+- Daily word goal
+- Keyboard shortcuts editor — remap everything
+- Notebook default location
+- Backup location and schedule
+- Master password management
+- Auto-lock timeout
+- Startup behavior — last note, daily note, blank
+
+BACKUP AND SYNC:
+- Automatic backup to configurable location
+- Backup schedule — hourly, daily, weekly
+- Backup to external drive
+- Backup encryption option
+- Backup restore wizard
+- Export entire vault as encrypted archive
+- Dropbox/Google Drive folder sync option
+- Git sync — store all notes as markdown in git repo, 
+  auto-commit on save
+
+PRINT:
+- Print any note with proper formatting
+- Print preview
+- Page setup — margins, paper size, orientation
+- Header and footer configuration — page numbers, 
+  date, title
+- Print to PDF directly
+
+TECH STACK:
+- GTK4 Python native
+- GtkSourceView 5 for code syntax highlighting
+- Cairo for all custom hand drawn UI elements
+- WebKit2GTK for markdown preview rendering
+- cryptography library for AES-256 locked notes
+- reportlab for PDF export
+- python-docx for DOCX export
+- sqlite3 for all note storage and clipboard history
+- inotify for clipboard monitoring via wl-paste/wl-copy
+- wl-clipboard for Wayland clipboard integration
+- All operations in background threads — UI never freezes
+- Notes stored at ~/.config/nyxus-notepad/notes/
+- Backups at ~/.config/nyxus-notepad/backups/
+- Config at ~/.config/nyxus-notepad/config.json
+
+EVERYTHING MUST WORK:
+- Every single button must be functional
+- Every single menu item must do something real
+- No placeholder features — if it appears it works
+- No TODO comments in delivered code
+- Test every feature before delivering
+- All keyboard shortcuts must work
+- Clipboard must capture and paste correctly
+- Locked notes must actually encrypt content
+- Export must produce real valid files
+- Auto-save must actually save
+- Search must return real results
+- Spell check must actually check spelling
+
+DELIVER:
+- main.py — entry point
+- editor.py — core editor module
+- notes.py — notes management
+- clipboard.py — clipboard manager
+- templates.py — template system
+- export.py — all export formats
+- crypto.py — encryption for locked notes
+- settings.py — settings management
+- ui_components.py — all custom drawn Cairo widgets
+- requirements.txt
+- system packages list
+- install.sh
+- README.md

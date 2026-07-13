@@ -1,0 +1,129 @@
+Two things needed:
+
+THING 1 — Wire NYXUS Panel into Waybar right side:
+The NYXUS Panel app already exists. Wire it into the 
+rightmost position of the Waybar taskbar so:
+- A button sits on the far right of Waybar
+- Clicking it opens NYXUS Panel as a flyout above it
+- Panel opens with slide up animation
+- Closes when clicking outside
+- Button shows a hand drawn icon — newspaper or grid icon
+- When panel is open button stays highlighted
+
+Add this to ~/.config/waybar/config:
+Custom module on far right that launches NYXUS Panel
+Panel anchors directly above the button position
+Panel stays on top of everything while open
+
+THING 2 — Build NYXUS Start — left side flyout:
+A flyout panel that opens from the far left of Waybar.
+Same behavior as NYXUS Panel — click to open, click 
+outside to close, slide animation.
+
+Same visual style — graffiti wall background behind
+everything, hand drawn fonts and borders, semi-transparent
+dark panels over the graffiti so content is readable.
+
+Fixed width 460px, height 680px.
+Always on top when open.
+Anchors above the left Waybar button.
+
+NYXUS START — exact layout top to bottom:
+
+HEADER:
+- NYXUS logo and owl mascot left side
+- Search bar — searches installed apps as you type
+  Results appear instantly below search bar
+  Press enter or click to launch app
+- Current date and time right side
+
+PINNED APPS SECTION:
+- Grid of pinned app icons — 4 per row
+- Default pinned: NYXUS Terminal, NYXUS Settings,
+  NYXUS Control, NYXUS SYSMON, NYXUS Security,
+  GodsApp, NYXUS SAGE, NYXUS Notepad, NYXUS Stickies,
+  NYXUS Weather, NYXUS Panel, File Manager,
+  Firefox, Chromium, Discord
+- Right click any pinned app:
+  Launch
+  Unpin from start
+  Pin to taskbar
+  Open file location
+- Drag to reorder pinned apps
+- Edit pins button — add or remove pinned apps
+
+RECENTLY USED SECTION:
+- Shows last 10 opened apps and files
+- App icon, name, and time last used
+- Click to launch or open
+- Right click — remove from recent, pin to top
+- Clear recent button
+
+ALL APPS SECTION:
+- Alphabetical list of every installed app
+- Search filters this list in real time
+- Category filter — System, Security, Internet,
+  Media, Development, Games, Settings
+- Click any app to launch it
+- Right click — pin to start, pin to taskbar,
+  open file location, uninstall
+
+GOWSKINET QUICK STATUS:
+- Small panel showing:
+  Phantom daemon — running or stopped green/red dot
+  Honeypot — active attacks counter
+  VPN — connected or disconnected
+  Network — GowskiNet online or offline
+- Click any item opens the relevant NYXUS app
+
+POWER ROW — bottom of panel:
+- User avatar and name — Joey
+- Row of power buttons:
+  Lock screen
+  Log out  
+  Suspend
+  Restart
+  Shutdown
+- Each with hand drawn icon
+- Confirmation dialog on restart and shutdown
+
+WAYBAR BUTTON — far left:
+- Hand drawn NYXUS owl icon or start icon
+- Click opens NYXUS Start flyout above it
+- Highlighted when panel is open
+
+TECHNICAL:
+- GTK4 Python native
+- Cairo for all hand drawn elements and graffiti background
+- Same graffiti background as NYXUS Panel:
+  Tagged wall with NYXUS LINUX NVIDIA ARCH KALI PYTHON
+  GTK WAYLAND words in graffiti style
+  Dark wall texture underneath
+  All content on semi-transparent panels over graffiti
+- subprocess for launching apps
+- psutil for GowskiNet status
+- Gio.AppInfo for installed app discovery
+- Recently used via Gtk.RecentManager
+- Settings at ~/.config/nyxus-start/config.json
+- Pinned apps saved to ~/.config/nyxus-start/pins.json
+- All animations use GLib.timeout for smooth rendering
+
+WAYBAR CONFIG — deliver exact additions needed:
+Add to ~/.config/waybar/config:
+- Far left custom module for NYXUS Start button
+- Far right custom module for NYXUS Panel button
+- Both modules wire click to open their respective app
+- Both show correct hand drawn icons in Waybar
+
+DELIVER:
+- nyxus-start/main.py — start panel entry point
+- nyxus-start/apps.py — installed app discovery
+- nyxus-start/recent.py — recently used tracking
+- nyxus-start/power.py — power options
+- nyxus-start/status.py — GowskiNet status
+- nyxus-start/settings.py — settings
+- waybar_additions.json — exact Waybar config to add
+- waybar_styles.css — Waybar CSS for both buttons
+- install.sh — installs both and updates Waybar config
+- requirements.txt
+- README.md

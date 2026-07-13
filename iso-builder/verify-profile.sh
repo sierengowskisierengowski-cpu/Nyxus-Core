@@ -931,10 +931,10 @@ CAL_DESKTOP="${AIROOT}/etc/skel/Desktop/install-nyxus.desktop"
 grep -q '^componentName: nyxus' "${CAL_BRAND}/branding.desc" 2>/dev/null \
   && ok "calamares: componentName=nyxus" \
   || fail "calamares: componentName not 'nyxus'"
-# DARK MIRROR palette lock: nyxus branding must be present in calamares
-grep -qi 'nyxus' "${CAL_BRAND}/branding.desc" 2>/dev/null \
-  && ok "calamares: NYXUS branding present" \
-  || fail "calamares: NYXUS branding missing"
+# Sprint E palette lock: cream accent must be present
+grep -qi '#f4ead5' "${CAL_BRAND}/branding.desc" \
+  && ok "calamares: Sprint E accent #f4ead5 present" \
+  || fail "calamares: Sprint E accent #f4ead5 missing"
 
 [[ -f "${CAL_BRAND}/show.qml" ]] \
   && ok "calamares: show.qml slideshow present" \
@@ -1037,9 +1037,9 @@ if [[ -f "${GRUB_THEME_DIR}/theme.txt" ]] \
 else
   fail "GRUB: theme.txt missing/incomplete"
 fi
-grep -qi 'nyxus\|NYXUS\|dark.mirror' "${GRUB_THEME_DIR}/theme.txt" 2>/dev/null \
-  && ok "GRUB: NYXUS branding present" \
-  || fail "GRUB: NYXUS branding missing from theme.txt"
+grep -qi '#f4ead5' "${GRUB_THEME_DIR}/theme.txt" 2>/dev/null \
+  && ok "GRUB: Sprint E accent #f4ead5 present" \
+  || fail "GRUB: Sprint E accent #f4ead5 missing from theme.txt"
 
 # Required theme assets
 for f in background.png select_c.png select_e.png select_w.png \
@@ -1089,18 +1089,18 @@ if [[ -f "${DUNST_RC}" ]] \
 else
   fail "dunst: dunstrc missing or incomplete"
 fi
-grep -qi '#a06bff' "${DUNST_RC}" 2>/dev/null \
-  && ok "dunst: DARK MIRROR accent #a06bff present" \
-  || fail "dunst: DARK MIRROR accent #a06bff missing"
+grep -qi '#f4ead5' "${DUNST_RC}" 2>/dev/null \
+  && ok "dunst: Sprint E accent #f4ead5 present" \
+  || fail "dunst: Sprint E accent #f4ead5 missing"
 grep -qi 'font *= *Inter' "${DUNST_RC}" 2>/dev/null \
   && ok "dunst: Inter font set" \
   || fail "dunst: Inter font not set"
 grep -qi 'corner_radius = 3' "${DUNST_RC}" 2>/dev/null \
   && ok "dunst: 3px corners applied" \
   || fail "dunst: corner_radius not locked to 3"
-grep -qi 'background *= *"#0c0c18' "${DUNST_RC}" 2>/dev/null \
-  && ok "dunst: obsidian glass background applied" \
-  || fail "dunst: obsidian glass background missing"
+grep -qi 'background *= *\"#0a0a14f7\"' "${DUNST_RC}" 2>/dev/null \
+  && ok "dunst: glass background rgba(10,10,20,0.97) applied" \
+  || fail "dunst: glass background missing"
 
 if [[ -f "${SWAYNC_CSS}" ]] \
    && grep -q '\.notification' "${SWAYNC_CSS}" \
@@ -1109,10 +1109,10 @@ if [[ -f "${SWAYNC_CSS}" ]] \
 else
   fail "swaync: style.css missing or incomplete"
 fi
-grep -qi '#a06bff' "${SWAYNC_CSS}" 2>/dev/null \
-  && ok "swaync: DARK MIRROR accent #a06bff present" \
-  || fail "swaync: DARK MIRROR accent #a06bff missing"
-grep -qi 'font-family: "Inter"' "${SWAYNC_CSS}" 2>/dev/null \
+grep -qi '#f4ead5' "${SWAYNC_CSS}" 2>/dev/null \
+  && ok "swaync: Sprint E accent #f4ead5 present" \
+  || fail "swaync: Sprint E accent #f4ead5 missing"
+grep -qi 'font-family: \"Inter\"' "${SWAYNC_CSS}" 2>/dev/null \
   && ok "swaync: Inter font set" \
   || fail "swaync: Inter font missing"
 grep -qi 'border-radius: 3px' "${SWAYNC_CSS}" 2>/dev/null \
@@ -1125,8 +1125,8 @@ for pkg in dunst swaync; do
     || fail "missing package: ${pkg}"
 done
 
-# ── 13v. DARK MIRROR palette/token compliance (chrome configs) ─────────────
-hd "13v. DARK MIRROR palette/token compliance"
+# ── 13v. Sprint E palette/token compliance (chrome configs) ────────────────
+hd "13v. Sprint E palette/token compliance"
 CHROME_SCAN=(
   "${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
   "${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-hyprland-general.conf"
@@ -1137,14 +1137,11 @@ CHROME_SCAN=(
   "${AIROOT}/etc/skel/.config/rofi/startmenu.rasi"
   "${AIROOT}/etc/skel/.config/swaync/style.css"
 )
-# Ban old Sprint E / pre-DARK-MIRROR palette tokens from chrome configs.
-# These were removed in the 2026-07-12 audit; their presence indicates
-# a stale/un-migrated config that needs to be updated.
-FORBIDDEN_PATTERN='#(f4ead5|7949f2|ff2667|26ffb7|ffb026)([^0-9a-fA-F]|$)|splat-pink|splat-purple'
+FORBIDDEN_PATTERN='#(C084FC|7C3AED|5B21B6|a78bfa|a06bff|3ad8ff|06b6d4|0ea5e9|dc2626|ef4444)([^0-9a-fA-F]|$)|splat-pink|splat-purple|DARK MIRROR'
 if grep -RIniE "${FORBIDDEN_PATTERN}" "${CHROME_SCAN[@]}" >/tmp/verify-profile-forbidden.out 2>/dev/null; then
-  fail "chrome configs contain stale pre-DARK-MIRROR colors (see /tmp/verify-profile-forbidden.out)"
+  fail "chrome configs contain forbidden Sprint E colors/tokens (see /tmp/verify-profile-forbidden.out)"
 else
-  ok "chrome configs: stale pre-DARK-MIRROR colors absent"
+  ok "chrome configs: forbidden Sprint E colors/tokens absent"
 fi
 
 # ── 14. mksquashfs ────────────────────────────────────────────────────

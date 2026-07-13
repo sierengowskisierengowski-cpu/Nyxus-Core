@@ -1,22 +1,10 @@
 # Nyxus-Core
 
-Canonical source repository for the **NYXUS** platform and **NYX** image pipeline.
-
-> **DARK MIRROR** · Obsidian Prism Desktop · Arch Linux + Hyprland + EWW
+Canonical source repository for the NYXUS platform and NYX image pipeline.
 
 **Terminology standard**
 - **NYX**: the bootable ISO image artifact only.
 - **NYXUS**: the operating system, platform services, and application ecosystem delivered by NYX.
-
----
-
-## Quick Install
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/sierengowskisierengowski-cpu/Nyxus-Core/main/install.sh | bash
-```
-
-Requirements: Arch Linux, bash 5+, curl, git.
 
 ---
 
@@ -33,10 +21,6 @@ Requirements: Arch Linux, bash 5+, curl, git.
 | API server + download routes | ✅ Operational at nyxus-core.replit.app |
 | Web surfaces (web, notepad, stickies, sysmon, widgets) | ✅ Vite builds pass |
 | archiso profile (`profiledef.sh`, `packages.x86_64`, greetd config) | ✅ Validated |
-| Terminal one-liner installer (`install.sh`) | ✅ curl-able |
-| Auto-update mechanism (`nyxus-update` + timer) | ✅ systemd user timer |
-| Live-sync one-liner (`nyxus-sync`) | ✅ pull + hot-reload |
-| EWW bars (DARK MIRROR obsidian/prism theme) | ✅ Source staged |
 | ISO bake (`build-iso.sh`) | 🟡 Requires Arch Linux host + root + `mkarchiso` |
 | Hyprland desktop + EWW bars + GTK4 app suite | 🟡 Source staged; live-boot required for end-to-end test |
 | Calamares disk installer | 🟡 Branding present; AUR-built; full install flow not yet verified |
@@ -114,18 +98,6 @@ See `/docs/architecture/architecture-overview.md` for component relationships an
 - Build host requirement: Arch Linux + root + `mkarchiso`
 - Entry point: `iso-builder/build-iso.sh`
 - Output artifact: `iso-builder/out/nyx-<version>-x86_64.iso`
-
-### Installing NYXUS (on-system)
-```bash
-# One-command curl installer
-curl -fsSL https://raw.githubusercontent.com/sierengowskisierengowski-cpu/Nyxus-Core/main/install.sh | bash
-
-# Live-sync: pull latest + hot-reload Hyprland + EWW bars
-nyxus-sync
-
-# Auto-update (systemd user timer — daily at 04:00)
-systemctl --user enable --now nyxus-update.timer
-```
 
 Operational detail is documented in `/docs/deployment/*`.
 

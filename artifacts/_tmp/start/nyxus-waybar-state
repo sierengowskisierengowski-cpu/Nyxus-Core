@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# nyxus-waybar-state {start|panel}
+#
+# Emits a single JSON line for Waybar's "custom" module:
+#   { "text": "<pango>...", "class": "open|closed", "tooltip": "..." }
+#
+# Waybar polls this every second (custom.interval=1). When the matching
+# flyout (~/tmp/nyxus-${APP}.pid) is alive, "class":"open" is emitted so
+# the button can light up via the .open CSS rule.
+
+set -u
+
+APP="${1:-start}"
+PID_FILE="/tmp/nyxus-${APP}.pid"
+
+CLASS="closed"
+if [[ -f "$PID_FILE" ]]; then
+  pid=$(cat "$PID_FILE" 2>/dev/null || true)
+  if [[ -n "${pid:-}" ]] && kill -0 "$pid" 2>/dev/null; then
+    CLASS="open"
+  fi
+fi
+
+case "$APP" in
+  start)
+    # Inter Display is the NYXUS DARK MIRROR display font. The X glow lives in waybar style.css
+    # as a background-image; here we only render the word "Start" on top.
+    TEXT="<span font_family='Inter Display' size='22pt' weight='bold' foreground='#e8edf5'>Start</span>"
+    TIP="NYXUS · Start  —  search apps, launch anything, system control"
+    ;;
+  panel)
+    TEXT="<span font_family='Inter Display' size='22pt' weight='bold' foreground='#e8edf5'>The Panel</span>"
+    TIP="NYXUS · The Panel  —  weather, news, system, settings"
+    ;;
+  notifications)
+    # Cyan handwritten label — matches GodsApp's DARK MIRROR Inter Display. Flyout
+    # backend ships in a follow-up release; the .open class will start
+    # working automatically once /tmp/nyxus-notifications.pid exists.
+    TEXT="<span font_family='Inter Display' size='22pt' weight='bold' foreground='#e8edf5'>Notifications</span>"
+    TIP="NYXUS · Notifications  —  alerts, messages, system events"
+    ;;
+  *)
+    TEXT="<span foreground='#e8edf5'>?$APP</span>"
+    TIP="unknown nyxus app: $APP"
+    ;;
+esac
+
+# Plain printf is enough — TEXT/TIP contain no double-quotes or backslashes
+# that would break JSON. Single-quoted Pango attrs make this safe by design.
+printf '{"text":"%s","class":"%s","alt":"%s","tooltip":"%s"}\n' \
+       "$TEXT" "$CLASS" "$CLASS" "$TIP"

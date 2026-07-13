@@ -1,0 +1,34 @@
+ 
+1. Mesh Modeling & Design Tools
+These are the primary tools used in Edit Mode to create the geometric foundation of your app's assets. 
+
+    Extrude (E): Pulls new geometry out from existing faces or edges to create volume.
+    Loop Cut (Ctrl+R): Adds edge loops around a mesh to increase detail or create specific sections.
+    Bevel (Ctrl+B): Rounds or slants edges, essential for realistic lighting and "soft" UI corners.
+    Inset (I): Creates new faces within selected ones, commonly used for recessed buttons or detailed panels.
+    Boolean Modifier: Allows you to cut holes into objects or join shapes together by subtracting or adding other geometry. 
+
+2. UI & Icon Specific Tools
+Blender is increasingly used for 3D UI elements and app icons by leveraging its vector and rendering capabilities. 
+
+    SVG Import: Allows you to bring in 2D logos or icons (e.g., from Figma) and convert them into 3D meshes for rendering.
+    Grease Pencil: A specialized tool for 2D sketching within the 3D viewport, useful for concepting UI layouts or unique 2D-style icons.
+    Text Tool: Creates 3D typography that can be customized with various fonts and beveled edges directly. 
+
+3. Texturing & Shading
+
+    Shader Editor: A node-based system for designing materials like glass, plastic, or metallic surfaces. Note that complex node setups (like ColorRamp) often need to be "baked" into standard image textures before they can be used in app engines.
+    UV Editing: Necessary for "unwrapping" 3D objects so that 2D image textures or UI graphics fit correctly on the surface.
+    Texture Painting: Allows for painting directly onto 3D models with customizable brushes. 
+
+4. Animation & Interactivity
+
+    Rigging & Armatures: Tools for building skeletons within objects to allow for complex movement or character-like behavior.
+    Keyframing: The foundation for all animation, allowing you to record changes in position, rotation, or scale over time. 
+
+5. Exporting for App Engines
+To use your Blender assets in an app, they must be exported into formats compatible with development platforms. 
+
+    FBX: The most common format for game engines like Unity and Unreal Engine. It preserves meshes, materials, and animations.
+    glTF / GLB: A versatile, efficient format widely supported for web and mobile apps, known for correctly preserving texture data better than FBX in some cases.
+    Export Best Practices: Before exporting, always Apply Transformations (Ctrl+A) to ensure your object's scale and rotation are correctly interpreted by the app 

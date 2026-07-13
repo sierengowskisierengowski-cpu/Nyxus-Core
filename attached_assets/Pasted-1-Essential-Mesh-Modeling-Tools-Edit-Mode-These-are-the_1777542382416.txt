@@ -1,0 +1,41 @@
+1. Essential Mesh Modeling Tools (Edit Mode)
+These are the core tools used to shape individual 3D objects by manipulating vertices, edges, and faces. 
+
+    Extrude (E): Pulls geometry out to create new volume; variants include Extrude Manifold, Extrude Along Normals, and Extrude to Cursor.
+    Loop Cut & Slide (Ctrl+R): Adds new edge loops around a mesh to increase detail.
+    Bevel (Ctrl+B): Rounds or slants sharp edges and vertices.
+    Inset Faces (I): Creates a new, smaller face inside a selected one—crucial for hard-surface detailing.
+    Knife Tool (K): Allows free-hand cutting of new topology directly onto the mesh.
+    Bridge Edge Loops: Connects two separate edge selections with new faces.
+    Spin Tool: Revolves selected geometry around the cursor, ideal for creating cylindrical or lathe-like shapes.
+    Poly Build: Specialized for manually drawing polygons, often used for retopology.
+    Fill (F): Creates a new edge or face between selected vertices. 
+
+2. Digital Sculpting Brushes (Sculpt Mode)
+Blender includes over 20 specialized brushes for organic design and high-detail character creation. 
+
+    Standard Brushes: Draw, Clay Strips, Inflate, Pinch, Grab, and Smooth.
+    Surface Brushes: Flatten, Scrape, and Multiplane Scrape for hard-surface sculpting.
+    Physics Brushes: Cloth Brush for simulating realistic fabric folds.
+    Gesture Tools: Box Mask, Lasso Trim, and Line Project for cutting or hiding parts of the model.
+    Dynamic Topology (Dyntopo): A feature that adds geometry on-the-fly wherever you brush. 
+
+3. Non-Destructive Design (Modifiers)
+Modifiers are automatic effects that change an object’s appearance without permanently altering its base shape. 
+
+    Generate: Subdivision Surface (for smoothing), Mirror (for symmetry), Array (for repeating patterns), Solidify (adding thickness), and Boolean (joining/cutting shapes).
+    Deform: Shrinkwrap (conforming one mesh to another), Simple Deform (bend/twist), and Lattice.
+    Physics: Cloth, Collision, and Fluid simulations. 
+
+4. Advanced Systems
+
+    Geometry Nodes: A node-based system for procedural design (e.g., generating entire cities or forests mathematically).
+    Grease Pencil: Tools for 2D drawing and sketching in 3D space, used for storyboarding and concept art.
+    Shader Editor: A node-based interface for designing complex materials like glass, metal, or skin. 
+
+5. Architectural & Technical Add-ons
+For precise design like architecture, specialized built-in or free plugins are often used:
+
+    Archipack / Archimesh: Parametric tools for instantly generating walls, windows, and doors.
+    MeasureIt: Displays real-time dimensions and angles in the viewport.
+    CAD Sketcher: Brings constraint-based sketching (like AutoCAD) into Blender. 

@@ -1,0 +1,46 @@
+
+...xXx... ~
+❯ hyprctl version | head -3                                                10:44:04
+Hyprland 0.54.3 built from branch v0.54.3 at commit 521ece463c4a9d3d128670688a34756805a4328f clean (version: bump to 0.54.3).
+Date: Fri Mar 27 18:17:50 2026
+Tag: v0.54.3, commits: 7014
+
+...xXx... ~
+❯                                                                          10:48:51
+...xXx... ~  14s
+❯ cat /tmp/nyxus-waybar.log                               23:09:37
+─────┬──────────────────────────────────────────────────────────────
+     │ File: /tmp/nyxus-waybar.log
+─────┼──────────────────────────────────────────────────────────────
+   1 │ [2026-04-28 23:09:35.902] [info] Using configuration file /ho
+     │ me/nyx/.config/waybar/config
+   2 │ [2026-04-28 23:09:35.904] [info] Discovered appearance 'dark'
+   3 │ [2026-04-28 23:09:35.904] [info] Using CSS file /home/nyx/.co
+     │ nfig/waybar/style.css
+   4 │ [2026-04-28 23:09:35.906] [error] style.css:874:10'cursor' is
+     │  not a valid property name
+─────┴──────────────────────────────────────────────────────────────
+
+...xXx... ~
+❯                                           curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | bash
+
+...xXx... ~
+❯ grep -niE 'col\.active_border|windowrule|^source' ~/.config/hypr/hyprland.conf
+23:windowrule {
+28:windowrule {
+81:    col.active_border   = rgba(ff00ffff) rgba(ff2da8ff) rgba(ff66ddff) rgba(b800ffff) rgba(00aaffff) rgba(39ff14ff) rgba(00aaffff) rgba(b800ffff) rgba(ff66ddff) rgba(ff00ffff) 70deg
+174:# Note: bringactivetotop is NOT a valid hyprland windowrule keyword.
+293:windowrule {
+304:windowrule {
+315:windowrule {
+325:windowrule {
+336:windowrule {
+347:windowrule {
+358:windowrule {
+399:source = ~/.config/hypr/conf.d/nyxus-windowrules.conf
+403:source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+406:source = ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+407:source = ~/.config/hypr/conf.d/nyxus-hyprland-general.conf
+
+...xXx... ~
+❯                                 

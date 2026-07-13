@@ -1,0 +1,124 @@
+
+...xXx... ~  10s
+❯ ls -la ~/.config/waybar/                                                 04:59:55
+head -60 /tmp/waybar.log
+.rw-r--r--  96k nyx   5 May 23:52  bg-bottom.png
+.rw-r--r--  80k nyx   5 May 23:52  bg-left.png
+.rw-r--r--  78k nyx   5 May 23:52  bg-right.png
+.rw-r--r--  99k nyx   5 May 23:52  bg-top.png
+lrwxrwxrwx    - nyx   6 May 04:59 󱁻 config -> /home/nyx/.config/waybar/waybar-config.json
+.rw-r--r-- 9.8k root 30 Apr 21:26  config.bak.nyxus-start.1777598779
+.rw-r--r--  10k root 30 Apr 22:55  config.bak.nyxus-start.1777604127
+.rw-r--r--  10k root 30 Apr 23:02  config.bak.nyxus-start.1777604529
+.rw-r--r-- 9.9k nyx  30 Apr 23:36  config.bak.nyxus-start.1777606598
+.rw-r--r--  10k nyx  30 Apr 23:50  config.bak.nyxus-start.1777607412
+.rw-r--r--  10k nyx   1 May 01:16  config.bak.nyxus-start.1777612608
+.rw-r--r--  10k nyx   1 May 01:17  config.bak.nyxus-start.1777612675
+.rw-r--r--  10k root  1 May 06:57  config.bak.nyxus-start.1777633034
+.rw-r--r--  10k root  1 May 07:13  config.bak.nyxus-start.1777634001
+.rw-r--r--  10k root  1 May 07:21  config.bak.nyxus-start.1777634481
+.rw-r--r--  10k root  1 May 07:26  config.bak.nyxus-start.1777634777
+.rw-r--r--  13k root  2 May 16:59  config.bak.nyxus-start.1777755591
+.rw-r--r--  13k root  2 May 17:54  config.bak.nyxus-start.1777758843
+.rw-r--r--  13k root  3 May 01:12  config.bak.nyxus-start.1777785128
+.rw-r--r--  13k root  3 May 01:12  config.bak.nyxus-start.1777785163
+.rw-r--r--  13k root  3 May 02:45  config.bak.nyxus-start.1777790704
+.rw-r--r--  13k root  3 May 04:25  config.bak.nyxus-start.1777796742
+.rw-r--r--  14k root  3 May 18:23  config.bak.nyxus-start.1777846999
+.rw-r--r--  14k root  3 May 18:26  config.bak.nyxus-start.1777847185
+.rw-r--r--  14k root  3 May 18:30  config.bak.nyxus-start.1777847446
+.rw-r--r--  14k root  3 May 20:10  config.bak.nyxus-start.1777853402
+.rw-r--r--  14k root  3 May 20:35  config.bak.nyxus-start.1777854947
+.rw-r--r--  14k root  3 May 22:39  config.bak.nyxus-start.1777862395
+.rw-r--r--  14k root  3 May 23:02  config.bak.nyxus-start.1777863741
+.rw-r--r--  14k root  3 May 23:07  config.bak.nyxus-start.1777864028
+.rw-r--r--  14k root  4 May 00:16  config.bak.nyxus-start.1777868169
+.rw-r--r--  14k root  4 May 01:53  config.bak.nyxus-start.1777874019
+.rw-r--r--  14k root  4 May 05:45  config.bak.nyxus-start.1777887928
+.rw-r--r--  14k root  4 May 06:42  config.bak.nyxus-start.1777891335
+.rw-r--r--  14k root  4 May 08:33  config.bak.nyxus-start.1777897996
+.rw-r--r--  14k root  4 May 08:39  config.bak.nyxus-start.1777898384
+.rw-r--r--  14k root  4 May 10:56  config.bak.nyxus-start.1777906588
+.rw-r--r--  14k root  4 May 15:26  config.bak.nyxus-start.1777922769
+.rw-r--r--  14k root  4 May 15:28  config.bak.nyxus-start.1777922886
+.rw-r--r--  14k root  4 May 18:21  config.bak.nyxus-start.1777933268
+.rw-r--r--  14k root  4 May 18:39  config.bak.nyxus-start.1777934355
+.rw-r--r--  14k root  4 May 22:39  config.bak.nyxus-start.1777948793
+.rw-r--r--  14k root  4 May 22:56  config.bak.nyxus-start.1777949773
+.rw-r--r--  14k root  4 May 23:00  config.bak.nyxus-start.1777950046
+.rw-r--r--  14k root  5 May 02:57  config.bak.nyxus-start.1777964265
+.rw-r--r--  14k root  5 May 05:24  config.bak.nyxus-start.1777973044
+.rw-r--r--  14k root  5 May 05:27  config.bak.nyxus-start.1777973248
+.rw-r--r--  14k root  5 May 05:32  config.bak.nyxus-start.1777973536
+.rw-r--r--  14k nyx   5 May 16:10  config.json
+.rw-r--r--  22k nyx   6 May 04:59  config.jsonc
+.rw-r--r--  24k nyx   3 May 05:07  nyxus-rightbar-bg.png
+.rwxr-xr-x  56k nyx   4 May 04:22  quicksettings.py
+.rwxr-xr-x  846 nyx   4 May 04:22  stats.sh
+lrwxrwxrwx    - nyx   6 May 04:59  style.css -> /home/nyx/.config/waybar/waybar-style.css
+.rwxr-xr-x 3.0k nyx   4 May 04:22  ticker.sh
+.rw-r--r--  22k nyx   6 May 04:55  waybar-config.json
+.rw-r--r--  17k nyx   6 May 04:55  waybar-style.css
+[2026-05-06 04:59:30.392] [info] Using configuration file /home/nyx/.config/waybar/config
+[2026-05-06 04:59:30.394] [info] Discovered appearance 'dark'
+[2026-05-06 04:59:30.405] [info] Using CSS file /home/nyx/.config/waybar/style.css
+[2026-05-06 04:59:30.434] [info] Hyprland IPC starting
+[2026-05-06 04:59:30.436] [info] Loading persistent workspaces from Waybar config
+[2026-05-06 04:59:30.436] [info] Loading persistent workspaces from Hyprland workspace rules
+[2026-05-06 04:59:30.441] [info] Loading persistent workspaces from Hyprland workspace rules
+Plugged
+[2026-05-06 04:59:30.574] [error] clock#date: format error: invalid arg-id in format string
+[2026-05-06 04:59:30.574] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:30.574] [error] clock#year: format error: invalid arg-id in format string
+[2026-05-06 04:59:30.613] [warning] Requested height: 60 is less than the minimum height: 140 required by the modules
+[2026-05-06 04:59:30.613] [info] Bar configured (width: 1900, height: 140) for output: eDP-1
+[2026-05-06 04:59:30.613] [warning] Requested height: 30 is less than the minimum height: 42 required by the modules
+[2026-05-06 04:59:30.613] [info] Bar configured (width: 1900, height: 42) for output: eDP-1
+[2026-05-06 04:59:30.613] [info] Bar configured (width: 64, height: 335) for output: eDP-1
+[2026-05-06 04:59:30.688] [info] Bar configured (width: 64, height: 243) for output: eDP-1
+[2026-05-06 04:59:31.000] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:32.001] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:33.001] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:34.001] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:35.001] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:36.001] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:37.000] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:38.001] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:39.001] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:40.000] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:41.000] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:42.000] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:43.000] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:44.000] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:45.001] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:46.000] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:47.000] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:48.000] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:49.001] [error] clock: format error: invalid arg-id in format string
+[2026-05-06 04:59:50.000] [error] clock: format error: invalid arg-id in format string
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+Plugged
+
+...xXx... ~
+❯           

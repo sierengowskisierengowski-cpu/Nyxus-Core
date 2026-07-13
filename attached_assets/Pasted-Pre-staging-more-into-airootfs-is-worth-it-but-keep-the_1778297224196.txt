@@ -1,0 +1,98 @@
+Pre-staging more into airootfs/ is worth it, but keep the live ISO “minimal stateful” and push most customization into /etc/skel (for user UX) + systemd units (for behavior). Here are the concrete recommendations for the two questions.
+
+1) Should airootfs/etc/nyxus/ ship with anything?
+Yes, but only safe, non-secret defaults and things that help debug/support.
+
+Good candidates to bake in:
+
+/etc/nyxus/nyxus.conf (or .toml/.yaml): defaults like log level, feature toggles, URLs, timeouts.
+/etc/nyxus/build-info.conf (or JSON): build metadata so you can identify exactly what ISO someone booted:
+git repo + commit SHA
+build date/time
+archiso version
+kernel version
+profile version string
+/etc/nyxus/firstboot.d/ (optional): drop-in scripts or flags used by a first-boot service.
+Do not ship secrets (API keys, private endpoints requiring tokens, user passwords).
+I would not ship a “brand lock file” unless you really need anti-remix behavior; it tends to create more pain than value and can break forks/testing.
+
+2) Should .desktop entry + Inter font be baked in?
+Bake them in if you want the live session to feel complete without running install.sh.
+
+.desktop entry
+If you want “Nyxus Intel” to show up in menus immediately:
+
+put a .desktop file in the image (either system-wide or per-user)
+Recommended:
+
+System-wide: airootfs/usr/share/applications/nyxus-intel.desktop
+Or per-user default: airootfs/etc/skel/.local/share/applications/nyxus-intel.desktop
+If it needs Wayland env vars (Hyprland), include them in Exec= or wrap them in the launcher script.
+
+Inter font
+If you want consistent UI typography in the live session:
+
+include the font package via pacman if available (ttf-inter on Arch), rather than copying font files manually.
+If you must vendor it, place in airootfs/usr/local/share/fonts/ and run fc-cache at build time (or let the live boot handle it, but that’s slower / less deterministic).
+Since you already have a lot of Nerd Fonts listed, adding ttf-inter as a package is usually the cleanest.
+
+Additional “worth it” pre-staging (high impact, low risk)
+A) A first-boot service (live-only)
+If nyxus-intel needs something to happen automatically on live boot (migrations, generating keys, enabling a user service), add:
+
+a systemd unit in airootfs/etc/systemd/system/
+enable it via symlink in airootfs/etc/systemd/system/multi-user.target.wants/
+Keep it idempotent and fast.
+
+B) Make failures debuggable
+Add a persistent-ish log target (even just good defaults):
+
+ensure journalctl is usable in live mode
+optionally set Storage=volatile explicitly (so expectations are clear)
+consider a /etc/issue or MOTD line pointing to “collect logs with …”
+C) Ensure nyxus-intel dependencies are fully present
+Since you moved to /opt/nyxus-intel/*.py, check you have all runtime deps as pacman packages (best) or vendored wheels (worst). If you rely on pip, consider pre-installing to system site-packages during build to avoid network dependency at runtime.
+
+Summary recommendation
+Put build metadata + safe defaults in /etc/nyxus/.
+Put UX things (.desktop, themes, configs) in /etc/skel or /usr/share.
+Prefer pacman packages for fonts (e.g. ttf-inter) and other assets.
+Avoid shipping /etc/shadow or secrets.
+If you paste what install.sh currently does for the .desktop and font, I can tell you exactly which bits are safe to move into airootfs so the live environment is feature-complete without running the installer.
+
+You said: why are you saying nyxus intel? its
+why are you saying nyxus intel? its nyxus void
+Copilot said: You’re right — I used “nyxus-intel” only
+You’re right — I used “nyxus-intel” only because your earlier build error and your airootfs population example referenced a launcher at:
+
+/usr/local/bin/nyxus-intel → python3 /opt/nyxus-intel/main.py
+So I was mirroring the current artifact name/path you showed, not implying the distro is called “Nyxus Intel”.
+
+If the product name is Nyxus Void, you’ve got two choices:
+
+Option 1 (recommended): Rename the artifact to match the distro branding
+Rename the launcher + directories so everything is “nyxus-void”:
+
+/usr/local/bin/nyxus-void
+/opt/nyxus-void/ (or /opt/nyxus/void/)
+.desktop entry: Name=Nyxus Void, Exec=/usr/local/bin/nyxus-void
+Then update profiledef.sh file_permissions accordingly.
+
+This avoids confusing “intel” naming forever.
+
+Option 2: Keep the internal component name, but present “Nyxus Void” externally
+If “nyxus-intel” is an internal module name, keep it, but make the UI/branding “Nyxus Void”:
+
+Keep /usr/local/bin/nyxus-intel
+Add /usr/local/bin/nyxus-void as a thin wrapper that execs nyxus-intel
+Desktop entry shows “Nyxus Void”
+That way you don’t have to refactor internal paths yet.
+
+Quick clarification so I advise the right direction
+Is “nyxus-intel” supposed to be:
+
+an old name you want to eliminate, or
+a specific subcomponent (installer/agent) that you’re fine keeping internally?
+Tell me which, and I’ll give you the exact renaming plan (including what to change in profiledef.sh, any .desktop entries, and any scripts that refer to the old paths).
+
+Block pasted, 1 total

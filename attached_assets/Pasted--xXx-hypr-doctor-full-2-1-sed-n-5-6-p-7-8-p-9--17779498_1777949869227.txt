@@ -1,0 +1,169 @@
+
+
+...xXx... ~
+❯ hypr-doctor --full 2>&1 | sed -n '/^\[5\]/,/^\[6\]/p; /^\[7\]/,/^\[8\]/p; /^\[9\]/,$p'
+[5] Source chain check
+Found sources:
+399:source = ~/.config/hypr/conf.d/nyxus-windowrules.conf
+
+Resolved source targets:
+ERROR: source target is not a file: ~/.config/hypr/conf.d/nyxus-windowrules.conf -> ~/.config/hypr/conf.d/nyxus-windowrules.conf
+
+[6] Config file list (1 files)
+[7] Config scans (common pitfalls)
+Scanning: /home/nyx/.config/hypr/hyprland.conf
+
+[8] Runtime checks (hyprctl)
+[9] Logs (best-effort)
+Last Hyprland-related logs from current boot (may be empty):
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: Welcome to Hyprland!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Instance Signature: 521ece463c4a9d3d128670688a34756805a4328f_1777942740_1805019654
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Runtime directory: /run/user/1000/hypr/521ece463c4a9d3d128670688a34756805a4328f_1777942740_1805019654
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Hyprland PID: 12299
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: ===== SYSTEM INFO: =====
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: System name: Linux
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Node name: NyxOS
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Release: 6.19.14-zen1-1-zen
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Version: #1 ZEN SMP PREEMPT_DYNAMIC Thu, 23 Apr 2026 06:56:44 +0000
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]:
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: GPU information:
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: 00:02.0 VGA compatible controller [0300]: Intel Corporation Alder Lake-P GT2 [Iris Xe Graphics] [8086:46a6] (rev 0c) (prog-if 00 [VGA controller])
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: 01:00.0 3D controller [0302]: NVIDIA Corporation GA106M [GeForce RTX 3060 Mobile / Max-Q] [10de:2520] (rev a1)
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: WARN ]: Warning: you're using an NVIDIA GPU. Make sure you follow the instructions on the wiki if anything is amiss.
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: os-release:
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: NAME="NYXUS"
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: PRETTY_NAME="NYXUS"
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: ID=nyxos
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: ID_LIKE=arch
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: BUILD_ID=rolling
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: VERSION="1.0"
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: VERSION_ID="1.0"
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: VERSION_CODENAME="primordial"
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: ANSI_COLOR="1;36"
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: HOME_URL="https://nyxos.local"
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DOCUMENTATION_URL="https://nyxos.local/docs"
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: SUPPORT_URL="https://nyxos.local/support"
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: BUG_REPORT_URL="https://nyxos.local/bugs"
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: LOGO=nyxos-logo
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: ========================
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]:
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: If you are crashing, or encounter any bugs, please consult https://wiki.hypr.land/Crashes-and-Bugs/
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]:
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: Current splash: "Hello everyone this is YOUR daily dose of ‘read the wiki’" - Vaxry
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Old rlimit: soft -> 1024, hard -> 524288
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: New rlimit: soft -> 524288, hard -> 524288
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: WARN ]: WARNING: Hyprland is being launched without start-hyprland. This is highly advised against.
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Creating the EventLoopManager!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Creating the KeybindManager!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Creating the AnimationManager!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Creating the DynamicPermissionManager!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Creating the ConfigManager!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Using config: /home/nyx/.config/hypr/hyprland.conf
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Warning: config descriptions have 326 entries, but there are 326 config values. This should fail tests!!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: !!!!HEY YOU, YES YOU!!!!: further logs to stdout / logfile are disabled by default. BEFORE SENDING THIS LOG, ENABLE THEM. Use debug:disable_logs = false to do so: https://wiki.hypr.land/Configuring/Variables/#debug
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Creating the CHyprError!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Creating the LayoutManager!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Creating the TokenManager!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Using config: /home/nyx/.config/hypr/hyprland.conf
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Disabling stdout logs! Check the log for further logs.
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Creating the PointerManager!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Creating the EventManager!
+May 04 20:59:00 NyxOS /usr/lib/gdm-wayland-session[12299]: DEBUG ]: Creating the AsyncResourceGatherer!
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12404]: The XKEYBOARD keymap compiler (xkbcomp) reports:
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12404]: > Warning:          Multiple symbols for level 1/group 1 on key <FK23>
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12404]: >                   Using F23, ignoring XF86TouchpadOff
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12404]: > Warning:          Symbol map for key <FK23> redefined
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12404]: >                   Using last definition for conflicting fields
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12404]: > Warning:          Symbol map for key <FK24> redefined
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12404]: >                   Using last definition for conflicting fields
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12404]: Errors from xkbcomp are not fatal to the X server
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12426]: The XKEYBOARD keymap compiler (xkbcomp) reports:
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12426]: > Warning:          Unsupported maximum keycode 709, clipping.
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12426]: >                   X11 cannot support keycodes above 255.
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12426]: > Warning:          Virtual modifier Hyper multiply defined
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12426]: >                   Using 0, ignoring 0
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12426]: > Warning:          Virtual modifier ScrollLock multiply defined
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12426]: >                   Using 0, ignoring 0
+May 04 20:59:02 NyxOS /usr/lib/gdm-wayland-session[12426]: Errors from xkbcomp are not fatal to the X server
+May 04 20:59:02 NyxOS systemd[10800]: Starting Portal service (Hyprland implementation)...
+May 04 20:59:02 NyxOS systemd[10800]: Started Portal service (Hyprland implementation).
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG] Initializing xdph...
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG] XDG_CURRENT_DESKTOP set to Hyprland
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG] Gathering exported interfaces
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wl_seat (ver 9)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wl_data_device_manager (ver 3)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wl_compositor (ver 6)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wl_subcompositor (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wl_shm (ver 2)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_viewporter (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_tearing_control_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_fractional_scale_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zxdg_output_manager_v1 (ver 3)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_cursor_shape_manager_v1 (ver 2)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwp_idle_inhibit_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwp_relative_pointer_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zxdg_decoration_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_alpha_modifier_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwlr_gamma_control_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: ext_foreign_toplevel_list_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwp_pointer_gestures_v1 (ver 3)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwlr_foreign_toplevel_manager_v1 (ver 3)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG] [toplevel] (activate) locks: 1
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwp_keyboard_shortcuts_inhibit_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwp_text_input_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwp_text_input_manager_v3 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwp_pointer_constraints_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwlr_output_power_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: xdg_activation_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: ext_idle_notifier_v1 (ver 2)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: hyprland_lock_notifier_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: ext_session_lock_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwp_input_method_manager_v2 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwp_virtual_keyboard_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwlr_virtual_pointer_manager_v1 (ver 2)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwlr_output_manager_v1 (ver 4)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: org_kde_kwin_server_decoration_manager (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: hyprland_focus_grab_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwp_tablet_manager_v2 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwlr_layer_shell_v1 (ver 5)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_presentation (ver 2)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: xdg_wm_base (ver 7)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwlr_data_control_manager_v1 (ver 2)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwp_primary_selection_device_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: xwayland_shell_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: hyprland_toplevel_mapping_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG] [toplevel mapping] registered manager
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: hyprland_global_shortcuts_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG] [globalshortcuts] registered
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: xdg_wm_dialog_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_single_pixel_buffer_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_security_context_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: hyprland_ctm_control_manager_v1 (ver 2)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: hyprland_surface_manager_v1 (ver 2)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_content_type_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: xdg_toplevel_tag_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: xdg_system_bell_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: ext_workspace_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: ext_data_control_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_pointer_warp_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_fifo_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_commit_timing_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: zwlr_screencopy_manager_v1 (ver 3)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG] [pipewire] connected
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG] [screencopy] init successful
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: hyprland_toplevel_export_manager_v1 (ver 2)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: ext_output_image_capture_source_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: ext_foreign_toplevel_image_capture_source_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: ext_image_copy_capture_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_color_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_drm_lease_device_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_linux_drm_syncobj_manager_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wp_drm_lease_device_v1 (ver 1)
+May 04 20:59:02 NyxOS xdg-desktop-portal-hyprland[12456]: [LOG]  | Got interface: wl_drm (ver 2)
+
+--------------------------------------------------------------------------------
+Done. Report saved to: /home/nyx/.cache/hypr-doctor/hypr-doctor-20260504-225734.log
+Tip: paste the last ~80 lines of the report (especially sections [5], [7], [8], [9]) when asking for help.
+
+...xXx... ~
+❯                     

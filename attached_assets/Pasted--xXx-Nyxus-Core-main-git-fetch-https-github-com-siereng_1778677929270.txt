@@ -1,0 +1,55 @@
+
+
+...xXx... Nyxus-Core  main $⇕
+❯ git fetch https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git main
+git merge --no-edit FETCH_HEAD
+From https://github.com/sierengowskisierengowski-cpu/Nyxus-Core
+ * branch            main       -> FETCH_HEAD
+Auto-merging iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+Auto-merging iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+CONFLICT (content): Merge conflict in iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+warning: Cannot merge binary files: iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/background.png (HEAD vs. a1f5a558aed1c063cdeef4ac480ac0e25e7683f0)
+Auto-merging iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/background.png
+CONFLICT (content): Merge conflict in iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/background.png
+Auto-merging iso-builder/nyx-profile/profiledef.sh
+Automatic merge failed; fix conflicts and then commit the result.
+
+...xXx... Nyxus-Core  main =$+⇕
+❯ git checkout --theirs iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+Updated 1 path from the index
+
+...xXx... Nyxus-Core  main =$+⇕
+❯ git checkout --ours iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/background.png
+Updated 1 path from the index
+
+...xXx... Nyxus-Core  main =$+⇕
+❯ it add iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf \
+        iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/background.png
+git commit --no-edit
+zsh: command not found: it
+U	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+U	iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/background.png
+error: Committing is not possible because you have unmerged files.
+hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+hint: as appropriate to mark resolution and make a commit.
+fatal: Exiting because of an unresolved conflict.
+
+...xXx... Nyxus-Core  main =$+⇕
+❯ git cherry-pick 3202909                                                  09:11:53
+git push https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git main
+
+
+error: Cherry-picking is not possible because you have unmerged files.
+hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+hint: as appropriate to mark resolution and make a commit.
+fatal: cherry-pick failed
+To https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+...xXx... Nyxus-Core  main =$+⇕
+❯                                         

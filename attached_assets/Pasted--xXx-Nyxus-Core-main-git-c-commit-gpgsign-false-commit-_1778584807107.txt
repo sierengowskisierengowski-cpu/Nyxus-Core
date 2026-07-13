@@ -1,0 +1,167 @@
+
+...xXx... Nyxus-Core  main ✘!+?⇣
+❯ git -c commit.gpgsign=false commit -am "msi: local iso-builder edits pre-pull"         07:16:08
+[main a2c56a0] msi: local iso-builder edits pre-pull
+ 14 files changed, 151 insertions(+), 220 deletions(-)
+ delete mode 100644 iso-builder/nyx-profile/airootfs/etc/skel/.config/nyxus-intel/backups/.gitkeep
+ delete mode 100644 iso-builder/nyx-profile/airootfs/etc/skel/.config/nyxus-intel/cases/.gitkeep
+ delete mode 100644 iso-builder/nyx-profile/airootfs/etc/skel/.config/systemd/user/nyxus-eww.service
+
+...xXx... Nyxus-Core  main ?⇕
+❯ git pull -X ours                                                                       07:17:35
+hint: You have divergent branches and need to specify how to reconcile them.
+hint: You can do so by running one of the following commands sometime before
+hint: your next pull:
+hint:
+hint:   git config pull.rebase false  # merge
+hint:   git config pull.rebase true   # rebase
+hint:   git config pull.ff only       # fast-forward only
+hint:
+hint: You can replace "git config" with "git config --global" to set a default
+hint: preference for all repositories. You can also pass --rebase, --no-rebase,
+hint: or --ff-only on the command line to override the configured default per
+hint: invocation.
+fatal: Need to specify how to reconcile divergent branches.
+
+...xXx... Nyxus-Core  main ?⇕
+❯ git pull --no-rebase -X ours                                                           07:17:40
+Auto-merging iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+Auto-merging iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+hint: Waiting for your editor to close the file... error: cannot run vi: No such file or directory
+error: unable to start editor 'vi'
+Not committing merge; use 'git commit' to complete the merge.
+
+...xXx... Nyxus-Core  main +?⇕
+❯ git -c commit.gpgsign=false commit -m "merge: pull origin/main with -X ours"           07:18:04
+[main 7d3c90b] merge: pull origin/main with -X ours
+
+...xXx... Nyxus-Core  main ?⇡
+❯ git -c commit.gpgsign=false commit -m "merge: pull origin/main with -X ours"           07:18:37
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-01.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-02.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-03.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-04.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-05.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-06.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-07.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-08.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-09.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-10.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-11.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-12.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-13.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-14.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-15.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-16.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-hyprlock-eye.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-login-stars.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-sierengowski-clean.png
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/.manifest.sha256
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CHANGELOG.md
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CREDITS.md
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/README.md
+	iso-builder/nyx-profile/airootfs/opt/nyxus/
+	iso-builder/nyx-profile/airootfs/usr/share/backgrounds/
+	iso-builder/out/
+
+nothing added to commit but untracked files present (use "git add" to track)
+
+...xXx... Nyxus-Core  main ?⇡
+❯ git status                                                                             07:18:56
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-01.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-02.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-03.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-04.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-05.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-06.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-07.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-08.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-09.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-10.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-11.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-12.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-13.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-14.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-15.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-16.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-hyprlock-eye.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-login-stars.png
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-sierengowski-clean.png
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/.manifest.sha256
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CHANGELOG.md
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CREDITS.md
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/README.md
+	iso-builder/nyx-profile/airootfs/opt/nyxus/
+	iso-builder/nyx-profile/airootfs/usr/share/backgrounds/
+	iso-builder/out/
+
+nothing added to commit but untracked files present (use "git add" to track)
+
+...xXx... Nyxus-Core  main ?⇡
+❯                                                                                       07:19:26
+
+...xXx... Nyxus-Core  main ?⇡
+❯ ./artifacts/api-server/nyxus-scripts/sync-eww.sh                                      07:19:28
+── NYXUS · sync-eww ──────────────────────────────────────────
+  source : /home/nyx/Nyxus-Core/artifacts/api-server/nyxus-scripts/eww
+  target : /home/nyx/.config/eww
+  mode   : COPY
+.d..t...... ./
+>f..t...... README.md
+>f.st...... eww.scss
+>f.st...... eww.yuck
+>f..t...... nyxus.conf
+.d..t...... scripts/
+>f..t...... scripts/audio-action.sh
+>f..t...... scripts/audio-sinks.sh
+>f..t...... scripts/audio.sh
+>f..t...... scripts/battery.sh
+>f..t...... scripts/bluetooth.sh
+>f..t...... scripts/brightness.sh
+>f..t...... scripts/bt-action.sh
+>f..t...... scripts/bt-list.sh
+>f..t...... scripts/calendar-month.sh
+>f..t...... scripts/calendar.sh
+>f..t...... scripts/cpu-bars.sh
+>f..t...... scripts/mic.sh
+>f..t...... scripts/network.sh
+>f.st...... scripts/notif-action.sh
+>f.st...... scripts/notif-history.sh
+>f+++++++++ scripts/notif-mute.sh
+>f..t...... scripts/notifications.sh
+>f..t...... scripts/osd-show.sh
+>f..t...... scripts/player.sh
+>f..t...... scripts/power-profile.sh
+>f.st...... scripts/qs-toggle.sh
+>f.st...... scripts/quicksettings.sh
+>f..t...... scripts/sys-pulse.sh
+>f..t...... scripts/ticker.sh
+>f..t...... scripts/updates.sh
+>f..t...... scripts/weather.sh
+>f..t...... scripts/wifi-action.sh
+>f..t...... scripts/wifi-list.sh
+>f..t...... scripts/workspaces.sh
+── reloading eww ─────────────────────────────────────────────
+ 2026-05-12T11:19:32.124Z INFO  eww > Initializing Eww server. (/run/user/1000/eww-server_69eff7c8a8c4b43d)
+Run `eww logs` to see any errors while editing your configuration.
+ 2026-05-12T11:19:32.125Z INFO  eww::server > Loading paths: config-dir: /home/nyx/.config/eww, ipc-socket: /run/user/1000/eww-server_69eff7c8a8c4b43d, log-file: /home/nyx/.cache/eww/eww_69eff7c8a8c4b43d.log
+  ✓ eww reloaded
+── done ──────────────────────────────────────────────────────
+
+...xXx... Nyxus-Core  main ?⇡
+❯ git config --global core.editor nano                                                  07:19:32
+
+...xXx... Nyxus-Core  main ?⇡
+❯                                        

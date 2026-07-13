@@ -1,0 +1,89 @@
+
+...xXx... nyxus/iso-builder  main $✘!+?⇣
+❯ cd ~/nyxus                                                                             19:56:16
+export PAGER=cat
+git --no-pager status -s
+git stash push -u -m "pre-eww-fix-pull"
+git pull
+git --no-pager log --oneline -5
+grep -c "warm-up build" iso-builder/nyx-profile/airootfs/root/customize_airootfs.sh
+ M artifacts/api-server/nyxus-scripts/hyprland.conf
+ M artifacts/api-server/nyxus-scripts/nyxus-hyprland-opacity.conf
+ M artifacts/api-server/nyxus-scripts/nyxus-hyprland-rules.conf
+ M iso-builder/nyx-profile/airootfs/etc/sddm.conf.d/nyxus.conf
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+ M iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+ D iso-builder/nyx-profile/airootfs/etc/skel/.config/nyxus-intel/backups/.gitkeep
+ D iso-builder/nyx-profile/airootfs/etc/skel/.config/nyxus-intel/cases/.gitkeep
+ D iso-builder/nyx-profile/airootfs/etc/skel/.config/systemd/user/nyxus-eww.service
+ M iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-bootstrap
+ M iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-intel
+ M iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-wait-bootstrap
+ M iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.intel.desktop
+ M iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/Main.qml
+ M iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/background.png
+ M iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/theme.conf
+M  iso-builder/nyx-profile/packages.x86_64
+?? iso-builder/bake.log
+?? iso-builder/nyx-profile/airootfs/etc/nyxus/CHANGELOG.md
+?? iso-builder/nyx-profile/airootfs/etc/nyxus/CREDITS.md
+?? iso-builder/nyx-profile/airootfs/etc/nyxus/LICENSE.md
+?? iso-builder/nyx-profile/airootfs/etc/nyxus/README.md
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/alacritty/
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/dunst/
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-01.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-02.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-03.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-04.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-05.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-06.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-07.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-08.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-09.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-10.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-11.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-12.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-13.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-14.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-15.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-bg-16.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/nyxus-sierengowski-clean.png
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/rofi/
+?? iso-builder/nyx-profile/airootfs/etc/skel/.config/wlogout/
+?? iso-builder/nyx-profile/airootfs/etc/skel/.nyxus
+?? iso-builder/nyx-profile/airootfs/opt/nyxus-cache/
+?? iso-builder/nyx-profile/airootfs/opt/nyxus-intel/.manifest.sha256
+?? iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CHANGELOG.md
+?? iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CREDITS.md
+?? iso-builder/nyx-profile/airootfs/opt/nyxus-intel/README.md
+?? iso-builder/nyx-profile/airootfs/opt/nyxus/
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-control
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-doctor
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-launcher
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-notepad
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-powermenu
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-quicksettings
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-screenshot
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-settings
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-stickies
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-sysmon
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-terminal
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-weather
+?? iso-builder/nyx-profile/airootfs/usr/local/bin/wallpaper-rotate
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.control.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.doctor.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.launcher.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.notepad.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.powermenu.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.quicksettings.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.screenshot.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.settings.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.stickies.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.sysmon_gtk.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.terminal.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.weather.desktop
+?? iso-builder/nyx-profile/airootfs/usr/share/backgrounds/
+?? iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/theme.conf.user
+?? iso-builder/out/

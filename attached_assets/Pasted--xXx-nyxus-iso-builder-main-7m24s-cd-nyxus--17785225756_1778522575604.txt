@@ -1,0 +1,98 @@
+
+
+...xXx... nyxus/iso-builder  main $✘!?⇣  7m24s
+❯ cd ~/nyxus                                                                        14:01:37
+git --no-optional-locks status
+git --no-optional-locks log --oneline -5
+echo "---"
+date
+sudo date
+sudo bash -c 'echo "sudo sees: $(date +%Y.%m.%d)"'
+echo "---"
+grep -n 'ISO_DATE\|2026' iso-builder/build-iso.sh | head -10
+On branch main
+Your branch is behind 'origin/main' by 46 commits, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   iso-builder/build-iso.sh
+	modified:   iso-builder/nyx-profile/airootfs/etc/sddm.conf.d/nyxus.conf
+	modified:   iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprland.conf
+	deleted:    iso-builder/nyx-profile/airootfs/etc/skel/.config/nyxus-intel/backups/.gitkeep
+	deleted:    iso-builder/nyx-profile/airootfs/etc/skel/.config/nyxus-intel/cases/.gitkeep
+	modified:   iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-intel
+	modified:   iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.intel.desktop
+	modified:   iso-builder/nyx-profile/packages.x86_64
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	iso-builder/nyx-profile/airootfs/etc/nyxus/CHANGELOG.md
+	iso-builder/nyx-profile/airootfs/etc/nyxus/CREDITS.md
+	iso-builder/nyx-profile/airootfs/etc/nyxus/LICENSE.md
+	iso-builder/nyx-profile/airootfs/etc/nyxus/README.md
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/alacritty/
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/dunst/
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hypridle.conf
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/hyprlock.conf
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls/
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/rofi/
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/waybar/
+	iso-builder/nyx-profile/airootfs/etc/skel/.config/wlogout/
+	iso-builder/nyx-profile/airootfs/etc/skel/.nyxus
+	iso-builder/nyx-profile/airootfs/opt/nyxus-cache/
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/.manifest.sha256
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CHANGELOG.md
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/CREDITS.md
+	iso-builder/nyx-profile/airootfs/opt/nyxus-intel/README.md
+	iso-builder/nyx-profile/airootfs/opt/nyxus/
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-control
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-doctor
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-launcher
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-notepad
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-powermenu
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-quicksettings
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-screenshot
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-settings
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-stickies
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-sysmon
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-terminal
+	iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-weather
+	iso-builder/nyx-profile/airootfs/usr/local/bin/wallpaper-rotate
+	iso-builder/nyx-profile/airootfs/usr/local/bin/waybar-stats
+	iso-builder/nyx-profile/airootfs/usr/local/bin/waybar-ticker
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.control.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.doctor.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.launcher.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.notepad.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.powermenu.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.quicksettings.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.screenshot.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.settings.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.stickies.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.sysmon_gtk.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.terminal.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.weather.desktop
+	iso-builder/nyx-profile/airootfs/usr/share/backgrounds/
+	iso-builder/nyx-profile/airootfs/usr/share/sddm/themes/nyxus/theme.conf.user
+	iso-builder/out/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+error: cannot run less: No such file or directory
+fatal: unable to execute pager 'less'
+---
+Mon May 11 02:02:36 PM EDT 2026
+[sudo] password for nyx:
+Mon May 11 02:02:43 PM EDT 2026
+sudo sees: 2026.05.11
+---
+3:# NYXUS — nyx-2026.05.02-x86_64.iso
+4:# Copyright © 2026 Joseph Sierengowski
+7:# NYX-J5W-2026-SIERENGOWSKI-LOCKED
+17:#   ./out/nyx-2026.05.02-x86_64.iso
+30:ISO_NAME="nyx-2026.05.02-x86_64.iso"
+230:# NYXUS ${name} launcher — Copyright © 2026 Joseph Sierengowski
+291:# NYXUS Phantom launcher — Copyright © 2026 Joseph Sierengowski
+
+...xXx... nyxus  main $✘!?⇣  7s

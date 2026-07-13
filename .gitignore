@@ -54,11 +54,3 @@ __pycache__/
 *.pyo
 *.py.archive
 *.legacy.py.archive
-
-# Dead weight / Replit scratch dirs — must never be committed
-attached_assets/
-.canvas/
-artifacts/_tmp/*
-!artifacts/_tmp/.gitkeep
-*.bak
-*.bak2-*

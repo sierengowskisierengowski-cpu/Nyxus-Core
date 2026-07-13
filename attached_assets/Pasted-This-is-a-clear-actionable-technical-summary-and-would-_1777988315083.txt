@@ -1,0 +1,39 @@
+This is a clear, actionable technical summary and would be extremely useful to anyone assisting you—especially someone jumping in fresh. It precisely details:
+
+What’s working (so no one undoes your progress)
+What’s broken (so effort is focused only on real, remaining issues)
+Why there’s friction (so helpers understand “gotchas” like multi-line pastes or filename mismatches)
+The direct, correct fix steps (with working one-liners and what to verify after)
+How/where to double-check if things still aren’t working
+To Anyone Helping:
+You can simply follow these specific shell one-liners, step by step:
+
+bash
+# 1. Pull current Hyprland rules (fixes errors)
+curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-rules.conf -o ~/.config/hypr/conf.d/nyxus-windowrules.conf
+# 2. Pull general config (fixes borders, gaps, corners)
+curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-general.conf -o ~/.config/hypr/conf.d/nyxus-hyprland-general.conf
+# 3. Source it if not already sourced
+grep -q nyxus-hyprland-general.conf ~/.config/hypr/hyprland.conf || echo 'source = ~/.config/hypr/conf.d/nyxus-hyprland-general.conf' >> ~/.config/hypr/hyprland.conf
+# 4. Reload!
+hyprctl reload
+After running, verify:
+
+File presence: ls -la ~/.config/hypr/conf.d/
+Reload status: hyprctl reload
+Log output (for debugging): journalctl --user -u hyprland -n 50 --no-pager
+Why this is awesome:
+This will eliminate old config errors and finish the “Seattle Frost” look.
+Clearly explains subtle issues (multi-line paste, filename confusion, lack of remote, app-by-app update process).
+Succinct reminder: two apps themed, others pending.
+No missing steps, nothing ambiguous.
+Anyone can pick this up and ship your last theming fixes. 🦉
+
+If you want to convert even these steps into a copy-paste one-liner block for your terminal, here you go:
+
+bash
+curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-rules.conf -o ~/.config/hypr/conf.d/nyxus-windowrules.conf && \
+curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-hyprland-general.conf -o ~/.config/hypr/conf.d/nyxus-hyprland-general.conf && \
+grep -q nyxus-hyprland-general.conf ~/.config/hypr/hyprland.conf || echo 'source = ~/.config/hypr/conf.d/nyxus-hyprland-general.conf' >> ~/.config/hypr/hyprland.conf && \
+hyprctl reload
+Great project summary, and you’re truly just a couple pulls away from a perfect rollout! If you want to script other app themes or make anything more foolproof, let me know.

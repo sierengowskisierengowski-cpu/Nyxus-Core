@@ -1,0 +1,20 @@
+                      09:15:39
+
+...xXx... Nyxus-Core  main $⇡
+❯ cd ~/Nyxus-Core && for kv in "io.nyxus.intel:Network;Security;" "nyxus-backup:Utility;Archiving;" "nyxus-control:Settings;" "nyxus-drop:Network;FileTransfer;" "nyxus-files:System;FileManager;FileTools;" "nyxus-gen-icons:Graphics;" "nyxus-launcher:Utility;" "nyxus-notepad:Utility;TextEditor;" "nyxus-powermenu:System;" "nyxus-screenshot:Graphics;" "nyxus-stickies:Office;" "nyxus-store:Settings;PackageManager;" "nyxus-updater:Settings;PackageManager;"; do n="${kv%%:*}"; c="${kv#*:}"; sed -i "s|^Categories=.*|Categories=$c|" "iso-builder/nyx-profile/airootfs/usr/share/applications/$n.desktop"; done && grep -H "^Categories=" iso-builder/nyx-profile/airootfs/usr/share/applications/{io.nyxus.intel,nyxus-backup,nyxus-control,nyxus-drop,nyxus-files,nyxus-gen-icons,nyxus-launcher,nyxus-notepad,nyxus-powermenu,nyxus-screenshot,nyxus-stickies,nyxus-store,nyxus-updater}.desktop
+iso-builder/nyx-profile/airootfs/usr/share/applications/io.nyxus.intel.desktop:Categories=Network;Security;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-backup.desktop:Categories=Utility;Archiving;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-control.desktop:Categories=Settings;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-drop.desktop:Categories=Network;FileTransfer;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-files.desktop:Categories=System;FileManager;FileTools;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-gen-icons.desktop:Categories=Graphics;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-launcher.desktop:Categories=Utility;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-notepad.desktop:Categories=Utility;TextEditor;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-powermenu.desktop:Categories=System;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-screenshot.desktop:Categories=Graphics;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-stickies.desktop:Categories=Office;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-store.desktop:Categories=Settings;PackageManager;
+iso-builder/nyx-profile/airootfs/usr/share/applications/nyxus-updater.desktop:Categories=Settings;PackageManager;
+
+...xXx... Nyxus-Core  main $!⇡
+❯                                                         
