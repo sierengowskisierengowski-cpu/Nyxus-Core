@@ -1,6 +1,6 @@
 import { createServer } from "http";
 import { createReadStream, statSync, existsSync } from "fs";
-import { join, extname, resolve } from "path";
+import { join, extname, resolve, sep } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -24,10 +24,34 @@ const MIME = {
   ".txt": "text/plain",
 };
 
+// Confine a resolved path to DIST. Rejects `..` traversal that would
+// otherwise let a raw request like `GET /../../../etc/passwd` escape the
+// web root and read arbitrary files off the host.
+function isInsideDist(candidate) {
+  const r = resolve(candidate);
+  return r === DIST || r.startsWith(DIST + sep);
+}
+
 const server = createServer((req, res) => {
   let urlPath = req.url.split("?")[0];
 
+  // Decode percent-encoding so encoded traversal (e.g. %2e%2e%2f) is
+  // caught by the containment check below rather than slipping through.
+  try {
+    urlPath = decodeURIComponent(urlPath);
+  } catch {
+    res.writeHead(400, { "Content-Type": "text/plain" });
+    res.end("Bad request");
+    return;
+  }
+
   let filePath = join(DIST, urlPath);
+
+  if (!isInsideDist(filePath)) {
+    res.writeHead(403, { "Content-Type": "text/plain" });
+    res.end("Forbidden");
+    return;
+  }
 
   if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
     const withIndex = join(filePath, "index.html");
