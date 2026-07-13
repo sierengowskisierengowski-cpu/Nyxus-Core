@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# One-shot recovery: eye-candy bars already fixed in ~/.config/eww.
+# Run with sudo to install login recovery gate + PAM hooks.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+SCRIPT_DIR="${ROOT}/artifacts/api-server/nyxus-scripts"
+USER_NAME="${1:-cosmic}"
+
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "Usage: sudo $0 [username]" >&2
+  exit 1
+fi
+
+install -Dm755 "${SCRIPT_DIR}/nyxus-recovery-auth" /usr/local/bin/nyxus-recovery-auth
+install -Dm755 "${SCRIPT_DIR}/nyxus-recovery-register" /usr/local/bin/nyxus-recovery-register
+install -Dm644 "${SCRIPT_DIR}/sddm-themes/nyxus/Main.qml" /usr/share/sddm/themes/nyxus/Main.qml
+
+mkdir -p /etc/nyxus
+chmod 700 /etc/nyxus
+
+patch_pam() {
+  local file="$1"
+  local snippet="$2"
+  if grep -q 'nyxus-recovery-auth' "$file" 2>/dev/null; then
+    return 0
+  fi
+  cp "$file" "${file}.bak-$(date +%Y%m%d-%H%M%S)"
+  { echo "# NYXUS recovery gate"; cat "$snippet"; echo; cat "$file"; } > "${file}.new"
+  mv "${file}.new" "$file"
+}
+
+patch_pam /etc/pam.d/sddm "${ROOT}/iso-builder/nyx-profile/airootfs/etc/pam.d/sddm-recovery-snippet"
+patch_pam /etc/pam.d/hyprlock "${ROOT}/iso-builder/nyx-profile/airootfs/etc/pam.d/sddm-recovery-snippet"
+
+nyxus-recovery-register "$USER_NAME"
+
+echo ""
+echo "Done. Recovery gate installed for ${USER_NAME}."
+echo "  SDDM:  hold FN (Launch1) + Space at login"
+echo "  Lock:  type RECOVERY_TOKEN from ~/.nyxus/recovery-gate.txt"
+echo "  Token: $(grep '^RECOVERY_TOKEN=' "/home/${USER_NAME}/.nyxus/recovery-gate.txt" | cut -d= -f2-)"
