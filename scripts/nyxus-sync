@@ -93,6 +93,12 @@ if [[ -n "${REPO_DIR}" && -d "${REPO_DIR}/.git" ]]; then
   mkdir -p "${NYXUS_DIR}"
   printf '%s\n' "${REPO_DIR}" > "${REPO_FILE}"
   INSTALL_SCRIPT="${REPO_DIR}/artifacts/api-server/nyxus-scripts/nyxus_install.sh"
+
+  # Deploy from the freshly-pulled local checkout instead of the download
+  # server: every config, script, wallpaper and GTK4 app tarball lives in the
+  # repo, so a `git pull` alone is a complete, server-independent live update.
+  # Respect an explicit NYXUS_OFFLINE_DIR override if the caller set one.
+  export NYXUS_OFFLINE_DIR="${NYXUS_OFFLINE_DIR:-${REPO_DIR}/artifacts/api-server/nyxus-scripts}"
 else
   # No local repo — fetch directly from API
   warn "No local repo found — fetching configs from network"
