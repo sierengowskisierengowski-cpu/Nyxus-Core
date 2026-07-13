@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Register (or rotate) the NYXUS recovery gate token used by hidden login.
+set -euo pipefail
+
+USER_NAME="${1:-${USER:-cosmic}}"
+TOKEN="${2:-}"
+HASH_PATH="/etc/nyxus/recovery.hash"
+HINT_PATH="${HOME}/.nyxus/recovery-gate.txt"
+
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "Run as root: sudo nyxus-recovery-register [user] [token]" >&2
+  exit 1
+fi
+
+if [[ -z "$TOKEN" ]]; then
+  TOKEN="$(python3 - <<'PY'
+import secrets
+print(secrets.token_urlsafe(24))
+PY
+)"
+fi
+
+mkdir -p /etc/nyxus
+chmod 700 /etc/nyxus
+
+python3 - "$TOKEN" "$HASH_PATH" <<'PY'
+import bcrypt, pathlib, sys
+token, path = sys.argv[1], pathlib.Path(sys.argv[2])
+path.write_bytes(bcrypt.hashpw(token.encode(), bcrypt.gensalt(rounds=12)))
+path.chmod(0o600)
+PY
+
+USER_HOME="$(getent passwd "$USER_NAME" | cut -d: -f6)"
+THEME_USER_CONF="/usr/share/sddm/themes/nyxus/theme.conf.user"
+mkdir -p "${USER_HOME}/.nyxus"
+cat > "${USER_HOME}/.nyxus/recovery-gate.txt" <<EOF
+# NYXUS recovery gate (keep private)
+# SDDM login: hold FN (Launch1) + Space on the greeter.
+# Lock screen: type RECOVERY_TOKEN below as your password.
+# Rotated: $(date -Iseconds)
+RECOVERY_TOKEN=${TOKEN}
+EOF
+chown "${USER_NAME}:${USER_NAME}" "${USER_HOME}/.nyxus/recovery-gate.txt"
+chmod 600 "${USER_HOME}/.nyxus/recovery-gate.txt"
+
+if [[ -f "$THEME_USER_CONF" ]]; then
+  grep -v '^RecoveryToken=' "$THEME_USER_CONF" > "${THEME_USER_CONF}.tmp" 2>/dev/null || true
+  mv "${THEME_USER_CONF}.tmp" "$THEME_USER_CONF"
+fi
+printf 'RecoveryToken=%s\n' "$TOKEN" >> "$THEME_USER_CONF"
+chmod 600 "$THEME_USER_CONF"
+
+echo "Recovery gate registered for ${USER_NAME}."
+echo "Token saved to ${USER_HOME}/.nyxus/recovery-gate.txt"

@@ -1,0 +1,3 @@
+# NYXUS recovery gate - sufficient auth before normal system-login.
+# Hidden SDDM combo (FN/Launch1 + Space) submits the recovery token.
+auth      sufficient   pam_exec.so   quiet expose_authtok /usr/local/bin/nyxus-recovery-auth
