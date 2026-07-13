@@ -30,6 +30,11 @@ log() { printf '[%s] %s\n' "$(ts)" "$*" >> "$LOG"; }
 
 log "launch start — bars=[${BARS}] timeout=${TIMEOUT_SECS}s"
 
+COMPILE="${HOME}/.config/eww/scripts/compile-eww-css.sh"
+if [[ -x "$COMPILE" ]]; then
+  "$COMPILE" >>"$LOG" 2>&1 || log "WARN — compile-eww-css failed (using existing eww.css)"
+fi
+
 # Detect daemon: newer eww uses an instance-hash socket name
 # (eww-server_<hex>) instead of the legacy eww-server_default. Probe via
 # `eww ping` which talks to whichever socket the daemon is using; fall back

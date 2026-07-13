@@ -35,7 +35,7 @@ for b in $bars; do eww close "$b" 2>/dev/null; done
   # "close X && open Y" — as long as one is up, bars stay hidden.
   while :; do
     act=$(eww active-windows 2>/dev/null) || break
-    grep -qE '^(dashboard|powermenu|cheatsheet|deepcore|mission): ' <<<"$act" || break
+    grep -qE '^(dashboard|powermenu|cheatsheet|deepcore|mission|nyxus-hub): ' <<<"$act" || break
     sleep 0.4
   done
   while read -r b; do eww open "$b" 2>/dev/null; done < "$lock/bars"

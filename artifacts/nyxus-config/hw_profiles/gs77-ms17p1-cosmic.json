@@ -1,0 +1,277 @@
+{
+  "generated": "2026-07-08T00:38:44.615838",
+  "board": "Micro-Star International Co., Ltd. MS-17P1",
+  "cpu": {
+    "model": "12th Gen Intel(R) Core(TM) i7-12700H",
+    "cores": 20,
+    "governor": "powersave",
+    "governors": [
+      "performance",
+      "powersave"
+    ],
+    "boost_path": "/sys/devices/system/cpu/cpufreq/boost",
+    "boost_supported": false,
+    "boost": false
+  },
+  "gpu": {
+    "vendor": "nvidia",
+    "name": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "detected": true,
+    "temp": 73.0,
+    "power_draw": 37.46,
+    "power_limit": 0.0,
+    "mem_used": 2261,
+    "mem_total": 6144,
+    "util": 0.0
+  },
+  "battery": {
+    "path": "/sys/class/power_supply/BAT1",
+    "pct": 93,
+    "status": "Not charging",
+    "charge_limit_path": "/sys/class/power_supply/BAT1/charge_control_end_threshold"
+  },
+  "hwmon": [
+    {
+      "name": "acpitz",
+      "path": "/sys/class/hwmon/hwmon1",
+      "temps": [
+        {
+          "idx": "1",
+          "label": "Temp 1",
+          "path": "/sys/class/hwmon/hwmon1/temp1_input",
+          "crit": null,
+          "max": null
+        }
+      ],
+      "fans": [],
+      "pwms": []
+    },
+    {
+      "name": "nvme",
+      "path": "/sys/class/hwmon/hwmon3",
+      "temps": [
+        {
+          "idx": "1",
+          "label": "Composite",
+          "path": "/sys/class/hwmon/hwmon3/temp1_input",
+          "crit": 89,
+          "max": 86
+        },
+        {
+          "idx": "2",
+          "label": "Sensor 1",
+          "path": "/sys/class/hwmon/hwmon3/temp2_input",
+          "crit": null,
+          "max": 65261
+        }
+      ],
+      "fans": [],
+      "pwms": []
+    },
+    {
+      "name": "msi_wmi_platform",
+      "path": "/sys/class/hwmon/hwmon4",
+      "temps": [],
+      "fans": [
+        {
+          "idx": "1",
+          "label": "Fan 1",
+          "path": "/sys/class/hwmon/hwmon4/fan1_input",
+          "min_rpm": 0
+        },
+        {
+          "idx": "2",
+          "label": "Fan 2",
+          "path": "/sys/class/hwmon/hwmon4/fan2_input",
+          "min_rpm": 0
+        },
+        {
+          "idx": "3",
+          "label": "Fan 3",
+          "path": "/sys/class/hwmon/hwmon4/fan3_input",
+          "min_rpm": 0
+        },
+        {
+          "idx": "4",
+          "label": "Fan 4",
+          "path": "/sys/class/hwmon/hwmon4/fan4_input",
+          "min_rpm": 0
+        }
+      ],
+      "pwms": []
+    },
+    {
+      "name": "coretemp",
+      "path": "/sys/class/hwmon/hwmon5",
+      "temps": [
+        {
+          "idx": "10",
+          "label": "Core 8",
+          "path": "/sys/class/hwmon/hwmon5/temp10_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "14",
+          "label": "Core 12",
+          "path": "/sys/class/hwmon/hwmon5/temp14_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "18",
+          "label": "Core 16",
+          "path": "/sys/class/hwmon/hwmon5/temp18_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "1",
+          "label": "Package id 0",
+          "path": "/sys/class/hwmon/hwmon5/temp1_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "22",
+          "label": "Core 20",
+          "path": "/sys/class/hwmon/hwmon5/temp22_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "26",
+          "label": "Core 24",
+          "path": "/sys/class/hwmon/hwmon5/temp26_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "27",
+          "label": "Core 25",
+          "path": "/sys/class/hwmon/hwmon5/temp27_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "28",
+          "label": "Core 26",
+          "path": "/sys/class/hwmon/hwmon5/temp28_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "29",
+          "label": "Core 27",
+          "path": "/sys/class/hwmon/hwmon5/temp29_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "2",
+          "label": "Core 0",
+          "path": "/sys/class/hwmon/hwmon5/temp2_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "30",
+          "label": "Core 28",
+          "path": "/sys/class/hwmon/hwmon5/temp30_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "31",
+          "label": "Core 29",
+          "path": "/sys/class/hwmon/hwmon5/temp31_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "32",
+          "label": "Core 30",
+          "path": "/sys/class/hwmon/hwmon5/temp32_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "33",
+          "label": "Core 31",
+          "path": "/sys/class/hwmon/hwmon5/temp33_input",
+          "crit": 100,
+          "max": 100
+        },
+        {
+          "idx": "6",
+          "label": "Core 4",
+          "path": "/sys/class/hwmon/hwmon5/temp6_input",
+          "crit": 100,
+          "max": 100
+        }
+      ],
+      "fans": [],
+      "pwms": []
+    },
+    {
+      "name": "spd5118",
+      "path": "/sys/class/hwmon/hwmon6",
+      "temps": [
+        {
+          "idx": "1",
+          "label": "Temp 1",
+          "path": "/sys/class/hwmon/hwmon6/temp1_input",
+          "crit": 85,
+          "max": 55
+        }
+      ],
+      "fans": [],
+      "pwms": []
+    },
+    {
+      "name": "spd5118",
+      "path": "/sys/class/hwmon/hwmon7",
+      "temps": [
+        {
+          "idx": "1",
+          "label": "Temp 1",
+          "path": "/sys/class/hwmon/hwmon7/temp1_input",
+          "crit": 85,
+          "max": 55
+        }
+      ],
+      "fans": [],
+      "pwms": []
+    },
+    {
+      "name": "r8169_0_2f00:00",
+      "path": "/sys/class/hwmon/hwmon8",
+      "temps": [
+        {
+          "idx": "1",
+          "label": "Temp 1",
+          "path": "/sys/class/hwmon/hwmon8/temp1_input",
+          "crit": null,
+          "max": 120
+        }
+      ],
+      "fans": [],
+      "pwms": []
+    },
+    {
+      "name": "iwlwifi_1",
+      "path": "/sys/class/hwmon/hwmon9",
+      "temps": [
+        {
+          "idx": "1",
+          "label": "Temp 1",
+          "path": "/sys/class/hwmon/hwmon9/temp1_input",
+          "crit": null,
+          "max": null
+        }
+      ],
+      "fans": [],
+      "pwms": []
+    }
+  ]
+}

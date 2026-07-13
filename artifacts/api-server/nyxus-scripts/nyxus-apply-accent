@@ -103,8 +103,10 @@ EOF
 # Handles three encodings per accent slot:
 #   #rrggbb / rrggbb   (CSS, rasi, toml, hyprland rgba(rrggbbaa), qt #aarrggbb)
 #   "R, G, B" and "R,G,B" decimal triplets (rgba() in CSS/SCSS)
+EWW_SCSS="${HOME}/.config/eww/eww.scss"
+[[ -f "${EWW_SCSS}" ]] || EWW_SCSS="${HOME}/.config/eww/eww.scss.source"
 CONSUMERS=(
-  "${HOME}/.config/eww/eww.scss"
+  "${EWW_SCSS}"
   "${HOME}/.config/hypr/hyprland.conf"
   "${HOME}/.config/hypr/conf.d/nyxus-hyprland-general.conf"
   "${HOME}/.config/hypr/conf.d/nyxus-hyprland-opacity.conf"
@@ -113,6 +115,7 @@ CONSUMERS=(
   "${HOME}/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf"
   "${HOME}/.config/hypr/conf.d/nyxus-hyprland-mission.conf"
   "${HOME}/.config/hypr/conf.d/nyxus-hyprland-flair.conf"
+  "${HOME}/.config/hypr/hyprlock.conf"
   "${HOME}/.config/rofi/config.rasi"
   "${HOME}/.config/rofi/launcher.rasi"
   "${HOME}/.config/rofi/nyxus.rasi"
@@ -178,7 +181,10 @@ changed = 0
 for path in sys.argv[1:]:
     if not os.path.isfile(path):
         continue
-    bpath = os.path.join(base_root, path.lstrip("/"))
+    rel = path.lstrip("/")
+    if rel.endswith("eww.scss.source"):
+        rel = rel[: -len(".source")]
+    bpath = os.path.join(base_root, rel)
     live = open(path, encoding="utf-8", errors="surrogateescape").read()
 
     # ── keep the canonical baseline fresh ────────────────────────────
@@ -209,7 +215,12 @@ for path in sys.argv[1:]:
         changed += 1
 
 print(f"accent: re-skinned {changed} consumer file(s) from canonical baseline")
+
 PYEOF
+
+if [[ -x "${HOME}/.config/eww/scripts/compile-eww-css.sh" ]]; then
+  timeout 120 "${HOME}/.config/eww/scripts/compile-eww-css.sh" 2>/dev/null || true
+fi
 
 # ── 5. persist + live reload ─────────────────────────────────────────
 TMP="$(mktemp)"

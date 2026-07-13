@@ -8,7 +8,7 @@
 $neon-orange: #ff7849;   // HUD "orange"  (fans / power)
 $neon-green:  #6dffcf;   // HUD "green"   (network)
 $neon-blue:   #4d9fff;   // HUD "blue"    (bluetooth)
-$neon-cyan:   #2bd2ff;   // HUD "cyan"    (HOME station)
+$neon-cyan:   #ff2667;   // HUD "cyan"    (HOME station)
 $neon-red:    #ff4d6b;   // HUD "red"     (music / danger)
 
 $text:       #e8edf5;    // nyx_white_off
@@ -19,6 +19,17 @@ $grey-ghost: #6a6e78;    // nyx_grey_tertiary
 $void-card:  rgba(7, 5, 14, 0.93);   // HUD card fill
 $void-deep:  rgba(5, 1, 13, 0.97);   // HUD root sheet
 $hairline:   rgba(255, 255, 255, 0.10);
+
+/* -- Apple-grade design tokens (rev 2026-07-13) ----------------------- */
+$radius-sm:   8px;
+$radius-md:   12px;
+$radius-lg:   14px;
+$radius-xl:   16px;
+$ease-apple:  cubic-bezier(0.23, 1, 0.32, 1);
+$ease-glass:  cubic-bezier(0.16, 1, 0.2, 1);
+$t-fast:      200ms $ease-glass;
+$t-med:       280ms $ease-apple;
+$t-slow:      350ms $ease-apple;
 
 /* -- OBSIDIAN HUD VESSEL (rev 2026-07-12) -----------------------------
  * The premium bar-vessel DNA, lifted straight from the NYXUS Home cards
@@ -129,7 +140,7 @@ window, window.background, decoration {
 
 * {
   all: unset;
-  font-family: "Inter Display", "Inter", "JetBrainsMono Nerd Font", sans-serif;
+  font-family: "Inter Display", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 12px;
   color: $text;
 }
@@ -151,43 +162,367 @@ window, window.background, decoration {
 }
 
 .bar-bottom {
-  margin: 0 86px;
-  padding: 5px 16px;
-  min-height: 36px;
-  border-top: 2px solid transparent;
-  background-image:
-    url('assets/starlight-twinkle-strip-0.png'),
-    url('assets/starlight-strip.png'),
-    linear-gradient(180deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
-    linear-gradient(100deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%);
+  margin: 0 72px;
+  padding: 0 8px;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
 }
 
 .bar-top {
-  margin: 0 86px;
-  padding: 2px 16px;
-  min-height: 20px;
-  border-radius: 12px;
-  background-image:
-    url('assets/starlight-twinkle-top-0.png'),
-    url('assets/starlight-top.png'),
-    linear-gradient(180deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
-    linear-gradient(280deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%);
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
 }
 
-.ws-rail {
-  background-image:
-    url('assets/starlight-twinkle-rail-0.png'),
-    url('assets/starlight-rail.png'),
-    linear-gradient(170deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
-    linear-gradient(100deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%);
+/* Top bar · ticker-only float — zero chrome, pure scrolling text */
+.bar-top-ticker-only {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
 }
 
-.app-rail {
-  background-image:
-    url('assets/starlight-twinkle-rail-0.png'),
-    url('assets/starlight-rail.png'),
-    linear-gradient(190deg, rgba(7,3,14,0.965), rgba(2,1,7,0.945)),
-    linear-gradient(280deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%);
+/* -- MINIMAL BOTTOM BAR (naked metrics + hub trigger) -------------- */
+.bar-bottom-minimal {
+  padding: 0 12px;
+  min-height: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.bar-metrics-left,
+.bar-metrics-right {
+  padding: 0 8px;
+  min-width: 0;
+}
+.bar-metric {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  color: rgba($nyxus-accent-secondary, 0.92);
+  text-shadow:
+    0 0 12px rgba($nyxus-accent-secondary, 0.55),
+    0 0 24px rgba($nyxus-accent-primary, 0.28);
+}
+.bar-metric-alert {
+  color: #ffd9a0;
+  text-shadow: 0 0 10px rgba(255, 160, 60, 0.75);
+}
+.bar-hub-trigger {
+  padding: 0 6px;
+  background: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  transition: all $t-fast;
+}
+.bar-hub-trigger:hover {
+  color: #ffffff;
+  text-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.65);
+}
+.bar-hub-brand {
+  font-family: "Inter Display", "Inter", sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.38em;
+  color: $nyxus-accent-primary;
+  text-shadow:
+    0 0 14px rgba($nyxus-accent-primary, 0.90),
+    0 0 28px rgba($nyxus-accent-secondary, 0.45);
+}
+.bar-hub-time {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  text-shadow:
+    0 0 16px rgba($nyxus-accent-secondary, 0.75),
+    0 0 32px rgba($nyxus-accent-primary, 0.45);
+}
+.bar-hub-date {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: rgba($nyxus-accent-secondary, 0.88);
+  text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.50);
+}
+.bar-hub-music-title {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: $neon-red;
+  text-shadow:
+    0 0 12px rgba($neon-red, 0.65),
+    0 0 22px rgba($nyxus-accent-primary, 0.30);
+}
+.bar-hub-music-artist {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: rgba($nyxus-accent-secondary, 0.90);
+  text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.45);
+}
+.bar-strip {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba($nyxus-accent-secondary, 0.92);
+  text-shadow:
+    0 0 12px rgba($nyxus-accent-secondary, 0.55),
+    0 0 24px rgba($nyxus-accent-primary, 0.28);
+  min-width: 0;
+}
+.bar-strip-fans {
+  color: rgba($neon-orange, 0.95);
+  text-shadow:
+    0 0 12px rgba($neon-orange, 0.55),
+    0 0 22px rgba($nyxus-accent-primary, 0.25);
+}
+.bar-strip-net {
+  color: rgba($neon-green, 0.95);
+  text-shadow:
+    0 0 12px rgba($neon-green, 0.50),
+    0 0 22px rgba($nyxus-accent-secondary, 0.28);
+}
+.cava-mini {
+  color: $nyxus-accent-secondary;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 8px rgba($nyxus-accent-ok, 0.80),
+    0 0 16px rgba($nyxus-accent-secondary, 0.40);
+}
+
+/* -- STARFALL REACTOR NEXUS (bottom bar) --------------------------- */
+.nexus-root {
+  margin: 0 52px;
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.nexus-starfall {
+  min-height: 3px;
+  margin: 0 12px;
+  border-radius: 999px 999px 0 0;
+  background-blend-mode: screen, screen;
+  background-size: 100% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  opacity: 0.88;
+  box-shadow: 0 0 14px rgba($nyxus-accent-secondary, 0.35);
+}
+.nexus-deck {
+  padding: 0 10px 4px;
+  min-height: 44px;
+  border-radius: $radius-xl;
+  border: 1px solid transparent;
+  border-top: 2px solid rgba($nyxus-accent-secondary, 0.55);
+  background-blend-mode: screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-origin: padding-box, padding-box, padding-box, border-box;
+  background-clip:   padding-box, padding-box, padding-box, border-box;
+}
+.nexus-cava-river {
+  min-height: 14px;
+  padding: 1px 8px 0;
+  margin: 3px 4px 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+    rgba($nyxus-accent-primary, 0.06) 0%,
+    rgba($nyxus-accent-secondary, 0.14) 50%,
+    rgba($nyxus-accent-primary, 0.06) 100%);
+  border-bottom: 1px solid rgba($nyxus-accent-secondary, 0.12);
+}
+.nexus-cava-wave {
+  color: rgba($nyxus-accent-secondary, 0.92);
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-shadow:
+    0 0 10px rgba($nyxus-accent-secondary, 0.75),
+    0 0 20px rgba($nyxus-accent-primary, 0.40);
+}
+.nexus-command-row {
+  padding: 2px 4px 3px;
+  min-height: 32px;
+}
+.nexus-wing {
+  min-width: 0;
+  padding: 0 4px;
+}
+.nexus-wing-left  { padding-left: 2px; }
+.nexus-wing-right { padding-right: 2px; }
+
+/* Reactor-heart — elevated center core */
+.nexus-heart {
+  padding: 0 10px;
+  margin: 0 6px;
+}
+.nexus-heart-btn {
+  padding: 3px 20px 4px;
+  border-radius: 999px;
+  @include obsidian-vessel($nyxus-accent-secondary, 0.80);
+  border-top: 2px solid rgba($nyxus-accent-secondary, 0.95);
+  box-shadow:
+    0 0 24px rgba($nyxus-accent-secondary, 0.35),
+    0 0 48px rgba($nyxus-accent-primary, 0.18),
+    0 4px 16px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 20px rgba($nyxus-accent-primary, 0.10);
+  transition: all $t-med;
+}
+.nexus-heart-btn:hover {
+  @include obsidian-vessel-hover($nyxus-accent-secondary);
+  box-shadow:
+    0 0 32px rgba($nyxus-accent-secondary, 0.55),
+    0 0 60px rgba($nyxus-accent-primary, 0.28),
+    0 4px 16px rgba(0, 0, 0, 0.55);
+}
+.nexus-heart-btn:active { @include obsidian-press($nyxus-accent-secondary); }
+.nexus-gem {
+  color: $nyxus-accent-primary;
+  font-size: 11px;
+  text-shadow: 0 0 12px rgba($nyxus-accent-primary, 0.90);
+}
+.nexus-clock-hm {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  text-shadow:
+    0 0 14px rgba($nyxus-accent-secondary, 0.70),
+    0 0 28px rgba($nyxus-accent-primary, 0.45);
+}
+.nexus-clock-date {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: rgba($nyxus-accent-secondary, 0.82);
+  text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.45);
+}
+
+/* Orb action buttons — magnetic pills on the wings */
+.nexus-orb {
+  padding: 4px 10px;
+  min-height: 28px;
+  border-radius: 999px;
+  @include obsidian-vessel($nyxus-accent-secondary, 0.55);
+  border-color: rgba($nyxus-accent-secondary, 0.42);
+  transition: all $t-fast;
+}
+.nexus-orb:hover {
+  @include obsidian-vessel-hover($nyxus-accent-secondary);
+  color: #ffffff;
+}
+.nexus-orb:active { @include obsidian-press($nyxus-accent-secondary); }
+.nexus-orb-label {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: $text;
+}
+.orb-net   .nexus-orb-label { color: $neon-blue-soft; }
+.orb-audio .nexus-orb-label { color: $accent-secondary-soft; }
+.orb-brt   .nexus-orb-label { color: $accent-warn-soft; }
+.orb-bt    .nexus-orb-label { color: $neon-blue-soft; }
+.orb-batt  .nexus-orb-label { color: $neon-green-soft; }
+.orb-notif .nexus-orb-label { color: $accent-primary-soft; }
+.orb-qs    .nexus-orb-label { color: $accent-ok-soft; }
+.orb-power .nexus-orb-label { color: $neon-red-soft; }
+.nexus-orb:hover .nexus-orb-label {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.65);
+}
+.orb-power:hover .nexus-orb-label {
+  text-shadow: 0 0 12px rgba($neon-red, 0.75);
+}
+
+/* Reactor metric chips — orbit the heart */
+.nexus-metrics {
+  padding: 0 4px;
+}
+.reactor-chip {
+  padding: 2px 7px;
+  border-radius: 6px;
+  @include obsidian-vessel($nyxus-accent-primary, 0.45);
+  transition: all $t-fast;
+}
+.reactor-chip:hover {
+  @include obsidian-vessel-hover($nyxus-accent-primary);
+}
+.reactor-chip-key {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: $grey-mid;
+}
+.reactor-chip-val {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  font-weight: 800;
+  color: $text;
+}
+.reactor-chip-pink   { border-color: rgba($nyxus-accent-primary, 0.50); }
+.reactor-chip-pink   .reactor-chip-val { color: $accent-primary-soft; text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.55); }
+.reactor-chip-purple { border-color: rgba($nyxus-accent-ok, 0.50); }
+.reactor-chip-purple .reactor-chip-val { color: $accent-ok-soft; text-shadow: 0 0 8px rgba($nyxus-accent-ok, 0.55); }
+.reactor-chip-blue   { border-color: rgba($neon-blue, 0.50); }
+.reactor-chip-blue   .reactor-chip-val { color: $neon-blue-soft; text-shadow: 0 0 8px rgba($neon-blue, 0.55); }
+.reactor-chip-orange { border-color: rgba($neon-orange, 0.50); }
+.reactor-chip-orange .reactor-chip-val { color: $neon-orange-soft; text-shadow: 0 0 8px rgba($neon-orange, 0.55); }
+.reactor-chip-alert {
+  border-color: rgba(255, 176, 80, 0.75);
+  border-top-color: rgba(255, 200, 120, 0.95);
+  box-shadow:
+    0 0 14px rgba(255, 140, 40, 0.45),
+    inset 0 0 8px rgba(255, 132, 32, 0.20);
+}
+.reactor-chip-alert .reactor-chip-val {
+  color: #ffd9a0;
+  text-shadow: 0 0 9px rgba(255, 160, 60, 0.80);
+}
+
+/* legacy bottom bar flip deck — removed, keep selectors harmless */
+.bar-bottom-deck {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* Side rails are transparent columns — glass lives on .float-island only. */
+.ws-rail, .app-rail {
+  background: transparent;
+  background-image: none;
+  background-blend-mode: normal;
+  border: none;
+  box-shadow: none;
+  padding: 0;
 }
 .bar-bottom > *, .bar-top > * { min-height: 0; min-width: 0; }
 .bar-bottom .bar-cluster { min-height: 0; }
@@ -195,8 +530,8 @@ window, window.background, decoration {
 .cluster-left, .cluster-right { min-width: 0; }
 
 .bar-cluster { padding: 0 4px; }
-.cluster-left  { padding-left: 2px; }
-.cluster-right { padding-right: 2px; }
+.cluster-left  { padding-left: 0; }
+.cluster-right { padding-right: 0; }
 
 /* -- PILLS . glass capsules ----------------------------------------- */
 
@@ -208,16 +543,16 @@ window, window.background, decoration {
    numbers. min-height locks the cap silhouette; no letter-spacing
    (it widened pills past their allocation and GTK ellipsized labels). */
 .pill {
-  padding: 3px 10px;
-  min-height: 28px;
+  padding: 4px 12px;
+  min-height: 30px;
   min-width: 20px;
-  border-radius: 10px;
+  border-radius: $radius-md;
   @include obsidian-vessel($nyxus-accent-primary);
   color: $text;
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
   font-weight: 700;
   font-size: 11px;
-  transition: all 220ms ease;
+  transition: all $t-med;
 }
 .pill-fog {
   /* inline :style sets background-position layer 1 for trapped fog drift */
@@ -327,7 +662,16 @@ window, window.background, decoration {
   box-shadow:
     0 0 28px rgba($neon-red, 0.55),
     0 0 48px rgba($nyxus-accent-primary, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 6px 18px rgba(0, 0, 0, 0.62);
+}
+.brand-top {
+  padding: 2px 10px 2px 6px;
+  min-height: 22px;
+  .brand-gem { font-size: 11px; }
+  .brand-word { font-size: 11px; letter-spacing: 0.08em; }
+}
+.brand-bottom {
+  margin-left: 0;
 }
 
 /* -- HEARTBEAT ------------------------------------------------------ */
@@ -399,25 +743,62 @@ window, window.background, decoration {
 .clock:hover { @include obsidian-vessel-hover($nyxus-accent-primary); }
 .clock-glyph { color: $nyxus-accent-primary; font-size: 14px;
                text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.65); }
-.clock-hms   { font-weight: 800; font-size: 16px; letter-spacing: 0.06em;
+.clock-hms   { font-weight: 800; font-size: 20px; letter-spacing: 0.06em;
                color: #ffffff;
                text-shadow:
-                 0 0 10px rgba(255, 255, 255, 0.55),
-                 0 0 20px rgba($nyxus-accent-primary, 0.45); }
-.clock-date  { color: $dim; font-size: 10px; letter-spacing: 0.14em; }
+                 0 0 12px rgba(255, 255, 255, 0.70),
+                 0 0 24px rgba($nyxus-accent-primary, 0.50); }
+.clock-sec   { font-weight: 700; font-size: 11px; letter-spacing: 0.04em;
+               color: rgba($nyxus-accent-secondary, 0.85);
+               text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.55);
+               padding-top: 4px; }
+.clock-date  { color: $dim; font-size: 11px; letter-spacing: 0.16em; font-weight: 600; }
+.bar-bottom .clock {
+  min-width: 148px;
+  padding: 2px 18px;
+}
 
 /* -- TICKER (top bar) ----------------------------------------------- */
 
-.ticker-label {
-  color: $nyxus-accent-primary;
-  font-weight: 700;
-  font-size: 10px;
-  padding: 0 8px;
-  text-shadow:
-    0 0 10px rgba($nyxus-accent-primary, 0.85),
-    0 0 22px rgba($nyxus-accent-primary, 0.40);
+/* full-width ticker vessel — legacy; naked ticker uses .ticker-naked */
+.ticker-vessel {
+  padding: 0;
+  min-width: 0;
+  background: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
 }
-/* full-width ribbon + dead-center NYXUS watermark (rev 2026-07-12) */
+.ticker-naked {
+  padding: 2px 0;
+}
+.ticker-row {
+  margin: 0;
+  padding: 0 6px;
+  min-width: 0;
+}
+/* legacy float ticker (unused) */
+.ticker-box-float {
+  padding: 8px 0;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+.ticker-hero {
+  color: rgba($nyxus-accent-secondary, 0.98);
+  font-family: "JetBrainsMono Nerd Font", "JetBrainsMono", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-shadow:
+    0 0 14px rgba($nyxus-accent-secondary, 0.65),
+    0 0 28px rgba($nyxus-accent-primary, 0.35);
+  min-width: 0;
+}
+
+/* legacy ticker chrome (panels / dock reuse) */
 .ticker-overlay {
   min-width: 700px;
 }
@@ -435,70 +816,188 @@ window, window.background, decoration {
     0 0 10px rgba($nyxus-accent-primary, 0.90),
     0 0 22px rgba($nyxus-accent-primary, 0.45);
 }
-/* signature scrolling marquee, dressed as a HUD tile card */
+/* full-width scrolling ribbon - dressed as obsidian HUD marquee card */
 .ticker-box {
-  padding: 1px 12px;
-  border-radius: 6px;
-  @include obsidian-vessel($nyxus-accent-secondary);
+  padding: 2px 14px;
+  border-radius: 10px;
+  @include obsidian-vessel($nyxus-accent-secondary, 0.72);
+  min-width: 0;
+  box-shadow:
+    0 0 14px rgba($nyxus-accent-secondary, 0.18),
+    0 5px 16px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 12px rgba($nyxus-accent-secondary, 0.08);
+}
+.ticker-label {
+  font-family: "Permanent Marker", "Inter", cursive;
+  font-size: 10px;
+  color: $nyxus-accent-primary;
+  text-shadow:
+    0 0 10px rgba($nyxus-accent-primary, 0.75),
+    0 0 20px rgba($nyxus-accent-secondary, 0.35);
+  padding-right: 2px;
 }
 .ticker {
-  color: $nyxus-accent-secondary;
+  color: rgba($nyxus-accent-secondary, 0.95);
   font-family: "JetBrainsMono Nerd Font", "JetBrainsMono", monospace;
-  font-size: 11px;
-  text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.45);
-  /* NO letter-spacing: the marquee is a fixed-column ribbon and
-     letter-spacing makes GTK ellipsize the sliding window. */
-  /* 120 monospace cols at ~7px each ~ 840px; keep in sync with
-     NYXUS_TICKER_COLS in nyxus.conf and :limit-width in eww.yuck. */
-  min-width: 700px;
+  font-size: 10px;
+  text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.55);
+  min-width: 0;
 }
 
-/* -- WORKSPACES (left rail) ----------------------------------------- */
+/* -- SIDE RAILS · float islands (no vertical slab) ----------------- */
 
-/* Vertical prism rim: magenta pours down into teal, mirrored on the
-   app rail so the two rails bracket the screen like a split spectrum. */
-.ws-rail {
-  border: 1px solid transparent;
-  border-radius: 18px;
-  padding: 12px 6px;
+.ws-rail, .app-rail,
+.ws-rail-float, .app-rail-float {
+  background: transparent;
+  background-image: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  min-width: 0;
+}
+
+/* Per-button float — pink rim always on, subtle fill, glow on hover. */
+.float-island {
+  margin-bottom: 8px;
+  padding: 3px 4px;
+  border-radius: 11px;
+  background: rgba(255, 38, 103, 0.04);
+  background-color: rgba(255, 38, 103, 0.04);
+  border: 1px solid rgba(255, 38, 103, 0.55);
+  box-shadow:
+    0 0 8px rgba(255, 38, 103, 0.12),
+    inset 0 0 10px rgba(255, 38, 103, 0.04);
+  transition: all $t-fast;
+}
+.float-island:hover {
+  border-color: rgba(255, 38, 103, 0.78);
+  background: rgba(255, 38, 103, 0.08);
+  box-shadow:
+    0 0 16px rgba(255, 38, 103, 0.35),
+    inset 0 0 12px rgba(255, 38, 103, 0.08);
+}
+.float-island:active {
+  border-color: rgba(255, 38, 103, 0.90);
+  box-shadow: 0 0 12px rgba(255, 38, 103, 0.42);
+}
+
+.float-island .ws-pill,
+.float-island .app-pill,
+.float-island .ws-pill-pink,
+.float-island .ws-pill-green,
+.float-island .ws-pill-purple,
+.float-island .ws-pill-gold,
+.float-island .ws-pill-orange,
+.float-island .ws-pill-blue,
+.float-island .ws-pill-cyan,
+.float-island .app-pill-pink,
+.float-island .app-pill-green,
+.float-island .app-pill-purple,
+.float-island .app-pill-gold,
+.float-island .app-pill-orange,
+.float-island .app-pill-blue {
+  background: transparent;
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  margin: 0;
+}
+.float-island .ws-pill:hover,
+.float-island .app-pill:hover,
+.float-island .ws-pill-pink:hover,
+.float-island .ws-pill-green:hover,
+.float-island .ws-pill-purple:hover,
+.float-island .ws-pill-gold:hover,
+.float-island .ws-pill-orange:hover,
+.float-island .ws-pill-blue:hover,
+.float-island .ws-pill-cyan:hover,
+.float-island .app-pill-pink:hover,
+.float-island .app-pill-green:hover,
+.float-island .app-pill-purple:hover,
+.float-island .app-pill-gold:hover,
+.float-island .app-pill-orange:hover,
+.float-island .app-pill-blue:hover {
+  background: transparent;
+  background-image: none;
+  border: none;
   box-shadow: none;
 }
+
 .ws-pill {
   min-width: 38px;
   min-height: 38px;
-  border-radius: 11px;
+  border-radius: $radius-md;
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
   font-weight: 700;
   font-size: 12px;
-  transition: all 180ms ease;
+  transition: all $t-fast;
 }
 .ws-rail-divider {
-  min-height: 1px;
-  min-width: 28px;
-  margin: 2px 4px;
-  background: linear-gradient(90deg, transparent, rgba(43, 210, 255, 0.45), transparent);
-  opacity: 0.7;
+  opacity: 0;
+  min-height: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  background: none;
 }
 
-/* -- APP RAIL (right) ----------------------------------------------- */
-
-.app-rail {
-  border: 1px solid transparent;
-  border-radius: 18px;
-  padding: 12px 6px;
-  box-shadow: none;
-  min-width: 56px;
-}
 .app-pill {
   min-width: 38px;
   min-height: 38px;
-  border-radius: 11px;
+  border-radius: $radius-md;
   color: $dim;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 16px;
-  transition: all 200ms ease;
+  transition: all $t-fast;
 }
 .app-pill:active { @include obsidian-press($nyxus-accent-primary); }
+
+/* -- BOOT SPLASH (nyxus-splash namespace) ---------------------------- */
+
+.splash-root {
+  background-color: rgba(3, 1, 7, 0.98);
+  background-image:
+    linear-gradient(180deg, rgba(4, 2, 10, 0.35), rgba(2, 1, 6, 0.72)),
+    url('assets/cosmic-overlay-splash.png');
+  background-size: cover;
+  background-position: center;
+}
+.splash-glyph {
+  font-size: 48px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow:
+    0 0 24px rgba($nyxus-accent-primary, 0.75),
+    0 0 48px rgba($nyxus-accent-secondary, 0.45);
+}
+.splash-word {
+  font-family: "Permanent Marker", "Inter Display", sans-serif;
+  font-size: 72px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: #ffffff;
+  text-shadow:
+    0 0 20px rgba($nyxus-accent-primary, 0.85),
+    0 0 40px rgba($nyxus-accent-secondary, 0.45);
+}
+.splash-tag {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  color: $grey-mid;
+  padding-top: 8px;
+}
+.splash-foot {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: $grey-ghost;
+  padding-bottom: 24px;
+}
 
 /* -- OVERLAY BACKDROP ------------------------------------------------ */
 /* Fullscreen tinted sheet behind dashboard / powermenu / cheatsheet.
@@ -514,12 +1013,168 @@ window, window.background, decoration {
     rgba(3, 1, 7, 0.985));
 }
 
+/* -- NYXUS MAIN HUB overlay ----------------------------------------- */
+.hub-backdrop {
+  background: radial-gradient(circle at 50% 40%,
+    rgba(10, 5, 20, 0.78),
+    rgba(3, 1, 7, 0.92));
+}
+.hub-panel {
+  min-width: 900px;
+  padding: 28px 32px 24px;
+  border-radius: $radius-xl;
+  border: 1px solid transparent;
+  background-blend-mode: screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-origin: padding-box, padding-box, padding-box, border-box;
+  background-clip:   padding-box, padding-box, padding-box, border-box;
+  box-shadow:
+    0 0 0 1px rgba($nyxus-accent-primary, 0.14),
+    0 0 56px rgba($nyxus-accent-primary, 0.24),
+    0 32px 96px rgba(0, 0, 0, 0.86),
+    inset 0 0 72px rgba($nyxus-accent-primary, 0.07);
+}
+.hub-title {
+  color: $nyxus-accent-primary;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-shadow:
+    0 0 18px rgba($nyxus-accent-primary, 0.65),
+    0 0 36px rgba($nyxus-accent-secondary, 0.25);
+}
+.hub-subtitle {
+  color: $grey-mid;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  padding-bottom: 4px;
+}
+.hub-section-title {
+  color: $nyxus-accent-secondary;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  padding-top: 6px;
+  text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.45);
+}
+.hub-grid {
+  padding: 4px 0 2px;
+}
+.hub-tile {
+  padding: 14px 10px;
+  min-width: 96px;
+  border-radius: $radius-md;
+  @include flyout-glass($nyxus-accent-primary, 0.62);
+  transition: all $t-med;
+}
+.hub-tile:hover {
+  @include flyout-glass-hover($nyxus-accent-primary);
+}
+.hub-tile-glyph { font-size: 22px; }
+.hub-tile-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: $dim;
+}
+.hub-tile-green  { border-color: rgba($nyxus-accent-secondary, 0.45); }
+.hub-tile-green  .hub-tile-glyph { color: $nyxus-accent-secondary; text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.55); }
+.hub-tile-blue   { border-color: rgba($neon-blue, 0.45); }
+.hub-tile-blue   .hub-tile-glyph { color: $neon-blue; text-shadow: 0 0 12px rgba($neon-blue, 0.55); }
+.hub-tile-purple { border-color: rgba($nyxus-accent-ok, 0.45); }
+.hub-tile-purple .hub-tile-glyph { color: $nyxus-accent-ok; text-shadow: 0 0 12px rgba($nyxus-accent-ok, 0.55); }
+.hub-tile-pink   { border-color: rgba($nyxus-accent-primary, 0.45); }
+.hub-tile-pink   .hub-tile-glyph { color: $nyxus-accent-primary; text-shadow: 0 0 12px rgba($nyxus-accent-primary, 0.55); }
+.hub-tile-gold   { border-color: rgba($nyxus-accent-warn, 0.45); }
+.hub-tile-gold   .hub-tile-glyph { color: $nyxus-accent-warn; text-shadow: 0 0 12px rgba($nyxus-accent-warn, 0.55); }
+.hub-tile-orange { border-color: rgba($neon-orange, 0.45); }
+.hub-tile-orange .hub-tile-glyph { color: $neon-orange; text-shadow: 0 0 12px rgba($neon-orange, 0.55); }
+.hub-tile-cyan   { border-color: rgba($neon-cyan, 0.45); }
+.hub-tile-cyan   .hub-tile-glyph { color: rgba($neon-cyan, 0.92); text-shadow: 0 0 12px rgba($neon-cyan, 0.55); }
+.hub-tile-red    { border-color: rgba($neon-red, 0.45); }
+.hub-tile-red    .hub-tile-glyph { color: $neon-red; text-shadow: 0 0 12px rgba($neon-red, 0.55); }
+.hub-slider-row {
+  padding: 2px 0;
+}
+.hub-slider-label {
+  min-width: 36px;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: $grey-mid;
+}
+.hub-ws-row {
+  padding: 4px 0 8px;
+}
+.hub-ws-pill {
+  min-width: 38px;
+  min-height: 34px;
+  padding: 4px 8px;
+  border-radius: $radius-sm;
+  @include flyout-glass($nyxus-accent-primary, 0.50);
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: $dim;
+  transition: all $t-fast;
+}
+.hub-ws-pill:hover { @include flyout-glass-hover($nyxus-accent-primary); color: #ffffff; }
+.hub-ws-active {
+  border-color: rgba($nyxus-accent-primary, 0.85);
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.75);
+}
+.hub-ws-occupied { color: $accent-primary-soft; }
+.hub-ws-pink   { border-color: rgba($nyxus-accent-primary, 0.40); color: $accent-primary-soft; }
+.hub-ws-green  { border-color: rgba($nyxus-accent-secondary, 0.40); color: $accent-secondary-soft; }
+.hub-ws-purple { border-color: rgba($nyxus-accent-ok, 0.40); color: $accent-ok-soft; }
+.hub-ws-gold   { border-color: rgba($nyxus-accent-warn, 0.40); color: $accent-warn-soft; }
+.hub-ws-orange { border-color: rgba($neon-orange, 0.40); color: $neon-orange-soft; }
+.hub-ws-blue   { border-color: rgba($neon-blue, 0.40); color: $neon-blue-soft; }
+.hub-ws-cyan   { border-color: rgba($neon-cyan, 0.40); color: rgba($neon-cyan, 0.88); }
+.hub-close-x {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba($nyxus-accent-primary, 0.25);
+  color: $grey-mid;
+  font-size: 14px;
+  transition: all $t-fast;
+}
+.hub-close-x:hover {
+  color: $nyxus-accent-primary;
+  border-color: rgba($nyxus-accent-primary, 0.55);
+}
+.hub-close {
+  margin-top: 8px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  background: rgba(17, 21, 31, 0.65);
+  border: 1px solid rgba($nyxus-accent-secondary, 0.25);
+  color: $grey-mid;
+  font-size: 11px;
+  transition: all $t-fast;
+}
+.hub-close:hover {
+  color: $nyxus-accent-secondary;
+  border-color: rgba($nyxus-accent-secondary, 0.55);
+}
+.hub-power-row { padding-top: 2px; }
+
 /* -- DEEP CORE overlay ----------------------------------------------- */
 
 .deepcore-root {
-  background: $void-deep;
+  background-color: rgba(5, 1, 13, 0.94);
+  background-image:
+    linear-gradient(180deg, rgba(4, 2, 10, 0.45), rgba(2, 1, 6, 0.72)),
+    url('assets/cosmic-overlay-deepcore.png');
+  background-size: cover;
+  background-position: center;
   padding: 48px 56px;
   border: 1px solid rgba($nyxus-accent-secondary, 0.42);
+  border-top: 2px solid $nyxus-accent-secondary;
   border-radius: 12px;
   box-shadow:
     0 0 0 1px rgba($nyxus-accent-secondary, 0.08),
@@ -963,23 +1618,21 @@ window, window.background, decoration {
 .notif-on   { color: $nyxus-accent-primary; border-color: rgba($nyxus-accent-primary, 0.55); }
 .notif-dnd  { color: $grey-ghost; border-color: rgba(255, 255, 255, 0.06); }
 
-/* Top-bar player (right-aligned) */
+/* Top-bar player - obsidian capsule riding the telemetry strip */
 .ticker-player {
-  background: rgba(17, 21, 31, 0.6);
-  border: 1px solid rgba($nyxus-accent-primary, 0.18);
-  border-radius: 8px;
-  padding: 2px 12px;
-  margin-right: 12px;
+  @include obsidian-vessel($nyxus-accent-primary, 0.65);
+  border-radius: 10px;
+  padding: 2px 10px;
+  margin-left: 4px;
   color: #ffffff;
 }
 .ticker-player:hover {
-  border-color: rgba($nyxus-accent-secondary, 0.45);
-  box-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.25);
+  @include obsidian-vessel-hover($nyxus-accent-primary);
 }
 .ticker-player-text {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 10px;
-  letter-spacing: 0.06em;
+  font-size: 9px;
+  letter-spacing: 0.04em;
   color: $dim;
 }
 
@@ -1001,7 +1654,6 @@ window, window.background, decoration {
   padding: 16px 24px;
   border-radius: 8px;
   @include flyout-glass($nyxus-accent-primary, 0.65);
-}
   min-width: 720px;
 }
 .dash-cores {
@@ -1077,10 +1729,11 @@ window, window.background, decoration {
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
-  border: 1px dashed rgba($nyxus-accent-primary, 0.60);
+  border: 1px solid rgba($nyxus-accent-primary, 0.38);
   border-top: 2px solid $nyxus-accent-primary;
-  border-radius: 8px;
-  padding: 18px 20px;
+  border-radius: $radius-lg;
+  padding: 20px 24px;
+  transition: box-shadow $t-med, border-color $t-fast;
   box-shadow:
     0 0 18px rgba($nyxus-accent-primary, 0.30),
     0 10px 34px rgba(0, 0, 0, 0.65),
@@ -1146,15 +1799,15 @@ window, window.background, decoration {
 
 /* -- panel view tabs (wifi nearby/saved, mixer inputs) ------------------ */
 .panel-tab {
-  padding: 5px 10px;
-  border-radius: 8px;
+  padding: 6px 12px;
+  border-radius: $radius-sm;
   @include flyout-glass($nyxus-accent-secondary, 0.75);
   color: $grey-mid;
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  transition: all 160ms ease;
+  letter-spacing: 0.08em;
+  transition: all $t-fast;
 }
 .panel-tab:hover { @include flyout-glass-hover($nyxus-accent-secondary); color: $text; }
 .panel-tab-on {
@@ -1166,12 +1819,13 @@ window, window.background, decoration {
 
 /* -- wifi saved view ---------------------------------------------------- */
 .wifi-auto {
-  padding: 2px 7px; border-radius: 3px;
+  padding: 4px 8px; border-radius: $radius-sm;
   background: transparent;
   border: 1px solid rgba($nyxus-accent-secondary, 0.24);
   color: $grey-ghost;
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 8px; font-weight: 700;
+  font-size: 9px; font-weight: 700;
+  transition: all $t-fast;
 }
 .wifi-auto:hover { background: rgba($nyxus-accent-secondary, 0.13); color: $text; }
 .wifi-auto-on {
@@ -1180,12 +1834,13 @@ window, window.background, decoration {
   text-shadow: 0 0 6px rgba($nyxus-accent-secondary, 0.55);
 }
 .wifi-act {
-  padding: 4px 10px; border-radius: 3px;
+  padding: 5px 12px; border-radius: $radius-sm;
   background: rgba($nyxus-accent-secondary, 0.10);
   border: 1px solid rgba($nyxus-accent-secondary, 0.34);
   color: $accent-secondary-soft;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 10px;
+  transition: all $t-fast;
 }
 .wifi-act:hover { background: rgba($nyxus-accent-secondary, 0.22); color: #ffffff; }
 .wifi-details {
@@ -1342,11 +1997,11 @@ window, window.background, decoration {
 .qs-grid { padding: 2px 0; }
 
 .qs-tile {
-  padding: 12px 8px;
+  padding: 14px 10px;
   min-width: 78px;
-  border-radius: 12px;
+  border-radius: $radius-md;
   @include obsidian-vessel($nyxus-accent-primary);
-  transition: all 160ms ease;
+  transition: all $t-fast;
 }
 .qs-tile:hover {
   @include obsidian-vessel-hover($nyxus-accent-primary);
@@ -1399,11 +2054,12 @@ window, window.background, decoration {
  * panels never show a blank box - there is always copy + (optional) hint.
  */
 .empty-state {
-  padding: 28px 16px;
+  padding: 32px 20px;
   margin: 8px 0;
-  border-radius: 12px;
+  border-radius: $radius-md;
   @include flyout-glass($nyxus-accent-primary, 0.55);
-  border-style: dashed;
+  border-style: solid;
+  border-color: rgba($nyxus-accent-primary, 0.28);
 }
 .empty-glyph {
   font-size: 28px;
@@ -1424,12 +2080,13 @@ window, window.background, decoration {
 }
 
 .qs-close, .wifi-close, .bt-close, .mix-close, .cal-close, .notif-close, .upd-close {
-  padding: 8px 14px;
-  border-radius: 3px;
+  padding: 8px 16px;
+  border-radius: $radius-md;
   background: rgba($neon-red, 0.12);
   border: 1px solid rgba($neon-red, 0.30);
   color: $neon-red-soft;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  transition: all $t-fast;
 }
 .qs-close:hover, .wifi-close:hover, .bt-close:hover, .mix-close:hover,
 .cal-close:hover, .notif-close:hover {
@@ -1457,9 +2114,10 @@ window, window.background, decoration {
 .wifi-current { color: $grey-mid; font-size: 11px; padding: 2px 4px; }
 
 .wifi-row, .bt-row, .mix-row, .notif-row {
-  padding: 8px 10px;
-  border-radius: 10px;
+  padding: 10px 14px;
+  border-radius: $radius-md;
   @include flyout-glass($nyxus-accent-secondary, 0.7);
+  transition: all $t-fast;
 }
 .wifi-row:hover, .bt-row:hover, .mix-row:hover, .notif-row:hover {
   @include flyout-glass-hover($nyxus-accent-secondary);
@@ -1489,11 +2147,12 @@ window, window.background, decoration {
 .bt-name { color: #ffffff; font-size: 12px; font-weight: 600; }
 .bt-mac  { color: $grey-ghost; font-size: 10px; letter-spacing: 0.04em; }
 .bt-act, .bt-forget {
-  padding: 4px 10px; border-radius: 3px;
+  padding: 5px 12px; border-radius: $radius-sm;
   background: rgba($nyxus-accent-primary, 0.10);
   border: 1px solid rgba($nyxus-accent-primary, 0.25);
   color: $accent-ok-soft;
   font-size: 10px;
+  transition: all $t-fast;
   /* NO letter-spacing (ellipsizes) */
 }
 .bt-act:hover { background: rgba($nyxus-accent-secondary, 0.22); color: #ffffff; }
@@ -1810,9 +2469,15 @@ window, window.background, decoration {
 /* mission uses the shared .overlay-backdrop tint (see DASHBOARD section)
    so the whole screen frosts behind Mission Control too. */
 .mission-root      { background-color: transparent; }
-.mission-card      { background-color: $void-deep;
+.mission-card      { background-color: rgba(5, 1, 13, 0.94);
+                     background-image:
+                       linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
+                       url('assets/cosmic-overlay-mission.png');
+                     background-size: cover;
+                     background-position: center;
                      padding: 22px 26px; border-radius: 12px;
                      border: 1px solid rgba($nyxus-accent-secondary, 0.42);
+                     border-top: 2px solid $nyxus-accent-secondary;
                      box-shadow:
                        0 0 0 1px rgba($nyxus-accent-secondary, 0.08),
                        0 24px 64px rgba(0,0,0,0.78),
@@ -1821,8 +2486,9 @@ window, window.background, decoration {
                      letter-spacing: 0.22em;
                      text-shadow: 0 0 16px rgba($nyxus-accent-warn, 0.45); }
 .mission-grid      { padding: 8px 0; }
-.mission-ws-card   { background: rgba(10, 13, 20, 0.85);
+.mission-ws-card   { background: rgba(6, 4, 12, 0.78);
                      border: 1px solid rgba($nyxus-accent-ok, 0.35);
+                     border-top: 2px solid rgba($nyxus-accent-ok, 0.62);
                      border-radius: 14px; padding: 12px;
                      min-width: 296px;
                      transition: all 140ms ease; }
@@ -1856,10 +2522,10 @@ window, window.background, decoration {
     url('assets/cosmic-flyout-brightness.png');
   background-size: cover;
   background-position: center;
-  border: 1px dashed rgba($nyxus-accent-warn, 0.60);
+  border: 1px solid rgba($nyxus-accent-warn, 0.42);
   border-top: 2px solid $nyxus-accent-warn;
-  border-radius: 8px;
-  padding: 20px 22px;
+  border-radius: $radius-lg;
+  padding: 20px 24px;
   min-width: 340px;
   box-shadow:
     0 0 18px rgba($nyxus-accent-warn, 0.30),
@@ -1957,11 +2623,16 @@ scale slider {
 }
 
 .qs-card {
-  background: $void-card;
-  border: 1px dashed rgba($nyxus-accent-primary, 0.60);
+  background-color: rgba(6, 4, 12, 0.88);
+  background-image:
+    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
+    url('assets/cosmic-flyout-qs.png');
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba($nyxus-accent-primary, 0.42);
   border-top: 2px solid $nyxus-accent-primary;
-  border-radius: 8px;
-  padding: 16px 16px 18px 16px;
+  border-radius: $radius-lg;
+  padding: 18px 20px;
   box-shadow:
     0 0 0 1px rgba($nyxus-accent-secondary, 0.08),
     0 0 28px rgba($nyxus-accent-secondary, 0.14),
@@ -2579,8 +3250,100 @@ scale slider {
    the padding box except the final prism rim, which paints the
    transparent border ring (border-box).
    =================================================================== */
-/* 4 layers per bar/rail: twinkle png, star png, legibility glass, prism rim. */
-.bar-bottom, .bar-top, .ws-rail, .app-rail {
+/* Aurora layer maps for nexus deck — prism rim on border-box. */
+.nexus-deck {
+  background-blend-mode: screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-origin: padding-box, padding-box, padding-box, border-box;
   background-clip:   padding-box, padding-box, padding-box, border-box;
+}
+/* legacy bottom controls (removed) */
+.bar-bottom-controls {
+  background-blend-mode: normal, normal, screen, screen, screen, normal, normal;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-origin: padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, border-box;
+  background-clip:   padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, border-box;
+}
+.ws-rail, .app-rail {
+  background: transparent;
+  background-image: none;
+}
+
+/* STARFALL ember alert - stressed metrics burn gold (keep LAST). */
+.hud-tile-alert {
+  border-color: rgba(255, 176, 80, 0.75);
+  border-top-color: rgba(255, 200, 120, 0.95);
+  box-shadow:
+    0 0 14px rgba(255, 140, 40, 0.45),
+    0 0 28px rgba(255, 90, 20, 0.22),
+    inset 0 1px 0 rgba(255, 244, 214, 0.30),
+    inset 0 -7px 14px rgba(255, 132, 32, 0.30);
+}
+.hud-tile-alert .hud-tile-value,
+.hud-tile-alert .hud-tile-glyph,
+.hud-tile-alert .hud-tile-label {
+  color: #ffd9a0;
+  text-shadow: 0 0 9px rgba(255, 160, 60, 0.80);
+}
+.hud-tile-strip .hud-tile {
+  padding: 1px 7px;
+}
+.hud-tile-strip .hud-tile-value {
+  font-size: 9px;
+}
+.hud-tile-strip .hud-tile-label {
+  font-size: 7px;
+}
+
+/* =====================================================================
+   APPLE-GRADE POLISH - rev 2026-07-13
+   Global interactive feedback, unified motion, and spacing rhythm.
+   Keep LAST so it wins the cascade without fighting HUD modules.
+   =================================================================== */
+
+button, .pill, .ws-pill, .app-pill, .panel-tab, .qs-tile,
+.dash-toggle, .dash-close, .power-btn, .flyout-close,
+.wifi-toggle, .wifi-rescan, .bt-toggle, .bt-scan,
+.wifi-act, .bt-act, .wifi-forget, .bt-forget,
+.bar-flip-collapse, .search-btn, .upd-sync, .upd-refresh {
+  transition: all $t-fast;
+}
+
+button:active, .pill:active, .ws-pill:active, .app-pill:active,
+.qs-tile:active, .dash-toggle:active, .bar-flip-collapse:active {
+  /* eww 0.5 rejects transform — press feedback via obsidian-press mixin only */
+}
+
+.bar-flip-collapse:active {
+  @include obsidian-press($nyxus-accent-primary);
+}
+
+.dash-close, .cheat-close, .dc-close {
+  transition: all $t-fast;
+}
+.dash-close:hover, .cheat-close:hover, .dc-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.ws-pill, .app-pill {
+  transition: all $t-med;
+}
+
+.dashboard-root, .powermenu-root, .cheat-root, .deepcore-root, .hub-panel {
+  border-radius: $radius-xl;
+}
+
+.dash-card {
+  border-radius: $radius-md;
+}
+
+.notif-row, .upd-row {
+  margin-bottom: 4px;
+}
+
+.flyout-title {
+  font-family: "Inter Display", "Inter", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.24em;
 }

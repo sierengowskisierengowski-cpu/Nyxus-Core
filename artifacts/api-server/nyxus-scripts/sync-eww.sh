@@ -56,28 +56,29 @@ fi
 # Make sure helper scripts are executable on the target.
 find "${dst_dir}/scripts" -maxdepth 1 -type f -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
 
+# eww 0.5: only one of eww.scss / eww.css — prefer precompiled css + .source
+if [[ -f "${dst_dir}/eww.scss.source" ]]; then
+  rm -f "${dst_dir}/eww.scss"
+fi
+if [[ $dry -eq 0 && -x "${dst_dir}/scripts/compile-eww-css.sh" ]]; then
+  echo "── compiling eww.css from source ───────────────────────────────"
+  (cd "${dst_dir}" && "${dst_dir}/scripts/compile-eww-css.sh") ||     echo "sync-eww: compile-eww-css failed (using shipped eww.css if present)" >&2
+fi
+
 if [[ $dry -eq 1 ]]; then
   echo "  (dry-run, no reload)"; exit 0
 fi
 
 if [[ $reload -eq 1 ]]; then
-  if command -v eww >/dev/null 2>&1; then
-    echo "── reloading eww ─────────────────────────────────────────────"
-    # `eww reload` re-reads the config without dropping windows,
-    # which is what you want 95% of the time. If the daemon isn't
-    # running yet, start it.
-    if eww ping >/dev/null 2>&1; then
-      eww reload || {
-        echo "sync-eww: eww reload failed — falling back to kill+daemon" >&2
-        eww kill 2>/dev/null || true
-        eww daemon
-      }
-    else
-      eww daemon
-    fi
-    echo "  ✓ eww reloaded"
-  else
-    echo "  (eww not on PATH — skipping reload)"
+  if command -v nyxus-eww-launch-safe >/dev/null 2>&1; then
+    echo "── relaunching eww via nyxus-eww-launch-safe ───────────────────"
+    nyxus-eww-launch-safe >>"${HOME}/.cache/nyxus-eww/sync.log" 2>&1 || \
+      echo "sync-eww: nyxus-eww-launch-safe failed — run manually" >&2
+  elif command -v nyxus-eww-launch >/dev/null 2>&1; then
+    echo "── relaunching eww via nyxus-eww-launch ────────────────────────"
+    nyxus-eww-launch >>"${HOME}/.cache/nyxus-eww/sync.log" 2>&1 || true
+  elif command -v eww >/dev/null 2>&1; then
+    echo "sync-eww: nyxus-eww-launch not found — skipping reload (no bare eww reload)" >&2
   fi
 fi
 

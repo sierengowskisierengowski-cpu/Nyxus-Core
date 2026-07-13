@@ -3,10 +3,11 @@
 ;; © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 ;;
 ;; Layout matrix:
-;;   bar-bottom       — brand (left) · clock/date (center) · essential pills
-;;   bar-top          — NYXUS (left) · live ticker · now-playing (right)
+;;   bar-bottom       — minimal center NYXUS hub trigger + naked metrics
+;;   bar-top          — live ticker only (full-width float, zero chrome)
 ;;   bar-left         — HOME ◈ + station pills OP..ED (stations.json)
 ;;   bar-right        — quick-launch app rail (8 apps)
+;;   nyxus-hub        — main menu hub overlay (settings · shortcuts · power)
 ;;   dashboard        — slim quick control: hub links · sliders · toggles
 ;;   powermenu        — full overlay: 5 actions
 ;;   cheatsheet       — full overlay: 3-column keybind reference
@@ -38,7 +39,7 @@
                                      "~/.config/eww/scripts/mic.sh")
 (defpoll BACKLIGHT  :interval "5s"   :initial '{"percent":50}'
                                      "~/.config/eww/scripts/brightness.sh")
-(defpoll WORKSPACES :interval "1s"   :initial '{"active":1,"home_active":false,"home":{"code":"◈","name":"HOME","hue":"cyan"},"stations":[]}'
+(defpoll WORKSPACES :interval "1s"   :initial '{"active":1,"home_active":false,"home":{"code":"◈","name":"HOME","hue":"cyan","occupied":false},"stations":[]}'
                                      "~/.config/eww/scripts/workspaces.sh")
 (defpoll WEATHER    :interval "900s" :initial '{"temp":"—","summary":"…"}'
                                      "~/.config/eww/scripts/weather.sh")
@@ -50,6 +51,10 @@
                                      "~/.config/eww/scripts/updates.sh")
 (defpoll PLAYER     :interval "2s"   :initial '{"status":"Stopped","title":"—","artist":"","icon":"□","tooltip":"player"}'
                                      "~/.config/eww/scripts/player.sh")
+(defpoll FANSTRIP   :interval "3s"   :initial '{"text":"FAN —","tooltip":"fan speeds"}'
+                                     "~/.config/eww/scripts/fan-strip.sh")
+(defpoll NETSTRIP   :interval "3s"   :initial '{"text":"NET —","tooltip":"network"}'
+                                     "~/.config/eww/scripts/net-strip.sh")
 (defpoll NOTIFS     :interval "3s"   :initial '{"icon":"○","label":"0","tooltip":"notifications","paused":"false","total":0}'
                                      "~/.config/eww/scripts/notifications.sh")
 
@@ -84,6 +89,8 @@
 ;; block true fullscreen) and restores them when the overlay closes.
 (defpoll DASH_SHIELD  :interval "2s" :initial ""
   "~/.config/eww/scripts/overlay-shield.sh dashboard")
+(defpoll HUB_SHIELD   :interval "2s" :initial ""
+  "~/.config/eww/scripts/overlay-shield.sh nyxus-hub")
 (defpoll POWER_SHIELD :interval "2s" :initial ""
   "~/.config/eww/scripts/overlay-shield.sh powermenu")
 (defpoll CHEAT_SHIELD :interval "2s" :initial ""
@@ -121,6 +128,10 @@
 ;; drives the aurora curtain intensity.
 (deflisten STARLIGHT :initial '{"f":0,"tw":0.5}'
                  "~/.config/eww/scripts/starlight-anim.sh")
+
+;; ── starfield lock veil (fullscreen screensaver) ─────────────────────
+(deflisten STARFIELD :initial '{"f":0}'
+                 "~/.config/eww/scripts/starfield-lock-anim.sh")
 
 ;; trapped fog drift inside obsidian pill vessels (rev 2026-07-12)
 (deflisten FOG :initial '{"x":50,"y":50,"a":0}'
@@ -196,6 +207,10 @@
   (box :class "cava-box" :space-evenly false :tooltip "Audio visualizer"
     (label :class "cava-label" :text CAVA)))
 
+;; Mini CAVA glyph strip for bottom-bar music flip (scaled-down bars).
+(defwidget cava_mini []
+  (label :class "cava-mini" :text CAVA :tooltip "Audio reactive · CAVA"))
+
 ;; per-metric HUD tiles (cpu=pink, mem=purple, temp=orange) instead of
 ;; one flat capsule — HOME-HUD reference language (rev 2026-07-09).
 (defwidget syspulse_widget []
@@ -210,9 +225,7 @@
           :onclick "eww open --toggle dashboard &"
           :tooltip "${TIME.long} · click for dashboard"
     (box :orientation "v" :space-evenly false :spacing 0 :halign "center"
-      (box :orientation "h" :space-evenly false :spacing 2 :halign "center"
-        (label :class "clock-hms"  :text "${TIME.hm}" :style "opacity: ${NEONFLICK};")
-        (label :class "clock-sec"  :text ":${TIME.sec}"))
+      (label :class "clock-hms"  :text "${TIME.hm}" :style "opacity: ${NEONFLICK};")
       (label :class "clock-date" :text "${TIME.date}"))))
 
 (defwidget audio_widget []
@@ -330,52 +343,56 @@
     (label :class "ticker-player-text" :limit-width 48
            :text "${PLAYER.icon}  ${PLAYER.title}")))
 
-;; Scrolling ticker ribbon — no center watermark; NYXUS lives on the left.
+;; Naked ticker — full-width sliding marquee, zero vessel chrome.
 (defwidget ticker_widget []
-  (box :class "ticker-box" :space-evenly false :hexpand true :halign "fill"
-    (label :class "ticker ticker-marquee"
-           :limit-width 120
+  (box :class "ticker-row" :orientation "h" :hexpand true :halign "fill" :valign "center"
+    (label :class "ticker ticker-marquee ticker-hero ticker-naked"
+           :hexpand true
+           :halign "fill"
+           :xalign 0
            :unindent false
            :text "${TICKER.text}"
            :tooltip "${TICKER.tooltip}")))
 
 ;; ── workspaces: HOME + stations 1..10 (from stations.json) ─────────
 (defwidget workspace_home_pill []
-  (button :class {WORKSPACES.home_active ? "ws-pill ws-pill-active ws-pill-cyan" :
-                  WORKSPACES.home.occupied ? "ws-pill ws-pill-occupied ws-pill-cyan" :
-                                            "ws-pill ws-pill-cyan"}
-          :style "background-position: ${FOG.x}% ${FOG.y}%, center;"
-          :onclick "hyprctl dispatch workspace name:0 &"
-          :tooltip "HOME · ${WORKSPACES.home.tagline ?: 'Obsidian Reactor'}"
-    "${WORKSPACES.home.code}"))
+  (eventbox :class "float-island"
+    (button :class {WORKSPACES.home_active ? "ws-pill ws-pill-active ws-pill-cyan" :
+                    WORKSPACES.home.occupied ? "ws-pill ws-pill-occupied ws-pill-cyan" :
+                                              "ws-pill ws-pill-cyan"}
+            :style "background-position: ${FOG.x}% ${FOG.y}%, center;"
+            :onclick "hyprctl dispatch workspace name:0 &"
+            :tooltip "HOME · ${WORKSPACES.home.tagline ?: 'Obsidian Reactor'}"
+      "${WORKSPACES.home.code}")))
 
 (defwidget station_pill [st]
-  (button :class {st.active ? "ws-pill ws-pill-active ws-pill-${st.hue}" :
-                  st.occupied ? "ws-pill ws-pill-occupied ws-pill-${st.hue}" :
-                                "ws-pill ws-pill-${st.hue}"}
-          :style "background-position: ${FOG.x}% ${FOG.y}%, center;"
-          :onclick "hyprctl dispatch workspace ${st.id} &"
-          :tooltip "${st.name} · ${st.tagline}"
-    "${st.code}"))
+  (eventbox :class "float-island"
+    (button :class {st.active ? "ws-pill ws-pill-active ws-pill-${st.hue}" :
+                    st.occupied ? "ws-pill ws-pill-occupied ws-pill-${st.hue}" :
+                                  "ws-pill ws-pill-${st.hue}"}
+            :style "background-position: ${FOG.x}% ${FOG.y}%, center;"
+            :onclick "hyprctl dispatch workspace ${st.id} &"
+            :tooltip "${st.name} · ${st.tagline}"
+      "${st.code}")))
 
+;; Transparent column — each pill is its own float-island (no rail slab).
 (defwidget workspaces_rail []
-  (box :class "ws-rail" :orientation "v" :space-evenly false :spacing 5 :valign "center"
-    :style "background-image: radial-gradient(circle at 50% ${PRISM.cleft}%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(180deg, rgba(150,90,255,0) ${round(PRISM.cleft - 2, 1)}%, rgba(255,250,240,0.95) ${PRISM.cleft}%, rgba(255,200,120,0.66) ${round(PRISM.cleft + 3, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.cleft + 9, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.cleft + 16, 1)}%, rgba(255,60,172,0) ${round(PRISM.cleft + 24, 1)}%), linear-gradient(${PRISM.a}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/graffiti-rail.png'), url('assets/starlight-twinkle-rail-${STARLIGHT.f}.png'), url('assets/starlight-rail.png'), linear-gradient(170deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.p * 0.03, 3)}), inset 0 0 ${round(20 + PRISM.p * 14, 1)}px rgba(150,90,255,${round(0.04 + PRISM.p * 0.06, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
+  (box :class "ws-rail ws-rail-float" :orientation "v" :space-evenly false :spacing 10 :valign "center" :halign "center"
     (workspace_home_pill)
-    (box :class "ws-rail-divider")
     (for st in {WORKSPACES.stations}
       (station_pill :st st))))
 
 ;; `hue` gives every rail icon its own neon hover identity
 ;; (.app-pill-<hue> in eww.scss — HOME-HUD language, rev 2026-07-09).
 (defwidget app_launcher [glyph cmd label ?hue]
-  (button :class "app-pill app-pill-${hue ?: 'pink'}" :onclick "${cmd} &" :tooltip "${label}"
-          :style "background-position: ${FOG.x}% ${FOG.y}%, center;"
-    "${glyph}"))
+  (eventbox :class "float-island"
+    (button :class "app-pill app-pill-${hue ?: 'pink'}" :onclick "${cmd} &" :tooltip "${label}"
+            :style "background-position: ${FOG.x}% ${FOG.y}%, center;"
+      "${glyph}")))
 
+;; Transparent column — each launcher is its own float-island (no rail slab).
 (defwidget app_rail []
-  (box :class "app-rail" :orientation "v" :space-evenly false :spacing 10 :valign "center"
-    :style "background-image: radial-gradient(circle at 50% ${PRISM.cright}%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(180deg, rgba(255,60,172,0) ${round(PRISM.cright - 24, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.cright - 16, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.cright - 9, 1)}%, rgba(255,200,120,0.66) ${round(PRISM.cright - 3, 1)}%, rgba(255,250,240,0.95) ${PRISM.cright}%, rgba(150,90,255,0) ${round(PRISM.cright + 2, 1)}%), linear-gradient(${PRISM.b}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/graffiti-rail.png'), url('assets/starlight-twinkle-rail-${STARLIGHT.f}.png'), url('assets/starlight-rail.png'), linear-gradient(190deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.g * 0.03, 3)}), inset 0 0 ${round(20 + PRISM.g * 14, 1)}px rgba(150,90,255,${round(0.04 + PRISM.g * 0.06, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
+  (box :class "app-rail app-rail-float" :orientation "v" :space-evenly false :spacing 11 :valign "center" :halign "center"
     (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
     (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
     (app_launcher :glyph "" :cmd "thunar"         :label "Files" :hue "gold")
@@ -389,44 +406,169 @@
 ;; BARS
 ;; ═════════════════════════════════════════════════════════════════════
 
-;; The :style blocks below re-paint each bar's two stacked backgrounds
-;; (glass on padding-box + rim gradient on border-box) with the live
-;; PRISM angle, so the rim colors chase around the frame; the inset
-;; glows breathe with PRISM.p/.g. Class CSS keeps origin/clip/static
-;; fallback, inline only overrides background-image + box-shadow.
-;; OBSIDIAN SPECTRUM COMMAND BRIDGE (rev 2026-07-12)
-;; Bottom: brand · reactor HUD · cava · hero clock · full status rail.
-;; Top:    system tiles · signature ticker · cosmos telemetry · player.
+;; ── MINIMAL BOTTOM BAR — naked metrics + center NYXUS hub trigger ────
+
+(defwidget bar_metric_text [label value ?alert ?tip]
+  (label :class "bar-metric${(alert ?: 0) == 1 ? ' bar-metric-alert' : ''}"
+         :text "${label} ${value}"
+         :tooltip "${tip ?: label}"))
+
+(defwidget bar_strip_text [text ?tip ?class]
+  (label :class "bar-strip ${class ?: ''}"
+         :text "${text}"
+         :tooltip "${tip ?: text}"
+         :limit-width 52
+         :truncate "end"))
+
+;; Idle face: NYXUS wordmark + clock + date (default bottom center).
+(defwidget bar_hub_idle []
+  (box :orientation "v" :space-evenly false :spacing 2 :halign "center"
+    (label :class "bar-hub-brand" :text "NYXUS" :style "opacity: ${NEONFLICK};")
+    (label :class "bar-hub-time" :text "${TIME.hm}")
+    (label :class "bar-hub-date" :text "${TIME.date}")))
+
+;; Music face: now-playing + mini CAVA when MPRIS reports active playback.
+(defwidget bar_hub_music []
+  (box :orientation "v" :space-evenly false :spacing 1 :halign "center"
+    (label :class "bar-hub-music-title" :limit-width 36 :truncate "end"
+           :text "${PLAYER.icon}  ${PLAYER.title}"
+           :tooltip "${PLAYER.tooltip}")
+    (label :class "bar-hub-music-artist" :limit-width 36 :truncate "end"
+           :visible {PLAYER.artist != ""}
+           :text "${PLAYER.artist}")
+    (cava_mini)))
+
+(defwidget bar_hub_trigger []
+  (button :class "bar-hub-trigger"
+          :onclick "eww open --toggle nyxus-hub &"
+          :onrightclick "playerctl play-pause &"
+          :tooltip "NYXUS Main Menu · ${PLAYER.status != 'Stopped' ? PLAYER.tooltip : TIME.long} · click hub · right-click play/pause"
+    (stack :orientation "v" :homogeneous false
+      (box :visible {PLAYER.status == "Stopped"} (bar_hub_idle))
+      (box :visible {PLAYER.status != "Stopped"} (bar_hub_music)))))
+
 (defwidget bar_bottom_layout []
-  (centerbox :class "bar bar-bottom" :orientation "h"
-    :style "background-image: radial-gradient(circle at ${PRISM.cbot}% 50%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(90deg, rgba(150,90,255,0) ${round(PRISM.cbot - 2, 1)}%, rgba(255,250,240,0.95) ${PRISM.cbot}%, rgba(255,200,120,0.66) ${round(PRISM.cbot + 4, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.cbot + 13, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.cbot + 25, 1)}%, rgba(255,60,172,0) ${round(PRISM.cbot + 36, 1)}%), linear-gradient(${PRISM.a}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/graffiti-strip.png'), url('assets/starlight-twinkle-strip-${STARLIGHT.f}.png'), url('assets/starlight-strip.png'), linear-gradient(180deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.a}deg, #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.p * 0.04, 3)}), inset 0 -16px ${round(26 + PRISM.p * 16, 1)}px rgba(120,75,255,${round(0.04 + PRISM.p * 0.06, 3)}), inset 0 16px ${round(26 + PRISM.g * 16, 1)}px rgba(150,90,255,${round(0.03 + PRISM.g * 0.05, 3)}), inset 0 0 ${round(16 + PRISM.ps * 40, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.60, 3)}), inset 0 0 ${round(12 + PRISM.fs * 18, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.15, 3)});"
-    (box :class "bar-cluster cluster-left" :space-evenly false :spacing 8 :halign "start" :valign "center"
-      (label :class "bar-bracket bar-bracket-l" :text "⟨")
-      (nyxus_brand) (heartbeat) (bar_divider) (syspulse_widget))
-    (box :class "bar-cluster cluster-center" :space-evenly false :spacing 10 :halign "center" :valign "center"
-      (cava_widget) (bar_divider) (clock_widget))
-    (box :class "bar-cluster cluster-right" :space-evenly false :spacing 6 :halign "end" :valign "center"
-      (cal_widget) (brightness_widget) (audio_widget) (mic_widget) (net_widget) (bluetooth_widget)
-      (battery_widget) (powerprof_widget) (updates_widget) (notifs_widget) (qs_widget) (power_button)
-      (label :class "bar-bracket bar-bracket-r" :text "⟩"))))
+  (box :class "bar-bottom-minimal" :orientation "h" :hexpand true :halign "fill"
+       :space-evenly false :valign "center"
+    (box :class "bar-metrics-left" :orientation "h" :hexpand true :halign "start"
+         :space-evenly false :spacing 12 :valign "center"
+      (bar_strip_text :text "${FANSTRIP.text}" :tip "${FANSTRIP.tooltip}" :class "bar-strip-fans"))
+    (box :hexpand false :halign "center" (bar_hub_trigger))
+    (box :class "bar-metrics-right" :orientation "h" :hexpand true :halign "end"
+         :space-evenly false :spacing 12 :valign "center"
+      (bar_strip_text :text "${NETSTRIP.text}" :tip "${NETSTRIP.tooltip}" :class "bar-strip-net"))))
 
 (defwidget bar_top_layout []
-  (centerbox :class "bar bar-top" :orientation "h"
-    :style "background-image: radial-gradient(circle at ${PRISM.ctop}% 50%, rgba(255,255,255,1) 0px, rgba(255,250,240,0.98) 4px, rgba(255,216,150,0.92) 9px, rgba(196,146,255,0.55) 17px, rgba(150,90,255,0.24) 30px, rgba(0,0,0,0) 52px), linear-gradient(90deg, rgba(255,60,172,0) ${round(PRISM.ctop - 36, 1)}%, rgba(255,60,172,0.12) ${round(PRISM.ctop - 25, 1)}%, rgba(178,128,255,0.36) ${round(PRISM.ctop - 13, 1)}%, rgba(255,200,120,0.66) ${round(PRISM.ctop - 4, 1)}%, rgba(255,250,240,0.95) ${PRISM.ctop}%, rgba(150,90,255,0) ${round(PRISM.ctop + 2.5, 1)}%), linear-gradient(${PRISM.b}deg, rgba(0,0,0,0) 8%, rgba(80,225,190,${round(0.01 + STARLIGHT.tw * 0.022, 3)}) 32%, rgba(150,90,255,${round(0.015 + STARLIGHT.tw * 0.03, 3)}) 58%, rgba(255,73,148,${round(0.006 + STARLIGHT.tw * 0.012, 3)}) 76%, rgba(0,0,0,0) 92%), url('assets/graffiti-top.png'), url('assets/starlight-twinkle-top-${STARLIGHT.f}.png'), url('assets/starlight-top.png'), linear-gradient(180deg, rgba(7,3,14,0.985), rgba(3,1,9,0.98)), linear-gradient(${PRISM.b}deg, #2bd2ff 0%, #784bff 33%, #ff3cac 66%, #2bd2ff 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,${round(0.04 + PRISM.g * 0.04, 3)}), inset 0 -10px ${round(18 + PRISM.p * 14, 1)}px rgba(120,75,255,${round(0.05 + PRISM.p * 0.08, 3)}), inset 0 0 ${round(14 + PRISM.ps * 34, 1)}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},${round(PRISM.ps * 0.55, 3)}), inset 0 0 ${round(10 + PRISM.fs * 16, 1)}px rgba(${PRISM.fr},${PRISM.fg},${PRISM.fb},${round(0.03 + PRISM.fs * 0.14, 3)});"
-    (box :class "bar-cluster cluster-left hud-tile-strip" :space-evenly false :spacing 6 :halign "start" :valign "center"
-      (label :class "ticker-label" :style "opacity: ${NEONFLICK};" :text "▌ NYXUS · LIVE")
-      (hud_tile :hue "pink"   :glyph "󰇅" :label "HOST" :value "${BARTILES.host}" :tip "Hostname")
-      (hud_tile :hue "purple" :glyph "󰌽" :label "KRN"  :value "${BARTILES.kern}" :tip "Kernel release")
-      (hud_tile :hue "blue"   :glyph "󰏖" :label "PKGS" :value "${BARTILES.pkgs}" :tip "Installed packages"))
-    (box :class "bar-cluster cluster-center" :space-evenly false :halign "center" :valign "center"
-      (ticker_widget))
-    (box :class "bar-cluster cluster-right hud-tile-strip" :space-evenly false :spacing 6 :halign "end" :valign "center"
-      (hud_tile :hue "purple" :glyph "${MOON.glyph}" :label "MOON" :value "${MOON.pct}%" :tip "${MOON.name} · ${MOON.pct}% illuminated")
-      (hud_tile :hue "gold"   :glyph "󰖕" :label "WX"   :value "${WEATHER.temp}" :tip "${WEATHER.summary}")
-      (hud_tile :hue "gold"   :glyph "󰔟" :label "UP"   :value "${BARTILES.up}"    :tip "System uptime")
-      (hud_tile :hue "orange" :glyph "󰋊" :label "DISK" :value "${BARTILES.disk}%" :tip "Root filesystem used")
-      (hud_tile :hue "green"  :glyph "󰩟" :label "NET"  :value "${BARTILES.ip}"    :tip "IPv4 · gw ${BARTILES.gw}")
-      (player_widget))))
+  (box :class "bar-top-ticker-only" :orientation "h" :hexpand true :halign "fill"
+    (ticker_widget)))
+
+;; ═════════════════════════════════════════════════════════════════════
+;; NYXUS MAIN HUB — cosmic glass command center (center bar click)
+;; ═════════════════════════════════════════════════════════════════════
+
+(defwidget hub_section_title [title]
+  (label :class "hub-section-title" :text title))
+
+(defwidget hub_tile [glyph label cmd ?hue]
+  (button :class "hub-tile hub-tile-${hue ?: 'pink'}" :onclick "(${cmd}) &"
+    (box :orientation "v" :space-evenly false :spacing 6 :halign "center"
+      (label :class "hub-tile-glyph" :text "${glyph}")
+      (label :class "hub-tile-label" :text "${label}"))))
+
+(defwidget hub_ws_pill [st]
+  (button :class {st.active ? "hub-ws-pill hub-ws-active hub-ws-${st.hue}" :
+                  st.occupied ? "hub-ws-pill hub-ws-occupied hub-ws-${st.hue}" :
+                                "hub-ws-pill hub-ws-${st.hue}"}
+          :onclick "hyprctl dispatch workspace ${st.id} &"
+          :tooltip "${st.name} · ${st.tagline}"
+    "${st.code}"))
+
+(defwidget hub_home_pill []
+  (button :class {WORKSPACES.home_active ? "hub-ws-pill hub-ws-active hub-ws-cyan" :
+                  WORKSPACES.home.occupied ? "hub-ws-pill hub-ws-occupied hub-ws-cyan" :
+                                            "hub-ws-pill hub-ws-cyan"}
+          :onclick "hyprctl dispatch workspace name:0 &"
+          :tooltip "HOME · ${WORKSPACES.home.tagline ?: 'Obsidian Reactor'}"
+    "${WORKSPACES.home.code}"))
+
+(defwidget nyxus_hub_layout []
+  (eventbox :onclick "true"
+    (box :class "hub-panel" :orientation "v" :space-evenly false :spacing 16
+         :halign "center" :valign "start"
+         :style "background-image: url('assets/starlight-twinkle-strip-${STARLIGHT.f}.png'), url('assets/starlight-strip.png'), linear-gradient(180deg, rgba(7,3,14,0.94), rgba(2,1,7,0.92)), linear-gradient(${PRISM.a}deg, #ff2667 0%, #7949f2 25%, #26ffb7 50%, #7949f2 75%, #ff2667 100%);"
+      (label :visible false :text HUB_SHIELD)
+      (box :orientation "h" :space-evenly false :spacing 12
+        (label :class "hub-title" :hexpand true :halign "start"
+               :text "NYXUS · MAIN HUB" :style "opacity: ${NEONFLICK};")
+        (button :class "hub-close-x" :onclick "eww close nyxus-hub" "✕"))
+      (label :class "hub-subtitle" :halign "start"
+             :text "${TIME.long} · ${BARTILES.host} · ${NETWORK.label}")
+
+      (hub_section_title :title "CONNECT")
+      (box :class "hub-grid" :orientation "h" :space-evenly true :spacing 10
+        (hub_tile :glyph "󰖩" :label "Wi‑Fi" :hue "green"
+                  :cmd "eww close nyxus-hub && eww open --toggle wifi")
+        (hub_tile :glyph "󰂯" :label "Bluetooth" :hue "blue"
+                  :cmd "eww close nyxus-hub && eww open --toggle bluetooth")
+        (hub_tile :glyph "󰂛" :label "Alerts" :hue "pink"
+                  :cmd "eww close nyxus-hub && eww open --toggle notifications")
+        (hub_tile :glyph "⚙" :label "Quick QS" :hue "purple"
+                  :cmd "eww close nyxus-hub && eww open --toggle quicksettings"))
+
+      (hub_section_title :title "SOUND")
+      (box :class "hub-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "hub-slider-label" :text "VOL")
+        (scale :class "hub-scale dash-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
+      (box :class "hub-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "hub-slider-label" :text "MIC")
+        (scale :class "hub-scale dash-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
+               :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%"))
+
+      (hub_section_title :title "DISPLAY")
+      (box :class "hub-slider-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "hub-slider-label" :text "BRT")
+        (scale :class "hub-scale dash-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+               :onchange "brightnessctl set {}%"))
+      (box :class "hub-grid" :orientation "h" :space-evenly true :spacing 10
+        (hub_tile :glyph "󰕾" :label "Mixer" :hue "purple"
+                  :cmd "eww close nyxus-hub && eww open --toggle mixer")
+        (hub_tile :glyph "󰍹" :label "Displays" :hue "pink"
+                  :cmd "eww close nyxus-hub && wdisplays")
+        (hub_tile :glyph "☼" :label "Bright" :hue "gold"
+                  :cmd "eww close nyxus-hub && eww open --toggle brightness-flyout"))
+
+      (hub_section_title :title "SYSTEM")
+      (box :class "hub-grid" :orientation "h" :space-evenly true :spacing 10
+        (hub_tile :glyph "◈" :label "Dashboard" :hue "cyan"
+                  :cmd "eww close nyxus-hub && hyprctl dispatch workspace name:0")
+        (hub_tile :glyph "◉" :label "Deep Core" :hue "green"
+                  :cmd "eww close nyxus-hub && eww open --toggle deepcore")
+        (hub_tile :glyph "▦" :label "Mission" :hue "purple"
+                  :cmd "eww close nyxus-hub && nyxus-mission toggle")
+        (hub_tile :glyph "󰚰" :label "Updates" :hue "gold"
+                  :cmd "eww close nyxus-hub && eww open --toggle updates")
+        (hub_tile :glyph "󰒓" :label "Settings" :hue "pink"
+                  :cmd "eww close nyxus-hub && nyxus-settings")
+        (hub_tile :glyph "󰌌" :label "Keys" :hue "orange"
+                  :cmd "eww close nyxus-hub && eww open --toggle hotkey-cheatsheet"))
+
+      (hub_section_title :title "STATIONS")
+      (box :class "hub-ws-row" :orientation "h" :space-evenly false :spacing 8
+        (hub_home_pill)
+        (for st in {WORKSPACES.stations}
+          (hub_ws_pill :st st)))
+
+      (hub_section_title :title "POWER")
+      (box :class "hub-grid hub-power-row" :orientation "h" :space-evenly true :spacing 10
+        (hub_tile :glyph "󰌾" :label "Lock" :hue "green"
+                  :cmd "eww close nyxus-hub && hyprlock")
+        (hub_tile :glyph "󰗽" :label "Logout" :hue "orange"
+                  :cmd "eww close nyxus-hub && hyprctl dispatch exit")
+        (hub_tile :glyph "󰐥" :label "Power" :hue "red"
+                  :cmd "eww close nyxus-hub && eww open --toggle powermenu"))
+
+      (button :class "hub-close" :onclick "eww close nyxus-hub" "Close (Esc)"))))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; DASHBOARD — replaces nyxus_quicksettings + nyxus_clock + nyxus_calendar
@@ -669,12 +811,20 @@
 ;; ═════════════════════════════════════════════════════════════════════
 
 (defwidget screensaver_layout []
-  (box :class "saver-root" :orientation "v" :halign "center" :valign "center"
-       :space-evenly false :spacing 28
-    (label :class "saver-clock" :text "${TIME.hm}")
-    (label :class "saver-date"  :text "${TIME.long}")
-    (label :class "saver-brand" :text "NYXUS · DARK MIRROR")
-    (label :class "saver-hint"  :text "move mouse · press any key")))
+  (eventbox :onclick "~/.config/eww/scripts/starfield-lock-reveal.sh --dismiss &"
+    (box :class "saver-root"
+         :style "background-image: url('assets/starfield-lock-twinkle-${STARFIELD.f}.png'), url('assets/starfield-lock-base.png');"
+         :orientation "v" :halign "center" :valign "center"
+         :space-evenly false :spacing 28
+      (button :class "saver-center-star"
+              :onclick "~/.config/eww/scripts/starfield-lock-reveal.sh &"
+              :tooltip "double-click ✦ to unlock"
+        (image :class "saver-star-img" :path "assets/starfield-center-star.png"
+               :image-width 96 :image-height 96))
+      (label :class "saver-clock" :text "${TIME.hm}")
+      (label :class "saver-date"  :text "${TIME.long}")
+      (label :class "saver-brand" :text "NYXUS · DARK MIRROR")
+      (label :class "saver-hint"  :text "double-click ✦ to unlock · click elsewhere to dismiss"))))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; WINDOWS
@@ -694,12 +844,12 @@
 ;; on .bar-bottom / .bar-top, NOT from a <100% surface width.
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
-  :geometry (geometry :x "0" :y "10" :width "100%" :height "54px" :anchor "bottom center")
+  :geometry (geometry :x "0" :y "8" :width "100%" :height "48px" :anchor "bottom center")
   (bar_bottom_layout))
 
 (defwindow bar-top
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-top"
-  :geometry (geometry :x "0" :y "6" :width "100%" :height "36px" :anchor "top center")
+  :geometry (geometry :x "0" :y "4" :width "100%" :height "36px" :anchor "top center")
   (bar_top_layout))
 
 (defwindow bar-left
@@ -720,6 +870,16 @@
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-dashboard"
   :geometry (geometry :width "100%" :height "100%" :anchor "center")
   (box :class "overlay-backdrop" (dashboard_layout)))
+
+(defwindow nyxus-hub
+  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-hub"
+  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  (eventbox :onclick "eww close nyxus-hub"
+    :onkeydown "[ '{}' = 'Escape' ] && eww close nyxus-hub"
+    (centerbox :class "hub-backdrop"
+      (box)
+      (nyxus_hub_layout)
+      (box))))
 
 (defwindow powermenu
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-powermenu"
