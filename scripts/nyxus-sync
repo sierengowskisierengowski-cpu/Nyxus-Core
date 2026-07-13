@@ -1,0 +1,185 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║  NYXUS Live-Sync — pull latest changes and hot-reload the session       ║
+# ║                                                                          ║
+# ║  Usage:   nyxus-sync [--no-install] [--no-reload]                       ║
+# ║  Curl:    curl -fsSL https://raw.githubusercontent.com/sierengowskisierengowski-cpu/Nyxus-Core/main/scripts/nyxus-sync | bash
+# ║                                                                          ║
+# ║  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED          ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+set -euo pipefail
+
+# ── Design tokens ─────────────────────────────────────────────────────────────
+R="\033[0m"; B="\033[1m"; DIM="\033[2m"
+VIOLET="\033[38;2;160;107;255m"   # #a06bff — obsidian prism violet
+CYAN="\033[38;2;58;216;255m"      # #3ad8ff — starlight cyan
+GOLD="\033[38;5;220m"; GREEN="\033[92m"; RED="\033[91m"
+
+ok()   { printf "  ${GREEN}${B}✓${R}  %s\n" "$1"; }
+fail() { printf "  ${RED}${B}✗${R}  %s\n" "$1" >&2; }
+warn() { printf "  ${GOLD}${B}!${R}  %s\n" "$1"; }
+hdr()  { printf "\n${VIOLET}${B}── %s${R}\n" "$1"; }
+
+# ── Parse args ────────────────────────────────────────────────────────────────
+DO_INSTALL=1
+DO_RELOAD=1
+for arg in "$@"; do
+  case "${arg}" in
+    --no-install)  DO_INSTALL=0 ;;
+    --no-reload)   DO_RELOAD=0 ;;
+    --help|-h)
+      printf "Usage: nyxus-sync [--no-install] [--no-reload]\n"
+      printf "  --no-install   Skip running nyxus_install.sh after pull\n"
+      printf "  --no-reload    Skip EWW/Hyprland hot-reload\n"
+      exit 0
+      ;;
+  esac
+done
+
+# ── Banner ────────────────────────────────────────────────────────────────────
+printf "\n"
+printf "${VIOLET}${B}  NYXUS SYNC${R}  ${DIM}$(date '+%H:%M:%S')${R}\n\n"
+
+# ── Find repo ─────────────────────────────────────────────────────────────────
+NYXUS_DIR="${HOME}/.nyxus"
+REPO_FILE="${NYXUS_DIR}/repo"
+
+REPO_DIR="${NYXUS_REPO_DIR:-}"
+if [[ -z "${REPO_DIR}" && -f "${REPO_FILE}" ]]; then
+  REPO_DIR="$(cat "${REPO_FILE}")"
+fi
+
+# Auto-detect common locations
+if [[ -z "${REPO_DIR}" ]]; then
+  for candidate in \
+    "${HOME}/Nyxus-Core" \
+    "${HOME}/nyxus-core" \
+    "${HOME}/.nyxus/repo-src" \
+    "/opt/nyxus/repo"
+  do
+    if [[ -d "${candidate}/.git" ]]; then
+      REPO_DIR="${candidate}"
+      break
+    fi
+  done
+fi
+
+# ── Pull latest changes ───────────────────────────────────────────────────────
+hdr "Sync"
+GIT_BEFORE=""
+GIT_AFTER=""
+
+if [[ -n "${REPO_DIR}" && -d "${REPO_DIR}/.git" ]]; then
+  cd "${REPO_DIR}"
+  GIT_BEFORE="$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
+  
+  if git pull --ff-only origin main 2>&1; then
+    GIT_AFTER="$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
+    if [[ "${GIT_BEFORE}" == "${GIT_AFTER}" ]]; then
+      ok "Already up to date at ${GIT_AFTER}"
+    else
+      ok "Updated: ${GIT_BEFORE} → ${GIT_AFTER}"
+      # Show what changed (compact)
+      git log --oneline "${GIT_BEFORE}..${GIT_AFTER}" 2>/dev/null | head -10 | while read -r line; do
+        printf "  ${DIM}  %s${R}\n" "${line}"
+      done
+    fi
+  else
+    warn "git pull failed — hot-reloading with current configs"
+    GIT_AFTER="${GIT_BEFORE}"
+  fi
+
+  # Save repo path for future runs
+  mkdir -p "${NYXUS_DIR}"
+  printf '%s\n' "${REPO_DIR}" > "${REPO_FILE}"
+  INSTALL_SCRIPT="${REPO_DIR}/artifacts/api-server/nyxus-scripts/nyxus_install.sh"
+
+  # Deploy from the freshly-pulled local checkout instead of the download
+  # server: every config, script, wallpaper and GTK4 app tarball lives in the
+  # repo, so a `git pull` alone is a complete, server-independent live update.
+  # Respect an explicit NYXUS_OFFLINE_DIR override if the caller set one.
+  export NYXUS_OFFLINE_DIR="${NYXUS_OFFLINE_DIR:-${REPO_DIR}/artifacts/api-server/nyxus-scripts}"
+else
+  # No local repo — fetch directly from API
+  warn "No local repo found — fetching configs from network"
+  INSTALL_SCRIPT="$(mktemp /tmp/nyxus_sync_install.XXXXXX.sh)"
+  # shellcheck disable=SC2064
+  trap "rm -f ${INSTALL_SCRIPT}" EXIT
+
+  if curl -fsSL --connect-timeout 15 \
+       -o "${INSTALL_SCRIPT}" \
+       "https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh" 2>/dev/null \
+  || curl -fsSL --connect-timeout 15 \
+       -o "${INSTALL_SCRIPT}" \
+       "https://raw.githubusercontent.com/sierengowskisierengowski-cpu/Nyxus-Core/main/artifacts/api-server/nyxus-scripts/nyxus_install.sh" 2>/dev/null; then
+    chmod +x "${INSTALL_SCRIPT}"
+    ok "Fetched nyxus_install.sh from network"
+  else
+    fail "Could not fetch install script — check your network"
+    exit 1
+  fi
+fi
+
+# ── Deploy configs ────────────────────────────────────────────────────────────
+if [[ "${DO_INSTALL}" -eq 1 ]]; then
+  hdr "Deploying"
+  if [[ -f "${INSTALL_SCRIPT}" ]]; then
+    if bash "${INSTALL_SCRIPT}" 2>&1; then
+      ok "Configs deployed"
+    else
+      INSTALL_EXIT=$?
+      fail "nyxus_install.sh exited ${INSTALL_EXIT} — hot-reload may use stale configs"
+    fi
+  else
+    warn "Install script not found: ${INSTALL_SCRIPT}"
+  fi
+fi
+
+# ── Hot-reload session ────────────────────────────────────────────────────────
+if [[ "${DO_RELOAD}" -eq 1 ]]; then
+  hdr "Hot-reload"
+
+  # EWW bars
+  if command -v eww &>/dev/null; then
+    eww close-all 2>/dev/null || true
+    sleep 0.4
+    eww open-many bar-top bar-bottom bar-left bar-right 2>/dev/null \
+      && ok "EWW bars reloaded" \
+      || warn "EWW partial reload — check: eww logs"
+  else
+    warn "eww not in PATH — bars not reloaded"
+  fi
+
+  # Hyprland
+  if command -v hyprctl &>/dev/null && hyprctl version &>/dev/null 2>&1; then
+    hyprctl reload 2>/dev/null && ok "Hyprland reloaded" || warn "hyprctl reload failed"
+  else
+    warn "Hyprland not running — skipping"
+  fi
+
+  # Dunst
+  if pgrep -x dunst &>/dev/null; then
+    pkill -x dunst 2>/dev/null || true
+    sleep 0.3
+    setsid -f dunst &>/dev/null || { dunst &>/dev/null & disown; }
+    ok "Dunst restarted"
+  fi
+
+  # NYXUS daemons — restart any user-level ones that need refreshing
+  for daemon in nyxus-missiond nyxus-qsd nyxus-hotkeyd; do
+    if systemctl --user is-active "${daemon}" &>/dev/null; then
+      systemctl --user restart "${daemon}" 2>/dev/null \
+        && ok "Restarted ${daemon}" \
+        || warn "${daemon} restart failed"
+    fi
+  done
+fi
+
+# ── Summary ───────────────────────────────────────────────────────────────────
+printf "\n${DIM}──────────────────────────────────────────────────────────────────────${R}\n"
+if [[ -n "${GIT_AFTER}" && "${GIT_BEFORE}" != "${GIT_AFTER}" ]]; then
+  printf "  ${GREEN}${B}✓ Synced${R}  ${DIM}${GIT_BEFORE} → ${GIT_AFTER}${R}\n"
+else
+  printf "  ${GREEN}${B}✓ Session hot-reloaded${R}\n"
+fi
+printf "  ${DIM}S I L E N T · D A R K · P U R E L Y   F U N C T I O N A L${R}\n\n"

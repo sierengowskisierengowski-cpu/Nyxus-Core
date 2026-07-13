@@ -60,6 +60,37 @@ dl() {
   fi
 }
 
+## Offline tarball-app install: extract a locally-cached nyxus-<pkg>.tgz from
+## NYXUS_OFFLINE_DIR and run its bundled install.sh, with no network access.
+## Returns non-zero if the tarball is absent or its install.sh fails, so the
+## caller can fall back to the network path. Tarballs use one of two top-level
+## layouts (`<name>/install.sh` or `nyxus-<name>/install.sh`) — the first
+## top-level directory that contains an install.sh wins.
+install_tarball_offline() {
+  local pkg="$1"
+  local tgz="${NYXUS_OFFLINE_DIR:-}/nyxus-${pkg}.tgz"
+  [ -n "${NYXUS_OFFLINE_DIR:-}" ] && [ -f "$tgz" ] || return 1
+
+  local work
+  work="$(mktemp -d "/tmp/nyxus-${pkg}.XXXXXX")" || return 1
+  if ! tar -xzf "$tgz" -C "$work" 2>/dev/null; then
+    rm -rf "$work"
+    return 1
+  fi
+
+  local top
+  top="$(find "$work" -mindepth 1 -maxdepth 2 -name install.sh -printf '%h\n' 2>/dev/null | head -1)"
+  if [ -z "$top" ] || [ ! -f "$top/install.sh" ]; then
+    rm -rf "$work"
+    return 1
+  fi
+
+  local rc=0
+  ( cd "$top" && bash install.sh ) || rc=$?
+  rm -rf "$work"
+  return "$rc"
+}
+
 # ── HEADER ────────────────────────────────────────────────────────────────────
 clear
 echo ""
@@ -608,7 +639,30 @@ dl "alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" || failed=$((failed
 # ── GTK4 TARBALL APPS — Home, Intel, Panel, Start, Sage, Studio, Shield… ────
 hdr "GTK4 Tarball Apps"
 TARBALL_APPS=(home weather notepad passwords intel panel start sage studio security)
+# "security" is a meta-app: its installer bundles phantom + shield + godsapp.
+# Offline mode installs those three tarballs directly.
+SECURITY_PKGS=(phantom shield godsapp)
 for app in "${TARBALL_APPS[@]}"; do
+  # Offline first: extract the locally-cached tarball(s) and run their
+  # bundled install.sh, so a machine with no access to the download server
+  # still gets every GTK4 app. Falls through to the network path only when
+  # no local tarball is present.
+  if [ -n "${NYXUS_OFFLINE_DIR:-}" ]; then
+    if [ "$app" = "security" ]; then
+      sec_rc=0
+      for sub in "${SECURITY_PKGS[@]}"; do
+        install_tarball_offline "$sub" || sec_rc=1
+      done
+      if [ "$sec_rc" -eq 0 ]; then
+        ok "${app} (phantom + shield + godsapp) ${DIM}(offline)${R}"
+        continue
+      fi
+    elif install_tarball_offline "$app"; then
+      ok "${app} (nyxus-${app}) ${DIM}(offline)${R}"
+      continue
+    fi
+  fi
+
   installer="nyxus_${app}_install.sh"
   if curl -fsSL "${API}/${installer}" | bash >/tmp/nyxus-${app}-install.log 2>&1; then
     ok "${app} (nyxus-${app})"
