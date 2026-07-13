@@ -116,9 +116,13 @@ if (( len < WINDOW )); then
   len=${#text}
 fi
 
-# ── advance offset ───────────────────────────────────────────────────
+# ── advance offset (seed mid-ribbon so first frame feels centered) ───
 off=0
-[[ -r "${CACHE_OFFSET}" ]] && off=$(<"${CACHE_OFFSET}")
+if [[ -r "${CACHE_OFFSET}" ]]; then
+  off=$(<"${CACHE_OFFSET}")
+else
+  off=$(( len / 2 ))
+fi
 off=$(( (off + 1) % len ))
 printf '%d' "${off}" > "${CACHE_OFFSET}"
 
