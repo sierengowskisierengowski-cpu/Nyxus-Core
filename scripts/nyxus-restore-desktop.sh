@@ -66,6 +66,16 @@ ok "backed up to ${BACKUP}"
 # ── 2. hyprland ─────────────────────────────────────────────────────────────
 step "install Hyprland configs"
 mkdir -p "${HOME}/.config/hypr/conf.d" "${HOME}/.config/hypr/walls"
+# Quarantine any stray Lua config from the reverted 0.55 lua migration
+# (PR #39). If present, Hyprland can load it INSTEAD OF/alongside
+# hyprland.conf — its catch-all float rules crash the session when apps
+# open. Move it into the backup, never leave it in ~/.config/hypr/.
+for stray in "${HOME}/.config/hypr/hyprland.lua" "${HOME}/.config/hypr"/conf.d/*.lua; do
+  if [[ -f "${stray}" ]]; then
+    mv "${stray}" "${BACKUP}/$(basename "${stray}").quarantined"
+    warn "quarantined stray lua config: ${stray} → backup"
+  fi
+done
 install -m 0644 "${NS}/hyprland.conf"  "${HOME}/.config/hypr/hyprland.conf"
 install -m 0644 "${NS}/hyprlock.conf"  "${HOME}/.config/hypr/hyprlock.conf"
 install -m 0644 "${NS}/hypridle.conf"  "${HOME}/.config/hypr/hypridle.conf"
