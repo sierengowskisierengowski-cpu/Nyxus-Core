@@ -342,6 +342,13 @@ fi
 if [[ -f "${NS}/nyxus-sync-stations" ]]; then
   install -m 0755 "${NS}/nyxus-sync-stations" "${LBIN}/nyxus-sync-stations"
 fi
+if [[ -f "${NS}/nyxus-session-start" ]]; then
+  install -m 0755 "${NS}/nyxus-session-start" "${LBIN}/nyxus-session-start"
+fi
+if [[ -f "${NS}/desktop-entries/nyxus-hyprland.desktop" ]]; then
+  install -Dm644 "${NS}/desktop-entries/nyxus-hyprland.desktop" \
+    "${PROFILE_DIR}/airootfs/usr/share/wayland-sessions/nyxus-hyprland.desktop"
+fi
 if [[ -f "${NS}/nyxus-sound.sh" ]]; then
   install -m 0755 "${NS}/nyxus-sound.sh" "${LBIN}/nyxus-sound.sh"
 fi

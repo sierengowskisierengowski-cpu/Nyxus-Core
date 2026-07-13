@@ -142,11 +142,18 @@ ok "$(ls "${HOME}/.config/hypr/walls/"*.png 2>/dev/null | wc -l) wallpapers in ~
 step "install helper launchers → ~/.local/bin"
 mkdir -p "${HOME}/.local/bin"
 for h in nyxus-eww-launch nyxus-eww-launch-safe nyxus-set-wallpaper.sh \
-         nyxus-sync-stations nyxus-bootstrap nyxus-wait-bootstrap; do
+         nyxus-sync-stations nyxus-bootstrap nyxus-wait-bootstrap \
+         nyxus-session-start; do
   if [[ -f "${NS}/${h}" ]]; then
     install -m 0755 "${NS}/${h}" "${HOME}/.local/bin/${h}"
   fi
 done
+# Wayland session entry for display managers (SDDM picks this up).
+if [[ -f "${NS}/desktop-entries/nyxus-hyprland.desktop" ]]; then
+  mkdir -p "${HOME}/.local/share/wayland-sessions"
+  install -m 0644 "${NS}/desktop-entries/nyxus-hyprland.desktop" \
+    "${HOME}/.local/share/wayland-sessions/nyxus-hyprland.desktop"
+fi
 ok "helpers installed"
 
 # ── 8. regenerate workspaces.json ───────────────────────────────────────────
