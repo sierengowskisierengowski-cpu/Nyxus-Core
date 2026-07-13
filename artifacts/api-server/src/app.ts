@@ -4,12 +4,40 @@ import express, {
   type Request,
   type Response,
 } from "express";
-import cors from "cors";
+import cors, { type CorsOptions } from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+
+// CORS origin policy.
+//
+// Set NYXUS_CORS_ORIGINS to a comma-separated allowlist (e.g.
+// "https://nyxus-core.replit.app,https://nyxus.example") to restrict
+// which browser origins may call this API. When it is left unset the
+// server keeps the historical open policy so the public installer /
+// asset-download endpoints remain reachable from any origin; the
+// token-authenticated routes are unaffected either way because they
+// rely on an Authorization: Bearer header (which browsers never attach
+// cross-origin without an explicit CORS grant), not ambient cookies.
+const allowedOrigins = (process.env["NYXUS_CORS_ORIGINS"] ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter((o) => o.length > 0);
+
+const corsOptions: CorsOptions =
+  allowedOrigins.length === 0
+    ? {}
+    : {
+        origin(origin, cb) {
+          // Non-browser clients (curl, native app) send no Origin header.
+          if (!origin || allowedOrigins.includes(origin)) {
+            return cb(null, true);
+          }
+          return cb(null, false);
+        },
+      };
 
 // Redact secrets that appear in URL path segments. The NYXUS Account
 // route uses /api/nyxus-account/profile/<token> where <token> is the
@@ -52,7 +80,7 @@ app.use(
     },
   }),
 );
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Skip body parsers for the NYXUS Account binary upload route — those
 // endpoints stream raw gzip bytes and must never be JSON/urlencoded
