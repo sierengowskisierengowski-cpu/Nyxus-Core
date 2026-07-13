@@ -1,0 +1,172 @@
+#!/usr/bin/env bash
+# ============================================================================
+# NYXUS — Desktop Restore (last-known-good)
+# © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+# Rebuilds the live Hyprland/EWW desktop from the canonical repo source
+# (artifacts/api-server/nyxus-scripts/). Run this when a build or agent
+# run has broken the session and you need to get back to a working state.
+#
+#   Usage (from a clone of Nyxus-Core):
+#     bash scripts/nyxus-restore-desktop.sh
+#
+#   Or one-shot without a clone:
+#     git clone --depth 1 -b <branch> https://github.com/sierengowskisierengowski-cpu/Nyxus-Core /tmp/nyxus-restore
+#     bash /tmp/nyxus-restore/scripts/nyxus-restore-desktop.sh
+#
+# What it does, in order:
+#   1. Backs up ~/.config/{hypr,eww,dunst,rofi,wlogout,alacritty,nyxus}
+#      to ~/.config/nyxus-restore-backup-<timestamp>/
+#   2. Installs Hyprland config + every conf.d shard from the repo
+#   3. Installs the full EWW tree (yuck modules, scss, scripts, assets)
+#   4. Installs dunst / rofi / wlogout / alacritty configs
+#   5. Installs stations.json + wallpaper.conf, regenerates workspaces.json
+#   6. Stages every nyxus-*.png wallpaper into ~/.config/hypr/walls/
+#   7. Installs helper launchers into ~/.local/bin
+#   8. Applies the cosmic-galaxy wallpaper, restarts EWW, reloads Hyprland
+#
+# Safe to re-run any number of times. Does NOT touch /usr or system files.
+# ============================================================================
+set -uo pipefail
+
+B=$'\e[1m'; R=$'\e[0m'
+PINK=$'\e[38;5;201m'; CYAN=$'\e[38;5;51m'; GOLD=$'\e[38;5;220m'; PURPLE=$'\e[38;5;177m'
+step() { printf "\n${PURPLE}▌${R} ${B}%s${R}\n" "$*"; }
+ok()   { printf "  ${CYAN}✓${R}  %s\n" "$*"; }
+warn() { printf "  ${GOLD}!${R}  %s\n" "$*"; }
+fail() { printf "  ${PINK}✗${R}  %s\n" "$*" >&2; }
+
+if [[ $EUID -eq 0 ]]; then
+  fail "run as your normal user, NOT root (this only touches ~/.config)"
+  exit 1
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+NS="${REPO_ROOT}/artifacts/api-server/nyxus-scripts"
+CFG="${REPO_ROOT}/artifacts/nyxus-config"
+
+if [[ ! -d "${NS}" ]]; then
+  fail "canonical source not found at ${NS} — run from a Nyxus-Core clone"
+  exit 1
+fi
+
+# ── 1. backup ───────────────────────────────────────────────────────────────
+step "backup current configs"
+TS="$(date +%Y%m%d-%H%M%S)"
+BACKUP="${HOME}/.config/nyxus-restore-backup-${TS}"
+mkdir -p "${BACKUP}"
+for d in hypr eww dunst rofi wlogout alacritty nyxus; do
+  if [[ -d "${HOME}/.config/${d}" ]]; then
+    cp -a "${HOME}/.config/${d}" "${BACKUP}/${d}"
+  fi
+done
+ok "backed up to ${BACKUP}"
+
+# ── 2. hyprland ─────────────────────────────────────────────────────────────
+step "install Hyprland configs"
+mkdir -p "${HOME}/.config/hypr/conf.d" "${HOME}/.config/hypr/walls"
+install -m 0644 "${NS}/hyprland.conf"  "${HOME}/.config/hypr/hyprland.conf"
+install -m 0644 "${NS}/hyprlock.conf"  "${HOME}/.config/hypr/hyprlock.conf"
+install -m 0644 "${NS}/hypridle.conf"  "${HOME}/.config/hypr/hypridle.conf"
+install -m 0644 "${NS}"/nyxus-hyprland-*.conf "${HOME}/.config/hypr/conf.d/"
+for shard in nyxus-stations.conf nyxus-safemode.conf nyxus-signature.conf \
+             nyxus-freeform.conf nyxus-cometfire.conf; do
+  if [[ -f "${NS}/${shard}" ]]; then
+    install -m 0644 "${NS}/${shard}" "${HOME}/.config/hypr/conf.d/${shard}"
+  fi
+done
+ok "hyprland.conf + $(ls "${HOME}/.config/hypr/conf.d/" | wc -l) conf.d shards"
+
+# ── 3. eww ──────────────────────────────────────────────────────────────────
+step "install EWW tree"
+mkdir -p "${HOME}/.config/eww/scripts" "${HOME}/.config/eww/assets"
+install -m 0644 "${NS}"/eww/*.yuck "${HOME}/.config/eww/"
+install -m 0644 "${NS}/eww/eww.scss" "${HOME}/.config/eww/eww.scss"
+if [[ -f "${NS}/eww/accent.scss" ]]; then
+  install -m 0644 "${NS}/eww/accent.scss" "${HOME}/.config/eww/accent.scss"
+fi
+if [[ -f "${NS}/eww/_nyxus_accent.scss" ]]; then
+  install -m 0644 "${NS}/eww/_nyxus_accent.scss" "${HOME}/.config/eww/_nyxus_accent.scss"
+fi
+if [[ -f "${NS}/eww/nyxus.conf" ]]; then
+  install -m 0644 "${NS}/eww/nyxus.conf" "${HOME}/.config/eww/nyxus.conf"
+fi
+install -m 0755 "${NS}"/eww/scripts/* "${HOME}/.config/eww/scripts/" 2>/dev/null || true
+if [[ -d "${NS}/eww/assets" ]]; then
+  cp -a "${NS}/eww/assets/." "${HOME}/.config/eww/assets/"
+fi
+# stale hand-backups confuse eww reload — they live in git history anyway
+rm -f "${HOME}/.config/eww"/eww.yuck.bak* 2>/dev/null || true
+ok "eww: $(ls "${HOME}/.config/eww/"*.yuck | wc -l) yuck modules, $(ls "${HOME}/.config/eww/scripts/" | wc -l) scripts"
+
+# ── 4. dunst / rofi / wlogout / alacritty ───────────────────────────────────
+step "install app configs"
+mkdir -p "${HOME}/.config/dunst" "${HOME}/.config/rofi" \
+         "${HOME}/.config/wlogout" "${HOME}/.config/alacritty"
+install -m 0644 "${NS}/nyxus-dunstrc"       "${HOME}/.config/dunst/dunstrc"
+install -m 0644 "${NS}/rofi-config.rasi"    "${HOME}/.config/rofi/config.rasi"
+install -m 0644 "${NS}/rofi-nyxus.rasi"     "${HOME}/.config/rofi/nyxus.rasi"
+install -m 0644 "${NS}/rofi-startmenu.rasi" "${HOME}/.config/rofi/startmenu.rasi"
+install -m 0644 "${NS}/wlogout-style.css"   "${HOME}/.config/wlogout/style.css"
+install -m 0644 "${NS}/wlogout-layout"      "${HOME}/.config/wlogout/layout"
+install -m 0644 "${NS}/alacritty.toml"      "${HOME}/.config/alacritty/alacritty.toml"
+ok "dunst / rofi / wlogout / alacritty"
+
+# ── 5. station matrix + wallpaper config ────────────────────────────────────
+step "install station matrix + wallpaper config"
+mkdir -p "${HOME}/.config/nyxus"
+install -m 0644 "${CFG}/stations.json" "${HOME}/.config/nyxus/stations.json"
+cat > "${HOME}/.config/nyxus/wallpaper.conf" <<EOF
+WALLPAPER="nyxus-cosmic-galaxy"
+WALLPAPER_PATH="${HOME}/.config/hypr/walls/nyxus-cosmic-galaxy.png"
+EOF
+ok "stations.json + wallpaper.conf (cosmic-galaxy)"
+
+# ── 6. wallpapers ───────────────────────────────────────────────────────────
+step "stage wallpapers"
+install -m 0644 "${NS}"/nyxus-*.png "${HOME}/.config/hypr/walls/" 2>/dev/null || true
+ok "$(ls "${HOME}/.config/hypr/walls/"*.png 2>/dev/null | wc -l) wallpapers in ~/.config/hypr/walls/"
+
+# ── 7. helper launchers ─────────────────────────────────────────────────────
+step "install helper launchers → ~/.local/bin"
+mkdir -p "${HOME}/.local/bin"
+for h in nyxus-eww-launch nyxus-eww-launch-safe nyxus-set-wallpaper.sh \
+         nyxus-sync-stations nyxus-bootstrap nyxus-wait-bootstrap; do
+  if [[ -f "${NS}/${h}" ]]; then
+    install -m 0755 "${NS}/${h}" "${HOME}/.local/bin/${h}"
+  fi
+done
+ok "helpers installed"
+
+# ── 8. regenerate workspaces.json ───────────────────────────────────────────
+step "sync stations → workspaces.json"
+if command -v jq >/dev/null 2>&1; then
+  "${HOME}/.local/bin/nyxus-sync-stations" && ok "workspaces.json regenerated" \
+    || warn "sync-stations failed — check jq / stations.json"
+else
+  warn "jq not installed — skipping workspaces.json regen (pacman -S jq)"
+fi
+
+# ── 9. apply live (only if inside a Hyprland session) ───────────────────────
+step "apply to live session"
+if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
+  WALL="${HOME}/.config/hypr/walls/nyxus-cosmic-galaxy.png"
+  if [[ -x "${HOME}/.local/bin/nyxus-set-wallpaper.sh" && -f "${WALL}" ]]; then
+    "${HOME}/.local/bin/nyxus-set-wallpaper.sh" "${WALL}" >/dev/null 2>&1 \
+      && ok "wallpaper applied: cosmic-galaxy" \
+      || warn "wallpaper apply failed — will land on next login"
+  fi
+  if [[ -x "${HOME}/.local/bin/nyxus-eww-launch-safe" ]]; then
+    "${HOME}/.local/bin/nyxus-eww-launch-safe" >/dev/null 2>&1 &
+    ok "EWW relaunched (single-daemon guard)"
+  fi
+  hyprctl reload >/dev/null 2>&1 && ok "hyprctl reload" \
+    || warn "hyprctl reload failed — log out and back in"
+else
+  warn "not inside a Hyprland session — changes take effect at next login"
+fi
+
+printf "\n${GOLD}${B}NYXUS desktop restored.${R}\n"
+printf "  backup of previous state: ${CYAN}%s${R}\n" "${BACKUP}"
+printf "  if anything is still off: log out, log back in.\n\n"
