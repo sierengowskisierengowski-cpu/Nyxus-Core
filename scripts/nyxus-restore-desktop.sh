@@ -162,7 +162,7 @@ for h in nyxus-eww-launch nyxus-eww-launch-safe nyxus-set-wallpaper.sh \
          nyxus-set-wallpaper nyxus-apply-accent nyxus-accent-from-wallpaper \
          nyxus-sync-stations nyxus-bootstrap nyxus-wait-bootstrap \
          nyxus-session-start nyxus-security \
-         nyxus-hub-apps nyxus-nowplaying nyxus-notif-to-eww nyxus-sound \
+         nyxus-hub-apps nyxus-hub-search nyxus-nowplaying nyxus-notif-to-eww nyxus-sound \
          nyxus-sound-bake nyxus-companion \
          nyxus-sfx nyxus-soundd nyxus-sounds nyxus-sound-forge \
          nyxus-shader nyxus-plugins nyxus-living nyxus-live-wallpaper \

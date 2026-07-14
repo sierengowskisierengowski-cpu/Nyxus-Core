@@ -114,6 +114,9 @@
   "nyxus-hub-apps $([ -f ~/.cache/nyxus-eww/hub-apps-all ] && echo '' || echo '--nyxus') 2>/dev/null || echo '[]'")
 (defpoll HUBAPPS_MODE :interval "10s" :initial "nyxus"
   "[ -f ~/.cache/nyxus-eww/hub-apps-all ] && echo all || echo nyxus")
+;; The Hub / global search query (lower-cased in the input handler). Drives
+;; the live app-grid filter (jq contains match) + Enter-to-launch top hit.
+(defvar HUB_QUERY "")
 (defpoll CHEAT_SHIELD :interval "2s" :initial ""
   "~/.config/eww/scripts/overlay-shield.sh cheatsheet")
 (defpoll DEEP_SHIELD  :interval "2s" :initial ""
@@ -554,10 +557,12 @@
   (label :class "hub-section-title" :text title))
 
 (defwidget hub_tile [glyph label cmd ?hue]
-  (button :class "hub-tile hub-tile-${hue ?: 'pink'}" :onclick "(${cmd}) &"
-    (box :orientation "v" :space-evenly false :spacing 6 :halign "center"
+  (button :class "hub-tile hub-tile-${hue ?: 'pink'}" :onclick "(${cmd}) &" :tooltip label
+          :hexpand true
+    (box :orientation "v" :space-evenly false :spacing 7 :halign "fill" :hexpand true
       (label :class "hub-tile-glyph" :text "${glyph}")
-      (label :class "hub-tile-label" :text "${label}"))))
+      (label :class "hub-tile-label" :hexpand true :halign "center"
+             :limit-width 16 :text "${label}"))))
 
 (defwidget hub_ws_pill [st]
   (button :class {st.active ? "hub-ws-pill hub-ws-active hub-ws-${st.hue}" :
@@ -578,107 +583,126 @@
 ;; ── The Hub · app-launcher row (Phase 7.3) ──────────────────────────
 ;; Launches by .desktop id via gtk-launch (handles field codes, terminal
 ;; apps, and env correctly) so we never eval a raw Exec string.
+;; Clean launcher entry — icon + name, hover glow (styled in .hub-app-tile).
+;; Closes the Hub first so the launched app is never buried behind the
+;; fullscreen overlay (the classic "dead click" trap).
 (defwidget hub_app_tile [app]
   (button :class "hub-app-tile"
           :onclick "eww close nyxus-hub && gtk-launch ${app.id} >/dev/null 2>&1 &"
           :tooltip "${app.name}"
-          :style "padding: 8px 10px; margin: 3px; border-radius: 10px; background-color: rgba(121,73,242,0.10);"
-    (box :orientation "h" :space-evenly false :spacing 10 :halign "start"
-      (label :text "◆" :style "color: #7949f2; font-size: 15px;")
-      (label :limit-width 22 :truncate "end" :halign "start" :hexpand true
-             :text "${app.name}" :style "color: #eef2fa; font-size: 13px;"))))
+    (box :orientation "h" :space-evenly false :spacing 12 :halign "start"
+      (label :class "hub-app-glyph" :text "◆")
+      (label :class "hub-app-name" :limit-width 30
+             :halign "start" :hexpand true :text "${app.name}"))))
+
+;; Global search: filters the app grid live (jq contains on HUB_QUERY) and, on
+;; Enter, hands the query to nyxus-hub-search which launches the best app OR
+;; opens the matching settings/action surface. HUB_QUERY is sanitized to
+;; lowercase [a-z0-9 space] in the handler so it is always safe to splice into
+;; the jq filter program below.
+(defwidget hub_search []
+  (box :class "hub-search" :orientation "h" :space-evenly false :spacing 10
+    (label :class "hub-search-glyph" :text "")
+    (input :class "hub-search-input" :hexpand true
+           :value HUB_QUERY
+           :onchange "eww update HUB_QUERY=\"$(printf '%s' {} | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9 ')\""
+           :onaccept "nyxus-hub-search {} >/dev/null 2>&1 &")
+    (button :class "hub-search-clear" :visible {HUB_QUERY != ""}
+            :onclick "eww update HUB_QUERY=''" :tooltip "Clear" "✕")))
 
 (defwidget nyxus_hub_layout []
   (eventbox :onclick "true"
     (box :class "hub-panel" :orientation "v" :space-evenly false :spacing 16
-         :halign "center" :valign "start"
+         :halign "center" :valign "center"
          :style "background-image: linear-gradient(180deg, rgba(9,4,20,0.46), rgba(3,1,9,0.30));"
       (label :visible false :text HUB_SHIELD)
-      (box :orientation "h" :space-evenly false :spacing 12
-        (label :class "hub-title" :hexpand true :halign "start"
-               :text "The Hub" :style "opacity: ${NEONFLICK};")
-        (button :class "hub-close-x" :onclick "eww close nyxus-hub" "✕"))
-      (label :class "hub-subtitle" :halign "start"
-             :text "${TIME.long} · ${BARTILES.host} · ${NETWORK.label}")
 
-      (hub_section_title :title "CONNECT")
-      (box :class "hub-grid" :orientation "h" :space-evenly true :spacing 10
-        (hub_tile :glyph "󰖩" :label "Wi‑Fi" :hue "green"
-                  :cmd "eww close nyxus-hub && eww open --toggle wifi")
-        (hub_tile :glyph "󰂯" :label "Bluetooth" :hue "blue"
-                  :cmd "eww close nyxus-hub && eww open --toggle bluetooth")
-        (hub_tile :glyph "󰂛" :label "Alerts" :hue "pink"
-                  :cmd "eww close nyxus-hub && eww open --toggle notifications")
-        (hub_tile :glyph "⚙" :label "Quick QS" :hue "purple"
-                  :cmd "eww close nyxus-hub && eww open --toggle quicksettings"))
+      ;; ── header: title + live clock + close ─────────────────────────
+      (box :class "hub-header" :orientation "h" :space-evenly false :spacing 16
+        (box :orientation "v" :space-evenly false :spacing 2 :hexpand true :halign "start"
+          (label :class "hub-title" :halign "start" :hexpand true :limit-width 24
+                 :text "The Hub" :style "opacity: ${NEONFLICK};")
+          (label :class "hub-subtitle" :halign "start" :hexpand true :limit-width 64
+                 :text "${TIME.long} · ${BARTILES.host} · ${NETWORK.label}"))
+        (button :class "hub-close-x" :onclick "eww close nyxus-hub" :tooltip "Close (Esc)" "✕"))
 
-      (hub_section_title :title "SOUND")
-      (box :class "hub-slider-row" :orientation "h" :space-evenly false :spacing 12
-        (label :class "hub-slider-label" :text "VOL")
-        (scale :class "hub-scale dash-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
-               :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
-      (box :class "hub-slider-row" :orientation "h" :space-evenly false :spacing 12
-        (label :class "hub-slider-label" :text "MIC")
-        (scale :class "hub-scale dash-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
-               :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%"))
+      ;; ── global search bar ──────────────────────────────────────────
+      (hub_search)
 
-      (hub_section_title :title "DISPLAY")
-      (box :class "hub-slider-row" :orientation "h" :space-evenly false :spacing 12
-        (label :class "hub-slider-label" :text "BRT")
-        (scale :class "hub-scale dash-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
-               :onchange "brightnessctl set {}%"))
-      (box :class "hub-grid" :orientation "h" :space-evenly true :spacing 10
-        (hub_tile :glyph "󰕾" :label "Mixer" :hue "purple"
-                  :cmd "eww close nyxus-hub && eww open --toggle mixer")
-        (hub_tile :glyph "󰍹" :label "Displays" :hue "pink"
-                  :cmd "eww close nyxus-hub && wdisplays")
-        (hub_tile :glyph "☼" :label "Bright" :hue "gold"
-                  :cmd "eww close nyxus-hub && eww open --toggle brightness-flyout"))
+      ;; ── two-column body: controls (left) · apps (right) ────────────
+      (box :class "hub-body" :orientation "h" :space-evenly false :spacing 22
+        (box :class "hub-col-left" :orientation "v" :space-evenly false :spacing 12 :hexpand true
 
-      (hub_section_title :title "SYSTEM")
-      (box :class "hub-grid" :orientation "h" :space-evenly true :spacing 10
-        (hub_tile :glyph "◈" :label "Dashboard" :hue "cyan"
-                  :cmd "eww close nyxus-hub && hyprctl dispatch workspace name:0")
-        (hub_tile :glyph "◉" :label "Deep Core" :hue "green"
-                  :cmd "eww close nyxus-hub && eww open --toggle deepcore")
-        (hub_tile :glyph "▦" :label "Mission" :hue "purple"
-                  :cmd "eww close nyxus-hub && nyxus-mission toggle")
-        (hub_tile :glyph "󰚰" :label "Updates" :hue "gold"
-                  :cmd "eww close nyxus-hub && eww open --toggle updates")
-        (hub_tile :glyph "󰒓" :label "Settings" :hue "pink"
-                  :cmd "eww close nyxus-hub && nyxus-settings")
-        (hub_tile :glyph "󰌌" :label "Keys" :hue "orange"
-                  :cmd "eww close nyxus-hub && eww open --toggle hotkey-cheatsheet"))
+          (hub_section_title :title "CONNECT")
+          (box :class "hub-grid" :orientation "h" :space-evenly false :hexpand true :spacing 12
+            (hub_tile :glyph "󰖩" :label "Wi‑Fi" :hue "green"
+                      :cmd "eww close nyxus-hub && eww open --toggle wifi")
+            (hub_tile :glyph "󰂯" :label "Bluetooth" :hue "blue"
+                      :cmd "eww close nyxus-hub && eww open --toggle bluetooth")
+            (hub_tile :glyph "󰂛" :label "Alerts" :hue "pink"
+                      :cmd "eww close nyxus-hub && eww open --toggle notifications")
+            (hub_tile :glyph "⚙" :label "Quick" :hue "purple"
+                      :cmd "eww close nyxus-hub && eww open --toggle quicksettings"))
 
-      (hub_section_title :title "STATIONS")
-      (box :class "hub-ws-row" :orientation "h" :space-evenly false :spacing 8
-        (hub_home_pill)
-        (for st in {WORKSPACES.stations}
-          (hub_ws_pill :st st)))
+          (hub_section_title :title "SOUND & DISPLAY")
+          (box :class "hub-slider-row" :orientation "h" :space-evenly false :spacing 12
+            (label :class "hub-slider-label" :text "VOL")
+            (scale :class "hub-scale dash-scale" :value "${AUDIO.vol}" :min 0 :max 100 :hexpand true
+                   :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%"))
+          (box :class "hub-slider-row" :orientation "h" :space-evenly false :spacing 12
+            (label :class "hub-slider-label" :text "MIC")
+            (scale :class "hub-scale dash-scale" :value "${MIC.vol}" :min 0 :max 100 :hexpand true
+                   :onchange "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ {}%"))
+          (box :class "hub-slider-row" :orientation "h" :space-evenly false :spacing 12
+            (label :class "hub-slider-label" :text "BRT")
+            (scale :class "hub-scale dash-scale" :value "${BACKLIGHT.percent}" :min 1 :max 100 :hexpand true
+                   :onchange "brightnessctl set {}%"))
 
-      (box :class "hub-section-head" :orientation "h" :space-evenly false :spacing 8
-        (label :class "hub-section-title" :hexpand true :halign "start" :text "APPS")
-        (button :class "hub-apps-toggle" :halign "end"
-                :onclick "mkdir -p ~/.cache/nyxus-eww && { [ -f ~/.cache/nyxus-eww/hub-apps-all ] && rm -f ~/.cache/nyxus-eww/hub-apps-all || touch ~/.cache/nyxus-eww/hub-apps-all; } &"
-                :tooltip "toggle NYXUS-only vs all installed apps"
-                :style "padding: 2px 10px; border-radius: 8px; background-color: rgba(121,73,242,0.14); color: #c9b7ff; font-size: 11px;"
-          "${HUBAPPS_MODE == 'all' ? 'ALL APPS' : 'NYXUS ONLY'}"))
-      (scroll :class "hub-apps-scroll" :vscroll true :hscroll false
-              :style "min-height: 200px;"
-        (box :class "hub-apps-list" :orientation "v" :space-evenly false :spacing 2
-          (for app in HUBAPPS
-            (hub_app_tile :app app))))
+          (hub_section_title :title "SYSTEM")
+          (box :class "hub-grid" :orientation "h" :space-evenly false :hexpand true :spacing 12
+            (hub_tile :glyph "◈" :label "Dashboard" :hue "cyan"
+                      :cmd "eww close nyxus-hub && hyprctl dispatch workspace name:0")
+            (hub_tile :glyph "◉" :label "Deep Core" :hue "green"
+                      :cmd "eww close nyxus-hub && eww open --toggle deepcore")
+            (hub_tile :glyph "▦" :label "Mission" :hue "purple"
+                      :cmd "eww close nyxus-hub && nyxus-mission toggle")
+            (hub_tile :glyph "󰚰" :label "Updates" :hue "gold"
+                      :cmd "eww close nyxus-hub && eww open --toggle updates"))
+          (box :class "hub-grid" :orientation "h" :space-evenly false :hexpand true :spacing 12
+            (hub_tile :glyph "󰍹" :label "Displays" :hue "blue"
+                      :cmd "eww close nyxus-hub && wdisplays")
+            (hub_tile :glyph "󰒓" :label "Settings" :hue "pink"
+                      :cmd "eww close nyxus-hub && nyxus-settings")
+            (hub_tile :glyph "󰌌" :label "Keys" :hue "orange"
+                      :cmd "eww close nyxus-hub && eww open --toggle hotkey-cheatsheet"))
 
-      (hub_section_title :title "POWER")
-      (box :class "hub-grid hub-power-row" :orientation "h" :space-evenly true :spacing 10
-        (hub_tile :glyph "󰌾" :label "Lock" :hue "green"
-                  :cmd "eww close nyxus-hub && hyprlock")
-        (hub_tile :glyph "󰗽" :label "Logout" :hue "orange"
-                  :cmd "eww close nyxus-hub && hyprctl dispatch exit")
-        (hub_tile :glyph "󰐥" :label "Power" :hue "red"
-                  :cmd "eww close nyxus-hub && eww open --toggle powermenu"))
+          (hub_section_title :title "STATIONS")
+          (box :class "hub-ws-row" :orientation "h" :space-evenly false :spacing 8
+            (hub_home_pill)
+            (for st in {WORKSPACES.stations}
+              (hub_ws_pill :st st)))
 
-      (button :class "hub-close" :onclick "eww close nyxus-hub" "Close (Esc)"))))
+          (hub_section_title :title "POWER")
+          (box :class "hub-grid hub-power-row" :orientation "h" :space-evenly false :hexpand true :spacing 12
+            (hub_tile :glyph "󰌾" :label "Lock" :hue "green"
+                      :cmd "eww close nyxus-hub && hyprlock")
+            (hub_tile :glyph "󰗽" :label "Logout" :hue "orange"
+                      :cmd "eww close nyxus-hub && hyprctl dispatch exit")
+            (hub_tile :glyph "󰐥" :label "Power" :hue "red"
+                      :cmd "eww close nyxus-hub && eww open --toggle powermenu")))
+
+        ;; RIGHT column — scrollable, searchable app launcher
+        (box :class "hub-col-right" :orientation "v" :space-evenly false :spacing 10
+          (box :class "hub-section-head" :orientation "h" :space-evenly false :spacing 8
+            (label :class "hub-section-title" :hexpand true :halign "start" :text "APPS")
+            (button :class "hub-apps-toggle" :halign "end"
+                    :onclick "mkdir -p ~/.cache/nyxus-eww && { [ -f ~/.cache/nyxus-eww/hub-apps-all ] && rm -f ~/.cache/nyxus-eww/hub-apps-all || touch ~/.cache/nyxus-eww/hub-apps-all; } &"
+                    :tooltip "toggle NYXUS-only vs all installed apps"
+              "${HUBAPPS_MODE == 'all' ? 'ALL APPS' : 'NYXUS ONLY'}"))
+          (scroll :class "hub-apps-scroll" :vscroll true :hscroll false :vexpand true
+            (box :class "hub-apps-list" :orientation "v" :space-evenly false :spacing 3
+              (for app in {jq(HUBAPPS, 'map(select(.name|ascii_downcase|contains("${HUB_QUERY}")))')}
+                (hub_app_tile :app app)))))))))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; DASHBOARD — replaces nyxus_quicksettings + nyxus_clock + nyxus_calendar

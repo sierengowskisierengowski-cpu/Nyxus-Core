@@ -1383,8 +1383,8 @@ window, window.background, decoration {
 }
 
 .hub-panel {
-  min-width: 900px;
-  padding: 28px 32px 24px;
+  min-width: 1180px;
+  padding: 26px 34px 28px;
   border-radius: 16px;
   border: 1px solid transparent;
   background-color: rgba(7, 3, 15, 0.24);
@@ -1397,9 +1397,12 @@ window, window.background, decoration {
 
 .hub-title {
   color: #7949f2;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: 0.32em;
+  /* Permanent Marker under-reports its width to GTK, so pango ellipsizes it
+     ("THE H…") even with room. Reserve the space explicitly. */
+  min-width: 260px;
+  letter-spacing: 0.1em;
   text-shadow: 0 0 18px rgba(121, 73, 242, 0.65), 0 0 36px rgba(255, 38, 103, 0.25);
 }
 
@@ -1407,7 +1410,7 @@ window, window.background, decoration {
   color: #9aa0ad;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 10px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
   padding-bottom: 4px;
 }
 
@@ -1415,7 +1418,7 @@ window, window.background, decoration {
   color: #ff2667;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.16em;
   padding-top: 6px;
   text-shadow: 0 0 10px rgba(255, 38, 103, 0.45);
 }
@@ -1446,9 +1449,12 @@ window, window.background, decoration {
 }
 
 .hub-tile-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  /* letter-spacing kept minimal: GTK sizes the label WITHOUT tracking but
+     renders WITH it, so a wide 0.12em value overflowed the request and
+     pango-ellipsized the text mid-tile ("Bluetoo…"). 0.03em is safe. */
+  letter-spacing: 0.03em;
   color: #c8ccd6;
 }
 
@@ -1642,6 +1648,145 @@ window, window.background, decoration {
 
 .hub-power-row {
   padding-top: 2px;
+}
+
+/* -- Hub redesign (rev 2026-07-14): header · global search · 2-col body -- */
+.hub-header {
+  padding-bottom: 2px;
+}
+
+.hub-body {
+  padding-top: 4px;
+}
+
+/* left = live controls (grows), right = fixed app column */
+.hub-col-left {
+  min-width: 640px;
+  padding-right: 6px;
+}
+
+.hub-col-right {
+  min-width: 400px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background-color: rgba(6, 3, 14, 0.34);
+  border: 1px solid rgba(121, 73, 242, 0.2);
+  box-shadow: inset 0 0 34px rgba(121, 73, 242, 0.05);
+}
+
+/* global search bar */
+.hub-search {
+  padding: 4px 14px;
+  border-radius: 14px;
+  background-color: rgba(8, 4, 18, 0.6);
+  border: 1px solid rgba(121, 73, 242, 0.32);
+  border-top: 1px solid rgba(121, 73, 242, 0.55);
+  box-shadow: 0 0 16px rgba(121, 73, 242, 0.14), inset 0 0 18px rgba(121, 73, 242, 0.05);
+  transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+
+.hub-search:focus-within,
+.hub-search:hover {
+  border-color: rgba(121, 73, 242, 0.7);
+  box-shadow: 0 0 22px rgba(121, 73, 242, 0.3), inset 0 0 18px rgba(121, 73, 242, 0.07);
+}
+
+.hub-search-glyph {
+  color: rgba(121, 73, 242, 0.92);
+  font-size: 15px;
+  text-shadow: 0 0 10px rgba(121, 73, 242, 0.55);
+}
+
+.hub-search-input {
+  color: #e8edf5;
+  font-size: 14px;
+  padding: 8px 6px;
+  background-color: transparent;
+  border: none;
+  caret-color: #7949f2;
+}
+
+.hub-search-input:focus {
+  background-color: transparent;
+}
+
+.hub-search-clear {
+  padding: 2px 9px;
+  border-radius: 8px;
+  color: #9aa0ad;
+  background-color: rgba(255, 38, 103, 0.1);
+  border: 1px solid rgba(255, 38, 103, 0.24);
+  transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+
+.hub-search-clear:hover {
+  color: #ff2667;
+  border-color: rgba(255, 38, 103, 0.6);
+}
+
+/* section head (APPS + scope toggle) */
+.hub-section-head {
+  padding: 2px 0;
+}
+
+.hub-apps-toggle {
+  padding: 3px 12px;
+  border-radius: 8px;
+  color: rgb(177.28, 149.44, 247.46);
+  background-color: rgba(121, 73, 242, 0.14);
+  border: 1px solid rgba(121, 73, 242, 0.28);
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+
+.hub-apps-toggle:hover {
+  color: #ffffff;
+  border-color: rgba(121, 73, 242, 0.65);
+  box-shadow: 0 0 12px rgba(121, 73, 242, 0.3);
+}
+
+/* scrollable app list */
+.hub-apps-scroll {
+  min-height: 520px;
+}
+
+.hub-apps-list {
+  padding: 2px 2px 2px 0;
+}
+
+/* clean launcher entry — icon + name, violet hover glow */
+.hub-app-tile {
+  padding: 9px 12px;
+  border-radius: 10px;
+  background-color: rgba(121, 73, 242, 0.06);
+  border: 1px solid transparent;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+
+.hub-app-tile:hover {
+  background-color: rgba(121, 73, 242, 0.16);
+  border-color: rgba(121, 73, 242, 0.55);
+  box-shadow: 0 0 16px rgba(121, 73, 242, 0.28);
+}
+
+.hub-app-glyph {
+  color: rgba(121, 73, 242, 0.85);
+  font-size: 14px;
+  text-shadow: 0 0 8px rgba(121, 73, 242, 0.45);
+}
+
+.hub-app-tile:hover .hub-app-glyph {
+  color: #ff2667;
+  text-shadow: 0 0 10px rgba(255, 38, 103, 0.65);
+}
+
+.hub-app-name {
+  color: #e8edf5;
+  font-size: 13px;
+  letter-spacing: 0.02em;
 }
 
 /* -- DEEP CORE overlay ----------------------------------------------- */
