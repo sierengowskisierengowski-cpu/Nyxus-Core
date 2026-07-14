@@ -1123,6 +1123,25 @@ class SectionPage(Adw.Bin):
     def toast(self, msg: str) -> None:
         self.win.toast(msg)
 
+    def launch_app(self, cmd: str, friendly: str = "") -> None:
+        """Launch an external app / helper. If the target binary is not
+        installed, toast a clear message instead of failing silently —
+        this is what keeps 'Open …' launcher rows from ever becoming
+        dead buttons. Wrapper tokens (pkexec/sudo/python3/…) are skipped
+        so the real target is what gets probed."""
+        tok = ""
+        for t in (cmd or "").split():
+            if t in ("pkexec", "sudo", "env", "python3", "python",
+                     "bash", "sh", "exec", "setsid", "nohup"):
+                continue
+            tok = t
+            break
+        if tok and not have(tok):
+            self.toast(f"{friendly or tok} is not installed")
+            log.info("launch_app: %s unavailable (%s)", tok, cmd)
+            return
+        fire_and_forget(cmd)
+
     def schedule_refresh(self, interval_ms: int, fn: Callable[[], bool]) -> None:
         """Live data: re-poll while page is visible."""
         if self._refresh_source is not None:
@@ -3625,9 +3644,10 @@ class KeyboardPage(SectionPage):
         self.add_group(ext)
         ext.add(action_row(
             "Open keyboard cheatsheet",
-            "Full list of system &amp; Hyprland shortcuts",
+            "Full list of system &amp; Hyprland shortcuts (overlay)",
             "Open",
-            lambda: fire_and_forget("nyxus-cheatsheet")))
+            lambda: self.launch_app(
+                "eww open --toggle cheatsheet", "Cheatsheet overlay")))
 
         # ── Real, parsed shortcut table from hyprland.conf ──
         # Reads ~/.config/hypr/hyprland.conf, surfaces every NYXUS app
@@ -5479,7 +5499,7 @@ class UpdatesPage(SectionPage):
             "Graphical update center (repos + AUR + flatpak), "
             "keybind Super + Ctrl + U",
             "Open",
-            lambda: fire_and_forget("nyxus-updater"),
+            lambda: self.launch_app("nyxus-updater", "NYXUS Updater"),
             css="nyx-pill-ok"))
         tools.add(action_row(
             "Run full system upgrade",
@@ -10047,7 +10067,7 @@ class BackupPage(SectionPage):
             "Open NYXUS Backup",
             "Create, restore and delete snapshots with the full UI",
             "Open",
-            lambda: fire_and_forget("nyxus-backup"),
+            lambda: self.launch_app("nyxus-backup", "NYXUS Backup"),
             css="nyx-pill-ok"))
         tools.add(action_row(
             "Create snapshot now",
@@ -10313,7 +10333,7 @@ class DropPage(SectionPage):
             "Open NYXUS Drop",
             "Send files &amp; text to paired devices from the full UI",
             "Open",
-            lambda: fire_and_forget("nyxus-drop"),
+            lambda: self.launch_app("nyxus-drop", "NYXUS Drop"),
             css="nyx-pill-ok"))
         tools.add(action_row(
             "Refresh devices",
@@ -12498,9 +12518,9 @@ class ScreenRecorderPage(SectionPage):
             "Start recording now",
             "Uses your defaults above",
             "Start",
-            lambda: fire_and_forget(
+            lambda: self.launch_app(
                 "nyxus-record start" if have("nyxus-record")
-                else "wf-recorder")))
+                else "wf-recorder", "Screen recorder")))
         tools.add(action_row(
             "Stop recording",
             "Send SIGINT to active wf-recorder",
