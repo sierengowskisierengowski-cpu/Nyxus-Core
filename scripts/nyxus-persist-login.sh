@@ -2,9 +2,40 @@
 # NYXUS · persist-login — restore theme/bars after every Hyprland login.
 set -u
 
+# PATH SELF-HEAL: under greetd/display-manager launches, ~/.local/bin is not
+# always on PATH (see hyprland.conf autostart comments). Guarantee the nyxus
+# launchers we call below (nyxus-eww-launch-safe, nyxus-restore-session, …)
+# resolve no matter how the session was started.
+export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
+
 LOG="${HOME}/.cache/nyxus-eww/persist-login.log"
 mkdir -p "$(dirname "$LOG")"
 ts() { date '+%F %T'; }
+
+# SYMLINK SELF-HEAL: the recovery launchers in ~/.local/bin are ABSOLUTE-PATH
+# symlinks into the Nyxus-Core clone (intentionally uncommitted). If they get
+# wiped, the exec-once lines silently no-op and no bars appear. Recreate any
+# that are missing/broken from the repo so the desktop keeps restoring even
+# after the symlinks are lost. Repo location is derived from this script's own
+# resolved path, so it works from any clone.
+nyxus_heal_symlinks() {
+  local self repo_scripts
+  self="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null)" || return 0
+  repo_scripts="$(dirname "$self")"
+  [ -d "$repo_scripts" ] || return 0
+  mkdir -p "${HOME}/.local/bin"
+  local name src dst
+  for name in nyxus-persist-login nyxus-boot-check nyxus-restore-session \
+              nyxus-restore-login nyxus-overlay-unstick; do
+    src="${repo_scripts}/${name}.sh"
+    dst="${HOME}/.local/bin/${name}"
+    [ -f "$src" ] || continue
+    if [ ! -e "$dst" ] || [ "$(readlink -f "$dst" 2>/dev/null)" != "$src" ]; then
+      ln -sf "$src" "$dst" 2>/dev/null || true
+    fi
+  done
+}
+nyxus_heal_symlinks || true
 
 {
   echo "[$(ts)] persist-login start"
