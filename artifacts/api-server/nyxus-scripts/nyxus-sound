@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-sound <event>   ·   rev 2026-07-14 r1 (Cosmic Sound Theme)
+#
+# Central player for the NYXUS cosmic UI sound theme. Every system
+# event that wants a voice calls `nyxus-sound <event>` — one shim, so a
+# single flag file silences the whole desktop.
+#
+# Design goals: cheap, idempotent, NON-BLOCKING (playback is detached
+# and the script returns immediately) and ALWAYS fails silent — if
+# audio is unavailable, muted, or the asset is missing, we exit 0 and
+# make no noise and no error.
+#
+# Assets:   ~/.local/share/nyxus/sounds/<event>.ogg   (baked by
+#           nyxus-sound-bake; falls back to .wav then freedesktop)
+# On/off:   ~/.config/nyxus/sound.state   (contains "on" or "off";
+#           missing == on). Toggle with `nyxus-sound toggle`.
+# Volume:   ~/.config/nyxus/sound.volume  (0-100, optional; default 90)
+#           or the env var NYXUS_SOUND_VOLUME.
+#
+# Usage:
+#   nyxus-sound <event>          play the sound for <event>
+#   nyxus-sound on|off|toggle    flip the global sound flag
+#   nyxus-sound status           print on|off and exit 0/1
+#   nyxus-sound list             list known events
+#   nyxus-sound test             play every event in sequence
+#
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+
+CFG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/nyxus"
+STATE="${CFG_DIR}/sound.state"
+VOLFILE="${CFG_DIR}/sound.volume"
+SND_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/nyxus/sounds"
+
+# Known events (baked by nyxus-sound-bake). Kept here purely for `list`
+# / `test`; unknown names still play if an asset happens to exist.
+EVENTS=(startup login logout lock unlock notification alert app-open error success)
+
+_state() {  # echo on|off (default on)
+  [[ -r "$STATE" ]] || { echo on; return; }
+  case "$(tr -d '[:space:]' < "$STATE" | tr '[:upper:]' '[:lower:]')" in
+    off|0|false|no|muted) echo off ;;
+    *)                    echo on  ;;
+  esac
+}
+
+_set_state() {  # $1 = on|off
+  mkdir -p "$CFG_DIR" 2>/dev/null || return 0
+  printf '%s\n' "$1" > "$STATE" 2>/dev/null || true
+}
+
+_volume() {  # echo 0-100
+  local v="${NYXUS_SOUND_VOLUME:-}"
+  [[ -z "$v" && -r "$VOLFILE" ]] && v="$(tr -dc '0-9' < "$VOLFILE")"
+  [[ "$v" =~ ^[0-9]+$ ]] || v=90
+  (( v > 100 )) && v=100
+  echo "$v"
+}
+
+_resolve() {  # $1 = event -> echo path to playable file, or empty
+  local ev="$1"
+  for f in "$SND_DIR/$ev.ogg" "$SND_DIR/$ev.oga" "$SND_DIR/$ev.wav"; do
+    [[ -r "$f" ]] && { echo "$f"; return 0; }
+  done
+  return 1
+}
+
+# Play a file, detached and non-blocking, honoring volume. Prefers
+# pw-play -> paplay -> ffplay -> aplay. Whole thing is wrapped in setsid
+# so it survives the caller and never ties up the session.
+_play() {
+  local file="$1" vol pct
+  vol="$(_volume)"
+  (
+    if command -v pw-play >/dev/null 2>&1; then
+      # pw-play volume is a linear gain 0.0-1.0
+      pct="$(awk "BEGIN{printf \"%.3f\", ${vol}/100}")"
+      exec pw-play --volume "$pct" "$file"
+    elif command -v paplay >/dev/null 2>&1; then
+      # paplay volume is 0-65536 (65536 == 100%)
+      pct="$(awk "BEGIN{printf \"%d\", ${vol}*655.36}")"
+      exec paplay --volume "$pct" "$file"
+    elif command -v ffplay >/dev/null 2>&1; then
+      exec ffplay -nodisp -autoexit -loglevel quiet -volume "$vol" "$file"
+    elif command -v aplay >/dev/null 2>&1; then
+      # aplay handles wav only and has no volume control
+      case "$file" in *.wav) exec aplay -q "$file" ;; esac
+    fi
+    exit 0
+  ) >/dev/null 2>&1 </dev/null &
+  disown 2>/dev/null || true
+}
+
+_play_event() {  # $1 = event
+  local ev="$1" file
+  [[ "$(_state)" == on ]] || exit 0
+  file="$(_resolve "$ev")" || {
+    # Last-ditch freedesktop fallback so the event still has a voice on
+    # systems where the cosmic set was never baked.
+    if command -v canberra-gtk-play >/dev/null 2>&1; then
+      local fd
+      case "$ev" in
+        login|startup) fd=desktop-login ;;
+        logout)        fd=desktop-logout ;;
+        lock)          fd=device-removed ;;
+        unlock)        fd=device-added ;;
+        notification)  fd=message-new-instant ;;
+        alert)         fd=dialog-warning ;;
+        error)         fd=dialog-error ;;
+        success)       fd=complete ;;
+        app-open)      fd=window-new ;;
+        *)             fd=bell ;;
+      esac
+      ( setsid canberra-gtk-play -i "$fd" >/dev/null 2>&1 & ) 2>/dev/null
+    fi
+    exit 0
+  }
+  _play "$file"
+}
+
+case "${1:-}" in
+  ""|-h|--help|help)
+    sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
+    exit 0 ;;
+  on)       _set_state on;  exit 0 ;;
+  off)      _set_state off; exit 0 ;;
+  toggle)   [[ "$(_state)" == on ]] && _set_state off || _set_state on
+            exit 0 ;;
+  status)   s="$(_state)"; echo "$s"; [[ "$s" == on ]] ;;
+  list|--list)
+            printf '%s\n' "${EVENTS[@]}"; exit 0 ;;
+  test|--test)
+            for e in "${EVENTS[@]}"; do echo "· $e"; "$0" "$e"; sleep 0.8; done
+            exit 0 ;;
+  *)        _play_event "$1"; exit 0 ;;
+esac
