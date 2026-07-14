@@ -11,11 +11,15 @@ npx --yes sass --no-charset --load-path=. "$SRC" eww.css || {
   echo "compile failed — keeping existing eww.css ($(wc -c < eww.css 2>/dev/null || echo 0) bytes)" >&2
   exit 0
 }
-# GTK CSS (eww 0.5) rejects web flexbox/text props — strip so reload never fails grey.
+# GTK CSS (eww 0.5 / GTK3) rejects web-only props. A SINGLE invalid property
+# makes GTK abort parsing at that line and silently drop every rule after it —
+# which is what left the bars/pills falling back to grey defaults. Strip the
+# whole `property: value;` declaration (the old regex only matched a valueless
+# `property;` form, so it never actually removed anything).
 sed -i -E \
-  -e '/^[[:space:]]*(justify-content|align-items|flex-direction|text-align|display:[[:space:]]*flex)[[:space:]]*;/d' \
+  -e '/^[[:space:]]*(justify-content|justify-items|justify-self|align-items|align-content|align-self|flex|flex-direction|flex-wrap|flex-flow|flex-grow|flex-shrink|flex-basis|order|gap|row-gap|column-gap|text-align|white-space|line-height|vertical-align|object-fit|overflow|overflow-x|overflow-y|position|top|right|bottom|left|z-index|float|clear|cursor|content|display)[[:space:]]*:[^;}]*;/d' \
   -e '/^[[:space:]]*margin:[[:space:]]*0[[:space:]]+auto[[:space:]]*;/d' \
-  -e '/^[[:space:]]*width:[[:space:]]*100%[[:space:]]*;/d' \
+  -e '/^[[:space:]]*(width|height|max-width|max-height):[^;}]*;/d' \
   eww.css
 echo "compiled $SRC → eww.css ($(wc -c < eww.css) bytes, no @charset)"
 if [[ -f eww.scss && ! -f eww.scss.source ]]; then

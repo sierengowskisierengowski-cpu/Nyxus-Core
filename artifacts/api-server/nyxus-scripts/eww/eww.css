@@ -1030,17 +1030,14 @@ window, window.background, decoration {
 
 .ticker-naked {
   padding: 2px 0;
-  text-align: center;
 }
 
 .ticker-row {
   padding: 0;
   min-width: 0;
-  justify-content: center;
 }
 
 .ticker-marquee {
-  text-align: center;
 }
 
 /* legacy float ticker (unused) */
