@@ -207,19 +207,26 @@ def main() -> int:
         "baseline_y": baseline_y,
         "default_facing": "right",
         "states": {
+            # Locomotion cycles advance from DISTANCE travelled (engine-driven),
+            # not wall-clock fps, so they never flail. The passing "idle" frame
+            # between opposing strides gives a 4-count walk.
             "idle":   st(["idle"], 2),
             "walk":   st(["walk_a", "idle", "walk_b", "idle"], 6),
             "run":    st(["run", "walk_a", "run", "walk_b"], 11),
+            # Every gesture is a SINGLE held pose — the engine adds life via a
+            # gentle breathing/squash bob. No 2-frame toggles (those read as
+            # frantic arm-flapping).
             "jump":   st(["jump"], 1, loop=False),
             "crouch": st(["crouch"], 1, loop=False),
-            "point":  st(["point"], 1, loop=False),
-            "wave":   st(["wave", "idle"], 4, loop=False),
+            "wave":   st(["wave"], 1, loop=False),
             "peace":  st(["peace"], 1, loop=False),
-            "laugh":  st(["laugh", "idle"], 6, loop=False),
+            "laugh":  st(["laugh"], 1, loop=False),
             "sit":    st(["sit"], 1, loop=True),
             "sleep":  st(["sit"], 1, loop=True),
-            "notify": st(["point", "idle"], 4),
-            "alert":  st(["jump", "crouch"], 8),
+            # Reactions (point pose retired per design): peace-sign a
+            # notification, throw arms up (jump pose) on a critical alert.
+            "notify": st(["peace"], 1, loop=False),
+            "alert":  st(["jump"], 1, loop=False),
         },
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2))

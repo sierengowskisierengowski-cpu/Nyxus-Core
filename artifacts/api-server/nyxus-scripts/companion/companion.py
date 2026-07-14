@@ -85,34 +85,55 @@ CPU_ALERT = _envf("NYXUS_COMPANION_CPU_ALERT", 85.0)     # percent
 TEMP_ALERT = _envf("NYXUS_COMPANION_TEMP_ALERT", 84.0)   # deg C
 SHADOW = _envb("NYXUS_COMPANION_SHADOW", True)
 SOUND = _envb("NYXUS_COMPANION_SOUND", True)
-LAYER_NAME = os.environ.get("NYXUS_COMPANION_LAYER", "bottom").lower()
+LAYER_NAME = os.environ.get("NYXUS_COMPANION_LAYER", "top").lower()
 SCALE = _envf("NYXUS_COMPANION_SCALE", 1.0)
 
 # Calm, natural stroll. Eased: accelerates to speed, decelerates to stop.
-WALK_SPEED = _envf("NYXUS_COMPANION_WALK_SPEED", 52.0)    # px/s cruise
-RUN_SPEED = _envf("NYXUS_COMPANION_RUN_SPEED", 170.0)     # px/s (rare)
-ACCEL = _envf("NYXUS_COMPANION_ACCEL", 120.0)             # px/s^2
-JUMP_V0 = _envf("NYXUS_COMPANION_JUMP", 300.0)            # px/s launch
-GRAVITY = _envf("NYXUS_COMPANION_GRAVITY", 1000.0)        # px/s^2
+# Deliberately slow — a chill saunter along the bar, not a scurry.
+WALK_SPEED = _envf("NYXUS_COMPANION_WALK_SPEED", 34.0)    # px/s cruise
+RUN_SPEED = _envf("NYXUS_COMPANION_RUN_SPEED", 120.0)     # px/s (rare)
+ACCEL = _envf("NYXUS_COMPANION_ACCEL", 70.0)              # px/s^2
+JUMP_V0 = _envf("NYXUS_COMPANION_JUMP", 340.0)            # px/s launch
+GRAVITY = _envf("NYXUS_COMPANION_GRAVITY", 900.0)         # px/s^2
 
-# How often he decides to do something (seconds between decisions) and the
-# weighted menu of what he picks. Mostly: keep idling.
-DECIDE_MIN = _envf("NYXUS_COMPANION_DECIDE_MIN", 9.0)
-DECIDE_MAX = _envf("NYXUS_COMPANION_DECIDE_MAX", 26.0)
-STROLL_EVERY = _envf("NYXUS_COMPANION_STROLL_EVERY", 150.0)  # avg secs between strolls
+# How often he decides to do something (seconds between decisions). Long gaps:
+# he mostly just stands and breathes.
+DECIDE_MIN = _envf("NYXUS_COMPANION_DECIDE_MIN", 12.0)
+DECIDE_MAX = _envf("NYXUS_COMPANION_DECIDE_MAX", 34.0)
+STROLL_EVERY = _envf("NYXUS_COMPANION_STROLL_EVERY", 180.0)  # avg secs between strolls
 
 TICK_ACTIVE_MS = 16     # ~60 fps while anything is in motion
 TICK_IDLE_MS = 125      # ~8 fps while just breathing
 
-JUMP_HEADROOM = 150
+# Bottom-bar grounding: the companion stands ON TOP of the eww bottom bar.
+# Bar geometry is probed live from hyprctl; these are fallbacks.
+BAR_HEIGHT_FALLBACK = _envi("NYXUS_COMPANION_BAR_H", 112)
+# Drop his feet this many px BELOW the bar's top edge so the sneakers actually
+# rest on the graphs instead of hovering (the sprite canvas has bottom padding).
+BAR_SINK = _envf("NYXUS_COMPANION_BAR_SINK", 22.0)
+# The center UFO-ship clock is a raised platform he can hop onto.
+PLATFORM_RISE = _envf("NYXUS_COMPANION_PLATFORM_RISE", 46.0)   # px above bar top
+PLATFORM_HALF = _envf("NYXUS_COMPANION_PLATFORM_HALF", 95.0)   # half-width of clock
+
+JUMP_HEADROOM = 170
 SIDE_ROOM = 40
-GROUND_PAD = 8
-STRIDE_WALK = 42.0   # px of travel per half stride (leg swap) at walk
-STRIDE_RUN = 66.0
+GROUND_PAD = 6
+STRIDE_WALK = 50.0   # px of travel per half stride (leg swap) at walk
+STRIDE_RUN = 74.0
 FADE_TIME = 0.18
 
 # Min seconds between ambient (non-click) sounds so he never gets annoying.
 SOUND_COOLDOWN = 45.0
+
+# Resolve nyxus-sound to an ABSOLUTE path once, so a minimal autostart PATH
+# (greetd/hypr exec-once) can't break click/alert audio.
+def _resolve_sound_bin():
+    for c in (shutil.which("nyxus-sound"),
+              os.path.expanduser("~/.local/bin/nyxus-sound"),
+              "/usr/local/bin/nyxus-sound", "/usr/bin/nyxus-sound"):
+        if c and os.path.isfile(c) and os.access(c, os.X_OK):
+            return c
+    return None
 
 LAYERS = {
     "background": Gtk4LayerShell.Layer.BACKGROUND,
@@ -139,10 +160,19 @@ class Companion:
         self.ground_y = self.surface_h - GROUND_PAD          # feet rest here
         self.center_x = self.surface_w / 2.0
 
-        # Screen bounds (focused monitor).
+        # Screen bounds (focused monitor) + bottom-bar geometry.
         self.screen_w, self.screen_h = self._monitor_size()
+        self.bar_top_y = self._bottom_bar_top()               # screen y of bar top
+        # Bottom-anchored: keep feet planted on the bar's top edge. margin_bottom
+        # positions the surface so ground_y maps exactly to bar_top_y.
+        self.win_bottom_margin = max(
+            0, int(self.screen_h - GROUND_PAD - self.bar_top_y - BAR_SINK))
         self.max_x = max(0, self.screen_w - self.surface_w)
-        self.win_top = max(0, self.screen_h - self.ground_y - 2)
+
+        # Center UFO-clock platform (screen-space center of the bottom bar).
+        self.platform_cx = self.screen_w / 2.0
+        self.ground_offset = 0.0          # 0 = on bar, PLATFORM_RISE = on clock
+        self._hop_target_offset = None    # set at launch, applied at apex
 
         # Position/motion (floats for sub-pixel easing).
         self.x = float(random.randint(0, self.max_x)) if self.max_x else 0.0
@@ -168,6 +198,7 @@ class Companion:
         self.last_activity = time.monotonic()
         self.look_wobble = 0.0
         self._last_sound = 0.0
+        self.sound_bin = _resolve_sound_bin()
         self._t0 = time.monotonic()
         self._last_tick = time.monotonic()
 
@@ -251,6 +282,26 @@ class Companion:
         except Exception:
             return 1920, 1080
 
+    def _bottom_bar_top(self):
+        """Screen-y of the top edge of the eww bottom bar (hyprctl layers)."""
+        try:
+            data = json.loads(subprocess.run(
+                ["hyprctl", "layers", "-j"], capture_output=True, text=True, timeout=2
+            ).stdout)
+            best = None
+            for mon in data.values():
+                for lvl in mon.get("levels", {}).values():
+                    for layer in lvl:
+                        ns = layer.get("namespace", "")
+                        if "bar-bottom" in ns or ns.endswith("bottom-bar"):
+                            top = layer.get("y", 0)
+                            best = top if best is None else min(best, top)
+            if best is not None and 0 < best < self.screen_h:
+                return int(best)
+        except Exception:
+            pass
+        return int(self.screen_h - BAR_HEIGHT_FALLBACK)
+
     # ---- Window / layer shell ---------------------------------------------
     def _build_window(self):
         self.win = Gtk.ApplicationWindow(application=self.app)
@@ -264,23 +315,28 @@ class Companion:
 
         Gtk4LayerShell.init_for_window(self.win)
         Gtk4LayerShell.set_namespace(self.win, "nyxus-companion")
-        Gtk4LayerShell.set_layer(self.win, LAYERS.get(LAYER_NAME, Gtk4LayerShell.Layer.BOTTOM))
+        Gtk4LayerShell.set_layer(self.win, LAYERS.get(LAYER_NAME, Gtk4LayerShell.Layer.TOP))
         Gtk4LayerShell.set_keyboard_mode(self.win, Gtk4LayerShell.KeyboardMode.NONE)
-        Gtk4LayerShell.set_anchor(self.win, Gtk4LayerShell.Edge.TOP, True)
+        # Anchor to BOTTOM+LEFT and set a NEGATIVE exclusive zone so the bars'
+        # own exclusive zones don't shove us around — the sprite's feet stay
+        # pinned to the bar's top edge and horizontal margin scans across.
+        Gtk4LayerShell.set_anchor(self.win, Gtk4LayerShell.Edge.BOTTOM, True)
         Gtk4LayerShell.set_anchor(self.win, Gtk4LayerShell.Edge.LEFT, True)
         Gtk4LayerShell.set_anchor(self.win, Gtk4LayerShell.Edge.RIGHT, False)
-        Gtk4LayerShell.set_anchor(self.win, Gtk4LayerShell.Edge.BOTTOM, False)
-        Gtk4LayerShell.set_exclusive_zone(self.win, 0)
+        Gtk4LayerShell.set_anchor(self.win, Gtk4LayerShell.Edge.TOP, False)
+        Gtk4LayerShell.set_exclusive_zone(self.win, -1)
         Gtk4LayerShell.set_margin(self.win, Gtk4LayerShell.Edge.LEFT, int(self.x))
-        Gtk4LayerShell.set_margin(self.win, Gtk4LayerShell.Edge.TOP, int(self.win_top))
+        Gtk4LayerShell.set_margin(self.win, Gtk4LayerShell.Edge.BOTTOM, self.win_bottom_margin)
 
-        # Fully transparent window: kill the theme's window/decoration background
-        # on every node of this window. Without this the compositor shows an
-        # opaque rectangle behind the sprite.
+        # Fully transparent window. The theme's ".background" node paints an
+        # opaque window fill; we drop that class AND override at USER priority
+        # (APPLICATION priority loses to some themes — that was the black box).
+        self.win.remove_css_class("background")
         css_text = (
-            "window.nyxus-companion, window.nyxus-companion * {"
+            "window.nyxus-companion, window.nyxus-companion *,"
+            " window.nyxus-companion decoration {"
             " background: transparent; background-color: transparent;"
-            " border: none; box-shadow: none; }"
+            " background-image: none; border: none; box-shadow: none; }"
         )
         css = Gtk.CssProvider()
         try:
@@ -288,7 +344,7 @@ class Companion:
         except AttributeError:
             css.load_from_data(css_text.encode())     # older pygobject
         Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            Gdk.Display.get_default(), css, Gtk.STYLE_PROVIDER_PRIORITY_USER
         )
 
         self.area = Gtk.DrawingArea()
@@ -355,7 +411,8 @@ class Companion:
         t = now - self._t0
         frac_x = self.x - math.floor(self.x)
         foot_x = self.center_x + frac_x
-        foot_y = self.ground_y - self.lift
+        rest_y = self.ground_y - self.ground_offset          # bar top or clock top
+        foot_y = rest_y - self.lift
 
         # --- squash / stretch -------------------------------------------------
         sx = sy = 1.0
@@ -389,7 +446,7 @@ class Companion:
         lean += self.look_wobble
 
         if SHADOW:
-            self._draw_shadow(cr, foot_x, self.ground_y + 2, sx)
+            self._draw_shadow(cr, foot_x, rest_y + 2, sx)
 
         pose = self.cur_pose
         pb = self._surf(pose)
@@ -454,6 +511,11 @@ class Companion:
         if self.jumping:
             self.lift += self.vlift * dt
             self.vlift -= GRAVITY * dt
+            # At the apex, commit the platform change (hop onto/off the clock),
+            # so the descent lands cleanly on the new ground height.
+            if self.vlift <= 0.0 and self._hop_target_offset is not None:
+                self.ground_offset = self._hop_target_offset
+                self._hop_target_offset = None
             if self.lift <= 0.0:
                 self.lift = 0.0
                 self.jumping = False
@@ -582,19 +644,20 @@ class Companion:
             return
 
         r = random.random()
+        near_platform = abs((self.x + self.center_x) - self.platform_cx) < PLATFORM_HALF
         if r < 0.55:
             pass                              # keep chilling (most common)
-        elif r < 0.70:
+        elif r < 0.72:
             # look around: flip to face the other way with a tiny head wobble
             self.facing *= -1
             self.look_wobble = 0.06 * self.facing
-        elif r < 0.79:
-            self._do_action(now, "wave", 2.2)
-        elif r < 0.88:
-            self._do_action(now, "peace", 2.2)
+        elif r < 0.84:
+            self._do_action(now, "wave", 2.4)
         elif r < 0.95:
-            self.facing = random.choice([-1, 1])
-            self._do_action(now, "point", 2.2)
+            # flash the peace sign (replaces the old point gesture)
+            self._do_action(now, "peace", 2.4)
+        elif near_platform or self.ground_offset > 0:
+            self._hop(now)                    # onto / off the UFO clock
         else:
             self._do_jump(now)
 
@@ -615,8 +678,32 @@ class Companion:
         if self.jumping:
             return
         self.jumping = True
-        self.vlift = JUMP_V0 * random.uniform(0.85, 1.1)
+        self.vlift = JUMP_V0 * random.uniform(0.85, 1.05)
         self.squash = 0.12
+        self.gait = "walk"
+        self.speed_cap = WALK_SPEED
+
+    def _hop(self, now):
+        """Hop up onto the center UFO clock, or hop back down onto the bar."""
+        if self.jumping:
+            return
+        if self.ground_offset > 0:
+            # already up top: hop down
+            self._hop_target_offset = 0.0
+        else:
+            # walk to the clock center first, then hop up
+            self.tx = float(max(0, min(self.max_x, self.platform_cx - self.center_x)))
+            if abs(self.x - self.tx) > 4:
+                # not there yet; stroll over, hop decided again on arrival
+                self.gait = "walk"
+                self.speed_cap = WALK_SPEED
+                return
+            self._hop_target_offset = PLATFORM_RISE
+        self.jumping = True
+        # enough launch velocity to clear the rise: v = sqrt(2*g*(rise+margin))
+        clearance = max(PLATFORM_RISE, 20.0) + 24.0
+        self.vlift = math.sqrt(2.0 * GRAVITY * clearance)
+        self.squash = 0.13
         self.gait = "walk"
         self.speed_cap = WALK_SPEED
 
@@ -645,7 +732,7 @@ class Companion:
     # ---- Sound ---------------------------------------------------------------
     def _play_sound(self, event, ambient=True):
         """Fire-and-forget through nyxus-sound. Ambient sounds are rate-limited."""
-        if not SOUND:
+        if not SOUND or not self.sound_bin:
             return
         now = time.monotonic()
         if ambient and now - self._last_sound < SOUND_COOLDOWN:
@@ -653,7 +740,7 @@ class Companion:
         self._last_sound = now
         try:
             subprocess.Popen(
-                ["nyxus-sound", event],
+                [self.sound_bin, event],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                 stdin=subprocess.DEVNULL, start_new_session=True,
             )
@@ -715,14 +802,17 @@ class Companion:
         elif cmd in ("wave", "hello", "hi"):
             self._register_activity()
             self._do_action(now, "wave", 2.4)
-        elif cmd == "point":
+        elif cmd == "point":                  # point retired -> peace
             self._register_activity()
-            self._do_action(now, "point", 2.4)
+            self._do_action(now, "peace", 2.4)
         elif cmd in ("laugh", "click"):
             self.laugh()
         elif cmd == "jump":
             self._register_activity()
             self._do_jump(now)
+        elif cmd == "hop":
+            self._register_activity()
+            self._hop(now)
         elif cmd == "stroll":
             self._register_activity()
             self._stroll(now)

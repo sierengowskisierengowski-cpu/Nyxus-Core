@@ -47,19 +47,11 @@
       "fps": 1,
       "loop": false
     },
-    "point": {
-      "frames": [
-        "point"
-      ],
-      "fps": 1,
-      "loop": false
-    },
     "wave": {
       "frames": [
-        "wave",
-        "idle"
+        "wave"
       ],
-      "fps": 4,
+      "fps": 1,
       "loop": false
     },
     "peace": {
@@ -71,10 +63,9 @@
     },
     "laugh": {
       "frames": [
-        "laugh",
-        "idle"
+        "laugh"
       ],
-      "fps": 6,
+      "fps": 1,
       "loop": false
     },
     "sit": {
@@ -93,19 +84,17 @@
     },
     "notify": {
       "frames": [
-        "point",
-        "idle"
+        "peace"
       ],
-      "fps": 4,
-      "loop": true
+      "fps": 1,
+      "loop": false
     },
     "alert": {
       "frames": [
-        "jump",
-        "crouch"
+        "jump"
       ],
-      "fps": 8,
-      "loop": true
+      "fps": 1,
+      "loop": false
     }
   }
 }
