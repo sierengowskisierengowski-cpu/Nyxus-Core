@@ -58,7 +58,7 @@ done
   echo "snapshot_at=$(date -Iseconds)"
   echo "hostname=$(hostname)"
   echo "user=${USER}"
-  git -C "${REPO}" rev-parse HEAD 2>/dev/null | sed 's/^/git_head=/'
+  git -C "${REPO}" rev-parse HEAD 2>/dev/null | sed 's/^/git_head=/' || true
   git -C "${REPO}" log -1 --oneline 2>/dev/null || true
   echo "eww_count=$(pgrep -c -x eww 2>/dev/null || echo 0)"
   command -v eww >/dev/null && eww active-windows 2>/dev/null || true
