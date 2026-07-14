@@ -159,10 +159,17 @@ ok "$(ls "${HOME}/.config/hypr/walls/"*.png 2>/dev/null | wc -l) wallpapers in ~
 step "install helper launchers → ~/.local/bin"
 mkdir -p "${HOME}/.local/bin"
 for h in nyxus-eww-launch nyxus-eww-launch-safe nyxus-set-wallpaper.sh \
+         nyxus-set-wallpaper nyxus-apply-accent nyxus-accent-from-wallpaper \
          nyxus-sync-stations nyxus-bootstrap nyxus-wait-bootstrap \
          nyxus-session-start nyxus-security \
          nyxus-hub-apps nyxus-nowplaying nyxus-notif-to-eww nyxus-sound \
-         nyxus-sound-bake nyxus-companion; do
+         nyxus-sound-bake nyxus-companion \
+         nyxus-sfx nyxus-soundd nyxus-sounds nyxus-sound-forge \
+         nyxus-shader nyxus-plugins nyxus-living nyxus-live-wallpaper \
+         nyxus-eww-cinematic nyxus-wall-cycle nyxus-wall-fx nyxus-wall-next \
+         nyxus-beat nyxus-beatd nyxus-tint nyxus-tintd nyxus-lens \
+         nyxus-spray nyxus-freeform nyxus-mission-control-toggle \
+         nyxus-record; do
   if [[ -f "${NS}/${h}" ]]; then
     install -m 0755 "${NS}/${h}" "${HOME}/.local/bin/${h}"
   elif [[ -f "${NS}/companion/${h}" ]]; then
