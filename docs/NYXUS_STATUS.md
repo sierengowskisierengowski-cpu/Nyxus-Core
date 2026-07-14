@@ -2,7 +2,7 @@
 
 **Safepoint date/time:** 2026-07-14 09:07 EDT  
 **Branch:** `cursor/restore-last-night-state-15e2`  
-**Latest commit:** `df0b271` (at tag `nyxus-good-state-2026-07-14-legend`)  
+**Latest commit:** at tag `nyxus-good-state-2026-07-14-legend` — run `git log -1 --oneline`  
 **Safepoint tag:** `nyxus-good-state-2026-07-14-legend`
 
 ---
