@@ -966,6 +966,7 @@
   (eventbox :onclick "eww close nyxus-hub"
     :onkeydown "[ '{}' = 'Escape' ] && nyxus-overlay-unstick"
     (centerbox :class "hub-backdrop"
+               :style "background-image: linear-gradient(rgba(5,1,13,0.74), rgba(5,1,13,0.80)), url('/home/cosmic/.config/eww/assets/nyxus-hero-crew-meet.png'); background-size: cover; background-position: center;"
       (box)
       (nyxus_hub_layout)
       (box))))
@@ -973,7 +974,9 @@
 (defwindow powermenu
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-powermenu"
   :geometry (geometry :width "100%" :height "100%" :anchor "center")
-  (box :class "overlay-backdrop" (powermenu_layout)))
+  (box :class "overlay-backdrop"
+       :style "background-image: linear-gradient(rgba(5,1,13,0.76), rgba(5,1,13,0.82)), url('/home/cosmic/.config/eww/assets/nyxus-hero-ufo-shop.png'); background-size: cover; background-position: center;"
+    (powermenu_layout)))
 
 (defwindow cheatsheet
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-cheatsheet"
