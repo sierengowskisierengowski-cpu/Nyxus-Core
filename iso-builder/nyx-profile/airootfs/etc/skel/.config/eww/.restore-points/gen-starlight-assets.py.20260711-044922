@@ -35,13 +35,9 @@ os.makedirs(OUT, exist_ok=True)
 
 FRAMES = 16
 
-# STARFALL plum rework (rev 2026-07-11d): deep plum velvet in the
-# #12001c-#1a0b2e band, ~88% alpha so the Hyprland blur pulls the
-# wallpaper's nebula THROUGH the felt instead of washing over it.
-FELT_TOP = (26, 11, 46)    # #1a0b2e
-FELT_MID = (22, 6, 38)
-FELT_BOT = (18, 0, 28)     # #12001c
-FELT_ALPHA = 224           # ~0.88
+FELT_TOP = (8, 4, 18)
+FELT_MID = (13, 6, 27)
+FELT_BOT = (5, 2, 12)
 
 LINE = (185, 160, 255)
 
@@ -58,7 +54,7 @@ def tint():
 
 
 def felt(w, h):
-    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 255))
     d = ImageDraw.Draw(img)
     for y in range(h):
         t = y / max(1, h - 1)
@@ -68,7 +64,7 @@ def felt(w, h):
         else:
             k = (t - 0.5) * 2
             c = tuple(int(FELT_MID[i] + (FELT_BOT[i] - FELT_MID[i]) * k) for i in range(3))
-        d.line([(0, y), (w, y)], fill=(*c, FELT_ALPHA))
+        d.line([(0, y), (w, y)], fill=(*c, 255))
     grain = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     gd = ImageDraw.Draw(grain)
     for _ in range((w * h) // 55):

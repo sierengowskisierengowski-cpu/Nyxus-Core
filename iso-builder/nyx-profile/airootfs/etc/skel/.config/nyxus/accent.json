@@ -51,10 +51,10 @@
       "ok": "#82ffd2"
     },
     "wallpaper": {
-      "primary": "#ff4994",
-      "secondary": "#26ff39",
-      "warn": "#ff8b26",
-      "ok": "#26ffb7"
+      "primary": "#f27531",
+      "secondary": "#26ffe0",
+      "warn": "#ff7326",
+      "ok": "#7326ff"
     }
   },
   "follow_wallpaper": true

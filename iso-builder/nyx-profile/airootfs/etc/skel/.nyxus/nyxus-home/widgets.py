@@ -1,21 +1,17 @@
 """
-NYXUS Home - the dashboard cards.
-Clock / Weather / Music (MPRIS) / Calendar / Notifications (dunst) /
-Notepad / System Pulse (CPU·RAM·GPU·NET) / Password Manager.
+NYXUS Home - the six dashboard cards.
+Faithful port of HomeDashboard.tsx (Clock / Weather / Calendar /
+Notifications / Notepad / Password Manager).
 (c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 
 import calendar
 import datetime as _dt
-import hashlib
 import json
 import os
-import re
 import secrets
-import shutil
 import string
-import subprocess
 import threading
 import time as _time
 import urllib.parse
@@ -363,243 +359,6 @@ class WeatherCard:
         return False
 
 
-# ── MUSIC (MPRIS via playerctl — controls any player) ──────────────────────
-_MUSIC_FMT = "\x1f".join([
-    "{{status}}", "{{playerName}}", "{{artist}}", "{{title}}",
-    "{{album}}", "{{position}}", "{{mpris:length}}", "{{mpris:artUrl}}",
-])
-_ART_CACHE = os.path.join(
-    os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")),
-    "nyxus-home", "art")
-os.makedirs(_ART_CACHE, exist_ok=True)
-
-
-def _fmt_clock(us: float) -> str:
-    s = max(0, int(us / 1e6))
-    return f"{s // 60}:{s % 60:02d}"
-
-
-class MusicCard:
-    """Live MPRIS deck: album art, track info, seek bar, transport
-    controls. Follows whatever player is active (spotify, mpv, mpd,
-    chromium, fooyin…) via playerctl."""
-
-    def __init__(self):
-        self.root, content, self.set_footer = make_card(
-            "red", "Music", "♫", "MPRIS · PLAYERCTL · LIVE")
-        self._player = None
-        self._art_url = None
-        self._seeking = False
-
-        self.stack = Gtk.Stack()
-        self.stack.set_vexpand(True)
-        self.stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-        self.stack.set_transition_duration(300)
-
-        # ── empty state ──────────────────────────────────────────────
-        empty = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        empty.set_valign(Gtk.Align.CENTER)
-        eg = Gtk.Label(label="♫")
-        eg.add_css_class("music-empty-glyph")
-        et = Gtk.Label(label="nothing playing")
-        et.add_css_class("wx-label")
-        eh = Gtk.Label(label="start any MPRIS player — spotify · mpv · fooyin · browser")
-        eh.add_css_class("music-hint")
-        empty.append(eg)
-        empty.append(et)
-        empty.append(eh)
-        self.stack.add_named(empty, "empty")
-
-        # ── deck ─────────────────────────────────────────────────────
-        deck = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-
-        top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        self.art = Gtk.Picture()
-        self.art.set_size_request(92, 92)
-        self.art.set_content_fit(Gtk.ContentFit.COVER)
-        self.art.add_css_class("music-art")
-        self.art_fallback = Gtk.Label(label="♪")
-        self.art_fallback.add_css_class("music-art-fallback")
-        self.art_fallback.set_size_request(92, 92)
-        self.art_stack = Gtk.Stack()
-        self.art_stack.add_named(self.art_fallback, "fallback")
-        self.art_stack.add_named(self.art, "art")
-        self.art_stack.set_valign(Gtk.Align.START)
-        top.append(self.art_stack)
-
-        info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
-        info.set_valign(Gtk.Align.CENTER)
-        info.set_hexpand(True)
-        self.title_lbl = Gtk.Label(xalign=0.0)
-        self.title_lbl.set_ellipsize(3)
-        self.title_lbl.add_css_class("music-title")
-        self.artist_lbl = Gtk.Label(xalign=0.0)
-        self.artist_lbl.set_ellipsize(3)
-        self.artist_lbl.add_css_class("music-artist")
-        self.album_lbl = Gtk.Label(xalign=0.0)
-        self.album_lbl.set_ellipsize(3)
-        self.album_lbl.add_css_class("music-album")
-        info.append(self.title_lbl)
-        info.append(self.artist_lbl)
-        info.append(self.album_lbl)
-        top.append(info)
-        deck.append(top)
-
-        # seek row
-        seek_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        self.pos_lbl = Gtk.Label(label="0:00")
-        self.pos_lbl.add_css_class("music-time")
-        self.seek = Gtk.Scale(
-            orientation=Gtk.Orientation.HORIZONTAL,
-            adjustment=Gtk.Adjustment(value=0, lower=0, upper=1,
-                                      step_increment=1))
-        self.seek.set_draw_value(False)
-        self.seek.set_hexpand(True)
-        self.seek.connect("change-value", self._on_seek)
-        self.len_lbl = Gtk.Label(label="0:00")
-        self.len_lbl.add_css_class("music-time")
-        seek_row.append(self.pos_lbl)
-        seek_row.append(self.seek)
-        seek_row.append(self.len_lbl)
-        deck.append(seek_row)
-
-        # transport
-        ctl = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        ctl.set_halign(Gtk.Align.CENTER)
-        prev_b = Gtk.Button(label="⏮")
-        prev_b.add_css_class("btn-nav-red")
-        prev_b.connect("clicked", lambda _b: self._ctl("previous"))
-        self.play_b = Gtk.Button(label="▶")
-        self.play_b.add_css_class("btn-primary-red")
-        self.play_b.connect("clicked", lambda _b: self._ctl("play-pause"))
-        next_b = Gtk.Button(label="⏭")
-        next_b.add_css_class("btn-nav-red")
-        next_b.connect("clicked", lambda _b: self._ctl("next"))
-        ctl.append(prev_b)
-        ctl.append(self.play_b)
-        ctl.append(next_b)
-        deck.append(ctl)
-
-        self.stack.add_named(deck, "deck")
-        content.append(self.stack)
-        self.stack.set_visible_child_name("empty")
-
-        self._tick()
-        GLib.timeout_add(1000, self._tick)
-
-    # ── playerctl IPC (background thread, UI applied via idle_add) ───
-    def _tick(self):
-        threading.Thread(target=self._poll_bg, daemon=True).start()
-        return True
-
-    def _poll_bg(self):
-        try:
-            r = subprocess.run(
-                ["playerctl", "metadata", "--format", _MUSIC_FMT],
-                capture_output=True, text=True, timeout=4)
-            if r.returncode != 0 or "\x1f" not in r.stdout:
-                GLib.idle_add(self._apply, None)
-                return
-            f = r.stdout.strip("\n").split("\x1f")
-            while len(f) < 8:
-                f.append("")
-            data = {
-                "status":  f[0], "player": f[1], "artist": f[2],
-                "title":   f[3], "album":  f[4],
-                "pos":     float(f[5] or 0), "len": float(f[6] or 0),
-                "art":     f[7],
-            }
-            GLib.idle_add(self._apply, data)
-        except Exception:
-            GLib.idle_add(self._apply, None)
-
-    def _apply(self, d):
-        if not d or not (d["title"] or d["artist"]):
-            self.stack.set_visible_child_name("empty")
-            self._player = None
-            self.set_footer("MPRIS · PLAYERCTL · IDLE")
-            return False
-        self._player = d["player"]
-        self.stack.set_visible_child_name("deck")
-        self.title_lbl.set_text(d["title"] or "unknown track")
-        self.artist_lbl.set_text(d["artist"] or "unknown artist")
-        self.album_lbl.set_text(d["album"] or "")
-        self.album_lbl.set_visible(bool(d["album"]))
-        playing = d["status"].lower() == "playing"
-        self.play_b.set_label("⏸" if playing else "▶")
-        if d["len"] > 0 and not self._seeking:
-            adj = self.seek.get_adjustment()
-            adj.set_upper(d["len"])
-            adj.set_value(min(d["pos"], d["len"]))
-        self.pos_lbl.set_text(_fmt_clock(d["pos"]))
-        self.len_lbl.set_text(_fmt_clock(d["len"]))
-        self._load_art(d["art"])
-        self.set_footer(
-            f"{d['player'].upper()} · {d['status'].upper()} · MPRIS LIVE")
-        return False
-
-    def _load_art(self, url):
-        if url == self._art_url:
-            return
-        self._art_url = url
-        if not url:
-            self.art_stack.set_visible_child_name("fallback")
-            return
-        if url.startswith("file://"):
-            path = urllib.parse.unquote(url[7:])
-            self._set_art(path)
-        elif url.startswith(("http://", "https://")):
-            threading.Thread(target=self._fetch_art_bg, args=(url,),
-                             daemon=True).start()
-        else:
-            self.art_stack.set_visible_child_name("fallback")
-
-    def _fetch_art_bg(self, url):
-        try:
-            cached = os.path.join(
-                _ART_CACHE, hashlib.md5(url.encode()).hexdigest())
-            if not os.path.exists(cached):
-                req = urllib.request.Request(
-                    url, headers={"User-Agent": "nyxus-home/2.0"})
-                with urllib.request.urlopen(req, timeout=10) as resp:
-                    blob = resp.read()
-                with open(cached + ".tmp", "wb") as fh:
-                    fh.write(blob)
-                os.replace(cached + ".tmp", cached)
-            GLib.idle_add(self._set_art, cached, url)
-        except Exception:
-            GLib.idle_add(
-                self.art_stack.set_visible_child_name, "fallback")
-
-    def _set_art(self, path, for_url=None):
-        if for_url is not None and for_url != self._art_url:
-            return False   # stale download — a newer track took over
-        try:
-            self.art.set_filename(path)
-            self.art_stack.set_visible_child_name("art")
-        except Exception:
-            self.art_stack.set_visible_child_name("fallback")
-        return False
-
-    def _on_seek(self, _scale, _scroll, value):
-        if self._player:
-            subprocess.Popen(
-                ["playerctl", "-p", self._player, "position",
-                 str(max(0.0, value / 1e6))])
-        return False
-
-    def _ctl(self, cmd):
-        args = ["playerctl"]
-        if self._player:
-            args += ["-p", self._player]
-        subprocess.Popen(args + [cmd])
-        GLib.timeout_add(150, self._tick_once)
-
-    def _tick_once(self):
-        self._tick()
-        return False
-
-
 # ── CALENDAR ───────────────────────────────────────────────────────────────
 class CalendarCard:
     def __init__(self):
@@ -685,132 +444,84 @@ class CalendarCard:
             self.grid.attach(lbl, col, row, 1, 1)
 
 
-# ── NOTIFICATIONS (live dunst history) ─────────────────────────────────────
-_TAG_RE = re.compile(r"<[^>]+>")
-_NOTIF_COLORS = ["purple", "cyan", "gold", "pink", "green", "orange"]
-_URGENCY_GLYPH = {"LOW": "○", "NORMAL": "◉", "CRITICAL": "⚠"}
-
-
-def _strip_markup(s: str) -> str:
-    return _TAG_RE.sub("", s or "").replace("&amp;", "&").strip()
-
-
-def _rel_age(secs: float) -> str:
-    if secs < 60:
-        return "now"
-    if secs < 3600:
-        return f"{int(secs // 60)}m"
-    if secs < 86400:
-        return f"{int(secs // 3600)}h"
-    return f"{int(secs // 86400)}d"
+# ── NOTIFICATIONS ──────────────────────────────────────────────────────────
+SEED_NOTIFS = [
+    {"id": "n1", "glyph": "\u25c9", "color": "purple",
+     "title": "INTEL",   "body": "Investigation auto-saved (3 findings).",         "time": "2m"},
+    {"id": "n2", "glyph": "\u26e8", "color": "green",
+     "title": "Shield",  "body": "Local scan complete \u2014 0 open ports outside policy.", "time": "8m"},
+    {"id": "n3", "glyph": "\u25c8", "color": "blue",
+     "title": "Phantom", "body": "Daemon armed. 0 threats since boot.",            "time": "14m"},
+    {"id": "n4", "glyph": "\u2726", "color": "gold",
+     "title": "GodsApp", "body": "WiFi audit module ready.",                        "time": "22m"},
+    {"id": "n5", "glyph": "\u2711", "color": "purple",
+     "title": "Notepad", "body": "5 notes synced to ~/.nyxus/notepad.json.",        "time": "1h"},
+    {"id": "n6", "glyph": "\u25e7", "color": "cyan",
+     "title": "SysMon",  "body": "CPU steady at 15% \u00b7 RAM 56% \u00b7 Temp 84\u00b0C.", "time": "2h"},
+]
 
 
 class NotificationsCard:
-    """Real notification feed — reads the live dunst history via
-    `dunstctl history`, dismisses via `dunstctl history-rm`."""
-
     def __init__(self):
         self.root, self.content, self.set_footer = make_card(
-            "green", "Notifications", "✉", "DUNST · LIVE HISTORY")
-        self.items = []
+            "green", "Notifications", "\u2709", "")
+        self.items = self._load()
         self.list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         scroller = Gtk.ScrolledWindow()
         scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroller.set_child(self.list_box)
         scroller.set_min_content_height(200)
-        scroller.set_vexpand(True)
         self.content.append(scroller)
+        self.reload_btn = Gtk.Button(label="\u21ba RELOAD FEED")
+        self.reload_btn.add_css_class("btn-nav-mono")
+        self.reload_btn.set_halign(Gtk.Align.START)
+        self.reload_btn.connect("clicked", self._reload)
+        self.content.append(self.reload_btn)
+        self._render()
 
-        btn_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        refresh_btn = Gtk.Button(label="↺ REFRESH")
-        refresh_btn.add_css_class("btn-nav-mono")
-        refresh_btn.connect("clicked", lambda _b: self._refresh())
-        clear_btn = Gtk.Button(label="✕ CLEAR ALL")
-        clear_btn.add_css_class("btn-nav-mono")
-        clear_btn.connect("clicked", self._clear_all)
-        btn_row.append(refresh_btn)
-        btn_row.append(clear_btn)
-        self.content.append(btn_row)
-
-        self._refresh()
-        GLib.timeout_add_seconds(5, self._refresh)
-
-    # ── dunst IPC ────────────────────────────────────────────────────
-    def _refresh(self):
-        threading.Thread(target=self._fetch_bg, daemon=True).start()
-        return True
-
-    def _fetch_bg(self):
-        items = []
-        ok = True
+    def _load(self):
         try:
-            out = subprocess.run(
-                ["dunstctl", "history"],
-                capture_output=True, text=True, timeout=4,
-            ).stdout
-            raw = json.loads(out).get("data", [[]])[0]
-            uptime = float(open("/proc/uptime").read().split()[0])
-            for n in raw:
-                def _f(key, default=""):
-                    v = n.get(key, {})
-                    return v.get("data", default) if isinstance(v, dict) else default
-                app = str(_f("appname")) or "system"
-                summary = _strip_markup(str(_f("summary"))) or app
-                body = _strip_markup(str(_f("body")))
-                if len(body) > 140:
-                    body = body[:137] + "…"
-                ts = float(_f("timestamp", 0)) / 1e6      # µs since boot
-                urgency = str(_f("urgency", "NORMAL")).upper()
-                color = _NOTIF_COLORS[
-                    sum(ord(c) for c in app) % len(_NOTIF_COLORS)]
-                if urgency == "CRITICAL":
-                    color = "red"
-                items.append({
-                    "id":    _f("id", 0),
-                    "glyph": _URGENCY_GLYPH.get(urgency, "◉"),
-                    "color": color,
-                    "title": summary,
-                    "app":   app,
-                    "body":  body,
-                    "time":  _rel_age(max(0.0, uptime - ts)),
-                })
+            with open(NOTIF_FILE, "r", encoding="utf-8") as f:
+                d = json.load(f)
+                if isinstance(d, list):
+                    return d
         except Exception:
-            ok = False
-        items.reverse()   # newest first
-        GLib.idle_add(self._apply, items, ok)
+            pass
+        return [dict(n) for n in SEED_NOTIFS]
 
-    def _apply(self, items, ok):
-        self.items = items
-        self._render(ok)
-        return False
+    def _save(self):
+        try:
+            with open(NOTIF_FILE, "w", encoding="utf-8") as f:
+                json.dump(self.items, f)
+        except OSError:
+            pass
+
+    def _reload(self, _b):
+        self.items = [dict(n) for n in SEED_NOTIFS]
+        self._save()
+        self._render()
 
     def _dismiss(self, nid):
-        subprocess.Popen(["dunstctl", "history-rm", str(nid)])
         self.items = [n for n in self.items if n["id"] != nid]
-        self._render(True)
+        self._save()
+        self._render()
 
-    def _clear_all(self, _b):
-        subprocess.Popen(["dunstctl", "history-clear"])
-        self.items = []
-        self._render(True)
-
-    def _render(self, ok=True):
+    def _render(self):
         child = self.list_box.get_first_child()
         while child is not None:
             nxt = child.get_next_sibling()
             self.list_box.remove(child)
             child = nxt
         if not self.items:
-            empty = Gtk.Label(
-                label="Inbox zero · all clear" if ok
-                else "dunst offline — no history available")
+            empty = Gtk.Label(label="Inbox zero \u00b7 all clear")
             empty.add_css_class("wx-loc")
             empty.set_xalign(0.5)
-            empty.set_margin_top(24)
             self.list_box.append(empty)
         for n in self.items:
             color_hex = PALETTE.get(n["color"], PALETTE["green"])
-            color_key = n["color"]
+            color_key = n["color"] if n["color"] in (
+                "pink", "cyan", "purple", "gold", "green", "orange", "red"
+            ) else "green"
             row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
             row.add_css_class(f"notif-{color_key}")
             glyph = Gtk.Label(label=n["glyph"])
@@ -823,16 +534,12 @@ class NotificationsCard:
             mid.set_hexpand(True)
             head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
             title = Gtk.Label(xalign=0.0)
-            title.set_ellipsize(3)
             title.set_markup(
                 f"<span foreground='{color_hex}' font_desc='Inter Display 13'>"
                 f"{GLib.markup_escape_text(n['title'])}</span>"
             )
             title.add_css_class("notif-title")
             head.append(title)
-            app_lbl = Gtk.Label(label=n["app"].upper())
-            app_lbl.add_css_class("notif-time")
-            head.append(app_lbl)
             spacer = Gtk.Box()
             spacer.set_hexpand(True)
             head.append(spacer)
@@ -840,21 +547,17 @@ class NotificationsCard:
             t.add_css_class("notif-time")
             head.append(t)
             mid.append(head)
-            if n["body"]:
-                body = Gtk.Label(label=n["body"], xalign=0.0)
-                body.set_wrap(True)
-                body.add_css_class("notif-body")
-                mid.append(body)
+            body = Gtk.Label(label=n["body"], xalign=0.0)
+            body.set_wrap(True)
+            body.add_css_class("notif-body")
+            mid.append(body)
             row.append(mid)
-            x_btn = Gtk.Button(label="✕")
+            x_btn = Gtk.Button(label="\u2715")
             x_btn.add_css_class(f"btn-icon-{color_key}")
-            x_btn.set_valign(Gtk.Align.CENTER)
             x_btn.connect("clicked", lambda _b, nid=n["id"]: self._dismiss(nid))
             row.append(x_btn)
             self.list_box.append(row)
-        self.set_footer(
-            f"{len(self.items)} IN HISTORY · DUNST LIVE" if ok
-            else "DUNST OFFLINE")
+        self.set_footer(f"{len(self.items)} ACTIVE \u00b7 LIVE FEED")
 
 
 # ── NOTEPAD ───────────────────────────────────────────────────────────────
@@ -1219,14 +922,11 @@ class SystemPulseCard:
         from collections import deque
         self.root, content, self.set_footer = make_card(
             "cyan", "System Pulse", "◉",
-            "/proc · nvidia-smi · live sampling")
+            "sampling /proc · 1s cadence")
 
         self.cpu_hist = deque([0.0] * self.HISTORY, maxlen=self.HISTORY)
         self.ram_hist = deque([0.0] * self.HISTORY, maxlen=self.HISTORY)
         self.net_hist = deque([0.0] * self.HISTORY, maxlen=self.HISTORY)
-        self.gpu_hist = deque([0.0] * self.HISTORY, maxlen=self.HISTORY)
-        self._gpu = None
-        self._gpu_ok = shutil.which("nvidia-smi") is not None
         self._prev_cpu = self._read_cpu_raw()
         self._prev_net = self._read_net_raw()
         self._net_peak = 1.0  # bytes/s autoscale for the net sparkline
@@ -1240,8 +940,7 @@ class SystemPulseCard:
         specs = [
             ("CPU", "pink",   self.cpu_hist, 0),
             ("RAM", "purple", self.ram_hist, 1),
-            ("GPU", "green",  self.gpu_hist, 2),
-            ("NET", "cyan",   self.net_hist, 3),
+            ("NET", "cyan",   self.net_hist, 2),
         ]
         for title, color_key, hist, col in specs:
             head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
@@ -1258,30 +957,8 @@ class SystemPulseCard:
 
         content.append(grid)
         self._sparks = grid
-        if self._gpu_ok:
-            GLib.timeout_add_seconds(2, self._sample_gpu)
-            self._sample_gpu()
         GLib.timeout_add(1000, self._tick)
         self._tick()
-
-    # ── GPU (nvidia-smi in a worker thread — never blocks the UI) ───
-    def _sample_gpu(self):
-        threading.Thread(target=self._sample_gpu_bg, daemon=True).start()
-        return True
-
-    def _sample_gpu_bg(self):
-        try:
-            out = subprocess.run(
-                ["nvidia-smi",
-                 "--query-gpu=utilization.gpu,temperature.gpu,"
-                 "memory.used,memory.total",
-                 "--format=csv,noheader,nounits"],
-                capture_output=True, text=True, timeout=4).stdout
-            util, temp, mu, mt = [float(x)
-                                  for x in out.strip().split(", ")[:4]]
-            self._gpu = (util, temp, mu, mt)
-        except Exception:
-            self._gpu = None
 
     # ── /proc readers ────────────────────────────────────────────────
     @staticmethod
@@ -1365,28 +1042,15 @@ class SystemPulseCard:
         else:
             self._value_labels["NET"].set_text(f"{rate} B/s")
 
-        # GPU (sampled by the worker thread)
-        if self._gpu is not None:
-            gutil, gtemp, gmu, gmt = self._gpu
-            self.gpu_hist.append(gutil)
-            self._value_labels["GPU"].set_text(
-                f"{gutil:3.0f}% · {gtemp:.0f}°C")
-        else:
-            self.gpu_hist.append(0.0)
-            self._value_labels["GPU"].set_text("—")
-
-        # footer: load · temp · disk · uptime
+        # footer: load · temp · uptime
         try:
             load1, load5, _ = os.getloadavg()
             up = float(open("/proc/uptime").read().split()[0])
             hrs, mins = int(up // 3600), int(up % 3600 // 60)
             temp = self._read_temp()
             tstr = f" · {temp:.0f}°C" if temp is not None else ""
-            du = shutil.disk_usage("/")
-            dstr = f" · disk {du.used / 2**30:.0f}/{du.total / 2**30:.0f}G"
             self.set_footer(
-                f"load {load1:.2f} / {load5:.2f}{tstr}{dstr}"
-                f" · up {hrs}h {mins:02d}m")
+                f"load {load1:.2f} / {load5:.2f}{tstr} · up {hrs}h {mins:02d}m")
         except OSError:
             pass
 

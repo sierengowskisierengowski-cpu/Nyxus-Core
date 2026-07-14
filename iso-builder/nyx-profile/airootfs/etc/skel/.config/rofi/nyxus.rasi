@@ -1,19 +1,19 @@
 /* NYXUS · Obsidian Prism — window switcher (Super+Tab)
- * Palette: #ff4994 · #26ff39 · #26ffb7 · #ff8b26 */
+ * Palette: #f27531 · #26ffe0 · #7326ff · #ff7326 */
 
 * {
     bg:         #05060a;
     bar-bg:     rgba(5, 6, 10, 0.90);
     widget-bg:  rgba(10, 13, 20, 0.85);
-    active:     #26ff39;
+    active:     #26ffe0;
     inactive:   rgba(238, 242, 250, 0.35);
-    highlight:  #ff4994;
-    violet:     #26ffb7;
-    gold:       #ff8b26;
+    highlight:  #f27531;
+    violet:     #7326ff;
+    gold:       #ff7326;
     text:       #eef2fa;
-    sep:        rgba(38, 255, 183, 0.35);
-    selected-bg:rgba(255, 73, 148, 0.18);
-    glass-line: rgba(38, 255, 57, 0.35);
+    sep:        rgba(115, 38, 255, 0.35);
+    selected-bg:rgba(242, 117, 49, 0.18);
+    glass-line: rgba(38, 255, 224, 0.35);
 
     font:                   "JetBrainsMono Nerd Font 12";
     background-color:       transparent;
@@ -22,8 +22,9 @@
 
 window {
     width:                  560px;
+    background-image:       url("~/.config/nyxus/backdrops/starfall-backdrop-card.png", both);
     background-color:       @bar-bg;
-    border:                 2px;
+    border:                 1px;
     border-color:           @glass-line;
     border-radius:          16px;
     padding:                16px;

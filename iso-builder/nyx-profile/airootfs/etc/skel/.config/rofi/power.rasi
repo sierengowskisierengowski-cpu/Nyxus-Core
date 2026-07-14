@@ -1,31 +1,30 @@
-/* NYXUS · Obsidian Prism — power menu
- * Palette: #ff4994 · #26ff39 · #26ffb7 · #ff8b26 */
+/* NYXUS · STARFALL — power menu (rev 2026-07-11)
+ * Moonstone glass over the baked wallpaper slab; hover = ember fire,
+ * destructive rows read hot red. Matches launcher.rasi. */
 
 * {
-    bg:         #05060a;
-    bar-bg:     rgba(5, 6, 10, 0.90);
-    widget-bg:  rgba(10, 13, 20, 0.85);
-    active:     #26ff39;
-    inactive:   rgba(238, 242, 250, 0.35);
-    highlight:  #ff4994;
-    violet:     #26ffb7;
-    gold:       #ff8b26;
-    text:       #eef2fa;
-    clock:      #eef2fa;
+    ink:        rgba(7, 3, 16, 0.92);
+    vessel:     rgba(16, 8, 32, 0.72);
+    moonline:   rgba(214, 205, 255, 0.42);
+    moontext:   #f2f0ff;
+    dim:        rgba(214, 205, 255, 0.45);
+    violet:     #a882ff;
+    ember:      #ffb050;
+    ember-hot:  #ffd9a0;
+    ember-bg:   rgba(255, 140, 40, 0.16);
+    ember-line: rgba(255, 176, 80, 0.55);
     urgent:     #ff5470;
-    sep:        rgba(38, 255, 183, 0.35);
-    selected-bg:rgba(255, 73, 148, 0.18);
-    glass-line: rgba(38, 255, 57, 0.35);
 
     font:                   "JetBrainsMono Nerd Font 13";
     background-color:       transparent;
-    text-color:             @text;
+    text-color:             @moontext;
 }
 
 window {
-    background-color:       @bar-bg;
-    border:                 2px;
-    border-color:           @glass-line;
+    background-image:       url("~/.config/nyxus/backdrops/starfall-backdrop-card.png", both);
+    background-color:       @ink;
+    border:                 1px;
+    border-color:           @moonline;
     border-radius:          16px;
     width:                  220px;
     padding:                12px;
@@ -49,7 +48,7 @@ inputbar {
 
 prompt {
     background-color:       transparent;
-    text-color:             @gold;
+    text-color:             @ember;
     font:                   "JetBrainsMono Nerd Font Bold 11";
     horizontal-align:       0.5;
     padding:                4px 0;
@@ -66,7 +65,7 @@ listview {
 
 element {
     background-color:       transparent;
-    text-color:             @text;
+    text-color:             @moontext;
     border-radius:          10px;
     padding:                10px 16px;
     cursor:                 pointer;
@@ -88,19 +87,19 @@ element-text {
 
 element normal.normal {
     background-color:       transparent;
-    text-color:             @text;
+    text-color:             @moontext;
 }
 
 element selected.normal {
-    background-color:       @selected-bg;
-    text-color:             @active;
+    background-color:       @ember-bg;
+    text-color:             @ember-hot;
     border:                 1px;
-    border-color:           @sep;
+    border-color:           @ember-line;
 }
 
 element alternate.normal {
     background-color:       transparent;
-    text-color:             @text;
+    text-color:             @moontext;
 }
 
 element normal.urgent {
@@ -109,14 +108,14 @@ element normal.urgent {
 }
 
 element selected.urgent {
-    background-color:       @selected-bg;
+    background-color:       rgba(255, 84, 112, 0.16);
     text-color:             @urgent;
     border:                 1px;
     border-color:           @urgent;
 }
 
 scrollbar {
-    background-color:       @widget-bg;
+    background-color:       @vessel;
     handle-color:           @violet;
     handle-width:           4px;
     border-radius:          2px;

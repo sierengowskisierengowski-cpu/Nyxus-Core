@@ -1,5 +1,5 @@
 # NYXUS dunst · Obsidian Prism (rev 2026-07-06)
-# Palette: #ff4994 · #26ff39 · #26ffb7 · #ff8b26
+# Palette: #f27531 · #26ffe0 · #7326ff · #ff7326
 
 [global]
     monitor = 0
@@ -26,9 +26,9 @@
     horizontal_padding = 16
     text_icon_padding = 12
     frame_width = 2
-    frame_color = "#26ff3959"
+    frame_color = "#26ffe059"
     gap_size = 6
-    separator_color = "#05060a"
+    separator_color = "#070310"
     sort = yes
 
     font = "JetBrains Mono Nerd Font 11"
@@ -56,7 +56,7 @@
     dmenu = /usr/bin/rofi -dmenu -p dunst:
     browser = /usr/bin/xdg-open
     always_run_script = true
-    title = NYXUS · Obsidian Prism
+    title = NYXUS · Starfall
     class = Dunst
     corner_radius = 12
     ignore_dbusclose = false
@@ -73,22 +73,22 @@
 [urgency_low]
     background    = "#05060ae6"
     foreground    = "#eef2facc"
-    frame_color   = "#26ffb766"
+    frame_color   = "#7326ff66"
     timeout       = 5
     default_icon  = dialog-information
 
 [urgency_normal]
     background    = "#05060ae6"
     foreground    = "#eef2fa"
-    frame_color   = "#ff499466"
+    frame_color   = "#f2753166"
     timeout       = 8
     override_pause_level = 30
     default_icon  = dialog-information
 
 [urgency_critical]
-    background    = "#05060ae6"
-    foreground    = "#eef2fa"
-    frame_color   = "#ff5470"
+    background    = "#180a04e6"
+    foreground    = "#ffd9a0"
+    frame_color   = "#ffb050"
     timeout       = 0
     override_pause_level = 60
     default_icon  = dialog-warning

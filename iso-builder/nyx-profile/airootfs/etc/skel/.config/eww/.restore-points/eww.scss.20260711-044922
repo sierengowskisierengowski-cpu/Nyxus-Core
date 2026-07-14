@@ -65,20 +65,20 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
   border: 1px solid transparent;
   border-radius: 16px;
   padding: 4px 12px;
-  /* PLUM rework (rev 2026-07-11d): deep plum ink #1a0b2e->#12001c at
-     ~90% so the blur pulls the wallpaper THROUGH the felt; saturated
-     violet rim; white sheen capped at 4% (was the milky film). */
   background-image:
     linear-gradient(180deg,
-      rgba(26, 11, 46, 0.92) 0%,
-      rgba(18, 0, 28, 0.88) 100%),
+      rgba(13, 16, 28, 0.84) 0%,
+      rgba(5, 6, 10, 0.72) 100%),
     linear-gradient(100deg,
-      #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%);
+      rgba($nyxus-accent-primary, 0.70) 0%,
+      rgba($nyxus-accent-ok, 0.55) 32%,
+      rgba($nyxus-accent-secondary, 0.70) 64%,
+      rgba($nyxus-accent-warn, 0.60) 100%);
   background-origin: border-box;
   background-clip: padding-box, border-box;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 0 36px rgba(120, 75, 255, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 36px rgba($nyxus-accent-ok, 0.10);
 }
 
 /* Window surface is 100% wide; this margin cuts the symmetric floating
@@ -92,14 +92,14 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
   border-top: 2px solid transparent;
   background-image:
     linear-gradient(180deg,
-      rgba(26, 11, 46, 0.92),
-      rgba(18, 0, 28, 0.88)),
+      rgba(13, 16, 28, 0.86),
+      rgba(5, 6, 10, 0.74)),
     linear-gradient(90deg,
-      #ff3cac 0%, #784bff 33%, #2bd2ff 66%, #ff3cac 100%);
+      $nyxus-accent-primary 0%, $nyxus-accent-ok 26%, $nyxus-accent-secondary 52%, $nyxus-accent-warn 78%, $nyxus-accent-primary 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -16px 34px rgba(120, 75, 255, 0.08),
-    inset 0 16px 34px rgba(150, 90, 255, 0.05);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -16px 34px rgba($nyxus-accent-primary, 0.10),
+    inset 0 16px 34px rgba($nyxus-accent-secondary, 0.06);
 }
 
 /* Floating ticker ribbon - mirrors the bottom bar's inset, thinner rim
@@ -111,13 +111,15 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
   border-radius: 12px;
   background-image:
     linear-gradient(180deg,
-      rgba(26, 11, 46, 0.92),
-      rgba(18, 0, 28, 0.88)),
+      rgba(10, 13, 24, 0.82),
+      rgba(5, 6, 10, 0.70)),
     linear-gradient(90deg,
-      #2bd2ff 0%, #784bff 50%, #ff3cac 100%);
+      rgba($nyxus-accent-secondary, 0.65) 0%,
+      rgba($nyxus-accent-ok, 0.55) 45%,
+      rgba($nyxus-accent-primary, 0.65) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -10px 24px rgba(150, 90, 255, 0.07);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -10px 24px rgba($nyxus-accent-ok, 0.08);
 }
 .bar-bottom > * { min-height: 0; }
 .bar-bottom .bar-cluster { min-height: 0; }
@@ -130,29 +132,27 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
    STARFALL shared vessel. Referenced by .brand/.clock/.cava-box/
    .ticker-box (and free for any other bar vessel to adopt). */
 @mixin moonstone {
-  /* PLUM rework (rev 2026-07-11d): deep plum crystal, white overlays
-     cut to 3-5% (they were the milky film); saturated purple border. */
   background-image:
     radial-gradient(circle at 50% 135%,
-      rgba(168, 130, 255, 0.38) 0%,
-      rgba(120, 85, 220, 0.13) 46%,
+      rgba(168, 130, 255, 0.42) 0%,
+      rgba(120, 85, 220, 0.14) 46%,
       rgba(0, 0, 0, 0) 72%),
     linear-gradient(120deg,
       rgba(255, 255, 255, 0.00) 5%,
-      rgba(255, 255, 255, 0.05) 12%,
+      rgba(255, 255, 255, 0.20) 12%,
       rgba(255, 255, 255, 0.00) 21%),
     linear-gradient(180deg,
-      rgba(228, 222, 255, 0.05) 0%,
-      rgba(26, 11, 46, 0.78) 20%,
-      rgba(18, 0, 28, 0.94) 100%);
-  border: 1px solid rgba(168, 130, 255, 0.55);
+      rgba(228, 222, 255, 0.16) 0%,
+      rgba(28, 16, 52, 0.60) 20%,
+      rgba(5, 2, 12, 0.95) 100%);
+  border: 1px solid rgba(214, 205, 255, 0.42);
   color: #f2f0ff;
   text-shadow: 0 0 9px rgba(255, 255, 255, 0.45);
   box-shadow:
     0 0 10px rgba(170, 140, 255, 0.20),
     0 0 26px rgba(140, 100, 255, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 -7px 14px rgba(150, 105, 255, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -7px 14px rgba(150, 105, 255, 0.22),
     inset 0 0 8px rgba(0, 0, 0, 0.22);
 }
 
@@ -161,10 +161,7 @@ $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
 .pill {
   padding: 2px 6px;
   border-radius: 8px;   /* STARFALL unified vessel radius */
-  /* PLUM rework (rev 2026-07-11d) */
-  background: linear-gradient(180deg,
-    rgba(26, 11, 46, 0.90) 0%,
-    rgba(18, 0, 28, 0.94) 100%);
+  background: $void-card;
   border: 1px solid rgba($nyxus-accent-primary, 0.38);
   color: $text;
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
@@ -2252,11 +2249,8 @@ scale slider {
 /* -- mini HUD tile: glyph + small-caps neon label + mono value -------- */
 .hud-tile {
   padding: 1px 8px;
-  border-radius: 8px;   /* STARFALL unified vessel radius */
-  /* PLUM rework (rev 2026-07-11d) */
-  background: linear-gradient(180deg,
-    rgba(26, 11, 46, 0.90) 0%,
-    rgba(18, 0, 28, 0.94) 100%);
+  border-radius: 4px;
+  background: $void-card;
   border: 1px solid $hairline;
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.30);
   transition: all 180ms ease;

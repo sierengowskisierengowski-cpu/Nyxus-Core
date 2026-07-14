@@ -1,14 +1,16 @@
-/* PRISM glass — magenta/cyan iridescent on deep void */
+/* NYXUS · STARFALL — start menu (rev 2026-07-11)
+ * Moonstone night-sky glass over the baked wallpaper slab; keeps the
+ * Permanent Marker / Caveat brand hand, selection burns ember. */
 * {
-    bg-deep:   #05060a;
-    bg-card:   #0a0d14;
-    text-hi:   #eef2fa;
-    text-lo:   rgba(238, 242, 250, 0.55);
-    hairline:  rgba(255, 73, 148, 0.35);
-    accent:    #ff4994;
-    accent2:   #26ff39;
-    glass-bg:  rgba(5, 6, 10, 0.88);
-    glass-line: rgba(38, 255, 57, 0.35);
+    bg-deep:   #070310;
+    bg-card:   rgba(16, 8, 32, 0.72);
+    text-hi:   #f2f0ff;
+    text-lo:   rgba(214, 205, 255, 0.55);
+    hairline:  rgba(214, 205, 255, 0.32);
+    accent:    #ffb050;
+    accent2:   #a882ff;
+    glass-bg:  rgba(7, 3, 16, 0.92);
+    glass-line: rgba(214, 205, 255, 0.42);
 
     background-color: transparent;
     text-color: @text-hi;
@@ -16,8 +18,9 @@
 
 window {
     width: 720px;
+    background-image: url("~/.config/nyxus/backdrops/starfall-backdrop-card.png", both);
     background-color: @glass-bg;
-    border: 2px;
+    border: 1px;
     border-color: @glass-line;
     border-radius: 16px;
     padding: 0;
@@ -65,7 +68,7 @@ listview {
 }
 
 element {
-    background-color: rgba(10, 13, 20, 0.85);
+    background-color: @bg-card;
     text-color: @text-hi;
     border: 1px;
     border-color: @hairline;
@@ -79,10 +82,10 @@ element selected.normal,
 element selected.alternate.normal,
 element selected.urgent,
 element selected.active {
-    background-color: @accent;
-    text-color: #05060a;
+    background-color: rgba(255, 140, 40, 0.18);
+    text-color: #ffd9a0;
     border: 1px;
-    border-color: @accent;
+    border-color: rgba(255, 176, 80, 0.60);
     border-radius: 10px;
 }
 
@@ -107,7 +110,7 @@ mode-switcher {
 }
 
 button {
-    background-color: rgba(10, 13, 20, 0.85);
+    background-color: @bg-card;
     text-color: @text-lo;
     border: 1px;
     border-color: @hairline;
@@ -117,8 +120,8 @@ button {
 }
 
 button selected {
-    background-color: @accent;
-    text-color: #05060a;
-    border-color: @accent;
+    background-color: rgba(255, 140, 40, 0.18);
+    text-color: #ffd9a0;
+    border-color: rgba(255, 176, 80, 0.60);
     border-radius: 10px;
 }

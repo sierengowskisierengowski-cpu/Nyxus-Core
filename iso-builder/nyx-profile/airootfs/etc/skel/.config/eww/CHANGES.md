@@ -91,6 +91,57 @@ sudo sensors-detect --auto                             # one-time, enables fan R
 
 ---
 
+## PLUM rework (rev 2026-07-11d)
+
+- **Milky film fixed**: the wash came from stacked low-alpha overlays -
+  white top-sheens (6-8%), the moonstone facet streak (20%) + top sheen
+  (16-22%), broad 26-42px violet inset glows (up to 13%) and the aurora
+  curtain (up to 7%). All whites now 3-5%, violet insets and aurora
+  halved.
+- **Deep plum base**: starlight felt re-baked `#1a0b2e -> #12001c` at
+  ~88% alpha (`gen-starlight-assets.py` FELT_* + FELT_ALPHA), ink layer
+  under it thinned to ~60% plum so the Hyprland blur pulls the galaxy
+  through the felt. Vessels (pills/tiles/moonstone) share the same plum
+  band with saturated purple borders (`rgba(168,130,255,.55)`).
+- **Starfield texture**: the felt IS the starfield (dark plum velvet +
+  animated pinpoint stars + 16-frame twinkle + faint nebula haze) -
+  regenerated, not layered over.
+- **Fireball -> shooting star**: perimeter comet retuned - white-hot
+  core, tail amber `rgba(255,200,120)` -> violet `rgba(178,128,255)` ->
+  magenta `rgba(255,60,172)` -> transparent. Ember gold stays as the
+  hover/alert accent.
+
+---
+
+## STARFALL pass (rev 2026-07-11)
+
+Design language: **moonstone night-sky glass + fireball ember**, extended
+from the bars to every clickable surface.
+
+- **Tokens**: ink void `rgba(7,3,16)→rgba(3,1,9)` · moonline border
+  `rgba(214,205,255,.42)` · violet nebula `#a882ff/#784bff` · ember
+  interaction accent `#ffb050/#ff8c28` (the comet's fire) · text `#f2f0ff`.
+- **Wallpaper-derived backdrops**: `nyxus-gen-backdrop` (in `~/.local/bin`)
+  bakes the current wallpaper into blurred/ink-tinted slabs
+  (`~/.config/nyxus/backdrops/`, copy in `assets/`). All eww flyouts,
+  the dashboard, powermenu, hotkey sheet, snap picker, deepcore, plus
+  rofi and wlogout paint it behind their glass. `nyxus-set-wallpaper`
+  re-bakes automatically on wallpaper change.
+- **Bars**: top/bottom rims now speak the rail dialect (`#ff3cac→#784bff→
+  #2bd2ff`); every vessel (pill, HUD tile, clock, ticker, cava, brand,
+  tray) shares the moonstone crystal + unified 8px radius. New tiles:
+  KRN + PKGS (top-left), LOAD moved into CPU tooltip. HUD tiles flip to
+  an **ember alert** state (sys-pulse `chot/mhot/ghot/thot`) when
+  cpu≥85 / ram≥90 / gpu≥90 / temp≥90.
+- **Hyprland 0.55 adoptions**: `decoration:glow` (violet inner glow,
+  focused `a882ff2e` / inactive `784bff12`) + `fadeGlow` animation;
+  group/tab colors moved to the STARFALL trio with ember lock state.
+- **Other surfaces**: rofi launcher/power/startmenu/window-switcher,
+  dunst (moonline frame, ember critical), wlogout (moonstone tiles,
+  full-screen backdrop) all restyled to the same tokens.
+
+---
+
 ## Restore points
 
 Timestamped backups live in `~/.config/eww/.restore-points/`

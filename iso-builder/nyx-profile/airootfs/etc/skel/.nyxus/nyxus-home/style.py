@@ -59,11 +59,11 @@ except Exception:
 # lockstep by nyxus-apply-accent; this file is a registered consumer.
 PALETTE = {
     "mono":   "#e8edf5",
-    "pink":   "#ff4994",
-    "cyan":   "#26ff39",
-    "purple": "#26ffb7",
-    "gold":   "#ff8b26",
-    "indigo": "#26ffb7",
+    "pink":   "#f27531",
+    "cyan":   "#26ffe0",
+    "purple": "#7326ff",
+    "gold":   "#ff7326",
+    "indigo": "#7326ff",
     "green":  "#6dffcf",
     "orange": "#ff7849",
     "blue":   "#4d9fff",
@@ -74,29 +74,20 @@ PALETTE = {
     "void":   "#0f1420",
 }
 
-NEONS = ["#ff4994", "#26ff39", "#26ffb7", "#ff8b26", "#6dffcf",
+NEONS = ["#f27531", "#26ffe0", "#7326ff", "#ff7326", "#6dffcf",
          "#ff7ae5", "#66efff", "#c084fc", "#ffce85"]
 
 
 def _card_css(name, color):
     return f"""
 .card-{name} {{
-    background: rgba(7, 5, 14, 0.93);
-    border: 1px dashed alpha({color}, 0.75);
+    background: rgba(6, 4, 12, 0.62);
+    border: 1px dashed alpha({color}, 0.66);
     border-top: 2px solid {color};
     border-radius: 8px;
     padding: 12px 14px;
     box-shadow: 0 0 18px alpha({color}, 0.34),
                 0 6px 22px rgba(0,0,0,0.55),
-                inset 0 0 24px rgba(0,0,0,0.18);
-    transition: box-shadow 320ms ease, border-color 320ms ease,
-                background-color 320ms ease;
-}}
-.card-{name}:hover {{
-    background: rgba(9, 6, 18, 0.97);
-    border-color: alpha({color}, 0.95);
-    box-shadow: 0 0 30px alpha({color}, 0.55),
-                0 10px 34px rgba(0,0,0,0.65),
                 inset 0 0 24px rgba(0,0,0,0.18);
 }}
 .card-{name}-header-glyph {{
@@ -197,48 +188,10 @@ def _card_css(name, color):
 """
 
 
-def _ghost_css(name, color):
-    return f"""
-.ghost-glyph-{name} {{
-    color: {color};
-    font-size: 16px;
-    text-shadow: 0 0 10px {color}, 0 0 18px alpha({color}, 0.55);
-}}
-.ghost-title-{name} {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 12px;
-    font-weight: 700;
-    color: {color};
-    letter-spacing: 0.30em;
-    text-shadow: 0 0 8px alpha({color}, 0.45);
-}}
-.ghost-rule-{name} {{
-    background: linear-gradient(to right,
-        {color}, alpha({color}, 0.35), transparent);
-    min-height: 1px;
-}}
-.ghost-footer-{name} {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    color: alpha({color}, 0.60);
-    letter-spacing: 0.16em;
-    padding-top: 4px;
-}}
-.ring-title-{name} {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    font-weight: 700;
-    color: {color};
-    letter-spacing: 0.26em;
-    text-shadow: 0 0 8px alpha({color}, 0.55);
-}}
-"""
-
-
 def build_css():
     css = format_css("""
 window, .home-root {{
-    background: rgba(5, 1, 13, 0.97);
+    background: rgba(6, 0, 16, 0.65);
     color: {WHITE_OFF};
     font-family: "Inter Display", "JetBrains Mono", sans-serif;
 }}
@@ -474,104 +427,6 @@ scale slider {{
 """)
     for name in ("pink", "cyan", "purple", "gold", "green", "orange", "red", "mono"):
         css += _card_css(name, PALETTE[name])
-    for name in ("pink", "cyan", "purple", "gold", "green", "orange", "red",
-                 "blue", "mono"):
-        css += _ghost_css(name, PALETTE[name])
-
-    # GHOST HUD chrome (hud.py) — borderless glass, laser rule, neon rings
-    css += f"""
-.ghost-card {{
-    background: rgba(6, 3, 13, 0.91);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 10px;
-    padding: 14px 18px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.45),
-                inset 0 0 30px rgba(0,0,0,0.22);
-    transition: background-color 320ms ease, box-shadow 320ms ease;
-}}
-.ghost-card:hover {{
-    background: rgba(8, 4, 16, 0.96);
-    border-color: rgba(255, 255, 255, 0.14);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.60),
-                inset 0 0 30px rgba(0,0,0,0.22);
-}}
-.ring-value {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 19px;
-    font-weight: 700;
-    color: {WHITE_OFF};
-    text-shadow: 0 0 12px alpha({WHITE_OFF}, 0.45);
-}}
-.ring-sub {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 8px;
-    color: {GREY_MID};
-    letter-spacing: 0.14em;
-}}
-.hud-mini-title {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    font-weight: 700;
-    color: {GREY_MID};
-    letter-spacing: 0.24em;
-}}
-.hud-mini-value {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 10px;
-    color: {GREY_LIGHT};
-    letter-spacing: 0.06em;
-}}
-.hud-temp-strip {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    color: {GREY_LIGHT};
-    letter-spacing: 0.10em;
-}}
-.hud-dim-note {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    color: {GREY_MID};
-    letter-spacing: 0.12em;
-}}
-.fan-name {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    color: {GREY_MID};
-    letter-spacing: 0.16em;
-}}
-.fan-rpm {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 13px;
-    font-weight: 700;
-    color: {WHITE_OFF};
-    text-shadow: 0 0 8px alpha({WHITE_OFF}, 0.35);
-}}
-.net-rate {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 15px;
-    font-weight: 700;
-    color: {WHITE_OFF};
-    text-shadow: 0 0 8px alpha({WHITE_OFF}, 0.35);
-}}
-.net-ifaces {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    color: {GREY_MID};
-    letter-spacing: 0.10em;
-}}
-.proc-name {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
-    color: {WHITE_OFF};
-    letter-spacing: 0.03em;
-}}
-.proc-pct {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
-    font-weight: 700;
-    color: {GREY_LIGHT};
-}}
-"""
 
     # System Pulse metric labels
     css += f"""
@@ -587,58 +442,6 @@ scale slider {{
     font-size: 11px;
     color: {PALETTE['text']};
 }}
-.music-title {{
-    font-family: "Inter Display", cursive;
-    font-size: 19px;
-    font-weight: 700;
-    color: {WHITE_OFF};
-    text-shadow: 0 0 10px alpha({WHITE_OFF}, 0.45);
-    letter-spacing: 0.02em;
-}}
-.music-artist {{
-    font-family: "Inter Display", cursive;
-    font-size: 15px;
-    color: {GREY_LIGHT};
-    letter-spacing: 0.03em;
-}}
-.music-album {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    color: {GREY_MID};
-    letter-spacing: 0.14em;
-}}
-.music-time {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    color: {GREY_LIGHT};
-    letter-spacing: 0.08em;
-}}
-.music-art {{
-    border-radius: 6px;
-    border: 1px dashed alpha({PALETTE['red']}, 0.45);
-    background: rgba(0, 0, 0, 0.45);
-    box-shadow: 0 0 16px alpha({PALETTE['red']}, 0.30);
-}}
-.music-art-fallback {{
-    font-size: 40px;
-    color: alpha({PALETTE['red']}, 0.65);
-    border-radius: 6px;
-    border: 1px dashed alpha({PALETTE['red']}, 0.45);
-    background: rgba(0, 0, 0, 0.45);
-    text-shadow: 0 0 14px alpha({PALETTE['red']}, 0.55);
-}}
-.music-empty-glyph {{
-    font-size: 44px;
-    color: alpha({PALETTE['red']}, 0.75);
-    text-shadow: 0 0 18px alpha({PALETTE['red']}, 0.55),
-                 0 0 34px alpha({PALETTE['red']}, 0.30);
-}}
-.music-hint {{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 9px;
-    color: {GREY_MID};
-    letter-spacing: 0.12em;
-}}
 """
     return css
 
@@ -648,16 +451,9 @@ def install_css():
     provider.load_from_data(build_css().encode("utf-8"))
     display = Gdk.Display.get_default()
     if display is not None:
-        # PRIORITY_USER + 1: nyxus_chrome.py installs its universal
-        # monochrome-glass CSS at PRIORITY_USER, and in GTK4 provider
-        # priority beats selector specificity — at APPLICATION priority
-        # every card/ghost background here was silently collapsed to the
-        # chrome's 0.55 glass and the dashboard blended into the graffiti.
-        # The home page owns its full design system, so it outranks chrome.
-        # (Providers are per-process: this cannot leak into other apps.)
         Gtk.StyleContext.add_provider_for_display(
             display, provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_USER + 1,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
 
 # ── palette guard (rev r13) ─────────────────────────────────────────

@@ -45,7 +45,7 @@ while True:
     # Perimeter comet: ONE light travels clockwise around the screen edge,
     # handed off bar-to-bar at the corners. ~7s lap. Off-quadrant bars get
     # -60 (off-canvas) so only one bar shows the comet at a time.
-    cang = (t * (360.0 / 10.0)) % 360.0
+    cang = (t * (360.0 / 32.0)) % 360.0
     ctop = cright = cbot = cleft = -60.0
     if cang < 90.0:
         ctop = cang / 0.9                       # left -> right across top

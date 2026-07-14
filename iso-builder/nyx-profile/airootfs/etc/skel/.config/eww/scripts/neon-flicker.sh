@@ -19,16 +19,19 @@ if [[ "${NYXUS_NEON_FLICKER:-on}" == "off" ]]; then
   exec sleep infinity
 fi
 
-# a burst is a quick irregular dip-recover sequence
+# a burst is a quick irregular dip-recover sequence; the occasional
+# hard double-blink sells the failing-neon-tube look
 BURSTS=(
   "0.45 1 0.70 1"
   "0.35 0.90 0.55 1"
   "0.60 1 0.40 0.85 1"
   "0.50 1"
+  "0.25 0.85 0.30 1"
+  "0.55 1 0.30 0.90 0.60 1"
 )
 
 while :; do
-  sleep $(( 5 + RANDOM % 6 ))
+  sleep $(( 3 + RANDOM % 5 ))
   burst="${BURSTS[$(( RANDOM % ${#BURSTS[@]} ))]}"
   for v in $burst; do
     echo "$v"

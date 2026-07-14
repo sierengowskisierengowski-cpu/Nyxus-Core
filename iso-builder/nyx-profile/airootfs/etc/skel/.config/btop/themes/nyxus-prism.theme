@@ -1,6 +1,6 @@
 # ════════════════════════════════════════════════════════════════════
 #  NYXUS · btop · OBSIDIAN PRISM · rev 2026-07-07
-#  Palette: #ff4994 magenta · #26ff39 cyan · #26ffb7 violet · #ff8b26 gold
+#  Palette: #f27531 magenta · #26ffe0 cyan · #7326ff violet · #ff7326 gold
 #  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 
@@ -14,10 +14,10 @@ theme[main_fg]="#eef2fa"
 theme[title]="#ffffff"
 
 # Highlight color for keyboard shortcuts
-theme[hi_fg]="#ff4994"
+theme[hi_fg]="#f27531"
 
 # Background color of selected item in processes box
-theme[selected_bg]="#26ffb7"
+theme[selected_bg]="#7326ff"
 
 # Foreground color of selected item in processes box
 theme[selected_fg]="#ffffff"
@@ -32,58 +32,58 @@ theme[graph_text]="#c8ccd6"
 theme[meter_bg]="#0a0a14"
 
 # Misc colors for processes box (mini-graphs, details)
-theme[proc_misc]="#26ff39"
+theme[proc_misc]="#26ffe0"
 
 # Box outline colors
-theme[cpu_box]="#26ffb7"
-theme[mem_box]="#26ff39"
-theme[net_box]="#ff4994"
-theme[proc_box]="#ff8b26"
+theme[cpu_box]="#7326ff"
+theme[mem_box]="#26ffe0"
+theme[net_box]="#f27531"
+theme[proc_box]="#ff7326"
 
 # Box divider line and small boxes
 theme[div_line]="#3a4152"
 
 # Temperature graph gradient (cool → hot)
-theme[temp_start]="#26ff39"
-theme[temp_mid]="#ff8b26"
+theme[temp_start]="#26ffe0"
+theme[temp_mid]="#ff7326"
 theme[temp_end]="#ff5470"
 
 # CPU graph gradient (violet → cyan → magenta)
-theme[cpu_start]="#26ffb7"
-theme[cpu_mid]="#26ff39"
-theme[cpu_end]="#ff4994"
+theme[cpu_start]="#7326ff"
+theme[cpu_mid]="#26ffe0"
+theme[cpu_end]="#f27531"
 
 # Mem/Disk free meter
-theme[free_start]="#26ffb7"
+theme[free_start]="#7326ff"
 theme[free_mid]="#a06bff"
 theme[free_end]="#c084fc"
 
 # Mem/Disk cached meter
-theme[cached_start]="#26ff39"
+theme[cached_start]="#26ffe0"
 theme[cached_mid]="#66efff"
 theme[cached_end]="#7dd3fc"
 
 # Mem/Disk available meter
-theme[available_start]="#ff8b26"
+theme[available_start]="#ff7326"
 theme[available_mid]="#ffce85"
 theme[available_end]="#ffd166"
 
 # Mem/Disk used meter
-theme[used_start]="#ff4994"
+theme[used_start]="#f27531"
 theme[used_mid]="#ff5fc0"
 theme[used_end]="#ff7ae5"
 
 # Download graph gradient
-theme[download_start]="#26ff39"
+theme[download_start]="#26ffe0"
 theme[download_mid]="#66efff"
 theme[download_end]="#a0f4ff"
 
 # Upload graph gradient
-theme[upload_start]="#ff4994"
+theme[upload_start]="#f27531"
 theme[upload_mid]="#ff5fc0"
 theme[upload_end]="#ff7ae5"
 
 # Process box gradient (from grey to prism)
-theme[process_start]="#26ffb7"
-theme[process_mid]="#26ff39"
-theme[process_end]="#ff4994"
+theme[process_start]="#7326ff"
+theme[process_mid]="#26ffe0"
+theme[process_end]="#f27531"

@@ -1,10 +1,12 @@
 /* ════════════════════════════════════════════════════════════════════════════
-   NYXUS · wlogout · OBSIDIAN PRISM · rev 2026-07-07
-   Palette: #ff4994 magenta · #26ff39 cyan · #26ffb7 violet · #ff8b26 gold
-   Deep-void frosted glass with iridescent prism rims. Matches the EWW
-   powermenu overlay, rofi power.rasi, and the Hyprland prism border loop.
+   NYXUS · wlogout · STARFALL · rev 2026-07-11
+   Moonstone night-sky glass: the baked wallpaper slab (nyxus-gen-backdrop)
+   ghosts through the frosted void; tiles are moonstone crystal vessels;
+   hover burns ember like the perimeter fireball. Destructive actions
+   (reboot / shutdown) read hot red. Matches the EWW powermenu overlay,
+   rofi power.rasi, and the Hyprland violet glow.
    NOTE: wlogout's GTK CSS parser does NOT follow @import — all colors
-   are inlined below. Keep in lockstep with the prism accent set.
+   are inlined below. Keep in lockstep with the STARFALL token set.
    © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ════════════════════════════════════════════════════════════════════════════ */
 
@@ -15,16 +17,18 @@
     letter-spacing: 0.18em;
 }
 
-/* ── DEEP VOID CANVAS · frosted glass over wallpaper ─────────────── */
+/* ── NIGHT-SKY CANVAS · baked wallpaper slab under frosted ink ────── */
 window {
-    background-color: rgba(5, 6, 10, 0.82) ;
-    background-image: none                  ;
-    color: #eef2fa                          ;
+    background-color: rgba(7, 3, 16, 0.86)   ;
+    background-image: url("/home/cosmic/.config/nyxus/backdrops/starfall-backdrop.png");
+    background-size: cover                    ;
+    background-position: center               ;
+    color: #f2f0ff                            ;
 }
 
-/* ── BUTTON BASE · prism glass tile ──────────────────────────────── */
+/* ── BUTTON BASE · moonstone crystal vessel ──────────────────────── */
 button {
-    background-color: rgba(10, 13, 20, 0.88)         ;
+    background-color: rgba(16, 8, 32, 0.80)          ;
     background-image: none;
     background-repeat: no-repeat;
     background-position: center 30%;
@@ -32,12 +36,14 @@ button {
 
     border-style:  solid                              ;
     border-width:  1px                                ;
-    border-color:  rgba(38, 255, 183, 0.35)           ;
+    border-color:  rgba(214, 205, 255, 0.42)          ;
     border-radius: 20px                               ;
 
-    color:        #c8ccd6                             ;
+    color:        #d6cdff                             ;
     box-shadow:   0 10px 32px rgba(0, 0, 0, 0.55),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.06);
+                  0 0 14px rgba(170, 140, 255, 0.16),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.14),
+                  inset 0 -18px 34px rgba(150, 105, 255, 0.14);
     outline:      none                                ;
 
     margin:       36px;
@@ -47,13 +53,14 @@ button {
 button:focus,
 button:active,
 button:hover {
-    background-color: rgba(12, 16, 26, 0.92)  ;
-    border-color:     rgba(38, 255, 57, 0.60);
-    color:            #ffffff                 ;
+    background-color: rgba(24, 13, 44, 0.88)  ;
+    border-color:     rgba(255, 176, 80, 0.70);
+    color:            #ffd9a0                 ;
     box-shadow:       0 12px 36px rgba(0, 0, 0, 0.60),
-                      0 0 26px rgba(38, 255, 57, 0.35),
-                      0 0 34px rgba(255, 73, 148, 0.25),
-                      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+                      0 0 26px rgba(255, 140, 40, 0.35),
+                      0 0 40px rgba(170, 140, 255, 0.20),
+                      inset 0 1px 0 rgba(255, 244, 214, 0.22),
+                      inset 0 -18px 34px rgba(255, 132, 32, 0.16);
     outline:          none                    ;
 }
 
@@ -62,21 +69,21 @@ button:hover {
 #suspend:hover,  button#suspend:hover,  .suspend:hover,  button.suspend:hover,
 #hibernate:hover,button#hibernate:hover,.hibernate:hover,button.hibernate:hover,
 #logout:hover,   button#logout:hover,   .logout:hover,   button.logout:hover {
-    border-color: rgba(38, 255, 57, 0.60);
-    color:        #26ff39                 ;
+    border-color: rgba(255, 176, 80, 0.70);
+    color:        #ffd9a0                 ;
 }
 
 /* ── DESTRUCTIVE · reboot / shutdown read as danger ──────────────── */
 #reboot, button#reboot, .reboot, button.reboot,
 #shutdown, button#shutdown, .shutdown, button.shutdown {
-    border-color: rgba(255, 84, 112, 0.35) ;
-    background-color: rgba(24, 9, 16, 0.88);
+    border-color: rgba(255, 84, 112, 0.40) ;
+    background-color: rgba(28, 8, 20, 0.84);
 }
 
 #reboot:hover,   button#reboot:hover,   .reboot:hover,   button.reboot:hover,
 #shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
     border-color:     rgba(255, 84, 112, 0.85);
-    background-color: rgba(34, 10, 18, 0.94)  ;
+    background-color: rgba(38, 10, 24, 0.92)  ;
     color:            #ff5470                 ;
     box-shadow:       0 12px 36px rgba(0, 0, 0, 0.60),
                       0 0 34px rgba(255, 84, 112, 0.45),

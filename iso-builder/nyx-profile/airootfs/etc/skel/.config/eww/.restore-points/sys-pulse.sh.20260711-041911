@@ -57,13 +57,5 @@ hot=0
 [[ "$cpu"  =~ ^[0-9]+$ ]] && (( cpu  >= 90 )) && hot=1
 [[ "$temp" =~ ^[0-9]+$ ]] && (( temp >= 97 )) && hot=1
 
-# ── per-tile ember alerts (STARFALL rev 2026-07-11) — computed here so
-#    yuck never has to coerce string JSON fields into numbers ──
-chot=0; mhot=0; thot=0; ghot=0
-[[ "$cpu"  =~ ^[0-9]+$ ]] && (( cpu  >= 85 )) && chot=1
-[[ "$mem"  =~ ^[0-9]+$ ]] && (( mem  >= 90 )) && mhot=1
-[[ "$temp" =~ ^[0-9]+$ ]] && (( temp >= 90 )) && thot=1
-[[ "$gpu"  =~ ^[0-9]+$ ]] && (( gpu  >= 90 )) && ghot=1
-
-printf '{"cpu":"%s","mem":"%s","temp":"%s","load":"%s","swap":"%s","gpu":"%s","gputemp":"%s","fan":"%s","netrx":"%s","nettx":"%s","hot":"%s","chot":%s,"mhot":%s,"thot":%s,"ghot":%s}\n' \
-  "$cpu" "$mem" "$temp" "$load" "$swap" "$gpu" "$gputemp" "$fan" "$netrx" "$nettx" "$hot" "$chot" "$mhot" "$thot" "$ghot"
+printf '{"cpu":"%s","mem":"%s","temp":"%s","load":"%s","swap":"%s","gpu":"%s","gputemp":"%s","fan":"%s","netrx":"%s","nettx":"%s","hot":"%s"}\n' \
+  "$cpu" "$mem" "$temp" "$load" "$swap" "$gpu" "$gputemp" "$fan" "$netrx" "$nettx" "$hot"

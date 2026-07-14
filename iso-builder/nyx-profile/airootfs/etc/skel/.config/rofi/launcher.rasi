@@ -1,29 +1,30 @@
-/* NYXUS · Obsidian Prism — app launcher
- * Palette: #ff4994 · #26ff39 · #26ffb7 · #ff8b26 */
+/* NYXUS · STARFALL — app launcher (rev 2026-07-11)
+ * Moonstone night-sky glass: baked wallpaper slab behind violet-silver
+ * crystal; selection burns ember like the perimeter fireball.
+ * Matches the eww bars/flyouts. Backdrop: nyxus-gen-backdrop. */
 
 * {
-    bg:         #05060a;
-    bar-bg:     rgba(5, 6, 10, 0.90);
-    widget-bg:  rgba(10, 13, 20, 0.85);
-    active:     #26ff39;
-    inactive:   rgba(238, 242, 250, 0.35);
-    highlight:  #ff4994;
-    violet:     #26ffb7;
-    gold:       #ff8b26;
-    text:       #eef2fa;
-    sep:        rgba(38, 255, 183, 0.35);
-    selected-bg:rgba(255, 73, 148, 0.18);
-    glass-line: rgba(38, 255, 57, 0.35);
+    ink:        rgba(7, 3, 16, 0.92);
+    vessel:     rgba(16, 8, 32, 0.72);
+    moonline:   rgba(214, 205, 255, 0.42);
+    moontext:   #f2f0ff;
+    dim:        rgba(214, 205, 255, 0.45);
+    violet:     #a882ff;
+    ember:      #ffb050;
+    ember-hot:  #ffd9a0;
+    ember-bg:   rgba(255, 140, 40, 0.16);
+    ember-line: rgba(255, 176, 80, 0.55);
 
     font:                   "JetBrainsMono Nerd Font 12";
     background-color:       transparent;
-    text-color:             @text;
+    text-color:             @moontext;
 }
 
 window {
-    background-color:       @bar-bg;
-    border:                 2px;
-    border-color:           @glass-line;
+    background-image:       url("~/.config/nyxus/backdrops/starfall-backdrop-card.png", both);
+    background-color:       @ink;
+    border:                 1px;
+    border-color:           @moonline;
     border-radius:          16px;
     width:                  520px;
     padding:                16px;
@@ -38,10 +39,10 @@ mainbox {
 }
 
 inputbar {
-    background-color:       @widget-bg;
+    background-color:       @vessel;
     border-radius:          10px;
     border:                 1px;
-    border-color:           @glass-line;
+    border-color:           @moonline;
     padding:                10px 14px;
     spacing:                8px;
     children:               [ prompt, entry ];
@@ -49,15 +50,15 @@ inputbar {
 
 prompt {
     background-color:       transparent;
-    text-color:             @gold;
+    text-color:             @ember;
     font:                   "JetBrainsMono Nerd Font 13";
     vertical-align:         0.5;
 }
 
 entry {
     background-color:       transparent;
-    text-color:             @text;
-    placeholder-color:      @inactive;
+    text-color:             @moontext;
+    placeholder-color:      @dim;
     placeholder:            "search apps...";
     vertical-align:         0.5;
     cursor:                 text;
@@ -77,7 +78,7 @@ listview {
 
 element {
     background-color:       transparent;
-    text-color:             @text;
+    text-color:             @moontext;
     border-radius:          10px;
     padding:                8px 12px;
     cursor:                 pointer;
@@ -98,23 +99,23 @@ element-text {
 
 element normal.normal {
     background-color:       transparent;
-    text-color:             @text;
+    text-color:             @moontext;
 }
 
 element selected.normal {
-    background-color:       @selected-bg;
-    text-color:             @active;
+    background-color:       @ember-bg;
+    text-color:             @ember-hot;
     border:                 1px;
-    border-color:           @sep;
+    border-color:           @ember-line;
 }
 
 element alternate.normal {
     background-color:       transparent;
-    text-color:             @text;
+    text-color:             @moontext;
 }
 
 scrollbar {
-    background-color:       @widget-bg;
+    background-color:       @vessel;
     handle-color:           @violet;
     handle-width:           3px;
     border-radius:          2px;

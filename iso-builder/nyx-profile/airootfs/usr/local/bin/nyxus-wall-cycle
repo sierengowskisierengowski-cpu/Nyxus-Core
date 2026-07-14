@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-wall-cycle <on|off|toggle|status|once>  ·  rev r1 · 2026-07-11
+#                                                   (Comet-Fire add-ons)
+#
+# Ambient wallpaper slideshow: every INTERVAL seconds pick a fresh wall
+# from the pool and swap with a randomly chosen awww/swww transition
+# (grow-from-cursor ripple, directional wipes, outer collapse, comet
+# sweep). Rides nyxus-set-wallpaper, so wallpaper.conf persistence and
+# the follow-wallpaper accent re-theme keep working exactly as on a
+# manual Super+Alt+W swap.
+#
+#   on|off|toggle   start/stop the daemon (notifies)
+#   once            single random swap with a random transition
+#   status          "on" / "off"
+#
+# Interval override:  NYXUS_WALL_CYCLE_SECS in ~/.config/eww/nyxus.conf
+# or the environment (default 900 = 15 min).
+# Bound: Super+Alt+Shift+W (nyxus-cometfire.conf).
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+
+PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-wall-cycle.pid"
+CONF="${HOME}/.config/eww/nyxus.conf"
+[ -r "${CONF}" ] && . "${CONF}" 2>/dev/null || true
+INTERVAL="${NYXUS_WALL_CYCLE_SECS:-900}"
+
+# comet-fire transition pool — weighted toward the showpieces
+TRANSITIONS=(grow grow outer wipe wave center any)
+
+running() { [[ -r "${PIDFILE}" ]] && kill -0 "$(cat "${PIDFILE}")" 2>/dev/null; }
+
+pick_wall() {
+  local current=""
+  [[ -r "${HOME}/.config/nyxus/wallpaper.conf" ]] \
+    && current="$(grep -m1 '^WALLPAPER_PATH=' "${HOME}/.config/nyxus/wallpaper.conf" | cut -d'"' -f2)"
+  find "${HOME}/.config/hypr/walls" /usr/share/backgrounds/nyxus \
+       -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) 2>/dev/null \
+    | grep -vE '(bar-|taskbar|topbar|rightbar|-bg\.png$)' \
+    | grep -vxF "${current}" | shuf -n1
+}
+
+swap_once() {
+  local wall t
+  wall="$(pick_wall)"
+  [[ -z "${wall}" ]] && return 1
+  t="${TRANSITIONS[RANDOM % ${#TRANSITIONS[@]}]}"
+  NYXUS_WALL_TRANSITION="${t}" NYXUS_WALL_TRANSITION_DURATION="1.6" \
+    nyxus-set-wallpaper "${wall}" >/dev/null 2>&1
+}
+
+daemon() {
+  echo $$ > "${PIDFILE}"
+  trap 'rm -f "${PIDFILE}"' EXIT INT TERM
+  while :; do
+    sleep "${INTERVAL}" &
+    wait $! || break
+    swap_once
+  done
+}
+
+case "${1:-toggle}" in
+  status) running && echo on || echo off ;;
+  once)   swap_once && echo "swapped" ;;
+  on)
+    running && { echo "wall-cycle: already on"; exit 0; }
+    nohup "$0" __daemon >/dev/null 2>&1 &
+    notify-send -u low -t 2500 "◤ NYXUS ◥ WALL CYCLE" \
+      "ambient slideshow on — every $((INTERVAL / 60)) min" 2>/dev/null
+    echo "wall-cycle: on"
+    ;;
+  off)
+    running || { echo "wall-cycle: already off"; exit 0; }
+    kill "$(cat "${PIDFILE}")" 2>/dev/null
+    notify-send -u low -t 2500 "◤ NYXUS ◥ WALL CYCLE" "slideshow off" 2>/dev/null
+    echo "wall-cycle: off"
+    ;;
+  toggle) running && exec "$0" off || exec "$0" on ;;
+  __daemon) daemon ;;
+  *) echo "usage: nyxus-wall-cycle <on|off|toggle|status|once>" >&2; exit 2 ;;
+esac
