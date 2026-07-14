@@ -238,4 +238,38 @@ pgrep -x swaync >/dev/null && command -v swaync-client >/dev/null && \
   timeout 5 swaync-client -rs 2>/dev/null || true
 pkill -USR1 -x cava 2>/dev/null || true
 
+# ── 5a. propagate the accent to the LIVE compositor border (Phase 3.2a) ──
+# `hyprctl reload` re-reads nyxus-hyprland-general.conf, but the border
+# daemons (nyxus-tintd / nyxus-beatd / nyxus-pulsed) snapshot the border
+# ONCE at startup and then rewrite `general:col.active_border` on every
+# tick/focus change — so a reload alone never sticks while they run, and
+# stopping tintd restores its STALE captured base. To keep borders in
+# lockstep with the accent engine: stop whichever daemons are live, push
+# the freshly-rendered border explicitly, then restart only those that
+# were running so they re-capture the new accent as their base.
+GENERAL_CONF="${HOME}/.config/hypr/conf.d/nyxus-hyprland-general.conf"
+if command -v hyprctl >/dev/null 2>&1 && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] \
+   && [[ -r "${GENERAL_CONF}" ]]; then
+  ACTIVE_BORDER="$(sed -n 's/^[[:space:]]*col\.active_border[[:space:]]*=[[:space:]]*//p'   "${GENERAL_CONF}" | head -1)"
+  INACTIVE_BORDER="$(sed -n 's/^[[:space:]]*col\.inactive_border[[:space:]]*=[[:space:]]*//p' "${GENERAL_CONF}" | head -1)"
+
+  TINT_WAS_ON=off; BEAT_WAS_ON=off
+  command -v nyxus-tint >/dev/null 2>&1 && [[ "$(nyxus-tint status 2>/dev/null)" == on ]] && TINT_WAS_ON=on
+  command -v nyxus-beat >/dev/null 2>&1 && [[ "$(nyxus-beat status 2>/dev/null)" == on ]] && BEAT_WAS_ON=on
+
+  [[ "${BEAT_WAS_ON}" == on ]] && nyxus-beat off >/dev/null 2>&1 || true
+  [[ "${TINT_WAS_ON}" == on ]] && nyxus-tint off >/dev/null 2>&1 || true
+
+  # let the daemons' exit-restore land before we overwrite the border
+  [[ "${TINT_WAS_ON}" == on || "${BEAT_WAS_ON}" == on ]] && sleep 0.3
+
+  [[ -n "${ACTIVE_BORDER}"   ]] && timeout 5 hyprctl keyword general:col.active_border   "${ACTIVE_BORDER}"   >/dev/null 2>&1 || true
+  [[ -n "${INACTIVE_BORDER}" ]] && timeout 5 hyprctl keyword general:col.inactive_border "${INACTIVE_BORDER}" >/dev/null 2>&1 || true
+
+  # nyxus-pulsed re-reads the border each cycle, so it self-heals to the
+  # new accent once the keyword above lands; only tint/beat need a restart.
+  [[ "${TINT_WAS_ON}" == on ]] && nyxus-tint on >/dev/null 2>&1 || true
+  [[ "${BEAT_WAS_ON}" == on ]] && nyxus-beat on >/dev/null 2>&1 || true
+fi
+
 echo "accent: applied '${NAME}' (primary=${NEW_P}, secondary=${NEW_S})"
