@@ -54,15 +54,17 @@ Rectangle {
         cache: true
         onStatusChanged: if (status === Image.Error) visible = false
     }
-    Rectangle {  // heavy wash so the login stays legible on any wall
+    Rectangle {  // light global wash for depth — keep the art sharp/visible
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.62)
+        color: Qt.rgba(0, 0, 0, 0.18)
     }
-    Rectangle {  // subtle purple floor glow (cheap linear gradient)
+    Rectangle {  // right-side scrim so the login column stays legible over the art
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0.0; color: Qt.rgba(121/255, 73/255, 242/255, 0.00) }
-            GradientStop { position: 1.0; color: Qt.rgba(121/255, 73/255, 242/255, 0.14) }
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0.0;  color: Qt.rgba(0, 0, 0, 0.0) }
+            GradientStop { position: 0.52; color: Qt.rgba(0, 0, 0, 0.0) }
+            GradientStop { position: 1.0;  color: Qt.rgba(2/255, 1/255, 8/255, 0.72) }
         }
     }
 
@@ -72,9 +74,10 @@ Rectangle {
                        dateLabel.text = Qt.formatDateTime(new Date(), "dddd · MMMM d").toUpperCase() } }
 
     Column {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: root.height * 0.10
+        id: clockCol
+        anchors.horizontalCenter: card.horizontalCenter
+        anchors.bottom: card.top
+        anchors.bottomMargin: 26
         spacing: 4
         Text { id: timeLabel; anchors.horizontalCenter: parent.horizontalCenter
             text: Qt.formatDateTime(new Date(), "HH:mm")
@@ -93,7 +96,10 @@ Rectangle {
         color: cCard
         border.width: 1
         border.color: cCardEdge
-        anchors.centerIn: parent
+        anchors.right: parent.right
+        anchors.rightMargin: root.width * 0.10
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.verticalCenterOffset: 44
 
         Rectangle {  // 2px accent top rule
             anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 0 }
@@ -113,13 +119,8 @@ Rectangle {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "NYXUS"
-                color: cText; font.pixelSize: 34; font.family: "Permanent Marker"; font.letterSpacing: 2
-            }
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
                 text: "welcome back, operator"
-                color: cTextFaint; font.pixelSize: 13; font.family: "Caveat"
+                color: cTextDim; font.pixelSize: 15; font.family: "Caveat"
             }
 
             // username
