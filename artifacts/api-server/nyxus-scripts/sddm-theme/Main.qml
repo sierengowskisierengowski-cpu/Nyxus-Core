@@ -42,6 +42,7 @@ Rectangle {
     readonly property color cTextFaint:"#6a6e78"
 
     property int selectedSession: sessionModel.lastIndex
+    property bool sessionPickerOpen: false   // hidden by default, one click to reveal
     property string errorText: ""
 
     // ── background artwork + void wash ───────────────────────
@@ -160,23 +161,53 @@ Rectangle {
                 }
             }
 
-            // session pills (all wayland/x sessions SDDM found)
-            Flow {
+            // session selector — HIDDEN BY DEFAULT, one click to reveal.
+            // Collapsed: a slim chip showing only the current session name.
+            // Expanded: the full pill list of every session SDDM found.
+            Column {
                 width: parent.width; spacing: 8
-                Repeater {
-                    model: sessionModel
-                    delegate: Rectangle {
-                        radius: 8; height: 30
-                        width: pillText.width + 24
-                        color: index === root.selectedSession ? Qt.rgba(121/255,73/255,242/255,0.28)
-                                                              : Qt.rgba(1,1,1,0.05)
-                        border.width: 1
-                        border.color: index === root.selectedSession ? cAccent : Qt.rgba(1,1,1,0.10)
-                        Text { id: pillText; anchors.centerIn: parent
-                            text: model.name; color: index === root.selectedSession ? cText : cTextDim
-                            font.pixelSize: 12; font.family: "JetBrainsMono Nerd Font" }
-                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                            onClicked: root.selectedSession = index }
+
+                Rectangle {
+                    width: parent.width; height: 34; radius: 8
+                    color: Qt.rgba(1,1,1,0.05); border.width: 1
+                    border.color: sessionChip.containsMouse ? cAccent : Qt.rgba(1,1,1,0.10)
+                    Row {
+                        anchors.centerIn: parent; spacing: 8
+                        Text { anchors.verticalCenter: parent.verticalCenter
+                            text: "session ·"; color: cTextFaint
+                            font.pixelSize: 11; font.family: "JetBrainsMono Nerd Font" }
+                        Repeater {  // renders only the currently-selected session's name
+                            model: sessionModel
+                            delegate: Text { visible: index === root.selectedSession
+                                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+                                text: model.name; color: cText
+                                font.pixelSize: 12; font.family: "JetBrainsMono Nerd Font" }
+                        }
+                        Text { anchors.verticalCenter: parent.verticalCenter
+                            text: root.sessionPickerOpen ? "▲" : "▾"; color: cAccent; font.pixelSize: 11 }
+                    }
+                    MouseArea { id: sessionChip; anchors.fill: parent; hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.sessionPickerOpen = !root.sessionPickerOpen }
+                }
+
+                Flow {
+                    width: parent.width; spacing: 8; visible: root.sessionPickerOpen
+                    Repeater {
+                        model: sessionModel
+                        delegate: Rectangle {
+                            radius: 8; height: 30
+                            width: pillText.width + 24
+                            color: index === root.selectedSession ? Qt.rgba(121/255,73/255,242/255,0.28)
+                                                                  : Qt.rgba(1,1,1,0.05)
+                            border.width: 1
+                            border.color: index === root.selectedSession ? cAccent : Qt.rgba(1,1,1,0.10)
+                            Text { id: pillText; anchors.centerIn: parent
+                                text: model.name; color: index === root.selectedSession ? cText : cTextDim
+                                font.pixelSize: 12; font.family: "JetBrainsMono Nerd Font" }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { root.selectedSession = index; root.sessionPickerOpen = false } }
+                        }
                     }
                 }
             }
