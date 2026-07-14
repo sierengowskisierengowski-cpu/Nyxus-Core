@@ -30,16 +30,16 @@ Rectangle {
     height: Screen.height
     color: "#04030a"
 
-    // ── palette ──────────────────────────────────────────────
+    // ── palette — consumes docs/THEME.md tokens (DARK MIRROR §8 login/lock) ──
     readonly property color cVoid:     "#04030a"
-    readonly property color cCard:     Qt.rgba(10/255, 8/255, 18/255, 0.72)
-    readonly property color cCardEdge: Qt.rgba(121/255, 73/255, 242/255, 0.55)
-    readonly property color cInput:    Qt.rgba(4/255, 3/255, 10/255, 0.92)
-    readonly property color cAccent:   "#7949f2"
-    readonly property color cAccent2:  "#ff2667"
-    readonly property color cText:     "#e8edf5"
-    readonly property color cTextDim:  "#a6abba"
-    readonly property color cTextFaint:"#6a6e78"
+    readonly property color cCard:     Qt.rgba(5/255, 2/255, 11/255, 0.78)     // frosted smoked-glass fill
+    readonly property color cCardEdge: Qt.rgba(121/255, 73/255, 242/255, 0.32) // 1px accent hairline
+    readonly property color cInput:    Qt.rgba(5/255, 1/255, 13/255, 0.90)     // void-deep
+    readonly property color cAccent:   "#7949f2"   // accent primary
+    readonly property color cAccent2:  "#ff2667"   // accent secondary
+    readonly property color cText:     "#e8edf5"   // nyx_white_off
+    readonly property color cTextDim:  "#c8ccd6"   // nyx_grey_light
+    readonly property color cTextFaint:"#6a6e78"   // nyx_grey_tertiary
 
     property int selectedSession: sessionModel.lastIndex
     property bool sessionPickerOpen: false   // hidden by default, one click to reveal
