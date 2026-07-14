@@ -166,20 +166,20 @@ window, window.background, decoration {
 
 .bar-hub-time {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 32px;
+  font-size: 23px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: #ffffff;
-  text-shadow: 0 0 16px rgba(255, 38, 103, 0.75), 0 0 32px rgba(121, 73, 242, 0.45);
+  text-shadow: 0 0 14px rgba(255, 38, 103, 0.8), 0 0 26px rgba(121, 73, 242, 0.5);
 }
 
 .bar-hub-date {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.16em;
-  color: rgba(255, 38, 103, 0.88);
-  text-shadow: 0 0 10px rgba(255, 38, 103, 0.5);
+  letter-spacing: 0.1em;
+  color: rgba(255, 38, 103, 0.92);
+  text-shadow: 0 0 8px rgba(255, 38, 103, 0.55);
 }
 
 .bar-hub-music-title {

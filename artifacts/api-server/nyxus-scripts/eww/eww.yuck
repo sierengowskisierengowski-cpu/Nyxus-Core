@@ -473,12 +473,13 @@
     (label :class "mon-trace mon-trace-secondary" :text "${NETGRAPH.up_spark}")
     (label :class "mon-value mon-value-secondary" :text "${NETGRAPH.up_fmt}")))
 
-;; Idle face: NYXUS wordmark + clock + date (default bottom center).
+;; Idle face: NYXUS wordmark + clock + date, framed inside the urban UFO
+;; saucer cockpit band (bottom center).
 (defwidget bar_hub_idle []
-  (box :orientation "v" :space-evenly false :spacing 2 :halign "center"
-    (label :class "bar-hub-brand" :text "NYXUS" :style "opacity: ${NEONFLICK};")
-    (label :class "bar-hub-time" :text "${TIME.hm}")
-    (label :class "bar-hub-date" :text "${TIME.date}")))
+  (box :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
+       :style "background-image: url('/home/cosmic/.config/eww/assets/nyxus-saucer-band.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 320px; min-height: 72px; padding: 20px 108px 12px 108px;"
+    (label :class "bar-hub-time" :halign "center" :text "${TIME.hm}")
+    (label :class "bar-hub-date" :halign "center" :text "${TIME.date}")))
 
 ;; Music face: now-playing + mini CAVA when MPRIS reports active playback.
 (defwidget bar_hub_music []
@@ -501,24 +502,26 @@
       (box :visible {PLAYER.status != "Stopped"} (bar_hub_music)))))
 
 (defwidget bar_bottom_layout []
-  (box :class "bar-bottom-minimal" :orientation "h" :hexpand true :halign "fill"
-       :space-evenly false :valign "center"
-    (box :class "bar-metrics-left mon-cluster" :orientation "h" :hexpand true :halign "start"
+  ;; centerbox guarantees the saucer clock stays dead-center regardless of the
+  ;; side clusters' widths. Metrics are balanced 3-per-side: fan/temp/cpu left,
+  ;; gpu + net (down/up) right.
+  (centerbox :class "bar-bottom-minimal" :orientation "h" :valign "center"
+    (box :class "bar-metrics-left mon-cluster" :orientation "h" :halign "start"
          :space-evenly false :spacing 14 :valign "center"
       (mon_cell :hue "orange" :glyph "󰈐" :value "${FANGRAPH.rpm}"
                 :spark "${FANGRAPH.spark}" :tip "${FANGRAPH.tooltip}")
       (mon_cell :hue "gold" :glyph "󰔏" :value "${SYSGRAPH.temp.val}°"
                 :spark "${SYSGRAPH.temp.spark}" :tip "CPU package temperature" :alert {SYSGRAPH.temp.hot})
       (mon_cell :hue "pink" :glyph "󰘚" :value "${SYSGRAPH.cpu.val}%"
-                :spark "${SYSGRAPH.cpu.spark}" :tip "CPU load" :alert {SYSGRAPH.cpu.hot})
+                :spark "${SYSGRAPH.cpu.spark}" :tip "CPU load" :alert {SYSGRAPH.cpu.hot}))
+    (box :halign "center" :valign "center" (bar_hub_trigger))
+    (box :class "bar-metrics-right mon-cluster" :orientation "h" :halign "end"
+         :space-evenly false :spacing 14 :valign "center"
       (mon_cell :hue "blue" :glyph "󰢮"
                 :value "${SYSGRAPH.gpu.present ? SYSGRAPH.gpu.val + '%' : 'off'}"
                 :spark "${SYSGRAPH.gpu.spark}"
                 :tip "${SYSGRAPH.gpu.present ? 'GPU ' + SYSGRAPH.gpu.val + '% - ' + SYSGRAPH.gpu.temp + 'C' : 'dGPU asleep (left un-woken)'}"
-                :alert {SYSGRAPH.gpu.hot} :dim {SYSGRAPH.gpu.present == false}))
-    (box :hexpand false :halign "center" (bar_hub_trigger))
-    (box :class "bar-metrics-right mon-cluster" :orientation "h" :hexpand true :halign "end"
-         :space-evenly false :spacing 12 :valign "center"
+                :alert {SYSGRAPH.gpu.hot} :dim {SYSGRAPH.gpu.present == false})
       (mon_net))))
 
 (defwidget bar_top_layout []
@@ -933,7 +936,7 @@
 ;; on .bar-bottom / .bar-top, NOT from a <100% surface width.
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
-  :geometry (geometry :x "0" :y "8" :width "100%" :height "48px" :anchor "bottom center")
+  :geometry (geometry :x "0" :y "8" :width "100%" :height "74px" :anchor "bottom center")
   (bar_bottom_layout))
 
 (defwindow bar-top

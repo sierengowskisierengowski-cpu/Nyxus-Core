@@ -257,21 +257,21 @@ window, window.background, decoration {
 }
 .bar-hub-time {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 32px;
+  font-size: 23px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: #ffffff;
   text-shadow:
-    0 0 16px rgba($nyxus-accent-secondary, 0.75),
-    0 0 32px rgba($nyxus-accent-primary, 0.45);
+    0 0 14px rgba($nyxus-accent-secondary, 0.80),
+    0 0 26px rgba($nyxus-accent-primary, 0.50);
 }
 .bar-hub-date {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.16em;
-  color: rgba($nyxus-accent-secondary, 0.88);
-  text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.50);
+  letter-spacing: 0.10em;
+  color: rgba($nyxus-accent-secondary, 0.92);
+  text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.55);
 }
 .bar-hub-music-title {
   font-family: "JetBrainsMono Nerd Font", monospace;
