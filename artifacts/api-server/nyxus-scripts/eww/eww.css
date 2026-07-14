@@ -2594,9 +2594,12 @@ scrollbar slider:hover {
 .qs-title, .wifi-title, .bt-title, .mix-title, .cal-title, .notif-title, .upd-title {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.22em;
-  color: #ffb026;
-  text-shadow: 0 0 14px rgba(255, 176, 38, 0.45);
+  letter-spacing: 0.16em;
+  /* cohesive default: brand violet, not gold (rev 2026-07-14). Per-panel
+     hues below still tint individual flyouts, but the shared baseline reads
+     as one urban/violet system. */
+  color: #7949f2;
+  text-shadow: 0 0 14px rgba(121, 73, 242, 0.45);
   padding-bottom: 4px;
 }
 
@@ -2622,9 +2625,9 @@ scrollbar slider:hover {
 }
 
 .cal-root, .upd-root {
-  border-color: rgba(255, 176, 38, 0.6);
-  border-top-color: #ffb026;
-  box-shadow: 0 0 18px rgba(255, 176, 38, 0.3), 0 10px 34px rgba(0, 0, 0, 0.65), inset 0 0 24px rgba(0, 0, 0, 0.18);
+  border-color: rgba(121, 73, 242, 0.6);
+  border-top-color: #7949f2;
+  box-shadow: 0 0 18px rgba(121, 73, 242, 0.3), 0 10px 34px rgba(0, 0, 0, 0.65), inset 0 0 24px rgba(0, 0, 0, 0.18);
 }
 
 .wifi-title {
@@ -2741,9 +2744,9 @@ scrollbar slider:hover {
   letter-spacing: 0.08em;
 }
 
-/* -- update center ------------------------------------------------------ */
+/* -- update center (violet-cohesive, rev 2026-07-14) -------------------- */
 .upd-title {
-  color: #ffb026;
+  color: #7949f2;
 }
 
 .upd-sub {
@@ -2756,31 +2759,31 @@ scrollbar slider:hover {
 .upd-refresh {
   padding: 4px 12px;
   border-radius: 3px;
-  background: rgba(255, 176, 38, 0.1);
-  border: 1px solid rgba(255, 176, 38, 0.38);
-  color: #ffb026;
+  background: rgba(121, 73, 242, 0.1);
+  border: 1px solid rgba(121, 73, 242, 0.38);
+  color: rgb(177.28, 149.44, 247.46);
   font-weight: 700;
 }
 
 .upd-refresh:hover {
-  background: rgba(255, 176, 38, 0.24);
+  background: rgba(121, 73, 242, 0.24);
   color: #ffffff;
-  box-shadow: 0 0 14px rgba(255, 176, 38, 0.45);
+  box-shadow: 0 0 14px rgba(121, 73, 242, 0.45);
 }
 
 .upd-row {
   padding: 6px 10px;
   border-radius: 8px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(255, 176, 38, 0.24);
-  border-top: 1px solid rgba(255, 176, 38, 0.465);
+  border: 1px solid rgba(121, 73, 242, 0.24);
+  border-top: 1px solid rgba(121, 73, 242, 0.465);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
 }
 
 .upd-row:hover {
   background-color: rgba(8, 4, 16, 0.86);
-  border-color: rgba(255, 176, 38, 0.58);
-  box-shadow: 0 0 18px rgba(255, 176, 38, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(255, 176, 38, 0.08);
+  border-color: rgba(121, 73, 242, 0.58);
+  box-shadow: 0 0 18px rgba(121, 73, 242, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(121, 73, 242, 0.08);
 }
 
 .upd-name {
@@ -2796,12 +2799,12 @@ scrollbar slider:hover {
 }
 
 .upd-arrow {
-  color: #ffb026;
+  color: #7949f2;
   font-size: 9px;
 }
 
 .upd-new {
-  color: rgb(255, 207.6, 124.8);
+  color: rgb(177.28, 149.44, 247.46);
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 9px;
 }
@@ -2838,11 +2841,11 @@ scrollbar slider:hover {
 }
 
 .cal-title {
-  color: #ffb026;
+  color: #7949f2;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.28em;
-  text-shadow: 0 0 14px rgba(255, 176, 38, 0.45);
+  letter-spacing: 0.2em;
+  text-shadow: 0 0 14px rgba(121, 73, 242, 0.45);
 }
 
 .cal-today {
@@ -2873,8 +2876,8 @@ scrollbar slider:hover {
   color: #e8edf5;
   font-weight: 600;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(255, 176, 38, 0.144);
-  border-top: 1px solid rgba(255, 176, 38, 0.279);
+  border: 1px solid rgba(121, 73, 242, 0.144);
+  border-top: 1px solid rgba(121, 73, 242, 0.279);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
 }
 
@@ -2914,17 +2917,17 @@ scrollbar slider:hover {
   background-size: 240% 240%, 100% 100%;
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(255, 176, 38, 0.48);
-  border-top: 2px solid rgba(255, 176, 38, 0.95);
-  box-shadow: 0 0 16px rgba(255, 176, 38, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 176, 38, 0.06);
+  border: 1px solid rgba(121, 73, 242, 0.48);
+  border-top: 2px solid rgba(121, 73, 242, 0.95);
+  box-shadow: 0 0 16px rgba(121, 73, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(121, 73, 242, 0.06);
   color: #e8edf5;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
 
 .cal-close:hover {
-  border-color: rgba(255, 176, 38, 0.95);
-  box-shadow: 0 0 22px rgba(255, 176, 38, 0.5), 0 0 40px rgba(255, 176, 38, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(121, 73, 242, 0.95);
+  box-shadow: 0 0 22px rgba(121, 73, 242, 0.5), 0 0 40px rgba(121, 73, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
 }
 

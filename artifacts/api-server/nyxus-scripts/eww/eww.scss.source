@@ -2050,9 +2050,12 @@ scrollbar slider:hover {
 .qs-title, .wifi-title, .bt-title, .mix-title, .cal-title, .notif-title, .upd-title {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.22em;
-  color: $nyxus-accent-warn;
-  text-shadow: 0 0 14px rgba($nyxus-accent-warn, 0.45);
+  letter-spacing: 0.16em;
+  /* cohesive default: brand violet, not gold (rev 2026-07-14). Per-panel
+     hues below still tint individual flyouts, but the shared baseline reads
+     as one urban/violet system. */
+  color: $nyxus-accent-primary;
+  text-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.45);
   padding-bottom: 4px;
 }
 
@@ -2065,8 +2068,8 @@ scrollbar slider:hover {
               box-shadow: 0 0 18px rgba($neon-blue, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
 .mix-root   { border-color: rgba($nyxus-accent-ok, 0.60); border-top-color: $nyxus-accent-ok;
               box-shadow: 0 0 18px rgba($nyxus-accent-ok, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
-.cal-root, .upd-root { border-color: rgba($nyxus-accent-warn, 0.60); border-top-color: $nyxus-accent-warn;
-              box-shadow: 0 0 18px rgba($nyxus-accent-warn, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
+.cal-root, .upd-root { border-color: rgba($nyxus-accent-primary, 0.60); border-top-color: $nyxus-accent-primary;
+              box-shadow: 0 0 18px rgba($nyxus-accent-primary, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
 
 .wifi-title { color: $nyxus-accent-secondary; text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.45); }
 .bt-title   { color: $neon-blue;              text-shadow: 0 0 12px rgba($neon-blue, 0.45); }
@@ -2133,8 +2136,8 @@ scrollbar slider:hover {
   letter-spacing: 0.08em;
 }
 
-/* -- update center ------------------------------------------------------ */
-.upd-title { color: $nyxus-accent-warn; }
+/* -- update center (violet-cohesive, rev 2026-07-14) -------------------- */
+.upd-title { color: $nyxus-accent-primary; }
 .upd-sub {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 9px;
@@ -2143,23 +2146,23 @@ scrollbar slider:hover {
 }
 .upd-refresh {
   padding: 4px 12px; border-radius: 3px;
-  background: rgba($nyxus-accent-warn, 0.10);
-  border: 1px solid rgba($nyxus-accent-warn, 0.38);
-  color: $nyxus-accent-warn;
+  background: rgba($nyxus-accent-primary, 0.10);
+  border: 1px solid rgba($nyxus-accent-primary, 0.38);
+  color: $accent-primary-soft;
   font-weight: 700;
 }
-.upd-refresh:hover { background: rgba($nyxus-accent-warn, 0.24); color: #ffffff;
-                     box-shadow: 0 0 14px rgba($nyxus-accent-warn, 0.45); }
+.upd-refresh:hover { background: rgba($nyxus-accent-primary, 0.24); color: #ffffff;
+                     box-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.45); }
 .upd-row {
   padding: 6px 10px;
   border-radius: 8px;
-  @include flyout-glass($nyxus-accent-warn, 0.75);
+  @include flyout-glass($nyxus-accent-primary, 0.75);
 }
-.upd-row:hover { @include flyout-glass-hover($nyxus-accent-warn); }
+.upd-row:hover { @include flyout-glass-hover($nyxus-accent-primary); }
 .upd-name  { color: $text; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 11px; }
 .upd-old   { color: $grey-ghost; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px; }
-.upd-arrow { color: $nyxus-accent-warn; font-size: 9px; }
-.upd-new   { color: $accent-warn-soft; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px; }
+.upd-arrow { color: $nyxus-accent-primary; font-size: 9px; }
+.upd-new   { color: $accent-primary-soft; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px; }
 .upd-sync {
   padding: 8px 14px; border-radius: 3px;
   background: rgba($nyxus-accent-secondary, 0.13);
@@ -2186,11 +2189,11 @@ scrollbar slider:hover {
 }
 
 .cal-title {
-  color: $nyxus-accent-warn;
+  color: $nyxus-accent-primary;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.28em;
-  text-shadow: 0 0 14px rgba($nyxus-accent-warn, 0.45);
+  letter-spacing: 0.20em;
+  text-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.45);
 }
 
 .cal-today {
@@ -2218,7 +2221,7 @@ scrollbar slider:hover {
   font-size: 12px;
   color: $text;
   font-weight: 600;
-  @include flyout-glass($nyxus-accent-warn, 0.45);
+  @include flyout-glass($nyxus-accent-primary, 0.45);
 }
 .cal-day-in:hover {
   @include flyout-glass-hover($nyxus-accent-primary);
@@ -2235,13 +2238,13 @@ scrollbar slider:hover {
   margin-top: 10px;
   padding: 10px 16px;
   border-radius: 10px;
-  @include obsidian-vessel($nyxus-accent-warn);
+  @include obsidian-vessel($nyxus-accent-primary);
   color: $text;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
 .cal-close:hover {
-  @include obsidian-vessel-hover($nyxus-accent-warn);
+  @include obsidian-vessel-hover($nyxus-accent-primary);
   color: #ffffff;
 }
 
