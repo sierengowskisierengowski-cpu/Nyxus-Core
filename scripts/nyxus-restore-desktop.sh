@@ -168,8 +168,11 @@ for h in nyxus-eww-launch nyxus-eww-launch-safe nyxus-set-wallpaper.sh \
     install -m 0755 "${NS}/companion/${h}" "${HOME}/.local/bin/${h}"
   fi
 done
-# Recovery autostart hooks (referenced from hyprland.conf)
-for script in nyxus-persist-login nyxus-boot-check nyxus-overlay-unstick nyxus-restore-session; do
+# Recovery autostart hooks (referenced from hyprland.conf). These are the
+# absolute-path symlinks the login-restore chain depends on; recreate the
+# FULL set so a wiped ~/.local/bin can't silently break session survival.
+for script in nyxus-persist-login nyxus-boot-check nyxus-overlay-unstick \
+              nyxus-restore-session nyxus-restore-login; do
   src="${REPO_ROOT}/scripts/${script}.sh"
   if [[ -f "${src}" ]]; then
     ln -sf "${src}" "${HOME}/.local/bin/${script}"

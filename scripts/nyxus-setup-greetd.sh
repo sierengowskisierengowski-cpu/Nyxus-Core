@@ -26,8 +26,22 @@ fi
 echo "▌ NYXUS — installing greetd + regreet login for ${REAL_USER}"
 
 # 1. Packages (all official 'extra' repo — no AUR). cage is already present.
+#    Resilient: if pacman can't run (offline / db lock) but every binary is
+#    already present, keep going so a re-run still redeploys the greeter/config
+#    instead of aborting on `set -e` before the important steps below.
 echo "  · installing greetd-regreet, greetd-tuigreet, cage …"
-pacman -S --needed --noconfirm greetd greetd-regreet greetd-tuigreet cage
+if ! pacman -S --needed --noconfirm greetd greetd-regreet greetd-tuigreet cage; then
+  missing=""
+  for b in greetd regreet tuigreet cage; do
+    command -v "$b" >/dev/null 2>&1 || missing="${missing} ${b}"
+  done
+  if [[ -n "${missing}" ]]; then
+    echo "  ✗ pacman failed and these are still missing:${missing}" >&2
+    echo "    get online and re-run: sudo scripts/nyxus-setup-greetd.sh" >&2
+    exit 1
+  fi
+  echo "  ! pacman unavailable but all greeter binaries already present — continuing"
+fi
 
 # 2. greeter chain script on PATH.
 install -Dm755 "${GS}/nyxus-greeter" /usr/local/bin/nyxus-greeter
@@ -61,6 +75,18 @@ systemctl disable cosmic-greeter.service >/dev/null 2>&1 || true
 systemctl enable greetd.service
 DM="$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null || true)"
 echo "  · display-manager.service -> ${DM}"
+
+# 7. Verify the deployed greeter actually carries the anti-flash / GPU fixes.
+#    A stale /usr/local/bin/nyxus-greeter (missing the HOME + iGPU-pin block)
+#    makes regreet fail EGL init ("//.cache permission denied", "libEGL … fd
+#    -1") and silently fall through to the text login — the exact "custom
+#    greeter never shows" symptom. Fail loudly if the deploy didn't take.
+if ! grep -q 'ANTI-FLASH #3' /usr/local/bin/nyxus-greeter 2>/dev/null; then
+  echo "  ✗ deployed /usr/local/bin/nyxus-greeter is missing the GPU/HOME fixes" >&2
+  echo "    (regreet would fall back to the text login). Re-run this script." >&2
+  exit 1
+fi
+echo "  ✓ greeter chain deployed with anti-flash + iGPU pin"
 
 # 7. Verify the deploy so a single run is trustworthy (catches a stale greeter
 #    binary — the exact failure mode where regreet's anti-flash startup never
