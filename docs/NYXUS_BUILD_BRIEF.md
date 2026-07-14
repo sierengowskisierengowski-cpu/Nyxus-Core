@@ -246,12 +246,12 @@ Still open:
 - [ ] 2.8 Git safepoint: "working login"
 
 ### Phase 3 — Fix what's broken in the running session
-- [ ] 3.1 Go through every menu/flyout/settings panel, list what's broken (§1.4)
+- [x] 3.1 Go through every menu/flyout/settings panel, list what's broken (§1.4) — see `docs/phase3-eww-handoff.md`; GTK apps all launch, 13/14 eww flyouts OK, Hub + TIME clock broken (handed to theme/eww agent)
 - [ ] 3.2 Fix each one, verify it opens/works without freezing
 - [ ] 3.2a **Accent desync — Hyprland window borders out of sync.** Verified live 2026-07-14: EWW bars/Hub + `accent.json` render purple `#7949f2` + magenta `#ff2667`, but the running compositor `general:col.active_border` (`hyprctl getoption`, not a file) is a stale orange→yellow gradient (`#ff7e2e → #ffff1f`). `nyxus-apply-accent` isn't propagating to the compositor border. Fix so borders follow the same accent engine. (Full cohesion in Phase 5.)
-- [ ] 3.3 Resolve keybind duplicates (`Super+R` vs `Super+Space`) (§5)
-- [ ] 3.4 Fix or replace the non-working terminal bind (§5)
-- [ ] 3.5 Full keybind audit + document final list in `docs/KEYBINDS.md`
+- [x] 3.3 Resolve keybind duplicates (`Super+R` vs `Super+Space`) (§5) — kept `Super+Space` (native launcher); removed `Super+R`/`Super+D` drun dupes; also fixed silent conf.d dupes (`T`→`J` togglesplit, `Alt+W`→`Alt+S` wallpaper studio, removed `Shift+W` hyprshot + bare `Escape`)
+- [x] 3.4 Fix or replace the non-working terminal bind (§5) — `Super+Return` now binds a real terminal (kitty→alacritty→foot); dropped the broken `nyxus_terminal.py`
+- [x] 3.5 Full keybind audit + document final list in `docs/KEYBINDS.md` — 0 duplicate active binds, `hyprctl configerrors` clean
 - [ ] 3.6 Git safepoint: "stable, de-duplicated session"
 
 ### Phase 4 — ISO & kernel audit
