@@ -76,25 +76,15 @@ systemctl enable greetd.service
 DM="$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null || true)"
 echo "  · display-manager.service -> ${DM}"
 
-# 7. Verify the deployed greeter actually carries the anti-flash / GPU fixes.
-#    A stale /usr/local/bin/nyxus-greeter (missing the HOME + iGPU-pin block)
-#    makes regreet fail EGL init ("//.cache permission denied", "libEGL … fd
-#    -1") and silently fall through to the text login — the exact "custom
-#    greeter never shows" symptom. Fail loudly if the deploy didn't take.
-if ! grep -q 'ANTI-FLASH #3' /usr/local/bin/nyxus-greeter 2>/dev/null; then
-  echo "  ✗ deployed /usr/local/bin/nyxus-greeter is missing the GPU/HOME fixes" >&2
-  echo "    (regreet would fall back to the text login). Re-run this script." >&2
-  exit 1
-fi
-echo "  ✓ greeter chain deployed with anti-flash + iGPU pin"
-
-# 7. Verify the deploy so a single run is trustworthy (catches a stale greeter
-#    binary — the exact failure mode where regreet's anti-flash startup never
-#    reached /usr/local/bin and the user saw the unstyled "default" login flash).
+# 7. Verify the deploy so a single run is trustworthy. This catches the exact
+#    failure mode behind "the custom greeter never shows": a stale
+#    /usr/local/bin/nyxus-greeter missing the anti-flash HOME/cache + iGPU-pin
+#    block, which makes regreet fail EGL init ("//.cache permission denied",
+#    "libEGL … fd -1") and silently fall through to the text login.
 echo "  · verifying deploy …"
 verify_ok=1
-if ! grep -q "ANTI-FLASH" /usr/local/bin/nyxus-greeter 2>/dev/null; then
-  echo "    ✗ /usr/local/bin/nyxus-greeter is missing the anti-flash startup" >&2
+if ! grep -q "ANTI-FLASH #3" /usr/local/bin/nyxus-greeter 2>/dev/null; then
+  echo "    ✗ /usr/local/bin/nyxus-greeter is stale (missing the anti-flash/iGPU startup)" >&2
   verify_ok=0
 fi
 if ! grep -q "nyxus-greeter" /etc/greetd/config.toml 2>/dev/null; then
@@ -111,7 +101,12 @@ for d in /var/lib/greetd /var/cache/regreet; do
     chown -R greeter:greeter "$d" 2>/dev/null || true
   fi
 done
-[[ "$verify_ok" -eq 1 ]] && echo "    ✓ greeter, greetd config, regreet theme + background all in place"
+if [[ "$verify_ok" -ne 1 ]]; then
+  echo "  ✗ deploy verification failed — regreet would fall back to the text login." >&2
+  echo "    Re-run: sudo scripts/nyxus-setup-greetd.sh" >&2
+  exit 1
+fi
+echo "    ✓ greeter, greetd config, regreet theme + background all in place"
 
 cat <<EOF
 
