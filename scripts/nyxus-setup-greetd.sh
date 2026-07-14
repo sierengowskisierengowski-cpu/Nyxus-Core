@@ -57,6 +57,18 @@ install -Dm644 "${GS}/nyxus-login-bg.png" /etc/greetd/nyxus-login-bg.png
 install -d -o greeter -g greeter /var/lib/greetd 2>/dev/null || true
 install -d -o greeter -g greeter /var/cache/regreet 2>/dev/null || true
 
+# 3b. PAM stack for greetd — password only, NO pam_fprintd. The prior stack
+#     included system-local-login (which has `auth sufficient pam_fprintd.so`),
+#     so the greetd auth conversation emitted a "Place your finger" prompt that
+#     regreet drew as a bar across the bottom of the login. Back up whatever is
+#     there, then install the fingerprint-free stack. Fingerprint auth for sudo
+#     and TTY login is untouched.
+if [[ -f /etc/pam.d/greetd ]] && ! grep -q 'NYXUS' /etc/pam.d/greetd; then
+  cp -a /etc/pam.d/greetd "/etc/pam.d/greetd.pre-nyxus.$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
+fi
+install -Dm644 "${GS}/greetd.pam" /etc/pam.d/greetd
+echo "  · /etc/pam.d/greetd -> password-only (no fingerprint prompt)"
+
 # 4. Nyxus fonts system-wide so the greeter can render the wordmark/clock.
 REAL_HOME="$(getent passwd "${REAL_USER}" | cut -d: -f6)"
 if [[ -d "${REAL_HOME}/.local/share/fonts/nyxus" ]]; then
@@ -94,6 +106,12 @@ fi
 for f in /etc/greetd/regreet.toml /etc/greetd/regreet.css /etc/greetd/nyxus-login-bg.png; do
   [[ -s "$f" ]] || { echo "    ✗ missing/empty $f" >&2; verify_ok=0; }
 done
+# PAM must be the fingerprint-free NYXUS stack, or the "place your finger" bar
+# comes back on the login screen.
+if ! grep -q 'NYXUS' /etc/pam.d/greetd 2>/dev/null; then
+  echo "    ✗ /etc/pam.d/greetd is not the NYXUS password-only stack (fingerprint bar will show)" >&2
+  verify_ok=0
+fi
 # greeter user must be able to write its GL/pipeline caches (anti-flash #1).
 for d in /var/lib/greetd /var/cache/regreet; do
   if ! sudo -u greeter test -w "$d" 2>/dev/null; then

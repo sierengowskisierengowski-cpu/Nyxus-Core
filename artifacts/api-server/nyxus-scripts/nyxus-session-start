@@ -31,11 +31,25 @@ if command -v dbus-update-activation-environment >/dev/null 2>&1; then
     >/dev/null 2>&1 || true
 fi
 
+# VT-FLASH FIX (2026-07-14): greetd runs this session command on a VT, so the
+# compositor's stdout/stderr (Hyprland's startup banner + per-frame log spam)
+# prints as raw text on the console during the greeter->desktop handoff — it
+# "looks like you ran hyprland in a terminal". Send that output to a log file
+# instead of the tty, and blank the VT first so nothing lingers behind the
+# first Hyprland frame. Keeps a readable log for debugging session crashes.
+SESSION_LOG="${XDG_CACHE_HOME:-${HOME}/.cache}/nyxus/hyprland-session.log"
+mkdir -p "$(dirname "${SESSION_LOG}")" 2>/dev/null || true
+# Clear the VT we were launched on (best-effort; harmless if stdout isn't a tty).
+if [[ -t 1 ]]; then
+  printf '\033[H\033[2J\033[3J' >/dev/tty 2>/dev/null || clear 2>/dev/null || true
+fi
+
 # Prefer the distro wrapper if present (Hyprland 0.55+), else bare binary.
+# Redirect all compositor output to the session log so the VT stays clean.
 if command -v start-hyprland >/dev/null 2>&1; then
-  exec start-hyprland
+  exec start-hyprland >>"${SESSION_LOG}" 2>&1
 elif command -v Hyprland >/dev/null 2>&1; then
-  exec Hyprland
+  exec Hyprland >>"${SESSION_LOG}" 2>&1
 else
   echo "nyxus-session-start: Hyprland binary not found on PATH" >&2
   exit 1
