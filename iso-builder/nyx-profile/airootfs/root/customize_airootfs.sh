@@ -410,7 +410,11 @@ chmod 700 /var/log/nyxus
 # ── Enable display + network + hardware services on the LIVE ISO ───────
 # These are also re-enabled by nyxus-postinstall on the installed system,
 # but enabling them in the live image means hardware works for live demos.
-systemctl enable sddm.service                2>/dev/null || true
+# Greeter: greetd + regreet (Wayland). SDDM's X11 greeter failed on hybrid
+# Intel+NVIDIA (GL SIGSEGV, then VT-handoff blank screen); greetd uses the
+# same Wayland/DRM path Hyprland does. nyxus-greeter chain falls back to
+# tuigreet (text) so the box never lands on a frozen screen. (rev 2026-07-14)
+systemctl enable greetd.service              2>/dev/null || true
 systemctl enable NetworkManager.service      2>/dev/null || true
 systemctl enable systemd-timesyncd.service   2>/dev/null || true
 systemctl enable bluetooth.service           2>/dev/null || true
@@ -451,9 +455,10 @@ done
 
 # Stop systemd-timesyncd in favour of chrony (the two conflict).
 systemctl disable systemd-timesyncd.service 2>/dev/null || true
-# Keep greetd installed only as a manual emergency fallback to avoid
-# conflicting display-manager startup paths with SDDM.
-systemctl disable greetd.service 2>/dev/null || true
+# greetd is the primary greeter (enabled above). Keep SDDM installed only as
+# a manual emergency fallback; disable it so the two don't fight over
+# display-manager.service at boot.
+systemctl disable sddm.service 2>/dev/null || true
 
 # Bind /etc/nsswitch.conf so .local hostnames resolve via mDNS.
 if [ -f /etc/nsswitch.conf ] && ! grep -q 'mdns_minimal' /etc/nsswitch.conf; then

@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# ============================================================
+#  NYXUS — build + install kage-ryu as a SELECTABLE kernel
+#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Builds the operator's kage-ryu security kernel and installs it ALONGSIDE
+#  the stock kernel. Stock `linux` remains the DEFAULT boot entry — kage-ryu
+#  is picked from the bootloader menu. A bad custom-kernel build can never
+#  strand you.
+#
+#  DO NOT run this until the Nyxus greetd login is verified stable (we hold
+#  custom-kernel work off an unverified login change on purpose).
+#
+#  Usage:  sudo kernel/install-kage-ryu.sh
+#          sudo kernel/install-kage-ryu.sh --repo /path/to/kage-ryu
+# ============================================================
+set -euo pipefail
+
+KAGE_REPO="${KAGE_REPO:-$HOME/Projects/arch-custom-kernel/linux-kage-ryu}"
+KAGE_GIT="https://github.com/sierengowskisierengowski-cpu/kage-ryu.git"
+REAL_USER="${SUDO_USER:-${USER}}"
+
+[[ "${1:-}" == "--repo" && -n "${2:-}" ]] && KAGE_REPO="$2"
+
+if [[ $EUID -ne 0 ]]; then echo "run: sudo $0"; exit 1; fi
+
+echo "▌ kage-ryu selectable-kernel install (stock stays default)"
+
+# makepkg must NOT run as root — build as the real user, install as root.
+if [[ ! -d "$KAGE_REPO" ]]; then
+  echo "  · cloning kage-ryu → $KAGE_REPO"
+  sudo -u "$REAL_USER" git clone "$KAGE_GIT" "$KAGE_REPO"
+fi
+
+echo "  · building (this takes a while; localmodconfig if ~/.config/modprobed.db exists)"
+LOCALMOD=n
+[[ -f "$(getent passwd "$REAL_USER" | cut -d: -f6)/.config/modprobed.db" ]] && LOCALMOD=y
+sudo -u "$REAL_USER" bash -lc "cd '$KAGE_REPO' && env _localmodcfg=$LOCALMOD makepkg -sc --noconfirm"
+
+echo "  · installing kernel packages"
+pacman -U --noconfirm "$KAGE_REPO"/linux-kage-ryu-*.pkg.tar.zst \
+                      "$KAGE_REPO"/linux-kage-ryu-headers-*.pkg.tar.zst
+
+# Regenerate the bootloader menu WITHOUT changing the default entry.
+if command -v grub-mkconfig >/dev/null 2>&1 && [[ -d /boot/grub ]]; then
+  echo "  · grub: regenerating menu (GRUB_DEFAULT unchanged — stock stays default)"
+  grub-mkconfig -o /boot/grub/grub.cfg
+elif [[ -d /boot/loader/entries ]]; then
+  echo "  · systemd-boot: kernel pacman hook writes the entry; default unchanged"
+  bootctl update 2>/dev/null || true
+else
+  echo "  ! unknown bootloader — verify kage-ryu entry exists before rebooting"
+fi
+
+# Ship the BBR sysctl (safe on any kernel).
+install -Dm644 "$(dirname "$0")/nyxus-bbr.conf" /etc/sysctl.d/99-nyxus-bbr.conf
+
+cat <<EOF
+
+── kage-ryu installed as a SELECTABLE kernel ────────────────────────
+Default boot is still stock 'linux'. To boot kage-ryu: pick it from the
+bootloader menu (GRUB: 'Advanced options'; systemd-boot: the linux-kage-ryu
+entry). Verify after boot:
+    uname -r            # should show -kage-ryu
+    zcat /proc/config.gz | grep -E 'MALDERLAKE|PREEMPT=|BPF_LSM'
+    bpftool btf list | head   # BTF present for jeTT CO-RE sensor
+If it misbehaves, just reboot and pick stock — nothing is lost.
+──────────────────────────────────────────────────────────────────────
+EOF
