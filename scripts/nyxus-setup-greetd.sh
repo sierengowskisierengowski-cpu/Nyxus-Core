@@ -62,6 +62,31 @@ systemctl enable greetd.service
 DM="$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null || true)"
 echo "  · display-manager.service -> ${DM}"
 
+# 7. Verify the deploy so a single run is trustworthy (catches a stale greeter
+#    binary — the exact failure mode where regreet's anti-flash startup never
+#    reached /usr/local/bin and the user saw the unstyled "default" login flash).
+echo "  · verifying deploy …"
+verify_ok=1
+if ! grep -q "ANTI-FLASH" /usr/local/bin/nyxus-greeter 2>/dev/null; then
+  echo "    ✗ /usr/local/bin/nyxus-greeter is missing the anti-flash startup" >&2
+  verify_ok=0
+fi
+if ! grep -q "nyxus-greeter" /etc/greetd/config.toml 2>/dev/null; then
+  echo "    ✗ /etc/greetd/config.toml does not point at nyxus-greeter" >&2
+  verify_ok=0
+fi
+for f in /etc/greetd/regreet.toml /etc/greetd/regreet.css /etc/greetd/nyxus-login-bg.png; do
+  [[ -s "$f" ]] || { echo "    ✗ missing/empty $f" >&2; verify_ok=0; }
+done
+# greeter user must be able to write its GL/pipeline caches (anti-flash #1).
+for d in /var/lib/greetd /var/cache/regreet; do
+  if ! sudo -u greeter test -w "$d" 2>/dev/null; then
+    echo "    ! $d not writable by 'greeter' — fixing ownership" >&2
+    chown -R greeter:greeter "$d" 2>/dev/null || true
+  fi
+done
+[[ "$verify_ok" -eq 1 ]] && echo "    ✓ greeter, greetd config, regreet theme + background all in place"
+
 cat <<EOF
 
 ── done. SAFE TO REBOOT ──────────────────────────────────────────────
