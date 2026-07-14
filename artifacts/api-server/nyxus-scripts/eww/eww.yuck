@@ -55,6 +55,16 @@
                                      "~/.config/eww/scripts/fan-strip.sh")
 (defpoll NETSTRIP   :interval "3s"   :initial '{"text":"NET —","tooltip":"network"}'
                                      "~/.config/eww/scripts/net-strip.sh")
+;; ── Phase 6 live monitoring graphs (bottom bar) ──────────────────────
+;; fan RPM sparkline, unified CPU/temp/GPU sparklines (dGPU degrades
+;; gracefully when asleep), and up/down network sparklines. All hist
+;; arrays are pre-scaled to 2..22px so the bars render directly.
+(defpoll FANGRAPH   :interval "2s"   :initial '{"fans":[{"id":1,"label":"FAN","rpm":0,"pct":0,"bar":0,"hist":[2,2,2,2,2,2,2,2]}],"tooltip":"fan speeds"}'
+                                     "~/.config/eww/scripts/fan-graph.sh")
+(defpoll SYSGRAPH   :interval "2s"   :initial '{"cpu":{"val":0,"hot":0,"hist":[2,2,2,2,2,2,2,2]},"temp":{"val":0,"hot":0,"hist":[2,2,2,2,2,2,2,2]},"gpu":{"val":0,"temp":0,"present":false,"hot":0,"hist":[2,2,2,2,2,2,2,2]}}'
+                                     "~/.config/eww/scripts/sys-graph.sh")
+(defpoll NETGRAPH   :interval "2s"   :initial '{"ssid":"...","icon":"~","up_fmt":"0B","down_fmt":"0B","up_bar":2,"down_bar":2,"up_hist":[2,2,2,2,2,2,2,2],"down_hist":[2,2,2,2,2,2,2,2],"tooltip":"network"}'
+                                     "~/.config/eww/scripts/net-graph.sh")
 (defpoll NOTIFS     :interval "3s"   :initial '{"icon":"○","label":"0","tooltip":"notifications","paused":"false","total":0}'
                                      "~/.config/eww/scripts/notifications.sh")
 

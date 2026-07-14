@@ -25,11 +25,11 @@ fmt_rate() {
 
 bar_of() {
   awk -v b="$1" 'BEGIN{
-  # log-ish scale: 0..10M -> 4..48px
-    if (b <= 0) { print 4; exit }
-    x = log(b+1) / log(10485760) * 44 + 4
-    if (x < 4) x = 4
-    if (x > 48) x = 48
+  # log-ish scale: 0..10M -> 2..22px (bottom-bar sparkline height)
+    if (b <= 0) { print 2; exit }
+    x = log(b+1) / log(10485760) * 20 + 2
+    if (x < 2) x = 2
+    if (x > 22) x = 22
     printf "%d", int(x)
   }'
 }

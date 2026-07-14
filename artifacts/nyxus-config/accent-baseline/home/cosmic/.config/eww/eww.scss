@@ -1015,26 +1015,46 @@ window, window.background, decoration {
    read as a solid dimmed backdrop - no desktop bleed. Alpha stays a
    hair under 1.0 so the Hyprland layerrule blur still catches edges. */
 .overlay-backdrop {
+  /* Transparent frosted dim (rev 2026-07-14): lets the Hyprland-blurred
+     wallpaper read through the fullscreen overlays while still focusing
+     the eye on the centered panel. */
   background: radial-gradient(circle at 50% 42%,
-    rgba(10, 5, 20, 0.94),
-    rgba(3, 1, 7, 0.985));
+    rgba(12, 6, 24, 0.50),
+    rgba(3, 1, 9, 0.74));
+}
+
+/* -- starfield veil (Phase 5.5) ------------------------------------- */
+/* Subtle Rolls-Royce twinkle dropped as the TOP child of an (overlay ...)
+   over a menu/panel. Transparent star frames over the blurred wallpaper;
+   kept low-opacity so it reads as a faint sparkle, never noisy. The box
+   owns no input window so clicks pass straight through. */
+.starfield-veil {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.30;
+}
+.starfield-veil-full {
+  background-size: cover;
+  opacity: 0.22;
 }
 
 /* -- NYXUS MAIN HUB overlay ----------------------------------------- */
 .hub-backdrop {
   background: radial-gradient(circle at 50% 40%,
-    rgba(10, 5, 20, 0.78),
-    rgba(3, 1, 7, 0.92));
+    rgba(12, 6, 24, 0.42),
+    rgba(3, 1, 9, 0.68));
 }
 .hub-panel {
   min-width: 900px;
   padding: 28px 32px 24px;
   border-radius: $radius-xl;
   border: 1px solid transparent;
-  background-blend-mode: screen, screen, normal, normal;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-  background-origin: padding-box, padding-box, padding-box, border-box;
-  background-clip:   padding-box, padding-box, padding-box, border-box;
+  background-color: rgba(7, 3, 15, 0.24);
+  background-blend-mode: normal;
+  background-size: cover;
+  background-origin: border-box;
+  background-clip:   border-box;
   box-shadow:
     0 0 0 1px rgba($nyxus-accent-primary, 0.14),
     0 0 56px rgba($nyxus-accent-primary, 0.24),
@@ -1173,10 +1193,8 @@ window, window.background, decoration {
 /* -- DEEP CORE overlay ----------------------------------------------- */
 
 .deepcore-root {
-  background-color: rgba(5, 1, 13, 0.94);
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.45), rgba(2, 1, 6, 0.72)),
-    url('assets/cosmic-overlay-deepcore.png');
+  background-color: rgba(6, 2, 15, 0.42);
+  background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.54), rgba(4, 2, 11, 0.22));
   background-size: cover;
   background-position: center;
   padding: 48px 56px;
@@ -1244,10 +1262,8 @@ window, window.background, decoration {
 /* -- DASHBOARD overlay ---------------------------------------------- */
 
 .dashboard-root {
-  background-color: rgba(5, 6, 10, 0.92);
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.38), rgba(2, 1, 6, 0.62)),
-    url('assets/cosmic-overlay-dashboard.png');
+  background-color: rgba(6, 2, 15, 0.42);
+  background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.54), rgba(4, 2, 11, 0.22));
   background-size: cover;
   background-position: center;
   padding: 80px 60px;
@@ -1366,10 +1382,8 @@ window, window.background, decoration {
 /* -- POWERMENU overlay . Obsidian Prism ----------------------------- */
 
 .powermenu-root {
-  background-color: rgba(5, 1, 13, 0.94);
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.45), rgba(2, 1, 6, 0.72)),
-    url('assets/cosmic-overlay-powermenu.png');
+  background-color: rgba(6, 2, 15, 0.42);
+  background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.54), rgba(4, 2, 11, 0.22));
   background-size: cover;
   background-position: center;
   padding: 60px 80px;
@@ -1484,10 +1498,8 @@ window, window.background, decoration {
 /* -- CHEATSHEET ------------------------------------------------------ */
 
 .cheatsheet-root {
-  background-color: rgba(5, 1, 13, 0.94);
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
-    url('assets/cosmic-overlay-cheatsheet.png');
+  background-color: rgba(6, 2, 15, 0.42);
+  background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.54), rgba(4, 2, 11, 0.22));
   background-size: cover;
   background-position: center;
   padding: 60px 80px;
@@ -1732,7 +1744,11 @@ window, window.background, decoration {
    1px dashed neon hairline, 2px solid neon top rule, radius 8, tight
    neon bloom. Each panel carries its own hue (set below). */
 .qs-root, .wifi-root, .bt-root, .mix-root, .cal-root, .notif-root, .upd-root {
-  background-color: rgba(6, 4, 12, 0.88);
+  /* Transparent frosted glass (rev 2026-07-14): a low-alpha tint over the
+     Hyprland-blurred cosmic wallpaper. A faint top-to-bottom scrim keeps
+     titles/rows legible while the nebula still reads through the frost. */
+  background-color: rgba(8, 5, 16, 0.34);
+  background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.50), rgba(4, 2, 11, 0.14));
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -1746,36 +1762,10 @@ window, window.background, decoration {
     0 10px 34px rgba(0, 0, 0, 0.65),
     inset 0 0 24px rgba(0, 0, 0, 0.18);
 }
-.qs-root {
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
-    url('assets/cosmic-flyout-qs.png');
-}
-.wifi-root, .bt-root {
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
-    url('assets/cosmic-flyout-wifi.png');
-}
-.mix-root {
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
-    url('assets/cosmic-flyout-mixer.png');
-}
-.cal-root {
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
-    url('assets/cosmic-flyout-cal.png');
-}
-.notif-root {
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
-    url('assets/cosmic-flyout-notif.png');
-}
-.upd-root {
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
-    url('assets/cosmic-flyout-upd.png');
-}
+/* Per-panel cosmic-art fills retired (rev 2026-07-14): every flyout now
+   shares the transparent frosted background above so the live blurred
+   wallpaper is the backdrop, giving one cohesive see-through language.
+   Per-panel identity still comes from the neon border/title hue below. */
 
 .qs-title, .wifi-title, .bt-title, .mix-title, .cal-title, .notif-title, .upd-title {
   font-size: 13px;
@@ -2476,10 +2466,8 @@ window, window.background, decoration {
 /* mission uses the shared .overlay-backdrop tint (see DASHBOARD section)
    so the whole screen frosts behind Mission Control too. */
 .mission-root      { background-color: transparent; }
-.mission-card      { background-color: rgba(5, 1, 13, 0.94);
-                     background-image:
-                       linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
-                       url('assets/cosmic-overlay-mission.png');
+.mission-card      { background-color: rgba(6, 2, 15, 0.42);
+                     background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.54), rgba(4, 2, 11, 0.22));
                      background-size: cover;
                      background-position: center;
                      padding: 22px 26px; border-radius: 12px;
@@ -2523,10 +2511,8 @@ window, window.background, decoration {
  * ===================================================================== */
 
 .flyout, .brightness-flyout {
-  background-color: rgba(6, 4, 12, 0.88);
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
-    url('assets/cosmic-flyout-brightness.png');
+  background-color: rgba(8, 5, 16, 0.34);
+  background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.50), rgba(4, 2, 11, 0.14));
   background-size: cover;
   background-position: center;
   border: 1px solid rgba($nyxus-accent-warn, 0.42);
@@ -2630,10 +2616,8 @@ scale slider {
 }
 
 .qs-card {
-  background-color: rgba(6, 4, 12, 0.88);
-  background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.42), rgba(2, 1, 6, 0.68)),
-    url('assets/cosmic-flyout-qs.png');
+  background-color: rgba(8, 5, 16, 0.34);
+  background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.50), rgba(4, 2, 11, 0.14));
   background-size: cover;
   background-position: center;
   border: 1px solid rgba($nyxus-accent-primary, 0.42);

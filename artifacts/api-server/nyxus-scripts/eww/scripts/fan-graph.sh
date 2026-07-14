@@ -72,7 +72,7 @@ for row in "${rows[@]}"; do
   (( pct < 0 )) && pct=0
   (( pct > 100 )) && pct=100
   bar=$(( pct * BAR_MAX / 100 ))
-  spark=$(( pct < 4 ? 4 : pct ))
+  spark=$(( 2 + pct * 20 / 100 ))   # 2..22px sparkline height (bottom bar)
   hist=$(push_hist "$(old_hist_for "$id")" "$spark")
   json_rows+=("$(jq -nc --argjson id "$id" --arg label "$label" --argjson rpm "$rpm" \
     --argjson pct "$pct" --argjson bar "$bar" --argjson hist "$hist" \
