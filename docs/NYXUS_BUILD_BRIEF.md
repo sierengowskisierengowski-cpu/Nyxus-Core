@@ -232,6 +232,14 @@ Still open:
 - **Every feature built from here forward must have its own setting/toggle, and that setting must be added to the Hub's master settings (§4.2) at the same time it's built** — not as a later cleanup pass. A feature with no visible control in the Hub is considered incomplete, even if the underlying functionality works. This applies to everything: the backdoor login keybind, biometric login, EWW bar options, music-mode behavior, theme variants, all of it. *(Sequencing while the Hub is pre-rebuild: see §9 Q6.)*
 - This checklist is the one to keep updated as the single source of truth for progress — update it in place as boxes get checked.
 
+> **SOLE-OWNER CONSOLIDATION (2026-07-14):** The parallel multi-agent split was
+> stopped at the user's direction — an audit found real commits but fragmented,
+> unverified, `eww.yuck`-colliding work (Hub broken, ~573 uncommitted lines,
+> `main` 2 days stale). From here **one agent owns all remaining phases and is
+> the sole editor of `eww.yuck`**, superseding every earlier per-phase ownership
+> carve-out (e.g. "login/lock off-limits", "eww.yuck owned by the theme agent").
+> No more concurrent agents on this repo.
+
 ### Phase 1 — Get to one clean, working system  ✅ COMPLETE (tag `phase-1-complete-2026-07-14`)
 - [x] 1.1 Full file audit — locate every Nyxus-related file/folder on the machine (§1.2)
 - [x] 1.1a **Check for multiple local copies before trusting any single source (incl. GitHub).** Found 4 local copies of Nyxus-Core; canonical `~/Nyxus-Core` confirmed authoritative; all unique unmerged work (EWW redesign, Replit history, regreet greeter) preserved to `archive/vault-*` branches before deleting duplicates.
@@ -254,8 +262,8 @@ Still open:
 
 ### Phase 3 — Fix what's broken in the running session
 - [x] 3.1 Go through every menu/flyout/settings panel, list what's broken (§1.4) — see `docs/phase3-eww-handoff.md`; GTK apps all launch, 13/14 eww flyouts OK, Hub + TIME clock broken (handed to theme/eww agent)
-- [ ] 3.2 Fix each one, verify it opens/works without freezing
-- [ ] 3.2a **Accent desync — Hyprland window borders out of sync.** Verified live 2026-07-14: EWW bars/Hub + `accent.json` render purple `#7949f2` + magenta `#ff2667`, but the running compositor `general:col.active_border` (`hyprctl getoption`, not a file) is a stale orange→yellow gradient (`#ff7e2e → #ffff1f`). `nyxus-apply-accent` isn't propagating to the compositor border. Fix so borders follow the same accent engine. (Full cohesion in Phase 5.)
+- [x] 3.2 Fix each one, verify it opens/works without freezing — **The Hub fixed** (2026-07-14): it was never a widget bug — the live eww daemon (started 02:17) was running a config older than disk, so `nyxus-hub` opened but failed to map. Config on disk was already correct; `eww reload` + re-verify → Hub opens, maps, and closes cleanly. TIME clock also fine live (uses `time.sh`, emits valid JSON; the old `date +json` parse error is a stale log-buffer entry, gone from the current config). All 13/14 flyouts + Hub now map.
+- [x] 3.2a **Accent desync — FIXED (2026-07-14).** Root cause: on-disk config (`nyxus-hyprland-general.conf`, sourced) already sets the purple `#7949f2` + magenta `#ff2667` border correctly, and `nyxus-apply-accent` *does* `hyprctl reload` — but the border-animation daemons (`nyxus-tintd`/`beatd`/`pulsed`) snapshot the border once at startup and rewrite `general:col.active_border` every tick, so a reload never sticks while they run (and stopping tintd restores its stale base). Fix: `nyxus-apply-accent` now stops the live tint/beat daemons, pushes the freshly-rendered active/inactive border via `hyprctl keyword`, then restarts only the daemons that were running so they re-capture the new accent. Validated live: `hyprctl keyword` accepts the `rgba()` gradient; border renders the accent. (Per-app tint stays a signature feature — it intentionally overrides per app when `nyxus-tint on`.)
 - [x] 3.3 Resolve keybind duplicates (`Super+R` vs `Super+Space`) (§5) — kept `Super+Space` (native launcher); removed `Super+R`/`Super+D` drun dupes; also fixed silent conf.d dupes (`T`→`J` togglesplit, `Alt+W`→`Alt+S` wallpaper studio, removed `Shift+W` hyprshot + bare `Escape`)
 - [x] 3.4 Fix or replace the non-working terminal bind (§5) — `Super+Return` now binds a real terminal (kitty→alacritty→foot); dropped the broken `nyxus_terminal.py`
 - [x] 3.5 Full keybind audit + document final list in `docs/KEYBINDS.md` — 0 duplicate active binds, `hyprctl configerrors` clean
@@ -288,19 +296,18 @@ Still open:
 - [ ] 6.4 Git safepoint: "bars v2"
 
 ### Phase 7 — Center widget + The Hub  🟡 IN PROGRESS
-> **STATUS (2026-07-14):** `eww.yuck` (where ALL of 7.1-7.4 UI lives) is owned by
-> the Phase 5/6 theme/bars agent and was actively being edited (uncommitted
-> changes at time of writing) — so the Phase 7 agent built the **backends +
-> a full implementation spec** (`docs/PHASE7_HUB_SPEC.md`) instead of touching
-> `eww.yuck`, to avoid clobbering in-flight work. UI wiring is a clean drop-in
-> once that file is free. **Do not have two agents editing eww.yuck at once.**
-- [ ] 7.1 Redesign the Nyxus clock/date center widget — spec written (`PHASE7_HUB_SPEC.md` §7.1); eww wiring pending
-- [ ] 7.2 Rename popup to "The Hub," redesign to high polish — spec written; eww wiring pending
-- [ ] 7.3 Add app-launcher area inside the Hub — **backend done** (`nyxus-hub-apps`, live-tested: 161 apps enumerated, `--nyxus`/`--filter` working); eww grid pending
+> **STATUS (2026-07-14, sole-owner consolidation):** `eww.yuck` is now owned by
+> one agent (see the sole-owner note at the top of the phase list). The Phase 7
+> backends + spec (`docs/PHASE7_HUB_SPEC.md`) are now wired into `eww.yuck` and
+> live-verified. See that spec for the exact per-item status.
+- [~] 7.1 Redesign the Nyxus clock/date center widget — the clock↔music **flip already exists** (`bar_hub_dynamic`: PLAYER/`player.sh` + click-opens-Hub). Rich music card (album art + progress via `nyxus-nowplaying`) **deferred** — can't verify the *playing* state offline; not shipping unverified album-art image loading into the main bar. `player.sh` surfaces keep working.
+- [x] 7.2 Rename popup to "The Hub," redesign to high polish — **done**, live-verified ("NYXUS · MAIN HUB" → "The Hub").
+- [x] 7.3 Add app-launcher area inside the Hub — **done**, live-verified. Backend `nyxus-hub-apps` (161 apps / 48 NYXUS) + a vertical launcher list in The Hub, launching by `.desktop` id via `gtk-launch` (safe, no raw Exec eval).
 - [ ] 7.4 Add any other useful quick-access items decided from §9 — blocked on §9 Q1 answer
-- [x] 7.5 Build music mode (MPRIS-based now-playing view) on the center widget — **backend done**: `nyxus-nowplaying` (source-agnostic via playerctl/MPRIS — YouTube/Spotify/mpv/vlc all work), live-tested, stable JSON contract documented; eww clock↔music-card wiring pending
-- [ ] 7.6 Verify every Hub button/section actually works — including settings surfaced from earlier phases (standing rule)
-- [ ] 7.7 Git safepoint: "Hub v1 + music mode"
+- [x] 7.5 Build music mode (MPRIS-based now-playing view) — **backend done + live-tested** (`nyxus-nowplaying`, source-agnostic playerctl/MPRIS). Center-widget music flip satisfied by the existing widget; rich card deferred (see 7.1).
+- [x] settings (standing rule) — persistent in-Hub **NYXUS ONLY ⇄ ALL APPS** launcher toggle (flag file), live-verified 48↔161.
+- [ ] 7.6 Verify every Hub button/section actually works — deferred to the live reboot pass.
+- [ ] 7.7 Git safepoint: "Hub v1 + music mode" — pending live reboot verify.
 
 ### Phase 8 — Daily-driver readiness  🟡 IN PROGRESS
 - [x] 8.1 Build bootstrap/install script — `scripts/nyxus-install.sh`: orchestrator (clone → run → working desktop) that composes the existing pieces (restore-desktop configs, greetd, kage-ryu, verify). Idempotent, `--dry-run` default-available, package-filter skips non-repo entries instead of aborting, gated extras (`--greeter`/`--kernel`/`--nvidia-suspend`/`--loadout`) opt-in only. Dry-run validated (318/320 pkgs installable).
