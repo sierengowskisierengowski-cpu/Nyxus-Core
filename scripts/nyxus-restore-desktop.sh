@@ -98,7 +98,11 @@ ok "hyprland.conf + $(ls "${HOME}/.config/hypr/conf.d/" | wc -l) conf.d shards"
 step "install EWW tree"
 mkdir -p "${HOME}/.config/eww/scripts" "${HOME}/.config/eww/assets"
 install -m 0644 "${NS}"/eww/*.yuck "${HOME}/.config/eww/"
-install -m 0644 "${NS}/eww/eww.scss" "${HOME}/.config/eww/eww.scss"
+# a few inline asset paths in eww.yuck are absolute — point them at the
+# deploying user's home so the UFO popup / hero backdrops / saucer resolve.
+[[ "${HOME}" != "/home/cosmic" ]] && \
+  sed -i "s#/home/cosmic/#${HOME}/#g" "${HOME}/.config/eww/eww.yuck" 2>/dev/null || true
+install -m 0644 "${NS}/eww/eww.scss" "${HOME}/.config/eww/eww.scss" 2>/dev/null || true
 if [[ -f "${NS}/eww/accent.scss" ]]; then
   install -m 0644 "${NS}/eww/accent.scss" "${HOME}/.config/eww/accent.scss"
 fi
@@ -121,6 +125,11 @@ step "install app configs"
 mkdir -p "${HOME}/.config/dunst" "${HOME}/.config/rofi" \
          "${HOME}/.config/wlogout" "${HOME}/.config/alacritty"
 install -m 0644 "${NS}/nyxus-dunstrc"       "${HOME}/.config/dunst/dunstrc"
+# UFO notification icon (dunst icon_path) — keep the dunstrc icon_path + the
+# bridge script's paths pointed at the deploying user's home.
+install -Dm644 "${NS}/eww/assets/nyxus-notif-ufo.png" \
+  "${HOME}/.local/share/nyxus/icons/nyxus-notif-ufo.png"
+sed -i "s#/home/cosmic/#${HOME}/#g" "${HOME}/.config/dunst/dunstrc" 2>/dev/null || true
 install -m 0644 "${NS}/rofi-config.rasi"    "${HOME}/.config/rofi/config.rasi"
 install -m 0644 "${NS}/rofi-nyxus.rasi"     "${HOME}/.config/rofi/nyxus.rasi"
 install -m 0644 "${NS}/rofi-startmenu.rasi" "${HOME}/.config/rofi/startmenu.rasi"
@@ -152,7 +161,7 @@ mkdir -p "${HOME}/.local/bin"
 for h in nyxus-eww-launch nyxus-eww-launch-safe nyxus-set-wallpaper.sh \
          nyxus-sync-stations nyxus-bootstrap nyxus-wait-bootstrap \
          nyxus-session-start nyxus-security \
-         nyxus-hub-apps nyxus-nowplaying; do
+         nyxus-hub-apps nyxus-nowplaying nyxus-notif-to-eww; do
   if [[ -f "${NS}/${h}" ]]; then
     install -m 0755 "${NS}/${h}" "${HOME}/.local/bin/${h}"
   fi

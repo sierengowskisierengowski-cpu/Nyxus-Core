@@ -92,6 +92,10 @@
 ;; wifi panel view: "nearby" (scan results) | "saved" (profiles + link info)
 (defvar WIFI_VIEW "nearby")
 
+;; live notification payload — fed by nyxus-notif-to-eww (dunst bridge) and
+;; rendered inside the UFO console popup (notif-popup window).
+(defvar notif '{"app":"","summary":"","body":"","urgency":"NORMAL"}')
+
 ;; ── overlay shields ──────────────────────────────────────────────────
 ;; eww only runs a poll while a window referencing it is open, so each
 ;; fullscreen overlay references its own shield var: opening the window
@@ -995,6 +999,25 @@
        :style "background-image: linear-gradient(rgba(5,1,13,0.76), rgba(5,1,13,0.82)), url('/home/cosmic/.config/eww/assets/nyxus-hero-ufo-shop.png'); background-size: cover; background-position: center;"
     (powermenu_layout)))
 
+;; ── UFO notification popup (dunst bridge → nyxus-notif-to-eww) ──────────
+;; The message renders inside the saucer's screen; dunst skip_display keeps
+;; its native popup hidden so this is the only thing shown.
+(defwidget notif_popup_card []
+  (box :class "notif-ufo notif-${notif.urgency == 'CRITICAL' ? 'crit' : 'norm'}"
+       :orientation "v" :space-evenly false :spacing 3 :valign "center" :halign "center"
+       :style "background-image: url('/home/cosmic/.config/eww/assets/nyxus-notif-frame.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 470px; min-height: 314px; padding: 104px 96px 118px 96px;"
+    (label :class "notif-app" :halign "center" :limit-width 34 :truncate "end"
+           :text {notif.app == "" ? "NYXUS" : notif.app})
+    (label :class "notif-summary" :halign "center" :wrap true :limit-width 26
+           :text {notif.summary})
+    (label :class "notif-body" :halign "center" :wrap true :lines 2 :limit-width 34
+           :visible {notif.body != ""} :text {notif.body})))
+
+(defwindow notif-popup
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-notif"
+  :geometry (geometry :x "8" :y "54" :width "470px" :height "314px" :anchor "top right")
+  (notif_popup_card))
+
 (defwindow cheatsheet
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-cheatsheet"
   :geometry (geometry :width "100%" :height "100%" :anchor "center")
@@ -1436,6 +1459,26 @@
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-quicksettings"
   :geometry (geometry :x "16" :y "78" :width "420px" :height "520px" :anchor "bottom right")
   (quicksettings_layout))
+
+;; ── UFO console notification popup (fed by the dunst→EWW bridge) ──────
+;; The message sits inside the saucer's screen window (same eye-trick as the
+;; bottom-bar clock). dunst renders no popup of its own (skip_display); this
+;; is the visible notification.
+(defwidget notif_popup_card []
+  (overlay
+    (image :class "notif-ufo-frame" :path "/home/cosmic/.config/eww/assets/nyxus-notif-frame.png"
+           :image-width 470 :image-height 314)
+    (box :class "notif-ufo" :orientation "v" :space-evenly false :halign "fill" :valign "fill"
+         :style "padding: 96px 108px 132px 108px;"
+      (label :class "notif-app" :halign "center" :limit-width 34
+             :text {notif.app == "" || notif.app == "notify-send" ? "NYXUS" : notif.app})
+      (label :class "notif-summary" :halign "center" :wrap true :limit-width 26 :text {notif.summary})
+      (label :class "notif-body" :halign "center" :wrap true :limit-width 32 :text {notif.body}))))
+
+(defwindow notif-popup
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-notif"
+  :geometry (geometry :x "18" :y "56" :width "470px" :height "314px" :anchor "top right")
+  (notif_popup_card))
 
 (defwindow wifi
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-wifi"

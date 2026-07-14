@@ -25,8 +25,8 @@
     padding = 14
     horizontal_padding = 16
     text_icon_padding = 12
-    frame_width = 2
-    frame_color = "#ff266759"
+    frame_width = 3
+    frame_color = "#7949f2cc"
     gap_size = 6
     separator_color = "#05060a"
     sort = yes
@@ -45,10 +45,10 @@
     show_indicators = yes
 
     icon_position = left
-    min_icon_size = 32
-    max_icon_size = 64
-    icon_corner_radius = 8
-    icon_path = /usr/share/icons/Adwaita/32x32/status/:/usr/share/icons/Adwaita/32x32/devices/:/usr/share/icons/hicolor/32x32/apps/
+    min_icon_size = 52
+    max_icon_size = 96
+    icon_corner_radius = 12
+    icon_path = /home/cosmic/.local/share/nyxus/icons/:/usr/share/icons/Adwaita/32x32/status/:/usr/share/icons/Adwaita/32x32/devices/:/usr/share/icons/hicolor/32x32/apps/
 
     sticky_history = yes
     history_length = 50
@@ -71,24 +71,33 @@
     per_monitor_dpi = false
 
 [urgency_low]
-    background    = "#05060ae6"
+    background    = "#05060af2"
     foreground    = "#eef2facc"
-    frame_color   = "#26ffb766"
+    frame_color   = "#26ffb7aa"
     timeout       = 5
-    default_icon  = dialog-information
+    default_icon  = nyxus-notif-ufo
 
 [urgency_normal]
-    background    = "#05060ae6"
+    background    = "#05060af2"
     foreground    = "#eef2fa"
-    frame_color   = "#7949f266"
+    frame_color   = "#7949f2cc"
     timeout       = 8
     override_pause_level = 30
-    default_icon  = dialog-information
+    default_icon  = nyxus-notif-ufo
 
 [urgency_critical]
-    background    = "#05060ae6"
-    foreground    = "#eef2fa"
-    frame_color   = "#ff5470"
+    background    = "#0a0410f2"
+    foreground    = "#ffffff"
+    frame_color   = "#ff2667"
     timeout       = 0
     override_pause_level = 60
-    default_icon  = dialog-warning
+    default_icon  = nyxus-notif-ufo
+
+# Forward every notification to the themed EWW UFO console popup and skip
+# dunst's own plain popup. dunst still owns the dbus service + keeps history
+# (notification center), so nothing breaks — remove this rule to fall back to
+# dunst's native popups.
+[nyxus-eww-popup]
+    appname = "*"
+    script = /home/cosmic/.local/bin/nyxus-notif-to-eww
+    skip_display = true

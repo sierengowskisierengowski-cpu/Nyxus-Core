@@ -273,6 +273,30 @@ window, window.background, decoration {
   color: rgba($nyxus-accent-secondary, 0.92);
   text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.55);
 }
+/* ── UFO notification popup (message inside the saucer screen) ───────── */
+.notif-ufo { background-color: transparent; }
+.notif-app {
+  font-family: "Permanent Marker", "Inter", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: rgba($nyxus-accent-secondary, 0.95);
+  text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.6);
+}
+.notif-summary {
+  font-family: "Inter Display", "Inter", sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba($nyxus-accent-primary, 0.75), 0 0 3px rgba(0,0,0,0.9);
+}
+.notif-body {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(201, 183, 255, 0.92);
+  text-shadow: 0 0 3px rgba(0,0,0,0.9);
+}
+.notif-crit .notif-summary { color: #ffd0dc; text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.9); }
 .bar-hub-music-title {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 12px;
@@ -355,6 +379,29 @@ window, window.background, decoration {
   color: #e8edf5;
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.85), 0 0 6px rgba(255, 255, 255, 0.28);
 }
+/* ── UFO console notification popup — text sits in the saucer screen ── */
+.notif-ufo { background-color: transparent; }
+.notif-app {
+  font-family: "Permanent Marker", "Inter", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: $nyxus-accent-secondary;
+  text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.75);
+}
+.notif-summary {
+  font-family: "Inter Display", "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba($nyxus-accent-primary, 0.65);
+}
+.notif-body {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  color: rgba(238, 242, 250, 0.82);
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
+}
+
 /* compact rows for the two-row stacked cells (dual fans, net down/up) */
 .mon-trace-sm {
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
