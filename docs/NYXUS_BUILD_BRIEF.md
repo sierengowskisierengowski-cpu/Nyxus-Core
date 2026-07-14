@@ -189,9 +189,9 @@ Still open:
 - [x] 1.2 Classify each file: keep / merge / delete (§2)
 - [x] 1.2a **Commit everything to git as-is before deleting anything** — pre-cleanup safepoint commit `c1410f4` made and pushed before any deletions.
 - [x] 1.2b **Check repo visibility (private/public) before committing anything sensitive.** — Confirmed **`sierengowskisierengowski-cpu/Nyxus-Core` is PUBLIC.** `NYXUS_VEIL_BRAINDUMP.md` (marked EYES ONLY) and any similarly sensitive notes must stay out of this repo entirely.
-- [ ] 1.3 Move all "keep" files into `nyxus-core` with organized folder structure
-- [ ] 1.4 Delete everything not moved into the repo
-- [ ] 1.5 Git safepoint: "consolidated build state"
+- [x] 1.3 Move all "keep" files into `nyxus-core` with organized folder structure — the six Claude agent-memory design notes (theme spec, typography, EWW bar constraints, living-wallpaper FX layer, addon status) consolidated into `docs/architecture/live-build-notes.md`.
+- [x] 1.4 Delete everything not moved into the repo — content-checked before deletion (per §1.1a discipline): dead GTK theme and an orphaned stale `nyxus_settings.py` deleted; GOLD snapshots, config backups, and dev screenshots deliberately **kept** (real, recent recovery value while the build is mid-repair, not stale cruft); `/opt/nyxus*` reclassified from the original audit's "dead" call to **live** after verification (dock/hotkey/mission-control/quick-settings/snap daemons all exec from there) — only the one broken `/opt/nyxus-cache` symlink is dead, awaiting a manual `sudo rm` (needs root).
+- [x] 1.5 Git safepoint: "consolidated build state" — tag `phase-1-complete-2026-07-14`
 
 ### Phase 2 — Reliable boot & login
 - [ ] 2.1 Confirm/install proper display manager + greeter (§1.1) — *review `archive/vault-uncommitted-wip` regreet variant first, see note under §1.1*
