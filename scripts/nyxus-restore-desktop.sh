@@ -155,6 +155,23 @@ install -m 0644 "${NS}"/nyxus-*.png "${HOME}/.config/hypr/walls/" 2>/dev/null ||
 install -m 0644 "${NS}"/hypr-walls/*.png "${HOME}/.config/hypr/walls/" 2>/dev/null || true
 ok "$(ls "${HOME}/.config/hypr/walls/"*.png 2>/dev/null | wc -l) wallpapers in ~/.config/hypr/walls/"
 
+# ── 6b. living wallpaper (flagship) — pre-rendered loop + UFO sprite ─────────
+# nyxus-live-wallpaper plays this seamless cosmic loop (drifting nebula,
+# twinkling stars, occasional cruising saucer) via mpvpaper. Shipping the
+# rendered mp4 means restore never has to re-encode; if it is somehow
+# missing, `nyxus-live-wallpaper on` re-renders it from the still.
+step "stage living wallpaper (flagship loop + UFO sprite)"
+mkdir -p "${HOME}/.config/hypr/walls/live"
+if [[ -d "${NS}/livewall" ]]; then
+  install -m 0644 "${NS}/livewall/nyxus-livewall-flagship.mp4" \
+    "${HOME}/.config/hypr/walls/live/nyxus-livewall-flagship.mp4" 2>/dev/null || true
+  install -m 0644 "${NS}/livewall/nyxus-livewall-ufo.png" \
+    "${HOME}/.config/hypr/walls/live/nyxus-livewall-ufo.png" 2>/dev/null || true
+  ok "living wallpaper loop + saucer sprite staged"
+else
+  warn "no livewall/ assets in source — living wallpaper will render on first enable"
+fi
+
 # ── 7. helper launchers ─────────────────────────────────────────────────────
 step "install helper launchers → ~/.local/bin"
 mkdir -p "${HOME}/.local/bin"
@@ -166,6 +183,7 @@ for h in nyxus-eww-launch nyxus-eww-launch-safe nyxus-set-wallpaper.sh \
          nyxus-sound-bake nyxus-companion \
          nyxus-sfx nyxus-soundd nyxus-sounds nyxus-sound-forge \
          nyxus-shader nyxus-plugins nyxus-living nyxus-live-wallpaper \
+         nyxus-livewall-flagship \
          nyxus-eww-cinematic nyxus-wall-cycle nyxus-wall-fx nyxus-wall-next \
          nyxus-beat nyxus-beatd nyxus-tint nyxus-tintd nyxus-lens \
          nyxus-spray nyxus-freeform nyxus-mission-control-toggle \
@@ -222,6 +240,15 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
     "${HOME}/.local/bin/nyxus-set-wallpaper.sh" "${WALL}" >/dev/null 2>&1 \
       && ok "wallpaper applied: alien-hero" \
       || warn "wallpaper apply failed — will land on next login"
+  fi
+  # Living wallpaper: honour the persisted on/off preference. `auto` starts
+  # the animated loop (mpvpaper) only if the user enabled it, otherwise it
+  # leaves the still in place — so restore never forces the living wallpaper
+  # on, it just puts back whatever the user last chose.
+  if [[ -x "${HOME}/.local/bin/nyxus-live-wallpaper" ]]; then
+    "${HOME}/.local/bin/nyxus-live-wallpaper" auto >/dev/null 2>&1 \
+      && ok "living wallpaper: honoured saved preference" \
+      || warn "living wallpaper auto failed — still image remains"
   fi
   if [[ -x "${HOME}/.local/bin/nyxus-eww-launch-safe" ]]; then
     "${HOME}/.local/bin/nyxus-eww-launch-safe" >/dev/null 2>&1 &
