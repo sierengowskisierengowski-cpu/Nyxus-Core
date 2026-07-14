@@ -18,6 +18,9 @@
 #   app-open      0.26s  quick soft rising blip
 #   error         0.45s  low descending denied tone
 #   success       0.50s  ascending 3-note arpeggio chime
+#   laugh         1.25s  warbling alien "ha-ha-ha" giggle (companion)
+#   chatter       0.90s  curious alien gibberish burble    (companion)
+#   yell          1.10s  urgent rising alien alarm yell    (companion)
 #
 # Requires: ffmpeg (sox is NOT required — this host has no sox). Rerun
 # any time to regenerate. Default outdir is the repo `sounds/` next to
@@ -71,5 +74,12 @@ mk alert        0.60 '0.32*(0.5+0.5*sin(2*PI*7*t))*sin(2*PI*523*t)+0.16*sin(2*PI
 mk app-open     0.26 '0.32*exp(-3*t)*sin(2*PI*(520+760*t)*t)' 'lowpass=f=9500'
 mk error        0.45 '0.34*sin(2*PI*(300-110*t)*t)+0.18*sin(2*PI*(150-55*t)*t)' 'aecho=0.8:0.85:50:0.20,lowpass=f=7000'
 mk success      0.50 '0.40*exp(-7*t)*sin(2*PI*660*t)*between(t\,0\,0.17)+0.40*exp(-7*(t-0.17))*sin(2*PI*880*t)*between(t\,0.17\,0.34)+0.42*exp(-7*(t-0.34))*sin(2*PI*1320*t)*between(t\,0.34\,0.50)' 'aecho=0.8:0.85:45:0.18,lowpass=f=10000'
+# laugh: 5 quick "ha" bursts (mod() envelope) on a rising, vibrato'd carrier
+# with a ring-mod flutter for an alien giggle. Used by the desktop companion.
+mk laugh        1.25 '0.5*exp(-15*mod(t\,0.23))*(0.7*sin(2*PI*(360+70*t)*t+5*sin(2*PI*6*t))+0.3*sin(2*PI*(720+140*t)*t))*(0.6+0.4*sin(2*PI*22*t))' 'aecho=0.8:0.85:45:0.2,lowpass=f=9000'
+# chatter: soft syllabic burble — short pitch-stepped blips (curious gibberish).
+mk chatter      0.90 '0.42*exp(-18*mod(t\,0.15))*sin(2*PI*(430+160*sin(2*PI*3.3*t)+90*mod(floor(t/0.15)\,3))*t+3*sin(2*PI*9*t))' 'aecho=0.8:0.85:35:0.15,lowpass=f=8500'
+# yell: urgent two-tone rising siren-yell with hard vibrato (critical alerts).
+mk yell         1.10 '0.5*(0.55+0.45*sin(2*PI*11*t))*sin(2*PI*(520+330*t)*t+7*sin(2*PI*13*t))+0.22*sin(2*PI*(1040+660*t)*t)' 'aecho=0.8:0.85:50:0.22,lowpass=f=8000'
 
 echo "done."

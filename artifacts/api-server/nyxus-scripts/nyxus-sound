@@ -36,7 +36,7 @@ SND_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/nyxus/sounds"
 
 # Known events (baked by nyxus-sound-bake). Kept here purely for `list`
 # / `test`; unknown names still play if an asset happens to exist.
-EVENTS=(startup login logout lock unlock notification alert app-open error success)
+EVENTS=(startup login logout lock unlock notification alert app-open error success laugh chatter yell)
 
 _state() {  # echo on|off (default on)
   [[ -r "$STATE" ]] || { echo on; return; }

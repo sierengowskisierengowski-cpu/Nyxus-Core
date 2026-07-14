@@ -82,6 +82,14 @@ nyxus-sound-bake ~/.local/share/nyxus/sounds   # or bake straight to deploy
 | `app-open`     | quick soft rising blip                 | 0.3 s   |
 | `error`        | low descending "denied" tone           | 0.5 s   |
 | `success`      | ascending 3-note arpeggio chime        | 0.6 s   |
+| `laugh`        | warbling alien "ha-ha-ha" giggle       | 1.25 s  |
+| `chatter`      | curious alien gibberish burble         | 0.9 s   |
+| `yell`         | urgent rising alien alarm yell         | 1.1 s   |
+
+`laugh` / `chatter` / `yell` are the desktop companion's voice
+(`nyxus-companion`): laugh on click, chatter on notifications, yell on
+critical CPU/temp alerts. The companion is audio-only — no text bubbles —
+and rate-limits ambient sounds so it never gets annoying.
 
 Deployed to `~/.local/share/nyxus/sounds/<event>.ogg`.
 
