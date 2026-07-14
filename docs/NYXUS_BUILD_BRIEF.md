@@ -287,12 +287,18 @@ Still open:
 - [ ] 6.3 Confirm all bar modules match theme from Phase 5
 - [ ] 6.4 Git safepoint: "bars v2"
 
-### Phase 7 — Center widget + The Hub
-- [ ] 7.1 Redesign the Nyxus clock/date center widget
-- [ ] 7.2 Rename popup to "The Hub," redesign to high polish
-- [ ] 7.3 Add app-launcher area inside the Hub
-- [ ] 7.4 Add any other useful quick-access items decided from §9
-- [ ] 7.5 Build music mode (MPRIS-based now-playing view) on the center widget
+### Phase 7 — Center widget + The Hub  🟡 IN PROGRESS
+> **STATUS (2026-07-14):** `eww.yuck` (where ALL of 7.1-7.4 UI lives) is owned by
+> the Phase 5/6 theme/bars agent and was actively being edited (uncommitted
+> changes at time of writing) — so the Phase 7 agent built the **backends +
+> a full implementation spec** (`docs/PHASE7_HUB_SPEC.md`) instead of touching
+> `eww.yuck`, to avoid clobbering in-flight work. UI wiring is a clean drop-in
+> once that file is free. **Do not have two agents editing eww.yuck at once.**
+- [ ] 7.1 Redesign the Nyxus clock/date center widget — spec written (`PHASE7_HUB_SPEC.md` §7.1); eww wiring pending
+- [ ] 7.2 Rename popup to "The Hub," redesign to high polish — spec written; eww wiring pending
+- [ ] 7.3 Add app-launcher area inside the Hub — **backend done** (`nyxus-hub-apps`, live-tested: 161 apps enumerated, `--nyxus`/`--filter` working); eww grid pending
+- [ ] 7.4 Add any other useful quick-access items decided from §9 — blocked on §9 Q1 answer
+- [x] 7.5 Build music mode (MPRIS-based now-playing view) on the center widget — **backend done**: `nyxus-nowplaying` (source-agnostic via playerctl/MPRIS — YouTube/Spotify/mpv/vlc all work), live-tested, stable JSON contract documented; eww clock↔music-card wiring pending
 - [ ] 7.6 Verify every Hub button/section actually works — including settings surfaced from earlier phases (standing rule)
 - [ ] 7.7 Git safepoint: "Hub v1 + music mode"
 

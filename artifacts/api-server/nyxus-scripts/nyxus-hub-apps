@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+# ============================================================================
+# NYXUS - Hub app-launcher backend (Phase 7.3)
+# (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+# Enumerates installed .desktop applications and emits a JSON array the Hub's
+# app-launcher area consumes (eww `defpoll`/`literal`). Source-agnostic: reads
+# the standard XDG application dirs, honours NoDisplay/Hidden/OnlyShowIn, and
+# strips Exec field codes (%u %f %U %F %i %c %k) so the command is runnable.
+#
+#   nyxus-hub-apps                # all visible apps, sorted by name -> JSON
+#   nyxus-hub-apps --filter foo   # name/exec substring filter (Hub search box)
+#   nyxus-hub-apps --nyxus        # only NYXUS apps (io.nyxus.* / nyxus-*)
+# ============================================================================
+import json, os, re, sys
+
+XDG_DATA_DIRS = os.environ.get("XDG_DATA_DIRS", "/usr/local/share:/usr/share")
+XDG_DATA_HOME = os.environ.get("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
+APP_DIRS = [os.path.join(d, "applications")
+            for d in [XDG_DATA_HOME, *XDG_DATA_DIRS.split(":")]]
+
+FIELD_CODES = re.compile(r"%[uUfFickvmnN]")
+
+
+def parse_desktop(path):
+    entry, in_section = {}, False
+    try:
+        with open(path, encoding="utf-8", errors="ignore") as fh:
+            for line in fh:
+                line = line.rstrip("\n")
+                if line.startswith("["):
+                    in_section = line.strip() == "[Desktop Entry]"
+                    continue
+                if not in_section or "=" not in line or line.startswith("#"):
+                    continue
+                k, _, v = line.partition("=")
+                entry[k.strip()] = v.strip()
+    except OSError:
+        return None
+    if entry.get("Type") != "Application":
+        return None
+    if entry.get("NoDisplay", "").lower() == "true":
+        return None
+    if entry.get("Hidden", "").lower() == "true":
+        return None
+    name = entry.get("Name")
+    exec_ = entry.get("Exec")
+    if not name or not exec_:
+        return None
+    exec_ = FIELD_CODES.sub("", exec_).strip()
+    return {
+        "name": name,
+        "exec": exec_,
+        "icon": entry.get("Icon", ""),
+        "categories": [c for c in entry.get("Categories", "").split(";") if c],
+        "terminal": entry.get("Terminal", "").lower() == "true",
+        "id": os.path.splitext(os.path.basename(path))[0],
+    }
+
+
+def collect():
+    seen, apps = set(), []
+    for d in APP_DIRS:
+        if not os.path.isdir(d):
+            continue
+        for fn in os.listdir(d):
+            if not fn.endswith(".desktop") or fn in seen:
+                continue
+            seen.add(fn)  # earlier dirs (user home) win over system
+            app = parse_desktop(os.path.join(d, fn))
+            if app:
+                apps.append(app)
+    apps.sort(key=lambda a: a["name"].lower())
+    return apps
+
+
+def main(argv):
+    apps = collect()
+    if "--nyxus" in argv:
+        apps = [a for a in apps if a["id"].startswith(("io.nyxus.", "nyxus-"))
+                or "nyxus" in a["exec"].lower()]
+    if "--filter" in argv:
+        try:
+            q = argv[argv.index("--filter") + 1].lower()
+            apps = [a for a in apps
+                    if q in a["name"].lower() or q in a["exec"].lower()]
+        except IndexError:
+            pass
+    json.dump(apps, sys.stdout, separators=(",", ":"))
+    sys.stdout.write("\n")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
