@@ -1431,6 +1431,25 @@ window, window.background, decoration {
   min-height: 24px;
 }
 .dashboard-scroll scrollbar slider:hover { background: rgba($nyxus-accent-primary, 0.65); }
+
+/* ── global scrollbar — urban violet/magenta, quiet but on-theme ─────── */
+scrollbar { background: transparent; border: none; }
+scrollbar trough {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 7px;
+  margin: 2px;
+}
+scrollbar slider {
+  background: linear-gradient(180deg, rgba($nyxus-accent-primary, 0.60), rgba($nyxus-accent-secondary, 0.45));
+  border-radius: 7px;
+  min-width: 7px;
+  min-height: 30px;
+  box-shadow: 0 0 7px rgba($nyxus-accent-primary, 0.35);
+}
+scrollbar slider:hover {
+  background: linear-gradient(180deg, rgba($nyxus-accent-primary, 0.90), rgba($nyxus-accent-secondary, 0.70));
+  box-shadow: 0 0 12px rgba($nyxus-accent-primary, 0.55);
+}
 .dash-clock {
   font-size: 88px;
   font-weight: 700;
@@ -3335,6 +3354,14 @@ scale slider {
   font-family: "Permanent Marker", "Inter Display", sans-serif;
   font-weight: 400;
   letter-spacing: 0.10em;
+}
+/* urban voice on the flyout + hub panel titles too, so headers read like the
+   login/hyprlock street-art lettering (short titles stay legible in marker) */
+.qs-title, .wifi-title, .bt-title, .mix-title, .cal-title, .notif-title,
+.upd-title, .hub-title, .flyout-title {
+  font-family: "Permanent Marker", "Inter Display", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.06em;
 }
 .power-title {
   color: $nyxus-accent-primary;
