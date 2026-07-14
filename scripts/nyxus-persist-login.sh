@@ -9,6 +9,25 @@ ts() { date '+%F %T'; }
 {
   echo "[$(ts)] persist-login start"
 
+  # Self-heal the recovery symlinks in ~/.local/bin. These are intentionally
+  # NOT committed (they are absolute-path symlinks into this repo checkout), so
+  # a fresh checkout / accidental wipe can leave them missing — which would
+  # silently break the exec-once autostart on the NEXT login. We can resolve
+  # our own repo location from this script's real path and re-create the whole
+  # recovery launcher set idempotently on every login.
+  SELF="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+  REPO_SCRIPTS="$(cd "$(dirname "$SELF")" && pwd)"
+  BIN="${HOME}/.local/bin"
+  mkdir -p "$BIN"
+  for s in nyxus-persist-login nyxus-boot-check nyxus-restore-session \
+           nyxus-restore-login nyxus-overlay-unstick; do
+    src="${REPO_SCRIPTS}/${s}.sh"
+    if [[ -f "$src" ]] && [[ "$(readlink -f "${BIN}/${s}" 2>/dev/null)" != "$(readlink -f "$src")" ]]; then
+      ln -sf "$src" "${BIN}/${s}"
+      echo "[$(ts)] self-heal symlink ${BIN}/${s} -> ${src}"
+    fi
+  done
+
   # Clear stuck overlay locks from prior session
   rm -rf "${XDG_RUNTIME_DIR:-/tmp}/nyxus-overlay-shield.d" 2>/dev/null || true
 

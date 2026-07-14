@@ -8,6 +8,15 @@
 # Hyprland so the session owns PID 1 of the user tree.
 set -euo pipefail
 
+# PATH FIX (2026-07-14): display managers (greetd/regreet) launch this with a
+# minimal PATH that does NOT include ~/.local/bin, where the nyxus autostart
+# launchers (nyxus-wait-bootstrap, nyxus-persist-login, nyxus-boot-check, …)
+# live. Without this, Hyprland's exec-once lines fail "command not found" and
+# the bars/widgets never come back after login. Put ~/.local/bin first so the
+# whole session (Hyprland + every exec-once child + user services) can find
+# them, regardless of how the session was started.
+export PATH="${HOME}/.local/bin:${PATH}"
+
 export XDG_CURRENT_DESKTOP=Hyprland
 export XDG_SESSION_TYPE=wayland
 export XDG_SESSION_DESKTOP=Hyprland
