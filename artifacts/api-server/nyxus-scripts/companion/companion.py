@@ -102,7 +102,7 @@ DECIDE_MAX = _envf("NYXUS_COMPANION_DECIDE_MAX", 26.0)
 STROLL_EVERY = _envf("NYXUS_COMPANION_STROLL_EVERY", 150.0)  # avg secs between strolls
 
 TICK_ACTIVE_MS = 16     # ~60 fps while anything is in motion
-TICK_IDLE_MS = 90       # ~11 fps while just breathing
+TICK_IDLE_MS = 125      # ~8 fps while just breathing
 
 JUMP_HEADROOM = 150
 SIDE_ROOM = 40
@@ -522,8 +522,8 @@ class Companion:
             self.area.queue_draw()
             self._idle_draw_phase = None
         else:
-            # breathing only: redraw at the idle tick rate (cheap, ~11fps)
-            phase = int((now - self._t0) * 12)
+            # breathing only: ~8 redraws/s is plenty for a ±3px breath cycle
+            phase = int((now - self._t0) * 8)
             if phase != self._idle_draw_phase:
                 self._idle_draw_phase = phase
                 self.area.queue_draw()
