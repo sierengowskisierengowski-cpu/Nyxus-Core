@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# ============================================================
+#  NYXUS — greetd greeter chain (never-lock-out fallback)
+#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  greetd runs this as the 'greeter' user. It walks a fallback chain so the
+#  machine can NEVER be left at a frozen/blank screen the way SDDM's X11
+#  greeter was on this hybrid Intel+NVIDIA GPU:
+#
+#    1. regreet under cage  (themed NYXUS login — Wayland, GPU path that
+#       Hyprland already proves works on this machine)
+#    2. regreet under cage with the software (pixman) renderer  (in case the
+#       GPU path misbehaves for the greeter specifically)
+#    3. tuigreet             (text login — the guaranteed fallback)
+#    4. agreety              (bare built-in prompt — last resort)
+#
+#  On a NORMAL successful login greetd tears this process down before it can
+#  fall through, so the chain only advances on a real startup failure.
+# ============================================================
+set +e
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+LOG="/tmp/nyxus-greeter.log"
+echo "[$(date -Iseconds)] nyxus-greeter start (user=$(id -un))" >>"$LOG" 2>&1
+
+run_regreet() {  # $1 = extra env description
+  echo "[$(date -Iseconds)] trying regreet ($1)" >>"$LOG" 2>&1
+  cage -s -- regreet >>"$LOG" 2>&1
+}
+
+if command -v cage >/dev/null 2>&1 && command -v regreet >/dev/null 2>&1; then
+  run_regreet "gpu";                 [ $? -eq 0 ] && exit 0
+  WLR_RENDERER=pixman run_regreet "pixman/software"; [ $? -eq 0 ] && exit 0
+  echo "[$(date -Iseconds)] regreet failed both renderers -> text fallback" >>"$LOG" 2>&1
+fi
+
+if command -v tuigreet >/dev/null 2>&1; then
+  echo "[$(date -Iseconds)] launching tuigreet (text)" >>"$LOG" 2>&1
+  exec tuigreet --time --remember --remember-session \
+       --greeting "NYXUS · fallback login" \
+       --cmd nyxus-session-start
+fi
+
+echo "[$(date -Iseconds)] launching agreety (bare)" >>"$LOG" 2>&1
+exec agreety --cmd nyxus-session-start

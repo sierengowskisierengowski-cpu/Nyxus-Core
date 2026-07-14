@@ -34,9 +34,15 @@ Nyxus is a custom Hyprland desktop build (custom ISO + custom kernel) meant to b
 - [ ] Remove the old broken Hyprland login theme entirely — it should not exist as a file, an option, or a fallback
 - [ ] New login screen should follow the Nyxus theme (§2) once built
 
-> **STATUS (2026-07-14):** Root cause of the blank-screen-on-boot found and fixed — the SDDM greeter was **SIGSEGV-crashing in hardware GL/EGL on the hybrid Intel+NVIDIA GPU** (it enumerated sessions fine, then crashed at render; the theme was never the problem). Fix: `QT_QUICK_BACKEND=software` renders the greeter via llvmpipe. SDDM chosen over greetd/regreet (Option A). A new from-scratch, pure-QtQuick greeter theme (Nyxus black + purple/magenta) was built and validated rendering offscreen. Deploy via `sudo scripts/nyxus-fix-login.sh`. **Pending user reboot verification.**
+> **STATUS (2026-07-14) — PIVOTED SDDM → greetd+regreet after two failed reboots:**
+> 1. First failure: SDDM greeter SIGSEGV in hardware GL on the hybrid Intel+NVIDIA GPU (blank screen + cursor). Fixed the crash with `QT_QUICK_BACKEND=software`.
+> 2. Second failure: with the crash gone, the SDDM greeter ran (PID alive, no coredump) but stayed **invisible** — X11's VT/DRM handoff never switched the panel to VT2, leaving a frozen VT1. This is an inherent fragility of SDDM's **X11** greeter on Optimus hardware.
+> 3. **Decision:** move the greeter off X11 onto **Wayland via `greetd` + `regreet`** (run under `cage`) — the same Wayland/DRM path Hyprland/COSMIC already use successfully. Verified `cage` initialises its renderer on the Intel Iris Xe in a nested smoke test (no reboot). Never-lock-out fallback chain built: **regreet (GPU) → regreet (pixman/software) → tuigreet (text) → agreety**, so a greeter failure drops to a text login, never a frozen screen.
+> - Themed regreet: alien "Nyxus Hyprland" background + frosted purple/magenta login CSS (ported from the SDDM theme + `docs/THEME.md` §8 tokens). Deploy via `sudo scripts/nyxus-setup-greetd.sh`. **Pending user reboot verification.**
+> - The SDDM theme/scripts (`sddm-theme/`, `nyxus-fix-login.sh`) are kept in-repo as a fallback but are no longer the active path.
+> - **ISO follow-up (Phase 4):** `iso-builder/.../customize_airootfs.sh` still `systemctl enable sddm` — needs swapping to `greetd` to match. Config files already mirrored to the ISO tree.
 >
-> **Archive pointer:** an earlier **regreet-based greeter variant** (greetd + regreet, 4-layer fallback chain) is preserved on GitHub branch **`archive/vault-uncommitted-wip`** — reviewed and set aside in favor of hardening the SDDM path that live + ISO already share. Revisit only if the SDDM path proves unreliable.
+> **Archive pointer:** the original regreet variant is on `archive/vault-uncommitted-wip` — this pivot supersedes/realises it with current tokens.
 
 #### Login screen — functional additions (build in Phase 2)
 - [ ] Hide the session picker by default (don't show session pills in plain view) but keep it easily reachable — e.g. a small icon/toggle rather than always-visible options
@@ -230,9 +236,9 @@ Still open:
 - [x] 1.5 Git safepoint: "consolidated build state"
 
 ### Phase 2 — Reliable boot & login  🟡 IN PROGRESS
-- [x] 2.1 Confirm/install proper display manager + greeter (§1.1) — SDDM; hybrid-GPU software-render fix. *(pending reboot verify)*
-- [x] 2.2 Build fresh login screen (no old broken Hyprland login left anywhere) — new pure-QtQuick theme; deploy script removes stock `hyprland*.desktop`. *(pending reboot verify)*
-- [x] 2.3 Confirm both Hyprland and COSMIC are selectable sessions at login (hidden by default, easily reachable) — collapsed session chip, click to reveal. *(pending reboot verify)*
+- [x] 2.1 Confirm/install proper display manager + greeter (§1.1) — **pivoted to greetd + regreet (Wayland)** after SDDM's X11 greeter failed twice on the hybrid GPU. Deploy: `sudo scripts/nyxus-setup-greetd.sh`. *(pending reboot verify)*
+- [x] 2.2 Build fresh login screen (no old broken Hyprland login left anywhere) — themed regreet (alien art + frosted purple/magenta CSS); stock `hyprland*.desktop` already removed; never-lock-out fallback chain. *(pending reboot verify)*
+- [x] 2.3 Confirm both Hyprland and COSMIC are selectable sessions at login (regreet session dropdown; both `.desktop` present). *(pending reboot verify)*
 - [ ] 2.4 Build the hidden backdoor login keybind (**`Super+Space+Enter`**, chord settled) as a lockout-proof fallback — mechanism still to build (§9 Q5).
 - [x] 2.5 Check for fingerprint/IR-camera hardware on the GS77; if present, scope fingerprint (`fprintd`) and face (`howdy`) login as a sub-task — **hardware CONFIRMED (Goodix fingerprint + IR camera); scoped as follow-up (§1.1).**
 - [ ] 2.6 Add settings/toggles for anything built here to the Hub (per the standing rule) — *pending §9 Q6 sequencing decision.*

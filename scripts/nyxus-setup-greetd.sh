@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# ============================================================
+#  NYXUS — switch the login greeter to greetd + regreet (Wayland)
+#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Why: SDDM's greeter uses X11, whose VT/GPU handoff kept failing on this
+#  hybrid Intel+NVIDIA laptop (first a GL SIGSEGV, then an invisible greeter
+#  frozen on VT1). Hyprland/COSMIC work fine because they are Wayland. This
+#  moves the greeter onto the same Wayland/DRM path via greetd + regreet,
+#  with a never-lock-out fallback chain (regreet -> tuigreet -> agreety).
+#
+#  Run once:  sudo scripts/nyxus-setup-greetd.sh
+# ============================================================
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+NS="${REPO_ROOT}/artifacts/api-server/nyxus-scripts"
+GS="${NS}/greetd"
+REAL_USER="${SUDO_USER:-${USER}}"
+
+if [[ $EUID -ne 0 ]]; then
+  echo "elevating with sudo …"
+  exec sudo -E bash "$0" "$@"
+fi
+
+echo "▌ NYXUS — installing greetd + regreet login for ${REAL_USER}"
+
+# 1. Packages (all official 'extra' repo — no AUR). cage is already present.
+echo "  · installing greetd-regreet, greetd-tuigreet, cage …"
+pacman -S --needed --noconfirm greetd greetd-regreet greetd-tuigreet cage
+
+# 2. greeter chain script on PATH.
+install -Dm755 "${GS}/nyxus-greeter" /usr/local/bin/nyxus-greeter
+
+# 3. greetd + regreet config, themed CSS, and the login background.
+#    Background must live under /etc/greetd — the 'greeter' user can't read
+#    the operator's home.
+install -Dm644 "${GS}/config.toml"  /etc/greetd/config.toml
+install -Dm644 "${GS}/regreet.toml" /etc/greetd/regreet.toml
+install -Dm644 "${GS}/regreet.css"  /etc/greetd/regreet.css
+install -Dm644 "${GS}/nyxus-login-bg.png" /etc/greetd/nyxus-login-bg.png
+# regreet writes its cache/state here as the greeter user.
+install -d -o greeter -g greeter /var/lib/greetd 2>/dev/null || true
+install -d -o greeter -g greeter /var/cache/regreet 2>/dev/null || true
+
+# 4. Nyxus fonts system-wide so the greeter can render the wordmark/clock.
+REAL_HOME="$(getent passwd "${REAL_USER}" | cut -d: -f6)"
+if [[ -d "${REAL_HOME}/.local/share/fonts/nyxus" ]]; then
+  install -d -m0755 /usr/share/fonts/nyxus
+  install -m0644 "${REAL_HOME}/.local/share/fonts/nyxus/"*.ttf /usr/share/fonts/nyxus/ 2>/dev/null || true
+  fc-cache -f >/dev/null 2>&1 || true
+fi
+
+# 5. Session entrypoint (greeter launches this for the NYXUS session).
+install -Dm755 "${NS}/nyxus-session-start" /usr/local/bin/nyxus-session-start
+
+# 6. Switch display-manager: SDDM off, greetd on. greetd.service aliases
+#    display-manager.service, so enabling it repoints the symlink.
+systemctl disable sddm.service          >/dev/null 2>&1 || true
+systemctl disable cosmic-greeter.service >/dev/null 2>&1 || true
+systemctl enable greetd.service
+DM="$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null || true)"
+echo "  · display-manager.service -> ${DM}"
+
+cat <<EOF
+
+── done. SAFE TO REBOOT ──────────────────────────────────────────────
+On reboot you should get the themed NYXUS (regreet) login. If regreet
+ever fails to start, greetd automatically falls through to a text login
+(tuigreet) — you will NOT be dropped to a frozen screen again.
+
+  sudo systemctl reboot
+
+At the greeter: pick NYXUS (Hyprland) or COSMIC and log in.
+
+If anything looks wrong you are still safe:
+  - a text login (tuigreet) appears instead of the themed one, OR
+  - switch to a TTY (Ctrl+Alt+F2) and: journalctl -b -u greetd
+Recovery log from the greeter chain: /tmp/nyxus-greeter.log
+To revert to SDDM:  sudo systemctl disable greetd && sudo systemctl enable sddm && reboot
+──────────────────────────────────────────────────────────────────────
+EOF
