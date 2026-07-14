@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-voice-install   ·   rev 2026-07-14 r1 (Cosmic Voice Control)
+#
+# Deploy / restore the NYXUS voice-control stack. Idempotent; safe to
+# re-run any time (e.g. after a fresh checkout or a wipe of ~/.local/bin).
+#
+# What it does:
+#   1. Installs nyxus-voiced, nyxus-voice, nyxus-voice-model into
+#      ~/.local/bin (from this repo checkout next to this script).
+#   2. Copies the Hyprland include nyxus-voice.conf to
+#      ~/.config/hypr/nyxus-voice.conf.
+#   3. Adds the single `source = ~/.config/hypr/nyxus-voice.conf` line to
+#      hyprland.conf ONLY with --wire-autostart (default: just prints it,
+#      so we never fight another editor of hyprland.conf).
+#   4. Ensures a default config exists (the daemon writes it on first run).
+#
+# Usage:
+#   nyxus-voice-install                install bins + hypr include (no edits
+#                                      to hyprland.conf)
+#   nyxus-voice-install --wire-autostart  ...and append the source line to
+#                                      hyprland.conf if it's missing
+#   nyxus-voice-install --check        report what's installed, change nothing
+#
+# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -euo pipefail
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+SRC="$(dirname "$SELF")"
+BIN="${HOME}/.local/bin"
+HYPR="${HOME}/.config/hypr"
+INCLUDE_SRC="${SRC}/nyxus-voice.conf"
+INCLUDE_DST="${HYPR}/nyxus-voice.conf"
+SOURCE_LINE='source = ~/.config/hypr/nyxus-voice.conf'
+
+BINS=(nyxus-voiced nyxus-voice nyxus-voice-model nyxus-voice-install)
+WIRE=0
+CHECK=0
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --wire-autostart) WIRE=1 ;;
+    --check) CHECK=1 ;;
+    -h|--help) sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) echo "nyxus-voice-install: unknown arg '$1'" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+if [[ $CHECK -eq 1 ]]; then
+  echo "── NYXUS voice · install check ───────────────────────────────"
+  for b in "${BINS[@]}"; do
+    if [[ -x "${BIN}/${b}" ]]; then echo "  ✓ ${BIN}/${b}"; else echo "  ✗ ${BIN}/${b} (missing)"; fi
+  done
+  if [[ -f "$INCLUDE_DST" ]]; then echo "  ✓ ${INCLUDE_DST}"; else echo "  ✗ ${INCLUDE_DST} (missing)"; fi
+  if [[ -f "${HYPR}/hyprland.conf" ]] && grep -qF "nyxus-voice.conf" "${HYPR}/hyprland.conf"; then
+    echo "  ✓ hyprland.conf sources nyxus-voice.conf"
+  else
+    echo "  ✗ hyprland.conf does NOT source nyxus-voice.conf (add: ${SOURCE_LINE})"
+  fi
+  exit 0
+fi
+
+echo "── NYXUS voice · install ─────────────────────────────────────"
+mkdir -p "$BIN" "$HYPR"
+
+for b in "${BINS[@]}"; do
+  if [[ -f "${SRC}/${b}" ]]; then
+    install -Dm755 "${SRC}/${b}" "${BIN}/${b}"
+    echo "  ✓ installed ${BIN}/${b}"
+  else
+    echo "  ! source missing: ${SRC}/${b}" >&2
+  fi
+done
+
+if [[ -f "$INCLUDE_SRC" ]]; then
+  install -Dm644 "$INCLUDE_SRC" "$INCLUDE_DST"
+  echo "  ✓ installed ${INCLUDE_DST}"
+fi
+
+# The daemon writes ~/.config/nyxus/voice.conf on first run; pre-create the
+# dir so that happens cleanly even before first launch.
+mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/nyxus"
+
+if [[ $WIRE -eq 1 ]]; then
+  MAIN="${HYPR}/hyprland.conf"
+  if [[ -f "$MAIN" ]]; then
+    if grep -qF "nyxus-voice.conf" "$MAIN"; then
+      echo "  ✓ hyprland.conf already sources nyxus-voice.conf"
+    else
+      {
+        echo ""
+        echo "# NYXUS — voice control autostart (added by nyxus-voice-install)"
+        echo "$SOURCE_LINE"
+      } >> "$MAIN"
+      echo "  ✓ appended source line to $MAIN"
+      command -v hyprctl >/dev/null 2>&1 && hyprctl reload >/dev/null 2>&1 || true
+    fi
+  else
+    echo "  ! $MAIN not found — add this line to your hyprland.conf:"
+    echo "      $SOURCE_LINE"
+  fi
+else
+  echo
+  echo "Autostart NOT wired (safe default — another agent may be editing"
+  echo "hyprland.conf). To enable it, add this single line to"
+  echo "~/.config/hypr/hyprland.conf near the other 'source =' lines:"
+  echo
+  echo "      $SOURCE_LINE"
+  echo
+  echo "…or re-run:  nyxus-voice-install --wire-autostart"
+fi
+
+echo
+echo "Done. Next steps:"
+echo "  1. (offline STT) pip install --user vosk   &&   nyxus-voice-model"
+echo "  2. nyxus-voice start        # or log out/in if autostart is wired"
+echo "  3. nyxus-voice status       # confirm backend + mic"
+echo "  4. Say:  \"Nyxus, lock down\""
