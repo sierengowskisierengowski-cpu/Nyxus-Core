@@ -1,132 +1,97 @@
 #!/usr/bin/env bash
-# NYXUS · EWW · bottom-bar network sparklines + rates
-# Output: {"ssid":"ETH","ip":"192.168.1.1","up":7500,"down":54000,"up_fmt":"7K","down_fmt":"54K","up_hist":[...],"down_hist":[...],"tooltip":"..."}
+# NYXUS . EWW . bottom-bar network live graph (Phase 6, rev 2026-07-14b)
+# Up/down throughput as rolling block-character sparklines (ghost-HUD
+# label render) + compact rates + connection identity.
+#
+# Output: {"ssid":"ETH","icon":"...","up_fmt":"7K","down_fmt":"54K",
+#          "up_spark":"...","down_spark":"...","tooltip":"..."}
 set -u
 export LC_ALL=C.UTF-8
 
 STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/nyxus-net-graph"
-STATE="${STATE_DIR}/state.json"
-HIST_LEN=16
-BAR_MAX=48
-
+STATE="${STATE_DIR}/hist.csv"    # 2 lines: down / up (0..100 log-scaled)
+HIST_LEN=24
 mkdir -p "${STATE_DIR}"
+BLOCKS=( "▁" "▂" "▃" "▄" "▅" "▆" "▇" "█" )
+have() { command -v "$1" >/dev/null 2>&1; }
+
+spark() {
+  local csv="$1" out="" v lvl
+  local -a a
+  IFS=',' read -r -a a <<<"$csv"
+  (( ${#a[@]} == 0 )) && { printf '%s' "${BLOCKS[0]}"; return; }
+  for v in "${a[@]}"; do
+    [[ "$v" =~ ^[0-9]+$ ]] || v=0
+    lvl=$(( v * 7 / 100 ))
+    (( lvl < 0 )) && lvl=0; (( lvl > 7 )) && lvl=7
+    out+="${BLOCKS[$lvl]}"
+  done
+  printf '%s' "$out"
+}
+
+trim() {
+  awk -v s="$1" -v n="$HIST_LEN" 'BEGIN{k=split(s,a,","); st=(k>n?k-n+1:1);
+    for(i=st;i<=k;i++) printf (i>st?",":"") a[i]}'
+}
 
 read_bytes() {
   awk 'NR>2 && $1!~/^lo:/ {gsub(/:/,"",$1); rx+=$2; tx+=$10} END{print rx+0, tx+0}' /proc/net/dev 2>/dev/null
 }
-
 fmt_rate() {
   awk -v b="$1" 'BEGIN{
     if (b < 1024) printf "%dB", b;
     else if (b < 1048576) printf "%.0fK", b/1024;
-    else printf "%.1fM", b/1048576;
-  }'
+    else printf "%.1fM", b/1048576; }'
 }
-
-bar_of() {
+log_pct() {  # bytes/s -> 0..100 on a log scale topping at ~10 MB/s
   awk -v b="$1" 'BEGIN{
-  # log-ish scale: 0..10M -> 2..22px (bottom-bar sparkline height)
-    if (b <= 0) { print 2; exit }
-    x = log(b+1) / log(10485760) * 20 + 2
-    if (x < 2) x = 2
-    if (x > 22) x = 22
-    printf "%d", int(x)
-  }'
+    if (b <= 0) { print 0; exit }
+    x = log(b+1) / log(10485760) * 100
+    if (x < 0) x = 0; if (x > 100) x = 100
+    printf "%d", int(x) }'
 }
 
-spark_of() {
-  bar_of "$1"
-}
-
-shift_hist() {
-  local json="$1" val="$2"
-  command -v jq >/dev/null 2>&1 || { echo "[$val]"; return; }
-  jq -c --argjson v "$val" --argjson n "$HIST_LEN" '
-    . as $h | ($h + [$v]) | if length > $n then .[-$n:] else . end
-  ' <<<"$json" 2>/dev/null || echo "[$val]"
-}
-
-icon="…"
-ssid="OFFLINE"
-sig=""
-ip="—"
-rx_bps=0
-tx_bps=0
-tooltip="Network · disconnected"
-
-ip=$(ip -4 addr show 2>/dev/null | awk '/inet /{print $2}' | grep -v '^127' | head -1 | cut -d/ -f1)
-[[ -z "$ip" ]] && ip="—"
-
+# ---- sample throughput ---------------------------------------------------
 read -r rx1 tx1 < <(read_bytes)
 sleep 0.35
 read -r rx2 tx2 < <(read_bytes)
+rx_bps=0; tx_bps=0
 if [[ -n "${rx1:-}" && -n "${rx2:-}" ]]; then
-  rx_bps=$(( (rx2 - rx1) * 3 ))
-  tx_bps=$(( (tx2 - tx1) * 3 ))
-  (( rx_bps < 0 )) && rx_bps=0
-  (( tx_bps < 0 )) && tx_bps=0
+  rx_bps=$(( (rx2 - rx1) * 3 )); (( rx_bps < 0 )) && rx_bps=0
+  tx_bps=$(( (tx2 - tx1) * 3 )); (( tx_bps < 0 )) && tx_bps=0
 fi
 
-if command -v nmcli >/dev/null 2>&1; then
+# ---- connection identity -------------------------------------------------
+icon="~"; ssid="OFFLINE"; tooltip="Network . disconnected"
+ip=$(ip -4 addr show 2>/dev/null | awk '/inet /{print $2}' | grep -v '^127' | head -1 | cut -d/ -f1)
+[[ -z "$ip" ]] && ip="-"
+if have nmcli; then
   active=$(nmcli -t -f NAME,TYPE,DEVICE connection show --active 2>/dev/null | head -1)
   if [[ -n "$active" ]]; then
-    name=$(cut -d: -f1 <<<"$active")
-    type=$(cut -d: -f2 <<<"$active")
-    dev=$(cut -d: -f3 <<<"$active")
+    name=$(cut -d: -f1 <<<"$active"); type=$(cut -d: -f2 <<<"$active"); dev=$(cut -d: -f3 <<<"$active")
     case "$type" in
       *wireless*)
-        sig=$(nmcli -t -f IN-USE,SIGNAL,SSID device wifi list 2>/dev/null | awk -F: '/^\*/{print $2; exit}')
-        sig="${sig:-0}"
-        if   [[ $sig -ge 75 ]]; then icon="▰▰▰▰"
-        elif [[ $sig -ge 50 ]]; then icon="▰▰▰▱"
-        elif [[ $sig -ge 25 ]]; then icon="▰▰▱▱"
-        else                          icon="▰▱▱▱"
-        fi
-        ssid="$name"
-        tooltip="WiFi · $name · ${sig}% · $dev · $ip"
-        ;;
+        sig=$(nmcli -t -f IN-USE,SIGNAL device wifi list 2>/dev/null | awk -F: '/^\*/{print $2; exit}')
+        icon="󰖩"; ssid="$name"
+        tooltip="WiFi . $name . ${sig:-0}% . $dev . $ip" ;;
       *ethernet*|*wired*)
-        icon="⌁"
-        ssid="ETH"
-        tooltip="Ethernet · $name · $dev · $ip"
-        ;;
+        icon="󰈀"; ssid="ETH"
+        tooltip="Ethernet . $name . $dev . $ip" ;;
       *)
-        icon="◉"
-        ssid="$name"
-        tooltip="$type · $name · $ip"
-        ;;
+        icon="󰛳"; ssid="$name"
+        tooltip="$type . $name . $ip" ;;
     esac
   fi
 fi
 
-up_fmt=$(fmt_rate "$tx_bps")
-down_fmt=$(fmt_rate "$rx_bps")
-up_bar=$(spark_of "$tx_bps")
-down_bar=$(spark_of "$rx_bps")
+# ---- roll histories + sparklines ------------------------------------------
+down_pct=$(log_pct "$rx_bps"); up_pct=$(log_pct "$tx_bps")
+dh=""; uh=""
+if [[ -r "$STATE" ]]; then { read -r dh; read -r uh; } < "$STATE"; fi
+dh=$(trim "${dh:+$dh,}$down_pct")
+uh=$(trim "${uh:+$uh,}$up_pct")
+printf '%s\n%s\n' "$dh" "$uh" > "$STATE"
 
-up_hist="[]"
-down_hist="[]"
-if [[ -r "$STATE" ]] && command -v jq >/dev/null 2>&1; then
-  up_hist=$(jq -c '.up_hist // []' "$STATE" 2>/dev/null)
-  down_hist=$(jq -c '.down_hist // []' "$STATE" 2>/dev/null)
-fi
-up_hist=$(shift_hist "$up_hist" "$up_bar")
-down_hist=$(shift_hist "$down_hist" "$down_bar")
-
-ip_short="$ip"
-[[ ${#ip_short} -gt 14 ]] && ip_short="${ip_short:0:11}…"
-
-if command -v jq >/dev/null 2>&1; then
-  jq -nc \
-    --arg ssid "$ssid" --arg icon "$icon" --arg ip "$ip_short" --arg sig "$sig" \
-    --argjson up "$tx_bps" --argjson down "$rx_bps" \
-    --arg up_fmt "$up_fmt" --arg down_fmt "$down_fmt" \
-    --argjson up_bar "$up_bar" --argjson down_bar "$down_bar" \
-    --argjson up_hist "$up_hist" --argjson down_hist "$down_hist" \
-    --arg tooltip "$tooltip" \
-    '{ssid:$ssid,icon:$icon,ip:$ip,sig:$sig,up:$up,down:$down,up_fmt:$up_fmt,down_fmt:$down_fmt,up_bar:$up_bar,down_bar:$down_bar,up_hist:$up_hist,down_hist:$down_hist,tooltip:$tooltip}' \
-    | tee "$STATE"
-else
-  printf '{"ssid":"%s","ip":"%s","up_fmt":"%s","down_fmt":"%s","tooltip":"%s"}\n' \
-    "$ssid" "$ip_short" "$up_fmt" "$down_fmt" "$tooltip"
-fi
+printf '{"ssid":"%s","icon":"%s","up_fmt":"%s","down_fmt":"%s","up_spark":"%s","down_spark":"%s","tooltip":"%s"}\n' \
+  "${ssid//\"/}" "$icon" "$(fmt_rate "$tx_bps")" "$(fmt_rate "$rx_bps")" \
+  "$(spark "$uh")" "$(spark "$dh")" "${tooltip//\"/}"

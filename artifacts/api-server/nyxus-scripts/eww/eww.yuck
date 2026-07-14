@@ -55,15 +55,15 @@
                                      "~/.config/eww/scripts/fan-strip.sh")
 (defpoll NETSTRIP   :interval "3s"   :initial '{"text":"NET —","tooltip":"network"}'
                                      "~/.config/eww/scripts/net-strip.sh")
-;; ── Phase 6 live monitoring graphs (bottom bar) ──────────────────────
-;; fan RPM sparkline, unified CPU/temp/GPU sparklines (dGPU degrades
-;; gracefully when asleep), and up/down network sparklines. All hist
-;; arrays are pre-scaled to 2..22px so the bars render directly.
-(defpoll FANGRAPH   :interval "2s"   :initial '{"fans":[{"id":1,"label":"FAN","rpm":0,"pct":0,"bar":0,"hist":[2,2,2,2,2,2,2,2]}],"tooltip":"fan speeds"}'
+;; ── Phase 6 live monitoring graphs (bottom bar, ghost HUD) ───────────
+;; fan RPM, unified CPU/temp/GPU (dGPU degrades gracefully when asleep)
+;; and up/down network - each streams a rolling block-char sparkline
+;; that renders as pure glowing text on the wallpaper (no chrome).
+(defpoll FANGRAPH   :interval "2s"   :initial '{"rpm":0,"pct":0,"spark":"▁","tooltip":"fan speeds"}'
                                      "~/.config/eww/scripts/fan-graph.sh")
-(defpoll SYSGRAPH   :interval "2s"   :initial '{"cpu":{"val":0,"hot":0,"hist":[2,2,2,2,2,2,2,2]},"temp":{"val":0,"hot":0,"hist":[2,2,2,2,2,2,2,2]},"gpu":{"val":0,"temp":0,"present":false,"hot":0,"hist":[2,2,2,2,2,2,2,2]}}'
+(defpoll SYSGRAPH   :interval "2s"   :initial '{"cpu":{"val":0,"hot":0,"spark":"▁"},"temp":{"val":0,"hot":0,"spark":"▁"},"gpu":{"val":0,"temp":0,"present":false,"hot":0,"spark":"▁"}}'
                                      "~/.config/eww/scripts/sys-graph.sh")
-(defpoll NETGRAPH   :interval "2s"   :initial '{"ssid":"...","icon":"~","up_fmt":"0B","down_fmt":"0B","up_bar":2,"down_bar":2,"up_hist":[2,2,2,2,2,2,2,2],"down_hist":[2,2,2,2,2,2,2,2],"tooltip":"network"}'
+(defpoll NETGRAPH   :interval "2s"   :initial '{"ssid":"...","icon":"~","up_fmt":"0B","down_fmt":"0B","up_spark":"▁","down_spark":"▁","tooltip":"network"}'
                                      "~/.config/eww/scripts/net-graph.sh")
 (defpoll NOTIFS     :interval "3s"   :initial '{"icon":"○","label":"0","tooltip":"notifications","paused":"false","total":0}'
                                      "~/.config/eww/scripts/notifications.sh")
@@ -441,6 +441,31 @@
          :limit-width 52
          :truncate "end"))
 
+;; ── Phase 6 monitoring cell: ghost-HUD glyph + live sparkline + value ─
+;; No chrome at all - a neon glyph, a glowing block-char sparkline trace
+;; and a mono value floating straight on the wallpaper. `alert` flips the
+;; readout to the ember state; `dim` fades it when a source is offline
+;; (e.g. the dGPU asleep and deliberately left un-woken).
+(defwidget mon_cell [hue glyph value spark ?tip ?alert ?dim]
+  (box :class "mon-cell${(alert ?: 0) == 1 ? ' mon-alert' : ''}${(dim ?: false) ? ' mon-dim' : ''}"
+       :orientation "h" :space-evenly false :spacing 6 :valign "center"
+       :tooltip "${tip ?: ''}"
+    (label :class "mon-glyph mon-glyph-${hue}" :text glyph)
+    (label :class "mon-trace mon-trace-${hue}" :text spark)
+    (label :class "mon-value mon-value-${hue}" :text value)))
+
+;; Network readout: icon + down trace/rate + up trace/rate, same ghost
+;; language as the left-side system cluster.
+(defwidget mon_net []
+  (box :class "mon-cell" :orientation "h" :space-evenly false :spacing 6 :valign "center"
+       :tooltip "${NETGRAPH.tooltip}"
+    (label :class "mon-glyph mon-glyph-green" :text "${NETGRAPH.icon}")
+    (label :class "mon-trace mon-trace-green" :text "${NETGRAPH.down_spark}")
+    (label :class "mon-value mon-value-green" :text "${NETGRAPH.down_fmt}")
+    (label :class "mon-updown mon-trace-secondary" :text "󰕒")
+    (label :class "mon-trace mon-trace-secondary" :text "${NETGRAPH.up_spark}")
+    (label :class "mon-value mon-value-secondary" :text "${NETGRAPH.up_fmt}")))
+
 ;; Idle face: NYXUS wordmark + clock + date (default bottom center).
 (defwidget bar_hub_idle []
   (box :orientation "v" :space-evenly false :spacing 2 :halign "center"
@@ -471,13 +496,23 @@
 (defwidget bar_bottom_layout []
   (box :class "bar-bottom-minimal" :orientation "h" :hexpand true :halign "fill"
        :space-evenly false :valign "center"
-    (box :class "bar-metrics-left" :orientation "h" :hexpand true :halign "start"
-         :space-evenly false :spacing 12 :valign "center"
-      (bar_strip_text :text "${FANSTRIP.text}" :tip "${FANSTRIP.tooltip}" :class "bar-strip-fans"))
+    (box :class "bar-metrics-left mon-cluster" :orientation "h" :hexpand true :halign "start"
+         :space-evenly false :spacing 14 :valign "center"
+      (mon_cell :hue "orange" :glyph "󰈐" :value "${FANGRAPH.rpm}"
+                :spark "${FANGRAPH.spark}" :tip "${FANGRAPH.tooltip}")
+      (mon_cell :hue "gold" :glyph "󰔏" :value "${SYSGRAPH.temp.val}°"
+                :spark "${SYSGRAPH.temp.spark}" :tip "CPU package temperature" :alert {SYSGRAPH.temp.hot})
+      (mon_cell :hue "pink" :glyph "󰘚" :value "${SYSGRAPH.cpu.val}%"
+                :spark "${SYSGRAPH.cpu.spark}" :tip "CPU load" :alert {SYSGRAPH.cpu.hot})
+      (mon_cell :hue "blue" :glyph "󰢮"
+                :value "${SYSGRAPH.gpu.present ? SYSGRAPH.gpu.val + '%' : 'off'}"
+                :spark "${SYSGRAPH.gpu.spark}"
+                :tip "${SYSGRAPH.gpu.present ? 'GPU ' + SYSGRAPH.gpu.val + '% - ' + SYSGRAPH.gpu.temp + 'C' : 'dGPU asleep (left un-woken)'}"
+                :alert {SYSGRAPH.gpu.hot} :dim {SYSGRAPH.gpu.present == false}))
     (box :hexpand false :halign "center" (bar_hub_trigger))
-    (box :class "bar-metrics-right" :orientation "h" :hexpand true :halign "end"
+    (box :class "bar-metrics-right mon-cluster" :orientation "h" :hexpand true :halign "end"
          :space-evenly false :spacing 12 :valign "center"
-      (bar_strip_text :text "${NETSTRIP.text}" :tip "${NETSTRIP.tooltip}" :class "bar-strip-net"))))
+      (mon_net))))
 
 (defwidget bar_top_layout []
   (box :class "bar-top-ticker-only" :orientation "h" :hexpand true :halign "fill"

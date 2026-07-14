@@ -1,90 +1,81 @@
 #!/usr/bin/env bash
-# NYXUS · EWW · bottom-bar fan graph meters + sparkline history
-# Output: {"fans":[{"id":1,"label":"FAN1","rpm":4200,"pct":47,"bar":26,"hist":[...]}],"tooltip":"..."}
+# NYXUS . EWW . bottom-bar fan live graph (Phase 6, rev 2026-07-14b)
+# Headline fan RPM + rolling block-character sparkline (ghost-HUD label
+# render, same technique as CAVA/sys-graph). Reads MSI hw_profile fan
+# paths when available, falls back to lm_sensors.
+#
+# Output: {"rpm":7868,"pct":87,"spark":"...","tooltip":"FAN1 7868 RPM . FAN2 8000 RPM"}
 set -u
 export LC_ALL=C.UTF-8
 
 STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/nyxus-fan-graph"
-STATE="${STATE_DIR}/state.json"
-HW="${HOME}/.config/nyxus/hw_profile.json"
-HIST_LEN=16
+STATE="${STATE_DIR}/hist.csv"
+HIST_LEN=24
 MAX_RPM=9000
-BAR_MAX=56
-
 mkdir -p "${STATE_DIR}"
-command -v jq >/dev/null 2>&1 || { echo '{"fans":[],"tooltip":"fan speeds"}'; exit 0; }
+BLOCKS=( "▁" "▂" "▃" "▄" "▅" "▆" "▇" "█" )
+have() { command -v "$1" >/dev/null 2>&1; }
 
-read_rpm() {
-  local path="$1"
-  [[ -r "$path" ]] || { echo 0; return; }
-  local v
-  v=$(<"$path")
-  [[ "$v" =~ ^[0-9]+$ ]] || { echo 0; return; }
-  echo "$v"
+spark() {  # CSV of 0..100 -> block string
+  local csv="$1" out="" v lvl
+  local -a a
+  IFS=',' read -r -a a <<<"$csv"
+  (( ${#a[@]} == 0 )) && { printf '%s' "${BLOCKS[0]}"; return; }
+  for v in "${a[@]}"; do
+    [[ "$v" =~ ^[0-9]+$ ]] || v=0
+    lvl=$(( v * 7 / 100 ))
+    (( lvl < 0 )) && lvl=0; (( lvl > 7 )) && lvl=7
+    out+="${BLOCKS[$lvl]}"
+  done
+  printf '%s' "$out"
 }
 
-push_hist() {
-  local hist="$1" val="$2"
-  [[ -z "$hist" || "$hist" == "null" ]] && hist="[]"
-  jq -c --argjson v "$val" --argjson n "$HIST_LEN" \
-    '. + [$v] | if length > $n then .[-$n:] else . end' <<<"$hist"
+trim() {
+  awk -v s="$1" -v n="$HIST_LEN" 'BEGIN{k=split(s,a,","); st=(k>n?k-n+1:1);
+    for(i=st;i<=k;i++) printf (i>st?",":"") a[i]}'
 }
 
-old_hist_for() {
-  local id="$1"
-  [[ -r "$STATE" ]] || { echo "[]"; return; }
-  jq -c --argjson id "$id" '.fans[]? | select(.id == $id) | .hist' "$STATE" 2>/dev/null | head -1 || echo "[]"
-}
-
-rows=()
-if [[ -r "$HW" ]]; then
-  while IFS=$'\t' read -r id label path; do
-    [[ -z "$id" || -z "$path" ]] && continue
-    rpm=$(read_rpm "$path")
-    rows+=("${id}|${label}|${rpm}")
+# ---- collect fan RPMs (hw_profile first, then lm_sensors) ---------------
+HW="${HOME}/.config/nyxus/hw_profile.json"
+labels=(); rpms=()
+if [[ -r "$HW" ]] && have jq; then
+  while IFS=$'\t' read -r label path; do
+    [[ -z "$label" || -z "$path" || ! -r "$path" ]] && continue
+    v=$(<"$path")
+    [[ "$v" =~ ^[0-9]+$ ]] || continue
+    labels+=("${label// /}"); rpms+=("$v")
   done < <(jq -r '
     .hwmon[]? | select(.name == "msi_wmi_platform" or (.fans | length) > 0) |
-    .fans[]? | "\(.idx // 0)\t\(.label // ("FAN" + (.idx|tostring)))\t\(.path)"
+    .fans[]? | "\(.label // ("FAN" + (.idx|tostring)))\t\(.path)"
   ' "$HW" 2>/dev/null | head -4)
 fi
-
-if [[ ${#rows[@]} -eq 0 ]] && command -v sensors >/dev/null 2>&1; then
-  local_i=0
-  while IFS= read -r line; do
-    [[ -z "$line" ]] && continue
-    local_i=$((local_i + 1))
-    rpm=$(awk '{print $2}' <<<"$line")
-    rows+=("${local_i}|$(awk '{print $1}' <<<"$line")|${rpm}")
+if [[ ${#rpms[@]} -eq 0 ]] && have sensors; then
+  while read -r l v; do
+    labels+=("$l"); rpms+=("$v")
   done < <(sensors 2>/dev/null | awk '
-    /[Ff]an[0-9]*:/ {
-      gsub(/:/, "", $1)
-      gsub(/[^0-9]/, "", $2)
-      if ($2+0 >= 0) printf "%s %s\n", toupper($1), $2
-    }' | head -4)
+    /[Ff]an[0-9]*:/ { gsub(/:/,"",$1); gsub(/[^0-9]/,"",$2)
+      if ($2+0 > 0) printf "%s %s\n", toupper($1), $2 }' | head -4)
 fi
 
-json_rows=()
-for row in "${rows[@]}"; do
-  IFS='|' read -r id label rpm <<<"$row"
-  label="${label// /}"
-  label=$(printf '%s' "$label" | tr '[:lower:]' '[:upper:]')
-  pct=$(( rpm * 100 / MAX_RPM ))
-  (( pct < 0 )) && pct=0
-  (( pct > 100 )) && pct=100
-  bar=$(( pct * BAR_MAX / 100 ))
-  spark=$(( 2 + pct * 20 / 100 ))   # 2..22px sparkline height (bottom bar)
-  hist=$(push_hist "$(old_hist_for "$id")" "$spark")
-  json_rows+=("$(jq -nc --argjson id "$id" --arg label "$label" --argjson rpm "$rpm" \
-    --argjson pct "$pct" --argjson bar "$bar" --argjson hist "$hist" \
-    '{id:$id,label:$label,rpm:$rpm,pct:$pct,bar:$bar,hist:$hist}')")
-done
-
-if [[ ${#json_rows[@]} -eq 0 ]]; then
-  fans='[{"id":1,"label":"FAN1","rpm":0,"pct":0,"bar":0,"hist":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]}]'
-  tooltip="Fan speeds · no sensors"
-else
-  fans=$(printf '%s\n' "${json_rows[@]}" | jq -sc '.')
-  tooltip=$(jq -r '[.[] | "\(.label) \(.rpm) RPM (\(.pct)%)" ] | join(" · ")' <<<"$fans")
+# headline = fastest fan; tooltip lists every spinning fan
+rpm=0; tooltip="Fans: no sensors"
+if [[ ${#rpms[@]} -gt 0 ]]; then
+  parts=()
+  for i in "${!rpms[@]}"; do
+    (( rpms[i] > rpm )) && rpm=${rpms[i]}
+    (( rpms[i] > 0 )) && parts+=("${labels[$i]} ${rpms[$i]} RPM")
+  done
+  (( ${#parts[@]} == 0 )) && parts=("fans idle")
+  tooltip=$(IFS=' . '; echo "${parts[*]}")
 fi
+pct=$(( rpm * 100 / MAX_RPM ))
+(( pct > 100 )) && pct=100
 
-jq -nc --argjson fans "$fans" --arg tooltip "$tooltip" '{fans:$fans,tooltip:$tooltip}' | tee "$STATE"
+# ---- roll history + sparkline -------------------------------------------
+h=""; [[ -r "$STATE" ]] && read -r h < "$STATE"
+h=$(trim "${h:+$h,}$pct")
+printf '%s\n' "$h" > "$STATE"
+sp=$(spark "$h")
+
+printf '{"rpm":%d,"pct":%d,"spark":"%s","tooltip":"%s"}\n' \
+  "$rpm" "$pct" "$sp" "${tooltip//\"/}"

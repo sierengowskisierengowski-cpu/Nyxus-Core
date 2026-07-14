@@ -52,6 +52,17 @@ window, window.background, decoration {
   color: #e8edf5;
 }
 
+/* Re-assert AFTER the `all: unset` above - unset reverts the window node
+   to the GTK theme's opaque dark fill, which painted a full-width slab
+   behind every bar (the ghost-HUD killer). Order matters here. */
+window, window.background, decoration {
+  background: none;
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+}
+
 /* -- BARS . PRISM EYE CANDY ------------------------------------------- */
 /* Every bar is a glass slab wrapped in a full prism rim: two stacked
    backgrounds, the glass painted on padding-box and the gradient on
@@ -99,7 +110,6 @@ window, window.background, decoration {
   background: transparent;
   background-image: none;
   box-shadow: none;
-  justify-content: center;
 }
 
 /* -- MINIMAL BOTTOM BAR (naked metrics + hub trigger) -------------- */
@@ -215,6 +225,148 @@ window, window.background, decoration {
   font-size: 11px;
   letter-spacing: 0.02em;
   text-shadow: 0 0 8px rgba(38, 255, 183, 0.8), 0 0 16px rgba(255, 38, 103, 0.4);
+}
+
+/* -- Phase 6 monitoring readouts (bottom-bar ghost HUD) --------------- */
+/* Zero chrome: no background, no border, no slab. Each metric is a neon
+   glyph + glowing live block-trace + mono value floating straight on the
+   wallpaper - text-shadow glow carries the legibility (live-build-notes
+   section 2 "ghost HUD / glow text only"). Hues: fan=orange, temp=gold,
+   cpu=primary purple, gpu=blue, net down=green / up=magenta. */
+.mon-cluster {
+  min-height: 0;
+  min-width: 0;
+  background: transparent;
+}
+
+.mon-cell {
+  padding: 0 2px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.mon-glyph {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 13px;
+  min-width: 15px;
+}
+
+.mon-trace {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.mon-value {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #e8edf5;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.85), 0 0 6px rgba(255, 255, 255, 0.28);
+}
+
+.mon-updown {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+}
+
+/* hue variants: neon glyph + trace glow (double halo = ink for contrast
+   on bright nebula regions + colored bloom for the neon read). */
+.mon-glyph-orange {
+  color: #ff7849;
+  text-shadow: 0 0 9px rgba(255, 120, 73, 0.75), 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+
+.mon-trace-orange {
+  color: rgba(255, 120, 73, 0.92);
+  text-shadow: 0 0 10px rgba(255, 120, 73, 0.65), 0 0 22px rgba(255, 120, 73, 0.3), 0 1px 5px rgba(0, 0, 0, 0.85);
+}
+
+.mon-value-orange {
+  color: rgb(255, 160.5, 127.6);
+}
+
+.mon-glyph-gold {
+  color: #ffb026;
+  text-shadow: 0 0 9px rgba(255, 176, 38, 0.75), 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+
+.mon-trace-gold {
+  color: rgba(255, 176, 38, 0.92);
+  text-shadow: 0 0 10px rgba(255, 176, 38, 0.65), 0 0 22px rgba(255, 176, 38, 0.3), 0 1px 5px rgba(0, 0, 0, 0.85);
+}
+
+.mon-value-gold {
+  color: rgb(255, 207.6, 124.8);
+}
+
+.mon-glyph-pink {
+  color: #7949f2;
+  text-shadow: 0 0 9px rgba(121, 73, 242, 0.8), 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+
+.mon-trace-pink {
+  color: rgba(121, 73, 242, 0.95);
+  text-shadow: 0 0 10px rgba(121, 73, 242, 0.7), 0 0 22px rgba(121, 73, 242, 0.32), 0 1px 5px rgba(0, 0, 0, 0.85);
+}
+
+.mon-value-pink {
+  color: rgb(177.28, 149.44, 247.46);
+}
+
+.mon-glyph-blue {
+  color: #4d9fff;
+  text-shadow: 0 0 9px rgba(77, 159, 255, 0.75), 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+
+.mon-trace-blue {
+  color: rgba(77, 159, 255, 0.92);
+  text-shadow: 0 0 10px rgba(77, 159, 255, 0.65), 0 0 22px rgba(77, 159, 255, 0.3), 0 1px 5px rgba(0, 0, 0, 0.85);
+}
+
+.mon-value-blue {
+  color: rgb(148.2, 197.4, 255);
+}
+
+.mon-glyph-green {
+  color: #6dffcf;
+  text-shadow: 0 0 9px rgba(109, 255, 207, 0.7), 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+
+.mon-trace-green {
+  color: rgba(109, 255, 207, 0.92);
+  text-shadow: 0 0 10px rgba(109, 255, 207, 0.6), 0 0 22px rgba(109, 255, 207, 0.28), 0 1px 5px rgba(0, 0, 0, 0.85);
+}
+
+.mon-value-green {
+  color: rgb(152.8, 255, 221.4);
+}
+
+.mon-trace-secondary {
+  color: rgba(255, 38, 103, 0.92);
+  text-shadow: 0 0 10px rgba(255, 38, 103, 0.62), 0 0 22px rgba(255, 38, 103, 0.3), 0 1px 5px rgba(0, 0, 0, 0.85);
+}
+
+.mon-value-secondary {
+  color: rgb(255, 135.65, 171.4);
+}
+
+/* ember alert state (hot metric) + graceful-degrade dim (dGPU asleep) */
+.mon-alert .mon-value {
+  color: #ffd9a0;
+  text-shadow: 0 0 12px rgba(255, 160, 60, 0.85), 0 1px 5px rgba(0, 0, 0, 0.9);
+}
+
+.mon-alert .mon-glyph {
+  color: #ffb45e;
+  text-shadow: 0 0 12px rgba(255, 160, 60, 0.85);
+}
+
+.mon-dim {
+  opacity: 0.45;
 }
 
 /* -- STARFALL REACTOR NEXUS (bottom bar) --------------------------- */
