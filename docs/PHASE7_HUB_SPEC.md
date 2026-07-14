@@ -62,7 +62,18 @@ Add to the Hub's settings surface (or `nyxus_settings` now + surface at Hub buil
 ## Status
 - [x] 7.5 backend (`nyxus-nowplaying`) — done, live-tested
 - [x] 7.3 backend (`nyxus-hub-apps`) — done, live-tested
-- [ ] 7.1 / 7.2 / 7.3-ui / 7.4 — eww wiring (gated on `eww.yuck` being free)
-- [ ] 7.6 verify every Hub button works
-- [ ] settings entries (standing rule)
+- [x] 7.2 Hub rename "NYXUS · MAIN HUB" → **"The Hub"** — done, live-verified
+- [x] 7.3-ui app-launcher section in The Hub — done; vertical list, launches by
+      `.desktop` id via `gtk-launch` (safe, no raw Exec eval); live-verified the
+      Hub maps + renders the APPS section (48 NYXUS apps)
+- [x] settings entry (standing rule) — persistent in-Hub **NYXUS ONLY ⇄ ALL APPS**
+      toggle (flag file `~/.cache/nyxus-eww/hub-apps-all`); live-verified 48↔161
+- [~] 7.1 center clock↔music — already satisfied by the existing `bar_hub_dynamic`
+      (PLAYER/player.sh flip + click-opens-Hub). Rich music card (album art +
+      progress bar + elapsed/duration via `nyxus-nowplaying`) NOT yet wired —
+      deferred: cannot verify the *playing* state offline, and shipping unverified
+      album-art image loading into the main bar is a needless risk. `player.sh`
+      surfaces keep working meanwhile.
+- [ ] 7.4 quick-access pins — gated on §9 Q1 (what to pin)
+- [ ] 7.6 verify every Hub button works — deferred to live reboot pass
 - [ ] 7.7 safepoint

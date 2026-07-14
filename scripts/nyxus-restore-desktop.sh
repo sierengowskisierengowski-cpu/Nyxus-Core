@@ -149,7 +149,8 @@ step "install helper launchers → ~/.local/bin"
 mkdir -p "${HOME}/.local/bin"
 for h in nyxus-eww-launch nyxus-eww-launch-safe nyxus-set-wallpaper.sh \
          nyxus-sync-stations nyxus-bootstrap nyxus-wait-bootstrap \
-         nyxus-session-start nyxus-security; do
+         nyxus-session-start nyxus-security \
+         nyxus-hub-apps nyxus-nowplaying; do
   if [[ -f "${NS}/${h}" ]]; then
     install -m 0755 "${NS}/${h}" "${HOME}/.local/bin/${h}"
   fi

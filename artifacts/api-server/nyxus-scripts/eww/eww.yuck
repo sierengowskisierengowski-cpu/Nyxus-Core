@@ -103,6 +103,13 @@
   "~/.config/eww/scripts/overlay-shield.sh nyxus-hub")
 (defpoll POWER_SHIELD :interval "2s" :initial ""
   "~/.config/eww/scripts/overlay-shield.sh powermenu")
+;; The Hub app launcher (Phase 7.3). Scope is a persistent in-Hub setting
+;; (standing rule): a flag file toggles NYXUS-only vs all apps. Falls back
+;; to [] if the backend isn't on PATH so the Hub still maps.
+(defpoll HUBAPPS :interval "10s" :initial "[]"
+  "nyxus-hub-apps $([ -f ~/.cache/nyxus-eww/hub-apps-all ] && echo '' || echo '--nyxus') 2>/dev/null || echo '[]'")
+(defpoll HUBAPPS_MODE :interval "10s" :initial "nyxus"
+  "[ -f ~/.cache/nyxus-eww/hub-apps-all ] && echo all || echo nyxus")
 (defpoll CHEAT_SHIELD :interval "2s" :initial ""
   "~/.config/eww/scripts/overlay-shield.sh cheatsheet")
 (defpoll DEEP_SHIELD  :interval "2s" :initial ""
@@ -547,6 +554,19 @@
           :tooltip "HOME · ${WORKSPACES.home.tagline ?: 'Obsidian Reactor'}"
     "${WORKSPACES.home.code}"))
 
+;; ── The Hub · app-launcher row (Phase 7.3) ──────────────────────────
+;; Launches by .desktop id via gtk-launch (handles field codes, terminal
+;; apps, and env correctly) so we never eval a raw Exec string.
+(defwidget hub_app_tile [app]
+  (button :class "hub-app-tile"
+          :onclick "eww close nyxus-hub && gtk-launch ${app.id} >/dev/null 2>&1 &"
+          :tooltip "${app.name}"
+          :style "padding: 8px 10px; margin: 3px; border-radius: 10px; background-color: rgba(121,73,242,0.10);"
+    (box :orientation "h" :space-evenly false :spacing 10 :halign "start"
+      (label :text "◆" :style "color: #7949f2; font-size: 15px;")
+      (label :limit-width 22 :truncate "end" :halign "start" :hexpand true
+             :text "${app.name}" :style "color: #eef2fa; font-size: 13px;"))))
+
 (defwidget nyxus_hub_layout []
   (eventbox :onclick "true"
     (box :class "hub-panel" :orientation "v" :space-evenly false :spacing 16
@@ -555,7 +575,7 @@
       (label :visible false :text HUB_SHIELD)
       (box :orientation "h" :space-evenly false :spacing 12
         (label :class "hub-title" :hexpand true :halign "start"
-               :text "NYXUS · MAIN HUB" :style "opacity: ${NEONFLICK};")
+               :text "The Hub" :style "opacity: ${NEONFLICK};")
         (button :class "hub-close-x" :onclick "eww close nyxus-hub" "✕"))
       (label :class "hub-subtitle" :halign "start"
              :text "${TIME.long} · ${BARTILES.host} · ${NETWORK.label}")
@@ -614,6 +634,19 @@
         (hub_home_pill)
         (for st in {WORKSPACES.stations}
           (hub_ws_pill :st st)))
+
+      (box :class "hub-section-head" :orientation "h" :space-evenly false :spacing 8
+        (label :class "hub-section-title" :hexpand true :halign "start" :text "APPS")
+        (button :class "hub-apps-toggle" :halign "end"
+                :onclick "mkdir -p ~/.cache/nyxus-eww && { [ -f ~/.cache/nyxus-eww/hub-apps-all ] && rm -f ~/.cache/nyxus-eww/hub-apps-all || touch ~/.cache/nyxus-eww/hub-apps-all; } &"
+                :tooltip "toggle NYXUS-only vs all installed apps"
+                :style "padding: 2px 10px; border-radius: 8px; background-color: rgba(121,73,242,0.14); color: #c9b7ff; font-size: 11px;"
+          "${HUBAPPS_MODE == 'all' ? 'ALL APPS' : 'NYXUS ONLY'}"))
+      (scroll :class "hub-apps-scroll" :vscroll true :hscroll false
+              :style "min-height: 200px;"
+        (box :class "hub-apps-list" :orientation "v" :space-evenly false :spacing 2
+          (for app in HUBAPPS
+            (hub_app_tile :app app))))
 
       (hub_section_title :title "POWER")
       (box :class "hub-grid hub-power-row" :orientation "h" :space-evenly true :spacing 10
