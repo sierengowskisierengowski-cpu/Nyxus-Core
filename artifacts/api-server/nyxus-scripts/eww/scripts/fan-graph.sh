@@ -57,8 +57,10 @@ if [[ ${#rpms[@]} -eq 0 ]] && have sensors; then
       if ($2+0 > 0) printf "%s %s\n", toupper($1), $2 }' | head -4)
 fi
 
-# headline = fastest fan; tooltip lists every spinning fan
+# headline = fastest fan; tooltip lists every spinning fan; fan1/fan2 = the
+# first two fans (stacked in the bar so both are always visible).
 rpm=0; tooltip="Fans: no sensors"
+fan1=${rpms[0]:-0}; fan2=${rpms[1]:-0}
 if [[ ${#rpms[@]} -gt 0 ]]; then
   parts=()
   for i in "${!rpms[@]}"; do
@@ -68,14 +70,19 @@ if [[ ${#rpms[@]} -gt 0 ]]; then
   (( ${#parts[@]} == 0 )) && parts=("fans idle")
   tooltip=$(IFS=' . '; echo "${parts[*]}")
 fi
-pct=$(( rpm * 100 / MAX_RPM ))
-(( pct > 100 )) && pct=100
+clamppct() { local p=$(( $1 * 100 / MAX_RPM )); (( p > 100 )) && p=100; echo "$p"; }
+pct=$(clamppct "$rpm"); pct1=$(clamppct "$fan1"); pct2=$(clamppct "$fan2")
 
-# ---- roll history + sparkline -------------------------------------------
-h=""; [[ -r "$STATE" ]] && read -r h < "$STATE"
-h=$(trim "${h:+$h,}$pct")
-printf '%s\n' "$h" > "$STATE"
-sp=$(spark "$h")
+# ---- roll history + sparkline (headline + one per fan) ------------------
+roll() {  # $1 = state file, $2 = new pct -> echoes sparkline
+  local st="$1" p="$2" hh=""
+  [[ -r "$st" ]] && read -r hh < "$st"
+  hh=$(trim "${hh:+$hh,}$p"); printf '%s\n' "$hh" > "$st"
+  spark "$hh"
+}
+sp=$(roll "$STATE" "$pct")
+sp1=$(roll "${STATE_DIR}/hist1.csv" "$pct1")
+sp2=$(roll "${STATE_DIR}/hist2.csv" "$pct2")
 
-printf '{"rpm":%d,"pct":%d,"spark":"%s","tooltip":"%s"}\n' \
-  "$rpm" "$pct" "$sp" "${tooltip//\"/}"
+printf '{"rpm":%d,"pct":%d,"spark":"%s","fan1":%d,"fan2":%d,"spark1":"%s","spark2":"%s","tooltip":"%s"}\n' \
+  "$rpm" "$pct" "$sp" "$fan1" "$fan2" "$sp1" "$sp2" "${tooltip//\"/}"

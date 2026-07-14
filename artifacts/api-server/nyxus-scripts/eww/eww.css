@@ -268,6 +268,23 @@ window, window.background, decoration {
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.85), 0 0 6px rgba(255, 255, 255, 0.28);
 }
 
+/* compact rows for the two-row stacked cells (dual fans, net down/up) */
+.mon-trace-sm {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.mon-value-sm {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #e8edf5;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.85);
+}
+
 .mon-updown {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 10px;

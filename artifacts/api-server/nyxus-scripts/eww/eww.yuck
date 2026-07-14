@@ -59,9 +59,9 @@
 ;; fan RPM, unified CPU/temp/GPU (dGPU degrades gracefully when asleep)
 ;; and up/down network - each streams a rolling block-char sparkline
 ;; that renders as pure glowing text on the wallpaper (no chrome).
-(defpoll FANGRAPH   :interval "2s"   :initial '{"rpm":0,"pct":0,"spark":"▁","tooltip":"fan speeds"}'
+(defpoll FANGRAPH   :interval "2s"   :initial '{"rpm":0,"pct":0,"spark":"▁","fan1":0,"fan2":0,"spark1":"▁","spark2":"▁","tooltip":"fan speeds"}'
                                      "~/.config/eww/scripts/fan-graph.sh")
-(defpoll SYSGRAPH   :interval "2s"   :initial '{"cpu":{"val":0,"hot":0,"spark":"▁"},"temp":{"val":0,"hot":0,"spark":"▁"},"gpu":{"val":0,"temp":0,"present":false,"hot":0,"spark":"▁"}}'
+(defpoll SYSGRAPH   :interval "2s"   :initial '{"cpu":{"val":0,"hot":0,"spark":"▁"},"temp":{"val":0,"hot":0,"spark":"▁"},"gpu":{"val":0,"temp":0,"present":false,"hot":0,"spark":"▁"},"mem":{"val":0,"hot":0,"spark":"▁"}}'
                                      "~/.config/eww/scripts/sys-graph.sh")
 (defpoll NETGRAPH   :interval "2s"   :initial '{"ssid":"...","icon":"~","up_fmt":"0B","down_fmt":"0B","up_spark":"▁","down_spark":"▁","tooltip":"network"}'
                                      "~/.config/eww/scripts/net-graph.sh")
@@ -461,17 +461,27 @@
     (label :class "mon-trace mon-trace-${hue}" :text spark)
     (label :class "mon-value mon-value-${hue}" :text value)))
 
-;; Network readout: icon + down trace/rate + up trace/rate, same ghost
-;; language as the left-side system cluster.
+;; Two-row stacked cell — glyph on the left, two spark+value rows stacked so
+;; both readouts stay visible without eating horizontal room (dual fans, and
+;; network down/up).
+(defwidget mon_stack2 [hue glyph l1_spark l1_val l2_spark l2_val ?hue2 ?tip ?alert]
+  (box :class "mon-cell${(alert ?: 0) == 1 ? ' mon-alert' : ''}" :orientation "h"
+       :space-evenly false :spacing 7 :valign "center" :tooltip "${tip ?: ''}"
+    (label :class "mon-glyph mon-glyph-${hue}" :text glyph)
+    (box :orientation "v" :space-evenly false :spacing 0 :valign "center"
+      (box :orientation "h" :space-evenly false :spacing 5 :halign "start"
+        (label :class "mon-trace-sm mon-trace-${hue}" :text l1_spark)
+        (label :class "mon-value-sm mon-value-${hue}" :text l1_val))
+      (box :orientation "h" :space-evenly false :spacing 5 :halign "start"
+        (label :class "mon-trace-sm mon-trace-${hue2 ?: hue}" :text l2_spark)
+        (label :class "mon-value-sm mon-value-${hue2 ?: hue}" :text l2_val)))))
+
+;; Network readout: connection icon + stacked down/up traces + rates.
 (defwidget mon_net []
-  (box :class "mon-cell" :orientation "h" :space-evenly false :spacing 6 :valign "center"
-       :tooltip "${NETGRAPH.tooltip}"
-    (label :class "mon-glyph mon-glyph-green" :text "${NETGRAPH.icon}")
-    (label :class "mon-trace mon-trace-green" :text "${NETGRAPH.down_spark}")
-    (label :class "mon-value mon-value-green" :text "${NETGRAPH.down_fmt}")
-    (label :class "mon-updown mon-trace-secondary" :text "󰕒")
-    (label :class "mon-trace mon-trace-secondary" :text "${NETGRAPH.up_spark}")
-    (label :class "mon-value mon-value-secondary" :text "${NETGRAPH.up_fmt}")))
+  (mon_stack2 :hue "green" :hue2 "secondary" :glyph "${NETGRAPH.icon}"
+              :l1_spark "${NETGRAPH.down_spark}" :l1_val "↓ ${NETGRAPH.down_fmt}"
+              :l2_spark "${NETGRAPH.up_spark}"   :l2_val "↑ ${NETGRAPH.up_fmt}"
+              :tip "${NETGRAPH.tooltip}"))
 
 ;; Idle face: NYXUS wordmark + clock + date, framed inside the urban UFO
 ;; saucer cockpit band (bottom center).
@@ -508,8 +518,10 @@
   (centerbox :class "bar-bottom-minimal" :orientation "h" :valign "center"
     (box :class "bar-metrics-left mon-cluster" :orientation "h" :halign "start"
          :space-evenly false :spacing 14 :valign "center"
-      (mon_cell :hue "orange" :glyph "󰈐" :value "${FANGRAPH.rpm}"
-                :spark "${FANGRAPH.spark}" :tip "${FANGRAPH.tooltip}")
+      (mon_stack2 :hue "orange" :glyph "󰈐"
+                  :l1_spark "${FANGRAPH.spark1}" :l1_val "${FANGRAPH.fan1}"
+                  :l2_spark "${FANGRAPH.spark2}" :l2_val "${FANGRAPH.fan2}"
+                  :tip "${FANGRAPH.tooltip}")
       (mon_cell :hue "gold" :glyph "󰔏" :value "${SYSGRAPH.temp.val}°"
                 :spark "${SYSGRAPH.temp.spark}" :tip "CPU package temperature" :alert {SYSGRAPH.temp.hot})
       (mon_cell :hue "pink" :glyph "󰘚" :value "${SYSGRAPH.cpu.val}%"
@@ -522,6 +534,8 @@
                 :spark "${SYSGRAPH.gpu.spark}"
                 :tip "${SYSGRAPH.gpu.present ? 'GPU ' + SYSGRAPH.gpu.val + '% - ' + SYSGRAPH.gpu.temp + 'C' : 'dGPU asleep (left un-woken)'}"
                 :alert {SYSGRAPH.gpu.hot} :dim {SYSGRAPH.gpu.present == false})
+      (mon_cell :hue "purple" :glyph "󰍛" :value "${SYSGRAPH.mem.val}%"
+                :spark "${SYSGRAPH.mem.spark}" :tip "RAM used" :alert {SYSGRAPH.mem.hot})
       (mon_net))))
 
 (defwidget bar_top_layout []

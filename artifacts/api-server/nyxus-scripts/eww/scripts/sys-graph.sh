@@ -84,24 +84,36 @@ if [[ -n "$nvpath" ]] && have nvidia-smi; then
   fi
 fi
 
+# ---- RAM used% (MemTotal - MemAvailable) ------------------------------
+mem=0
+{ read -r _ mtot _; read -r _ _ _; read -r _ mavail _; } < <(grep -E '^(MemTotal|MemFree|MemAvailable):' /proc/meminfo)
+if [[ "${mtot:-0}" =~ ^[0-9]+$ ]] && (( mtot > 0 )) && [[ "${mavail:-}" =~ ^[0-9]+$ ]]; then
+  mem=$(( (mtot - mavail) * 100 / mtot ))
+fi
+(( mem < 0 )) && mem=0; (( mem > 100 )) && mem=100
+
 # ---- roll histories ----------------------------------------------------
-ch=""; th=""; gh=""
-if [[ -r "$STATE" ]]; then { read -r ch; read -r th; read -r gh; } < "$STATE"; fi
+ch=""; th=""; gh=""; mh=""
+if [[ -r "$STATE" ]]; then { read -r ch; read -r th; read -r gh; read -r mh; } < "$STATE"; fi
 ch=$(trim "${ch:+$ch,}$cpu")
 th=$(trim "${th:+$th,}$tnorm")
 gh=$(trim "${gh:+$gh,}$gpu_util")
-printf '%s\n%s\n%s\n' "$ch" "$th" "$gh" > "$STATE"
+mh=$(trim "${mh:+$mh,}$mem")
+printf '%s\n%s\n%s\n%s\n' "$ch" "$th" "$gh" "$mh" > "$STATE"
 
 # ---- hot flags ---------------------------------------------------------
-chot=0; thot=0; ghot=0
+chot=0; thot=0; ghot=0; mhot=0
 (( cpu >= 88 )) && chot=1
 (( temp >= 90 )) && thot=1
 (( gpu_util >= 90 )) && ghot=1
+(( mem >= 90 )) && mhot=1
 
 cpu_spark=$(spark "$ch")
 temp_spark=$(spark "$th")
 gpu_spark=$(spark "$gh")
+mem_spark=$(spark "$mh")
 
-printf '{"cpu":{"val":%d,"hot":%d,"spark":"%s"},"temp":{"val":%d,"hot":%d,"spark":"%s"},"gpu":{"val":%d,"temp":%d,"present":%s,"hot":%d,"spark":"%s"}}\n' \
+printf '{"cpu":{"val":%d,"hot":%d,"spark":"%s"},"temp":{"val":%d,"hot":%d,"spark":"%s"},"gpu":{"val":%d,"temp":%d,"present":%s,"hot":%d,"spark":"%s"},"mem":{"val":%d,"hot":%d,"spark":"%s"}}\n' \
   "$cpu" "$chot" "$cpu_spark" "$temp" "$thot" "$temp_spark" \
-  "$gpu_util" "$gpu_temp" "$gpu_present" "$ghot" "$gpu_spark"
+  "$gpu_util" "$gpu_temp" "$gpu_present" "$ghot" "$gpu_spark" \
+  "$mem" "$mhot" "$mem_spark"
