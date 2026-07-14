@@ -23,7 +23,6 @@
 window {
     width:                  560px;
     background-color:       @bar-bg;
-    background-image:       url("~/.config/nyxus/backdrops/starfall-backdrop-card.png", both);
     border:                 2px;
     border-color:           @glass-line;
     border-radius:          16px;

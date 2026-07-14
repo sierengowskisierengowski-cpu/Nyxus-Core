@@ -75,6 +75,7 @@ echo "GOLD-LATEST -> $(basename "$GOLD")" > "${RECOVERY}/LATEST_SNAPSHOT"
 
 mkdir -p "${HOME}/.nyxus"
 date -Iseconds > "${HOME}/.nyxus/.state-saved"
+date -Iseconds > "${HOME}/.nyxus/.daily-driver-locked"
 
 echo "── saved: ${GOLD}"
 echo "── marker: ${HOME}/.nyxus/.state-saved"

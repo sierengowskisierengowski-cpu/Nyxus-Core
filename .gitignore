@@ -54,3 +54,4 @@ __pycache__/
 *.pyo
 *.py.archive
 *.legacy.py.archive
+artifacts/api-server/nyxus-scripts/eww/*.bak*

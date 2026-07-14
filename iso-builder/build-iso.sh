@@ -90,6 +90,15 @@ fi
 ok "running on Arch as root with mkarchiso available"
 ok "iso version: ${ISO_DATE} → ${ISO_NAME}"
 
+# ── lean ISO tier (optional) ─────────────────────────────────────────────
+NYX_ISO_TIER="${NYX_ISO_TIER:-full}"
+if [[ "${NYX_ISO_TIER}" == "lean" && -f "${PROFILE_DIR}/packages.x86_64.lean" ]]; then
+  cp "${PROFILE_DIR}/packages.x86_64" "${PROFILE_DIR}/packages.x86_64.full.bak"
+  cp "${PROFILE_DIR}/packages.x86_64.lean" "${PROFILE_DIR}/packages.x86_64"
+  trap '[[ -f "${PROFILE_DIR}/packages.x86_64.full.bak" ]] && mv "${PROFILE_DIR}/packages.x86_64.full.bak" "${PROFILE_DIR}/packages.x86_64"' EXIT
+  ok "NYX_ISO_TIER=lean — using packages.x86_64.lean"
+fi
+
 # ── stamp version into profiledef.sh + os-release ────────────────────────
 # Keep the date in a single place (this script). At every bake we rewrite
 # the iso_version in profiledef.sh (consumed by mkarchiso for ISO metadata)
@@ -224,8 +233,16 @@ fi
 # ── EWW (replaces waybar as of rev r6-eww) ──────────────────────────────────
 # Top-level eww.yuck / eww.scss / nyxus.conf + all *.yuck modules + scripts/
 install -m 0644 "${NS}/eww/eww.yuck"   "${SKEL}/.config/eww/eww.yuck"
-install -m 0644 "${NS}/eww/eww.scss"   "${SKEL}/.config/eww/eww.scss"
 install -m 0644 "${NS}/eww/nyxus.conf" "${SKEL}/.config/eww/nyxus.conf"
+# eww 0.5: ship precompiled CSS + SCSS source (never both eww.scss and eww.css in skel)
+if [[ -f "${NS}/eww/eww.css" ]]; then
+  install -m 0644 "${NS}/eww/eww.css" "${SKEL}/.config/eww/eww.css"
+fi
+if [[ -f "${NS}/eww/eww.scss.source" ]]; then
+  install -m 0644 "${NS}/eww/eww.scss.source" "${SKEL}/.config/eww/eww.scss.source"
+elif [[ -f "${NS}/eww/eww.scss" ]]; then
+  install -m 0644 "${NS}/eww/eww.scss" "${SKEL}/.config/eww/eww.scss.source"
+fi
 if compgen -G "${NS}/eww/*.yuck" >/dev/null; then
   install -m 0644 "${NS}"/eww/*.yuck "${SKEL}/.config/eww/" 2>/dev/null || true
 fi

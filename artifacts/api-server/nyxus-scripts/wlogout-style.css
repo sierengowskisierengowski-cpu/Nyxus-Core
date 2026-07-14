@@ -17,10 +17,8 @@
 
 /* ── DEEP VOID CANVAS · frosted glass over wallpaper ─────────────── */
 window {
-    background-color: rgba(5, 6, 10, 0.72) ;
-    background-image: url("file:///home/cosmic/.config/nyxus/backdrops/starfall-backdrop.png");
-    background-size: cover;
-    background-position: center;
+    background-color: rgba(5, 6, 10, 0.82) ;
+    background-image: none                  ;
     color: #eef2fa                          ;
 }
 

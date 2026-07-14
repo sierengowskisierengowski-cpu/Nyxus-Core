@@ -51,10 +51,10 @@
                                      "~/.config/eww/scripts/updates.sh")
 (defpoll PLAYER     :interval "2s"   :initial '{"status":"Stopped","title":"—","artist":"","icon":"□","tooltip":"player"}'
                                      "~/.config/eww/scripts/player.sh")
-(defpoll FAN_GRAPH  :interval "2s"   :initial '{"fans":[{"id":1,"label":"FAN1","rpm":0,"pct":0,"bar":0,"hist":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]}],"tooltip":"fan speeds"}'
-                                     "~/.config/eww/scripts/fan-graph.sh")
-(defpoll NET_GRAPH  :interval "2s"   :initial '{"ssid":"NET","ip":"—","up_fmt":"0B","down_fmt":"0B","up_bar":4,"down_bar":4,"up_hist":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],"down_hist":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],"tooltip":"network"}'
-                                     "~/.config/eww/scripts/net-graph.sh")
+(defpoll FANSTRIP   :interval "3s"   :initial '{"text":"FAN —","tooltip":"fan speeds"}'
+                                     "~/.config/eww/scripts/fan-strip.sh")
+(defpoll NETSTRIP   :interval "3s"   :initial '{"text":"NET —","tooltip":"network"}'
+                                     "~/.config/eww/scripts/net-strip.sh")
 (defpoll NOTIFS     :interval "3s"   :initial '{"icon":"○","label":"0","tooltip":"notifications","paused":"false","total":0}'
                                      "~/.config/eww/scripts/notifications.sh")
 
@@ -343,9 +343,9 @@
     (label :class "ticker-player-text" :limit-width 48
            :text "${PLAYER.icon}  ${PLAYER.title}")))
 
-;; Naked ticker — full viewport marquee, symmetric center feel.
+;; Naked ticker — full-width sliding marquee, zero vessel chrome.
 (defwidget ticker_widget []
-  (box :class "ticker-row" :orientation "h" :hexpand true :halign "fill" :valign "center"
+  (box :class "ticker-row" :orientation "h" :hexpand true :halign "center" :valign "center"
     (label :class "ticker ticker-marquee ticker-hero ticker-naked"
            :hexpand true
            :halign "center"
@@ -413,77 +413,36 @@
          :text "${label} ${value}"
          :tooltip "${tip ?: label}"))
 
-(defwidget fan_spark_col [h]
-  (box :class "fan-spark-col" :orientation "v" :space-evenly false :valign "end"
-    (box :class "fan-spark-fill" :style "min-height: ${h}px;")))
-
-(defwidget fan_graph_row [fan]
-  (box :class "fan-graph-row" :orientation "v" :space-evenly false :spacing 2
-    (box :orientation "h" :space-evenly false :spacing 6 :valign "center"
-      (label :class "fan-graph-label" :text "${fan.label}")
-      (label :class "fan-graph-rpm" :text "${fan.rpm}"))
-    (box :class "fan-bar-track" :orientation "h" :valign "center"
-      (box :class "fan-bar-fill" :style "min-width: ${fan.bar}px;"))
-    (box :class "fan-spark-row" :orientation "h" :space-evenly false :spacing 1 :valign "end"
-      (for h in {fan.hist}
-        (fan_spark_col :h h)))))
-
-(defwidget fan_graph_widget []
-  (box :class "fan-graph-panel" :orientation "v" :space-evenly false :spacing 5
-       :tooltip "${FAN_GRAPH.tooltip}"
-    (for fan in {FAN_GRAPH.fans}
-      (fan_graph_row :fan fan))))
-
-(defwidget net_spark_col [h ?kind]
-  (box :class "net-spark-col net-spark-${kind ?: 'down'}" :orientation "v" :space-evenly false :valign "end"
-    (box :class "net-spark-fill" :style "min-height: ${h}px;")))
-
-(defwidget net_graph_widget []
-  (box :class "net-graph-panel" :orientation "v" :space-evenly false :spacing 3
-       :tooltip "${NET_GRAPH.tooltip}"
-    (box :orientation "h" :space-evenly false :spacing 6 :halign "end"
-      (label :class "net-graph-ssid" :text "${NET_GRAPH.icon} ${NET_GRAPH.ssid}")
-      (label :class "net-graph-ip" :text "${NET_GRAPH.ip}"))
-    (box :orientation "h" :space-evenly false :spacing 8 :halign "end" :valign "center"
-      (label :class "net-graph-rate net-graph-up" :text "↑${NET_GRAPH.up_fmt}")
-      (box :class "net-bar-track net-bar-up" :orientation "h"
-        (box :class "net-bar-fill net-bar-fill-up" :style "min-width: ${NET_GRAPH.up_bar}px;")))
-    (box :class "net-spark-row" :orientation "h" :space-evenly false :spacing 1 :halign "end" :valign "end"
-      (for h in {NET_GRAPH.up_hist}
-        (net_spark_col :h h :kind "up")))
-    (box :orientation "h" :space-evenly false :spacing 8 :halign "end" :valign "center"
-      (label :class "net-graph-rate net-graph-down" :text "↓${NET_GRAPH.down_fmt}")
-      (box :class "net-bar-track net-bar-down" :orientation "h"
-        (box :class "net-bar-fill net-bar-fill-down" :style "min-width: ${NET_GRAPH.down_bar}px;")))
-    (box :class "net-spark-row" :orientation "h" :space-evenly false :spacing 1 :halign "end" :valign "end"
-      (for h in {NET_GRAPH.down_hist}
-        (net_spark_col :h h :kind "down")))))
+(defwidget bar_strip_text [text ?tip ?class]
+  (label :class "bar-strip ${class ?: ''}"
+         :text "${text}"
+         :tooltip "${tip ?: text}"
+         :limit-width 52
+         :truncate "end"))
 
 ;; Idle face: NYXUS wordmark + clock + date (default bottom center).
 (defwidget bar_hub_idle []
   (box :orientation "v" :space-evenly false :spacing 2 :halign "center"
-    (label :class "bar-hub-brand nyxus-sigil-brand" :text "NYXUS" :style "opacity: ${NEONFLICK};")
-    (label :class "bar-hub-time nyxus-sigil-time" :text "${TIME.hm}")
-    (label :class "bar-hub-date nyxus-sigil-date" :text "${TIME.date}")))
+    (label :class "bar-hub-brand" :text "NYXUS" :style "opacity: ${NEONFLICK};")
+    (label :class "bar-hub-time" :text "${TIME.hm}")
+    (label :class "bar-hub-date" :text "${TIME.date}")))
 
 ;; Music face: now-playing + mini CAVA when MPRIS reports active playback.
 (defwidget bar_hub_music []
-  (box :orientation "v" :space-evenly false :spacing 2 :halign "center"
-    (label :class "bar-hub-music-title"
+  (box :orientation "v" :space-evenly false :spacing 1 :halign "center"
+    (label :class "bar-hub-music-title" :limit-width 36 :truncate "end"
            :text "${PLAYER.icon}  ${PLAYER.title}"
            :tooltip "${PLAYER.tooltip}")
-    (label :class "bar-hub-music-artist"
+    (label :class "bar-hub-music-artist" :limit-width 36 :truncate "end"
            :visible {PLAYER.artist != ""}
            :text "${PLAYER.artist}")
     (cava_mini)))
 
-;; Reactor Sigil — frosted lens core with PRISM rim, music flip, hub click.
-(defwidget nyxus_signature_core []
-  (button :class "nyxus-sigil-core bar-hub-trigger"
+(defwidget bar_hub_trigger []
+  (button :class "bar-hub-trigger"
           :onclick "eww open --toggle nyxus-hub &"
           :onrightclick "playerctl play-pause &"
-          :tooltip "NYXUS Signature Core · ${PLAYER.status != 'Stopped' ? PLAYER.tooltip : TIME.long} · click hub · right-click play/pause"
-          :style "background-image: linear-gradient(180deg, rgba(8,4,16,0.82), rgba(3,1,8,0.90)), linear-gradient(${PRISM.a}deg, rgba(255,38,103,0.42) 0%, rgba(121,73,242,0.34) 35%, rgba(38,255,183,0.38) 70%, rgba(255,38,103,0.42) 100%); box-shadow: 0 0 ${PRISM.ps}px rgba(${PRISM.pr},${PRISM.pg},${PRISM.pb},0.55), 0 0 28px rgba(121,73,242,0.28), inset 0 0 24px rgba(255,38,103,0.10);"
+          :tooltip "NYXUS Main Menu · ${PLAYER.status != 'Stopped' ? PLAYER.tooltip : TIME.long} · click hub · right-click play/pause"
     (stack :orientation "v" :homogeneous false
       (box :visible {PLAYER.status == "Stopped"} (bar_hub_idle))
       (box :visible {PLAYER.status != "Stopped"} (bar_hub_music)))))
@@ -492,12 +451,12 @@
   (box :class "bar-bottom-minimal" :orientation "h" :hexpand true :halign "fill"
        :space-evenly false :valign "center"
     (box :class "bar-metrics-left" :orientation "h" :hexpand true :halign "start"
-         :space-evenly false :spacing 10 :valign "center"
-      (fan_graph_widget))
-    (box :hexpand false :halign "center" (nyxus_signature_core))
+         :space-evenly false :spacing 12 :valign "center"
+      (bar_strip_text :text "${FANSTRIP.text}" :tip "${FANSTRIP.tooltip}" :class "bar-strip-fans"))
+    (box :hexpand false :halign "center" (bar_hub_trigger))
     (box :class "bar-metrics-right" :orientation "h" :hexpand true :halign "end"
-         :space-evenly false :spacing 10 :valign "center"
-      (net_graph_widget))))
+         :space-evenly false :spacing 12 :valign "center"
+      (bar_strip_text :text "${NETSTRIP.text}" :tip "${NETSTRIP.tooltip}" :class "bar-strip-net"))))
 
 (defwidget bar_top_layout []
   (box :class "bar-top-ticker-only" :orientation "h" :hexpand true :halign "fill"
@@ -885,7 +844,7 @@
 ;; on .bar-bottom / .bar-top, NOT from a <100% surface width.
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
-  :geometry (geometry :x "0" :y "8" :width "100%" :height "58px" :anchor "bottom center")
+  :geometry (geometry :x "0" :y "8" :width "100%" :height "48px" :anchor "bottom center")
   (bar_bottom_layout))
 
 (defwindow bar-top
@@ -916,7 +875,7 @@
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-hub"
   :geometry (geometry :width "100%" :height "100%" :anchor "center")
   (eventbox :onclick "eww close nyxus-hub"
-    :onkeydown "[ '{}' = 'Escape' ] && eww close nyxus-hub"
+    :onkeydown "[ '{}' = 'Escape' ] && nyxus-overlay-unstick"
     (centerbox :class "hub-backdrop"
       (box)
       (nyxus_hub_layout)

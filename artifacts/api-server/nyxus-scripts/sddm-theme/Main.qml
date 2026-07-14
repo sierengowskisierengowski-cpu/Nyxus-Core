@@ -40,7 +40,7 @@ Rectangle {
     readonly property color clrHairline:     Qt.rgba(255/255, 255/255, 255/255, 0.10)
     // Accent comes from theme.conf.user (written by Settings → Appearance).
     // Falls back to the locked Mirror White if no accent has been set.
-    readonly property color clrAccent:       config.Accent || "#e8edf5"
+    readonly property color clrAccent:       config.Accent || "#7949f2"
     readonly property color clrFocus:        Qt.rgba(230/255, 240/255, 255/255, 0.55)
     readonly property color clrText:         "#e8edf5"
     readonly property color clrTextDim:      "#c8ccd6"
@@ -58,7 +58,7 @@ Rectangle {
     }
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.78)
+        color: Qt.rgba(0, 0, 0, 0.52)
     }
 
     // ── Top-right power controls ─────────────────────────────────────────
@@ -163,6 +163,17 @@ Rectangle {
             clip: true
         }
 
+        // NYXUS wordmark
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            text: "NYXUS"
+            color: clrAccent
+            font.family: "Inter"
+            font.pixelSize: 14
+            font.weight: Font.Bold
+            font.letterSpacing: 8
+        }
+
         // Clock
         Text {
             id: clock
@@ -199,9 +210,10 @@ Rectangle {
             Layout.preferredWidth: 380
             Layout.preferredHeight: 220
             color: clrGlass
-            border.color: clrHairline
+            border.color: clrAccent
             border.width: 1
             radius: 14
+            opacity: 0.95
 
             ColumnLayout {
                 anchors.fill: parent
@@ -212,7 +224,7 @@ Rectangle {
                 Text {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
-                    text: "WELCOME TO THE DARKSIDE"
+                    text: "SIGN IN TO NYXUS"
                     color: clrTextHint
                     font.family: "Inter"
                     font.pixelSize: 10

@@ -148,6 +148,13 @@ for h in nyxus-eww-launch nyxus-eww-launch-safe nyxus-set-wallpaper.sh \
     install -m 0755 "${NS}/${h}" "${HOME}/.local/bin/${h}"
   fi
 done
+# Recovery autostart hooks (referenced from hyprland.conf)
+for script in nyxus-persist-login nyxus-boot-check nyxus-overlay-unstick nyxus-restore-session; do
+  src="${REPO_ROOT}/scripts/${script}.sh"
+  if [[ -f "${src}" ]]; then
+    ln -sf "${src}" "${HOME}/.local/bin/${script}"
+  fi
+done
 # Wayland session entry for display managers (SDDM picks this up).
 if [[ -f "${NS}/desktop-entries/nyxus-hyprland.desktop" ]]; then
   mkdir -p "${HOME}/.local/share/wayland-sessions"

@@ -1,0 +1,122 @@
+/* NYXUS · Obsidian Prism — app launcher
+ * Palette: #7949f2 · #ff2667 · #26ffb7 · #ffb026 */
+
+* {
+    bg:         #05060a;
+    bar-bg:     rgba(5, 6, 10, 0.90);
+    widget-bg:  rgba(10, 13, 20, 0.85);
+    active:     #ff2667;
+    inactive:   rgba(238, 242, 250, 0.35);
+    highlight:  #7949f2;
+    violet:     #26ffb7;
+    gold:       #ffb026;
+    text:       #eef2fa;
+    sep:        rgba(38, 255, 183, 0.35);
+    selected-bg:rgba(121, 73, 242, 0.18);
+    glass-line: rgba(255, 38, 103, 0.35);
+
+    font:                   "JetBrainsMono Nerd Font 12";
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+window {
+    background-color:       @bar-bg;
+    border:                 2px;
+    border-color:           @glass-line;
+    border-radius:          16px;
+    width:                  520px;
+    padding:                16px;
+    location:               center;
+    anchor:                 center;
+}
+
+mainbox {
+    background-color:       transparent;
+    spacing:                10px;
+    children:               [ inputbar, listview ];
+}
+
+inputbar {
+    background-color:       @widget-bg;
+    border-radius:          10px;
+    border:                 1px;
+    border-color:           @glass-line;
+    padding:                10px 14px;
+    spacing:                8px;
+    children:               [ prompt, entry ];
+}
+
+prompt {
+    background-color:       transparent;
+    text-color:             @gold;
+    font:                   "JetBrainsMono Nerd Font 13";
+    vertical-align:         0.5;
+}
+
+entry {
+    background-color:       transparent;
+    text-color:             @text;
+    placeholder-color:      @inactive;
+    placeholder:            "search apps...";
+    vertical-align:         0.5;
+    cursor:                 text;
+}
+
+listview {
+    background-color:       transparent;
+    columns:                1;
+    lines:                  8;
+    spacing:                2px;
+    scrollbar:              true;
+    border:                 0;
+    cycle:                  false;
+    dynamic:                true;
+    layout:                 vertical;
+}
+
+element {
+    background-color:       transparent;
+    text-color:             @text;
+    border-radius:          10px;
+    padding:                8px 12px;
+    cursor:                 pointer;
+    orientation:            horizontal;
+    spacing:                10px;
+}
+
+element-icon {
+    background-color:       transparent;
+    size:                   22px;
+}
+
+element-text {
+    background-color:       transparent;
+    text-color:             inherit;
+    vertical-align:         0.5;
+}
+
+element normal.normal {
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+element selected.normal {
+    background-color:       @selected-bg;
+    text-color:             @active;
+    border:                 1px;
+    border-color:           @sep;
+}
+
+element alternate.normal {
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+scrollbar {
+    background-color:       @widget-bg;
+    handle-color:           @violet;
+    handle-width:           3px;
+    border-radius:          2px;
+    padding:                2px;
+}
