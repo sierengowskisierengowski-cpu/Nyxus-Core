@@ -27,6 +27,7 @@ Work landed across agents in this session (newest first):
 | **Login / greetd pivot** | greetd + regreet configs; never-lock-out fallback chain (`nyxus-persist-login`, `nyxus-restore-login`, `nyxus-boot-check`) |
 | **Phase 1 consolidation** | Canonical source under `artifacts/api-server/nyxus-scripts/`; `nyxus-restore-desktop.sh`; prior tags `consolidated-takeover-2026-07-14`, `phase-1-complete-2026-07-14`, `nyxus-good-state-2026-07-14-bars-art` |
 | **Alien companion (v1)** | `companion/companion.py` GTK4 layer-shell engine; placeholder sprite frames + manifest; `nyxus-companion` launcher; state machine (idle/sleep/notify/alert/workspace/flair) |
+| **Companion deploy (this safepoint)** | `hyprland.conf` exec-once autostart; `nyxus-restore-desktop.sh` stages companion + sounds + launchers |
 
 ---
 
@@ -49,7 +50,7 @@ Agents may still be running or work is partially landed:
 - Cinematic boot (Plymouth UFO landing)
 - Voice control (wake-word commands)
 - Settings app deeper visual overhaul
-- Wire companion autostart into `hyprland.conf`
+- Wire companion autostart into `hyprland.conf` *(done this safepoint — `exec-once` via `nyxus-companion start`)*
 - Wire notification sounds into bridge *(partially done — chimes in bridge; verify end-to-end after login)*
 - Settings/Hub sound toggle UI
 - Phase 2.4 backdoor login keybind
@@ -57,7 +58,7 @@ Agents may still be running or work is partially landed:
 - kage-ryu kernel boot validation
 - Phase 8 E2E test + v1.0 tag
 - Merge branch to `main`
-- Extend `nyxus-restore-desktop.sh` to deploy `companion/` + `nyxus-companion` + `nyxus-sound` helpers
+- Extend `nyxus-restore-desktop.sh` to deploy `companion/` + `nyxus-companion` + `nyxus-sound` helpers *(done this safepoint)*
 
 ---
 
@@ -67,7 +68,7 @@ Agents may still be running or work is partially landed:
 2. **Greeter flash fix** — Run `sudo scripts/nyxus-setup-greetd.sh` then reboot for greetd/regreet login flash fix.
 3. **Broken cache symlink** — `sudo rm /opt/nyxus-cache` (broken symlink on this host).
 4. **Live vs repo drift** — `~/.config/hypr/hyprland.conf` on disk may lag repo (repo has Phase 3 keybind consolidation); run restore to sync.
-5. **Companion not autostarted** — Launch manually: `nyxus-companion start` until hyprland exec-once is wired.
+5. **Companion autostart** — Wired in repo `hyprland.conf`; log out/in to verify spawn after restore.
 
 ---
 
@@ -103,7 +104,7 @@ git checkout nyxus-good-state-2026-07-14-legend
 bash scripts/nyxus-restore-desktop.sh
 ```
 
-**Deploy companion + sounds after restore (manual until restore script updated):**
+**Deploy companion + sounds after restore** — `nyxus-restore-desktop.sh` now stages these automatically. Manual fallback:
 
 ```bash
 mkdir -p ~/.local/share/nyxus/companion ~/.local/share/nyxus/sounds
@@ -111,7 +112,6 @@ cp -a artifacts/api-server/nyxus-scripts/companion/. ~/.local/share/nyxus/compan
 cp -a artifacts/api-server/nyxus-scripts/sounds/*.ogg ~/.local/share/nyxus/sounds/
 install -m 0755 artifacts/api-server/nyxus-scripts/companion/nyxus-companion ~/.local/bin/
 install -m 0755 artifacts/api-server/nyxus-scripts/nyxus-sound ~/.local/bin/
-install -m 0755 artifacts/api-server/nyxus-scripts/nyxus-sound-bake ~/.local/bin/
 nyxus-companion start
 ```
 
