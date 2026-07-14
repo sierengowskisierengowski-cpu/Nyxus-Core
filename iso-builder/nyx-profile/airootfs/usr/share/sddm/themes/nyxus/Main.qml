@@ -1,494 +1,246 @@
-// ============================================================================
-//  NYXUS · SDDM theme — Main.qml                          rev 2026-05-13 r2
+// ============================================================
+//  NYXUS — SDDM greeter · "Void Sign-In" (rev 2026-07-14 · from-scratch rebuild)
 //
-//  DARK MIRROR brand login screen. One-of-a-kind: stacked aurora gradient
-//  background, ◤ X ◥ glyph + animated underline, AccountsService-backed
-//  user picker on the left, password panel + session selector on the right,
-//  hairline status bar (hostname · datetime · battery · network) along the
-//  bottom. No blur on the foreground panels — sharp glass with thin rules.
+//  Design goals for this rebuild:
+//   - RELIABLE RENDER FIRST. Pure QtQuick only — no QtQuick.Controls,
+//     no SddmComponents. This avoids the qt5/qt6 quickcontrols2 split
+//     (qt6-quickcontrols2 is not always present) and the QQC1 `Button`
+//     shadowing bug that broke earlier themes. Nothing here needs a
+//     control that isn't in base QtQuick.
+//   - The blank-screen-on-boot failure was NOT this theme — it was the
+//     greeter crashing in hardware GL on hybrid Intel+NVIDIA. The
+//     deploy script sets QT_QUICK_BACKEND=software so the scene renders
+//     via llvmpipe. This theme is written to also be cheap to render in
+//     software (no blur, no shaders, no heavy effects).
+//   - Nyxus palette (deep void black + purple #7949F2 + magenta #FF2667).
+//     Rough palette match only — full theme polish is Phase 5.
 //
-//  Implements:
-//    · U3   — sharp non-blurry visuals, full-rebuild brand
-//    · P6.33 — AccountsService user list (model populated by ListView from
-//             /var/lib/AccountsService/users via the SDDM userModel role).
+//  Both Hyprland and COSMIC (and any other /usr/share/wayland-sessions
+//  entry) are listed as selectable session pills, sourced from SDDM's
+//  sessionModel.
 //
 //  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
-// ============================================================================
+// ============================================================
 import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import SddmComponents 2.0
+import QtQuick.Window 2.15
 
 Rectangle {
     id: root
-    width: 1920
-    height: 1080
-    color: "#040406"
+    width: Screen.width
+    height: Screen.height
+    color: "#04030a"
 
-    // Brand palette (DARK MIRROR).
-    readonly property color accent:     "#C084FC"
-    readonly property color accentDim:  "#7C3AED"
-    readonly property color hairline:   "#1A1722"
-    readonly property color panel:      "#0A0810"
-    readonly property color panelEdge:  "#1F1B2C"
-    readonly property color textHi:     "#E9E5F2"
-    readonly property color textLo:     "#7B7390"
-    readonly property color danger:     "#F87171"
+    // ── palette ──────────────────────────────────────────────
+    readonly property color cVoid:     "#04030a"
+    readonly property color cCard:     Qt.rgba(10/255, 8/255, 18/255, 0.72)
+    readonly property color cCardEdge: Qt.rgba(121/255, 73/255, 242/255, 0.55)
+    readonly property color cInput:    Qt.rgba(4/255, 3/255, 10/255, 0.92)
+    readonly property color cAccent:   "#7949f2"
+    readonly property color cAccent2:  "#ff2667"
+    readonly property color cText:     "#e8edf5"
+    readonly property color cTextDim:  "#a6abba"
+    readonly property color cTextFaint:"#6a6e78"
 
-    // ── BACKGROUND: layered radial + linear, no blur, sharp gradient ────
-    // Drawn directly with Rectangle gradients so it stays crisp at 4K.
-    Rectangle {
+    property int selectedSession: sessionModel.lastIndex
+    property string errorText: ""
+
+    // ── background artwork + void wash ───────────────────────
+    Image {
+        anchors.fill: parent
+        source: config.background || "background.png"
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        cache: true
+        onStatusChanged: if (status === Image.Error) visible = false
+    }
+    Rectangle {  // heavy wash so the login stays legible on any wall
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.62)
+    }
+    Rectangle {  // subtle purple floor glow (cheap linear gradient)
         anchors.fill: parent
         gradient: Gradient {
-            orientation: Gradient.Vertical
-            GradientStop { position: 0.00; color: "#0A0712" }
-            GradientStop { position: 0.45; color: "#06050B" }
-            GradientStop { position: 1.00; color: "#000000" }
-        }
-    }
-    // Subtle aurora glow top-left.
-    Rectangle {
-        width: 900; height: 900; radius: 450
-        x: -300; y: -300
-        opacity: 0.18
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: root.accent }
-            GradientStop { position: 1.0; color: "#00000000" }
-        }
-    }
-    // Aurora glow bottom-right (cooler).
-    Rectangle {
-        width: 1100; height: 1100; radius: 550
-        x: parent.width - 800; y: parent.height - 800
-        opacity: 0.12
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "#5B21B6" }
-            GradientStop { position: 1.0; color: "#00000000" }
+            GradientStop { position: 0.0; color: Qt.rgba(121/255, 73/255, 242/255, 0.00) }
+            GradientStop { position: 1.0; color: Qt.rgba(121/255, 73/255, 242/255, 0.14) }
         }
     }
 
-    // ── BRAND HEADER (centred, top) ────────────────────────────────────
-    ColumnLayout {
-        id: header
-        anchors.top: parent.top
-        anchors.topMargin: 56
+    // ── live clock ───────────────────────────────────────────
+    Timer { id: clockTimer; interval: 1000; running: true; repeat: true
+        onTriggered: { timeLabel.text = Qt.formatDateTime(new Date(), "HH:mm");
+                       dateLabel.text = Qt.formatDateTime(new Date(), "dddd · MMMM d").toUpperCase() } }
+
+    Column {
         anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: root.height * 0.10
         spacing: 4
-
-        Text {
-            text: "◤ X ◥"
-            color: root.accent
-            font.family: "JetBrains Mono"
-            font.pixelSize: 56
-            font.bold: true
-            Layout.alignment: Qt.AlignHCenter
-            // Soft glow via duplicated Text with opacity (no blur shader).
-        }
-        Text {
-            text: "NYXUS"
-            color: root.accent
-            font.family: "JetBrains Mono"
-            font.pixelSize: 22
-            font.letterSpacing: 8
-            font.bold: true
-            Layout.alignment: Qt.AlignHCenter
-        }
-        Text {
-            text: "DARK MIRROR"
-            color: root.textLo
-            font.family: "JetBrains Mono"
-            font.pixelSize: 10
-            font.letterSpacing: 12
-            Layout.alignment: Qt.AlignHCenter
-        }
-        Rectangle {
-            Layout.preferredWidth: 220
-            Layout.preferredHeight: 1
-            Layout.alignment: Qt.AlignHCenter
-            color: root.accent
-            opacity: 0.35
-            Layout.topMargin: 8
-        }
+        Text { id: timeLabel; anchors.horizontalCenter: parent.horizontalCenter
+            text: Qt.formatDateTime(new Date(), "HH:mm")
+            color: cText; font.pixelSize: 76; font.family: "Orbitron"; font.letterSpacing: 2 }
+        Text { id: dateLabel; anchors.horizontalCenter: parent.horizontalCenter
+            text: Qt.formatDateTime(new Date(), "dddd · MMMM d").toUpperCase()
+            color: cTextDim; font.pixelSize: 14; font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: 3 }
     }
 
-    // ── USER PICKER (left panel) — populated from AccountsService ─────
+    // ── login card ───────────────────────────────────────────
     Rectangle {
-        id: usersPanel
-        width: 340
-        height: 560
-        anchors.left: parent.left
-        anchors.leftMargin: 120
-        anchors.verticalCenter: parent.verticalCenter
-        color: root.panel
-        border.color: root.panelEdge
+        id: card
+        width: 420
+        height: cardCol.height + 56
+        radius: 16
+        color: cCard
         border.width: 1
-        radius: 0      // sharp corners — DARK MIRROR is slab-edged.
+        border.color: cCardEdge
+        anchors.centerIn: parent
 
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 24
-            spacing: 12
-
-            Text {
-                text: "ACCOUNTS"
-                color: root.textLo
-                font.family: "JetBrains Mono"
-                font.pixelSize: 10
-                font.letterSpacing: 6
-                Layout.alignment: Qt.AlignHCenter
-                Layout.bottomMargin: 6
-            }
-
-            ListView {
-                id: usersView
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true
-                model: userModel        // SDDM-provided, backed by AccountsService
-                spacing: 6
-                currentIndex: userModel.lastIndex >= 0 ? userModel.lastIndex : 0
-                onCurrentIndexChanged: {
-                    if (currentIndex >= 0 && currentItem)
-                        passwordField.forceActiveFocus()
-                }
-                delegate: Item {
-                    width: usersView.width
-                    height: 56
-                    Rectangle {
-                        anchors.fill: parent
-                        color: ListView.isCurrentItem ? "#15101F" : "transparent"
-                        border.color: ListView.isCurrentItem ? root.accent : "transparent"
-                        border.width: 1
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
-                            spacing: 12
-                            // Avatar — AccountsService PNG, fall back to glyph.
-                            Image {
-                                source: model.icon !== "" ? "file://" + model.icon : ""
-                                fillMode: Image.PreserveAspectCrop
-                                Layout.preferredWidth: 36
-                                Layout.preferredHeight: 36
-                                visible: source != ""
-                            }
-                            Rectangle {
-                                Layout.preferredWidth: 36
-                                Layout.preferredHeight: 36
-                                color: root.accentDim
-                                visible: !model.icon
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: model.name.length > 0 ? model.name.substring(0,1).toUpperCase() : "?"
-                                    color: "#FFFFFF"
-                                    font.family: "JetBrains Mono"
-                                    font.pixelSize: 18
-                                    font.bold: true
-                                }
-                            }
-                            ColumnLayout {
-                                spacing: 0
-                                Text {
-                                    text: model.realName !== "" ? model.realName : model.name
-                                    color: root.textHi
-                                    font.family: "JetBrains Mono"
-                                    font.pixelSize: 14
-                                    font.bold: true
-                                }
-                                Text {
-                                    text: "@" + model.name
-                                    color: root.textLo
-                                    font.family: "JetBrains Mono"
-                                    font.pixelSize: 10
-                                }
-                            }
-                            Item { Layout.fillWidth: true }
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: usersView.currentIndex = index
-                        }
-                    }
-                }
+        Rectangle {  // 2px accent top rule
+            anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 0 }
+            height: 2; radius: 2
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: cAccent }
+                GradientStop { position: 1.0; color: cAccent2 }
             }
         }
-    }
 
-    // ── LOGIN PANEL (right) ─────────────────────────────────────────────
-    Rectangle {
-        id: loginPanel
-        width: 460
-        height: 420
-        anchors.right: parent.right
-        anchors.rightMargin: 120
-        anchors.verticalCenter: parent.verticalCenter
-        color: root.panel
-        border.color: root.panelEdge
-        border.width: 1
-        radius: 0
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 32
+        Column {
+            id: cardCol
+            anchors.centerIn: parent
+            width: parent.width - 56
             spacing: 18
 
             Text {
-                text: "AUTHENTICATE"
-                color: root.textLo
-                font.family: "JetBrains Mono"
-                font.pixelSize: 10
-                font.letterSpacing: 6
-                Layout.alignment: Qt.AlignHCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "NYXUS"
+                color: cText; font.pixelSize: 34; font.family: "Permanent Marker"; font.letterSpacing: 2
             }
-
             Text {
-                id: greeting
-                text: usersView.currentItem
-                      ? "Welcome back, " + (userModel.data(userModel.index(usersView.currentIndex, 0), Qt.UserRole + 2) || "")
-                      : "Welcome"
-                color: root.textHi
-                font.family: "JetBrains Mono"
-                font.pixelSize: 18
-                font.bold: true
-                Layout.alignment: Qt.AlignHCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "welcome back, operator"
+                color: cTextFaint; font.pixelSize: 13; font.family: "Caveat"
             }
 
+            // username
             Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: root.hairline
-            }
-
-            // Password field.
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 48
-                color: "#050308"
-                border.color: passwordField.activeFocus ? root.accent : root.panelEdge
-                border.width: 1
+                width: parent.width; height: 48; radius: 10
+                color: cInput; border.width: 1
+                border.color: nameInput.activeFocus ? cAccent : Qt.rgba(1,1,1,0.10)
                 TextInput {
-                    id: passwordField
-                    anchors.fill: parent
-                    anchors.leftMargin: 14
-                    anchors.rightMargin: 14
-                    color: root.textHi
-                    font.family: "JetBrains Mono"
-                    font.pixelSize: 16
-                    echoMode: TextInput.Password
-                    passwordCharacter: "•"
-                    selectByMouse: true
+                    id: nameInput
+                    anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 16
                     verticalAlignment: TextInput.AlignVCenter
-                    Keys.onReturnPressed:  loginButton.activate()
-                    Keys.onEnterPressed:   loginButton.activate()
-                }
-                Text {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 14
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "passphrase"
-                    color: root.textLo
-                    font.family: "JetBrains Mono"
-                    font.pixelSize: 14
-                    visible: passwordField.text.length === 0 && !passwordField.activeFocus
+                    color: cText; font.pixelSize: 15; font.family: "JetBrainsMono Nerd Font"
+                    clip: true
+                    text: userModel.lastUser
+                    onAccepted: passwordInput.forceActiveFocus()
+                    Text { anchors.verticalCenter: parent.verticalCenter
+                        visible: !nameInput.text && !nameInput.activeFocus
+                        text: "username"; color: cTextFaint; font: nameInput.font }
                 }
             }
 
-            // Error text (hidden when empty).
-            Text {
-                id: errorText
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-                color: root.danger
-                font.family: "JetBrains Mono"
-                font.pixelSize: 11
-                text: ""
-                visible: text.length > 0
-            }
-
-            // Session selector.
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 10
-                Text {
-                    text: "SESSION"
-                    color: root.textLo
-                    font.family: "JetBrains Mono"
-                    font.pixelSize: 10
-                    font.letterSpacing: 4
-                }
-                ComboBox {
-                    id: sessionBox
-                    Layout.fillWidth: true
-                    model: sessionModel
-                    textRole: "name"
-                    currentIndex: sessionModel.lastIndex >= 0 ? sessionModel.lastIndex : 0
-                    font.family: "JetBrains Mono"
-                    font.pixelSize: 12
-                }
-            }
-
-            // Login button.
+            // password
             Rectangle {
-                id: loginButton
-                Layout.fillWidth: true
-                Layout.preferredHeight: 44
-                color: ma.containsMouse ? root.accent : "#1A1424"
-                border.color: root.accent
-                border.width: 1
-                function activate() {
-                    var idx = usersView.currentIndex >= 0 ? usersView.currentIndex : 0
-                    sddm.login(userModel.data(userModel.index(idx, 0), Qt.UserRole + 1),
-                               passwordField.text,
-                               sessionBox.currentIndex)
-                }
-                MouseArea {
-                    id: ma
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: loginButton.activate()
-                }
-                Text {
-                    anchors.centerIn: parent
-                    text: "ENTER"
-                    color: ma.containsMouse ? "#0A0810" : root.accent
-                    font.family: "JetBrains Mono"
-                    font.pixelSize: 13
-                    font.letterSpacing: 8
-                    font.bold: true
+                width: parent.width; height: 48; radius: 10
+                color: cInput; border.width: 1
+                border.color: passwordInput.activeFocus ? cAccent : Qt.rgba(1,1,1,0.10)
+                TextInput {
+                    id: passwordInput
+                    anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 16
+                    verticalAlignment: TextInput.AlignVCenter
+                    color: cText; font.pixelSize: 15; font.family: "JetBrainsMono Nerd Font"
+                    echoMode: TextInput.Password; passwordCharacter: "•"; clip: true
+                    onAccepted: root.doLogin()
+                    onTextChanged: root.errorText = ""
+                    Text { anchors.verticalCenter: parent.verticalCenter
+                        visible: !passwordInput.text
+                        text: config.PasswordFieldPlaceholderText || "passphrase"
+                        color: cTextFaint; font: passwordInput.font }
                 }
             }
 
-            Item { Layout.fillHeight: true }
-        }
-    }
-
-    // ── FOOTER STATUS BAR (sharp hairline) ──────────────────────────────
-    Rectangle {
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 36
-        color: "#04030A"
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 1
-            color: root.hairline
-        }
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 24
-            anchors.rightMargin: 24
-            spacing: 20
-            Text {
-                text: "NYXUS · DARK MIRROR · " + Qt.application.version
-                color: root.textLo
-                font.family: "JetBrains Mono"
-                font.pixelSize: 10
-                font.letterSpacing: 4
-            }
-            Item { Layout.fillWidth: true }
-            Text {
-                id: clock
-                color: root.textLo
-                font.family: "JetBrains Mono"
-                font.pixelSize: 11
-                Timer {
-                    interval: 1000
-                    running: true
-                    repeat: true
-                    triggeredOnStart: true
-                    onTriggered: {
-                        var d = new Date()
-                        clock.text = Qt.formatDateTime(d, "ddd · MMM dd · hh:mm:ss")
+            // session pills (all wayland/x sessions SDDM found)
+            Flow {
+                width: parent.width; spacing: 8
+                Repeater {
+                    model: sessionModel
+                    delegate: Rectangle {
+                        radius: 8; height: 30
+                        width: pillText.width + 24
+                        color: index === root.selectedSession ? Qt.rgba(121/255,73/255,242/255,0.28)
+                                                              : Qt.rgba(1,1,1,0.05)
+                        border.width: 1
+                        border.color: index === root.selectedSession ? cAccent : Qt.rgba(1,1,1,0.10)
+                        Text { id: pillText; anchors.centerIn: parent
+                            text: model.name; color: index === root.selectedSession ? cText : cTextDim
+                            font.pixelSize: 12; font.family: "JetBrainsMono Nerd Font" }
+                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            onClicked: root.selectedSession = index }
                     }
                 }
             }
-            Item { Layout.preferredWidth: 24 }
+
+            // sign-in button
+            Rectangle {
+                width: parent.width; height: 50; radius: 10
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: signInArea.pressed ? Qt.darker(cAccent,1.2) : cAccent }
+                    GradientStop { position: 1.0; color: signInArea.pressed ? Qt.darker(cAccent2,1.2) : cAccent2 }
+                }
+                Text { anchors.centerIn: parent
+                    text: config.LoginButtonText || "SIGN IN"
+                    color: "#ffffff"; font.pixelSize: 15; font.bold: true
+                    font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: 2 }
+                MouseArea { id: signInArea; anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor; onClicked: root.doLogin() }
+            }
+
+            // error / caps-lock line
             Text {
-                text: "F1 SESSION  ·  F2 LAYOUT  ·  F12 POWER"
-                color: root.textLo
-                font.family: "JetBrains Mono"
-                font.pixelSize: 10
-                font.letterSpacing: 3
+                anchors.horizontalCenter: parent.horizontalCenter
+                height: 14
+                text: root.errorText !== "" ? root.errorText
+                      : (keyboard.capsLock ? "⇪ CAPS LOCK ON" : "")
+                color: root.errorText !== "" ? cAccent2 : cTextFaint
+                font.pixelSize: 11; font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: 1
             }
         }
     }
 
-    // ── SDDM signal hookups ─────────────────────────────────────────────
+    // ── power controls (top-right) ───────────────────────────
+    Row {
+        anchors.top: parent.top; anchors.right: parent.right
+        anchors.topMargin: 28; anchors.rightMargin: 32; spacing: 22
+        Text { text: "⏻ shutdown"; color: cTextDim; font.pixelSize: 13; font.family: "JetBrainsMono Nerd Font"
+            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                onClicked: sddm.powerOff() } }
+        Text { text: "⟳ reboot"; color: cTextDim; font.pixelSize: 13; font.family: "JetBrainsMono Nerd Font"
+            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                onClicked: sddm.reboot() } }
+    }
+
+    Text {  // copyright chrome
+        anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottomMargin: 18
+        text: "© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
+        color: cTextFaint; font.pixelSize: 9; font.family: "JetBrainsMono Nerd Font"
+    }
+
+    function doLogin() {
+        errorText = "";
+        sddm.login(nameInput.text, passwordInput.text, selectedSession);
+    }
+
     Connections {
         target: sddm
-        function onLoginFailed() {
-            errorText.text = "ACCESS DENIED"
-            passwordField.text = ""
-            passwordField.forceActiveFocus()
-        }
-        function onLoginSucceeded() {
-            errorText.text = ""
-        }
+        function onLoginFailed() { root.errorText = "ACCESS DENIED"; passwordInput.text = ""; passwordInput.forceActiveFocus(); }
+        function onLoginSucceeded() { root.errorText = ""; }
     }
 
-    // Keyboard shortcuts: F12 power menu (rendered via SDDM API).
-    Keys.onPressed: {
-        if (event.key === Qt.Key_F12) {
-            powerMenu.visible = !powerMenu.visible
-        }
+    Component.onCompleted: {
+        if (nameInput.text === "") nameInput.forceActiveFocus();
+        else passwordInput.forceActiveFocus();
     }
-
-    // ── POWER MENU (toggleable) ─────────────────────────────────────────
-    Rectangle {
-        id: powerMenu
-        visible: false
-        width: 320; height: 64
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.topMargin: 24
-        anchors.rightMargin: 24
-        color: root.panel
-        border.color: root.accent
-        border.width: 1
-        RowLayout {
-            anchors.fill: parent
-            anchors.margins: 12
-            spacing: 8
-            Repeater {
-                model: [
-                    { label: "SUSPEND",  action: "suspend"  },
-                    { label: "REBOOT",   action: "reboot"   },
-                    { label: "SHUTDOWN", action: "shutdown" }
-                ]
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    color: pma.containsMouse ? root.accent : "transparent"
-                    border.color: root.panelEdge
-                    border.width: 1
-                    Text {
-                        anchors.centerIn: parent
-                        text: modelData.label
-                        color: pma.containsMouse ? "#0A0810" : root.textHi
-                        font.family: "JetBrains Mono"
-                        font.pixelSize: 10
-                        font.letterSpacing: 3
-                        font.bold: true
-                    }
-                    MouseArea {
-                        id: pma
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (modelData.action === "suspend")  sddm.suspend()
-                            if (modelData.action === "reboot")   sddm.reboot()
-                            if (modelData.action === "shutdown") sddm.powerOff()
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    Component.onCompleted: passwordField.forceActiveFocus()
 }

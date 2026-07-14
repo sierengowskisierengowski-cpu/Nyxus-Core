@@ -32,9 +32,12 @@ USER_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
 
 cat > /etc/sddm.conf.d/10-nyxus-login.conf <<EOF
 # NYXUS login — X11 greeter (reliable on MSI GS77 hybrid NVIDIA)
+# QT_QUICK_BACKEND=software: greeter SIGSEGVs in hardware GL on this
+# hybrid Intel+NVIDIA GPU (blank screen). Software render sidesteps it.
 [General]
 DisplayServer=x11
 Numlock=on
+GreeterEnvironment=QT_QUICK_BACKEND=software,QT_XCB_GL_INTEGRATION=none
 
 [Theme]
 Current=nyxus

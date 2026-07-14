@@ -203,6 +203,7 @@ Still open:
 ### Phase 3 — Fix what's broken in the running session
 - [ ] 3.1 Go through every menu/flyout/settings panel, list what's broken (§1.4)
 - [ ] 3.2 Fix each one, verify it opens/works without freezing
+- [ ] 3.2a **Accent desync — Hyprland window borders out of sync with the rest of the session.** Verified live 2026-07-14: EWW bars/Hub and `~/.config/nyxus/accent.json` (`active: wallpaper`) render purple `#7949f2` + magenta `#ff2667`, but the *running compositor* `general:col.active_border` (`hyprctl getoption`, not a file) is a stale **orange→yellow gradient** (`#ff7e2e → #ffff1f`). `nyxus-apply-accent` is not propagating the accent to Hyprland's border color. Fix so borders follow the same accent engine as everything else. (Related cohesion work lands fully in Phase 5.)
 - [ ] 3.3 Resolve keybind duplicates (`Super+R` vs `Super+Space`) (§6)
 - [ ] 3.4 Fix or replace the non-working terminal bind (§6)
 - [ ] 3.5 Full keybind audit + document final list in `docs/KEYBINDS.md`
