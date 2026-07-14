@@ -999,24 +999,10 @@
        :style "background-image: linear-gradient(rgba(5,1,13,0.76), rgba(5,1,13,0.82)), url('/home/cosmic/.config/eww/assets/nyxus-hero-ufo-shop.png'); background-size: cover; background-position: center;"
     (powermenu_layout)))
 
-;; ── UFO notification popup (dunst bridge → nyxus-notif-to-eww) ──────────
-;; The message renders inside the saucer's screen; dunst skip_display keeps
-;; its native popup hidden so this is the only thing shown.
-(defwidget notif_popup_card []
-  (box :class "notif-ufo notif-${notif.urgency == 'CRITICAL' ? 'crit' : 'norm'}"
-       :orientation "v" :space-evenly false :spacing 3 :valign "center" :halign "center"
-       :style "background-image: url('/home/cosmic/.config/eww/assets/nyxus-notif-frame.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 470px; min-height: 314px; padding: 104px 96px 118px 96px;"
-    (label :class "notif-app" :halign "center" :limit-width 34 :truncate "end"
-           :text {notif.app == "" ? "NYXUS" : notif.app})
-    (label :class "notif-summary" :halign "center" :wrap true :limit-width 26
-           :text {notif.summary})
-    (label :class "notif-body" :halign "center" :wrap true :lines 2 :limit-width 34
-           :visible {notif.body != ""} :text {notif.body})))
-
-(defwindow notif-popup
-  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-notif"
-  :geometry (geometry :x "8" :y "54" :width "470px" :height "314px" :anchor "top right")
-  (notif_popup_card))
+;; NOTE: the UFO notification popup (notif_popup_card + notif-popup window)
+;; is defined once, further down near the other flyout windows. A duplicate
+;; pair used to live here — removed 2026-07-14 so there is a single source of
+;; truth (eww silently kept only the last def, which made edits here dead).
 
 (defwindow cheatsheet
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-cheatsheet"

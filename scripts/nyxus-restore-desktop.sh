@@ -227,6 +227,17 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
     "${HOME}/.local/bin/nyxus-eww-launch-safe" >/dev/null 2>&1 &
     ok "EWW relaunched (single-daemon guard)"
   fi
+  # Reload dunst so the freshly-installed dunstrc (incl. the EWW UFO-popup
+  # bridge rule + skip_display) takes effect NOW — otherwise a running dunst
+  # keeps its stale config until next login and the themed popup never fires.
+  if command -v dunst >/dev/null 2>&1; then
+    if pgrep -x dunst >/dev/null 2>&1; then
+      killall dunst >/dev/null 2>&1 || true
+      sleep 0.3
+    fi
+    setsid dunst >/dev/null 2>&1 &
+    ok "dunst reloaded (UFO notification bridge active)"
+  fi
   hyprctl reload >/dev/null 2>&1 && ok "hyprctl reload" \
     || warn "hyprctl reload failed — log out and back in"
 else
