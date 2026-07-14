@@ -97,7 +97,7 @@ for f in nyxus_palette.py nyxus-palette.css \
            nyxus_wallpaper_studio.py \
            nyxus_settings_accessibility.py nyxus_settings_notifications.py \
            nyxus_settings_sandbox.py nyxus_settings_snapshots.py \
-           nyxus_i18n.py nyxus_updater.py nyxus_drop.py nyxus_hotcorners.py \
+           nyxus_i18n.py nyxus_updater.py nyxus_drop.py \
            nyxus_doctor.py nyxus_launcher.py \
            nyxus_screenshot.py nyxus_chrome.py \
            nyxus_screensaver.py nyxus_demon_wake.py \
@@ -133,6 +133,13 @@ done
 if dl "nyxus-record" "$HOME/.local/bin/nyxus-record"; then
   chmod 0755 "$HOME/.local/bin/nyxus-record"
   sudo -n install -Dm0755 "$HOME/.local/bin/nyxus-record" /usr/local/bin/nyxus-record 2>/dev/null || true
+fi
+
+# Hot Corners daemon — the systemd --user unit written by Settings
+# (nyxus_settings.py AppearancePage) execs %h/.local/bin/nyxus_hotcorners.py,
+# so the script must live there (not in ~/.nyxus).
+if dl "nyxus_hotcorners.py" "$HOME/.local/bin/nyxus_hotcorners.py"; then
+  chmod 0755 "$HOME/.local/bin/nyxus_hotcorners.py"
 fi
 
 # ── GTK4 Python dependencies ──────────────────────────────────────────────────
