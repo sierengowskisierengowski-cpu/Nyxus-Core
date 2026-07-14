@@ -331,10 +331,10 @@ ttf-dejavu
 cantarell-fonts
 ttf-iosevka-nerd
 adobe-source-code-pro-fonts
-# AMD GPU users were getting software render — ship full vulkan AMD
-# + VA-API Mesa fallback for non-NVIDIA decode.
-vulkan-radeon
-lib32-vulkan-radeon
+# NOTE (2026-07-14): dropped vulkan-radeon + lib32-vulkan-radeon — this is a
+# hardware-locked build for the MSI GS77 (Intel Iris Xe + NVIDIA only). AMD's
+# RADV Vulkan driver does nothing here; Vulkan resolves to vulkan-intel / the
+# NVIDIA driver. Re-add only if this profile is ever retargeted to AMD hardware.
 # Pin input driver explicitly (Hyprland normally pulls it but archiso
 # image-build doesn't always include it).
 xf86-input-libinput
