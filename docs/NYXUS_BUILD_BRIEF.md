@@ -190,8 +190,15 @@ Placeholder section — add specific ideas here as they come up. Known so far:
 - Music-reactive center widget (§4.3)
 - Starfield/eye-candy motif throughout (§2)
 
+### 8.1 "GowskiNet security loadout" (added 2026-07-14 — see docs/MACHINE_PROFILE.md)
+This machine is a **security lab**, not a generic desktop: `jeTT` (AI EDR, Rust + Granite GGUF on CUDA) runs live now, alongside a 10-container honeypot farm, `Bifrost` SOC dashboard, and `Meli`. The `kage-ryu` custom kernel (Linux 7.0.12 + XanMod + eBPF sensor) was built to host the sensor half of `jeTT`. These are **central to the Nyxus identity**, but must not destabilize the daily driver:
+- Ship **kage-ryu as a SELECTABLE kernel** (bootloader entry); stock `linux` stays the default.
+- Ship the loadout (jeTT + kage-ryu sensor + Bifrost) as an **opt-in module** with a Hub toggle (standing rule), not baked into the base ISO. Deployed footprint is modest (Rust daemon + ~1.5 GB q4 GGUF); the 82 GB on disk is dev/training bulk that never ships.
+- Lean the kernel/ISO to this workflow (keep eBPF/BTF/BPF_LSM, Docker, netfilter, NVIDIA+i915, HZ=1000, WireGuard, audit; strip ham radio/ISDN/ATM/PCMCIA/FireWire/NFC/InfiniBand/AMD-GPU/nouveau/non-x86 QEMU firmware/IPVS/excess xt).
+- **Finish kage-ryu first** (config gaps documented in MACHINE_PROFILE.md: microarch, preempt mode, base version bump 7.0→7.1, boot-validate the sensor loop).
+
 ### Deferred / out-of-scope cleanup (not part of this build)
-- **Other GitHub projects with multiple un-synced local copies** — the 2026-07-14 audit also found several *other*, unrelated projects with multiple out-of-sync local checkouts (`Bifrost`, `GodsApp`, `Meli`, and some under `GowskiNet-Vault/Security/Cyber/`). **Not part of Nyxus**; left untouched. Candidate for a separate future cleanup pass using the same compare-before-trusting approach as §10 / 1.1a.
+- **Duplicate/un-synced local checkouts** of projects found in the 2026-07-14 audit (e.g. `GodsApp`, and some under `GowskiNet-Vault/Security/Cyber/`). This is a **repo-hygiene cleanup pass** (dedupe copies) — separate from §8.1, which *integrates* jeTT/Bifrost/Meli/kage-ryu as the security loadout. Use the compare-before-trusting approach from §10 / 1.1a. `Bifrost`/`Meli` are part of the loadout (§8.1), not junk — only their stray duplicate copies are cleanup targets.
 
 ---
 
@@ -255,11 +262,16 @@ Still open:
 - [ ] 3.6 Git safepoint: "stable, de-duplicated session"
 
 ### Phase 4 — ISO & kernel audit
-- [ ] 4.1 Review custom ISO build process, remove cruft, confirm reproducible
-- [ ] 4.2 Review custom kernel config/build, remove stale patches/unused flags
-- [ ] 4.3 Evaluate/apply performance-oriented tuning (scheduler, governor) — daily-driver stable, not experimental
-- [ ] 4.4 Confirm MSI GS77 hardware support: Optimus GPU/PRIME setup, `msi-ec` (fan/battery/webcam/Fn-key), keyboard RGB, WiFi/Bluetooth/audio (§1.3)
-- [ ] 4.5 Git safepoint: "clean ISO/kernel + MSI GS77 hardware support"
+> **STATUS (2026-07-14):** Audit done — see `docs/MACHINE_PROFILE.md`. Hardware fully supported on **stock 7.1.3** (msi-ec loaded, fingerprint enrolled, Optimus/wifi/bt/audio all working). No custom kernel is *required*, but the user has **`kage-ryu`** (their security kernel) and wants it finished + shipped as a selectable option. NVIDIA suspend services are disabled (approved to enable). Governor stays `powersave`. Custom kernel = kage-ryu (not a fresh linux-nyx).
+- [x] 4.1 Review custom ISO build process, remove cruft, confirm reproducible — audited (build-iso.sh staging is sound; still SDDM-based → 4.1b)
+- [ ] 4.1b Finish greetd ISO integration: `customize_airootfs.sh` enable greetd not sddm; build-iso stage nyxus-greeter+regreet (Phase 2 pivot; **user approved**)
+- [x] 4.2 Review custom kernel config/build — audited kage-ryu; gaps documented (microarch=98 bug → Alder Lake 41/99; PREEMPT_LAZY vs full; tracers; base 7.0.12 vs live 7.1.3; not yet booted)
+- [ ] 4.2a **Finish kage-ryu** (fix config gaps, bump base toward 7.1.x, modprobed-db lean module set, boot-validate the eBPF sensor loop) — ship as SELECTABLE kernel, stock stays default
+- [ ] 4.3 Enable NVIDIA suspend/resume/hibernate services + NVreg preserve-video-memory (approved) — keep `powersave` governor
+- [x] 4.4 Confirm MSI GS77 hardware support — DONE: msi-ec full surface (fan/battery/webcam/fn/leds), Goodix fingerprint enrolled, IR camera present, SteelSeries RGB (msi-perkeyrgb/openrgb), wifi/bt/audio all working on stock. Fix doc drift (i915→xe, nvidia-open).
+- [ ] 4.5 Lean the kernel/ISO to the security-lab workflow (strip list in MACHINE_PROFILE.md); keep eBPF/BTF/BPF_LSM/Docker/netfilter/NVIDIA/HZ1000/WireGuard/audit
+- [ ] 4.6 Git safepoint: "clean ISO/kernel + MSI GS77 hardware support"
+> Security-loadout integration (jeTT/kage-ryu sensor/Bifrost as opt-in module + Hub toggle) is tracked in §8.1 as its own build effort.
 
 ### Phase 5 — Theme pass
 - [ ] 5.1 Define the shared theme tokens (colors, fonts, effects) in one place in the repo
