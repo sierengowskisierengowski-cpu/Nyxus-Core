@@ -19,6 +19,18 @@ app="${1:-}"; summary="${2:-}"; body="${3:-}"; urgency="${5:-NORMAL}"
 POPUP="notif-popup"
 TIMER="${XDG_RUNTIME_DIR}/nyxus-notif-timer.pid"
 
+# NYXUS cosmic sound theme (rev 2026-07-14): one chime per notification —
+# alien warble for CRITICAL, warm pluck otherwise. Runs before the EWW
+# checks so the sound survives an eww outage; nyxus-sound fails silent
+# and honors the global mute flag (~/.config/nyxus/sound.state).
+if command -v nyxus-sound >/dev/null 2>&1; then
+  if [[ "$urgency" == "CRITICAL" ]]; then
+    nyxus-sound alert &
+  else
+    nyxus-sound notification &
+  fi
+fi
+
 command -v eww >/dev/null 2>&1 || exit 0
 pgrep -x eww >/dev/null 2>&1 || exit 0
 

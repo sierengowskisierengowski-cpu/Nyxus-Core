@@ -1,0 +1,69 @@
+{
+  "name": "nyxus-alien-placeholder",
+  "note": "PLACEHOLDER frames derived from nyxus-emblem-header.png. Replace PNGs (same names) or edit this manifest with polished art.",
+  "sprite_height": 150,
+  "default_facing": "right",
+  "states": {
+    "idle": {
+      "frames": [
+        "idle_0",
+        "idle_1"
+      ],
+      "fps": 2,
+      "loop": true
+    },
+    "walk": {
+      "frames": [
+        "walk_0",
+        "walk_1"
+      ],
+      "fps": 6,
+      "loop": true
+    },
+    "sleep": {
+      "frames": [
+        "sleep_0"
+      ],
+      "fps": 1,
+      "loop": true
+    },
+    "alert": {
+      "frames": [
+        "alert_0",
+        "alert_1"
+      ],
+      "fps": 8,
+      "loop": true
+    },
+    "notify": {
+      "frames": [
+        "notify_0",
+        "idle_0"
+      ],
+      "fps": 4,
+      "loop": true
+    },
+    "peace": {
+      "frames": [
+        "peace_0"
+      ],
+      "fps": 2,
+      "loop": false
+    },
+    "point": {
+      "frames": [
+        "point_0"
+      ],
+      "fps": 2,
+      "loop": false
+    },
+    "wave": {
+      "frames": [
+        "wave_0",
+        "wave_1"
+      ],
+      "fps": 5,
+      "loop": false
+    }
+  }
+}
