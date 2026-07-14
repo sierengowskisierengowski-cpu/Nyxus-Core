@@ -79,6 +79,12 @@ done
 install -m 0644 "${NS}/hyprland.conf"  "${HOME}/.config/hypr/hyprland.conf"
 install -m 0644 "${NS}/hyprlock.conf"  "${HOME}/.config/hypr/hyprlock.conf"
 install -m 0644 "${NS}/hypridle.conf"  "${HOME}/.config/hypr/hypridle.conf"
+# hyprland.conf sources ./nyxus-monitors.conf (Settings auto-manages it);
+# ensure an empty stub exists so a fresh install doesn't warn on a missing
+# source and never clobber a user's real monitor overrides if present.
+[[ -f "${HOME}/.config/hypr/nyxus-monitors.conf" ]] || \
+  printf '# NYXUS monitor overrides — auto-managed by Settings\n' \
+    > "${HOME}/.config/hypr/nyxus-monitors.conf"
 install -m 0644 "${NS}"/nyxus-hyprland-*.conf "${HOME}/.config/hypr/conf.d/"
 for shard in nyxus-stations.conf nyxus-safemode.conf nyxus-signature.conf \
              nyxus-freeform.conf nyxus-cometfire.conf; do
@@ -143,7 +149,7 @@ step "install helper launchers → ~/.local/bin"
 mkdir -p "${HOME}/.local/bin"
 for h in nyxus-eww-launch nyxus-eww-launch-safe nyxus-set-wallpaper.sh \
          nyxus-sync-stations nyxus-bootstrap nyxus-wait-bootstrap \
-         nyxus-session-start; do
+         nyxus-session-start nyxus-security; do
   if [[ -f "${NS}/${h}" ]]; then
     install -m 0755 "${NS}/${h}" "${HOME}/.local/bin/${h}"
   fi
