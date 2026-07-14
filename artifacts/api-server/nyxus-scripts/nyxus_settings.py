@@ -31,6 +31,7 @@ import shutil
 import subprocess
 import sys
 import textwrap
+import threading
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
@@ -1165,7 +1166,8 @@ def action_row(title: str, subtitle: str, button_label: str,
                css: str = "nyx-pill") -> Adw.ActionRow:
     row = Adw.ActionRow(title=title, subtitle=subtitle)
     btn = Gtk.Button(label=button_label)
-    btn.add_css_class(css)
+    if css:  # empty string → no class (avoids GTK css_class assertion)
+        btn.add_css_class(css)
     btn.set_valign(Gtk.Align.CENTER)
     btn.connect("clicked", lambda _b: on_click())
     row.add_suffix(btn)
@@ -1177,6 +1179,15 @@ def empty_row(title: str, subtitle: str = "") -> Adw.ActionRow:
     row = Adw.ActionRow(title=title, subtitle=subtitle)
     row.add_css_class("nyx-empty-row")
     return row
+
+
+def empty_group(title: str, subtitle: str = "") -> Adw.PreferencesGroup:
+    """A single-row informational group for graceful 'nothing here'
+    states (missing backend, no devices, no apps). Wrapped in its own
+    PreferencesGroup so callers can hand it straight to add_group()."""
+    grp = Adw.PreferencesGroup()
+    grp.add(empty_row(title, subtitle))
+    return grp
 
 
 def debounced(scale: Gtk.Scale,
@@ -1918,7 +1929,7 @@ class SoundPage(SectionPage):
         self.add_group(tools)
         if have("pavucontrol"):
             tools.add(action_row("Open pavucontrol",
-                                 "Per-application mixer & routing",
+                                 "Per-application mixer &amp; routing",
                                  "Launch",
                                  lambda: fire_and_forget("pavucontrol")))
         if have("easyeffects"):
@@ -3614,7 +3625,7 @@ class KeyboardPage(SectionPage):
         self.add_group(ext)
         ext.add(action_row(
             "Open keyboard cheatsheet",
-            "Full list of system & Hyprland shortcuts",
+            "Full list of system &amp; Hyprland shortcuts",
             "Open",
             lambda: fire_and_forget("nyxus-cheatsheet")))
 
@@ -3936,7 +3947,7 @@ class MousePage(SectionPage):
         # ── Touchpad gestures (libinput-gestures) ────────────────────
         gst_grp = Adw.PreferencesGroup(
             title="Touchpad gestures",
-            description="3- & 4-finger swipes powered by "
+            description="3- &amp; 4-finger swipes powered by "
                         "libinput-gestures (user systemd unit)")
         self.add_group(gst_grp)
         if not have("libinput-gestures"):
@@ -5479,7 +5490,7 @@ class UpdatesPage(SectionPage):
             if have(helper):
                 tools.add(action_row(
                     f"AUR upgrade ({helper})",
-                    f"{helper} -Syu — includes AUR & repos",
+                    f"{helper} -Syu — includes AUR &amp; repos",
                     "Run",
                     lambda h=helper:
                         open_terminal(f"{h} -Syu", self.win)))
@@ -6297,7 +6308,7 @@ class AppPermissionsPage(SectionPage):
             title="Sandboxed apps",
             description="Per-app permissions for installed Flatpaks. "
                         "Toggles below write to the user override store "
-                        "(~/.local/share/flatpak/overrides/<app>).")
+                        "(~/.local/share/flatpak/overrides/&lt;app&gt;).")
         self.add_group(head)
         rc, out, _ = sh(["flatpak", "list", "--app",
                          "--columns=application,name"], timeout=5)
@@ -10182,7 +10193,7 @@ class SyncPage(SectionPage):
         # Connection — key is `url` (matches nyxus_account.py CLI/UI)
         conn = Adw.PreferencesGroup(
             title="Connection",
-            description="Sync server endpoint & access token (chmod 600)")
+            description="Sync server endpoint &amp; access token (chmod 600)")
         self.add_group(conn)
         if cfg_err:
             conn.add(empty_row("Could not read account.json", cfg_err))
@@ -10296,11 +10307,11 @@ class DropPage(SectionPage):
         # Tools
         tools = Adw.PreferencesGroup(
             title="Tools",
-            description="Send files & text · keybind Super + Ctrl + D")
+            description="Send files &amp; text · keybind Super + Ctrl + D")
         self.add_group(tools)
         tools.add(action_row(
             "Open NYXUS Drop",
-            "Send files & text to paired devices from the full UI",
+            "Send files &amp; text to paired devices from the full UI",
             "Open",
             lambda: fire_and_forget("nyxus-drop"),
             css="nyx-pill-ok"))
@@ -10558,7 +10569,7 @@ class LanguagePage(SectionPage):
         # ── Picker ─────────────────────────────────────────────
         pick = Adw.PreferencesGroup(
             title="Display language",
-            description="Applied at next sign-in. Sign out & back in "
+            description="Applied at next sign-in. Sign out &amp; back in "
                         "to see translated UI everywhere.")
         self.add_group(pick)
 
@@ -10614,7 +10625,7 @@ class LanguagePage(SectionPage):
         self.add_group(sysg)
         sysg.add(action_row(
             "Apply current pick to /etc/locale.conf",
-            "LANG=<lang>.UTF-8 (one line)",
+            "LANG=&lt;lang&gt;.UTF-8 (one line)",
             "Apply",
             # Read self._selected_lang at CLICK time, not build time,
             # so the user's freshly-picked combo value is what's
@@ -12848,7 +12859,7 @@ class WelcomePage(SectionPage):
         skip = prefs.get("skip_pages", [])
         for pid, lbl in (
                 ("profile",   "Skip profile page (display name + avatar)"),
-                ("theme",     "Skip theme & accent page"),
+                ("theme",     "Skip theme &amp; accent page"),
                 ("wallpaper", "Skip wallpaper page"),
                 ("dock",      "Skip dock setup page"),
                 ("apps",      "Skip recommended apps page"),
