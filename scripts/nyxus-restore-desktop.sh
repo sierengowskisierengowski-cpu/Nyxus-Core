@@ -161,9 +161,11 @@ mkdir -p "${HOME}/.local/bin"
 for h in nyxus-eww-launch nyxus-eww-launch-safe nyxus-set-wallpaper.sh \
          nyxus-sync-stations nyxus-bootstrap nyxus-wait-bootstrap \
          nyxus-session-start nyxus-security \
-         nyxus-hub-apps nyxus-nowplaying nyxus-notif-to-eww; do
+         nyxus-hub-apps nyxus-nowplaying nyxus-notif-to-eww nyxus-sound; do
   if [[ -f "${NS}/${h}" ]]; then
     install -m 0755 "${NS}/${h}" "${HOME}/.local/bin/${h}"
+  elif [[ -f "${NS}/companion/${h}" ]]; then
+    install -m 0755 "${NS}/companion/${h}" "${HOME}/.local/bin/${h}"
   fi
 done
 # Recovery autostart hooks (referenced from hyprland.conf)
@@ -180,6 +182,17 @@ if [[ -f "${NS}/desktop-entries/nyxus-hyprland.desktop" ]]; then
     "${HOME}/.local/share/wayland-sessions/nyxus-hyprland.desktop"
 fi
 ok "helpers installed"
+
+# ── 7b. companion app + cosmic sounds ───────────────────────────────────────
+step "install companion + sound theme"
+mkdir -p "${HOME}/.local/share/nyxus/companion" "${HOME}/.local/share/nyxus/sounds"
+if [[ -d "${NS}/companion" ]]; then
+  rsync -a --delete "${NS}/companion/" "${HOME}/.local/share/nyxus/companion/"
+fi
+if [[ -d "${NS}/sounds" ]]; then
+  rsync -a "${NS}/sounds/" "${HOME}/.local/share/nyxus/sounds/"
+fi
+ok "companion + sounds staged"
 
 # ── 8. regenerate workspaces.json ───────────────────────────────────────────
 step "sync stations → workspaces.json"
