@@ -11,8 +11,8 @@ Canonical profile: `artifacts/nyxus-config/hw_profiles/gs77-ms17p1-cosmic.json`
 |-----------|-------|
 | Board | MSI MS-17P1 (GS77) |
 | CPU | Intel i7-12700H (Alder Lake-P, 20 threads) |
-| iGPU | Intel Iris Xe (`i915`) |
-| dGPU | NVIDIA RTX 3060 Mobile (`nvidia-open`) |
+| iGPU | Intel Iris Xe (`xe` on live kernel 7.1.x; `i915` also supports it — ISO mkinitcpio still lists i915) |
+| dGPU | NVIDIA RTX 3060 Mobile (`nvidia-open` / `nvidia-open-dkms`; live driver 610.x) |
 | WiFi | Intel CNVi (`iwlwifi`) |
 | Ethernet | Realtek Killer E3000 (`r8169`) |
 

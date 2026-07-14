@@ -263,14 +263,14 @@ Still open:
 
 ### Phase 4 — ISO & kernel audit
 > **STATUS (2026-07-14):** Audit done — see `docs/MACHINE_PROFILE.md`. Hardware fully supported on **stock 7.1.3** (msi-ec loaded, fingerprint enrolled, Optimus/wifi/bt/audio all working). No custom kernel is *required*, but the user has **`kage-ryu`** (their security kernel) and wants it finished + shipped as a selectable option. NVIDIA suspend services are disabled (approved to enable). Governor stays `powersave`. Custom kernel = kage-ryu (not a fresh linux-nyx).
-- [x] 4.1 Review custom ISO build process, remove cruft, confirm reproducible — audited (build-iso.sh staging is sound; still SDDM-based → 4.1b)
-- [ ] 4.1b Finish greetd ISO integration: `customize_airootfs.sh` enable greetd not sddm; build-iso stage nyxus-greeter+regreet (Phase 2 pivot; **user approved**)
-- [x] 4.2 Review custom kernel config/build — audited kage-ryu; gaps documented (microarch=98 bug → Alder Lake 41/99; PREEMPT_LAZY vs full; tracers; base 7.0.12 vs live 7.1.3; not yet booted)
-- [ ] 4.2a **Finish kage-ryu** (fix config gaps, bump base toward 7.1.x, modprobed-db lean module set, boot-validate the eBPF sensor loop) — ship as SELECTABLE kernel, stock stays default
-- [ ] 4.3 Enable NVIDIA suspend/resume/hibernate services + NVreg preserve-video-memory (approved) — keep `powersave` governor
-- [x] 4.4 Confirm MSI GS77 hardware support — DONE: msi-ec full surface (fan/battery/webcam/fn/leds), Goodix fingerprint enrolled, IR camera present, SteelSeries RGB (msi-perkeyrgb/openrgb), wifi/bt/audio all working on stock. Fix doc drift (i915→xe, nvidia-open).
-- [ ] 4.5 Lean the kernel/ISO to the security-lab workflow (strip list in MACHINE_PROFILE.md); keep eBPF/BTF/BPF_LSM/Docker/netfilter/NVIDIA/HZ1000/WireGuard/audit
-- [ ] 4.6 Git safepoint: "clean ISO/kernel + MSI GS77 hardware support"
+- [x] 4.1 Review custom ISO build process, remove cruft, confirm reproducible — audited (build-iso.sh staging is sound)
+- [x] 4.1b Finish greetd ISO integration — `customize_airootfs.sh` enables greetd / disables sddm; greeter stack (greetd-regreet/tuigreet/cage) + /etc/greetd configs + nyxus-greeter ship in the airootfs tree (commits `71b54a1d`, `d6406303`)
+- [x] 4.2 Review custom kernel config/build — audited kage-ryu; gaps documented + FIXED (see 4.2a)
+- [x] 4.2a **Finish kage-ryu recipe** — microarch bug fixed (98→41 Alder Lake), security-lab beast tuning added, lean strip (AMD/nouveau/IPVS/CAN/WWAN/staging/TV), build-mode docs; pushed to kage-ryu repo (`19c77dc`). ⏳ *boot-validate the eBPF sensor loop is HELD until greetd login verified — build/install/boot not run yet.* Ships SELECTABLE (stock stays default) via `kernel/install-kage-ryu.sh`.
+- [x] 4.3 NVIDIA suspend/resume/hibernate — ISO: NVreg_PreserveVideoMemoryAllocations added to modprobe.d/nvidia.conf (services already enabled on ISO). LIVE: `scripts/nyxus-fix-nvidia-suspend.sh` prepared (run after login verified). Governor stays `powersave`.
+- [x] 4.4 Confirm MSI GS77 hardware support — DONE: msi-ec full surface, Goodix fingerprint enrolled, IR camera, SteelSeries RGB, wifi/bt/audio all on stock. Doc drift fixed (i915→xe, nvidia-open) in KERNEL_ISO.md.
+- [x] 4.5 Lean the kernel/ISO — kernel: AMD/nouveau/IPVS/CAN/WWAN/staging/TV stripped in kage-ryu (Intel+NVIDIA-only box). ISO: security toolkit + scx added, greeter stack fixed. *(Remaining optional: prune AMD `vulkan-radeon` + evaluate `qemu-desktop` scope — low-value, flagged not done.)*
+- [ ] 4.6 Git safepoint: "clean ISO/kernel + MSI GS77 hardware support" — pending (custom kernel boot-validation gated on login)
 > Security-loadout integration (jeTT/kage-ryu sensor/Bifrost as opt-in module + Hub toggle) is tracked in §8.1 as its own build effort.
 
 ### Phase 5 — Theme pass
