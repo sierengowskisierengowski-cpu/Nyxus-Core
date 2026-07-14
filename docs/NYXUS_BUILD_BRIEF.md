@@ -296,11 +296,11 @@ Still open:
 - [ ] 7.6 Verify every Hub button/section actually works — including settings surfaced from earlier phases (standing rule)
 - [ ] 7.7 Git safepoint: "Hub v1 + music mode"
 
-### Phase 8 — Daily-driver readiness
-- [ ] 8.1 Build bootstrap/install script (§6)
-- [ ] 8.2 Write README + KEYBINDS.md + any other docs
-- [ ] 8.3 Full end-to-end test: fresh boot → login → daily use, no crashes/freezes
-- [ ] 8.4 Git safepoint / tag: "Nyxus v1.0 — daily driver ready"
+### Phase 8 — Daily-driver readiness  🟡 IN PROGRESS
+- [x] 8.1 Build bootstrap/install script — `scripts/nyxus-install.sh`: orchestrator (clone → run → working desktop) that composes the existing pieces (restore-desktop configs, greetd, kage-ryu, verify). Idempotent, `--dry-run` default-available, package-filter skips non-repo entries instead of aborting, gated extras (`--greeter`/`--kernel`/`--nvidia-suspend`/`--loadout`) opt-in only. Dry-run validated (318/320 pkgs installable).
+- [x] 8.2 Docs — `docs/INSTALL.md` (both install paths + bootstrap flags/safety). `docs/KEYBINDS.md` already written (Phase 3). *(README install-section pointer optional — left to avoid collision with the doc/settings agent's README edits.)*
+- [ ] 8.3 Full end-to-end test: fresh boot → login → daily use, no crashes/freezes — **gated on greetd login reboot + other phases landing**
+- [ ] 8.4 Git safepoint / tag: "Nyxus v1.0 — daily driver ready" — **final tag, gated on 8.3 + all phases green**
 
 ---
 
