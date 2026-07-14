@@ -105,7 +105,7 @@ except Exception:
     FONT_DISPLAY   = "Inter Display"
 
 DANGER_RED = "#ff6464"  # §8 — RESERVED for destructive only
-NYXUS_GOLD = "#d4b87a"  # warm brand accent — selection, focus rings
+NYXUS_GOLD = "#7949f2"  # NYXUS urban accent (violet) — selection, focus rings
 
 # Nerd-font glyphs (§6 — never emoji in chrome).
 GLYPHS = {
@@ -665,12 +665,12 @@ window, .nyx-bg {{
     border-bottom: 1px solid {HAIRLINE_WHITE};
 }}
 .nyx-sidebar-title {{
-    font-family: '{FONT_DISPLAY}', '{FONT_UI}', sans-serif;
-    font-size: 18px;
-    font-weight: 600;
-    letter-spacing: 0.4px;
+    font-family: 'Permanent Marker', '{FONT_DISPLAY}', '{FONT_UI}', sans-serif;
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: 0.6px;
     color: {WHITE_PURE};
-    text-shadow: 0 0 14px rgba(255,255,255,0.18);
+    text-shadow: 0 0 16px rgba(121,73,242,0.55);
 }}
 .nyx-sidebar-rev {{
     font-family: '{FONT_MONO}', monospace;
@@ -705,7 +705,7 @@ window, .nyx-bg {{
     background-color: {GLASS_DARK};
     color: {WHITE_PURE};
     box-shadow: inset 3px 0 0 0 {NYXUS_GOLD},
-                0 0 18px rgba(212,184,122,0.10);
+                0 0 18px rgba(121,73,242,0.10);
 }}
 .nyx-section-glyph {{
     font-family: 'Symbols Nerd Font', 'Symbols Nerd Font Mono', monospace;
@@ -739,7 +739,7 @@ window, .nyx-bg {{
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: {RADIUS_CARD}px;
     box-shadow: 0 24px 64px rgba(0,0,0,0.7),
-                0 0 0 1px rgba(212,184,122,0.08);
+                0 0 0 1px rgba(121,73,242,0.08);
     padding: 8px;
 }}
 .nyx-palette-entry {{
@@ -757,7 +757,7 @@ window, .nyx-bg {{
 .nyx-palette-row:hover,
 .nyx-palette-row.selected,
 .nyx-palette-row:selected {{
-    background-color: rgba(212,184,122,0.10);
+    background-color: rgba(121,73,242,0.10);
     color: {WHITE_PURE};
 }}
 .nyx-palette-hint {{
