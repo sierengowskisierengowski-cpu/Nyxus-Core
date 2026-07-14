@@ -449,9 +449,12 @@ for svc in \
   paccache.timer \
   reflector.timer \
   fstrim.timer \
+  scx.service \
   nyxus-firstboot.service ; do
   systemctl enable "${svc}" 2>/dev/null || true
 done
+# scx.service: sched_ext userspace scheduler (scx_lavd, /etc/default/scx).
+# Runtime-swappable; `systemctl stop scx` reverts to kernel EEVDF instantly.
 
 # Stop systemd-timesyncd in favour of chrony (the two conflict).
 systemctl disable systemd-timesyncd.service 2>/dev/null || true

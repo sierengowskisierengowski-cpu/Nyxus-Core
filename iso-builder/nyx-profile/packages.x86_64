@@ -538,3 +538,8 @@ gdb
 strace
 ltrace
 trace-cmd
+
+# ── NYXUS performance (rev 2026-07-14) ─────────────────────────────
+# sched_ext userspace schedulers. scx_lavd (latency-aware) is enabled via
+# /etc/default/scx + scx.service; runtime-swappable, reverts to EEVDF on stop.
+scx-scheds

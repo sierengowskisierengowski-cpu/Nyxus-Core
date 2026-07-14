@@ -43,6 +43,30 @@ sudo kernel/install-kage-ryu.sh          # builds + installs, adds selectable en
 # stock `linux` remains the default boot entry; pick "kage-ryu" at the bootloader.
 ```
 
+## Optional build modes (bigger/meaner, higher cost)
+The kage-ryu PKGBUILD already supports these env toggles — pick per build:
+- **Leanest module set:** `pacman -S modprobed-db`, run `modprobed-db store`
+  a handful of times across normal use (after wifi/bt/suspend/hdmi/dGPU), then
+  build with `_localmodcfg=y`. Compiles only modules you actually load — big
+  cut to build time and on-disk size. `install-kage-ryu.sh` auto-uses this if
+  `~/.config/modprobed.db` exists.
+- **Clang + ThinLTO:** `env _compiler=clang makepkg -sc` — a measurably faster
+  kernel (whole-program opt). Costs longer build + pulls clang/llvm/lld.
+- **Pure `-march=native`:** `env _microarchitecture=99` instead of the default
+  41 (Alder Lake) — locks the binary to *this exact* CPU. 41 is portable across
+  Alder Lake; 99 squeezes marginally more but only runs on this chip.
+
+## Secure Boot (sbctl — already shipped in the ISO)
+kage-ryu is an unsigned custom kernel, so it won't boot with Secure Boot ON
+until signed. After install, before rebooting into it:
+```bash
+sudo sbctl sign -s /usr/lib/modules/*-kage-ryu/vmlinuz    # sign the image
+sudo sbctl sign -s /boot/EFI/.../grubx64.efi              # if not already
+sudo sbctl verify                                          # confirm all signed
+```
+Or leave Secure Boot off (stock `linux` still boots either way, so you're never
+locked out). Documented here so it's not a surprise at the boot screen.
+
 ## Files here
 - `install-kage-ryu.sh` — builds kage-ryu from its repo (localmodconfig if a
   modprobed.db exists), installs the packages, regenerates the bootloader menu
@@ -50,3 +74,13 @@ sudo kernel/install-kage-ryu.sh          # builds + installs, adds selectable en
 - `nyxus-bbr.conf` — sysctl drop-in (BBR congestion control + FQ qdisc) that
   pairs with the kernel's `CONFIG_TCP_CONG_BBR`/`NET_SCH_FQ`. Deploy to
   `/etc/sysctl.d/`. Safe on stock kernel too.
+
+## Deliberately NOT done (honest calls)
+- **No host nftables/ufw lockdown ruleset shipped.** This box runs a Docker
+  honeypot fleet that *intentionally* exposes ports to attract attackers, and
+  Docker manages its own iptables/nftables rules. A restrictive host firewall
+  would fight the working setup and can silently break honeypot exposure or
+  container networking. Firewall policy stays operator-driven, per-need.
+- **CPU speculative-exec mitigations stay ON/available** — never hardcoded
+  `mitigations=off`. This machine detonates malware and runs honeypots; the
+  small perf gain isn't worth weakening a security lab. Adjustable per-boot.

@@ -501,3 +501,6 @@ gdb
 strace
 ltrace
 trace-cmd
+
+# sched_ext scheduler (scx_lavd) — runtime-swappable, reverts to EEVDF on stop.
+scx-scheds

@@ -1,0 +1,10 @@
+# NYXUS — sched_ext userspace scheduler (rev 2026-07-14)
+# Enabled via `systemctl enable scx.service` (done in customize_airootfs).
+# scx_lavd = Latency-Aware Virtual Deadline: tuned for interactive/gaming +
+# mixed load, a strong fit for this machine's CUDA + Docker + compile mix.
+# Fully runtime-swappable and revertible: `systemctl stop scx` drops straight
+# back to the kernel's default EEVDF scheduler with zero reboot. Requires a
+# kernel with CONFIG_SCHED_CLASS_EXT (stock Arch has it; kage-ryu keeps it).
+SCX_SCHEDULER=scx_lavd
+# Optional tuning flags (see `scx_lavd --help`):
+# SCX_FLAGS='--performance'
