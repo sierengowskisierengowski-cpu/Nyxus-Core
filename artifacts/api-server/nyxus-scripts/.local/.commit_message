@@ -1,0 +1,52 @@
+nyxus-settings: Settings Completeness Standard rollout (rev 2026-05-14)
+
+Builds on the standard-footer foundation (make_keybinds_group /
+make_reset_group / make_advanced_group + auto-injected
+_append_standard_footer driven by class attrs).
+
+New pages (6) — all with full General/Appearance/Behavior/Tools sections
+and the standard footer wired in:
+  · DockPage           (~/.config/nyxus/dock.toml + nyxus-dock reload)
+  · WallpaperStudioPage (system + user wallpaper packs, slideshow prefs)
+  · ThemePacksPage     (5 curated DARK MIRROR variants, glow + grain)
+  · ClipboardPage      (cliphist + wl-clipboard, secrets filter)
+  · ScreenRecorderPage (wf-recorder defaults; FileDialog with native +
+                        terminal fallback per code-review)
+  · AssistantPage      (NORA scaffold — wake / model / hotkey, honest)
+
+Per-page customization (17 audit-flagged pages) — adds
+STANDARD_KEYBIND_TOKENS / STANDARD_RESET_NS / STANDARD_ADVANCED so the
+auto footer renders meaningful keybinds, scoped reset namespaces, and
+real Advanced operations (open conf, regen grub, vacuum journal,
+restart NM, list usbguard rules, etc.):
+  AccessibilityPage, AppPermissionsPage, StoragePage, AppsPage,
+  LanguagePage, UsersPage, ParentalControlsPage, VirtPage,
+  ContainersPage, KernelPage, GamingPage, EditorsPage, UsbPage,
+  SecBootPage, VpnPage, DohPage, MacRandomPage.
+  (Final counts: 23 pages with KEYBIND_TOKENS/RESET_NS, 17 with custom
+   ADVANCED rows; remaining pages inherit the default footer.)
+
+New helper:
+  iso-builder/.../usr/local/bin/nyxus-clipboard
+  Bash wrapper around cliphist + wl-clipboard:
+    pick / list / wipe / watch / stop / restart / status
+  Reads ~/.config/nyxus/settings.json clipboard.* prefs (picker_theme,
+  skip_secrets, max_kb).  Never edits /etc, never asks for sudo.
+
+verify-profile.sh:
+  New section 13n checks the helper, package prerequisites
+  (cliphist / wl-clipboard / wf-recorder / grim / slurp), section
+  registration for the 6 new keys, and presence of all standard-footer
+  symbols in nyxus_settings.py.
+
+Validation:
+  · python -c 'import ast' OK on the now-13197-line file
+  · bash -n on nyxus-clipboard + verify-profile.sh OK
+  · architect code review: PASS (one runtime risk on Gtk.FileDialog
+    fixed: feature-detected fallback to FileChooserNative then to
+    terminal prompt)
+
+Honors replit.md:
+  · No fail2ban / PAM lockout.
+  · Every new page ships General + Appearance + Behavior + Keybinds +
+    Reset + Advanced. No empty pages, no dead toggles.

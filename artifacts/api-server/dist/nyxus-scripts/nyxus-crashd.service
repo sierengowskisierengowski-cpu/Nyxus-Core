@@ -1,0 +1,16 @@
+[Unit]
+Description=NYXUS crash watcher (follows systemd-coredump events)
+After=graphical-session.target
+PartOf=graphical-session.target
+ConditionPathExists=!%h/.config/nyxus/crashd.disabled
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.nyxus/nyxus_crashd.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=null
+StandardError=journal
+
+[Install]
+WantedBy=graphical-session.target

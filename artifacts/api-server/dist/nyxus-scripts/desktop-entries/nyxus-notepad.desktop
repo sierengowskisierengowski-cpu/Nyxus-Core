@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Notepad
+GenericName=Notepad
+Comment=Quick text editor with autosave
+Exec=/usr/local/bin/nyxus notepad
+TryExec=/usr/local/bin/nyxus
+Icon=accessories-text-editor
+Terminal=false
+Categories=Office;TextEditor;
+Keywords=NYXUS;NYX;Notepad;
+StartupNotify=true
+StartupWMClass=nyxus.notepad
+X-NYXUS-Module=nyxus_notepad

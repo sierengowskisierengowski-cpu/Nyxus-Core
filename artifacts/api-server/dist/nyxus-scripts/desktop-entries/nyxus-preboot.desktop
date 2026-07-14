@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Preboot
+GenericName=Preboot
+Comment=Pre-boot environment helper
+Exec=/usr/local/bin/nyxus preboot
+TryExec=/usr/local/bin/nyxus
+Icon=system-run
+Terminal=false
+Categories=System;
+Keywords=NYXUS;NYX;Preboot;
+StartupNotify=true
+StartupWMClass=nyxus.preboot
+X-NYXUS-Module=nyxus_preboot

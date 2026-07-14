@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Files
+GenericName=Files
+Comment=Browse files and folders
+Exec=/usr/local/bin/nyxus files
+TryExec=/usr/local/bin/nyxus
+Icon=system-file-manager
+Terminal=false
+Categories=FileManager;Utility;
+Keywords=NYXUS;NYX;Files;
+StartupNotify=true
+StartupWMClass=nyxus.files
+X-NYXUS-Module=nyxus_files

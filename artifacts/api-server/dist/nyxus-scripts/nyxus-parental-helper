@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  NYXUS · Parental Controls privileged helper       rev 2026-05-13 r1
+#  Installed at /usr/local/libexec/nyxus-parental-helper.
+#  Invoked via pkexec from nyxus_parental.py.
+#
+#  Subcommands:
+#    apply -        — read JSON policy from stdin, write /etc/nyxus/parental.toml
+#                     and side-effect /etc/hosts.d/parental-blocklist + DNS.
+#    pause <user>   — lock <user>'s session immediately (loginctl + hyprlock).
+#    show           — cat /etc/nyxus/parental.toml.
+#
+#  HARD POLICY (replit.md): never enables faillock or PAM lockout.
+#
+#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -u
+LOG=/var/log/nyxus/parental.log
+mkdir -p "$(dirname "$LOG")" /etc/nyxus /etc/hosts.d
+log()  { printf '%s %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; }
+fail() { echo "nyxus-parental-helper: $*" >&2; log "FAIL: $*"; exit 2; }
+
+[[ $# -ge 1 ]] || { echo "usage: $0 <apply|pause|show> [args]" >&2; exit 2; }
+ACTION="$1"; shift
+
+case "$ACTION" in
+  show)
+    [[ -f /etc/nyxus/parental.toml ]] && exec cat /etc/nyxus/parental.toml
+    echo "{}"; exit 0
+    ;;
+
+  apply)
+    [[ "${1:-}" == "-" ]] || fail "apply only reads from stdin: 'apply -'"
+    PAYLOAD="$(cat)"
+    # Validate JSON before touching disk.
+    echo "${PAYLOAD}" | python3 -c 'import sys,json; json.loads(sys.stdin.read())' \
+      || fail "invalid JSON payload"
+    # Atomic-write: temp file + rename.
+    TMP="$(mktemp /etc/nyxus/parental.toml.XXXXXX)"
+    chmod 0644 "$TMP"
+    printf '%s\n' "${PAYLOAD}" >"$TMP"
+    mv -f "$TMP" /etc/nyxus/parental.toml
+    log "policy written ($(echo "${PAYLOAD}" | wc -c) bytes)"
+
+    # Side-effect: refresh /etc/hosts.d/parental-blocklist if web filter on.
+    WEB_ENABLED=$(echo "${PAYLOAD}" | python3 -c \
+      'import sys,json; print(json.loads(sys.stdin.read())["web_filter"]["enabled"])')
+    if [[ "${WEB_ENABLED}" == "True" ]]; then
+      cat >/etc/hosts.d/parental-blocklist <<'HOSTS'
+# NYXUS parental web filter — auto-managed; do not hand-edit.
+0.0.0.0 example-blocked-1.invalid
+0.0.0.0 example-blocked-2.invalid
+HOSTS
+      log "wrote /etc/hosts.d/parental-blocklist"
+    else
+      rm -f /etc/hosts.d/parental-blocklist
+    fi
+
+    # Side-effect: SafeSearch DNS via systemd-resolved drop-in.
+    SS_ENABLED=$(echo "${PAYLOAD}" | python3 -c \
+      'import sys,json; print(json.loads(sys.stdin.read())["safesearch"]["enabled"])')
+    DROPIN=/etc/systemd/resolved.conf.d/99-nyxus-parental.conf
+    if [[ "${SS_ENABLED}" == "True" ]]; then
+      mkdir -p "$(dirname "${DROPIN}")"
+      cat >"${DROPIN}" <<'EOF'
+# NYXUS parental SafeSearch DNS — auto-managed.
+[Resolve]
+DNS=208.67.222.123 208.67.220.123
+FallbackDNS=
+EOF
+      systemctl reload systemd-resolved 2>/dev/null || true
+      log "wrote ${DROPIN} (SafeSearch DNS)"
+    else
+      rm -f "${DROPIN}"
+      systemctl reload systemd-resolved 2>/dev/null || true
+    fi
+    echo "ok"
+    ;;
+
+  pause)
+    [[ $# -eq 1 ]] || fail "usage: pause <user>"
+    [[ "$1" =~ ^[a-z_][a-z0-9_-]*$ ]] || fail "invalid user"
+    id -u "$1" >/dev/null 2>&1 || fail "no such user: $1"
+    log "pause $1"
+    loginctl lock-sessions 2>/dev/null || true
+    sudo -u "$1" hyprlock --immediate 2>/dev/null || true
+    echo "paused"
+    ;;
+
+  *) fail "unknown action: $ACTION" ;;
+esac

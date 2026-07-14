@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Account
+GenericName=Account
+Comment=Manage user account + avatar
+Exec=/usr/local/bin/nyxus account
+TryExec=/usr/local/bin/nyxus
+Icon=user-info
+Terminal=false
+Categories=Settings;
+Keywords=NYXUS;NYX;Account;
+StartupNotify=true
+StartupWMClass=nyxus.account
+X-NYXUS-Module=nyxus_account

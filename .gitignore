@@ -60,3 +60,4 @@ __pycache__/
 /.config/
 /.gowskinet-organized
 .claude/
+.config/gh/

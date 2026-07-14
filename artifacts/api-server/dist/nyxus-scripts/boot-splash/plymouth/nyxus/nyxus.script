@@ -1,0 +1,170 @@
+// ─────────────────────────────────────────────────────────────────────────────
+//  NYXUS · Plymouth boot splash · Cosmic Ink Swirl · Dark Glass
+//  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+//  Locked Visual System rev 2026-05-06v
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Screen geometry ─────────────────────────────────────────────────────────
+screen.w = Window.GetWidth();
+screen.h = Window.GetHeight();
+screen.cx = screen.w / 2;
+screen.cy = screen.h / 2;
+
+// ── Background: cosmic ink swirl, full bleed (cover) ────────────────────────
+bg.image    = Image("background.png");
+bg.scale    = Math.Max(screen.w / bg.image.GetWidth(),
+                       screen.h / bg.image.GetHeight());
+bg.scaled   = bg.image.Scale(bg.image.GetWidth()  * bg.scale,
+                             bg.image.GetHeight() * bg.scale);
+bg.sprite   = Sprite(bg.scaled);
+bg.sprite.SetX((screen.w - bg.scaled.GetWidth())  / 2);
+bg.sprite.SetY((screen.h - bg.scaled.GetHeight()) / 2);
+bg.sprite.SetZ(-100);
+
+// ── Vignette (dark gradient to anchor the wordmark) ─────────────────────────
+// Plymouth doesn't have a true gradient, so we layer two soft black slabs.
+vig.top.image  = Image("background.png").Scale(screen.w, 8);
+vig.top.sprite = Sprite();
+vig.top.sprite.SetOpacity(0.0);
+
+// ── NYXUS wordmark (gold, centered, slightly above middle) ──────────────────
+wm.image  = Image("wordmark.png");
+wm.sprite = Sprite(wm.image);
+wm.sprite.SetX(screen.cx - wm.image.GetWidth()  / 2);
+wm.sprite.SetY(screen.cy - wm.image.GetHeight() - 10);
+wm.sprite.SetOpacity(0);
+
+// ── Tagline (cool white, tracked out, just below wordmark) ──────────────────
+tag.image  = Image("tagline.png");
+tag.sprite = Sprite(tag.image);
+tag.sprite.SetX(screen.cx - tag.image.GetWidth() / 2);
+tag.sprite.SetY(screen.cy + 20);
+tag.sprite.SetOpacity(0);
+
+// ── Subline brand stamp ─────────────────────────────────────────────────────
+sub.image  = Image("subline.png");
+sub.sprite = Sprite(sub.image);
+sub.sprite.SetX(screen.cx - sub.image.GetWidth() / 2);
+sub.sprite.SetY(screen.cy + 70);
+sub.sprite.SetOpacity(0);
+
+// ── Spinner ring · 12 dots arrayed around an invisible circle ───────────────
+spinner.dot_w     = Image("dot.png");
+spinner.dot_g     = Image("dot_gold.png");
+spinner.count     = 12;
+spinner.radius    = 32;
+spinner.cx        = screen.cx;
+spinner.cy        = screen.h - 130;
+spinner.head      = 0;
+spinner.dots      = [];
+spinner.dots_gold = [];
+
+for (i = 0; i < spinner.count; i++) {
+    angle = (i * 2 * 3.14159265) / spinner.count - (3.14159265 / 2);
+    dx = Math.Cos(angle) * spinner.radius;
+    dy = Math.Sin(angle) * spinner.radius;
+    px = spinner.cx + dx - (spinner.dot_w.GetWidth()  / 2);
+    py = spinner.cy + dy - (spinner.dot_w.GetHeight() / 2);
+
+    spinner.dots[i] = Sprite(spinner.dot_w);
+    spinner.dots[i].SetX(px);
+    spinner.dots[i].SetY(py);
+    spinner.dots[i].SetOpacity(0.18);
+
+    spinner.dots_gold[i] = Sprite(spinner.dot_g);
+    spinner.dots_gold[i].SetX(px);
+    spinner.dots_gold[i].SetY(py);
+    spinner.dots_gold[i].SetOpacity(0);
+}
+
+// ── Status text sprite (filled by Update messages) ──────────────────────────
+status.sprite = Sprite();
+status.sprite.SetX(40);
+status.sprite.SetY(screen.h - 40);
+
+// ── Animation state ─────────────────────────────────────────────────────────
+anim.tick      = 0;
+anim.fade_done = 0;
+
+fun Refresh() {
+    anim.tick++;
+
+    // ── Boot reveal: fade in the wordmark / tagline / subline over ~80 ticks
+    if (!anim.fade_done) {
+        a = anim.tick / 60.0;
+        if (a > 1.0) { a = 1.0; anim.fade_done = 1; }
+        wm.sprite.SetOpacity(a);
+        tag.sprite.SetOpacity(a * 0.95);
+        sub.sprite.SetOpacity(a * 0.65);
+    }
+
+    // ── Spinner: a 4-dot gold "comet" rotating clockwise once every ~4s ────
+    if (anim.tick % 4 == 0) {
+        spinner.head = (spinner.head + 1) % spinner.count;
+        for (i = 0; i < spinner.count; i++) {
+            // distance from head, going backward = trail
+            d = (spinner.head - i + spinner.count) % spinner.count;
+            if      (d == 0) spinner.dots_gold[i].SetOpacity(1.00);
+            else if (d == 1) spinner.dots_gold[i].SetOpacity(0.65);
+            else if (d == 2) spinner.dots_gold[i].SetOpacity(0.35);
+            else if (d == 3) spinner.dots_gold[i].SetOpacity(0.15);
+            else             spinner.dots_gold[i].SetOpacity(0.00);
+        }
+    }
+}
+Plymouth.SetRefreshFunction(Refresh);
+
+// ── Lifecycle: shutdown / quit ──────────────────────────────────────────────
+fun QuitCallback() {
+    bg.sprite.SetOpacity(0);
+    wm.sprite.SetOpacity(0);
+    tag.sprite.SetOpacity(0);
+    sub.sprite.SetOpacity(0);
+    for (i = 0; i < spinner.count; i++) {
+        spinner.dots[i].SetOpacity(0);
+        spinner.dots_gold[i].SetOpacity(0);
+    }
+}
+Plymouth.SetQuitFunction(QuitCallback);
+
+// ── Password prompt (LUKS) ──────────────────────────────────────────────────
+fun DisplayPasswordCallback(prompt, bullets) {
+    // Clear spinner during prompt
+    for (i = 0; i < spinner.count; i++) {
+        spinner.dots_gold[i].SetOpacity(0);
+        spinner.dots[i].SetOpacity(0.18);
+    }
+    // Draw bullets as a row of gold dots above the spinner area
+    if (global.bullets) {
+        for (i = 0; i < global.bullets_count; i++)
+            global.bullets[i] = NULL;
+    }
+    global.bullets = [];
+    global.bullets_count = bullets;
+    spacing = 26;
+    start_x = screen.cx - ((bullets - 1) * spacing) / 2;
+    for (i = 0; i < bullets; i++) {
+        s = Sprite(spinner.dot_g);
+        s.SetX(start_x + (i * spacing) - 16);
+        s.SetY(screen.h - 130 - 16);
+        s.SetOpacity(0.95);
+        global.bullets[i] = s;
+    }
+}
+Plymouth.SetDisplayPasswordFunction(DisplayPasswordCallback);
+
+fun DisplayNormalCallback() {
+    if (global.bullets) {
+        for (i = 0; i < global.bullets_count; i++)
+            global.bullets[i] = NULL;
+        global.bullets = NULL;
+    }
+}
+Plymouth.SetDisplayNormalFunction(DisplayNormalCallback);
+
+// ── Message callback (boot status text) ─────────────────────────────────────
+fun MessageCallback(text) {
+    status.image  = Image.Text(text, 0.85, 0.90, 1.00, 0.85, "Sans 11");
+    status.sprite.SetImage(status.image);
+}
+Plymouth.SetMessageFunction(MessageCallback);

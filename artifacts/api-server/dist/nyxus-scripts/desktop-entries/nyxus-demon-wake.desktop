@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Wake Console
+GenericName=Wake Console
+Comment=Wake-on-LAN + system wake controls
+Exec=/usr/local/bin/nyxus demon-wake
+TryExec=/usr/local/bin/nyxus
+Icon=system-run
+Terminal=false
+Categories=System;
+Keywords=NYXUS;NYX;Console;
+StartupNotify=true
+StartupWMClass=nyxus.demon-wake
+X-NYXUS-Module=nyxus_demon_wake

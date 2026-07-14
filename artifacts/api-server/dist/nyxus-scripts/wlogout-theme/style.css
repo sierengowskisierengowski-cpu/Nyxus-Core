@@ -1,0 +1,82 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   NYXUS · wlogout · DARK MIRROR · LOCKED rev 2026-05-07 r13
+   Matches unified DARK MIRROR · UNIFIED FROSTED GLASS spec.
+   Pure monochrome — white / off-white #e8edf5 / light grey #c8ccd6 /
+   faded black / ink black. No pink, no purple, no neon, no per-button
+   color fills.
+   © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ════════════════════════════════════════════════════════════════════════════ */
+
+* {
+    font-family: 'Inter', 'JetBrains Mono', sans-serif !important;
+    font-size:   16px !important;
+    font-weight: 700  !important;
+    letter-spacing: 0.18em;
+}
+
+/* ── DARK CANVAS · frosted glass over wallpaper ──────────────────── */
+window {
+    background-color: rgba(8, 12, 20, 0.62) !important;
+    background-image: none                  !important;
+    color: #e8edf5                          !important;
+}
+
+/* ── BUTTON BASE · DARK MIRROR pebble ────────────────────────────── */
+button {
+    background-color: rgba(15, 20, 32, 0.72)  !important;
+    background-image: none                    !important;
+    background-repeat: no-repeat;
+    background-position: center 30%;
+    background-size: 26%;
+
+    border-style:  solid                       !important;
+    border-width:  1px                         !important;
+    border-color:  rgba(255, 255, 255, 0.10)   !important;
+    border-radius: 16px                        !important;
+
+    color:        #e8edf5                      !important;
+    box-shadow:   0 6px 18px rgba(0, 0, 0, 0.45),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    outline:      none                         !important;
+
+    margin:       40px;
+    text-transform: uppercase;
+    transition:     all 220ms ease;
+}
+
+button:focus,
+button:active,
+button:hover {
+    background-color: rgba(8, 12, 20, 0.88)   !important;
+    border-color:     rgba(232, 237, 245, 0.55)!important;
+    color:            #ffffff                  !important;
+    box-shadow:       0 8px 24px rgba(0, 0, 0, 0.55),
+                      0 0 22px rgba(232, 237, 245, 0.45),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+    outline:          none                     !important;
+}
+
+/* ── All six action buttons share the SAME monochrome treatment ──── */
+#lock,     button#lock,     .lock,     button.lock,
+#logout,   button#logout,   .logout,   button.logout,
+#suspend,  button#suspend,  .suspend,  button.suspend,
+#hibernate,button#hibernate,.hibernate,button.hibernate,
+#reboot,   button#reboot,   .reboot,   button.reboot,
+#shutdown, button#shutdown, .shutdown, button.shutdown {
+    background-color: rgba(15, 20, 32, 0.72) !important;
+    background-image: none                   !important;
+    border-color:     rgba(255, 255, 255, 0.10) !important;
+    color:            #e8edf5                !important;
+    border-radius:    16px                   !important;
+}
+
+#lock:hover,     button#lock:hover,     .lock:hover,     button.lock:hover,
+#logout:hover,   button#logout:hover,   .logout:hover,   button.logout:hover,
+#suspend:hover,  button#suspend:hover,  .suspend:hover,  button.suspend:hover,
+#hibernate:hover,button#hibernate:hover,.hibernate:hover,button.hibernate:hover,
+#reboot:hover,   button#reboot:hover,   .reboot:hover,   button.reboot:hover,
+#shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
+    background-color: rgba(8, 12, 20, 0.88) !important;
+    border-color:     rgba(232, 237, 245, 0.55) !important;
+    color:            #ffffff !important;
+}

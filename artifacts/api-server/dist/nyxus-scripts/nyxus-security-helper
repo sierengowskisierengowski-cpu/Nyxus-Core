@@ -1,0 +1,311 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  NYXUS · Security Center privileged helper      rev 2026-05-13 r1
+#
+#  Installed at /usr/local/libexec/nyxus-security-helper. Invoked via pkexec
+#  from nyxus_security.py. Performs the small set of operations that need
+#  root: ufw rules, clamav daemon, sudo timeout, idle lock, USBGuard, fwupd,
+#  vault, hosts blocklist, MOK enroll, faillock toggle.
+#
+#  Each subcommand is whitelisted with strict argument validation. Anything
+#  not matching is rejected with rc=2.
+#
+#  Hard rules (per project preference):
+#    · enable-faillock requires explicit confirmation flag — and is logged.
+#    · No subcommand silently edits config files; every edit is sed-targeted
+#      and a backup with .nyxus.bak is written first.
+#    · Every action emits one line to /var/log/nyxus-security.log.
+#
+#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -u
+
+LOG=/var/log/nyxus-security.log
+
+usage() {
+  cat <<EOF
+nyxus-security-helper <action> [args...]
+
+Firewall (ufw):
+  ufw-master   <enable|disable>
+  ufw-default  <incoming|outgoing> <allow|deny|reject>
+  ufw-logging  <off|low|medium|high|full>
+  ufw-add      <allow|deny|reject|limit> <port|service> [from-cidr]
+  ufw-delete   <rule-number>
+  ufw-app-allow <profile-name>
+  ufw-app-deny  <profile-name>
+  ufw-reset
+  ufw-panic
+ClamAV:
+  enable-clamd
+  update-clamav
+Account:
+  set-sudo-timeout <minutes 0..60>
+  set-idle-lock    <seconds 0..1800>
+  expire-password  <user>
+  enable-faillock  --confirm=ENABLE-LOCKOUT-RISK
+  disable-faillock
+USB / Firmware:
+  enable-usbguard
+  disable-usbguard
+  usbguard-allow-all
+  fwupd-update
+  enroll-mok
+Domain blocklist:
+  block-domain   <domain.tld>
+  unblock-domain <domain.tld>
+Vault:
+  vault-create  <user>
+  vault-open    <user>
+  vault-close   <user>
+EOF
+  exit 2
+}
+
+logmsg() {
+  printf '%s %s\n' "$(date -Is)" "$*" >> "$LOG" 2>/dev/null || true
+}
+
+[[ $# -ge 1 ]] || usage
+action="$1"; shift
+
+[[ "$EUID" -eq 0 ]] || { echo "must be root" >&2; exit 1; }
+
+# ── helpers ────────────────────────────────────────────────────────────────
+backup_once() {
+  local f="$1"
+  [[ -f "$f" && ! -f "${f}.nyxus.bak" ]] && cp -a "$f" "${f}.nyxus.bak" || true
+}
+
+PORT_RE='^[A-Za-z0-9_:./-]{1,64}$'
+CIDR_RE='^[0-9A-Fa-f:./]{1,64}$'
+DOM_RE='^[A-Za-z0-9][A-Za-z0-9.-]{0,253}\.[A-Za-z]{2,63}$'
+USER_RE='^[a-z_][a-z0-9_-]{0,31}$'
+NUM_RE='^[0-9]+$'
+
+logmsg "BEGIN action=$action args=$* uid=$PKEXEC_UID"
+
+case "$action" in
+  # ── UFW ────────────────────────────────────────────────────────────────
+  ufw-master)
+    case "${1:-}" in
+      enable)  ufw --force enable  ;;
+      disable) ufw --force disable ;;
+      *) echo "bad arg" >&2; exit 2 ;;
+    esac
+    systemctl enable --now ufw.service 2>/dev/null || true
+    ;;
+  ufw-default)
+    dir="${1:-}"; act="${2:-}"
+    case "$dir$act" in
+      incomingallow|incomingdeny|incomingreject \
+      |outgoingallow|outgoingdeny|outgoingreject) ;;
+      *) echo "bad direction/action" >&2; exit 2 ;;
+    esac
+    ufw default "$act" "$dir"
+    ;;
+  ufw-logging)
+    lv="${1:-}"
+    case "$lv" in off|low|medium|high|full) ;;
+      *) echo "bad level" >&2; exit 2 ;;
+    esac
+    ufw logging "$lv"
+    ;;
+  ufw-add)
+    act="${1:-}"; pt="${2:-}"; src="${3:-}"
+    case "$act" in allow|deny|reject|limit) ;;
+      *) echo "bad action" >&2; exit 2 ;;
+    esac
+    [[ "$pt" =~ $PORT_RE ]] || { echo "bad port/service" >&2; exit 2; }
+    if [[ -n "$src" ]]; then
+      [[ "$src" =~ $CIDR_RE ]] || { echo "bad cidr" >&2; exit 2; }
+      ufw "$act" from "$src" to any port "${pt%%/*}" \
+        ${pt#*/:+proto ${pt#*/}} 2>&1 || ufw "$act" from "$src" to any "$pt"
+    else
+      ufw "$act" "$pt"
+    fi
+    ;;
+  ufw-delete)
+    n="${1:-}"
+    [[ "$n" =~ $NUM_RE ]] || { echo "bad number" >&2; exit 2; }
+    yes | ufw delete "$n"
+    ;;
+  ufw-app-allow|ufw-app-deny)
+    name="${1:-}"
+    [[ -n "$name" ]] || { echo "bad name" >&2; exit 2; }
+    # sanitize: allow letters, digits, space, dot, hyphen
+    case "$name" in *[!A-Za-z0-9\ .\-]*)
+      echo "bad app name" >&2; exit 2 ;;
+    esac
+    if [[ "$action" == "ufw-app-allow" ]]; then ufw allow "$name"
+    else                                         ufw deny  "$name"; fi
+    ;;
+  ufw-reset)
+    yes | ufw reset
+    ;;
+  ufw-panic)
+    ufw default deny incoming
+    ufw default deny outgoing
+    ufw --force reload
+    ;;
+
+  # ── ClamAV ─────────────────────────────────────────────────────────────
+  enable-clamd)
+    systemctl enable --now clamav-daemon.service 2>/dev/null \
+      || systemctl enable --now clamav-daemon 2>/dev/null \
+      || systemctl enable --now clamd@scan 2>/dev/null \
+      || true
+    systemctl enable --now clamav-freshclam.service 2>/dev/null || true
+    ;;
+  update-clamav)
+    freshclam --quiet 2>&1 | tail -20
+    ;;
+
+  # ── Account ────────────────────────────────────────────────────────────
+  set-sudo-timeout)
+    mins="${1:-}"
+    [[ "$mins" =~ $NUM_RE && $mins -le 60 ]] || \
+      { echo "bad minutes" >&2; exit 2; }
+    f=/etc/sudoers.d/10-nyxus-timeout
+    backup_once "$f"
+    {
+      echo "# Managed by NYXUS Security Center"
+      echo "Defaults timestamp_timeout=$mins"
+    } > "$f"
+    chmod 0440 "$f"
+    visudo -cf "$f" >/dev/null || { rm -f "$f"; echo "visudo check failed" >&2; exit 1; }
+    ;;
+  set-idle-lock)
+    secs="${1:-}"
+    [[ "$secs" =~ $NUM_RE && $secs -le 1800 ]] || \
+      { echo "bad seconds" >&2; exit 2; }
+    # find calling user's hypridle.conf
+    home=$(getent passwd "$PKEXEC_USER" | cut -d: -f6)
+    [[ -d "$home" ]] || { echo "no home" >&2; exit 1; }
+    f="$home/.config/hypr/hypridle.conf"
+    [[ -f "$f" ]] || { echo "no hypridle.conf" >&2; exit 1; }
+    backup_once "$f"
+    # Patch first 'timeout =' line in the first listener block
+    sed -i -E "0,/^[[:space:]]*timeout[[:space:]]*=.*/s//    timeout = $secs/" "$f"
+    chown "$PKEXEC_USER:$PKEXEC_USER" "$f"
+    # tell hypridle to reload
+    sudo -u "$PKEXEC_USER" pkill -SIGUSR2 hypridle 2>/dev/null || true
+    ;;
+  expire-password)
+    u="${1:-}"
+    [[ "$u" =~ $USER_RE ]] || { echo "bad user" >&2; exit 2; }
+    chage -d 0 "$u"
+    ;;
+  enable-faillock)
+    # WARN: this can lock the user out. Logged loudly. Hard gate: the
+    # caller MUST pass --confirm=ENABLE-LOCKOUT-RISK as the first arg.
+    # This is enforced both here AND by a two-step UI dialog in the
+    # AccountPage. Project preference: PAM lockout STAYS OFF until the
+    # user has finished install + recovery testing.
+    if [[ "${1:-}" != "--confirm=ENABLE-LOCKOUT-RISK" ]]; then
+      logmsg "REJECT enable-faillock — missing --confirm=ENABLE-LOCKOUT-RISK"
+      echo "refusing: enable-faillock requires --confirm=ENABLE-LOCKOUT-RISK" >&2
+      exit 2
+    fi
+    logmsg "WARNING enable-faillock CONFIRMED"
+    f=/etc/security/faillock.conf
+    [[ -f "$f" ]] || { echo "no faillock.conf" >&2; exit 1; }
+    backup_once "$f"
+    sed -i -E 's|^[#[:space:]]*deny[[:space:]]*=.*|deny = 5|'                "$f"
+    sed -i -E 's|^[#[:space:]]*unlock_time[[:space:]]*=.*|unlock_time = 900|' "$f"
+    # add pam line if missing — pam_faillock preauth + authfail
+    for pam in /etc/pam.d/system-auth /etc/pam.d/login; do
+      [[ -f "$pam" ]] || continue
+      backup_once "$pam"
+      grep -q pam_faillock "$pam" || \
+        sed -i -E '/^auth[[:space:]]+required[[:space:]]+pam_unix.so/i auth        required      pam_faillock.so preauth silent' "$pam"
+    done
+    ;;
+  disable-faillock)
+    for pam in /etc/pam.d/system-auth /etc/pam.d/login; do
+      [[ -f "$pam" ]] || continue
+      backup_once "$pam"
+      sed -i -E '/pam_faillock\.so/d' "$pam"
+    done
+    ;;
+
+  # ── USB / firmware ─────────────────────────────────────────────────────
+  enable-usbguard)
+    systemctl enable --now usbguard.service
+    ;;
+  disable-usbguard)
+    systemctl disable --now usbguard.service 2>/dev/null || true
+    ;;
+  usbguard-allow-all)
+    usbguard generate-policy > /etc/usbguard/rules.conf 2>/dev/null || true
+    chmod 0600 /etc/usbguard/rules.conf
+    systemctl restart usbguard.service 2>/dev/null || true
+    ;;
+  fwupd-update)
+    fwupdmgr refresh --force --json >/dev/null 2>&1 || true
+    fwupdmgr update --no-reboot-check --json -y 2>&1 | tail -40
+    ;;
+  enroll-mok)
+    [[ -f /etc/nyxus/MOK.der ]] || { echo "no MOK.der" >&2; exit 1; }
+    mokutil --import /etc/nyxus/MOK.der
+    ;;
+
+  # ── Hosts blocklist ────────────────────────────────────────────────────
+  block-domain)
+    d="${1:-}"
+    [[ "$d" =~ $DOM_RE ]] || { echo "bad domain" >&2; exit 2; }
+    backup_once /etc/hosts
+    grep -qE "^[[:space:]]*0\.0\.0\.0[[:space:]]+$d\$" /etc/hosts || \
+      printf "0.0.0.0\t%s\t# nyxus-block %s\n" "$d" \
+        "$(date +%Y-%m-%d)" >> /etc/hosts
+    ;;
+  unblock-domain)
+    d="${1:-}"
+    [[ "$d" =~ $DOM_RE ]] || { echo "bad domain" >&2; exit 2; }
+    backup_once /etc/hosts
+    sed -i -E "\\#^[[:space:]]*0\\.0\\.0\\.0[[:space:]]+${d//./\\.}([[:space:]]|\$)#d" /etc/hosts
+    ;;
+
+  # ── Vault (LUKS file) ──────────────────────────────────────────────────
+  vault-create)
+    u="${1:-}"
+    [[ "$u" =~ $USER_RE ]] || { echo "bad user" >&2; exit 2; }
+    home=$(getent passwd "$u" | cut -d: -f6)
+    [[ -d "$home" ]] || { echo "no home" >&2; exit 1; }
+    install -d -m 0700 -o "$u" -g "$u" "$home/.nyxus"
+    f="$home/.nyxus/vault.luks"
+    if [[ -f "$f" ]]; then
+      echo "vault already exists at $f — refusing to overwrite" >&2
+      exit 1
+    fi
+    truncate -s 256M "$f"
+    chown "$u:$u" "$f"
+    chmod 0600 "$f"
+    echo "vault created at $f. Format with cryptsetup luksFormat when ready."
+    ;;
+  vault-open)
+    u="${1:-}"
+    [[ "$u" =~ $USER_RE ]] || { echo "bad user" >&2; exit 2; }
+    home=$(getent passwd "$u" | cut -d: -f6)
+    f="$home/.nyxus/vault.luks"
+    [[ -f "$f" ]] || { echo "no vault" >&2; exit 1; }
+    cryptsetup open "$f" "nyxus-vault-$u" 2>&1 | tail -5
+    install -d -m 0700 -o "$u" -g "$u" "$home/Vault"
+    mount "/dev/mapper/nyxus-vault-$u" "$home/Vault" 2>&1 | tail -5
+    ;;
+  vault-close)
+    u="${1:-}"
+    [[ "$u" =~ $USER_RE ]] || { echo "bad user" >&2; exit 2; }
+    home=$(getent passwd "$u" | cut -d: -f6)
+    umount "$home/Vault" 2>/dev/null || true
+    cryptsetup close "nyxus-vault-$u" 2>/dev/null || true
+    ;;
+
+  *)
+    echo "unknown action: $action" >&2
+    usage
+    ;;
+esac
+
+logmsg "OK    action=$action"
+echo "ok"

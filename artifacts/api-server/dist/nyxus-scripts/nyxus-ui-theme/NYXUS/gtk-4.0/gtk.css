@@ -1,0 +1,440 @@
+/* ============================================================
+   NYXUS GTK4 Theme
+   ~/.themes/NYXUS/gtk-4.0/gtk.css
+
+   Background: #0f1420  Text: #c8ccd6  Accent: #6a6e78
+   Pink Hover: #6a6e78  Font: JetBrains Mono Nerd Font
+
+   Silent. Dark. Purely Functional.
+   © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   ============================================================ */
+
+/* GTK4 uses custom properties */
+:root {
+  --bg:          #0f1420;
+  --bg-alt:      #0a0a0a;
+  --bg-hover:    #000000;
+  --bg-active:   #0a0a0a;
+  --accent:      #6a6e78;
+  --accent-light:#9aa0ad;
+  --pink:        #6a6e78;
+  --text:        #c8ccd6;
+  --text-dim:    #6a6e78;
+  --text-off:    #3a3e4a;
+  --border:      #0a0a0a;
+  --border-a:    #2a2e3a;
+  --red:         #9aa0ad;
+  --green:       #c8ccd6;
+  --yellow:      #e8edf5;
+  --cyan:        #c8ccd6;
+}
+
+/* ── GTK4 color definitions ─────────────────────────────────── */
+@define-color accent_color          #6a6e78;
+@define-color accent_bg_color       #6a6e78;
+@define-color accent_fg_color       #ffffff;
+@define-color destructive_color     #9aa0ad;
+@define-color destructive_bg_color  rgba(255, 255, 255, 0.18);
+@define-color destructive_fg_color  #9aa0ad;
+@define-color success_color         #c8ccd6;
+@define-color success_bg_color      rgba(255, 255, 255, 0.12);
+@define-color success_fg_color      #c8ccd6;
+@define-color warning_color         #e8edf5;
+@define-color warning_bg_color      rgba(255, 255, 255, 0.12);
+@define-color warning_fg_color      #e8edf5;
+@define-color error_color           #9aa0ad;
+@define-color error_bg_color        rgba(255, 255, 255, 0.12);
+@define-color error_fg_color        #9aa0ad;
+@define-color window_bg_color       #0f1420;
+@define-color window_fg_color       #c8ccd6;
+@define-color view_bg_color         #0f1420;
+@define-color view_fg_color         #c8ccd6;
+@define-color headerbar_bg_color    #0a0a0a;
+@define-color headerbar_fg_color    #c8ccd6;
+@define-color headerbar_border_color #0a0a0a;
+@define-color sidebar_bg_color      #0a0a0a;
+@define-color sidebar_fg_color      #c8ccd6;
+@define-color card_bg_color         #0a0a0a;
+@define-color card_fg_color         #c8ccd6;
+@define-color dialog_bg_color       #0f1420;
+@define-color dialog_fg_color       #c8ccd6;
+@define-color popover_bg_color      #0a0a0a;
+@define-color popover_fg_color      #c8ccd6;
+@define-color thumbnail_bg_color    #0f1420;
+@define-color thumbnail_fg_color    #c8ccd6;
+@define-color shade_color           rgba(0,0,0,0.5);
+@define-color scrollbar_outline_color transparent;
+
+/* ── Base ───────────────────────────────────────────────────── */
+* {
+  font-family: "JetBrains Mono Nerd Font", "JetBrains Mono", monospace;
+  font-size: 11px;
+  -gtk-icon-shadow: none;
+  text-shadow: none;
+  transition: all 120ms ease;
+}
+
+window,
+.background {
+  background-color: @window_bg_color;
+  color: @window_fg_color;
+}
+
+/* ── Header Bar ─────────────────────────────────────────────── */
+headerbar {
+  background-color: @headerbar_bg_color;
+  color: @headerbar_fg_color;
+  border-bottom: 1px solid @headerbar_border_color;
+  padding: 4px 8px;
+  min-height: 40px;
+}
+
+headerbar .title {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* Window controls */
+headerbar windowcontrols button {
+  background: transparent;
+  border: 1px solid #2a2e3a;
+  border-radius: 50%;
+  padding: 4px;
+  min-width: 16px;
+  min-height: 16px;
+  color: #6a6e78;
+}
+
+headerbar windowcontrols button:hover {
+  background-color: #6a6e78;
+  border-color: #6a6e78;
+  color: #ffffff;
+}
+
+headerbar windowcontrols button.close:hover {
+  background-color: #9aa0ad;
+  border-color: #9aa0ad;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+button {
+  background-color: @card_bg_color;
+  color: @window_fg_color;
+  border: 1px solid #2a2e3a;
+  border-radius: 4px;
+  padding: 6px 16px;
+}
+
+button:hover {
+  background-color: #000000;
+  border-color: #6a6e78;
+  color: #6a6e78;
+}
+
+button:active {
+  background-color: #0a0a0a;
+  border-color: #6a6e78;
+  color: #9aa0ad;
+}
+
+button.suggested-action {
+  background-color: #6a6e78;
+  border-color: #6a6e78;
+  color: #ffffff;
+}
+
+button.suggested-action:hover {
+  background-color: #6a6e78;
+  border-color: #6a6e78;
+}
+
+button.destructive-action {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: #9aa0ad;
+  color: #9aa0ad;
+}
+
+button.destructive-action:hover {
+  background-color: #9aa0ad;
+  color: #0f1420;
+}
+
+button:disabled {
+  background-color: transparent;
+  border-color: #0a0a0a;
+  color: #3a3e4a;
+}
+
+button.flat,
+button.circular {
+  background-color: transparent;
+  border-color: transparent;
+  color: #6a6e78;
+}
+
+button.flat:hover,
+button.circular:hover {
+  background-color: #000000;
+  color: #6a6e78;
+}
+
+/* ── Entry ──────────────────────────────────────────────────── */
+entry,
+searchentry,
+spinbutton {
+  background-color: @card_bg_color;
+  color: @window_fg_color;
+  border: 1px solid #2a2e3a;
+  border-radius: 4px;
+  padding: 6px 10px;
+  caret-color: #6a6e78;
+}
+
+entry:focus,
+searchentry:focus {
+  border-color: #6a6e78;
+  outline: 2px solid rgba(8, 12, 20, 0.25);
+  outline-offset: -1px;
+}
+
+entry:disabled {
+  color: #3a3e4a;
+  border-color: #0a0a0a;
+}
+
+entry selection {
+  background-color: #6a6e78;
+  color: #ffffff;
+}
+
+/* ── Lists & Rows ───────────────────────────────────────────── */
+listview,
+columnview,
+treeview {
+  background-color: @view_bg_color;
+  color: @view_fg_color;
+}
+
+listview > row,
+columnview > row {
+  padding: 4px 8px;
+}
+
+listview > row:hover,
+columnview > row:hover {
+  background-color: #000000;
+  color: #6a6e78;
+}
+
+listview > row:selected,
+columnview > row:selected {
+  background-color: #6a6e78;
+  color: #ffffff;
+}
+
+/* ── Check & Radio ──────────────────────────────────────────── */
+checkbutton check,
+radiobutton radio {
+  background-color: #0a0a0a;
+  border: 1px solid #2a2e3a;
+  border-radius: 3px;
+  min-width: 16px;
+  min-height: 16px;
+}
+
+checkbutton check:hover,
+radiobutton radio:hover { border-color: #6a6e78; }
+
+checkbutton check:checked,
+radiobutton radio:checked {
+  background-color: #6a6e78;
+  border-color: #6a6e78;
+  color: #ffffff;
+}
+
+/* ── Switch ─────────────────────────────────────────────────── */
+switch {
+  background-color: #0a0a0a;
+  border-radius: 14px;
+  border: 1px solid #2a2e3a;
+  min-width: 44px;
+  min-height: 22px;
+}
+
+switch:checked {
+  background-color: #6a6e78;
+  border-color: #6a6e78;
+}
+
+switch > slider {
+  background-color: #6a6e78;
+  border-radius: 50%;
+  min-width: 16px;
+  min-height: 16px;
+  margin: 2px;
+}
+
+switch:checked > slider {
+  background-color: #ffffff;
+}
+
+/* ── Scale ──────────────────────────────────────────────────── */
+scale trough {
+  background-color: #0a0a0a;
+  border-radius: 6px;
+  min-height: 4px;
+}
+
+scale trough highlight {
+  background-color: #6a6e78;
+  border-radius: 6px;
+}
+
+scale slider {
+  background-color: #9aa0ad;
+  border: 1px solid #6a6e78;
+  border-radius: 50%;
+  min-width: 14px;
+  min-height: 14px;
+}
+
+scale slider:hover {
+  background-color: #6a6e78;
+  border-color: #6a6e78;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+scrollbar {
+  background-color: transparent;
+}
+
+scrollbar slider {
+  background-color: #2a2e3a;
+  border-radius: 8px;
+  min-width: 4px;
+  min-height: 4px;
+  margin: 2px;
+}
+
+scrollbar slider:hover { background-color: #6a6e78; }
+scrollbar slider:active { background-color: #9aa0ad; }
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.sidebar,
+stacksidebar,
+navigationview {
+  background-color: @sidebar_bg_color;
+  border-right: 1px solid #0a0a0a;
+}
+
+.sidebar row,
+stacksidebar row {
+  padding: 6px 12px;
+  color: #6a6e78;
+}
+
+.sidebar row:hover,
+stacksidebar row:hover {
+  background-color: #000000;
+  color: #6a6e78;
+}
+
+.sidebar row:selected,
+stacksidebar row:selected {
+  background-color: rgba(8, 12, 20, 0.15);
+  color: #9aa0ad;
+  border-left: 2px solid #6a6e78;
+}
+
+/* ── Popover / Menu ─────────────────────────────────────────── */
+popover {
+  background-color: @popover_bg_color;
+  border: 1px solid #2a2e3a;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.75);
+  padding: 4px;
+}
+
+popover modelbutton {
+  padding: 5px 12px;
+  color: #c8ccd6;
+  border-radius: 4px;
+}
+
+popover modelbutton:hover {
+  background-color: #000000;
+  color: #6a6e78;
+}
+
+/* ── Tooltip ────────────────────────────────────────────────── */
+tooltip {
+  background-color: @popover_bg_color;
+  color: @window_fg_color;
+  border: 1px solid #2a2e3a;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+}
+
+/* ── Progress Bar ───────────────────────────────────────────── */
+progressbar trough {
+  background-color: #0a0a0a;
+  border-radius: 4px;
+  min-height: 6px;
+}
+
+progressbar progress {
+  background-color: #6a6e78;
+  border-radius: 4px;
+}
+
+/* ── Card ───────────────────────────────────────────────────── */
+.card {
+  background-color: @card_bg_color;
+  border: 1px solid #0a0a0a;
+  border-radius: 6px;
+}
+
+/* ── Separator ──────────────────────────────────────────────── */
+separator {
+  background-color: #0a0a0a;
+  min-width: 1px;
+  min-height: 1px;
+}
+
+/* ── Link ───────────────────────────────────────────────────── */
+*:link { color: #9aa0ad; }
+*:link:hover { color: #6a6e78; }
+*:visited { color: #6a6e78; }
+
+/* ── GNOME Shell / Libadwaita overrides ─────────────────────── */
+.view,
+.content-view {
+  background-color: @view_bg_color;
+  color: @view_fg_color;
+}
+
+.dialog-content,
+dialog {
+  background-color: @dialog_bg_color;
+}
+
+.tag {
+  background-color: rgba(8, 12, 20, 0.2);
+  color: #9aa0ad;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 10px;
+}
+
+.pill {
+  border-radius: 14px;
+}
+
+/* ── Toolbar View ───────────────────────────────────────────── */
+toolbarview > .top-bar,
+toolbarview > .bottom-bar {
+  background-color: @headerbar_bg_color;
+  border-color: #0a0a0a;
+}

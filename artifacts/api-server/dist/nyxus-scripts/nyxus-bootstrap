@@ -1,0 +1,229 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║  NYXUS — first-boot bootstrap                                        ║
+# ║  Lives at: /usr/local/bin/nyxus-bootstrap                            ║
+# ║  Triggered by: Hyprland exec-once on every login (idempotent)        ║
+# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+#
+# Behavior:
+#   - First successful run: pulls nyxus_install.sh from production (or the
+#     pre-staged offline cache at /opt/nyxus-cache), runs it, then writes
+#     the current BOOTSTRAP_VERSION into ~/.nyxus/.bootstrapped to no-op
+#     on subsequent boots.
+#   - Subsequent boots: marker present AND version matches → exit 0.
+#     Marker present but version mismatch (i.e. a newer ISO/bake landed
+#     a newer bootstrap script with a bumped version) → AUTO RE-RUN so
+#     the user picks up new configs/apps without manual intervention.
+#   - To force re-bootstrap manually: rm ~/.nyxus/.bootstrapped && nyxus-bootstrap
+#
+# Bumping BOOTSTRAP_VERSION:
+#   When you ship a bake that needs to refresh installed systems
+#   (new hyprland.conf, new app, new package list, etc.), bump this number.
+#   Existing installs will detect the mismatch on next login and self-heal.
+#
+# Logs: /tmp/nyxus-bootstrap.log (Hyprland tee already wraps the call)
+set -uo pipefail
+
+# ── Version stamp: BUMP ON EVERY RELEASE THAT TOUCHES INSTALLED FILES ───────
+BOOTSTRAP_VERSION="2026.05.12-r10-mission"
+
+PROD_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/download/nyxus/nyxus_install.sh"
+OFFLINE_CACHE="${NYXUS_OFFLINE_DIR:-/opt/nyxus-cache}"
+NYXUS_DIR="${HOME}/.nyxus"
+MARK="${NYXUS_DIR}/.bootstrapped"
+
+log() { printf '[nyxus-bootstrap] %s %s\n' "$(date -Iseconds)" "$*"; }
+
+# ── First-boot splash via Hyprland's built-in notify (no daemon required) ───
+# Dunst is also exec-once and races us, so we can't depend on notify-send.
+# hyprctl notify is rendered directly by the compositor — always available
+# inside an `exec-once` because $HYPRLAND_INSTANCE_SIGNATURE is set by then.
+# Icons: 0 warn, 1 info, 2 hint, 3 error, 4 confused, 5 ok, -1 none
+# Color: DARK MIRROR off-white rgb(e8edf5) for normal, rgb(ff8888) for error.
+notify() {
+  command -v hyprctl >/dev/null 2>&1 || return 0
+  local icon="${1:-2}" timeout="${2:-5000}" color="${3:-rgb(e8edf5)}" msg="${4:-}"
+  hyprctl notify "${icon}" "${timeout}" "${color}" "  NYXUS · ${msg}" \
+    >/dev/null 2>&1 || true
+}
+
+log "starting (user=${USER:-?} home=${HOME:-?} version=${BOOTSTRAP_VERSION})"
+mkdir -p "${NYXUS_DIR}"
+
+# ── Hyprland plugin sync ─────────────────────────────────────────────────────
+# Runs on EVERY login (before the marker fast-path) so plugin-only changes
+# can ship without forcing a full re-install via version bump. The function
+# is fully idempotent: each `hyprpm` step is a no-op when already in the
+# desired state, and any failure is logged but never aborts bootstrap (the
+# desktop must still come up even if a plugin fails to compile against the
+# user's Hyprland headers).
+#
+# Currently managed plugins:
+#   hyprexpo  — Mission Control overview (P3.13). Triggered by SUPER+F3
+#               and the 4-finger touchpad swipe defined in the
+#               nyxus-hyprland-mission.conf shard.
+ensure_hyprland_plugins() {
+  command -v hyprpm >/dev/null 2>&1 || {
+    log "hyprpm not on PATH — skipping plugin sync (Hyprland too old?)"
+    return 0
+  }
+
+  # `hyprpm list` prints "Plugin <name>" lines for every installed plugin
+  # regardless of enabled/disabled state. Match case-insensitively because
+  # hyprpm has shifted the casing across versions.
+  local installed
+  installed="$(hyprpm list 2>/dev/null || true)"
+
+  if ! grep -qi 'hyprexpo' <<<"${installed}"; then
+    log "installing hyprexpo plugin (first time)"
+    # `hyprpm update` ensures the headers cache is fresh for the running
+    # Hyprland version — required before `add` will compile cleanly.
+    hyprpm update >/dev/null 2>&1 \
+      || log "hyprpm update failed (continuing — add may still work)"
+    hyprpm add https://github.com/hyprwm/hyprland-plugins >/dev/null 2>&1 \
+      || { log "hyprpm add failed — Mission Control unavailable until next boot"; return 0; }
+  fi
+
+  # `enable` is idempotent — re-running while enabled is a no-op.
+  hyprpm enable hyprexpo >/dev/null 2>&1 \
+    || log "hyprpm enable hyprexpo failed (plugin may not have compiled)"
+
+  # Reload so the just-loaded plugin is picked up by the running compositor
+  # without requiring a logout. Safe even on cold boot — Hyprland will be
+  # alive by the time exec-once nyxus-bootstrap runs.
+  hyprpm reload >/dev/null 2>&1 || true
+}
+ensure_hyprland_plugins || true
+
+# Already bootstrapped → version check fast path
+# If marker contains current version → no-op (steady state).
+# If marker contains an older version → fall through and re-run so the
+# new bake's hyprland.conf, packages, and apps land automatically.
+if [[ -f "${MARK}" ]]; then
+  INSTALLED_VERSION="$(cat "${MARK}" 2>/dev/null | head -1 | tr -d '[:space:]')"
+  if [[ "${INSTALLED_VERSION}" == "${BOOTSTRAP_VERSION}" ]]; then
+    log "already bootstrapped at version ${BOOTSTRAP_VERSION} — nothing to do"
+    exit 0
+  fi
+  log "marker version (${INSTALLED_VERSION:-<empty>}) != current (${BOOTSTRAP_VERSION}) — refreshing"
+  notify 2 60000 "rgb(c8ccd6)" "new NYXUS version detected (${BOOTSTRAP_VERSION}) — refreshing configs…"
+fi
+
+# First-boot splash — long timeout so it stays up through the install.
+# The user sees this immediately on first login, before waybar/wallpaper
+# appear. Without it the screen looks frozen for ~60s.
+notify 2 120000 "rgb(e8edf5)" "first-boot setup starting — installing chrome, ~60 seconds…"
+
+# ── Heartbeat: re-notify every 30s while install runs ───────────────────────
+# Without this the splash dies at 120s and a slow install (older HDD, slow
+# Wi-Fi) leaves the user staring at a blank desktop wondering if it crashed.
+# We background a tiny loop and kill it on exit so it can never outlive us.
+heartbeat_loop() {
+  local n=0
+  while sleep 30; do
+    n=$((n+1))
+    notify 2 60000 "rgb(c8ccd6)" "still installing — ${n}× 30s elapsed (slow disk/network is normal)"
+  done
+}
+heartbeat_loop &
+HEARTBEAT_PID=$!
+
+cleanup() {
+  [[ -n "${HEARTBEAT_PID:-}" ]] && kill "${HEARTBEAT_PID}" 2>/dev/null || true
+  rm -f "${TMP_INSTALLER:-}"
+}
+
+# ── 1. Try network ──────────────────────────────────────────────────────────
+TMP_INSTALLER="$(mktemp /tmp/nyxus_install.XXXXXX.sh)"
+trap cleanup EXIT
+
+# Quick connectivity probe so we can give an honest message if curl fails.
+# If we can resolve+TCP-handshake to the prod host, curl failures are then
+# attributable to TLS/HTTP/server-side, not "no internet". This avoids the
+# misdirecting "no internet + no offline cache" message when the user's
+# network is fine but production is having a bad day.
+HAVE_NET=0
+if curl -fsS --connect-timeout 5 --max-time 8 -o /dev/null \
+        "${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/healthz" 2>/dev/null; then
+  HAVE_NET=1
+fi
+
+if curl -fsSL --max-time 30 --retry 2 --retry-delay 3 \
+       "${PROD_URL}" -o "${TMP_INSTALLER}" 2>/dev/null; then
+  log "downloaded installer from ${PROD_URL}"
+  notify 2 10000 "rgb(c8ccd6)" "downloaded installer · running install (this is the long part)…"
+  if bash "${TMP_INSTALLER}"; then
+    echo "${BOOTSTRAP_VERSION}" > "${MARK}"
+    log "complete (online) — marker written: ${MARK} (version ${BOOTSTRAP_VERSION})"
+    notify 5 8000 "rgb(e8edf5)" "ready · welcome, ${USER:-friend}"
+    exit 0
+  else
+    rc=$?
+    log "installer exited with code ${rc} — NOT marking bootstrapped (will retry next boot)"
+    notify 3 15000 "rgb(ff8888)" "install failed (code ${rc}) — will retry on next login"
+    exit "${rc}"
+  fi
+fi
+
+# ── 2. Offline fallback (pre-staged ISO cache) ──────────────────────────────
+if [[ -d "${OFFLINE_CACHE}" && -f "${OFFLINE_CACHE}/nyxus_install.sh" ]]; then
+  log "no internet — using offline cache: ${OFFLINE_CACHE}"
+  notify 2 10000 "rgb(c8ccd6)" "no internet — using offline cache, installing…"
+  if NYXUS_OFFLINE_DIR="${OFFLINE_CACHE}" bash "${OFFLINE_CACHE}/nyxus_install.sh"; then
+    echo "${BOOTSTRAP_VERSION}" > "${MARK}"
+    log "complete (offline) — marker written: ${MARK} (version ${BOOTSTRAP_VERSION})"
+    notify 5 8000 "rgb(e8edf5)" "ready (offline install) · welcome, ${USER:-friend}"
+    exit 0
+  else
+    rc=$?
+    log "offline installer exited with code ${rc} — NOT marking bootstrapped"
+    notify 3 15000 "rgb(ff8888)" "offline install failed (code ${rc}) — will retry on next login"
+    exit "${rc}"
+  fi
+fi
+
+# ── 3. Download failed, no cache → fail loud, leave a hint on the desktop ───
+# Distinguish "no internet" (most common, most fixable) from "download
+# failed despite internet" (probably prod outage / DNS / TLS) so we don't
+# misdirect troubleshooting.
+if [[ "${HAVE_NET}" -eq 1 ]]; then
+  log "FAILED: download failed despite working internet (production outage? DNS? TLS?) AND no offline cache at ${OFFLINE_CACHE}"
+  notify 3 30000 "rgb(ff8888)" "download failed — server unreachable but you're online · see ~/Desktop note"
+  FAIL_REASON="The download failed even though your internet is working. This usually means production (nyxus-core.replit.app) is down or unreachable from your network."
+else
+  log "FAILED: no internet AND no offline cache at ${OFFLINE_CACHE}"
+  notify 3 30000 "rgb(ff8888)" "no internet + no offline cache — see ~/Desktop note for next steps"
+  FAIL_REASON="The system has no internet connection and the offline cache at ${OFFLINE_CACHE} is missing or empty."
+fi
+log "Once resolved, re-run manually:  nyxus-bootstrap"
+
+# Drop a visible note on the desktop so a non-technical user knows what to do.
+NOTE="${HOME}/Desktop/NYXUS-FIRST-BOOT-FAILED.txt"
+mkdir -p "${HOME}/Desktop" 2>/dev/null
+cat > "${NOTE}" 2>/dev/null <<EONOTE
+NYXUS first-boot bootstrap failed.
+
+WHAT HAPPENED:
+${FAIL_REASON:-Bootstrap exited before completing.}
+
+HOW TO FIX:
+1. Get online (NetworkManager applet lives on the EWW bar — but you don't
+   have an EWW bar yet, so use the terminal):
+       SUPER + RETURN          (NYXUS terminal)
+       SUPER + SHIFT + RETURN  (raw Alacritty fallback)
+   Then:  nmtui   (Wi-Fi setup)
+2. Once online, re-run the bootstrap:
+       nyxus-bootstrap
+
+OTHER USEFUL KEYS WHILE THE DESKTOP IS BARE:
+   SUPER + Q               close the focused window
+   SUPER + R               app launcher (rofi)
+   SUPER + SHIFT + E       logout menu
+
+LOG:  /tmp/nyxus-bootstrap.log
+
+— NYXUS · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+EONOTE
+
+exit 1

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# NYXUS Hyprland launcher — switches to Safe Mode config when the kernel
+# was booted with `nyxus.safemode=1` (set by the recovery GRUB entry in
+# /etc/grub.d/41_nyxus_recovery). Otherwise launches the normal session.
+#
+# Wired as the SDDM session command and the user-shell `Hyprland` alias.
+
+set -u
+LOG="${XDG_CACHE_HOME:-$HOME/.cache}/nyxus/session.log"
+mkdir -p "$(dirname "$LOG")"
+
+if grep -qw 'nyxus.safemode=1' /proc/cmdline 2>/dev/null; then
+    cfg="$HOME/.config/hypr/conf.d/nyxus-safemode.conf"
+    [[ -f "$cfg" ]] || cfg="/etc/skel/.config/hypr/conf.d/nyxus-safemode.conf"
+    echo "$(date -Is) safe-mode session ($cfg)" >> "$LOG"
+    exec Hyprland --config "$cfg"
+fi
+
+cfg="$HOME/.config/hypr/hyprland.conf"
+echo "$(date -Is) normal session ($cfg)" >> "$LOG"
+exec Hyprland --config "$cfg"

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<!--
+  NYXUS · Welcome Wizard polkit policy
+  rev 2026.05.11-r9-eww
+
+  Allow members of the wheel group (the default desktop user is in wheel)
+  to invoke the welcome helper without a separate password prompt during
+  the wizard. The wizard will already have authenticated the user as part
+  of the password-change step; we keep auth_admin_keep so policykit caches
+  the credential for the wizard's lifetime.
+
+  Installed to: /usr/share/polkit-1/actions/dev.nyxus.welcome.policy
+-->
+<policyconfig>
+  <vendor>NYXUS</vendor>
+  <vendor_url>https://nyxus-core.replit.app</vendor_url>
+
+  <action id="dev.nyxus.welcome.helper">
+    <description>Apply NYXUS first-boot setup</description>
+    <message>NYXUS Welcome needs your password to apply system settings</message>
+    <defaults>
+      <allow_any>auth_admin_keep</allow_any>
+      <allow_inactive>auth_admin_keep</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/libexec/nyxus-welcome-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>

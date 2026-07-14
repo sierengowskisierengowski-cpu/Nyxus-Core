@@ -1,0 +1,1391 @@
+/* nyxus accent — auto-loaded if present (Settings → Appearance writes it) */
+@import "_nyxus_accent";
+
+/* ─────────────────────────────────────────────────────────────────────
+ * NYXUS GLASS SYSTEM (rev 2026-05-12)
+ * Source-of-truth promoted from godsapp/ui.py — propagated across
+ * every translucent surface in NYXUS so flyouts, popovers, the
+ * start menu, and modals all share the same "deep slate, soft
+ * glow" feel users have flagged as the signature look.
+ * Do not redefine these values elsewhere; reference the variables.
+ * ───────────────────────────────────────────────────────────────────── */
+$glass-dark:     rgba(8, 8, 8, 0.72);      /* main panel */
+$glass-deeper:   rgba(8, 8, 8, 0.86);      /* inner sections */
+$glass-deepest:  rgba(8, 8, 8, 0.96);      /* modals / heavy */
+$hairline-white: rgba(255, 255, 255, 0.10);
+$hairline-ink:   rgba(0, 0, 0, 0.45);
+$shadow-active:  rgba(0, 0, 0, 0.65);
+$shadow-rest:    rgba(0, 0, 0, 0.20);
+
+/* ── NYXUS WARM ACCENT (rev 2026-05-12) ────────────────────────────────
+   Pure mono read as flat at low light — user fed in cosmic/sepia
+   reference imagery (gold dust, aged amber, warm celestial). Soft
+   gold accent restores legibility on hover/active/badge states
+   without breaking the enterprise-dark feel. Gold is RESERVED for
+   "alive" states only: active task, focused control, current
+   workspace, hover edges, brand. Default text + chrome stay
+   monochrome. */
+$gold:           #7B5EA7;                  /* primary accent */
+$gold-soft:      #C4607A;                  /* hover text */
+$gold-deep:      #8B4040;                  /* tooltips / dim */
+$gold-glow:      rgba(123, 94, 167, 0.35);
+$gold-edge:      rgba(123, 94, 167, 0.55);
+$gold-bg-soft:   rgba(196, 96, 122, 0.10);
+$gold-bg-active: rgba(196, 96, 122, 0.20);
+
+/* Marquee animation for the top-bar ticker (smooth scroll). */
+@keyframes nyx-marquee {
+  from { margin-left:  100%; }
+  to   { margin-left: -100%; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+ * NYXUS · EWW styles — DARK MIRROR aesthetic
+ * © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ *
+ * Palette:
+ *   void-0     #05060a   (deep background)
+ *   void-1     #0a0d14   (panel)
+ *   void-2     #11151f   (raised)
+ *   text       #e8edf5
+ *   dim        #7a8298
+ *   violet     #8b6f3a   (primary accent — vortex glow)
+ *   cyan       #d4b87a   (secondary accent — live signal)
+ *   gold       #e8c66b   (warning / highlight)
+ *   crimson    #ff4d6b   (critical / low)
+ * ───────────────────────────────────────────────────────────────────── */
+
+* {
+  all: unset;
+  font-family: "JetBrains Mono Nerd Font", monospace;
+  font-size: 12px;
+  color: #C8C0C0;
+}
+
+/* ── BARS ─────────────────────────────────────────────────────────── */
+
+.bar {
+  /* High-contrast readable surface — bars are NOT glass.
+     Wallpaper must NOT bleed through here, only through flyouts. */
+  background: rgba(8, 10, 16, 0.96);
+  color: #ffffff;
+  font-weight: 500;
+  border: 1px solid $gold-edge;
+  border-radius: 14px;
+  padding: 3px 10px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 14px 44px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.bar label,
+.bar button { color: #ffffff; font-weight: 500; }
+
+/* .bar-bottom sizing now defined alongside the P3.13d enterprise loadout
+   block at the bottom of this file (search a.search-btn references). */
+.bar-top    { padding: 2px 10px; min-height: 20px; border-radius: 0 0 14px 14px; }
+
+.bar-cluster { padding: 0 6px; }
+
+/* ── PILLS (right cluster + helpers) ──────────────────────────────── */
+
+.pill {
+  padding: 4px 12px;
+  border-radius: 10px;
+  background: rgba(17, 21, 31, 0.6);
+  border: 1px solid rgba(160, 107, 255, 0.10);
+  color: #e8edf5;
+  transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.pill:hover {
+  background: rgba(160, 107, 255, 0.14);
+  border-color: rgba(160, 107, 255, 0.45);
+  color: #ffffff;
+}
+
+.batt-charge {
+  border-color: rgba(212, 184, 122, 0.45);
+  color: #d4b87a;
+}
+.batt-low {
+  border-color: rgba(255, 77, 107, 0.55);
+  color: #ff4d6b;
+}
+
+.power-pill {
+  background: rgba(255, 77, 107, 0.10);
+  border-color: rgba(255, 77, 107, 0.35);
+  color: #ff8b9e;
+}
+.power-pill:hover {
+  background: rgba(255, 77, 107, 0.22);
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(255, 77, 107, 0.45);
+}
+
+/* ── BRAND ────────────────────────────────────────────────────────── */
+
+.brand {
+  padding: 4px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  background: linear-gradient(135deg,
+    rgba(160, 107, 255, 0.22),
+    rgba(212, 184, 122, 0.10));
+  border: 1px solid rgba(160, 107, 255, 0.45);
+  color: #ffffff;
+  box-shadow:
+    inset 0 0 12px rgba(160, 107, 255, 0.18),
+    0 0 16px rgba(160, 107, 255, 0.20);
+}
+.brand:hover {
+  background: linear-gradient(135deg,
+    rgba(160, 107, 255, 0.40),
+    rgba(212, 184, 122, 0.22));
+  box-shadow:
+    inset 0 0 18px rgba(160, 107, 255, 0.30),
+    0 0 28px rgba(160, 107, 255, 0.45);
+}
+
+/* ── HEARTBEAT ────────────────────────────────────────────────────── */
+
+.heartbeat {
+  color: #d4b87a;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  padding: 0 8px;
+  text-shadow: 0 0 8px rgba(212, 184, 122, 0.65);
+}
+
+/* ── SYS PULSE ────────────────────────────────────────────────────── */
+
+.syspulse {
+  padding: 2px 10px;
+  border-radius: 8px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.10);
+}
+.syspulse-cpu  { color: #d4b87a; letter-spacing: 0.08em; }
+.syspulse-mem  { color: #8b6f3a; letter-spacing: 0.08em; }
+.syspulse-temp { color: #e8c66b; letter-spacing: 0.08em; }
+
+.tray-dummy {
+  color: #7a8298;
+  letter-spacing: 0.5em;
+  padding: 0 12px;
+}
+
+/* ── CLOCK ────────────────────────────────────────────────────────── */
+
+.clock {
+  padding: 4px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg,
+    rgba(160, 107, 255, 0.10),
+    rgba(212, 184, 122, 0.06));
+  border: 1px solid rgba(160, 107, 255, 0.22);
+  transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.clock:hover {
+  background: linear-gradient(135deg,
+    rgba(160, 107, 255, 0.25),
+    rgba(212, 184, 122, 0.14));
+  border-color: rgba(160, 107, 255, 0.55);
+  box-shadow: 0 0 24px rgba(160, 107, 255, 0.35);
+}
+.clock-glyph { color: #8b6f3a; font-size: 14px; }
+.clock-hms   { font-weight: 700; font-size: 13px; letter-spacing: 0.06em; }
+.clock-date  { color: #b8bfd0; }
+
+/* ── TICKER (top bar) ─────────────────────────────────────────────── */
+
+.ticker-label {
+  color: #e8edf5;
+  font-weight: 700;
+  letter-spacing: 0.20em;
+  font-size: 10px;
+  padding: 0 8px;
+}
+.ticker-box {
+  padding: 0 4px;
+  /* Hide overflow so the marquee text scrolls in/out of frame
+     instead of stretching the bar width. */
+  min-width: 0;
+}
+.ticker {
+  color: #c8ccd6;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  /* Smooth horizontal scroll — text starts off-screen right and
+     drifts to off-screen left over 60s, looping forever. */
+  animation: nyx-marquee 60s linear infinite;
+}
+
+/* ── WORKSPACES (left rail) ───────────────────────────────────────── */
+
+.ws-rail {
+  background: rgba(5, 6, 10, 0.78);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 18px;
+  padding: 14px 6px;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    inset 0 0 20px rgba(160, 107, 255, 0.05);
+}
+.ws-pill {
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 12px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.10);
+  color: #7a8298;
+  font-weight: 700;
+  font-size: 13px;
+  transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.ws-pill:hover {
+  background: rgba(160, 107, 255, 0.14);
+  color: #e8edf5;
+}
+.ws-pill-active {
+  background: linear-gradient(135deg, #8b6f3a, #d4b87a);
+  color: #05060a;
+  border-color: rgba(212, 184, 122, 0.65);
+  box-shadow: 0 0 18px rgba(160, 107, 255, 0.55);
+}
+
+/* ── APP RAIL (right) ─────────────────────────────────────────────── */
+
+.app-rail {
+  background: rgba(5, 6, 10, 0.78);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 18px;
+  padding: 14px 6px;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    inset 0 0 20px rgba(160, 107, 255, 0.05);
+}
+.app-pill {
+  min-width: 38px;
+  min-height: 38px;
+  border-radius: 12px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.10);
+  color: #c8ccd6;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 16px;
+  transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.app-pill:hover {
+  background: linear-gradient(135deg,
+    rgba(160, 107, 255, 0.22),
+    rgba(212, 184, 122, 0.12));
+  border-color: rgba(160, 107, 255, 0.55);
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(160, 107, 255, 0.40);
+}
+
+/* ── DASHBOARD overlay ────────────────────────────────────────────── */
+
+.dashboard-root {
+  background: $glass-deepest;
+  padding: 80px 60px;
+  border: 1px solid $hairline-white;
+  border-radius: 28px;
+  box-shadow:
+    0 1px 0 $hairline-white inset,
+    0 40px 120px $shadow-active,
+    0 4px 16px $shadow-rest;
+}
+/* Scroll wrapper around dashboard content (only visible when content
+   exceeds viewport height — typical 1366×768 keeps it hidden). */
+.dashboard-scroll {
+  background: transparent;
+  /* Make scrollbar match the dark/violet theme rather than the default
+     GTK accent — keeps the panel visually quiet when it does appear. */
+}
+.dashboard-scroll scrollbar {
+  background: transparent;
+  border: none;
+}
+.dashboard-scroll scrollbar slider {
+  background: rgba(160, 107, 255, 0.35);
+  border-radius: 4px;
+  min-width: 6px;
+  min-height: 24px;
+}
+.dashboard-scroll scrollbar slider:hover { background: rgba(160, 107, 255, 0.65); }
+.dash-clock {
+  font-size: 88px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  text-shadow: 0 0 32px rgba(160, 107, 255, 0.55);
+}
+.dash-date {
+  font-size: 16px;
+  color: #b8bfd0;
+  letter-spacing: 0.20em;
+}
+.dash-grid { padding: 24px 0; }
+.dash-card {
+  padding: 24px 32px;
+  border-radius: 18px;
+  background: rgba(17, 21, 31, 0.65);
+  border: 1px solid rgba(160, 107, 255, 0.15);
+  min-width: 200px;
+}
+.dash-card-title {
+  color: #8b6f3a;
+  letter-spacing: 0.30em;
+  font-size: 10px;
+  font-weight: 700;
+}
+.dash-card-big {
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffffff;
+}
+.dash-card-sub {
+  color: #7a8298;
+  font-size: 11px;
+  letter-spacing: 0.10em;
+}
+.dash-toggle {
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: rgba(17, 21, 31, 0.65);
+  border: 1px solid rgba(160, 107, 255, 0.15);
+  letter-spacing: 0.16em;
+  font-size: 11px;
+  transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.dash-toggle:hover {
+  background: rgba(160, 107, 255, 0.20);
+  border-color: rgba(160, 107, 255, 0.55);
+  box-shadow: 0 0 18px rgba(160, 107, 255, 0.35);
+}
+.dash-close {
+  margin-top: 16px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #7a8298;
+  letter-spacing: 0.16em;
+  font-size: 10px;
+}
+.dash-close:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.40); }
+
+/* ── POWERMENU overlay ────────────────────────────────────────────── */
+
+.powermenu-root {
+  background: rgba(5, 6, 10, 0.94);
+  padding: 60px 80px;
+  border: 1px solid rgba(255, 77, 107, 0.28);
+  border-radius: 28px;
+  box-shadow:
+    0 0 0 1px rgba(255, 77, 107, 0.06),
+    0 40px 120px rgba(0, 0, 0, 0.85),
+    inset 0 0 80px rgba(255, 77, 107, 0.05);
+}
+.power-title {
+  color: #ff8b9e;
+  font-size: 13px;
+  letter-spacing: 0.40em;
+  font-weight: 700;
+  padding-bottom: 16px;
+  text-shadow: 0 0 16px rgba(255, 77, 107, 0.55);
+}
+.power-btn {
+  min-width: 130px;
+  min-height: 130px;
+  border-radius: 20px;
+  background: rgba(17, 21, 31, 0.65);
+  border: 1px solid rgba(160, 107, 255, 0.15);
+  transition: all 180ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.power-btn:hover {
+  background: linear-gradient(135deg,
+    rgba(255, 77, 107, 0.20),
+    rgba(160, 107, 255, 0.18));
+  border-color: rgba(255, 77, 107, 0.55);
+  box-shadow: 0 0 32px rgba(255, 77, 107, 0.40);
+}
+/* Destructive variants (Shutdown/Restart) — red border + glyph in
+   resting state so they read as obviously different from soft actions
+   (Suspend/Logout/Lock). Per DESIGN_CONTRACT.md §8. */
+.power-btn-danger {
+  border-color: rgba(255, 77, 107, 0.45);
+  background: rgba(40, 12, 22, 0.55);
+}
+.power-btn-danger .power-glyph { color: #ff8b9e; }
+.power-btn-danger:hover {
+  border-color: rgba(255, 77, 107, 0.85);
+  box-shadow: 0 0 36px rgba(255, 77, 107, 0.55);
+}
+.power-glyph {
+  font-size: 40px;
+  color: #ffffff;
+}
+.power-label {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #c8ccd6;
+}
+.power-cancel {
+  margin-top: 16px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #7a8298;
+  letter-spacing: 0.16em;
+  font-size: 10px;
+}
+.power-cancel:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.40); }
+
+/* ── DASHBOARD · sliders + calendar (additions) ────────────────────── */
+
+.dash-card-cal { min-width: 240px; }
+.dash-cal-grid {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 12px;
+  color: #c8ccd6;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+.dash-sliders { padding: 12px 0; min-width: 480px; }
+.dash-slider-row { padding: 0 8px; }
+.dash-slider-label {
+  color: #8b6f3a;
+  letter-spacing: 0.20em;
+  font-weight: 700;
+  font-size: 10px;
+  min-width: 36px;
+}
+.dash-scale trough {
+  min-height: 6px;
+  border-radius: 6px;
+  background: rgba(17, 21, 31, 0.85);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+}
+.dash-scale highlight {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #8b6f3a, #d4b87a);
+  box-shadow: 0 0 12px rgba(160, 107, 255, 0.55);
+}
+.dash-scale slider {
+  background: #ffffff;
+  min-width: 14px;
+  min-height: 14px;
+  border-radius: 14px;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.55);
+  margin: -6px;
+}
+.dash-toggle-glyph { font-size: 22px; }
+.dash-toggle-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: #c8ccd6;
+}
+
+/* ── CHEATSHEET ────────────────────────────────────────────────────── */
+
+.cheatsheet-root {
+  background: rgba(5, 6, 10, 0.92);
+  padding: 60px 80px;
+  border: 1px solid rgba(160, 107, 255, 0.28);
+  border-radius: 28px;
+  box-shadow:
+    0 0 0 1px rgba(212, 184, 122, 0.06),
+    0 40px 120px rgba(0, 0, 0, 0.85),
+    inset 0 0 80px rgba(160, 107, 255, 0.06);
+}
+.cheat-title {
+  color: #ffffff;
+  font-size: 14px;
+  letter-spacing: 0.40em;
+  font-weight: 700;
+  padding-bottom: 12px;
+  text-shadow: 0 0 16px rgba(160, 107, 255, 0.55);
+}
+.cheat-section {
+  color: #8b6f3a;
+  letter-spacing: 0.30em;
+  font-size: 10px;
+  font-weight: 700;
+  padding-bottom: 8px;
+}
+.cheat-col {
+  padding: 16px 24px;
+  border-radius: 14px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.12);
+  min-width: 280px;
+}
+.cheat-row { padding: 3px 0; }
+.cheat-chord {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  color: #d4b87a;
+  font-size: 11px;
+  min-width: 130px;
+  letter-spacing: 0.04em;
+}
+.cheat-action {
+  color: #c8ccd6;
+  font-size: 11px;
+}
+.cheat-close {
+  margin-top: 16px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #7a8298;
+  letter-spacing: 0.16em;
+  font-size: 10px;
+}
+.cheat-close:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.40); }
+
+/* ── OSD pop-ups ───────────────────────────────────────────────────── */
+
+.osd-root {
+  background: rgba(5, 6, 10, 0.92);
+  border: 1px solid rgba(160, 107, 255, 0.30);
+  border-radius: 18px;
+  padding: 14px 22px;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.65),
+    0 0 28px rgba(160, 107, 255, 0.20);
+}
+.osd-glyph {
+  font-size: 24px;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(160, 107, 255, 0.65);
+}
+.osd-label {
+  color: #c8ccd6;
+  letter-spacing: 0.16em;
+  font-size: 10px;
+  font-weight: 700;
+}
+.osd-bar trough {
+  min-height: 6px;
+  border-radius: 6px;
+  background: rgba(17, 21, 31, 0.85);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+}
+.osd-bar highlight {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #8b6f3a, #d4b87a);
+  box-shadow: 0 0 12px rgba(160, 107, 255, 0.55);
+}
+
+/* ── SCREENSAVER ───────────────────────────────────────────────────── */
+
+.saver-root {
+  background: rgba(0, 0, 0, 0.96);
+  padding: 100px;
+}
+.saver-clock {
+  font-size: 140px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 0 48px rgba(160, 107, 255, 0.65);
+  letter-spacing: 0.04em;
+}
+.saver-date {
+  font-size: 18px;
+  color: #b8bfd0;
+  letter-spacing: 0.30em;
+}
+.saver-brand {
+  font-size: 12px;
+  color: #8b6f3a;
+  letter-spacing: 0.50em;
+  font-weight: 700;
+  text-shadow: 0 0 16px rgba(160, 107, 255, 0.45);
+}
+.saver-hint {
+  color: #5a6278;
+  font-size: 10px;
+  letter-spacing: 0.30em;
+  padding-top: 24px;
+}
+
+/* ─── Enterprise additions: new bar pills, player, cores, polish ───── */
+
+/* Mic mute / bluetooth / power-profile / updates / notifications color states */
+.mic-mute   { color: #ff5577; border-color: rgba(255, 85, 119, 0.45); }
+.bt-off     { color: #5a6278; border-color: rgba(255, 255, 255, 0.06); }
+.bt-conn    { color: #d4b87a; border-color: rgba(212, 184, 122, 0.45);
+              box-shadow: 0 0 12px rgba(212, 184, 122, 0.30); }
+.pp-perf    { color: #ffb04a; border-color: rgba(255, 176, 74, 0.55);
+              text-shadow: 0 0 8px rgba(255, 176, 74, 0.50); }
+.pp-save    { color: #4ade80; border-color: rgba(74, 222, 128, 0.45); }
+.upd-many   { color: #ffb04a; border-color: rgba(255, 176, 74, 0.55); }
+/* P2.12 review fix — locked monochrome (no neon accent in notif state). */
+.notif-on   { color: #e8edf5; border-color: rgba(232, 237, 245, 0.55); }
+.notif-dnd  { color: #5a6278; border-color: rgba(255, 255, 255, 0.06); }
+
+/* Top-bar player (right-aligned) */
+.ticker-player {
+  background: rgba(17, 21, 31, 0.6);
+  border: 1px solid rgba(160, 107, 255, 0.18);
+  border-radius: 8px;
+  padding: 2px 12px;
+  margin-right: 12px;
+  color: #ffffff;
+}
+.ticker-player:hover {
+  border-color: rgba(212, 184, 122, 0.45);
+  box-shadow: 0 0 10px rgba(212, 184, 122, 0.25);
+}
+.ticker-player-text {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: #c8ccd6;
+}
+
+/* Workspace pill: occupied state */
+.ws-pill-occupied {
+  border-color: rgba(160, 107, 255, 0.45) !important;
+  color: #c8ccd6 !important;
+  background: rgba(160, 107, 255, 0.06) !important;
+}
+.ws-pill-occupied:hover { color: #ffffff !important; }
+
+/* Per-core CPU graph */
+.dash-cores-card {
+  padding: 18px 24px;
+  border-radius: 16px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.16);
+  min-width: 720px;
+}
+.dash-cores {
+  min-height: 64px;
+  padding: 6px 4px;
+}
+.core-bar {
+  min-width: 14px;
+  background: rgba(17, 21, 31, 0.85);
+  border-radius: 4px;
+  border: 1px solid rgba(160, 107, 255, 0.10);
+  padding: 2px;
+}
+.core-fill {
+  background: linear-gradient(180deg, #d4b87a, #8b6f3a);
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(160, 107, 255, 0.40);
+  min-width: 8px;
+}
+.core-warm { background: linear-gradient(180deg, #ffb04a, #ff7a3a); }
+.core-hot  { background: linear-gradient(180deg, #ff5577, #c0306c);
+             box-shadow: 0 0 10px rgba(255, 85, 119, 0.55); }
+
+/* Dashboard media player card */
+.dash-player {
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: rgba(17, 21, 31, 0.55);
+  border: 1px solid rgba(160, 107, 255, 0.16);
+  min-width: 240px;
+}
+.dash-player-title {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(160, 107, 255, 0.35);
+}
+.dash-player-artist {
+  color: #8b94a8;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.dash-player-controls { padding-top: 8px; }
+.dash-player-btn {
+  background: rgba(160, 107, 255, 0.10);
+  border: 1px solid rgba(160, 107, 255, 0.28);
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: #ffffff;
+  font-size: 14px;
+}
+.dash-player-btn:hover {
+  background: rgba(160, 107, 255, 0.22);
+  border-color: rgba(212, 184, 122, 0.55);
+  box-shadow: 0 0 14px rgba(160, 107, 255, 0.50);
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+ * SPRINT 1 · QUICK SETTINGS / WIFI / BT / MIXER / CALENDAR / NOTIF
+ * ═════════════════════════════════════════════════════════════════════ */
+
+/* ── shared flyout panel base ─ NYXUS GLASS (godsapp parity) ─────────── */
+.qs-root, .wifi-root, .bt-root, .mix-root, .cal-root, .notif-root {
+  background: $glass-dark;
+  border: 1px solid $hairline-white;
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow:
+    0 1px 0 $hairline-white inset,
+    0 24px 60px $shadow-active,
+    0 2px 8px $shadow-rest;
+}
+
+.qs-title, .wifi-title, .bt-title, .mix-title, .cal-title, .notif-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #e8edf5;
+  padding-bottom: 4px;
+}
+
+.qs-pill, .cal-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 4px 12px;
+  color: #c8ccd6;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.qs-pill:hover, .cal-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+/* P2.12 — Control Center header / settings shortcut. */
+.qs-header { padding-bottom: 4px; }
+.qs-settings {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 4px 10px;
+  color: #e8edf5;
+  font-size: 14px;
+}
+.qs-settings:hover { background: rgba(255, 255, 255, 0.14); }
+
+/* ── QUICK SETTINGS tiles — monochrome ───────────────────────────────── */
+.qs-grid { padding: 2px 0; }
+
+.qs-tile {
+  padding: 12px 8px;
+  min-width: 78px;
+  border-radius: 12px;
+  background: rgba(15, 20, 32, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 160ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.qs-tile:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.qs-tile-on {
+  background: rgba(232, 237, 245, 0.10);
+  border-color: rgba(232, 237, 245, 0.55);
+  box-shadow:
+    inset 0 0 12px rgba(232, 237, 245, 0.08),
+    0 0 14px rgba(232, 237, 245, 0.10);
+}
+.qs-tile-glyph { font-size: 18px; color: #ffffff; }
+.qs-tile-label {
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  color: #c8ccd6;
+  padding-top: 2px;
+}
+
+.qs-sliders { padding-top: 8px; }
+.qs-slider-glyph { font-size: 14px; color: #c8ccd6; min-width: 22px; }
+.qs-scale trough {
+  background: rgba(15, 20, 32, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  min-height: 6px;
+}
+.qs-scale highlight {
+  background: #e8edf5;
+  border-radius: 999px;
+}
+.qs-scale slider {
+  background: #ffffff;
+  border-radius: 999px;
+  min-width: 14px; min-height: 14px;
+  box-shadow: 0 0 8px rgba(232, 237, 245, 0.40);
+}
+
+/* P2.12 — Now-playing strip. Sits between sliders and the close
+   button; auto-hides when no media player is reporting status. */
+.qs-nowplaying {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(15, 20, 32, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+.qs-np-icon  { font-size: 18px; color: #ffffff; min-width: 22px; }
+.qs-np-title { color: #e8edf5; font-size: 12px; font-weight: 600; }
+.qs-np-artist { color: #8b94a8; font-size: 10px; }
+.qs-np-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+  color: #c8ccd6;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+.qs-np-btn:hover { background: rgba(255, 255, 255, 0.10); color: #ffffff; }
+.qs-np-btn-primary {
+  background: rgba(232, 237, 245, 0.14);
+  border-color: rgba(232, 237, 245, 0.45);
+  color: #ffffff;
+}
+
+/* ── DESIGN_CONTRACT §9 — empty states ───────────────────────────────── */
+/* Shared style for the "no items yet" placeholder shown inside any
+ * list-flyout's scroll area when its data array is empty. Apple/MS-grade
+ * panels never show a blank box — there is always copy + (optional) hint.
+ */
+.empty-state {
+  padding: 28px 16px;
+  margin: 8px 0;
+  background: rgba(17, 21, 31, 0.45);
+  border: 1px dashed rgba(160, 107, 255, 0.18);
+  border-radius: 12px;
+}
+.empty-glyph {
+  font-size: 28px;
+  color: #8b6f3a;
+  text-shadow: 0 0 14px rgba(160, 107, 255, 0.35);
+  padding-bottom: 4px;
+}
+.empty-title {
+  color: #e8edf5;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.empty-hint {
+  color: #6b7388;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.qs-close, .wifi-close, .bt-close, .mix-close, .cal-close, .notif-close {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255, 77, 107, 0.12);
+  border: 1px solid rgba(255, 77, 107, 0.30);
+  color: #ff8b9e;
+  letter-spacing: 0.12em;
+}
+.qs-close:hover, .wifi-close:hover, .bt-close:hover, .mix-close:hover,
+.cal-close:hover, .notif-close:hover {
+  background: rgba(255, 77, 107, 0.28);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(255, 77, 107, 0.45);
+}
+
+/* ── Shared flyout control buttons ─ DARK MIRROR monochrome ─────────
+ * P2.12 review fix: this rule used to apply cyan neon to every
+ * flyout's secondary action (WiFi toggle/rescan, BT toggle/scan,
+ * Notification DND/Clear, advanced shortcuts). Locked palette is
+ * white #e8edf5 / grey #c8ccd6 / black, no cyan/violet. */
+.wifi-toggle, .wifi-rescan, .bt-toggle, .bt-scan, .notif-dnd, .notif-clear,
+.wifi-advanced, .bt-advanced, .mix-advanced {
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #c8ccd6;
+  letter-spacing: 0.10em;
+}
+.wifi-toggle:hover, .wifi-rescan:hover, .bt-toggle:hover, .bt-scan:hover,
+.notif-dnd:hover, .notif-clear:hover, .wifi-advanced:hover, .bt-advanced:hover,
+.mix-advanced:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(232, 237, 245, 0.45);
+  color: #ffffff;
+}
+
+.wifi-current { color: #8b94a8; font-size: 11px; padding: 2px 4px; }
+
+/* P2.12 review fix (round 2): row base/hover converted to monochrome
+ * so Notification Center inherits the locked DARK MIRROR palette.
+ * Same neutral applied to wifi/bt/mix rows for system-wide cohesion. */
+.wifi-row, .bt-row, .mix-row, .notif-row {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(15, 20, 32, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.wifi-row:hover, .bt-row:hover, .mix-row:hover, .notif-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.wifi-row-active, .bt-row-conn, .mix-row-default {
+  background: linear-gradient(90deg,
+    rgba(160, 107, 255, 0.18),
+    rgba(212, 184, 122, 0.08));
+  border-color: rgba(212, 184, 122, 0.45);
+  box-shadow: inset 0 0 12px rgba(160, 107, 255, 0.18);
+}
+
+.wifi-bars { color: #d4b87a; font-family: "JetBrainsMono Nerd Font", monospace; min-width: 44px; }
+.wifi-name { background: transparent; border: none; color: #e8edf5; font-size: 12px; }
+.wifi-name:hover { color: #ffffff; text-shadow: 0 0 8px rgba(212, 184, 122, 0.55); }
+.wifi-sig { color: #8b94a8; font-size: 10px; min-width: 36px; }
+.wifi-forget {
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(255, 77, 107, 0.10);
+  border: 1px solid rgba(255, 77, 107, 0.25);
+  color: #ff8b9e;
+}
+.wifi-forget:hover { background: rgba(255, 77, 107, 0.30); color: #ffffff; }
+
+/* ── BLUETOOTH ──────────────────────────────────────────────────────── */
+.bt-icon { font-size: 16px; color: #d4b87a; min-width: 24px; }
+.bt-name { color: #ffffff; font-size: 12px; font-weight: 600; }
+.bt-mac  { color: #6b7388; font-size: 10px; letter-spacing: 0.04em; }
+.bt-act, .bt-forget {
+  padding: 4px 10px; border-radius: 8px;
+  background: rgba(160, 107, 255, 0.10);
+  border: 1px solid rgba(160, 107, 255, 0.25);
+  color: #d0c4ff;
+  font-size: 10px;
+  letter-spacing: 0.10em;
+}
+.bt-act:hover { background: rgba(212, 184, 122, 0.22); color: #ffffff; }
+.bt-forget {
+  background: rgba(255, 77, 107, 0.10);
+  border-color: rgba(255, 77, 107, 0.25);
+  color: #ff8b9e;
+}
+.bt-forget:hover { background: rgba(255, 77, 107, 0.30); color: #ffffff; }
+
+/* ── AUDIO MIXER ────────────────────────────────────────────────────── */
+.mix-section {
+  font-size: 10px; letter-spacing: 0.20em;
+  color: #6b7388;
+  padding: 8px 4px 2px;
+}
+.mix-pick {
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  color: #d4b87a;
+  font-size: 14px;
+  min-width: 22px;
+}
+.mix-pick:hover { color: #ffffff; text-shadow: 0 0 10px rgba(212, 184, 122, 0.65); }
+.mix-name { color: #e8edf5; font-size: 12px; }
+.mix-pct { color: #8b94a8; font-size: 10px; min-width: 38px; }
+.mix-mute {
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(17, 21, 31, 0.85);
+  border: 1px solid rgba(160, 107, 255, 0.20);
+  color: #d0c4ff;
+}
+.mix-mute:hover { background: rgba(160, 107, 255, 0.22); color: #ffffff; }
+.mix-app-glyph { color: #8b6f3a; font-size: 14px; min-width: 22px; }
+.mix-scale trough {
+  background: rgba(17, 21, 31, 0.85);
+  border: 1px solid rgba(160, 107, 255, 0.20);
+  border-radius: 999px;
+  min-height: 5px;
+}
+.mix-scale highlight {
+  background: linear-gradient(90deg, #8b6f3a, #d4b87a);
+  border-radius: 999px;
+}
+.mix-scale slider {
+  background: #ffffff;
+  border-radius: 999px;
+  min-width: 12px; min-height: 12px;
+}
+
+/* ── CALENDAR ───────────────────────────────────────────────────────── */
+.cal-today { color: #8b94a8; font-size: 11px; padding: 0 4px 6px; }
+.cal-dow-cell {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: #6b7388;
+  min-width: 36px;
+}
+.cal-week { padding: 1px 0; }
+.cal-day {
+  min-width: 36px;
+  padding: 6px 0;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #e8edf5;
+}
+.cal-day-in:hover { background: rgba(160, 107, 255, 0.16); }
+.cal-day-out { color: #3a4055; }
+.cal-day-today {
+  background: linear-gradient(135deg, #8b6f3a, #d4b87a);
+  color: #05060a;
+  font-weight: 700;
+  box-shadow: 0 0 14px rgba(160, 107, 255, 0.55);
+}
+
+/* ── NOTIFICATIONS ──────────────────────────────────────────────────── */
+/* Per-app group section. Header carries app name + count badge + mute
+   toggle. Muted groups dim to 55% to keep them legible without
+   competing with active notifications. */
+.notif-group {
+  background: rgba(20, 24, 36, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+.notif-group-muted { opacity: 0.55; }
+.notif-group-header {
+  padding: 2px 4px 6px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 4px;
+}
+.notif-count {
+  color: #c8ccd6;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.notif-mute {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+  padding: 1px 6px;
+  color: #c8ccd6;
+  font-size: 11px;
+}
+.notif-mute:hover { background: rgba(255, 255, 255, 0.08); color: #ffffff; }
+.notif-mute-on {
+  color: #e8edf5;
+  border-color: rgba(232, 237, 245, 0.45);
+  background: rgba(232, 237, 245, 0.08);
+}
+/* Inline default-action affordance ("↗" arrow). Renders only when
+   dunst exposes a default_action_name. */
+.notif-action {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+  padding: 0 8px;
+  color: #c8ccd6;
+  font-size: 12px;
+}
+.notif-action:hover { background: rgba(255, 255, 255, 0.14); color: #ffffff; }
+/* DND toggle "on" state — flips to a high-contrast pill so users
+   notice that notifications are being suppressed. */
+.notif-dnd-on {
+  color: #050810;
+  background: #e8edf5;
+  border-color: #e8edf5;
+}
+.notif-row-muted { opacity: 0.6; }
+
+/* P2.12 review fix — monochrome app label. */
+.notif-app {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: #c8ccd6;
+  min-width: 64px;
+  padding: 2px 6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+}
+.notif-summary { color: #ffffff; font-size: 12px; font-weight: 600; }
+.notif-body    { color: #8b94a8; font-size: 10px; }
+.notif-dismiss {
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(255, 77, 107, 0.08);
+  border: 1px solid rgba(255, 77, 107, 0.20);
+  color: #ff8b9e;
+}
+.notif-dismiss:hover { background: rgba(255, 77, 107, 0.28); color: #ffffff; }
+
+/* ═════════════════════════════════════════════════════════════════════
+ * P3.13b · NYXUS START MENU (Win11-grade launcher, glass aesthetic)
+ * Bound to bottom-left "✕ NYXUS" brand button. Mirrors godsapp glass.
+ * ═════════════════════════════════════════════════════════════════════ */
+
+.startmenu-root {
+  background: $glass-dark;
+  border: 1px solid $hairline-white;
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow:
+    0 1px 0 $hairline-white inset,
+    0 32px 80px $shadow-active,
+    0 4px 16px $shadow-rest;
+  min-width: 640px;
+}
+
+.startmenu-search {
+  background: $glass-deeper;
+  border: 1px solid $hairline-white;
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: #e8edf5;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.startmenu-search:focus {
+  border-color: rgba(255, 255, 255, 0.40);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+}
+
+.startmenu-section {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #c8ccd6;
+  padding: 14px 4px 6px 4px;
+}
+
+.startmenu-grid { padding: 4px 0; }
+
+.startmenu-tile {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 14px 8px;
+  min-width: 90px;
+  transition: all 160ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.startmenu-tile:hover {
+  background: $glass-deeper;
+  border-color: $hairline-white;
+}
+.startmenu-tile-glyph {
+  font-size: 24px;
+  color: #e8edf5;
+  padding-bottom: 4px;
+}
+.startmenu-tile-label {
+  font-size: 10px;
+  color: #c8ccd6;
+  letter-spacing: 0.04em;
+}
+
+.startmenu-recent-row {
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px 10px;
+  transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.startmenu-recent-row:hover { background: $glass-deeper; }
+.startmenu-recent-name { font-size: 11px; color: #e8edf5; }
+.startmenu-recent-path { font-size: 9px;  color: #8b94a8; }
+
+.startmenu-footer {
+  background: $glass-deeper;
+  border: 1px solid $hairline-white;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 14px;
+}
+.startmenu-user {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e8edf5;
+  letter-spacing: 0.04em;
+}
+.startmenu-power-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #c8ccd6;
+  transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.startmenu-power-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: $hairline-white;
+  color: #ffffff;
+}
+.startmenu-power-btn.shutdown:hover {
+  background: rgba(255, 77, 107, 0.18);
+  border-color: rgba(255, 77, 107, 0.40);
+  color: #ff8b9e;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+ * P3.13d · BOTTOM BAR — enterprise loadout (search + dock + taskbar)
+ * Glass parity with the rest of NYXUS; tight, neutral, monochrome.
+ * ═════════════════════════════════════════════════════════════════════ */
+
+/* Spotlight-style search button — sits between Start and Workspaces. */
+.search-btn {
+  background: $glass-deeper;
+  border: 1px solid $hairline-white;
+  border-radius: 8px;
+  padding: 4px 14px;
+  min-width: 200px;
+  transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.search-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.search-glyph { color: #c8ccd6; font-size: 12px; padding-right: 2px; }
+.search-text  { color: #8b94a8; font-size: 11px; letter-spacing: 0.06em; }
+
+/* Horizontal pinned dock — Win11/Mac style. */
+.app-rail-h {
+  padding: 0 4px;
+  /* divider on the right separates dock from the live taskbar */
+  border-right: 1px solid $hairline-white;
+  margin-right: 4px;
+  padding-right: 10px;
+}
+.app-rail-h .app-pill {
+  padding: 4px 8px;
+  font-size: 14px;
+  color: #c8ccd6;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.app-rail-h .app-pill:hover {
+  background: $glass-deeper;
+  border-color: $hairline-white;
+  color: #ffffff;
+}
+
+/* Live taskbar — running Hyprland windows. */
+.taskbar {
+  padding: 0 6px;
+  min-height: 36px;
+}
+.taskbar-empty {
+  color: #8b94a8;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 0 14px;
+}
+.taskbar-tile {
+  background: $glass-deeper;
+  border: 1px solid $hairline-white;
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: #c8ccd6;
+  transition: all 140ms cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+.taskbar-tile:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+.taskbar-tile-active {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  box-shadow: inset 0 -2px 0 #ffffff;
+}
+.taskbar-glyph { font-size: 12px; font-weight: 700; }
+.taskbar-title { font-size: 10px; letter-spacing: 0.04em; }
+
+/* Tighten the right-cluster tray pills so 13 widgets fit cleanly
+   on a 1366-wide panel even with the new dock + taskbar on the left. */
+.cluster-right > * {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+/* Slightly taller bottom bar so the taskbar tiles don't crowd. */
+.bar-bottom { padding: 4px 12px; min-height: 30px; }
+
+/* ═════════════════════════════════════════════════════════════════════
+ * NYXUS WARM ACCENT OVERLAY (rev 2026-05-12)
+ * Re-targets active/alive states to use $gold instead of pure white.
+ * Applied as a final overlay so the rest of the file stays mono.
+ * ═════════════════════════════════════════════════════════════════════ */
+
+/* Brand button — ✕ NYXUS now reads as warm metal */
+.brand              { color: $gold; text-shadow: 0 0 10px $gold-glow; }
+.brand:hover        { color: $gold-soft; background: $gold-bg-soft;
+                      border-color: $gold-edge; }
+
+/* Top-bar marquee label */
+.ticker-label       { color: $gold; }
+
+/* Workspaces — current workspace pops gold */
+.ws-pill-active     { color: $gold !important;
+                      border-color: $gold-edge !important;
+                      background: $gold-bg-active !important;
+                      box-shadow: 0 0 12px $gold-glow !important; }
+.ws-pill:hover      { color: $gold-soft;
+                      border-color: $gold-edge; }
+
+/* Quick Settings active tile */
+.qs-tile-on         { color: $gold !important;
+                      border-color: $gold-edge !important;
+                      background: $gold-bg-active !important;
+                      box-shadow: inset 0 0 12px $gold-glow !important; }
+
+/* Search button focus edge */
+.search-btn:hover   { border-color: $gold-edge;
+                      background: $gold-bg-soft; }
+.search-btn:hover .search-text  { color: $gold-soft; }
+.search-btn:hover .search-glyph { color: $gold; }
+
+/* Pinned dock hover */
+.app-rail-h .app-pill:hover { color: $gold;
+                              border-color: $gold-edge;
+                              background: $gold-bg-soft; }
+
+/* Live taskbar — active window glows gold (replaces white underline) */
+.taskbar-tile-active {
+  color: $gold !important;
+  border-color: $gold-edge !important;
+  background: $gold-bg-active !important;
+  box-shadow: inset 0 -2px 0 $gold !important;
+}
+.taskbar-tile:hover  { color: $gold-soft;
+                       border-color: $gold-edge; }
+
+/* Start menu — current pinned tile hover gets a gold edge */
+.startmenu-tile:hover { border-color: $gold-edge;
+                        background: $gold-bg-soft; }
+.startmenu-tile-glyph { color: $gold-soft; }
+.startmenu-search:focus { border-color: $gold-edge;
+                          box-shadow: 0 0 12px $gold-glow; }
+.startmenu-power-btn:hover { color: $gold;
+                             border-color: $gold-edge;
+                             background: $gold-bg-soft; }
+
+/* Battery / updates / notification badges — warm when "needs attention" */
+.battery-low, .battery-crit { color: $gold !important; }
+.updates-pending           { color: $gold !important; }
+.notif-badge.has-items     { background: $gold-bg-active;
+                             color: $gold;
+                             border: 1px solid $gold-edge; }
+
+/* Tooltips — keep mono but tint border so they feel "of the system" */
+tooltip {
+  background: $glass-deepest;
+  color: #e8edf5;
+  border: 1px solid $gold-edge;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+/* Heartbeat dot — alive = gold pulse */
+.heartbeat { color: $gold; text-shadow: 0 0 8px $gold-glow; }
+
+/* SysPulse: dim the chrome, gold the values */
+.syspulse-cpu, .syspulse-mem, .syspulse-temp {
+  color: #c8ccd6;
+}
