@@ -473,3 +473,31 @@ macchanger
 dnscrypt-proxy
 sound-theme-freedesktop
 qt5-svg
+
+# ── NYXUS greeter stack (rev 2026-07-14) — REQUIRED ────────────────
+# ISO enables greetd; nyxus-greeter runs regreet under cage -> tuigreet
+# fallback. Without these the lean ISO boots to a greeterless greetd.
+greetd-regreet
+greetd-tuigreet
+cage
+
+# ── NYXUS security-lab toolkit (lean subset, rev 2026-07-14) ───────
+# Core lab tooling kept even on lean (this is a security daily driver).
+# ghidra intentionally OMITTED from lean (pulls a full JDK) — radare2 +
+# rizin cover reverse engineering; add ghidra on the full tier.
+bpftrace
+bpf
+bpf-linker
+nmap
+tcpdump
+wireshark-cli
+radare2
+rizin
+binwalk
+yara
+sleuthkit
+volatility3
+gdb
+strace
+ltrace
+trace-cmd

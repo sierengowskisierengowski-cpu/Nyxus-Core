@@ -502,3 +502,39 @@ macchanger
 dnscrypt-proxy
 sound-theme-freedesktop
 qt5-svg
+
+# ── NYXUS greeter stack (rev 2026-07-14) — REQUIRED ────────────────
+# The ISO enables greetd (see customize_airootfs.sh). The greeter chain
+# nyxus-greeter runs regreet under cage, falling back to tuigreet (text).
+# Without these three the ISO boots to greetd with NO greeter binary =
+# broken login. cage/regreet are Wayland (dodges the SDDM X11 hybrid-GPU
+# crash). SDDM is intentionally NOT installed anymore.
+greetd-regreet
+greetd-tuigreet
+cage
+
+# ── NYXUS security-lab toolkit (rev 2026-07-14) ────────────────────
+# This build is a security lab (see docs/MACHINE_PROFILE.md): jeTT eBPF
+# EDR, Docker honeypots, malware analysis. All official-repo (no AUR).
+# eBPF / kernel observability (pairs with the kage-ryu sensor + BCC):
+bpftrace
+bpf
+bpf-linker
+# Traffic capture / recon:
+nmap
+tcpdump
+wireshark-cli
+# Reverse engineering / malware analysis:
+radare2
+rizin
+ghidra
+binwalk
+yara
+# Forensics / memory:
+sleuthkit
+volatility3
+# Debug / trace:
+gdb
+strace
+ltrace
+trace-cmd
