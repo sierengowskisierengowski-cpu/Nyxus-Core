@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=NYXUS
+Description=NYXUS · Cosmic Arrival · UFO landing boot cinematic (violet/magenta nebula, descending saucer, tractor-beam NYXUS reveal)
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/nyxus
+ScriptFile=/usr/share/plymouth/themes/nyxus/nyxus.script
