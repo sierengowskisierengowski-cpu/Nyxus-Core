@@ -183,6 +183,17 @@
 (defwidget bar_divider []
   (box :class "bar-cluster-divider"))
 
+;; ── starfield veil (Phase 5.5) ───────────────────────────────────────
+;; Subtle animated Rolls-Royce twinkle for menu / flyout / panel
+;; backgrounds. Used as the TOP child of an (overlay ...) so the stars
+;; ride over the panel fill; the box owns no input window (plain GtkBox)
+;; so clicks pass straight through to the panel below. STARLIGHT.f cycles
+;; 16 transparent frames; `full` swaps in the fullscreen lock field for
+;; the edge-to-edge overlays.
+(defwidget starfield_veil [?full]
+  (box :class "starfield-veil${full == true ? ' starfield-veil-full' : ''}"
+       :style "background-image: url('assets/${full == true ? 'starfield-lock-twinkle' : 'starlight-twinkle-panel'}-${STARLIGHT.f}.png');"))
+
 ;; ── HOME-HUD mini tile: glyph + small-caps neon label + mono value ───
 ;; `hue` picks the neon via .hud-tile-<hue> (pink/green/purple/gold/
 ;; orange/blue/red — all mapped to shared tokens in eww.scss).
@@ -495,7 +506,7 @@
   (eventbox :onclick "true"
     (box :class "hub-panel" :orientation "v" :space-evenly false :spacing 16
          :halign "center" :valign "start"
-         :style "background-image: url('assets/starlight-twinkle-strip-${STARLIGHT.f}.png'), url('assets/starlight-strip.png'), linear-gradient(180deg, rgba(7,3,14,0.94), rgba(2,1,7,0.92)), linear-gradient(${PRISM.a}deg, #ff2667 0%, #7949f2 25%, #26ffb7 50%, #7949f2 75%, #ff2667 100%);"
+         :style "background-image: linear-gradient(180deg, rgba(9,4,20,0.46), rgba(3,1,9,0.30));"
       (label :visible false :text HUB_SHIELD)
       (box :orientation "h" :space-evenly false :spacing 12
         (label :class "hub-title" :hexpand true :halign "start"
