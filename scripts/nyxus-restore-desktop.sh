@@ -23,7 +23,7 @@
 #   5. Installs stations.json + wallpaper.conf, regenerates workspaces.json
 #   6. Stages every nyxus-*.png wallpaper into ~/.config/hypr/walls/
 #   7. Installs helper launchers into ~/.local/bin
-#   8. Applies the cosmic-galaxy wallpaper, restarts EWW, reloads Hyprland
+#   8. Applies the alien-hero wallpaper, restarts EWW, reloads Hyprland
 #
 # Safe to re-run any number of times. Does NOT touch /usr or system files.
 # ============================================================================
@@ -134,14 +134,16 @@ step "install station matrix + wallpaper config"
 mkdir -p "${HOME}/.config/nyxus"
 install -m 0644 "${CFG}/stations.json" "${HOME}/.config/nyxus/stations.json"
 cat > "${HOME}/.config/nyxus/wallpaper.conf" <<EOF
-WALLPAPER="nyxus-cosmic-galaxy"
-WALLPAPER_PATH="${HOME}/.config/hypr/walls/nyxus-cosmic-galaxy.png"
+WALLPAPER="nyxus-wall-alien-hero"
+WALLPAPER_PATH="${HOME}/.config/hypr/walls/nyxus-wall-alien-hero.png"
 EOF
-ok "stations.json + wallpaper.conf (cosmic-galaxy)"
+ok "stations.json + wallpaper.conf (alien-hero)"
 
 # ── 6. wallpapers ───────────────────────────────────────────────────────────
 step "stage wallpapers"
 install -m 0644 "${NS}"/nyxus-*.png "${HOME}/.config/hypr/walls/" 2>/dev/null || true
+# the canonical wallpaper/lock art set lives under hypr-walls/
+install -m 0644 "${NS}"/hypr-walls/*.png "${HOME}/.config/hypr/walls/" 2>/dev/null || true
 ok "$(ls "${HOME}/.config/hypr/walls/"*.png 2>/dev/null | wc -l) wallpapers in ~/.config/hypr/walls/"
 
 # ── 7. helper launchers ─────────────────────────────────────────────────────
@@ -182,10 +184,10 @@ fi
 # ── 9. apply live (only if inside a Hyprland session) ───────────────────────
 step "apply to live session"
 if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
-  WALL="${HOME}/.config/hypr/walls/nyxus-cosmic-galaxy.png"
+  WALL="${HOME}/.config/hypr/walls/nyxus-wall-alien-hero.png"
   if [[ -x "${HOME}/.local/bin/nyxus-set-wallpaper.sh" && -f "${WALL}" ]]; then
     "${HOME}/.local/bin/nyxus-set-wallpaper.sh" "${WALL}" >/dev/null 2>&1 \
-      && ok "wallpaper applied: cosmic-galaxy" \
+      && ok "wallpaper applied: alien-hero" \
       || warn "wallpaper apply failed — will land on next login"
   fi
   if [[ -x "${HOME}/.local/bin/nyxus-eww-launch-safe" ]]; then
