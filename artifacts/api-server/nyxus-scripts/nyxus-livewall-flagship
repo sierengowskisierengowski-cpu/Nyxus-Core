@@ -12,10 +12,10 @@
 #   · TWINKLING STARS — an overlaid procedural starfield whose stars
 #                       pulse individually (per-pixel phase), on top of
 #                       the wallpaper's own baked-in stars.
-#   · CRUISING UFO    — the polished NYXUS flying saucer (reused from the
-#                       theme's saucer art, not hand-drawn) with a soft
-#                       violet halo cruises once across the open sky per
-#                       loop, then is gone → reads as an "occasional" flyby.
+#   · CRUISING UFO    — the SAME slick neon saucer as the bottom-bar saucer
+#                       clock / notification UFO (reused theme art, matted +
+#                       soft violet halo, NOT hand-drawn) cruises once across
+#                       the open sky per loop → reads as an "occasional" flyby.
 #
 # Every oscillator completes an integer number of cycles over the loop
 # and the star plane is horizontally periodic, so the clip loops with
@@ -76,11 +76,12 @@ magick "${MDIR}/small.png" "${MDIR}/big.png" -compose screen -composite \
 magick "${MDIR}/stars.png" "${MDIR}/stars.png" +append "${MDIR}/starfield.png"
 
 # ── 2. UFO saucer sprite — REUSE the polished theme saucer art ──────
-# We do NOT hand-draw the UFO: we reuse the slick violet/magenta flying
-# saucer used across NYXUS (the Plymouth boot saucer, which is a clean
-# procedurally-rendered sprite with true alpha). Preferred source is the
-# glow-baked livewall sprite; otherwise we bake a soft nebula-consistent
-# glow onto the raw saucer; procedural draw is only a last-ditch fallback.
+# We do NOT hand-draw the UFO. The flying ship IS the slick neon-graffiti
+# NYXUS saucer used by the bottom-bar SAUCER CLOCK and the notification UFO
+# popup. nyxus-livewall-ufo.png is that exact art matted off its black
+# background (flood-fill) with a soft violet halo baked on. Fallbacks reuse
+# the transparent bar-saucer art (nyxus-saucer-band.png), same style; a
+# procedural draw is only a never-fail last resort.
 SCRIPT_SELF="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "$0")"
 SCRIPT_DIR="$(dirname "${SCRIPT_SELF}")"
 UFO_SRC="${NYX_UFO:-}"
@@ -88,8 +89,8 @@ if [[ -z "${UFO_SRC}" ]]; then
   for c in \
     "${HOME}/.config/hypr/walls/live/nyxus-livewall-ufo.png" \
     "${SCRIPT_DIR}/livewall/nyxus-livewall-ufo.png" \
-    "${SCRIPT_DIR}/plymouth/nyxus/saucer.png" \
-    "/usr/share/plymouth/themes/nyxus/saucer.png"; do
+    "${SCRIPT_DIR}/eww/assets/nyxus-saucer-band.png" \
+    "${HOME}/.config/eww/assets/nyxus-saucer-band.png"; do
     [[ -f "${c}" ]] && { UFO_SRC="${c}"; break; }
   done
 fi
@@ -125,7 +126,7 @@ fi
 PANX=$(python3 -c "print(round(${W}*0.013))")   # nebula orbit amplitude
 PANY=$(python3 -c "print(round(${H}*0.016))")
 SBOB=$(python3 -c "print(round(${H}*0.010))")    # starfield vertical bob
-UW=$(python3 -c "print(round(${W}*0.24))")       # UFO width on screen
+UW=$(python3 -c "print(round(${W}*0.28))")       # UFO width on screen
 UY=$(python3 -c "print(round(${H}*0.14))")       # UFO cruise altitude
 UBOB=$(python3 -c "print(round(${H}*0.02))")
 U0=9; U1=21; UCROSS=$((U1 - U0))                 # flyby window (s)
