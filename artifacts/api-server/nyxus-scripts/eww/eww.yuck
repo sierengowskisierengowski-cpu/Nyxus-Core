@@ -568,7 +568,7 @@
   (button :class {st.active ? "hub-ws-pill hub-ws-active hub-ws-${st.hue}" :
                   st.occupied ? "hub-ws-pill hub-ws-occupied hub-ws-${st.hue}" :
                                 "hub-ws-pill hub-ws-${st.hue}"}
-          :onclick "hyprctl dispatch workspace ${st.id} &"
+          :onclick "nyxus-hub-close; hyprctl dispatch workspace ${st.id} &"
           :tooltip "${st.name} · ${st.tagline}"
     "${st.code}"))
 
@@ -576,7 +576,7 @@
   (button :class {WORKSPACES.home_active ? "hub-ws-pill hub-ws-active hub-ws-cyan" :
                   WORKSPACES.home.occupied ? "hub-ws-pill hub-ws-occupied hub-ws-cyan" :
                                             "hub-ws-pill hub-ws-cyan"}
-          :onclick "hyprctl dispatch workspace name:0 &"
+          :onclick "nyxus-hub-close; hyprctl dispatch workspace name:0 &"
           :tooltip "HOME · ${WORKSPACES.home.tagline ?: 'Obsidian Reactor'}"
     "${WORKSPACES.home.code}"))
 
@@ -588,7 +588,7 @@
 ;; fullscreen overlay (the classic "dead click" trap).
 (defwidget hub_app_tile [app]
   (button :class "hub-app-tile"
-          :onclick "eww close nyxus-hub && gtk-launch ${app.id} >/dev/null 2>&1 &"
+          :onclick "nyxus-hub-close; gtk-launch ${app.id} >/dev/null 2>&1 &"
           :tooltip "${app.name}"
     (box :orientation "h" :space-evenly false :spacing 12 :halign "start"
       (label :class "hub-app-glyph" :text "◆")
@@ -606,7 +606,7 @@
     (input :class "hub-search-input" :hexpand true
            :value HUB_QUERY
            :onchange "eww update HUB_QUERY=\"$(printf '%s' {} | tr 'A-Z' 'a-z' | tr -cd 'a-z0-9 ')\""
-           :onaccept "nyxus-hub-search {} >/dev/null 2>&1 &")
+           :onaccept "nyxus-hub-close; nyxus-hub-search {} >/dev/null 2>&1 &")
     (button :class "hub-search-clear" :visible {HUB_QUERY != ""}
             :onclick "eww update HUB_QUERY=''" :tooltip "Clear" "✕")))
 
@@ -624,7 +624,7 @@
                  :text "The Hub" :style "opacity: ${NEONFLICK};")
           (label :class "hub-subtitle" :halign "start" :hexpand true :limit-width 64
                  :text "${TIME.long} · ${BARTILES.host} · ${NETWORK.label}"))
-        (button :class "hub-close-x" :onclick "eww close nyxus-hub" :tooltip "Close (Esc)" "✕"))
+        (button :class "hub-close-x" :onclick "nyxus-hub-close &" :tooltip "Close (Esc)" "✕"))
 
       ;; ── global search bar ──────────────────────────────────────────
       (hub_search)
@@ -636,13 +636,13 @@
           (hub_section_title :title "CONNECT")
           (box :class "hub-grid" :orientation "h" :space-evenly false :hexpand true :spacing 12
             (hub_tile :glyph "󰖩" :label "Wi‑Fi" :hue "green"
-                      :cmd "eww close nyxus-hub && eww open --toggle wifi")
+                      :cmd "nyxus-hub-close; eww open --toggle wifi")
             (hub_tile :glyph "󰂯" :label "Bluetooth" :hue "blue"
-                      :cmd "eww close nyxus-hub && eww open --toggle bluetooth")
+                      :cmd "nyxus-hub-close; eww open --toggle bluetooth")
             (hub_tile :glyph "󰂛" :label "Alerts" :hue "pink"
-                      :cmd "eww close nyxus-hub && eww open --toggle notifications")
+                      :cmd "nyxus-hub-close; eww open --toggle notifications")
             (hub_tile :glyph "⚙" :label "Quick" :hue "purple"
-                      :cmd "eww close nyxus-hub && eww open --toggle quicksettings"))
+                      :cmd "nyxus-hub-close; eww open --toggle quicksettings"))
 
           (hub_section_title :title "SOUND & DISPLAY")
           (box :class "hub-slider-row" :orientation "h" :space-evenly false :spacing 12
@@ -661,20 +661,20 @@
           (hub_section_title :title "SYSTEM")
           (box :class "hub-grid" :orientation "h" :space-evenly false :hexpand true :spacing 12
             (hub_tile :glyph "◈" :label "Dashboard" :hue "cyan"
-                      :cmd "eww close nyxus-hub && hyprctl dispatch workspace name:0")
-            (hub_tile :glyph "◉" :label "Deep Core" :hue "green"
-                      :cmd "eww close nyxus-hub && eww open --toggle deepcore")
+                      :cmd "nyxus-hub-close; hyprctl dispatch workspace name:0")
+            (hub_tile :glyph "󰕧" :label "Mixer" :hue "green"
+                      :cmd "nyxus-hub-close; eww open --toggle mixer")
             (hub_tile :glyph "▦" :label "Mission" :hue "purple"
-                      :cmd "eww close nyxus-hub && nyxus-mission toggle")
+                      :cmd "nyxus-hub-close; nyxus-mission toggle")
             (hub_tile :glyph "󰚰" :label "Updates" :hue "gold"
-                      :cmd "eww close nyxus-hub && eww open --toggle updates"))
+                      :cmd "nyxus-hub-close; eww open --toggle updates"))
           (box :class "hub-grid" :orientation "h" :space-evenly false :hexpand true :spacing 12
             (hub_tile :glyph "󰍹" :label "Displays" :hue "blue"
-                      :cmd "eww close nyxus-hub && wdisplays")
+                      :cmd "nyxus-hub-close; wdisplays")
             (hub_tile :glyph "󰒓" :label "Settings" :hue "pink"
-                      :cmd "eww close nyxus-hub && nyxus-settings")
+                      :cmd "nyxus-hub-close; nyxus-settings")
             (hub_tile :glyph "󰌌" :label "Keys" :hue "orange"
-                      :cmd "eww close nyxus-hub && eww open --toggle hotkey-cheatsheet"))
+                      :cmd "nyxus-hub-close; eww open --toggle cheatsheet"))
 
           (hub_section_title :title "STATIONS")
           (box :class "hub-ws-row" :orientation "h" :space-evenly false :spacing 8
@@ -685,11 +685,11 @@
           (hub_section_title :title "POWER")
           (box :class "hub-grid hub-power-row" :orientation "h" :space-evenly false :hexpand true :spacing 12
             (hub_tile :glyph "󰌾" :label "Lock" :hue "green"
-                      :cmd "eww close nyxus-hub && hyprlock")
+                      :cmd "nyxus-hub-close; hyprlock")
             (hub_tile :glyph "󰗽" :label "Logout" :hue "orange"
-                      :cmd "eww close nyxus-hub && hyprctl dispatch exit")
+                      :cmd "nyxus-hub-close; hyprctl dispatch exit")
             (hub_tile :glyph "󰐥" :label "Power" :hue "red"
-                      :cmd "eww close nyxus-hub && eww open --toggle powermenu")))
+                      :cmd "nyxus-hub-close; eww open --toggle powermenu")))
 
         ;; RIGHT column — scrollable, searchable app launcher
         (box :class "hub-col-right" :orientation "v" :space-evenly false :spacing 10
@@ -828,7 +828,7 @@
       (dash_quick_toggle :glyph "󰚰" :label "Updates"   :hue "gold"   :cmd "eww close dashboard && eww open --toggle updates")
       (dash_quick_toggle :glyph "󰒓" :label "Settings"  :hue "pink"   :cmd "eww close dashboard && nyxus-settings")
       (dash_quick_toggle :glyph "󰌾" :label "Lock"      :hue "green"  :cmd "eww close dashboard && hyprlock")
-      (dash_quick_toggle :glyph "󰌌" :label "Keys"      :hue "orange" :cmd "eww close dashboard && eww open --toggle hotkey-cheatsheet")
+      (dash_quick_toggle :glyph "󰌌" :label "Keys"      :hue "orange" :cmd "eww close dashboard && eww open --toggle cheatsheet")
       (dash_quick_toggle :glyph "󰐥" :label "Power"     :hue "red"    :cmd "eww close dashboard && eww open --toggle powermenu"))
 
     (button :class "dash-close" :onclick "eww close dashboard" "Close (Esc)"))))
@@ -1008,13 +1008,16 @@
 (defwindow nyxus-hub
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-hub"
   :geometry (geometry :width "100%" :height "100%" :anchor "center")
-  (eventbox :onclick "eww close nyxus-hub"
-    :onkeydown "[ '{}' = 'Escape' ] && nyxus-overlay-unstick"
-    (centerbox :class "hub-backdrop"
-               :style "background-image: linear-gradient(rgba(5,1,13,0.74), rgba(5,1,13,0.80)), url('/home/cosmic/.config/eww/assets/nyxus-hero-crew-meet.png'); background-size: cover; background-position: center;"
-      (box)
-      (nyxus_hub_layout)
-      (box))))
+  ;; Full-bleed clickable backdrop (NOT a centerbox — empty centerbox
+  ;; cells collapse to 0 width so click-outside never fired). Escape is
+  ;; also bound in hyprland.conf because eww :onkeydown is unreliable.
+  (eventbox :onclick "nyxus-hub-close &"
+            :cursor "default"
+    (box :class "hub-backdrop"
+         :halign "fill" :valign "fill" :hexpand true :vexpand true
+         :style "background-image: linear-gradient(rgba(5,1,13,0.74), rgba(5,1,13,0.80)), url('/home/cosmic/.config/eww/assets/nyxus-hero-crew-meet.png'); background-size: cover; background-position: center;"
+      (eventbox :onclick "true" :halign "center" :valign "center"
+        (nyxus_hub_layout)))))
 
 (defwindow powermenu
   :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-powermenu"

@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# nyxus-hub-close — reliably dismiss The Hub (and stuck fullscreen overlays).
+#
+# Why this exists: eww 0.5 :onkeydown Escape is unreliable on layer-shell
+# overlays, the Hub backdrop click target collapses to zero width in a
+# centerbox, and closing the window alone can leave the overlay-shield lock
+# with bars still hidden. This script is the single close path for the X
+# button, backdrop, Escape (via Hyprland), and any tile that just needs out.
+set -u
+
+export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH:-/usr/bin:/bin}"
+
+runtime="${XDG_RUNTIME_DIR:-/tmp}"
+lock="${runtime}/nyxus-overlay-shield.d"
+
+# Close Hub first (idempotent), then any other fullscreen overlay that can
+# trap the session the same way.
+if command -v eww >/dev/null 2>&1; then
+  eww close nyxus-hub 2>/dev/null || true
+  while IFS= read -r line; do
+    win="${line%%:*}"
+    win="${win#"${win%%[![:space:]]*}"}"
+    case "$win" in
+      ""|bar-*) continue ;;
+      dashboard|powermenu|cheatsheet|deepcore|mission|hotkey-cheatsheet|hotkey-recorder|screensaver)
+        eww close "$win" 2>/dev/null || true
+        ;;
+    esac
+  done < <(eww active-windows 2>/dev/null || true)
+fi
+
+# Restore bars from the shield stash if present.
+if [[ -f "${lock}/bars" ]]; then
+  while read -r b; do
+    [[ -n "$b" ]] && eww open "$b" 2>/dev/null || true
+  done < "${lock}/bars"
+  rm -rf "$lock"
+fi
+
+# If bars still aren't up (shield never ran / stash empty), bring them back.
+if command -v eww >/dev/null 2>&1; then
+  act="$(eww active-windows 2>/dev/null || true)"
+  if ! grep -q '^bar-bottom:' <<<"$act"; then
+    if command -v nyxus-eww-launch-safe >/dev/null 2>&1; then
+      nyxus-eww-launch-safe >/dev/null 2>&1 &
+    else
+      for b in bar-top bar-bottom bar-left bar-right; do
+        eww open "$b" 2>/dev/null || true
+      done
+    fi
+  fi
+fi
