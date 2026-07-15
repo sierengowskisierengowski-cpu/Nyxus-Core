@@ -75,12 +75,14 @@ TEMP_ALERT = _envf("NYXUS_COMPANION_TEMP_ALERT", 84.0)
 SOUND = _envb("NYXUS_COMPANION_SOUND", True)
 LAYER_NAME = os.environ.get("NYXUS_COMPANION_LAYER", "top").lower()
 
-TARGET_H = _envi("NYXUS_COMPANION_HEIGHT", 150)   # on-screen bust height (px)
+# Tiny bust perched ON the center saucer (~72px tall band). 150px was ~3× too
+# big and read as a mid-screen wallpaper cutout; keep him a small pilot.
+TARGET_H = _envi("NYXUS_COMPANION_HEIGHT", 52)   # on-screen bust height (px)
 # Fine placement over the center saucer clock.
 X_OFFSET = _envi("NYXUS_COMPANION_X_OFFSET", 0)   # +right / -left from center
-# How far his bottom sits below the bar's top edge (so he perches ON the saucer
-# without covering the clock readout lower in the bar).
-SADDLE = _envi("NYXUS_COMPANION_SADDLE", 6)
+# How far his bottom sits below the bar's top edge (nestles into the saucer rim
+# without covering the clock readout in the cockpit band).
+SADDLE = _envi("NYXUS_COMPANION_SADDLE", 10)
 BAR_HEIGHT_FALLBACK = _envi("NYXUS_COMPANION_BAR_H", 112)
 
 # Ambient sound cooldown so he never spams.
@@ -136,9 +138,9 @@ class Companion:
         self.frame_h = int(round(base_h * self.scale))
         self.baseline_y = self.manifest.get("baseline_y", base_h - 4) * self.scale
 
-        # Small window: sprite + headroom for the reaction bounce.
-        self.pad_x = 24
-        self.head_room = 46
+        # Tight window: tiny sprite + a little headroom for the reaction bounce.
+        self.pad_x = 10
+        self.head_room = 14
         self.surface_w = self.frame_w + self.pad_x * 2
         self.surface_h = self.frame_h + self.head_room
         self.anchor_x = self.surface_w / 2.0
@@ -146,10 +148,8 @@ class Companion:
 
         self.screen_w, self.screen_h = self._monitor_size()
         self.bar_top_y = self._bottom_bar_top()
-        # Bottom-anchored: the sprite's bottom (ground_y, 2px above the surface
-        # bottom) should land SADDLE px below the bar's top edge so he perches
-        # on the saucer. sprite_bottom_screen = screen_h - margin - (surface_h -
-        # ground_y); solve for margin.
+        # Bottom-anchored: the sprite's bottom should land SADDLE px below the
+        # bar's top edge so the tiny bust perches on the saucer rim.
         foot_gap = self.surface_h - self.ground_y            # == 2
         self.win_bottom_margin = max(
             0, int(self.screen_h - self.bar_top_y - SADDLE - foot_gap))
