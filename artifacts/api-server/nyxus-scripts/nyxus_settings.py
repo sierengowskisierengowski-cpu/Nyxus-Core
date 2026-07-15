@@ -31,7 +31,6 @@ import shutil
 import subprocess
 import sys
 import textwrap
-import threading
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
@@ -105,7 +104,7 @@ except Exception:
     FONT_DISPLAY   = "Inter Display"
 
 DANGER_RED = "#ff6464"  # §8 — RESERVED for destructive only
-NYXUS_GOLD = "#7949f2"  # NYXUS urban accent (violet) — selection, focus rings
+NYXUS_GOLD = "#d4b87a"  # warm brand accent — selection, focus rings
 
 # Nerd-font glyphs (§6 — never emoji in chrome).
 GLYPHS = {
@@ -665,12 +664,12 @@ window, .nyx-bg {{
     border-bottom: 1px solid {HAIRLINE_WHITE};
 }}
 .nyx-sidebar-title {{
-    font-family: 'Permanent Marker', '{FONT_DISPLAY}', '{FONT_UI}', sans-serif;
-    font-size: 20px;
-    font-weight: 400;
-    letter-spacing: 0.6px;
+    font-family: '{FONT_DISPLAY}', '{FONT_UI}', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
     color: {WHITE_PURE};
-    text-shadow: 0 0 16px rgba(121,73,242,0.55);
+    text-shadow: 0 0 14px rgba(255,255,255,0.18);
 }}
 .nyx-sidebar-rev {{
     font-family: '{FONT_MONO}', monospace;
@@ -705,7 +704,7 @@ window, .nyx-bg {{
     background-color: {GLASS_DARK};
     color: {WHITE_PURE};
     box-shadow: inset 3px 0 0 0 {NYXUS_GOLD},
-                0 0 18px rgba(121,73,242,0.10);
+                0 0 18px rgba(212,184,122,0.10);
 }}
 .nyx-section-glyph {{
     font-family: 'Symbols Nerd Font', 'Symbols Nerd Font Mono', monospace;
@@ -739,7 +738,7 @@ window, .nyx-bg {{
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: {RADIUS_CARD}px;
     box-shadow: 0 24px 64px rgba(0,0,0,0.7),
-                0 0 0 1px rgba(121,73,242,0.08);
+                0 0 0 1px rgba(212,184,122,0.08);
     padding: 8px;
 }}
 .nyx-palette-entry {{
@@ -757,7 +756,7 @@ window, .nyx-bg {{
 .nyx-palette-row:hover,
 .nyx-palette-row.selected,
 .nyx-palette-row:selected {{
-    background-color: rgba(121,73,242,0.10);
+    background-color: rgba(212,184,122,0.10);
     color: {WHITE_PURE};
 }}
 .nyx-palette-hint {{
@@ -1123,25 +1122,6 @@ class SectionPage(Adw.Bin):
     def toast(self, msg: str) -> None:
         self.win.toast(msg)
 
-    def launch_app(self, cmd: str, friendly: str = "") -> None:
-        """Launch an external app / helper. If the target binary is not
-        installed, toast a clear message instead of failing silently —
-        this is what keeps 'Open …' launcher rows from ever becoming
-        dead buttons. Wrapper tokens (pkexec/sudo/python3/…) are skipped
-        so the real target is what gets probed."""
-        tok = ""
-        for t in (cmd or "").split():
-            if t in ("pkexec", "sudo", "env", "python3", "python",
-                     "bash", "sh", "exec", "setsid", "nohup"):
-                continue
-            tok = t
-            break
-        if tok and not have(tok):
-            self.toast(f"{friendly or tok} is not installed")
-            log.info("launch_app: %s unavailable (%s)", tok, cmd)
-            return
-        fire_and_forget(cmd)
-
     def schedule_refresh(self, interval_ms: int, fn: Callable[[], bool]) -> None:
         """Live data: re-poll while page is visible."""
         if self._refresh_source is not None:
@@ -1185,8 +1165,7 @@ def action_row(title: str, subtitle: str, button_label: str,
                css: str = "nyx-pill") -> Adw.ActionRow:
     row = Adw.ActionRow(title=title, subtitle=subtitle)
     btn = Gtk.Button(label=button_label)
-    if css:  # empty string → no class (avoids GTK css_class assertion)
-        btn.add_css_class(css)
+    btn.add_css_class(css)
     btn.set_valign(Gtk.Align.CENTER)
     btn.connect("clicked", lambda _b: on_click())
     row.add_suffix(btn)
@@ -1198,15 +1177,6 @@ def empty_row(title: str, subtitle: str = "") -> Adw.ActionRow:
     row = Adw.ActionRow(title=title, subtitle=subtitle)
     row.add_css_class("nyx-empty-row")
     return row
-
-
-def empty_group(title: str, subtitle: str = "") -> Adw.PreferencesGroup:
-    """A single-row informational group for graceful 'nothing here'
-    states (missing backend, no devices, no apps). Wrapped in its own
-    PreferencesGroup so callers can hand it straight to add_group()."""
-    grp = Adw.PreferencesGroup()
-    grp.add(empty_row(title, subtitle))
-    return grp
 
 
 def debounced(scale: Gtk.Scale,
@@ -1948,7 +1918,7 @@ class SoundPage(SectionPage):
         self.add_group(tools)
         if have("pavucontrol"):
             tools.add(action_row("Open pavucontrol",
-                                 "Per-application mixer &amp; routing",
+                                 "Per-application mixer & routing",
                                  "Launch",
                                  lambda: fire_and_forget("pavucontrol")))
         if have("easyeffects"):
@@ -3644,10 +3614,9 @@ class KeyboardPage(SectionPage):
         self.add_group(ext)
         ext.add(action_row(
             "Open keyboard cheatsheet",
-            "Full list of system &amp; Hyprland shortcuts (overlay)",
+            "Full list of system & Hyprland shortcuts",
             "Open",
-            lambda: self.launch_app(
-                "eww open --toggle cheatsheet", "Cheatsheet overlay")))
+            lambda: fire_and_forget("nyxus-cheatsheet")))
 
         # ── Real, parsed shortcut table from hyprland.conf ──
         # Reads ~/.config/hypr/hyprland.conf, surfaces every NYXUS app
@@ -3967,7 +3936,7 @@ class MousePage(SectionPage):
         # ── Touchpad gestures (libinput-gestures) ────────────────────
         gst_grp = Adw.PreferencesGroup(
             title="Touchpad gestures",
-            description="3- &amp; 4-finger swipes powered by "
+            description="3- & 4-finger swipes powered by "
                         "libinput-gestures (user systemd unit)")
         self.add_group(gst_grp)
         if not have("libinput-gestures"):
@@ -5499,7 +5468,7 @@ class UpdatesPage(SectionPage):
             "Graphical update center (repos + AUR + flatpak), "
             "keybind Super + Ctrl + U",
             "Open",
-            lambda: self.launch_app("nyxus-updater", "NYXUS Updater"),
+            lambda: fire_and_forget("nyxus-updater"),
             css="nyx-pill-ok"))
         tools.add(action_row(
             "Run full system upgrade",
@@ -5510,7 +5479,7 @@ class UpdatesPage(SectionPage):
             if have(helper):
                 tools.add(action_row(
                     f"AUR upgrade ({helper})",
-                    f"{helper} -Syu — includes AUR &amp; repos",
+                    f"{helper} -Syu — includes AUR & repos",
                     "Run",
                     lambda h=helper:
                         open_terminal(f"{h} -Syu", self.win)))
@@ -6328,7 +6297,7 @@ class AppPermissionsPage(SectionPage):
             title="Sandboxed apps",
             description="Per-app permissions for installed Flatpaks. "
                         "Toggles below write to the user override store "
-                        "(~/.local/share/flatpak/overrides/&lt;app&gt;).")
+                        "(~/.local/share/flatpak/overrides/<app>).")
         self.add_group(head)
         rc, out, _ = sh(["flatpak", "list", "--app",
                          "--columns=application,name"], timeout=5)
@@ -10067,7 +10036,7 @@ class BackupPage(SectionPage):
             "Open NYXUS Backup",
             "Create, restore and delete snapshots with the full UI",
             "Open",
-            lambda: self.launch_app("nyxus-backup", "NYXUS Backup"),
+            lambda: fire_and_forget("nyxus-backup"),
             css="nyx-pill-ok"))
         tools.add(action_row(
             "Create snapshot now",
@@ -10213,7 +10182,7 @@ class SyncPage(SectionPage):
         # Connection — key is `url` (matches nyxus_account.py CLI/UI)
         conn = Adw.PreferencesGroup(
             title="Connection",
-            description="Sync server endpoint &amp; access token (chmod 600)")
+            description="Sync server endpoint & access token (chmod 600)")
         self.add_group(conn)
         if cfg_err:
             conn.add(empty_row("Could not read account.json", cfg_err))
@@ -10327,13 +10296,13 @@ class DropPage(SectionPage):
         # Tools
         tools = Adw.PreferencesGroup(
             title="Tools",
-            description="Send files &amp; text · keybind Super + Ctrl + D")
+            description="Send files & text · keybind Super + Ctrl + D")
         self.add_group(tools)
         tools.add(action_row(
             "Open NYXUS Drop",
-            "Send files &amp; text to paired devices from the full UI",
+            "Send files & text to paired devices from the full UI",
             "Open",
-            lambda: self.launch_app("nyxus-drop", "NYXUS Drop"),
+            lambda: fire_and_forget("nyxus-drop"),
             css="nyx-pill-ok"))
         tools.add(action_row(
             "Refresh devices",
@@ -10589,7 +10558,7 @@ class LanguagePage(SectionPage):
         # ── Picker ─────────────────────────────────────────────
         pick = Adw.PreferencesGroup(
             title="Display language",
-            description="Applied at next sign-in. Sign out &amp; back in "
+            description="Applied at next sign-in. Sign out & back in "
                         "to see translated UI everywhere.")
         self.add_group(pick)
 
@@ -10645,7 +10614,7 @@ class LanguagePage(SectionPage):
         self.add_group(sysg)
         sysg.add(action_row(
             "Apply current pick to /etc/locale.conf",
-            "LANG=&lt;lang&gt;.UTF-8 (one line)",
+            "LANG=<lang>.UTF-8 (one line)",
             "Apply",
             # Read self._selected_lang at CLICK time, not build time,
             # so the user's freshly-picked combo value is what's
@@ -12518,9 +12487,9 @@ class ScreenRecorderPage(SectionPage):
             "Start recording now",
             "Uses your defaults above",
             "Start",
-            lambda: self.launch_app(
+            lambda: fire_and_forget(
                 "nyxus-record start" if have("nyxus-record")
-                else "wf-recorder", "Screen recorder")))
+                else "wf-recorder")))
         tools.add(action_row(
             "Stop recording",
             "Send SIGINT to active wf-recorder",
@@ -12879,7 +12848,7 @@ class WelcomePage(SectionPage):
         skip = prefs.get("skip_pages", [])
         for pid, lbl in (
                 ("profile",   "Skip profile page (display name + avatar)"),
-                ("theme",     "Skip theme &amp; accent page"),
+                ("theme",     "Skip theme & accent page"),
                 ("wallpaper", "Skip wallpaper page"),
                 ("dock",      "Skip dock setup page"),
                 ("apps",      "Skip recommended apps page"),

@@ -1,58 +1,24 @@
 {
-  "name": "nyxus-alien-dude",
-  "note": "Full-body Nyxus alien street dude. Key poses keyed from assets/source/*.png by gen_companion_sprites.py; the engine adds tweening/squash/lean/shadow/cross-fade for rigged motion.",
-  "sprite_width": 206,
-  "sprite_height": 238,
-  "baseline_y": 228,
-  "default_facing": "right",
+  "name": "nyxus-alien-piloted",
+  "note": "Piloted-saucer companion cut from nyxus-wall-alien-hero.png (the wallpaper peace-sign alien). chill=bust, peace=bust+hand; the engine drives wave/cheer/alert as motion/tint variations.",
+  "sprite_width": 342,
+  "sprite_height": 318,
+  "baseline_y": 314,
+  "default_facing": "left",
   "states": {
+    "chill": {
+      "frames": [
+        "chill"
+      ],
+      "fps": 1,
+      "loop": true
+    },
     "idle": {
       "frames": [
-        "idle"
-      ],
-      "fps": 2,
-      "loop": true
-    },
-    "walk": {
-      "frames": [
-        "walk_a",
-        "idle",
-        "walk_b",
-        "idle"
-      ],
-      "fps": 6,
-      "loop": true
-    },
-    "run": {
-      "frames": [
-        "run",
-        "walk_a",
-        "run",
-        "walk_b"
-      ],
-      "fps": 11,
-      "loop": true
-    },
-    "jump": {
-      "frames": [
-        "jump"
+        "chill"
       ],
       "fps": 1,
-      "loop": false
-    },
-    "crouch": {
-      "frames": [
-        "crouch"
-      ],
-      "fps": 1,
-      "loop": false
-    },
-    "wave": {
-      "frames": [
-        "wave"
-      ],
-      "fps": 1,
-      "loop": false
+      "loop": true
     },
     "peace": {
       "frames": [
@@ -61,28 +27,14 @@
       "fps": 1,
       "loop": false
     },
-    "laugh": {
+    "wave": {
       "frames": [
-        "laugh"
+        "peace"
       ],
       "fps": 1,
       "loop": false
     },
-    "sit": {
-      "frames": [
-        "sit"
-      ],
-      "fps": 1,
-      "loop": true
-    },
-    "sleep": {
-      "frames": [
-        "sit"
-      ],
-      "fps": 1,
-      "loop": true
-    },
-    "notify": {
+    "cheer": {
       "frames": [
         "peace"
       ],
@@ -91,7 +43,14 @@
     },
     "alert": {
       "frames": [
-        "jump"
+        "peace"
+      ],
+      "fps": 1,
+      "loop": false
+    },
+    "notify": {
+      "frames": [
+        "peace"
       ],
       "fps": 1,
       "loop": false

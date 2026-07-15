@@ -59,8 +59,8 @@ except Exception:
 # lockstep by nyxus-apply-accent; this file is a registered consumer.
 PALETTE = {
     "mono":   "#e8edf5",
-    "pink":   "#7949f2",
-    "cyan":   "#ff2667",
+    "pink":   "#794dff",
+    "cyan":   "#ff266c",
     "purple": "#26ffb7",
     "gold":   "#ffb026",
     "indigo": "#26ffb7",
@@ -74,7 +74,7 @@ PALETTE = {
     "void":   "#0f1420",
 }
 
-NEONS = ["#7949f2", "#ff2667", "#26ffb7", "#ffb026", "#6dffcf",
+NEONS = ["#794dff", "#ff266c", "#26ffb7", "#ffb026", "#6dffcf",
          "#ff7ae5", "#66efff", "#c084fc", "#ffce85"]
 
 
