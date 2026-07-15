@@ -1383,16 +1383,20 @@ window, window.background, decoration {
 }
 
 .hub-panel {
-  min-width: 1180px;
-  padding: 26px 34px 28px;
+  /* Fill the viewport — floating centered card left a dead gap at the
+     bottom once the bars were hidden by overlay-shield. */
+  min-width: 100%;
+  min-height: 100%;
+  padding: 22px 28px 20px;
   border-radius: 16px;
   border: 1px solid transparent;
-  background-color: rgba(7, 3, 15, 0.24);
+  background-color: rgba(7, 3, 15, 0.55);
+  background-image: linear-gradient(180deg, rgba(9, 4, 20, 0.62), rgba(3, 1, 9, 0.48));
   background-blend-mode: normal;
   background-size: cover;
   background-origin: border-box;
   background-clip: border-box;
-  box-shadow: 0 0 0 1px rgba(121, 73, 242, 0.14), 0 0 56px rgba(121, 73, 242, 0.24), 0 32px 96px rgba(0, 0, 0, 0.86), inset 0 0 72px rgba(121, 73, 242, 0.07);
+  box-shadow: 0 0 0 1px rgba(121, 73, 242, 0.16), 0 0 56px rgba(121, 73, 242, 0.22), 0 24px 72px rgba(0, 0, 0, 0.78), inset 0 0 72px rgba(121, 73, 242, 0.06);
 }
 
 .hub-title {
@@ -1657,20 +1661,21 @@ window, window.background, decoration {
 
 .hub-body {
   padding-top: 4px;
+  min-height: 0; /* allow vexpand children to shrink into scroll */
 }
 
-/* left = live controls (grows), right = fixed app column */
+/* left = live controls, right = app column that fills remaining height */
 .hub-col-left {
-  min-width: 640px;
+  min-width: 720px;
   padding-right: 6px;
 }
 
 .hub-col-right {
-  min-width: 400px;
+  min-width: 420px;
   padding: 14px 16px;
   border-radius: 14px;
-  background-color: rgba(6, 3, 14, 0.34);
-  border: 1px solid rgba(121, 73, 242, 0.2);
+  background-color: rgba(6, 3, 14, 0.42);
+  border: 1px solid rgba(121, 73, 242, 0.22);
   box-shadow: inset 0 0 34px rgba(121, 73, 242, 0.05);
 }
 
@@ -1748,9 +1753,9 @@ window, window.background, decoration {
   box-shadow: 0 0 12px rgba(121, 73, 242, 0.3);
 }
 
-/* scrollable app list */
+/* scrollable app list — fills the right column */
 .hub-apps-scroll {
-  min-height: 520px;
+  min-height: 640px;
 }
 
 .hub-apps-list {

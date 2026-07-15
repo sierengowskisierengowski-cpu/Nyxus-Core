@@ -25,7 +25,13 @@ runbg() { setsid "$@" >/dev/null 2>&1 & }
 
 # Every branch closes the Hub first so the launched surface/app is not hidden
 # behind the fullscreen Hub overlay (the classic "dead button" trap).
-close_hub() { eww close nyxus-hub >/dev/null 2>&1 || true; }
+close_hub() {
+  if command -v nyxus-hub-close >/dev/null 2>&1; then
+    nyxus-hub-close >/dev/null 2>&1 || true
+  else
+    eww close nyxus-hub >/dev/null 2>&1 || true
+  fi
+}
 flyout()    { close_hub; eww open --toggle "$1" >/dev/null 2>&1; }
 
 # ── 1. global action / settings keywords ────────────────────────────────────
@@ -38,12 +44,19 @@ case "$q" in
   update*|upgrade*)                flyout updates;            exit 0;;
   quicksettings|quick*|qs)         flyout quicksettings;      exit 0;;
   bright*|backlight|display*)      flyout brightness-flyout;  exit 0;;
-  keys|cheat*|hotkey*|shortcut*)   flyout hotkey-cheatsheet;  exit 0;;
-  deepcore|deep*|monitor)          flyout deepcore;           exit 0;;
+  keys|cheat*|hotkey*|shortcut*)   flyout cheatsheet;         exit 0;;
+  deepcore|deep*|monitor|sysmon|btop) close_hub; runbg kitty -e btop; exit 0;;
   lock)                            close_hub; runbg hyprlock;              exit 0;;
-  power|shutdown|reboot|logout)    close_hub; eww open --toggle powermenu; exit 0;;
+  power|shutdown|reboot|logout|sleep|suspend)
+                                   close_hub; eww open --toggle powermenu; exit 0;;
   dashboard|dash|home)             close_hub; hyprctl dispatch workspace name:0; exit 0;;
   mission*)                        close_hub; nyxus-mission toggle;        exit 0;;
+  files|thunar|fm)                 close_hub; runbg thunar;                exit 0;;
+  terminal|term|kitty|shell)       close_hub; runbg kitty || runbg alacritty; exit 0;;
+  browser|firefox|web)             close_hub; runbg firefox;               exit 0;;
+  wallpaper|livewall|living)       close_hub; nyxus-live-wallpaper toggle; exit 0;;
+  store|shop)                      close_hub; runbg nyxus-store;           exit 0;;
+  screenshot|capture|snip)         close_hub; runbg python3 ~/.nyxus/nyxus_screenshot.py region; exit 0;;
 esac
 case "$q" in
   settings*|setting*|pref*|preferences*|config*|options*)
