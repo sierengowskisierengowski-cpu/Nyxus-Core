@@ -161,10 +161,14 @@ if [[ -d "${AIROOT}/usr/share/applications" ]]; then
   fi
 
   # NYXUS desktop-entry source parity (source-of-truth lives in nyxus-scripts/)
+  # Session-selector entries (DesktopNames=) are installed to
+  # usr/share/wayland-sessions/ by build-iso.sh, not usr/share/applications/
+  # (desktop-file-validate rejects DesktopNames on a Type=Application entry
+  # outside a session directory), so they are excluded from this parity set.
   SRC_DESK="${NS}/desktop-entries"
   ISO_DESK="${AIROOT}/usr/share/applications"
   if [[ -d "${SRC_DESK}" ]]; then
-    src_list="$(find "${SRC_DESK}" -maxdepth 1 -name 'nyxus-*.desktop' -printf '%f\n' | sort)"
+    src_list="$(grep -EL '^DesktopNames=' "${SRC_DESK}"/nyxus-*.desktop 2>/dev/null | xargs -n1 basename | sort)"
     iso_list="$(find "${ISO_DESK}" -maxdepth 1 -name 'nyxus-*.desktop' -printf '%f\n' | sort)"
     if [[ "${src_list}" != "${iso_list}" ]]; then
       fail "desktop parity mismatch between nyxus-scripts/desktop-entries and airootfs/usr/share/applications"
@@ -445,7 +449,11 @@ hd "13f. NYXUS workspaces"
 [[ -f "${AIROOT}/etc/skel/.config/systemd/user/nyxus-ws-wallpaperd.service" ]] \
   && ok "ws wallpaper systemd unit present" \
   || fail "ws wallpaper systemd unit missing"
-WS_NAMES=$(grep -c '^workspace = ' "${AIROOT}/etc/skel/.config/hypr/hyprland.conf")
+# Named workspaces are declared either inline in hyprland.conf or in a
+# sourced conf.d/*.conf shard (e.g. nyxus-stations.conf) — count both.
+WS_NAMES=$(cat "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+               "${AIROOT}/etc/skel/.config/hypr/conf.d"/*.conf 2>/dev/null \
+           | grep -c '^workspace = ')
 if (( WS_NAMES >= 10 )); then
   ok "${WS_NAMES} named workspaces declared"
 else
