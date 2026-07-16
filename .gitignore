@@ -55,3 +55,11 @@ __pycache__/
 *.py.archive
 *.legacy.py.archive
 artifacts/api-server/nyxus-scripts/eww/*.bak*
+
+# NYXUS release hygiene — never ship these
+artifacts/_tmp/
+*.bak
+*.pre-deploy-*.bak
+nyxus-*-backup-*/
+iso-builder/out/
+iso-builder/work/

@@ -1,1 +1,2 @@
-/home/cosmic/.nyxus/nyxus_stickies.py
+#!/usr/bin/env bash
+exec python3 "${HOME}/.nyxus/nyxus_stickies.py" "$@"

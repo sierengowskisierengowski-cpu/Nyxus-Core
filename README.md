@@ -30,6 +30,31 @@ See [`ROADMAP.md`](ROADMAP.md) for the NyXxOS v2 phased plan.
 
 ---
 
+## Install (terminal)
+
+Deploy the NYXUS desktop onto an existing Arch + Hyprland system straight from the terminal:
+
+```bash
+git clone https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git
+cd Nyxus-Core && ./install.sh
+```
+
+Or the one-liner (once you trust the repo — read scripts you pipe to bash):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sierengowskisierengowski-cpu/Nyxus-Core/main/install.sh | bash -s -- --check   # preview
+```
+
+`install.sh` is the user-level deployer: it places the exact live-verified
+configs onto `~/.config/eww`, `~/.config/hypr`, `~/.local/bin`, `~/.nyxus`,
+`~/.config/nyxus` (matrix screensaver) and `~/.local/share/applications`,
+compiles the theme CSS, and reloads a running session. It is idempotent —
+re-running it converges to zero changes. Flags: `--check` (preview),
+`--no-reload`, `--system` (full package/greeter/kernel install via
+`scripts/nyxus-install.sh`, needs sudo).
+
+---
+
 ## System Overview
 
 Nyxus-Core contains the end-to-end platform implementation:
@@ -145,7 +170,7 @@ This section shows the current tracked code size for the NYXUS build in this rep
 ### Measurement method
 
 - Count source lines from tracked code files (`.py`, `.ts`, `.tsx`, `.js`, `.jsx`, `.sh`, `.yuck`, `.scss`, `.css`, `.qml`).
-- Exclude generated/output/vendor paths (for example: `node_modules/`, `dist/`, `build/`, `coverage/`, `attached_assets/`, `artifacts/_tmp/`, `iso-builder/out/`).
+- Exclude generated/output/vendor paths (for example: `node_modules/`, `dist/`, `build/`, `coverage/`, `attached_assets/`, `iso-builder/out/`).
 - Recalculate this snapshot whenever major build content changes.
 
 ---
