@@ -48,7 +48,19 @@ apply() {
 
 case "${1:-status}" in
   status) current ;;
-  restore) apply "$(current)" ;;
+  restore)
+    # NIGHT is a transient comfort toggle (Hub "Night" tile / quick-settings
+    # night-light), NOT a persistent look. Restoring it at session start gave
+    # every login an orange/yellow haze (rev 2026-07-15 regression). Logins
+    # always start clean; artistic filters (ember/vignette/crt/noir) still
+    # persist by design.
+    saved="$(current)"
+    if [[ "${saved}" == "night" ]]; then
+      echo "off" > "${STATE}"
+      saved="off"
+    fi
+    apply "${saved}"
+    ;;
   next)
     cur="$(current)"; idx=0
     for i in "${!CYCLE[@]}"; do [[ "${CYCLE[$i]}" == "${cur}" ]] && idx=$i; done

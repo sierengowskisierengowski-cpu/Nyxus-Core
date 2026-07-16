@@ -272,3 +272,28 @@ Recommended login/lock surface tokens:
    step 3).
 7. Accent change? Edit `accent.json`, run `nyxus-apply-accent` — never hand-edit
    generated accent files.
+
+---
+
+## 11. Shipped signature components (current reality · rev 2026-07-15)
+
+The DARK MIRROR tokens above drive these live surfaces. All are shipped and
+verified; none are placeholders.
+
+| Component | Where | Notes |
+|-----------|-------|-------|
+| **The Hub** | `eww.yuck` `nyxus_hub_layout`; `nyxus-hub-launch` / `nyxus-hub-close` / `nyxus-hub-apps` / `nyxus-hub-search` | Redesigned full-screen launcher/command surface: NYXUS/ALL app toggle, search, now-playing, and a STATIONS footer switcher (OP..ED, from `stations.json`) + power actions. Closed by `nyxus-hub-close` and by the global `Escape` / `Super+Shift+Escape` binds. |
+| **Station rail** | `eww.yuck` `workspaces_rail` / `station_pill` | Left rail = HOME `◈` + station pills OP/FG/GH/PL/WV/CR/MS/SC/BL/ED, hue-tinted per station, driven by `~/.config/nyxus/stations.json`. Matches Hyprland workspace identity 1-10 (see NYXUS_STATUS station reconciliation). |
+| **Saucer center clock + music** | `eww.yuck` `.saucer-*` classes; `nyxus-nowplaying` | UFO-saucer center clock on `bar-bottom`; flips to a source-agnostic MPRIS now-playing readout when any player is active. |
+| **NYXUS PULSE** | `nyxus-pulsed` / `nyxus-beat*`; `~/.config/nyxus/pulse-cava.conf`, `cava.conf` | Cava-driven audio-reactive beat feed used by bar FX / visualizers. |
+| **HOME dashboard** | `~/.nyxus/nyxus-home/` (GTK4, workspace name:0) | Command deck: clock, weather, SYSTEM CORE rings + per-core bars, JETT AI EDR, HONEYPOT GRID, MUSIC DECK, NETWORK, Fans/Storage/Calendar/Notepad/Processes/Notifications/Password. Builds its own `CosmicSceneArea` backdrop — it pre-arms the `nyxus_chrome` guard so the shared present-hook doesn't re-wrap (and blank) its overlay. |
+| **Matrix screensaver** | `~/.nyxus/nyxus_matrix_saver.py`; `nyxus-screensaver` | Idle/lock-adjacent matrix-rain saver in the neon palette. |
+| **hyprlock (UFO art)** | `~/.config/hypr/hyprlock.conf` + `hyprlock-accent.conf`; `assets/nyxus-hyprlock-ufo.png` | Lock screen over the UFO art + fullscreen starfield; consumes the generated accent tokens (§8). |
+| **Branded splash** | `eww/splash.yuck` + `.splash-*` in `eww.scss.source`; `assets/nyxus-splash-brand.png` | Session-start curtain = full-bleed graffiti "NYXUS HYPRLAND" brand art with top/bottom scrim for legible boot text. Pre-scaled to the panel resolution because the compile step strips `background-size`. |
+| **Brand art set** | `~/.config/eww/assets/nyxus-brand-*.png` | `nyxus`, `sierengowski`, `hyprland`, `nyxus-hyprland` graffiti wordmarks on nebula brick/wet-pavement scenes — the source for the splash backdrop and available for hero/branding surfaces. |
+
+### Overlay safety (LOCKED)
+
+Every EWW overlay/flyout/fullscreen window is `:focusable false`. This is a
+**hard rule** — a focusable overlay previously created a keyboard trap that
+forced reboots. Never set any overlay back to `:focusable true`.

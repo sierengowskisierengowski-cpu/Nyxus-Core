@@ -74,6 +74,30 @@ def collect():
     return apps
 
 
+def dedupe_by_name(apps):
+    """Collapse duplicate Name entries (e.g. nyxus-store + io.nyxus.store).
+
+    Prefer the shorter / nyxus-* desktop id so gtk-launch hits the common
+    wrapper; first occurrence wins when scores tie.
+    """
+    best = {}
+    for app in apps:
+        key = app["name"].casefold()
+        score = 0
+        aid = app["id"]
+        if aid.startswith("nyxus-"):
+            score += 2
+        elif aid.startswith("io.nyxus."):
+            score += 1
+        score -= len(aid) * 0.001
+        prev = best.get(key)
+        if prev is None or score > prev[0]:
+            best[key] = (score, app)
+    out = [pair[1] for pair in best.values()]
+    out.sort(key=lambda a: a["name"].lower())
+    return out
+
+
 def main(argv):
     apps = collect()
     if "--nyxus" in argv:
@@ -86,6 +110,7 @@ def main(argv):
                     if q in a["name"].lower() or q in a["exec"].lower()]
         except IndexError:
             pass
+    apps = dedupe_by_name(apps)
     json.dump(apps, sys.stdout, separators=(",", ":"))
     sys.stdout.write("\n")
 

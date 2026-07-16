@@ -15,12 +15,16 @@
        :space-evenly false
        :hexpand true
        :vexpand true
+    ;; top-left session status over the top scrim
+    (box :class "splash-topbar" :halign "start"
+      (label :class "splash-status" :text "◈ NYXUS · HYPRLAND SESSION"))
     (box :vexpand true)
-    (label :class "splash-glyph" :text "◤ X ◥")
-    (label :class "splash-word"  :text "NYXUS")
-    (label :class "splash-tag"   :text "Obsidian Prism · Iridescent Void")
-    (box :vexpand true)
-    (label :class "splash-foot"  :text "© 2026 JOSEPH SIERENGOWSKI")))
+    ;; bottom scrim: tagline + boot line + copyright (the graffiti brand
+    ;; art already carries the NYXUS HYPRLAND wordmark, so no big label)
+    (box :class "splash-footer" :orientation "v" :space-evenly false :hexpand true :halign "fill"
+      (label :class "splash-tag"  :halign "center" :wrap false :show-truncated false :text "OBSIDIAN PRISM · IRIDESCENT VOID")
+      (label :class "splash-boot" :halign "center" :text "INITIALIZING SESSION …")
+      (label :class "splash-foot" :halign "center" :text "© 2026 JOSEPH SIERENGOWSKI"))))
 
 (defwindow nyxus-splash
   :monitor 0

@@ -18,6 +18,7 @@ npx --yes sass --no-charset --load-path=. "$SRC" eww.css || {
 # `property;` form, so it never actually removed anything).
 sed -i -E \
   -e '/^[[:space:]]*(justify-content|justify-items|justify-self|align-items|align-content|align-self|flex|flex-direction|flex-wrap|flex-flow|flex-grow|flex-shrink|flex-basis|order|gap|row-gap|column-gap|text-align|white-space|line-height|vertical-align|object-fit|overflow|overflow-x|overflow-y|position|top|right|bottom|left|z-index|float|clear|cursor|content|display)[[:space:]]*:[^;}]*;/d' \
+  -e '/^[[:space:]]*(background-blend-mode|background-clip|background-origin|background-size|filter|backdrop-filter|mix-blend-mode|isolation|mask|mask-image|clip-path|caret-color|appearance|user-select)[[:space:]]*:[^;}]*;/d' \
   -e '/^[[:space:]]*margin:[[:space:]]*0[[:space:]]+auto[[:space:]]*;/d' \
   -e '/^[[:space:]]*(width|height|max-width|max-height):[^;}]*;/d' \
   eww.css

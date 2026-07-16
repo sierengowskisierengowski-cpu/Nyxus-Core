@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# nyxus-hub-open — map The Hub as a TRUE fullscreen overlay.
+#
+# WHY close the bars first: the Hub is an eww overlay-layer window sized
+# 100%x100%. If it maps while the four bars are up, gtk-layer-shell
+# subtracts the bars' exclusive zones from the usable area, so the Hub is
+# laid out short — a dead strip at the bottom where the live wallpaper and
+# dock bleed through. Closing the bars releases the zones first.
+#
+# rev 2026-07-15 r2: STRAND-PROOF. Every eww call is bounded with `timeout`
+# and if the Hub fails to map after the bars were closed, the bars are
+# restored immediately (nyxus-hub-close) — the user can never be left on a
+# bare wallpaper with no bars and no hub. Wedged-daemon case is delegated
+# to nyxus-hub-close, which hard-restarts eww.
+set -u
+export PATH="${HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+runtime="${XDG_RUNTIME_DIR:-/tmp}"
+lock="${runtime}/nyxus-overlay-shield.d"
+
+command -v eww >/dev/null 2>&1 || exit 0
+
+# Bounded eww call — never hangs on a wedged daemon.
+ew() { timeout -k 2 "$1" eww --no-daemonize "${@:2}" 2>/dev/null; }
+
+# Wedged daemon? Do not start closing bars we cannot reopen — recover first.
+if ! ew 3 ping >/dev/null 2>&1; then
+  exec nyxus-hub-close
+fi
+
+# Toggle off if already open.
+if ew 4 active-windows | grep -q '^nyxus-hub:'; then
+  exec nyxus-hub-close
+fi
+
+# Stash the currently-open bars (only if not already stashed) so
+# nyxus-hub-close / the overlay-shield watcher can restore them.
+mkdir -p "$lock"
+if [[ ! -f "$lock/bars" ]]; then
+  bars=$(ew 4 active-windows | awk -F': ' '/^bar-/{print $1}')
+  [[ -n "$bars" ]] && printf '%s\n' $bars > "$lock/bars"
+fi
+
+# Close the bars so the exclusive zones are released before the Hub maps.
+for b in bar-top bar-bottom bar-left bar-right; do
+  ew 4 close "$b" || true
+done
+
+# Small settle so the compositor drops the exclusive zones, then map full.
+sleep 0.08
+if ! ew 8 open nyxus-hub; then
+  # Hub failed to map — restore the bars NOW so the user is never stranded.
+  echo "nyxus-hub-open: hub failed to open — restoring bars" >&2
+  exec nyxus-hub-close
+fi
+exit 0

@@ -1,13 +1,27 @@
-# NYXUS Status — Legend Build Safepoint
+# NYXUS Status — Daily-Driver Readiness Pass
 
-**Safepoint date/time:** 2026-07-14 09:07 EDT  
-**Branch:** `cursor/restore-last-night-state-15e2`  
-**Latest commit:** at tag `nyxus-good-state-2026-07-14-legend` — run `git log -1 --oneline`  
-**Safepoint tag:** `nyxus-good-state-2026-07-14-legend`
+**Updated:** 2026-07-15 · daily-driver readiness pass (desktop / eww / hypr)
+**Prior safepoint:** `nyxus-good-state-2026-07-14-legend` (Legend build, below)
 
 ---
 
-## COMPLETED
+## 2026-07-15 — DAILY-DRIVER READINESS PASS
+
+Desktop-scope readiness work (eww/hypr configs, HOME dashboard, splash, docs,
+repo hygiene). Session kept `pgrep -c -x eww` == 1 throughout; no
+reboot/logout/lock.
+
+| Area | What shipped |
+|------|--------------|
+| **Station naming reconciliation** | Ended the split-brain: `nyxus-hyprland-general.conf` no longer defines `WEB/CODE/TERM/FILES/MEDIA/COMMS`. Workspace 1-10 identity now has ONE source — `conf.d/nyxus-stations.conf` (sourced from `hyprland.conf`) — matching `~/.config/nyxus/stations.json` and the EWW left rail: **OPS · FORGE · GHOST · PULSE · WAVE · CORE · MESH · SCRIBE · BLAST · EDGE**. Verified via `hyprctl workspaces`. |
+| **Station auto-launch** | `on-created-empty` wired for a small "ready to work" login set — OPS→`alacritty`, PULSE→`firefox`, CORE→`thunar`. Every other station documents its signature app on a commented line (opt-in). Station 10 (EDGE) reserved as the landing pad for the forthcoming NYXUS master hub (Bifrost) — launch left commented pending confirmation. |
+| **HOME dashboard render fix** | Workspace-0 `nyxus-home` GTK4 dashboard was rendering **blank** — the auto-injected `nyxus_chrome` present-hook called `overlay.add_overlay(cur)` on the window's own `Gtk.Overlay` while it still had a parent ("already has parent"), orphaning the whole card grid. Pre-arming the chrome re-entrancy guard in `nyxus-home/main.py` skips the redundant cosmic wrap (HOME builds its own `CosmicSceneArea`). Full deck now renders: giant clock, weather, SYSTEM CORE rings + per-core bars, JETT AI EDR, HONEYPOT GRID, MUSIC DECK, NETWORK, Fans/Storage/Calendar/Notepad/Processes/Notifications/Password. |
+| **Branded urban splash** | Session-start splash upgraded from the plain starfield/text curtain to the full-bleed graffiti brand art (`assets/nyxus-splash-brand.png`, pre-scaled 1920x1080 so it covers despite the compile step stripping `background-size`). Top/bottom scrim keeps the boot text legible. GTK-valid, no grey fallback. |
+| **Stale-file cleanup** | Removed Tokyo-Night rofi leftover `~/.config/rofi/nexus.rasi` (nothing sourced it) and dangling symlink `~/.local/bin/pmos-james`. |
+
+---
+
+## COMPLETED (Legend build · 2026-07-14)
 
 Work landed across agents in this session (newest first):
 
@@ -64,11 +78,31 @@ Agents may still be running or work is partially landed:
 
 ## KNOWN ISSUES / USER ACTION NEEDED
 
-1. **Log out / log back in** — Verify EWW bars autostart and full session stack after restore.
-2. **Greeter flash fix** — Run `sudo scripts/nyxus-setup-greetd.sh` then reboot for greetd/regreet login flash fix.
-3. **Broken cache symlink** — `sudo rm /opt/nyxus-cache` (broken symlink on this host).
-4. **Live vs repo drift** — `~/.config/hypr/hyprland.conf` on disk may lag repo (repo has Phase 3 keybind consolidation); run restore to sync.
-5. **Companion autostart** — Wired in repo `hyprland.conf`; log out/in to verify spawn after restore.
+Flagged by the 2026-07-15 readiness pass (each needs sudo / a reboot / a
+package install / a user decision — intentionally NOT auto-applied):
+
+1. **Root-owned cache symlink** — `sudo rm /opt/nyxus-cache` (root-owned broken
+   symlink → `…/GowskiNet-Vault/OS/Nyxus-Core/artifacts/api-server/dist/nyxus-scripts`;
+   needs sudo, so left for the user).
+2. **Plymouth cinematic boot splash** — `sudo scripts/nyxus-setup-plymouth.sh`
+   (needs sudo; not deployed).
+3. **greetd greeter verification** — needs a reboot to confirm the login flash
+   fix / greeter theme.
+4. **Voice control (Vosk)** — `nyxus-voice-install` needs a package + model
+   download; not installed.
+5. **Companion art redo + re-enable** — placeholder sprites only; needs an art
+   decision before re-enabling autostart.
+6. **Station master-hub launch** — station 10 (EDGE) reserved for Bifrost; the
+   `on-created-empty` line is commented pending the Bifrost build landing and a
+   confirmed launch command (currently only a shell alias, not a PATH binary).
+7. **Fuller station auto-launch** — only OPS/PULSE/CORE auto-launch at login by
+   default; uncomment the per-station lines in `conf.d/nyxus-stations.conf` to
+   opt each remaining station into launching its signature app.
+
+Recent regression-guard fixes confirmed intact this pass: all EWW overlays
+`:focusable false` (keyboard-trap fix), `nyxus-hub-close`, Escape /
+Super+Shift+Escape binds, redesigned Hub (`nyxus_hub_layout`), saucer/music
+widgets + `.saucer-*` CSS, hyprlock (UFO art), matrix screensaver, NYXUS PULSE.
 
 ---
 

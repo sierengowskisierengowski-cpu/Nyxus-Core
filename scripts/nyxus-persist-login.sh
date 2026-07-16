@@ -34,8 +34,9 @@ ts() { date '+%F %T'; }
     fi
   done
 
-  # Clear stuck overlay locks from prior session
+  # Clear stuck overlay + eww launch locks from prior session / killed agents
   rm -rf "${XDG_RUNTIME_DIR:-/tmp}/nyxus-overlay-shield.d" 2>/dev/null || true
+  rm -f "${XDG_RUNTIME_DIR:-/tmp}/nyxus-eww-launch.lock" 2>/dev/null || true
 
   # Ensure CSS exists (offline-safe compile)
   if [[ -x "${HOME}/.config/eww/scripts/compile-eww-css.sh" ]]; then
@@ -56,12 +57,29 @@ ts() { date '+%F %T'; }
     nyxus-eww-launch >>"$LOG" 2>&1 || true
   fi
 
-  # Verify; restore from GOLD if bars still broken
-  bars="$(eww active-windows 2>/dev/null | grep -cE '^bar-' || echo 0)"
+  # Robust bar count (grep -c exits 1 when 0 — never use `|| echo 0` here)
+  bars="$(eww active-windows 2>/dev/null | grep -cE '^bar-' || true)"
+  bars="${bars:-0}"
+
+  # Fallback if launch-safe failed (stale lock / hang): open bars directly
+  if [[ "$bars" -lt 4 ]]; then
+    echo "[$(ts)] bars=$bars after launch-safe — direct eww fallback"
+    if ! eww ping >/dev/null 2>&1; then
+      eww daemon >>"$LOG" 2>&1 &
+      sleep 1.5
+    fi
+    for b in bar-bottom bar-top bar-left bar-right; do
+      eww open "$b" >>"$LOG" 2>&1 || true
+    done
+    bars="$(eww active-windows 2>/dev/null | grep -cE '^bar-' || true)"
+    bars="${bars:-0}"
+  fi
+
   if [[ "$bars" -lt 4 ]] && command -v nyxus-restore-session >/dev/null 2>&1; then
     echo "[$(ts)] bars=$bars — restoring from GOLD-LATEST"
     nyxus-restore-session >>"$LOG" 2>&1 || true
   fi
 
-  echo "[$(ts)] persist-login done (bars=$(eww active-windows 2>/dev/null | grep -cE '^bar-' || echo 0))"
+  bars="$(eww active-windows 2>/dev/null | grep -cE '^bar-' || true)"
+  echo "[$(ts)] persist-login done (bars=${bars:-0})"
 } >>"$LOG" 2>&1

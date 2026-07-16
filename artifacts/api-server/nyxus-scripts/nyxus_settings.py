@@ -106,6 +106,21 @@ except Exception:
 DANGER_RED = "#ff6464"  # §8 — RESERVED for destructive only
 NYXUS_GOLD = "#d4b87a"  # warm brand accent — selection, focus rings
 
+# ── Neon HUD accents (live accent.json) ───────────────────────────────
+# Settings shipped in the monochrome DARK MIRROR palette while the rest
+# of the desktop (launcher / HOME / Hub) moved to the neon HUD language.
+# Pull the SAME live accent everyone else uses so Settings matches. All
+# selection/focus/active states below are re-pointed onto these.
+try:
+    from nyxus_palette import (  # type: ignore
+        ACCENT_PRIMARY as NEON, ACCENT_SECONDARY as NEON_2,
+        ACCENT_OK as NEON_OK,
+    )
+except Exception:
+    NEON    = "#984dff"   # purple — primary
+    NEON_2  = "#ff264c"   # red — secondary
+    NEON_OK = "#26ffb7"   # green — positive
+
 # Nerd-font glyphs (§6 — never emoji in chrome).
 GLYPHS = {
     "appearance":    "\uf53f",   # nf-mdi-palette
@@ -669,7 +684,7 @@ window, .nyx-bg {{
     font-weight: 600;
     letter-spacing: 0.4px;
     color: {WHITE_PURE};
-    text-shadow: 0 0 14px rgba(255,255,255,0.18);
+    text-shadow: 0 0 16px alpha({NEON}, 0.65);
 }}
 .nyx-sidebar-rev {{
     font-family: '{FONT_MONO}', monospace;
@@ -686,8 +701,8 @@ window, .nyx-bg {{
     padding: 6px 10px;
 }}
 .nyx-search:focus-within {{
-    border-color: {WHITE_OFF};
-    box-shadow: 0 0 18px rgba(255,255,255,0.10);
+    border-color: {NEON};
+    box-shadow: 0 0 18px alpha({NEON}, 0.35);
 }}
 .nyx-section-row {{
     padding: 10px 14px;
@@ -701,10 +716,10 @@ window, .nyx-bg {{
     color: {WHITE_OFF};
 }}
 .nyx-section-row.selected, .nyx-section-row:selected {{
-    background-color: {GLASS_DARK};
+    background-color: alpha({NEON}, 0.14);
     color: {WHITE_PURE};
-    box-shadow: inset 3px 0 0 0 {NYXUS_GOLD},
-                0 0 18px rgba(212,184,122,0.10);
+    box-shadow: inset 3px 0 0 0 {NEON},
+                0 0 18px alpha({NEON}, 0.28);
 }}
 .nyx-section-glyph {{
     font-family: 'Symbols Nerd Font', 'Symbols Nerd Font Mono', monospace;
@@ -714,7 +729,7 @@ window, .nyx-bg {{
 }}
 .nyx-section-row.selected .nyx-section-glyph,
 .nyx-section-row:selected .nyx-section-glyph {{
-    color: {NYXUS_GOLD};
+    color: {NEON};
 }}
 .nyx-search-count {{
     font-size: 11px;
@@ -735,10 +750,10 @@ window, .nyx-bg {{
 }}
 .nyx-palette-card {{
     background-color: {GLASS_DARK};
-    border: 1px solid rgba(255,255,255,0.10);
+    border: 1px solid alpha({NEON}, 0.30);
     border-radius: {RADIUS_CARD}px;
     box-shadow: 0 24px 64px rgba(0,0,0,0.7),
-                0 0 0 1px rgba(212,184,122,0.08);
+                0 0 22px alpha({NEON}, 0.20);
     padding: 8px;
 }}
 .nyx-palette-entry {{
@@ -756,7 +771,7 @@ window, .nyx-bg {{
 .nyx-palette-row:hover,
 .nyx-palette-row.selected,
 .nyx-palette-row:selected {{
-    background-color: rgba(212,184,122,0.10);
+    background-color: alpha({NEON}, 0.16);
     color: {WHITE_PURE};
 }}
 .nyx-palette-hint {{
@@ -773,7 +788,8 @@ window, .nyx-bg {{
 }}
 .nyx-page-header {{
     padding: 22px 28px 12px;
-    border-bottom: 1px solid {HAIRLINE_WHITE};
+    border-bottom: 1px solid alpha({NEON}, 0.35);
+    box-shadow: 0 1px 0 0 alpha({NEON}, 0.12);
 }}
 .nyx-page-title {{
     font-family: '{FONT_DISPLAY}', '{FONT_UI}', sans-serif;
@@ -781,7 +797,7 @@ window, .nyx-bg {{
     font-weight: 600;
     letter-spacing: 0.3px;
     color: {WHITE_PURE};
-    text-shadow: 0 0 16px rgba(255,255,255,0.16);
+    text-shadow: 0 0 18px alpha({NEON}, 0.55);
 }}
 .nyx-page-sub {{
     color: {GREY_MID};
@@ -814,8 +830,9 @@ row label.subtitle {{ color: {GREY_TERTIARY}; font-size: 12px; }}
 
 switch {{ background-color: {GLASS_DARK};
          border: 1px solid {HAIRLINE_WHITE}; }}
-switch:checked {{ background-color: {WHITE_OFF};
-                  border-color: {WHITE_PURE}; }}
+switch:checked {{ background-color: {NEON};
+                  border-color: {NEON};
+                  box-shadow: 0 0 12px alpha({NEON}, 0.45); }}
 switch slider {{ background-color: {GREY_LIGHT}; }}
 switch:checked slider {{ background-color: {INK_BLACK}; }}
 
@@ -832,10 +849,11 @@ button:hover {{
     border-color: {WHITE_OFF};
 }}
 button.suggested-action, button.nyx-primary {{
-    background-color: {WHITE_OFF};
+    background-color: {NEON};
     color: {INK_BLACK};
-    border-color: {WHITE_PURE};
+    border-color: {NEON};
     font-weight: 600;
+    box-shadow: 0 0 16px alpha({NEON}, 0.40);
 }}
 button.destructive-action, button.nyx-danger {{
     background-color: transparent;
@@ -848,10 +866,10 @@ button.destructive-action:hover {{
 
 scale trough {{ background-color: {GLASS_DARK};
                 border: 1px solid {HAIRLINE_WHITE}; }}
-scale highlight {{ background-color: {WHITE_OFF}; }}
+scale highlight {{ background-color: {NEON}; }}
 scale slider {{ background-color: {WHITE_PURE};
-                border: 1px solid {WHITE_PURE};
-                box-shadow: 0 0 8px rgba(255,255,255,0.30); }}
+                border: 1px solid {NEON};
+                box-shadow: 0 0 10px alpha({NEON}, 0.55); }}
 
 /* ── Status pill ─────────────────────────────────────────────────── */
 .nyx-pill {{
@@ -879,8 +897,8 @@ scale slider {{ background-color: {WHITE_PURE};
     border-color: {GREY_LIGHT};
 }}
 .nyx-wall-tile.selected {{
-    border-color: {WHITE_PURE};
-    box-shadow: 0 0 18px rgba(255,255,255,0.18);
+    border-color: {NEON};
+    box-shadow: 0 0 18px alpha({NEON}, 0.45);
 }}
 
 /* ── Toast ───────────────────────────────────────────────────────── */

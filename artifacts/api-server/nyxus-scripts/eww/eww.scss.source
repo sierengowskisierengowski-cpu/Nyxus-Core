@@ -257,7 +257,7 @@ window, window.background, decoration {
 }
 .bar-hub-time {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 23px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: 0.04em;
   color: #ffffff;
@@ -269,7 +269,7 @@ window, window.background, decoration {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.06em;
   color: rgba($nyxus-accent-secondary, 0.92);
   text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.55);
 }
@@ -299,9 +299,9 @@ window, window.background, decoration {
 .notif-crit .notif-summary { color: #ffd0dc; text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.9); }
 .bar-hub-music-title {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: $neon-red;
   text-shadow:
     0 0 12px rgba($neon-red, 0.65),
@@ -314,6 +314,111 @@ window, window.background, decoration {
   letter-spacing: 0.12em;
   color: rgba($nyxus-accent-secondary, 0.90);
   text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.45);
+}
+
+/* ── SAUCER COCKPIT SCREEN (bottom-center hub trigger) ────────────────
+ * The saucer PNG has a transparent oval cockpit window; `.saucer-screen`
+ * is the SOLID dark display that sits inside it (via an eww overlay) so
+ * the clock / music UI is never see-through. Deep obsidian fill + a
+ * subtle neon rim + inner ink vignette = a real lit-up cockpit screen. */
+.saucer-frame { background-color: transparent; }
+
+.saucer-screen {
+  background-color: rgba(5, 2, 14, 0.88);
+  border: 1px solid rgba($nyxus-accent-primary, 0.55);
+  border-radius: 999px;
+  padding: 5px 26px;
+  min-width: 176px;
+  box-shadow:
+    0 0 14px rgba($nyxus-accent-primary, 0.35),
+    0 0 26px rgba($nyxus-accent-secondary, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 16px rgba(0, 0, 0, 0.72);
+}
+/* music face needs more room for transport + graph — softer rectangle,
+ * kept compact so it still nests inside the saucer body (rings visible
+ * above and below) instead of floating over the hull. */
+.saucer-screen-music {
+  border-radius: 18px;
+  padding: 3px 14px 4px 14px;
+  min-width: 232px;
+  border-color: rgba($neon-red, 0.50);
+  box-shadow:
+    0 0 14px rgba($neon-red, 0.30),
+    0 0 26px rgba($nyxus-accent-primary, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 16px rgba(0, 0, 0, 0.74);
+}
+
+/* bigger, livelier CAVA spectrum for the music face — mint so it reads as
+ * a distinct graph against the red title/progress, violet glow for depth. */
+.cava-saucer {
+  color: $neon-green;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-shadow:
+    0 0 6px rgba($neon-green, 0.80),
+    0 0 14px rgba($nyxus-accent-primary, 0.45);
+}
+
+/* elapsed / length readouts + progress track */
+.saucer-time {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba($nyxus-accent-secondary, 0.92);
+  text-shadow: 0 0 6px rgba($nyxus-accent-secondary, 0.45);
+}
+.saucer-prog {
+  min-width: 108px;
+  min-height: 4px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.6);
+}
+.saucer-prog-fill {
+  min-height: 4px;
+  border-radius: 999px;
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-image: linear-gradient(90deg,
+    $nyxus-accent-primary 0%,
+    $neon-red 60%,
+    $nyxus-accent-secondary 100%);
+  box-shadow: 0 0 7px rgba($neon-red, 0.60);
+}
+
+/* transport controls — prev / play-pause / next */
+.saucer-controls { margin-top: 1px; }
+.saucer-btn {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba($nyxus-accent-primary, 0.30);
+  border-radius: 999px;
+  min-width: 22px;
+  min-height: 15px;
+  padding: 0 2px;
+  color: rgba($nyxus-accent-secondary, 0.95);
+  font-size: 11px;
+  text-shadow: 0 0 6px rgba($nyxus-accent-secondary, 0.5);
+  transition: all $t-fast;
+}
+.saucer-btn:hover {
+  background-color: rgba($nyxus-accent-primary, 0.22);
+  border-color: rgba($nyxus-accent-primary, 0.70);
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.85);
+}
+.saucer-btn-main {
+  min-width: 26px;
+  color: $neon-red;
+  border-color: rgba($neon-red, 0.55);
+  text-shadow: 0 0 9px rgba($neon-red, 0.7);
+}
+.saucer-btn-main:hover {
+  background-color: rgba($neon-red, 0.22);
+  border-color: rgba($neon-red, 0.85);
+  color: #ffffff;
 }
 .bar-strip {
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
@@ -1104,45 +1209,57 @@ window, window.background, decoration {
 
 /* -- BOOT SPLASH (nyxus-splash namespace) ---------------------------- */
 
+/* Urban/branded splash (rev 2026-07-15) — full-bleed graffiti brand art
+   (assets/nyxus-splash-brand.png, pre-scaled to 1920x1080 so it covers
+   without the compile step's stripped `background-size`). Top + bottom
+   scrim gradients keep the boot text legible over the artwork. */
 .splash-root {
-  background-color: rgba(3, 1, 7, 0.98);
+  background-color: #030107;
   background-image:
-    linear-gradient(180deg, rgba(4, 2, 10, 0.35), rgba(2, 1, 6, 0.72)),
-    url('assets/cosmic-overlay-splash.png');
-  background-size: cover;
+    linear-gradient(180deg,
+      rgba(2, 1, 6, 0.68) 0%,
+      rgba(2, 1, 6, 0.0) 20%,
+      rgba(2, 1, 6, 0.0) 66%,
+      rgba(2, 1, 6, 0.82) 100%),
+    url('assets/nyxus-splash-brand.png');
   background-position: center;
 }
-.splash-glyph {
-  font-size: 48px;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow:
-    0 0 24px rgba($nyxus-accent-primary, 0.75),
-    0 0 48px rgba($nyxus-accent-secondary, 0.45);
+.splash-topbar {
+  padding: 20px 26px;
 }
-.splash-word {
-  font-family: "Permanent Marker", "Inter Display", sans-serif;
-  font-size: 72px;
-  font-weight: 400;
-  letter-spacing: 0.18em;
-  color: #ffffff;
-  text-shadow:
-    0 0 20px rgba($nyxus-accent-primary, 0.85),
-    0 0 40px rgba($nyxus-accent-secondary, 0.45);
+.splash-status {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 12px;
+  letter-spacing: 0.26em;
+  color: $nyxus-accent-secondary;
+  text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.7);
+}
+.splash-footer {
+  padding-bottom: 30px;
 }
 .splash-tag {
+  font-family: "Permanent Marker", "Inter Display", sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.30em;
+  color: #ffffff;
+  text-shadow:
+    0 0 14px rgba($nyxus-accent-primary, 0.85),
+    0 0 30px rgba($nyxus-accent-secondary, 0.45);
+}
+.splash-boot {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 11px;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.30em;
   color: $grey-mid;
   padding-top: 8px;
+  text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.5);
 }
 .splash-foot {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 9px;
-  letter-spacing: 0.22em;
-  color: $grey-ghost;
-  padding-bottom: 24px;
+  letter-spacing: 0.24em;
+  color: $grey-mid;
+  padding-top: 12px;
 }
 
 /* -- OVERLAY BACKDROP ------------------------------------------------ */
@@ -1154,12 +1271,14 @@ window, window.background, decoration {
    read as a solid dimmed backdrop - no desktop bleed. Alpha stays a
    hair under 1.0 so the Hyprland layerrule blur still catches edges. */
 .overlay-backdrop {
-  /* Transparent frosted dim (rev 2026-07-14): lets the Hyprland-blurred
-     wallpaper read through the fullscreen overlays while still focusing
-     the eye on the centered panel. */
-  background: radial-gradient(circle at 50% 42%,
-    rgba(12, 6, 24, 0.50),
-    rgba(3, 1, 9, 0.74));
+  /* Opaque cover (rev 2026-07-15): the previous frosted dim let the LIVE
+     video wallpaper + the bottom bar/dock bleed through, which read as
+     jitter/movement and "see the screen behind at the bottom". Fullscreen
+     overlays now FULLY cover — rock-steady, no gap. */
+  background-color: rgb(3, 1, 9);
+  background-image: radial-gradient(circle at 50% 42%,
+    rgba(14, 7, 26, 1.0),
+    rgba(3, 1, 9, 1.0));
 }
 
 /* -- starfield veil (Phase 5.5) ------------------------------------- */
@@ -1180,54 +1299,57 @@ window, window.background, decoration {
 
 /* -- NYXUS MAIN HUB overlay ----------------------------------------- */
 .hub-backdrop {
-  background: radial-gradient(circle at 50% 40%,
-    rgba(12, 6, 24, 0.42),
-    rgba(3, 1, 9, 0.68));
+  /* Opaque cover (rev 2026-07-15): solid base colour under the hero image
+     so the live video wallpaper / dock can never bleed through (no drift,
+     no bottom gap). The hero PNG + dark gradient ride on top of this. */
+  background-color: rgb(3, 1, 9);
+  background-image: radial-gradient(circle at 50% 40%,
+    rgba(14, 7, 26, 1.0),
+    rgba(3, 1, 9, 1.0));
 }
 .hub-panel {
-  /* Fill the viewport — floating centered card left a dead gap at the
-     bottom once the bars were hidden by overlay-shield. */
-  min-width: 100%;
-  min-height: 100%;
-  padding: 22px 28px 20px;
+  min-width: 900px;
+  padding: 28px 32px 24px;
   border-radius: $radius-xl;
   border: 1px solid transparent;
-  background-color: rgba(7, 3, 15, 0.55);
-  background-image: linear-gradient(180deg, rgba(9, 4, 20, 0.62), rgba(3, 1, 9, 0.48));
+  background-color: rgba(7, 3, 15, 0.24);
   background-blend-mode: normal;
   background-size: cover;
   background-origin: border-box;
   background-clip:   border-box;
   box-shadow:
-    0 0 0 1px rgba($nyxus-accent-primary, 0.16),
-    0 0 56px rgba($nyxus-accent-primary, 0.22),
-    0 24px 72px rgba(0, 0, 0, 0.78),
-    inset 0 0 72px rgba($nyxus-accent-primary, 0.06);
+    0 0 0 1px rgba($nyxus-accent-primary, 0.14),
+    0 0 56px rgba($nyxus-accent-primary, 0.24),
+    0 32px 96px rgba(0, 0, 0, 0.86),
+    inset 0 0 72px rgba($nyxus-accent-primary, 0.07);
 }
 .hub-title {
   color: $nyxus-accent-primary;
-  font-size: 22px;
-  font-weight: 800;
-  /* Permanent Marker under-reports its width to GTK, so pango ellipsizes it
-     ("THE H…") even with room. Reserve the space explicitly. */
-  min-width: 260px;
-  letter-spacing: 0.10em;
+  font-family: "Permanent Marker", "Inter", cursive;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
   text-shadow:
-    0 0 18px rgba($nyxus-accent-primary, 0.65),
-    0 0 36px rgba($nyxus-accent-secondary, 0.25);
+    0 0 20px rgba($nyxus-accent-primary, 0.70),
+    0 0 40px rgba($nyxus-accent-secondary, 0.28);
+}
+.hub-title-gem {
+  color: $nyxus-accent-secondary;
+  font-size: 20px;
+  text-shadow: 0 0 16px rgba($nyxus-accent-secondary, 0.75);
 }
 .hub-subtitle {
   color: $grey-mid;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 10px;
-  letter-spacing: 0.05em;
-  padding-bottom: 4px;
+  letter-spacing: 0.14em;
+  padding-bottom: 2px;
 }
 .hub-section-title {
   color: $nyxus-accent-secondary;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.28em;
   padding-top: 6px;
   text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.45);
 }
@@ -1246,11 +1368,10 @@ window, window.background, decoration {
 }
 .hub-tile-glyph { font-size: 22px; }
 .hub-tile-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  /* letter-spacing kept minimal: GTK sizes the label WITHOUT tracking but
-     renders WITH it, so a wide 0.12em value overflowed the request and
-     pango-ellipsized the text mid-tile ("Bluetoo…"). 0.03em is safe. */
+  /* GTK sizes without tracking but renders with it — 0.12em ellipsized
+     mid-tile ("Bluetoo…"). 0.03em is the layout-safe max. */
   letter-spacing: 0.03em;
   color: $dim;
 }
@@ -1339,79 +1460,171 @@ window, window.background, decoration {
 }
 .hub-power-row { padding-top: 2px; }
 
-/* -- Hub redesign (rev 2026-07-14): header · global search · 2-col body -- */
-.hub-header { padding-bottom: 2px; }
+/* -- HUB rev 2026-07-15 · command-center redesign -------------------- *
+ * All-additive: header bar, live monitor strip, now-playing media card,
+ * 3-column body + footer. Reuses flyout-glass tokens. GTK-valid only. */
 
-.hub-body {
-  padding-top: 4px;
-  min-height: 0; /* allow vexpand children to shrink into scroll */
+/* header: wordmark cluster · weather · clock · close */
+.hub-headerbar {
+  padding: 2px 2px 10px;
+  border-bottom: 1px solid rgba($nyxus-accent-primary, 0.16);
 }
-
-/* left = live controls, right = app column that fills remaining height */
-.hub-col-left  { min-width: 720px; padding-right: 6px; }
-.hub-col-right {
-  min-width: 420px;
-  padding: 14px 16px;
-  border-radius: $radius-lg;
-  background-color: rgba(6, 3, 14, 0.42);
-  border: 1px solid rgba($nyxus-accent-primary, 0.22);
-  box-shadow: inset 0 0 34px rgba($nyxus-accent-primary, 0.05);
+.hub-weather {
+  padding: 6px 14px;
+  border-radius: $radius-md;
+  @include flyout-glass($neon-blue, 0.55);
 }
-
-/* global search bar */
-.hub-search {
-  padding: 4px 14px;
-  border-radius: $radius-lg;
-  background-color: rgba(8, 4, 18, 0.60);
-  border: 1px solid rgba($nyxus-accent-primary, 0.32);
-  border-top: 1px solid rgba($nyxus-accent-primary, 0.55);
-  box-shadow:
-    0 0 16px rgba($nyxus-accent-primary, 0.14),
-    inset 0 0 18px rgba($nyxus-accent-primary, 0.05);
-  transition: all $t-fast;
+.hub-weather-temp {
+  color: $neon-blue-soft;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 17px;
+  font-weight: 700;
+  text-shadow: 0 0 12px rgba($neon-blue, 0.45);
 }
-.hub-search:focus-within,
-.hub-search:hover {
-  border-color: rgba($nyxus-accent-primary, 0.70);
-  box-shadow:
-    0 0 22px rgba($nyxus-accent-primary, 0.30),
-    inset 0 0 18px rgba($nyxus-accent-primary, 0.07);
-}
-.hub-search-glyph {
-  color: rgba($nyxus-accent-primary, 0.92);
-  font-size: 15px;
-  text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.55);
-}
-.hub-search-input {
-  color: $text;
-  font-size: 14px;
-  padding: 8px 6px;
-  background-color: transparent;
-  border: none;
-  caret-color: $nyxus-accent-primary;
-}
-.hub-search-input:focus { background-color: transparent; }
-.hub-search-clear {
-  padding: 2px 9px;
-  border-radius: 8px;
+.hub-weather-sum {
   color: $grey-mid;
-  background-color: rgba($nyxus-accent-secondary, 0.10);
-  border: 1px solid rgba($nyxus-accent-secondary, 0.24);
-  transition: all $t-fast;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
 }
-.hub-search-clear:hover {
-  color: $nyxus-accent-secondary;
-  border-color: rgba($nyxus-accent-secondary, 0.60);
+.hub-clock {
+  color: $text;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 26px;
+  font-weight: 700;
+  text-shadow: 0 0 16px rgba($nyxus-accent-primary, 0.40);
+}
+.hub-clock-date {
+  color: $grey-mid;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  /* GTK renders tracking it does not measure → 0.16em ellipsized the date
+     ("Wed 15 Ju…"). 0.04em is the layout-safe ceiling (same fix as
+     .hub-stat-label). */
+  letter-spacing: 0.04em;
 }
 
-/* section head (APPS + scope toggle) */
-.hub-section-head { padding: 2px 0; }
+/* live monitor strip — SYSPULSE chips */
+.hub-monitor {
+  padding: 4px 0 2px;
+}
+.hub-stat {
+  padding: 9px 14px;
+  border-radius: $radius-md;
+  @include flyout-glass($nyxus-accent-primary, 0.50);
+  transition: all $t-fast;
+}
+.hub-stat-glyph { font-size: 20px; }
+.hub-stat-value {
+  color: $text;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 16px;
+  font-weight: 700;
+}
+.hub-stat-label {
+  color: $grey-mid;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 9px;
+  font-weight: 700;
+  /* GTK renders tracking it does not measure → wider tracking ellipsizes
+     the short label ("CPU"→"CR."). 0.04em is the layout-safe ceiling. */
+  letter-spacing: 0.04em;
+}
+.hub-stat-pink   { border-color: rgba($nyxus-accent-primary, 0.40); }
+.hub-stat-pink   .hub-stat-glyph { color: $nyxus-accent-primary; text-shadow: 0 0 12px rgba($nyxus-accent-primary, 0.55); }
+.hub-stat-purple { border-color: rgba($nyxus-accent-ok, 0.40); }
+.hub-stat-purple .hub-stat-glyph { color: $nyxus-accent-ok; text-shadow: 0 0 12px rgba($nyxus-accent-ok, 0.55); }
+.hub-stat-blue   { border-color: rgba($neon-blue, 0.40); }
+.hub-stat-blue   .hub-stat-glyph { color: $neon-blue; text-shadow: 0 0 12px rgba($neon-blue, 0.55); }
+.hub-stat-gold   { border-color: rgba($nyxus-accent-warn, 0.40); }
+.hub-stat-gold   .hub-stat-glyph { color: $nyxus-accent-warn; text-shadow: 0 0 12px rgba($nyxus-accent-warn, 0.55); }
+.hub-stat-green  { border-color: rgba($nyxus-accent-secondary, 0.40); }
+.hub-stat-green  .hub-stat-glyph { color: $nyxus-accent-secondary; text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.55); }
+.hub-stat-orange { border-color: rgba($neon-orange, 0.40); }
+.hub-stat-orange .hub-stat-glyph { color: $neon-orange; text-shadow: 0 0 12px rgba($neon-orange, 0.55); }
+
+/* body columns — glass panes so the three zones read as distinct cards */
+.hub-col {
+  padding: 12px 14px 14px;
+  border-radius: $radius-lg;
+  background-color: rgba(6, 2, 13, 0.34);
+  border: 1px solid rgba($nyxus-accent-primary, 0.10);
+}
+
+/* slider live readout */
+.hub-slider-val {
+  min-width: 30px;
+  color: $accent-primary-soft;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* now-playing media card */
+.hub-media {
+  padding: 12px 14px;
+  border-radius: $radius-md;
+  @include flyout-glass($neon-red, 0.62);
+}
+.hub-media-glyph {
+  color: $neon-red;
+  font-size: 22px;
+  text-shadow: 0 0 14px rgba($neon-red, 0.55);
+}
+.hub-media-title {
+  color: $text;
+  font-size: 13px;
+  font-weight: 700;
+}
+.hub-media-artist {
+  color: $grey-mid;
+  font-size: 11px;
+}
+.hub-media-time {
+  color: $grey-mid;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  min-width: 34px;
+}
+.hub-media-prog {
+  min-height: 5px;
+  border-radius: 3px;
+  background-color: rgba(255, 255, 255, 0.10);
+}
+.hub-media-prog-fill {
+  min-height: 5px;
+  border-radius: 3px;
+  background-repeat: no-repeat;
+  background-image: linear-gradient(90deg, $neon-red, $nyxus-accent-primary);
+  box-shadow: 0 0 8px rgba($neon-red, 0.55);
+}
+.hub-media-btn {
+  min-width: 40px;
+  padding: 6px 10px;
+  border-radius: $radius-sm;
+  background-color: rgba(10, 4, 18, 0.66);
+  border: 1px solid rgba($neon-red, 0.28);
+  color: $dim;
+  font-size: 15px;
+  transition: all $t-fast;
+}
+.hub-media-btn:hover {
+  border-color: rgba($neon-red, 0.62);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba($neon-red, 0.30);
+}
+.hub-media-btn-main {
+  color: $neon-red-soft;
+  border-color: rgba($neon-red, 0.55);
+}
+
+/* apps column head + list */
 .hub-apps-toggle {
   padding: 3px 12px;
-  border-radius: 8px;
-  color: $accent-primary-soft;
-  background-color: rgba($nyxus-accent-primary, 0.14);
-  border: 1px solid rgba($nyxus-accent-primary, 0.28);
+  border-radius: $radius-sm;
+  background-color: rgba($nyxus-accent-ok, 0.14);
+  border: 1px solid rgba($nyxus-accent-ok, 0.30);
+  color: $accent-ok-soft;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 10px;
   font-weight: 700;
@@ -1419,43 +1632,15 @@ window, window.background, decoration {
   transition: all $t-fast;
 }
 .hub-apps-toggle:hover {
+  border-color: rgba($nyxus-accent-ok, 0.60);
   color: #ffffff;
-  border-color: rgba($nyxus-accent-primary, 0.65);
-  box-shadow: 0 0 12px rgba($nyxus-accent-primary, 0.30);
 }
+.hub-section-head { padding-bottom: 2px; }
 
-/* scrollable app list — fills the right column */
-.hub-apps-scroll {
-  min-height: 640px;
-}
-.hub-apps-list { padding: 2px 2px 2px 0; }
-
-/* clean launcher entry — icon + name, violet hover glow */
-.hub-app-tile {
-  padding: 9px 12px;
-  border-radius: 10px;
-  background-color: rgba($nyxus-accent-primary, 0.06);
-  border: 1px solid transparent;
-  transition: all $t-fast;
-}
-.hub-app-tile:hover {
-  background-color: rgba($nyxus-accent-primary, 0.16);
-  border-color: rgba($nyxus-accent-primary, 0.55);
-  box-shadow: 0 0 16px rgba($nyxus-accent-primary, 0.28);
-}
-.hub-app-glyph {
-  color: rgba($nyxus-accent-primary, 0.85);
-  font-size: 14px;
-  text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.45);
-}
-.hub-app-tile:hover .hub-app-glyph {
-  color: $nyxus-accent-secondary;
-  text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.65);
-}
-.hub-app-name {
-  color: $text;
-  font-size: 13px;
-  letter-spacing: 0.02em;
+/* footer: stations switcher + power actions */
+.hub-footer {
+  padding-top: 8px;
+  border-top: 1px solid rgba($nyxus-accent-primary, 0.14);
 }
 
 /* -- DEEP CORE overlay ----------------------------------------------- */
@@ -2057,12 +2242,9 @@ scrollbar slider:hover {
 .qs-title, .wifi-title, .bt-title, .mix-title, .cal-title, .notif-title, .upd-title {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  /* cohesive default: brand violet, not gold (rev 2026-07-14). Per-panel
-     hues below still tint individual flyouts, but the shared baseline reads
-     as one urban/violet system. */
-  color: $nyxus-accent-primary;
-  text-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.45);
+  letter-spacing: 0.22em;
+  color: $nyxus-accent-warn;
+  text-shadow: 0 0 14px rgba($nyxus-accent-warn, 0.45);
   padding-bottom: 4px;
 }
 
@@ -2075,8 +2257,8 @@ scrollbar slider:hover {
               box-shadow: 0 0 18px rgba($neon-blue, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
 .mix-root   { border-color: rgba($nyxus-accent-ok, 0.60); border-top-color: $nyxus-accent-ok;
               box-shadow: 0 0 18px rgba($nyxus-accent-ok, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
-.cal-root, .upd-root { border-color: rgba($nyxus-accent-primary, 0.60); border-top-color: $nyxus-accent-primary;
-              box-shadow: 0 0 18px rgba($nyxus-accent-primary, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
+.cal-root, .upd-root { border-color: rgba($nyxus-accent-warn, 0.60); border-top-color: $nyxus-accent-warn;
+              box-shadow: 0 0 18px rgba($nyxus-accent-warn, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
 
 .wifi-title { color: $nyxus-accent-secondary; text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.45); }
 .bt-title   { color: $neon-blue;              text-shadow: 0 0 12px rgba($neon-blue, 0.45); }
@@ -2143,8 +2325,8 @@ scrollbar slider:hover {
   letter-spacing: 0.08em;
 }
 
-/* -- update center (violet-cohesive, rev 2026-07-14) -------------------- */
-.upd-title { color: $nyxus-accent-primary; }
+/* -- update center ------------------------------------------------------ */
+.upd-title { color: $nyxus-accent-warn; }
 .upd-sub {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 9px;
@@ -2153,23 +2335,23 @@ scrollbar slider:hover {
 }
 .upd-refresh {
   padding: 4px 12px; border-radius: 3px;
-  background: rgba($nyxus-accent-primary, 0.10);
-  border: 1px solid rgba($nyxus-accent-primary, 0.38);
-  color: $accent-primary-soft;
+  background: rgba($nyxus-accent-warn, 0.10);
+  border: 1px solid rgba($nyxus-accent-warn, 0.38);
+  color: $nyxus-accent-warn;
   font-weight: 700;
 }
-.upd-refresh:hover { background: rgba($nyxus-accent-primary, 0.24); color: #ffffff;
-                     box-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.45); }
+.upd-refresh:hover { background: rgba($nyxus-accent-warn, 0.24); color: #ffffff;
+                     box-shadow: 0 0 14px rgba($nyxus-accent-warn, 0.45); }
 .upd-row {
   padding: 6px 10px;
   border-radius: 8px;
-  @include flyout-glass($nyxus-accent-primary, 0.75);
+  @include flyout-glass($nyxus-accent-warn, 0.75);
 }
-.upd-row:hover { @include flyout-glass-hover($nyxus-accent-primary); }
+.upd-row:hover { @include flyout-glass-hover($nyxus-accent-warn); }
 .upd-name  { color: $text; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 11px; }
 .upd-old   { color: $grey-ghost; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px; }
-.upd-arrow { color: $nyxus-accent-primary; font-size: 9px; }
-.upd-new   { color: $accent-primary-soft; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px; }
+.upd-arrow { color: $nyxus-accent-warn; font-size: 9px; }
+.upd-new   { color: $accent-warn-soft; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px; }
 .upd-sync {
   padding: 8px 14px; border-radius: 3px;
   background: rgba($nyxus-accent-secondary, 0.13);
@@ -2196,11 +2378,11 @@ scrollbar slider:hover {
 }
 
 .cal-title {
-  color: $nyxus-accent-primary;
+  color: $nyxus-accent-warn;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.20em;
-  text-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.45);
+  letter-spacing: 0.28em;
+  text-shadow: 0 0 14px rgba($nyxus-accent-warn, 0.45);
 }
 
 .cal-today {
@@ -2228,7 +2410,7 @@ scrollbar slider:hover {
   font-size: 12px;
   color: $text;
   font-weight: 600;
-  @include flyout-glass($nyxus-accent-primary, 0.45);
+  @include flyout-glass($nyxus-accent-warn, 0.45);
 }
 .cal-day-in:hover {
   @include flyout-glass-hover($nyxus-accent-primary);
@@ -2245,13 +2427,13 @@ scrollbar slider:hover {
   margin-top: 10px;
   padding: 10px 16px;
   border-radius: 10px;
-  @include obsidian-vessel($nyxus-accent-primary);
+  @include obsidian-vessel($nyxus-accent-warn);
   color: $text;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
 .cal-close:hover {
-  @include obsidian-vessel-hover($nyxus-accent-primary);
+  @include obsidian-vessel-hover($nyxus-accent-warn);
   color: #ffffff;
 }
 

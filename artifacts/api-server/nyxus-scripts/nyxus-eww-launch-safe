@@ -1,23 +1,103 @@
 #!/usr/bin/env bash
-# NYXUS - duplicate-proof eww launcher wrapper.
+# NYXUS - duplicate-proof eww launcher wrapper.        rev 2026-07-15 r3
+#
+# HARD GUARANTEES (post-regression rewrite):
+#   1. NEVER hangs. Every eww CLI call is wrapped in `timeout` (a wedged
+#      daemon makes the bare CLI block on its socket forever — that hang
+#      is what stranded login on 2026-07-15). Total worst-case runtime is
+#      bounded (~75s) and every wait is explicit.
+#   2. IDEMPOTENT. If the daemon answers ping and all four bars are up,
+#      exits 0 without killing anything (no bar flash, no daemon churn).
+#   3. Single-flight lock with bounded wait + stale-lock clear, then it
+#      ALWAYS falls through to a forced launch — a busy/stale lock can
+#      delay it a few seconds but can never stop the bars from coming up.
+#   4. Last-resort path opens the bars directly even if nyxus-eww-launch
+#      is missing or times out.
 set -u
 
-pkill -9 -x eww 2>/dev/null
-pkill -9 -f '/eww (daemon|open|open-many|reload|close)' 2>/dev/null
-sleep 0.5
-rm -f "${XDG_RUNTIME_DIR:-/tmp}"/eww-server_* 2>/dev/null
+export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH:-/usr/bin:/bin}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 
-if ! eww ping >/dev/null 2>&1; then
-  eww daemon &
-  dpid=$!
-  for _ in $(seq 1 60); do
-    eww ping >/dev/null 2>&1 && break
-    sleep 0.25
-  done
-  if ! eww ping >/dev/null 2>&1; then
-    echo "nyxus-eww-launch-safe: eww daemon failed to start" >&2
-    exit 1
+BARS_WANTED=(bar-bottom bar-top bar-left bar-right)
+lock="${XDG_RUNTIME_DIR}/nyxus-eww-launch.lock"
+mkdir -p "$(dirname "$lock")"
+
+# Bounded eww call: a wedged daemon can block the CLI forever; never allow it.
+ew() { timeout -k 2 "$1" eww --no-daemonize "${@:2}" 2>/dev/null; }
+
+bar_count() {
+  local n
+  n="$(ew 4 active-windows | grep -cE '^bar-' || true)"
+  printf '%s' "${n:-0}"
+}
+
+healthy() {
+  ew 3 ping >/dev/null 2>&1 && [[ "$(bar_count)" -ge 4 ]]
+}
+
+# ── 0 · fast path: session already healthy — do not touch it ─────────────
+if healthy; then
+  echo "nyxus-eww-launch-safe: daemon + 4 bars already up — nothing to do" >&2
+  exit 0
+fi
+
+# ── 1 · single-flight lock (bounded; NEVER blocks the launch) ────────────
+acquire() {
+  local t="${1:-5}"
+  [[ "$t" =~ ^[0-9]+$ ]] || t=5          # bad/missing timeout arg → default
+  exec 9>"$lock" || return 1
+  flock -w "$t" 9
+}
+
+if ! acquire 8; then
+  echo "nyxus-eww-launch-safe: lock busy — clearing stale lock and retrying" >&2
+  rm -f "$lock" 2>/dev/null || true
+  if ! acquire 5; then
+    # Re-check: the lock holder may have finished the job while we waited.
+    if healthy; then
+      echo "nyxus-eww-launch-safe: bars came up while waiting — skipping" >&2
+      exit 0
+    fi
+    echo "nyxus-eww-launch-safe: forcing launch without lock" >&2
   fi
 fi
 
-exec "$(command -v nyxus-eww-launch || echo /usr/local/bin/nyxus-eww-launch)"
+# ── 2 · clean slate: exactly one daemon ──────────────────────────────────
+pkill -9 -x eww 2>/dev/null || true
+pkill -9 -f '/eww (daemon|open|open-many|reload|close)' 2>/dev/null || true
+sleep 0.4
+rm -f "${XDG_RUNTIME_DIR}"/eww-server_* 2>/dev/null || true
+
+# CRITICAL: close fd 9 for the daemon (9>&-). Without this the daemon and
+# every child it spawns (defpoll shells, cava, …) inherit the lock fd and
+# hold the flock FOREVER — the next launch-safe run then blocks on a lock
+# that can never be released. This was the root cause of the 2026-07-15
+# login hang (fuser showed eww/cava/bash all holding the lock file).
+eww daemon >/dev/null 2>&1 9>&- &
+for _ in $(seq 1 40); do
+  ew 2 ping >/dev/null 2>&1 && break
+  sleep 0.25
+done
+if ! ew 2 ping >/dev/null 2>&1; then
+  echo "nyxus-eww-launch-safe: eww daemon failed to start" >&2
+  exit 1
+fi
+
+# ── 3 · preferred path: full launcher (CSS compile + ordered opens), but
+#        HARD-CAPPED — if it wedges we still fall through to direct opens.
+if command -v nyxus-eww-launch >/dev/null 2>&1; then
+  timeout -k 5 45 nyxus-eww-launch || \
+    echo "nyxus-eww-launch-safe: nyxus-eww-launch failed/timed out — direct fallback" >&2
+fi
+
+# ── 4 · last resort: open any missing bar directly ───────────────────────
+if [[ "$(bar_count)" -lt 4 ]]; then
+  act="$(ew 4 active-windows || true)"
+  for b in "${BARS_WANTED[@]}"; do
+    grep -q "^${b}:" <<<"$act" || ew 8 open "$b" || true
+  done
+fi
+
+final="$(bar_count)"
+echo "nyxus-eww-launch-safe: done (bars=${final})" >&2
+[[ "$final" -ge 4 ]]

@@ -261,6 +261,8 @@ window, window.background, decoration {
   font-weight: 800;
   letter-spacing: 0.04em;
   color: #ffffff;
+  /* nudge clock block down into the saucer screen oval */
+  margin-top: 8px;
   text-shadow:
     0 0 14px rgba($nyxus-accent-secondary, 0.80),
     0 0 26px rgba($nyxus-accent-primary, 0.50);
@@ -269,7 +271,7 @@ window, window.background, decoration {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.06em;
   color: rgba($nyxus-accent-secondary, 0.92);
   text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.55);
 }
@@ -1185,8 +1187,8 @@ window, window.background, decoration {
     rgba(3, 1, 9, 0.68));
 }
 .hub-panel {
-  min-width: 1180px;
-  padding: 26px 34px 28px;
+  min-width: 900px;
+  padding: 28px 32px 24px;
   border-radius: $radius-xl;
   border: 1px solid transparent;
   background-color: rgba(7, 3, 15, 0.24);
@@ -1202,12 +1204,9 @@ window, window.background, decoration {
 }
 .hub-title {
   color: $nyxus-accent-primary;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
-  /* Permanent Marker under-reports its width to GTK, so pango ellipsizes it
-     ("THE H…") even with room. Reserve the space explicitly. */
-  min-width: 260px;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.32em;
   text-shadow:
     0 0 18px rgba($nyxus-accent-primary, 0.65),
     0 0 36px rgba($nyxus-accent-secondary, 0.25);
@@ -1216,14 +1215,14 @@ window, window.background, decoration {
   color: $grey-mid;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 10px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.14em;
   padding-bottom: 4px;
 }
 .hub-section-title {
   color: $nyxus-accent-secondary;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.28em;
   padding-top: 6px;
   text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.45);
 }
@@ -1242,11 +1241,10 @@ window, window.background, decoration {
 }
 .hub-tile-glyph { font-size: 22px; }
 .hub-tile-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  /* letter-spacing kept minimal: GTK sizes the label WITHOUT tracking but
-     renders WITH it, so a wide 0.12em value overflowed the request and
-     pango-ellipsized the text mid-tile ("Bluetoo…"). 0.03em is safe. */
+  /* GTK sizes without tracking but renders with it — 0.12em ellipsized
+     mid-tile ("Bluetoo…"). 0.03em is the layout-safe max. */
   letter-spacing: 0.03em;
   color: $dim;
 }
@@ -1334,122 +1332,6 @@ window, window.background, decoration {
   border-color: rgba($nyxus-accent-secondary, 0.55);
 }
 .hub-power-row { padding-top: 2px; }
-
-/* -- Hub redesign (rev 2026-07-14): header · global search · 2-col body -- */
-.hub-header { padding-bottom: 2px; }
-
-.hub-body { padding-top: 4px; }
-
-/* left = live controls (grows), right = fixed app column */
-.hub-col-left  { min-width: 640px; padding-right: 6px; }
-.hub-col-right {
-  min-width: 400px;
-  padding: 14px 16px;
-  border-radius: $radius-lg;
-  background-color: rgba(6, 3, 14, 0.34);
-  border: 1px solid rgba($nyxus-accent-primary, 0.20);
-  box-shadow: inset 0 0 34px rgba($nyxus-accent-primary, 0.05);
-}
-
-/* global search bar */
-.hub-search {
-  padding: 4px 14px;
-  border-radius: $radius-lg;
-  background-color: rgba(8, 4, 18, 0.60);
-  border: 1px solid rgba($nyxus-accent-primary, 0.32);
-  border-top: 1px solid rgba($nyxus-accent-primary, 0.55);
-  box-shadow:
-    0 0 16px rgba($nyxus-accent-primary, 0.14),
-    inset 0 0 18px rgba($nyxus-accent-primary, 0.05);
-  transition: all $t-fast;
-}
-.hub-search:focus-within,
-.hub-search:hover {
-  border-color: rgba($nyxus-accent-primary, 0.70);
-  box-shadow:
-    0 0 22px rgba($nyxus-accent-primary, 0.30),
-    inset 0 0 18px rgba($nyxus-accent-primary, 0.07);
-}
-.hub-search-glyph {
-  color: rgba($nyxus-accent-primary, 0.92);
-  font-size: 15px;
-  text-shadow: 0 0 10px rgba($nyxus-accent-primary, 0.55);
-}
-.hub-search-input {
-  color: $text;
-  font-size: 14px;
-  padding: 8px 6px;
-  background-color: transparent;
-  border: none;
-  caret-color: $nyxus-accent-primary;
-}
-.hub-search-input:focus { background-color: transparent; }
-.hub-search-clear {
-  padding: 2px 9px;
-  border-radius: 8px;
-  color: $grey-mid;
-  background-color: rgba($nyxus-accent-secondary, 0.10);
-  border: 1px solid rgba($nyxus-accent-secondary, 0.24);
-  transition: all $t-fast;
-}
-.hub-search-clear:hover {
-  color: $nyxus-accent-secondary;
-  border-color: rgba($nyxus-accent-secondary, 0.60);
-}
-
-/* section head (APPS + scope toggle) */
-.hub-section-head { padding: 2px 0; }
-.hub-apps-toggle {
-  padding: 3px 12px;
-  border-radius: 8px;
-  color: $accent-primary-soft;
-  background-color: rgba($nyxus-accent-primary, 0.14);
-  border: 1px solid rgba($nyxus-accent-primary, 0.28);
-  font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  transition: all $t-fast;
-}
-.hub-apps-toggle:hover {
-  color: #ffffff;
-  border-color: rgba($nyxus-accent-primary, 0.65);
-  box-shadow: 0 0 12px rgba($nyxus-accent-primary, 0.30);
-}
-
-/* scrollable app list */
-.hub-apps-scroll {
-  min-height: 520px;
-}
-.hub-apps-list { padding: 2px 2px 2px 0; }
-
-/* clean launcher entry — icon + name, violet hover glow */
-.hub-app-tile {
-  padding: 9px 12px;
-  border-radius: 10px;
-  background-color: rgba($nyxus-accent-primary, 0.06);
-  border: 1px solid transparent;
-  transition: all $t-fast;
-}
-.hub-app-tile:hover {
-  background-color: rgba($nyxus-accent-primary, 0.16);
-  border-color: rgba($nyxus-accent-primary, 0.55);
-  box-shadow: 0 0 16px rgba($nyxus-accent-primary, 0.28);
-}
-.hub-app-glyph {
-  color: rgba($nyxus-accent-primary, 0.85);
-  font-size: 14px;
-  text-shadow: 0 0 8px rgba($nyxus-accent-primary, 0.45);
-}
-.hub-app-tile:hover .hub-app-glyph {
-  color: $nyxus-accent-secondary;
-  text-shadow: 0 0 10px rgba($nyxus-accent-secondary, 0.65);
-}
-.hub-app-name {
-  color: $text;
-  font-size: 13px;
-  letter-spacing: 0.02em;
-}
 
 /* -- DEEP CORE overlay ----------------------------------------------- */
 
@@ -2050,12 +1932,9 @@ scrollbar slider:hover {
 .qs-title, .wifi-title, .bt-title, .mix-title, .cal-title, .notif-title, .upd-title {
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  /* cohesive default: brand violet, not gold (rev 2026-07-14). Per-panel
-     hues below still tint individual flyouts, but the shared baseline reads
-     as one urban/violet system. */
-  color: $nyxus-accent-primary;
-  text-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.45);
+  letter-spacing: 0.22em;
+  color: $nyxus-accent-warn;
+  text-shadow: 0 0 14px rgba($nyxus-accent-warn, 0.45);
   padding-bottom: 4px;
 }
 
@@ -2068,8 +1947,8 @@ scrollbar slider:hover {
               box-shadow: 0 0 18px rgba($neon-blue, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
 .mix-root   { border-color: rgba($nyxus-accent-ok, 0.60); border-top-color: $nyxus-accent-ok;
               box-shadow: 0 0 18px rgba($nyxus-accent-ok, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
-.cal-root, .upd-root { border-color: rgba($nyxus-accent-primary, 0.60); border-top-color: $nyxus-accent-primary;
-              box-shadow: 0 0 18px rgba($nyxus-accent-primary, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
+.cal-root, .upd-root { border-color: rgba($nyxus-accent-warn, 0.60); border-top-color: $nyxus-accent-warn;
+              box-shadow: 0 0 18px rgba($nyxus-accent-warn, 0.30), 0 10px 34px rgba(0,0,0,0.65), inset 0 0 24px rgba(0,0,0,0.18); }
 
 .wifi-title { color: $nyxus-accent-secondary; text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.45); }
 .bt-title   { color: $neon-blue;              text-shadow: 0 0 12px rgba($neon-blue, 0.45); }
@@ -2136,8 +2015,8 @@ scrollbar slider:hover {
   letter-spacing: 0.08em;
 }
 
-/* -- update center (violet-cohesive, rev 2026-07-14) -------------------- */
-.upd-title { color: $nyxus-accent-primary; }
+/* -- update center ------------------------------------------------------ */
+.upd-title { color: $nyxus-accent-warn; }
 .upd-sub {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 9px;
@@ -2146,23 +2025,23 @@ scrollbar slider:hover {
 }
 .upd-refresh {
   padding: 4px 12px; border-radius: 3px;
-  background: rgba($nyxus-accent-primary, 0.10);
-  border: 1px solid rgba($nyxus-accent-primary, 0.38);
-  color: $accent-primary-soft;
+  background: rgba($nyxus-accent-warn, 0.10);
+  border: 1px solid rgba($nyxus-accent-warn, 0.38);
+  color: $nyxus-accent-warn;
   font-weight: 700;
 }
-.upd-refresh:hover { background: rgba($nyxus-accent-primary, 0.24); color: #ffffff;
-                     box-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.45); }
+.upd-refresh:hover { background: rgba($nyxus-accent-warn, 0.24); color: #ffffff;
+                     box-shadow: 0 0 14px rgba($nyxus-accent-warn, 0.45); }
 .upd-row {
   padding: 6px 10px;
   border-radius: 8px;
-  @include flyout-glass($nyxus-accent-primary, 0.75);
+  @include flyout-glass($nyxus-accent-warn, 0.75);
 }
-.upd-row:hover { @include flyout-glass-hover($nyxus-accent-primary); }
+.upd-row:hover { @include flyout-glass-hover($nyxus-accent-warn); }
 .upd-name  { color: $text; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 11px; }
 .upd-old   { color: $grey-ghost; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px; }
-.upd-arrow { color: $nyxus-accent-primary; font-size: 9px; }
-.upd-new   { color: $accent-primary-soft; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px; }
+.upd-arrow { color: $nyxus-accent-warn; font-size: 9px; }
+.upd-new   { color: $accent-warn-soft; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px; }
 .upd-sync {
   padding: 8px 14px; border-radius: 3px;
   background: rgba($nyxus-accent-secondary, 0.13);
@@ -2189,11 +2068,11 @@ scrollbar slider:hover {
 }
 
 .cal-title {
-  color: $nyxus-accent-primary;
+  color: $nyxus-accent-warn;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.20em;
-  text-shadow: 0 0 14px rgba($nyxus-accent-primary, 0.45);
+  letter-spacing: 0.28em;
+  text-shadow: 0 0 14px rgba($nyxus-accent-warn, 0.45);
 }
 
 .cal-today {
@@ -2221,7 +2100,7 @@ scrollbar slider:hover {
   font-size: 12px;
   color: $text;
   font-weight: 600;
-  @include flyout-glass($nyxus-accent-primary, 0.45);
+  @include flyout-glass($nyxus-accent-warn, 0.45);
 }
 .cal-day-in:hover {
   @include flyout-glass-hover($nyxus-accent-primary);
@@ -2238,13 +2117,13 @@ scrollbar slider:hover {
   margin-top: 10px;
   padding: 10px 16px;
   border-radius: 10px;
-  @include obsidian-vessel($nyxus-accent-primary);
+  @include obsidian-vessel($nyxus-accent-warn);
   color: $text;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
 .cal-close:hover {
-  @include obsidian-vessel-hover($nyxus-accent-primary);
+  @include obsidian-vessel-hover($nyxus-accent-warn);
   color: #ffffff;
 }
 
