@@ -375,7 +375,27 @@ fi
 if [[ -f "${NS}/desktop/nyxus-context-menu.sh" ]]; then
   install -m 0755 "${NS}/desktop/nyxus-context-menu.sh" "${LBIN}/nyxus-context-menu.sh"
 fi
-ok "helpers: wallpaper-rotate / nyxus-eww-launch"
+# ── Hub + escape-path scripts (rev 2026-07-15 RC) ───────────────────────
+# hyprland.conf's Escape / Super+Shift+Escape binds and the bar's start
+# button call these. They MUST ship or the ISO reproduces the "trapped
+# fullscreen with no bars" regression with no recovery path.
+for _hub in nyxus-hub-open nyxus-hub-close nyxus-hub-launch nyxus-hub-apps \
+            nyxus-hub-search nyxus-shader nyxus-screensaver; do
+  if [[ -f "${NS}/${_hub}" ]]; then
+    install -m 0755 "${NS}/${_hub}" "${LBIN}/${_hub}"
+  fi
+done
+# Matrix screensaver payload (launched by nyxus-screensaver via hypridle).
+if [[ -f "${NS}/nyxus_matrix_saver.py" ]]; then
+  install -Dm0755 "${NS}/nyxus_matrix_saver.py" \
+    "${SKEL}/.config/nyxus/nyxus_matrix_saver.py"
+fi
+# greetd greeter chain — keep the airootfs copy in lockstep with the
+# canonical fixed version (login-loop fix: signal-death != crash).
+if [[ -f "${NS}/greetd/nyxus-greeter" ]]; then
+  install -m 0755 "${NS}/greetd/nyxus-greeter" "${LBIN}/nyxus-greeter"
+fi
+ok "helpers: wallpaper-rotate / nyxus-eww-launch / hub+escape set / greeter"
 
 # Sound theme assets used by nyxus-sound.sh (falls back to canberra IDs if missing).
 if [[ -d "${NS}/sounds" ]]; then

@@ -1,7 +1,27 @@
-# NYXUS Status — Daily-Driver Readiness Pass
+# NYXUS Status — Release Candidate
 
-**Updated:** 2026-07-15 · daily-driver readiness pass (desktop / eww / hypr)
+**Updated:** 2026-07-15 (late) · release-engineering pass `nyxus-rc-2026-07-15`
 **Prior safepoint:** `nyxus-good-state-2026-07-14-legend` (Legend build, below)
+
+---
+
+## 2026-07-15 (LATE) — RELEASE-ENGINEERING PASS (`nyxus-rc-2026-07-15`)
+
+Root-cause fixes for the evening regression (eww launch hang → no bars at
+login; Hub fullscreen trap; night-filter haze at login; greeter "login
+loop"), plus the terminal installer and the release checklist. Every fix was
+verified LIVE and backported to the canonical ship tree — see
+`docs/RELEASE_CHECKLIST.md` for per-item evidence.
+
+| Area | What shipped |
+|------|--------------|
+| **eww launch never hangs** | `nyxus-eww-launch-safe` r3: healthy-session fast-path (no daemon churn), numeric-validated bounded `flock` waits, and — the true root cause — `eww daemon` now starts with the lock fd closed (`9>&-`). Previously the daemon and every defpoll child (cava, bash, hyprctl…) inherited fd 9 and held the launch lock FOREVER, so the next launcher blocked and login came up bar-less. All eww CLI calls in the launch/close path are `timeout`-bounded (a wedged daemon blocks the bare CLI indefinitely) and use `--no-daemonize` so a CLI can never fork a rogue second daemon. |
+| **Hub trap killed** | `nyxus-hub-open` restores the bars immediately if the Hub fails to map; `nyxus-hub-close` ping-checks first and hard-recovers a wedged daemon (`pkill -9` → `nyxus-eww-launch-safe`). Wedge scenario tested live via SIGSTOP on the daemon: Super+Shift+Escape path recovered 4 bars + single daemon in ~6s. Plain-Escape gate is timeout-bounded and treats a wedged daemon as "needs recovery". |
+| **Hub rock-steady** | Residual "moves on its own" pinned: NET tile rate strings now fixed-width (`sys-pulse.sh` `fmt_rate`), hub clock-date letter-spacing brought into GTK's measured range (was ellipsizing). Proof: two screenshots 2s apart differ only in live digits (955 px = 0.05%, zero layout motion). |
+| **Night-light OFF at login** | Root cause of the orange haze: Hub "Night" tile → `nyxus-shader night` persisted in `shader.state` and `exec-once = nyxus-shader restore` re-applied it every login. `restore` now maps `night`→`off` (night is session-transient; artistic filters still persist). Toggle verified both ways live. |
+| **Login loop / terminal flash** | greetd kills the greeter (cage) on successful auth; the fallback chain misread that signal-death as a crash and spawned a SECOND greeter — the "login loops back" effect. `nyxus-greeter` now treats exit≥128 as teardown and stops. The "hyprland terminal" flash: the stale root-owned `/usr/local/bin/nyxus-session-start` (no VT-clear/log-redirect) shadows the fixed copy — needs one sudo `install` (see RELEASE_CHECKLIST). |
+| **Terminal installer** | `install.sh` at repo root: NYXUS ASCII banner, staged deploy (deps → configs → CSS compile → live reload → summary) onto all live surfaces, curated launcher manifest, idempotent (re-run converges to 0 changes — verified). README gained an Install section. |
+| **Repo hygiene** | Stale `artifacts/_tmp/` staging tree removed from the ship; `.gitignore` hardened (backup dirs, `*.bak`, ISO work dirs); secret scan clean (no tokens/keys in tracked content). Matrix saver ship copy added (`nyxus_matrix_saver.py`) — was live-only. |
 
 ---
 
