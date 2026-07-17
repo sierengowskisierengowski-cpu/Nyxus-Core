@@ -1,0 +1,849 @@
+Build a native GTK4 Python application called NYXUS INTEL.
+
+This is a professional grade open source intelligence 
+and investigation application. Every single feature must 
+produce real actual results from real APIs and real tools.
+No simulated data. No placeholder results. No fake finds.
+If a feature cannot produce real results it does not get 
+built — only include what actually works.
+
+DO NOT apply NyX brand colors — those come later.
+
+VISUAL STYLE — MANDATORY — READ THIS FIRST:
+This app must look and feel completely professional and 
+grade A quality. Think premium commercial intelligence 
+application. Every screen, every panel, every element 
+must be polished and intentional.
+
+Hand drawn hand written style throughout — same as GodsApp:
+- Handwritten font for ALL text everywhere — titles, 
+  labels, buttons, menus, results, everything
+- Hand drawn sketch borders on all panels and containers
+- Slightly imperfect hand drawn borders — marker feel
+- Hand drawn sketch style icons throughout
+- Tilted elements where appropriate — section headers 
+  slightly tilted, decorative elements at slight angles
+- Result cards have hand drawn border styling
+- Dark background throughout — near black base
+- Nothing looks like a standard GTK app
+- Every widget custom styled to match aesthetic
+- Professional and polished — grade A execution
+- The hand drawn aesthetic IS the professional look
+- Execute it at the highest possible quality level
+
+PASSWORD LOCK — MANDATORY:
+- App locked at ALL times with master password
+- Launch screen — password entry only, nothing visible behind
+- Hand drawn password entry field and unlock button
+- Wrong password — subtle shake animation
+- No bypass of any kind possible
+- Auto locks after configurable inactivity timeout
+  Default 5 minutes — configurable in settings
+- Re-enter password to unlock after auto lock
+- Password set on very first launch via setup screen
+- Change password available in settings
+- Password stored as bcrypt hash — never plain text ever
+- Three consecutive wrong attempts — app closes completely
+- Lock button always visible in top bar when unlocked
+- Keyboard shortcut Ctrl+L — instant lock
+- Session stays unlocked until timeout or manual lock
+
+FIRST LAUNCH DISCLAIMER — shown once only:
+"NYXUS INTEL is a professional open source intelligence
+tool. All searches use only publicly available 
+information and legal public APIs and tools.
+You are solely responsible for how you use this 
+application. Only investigate subjects you have 
+explicit legal authorization to investigate.
+Unauthorized investigation of private individuals 
+may violate state and federal privacy laws including
+the DPPA, ECPA, and CFAA.
+By continuing you accept full and complete legal 
+responsibility for all your use of this tool."
+Checkbox. Continue button. Timestamp logged to config.
+Never shown again after accepted.
+
+NAVIGATION STRUCTURE:
+Left sidebar — fixed, always visible when unlocked:
+- NYXUS INTEL logo and app name at top
+- Search bar — filter subjects in sidebar
+- Alphabetical subject index:
+  Letters A through Z
+  Each letter shows count of subjects
+  Click letter — expands to show subjects under it
+  Each subject entry shows:
+    Name or identifier
+    Search date
+    Total findings count
+    Confidence indicator — color coded dot
+  Click subject — opens case file in main area
+  Right click subject — context menu:
+    Open case
+    Export as PDF
+    Export as encrypted archive
+    Lock case with additional password
+    Merge with another case
+    Delete case — confirmation required
+- New Search button at bottom of sidebar
+- Settings button at very bottom
+
+Top bar — always visible when unlocked:
+- App title left side
+- Active searches indicator — spinner and count
+  when searches are running
+- Lock button — always visible — Ctrl+L
+- Settings gear icon
+
+Main area — switches between:
+- Welcome screen when no case selected
+- Search progress screen during active search
+- Case file viewer when case selected
+
+Bottom status bar:
+- Current operation description
+- Last search time
+- Total cases stored
+- Database size
+
+NEW SEARCH FLOW:
+
+Click New Search — opens search panel in main area:
+
+Single unified search input — large, prominent:
+Placeholder text: 
+"Enter name, email, username, phone number, 
+IP address, domain, crypto wallet, or drop 
+an image file here"
+
+Auto detection of input type:
+- Contains @ → email investigation triggered
+- Numeric with dashes → phone investigation
+- Starts with IP pattern → IP investigation  
+- Starts with http www or domain pattern → domain
+- Starts with Bitcoin patterns 1 3 bc1 → Bitcoin
+- Starts with 0x and 42 chars → Ethereum
+- Image file dropped → photo analysis
+- Plain text → person and username search
+
+Manual type override dropdown if needed
+
+Search button — large, prominent, hand drawn style
+
+When search starts:
+- Progress panel fills main area
+- Each tool shown as its own status row:
+  Tool name — Running / Complete / Failed
+  Spinner while running
+  Checkmark when complete
+  Finding count when complete
+- Results populate in real time below progress
+- User can read results as they come in
+- Does not wait for all tools to finish
+
+WHAT GETS SEARCHED — REAL WORKING TOOLS ONLY:
+
+EMAIL INVESTIGATION:
+Triggers automatically when @ detected in input.
+Runs all simultaneously in background threads:
+
+HaveIBeenPwned API:
+- Requires free API key — prompt user to enter in settings
+- Returns every breach email appeared in
+- For each breach shows:
+  Breach name and website
+  Date of breach
+  Exactly what data was exposed
+  Number of accounts in breach
+  Whether passwords were plain text or hashed
+- Also checks paste sites via HIBP API
+
+Holehe:
+- Install via pip — holehe package
+- Checks 200+ platforms for account registered 
+  with that email
+- Returns for each platform:
+  Account exists — confirmed
+  Account likely exists
+  Account not found
+  Platform name and direct URL if found
+- Run via subprocess, parse output
+
+DeHashed API:
+- Requires API key — prompt in settings
+- Searches breach database
+- Returns entries containing that email
+- Shows username, IP, password hash, name if present
+
+Username and name extraction:
+- Extract username portion before @ symbol
+- Extract potential first/last name if format allows
+- Automatically feed both into person search
+- Runs person search in parallel without user input
+
+EMAIL RESULT CARDS show:
+- Platform name with icon
+- Status — found, not found, likely
+- Direct link to profile if found
+- Breach details if breach result
+- Data exposed clearly listed
+- Date of breach or discovery
+- Confidence level
+- Source clearly labeled
+
+USERNAME SEARCH:
+Triggers when username pattern detected or 
+extracted from email.
+
+Sherlock:
+- Install via pip or git clone
+- Run via subprocess with username as argument
+- Parse output in real time as it streams
+- For each platform found:
+  Platform name
+  Full URL to profile
+  Response time
+  Status — found, not found, error
+- Show results populating in real time
+- Group by: found, not found, error
+
+Additional username checks beyond Sherlock:
+- Namechk style checks for platforms Sherlock misses
+- Username variations automatically checked:
+  username123, username_, _username, username.name
+  username-name, nameusername, name_username
+
+USERNAME RESULT CARDS show:
+- Platform name
+- Full clickable URL
+- Account status
+- Profile preview if publicly accessible
+- Date account created if visible
+- Confidence level
+
+PERSON SEARCH:
+Triggers on plain name input.
+Runs all simultaneously:
+
+Google Dork Automation:
+Using Google Custom Search API — requires API key:
+Run these dorks automatically:
+"firstname lastname" site:linkedin.com
+"firstname lastname" site:facebook.com
+"firstname lastname" site:twitter.com
+"firstname lastname" filetype:pdf
+"firstname lastname" resume OR cv
+"firstname lastname" site:github.com
+"firstname lastname" site:reddit.com
+"firstname lastname" contact OR email OR phone
+"firstname lastname" address OR location
+"firstname lastname" site:spokeo.com OR site:whitepages.com
+"firstname lastname" news article
+"firstname lastname" court OR lawsuit OR filed
+"firstname lastname" obituary
+"firstname lastname" site:youtube.com
+"firstname lastname" site:instagram.com
+
+Parse results — for each result:
+  Title, URL, snippet, date if available
+  Categorize by source type automatically
+
+Public Government Records APIs:
+All free public APIs — no special access needed:
+
+FAA Aircraft Registration:
+- Query: registry.faa.gov API
+- Search by owner name
+- Returns aircraft type, tail number, 
+  registration date, owner address, status
+- Shows if they own or have owned aircraft
+
+FCC License Database:
+- Query: data.fcc.gov API  
+- Search by name
+- Returns license type, callsign, frequency,
+  address, grant date, expiry, status
+- Amateur radio, commercial licenses etc
+
+SEC EDGAR:
+- Query: efts.sec.gov API
+- Search by person name
+- Returns all filings mentioning that name
+- Officer roles, company affiliations,
+  stock transactions requiring disclosure
+
+FEC Campaign Finance:
+- Query: api.open.fec.gov — free public API
+- Search donor name
+- Returns all political donations over $200
+- Amount, recipient, date, employer, address
+- Completely public record
+
+USPTO Patents:
+- Query: developer.uspto.gov API
+- Search inventor name
+- Returns all patents filed
+- Patent title, number, date, description
+- Co-inventors revealed
+
+USPTO Trademarks:
+- Query: tsdr.uspto.gov API
+- Search owner name
+- Returns all trademark registrations
+- Brand names they own or have owned
+
+OpenSanctions:
+- Query: api.opensanctions.org — free API
+- Check name against all sanctions lists
+- UN, EU, US OFAC, and 200+ other lists
+- Returns any matches with list source
+- Critical for due diligence
+
+Wayback Machine:
+- Query: archive.org API
+- Search for pages mentioning the name
+- Returns cached pages with that name
+- Show historical content found
+
+Reddit Search:
+- Query: pushshift.io API
+- Search username and name in posts and comments
+- Returns posts, comments, subreddits active in
+- Account creation date if findable
+
+GitHub Search:
+- Query: api.github.com — free public API
+- Search by name and email
+- Returns repositories, commits, contributions
+- Email addresses found in commit history
+- Organizations member of
+
+Pastebin and Paste Sites:
+- Search psbdmp.ws API for pastes containing name
+- Returns any paste mentioning the name or email
+
+News Search:
+- Google News RSS for name mentions
+- Returns recent and historical news articles
+- Date, source, headline, snippet
+
+PERSON RESULT CARDS show:
+- Source name clearly labeled
+- Finding type — profile, record, mention etc
+- Relevant details extracted and shown clearly
+- Direct link to source
+- Date if available
+- Confidence level
+
+IP INVESTIGATION:
+Triggers on IP address input.
+Runs simultaneously:
+
+Shodan:
+- Requires API key — free tier available
+- Full host report for IP
+- Open ports and services running
+- Software versions detected
+- Known vulnerabilities
+- Historical data — what was running before
+- Organization and ISP
+
+VirusTotal:
+- Requires free API key
+- IP reputation report
+- Detection by security vendors
+- Related malicious files
+- URLs hosted on this IP
+- Communication patterns
+
+AbuseIPDB:
+- Requires free API key
+- Abuse confidence score
+- Report history — who reported it and why
+- Country, ISP, usage type
+- Total reports count
+
+IPinfo:
+- Free tier available
+- Geolocation — city, region, country
+- ISP and organization
+- ASN information
+- Timezone
+- Whether it is a VPN or proxy or Tor
+
+WHOIS:
+- python-whois library
+- Full registration data
+- Registrant if not privacy protected
+- Registration and expiry dates
+- Name servers
+
+Reverse DNS:
+- What domain names point to this IP
+- Historical reverse DNS
+
+Tor Exit Node Check:
+- Check against Tor exit node list
+- Returns whether IP is a known Tor exit node
+
+IP RESULT CARDS show:
+- IP reputation score prominently
+- Location on inline map
+- All open ports listed clearly
+- ISP and organization
+- Abuse history summary
+- All vendor detections
+
+DOMAIN INVESTIGATION:
+Triggers on domain/URL input.
+
+WHOIS — python-whois:
+- Full current registration data
+- Registrant name, email, address if not private
+- Registration date, expiry date
+- Name servers
+- Registrar
+
+Historical WHOIS — whoisxml API:
+- Who owned domain in the past
+- Address and contact history before privacy protection
+- Ownership changes over time
+
+DNS Records — dnspython:
+- All record types: A, AAAA, MX, TXT, NS, SOA, CNAME
+- Show all results for each type
+- TTL values
+
+SSL Certificate History — crt.sh:
+- Query crt.sh API
+- All SSL certificates ever issued for domain
+- Organization names on certificates
+- Email addresses on certificates
+- Subdomains revealed in certificate transparency
+
+Wayback Machine Deep Scan:
+- All snapshots ever taken of domain
+- Timeline of captures
+- Preview any snapshot
+- Pages linked from snapshots
+
+Shodan Domain Search:
+- All IPs associated with domain
+- Services running on each IP
+- Vulnerabilities found
+
+VirusTotal Domain:
+- Domain reputation
+- Malware detections
+- Associated IPs
+- URLs flagged as malicious
+
+Subdomain Enumeration:
+- Certificate transparency via crt.sh
+- DNS brute force common subdomains
+- Returns all discovered subdomains
+
+Technology Detection:
+- What technologies power the website
+- Server software, frameworks, analytics
+- Via builtwith API or wappalyzer
+
+DOMAIN RESULT CARDS show:
+- Registration details clearly
+- Historical ownership timeline
+- All DNS records in readable format
+- SSL certificate history
+- Technology stack found
+- Reputation scores
+
+CRYPTOCURRENCY INVESTIGATION:
+Triggers on Bitcoin or Ethereum address input.
+
+Bitcoin — Blockchain.info API:
+- Total received amount in BTC and USD
+- Total sent amount
+- Current balance
+- First transaction date
+- Last transaction date
+- Total transaction count
+- All transactions listed:
+  Date and time
+  Amount
+  Direction — received or sent
+  Other wallet address
+  Transaction hash
+  Block confirmation count
+- Connected wallets — all wallets that 
+  sent to or received from this address
+- Risk flags — if wallet interacted with
+  known darknet market addresses or 
+  sanctioned wallets
+
+Ethereum — Etherscan API:
+- Free API key required
+- Same depth as Bitcoin
+- ETH balance and USD value
+- All transactions
+- Token transfers — ERC20 tokens
+- Smart contract interactions
+- ENS name if registered
+
+CRYPTO RESULT CARDS show:
+- Balance prominently displayed
+- Transaction timeline visual
+- Connected wallet count
+- Risk score if any flags
+- Total volume in and out
+- First and last activity dates
+
+PHOTO AND IMAGE ANALYSIS:
+Triggers when image file dropped or uploaded.
+
+EXIF Metadata Extraction — piexif and Pillow:
+Extract and display ALL metadata found:
+
+GPS Data if present:
+- Latitude and longitude converted to decimal
+- Resolve to street address via geocoding API
+- Display on inline map pinned to exact location
+- Altitude — calculate approximate floor if building
+- GPS timestamp — separate from photo timestamp
+- GPS precision/accuracy
+
+Date and Time:
+- Date original — when photo actually taken
+- Date digitized — when processed
+- Date modified — when file last changed
+- Timezone offset if present
+- Detect if date was modified after capture:
+  Compare original vs modified timestamps
+  Flag inconsistency if found
+  Show warning clearly
+
+Device Information:
+- Camera make — Apple Samsung Google etc
+- Camera model — exact model
+- Software version — iOS Android version
+- Firmware version if present
+- Unique device identifier if present
+- Lens model if present
+
+Camera Settings:
+- Focal length
+- Aperture f-stop
+- Shutter speed
+- ISO sensitivity
+- Flash — fired or not
+- White balance
+- Metering mode
+- Exposure compensation
+
+Image Properties:
+- Dimensions in pixels
+- Color space
+- Bit depth
+- Compression type
+- Thumbnail embedded
+
+File Integrity Analysis:
+- SHA256 hash of file
+- Check if metadata was modified after capture
+- Detect multiple save operations
+- Flag any inconsistencies found
+- Show modification history if detectable
+
+Reverse Image Search:
+- Search image across multiple engines
+- Find all public locations where image appears
+- Google reverse image via scraping
+- Bing visual search
+- TinEye if available
+- Return all URLs where image found
+- Platform, date posted, account that posted
+
+PHOTO RESULT CARDS show:
+- GPS location on map if found
+- Full address resolved
+- All metadata in readable format
+- Date analysis with any warnings
+- Device information clearly
+- All locations where image found online
+- Modification warnings prominently if detected
+
+INTEGRITY WARNING displayed prominently if:
+- Date modified differs from date taken
+- Multiple save operations detected
+- Metadata fields inconsistent with each other
+- GPS data missing but other data present
+- Any anomalies detected
+
+AUTO CASE FILING:
+
+When search completes — automatically:
+
+1. Create case folder named:
+   Person search: LASTNAME_FIRSTNAME_DATEOFSEACH
+   Email search: EMAIL_ADDRESS_DATEOFSEACH  
+   Username search: USERNAME_DATEOFSEACH
+   IP search: IP_ADDRESS_DATEOFSEACH
+   Domain search: DOMAIN_DATEOFSEACH
+   Crypto search: WALLET_SHORT_DATEOFSEACH
+   Photo search: PHOTO_ANALYSIS_DATEOFSEACH
+
+2. File all findings into categories automatically:
+   /Identity — names, usernames, profiles
+   /Contact — emails, phones, addresses
+   /Digital_Footprint — platform accounts
+   /Breach_Data — all breach findings
+   /Public_Records — government records
+   /Financial — business, property, donations
+   /Legal — court and sanctions records
+   /Crypto — blockchain analysis
+   /Historical — archived old content
+   /Photos — images found or analyzed
+   /Raw_Data — complete JSON all API responses
+   /Report — auto generated PDF
+
+3. Generate PDF report automatically:
+   NYXUS INTEL header and logo
+   Subject name and search date
+   Executive summary in plain English
+   Confidence score overall
+   Total sources checked
+   Total findings by category
+   Each category section with all findings
+   Source citation for every finding
+   Timeline if dates available
+   NYXUS INTEL watermark and timestamp
+   Generated by Joey Sierengowski GowskiNet
+   Copyright 2026
+
+4. Add subject to alphabetical sidebar index
+   Filed under correct letter automatically
+   Shows finding count and date
+
+CASE FILE VIEWER:
+
+When subject selected from sidebar:
+
+Top summary card:
+- Subject name or identifier prominently
+- Photo if found — circular display
+- Total findings count
+- Search date and time
+- Overall confidence score — color coded
+- Quick stats row:
+  Platforms found count
+  Breaches found count  
+  Records found count
+  Photos found count
+
+Tab navigation:
+- Overview — executive summary, key findings
+- Timeline — all findings chronological order
+- Identity — all profiles and usernames
+- Breach Data — all breach results
+- Public Records — all government findings
+- Digital Footprint — all online presence
+- Historical — archived and old content
+- Financial — business and property records
+- Photos — all images found or analyzed
+- Crypto — blockchain analysis if applicable
+- Notes — your personal notes on this case
+- Raw Data — full JSON for power users
+
+Each finding displayed as a card:
+- Clear label — what was found
+- Source name — where it came from
+- Direct clickable link to source
+- Date if available
+- Confidence indicator
+- The actual content — readable plain English
+- Star button — mark as important
+- Delete button — remove this finding
+- Copy button — copy to clipboard
+- Expand button — see full details
+
+NOTES TAB:
+- Free text notes field — your own observations
+- Add note button — timestamped entries
+- Notes saved with case file
+- Notes encrypted with case
+
+CASE MANAGEMENT:
+
+Alphabetical sidebar navigation:
+- All cases sorted A through Z automatically
+- Letter headers show case count
+- Each case entry shows name, date, count
+- Search bar filters in real time
+
+Right click case options:
+- Open case
+- Export as PDF — generates fresh report
+- Export as encrypted archive — password protected zip
+- Lock case — add individual password to this case
+- Merge cases — combine two subjects
+- Delete case — requires confirmation dialog
+- Add note to case
+
+Bulk operations:
+- Select multiple cases
+- Export selected as batch
+- Delete selected with confirmation
+
+SETTINGS PANEL:
+
+API Keys section:
+- HaveIBeenPwned API key field
+- Shodan API key field
+- VirusTotal API key field
+- AbuseIPDB API key field
+- DeHashed API key field
+- FEC API key field — free, just register
+- Google Custom Search API key and engine ID
+- Etherscan API key field
+- IPinfo API key field
+- Each field has: input, save button, test button
+- Test button verifies key works and shows quota
+
+Security section:
+- Change master password
+- Auto lock timeout slider — 1 to 60 minutes
+- Lock on screen lock toggle
+- Failed attempt limit — 3 to 10
+
+Storage section:
+- Cases location — file picker
+- Backup location — file picker
+- Backup schedule — manual, daily, weekly
+- Backup now button
+- Storage used display
+- Clear all cases — requires password confirmation
+
+Search Defaults section:
+- Default search depth — quick or thorough
+- Auto start search on enter toggle
+- Auto generate PDF on completion toggle
+- Show raw data tab toggle
+
+About section:
+- App version
+- Total cases stored
+- Total searches run
+- Database size
+- Credits — NYXUS INTEL by Joey Sierengowski
+- Copyright 2026 GowskiNet
+
+SECURITY AND ENCRYPTION:
+
+All case data encrypted at rest:
+- AES-256-GCM encryption
+- Key derived from master password via PBKDF2
+- Each case has unique salt
+- Encryption transparent to user
+
+File security:
+- Cases stored as encrypted SQLite database
+- No plain text case files ever on disk
+- Temp files never created
+- Memory cleared after session
+
+Secure deletion:
+- Delete overwrites file multiple times
+- Not just marked as deleted — actually wiped
+- Confirmation required before any delete
+
+Privacy:
+- Zero telemetry
+- Zero analytics
+- Zero cloud connection
+- Everything local only
+- No data ever transmitted except API calls
+  during active searches
+
+TECH STACK:
+- GTK4 Python native
+- Cairo for all custom hand drawn UI elements
+- Sherlock via subprocess — install in setup
+- Holehe Python library — pip install holehe
+- HaveIBeenPwned via requests API
+- Shodan Python library — pip install shodan
+- VirusTotal via requests API
+- AbuseIPDB via requests API
+- IPinfo via requests API
+- python-whois — pip install python-whois
+- dnspython — pip install dnspython
+- Blockchain.info via requests API
+- Etherscan via requests API
+- USPTO via requests API
+- SEC EDGAR via requests API
+- FEC via requests API
+- FAA via requests API
+- FCC via requests API
+- OpenSanctions via requests API
+- Google Custom Search via requests API
+- Wayback Machine via requests API
+- crt.sh via requests API
+- Pillow for image handling — pip install Pillow
+- piexif for EXIF extraction — pip install piexif
+- bcrypt for password hashing — pip install bcrypt
+- cryptography for AES encryption
+- reportlab for PDF generation
+- sqlite3 for encrypted case database
+- All API calls in background threads always
+- UI never freezes during any operation
+- Progress updates via GLib.idle_add only
+- Cases at ~/.config/nyxus-intel/cases/
+- Config at ~/.config/nyxus-intel/config.json
+- Keys stored encrypted separately
+
+GTK4 REQUIREMENTS:
+- All action names valid format only
+  Letters numbers hyphens dots — nothing else
+- No CSS importing resources that dont exist
+- All UI updates on main thread via GLib.idle_add
+- App must launch without any crashes
+- Password screen must appear before anything else
+- Test every button and action before delivering
+
+EVERYTHING MUST WORK:
+- Password lock must actually lock — no bypass ever
+- Every search must call real APIs and return real data
+- Auto filing must correctly categorize everything
+- PDF must generate and be readable
+- Alphabetical sorting must be accurate
+- Encryption must actually encrypt case files
+- Delete must securely wipe data
+- All API integrations must handle errors gracefully
+- Show clear message if API key missing or invalid
+- Show clear message if API quota exceeded
+- App must never crash on bad input
+- Handle network errors gracefully
+- No placeholder features anywhere at all
+
+DELIVER:
+- main.py — app entry point
+- auth.py — password lock and session management
+- search_coordinator.py — unified search manager
+- email_intel.py — email investigation
+- username_intel.py — username search via Sherlock
+- person_intel.py — person search and records
+- ip_intel.py — IP investigation
+- domain_intel.py — domain investigation
+- crypto_intel.py — blockchain investigation
+- photo_intel.py — EXIF and image analysis
+- records_intel.py — all public records APIs
+- case_manager.py — case filing and management
+- case_viewer.py — case display interface
+- report_generator.py — PDF report creation
+- encryption.py — AES-256 case encryption
+- settings.py — settings panel
+- ui_components.py — all Cairo custom widgets
+- setup_wizard.py — first launch password setup
+- requirements.txt — all Python dependencies
+- packages.txt — all system packages needed
+- install.sh — installs everything including 
+  Sherlock and Holehe automatically
+- api_setup.md — which API keys needed, 
+  where to get each one, which are free
+- README.md — complete usage documentation

@@ -43,4 +43,4 @@ Although the directory name can appear ambiguous, in this repository it is a pri
 
 ---
 
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

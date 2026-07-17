@@ -19,7 +19,7 @@ set -euo pipefail
 #    sudo chmod +x /usr/local/bin/hypr-doctor
 #  (or installed automatically by nyxus-resync-all.sh r15+)
 #
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 #  Version log:
 #    r1 — initial release

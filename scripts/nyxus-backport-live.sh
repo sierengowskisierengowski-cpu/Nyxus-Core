@@ -38,12 +38,15 @@ echo "  mode   : $([[ $dry -eq 1 ]] && echo DRY-RUN || echo COPY)"
 # ── EWW (exclude restore points, backups, pycache) ───────────────────────
 if [[ -d "${HOME}/.config/eww" ]]; then
   echo "── eww config + scripts + assets ───────────────────────────────"
-  "${RSYNC[@]}" \
-    --exclude='.restore-points/' \
-    --exclude='*.bak' \
-    --exclude='*.bak-*' \
-    --exclude='__pycache__/' \
+  eww_excludes=(--exclude='.restore-points/' --exclude='*.bak' --exclude='*.bak-*' --exclude='eww.yuck.bak*' --exclude='__pycache__/')
+  if [[ -f "${HOME}/.config/eww/eww.scss.source" ]]; then
+    eww_excludes+=(--exclude='eww.scss')
+  fi
+  "${RSYNC[@]}" "${eww_excludes[@]}" \
     "${HOME}/.config/eww/" "${CANON}/eww/"
+  if [[ -f "${CANON}/eww/eww.scss.source" && -f "${CANON}/eww/eww.scss" ]]; then
+    rm -f "${CANON}/eww/eww.scss"
+  fi
 fi
 
 # ── Hyprland ─────────────────────────────────────────────────────────────
@@ -79,15 +82,23 @@ for theme_dir in dunst rofi wlogout; do
   esac
   [[ -f "$src_file" ]] && "${RSYNC[@]}" "$src_file" "${CANON}/$dst_name"
 done
-for rasi in config.rasi nyxus.rasi startmenu.rasi; do
+for rasi in config.rasi nyxus.rasi startmenu.rasi launcher.rasi power.rasi; do
   src="${HOME}/.config/rofi/$rasi"
   case "$rasi" in
     config.rasi)    dst=rofi-config.rasi ;;
     nyxus.rasi)     dst=rofi-nyxus.rasi ;;
     startmenu.rasi) dst=rofi-startmenu.rasi ;;
+    launcher.rasi)  dst=rofi-launcher.rasi ;;
+    power.rasi)     dst=rofi-power.rasi ;;
   esac
   [[ -f "$src" ]] && "${RSYNC[@]}" "$src" "${CANON}/$dst"
 done
+if [[ -d "${HOME}/.config/rofi" ]]; then
+  mkdir -p "${CANON}/rofi-scripts"
+  for sh in apps-launcher.sh cheatsheet.sh power.sh; do
+    [[ -f "${HOME}/.config/rofi/$sh" ]] && "${RSYNC[@]}" "${HOME}/.config/rofi/$sh" "${CANON}/rofi-scripts/$sh"
+  done
+fi
 [[ -f "${HOME}/.config/alacritty/alacritty.toml" ]] && \
   "${RSYNC[@]}" "${HOME}/.config/alacritty/alacritty.toml" "${CANON}/alacritty.toml"
 

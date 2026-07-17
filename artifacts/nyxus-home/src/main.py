@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ============================================
 # NYXUS Home — main GTK4 entry
-# (c) 2026 Joseph Sierengowski
+# (c) 2026 Joseph A. Sierengowski
 # NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================
 """
@@ -132,6 +132,16 @@ class HomeWindow(Gtk.ApplicationWindow):
         super().__init__(application=app)
         self.set_title("NYXUS Home")
         self.set_default_size(1280, 820)
+
+        # Pre-arm the nyxus_chrome re-entrancy guard. The auto-injected
+        # chrome present()-hook still runs _install_global_css /
+        # transparency (those execute before the guard), but this makes
+        # install_chrome return BEFORE its cosmic-scene wrap — that wrap
+        # calls overlay.add_overlay(cur) on our own Gtk.Overlay while it
+        # still has the window as parent, which GTK rejects ("already has
+        # parent") and left the whole dashboard orphaned/blank. HOME builds
+        # its own CosmicSceneArea backdrop, so the extra wrap is redundant.
+        self._nyxus_chrome_installed = True
 
         # Overlay: animated cosmic BG underneath, content on top
         overlay = Gtk.Overlay()

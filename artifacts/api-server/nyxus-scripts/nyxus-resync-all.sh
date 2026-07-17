@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # NYXUS — Bulk Resync All Apps
-# © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 #   curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-resync-all.sh | sudo bash
 #

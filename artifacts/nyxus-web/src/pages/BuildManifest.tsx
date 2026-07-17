@@ -1,6 +1,6 @@
 // ============================================
 // NYXUS — Build Manifest
-// Copyright © 2026 Joseph Sierengowski
+// Copyright © 2026 Joseph A. Sierengowski
 // All Rights Reserved
 // NYX-J5W-2026-SIERENGOWSKI-LOCKED
 // ============================================

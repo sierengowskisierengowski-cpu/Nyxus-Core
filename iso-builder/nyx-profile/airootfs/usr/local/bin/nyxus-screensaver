@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# NYXUS alien matrix-rain screensaver launcher.
+# Launched by hypridle at idle; torn down by hypridle on-resume via
+# `pkill -f nyxus_matrix_saver`. The saver itself also quits on any
+# key/click/mouse-move, so the user can never get trapped behind it.
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}"
+
+# single-instance guard
+if pgrep -f nyxus_matrix_saver >/dev/null 2>&1; then
+    exit 0
+fi
+exec python3 "$HOME/.config/nyxus/nyxus_matrix_saver.py"

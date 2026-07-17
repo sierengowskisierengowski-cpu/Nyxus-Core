@@ -1,0 +1,1 @@
+/opt/nyxus/nyxus_gen_icons.py

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================
 # NYXUS — nyx-2026.05.11-x86_64.iso
-# Copyright © 2026 Joseph Sierengowski
+# Copyright © 2026 Joseph A. Sierengowski
 # All Rights Reserved
 # Unauthorized use or distribution prohibited
 # NYX-J5W-2026-SIERENGOWSKI-LOCKED
@@ -12,9 +12,9 @@
 
 iso_name="nyx"
 iso_label="NYX_2026_05"
-iso_publisher="Joseph Sierengowski <https://github.com/sierengowski/NyX.OS-V1>"
+iso_publisher="Joseph A. Sierengowski <https://github.com/sierengowski/NyX.OS-V1>"
 iso_application="NYXUS Live/Install"
-iso_version="2026.05.12"
+iso_version="2026.07.16"
 install_dir="arch"
 buildmodes=('iso')
 bootmodes=(
@@ -77,6 +77,83 @@ file_permissions=(
   ["/usr/local/libexec/nyxus-welcome-helper"]="0:0:755"
   # Privileged helpers (libexec) — invoked via polkit, must be executable.
   ["/usr/local/libexec/nyxus-parental-helper"]="0:0:755"
+  # ── VM boot-test regression (2026-07-15) ─────────────────────────────
+  # First-ever real `mkarchiso` bake + boot test found nyxus-greeter shipped
+  # NON-EXECUTABLE (greetd: "/bin/sh: /usr/local/bin/nyxus-greeter: Permission
+  # denied" → login-loop with zero recovery, the exact class of bug this
+  # array exists to prevent). Root cause: this array was only ever patched
+  # piecemeal for whichever files broke a given outage — most of
+  # /usr/local/bin, /usr/local/libexec, /usr/local/sbin, and
+  # /etc/nyxus-firstboot.d/*.sh were never added and had never been through
+  # a real bake+boot cycle before tonight. Locking every currently-shipped
+  # executable in those trees here, generated from the actual airootfs
+  # contents at the time of this fix — see git history for the exact
+  # audit if this list needs regenerating after new scripts are added.
+  ["/etc/nyxus-firstboot.d/01-machine-id.sh"]="0:0:755"
+  ["/etc/nyxus-firstboot.d/02-xdg-user-dirs.sh"]="0:0:755"
+  ["/etc/nyxus-firstboot.d/03-mime-defaults.sh"]="0:0:755"
+  ["/etc/nyxus-firstboot.d/04-welcome.sh"]="0:0:755"
+  ["/etc/nyxus-firstboot.d/05-icon-cache.sh"]="0:0:755"
+  ["/usr/local/bin/nyxus"]="0:0:755"
+  ["/usr/local/bin/nyxus-account"]="0:0:755"
+  ["/usr/local/bin/nyxus-apply-accent"]="0:0:755"
+  ["/usr/local/bin/nyxus-backdoor-log"]="0:0:755"
+  ["/usr/local/bin/nyxus-bar-plugins"]="0:0:755"
+  ["/usr/local/bin/nyxus-bd-detect"]="0:0:755"
+  ["/usr/local/bin/nyxus-bd-router"]="0:0:755"
+  ["/usr/local/bin/nyxus-crash-report"]="0:0:755"
+  ["/usr/local/bin/nyxus-distrobox-helper"]="0:0:755"
+  ["/usr/local/bin/nyxus-dock"]="0:0:755"
+  ["/usr/local/bin/nyxus-doh"]="0:0:755"
+  ["/usr/local/bin/nyxus-eww-launch-safe"]="0:0:755"
+  ["/usr/local/bin/nyxus-focusmode"]="0:0:755"
+  ["/usr/local/bin/nyxus-gamemode"]="0:0:755"
+  ["/usr/local/bin/nyxus-gen-backdrop"]="0:0:755"
+  ["/usr/local/bin/nyxus-ghost-auth"]="0:0:755"
+  ["/usr/local/bin/nyxus-ghost-register"]="0:0:755"
+  ["/usr/local/bin/nyxus-greeter"]="0:0:755"
+  ["/usr/local/bin/nyxus-hotkey"]="0:0:755"
+  ["/usr/local/bin/nyxus-hub-apps"]="0:0:755"
+  ["/usr/local/bin/nyxus-hub-close"]="0:0:755"
+  ["/usr/local/bin/nyxus-hub-launch"]="0:0:755"
+  ["/usr/local/bin/nyxus-hub-open"]="0:0:755"
+  ["/usr/local/bin/nyxus-hub-search"]="0:0:755"
+  ["/usr/local/bin/nyxus-kernel-switch"]="0:0:755"
+  ["/usr/local/bin/nyxus-loginscreen"]="0:0:755"
+  ["/usr/local/bin/nyxus-mac-randomize"]="0:0:755"
+  ["/usr/local/bin/nyxus-mission"]="0:0:755"
+  ["/usr/local/bin/nyxus-oath-register"]="0:0:755"
+  ["/usr/local/bin/nyxus-pacman-toast"]="0:0:755"
+  ["/usr/local/bin/nyxus-plymouth"]="0:0:755"
+  ["/usr/local/bin/nyxus-protonup"]="0:0:755"
+  ["/usr/local/bin/nyxus-qs"]="0:0:755"
+  ["/usr/local/bin/nyxus-screensaver"]="0:0:755"
+  ["/usr/local/bin/nyxus-secboot"]="0:0:755"
+  ["/usr/local/bin/nyxus-session-start"]="0:0:755"
+  ["/usr/local/bin/nyxus-set-wallpaper"]="0:0:755"
+  ["/usr/local/bin/nyxus-shader"]="0:0:755"
+  ["/usr/local/bin/nyxus-snap"]="0:0:755"
+  ["/usr/local/bin/nyxus-sound"]="0:0:755"
+  ["/usr/local/bin/nyxus-store-install"]="0:0:755"
+  ["/usr/local/bin/nyxus-sync-stations"]="0:0:755"
+  ["/usr/local/bin/nyxus-usbguard-helper"]="0:0:755"
+  ["/usr/local/bin/nyxus-usbwatch-event"]="0:0:755"
+  ["/usr/local/bin/nyxus-virt-setup"]="0:0:755"
+  ["/usr/local/bin/nyxus-vpn"]="0:0:755"
+  ["/usr/local/bin/nyxus-wallpaper-autostart"]="0:0:755"
+  ["/usr/local/bin/nyxus-wallpaper-studio"]="0:0:755"
+  ["/usr/local/bin/nyxus-workspace-wallpaperd"]="0:0:755"
+  ["/usr/local/libexec/nyxus-account-helper"]="0:0:755"
+  ["/usr/local/libexec/nyxus-backup-helper"]="0:0:755"
+  ["/usr/local/libexec/nyxus-doctor-helper"]="0:0:755"
+  ["/usr/local/libexec/nyxus-security-helper"]="0:0:755"
+  ["/usr/local/libexec/nyxus-sound-system-default"]="0:0:755"
+  ["/usr/local/libexec/nyxus-usbwatch-helper"]="0:0:755"
+  ["/usr/local/sbin/nyxus-firstboot"]="0:0:755"
+  # Bifrost (Master Hub) — staged by build-iso.sh's "stage NYXUS Master Hub"
+  # step, same non-pacman-managed-file risk as everything else above.
+  ["/usr/bin/bifrost"]="0:0:755"
+  ["/usr/bin/bifrost-guardian"]="0:0:755"
   # Live-session sudoers drop-in: passwordless sudo for nyx user on the
   # live ISO ONLY. Calamares post-install removes /etc/sudoers.d/10-nyxus-live
   # so the installed system reverts to standard wheel + password.

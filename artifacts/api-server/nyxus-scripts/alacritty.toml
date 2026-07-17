@@ -55,80 +55,77 @@ hide_when_typing = true
 [bell]
 animation = "EaseOutExpo"
 duration  = 0
-color     = "#7949f2"
+color     = "#f4ead5"
 
-# ── PRISM terminal palette (rev 2026-07-06) ─────────────────
-# Neon-on-void: full 16-color ANSI ramp so syntax highlighting,
-# ls, git, htop etc. actually read in color instead of mono cream.
 [colors]
 draw_bold_text_with_bright_colors = true
 
 [colors.primary]
-background     = "#05060a"
-foreground     = "#eef2fa"
-dim_foreground = "#eef2fa8c"
+background     = "#0a0a14"
+foreground     = "#f4ead5"
+dim_foreground = "#f4ead58c"
 
 [colors.cursor]
-text   = "#05060a"
-cursor = "#7949f2"
+text   = "#050308"
+cursor = "#f4ead5"
 
 [colors.vi_mode_cursor]
-text   = "#05060a"
-cursor = "#ff2667"
+text   = "#050308"
+cursor = "#f4ead5"
 
 [colors.selection]
-text       = "#05060a"
-background = "#ff2667"
+text       = "#050308"
+background = "#f4ead5"
 
 [colors.search.matches]
-foreground = "#05060a"
-background = "#ffb026"
+foreground = "#050308"
+background = "#f4ead5"
 
 [colors.search.focused_match]
-foreground = "#05060a"
-background = "#7949f2"
+foreground = "#050308"
+background = "#f4ead5"
 
 [colors.footer_bar]
-background = "#05060a"
-foreground = "#eef2fa8c"
+background = "#050308"
+foreground = "#f4ead58c"
 
 [colors.hints.start]
-foreground = "#05060a"
-background = "#7949f2"
+foreground = "#050308"
+background = "#f4ead5"
 
 [colors.hints.end]
-foreground = "#05060a"
-background = "#ff2667"
+foreground = "#050308"
+background = "#f4ead5"
 
 [colors.normal]
-black   = "#05060a"
-red     = "#ff5470"
-green   = "#26ffb7"
-yellow  = "#ffb026"
-blue    = "#4d9fff"
-magenta = "#7949f2"
-cyan    = "#ff2667"
-white   = "#eef2fa"
+black   = "#050308"
+red     = "#f87171"
+green   = "#f4ead5"
+yellow  = "#f4ead5"
+blue    = "#1a1a28"
+magenta = "#f4ead5"
+cyan    = "#f4ead5"
+white   = "#f4ead5"
 
 [colors.bright]
-black   = "#3a4152"
-red     = "#ff7a93"
-green   = "#6dffcf"
-yellow  = "#ffce85"
-blue    = "#7ab8ff"
-magenta = "#ff7ae5"
-cyan    = "#66efff"
-white   = "#ffffff"
+black   = "#0a0a14"
+red     = "#f87171"
+green   = "#f4ead5"
+yellow  = "#f4ead5"
+blue    = "#1a1a28"
+magenta = "#f4ead5"
+cyan    = "#f4ead5"
+white   = "#f4ead5"
 
 [colors.dim]
 black   = "#000000"
-red     = "#b23a4f"
-green   = "#00b37d"
-yellow  = "#b37e3b"
-blue    = "#366fb3"
-magenta = "#b23797"
-cyan    = "#00a0b3"
-white   = "#a6adbd"
+red     = "#f87171"
+green   = "#f4ead58c"
+yellow  = "#f4ead58c"
+blue    = "#1a1a28"
+magenta = "#f4ead58c"
+cyan    = "#f4ead58c"
+white   = "#f4ead58c"
 
 [[keyboard.bindings]]
 key    = "V"

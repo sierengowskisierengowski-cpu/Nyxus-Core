@@ -6,7 +6,7 @@
 }
 {
     "label" : "logout",
-    "action" : "loginctl terminate-user $USER",
+    "action" : "bash -c 'nyxus-sound logout; sleep 0.7; loginctl terminate-user $USER'",
     "text" : "󰍃  Logout",
     "keybind" : "e"
 }

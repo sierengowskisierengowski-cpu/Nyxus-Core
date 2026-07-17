@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Terminal
+Comment=NYXUS-themed terminal
+Exec=/usr/local/bin/nyxus-terminal
+Icon=preferences-system
+Categories=System;Utility;
+Terminal=false
+StartupNotify=true

@@ -3,7 +3,7 @@ NYXUS Home — LIVE notifications card (rev r1 · 2026-07-12)
 Real feed from `dunstctl history` (the actual dunst daemon history) —
 no seeded/fake entries.  Refreshes every 5 s; dismissal removes the
 item from dunst's history via `dunstctl history-rm`.
-(c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+(c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 

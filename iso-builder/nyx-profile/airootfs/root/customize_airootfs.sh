@@ -12,6 +12,22 @@
 # Reference: https://wiki.archlinux.org/title/Archiso#Adding_users
 set -e -u
 
+# ── Package-rename compat shims (rev 2026-07-16) ────────────────────────
+# Arch `extra` dropped `swww` in favor of `awww` ("An Answer to your
+# Wayland Wallpaper Woes", a maintained fork — its own package metadata
+# declares Provides:swww + Replaces:swww). packages.x86_64 now installs
+# `awww`, but every NYXUS script/config still invokes the `swww`/
+# `swww-daemon` commands verbatim (nyxus-set-wallpaper.sh,
+# nyxus-wallpaper-autostart, nyxus_wallpaper_studio.py, hypr conf.d
+# exec-once lines, etc.) — rather than touch every call site, symlink the
+# old command names to the new binaries so nothing else has to change.
+for pair in "swww:awww" "swww-daemon:awww-daemon"; do
+  old="${pair%%:*}"; new="${pair##*:}"
+  if [ -x "/usr/bin/${new}" ] && [ ! -e "/usr/bin/${old}" ]; then
+    ln -s "/usr/bin/${new}" "/usr/bin/${old}"
+  fi
+done
+
 # ── Locale ──────────────────────────────────────────────────────────────
 locale-gen
 
@@ -410,7 +426,11 @@ chmod 700 /var/log/nyxus
 # ── Enable display + network + hardware services on the LIVE ISO ───────
 # These are also re-enabled by nyxus-postinstall on the installed system,
 # but enabling them in the live image means hardware works for live demos.
-systemctl enable sddm.service                2>/dev/null || true
+# Greeter: greetd + regreet (Wayland). SDDM's X11 greeter failed on hybrid
+# Intel+NVIDIA (GL SIGSEGV, then VT-handoff blank screen); greetd uses the
+# same Wayland/DRM path Hyprland does. nyxus-greeter chain falls back to
+# tuigreet (text) so the box never lands on a frozen screen. (rev 2026-07-14)
+systemctl enable greetd.service              2>/dev/null || true
 systemctl enable NetworkManager.service      2>/dev/null || true
 systemctl enable systemd-timesyncd.service   2>/dev/null || true
 systemctl enable bluetooth.service           2>/dev/null || true
@@ -445,15 +465,57 @@ for svc in \
   paccache.timer \
   reflector.timer \
   fstrim.timer \
-  nyxus-firstboot.service ; do
+  scx.service \
+  nyxus-firstboot.service \
+  jett-daemon.service \
+  docker.service \
+  nyxus-honeypot-firewall.service ; do
   systemctl enable "${svc}" 2>/dev/null || true
 done
+# jett-daemon.service: jeTT AI Security Daemon (rev 2026-07-16). Safe to
+# enable by default because the shipped override.conf pins it to
+# JETT_MODE=learn + JETT_ENFORCE_DRY_RUN=1 — it observes and logs would-be
+# verdicts but never kills/quarantines anything until an operator reviews
+# false positives and deliberately switches it to enforce.
+#
+# docker.service + nyxus-honeypot-firewall.service (rev 2026-07-16, r2):
+# needed so the honeypot/Docker stack (created once by the
+# /etc/nyxus-firstboot.d/06-honeypot-stack.sh fragment) comes back up on
+# every subsequent boot via each container's own restart:unless-stopped
+# policy — exactly the mechanism the live dev machine relies on, not a
+# bespoke re-implementation. nyxus-honeypot-firewall re-applies the
+# DOCKER-USER egress lockdown every time docker(.service) starts
+# (PartOf=docker.service in its own unit), since iptables rules don't
+# survive a docker restart on their own.
+
+# ── Meli + honeypot bridges — global (all-users) systemd --user units ──
+# rev 2026-07-16, r2: the user explicitly asked for the full live setup
+# (Meli app + ingest + the six honeypot→Meli bridges) to come up
+# automatically, matching how this machine runs today, superseding the
+# earlier "opt-in via Setup Wizard" call for the bridges. `--global`
+# enables these for any user account created at install time (no
+# per-user ~/.config/systemd/user copy needed, and no user session has
+# to exist yet at build time for this to take effect).
+systemctl --global enable \
+  meli.service \
+  meli-ingest.service \
+  meli-labyrinth-digest.timer \
+  cowrie-bridge.service \
+  conpot-bridge.service \
+  dionaea-bridge.service \
+  endlessh-bridge.service \
+  heralding-bridge.service \
+  http-bridge.service \
+  2>/dev/null || true
+# scx.service: sched_ext userspace scheduler (scx_lavd, /etc/default/scx).
+# Runtime-swappable; `systemctl stop scx` reverts to kernel EEVDF instantly.
 
 # Stop systemd-timesyncd in favour of chrony (the two conflict).
 systemctl disable systemd-timesyncd.service 2>/dev/null || true
-# Keep greetd installed only as a manual emergency fallback to avoid
-# conflicting display-manager startup paths with SDDM.
-systemctl disable greetd.service 2>/dev/null || true
+# greetd is the primary greeter (enabled above). Keep SDDM installed only as
+# a manual emergency fallback; disable it so the two don't fight over
+# display-manager.service at boot.
+systemctl disable sddm.service 2>/dev/null || true
 
 # Bind /etc/nsswitch.conf so .local hostnames resolve via mDNS.
 if [ -f /etc/nsswitch.conf ] && ! grep -q 'mdns_minimal' /etc/nsswitch.conf; then

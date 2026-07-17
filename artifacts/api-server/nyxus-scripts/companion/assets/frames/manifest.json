@@ -1,0 +1,59 @@
+{
+  "name": "nyxus-alien-piloted",
+  "note": "Piloted-saucer companion cut from nyxus-wall-alien-hero.png (the wallpaper peace-sign alien). chill=bust, peace=bust+hand; the engine drives wave/cheer/alert as motion/tint variations.",
+  "sprite_width": 342,
+  "sprite_height": 318,
+  "baseline_y": 314,
+  "default_facing": "left",
+  "states": {
+    "chill": {
+      "frames": [
+        "chill"
+      ],
+      "fps": 1,
+      "loop": true
+    },
+    "idle": {
+      "frames": [
+        "chill"
+      ],
+      "fps": 1,
+      "loop": true
+    },
+    "peace": {
+      "frames": [
+        "peace"
+      ],
+      "fps": 1,
+      "loop": false
+    },
+    "wave": {
+      "frames": [
+        "peace"
+      ],
+      "fps": 1,
+      "loop": false
+    },
+    "cheer": {
+      "frames": [
+        "peace"
+      ],
+      "fps": 1,
+      "loop": false
+    },
+    "alert": {
+      "frames": [
+        "peace"
+      ],
+      "fps": 1,
+      "loop": false
+    },
+    "notify": {
+      "frames": [
+        "peace"
+      ],
+      "fps": 1,
+      "loop": false
+    }
+  }
+}

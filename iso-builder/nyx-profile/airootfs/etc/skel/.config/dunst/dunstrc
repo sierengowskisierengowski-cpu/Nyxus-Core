@@ -1,5 +1,5 @@
-# NYXUS dunst configuration · DARK MIRROR theme
-# Palette: #a06bff violet · #3ad8ff cyan · #0c0c12 obsidian · #e8e8f0 text
+# NYXUS dunst configuration · Sprint E Total Identity
+# Palette: #f4ead5 (cream accent) · #0a0a14 (void bg, 0.97 glass) · #050308 (ink) · #f87171 (critical) — matches swaync/style.css 1:1
 
 [global]
     monitor = 0
@@ -18,7 +18,6 @@
     progress_bar_min_width = 240
     progress_bar_max_width = 420
     progress_bar_corner_radius = 3
-    progress_bar_color = "#3ad8ff"
 
     indicate_hidden = yes
     transparency = 4
@@ -26,10 +25,10 @@
     padding = 14
     horizontal_padding = 16
     text_icon_padding = 12
-    frame_width = 2
-    frame_color = "#a06bff"
+    frame_width = 1
+    frame_color = "#f4ead538"
     gap_size = 6
-    separator_color = "#1a1a2e"
+    separator_color = "#1a1a28"
     sort = yes
 
     font = Inter 11
@@ -46,10 +45,10 @@
     show_indicators = yes
 
     icon_position = left
-    min_icon_size = 32
-    max_icon_size = 64
+    min_icon_size = 52
+    max_icon_size = 96
     icon_corner_radius = 3
-    icon_path = /usr/share/icons/Adwaita/32x32/status/:/usr/share/icons/Adwaita/32x32/devices/:/usr/share/icons/hicolor/32x32/apps/
+    icon_path = /home/cosmic/.local/share/nyxus/icons/:/usr/share/icons/Adwaita/32x32/status/:/usr/share/icons/Adwaita/32x32/devices/:/usr/share/icons/hicolor/32x32/apps/
 
     sticky_history = yes
     history_length = 50
@@ -72,24 +71,33 @@
     per_monitor_dpi = false
 
 [urgency_low]
-    background    = "#0c0c18eb"
-    foreground    = "#e8e8f0"
-    frame_color   = "#a06bff"
+    background    = "#0a0a14f7"
+    foreground    = "#f4ead58c"
+    frame_color   = "#f4ead538"
     timeout       = 5
-    default_icon  = dialog-information
+    default_icon  = nyxus-notif-ufo
 
 [urgency_normal]
-    background    = "#0c0c18eb"
-    foreground    = "#e8e8f0"
-    frame_color   = "#a06bff"
+    background    = "#0a0a14f7"
+    foreground    = "#f4ead5"
+    frame_color   = "#f4ead5"
     timeout       = 8
     override_pause_level = 30
-    default_icon  = dialog-information
+    default_icon  = nyxus-notif-ufo
 
 [urgency_critical]
-    background    = "#100c1aee"
-    foreground    = "#e8e8f0"
-    frame_color   = "#3ad8ff"
+    background    = "#0a0a14f7"
+    foreground    = "#f4ead5"
+    frame_color   = "#f87171"
     timeout       = 0
     override_pause_level = 60
-    default_icon  = dialog-warning
+    default_icon  = nyxus-notif-ufo
+
+# Forward every notification to the themed EWW UFO console popup and skip
+# dunst's own plain popup. dunst still owns the dbus service + keeps history
+# (notification center), so nothing breaks — remove this rule to fall back to
+# dunst's native popups.
+[nyxus-eww-popup]
+    appname = "*"
+    script = /home/cosmic/.local/bin/nyxus-notif-to-eww
+    skip_display = true

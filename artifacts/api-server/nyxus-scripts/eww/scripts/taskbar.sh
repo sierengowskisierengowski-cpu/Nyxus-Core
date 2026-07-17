@@ -2,7 +2,7 @@
 # NYXUS · EWW · taskbar — running windows from Hyprland
 # Emits {"items":[{address,title,class,glyph,active,workspace}, …]}
 # Used by the live taskbar widget in the bottom bar.
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 set -u
 export LC_ALL=C.UTF-8
 

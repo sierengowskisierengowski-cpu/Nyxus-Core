@@ -1,0 +1,349 @@
+
+Provides a set of Systemd units and helpers to set up the environment and manage standalone Wayland compositor sessions.
+
+Aside from environment setup/cleanup, it makes Systemd do most of the work and does not require any extra daemons running in background (except for a tiny waitpid process and a simple shell signal handler in the lightest case).
+
+This setup provides robust session management, overridable compositor- and session-aware environment management, XDG autostart, bi-directional binding with login session, clean shutdown, solutions for a set of small but annoying gotchas of systemd session management.
+
+For compositors this is an opportunity to offload: Systemd integration, session/XDG autostart management, Systemd/DBus activation environment interaction with its caveats.
+
+Important
+
+This project is currently in a stable phase with a slow-burning refactoring. Although no drastic changes are planned, keep an eye for commits with breaking changes, indicated by an exclamation point (e.g. fix!: ..., chore!: ..., feat!: ..., etc.).
+
+Important
+
+v0.26.0 now has special treatment of transient session vars: XDG_SEAT, XDG_SEAT_PATH, XDG_SESSION_ID, XDG_SESSION_PATH, XDG_VTNR. Those vars are not exported to activation environment(s) since they are highly session-specific. Instead they are fed to compositor unit via EnvironmentFile= directive pointing to a runtime file. uwsm app will pass them to launched services automatically. Also static unit files are now permanent, and shell code is moved to separate files in libexec dir. Compositor's executable basename will only be auto-added to XDG_CURRENT_DESKTOP if other sources came up empty.
+
+Note
+
+It is highly recommended to use dbus-broker as the D-Bus daemon implementation. Among other benefits, it reuses the systemd activation environment instead of having a separate one. This simplifies environment management and allows proper cleanup. Reference D-Bus implementation is also supported, but it doesn't allow unsetting vars, so a best effort cleanup is performed by setting them to an empty string instead. The only way to properly clean up the separate environment of the reference D-Bus daemon is to run loginctl terminate-user "".
+
+uwsm select (via whiptail)
+
+Concepts and features
+Uses systemd units and dependencies for startup, operation, and shutdown.
+Systemd units are treated with hierarchy and universality in mind.
+Bi-directional binding between login session and graphical session.
+Compositor-specific behavior is adjustable by plugins.
+Idempotently (well, best-effort-idempotently) handles environment.
+Can work with Desktop entries from `wayland-sessions` in XDG data hierarchy and/or be included in them.
+Can run with arbitrary compositor command line, or take it (along with other data) from desktop entries (saved as a unit drop-in).
+Provides better control of XDG autostart apps.
+Tries best to shutdown session cleanly via a net of dependencies between units.
+Provides helpers and tools for various operations.
+Installation and basic configuration
+1. Building and installing
+Checkout the last version-tagged commit. Untagged commits are WIP.
+
+Building and installing the python project directly.
+Building and installing a deb package.
+Arch.
+NixOS options.
+Runtime dependencies:
+
+python modules:
+xdg (pyxdg)
+dbus (dbus_python)
+waitpid (optional, but recommended for resources; from util-linux or util-linux-extra package)
+whiptail (optional, for select feature; from whiptail or libnewt package)
+a dmenu-like menu (optional; for uuctl script), supported:
+vicinae
+fuzzel
+walker
+wofi
+rofi
+hyprlauncher
+tofi
+bemenu
+wmenu
+dmenu
+notify-send (optional, for feedback from uwsm app commands and optional failed unit monitor fumon service; from libnotify-bin or libnotify package)
+inotifywait (optional, for ttyautolock script and service; from inotify-tools package)
+2. Service startup notification and vars set by compositor
+Potentially tricky part.
+
+TLDR; if your compositor puts WAYLAND_DISPLAY (and along with it DISPLAY, or other important or useful variables) into systemd activation environment, uwsm will make everything work automagically, proceed to section 3.
+
+Otherwise configure compositor to run uwsm finalize command at the end of its startup. It will deal with putting WAYLAND_DISPLAY and DISPLAY (if set) variables into activation environments in the best possible ways and signal unit readiness to systemd.
+
+If compositor is known to set useful vars but they are missing from activation environments.
+If graphical session is reached prematurely, i.e. compositor puts other vars into activation environments much later than `WAYLAND_DISPLAY`, too late for downstream units to get.
+Technical details
+3. Applications and Slices
+Applications should be launched in their own user-level systemd units.
+
+Some applications (usually those intended to be autostarted in a graphical session) are shipped with their own units. Check and enable them with: systemctl --user enable ....
+
+More info
+Other apps are shipped with XDG autostart entries. Systemd automatically converts them to app-*@autostart.service units and starts.
+
+More info
+To launch any other app use:
+
+uwsm app -- {executable|entry.desktop[:action]} [args ...]
+A one-shot app launcher can be started directly, but either configured to run things via uwsm app or wrapped in a shell expression to feed output, preferably Desktop Entry path or ID, to uwsm app.
+
+Not all launchers are able to provide Desktop Entry ID, most just provide the resulting command, so units will lack fancy description.
+
+Fuzzel since 1.14.0 exports app metadata via DESKTOP_ENTRY_* vars, hopefully starting a good trend. Those vars are supported transparently by uwsm app. See relevant PR for more info.
+
+Some examples:
+
+Launcher	Via	What	Metadata
+vicinae	gui	Vicinae settings > Extentions > Applications > Launch Prefix=uwsm app --	no
+fuzzel	command	fuzzel "--launch-prefix=uwsm app --"	env
+fuzzel	config	launch-prefix=uwsm app --	env
+albert	env var	ALBERT_APPLICATIONS_COMMAND_PREFIX: uwsm;app;--	no
+albert	shell	ALBERT_APPLICATIONS_COMMAND_PREFIX="uwsm;app;--" albert	no
+walker	config	app_launch_prefix = "uwsm app -- "	no
+wofi	shell	uwsm app -- "$(wofi --show drun --define=drun-print_desktop_file=true | sed -E "s/(\.desktop) /\1:/")"	entry
+wofi	shell	uwsm app -- "$(D=$(wofi --show drun --define=drun-print_desktop_file=true); case "$D" in *'.desktop '*) echo "${D%.desktop *}.desktop:${D#*.desktop }";; *) echo "$D";; esac)"	entry
+hyprlauncher	config	desktop_launch_prefix = uwsm app --	no
+tofi	shell	uwsm app -- $(tofi-drun)	no
+rofi	command	rofi -show drun -run-command "uwsm app -- {cmd}"	no
+Compositor itself runs in session.slice which has priority in some resource allocation. It would be a bad practice to accumulate all apps there, and extremely bad practice to accumulate processes inside compositor's unit itself.
+
+Faster alternatives
+Background and details
+4. Environments and shell profile
+There are three general groups of environment variables in graphical session operation:
+
+those that all/some apps need to see
+those that compositor needs to see
+those that compositor sets and graphical apps need to see (this was covered in section 2)
+Summary of where to put a user-level var for the first two categories:
+
+For user's systemd services, including compositor: define in ${XDG_CONFIG_HOME}/environment.d/*.conf. It does not affect login sessions or systemd user manager itself (see man 5 environment.d).
+For login shell context and uwsm environment preloader, including plugins: export in your shell's profile.
+For uwsm-managed graphical session: export in ${XDG_CONFIG_HOME}/uwsm/env or ${XDG_CONFIG_HOME}/uwsm/env.d/my_vars
+For uwsm-managed graphical session of specific compositor: export in ${XDG_CONFIG_HOME}/uwsm/env-${desktop} or ${XDG_CONFIG_HOME}/uwsm/env-${desktop}.d/my_vars
+Choose whatever scope suits your needs.
+
+If startup was initiated via uwsm start command, its environment will be saved and picked up by environment preloader (since uwsm start is supposed to be started from login session context, it is assumed that profile of the login shell was already sourced).
+
+Otherwise, environment preloader will source POSIX shell (/bin/sh) profile by itself (/etc/profile, ${HOME}/.profile). Other shells compatibility with these files may vary.
+
+Operation
+Syntax and behavior
+-h|--help option is available for uwsm and all of its subcommands.
+
+Basics:
+
+uwsm start [options] -- ${compositor} [arguments]
+Always use -- to disambiguate command line if any dashed arguments are intended for the launched compositor.
+
+${compositor} can be an executable or a valid desktop entry ID (optionally with an action ID appended via ':'), or one of special the values: select|default.
+
+If ${compositor} is given as a path, or -F option is given, "hardcode" mode is engaged: the resulting command line will always be written to unit drop-ins and contain full path to executable as seen by uwsm start. Path to executable will also be written if encountered in a desktop entry's Exec.
+
+Optional parameters to provide more metadata:
+
+-[a|e]D DesktopName1[:DesktopName2:...]: append (-a) or exclusively set (-e) ${XDG_CURRENT_DESKTOP}
+-N Name
+-C "Compositor description"
+Arguments and metadata are stored in specifier unit drop-ins if needed.
+
+The uwsm start ... command will wait until the graphical session ends, also holding open the login session it resides in. The graphical session will also deactivate if the process that started it ends.
+
+Some details
+Where to launch from
+Shell profile integration
+To launch automatically after login on virtual console 1, if systemd is at graphical.target, add this code (or equivalent) to your shell's profile:
+
+if uwsm check may-start && uwsm select; then
+	exec uwsm start default
+fi
+The main statement should be protected by a condition that will return false in situations when running uwsm start is not desired. I.e. if this is ~/.profile and uwsm environment preloader sources it by itself (it can do that if compositor's unit was activated without the use of uwsm start command).
+
+uwsm check may-start subcommand serves as a collection of useful checks. By default: user's dbus is available, parent is a login shell (process name starts with -), tty1 is in foreground, login session's tty matches, login session is local, system's graphical.target is active or activating, user's graphical-session.target and other related units are inactive.
+
+Also for convenience environment preloader defines IN_UWSM_ENV_PRELOADER=true variable (not exported), which can be probed from shell profile to do things conditionally.
+
+uwsm select shows whiptail menu to select the default desktop entry from wayland-sessions directories. At this point one can cancel and continue with the normal login shell.
+
+exec in shell profile causes uwsm to replace login shell, binding it to user's login session.
+
+uwsm start default launches the previously selected default compositor.
+
+From a display manager
+To launch uwsm from a display/login manager, uwsm can be used inside desktop entries.
+
+These entries are placed in wayland-sessions subdirectory of XDG_DATA_DIRS. Usually, if XDG_DATA_DIRS contains /usr/local/share and /usr/share, user defined entries are placed in /usr/local/share/wayland-sessions.
+
+Example /usr/local/share/wayland-sessions/my-compositor-uwsm.desktop:
+
+[Desktop Entry]
+Name=My compositor (with UWSM)
+Comment=My cool compositor, UWSM session
+
+# a reference to another entry (preferred since some DMs may fail on quoted arguments)
+Exec=uwsm start -- my-compositor.desktop
+
+# or a full command line with metadata and executable
+#Exec=uwsm start -N "My compositor" -D mycompositor:mylib -C "My cool compositor" -- mywm
+
+# invalidates entry if uwsm is missing
+TryExec=uwsm
+
+DesktopNames=mycompositor;mylib
+Type=Application
+Things to keep in mind:
+
+Command in Exec= should start with uwsm start.
+If command references an executable, keys of the entry should be mirrored in arguments, because otherwise uwsm will not have access to those strings.
+It should not point to itself (as a combination of Desktop Entry ID and Action ID).
+It should not point to a Desktop Entry ID and Action ID that also uses uwsm.
+Potentially such entries may be found and used by uwsm itself, i.e. in shell profile integration situation, or when launched manually. Following the principles above ensures uwsm will properly recognize itself and parse requested arguments inside the entry without any side effects.
+
+Some display managers may fail to handle quoting correctly. Workaround in this case is to use single-word arguments and/or point to another entry.
+
+Alternatively, if a display manager supports wrapper commands/scripts, uwsm can be inserted there to receive either Entry and Action IDs, or a parsed command line.
+
+Testing and feedback is needed.
+
+How to stop
+Either of:
+
+loginctl terminate-user "" (this ends all login sessions and units of current user, good for resetting everything, including runtime units, environments, etc.)
+loginctl terminate-session "$XDG_SESSION_ID" (this ends login session that uwsm was launched in, special unit wayland-session-bindpid@.service waiting for the former login shell process will exit and bring down graphical session units. Empty argument will only work if loginctl is called from within login session scope itself, so variable should be used when calling from graphical session units)
+uwsm stop (brings down graphical session units. Login session will end if uwsm start replaced login shell)
+systemctl --user stop wayland-wm@*.service (effectively the same as previous one)
+Do not use compositor's native exit mechanism or kill its process directly, this will yank compositor from under all the clients and interfere with ordered unit deactivation sequence.
+
+Longer story, tour under the hood
+Some extended examples and partial recreation of some behaviors via excessive shell code, just for deeper explanation.
+
+Dive
+Compositor-specific actions
+Shell plugins provide compositor-specific functions during environment preparation.
+
+Named ${__WM_BIN_ID__}.sh, they should only contain specifically named functions.
+
+${__WM_BIN_ID__} is derived from the item 0 of compositor command line by applying s/(^[^a-zA-Z]|[^a-zA-Z0-9_])+/_/ and converting to lower case.
+
+It is used as plugin id and suffix in function names.
+
+Variables available to plugins:
+
+__WM_ID__ - compositor ID, effective first argument of start.
+__WM_ID_UNIT_STRING__ - compositor ID escaped for systemd unit name.
+__WM_BIN_ID__ - processed first item of compositor argv.
+__WM_DESKTOP_NAMES__ - :-separated desktop names from DesktopNames= of entry and -D CLI argument.
+__WM_FIRST_DESKTOP_NAME__ - first of the above.
+__WM_DESKTOP_NAMES_LOWERCASE__ - same as the above, but in lower case.
+__WM_FIRST_DESKTOP_NAME_LOWERCASE__ - first of the above.
+__WM_DESKTOP_NAMES_EXCLUSIVE__ - (true|false) indicates that __WM_DESKTOP_NAMES__ came from CLI argument and are marked as exclusive.
+__OIFS__ - contains shell default field separator (space, tab, newline) for convenient restoring.
+Standard functions:
+
+load_wm_env - standard function for loading env files
+process_config_dirs - called by load_wm_env, iterates over whole XDG Config and system XDG Data hierarchies (decreasing priority)
+in_each_config_dir - called by process_config_dirs for each config dir, does nothing ATM
+process_config_dirs_reversed - called by load_wm_env, same as process_config_dirs, but in reverse (increasing priority)
+in_each_config_dir_reversed - called by process_config_dirs_reversed for each config dir, loads uwsm/env, uwsm/env.d/*, uwsm/env-${desktop}, uwsm/env-${desktop}.d/* files
+source_file - sources $1 file, providing messages for log.
+See code inside uwsm/main.py for more auxiliary functions.
+
+Functions that can be added by plugins, replacing standard functions:
+
+quirks__${__WM_BIN_ID__} - called before env loading.
+load_wm_env__${__WM_BIN_ID__}
+process_config_dirs_reversed__${__WM_BIN_ID__}
+in_each_config_dir_reversed__${__WM_BIN_ID__}
+process_config_dirs__${__WM_BIN_ID__}
+in_each_config_dir__${__WM_BIN_ID__}
+Original functions are still available for calling explicitly if combined effect is needed.
+
+Example:
+
+#!/bin/false
+
+# function to make arbitrary actions before loading environment
+quirks__my_cool_wm() {
+  # here additional vars can be set or unset
+  export I_WANT_THIS_IN_SESSION=yes
+  unset I_DO_NOT_WANT_THAT
+  # or prepare a config for compositor
+  # or set a var to modify what sourcing uwsm/env, uwsm/env-${__WM_ID__}
+  # in the next stage will do
+  ...
+  # add a var to be exported by uwsm finalize:
+  UWSM_FINALIZE_VARNAMES="${UWSM_FINALIZE_VARNAMES}${UWSM_FINALIZE_VARNAMES:+ }ANOTHER_VAR1 ANOTHER_VAR2"
+  # add a var to wait and depend on before graphical session:
+  UWSM_WAIT_VARNAMES="${UWSM_WAIT_VARNAMES}${UWSM_WAIT_VARNAMES:+ }ANOTHER_VAR1 ANOTHER_VAR2"
+}
+
+in_each_config_dir_reversed__my_cool_wm() {
+  # custom mechanism for loading of env files (or a stub)
+  # replaces standard function, but we want it also
+  # so call it explicitly
+  in_each_config_dir_reversed "$1"
+  # and additionally source our file
+  source_file "${1}/${__WM_ID__}/env"
+}
+Compliments
+Inspired by and adapted some techniques from:
+
+sway-services
+sway-systemd
+sway
+Presentation by Martin Pitt
+Special thanks to:
+
+@skewballfox for help with python and pointing me to useful tools.
+@notpeelz for improving commit process, meson, modularization, creating AUR package.
+@YaLTeR for an idea that lead to automatic compositor startup detection.
+@izmyname for integration and documentation work on Hyprland's side.
+@basil for LXQt integration and documentation work.
+About
+Universal Wayland Session Manager
+
+Resources
+ Readme
+License
+ MIT license
+ Activity
+Stars
+ 1.1k stars
+Watchers
+ 14 watching
+Forks
+ 39 forks
+Report repository
+Releases
+ 90 tags
+Contributors
+31
+@Vladimir-csp
+@notpeelz
+@c4rlo
+@Lioli7k
+@skewballfox
+@basil
+@carlo711
+@ddogfoodd
+@baodrate
+@abenz1267
+@peppapig450
+@izmyname
+@keanehatescoding
+@andresilva
++ 17 contributors
+Languages
+Python
+78.2%
+ 
+Shell
+18.1%
+ 
+Meson
+3.7%
+Footer
+© 2026 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Community

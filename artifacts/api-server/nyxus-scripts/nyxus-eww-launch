@@ -12,7 +12,7 @@
 # ║    NYXUS_EWW_TIMEOUT   — wall-clock socket-wait timeout (s)          ║
 # ║    NYXUS_EWW_LOG_DIR   — log destination                             ║
 # ║                                                                      ║
-# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ║  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 set -u
 
@@ -30,6 +30,11 @@ log() { printf '[%s] %s\n' "$(ts)" "$*" >> "$LOG"; }
 
 log "launch start — bars=[${BARS}] timeout=${TIMEOUT_SECS}s"
 
+COMPILE="${HOME}/.config/eww/scripts/compile-eww-css.sh"
+if [[ -x "$COMPILE" ]]; then
+  "$COMPILE" >>"$LOG" 2>&1 || log "WARN — compile-eww-css failed (using existing eww.css)"
+fi
+
 # Detect daemon: newer eww uses an instance-hash socket name
 # (eww-server_<hex>) instead of the legacy eww-server_default. Probe via
 # `eww ping` which talks to whichever socket the daemon is using; fall back
@@ -38,7 +43,7 @@ RUNDIR="${XDG_RUNTIME_DIR:-/tmp}"
 deadline=$(( $(date +%s) + TIMEOUT_SECS ))
 SOCK=""
 while :; do
-  if eww ping >/dev/null 2>&1; then
+  if timeout -k 2 5 eww --no-daemonize ping >/dev/null 2>&1; then
     SOCK="$(ls -1t "$RUNDIR"/eww-server_* 2>/dev/null | head -1)"
     [[ -z "$SOCK" ]] && SOCK="(via eww ping)"
     break
@@ -57,12 +62,15 @@ while :; do
 done
 log "socket ready · ${SOCK}"
 
-eww close-all 2>/dev/null && log "closed pre-existing windows"
+timeout -k 2 10 eww --no-daemonize close-all 2>/dev/null && log "closed pre-existing windows"
 sleep 0.2
 
 failed=0
 for bar in $BARS; do
-  if eww open "$bar" 2>>"$LOG"; then
+  # timeout-bound: a bare `eww open` against a busy/wedged daemon can hang
+  # forever (observed live 2026-07-15: orphaned `eww open bar-*` clients
+  # lingering on PID 1). 10s is generous for a healthy open.
+  if timeout -k 2 10 eww --no-daemonize open "$bar" 2>>"$LOG"; then
     log "opened · ${bar}"
   else
     log "ERROR opening · ${bar}"

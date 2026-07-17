@@ -11,7 +11,7 @@
 # ║  Reads NYXUS_OSD_DURATION from ~/.config/eww/nyxus.conf when no      ║
 # ║  duration arg is provided.                                           ║
 # ║                                                                      ║
-# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ║  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 set -u
 window="${1:?usage: osd-show.sh <window> [duration]}"
@@ -30,6 +30,20 @@ new_deadline=$(awk -v d="$duration" 'BEGIN{
   printf "%.0f", now + d * 1000
 }')
 echo "$new_deadline" > "$deadline_file"
+
+# NYXUS cosmic sound theme (rev 2026-07-14): subtle tick when an OSD shows.
+# Debounced via a shared timestamp file — held volume/brightness keys fire
+# this script per repeat, so skip if the last tick was < 300ms ago.
+# nyxus-sound itself fails silent + honors the global mute flag.
+if command -v nyxus-sound >/dev/null 2>&1; then
+  snd_stamp="${runtime}/nyxus-osd-sound.last"
+  snd_now=$(date +%s%3N)
+  snd_last=$(cat "$snd_stamp" 2>/dev/null || echo 0)
+  if (( snd_now - snd_last >= 300 )); then
+    echo "$snd_now" > "$snd_stamp"
+    nyxus-sound app-open &
+  fi
+fi
 
 # INSTANT VALUE (rev 2026-07-07): the OSD widgets read defpoll vars with
 # 2-5s intervals, so a rapid volume-key burst used to show stale values.

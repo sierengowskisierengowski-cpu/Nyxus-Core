@@ -1,4 +1,4 @@
-// © 2026 Joseph Sierengowski
+// © 2026 Joseph A. Sierengowski
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 

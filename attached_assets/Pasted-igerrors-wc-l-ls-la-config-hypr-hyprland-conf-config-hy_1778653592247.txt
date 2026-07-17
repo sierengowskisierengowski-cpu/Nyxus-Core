@@ -1,0 +1,41 @@
+igerrors | wc -l
+ls -la ~/.config/hypr/hyprland.conf ~/.config/hypr/conf.d/ 2>/dev/null
+hyprctl version | head -3
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 206: config option <misc:disable_config_error_overlay> does not exist.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 422: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/hyprland.conf at line 423: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 27: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 28: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 29: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 32: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 33: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 34: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 37: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 38: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 39: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 42: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 43: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 44: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 60: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 61: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 64: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 65: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+Config error in file /home/nyx/.config/hypr/conf.d/nyxus-hyprland-rules.conf at line 68: windowrulev2 is deprecated. Correct syntax can be found on the wiki.
+1371
+-rw-r--r-- 1 nyx nyx 27245 May 13 04:31 /home/nyx/.config/hypr/hyprland.conf
+
+/home/nyx/.config/hypr/conf.d/:
+total 24
+drwxr-xr-x 2 nyx nyx  253 May 13 04:31 .
+drwxr-xr-x 4 nyx nyx  105 May 13 04:31 ..
+-rw-r--r-- 1 nyx nyx 1784 May 13 04:31 nyxus-hyprland-blur.conf
+-rw-r--r-- 1 nyx nyx 1290 May 13 04:31 nyxus-hyprland-fog.conf
+-rw-r--r-- 1 nyx nyx 4246 May 13 04:31 nyxus-hyprland-general.conf
+-rw-r--r-- 1 nyx nyx 4967 May 13 04:31 nyxus-hyprland-layerblur.conf
+-rw-r--r-- 1 nyx nyx 3709 May 13 04:31 nyxus-hyprland-mission.conf
+-rw-r--r-- 1 nyx nyx 1870 May 13 04:31 nyxus-hyprland-opacity.conf
+-rw-r--r-- 1 nyx nyx 4184 May 13 04:31 nyxus-hyprland-rules.conf
+Hyprland 0.55.0 built from branch v0.55.0 at commit af923e30d1d24f1f4a4f5cb8308065173c1d9539 clean (version: bump to 0.55.0).
+Date: Sat May 9 13:35:27 2026
+Tag: v0.55.0, commits: 7290
+[nyx@nyxus ~]$

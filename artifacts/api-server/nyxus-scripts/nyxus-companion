@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# nyxus-companion — control the Nyxus alien desktop companion overlay.
+#
+#   nyxus-companion start        launch the companion (if not already running)
+#   nyxus-companion stop         stop it
+#   nyxus-companion restart      stop then start
+#   nyxus-companion toggle       start if stopped, stop if running
+#   nyxus-companion status       print running state
+#   nyxus-companion nudge EVENT  send an event to the running companion
+#                                (notification|workspace|idle|active|peace|wave|hello|quit)
+#
+# gtk4-layer-shell must be LD_PRELOADed before libwayland — handled below.
+set -euo pipefail
+
+APP_DIR="${NYXUS_COMPANION_DIR:-$HOME/.local/share/nyxus/companion}"
+RUNTIME="${XDG_RUNTIME_DIR:-/tmp}"
+PIDFILE="$RUNTIME/nyxus-companion.pid"
+FIFO="$RUNTIME/nyxus-companion.fifo"
+
+# Mode select: "piloted" (default, alien posted up in the center saucer) or
+# "freeroam" (the archived free-roaming walker at legacy-freeroam/companion.py).
+MODE="${NYXUS_COMPANION_MODE:-piloted}"
+if [[ "$MODE" == "freeroam" ]]; then
+  MAIN="$APP_DIR/legacy-freeroam/companion.py"
+else
+  MAIN="$APP_DIR/companion.py"
+fi
+
+# Fall back to running straight from the repo checkout if not deployed.
+if [[ ! -f "$MAIN" ]]; then
+  SELF_DIR="$(dirname "$(readlink -f "$0")")"
+  if [[ "$MODE" == "freeroam" && -f "$SELF_DIR/legacy-freeroam/companion.py" ]]; then
+    APP_DIR="$SELF_DIR"; MAIN="$SELF_DIR/legacy-freeroam/companion.py"
+  elif [[ -f "$SELF_DIR/companion.py" ]]; then
+    APP_DIR="$SELF_DIR"; MAIN="$SELF_DIR/companion.py"
+  fi
+fi
+
+is_running() {
+  [[ -f "$PIDFILE" ]] || return 1
+  local pid
+  pid="$(cat "$PIDFILE" 2>/dev/null || true)"
+  [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null
+}
+
+cmd_start() {
+  if is_running; then
+    echo "nyxus-companion: already running (pid $(cat "$PIDFILE"))"
+    return 0
+  fi
+  if [[ ! -f "$MAIN" ]]; then
+    echo "nyxus-companion: app not found at $MAIN" >&2
+    exit 1
+  fi
+  local lib
+  # `|| true`: awk exits on first match, giving ldconfig SIGPIPE (exit 141),
+  # which would trip `set -o pipefail` and abort the launch.
+  lib="$(ldconfig -p 2>/dev/null | awk '/libgtk4-layer-shell\.so/ {print $NF; exit}' || true)"
+  if [[ -n "$lib" && -f "$lib" ]]; then
+    export LD_PRELOAD="${lib}${LD_PRELOAD:+:$LD_PRELOAD}"
+  fi
+  export GDK_BACKEND=wayland
+  # Detach into a new session; `exec` makes python inherit the shell PID so the
+  # pidfile always holds the real companion PID.
+  setsid bash -c 'echo $$ >"'"$PIDFILE"'"; exec python3 "'"$MAIN"'"' \
+    >/tmp/nyxus-companion.log 2>&1 &
+  sleep 0.2
+  echo "nyxus-companion: started (pid $(cat "$PIDFILE" 2>/dev/null || echo '?'))"
+}
+
+cmd_stop() {
+  if is_running; then
+    local pid
+    pid="$(cat "$PIDFILE")"
+    kill "$pid" 2>/dev/null || true
+    for _ in $(seq 1 20); do
+      kill -0 "$pid" 2>/dev/null || break
+      sleep 0.1
+    done
+    kill -9 "$pid" 2>/dev/null || true
+  fi
+  rm -f "$PIDFILE"
+  echo "nyxus-companion: stopped"
+}
+
+cmd_status() {
+  if is_running; then
+    echo "running (pid $(cat "$PIDFILE"))"
+  else
+    echo "stopped"
+    return 1
+  fi
+}
+
+cmd_nudge() {
+  local event="${1:-}"
+  if [[ -z "$event" ]]; then
+    echo "usage: nyxus-companion nudge <event>" >&2
+    exit 2
+  fi
+  if [[ ! -p "$FIFO" ]]; then
+    echo "nyxus-companion: not running (no fifo)" >&2
+    exit 1
+  fi
+  printf '%s\n' "$event" >"$FIFO"
+}
+
+case "${1:-}" in
+  start)   cmd_start ;;
+  stop)    cmd_stop ;;
+  restart) cmd_stop; sleep 0.3; cmd_start ;;
+  toggle)  if is_running; then cmd_stop; else cmd_start; fi ;;
+  status)  cmd_status ;;
+  nudge)   shift; cmd_nudge "${1:-}" ;;
+  *)
+    echo "usage: nyxus-companion {start|stop|restart|toggle|status|nudge EVENT}" >&2
+    exit 2
+    ;;
+esac

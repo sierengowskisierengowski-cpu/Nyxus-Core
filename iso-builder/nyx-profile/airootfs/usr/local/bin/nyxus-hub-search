@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# ============================================================================
+# NYXUS — Hub global-search launcher
+# © 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+# Resolves a free-text query from the Hub's global search bar to the single
+# best action and runs it. Search order:
+#   1. NYXUS system actions / settings keywords (wifi, bluetooth, lock, …)
+#      → opens the matching EWW flyout / overlay or NYXUS Settings.
+#   2. Best-matching installed .desktop application (exact > prefix >
+#      substring on name, then Exec substring), launched via gtk-launch.
+#
+# Invoked by the Hub search input's Enter (`onaccept`) handler:
+#     nyxus-hub-search <free text…>
+# Always exits 0 so a miss never surfaces a shell error in the Hub.
+# ============================================================================
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+q="$(printf '%s' "$*" | tr '[:upper:]' '[:lower:]' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+[ -z "$q" ] && exit 0
+
+runbg() { setsid "$@" >/dev/null 2>&1 & }
+
+# Every branch closes the Hub first so the launched surface/app is not hidden
+# behind the fullscreen Hub overlay (the classic "dead button" trap).
+close_hub() {
+  if command -v nyxus-hub-close >/dev/null 2>&1; then
+    nyxus-hub-close >/dev/null 2>&1 || true
+  else
+    eww close nyxus-hub >/dev/null 2>&1 || true
+  fi
+}
+flyout()    { close_hub; eww open --toggle "$1" >/dev/null 2>&1; }
+
+# ── 1. global action / settings keywords ────────────────────────────────────
+case "$q" in
+  wifi|wi-fi|wireless|network|net) flyout wifi;               exit 0;;
+  bluetooth|bt)                    flyout bluetooth;          exit 0;;
+  mixer|audio|volume|sound)        flyout mixer;              exit 0;;
+  calendar|cal|date)               flyout calendar;           exit 0;;
+  notif*|alert*)                   flyout notifications;      exit 0;;
+  update*|upgrade*)                flyout updates;            exit 0;;
+  quicksettings|quick*|qs)         flyout quicksettings;      exit 0;;
+  bright*|backlight|display*)      flyout brightness-flyout;  exit 0;;
+  keys|cheat*|hotkey*|shortcut*)   flyout cheatsheet;         exit 0;;
+  deepcore|deep*|monitor|sysmon|btop) close_hub; runbg kitty -e btop; exit 0;;
+  lock)                            close_hub; runbg hyprlock;              exit 0;;
+  power|shutdown|reboot|logout|sleep|suspend)
+                                   close_hub; eww open --toggle powermenu; exit 0;;
+  dashboard|dash|home)             close_hub; hyprctl dispatch workspace name:0; exit 0;;
+  mission*)                        close_hub; nyxus-mission toggle;        exit 0;;
+  files|thunar|fm)                 close_hub; runbg thunar;                exit 0;;
+  terminal|term|kitty|shell)       close_hub; runbg kitty || runbg alacritty; exit 0;;
+  browser|firefox|web)             close_hub; runbg firefox;               exit 0;;
+  wallpaper|livewall|living)       close_hub; nyxus-live-wallpaper toggle; exit 0;;
+  store|shop)                      close_hub; runbg nyxus-store;           exit 0;;
+  screenshot|capture|snip)         close_hub; runbg python3 ~/.nyxus/nyxus_screenshot.py region; exit 0;;
+esac
+case "$q" in
+  settings*|setting*|pref*|preferences*|config*|options*)
+      close_hub; runbg nyxus-settings; exit 0;;
+esac
+
+# ── 2. best-matching installed application ──────────────────────────────────
+# NB: program is passed via -c (not `- <<HEREDOC`) so the app-list pipe stays
+# on python's stdin; the query rides in as argv[1].
+best="$(nyxus-hub-apps 2>/dev/null | python3 -c '
+import json, sys
+q = sys.argv[1].lower()
+try:
+    apps = json.load(sys.stdin)
+except Exception:
+    apps = []
+def score(a):
+    n = a.get("name", "").lower()
+    if n == q:            return 0
+    if n.startswith(q):   return 1
+    if q in n:            return 2
+    if q in a.get("exec", "").lower(): return 3
+    return 9
+apps = [a for a in apps if score(a) < 9]
+apps.sort(key=lambda a: (score(a), len(a.get("name", ""))))
+print(apps[0]["id"] if apps else "")
+' "$q")"
+if [ -n "$best" ]; then
+  close_hub
+  gtk-launch "$best" >/dev/null 2>&1 &
+fi
+exit 0

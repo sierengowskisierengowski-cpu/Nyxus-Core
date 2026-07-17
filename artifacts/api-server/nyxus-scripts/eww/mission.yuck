@@ -28,7 +28,7 @@
   :monitor 0
   :geometry (geometry :x "0%" :y "0%" :width "100%" :height "100%" :anchor "center")
   :stacking "overlay"
-  :focusable true
+  :focusable false
   :namespace "nyxus-mission"
   (eventbox :onkeydown "[ '{}' = 'Escape' ] && nyxus-mission close"
     (centerbox :class "mission-root overlay-backdrop"

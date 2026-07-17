@@ -1,0 +1,45 @@
+      (/usr/local/bin)
+  ✗ nyxus-phantom          (not installed anywhere — check install log above)
+
+──────────────────────────────────────────────────────────────
+
+▌ 7/7 · DIAGNOSE Hyprland (auto-runs hypr-doctor — instant error surface)
+  ✓  full report: /home/nyx/.cache/hypr-doctor/hypr-doctor-20260509-144926.log
+
+  Hyprland config errors (section [8a] — powers the waybar overlay):
+  ✓  hyprctl configerrors: 0 errors — waybar overlay should be clean
+
+  Hyprland source chain (section [5]):
+      Found sources:
+      397:source = ~/.config/hypr/conf.d/nyxus-hyprland-general.conf
+      398:source = ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+      399:source = ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+      400:source = ~/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf
+      401:source = ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+      404:source = ~/.config/hypr/conf.d/nyxus-windowrules.conf
+      Resolved source targets:
+      OK: ~/.config/hypr/conf.d/nyxus-hyprland-general.conf -> /home/nyx/.config/hypr/conf.d/nyxus-hyprland-general.conf
+      OK: ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf -> /home/nyx/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+      OK: ~/.config/hypr/conf.d/nyxus-hyprland-blur.conf -> /home/nyx/.config/hypr/conf.d/nyxus-hyprland-blur.conf
+      OK: ~/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf -> /home/nyx/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf
+      OK: ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf -> /home/nyx/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+      OK: ~/.config/hypr/conf.d/nyxus-windowrules.conf -> /home/nyx/.config/hypr/conf.d/nyxus-windowrules.conf
+
+  Hyprland log tail (section [9a] — parse errors land here):
+      WARN: no Hyprland log found at /home/nyx/.cache/hyprland/hyprland.log or $XDG_RUNTIME_DIR/hypr/<sig>/hyprland.log
+      Tip: enable verbose logging by setting in hyprland.conf:
+          debug { disable_logs = false }
+
+──────────────────────────────────────────────────────────────
+  DONE. (resync script v2026.05.09-r22)
+  The NYXUS apps will load the new chrome on next launch.
+  Re-run hypr-doctor any time:  hypr-doctor  or  hypr-doctor --full
+  Idle pipeline: 2min dim → 3min screensaver → 5min lock → 8min DPMS off → 15min suspend
+  Test the jumpscare without waiting:  nyxus-demon-wake
+  Test the lock screen:                loginctl lock-session
+──────────────────────────────────────────────────────────────
+
+ok
+
+...xXx... ~  25s
+❯                                   

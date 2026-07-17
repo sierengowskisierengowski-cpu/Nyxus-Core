@@ -35,11 +35,16 @@ fi
 read_bytes() {
   awk 'NR>2 && $1!~/^lo:/ {gsub(/:/,"",$1); rx+=$2; tx+=$10} END{print rx+0, tx+0}' /proc/net/dev 2>/dev/null
 }
-fmt_rate() {  # bytes/sec -> compact human string
+fmt_rate() {  # bytes/sec -> FIXED-WIDTH human string (always 4 chars)
+  # Constant width kills the Hub jitter: variable-width strings ("2K" vs
+  # "132B") re-rendered every 2s read as the panel "moving on its own".
+  # The consumers render in JetBrainsMono, so padded spaces hold the width.
   awk -v b="$1" 'BEGIN{
-    if (b<1024) printf "%dB", b;
-    else if (b<1048576) printf "%.0fK", b/1024;
-    else printf "%.1fM", b/1048576;
+    if (b<1000)            printf "%3dB", b;
+    else if (b<1022976)    printf "%3.0fK", b/1024;      # <999.5K
+    else if (b<10433332)   printf "%.1fM",  b/1048576;   # <9.95M
+    else if (b<1047527424) printf "%3.0fM", b/1048576;   # <999M
+    else                   printf "%.1fG",  b/1073741824;
   }'
 }
 read -r rx1 tx1 < <(read_bytes)

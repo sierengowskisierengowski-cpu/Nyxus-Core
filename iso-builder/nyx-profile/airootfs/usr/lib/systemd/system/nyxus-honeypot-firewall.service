@@ -1,0 +1,14 @@
+[Unit]
+Description=Nyxus honeypot egress lockdown (iptables DOCKER-USER)
+After=docker.service
+Requires=docker.service
+# Reapply if docker is restarted (which rebuilds its iptables chains).
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/nyxus-honeypot-firewall
+
+[Install]
+WantedBy=multi-user.target

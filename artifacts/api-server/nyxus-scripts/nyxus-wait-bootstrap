@@ -18,7 +18,7 @@
 # ║  Timeout: 120s by default (override with NYXUS_WAIT_TIMEOUT=N).      ║
 # ║  After timeout, runs the args anyway — better degraded UI than no UI.║
 # ║                                                                      ║
-# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ║  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 set -u
 

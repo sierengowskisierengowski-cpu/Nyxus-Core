@@ -248,6 +248,26 @@ def build(name, w, h, spec, cbox, n_hero, n_mid, n_dust):
     print(f"wrote {FRAMES} twinkle frames · {name}")
 
 
-build("strip", 1896, 49, CASSIOPEIA, (1250, 8, 1520, 41), n_hero=38, n_mid=165, n_dust=620)
-build("top", 1896, 32, LYRA, (1560, 5, 1740, 27), n_hero=28, n_mid=120, n_dust=460)
-build("rail", 56, 760, ORION, (10, 430, 46, 640), n_hero=22, n_mid=90, n_dust=340)
+# name -> build kwargs. Pass names on argv to build a subset (so the panel
+# twinkle can be (re)generated without churning the committed bar frames).
+#   python3 gen-starlight-assets.py            # all
+#   python3 gen-starlight-assets.py panel      # only the flyout/menu field
+BUILDS = {
+    "strip": dict(w=1896, h=49,  spec=CASSIOPEIA, cbox=(1250, 8, 1520, 41), n_hero=38, n_mid=165, n_dust=620),
+    "top":   dict(w=1896, h=32,  spec=LYRA,       cbox=(1560, 5, 1740, 27), n_hero=28, n_mid=120, n_dust=460),
+    "rail":  dict(w=56,   h=760, spec=ORION,      cbox=(10, 430, 46, 640),  n_hero=22, n_mid=90,  n_dust=340),
+    # Flyout / menu / settings-panel field (rev 2026-07-14, Phase 5.5). A
+    # portrait card of obsidian velvet + Lyra; scaled `cover` behind every
+    # eww flyout so the Rolls-Royce starlight motif rides under the menus
+    # too, not just the Hub. Kept sparse so it stays subtle, not noisy.
+    "panel": dict(w=512,  h=640,  spec=LYRA,      cbox=(40, 40, 240, 210),  n_hero=30, n_mid=120, n_dust=520),
+}
+
+if __name__ == "__main__":
+    import sys
+    names = sys.argv[1:] or list(BUILDS.keys())
+    for _n in names:
+        if _n not in BUILDS:
+            print("unknown build:", _n, "(have:", ", ".join(BUILDS), ")")
+            continue
+        build(_n, **BUILDS[_n])

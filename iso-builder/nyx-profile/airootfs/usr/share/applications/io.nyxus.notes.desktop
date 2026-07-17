@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Notes
+Comment=Quick scratchpad notes
+Exec=/usr/local/bin/nyxus-notes
+Icon=preferences-system
+Categories=System;Utility;
+Terminal=false
+StartupNotify=true

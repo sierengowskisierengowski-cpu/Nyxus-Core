@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# NYXUS Settings launcher — Copyright © 2026 Joseph A. Sierengowski
+exec python3 /opt/nyxus/nyxus_settings.py "$@"

@@ -15,7 +15,7 @@ RemainAfterExit=yes
 ExecStart=/usr/local/sbin/nyxus-firstboot
 StandardOutput=journal
 StandardError=journal
-TimeoutStartSec=180s
+TimeoutStartSec=900s
 
 [Install]
 WantedBy=multi-user.target

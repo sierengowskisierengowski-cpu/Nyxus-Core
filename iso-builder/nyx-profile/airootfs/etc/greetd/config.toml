@@ -1,22 +1,18 @@
-# ============================================
-# NYXUS — greetd configuration
-# Copyright © 2026 Joseph Sierengowski
-# All Rights Reserved
-# NYX-J5W-2026-SIERENGOWSKI-LOCKED
-# ============================================
+# ============================================================
+#  NYXUS — greetd configuration
+#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  rev 2026-07-14 — Wayland greeter chain (replaces SDDM; SDDM's X11 greeter
+#  crashed/failed VT handoff on this hybrid Intel+NVIDIA GPU).
 #
-# greetd is the sole display manager for the NYX live ISO session.
-# tuigreet is used as the greeter with auto-login to the `nyx` user,
-# launching directly into Hyprland on the Wayland compositor.
-# SDDM and all other display managers must NOT be active alongside this.
+#  default_session runs /usr/local/bin/nyxus-greeter, a fallback chain:
+#  regreet (themed) -> tuigreet (text) -> agreety (bare). See that script.
+# ============================================================
 
 [terminal]
+# Run the greeter on VT 1 (where the boot messages already are — avoids the
+# VT-switch handoff that left SDDM's greeter invisible on VT2).
 vt = 1
 
 [default_session]
-command = "tuigreet --time --remember --remember-session --sessions /usr/share/wayland-sessions --cmd Hyprland"
+command = "/usr/local/bin/nyxus-greeter"
 user = "greeter"
-
-[initial_session]
-command = "Hyprland"
-user = "nyx"

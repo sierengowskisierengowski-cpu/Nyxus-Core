@@ -51,4 +51,4 @@ curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | b
 
 ---
 
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

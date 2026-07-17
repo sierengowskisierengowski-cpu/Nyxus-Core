@@ -1,0 +1,6 @@
+JETT_MODEL=/opt/jett/models/jett-r6-q4_k_m.gguf
+JETT_MODE=learn
+JETT_ENFORCE_DRY_RUN=1
+JETT_TELEMETRY=both
+JETT_ALLOWLIST=/etc/jett/allowlist.conf
+JETT_MODEL_PIN=/etc/jett/model.sha256

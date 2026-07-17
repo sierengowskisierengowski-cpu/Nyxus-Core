@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS App Store
+Comment=Browse, install, and update software
+Exec=/usr/local/bin/nyxus-store
+Icon=preferences-system
+Categories=System;Utility;
+Terminal=false
+StartupNotify=true

@@ -2,7 +2,7 @@
 # ╔══════════════════════════════════════════════════════════════════════╗
 # ║          NYXUS OS — Full System Installer                            ║
 # ║  Downloads and deploys all NYXUS configs, scripts, and wallpapers    ║
-# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ║  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 #
 # Usage:
@@ -70,7 +70,7 @@ printf "${PINK}${B}  ██  █ ██    ██     ████   ██     
 printf "${PURPLE}${B}  ██   ████   ██      ██    ██  █████ ${R}\n"
 echo ""
 printf "  ${DIM}S I L E N T  ·  D A R K  ·  P U R E L Y   F U N C T I O N A L${R}\n"
-printf "  ${DIM}© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED${R}\n"
+printf "  ${DIM}© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED${R}\n"
 echo ""
 
 failed=0
@@ -97,6 +97,7 @@ for f in nyxus_palette.py nyxus-palette.css \
            nyxus_wallpaper_studio.py \
            nyxus_settings_accessibility.py nyxus_settings_notifications.py \
            nyxus_settings_sandbox.py nyxus_settings_snapshots.py \
+           nyxus_i18n.py nyxus_updater.py nyxus_drop.py \
            nyxus_doctor.py nyxus_launcher.py \
            nyxus_screenshot.py nyxus_chrome.py \
            nyxus_screensaver.py nyxus_demon_wake.py \
@@ -112,6 +113,34 @@ exec python3 "$HOME/.nyxus/nyxus-crash-report.py" "$@"
 EOF
 chmod 0755 "$HOME/.local/bin/nyxus-crash-report"
 sudo -n install -Dm0755 "$HOME/.local/bin/nyxus-crash-report" /usr/local/bin/nyxus-crash-report 2>/dev/null || true
+
+# Settings "Open …" launcher wrappers (nyxus_settings.py launches these by
+# name from the Backup / Updates / Drop pages). Thin wrappers over the
+# GTK apps deployed to ~/.nyxus above.
+for pair in "nyxus-backup:nyxus_backup.py" \
+            "nyxus-updater:nyxus_updater.py" \
+            "nyxus-drop:nyxus_drop.py"; do
+  wrap="${pair%%:*}"; impl="${pair##*:}"
+  cat > "$HOME/.local/bin/$wrap" <<EOF
+#!/usr/bin/env bash
+exec python3 "\$HOME/.nyxus/$impl" "\$@"
+EOF
+  chmod 0755 "$HOME/.local/bin/$wrap"
+  sudo -n install -Dm0755 "$HOME/.local/bin/$wrap" "/usr/local/bin/$wrap" 2>/dev/null || true
+done
+
+# Screen Recorder helper is a standalone bash script (not a wrapper).
+if dl "nyxus-record" "$HOME/.local/bin/nyxus-record"; then
+  chmod 0755 "$HOME/.local/bin/nyxus-record"
+  sudo -n install -Dm0755 "$HOME/.local/bin/nyxus-record" /usr/local/bin/nyxus-record 2>/dev/null || true
+fi
+
+# Hot Corners daemon — the systemd --user unit written by Settings
+# (nyxus_settings.py AppearancePage) execs %h/.local/bin/nyxus_hotcorners.py,
+# so the script must live there (not in ~/.nyxus).
+if dl "nyxus_hotcorners.py" "$HOME/.local/bin/nyxus_hotcorners.py"; then
+  chmod 0755 "$HOME/.local/bin/nyxus_hotcorners.py"
+fi
 
 # ── GTK4 Python dependencies ──────────────────────────────────────────────────
 hdr "Python GTK4 Dependencies"

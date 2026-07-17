@@ -17,7 +17,7 @@
 # Failure is loud: bad config aborts non-zero so the service status
 # reflects reality instead of silently doing nothing.
 #
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 set -u
 
 CONF="$HOME/.config/nyxus/nightlight.conf"

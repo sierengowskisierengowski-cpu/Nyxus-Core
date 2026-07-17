@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# nyxus-hub-launch — dismiss The Hub, then launch a .desktop application id.
+# Used by hub_app_tile so clicks never depend on eww's shell PATH or a
+# buried gtk-launch behind the fullscreen overlay.
+set -u
+export PATH="${HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+mkdir -p "${HOME}/.cache/nyxus-eww"
+log="${HOME}/.cache/nyxus-eww/hub-launch.log"
+id="${1:-}"
+{
+  echo "$(date -Iseconds) id=${id}"
+} >>"$log"
+
+# Drop the overlay immediately so the app is not buried under it.
+if command -v eww >/dev/null 2>&1; then
+  eww close nyxus-hub 2>/dev/null || true
+fi
+# Full dismiss (restore bars) in the background — must not block launch.
+if command -v nyxus-hub-close >/dev/null 2>&1; then
+  (nyxus-hub-close >/dev/null 2>&1 || true) &
+fi
+
+# Brief settle so Hyprland focuses the new window, not the dying overlay.
+sleep 0.15
+
+if [[ -z "$id" || "$id" == *'$'* ]]; then
+  echo "bad/empty id (eww failed to expand app.id?)" >>"$log"
+  exit 1
+fi
+
+if /usr/bin/gtk-launch "$id" >>"$log" 2>&1; then
+  echo "gtk-launch ok" >>"$log"
+  exit 0
+fi
+echo "gtk-launch failed; trying Exec= fallback" >>"$log"
+
+# Fallback: read Exec= from the matching .desktop (user dirs win).
+for d in "${HOME}/.local/share/applications" /usr/local/share/applications /usr/share/applications; do
+  f="${d}/${id}.desktop"
+  [[ -f "$f" ]] || continue
+  exec_line=$(awk -F= '
+    /^\[Desktop Entry\]/ {in_e=1; next}
+    /^\[/ {in_e=0}
+    in_e && /^Exec=/ {sub(/^Exec=/,""); print; exit}
+  ' "$f")
+  # Strip desktop field codes (%u %f …)
+  exec_line=$(printf '%s' "$exec_line" | sed -E 's/ %[a-zA-Z]//g; s/%%/%/g')
+  [[ -n "$exec_line" ]] || continue
+  echo "exec fallback: $exec_line" >>"$log"
+  # Intentional: Exec lines are trusted local desktop entries.
+  bash -c "$exec_line" >>"$log" 2>&1 &
+  exit 0
+done
+
+echo "launch failed for id=${id}" >>"$log"
+exit 1

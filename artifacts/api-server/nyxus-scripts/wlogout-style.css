@@ -1,11 +1,11 @@
 /* ════════════════════════════════════════════════════════════════════════════
    NYXUS · wlogout · OBSIDIAN PRISM · rev 2026-07-07
-   Palette: #7949f2 magenta · #ff2667 cyan · #26ffb7 violet · #ffb026 gold
+   Palette: #794dff magenta · #ff266c cyan · #26ffb7 violet · #ffb026 gold
    Deep-void frosted glass with iridescent prism rims. Matches the EWW
    powermenu overlay, rofi power.rasi, and the Hyprland prism border loop.
    NOTE: wlogout's GTK CSS parser does NOT follow @import — all colors
    are inlined below. Keep in lockstep with the prism accent set.
-   © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ════════════════════════════════════════════════════════════════════════════ */
 
 * {
@@ -17,10 +17,8 @@
 
 /* ── DEEP VOID CANVAS · frosted glass over wallpaper ─────────────── */
 window {
-    background-color: rgba(5, 6, 10, 0.72) ;
-    background-image: url("file:///home/cosmic/.config/nyxus/backdrops/starfall-backdrop.png");
-    background-size: cover;
-    background-position: center;
+    background-color: rgba(5, 6, 10, 0.82) ;
+    background-image: none                  ;
     color: #eef2fa                          ;
 }
 
@@ -50,11 +48,11 @@ button:focus,
 button:active,
 button:hover {
     background-color: rgba(12, 16, 26, 0.92)  ;
-    border-color:     rgba(255, 38, 103, 0.60);
+    border-color:     rgba(255, 38, 108, 0.60);
     color:            #ffffff                 ;
     box-shadow:       0 12px 36px rgba(0, 0, 0, 0.60),
-                      0 0 26px rgba(255, 38, 103, 0.35),
-                      0 0 34px rgba(121, 73, 242, 0.25),
+                      0 0 26px rgba(255, 38, 108, 0.35),
+                      0 0 34px rgba(121, 77, 255, 0.25),
                       inset 0 1px 0 rgba(255, 255, 255, 0.14);
     outline:          none                    ;
 }
@@ -64,8 +62,8 @@ button:hover {
 #suspend:hover,  button#suspend:hover,  .suspend:hover,  button.suspend:hover,
 #hibernate:hover,button#hibernate:hover,.hibernate:hover,button.hibernate:hover,
 #logout:hover,   button#logout:hover,   .logout:hover,   button.logout:hover {
-    border-color: rgba(255, 38, 103, 0.60);
-    color:        #ff2667                 ;
+    border-color: rgba(255, 38, 108, 0.60);
+    color:        #ff266c                 ;
 }
 
 /* ── DESTRUCTIVE · reboot / shutdown read as danger ──────────────── */

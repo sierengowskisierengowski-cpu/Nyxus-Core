@@ -15,7 +15,7 @@ theme.txt:
 Reproducible: run from repo root with `python3 scripts/generate-grub-theme.py`.
 Idempotent: overwrites existing files.
 
-(c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+(c) 2026 JOSEPH A. SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 import math

@@ -1,6 +1,6 @@
 # NYXUS — Proprietary License
 
-Copyright © 2026 Joseph Sierengowski  
+Copyright © 2026 Joseph A. Sierengowski  
 All rights reserved.
 
 NYX-J5W-2026-SIERENGOWSKI-LOCKED
@@ -9,7 +9,7 @@ NYX-J5W-2026-SIERENGOWSKI-LOCKED
 
 ## Terms
 
-This software and all associated files — source code, configuration files, scripts, assets, themes, icons, and documentation — are the exclusive intellectual property of Joseph Sierengowski.
+This software and all associated files — source code, configuration files, scripts, assets, themes, icons, and documentation — are the exclusive intellectual property of Joseph A. Sierengowski.
 
 **You may not:**
 
@@ -30,7 +30,7 @@ You may install and run NYXUS on hardware you personally own for your own privat
 Every file in this distribution carries the stamp:
 
 ```
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 ```
 
 Every Python file carries an embedded identity fingerprint (`__nyxid__`) and integrity check. Removing or altering these markers constitutes a violation of this license.
@@ -43,4 +43,4 @@ THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---
 
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

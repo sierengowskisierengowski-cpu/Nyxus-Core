@@ -1,0 +1,100 @@
+{
+  "name": "nyxus-alien-dude",
+  "note": "Full-body Nyxus alien street dude. Key poses keyed from assets/source/*.png by gen_companion_sprites.py; the engine adds tweening/squash/lean/shadow/cross-fade for rigged motion.",
+  "sprite_width": 206,
+  "sprite_height": 238,
+  "baseline_y": 228,
+  "default_facing": "right",
+  "states": {
+    "idle": {
+      "frames": [
+        "idle"
+      ],
+      "fps": 2,
+      "loop": true
+    },
+    "walk": {
+      "frames": [
+        "walk_a",
+        "idle",
+        "walk_b",
+        "idle"
+      ],
+      "fps": 6,
+      "loop": true
+    },
+    "run": {
+      "frames": [
+        "run",
+        "walk_a",
+        "run",
+        "walk_b"
+      ],
+      "fps": 11,
+      "loop": true
+    },
+    "jump": {
+      "frames": [
+        "jump"
+      ],
+      "fps": 1,
+      "loop": false
+    },
+    "crouch": {
+      "frames": [
+        "crouch"
+      ],
+      "fps": 1,
+      "loop": false
+    },
+    "wave": {
+      "frames": [
+        "wave"
+      ],
+      "fps": 1,
+      "loop": false
+    },
+    "peace": {
+      "frames": [
+        "peace"
+      ],
+      "fps": 1,
+      "loop": false
+    },
+    "laugh": {
+      "frames": [
+        "laugh"
+      ],
+      "fps": 1,
+      "loop": false
+    },
+    "sit": {
+      "frames": [
+        "sit"
+      ],
+      "fps": 1,
+      "loop": true
+    },
+    "sleep": {
+      "frames": [
+        "sit"
+      ],
+      "fps": 1,
+      "loop": true
+    },
+    "notify": {
+      "frames": [
+        "peace"
+      ],
+      "fps": 1,
+      "loop": false
+    },
+    "alert": {
+      "frames": [
+        "jump"
+      ],
+      "fps": 1,
+      "loop": false
+    }
+  }
+}

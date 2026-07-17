@@ -25,10 +25,9 @@
 ; shadowed the themed qs-root panel in eww.yuck (includes load last), so
 ; Super+A / the bar pill opened this off-theme daemon card instead.
 (defwindow quicksettings-daemon
-  :monitor 0 :stacking "overlay" :focusable true
+  :monitor 0 :stacking "overlay" :focusable false
   :geometry (geometry :x "-12px" :y "44px" :anchor "top right"
                        :width "320px" :height "420px")
-  :stacking "overlay" :focusable true
   :namespace "nyxus-quicksettings"
   (box :class "qs-card" :orientation "v" :space-evenly false :spacing 10
 

@@ -8,7 +8,7 @@
  * The "Dark Mirror" gold is #d4b87a. Background is the same near-black
  * (#0b0b0f) used by the rest of the OS.
  *
- * © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ * © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
  */
 import QtQuick 2.15
 import calamares.slideshow 1.0

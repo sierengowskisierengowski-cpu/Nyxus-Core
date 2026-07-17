@@ -108,7 +108,7 @@ export function PanelFlyout({ open, onClose }: { open: boolean; onClose: () => v
         textAlign: "center",
         fontFamily: '"JetBrains Mono", monospace',
       }}>
-        © 2026 JOSEPH SIERENGOWSKI
+        © 2026 JOSEPH A. SIERENGOWSKI
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 ;;   osd-capslock — transient caps-lock state pop-up. Same .osd-* skin
 ;;   as the volume/brightness/mic OSDs; state pushed by
 ;;   scripts/osd-capslock.sh via a bindn in nyxus-signature.conf.
-;; © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+;; © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 ;; ─────────────────────────────────────────────────────────────────────
 
 (defvar CAPSSTATE '{"on":false}')

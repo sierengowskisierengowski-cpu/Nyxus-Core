@@ -55,77 +55,77 @@ hide_when_typing = true
 [bell]
 animation = "EaseOutExpo"
 duration  = 0
-color     = "#e8e8f0"
+color     = "#f4ead5"
 
 [colors]
 draw_bold_text_with_bright_colors = true
 
 [colors.primary]
 background     = "#0a0a14"
-foreground     = "#e8e8f0"
-dim_foreground = "#e8e8f08c"
+foreground     = "#f4ead5"
+dim_foreground = "#f4ead58c"
 
 [colors.cursor]
 text   = "#050308"
-cursor = "#e8e8f0"
+cursor = "#f4ead5"
 
 [colors.vi_mode_cursor]
 text   = "#050308"
-cursor = "#e8e8f0"
+cursor = "#f4ead5"
 
 [colors.selection]
 text       = "#050308"
-background = "#e8e8f0"
+background = "#f4ead5"
 
 [colors.search.matches]
 foreground = "#050308"
-background = "#e8e8f0"
+background = "#f4ead5"
 
 [colors.search.focused_match]
 foreground = "#050308"
-background = "#e8e8f0"
+background = "#f4ead5"
 
 [colors.footer_bar]
 background = "#050308"
-foreground = "#e8e8f08c"
+foreground = "#f4ead58c"
 
 [colors.hints.start]
 foreground = "#050308"
-background = "#e8e8f0"
+background = "#f4ead5"
 
 [colors.hints.end]
 foreground = "#050308"
-background = "#e8e8f0"
+background = "#f4ead5"
 
 [colors.normal]
 black   = "#050308"
 red     = "#f87171"
-green   = "#e8e8f0"
-yellow  = "#e8e8f0"
+green   = "#f4ead5"
+yellow  = "#f4ead5"
 blue    = "#1a1a28"
-magenta = "#e8e8f0"
-cyan    = "#e8e8f0"
-white   = "#e8e8f0"
+magenta = "#f4ead5"
+cyan    = "#f4ead5"
+white   = "#f4ead5"
 
 [colors.bright]
 black   = "#0a0a14"
 red     = "#f87171"
-green   = "#e8e8f0"
-yellow  = "#e8e8f0"
+green   = "#f4ead5"
+yellow  = "#f4ead5"
 blue    = "#1a1a28"
-magenta = "#e8e8f0"
-cyan    = "#e8e8f0"
-white   = "#e8e8f0"
+magenta = "#f4ead5"
+cyan    = "#f4ead5"
+white   = "#f4ead5"
 
 [colors.dim]
 black   = "#000000"
 red     = "#f87171"
-green   = "#e8e8f08c"
-yellow  = "#e8e8f08c"
+green   = "#f4ead58c"
+yellow  = "#f4ead58c"
 blue    = "#1a1a28"
-magenta = "#e8e8f08c"
-cyan    = "#e8e8f08c"
-white   = "#e8e8f08c"
+magenta = "#f4ead58c"
+cyan    = "#f4ead58c"
+white   = "#f4ead58c"
 
 [[keyboard.bindings]]
 key    = "V"

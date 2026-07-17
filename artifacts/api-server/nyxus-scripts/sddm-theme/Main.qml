@@ -1,373 +1,278 @@
-// NYXUS · SDDM greeter · DARK MIRROR void login (rev 2026-05-12 r14)
-// P2.10 polish: user avatar from ~/.face via UserModel, SUSPEND power
-// action, focus rings on power buttons, screen-reader accessibility
-// labels on every interactive control.
+// ============================================================
+//  NYXUS — SDDM greeter · "Void Sign-In" (rev 2026-07-14 · from-scratch rebuild)
 //
-// Replaces a 448-line theme that broke at line 245 with a non-existent
-// `contentItem` binding on a ComboBox `background:` — caused SDDM to fall
-// back to the default blue Breeze theme. This rewrite is intentionally
-// lean (~200 lines) and uses only well-supported QtQuick.Controls 2 API.
+//  Design goals for this rebuild:
+//   - RELIABLE RENDER FIRST. Pure QtQuick only — no QtQuick.Controls,
+//     no SddmComponents. This avoids the qt5/qt6 quickcontrols2 split
+//     (qt6-quickcontrols2 is not always present) and the QQC1 `Button`
+//     shadowing bug that broke earlier themes. Nothing here needs a
+//     control that isn't in base QtQuick.
+//   - The blank-screen-on-boot failure was NOT this theme — it was the
+//     greeter crashing in hardware GL on hybrid Intel+NVIDIA. The
+//     deploy script sets QT_QUICK_BACKEND=software so the scene renders
+//     via llvmpipe. This theme is written to also be cheap to render in
+//     software (no blur, no shaders, no heavy effects).
+//   - Nyxus palette (deep void black + purple #7949F2 + magenta #FF2667).
+//     Rough palette match only — full theme polish is Phase 5.
 //
-// Visual System lock (DARK MIRROR rev r13):
-//   - Pure void: black base + 78% black wash over background.png, so the
-//     existing cosmic-ink artwork barely whispers through as faint silver.
-//   - Login card: rgba(8,12,20,0.55) dark glass, 1px white hairline at
-//     0.10 alpha, 14px corner radius.
-//   - Inputs: rgba(15,20,32,0.72) deeper glass.
-//   - Text: #e8edf5 primary off-white, #c8ccd6 secondary, #6a6e78 hint,
-//     #ffffff hover halo only.
-//   - No gold, no neon, no per-app colors. Monochrome only.
-
+//  Both Hyprland and COSMIC (and any other /usr/share/wayland-sessions
+//  entry) are listed as selectable session pills, sourced from SDDM's
+//  sessionModel.
+//
+//  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+// ============================================================
 import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-// NOTE: do NOT import SddmComponents — its `Button` type (QQC1-era, no
-// `contentItem` property) shadows the QQC2 Button and breaks the theme
-// with `Cannot assign to non-existent property "contentItem"`. Nothing
-// in this theme uses SddmComponents types, so the import is unneeded.
+import QtQuick.Window 2.15
 
 Rectangle {
     id: root
-    width: 1920
-    height: 1080
-    color: "#000000"
+    width: Screen.width
+    height: Screen.height
+    color: "#04030a"
 
-    // ── DARK MIRROR palette tokens ───────────────────────────────────────
-    readonly property color clrBgVoid:       "#000000"
-    readonly property color clrGlass:        Qt.rgba(8/255, 12/255, 20/255, 0.55)
-    readonly property color clrGlassDeep:    Qt.rgba(15/255, 20/255, 32/255, 0.72)
-    readonly property color clrGlassDeepest: Qt.rgba(5/255, 7/255, 12/255, 0.92)
-    readonly property color clrHairline:     Qt.rgba(255/255, 255/255, 255/255, 0.10)
-    // Accent comes from theme.conf.user (written by Settings → Appearance).
-    // Falls back to the locked Mirror White if no accent has been set.
-    readonly property color clrAccent:       config.Accent || "#e8edf5"
-    readonly property color clrFocus:        Qt.rgba(230/255, 240/255, 255/255, 0.55)
-    readonly property color clrText:         "#e8edf5"
-    readonly property color clrTextDim:      "#c8ccd6"
-    readonly property color clrTextHint:     "#6a6e78"
-    readonly property color clrWhite:        "#ffffff"
+    // ── palette — consumes docs/THEME.md tokens (DARK MIRROR §8 login/lock) ──
+    readonly property color cVoid:     "#04030a"
+    readonly property color cCard:     Qt.rgba(5/255, 2/255, 11/255, 0.78)     // frosted smoked-glass fill
+    readonly property color cCardEdge: Qt.rgba(121/255, 73/255, 242/255, 0.32) // 1px accent hairline
+    readonly property color cInput:    Qt.rgba(5/255, 1/255, 13/255, 0.90)     // void-deep
+    readonly property color cAccent:   "#7949f2"   // accent primary
+    readonly property color cAccent2:  "#ff2667"   // accent secondary
+    readonly property color cText:     "#e8edf5"   // nyx_white_off
+    readonly property color cTextDim:  "#c8ccd6"   // nyx_grey_light
+    readonly property color cTextFaint:"#6a6e78"   // nyx_grey_tertiary
 
-    // ── Background: artwork + heavy void wash ────────────────────────────
+    property int selectedSession: sessionModel.lastIndex
+    property bool sessionPickerOpen: false   // hidden by default, one click to reveal
+    property string errorText: ""
+
+    // ── background artwork + void wash ───────────────────────
     Image {
         anchors.fill: parent
         source: config.background || "background.png"
         fillMode: Image.PreserveAspectCrop
-        asynchronous: false
+        asynchronous: true
         cache: true
-        smooth: true
+        onStatusChanged: if (status === Image.Error) visible = false
     }
-    Rectangle {
+    Rectangle {  // light global wash for depth — keep the art sharp/visible
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.78)
+        color: Qt.rgba(0, 0, 0, 0.18)
     }
-
-    // ── Top-right power controls ─────────────────────────────────────────
-    Row {
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.margins: 24
-        spacing: 8
-        z: 10
-
-        Repeater {
-            model: [
-                { label: "SUSPEND", action: "suspend", enabled: sddm.canSuspend  },
-                { label: "REBOOT",  action: "reboot",  enabled: sddm.canReboot   },
-                { label: "POWER",   action: "off",     enabled: sddm.canPowerOff }
-            ]
-            delegate: Button {
-                id: pwrBtn
-                text: modelData.label
-                enabled: modelData.enabled
-                font.family: "Inter"
-                font.pixelSize: 11
-                font.letterSpacing: 1.5
-                padding: 10
-                Accessible.role: Accessible.Button
-                Accessible.name: modelData.label
-                Accessible.description: "Session " + modelData.action.toLowerCase() + " action"
-                background: Rectangle {
-                    color: pwrBtn.hovered ? clrGlassDeep : clrGlass
-                    // Visible keyboard focus ring — required for a11y.
-                    border.color: pwrBtn.activeFocus ? clrAccent
-                                : pwrBtn.hovered    ? clrFocus
-                                : clrHairline
-                    border.width: pwrBtn.activeFocus ? 2 : 1
-                    radius: 14
-                    opacity: pwrBtn.enabled ? 1.0 : 0.45
-                }
-                contentItem: Text {
-                    text: pwrBtn.text
-                    color: pwrBtn.hovered ? clrWhite : clrTextDim
-                    font: pwrBtn.font
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                onClicked: {
-                    if      (modelData.action === "suspend") sddm.suspend()
-                    else if (modelData.action === "reboot")  sddm.reboot()
-                    else                                     sddm.powerOff()
-                }
-            }
+    Rectangle {  // right-side scrim so the login column stays legible over the art
+        anchors.fill: parent
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0.0;  color: Qt.rgba(0, 0, 0, 0.0) }
+            GradientStop { position: 0.52; color: Qt.rgba(0, 0, 0, 0.0) }
+            GradientStop { position: 1.0;  color: Qt.rgba(2/255, 1/255, 8/255, 0.72) }
         }
     }
 
-    // ── Center clock + login card stack ──────────────────────────────────
-    ColumnLayout {
-        anchors.centerIn: parent
-        spacing: 28
-        width: 420
+    // ── live clock ───────────────────────────────────────────
+    Timer { id: clockTimer; interval: 1000; running: true; repeat: true
+        onTriggered: { timeLabel.text = Qt.formatDateTime(new Date(), "HH:mm");
+                       dateLabel.text = Qt.formatDateTime(new Date(), "dddd · MMMM d").toUpperCase() } }
 
-        // Avatar — circular ~/.face from UserModel (when a real account
-        // exists). Falls back to a hairline glyph on the live ISO. The
-        // outer Rectangle gives us a hairline ring + circular clip.
-        Rectangle {
-            id: avatarRing
-            Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: 96
-            Layout.preferredHeight: 96
-            color: clrGlass
-            radius: 48
-            border.color: clrHairline
-            border.width: 1
-            // The icon source from UserModel is already a file path; if
-            // missing or unreadable QML will silently skip the Image
-            // and the hairline ring + glyph remain visible.
-            property string iconPath: userModel.count > 0
-                ? userModel.data(userModel.index(0, 0), Qt.UserRole + 2)
-                : ""
-
-            Image {
-                id: avatarImg
-                anchors.fill: parent
-                anchors.margins: 2
-                source: avatarRing.iconPath
-                fillMode: Image.PreserveAspectCrop
-                visible: status === Image.Ready
-                asynchronous: true
-                cache: true
-                smooth: true
-                // Round mask via OpacityMask would require QtGraphicalEffects;
-                // a plain radius + clip on the parent achieves the same look
-                // on every Qt 6 stack without an extra import.
-                layer.enabled: true
-            }
-            Text {
-                anchors.centerIn: parent
-                visible: !avatarImg.visible
-                text: "◆"
-                color: clrTextDim
-                font.family: "Inter"
-                font.pixelSize: 38
-            }
-            clip: true
-        }
-
-        // Clock
-        Text {
-            id: clock
-            Layout.alignment: Qt.AlignHCenter
+    Column {
+        id: clockCol
+        anchors.horizontalCenter: card.horizontalCenter
+        anchors.bottom: card.top
+        anchors.bottomMargin: 26
+        spacing: 4
+        Text { id: timeLabel; anchors.horizontalCenter: parent.horizontalCenter
             text: Qt.formatDateTime(new Date(), "HH:mm")
-            color: clrText
-            font.family: "Inter"
-            font.pixelSize: 96
-            font.weight: Font.Light
-            font.letterSpacing: 4
-        }
-        Text {
-            id: dateLabel
-            Layout.alignment: Qt.AlignHCenter
-            text: Qt.formatDateTime(new Date(), "dddd · d MMMM yyyy").toUpperCase()
-            color: clrTextDim
-            font.family: "Inter"
-            font.pixelSize: 12
-            font.letterSpacing: 3
-        }
-        Timer {
-            interval: 1000
-            running: true
-            repeat: true
-            onTriggered: {
-                clock.text = Qt.formatDateTime(new Date(), "HH:mm")
-                dateLabel.text = Qt.formatDateTime(new Date(), "dddd · d MMMM yyyy").toUpperCase()
+            color: cText; font.pixelSize: 76; font.family: "Orbitron"; font.letterSpacing: 2 }
+        Text { id: dateLabel; anchors.horizontalCenter: parent.horizontalCenter
+            text: Qt.formatDateTime(new Date(), "dddd · MMMM d").toUpperCase()
+            color: cTextDim; font.pixelSize: 14; font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: 3 }
+    }
+
+    // ── login card ───────────────────────────────────────────
+    Rectangle {
+        id: card
+        width: 420
+        height: cardCol.height + 56
+        radius: 16
+        color: cCard
+        border.width: 1
+        border.color: cCardEdge
+        anchors.right: parent.right
+        anchors.rightMargin: root.width * 0.10
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.verticalCenterOffset: 44
+
+        Rectangle {  // 2px accent top rule
+            anchors { top: parent.top; left: parent.left; right: parent.right; topMargin: 0 }
+            height: 2; radius: 2
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: cAccent }
+                GradientStop { position: 1.0; color: cAccent2 }
             }
         }
 
-        // Login card
-        Rectangle {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: 380
-            Layout.preferredHeight: 220
-            color: clrGlass
-            border.color: clrHairline
-            border.width: 1
-            radius: 14
+        Column {
+            id: cardCol
+            anchors.centerIn: parent
+            width: parent.width - 56
+            spacing: 18
 
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 24
-                spacing: 14
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "welcome back, operator"
+                color: cTextDim; font.pixelSize: 15; font.family: "Caveat"
+            }
 
-                // Tagline
-                Text {
-                    Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignHCenter
-                    text: "WELCOME TO THE DARKSIDE"
-                    color: clrTextHint
-                    font.family: "Inter"
-                    font.pixelSize: 10
-                    font.letterSpacing: 2.5
+            // username
+            Rectangle {
+                width: parent.width; height: 48; radius: 10
+                color: cInput; border.width: 1
+                border.color: nameInput.activeFocus ? cAccent : Qt.rgba(1,1,1,0.10)
+                TextInput {
+                    id: nameInput
+                    anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 16
+                    verticalAlignment: TextInput.AlignVCenter
+                    color: cText; font.pixelSize: 15; font.family: "JetBrainsMono Nerd Font"
+                    clip: true
+                    text: userModel.lastUser
+                    onAccepted: passwordInput.forceActiveFocus()
+                    Text { anchors.verticalCenter: parent.verticalCenter
+                        visible: !nameInput.text && !nameInput.activeFocus
+                        text: "username"; color: cTextFaint; font: nameInput.font }
                 }
+            }
 
-                // Username field (free entry — works on live ISO with no users)
-                TextField {
-                    id: userField
-                    Layout.fillWidth: true
-                    placeholderText: "username"
-                    placeholderTextColor: clrTextHint
-                    color: clrText
-                    font.family: "Inter"
-                    font.pixelSize: 14
-                    text: userModel.lastUser || (userModel.count > 0 ? userModel.data(userModel.index(0, 0), Qt.UserRole + 1) : "root")
-                    selectByMouse: true
-                    leftPadding: 14
-                    rightPadding: 14
-                    Accessible.role: Accessible.EditableText
-                    Accessible.name: "Username"
-                    Accessible.description: "Account username for sign-in"
-                    background: Rectangle {
-                        color: clrGlassDeep
-                        border.color: userField.activeFocus ? clrFocus : clrHairline
-                        border.width: 1
-                        radius: 10
+            // password
+            Rectangle {
+                width: parent.width; height: 48; radius: 10
+                color: cInput; border.width: 1
+                border.color: passwordInput.activeFocus ? cAccent : Qt.rgba(1,1,1,0.10)
+                TextInput {
+                    id: passwordInput
+                    anchors.fill: parent; anchors.leftMargin: 16; anchors.rightMargin: 16
+                    verticalAlignment: TextInput.AlignVCenter
+                    color: cText; font.pixelSize: 15; font.family: "JetBrainsMono Nerd Font"
+                    echoMode: TextInput.Password; passwordCharacter: "•"; clip: true
+                    onAccepted: root.doLogin()
+                    onTextChanged: root.errorText = ""
+                    Text { anchors.verticalCenter: parent.verticalCenter
+                        visible: !passwordInput.text
+                        text: config.PasswordFieldPlaceholderText || "passphrase"
+                        color: cTextFaint; font: passwordInput.font }
+                }
+            }
+
+            // session selector — HIDDEN BY DEFAULT, one click to reveal.
+            // Collapsed: a slim chip showing only the current session name.
+            // Expanded: the full pill list of every session SDDM found.
+            Column {
+                width: parent.width; spacing: 8
+
+                Rectangle {
+                    width: parent.width; height: 34; radius: 8
+                    color: Qt.rgba(1,1,1,0.05); border.width: 1
+                    border.color: sessionChip.containsMouse ? cAccent : Qt.rgba(1,1,1,0.10)
+                    Row {
+                        anchors.centerIn: parent; spacing: 8
+                        Text { anchors.verticalCenter: parent.verticalCenter
+                            text: "session ·"; color: cTextFaint
+                            font.pixelSize: 11; font.family: "JetBrainsMono Nerd Font" }
+                        Repeater {  // renders only the currently-selected session's name
+                            model: sessionModel
+                            delegate: Text { visible: index === root.selectedSession
+                                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+                                text: model.name; color: cText
+                                font.pixelSize: 12; font.family: "JetBrainsMono Nerd Font" }
+                        }
+                        Text { anchors.verticalCenter: parent.verticalCenter
+                            text: root.sessionPickerOpen ? "▲" : "▾"; color: cAccent; font.pixelSize: 11 }
                     }
-                    KeyNavigation.tab: passwordField
+                    MouseArea { id: sessionChip; anchors.fill: parent; hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.sessionPickerOpen = !root.sessionPickerOpen }
                 }
 
-                // Password field
-                TextField {
-                    id: passwordField
-                    Layout.fillWidth: true
-                    placeholderText: config.PasswordFieldPlaceholderText || "enter passphrase"
-                    placeholderTextColor: clrTextHint
-                    color: clrText
-                    font.family: "Inter"
-                    font.pixelSize: 14
-                    echoMode: TextInput.Password
-                    passwordCharacter: "•"
-                    selectByMouse: true
-                    leftPadding: 14
-                    rightPadding: 14
-                    Accessible.role: Accessible.EditableText
-                    Accessible.name: "Password"
-                    Accessible.description: "Account password — input is hidden"
-                    background: Rectangle {
-                        color: clrGlassDeep
-                        border.color: passwordField.activeFocus ? clrFocus : clrHairline
-                        border.width: 1
-                        radius: 10
+                Flow {
+                    width: parent.width; spacing: 8; visible: root.sessionPickerOpen
+                    Repeater {
+                        model: sessionModel
+                        delegate: Rectangle {
+                            radius: 8; height: 30
+                            width: pillText.width + 24
+                            color: index === root.selectedSession ? Qt.rgba(121/255,73/255,242/255,0.28)
+                                                                  : Qt.rgba(1,1,1,0.05)
+                            border.width: 1
+                            border.color: index === root.selectedSession ? cAccent : Qt.rgba(1,1,1,0.10)
+                            Text { id: pillText; anchors.centerIn: parent
+                                text: model.name; color: index === root.selectedSession ? cText : cTextDim
+                                font.pixelSize: 12; font.family: "JetBrainsMono Nerd Font" }
+                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                onClicked: { root.selectedSession = index; root.sessionPickerOpen = false } }
+                        }
                     }
-                    Keys.onReturnPressed: signInBtn.clicked()
-                    Keys.onEnterPressed:  signInBtn.clicked()
                 }
+            }
 
-                // Sign-in button
-                Button {
-                    id: signInBtn
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 36
+            // sign-in button
+            Rectangle {
+                width: parent.width; height: 50; radius: 10
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: signInArea.pressed ? Qt.darker(cAccent,1.2) : cAccent }
+                    GradientStop { position: 1.0; color: signInArea.pressed ? Qt.darker(cAccent2,1.2) : cAccent2 }
+                }
+                Text { anchors.centerIn: parent
                     text: config.LoginButtonText || "SIGN IN"
-                    font.family: "Inter"
-                    font.pixelSize: 12
-                    font.letterSpacing: 3
-                    Accessible.role: Accessible.Button
-                    Accessible.name: "Sign in"
-                    Accessible.description: "Authenticate and start the selected session"
-                    background: Rectangle {
-                        color: signInBtn.hovered ? clrGlassDeepest : clrGlassDeep
-                        border.color: signInBtn.hovered ? clrAccent : clrHairline
-                        border.width: 1
-                        radius: 10
-                    }
-                    contentItem: Text {
-                        text: signInBtn.text
-                        color: signInBtn.hovered ? clrWhite : clrText
-                        font: signInBtn.font
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    onClicked: sddm.login(userField.text, passwordField.text, sessionCombo.currentIndex)
-                }
+                    color: "#ffffff"; font.pixelSize: 15; font.bold: true
+                    font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: 2 }
+                MouseArea { id: signInArea; anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor; onClicked: root.doLogin() }
+            }
 
-                // Error indicator
-                Text {
-                    id: errorLine
-                    Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignHCenter
-                    color: clrTextDim
-                    font.family: "Inter"
-                    font.pixelSize: 10
-                    font.letterSpacing: 1.5
-                    text: ""
-                }
-            }
-        }
-
-        // Session selector (small, beneath card)
-        ComboBox {
-            id: sessionCombo
-            Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: 220
-            model: sessionModel
-            textRole: "name"
-            currentIndex: sessionModel.lastIndex >= 0 ? sessionModel.lastIndex : 0
-            font.family: "Inter"
-            font.pixelSize: 11
-            background: Rectangle {
-                color: clrGlass
-                border.color: clrHairline
-                border.width: 1
-                radius: 10
-            }
-            contentItem: Text {
-                text: sessionCombo.displayText
-                color: clrTextDim
-                font: sessionCombo.font
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                leftPadding: 14
-            }
-            popup.background: Rectangle {
-                color: clrGlassDeepest
-                border.color: clrHairline
-                border.width: 1
-                radius: 10
+            // error / caps-lock line
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                height: 14
+                text: root.errorText !== "" ? root.errorText
+                      : (keyboard.capsLock ? "⇪ CAPS LOCK ON" : "")
+                color: root.errorText !== "" ? cAccent2 : cTextFaint
+                font.pixelSize: 11; font.family: "JetBrainsMono Nerd Font"; font.letterSpacing: 1
             }
         }
     }
 
-    // ── Bottom-left wordmark ─────────────────────────────────────────────
-    Text {
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.margins: 24
-        text: "SIERENGOWSKI"
-        color: clrTextHint
-        font.family: "Inter"
-        font.pixelSize: 10
-        font.letterSpacing: 4
+    // ── power controls (top-right) ───────────────────────────
+    Row {
+        anchors.top: parent.top; anchors.right: parent.right
+        anchors.topMargin: 28; anchors.rightMargin: 32; spacing: 22
+        Text { text: "⏻ shutdown"; color: cTextDim; font.pixelSize: 13; font.family: "JetBrainsMono Nerd Font"
+            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                onClicked: sddm.powerOff() } }
+        Text { text: "⟳ reboot"; color: cTextDim; font.pixelSize: 13; font.family: "JetBrainsMono Nerd Font"
+            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                onClicked: sddm.reboot() } }
     }
 
-    // ── SDDM signal wiring ───────────────────────────────────────────────
+    Text {  // copyright chrome
+        anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottomMargin: 18
+        text: "© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
+        color: cTextFaint; font.pixelSize: 9; font.family: "JetBrainsMono Nerd Font"
+    }
+
+    function doLogin() {
+        errorText = "";
+        sddm.login(nameInput.text, passwordInput.text, selectedSession);
+    }
+
     Connections {
         target: sddm
-        function onLoginSucceeded() { errorLine.text = "" }
-        function onLoginFailed() {
-            errorLine.text = "ACCESS DENIED"
-            passwordField.selectAll()
-            passwordField.forceActiveFocus()
-        }
+        function onLoginFailed() { root.errorText = "ACCESS DENIED"; passwordInput.text = ""; passwordInput.forceActiveFocus(); }
+        function onLoginSucceeded() { root.errorText = ""; }
     }
 
-    Component.onCompleted: passwordField.forceActiveFocus()
+    Component.onCompleted: {
+        if (nameInput.text === "") nameInput.forceActiveFocus();
+        else passwordInput.forceActiveFocus();
+    }
 }

@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# ============================================================
+#  nyxus-notif-to-eww — dunst → EWW UFO notification bridge
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  dunst runs this per notification (see the [nyxus-eww] rule in dunstrc,
+#  with skip_display=true so dunst's own popup is suppressed and only the
+#  themed EWW popup shows). dunst still owns the dbus service + history, so
+#  notifications never break — if EWW is down this is a no-op and dunst can
+#  be flipped back to native popups by removing skip_display.
+#
+#  dunst passes:  $1=appname  $2=summary  $3=body  $4=icon  $5=urgency
+# ============================================================
+set -u
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+export PATH="${HOME}/.local/bin:${PATH}"
+
+app="${1:-}"; summary="${2:-}"; body="${3:-}"; urgency="${5:-NORMAL}"
+POPUP="notif-popup"
+TIMER="${XDG_RUNTIME_DIR}/nyxus-notif-timer.pid"
+
+# NYXUS cosmic sound theme (rev 2026-07-14): one chime per notification —
+# alien warble for CRITICAL, warm pluck otherwise. Runs before the EWW
+# checks so the sound survives an eww outage; nyxus-sound fails silent
+# and honors the global mute flag (~/.config/nyxus/sound.state).
+if command -v nyxus-sound >/dev/null 2>&1; then
+  if [[ "$urgency" == "CRITICAL" ]]; then
+    nyxus-sound alert &
+  else
+    nyxus-sound notification &
+  fi
+fi
+
+command -v eww >/dev/null 2>&1 || exit 0
+pgrep -x eww >/dev/null 2>&1 || exit 0
+
+# Build the JSON payload safely (summary/body can contain quotes, newlines,
+# markup) — python handles all escaping.
+payload="$(python3 - "$app" "$summary" "$body" "$urgency" <<'PY'
+import json, sys, re
+app, summary, body, urg = sys.argv[1:5]
+# strip pango markup dunst may pass through, collapse whitespace
+strip = lambda s: re.sub(r"<[^>]+>", "", s or "").strip()
+print(json.dumps({"app": strip(app)[:40], "summary": strip(summary)[:120],
+                  "body": strip(body)[:240], "urgency": urg}))
+PY
+)"
+[[ -z "$payload" ]] && exit 0
+
+eww update notif="$payload" 2>/dev/null
+eww open "$POPUP" 2>/dev/null
+
+# Reset the auto-close timer (kill any pending close, start a fresh one) so a
+# burst of notifications keeps the popup up and it closes once things settle.
+if [[ -r "$TIMER" ]]; then kill "$(cat "$TIMER")" 2>/dev/null || true; fi
+dur=6; [[ "$urgency" == "CRITICAL" ]] && dur=12
+( sleep "$dur"; eww close "$POPUP" 2>/dev/null; rm -f "$TIMER" ) &
+echo $! > "$TIMER"

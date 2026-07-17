@@ -1,58 +1,176 @@
 #!/usr/bin/env bash
-# NYXUS living wallpaper controller
-#   nyxus-live-wallpaper on      - start the animated wallpaper (mpvpaper)
-#   nyxus-live-wallpaper off     - stop it and restore the still wallpaper
-#   nyxus-live-wallpaper toggle  - flip between the two
-#   nyxus-live-wallpaper auto    - used by autostart: start only if enabled
-# State persists in ~/.config/nyxus/livewall.conf so the choice
-# survives reboots. Falls back to the still image if mpvpaper is
-# not installed, so this is always safe to call.
+# ════════════════════════════════════════════════════════════════════
+# nyxus-live-wallpaper — NYXUS flagship LIVING WALLPAPER controller
+#                                                        · rev 2026-07-14
+#
+#   nyxus-live-wallpaper on      start the animated wallpaper (mpvpaper)
+#   nyxus-live-wallpaper off     stop it, restore the still wallpaper
+#   nyxus-live-wallpaper toggle  flip between the two
+#   nyxus-live-wallpaper auto    autostart hook: start only if enabled
+#   nyxus-live-wallpaper status  print state (enabled? running? video?)
+#   nyxus-live-wallpaper render  (re)build the flagship loop from the still
+#
+# The animated background is a seamless cosmic loop — drifting nebula,
+# twinkling stars and an occasional cruising UFO — played by mpvpaper on
+# the Wayland *background* layer, so it sits BEHIND the eww bars, the
+# companion and every window.
+#
+# The on/off choice persists in ~/.config/nyxus/livewall.conf so it
+# survives logout/reboot (the hyprland.conf exec-once calls `auto`).
+#
+# Always safe to call: if mpvpaper or the loop is missing it renders the
+# loop once (ffmpeg) and, failing that, falls back to the still image —
+# it never leaves the desktop black.
+# © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
 set -u
-STATE="$HOME/.config/nyxus/livewall.conf"
-STILL="$HOME/.config/hypr/walls/nyxus-graffiti-space.png"
-[ -f "$HOME/.config/nyxus/wallpaper.conf" ] && . "$HOME/.config/nyxus/wallpaper.conf" 2>/dev/null && STILL="${WALLPAPER_PATH:-$STILL}"
 
-# Per-wallpaper living loop (rendered by nyxus-livewall-generate):
-# walls/live/<stem>-live.mp4 for the CURRENT still, so the animated
-# wallpaper is always your actual background — falls back to the
-# generic idle loop if none has been rendered yet.
-_stem="$(basename "$STILL")"; _stem="${_stem%.*}"
-VIDEO="$HOME/.config/hypr/walls/live/${_stem}-live.mp4"
-[ -f "$VIDEO" ] || VIDEO="$HOME/.config/hypr/walls/live/nyxus-live-idle.mp4"
+CFG_DIR="${HOME}/.config/nyxus"
+STATE="${CFG_DIR}/livewall.conf"
+LIVE_DIR="${HOME}/.config/hypr/walls/live"
+FLAGSHIP="${LIVE_DIR}/nyxus-livewall-flagship.mp4"
+IPC_SOCK="${XDG_RUNTIME_DIR:-/tmp}/nyxus-mpv.sock"
+# The still background on this desktop is owned by the per-workspace
+# wallpaper daemon (nyxus-ws-wallpaperd.service → awww-daemon). It repaints
+# on every workspace switch and shares the Wayland *background* layer with
+# mpvpaper, so it MUST be stopped while the living wallpaper is on, else it
+# covers the animation. We stop the service (no repaint on ws-switch) and,
+# because the hyprland.conf autostart starts that service in PARALLEL with
+# our `auto` hook, run a short guard to win that one-time login race.
+WS_SVC="nyxus-ws-wallpaperd.service"
 
-enabled() { [ -f "$STATE" ] && grep -q "LIVE=on" "$STATE"; }
+mkdir -p "${CFG_DIR}" "${LIVE_DIR}"
+
+# still wallpaper (for the fallback path + as the render source)
+STILL="${HOME}/.config/hypr/walls/nyxus-wall-alien-hero.png"
+if [[ -f "${CFG_DIR}/wallpaper.conf" ]]; then
+  # shellcheck source=/dev/null
+  . "${CFG_DIR}/wallpaper.conf" 2>/dev/null || true
+  [[ -n "${WALLPAPER_PATH:-}" && -f "${WALLPAPER_PATH}" ]] && STILL="${WALLPAPER_PATH}"
+fi
+
+# resolve the loop to play: flagship first, then any per-wallpaper /
+# idle loop that happens to be present (backwards compatible).
+resolve_video() {
+  if [[ -f "${FLAGSHIP}" ]]; then echo "${FLAGSHIP}"; return; fi
+  local stem; stem="$(basename "${STILL}")"; stem="${stem%.*}"
+  for v in "${LIVE_DIR}/${stem}-live.mp4" "${LIVE_DIR}/nyxus-live-idle.mp4"; do
+    [[ -f "${v}" ]] && { echo "${v}"; return; }
+  done
+  echo "${FLAGSHIP}"   # canonical path even if absent (render target)
+}
+VIDEO="$(resolve_video)"
+
+enabled()      { [[ -f "${STATE}" ]] && grep -q '^LIVE=on' "${STATE}"; }
+mpv_running()  { pgrep -x mpvpaper >/dev/null 2>&1; }
+set_state()    { printf 'LIVE=%s\n' "$1" > "${STATE}"; }
+
+# stop the still-wallpaper daemons that would otherwise cover mpvpaper
+stop_still_daemons() {
+  systemctl --user stop "${WS_SVC}" 2>/dev/null || true
+  pkill -x awww-daemon 2>/dev/null || true
+  pkill -x swww-daemon 2>/dev/null || true
+  swww kill 2>/dev/null || true
+  pkill -x swaybg 2>/dev/null || true
+}
+
+# Win the login race: hyprland fires our `auto` hook and the ws-wallpaperd
+# service start in parallel, so the daemon may come up just after we stop
+# it. Keep the background clear for a few seconds, but bail the moment the
+# user turns the living wallpaper off (mpvpaper gone) so we never fight it.
+spawn_guard() {
+  setsid bash -c '
+    for _ in $(seq 1 15); do
+      sleep 1
+      pgrep -x mpvpaper >/dev/null 2>&1 || exit 0
+      if pgrep -x awww-daemon >/dev/null 2>&1 || \
+         systemctl --user is-active --quiet '"${WS_SVC}"' 2>/dev/null; then
+        systemctl --user stop '"${WS_SVC}"' 2>/dev/null || true
+        pkill -x awww-daemon 2>/dev/null || true
+      fi
+    done
+  ' >/dev/null 2>&1 &
+}
+
+render_loop() {
+  # Build the flagship loop from the current still if we can.
+  command -v nyxus-livewall-flagship >/dev/null 2>&1 || return 1
+  command -v ffmpeg >/dev/null 2>&1 || return 1
+  echo "rendering flagship loop (first run, ~1-2 min)…" >&2
+  nyxus-livewall-flagship "${STILL}" "${FLAGSHIP}" >&2
+}
 
 start_live() {
-  if ! command -v mpvpaper >/dev/null || [ ! -f "$VIDEO" ]; then
-    notify-send "NYXUS Live Wallpaper" "mpvpaper not installed or video missing - staying on still image" 2>/dev/null
-    start_still
+  if ! command -v mpvpaper >/dev/null 2>&1; then
+    notify-send "NYXUS Live Wallpaper" \
+      "mpvpaper not installed — staying on still image (sudo pacman -S mpvpaper)" 2>/dev/null
+    start_still keepstate
+    set_state on   # remember the *intent*; it engages once mpvpaper exists
     return 1
   fi
-  pkill -x swaybg 2>/dev/null; pkill -x mpvpaper 2>/dev/null; sleep 0.3
-  # input-ipc-server lets nyxus-wall-fx drive hue/saturation/speed live
-  # (audio-reactive pulse + per-workspace tints).
-  setsid mpvpaper -o "no-audio loop-file=inf hwdec=auto input-ipc-server=${XDG_RUNTIME_DIR:-/tmp}/nyxus-mpv.sock" '*' "$VIDEO" >/dev/null 2>&1 &
-  echo "LIVE=on" > "$STATE"
-  command -v nyxus-wall-fx >/dev/null && nyxus-wall-fx auto
+  if [[ ! -f "${VIDEO}" ]]; then
+    render_loop || true
+    VIDEO="$(resolve_video)"
+  fi
+  if [[ ! -f "${VIDEO}" ]]; then
+    notify-send "NYXUS Live Wallpaper" "loop missing and render failed — still image" 2>/dev/null
+    start_still keepstate
+    set_state on
+    return 1
+  fi
+  pkill -x mpvpaper 2>/dev/null || true
+  stop_still_daemons
+  sleep 0.3
+  # background layer → behind bars/companion/windows. input-ipc-server
+  # lets other nyxus tools drive playback (speed/hue) live if desired.
+  setsid mpvpaper -l background \
+    -o "no-audio --loop=inf --hwdec=auto --panscan=1.0 --video-unscaled=no --input-ipc-server=${IPC_SOCK}" \
+    '*' "${VIDEO}" >/dev/null 2>&1 &
+  set_state on
+  spawn_guard
+  command -v nyxus-wall-fx >/dev/null 2>&1 && nyxus-wall-fx auto >/dev/null 2>&1 || true
 }
 
 start_still() {
-  command -v nyxus-wall-fx >/dev/null && nyxus-wall-fx stop-quiet
-  pkill -x mpvpaper 2>/dev/null; pkill -x swaybg 2>/dev/null; sleep 0.3
-  # Delegate to the stock autostart when present (swww/hyprpaper aware),
-  # otherwise plain swaybg.
-  if [ -x /usr/local/bin/nyxus-wallpaper-autostart ]; then
+  # arg1=keepstate → don't rewrite LIVE (used by fallbacks)
+  command -v nyxus-wall-fx >/dev/null 2>&1 && nyxus-wall-fx stop-quiet >/dev/null 2>&1 || true
+  pkill -x mpvpaper 2>/dev/null || true
+  sleep 0.3
+  # Prefer handing the background back to its normal owner — the
+  # per-workspace wallpaper daemon — so per-desk stills return exactly as
+  # before. Fall back to the stock autostart / swww / swaybg if the service
+  # is unavailable, so the desktop is never left black.
+  if systemctl --user list-unit-files "${WS_SVC}" >/dev/null 2>&1 && \
+     systemctl --user cat "${WS_SVC}" >/dev/null 2>&1; then
+    systemctl --user start "${WS_SVC}" 2>/dev/null || true
+  elif [[ -x /usr/local/bin/nyxus-wallpaper-autostart ]]; then
     setsid /usr/local/bin/nyxus-wallpaper-autostart >/dev/null 2>&1 &
+  elif command -v nyxus-set-wallpaper >/dev/null 2>&1; then
+    setsid nyxus-set-wallpaper "${STILL}" >/dev/null 2>&1 &
   else
-    setsid swaybg -m fill -i "$STILL" >/dev/null 2>&1 &
+    pkill -x swaybg 2>/dev/null || true
+    setsid swaybg -m fill -i "${STILL}" -c "#000000" >/dev/null 2>&1 &
   fi
-  echo "LIVE=off" > "$STATE"
+  [[ "${1:-}" == keepstate ]] || set_state off
+}
+
+status() {
+  local pref="off"; enabled && pref="on"
+  local run="stopped"; mpv_running && run="running"
+  echo "nyxus-live-wallpaper"
+  echo "  preference : ${pref}   (persisted in ${STATE})"
+  echo "  engine     : mpvpaper $(command -v mpvpaper >/dev/null 2>&1 && echo present || echo MISSING)"
+  echo "  state      : ${run}"
+  echo "  loop       : ${VIDEO} $( [[ -f "${VIDEO}" ]] && echo "($(du -h "${VIDEO}" | cut -f1))" || echo '(not rendered)')"
+  echo "  still (fb) : ${STILL}"
 }
 
 case "${1:-toggle}" in
   on)     start_live ;;
   off)    start_still ;;
-  toggle) if pgrep -x mpvpaper >/dev/null; then start_still; else start_live; fi ;;
-  auto)   if enabled; then start_live; else start_still; fi ;;
-  *)      echo "usage: nyxus-live-wallpaper {on|off|toggle|auto}"; exit 1 ;;
+  toggle) if mpv_running; then start_still; else start_live; fi ;;
+  auto)   if enabled; then start_live; else start_still keepstate; fi ;;
+  status) status ;;
+  render) render_loop && echo "rendered: ${FLAGSHIP}" ;;
+  *)      echo "usage: nyxus-live-wallpaper {on|off|toggle|auto|status|render}"; exit 1 ;;
 esac

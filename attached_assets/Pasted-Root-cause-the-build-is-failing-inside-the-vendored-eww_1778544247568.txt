@@ -1,0 +1,58 @@
+Root cause: the build is failing inside the vendored eww source build during ISO customization, and the repo already contains a workaround for exactly this time-0.3.34 / E0282 compiler failure.
+
+What failed:
+
+cargo build for eww v0.6.0
+dependency time v0.3.34
+compiler error E0282 in src/format_description/parse/mod.rs
+Why it failed:
+
+eww is built from source in iso-builder/nyx-profile/airootfs/root/customize_airootfs.sh
+that script expects to patch time-0.3.34 after a warm-up build extracts Cargo sources
+your log shows the final build still hit the unpatched time crate, so the patch likely didn’t apply in the environment where mkarchiso ran
+Evidence:
+
+sierengowskisierengowski-cpu / Nyxus-Core / iso-builder / nyx-profile / airootfs / root / customize_airootfs.sh
+        chmod u+w "$f" 2>/dev/null || true
+        sed -i 's|^    let items = format_items|    let items: Box<_> = format_items|' "$f"
+        echo "[customize_airootfs] patched $f for E0282"
+        patched=1
+      fi
+    done
+Immediate fix:
+
+Re-run the build and look specifically for one of these lines:
+[customize_airootfs] patched ... for E0282
+or [customize_airootfs] no time-0.3.34 found to patch ...
+If you don’t see the “patched” line, the patch function isn’t finding the extracted crate source.
+Make the patch step more robust by patching whatever Cargo registry path exists, then fail loudly if time-0.3.34 is present but unmodified.
+Recommended hardening change:
+
+after patch_time_034, verify the target line changed
+if not, abort before the final cargo build with a clear message
+Suggested patch logic:
+
+bash
+find "${CARGO_HOME:-$HOME/.cargo}/registry/src" -type f \
+  -path '*/time-0.3.34/src/format_description/parse/mod.rs' \
+  -print -exec sed -i \
+  's|^    let items = format_items|    let items: Box<_> = format_items|' {} \;
+Then verify with:
+
+bash
+grep -R 'let items: Box<_> = format_items' \
+  "${CARGO_HOME:-$HOME/.cargo}/registry/src"/*/time-0.3.34/src/format_description/parse/mod.rs
+Most likely root cause:
+
+not the repo’s own Rust code
+not eww itself directly
+the patch/verification flow in customize_airootfs.sh is too optimistic for the Cargo registry layout or extraction timing in your chroot build
+Best long-term fixes, in order:
+
+Keep the current patch, but add verification and hard failure if patch not applied.
+Pin NYXUS_EWW_TAG to an upstream eww revision that no longer pulls time 0.3.34.
+If possible, patch eww’s lockfile or use a newer Rust toolchain compatible with that dependency set.
+One more thing: code search results may be incomplete due to tool limits. You can inspect more matches here:
+
+https://github.com/search?q=repo%3Asierengowskisierengowski-cpu%2FNyxus-Core+customize_airootfs+OR+NYXUS_EWW_TAG+OR+eww+OR+%22cargo+build%22&type=code
+If you want, I can next:

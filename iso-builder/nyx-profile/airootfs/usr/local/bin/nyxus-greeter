@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# ============================================================
+#  NYXUS — greetd greeter chain (never-lock-out fallback)
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  greetd runs this as the 'greeter' user. It walks a fallback chain so the
+#  machine can NEVER be left at a frozen/blank screen the way SDDM's X11
+#  greeter was on this hybrid Intel+NVIDIA GPU:
+#
+#    1. regreet under cage  (themed NYXUS login — Wayland, GPU path that
+#       Hyprland already proves works on this machine)
+#    2. regreet under cage with the software (pixman) renderer  (in case the
+#       GPU path misbehaves for the greeter specifically)
+#    3. tuigreet             (text login — the guaranteed fallback)
+#    4. agreety              (bare built-in prompt — last resort)
+#
+#  On a NORMAL successful login greetd tears this process down before it can
+#  fall through, so the chain only advances on a real startup failure.
+# ============================================================
+set +e
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+LOG="/tmp/nyxus-greeter.log"
+echo "[$(date -Iseconds)] nyxus-greeter start (user=$(id -un))" >>"$LOG" 2>&1
+
+# ── ANTI-FLASH #1 · give the greeter a writable HOME + caches ───────────────
+# greetd runs us as 'greeter' with no HOME, so $HOME was empty ("//"). That
+# made wlroots and GTK fail to create their GL/pipeline/shader caches every
+# single login ("Failed to create //.cache for shader cache" /
+# "Failed to create pipeline cache directory" in this log) — so the whole GL
+# pipeline was recompiled from scratch on EVERY boot, lengthening the window
+# where a blank/unstyled greeter is on screen (the "default login flash").
+# Point HOME/XDG at the greeter-owned dirs the setup script provisions
+# (/var/lib/greetd, /var/cache/regreet) so the caches persist and warm up.
+export HOME="${HOME:-/var/lib/greetd}"
+[ -d "$HOME" ] && [ -w "$HOME" ] || HOME=/var/lib/greetd
+export XDG_CACHE_HOME="/var/cache/regreet"
+export XDG_DATA_HOME="${HOME}/.local/share"
+mkdir -p "$XDG_CACHE_HOME" "$XDG_DATA_HOME" 2>/dev/null
+
+# ── ANTI-FLASH #2 · dark GTK theme so the first paint is not a light flash ──
+# regreet maps its window, THEN applies /etc/greetd/regreet.css. For the frame
+# in between GTK falls back to its default LIGHT theme — a white box flashes
+# before the themed dark card. Force a dark theme + dark preference so the
+# very first paint is already dark and the transition is invisible.
+export GTK_THEME="${GTK_THEME:-Adwaita:dark}"
+export ADW_DISABLE_PORTAL=1
+
+# ── ANTI-FLASH #3 · render the greeter on the iGPU that drives the panel ────
+# This is a hybrid Intel(iGPU)+NVIDIA(dGPU) laptop; the internal eDP panel is
+# wired to the Intel i915. Left to itself, cage inits BOTH GPUs and picks the
+# NVIDIA proprietary path as primary, then cross-GPU-copies to the Intel eDP —
+# ~1-2s of extra init plus flicker before anything is drawn. Pin cage to the
+# i915 card that owns the display so it comes up straight and fast. Guarded:
+# only set when exactly one i915 card is found, otherwise fall back to the
+# default multi-GPU behaviour (the never-lock-out chain still protects us).
+if [ -z "${WLR_DRM_DEVICES:-}" ]; then
+  igpu=""
+  for d in /dev/dri/card[0-9]*; do
+    [ -e "$d" ] || continue
+    drv="$(basename "$(readlink -f "/sys/class/drm/$(basename "$d")/device/driver" 2>/dev/null)" 2>/dev/null)"
+    if [ "$drv" = "i915" ] || [ "$drv" = "xe" ]; then
+      if [ -z "$igpu" ]; then igpu="$d"; else igpu="MULTI"; fi
+    fi
+  done
+  if [ -n "$igpu" ] && [ "$igpu" != "MULTI" ]; then
+    export WLR_DRM_DEVICES="$igpu"
+    echo "[$(date -Iseconds)] pinning greeter to iGPU $igpu" >>"$LOG" 2>&1
+  fi
+fi
+
+# ── LOGIN-LOOP FIX (2026-07-15) ─────────────────────────────────────────────
+# When the user logs in successfully, greetd tears the greeter session down by
+# KILLING cage (signal). cage then exits non-zero, which this chain used to
+# misread as a *crash* — so it immediately spawned a SECOND greeter on VT1
+# while the user's Hyprland session was starting. The user saw: log in →
+# login screen comes BACK → console text flashes → desktop ("login loop").
+# A signal-death (exit status >= 128, e.g. 143=SIGTERM / 137=SIGKILL) is
+# greetd's normal post-auth teardown, NEVER a startup failure — treat it as
+# success and stop the chain. Real crashes exit 1 and still fall through.
+trap 'echo "[$(date -Iseconds)] got TERM (greetd teardown) — exiting chain" >>"$LOG" 2>&1; exit 0' TERM INT
+
+run_regreet() {  # $1 = extra env description
+  echo "[$(date -Iseconds)] trying regreet ($1)" >>"$LOG" 2>&1
+  cage -s -- regreet >>"$LOG" 2>&1
+  rc=$?
+  if [ "$rc" -ge 128 ]; then
+    echo "[$(date -Iseconds)] regreet ($1) ended by signal ($rc) — greetd teardown, chain stops" >>"$LOG" 2>&1
+    exit 0
+  fi
+  return "$rc"
+}
+
+if command -v cage >/dev/null 2>&1 && command -v regreet >/dev/null 2>&1; then
+  run_regreet "gpu";                 [ $? -eq 0 ] && exit 0
+  WLR_RENDERER=pixman run_regreet "pixman/software"; [ $? -eq 0 ] && exit 0
+  echo "[$(date -Iseconds)] regreet failed both renderers -> text fallback" >>"$LOG" 2>&1
+fi
+
+if command -v tuigreet >/dev/null 2>&1; then
+  echo "[$(date -Iseconds)] launching tuigreet (text)" >>"$LOG" 2>&1
+  exec tuigreet --time --remember --remember-session \
+       --greeting "NYXUS · fallback login" \
+       --cmd nyxus-session-start
+fi
+
+echo "[$(date -Iseconds)] launching agreety (bare)" >>"$LOG" 2>&1
+exec agreety --cmd nyxus-session-start

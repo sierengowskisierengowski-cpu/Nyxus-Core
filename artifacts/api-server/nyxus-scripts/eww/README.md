@@ -2,7 +2,7 @@
 
 **ElKowar's Wacky Widgets** powering the NYXUS DARK MIRROR shell.
 
-> © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+> © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 > Replaces waybar entirely. 4 bars + 4 overlays + 3 OSD pop-ups.
 
 ---

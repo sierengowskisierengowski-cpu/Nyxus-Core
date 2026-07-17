@@ -1,0 +1,1 @@
+/opt/nyxus/nyxus-crash-report.py

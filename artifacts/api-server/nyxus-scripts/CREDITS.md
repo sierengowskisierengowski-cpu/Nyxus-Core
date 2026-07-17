@@ -6,7 +6,7 @@ NYX-J5W-2026-SIERENGOWSKI-LOCKED
 
 ## Author
 
-**Joseph Sierengowski**  
+**Joseph A. Sierengowski**  
 Designer, architect, and sole developer of NYXUS  
 © 2026 — All rights reserved
 
@@ -27,7 +27,7 @@ Designer, architect, and sole developer of NYXUS
 | lxpolkit | Polkit authentication agent |
 | hypridle | Idle daemon |
 
-## NYXUS Applications (original work by Joseph Sierengowski)
+## NYXUS Applications (original work by Joseph A. Sierengowski)
 
 - NYXUS SysMon — live system dashboard
 - NYXUS Terminal — GTK4 + VTE terminal
@@ -73,4 +73,4 @@ Designer, architect, and sole developer of NYXUS
 
 ---
 
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

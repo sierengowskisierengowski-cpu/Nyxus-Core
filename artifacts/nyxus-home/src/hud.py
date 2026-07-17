@@ -3,7 +3,7 @@ NYXUS Home — SYSTEM HUD widgets (rev r1 · 2026-07-08)
 Borderless neon instrumentation: ring gauges, fan dials, mirrored
 net graph, per-core bars, storage + process readouts. All data is
 sampled from /proc, /sys/class/hwmon and nvidia-smi — no fake numbers.
-(c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+(c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 

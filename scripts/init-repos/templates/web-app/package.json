@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "{{REPO_DESCRIPTION}}",
-  "copyright": "© 2026 Joseph Sierengowski",
+  "copyright": "© 2026 Joseph A. Sierengowski",
   "packageManager": "pnpm@10",
   "type": "module",
   "scripts": {

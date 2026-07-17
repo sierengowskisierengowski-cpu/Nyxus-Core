@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# ============================================================================
+# NYXUS — now-playing engine (Phase 7.5 music-mode backend)
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+# Source-agnostic MPRIS now-playing feed for the center widget. Emits ONE line
+# of JSON that the EWW center widget consumes (defpoll or, with --follow,
+# deflisten) to flip between the Nyxus clock and a music/now-playing view.
+#
+# Source-agnostic by design: playerctl reads MPRIS, which YouTube-in-browser,
+# Spotify, mpv, vlc, etc. all expose — so it "just picks up whatever's playing"
+# per the brief (§4.3). No per-app integration needed.
+#
+#   nyxus-nowplaying            # one-shot: print current state as JSON, exit
+#   nyxus-nowplaying --follow   # stream a JSON line on every change (for eww)
+#
+# JSON shape (stable contract for the eww widget):
+#   {"playing":bool,"status":"Playing|Paused|Stopped","title":"","artist":"",
+#    "album":"","player":"","art":"/path-or-url-or-empty","position":int,
+#    "length":int,"pct":0-100,"elapsed":"m:ss","duration":"m:ss"}
+# When nothing is playing: {"playing":false,"status":"Stopped", ...empty}.
+# ============================================================================
+set -uo pipefail
+
+have() { command -v "$1" >/dev/null 2>&1; }
+have playerctl || { printf '{"playing":false,"status":"Stopped","title":"","artist":"","album":"","player":"","art":"","position":0,"length":0,"pct":0,"elapsed":"0:00","duration":"0:00","error":"playerctl-missing"}\n'; exit 0; }
+have jq || { printf '{"playing":false,"status":"Stopped","error":"jq-missing"}\n'; exit 0; }
+
+fmt_time() { # seconds -> m:ss  (or h:mm:ss)
+  local s=${1:-0}; s=${s%.*}; [[ "$s" =~ ^[0-9]+$ ]] || s=0
+  if (( s >= 3600 )); then printf '%d:%02d:%02d' $((s/3600)) $(((s%3600)/60)) $((s%60))
+  else printf '%d:%02d' $((s/60)) $((s%60)); fi
+}
+
+emit() {
+  # Prefer the active player (the one that's Playing), else the first.
+  local player status title artist album art pos_us len_us pos len pct
+  status="$(playerctl status 2>/dev/null || true)"
+  if [[ -z "$status" ]]; then
+    printf '{"playing":false,"status":"Stopped","title":"","artist":"","album":"","player":"","art":"","position":0,"length":0,"pct":0,"elapsed":"0:00","duration":"0:00"}\n'
+    return
+  fi
+  player="$(playerctl metadata --format '{{playerName}}' 2>/dev/null || true)"
+  title="$(playerctl metadata title 2>/dev/null || true)"
+  artist="$(playerctl metadata artist 2>/dev/null || true)"
+  album="$(playerctl metadata album 2>/dev/null || true)"
+  art="$(playerctl metadata mpris:artUrl 2>/dev/null || true)"; art="${art#file://}"
+  pos="$(playerctl position 2>/dev/null || echo 0)"; pos="${pos%.*}"
+  len_us="$(playerctl metadata mpris:length 2>/dev/null || echo 0)"
+  [[ "$len_us" =~ ^[0-9]+$ ]] || len_us=0; len=$((len_us/1000000))
+  [[ "$pos" =~ ^[0-9]+$ ]] || pos=0
+  pct=0; (( len > 0 )) && pct=$(( pos*100/len )); (( pct > 100 )) && pct=100
+  local playing=false; [[ "$status" == "Playing" ]] && playing=true
+  jq -cn \
+    --argjson playing "$playing" --arg status "$status" \
+    --arg title "$title" --arg artist "$artist" --arg album "$album" \
+    --arg player "$player" --arg art "$art" \
+    --argjson position "$pos" --argjson length "$len" --argjson pct "$pct" \
+    --arg elapsed "$(fmt_time "$pos")" --arg duration "$(fmt_time "$len")" \
+    '{playing:$playing,status:$status,title:$title,artist:$artist,album:$album,
+      player:$player,art:$art,position:$position,length:$length,pct:$pct,
+      elapsed:$elapsed,duration:$duration}'
+}
+
+if [[ "${1:-}" == "--follow" ]]; then
+  # Poll once a second: catches track/status changes AND advances the
+  # progress bar. Simple + robust for an eww `deflisten`. Ctrl-C / eww exit
+  # tears it down cleanly.
+  while true; do emit; sleep 1; done
+else
+  emit
+fi

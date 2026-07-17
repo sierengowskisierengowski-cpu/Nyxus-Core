@@ -18,6 +18,7 @@ This directory contains the canonical project documentation for system scope, ar
 ### Architecture
 - [`architecture/architecture-overview.md`](architecture/architecture-overview.md): System composition, component boundaries, and responsibility model.
 - [`architecture/repository-structure.md`](architecture/repository-structure.md): Workspace and directory-level structure details.
+- [`architecture/live-build-notes.md`](architecture/live-build-notes.md): Hard-won runtime constraints and design decisions for the live Hyprland/EWW desktop (theme spec, typography, EWW bar gotchas, living-wallpaper FX layer, addon status) — consolidated from agent session memory.
 
 ### Deployment
 - [`deployment/build-pipeline.md`](deployment/build-pipeline.md): Workspace build/typecheck flow and packaging expectations.
@@ -41,4 +42,4 @@ This naming is enforced throughout repository documentation.
 
 ---
 
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

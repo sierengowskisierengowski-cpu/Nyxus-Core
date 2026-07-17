@@ -118,9 +118,6 @@
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Terminal install one-liner (`install.sh`) | ✅ | `curl -fsSL .../install.sh \| bash` — Arch Linux + DARK MIRROR banner |
-| Auto-update mechanism (`nyxus-update` + timer) | ✅ | `scripts/nyxus-update` + `nyxus-update.service`/`.timer` — daily at 04:00 |
-| Live-sync one-liner (`nyxus-sync`) | ✅ | `scripts/nyxus-sync` — git pull + config deploy + hot-reload EWW/Hyprland |
 | Public release of a signed, downloadable NYX ISO | ⬜ | Build requires Arch Linux host; no automated CI ISO artifact yet |
 | Automated ISO CI build + artifact upload | ⬜ | `build-iso.yml` workflow exists but requires privileged Arch runner |
 | NYXUS Account service (backend) | ⬜ | UI scaffolded; backend service not shipped |
@@ -133,4 +130,4 @@
 
 ---
 
-© 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED

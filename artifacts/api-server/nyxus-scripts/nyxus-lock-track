@@ -8,7 +8,7 @@
 #   chip   — "▶ NOW PLAYING" / "⏸ PAUSED" pill text
 #   title  — track title, clipped to 34 chars
 #   artist — artist · album, clipped to 40 chars
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:${PATH}"

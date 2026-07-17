@@ -2,7 +2,7 @@
   "name": "{{REPO_NAME}}",
   "version": "0.1.0",
   "description": "{{REPO_DESCRIPTION}}",
-  "copyright": "© 2026 Joseph Sierengowski",
+  "copyright": "© 2026 Joseph A. Sierengowski",
   "packageManager": "pnpm@10",
   "type": "module",
   "main": "dist/index.js",

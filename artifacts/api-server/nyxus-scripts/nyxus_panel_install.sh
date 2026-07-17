@@ -2,7 +2,7 @@
 # ============================================================================
 # NYXUS PANEL · one-shot installer
 # Downloads nyxus-panel.tgz, extracts, runs install.sh
-# © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 #   curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_panel_install.sh | bash
 # ============================================================================

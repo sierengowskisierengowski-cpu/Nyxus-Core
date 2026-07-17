@@ -19,7 +19,7 @@
 # Delegates the actual paint to nyxus-set-wallpaper.sh so every
 # backend (swww/swaybg/hyprpaper/feh) is tried.
 #
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 set -u
 
 CONF="$HOME/.config/nyxus/dynamic-wallpaper.conf"

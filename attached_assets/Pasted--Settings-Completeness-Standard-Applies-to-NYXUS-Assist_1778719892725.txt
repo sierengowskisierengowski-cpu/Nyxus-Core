@@ -1,0 +1,17 @@
+
+Settings Completeness Standard — Applies to NYXUS Assistant and Every Feature in the Build:
+Every feature, app, addon, and component in the entire NYXUS build must have its own fully populated settings section wired into the main Settings hub. This is non-negotiable and applies to everything — NYXUS Assistant, the Dock, Wallpaper Studio, Theme Packs, Game Mode, Focus Mode, Night Mode, the bar, EWW widgets, keybinds, snap layouts, mission control, quick settings, the file manager, the software store, the security center, the clipboard manager, the screen recorder, the screenshot tool, notifications, sound, power management, network, bluetooth, display, accessibility, backup, updates, users, privacy — everything.
+Every settings section must be fully built out the way a real commercial operating system would ship it. No empty pages. No greyed out options. No placeholder text. No toggles that do nothing. No sliders that go nowhere. Every single option in every single settings page must be wired to a real function that actually does what it says.
+Every app and feature must have at minimum:
+
+Its own dedicated settings section or page in the Settings hub
+General options relevant to that feature
+Appearance options where applicable — how it looks, sizing, position, animations on or off
+Behavior options — how it acts, what triggers it, what it does
+Keybind configuration for that feature
+Reset to defaults button
+Any feature-specific advanced options a power user would expect
+
+The standard is this: if you opened System Preferences on macOS or Settings on Windows 11 and looked at any feature's settings page, NYXUS must match or exceed that depth for every equivalent feature. A person coming from macOS or Windows must open NYXUS Settings and feel like nothing is missing. Every option they would expect to find must be there and must work.
+This applies retroactively to everything already built and going forward to everything being built. If any existing settings page is empty, sparse, or has non-functional options — fix it. If any feature exists in the OS but has no settings page — add one. If any setting exists but the toggle does nothing — wire it.
+This is what separates a real operating system from a demo. Build it to that standard across the entire codebase.

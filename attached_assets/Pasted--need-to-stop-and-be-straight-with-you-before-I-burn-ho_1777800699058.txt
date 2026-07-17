@@ -1,0 +1,37 @@
+ need to stop and be straight with you before I burn hours building the wrong thing.
+
+Reality check on the spec:
+
+The current nyxus_settings.py is 2,322 lines with 19 working pages: Display, Sound, Network, Bluetooth, Appearance, Workspaces, Keyboard, Mouse, Power, Date&Time, Notifications, Users, Privacy, Apps, Storage, Language, Accessibility, Printers, Gaming, Developer.
+
+What you're asking for is 22 categories, each with 20–60 individual real settings — every one of them actually wired to the live system (UFW rules editor, WireGuard QR import/export, YubiKey FIDO2/PIV management, BTRFS subvolumes, Timeshift snapshots, GRUB editor, systemd unit editor, cron visual editor, per-app PipeWire volume, SMART data per drive, controller calibration wizard, hosts-file editor, Docker container manager, kernel sysctl editor, etc.). Realistically that is 15,000–25,000 lines of GTK4 Python code, plus polkit rules so half of it can run unprivileged, plus hardware that may not even be present on every machine.
+
+If I try to ship that in one response, you will get a broken file full of stubs and silent failures — exactly the "fake toggles" and "placeholders" you said you don't want. That helps nobody.
+
+Here is the honest plan I propose — same one-at-a-time / publish / curl / confirm cadence we've been using:
+
+Phase A — Shell rebuild (1 task, ~1500 lines, ~1 publish):
+
+    New main screen: 22 large hand-drawn category tiles in a grid, each with sketch icon + Caveat title
+    Top bar: back button (always visible), live breadcrumb (Settings > Display > Resolution), global search across every setting in every category
+    Recently-changed strip + Favorites/star strip on main screen
+    Restart-required indicator framework (banner + per-setting flag)
+    Toast/apply-immediately framework
+    Window: 1280×800 standard, hyprland rule, robust waybar focus-or-launch
+    All 19 existing pages re-wired into the new shell so nothing regresses
+
+Phase B — Categories, one per task, in your priority order (21 tasks):
+For each category I:
+
+    Build every setting in the spec, real-wired to the system (no fake toggles)
+    Add it to the search index
+    Sync, audit, you publish, you curl and confirm before the next one starts
+
+That gives you Tesla-grade depth on every category instead of a giant pile of half-built stubs. Each phase ships in ~30 min of my time and you can see/test it before I move on — same proven loop.
+
+One thing I need from you to start:
+Question	Why
+Confirm I should proceed Phase A first (shell + nav + search + favorites + restart-banner + re-wire existing pages), then go category-by-category in this order: Account → Wallpaper → Fonts → Themes → Display → Sound → Network → Bluetooth → Keyboard → Mouse → Power → Users → Privacy → Apps → Storage → Notifications → Date&Time → Language → Accessibility → Gaming → Developer → About	Need your green light on the order. We can re-order any time, but I'd rather not start until you OK it.
+Any of the 22 categories you want me to drop or defer (e.g. you may not have a webcam for "take photo", a YubiKey, BTRFS, GRUB-not-systemd-boot, Docker, etc. — telling me up-front saves a category-worth of work)	Some sub-features only make sense if the hardware/tool is present.
+
+Reply "Phase A go" (and any drops) and I'll start building the new shell immediately. If you want a different order or a different chunk size, tell

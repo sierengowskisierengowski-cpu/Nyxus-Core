@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # NYXUS Animated Wallpaper — mpvpaper driver with rotation
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 # Loops video files as the desktop background using mpvpaper. When a
 # directory is supplied (or the default WALL_DIR contains multiple

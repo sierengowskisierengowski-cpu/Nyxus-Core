@@ -20,7 +20,7 @@
 # Exit non-zero on hard failure so Calamares surfaces a real error
 # instead of silently shipping a broken install.
 #
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 set -euo pipefail
 IFS=$'\n\t'
 

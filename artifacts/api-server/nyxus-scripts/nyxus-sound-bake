@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-sound-bake [outdir]   ·   rev 2026-07-14 r1 (Cosmic Sound Theme)
+#
+# Synthesizes the NYXUS cosmic UI sound set from pure math via ffmpeg's
+# lavfi `aevalsrc` generator — no samples, no external assets. The
+# palette is short, punchy, warm-synth sci-fi: UFO power blips, galaxy
+# chimes, alien warble. Tuned quiet and de-harshed (low-passed + gently
+# limited) so the sounds sit UNDER music and never stab.
+#
+#   startup       0.70s  warm rising 3-partial pad         (boot chime)
+#   login         0.55s  bright rising UFO power-up
+#   logout        0.60s  falling power-down
+#   lock          0.30s  short descending seal blip + tick
+#   unlock        0.30s  short ascending release blip + tick
+#   notification  0.42s  warm plucked fifth chime
+#   alert         0.60s  pulsing alien warble (attention)
+#   app-open      0.26s  quick soft rising blip
+#   error         0.45s  low descending denied tone
+#   success       0.50s  ascending 3-note arpeggio chime
+#   laugh         1.25s  warbling alien "ha-ha-ha" giggle (companion)
+#   chatter       0.90s  curious alien gibberish burble    (companion)
+#   yell          1.10s  urgent rising alien alarm yell    (companion)
+#
+# Requires: ffmpeg (sox is NOT required — this host has no sox). Rerun
+# any time to regenerate. Default outdir is the repo `sounds/` next to
+# this script; pass an explicit dir to bake elsewhere.
+#
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -euo pipefail
+
+command -v ffmpeg >/dev/null 2>&1 || { echo "nyxus-sound-bake: ffmpeg not found" >&2; exit 1; }
+
+OUT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/sounds}"
+mkdir -p "$OUT"
+RATE=48000
+TARGET_DB=-4.0            # every sound is peak-normalized to this level
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+
+# mk <name> <dur> <expr> [postfilters]
+#   expr        : aevalsrc waveform expression (t = seconds)
+#   postfilters : optional extra -af chain (reverb/lowpass) applied
+#                 BEFORE the shared fade tail.
+# Two-pass: render -> measure peak -> apply exact gain to TARGET_DB, so
+# the whole set sits at one consistent, punchy-but-not-harsh level.
+mk() {
+  local name="$1" dur="$2" expr="$3" post="${4:-}"
+  local fout wav peak gain
+  fout="$(awk "BEGIN{printf \"%.3f\", ($dur)-0.10}")"
+  wav="$TMP/${name}.wav"
+  ffmpeg -hide_banner -v error -y \
+    -f lavfi -i "aevalsrc=${expr}:d=${dur}:s=${RATE}" \
+    -af "${post:+$post,}afade=t=in:st=0:d=0.015,afade=t=out:st=${fout}:d=0.10,aformat=sample_fmts=fltp:channel_layouts=mono" \
+    -ac 1 "$wav"
+  peak="$(ffmpeg -hide_banner -i "$wav" -af volumedetect -f null - 2>&1 \
+          | awk '/max_volume/{print $(NF-1)}')"
+  gain="$(awk "BEGIN{printf \"%.3f\", ${TARGET_DB}-(${peak:-0})}")"
+  ffmpeg -hide_banner -v error -y -i "$wav" \
+    -af "volume=${gain}dB,alimiter=level_in=1:limit=0.95,aformat=sample_fmts=fltp:channel_layouts=mono" \
+    -ac 2 -c:a libvorbis -qscale:a 5 "$OUT/${name}.ogg"
+  printf '  ◦ %-13s %ss  (gain %+.1fdB)\n' "$name" "$dur" "$gain"
+}
+
+echo "baking NYXUS cosmic sound set -> $OUT"
+
+mk startup      0.70 '0.26*sin(2*PI*(160+140*t)*t)+0.15*sin(2*PI*(320+280*t)*t)+0.08*sin(2*PI*(480+420*t)*t)' 'aecho=0.8:0.85:60|110:0.25|0.16,lowpass=f=8500'
+mk login        0.55 '0.34*sin(2*PI*(320+620*t)*t)+0.14*sin(2*PI*(640+1240*t)*t)' 'aecho=0.8:0.85:45|80:0.22|0.14,lowpass=f=9500'
+mk logout       0.60 '0.32*sin(2*PI*(780-520*t)*t)+0.13*sin(2*PI*(1180-880*t)*t)' 'aecho=0.8:0.85:55|95:0.22|0.14,lowpass=f=9000'
+mk lock         0.30 '0.36*sin(2*PI*(880-380*t)*t)+0.12*sin(2*PI*2400*t)*exp(-40*t)' 'lowpass=f=9000'
+mk unlock       0.30 '0.34*sin(2*PI*(520+360*t)*t)+0.12*sin(2*PI*2600*t)*exp(-45*t)' 'lowpass=f=9500'
+mk notification 0.42 '0.42*exp(-6*t)*sin(2*PI*784*t)+0.28*exp(-7*t)*sin(2*PI*1176*t)' 'aecho=0.8:0.85:40:0.18,lowpass=f=10000'
+mk alert        0.60 '0.32*(0.5+0.5*sin(2*PI*7*t))*sin(2*PI*523*t)+0.16*sin(2*PI*262*t)' 'aecho=0.8:0.85:60:0.20,lowpass=f=8500'
+mk app-open     0.26 '0.32*exp(-3*t)*sin(2*PI*(520+760*t)*t)' 'lowpass=f=9500'
+mk error        0.45 '0.34*sin(2*PI*(300-110*t)*t)+0.18*sin(2*PI*(150-55*t)*t)' 'aecho=0.8:0.85:50:0.20,lowpass=f=7000'
+mk success      0.50 '0.40*exp(-7*t)*sin(2*PI*660*t)*between(t\,0\,0.17)+0.40*exp(-7*(t-0.17))*sin(2*PI*880*t)*between(t\,0.17\,0.34)+0.42*exp(-7*(t-0.34))*sin(2*PI*1320*t)*between(t\,0.34\,0.50)' 'aecho=0.8:0.85:45:0.18,lowpass=f=10000'
+# laugh: 5 quick "ha" bursts (mod() envelope) on a rising, vibrato'd carrier
+# with a ring-mod flutter for an alien giggle. Used by the desktop companion.
+mk laugh        1.25 '0.5*exp(-15*mod(t\,0.23))*(0.7*sin(2*PI*(360+70*t)*t+5*sin(2*PI*6*t))+0.3*sin(2*PI*(720+140*t)*t))*(0.6+0.4*sin(2*PI*22*t))' 'aecho=0.8:0.85:45:0.2,lowpass=f=9000'
+# chatter: soft syllabic burble — short pitch-stepped blips (curious gibberish).
+mk chatter      0.90 '0.42*exp(-18*mod(t\,0.15))*sin(2*PI*(430+160*sin(2*PI*3.3*t)+90*mod(floor(t/0.15)\,3))*t+3*sin(2*PI*9*t))' 'aecho=0.8:0.85:35:0.15,lowpass=f=8500'
+# yell: urgent two-tone rising siren-yell with hard vibrato (critical alerts).
+mk yell         1.10 '0.5*(0.55+0.45*sin(2*PI*11*t))*sin(2*PI*(520+330*t)*t+7*sin(2*PI*13*t))+0.22*sin(2*PI*(1040+660*t)*t)' 'aecho=0.8:0.85:50:0.22,lowpass=f=8000'
+
+echo "done."

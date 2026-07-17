@@ -1,221 +1,234 @@
 #!/usr/bin/env bash
-# ╔══════════════════════════════════════════════════════════════════════════╗
-# ║  NYXUS — One-Command Terminal Installer                                  ║
-# ║  Installs NYXUS configs, EWW bars, Hyprland theme, and GTK apps         ║
-# ║                                                                          ║
-# ║  Usage (run on a live NYXUS session or compatible Arch/Hyprland setup): ║
-# ║    curl -fsSL https://raw.githubusercontent.com/sierengowskisierengowski-cpu/Nyxus-Core/main/install.sh | bash
-# ║                                                                          ║
-# ║  SECURITY NOTE: piping curl output to bash executes downloaded code.    ║
-# ║  This script is served over HTTPS from GitHub (TLS-verified). For       ║
-# ║  maximum safety, download and inspect before running:                   ║
-# ║    curl -fsSL <url> -o /tmp/nyxus-install.sh && less /tmp/nyxus-install.sh && bash /tmp/nyxus-install.sh
-# ║                                                                          ║
-# ║  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED          ║
-# ╚══════════════════════════════════════════════════════════════════════════╝
-set -euo pipefail
+# ============================================================================
+#  NYXUS — terminal installer                        rev 2026-07-15 (RC)
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Deploys the NYXUS Hyprland desktop from this repo's canonical tree onto
+#  the LIVE user surfaces — the exact same fixed state that was verified on
+#  the reference machine. This kills the "fixed in repo but not on my
+#  machine" class of bugs for fresh installs and re-runs alike.
+#
+#    ./install.sh                 # user-level deploy (no sudo needed)
+#    ./install.sh --check         # preview: show what would change, touch nothing
+#    ./install.sh --no-reload     # deploy but don't reload the running session
+#    ./install.sh --system        # ALSO run the full system installer
+#                                 # (packages/greeter/kernel — needs sudo,
+#                                 #  delegates to scripts/nyxus-install.sh)
+#
+#  Idempotent and safe to re-run: files are only replaced, never deleted;
+#  your personal data (~/.config/nyxus state, notes, wallpapers you added)
+#  is never touched. Non-interactive by default — no prompts.
+# ============================================================================
+set -uo pipefail
 
-# ── Design tokens · DARK MIRROR palette ──────────────────────────────────────
-R="\033[0m"
-B="\033[1m"
-DIM="\033[2m"
-VIOLET="\033[38;2;160;107;255m"   # #a06bff — obsidian prism violet
-CYAN="\033[38;2;58;216;255m"      # #3ad8ff — starlight cyan
-GOLD="\033[38;5;220m"
-GREEN="\033[92m"
-RED="\033[91m"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NS="${REPO_ROOT}/artifacts/api-server/nyxus-scripts"
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-ok()   { printf "  ${GREEN}${B}✓${R}  %s\n" "$1"; }
-fail() { printf "  ${RED}${B}✗${R}  %s\n" "$1" >&2; }
-warn() { printf "  ${GOLD}${B}!${R}  %s\n" "$1"; }
-hdr()  { printf "\n${VIOLET}${B}── %s${R}\n" "$1"; }
-
-# ── Banner ────────────────────────────────────────────────────────────────────
-clear
-printf "\n"
-printf "${VIOLET}${B}  ███   ██  ██  ██  ██  ██  ██  █████ ${R}\n"
-printf "${CYAN}${B}  ████  ██   ████   ██  ██  ██  ██    ${R}\n"
-printf "${VIOLET}${B}  ██ █  ██    ██    ██  ██  ██   ████ ${R}\n"
-printf "${CYAN}${B}  ██  █ ██    ██     ████   ██      ██ ${R}\n"
-printf "${VIOLET}${B}  ██   ████   ██      ██    ██  █████ ${R}\n"
-printf "\n"
-printf "  ${DIM}DARK MIRROR · OBSIDIAN/PRISM · HYPRLAND${R}\n"
-printf "  ${DIM}© 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED${R}\n"
-printf "\n"
-printf "  ${CYAN}${B}Nyxus-Core ${R}${DIM}— https://github.com/sierengowskisierengowski-cpu/Nyxus-Core${R}\n"
-printf "\n"
-
-# ── Prerequisites ─────────────────────────────────────────────────────────────
-hdr "Prerequisites"
-
-# Bash version check
-if (( BASH_VERSINFO[0] < 5 )); then
-  fail "bash 5+ required (you have bash ${BASH_VERSION})"
-  exit 1
+# ── ANSI (violet / magenta signature palette) ───────────────────────────────
+if [[ -t 1 ]]; then
+  B=$'\e[1m'; R=$'\e[0m'; DIM=$'\e[2m'
+  V1=$'\e[38;5;93m'; V2=$'\e[38;5;129m'; V3=$'\e[38;5;165m'
+  V4=$'\e[38;5;201m'; V5=$'\e[38;5;213m'
+  MINT=$'\e[38;5;121m'; GOLD=$'\e[38;5;220m'; RED=$'\e[38;5;203m'
+else
+  B=""; R=""; DIM=""; V1=""; V2=""; V3=""; V4=""; V5=""; MINT=""; GOLD=""; RED=""
 fi
-ok "bash ${BASH_VERSION}"
 
-# Required tools
-for tool in curl git; do
-  if ! command -v "${tool}" &>/dev/null; then
-    fail "${tool} not found — install it first"
-    exit 1
-  fi
-  ok "${tool} $(${tool} --version 2>&1 | head -1)"
+banner() {
+  printf '%s\n' \
+"${V1}    ███╗   ██╗${V2}██╗   ██╗${V3}██╗  ██╗${V4}██╗   ██╗${V5}███████╗${R}" \
+"${V1}    ████╗  ██║${V2}╚██╗ ██╔╝${V3}╚██╗██╔╝${V4}██║   ██║${V5}██╔════╝${R}" \
+"${V1}    ██╔██╗ ██║${V2} ╚████╔╝ ${V3} ╚███╔╝ ${V4}██║   ██║${V5}███████╗${R}" \
+"${V1}    ██║╚██╗██║${V2}  ╚██╔╝  ${V3} ██╔██╗ ${V4}██║   ██║${V5}╚════██║${R}" \
+"${V1}    ██║ ╚████║${V2}   ██║   ${V3}██╔╝ ██╗${V4}╚██████╔╝${V5}███████║${R}" \
+"${V1}    ╚═╝  ╚═══╝${V2}   ╚═╝   ${V3}╚═╝  ╚═╝${V4} ╚═════╝ ${V5}╚══════╝${R}" \
+"" \
+"${DIM}    ◤ OBSIDIAN PRISM · IRIDESCENT VOID ◥${R}" \
+"${DIM}    silent dark Hyprland desktop · © 2026 JOSEPH A. SIERENGOWSKI${R}" \
+""
+}
+
+step() { printf "\n${V4}▌${R} ${B}%s${R}\n" "$*"; }
+ok()   { printf "  ${MINT}✓${R}  %s\n" "$*"; }
+info() { printf "  ${V5}·${R}  %s\n" "$*"; }
+warn() { printf "  ${GOLD}!${R}  %s\n" "$*"; }
+die()  { printf "  ${RED}✗${R}  %s\n" "$*" >&2; exit 1; }
+
+# ── options ─────────────────────────────────────────────────────────────────
+CHECK=false; RELOAD=true; SYSTEM=false
+for arg in "$@"; do case "$arg" in
+  --check|--dry-run) CHECK=true ;;
+  --no-reload)       RELOAD=false ;;
+  --system)          SYSTEM=true ;;
+  -h|--help)         sed -n '3,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  *) die "unknown option: $arg (try --help)" ;;
+esac; done
+
+# copy helper: only writes when content differs (idempotent + fast re-runs)
+CHANGED=0
+place() { # place <src> <dst> [mode]
+  local src="$1" dst="$2" mode="${3:-0644}"
+  [[ -f "$src" ]] || { warn "missing in repo: ${src#"$REPO_ROOT"/}"; return 1; }
+  if [[ -f "$dst" ]] && cmp -s "$src" "$dst"; then return 0; fi
+  if $CHECK; then info "would update ${dst/#$HOME/\~}"; CHANGED=$((CHANGED+1)); return 0; fi
+  mkdir -p "$(dirname "$dst")"
+  install -m "$mode" "$src" "$dst" && CHANGED=$((CHANGED+1))
+}
+
+banner
+$CHECK && warn "CHECK MODE — nothing will be written"
+
+# ── 1 · dependency check ────────────────────────────────────────────────────
+step "1/5 · dependency check"
+[[ -d "$NS" ]] || die "run from a Nyxus-Core clone (missing artifacts/…/nyxus-scripts)"
+missing=()
+for c in hyprctl eww grim jq python3; do
+  command -v "$c" >/dev/null 2>&1 && ok "$c $(command -v "$c")" || { missing+=("$c"); warn "$c NOT FOUND"; }
 done
+command -v sass >/dev/null 2>&1 || command -v npx >/dev/null 2>&1 \
+  && ok "sass/npx (CSS compile)" || { missing+=(sass); warn "sass or npx NOT FOUND (eww CSS compile)"; }
+if (( ${#missing[@]} )); then
+  warn "install missing deps first, e.g.: sudo pacman -S --needed hyprland eww grim jq dart-sass"
+  warn "continuing — configs will still be placed, some features degrade"
+fi
 
-# Arch Linux check (hard requirement — NYXUS is Arch-based)
-if [[ -f /etc/os-release ]]; then
-  # shellcheck source=/dev/null
-  source /etc/os-release
-  if [[ "${ID:-}" != "arch" && "${ID_LIKE:-}" != *"arch"* && "${ID:-}" != "nyxus" ]]; then
-    fail "NYXUS requires Arch Linux (detected: ${PRETTY_NAME:-unknown})"
-    fail "This installer will only work on Arch Linux or NYXUS."
-    exit 1
+# ── 2 · deploy: live config surfaces ────────────────────────────────────────
+step "2/5 · deploy configs → live surfaces"
+
+# eww (bars, Hub, OSDs, flyouts, theme)
+n=0
+while IFS= read -r -d '' f; do
+  rel="${f#"$NS"/eww/}"
+  place "$f" "$HOME/.config/eww/$rel" && n=$((n+1)) || true
+done < <(find "$NS/eww" -type f -print0)
+ok "eww → ~/.config/eww  ($n files checked)"
+
+# hyprland (core + conf.d + shaders ride along in repo hyprland tree)
+for f in hyprland.conf hypridle.conf hyprlock.conf hyprpaper.conf; do
+  place "$NS/$f" "$HOME/.config/hypr/$f" || true
+done
+for f in "$NS"/nyxus-*.conf; do
+  [[ -f "$f" ]] || continue
+  base="$(basename "$f")"
+  case "$base" in
+    nyxus-monitors.conf) dst="$HOME/.config/hypr/$base" ;;  # per-machine, but seed if absent
+    nyxus-voice.conf)    dst="$HOME/.config/hypr/$base" ;;  # sourced from hypr root, not conf.d
+    *)                   dst="$HOME/.config/hypr/conf.d/$base" ;;
+  esac
+  if [[ "$base" == nyxus-monitors.conf && -f "$dst" ]]; then continue; fi
+  place "$f" "$dst" || true
+done
+ok "hyprland → ~/.config/hypr (+conf.d)"
+
+# launcher/bin scripts → ~/.local/bin. CURATED manifest — the exact launcher
+# set the reference machine runs (verified live 2026-07-15). Do NOT glob the
+# whole scripts dir: it also holds assets (.tgz/.mp4/.service) that must
+# never land on PATH.
+LAUNCHERS=(
+  nyxus-accent-from-wallpaper nyxus-apply-accent nyxus-backup nyxus-beat
+  nyxus-beatd nyxus-bootstrap nyxus-companion nyxus-crash-report nyxus-drop
+  nyxus-dynamic-wallpaper.sh nyxus-eww-cinematic nyxus-eww-launch
+  nyxus-eww-launch-safe nyxus-freeform nyxus-gen-backdrop nyxus-home
+  nyxus_hotcorners.py nyxus-hub-apps nyxus-hub-close nyxus-hub-launch
+  nyxus-hub-open nyxus-hub-search nyxus-lens nyxus-livewall-flagship
+  nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art
+  nyxus-lock-track nyxus-mission-control-toggle nyxus-notifications
+  nyxus-notif-to-eww nyxus-nowplaying nyxus-palette-extract nyxus-plugins
+  nyxus-plymouth-install nyxus-postinstall nyxus-pulsed nyxus-record
+  nyxus-screensaver nyxus-security nyxus-session-start nyxus-settings
+  nyxus-set-wallpaper nyxus-set-wallpaper.sh nyxus-sfx nyxus-shader
+  nyxus-sound nyxus-sound-bake nyxus-soundd nyxus-sound-forge nyxus-sounds
+  nyxus-spray nyxus-store nyxus-sync-stations nyxus-tint nyxus-tintd
+  nyxus-updater nyxus-voice nyxus-voiced nyxus-voice-install
+  nyxus-voice-model nyxus-wait-bootstrap nyxus-wall-cycle nyxus-wall-fx
+  nyxus-wall-next nyxus-weather-line nyxus-welcome sync-eww.sh
+)
+n=0
+for base in "${LAUNCHERS[@]}"; do
+  place "$NS/$base" "$HOME/.local/bin/$base" 0755 && n=$((n+1)) || true
+done
+ok "launchers → ~/.local/bin  ($n scripts checked)"
+
+# NYXUS python app suite → ~/.nyxus (+ thin launchers)
+n=0
+for f in "$NS"/nyxus_*.py; do
+  [[ -f "$f" ]] || continue
+  base="$(basename "$f")"
+  [[ "$base" == nyxus_matrix_saver.py ]] && continue  # ships to ~/.config/nyxus below
+  place "$f" "$HOME/.nyxus/$base" 0755 && n=$((n+1)) || true
+done
+ok "app suite → ~/.nyxus  ($n apps checked)"
+
+# alien matrix-rain screensaver → ~/.config/nyxus/ (the path hypridle +
+# nyxus-screensaver expect; see docs/THEME.md)
+place "$NS/nyxus_matrix_saver.py" "$HOME/.config/nyxus/nyxus_matrix_saver.py" 0755 || true
+ok "matrix screensaver → ~/.config/nyxus/nyxus_matrix_saver.py"
+
+# .desktop entries (Hub tiles / launcher discover apps through these).
+# SEED-IF-ABSENT: existing user entries may carry machine-local fixes
+# (X-Nyxus-Override) with absolute paths — never clobber those.
+n=0
+for f in "$NS"/desktop-entries/*.desktop; do
+  [[ -f "$f" ]] || continue
+  dst="$HOME/.local/share/applications/$(basename "$f")"
+  [[ -f "$dst" ]] && continue
+  place "$f" "$dst" && n=$((n+1)) || true
+done
+ok "desktop entries seeded → ~/.local/share/applications  ($n new)"
+
+# wallpapers (rotation set; only seeds missing files — user additions kept)
+n=0
+for f in "$NS"/hypr-walls/rotation/*.png; do
+  [[ -f "$f" ]] || continue
+  dst="$HOME/.config/hypr/walls/rotation/$(basename "$f")"
+  [[ -f "$dst" ]] || { place "$f" "$dst" && n=$((n+1)) || true; }
+done
+ok "wallpaper rotation seeded ($n new)"
+
+# ── 3 · compile theme CSS (GTK-strict, no grey fallback) ────────────────────
+step "3/5 · compile eww theme"
+if $CHECK; then
+  info "would run ~/.config/eww/scripts/compile-eww-css.sh"
+elif [[ -x "$HOME/.config/eww/scripts/compile-eww-css.sh" ]]; then
+  if "$HOME/.config/eww/scripts/compile-eww-css.sh" >/dev/null 2>&1 \
+     && [[ -f "$HOME/.config/eww/eww.css" ]] \
+     && ! head -1 "$HOME/.config/eww/eww.css" | grep -q '@charset'; then
+    ok "eww.css compiled clean (no @charset / grey-fallback poison)"
+  else
+    warn "CSS compile failed — bars will use the last known-good eww.css"
   fi
-  ok "OS: ${PRETTY_NAME:-Arch Linux}"
 else
-  fail "Could not detect OS — /etc/os-release missing. Cannot confirm Arch Linux."
-  exit 1
+  warn "compile-eww-css.sh not executable — skipped"
 fi
 
-# Hyprland check (soft warning)
-if ! command -v hyprctl &>/dev/null; then
-  warn "Hyprland not detected — EWW bar launch step will be skipped"
-  HYPRLAND_RUNNING=0
-else
-  ok "Hyprland: $(hyprctl version 2>/dev/null | head -1 || echo 'detected')"
-  HYPRLAND_RUNNING=1
-fi
-
-# ── Confirmation ──────────────────────────────────────────────────────────────
-printf "\n"
-printf "  ${GOLD}${B}WARNING:${R} This installer will:\n"
-printf "  ${DIM}• Write NYXUS configs to your ~/.config/{eww,hypr,rofi,dunst,...}${R}\n"
-printf "  ${DIM}• Install/update NYXUS Python apps to ~/.local/bin/${R}\n"
-printf "  ${DIM}• Reload your running EWW/Hyprland session (if detected)${R}\n"
-printf "\n"
-
-# Respect non-interactive environments (e.g., piped curl | bash)
-if [[ -t 0 ]]; then
-  read -r -p "  Proceed? [y/N] " CONFIRM
-  CONFIRM="${CONFIRM,,}"
-  if [[ "${CONFIRM}" != "y" && "${CONFIRM}" != "yes" ]]; then
-    printf "\n  ${DIM}Aborted.${R}\n\n"
-    exit 0
+# ── 4 · reload the live session (if one is running) ────────────────────────
+step "4/5 · reload live session"
+if $CHECK; then
+  info "would reload hyprland config + relaunch bars via nyxus-eww-launch-safe"
+elif ! $RELOAD; then
+  info "skipped (--no-reload) — changes apply on next login"
+elif [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] || hyprctl monitors >/dev/null 2>&1; then
+  hyprctl reload >/dev/null 2>&1 && ok "hyprland config reloaded" || warn "hyprctl reload failed"
+  if [[ -x "$HOME/.local/bin/nyxus-eww-launch-safe" ]]; then
+    "$HOME/.local/bin/nyxus-eww-launch-safe" >/dev/null 2>&1 \
+      && ok "eww bars relaunched (single daemon, 4 bars)" \
+      || warn "bar relaunch reported issues — run nyxus-eww-launch-safe manually"
   fi
 else
-  warn "Non-interactive mode detected — proceeding automatically."
-  warn "Pass NYXUS_NO_CONFIRM=0 to abort non-interactive runs."
-  if [[ "${NYXUS_NO_CONFIRM:-1}" == "0" ]]; then
-    printf "\n  ${DIM}Aborted (NYXUS_NO_CONFIRM=0).${R}\n\n"
-    exit 0
-  fi
+  info "no running Hyprland session — changes apply on next login"
 fi
 
-# ── Determine install source ──────────────────────────────────────────────────
-NYXUS_REPO_DIR="${NYXUS_REPO_DIR:-}"
-NYXUS_BASE_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}"
-RAW_BASE="https://raw.githubusercontent.com/sierengowskisierengowski-cpu/Nyxus-Core/main"
-
-hdr "Install method"
-
-# Option A: local repo clone available → run directly
-if [[ -z "${NYXUS_REPO_DIR}" ]]; then
-  for candidate in \
-    "${HOME}/Nyxus-Core" \
-    "${HOME}/nyxus-core" \
-    "${HOME}/.nyxus/repo" \
-    "/opt/nyxus/repo"
-  do
-    if [[ -f "${candidate}/artifacts/api-server/nyxus-scripts/nyxus_install.sh" ]]; then
-      NYXUS_REPO_DIR="${candidate}"
-      break
-    fi
-  done
-fi
-
-if [[ -n "${NYXUS_REPO_DIR}" ]]; then
-  ok "Local repo found: ${NYXUS_REPO_DIR}"
-  INSTALL_SCRIPT="${NYXUS_REPO_DIR}/artifacts/api-server/nyxus-scripts/nyxus_install.sh"
+# ── 5 · summary ─────────────────────────────────────────────────────────────
+step "5/5 · post-install summary"
+if $CHECK; then
+  ok "check complete — ${CHANGED} file(s) would change"
 else
-  # Option B: download nyxus_install.sh from the API or GitHub raw
-  warn "No local repo found — fetching nyxus_install.sh from network"
-  INSTALL_SCRIPT="$(mktemp /tmp/nyxus_install.XXXXXX.sh)"
-  # shellcheck disable=SC2064
-  trap "rm -f ${INSTALL_SCRIPT}" EXIT
-
-  DOWNLOAD_OK=0
-  # Try API endpoint first
-  if curl -fsSL --connect-timeout 10 \
-       -o "${INSTALL_SCRIPT}" \
-       "${NYXUS_BASE_URL}/api/download/nyxus/nyxus_install.sh" 2>/dev/null; then
-    DOWNLOAD_OK=1
-    ok "Downloaded from API: ${NYXUS_BASE_URL}"
-  fi
-
-  # Fallback: GitHub raw
-  if [[ "${DOWNLOAD_OK}" -eq 0 ]]; then
-    if curl -fsSL --connect-timeout 15 \
-         -o "${INSTALL_SCRIPT}" \
-         "${RAW_BASE}/artifacts/api-server/nyxus-scripts/nyxus_install.sh" 2>/dev/null; then
-      DOWNLOAD_OK=1
-      ok "Downloaded from GitHub raw"
-    fi
-  fi
-
-  if [[ "${DOWNLOAD_OK}" -eq 0 ]]; then
-    fail "Could not download nyxus_install.sh — check your network connection"
-    printf "\n  ${DIM}Manual download:${R}\n"
-    printf "  ${DIM}  curl -fsSL ${NYXUS_BASE_URL}/api/download/nyxus/nyxus_install.sh -o /tmp/nyxus_install.sh${R}\n"
-    printf "  ${DIM}  bash /tmp/nyxus_install.sh${R}\n\n"
-    exit 1
-  fi
-
-  chmod +x "${INSTALL_SCRIPT}"
+  ok "deploy complete — ${CHANGED} file(s) updated (identical files untouched)"
 fi
-
-# ── Run the installer ─────────────────────────────────────────────────────────
-hdr "Running NYXUS installer"
-printf "  ${DIM}Script: ${INSTALL_SCRIPT}${R}\n\n"
-
-if bash "${INSTALL_SCRIPT}"; then
-  INSTALL_EXIT=0
-else
-  INSTALL_EXIT=$?
+info "surfaces: ~/.config/eww · ~/.config/hypr · ~/.local/bin · ~/.nyxus"
+info "          ~/.config/nyxus (screensaver) · ~/.local/share/applications"
+if $SYSTEM; then
+  step "system installer (packages / greeter / kernel — sudo)"
+  exec bash "${REPO_ROOT}/scripts/nyxus-install.sh" --yes
 fi
-
-# ── Save repo location for nyxus-sync ─────────────────────────────────────────
-if [[ -n "${NYXUS_REPO_DIR}" ]]; then
-  mkdir -p "${HOME}/.nyxus"
-  printf '%s\n' "${NYXUS_REPO_DIR}" > "${HOME}/.nyxus/repo"
-  ok "Repo path saved to ~/.nyxus/repo"
-fi
-
-# ── Post-install summary ──────────────────────────────────────────────────────
-printf "\n"
-printf "${DIM}──────────────────────────────────────────────────────────────────────${R}\n"
-printf "\n"
-
-if [[ "${INSTALL_EXIT}" -eq 0 ]]; then
-  printf "  ${GREEN}${B}✓ NYXUS installation complete.${R}\n\n"
-  printf "  ${VIOLET}${B}Key bindings:${R}\n"
-  printf "  ${DIM}  Super+Space     — NYXUS Launcher (nyxus-start)${R}\n"
-  printf "  ${DIM}  Super+\`         — Quick Control overlay${R}\n"
-  printf "  ${DIM}  Super+L         — Lock screen (hyprlock)${R}\n"
-  printf "  ${DIM}  Super+Shift+E   — Logout menu (wlogout)${R}\n"
-  printf "  ${DIM}  Super+0         — NYXUS Home (Obsidian Reactor)${R}\n"
-  printf "  ${DIM}  Super+F3        — Mission Control${R}\n"
-  printf "  ${DIM}  Super+Alt+W     — Reload wallpaper${R}\n"
-  printf "\n"
-  printf "  ${CYAN}${B}Live sync:${R}  ${DIM}nyxus-sync${R}  ${DIM}(pull + hot-reload)${R}\n"
-  printf "  ${CYAN}${B}Auto-update:${R} enable with ${DIM}systemctl --user enable --now nyxus-update.timer${R}\n"
-  printf "\n"
-  printf "  ${DIM}S I L E N T · D A R K · P U R E L Y   F U N C T I O N A L${R}\n\n"
-else
-  printf "  ${RED}${B}✗ Installer exited with code ${INSTALL_EXIT}${R}\n"
-  printf "  ${DIM}Check /tmp/nyxus-eww.log for EWW issues.${R}\n"
-  printf "  ${DIM}Re-run: curl -fsSL ${RAW_BASE}/install.sh | bash${R}\n\n"
-  exit "${INSTALL_EXIT}"
-fi
+printf "\n${V5}${B}  ◆ NYXUS ready.${R} ${DIM}Log in via 'NYXUS (Hyprland)' — or you're already home.${R}\n\n"

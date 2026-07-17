@@ -1,13 +1,14 @@
 [Desktop Entry]
 Type=Application
-Version=1.0
 Name=NYXUS Welcome
-GenericName=Onboarding Wizard
-Comment=Set up your NYXUS desktop
-Exec=nyxus-welcome
-Icon=nyxus
+GenericName=Welcome
+Comment=First-run NYXUS introduction
+Exec=/usr/local/bin/nyxus welcome
+TryExec=/usr/local/bin/nyxus
+Icon=help-about
 Terminal=false
-Categories=System;Settings;
-Keywords=welcome;onboarding;wizard;setup;first-run;nyxus;
+Categories=System;
+Keywords=NYXUS;NYX;Welcome;
 StartupNotify=true
-StartupWMClass=com.nyxus.Welcome
+StartupWMClass=nyxus.welcome
+X-NYXUS-Module=nyxus_welcome

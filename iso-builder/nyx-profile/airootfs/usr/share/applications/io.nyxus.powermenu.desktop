@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Power
+Comment=Lock / suspend / logout / restart / shutdown
+Exec=/usr/local/bin/nyxus-powermenu
+Icon=preferences-system
+Categories=System;Utility;
+Terminal=false
+StartupNotify=true

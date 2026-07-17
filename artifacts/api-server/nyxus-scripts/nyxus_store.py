@@ -26,7 +26,7 @@ Every section honors §9: empty states are explicit ("No updates" / "No
 matches" / "No AUR helper installed — install paru or yay") rather than
 blank panels.
 
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 

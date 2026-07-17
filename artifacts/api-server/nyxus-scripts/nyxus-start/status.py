@@ -9,7 +9,7 @@ Probes four signals (best-effort, never blocks UI):
 
 Each probe is fast and safe to call from a GLib timer.
 
-© 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 import os

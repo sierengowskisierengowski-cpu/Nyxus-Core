@@ -38,7 +38,7 @@ fi
 step "installing NYXUS hardware-enablement package set"
 HW_PKGS=(
   # NVIDIA hybrid stack
-  linux-headers nvidia-dkms nvidia-utils nvidia-settings
+  linux-headers nvidia-open-dkms nvidia-utils nvidia-settings
   lib32-nvidia-utils opencl-nvidia egl-wayland libva-nvidia-driver
   # Intel iGPU + Vulkan
   intel-media-driver libva-intel-driver libva-utils

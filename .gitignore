@@ -54,13 +54,17 @@ __pycache__/
 *.pyo
 *.py.archive
 *.legacy.py.archive
+artifacts/api-server/nyxus-scripts/eww/*.bak*
 
-# Dead weight / Replit scratch dirs — must never be committed
+# NYXUS release hygiene — never ship these
+artifacts/_tmp/
+*.bak
+*.pre-deploy-*.bak
+nyxus-*-backup-*/
+iso-builder/out/
+iso-builder/work/
+iso-builder/nyx-profile/airootfs/usr/local/bin/jett-daemon
+
+# Dead weight / Replit scratch dirs (added for main hygiene)
 attached_assets/
 .canvas/
-artifacts/_tmp/*
-!artifacts/_tmp/.gitkeep
-*.bak
-*.bak2-*
-**/.restore-points/
-.restore-points/

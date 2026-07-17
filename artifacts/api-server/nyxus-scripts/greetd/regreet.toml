@@ -1,0 +1,29 @@
+# ============================================================
+#  NYXUS — ReGreet configuration (themed Wayland greeter)
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  rev 2026-07-14 — Nyxus alien / "Nyxus Hyprland" login.
+#  Styling lives in /etc/greetd/regreet.css (loaded automatically).
+#  Background MUST live under /etc/greetd/ — the 'greeter' user cannot
+#  read the operator's home directory.
+# ============================================================
+
+[background]
+path = "/etc/greetd/nyxus-login-bg.png"
+fit = "Cover"
+
+[GTK]
+application_prefer_dark_theme = true
+cursor_theme_name = "Adwaita"
+font_name = "Inter Display 12"
+icon_theme_name = "Adwaita"
+
+[appearance]
+greeting_msg = "welcome back, operator"
+
+[commands]
+reboot = [ "systemctl", "reboot" ]
+poweroff = [ "systemctl", "poweroff" ]
+
+[widget.clock]
+format = "%H:%M · %A · %B %d"
+resolution = "1000ms"

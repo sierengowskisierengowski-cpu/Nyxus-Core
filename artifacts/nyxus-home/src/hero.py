@@ -2,7 +2,7 @@
 NYXUS Home — HERO strip (rev r1 · 2026-07-12)
 Command-deck masthead: giant neon clock w/ Cairo seconds arc, live date,
 host / kernel / uptime readout, and a one-line Open-Meteo weather pull.
-(c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+(c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 

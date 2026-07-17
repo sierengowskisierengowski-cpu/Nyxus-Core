@@ -1,5 +1,5 @@
-# NYXUS dunst · Obsidian Prism (rev 2026-07-06)
-# Palette: #7949f2 · #ff2667 · #26ffb7 · #ffb026
+# NYXUS dunst configuration · Sprint E Total Identity
+# Palette: #f4ead5 (cream accent) · #0a0a14 (void bg, 0.97 glass) · #050308 (ink) · #f87171 (critical) — matches swaync/style.css 1:1
 
 [global]
     monitor = 0
@@ -14,10 +14,10 @@
 
     progress_bar = true
     progress_bar_height = 10
-    progress_bar_frame_width = 2
+    progress_bar_frame_width = 1
     progress_bar_min_width = 240
     progress_bar_max_width = 420
-    progress_bar_corner_radius = 5
+    progress_bar_corner_radius = 3
 
     indicate_hidden = yes
     transparency = 4
@@ -25,13 +25,13 @@
     padding = 14
     horizontal_padding = 16
     text_icon_padding = 12
-    frame_width = 2
-    frame_color = "#ff266759"
+    frame_width = 1
+    frame_color = "#f4ead538"
     gap_size = 6
-    separator_color = "#05060a"
+    separator_color = "#1a1a28"
     sort = yes
 
-    font = "JetBrains Mono Nerd Font 11"
+    font = Inter 11
     line_height = 3
     markup = full
     format = "<b>%a · %s</b>\n%b"
@@ -45,10 +45,10 @@
     show_indicators = yes
 
     icon_position = left
-    min_icon_size = 32
-    max_icon_size = 64
-    icon_corner_radius = 8
-    icon_path = /usr/share/icons/Adwaita/32x32/status/:/usr/share/icons/Adwaita/32x32/devices/:/usr/share/icons/hicolor/32x32/apps/
+    min_icon_size = 52
+    max_icon_size = 96
+    icon_corner_radius = 3
+    icon_path = /home/cosmic/.local/share/nyxus/icons/:/usr/share/icons/Adwaita/32x32/status/:/usr/share/icons/Adwaita/32x32/devices/:/usr/share/icons/hicolor/32x32/apps/
 
     sticky_history = yes
     history_length = 50
@@ -56,9 +56,9 @@
     dmenu = /usr/bin/rofi -dmenu -p dunst:
     browser = /usr/bin/xdg-open
     always_run_script = true
-    title = NYXUS · Obsidian Prism
+    title = NYXUS Notifications
     class = Dunst
-    corner_radius = 12
+    corner_radius = 3
     ignore_dbusclose = false
 
     force_xwayland = false
@@ -71,24 +71,33 @@
     per_monitor_dpi = false
 
 [urgency_low]
-    background    = "#05060ae6"
-    foreground    = "#eef2facc"
-    frame_color   = "#26ffb766"
+    background    = "#0a0a14f7"
+    foreground    = "#f4ead58c"
+    frame_color   = "#f4ead538"
     timeout       = 5
-    default_icon  = dialog-information
+    default_icon  = nyxus-notif-ufo
 
 [urgency_normal]
-    background    = "#05060ae6"
-    foreground    = "#eef2fa"
-    frame_color   = "#7949f266"
+    background    = "#0a0a14f7"
+    foreground    = "#f4ead5"
+    frame_color   = "#f4ead5"
     timeout       = 8
     override_pause_level = 30
-    default_icon  = dialog-information
+    default_icon  = nyxus-notif-ufo
 
 [urgency_critical]
-    background    = "#05060ae6"
-    foreground    = "#eef2fa"
-    frame_color   = "#ff5470"
+    background    = "#0a0a14f7"
+    foreground    = "#f4ead5"
+    frame_color   = "#f87171"
     timeout       = 0
     override_pause_level = 60
-    default_icon  = dialog-warning
+    default_icon  = nyxus-notif-ufo
+
+# Forward every notification to the themed EWW UFO console popup and skip
+# dunst's own plain popup. dunst still owns the dbus service + keeps history
+# (notification center), so nothing breaks — remove this rule to fall back to
+# dunst's native popups.
+[nyxus-eww-popup]
+    appname = "*"
+    script = /home/cosmic/.local/bin/nyxus-notif-to-eww
+    skip_display = true

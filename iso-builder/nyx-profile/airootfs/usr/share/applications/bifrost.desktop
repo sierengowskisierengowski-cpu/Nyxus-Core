@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Bifrost
+GenericName=Security Monitor
+Comment=Heimdall Never Sleeps — AI-powered endpoint detection and response.
+Exec=env BIFROST_GUARDIAN=/usr/lib/bifrost/bifrost/guardian.py /usr/bin/bifrost
+Icon=bifrost
+Terminal=false
+StartupNotify=true
+Categories=Utility;Security;
+Keywords=security;edr;monitoring;heimdall;guardian;

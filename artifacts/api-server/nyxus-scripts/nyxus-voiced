@@ -1,0 +1,936 @@
+#!/usr/bin/env python3
+# ════════════════════════════════════════════════════════════════════
+# nyxus-voiced   ·   rev 2026-07-14 r1 (Cosmic Voice Control)
+#
+# Offline, wake-word voice assistant for the NYXUS Hyprland desktop.
+# Say "Nyxus, <command>" to drive the desktop with your voice.
+#
+#   "Nyxus, lock down"                 -> loginctl lock-session
+#   "Nyxus, launch terminal"           -> app launch (config app map)
+#   "Nyxus, workspace three"           -> hyprctl dispatch workspace 3
+#   "Nyxus, take a screenshot"         -> nyxus_screenshot.py
+#   "Nyxus, toggle living wallpaper"   -> nyxus-live-wallpaper toggle
+#   "Nyxus, mute" / "volume up"        -> wpctl set-{mute,volume}
+#   "Nyxus, say hi"                    -> companion wave + alien chirp
+#   "Nyxus, go to sleep"               -> daemon self-mutes (push-to-talk)
+#
+# DESIGN — offline-first, lightweight, NEVER crashes the session:
+#   * STT backend is Vosk (python-vosk + a small model). Vosk is the
+#     lightest always-on option: streaming, tiny (~50MB small EN model),
+#     fully local, no network, ideal for continuous wake-word capture.
+#   * If Vosk (or its model) is missing, the daemon logs a clear
+#     "no STT backend" message and idles harmlessly — the parser and
+#     dispatcher are fully exercised via --selftest / --simulate so the
+#     whole pipeline is testable with no microphone at all.
+#   * Mic capture prefers python-sounddevice; falls back to `pw-record`
+#     (PipeWire) as a raw-PCM subprocess. Either feeds 16kHz mono s16le
+#     into Vosk.
+#   * Audio feedback reuses the alien sound theme via `nyxus-sound`.
+#     Optional spoken TTS via espeak-ng or piper if present (never a
+#     hard dependency — checked with shutil.which).
+#
+# PRIVACY: 100% local. No audio ever leaves the machine; there is no
+# network code path. The mic is only opened while the daemon runs and
+# is NOT muted (see `nyxus-voice mute` / push-to-talk toggle).
+#
+# CONFIG:  ~/.config/nyxus/voice.conf   (auto-created with defaults)
+# LOG:     ~/.cache/nyxus/voice.log
+# PID:     $XDG_RUNTIME_DIR/nyxus-voiced.pid
+# MUTE:    $XDG_RUNTIME_DIR/nyxus-voiced.mute   (push-to-talk flag)
+#
+# USAGE (normally driven by the `nyxus-voice` CLI, not run directly):
+#   nyxus-voiced                       run the daemon (foreground)
+#   nyxus-voiced --selftest            run dispatcher unit tests, exit 0/1
+#   nyxus-voiced --simulate "TEXT"     parse+dispatch one transcript (dry-run)
+#   nyxus-voiced --simulate "TEXT" --execute   ...and actually run it
+#   nyxus-voiced --print-config        show resolved config + backend status
+#   nyxus-voiced --list-devices        list input devices (calibration)
+#
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+from __future__ import annotations
+
+import json
+import os
+import re
+import shlex
+import shutil
+import signal
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+VERSION = "2026-07-14-r1"
+
+HOME = Path(os.path.expanduser("~"))
+CFG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config")) / "nyxus"
+CFG_FILE = CFG_DIR / "voice.conf"
+CACHE_DIR = Path(os.environ.get("XDG_CACHE_HOME", HOME / ".cache")) / "nyxus"
+LOG_FILE = CACHE_DIR / "voice.log"
+DATA_DIR = Path(os.environ.get("XDG_DATA_HOME", HOME / ".local" / "share")) / "nyxus"
+RUNTIME_DIR = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp"))
+PID_FILE = RUNTIME_DIR / "nyxus-voiced.pid"
+MUTE_FLAG = RUNTIME_DIR / "nyxus-voiced.mute"
+
+# Where nyxus-voice-model drops the small Vosk model, plus common distro
+# locations we probe as a courtesy.
+MODEL_SEARCH = [
+    DATA_DIR / "vosk",
+    HOME / ".local" / "share" / "vosk",
+    Path("/usr/share/vosk-models"),
+    Path("/usr/share/vosk"),
+]
+
+DEFAULTS = {
+    "wake_word": "nyxus",
+    "model": "",            # empty -> auto-detect under MODEL_SEARCH
+    "samplerate": "16000",
+    "device": "",           # empty -> default input; else sounddevice index/name
+    "backend": "auto",      # auto|vosk (room for whisper later)
+    "feedback": "both",     # sound|tts|both|none
+    "tts": "auto",          # auto|espeak-ng|espeak|piper|off
+    "tts_voice": "",        # espeak-ng voice (e.g. en-us+m3); empty -> default
+    "tts_rate": "165",      # espeak-ng words/min
+    "require_wake": "1",    # require the wake word before every command
+    "cooldown_ms": "1500",  # ignore identical command repeated within window
+    "min_command_chars": "2",
+    "volume_step": "5",     # percent per volume up/down
+    "start_muted": "0",     # if 1, boot in push-to-talk mute
+    # app map: spoken alias -> command line (semicolon separated aliases share
+    # a target via the config file; here we ship sensible defaults in code).
+}
+
+# Spoken app aliases -> launch command. Overridable via [apps] in voice.conf.
+DEFAULT_APPS = {
+    "terminal": "alacritty",
+    "console": "alacritty",
+    "files": "nyxus-files",
+    "file manager": "nyxus-files",
+    "browser": "xdg-open https://",
+    "web browser": "xdg-open https://",
+    "firefox": "firefox",
+    "chrome": "google-chrome-stable",
+    "chromium": "chromium",
+    "editor": "code",
+    "code": "code",
+    "text editor": "code",
+    "notepad": "nyxus-notepad",
+    "notes": "nyxus-notepad",
+    "settings": "nyxus-settings",
+    "store": "nyxus-store",
+    "launcher": "nyxus-launcher",
+    "music": "nyxus-beat",
+}
+
+# ── logging ──────────────────────────────────────────────────────────
+
+_LOG_FH = None
+
+
+def _log(msg: str) -> None:
+    global _LOG_FH
+    line = f"[{time.strftime('%F %T')}] {msg}"
+    try:
+        if _LOG_FH is None:
+            CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            _LOG_FH = open(LOG_FILE, "a", buffering=1)
+        _LOG_FH.write(line + "\n")
+    except Exception:
+        pass
+    # Also echo to stderr for interactive/foreground runs, but NOT when
+    # stderr is a file (the CLI redirects it into LOG_FILE when detached,
+    # which would double every line).
+    try:
+        if sys.stderr.isatty():
+            sys.stderr.write(line + "\n")
+            sys.stderr.flush()
+    except Exception:
+        pass
+
+
+# ── config ───────────────────────────────────────────────────────────
+
+def default_config_text() -> str:
+    return f"""# ~/.config/nyxus/voice.conf — NYXUS voice control
+# Lines are `key = value`. `#` starts a comment. Restart the daemon
+# (`nyxus-voice restart`) after editing.
+
+# Wake word. Say "<wake_word>, <command>". Keep it short + distinct.
+wake_word = {DEFAULTS['wake_word']}
+
+# Path to a Vosk model directory. Leave empty to auto-detect a model
+# installed by `nyxus-voice-model` under ~/.local/share/nyxus/vosk/.
+model = {DEFAULTS['model']}
+
+# Mic capture. samplerate must match the model (16000 for the small EN
+# model). device empty = system default input; otherwise a sounddevice
+# index or name substring (see `nyxus-voice calibrate`).
+samplerate = {DEFAULTS['samplerate']}
+device = {DEFAULTS['device']}
+
+# STT backend: auto (currently == vosk) | vosk.
+backend = {DEFAULTS['backend']}
+
+# Feedback channel: sound | tts | both | none.
+feedback = {DEFAULTS['feedback']}
+
+# TTS engine: auto (espeak-ng > espeak > piper) | espeak-ng | espeak | piper | off.
+tts = {DEFAULTS['tts']}
+tts_voice = {DEFAULTS['tts_voice']}
+tts_rate = {DEFAULTS['tts_rate']}
+
+# Require the wake word before EVERY command (1 = strongly recommended,
+# avoids false triggers). 0 = treat any recognized command as active.
+require_wake = {DEFAULTS['require_wake']}
+
+# Debounce: ignore the same command repeated within this many ms.
+cooldown_ms = {DEFAULTS['cooldown_ms']}
+min_command_chars = {DEFAULTS['min_command_chars']}
+
+# Volume step (percent) for "volume up" / "volume down".
+volume_step = {DEFAULTS['volume_step']}
+
+# Boot into push-to-talk mute (1) or listening (0). Toggle live with
+# `nyxus-voice toggle` (or say "Nyxus, go to sleep" / "Nyxus, wake up").
+start_muted = {DEFAULTS['start_muted']}
+
+# ── App map ────────────────────────────────────────────────────────
+# "launch/open/start <alias>" -> command. Add your own; format:
+#   app <alias> = <command line>
+# e.g.  app spotify = spotify
+# The defaults (terminal, files, browser, firefox, code, notes, ...) are
+# built in; entries here override or extend them.
+# app spotify = spotify
+"""
+
+
+def load_config() -> dict:
+    cfg = dict(DEFAULTS)
+    apps = dict(DEFAULT_APPS)
+    if not CFG_FILE.exists():
+        try:
+            CFG_DIR.mkdir(parents=True, exist_ok=True)
+            CFG_FILE.write_text(default_config_text())
+            _log(f"wrote default config -> {CFG_FILE}")
+        except Exception as e:
+            _log(f"could not write default config: {e}")
+    try:
+        for raw in CFG_FILE.read_text().splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "=" not in line:
+                continue
+            key, val = line.split("=", 1)
+            key = key.strip()
+            val = val.strip()
+            if key.startswith("app "):
+                alias = key[4:].strip().lower()
+                if alias:
+                    apps[alias] = val
+            else:
+                cfg[key] = val
+    except Exception as e:
+        _log(f"config parse error (using defaults): {e}")
+    cfg["_apps"] = apps
+    return cfg
+
+
+def _cfg_int(cfg: dict, key: str) -> int:
+    try:
+        return int(str(cfg.get(key, DEFAULTS.get(key, "0"))).strip())
+    except (TypeError, ValueError):
+        return int(DEFAULTS.get(key, "0"))
+
+
+# ── number-word parsing (workspaces / volume) ─────────────────────────
+
+_UNITS = {
+    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11,
+    "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
+    "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
+}
+_TENS = {
+    "twenty": 20, "thirty": 30, "forty": 40, "fourty": 40, "fifty": 50,
+    "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90,
+}
+# Homophones the STT often emits for digits — ONLY used as a last resort so
+# real number-words ("two", "forty") always win over filler ("to", "for").
+_HOMOPHONES = {"oh": 0, "to": 2, "too": 2, "for": 4, "ate": 8, "won": 1}
+
+
+def parse_number(text: str):
+    """Return the first integer in text (digits or spoken number-words)."""
+    m = re.search(r"\d+", text)
+    if m:
+        try:
+            return int(m.group(0))
+        except ValueError:
+            pass
+    toks = re.findall(r"[a-z]+", text.lower())
+    current = 0
+    found = False
+    for t in toks:
+        if t in _TENS:
+            current += _TENS[t]
+            found = True
+        elif t in _UNITS:
+            current += _UNITS[t]
+            found = True
+        elif t == "hundred":
+            current = (current or 1) * 100
+            found = True
+        elif found:
+            break  # a non-number word ends the spoken number
+    if found:
+        return current
+    for t in toks:
+        if t in _HOMOPHONES:
+            return _HOMOPHONES[t]
+    return None
+
+
+# ── the command grammar / dispatcher ─────────────────────────────────
+#
+# An Action is a dict: {name, argv, speak, sound, dry}. `argv` is either a
+# list (exec directly) or a string (run via `sh -c`). Handlers are pure —
+# they build Actions from the command text and never touch the desktop —
+# so --selftest can assert on Action.name/argv with zero side effects.
+
+SCREENSHOT_CANDIDATES = [
+    ["python3", str(HOME / ".nyxus" / "nyxus_screenshot.py"), "region"],
+    ["nyxus-screenshot"],
+    ["grimblast", "copysave", "area"],
+    ["hyprshot", "-m", "region"],
+    ["grim", "-"],
+]
+
+
+def _screenshot_argv() -> list:
+    for cand in SCREENSHOT_CANDIDATES:
+        exe = cand[0]
+        if exe == "python3":
+            if Path(cand[1]).exists():
+                return cand
+        elif shutil.which(exe):
+            return cand
+    # Last resort: the nyxus python screenshot even if we can't stat it.
+    return ["python3", str(HOME / ".nyxus" / "nyxus_screenshot.py"), "region"]
+
+
+def _act(name, argv=None, speak="", sound=""):
+    return {"name": name, "argv": argv, "speak": speak, "sound": sound}
+
+
+def build_action(command: str, cfg: dict):
+    """Map a (wake-word-stripped) command string to an Action, or None.
+
+    Returns (action, matched_bool). `matched_bool` False -> unrecognized.
+    """
+    c = " " + command.lower().strip() + " "
+    apps = cfg.get("_apps", DEFAULT_APPS)
+    vstep = _cfg_int(cfg, "volume_step") or 5
+
+    # ── self / listening control (push-to-talk by voice) ──────────────
+    if re.search(r"\b(go to sleep|stop listening|mute yourself|sleep now)\b", c):
+        return _act("sleep", None, "going to sleep", "logout"), True
+    if re.search(r"\b(wake up|start listening|are you there|you awake)\b", c):
+        return _act("wake", None, "i'm listening", "login"), True
+
+    # ── lock ──────────────────────────────────────────────────────────
+    if re.search(r"\block ?down\b|\block (the )?(screen|desktop|session)\b|\block it\b|\block me out\b|(^|\s)lock(\s|$)", c):
+        return _act("lock", ["loginctl", "lock-session"], "locking down", "lock"), True
+
+    # ── screenshot ────────────────────────────────────────────────────
+    if re.search(r"\b(screenshot|screen shot|capture (the )?screen|take a (screen ?shot|picture)|grab the screen)\b", c):
+        return _act("screenshot", _screenshot_argv(), "screenshot", "success"), True
+
+    # ── living wallpaper toggle ──────────────────────────────────────
+    if re.search(r"\b(living wallpaper|live wallpaper|animated wallpaper)\b", c) or \
+       re.search(r"\b(toggle|switch) (the )?wallpaper\b", c):
+        return _act("wallpaper", ["nyxus-live-wallpaper", "toggle"],
+                    "toggling the living wallpaper", "success"), True
+
+    # ── say hi -> companion wave ──────────────────────────────────────
+    if re.search(r"\b(say (hi|hello|hey)|wave( (hi|hello|at me))?|greet me|introduce yourself)\b", c):
+        return _act("hello", ["nyxus-companion", "nudge", "wave"],
+                    "hey there", "laugh"), True
+
+    # ── mute / volume ─────────────────────────────────────────────────
+    if re.search(r"\b(un)?mute\b|\b(mute|silence) (the )?(audio|sound|volume|speakers?)\b", c):
+        return _act("mute", ["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"],
+                    "toggling mute", "notification"), True
+    if re.search(r"\b(max(imum)? volume|volume (max|full)|full volume|blast it)\b", c):
+        return _act("volume-max", ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "1.0"],
+                    "max volume", "notification"), True
+    # "volume 40 percent" / "set volume to fifty"
+    if re.search(r"\b(set )?volume\b", c) and (re.search(r"\bpercent\b", c) or re.search(r"\bto\b", c) or re.search(r"\d", c)):
+        n = parse_number(c)
+        if n is not None and re.search(r"\b(up|louder|raise|increase)\b", c) is None and \
+           re.search(r"\b(down|lower|quieter|decrease|reduce)\b", c) is None:
+            n = max(0, min(150, n))
+            return _act("volume-set", ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{n}%"],
+                        f"volume {n} percent", "notification"), True
+    if re.search(r"\b(volume up|louder|turn it up|raise (the )?volume|increase (the )?volume|crank it)\b", c):
+        return _act("volume-up", ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{vstep}%+"],
+                    "louder", "notification"), True
+    if re.search(r"\b(volume down|quieter|turn it down|lower (the )?volume|decrease (the )?volume|reduce (the )?volume)\b", c):
+        return _act("volume-down", ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{vstep}%-"],
+                    "quieter", "notification"), True
+
+    # ── workspace switching ───────────────────────────────────────────
+    if re.search(r"\b(workspace|desktop|work space)\b", c) or \
+       re.search(r"\b(go to|switch to|jump to|move to) (workspace|desktop)\b", c):
+        n = parse_number(c)
+        if n is not None:
+            return _act("workspace", ["hyprctl", "dispatch", "workspace", str(n)],
+                        f"workspace {n}", "success"), True
+
+    # ── app launch ────────────────────────────────────────────────────
+    m = re.search(r"\b(launch|open|start|run|fire up)\b\s+(.+)$", command.lower().strip())
+    if m:
+        target = m.group(2).strip()
+        target = re.sub(r"\b(the|app|application|program|please|for me)\b", " ", target).strip()
+        target = re.sub(r"\s+", " ", target)
+        cmdline = _resolve_app(target, apps)
+        if cmdline:
+            return _act("launch", cmdline, f"launching {target}", "app-open"), True
+        return _act("launch-unknown", None,
+                    f"i don't know how to launch {target}", "error"), False
+
+    # ── help ──────────────────────────────────────────────────────────
+    if re.search(r"\b(help|what can you do|commands|list commands)\b", c):
+        return _act("help", None,
+                    "try lock down, launch terminal, workspace three, "
+                    "take a screenshot, toggle living wallpaper, mute, "
+                    "volume up, or say hi", "chatter"), True
+
+    return None, False
+
+
+def _resolve_app(target: str, apps: dict):
+    """Resolve a spoken app name to an exec command (list) or None."""
+    if not target:
+        return None
+    # exact alias
+    if target in apps:
+        return _split_cmd(apps[target])
+    # alias contained in the spoken phrase (longest alias first)
+    for alias in sorted(apps, key=len, reverse=True):
+        if re.search(r"\b" + re.escape(alias) + r"\b", target):
+            return _split_cmd(apps[alias])
+    # single bare word that is a real executable -> just run it
+    word = target.split()[0] if target.split() else ""
+    if word and shutil.which(word):
+        return [word]
+    return None
+
+
+def _split_cmd(cmdline: str):
+    """A config command may be a bare exec or need a shell (URLs, &&)."""
+    if any(ch in cmdline for ch in ("&&", "||", ";", "|", ">", "<", "$")):
+        return cmdline  # string -> run via sh -c
+    try:
+        return shlex.split(cmdline)
+    except ValueError:
+        return cmdline
+
+
+# ── feedback (sound + optional TTS) ──────────────────────────────────
+
+def _tts_engine(cfg: dict):
+    pref = cfg.get("tts", "auto").strip().lower()
+    if pref == "off":
+        return None
+    order = [pref] if pref not in ("auto", "") else ["espeak-ng", "espeak", "piper"]
+    for eng in order:
+        if shutil.which(eng):
+            return eng
+    return None
+
+
+def speak(cfg: dict, text: str):
+    mode = cfg.get("feedback", "both").strip().lower()
+    if mode in ("none",) or not text:
+        return
+    if mode in ("tts", "both"):
+        eng = _tts_engine(cfg)
+        if eng in ("espeak-ng", "espeak"):
+            args = [eng]
+            voice = cfg.get("tts_voice", "").strip()
+            rate = cfg.get("tts_rate", "").strip()
+            if voice:
+                args += ["-v", voice]
+            if rate:
+                args += ["-s", rate]
+            args.append(text)
+            _spawn(args)
+        elif eng == "piper":
+            # piper reads text on stdin and writes raw audio; pipe to a player.
+            _spawn_shell(
+                "echo " + shlex.quote(text) +
+                " | piper --output-raw 2>/dev/null | pw-play --rate 22050 --format s16 --channels 1 - 2>/dev/null"
+            )
+
+
+def play_sound(cfg: dict, event: str):
+    mode = cfg.get("feedback", "both").strip().lower()
+    if mode in ("none", "tts") or not event:
+        return
+    if shutil.which("nyxus-sound"):
+        _spawn(["nyxus-sound", event])
+
+
+# ── process spawning (detached, non-blocking, fail-silent) ────────────
+
+def _spawn(argv):
+    try:
+        subprocess.Popen(
+            argv, stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except Exception as e:
+        _log(f"spawn failed {argv!r}: {e}")
+
+
+def _spawn_shell(cmd: str):
+    try:
+        subprocess.Popen(
+            ["sh", "-c", cmd], stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except Exception as e:
+        _log(f"spawn-shell failed: {e}")
+
+
+def run_action(action: dict, cfg: dict, execute: bool):
+    """Give feedback and (if execute) run the action's command."""
+    name = action["name"]
+    argv = action.get("argv")
+    # Feedback first so it feels responsive.
+    if action.get("sound"):
+        play_sound(cfg, action["sound"])
+    if action.get("speak"):
+        speak(cfg, action["speak"])
+    if not execute:
+        _log(f"[dry-run] action={name} argv={argv!r}")
+        return
+    if argv is None:
+        return  # feedback-only (help / sleep / wake handled by caller)
+    _log(f"exec action={name} argv={argv!r}")
+    if isinstance(argv, str):
+        _spawn_shell(argv)
+    else:
+        _spawn(list(argv))
+
+
+# ── transcript -> command extraction (wake word handling) ─────────────
+
+def extract_command(text: str, cfg: dict):
+    """Strip the wake word; return the command portion, or None to ignore."""
+    text = re.sub(r"\s+", " ", (text or "").strip().lower())
+    if not text:
+        return None
+    wake = cfg.get("wake_word", "nyxus").strip().lower()
+    require = str(cfg.get("require_wake", "1")).strip() not in ("0", "false", "no", "off")
+    if wake and wake in text:
+        # take everything after the LAST wake-word occurrence
+        idx = text.rfind(wake)
+        cmd = text[idx + len(wake):].strip(" ,.!?-")
+        return cmd
+    if require:
+        return None
+    return text.strip(" ,.!?-")
+
+
+# ── the mic + STT loop (Vosk) ─────────────────────────────────────────
+
+def find_model(cfg: dict):
+    m = cfg.get("model", "").strip()
+    if m:
+        p = Path(os.path.expanduser(m))
+        return p if p.exists() else None
+    for base in MODEL_SEARCH:
+        try:
+            if not base.exists():
+                continue
+            # a Vosk model dir contains an `am/` subdir (acoustic model)
+            if (base / "am").is_dir():
+                return base
+            for child in sorted(base.iterdir()):
+                if child.is_dir() and (child / "am").is_dir():
+                    return child
+        except Exception:
+            continue
+    return None
+
+
+def backend_status(cfg: dict) -> dict:
+    st = {"vosk_module": False, "model": None, "sounddevice": False,
+          "pw_record": bool(shutil.which("pw-record")),
+          "tts": _tts_engine(cfg), "ready": False}
+    try:
+        import vosk  # noqa: F401
+        st["vosk_module"] = True
+    except Exception:
+        st["vosk_module"] = False
+    try:
+        import sounddevice  # noqa: F401
+        st["sounddevice"] = True
+    except Exception:
+        st["sounddevice"] = False
+    model = find_model(cfg)
+    st["model"] = str(model) if model else None
+    st["ready"] = bool(st["vosk_module"] and st["model"] and
+                       (st["sounddevice"] or st["pw_record"]))
+    return st
+
+
+def _muted() -> bool:
+    return MUTE_FLAG.exists()
+
+
+def run_daemon(cfg: dict):
+    _log(f"nyxus-voiced {VERSION} starting (wake='{cfg.get('wake_word')}')")
+    st = backend_status(cfg)
+    _log(f"backend: vosk={st['vosk_module']} model={st['model']} "
+         f"sounddevice={st['sounddevice']} pw-record={st['pw_record']} "
+         f"tts={st['tts']}")
+
+    if str(cfg.get("start_muted", "0")).strip() in ("1", "true", "yes", "on"):
+        try:
+            MUTE_FLAG.touch()
+        except Exception:
+            pass
+
+    if not st["ready"]:
+        # GRACEFUL FALLBACK — never crash the session. Explain exactly what
+        # is missing and idle until the daemon is stopped.
+        missing = []
+        if not st["vosk_module"]:
+            missing.append("python-vosk (pip install vosk)")
+        if not st["model"]:
+            missing.append("a Vosk model (run: nyxus-voice-model)")
+        if not (st["sounddevice"] or st["pw_record"]):
+            missing.append("a mic backend (python-sounddevice or pipewire's pw-record)")
+        _log("no STT backend; install vosk model — voice control is IDLE. "
+             "Missing: " + "; ".join(missing))
+        _log("parser/dispatcher still testable: `nyxus-voice test \"nyxus lock down\"`")
+        # Idle loop so the process is a well-behaved, killable no-op.
+        _idle_forever()
+        return
+
+    play_sound(cfg, "success")
+    _log("listening. Say: \"" + cfg.get("wake_word", "nyxus") + ", <command>\"")
+    try:
+        _vosk_loop(cfg, st)
+    except Exception as e:
+        _log(f"STT loop crashed (kept session alive): {e}")
+        _idle_forever()
+
+
+def _idle_forever():
+    stop = {"v": False}
+
+    def _h(*_):
+        stop["v"] = True
+    signal.signal(signal.SIGTERM, _h)
+    signal.signal(signal.SIGINT, _h)
+    while not stop["v"]:
+        time.sleep(1.0)
+    _log("nyxus-voiced stopped (idle)")
+
+
+def _dispatch_transcript(text: str, cfg: dict, last: dict):
+    """Shared path for live + simulated transcripts. Returns action name."""
+    cmd = extract_command(text, cfg)
+    if cmd is None:
+        return None
+    if len(cmd) < (_cfg_int(cfg, "min_command_chars") or 2):
+        return None
+    action, matched = build_action(cmd, cfg)
+    if action is None:
+        _log(f"heard '{cmd}' — no matching command")
+        return None
+    name = action["name"]
+    # debounce identical command
+    now = time.monotonic() * 1000.0
+    cool = _cfg_int(cfg, "cooldown_ms")
+    if last.get("name") == name and (now - last.get("t", 0)) < cool:
+        _log(f"debounced repeat '{name}'")
+        return name
+    last["name"] = name
+    last["t"] = now
+
+    # sleep/wake toggle the push-to-talk mute flag directly.
+    if name == "sleep":
+        try:
+            MUTE_FLAG.touch()
+        except Exception:
+            pass
+        run_action(action, cfg, execute=True)
+        return name
+    if name == "wake":
+        try:
+            MUTE_FLAG.unlink(missing_ok=True)
+        except Exception:
+            pass
+        run_action(action, cfg, execute=True)
+        return name
+
+    _log(f"command '{cmd}' -> {name}"
+         + (" (unrecognized target)" if not matched else ""))
+    run_action(action, cfg, execute=True)
+    return name
+
+
+def _vosk_loop(cfg: dict, st: dict):
+    import vosk
+    vosk.SetLogLevel(-1)
+    samplerate = _cfg_int(cfg, "samplerate") or 16000
+    model = vosk.Model(st["model"])
+    rec = vosk.KaldiRecognizer(model, samplerate)
+    rec.SetWords(False)
+    last = {"name": None, "t": 0.0}
+
+    stop = {"v": False}
+
+    def _h(*_):
+        stop["v"] = True
+    signal.signal(signal.SIGTERM, _h)
+    signal.signal(signal.SIGINT, _h)
+    # SIGUSR1 -> reload config (mute state is a flag file, checked live)
+    try:
+        signal.signal(signal.SIGUSR1, lambda *_: None)
+    except Exception:
+        pass
+
+    def handle_chunk(data: bytes):
+        if _muted():
+            return
+        if rec.AcceptWaveform(data):
+            res = json.loads(rec.Result() or "{}")
+            text = res.get("text", "").strip()
+            if text:
+                _log(f"heard: {text}")
+                _dispatch_transcript(text, cfg, last)
+
+    if st["sounddevice"]:
+        import sounddevice as sd
+        blocksize = 4000
+        device = cfg.get("device", "").strip() or None
+        if device is not None:
+            try:
+                device = int(device)
+            except ValueError:
+                pass
+        with sd.RawInputStream(samplerate=samplerate, blocksize=blocksize,
+                               dtype="int16", channels=1, device=device) as stream:
+            while not stop["v"]:
+                data, _ = stream.read(blocksize)
+                handle_chunk(bytes(data))
+    else:
+        # pw-record fallback: raw s16 mono at samplerate on stdout.
+        proc = subprocess.Popen(
+            ["pw-record", "--rate", str(samplerate), "--channels", "1",
+             "--format", "s16", "-"],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        )
+        try:
+            while not stop["v"]:
+                data = proc.stdout.read(4000)
+                if not data:
+                    break
+                handle_chunk(data)
+        finally:
+            proc.terminate()
+    _log("nyxus-voiced stopped")
+
+
+# ── self-test (no mic, no backend needed) ─────────────────────────────
+
+SELFTEST_CASES = [
+    # (transcript, expected action name or None)
+    ("nyxus lock down", "lock"),
+    ("nyxus lock the screen", "lock"),
+    ("hey nyxus lock it", "lock"),
+    ("nyxus launch terminal", "launch"),
+    ("nyxus open the file manager", "launch"),
+    ("nyxus start firefox", "launch"),
+    ("nyxus workspace three", "workspace"),
+    ("nyxus go to workspace 5", "workspace"),
+    ("nyxus go to workspace three", "workspace"),
+    ("nyxus switch to desktop two", "workspace"),
+    ("nyxus take a screenshot", "screenshot"),
+    ("nyxus capture the screen", "screenshot"),
+    ("nyxus toggle living wallpaper", "wallpaper"),
+    ("nyxus toggle the wallpaper", "wallpaper"),
+    ("nyxus mute", "mute"),
+    ("nyxus unmute", "mute"),
+    ("nyxus volume up", "volume-up"),
+    ("nyxus louder", "volume-up"),
+    ("nyxus volume down", "volume-down"),
+    ("nyxus set volume to forty percent", "volume-set"),
+    ("nyxus max volume", "volume-max"),
+    ("nyxus say hi", "hello"),
+    ("nyxus wave at me", "hello"),
+    ("nyxus go to sleep", "sleep"),
+    ("nyxus wake up", "wake"),
+    ("nyxus what can you do", "help"),
+    # wake-word gating: no wake word -> ignored
+    ("lock down", None),
+    ("just talking about my day", None),
+    # unknown app -> launch-unknown (matched False)
+    ("nyxus launch flibbertigibbet", "launch-unknown"),
+]
+
+
+def selftest(cfg: dict) -> int:
+    passed = 0
+    failed = 0
+    print(f"nyxus-voiced {VERSION} — dispatcher self-test\n")
+    for text, expected in SELFTEST_CASES:
+        cmd = extract_command(text, cfg)
+        if cmd is None:
+            got = None
+        else:
+            action, _ = build_action(cmd, cfg)
+            got = action["name"] if action else None
+        ok = got == expected
+        passed += ok
+        failed += (not ok)
+        mark = "PASS" if ok else "FAIL"
+        print(f"  [{mark}] {text!r:52} -> {got!r}"
+              + ("" if ok else f"  (expected {expected!r})"))
+    # Number-word + argv resolution (guards against homophone false-parses).
+    print("\n  argv / number-word checks:")
+    argv_cases = [
+        ("nyxus go to workspace three", ["hyprctl", "dispatch", "workspace", "3"]),
+        ("nyxus workspace 7", ["hyprctl", "dispatch", "workspace", "7"]),
+        ("nyxus set volume to forty percent",
+         ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "40%"]),
+        ("nyxus set volume to one hundred percent",
+         ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "100%"]),
+    ]
+    for text, expected_argv in argv_cases:
+        cmd = extract_command(text, cfg)
+        action, _ = build_action(cmd, cfg) if cmd else (None, False)
+        got = action.get("argv") if action else None
+        ok = got == expected_argv
+        passed += ok
+        failed += (not ok)
+        mark = "PASS" if ok else "FAIL"
+        print(f"  [{mark}] {text!r:52} -> {got!r}"
+              + ("" if ok else f"  (expected {expected_argv!r})"))
+
+    total = len(SELFTEST_CASES) + len(argv_cases)
+    print(f"\n{passed} passed, {failed} failed, {total} total")
+    return 0 if failed == 0 else 1
+
+
+# ── entrypoint ────────────────────────────────────────────────────────
+
+def _write_pid():
+    try:
+        PID_FILE.write_text(str(os.getpid()))
+    except Exception:
+        pass
+
+
+def _remove_pid():
+    try:
+        if PID_FILE.exists() and PID_FILE.read_text().strip() == str(os.getpid()):
+            PID_FILE.unlink()
+    except Exception:
+        pass
+
+
+def main(argv):
+    cfg = load_config()
+
+    if "--selftest" in argv:
+        return selftest(cfg)
+
+    if "--print-config" in argv:
+        st = backend_status(cfg)
+        printable = {k: v for k, v in cfg.items() if k != "_apps"}
+        print(json.dumps({
+            "version": VERSION,
+            "config_file": str(CFG_FILE),
+            "config": printable,
+            "apps": cfg["_apps"],
+            "backend": st,
+            "model_search": [str(p) for p in MODEL_SEARCH],
+        }, indent=2))
+        return 0
+
+    if "--list-devices" in argv:
+        try:
+            import sounddevice as sd
+            print(sd.query_devices())
+        except Exception as e:
+            print(f"sounddevice unavailable: {e}", file=sys.stderr)
+            # fall back to pw-record device listing
+            if shutil.which("pw-record"):
+                subprocess.run(["pw-cli", "list-objects", "Node"], check=False)
+        return 0
+
+    if "--version" in argv:
+        print(VERSION)
+        return 0
+
+    if "--simulate" in argv:
+        i = argv.index("--simulate")
+        text = argv[i + 1] if i + 1 < len(argv) else ""
+        execute = "--execute" in argv
+        cmd = extract_command(text, cfg)
+        if cmd is None:
+            print(f"ignored (no wake word / empty): {text!r}")
+            return 0
+        action, matched = build_action(cmd, cfg)
+        if action is None:
+            print(f"no matching command for: {cmd!r}")
+            return 1
+        print(f"transcript : {text!r}")
+        print(f"command    : {cmd!r}")
+        print(f"action     : {action['name']}"
+              + ("" if matched else "  (unrecognized target)"))
+        print(f"argv       : {action.get('argv')!r}")
+        print(f"speak      : {action.get('speak')!r}")
+        print(f"sound      : {action.get('sound')!r}")
+        print(f"mode       : {'EXECUTE' if execute else 'DRY-RUN'}")
+        if action["name"] == "sleep" and execute:
+            MUTE_FLAG.touch()
+        elif action["name"] == "wake" and execute:
+            MUTE_FLAG.unlink(missing_ok=True)
+        else:
+            run_action(action, cfg, execute=execute)
+        return 0
+
+    # ── default: run the daemon ──
+    # single-instance guard
+    if PID_FILE.exists():
+        try:
+            old = int(PID_FILE.read_text().strip())
+            os.kill(old, 0)
+            _log(f"already running (pid {old}); exiting")
+            return 0
+        except (ValueError, ProcessLookupError, PermissionError):
+            pass
+    _write_pid()
+    try:
+        run_daemon(cfg)
+    finally:
+        _remove_pid()
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except KeyboardInterrupt:
+        sys.exit(0)

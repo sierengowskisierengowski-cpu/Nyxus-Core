@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
 #  NYXUS SDDM Theme Installer · COSMIC INK SWIRL · DARK GLASS LOGIN
-#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 

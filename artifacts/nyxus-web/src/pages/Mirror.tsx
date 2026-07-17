@@ -1,6 +1,6 @@
 // ============================================
 // NYXUS — nyx-2026.05.02-x86_64.iso
-// Copyright © 2026 Joseph Sierengowski
+// Copyright © 2026 Joseph A. Sierengowski
 // All Rights Reserved
 // NYX-J5W-2026-SIERENGOWSKI-LOCKED
 // ============================================

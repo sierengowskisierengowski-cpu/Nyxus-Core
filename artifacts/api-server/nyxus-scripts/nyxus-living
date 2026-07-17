@@ -13,7 +13,7 @@
 # The music layers stay on their own switches (they're moods, not
 # plumbing): nyxus-beat (Super+Alt+B) · wall-fx (Super+Shift+P).
 # Bound: Super+Alt+L ("living").
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:${PATH}"
@@ -26,8 +26,13 @@ start() {
   if ! pulsed_up; then
     nohup nyxus-pulsed >/dev/null 2>&1 &
   fi
-  notify-send -u low -t 2600 "◤ NYXUS ◥ LIVING THEME" \
-    "the shell is alive — borders and bars now follow you" 2>/dev/null
+  # Quiet at boot: the autostart (`nyxus-living on quiet`) must not pop a toast
+  # on every single login — the user only wants the notification when THEY
+  # toggle it. Any non-quiet invocation (the Super+Alt+L bind) still notifies.
+  if [[ "${QUIET:-0}" != "1" ]]; then
+    notify-send -u low -t 2600 "◤ NYXUS ◥ LIVING THEME" \
+      "the shell is alive — borders and bars now follow you" 2>/dev/null
+  fi
   echo "living: on"
 }
 
@@ -41,10 +46,14 @@ stop() {
   echo "living: off"
 }
 
+# Second arg (or NYXUS_LIVING_QUIET=1) suppresses the toast — used by the
+# login autostart so the desktop doesn't notify on every boot.
+[[ "${2:-}" == "quiet" || "${NYXUS_LIVING_QUIET:-0}" == "1" ]] && QUIET=1 || QUIET=0
+
 case "${1:-toggle}" in
   on)     start ;;
   off)    stop ;;
   toggle) pulsed_up && stop || start ;;
   status) pulsed_up && echo on || echo off ;;
-  *) echo "usage: nyxus-living <on|off|toggle|status>" >&2; exit 2 ;;
+  *) echo "usage: nyxus-living <on|off|toggle|status> [quiet]" >&2; exit 2 ;;
 esac

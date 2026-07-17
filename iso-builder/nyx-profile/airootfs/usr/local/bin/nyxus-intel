@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# NYXUS Phantom launcher — Copyright © 2026 Joseph Sierengowski
+# NYXUS Phantom launcher — Copyright © 2026 Joseph A. Sierengowski
 exec python3 -c '
 import sys
 sys.path.insert(0, "/opt/nyxus-intel")

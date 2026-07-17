@@ -1,0 +1,146 @@
+
+Copilot said: Your Hyprland config syntax is for an
+Your Hyprland config syntax is for an older/different rule format, so current Hyprland is parsing rule arguments like float, pin, class:^...$, blur, noblur, etc. as malformed fields instead of valid rule entries.
+
+Most likely:
+
+the shipped Nyxus Hyprland snippets target an older Hyprland syntax, or
+your installed Hyprland version expects windowrulev2 = ..., layerrule = ... style lines and the copied files use old comma-separated/legacy formats incorrectly.
+Also, separately:
+
+swww-daemon is not installed
+~/.config/eww does not exist, so eww daemon and eww open bar fail
+What the errors mean
+Examples like:
+
+invalid field float: missing a value
+invalid field class:^([Nn]yxus.*)$: missing a value
+invalid field blur: missing a value
+invalid field type ignorealpha
+mean Hyprland is reading lines that probably look roughly like:
+
+INI
+windowrulev2 = float, center, class:^(io\.nyxus\.weather)$
+layerrule = blur, some-layer
+but in a syntax/layout that your version no longer accepts in that exact form, or they may be missing the required =, commas, or keywords for your version.
+
+Immediate fix path
+1. Inspect the actual copied files
+Run:
+
+bash
+sed -n '330,380p' ~/.config/hypr/hyprland.conf
+sed -n '1,130p' ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+sed -n '1,80p' ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+sed -n '1,80p' ~/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf
+sed -n '1,80p' ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+I want the exact lines around the failures. The pattern strongly suggests bad/obsolete rule syntax.
+
+2. Temporarily disable the broken Nyxus snippets
+Fastest way to get Hyprland sane again:
+
+bash
+mkdir -p ~/.config/hypr/disabled
+mv ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf ~/.config/hypr/disabled/
+mv ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf ~/.config/hypr/disabled/
+mv ~/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf ~/.config/hypr/disabled/
+mv ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf ~/.config/hypr/disabled/
+hyprctl reload
+hyprctl configerrors
+If hyprland.conf itself also has direct bad rules around lines 341–342, comment those out too.
+
+3. Fix the base Hyprland file lines 341–342
+Open:
+
+bash
+nano ~/.config/hypr/hyprland.conf
+and inspect around line 341. If you see something like old windowrule/windowrulev2 syntax, that is the root cause.
+
+Likely syntax conversions
+These are the common valid modern forms.
+
+Window rules
+Usually:
+
+INI
+windowrulev2 = float, class:^(io\.nyxus\.weather)$
+windowrulev2 = center, class:^(io\.nyxus\.weather)$
+windowrulev2 = pin, class:^(panel|nyxus-panel)$
+windowrulev2 = noborder, class:^(io\.nyxus\.sysmon)$
+windowrulev2 = opacity 0.95 0.95, class:^(io\.nyxus\.weather)$
+Not something malformed like:
+
+INI
+windowrulev2 float, center, class:^(io\.nyxus\.weather)$
+or:
+
+INI
+windowrulev2 = class:^(io\.nyxus\.weather)$, float
+if your version doesn’t accept that order.
+
+Layer rules
+Usually:
+
+INI
+layerrule = blur, waybar
+layerrule = ignorealpha 0.2, waybar
+layerrule = noanim, launcher
+layerrule = noblur, notifications
+If Hyprland says invalid field blur or type ignorealpha, it often means the line is not being parsed as a proper layerrule = ... assignment.
+
+The non-Hyprland issues
+swww-daemon: command not found
+Install swww.
+
+Arch/Hyprland setup:
+
+bash
+sudo pacman -S swww
+or if it’s in your AUR-based flow, use your helper.
+
+eww config missing
+You need an actual config directory:
+
+bash
+mkdir -p ~/.config/eww
+But just creating the folder may not be enough — eww needs widget/config files, usually eww.yuck and optional eww.scss/CSS. So the Nyxus setup likely forgot to copy them.
+
+Check whether the repo has them:
+
+bash
+find ~/nyxus -iname '*eww*' -o -iname '*.yuck'
+If found, copy them into ~/.config/eww/.
+
+Best next command set
+Run this exact block:
+
+bash
+mkdir -p ~/.config/hypr/disabled
+
+mv ~/.config/hypr/conf.d/nyxus-hyprland-rules.conf ~/.config/hypr/disabled/ 2>/dev/null
+mv ~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf ~/.config/hypr/disabled/ 2>/dev/null
+mv ~/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf ~/.config/hypr/disabled/ 2>/dev/null
+mv ~/.config/hypr/conf.d/nyxus-hyprland-fog.conf ~/.config/hypr/disabled/ 2>/dev/null
+
+cp ~/.config/hypr/hyprland.conf ~/.config/hypr/hyprland.conf.bak
+
+sed -n '330,380p' ~/.config/hypr/hyprland.conf
+hyprctl reload
+hyprctl configerrors
+Bottom line
+You have 3 separate problems:
+
+Hyprland rules syntax incompatibility in the Nyxus config snippets
+swww not installed
+eww config not copied/generated
+If you send me:
+
+~/.config/hypr/hyprland.conf lines 330–380
+full contents of:
+~/.config/hypr/conf.d/nyxus-hyprland-rules.conf
+~/.config/hypr/conf.d/nyxus-hyprland-opacity.conf
+~/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf
+~/.config/hypr/conf.d/nyxus-hyprland-fog.conf
+I can rewrite them into valid syntax for your Hyprland version.
+
+Block pasted, 1 total

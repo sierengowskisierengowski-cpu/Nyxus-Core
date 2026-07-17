@@ -1,0 +1,61 @@
+On first launch, auto-detect the full hardware profile of the machine using dmidecode, /sys/class/dmi/id/, lm-sensors, and hwmon sysfs. Detect CPU, GPU, RAM, motherboard, all fans, all thermal zones, all RGB devices via OpenRGB, battery and AC adapter state. Save this hardware profile locally so the app knows the exact machine on every subsequent launch. If a component is not detected, its panel does not appear in the UI at all.
+Fan Control:
+
+Per-fan manual RPM sliders
+Preset modes: Silent, Balanced, Performance, Turbo, Custom
+Custom fan curve editor — temperature vs RPM that the user draws/sets themselves
+Real-time RPM and temperature readouts for every detected sensor
+Fan hysteresis control to prevent constant RPM hunting
+
+Thermal Monitoring:
+
+Live temperature readouts for CPU, GPU, NVMe, and motherboard
+Per-component temperature alert thresholds set by the user
+Thermal history graph for the last 60 minutes
+Throttle detection — warns the user if the CPU is actively thermal throttling
+
+Performance Profiles:
+
+Four built-in profiles: Silent, Balanced, Performance, Beast Mode
+Each profile controls: fan curve + CPU power governor + CPU boost on/off + GPU power limit combined
+Auto-switching between profiles based on AC vs battery state
+Game Mode — detects a fullscreen process launching and automatically switches to the Performance profile
+
+RGB Control:
+
+Backend via OpenRGB REST API and CLI
+Auto-detect all connected RGB devices
+Per-device color picker and effect selector
+Named RGB profile system — save and recall setups
+State-linked RGB — colors change based on system state: NyX default colors at idle, red when thermals are critically high, blue when on battery/silent mode
+Optional audio sync hook
+
+Power Management:
+
+CPU governor control: powersave, schedutil, performance
+CPU boost toggle
+GPU power limit slider — NVIDIA via nvidia-smi, AMD via rocm
+TDP control via ryzenadj for AMD or intel-undervolt for Intel where supported
+Battery charge limit control where hardware supports it
+
+Process Governor:
+
+View running processes and set CPU priority via nice and ionice directly from the app
+One-click boost selected process to high priority
+
+Monitoring Panel:
+
+Glanceable live panel showing CPU usage, GPU usage, RAM, all temps, and fan RPMs
+Scoped only to what the app controls — not a full sysmon replacement
+
+Profiles System:
+
+Save complete system states — fans, RGB, power governor, CPU boost, GPU limit — as named profiles
+Examples: Gaming, Work, Silent, Nighttime
+Instant profile switching
+
+System Tray:
+
+App minimizes to system tray when closed, does not fully exit
+Right-click tray icon shows quick profile switcher without opening the full app
+Tray tooltip shows current active profile and CPU temperature

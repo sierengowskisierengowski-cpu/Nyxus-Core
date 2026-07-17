@@ -1,0 +1,535 @@
+# ============================================
+# NYXUS — nyx-2026.05.11-x86_64.iso
+# Copyright © 2026 Joseph A. Sierengowski
+# All Rights Reserved
+# NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+#
+# Pacman packages baked into the NYX live ISO.
+# Comments + blank lines are ignored by mkarchiso.
+
+# ── base system ────────────────────────────────────────────────────
+base
+base-devel
+linux
+linux-firmware
+mkinitcpio
+mkinitcpio-archiso
+intel-ucode
+amd-ucode
+sudo
+networkmanager
+iwd
+wpa_supplicant
+dhcpcd
+openssh
+git
+nano
+vim
+wget
+curl
+unzip
+zip
+tar
+htop
+fastfetch
+
+# ── boot ───────────────────────────────────────────────────────────
+syslinux
+grub
+efibootmgr
+memtest86+-efi
+
+# ── filesystem support ─────────────────────────────────────────────
+btrfs-progs
+dosfstools
+e2fsprogs
+exfatprogs
+f2fs-tools
+ntfs-3g
+xfsprogs
+gptfdisk
+parted
+mtools
+
+# ── Hyprland / Wayland ────────────────────────────────────────────
+hyprland
+hyprlock
+hypridle
+# mpvpaper is AUR-only — built from source by customize_airootfs.sh.
+# These are its runtime + build dependencies.
+mpv
+meson
+ninja
+scdoc
+# rust provides `cargo` — required to build EWW from source in
+# customize_airootfs.sh. The chroot has no pacman mirrors, so build deps
+# CANNOT be installed at customize time; they MUST be pacstrapped here.
+rust
+wayland-protocols
+hyprcursor
+greetd
+plymouth
+qt5-quickcontrols2
+qt5-graphicaleffects
+qt5-declarative
+# waybar removed 2026-05-11 — replaced by EWW (ElKowar's Wacky Widgets).
+# EWW is AUR-only (eww-wayland); built from source by customize_airootfs.sh.
+# Runtime helpers EWW expects:
+socat
+jq
+acpi
+gtk-layer-shell
+wofi
+rofi
+rofi-emoji
+dunst
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+qt5-wayland
+qt6-wayland
+xorg-xwayland
+wl-clipboard
+grim
+slurp
+cliphist
+brightnessctl
+playerctl
+pamixer
+pavucontrol
+swaybg
+# rev 2026-07-16: swapped back to `awww` — see packages.x86_64 for why.
+awww
+wdisplays
+# wlogout removed 2026-05-11 — built from upstream source by
+# customize_airootfs.sh (was failing pacstrap on mirrors that don't yet
+# carry it in extra; building from source removes the mirror dependency).
+nwg-displays
+blueman
+geoclue
+power-profiles-daemon
+bluez
+bluez-utils
+# (dedup) networkmanager
+network-manager-applet
+polkit
+polkit-gnome
+
+# ── audio ─────────────────────────────────────────────────────────
+pipewire
+pipewire-alsa
+pipewire-pulse
+pipewire-jack
+wireplumber
+alsa-utils
+
+# ── GTK4 + Python (for NYXUS apps) ────────────────────────────────
+gtk4
+libadwaita
+adw-gtk-theme
+papirus-icon-theme
+vte3
+vte-common
+python
+python-gobject
+python-pip
+python-cairo
+python-psutil
+python-cryptography
+python-requests
+python-pillow
+python-dnspython
+
+# ── nyxus-intel runtime deps (Policy A — pacman-first, offline-capable) ─
+# Mirrors the contents of intel/packages.txt + intel/requirements.txt
+# packaged for Arch. Anything not in official repos stays as a pip-at-
+# first-run fallback inside install.sh.
+python-bcrypt
+python-reportlab
+# NOTE: `python-shodan` is AUR-only — install.sh handles it as a pip
+# fallback at first run if needed (nyxus-phantom threat-intel feature).
+# NOTE: `python-piexif` is AUR-only — install.sh handles it as a pip
+# fallback at first run (EXIF metadata editing for the media library).
+# NOTE: `python-whois` is AUR-only — install.sh handles it as a pip
+# fallback at first run. The `whois` C binary below covers the CLI need.
+whois
+
+# ── fonts ─────────────────────────────────────────────────────────
+ttf-jetbrains-mono-nerd
+ttf-firacode-nerd
+inter-font
+noto-fonts
+noto-fonts-emoji
+otf-font-awesome
+
+# ── terminal emulators (alacritty is NYXUS default) ───────────────
+alacritty
+
+# ── terminal + utilities ──────────────────────────────────────────
+foot
+kitty
+fzf
+ripgrep
+fd
+bat
+eza
+zoxide
+starship
+ranger
+
+
+# ── GPU drivers — NVIDIA hybrid stack (LOCKED · 2026-05-10 r5) ────
+# Target hw: MSI GS77 i9-12900H + RTX 3060 (Intel iGPU + NVIDIA dGPU).
+# nvidia-open-dkms rebuilds the module against any kernel; linux-headers is
+# required for DKMS to compile. egl-wayland + libva-nvidia-driver are
+# required for proper Wayland + hardware video decode under Hyprland.
+linux-headers
+nvidia-open-dkms
+nvidia-utils
+nvidia-settings
+lib32-nvidia-utils
+opencl-nvidia
+egl-wayland
+libva-nvidia-driver
+
+# ── GPU drivers — Intel iGPU + Vulkan loaders ────────────────────
+intel-media-driver
+libva-intel-driver
+libva-utils
+vulkan-intel
+lib32-vulkan-intel
+vulkan-icd-loader
+lib32-vulkan-icd-loader
+vulkan-tools
+intel-gpu-tools
+mesa
+lib32-mesa
+mesa-utils
+
+# ── Audio firmware (CRITICAL — MSI GS77 needs sof-firmware) ──────
+sof-firmware
+alsa-firmware
+alsa-ucm-conf
+
+# ── Power / thermal management ──────────────────────────────────
+thermald
+acpid
+upower
+lm_sensors
+nvtop
+powertop
+
+# ── Bluetooth + printing + webcam ───────────────────────────────
+bluez-obex
+cups
+cups-pdf
+system-config-printer
+v4l-utils
+
+# ── Biometric + hardware-token authentication ───────────────────
+# fprintd  → fingerprint daemon (libfprint backend; works with most
+#            laptop fingerprint sensors out of the box).
+# pam-u2f  → PAM module for FIDO2/U2F hardware tokens (YubiKey).
+# libfido2 → FIDO2 support library used by pam-u2f + ykman.
+# yubikey-manager → CLI to register/program YubiKeys.
+# pamtester → diagnostic tool, useful when wiring this stack up.
+# python-opencv + python-dlib are runtime deps for `howdy` face auth
+# (built from AUR by customize_airootfs.sh, since howdy is AUR-only).
+fprintd
+libfprint
+pam-u2f
+libfido2
+yubikey-manager
+# pamtester removed 2026-05-11 — AUR-only, built from source by
+# customize_airootfs.sh (used at runtime by nyxus-bd-router for U2F auth).
+python-opencv
+# python-dlib removed 2026-05-11 — AUR-only, pulled in transitively by
+# howdy's own debian/install.sh during the customize_airootfs.sh build.
+# v4l2loopback-dkms — virtual V4L2 loopback device kernel module.
+# Provides the v4l2loopback kernel module across the shipped kernel set.
+v4l2loopback-dkms
+# oath-toolkit ships oathtool (TOTP code generator/verifier) and pam_oath.
+# Used by the backdoor stack as the 4th factor (rotating 30-second OTP).
+oath-toolkit
+# qrencode renders the TOTP enrolment URI as an ASCII QR code so the user
+# can scan it into Aegis/Authy/Google Authenticator from a terminal.
+qrencode
+
+# ── Gaming stack (multilib) ─────────────────────────────────────
+lib32-gamemode
+lib32-mangohud
+giflib
+lib32-giflib
+gnutls
+lib32-gnutls
+libpng
+lib32-libpng
+
+# ── Daily-driver apps ───────────────────────────────────────────
+firefox
+nautilus
+hyprshot
+wf-recorder
+file-roller
+7zip
+unrar
+libcanberra
+
+# ── archiso runtime requirements ──────────────────────────────────
+arch-install-scripts
+archinstall
+pacman-contrib
+reflector
+rsync
+which
+
+# NYXUS installer (AUR-only; built in customize_airootfs.sh).
+
+# ═══════════════════════════════════════════════════════════════════
+# COMPLETION WAVE 1+2+3 — backends for half-built UI, hardware /
+# network / FS completeness, stability + security hardening.
+# Added 2026-05-13 to back the Settings UI pages that previously had
+# frontend-only implementations (App Sandbox, Backup Snapshots,
+# Accessibility, Notifications, Firmware Updates) and to fill the gaps
+# audited in the 121-item completion master list.
+# ═══════════════════════════════════════════════════════════════════
+
+# ── Wave 1: backends for half-built UI pages ──────────────────────
+# Settings → App Sandbox backend.
+flatpak
+# Flatpak portal base.
+xdg-desktop-portal
+# Settings → Notifications busctl backend.
+swaync
+# Settings → Firmware Updates backend.
+fwupd
+# mpv codec coverage (h264/aac/vorbis).
+gst-plugins-good
+# h265 / mkv / aac+.
+gst-plugins-bad
+# mp3 / x264 (proprietary).
+gst-plugins-ugly
+# ffmpeg-backed gstreamer plugins.
+gst-libav
+# general media transcoding + thumbnails.
+ffmpeg
+# accurate system time (TLS sanity).
+chrony
+
+# ── Wave 2: hardware / network / FS completeness ──────────────────
+# CJK + missing standard font fallbacks.
+noto-fonts-cjk
+ttf-liberation
+ttf-dejavu
+cantarell-fonts
+ttf-iosevka-nerd
+adobe-source-code-pro-fonts
+# AMD GPU users were getting software render — ship full vulkan AMD
+# + VA-API Mesa fallback for non-NVIDIA decode.
+# Pin input driver explicitly (Hyprland normally pulls it but archiso
+# image-build doesn't always include it).
+xf86-input-libinput
+# Removable media automount + GVFS backends (USB sticks, Android,
+# SMB, iOS via gvfs-afc).
+udisks2
+udiskie
+gvfs
+gvfs-mtp
+gvfs-smb
+gvfs-afc
+gvfs-gphoto2
+gvfs-nfs
+# VPN + mobile broadband + NM full GUI editor.
+wireguard-tools
+openvpn
+networkmanager-openvpn
+modemmanager
+mobile-broadband-provider-info
+nm-connection-editor
+# mDNS / .local hostnames / AirPrint / printer auto-discovery.
+avahi
+nss-mdns
+# Print/scan completeness.
+# HP printer drivers (covers ~40% of home printers).
+hplip
+# Scanner backend.
+sane
+# Scanner GUI.
+simple-scan
+
+# ── Wave 3: stability + security + accessibility ──────────────────
+# Out-of-memory protection (the single biggest stability win).
+earlyoom
+# Compressed RAM-backed swap (~2x effective RAM on small machines).
+zram-generator
+# Multi-core IRQ distribution + auto-nice.
+irqbalance
+# Sandboxing primitives (bubblewrap is also flatpak's runtime dep).
+bubblewrap
+firejail
+apparmor
+# Per-USB-device authorization (pairs with nyxus_usb_watch.py).
+usbguard
+# Kernel auditing (security daemon backend).
+audit
+# Encryption / keyring / signed packages.
+gnupg
+seahorse
+libsecret
+openssl
+# Stateful firewall + zone-based config.
+firewalld
+# Accessibility stack (Settings → Accessibility backend).
+orca
+speech-dispatcher
+espeak-ng
+brltty
+at-spi2-core
+# Snapshot backups (Settings → Backup → Snapshots tab backend).
+# NOTE: timeshift, snap-pac, snapper-rollback, ananicy-cpp, yay,
+# distrobox are AUR — handled by customize_airootfs.sh build step.
+snapper
+restic
+# Encrypted off-site backup alternative.
+borg
+# Dev / containers / power-user.
+# Rootless containers.
+# Rust toolchain (modern AUR builds).
+rustup
+# Modern editor.
+# Secondary browser.
+# appimagelauncher is AUR-only — built from source by customize_airootfs.sh.
+# Wayland tools that back existing services + UI conventions.
+# Blue-light filter (backs nyxus-nightlight.service).
+wlsunset
+# Screenshot annotation (chained from grim/slurp).
+swappy
+# Boot-time multi-OS detection (off by default in stock Arch).
+os-prober
+# Misc system polish.
+# ~/.cache/nyxus/*.log rotation.
+logrotate
+# Already listed above; grouping.
+# man page database.
+man-db
+# base man-pages corpus.
+man-pages
+
+# ── NYXUS Drop / KDE Connect (cross-device file + text share) ──────
+# DropPage in nyxus_settings.py auto-detects this and offers an install
+# fallback if missing. Shipping it stock so first-boot is zero-config.
+kdeconnect
+
+# ── NYXUS Audio EQ (EasyEffects + LV2 plug-ins) ────────────────────
+# SoundPage exposes preset switcher; presets ship in /etc/skel/.config
+# /easyeffects/output/. Autostarted as a gapplication-service so the
+# pipeline is hot before the user opens anything.
+easyeffects
+lsp-plugins-lv2
+calf
+# rnnoise model used by EasyEffects "Noise Reduction" preset.
+rnnoise
+
+# ── NYXUS Virt Manager (Tier B · 2026-05-14) ───────────────────────
+# Full QEMU/KVM stack + libvirt + virt-manager UI + UEFI fw + bridged networking
+# helpers + swtpm so Win 11 guests Just Work. nyxus-virt-setup runs
+# on first launch from VirtPage to enable libvirtd + add user to grp.
+virt-viewer
+dnsmasq
+iptables
+
+# ── NYXUS Containers (Tier B) ──────────────────────────────────────
+# podman is already shipped above. Add buildah/skopeo for image build
+# + transfer, distrobox for one-command rootless dev containers.
+
+# ── NYXUS Kernel Switcher (Tier B) ─────────────────────────────────
+# Ship LTS + ZEN + HARDENED alongside stock so users can pick at the
+# GRUB menu. nyxus-kernel-switch sets GRUB_DEFAULT and regenerates
+# grub.cfg via pkexec.
+
+# ── NYXUS Gaming / Proton-GE (Tier B) ──────────────────────────────
+# Steam (multilib) + nyxus-protonup downloads Proton-GE releases into
+# ~/.steam/root/compatibilitytools.d/ — no AUR dependency.
+
+# ── NYXUS Editors bundle (Tier B) ──────────────────────────────────
+# code = open-source VS Code build. helix = modern modal editor.
+# micro = nano replacement. gnome-text-editor = simple GUI default.
+
+# ── NYXUS Tier C (rev 2026-05-14): security & network polish ───────
+# usbguard already shipped above (line 377). Adding strongSwan plug-in,
+# Secure Boot manager (sbctl), TPM2 userspace tools, MAC randomizer,
+# and dnscrypt-proxy for DNS-over-HTTPS.
+#
+# IMPORTANT: usbguard daemon ships with PresentDevicePolicy=allow and
+# an EMPTY rules.conf so it never locks the user out of their own USB
+# keyboard at install time. Per user pref: account-lockout / hardening
+# policies are opt-in post-install only. UsbPage exposes the toggle.
+networkmanager-strongswan
+sbctl
+tpm2-tools
+macchanger
+dnscrypt-proxy
+sound-theme-freedesktop
+qt5-svg
+
+# ── NYXUS greeter stack (rev 2026-07-14) — REQUIRED ────────────────
+# ISO enables greetd; nyxus-greeter runs regreet under cage -> tuigreet
+# fallback. Without these the lean ISO boots to a greeterless greetd.
+greetd-regreet
+greetd-tuigreet
+cage
+
+# ── NYXUS security-lab toolkit (lean subset, rev 2026-07-14) ───────
+# Core lab tooling kept even on lean (this is a security daily driver).
+# ghidra intentionally OMITTED from lean (pulls a full JDK) — radare2 +
+# rizin cover reverse engineering; add ghidra on the full tier.
+bpftrace
+bpf
+bpf-linker
+nmap
+tcpdump
+wireshark-cli
+radare2
+rizin
+binwalk
+yara
+sleuthkit
+volatility3
+gdb
+strace
+ltrace
+trace-cmd
+
+# sched_ext scheduler (scx_lavd) — runtime-swappable, reverts to EEVDF on stop.
+scx-scheds
+
+# ── NYXUS Master Hub (Bifrost) runtime deps (rev 2026-07-15) ───────
+# Same rationale as the full tier — kept on lean too since this is a
+# security daily driver. `ollama` intentionally omitted (see full tier
+# comment); guardian.py degrades gracefully without a local LLM.
+webkit2gtk-4.1
+gtk3
+libayatana-appindicator
+python-pydantic
+python-openai
+python-aiohttp
+sqlite
+nftables
+
+# ── Meli (Honeypot Command Center) + jeTT runtime deps (rev 2026-07-16)
+# Kept on lean too — same rationale as Bifrost above, this is a security
+# daily driver. See packages.x86_64 for the full comment.
+mosquitto
+python-sqlalchemy
+python-click
+python-structlog
+python-paho-mqtt
+python-yaml
+python-argon2-cffi
+python-pyotp
+libnotify
+
+# honeypot/Docker stack (rev 2026-07-16, r2) — kept on lean too, same
+# rationale. See packages.x86_64 for the full comment.
+docker
+docker-compose

@@ -1,0 +1,85 @@
+Golden rules for Hyprland config
+
+    Use the canonical location
+        Main config: ~/.config/hypr/hyprland.conf
+        Extra modules: ~/.config/hypr/conf.d/*.conf (or any folder you prefer)
+
+    Split config by purpose and source it Keep hyprland.conf as a thin “entry point” that only sources other files.
+
+    Keep env vars in one place (and set them early) Put env = ... lines together (or in a dedicated file you source near the top), so toolkit variables (Wayland, cursor, scaling) are applied consistently.
+
+    Put keybinds in one file, exec/autostart in one file This prevents “bind sprawl” and makes it obvious what is responsible for launching what.
+
+    One responsibility per file If something breaks, you can comment out a single source = ... line and isolate the issue quickly.
+
+    Don’t fight app conventions
+        Waybar: ~/.config/waybar/config + ~/.config/waybar/style.css
+        wofi: ~/.config/wofi/config + style.css
+        kitty/alacritty/foot, mako/dunst, etc: each in ~/.config/<app>/
+
+    Prefer exec-once for daemons, exec only when you truly want “re-run” Most autostart items should be exec-once = ....
+
+A “golden” Hyprland layout (recommended)
+Code
+
+~/.config/hypr/
+├─ hyprland.conf
+├─ conf.d/
+│  ├─ 00-env.conf
+│  ├─ 10-input.conf
+│  ├─ 20-general.conf
+│  ├─ 30-decoration.conf
+│  ├─ 40-animations.conf
+│  ├─ 50-rules.conf
+│  ├─ 60-binds.conf
+│  ├─ 70-autostart.conf
+│  └─ 90-monitors.conf
+└─ scripts/
+   ├─ screenshot.sh
+   └─ toggle-touchpad.sh
+
+Example hyprland.conf as an entry point
+~/.config/hypr/hyprland.conf
+
+# Keep this file minimal; load everything else.
+source = ~/.config/hypr/conf.d/00-env.conf
+source = ~/.config/hypr/conf.d/10-input.conf
+source = ~/.config/hypr/conf.d/20-general.conf
+source = ~/.config/hypr/conf.d/30-decoration.conf
+source = ~/.config/hypr/conf.d/40-animations.conf
+
+Notes:
+
+    The numbering enforces an obvious order.
+    Put monitors late so they can reference variables you set earlier.
+
+What belongs in each Hyprland file
+
+    00-env.conf: env = ... and global variables you use elsewhere
+    10-input.conf: keyboard layout, repeat rate, touchpad options
+    20-general.conf: gaps, borders, layout defaults, misc behavior
+    30-decoration.conf: rounding, blur, shadows
+    40-animations.conf: animation curves/speeds
+    50-rules.conf: window rules (windowrulev2)
+    60-binds.conf: all bind, bindm, binde, etc.
+    70-autostart.conf: exec-once services (waybar, notifications, clipboard, polkit agent)
+    90-monitors.conf: monitor definitions and workspace-to-monitor mapping
+
+The “correct” place for related configs (so things flow)
+
+    Waybar: ~/.config/waybar/
+    Notifications: ~/.config/mako/ (or ~/.config/dunst/ if you use dunst under Wayland)
+    Launcher: ~/.config/wofi/ or ~/.config/rofi/ (wayland fork) etc.
+    Terminal: ~/.config/kitty/ / ~/.config/alacritty/ / ~/.config/foot/
+    GTK/Qt theming: typically via your distro tools + env vars (keep env vars in 00-env.conf)
+    Login/session:
+        If you start Hyprland from a display manager: keep session variables consistent (often via /etc/environment, user environment, or the DM)
+        If you start from TTY: keep your exec Hyprland in .bash_profile/.zprofile and avoid duplicating autostart there
+
+Practical “no issues” checks
+
+    Reload config: hyprctl reload
+    Inspect what Hyprland thinks: hyprctl monitors, hyprctl clients, hyprctl getoption <option>
+    If something is flaky, temporarily comment out one source = ... line and reload until it’s isolated.
+
+Two details to tailor this to your setup

@@ -130,7 +130,7 @@ in `build-iso.sh`. As the other tarball apps stabilize
 passwords), add their staging step alongside the Phantom block.
 
 ## Legal
-Copyright © 2026 Joseph Sierengowski
+Copyright © 2026 Joseph A. Sierengowski
 All Rights Reserved
 NYX-J5W-2026-SIERENGOWSKI-LOCKED
 See LICENSE.md.

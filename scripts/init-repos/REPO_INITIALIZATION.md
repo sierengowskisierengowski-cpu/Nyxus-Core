@@ -1,6 +1,6 @@
 # Nyxus Repository Initialization System
 
-© 2026 Joseph Sierengowski
+© 2026 Joseph A. Sierengowski
 
 This folder provides a repeatable bootstrap for all 18 Nyxus repositories split out from Nyxus-Core.
 

@@ -1,0 +1,19 @@
+#%PAM-1.0
+# ============================================================
+#  NYXUS — PAM stack for the greetd login (installed to /etc/pam.d/greetd)
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Password-only. This deliberately does NOT include system-local-login,
+#  which carries `auth sufficient pam_fprintd.so`. With fprintd in the stack
+#  the greetd IPC auth conversation emits a "Place your finger on the reader"
+#  PAM prompt, and regreet renders it as a wide bar across the bottom of the
+#  login screen (the "place your fingerprint" design flaw). Using system-login
+#  (which has no fprintd) gives a clean themed password card with no stray bar.
+#
+#  Fingerprint auth is untouched everywhere else — sudo and TTY `login` keep
+#  their own pam_fprintd entries (see /etc/pam.d/sudo, system-local-login).
+# ============================================================
+auth       include    system-login
+account    include    system-login
+password   include    system-login
+session    include    system-login

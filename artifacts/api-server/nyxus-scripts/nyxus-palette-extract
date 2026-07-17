@@ -22,7 +22,7 @@
 #   · near-grayscale wallpapers (max seed chroma < 0.12) fall back
 #              to the noir-style desaturated palette
 #
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 import colorsys
 import json

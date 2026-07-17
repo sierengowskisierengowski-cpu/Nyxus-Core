@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # NYXUS Start Menu — app enumerator
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 # Emits a single JSON document consumed by the (defpoll STARTAPPS …)
 # in eww.yuck:
