@@ -17,7 +17,7 @@
 # Interval override:  NYXUS_WALL_CYCLE_SECS in ~/.config/eww/nyxus.conf
 # or the environment (default 900 = 15 min).
 # Bound: Super+Alt+Shift+W (nyxus-cometfire.conf).
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:${PATH}"

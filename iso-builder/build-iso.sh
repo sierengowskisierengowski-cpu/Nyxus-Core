@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================
 # NYXUS — nyx-2026.05.11-x86_64.iso
-# Copyright © 2026 Joseph Sierengowski
+# Copyright © 2026 Joseph A. Sierengowski
 # All Rights Reserved
 # Unauthorized use or distribution prohibited
 # NYX-J5W-2026-SIERENGOWSKI-LOCKED
@@ -512,7 +512,7 @@ for entry in "${APPS_LIST[@]}"; do
   fi
   cat > "${LBIN}/${bin_name}" <<LAUNCHER
 #!/usr/bin/env bash
-# NYXUS ${name} launcher — Copyright © 2026 Joseph Sierengowski
+# NYXUS ${name} launcher — Copyright © 2026 Joseph A. Sierengowski
 exec python3 /opt/nyxus/nyxus_${mod}.py "\$@"
 LAUNCHER
   chmod 0755 "${LBIN}/${bin_name}"
@@ -634,7 +634,7 @@ fi
 mkdir -p "${PROFILE_DIR}/airootfs/usr/local/bin"
 cat > "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus-intel" <<'LAUNCHER'
 #!/usr/bin/env bash
-# NYXUS Phantom launcher — Copyright © 2026 Joseph Sierengowski
+# NYXUS Phantom launcher — Copyright © 2026 Joseph A. Sierengowski
 exec python3 -c '
 import sys
 sys.path.insert(0, "/opt/nyxus-intel")
@@ -706,6 +706,610 @@ chmod 0755 "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus" \
            "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus-usbwatch-event" \
            "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus-pacman-toast" 2>/dev/null || true
 ok "wave-4 wiring installed (helpers, polkit, firstboot, dispatcher)"
+
+# ── stage NYXUS Master Hub (Bifrost) ─────────────────────────────────────
+# rev 2026-07-15 — Bifrost is built off-tree (its own repo/pacman package,
+# NOT part of this repo — see docs/NYXUS_BUILD.md "separate security stack").
+# Previously the ISO shipped nothing for it (station 10/EDGE launch line in
+# nyxus-stations.conf was commented out pending "the Bifrost build landing").
+# That build has landed, so we stage the already-built package payload
+# straight into airootfs at bake time — the same "copy prebuilt artifacts
+# into airootfs" pattern used above for every other NYXUS component, rather
+# than compiling Tauri/Rust/pnpm inside the mkarchiso chroot.
+#
+# Source precedence (first match wins), override with env vars:
+#   NYX_BIFROST_BIN  — path to the built `bifrost` binary
+#   NYX_BIFROST_REPO — path to a checkout of the Bifrost source repo
+#                      (used for guardian python source, systemd unit,
+#                      desktop icon, and the default heimdall config)
+step "stage NYXUS Master Hub (Bifrost)"
+BIFROST_BIN="${NYX_BIFROST_BIN:-${HOME}/Projects/bifrost/app/bifrost-desktop/src-tauri/target/release/bifrost}"
+BIFROST_REPO="${NYX_BIFROST_REPO:-${HOME}/Projects/bifrost}"
+if [[ ! -x "${BIFROST_BIN}" && -x /usr/bin/bifrost ]]; then
+  warn "built binary not found at ${BIFROST_BIN} — falling back to the installed /usr/bin/bifrost"
+  BIFROST_BIN="/usr/bin/bifrost"
+fi
+
+if [[ -x "${BIFROST_BIN}" ]]; then
+  BIFROST_SHA="$(sha256sum "${BIFROST_BIN}" | cut -d' ' -f1)"
+  printf "  ${B}bifrost binary:${R} %s\n" "${BIFROST_BIN}"
+  printf "  ${B}sha256:${R}         %s\n" "${BIFROST_SHA}"
+
+  install -Dm0755 "${BIFROST_BIN}" "${PROFILE_DIR}/airootfs/usr/bin/bifrost"
+
+  # bifrost-guardian CLI wrapper — identical to packaging/PKGBUILD's
+  # package() step, generated inline so this doesn't depend on host state.
+  install -Dm0755 /dev/stdin "${PROFILE_DIR}/airootfs/usr/bin/bifrost-guardian" <<'BIFROSTGUARDIAN'
+#!/bin/bash
+export PYTHONPATH=/usr/lib/bifrost${PYTHONPATH:+:$PYTHONPATH}
+export HEIMDALL_CONFIG_PATH="${HEIMDALL_CONFIG_PATH:-/etc/heimdall/heimdall_config.json}"
+if [[ "${BIFROST_GUARDIAN_RUN_MODE:-app}" == "service" ]]; then
+  if ! python3 - "$HEIMDALL_CONFIG_PATH" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+mode = "persistent"
+if path.exists():
+    try:
+        mode = str(json.loads(path.read_text(encoding="utf-8")).get(
+            "guardian_persistence_mode",
+            "persistent",
+        )).strip().lower()
+    except Exception:
+        mode = "persistent"
+sys.exit(0 if mode != "session_only" else 1)
+PY
+  then
+    echo "[bifrost-guardian] session-only mode active; skipping service start." >&2
+    exit 0
+  fi
+fi
+exec python3 -m bifrost.guardian "$@"
+BIFROSTGUARDIAN
+  ok "binary + bifrost-guardian wrapper → /usr/bin/"
+
+  if [[ -d "${BIFROST_REPO}/bifrost" && -d "${BIFROST_REPO}/heimdall" ]]; then
+    BIFROST_LIB="${PROFILE_DIR}/airootfs/usr/lib/bifrost"
+    rm -rf "${BIFROST_LIB}"
+    mkdir -p "${BIFROST_LIB}"
+    cp -a "${BIFROST_REPO}/bifrost" "${BIFROST_LIB}/bifrost"
+    cp -a "${BIFROST_REPO}/heimdall" "${BIFROST_LIB}/heimdall"
+    find "${BIFROST_LIB}" \( -name '*.bak' -o -name '__pycache__' \) -exec rm -rf {} + 2>/dev/null || true
+    ok "guardian python source → /usr/lib/bifrost/{bifrost,heimdall}"
+  else
+    warn "Bifrost source repo not found at ${BIFROST_REPO} — guardian python source NOT staged"
+    warn "bifrost-guardian.service will fail to start until /usr/lib/bifrost/ is populated"
+  fi
+
+  # Desktop entry — must match the live installed entry exactly (same
+  # Exec= env BIFROST_GUARDIAN=... wiring verified against the running
+  # session tonight).
+  install -Dm0644 /dev/stdin "${PROFILE_DIR}/airootfs/usr/share/applications/bifrost.desktop" <<'BIFROSTDESKTOP'
+[Desktop Entry]
+Type=Application
+Name=Bifrost
+GenericName=Security Monitor
+Comment=Heimdall Never Sleeps — AI-powered endpoint detection and response.
+Exec=env BIFROST_GUARDIAN=/usr/lib/bifrost/bifrost/guardian.py /usr/bin/bifrost
+Icon=bifrost
+Terminal=false
+StartupNotify=true
+Categories=Utility;Security;
+Keywords=security;edr;monitoring;heimdall;guardian;
+BIFROSTDESKTOP
+  ok "desktop entry → /usr/share/applications/bifrost.desktop"
+
+  BIFROST_ICON_SRC="${BIFROST_REPO}/app/bifrost-desktop/src-tauri/icons/128x128@2x.png"
+  if [[ -f "${BIFROST_ICON_SRC}" ]]; then
+    install -Dm0644 "${BIFROST_ICON_SRC}" \
+      "${PROFILE_DIR}/airootfs/usr/share/icons/hicolor/256x256/apps/bifrost.png"
+    ok "icon → /usr/share/icons/hicolor/256x256/apps/bifrost.png"
+  elif [[ -f /usr/share/icons/hicolor/256x256/apps/bifrost.png ]]; then
+    install -Dm0644 /usr/share/icons/hicolor/256x256/apps/bifrost.png \
+      "${PROFILE_DIR}/airootfs/usr/share/icons/hicolor/256x256/apps/bifrost.png"
+    ok "icon → /usr/share/icons/hicolor/256x256/apps/bifrost.png (from live install, repo copy missing)"
+  else
+    warn "bifrost icon not found (checked repo + live /usr/share/icons) — Icon=bifrost will 404 to a fallback"
+  fi
+
+  if [[ -f "${BIFROST_REPO}/bifrost-guardian.service" ]]; then
+    install -Dm0644 "${BIFROST_REPO}/bifrost-guardian.service" \
+      "${PROFILE_DIR}/airootfs/usr/lib/systemd/system/bifrost-guardian.service"
+    ok "systemd unit → /usr/lib/systemd/system/bifrost-guardian.service (installed, NOT enabled by default — opt-in per docs/NYXUS_BUILD_BRIEF.md §8.1)"
+  else
+    warn "bifrost-guardian.service not found in ${BIFROST_REPO} — not staged"
+  fi
+
+  # Default (non-secret) Heimdall config — deliberately NOT the live
+  # /etc/heimdall/heimdall_config.json / bifrost.env, which are
+  # machine-specific and may carry live tokens. Ship the same
+  # zero-token template a fresh `pacman -U bifrost*.pkg.tar.zst`
+  # install would use.
+  if [[ -f "${BIFROST_REPO}/packaging/heimdall_config.json.default" ]]; then
+    install -Dm0644 "${BIFROST_REPO}/packaging/heimdall_config.json.default" \
+      "${PROFILE_DIR}/airootfs/etc/heimdall/heimdall_config.json"
+    ok "default heimdall_config.json → /etc/heimdall/ (no secrets, dry_run:true, autonomous_actions_enabled:false)"
+  else
+    warn "packaging/heimdall_config.json.default not found — /etc/heimdall/ left empty"
+  fi
+
+  ok "NYXUS Master Hub (Bifrost) staged — window app-id per tauri.conf.json: watch.bifrost.desktop"
+else
+  warn "no bifrost binary found at ${BIFROST_BIN} or /usr/bin/bifrost — ISO will ship WITHOUT Bifrost"
+  warn "set NYX_BIFROST_BIN=/path/to/bifrost to stage it, or build it first"
+fi
+
+# ── stage Meli — Honeypot Command Center (rev 2026-07-16, r2) ────────────
+# First time Meli ships in this ISO. Same "copy prebuilt/installed
+# artifacts into airootfs" pattern as Bifrost above — the canonical
+# install surface is /opt/meli/app + /opt/meli/venv (see ~/Projects/meli
+# ... NO: Meli's real install.sh/PKGBUILD live at /opt/meli/app, that's
+# the source of truth used below, not the unrelated bifrost-daemon crate
+# that happens to also be named "meli" under ~/Projects/meli).
+#
+# r2 (same night, follow-up instruction) — the user explicitly overrode
+# the r1 judgment call: the honeypot Docker stack + its Meli bridges now
+# ship as REAL, auto-starting components, not opt-in templates, so a
+# fresh install matches this live machine. See the "stage the live
+# honeypot/Docker stack" step further down for that half; this step still
+# only covers the Meli app itself.
+#
+# Still deliberately NOT staged:
+#   - ~/.local/share/meli/meli.db and any honeypot capture/log data —
+#     personal live data, not install media. Ships with fresh-DB-on-
+#     first-run behaviour instead (meli.database.init_db(), same as any
+#     normal software install).
+step "stage Meli — Honeypot Command Center (app, no live data)"
+MELI_REPO="${NYX_MELI_REPO:-/opt/meli/app}"
+if [[ -d "${MELI_REPO}" ]]; then
+  MELI_APP_DEST="${PROFILE_DIR}/airootfs/opt/meli/app"
+  rm -rf "${MELI_APP_DEST}"
+  mkdir -p "${MELI_APP_DEST}"
+  rsync -a \
+    --exclude=".git" --exclude="__pycache__" --exclude="*.pyc" \
+    --exclude=".venv" --exclude="venv" --exclude="dist" --exclude="build" \
+    --exclude="*.egg-info" \
+    "${MELI_REPO}/" "${MELI_APP_DEST}/"
+  ok "app source → /opt/meli/app"
+
+  MELI_VENV_SRC="${NYX_MELI_VENV:-/opt/meli/venv}"
+  if [[ -d "${MELI_VENV_SRC}" ]]; then
+    MELI_VENV_DEST="${PROFILE_DIR}/airootfs/opt/meli/venv"
+    rm -rf "${MELI_VENV_DEST}"
+    mkdir -p "$(dirname "${MELI_VENV_DEST}")"
+    cp -a "${MELI_VENV_SRC}" "${MELI_VENV_DEST}"
+    find "${MELI_VENV_DEST}" -iname "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+    ok "prebuilt venv (meli package pip-installed, --system-site-packages) → /opt/meli/venv"
+  else
+    warn "${MELI_VENV_SRC} not found — Meli app source staged WITHOUT a working venv"
+    warn "run /opt/meli/app/install.sh post-boot to build the venv, or set NYX_MELI_VENV"
+  fi
+
+  install -Dm0755 /dev/stdin "${PROFILE_DIR}/airootfs/usr/local/bin/meli" <<'MELILAUNCHER'
+#!/usr/bin/env bash
+# Meli launcher — mirrors install.sh's Phase 4 launcher exactly: the meli
+# package is pip-installed into the venv, so python finds it natively.
+exec /opt/meli/venv/bin/python -m meli "$@"
+MELILAUNCHER
+  ok "launcher → /usr/local/bin/meli"
+
+  if [[ -f "${MELI_REPO}/meli.desktop" ]]; then
+    install -Dm0644 "${MELI_REPO}/meli.desktop" "${PROFILE_DIR}/airootfs/usr/share/applications/meli.desktop"
+    ok "desktop entry → /usr/share/applications/meli.desktop"
+  fi
+  for size in 16 32 48 64 128 256 512; do
+    ICON_SRC="${MELI_REPO}/assets/icons/meli-${size}.png"
+    if [[ -f "${ICON_SRC}" ]]; then
+      install -Dm0644 "${ICON_SRC}" \
+        "${PROFILE_DIR}/airootfs/usr/share/icons/hicolor/${size}x${size}/apps/meli.png"
+    fi
+  done
+  if [[ -f "${MELI_REPO}/assets/icons/meli.svg" ]]; then
+    install -Dm0644 "${MELI_REPO}/assets/icons/meli.svg" \
+      "${PROFILE_DIR}/airootfs/usr/share/icons/hicolor/scalable/apps/meli.svg"
+  fi
+  ok "icons → /usr/share/icons/hicolor/*/apps/meli.{png,svg}"
+
+  # systemd --user unit TEMPLATES → /usr/lib/systemd/user/, the standard
+  # vendor-template location. r2: now ENABLED by default (globally, via
+  # `systemctl --global enable` in customize_airootfs.sh) — the live
+  # machine has meli.service + meli-ingest.service enabled today, and the
+  # user explicitly asked for "everything like how it was before" on
+  # first boot, superseding the earlier "let the Setup Wizard decide"
+  # call. The EULA/setup wizard still runs on first launch of the GUI
+  # (meli.service just starts the app; it does not silently skip
+  # first-run onboarding), so this does not bypass consent screens.
+  MELI_UNIT_COUNT=0
+  for unit in meli.service meli-ingest.service meli-labyrinth-digest.service meli-labyrinth-digest.timer; do
+    if [[ -f "${MELI_REPO}/${unit}" ]]; then
+      install -Dm0644 "${MELI_REPO}/${unit}" "${PROFILE_DIR}/airootfs/usr/lib/systemd/user/${unit}"
+      MELI_UNIT_COUNT=$((MELI_UNIT_COUNT + 1))
+    fi
+  done
+  ok "${MELI_UNIT_COUNT} systemd --user unit templates → /usr/lib/systemd/user/ (globally enabled in customize_airootfs.sh)"
+
+  ok "Meli app staged — fresh empty-DB install; personal meli.db NOT baked in"
+else
+  warn "Meli app not found at ${MELI_REPO} — ISO will ship WITHOUT Meli"
+  warn "set NYX_MELI_REPO=/path/to/meli/app to stage it"
+fi
+
+# ── stage the live honeypot/Docker stack + Meli bridges (rev 2026-07-16, r2)
+# The user explicitly overrode the earlier "templates only" judgment call:
+# they want cowrie/conpot/dionaea/endlessh/heralding/http-honeypot to be
+# REAL, running components on first boot of the installed system, matching
+# this live machine exactly — not a manual opt-in.
+#
+# Design choice — autostart mechanism (documented per the task's request
+# to justify zero-touch vs. first-boot-triggered):
+#   On THIS live machine, docker.service is `enabled`, the six containers
+#   already exist with `restart: unless-stopped`, and that restart policy
+#   (not any bespoke unit) is 100% of what brings them back after a
+#   reboot — Docker itself resurrects them the moment dockerd starts.
+#   A brand-new install has no containers yet, so there is nothing for
+#   that restart policy to resurrect on first boot. To reach the exact
+#   same steady state with zero manual steps, we:
+#     1. Pre-pull the images ON THE BUILD HOST via `docker save` (they are
+#        already running here, so this is a local export, not a fresh
+#        registry pull) and bake the tarballs into the ISO — this avoids
+#        depending on network access / registry availability on someone
+#        else's first boot, and guarantees the exact image digests this
+#        machine is running right now, not "whatever :latest resolves to
+#        later."
+#     2. Run ONE first-boot fragment (/etc/nyxus-firstboot.d/06-honeypot-
+#        stack.sh, using the project's existing first-boot-once framework)
+#        that `docker load`s those tarballs (fast, offline) and then runs
+#        `docker compose up -d` exactly once to CREATE the containers.
+#     3. From that point on, behavior is identical to this live machine:
+#        docker.service is enabled, containers carry restart:unless-
+#        stopped, so every subsequent boot resurrects them with no unit
+#        of ours involved at all — same mechanism, not a re-implementation.
+#   This is "zero-touch" from the installing user's perspective (no wizard
+#   click, no manual `docker compose up`) while still being safe to run
+#   inside the shared firstboot budget (offline `docker load` instead of a
+#   multi-GB network pull racing a timeout).
+#
+# The Meli bridges (cowrie/conpot/dionaea/endlessh/heralding/http →
+# meli/events/ingest over MQTT) are staged as the exact systemd --user
+# units currently `enabled` on this machine (confirmed via `systemctl
+# --user list-unit-files '*bridge*'`), globally enabled the same way.
+#
+# Belt-and-suspenders safety kept from the r1 pass despite going "real":
+#   - Grafana's live admin password is NOT baked in — a fresh random one
+#     is generated by the firstboot fragment and written (root-only) to
+#     /root/nyxus-grafana-admin-password.txt, mirroring how Bifrost ships
+#     a zero-token config instead of live secrets.
+#   - The DOCKER-USER egress-lockdown firewall (hardening/nyxus-honeypot-
+#     firewall.sh) is staged and ENABLED even though it is not yet
+#     enabled on this particular live machine — it was clearly written
+#     for exactly this purpose (blocks the honeypot subnet from pivoting
+#     to the LAN/host while leaving inbound capture + outbound-to-internet
+#     intact) and costs nothing to turn on for install media going onto
+#     an unknown target network.
+#   - Live capture data (~/Projects/honeypot/logs, data/, noc-data/) is
+#     NOT staged — only app/config/compose/images, so the fresh install
+#     starts with empty capture history, same "fresh DB" principle as Meli.
+step "stage the live honeypot/Docker stack (cowrie/conpot/dionaea/endlessh/heralding/http)"
+HONEYPOT_SRC="${NYX_HONEYPOT_REPO:-${HOME}/Projects/honeypot}"
+HONEYPOT_DEST="${PROFILE_DIR}/airootfs/opt/honeypot"
+if [[ -d "${HONEYPOT_SRC}" && -f "${HONEYPOT_SRC}/docker-compose.yml" ]]; then
+  rm -rf "${HONEYPOT_DEST}"
+  mkdir -p "${HONEYPOT_DEST}"/{logs,data,images}
+
+  install -Dm0644 "${HONEYPOT_SRC}/docker-compose.yml" "${HONEYPOT_DEST}/docker-compose.yml"
+  [[ -f "${HONEYPOT_SRC}/cowrie/etc/userdb.txt" ]] && \
+    install -Dm0644 "${HONEYPOT_SRC}/cowrie/etc/userdb.txt" "${HONEYPOT_DEST}/cowrie/etc/userdb.txt"
+  [[ -f "${HONEYPOT_SRC}/http-honeypot/server.js" ]] && \
+    install -Dm0644 "${HONEYPOT_SRC}/http-honeypot/server.js" "${HONEYPOT_DEST}/http-honeypot/server.js"
+  [[ -f "${HONEYPOT_SRC}/prometheus/prometheus.yml" ]] && \
+    install -Dm0644 "${HONEYPOT_SRC}/prometheus/prometheus.yml" "${HONEYPOT_DEST}/prometheus/prometheus.yml"
+  [[ -f "${HONEYPOT_SRC}/promtail/promtail.yml" ]] && \
+    install -Dm0644 "${HONEYPOT_SRC}/promtail/promtail.yml" "${HONEYPOT_DEST}/promtail/promtail.yml"
+  ok "docker-compose.yml + service configs → /opt/honeypot/"
+
+  # .env — NOT the live one verbatim (it carries a real Grafana admin
+  # password + a stale Replit API URL unrelated to the current bridge
+  # design). Ship a placeholder the firstboot fragment replaces.
+  install -Dm0600 /dev/stdin "${HONEYPOT_DEST}/.env" <<'HONEYPOTENV'
+# Generated at bake time — GF_SECURITY_ADMIN_PASSWORD is replaced with a
+# fresh random value by /etc/nyxus-firstboot.d/06-honeypot-stack.sh on
+# first boot (see /root/nyxus-grafana-admin-password.txt afterward).
+GF_SECURITY_ADMIN_PASSWORD=CHANGE_ME_ON_FIRST_BOOT
+HONEYPOTENV
+  ok "env template → /opt/honeypot/.env (password generated on first boot, not baked in)"
+
+  # Meli bridge scripts — same six files actually running on this
+  # machine, with their hardcoded ~/Projects/honeypot paths rewritten to
+  # the new system-wide /opt/honeypot install path (staged COPY only; the
+  # live source files under ~/Projects/honeypot are untouched).
+  BRIDGE_COUNT=0
+  for bridge in cowrie_to_meli.py conpot_to_meli.py dionaea_to_meli.py \
+                endlessh_to_meli.py heralding_to_meli.py http_honeypot_to_meli.py; do
+    if [[ -f "${HONEYPOT_SRC}/${bridge}" ]]; then
+      install -Dm0755 "${HONEYPOT_SRC}/${bridge}" "${HONEYPOT_DEST}/${bridge}"
+      sed -i \
+        -e 's#Path\.home() / "Projects/honeypot/#Path("/opt/honeypot/#' \
+        -e 's#/home/cosmic/Projects/honeypot/#/opt/honeypot/#g' \
+        "${HONEYPOT_DEST}/${bridge}"
+      BRIDGE_COUNT=$((BRIDGE_COUNT + 1))
+    fi
+  done
+  ok "${BRIDGE_COUNT} honeypot→Meli bridge scripts → /opt/honeypot/ (paths rewritten for /opt/honeypot)"
+
+  # Bridge systemd --user units — the exact ones `enabled` on this
+  # machine right now (systemctl --user list-unit-files '*bridge*'),
+  # ExecStart/log paths rewritten the same way, staged as vendor
+  # templates and globally enabled in customize_airootfs.sh.
+  BRIDGE_UNIT_COUNT=0
+  BRIDGE_UNIT_SRC="${HOME}/.config/systemd/user"
+  for unit in cowrie-bridge.service conpot-bridge.service dionaea-bridge.service \
+              endlessh-bridge.service heralding-bridge.service http-bridge.service; do
+    if [[ -f "${BRIDGE_UNIT_SRC}/${unit}" ]]; then
+      install -Dm0644 "${BRIDGE_UNIT_SRC}/${unit}" "${PROFILE_DIR}/airootfs/usr/lib/systemd/user/${unit}"
+      sed -i \
+        -e 's#/home/cosmic/Projects/honeypot/#/opt/honeypot/#g' \
+        "${PROFILE_DIR}/airootfs/usr/lib/systemd/user/${unit}"
+      BRIDGE_UNIT_COUNT=$((BRIDGE_UNIT_COUNT + 1))
+    fi
+  done
+  if (( BRIDGE_UNIT_COUNT > 0 )); then
+    ok "${BRIDGE_UNIT_COUNT} bridge systemd --user units → /usr/lib/systemd/user/ (globally enabled)"
+  else
+    warn "no live bridge unit files found under ${BRIDGE_UNIT_SRC} — bridges staged without units, add manually"
+  fi
+
+  # Egress-lockdown firewall — staged + enabled even though it is not
+  # currently enabled on THIS live machine (see step comment above).
+  if [[ -f "${HONEYPOT_SRC}/hardening/nyxus-honeypot-firewall.sh" ]]; then
+    install -Dm0755 "${HONEYPOT_SRC}/hardening/nyxus-honeypot-firewall.sh" \
+      "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus-honeypot-firewall"
+    install -Dm0644 "${HONEYPOT_SRC}/hardening/nyxus-honeypot-firewall.service" \
+      "${PROFILE_DIR}/airootfs/usr/lib/systemd/system/nyxus-honeypot-firewall.service"
+    sed -i \
+      -e 's#/home/cosmic/Projects/honeypot/hardening/nyxus-honeypot-firewall\.sh#/usr/local/bin/nyxus-honeypot-firewall#' \
+      "${PROFILE_DIR}/airootfs/usr/lib/systemd/system/nyxus-honeypot-firewall.service"
+    ok "egress-lockdown firewall → /usr/local/bin/nyxus-honeypot-firewall (+ unit, enabled)"
+  fi
+  if [[ -f "${HONEYPOT_SRC}/hardening/nyxus-fim.rules" ]]; then
+    install -Dm0640 "${HONEYPOT_SRC}/hardening/nyxus-fim.rules" \
+      "${PROFILE_DIR}/airootfs/etc/audit/rules.d/nyxus-fim.rules"
+    ok "FIM audit ruleset → /etc/audit/rules.d/nyxus-fim.rules (auditd already enabled by base profile — lights up Bifrost's FIM panel)"
+  fi
+
+  # Pre-pull the images this machine is ACTUALLY running right now, via a
+  # local export (no registry round-trip needed since they're already
+  # here) — guarantees first boot matches this machine's exact digests
+  # and needs no network.
+  HONEYPOT_IMAGES=(
+    "cowrie/cowrie:latest"
+    "grafana/loki:latest"
+    "node:20-alpine"
+    "grafana/grafana:latest"
+    "prom/prometheus:latest"
+    "heywoodlh/heralding:latest"
+    "linuxserver/endlessh:latest"
+    "grafana/promtail:latest"
+    "honeynet/conpot:latest"
+    "dinotools/dionaea:latest"
+  )
+  if command -v docker >/dev/null 2>&1; then
+    IMG_SAVED=0
+    for img in "${HONEYPOT_IMAGES[@]}"; do
+      if docker image inspect "${img}" >/dev/null 2>&1; then
+        TAR_NAME="$(echo "${img}" | tr '/:' '__').tar"
+        printf "  ${B}saving:${R} %s\n" "${img}"
+        docker save "${img}" -o "${HONEYPOT_DEST}/images/${TAR_NAME}"
+        IMG_SAVED=$((IMG_SAVED + 1))
+      else
+        warn "image ${img} not present on build host — will need a network pull on first boot"
+      fi
+    done
+    ok "${IMG_SAVED}/${#HONEYPOT_IMAGES[@]} honeypot images pre-pulled → /opt/honeypot/images/ ($(du -sh "${HONEYPOT_DEST}/images" 2>/dev/null | cut -f1))"
+  else
+    warn "docker not available on build host — images NOT pre-pulled, first boot will need network access"
+  fi
+
+  # First-boot fragment — loads the pre-pulled images and brings the
+  # stack up exactly once, using the project's existing firstboot-once
+  # framework (see /usr/local/sbin/nyxus-firstboot).
+  install -Dm0755 /dev/stdin \
+    "${PROFILE_DIR}/airootfs/etc/nyxus-firstboot.d/06-honeypot-stack.sh" <<'HONEYPOTFIRSTBOOT'
+#!/usr/bin/env bash
+# NYXUS firstboot · bring the honeypot/Docker stack up exactly once.
+# After this, docker.service + each container's restart:unless-stopped
+# policy is 100% of what keeps them running across future reboots —
+# same mechanism as the machine this ISO was built from, no extra unit.
+set -u
+MARKER=/var/lib/nyxus/honeypot-stack.done
+[[ -f "${MARKER}" ]] && exit 0
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo "[firstboot] docker not installed — skipping honeypot stack"
+  exit 0
+fi
+systemctl start docker.service 2>/dev/null
+
+cd /opt/honeypot || exit 0
+
+if grep -q '^GF_SECURITY_ADMIN_PASSWORD=CHANGE_ME_ON_FIRST_BOOT$' .env 2>/dev/null; then
+  GEN_PW="$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 20)"
+  sed -i "s/^GF_SECURITY_ADMIN_PASSWORD=.*/GF_SECURITY_ADMIN_PASSWORD=${GEN_PW}/" .env
+  {
+    echo "Grafana admin password (generated on first boot): ${GEN_PW}"
+    echo "Log in at http://localhost:3000 (user: admin)"
+  } > /root/nyxus-grafana-admin-password.txt
+  chmod 0600 /root/nyxus-grafana-admin-password.txt
+fi
+
+if [[ -d images ]]; then
+  for tar in images/*.tar; do
+    [[ -f "${tar}" ]] && docker load -i "${tar}"
+  done
+fi
+
+if docker compose -f docker-compose.yml --env-file .env up -d; then
+  echo "[firstboot] honeypot stack started"
+else
+  echo "[firstboot] honeypot stack failed to start — check 'docker compose logs' in /opt/honeypot"
+fi
+
+mkdir -p /var/lib/nyxus
+date -Iseconds > "${MARKER}"
+HONEYPOTFIRSTBOOT
+  ok "firstboot fragment → /etc/nyxus-firstboot.d/06-honeypot-stack.sh (docker load + compose up -d, once)"
+
+  # The shared firstboot budget (TimeoutStartSec) needs headroom for a
+  # multi-GB `docker load` + container creation alongside fragments 01-05.
+  NYXFB_UNIT="${PROFILE_DIR}/airootfs/etc/systemd/system/nyxus-firstboot.service"
+  if [[ -f "${NYXFB_UNIT}" ]]; then
+    sed -i -E 's/^TimeoutStartSec=.*/TimeoutStartSec=900s/' "${NYXFB_UNIT}"
+    ok "nyxus-firstboot.service TimeoutStartSec → 900s (room for offline docker load of the honeypot images)"
+  fi
+
+  ok "honeypot/Docker stack staged — fresh install, no live capture history, auto-starts once on first boot then behaves exactly like this machine"
+else
+  warn "honeypot stack not found at ${HONEYPOT_SRC} (or no docker-compose.yml) — ISO will ship WITHOUT the honeypot stack"
+  warn "set NYX_HONEYPOT_REPO=/path/to/honeypot to stage it"
+fi
+
+# ── stage jeTT AI Security Daemon — the real, fixed Jett (rev 2026-07-16)
+# First time Jett ships in this ISO. Canonical packaged layout matches
+# ~/Projects/jeTT/install.sh exactly (binary → /usr/local/bin,
+# engine → /usr/local/lib/jett, unit → EnvironmentFile=-/etc/default/jett)
+# rather than the live dev checkout's ad-hoc ~/Projects/jeTT/target paths.
+#
+# Binary source precedence — a separate in-progress task may still be
+# rebuilding Jett's CUDA/eBPF binary in an isolated build dir without
+# having restarted the live service yet, so grabbing whatever now sits at
+# target/release/jett-daemon on disk is NOT safe (it may be that WIP
+# build, half-linked or untested):
+#   1. NYX_JETT_BIN override, if set
+#   2. the EXACT bytes of the currently-running jett-daemon process, read
+#      straight out of /proc/<pid>/exe — this is what's actually
+#      confirmed active (systemctl is-active) and producing verdicts in
+#      the journal right now, not whatever the on-disk file currently is
+#   3. on-disk target/release/jett-daemon, last resort, explicitly
+#      flagged as unverified in the build log
+step "stage jeTT AI Security Daemon (real, fixed Jett)"
+JETT_REPO="${NYX_JETT_REPO:-${HOME}/Projects/jeTT}"
+JETT_BIN=""
+JETT_SRC_DESC=""
+
+if [[ -n "${NYX_JETT_BIN:-}" && -x "${NYX_JETT_BIN}" ]]; then
+  JETT_BIN="${NYX_JETT_BIN}"
+  JETT_SRC_DESC="explicit NYX_JETT_BIN override"
+elif systemctl is-active --quiet jett-daemon 2>/dev/null; then
+  JETT_PID="$(systemctl show -p MainPID --value jett-daemon 2>/dev/null || echo 0)"
+  if [[ "${JETT_PID}" != "0" && -r "/proc/${JETT_PID}/exe" ]] \
+     && cp "/proc/${JETT_PID}/exe" /tmp/nyx-jett-daemon-live.bin 2>/dev/null; then
+    chmod 0755 /tmp/nyx-jett-daemon-live.bin
+    JETT_BIN=/tmp/nyx-jett-daemon-live.bin
+    JETT_SRC_DESC="live-running jett-daemon, pid ${JETT_PID} — confirmed active via systemctl is-active + verdicts observed in journalctl; read directly from /proc/${JETT_PID}/exe (NOT the on-disk build, which a separate GPU-restore rebuild may have already overwritten without restarting the service)"
+  else
+    warn "jett-daemon.service is active but its /proc/<pid>/exe was not readable (need root) — falling back"
+  fi
+fi
+
+if [[ -z "${JETT_BIN}" && -x "${JETT_REPO}/target/release/jett-daemon" ]]; then
+  JETT_BIN="${JETT_REPO}/target/release/jett-daemon"
+  JETT_SRC_DESC="on-disk build at ${JETT_REPO}/target/release/jett-daemon — UNVERIFIED, jett-daemon.service was not active/readable at bake time so this could be a WIP rebuild"
+  warn "could not confirm a live jett-daemon process — falling back to the on-disk build (unverified)"
+fi
+
+if [[ -n "${JETT_BIN}" ]]; then
+  JETT_SHA="$(sha256sum "${JETT_BIN}" | cut -d' ' -f1)"
+  printf "  ${B}jett-daemon source:${R} %s\n" "${JETT_SRC_DESC}"
+  printf "  ${B}sha256:${R}             %s\n" "${JETT_SHA}"
+
+  install -Dm0755 "${JETT_BIN}" "${PROFILE_DIR}/airootfs/usr/local/bin/jett-daemon"
+  install -d -m 0750 "${PROFILE_DIR}/airootfs/var/log/jett"
+  install -d -m 0750 "${PROFILE_DIR}/airootfs/var/jett/quarantine"
+  install -d -m 0755 "${PROFILE_DIR}/airootfs/opt/jett/models"
+  ok "jett-daemon binary → /usr/local/bin/jett-daemon"
+
+  if [[ -x "${JETT_REPO}/target/release/jeTT" ]]; then
+    install -Dm0755 "${JETT_REPO}/target/release/jeTT" "${PROFILE_DIR}/airootfs/usr/local/lib/jett/jeTT"
+    ok "jeTT inference engine binary → /usr/local/lib/jett/jeTT"
+  else
+    warn "jeTT engine binary not found at ${JETT_REPO}/target/release/jeTT — CLI/eval features unavailable"
+  fi
+
+  if [[ -f "${JETT_REPO}/jett" ]]; then
+    install -Dm0755 "${JETT_REPO}/jett" "${PROFILE_DIR}/airootfs/usr/local/bin/jett"
+    ln -sf jett "${PROFILE_DIR}/airootfs/usr/local/bin/jeTT"
+    # The wrapper resolves scripts/jett-ctl.sh relative to its OWN
+    # on-disk location (readlink -f "$BASH_SOURCE"), which only works if
+    # scripts/ ships alongside it — install.sh's own packaged layout has
+    # this same requirement, so mirror it rather than leave `jett menu`
+    # broken on a non-dev-checkout install.
+    if [[ -f "${JETT_REPO}/scripts/jett-ctl.sh" ]]; then
+      install -Dm0755 "${JETT_REPO}/scripts/jett-ctl.sh" \
+        "${PROFILE_DIR}/airootfs/usr/local/bin/scripts/jett-ctl.sh"
+    fi
+    ok "jett control-panel wrapper → /usr/local/bin/jett (+ jeTT symlink, scripts/jett-ctl.sh)"
+  fi
+
+  if [[ -f "${JETT_REPO}/jett-daemon.service" ]]; then
+    install -Dm0644 "${JETT_REPO}/jett-daemon.service" \
+      "${PROFILE_DIR}/airootfs/usr/lib/systemd/system/jett-daemon.service"
+    ok "systemd unit → /usr/lib/systemd/system/jett-daemon.service (enabled by customize_airootfs.sh — safe default is learn+dry-run, see override.conf below)"
+  else
+    warn "jett-daemon.service not found in ${JETT_REPO} — not staged, enable step in customize_airootfs.sh will no-op"
+  fi
+
+  # Vendor override.conf — the ONLY place effective mode gets decided.
+  # Hard-pinned to learn + dry-run. Everything established tonight said
+  # false positives need human review before any enforce default ships —
+  # do not change this to enforce without that review happening first.
+  install -Dm0644 /dev/stdin \
+    "${PROFILE_DIR}/airootfs/usr/lib/systemd/system/jett-daemon.service.d/override.conf" <<'JETTOVERRIDE'
+[Service]
+Environment="JETT_MODE=learn"
+Environment="JETT_ENFORCE_DRY_RUN=1"
+Environment="JETT_TELEMETRY=both"
+JETTOVERRIDE
+  ok "override.conf → learn mode + dry-run pinned as the shipped default"
+
+  # /etc/default/jett — the EnvironmentFile the unit reads. Pinned to
+  # learn mode here too so both layers agree (belt-and-suspenders: the
+  # live host's /etc/default/jett said enforce tonight while a drop-in
+  # silently forced it back to learn — ship it consistent instead of
+  # relying on override.conf alone to save us from that kind of drift).
+  install -Dm0644 /dev/stdin "${PROFILE_DIR}/airootfs/etc/default/jett" <<'JETTDEFAULT'
+JETT_MODEL=/opt/jett/models/jett-r6-q4_k_m.gguf
+JETT_MODE=learn
+JETT_ENFORCE_DRY_RUN=1
+JETT_TELEMETRY=both
+JETT_ALLOWLIST=/etc/jett/allowlist.conf
+JETT_MODEL_PIN=/etc/jett/model.sha256
+JETTDEFAULT
+  ok "default env → /etc/default/jett (JETT_MODE=learn, dry-run — model NOT bundled, per INSTALL.md drop your GGUF at /opt/jett/models/)"
+
+  # Allowlist + model-pin framework — the mechanism, not necessarily this
+  # exact machine's live tuning. Prefer the live host's current (fixed)
+  # allowlist since it's confirmed working tonight; fall back to the
+  # repo's documented example template.
+  if [[ -f /etc/jett/allowlist.conf ]]; then
+    install -Dm0644 /etc/jett/allowlist.conf "${PROFILE_DIR}/airootfs/etc/jett/allowlist.conf"
+    ok "allowlist (live, confirmed-working copy) → /etc/jett/allowlist.conf"
+  elif [[ -f "${JETT_REPO}/config/allowlist.example.conf" ]]; then
+    install -Dm0644 "${JETT_REPO}/config/allowlist.example.conf" "${PROFILE_DIR}/airootfs/etc/jett/allowlist.conf"
+    ok "allowlist (documented example template) → /etc/jett/allowlist.conf"
+  else
+    warn "no allowlist source found — /etc/jett/allowlist.conf not staged (daemon falls back to \$HOME + system-path defaults per its own docs)"
+  fi
+  if [[ -f /etc/jett/model.sha256 ]]; then
+    install -Dm0644 /etc/jett/model.sha256 "${PROFILE_DIR}/airootfs/etc/jett/model.sha256"
+    ok "model.sha256 pin → /etc/jett/model.sha256"
+  fi
+
+  ok "jeTT AI Security Daemon staged — default mode: LEARN + dry-run; model GGUF NOT bundled (drop it in /opt/jett/models/ post-install, same as upstream)"
+else
+  warn "no jett-daemon binary available (live service inactive/unreadable AND no on-disk build) — ISO will ship WITHOUT Jett"
+  warn "set NYX_JETT_BIN=/path/to/jett-daemon to stage it, or ensure jett-daemon.service is running+readable at bake time"
+fi
 
 # ── mirror OS-level docs into /etc/nyxus/ ────────────────────────────────
 step "mirror OS-level docs into airootfs/etc/nyxus/"

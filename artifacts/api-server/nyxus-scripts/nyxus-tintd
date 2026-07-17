@@ -24,7 +24,7 @@
 # on, just leave tintd running — the next focus change re-tints; the
 # only stale bit is the exit-restore snapshot (toggle tint off/on to
 # refresh it).
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:${PATH}"

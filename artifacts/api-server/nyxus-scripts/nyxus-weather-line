@@ -7,7 +7,7 @@
 # the network), then refreshes the cache in the background when it's
 # older than 30 minutes. First run / no network → empty output, and
 # the label just doesn't render.
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 CACHE="${HOME}/.cache/nyxus/weather.txt"

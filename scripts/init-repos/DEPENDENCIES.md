@@ -1,6 +1,6 @@
 # Nyxus Multi-Repository Dependencies
 
-© 2026 Joseph Sierengowski
+© 2026 Joseph A. Sierengowski
 
 ## Core Dependency Rules
 

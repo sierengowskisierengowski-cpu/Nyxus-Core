@@ -23,7 +23,7 @@
 # The daemon NEVER crashes the session: with no STT backend/model it logs
 # a clear message and idles. See `nyxus-voice status`.
 #
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"

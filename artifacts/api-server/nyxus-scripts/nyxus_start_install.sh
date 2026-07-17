@@ -8,7 +8,7 @@
 # Usage (on the target Arch box):
 #     curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_start_install.sh | sudo bash
 #
-# © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ──────────────────────────────────────────────────────────────────────
 set -euo pipefail
 

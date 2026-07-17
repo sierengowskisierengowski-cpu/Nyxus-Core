@@ -13,7 +13,7 @@
 # The music layers stay on their own switches (they're moods, not
 # plumbing): nyxus-beat (Super+Alt+B) · wall-fx (Super+Shift+P).
 # Bound: Super+Alt+L ("living").
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:${PATH}"

@@ -17,6 +17,9 @@ if $stale; then
   count=0
   if command -v checkupdates >/dev/null 2>&1; then
     count=$(checkupdates 2>/dev/null | wc -l)
+  else
+    # pacman-contrib not installed — fall back to the local sync DB
+    count=$(pacman -Qu 2>/dev/null | grep -vc '\[ignored\]')
   fi
   if [[ $count -eq 0 ]]; then
     icon="✓"; label="OK"; tooltip="System · up to date"

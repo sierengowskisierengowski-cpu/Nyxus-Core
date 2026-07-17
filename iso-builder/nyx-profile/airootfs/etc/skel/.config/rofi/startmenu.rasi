@@ -4,11 +4,11 @@
     bg-card:   #0a0d14;
     text-hi:   #eef2fa;
     text-lo:   rgba(238, 242, 250, 0.55);
-    hairline:  rgba(121, 73, 242, 0.35);
-    accent:    #7949f2;
-    accent2:   #ff2667;
+    hairline:  rgba(121, 77, 255, 0.35);
+    accent:    #794dff;
+    accent2:   #ff266c;
     glass-bg:  rgba(5, 6, 10, 0.88);
-    glass-line: rgba(255, 38, 103, 0.35);
+    glass-line: rgba(255, 38, 108, 0.35);
 
     background-color: transparent;
     text-color: @text-hi;
@@ -17,7 +17,6 @@
 window {
     width: 720px;
     background-color: @glass-bg;
-    background-image: url("~/.config/nyxus/backdrops/starfall-backdrop-card.png", both);
     border: 2px;
     border-color: @glass-line;
     border-radius: 16px;

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # NYXUS — Desktop Restore (last-known-good)
-# © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 # Rebuilds the live Hyprland/EWW desktop from the canonical repo source
 # (artifacts/api-server/nyxus-scripts/). Run this when a build or agent

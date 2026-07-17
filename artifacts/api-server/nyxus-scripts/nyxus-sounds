@@ -3,7 +3,7 @@
 # nyxus-sounds <on|off|toggle|status|demo>   ·   rev 2026-07-07 r1
 # Master switch for NYXUS UI sounds (flag file read by nyxus-sfx —
 # the soundd daemon keeps running either way, it just goes quiet).
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:${PATH}"

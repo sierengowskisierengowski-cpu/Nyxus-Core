@@ -1,6 +1,6 @@
 # ============================================================
 #  NYXUS — greetd configuration
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #  rev 2026-07-14 — Wayland greeter chain (replaces SDDM; SDDM's X11 greeter
 #  crashed/failed VT handoff on this hybrid Intel+NVIDIA GPU).
 #

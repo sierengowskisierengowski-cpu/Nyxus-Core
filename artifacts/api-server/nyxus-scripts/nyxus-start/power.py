@@ -10,7 +10,7 @@ Tries multiple backends in order so it works on barebones systems too:
 
 All actions are detached so the Start panel can close cleanly.
 
-© 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 import os

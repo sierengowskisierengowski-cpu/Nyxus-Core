@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 #  NYXUS — Wlogout Theme Installer
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================
 
 set -euo pipefail

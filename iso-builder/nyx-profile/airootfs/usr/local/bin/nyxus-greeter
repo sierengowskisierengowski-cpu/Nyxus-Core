@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 #  NYXUS — greetd greeter chain (never-lock-out fallback)
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 #  greetd runs this as the 'greeter' user. It walks a fallback chain so the
 #  machine can NEVER be left at a frozen/blank screen the way SDDM's X11

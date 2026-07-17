@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 # ============================================================
-#  NYXUS — build + install kage-ryu as a SELECTABLE kernel
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  NYXUS — build + install "Kage Ryu Nyxus" as a SELECTABLE kernel
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
-#  Builds the operator's kage-ryu security kernel and installs it ALONGSIDE
-#  the stock kernel. Stock `linux` remains the DEFAULT boot entry — kage-ryu
-#  is picked from the bootloader menu. A bad custom-kernel build can never
-#  strand you.
+#  Display name: "Kage Ryu Nyxus". Technical package/build id stays
+#  `linux-kage-ryu` (pkgbase) so the bootloader/pacman/module paths keep
+#  working — only the human-facing name changes, not the underlying slug.
+#
+#  Builds the operator's Kage Ryu Nyxus security kernel and installs it
+#  ALONGSIDE the stock kernel. Stock `linux` remains the DEFAULT boot entry —
+#  Kage Ryu Nyxus is picked from the bootloader menu. A bad custom-kernel
+#  build can never strand you.
 #
 #  DO NOT run this until the Nyxus greetd login is verified stable (we hold
 #  custom-kernel work off an unverified login change on purpose).
@@ -24,7 +28,7 @@ REAL_USER="${SUDO_USER:-${USER}}"
 
 if [[ $EUID -ne 0 ]]; then echo "run: sudo $0"; exit 1; fi
 
-echo "▌ kage-ryu selectable-kernel install (stock stays default)"
+echo "▌ Kage Ryu Nyxus selectable-kernel install (stock stays default)"
 
 # makepkg must NOT run as root — build as the real user, install as root.
 if [[ ! -d "$KAGE_REPO" ]]; then
@@ -57,11 +61,12 @@ install -Dm644 "$(dirname "$0")/nyxus-bbr.conf" /etc/sysctl.d/99-nyxus-bbr.conf
 
 cat <<EOF
 
-── kage-ryu installed as a SELECTABLE kernel ────────────────────────
-Default boot is still stock 'linux'. To boot kage-ryu: pick it from the
-bootloader menu (GRUB: 'Advanced options'; systemd-boot: the linux-kage-ryu
-entry). Verify after boot:
-    uname -r            # should show -kage-ryu
+── Kage Ryu Nyxus installed as a SELECTABLE kernel ──────────────────
+Default boot is still stock 'linux'. To boot Kage Ryu Nyxus: pick it from
+the bootloader menu (GRUB: 'Advanced options'; systemd-boot: the entry
+built from the linux-kage-ryu package — title shows the NYXUS os-release
+name + kernel version). Verify after boot:
+    uname -r            # will show -kage-ryu (build/package id, unchanged)
     zcat /proc/config.gz | grep -E 'MALDERLAKE|PREEMPT=|BPF_LSM'
     bpftool btf list | head   # BTF present for jeTT CO-RE sensor
 If it misbehaves, just reboot and pick stock — nothing is lost.

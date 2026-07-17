@@ -31,7 +31,7 @@
 #     GPG-sign the manifest with an offline key, embed the public key in
 #     the bootstrap.
 #
-# © 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ──────────────────────────────────────────────────────────────────────
 
 NYXUS_BASE="${NYXUS_BASE:-https://nyxus-core.replit.app/api/download/nyxus}"

@@ -17,7 +17,7 @@
 #   off.wav        2-note descending chime      (something disabled)
 #   boot.wav       1.4s pad swell               (splash curtain)
 #
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 import math, os, random, struct, wave
 

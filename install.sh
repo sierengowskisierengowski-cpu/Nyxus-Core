@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 #  NYXUS — terminal installer                        rev 2026-07-15 (RC)
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 #  Deploys the NYXUS Hyprland desktop from this repo's canonical tree onto
 #  the LIVE user surfaces — the exact same fixed state that was verified on
@@ -44,7 +44,7 @@ banner() {
 "${V1}    ╚═╝  ╚═══╝${V2}   ╚═╝   ${V3}╚═╝  ╚═╝${V4} ╚═════╝ ${V5}╚══════╝${R}" \
 "" \
 "${DIM}    ◤ OBSIDIAN PRISM · IRIDESCENT VOID ◥${R}" \
-"${DIM}    silent dark Hyprland desktop · © 2026 JOSEPH SIERENGOWSKI${R}" \
+"${DIM}    silent dark Hyprland desktop · © 2026 JOSEPH A. SIERENGOWSKI${R}" \
 ""
 }
 

@@ -5,7 +5,7 @@
    powermenu overlay, rofi power.rasi, and the Hyprland prism border loop.
    NOTE: wlogout's GTK CSS parser does NOT follow @import — all colors
    are inlined below. Keep in lockstep with the prism accent set.
-   © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+   © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
    ════════════════════════════════════════════════════════════════════════════ */
 
 * {

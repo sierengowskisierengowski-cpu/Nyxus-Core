@@ -5,7 +5,7 @@
 # asynchronously, honoring the global mute flag. Everything that
 # makes noise in NYXUS goes through here, so one file silences all.
 #   mute flag: ~/.config/nyxus/sounds.muted  (exists = silent)
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 [[ -e "${HOME}/.config/nyxus/sounds.muted" ]] && exit 0

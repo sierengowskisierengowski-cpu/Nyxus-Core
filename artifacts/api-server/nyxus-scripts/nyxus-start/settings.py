@@ -6,7 +6,7 @@ Two JSON files in ~/.config/nyxus-start/:
     pins.json     — list of pinned .desktop ids (and arbitrary-command pins)
     recent.json   — last 10 launched apps (rotating)
 
-© 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 import json

@@ -1,8 +1,19 @@
 #!/usr/bin/env bash
 # Renders the cheat-sheet body as eww-loadable widget literal.
-# Argument 1: optional search query.
+#   hotkey-cheatsheet.sh              → render using saved query
+#   hotkey-cheatsheet.sh set <query>  → save query + push HK_CONTENT live
 set -euo pipefail
-q="${1:-}"
+qfile="${XDG_RUNTIME_DIR:-/tmp}/nyxus-hk-query"
+
+if [[ "${1:-}" == "set" ]]; then
+  printf '%s' "${2:-}" > "$qfile"
+  eww update HK_CONTENT="$("$0")" 2>/dev/null || true
+  exit 0
+fi
+
+q="${1:-$(cat "$qfile" 2>/dev/null || true)}"
+# literal needs exactly ONE root widget — wrap all lines in a vbox
+printf '(box :orientation "v" :space-evenly false :spacing 2 :halign "start"\n'
 nyxus-hotkey list 2>/dev/null | awk -v q="$q" '
 function trim(s){ gsub(/^[[:space:]]+|[[:space:]]+$/,"",s); return s }
 BEGIN{ cur="" }
@@ -18,3 +29,4 @@ NF>0 {
   gsub(/"/,"\\\"",line)
   printf "(label :class \"hk-line\" :xalign 0 :text \"  %s\")\n", line
 }'
+printf ')\n'

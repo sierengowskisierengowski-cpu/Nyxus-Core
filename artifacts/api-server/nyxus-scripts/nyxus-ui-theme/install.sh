@@ -4,7 +4,7 @@
 #  Installs: Mako · Alacritty · GTK3/4 Theme
 #
 #  Silent. Dark. Purely Functional.
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================
 
 set -euo pipefail
@@ -71,5 +71,5 @@ echo "  Font note: ensure JetBrains Mono Nerd Font is installed:"
 echo "    sudo pacman -S ttf-jetbrains-mono-nerd   # Arch"
 echo "    # or download from nerdfonts.com"
 echo ""
-echo "  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
+echo "  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
 echo ""

@@ -11,7 +11,7 @@
 #  everyday Security Center is NYXUS Shield (/opt/nyxus-shield). This thin
 #  wrapper wires the binds to it and implements the panic sequence.
 #
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================
 
 _notify() { command -v notify-send >/dev/null 2>&1 && notify-send "$@" || true; }

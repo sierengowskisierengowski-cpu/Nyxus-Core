@@ -19,7 +19,7 @@
 //  entry) are listed as selectable session pills, sourced from SDDM's
 //  sessionModel.
 //
-//  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+//  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 // ============================================================
 import QtQuick 2.15
 import QtQuick.Window 2.15
@@ -256,7 +256,7 @@ Rectangle {
     Text {  // copyright chrome
         anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottomMargin: 18
-        text: "© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
+        text: "© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
         color: cTextFaint; font.pixelSize: 9; font.family: "JetBrainsMono Nerd Font"
     }
 

@@ -7,7 +7,7 @@
 # ~/.config/hypr/conf.d/nyxus-freeform.conf and hot-reloads Hyprland.
 # Existing windows keep their current state; the mode applies to
 # windows opened from now on.
-# © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 
@@ -30,7 +30,7 @@ HEADER='# ============================================================
 #  catch-alls (they are sourced BEFORE this shard, and more-specific
 #  size/move rules win at map time).
 #
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================'
 
 is_on() { grep -q '^windowrule = float on' "${SHARD}" 2>/dev/null; }

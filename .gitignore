@@ -63,3 +63,4 @@ artifacts/_tmp/
 nyxus-*-backup-*/
 iso-builder/out/
 iso-builder/work/
+iso-builder/nyx-profile/airootfs/usr/local/bin/jett-daemon

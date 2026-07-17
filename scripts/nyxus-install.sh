@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # NYXUS — bootstrap installer  ·  "clone → run → working system"  (Phase 8.1)
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 # Installs the NYXUS Hyprland desktop onto an EXISTING Arch Linux system
 # (dotfiles/rice style). This is the terminal install path — distinct from the

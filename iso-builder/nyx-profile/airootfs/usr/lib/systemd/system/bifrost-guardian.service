@@ -1,0 +1,21 @@
+[Unit]
+Description=Bifrost Heimdall Guardian (background monitoring pipeline)
+Documentation=https://github.com/sierengowskisierengowski-cpu/Bifrost
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=BIFROST_GUARDIAN_RUN_MODE=service
+ExecStart=/usr/bin/bifrost-guardian --dashboard --dashboard-host 127.0.0.1 --dashboard-port 8766
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/heimdall /var/log/heimdall /var/log/bifrost /etc/heimdall
+EnvironmentFile=-/etc/heimdall/bifrost.env
+
+[Install]
+WantedBy=multi-user.target

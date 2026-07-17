@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -u
+
+LOG_DIR="${HOME}/.cache/nyxus"
+LOG_FILE="${LOG_DIR}/mission-control.log"
+mkdir -p "${LOG_DIR}"
+
+# `hyprexpo:expo` is the official Hyprland plugin dispatcher that
+# implements Mission Control-style workspace overview toggling.
+if ! command -v hyprctl >/dev/null 2>&1; then
+  printf '[%s] toggle mission control skipped: hyprctl not found\n' \
+    "$(date '+%F %T')" >>"${LOG_FILE}"
+  exit 0
+fi
+
+hyprctl dispatch hyprexpo:expo toggle >>"${LOG_FILE}" 2>&1
+status=$?
+if [ "${status}" -ne 0 ]; then
+  printf '[%s] toggle mission control failed: hyprctl dispatch hyprexpo:expo toggle (exit=%s)\n' \
+    "$(date '+%F %T')" "${status}" >>"${LOG_FILE}"
+  exit "${status}"
+fi

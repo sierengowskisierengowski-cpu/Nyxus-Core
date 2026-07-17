@@ -12,7 +12,7 @@
 #
 #  Re-run any time:   python3 gen_nyxus_boot_art.py [path/to/nebula-source.png]
 #
-#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ─────────────────────────────────────────────────────────────────────────────
 import os
 import sys

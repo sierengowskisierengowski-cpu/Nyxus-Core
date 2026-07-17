@@ -21,7 +21,7 @@
 # Always safe to call: if mpvpaper or the loop is missing it renders the
 # loop once (ffmpeg) and, failing that, falls back to the still image —
 # it never leaves the desktop black.
-# © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 

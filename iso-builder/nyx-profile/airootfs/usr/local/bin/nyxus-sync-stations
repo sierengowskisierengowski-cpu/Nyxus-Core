@@ -3,16 +3,14 @@
 set -euo pipefail
 CONF="${HOME}/.config/nyxus/stations.json"
 OUT="${HOME}/.config/nyxus/workspaces.json"
-WALL_DIR="$(jq -r '.wall_dir // "~/.config/hypr/walls"' "$CONF")"
-WALL_DIR="${WALL_DIR/#\~/$HOME}"
-jq -n --slurpfile s "$CONF" --arg wall_dir "$WALL_DIR" '
+jq -n --slurpfile s "$CONF" '
   {
     "_comment": "Auto-generated from stations.json by nyxus-sync-stations. Do not hand-edit.",
     "workspaces": [
       $s[0].stations[] | {
         id: .id,
         name: .name,
-        wallpaper: ($wall_dir + "/" + .wallpaper)
+        wallpaper: ($s[0].wall_dir + "/" + .wallpaper)
       }
     ]
   }

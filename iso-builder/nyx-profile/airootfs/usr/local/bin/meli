@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Meli launcher — mirrors install.sh's Phase 4 launcher exactly: the meli
+# package is pip-installed into the venv, so python finds it natively.
+exec /opt/meli/venv/bin/python -m meli "$@"

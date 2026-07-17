@@ -34,8 +34,16 @@ case "$target" in
       pkill -x gammastep
     elif pgrep -x wlsunset >/dev/null; then
       pkill -x wlsunset
-    else
-      command -v gammastep >/dev/null && nohup gammastep -O 4500 >/dev/null 2>&1 & disown
+    elif command -v gammastep >/dev/null; then
+      nohup gammastep -O 4500 >/dev/null 2>&1 & disown
+    elif command -v nyxus-shader >/dev/null; then
+      # no gamma tool installed — use the Hyprland screen-shader warm
+      # filter (nyxus-shader night) as the native NYXUS night light
+      if [[ "$(nyxus-shader status 2>/dev/null)" == "night" ]]; then
+        nyxus-shader off >/dev/null 2>&1
+      else
+        nyxus-shader night >/dev/null 2>&1
+      fi
     fi
     ;;
   profile)

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# NYXUS · USB Watch privileged helper · rev 2026-05-13 r1
+# Installed at /usr/local/libexec/nyxus-usbwatch-helper.
+# Invoked via pkexec from nyxus_usb_watch.py for the ops that need root:
+# usbguard policy add/remove, /sys/.../authorized writes, audit log read.
+set -u
+LOG=/var/log/nyxus/usbwatch.log
+mkdir -p "$(dirname "$LOG")"
+log()  { printf '%s %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; }
+fail() { echo "nyxus-usbwatch-helper: $*" >&2; log "FAIL: $*"; exit 2; }
+
+[[ $# -ge 1 ]] || { echo "usage: $0 <list|allow|block|reset> [bus:dev|id]" >&2; exit 2; }
+ACTION="$1"; shift
+
+case "$ACTION" in
+  list)
+    if command -v usbguard >/dev/null; then
+      log "list"; exec usbguard list-devices
+    else
+      log "list (lsusb fallback)"; exec lsusb
+    fi
+    ;;
+  allow)
+    [[ $# -eq 1 ]] || fail "usage: allow <id>"
+    [[ "$1" =~ ^[0-9]+$ ]]   || fail "invalid id"
+    command -v usbguard >/dev/null || fail "usbguard not installed"
+    log "allow $1"; exec usbguard allow-device "$1"
+    ;;
+  block)
+    [[ $# -eq 1 ]] || fail "usage: block <id>"
+    [[ "$1" =~ ^[0-9]+$ ]]   || fail "invalid id"
+    command -v usbguard >/dev/null || fail "usbguard not installed"
+    log "block $1"; exec usbguard block-device "$1"
+    ;;
+  reset)
+    command -v usbguard >/dev/null || fail "usbguard not installed"
+    log "reset (re-evaluate all)"; exec systemctl restart usbguard.service
+    ;;
+  audit)
+    log "audit-tail"; exec tail -n 200 /var/log/nyxus/usbwatch.log
+    ;;
+  *) fail "unknown action: $ACTION" ;;
+esac

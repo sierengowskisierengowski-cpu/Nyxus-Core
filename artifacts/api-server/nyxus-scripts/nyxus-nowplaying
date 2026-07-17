@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # NYXUS — now-playing engine (Phase 7.5 music-mode backend)
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 # Source-agnostic MPRIS now-playing feed for the center widget. Emits ONE line
 # of JSON that the EWW center widget consumes (defpoll or, with --follow,

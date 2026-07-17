@@ -1,6 +1,6 @@
 # ============================================
 # NYXUS — nyx-2026.05.11-x86_64.iso
-# Copyright © 2026 Joseph Sierengowski
+# Copyright © 2026 Joseph A. Sierengowski
 # All Rights Reserved
 # NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================
@@ -69,7 +69,6 @@ rust
 wayland-protocols
 hyprcursor
 greetd
-tuigreet
 plymouth
 qt5-quickcontrols2
 qt5-graphicaleffects
@@ -99,9 +98,8 @@ playerctl
 pamixer
 pavucontrol
 swaybg
-# `swww` is the Wayland animated wallpaper daemon (official Arch extra).
-# (Previously listed as `awww` which is a different, unrelated project.)
-swww
+# rev 2026-07-16: swapped back to `awww` — see packages.x86_64 for why.
+awww
 wdisplays
 # wlogout removed 2026-05-11 — built from upstream source by
 # customize_airootfs.sh (was failing pacstrap on mirrors that don't yet
@@ -504,3 +502,34 @@ trace-cmd
 
 # sched_ext scheduler (scx_lavd) — runtime-swappable, reverts to EEVDF on stop.
 scx-scheds
+
+# ── NYXUS Master Hub (Bifrost) runtime deps (rev 2026-07-15) ───────
+# Same rationale as the full tier — kept on lean too since this is a
+# security daily driver. `ollama` intentionally omitted (see full tier
+# comment); guardian.py degrades gracefully without a local LLM.
+webkit2gtk-4.1
+gtk3
+libayatana-appindicator
+python-pydantic
+python-openai
+python-aiohttp
+sqlite
+nftables
+
+# ── Meli (Honeypot Command Center) + jeTT runtime deps (rev 2026-07-16)
+# Kept on lean too — same rationale as Bifrost above, this is a security
+# daily driver. See packages.x86_64 for the full comment.
+mosquitto
+python-sqlalchemy
+python-click
+python-structlog
+python-paho-mqtt
+python-yaml
+python-argon2-cffi
+python-pyotp
+libnotify
+
+# honeypot/Docker stack (rev 2026-07-16, r2) — kept on lean too, same
+# rationale. See packages.x86_64 for the full comment.
+docker
+docker-compose

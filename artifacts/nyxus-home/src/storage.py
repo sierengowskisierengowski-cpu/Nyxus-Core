@@ -1,6 +1,6 @@
 # ============================================
 # NYXUS Home — storage layer
-# © 2026 Joseph Sierengowski
+# © 2026 Joseph A. Sierengowski
 # NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================
 """

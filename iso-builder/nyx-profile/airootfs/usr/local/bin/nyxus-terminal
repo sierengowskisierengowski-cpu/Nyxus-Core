@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# NYXUS Terminal launcher — Copyright © 2026 Joseph A. Sierengowski
+exec python3 /opt/nyxus/nyxus_terminal.py "$@"

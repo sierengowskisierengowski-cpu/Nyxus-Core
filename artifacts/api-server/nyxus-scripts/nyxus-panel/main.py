@@ -33,7 +33,7 @@ Layout
   │   See more news    🖳 ⚙ 🛡 ✦ 🤖 🗀            │   ← footer
   └──────────────────────────────────────────────┘
 
-© 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 
@@ -835,7 +835,7 @@ class PanelWindow(Gtk.ApplicationWindow):
         about.set_program_name("NYXUS Panel")
         about.set_version("1.0")
         about.set_comments("News, weather, and system stats — Windows-style flyout, NYXUS-themed.")
-        about.set_copyright("© 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED")
+        about.set_copyright("© 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED")
         about.set_license_type(Gtk.License.MIT_X11)
         about.present()
 

@@ -331,7 +331,7 @@ export function SettingsWindow({ open, onClose }: { open: boolean; onClose: () =
             <ReadOnlyRow label="NYXUS" value="rev r16 · DARK MIRROR (LOCKED)" />
             <ReadOnlyRow label="Apps" value="26 installed (3 live + 11 tarball + 12 system)" />
             <ReadOnlyRow label="Settings keys" value={`${Object.keys(s).length} wired in`} />
-            <ReadOnlyRow label="Creator" value="Joseph Sierengowski" />
+            <ReadOnlyRow label="Creator" value="Joseph A. Sierengowski" />
             <ReadOnlyRow label="Source" value="github.com/sierengowskisierengowski-cpu/Nyxus-Core" />
             <ReadOnlyRow label="Distribution" value="nyxus-core.replit.app" />
           </Stack>

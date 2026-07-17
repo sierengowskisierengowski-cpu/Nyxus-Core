@@ -12,7 +12,7 @@ NYX-J5W-2026-SIERENGOWSKI-LOCKED
 - Full naming canonicalized: NYX (ISO) and NYXUS (OS + apps) — all legacy names removed
 - Hyprland config updated: `windowrulev2` syntax fixed, `GTK_THEME=NYXUS` set, polkit-gnome replaced with `lxpolkit` for bare-Hyprland compatibility
 - GTK theme canonicalized to NYXUS, install path updated to `~/.themes/NYXUS`
-- All configs stamped: `© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED`
+- All configs stamped: `© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED`
 
 ### Applications
 - `nyxus_sysmon_gtk.py` — 8-section live dashboard: CPU, Memory, Network, Disk, Processes, Sensors, Sys
@@ -53,4 +53,4 @@ NYX-J5W-2026-SIERENGOWSKI-LOCKED
 
 ---
 
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

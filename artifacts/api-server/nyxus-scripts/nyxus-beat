@@ -3,7 +3,7 @@
 # nyxus-beat <on|off|toggle|status>   ·   rev 2026-07-07 r1 (Signature)
 # Front door for the audio-reactive border daemon (nyxus-beatd).
 # Bound: Super+Alt+B ("beat"). Quicksettings-friendly.
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:${PATH}"

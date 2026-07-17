@@ -4,7 +4,7 @@
 # Front door for the per-app border tint daemon (nyxus-tintd): every
 # app class gets its own deterministic neon on the focus ring.
 # Bound: Super+T. Runs happily alongside nyxus-beat (Super+Alt+B).
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:${PATH}"

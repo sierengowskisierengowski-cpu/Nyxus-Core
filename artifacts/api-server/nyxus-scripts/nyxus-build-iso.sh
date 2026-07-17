@@ -22,7 +22,7 @@
 #     cannot be found" / "errors were encountered during the build" class
 #     of bugs so you don't ship a non-bootable ISO
 #
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================================
 set -euo pipefail
 

@@ -11,7 +11,7 @@
 # ║  Reads NYXUS_OSD_DURATION from ~/.config/eww/nyxus.conf when no      ║
 # ║  duration arg is provided.                                           ║
 # ║                                                                      ║
-# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ║  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 set -u
 window="${1:?usage: osd-show.sh <window> [duration]}"

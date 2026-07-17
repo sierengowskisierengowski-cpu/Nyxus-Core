@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 #  NYXUS — fix NVIDIA suspend/resume on the LIVE machine (Phase 4.3)
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 #  The GS77's nvidia-suspend/resume/hibernate services are DISABLED on the
 #  live install (the ISO already enables them; the installed system didn't).

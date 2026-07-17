@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # NYXUS — NYXUS Notepad bootstrap installer
 #   curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_notepad_install.sh | bash
-# (c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# (c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 set -euo pipefail
 
 B=$'\e[1m'; R=$'\e[0m'; PINK=$'\e[38;5;201m'; CYAN=$'\e[38;5;51m'

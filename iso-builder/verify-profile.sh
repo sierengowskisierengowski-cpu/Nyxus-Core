@@ -24,7 +24,7 @@
 #
 #  Exit code: 0 if no [FAIL] lines were emitted, 1 otherwise.
 #
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================================
 set -u
 
@@ -753,7 +753,12 @@ else
   fail "Settings: loginscreen not registered or LoginScreenPage missing"
 fi
 # Required runtime packages — greetd + tuigreet (display manager for live ISO).
-for pkg in greetd tuigreet; do
+# rev 2026-07-16: the bare `tuigreet` package name does not resolve in Arch
+# repos (only `greetd-tuigreet` does — confirmed via `pacman -Si tuigreet`
+# failing during the real bake). packages.x86_64 was fixed to only list
+# `greetd-tuigreet`; update this check to match instead of a name that was
+# never actually installable.
+for pkg in greetd greetd-tuigreet; do
   grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \
     && ok "package: ${pkg}" \
     || fail "missing package: ${pkg}"

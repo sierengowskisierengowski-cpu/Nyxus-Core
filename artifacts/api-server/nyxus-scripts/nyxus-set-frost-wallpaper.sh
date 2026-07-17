@@ -8,7 +8,7 @@
 # Usage:
 #   curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus-set-frost-wallpaper.sh | bash
 #
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 set -euo pipefail
 
 VERSION="2026.05.05-r3"

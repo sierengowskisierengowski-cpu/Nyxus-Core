@@ -1,7 +1,7 @@
 #%PAM-1.0
 # ============================================================
 #  NYXUS — PAM stack for the greetd login (installed to /etc/pam.d/greetd)
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 #  Password-only. This deliberately does NOT include system-local-login,
 #  which carries `auth sufficient pam_fprintd.so`. With fprintd in the stack

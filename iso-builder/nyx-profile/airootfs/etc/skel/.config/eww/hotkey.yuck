@@ -58,7 +58,7 @@
   :geometry (geometry :x "0" :y "0" :width "720px" :height "640px"
                       :anchor "center")
   :stacking "overlay"
-  :focusable true
+  :focusable false
   :namespace "nyxus-hotkey"
   (hotkey-cheatsheet-content))
 
@@ -88,6 +88,6 @@
   :geometry (geometry :x "0" :y "0" :width "420px" :height "220px"
                       :anchor "center")
   :stacking "overlay"
-  :focusable true
+  :focusable false
   :namespace "nyxus-hotkey"
   (hk-recorder-content))

@@ -24,7 +24,7 @@
   (box :class "deepcore-root" :orientation "v" :halign "center" :valign "center"
        :space-evenly false :spacing 20
     (label :visible false :text DEEP_SHIELD)
-    (label :class "dc-title" :style "opacity: ${NEONFLICK};" :text "NYXUS · DEEP CORE")
+    (label :class "dc-title" :style "opacity: 1;" :text "NYXUS · DEEP CORE")
     (label :class "dc-sub" :text "kernel observatory · sentinel grid · jeTT verdicts · honeypot feed")
     (box :class "dc-cols" :orientation "h" :space-evenly false :spacing 24
       (box :class "dc-col" :orientation "v" :space-evenly false :spacing 8
@@ -61,6 +61,6 @@
     (button :class "dc-close" :onclick "eww close deepcore" "Close (Super+G)")))
 
 (defwindow deepcore
-  :monitor 0 :stacking "overlay" :focusable true :namespace "nyxus-deepcore"
+  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-deepcore"
   :geometry (geometry :width "100%" :height "100%" :anchor "center")
   (box :class "overlay-backdrop" (deepcore_layout)))

@@ -23,7 +23,7 @@
 # Defaults: current still from ~/.config/nyxus/wallpaper.conf (or the
 # graffiti-space wall), output walls/live/<stem>-live.mp4, 24s @ 25fps,
 # sized to the active monitor.
-# © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -euo pipefail
 

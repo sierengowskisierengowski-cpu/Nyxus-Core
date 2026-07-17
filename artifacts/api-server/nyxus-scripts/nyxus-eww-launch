@@ -12,7 +12,7 @@
 # ║    NYXUS_EWW_TIMEOUT   — wall-clock socket-wait timeout (s)          ║
 # ║    NYXUS_EWW_LOG_DIR   — log destination                             ║
 # ║                                                                      ║
-# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ║  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 set -u
 

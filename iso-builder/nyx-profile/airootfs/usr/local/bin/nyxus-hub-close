@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# nyxus-hub-close — reliably dismiss the Hub and ANY stuck overlay/flyout.
+#
+# rev 2026-07-15 r2: WEDGE-PROOF. Every eww CLI call is wrapped in `timeout`
+# (a wedged/hung daemon makes the bare CLI block on its socket forever — that
+# is exactly the state that trapped the user fullscreen with no bars). If the
+# daemon does not answer ping, we hard-kill it and relaunch the whole bar set
+# via nyxus-eww-launch-safe. This script is the target of BOTH escape binds
+# (plain Escape gate + Super+Shift+Escape failsafe) and must ALWAYS return a
+# usable desktop in bounded time, no matter how broken eww is.
+#
+# DENY-LIST model: close every active eww window that is not persistent
+# chrome (bars / OSDs / dock / passive notif) — can never miss a new overlay.
+set -u
+export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH:-/usr/bin:/bin}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+runtime="${XDG_RUNTIME_DIR:-/tmp}"
+lock="${runtime}/nyxus-overlay-shield.d"
+
+# Windows that must NEVER be auto-closed (persistent desktop chrome).
+KEEP='bar-top|bar-bottom|bar-left|bar-right|osd-volume|osd-brightness|osd-mic|osd|dock|dock-reveal|snap-toast|notif-popup'
+
+# Bounded eww call — never hangs on a wedged daemon.
+ew() { timeout -k 2 "$1" eww --no-daemonize "${@:2}" 2>/dev/null; }
+
+recover_from_wedge() {
+  # Daemon unresponsive: hard-kill (SIGKILL works even on a SIGSTOPped
+  # process) and bring the bars back with the safe launcher.
+  echo "nyxus-hub-close: eww daemon wedged — hard restart" >&2
+  pkill -9 -x eww 2>/dev/null || true
+  rm -rf "$lock" 2>/dev/null || true
+  if command -v nyxus-eww-launch-safe >/dev/null 2>&1; then
+    exec nyxus-eww-launch-safe
+  fi
+  exit 1
+}
+
+command -v eww >/dev/null 2>&1 || exit 0
+
+# Wedge check FIRST: if the daemon won't even answer ping, no `eww close`
+# can work — go straight to recovery.
+if pgrep -x eww >/dev/null 2>&1 && ! ew 3 ping >/dev/null 2>&1; then
+  recover_from_wedge
+fi
+
+# Fast path: close the Hub explicitly, then sweep every other overlay.
+ew 5 close nyxus-hub || true
+while IFS= read -r line; do
+  win="${line%%:*}"
+  win="${win#"${win%%[![:space:]]*}"}"
+  win="${win%"${win##*[![:space:]]}"}"
+  case "$win" in
+    "") continue ;;
+    *)
+      if echo "$win" | grep -qvE "^(${KEEP})$"; then
+        ew 5 close "$win" || true
+      fi
+      ;;
+  esac
+done < <(ew 5 active-windows || true)
+
+# Restore any bars the overlay-shield / hub-open stashed.
+if [[ -f "${lock}/bars" ]]; then
+  while read -r b; do
+    [[ -n "$b" ]] && ew 5 open "$b" || true
+  done < "${lock}/bars"
+  rm -rf "$lock"
+fi
+
+# Failsafe: ensure the four bars are up no matter what.
+act="$(ew 5 active-windows || true)"
+for b in bar-top bar-bottom bar-left bar-right; do
+  grep -q "^${b}:" <<<"$act" || ew 5 open "$b" || true
+done
+
+# Final honesty check: if after all that the daemon is dead/wedged or the
+# bars still are not up, run full recovery (single daemon + 4 bars).
+if ! ew 3 ping >/dev/null 2>&1; then
+  recover_from_wedge
+fi
+bars="$(ew 4 active-windows | grep -cE '^bar-' || true)"
+if [[ "${bars:-0}" -lt 4 ]] && command -v nyxus-eww-launch-safe >/dev/null 2>&1; then
+  exec nyxus-eww-launch-safe
+fi
+exit 0

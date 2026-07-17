@@ -1,6 +1,6 @@
 # ============================================
 # NYXUS — nyx-2026.05.11-x86_64.iso
-# Copyright © 2026 Joseph Sierengowski
+# Copyright © 2026 Joseph A. Sierengowski
 # All Rights Reserved
 # NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================
@@ -71,7 +71,6 @@ rust
 wayland-protocols
 hyprcursor
 greetd
-tuigreet
 plymouth
 qt5-quickcontrols2
 qt5-graphicaleffects
@@ -101,9 +100,16 @@ playerctl
 pamixer
 pavucontrol
 swaybg
-# `swww` is the Wayland animated wallpaper daemon (official Arch extra).
-# (Previously listed as `awww` which is a different, unrelated project.)
-swww
+# rev 2026-07-16: `swww` no longer resolves in Arch `extra` — upstream
+# repos dropped it in favor of `awww` ("An Answer to your Wayland
+# Wallpaper Woes"), which is a maintained fork/successor, not a
+# different project as an earlier comment here claimed — its own
+# package metadata declares `Provides: swww` + `Replaces: swww`. Package
+# name swapped back to `awww`; a `swww`→`awww` compat symlink is added
+# by customize_airootfs.sh so every existing `swww ...`-invoking script
+# (nyxus-set-wallpaper.sh, nyxus-wallpaper-autostart, nyxus_wallpaper_
+# studio.py, etc.) keeps working unmodified.
+awww
 wdisplays
 # wlogout removed 2026-05-11 — built from upstream source by
 # customize_airootfs.sh (was failing pacstrap on mirrors that don't yet
@@ -543,3 +549,54 @@ trace-cmd
 # sched_ext userspace schedulers. scx_lavd (latency-aware) is enabled via
 # /etc/default/scx + scx.service; runtime-swappable, reverts to EEVDF on stop.
 scx-scheds
+
+# ── NYXUS Master Hub (Bifrost) runtime deps (rev 2026-07-15) ───────
+# Bifrost is the Tauri-based security dashboard staged into airootfs by
+# build-iso.sh (binary already built off-tree at ~/Projects/bifrost).
+# webkit2gtk-4.1/gtk3/libayatana-appindicator are required for the Tauri
+# window + tray icon to render at all; the python-* set covers the
+# guardian.py sidecar's imports. `ollama` (optional local LLM backend)
+# is intentionally NOT listed — guardian.py already degrades gracefully
+# without it (logs a non-fatal warning), matching live behavior tonight.
+webkit2gtk-4.1
+gtk3
+libayatana-appindicator
+python-pydantic
+python-openai
+python-aiohttp
+sqlite
+nftables
+
+# ── Meli (Honeypot Command Center) runtime deps (rev 2026-07-16) ──────
+# Meli app + venv staged into airootfs by build-iso.sh from the installed
+# /opt/meli (see PKGBUILD/install.sh). gtk4/libadwaita/python-gobject/
+# python-cryptography/python-requests/python-bcrypt are already listed
+# above for other NYXUS components; only the deps unique to Meli's
+# PKGBUILD `depends=()` are added here. The shipped venv uses
+# --system-site-packages, so these must be real pacman packages, not
+# just pip installs baked into the venv.
+mosquitto
+python-sqlalchemy
+python-click
+python-structlog
+python-paho-mqtt
+python-yaml
+python-argon2-cffi
+python-pyotp
+libnotify
+
+# ── jeTT AI Security Daemon runtime deps (rev 2026-07-16) ─────────────
+# jett-daemon itself is a self-contained Rust binary (ldd shows only
+# libc/libgcc/libm — no extra runtime packages needed there); GPU
+# inference depends on the nvidia-open-dkms/nvidia-utils/opencl-nvidia
+# already listed above for the rest of NYXUS.
+
+# ── honeypot/Docker stack runtime deps (rev 2026-07-16, r2) ────────────
+# Needed to run the pre-pulled cowrie/conpot/dionaea/endlessh/heralding/
+# http-honeypot + grafana/prometheus/loki/promtail containers staged into
+# /opt/honeypot by build-iso.sh. `docker-compose` on Arch ships both the
+# standalone binary AND the `docker compose` CLI plugin, so either
+# invocation style works. iptables (already listed above) covers the
+# DOCKER-USER egress-lockdown firewall.
+docker
+docker-compose

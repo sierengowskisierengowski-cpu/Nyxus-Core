@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Settings
+Comment=System control center
+Exec=/usr/local/bin/nyxus-settings
+Icon=preferences-system
+Categories=System;Utility;
+Terminal=false
+StartupNotify=true

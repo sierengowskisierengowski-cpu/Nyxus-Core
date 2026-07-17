@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 #  nyxus-notif-to-eww — dunst → EWW UFO notification bridge
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 #  dunst runs this per notification (see the [nyxus-eww] rule in dunstrc,
 #  with skip_display=true so dunst's own popup is suppressed and only the

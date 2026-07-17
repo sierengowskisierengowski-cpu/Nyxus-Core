@@ -2,7 +2,7 @@
 # ╔══════════════════════════════════════════════════════════════════════╗
 # ║          NYXUS OS — Full System Installer                            ║
 # ║  Downloads and deploys all NYXUS configs, scripts, and wallpapers    ║
-# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ║  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 #
 # Usage:
@@ -70,7 +70,7 @@ printf "${PINK}${B}  ██  █ ██    ██     ████   ██     
 printf "${PURPLE}${B}  ██   ████   ██      ██    ██  █████ ${R}\n"
 echo ""
 printf "  ${DIM}S I L E N T  ·  D A R K  ·  P U R E L Y   F U N C T I O N A L${R}\n"
-printf "  ${DIM}© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED${R}\n"
+printf "  ${DIM}© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED${R}\n"
 echo ""
 
 failed=0

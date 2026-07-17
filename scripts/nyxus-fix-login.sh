@@ -9,7 +9,7 @@
 # greeter via llvmpipe and sidesteps the GPU entirely. Login sessions
 # (Hyprland/COSMIC) still use the full GPU under Wayland — unaffected.
 #
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

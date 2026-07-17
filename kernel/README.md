@@ -1,4 +1,4 @@
-# NYXUS — Kernel (kage-ryu, selectable security kernel)
+# NYXUS — Kernel ("Kage Ryu Nyxus", selectable security kernel)
 
 > **Status (2026-07-14): PREPARED, NOT DEPLOYED.** Recipe fixed and committed;
 > holding the actual build/install/boot until the Nyxus greetd login is
@@ -6,13 +6,17 @@
 > unverified login change.
 
 ## What this is
-`kage-ryu` is the operator's own security-lab kernel (separate repo:
-`github.com/sierengowskisierengowski-cpu/kage-ryu`) — Linux + XanMod, tuned for
+**Kage Ryu Nyxus** is the operator's own security-lab kernel — the
+user-facing/display name for NYXUS's custom kernel build. The underlying
+build recipe/package id stays `kage-ryu` / `linux-kage-ryu` (separate repo:
+`github.com/sierengowskisierengowski-cpu/kage-ryu`) so pacman, the bootloader,
+and `/usr/lib/modules/*-kage-ryu` module paths keep working unchanged — only
+the human-facing name is "Kage Ryu Nyxus". It's Linux + XanMod, tuned for
 the MSI GS77 (i7-12700H / Alder Lake) and the jeTT eBPF EDR + Docker honeypot +
-CUDA workload. Nyxus ships it as a **selectable** kernel: **stock `linux` stays
-the default boot entry**, kage-ryu is chosen from the bootloader when you want
-the security loadout. This guarantees a bad custom-kernel build can never
-strand you.
+CUDA workload. NYXUS ships it as a **selectable** kernel: **stock `linux`
+stays the default boot entry**, Kage Ryu Nyxus is chosen from the bootloader
+when you want the security loadout. This guarantees a bad custom-kernel build
+can never strand you.
 
 ## Recipe fixes applied (in the kage-ryu repo, commit `fix(kage-ryu)`)
 - **microarch bug fixed:** `_microarchitecture=98` was a no-op (not in the
@@ -40,7 +44,7 @@ so it's a fine baseline; bump when convenient. See install helper `--bump` note.
 #   pacman -S modprobed-db && sudo modprobed-db store   # populate ~/.config/modprobed.db
 # Then:
 sudo kernel/install-kage-ryu.sh          # builds + installs, adds selectable entry
-# stock `linux` remains the default boot entry; pick "kage-ryu" at the bootloader.
+# stock `linux` remains the default boot entry; pick "Kage Ryu Nyxus" at the bootloader.
 ```
 
 ## Optional build modes (bigger/meaner, higher cost)
@@ -57,7 +61,7 @@ The kage-ryu PKGBUILD already supports these env toggles — pick per build:
   Alder Lake; 99 squeezes marginally more but only runs on this chip.
 
 ## Secure Boot (sbctl — already shipped in the ISO)
-kage-ryu is an unsigned custom kernel, so it won't boot with Secure Boot ON
+Kage Ryu Nyxus is an unsigned custom kernel, so it won't boot with Secure Boot ON
 until signed. After install, before rebooting into it:
 ```bash
 sudo sbctl sign -s /usr/lib/modules/*-kage-ryu/vmlinuz    # sign the image
@@ -68,7 +72,7 @@ Or leave Secure Boot off (stock `linux` still boots either way, so you're never
 locked out). Documented here so it's not a surprise at the boot screen.
 
 ## Files here
-- `install-kage-ryu.sh` — builds kage-ryu from its repo (localmodconfig if a
+- `install-kage-ryu.sh` — builds Kage Ryu Nyxus from its repo (localmodconfig if a
   modprobed.db exists), installs the packages, regenerates the bootloader menu
   **without changing the default**, and prints how to select it.
 - `nyxus-bbr.conf` — sysctl drop-in (BBR congestion control + FQ qdisc) that

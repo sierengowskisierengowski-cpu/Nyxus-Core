@@ -17,7 +17,7 @@
 # angle, tint keeps the colors, nobody stomps anybody.
 #
 # Not run directly — use `nyxus-beat on|off|toggle`.
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:${PATH}"

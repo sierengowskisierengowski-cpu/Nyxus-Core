@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+# Nyxus honeypot egress lockdown (iptables / DOCKER-USER).
+#
+# The docker network split already prevents honeypots from reaching the
+# monitoring containers. This adds the belt-and-suspenders egress control the
+# threat model calls for: the honeypot subnet may NOT initiate connections to
+# the host LAN, the host itself, the monitoring subnet, or other docker
+# networks. Inbound attacker connections (and their return traffic) still work,
+# honeypots can still talk to each other, and outbound to the public internet
+# is left intact (so a captured session still "looks real").
+#
+# Implemented in a dedicated chain (NYXUS-HP-EGRESS) jumped-to from DOCKER-USER
+# so it is fully idempotent and easy to remove.
+#
+# Requires root. Applied via nyxus-harden-privileged.sh and reapplied on boot
+# by nyxus-honeypot-firewall.service (rules are not persistent across reboots
+# on their own).
+set -euo pipefail
+
+HP_SUBNET="${HP_SUBNET:-172.19.0.0/16}"     # honeypot-net
+MON_SUBNET="${MON_SUBNET:-172.18.0.0/16}"   # monitoring-net
+CHAIN="NYXUS-HP-EGRESS"
+
+if [[ $EUID -ne 0 ]]; then
+    echo "Must run as root." >&2
+    exit 1
+fi
+
+# Auto-detect the honeypot-net subnet if docker is available (survives the
+# docker-assigned subnet changing).
+if command -v docker >/dev/null 2>&1; then
+    detected="$(docker network inspect honeypot-net \
+        --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' 2>/dev/null || true)"
+    [[ -n "$detected" ]] && HP_SUBNET="$detected"
+    detected_mon="$(docker network inspect monitoring-net \
+        --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' 2>/dev/null || true)"
+    [[ -n "$detected_mon" ]] && MON_SUBNET="$detected_mon"
+fi
+
+echo "==> honeypot subnet: ${HP_SUBNET}   monitoring subnet: ${MON_SUBNET}"
+
+# (Re)create the chain cleanly.
+iptables -N "${CHAIN}" 2>/dev/null || iptables -F "${CHAIN}"
+
+# 1) Always allow return traffic for connections initiated FROM outside
+#    (i.e. real inbound attacks to the published honeypot ports).
+iptables -A "${CHAIN}" -m conntrack --ctstate ESTABLISHED,RELATED -j RETURN
+# 2) Allow honeypot <-> honeypot (intra-subnet) so multi-service captures work.
+iptables -A "${CHAIN}" -s "${HP_SUBNET}" -d "${HP_SUBNET}" -j RETURN
+# 3) DROP honeypot-initiated egress to the monitoring subnet, the host LAN,
+#    the host itself, and any other docker/RFC1918 network.
+iptables -A "${CHAIN}" -s "${HP_SUBNET}" -d "${MON_SUBNET}" -j DROP
+iptables -A "${CHAIN}" -s "${HP_SUBNET}" -d 10.0.0.0/8      -j DROP
+iptables -A "${CHAIN}" -s "${HP_SUBNET}" -d 172.16.0.0/12   -j DROP
+iptables -A "${CHAIN}" -s "${HP_SUBNET}" -d 192.168.0.0/16  -j DROP
+iptables -A "${CHAIN}" -s "${HP_SUBNET}" -d 169.254.0.0/16  -j DROP
+# 4) Anything else (public internet) falls through to RETURN.
+iptables -A "${CHAIN}" -j RETURN
+
+# Hook the chain into DOCKER-USER exactly once.
+if ! iptables -C DOCKER-USER -j "${CHAIN}" 2>/dev/null; then
+    iptables -I DOCKER-USER -j "${CHAIN}"
+fi
+
+echo "==> Applied. Current ${CHAIN}:"
+iptables -L "${CHAIN}" -n --line-numbers

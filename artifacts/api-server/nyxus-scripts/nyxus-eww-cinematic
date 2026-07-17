@@ -16,7 +16,7 @@
 # Fail-safe by design: the splash is force-closed on ANY exit path
 # plus a detached 12s watchdog, so a crash can never leave the screen
 # covered.
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:${PATH}"

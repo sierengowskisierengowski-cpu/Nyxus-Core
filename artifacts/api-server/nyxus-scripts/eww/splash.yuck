@@ -6,7 +6,7 @@
 ;;  layerrule animation on namespace "nyxus-splash"). Opened and
 ;;  closed ONLY by nyxus-eww-cinematic at startup.
 ;;
-;;  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+;;  (c) 2026 JOSEPH A. SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 ;; ==================================================================
 
 (defwidget splash_layout []
@@ -24,7 +24,7 @@
     (box :class "splash-footer" :orientation "v" :space-evenly false :hexpand true :halign "fill"
       (label :class "splash-tag"  :halign "center" :wrap false :show-truncated false :text "OBSIDIAN PRISM · IRIDESCENT VOID")
       (label :class "splash-boot" :halign "center" :text "INITIALIZING SESSION …")
-      (label :class "splash-foot" :halign "center" :text "© 2026 JOSEPH SIERENGOWSKI"))))
+      (label :class "splash-foot" :halign "center" :text "© 2026 JOSEPH A. SIERENGOWSKI"))))
 
 (defwindow nyxus-splash
   :monitor 0

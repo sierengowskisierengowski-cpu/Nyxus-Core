@@ -99,4 +99,4 @@ The 12-addon eye-candy layer was verified end-to-end and pushed on 2026-07-08 (c
 
 ---
 
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED

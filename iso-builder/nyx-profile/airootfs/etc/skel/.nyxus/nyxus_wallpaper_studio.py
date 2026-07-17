@@ -1,0 +1,1 @@
+/opt/nyxus/nyxus_wallpaper_studio.py

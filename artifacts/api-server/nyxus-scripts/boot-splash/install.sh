@@ -2,7 +2,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 #  NYXUS · Boot Splash Installer
 #  Installs Plymouth theme (kernel-phase splash) + GRUB theme (bootloader menu)
-#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ─────────────────────────────────────────────────────────────────────────────
 #
 #  USAGE — INSTALLED SYSTEM (post-bake on real hardware):

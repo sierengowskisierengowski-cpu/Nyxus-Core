@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 #  NYXUS — switch the login greeter to greetd + regreet (Wayland)
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #
 #  Why: SDDM's greeter uses X11, whose VT/GPU handoff kept failing on this
 #  hybrid Intel+NVIDIA laptop (first a GL SIGSEGV, then an invisible greeter

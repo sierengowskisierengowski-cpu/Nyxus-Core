@@ -1,5 +1,5 @@
 -- NYXUS Window Rules (Hyprland 0.55 Lua)
--- © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+-- © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 
 -- Float all windows by default
 hl.window_rule({ match = { class = ".*" }, float = true })
@@ -17,7 +17,7 @@ hl.window_rule({ match = { class = ".*nyxus\\.(notepad|notes|clipboard)" }, size
 hl.window_rule({ match = { class = ".*nyxus\\.(launcher|powermenu)" }, size = {760, 540} })
 hl.window_rule({ match = { class = ".*nyxus\\.weather" }, size = {380, 560}, pin = true, move = {20, 100} })
 -- NYXUS Layer Rules (Hyprland 0.55 Lua)
--- © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+-- © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 
 hl.layer_rule({ match = { namespace = "nyxus-bar-bottom" }, blur = true, ignore_alpha = 0.2 })
 hl.layer_rule({ match = { namespace = "nyxus-bar-top" }, blur = true, ignore_alpha = 0.2 })

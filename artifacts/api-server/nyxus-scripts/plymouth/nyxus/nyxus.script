@@ -14,7 +14,7 @@
 //  Resolution independent: every sprite is scaled from the live screen size,
 //  so it looks right at the forced 1280x720 boot mode or a native 1920x1080.
 //
-//  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+//  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 // ─────────────────────────────────────────────────────────────────────────────
 
 PI = 3.14159265;

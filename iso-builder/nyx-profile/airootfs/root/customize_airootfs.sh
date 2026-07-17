@@ -12,6 +12,22 @@
 # Reference: https://wiki.archlinux.org/title/Archiso#Adding_users
 set -e -u
 
+# ── Package-rename compat shims (rev 2026-07-16) ────────────────────────
+# Arch `extra` dropped `swww` in favor of `awww` ("An Answer to your
+# Wayland Wallpaper Woes", a maintained fork — its own package metadata
+# declares Provides:swww + Replaces:swww). packages.x86_64 now installs
+# `awww`, but every NYXUS script/config still invokes the `swww`/
+# `swww-daemon` commands verbatim (nyxus-set-wallpaper.sh,
+# nyxus-wallpaper-autostart, nyxus_wallpaper_studio.py, hypr conf.d
+# exec-once lines, etc.) — rather than touch every call site, symlink the
+# old command names to the new binaries so nothing else has to change.
+for pair in "swww:awww" "swww-daemon:awww-daemon"; do
+  old="${pair%%:*}"; new="${pair##*:}"
+  if [ -x "/usr/bin/${new}" ] && [ ! -e "/usr/bin/${old}" ]; then
+    ln -s "/usr/bin/${new}" "/usr/bin/${old}"
+  fi
+done
+
 # ── Locale ──────────────────────────────────────────────────────────────
 locale-gen
 
@@ -450,9 +466,47 @@ for svc in \
   reflector.timer \
   fstrim.timer \
   scx.service \
-  nyxus-firstboot.service ; do
+  nyxus-firstboot.service \
+  jett-daemon.service \
+  docker.service \
+  nyxus-honeypot-firewall.service ; do
   systemctl enable "${svc}" 2>/dev/null || true
 done
+# jett-daemon.service: jeTT AI Security Daemon (rev 2026-07-16). Safe to
+# enable by default because the shipped override.conf pins it to
+# JETT_MODE=learn + JETT_ENFORCE_DRY_RUN=1 — it observes and logs would-be
+# verdicts but never kills/quarantines anything until an operator reviews
+# false positives and deliberately switches it to enforce.
+#
+# docker.service + nyxus-honeypot-firewall.service (rev 2026-07-16, r2):
+# needed so the honeypot/Docker stack (created once by the
+# /etc/nyxus-firstboot.d/06-honeypot-stack.sh fragment) comes back up on
+# every subsequent boot via each container's own restart:unless-stopped
+# policy — exactly the mechanism the live dev machine relies on, not a
+# bespoke re-implementation. nyxus-honeypot-firewall re-applies the
+# DOCKER-USER egress lockdown every time docker(.service) starts
+# (PartOf=docker.service in its own unit), since iptables rules don't
+# survive a docker restart on their own.
+
+# ── Meli + honeypot bridges — global (all-users) systemd --user units ──
+# rev 2026-07-16, r2: the user explicitly asked for the full live setup
+# (Meli app + ingest + the six honeypot→Meli bridges) to come up
+# automatically, matching how this machine runs today, superseding the
+# earlier "opt-in via Setup Wizard" call for the bridges. `--global`
+# enables these for any user account created at install time (no
+# per-user ~/.config/systemd/user copy needed, and no user session has
+# to exist yet at build time for this to take effect).
+systemctl --global enable \
+  meli.service \
+  meli-ingest.service \
+  meli-labyrinth-digest.timer \
+  cowrie-bridge.service \
+  conpot-bridge.service \
+  dionaea-bridge.service \
+  endlessh-bridge.service \
+  heralding-bridge.service \
+  http-bridge.service \
+  2>/dev/null || true
 # scx.service: sched_ext userspace scheduler (scx_lavd, /etc/default/scx).
 # Runtime-swappable; `systemctl stop scx` reverts to kernel EEVDF instantly.
 

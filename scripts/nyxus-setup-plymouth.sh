@@ -26,7 +26,7 @@
 #  Revert:  restore the *.nyxus-bak files and rerun `sudo mkinitcpio -P`
 #           (GRUB: also `sudo grub-mkconfig -o /boot/grub/grub.cfg`).
 #
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ═════════════════════════════════════════════════════════════════════════════
 set -euo pipefail
 

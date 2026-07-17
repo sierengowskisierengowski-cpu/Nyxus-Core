@@ -1,6 +1,6 @@
 // ============================================
 // NYXUS — Download Portal
-// Copyright © 2026 Joseph Sierengowski
+// Copyright © 2026 Joseph A. Sierengowski
 // All Rights Reserved
 // NYX-J5W-2026-SIERENGOWSKI-LOCKED
 // ============================================
@@ -661,7 +661,7 @@ function Landing() {
           }}
         >
           <div style={{ fontFamily: FONT_MONO, fontSize: "0.6rem", color: NYX.dim, letterSpacing: "0.22em" }}>
-            © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED ·{" "}
+            © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED ·{" "}
             <span style={{ color: NYX.text2 }}>DARK MIRROR · Triple-Black · rev r14</span>
           </div>
         </footer>
