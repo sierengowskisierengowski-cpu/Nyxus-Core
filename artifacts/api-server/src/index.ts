@@ -15,11 +15,15 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
-
+const server = app.listen(port, () => {
   logger.info({ port }, "Server listening");
+});
+
+// `app.listen`'s callback fires only on the "listening" event and never
+// receives an error — startup failures (EADDRINUSE, EACCES, …) surface as
+// an "error" event on the server. Without this listener those errors would
+// become an unhandled exception with no structured log.
+server.on("error", (err) => {
+  logger.error({ err }, "Error listening on port");
+  process.exit(1);
 });
