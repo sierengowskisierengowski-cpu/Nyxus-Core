@@ -96,6 +96,7 @@ PY
 cleanup_sessions() {
   local dirs=(/usr/share/wayland-sessions /usr/share/xsessions) dir path base removed=0 kept=0
   local sddm_session_dirs="/usr/share/wayland-sessions"
+  local sddm_default_conf="/etc/sddm.conf.d/10-nyxus-default-session.conf"
   step "clean session entries + set NYXUS as default"
   run "sudo install -Dm755 \"${NS}/nyxus-session-start\" /usr/local/bin/nyxus-session-start"
   run "sudo install -Dm644 \"${NS}/desktop-entries/nyxus-hyprland.desktop\" /usr/share/wayland-sessions/nyxus-hyprland.desktop"
@@ -129,10 +130,10 @@ cleanup_sessions() {
     sddm_session_dirs="${sddm_session_dirs},${REAL_HOME}/.local/share/wayland-sessions"
   fi
   if $DRY; then
-    warn "[dry-run] would install /etc/sddm.conf.d/10-nyxus-default-session.conf"
+    warn "[dry-run] would install ${sddm_default_conf}"
   else
     sudo mkdir -p /etc/sddm.conf.d
-    cat <<EOF | sudo tee /etc/sddm.conf.d/10-nyxus-default-session.conf >/dev/null
+    cat <<EOF | sudo tee "${sddm_default_conf}" >/dev/null
 [General]
 DefaultSession=nyxus-hyprland.desktop
 
@@ -218,7 +219,7 @@ fi
 $DRY && DRY_SUFFIX=", DRY-RUN"
 PKG_LIST="${PROFILE}/packages.x86_64"; [[ "$TIER" == lean ]] && PKG_LIST="${PROFILE}/packages.x86_64.lean"
 [[ -f "$PKG_LIST" ]] || { fail "package list not found: $PKG_LIST"; exit 1; }
-ok "${HOST_LABEL}, running as ${USER}, tier=${TIER}${DRY_SUFFIX}"
+ok "${HOST_LABEL}, running as ${REAL_USER}, tier=${TIER}${DRY_SUFFIX}"
 ok "plan: packages + session-cleanup + verify$($SKIP_USER_CONFIG || echo ' + configs + apps')$($DO_GREETER && echo ' + greeter')$($DO_KERNEL && echo ' + kernel')$($DO_NVIDIA && echo ' + nvidia-suspend')$($DO_LOADOUT && echo ' + security-loadout')"
 
 if ! $DRY && ! $ASSUME_YES; then

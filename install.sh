@@ -95,34 +95,37 @@ manifest_has() {
   declare -n map_ref="$map_name"
   [[ -n "${map_ref[$key]+x}" ]]
 }
-while IFS= read -r -d '' f; do
-  manifest_add MANIFEST_EWW "${f#"$NS"/eww/}"
-done < <(find "$NS/eww" -type f -print0)
-for f in hyprland.conf hypridle.conf hyprlock.conf hyprpaper.conf; do
-  manifest_add MANIFEST_HYPR "$f"
-done
-for f in "$NS"/nyxus-*.conf; do
-  [[ -f "$f" ]] || continue
-  base="$(basename "$f")"
-  case "$base" in
-    nyxus-monitors.conf|nyxus-voice.conf) manifest_add MANIFEST_HYPR "$base" ;;
-    *)                                    manifest_add MANIFEST_HYPR "conf.d/$base" ;;
-  esac
-done
-if [[ -d "$NS/hypr-walls/rotation" ]]; then
+build_manifests() {
   while IFS= read -r -d '' f; do
-    manifest_add MANIFEST_HYPR "walls/rotation/${f##*/}"
-  done < <(find "$NS/hypr-walls/rotation" -type f -print0)
-fi
-for f in "$NS"/nyxus_*.py; do
-  [[ -f "$f" ]] || continue
-  [[ "$(basename "$f")" == "nyxus_matrix_saver.py" ]] && continue
-  manifest_add MANIFEST_NYXUS "$(basename "$f")"
-done
-for base in "${LAUNCHERS[@]}"; do manifest_add MANIFEST_BIN "$base"; done
-while IFS= read -r -d '' f; do
-  manifest_add MANIFEST_DESKTOP "$(basename "$f")"
-done < <(find "$NS/desktop-entries" -maxdepth 1 -type f -name '*.desktop' -print0)
+    manifest_add MANIFEST_EWW "${f#"$NS"/eww/}"
+  done < <(find "$NS/eww" -type f -print0)
+  for f in hyprland.conf hypridle.conf hyprlock.conf hyprpaper.conf; do
+    manifest_add MANIFEST_HYPR "$f"
+  done
+  for f in "$NS"/nyxus-*.conf; do
+    [[ -f "$f" ]] || continue
+    base="$(basename "$f")"
+    case "$base" in
+      nyxus-monitors.conf|nyxus-voice.conf) manifest_add MANIFEST_HYPR "$base" ;;
+      *)                                    manifest_add MANIFEST_HYPR "conf.d/$base" ;;
+    esac
+  done
+  if [[ -d "$NS/hypr-walls/rotation" ]]; then
+    while IFS= read -r -d '' f; do
+      manifest_add MANIFEST_HYPR "walls/rotation/${f##*/}"
+    done < <(find "$NS/hypr-walls/rotation" -type f -print0)
+  fi
+  for f in "$NS"/nyxus_*.py; do
+    [[ -f "$f" ]] || continue
+    [[ "$(basename "$f")" == "nyxus_matrix_saver.py" ]] && continue
+    manifest_add MANIFEST_NYXUS "$(basename "$f")"
+  done
+  for base in "${LAUNCHERS[@]}"; do manifest_add MANIFEST_BIN "$base"; done
+  while IFS= read -r -d '' f; do
+    manifest_add MANIFEST_DESKTOP "$(basename "$f")"
+  done < <(find "$NS/desktop-entries" -maxdepth 1 -type f -name '*.desktop' -print0)
+}
+build_manifests
 
 # copy helper: only writes when content differs (idempotent + fast re-runs)
 CHANGED=0
@@ -140,7 +143,10 @@ BACKUP_COUNT=0
 BACKUP_PREVIEW_COUNT=0
 preserve_hypr_extra() {
   local rel="$1"
-  [[ "$rel" == "nyxus-monitors.conf" || "$rel" == walls/rotation/* ]]
+  case "$rel" in
+    nyxus-monitors.conf|walls/rotation/*) return 0 ;;
+    *)                                    return 1 ;;
+  esac
 }
 ensure_backup_root() {
   [[ -n "$BACKUP_ROOT" ]] && return 0
@@ -152,7 +158,7 @@ prune_empty_parent_dirs() {
   while [[ "$current" != "$stop" && "$current" != "/" ]]; do
     if ! rmdir "$current" 2>/dev/null; then
       if [[ ! -d "$current" ]]; then
-        warn "could not inspect pruned parent ${current/#$HOME/\~}"
+        warn "parent directory disappeared during pruning: ${current/#$HOME/\~}"
       elif [[ -n "$(find "$current" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
         info "keeping non-empty ${current/#$HOME/\~}"
       else
