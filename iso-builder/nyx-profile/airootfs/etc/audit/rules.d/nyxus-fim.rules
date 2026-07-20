@@ -1,0 +1,32 @@
+## Nyxus File-Integrity-Monitoring (FIM) baseline
+## Installed to /etc/audit/rules.d/nyxus-fim.rules and loaded via augenrules.
+## Surfaced by Bifrost's sysctl.rs::fim_status panel (auditd + these keys).
+
+## -- Control ------------------------------------------------------------
+# Larger event buffer so bursts of writes aren't dropped; wait rather than
+# lose records when the backlog fills.
+-b 8192
+--backlog_wait_time 60000
+
+## -- System binaries & configuration ------------------------------------
+-w /etc -p wa -k nyxus_etc
+-w /usr/bin -p wa -k nyxus_usrbin
+-w /usr/sbin -p wa -k nyxus_usrsbin
+-w /usr/local/bin -p wa -k nyxus_localbin
+-w /usr/local/sbin -p wa -k nyxus_localsbin
+
+## -- Identity / privilege escalation surfaces ---------------------------
+-w /etc/passwd -p wa -k nyxus_identity
+-w /etc/shadow -p wa -k nyxus_identity
+-w /etc/group -p wa -k nyxus_identity
+-w /etc/gshadow -p wa -k nyxus_identity
+-w /etc/sudoers -p wa -k nyxus_privesc
+-w /etc/sudoers.d -p wa -k nyxus_privesc
+
+## -- Nyxus / desktop config surfaces ------------------------------------
+-w /home/cosmic/.config/nyxus -p wa -k nyxus_config
+-w /home/cosmic/.nyxus -p wa -k nyxus_dotdir
+
+## -- Honeypot evidence (tamper detection on captured logs/samples) ------
+-w /home/cosmic/Projects/honeypot/logs -p wa -k nyxus_hp_logs
+-w /home/cosmic/Projects/honeypot/data -p wa -k nyxus_hp_data
