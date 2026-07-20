@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# nyxus-tour — guided showcase of the NYXUS desktop.   rev 2026-07-20 r1
+#
+# Walks a fresh user (or an audience) through the signature NYXUS
+# features step by step: each stop fires a rich notification explaining
+# what to press / what just happened, with optional live demonstrations.
+#
+# Usage:
+#   nyxus-tour            Run the interactive tour (notification-paced)
+#   nyxus-tour --list     Print the tour stops and exit
+#   nyxus-tour --fast     No pauses between stops (demo reel mode)
+#
+# Silent. Dark. Purely Functional.
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+set -euo pipefail
+
+PAUSE=6
+FAST=0
+
+notify() {
+  command -v notify-send >/dev/null 2>&1 \
+    && notify-send -a "NYXUS Tour" "$@" || true
+}
+
+# stop <n> <title> <body>
+stop() {
+  local n="$1" title="$2" body="$3"
+  echo "[$n] ${title} — ${body}"
+  notify -u normal "◤ ${n} · ${title} ◥" "${body}"
+  (( FAST )) || sleep "${PAUSE}"
+}
+
+TOUR=(
+  "Welcome|This is NYXUS — a fully custom Hyprland build. Sit back; each stop explains one signature feature."
+  "The Bar|The EWW bar up top is 100% custom: live system pulse, tickers, calendar, dock and quick-settings. Hover widgets for animations."
+  "Launcher|Press Super+Space (or Super+D) to open the NYXUS launcher — fuzzy app search with themed chrome."
+  "Hacker Mode|Press Super+Ctrl+X to flip the ENTIRE desktop into the parallel HACKER MODE — matrix borders, security stations, alternate wallpapers. Press it again to flip back."
+  "Wallpaper Studio|Run 'nyxus-settings' → Wallpaper, or 'nyxus-set-wallpaper' — 80+ shipped NYXUS wallpapers with live preview."
+  "Accent Engine|nyxus-apply-accent re-skins the whole desktop (bar, lock, apps) from one palette file. Try the presets in Settings."
+  "Lock Screen|Press Super+L — hyprlock renders the Prism HUD lock: live clock card, weather, now-playing, neon prism input."
+  "App Suite|Notepad, Stickies, Notes, SysMon, Store, Doctor, Battery Health, Network Usage — all custom NYXUS apps under the Super menu."
+  "Keybind Cheatsheet|Lost? The hotkey overlay lists every binding. See docs/KEYBINDS.md or the bar's hotkey widget."
+  "Doctor|Something off? Run 'nyxus-doctor' — a full health audit of the session with guided repairs."
+  "The End|That's the surface. Explore Settings for parental controls, snapshots, sandbox, accessibility and more. NYXUS out."
+)
+
+case "${1:-}" in
+  --list)
+    i=1
+    for t in "${TOUR[@]}"; do
+      printf '%2d. %s\n' "$i" "${t%%|*}"
+      i=$((i+1))
+    done
+    exit 0
+    ;;
+  --fast) FAST=1 ;;
+  "") ;;
+  *)
+    echo "usage: nyxus-tour [--list|--fast]" >&2
+    exit 1
+    ;;
+esac
+
+i=1
+total=${#TOUR[@]}
+for t in "${TOUR[@]}"; do
+  stop "${i}/${total}" "${t%%|*}" "${t#*|}"
+  i=$((i+1))
+done
