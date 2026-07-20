@@ -1,8 +1,8 @@
-# NyXxOS v2 — Roadmap
+# NYXUS v2 — Roadmap
 
 > **Status:** living document — updated as milestones are reached
 >
-> This roadmap describes the intended direction for NyXxOS (delivered via the
+> This roadmap describes the intended direction for NYXUS (delivered via the
 > NYX ISO). It is written to reflect the *current* repository reality as a
 > starting point and to be honest about what is aspirational.
 
@@ -10,7 +10,7 @@
 
 ## Vision / Goals
 
-NyXxOS is a custom Arch Linux distribution built around Hyprland, designed
+NYXUS is a custom Arch Linux distribution built around Hyprland, designed
 to deliver an experience that feels cohesive, polished, and complete — closer
 to a commercial product than a hobbyist rice. The platform combines:
 

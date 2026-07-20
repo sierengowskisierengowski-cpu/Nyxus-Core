@@ -39,7 +39,12 @@ case "$pick" in
   *Mission\ Control*) nyxus-mission-control-toggle & ;;
   *Home\ App*)        nyxus-home & ;;
   *Settings*)         nyxus-settings & ;;
-  *Security\ Center*) command -v nyxus-security >/dev/null && nyxus-security & || notify-send "NYXUS" "nyxus-security not installed" ;;
+  *Security\ Center*)
+    if command -v nyxus-security >/dev/null 2>&1; then
+      nyxus-security &
+    else
+      notify-send "NYXUS" "nyxus-security not installed"
+    fi ;;
   *Doctor*)           alacritty -e python3 ~/.nyxus/nyxus_doctor.py ;;
   *Terminal*)         alacritty ;;
   *File\ Manager*)    nyxus-files 2>/dev/null || thunar ~ ;;

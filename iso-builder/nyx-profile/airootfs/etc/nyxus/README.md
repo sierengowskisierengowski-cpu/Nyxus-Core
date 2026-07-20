@@ -26,7 +26,7 @@ Canonical source repository for the NYXUS platform and NYX image pipeline.
 | Calamares disk installer | 🟡 Branding present; AUR-built; full install flow not yet verified |
 | Automated ISO CI artifact + signed release | ⬜ Not yet implemented |
 
-See [`ROADMAP.md`](ROADMAP.md) for the NyXxOS v2 phased plan.
+See [`ROADMAP.md`](ROADMAP.md) for the NYXUS v2 phased plan.
 
 ---
 

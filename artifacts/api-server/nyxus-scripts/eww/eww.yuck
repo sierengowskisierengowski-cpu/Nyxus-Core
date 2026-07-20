@@ -41,6 +41,8 @@
                                      "~/.config/eww/scripts/brightness.sh")
 (defpoll WORKSPACES :interval "1s"   :initial '{"active":1,"home_active":false,"home":{"code":"◈","name":"HOME","hue":"cyan","occupied":false},"stations":[]}'
                                      "~/.config/eww/scripts/workspaces.sh")
+(defpoll APP_RAIL   :interval "0.5s" :initial '{"active":"","terminal":{"active":false,"occupied":false},"browser":{"active":false,"occupied":false},"files":{"active":false,"occupied":false},"sysmon":{"active":false,"occupied":false},"notepad":{"active":false,"occupied":false},"stickies":{"active":false,"occupied":false},"mixer":{"active":false,"occupied":false},"bluetooth":{"active":false,"occupied":false}}'
+                                     "~/.config/eww/scripts/app-rail.sh")
 (defpoll WEATHER    :interval "900s" :initial '{"temp":"—","summary":"…"}'
                                      "~/.config/eww/scripts/weather.sh")
 (defpoll CALENDAR   :interval "60s"  :initial '{"month":"—","grid":""}'
@@ -111,16 +113,23 @@
 ;; The Hub app launcher (Phase 7.3). Scope is a persistent in-Hub setting
 ;; (standing rule): a flag file toggles NYXUS-only vs all apps. Falls back
 ;; to [] if the backend isn't on PATH so the Hub still maps.
+;; Hub app listing: default shows all apps (inclusive). Create ~/.cache/nyxus-eww/hub-apps-nyxus
+;; to opt into NYXUS-only mode. (Rev 2026-07-20: flag file renamed hub-apps-all→hub-apps-nyxus
+;; and default flipped to show-all so new installs see the full app grid by default.)
 (defpoll HUBAPPS :interval "10s" :initial "[]"
-  "nyxus-hub-apps $([ -f ~/.cache/nyxus-eww/hub-apps-all ] && echo '' || echo '--nyxus') 2>/dev/null || echo '[]'")
-(defpoll HUBAPPS_MODE :interval "10s" :initial "nyxus"
-  "[ -f ~/.cache/nyxus-eww/hub-apps-all ] && echo all || echo nyxus")
+  "nyxus-hub-apps $([ -f ~/.cache/nyxus-eww/hub-apps-nyxus ] && echo '--nyxus' || echo '') 2>/dev/null || echo '[]'")
+(defpoll HUBAPPS_MODE :interval "10s" :initial "all"
+  "[ -f ~/.cache/nyxus-eww/hub-apps-nyxus ] && echo nyxus || echo all")
 (defpoll CHEAT_SHIELD :interval "2s" :initial ""
   "~/.config/eww/scripts/overlay-shield.sh cheatsheet")
 (defpoll DEEP_SHIELD  :interval "2s" :initial ""
   "~/.config/eww/scripts/overlay-shield.sh deepcore")
 ;; mixer panel: show input devices section
 (defvar MIX_SHOW_INPUTS false)
+;; manual saucer flip (Super+R / middle-click the saucer): XORs with the
+;; MPRIS auto-flip so you can force the music face while idle, or peek at
+;; the clock while a track is playing. Auto behaviour is untouched at false.
+(defvar SAUCER_FORCE false)
 
 ;; ── audio visualizer ─────────────────────────────────────────────────
 ;; cava.sh streams one line of block glyphs per frame (30 fps).

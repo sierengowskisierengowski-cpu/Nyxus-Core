@@ -68,3 +68,25 @@ iso-builder/nyx-profile/airootfs/usr/local/bin/jett-daemon
 # Dead weight / Replit scratch dirs (added for main hygiene)
 attached_assets/
 .canvas/
+
+# Local build / lab artifacts — do not push
+iso-builder/local-repo/
+iso-builder/bake.log
+iso-builder/nyx-profile/airootfs/opt/honeypot/images/
+iso-builder/nyx-profile/airootfs/opt/honeypot/logs/
+iso-builder/nyx-profile/airootfs/opt/honeypot/data/
+iso-builder/nyx-profile/airootfs/opt/arsenal/tools/**/.local/
+iso-builder/nyx-profile/airootfs/opt/arsenal/tools/**/node_modules/
+iso-builder/nyx-profile/airootfs/opt/arsenal/tools/**/target/
+iso-builder/nyx-profile/airootfs/opt/arsenal/tools/**/dist/
+iso-builder/nyx-profile/airootfs/opt/arsenal/tools/**/*.db
+iso-builder/nyx-profile/airootfs/opt/arsenal/tools/**/*.db-shm
+iso-builder/nyx-profile/airootfs/opt/arsenal/tools/**/*.db-wal
+
+# Secrets — never commit
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.sample
+lab-credentials.env
+.git-credentials

@@ -87,11 +87,14 @@ if [[ -f "${CANON}/eww/eww.scss" && -f "${CANON}/eww/eww.css" ]]; then
 fi
 
 # 3. hyprlock / hyprexpo policy
-if grep -rE '^bind.*exec.*\bhyprlock\b|^[^#]*on-timeout.*\bhyprlock\b|^[^#]*lock_cmd.*\bhyprlock\b' \
+# lock_cmd = hyprlock in hypridle.conf is correct — hypridle's lock_cmd IS
+# the session lock handler and must invoke hyprlock directly. Only flag
+# direct keybind exec or on-timeout invocations (bypassing loginctl).
+if grep -rE '^bind.*exec.*\bhyprlock\b|^[^#]*on-timeout.*\bhyprlock\b' \
    "${HOME}/.config/hypr"/*.conf "${HOME}/.config/hypr"/conf.d/*.conf 2>/dev/null | grep -qv '^#'; then
-  bad "hyprlock still wired in active hypr config"
+  bad "hyprlock still wired in active hypr config (use loginctl lock-session for keybinds)"
 else
-  ok "hyprlock not actively bound"
+  ok "hyprlock not directly bound (loginctl lock-session → hypridle → hyprlock is correct)"
 fi
 
 if grep -rE '^[^#]*hyprexpo' "${HOME}/.config/hypr" 2>/dev/null | grep -qE 'load hyprexpo|hyprexpo:expo'; then
