@@ -69,6 +69,9 @@ file_permissions=(
   ["/usr/local/bin/nyxus-store"]="0:0:755"
   ["/usr/local/bin/nyxus-powermenu"]="0:0:755"
   ["/usr/local/bin/nyxus-doctor"]="0:0:755"
+  ["/usr/local/bin/nyxus-battery"]="0:0:755"
+  ["/usr/local/bin/nyxus-netusage"]="0:0:755"
+  ["/usr/local/bin/nyxus-tour"]="0:0:755"
   # ── Welcome wizard launcher + privileged helper ──────────────────────
   # nyxus-welcome is installed by customize_airootfs.sh from /root/ stage.
   # The auto-generated APPS_LIST wrapper would also have produced one,

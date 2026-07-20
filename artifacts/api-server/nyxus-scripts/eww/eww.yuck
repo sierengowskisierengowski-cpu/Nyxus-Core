@@ -559,9 +559,10 @@
   (button :class "bar-hub-trigger"
           :onclick "nyxus-hub-open &"
           :onrightclick "playerctl play-pause &"
-          :tooltip "NYXUS Main Menu · ${PLAYER.status != 'Stopped' ? PLAYER.tooltip : TIME.long} · click hub · right-click play/pause"
+          :onmiddleclick "eww update SAUCER_FORCE=${SAUCER_FORCE ? 'false' : 'true'} &"
+          :tooltip "NYXUS Main Menu · ${PLAYER.status != 'Stopped' ? PLAYER.tooltip : TIME.long} · click hub · right-click play/pause · middle-click / Super+R flip"
     (stack :class "saucer-stack" :transition "slideup" :same-size true
-           :selected {PLAYER.status == "Stopped" ? 0 : 1}
+           :selected {(PLAYER.status == "Stopped") == SAUCER_FORCE ? 1 : 0}
       (bar_hub_idle)
       (bar_hub_music))))
 

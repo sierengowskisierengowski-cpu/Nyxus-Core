@@ -269,6 +269,8 @@ lib32-libpng
 firefox
 nautilus
 hyprshot
+# Pixel eyedropper — Super+I copies any on-screen colour (Aurora pack).
+hyprpicker
 wf-recorder
 file-roller
 7zip

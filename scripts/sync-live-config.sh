@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# sync-live-config.sh · rev 2026-07-07
+#
+# Pull the LIVE desktop configuration from this machine into the ISO
+# skel + airootfs so the repo (and every future install) matches what
+# is actually running. Run from anywhere; then review `git status`
+# and commit.
+#
+#   ./scripts/sync-live-config.sh          # sync everything
+#
+# Volatile junk (logs, backups, caches, per-machine geometry) is
+# excluded so diffs stay reviewable.
+# © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -euo pipefail
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SKEL="${REPO}/iso-builder/nyx-profile/airootfs/etc/skel"
+ROOTFS="${REPO}/iso-builder/nyx-profile/airootfs"
+
+RSYNC=(rsync -a --delete
+  --exclude '*.bak*' --exclude '*.log' --exclude '__pycache__'
+  --exclude '*.pyc'  --exclude 'welcome.done' --exclude 'theme-backups'
+  --exclude '.claude' --exclude '*.mp4'
+  --exclude 'accent-baseline'   # per-machine cache; regenerates on first accent apply
+)
+
+# ── ~/.config surfaces that define the NYXUS look ────────────────────
+CONFIG_DIRS=(
+  eww hypr rofi dunst wlogout alacritty kitty cava btop
+  qt5ct qt6ct gtk-3.0 gtk-4.0 nyxus
+)
+for d in "${CONFIG_DIRS[@]}"; do
+  SRC="${HOME}/.config/${d}"
+  [[ -d "${SRC}" ]] || { echo "skip (missing): ${d}"; continue; }
+  mkdir -p "${SKEL}/.config/${d}"
+  "${RSYNC[@]}" "${SRC}/" "${SKEL}/.config/${d}/"
+  echo "synced: .config/${d}"
+done
+
+# per-machine noise that must not ship in skel
+rm -f  "${SKEL}/.config/nyxus/welcome.done" \
+       "${SKEL}/.config/qt6ct/qt6ct.conf.bak" 2>/dev/null || true
+# qt SettingsWindow geometry is per-machine — strip the section
+for q in qt5ct qt6ct; do
+  f="${SKEL}/.config/${q}/${q}.conf"
+  [[ -f "$f" ]] && sed -i '/^\[SettingsWindow\]/,/^\[/{/^\[SettingsWindow\]/d;/^\[/!d}' "$f"
+done
+
+# ── legacy ~/.nyxus GTK app tree (settings control center, launcher,
+#    screenshot, doctor, palette, panel/home/start apps). These ship in
+#    skel so every install gets the canonical NYXUS Settings app that
+#    the `nyxus-settings` wrapper launches. Only code ships — state
+#    files (hw_profile.json, backgrounds cache, shield state) stay
+#    per-machine. ──
+mkdir -p "${SKEL}/.nyxus"
+for f in "${HOME}/.nyxus/"*.py "${HOME}/.nyxus/nyxus-palette.css"; do
+  [[ -f "$f" ]] || continue
+  install -m 644 "$f" "${SKEL}/.nyxus/$(basename "$f")"
+done
+# executables keep their bit (they're launched directly from binds)
+chmod 755 "${SKEL}/.nyxus/"*.py 2>/dev/null || true
+echo "synced: .nyxus/*.py + nyxus-palette.css"
+for d in nyxus-panel nyxus-home nyxus-start; do
+  SRC="${HOME}/.nyxus/${d}"
+  [[ -d "${SRC}" ]] || { echo "skip (missing): .nyxus/${d}"; continue; }
+  mkdir -p "${SKEL}/.nyxus/${d}"
+  "${RSYNC[@]}" "${SRC}/" "${SKEL}/.nyxus/${d}/"
+  echo "synced: .nyxus/${d}"
+done
+
+# ── user + system scripts ────────────────────────────────────────────
+mkdir -p "${ROOTFS}/usr/local/bin"
+for f in "${HOME}/.local/bin/"nyxus-*; do
+  [[ -f "$f" ]] || continue
+  install -m 755 "$f" "${ROOTFS}/usr/local/bin/$(basename "$f")"
+  echo "synced: usr/local/bin/$(basename "$f")"
+done
+for f in /usr/local/bin/nyxus*; do
+  [[ -f "$f" ]] || continue
+  # ~/.local/bin versions shadow and win — don't overwrite those
+  [[ -f "${HOME}/.local/bin/$(basename "$f")" ]] && continue
+  install -m 755 "$f" "${ROOTFS}/usr/local/bin/$(basename "$f")"
+done
+echo "synced: /usr/local/bin/nyxus*"
+
+# ── UI sound pack (nyxus-sfx plays from ~/.local/share/nyxus/sounds) ──
+if [[ -d "${HOME}/.local/share/nyxus/sounds" ]]; then
+  mkdir -p "${SKEL}/.local/share/nyxus/sounds"
+  rsync -a --delete "${HOME}/.local/share/nyxus/sounds/" "${SKEL}/.local/share/nyxus/sounds/"
+  echo "synced: .local/share/nyxus/sounds"
+fi
+
+# ── Hyprland plugins (built against the pinned 0.55.4 — nyxus-plugins
+#    loads them from ~/.local/lib/nyxus-plugins; rebuild after any
+#    Hyprland bump) ──
+if [[ -d "${HOME}/.local/lib/nyxus-plugins" ]]; then
+  mkdir -p "${SKEL}/.local/lib/nyxus-plugins"
+  rsync -a --delete "${HOME}/.local/lib/nyxus-plugins/" "${SKEL}/.local/lib/nyxus-plugins/"
+  echo "synced: .local/lib/nyxus-plugins"
+fi
+
+# ── theme fonts (graffiti type system: Permanent Marker/Caveat/Orbitron) ──
+if [[ -d "${HOME}/.local/share/fonts/nyxus" ]]; then
+  mkdir -p "${ROOTFS}/usr/share/fonts/nyxus"
+  rsync -a --delete "${HOME}/.local/share/fonts/nyxus/" "${ROOTFS}/usr/share/fonts/nyxus/"
+  echo "synced: usr/share/fonts/nyxus"
+fi
+
+echo
+echo "done — review with:  git -C ${REPO} status"
