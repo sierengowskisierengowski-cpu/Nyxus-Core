@@ -49,7 +49,7 @@ DO_GREETER=true; DO_KERNEL=false; DO_NVIDIA=false; DO_LOADOUT=false
 SKIP_USER_CONFIG=false; KEEP_LEGACY_SESSIONS=false
 REAL_USER="${USER}"
 REAL_HOME="${HOME}"
-usage() { sed -n '2,33p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; }
+usage() { sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; }
 python_set_ini_key() { # python_set_ini_key <file> <section> <key> <value> <use-sudo-literal:true|false>
   local file="$1" section="$2" key="$3" value="$4" use_sudo="${5:-false}" runner=(python3)
   $use_sudo && runner=(sudo python3)
@@ -94,6 +94,7 @@ PY
 }
 cleanup_sessions() {
   local dirs=(/usr/share/wayland-sessions /usr/share/xsessions) dir path base removed=0 kept=0
+  local sddm_session_dirs="/usr/share/wayland-sessions"
   step "clean session entries + set NYXUS as default"
   run "sudo install -Dm755 \"${NS}/nyxus-session-start\" /usr/local/bin/nyxus-session-start"
   run "sudo install -Dm644 \"${NS}/desktop-entries/nyxus-hyprland.desktop\" /usr/share/wayland-sessions/nyxus-hyprland.desktop"
@@ -121,6 +122,11 @@ cleanup_sessions() {
   if [[ -d /var/lib/AccountsService/users ]]; then
     python_set_ini_key "/var/lib/AccountsService/users/${REAL_USER}" User Session nyxus-hyprland.desktop true
   fi
+  if [[ "$REAL_HOME" == *[[:space:],]* ]]; then
+    warn "home path contains whitespace/comma; omitting user SessionDir from SDDM drop-in"
+  else
+    sddm_session_dirs="${sddm_session_dirs},${REAL_HOME}/.local/share/wayland-sessions"
+  fi
   if $DRY; then
     warn "[dry-run] would install /etc/sddm.conf.d/10-nyxus-default-session.conf"
   else
@@ -134,7 +140,7 @@ RememberLastSession=false
 RememberLastUser=true
 
 [Wayland]
-SessionDir=/usr/share/wayland-sessions,${REAL_HOME}/.local/share/wayland-sessions
+SessionDir=${sddm_session_dirs}
 
 [X11]
 SessionDir=/usr/share/xsessions

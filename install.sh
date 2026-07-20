@@ -60,7 +60,7 @@ for arg in "$@"; do case "$arg" in
   --system)          RUN_SYSTEM=true ;;
   --user-only)       RUN_SYSTEM=false ;;
   --keep-legacy-sessions) KEEP_LEGACY_SESSIONS=true ;;
-  -h|--help)         sed -n '3,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help)         sed -n '3,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
   *) die "unknown option: $arg (try --help)" ;;
 esac; done
 
