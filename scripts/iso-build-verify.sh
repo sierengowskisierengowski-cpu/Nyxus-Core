@@ -100,7 +100,7 @@ done
 
 hdr "7. Required packages declared"
 PKG="$PROFILE/packages.x86_64"
-for p in base linux linux-firmware hyprland greetd tuigreet networkmanager; do
+for p in base linux linux-firmware hyprland greetd greetd-tuigreet networkmanager; do
   if grep -qE "^${p}$" "$PKG" 2>/dev/null; then ok "package: $p"
   else                                          bad "missing package: $p"; fi
 done
