@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # qemu-smoke-test.sh — boot a freshly-baked NYXUS ISO headless in QEMU
-# and verify it actually reaches a working live session.   rev 2026-07-20 r1
+# and verify it actually reaches a working live session. rev 2026-07-20 r1
 #
 # This is the "never flash a broken USB again" gate: it catches an old or
 # broken bake (no splash, dead greeter, missing services) BEFORE you burn

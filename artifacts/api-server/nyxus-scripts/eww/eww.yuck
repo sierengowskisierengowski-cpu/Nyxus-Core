@@ -131,11 +131,6 @@
 ;; the clock while a track is playing. Auto behaviour is untouched at false.
 (defvar SAUCER_FORCE false)
 
-;; manual saucer flip (Super+R / middle-click the saucer): XORs with the
-;; MPRIS auto-flip so you can force the music face while idle, or peek at
-;; the clock while a track is playing. Auto behaviour is untouched at false.
-(defvar SAUCER_FORCE false)
-
 ;; ── audio visualizer ─────────────────────────────────────────────────
 ;; cava.sh streams one line of block glyphs per frame (30 fps).
 (deflisten CAVA :initial "▁▁▁▁▁▁▁▁▁▁▁▁▁▁"
