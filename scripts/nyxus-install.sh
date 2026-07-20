@@ -50,7 +50,7 @@ SKIP_USER_CONFIG=false; KEEP_LEGACY_SESSIONS=false
 REAL_USER="${USER}"
 REAL_HOME="${HOME}"
 usage() { sed -n '2,33p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; }
-python_set_ini_key() { # python_set_ini_key <file> <section> <key> <value> <sudo:true|false>
+python_set_ini_key() { # python_set_ini_key <file> <section> <key> <value> <use-sudo-literal:true|false>
   local file="$1" section="$2" key="$3" value="$4" use_sudo="${5:-false}" runner=(python3)
   $use_sudo && runner=(sudo python3)
   if $DRY; then
