@@ -416,8 +416,10 @@ if [[ -d "${NS}/nyxus-start" ]]; then
     install -m 0644 "${_f}" "${PROFILE_DIR}/airootfs/opt/nyxus/nyxus-start/"
   done
   if [[ -f "${NS}/nyxus-start/nyxus-start" ]]; then
-    # Adapt the launcher path from ~/.nyxus to /opt/nyxus (ISO context).
-    sed 's|${HOME}/.nyxus/nyxus-start|/opt/nyxus/nyxus-start|g' \
+    # Adapt the launcher from user-install path (~/.nyxus) to ISO system path
+    # (/opt/nyxus). Single quotes are intentional: sed must match the literal
+    # characters '${HOME}' in the source file, not the expanded value.
+    sed 's|${HOME}/\.nyxus/nyxus-start|/opt/nyxus/nyxus-start|g' \
       "${NS}/nyxus-start/nyxus-start" > "${LBIN}/nyxus-start"
     chmod 0755 "${LBIN}/nyxus-start"
   fi

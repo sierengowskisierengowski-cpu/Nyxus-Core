@@ -113,6 +113,9 @@
 ;; The Hub app launcher (Phase 7.3). Scope is a persistent in-Hub setting
 ;; (standing rule): a flag file toggles NYXUS-only vs all apps. Falls back
 ;; to [] if the backend isn't on PATH so the Hub still maps.
+;; Hub app listing: default shows all apps (inclusive). Create ~/.cache/nyxus-eww/hub-apps-nyxus
+;; to opt into NYXUS-only mode. (Rev 2026-07-20: flag file renamed hub-apps-all→hub-apps-nyxus
+;; and default flipped to show-all so new installs see the full app grid by default.)
 (defpoll HUBAPPS :interval "10s" :initial "[]"
   "nyxus-hub-apps $([ -f ~/.cache/nyxus-eww/hub-apps-nyxus ] && echo '--nyxus' || echo '') 2>/dev/null || echo '[]'")
 (defpoll HUBAPPS_MODE :interval "10s" :initial "all"
