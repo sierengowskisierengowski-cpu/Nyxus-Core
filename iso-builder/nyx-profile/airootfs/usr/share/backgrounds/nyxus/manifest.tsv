@@ -1,100 +1,74 @@
-nyxus-void-vortex	Void Vortex
-nyxus-dark-mirror-grid	Dark Mirror Grid
-nyxus-aurora-drift	Aurora Drift
-nyxus-phantom-mesh	Phantom Mesh
-nyxus-deep-static	Deep Static
-nyxus-crimson-eclipse	Crimson Eclipse
-nyxus-cyan-pulse	Cyan Pulse
-nyxus-carbon-weave	Carbon Weave
-nyxus-sigil	NYXUS Sigil
+nyxus-bar-stone	Bar Stone
+nyxus-bg-01	Bg 01
+nyxus-bg-02	Bg 02
+nyxus-bg-03	Bg 03
+nyxus-bg-04	Bg 04
+nyxus-bg-05	Bg 05
+nyxus-bg-06	Bg 06
+nyxus-bg-07	Bg 07
+nyxus-bg-08	Bg 08
+nyxus-bg-09	Bg 09
+nyxus-bg-10	Bg 10
+nyxus-bg-11	Bg 11
+nyxus-bg-12	Bg 12
+nyxus-bg-13	Bg 13
+nyxus-bg-14	Bg 14
+nyxus-bg-15	Bg 15
+nyxus-bg-16	Bg 16
+nyxus-bg-cosmic-dust	Bg Cosmic Dust
+nyxus-bg-cosmos-gold	Bg Cosmos Gold
+nyxus-bg-darkmirror-02	Bg Darkmirror 02
+nyxus-bg-darkmirror-03	Bg Darkmirror 03
+nyxus-bg-darkmirror	Bg Darkmirror
+nyxus-bg-light-shaft	Bg Light Shaft
+nyxus-bg-moon-crater	Bg Moon Crater
+nyxus-bg-sepia-watercolor	Bg Sepia Watercolor
 nyxus-cosmic-galaxy	Cosmic Galaxy
+nyxus-demon	Demon
+nyxus-drifter-wall	Drifter Wall
 nyxus-eye-mosaic	Eye Mosaic
+nyxus-frost-sierengowski	Frost Sierengowski
+nyxus-frost-tile-glyphs	Frost Tile Glyphs
+nyxus-frost-tile-grid	Frost Tile Grid
 nyxus-galaxy	Galaxy
+nyxus-graffiti-01	Graffiti 01
+nyxus-graffiti-02	Graffiti 02
+nyxus-graffiti-03	Graffiti 03
+nyxus-graffiti-04	Graffiti 04
+nyxus-graffiti-05	Graffiti 05
+nyxus-graffiti-06	Graffiti 06
+nyxus-graffiti-07	Graffiti 07
+nyxus-graffiti-08	Graffiti 08
+nyxus-graffiti-09	Graffiti 09
+nyxus-graffiti-10	Graffiti 10
+nyxus-graffiti-11	Graffiti 11
+nyxus-graffiti-12	Graffiti 12
+nyxus-graffiti-13	Graffiti 13
+nyxus-graffiti-14	Graffiti 14
+nyxus-graffiti-15	Graffiti 15
+nyxus-graffiti-16	Graffiti 16
+nyxus-graffiti-17	Graffiti 17
+nyxus-graffiti-18	Graffiti 18
+nyxus-graffiti-19	Graffiti 19
+nyxus-graffiti-20	Graffiti 20
+nyxus-graffiti-21	Graffiti 21
+nyxus-graffiti-22	Graffiti 22
+nyxus-graffiti-23	Graffiti 23
+nyxus-graffiti-24	Graffiti 24
 nyxus-graffiti-space	Graffiti Space
-nyxus-obsidian-prism-4k	Obsidian Prism 4K
-nyxus-prism-4k	Prism 4K
+nyxus-hyprlock-eye	Hyprlock Eye
+nyxus-ink-swirl	Ink Swirl
+nyxus-login-stars	Login Stars
+nyxus-monogram-mist	Monogram Mist
+nyxus-obsidian-prism-4k	Obsidian Prism 4k
+nyxus-prism-4k	Prism 4k
 nyxus-prism-illusion	Prism Illusion
+nyxus-rightbar-bg	Rightbar Bg
+nyxus-sierengowski-clean	Sierengowski Clean
 nyxus-space-collage	Space Collage
-nyxus-void-01	Void 01
-nyxus-void-02	Void 02
-nyxus-void-03	Void 03
-nyxus-void-04	Void 04
-nyxus-void-05	Void 05
-nyxus-void-06	Void 06
-nyxus-void-07	Void 07
-nyxus-void-08	Void 08
-nyxus-void-09	Void 09
-nyxus-void-10	Void 10
-nyxus-void-11	Void 11
-nyxus-void-12	Void 12
-nyxus-void-13	Void 13
-nyxus-void-14	Void 14
-nyxus-void-15	Void 15
-nyxus-deepspace-01	Deep Space 01
-nyxus-deepspace-02	Deep Space 02
-nyxus-deepspace-03	Deep Space 03
-nyxus-deepspace-04	Deep Space 04
-nyxus-deepspace-05	Deep Space 05
-nyxus-deepspace-06	Deep Space 06
-nyxus-deepspace-07	Deep Space 07
-nyxus-deepspace-08	Deep Space 08
-nyxus-deepspace-09	Deep Space 09
-nyxus-deepspace-10	Deep Space 10
-nyxus-deepspace-11	Deep Space 11
-nyxus-deepspace-12	Deep Space 12
-nyxus-deepspace-13	Deep Space 13
-nyxus-deepspace-14	Deep Space 14
-nyxus-blackhole-01	Black Hole 01
-nyxus-blackhole-02	Black Hole 02
-nyxus-blackhole-03	Black Hole 03
-nyxus-blackhole-04	Black Hole 04
-nyxus-blackhole-05	Black Hole 05
-nyxus-blackhole-06	Black Hole 06
-nyxus-blackhole-07	Black Hole 07
-nyxus-blackhole-08	Black Hole 08
-nyxus-blackhole-09	Black Hole 09
-nyxus-blackhole-10	Black Hole 10
-nyxus-blackhole-11	Black Hole 11
-nyxus-blackhole-12	Black Hole 12
-nyxus-nebula-01	Nebula 01
-nyxus-nebula-02	Nebula 02
-nyxus-nebula-03	Nebula 03
-nyxus-nebula-04	Nebula 04
-nyxus-nebula-05	Nebula 05
-nyxus-nebula-06	Nebula 06
-nyxus-nebula-07	Nebula 07
-nyxus-nebula-08	Nebula 08
-nyxus-nebula-09	Nebula 09
-nyxus-nebula-10	Nebula 10
-nyxus-nebula-11	Nebula 11
-nyxus-nebula-12	Nebula 12
-nyxus-nebula-13	Nebula 13
-nyxus-nebula-14	Nebula 14
-nyxus-nebula-15	Nebula 15
-nyxus-nebula-16	Nebula 16
-nyxus-nebula-17	Nebula 17
-nyxus-nebula-18	Nebula 18
-nyxus-nebula-19	Nebula 19
-nyxus-nebula-20	Nebula 20
-nyxus-nebula-21	Nebula 21
-nyxus-nebula-22	Nebula 22
-nyxus-nebula-23	Nebula 23
-nyxus-nebula-24	Nebula 24
-nyxus-nebula-25	Nebula 25
-nyxus-nebula-26	Nebula 26
-nyxus-nebula-27	Nebula 27
-nyxus-nebula-28	Nebula 28
-nyxus-nebula-29	Nebula 29
-nyxus-nebula-30	Nebula 30
-nyxus-nebula-31	Nebula 31
-nyxus-nebula-32	Nebula 32
-nyxus-nebula-33	Nebula 33
-nyxus-nebula-34	Nebula 34
-nyxus-nebula-35	Nebula 35
-nyxus-nebula-36	Nebula 36
-nyxus-nebula-37	Nebula 37
-nyxus-nebula-38	Nebula 38
-nyxus-nebula-39	Nebula 39
-nyxus-nebula-40	Nebula 40
-nyxus-nebula-41	Nebula 41
-nyxus-nebula-42	Nebula 42
+nyxus-starfield-wall	Starfield Wall
+nyxus-starlight	Starlight
+nyxus-taskbar-bg	Taskbar Bg
+nyxus-topbar-mist	Topbar Mist
+nyxus-void-vortex	Void Vortex
+nyxus-waybar-stars	Waybar Stars
