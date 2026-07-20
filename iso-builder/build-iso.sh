@@ -187,6 +187,7 @@ mkdir -p \
 # waybar-style.css, waybar-stats.sh, waybar-ticker.sh deleted from source.
 install -m 0644 "${NS}/hyprland.conf"        "${SKEL}/.config/hypr/hyprland.conf"
 install -m 0644 "${NS}/hyprlock.conf"        "${SKEL}/.config/hypr/hyprlock.conf"
+install -m 0644 "${NS}/hyprlock-accent.conf" "${SKEL}/.config/hypr/hyprlock-accent.conf"
 install -m 0644 "${NS}/hypridle.conf"        "${SKEL}/.config/hypr/hypridle.conf"
 install -m 0644 "${NS}/nyxus-dunstrc"        "${SKEL}/.config/dunst/dunstrc"
 install -m 0644 "${NS}/rofi-config.rasi"     "${SKEL}/.config/rofi/config.rasi"
@@ -396,6 +397,31 @@ if [[ -f "${NS}/greetd/nyxus-greeter" ]]; then
   install -m 0755 "${NS}/greetd/nyxus-greeter" "${LBIN}/nyxus-greeter"
 fi
 ok "helpers: wallpaper-rotate / nyxus-eww-launch / hub+escape set / greeter"
+
+# ── Security mode scripts (rev 2026-07-17) ──────────────────────────────
+# nyxus-ghost, nyxus-panic, nyxus-hacker-mode, nyxus-blackarch-full
+# are user-facing launchers; nyxus-ghost-helper is the privileged backend.
+for _sec in nyxus-ghost nyxus-ghost-helper nyxus-panic nyxus-hacker-mode \
+            nyxus-blackarch-full; do
+  if [[ -f "${NS}/${_sec}" ]]; then
+    install -m 0755 "${NS}/${_sec}" "${LBIN}/${_sec}"
+  fi
+done
+# nyxus-start GTK app — install app directory to /opt/nyxus/nyxus-start
+# and the launcher shim to /usr/local/bin/nyxus-start.
+if [[ -d "${NS}/nyxus-start" ]]; then
+  mkdir -p "${PROFILE_DIR}/airootfs/opt/nyxus/nyxus-start"
+  for _f in "${NS}/nyxus-start"/*.py "${NS}/nyxus-start/nyxus-palette.css"; do
+    [[ -f "${_f}" ]] || continue
+    install -m 0644 "${_f}" "${PROFILE_DIR}/airootfs/opt/nyxus/nyxus-start/"
+  done
+  if [[ -f "${NS}/nyxus-start/nyxus-start" ]]; then
+    # Adapt the launcher path from ~/.nyxus to /opt/nyxus (ISO context).
+    sed 's|${HOME}/.nyxus/nyxus-start|/opt/nyxus/nyxus-start|g' \
+      "${NS}/nyxus-start/nyxus-start" > "${LBIN}/nyxus-start"
+    chmod 0755 "${LBIN}/nyxus-start"
+  fi
+fi
 
 # Sound theme assets used by nyxus-sound.sh (falls back to canberra IDs if missing).
 if [[ -d "${NS}/sounds" ]]; then

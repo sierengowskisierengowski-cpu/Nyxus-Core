@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Tour
+GenericName=Tour
+Comment=Guided showcase of the NYXUS desktop features
+Exec=nyxus-tour
+TryExec=nyxus-tour
+Icon=help-about
+Terminal=false
+Categories=System;
+Keywords=NYXUS;NYX;Tour;Demo;Showcase;
+StartupNotify=false

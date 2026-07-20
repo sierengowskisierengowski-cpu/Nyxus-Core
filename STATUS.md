@@ -1,4 +1,4 @@
-# NyXxOS / Nyxus-Core — Status
+# NYXUS / Nyxus-Core — Status
 
 > **Last updated:** 2026-07-12
 >

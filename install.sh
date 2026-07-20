@@ -66,15 +66,16 @@ esac; done
 
 LAUNCHERS=(
   nyxus-accent-from-wallpaper nyxus-apply-accent nyxus-backup nyxus-beat
-  nyxus-beatd nyxus-bootstrap nyxus-companion nyxus-crash-report nyxus-drop
+  nyxus-beatd nyxus-blackarch-full nyxus-bootstrap nyxus-companion nyxus-crash-report nyxus-drop
   nyxus-dynamic-wallpaper.sh nyxus-eww-cinematic nyxus-eww-launch
-  nyxus-eww-launch-safe nyxus-freeform nyxus-gen-backdrop nyxus-home
+  nyxus-eww-launch-safe nyxus-freeform nyxus-gen-backdrop nyxus-ghost
+  nyxus-ghost-helper nyxus-hacker-mode nyxus-home
   nyxus_hotcorners.py nyxus-hub-apps nyxus-hub-close nyxus-hub-launch
   nyxus-hub-open nyxus-hub-search nyxus-lens nyxus-livewall-flagship
   nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art
   nyxus-lock-track nyxus-mission-control-toggle nyxus-notifications
-  nyxus-notif-to-eww nyxus-nowplaying nyxus-palette-extract nyxus-plugins
-  nyxus-plymouth-install nyxus-postinstall nyxus-pulsed nyxus-record
+  nyxus-notif-to-eww nyxus-nowplaying nyxus-palette-extract nyxus-panic
+  nyxus-plugins nyxus-plymouth-install nyxus-postinstall nyxus-pulsed nyxus-record
   nyxus-screensaver nyxus-security nyxus-session-start nyxus-settings
   nyxus-set-wallpaper nyxus-set-wallpaper.sh nyxus-sfx nyxus-shader
   nyxus-sound nyxus-sound-bake nyxus-soundd nyxus-sound-forge nyxus-sounds
@@ -99,7 +100,7 @@ build_manifests() {
   while IFS= read -r -d '' f; do
     manifest_add MANIFEST_EWW "${f#"$NS"/eww/}"
   done < <(find "$NS/eww" -type f -print0)
-  for f in hyprland.conf hypridle.conf hyprlock.conf hyprpaper.conf; do
+  for f in hyprland.conf hypridle.conf hyprlock.conf hyprlock-accent.conf hyprpaper.conf; do
     manifest_add MANIFEST_HYPR "$f"
   done
   for f in "$NS"/nyxus-*.conf; do
@@ -121,6 +122,7 @@ build_manifests() {
     manifest_add MANIFEST_NYXUS "$(basename "$f")"
   done
   for base in "${LAUNCHERS[@]}"; do manifest_add MANIFEST_BIN "$base"; done
+  manifest_add MANIFEST_BIN "nyxus-start"  # deployed from nyxus-start/ sub-dir
   while IFS= read -r -d '' f; do
     manifest_add MANIFEST_DESKTOP "$(basename "$f")"
   done < <(find "$NS/desktop-entries" -maxdepth 1 -type f -name '*.desktop' -print0)
@@ -261,7 +263,7 @@ done < <(find "$NS/eww" -type f -print0)
 ok "eww → ~/.config/eww  ($n files checked)"
 
 # hyprland (core + conf.d + shaders ride along in repo hyprland tree)
-for f in hyprland.conf hypridle.conf hyprlock.conf hyprpaper.conf; do
+for f in hyprland.conf hypridle.conf hyprlock.conf hyprlock-accent.conf hyprpaper.conf; do
   place "$NS/$f" "$HOME/.config/hypr/$f" || true
 done
 for f in "$NS"/nyxus-*.conf; do
@@ -296,6 +298,18 @@ for f in "$NS"/nyxus_*.py; do
   place "$f" "$HOME/.nyxus/$base" 0755 && n=$((n+1)) || true
 done
 ok "app suite → ~/.nyxus  ($n apps checked)"
+
+# nyxus-start GTK app → ~/.nyxus/nyxus-start/ + launcher → ~/.local/bin/nyxus-start
+if [[ -d "$NS/nyxus-start" ]]; then
+  mkdir -p "$HOME/.nyxus/nyxus-start"
+  n=0
+  for f in "$NS/nyxus-start"/*.py "$NS/nyxus-start/nyxus-palette.css"; do
+    [[ -f "$f" ]] || continue
+    place "$f" "$HOME/.nyxus/nyxus-start/$(basename "$f")" && n=$((n+1)) || true
+  done
+  place "$NS/nyxus-start/nyxus-start" "$HOME/.local/bin/nyxus-start" 0755 || true
+  ok "nyxus-start app → ~/.nyxus/nyxus-start  ($n files) + launcher → ~/.local/bin/nyxus-start"
+fi
 
 # alien matrix-rain screensaver → ~/.config/nyxus/ (the path hypridle +
 # nyxus-screensaver expect; see docs/THEME.md)
@@ -357,7 +371,7 @@ step "6/6 · verify deploy"
 while IFS= read -r -d '' f; do
   verify_pair "$f" "$HOME/.config/eww/${f#"$NS"/eww/}"
 done < <(find "$NS/eww" -type f -print0)
-for f in hyprland.conf hypridle.conf hyprlock.conf hyprpaper.conf; do
+for f in hyprland.conf hypridle.conf hyprlock.conf hyprlock-accent.conf hyprpaper.conf; do
   verify_pair "$NS/$f" "$HOME/.config/hypr/$f"
 done
 for f in "$NS"/nyxus-*.conf; do
@@ -377,6 +391,10 @@ for base in "${LAUNCHERS[@]}"; do
   [[ -f "$NS/$base" ]] || continue
   verify_pair "$NS/$base" "$HOME/.local/bin/$base"
 done
+# nyxus-start launcher (deployed from nyxus-start/ sub-dir)
+if [[ -f "$NS/nyxus-start/nyxus-start" ]]; then
+  verify_pair "$NS/nyxus-start/nyxus-start" "$HOME/.local/bin/nyxus-start"
+fi
 for f in "$NS"/nyxus_*.py; do
   [[ -f "$f" ]] || continue
   [[ "$(basename "$f")" == "nyxus_matrix_saver.py" ]] && continue
