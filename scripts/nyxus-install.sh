@@ -122,7 +122,7 @@ cleanup_sessions() {
   if [[ -d /var/lib/AccountsService/users ]]; then
     python_set_ini_key "/var/lib/AccountsService/users/${REAL_USER}" User Session nyxus-hyprland.desktop true
   fi
-  if [[ "$REAL_HOME" == *[[:space:],]* ]]; then
+  if [[ "$REAL_HOME" == *[[:space:]]* || "$REAL_HOME" == *,* ]]; then
     warn "home path contains whitespace or a comma; omitting user SessionDir from SDDM drop-in (SDDM uses commas to delimit SessionDir entries)"
   else
     sddm_session_dirs="${sddm_session_dirs},${REAL_HOME}/.local/share/wayland-sessions"
@@ -198,7 +198,7 @@ esac; done
 # ── 0. preflight ─────────────────────────────────────────────────────────────
 step "preflight"
 if [[ $EUID -eq 0 ]]; then fail "run as your normal user, not root (sudo is used where needed)"; exit 1; fi
-HOST_LABEL="Arch host"
+HOST_LABEL=""
 if [[ ! -f /etc/arch-release ]]; then
   if $DRY; then
     warn "non-Arch host detected — dry-run preview only"
@@ -206,6 +206,8 @@ if [[ ! -f /etc/arch-release ]]; then
   else
     fail "this installer targets Arch Linux"; exit 1
   fi
+else
+  HOST_LABEL="Arch host"
 fi
 [[ -d "$NS" ]] || { fail "run from a Nyxus-Core clone (missing ${NS})"; exit 1; }
 if ! command -v pacman >/dev/null 2>&1; then

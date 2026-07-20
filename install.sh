@@ -137,6 +137,7 @@ place() { # place <src> <dst> [mode]
 
 BACKUP_ROOT=""
 BACKUP_COUNT=0
+BACKUP_PREVIEW_COUNT=0
 ensure_backup_root() {
   [[ -n "$BACKUP_ROOT" ]] && return 0
   BACKUP_ROOT="${HOME}/.nyxus-backup-$(date +%Y%m%d-%H%M%S)"
@@ -145,7 +146,10 @@ ensure_backup_root() {
 prune_empty_parent_dirs() {
   local current="$1" stop="$2"
   while [[ "$current" != "$stop" && "$current" != "/" ]]; do
-    rmdir "$current" 2>/dev/null || break
+    if ! rmdir "$current" 2>/dev/null; then
+      info "keeping non-empty ${current/#$HOME/\~}"
+      break
+    fi
     current="$(dirname "$current")"
   done
 }
@@ -154,12 +158,13 @@ backup_move() { # backup_move <src> <home-relative-dest>
   ensure_backup_root
   if $CHECK; then
     info "would back up ~/${rel#./}"
+    BACKUP_PREVIEW_COUNT=$((BACKUP_PREVIEW_COUNT+1))
   else
     dst_dir="${BACKUP_ROOT}/$(dirname "$rel")"
     mkdir -p "$dst_dir"
     mv "$src" "${BACKUP_ROOT}/${rel}"
+    BACKUP_COUNT=$((BACKUP_COUNT+1))
   fi
-  BACKUP_COUNT=$((BACKUP_COUNT+1))
 }
 purge_unmanaged_tree() { # purge_unmanaged_tree <root> <prefix> <manifest> [mode]
   local root="$1" prefix="$2" manifest="$3" mode="${4:-generic}" path rel
@@ -219,10 +224,12 @@ purge_unmanaged_tree "$HOME/.config/hypr" ".config/hypr" MANIFEST_HYPR hypr
 purge_unmanaged_tree "$HOME/.nyxus" ".nyxus" MANIFEST_NYXUS
 purge_unmanaged_matches "$HOME/.local/bin" 'nyxus-*' ".local/bin" MANIFEST_BIN
 purge_unmanaged_matches "$HOME/.local/share/applications" 'nyxus-*.desktop' ".local/share/applications" MANIFEST_DESKTOP
-if (( BACKUP_COUNT == 0 )); then
+BACKUP_FOUND=$BACKUP_COUNT
+$CHECK && BACKUP_FOUND=$BACKUP_PREVIEW_COUNT
+if (( BACKUP_FOUND == 0 )); then
   ok "no stale NYXUS-managed files found"
 else
-  ok "$BACKUP_COUNT stale file(s)$($CHECK && printf ' would be') backed up before deploy"
+  ok "$BACKUP_FOUND stale file(s)$($CHECK && printf ' would be') backed up before deploy"
 fi
 
 # ── 3 · deploy: live config surfaces ────────────────────────────────────────
@@ -369,6 +376,7 @@ $KEEP_LEGACY_SESSIONS && SYSTEM_ARGS+=(--keep-legacy-sessions)
 if $RUN_SYSTEM; then
   step "system phase (packages / sessions / greeter)"
   if $CHECK; then
+    info "dry-run preview does not require sudo authentication"
     bash "${REPO_ROOT}/scripts/nyxus-install.sh" --dry-run "${SYSTEM_ARGS[@]}" || die "system phase dry-run failed"
   else
     sudo -v || die "sudo authentication failed"
@@ -389,7 +397,9 @@ else
     warn "managed-file checksum mismatches: ${VERIFY_MATCHED}/${VERIFY_TOTAL} matched repo"
   fi
 fi
-if (( BACKUP_COUNT == 0 )); then
+BACKUP_FOUND=$BACKUP_COUNT
+$CHECK && BACKUP_FOUND=$BACKUP_PREVIEW_COUNT
+if (( BACKUP_FOUND == 0 )); then
   info "backup: none needed (no stale NYXUS-managed files)"
 else
   info "backup: ${BACKUP_ROOT}"
