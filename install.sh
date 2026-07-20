@@ -138,6 +138,10 @@ place() { # place <src> <dst> [mode]
 BACKUP_ROOT=""
 BACKUP_COUNT=0
 BACKUP_PREVIEW_COUNT=0
+preserve_hypr_extra() {
+  local rel="$1"
+  [[ "$rel" == "nyxus-monitors.conf" || "$rel" == walls/rotation/* ]]
+}
 ensure_backup_root() {
   [[ -n "$BACKUP_ROOT" ]] && return 0
   BACKUP_ROOT="${HOME}/.nyxus-backup-$(date +%Y%m%d-%H%M%S)"
@@ -147,7 +151,13 @@ prune_empty_parent_dirs() {
   local current="$1" stop="$2"
   while [[ "$current" != "$stop" && "$current" != "/" ]]; do
     if ! rmdir "$current" 2>/dev/null; then
-      info "keeping non-empty ${current/#$HOME/\~}"
+      if [[ ! -d "$current" ]]; then
+        warn "could not inspect pruned parent ${current/#$HOME/\~}"
+      elif [[ -n "$(find "$current" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
+        info "keeping non-empty ${current/#$HOME/\~}"
+      else
+        warn "could not prune empty ${current/#$HOME/\~}"
+      fi
       break
     fi
     current="$(dirname "$current")"
@@ -171,9 +181,7 @@ purge_unmanaged_tree() { # purge_unmanaged_tree <root> <prefix> <manifest> [mode
   [[ -d "$root" ]] || return 0
   while IFS= read -r -d '' path; do
     rel="${path#"$root"/}"
-    case "$mode:$rel" in
-      hypr:nyxus-monitors.conf|hypr:walls/rotation/*) continue ;;
-    esac
+    [[ "$mode" == "hypr" ]] && preserve_hypr_extra "$rel" && continue
     if ! manifest_has "$manifest" "$rel"; then
       backup_move "$path" "${prefix}/${rel}"
       $CHECK || prune_empty_parent_dirs "$(dirname "$path")" "$root"
@@ -192,11 +200,14 @@ purge_unmanaged_matches() { # purge_unmanaged_matches <dir> <glob> <prefix> <man
 }
 VERIFY_TOTAL=0
 VERIFY_MATCHED=0
+VERIFY_MISMATCHES=()
 verify_pair() { # verify_pair <src> <dst>
   local src="$1" dst="$2"
   VERIFY_TOTAL=$((VERIFY_TOTAL+1))
   if [[ -f "$dst" ]] && cmp -s "$src" "$dst"; then
     VERIFY_MATCHED=$((VERIFY_MATCHED+1))
+  else
+    VERIFY_MISMATCHES+=("${dst/#$HOME/\~}")
   fi
 }
 
@@ -395,6 +406,7 @@ else
     ok "managed-file checksums match repo (${VERIFY_MATCHED}/${VERIFY_TOTAL})"
   else
     warn "managed-file checksum mismatches: ${VERIFY_MATCHED}/${VERIFY_TOTAL} matched repo"
+    warn "mismatched paths: ${VERIFY_MISMATCHES[*]:0:8}"
   fi
 fi
 BACKUP_FOUND=$BACKUP_COUNT

@@ -47,8 +47,9 @@ run()  { if $DRY; then printf "  ${GOLD}[dry-run]${R} %s\n" "$*"; else eval "$*"
 DRY=false; TIER=full; ASSUME_YES=false
 DO_GREETER=true; DO_KERNEL=false; DO_NVIDIA=false; DO_LOADOUT=false
 SKIP_USER_CONFIG=false; KEEP_LEGACY_SESSIONS=false
-REAL_USER="${USER}"
-REAL_HOME="${HOME}"
+REAL_USER="${SUDO_USER:-${USER}}"
+REAL_HOME="$(getent passwd "${REAL_USER}" | cut -d: -f6)"
+[[ -n "$REAL_HOME" ]] || REAL_HOME="${HOME}"
 usage() { awk 'NR==1{next} /^#/ {sub(/^# ?/, ""); print; next} {exit}' "${BASH_SOURCE[0]}"; exit 0; }
 python_set_ini_key() { # python_set_ini_key <file> <section> <key> <value> <use-sudo-literal:true|false>
   local file="$1" section="$2" key="$3" value="$4" use_sudo="${5:-false}" runner=(python3)
@@ -122,8 +123,8 @@ cleanup_sessions() {
   if [[ -d /var/lib/AccountsService/users ]]; then
     python_set_ini_key "/var/lib/AccountsService/users/${REAL_USER}" User Session nyxus-hyprland.desktop true
   fi
-  if [[ "$REAL_HOME" == *[[:space:]]* || "$REAL_HOME" == *,* ]]; then
-    warn "home path contains whitespace or a comma; omitting user SessionDir from SDDM drop-in (SDDM uses commas to delimit SessionDir entries)"
+  if [[ ! "$REAL_HOME" =~ ^[-[:alnum:]_./]+$ ]]; then
+    warn "home path contains characters SDDM SessionDir does not handle safely; omitting user SessionDir from SDDM drop-in"
   else
     sddm_session_dirs="${sddm_session_dirs},${REAL_HOME}/.local/share/wayland-sessions"
   fi
@@ -199,6 +200,7 @@ esac; done
 step "preflight"
 if [[ $EUID -eq 0 ]]; then fail "run as your normal user, not root (sudo is used where needed)"; exit 1; fi
 HOST_LABEL=""
+DRY_SUFFIX=""
 if [[ ! -f /etc/arch-release ]]; then
   if $DRY; then
     warn "non-Arch host detected — dry-run preview only"
@@ -213,9 +215,10 @@ fi
 if ! command -v pacman >/dev/null 2>&1; then
   if $DRY; then warn "pacman not found on this host — package preview limited"; else fail "pacman not found"; exit 1; fi
 fi
+$DRY && DRY_SUFFIX=", DRY-RUN"
 PKG_LIST="${PROFILE}/packages.x86_64"; [[ "$TIER" == lean ]] && PKG_LIST="${PROFILE}/packages.x86_64.lean"
 [[ -f "$PKG_LIST" ]] || { fail "package list not found: $PKG_LIST"; exit 1; }
-ok "${HOST_LABEL}, running as ${USER}, tier=${TIER}$($DRY && echo ', DRY-RUN')"
+ok "${HOST_LABEL}, running as ${USER}, tier=${TIER}${DRY_SUFFIX}"
 ok "plan: packages + session-cleanup + verify$($SKIP_USER_CONFIG || echo ' + configs + apps')$($DO_GREETER && echo ' + greeter')$($DO_KERNEL && echo ' + kernel')$($DO_NVIDIA && echo ' + nvidia-suspend')$($DO_LOADOUT && echo ' + security-loadout')"
 
 if ! $DRY && ! $ASSUME_YES; then
