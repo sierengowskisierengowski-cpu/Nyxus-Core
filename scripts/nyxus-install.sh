@@ -49,7 +49,7 @@ DO_GREETER=true; DO_KERNEL=false; DO_NVIDIA=false; DO_LOADOUT=false
 SKIP_USER_CONFIG=false; KEEP_LEGACY_SESSIONS=false
 REAL_USER="${USER}"
 REAL_HOME="${HOME}"
-usage() { sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; }
+usage() { awk 'NR==1{next} /^#/ {sub(/^# ?/, ""); print; next} {exit}' "${BASH_SOURCE[0]}"; exit 0; }
 python_set_ini_key() { # python_set_ini_key <file> <section> <key> <value> <use-sudo-literal:true|false>
   local file="$1" section="$2" key="$3" value="$4" use_sudo="${5:-false}" runner=(python3)
   $use_sudo && runner=(sudo python3)
@@ -123,7 +123,7 @@ cleanup_sessions() {
     python_set_ini_key "/var/lib/AccountsService/users/${REAL_USER}" User Session nyxus-hyprland.desktop true
   fi
   if [[ "$REAL_HOME" == *[[:space:],]* ]]; then
-    warn "home path contains whitespace/comma; omitting user SessionDir from SDDM drop-in"
+    warn "home path contains whitespace or a comma; omitting user SessionDir from SDDM drop-in (SDDM uses commas to delimit SessionDir entries)"
   else
     sddm_session_dirs="${sddm_session_dirs},${REAL_HOME}/.local/share/wayland-sessions"
   fi
@@ -200,8 +200,12 @@ step "preflight"
 if [[ $EUID -eq 0 ]]; then fail "run as your normal user, not root (sudo is used where needed)"; exit 1; fi
 HOST_LABEL="Arch host"
 if [[ ! -f /etc/arch-release ]]; then
-  if $DRY; then warn "non-Arch host detected — dry-run preview only"; else fail "this installer targets Arch Linux"; exit 1; fi
-  HOST_LABEL="non-Arch preview host"
+  if $DRY; then
+    warn "non-Arch host detected — dry-run preview only"
+    HOST_LABEL="non-Arch preview host"
+  else
+    fail "this installer targets Arch Linux"; exit 1
+  fi
 fi
 [[ -d "$NS" ]] || { fail "run from a Nyxus-Core clone (missing ${NS})"; exit 1; }
 if ! command -v pacman >/dev/null 2>&1; then
