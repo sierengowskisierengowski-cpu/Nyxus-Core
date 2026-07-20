@@ -39,19 +39,31 @@ git clone https://github.com/sierengowskisierengowski-cpu/Nyxus-Core.git
 cd Nyxus-Core && ./install.sh
 ```
 
+Preview the same full deploy without changing anything:
+
+```bash
+./install.sh --check
+```
+
 Or the one-liner (once you trust the repo — read scripts you pipe to bash):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sierengowskisierengowski-cpu/Nyxus-Core/main/install.sh | bash -s -- --check   # preview
 ```
 
-`install.sh` is the user-level deployer: it places the exact live-verified
-configs onto `~/.config/eww`, `~/.config/hypr`, `~/.local/bin`, `~/.nyxus`,
-`~/.config/nyxus` (matrix screensaver) and `~/.local/share/applications`,
-compiles the theme CSS, and reloads a running session. It is idempotent —
-re-running it converges to zero changes. Flags: `--check` (preview),
-`--no-reload`, `--system` (full package/greeter/kernel install via
-`scripts/nyxus-install.sh`, needs sudo).
+`install.sh` is the canonical one-command installer. By default it:
+- backs up and purges stale NYXUS-managed files from `~/.config/hypr`,
+  `~/.config/eww`, `~/.nyxus`, `~/.local/bin/nyxus-*`, and
+  `~/.local/share/applications/nyxus-*.desktop`
+- preserves user-owned state (`~/.config/nyxus`, `nyxus-monitors.conf`, extra
+  wallpapers in `~/.config/hypr/walls/rotation`)
+- redeploys the repo-managed configs/apps/desktop entries
+- runs the system phase (`scripts/nyxus-install.sh`) to install packages,
+  repair greeter/session entries, and set `NYXUS (Hyprland)` as the default session
+
+It is idempotent — re-running it on a clean system converges to zero changes and
+creates no new backup directory. Flags: `--check` (preview), `--user-only`
+(skip the system phase), `--no-reload`, `--keep-legacy-sessions`.
 
 ---
 

@@ -4,7 +4,7 @@ NYXUS has **two** install paths. Pick the one that matches your situation.
 
 | Path | Use when | Entry point |
 |------|----------|-------------|
-| **Bootstrap (rice)** | You already run Arch and want the NYXUS desktop on it | `scripts/nyxus-install.sh` |
+| **Bootstrap (rice)** | You already run Arch and want the NYXUS desktop on it | `install.sh` |
 | **NYX ISO (bare metal)** | Fresh install on a new/wiped machine | `iso-builder/build-iso.sh` → flash → install |
 
 ---
@@ -12,45 +12,42 @@ NYXUS has **two** install paths. Pick the one that matches your situation.
 ## 1. Bootstrap install (onto an existing Arch system)
 
 Dotfiles/rice-style: clone the repo, run one script, get a working NYXUS
-Hyprland desktop. It **orchestrates** the existing, tested pieces (config
-restore, greeter, kernel, verify) rather than reimplementing them.
+Hyprland desktop. `install.sh` is the canonical entry point: it cleans stale
+NYXUS-managed user files with backup, redeploys the user surfaces, then runs
+the system phase (packages / greeter / session cleanup / verify).
 
 ```bash
 git clone https://github.com/sierengowskisierengowski-cpu/Nyxus-Core
 cd Nyxus-Core
-./scripts/nyxus-install.sh --dry-run     # preview the full plan, change nothing
-./scripts/nyxus-install.sh               # base desktop (packages + configs + apps)
+./install.sh --check     # preview the full plan, change nothing
+./install.sh             # full clean deploy
 ```
 
 ### What the base run does
 1. **Preflight** — confirms Arch, that you're a normal user (not root), and the package list exists.
-2. **Packages** — installs the profile package set with `pacman -S --needed`. Entries not in your enabled repos (AUR pkgs, `lib32-*` with multilib off) are **skipped, not fatal**, and reported.
-3. **Configs** — runs `nyxus-restore-desktop.sh`, which **backs up** your current `~/.config/{hypr,eww,rofi,dunst,wlogout,alacritty,nyxus}` first, then places the canonical hypr/eww/rofi/dunst configs, stations, wallpapers, and helper launchers.
-4. **App suite** — copies the ~40 NYXUS GTK apps into `~/.nyxus/` and generates `~/.local/bin/nyxus-*` launchers.
-5. **Verify** — runs `nyxus-verify-build.sh`.
-
-Then log out and pick **NYXUS (Hyprland)** at your login screen.
+2. **Purge with backup** — moves stale NYXUS-managed files out of `~/.config/hypr`, `~/.config/eww`, `~/.nyxus`, `~/.local/bin/nyxus-*`, and `~/.local/share/applications/nyxus-*.desktop` into `~/.nyxus-backup-<timestamp>/`.
+3. **Preserve user-owned state** — leaves `~/.config/nyxus`, `nyxus-monitors.conf`, and extra wallpapers in `~/.config/hypr/walls/rotation` untouched.
+4. **User deploy** — places the canonical hypr/eww configs, launchers, app suite, desktop entries, and wallpaper rotation set.
+5. **System phase** — delegates to `scripts/nyxus-install.sh --yes --skip-user-config` for packages, greeter/session repair, default-session pinning, and build verification.
+6. **Verification summary** — reports backup location, session cleanup/default-session status, and managed-file checksum parity.
 
 ### Flags
 | Flag | Effect |
 |------|--------|
 | `--dry-run` | Print the full plan and change nothing (recommended first run). |
-| `--yes`, `-y` | Skip the confirmation prompt (for automation). |
-| `--lean` / `--full` | Use `packages.x86_64.lean` / `.x86_64` (default: full). |
-| `--greeter` | **Opt-in.** Switch the login to greetd + regreet (`nyxus-setup-greetd.sh`). |
-| `--nvidia-suspend` | **Opt-in.** Fix Optimus suspend/resume (`nyxus-fix-nvidia-suspend.sh`). |
-| `--kernel` | **Opt-in.** Build + install the `kage-ryu` kernel as a *selectable* entry (stock stays default). Long build. |
-| `--loadout` | **Opt-in.** Install the GowskiNet security loadout (jeTT / kage-ryu sensor / Bifrost) — see brief §8.1. |
-| `--all` | Base + every opt-in above. |
+| `--user-only` | Skip the system phase and deploy only the cleaned user surfaces. |
+| `--no-reload` | Do not reload a running Hyprland session after deploy. |
+| `--keep-legacy-sessions` | Preserve old `qtile.desktop` / stock Hyprland session entries instead of removing them. |
 
 ### Safety notes
-- **Idempotent** — safe to re-run; the config phase backs up each time.
-- The **greeter/kernel/loadout are never run by default** — they change the
-  login path or install a custom kernel, so they're explicit opt-ins. Make
-  sure you can reach a TTY (`Ctrl+Alt+F2`) before using `--greeter`.
+- **Idempotent** — safe to re-run; once the system is clean, no new backup dir is created.
+- The default run now includes greeter/session repair so the login path matches
+  the current NYXUS build after one command.
 - Enable the `multilib` repo (in `/etc/pacman.conf`) before installing if you
   want the 32-bit Steam/Proton bits; otherwise those `lib32-*` packages are
   cleanly skipped.
+- `scripts/nyxus-install.sh` remains available as the advanced system-phase
+  entry point (`--skip-user-config`, `--no-greeter`, kernel/NVIDIA/loadout flags).
 
 ---
 
