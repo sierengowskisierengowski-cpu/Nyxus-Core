@@ -53,9 +53,11 @@ _getopt() { hyprctl getoption "$1" -j 2>/dev/null | jq -r "$2" 2>/dev/null; }
 is_on()   { [[ -f "${STATE}" ]] && grep -q '^mode=on$' "${STATE}"; }
 
 expand_home() {
+  local home="${HOME:-}"
+  [[ -n "${home}" ]] || return 1
   case "${1:-}" in
-    "~")    printf '%s\n' "$HOME" ;;
-    "~/"*)  printf '%s/%s\n' "$HOME" "${1#~/}" ;;
+    "~")    printf '%s\n' "${home}" ;;
+    "~/"*)  printf '%s/%s\n' "${home}" "${1#~/}" ;;
     *)      printf '%s\n' "${1:-}" ;;
   esac
 }
@@ -70,6 +72,7 @@ json_string() {
 resolve_wallpaper_path() {
   local filename="$1" file dir
   [[ -n "$filename" ]] || return 1
+  [[ "$filename" = /* && -r "$filename" ]] && { printf '%s\n' "$filename"; return 0; }
   for dir in "${@:2}"; do
     [[ -n "$dir" ]] || continue
     dir="$(expand_home "$dir")"
