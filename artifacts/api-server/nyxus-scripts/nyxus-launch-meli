@@ -20,7 +20,7 @@ open_grafana() {
 if command -v meli >/dev/null 2>&1; then
   setsid meli >/dev/null 2>&1 &
 else
-  msg="Meli is not installed on this system yet. PULSE expects the Meli app before the honeypot station can fully launch."
+  msg="Meli is not installed on this system yet. Install the Meli app before the PULSE honeypot station can fully launch."
   printf '%s\n' "$msg" >&2
   notify -u critical "NYXUS Meli" "$msg"
 fi

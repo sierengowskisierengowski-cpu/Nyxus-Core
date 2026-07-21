@@ -48,13 +48,17 @@ HACKER_BORDER="rgba(00ff41ff) rgba(0aff9dff) rgba(0a2a12ff) 90deg"
 HACKER_INACTIVE_BORDER="rgba(00ff4133) rgba(0a2a1233) 90deg"
 
 notify()  { command -v notify-send >/dev/null 2>&1 && notify-send "$@" || true; }
+warn()    { printf '[nyxus-hacker-mode] %s\n' "$*" >&2; }
 _hypr()   { command -v hyprctl >/dev/null 2>&1 && hyprctl "$@" >/dev/null 2>&1 || true; }
 _getopt() { hyprctl getoption "$1" -j 2>/dev/null | jq -r "$2" 2>/dev/null; }
 is_on()   { [[ -f "${STATE}" ]] && grep -q '^mode=on$' "${STATE}"; }
 
 expand_home() {
   local home="${HOME:-}"
-  [[ -n "${home}" ]] || return 1
+  if [[ -z "${home}" ]]; then
+    warn "HOME is empty; cannot expand wallpaper paths."
+    return 1
+  fi
   case "${1:-}" in
     "~")    printf '%s\n' "${home}" ;;
     "~/"*)  printf '%s/%s\n' "${home}" "${1#~/}" ;;
@@ -71,7 +75,10 @@ json_string() {
 
 resolve_wallpaper_path() {
   local filename="$1" file dir
-  [[ -n "$filename" ]] || return 1
+  if [[ -z "$filename" ]]; then
+    warn "wallpaper filename is empty; cannot resolve path."
+    return 1
+  fi
   [[ "$filename" = /* && -r "$filename" ]] && { printf '%s\n' "$filename"; return 0; }
   for dir in "${@:2}"; do
     [[ -n "$dir" ]] || continue
@@ -80,6 +87,7 @@ resolve_wallpaper_path() {
     [[ -r "$file" ]] && { printf '%s\n' "$file"; return 0; }
   done
   [[ -r "$filename" ]] && { printf '%s\n' "$filename"; return 0; }
+  warn "could not resolve wallpaper path for ${filename}."
   return 1
 }
 
