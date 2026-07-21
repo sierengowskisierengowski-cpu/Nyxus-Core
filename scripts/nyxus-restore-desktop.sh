@@ -123,7 +123,8 @@ ok "eww: $(ls "${HOME}/.config/eww/"*.yuck | wc -l) yuck modules, $(ls "${HOME}/
 # ── 4. dunst / rofi / wlogout / alacritty ───────────────────────────────────
 step "install app configs"
 mkdir -p "${HOME}/.config/dunst" "${HOME}/.config/rofi" \
-         "${HOME}/.config/wlogout" "${HOME}/.config/alacritty"
+         "${HOME}/.config/wlogout" "${HOME}/.config/alacritty" \
+         "${HOME}/.config/kitty"
 install -m 0644 "${NS}/nyxus-dunstrc"       "${HOME}/.config/dunst/dunstrc"
 # UFO notification icon (dunst icon_path) — keep the dunstrc icon_path + the
 # bridge script's paths pointed at the deploying user's home.
@@ -136,7 +137,8 @@ install -m 0644 "${NS}/rofi-startmenu.rasi" "${HOME}/.config/rofi/startmenu.rasi
 install -m 0644 "${NS}/wlogout-style.css"   "${HOME}/.config/wlogout/style.css"
 install -m 0644 "${NS}/wlogout-layout"      "${HOME}/.config/wlogout/layout"
 install -m 0644 "${NS}/alacritty.toml"      "${HOME}/.config/alacritty/alacritty.toml"
-ok "dunst / rofi / wlogout / alacritty"
+[ -f "${NS}/kitty.conf" ] && install -m 0644 "${NS}/kitty.conf" "${HOME}/.config/kitty/kitty.conf"
+ok "dunst / rofi / wlogout / alacritty / kitty"
 
 # ── 5. station matrix + wallpaper config ────────────────────────────────────
 step "install station matrix + wallpaper config"
