@@ -140,6 +140,7 @@ file_permissions=(
   ["/usr/local/bin/nyxus-plymouth"]="0:0:755"
   ["/usr/local/bin/nyxus-protonup"]="0:0:755"
   ["/usr/local/bin/nyxus-qs"]="0:0:755"
+  ["/usr/local/bin/nyxus-rotate-walls"]="0:0:755"
   ["/usr/local/bin/nyxus-screensaver"]="0:0:755"
   ["/usr/local/bin/nyxus-secboot"]="0:0:755"
   ["/usr/local/bin/nyxus-session-start"]="0:0:755"
