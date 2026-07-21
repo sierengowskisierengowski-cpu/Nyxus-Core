@@ -79,7 +79,7 @@ LAUNCHERS=(
   nyxus-persist-login
   nyxus-plugins nyxus-plymouth-install nyxus-postinstall nyxus-pulsed nyxus-record
   nyxus-rotate-walls
-  nyxus-screensaver nyxus-security nyxus-session-start nyxus-settings
+  nyxus-screensaver nyxus-security nyxus-sense nyxus-session-start nyxus-settings
   nyxus-set-wallpaper nyxus-set-wallpaper.sh nyxus-sfx nyxus-shader
   nyxus-sound nyxus-sound-bake nyxus-soundd nyxus-sound-forge nyxus-sounds
   nyxus-spray nyxus-store nyxus-sync-stations nyxus-tint nyxus-tintd
