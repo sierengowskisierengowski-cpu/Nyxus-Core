@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-voice-model   ·   rev 2026-07-14 r1 (Cosmic Voice Control)
+#
+# Fetch + install an OFFLINE Vosk speech model for nyxus-voiced.
+#
+# The model binary is NOT shipped in the repo (it's ~40-50MB). This
+# helper downloads it once from the official Alpha Cephei mirror and
+# unpacks it to  ~/.local/share/nyxus/vosk/<model>/  where the daemon
+# auto-detects it. Purely a one-time, user-initiated download — the
+# daemon itself never touches the network.
+#
+# Usage:
+#   nyxus-voice-model                 install the default small EN model
+#   nyxus-voice-model --model NAME    install a specific model (see --list)
+#   nyxus-voice-model --list          show known model names + sizes
+#   nyxus-voice-model --url URL       install from an explicit .zip URL
+#   nyxus-voice-model --dir PATH      install into PATH (default share dir)
+#   nyxus-voice-model --status        show what's installed / detected
+#
+# After install:  nyxus-voice restart
+#
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -euo pipefail
+
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/nyxus/vosk"
+BASE_URL="https://alphacephei.com/vosk/models"
+
+# name -> "zip-filename  approx-size  description"
+declare -A MODELS=(
+  [small-en]="vosk-model-small-en-us-0.15.zip|40MB|English (US), small, always-on friendly (DEFAULT)"
+  [en]="vosk-model-en-us-0.22.zip|1.8GB|English (US), full accuracy (heavy)"
+  [small-en-in]="vosk-model-small-en-in-0.4.zip|36MB|English (Indian), small"
+  [small-de]="vosk-model-small-de-0.15.zip|45MB|German, small"
+  [small-es]="vosk-model-small-es-0.42.zip|39MB|Spanish, small"
+  [small-fr]="vosk-model-small-fr-0.22.zip|41MB|French, small"
+)
+
+MODEL="small-en"
+URL=""
+DEST="$DATA_DIR"
+
+usage() { sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; }
+
+list_models() {
+  echo "Known Vosk models (offline, download-once):"
+  printf "  %-14s %-8s %s\n" NAME SIZE DESCRIPTION
+  local k v size desc
+  for k in small-en en small-en-in small-de small-es small-fr; do
+    v="${MODELS[$k]}"
+    size="$(echo "$v" | cut -d'|' -f2)"
+    desc="$(echo "$v" | cut -d'|' -f3)"
+    printf "  %-14s %-8s %s\n" "$k" "$size" "$desc"
+  done
+  echo
+  echo "Default: small-en (best for always-on wake-word capture)."
+  echo "Full catalog: ${BASE_URL%/models}  (https://alphacephei.com/vosk/models)"
+}
+
+status() {
+  echo "── NYXUS voice model · status ────────────────────────────────"
+  echo "install dir : $DATA_DIR"
+  if [[ -d "$DATA_DIR" ]]; then
+    local found=0
+    for d in "$DATA_DIR"/*/; do
+      [[ -d "$d" ]] || continue
+      if [[ -d "${d}am" ]]; then
+        echo "  ✓ model: ${d}  ($(du -sh "$d" 2>/dev/null | cut -f1))"
+        found=1
+      fi
+    done
+    [[ $found -eq 1 ]] || echo "  (no usable model found — run: nyxus-voice-model)"
+  else
+    echo "  (nothing installed — run: nyxus-voice-model)"
+  fi
+  if command -v python3 >/dev/null 2>&1; then
+    if python3 -c "import vosk" 2>/dev/null; then
+      echo "python-vosk : installed"
+    else
+      echo "python-vosk : MISSING  ->  pip install --user vosk   (or: pipx/venv)"
+    fi
+  fi
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --model)  shift; MODEL="${1:-}" ;;
+    --url)    shift; URL="${1:-}" ;;
+    --dir)    shift; DEST="${1:-$DATA_DIR}" ;;
+    --list|-l) list_models; exit 0 ;;
+    --status|-s) status; exit 0 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "nyxus-voice-model: unknown arg '$1'" >&2; usage; exit 2 ;;
+  esac
+  shift
+done
+
+command -v curl  >/dev/null 2>&1 || { echo "need curl"  >&2; exit 3; }
+command -v unzip >/dev/null 2>&1 || { echo "need unzip (sudo pacman -S unzip)" >&2; exit 3; }
+
+if [[ -z "$URL" ]]; then
+  entry="${MODELS[$MODEL]:-}"
+  if [[ -z "$entry" ]]; then
+    echo "nyxus-voice-model: unknown model '$MODEL' (see --list)" >&2
+    exit 2
+  fi
+  zip="$(echo "$entry" | cut -d'|' -f1)"
+  URL="${BASE_URL}/${zip}"
+fi
+
+zipname="$(basename "$URL")"
+modelname="${zipname%.zip}"
+mkdir -p "$DEST"
+target="${DEST}/${modelname}"
+
+if [[ -d "${target}/am" ]]; then
+  echo "nyxus-voice-model: already installed at ${target}"
+  echo "Re-run 'nyxus-voice restart' to pick it up, or delete it to reinstall."
+  exit 0
+fi
+
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+echo "── NYXUS voice model ─────────────────────────────────────────"
+echo "  model  : ${modelname}"
+echo "  url    : ${URL}"
+echo "  dest   : ${target}"
+echo "  (one-time download; the daemon stays 100% offline afterwards)"
+echo
+
+echo "Downloading…"
+if ! curl -fL --progress-bar -o "${tmp}/${zipname}" "$URL"; then
+  echo "nyxus-voice-model: download failed. Check your network or pass --url." >&2
+  exit 4
+fi
+
+echo "Unpacking…"
+unzip -q "${tmp}/${zipname}" -d "$tmp"
+
+# The zip extracts to a top-level dir named after the model.
+extracted="$(find "$tmp" -maxdepth 2 -type d -name 'am' -printf '%h\n' 2>/dev/null | head -1)"
+if [[ -z "$extracted" ]]; then
+  echo "nyxus-voice-model: unexpected archive layout (no am/ dir found)" >&2
+  exit 5
+fi
+
+rm -rf "$target"
+mv "$extracted" "$target"
+
+echo
+echo "  ✓ installed: ${target}  ($(du -sh "$target" 2>/dev/null | cut -f1))"
+echo
+echo "Next:"
+if ! python3 -c "import vosk" 2>/dev/null; then
+  echo "  1. Install the Vosk python module:   pip install --user vosk"
+  echo "  2. Restart the listener:             nyxus-voice restart"
+else
+  echo "  Restart the listener:                nyxus-voice restart"
+fi
+echo "  Then say:  \"Nyxus, lock down\""

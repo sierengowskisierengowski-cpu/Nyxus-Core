@@ -2,7 +2,7 @@
 """
 NYXUS — Full-Screen Error Takeover
 Red binary matrix cascade with glowing ERROR text.
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 
 
@@ -189,7 +189,7 @@ def render_error(
     detail_row     = logo_row_start + len(ERROR_ART) + 2
     menu_row       = rows - 4
 
-    copyright = "© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
+    copyright = "© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
     cp_col    = max(0, (cols - len(copyright)) // 2)
 
     start_time = time.time()

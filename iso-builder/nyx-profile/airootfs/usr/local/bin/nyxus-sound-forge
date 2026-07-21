@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+# ════════════════════════════════════════════════════════════════════
+# nyxus-sound-forge   ·   rev 2026-07-07 r1 (Signature)
+#
+# Synthesizes the NYXUS UI sound set from pure math (stdlib only —
+# wave + struct, no samples, no dependencies) into
+# ~/.local/share/nyxus/sounds/. Rerun any time to regenerate.
+#
+# The palette: short, soft, synthetic — sci-fi console, not Windows.
+# Everything is mixed quiet (peak ~0.30) so it sits UNDER music.
+#
+#   open.wav       rising dual-sine blip        (window opens)
+#   close.wav      falling dual-sine blip       (window closes)
+#   workspace.wav  40ms crystal tick            (workspace switch)
+#   shot.wav       noise-click + high ping      (screenshot)
+#   on.wav         3-note ascending chime       (something enabled)
+#   off.wav        2-note descending chime      (something disabled)
+#   boot.wav       1.4s pad swell               (splash curtain)
+#
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+import math, os, random, struct, wave
+
+RATE = 44100
+OUT = os.path.expanduser("~/.local/share/nyxus/sounds")
+os.makedirs(OUT, exist_ok=True)
+random.seed(2026)
+
+def env(i, n, attack=0.008, release=None):
+    """attack/decay envelope; release defaults to full remaining tail"""
+    t = i / RATE
+    dur = n / RATE
+    a = min(1.0, t / attack) if attack > 0 else 1.0
+    rel = release if release is not None else dur * 0.9
+    d = min(1.0, max(0.0, (dur - t) / rel))
+    return a * d
+
+def sine_sweep(dur, f0, f1, amp=0.28, harmonics=((1, 1.0), (2, 0.35))):
+    n = int(dur * RATE)
+    out = []
+    phase = 0.0
+    for i in range(n):
+        f = f0 + (f1 - f0) * (i / n)
+        phase += 2 * math.pi * f / RATE
+        s = sum(w * math.sin(phase * h) for h, w in harmonics)
+        out.append(amp * env(i, n) * s)
+    return out
+
+def chime(notes, note_dur=0.11, gap=0.02, amp=0.22):
+    out = []
+    for f in notes:
+        n = int(note_dur * RATE)
+        for i in range(n):
+            s = math.sin(2 * math.pi * f * i / RATE) \
+                + 0.4 * math.sin(2 * math.pi * f * 2 * i / RATE)
+            out.append(amp * env(i, n, attack=0.004) * s)
+        out.extend([0.0] * int(gap * RATE))
+    return out
+
+def click_ping():
+    out = []
+    n = int(0.015 * RATE)                       # mechanical click: filtered noise
+    prev = 0.0
+    for i in range(n):
+        prev = 0.6 * prev + 0.4 * (random.random() * 2 - 1)
+        out.append(0.5 * env(i, n, attack=0.0005) * prev)
+    out.extend([0.0] * int(0.01 * RATE))
+    n = int(0.10 * RATE)                        # crystal ping
+    for i in range(n):
+        s = math.sin(2 * math.pi * 1650 * i / RATE)
+        out.append(0.16 * env(i, n, attack=0.002) * s)
+    return out
+
+def pad_swell(dur=1.4, amp=0.16):
+    """slow chord swell — A2 + E3 + A3 + C#4, gentle detune shimmer"""
+    n = int(dur * RATE)
+    freqs = (110.0, 164.8, 220.0, 277.2)
+    out = []
+    for i in range(n):
+        t = i / RATE
+        sw = min(1.0, t / (dur * 0.55)) * min(1.0, max(0.0, (dur - t) / (dur * 0.35)))
+        s = sum(math.sin(2 * math.pi * f * t) + math.sin(2 * math.pi * (f * 1.003) * t)
+                for f in freqs) / (len(freqs) * 2)
+        out.append(amp * sw * s)
+    return out
+
+def write(name, samples):
+    path = os.path.join(OUT, name)
+    with wave.open(path, "w") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(RATE)
+        w.writeframes(b"".join(
+            struct.pack("<h", max(-32767, min(32767, int(s * 32767))))
+            for s in samples))
+    print(f"forged {name:16s} {len(samples)/RATE*1000:6.0f} ms")
+
+write("open.wav",      sine_sweep(0.09, 660, 880))
+write("close.wav",     sine_sweep(0.09, 880, 560))
+write("workspace.wav", sine_sweep(0.04, 1200, 1180, amp=0.16, harmonics=((1, 1.0),)))
+write("shot.wav",      click_ping())
+write("on.wav",        chime((523.3, 659.3, 880.0)))
+write("off.wav",       chime((659.3, 440.0), note_dur=0.13))
+write("boot.wav",      pad_swell())

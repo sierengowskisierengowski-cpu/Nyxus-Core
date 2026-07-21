@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-lock-track <chip|title|artist>   ·   rev 2026-07-07 r1
+#
+# Text feeds for the hyprlock now-playing card. Empty output when
+# nothing is playing, so the labels simply vanish instead of showing
+# stale junk (hyprlock hides empty labels).
+#   chip   — "▶ NOW PLAYING" / "⏸ PAUSED" pill text
+#   title  — track title, clipped to 34 chars
+#   artist — artist · album, clipped to 40 chars
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+
+command -v playerctl >/dev/null || exit 0
+STATUS="$(playerctl status 2>/dev/null)"
+[[ "${STATUS}" == "Playing" || "${STATUS}" == "Paused" ]] || exit 0
+
+clip() { local s="$1" n="$2"; (( ${#s} > n )) && echo "${s:0:$((n-1))}…" || echo "${s}"; }
+
+case "${1:-title}" in
+  chip)
+    [[ "${STATUS}" == "Playing" ]] && echo "▶ NOW PLAYING" || echo "⏸ PAUSED"
+    ;;
+  title)
+    clip "$(playerctl metadata title 2>/dev/null)" 34
+    ;;
+  artist)
+    A="$(playerctl metadata artist 2>/dev/null)"
+    AL="$(playerctl metadata album 2>/dev/null)"
+    if [[ -n "${A}" && -n "${AL}" ]]; then
+      clip "${A} · ${AL}" 40
+    else
+      clip "${A}${AL}" 40
+    fi
+    ;;
+esac

@@ -11,7 +11,7 @@
 # external sound assets are required to ship this. Playback is attempted
 # via pw-play (PipeWire) → paplay (PulseAudio) → aplay (ALSA), in order.
 #
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================================
 import gi
 import math

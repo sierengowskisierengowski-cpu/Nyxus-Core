@@ -10,7 +10,7 @@
 #  Just write. Auto-saves to ~/.config/nyxus/notes/notes.txt
 #  every keystroke (debounced 800ms).
 #
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================
 
 import sys

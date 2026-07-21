@@ -1,30 +1,14 @@
 #!/usr/bin/env bash
-# NYXUS idle screensaver launcher.
-# Prefers the alien-wallpaper screensaver (nyxus_screensaver.py — an alien
-# wall behind the clock); falls back to the classic matrix-rain saver if the
-# wallpaper saver isn't present. Launched by hypridle at idle and torn down
-# on-resume via `pkill -f 'nyxus_(matrix_saver|screensaver)'`. Both savers
-# quit on any key/click/mouse-move, so the user can never get trapped behind
-# one.
+# NYXUS alien matrix-rain screensaver launcher.
+# Launched by hypridle at idle; torn down by hypridle on-resume via
+# `pkill -f nyxus_matrix_saver`. The saver itself also quits on any
+# key/click/mouse-move, so the user can never get trapped behind it.
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}"
 
-# single-instance guard — either saver already up means we're covered
-if pgrep -f 'nyxus_(matrix_saver|screensaver)\.py' >/dev/null 2>&1; then
+# single-instance guard
+if pgrep -f nyxus_matrix_saver >/dev/null 2>&1; then
     exit 0
 fi
-
-# alien-wallpaper saver first, from wherever it deployed (skel/ISO, install.sh)
-for p in "$HOME/.config/nyxus/nyxus_screensaver.py" \
-         "$HOME/.nyxus/nyxus_screensaver.py" \
-         "/opt/nyxus/nyxus_screensaver.py"; do
-    [ -f "$p" ] && exec python3 "$p"
-done
-
-# fallback: classic alien matrix-rain saver
-for p in "$HOME/.config/nyxus/nyxus_matrix_saver.py" \
-         "/opt/nyxus/nyxus_matrix_saver.py"; do
-    [ -f "$p" ] && exec python3 "$p"
-done
-exit 0
+exec python3 "$HOME/.config/nyxus/nyxus_matrix_saver.py"

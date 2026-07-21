@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-lens <text|qr>   ·   rev 2026-07-07 r1 (Signature)
+#
+# "Circle to search" for the desktop. Drag a box over anything on
+# screen and NYXUS reads it:
+#   text — OCR the region (tesseract) → clipboard
+#   qr   — decode QR / barcodes (zbarimg) → clipboard, and if the
+#          payload is a URL the notification says so
+#
+# Degrades politely: if the OCR/QR engine isn't installed yet, you
+# get a notification with the exact pacman line instead of a crash.
+#
+# Bound: Super+Shift+T (text) · Super+Shift+Q (qr)
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+
+MODE="${1:-text}"
+TMP="$(mktemp --suffix=.png /tmp/nyxus-lens-XXXXXX)"
+trap 'rm -f "${TMP}"' EXIT
+
+note() { notify-send -u low -t 5000 "◤ NYXUS ◥ LENS" "$1" 2>/dev/null; }
+warn() { notify-send -u normal -t 6000 "◤ NYXUS ◥ LENS" "$1" 2>/dev/null; }
+
+REGION="$(slurp 2>/dev/null)" || exit 0        # user hit Escape — no-op
+grim -g "${REGION}" "${TMP}" || { warn "capture failed"; exit 1; }
+
+case "${MODE}" in
+  text)
+    command -v tesseract >/dev/null || {
+      warn "OCR engine missing — install with:\nsudo pacman -S tesseract tesseract-data-eng"
+      exit 1
+    }
+    TEXT="$(tesseract "${TMP}" - 2>/dev/null | sed -e 's/[[:space:]]*$//' -e '/^$/d')"
+    if [[ -z "${TEXT}" ]]; then
+      warn "no text found in that region"
+      exit 0
+    fi
+    printf '%s' "${TEXT}" | wl-copy
+    PREVIEW="$(printf '%s' "${TEXT}" | head -c 160)"
+    note "text → clipboard\n<i>${PREVIEW}</i>"
+    ;;
+  qr)
+    command -v zbarimg >/dev/null || {
+      warn "QR engine missing — install with:\nsudo pacman -S zbar"
+      exit 1
+    }
+    DATA="$(zbarimg --quiet --raw "${TMP}" 2>/dev/null | head -n 1)"
+    if [[ -z "${DATA}" ]]; then
+      warn "no QR / barcode found in that region"
+      exit 0
+    fi
+    printf '%s' "${DATA}" | wl-copy
+    if [[ "${DATA}" =~ ^https?:// ]]; then
+      note "link → clipboard\n<i>${DATA}</i>"
+    else
+      note "code → clipboard\n<i>$(printf '%s' "${DATA}" | head -c 160)</i>"
+    fi
+    ;;
+  *)
+    echo "usage: nyxus-lens <text|qr>" >&2
+    exit 2
+    ;;
+esac

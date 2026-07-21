@@ -1,0 +1,124 @@
+/* PRISM glass — magenta/cyan iridescent on deep void */
+* {
+    bg-deep:   #05060a;
+    bg-card:   #0a0d14;
+    text-hi:   #eef2fa;
+    text-lo:   rgba(238, 242, 250, 0.55);
+    hairline:  rgba(121, 73, 242, 0.35);
+    accent:    #7949f2;
+    accent2:   #ff2667;
+    glass-bg:  rgba(5, 6, 10, 0.88);
+    glass-line: rgba(255, 38, 103, 0.35);
+
+    background-color: transparent;
+    text-color: @text-hi;
+}
+
+window {
+    width: 740px;
+    background-color: @glass-bg;
+    border: 1px;
+    border-color: @glass-line;
+    border-radius: 16px;
+    padding: 0;
+    location: center;
+    anchor: center;
+    y-offset: 60px;
+}
+
+mainbox {
+    background-color: transparent;
+    children: [ inputbar, listview, mode-switcher ];
+}
+
+inputbar {
+    background-color: transparent;
+    border: 0 0 1px 0;
+    border-color: @hairline;
+    padding: 14px 16px;
+    spacing: 10px;
+    children: [ prompt, entry ];
+}
+
+prompt {
+    text-color: @accent;
+    font: "Permanent Marker 13";
+}
+
+entry {
+    text-color: @text-hi;
+    placeholder: "Search apps, files, settings...";
+    placeholder-color: @text-lo;
+    font: "Caveat 15";
+}
+
+listview {
+    background-color: transparent;
+    padding: 12px;
+    spacing: 4px;
+    lines: 4;
+    columns: 4;
+    cycle: true;
+    dynamic: true;
+    scrollbar: false;
+    layout: vertical;
+}
+
+element {
+    background-color: rgba(10, 13, 20, 0.85);
+    text-color: @text-hi;
+    border: 1px;
+    border-color: @hairline;
+    padding: 12px 8px;
+    spacing: 6px;
+    border-radius: 12px;
+    orientation: vertical;
+}
+
+element selected.normal,
+element selected.alternate.normal,
+element selected.urgent,
+element selected.active {
+    background-color: rgba(121, 73, 242, 0.22);
+    text-color: @text-hi;
+    border: 1px;
+    border-color: @accent2;
+    border-radius: 12px;
+}
+
+element-icon {
+    size: 38px;
+    horizontal-align: 0.5;
+}
+
+element-text {
+    text-color: inherit;
+    horizontal-align: 0.5;
+    font: "Inter 11";
+}
+
+mode-switcher {
+    background-color: transparent;
+    border: 1px 0 0 0;
+    border-color: @hairline;
+    border-radius: 0 0 16px 16px;
+    padding: 8px 12px;
+    spacing: 6px;
+}
+
+button {
+    background-color: rgba(10, 13, 20, 0.85);
+    text-color: @text-lo;
+    border: 1px;
+    border-color: @hairline;
+    border-radius: 10px;
+    padding: 6px 14px;
+    font: "Permanent Marker 10";
+}
+
+button selected {
+    background-color: @accent;
+    text-color: #05060a;
+    border-color: @accent;
+    border-radius: 10px;
+}

@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-ghost [on|off|toggle|status]   ·   rev 2026-07-17
+#
+# INVISIBILITY / ANONYMITY MODE (Tails/Whonix-style, for the owner's own
+# box). Toggling ON maximises anonymity:
+#
+#   1. TOR TRANSPARENT PROXY — starts tor and routes ALL TCP through Tor's
+#      TransPort (9040) + DNS through Tor's DNSPort (5353).
+#   2. EGRESS KILL-SWITCH — nftables drops every outbound packet that is
+#      NOT the tor daemon, loopback, or the transparent-proxy redirect, so
+#      nothing can leak around Tor (no clearnet, no DNS leak).
+#   3. MAC RANDOMISATION — macchanger -r on every wired/wireless NIC.
+#   4. PRESENCE HIDE — stops avahi (mDNS/.local broadcast).
+#
+# Toggling OFF reverses all four cleanly (flush nftables ghost table,
+# stop tor, restore permanent MACs, restart avahi).
+#
+# The privileged work runs in nyxus-ghost-helper via pkexec (a GUI polkit
+# prompt appears — the polkit-gnome agent is autostarted by Hyprland).
+# tor.service is TOGGLED here, never enabled at boot.
+#
+# State: ~/.config/nyxus/ghost.state.  Bound to Super+Ctrl+G + bar button.
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
+
+STATE_DIR="${HOME}/.config/nyxus"
+STATE="${STATE_DIR}/ghost.state"
+HELPER="/usr/local/bin/nyxus-ghost-helper"
+mkdir -p "${STATE_DIR}"
+
+notify() { command -v notify-send >/dev/null 2>&1 && notify-send "$@" || true; }
+is_on()  { [[ -f "${STATE}" ]] && grep -q '^mode=on$' "${STATE}"; }
+
+run_helper() {
+  # Prefer pkexec (GUI prompt); fall back to sudo in a terminal.
+  if [[ "$(id -u)" -eq 0 ]]; then
+    "${HELPER}" "$1"; return $?
+  fi
+  if command -v pkexec >/dev/null 2>&1; then
+    pkexec "${HELPER}" "$1"; return $?
+  fi
+  sudo "${HELPER}" "$1"
+}
+
+ghost_on() {
+  if is_on; then notify -u low "NYXUS Ghost" "Invisibility already active."; return 0; fi
+  notify -u normal "NYXUS Ghost" "Engaging invisibility mode — starting Tor, randomising MAC, sealing egress…"
+  if run_helper on; then
+    echo "mode=on" > "${STATE}"
+    notify -u critical "NYXUS Ghost" "INVISIBLE · all traffic via Tor · egress kill-switch armed · MAC randomised · mDNS muted."
+  else
+    notify -u critical "NYXUS Ghost" "Failed to engage (helper denied or errored). Still on clearnet."
+    return 1
+  fi
+}
+
+ghost_off() {
+  if ! is_on; then notify -u low "NYXUS Ghost" "Invisibility not active."; return 0; fi
+  notify -u normal "NYXUS Ghost" "Disengaging — restoring clearnet, MAC, mDNS…"
+  if run_helper off; then
+    rm -f "${STATE}"
+    notify -u normal "NYXUS Ghost" "Back to normal — Tor stopped, egress open, MAC + mDNS restored."
+  else
+    notify -u critical "NYXUS Ghost" "Failed to disengage cleanly — check 'nyxus-ghost-helper off' as root."
+    return 1
+  fi
+}
+
+case "${1:-toggle}" in
+  on)       ghost_on ;;
+  off)      ghost_off ;;
+  status)   is_on && echo on || echo off ;;
+  toggle|*) is_on && ghost_off || ghost_on ;;
+esac

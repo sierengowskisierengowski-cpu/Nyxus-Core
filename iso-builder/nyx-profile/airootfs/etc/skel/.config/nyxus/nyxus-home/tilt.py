@@ -7,7 +7,7 @@ Hover/click hit-tests in GTK4 stay axis-aligned; at <=2 deg this is invisible.
 If GTK4 snapshot rotation is unavailable for any reason, the wrapper falls
 back to rendering the child un-rotated rather than crashing.
 
-(c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+(c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 import math
 import gi

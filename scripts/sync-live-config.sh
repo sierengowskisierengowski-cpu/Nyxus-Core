@@ -24,6 +24,16 @@ RSYNC=(rsync -a --delete
   --exclude '*.pyc'  --exclude 'welcome.done' --exclude 'theme-backups'
   --exclude '.claude' --exclude '*.mp4'
   --exclude 'accent-baseline'   # per-machine cache; regenerates on first accent apply
+  # ── PRIVACY / STATE guards (2026-07-21): never ship personal data or
+  #    per-machine runtime state into the ISO skel. webapp-profiles holds
+  #    live Firefox profiles (cookies, history, breach DBs); the *.sqlite/
+  #    *.db family and .pid/.state/.sock are runtime, not config. ──
+  --exclude 'webapp-profiles'
+  --exclude '*.sqlite' --exclude '*.sqlite-*'
+  --exclude '*.db' --exclude '*.db-wal' --exclude '*.db-shm'
+  --exclude '*.pid' --exclude '*.state' --exclude '*.sock'
+  --exclude 'sense.json' --exclude 'hacker-mode.state'
+  --exclude 'cache' --exclude 'Cache' --exclude '*.lock'
 )
 
 # ── ~/.config surfaces that define the NYXUS look ────────────────────

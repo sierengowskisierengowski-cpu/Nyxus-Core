@@ -13,7 +13,7 @@ Live security telemetry, zero mock data:
                   `docker ps`, plus a live attack feed scraped from
                   `docker logs --since` of the noisy pots.
 
-(c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+(c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 

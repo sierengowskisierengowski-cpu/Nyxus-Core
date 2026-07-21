@@ -1,3 +1,2 @@
 #!/usr/bin/env bash
-# NYXUS App Store launcher — Copyright © 2026 Joseph A. Sierengowski
-exec python3 /opt/nyxus/nyxus_store.py "$@"
+exec python3 "/home/cosmic/.local/share/nyxus-store/main.py" "$@"

@@ -1,0 +1,892 @@
+#!/usr/bin/env python3
+"""
+NYXUS Shield — everyday security GTK4 application.
+© 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+
+Plain English. One-click operations. Friendly warnings. Powerful underneath.
+Reads NYXUS Phantom's event database for integrated alerts.
+
+Run:
+    python3 main.py
+    # or installed:
+    nyxus-shield
+"""
+from __future__ import annotations
+
+import json
+import os
+import sqlite3
+import subprocess
+import threading
+import time
+from pathlib import Path
+
+import gi
+
+# ── NYXUS palette (single source of truth · rev r13) ────────────────
+try:
+    from nyxus_palette import (
+        WHITE_PURE, WHITE_OFF, GREY_LIGHT, GREY_MID, GREY_TERTIARY,
+        INK_FADED, INK_BLACK,
+        GLASS_DARK, GLASS_DEEPER, GLASS_DEEPEST,
+        HAIRLINE_WHITE, HAIRLINE_INK,
+        SHADOW_INK_ACTIVE, SHADOW_INK_INACTIVE,
+        RADIUS_CARD, RADIUS_PILL, RADIUS_INPUT,
+        FONT_UI, FONT_MONO, FONT_DISPLAY,
+        format_css, assert_no_forbidden,
+    )
+except Exception:
+    # palette module is shipped alongside every NYXUS app via
+    # nyxus_install.sh; if it's missing, fall back to literals so
+    # the app still launches.
+    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
+    INK_FADED='#0a0a0a'; INK_BLACK='#000000'
+    GLASS_DARK='rgba(8, 12, 20, 0.55)'
+    GLASS_DEEPER='rgba(15, 20, 32, 0.72)'
+    GLASS_DEEPEST='rgba(5, 7, 12, 0.92)'
+    HAIRLINE_WHITE='rgba(255, 255, 255, 0.10)'
+    HAIRLINE_INK='rgba(0, 0, 0, 0.45)'
+    SHADOW_INK_ACTIVE='rgba(0, 0, 0, 0.65)'
+    SHADOW_INK_INACTIVE='rgba(0, 0, 0, 0.20)'
+    RADIUS_CARD=14; RADIUS_PILL=12; RADIUS_INPUT=10
+    FONT_UI='Inter'; FONT_MONO='JetBrains Mono'; FONT_DISPLAY='Inter Display'
+    def format_css(t):
+        _d = {
+            'WHITE_PURE': WHITE_PURE, 'WHITE_OFF': WHITE_OFF,
+            'GREY_LIGHT': GREY_LIGHT, 'GREY_MID': GREY_MID,
+            'GREY_TERTIARY': GREY_TERTIARY,
+            'INK_FADED': INK_FADED, 'INK_BLACK': INK_BLACK,
+            'GLASS_DARK': GLASS_DARK, 'GLASS_DEEPER': GLASS_DEEPER,
+            'GLASS_DEEPEST': GLASS_DEEPEST,
+            'HAIRLINE_WHITE': HAIRLINE_WHITE, 'HAIRLINE_INK': HAIRLINE_INK,
+            'SHADOW_INK_ACTIVE': SHADOW_INK_ACTIVE,
+            'SHADOW_INK_INACTIVE': SHADOW_INK_INACTIVE,
+            'RADIUS_CARD': RADIUS_CARD, 'RADIUS_PILL': RADIUS_PILL,
+            'RADIUS_INPUT': RADIUS_INPUT,
+            'FONT_UI': FONT_UI, 'FONT_MONO': FONT_MONO,
+            'FONT_DISPLAY': FONT_DISPLAY,
+        }
+        return t.format_map(_d)
+    def assert_no_forbidden(*a, **k): pass
+# ─────────────────────────────────────────────────────────────────────
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+from gi.repository import GLib, Gtk, Gdk, Adw   # noqa: E402
+
+# theme module ships alongside in /usr/share/nyxus/theme/
+import sys
+sys.path.insert(0, "/usr/share/nyxus/theme")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "theme"))
+sys.path.insert(0, str(Path.home() / ".local/share/nyxus/theme"))
+try:
+    from nyxus_theme import apply_theme, COLORS, header, card, make_badge   # noqa: E402
+except ImportError:
+    # graceful fallback so Shield still launches if theme assets missing
+    COLORS = {"gold": "#e8edf5", "pink": "#6a6e78", "purple": "#6a6e78"}
+    def apply_theme(*_a, **_k): pass
+    def header(t, level=1):
+        l = Gtk.Label(label=t, xalign=0)
+        return l
+    def card(child, *, active=False):
+        f = Gtk.Frame(); f.set_child(child); return f
+    def make_badge(sev, text=None):
+        return Gtk.Label(label=text or sev)
+
+from scans import QuickScanner, NetworkScanner, MalwareScanner   # noqa: E402
+from net  import FirewallManager, VPNManager                      # noqa: E402
+from db   import ShieldDB                                         # noqa: E402
+
+APP_ID    = "co.nyxus.Shield"
+APP_NAME  = "NYXUS Shield"
+PHANTOM_DB = Path.home() / ".nyxus" / "phantom" / "events.db"
+SHIELD_DIR = Path.home() / ".nyxus" / "shield"
+
+
+# =========================================================================== #
+# DASHBOARD VIEW                                                              #
+# =========================================================================== #
+class DashboardView(Gtk.Box):
+    def __init__(self, app):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12,
+                         margin_top=16, margin_bottom=16,
+                         margin_start=20, margin_end=20)
+        self.app = app
+        self.db = app.db
+
+        self.append(header("Welcome back — your shield is up.", level=1))
+
+        # threat score row
+        score_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+        self.score_label = Gtk.Label(label="—")
+        self.score_label.get_style_context().add_class("nyx-threat-score")
+        self.score_caption = Gtk.Label(label="THREAT SCORE", xalign=0)
+        self.score_caption.get_style_context().add_class("nyx-threat-label")
+        score_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        score_box.append(self.score_label)
+        score_box.append(self.score_caption)
+        score_row.append(card(score_box))
+
+        # health checks
+        health_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4,
+                             margin_top=10, margin_bottom=10,
+                             margin_start=14, margin_end=14)
+        health_box.append(header("System Health", level=3))
+        self.health_grid = Gtk.Grid(column_spacing=18, row_spacing=6)
+        health_box.append(self.health_grid)
+        score_row.append(card(health_box))
+        self.append(score_row)
+
+        # quick actions
+        actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10,
+                          margin_top=8, margin_bottom=8)
+        for label, cb, css in (
+            ("⚡  Scan Now",     self.on_scan,   "nyx-btn-primary"),
+            ("🛠  Fix All",      self.on_fix,    "nyx-btn-gold"),
+            ("📋  View Report",  self.on_report, ""),
+        ):
+            b = Gtk.Button(label=label)
+            if css:
+                b.get_style_context().add_class(css)
+            b.connect("clicked", cb)
+            actions.append(b)
+        self.append(actions)
+
+        # recent alerts from Phantom
+        self.append(header("Recent alerts", level=2))
+        self.alert_list = Gtk.ListBox()
+        self.alert_list.get_style_context().add_class("nyx-card")
+        self.append(self.alert_list)
+
+        # initial paint + 5 s refresh
+        self._refresh()
+        GLib.timeout_add_seconds(5, self._refresh)
+
+    def _refresh(self) -> bool:
+        # health checks (cheap)
+        checks = self.app.scanner.health_checks()
+        # rebuild grid
+        child = self.health_grid.get_first_child()
+        while child:
+            self.health_grid.remove(child)
+            child = self.health_grid.get_first_child()
+        for i, (name, ok, detail) in enumerate(checks):
+            self.health_grid.attach(make_badge("SAFE" if ok else "CRIT",
+                                               "✓" if ok else "✗"), 0, i, 1, 1)
+            n = Gtk.Label(label=name, xalign=0); n.get_style_context().add_class("nyx-mono")
+            d = Gtk.Label(label=detail, xalign=0); d.get_style_context().add_class("nyx-dim")
+            self.health_grid.attach(n, 1, i, 1, 1)
+            self.health_grid.attach(d, 2, i, 1, 1)
+
+        # threat score = 100 - 8*RED - 3*ORANGE - 1*YELLOW (clamped)
+        sev_counts = self._phantom_24h()
+        deduction = (sev_counts.get("RED", 0)    * 8 +
+                     sev_counts.get("ORANGE", 0) * 3 +
+                     sev_counts.get("YELLOW", 0) * 1)
+        score = max(0, 100 - deduction)
+        # also penalize health failures
+        score -= sum(0 if ok else 5 for _, ok, _ in checks)
+        score = max(0, min(100, score))
+        self.score_label.set_label(str(score))
+        # color the score
+        ctx = self.score_label.get_style_context()
+        for c in ("nyx-safe-score", "nyx-warn-score", "nyx-crit-score"):
+            ctx.remove_class(c)
+        if score >= 80:
+            self.score_label.set_markup(f"<span foreground='{COLORS['safe']}'>{score}</span>")
+        elif score >= 50:
+            self.score_label.set_markup(f"<span foreground='{COLORS['warn']}'>{score}</span>")
+        else:
+            self.score_label.set_markup(f"<span foreground='{COLORS['crit']}'>{score}</span>")
+
+        # alerts list
+        child = self.alert_list.get_first_child()
+        while child:
+            self.alert_list.remove(child)
+            child = self.alert_list.get_first_child()
+        rows = self._phantom_recent(20)
+        if not rows:
+            row = Gtk.Label(label="  no recent alerts — your shield is calm.  ",
+                            xalign=0, margin_top=10, margin_bottom=10)
+            row.get_style_context().add_class("nyx-faint")
+            self.alert_list.append(row)
+        for ts, sev, mod, msg in rows:
+            r = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10,
+                        margin_top=4, margin_bottom=4, margin_start=10, margin_end=10)
+            r.append(make_badge(sev))
+            t = Gtk.Label(label=ts.split("T")[1][:8] if "T" in ts else ts[:8], xalign=0)
+            t.get_style_context().add_class("nyx-mono")
+            m = Gtk.Label(label=f"{mod}  {msg}", xalign=0, hexpand=True, wrap=True)
+            r.append(t); r.append(m)
+            self.alert_list.append(r)
+        return True
+
+    def _phantom_24h(self) -> dict[str, int]:
+        if not PHANTOM_DB.exists():
+            return {}
+        try:
+            cutoff = time.strftime("%Y-%m-%dT%H:%M:%SZ",
+                                   time.gmtime(time.time() - 86400))
+            c = sqlite3.connect(f"file:{PHANTOM_DB}?mode=ro", uri=True)
+            cur = c.execute("SELECT severity, COUNT(*) FROM events WHERE ts > ? GROUP BY severity",
+                            (cutoff,))
+            out = {r[0]: r[1] for r in cur.fetchall()}
+            c.close()
+            return out
+        except Exception:
+            return {}
+
+    def _phantom_recent(self, n: int) -> list[tuple]:
+        if not PHANTOM_DB.exists():
+            return []
+        try:
+            c = sqlite3.connect(f"file:{PHANTOM_DB}?mode=ro", uri=True)
+            cur = c.execute("SELECT ts, severity, module, message FROM events "
+                            "WHERE severity IN ('YELLOW','ORANGE','RED') "
+                            "ORDER BY id DESC LIMIT ?", (n,))
+            rows = cur.fetchall()
+            c.close()
+            return rows
+        except Exception:
+            return []
+
+    # button callbacks
+    def on_scan(self, _b):
+        self.app.show_view("scan")
+
+    def on_fix(self, _b):
+        # runs the recommended autofixes the scanner identified
+        self.app.scanner.run_autofix(self.app.toast)
+
+    def on_report(self, _b):
+        self.app.show_view("reports")
+
+
+# =========================================================================== #
+# SCAN VIEW — runs the quick scan synchronously and shows results             #
+# =========================================================================== #
+class ScanView(Gtk.Box):
+    def __init__(self, app):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10,
+                         margin_top=16, margin_bottom=16,
+                         margin_start=20, margin_end=20)
+        self.app = app
+        self.append(header("One-click quick scan", level=1))
+        sub = Gtk.Label(label="Runs every check below. No tech knowledge needed.",
+                        xalign=0)
+        sub.get_style_context().add_class("nyx-dim")
+        self.append(sub)
+
+        self.bar = Gtk.ProgressBar(show_text=True, hexpand=True)
+        self.append(self.bar)
+
+        self.run_btn = Gtk.Button(label="▶  Start scan")
+        self.run_btn.get_style_context().add_class("nyx-btn-primary")
+        self.run_btn.connect("clicked", self.on_start)
+        self.append(self.run_btn)
+
+        self.results = Gtk.ListBox(vexpand=True)
+        self.results.get_style_context().add_class("nyx-card")
+        scroll = Gtk.ScrolledWindow(vexpand=True)
+        scroll.set_child(self.results)
+        self.append(scroll)
+
+    def on_start(self, _b):
+        self.run_btn.set_sensitive(False)
+        self.bar.set_fraction(0)
+        # clear results
+        c = self.results.get_first_child()
+        while c:
+            self.results.remove(c); c = self.results.get_first_child()
+
+        def progress(done, total, name, ok, detail):
+            def ui_update():
+                self.bar.set_fraction(done / total)
+                self.bar.set_text(f"{done}/{total}  {name}")
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10,
+                              margin_top=2, margin_bottom=2,
+                              margin_start=10, margin_end=10)
+                row.append(make_badge("SAFE" if ok else "CRIT",
+                                       "PASS" if ok else "FAIL"))
+                n = Gtk.Label(label=name, xalign=0); n.set_size_request(260, -1)
+                d = Gtk.Label(label=detail, xalign=0, wrap=True, hexpand=True)
+                d.get_style_context().add_class("nyx-dim")
+                row.append(n); row.append(d)
+                self.results.append(row)
+                if done == total:
+                    self.run_btn.set_sensitive(True)
+                    self.app.toast(f"Scan complete · {total} checks")
+                return False
+            GLib.idle_add(ui_update)
+
+        threading.Thread(target=lambda: self.app.scanner.full_scan(progress),
+                         daemon=True, name="full-scan").start()
+
+
+# =========================================================================== #
+# NETWORK VIEW                                                                #
+# =========================================================================== #
+class NetworkView(Gtk.Box):
+    def __init__(self, app):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10,
+                         margin_top=16, margin_bottom=16,
+                         margin_start=20, margin_end=20)
+        self.app = app
+        self.append(header("Network", level=1))
+
+        actions = Gtk.Box(spacing=10)
+        b1 = Gtk.Button(label="🔎  Scan my network")
+        b1.get_style_context().add_class("nyx-btn-primary")
+        b1.connect("clicked", self.on_scan_lan)
+        b2 = Gtk.Button(label="🛡  Check open ports")
+        b2.connect("clicked", self.on_scan_ports)
+        b3 = Gtk.Button(label="🌐  Check internet exposure")
+        b3.connect("clicked", self.on_check_exposure)
+        for b in (b1, b2, b3):
+            actions.append(b)
+        self.append(actions)
+
+        self.devices = Gtk.ListBox(vexpand=True)
+        self.devices.get_style_context().add_class("nyx-card")
+        scroll = Gtk.ScrolledWindow(vexpand=True); scroll.set_child(self.devices)
+        self.append(scroll)
+
+        self.status = Gtk.Label(label="ready", xalign=0)
+        self.status.get_style_context().add_class("nyx-faint")
+        self.append(self.status)
+
+    def _clear(self):
+        c = self.devices.get_first_child()
+        while c:
+            self.devices.remove(c); c = self.devices.get_first_child()
+
+    def on_scan_lan(self, _b):
+        self._clear()
+        self.status.set_label("scanning network …")
+        def work():
+            results = NetworkScanner().lan_discover()
+            def ui():
+                self.status.set_label(f"{len(results)} device(s)")
+                for d in results:
+                    self.devices.append(self._device_row(d))
+                return False
+            GLib.idle_add(ui)
+        threading.Thread(target=work, daemon=True).start()
+
+    def _device_row(self, d):
+        r = Gtk.Box(spacing=10, margin_top=4, margin_bottom=4,
+                    margin_start=10, margin_end=10)
+        r.append(make_badge("INFO", d.get("status", "live")))
+        ip = Gtk.Label(label=d["ip"], xalign=0); ip.set_size_request(140, -1)
+        ip.get_style_context().add_class("nyx-mono")
+        mac = Gtk.Label(label=d.get("mac",""), xalign=0); mac.set_size_request(180,-1)
+        mac.get_style_context().add_class("nyx-mono")
+        host = Gtk.Label(label=d.get("hostname","?"), xalign=0, hexpand=True)
+        r.append(ip); r.append(mac); r.append(host)
+        return r
+
+    def on_scan_ports(self, _b):
+        self._clear()
+        self.status.set_label("checking own ports …")
+        def work():
+            results = NetworkScanner().own_ports()
+            def ui():
+                self.status.set_label(f"{len(results)} listening port(s)")
+                for p in results:
+                    sev = "SAFE" if p["bind"].startswith("127") else \
+                          ("WARN" if p["bind"] == "0.0.0.0" else "INFO")
+                    r = Gtk.Box(spacing=10, margin_top=4, margin_bottom=4,
+                                margin_start=10, margin_end=10)
+                    r.append(make_badge(sev))
+                    pl = Gtk.Label(label=f"{p['proto']:5} {p['port']:>5}", xalign=0)
+                    pl.set_size_request(120,-1); pl.get_style_context().add_class("nyx-mono")
+                    bind = Gtk.Label(label=p["bind"], xalign=0); bind.set_size_request(150,-1)
+                    bind.get_style_context().add_class("nyx-mono")
+                    proc = Gtk.Label(label=p.get("process","?"), xalign=0, hexpand=True)
+                    r.append(pl); r.append(bind); r.append(proc)
+                    self.devices.append(r)
+                return False
+            GLib.idle_add(ui)
+        threading.Thread(target=work, daemon=True).start()
+
+    def on_check_exposure(self, _b):
+        self._clear()
+        self.status.set_label("asking external service for visible IP …")
+        def work():
+            ext = NetworkScanner().external_ip()
+            def ui():
+                self.status.set_label("external view fetched")
+                row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4,
+                              margin_top=10, margin_bottom=10,
+                              margin_start=10, margin_end=10)
+                row.append(header(f"Visible IP : {ext.get('ip','?')}", level=3))
+                for k, v in ext.items():
+                    if k == "ip":
+                        continue
+                    l = Gtk.Label(label=f"{k}: {v}", xalign=0)
+                    l.get_style_context().add_class("nyx-dim")
+                    row.append(l)
+                self.devices.append(row)
+                return False
+            GLib.idle_add(ui)
+        threading.Thread(target=work, daemon=True).start()
+
+
+# =========================================================================== #
+# FIREWALL VIEW                                                               #
+# =========================================================================== #
+class FirewallView(Gtk.Box):
+    def __init__(self, app):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10,
+                         margin_top=16, margin_bottom=16,
+                         margin_start=20, margin_end=20)
+        self.app = app
+        self.fw = FirewallManager()
+        self.append(header("Firewall", level=1))
+
+        toggle_row = Gtk.Box(spacing=10)
+        self.toggle = Gtk.Switch()
+        self.toggle.connect("notify::active", self.on_toggle)
+        toggle_row.append(Gtk.Label(label="Firewall  "))
+        toggle_row.append(self.toggle)
+        self.status_label = Gtk.Label(label="…", xalign=0)
+        self.status_label.get_style_context().add_class("nyx-dim")
+        toggle_row.append(self.status_label)
+        self.append(toggle_row)
+
+        # presets
+        preset_row = Gtk.Box(spacing=10)
+        for name in ("Gaming", "Work", "Maximum Security", "Custom"):
+            b = Gtk.Button(label=name)
+            b.connect("clicked", lambda _b, n=name: self.fw.apply_preset(n) and self._refresh())
+            preset_row.append(b)
+        self.append(preset_row)
+
+        self.rules = Gtk.ListBox(vexpand=True)
+        self.rules.get_style_context().add_class("nyx-card")
+        scroll = Gtk.ScrolledWindow(vexpand=True); scroll.set_child(self.rules)
+        self.append(scroll)
+
+        self._refresh()
+
+    def _refresh(self):
+        st = self.fw.status()
+        self.status_label.set_label(st["msg"])
+        self.toggle.set_active(st["enabled"])
+        c = self.rules.get_first_child()
+        while c:
+            self.rules.remove(c); c = self.rules.get_first_child()
+        for rule in st.get("rules", []):
+            r = Gtk.Box(spacing=10, margin_top=2, margin_bottom=2,
+                        margin_start=10, margin_end=10)
+            sev = "SAFE" if rule.get("action") == "ALLOW" else "WARN"
+            r.append(make_badge(sev, rule.get("action","?")))
+            l = Gtk.Label(label=rule.get("plain","?"), xalign=0, hexpand=True, wrap=True)
+            r.append(l)
+            self.rules.append(r)
+
+    def on_toggle(self, sw, _):
+        if sw.get_active():
+            self.fw.enable()
+        else:
+            self.fw.disable()
+        self._refresh()
+
+
+# =========================================================================== #
+# MALWARE / VPN / PASSWORDS / PRIVACY / UPDATES / PHANTOM / REPORTS / SETTINGS#
+# =========================================================================== #
+class GenericPanel(Gtk.Box):
+    """Reusable panel for the simpler views."""
+    def __init__(self, title: str, subtitle: str, build_callable):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10,
+                         margin_top=16, margin_bottom=16,
+                         margin_start=20, margin_end=20)
+        self.append(header(title, level=1))
+        if subtitle:
+            s = Gtk.Label(label=subtitle, xalign=0); s.get_style_context().add_class("nyx-dim")
+            self.append(s)
+        scroll = Gtk.ScrolledWindow(vexpand=True)
+        self.body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scroll.set_child(self.body)
+        self.append(scroll)
+        build_callable(self.body)
+
+
+def build_malware(body: Gtk.Box):
+    scanner = MalwareScanner()
+    state = {"running": False}
+    out = Gtk.TextView(editable=False, monospace=True)
+    out.get_style_context().add_class("nyx-mono")
+    btn = Gtk.Button(label="🔍  Scan entire system")
+    btn.get_style_context().add_class("nyx-btn-primary")
+    def run(_b):
+        if state["running"]:
+            return
+        state["running"] = True
+        btn.set_label("scanning …")
+        out.get_buffer().set_text("running ClamAV + rkhunter + chkrootkit …\n")
+        def work():
+            res = scanner.run_all()
+            def ui():
+                out.get_buffer().set_text(res)
+                btn.set_label("🔍  Scan entire system again")
+                state["running"] = False
+                return False
+            GLib.idle_add(ui)
+        threading.Thread(target=work, daemon=True).start()
+    btn.connect("clicked", run)
+    body.append(btn)
+    sw = Gtk.ScrolledWindow(vexpand=True); sw.set_child(out)
+    body.append(sw)
+
+
+def build_passwords(body: Gtk.Box):
+    body.append(header("Password strength checker", level=3))
+    entry = Gtk.PasswordEntry(show_peek_icon=True)
+    body.append(entry)
+    score = Gtk.LevelBar(min_value=0, max_value=4, value=0, hexpand=True)
+    body.append(score)
+    detail = Gtk.Label(label="type a password to check", xalign=0)
+    detail.get_style_context().add_class("nyx-dim")
+    body.append(detail)
+    def on_change(_e):
+        pw = entry.get_text()
+        s, txt = _grade(pw)
+        score.set_value(s)
+        detail.set_label(txt)
+    entry.connect("changed", on_change)
+
+    body.append(header("Have I Been Pwned check", level=3))
+    hibp_box = Gtk.Box(spacing=8)
+    hibp_entry = Gtk.Entry(placeholder_text="email address")
+    hibp_btn = Gtk.Button(label="check")
+    hibp_status = Gtk.Label(label="", xalign=0)
+    hibp_box.append(hibp_entry); hibp_box.append(hibp_btn); hibp_box.append(hibp_status)
+    body.append(hibp_box)
+    def on_check(_b):
+        from scans import hibp_email_count
+        hibp_status.set_label("checking …")
+        def work():
+            n = hibp_email_count(hibp_entry.get_text().strip())
+            GLib.idle_add(lambda: hibp_status.set_label(
+                f"⚠  {n} breach(es)" if n > 0 else "✓  no breaches found"))
+        threading.Thread(target=work, daemon=True).start()
+    hibp_btn.connect("clicked", on_check)
+
+
+def _grade(pw: str) -> tuple[int, str]:
+    if not pw:
+        return 0, "type a password to check"
+    score = 0
+    if len(pw) >= 8: score += 1
+    if len(pw) >= 14: score += 1
+    if any(c.islower() for c in pw) and any(c.isupper() for c in pw): score += 1
+    if any(c.isdigit() for c in pw) and any(not c.isalnum() for c in pw): score += 1
+    txt = ["very weak","weak","ok","strong","fortress"][min(4,score)]
+    return score, f"{txt} · {len(pw)} chars"
+
+
+def build_privacy(body: Gtk.Box):
+    rows = []
+    # camera/mic/audio device access via /dev/video*, /dev/snd
+    rows.append(("Camera devices", subprocess.getoutput("ls /dev/video* 2>/dev/null") or "none"))
+    rows.append(("Audio devices", subprocess.getoutput("ls /dev/snd 2>/dev/null") or "none"))
+    rows.append(("Active processes with mic", subprocess.getoutput(
+        "lsof /dev/snd/* 2>/dev/null | tail -n +2 | awk '{print $1}' | sort -u")
+        or "none"))
+    rows.append(("DNS over HTTPS", "active" if "1.1.1.1" in subprocess.getoutput(
+        "cat /etc/resolv.conf 2>/dev/null") else "system DNS"))
+    rows.append(("Browser tracking protection",
+                 "(check browser settings)"))
+    for k, v in rows:
+        r = Gtk.Box(spacing=10, margin_top=2, margin_bottom=2)
+        r.append(Gtk.Label(label=k, xalign=0, width_chars=28))
+        l = Gtk.Label(label=v, xalign=0, wrap=True, hexpand=True)
+        l.get_style_context().add_class("nyx-mono")
+        r.append(l)
+        body.append(r)
+
+
+def build_updates(body: Gtk.Box):
+    out = Gtk.TextView(editable=False, monospace=True)
+    out.get_style_context().add_class("nyx-mono")
+    btn = Gtk.Button(label="Check for updates")
+    btn.get_style_context().add_class("nyx-btn-primary")
+    def run(_b):
+        out.get_buffer().set_text("checking updates …\n")
+        def work():
+            if subprocess.run(["which", "checkupdates"], capture_output=True).returncode == 0:
+                txt = subprocess.getoutput("checkupdates 2>/dev/null")
+            elif subprocess.run(["which", "apt"], capture_output=True).returncode == 0:
+                txt = subprocess.getoutput("apt list --upgradable 2>/dev/null")
+            else:
+                txt = "no supported package manager found (pacman/apt expected)"
+            GLib.idle_add(lambda: out.get_buffer().set_text(txt or "no updates available"))
+        threading.Thread(target=work, daemon=True).start()
+    btn.connect("clicked", run)
+    body.append(btn)
+    sw = Gtk.ScrolledWindow(vexpand=True); sw.set_child(out); body.append(sw)
+
+
+def build_vpn(body: Gtk.Box):
+    vpn = VPNManager()
+    status = Gtk.Label(label="…", xalign=0); status.get_style_context().add_class("nyx-mono")
+    body.append(status)
+    actions = Gtk.Box(spacing=10)
+    bup = Gtk.Button(label="Connect"); bup.get_style_context().add_class("nyx-btn-success")
+    bdn = Gtk.Button(label="Disconnect")
+    bleak = Gtk.Button(label="DNS leak check")
+    actions.append(bup); actions.append(bdn); actions.append(bleak)
+    body.append(actions)
+    def refresh():
+        s = vpn.status()
+        status.set_label(json.dumps(s, indent=2))
+    refresh()
+    bup.connect("clicked", lambda _b: (vpn.connect(), refresh()))
+    bdn.connect("clicked", lambda _b: (vpn.disconnect(), refresh()))
+    bleak.connect("clicked", lambda _b: status.set_label(json.dumps(vpn.dns_leak_check(), indent=2)))
+
+
+def build_phantom(body: Gtk.Box):
+    if not PHANTOM_DB.exists():
+        body.append(Gtk.Label(label="Phantom not installed yet — run the Phantom installer.",
+                              xalign=0))
+        return
+    body.append(header("Phantom event timeline (last 200)", level=3))
+    out = Gtk.TextView(editable=False, monospace=True)
+    out.get_style_context().add_class("nyx-mono")
+    sw = Gtk.ScrolledWindow(vexpand=True); sw.set_child(out); body.append(sw)
+    def refresh():
+        try:
+            c = sqlite3.connect(f"file:{PHANTOM_DB}?mode=ro", uri=True)
+            cur = c.execute("SELECT ts, severity, module, message "
+                            "FROM events ORDER BY id DESC LIMIT 200")
+            txt = "\n".join(f"{ts}  [{sev:6}]  {mod:8}  {msg}"
+                            for ts, sev, mod, msg in cur.fetchall())
+            c.close()
+        except Exception as exc:
+            txt = f"error: {exc}"
+        out.get_buffer().set_text(txt)
+    refresh()
+    btn = Gtk.Button(label="↻  Refresh"); btn.connect("clicked", lambda _b: refresh())
+    body.append(btn)
+
+
+def build_reports(body: Gtk.Box):
+    rep_dir = SHIELD_DIR / "reports"
+    rep_dir.mkdir(parents=True, exist_ok=True)
+    body.append(Gtk.Label(label=f"Reports stored in {rep_dir}", xalign=0))
+    btn = Gtk.Button(label="📄  Generate today's report")
+    btn.get_style_context().add_class("nyx-btn-primary")
+    out = Gtk.TextView(editable=False, monospace=True)
+    out.get_style_context().add_class("nyx-mono")
+    sw = Gtk.ScrolledWindow(vexpand=True); sw.set_child(out)
+    def run(_b):
+        from scans import build_report_markdown
+        text = build_report_markdown()
+        path = rep_dir / f"{time.strftime('%Y-%m-%d')}.md"
+        path.write_text(text)
+        out.get_buffer().set_text(f"# saved to {path}\n\n{text}")
+    btn.connect("clicked", run)
+    body.append(btn); body.append(sw)
+
+
+def build_settings(body: Gtk.Box):
+    body.append(header("Settings", level=3))
+    grid = Gtk.Grid(column_spacing=14, row_spacing=8)
+    body.append(grid)
+    grid.attach(Gtk.Label(label="Scan schedule", xalign=0), 0, 0, 1, 1)
+    sched = Gtk.DropDown.new_from_strings(["off","hourly","daily","weekly"])
+    grid.attach(sched, 1, 0, 1, 1)
+    grid.attach(Gtk.Label(label="Notification level", xalign=0), 0, 1, 1, 1)
+    nlevel = Gtk.DropDown.new_from_strings(["all","warn+","high+","off"])
+    grid.attach(nlevel, 1, 1, 1, 1)
+    grid.attach(Gtk.Label(label="Auto-fix policy", xalign=0), 0, 2, 1, 1)
+    afix = Gtk.DropDown.new_from_strings(["never","ask first","trusted only","always"])
+    grid.attach(afix, 1, 2, 1, 1)
+
+
+# =========================================================================== #
+# MAIN APPLICATION                                                            #
+# =========================================================================== #
+class ShieldApp(Adw.Application):
+    def __init__(self):
+        super().__init__(application_id=APP_ID)
+        self.scanner = QuickScanner()
+        SHIELD_DIR.mkdir(parents=True, exist_ok=True)
+        self.db = ShieldDB(SHIELD_DIR / "shield.db")
+        self.toaster: Adw.ToastOverlay | None = None
+        self.win: Adw.ApplicationWindow | None = None
+        self._views: dict[str, Gtk.Widget] = {}
+        self.connect("activate", self.on_activate)
+
+    def toast(self, msg: str) -> None:
+        if self.toaster:
+            self.toaster.add_toast(Adw.Toast(title=msg, timeout=4))
+
+    def show_view(self, name: str) -> None:
+        view = self._views.get(name)
+        if view:
+            self.stack.set_visible_child(view)
+
+    def on_activate(self, _a):
+        apply_theme(Gdk.Display.get_default())
+        self.win = Adw.ApplicationWindow(application=self)
+        self.win.set_title(APP_NAME)
+        self.win.set_default_size(1200, 760)
+
+        # header bar
+        head = Adw.HeaderBar()
+        title = Gtk.Label(label=APP_NAME); title.get_style_context().add_class("title")
+        head.set_title_widget(title)
+
+        # main horizontal layout
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        outer.append(head)
+
+        split = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, hexpand=True, vexpand=True)
+
+        # sidebar
+        sidebar = Gtk.ListBox()
+        sidebar.get_style_context().add_class("nyx-sidebar")
+        sidebar.set_size_request(220, -1)
+
+        nav = [
+            ("dashboard", "🏠  Dashboard",   DashboardView),
+            ("scan",      "⚡  Quick Scan",  ScanView),
+            ("network",   "🌐  Network",     NetworkView),
+            ("firewall",  "🛡  Firewall",    FirewallView),
+            ("malware",   "🧪  Malware",     None),
+            ("passwords", "🔑  Passwords",   None),
+            ("privacy",   "👁  Privacy",      None),
+            ("updates",   "📦  Updates",     None),
+            ("vpn",       "🔒  VPN",         None),
+            ("phantom",   "👻  Phantom",     None),
+            ("reports",   "📋  Reports",     None),
+            ("settings",  "⚙  Settings",    None),
+        ]
+
+        self.toaster = Adw.ToastOverlay()
+        self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE,
+                               hexpand=True, vexpand=True)
+        self.toaster.set_child(self.stack)
+
+        for slug, label, cls in nav:
+            row = Gtk.Label(label=label, xalign=0, margin_top=4, margin_bottom=4,
+                            margin_start=12, margin_end=12)
+            sidebar.append(row)
+            if cls is not None:
+                view = cls(self)
+            else:
+                view = self._build_secondary(slug)
+            self._views[slug] = view
+            self.stack.add_named(view, slug)
+
+        sidebar.connect("row-selected", self._on_nav)
+        sidebar.select_row(sidebar.get_row_at_index(0))
+
+        split.append(sidebar)
+        split.append(self.toaster)
+        outer.append(split)
+
+        # status bar
+        sb = Gtk.Label(label=f"NYXUS Shield · phantom DB: "
+                             f"{'present' if PHANTOM_DB.exists() else 'missing'}",
+                       xalign=0)
+        sb.get_style_context().add_class("nyx-statusbar")
+        outer.append(sb)
+
+        self.win.set_content(outer)
+        self.win.present()
+
+    def _on_nav(self, lb, row):
+        if not row:
+            return
+        idx = row.get_index()
+        slug = ["dashboard","scan","network","firewall","malware",
+                "passwords","privacy","updates","vpn","phantom",
+                "reports","settings"][idx]
+        self.show_view(slug)
+
+    def _build_secondary(self, slug: str) -> Gtk.Widget:
+        builders = {
+            "malware":   ("Malware scanner", "ClamAV + rkhunter + chkrootkit", build_malware),
+            "passwords": ("Password security", "Strength + breach + generator", build_passwords),
+            "privacy":   ("Privacy", "Camera, mic, location, DNS, trackers", build_privacy),
+            "updates":   ("Updates", "Available system updates", build_updates),
+            "vpn":       ("VPN", "WireGuard quick controls", build_vpn),
+            "phantom":   ("Phantom integration", "Daemon events live timeline", build_phantom),
+            "reports":   ("Security reports", "Daily / weekly / monthly", build_reports),
+            "settings":  ("Settings", "Preferences", build_settings),
+        }
+        title, sub, fn = builders[slug]
+        return GenericPanel(title, sub, fn)
+
+
+def main() -> int:
+    app = ShieldApp()
+    return app.run(None)
+
+
+
+# ─────────────────────────── NYXUS CHROME (auto-injected) ───────────────────
+# Unifies look across every NYXUS GTK4 app: DARK MIRROR glass, Inter
+# font, DARK MIRROR palette. Monkey-patches BOTH Gtk.ApplicationWindow.present
+# AND Adw.ApplicationWindow.present so the canonical install_chrome()
+# runs once per top-level window — without touching the app's own
+# window-construction code. install_chrome auto-detects Adw vs Gtk
+# windows and uses set_content/get_content vs set_child/get_child
+# accordingly. nyxus-panel is intentionally excluded (LayerShell
+# incompatibility with Gtk.Overlay). nyxus_chrome.py is shipped to
+# ~/.nyxus by nyxus_install.sh.
+try:
+    import os as _nyx_os, sys as _nyx_sys
+    _nyx_chrome_dir = _nyx_os.path.expanduser("~/.nyxus")
+    if _nyx_chrome_dir not in _nyx_sys.path:
+        _nyx_sys.path.insert(0, _nyx_chrome_dir)
+    try:
+        from nyxus_chrome import install_chrome as _nyx_install_chrome
+    except ImportError:
+        _nyx_install_chrome = lambda *a, **kw: None  # silent no-op
+    _NYX_PAGE_KEY = "_shield"
+    def _nyx_make_present_hook(_orig):
+        def _nyx_present(self):
+            try: _nyx_install_chrome(self, page_key=_NYX_PAGE_KEY)
+            except Exception: pass
+            return _orig(self)
+        return _nyx_present
+    # Hook Gtk.ApplicationWindow (covers most NYXUS apps)
+    try:
+        import gi as _nyx_gi
+        _nyx_gi.require_version("Gtk", "4.0")
+        from gi.repository import Gtk as _NyxGtk
+        if not getattr(_NyxGtk.ApplicationWindow, "_nyx_chrome_hooked", False):
+            _NyxGtk.ApplicationWindow.present = _nyx_make_present_hook(
+                _NyxGtk.ApplicationWindow.present)
+            _NyxGtk.ApplicationWindow._nyx_chrome_hooked = True
+    except Exception as _nyx_eg:
+        import sys as _nyx_sys
+        print("nyxus-chrome Gtk hook skipped: %s" % _nyx_eg, file=_nyx_sys.stderr)
+    # Hook Adw.ApplicationWindow (covers shield, sage, studio, godsapp)
+    try:
+        import gi as _nyx_gi
+        _nyx_gi.require_version("Adw", "1")
+        from gi.repository import Adw as _NyxAdw
+        if not getattr(_NyxAdw.ApplicationWindow, "_nyx_chrome_hooked", False):
+            _NyxAdw.ApplicationWindow.present = _nyx_make_present_hook(
+                _NyxAdw.ApplicationWindow.present)
+            _NyxAdw.ApplicationWindow._nyx_chrome_hooked = True
+    except Exception as _nyx_ea:
+        # Adw missing is fine for pure-Gtk apps; only log if non-import
+        if not isinstance(_nyx_ea, (ImportError, ValueError)):
+            import sys as _nyx_sys
+            print("nyxus-chrome Adw hook skipped: %s" % _nyx_ea, file=_nyx_sys.stderr)
+except Exception as _nyx_e:
+    import sys as _nyx_sys
+    print("nyxus-chrome bootstrap skipped: %s" % _nyx_e, file=_nyx_sys.stderr)
+# ────────────────────────── /NYXUS CHROME ───────────────────────────────────
+
+if __name__ == "__main__":
+    raise SystemExit(main())

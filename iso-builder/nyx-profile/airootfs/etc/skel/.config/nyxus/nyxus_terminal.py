@@ -12,7 +12,7 @@
 #  black -> ink black) defined in hyprland.conf. The terminal
 #  itself contributes nothing — exactly what the user asked for.
 #
-#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================
 import gi, os, sys
 

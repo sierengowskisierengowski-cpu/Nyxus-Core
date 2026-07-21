@@ -1,0 +1,123 @@
+/* NYXUS · Obsidian Prism — power menu
+ * Palette: #794dff · #ff266c · #26ffb7 · #ffb026 */
+
+* {
+    bg:         #05060a;
+    bar-bg:     rgba(5, 6, 10, 0.90);
+    widget-bg:  rgba(10, 13, 20, 0.85);
+    active:     #ff266c;
+    inactive:   rgba(238, 242, 250, 0.35);
+    highlight:  #794dff;
+    violet:     #26ffb7;
+    gold:       #ffb026;
+    text:       #eef2fa;
+    clock:      #eef2fa;
+    urgent:     #ff5470;
+    sep:        rgba(38, 255, 183, 0.35);
+    selected-bg:rgba(121, 77, 255, 0.18);
+    glass-line: rgba(255, 38, 108, 0.35);
+
+    font:                   "JetBrainsMono Nerd Font 13";
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+window {
+    background-color:       @bar-bg;
+    border:                 2px;
+    border-color:           @glass-line;
+    border-radius:          16px;
+    width:                  220px;
+    padding:                12px;
+    location:               center;
+    anchor:                 center;
+}
+
+mainbox {
+    background-color:       transparent;
+    spacing:                8px;
+    padding:                4px;
+    children:               [ inputbar, listview ];
+}
+
+inputbar {
+    background-color:       transparent;
+    children:               [ prompt ];
+    spacing:                0;
+    padding:                0 0 8px 0;
+}
+
+prompt {
+    background-color:       transparent;
+    text-color:             @gold;
+    font:                   "JetBrainsMono Nerd Font Bold 11";
+    horizontal-align:       0.5;
+    padding:                4px 0;
+}
+
+listview {
+    background-color:       transparent;
+    columns:                1;
+    lines:                  4;
+    spacing:                4px;
+    scrollbar:              false;
+    border:                 0;
+}
+
+element {
+    background-color:       transparent;
+    text-color:             @text;
+    border-radius:          10px;
+    padding:                10px 16px;
+    cursor:                 pointer;
+    orientation:            horizontal;
+    spacing:                12px;
+}
+
+element-icon {
+    background-color:       transparent;
+    size:                   18px;
+}
+
+element-text {
+    background-color:       transparent;
+    text-color:             inherit;
+    vertical-align:         0.5;
+    horizontal-align:       0.0;
+}
+
+element normal.normal {
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+element selected.normal {
+    background-color:       @selected-bg;
+    text-color:             @active;
+    border:                 1px;
+    border-color:           @sep;
+}
+
+element alternate.normal {
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+element normal.urgent {
+    background-color:       transparent;
+    text-color:             @urgent;
+}
+
+element selected.urgent {
+    background-color:       @selected-bg;
+    text-color:             @urgent;
+    border:                 1px;
+    border-color:           @urgent;
+}
+
+scrollbar {
+    background-color:       @widget-bg;
+    handle-color:           @violet;
+    handle-width:           4px;
+    border-radius:          2px;
+}

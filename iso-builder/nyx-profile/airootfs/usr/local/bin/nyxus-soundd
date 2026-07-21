@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-soundd   ·   rev 2026-07-07 r1 (Signature)
+#
+# UI sound daemon — rides Hyprland's event socket (socket2) and gives
+# the desktop a voice: window opens/closes blip, workspace switches
+# tick. Deliberately restrained:
+#   · 6s startup grace (session restore stays silent)
+#   · 120ms global cooldown — event storms produce ONE sound
+#   · special workspaces (scratchpads) don't tick
+#   · all playback via nyxus-sfx, so the global mute flag rules
+#
+# Toggle with `nyxus-sounds on|off|toggle`.
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+
+PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-soundd.pid"
+SOCK="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
+
+command -v socat >/dev/null || { echo "soundd: socat missing" >&2; exit 1; }
+[[ -S "${SOCK}" ]] || { echo "soundd: no hyprland event socket" >&2; exit 1; }
+
+if [[ -r "${PIDFILE}" ]] && kill -0 "$(cat "${PIDFILE}")" 2>/dev/null; then
+  exit 0
+fi
+echo $$ > "${PIDFILE}"
+trap 'pkill -P $$ 2>/dev/null; rm -f "${PIDFILE}"' EXIT INT TERM
+
+START=$(( $(date +%s%3N) ))
+last=0
+
+socat -u "UNIX-CONNECT:${SOCK}" - 2>/dev/null | while IFS= read -r line; do
+  now=$(( $(date +%s%3N) ))
+  (( now - START < 6000 )) && continue      # startup grace
+  (( now - last < 120 )) && continue        # global cooldown
+  case "${line}" in
+    openwindow\>\>*)   nyxus-sfx open;      last=${now} ;;
+    closewindow\>\>*)  nyxus-sfx close;     last=${now} ;;
+    workspace\>\>special*) : ;;             # scratchpads stay silent
+    workspace\>\>*)    nyxus-sfx workspace; last=${now} ;;
+  esac
+done &
+# backgrounded + wait'ed: a foreground pipeline makes bash defer the
+# TERM trap until the pipe exits (stale pidfile, orphan socat on kill).
+wait $!

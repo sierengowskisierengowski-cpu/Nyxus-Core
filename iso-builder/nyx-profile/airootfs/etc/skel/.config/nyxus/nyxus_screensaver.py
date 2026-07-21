@@ -15,7 +15,7 @@
 # So this process does NOT handle input itself — hypridle pkills it on
 # wake and then spawns the demon jumpscare overlay.
 #
-# © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================================
 import gi
 import sys

@@ -26,7 +26,7 @@ Usage in any GTK4 NYXUS app:
     # in do_activate, AFTER window content is set:
     install_chrome(self.win, page_key="_notepad")    # or "_stickies", etc.
 
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 import gi
 gi.require_version("Gtk", "4.0")

@@ -1,0 +1,288 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-hacker-mode [on|off|toggle|status]   ·   rev 2026-07-17 r2
+#
+# Flips the WHOLE desktop into a parallel "HACKER MODE" environment — a
+# second station matrix, not just a wallpaper swap. Toggling ON:
+#
+#   • swaps the ACTIVE station matrix (~/.config/nyxus/stations.json) for
+#     the hacker matrix (stations-hacker.json): every workstation gets a
+#     dark grim-alien wallpaper, a darker hue, a security tagline, and its
+#     launch rebound to the security stack (Arsenal, jeTT+Bifrost, Meli+
+#     honeypot, CIPHER, RedForge/Trainer, Tor/recon, …).
+#   • regenerates workspaces.json (per-workspace wallpaper daemon) and the
+#     Hyprland station shard (defaultName + on-created-empty), then reloads.
+#   • drops window opacity + repaints the focus ring matrix-green.
+#   • surfaces the security stack (Arsenal hub + Bifrost).
+#
+# Toggling OFF restores the exact captured normal state (matrix, shard,
+# opacity, border, wallpaper) — fully reversible + flicker-free (live
+# hyprctl keyword pushes; EWW left rail re-reads stations.json on its 1s
+# poll automatically). NEVER auto-activates at boot.
+#
+# State + backups live in ~/.config/nyxus/. Bound to Super+Ctrl+X + an
+# EWW bar button.
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
+
+STATE_DIR="${HOME}/.config/nyxus"
+STATE="${STATE_DIR}/hacker-mode.state"
+CFG_DIR="${STATE_DIR}"
+CONFD="${HOME}/.config/hypr/conf.d"
+STATIONS="${CFG_DIR}/stations.json"
+STATIONS_HACKER="${CFG_DIR}/stations-hacker.json"
+STATIONS_NORMAL_BAK="${CFG_DIR}/stations-normal.bak.json"
+STATIONS_CONF="${CONFD}/nyxus-stations.conf"
+STATIONS_CONF_BAK="${CFG_DIR}/nyxus-stations.conf.normal.bak"
+WORKSPACES="${CFG_DIR}/workspaces.json"
+mkdir -p "${STATE_DIR}" "${CONFD}"
+
+# Fallbacks to the shipped /etc/skel copies (fresh account / first run).
+[[ -r "${STATIONS_HACKER}" ]] || STATIONS_HACKER="/etc/skel/.config/nyxus/stations-hacker.json"
+
+HACKER_ACTIVE_OPACITY="0.82"
+HACKER_INACTIVE_OPACITY="0.68"
+HACKER_BORDER="rgba(00ff41ff) rgba(0aff9dff) rgba(0a2a12ff) 90deg"
+HACKER_INACTIVE_BORDER="rgba(00ff4133) rgba(0a2a1233) 90deg"
+
+notify()  { command -v notify-send >/dev/null 2>&1 && notify-send "$@" || true; }
+warn()    { printf '[nyxus-hacker-mode] %s\n' "$*" >&2; }
+_hypr()   { command -v hyprctl >/dev/null 2>&1 && hyprctl "$@" >/dev/null 2>&1 || true; }
+_getopt() { hyprctl getoption "$1" -j 2>/dev/null | jq -r "$2" 2>/dev/null; }
+is_on()   { [[ -f "${STATE}" ]] && grep -q '^mode=on$' "${STATE}"; }
+
+expand_home() {
+  local home="${HOME:-}"
+  if [[ -z "${home}" ]]; then
+    warn "HOME is empty; cannot expand wallpaper paths."
+    return 1
+  fi
+  # Caller is the trusted NYXUS config/runtime state in this repo. These paths
+  # only use the current user's home (`~` / `~/...`), not `~otheruser/...`.
+  case "${1:-}" in
+    "~")    printf '%s\n' "${home}" ;;
+    "~/"*)  printf '%s\n' "${home}/${1#~/}" ;;
+    *)      printf '%s\n' "${1:-}" ;;
+  esac
+}
+
+json_string() {
+  local file="$1" query="$2"
+  [[ -r "$file" ]] || return 1
+  command -v jq >/dev/null 2>&1 || return 1
+  jq -r "$query // empty" "$file" 2>/dev/null | head -1
+}
+
+resolve_wallpaper_path() {
+  local filename="$1" file dir
+  if [[ -z "$filename" ]]; then
+    warn "wallpaper filename is empty; cannot resolve path."
+    return 1
+  fi
+  [[ "$filename" = /* && -r "$filename" ]] && { printf '%s\n' "$filename"; return 0; }
+  if [[ "$filename" == */* ]]; then
+    warn "rejecting non-basename wallpaper path: ${filename}"
+    return 1
+  fi
+  for dir in "${@:2}"; do
+    [[ -n "$dir" ]] || continue
+    dir="$(expand_home "$dir")"
+    file="${dir%/}/${filename}"
+    [[ -r "$file" ]] && { printf '%s\n' "$file"; return 0; }
+  done
+  [[ "$filename" != /* && -r "$filename" ]] && { printf '%s\n' "$filename"; return 0; }
+  warn "could not resolve wallpaper path for ${filename}."
+  return 1
+}
+
+matrix_wallpaper() {
+  local matrix="$1" file wall_dir
+  file="$(json_string "$matrix" '.unified_wallpaper')"
+  [[ -n "$file" ]] || file="$(json_string "$matrix" '.home.wallpaper')"
+  wall_dir="$(json_string "$matrix" '.wall_dir')"
+  resolve_wallpaper_path "$file" "$wall_dir" "$HOME/.config/hypr/walls" "/usr/share/backgrounds/nyxus"
+}
+
+mode_wallpaper() {
+  local matrix="$1" fallback_name="$2" wall
+  wall="$(matrix_wallpaper "${matrix}" 2>/dev/null || true)"
+  [[ -n "${wall}" ]] || wall="$(resolve_wallpaper_path "${fallback_name}" "$HOME/.config/hypr/walls" "/usr/share/backgrounds/nyxus" 2>/dev/null || true)"
+  printf '%s\n' "${wall}"
+}
+
+# ── regenerate workspaces.json from the active stations.json ───────────
+sync_workspaces() {
+  if command -v nyxus-sync-stations >/dev/null 2>&1; then
+    nyxus-sync-stations >/dev/null 2>&1 && return 0
+  fi
+  command -v jq >/dev/null 2>&1 || return 0
+  jq -n --slurpfile s "${STATIONS}" '
+    { "_comment": "Auto-generated by nyxus-hacker-mode. Do not hand-edit.",
+      "workspaces": [ $s[0].stations[] | {id: .id, name: .name,
+        wallpaper: ($s[0].wall_dir + "/" + .wallpaper)} ] }' \
+    > "${WORKSPACES}" 2>/dev/null || true
+}
+
+# ── (re)generate the Hyprland station shard from the active matrix ─────
+# Emits defaultName + on-created-empty (from .launch) per station. Launch
+# strings deliberately carry NO commas (Hyprland splits workspace rules on
+# commas), so each becomes exactly one on-created-empty rule.
+gen_stations_conf() {
+  command -v jq >/dev/null 2>&1 || return 1
+  {
+    echo "# ============================================================"
+    echo "#  NYXUS — Station Matrix (AUTO-GENERATED by nyxus-hacker-mode)"
+    echo "#  Regenerated on every hacker-mode flip from the active"
+    echo "#  ~/.config/nyxus/stations.json. Do not hand-edit — edit the"
+    echo "#  matrix JSON (stations.json / stations-hacker.json) instead."
+    echo "# ============================================================"
+    echo
+    jq -r '.stations[] |
+      "workspace = \(.id), persistent:true, defaultName:\(.name)" +
+      ( if (.launch // "") != "" then ", on-created-empty:\(.launch)" else "" end)' \
+      "${STATIONS}"
+  } > "${STATIONS_CONF}" 2>/dev/null
+}
+
+# ── apply per-workspace wallpapers (restart daemon, else set base) ─────
+apply_wallpapers() {
+  local base="$1" resolved=""
+  if [[ -r "${base}" ]]; then
+    resolved="${base}"
+  elif [[ -r "${HOME}/.config/hypr/walls/${base}" ]]; then
+    resolved="${HOME}/.config/hypr/walls/${base}"
+  elif [[ -r "/usr/share/backgrounds/nyxus/${base}" ]]; then
+    resolved="/usr/share/backgrounds/nyxus/${base}"
+  fi
+  if systemctl --user is-active --quiet nyxus-ws-wallpaperd.service 2>/dev/null; then
+    systemctl --user restart nyxus-ws-wallpaperd.service 2>/dev/null || true
+  fi
+  # Immediate feedback on the current workspace (flicker-free fade).
+  if [[ -r "${resolved}" ]]; then
+    if command -v swww >/dev/null 2>&1; then
+      swww img "${resolved}" --transition-type fade --transition-duration 1 2>/dev/null || true
+    elif command -v nyxus-set-wallpaper >/dev/null 2>&1; then
+      nyxus-set-wallpaper "${resolved}" 2>/dev/null || true
+    fi
+  fi
+}
+
+apply_workspace_names() {
+  command -v jq >/dev/null 2>&1 || return 0
+  command -v hyprctl >/dev/null 2>&1 || return 0
+  jq -r '.stations[] | "\(.id)\t\(.name)"' "${STATIONS}" 2>/dev/null | \
+  while IFS=$'\t' read -r id name; do
+    [[ -n "${id:-}" && -n "${name:-}" ]] || continue
+    hyprctl dispatch renameworkspace "${id}" "${name}" >/dev/null 2>&1 || true
+  done
+}
+
+# ── actively spawn each station's tool into its workspace ─────────────
+# on-created-empty rules only fire on first visit to a freshly-created
+# empty workspace, so a toggle never fills the stations by itself. Here we
+# push each station's launch straight onto its workspace ([workspace N
+# silent] keeps focus put), skipping any workspace that already holds a
+# window so we never double up on stations the user is already using.
+spawn_stations() {
+  command -v hyprctl >/dev/null 2>&1 || return 0
+  command -v jq >/dev/null 2>&1 || return 0
+  local occupied id launch
+  occupied=" $(hyprctl clients -j 2>/dev/null | jq -r '.[].workspace.id' 2>/dev/null | sort -un | tr '\n' ' ')"
+  while IFS=$'\t' read -r id launch; do
+    [[ -n "${launch}" ]] || continue
+    case "${occupied}" in *" ${id} "*) continue ;; esac
+    hyprctl dispatch exec "[workspace ${id} silent] ${launch}" >/dev/null 2>&1
+    sleep 0.2
+  done < <(jq -r '.stations[] | select((.launch // "") != "") | "\(.id)\t\(.launch)"' "${STATIONS}")
+}
+
+hacker_on() {
+  if is_on; then notify -u low "NYXUS Hacker Mode" "Already engaged."; return 0; fi
+  if [[ ! -r "${STATIONS_HACKER}" ]]; then
+    notify -u critical "NYXUS Hacker Mode" "stations-hacker.json not found — cannot engage."
+    return 1
+  fi
+
+  # Capture normal state so OFF is exact.
+  local n_active n_inactive
+  n_active="$(_getopt decoration:active_opacity '.float // .int // 0.9')"
+  n_inactive="$(_getopt decoration:inactive_opacity '.float // .int // 0.8')"
+  [[ -f "${STATIONS}" ]]        && cp -f "${STATIONS}" "${STATIONS_NORMAL_BAK}"
+  [[ -f "${STATIONS_CONF}" ]]   && cp -f "${STATIONS_CONF}" "${STATIONS_CONF_BAK}"
+  {
+    echo "mode=on"
+    echo "prev_active_opacity=${n_active:-0.90}"
+    echo "prev_inactive_opacity=${n_inactive:-0.80}"
+  } > "${STATE}"
+
+  # 1. Swap the active matrix → regenerate all consumers → reload.
+  cp -f "${STATIONS_HACKER}" "${STATIONS}"
+  sync_workspaces
+  gen_stations_conf
+  _hypr reload
+  apply_workspace_names
+
+  # 2. Darker chrome (live, reversible).
+  _hypr keyword decoration:active_opacity   "${HACKER_ACTIVE_OPACITY}"
+  _hypr keyword decoration:inactive_opacity "${HACKER_INACTIVE_OPACITY}"
+  _hypr keyword general:col.active_border   ${HACKER_BORDER}
+  _hypr keyword general:col.inactive_border ${HACKER_INACTIVE_BORDER}
+
+  # 3. Flip wallpapers across workspaces.
+  local hacker_wall
+  hacker_wall="$(mode_wallpaper "${STATIONS_HACKER}" "nyxus-hacker-mode-a.png")"
+  [[ -n "${hacker_wall}" ]] && apply_wallpapers "${hacker_wall}"
+
+  # 4. Actively fill every station with its security tool, then raise the
+  #    Deep Core flyout. spawn_stations skips already-occupied workspaces.
+  spawn_stations
+  ( command -v eww >/dev/null 2>&1 && eww open --toggle deepcore >/dev/null 2>&1 & ) 2>/dev/null || true
+
+  notify -u critical "NYXUS Hacker Mode" "ENGAGED - parallel security layout - all stations flipped - security stack up."
+}
+
+hacker_off() {
+  if ! is_on; then notify -u low "NYXUS Hacker Mode" "Not engaged."; return 0; fi
+  local p_active p_inactive
+  p_active="$(grep -oP '^prev_active_opacity=\K.*' "${STATE}" 2>/dev/null | head -1)"
+  p_inactive="$(grep -oP '^prev_inactive_opacity=\K.*' "${STATE}" 2>/dev/null | head -1)"
+
+  # 1. Restore the normal matrix + shard (exact captured copies).
+  if [[ -f "${STATIONS_NORMAL_BAK}" ]]; then
+    cp -f "${STATIONS_NORMAL_BAK}" "${STATIONS}"
+  elif [[ -f "/etc/skel/.config/nyxus/stations.json" ]]; then
+    cp -f "/etc/skel/.config/nyxus/stations.json" "${STATIONS}"
+  fi
+  if [[ -f "${STATIONS_CONF_BAK}" ]]; then
+    cp -f "${STATIONS_CONF_BAK}" "${STATIONS_CONF}"
+  fi
+  sync_workspaces
+  _hypr reload
+  apply_workspace_names
+
+  # 2. Restore chrome.
+  _hypr keyword decoration:active_opacity   "${p_active:-0.90}"
+  _hypr keyword decoration:inactive_opacity "${p_inactive:-0.80}"
+
+  # 3. Restore normal wallpapers.
+  local norm_wall
+  norm_wall="$(grep -oP '^WALLPAPER_PATH="?\K[^"]+' "${STATE_DIR}/wallpaper.conf" 2>/dev/null | head -1)"
+  if [[ -n "${norm_wall}" ]]; then
+    norm_wall="$(expand_home "${norm_wall}")"
+  else
+    norm_wall="$(mode_wallpaper "${STATIONS}" "nyxus-desktop-hero.png")"
+  fi
+  [[ -n "${norm_wall}" ]] && apply_wallpapers "${norm_wall}"
+
+  rm -f "${STATE}"
+  notify -u normal "NYXUS Hacker Mode" "Disengaged — normal station matrix restored."
+}
+
+case "${1:-toggle}" in
+  on)       hacker_on ;;
+  off)      hacker_off ;;
+  status)   is_on && echo on || echo off ;;
+  toggle|*) is_on && hacker_off || hacker_on ;;
+esac

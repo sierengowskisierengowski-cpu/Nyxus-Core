@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-exec python3 /opt/nyxus/nyxus-crash-report.py "$@"
+exec python3 "$HOME/.nyxus/nyxus-crash-report.py" "$@"

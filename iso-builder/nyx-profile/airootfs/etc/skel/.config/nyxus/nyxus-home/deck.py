@@ -5,7 +5,7 @@ spectrum: cava is spawned in raw-ascii mode against the default PipeWire
 monitor, its bar stream is read on a background thread and painted as a
 mirrored neon analyzer.  No player → deck idles with a breathing standby
 trace (clearly labelled STANDBY, not fake audio).
-(c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+(c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 

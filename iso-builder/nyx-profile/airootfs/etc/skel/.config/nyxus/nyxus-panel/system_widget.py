@@ -4,7 +4,7 @@ NYXUS Panel — System stats tile.
 Live CPU / RAM / GPU / network stats refreshed every 5 s on a GLib timer.
 GPU info comes from `nvidia-smi --query-gpu=...`.  Net I/O from psutil deltas.
 
-© 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 

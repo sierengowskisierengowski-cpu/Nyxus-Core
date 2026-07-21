@@ -23,7 +23,7 @@ Backends:
 
 Esc cancels the window. Honors $NYXUS_DRY_RUN=1 for safe local testing.
 
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 
