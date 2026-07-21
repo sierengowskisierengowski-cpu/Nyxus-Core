@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Start
+GenericName=Start Menu
+Comment=Open NYXUS start and app search
+Exec=nyxus-start
+TryExec=nyxus-start
+Icon=system-search
+Terminal=false
+Categories=Utility;
+Keywords=NYXUS;Start;Launcher;Search;
+StartupNotify=true
+StartupWMClass=start

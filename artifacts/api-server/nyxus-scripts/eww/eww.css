@@ -4709,6 +4709,26 @@ scale slider {
   text-shadow: 0 0 12px rgba(77, 159, 255, 0.85);
 }
 
+.sec-pill {
+  min-height: 24px;
+}
+
+.sec-pill.sec-off {
+  opacity: 0.7;
+  border-style: dashed;
+}
+
+.sec-pill.sec-on {
+  opacity: 1;
+  box-shadow: 0 0 12px rgba(255, 38, 76, 0.42), 0 0 22px rgba(152, 77, 255, 0.24);
+}
+
+.sec-pill.sec-armed {
+  opacity: 1;
+  border-color: rgba(255, 77, 107, 0.85);
+  box-shadow: 0 0 12px rgba(255, 77, 107, 0.45), 0 0 22px rgba(255, 176, 38, 0.28);
+}
+
 /* -- workspace pills: crank the states (final word in the cascade) ---- */
 /* Same machined obsidian-vessel ring language as the right app rail:
    every pill is a solid near-black keycap wrapped in a neon hairline. */
@@ -5240,6 +5260,10 @@ scale slider {
 
 .brand-gem, .brand-word {
   text-shadow: 0 0 12px rgba(255, 255, 255, 0.75), 0 0 24px rgba(255, 77, 107, 0.55), 0 0 40px rgba(152, 77, 255, 0.25);
+}
+
+.nyx-glitch {
+  text-shadow: 0 0 10px rgba(152, 77, 255, 0.7), 0 0 20px rgba(255, 38, 76, 0.55), 0 0 32px rgba(255, 77, 107, 0.28);
 }
 
 /* spray-halo on the hero clock - pink/green double bloom like the wall */

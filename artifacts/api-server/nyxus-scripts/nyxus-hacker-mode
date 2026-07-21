@@ -13,7 +13,7 @@
 #   • regenerates workspaces.json (per-workspace wallpaper daemon) and the
 #     Hyprland station shard (defaultName + on-created-empty), then reloads.
 #   • drops window opacity + repaints the focus ring matrix-green.
-#   • surfaces the security stack (Arsenal hub + Bifrost + Deep Core).
+#   • surfaces the security stack (Arsenal hub + Bifrost).
 #
 # Toggling OFF restores the exact captured normal state (matrix, shard,
 # opacity, border, wallpaper) — fully reversible + flicker-free (live
@@ -88,18 +88,47 @@ gen_stations_conf() {
 
 # ── apply per-workspace wallpapers (restart daemon, else set base) ─────
 apply_wallpapers() {
-  local base="$1"
+  local base="$1" resolved=""
+  if [[ -r "${base}" ]]; then
+    resolved="${base}"
+  elif [[ -r "${HOME}/.config/hypr/walls/${base}" ]]; then
+    resolved="${HOME}/.config/hypr/walls/${base}"
+  elif [[ -r "/usr/share/backgrounds/nyxus/${base}" ]]; then
+    resolved="/usr/share/backgrounds/nyxus/${base}"
+  fi
   if systemctl --user is-active --quiet nyxus-ws-wallpaperd.service 2>/dev/null; then
     systemctl --user restart nyxus-ws-wallpaperd.service 2>/dev/null || true
   fi
   # Immediate feedback on the current workspace (flicker-free fade).
-  if [[ -r "${base}" ]]; then
+  if [[ -r "${resolved}" ]]; then
     if command -v swww >/dev/null 2>&1; then
-      swww img "${base}" --transition-type fade --transition-duration 1 2>/dev/null || true
+      swww img "${resolved}" --transition-type fade --transition-duration 1 2>/dev/null || true
     elif command -v nyxus-set-wallpaper >/dev/null 2>&1; then
-      nyxus-set-wallpaper "${base}" 2>/dev/null || true
+      nyxus-set-wallpaper "${resolved}" 2>/dev/null || true
     fi
   fi
+}
+
+apply_workspace_names() {
+  command -v jq >/dev/null 2>&1 || return 0
+  command -v hyprctl >/dev/null 2>&1 || return 0
+  jq -r '.stations[] | "\(.id)\t\(.name)"' "${STATIONS}" 2>/dev/null | \
+  while IFS=$'\t' read -r id name; do
+    [[ -n "${id:-}" && -n "${name:-}" ]] || continue
+    hyprctl dispatch renameworkspace "${id}" "${name}" >/dev/null 2>&1 || true
+  done
+}
+
+prime_station_workspaces() {
+  command -v hyprctl >/dev/null 2>&1 || return 0
+  command -v jq >/dev/null 2>&1 || return 0
+  local cur=""
+  cur="$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.id // empty' 2>/dev/null || true)"
+  while read -r id; do
+    [[ -n "${id:-}" ]] || continue
+    hyprctl dispatch workspace "${id}" >/dev/null 2>&1 || true
+  done < <(jq -r '.stations[].id' "${STATIONS}" 2>/dev/null)
+  [[ -n "${cur}" ]] && hyprctl dispatch workspace "${cur}" >/dev/null 2>&1 || true
 }
 
 hacker_on() {
@@ -126,6 +155,8 @@ hacker_on() {
   sync_workspaces
   gen_stations_conf
   _hypr reload
+  apply_workspace_names
+  prime_station_workspaces
 
   # 2. Darker chrome (live, reversible).
   _hypr keyword decoration:active_opacity   "${HACKER_ACTIVE_OPACITY}"
@@ -134,12 +165,11 @@ hacker_on() {
   _hypr keyword general:col.inactive_border ${HACKER_INACTIVE_BORDER}
 
   # 3. Flip wallpapers across workspaces.
-  apply_wallpapers "/usr/share/backgrounds/nyxus/nyxus-hacker-mode-a.png"
+  apply_wallpapers "nyxus-hacker-mode-a.png"
 
   # 4. Surface the security stack (best-effort, each guarded).
   ( command -v arsenal >/dev/null 2>&1 && setsid kitty --title Arsenal -e arsenal >/dev/null 2>&1 & ) 2>/dev/null || true
   ( command -v bifrost >/dev/null 2>&1 && setsid bifrost >/dev/null 2>&1 & ) 2>/dev/null || true
-  ( command -v eww >/dev/null 2>&1 && eww open --toggle deepcore >/dev/null 2>&1 & ) 2>/dev/null || true
 
   notify -u critical "NYXUS Hacker Mode" "ENGAGED — parallel security layout · all stations flipped · security stack up."
 }
@@ -161,6 +191,8 @@ hacker_off() {
   fi
   sync_workspaces
   _hypr reload
+  apply_workspace_names
+  prime_station_workspaces
 
   # 2. Restore chrome.
   _hypr keyword decoration:active_opacity   "${p_active:-0.90}"
@@ -169,7 +201,9 @@ hacker_off() {
   # 3. Restore normal wallpapers.
   local norm_wall
   norm_wall="$(grep -oP '^WALLPAPER_PATH="?\K[^"]+' "${STATE_DIR}/wallpaper.conf" 2>/dev/null | head -1)"
-  [[ -n "${norm_wall}" ]] || norm_wall="/usr/share/backgrounds/nyxus/nyxus-desktop-hero.png"
+  norm_wall="${norm_wall/\$HOME/${HOME}}"
+  norm_wall="${norm_wall/#\~/${HOME}}"
+  [[ -n "${norm_wall}" ]] || norm_wall="nyxus-desktop-hero.png"
   apply_wallpapers "${norm_wall}"
 
   rm -f "${STATE}"
