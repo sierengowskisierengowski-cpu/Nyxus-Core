@@ -511,6 +511,16 @@ dnscrypt-proxy
 sound-theme-freedesktop
 qt5-svg
 
+# ── NYXUS Ghost / Invisibility mode (rev 2026-07-17) ───────────────
+# tor + torsocks back nyxus-ghost (invisibility/anonymity mode): the
+# script toggles a Tor transparent proxy + nftables egress kill-switch,
+# randomises the MAC (macchanger, above), and mutes mDNS (avahi). tor is
+# TOGGLED by nyxus-ghost — its service is deliberately NOT enabled at boot
+# (see customize_airootfs.sh: tor.service is absent from the enable list).
+# nftables (Bifrost dep, above) provides the kill-switch ruleset.
+tor
+torsocks
+
 # ── NYXUS greeter stack (rev 2026-07-14) — REQUIRED ────────────────
 # The ISO enables greetd (see customize_airootfs.sh). The greeter chain
 # nyxus-greeter runs regreet under cage, falling back to tuigreet (text).
@@ -602,3 +612,107 @@ libnotify
 # DOCKER-USER egress-lockdown firewall.
 docker
 docker-compose
+
+# ═══════════════════════════════════════════════════════════════════
+# BLACKARCH — curated offensive/defensive toolkit (rev 2026-07-17)
+# ═══════════════════════════════════════════════════════════════════
+# The [blackarch] repo is wired in nyx-profile/pacman.conf; the host
+# keyring (blackarch-keyring, populated on this build box) verifies these
+# at pacstrap, and customize_airootfs.sh populates the keyring + adds the
+# repo to the LIVE /etc/pacman.conf so post-boot installs keep working.
+#
+# SIZE TRADEOFF (documented per the task): the full `blackarch` group is
+# ~2800 packages and would balloon the ISO to tens of GB. Instead this is
+# a CURATED ~67-tool set spanning recon / scanner / webapp / exploitation /
+# wireless / cracker / forensic / anti-forensic / sniffer / proxy / crypto —
+# enough to be "loaded with the works" while the ISO still bakes + boots
+# (adds roughly a few GB, dominated by metasploit/zaproxy/kismet). Anyone
+# who wants EVERYTHING runs `nyxus-blackarch-full` post-boot (installs the
+# whole `blackarch` group). Tools already shipped from official repos
+# (nmap, wireshark-cli, radare2, rizin, ghidra, binwalk, yara, sleuthkit,
+# volatility3, tcpdump, gdb, tor, torsocks, macchanger, …) are NOT relisted
+# here to avoid duplicates.
+# NOTE: blackarch package names are curated by hand; if any single name
+# fails to resolve at the first real bake, remove that one line (pacstrap
+# aborts on an unknown package) — everything else is independent.
+
+# ── keyring + mirrorlist (so the LIVE system trusts + resolves blackarch)
+blackarch-keyring
+blackarch-mirrorlist
+
+# ── recon / OSINT ──
+amass
+subfinder
+assetfinder
+theharvester
+recon-ng
+dnsrecon
+dnsenum
+fierce
+sublist3r
+# ── scanners ──
+masscan
+nikto
+wpscan
+nuclei
+naabu
+rustscan
+enum4linux
+# ── webapp ──
+sqlmap
+gobuster
+ffuf
+feroxbuster
+dirb
+wfuzz
+whatweb
+commix
+xsser
+dalfox
+zaproxy
+# ── exploitation ──
+metasploit
+exploitdb
+routersploit
+crackmapexec
+impacket
+# ── wireless ──
+aircrack-ng
+wifite
+reaver
+bully
+bettercap
+kismet
+hcxtools
+hcxdumptool
+mdk4
+pixiewps
+# ── password / cracker ──
+hashcat
+john
+hydra
+medusa
+ncrack
+crunch
+cewl
+hashid
+patator
+# ── forensic / anti-forensic ──
+foremost
+bulk-extractor
+# UNRESOLVED: steghide
+stegseek
+perl-image-exiftool
+bleachbit
+secure-delete
+mat2
+# ── sniffer / MITM / proxy ──
+ettercap
+dsniff
+responder
+mitmproxy
+proxychains-ng
+# ── SSL / crypto ──
+sslscan
+sslyze
+testssl.sh
