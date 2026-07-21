@@ -61,7 +61,7 @@ expand_home() {
   fi
   case "${1:-}" in
     "~")    printf '%s\n' "${home}" ;;
-    "~/"*)  printf '%s/%s\n' "${home}" "${1#~/}" ;;
+    "~/"*)  printf '%s\n' "${home}/${1#~/}" ;;
     *)      printf '%s\n' "${1:-}" ;;
   esac
 }
@@ -230,7 +230,7 @@ hacker_off() {
   else
     norm_wall="$(mode_wallpaper "${STATIONS}" "nyxus-desktop-hero.png")"
   fi
-  apply_wallpapers "${norm_wall}"
+  [[ -n "${norm_wall}" ]] && apply_wallpapers "${norm_wall}"
 
   rm -f "${STATE}"
   notify -u normal "NYXUS Hacker Mode" "Disengaged — normal station matrix restored."

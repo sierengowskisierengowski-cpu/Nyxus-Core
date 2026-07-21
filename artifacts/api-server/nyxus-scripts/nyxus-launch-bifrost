@@ -14,8 +14,4 @@ if pgrep -x bifrost >/dev/null 2>&1; then
   exit 0
 fi
 
-if [[ "${1:-}" == "--background" ]]; then
-  setsid bifrost >/dev/null 2>&1 &
-else
-  bifrost >/dev/null 2>&1 &
-fi
+setsid bifrost >/dev/null 2>&1 &
