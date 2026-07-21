@@ -96,13 +96,90 @@ fi
 ok "running on Arch as root with mkarchiso available"
 ok "iso version: ${ISO_DATE} → ${ISO_NAME}"
 
+# ── restore committed profile files the bake mutates in place ────────────
+# The bake edits a couple of tracked profile files in place (the package
+# list for the lean tier / the optional custom kernel, and pacman.conf for
+# the custom-kernel local repo). Restore them on ANY exit so a git checkout
+# is never left dirty, whether the bake succeeds or dies mid-run.
+_nyx_restore_profile() {
+  [[ -f "${PROFILE_DIR}/packages.x86_64.bake.bak" ]] && mv -f "${PROFILE_DIR}/packages.x86_64.bake.bak" "${PROFILE_DIR}/packages.x86_64"
+  [[ -f "${PROFILE_DIR}/pacman.conf.bake.bak" ]]     && mv -f "${PROFILE_DIR}/pacman.conf.bake.bak"     "${PROFILE_DIR}/pacman.conf"
+  return 0
+}
+trap _nyx_restore_profile EXIT
+
 # ── lean ISO tier (optional) ─────────────────────────────────────────────
 NYX_ISO_TIER="${NYX_ISO_TIER:-full}"
 if [[ "${NYX_ISO_TIER}" == "lean" && -f "${PROFILE_DIR}/packages.x86_64.lean" ]]; then
-  cp "${PROFILE_DIR}/packages.x86_64" "${PROFILE_DIR}/packages.x86_64.full.bak"
+  cp "${PROFILE_DIR}/packages.x86_64" "${PROFILE_DIR}/packages.x86_64.bake.bak"
   cp "${PROFILE_DIR}/packages.x86_64.lean" "${PROFILE_DIR}/packages.x86_64"
-  trap '[[ -f "${PROFILE_DIR}/packages.x86_64.full.bak" ]] && mv "${PROFILE_DIR}/packages.x86_64.full.bak" "${PROFILE_DIR}/packages.x86_64"' EXIT
   ok "NYX_ISO_TIER=lean — using packages.x86_64.lean"
+fi
+
+# ── Kage Ryu Nyxus custom kernel (OPT-IN) ────────────────────────────────
+# rev 2026-07-21 — bake the operator's own linux-kage-ryu security kernel
+# into the ISO so a fresh install already has it as a SELECTABLE entry
+# (stock `linux` stays the default boot entry — a bad custom-kernel build
+# can never strand you).
+#
+# This is OFF by default and a strict no-op unless NYX_WITH_KAGE_RYU=1, so
+# CI and every other build host keep baking a normal ISO with zero custom-
+# kernel dependency. The kernel is NOT in any Arch repo and is a multi-GB,
+# long compile, so it is NEVER built inside this script — you build the
+# package once (see kernel/README.md + kernel/install-kage-ryu.sh, or
+# `cd <kage-ryu repo> && makepkg -sc`), then bake with:
+#
+#     NYX_WITH_KAGE_RYU=1 sudo ./build-iso.sh
+#
+# It looks for the prebuilt linux-kage-ryu + headers packages under
+# NYX_KAGE_PKGDIR (default ~/Projects/arch-custom-kernel/linux-kage-ryu),
+# stages them into a profile-local [nyx-local] pacman repo, wires that repo
+# into the build pacman.conf, and appends the two packages to the bake's
+# package list. All of that is undone on exit by _nyx_restore_profile.
+if [[ "${NYX_WITH_KAGE_RYU:-0}" == "1" ]]; then
+  step "Kage Ryu Nyxus custom kernel (NYX_WITH_KAGE_RYU=1)"
+  KAGE_PKGDIR="${NYX_KAGE_PKGDIR:-${HOME}/Projects/arch-custom-kernel/linux-kage-ryu}"
+  LOCAL_REPO="${SCRIPT_DIR}/local-repo"
+  _kage_main="$(ls -t "${KAGE_PKGDIR}"/linux-kage-ryu-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)"
+  _kage_hdr="$(ls -t "${KAGE_PKGDIR}"/linux-kage-ryu-headers-*.pkg.tar.zst 2>/dev/null | head -1 || true)"
+  if [[ -z "${_kage_main}" || -z "${_kage_hdr}" ]]; then
+    fail "NYX_WITH_KAGE_RYU=1 but no prebuilt kernel packages found in ${KAGE_PKGDIR}"
+    fail "build them first (kernel is never compiled inside the bake):"
+    fail "  sudo kernel/install-kage-ryu.sh      # builds + installs on THIS host"
+    fail "  # or, to only produce the packages:  cd <kage-ryu repo> && makepkg -sc"
+    fail "then re-run:  NYX_WITH_KAGE_RYU=1 sudo ./build-iso.sh"
+    fail "(or set NYX_KAGE_PKGDIR=/dir/with/linux-kage-ryu-*.pkg.tar.zst)"
+    exit 1
+  fi
+  mkdir -p "${LOCAL_REPO}"
+  cp -f "${_kage_main}" "${_kage_hdr}" "${LOCAL_REPO}/"
+  ( cd "${LOCAL_REPO}" && repo-add -q nyx-local.db.tar.gz \
+       "$(basename "${_kage_main}")" "$(basename "${_kage_hdr}")" >/dev/null )
+  ok "kernel: $(basename "${_kage_main}") + headers → ${LOCAL_REPO}/ (repo-add nyx-local.db)"
+  printf "  ${B}kernel sha256:${R} %s\n" "$(sha256sum "${_kage_main}" | cut -d' ' -f1)"
+
+  # Wire the profile-local repo into the build pacman.conf (unsigned local
+  # packages, so TrustAll for THIS repo only; official repos stay Required).
+  cp "${PROFILE_DIR}/pacman.conf" "${PROFILE_DIR}/pacman.conf.bake.bak"
+  if ! grep -q '^\[nyx-local\]' "${PROFILE_DIR}/pacman.conf"; then
+    cat >> "${PROFILE_DIR}/pacman.conf" <<PACMANLOCAL
+
+[nyx-local]
+SigLevel = Optional TrustAll
+Server = file://${LOCAL_REPO}
+PACMANLOCAL
+  else
+    sed -i -E "s#^Server = file://.*/local-repo\$#Server = file://${LOCAL_REPO}#" "${PROFILE_DIR}/pacman.conf"
+  fi
+  ok "pacman.conf [nyx-local] Server → file://${LOCAL_REPO}"
+
+  # Append the kernel packages to the bake's package list (back it up first
+  # unless the lean tier already did).
+  [[ -f "${PROFILE_DIR}/packages.x86_64.bake.bak" ]] || cp "${PROFILE_DIR}/packages.x86_64" "${PROFILE_DIR}/packages.x86_64.bake.bak"
+  if ! grep -q '^linux-kage-ryu$' "${PROFILE_DIR}/packages.x86_64"; then
+    printf '\n# Kage Ryu Nyxus custom kernel (staged into [nyx-local] by build-iso.sh)\nlinux-kage-ryu\nlinux-kage-ryu-headers\n' >> "${PROFILE_DIR}/packages.x86_64"
+  fi
+  ok "packages.x86_64 += linux-kage-ryu + headers (installs ALONGSIDE stock linux; stock stays default)"
 fi
 
 # ── stamp version into profiledef.sh + os-release ────────────────────────
