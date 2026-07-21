@@ -76,6 +76,7 @@ LAUNCHERS=(
   nyxus-lock-track nyxus-mission-control-toggle nyxus-notifications
   nyxus-notif-to-eww nyxus-nowplaying nyxus-palette-extract nyxus-panic
   nyxus-plugins nyxus-plymouth-install nyxus-postinstall nyxus-pulsed nyxus-record
+  nyxus-rotate-walls
   nyxus-screensaver nyxus-security nyxus-session-start nyxus-settings
   nyxus-set-wallpaper nyxus-set-wallpaper.sh nyxus-sfx nyxus-shader
   nyxus-sound nyxus-sound-bake nyxus-soundd nyxus-sound-forge nyxus-sounds
@@ -317,6 +318,14 @@ fi
 place "$NS/nyxus_screensaver.py"   "$HOME/.config/nyxus/nyxus_screensaver.py"   0755 || true
 place "$NS/nyxus_matrix_saver.py"  "$HOME/.config/nyxus/nyxus_matrix_saver.py"  0755 || true
 ok "screensavers → ~/.config/nyxus/ (alien-wallpaper + matrix-rain)"
+
+# Curated wallpaper-rotation list (alien / NYXUS-HYPRLAND / sierengowski set
+# that the desktop + lock + login rotate through). SEED ONLY — never clobber
+# the user's edited pick list on re-run.
+if [[ -f "$NS/wall-rotation.list" && ! -f "$HOME/.config/nyxus/wall-rotation.list" ]]; then
+  place "$NS/wall-rotation.list" "$HOME/.config/nyxus/wall-rotation.list" || true
+  ok "wall-rotation list → ~/.config/nyxus/wall-rotation.list (seeded)"
+fi
 
 # Hyprland helper scripts → ~/.config/hypr/scripts/ (idle-glass, pulse halo,
 # lens zoom, prism-pulse, daily-line). Canonical source is the ISO skel tree,
