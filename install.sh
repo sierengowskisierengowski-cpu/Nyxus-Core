@@ -311,10 +311,26 @@ if [[ -d "$NS/nyxus-start" ]]; then
   ok "nyxus-start app → ~/.nyxus/nyxus-start  ($n files) + launcher → ~/.local/bin/nyxus-start"
 fi
 
-# alien matrix-rain screensaver → ~/.config/nyxus/ (the path hypridle +
-# nyxus-screensaver expect; see docs/THEME.md)
-place "$NS/nyxus_matrix_saver.py" "$HOME/.config/nyxus/nyxus_matrix_saver.py" 0755 || true
-ok "matrix screensaver → ~/.config/nyxus/nyxus_matrix_saver.py"
+# idle screensavers → ~/.config/nyxus/ (the path hypridle + nyxus-screensaver
+# expect; see docs/THEME.md). nyxus_screensaver.py is the alien-wallpaper saver
+# (default); nyxus_matrix_saver.py is the matrix-rain fallback.
+place "$NS/nyxus_screensaver.py"   "$HOME/.config/nyxus/nyxus_screensaver.py"   0755 || true
+place "$NS/nyxus_matrix_saver.py"  "$HOME/.config/nyxus/nyxus_matrix_saver.py"  0755 || true
+ok "screensavers → ~/.config/nyxus/ (alien-wallpaper + matrix-rain)"
+
+# Hyprland helper scripts → ~/.config/hypr/scripts/ (idle-glass, pulse halo,
+# lens zoom, prism-pulse, daily-line). Canonical source is the ISO skel tree,
+# so the installed system matches the ISO exactly. Referenced by hyprland.conf
+# + conf.d shards; without these the eye-candy binds silently no-op.
+HYPR_SCRIPTS_SRC="${REPO_ROOT}/iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/scripts"
+if [[ -d "$HYPR_SCRIPTS_SRC" ]]; then
+  n=0
+  for f in "$HYPR_SCRIPTS_SRC"/*.sh; do
+    [[ -f "$f" ]] || continue
+    place "$f" "$HOME/.config/hypr/scripts/$(basename "$f")" 0755 && n=$((n+1)) || true
+  done
+  ok "hypr scripts → ~/.config/hypr/scripts  ($n scripts)"
+fi
 
 # .desktop entries (Hub tiles / launcher discover apps through these).
 n=0
