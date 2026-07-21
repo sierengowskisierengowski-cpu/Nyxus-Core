@@ -65,8 +65,9 @@ for arg in "$@"; do case "$arg" in
 esac; done
 
 LAUNCHERS=(
+  nyxus
   nyxus-accent-from-wallpaper nyxus-apply-accent nyxus-backup nyxus-beat
-  nyxus-beatd nyxus-blackarch-full nyxus-bootstrap nyxus-companion nyxus-crash-report nyxus-drop
+  nyxus-beatd nyxus-blackarch-full nyxus-boot-check nyxus-bootstrap nyxus-companion nyxus-crash-report nyxus-drop
   nyxus-dynamic-wallpaper.sh nyxus-eww-cinematic nyxus-eww-launch
   nyxus-eww-launch-safe nyxus-freeform nyxus-gen-backdrop nyxus-ghost
   nyxus-ghost-helper nyxus-glow nyxus-hacker-mode nyxus-home
@@ -75,6 +76,7 @@ LAUNCHERS=(
   nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art
   nyxus-lock-track nyxus-mission-control-toggle nyxus-notifications
   nyxus-notif-to-eww nyxus-nowplaying nyxus-palette-extract nyxus-panic
+  nyxus-persist-login
   nyxus-plugins nyxus-plymouth-install nyxus-postinstall nyxus-pulsed nyxus-record
   nyxus-rotate-walls
   nyxus-screensaver nyxus-security nyxus-session-start nyxus-settings
@@ -140,6 +142,14 @@ place() { # place <src> <dst> [mode]
   if $CHECK; then info "would update ${dst/#$HOME/\~}"; CHANGED=$((CHANGED+1)); return 0; fi
   mkdir -p "$(dirname "$dst")"
   install -m "$mode" "$src" "$dst" && CHANGED=$((CHANGED+1))
+}
+place_with_backup() { # place_with_backup <src> <dst> <backup-rel> [mode]
+  local src="$1" dst="$2" rel="$3" mode="${4:-0644}"
+  [[ -f "$src" ]] || { warn "missing in repo: ${src#"$REPO_ROOT"/}"; return 1; }
+  if [[ -f "$dst" ]] && ! cmp -s "$src" "$dst"; then
+    backup_move "$dst" "$rel"
+  fi
+  place "$src" "$dst" "$mode"
 }
 
 BACKUP_ROOT=""
@@ -347,19 +357,36 @@ place "$NS/nyxus_screensaver.py"   "$HOME/.config/nyxus/nyxus_screensaver.py"   
 place "$NS/nyxus_matrix_saver.py"  "$HOME/.config/nyxus/nyxus_matrix_saver.py"  0755 || true
 ok "screensavers → ~/.config/nyxus/ (alien-wallpaper + matrix-rain)"
 
-# station matrix + hacker matrix + wallpaper seed → ~/.config/nyxus/
-NYXUS_CFG="${REPO_ROOT}/artifacts/nyxus-config"
-place "$NYXUS_CFG/stations.json"        "$HOME/.config/nyxus/stations.json" || true
-place "$NYXUS_CFG/stations-hacker.json" "$HOME/.config/nyxus/stations-hacker.json" || true
-place "$NYXUS_CFG/wallpaper.conf"       "$HOME/.config/nyxus/wallpaper.conf" || true
-if $CHECK; then
-  info "would regenerate ~/.config/nyxus/workspaces.json from stations.json"
-elif [[ -x "$HOME/.local/bin/nyxus-sync-stations" && -f "$HOME/.config/nyxus/stations.json" ]]; then
-  "$HOME/.local/bin/nyxus-sync-stations" >/dev/null 2>&1 \
-    && ok "station matrix → ~/.config/nyxus (normal + hacker) + workspaces.json regenerated" \
-    || warn "station matrix copied but workspaces.json regen failed — check jq / stations.json"
-else
-  ok "station matrix → ~/.config/nyxus (normal + hacker)"
+# canonical NYXUS runtime config bundle (stations/accent/wallpaper/profile).
+# Back up user edits before overwrite so re-runs stay reversible.
+NYXUS_CFG_SRC="${REPO_ROOT}/artifacts/nyxus-config"
+if [[ -d "$NYXUS_CFG_SRC" ]]; then
+  n=0
+  for base in stations.json stations-hacker.json accent.json wallpaper.conf; do
+    [[ -f "$NYXUS_CFG_SRC/$base" ]] || continue
+    place_with_backup "$NYXUS_CFG_SRC/$base" \
+      "$HOME/.config/nyxus/$base" \
+      ".config/nyxus/$base" && n=$((n+1)) || true
+  done
+  if [[ -d "$NYXUS_CFG_SRC/hw_profiles" ]]; then
+    while IFS= read -r -d '' f; do
+      rel="${f#"$NYXUS_CFG_SRC"/}"
+      place_with_backup "$f" "$HOME/.config/nyxus/$rel" ".config/nyxus/$rel" && n=$((n+1)) || true
+    done < <(find "$NYXUS_CFG_SRC/hw_profiles" -type f -print0)
+  fi
+  if $CHECK; then
+    info "would regenerate ~/.config/nyxus/workspaces.json from stations.json"
+    ok "nyxus config → ~/.config/nyxus  ($n files checked)"
+  elif [[ -x "$HOME/.local/bin/nyxus-sync-stations" && -f "$HOME/.config/nyxus/stations.json" ]]; then
+    if "$HOME/.local/bin/nyxus-sync-stations" >/dev/null 2>&1; then
+      ok "nyxus config → ~/.config/nyxus  ($n files checked) + workspaces.json regenerated"
+    else
+      warn "nyxus config copied but workspaces.json regen failed — check jq / stations.json"
+      ok "nyxus config → ~/.config/nyxus  ($n files checked)"
+    fi
+  else
+    ok "nyxus config → ~/.config/nyxus  ($n files checked)"
+  fi
 fi
 
 # Curated wallpaper-rotation list (alien / NYXUS-HYPRLAND / sierengowski set
@@ -415,6 +442,11 @@ if [[ -d "$WALLS_SRC" ]]; then
   done
 fi
 ok "wallpapers → ~/.config/hypr/walls  ($n files checked)"
+# explicit user-surface mirrors for hacker-mode fallback logic
+for base in nyxus-hacker-mode-a.png nyxus-hacker-mode-b.png nyxus-kageryu-blackout.png; do
+  [[ -f "$WALLS_SRC/$base" ]] || continue
+  place "$WALLS_SRC/$base" "$HOME/.config/hypr/walls/$base" || true
+done
 
 # wallpapers (rotation set; repo files replaced, user additions kept)
 n=0
@@ -479,6 +511,12 @@ for f in "$NS"/hypr-walls/rotation/*.png; do
   [[ -f "$f" ]] || continue
   verify_pair "$f" "$HOME/.config/hypr/walls/rotation/$(basename "$f")"
 done
+if [[ -d "$WALLS_SRC" ]]; then
+  for f in "$WALLS_SRC"/*.png; do
+    [[ -f "$f" ]] || continue
+    verify_pair "$f" "$HOME/.config/hypr/walls/$(basename "$f")"
+  done
+fi
 for base in "${LAUNCHERS[@]}"; do
   [[ -f "$NS/$base" ]] || continue
   verify_pair "$NS/$base" "$HOME/.local/bin/$base"
@@ -493,10 +531,18 @@ for f in "$NS"/nyxus_*.py; do
   verify_pair "$f" "$HOME/.nyxus/$(basename "$f")"
 done
 verify_pair "$NS/nyxus_matrix_saver.py" "$HOME/.config/nyxus/nyxus_matrix_saver.py"
-for f in stations.json stations-hacker.json wallpaper.conf; do
-  [[ -f "$NYXUS_CFG/$f" ]] || continue
-  verify_pair "$NYXUS_CFG/$f" "$HOME/.config/nyxus/$f"
-done
+if [[ -d "$NYXUS_CFG_SRC" ]]; then
+  for base in stations.json stations-hacker.json accent.json wallpaper.conf; do
+    [[ -f "$NYXUS_CFG_SRC/$base" ]] || continue
+    verify_pair "$NYXUS_CFG_SRC/$base" "$HOME/.config/nyxus/$base"
+  done
+  if [[ -d "$NYXUS_CFG_SRC/hw_profiles" ]]; then
+    while IFS= read -r -d '' f; do
+      rel="${f#"$NYXUS_CFG_SRC"/}"
+      verify_pair "$f" "$HOME/.config/nyxus/$rel"
+    done < <(find "$NYXUS_CFG_SRC/hw_profiles" -type f -print0)
+  fi
+fi
 for f in "$NS"/desktop-entries/*.desktop; do
   [[ -f "$f" ]] || continue
   verify_pair "$f" "$HOME/.local/share/applications/$(basename "$f")"

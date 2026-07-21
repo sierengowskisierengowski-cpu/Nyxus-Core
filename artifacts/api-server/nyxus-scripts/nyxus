@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# NYXUS · user-surface CLI dispatcher (install.sh --user-only compatible)
+set -euo pipefail
+NYXUS_HOME="${NYXUS_HOME:-${HOME}/.nyxus}"
+PROG="$(basename "$0")"
+
+case "${1:-}" in
+  ""|"-h"|"--help")
+    echo "Usage: ${PROG} <module> [args...]"
+    echo "Runs: ${NYXUS_HOME}/nyxus_<module>.py"
+    exit 0
+    ;;
+  --version|-V)
+    echo "NYXUS user dispatcher"
+    exit 0
+    ;;
+esac
+
+MOD="$1"; shift
+MOD="${MOD//-/_}"
+TARGET="${NYXUS_HOME}/nyxus_${MOD}.py"
+if [[ ! -f "${TARGET}" ]]; then
+  echo "${PROG}: unknown module '${MOD}' (missing ${TARGET})" >&2
+  exit 2
+fi
+mkdir -p "${HOME}/.cache/nyxus"
+exec python3 "${TARGET}" "$@" 2>>"${HOME}/.cache/nyxus/${MOD}.log"

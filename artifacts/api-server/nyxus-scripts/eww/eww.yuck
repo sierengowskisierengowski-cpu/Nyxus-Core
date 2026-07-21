@@ -70,6 +70,10 @@
                                      "~/.config/eww/scripts/net-graph.sh")
 (defpoll NOTIFS     :interval "3s"   :initial '{"icon":"○","label":"0","tooltip":"notifications","paused":"false","total":0}'
                                      "~/.config/eww/scripts/notifications.sh")
+(defpoll SECSTATE   :interval "2s"   :initial '{"hacker":"off","ghost":"off","panic":"idle"}'
+                                     "~/.config/eww/scripts/security-state.sh")
+(defpoll GLITCH     :interval "7s"   :initial '{"brand":false,"stamp":false,"clock":false,"ticker":false,"search":false}'
+                                     "~/.config/eww/scripts/random-glow.sh")
 
 ;; ── Sprint 1 flyouts ─────────────────────────────────────────────────
 (defpoll QS         :interval "3s"   :initial '{"wifi":"off","bt":"off","airplane":"off","dnd":"off","nightlight":"off","profile":"balanced","mic_mute":"off","audio_mute":"off","rot_lock":"off","auto_bright":"off"}'
@@ -185,8 +189,8 @@
     (box :orientation "h" :space-evenly false :spacing 7
       (label :class "brand-gem" :text "◆")
       (box :orientation "v" :space-evenly false :spacing 0
-        (label :class "brand-word" :text "NYXUS")
-        (label :class "brand-stamp" :text "SIGNATURE")))))
+        (label :class {GLITCH.brand ? "brand-word nyx-glitch" : "brand-word"} :text "NYXUS")
+        (label :class {GLITCH.stamp ? "brand-stamp nyx-glitch" : "brand-stamp"} :text "SIGNATURE")))))
 
 (defwidget nyxus_brand_compact []
   (button :class "brand brand-top"
@@ -195,7 +199,7 @@
           :tooltip "NYXUS Start"
     (box :orientation "h" :space-evenly false :spacing 6
       (label :class "brand-gem" :text "◆")
-      (label :class "brand-word" :text "NYXUS"))))
+      (label :class {GLITCH.brand ? "brand-word nyx-glitch" : "brand-word"} :text "NYXUS"))))
 
 ;; Reusable status pill (FOG drift disabled — caused overlay shake).
 (defwidget pill_btn [class text ?onclick ?onrightclick ?onmiddleclick ?tooltip]
@@ -268,7 +272,7 @@
           :tooltip "${TIME.long} · click for dashboard"
     (box :orientation "v" :space-evenly false :spacing 0 :halign "center"
       (label :class "clock-hms"  :text "${TIME.hm}" :style "opacity: 1;")
-      (label :class "clock-date" :text "${TIME.date}"))))
+      (label :class {GLITCH.clock ? "clock-date nyx-glitch" : "clock-date"} :text "${TIME.date}"))))
 
 (defwidget audio_widget []
   (pill_btn :class "p-audio"
@@ -319,7 +323,15 @@
   (button :class "search-btn"
           :onclick "nyxus-start &"
           :tooltip "Search NYXUS"
-    "  Search NYXUS"))
+    (label :class {GLITCH.search ? "nyx-glitch" : ""} :text "  Search NYXUS")))
+
+(defwidget security_toggle [glyph cmd state tip ?hue]
+  (eventbox :class "float-island"
+    (button :class "app-pill sec-pill app-pill-${hue ?: 'green'} ${state == 'on' ? 'sec-on' : state == 'armed' ? 'sec-armed' : 'sec-off'}"
+            :onclick "${cmd} &"
+            :tooltip "${tip} · ${state == 'on' ? 'ON' : state == 'armed' ? 'ARMED' : 'OFF'}"
+            :style "background-position: center;"
+      "${glyph}")))
 
 ;; ── brightness flyout (opened from bar brightness pill) ──
 (defwidget brightness_flyout_layout []
@@ -388,7 +400,7 @@
 ;; Naked ticker — full-width sliding marquee, zero vessel chrome.
 (defwidget ticker_widget []
   (box :class "ticker-row" :orientation "h" :hexpand true :halign "center" :valign "center"
-    (label :class "ticker ticker-marquee ticker-hero ticker-naked"
+    (label :class {GLITCH.ticker ? "ticker ticker-marquee ticker-hero ticker-naked nyx-glitch" : "ticker ticker-marquee ticker-hero ticker-naked"}
            :hexpand true
            :halign "center"
            :xalign 0.5
@@ -435,6 +447,7 @@
 ;; Transparent column — each launcher is its own float-island (no rail slab).
 (defwidget app_rail []
   (box :class "app-rail app-rail-float" :orientation "v" :space-evenly false :spacing 11 :valign "center" :halign "center"
+    (app_launcher :glyph "󰣇" :cmd "nyxus-start"     :label "NYXUS Start" :hue "pink")
     (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
     (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
     (app_launcher :glyph "" :cmd "thunar"         :label "Files" :hue "gold")
@@ -442,7 +455,10 @@
     (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad" :hue "purple")
     (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies" :hue "gold")
     (app_launcher :glyph "" :cmd "eww open --toggle mixer" :label "Audio" :hue "purple")
-    (app_launcher :glyph "" :cmd "eww open --toggle bluetooth" :label "Bluetooth" :hue "blue")))
+    (app_launcher :glyph "" :cmd "eww open --toggle bluetooth" :label "Bluetooth" :hue "blue")
+    (security_toggle :glyph "󰞇" :cmd "nyxus-hacker-mode toggle" :state "${SECSTATE.hacker}" :tip "Hacker Mode" :hue "green")
+    (security_toggle :glyph "󰈈" :cmd "nyxus-ghost toggle" :state "${SECSTATE.ghost}" :tip "Ghost Mode" :hue "purple")
+    (security_toggle :glyph "󰌾" :cmd "nyxus-panic lock" :state "${SECSTATE.panic}" :tip "Panic Lock" :hue "red")))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; BARS
@@ -505,7 +521,7 @@
 ;; old fragile padding that read as see-through.
 (defwidget saucer_base []
   (box :class "saucer-frame"
-       :style "background-image: url('/home/cosmic/.config/eww/assets/nyxus-saucer-band.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 430px; min-height: 116px;"))
+       :style "background-image: url('assets/nyxus-saucer-band.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 430px; min-height: 116px;"))
 
 ;; Bigger, livelier CAVA strip for the music face (full 14-bar spectrum,
 ;; taller glyphs + neon gradient glow) — the "bad-ass" beat graph.
@@ -553,18 +569,22 @@
           (button :class "saucer-btn" :onclick "playerctl next &" :tooltip "Next" "󰒭"))))))
 
 ;; The idle↔music "flip". eww/GTK cannot do a true 3D card flip, so this
-;; approximates one with a GtkStack slide transition (the idle face slides
-;; up/out as the music face slides in), toggled by MPRIS playback state.
+;; approximates one with a softer crossfade transition, toggled by MPRIS
+;; playback state.
+;; Only the IDLE (clock) face is wrapped in the hub-open button. The music
+;; face is transport-only — nesting its prev/play/next buttons inside an
+;; outer GtkButton made every tap fire the outer onclick (nyxus-hub-open)
+;; instead of the transport control. Flip back to the clock with Super+R.
 (defwidget bar_hub_trigger []
-  (button :class "bar-hub-trigger"
-          :onclick "nyxus-hub-open &"
-          :onrightclick "playerctl play-pause &"
-          :onmiddleclick "eww update SAUCER_FORCE=${SAUCER_FORCE ? 'false' : 'true'} &"
-          :tooltip "NYXUS Main Menu · ${PLAYER.status != 'Stopped' ? PLAYER.tooltip : TIME.long} · click hub · right-click play/pause · middle-click / Super+R flip"
-    (stack :class "saucer-stack" :transition "slideup" :same-size true
-           :selected {(PLAYER.status == "Stopped") == SAUCER_FORCE ? 1 : 0}
-      (bar_hub_idle)
-      (bar_hub_music))))
+  (stack :class "saucer-stack" :transition "crossfade" :same-size true
+         :selected {(PLAYER.status == "Stopped") == SAUCER_FORCE ? 1 : 0}
+    (button :class "bar-hub-trigger"
+            :onclick "nyxus-hub-open &"
+            :onrightclick "playerctl play-pause &"
+            :onmiddleclick "eww update SAUCER_FORCE=${SAUCER_FORCE ? 'false' : 'true'} &"
+            :tooltip "NYXUS Main Menu · ${TIME.long} · click hub · right-click play/pause · middle-click / Super+R flip"
+      (bar_hub_idle))
+    (bar_hub_music)))
 
 (defwidget bar_bottom_layout []
   ;; centerbox guarantees the saucer clock stays dead-center regardless of the
@@ -780,7 +800,7 @@
             (hub_tile :glyph "◉" :label "Deep Core" :hue "green"
                       :cmd "nyxus-hub-close; eww open --toggle deepcore")
             (hub_tile :glyph "▦" :label "Mission" :hue "purple"
-                      :cmd "nyxus-hub-close; nyxus-mission toggle"))
+                      :cmd "nyxus-hub-close; nyxus-mission-control-toggle"))
           (box :class "hub-grid" :orientation "h" :space-evenly true :hexpand true :spacing 10
             (hub_tile :glyph "󰚰" :label "Updates" :hue "gold"
                       :cmd "nyxus-hub-close; eww open --toggle updates")
@@ -912,7 +932,7 @@
           (label :class "dash-card-foot dash-foot-green" :halign "start"
                  :text "Super+G · kernel · jeTT · honeypot feed")))
       (button :class "dash-card dash-hub-card"
-              :onclick "nyxus-hub-close; nyxus-mission toggle &"
+              :onclick "nyxus-hub-close; nyxus-mission-control-toggle &"
         (box :orientation "v" :space-evenly false :spacing 8
           (label :class "dash-card-big dash-big-purple" :text "▦")
           (label :class "dash-card-script" :text "MISSION CONTROL")
@@ -1138,7 +1158,7 @@
     ;; did not, leaving a ~44px transparent strip at the bottom where the
     ;; live video wallpaper bled through). The opaque backdrop rides here.
     (box :class "hub-backdrop" :orientation "v" :vexpand true :hexpand true
-         :style "background-color: rgb(3,1,9); background-image: linear-gradient(rgba(4,2,10,0.95), rgba(2,1,7,0.98)), url('/home/cosmic/.config/eww/assets/nyxus-hero-crew-meet.png'); background-size: cover; background-position: center;"
+         :style "background-color: rgb(3,1,9); background-image: linear-gradient(rgba(4,2,10,0.95), rgba(2,1,7,0.98)), url('assets/nyxus-hero-crew-meet.png'); background-size: cover; background-position: center;"
       (centerbox :vexpand true :hexpand true
         (box)
         (nyxus_hub_layout)
@@ -1148,7 +1168,7 @@
   :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-powermenu"
   :geometry (geometry :width "100%" :height "100%" :anchor "center")
   (box :class "overlay-backdrop"
-       :style "background-image: linear-gradient(rgba(5,1,13,0.76), rgba(5,1,13,0.82)), url('/home/cosmic/.config/eww/assets/nyxus-hero-ufo-shop.png'); background-size: cover; background-position: center;"
+       :style "background-image: linear-gradient(rgba(5,1,13,0.76), rgba(5,1,13,0.82)), url('assets/nyxus-hero-ufo-shop.png'); background-size: cover; background-position: center;"
     (powermenu_layout)))
 
 (defwindow cheatsheet
@@ -1599,7 +1619,7 @@
 ;; is the visible notification.
 (defwidget notif_popup_card []
   (overlay
-    (image :class "notif-ufo-frame" :path "/home/cosmic/.config/eww/assets/nyxus-notif-frame.png"
+    (image :class "notif-ufo-frame" :path "assets/nyxus-notif-frame.png"
            :image-width 470 :image-height 314)
     (box :class "notif-ufo" :orientation "v" :space-evenly false :halign "fill" :valign "fill"
          :style "padding: 96px 108px 132px 108px;"
