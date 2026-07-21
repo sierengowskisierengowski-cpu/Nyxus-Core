@@ -82,7 +82,9 @@ from gi.repository import Gtk, Gdk, GLib, Gio, Adw  # noqa: E402
 
 
 _CSS = b"""
-window.nyx-screensaver { background: #000000; }
+window.nyx-screensaver { background: #05010d; }
+/* dim scrim over the alien wallpaper so the clock stays legible */
+.nyx-scrim { background: rgba(5, 3, 14, 0.55); }
 .nyx-logo {
   color: rgba(255, 255, 255, 0.95);
   font-family: 'JetBrains Mono', monospace;
@@ -161,7 +163,38 @@ class ScreensaverWindow(Gtk.ApplicationWindow):
         for w in (logo, word, sep_top, self.clock, sep_bot, tag):
             box.append(w)
 
-        self.set_child(box)
+        # Alien-wallpaper backdrop (rev 2026-07-21): the idle screen shows one
+        # of the NYXUS alien walls behind the clock instead of flat black.
+        # Falls back to the CSS base colour if no wallpaper resolves, so the
+        # saver never fails to open. Override with NYXUS_SCREENSAVER_WALL.
+        import os
+        overlay = Gtk.Overlay()
+        wall = os.environ.get("NYXUS_SCREENSAVER_WALL", "")
+        candidates = [wall] if wall else []
+        candidates += [
+            "/usr/share/backgrounds/nyxus/nyxus-urban-alien.png",
+            "/usr/share/backgrounds/nyxus/nyxus-kageryu-blackout.png",
+            "/usr/share/backgrounds/nyxus/nyxus-login-wall.png",
+            os.path.expanduser("~/.config/hypr/walls/nyxus-urban-alien.png"),
+        ]
+        picked = next((p for p in candidates if p and os.path.isfile(p)), None)
+        if picked:
+            try:
+                pic = Gtk.Picture.new_for_filename(picked)
+                pic.set_content_fit(Gtk.ContentFit.COVER)
+                pic.set_can_shrink(True)
+                pic.set_hexpand(True)
+                pic.set_vexpand(True)
+                overlay.set_child(pic)
+                scrim = Gtk.Box()
+                scrim.add_css_class("nyx-scrim")
+                scrim.set_hexpand(True)
+                scrim.set_vexpand(True)
+                overlay.add_overlay(scrim)
+            except Exception:
+                pass
+        overlay.add_overlay(box)
+        self.set_child(overlay)
         GLib.timeout_add_seconds(10, self._tick_clock)
 
     def _tick_clock(self):
