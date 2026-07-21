@@ -69,7 +69,7 @@ LAUNCHERS=(
   nyxus-beatd nyxus-blackarch-full nyxus-bootstrap nyxus-companion nyxus-crash-report nyxus-drop
   nyxus-dynamic-wallpaper.sh nyxus-eww-cinematic nyxus-eww-launch
   nyxus-eww-launch-safe nyxus-freeform nyxus-gen-backdrop nyxus-ghost
-  nyxus-ghost-helper nyxus-hacker-mode nyxus-home
+  nyxus-ghost-helper nyxus-glow nyxus-hacker-mode nyxus-home
   nyxus_hotcorners.py nyxus-hub-apps nyxus-hub-close nyxus-hub-launch
   nyxus-hub-open nyxus-hub-search nyxus-lens nyxus-livewall-flagship
   nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art
@@ -325,6 +325,13 @@ ok "screensavers → ~/.config/nyxus/ (alien-wallpaper + matrix-rain)"
 if [[ -f "$NS/wall-rotation.list" && ! -f "$HOME/.config/nyxus/wall-rotation.list" ]]; then
   place "$NS/wall-rotation.list" "$HOME/.config/nyxus/wall-rotation.list" || true
   ok "wall-rotation list → ~/.config/nyxus/wall-rotation.list (seeded)"
+fi
+
+# ~/.bashrc — NYXUS shell greeting (random-neon-glow line) + `glow` helper.
+# SEED ONLY: never clobber a user's existing ~/.bashrc.
+if [[ -f "$NS/bashrc" && ! -f "$HOME/.bashrc" ]]; then
+  place "$NS/bashrc" "$HOME/.bashrc" || true
+  ok "shell greeting → ~/.bashrc (seeded)"
 fi
 
 # Hyprland helper scripts → ~/.config/hypr/scripts/ (idle-glass, pulse halo,

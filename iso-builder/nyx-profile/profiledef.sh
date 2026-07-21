@@ -116,6 +116,7 @@ file_permissions=(
   ["/usr/local/bin/nyxus-focusmode"]="0:0:755"
   ["/usr/local/bin/nyxus-gamemode"]="0:0:755"
   ["/usr/local/bin/nyxus-gen-backdrop"]="0:0:755"
+  ["/usr/local/bin/nyxus-glow"]="0:0:755"
   ["/usr/local/bin/nyxus-ghost-auth"]="0:0:755"
   ["/usr/local/bin/nyxus-ghost-register"]="0:0:755"
   ["/usr/local/bin/nyxus-ghost"]="0:0:755"
