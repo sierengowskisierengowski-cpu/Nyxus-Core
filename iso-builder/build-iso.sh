@@ -53,7 +53,13 @@ fi
 # rev r24 (2026-05-18) — self-healing preflight: every tool mkarchiso
 # needs to bake a UEFI+BIOS ISO is installed here in one shot so the user
 # never has to play whack-a-mole with "X not found" failures.
-HOST_DEPS=(archiso squashfs-tools libisoburn dosfstools grub mtools edk2-ovmf)
+# rev r25 (2026-07-21) — added jq (workspaces.json generation), python
+# (host-side tamper-manifest hashing + inline helpers), curl (tarball
+# fallback download) and rsync (meli app staging) — this script invokes
+# them directly and none of archiso's own dependencies pull them in, so a
+# bare `archlinux:latest` + archiso host was failing with "command not
+# found" mid-bake.
+HOST_DEPS=(archiso squashfs-tools libisoburn dosfstools grub mtools edk2-ovmf jq python curl rsync)
 MISSING_DEPS=()
 for pkg in "${HOST_DEPS[@]}"; do
   if ! pacman -Q "${pkg}" >/dev/null 2>&1; then
