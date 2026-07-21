@@ -70,7 +70,7 @@ json_string() {
 resolve_wallpaper_path() {
   local filename="$1" file dir
   [[ -n "$filename" ]] || return 1
-  for dir in "$@"; do
+  for dir in "${@:2}"; do
     [[ "$dir" == "$filename" ]] && continue
     [[ -n "$dir" ]] || continue
     dir="$(expand_home "$dir")"
