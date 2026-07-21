@@ -1345,6 +1345,105 @@ else
   warn "set NYX_JETT_BIN=/path/to/jett-daemon to stage it, or ensure jett-daemon.service is running+readable at bake time"
 fi
 
+# ── stage Arsenal — GowskiNet Security Hub (TUI launcher) ────────────────
+# rev 2026-07-17 (r2 2026-07-21) — Arsenal is the operator's app-launcher
+# hub: a Rust ratatui TUI (`arsenal-hub`) that reads a registry.toml of
+# every tool and launches/monitors them.
+#
+# Unlike the other "stage from a local dev checkout" steps above, the
+# hub binary, registry, launcher, desktop entry, and every tool's source
+# tree (GSL/RedForge/Forge/CIPHER/AI-Cyber-Defense-Trainer/axiom/c2) are
+# committed directly under this profile's airootfs/ — mkarchiso picks
+# them up with no extra staging needed, same as any other tracked file.
+# No .env or *.db ships (see .gitignore): each app's own one-shot
+# `~/Arsenal/setup-apps.sh` creates its database role/schema and seeds a
+# fresh admin login after install, so nobody's local secrets/lab history
+# ends up baked into a distributable image.
+#
+# This step is ONLY for refreshing that committed tree from a newer local
+# checkout before a bake (e.g. after rebuilding the Rust hub, or editing
+# registry.toml) — it is a no-op when ${ARSENAL_REPO} doesn't exist,
+# which is the common case (CI, or anyone else's build host).
+step "stage Arsenal — GowskiNet Security Hub (TUI launcher)"
+ARSENAL_REPO="${NYX_ARSENAL_REPO:-${HOME}/Arsenal}"
+if [[ -d "${ARSENAL_REPO}" && -f "${ARSENAL_REPO}/registry.toml" ]]; then
+  ARSENAL_BIN="${NYX_ARSENAL_BIN:-${ARSENAL_REPO}/hub/target/release/arsenal-hub}"
+  ARSENAL_SKEL="${SKEL}/Arsenal"
+  mkdir -p "${ARSENAL_SKEL}" \
+           "${PROFILE_DIR}/airootfs/etc/arsenal" \
+           "${PROFILE_DIR}/airootfs/opt/arsenal/tools"
+
+  # 1. hub binary → /usr/local/bin/arsenal-hub (+ friendly `arsenal` wrapper)
+  if [[ -x "${ARSENAL_BIN}" ]]; then
+    install -Dm0755 "${ARSENAL_BIN}" "${PROFILE_DIR}/airootfs/usr/local/bin/arsenal-hub"
+    printf "  ${B}arsenal-hub sha256:${R} %s\n" "$(sha256sum "${ARSENAL_BIN}" | cut -d' ' -f1)"
+    ok "hub binary → /usr/local/bin/arsenal-hub (refreshed from ${ARSENAL_REPO})"
+  else
+    warn "arsenal-hub binary not found at ${ARSENAL_BIN} — build it (cd '${ARSENAL_REPO}/hub' && cargo build --release) or set NYX_ARSENAL_BIN"
+    warn "keeping the already-committed arsenal-hub binary as-is"
+  fi
+
+  # 2. registry.toml — rewrite hardcoded live paths to shipped locations.
+  #    /etc/arsenal/ (system reference) + /etc/skel/Arsenal/ (per-user seed).
+  _reg_tmp="$(mktemp)"
+  sed -E \
+    -e 's#/home/cosmic/GowskiNet-Vault/Security/#/opt/arsenal/tools/#g' \
+    -e 's#/home/cosmic/GowskiNet-Vault/AI/#/opt/arsenal/tools/#g' \
+    -e 's#/home/cosmic/Projects/axiom#/opt/arsenal/tools/axiom#g' \
+    -e 's#/home/cosmic/Projects/c2#/opt/arsenal/tools/c2#g' \
+    -e 's#/home/cosmic/Projects/jeTT#/usr/local/lib/jett#g' \
+    -e 's#/home/cosmic/Projects/bifrost#/usr/lib/bifrost#g' \
+    -e 's#/home/cosmic/Projects/meli#/opt/meli/app#g' \
+    -e 's#/home/cosmic/Projects/honeypot#/opt/honeypot#g' \
+    "${ARSENAL_REPO}/registry.toml" > "${_reg_tmp}"
+  install -Dm0644 "${_reg_tmp}" "${PROFILE_DIR}/airootfs/etc/arsenal/registry.toml"
+  install -Dm0644 "${_reg_tmp}" "${ARSENAL_SKEL}/registry.toml"
+  rm -f "${_reg_tmp}"
+  ok "registry.toml → /etc/arsenal/ + /etc/skel/Arsenal/ (live paths rewritten to shipped locations, refreshed)"
+
+  # 2b. setup-apps.sh — one-shot bring-up for the web tools.
+  if [[ -f "${ARSENAL_REPO}/setup-apps.sh" ]]; then
+    install -Dm0755 "${ARSENAL_REPO}/setup-apps.sh" \
+      "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus-setup-apps"
+    install -Dm0755 "${ARSENAL_REPO}/setup-apps.sh" \
+      "${ARSENAL_SKEL}/setup-apps.sh"
+    ok "setup-apps.sh → /usr/local/bin/nyxus-setup-apps (0755) + /etc/skel/Arsenal/setup-apps.sh (refreshed)"
+  fi
+
+  # 3. Optional: refresh the tool source trees from a newer local checkout.
+  #    Off by default — the committed trees already ship. Set
+  #    NYX_STAGE_ARSENAL_APPS=1 to pull in local changes before a bake.
+  if [[ "${NYX_STAGE_ARSENAL_APPS:-0}" == "1" ]]; then
+    warn "NYX_STAGE_ARSENAL_APPS=1 — refreshing Arsenal tool repos into /opt/arsenal/tools/"
+    declare -A _arsenal_srcs=(
+      [GSL]="/home/cosmic/GowskiNet-Vault/Security/GSL"
+      [RedForge]="/home/cosmic/GowskiNet-Vault/Security/RedForge"
+      [Forge]="/home/cosmic/GowskiNet-Vault/Security/Forge"
+      [CIPHER]="/home/cosmic/GowskiNet-Vault/Security/CIPHER"
+      [AI-Cyber-Defense-Trainer]="/home/cosmic/GowskiNet-Vault/AI/AI-Cyber-Defense-Trainer"
+      [axiom]="/home/cosmic/Projects/axiom"
+      [c2]="/home/cosmic/Projects/c2"
+    )
+    for _name in "${!_arsenal_srcs[@]}"; do
+      _src="${_arsenal_srcs[$_name]}"
+      if [[ -d "${_src}" ]]; then
+        rsync -a --exclude='.git' --exclude='node_modules' --exclude='.venv' \
+              --exclude='venv' --exclude='target' --exclude='__pycache__' \
+              --exclude='dist' --exclude='build' --exclude='.env' \
+              --exclude='*.db' --exclude='*.db-shm' --exclude='*.db-wal' \
+              "${_src}/" "${PROFILE_DIR}/airootfs/opt/arsenal/tools/${_name}/"
+        ok "refreshed ${_name} → /opt/arsenal/tools/${_name}"
+      else
+        warn "Arsenal tool source not found: ${_src} — leaving the already-committed tree as-is"
+      fi
+    done
+  fi
+
+  ok "Arsenal staged — run 'arsenal' or search 'Arsenal' in the launcher"
+else
+  ok "Arsenal repo not found at ${ARSENAL_REPO} — using the already-committed Arsenal tree as shipped (this is the common case)"
+fi
+
 # ── mirror OS-level docs into /etc/nyxus/ ────────────────────────────────
 step "mirror OS-level docs into airootfs/etc/nyxus/"
 NYXUS_DOCS="${PROFILE_DIR}/airootfs/etc/nyxus"
