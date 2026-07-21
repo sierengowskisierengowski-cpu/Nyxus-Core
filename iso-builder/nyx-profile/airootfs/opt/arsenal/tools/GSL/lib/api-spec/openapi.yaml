@@ -1,0 +1,426 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: GowskiNet Security Lab API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: tools
+    description: Tool catalog and execution
+  - name: history
+    description: Run history and results
+  - name: notes
+    description: Notes and findings
+  - name: dashboard
+    description: Dashboard summaries
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /tools:
+    get:
+      operationId: listTools
+      tags: [tools]
+      summary: List all tools
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: difficulty
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: search
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Tool list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tool"
+
+  /tools/{toolId}:
+    get:
+      operationId: getTool
+      tags: [tools]
+      summary: Get a single tool
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tool detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+        "404":
+          description: Not found
+
+  /tools/{toolId}/favorites:
+    post:
+      operationId: toggleFavorite
+      tags: [tools]
+      summary: Toggle tool favorite
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FavoriteToggle"
+      responses:
+        "200":
+          description: Updated tool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tool"
+
+  /runs:
+    get:
+      operationId: listRuns
+      tags: [history]
+      summary: List tool run history
+      parameters:
+        - name: toolId
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: offset
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Run history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Run"
+
+  /runs/{runId}:
+    get:
+      operationId: getRun
+      tags: [history]
+      summary: Get a run record
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Run detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Run"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteRun
+      tags: [history]
+      summary: Delete a run record
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /runs/{runId}/flag:
+    post:
+      operationId: flagRun
+      tags: [history]
+      summary: Flag a run as finding
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunFlag"
+      responses:
+        "200":
+          description: Updated run
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Run"
+
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List notes
+      responses:
+        "200":
+          description: Notes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+    post:
+      operationId: createNote
+      tags: [notes]
+      summary: Create note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /notes/{noteId}:
+    patch:
+      operationId: updateNote
+      tags: [notes]
+      summary: Update note
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+    delete:
+      operationId: deleteNote
+      tags: [notes]
+      summary: Delete note
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Dashboard stats
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/recent-runs:
+    get:
+      operationId: getRecentRuns
+      tags: [dashboard]
+      summary: Recent tool runs
+      responses:
+        "200":
+          description: Recent runs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Run"
+
+  /dashboard/devices:
+    get:
+      operationId: getNetworkDevices
+      tags: [dashboard]
+      summary: Live devices on 192.168.0.x
+      responses:
+        "200":
+          description: Device list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NetworkDevice"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    Tool:
+      type: object
+      required: [id, name, description, category, difficulty, estimatedTime, command, isFavorite]
+      properties:
+        id:          { type: string }
+        name:        { type: string }
+        description: { type: string }
+        category:    { type: string }
+        difficulty:  { type: string }
+        estimatedTime: { type: string }
+        command:     { type: string }
+        params:
+          type: array
+          items:
+            $ref: "#/components/schemas/ToolParam"
+        learnContent: { type: ["string", "null"] }
+        isFavorite:  { type: boolean }
+        tags:
+          type: array
+          items: { type: string }
+
+    ToolParam:
+      type: object
+      required: [name, label, type, defaultValue]
+      properties:
+        name:         { type: string }
+        label:        { type: string }
+        type:         { type: string }
+        defaultValue: { type: string }
+        placeholder:  { type: ["string", "null"] }
+        required:     { type: boolean }
+
+    FavoriteToggle:
+      type: object
+      required: [favorite]
+      properties:
+        favorite: { type: boolean }
+
+    Run:
+      type: object
+      required: [id, toolId, toolName, command, status, startedAt]
+      properties:
+        id:        { type: integer }
+        toolId:    { type: string }
+        toolName:  { type: string }
+        command:   { type: string }
+        status:    { type: string }
+        output:    { type: ["string", "null"] }
+        startedAt: { type: string }
+        endedAt:   { type: ["string", "null"] }
+        isFlagged: { type: boolean }
+        flagNote:  { type: ["string", "null"] }
+        severity:  { type: ["string", "null"] }
+
+    RunFlag:
+      type: object
+      required: [flagged]
+      properties:
+        flagged:  { type: boolean }
+        flagNote: { type: ["string", "null"] }
+        severity: { type: ["string", "null"] }
+
+    Note:
+      type: object
+      required: [id, content, createdAt]
+      properties:
+        id:        { type: integer }
+        toolId:    { type: ["string", "null"] }
+        runId:     { type: ["integer", "null"] }
+        content:   { type: string }
+        title:     { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    NoteInput:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string }
+        title:   { type: ["string", "null"] }
+        toolId:  { type: ["string", "null"] }
+        runId:   { type: ["integer", "null"] }
+
+    NoteUpdate:
+      type: object
+      properties:
+        content: { type: string }
+        title:   { type: ["string", "null"] }
+
+    DashboardSummary:
+      type: object
+      required: [totalTools, totalRuns, totalCategories, favoriteCount, findingsCount, recentActivity]
+      properties:
+        totalTools:     { type: integer }
+        totalRuns:      { type: integer }
+        totalCategories: { type: integer }
+        favoriteCount:  { type: integer }
+        findingsCount:  { type: integer }
+        recentActivity: { type: string }
+
+    NetworkDevice:
+      type: object
+      required: [ip, status]
+      properties:
+        ip:       { type: string }
+        hostname: { type: ["string", "null"] }
+        mac:      { type: ["string", "null"] }
+        vendor:   { type: ["string", "null"] }
+        status:   { type: string }

@@ -1,0 +1,1600 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: GowskiNet REDFORGE API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: auth
+  - name: disclaimer
+  - name: dashboard
+  - name: scenarios
+  - name: missions
+  - name: notes
+  - name: notebooks
+  - name: knowledge
+  - name: scoreboard
+  - name: settings
+  - name: tutor
+  - name: network
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+
+  /auth/status:
+    get:
+      operationId: getAuthStatus
+      tags: [auth]
+      summary: Setup status + current session
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthStatus" }
+
+  /auth/setup:
+    post:
+      operationId: setupAuth
+      tags: [auth]
+      summary: First-time admin setup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AuthSetupInput" }
+      responses:
+        "200":
+          description: TOTP secret to enroll
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthSetupResult" }
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with password + TOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginInput" }
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SessionInfo" }
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out
+      responses:
+        "204": { description: Logged out }
+
+  /disclaimer/status:
+    get:
+      operationId: getDisclaimerStatus
+      tags: [disclaimer]
+      summary: Has disclaimer been accepted?
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DisclaimerStatus" }
+
+  /disclaimer/accept:
+    post:
+      operationId: acceptDisclaimer
+      tags: [disclaimer]
+      summary: Record disclaimer acceptance
+      responses:
+        "200":
+          description: Recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DisclaimerStatus" }
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Mission Control summary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardSummary" }
+
+  /dashboard/recent-missions:
+    get:
+      operationId: getRecentMissions
+      tags: [dashboard]
+      summary: Recent completed missions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MissionSummary" }
+
+  /dashboard/recent-notes:
+    get:
+      operationId: getRecentNotes
+      tags: [dashboard]
+      summary: Recently edited notes
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Note" }
+
+  /scenarios:
+    get:
+      operationId: listScenarios
+      tags: [scenarios]
+      summary: Browse curated detection scenarios
+      parameters:
+        - { name: category, in: query, schema: { type: string } }
+        - { name: difficulty, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Scenario" }
+
+  /scenarios/{id}:
+    get:
+      operationId: getScenario
+      tags: [scenarios]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ScenarioDetail" }
+
+  /scenarios/{id}/deploy:
+    post:
+      operationId: deployScenario
+      tags: [scenarios]
+      summary: Start a mission based on this scenario
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeployScenarioInput" }
+      responses:
+        "201":
+          description: Mission started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Mission" }
+
+  /scenarios/random:
+    post:
+      operationId: deployRandomScenario
+      tags: [scenarios]
+      summary: Generate and deploy a random scenario mission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RandomScenarioInput" }
+      responses:
+        "201":
+          description: Mission started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Mission" }
+
+  /missions:
+    get:
+      operationId: listMissions
+      tags: [missions]
+      summary: All missions (active + completed)
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MissionSummary" }
+
+  /missions/active:
+    get:
+      operationId: getActiveMission
+      tags: [missions]
+      summary: Current active mission if any
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ActiveMissionResponse" }
+
+  /missions/{id}:
+    get:
+      operationId: getMission
+      tags: [missions]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissionDetail" }
+    delete:
+      operationId: deleteMission
+      tags: [missions]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Deleted }
+
+  /missions/{id}/investigation:
+    patch:
+      operationId: updateInvestigation
+      tags: [missions]
+      summary: Save notes/hypothesis/evidence to active mission
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InvestigationUpdate" }
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Mission" }
+
+  /missions/{id}/submit:
+    post:
+      operationId: submitMission
+      tags: [missions]
+      summary: Submit findings and score
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitMissionInput" }
+      responses:
+        "200":
+          description: Scored
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissionDebrief" }
+
+  /missions/{id}/giveup:
+    post:
+      operationId: giveUpMission
+      tags: [missions]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Revealed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissionDebrief" }
+
+  /missions/{id}/hint:
+    post:
+      operationId: requestHint
+      tags: [missions]
+      summary: Reveal one hint (costs points)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Hint
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HintResponse" }
+
+  /missions/{id}/debrief:
+    get:
+      operationId: getMissionDebrief
+      tags: [missions]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissionDebrief" }
+
+  /missions/{id}/master:
+    post:
+      operationId: markMastered
+      tags: [missions]
+      summary: Mark a saved mission as mastered
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MissionSummary" }
+
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      parameters:
+        - { name: notebookId, in: query, schema: { type: integer } }
+        - { name: tag, in: query, schema: { type: string } }
+        - { name: noteType, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+        - { name: archived, in: query, schema: { type: boolean } }
+        - { name: pinned, in: query, schema: { type: boolean } }
+        - { name: favorited, in: query, schema: { type: boolean } }
+        - { name: sort, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Note" }
+    post:
+      operationId: createNote
+      tags: [notes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NoteInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+
+  /notes/{id}:
+    get:
+      operationId: getNote
+      tags: [notes]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+    patch:
+      operationId: updateNote
+      tags: [notes]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NoteUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+    delete:
+      operationId: deleteNote
+      tags: [notes]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Deleted }
+
+  /notes/{id}/pin:
+    post:
+      operationId: togglePinNote
+      tags: [notes]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+
+  /notes/{id}/favorite:
+    post:
+      operationId: toggleFavoriteNote
+      tags: [notes]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+
+  /notes/{id}/archive:
+    post:
+      operationId: toggleArchiveNote
+      tags: [notes]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+
+  /notes/{id}/versions:
+    get:
+      operationId: listNoteVersions
+      tags: [notes]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/NoteVersion" }
+
+  /notes/{id}/restore/{versionId}:
+    post:
+      operationId: restoreNoteVersion
+      tags: [notes]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: versionId, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Restored
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+
+  /notes/{id}/duplicate:
+    post:
+      operationId: duplicateNote
+      tags: [notes]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "201":
+          description: Duplicated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Note" }
+
+  /note-templates:
+    get:
+      operationId: listNoteTemplates
+      tags: [notes]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/NoteTemplate" }
+
+  /notebooks:
+    get:
+      operationId: listNotebooks
+      tags: [notebooks]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Notebook" }
+    post:
+      operationId: createNotebook
+      tags: [notebooks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NotebookInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Notebook" }
+
+  /notebooks/{id}:
+    patch:
+      operationId: updateNotebook
+      tags: [notebooks]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NotebookUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Notebook" }
+    delete:
+      operationId: deleteNotebook
+      tags: [notebooks]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Deleted }
+
+  /tags:
+    get:
+      operationId: listTags
+      tags: [notes]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TagSummary" }
+
+  /kb/mitre/tactics:
+    get:
+      operationId: listMitreTactics
+      tags: [knowledge]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MitreTactic" }
+
+  /kb/mitre/techniques:
+    get:
+      operationId: listMitreTechniques
+      tags: [knowledge]
+      parameters:
+        - { name: tactic, in: query, schema: { type: string } }
+        - { name: platform, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MitreTechnique" }
+
+  /kb/mitre/techniques/{techniqueId}:
+    get:
+      operationId: getMitreTechnique
+      tags: [knowledge]
+      parameters:
+        - { name: techniqueId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MitreTechniqueDetail" }
+
+  /kb/lolbas:
+    get:
+      operationId: listLolbas
+      tags: [knowledge]
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/KbEntry" }
+
+  /kb/lolbas/{name}:
+    get:
+      operationId: getLolbasEntry
+      tags: [knowledge]
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KbEntryDetail" }
+
+  /kb/gtfobins:
+    get:
+      operationId: listGtfobins
+      tags: [knowledge]
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/KbEntry" }
+
+  /kb/gtfobins/{name}:
+    get:
+      operationId: getGtfobinsEntry
+      tags: [knowledge]
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KbEntryDetail" }
+
+  /kb/malware:
+    get:
+      operationId: listMalware
+      tags: [knowledge]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/KbEntry" }
+
+  /kb/malware/{name}:
+    get:
+      operationId: getMalwareEntry
+      tags: [knowledge]
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KbEntryDetail" }
+
+  /kb/atomic-tests:
+    get:
+      operationId: listAtomicTests
+      tags: [knowledge]
+      parameters:
+        - { name: technique, in: query, schema: { type: string } }
+        - { name: platform, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AtomicTest" }
+
+  /kb/atomic-tests/{id}:
+    get:
+      operationId: getAtomicTest
+      tags: [knowledge]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AtomicTestDetail" }
+
+  /kb/cves:
+    get:
+      operationId: listCves
+      tags: [knowledge]
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: year, in: query, schema: { type: integer } }
+        - { name: severity, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CveEntry" }
+
+  /kb/cves/{cveId}:
+    get:
+      operationId: getCve
+      tags: [knowledge]
+      parameters:
+        - { name: cveId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CveDetail" }
+
+  /scoreboard/me:
+    get:
+      operationId: getMyProgress
+      tags: [scoreboard]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProgressSummary" }
+
+  /scoreboard/skills:
+    get:
+      operationId: getSkillRadar
+      tags: [scoreboard]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SkillScore" }
+
+  /scoreboard/streak:
+    get:
+      operationId: getStreak
+      tags: [scoreboard]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StreakData" }
+
+  /scoreboard/achievements:
+    get:
+      operationId: listAchievements
+      tags: [scoreboard]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Achievement" }
+
+  /scoreboard/weekly:
+    get:
+      operationId: getWeeklySummary
+      tags: [scoreboard]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WeeklySummary" }
+
+  /network/devices:
+    get:
+      operationId: listNetworkDevices
+      tags: [network]
+      summary: Recently discovered devices on local subnet
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/NetworkDevice" }
+
+  /network/scan:
+    post:
+      operationId: scanNetwork
+      tags: [network]
+      summary: Run a real host-discovery scan (nmap/arp-scan) of the allow-listed lab subnet
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/NetworkDevice" }
+
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Settings" }
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SettingsUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Settings" }
+
+  /settings/change-password:
+    post:
+      operationId: changePassword
+      tags: [settings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChangePasswordInput" }
+      responses:
+        "204": { description: Changed }
+
+  /tutor/explain:
+    post:
+      operationId: tutorExplain
+      tags: [tutor]
+      summary: Ask Claude to explain code/log/technique (SSE stream)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TutorRequest" }
+      responses:
+        "200":
+          description: SSE stream of text deltas
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+  /tutor/quiz:
+    post:
+      operationId: tutorQuiz
+      tags: [tutor]
+      summary: Generate study questions about a technique
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/QuizRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QuizResponse" }
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string }
+
+    AuthStatus:
+      type: object
+      required: [needsSetup, authenticated]
+      properties:
+        needsSetup: { type: boolean }
+        authenticated: { type: boolean }
+        username: { type: ["string", "null"] }
+        disclaimerAcceptedAt: { type: ["string", "null"], format: date-time }
+
+    AuthSetupInput:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 1 }
+        password: { type: string, minLength: 8 }
+
+    AuthSetupResult:
+      type: object
+      required: [totpSecret, otpauthUrl]
+      properties:
+        totpSecret: { type: string }
+        otpauthUrl: { type: string }
+        recoveryCodes:
+          type: array
+          items: { type: string }
+
+    LoginInput:
+      type: object
+      required: [username, password, totpCode]
+      properties:
+        username: { type: string }
+        password: { type: string }
+        totpCode: { type: string }
+
+    SessionInfo:
+      type: object
+      required: [username]
+      properties:
+        username: { type: string }
+
+    DisclaimerStatus:
+      type: object
+      required: [accepted]
+      properties:
+        accepted: { type: boolean }
+        acceptedAt: { type: ["string", "null"], format: date-time }
+        version: { type: string }
+
+    DashboardSummary:
+      type: object
+      required:
+        - threatLevel
+        - missionsCompleted
+        - notesCount
+        - streakDays
+        - skillLevel
+        - xp
+        - kbStats
+        - version
+      properties:
+        threatLevel: { type: string }
+        missionsCompleted: { type: integer }
+        missionsActive: { type: integer }
+        notesCount: { type: integer }
+        streakDays: { type: integer }
+        skillLevel: { type: string }
+        xp: { type: integer }
+        averageScore: { type: ["number", "null"] }
+        kbStats: { $ref: "#/components/schemas/KbStats" }
+        version: { type: string }
+        claudeStatus: { type: string }
+
+    KbStats:
+      type: object
+      required: [mitreTechniques, atomicTests, lolbas, gtfobins, cves, malware]
+      properties:
+        mitreTechniques: { type: integer }
+        atomicTests: { type: integer }
+        lolbas: { type: integer }
+        gtfobins: { type: integer }
+        cves: { type: integer }
+        malware: { type: integer }
+
+    Scenario:
+      type: object
+      required: [id, name, category, difficulty, description, mitreTechniques, platforms]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        difficulty: { type: string }
+        description: { type: string }
+        mitreTechniques:
+          type: array
+          items: { type: string }
+        platforms:
+          type: array
+          items: { type: string }
+        timeLimitMinutes: { type: integer }
+
+    ScenarioDetail:
+      allOf:
+        - $ref: "#/components/schemas/Scenario"
+        - type: object
+          properties:
+            atomicTestId: { type: ["string", "null"] }
+            backstory: { type: string }
+            tags:
+              type: array
+              items: { type: string }
+
+    DeployScenarioInput:
+      type: object
+      required: [mode]
+      properties:
+        mode: { type: string, enum: [blind, preview] }
+        timeLimitMinutes: { type: integer }
+
+    RandomScenarioInput:
+      type: object
+      required: [difficulty]
+      properties:
+        difficulty: { type: string }
+        categories:
+          type: array
+          items: { type: string }
+        timeLimitMinutes: { type: integer }
+
+    Mission:
+      type: object
+      required:
+        - id
+        - scenarioId
+        - scenarioName
+        - status
+        - mode
+        - startedAt
+      properties:
+        id: { type: integer }
+        scenarioId: { type: string }
+        scenarioName: { type: string }
+        category: { type: string }
+        difficulty: { type: string }
+        status: { type: string }
+        mode: { type: string }
+        startedAt: { type: string, format: date-time }
+        completedAt: { type: ["string", "null"], format: date-time }
+        timeLimitMinutes: { type: ["integer", "null"] }
+        notes: { type: string }
+        hypothesis: { type: string }
+        evidence: { type: string }
+        hintsUsed: { type: integer }
+        score: { type: ["integer", "null"] }
+
+    MissionSummary:
+      type: object
+      required: [id, scenarioName, status, startedAt]
+      properties:
+        id: { type: integer }
+        scenarioId: { type: string }
+        scenarioName: { type: string }
+        category: { type: string }
+        difficulty: { type: string }
+        status: { type: string }
+        startedAt: { type: string, format: date-time }
+        completedAt: { type: ["string", "null"], format: date-time }
+        score: { type: ["integer", "null"] }
+        mastered: { type: boolean }
+
+    MissionDetail:
+      allOf:
+        - $ref: "#/components/schemas/Mission"
+        - type: object
+          properties:
+            scenario: { $ref: "#/components/schemas/ScenarioDetail" }
+            debrief:
+              oneOf:
+                - { $ref: "#/components/schemas/MissionDebrief" }
+                - { type: "null" }
+
+    ActiveMissionResponse:
+      type: object
+      properties:
+        mission:
+          oneOf:
+            - { $ref: "#/components/schemas/Mission" }
+            - { type: "null" }
+
+    InvestigationUpdate:
+      type: object
+      properties:
+        notes: { type: string }
+        hypothesis: { type: string }
+        evidence: { type: string }
+
+    SubmitMissionInput:
+      type: object
+      required: [identifiedTechnique]
+      properties:
+        identifiedTechnique: { type: string }
+        identifiedCategory: { type: string }
+        confidence: { type: integer }
+        finalNotes: { type: string }
+
+    HintResponse:
+      type: object
+      required: [hint, hintsUsed]
+      properties:
+        hint: { type: string }
+        hintsUsed: { type: integer }
+
+    MissionDebrief:
+      type: object
+      required:
+        - mission
+        - reveal
+        - artifacts
+        - performance
+        - relatedTechniques
+      properties:
+        mission: { $ref: "#/components/schemas/Mission" }
+        reveal: { $ref: "#/components/schemas/ScenarioReveal" }
+        artifacts:
+          type: array
+          items: { $ref: "#/components/schemas/MissionArtifact" }
+        performance: { $ref: "#/components/schemas/PerformanceScore" }
+        relatedTechniques:
+          type: array
+          items: { $ref: "#/components/schemas/MitreTechnique" }
+
+    ScenarioReveal:
+      type: object
+      required: [name, category, mitreTechniques, description, sourceCode, whyItWorks, howToDetect, whatYouShouldHaveSeen, howToPrevent]
+      properties:
+        name: { type: string }
+        category: { type: string }
+        mitreTechniques:
+          type: array
+          items: { type: string }
+        description: { type: string }
+        sourceCode: { type: string }
+        codeLanguage: { type: string }
+        codeExplanation:
+          type: array
+          items: { $ref: "#/components/schemas/CodeLine" }
+        whyItWorks: { type: string }
+        howToDetect: { type: string }
+        whatYouShouldHaveSeen: { type: string }
+        howToPrevent: { type: string }
+        realWorldExamples:
+          type: array
+          items: { type: string }
+        recommendedReading:
+          type: array
+          items: { $ref: "#/components/schemas/Reference" }
+
+    CodeLine:
+      type: object
+      required: [line, code, explanation]
+      properties:
+        line: { type: integer }
+        code: { type: string }
+        explanation: { type: string }
+
+    Reference:
+      type: object
+      required: [title, url]
+      properties:
+        title: { type: string }
+        url: { type: string }
+
+    MissionArtifact:
+      type: object
+      required: [kind, label, content]
+      properties:
+        kind: { type: string }
+        label: { type: string }
+        content: { type: string }
+
+    PerformanceScore:
+      type: object
+      required: [overall, detectionTime, identification, evidenceQuality, containment]
+      properties:
+        overall: { type: integer }
+        detectionTime: { type: integer }
+        identification: { type: integer }
+        evidenceQuality: { type: integer }
+        containment: { type: integer }
+        feedback: { type: string }
+
+    Note:
+      type: object
+      required: [id, title, body, noteType, pinned, favorited, archived, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        body: { type: string }
+        noteType: { type: string }
+        notebookId: { type: ["integer", "null"] }
+        missionId: { type: ["integer", "null"] }
+        techniqueId: { type: ["string", "null"] }
+        tags:
+          type: array
+          items: { type: string }
+        pinned: { type: boolean }
+        favorited: { type: boolean }
+        archived: { type: boolean }
+        wordCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        lastViewedAt: { type: ["string", "null"], format: date-time }
+
+    NoteInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1 }
+        body: { type: string }
+        noteType: { type: string }
+        notebookId: { type: ["integer", "null"] }
+        missionId: { type: ["integer", "null"] }
+        techniqueId: { type: ["string", "null"] }
+        tags:
+          type: array
+          items: { type: string }
+
+    NoteUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        body: { type: string }
+        noteType: { type: string }
+        notebookId: { type: ["integer", "null"] }
+        techniqueId: { type: ["string", "null"] }
+        tags:
+          type: array
+          items: { type: string }
+
+    NoteVersion:
+      type: object
+      required: [id, noteId, title, body, createdAt]
+      properties:
+        id: { type: integer }
+        noteId: { type: integer }
+        title: { type: string }
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    NoteTemplate:
+      type: object
+      required: [id, name, body]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        body: { type: string }
+
+    Notebook:
+      type: object
+      required: [id, name, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        color: { type: string }
+        noteCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+
+    NotebookInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        color: { type: string }
+
+    NotebookUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        color: { type: string }
+
+    TagSummary:
+      type: object
+      required: [name, count]
+      properties:
+        name: { type: string }
+        count: { type: integer }
+
+    MitreTactic:
+      type: object
+      required: [id, name, description]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        techniqueCount: { type: integer }
+
+    MitreTechnique:
+      type: object
+      required: [id, name, tactics, platforms]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        tactics:
+          type: array
+          items: { type: string }
+        platforms:
+          type: array
+          items: { type: string }
+
+    MitreTechniqueDetail:
+      allOf:
+        - $ref: "#/components/schemas/MitreTechnique"
+        - type: object
+          properties:
+            detection: { type: string }
+            mitigation: { type: string }
+            dataSources:
+              type: array
+              items: { type: string }
+            references:
+              type: array
+              items: { $ref: "#/components/schemas/Reference" }
+            subTechniques:
+              type: array
+              items: { $ref: "#/components/schemas/MitreTechnique" }
+
+    KbEntry:
+      type: object
+      required: [name, summary]
+      properties:
+        name: { type: string }
+        summary: { type: string }
+        category: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+
+    KbEntryDetail:
+      allOf:
+        - $ref: "#/components/schemas/KbEntry"
+        - type: object
+          properties:
+            description: { type: string }
+            examples:
+              type: array
+              items: { $ref: "#/components/schemas/KbExample" }
+            mitreTechniques:
+              type: array
+              items: { type: string }
+            references:
+              type: array
+              items: { $ref: "#/components/schemas/Reference" }
+
+    KbExample:
+      type: object
+      required: [label, code]
+      properties:
+        label: { type: string }
+        code: { type: string }
+        language: { type: string }
+        description: { type: string }
+
+    AtomicTest:
+      type: object
+      required: [id, name, techniqueId, platforms, executor]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        techniqueId: { type: string }
+        techniqueName: { type: string }
+        description: { type: string }
+        platforms:
+          type: array
+          items: { type: string }
+        executor: { type: string }
+
+    AtomicTestDetail:
+      allOf:
+        - $ref: "#/components/schemas/AtomicTest"
+        - type: object
+          properties:
+            command: { type: string }
+            cleanupCommand: { type: string }
+            inputArguments: { type: string }
+            detectionGuidance: { type: string }
+
+    CveEntry:
+      type: object
+      required: [id, summary, severity]
+      properties:
+        id: { type: string }
+        summary: { type: string }
+        severity: { type: string }
+        cvss: { type: ["number", "null"] }
+        published: { type: ["string", "null"], format: date-time }
+        product: { type: string }
+        vendor: { type: string }
+
+    CveDetail:
+      allOf:
+        - $ref: "#/components/schemas/CveEntry"
+        - type: object
+          properties:
+            description: { type: string }
+            references:
+              type: array
+              items: { $ref: "#/components/schemas/Reference" }
+            cwe:
+              type: array
+              items: { type: string }
+
+    ProgressSummary:
+      type: object
+      required: [skillLevel, xp, missionsCompleted, averageScore, bestScore, fastestDetectionSeconds]
+      properties:
+        skillLevel: { type: string }
+        xp: { type: integer }
+        xpToNextLevel: { type: integer }
+        missionsCompleted: { type: integer }
+        averageScore: { type: ["number", "null"] }
+        bestScore: { type: ["integer", "null"] }
+        fastestDetectionSeconds: { type: ["integer", "null"] }
+        weakestCategory: { type: ["string", "null"] }
+        strongestCategory: { type: ["string", "null"] }
+
+    SkillScore:
+      type: object
+      required: [category, score, missionCount]
+      properties:
+        category: { type: string }
+        score: { type: number }
+        missionCount: { type: integer }
+
+    StreakData:
+      type: object
+      required: [currentStreak, longestStreak, days]
+      properties:
+        currentStreak: { type: integer }
+        longestStreak: { type: integer }
+        days:
+          type: array
+          items: { $ref: "#/components/schemas/StreakDay" }
+
+    StreakDay:
+      type: object
+      required: [date, count]
+      properties:
+        date: { type: string }
+        count: { type: integer }
+
+    Achievement:
+      type: object
+      required: [id, name, description, unlocked]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        unlocked: { type: boolean }
+        unlockedAt: { type: ["string", "null"], format: date-time }
+        icon: { type: string }
+
+    WeeklySummary:
+      type: object
+      required: [missionsThisWeek, scoreAverage, focusAreas]
+      properties:
+        missionsThisWeek: { type: integer }
+        scoreAverage: { type: ["number", "null"] }
+        focusAreas:
+          type: array
+          items: { type: string }
+        improvementAreas:
+          type: array
+          items: { type: string }
+        notesCreated: { type: integer }
+
+    NetworkDevice:
+      type: object
+      required: [ip, lastSeen]
+      properties:
+        ip: { type: string }
+        hostname: { type: string }
+        mac: { type: string }
+        vendor: { type: string }
+        excluded: { type: boolean }
+        lastSeen: { type: string, format: date-time }
+
+    Settings:
+      type: object
+      required: [targetSubnet, defaultDifficulty, defaultTimerMinutes, claudeModel]
+      properties:
+        targetSubnet: { type: string }
+        excludedDevices:
+          type: array
+          items: { type: string }
+        defaultDifficulty: { type: string }
+        defaultTimerMinutes: { type: integer }
+        claudeModel: { type: string }
+        ntfyUrl: { type: string }
+        notifyOnStart: { type: boolean }
+        notifyOnTimer: { type: boolean }
+
+    SettingsUpdate:
+      type: object
+      properties:
+        targetSubnet: { type: string }
+        excludedDevices:
+          type: array
+          items: { type: string }
+        defaultDifficulty: { type: string }
+        defaultTimerMinutes: { type: integer }
+        claudeModel: { type: string }
+        ntfyUrl: { type: string }
+        notifyOnStart: { type: boolean }
+        notifyOnTimer: { type: boolean }
+
+    ChangePasswordInput:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string, minLength: 8 }
+
+    TutorRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt: { type: string }
+        context: { type: string }
+        kind: { type: string }
+
+    QuizRequest:
+      type: object
+      required: [topic]
+      properties:
+        topic: { type: string }
+        techniqueId: { type: string }
+        count: { type: integer }
+
+    QuizResponse:
+      type: object
+      required: [questions]
+      properties:
+        questions:
+          type: array
+          items: { $ref: "#/components/schemas/QuizQuestion" }
+
+    QuizQuestion:
+      type: object
+      required: [question, answer]
+      properties:
+        question: { type: string }
+        answer: { type: string }
+        difficulty: { type: string }

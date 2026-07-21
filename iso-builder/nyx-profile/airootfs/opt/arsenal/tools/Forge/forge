@@ -1,0 +1,161 @@
+#!/usr/bin/env bash
+# GowskiNet FORGE launcher — starts the fully-local threat research workstation.
+#
+#   ./forge          start (build if needed) and open the UI
+#   ./forge stop     stop the running server
+#   ./forge restart  stop then start
+#   ./forge status   show what's running
+#   ./forge rebuild  force a fresh build, then start
+#
+# Everything runs locally: Postgres for storage, Ollama for the AI engine.
+# No cloud, no API key, bound to 127.0.0.1.
+
+set -euo pipefail
+
+FORGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$FORGE_DIR"
+
+ENV_FILE="$FORGE_DIR/.env"
+SERVER_ENTRY="$FORGE_DIR/artifacts/api-server/dist/index.mjs"
+SPA_INDEX="$FORGE_DIR/artifacts/forge/dist/public/index.html"
+PIDFILE="$FORGE_DIR/.forge.pid"
+LOGFILE="$FORGE_DIR/forge.log"
+
+c() { printf '\033[%sm%s\033[0m\n' "$1" "$2"; }
+info() { c "36" "  → $1"; }
+ok()   { c "32" "  ✓ $1"; }
+warn() { c "33" "  ! $1"; }
+err()  { c "31" "  ✗ $1" >&2; }
+
+[[ -f "$ENV_FILE" ]] || { err ".env not found at $ENV_FILE"; exit 1; }
+set -a; # shellcheck disable=SC1090
+source "$ENV_FILE"; set +a
+PORT="${PORT:-20000}"
+
+is_running() {
+  [[ -f "$PIDFILE" ]] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null
+}
+
+ensure_service() { # name
+  local svc="$1"
+  if ! systemctl is-active --quiet "$svc"; then
+    info "starting $svc (needs authorization)…"
+    pkexec systemctl start "$svc" || { err "could not start $svc"; exit 1; }
+  fi
+  ok "$svc is up"
+}
+
+wait_for_ollama_model() {
+  # Ollama may take a moment after start; verify the configured model exists.
+  local model="${OLLAMA_MODEL:-forge-sec}"
+  local host="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+  for _ in $(seq 1 20); do
+    if curl -sf "$host/api/tags" 2>/dev/null | grep -q "\"$model"; then
+      ok "AI model '$model' ready"
+      return 0
+    fi
+    sleep 0.5
+  done
+  warn "AI model '$model' not found in Ollama — generation will fail until it's pulled."
+}
+
+do_build() {
+  info "installing dependencies (pnpm)…"
+  pnpm install --prefer-offline >/dev/null 2>&1 || pnpm install
+  info "pushing database schema…"
+  pnpm --filter db push >/dev/null
+  info "building frontend + backend…"
+  pnpm run build
+  ok "build complete"
+}
+
+SYSTEMD_UNIT="gowskinet-forge.service"
+has_systemd_unit() { systemctl --user list-unit-files "$SYSTEMD_UNIT" 2>/dev/null | grep -q "$SYSTEMD_UNIT"; }
+
+do_start() {
+  # FORGE runs as a real systemd --user service (survives reboot/logout via
+  # `loginctl enable-linger`) rather than a manually-backgrounded process —
+  # this launcher is now a thin, idempotent wrapper around that service.
+  if has_systemd_unit; then
+    if systemctl --user is-active --quiet "$SYSTEMD_UNIT"; then
+      ok "FORGE already running → http://localhost:$PORT"
+      return 0
+    fi
+    c "35" "▟▛ GowskiNet FORGE — local threat research workstation"
+    ensure_service postgresql
+    ensure_service ollama
+    wait_for_ollama_model
+    if [[ ! -f "$SERVER_ENTRY" || ! -f "$SPA_INDEX" ]]; then
+      warn "build artifacts missing — building now (first run)…"
+      do_build
+    fi
+    info "starting $SYSTEMD_UNIT…"
+    systemctl --user start "$SYSTEMD_UNIT"
+  else
+    warn "systemd unit not installed yet — falling back to a foreground-managed process."
+    c "35" "▟▛ GowskiNet FORGE — local threat research workstation"
+    ensure_service postgresql
+    ensure_service ollama
+    wait_for_ollama_model
+    if [[ ! -f "$SERVER_ENTRY" || ! -f "$SPA_INDEX" ]]; then
+      warn "build artifacts missing — building now (first run)…"
+      do_build
+    fi
+    info "starting server on 127.0.0.1:$PORT…"
+    setsid node --enable-source-maps "$SERVER_ENTRY" >"$LOGFILE" 2>&1 </dev/null &
+    echo $! > "$PIDFILE"
+    disown || true
+  fi
+
+  for _ in $(seq 1 20); do
+    if curl -sf "http://localhost:$PORT/api/healthz" >/dev/null 2>&1; then
+      ok "FORGE is live → http://localhost:$PORT"
+      c "36" "     login: ${FORGE_AUTH_USERNAME:-admin} / ${FORGE_AUTH_PASSWORD:-<see .env>}"
+      command -v xdg-open >/dev/null && xdg-open "http://localhost:$PORT" >/dev/null 2>&1 || true
+      return 0
+    fi
+    sleep 0.5
+  done
+  err "server did not become healthy — see $LOGFILE"
+  tail -n 20 "$LOGFILE" >&2 || true
+  exit 1
+}
+
+do_stop() {
+  if has_systemd_unit && systemctl --user is-active --quiet "$SYSTEMD_UNIT"; then
+    systemctl --user stop "$SYSTEMD_UNIT"
+    ok "FORGE stopped"
+    return 0
+  fi
+  if is_running; then
+    kill "$(cat "$PIDFILE")" 2>/dev/null || true
+    rm -f "$PIDFILE"
+    ok "FORGE stopped"
+  else
+    pkill -f "$SERVER_ENTRY" 2>/dev/null && ok "FORGE stopped (matched process)" || warn "FORGE was not running"
+    rm -f "$PIDFILE"
+  fi
+}
+
+do_status() {
+  if has_systemd_unit; then
+    systemctl --user is-active --quiet "$SYSTEMD_UNIT" \
+      && ok "running (systemd) → http://localhost:$PORT" \
+      || warn "not running"
+  elif is_running; then
+    ok "running (pid $(cat "$PIDFILE")) → http://localhost:$PORT"
+  else
+    warn "not running"
+  fi
+  systemctl is-active --quiet postgresql && ok "postgresql: active" || warn "postgresql: inactive"
+  systemctl is-active --quiet ollama && ok "ollama: active" || warn "ollama: inactive"
+}
+
+case "${1:-start}" in
+  start)   do_start ;;
+  stop)    do_stop ;;
+  restart) do_stop; sleep 1; do_start ;;
+  status)  do_status ;;
+  rebuild) do_stop || true; do_build; do_start ;;
+  *) echo "usage: forge {start|stop|restart|status|rebuild}"; exit 1 ;;
+esac

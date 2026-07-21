@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "GowskiNet FORGE"
+version = "1.0.0"
+id = "artifacts/forge"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18275
+
+[services.development]
+run = "pnpm --filter @workspace/forge run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/forge", "run", "build" ]
+publicDir = "artifacts/forge/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18275"
+BASE_PATH = "/"

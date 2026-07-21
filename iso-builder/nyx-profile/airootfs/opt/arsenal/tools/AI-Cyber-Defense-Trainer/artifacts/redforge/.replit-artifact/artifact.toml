@@ -1,0 +1,30 @@
+kind = "web"
+previewPath = "/"
+title = "GowskiNet REDFORGE"
+version = "1.0.0"
+id = "artifacts/redforge"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20508
+
+[services.env]
+PORT = "20508"
+BASE_PATH = "/"
+
+[services.development]
+run = "PORT=20508 BASE_PATH=/ pnpm --filter @workspace/redforge run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/redforge", "run", "build" ]
+publicDir = "artifacts/redforge/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

@@ -1,0 +1,663 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: GowskiNet REDFORGE API — AI-powered adversary emulation platform
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: missions
+    description: Attack mission management
+  - name: notes
+    description: Study notes
+  - name: network
+    description: Network device discovery
+  - name: stats
+    description: Skill scores and training statistics
+  - name: knowledge-base
+    description: MITRE ATT&CK knowledge base
+  - name: dashboard
+    description: Mission control dashboard
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # --- Dashboard ---
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Mission control overview — threat level, active attack, counters, streak
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  # --- Missions ---
+  /missions:
+    get:
+      operationId: listMissions
+      tags: [missions]
+      summary: List all missions with filtering
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, active, completed, failed]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of missions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Mission"
+    post:
+      operationId: generateMission
+      tags: [missions]
+      summary: Generate and optionally deploy a new attack mission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MissionInput"
+      responses:
+        "201":
+          description: Mission created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mission"
+
+  /missions/recent:
+    get:
+      operationId: getRecentMissions
+      tags: [missions]
+      summary: Get last 10 missions for dashboard
+      responses:
+        "200":
+          description: Recent missions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Mission"
+
+  /missions/{id}:
+    get:
+      operationId: getMission
+      tags: [missions]
+      summary: Get full mission details including generated code
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Mission details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mission"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteMission
+      tags: [missions]
+      summary: Delete a mission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /missions/{id}/reveal:
+    get:
+      operationId: revealMission
+      tags: [missions]
+      summary: Reveal hidden mission details after blind deployment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Full mission reveal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissionReveal"
+
+  /missions/{id}/status:
+    patch:
+      operationId: updateMissionStatus
+      tags: [missions]
+      summary: Update mission status (active/completed/failed)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MissionStatusUpdate"
+      responses:
+        "200":
+          description: Updated mission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mission"
+
+  /missions/{id}/score:
+    patch:
+      operationId: scoreMission
+      tags: [missions]
+      summary: Score a completed mission (detection success, response quality)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MissionScore"
+      responses:
+        "200":
+          description: Updated mission with scores
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mission"
+
+  # --- Study Notes ---
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List study notes
+      parameters:
+        - name: missionId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Notes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+    post:
+      operationId: createNote
+      tags: [notes]
+      summary: Create a study note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /notes/recent:
+    get:
+      operationId: getRecentNotes
+      tags: [notes]
+      summary: Get last 3 study notes for dashboard
+      responses:
+        "200":
+          description: Recent notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+
+  /notes/{id}:
+    get:
+      operationId: getNote
+      tags: [notes]
+      summary: Get a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+    patch:
+      operationId: updateNote
+      tags: [notes]
+      summary: Update a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteUpdate"
+      responses:
+        "200":
+          description: Updated note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+    delete:
+      operationId: deleteNote
+      tags: [notes]
+      summary: Delete a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # --- Network ---
+  /network/devices:
+    get:
+      operationId: listNetworkDevices
+      tags: [network]
+      summary: List discovered 192.168.0.x devices
+      responses:
+        "200":
+          description: Network devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NetworkDevice"
+
+  # --- Stats ---
+  /stats/summary:
+    get:
+      operationId: getStatsSummary
+      tags: [stats]
+      summary: Training summary — streak, totals, last activity
+      responses:
+        "200":
+          description: Stats summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsSummary"
+
+  /stats/radar:
+    get:
+      operationId: getSkillRadar
+      tags: [stats]
+      summary: Skill scores by category for radar chart
+      responses:
+        "200":
+          description: Skill radar data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SkillScore"
+
+  /stats/categories:
+    get:
+      operationId: getCategoryBreakdown
+      tags: [stats]
+      summary: Mission count and success rate by attack category
+      responses:
+        "200":
+          description: Category breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryStat"
+
+  # --- Knowledge Base ---
+  /knowledge-base/status:
+    get:
+      operationId: getKnowledgeBaseStatus
+      tags: [knowledge-base]
+      summary: Knowledge base load status — technique counts by category
+      responses:
+        "200":
+          description: Knowledge base status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeBaseStatus"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    # --- Mission ---
+    Mission:
+      type: object
+      required: [id, title, category, difficulty, mode, status, targetIp, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        category:
+          type: string
+          enum: [WiFi, Web, Network, Malware, Social, Physical, Mixed]
+        difficulty:
+          type: string
+          enum: [Beginner, Intermediate, Advanced, Expert, Unknown]
+        mode:
+          type: string
+          enum: [template, claude, hybrid]
+        status:
+          type: string
+          enum: [pending, active, completed, failed]
+        targetIp:
+          type: string
+        revealed:
+          type: boolean
+        detectionScore:
+          type: ["integer", "null"]
+        responseScore:
+          type: ["integer", "null"]
+        generatedCode:
+          type: ["string", "null"]
+        mitreIds:
+          type: ["string", "null"]
+        startedAt:
+          type: ["string", "null"]
+        completedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    MissionInput:
+      type: object
+      required: [mode]
+      properties:
+        mode:
+          type: string
+          enum: [template, claude, hybrid]
+        difficulty:
+          type: string
+          enum: [Beginner, Intermediate, Advanced, Expert, Unknown]
+          default: Unknown
+        category:
+          type: ["string", "null"]
+          enum: [WiFi, Web, Network, Malware, Social, Physical, Mixed, null]
+        prompt:
+          type: ["string", "null"]
+        targetIp:
+          type: ["string", "null"]
+        blind:
+          type: boolean
+          default: false
+
+    MissionReveal:
+      type: object
+      required: [mission, primitives, mitreMapping]
+      properties:
+        mission:
+          $ref: "#/components/schemas/Mission"
+        primitives:
+          type: array
+          items:
+            type: string
+        mitreMapping:
+          type: array
+          items:
+            type: string
+
+    MissionStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pending, active, completed, failed]
+
+    MissionScore:
+      type: object
+      properties:
+        detectionScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        responseScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+    # --- Note ---
+    Note:
+      type: object
+      required: [id, content, createdAt]
+      properties:
+        id:
+          type: integer
+        missionId:
+          type: ["integer", "null"]
+        content:
+          type: string
+        tags:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    NoteInput:
+      type: object
+      required: [content]
+      properties:
+        missionId:
+          type: ["integer", "null"]
+        content:
+          type: string
+        tags:
+          type: ["string", "null"]
+
+    NoteUpdate:
+      type: object
+      properties:
+        content:
+          type: string
+        tags:
+          type: ["string", "null"]
+
+    # --- Network ---
+    NetworkDevice:
+      type: object
+      required: [ip, status]
+      properties:
+        ip:
+          type: string
+        hostname:
+          type: ["string", "null"]
+        mac:
+          type: ["string", "null"]
+        vendor:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [online, offline, unknown]
+        isTarget:
+          type: boolean
+        openPorts:
+          type: array
+          items:
+            type: integer
+        lastSeen:
+          type: ["string", "null"]
+
+    # --- Stats ---
+    StatsSummary:
+      type: object
+      required: [totalMissions, totalNotes, streak, lastTrainingDate]
+      properties:
+        totalMissions:
+          type: integer
+        completedMissions:
+          type: integer
+        totalNotes:
+          type: integer
+        streak:
+          type: integer
+        lastTrainingDate:
+          type: ["string", "null"]
+        avgDetectionScore:
+          type: ["number", "null"]
+        avgResponseScore:
+          type: ["number", "null"]
+
+    SkillScore:
+      type: object
+      required: [category, score]
+      properties:
+        category:
+          type: string
+        score:
+          type: number
+        count:
+          type: integer
+
+    CategoryStat:
+      type: object
+      required: [category, count, successRate]
+      properties:
+        category:
+          type: string
+        count:
+          type: integer
+        successRate:
+          type: number
+
+    # --- Dashboard ---
+    DashboardSummary:
+      type: object
+      required: [threatLevel, claudeApiStatus, redforgeVersion]
+      properties:
+        threatLevel:
+          type: string
+          enum: [TRAINING, ACTIVE_ATTACK, INCIDENT]
+        activeMission:
+          type: ["object", "null"]
+          properties:
+            id:
+              type: integer
+            title:
+              type: string
+            startedAt:
+              type: string
+            elapsedSeconds:
+              type: integer
+        stats:
+          $ref: "#/components/schemas/StatsSummary"
+        claudeApiStatus:
+          type: string
+          enum: [online, offline, unconfigured]
+        redforgeVersion:
+          type: string
+        knowledgeBase:
+          $ref: "#/components/schemas/KnowledgeBaseStatus"
+
+    # --- Knowledge Base ---
+    KnowledgeBaseStatus:
+      type: object
+      required: [totalTechniques, loaded]
+      properties:
+        totalTechniques:
+          type: integer
+        loaded:
+          type: boolean
+        categories:
+          type: object
+          additionalProperties:
+            type: integer
+        lastUpdated:
+          type: ["string", "null"]

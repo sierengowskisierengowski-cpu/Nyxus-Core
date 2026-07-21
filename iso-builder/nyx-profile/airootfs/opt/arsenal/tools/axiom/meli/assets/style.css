@@ -1,0 +1,365 @@
+/* ============================================================================
+ * Meli — Honeypot Command Center
+ * Theme: Frosted Cream / Honey Glow — top-tier UI inspired by aerospace,
+ * automotive, and Fortune 500 control surfaces. Cream off-white palette,
+ * amber/honey accents, active glow borders, pulsing motion on focus.
+ * ============================================================================
+ *
+ * Palette
+ *   cream-50  #fffdf7   primary surface
+ *   cream-100 #faf6ec   panel
+ *   cream-200 #f3ecd7   recessed
+ *   ink-900   #1a1410   primary text on cream
+ *   ink-700   #4a3f33   secondary text
+ *   honey-100 #fef3c7   soft honey tint
+ *   honey-300 #fcd34d   bright honey
+ *   honey-500 #f59e0b   primary brand
+ *   honey-600 #d97706   pressed
+ *   honey-700 #b45309   deep honey
+ *   crit      #ef4444   critical
+ *   warn      #f97316   warning
+ *   info      #60a5fa   info
+ *   ok        #34d399   ok
+ * ============================================================================ */
+
+@define-color meli_cream_50  #fffdf7;
+@define-color meli_cream_100 #faf6ec;
+@define-color meli_cream_200 #f3ecd7;
+@define-color meli_cream_300 #e8dec0;
+@define-color meli_ink_900   #1a1410;
+@define-color meli_ink_700   #4a3f33;
+@define-color meli_ink_500   #7a6b58;
+@define-color meli_honey_100 #fef3c7;
+@define-color meli_honey_200 #fde68a;
+@define-color meli_honey_300 #fcd34d;
+@define-color meli_honey_400 #fbbf24;
+@define-color meli_honey_500 #f59e0b;
+@define-color meli_honey_600 #d97706;
+@define-color meli_honey_700 #b45309;
+@define-color meli_honey_800 #92400e;
+
+/* ── Root window: frosted cream backdrop ─────────────────────────────── */
+window.background,
+.meli-root {
+    background:
+        radial-gradient(circle at 12% 10%, alpha(@meli_honey_300, 0.10) 0%, transparent 45%),
+        radial-gradient(circle at 92% 92%, alpha(@meli_honey_500, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, @meli_cream_50 0%, @meli_cream_100 100%);
+    color: @meli_ink_900;
+}
+
+/* Allow window transparency so compositor blur (COSMIC/Wayland) shows through */
+window.background {
+    background-color: alpha(@meli_cream_50, 0.94);
+}
+
+/* ── Sidebar: frosted panel with honey edge ──────────────────────────── */
+.meli-sidebar {
+    background:
+        linear-gradient(180deg,
+            alpha(@meli_cream_50, 0.92) 0%,
+            alpha(@meli_cream_100, 0.85) 100%);
+    border-right: 1px solid alpha(@meli_honey_500, 0.35);
+    box-shadow: inset -1px 0 0 alpha(@meli_honey_300, 0.25),
+                4px 0 24px alpha(@meli_honey_500, 0.08);
+    padding: 0;
+}
+
+.meli-sidebar separator {
+    background-color: alpha(@meli_honey_500, 0.18);
+    min-height: 1px;
+    margin: 6px 12px;
+}
+
+/* Sidebar navigation buttons */
+.meli-sidebar button.flat,
+.meli-sidebar togglebutton.flat {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: @meli_ink_700;
+    transition: background 180ms ease, border-color 180ms ease,
+                box-shadow 220ms ease, color 180ms ease;
+}
+.meli-sidebar button.flat:hover,
+.meli-sidebar togglebutton.flat:hover {
+    background: alpha(@meli_honey_300, 0.18);
+    border-color: alpha(@meli_honey_500, 0.35);
+    color: @meli_ink_900;
+}
+.meli-sidebar togglebutton.flat:checked {
+    background: linear-gradient(135deg,
+        alpha(@meli_honey_300, 0.35),
+        alpha(@meli_honey_500, 0.22));
+    border-color: alpha(@meli_honey_500, 0.75);
+    color: @meli_honey_800;
+    box-shadow:
+        0 0 0 1px alpha(@meli_honey_400, 0.55),
+        0 0 18px alpha(@meli_honey_500, 0.35),
+        inset 0 1px 0 alpha(#ffffff, 0.6);
+    font-weight: 700;
+}
+.meli-sidebar togglebutton.flat:checked image {
+    -gtk-icon-shadow: 0 0 6px alpha(@meli_honey_500, 0.7);
+}
+
+/* ── Brand block ─────────────────────────────────────────────────────── */
+.meli-brand {
+    padding: 8px 4px 4px 4px;
+}
+@keyframes meli-pulse {
+    0%   { opacity: 0.85; }
+    50%  { opacity: 1.0;  }
+    100% { opacity: 0.85; }
+}
+.meli-brand-logo {
+    -gtk-icon-shadow:
+        0 0 8px  alpha(@meli_honey_500, 0.55),
+        0 0 16px alpha(@meli_honey_400, 0.35),
+        0 0 28px alpha(@meli_honey_300, 0.25);
+    animation: meli-pulse 3.2s ease-in-out infinite;
+}
+.meli-brand-title {
+    color: @meli_honey_700;
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-shadow:
+        0 0 6px  alpha(@meli_honey_500, 0.45),
+        0 0 14px alpha(@meli_honey_400, 0.30);
+}
+.meli-brand-sub {
+    color: @meli_ink_500;
+    font-size: 0.78em;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+/* ── Headerbars ──────────────────────────────────────────────────────── */
+.meli-header,
+headerbar {
+    background:
+        linear-gradient(180deg,
+            alpha(@meli_cream_50, 0.96),
+            alpha(@meli_cream_100, 0.90));
+    border-bottom: 1px solid alpha(@meli_honey_500, 0.30);
+    box-shadow: 0 1px 12px alpha(@meli_honey_500, 0.08);
+    color: @meli_ink_900;
+}
+
+/* ── Cards: frosted with glow on hover ───────────────────────────────── */
+.stat-card,
+.meli-card {
+    background: linear-gradient(160deg,
+        alpha(@meli_cream_50, 0.88),
+        alpha(@meli_cream_100, 0.78));
+    border: 1px solid alpha(@meli_honey_500, 0.30);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow:
+        0 1px 0 alpha(#ffffff, 0.7) inset,
+        0 4px 18px alpha(@meli_honey_700, 0.08),
+        0 0 0 1px alpha(@meli_honey_300, 0.18);
+    transition: border-color 200ms ease, box-shadow 240ms ease,
+                transform 200ms ease;
+}
+.stat-card:hover,
+.meli-card:hover {
+    border-color: alpha(@meli_honey_500, 0.65);
+    box-shadow:
+        0 1px 0 alpha(#ffffff, 0.85) inset,
+        0 8px 28px alpha(@meli_honey_500, 0.20),
+        0 0 0 1px alpha(@meli_honey_400, 0.45),
+        0 0 24px alpha(@meli_honey_500, 0.18);
+}
+
+/* List-style boxes get the same treatment */
+.boxed-list, list.boxed-list, listbox.boxed-list {
+    background: alpha(@meli_cream_50, 0.85);
+    border: 1px solid alpha(@meli_honey_500, 0.28);
+    border-radius: 14px;
+    box-shadow:
+        0 1px 0 alpha(#ffffff, 0.6) inset,
+        0 4px 18px alpha(@meli_honey_700, 0.06);
+}
+.boxed-list > row {
+    background: transparent;
+    border-bottom: 1px solid alpha(@meli_honey_500, 0.12);
+    transition: background 160ms ease;
+}
+.boxed-list > row:last-child { border-bottom: none; }
+.boxed-list > row:hover,
+.event-row:hover {
+    background: linear-gradient(90deg,
+        alpha(@meli_honey_300, 0.18),
+        alpha(@meli_honey_300, 0.04));
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+button {
+    background: alpha(@meli_cream_50, 0.85);
+    color: @meli_ink_900;
+    border: 1px solid alpha(@meli_honey_500, 0.35);
+    border-radius: 10px;
+    padding: 6px 14px;
+    transition: background 160ms ease, border-color 180ms ease,
+                box-shadow 220ms ease;
+}
+button:hover {
+    background: alpha(@meli_honey_300, 0.22);
+    border-color: alpha(@meli_honey_500, 0.7);
+    box-shadow: 0 0 18px alpha(@meli_honey_500, 0.25);
+}
+button:active {
+    background: alpha(@meli_honey_500, 0.30);
+}
+
+button.suggested-action {
+    background: linear-gradient(180deg, @meli_honey_400, @meli_honey_600);
+    color: #1a1410;
+    border: 1px solid @meli_honey_700;
+    font-weight: 700;
+    text-shadow: 0 1px 0 alpha(#ffffff, 0.45);
+    box-shadow:
+        0 1px 0 alpha(#ffffff, 0.5) inset,
+        0 0 18px alpha(@meli_honey_500, 0.55),
+        0 2px 6px alpha(@meli_honey_800, 0.35);
+}
+button.suggested-action:hover {
+    background: linear-gradient(180deg, @meli_honey_300, @meli_honey_500);
+    box-shadow:
+        0 1px 0 alpha(#ffffff, 0.6) inset,
+        0 0 28px alpha(@meli_honey_500, 0.75),
+        0 4px 10px alpha(@meli_honey_800, 0.4);
+}
+button.suggested-action:active {
+    background: linear-gradient(180deg, @meli_honey_600, @meli_honey_700);
+}
+
+button.destructive-action {
+    background: linear-gradient(180deg, #f87171, #dc2626);
+    color: #fffbeb;
+    border-color: #991b1b;
+    box-shadow: 0 0 16px alpha(#ef4444, 0.5);
+}
+
+button.pill { border-radius: 999px; padding: 8px 22px; }
+
+/* ── Entries / search ────────────────────────────────────────────────── */
+entry, .entry, searchentry {
+    background: alpha(@meli_cream_50, 0.9);
+    color: @meli_ink_900;
+    border: 1px solid alpha(@meli_honey_500, 0.35);
+    border-radius: 10px;
+    padding: 6px 10px;
+    caret-color: @meli_honey_600;
+    transition: border-color 180ms ease, box-shadow 220ms ease;
+}
+entry:focus, entry:focus-within, searchentry:focus-within {
+    border-color: @meli_honey_500;
+    box-shadow:
+        0 0 0 2px alpha(@meli_honey_400, 0.35),
+        0 0 18px alpha(@meli_honey_500, 0.35);
+}
+
+/* ── Honey-tinted text accents ───────────────────────────────────────── */
+.amber-accent,
+.honey-accent {
+    color: @meli_honey_700;
+    text-shadow:
+        0 0 5px alpha(@meli_honey_500, 0.30),
+        0 0 12px alpha(@meli_honey_400, 0.20);
+}
+.honey-text { color: @meli_honey_700; font-weight: 600; }
+.honey-glow {
+    color: @meli_honey_700;
+    text-shadow:
+        0 0 6px  alpha(@meli_honey_500, 0.55),
+        0 0 14px alpha(@meli_honey_400, 0.35);
+}
+.honey-pill {
+    background: linear-gradient(135deg, alpha(@meli_honey_300, 0.55), alpha(@meli_honey_500, 0.35));
+    color: @meli_honey_800;
+    border: 1px solid alpha(@meli_honey_500, 0.6);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-weight: 700;
+    font-size: 0.78em;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 10px alpha(@meli_honey_500, 0.25);
+}
+
+/* ── Severity colors (kept ergonomic on cream) ───────────────────────── */
+.severity-info     { color: #2563eb; font-weight: 600; }
+.severity-low      { color: #1d4ed8; font-weight: 600; }
+.severity-medium   { color: @meli_honey_700; font-weight: 700;
+                     text-shadow: 0 0 8px alpha(@meli_honey_500, 0.35); }
+.severity-high     { color: #c2410c; font-weight: 800;
+                     text-shadow: 0 0 8px alpha(#f97316, 0.45); }
+.severity-critical { color: #b91c1c; font-weight: 900;
+                     text-shadow: 0 0 10px alpha(#ef4444, 0.55),
+                                  0 0 18px alpha(#ef4444, 0.30); }
+
+/* ── Monospace block ─────────────────────────────────────────────────── */
+.monospace {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", monospace;
+    font-feature-settings: "liga" 1;
+}
+
+/* ── Lock screen ─────────────────────────────────────────────────────── */
+.meli-lock {
+    background:
+        radial-gradient(circle at 50% 35%, alpha(@meli_honey_400, 0.20) 0%, transparent 55%),
+        linear-gradient(180deg, alpha(@meli_cream_50, 0.97), alpha(@meli_cream_200, 0.94));
+}
+.meli-lock-card {
+    background: alpha(@meli_cream_50, 0.92);
+    border: 1px solid alpha(@meli_honey_500, 0.5);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow:
+        0 1px 0 alpha(#ffffff, 0.85) inset,
+        0 12px 48px alpha(@meli_honey_700, 0.18),
+        0 0 80px alpha(@meli_honey_500, 0.25),
+        0 0 0 1px alpha(@meli_honey_400, 0.35);
+}
+
+/* ── Separators ──────────────────────────────────────────────────────── */
+separator {
+    background-color: alpha(@meli_honey_500, 0.20);
+    min-height: 1px;
+}
+
+/* ── Adw.PreferencesGroup tweaks ────────────────────────────────────── */
+preferencesgroup > box > label.heading {
+    color: @meli_honey_700;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+/* ── Switch (toggle) ─────────────────────────────────────────────────── */
+switch:checked {
+    background-color: @meli_honey_500;
+    box-shadow: 0 0 12px alpha(@meli_honey_500, 0.55);
+}
+switch:checked slider { background-color: @meli_cream_50; }
+
+/* ── Scrollbars: thin honey ──────────────────────────────────────────── */
+scrollbar slider {
+    background-color: alpha(@meli_honey_500, 0.5);
+    border-radius: 999px;
+    min-width: 6px; min-height: 6px;
+}
+scrollbar slider:hover { background-color: @meli_honey_500; }
+
+/* ── Tooltip ─────────────────────────────────────────────────────────── */
+tooltip {
+    background: alpha(@meli_ink_900, 0.92);
+    color: @meli_honey_200;
+    border: 1px solid alpha(@meli_honey_500, 0.6);
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+
+/* ── Dim labels keep proper contrast on cream ────────────────────────── */
+.dim-label { color: alpha(@meli_ink_900, 0.55); }

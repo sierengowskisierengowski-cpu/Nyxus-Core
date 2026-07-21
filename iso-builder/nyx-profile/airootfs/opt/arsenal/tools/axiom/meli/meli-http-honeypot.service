@@ -1,0 +1,49 @@
+[Unit]
+Description=Meli HTTP honeypot (stdlib HTTP server -> Meli MQTT ingest)
+Documentation=https://github.com/your-org/meli/blob/main/docs/HONEYPOT-INTEGRATION.md
+After=network-online.target mosquitto.service
+Wants=network-online.target
+# Don't hard-require mosquitto — the honeypot retries publishes and falls
+# back to the backup-log if MQTT is briefly unavailable.
+
+[Service]
+Type=simple
+User=meli-http
+Group=meli-http
+
+# Edit these for your environment. Defaults assume Mosquitto on the same Pi.
+Environment=MELI_HTTP_BIND=0.0.0.0
+Environment=MELI_HTTP_PORT=8080
+Environment=MELI_MQTT_HOST=127.0.0.1
+Environment=MELI_MQTT_PORT=1883
+Environment=MELI_MQTT_TOPIC=meli/events/ingest
+Environment=MELI_HTTP_NAME=%H-http
+Environment=MELI_HTTP_BACKUP_LOG=/var/lib/meli-http-honeypot/backup.jsonl
+
+ExecStart=/usr/bin/python3 /opt/meli-http-honeypot/meli_http_honeypot.py \
+    --bind ${MELI_HTTP_BIND} \
+    --port ${MELI_HTTP_PORT} \
+    --mqtt-host ${MELI_MQTT_HOST} \
+    --mqtt-port ${MELI_MQTT_PORT} \
+    --topic ${MELI_MQTT_TOPIC} \
+    --name ${MELI_HTTP_NAME} \
+    --backup-log ${MELI_HTTP_BACKUP_LOG}
+
+# Backup-log lives here so dropped events survive an MQTT outage.
+StateDirectory=meli-http-honeypot
+
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Hardening — the honeypot only needs to talk to the broker and write its
+# backup log. It binds an unprivileged port, so no capabilities are needed.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/meli-http-honeypot
+
+[Install]
+WantedBy=multi-user.target

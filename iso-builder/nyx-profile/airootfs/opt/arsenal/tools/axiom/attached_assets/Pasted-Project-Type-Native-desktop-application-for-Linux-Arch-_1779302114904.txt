@@ -1,0 +1,152 @@
+Project Type
+Native desktop application for Linux (Arch/COSMIC primary target). Built using Tauri (Rust backend + React/TypeScript frontend) — produces a real compiled binary, installs natively, real .desktop file, real icon, no browser.
+Author
+Joseph Sierengowski
+Description
+Real-time threat intelligence command center for personal honeypot infrastructure. Aggregates and visualizes attack data from multiple honeypot services. Built as a serious threat intel research tool.
+Repository
+New separate GitHub repo: gowskinet-honeypot-command-center
+Stack
+
+Tauri 2.x (Rust backend)
+React 18 + TypeScript + Tailwind + shadcn/ui (frontend)
+PostgreSQL (persistent storage) with SQLite fallback for local-only mode
+Redis for real-time pub/sub
+WebSocket for live event streaming
+JWT auth with refresh tokens
+Tauri's secure storage for credentials
+
+Data Sources (Honeypot Integrations)
+
+Cowrie (SSH/Telnet — ports 2222/23)
+Heralding (FTP, SMTP, RDP, VNC)
+Dionaea (SMB/SQL — ports 445/1433)
+HTTP-Honeypot (custom — port 8888)
+Glastopf (web honeypot)
+Mailoney (SMTP)
+
+Parser pushes events to local API endpoint /api/events/ingest with bearer token auth.
+Severity Classification (All Implemented, No Placeholders)
+
+INFO (green) — scans, single failed logins, probes
+LOW (blue) — repeated probes, basic brute force
+MEDIUM (yellow) — sustained brute force, credential stuffing, dictionary attacks
+HIGH (orange) — successful auth, command execution, downloads
+CRITICAL / RED LINE (red, animated siren, sound alert) — malware payload, APT IoC match, RCE, post-exploitation, data exfil
+
+Required Dashboard Views (All Functional)
+
+Live Feed (WebSocket-driven real-time event stream)
+Geographic Map (animated world map, attack arrows source → my node, heatmap)
+Top Attackers (most active IPs, full per-IP history)
+Top Credentials (most-attempted usernames/passwords across all honeypots)
+Command Analysis (most-executed post-auth commands on Cowrie)
+Payloads / Malware (captured files, hashes, VirusTotal lookup)
+Service Stats (per-honeypot breakdowns)
+Timeline / Historical (charts: daily/weekly/monthly)
+IP Reputation (AbuseIPDB, GreyNoise, VirusTotal API enrichment)
+Botnet Detection (coordinated attack identification)
+Alert Rules (user-configurable thresholds)
+Reports (auto-generated markdown daily/weekly, exportable PDF)
+Settings (in-depth, see below)
+
+Alerting System
+
+In-app red-line alerts with animated siren + sound for CRITICAL
+External integrations: Discord webhook, Slack webhook, Telegram bot, email (SMTP)
+Per-severity routing config
+Alert history with acknowledgment tracking
+
+Authentication & Security
+
+Login screen with brand identity
+JWT, 30-day refresh tokens
+App lock screen (configurable auto-lock after N minutes idle)
+Master password requirement on app launch
+Optional YubiKey / TOTP 2FA
+Encrypted local storage for sensitive data (Tauri stronghold or sqlcipher)
+Failed login lockout (configurable attempts threshold)
+
+Settings Panel (In-Depth, All Functional)
+
+General: language, startup behavior, auto-update
+Appearance: theme variants, font size, density (Replit picks colors)
+Notifications: per-severity routing, sound on/off, notification position
+Alerts: rule management UI, threshold configuration
+Data Sources: add/edit honeypot endpoints, API tokens, test connections
+Integrations: Discord/Slack/Telegram/SMTP credential config with test buttons
+Enrichment APIs: AbuseIPDB, GreyNoise, VirusTotal API key management
+Security: master password change, 2FA setup, auto-lock timing, failed login limits
+Database: backup/restore, export to JSON/CSV, retention policy
+Advanced: log level, debug mode, telemetry opt-in/out
+About: version, author (Joseph Sierengowski), license, GitHub link, build date
+
+Keyboard Shortcuts (All Wired Up)
+
+Spacebar: pause/resume live feed
+Number keys 1-9: switch dashboard tabs
+/: focus search
+Ctrl+L: lock app immediately
+Ctrl+,: open settings
+Ctrl+E: export current view
+Ctrl+R: refresh data
+Esc: dismiss modal / cancel alert
+
+API Endpoints (All Implemented)
+
+POST /api/events/ingest — honeypot parser pushes events here (bearer auth)
+GET /api/events/live — WebSocket for live stream
+GET /api/events/historical — paginated with filters
+GET /api/stats/dashboard — aggregated widgets
+GET /api/ips/:ip — full enriched info on attacker IP
+POST /api/alerts/rules — CRUD for alert rules
+GET /api/honeypots/status — health check on configured sources
+OpenAPI/Swagger documentation at /api/docs
+
+Required Files in Repo
+
+README.md — full project description, features, screenshots, installation, configuration, attribution to Joseph Sierengowski
+LICENSE — MIT or AGPL (specify)
+INSTALL.md — step-by-step installation including dependencies, build, packaging, distribution
+ARCHITECTURE.md — system design, data flow, component diagrams
+API.md — endpoint documentation
+CONTRIBUTING.md — even if it's just you, document the workflow
+CHANGELOG.md — semantic versioning
+.env.example — all env vars documented
+package.json — author: "Joseph Sierengowski"
+Cargo.toml — authors: ["Joseph Sierengowski"]
+tauri.conf.json — proper app metadata
+
+Build & Distribution
+
+Tauri builds produce: .deb, .rpm, AppImage, raw binary, .pacman (via custom packaging)
+GitHub Actions workflow for automated builds on tagged releases
+Signed binaries
+AUR package for Arch users
+Real installer that places .desktop file in /usr/share/applications/, icon in /usr/share/icons/hicolor/, binary in /usr/bin/
+
+Icon
+Custom icon: hexagonal honeycomb cell with honey dripping, subtle warning glow, dark background. Multiple sizes for icon spec (16x16, 32x32, 48x48, 64x64, 128x128, 256x256, 512x512, SVG source).
+Non-Negotiables
+
+Every clickable element MUST go somewhere functional — no dead ends, no "coming soon"
+All 13 dashboard views fully functional in v1
+All Settings sections fully functional
+All keyboard shortcuts wired
+Real data flow end-to-end (no mock data after development)
+Real authentication, real auth lockout, real session management
+App must compile to a real binary, install via package manager, appear in app launcher with proper icon
+README and docs written as if this is going on a real software portfolio
+
+First Sprint Deliverable
+A buildable Tauri project that:
+
+Compiles to a native Linux binary
+Has the full UI scaffolded (all 13 views accessible, even if some are empty)
+Login + auth working end to end
+WebSocket live feed working with Cowrie data
+Settings panel scaffolded with all sections present
+Severity classification engine functional
+Red-line CRITICAL alert system working
+Deployed to GitHub with all docs in place
+Includes build instructions producing an installable package

@@ -1,0 +1,1549 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: GowskiNet FORGE API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: dashboard
+    description: Dashboard stats and summaries
+  - name: inputs
+    description: Input Lab - raw material ingestion
+  - name: threats
+    description: Generated threat management
+  - name: detection-rules
+    description: Detection rules (Sigma, Snort, Yara)
+  - name: notes
+    description: Research notes
+  - name: knowledge
+    description: Knowledge base management
+  - name: integrations
+    description: REDFORGE and Meli integrations
+  - name: settings
+    description: Application settings
+  - name: anthropic
+    description: Anthropic AI chat operations
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ─── Dashboard ───────────────────────────────────────────────────────────────
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  # ─── Inputs ──────────────────────────────────────────────────────────────────
+  /inputs:
+    get:
+      operationId: listInputs
+      tags: [inputs]
+      summary: List all queued inputs
+      responses:
+        "200":
+          description: List of inputs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ThreatInput"
+    post:
+      operationId: createInput
+      tags: [inputs]
+      summary: Add input to the queue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ThreatInputCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreatInput"
+
+  /inputs/{id}:
+    delete:
+      operationId: deleteInput
+      tags: [inputs]
+      summary: Remove input from queue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /inputs/analyze:
+    post:
+      operationId: analyzeInputs
+      tags: [inputs]
+      summary: Analyze all queued inputs (extract techniques, MITRE mappings)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyzeRequest"
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InputAnalysis"
+
+  # ─── Threats ─────────────────────────────────────────────────────────────────
+  /threats:
+    get:
+      operationId: listThreats
+      tags: [threats]
+      summary: List all generated threats
+      parameters:
+        - name: noveltyMin
+          in: query
+          schema:
+            type: integer
+        - name: noveltyMax
+          in: query
+          schema:
+            type: integer
+        - name: platform
+          in: query
+          schema:
+            type: string
+        - name: mastered
+          in: query
+          schema:
+            type: boolean
+        - name: sentToRedforge
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of threats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreatListResponse"
+
+  /threats/recent:
+    get:
+      operationId: getRecentThreats
+      tags: [threats]
+      summary: Get 10 most recent threats
+      responses:
+        "200":
+          description: Recent threats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ThreatSummary"
+
+  /threats/top:
+    get:
+      operationId: getTopThreats
+      tags: [threats]
+      summary: Get highest novelty threats
+      responses:
+        "200":
+          description: Top threats by novelty
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ThreatSummary"
+
+  /threats/{id}:
+    get:
+      operationId: getThreat
+      tags: [threats]
+      summary: Get full threat detail with output package
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Full threat detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Threat"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateThreat
+      tags: [threats]
+      summary: Update threat (mastered status, notes, etc)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ThreatUpdate"
+      responses:
+        "200":
+          description: Updated threat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Threat"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteThreat
+      tags: [threats]
+      summary: Delete threat from library
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /threats/{id}/send-to-redforge:
+    post:
+      operationId: sendThreatToRedforge
+      tags: [threats]
+      summary: Send threat to REDFORGE as training scenario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Send result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedforgeDeployResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /threats/generate:
+    post:
+      operationId: generateThreats
+      tags: [threats]
+      summary: Run mutation engines to generate new threats (SSE stream)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateRequest"
+      responses:
+        "200":
+          description: SSE stream of generation progress and results
+          content:
+            text/event-stream: {}
+
+  # ─── Detection Rules ─────────────────────────────────────────────────────────
+  /detection-rules:
+    get:
+      operationId: listDetectionRules
+      tags: [detection-rules]
+      summary: List all detection rules
+      parameters:
+        - name: ruleType
+          in: query
+          schema:
+            type: string
+        - name: threatId
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of detection rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DetectionRule"
+    post:
+      operationId: createDetectionRule
+      tags: [detection-rules]
+      summary: Manually add a detection rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DetectionRuleCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DetectionRule"
+
+  /detection-rules/{id}:
+    get:
+      operationId: getDetectionRule
+      tags: [detection-rules]
+      summary: Get detection rule detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Detection rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DetectionRule"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateDetectionRule
+      tags: [detection-rules]
+      summary: Edit detection rule content
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DetectionRuleUpdate"
+      responses:
+        "200":
+          description: Updated rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DetectionRule"
+    delete:
+      operationId: deleteDetectionRule
+      tags: [detection-rules]
+      summary: Delete detection rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Notes ───────────────────────────────────────────────────────────────────
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List research notes
+      parameters:
+        - name: notebook
+          in: query
+          schema:
+            type: string
+        - name: noteType
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: pinned
+          in: query
+          schema:
+            type: boolean
+        - name: starred
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+    post:
+      operationId: createNote
+      tags: [notes]
+      summary: Create a research note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /notes/{id}:
+    get:
+      operationId: getNote
+      tags: [notes]
+      summary: Get note detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateNote
+      tags: [notes]
+      summary: Update note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+    delete:
+      operationId: deleteNote
+      tags: [notes]
+      summary: Delete note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /notebooks:
+    get:
+      operationId: listNotebooks
+      tags: [notes]
+      summary: List all notebook names
+      responses:
+        "200":
+          description: List of notebook names
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  # ─── Knowledge Base ───────────────────────────────────────────────────────────
+  /knowledge-entries:
+    get:
+      operationId: listKnowledgeEntries
+      tags: [knowledge]
+      summary: List knowledge base entries
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnowledgeEntry"
+    post:
+      operationId: createKnowledgeEntry
+      tags: [knowledge]
+      summary: Add knowledge base entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeEntryCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeEntry"
+
+  /knowledge-entries/{id}:
+    delete:
+      operationId: deleteKnowledgeEntry
+      tags: [knowledge]
+      summary: Remove knowledge entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /knowledge-stats:
+    get:
+      operationId: getKnowledgeStats
+      tags: [knowledge]
+      summary: Get knowledge base stats by category
+      responses:
+        "200":
+          description: Knowledge stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeStats"
+
+  # ─── Integrations ─────────────────────────────────────────────────────────────
+  /integrations/redforge/status:
+    get:
+      operationId: getRedforgeStatus
+      tags: [integrations]
+      summary: Get REDFORGE connection status
+      responses:
+        "200":
+          description: REDFORGE status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntegrationStatus"
+
+  /integrations/redforge/history:
+    get:
+      operationId: getRedforgeHistory
+      tags: [integrations]
+      summary: Get threats sent to REDFORGE with outcomes
+      responses:
+        "200":
+          description: REDFORGE send history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RedforgeHistoryItem"
+
+  /integrations/meli/status:
+    get:
+      operationId: getMeliStatus
+      tags: [integrations]
+      summary: Get Meli honeypot connection status
+      responses:
+        "200":
+          description: Meli status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntegrationStatus"
+
+  /integrations/meli/feed:
+    get:
+      operationId: getMeliFeed
+      tags: [integrations]
+      summary: Get recent Cowrie captured commands
+      responses:
+        "200":
+          description: Meli captured commands feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MeliCommand"
+
+  # ─── Settings ─────────────────────────────────────────────────────────────────
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get application settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettings"
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update application settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppSettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettings"
+
+  # ─── Anthropic AI ─────────────────────────────────────────────────────────────
+  /anthropic/conversations:
+    get:
+      operationId: listAnthropicConversations
+      tags: [anthropic]
+      summary: List all conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnthropicConversation"
+    post:
+      operationId: createAnthropicConversation
+      tags: [anthropic]
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnthropicConversationInput"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicConversation"
+
+  /anthropic/conversations/{id}:
+    get:
+      operationId: getAnthropicConversation
+      tags: [anthropic]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicError"
+    delete:
+      operationId: deleteAnthropicConversation
+      tags: [anthropic]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnthropicError"
+
+  /anthropic/conversations/{id}/messages:
+    get:
+      operationId: listAnthropicMessages
+      tags: [anthropic]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnthropicMessage"
+    post:
+      operationId: sendAnthropicMessage
+      tags: [anthropic]
+      summary: Send a message and receive an AI response (SSE stream)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnthropicMessageInput"
+      responses:
+        "200":
+          description: SSE stream of assistant response chunks
+          content:
+            text/event-stream: {}
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    # ─── Dashboard ──────────────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required:
+        - totalThreatsGenerated
+        - threatLibrarySize
+        - detectionRulesGenerated
+        - noveltyDistribution
+        - topInputSources
+        - redforgeConnectionStatus
+        - meliConnectionStatus
+        - knowledgeBaseSize
+        - highestNoveltyScore
+        - masteredCount
+        - unsentToRedforge
+        - unanalyzedMeliCommands
+      properties:
+        totalThreatsGenerated:
+          type: integer
+        threatLibrarySize:
+          type: integer
+        detectionRulesGenerated:
+          type: integer
+        masteredCount:
+          type: integer
+        unsentToRedforge:
+          type: integer
+        unanalyzedMeliCommands:
+          type: integer
+        highestNoveltyScore:
+          type: integer
+        redforgeConnectionStatus:
+          type: boolean
+        meliConnectionStatus:
+          type: boolean
+        knowledgeBaseSize:
+          type: integer
+        noveltyDistribution:
+          type: object
+          required: [low, medium, high, unprecedented]
+          properties:
+            low:
+              type: integer
+            medium:
+              type: integer
+            high:
+              type: integer
+            unprecedented:
+              type: integer
+        topInputSources:
+          type: array
+          items:
+            type: object
+            required: [source, count]
+            properties:
+              source:
+                type: string
+              count:
+                type: integer
+
+    # ─── Inputs ─────────────────────────────────────────────────────────────────
+    ThreatInput:
+      type: object
+      required: [id, inputType, content, createdAt]
+      properties:
+        id:
+          type: integer
+        inputType:
+          type: string
+          description: "code | file | url | meli | redforge | gsl | cve | mitre | natural_language"
+        content:
+          type: string
+        sourceUrl:
+          type: ["string", "null"]
+        language:
+          type: ["string", "null"]
+        label:
+          type: ["string", "null"]
+        analyzed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    ThreatInputCreate:
+      type: object
+      required: [inputType, content]
+      properties:
+        inputType:
+          type: string
+        content:
+          type: string
+        sourceUrl:
+          type: string
+        language:
+          type: string
+        label:
+          type: string
+
+    AnalyzeRequest:
+      type: object
+      required: [inputIds]
+      properties:
+        inputIds:
+          type: array
+          items:
+            type: integer
+
+    InputAnalysis:
+      type: object
+      required: [techniques, mitreIds, patterns, sophisticationScore, gaps]
+      properties:
+        techniques:
+          type: array
+          items:
+            type: string
+        mitreIds:
+          type: array
+          items:
+            type: string
+        patterns:
+          type: array
+          items:
+            type: string
+        sophisticationScore:
+          type: integer
+        gaps:
+          type: array
+          items:
+            type: string
+        summary:
+          type: string
+
+    # ─── Threats ────────────────────────────────────────────────────────────────
+    ThreatSummary:
+      type: object
+      required: [id, name, noveltyScore, estimatedDetectionRate, platform, createdAt, mastered, sentToRedforge]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        noveltyScore:
+          type: integer
+        estimatedDetectionRate:
+          type: integer
+        platform:
+          type: string
+        category:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        mastered:
+          type: boolean
+        sentToRedforge:
+          type: boolean
+        description:
+          type: string
+
+    Threat:
+      type: object
+      required: [id, name, noveltyScore, estimatedDetectionRate, platform, createdAt, mastered, sentToRedforge, code, technicalBreakdown, mitreIds, realWorldFeasibility, sigmaRule, snortRule, yaraRule, defensiveRecommendations, hardeningConfig, testPlan, mutationEnginesUsed]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        noveltyScore:
+          type: integer
+        estimatedDetectionRate:
+          type: integer
+        platform:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        code:
+          type: string
+        technicalBreakdown:
+          type: string
+        mitreIds:
+          type: array
+          items:
+            type: string
+        realWorldFeasibility:
+          type: string
+        sigmaRule:
+          type: ["string", "null"]
+        snortRule:
+          type: ["string", "null"]
+        yaraRule:
+          type: ["string", "null"]
+        behavioralIndicators:
+          type: array
+          items:
+            type: string
+        networkIndicators:
+          type: array
+          items:
+            type: string
+        defensiveRecommendations:
+          type: string
+        hardeningConfig:
+          type: string
+        testPlan:
+          type: string
+        mutationEnginesUsed:
+          type: array
+          items:
+            type: string
+        parentInputIds:
+          type: array
+          items:
+            type: integer
+        userNotes:
+          type: ["string", "null"]
+        mastered:
+          type: boolean
+        sentToRedforge:
+          type: boolean
+        sentToRedforgeAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    ThreatListResponse:
+      type: object
+      required: [threats, total]
+      properties:
+        threats:
+          type: array
+          items:
+            $ref: "#/components/schemas/ThreatSummary"
+        total:
+          type: integer
+
+    ThreatUpdate:
+      type: object
+      properties:
+        mastered:
+          type: boolean
+        userNotes:
+          type: string
+        sentToRedforge:
+          type: boolean
+
+    GenerateRequest:
+      type: object
+      required: [inputIds, engines]
+      properties:
+        inputIds:
+          type: array
+          items:
+            type: integer
+        engines:
+          type: array
+          items:
+            type: string
+          description: "codeSplicing | logicMutation | crossDomainFusion | evasionEvolution | protocolAbuse | lolExpansion | payloadPolymorphism"
+        noveltyTarget:
+          type: integer
+          description: "1-10"
+        complexityTarget:
+          type: string
+          description: "simple | moderate | complex | multi-stage"
+        platform:
+          type: string
+          description: "linux | windows | macos | android | iot | network | web"
+        evasionPriority:
+          type: integer
+          description: "1-5"
+        stealthLevel:
+          type: string
+          description: "noisy | balanced | silent"
+        attackGoal:
+          type: string
+          description: "reconnaissance | access | persistence | exfiltration | disruption"
+
+    RedforgeDeployResult:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        missionId:
+          type: ["string", "null"]
+
+    # ─── Detection Rules ─────────────────────────────────────────────────────────
+    DetectionRule:
+      type: object
+      required: [id, ruleType, name, content, createdAt]
+      properties:
+        id:
+          type: integer
+        ruleType:
+          type: string
+          description: "sigma | snort | yara"
+        name:
+          type: string
+        content:
+          type: string
+        threatId:
+          type: ["integer", "null"]
+        mitreIds:
+          type: array
+          items:
+            type: string
+        tested:
+          type: boolean
+        effective:
+          type: ["boolean", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    DetectionRuleCreate:
+      type: object
+      required: [ruleType, name, content]
+      properties:
+        ruleType:
+          type: string
+        name:
+          type: string
+        content:
+          type: string
+        threatId:
+          type: integer
+        mitreIds:
+          type: array
+          items:
+            type: string
+
+    DetectionRuleUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        content:
+          type: string
+        tested:
+          type: boolean
+        effective:
+          type: boolean
+
+    # ─── Notes ──────────────────────────────────────────────────────────────────
+    Note:
+      type: object
+      required: [id, title, content, noteType, notebook, pinned, starred, archived, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        noteType:
+          type: string
+          description: "threat | technique | detection | research | quick_capture"
+        notebook:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        threatId:
+          type: ["integer", "null"]
+        pinned:
+          type: boolean
+        starred:
+          type: boolean
+        archived:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    NoteCreate:
+      type: object
+      required: [title, noteType, notebook]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        noteType:
+          type: string
+        notebook:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        threatId:
+          type: integer
+        pinned:
+          type: boolean
+
+    NoteUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        noteType:
+          type: string
+        notebook:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        pinned:
+          type: boolean
+        starred:
+          type: boolean
+        archived:
+          type: boolean
+
+    # ─── Knowledge Base ──────────────────────────────────────────────────────────
+    KnowledgeEntry:
+      type: object
+      required: [id, category, title, content, source, createdAt]
+      properties:
+        id:
+          type: integer
+        category:
+          type: string
+          description: "mitre | malware | lolbas | gtfobins | cve | exploit | cowrie | custom | owasp | wifi | bluetooth | container | iot | crypto | supply_chain"
+        title:
+          type: string
+        content:
+          type: string
+        source:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    KnowledgeEntryCreate:
+      type: object
+      required: [category, title, content, source]
+      properties:
+        category:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        source:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    KnowledgeStats:
+      type: object
+      required: [total, byCategory, lastUpdated]
+      properties:
+        total:
+          type: integer
+        byCategory:
+          type: array
+          items:
+            type: object
+            required: [category, count]
+            properties:
+              category:
+                type: string
+              count:
+                type: integer
+        lastUpdated:
+          type: string
+          format: date-time
+
+    # ─── Integrations ────────────────────────────────────────────────────────────
+    IntegrationStatus:
+      type: object
+      required: [online, name, lastChecked]
+      properties:
+        online:
+          type: boolean
+        name:
+          type: string
+        lastChecked:
+          type: string
+          format: date-time
+        details:
+          type: string
+
+    RedforgeHistoryItem:
+      type: object
+      required: [id, threatId, threatName, sentAt]
+      properties:
+        id:
+          type: integer
+        threatId:
+          type: integer
+        threatName:
+          type: string
+        sentAt:
+          type: string
+          format: date-time
+        missionId:
+          type: ["string", "null"]
+        outcome:
+          type: ["string", "null"]
+        score:
+          type: ["integer", "null"]
+
+    MeliCommand:
+      type: object
+      required: [id, command, sourceIp, capturedAt, analyzed]
+      properties:
+        id:
+          type: integer
+        command:
+          type: string
+        sourceIp:
+          type: string
+        session:
+          type: string
+        capturedAt:
+          type: string
+          format: date-time
+        analyzed:
+          type: boolean
+        importedAsInputId:
+          type: ["integer", "null"]
+
+    # ─── Settings ────────────────────────────────────────────────────────────────
+    AppSettings:
+      type: object
+      required: [id, claudeModel, defaultNoveltyTarget, defaultComplexity, defaultPlatform, redforgeUrl, meliUrl, sandboxEnabled, createdAt]
+      properties:
+        id:
+          type: integer
+        claudeModel:
+          type: string
+        defaultNoveltyTarget:
+          type: integer
+        defaultComplexity:
+          type: string
+        defaultPlatform:
+          type: string
+        defaultEvasionPriority:
+          type: integer
+        redforgeUrl:
+          type: ["string", "null"]
+        meliUrl:
+          type: ["string", "null"]
+        sandboxEnabled:
+          type: boolean
+        maxCpuPercent:
+          type: integer
+        maxRamMb:
+          type: integer
+        maxExecutionSeconds:
+          type: integer
+        disclaimerAccepted:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    AppSettingsUpdate:
+      type: object
+      properties:
+        claudeModel:
+          type: string
+        defaultNoveltyTarget:
+          type: integer
+        defaultComplexity:
+          type: string
+        defaultPlatform:
+          type: string
+        defaultEvasionPriority:
+          type: integer
+        redforgeUrl:
+          type: string
+        meliUrl:
+          type: string
+        sandboxEnabled:
+          type: boolean
+        maxCpuPercent:
+          type: integer
+        maxRamMb:
+          type: integer
+        maxExecutionSeconds:
+          type: integer
+        disclaimerAccepted:
+          type: boolean
+
+    # ─── Anthropic ───────────────────────────────────────────────────────────────
+    AnthropicConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - createdAt
+
+    AnthropicMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversationId
+        - role
+        - content
+        - createdAt
+
+    AnthropicConversationInput:
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+
+    AnthropicMessageInput:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
+
+    AnthropicConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnthropicMessage"
+      required:
+        - id
+        - title
+        - createdAt
+        - messages
+
+    AnthropicError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

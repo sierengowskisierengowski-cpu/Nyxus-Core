@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "GowskiNet CIPHER"
+version = "1.0.0"
+id = "artifacts/cipher"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23051
+
+[services.development]
+run = "pnpm --filter @workspace/cipher run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cipher", "run", "build" ]
+publicDir = "artifacts/cipher/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23051"
+BASE_PATH = "/"
