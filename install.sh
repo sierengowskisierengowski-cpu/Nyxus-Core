@@ -70,7 +70,7 @@ LAUNCHERS=(
   nyxus-dynamic-wallpaper.sh nyxus-eww-cinematic nyxus-eww-launch
   nyxus-eww-launch-safe nyxus-freeform nyxus-gen-backdrop nyxus-ghost
   nyxus-ghost-helper nyxus-glow nyxus-hacker-mode nyxus-home
-  nyxus_hotcorners.py nyxus-hub-apps nyxus-hub-close nyxus-hub-launch
+  nyxus-hotkey nyxus_hotcorners.py nyxus-hub-apps nyxus-hub-close nyxus-hub-launch
   nyxus-hub-open nyxus-hub-search nyxus-lens nyxus-livewall-flagship
   nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art
   nyxus-lock-track nyxus-mission-control-toggle nyxus-notifications
@@ -83,7 +83,8 @@ LAUNCHERS=(
   nyxus-spray nyxus-store nyxus-sync-stations nyxus-tint nyxus-tintd
   nyxus-updater nyxus-voice nyxus-voiced nyxus-voice-install
   nyxus-voice-model nyxus-wait-bootstrap nyxus-wall-cycle nyxus-wall-fx
-  nyxus-wall-next nyxus-weather-line nyxus-welcome sync-eww.sh
+  nyxus-wall-next nyxus-wallpaper-autostart nyxus-weather-line nyxus-welcome sync-eww.sh
+  nyxus-gamemode nyxus-focusmode
 )
 
 declare -A MANIFEST_EWW=() MANIFEST_HYPR=() MANIFEST_NYXUS=() MANIFEST_BIN=() MANIFEST_DESKTOP=()
