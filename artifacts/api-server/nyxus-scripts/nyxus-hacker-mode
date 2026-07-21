@@ -59,8 +59,8 @@ expand_home() {
     warn "HOME is empty; cannot expand wallpaper paths."
     return 1
   fi
-  # NYXUS config paths only use the current user's home (`~` / `~/...`), not
-  # `~otheruser/...`, so we intentionally keep expansion scoped to this account.
+  # Caller is the trusted NYXUS config/runtime state in this repo. These paths
+  # only use the current user's home (`~` / `~/...`), not `~otheruser/...`.
   case "${1:-}" in
     "~")    printf '%s\n' "${home}" ;;
     "~/"*)  printf '%s\n' "${home}/${1#~/}" ;;
@@ -82,6 +82,10 @@ resolve_wallpaper_path() {
     return 1
   fi
   [[ "$filename" = /* && -r "$filename" ]] && { printf '%s\n' "$filename"; return 0; }
+  if [[ "$filename" == */* ]]; then
+    warn "rejecting non-basename wallpaper path: ${filename}"
+    return 1
+  fi
   for dir in "${@:2}"; do
     [[ -n "$dir" ]] || continue
     dir="$(expand_home "$dir")"

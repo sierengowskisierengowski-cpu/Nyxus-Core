@@ -14,4 +14,10 @@ if pgrep -x bifrost >/dev/null 2>&1; then
   exit 0
 fi
 
-setsid bifrost >/dev/null 2>&1 &
+LOCK_DIR="${XDG_RUNTIME_DIR:-/tmp}/nyxus-bifrost.launch.lock"
+if ! mkdir "${LOCK_DIR}" 2>/dev/null; then
+  exit 0
+fi
+trap 'rmdir "${LOCK_DIR}" 2>/dev/null || true' EXIT
+
+pgrep -x bifrost >/dev/null 2>&1 || setsid bifrost >/dev/null 2>&1 &
