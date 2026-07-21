@@ -37,7 +37,9 @@ a fresh `sha256sums` for the new tarball/patch — a networked build step, not a
 blind edit. 7.0.12 fully supports the GS77 (DRM_XE, MSI_EC, iwlwifi all present),
 so it's a fine baseline; bump when convenient. See install helper `--bump` note.
 
-## Build + install (run LATER, after login is verified)
+## Two ways to get Kage Ryu Nyxus onto a machine
+
+**A) Post-install, on a running NYXUS system (simplest — works today):**
 ```bash
 # Lean build (recommended): capture your real module set first, once,
 # after exercising all hardware (wifi/bt/suspend/hdmi/dGPU):
@@ -46,6 +48,24 @@ so it's a fine baseline; bump when convenient. See install helper `--bump` note.
 sudo kernel/install-kage-ryu.sh          # builds + installs, adds selectable entry
 # stock `linux` remains the default boot entry; pick "Kage Ryu Nyxus" at the bootloader.
 ```
+
+**B) Baked into the ISO (opt-in), so a fresh install already has it:**
+The kernel is a multi-GB, long compile and is NOT in any Arch repo, so
+`build-iso.sh` never compiles it — you build the **package** once, then
+point the bake at it. This is **off by default** (CI and normal bakes ship
+a standard ISO with no custom-kernel dependency); enable it with
+`NYX_WITH_KAGE_RYU=1`:
+```bash
+# 1. Produce the package (either the full install helper above, which also
+#    leaves the .pkg.tar.zst in the kage-ryu repo dir, or just:)
+cd ~/Projects/arch-custom-kernel/linux-kage-ryu && makepkg -sc   # → linux-kage-ryu-*.pkg.tar.zst
+
+# 2. Bake with the kernel staged into the ISO's [nyx-local] repo:
+NYX_WITH_KAGE_RYU=1 sudo ./iso-builder/build-iso.sh
+#   Override the package location with NYX_KAGE_PKGDIR=/dir/with/the/.pkg.tar.zst
+```
+Either way the installed system keeps **stock `linux` as the default boot
+entry**; Kage Ryu Nyxus is selectable from the bootloader.
 
 ## Optional build modes (bigger/meaner, higher cost)
 The kage-ryu PKGBUILD already supports these env toggles — pick per build:
