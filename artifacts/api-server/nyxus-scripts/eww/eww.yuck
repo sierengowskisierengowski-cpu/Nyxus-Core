@@ -571,16 +571,20 @@
 ;; The idle↔music "flip". eww/GTK cannot do a true 3D card flip, so this
 ;; approximates one with a softer crossfade transition, toggled by MPRIS
 ;; playback state.
+;; Only the IDLE (clock) face is wrapped in the hub-open button. The music
+;; face is transport-only — nesting its prev/play/next buttons inside an
+;; outer GtkButton made every tap fire the outer onclick (nyxus-hub-open)
+;; instead of the transport control. Flip back to the clock with Super+R.
 (defwidget bar_hub_trigger []
-  (button :class "bar-hub-trigger"
-          :onclick "nyxus-hub-open &"
-          :onrightclick "playerctl play-pause &"
-          :onmiddleclick "eww update SAUCER_FORCE=${SAUCER_FORCE ? 'false' : 'true'} &"
-          :tooltip "NYXUS Main Menu · ${PLAYER.status != 'Stopped' ? PLAYER.tooltip : TIME.long} · click hub · right-click play/pause · middle-click / Super+R flip"
-    (stack :class "saucer-stack" :transition "crossfade" :same-size true
-           :selected {(PLAYER.status == "Stopped") == SAUCER_FORCE ? 1 : 0}
-      (bar_hub_idle)
-      (bar_hub_music))))
+  (stack :class "saucer-stack" :transition "crossfade" :same-size true
+         :selected {(PLAYER.status == "Stopped") == SAUCER_FORCE ? 1 : 0}
+    (button :class "bar-hub-trigger"
+            :onclick "nyxus-hub-open &"
+            :onrightclick "playerctl play-pause &"
+            :onmiddleclick "eww update SAUCER_FORCE=${SAUCER_FORCE ? 'false' : 'true'} &"
+            :tooltip "NYXUS Main Menu · ${TIME.long} · click hub · right-click play/pause · middle-click / Super+R flip"
+      (bar_hub_idle))
+    (bar_hub_music)))
 
 (defwidget bar_bottom_layout []
   ;; centerbox guarantees the saucer clock stays dead-center regardless of the
