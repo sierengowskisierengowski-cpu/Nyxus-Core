@@ -340,6 +340,23 @@ for f in "$NS"/desktop-entries/*.desktop; do
 done
 ok "desktop entries → ~/.local/share/applications  ($n files checked)"
 
+# wallpapers — full NYXUS set → ~/.config/hypr/walls (matches the ISO skel,
+# which ships all of them there). Canonical source is the ISO skel tree so an
+# install.sh machine matches a fresh ISO exactly. This includes the default
+# wallpaper (nyxus-cosmic-galaxy) + the alien walls the screensaver, hyprlock
+# and Hacker Mode reference; without it those fell back to a flat colour.
+# place() is idempotent (skips unchanged), so re-runs are cheap. User-added
+# wallpapers under walls/rotation/ are preserved (handled separately below).
+WALLS_SRC="${REPO_ROOT}/iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls"
+n=0
+if [[ -d "$WALLS_SRC" ]]; then
+  for f in "$WALLS_SRC"/*.png; do
+    [[ -f "$f" ]] || continue
+    place "$f" "$HOME/.config/hypr/walls/$(basename "$f")" && n=$((n+1)) || true
+  done
+fi
+ok "wallpapers → ~/.config/hypr/walls  ($n files checked)"
+
 # wallpapers (rotation set; repo files replaced, user additions kept)
 n=0
 for f in "$NS"/hypr-walls/rotation/*.png; do
