@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=NYXUS Battery Health
+GenericName=Battery
+Comment=Charge, health, cycles, and power draw diagnostics
+Exec=/usr/local/bin/nyxus battery
+TryExec=/usr/local/bin/nyxus
+Icon=battery
+Terminal=false
+Categories=System;Monitor;
+Keywords=NYXUS;NYX;Battery;Power;Health;
+StartupNotify=true
+StartupWMClass=nyxus.battery
+X-NYXUS-Module=nyxus_battery
