@@ -67,7 +67,7 @@ esac; done
 LAUNCHERS=(
   nyxus
   nyxus-accent-from-wallpaper nyxus-apply-accent nyxus-backup nyxus-beat
-  nyxus-beatd nyxus-blackarch-full nyxus-bootstrap nyxus-companion nyxus-crash-report nyxus-drop
+  nyxus-beatd nyxus-blackarch-full nyxus-boot-check nyxus-bootstrap nyxus-companion nyxus-crash-report nyxus-drop
   nyxus-dynamic-wallpaper.sh nyxus-eww-cinematic nyxus-eww-launch
   nyxus-eww-launch-safe nyxus-freeform nyxus-gen-backdrop nyxus-ghost
   nyxus-ghost-helper nyxus-glow nyxus-hacker-mode nyxus-home
@@ -76,6 +76,7 @@ LAUNCHERS=(
   nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art
   nyxus-lock-track nyxus-mission-control-toggle nyxus-notifications
   nyxus-notif-to-eww nyxus-nowplaying nyxus-palette-extract nyxus-panic
+  nyxus-persist-login
   nyxus-plugins nyxus-plymouth-install nyxus-postinstall nyxus-pulsed nyxus-record
   nyxus-rotate-walls
   nyxus-screensaver nyxus-security nyxus-session-start nyxus-settings
