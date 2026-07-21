@@ -85,7 +85,7 @@ LAUNCHERS=(
   nyxus-spray nyxus-store nyxus-sync-stations nyxus-tint nyxus-tintd
   nyxus-updater nyxus-voice nyxus-voiced nyxus-voice-install
   nyxus-voice-model nyxus-wait-bootstrap nyxus-wall-cycle nyxus-wall-fx
-  nyxus-wall-next nyxus-wallpaper-autostart nyxus-weather-line nyxus-welcome sync-eww.sh
+  nyxus-wall-next nyxus-wallpaper-autostart nyxus-weather-line nyxus-welcome nyxus-whispers sync-eww.sh
   nyxus-gamemode nyxus-focusmode
 )
 

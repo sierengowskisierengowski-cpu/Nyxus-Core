@@ -17,7 +17,7 @@
 set -u
 
 LIST="${NYXUS_WALL_LIST:-${HOME}/.config/nyxus/wall-rotation.list}"
-WALLDIRS=("${HOME}/.config/hypr/walls" "/usr/share/backgrounds/nyxus")
+WALLDIRS=("${HOME}/.config/hypr/walls" "${HOME}/.config/hypr/walls/rotation" "/usr/share/backgrounds/nyxus")
 CACHE="${HOME}/.cache/nyxus"
 LOCK_WALL="${CACHE}/lock-wall.png"
 INTERVAL="${NYXUS_WALL_INTERVAL:-1200}"   # desktop daemon: rotate every 20 min
