@@ -279,6 +279,33 @@ for f in "$NS"/nyxus-*.conf; do
   if [[ "$base" == nyxus-monitors.conf && -f "$dst" ]]; then continue; fi
   place "$f" "$dst" || true
 done
+# Hyprland `env = PATH,…` is a RAW string — $HOME does not expand and breaks
+# every bare nyxus-* bind. Stamp the installing user's real home into the
+# live hyprland.conf (fixes leftover `$HOME`, placeholders, or foreign homes).
+if [[ -f "$HOME/.config/hypr/hyprland.conf" ]]; then
+  if $CHECK; then
+    info "would stamp PATH home → $HOME in ~/.config/hypr/hyprland.conf"
+  else
+    sed -i \
+      -e "s|__NYXUS_HOME__|$HOME|g" \
+      -e "s|env = PATH,\$HOME/|env = PATH,$HOME/|g" \
+      "$HOME/.config/hypr/hyprland.conf"
+    # Normalize any /home/<user>/ prefixes on the PATH line to this $HOME.
+    # (Safe for the cosmic reference machine: /home/cosmic → /home/cosmic.)
+    python3 - "$HOME" "$HOME/.config/hypr/hyprland.conf" <<'PY' || true
+import re, sys
+home, path = sys.argv[1], sys.argv[2]
+text = open(path).read()
+def fix_line(m):
+    line = m.group(0)
+    line = re.sub(r'/home/[^/]+/', home.rstrip('/') + '/', line)
+    return line
+text2, n = re.subn(r'(?m)^env = PATH,.*$', fix_line, text, count=1)
+if n and text2 != text:
+    open(path, 'w').write(text2)
+PY
+  fi
+fi
 ok "hyprland → ~/.config/hypr (+conf.d)"
 
 # launcher/bin scripts → ~/.local/bin. CURATED manifest — the exact launcher
