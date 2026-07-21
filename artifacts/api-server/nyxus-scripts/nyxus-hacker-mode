@@ -194,7 +194,7 @@ hacker_on() {
 
   # 4. Surface the security stack (best-effort, each guarded).
   ( command -v arsenal >/dev/null 2>&1 && setsid kitty --title Arsenal -e arsenal >/dev/null 2>&1 & ) 2>/dev/null || true
-  ( command -v nyxus-launch-bifrost >/dev/null 2>&1 && nyxus-launch-bifrost --background >/dev/null 2>&1 ) 2>/dev/null || true
+  ( command -v nyxus-launch-bifrost >/dev/null 2>&1 && nyxus-launch-bifrost --background >/dev/null 2>&1 & ) 2>/dev/null || true
   ( command -v eww >/dev/null 2>&1 && eww open --toggle deepcore >/dev/null 2>&1 & ) 2>/dev/null || true
 
   notify -u critical "NYXUS Hacker Mode" "ENGAGED — parallel security layout · all stations flipped · security stack up."
