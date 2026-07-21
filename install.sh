@@ -71,7 +71,7 @@ LAUNCHERS=(
   nyxus-eww-launch-safe nyxus-freeform nyxus-gen-backdrop nyxus-ghost
   nyxus-ghost-helper nyxus-glow nyxus-hacker-mode nyxus-home
   nyxus-hotkey nyxus_hotcorners.py nyxus-hub-apps nyxus-hub-close nyxus-hub-launch
-  nyxus-hub-open nyxus-hub-search nyxus-lens nyxus-livewall-flagship
+  nyxus-hub-open nyxus-hub-search nyxus-launch-bifrost nyxus-launch-meli nyxus-lens nyxus-livewall-flagship
   nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art
   nyxus-lock-track nyxus-mission-control-toggle nyxus-notifications
   nyxus-notif-to-eww nyxus-nowplaying nyxus-palette-extract nyxus-panic
@@ -347,6 +347,21 @@ place "$NS/nyxus_screensaver.py"   "$HOME/.config/nyxus/nyxus_screensaver.py"   
 place "$NS/nyxus_matrix_saver.py"  "$HOME/.config/nyxus/nyxus_matrix_saver.py"  0755 || true
 ok "screensavers → ~/.config/nyxus/ (alien-wallpaper + matrix-rain)"
 
+# station matrix + hacker matrix + wallpaper seed → ~/.config/nyxus/
+NYXUS_CFG="${REPO_ROOT}/artifacts/nyxus-config"
+place "$NYXUS_CFG/stations.json"        "$HOME/.config/nyxus/stations.json" || true
+place "$NYXUS_CFG/stations-hacker.json" "$HOME/.config/nyxus/stations-hacker.json" || true
+place "$NYXUS_CFG/wallpaper.conf"       "$HOME/.config/nyxus/wallpaper.conf" || true
+if $CHECK; then
+  info "would regenerate ~/.config/nyxus/workspaces.json from stations.json"
+elif [[ -x "$HOME/.local/bin/nyxus-sync-stations" && -f "$HOME/.config/nyxus/stations.json" ]]; then
+  "$HOME/.local/bin/nyxus-sync-stations" >/dev/null 2>&1 \
+    && ok "station matrix → ~/.config/nyxus (normal + hacker) + workspaces.json regenerated" \
+    || warn "station matrix copied but workspaces.json regen failed — check jq / stations.json"
+else
+  ok "station matrix → ~/.config/nyxus (normal + hacker)"
+fi
+
 # Curated wallpaper-rotation list (alien / NYXUS-HYPRLAND / sierengowski set
 # that the desktop + lock + login rotate through). SEED ONLY — never clobber
 # the user's edited pick list on re-run.
@@ -478,6 +493,10 @@ for f in "$NS"/nyxus_*.py; do
   verify_pair "$f" "$HOME/.nyxus/$(basename "$f")"
 done
 verify_pair "$NS/nyxus_matrix_saver.py" "$HOME/.config/nyxus/nyxus_matrix_saver.py"
+for f in stations.json stations-hacker.json wallpaper.conf; do
+  [[ -f "$NYXUS_CFG/$f" ]] || continue
+  verify_pair "$NYXUS_CFG/$f" "$HOME/.config/nyxus/$f"
+done
 for f in "$NS"/desktop-entries/*.desktop; do
   [[ -f "$f" ]] || continue
   verify_pair "$f" "$HOME/.local/share/applications/$(basename "$f")"
@@ -496,6 +515,7 @@ if $RUN_SYSTEM; then
   fi
 else
   info "system phase skipped (--user-only)"
+  warn "--user-only leaves system security components untouched (jeTT daemon, Bifrost, Meli/Grafana services)"
 fi
 
 if $CHECK; then
@@ -518,5 +538,5 @@ else
   info "backup: ${BACKUP_ROOT}"
 fi
 info "surfaces: ~/.config/eww · ~/.config/hypr · ~/.local/bin · ~/.nyxus"
-info "          ~/.config/nyxus (screensaver) · ~/.local/share/applications"
+info "          ~/.config/nyxus (stations + wallpaper + screensavers) · ~/.local/share/applications"
 printf "\n${V5}${B}  ◆ NYXUS ready.${R} ${DIM}Run ./install.sh again anytime; clean systems converge without backup churn.${R}\n\n"

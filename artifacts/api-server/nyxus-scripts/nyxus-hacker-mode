@@ -52,6 +52,43 @@ _hypr()   { command -v hyprctl >/dev/null 2>&1 && hyprctl "$@" >/dev/null 2>&1 |
 _getopt() { hyprctl getoption "$1" -j 2>/dev/null | jq -r "$2" 2>/dev/null; }
 is_on()   { [[ -f "${STATE}" ]] && grep -q '^mode=on$' "${STATE}"; }
 
+expand_home() {
+  case "${1:-}" in
+    "~")    printf '%s\n' "$HOME" ;;
+    "~/"*)  printf '%s/%s\n' "$HOME" "${1#~/}" ;;
+    *)      printf '%s\n' "${1:-}" ;;
+  esac
+}
+
+json_string() {
+  local file="$1" query="$2"
+  [[ -r "$file" ]] || return 1
+  command -v jq >/dev/null 2>&1 || return 1
+  jq -r "$query // empty" "$file" 2>/dev/null | head -1
+}
+
+resolve_wallpaper_path() {
+  local filename="$1" file dir
+  [[ -n "$filename" ]] || return 1
+  for dir in "$@"; do
+    [[ "$dir" == "$filename" ]] && continue
+    [[ -n "$dir" ]] || continue
+    dir="$(expand_home "$dir")"
+    file="${dir%/}/${filename}"
+    [[ -r "$file" ]] && { printf '%s\n' "$file"; return 0; }
+  done
+  [[ -r "$filename" ]] && { printf '%s\n' "$filename"; return 0; }
+  return 1
+}
+
+matrix_wallpaper() {
+  local matrix="$1" file wall_dir
+  file="$(json_string "$matrix" '.unified_wallpaper')"
+  [[ -n "$file" ]] || file="$(json_string "$matrix" '.home.wallpaper')"
+  wall_dir="$(json_string "$matrix" '.wall_dir')"
+  resolve_wallpaper_path "$file" "$wall_dir" "$HOME/.config/hypr/walls" "/usr/share/backgrounds/nyxus"
+}
+
 # ── regenerate workspaces.json from the active stations.json ───────────
 sync_workspaces() {
   if command -v nyxus-sync-stations >/dev/null 2>&1; then
@@ -134,11 +171,14 @@ hacker_on() {
   _hypr keyword general:col.inactive_border ${HACKER_INACTIVE_BORDER}
 
   # 3. Flip wallpapers across workspaces.
-  apply_wallpapers "/usr/share/backgrounds/nyxus/nyxus-hacker-mode-a.png"
+  local hacker_wall
+  hacker_wall="$(matrix_wallpaper "${STATIONS_HACKER}" 2>/dev/null || true)"
+  [[ -n "${hacker_wall}" ]] || hacker_wall="$(resolve_wallpaper_path "nyxus-hacker-mode-a.png" "$HOME/.config/hypr/walls" "/usr/share/backgrounds/nyxus" 2>/dev/null || true)"
+  [[ -n "${hacker_wall}" ]] && apply_wallpapers "${hacker_wall}"
 
   # 4. Surface the security stack (best-effort, each guarded).
   ( command -v arsenal >/dev/null 2>&1 && setsid kitty --title Arsenal -e arsenal >/dev/null 2>&1 & ) 2>/dev/null || true
-  ( command -v bifrost >/dev/null 2>&1 && setsid bifrost >/dev/null 2>&1 & ) 2>/dev/null || true
+  ( command -v nyxus-launch-bifrost >/dev/null 2>&1 && nyxus-launch-bifrost --background >/dev/null 2>&1 ) 2>/dev/null || true
   ( command -v eww >/dev/null 2>&1 && eww open --toggle deepcore >/dev/null 2>&1 & ) 2>/dev/null || true
 
   notify -u critical "NYXUS Hacker Mode" "ENGAGED — parallel security layout · all stations flipped · security stack up."
@@ -169,7 +209,12 @@ hacker_off() {
   # 3. Restore normal wallpapers.
   local norm_wall
   norm_wall="$(grep -oP '^WALLPAPER_PATH="?\K[^"]+' "${STATE_DIR}/wallpaper.conf" 2>/dev/null | head -1)"
-  [[ -n "${norm_wall}" ]] || norm_wall="/usr/share/backgrounds/nyxus/nyxus-desktop-hero.png"
+  if [[ -n "${norm_wall}" ]]; then
+    norm_wall="$(expand_home "${norm_wall}")"
+  else
+    norm_wall="$(matrix_wallpaper "${STATIONS}" 2>/dev/null || true)"
+  fi
+  [[ -n "${norm_wall}" ]] || norm_wall="$(resolve_wallpaper_path "nyxus-desktop-hero.png" "$HOME/.config/hypr/walls" "/usr/share/backgrounds/nyxus" 2>/dev/null || true)"
   apply_wallpapers "${norm_wall}"
 
   rm -f "${STATE}"
