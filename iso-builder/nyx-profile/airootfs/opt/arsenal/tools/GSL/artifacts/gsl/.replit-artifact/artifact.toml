@@ -1,0 +1,39 @@
+kind = "web"
+previewPath = "/"
+title = "GowskiNet Security Lab"
+version = "1.0.0"
+id = "artifacts/gsl"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19670
+
+[services.development]
+run = "pnpm --filter @workspace/gsl run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/gsl", "run", "build" ]
+publicDir = "artifacts/gsl/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19670"
+BASE_PATH = "/"
+
+[[services]]
+name = "python-api"
+paths = [ "/api", "/ws" ]
+localPort = 8000
+
+[services.development]
+run = "bash /home/runner/workspace/gsl-backend/start.sh"

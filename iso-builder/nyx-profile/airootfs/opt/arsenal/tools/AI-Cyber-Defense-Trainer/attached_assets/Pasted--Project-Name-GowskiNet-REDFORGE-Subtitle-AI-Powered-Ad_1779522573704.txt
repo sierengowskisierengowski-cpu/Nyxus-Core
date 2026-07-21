@@ -1,0 +1,96 @@
+
+Project Name: GowskiNet REDFORGE
+Subtitle: AI-Powered Adversary Emulation and Training Platform
+Launch command: redforge
+Port: 19000
+Only accessible on: 192.168.0.x network
+What this is: A self-hosted AI-powered attack generation and training platform. It generates real novel attacks against my own GowskiNet lab network using the Claude AI API combined with a deep cybersecurity knowledge base. Every attack is real, every script actually runs, every payload is unique. I study the generated code, learn how attacks work from the inside, and build real threat hunting and incident response skills. Nothing is simulated — everything is real and deployed against my own systems.
+Machine: nyx-cosmic, 192.168.0.172, COSMIC Linux Arch
+Target network: 192.168.0.x only — hard locked, cannot target anything outside
+Tech Stack:
+
+Backend: Python FastAPI + uvicorn
+Frontend: React + TypeScript + Tailwind CSS
+AI Engine: Claude API (claude-sonnet-4-20250514)
+Attack execution: Python subprocess, bash, real system tools
+Live output: WebSockets streaming real stdout/stderr
+Database: SQLite — all generated attacks, code, notes, scores, history
+Auth: Argon2id password + TOTP 2FA
+Knowledge base: JSON/markdown files loaded into Claude context
+
+Visual Design:
+
+Deep dark background #0a0a0f
+Primary accent: red #ef4444 — this is a red team tool, feel dangerous
+Secondary accent: purple #7B5EA7 GowskiNet brand
+Terminal aesthetic — feels like a real hacker tool
+Monospace everywhere — JetBrains Mono
+Animated elements — pulsing indicators, scanning animations
+Red glow on active attack panels
+Clean sidebar navigation
+Fully responsive
+
+
+CORE ENGINE — How attacks are generated:
+Three generation modes working together:
+Mode 1 — Template Primitives Engine:
+
+Library of hundreds of attack building blocks
+Reconnaissance primitives: port scan, service detection, OS fingerprint, banner grab, DNS enum, OSINT gather
+Access primitives: brute force, credential stuffing, exploit, phishing, evil twin, MITM
+Execution primitives: bash oneliner, Python script, compiled binary, macro, shellcode
+Persistence primitives: cron job, systemd service, bashrc injection, SUID bit, SSH key plant
+Evasion primitives: slow timing, random delays, traffic mimicry, log clearing, process hiding
+Exfiltration primitives: DNS tunneling, HTTP POST, ICMP covert channel, steganography
+Engine randomly combines valid combinations from each stage
+Adds randomized variables — ports, timing, naming, encoding
+Produces structurally sound attack chains every time
+
+Mode 2 — Claude AI Generation:
+
+Full Claude API integration with deep cybersecurity system prompt
+Knowledge base loaded into context: MITRE ATT&CK all techniques, real malware behavior patterns, living off the land techniques, evasion methods, real CVE exploit patterns, honeypot captured attack data from GowskiNet logs
+Claude generates actual working bash/Python attack scripts from scratch
+Every generation completely unique — novel combinations never seen before
+Can combine techniques across domains — WiFi + social engineering + persistence
+Generates realistic attacker naming — fake C2 domains, realistic process names, convincing file paths
+Code is real and actually executes
+
+Mode 3 — Hybrid (default):
+
+Template engine provides the attack structure and deployment framework
+Claude fills in the novel payload, evasion technique, and specific implementation
+Result: structurally reliable attacks with genuinely novel content
+Truly unpredictable — even the operator doesn't know exactly what will be generated
+
+
+PAGES — build every single one:
+1. Mission Control (Dashboard)
+
+Current threat level indicator — TRAINING / ACTIVE ATTACK / INCIDENT
+Active attack status — what's currently running, progress, time elapsed
+Recent missions — last 10 generated attacks with outcome
+Your skill scores across all categories — radar chart showing strengths and weaknesses
+Streak — how many days in a row you've trained
+Total missions completed, attacks studied, notes written
+Quick launch buttons — Random Attack, Specify Attack, Full Scenario
+Live network status — all 192.168.0.x devices, which are targets
+Knowledge base status — how many techniques loaded
+Recent notes — last 3 study notes with quick access
+REDFORGE version and Claude API status indicator
+
+2. Attack Generator
+Sub-mode A — Random Attack:
+
+Single big button: GENERATE AND DEPLOY
+Difficulty selector before generating: Beginner / Intermediate / Advanced / Expert / Unknown (truly random, no hints)
+Category filter — include/exclude categories (WiFi, Web, Network, Malware, Social, Physical)
+You see nothing about what was generated until after it runs
+Attack deploys silently
+Timer starts — you have X minutes to detect and respond
+After timer or you call it — full reveal
+
+Sub-mode B — Specify Attack:
+
+Natural language input: type exactly what you want
+Examples: "credential harvesting WiFi captive portal", "Linux rootkit with persistence", "slow covert port scan with evasion", "ransomware simulator that enc...

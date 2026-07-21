@@ -1,0 +1,444 @@
+Confirmation dialog showing exact command before every deploy
+Kill button — instantly stops any running tool
+Every run logged — timestamp, tool, target, full command, full output
+Warning banner on every page: "Authorized use on your own network only"
+Read only mode toggle — browse without deploying
+
+How every tool works:
+
+Click category in sidebar
+See tool cards — name, plain English description, difficulty, estimated time
+Click tool — config panel opens with pre-filled smart defaults
+Live command preview — shows exact real command updating as you configure
+Click Deploy — confirmation dialog shows exact command
+Confirm — tool runs, real stdout/stderr streams live via WebSocket
+Output panel — color coded, scrollable, copy button, download as txt, save to history, kill button
+After completion — summary saved to history automatically
+
+Learn Tab on every tool:
+
+What this tool does in plain English
+When to use it
+How it works technically
+Full command syntax explained line by line
+Real world examples
+What the output means and what to look for
+What to do next based on results
+
+
+CATEGORY 1: Network Scanning
+
+Nmap — port scan, service detection (-sV), OS fingerprint (-O), aggressive (-A), vuln scripts (--script vuln), custom port range, output formats
+Masscan — fastest port scanner, full network sweep, configurable rate, target range
+Netdiscover — find all live devices on 192.168.0.x via ARP
+ARP-scan — ARP based device discovery with vendor lookup
+Angry IP Scanner — ping sweep with hostname and MAC resolution
+Unicornscan — async port scanner, UDP scanning
+Zmap — internet scale scanner configured for local subnet
+Fping — fast ping sweep, multiple hosts simultaneously
+Nbtscan — NetBIOS name scanner, find Windows machines
+SNMPwalk — SNMP enumeration against network devices
+Onesixtyone — fast SNMP scanner
+Enum4linux — Linux/Samba enumeration
+RPCscan — RPC service enumeration
+SSLscan — SSL/TLS configuration scanner
+Testssl.sh — comprehensive SSL/TLS testing
+DNSmap — DNS enumeration and zone transfer
+Fierce — DNS reconnaissance
+Amass — network mapping and asset discovery
+
+CATEGORY 2: WiFi Security
+
+Airmon-ng — put wireless interface into monitor mode, kill interfering processes
+Airodump-ng — scan nearby networks, capture handshakes, show clients per AP
+Aireplay-ng — deauth attack against your own devices, ARP replay, chopchop
+Aircrack-ng — WPA2 handshake cracking with wordlist
+Airgraph-ng — visualize WiFi network relationships
+Kismet — full passive WiFi monitoring, logging, client tracking
+Wash — find WPS enabled routers nearby
+Reaver — WPS PIN brute force against your own router
+Bully — alternative WPS attack tool
+Pixiewps — WPS pixie dust attack
+Wifite2 — automated WiFi auditing, runs full attack chain automatically
+Hostapd-wpe — evil twin access point, capture credentials
+Airbase-ng — create fake access points for testing
+MDK4 — WiFi denial of service testing, beacon flooding, deauth storm
+Cowpatty — WPA2 handshake cracker, rainbow table support
+Pyrit — GPU accelerated WPA2 cracking
+WiFi-Pumpkin3 — rogue AP framework with modules
+Bettercap WiFi module — WiFi probe sniffer, handshake capture
+PMKID attack — modern WPA2 attack without deauth via hcxdumptool
+hcxdumptool — capture PMKIDs and handshakes
+hcxtools — convert captures to hashcat format
+
+CATEGORY 3: Web Application Testing
+
+Nikto — full web server vulnerability scan
+Gobuster — directory, file, DNS, VHost brute force
+Dirb — web content scanner with built in wordlists
+Dirbuster — GUI web path brute forcer
+Feroxbuster — fast recursive content discovery
+SQLmap — automated SQL injection detection and exploitation
+WPScan — WordPress CMS vulnerability scanner
+Joomscan — Joomla CMS scanner
+Droopescan — Drupal/Silverstripe scanner
+XSSer — automated XSS detection and exploitation
+Commix — command injection exploiter
+CSRF Tester — cross site request forgery testing
+Arjun — HTTP parameter discovery
+Wfuzz — web application fuzzer
+ffuf — fast web fuzzer, content discovery
+Nuclei — vulnerability scanner with community templates
+Whatweb — web technology fingerprinter
+Wafw00f — web application firewall detector
+Curl — custom HTTP request builder, all methods, headers, body
+HTTPie — human friendly HTTP testing
+Burp Suite CE — launch and proxy config helper
+OWASP ZAP — automated web app scanner
+Skipfish — web app security recon
+W3af — web app attack and audit framework
+
+CATEGORY 4: Password and Hash Testing
+
+Hashcat — GPU accelerated, all hash types (MD5/SHA1/SHA256/SHA512/bcrypt/NTLM/WPA2/etc), wordlist, rule, brute force, combinator, mask attack
+John the Ripper — CPU hash cracking, auto detect hash type, wordlist + rules
+Hydra — login brute force: SSH/FTP/HTTP/HTTPS/Telnet/SMB/RDP/MySQL/PostgreSQL
+Medusa — parallel login brute forcer
+Ncrack — network authentication cracker
+CeWL — custom wordlist generator from target website
+Crunch — wordlist generator with pattern and charset
+Cupp — common user password profiler, targeted wordlist
+RSMangler — wordlist mangler and rule generator
+Mentalist — GUI wordlist generator
+Hashid — identify unknown hash types
+Hash-identifier — alternative hash identifier
+Ophcrack — Windows LM/NTLM hash cracker with rainbow tables
+Mimikatz — Windows credential extraction (testing against your own Windows VMs)
+Responder — LLMNR/NBT-NS/mDNS poisoner, capture NTLMv2 hashes
+Impacket — Python Windows protocol tools, secretsdump, psexec
+
+CATEGORY 5: Exploitation Framework
+
+Metasploit — full msfconsole, searchable module browser, exploit + payload picker, listener setup, session management, post exploitation modules
+SearchSploit — offline exploit-db search, show full exploit code
+MSFvenom — payload generator, all platforms and formats
+BeEF — Browser Exploitation Framework, hook browsers on your own network
+Armitage — Metasploit GUI
+RouterSploit — embedded device exploitation framework for testing your own router
+ExploitDB browser — browse full exploit database online
+CVE search — search CVEs by keyword or product
+Veil — AV evasion framework for testing your own endpoint detection
+TheFatRat — payload generator and listener
+
+CATEGORY 6: Honeypot Testing
+
+Cowrie SSH trigger — simulated SSH brute force against your Cowrie, verify capture
+Cowrie Telnet trigger — simulated Telnet login attempts
+Dionaea SMB trigger — simulated SMB exploit attempt
+Dionaea FTP trigger — simulated FTP connection
+Dionaea HTTP trigger — simulated HTTP exploit
+Heralding credential stuffing — automated credential pairs against Heralding
+Conpot Modbus trigger — ICS/SCADA protocol probe
+Conpot SNMP trigger — SNMP enumeration against Conpot
+Endlessh tarpit test — connect and verify trapping and delay
+Mailoney SMTP trigger — simulated email spam relay attempt
+Glastopf HTTP trigger — web honeypot probe
+Full honeypot health check — verify all honeypots alive and capturing, show status dashboard
+Attack replay — replay a captured attack from your logs against your honeypots
+Cowrie log analyzer — parse and summarize Cowrie logs, top IPs, top credentials
+
+CATEGORY 7: Packet Analysis
+
+tcpdump — capture on any interface, filter by host/port/protocol, live output, download PCAP
+Wireshark — launch capture, save PCAP, download from browser
+Scapy — custom packet crafter: SYN, ICMP, ARP, UDP, DNS, TCP handshake templates
+Netcat — raw TCP/UDP tester, send custom data, listen mode
+hping3 — custom packet crafter, all protocols, TTL, flags, payload
+Tshark — command line Wireshark, filter and analyze PCAPs
+Tcpflow — reconstruct TCP sessions from PCAP
+Ngrep — grep through network traffic
+Dsniff — network sniffer suite, urlsnarf, mailsnarf
+Arpspoof — ARP spoofing test on your own network
+Ettercap — man in the middle framework for your own network
+Bettercap — full MITM framework, ARP spoof, DNS spoof, packet sniffer
+SSLstrip — HTTPS downgrade test on your own traffic
+Mitmproxy — interactive HTTPS proxy, inspect and modify traffic
+Zeek — network analysis framework, generate logs from PCAP
+Suricata — IDS/IPS test — run rules against captured traffic
+NetworkMiner — passive network sniffer and PCAP analyzer
+
+CATEGORY 8: Bluetooth and RF
+
+Bluetoothctl — scan nearby BT devices, pair, info, show services
+HCItool — Bluetooth device inquiry and info
+BLE scanner — Bluetooth Low Energy beacon scan, UUID, RSSI, manufacturer data
+Gatttool — BLE GATT attribute reader/writer
+BTLEjuice — BLE MITM framework for testing your own BLE devices
+Ubertooth — if connected, BT packet capture and analysis
+RTL-SDR — software defined radio, frequency scanner, signal strength, AM/FM/WFM decode
+GNU Radio — signal processing, demodulate custom signals
+GQRX — SDR receiver GUI launcher
+Dump1090 — ADS-B aircraft tracker via RTL-SDR
+RTL-433 — decode 433MHz IoT sensors via RTL-SDR
+Multimon-ng — decode POCSAG, FLEX pager signals
+Hackrf tools — if HackRF connected, transmit/receive
+Flipper Zero — if connected via USB: run saved scripts, SubGHz transmit/receive, IR transmit, NFC read, RFID read, BadUSB payload launcher
+Meshtastic CLI — if Meshtastic node connected: send messages, show node list, channel config
+ESP32 tools — flash firmware, serial monitor, GPIO control via connected ESP32
+
+CATEGORY 9: Stress Testing
+
+hping3 SYN flood — test your own firewall, configurable rate and duration
+Slowloris — slow HTTP attack against your own web server
+GoldenEye — HTTP DoS tool against your own services
+Siege — HTTP load testing, configurable concurrent users and duration
+Apache Bench (ab) — web server benchmark
+Wrk — modern HTTP benchmarking tool
+Iperf3 — network bandwidth test between your machines, client and server mode
+Netperf — network performance measurement
+Stress-ng — CPU, RAM, disk, network stress test on your own machine, all subsystems
+Memtester — RAM integrity test
+Disk speed test — dd based read/write benchmark
+GPU stress — test NVIDIA RTX 3060 under full load
+Fio — advanced disk I/O benchmarking
+Bonnie++ — filesystem and disk benchmark
+
+CATEGORY 10: Forensics and Analysis
+
+Volatility3 — memory dump analysis: process list, network connections, registry, timeline, malware hunting
+Binwalk — firmware and binary analysis, extract embedded files, entropy analysis
+Foremost — file carving from disk images, recover deleted files
+Photorec — recover deleted files from any media
+Strings — extract printable strings from any binary
+Hexdump / xxd — hex view of any file with ASCII panel
+File — identify file type of any file
+Exiftool — extract all metadata from images, PDFs, Office docs, videos
+Steghide — detect and extract hidden data from images
+Stegsolve — image steganography analyzer
+Zsteg — detect LSB steganography in PNG/BMP
+Bulk extractor — extract emails, URLs, credit cards, phone numbers from disk images
+Autopsy — forensic platform, full case management
+Sleuth Kit — command line forensics tools
+Chkrootkit — rootkit detection scan
+Rkhunter — rootkit and backdoor scanner
+Lynis — full local system security audit
+Unhide — find hidden processes and ports
+Lsof — list all open files and network connections
+Auditd — Linux audit framework, log all system calls
+
+CATEGORY 11: OSINT
+
+Whois — domain and IP registration lookup
+Shodan CLI — search Shodan for your own IP, see what's exposed publicly
+TheHarvester — emails, subdomains, hosts, employee names from public sources
+Maltego CE — launch if installed
+DNSrecon — full DNS enumeration, zone transfer, brute force subdomains
+Sublist3r — fast subdomain enumeration
+Amass — deep subdomain and asset discovery
+Recon-ng — full OSINT framework with modules
+Spiderfoot — automated OSINT collection, 200+ modules
+Sherlock — find username across 300+ social networks
+Maigret — person OSINT from username
+Holehe — check if email is registered on sites
+GHunt — Google account OSINT
+Twint — Twitter OSINT without API
+Instaloader — Instagram OSINT
+Phoneinfoga — phone number OSINT
+Email2phonenumber — correlate email to phone
+Hunter.io CLI — find emails for a domain
+Photon — fast web crawler for OSINT
+Metagoofil — metadata extraction from public documents
+FOCA — document metadata analysis
+Google dorks builder — generate advanced Google search queries
+Certificate transparency search — find subdomains via SSL certs
+Wayback Machine lookup — find archived versions of any site
+
+CATEGORY 12: Vulnerability Scanning
+
+OpenVAS/GVM — full vulnerability scan against your own hosts
+Nessus Essentials — if installed, launch scan
+Nuclei — fast template based vulnerability scanner, 5000+ templates
+Trivy — container and filesystem vulnerability scanner, scan all your Docker containers
+Grype — container image vulnerability scanner
+Syft — generate software bill of materials for any container
+Snyk CLI — dependency vulnerability scanner
+Safety — Python dependency vulnerability checker
+Retire.js — JavaScript library vulnerability scanner
+OWASP Dependency Check — scan project dependencies for known CVEs
+Prowler — cloud security assessment (AWS/Azure/GCP)
+Scout Suite — multi-cloud security auditing
+Kube-bench — Kubernetes security benchmark
+Docker Bench Security — Docker host security assessment
+
+CATEGORY 13: Cryptography
+
+GPG — encrypt/decrypt files, key generation, sign files, verify signatures
+OpenSSL — certificate generation, encryption/decryption, hash verification, s_client TLS testing
+Age — modern file encryption tool
+Veracrypt — create and mount encrypted containers
+Hash generator — generate MD5/SHA1/SHA256/SHA512/SHA3/BLAKE2 of any file or text
+Hash verifier — verify file integrity against known hash
+Base64 encode/decode
+Hex encode/decode
+ROT13/Caesar cipher encode/decode
+XOR cipher tool
+Morse code converter
+JWT decoder and analyzer
+RSA key generator and analyzer
+Certificate analyzer — parse and display X.509 cert details
+Entropy analyzer — measure randomness of any file or data
+Password strength meter — test password entropy and estimated crack time
+
+CATEGORY 14: Steganography
+
+Steghide — hide and extract data in JPEG/BMP/WAV/AU files
+Stegsolve — visual image steganography analyzer, bit plane viewer
+Zsteg — detect LSB steganography in PNG and BMP
+OpenStego — LSB image steganography
+SilentEye — hide data in images and audio
+MP3Stego — hide data in MP3 files
+Stegcracker — brute force steghide passwords
+StegSnow — whitespace steganography in text files
+Outguess — statistical steganography
+Exiftool steganography — hide data in image metadata
+Audio steganography — hide data in WAV files via LSB
+PDF steganography — hide data in PDF whitespace
+Stegdetect — automated stego detection in JPEG files
+Chi-square analysis — statistical detection of LSB steganography
+
+CATEGORY 15: Reverse Engineering
+
+Ghidra — NSA reverse engineering framework, decompiler, disassembler
+Radare2 — command line reverse engineering framework
+Cutter — Radare2 GUI
+GDB — GNU debugger with PEDA/pwndbg/gef enhancement
+ltrace — library call tracer
+strace — system call tracer
+objdump — disassemble any binary
+readelf — analyze ELF binary structure
+nm — list symbols in binary
+pwntools — Python CTF and exploit development library
+ROPgadget — ROP chain finder for exploit development
+pwndbg — enhanced GDB for exploit development
+angr — binary analysis framework, symbolic execution
+Frida — dynamic instrumentation toolkit
+jadx — Android APK decompiler
+apktool — Android APK reverse engineering
+dex2jar — convert Android DEX to JAR
+dnSpy — .NET assembly decompiler
+ILSpy — .NET decompiler
+Detect-it-Easy — file type and packer identifier
+
+CATEGORY 16: Docker and Container Security
+
+Trivy — scan all running containers for CVEs
+Docker Bench Security — CIS Docker benchmark audit
+Grype — container image vulnerability scanner
+Syft — software bill of materials generator
+Dive — explore Docker image layers, find waste
+Clair — static analysis of Docker images
+Anchore — container security analysis
+Falco — runtime container security monitoring
+Dockle — container image linter
+Hadolint — Dockerfile linter
+Docker stats — live resource usage all containers
+Container network map — visualize container networking
+Portainer integration — launch Portainer at https://localhost:9443
+List all containers — name, status, ports, image, uptime
+Container logs viewer — tail logs from any container in real time
+Exec into container — open terminal inside any running container
+
+CATEGORY 17: Social Engineering
+
+SET (Social Engineering Toolkit) — full SET launcher, credential harvester, phishing pages, USB payloads
+GoPhish — phishing campaign framework against your own email
+King Phisher — phishing campaign manager
+Evilginx2 — advanced phishing proxy, bypass 2FA testing
+Beef XSS framework — browser hooking, social engineering modules
+QRGen — generate malicious QR codes for testing
+Macro generator — create Office macro payloads for testing your own systems
+USB Rubber Ducky payloads — generate and test keystroke injection scripts
+Vishing scripts — practice social engineering call scripts
+Pretexting templates — library of social engineering scenarios for training
+
+CATEGORY 18: IoT and Hardware
+
+ESP32 serial monitor — connect to any ESP32 via USB, see serial output live
+ESP32 firmware flasher — flash any bin file to connected ESP32 via esptool
+ESP32 GPIO controller — toggle GPIO pins on connected ESP32 remotely
+Arduino CLI — compile and flash Arduino sketches
+Flipper Zero full integration — SubGHz, IR, NFC, RFID, BadUSB, GPIO, Bluetooth via USB
+Meshtastic — node management, message sending, channel config, node map
+RTL-SDR full suite — spectrum analyzer, signal recorder, decoder launcher
+I2C scanner — scan I2C bus for connected devices
+SPI analyzer — analyze SPI communication
+UART sniffer — capture and decode UART serial communication
+JTAG/SWD tools — OpenOCD launcher for chip debugging
+Shodan IoT search — find IoT devices on your own public IP
+Router admin tools — automated router config backup, default cred check against your own router
+Printer security — check printers on network for vulnerabilities
+IP camera scanner — find cameras on network, check for default creds
+Smart home scanner — find smart home devices, check security
+
+CATEGORY 19: GowskiNet Specific
+
+Honeypot dashboard — live status all honeypots, attack counts, top IPs
+Attack heatmap — visualize attacks by hour, day, source country
+Credential wordlist extractor — extract all tried credentials from Cowrie logs, build wordlist
+Botnet detector — find coordinated attack patterns across honeypot logs
+IP intelligence — enrich any captured IP with geolocation, ASN, abuse score, Shodan data
+GowskiNet device map — visual map of all 192.168.0.x devices with status
+Pi Zero honeypot manager — manage Cowrie on Pi Zero W2 at 192.168.0.125
+Pi5 Kali manager — manage Pi5 at 192.168.0.80 when online
+Docker stack manager — start/stop/restart all honeypot containers
+Grafana launcher — open Grafana dashboard
+Loki log search — query Loki logs from UI
+Prometheus metrics — view all metrics in browser
+Daily report generator — generate and download daily attack report
+SIEM lite — correlate events across all honeypots, find attack patterns
+Threat intel export — export all captured IPs to blocklist format
+
+CATEGORY 20: CTF and Practice
+
+PicoCTF challenge launcher — browse and launch picoCTF challenges
+HackTheBox — launch VPN connection, browse machines
+TryHackMe — browser launcher with VPN helper
+VulnHub — download and import vulnerable VMs
+DVWA — launch Damn Vulnerable Web Application locally
+Metasploitable — launch Metasploitable2 VM if installed
+CTF tools: CyberChef, dcode.fr, CrackStation, HashKiller quick launchers
+Wordlist manager — download, manage, combine wordlists (rockyou, SecLists, etc)
+Note taking — CTF notes per challenge, markdown support, flag tracker
+Timer — CTF competition countdown timer
+
+
+Dashboard Page:
+
+Overview of all 20 categories with tool counts
+Recently run tools with status
+Saved findings summary
+All live devices on 192.168.0.x network
+Quick launch — pin favorite tools for one click access
+Live CPU/RAM while tools are running
+Active tool indicator — shows if a tool is currently running
+
+History and Results:
+
+Every run saved — timestamp, tool, target, command, full output
+Searchable and filterable
+Compare two runs side by side
+Export as JSON, CSV, or TXT
+Saved findings — flag results, add notes, tag by severity
+
+Notes:
+
+Per-tool notes
+Per-session notes
+Markdown support
+Export notes as PDF or markdown
+
+Installation:
+
+Single install.sh — installs ALL tools via pacman/pip/git automatically
+Checks which tools already installed, skips those
+Systemd service — starts on boot

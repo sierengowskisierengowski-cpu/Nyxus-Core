@@ -1,0 +1,452 @@
+
+
+Project Name: GowskiNet CIPHER
+Subtitle: AI-Powered Intelligent Password Research and Analysis Engine
+Launch command: cipher
+Port: 21000
+Only accessible on: 192.168.0.x network
+What this is: A genuinely original AI-powered password research and cracking platform built from scratch. Not a wrapper around existing tools — a completely custom engine that combines real cryptographic attack techniques with AI intelligence, honeypot-gathered credential data, behavioral pattern analysis, and targeted wordlist generation. It learns from every crack, gets smarter over time, and builds a living intelligence database of how humans actually create passwords. Hands down the most thorough password research tool in your stack.
+Philosophy: Every password cracker that exists today uses the same approach — take a wordlist, apply rules, brute force. They're dumb. They don't think. CIPHER thinks. It analyzes context, learns patterns, predicts human behavior, and generates targeted attacks that no generic tool could produce. It knows YOUR network, YOUR captured credentials, YOUR specific targets. That's what makes it genuinely different.
+Machine: nyx-cosmic, 192.168.0.172, COSMIC Linux Arch
+GPU: NVIDIA RTX 3060 — used for maximum cracking speed via CUDA
+Tech Stack:
+
+Backend: Python FastAPI + uvicorn
+Frontend: React + TypeScript + Tailwind CSS
+AI Engine: Claude API (claude-sonnet-4-20250514)
+GPU cracking: Hashcat via subprocess with CUDA
+CPU cracking: John the Ripper via subprocess
+Custom engine: Python — pattern analysis, wordlist generation, mutation logic
+Database: SQLite — all hashes, cracks, patterns, intelligence, notes
+Auth: Argon2id password + TOTP 2FA
+Meli integration: pulls real credentials from Cowrie honeypot database
+WebSockets: live cracking progress streaming
+
+Visual Design:
+
+Deep dark background #0a0a0f
+Primary accent: cyan #06b6d4 — cold, precise, analytical
+Secondary accent: purple #7B5EA7 GowskiNet brand
+Matrix/cipher aesthetic — feels like a real cracking tool
+Animated progress indicators for active cracking jobs
+Live statistics updating in real time
+Code and hash displays in monospace everywhere
+JetBrains Mono for all data
+Clean professional layout — nothing cluttered
+Fully responsive
+
+
+CORE ENGINE — What makes CIPHER genuinely different:
+Intelligence Layer 1 — GowskiNet Credential Database:
+CIPHER has direct access to every credential ever captured by your Cowrie honeypot. Over 4600+ real attacks worth of real username and password combinations that real attackers actually use. This is intelligence no commercial tool has. CIPHER analyzes these continuously:
+
+Most common passwords tried by real attackers
+Most common username patterns
+Seasonal trends — do attackers try different passwords at different times
+Geographic patterns — do attackers from certain countries prefer certain passwords
+Evolution tracking — how attacker credential lists have changed over time
+Correlation analysis — which usernames appear with which passwords
+Pattern extraction — what rules and mutations attackers apply to base words
+This living intelligence feeds directly into wordlist generation and attack strategy
+
+Intelligence Layer 2 — Pattern Learning Engine:
+CIPHER studies every password it successfully cracks and learns:
+
+How humans structure passwords — base word + number + symbol patterns
+Common substitutions — a→@ e→3 i→1 o→0 s→$ etc and which are most common
+Number patterns — most people use birth years, 123, 69, their address
+Symbol placement — most people put symbols at the end or after the base word
+Length distribution — most passwords cluster at 8-12 characters
+Language patterns — which languages, which words, which name types
+Cultural patterns — location specific words, local sports teams, local references
+Corporate patterns — company name + year + symbol is extremely common
+The more passwords CIPHER cracks the smarter it gets
+
+Intelligence Layer 3 — Claude AI Targeting:
+When you give CIPHER context about a target — not for attacking others, for testing your own accounts and understanding how targeted attacks work — Claude generates hyper-intelligent wordlists:
+
+You provide: name, location, interests, job, pets, important dates, company
+Claude generates: every likely password combination a human with that profile would create
+Includes: name variations, important years, pet names + numbers, sports teams, company names, common phrases in their language
+Generates passwords the target would actually think of, not random strings
+This is exactly what sophisticated human attackers do manually — CIPHER automates it with AI
+For understanding how targeted attacks work and hardening your own passwords
+
+Intelligence Layer 4 — Custom Rule Generation:
+CIPHER generates custom Hashcat and John rules based on what it has learned:
+
+Analyzes patterns in your cracked password database
+Generates rules that match how real humans in your specific dataset mutate passwords
+These custom rules outperform generic rulesets because they're based on real data
+Rules improve automatically as more passwords are cracked
+Export rules for use in GSL or external tools
+
+Intelligence Layer 5 — Hash Intelligence:
+CIPHER knows everything about hashes:
+
+Auto-identifies any hash type — MD5, SHA1, SHA256, SHA512, bcrypt, scrypt, Argon2, NTLM, LM, MySQL, PostgreSQL, Django, Laravel, WordPress, every format
+Identifies weak hashing — unsalted MD5, deprecated algorithms
+Detects hash reuse — same hash appearing multiple times
+Estimates crack difficulty before starting — saves time on impossible hashes
+Identifies likely source — does this look like a Linux shadow file, Windows SAM, web app database
+
+
+PAGES — build every single one:
+1. CIPHER Dashboard
+
+Total hashes in database — ever submitted
+Total cracked — count and percentage
+Active cracking jobs — name, progress %, speed, ETA
+GPU status — RTX 3060 utilization, temperature, VRAM usage
+CPU status — cores in use, temperature
+Cracking speed — current H/s and GH/s
+Recent cracks — last 10 passwords cracked with hash type and method used
+Intelligence stats — credential database size, patterns learned, custom rules generated
+Wordlist library size — total wordlists, total words
+Top cracked hash types — what you crack most
+Weak hash alert — any unsalted MD5 or deprecated hashes in database
+Notes — recent research notes
+Meli feed — new credentials captured by honeypot ready to analyze
+
+2. Hash Submission
+
+The main input — submit hashes for cracking
+Input methods:
+
+Paste single hash
+Paste multiple hashes — one per line
+Upload hash file — any format
+Upload shadow file — Linux /etc/shadow format, auto-parsed
+Upload SAM file — Windows SAM format
+Import from Meli — pull captured hashes from honeypot database
+Import from GSL — import hashes found during penetration testing on your own systems
+
+
+Auto hash identification — paste any hash, CIPHER identifies the type instantly
+Hash details panel — shows: identified type, algorithm strength, salted or not, estimated crack difficulty, recommended attack strategy
+Label hashes — add notes about where this hash came from
+Submit to queue button — adds to cracking job queue
+Batch submit — submit hundreds at once
+
+3. Attack Engine
+
+Where you configure and launch cracking attacks
+Job configuration:
+
+Select hashes to attack — from submitted queue
+Hash type — auto-detected or manual override
+Attack mode selector:
+
+
+
+Mode 1 — Dictionary Attack:
+
+Select wordlists from library
+Multiple wordlists simultaneously
+Rule selection — built in rules + your custom generated rules
+Estimated time display before starting
+GPU or CPU selection
+
+Mode 2 — AI Targeted Attack:
+
+Input context about the password owner
+Name, location, interests, job title, company, pets, important dates, hobbies, favorite sports team, birth year, children names
+Claude generates hyper-targeted wordlist in real time
+Shows generated wordlist before attacking — you can review and edit
+Runs targeted wordlist first then falls back to mutations
+
+Mode 3 — GowskiNet Intelligence Attack:
+
+Uses your honeypot credential database as primary wordlist
+Applies learned mutation patterns from your crack history
+Uses your custom generated rules
+Highest success rate for common passwords because it uses real attacker data
+
+Mode 4 — Pattern Attack:
+
+You define a pattern: [name][year][symbol] or [word][number][word]
+CIPHER generates all combinations matching that pattern
+Based on what your pattern learning engine has found most common
+Useful when you know something about how the password was constructed
+
+Mode 5 — Brute Force:
+
+Charset selection: lowercase, uppercase, numbers, symbols, custom
+Length range: min and max
+Estimated time and combination count shown before starting
+GPU accelerated via Hashcat CUDA
+Smart brute force — starts with most likely character combinations based on learned patterns
+
+Mode 6 — Hybrid Attack:
+
+Combines dictionary + brute force
+Wordlist words with brute forced prefixes and suffixes
+Most effective against password + number combinations
+
+Mode 7 — Fingerprint Attack:
+
+You know something about the password — maybe you saw part of it, maybe you know the policy
+Input what you know: starts with capital, ends with number, contains the word "summer", is exactly 10 characters
+CIPHER generates only candidates matching those fingerprints
+Dramatically reduces search space
+
+Mode 8 — Rainbow Table Attack:
+
+Pre-computed rainbow tables for common unsalted hashes
+Instant cracking of MD5, SHA1, NTLM, LM if unsalted
+Manage rainbow table library — download, store, index
+
+Mode 9 — Combinator Attack:
+
+Two wordlists combined — every word from list A + every word from list B
+Generates compound passwords: word+word, name+place, color+animal
+Effective against passphrase style passwords
+
+Mode 10 — PRINCE Attack:
+
+Probability Infinite Chained Elements
+Advanced statistical attack based on password probability
+More intelligent than pure brute force
+Uses your learned pattern statistics to order candidates by likelihood
+Launch job button
+Estimated time and speed prediction before launching
+GPU vs CPU recommendation based on hash type and count
+
+4. Live Cracking Monitor
+
+Real time view of all active cracking jobs
+Per job stats:
+
+Hash type and count
+Attack mode in progress
+Current speed — H/s, KH/s, MH/s, GH/s, TH/s
+Progress percentage
+Time elapsed and ETA
+Candidates tried count
+Cracks found so far — count updates live
+Current wordlist or position in brute force space
+
+
+GPU monitor — utilization, temperature, power draw, VRAM
+CPU monitor — cores, temperature, load
+Live crack feed — passwords appear here the instant they're cracked
+Pause, resume, stop buttons per job
+Priority adjustment — move jobs up and down in queue
+Auto-notification — ntfy.sh push when job completes or crack found
+
+5. Results and Analysis
+
+All cracked passwords with full details:
+
+Original hash
+Cracked plaintext
+Hash type
+Attack mode that cracked it
+Time to crack
+Wordlist or position used
+Date cracked
+
+
+Password strength analyzer for every cracked password:
+
+Entropy score
+Estimated crack time with different attack types
+Pattern identified — base word, number suffix, symbol, etc
+Weakness explanation — why this password was easy or hard
+Improvement suggestions
+
+
+Pattern statistics across all cracked passwords:
+
+Most common base words
+Most common number patterns
+Most common symbol placements
+Average length
+Character set distribution
+These patterns feed back into the learning engine automatically
+
+
+Export results — full crack report as CSV, JSON, or PDF
+Hash reuse detector — highlight any plaintext that appears multiple times
+Credential pair matcher — if you have username + hash, shows username + cracked password pairs
+
+6. Wordlist Library
+
+All wordlists stored and managed here
+Built in wordlists included:
+
+RockYou — 14 million passwords
+SecLists all password lists
+Probable wordlists — statistically likely passwords
+Common first names — all languages
+Common last names — all languages
+Places — cities, countries, landmarks worldwide
+Sports teams — all major leagues worldwide
+Keyboard walks — qwerty, dvorak, common patterns
+Dates — years, date formats
+Leet speak variations — pre-generated common substitutions
+Default credentials — router, IoT, service default passwords
+Your GowskiNet honeypot wordlist — all credentials captured by Cowrie, updated automatically
+
+
+Custom wordlist generator:
+
+CeWL integration — generate from any website
+Crunch integration — pattern based generation
+CUPP integration — targeted personal wordlist
+AI generator — describe what kind of wordlist you want, Claude generates it
+Merge wordlists — combine multiple into one, deduplicate
+Filter wordlists — by length, by charset, by pattern
+Sort by probability — reorder based on your learned crack statistics
+
+
+Wordlist stats — size, word count, estimated coverage
+Download any wordlist
+Upload custom wordlists
+
+7. Rules Library
+
+All Hashcat and John the Ripper rules stored here
+Built in rulesets:
+
+Best64 — most effective 64 rules
+OneRuleToRuleThemAll — comprehensive rule set
+Toggles — case toggling rules
+Leetspeak — character substitution rules
+Append rules — common number and symbol appends
+Hybrid rules — combination rules
+
+
+Your custom generated rules — auto-generated by pattern learning engine
+Rule editor — create and edit rules with syntax validation
+Rule tester — test any rule against sample words, see output
+Rule effectiveness tracker — which rules produce the most cracks
+Rule generator — describe what mutation pattern you want, CIPHER writes the rule
+Export rules — Hashcat format, John format
+
+8. Intelligence Center
+
+The brain of CIPHER — all learned intelligence displayed here
+Credential Intelligence from GowskiNet honeypots:
+
+Top 100 most tried passwords in your honeypots
+Top 100 most tried usernames
+Credential pair frequency — username + password combos most commonly tried together
+Geographic credential patterns — which countries try which passwords
+Temporal patterns — time of day and day of week credential patterns
+Evolution timeline — how attacker wordlists have changed month over month
+New credential detection — passwords being tried for the first time, may indicate new breach data in circulation
+
+
+Pattern Learning Stats:
+
+Most common password structures found in your cracked database
+Most effective mutations — which substitutions appear most in real passwords
+Length distribution chart
+Character set analysis
+Language distribution — what languages your cracked passwords come from
+Weakness heatmap — what makes passwords fail
+
+
+Predictive Intelligence:
+
+Based on patterns, what are the most likely password structures for your next target
+Recommended attack order — which modes to try first for best results
+Success probability estimate for any submitted hash
+
+
+All intelligence updates automatically as you crack more passwords
+
+9. Hash Database
+
+Every hash ever submitted to CIPHER stored here permanently
+Browse all hashes — cracked and uncracked
+Filter by: hash type, cracked status, date submitted, label, source
+Search by hash value or cracked plaintext
+Bulk operations — resubmit uncracked hashes with new attack, delete, export
+Hash statistics — types distribution, crack rate by type, average crack time by type
+Pre-computed hash lookup — check any hash against rainbow tables instantly
+Hash generator — generate hashes of any plaintext in any algorithm, for testing
+Hash comparison — check if two hashes match without revealing plaintext
+Salted hash tools — extract salt, test salt patterns
+
+10. Research Notes
+Full notes system:
+
+Note types: Crack Session Notes, Pattern Research, Hash Analysis, Wordlist Notes, Rule Development, Quick Capture
+Full markdown with syntax highlighted code blocks
+Tag system
+Notebooks — organize by: Algorithm Research, Pattern Analysis, Targeted Research, Tool Development
+Link notes to specific crack jobs or hash submissions
+Auto-save every 30 seconds
+Version history
+Full text search
+Export as markdown or PDF
+Templates: Crack Session Report, Pattern Analysis, Hash Algorithm Research, Wordlist Development
+Pin, favorite, archive
+Keyboard shortcut Ctrl+N for quick capture
+Timestamps on everything
+
+11. Password Strength Analyzer
+
+Standalone tool — analyze any password without cracking
+Input any password — see full analysis:
+
+Entropy score — bits of entropy
+Character set analysis — which charsets used
+Pattern detection — is this a common structure
+Dictionary word detection — contains known words
+Crack time estimate — with different attack types and hardware
+Strength score — overall rating
+Specific weaknesses — exactly why it's weak
+Improvement suggestions — specific changes to make it stronger
+Similar password detector — does this match patterns in your cracked database
+
+
+Bulk analyzer — paste a list of passwords, analyze all at once
+Policy checker — test password against custom policy rules
+Passphrase analyzer — specific analysis for passphrase style passwords
+Password history checker — has this been cracked before in your database
+
+12. Settings
+
+Claude API key and model
+GPU configuration — CUDA device selection, memory limits, temperature limits
+CPU configuration — thread count, priority
+Hashcat path and version
+John the Ripper path and version
+Meli connection config — API endpoint, authentication
+Default attack settings — preferred modes, wordlists, rules
+Auto-attack config — when new hashes arrive from Meli, automatically start with these settings
+Notification settings — ntfy.sh for crack completion alerts
+Data retention — how long to keep old jobs and results
+Export settings
+Change password and 2FA
+About — version, GPU info, cracking speed benchmark
+
+
+Legal Disclaimer — full screen on first launch and footer on every page:
+"GowskiNet CIPHER is a personal password security research and analysis tool intended exclusively for authorized security testing, password policy research, and defensive security education on systems and accounts you own or have explicit written authorization to test.
+Using password cracking tools against accounts, systems, or hashes you do not own or are not explicitly authorized to test is illegal under the Computer Fraud and Abuse Act, the Stored Communications Act, and equivalent laws worldwide. You are solely responsible for ensuring all use is lawful and authorized.
+This tool is intended to help you understand password weaknesses, improve password policies, test your own system security, and conduct authorized penetration testing research. By using CIPHER you confirm that all hashes and credentials submitted are from systems you own or are explicitly authorized to test.
+For authorized security research only."
+
+First launch checkbox: "I confirm all hashes submitted are from systems I own or am explicitly authorized to test"
+DISCLAIMER.md in repo root
+All crack reports include header: "Generated by GowskiNet CIPHER — authorized research only"
+Full audit log of all submissions and crack jobs
+
+
+Installation:
+
+Single install.sh
+Installs Hashcat with CUDA support for RTX 3060
+Installs John the Ripper
+Downloads core wordlists — RockYou, SecLists, Probable
+Configures Claude API key
+Connects to Meli automatically
+Systemd service — starts on boot
+Launch command: cipher
+Only accessible on 192.168.0.x
+Post install benchmark — tests GPU cracking speed so you know your baseline
+

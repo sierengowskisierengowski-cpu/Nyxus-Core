@@ -1,0 +1,429 @@
+Project Name: GowskiNet FORGE
+Subtitle: Novel Threat Generation and Anticipation Engine
+Launch command: forge
+Port: 20000
+Only accessible on: 192.168.0.x network
+What this is: A self-hosted AI-powered threat research and anticipation platform. You feed it existing attack code, scripts, exploits, malware samples, and techniques. It analyzes, mutates, combines, and evolves them into entirely new threat variants that may not exist anywhere in the wild yet. You study every generated threat completely, build detection rules, test those rules, and store everything in your personal threat intelligence library. When real attackers eventually think of the same techniques — you already know them, already built detection, already defended. You stay 10 steps ahead permanently.
+Philosophy: The best cybersecurity researchers don't wait for attacks to happen. They think like attackers, build what attackers haven't built yet, study it from the inside, and defend against it before it exists in the wild. That's what FORGE does — it turns you into a proactive threat researcher, not a reactive defender.
+Machine: nyx-cosmic, 192.168.0.172, COSMIC Linux Arch
+Tech Stack:
+
+Backend: Python FastAPI + uvicorn
+Frontend: React + TypeScript + Tailwind CSS
+AI Engine: Claude API (claude-sonnet-4-20250514)
+Code execution: Python subprocess, isolated sandbox environment
+Static analysis: Python AST parser, bash parser, custom pattern extractor
+Live output: WebSockets
+Database: SQLite — all generated threats, mutations, detection rules, notes, library
+Auth: Argon2id password + TOTP 2FA
+Sandbox: isolated temp directories, resource limited, auto-cleanup
+REDFORGE integration: direct API to send generated threats to REDFORGE for deployment
+
+Visual Design:
+
+Deep dark background #0a0a0f
+Primary accent: orange #f97316 — forge, fire, creation
+Secondary accent: purple #7B5EA7 GowskiNet brand
+Feels like a research laboratory — clean, precise, analytical
+Split panel layouts — input left, analysis right
+Code editors with full syntax highlighting
+Animated forge/fire subtle elements
+Data visualization for threat relationships and mutation trees
+JetBrains Mono everywhere
+Fully responsive
+
+
+CORE ENGINE — How FORGE works:
+Step 1 — Ingestion:
+You feed FORGE raw material. It accepts anything:
+
+Paste raw code directly — bash, Python, PowerShell, C, Assembly, any language
+Upload files — .sh, .py, .ps1, .c, .exe, .elf, .bin, .pcap, .yar, .sigma
+Pull from URL — paste a GitHub link, exploit-db link, pastebin, any URL
+Import from GSL history — pull any tool run output directly
+Import from REDFORGE library — use previously generated attacks as new input
+Import from Meli — pull real attacker commands captured by your Cowrie honeypot
+Paste MITRE ATT&CK technique description — FORGE extracts the technical concept
+Paste CVE description — FORGE extracts the vulnerability pattern
+Paste malware analysis report — FORGE extracts behavioral patterns
+Type natural language description — "a technique that uses DNS to exfiltrate data while looking like normal traffic"
+
+Step 2 — Analysis:
+FORGE analyzes everything you fed it:
+
+Extracts techniques — what attack primitives are present
+Maps to MITRE ATT&CK — which documented techniques does this use
+Identifies patterns — timing, encoding, protocol usage, evasion methods
+Detects signatures — what would current security tools flag
+Finds gaps — what parts of this technique are underdeveloped or could be extended
+Rates sophistication — how advanced is the existing code
+Identifies dependencies — what tools, libraries, system features does it rely on
+Finds the core logic — strips away everything except the fundamental technique
+Visual analysis map — shows all extracted components as a relationship graph
+
+Step 3 — Mutation and Generation:
+The core of FORGE. Seven mutation engines running in parallel:
+Engine 1 — Code Splicing:
+Takes technique components from multiple inputs and combines them into one working script. If you fed it a port scanner and a credential stuffer — it might generate a tool that scans for open services and immediately attempts credential stuffing against found services, all in one automated chain. The combination might not exist anywhere documented.
+Engine 2 — Logic Mutation:
+Takes existing working code and rewrites how it achieves its goal. Same outcome, completely different implementation. Like how malware authors rewrite their code every release to evade signature detection. Generates variants that are functionally identical but look completely different to scanners.
+Engine 3 — Cross Domain Fusion:
+Combines techniques from completely different attack domains. WiFi technique fused with web attack. Physical access technique fused with network technique. Social engineering fused with malware delivery. These cross-domain combinations are where the most novel threats live because most researchers work in silos.
+Engine 4 — Evasion Evolution:
+Takes any existing attack and evolves its evasion layer. Finds new ways to hide the same attack from: antivirus, IDS/IPS, SIEM correlation rules, EDR behavioral detection, network monitoring, log analysis. Generates attacks that achieve the same goal while systematically avoiding every known detection method.
+Engine 5 — Protocol Abuse:
+Analyzes legitimate network protocols and finds new ways to abuse them. DNS, ICMP, HTTP/2, QUIC, Bluetooth LE, mDNS, SNMP — finds covert channels, timing attacks, data exfiltration methods hidden inside legitimate protocol traffic. Some combinations have never been documented.
+Engine 6 — Living Off the Land Expansion:
+Takes the LOLBAS and GTFOBINS databases and finds new combinations of legitimate system tools that together achieve malicious outcomes. No malicious code — only tools already on the system. These are the hardest attacks to detect because everything used is legitimate and expected.
+Engine 7 — Payload Polymorphism:
+Takes any payload and generates infinite unique representations that all behave identically. Same function, different encoding, different obfuscation, different structure every time. Generates variants that all achieve the same thing but none share any signature with each other or with the original.
+Step 4 — Claude AI Evaluation:
+Every mutation goes through Claude for evaluation:
+
+Technical validity — would this actually work on a real Linux/Windows system
+Novelty assessment — how different is this from anything in the MITRE ATT&CK database or public exploit databases
+Detection prediction — which security tools would likely catch this and which wouldn't
+Gap filling — if a mutation has a logical gap, Claude writes the missing code to complete it
+Optimization — Claude refines the generated code to be more reliable and effective
+Implication analysis — what could a sophisticated attacker do with this technique
+Defense generation — Claude immediately generates the detection rules and defensive measures
+
+Step 5 — Output Package:
+Every generated threat produces a complete research package:
+
+Complete working code — all files, fully executable
+Mutation lineage — which inputs were combined to create this, visual family tree
+Novelty score 1-10 — how new is this technique
+Estimated detection rate — percentage of common security tools that would flag it
+MITRE ATT&CK mapping — which techniques this combines, extends, or creates new
+Technical breakdown — how and why it works, complete explanation
+Real world feasibility — could a real attacker use this, what would they need
+Detection signatures:
+
+Sigma rule — SIEM detection rule
+Snort/Suricata rule — network IDS rule
+Yara rule — malware scanner rule
+Specific log entries to watch for
+Behavioral indicators
+Network indicators of compromise
+
+
+Defensive recommendations — exact steps to prevent this technique
+Hardening config — specific config changes that would block it
+Test plan — how to safely test detection in your own lab
+Send to REDFORGE button — deploy this as a training scenario instantly
+Save to threat library button
+Your notes field — annotate right now while it's fresh
+
+
+PAGES — build every single one:
+1. Forge Dashboard
+
+Total threats generated — lifetime count
+Novelty distribution chart — how many low/medium/high/unprecedented novelty threats generated
+Most used input sources — where your best threats came from
+Recent generations — last 10 with novelty scores
+Threat library size — how many threats fully studied and mastered
+Detection rules generated — total Sigma/Snort/Yara rules created
+Active mutations running — if any generation in progress
+Quick stats: highest novelty threat ever generated, most novel technique discovered
+Recent notes — last 3 research notes
+REDFORGE connection status — how many threats sent for training
+Meli connection — live feed of new attacker commands from honeypots ready to analyze
+Knowledge base stats — how many techniques, samples, CVEs loaded
+Recommended action — "You have 3 new Cowrie commands to analyze" or "5 threats not yet sent to REDFORGE"
+
+2. Input Lab
+
+The main workspace where you feed FORGE raw material
+Multi-source input panel:
+
+Code editor tab — paste raw code, full syntax highlighting, language auto-detection
+File upload tab — drag and drop any file type
+URL import tab — paste any URL, FORGE fetches and extracts
+Meli import tab — live feed of recent Cowrie captured commands, click any to import
+REDFORGE import tab — browse REDFORGE library, import any generated attack
+GSL import tab — import any tool run output from GSL history
+CVE import tab — search CVE database, import any CVE description and POC
+MITRE import tab — browse ATT&CK techniques, import any technique
+Natural language tab — describe a technique in plain English
+
+
+You can combine multiple inputs before generating — add 5 different scripts and generate from all of them simultaneously
+Input queue — shows everything queued for analysis
+Clear and analyze button — runs Step 2 analysis before generation
+Analysis results panel — shows extracted techniques, MITRE mappings, identified patterns
+Proceed to generation button
+
+3. Mutation Lab
+
+Where you control the generation process
+Seven mutation engine toggles — enable/disable any combination
+Generation parameters:
+
+Novelty target — how different from known techniques do you want
+Complexity target — simple one liner to complex multi-stage
+Target platform — Linux, Windows, MacOS, Android, IoT, Network Device, Web App
+Target environment — what kind of network/system to target (your 192.168.0.x configs)
+Evasion priority — how hard should it try to evade detection
+Stealth level — noisy and fast vs slow and quiet
+Attack goal — reconnaissance, access, persistence, exfiltration, disruption
+
+
+Generate button — runs all selected engines
+Progress indicator — shows which engine is running, Claude evaluation progress
+Results appear as cards — multiple variants generated per run
+Each card shows: variant name, novelty score, detection rate estimate, one line description
+Click any card to see full output package
+Regenerate — run again with same inputs for different variants
+Save all — save entire generation run to library
+
+4. Threat Analysis
+
+Deep dive into any single generated threat
+Full output package display:
+
+Code viewer — complete syntax highlighted code, all files
+Line by line annotator — click any line to add annotation explaining what it does
+Mutation tree — visual graph showing which inputs contributed to which parts
+MITRE ATT&CK overlay — which technique IDs map to which code sections
+Detection signatures panel — all generated Sigma/Snort/Yara rules with syntax highlighting
+Defense panel — hardening steps and config changes
+Test plan — how to test detection safely in your lab
+
+
+Run static analysis button — deeper code analysis, find additional patterns
+Compare with similar — find similar threats in your library, see the differences
+Evolve further button — use this threat as input for another generation round
+Send to REDFORGE — deploy as training scenario
+Mark as mastered — you fully understand this threat
+Export as threat intelligence report — formatted PDF
+
+5. Threat Library
+
+Every generated threat saved here permanently
+Browse modes:
+
+Grid view — cards with novelty score, category, date
+List view — compact with key stats
+Timeline view — chronological, see your research history
+Graph view — relationship map showing how threats are related via shared techniques
+
+
+Filter by:
+
+Novelty score range
+Attack category
+Target platform
+Detection rate
+Date range
+Mastered / not mastered
+Sent to REDFORGE / not sent
+Has detection rules / missing rules
+
+
+Search — full text search across all threat names, descriptions, code, notes
+Bulk actions — send multiple to REDFORGE, export multiple as report, mark multiple as mastered
+Threat relationships — click any threat to see related threats in library
+Library stats — total threats, average novelty, technique coverage map
+Export entire library — full threat intelligence database as JSON or PDF
+Coverage map — visual heatmap of MITRE ATT&CK matrix showing which techniques you have covered vs gaps
+
+6. Detection Rules Lab
+
+All generated detection rules in one place
+Browse all Sigma rules — search, filter, edit
+Browse all Snort/Suricata rules
+Browse all Yara rules
+Test rules against your own traffic — pipe a PCAP through Suricata rules
+Test Yara rules against files in your lab
+Rule effectiveness tracker — did this rule actually fire when REDFORGE deployed the threat
+Rule editor — modify any generated rule, syntax validation
+Export rules — Sigma format, Snort format, Yara format, all at once
+Import rules — bring in rules from other sources, store in library
+Deploy rules — push Sigma rules to your Grafana/Loki stack, push Suricata rules to your IDS
+Rule coverage map — which MITRE techniques do you have detection rules for
+
+7. Research Notes
+Full notes system identical to REDFORGE notes but research focused:
+Note types:
+
+Threat Notes — linked to specific generated threat
+Technique Notes — about a specific attack technique or concept
+Detection Notes — about detection methods and rules
+Research Notes — freeform research thoughts
+Quick Capture — fast ideas, organize later
+
+Features — all of these:
+
+Full markdown with syntax highlighted code blocks
+Tag system with custom tags
+Notebooks — organize by topic: "DNS Exfiltration Research", "Living Off The Land", "WiFi Techniques", "Novel Persistence Methods"
+Link notes to threats in library
+Link notes to REDFORGE missions
+Full text search across all notes instantly
+Auto-save every 30 seconds
+Version history — restore any previous version
+Pin important notes — show on dashboard
+Templates: Threat Research Report, Detection Rule Development, Technique Analysis, CVE Research, Incident Post-Mortem
+Export: single note as markdown/PDF, entire notebook as PDF study guide
+Import markdown files
+Quick capture keyboard shortcut Ctrl+N anywhere
+Word count and reading time
+Favorites — star critical notes
+Archive without deleting
+Duplicate as template
+Share read-only link on local network
+
+8. Knowledge Base Manager
+
+View everything currently loaded into FORGE's AI context
+Categories:
+
+MITRE ATT&CK techniques — all loaded, browse and view each
+Malware samples and analysis reports
+LOLBAS and GTFOBINS full databases
+CVE collection — all imported CVEs
+Exploit database samples
+Your own Cowrie captured attacker commands
+Custom techniques you've documented yourself
+
+
+Add new knowledge:
+
+Upload any document, report, code file
+Paste text directly
+Import from URL
+Pull latest MITRE ATT&CK update
+Pull latest CVE feed
+
+
+Remove or archive outdated knowledge
+Knowledge stats — total entries, last updated, coverage by category
+The bigger and richer this knowledge base the more novel and sophisticated FORGE's generations become
+
+9. REDFORGE Integration
+
+Direct connection to REDFORGE running on same machine
+Status — REDFORGE online/offline
+Send any threat to REDFORGE — one click deployment as training scenario
+Queue — threats waiting to be sent
+History — all threats previously sent, outcomes, your scores
+Feedback loop — when you complete a REDFORGE mission based on a FORGE threat, your detection notes and score feed back into FORGE to improve future generation
+Suggested training — FORGE recommends which threats to send to REDFORGE based on your weak areas
+
+10. Meli Integration
+
+Live connection to Meli honeypot data
+Real time feed — new attacker commands from Cowrie appear here as they're captured
+One click import — any captured command goes straight to Input Lab
+Pattern analysis — FORGE automatically looks for patterns across multiple captured commands
+Novel technique detector — if Meli captures something that matches no known MITRE technique, FORGE flags it as potential novel threat for research
+Attacker profile builder — FORGE aggregates commands from same IP to build attacker technique profile
+Threat evolution tracker — if same attacker returns with new techniques, FORGE detects the evolution
+
+11. Responsible Disclosure Helper
+
+If you generate something with novelty score 9 or 10 — something truly unprecedented
+FORGE offers to help you document it for responsible disclosure
+Formats finding as professional security research report
+Identifies which vendors or projects are affected
+Generates CVE submission template
+Tracks disclosure timeline — when submitted, vendor response, patch date, public disclosure date
+This is how real security researchers contribute to the community and build reputation
+
+12. Settings
+
+Claude API key and model selection
+Generation defaults — default novelty target, complexity, platform
+Safety settings — excluded IPs, resource limits, sandbox config
+REDFORGE connection config
+Meli connection config
+Knowledge base auto-update schedule
+Note backup schedule and location
+Export settings
+Change password and 2FA
+About — version, stats, Claude model, knowledge base size
+
+
+Knowledge Base to build and include at launch:
+
+Complete MITRE ATT&CK Enterprise, Mobile, and ICS — all tactics and techniques
+LOLBAS — all Windows living off the land binaries
+GTFOBINS — all Linux living off the land binaries
+LOLDRIVERS — malicious driver database
+Top 100 most significant malware families — behavioral patterns and techniques
+OWASP Top 10 with technical implementation details
+Common CVE exploit patterns by vulnerability class
+WiFi attack technique library
+Bluetooth and RF attack techniques
+Social engineering technique library
+Container escape techniques
+IoT attack pattern library
+Cryptographic attack techniques
+Side channel attack concepts
+Supply chain attack patterns
+Your GowskiNet Cowrie captured commands — real attacker data
+
+
+Safety — hardcoded cannot be bypassed:
+
+All generated code tested in isolated sandbox only
+Sandbox: isolated temp directory, no network access during static analysis
+Resource limits on any execution: max 25% CPU, max 512MB RAM, max 60 seconds
+Auto cleanup — sandbox wiped after every session
+No generated code can write outside designated sandbox directories
+All generation logged permanently — full audit trail
+Send to REDFORGE is the only deployment path — REDFORGE has its own safety rules
+Emergency stop — kills all active processes instantly
+No external network calls from generated code during analysis
+
+
+Legal Disclaimer — show on every page footer and full screen on first launch:
+"GowskiNet FORGE is a personal cybersecurity threat research and anticipation tool intended exclusively for defensive security research, threat modeling, and proactive defense on systems and networks you own or have explicit written authorization to research.
+All threat generation is performed for the purpose of understanding attack techniques, building detection capabilities, and improving defensive security posture. Generated code is intended for analysis and study only. Deployment of any generated code against systems you do not own or are not explicitly authorized to test is illegal under the Computer Fraud and Abuse Act, the UK Computer Misuse Act, and equivalent laws worldwide.
+Responsible disclosure of genuinely novel vulnerabilities discovered through this research is encouraged. The operator of this tool is solely responsible for all use and ensuring compliance with all applicable laws.
+For authorized defensive security research only."
+
+Checkbox on first launch: "I confirm all research is for defensive purposes on my own authorized systems"
+DISCLAIMER.md in repo root
+All generated code includes header comment: "Generated by GowskiNet FORGE — authorized defensive research only"
+Full audit log of all generations with timestamp
+
+
+Installation:
+
+Single install.sh — all dependencies installed automatically
+Creates isolated sandbox directories
+Configures Claude API key
+Imports initial knowledge base automatically
+Connects to Meli and REDFORGE automatically if running
+Systemd service — starts on boot
+Launch command: forge
+Only accessible on 192.168.0.x
+Post install wizard — API key, password, 2FA, initial knowledge base import
+
+Build Rules — no exceptions:
+
+Show browser preview screenshot before pushing any code
+Build Dashboard first, then Input Lab, then Mutation Lab, then Threat Analysis, then Library, then Notes, then rest
+Claude API integration must be real — actually calls Claude, real generated analysis and code
+All seven mutation engines must actually work — real code transformation not placeholder
+Notes system fully functional
+REDFORGE and Meli integrations wired to real APIs
+Never push blind — show preview every time
+Match design spec — dark, orange accent, research lab aesthetic
+Knowledge base must actually load into Claude context on generation
+
+Start with: project scaffold + Dashboard + Input Lab + Mutation Lab with Claude API generating real threat analysis. Show browser preview before pushing anything.
+
+
+That's the complete FORGE brief. Your full GowskiNet stack when everything is built:
+
+Meli — watching attacks come in
+GCN — control everything remotely
+GSL — 300+ real security tools
+REDFORGE — AI training you with novel attacks
+FORGE — you generating threats nobody has thought of yet, staying 10 steps ahead
+
+That's a legitimate professional security research setup. Send FORGE as its own brand new Replit project. Let's build it.

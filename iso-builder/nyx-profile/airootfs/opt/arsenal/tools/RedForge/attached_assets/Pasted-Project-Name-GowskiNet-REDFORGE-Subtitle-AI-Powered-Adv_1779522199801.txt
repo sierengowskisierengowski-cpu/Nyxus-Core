@@ -1,0 +1,280 @@
+Project Name: GowskiNet REDFORGE
+Subtitle: AI-Powered Adversary Emulation and Training Platform
+Launch command: redforge
+Port: 19000
+Only accessible on: 192.168.0.x network
+What this is: A self-hosted AI-powered attack generation and training platform. It generates real novel attacks against my own GowskiNet lab network using the Claude AI API combined with a deep cybersecurity knowledge base. Every attack is real, every script actually runs, every payload is unique. I study the generated code, learn how attacks work from the inside, and build real threat hunting and incident response skills. Nothing is simulated — everything is real and deployed against my own systems.
+Machine: nyx-cosmic, 192.168.0.172, COSMIC Linux Arch
+Target network: 192.168.0.x only — hard locked, cannot target anything outside
+Tech Stack:
+
+Backend: Python FastAPI + uvicorn
+Frontend: React + TypeScript + Tailwind CSS
+AI Engine: Claude API (claude-sonnet-4-20250514)
+Attack execution: Python subprocess, bash, real system tools
+Live output: WebSockets streaming real stdout/stderr
+Database: SQLite — all generated attacks, code, notes, scores, history
+Auth: Argon2id password + TOTP 2FA
+Knowledge base: JSON/markdown files loaded into Claude context
+
+Visual Design:
+
+Deep dark background #0a0a0f
+Primary accent: red #ef4444 — this is a red team tool, feel dangerous
+Secondary accent: purple #7B5EA7 GowskiNet brand
+Terminal aesthetic — feels like a real hacker tool
+Monospace everywhere — JetBrains Mono
+Animated elements — pulsing indicators, scanning animations
+Red glow on active attack panels
+Clean sidebar navigation
+Fully responsive
+
+
+CORE ENGINE — How attacks are generated:
+Three generation modes working together:
+Mode 1 — Template Primitives Engine:
+
+Library of hundreds of attack building blocks
+Reconnaissance primitives: port scan, service detection, OS fingerprint, banner grab, DNS enum, OSINT gather
+Access primitives: brute force, credential stuffing, exploit, phishing, evil twin, MITM
+Execution primitives: bash oneliner, Python script, compiled binary, macro, shellcode
+Persistence primitives: cron job, systemd service, bashrc injection, SUID bit, SSH key plant
+Evasion primitives: slow timing, random delays, traffic mimicry, log clearing, process hiding
+Exfiltration primitives: DNS tunneling, HTTP POST, ICMP covert channel, steganography
+Engine randomly combines valid combinations from each stage
+Adds randomized variables — ports, timing, naming, encoding
+Produces structurally sound attack chains every time
+
+Mode 2 — Claude AI Generation:
+
+Full Claude API integration with deep cybersecurity system prompt
+Knowledge base loaded into context: MITRE ATT&CK all techniques, real malware behavior patterns, living off the land techniques, evasion methods, real CVE exploit patterns, honeypot captured attack data from GowskiNet logs
+Claude generates actual working bash/Python attack scripts from scratch
+Every generation completely unique — novel combinations never seen before
+Can combine techniques across domains — WiFi + social engineering + persistence
+Generates realistic attacker naming — fake C2 domains, realistic process names, convincing file paths
+Code is real and actually executes
+
+Mode 3 — Hybrid (default):
+
+Template engine provides the attack structure and deployment framework
+Claude fills in the novel payload, evasion technique, and specific implementation
+Result: structurally reliable attacks with genuinely novel content
+Truly unpredictable — even the operator doesn't know exactly what will be generated
+
+
+PAGES — build every single one:
+1. Mission Control (Dashboard)
+
+Current threat level indicator — TRAINING / ACTIVE ATTACK / INCIDENT
+Active attack status — what's currently running, progress, time elapsed
+Recent missions — last 10 generated attacks with outcome
+Your skill scores across all categories — radar chart showing strengths and weaknesses
+Streak — how many days in a row you've trained
+Total missions completed, attacks studied, notes written
+Quick launch buttons — Random Attack, Specify Attack, Full Scenario
+Live network status — all 192.168.0.x devices, which are targets
+Knowledge base status — how many techniques loaded
+Recent notes — last 3 study notes with quick access
+REDFORGE version and Claude API status indicator
+
+2. Attack Generator
+Sub-mode A — Random Attack:
+
+Single big button: GENERATE AND DEPLOY
+Difficulty selector before generating: Beginner / Intermediate / Advanced / Expert / Unknown (truly random, no hints)
+Category filter — include/exclude categories (WiFi, Web, Network, Malware, Social, Physical)
+You see nothing about what was generated until after it runs
+Attack deploys silently
+Timer starts — you have X minutes to detect and respond
+After timer or you call it — full reveal
+
+Sub-mode B — Specify Attack:
+
+Natural language input: type exactly what you want
+Examples: "credential harvesting WiFi captive portal", "Linux rootkit with persistence", "slow covert port scan with evasion", "ransomware simulator that encrypts my test folder", "reverse shell that beacons every 30 seconds"
+Claude interprets and generates the exact attack requested
+Config options appear based on what was requested
+Preview mode — see the generated code before deploying (for learning, not for challenge mode)
+Deploy button
+
+Sub-mode C — Full Red Team Scenario:
+
+Multi-stage attack chain generator
+Claude generates a complete APT-style campaign:
+
+Stage 1: Reconnaissance — passive and active
+Stage 2: Initial Access — one or more vectors
+Stage 3: Execution — payload runs
+Stage 4: Persistence — survives reboot
+Stage 5: Defense Evasion — covers tracks
+Stage 6: Discovery — maps your network from inside
+Stage 7: Lateral Movement — moves to another 192.168.0.x device
+Stage 8: Exfiltration — sends fake data somewhere
+
+
+Each stage deploys automatically after previous completes
+You detect and respond to each stage in real time
+Full debrief after all stages complete
+
+3. Active Mission
+
+Shows when an attack is currently running
+Timer counting up — how long since attack started
+Your investigation workspace:
+
+Notes field — write what you're seeing in real time
+Hypothesis field — what do you think the attack is
+Evidence collected — drag and drop log snippets, screenshots, findings
+Containment actions — buttons to isolate device, block IP, stop service
+
+
+Hint system — request a hint, costs points, reveals one clue
+Give up button — ends mission and reveals answer immediately
+Submit findings button — submit your analysis before reveal
+
+4. Mission Debrief
+
+Full reveal of everything that happened
+What was generated — attack type, category, MITRE technique IDs
+Complete source code — every file, every script, every command that ran
+Line by line code explanation — what each line does in plain English
+Why it works — technical explanation of the underlying vulnerability or technique
+How defenders normally detect this — signatures, log entries, behavioral indicators
+What you should have seen — exact log entries it generated, where to look
+How to prevent it — configuration changes, hardening steps
+Your performance score:
+
+Detection time — how fast did you find it
+Identification accuracy — did you correctly identify the attack type
+Evidence quality — how thorough was your investigation
+Containment speed — how fast did you respond
+Overall score out of 100
+
+
+Related techniques — other attacks that use similar methods
+Real world examples — documented cases where this technique was used by real threat actors
+Recommended study — links to relevant MITRE ATT&CK pages, CVEs, writeups
+Save to study library button
+
+5. Study Library
+
+Every completed mission saved here permanently
+Browse by: date, attack category, difficulty, score, technique
+Search by keyword
+Each entry shows: attack name, generated code, full explanation, your score, your notes
+Filter: only show ones you scored below 70 — review weak areas
+Mark as mastered — tag attacks you fully understand
+Re-run any saved attack — deploy it again to practice detection
+Compare two attacks side by side — see how similar techniques differ
+Export full library as PDF study guide
+
+6. Notes — Full Study Notes System
+This is your personal cybersecurity notebook inside REDFORGE:
+Note types:
+
+Mission Notes — automatically linked to a specific attack mission, created during Active Mission phase
+Study Notes — freeform notes while reviewing debrief or study library
+Technique Notes — notes about a specific MITRE ATT&CK technique
+Tool Notes — notes about a specific tool or command
+Quick Notes — fast capture, organize later
+
+Note editor features:
+
+Full markdown support — headers, bold, italic, code blocks, tables, bullet lists
+Syntax highlighted code blocks — paste attack code, it highlights properly
+Tag system — add custom tags to any note
+Link notes together — reference other notes inline
+Attach evidence — paste log snippets, paste command output directly into note
+Timestamp on every note — when created, when last edited
+Pin important notes — pinned notes show on dashboard
+Archive notes — hide without deleting
+
+Note organization:
+
+Notebooks — group notes into named collections
+
+Examples: "WiFi Attacks", "Persistence Techniques", "Things I Keep Forgetting", "CTF Writeups", "GowskiNet Incidents"
+
+
+Tags — cross-notebook organization
+Search — full text search across all notes instantly
+Sort by: date, title, tag, notebook, most viewed
+Filter by: notebook, tag, note type, date range
+
+Note features:
+
+Auto-save every 30 seconds — never lose work
+Version history — see previous versions of any note, restore any version
+Export single note as markdown, PDF, or plain text
+Export entire notebook as PDF study guide or markdown folder
+Import markdown files — paste notes from outside
+Share note — generate a read-only link (local network only)
+Duplicate note — copy as starting template
+Note templates — pre-built templates for: Incident Report, Vulnerability Analysis, Tool Cheatsheet, CTF Writeup, Attack Breakdown
+Word count, reading time estimate
+Last viewed — shows recently accessed notes
+Favorites — star important notes, quick access sidebar
+
+Quick capture:
+
+Keyboard shortcut — Ctrl+N anywhere in the app opens quick note
+Quick note auto-tags with current mission if one is active
+Converts to full note with one click
+
+7. Knowledge Base
+
+Browse the full knowledge base that feeds the AI
+MITRE ATT&CK browser — all tactics and techniques, click any for full details
+Malware encyclopedia — documented malware families, how they work
+Living off the land techniques — all documented LOLBAS and GTFOBINS
+CVE browser — search and browse CVEs by product, year, severity
+Your GowskiNet attack data — browse your own captured honeypot attacks, see patterns
+Contribute — add your own techniques to the knowledge base, Claude learns from them
+Everything here is what Claude draws from when generating attacks
+
+8. Scoreboard and Progress
+
+Your overall skill level — Novice / Apprentice / Analyst / Senior Analyst / Expert / Elite
+XP points — earned from every completed mission
+Skill radar chart — Network, WiFi, Web, Malware, Forensics, Evasion, Response
+Streak calendar — daily training history like GitHub contributions
+Personal bests — fastest detection, highest score, hardest attack beaten
+Weakness analysis — which attack categories you score lowest on, recommended practice
+Mission history — every mission ever completed with scores
+Achievement badges — unlock for milestones: first detection, 7 day streak, scored 100, detected Expert attack, etc
+Weekly summary — what you learned this week, improvement areas
+
+9. Settings
+
+Claude API key configuration and test
+Knowledge base management — add/remove/update knowledge files
+Target network configuration — confirm 192.168.0.x targets
+Excluded devices — mark devices that should never be targeted
+Attack intensity limits — max CPU usage, max network bandwidth attacks can use
+Timer settings — how long missions run before auto-reveal
+Difficulty default
+Notification settings — ntfy.sh alerts when attack starts, when timer expires
+Data management — export all data, reset scores, clear history
+Change password and 2FA
+About — version, Claude model in use, knowledge base stats
+
+
+Knowledge Base Files to build and include:
+Load all of these into Claude's context when generating attacks:
+
+MITRE ATT&CK Enterprise — all 200+ techniques with descriptions and examples
+MITRE ATT&CK Mobile and ICS
+Living off the land binaries — LOLBAS and GTFOBINS full lists
+Common malware behavior patterns — Emotet, Mirai, WannaCry, Cobalt Strike, Metasploit patterns
+Evasion techniques library — timestomping, log clearing, process injection, DLL sideloading, etc
+WiFi attack patterns — WPA2 attack chain, evil twin flow, PMKID attack
+Web attack patterns — OWASP Top 10 with real examples
+Linux privilege escalation techniques — SUID, sudo misconfig, cron, PATH hijack, kernel exploits
+Windows attack techniques — for testing Windows VMs if present
+Network attack patterns — ARP spoofing, DNS poisoning, MITM chains
+Social engineering frameworks — pretexting, phishing construction, credential harvesting flows
+Cryptographic attack techniques — hash cracking strategies, certificate attacks
+Container escape techniques — for testing Docker security
+IoT attack patterns — default creds, firmware extraction, protocol attacks
+Real GowskiNet honeypot data — top credentials tried, top commands run, top payloads seen

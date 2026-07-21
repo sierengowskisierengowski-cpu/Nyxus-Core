@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Arsenal launcher — arsenal-hub reads ~/Arsenal/registry.toml, falling back
+# to ./registry.toml. Seed a per-user copy from the system reference on
+# first run so the hub always has a registry even for accounts whose
+# ~/Arsenal was never populated from /etc/skel.
+if [[ ! -f "${HOME}/Arsenal/registry.toml" && -f /etc/arsenal/registry.toml ]]; then
+  mkdir -p "${HOME}/Arsenal"
+  cp /etc/arsenal/registry.toml "${HOME}/Arsenal/registry.toml"
+fi
+exec arsenal-hub "$@"

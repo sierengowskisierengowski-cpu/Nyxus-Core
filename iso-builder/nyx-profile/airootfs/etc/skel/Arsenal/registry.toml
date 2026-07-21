@@ -1,0 +1,150 @@
+# Arsenal tool registry — data-driven; the hub reads this at runtime.
+# Add/edit a [[tool]] block and it shows up in the hub. No recompile needed.
+#
+# fields:
+#   id          unique short id
+#   name        display name
+#   desc        one-line description
+#   category    defense | offense | ai | infra
+#   interface   service | webapp | web | cli
+#   path        absolute path (optional for pure web URLs)
+#   launch      shell command the hub runs on <Enter>
+#   status      how the hub checks live state:
+#               service_system=<unit> | service_user=<unit> | docker=<name> | web=<url> | none
+
+[[tool]]
+id = "jett"
+name = "jeTT"
+desc = "Local AI EDR — kernel/proc behavior watchdog (Rust + CUDA), learn/enforce"
+category = "defense"
+interface = "service"
+path = "/usr/local/lib/jett"
+launch = "kitty --title jeTT -e sh -c 'journalctl -u jett-daemon -f 2>&1 || { echo; echo \"(press enter)\"; read _; }'"
+status = "service_system=jett-daemon"
+
+[[tool]]
+id = "bifrost"
+name = "Bifrost"
+desc = "AI-powered Linux EDR / guardian"
+category = "defense"
+interface = "service"
+path = "/usr/lib/bifrost"
+launch = "kitty --title Bifrost -e sh -c 'journalctl -u bifrost-guardian -f 2>&1 || { echo; echo \"(press enter)\"; read _; }'"
+status = "service_system=bifrost-guardian"
+
+[[tool]]
+id = "meli"
+name = "Meli"
+desc = "Honeypot command center / event ingestion engine"
+category = "defense"
+interface = "service"
+path = "/opt/meli/app"
+launch = "kitty --title Meli -e sh -c 'journalctl --user -u meli-ingest -f 2>&1 || { echo; echo \"(press enter)\"; read _; }'"
+status = "service_user=meli-ingest"
+
+[[tool]]
+id = "honeypot"
+name = "Honeypot Stack"
+desc = "Cowrie/Heralding/Conpot/Dionaea/Endlessh + Grafana/Loki/Prometheus"
+category = "defense"
+interface = "service"
+path = "/opt/honeypot"
+launch = "kitty --title Honeypot -e sh -c 'cd /opt/honeypot && docker compose ps; echo; exec bash'"
+status = "docker=cowrie"
+
+[[tool]]
+id = "axiom"
+name = "Axiom"
+desc = "Desktop AI assistant (tray, hotkey, local GPU inference)"
+category = "ai"
+interface = "webapp"
+path = "/opt/arsenal/tools/axiom"
+launch = "kitty --title Axiom -e sh -c 'cd /opt/arsenal/tools/axiom && exec bash'"
+status = "none"
+
+[[tool]]
+id = "ghost-relay"
+name = "Ghost-Relay (c2)"
+desc = "Go operator console / network-relay framework for the lab"
+category = "offense"
+interface = "cli"
+path = "/opt/arsenal/tools/c2"
+launch = "kitty --title Ghost-Relay -e sh -c 'cd /opt/arsenal/tools/c2 && exec bash'"
+status = "none"
+
+[[tool]]
+id = "gsl"
+name = "GSL"
+desc = "Personal training-lab dashboard + live terminal (FastAPI + React)"
+category = "offense"
+interface = "webapp"
+path = "/opt/arsenal/tools/GSL"
+launch = "kitty --title GSL -e sh -c 'cd /opt/arsenal/tools/GSL && exec bash'"
+status = "none"
+
+[[tool]]
+id = "redforge"
+name = "RedForge"
+desc = "Blue-team training platform — missions/scoring/KB/AI tutor (MITRE ATT&CK)"
+category = "defense"
+interface = "webapp"
+path = "/opt/arsenal/tools/RedForge"
+launch = "kitty --title RedForge -e sh -c 'cd /opt/arsenal/tools/RedForge && exec bash'"
+status = "none"
+
+[[tool]]
+id = "forge"
+name = "Forge"
+desc = "AI research platform — technique generation/analysis + honeypot feed"
+category = "ai"
+interface = "webapp"
+path = "/opt/arsenal/tools/Forge"
+launch = "kitty --title Forge -e sh -c 'cd /opt/arsenal/tools/Forge && exec bash'"
+status = "none"
+
+[[tool]]
+id = "cipher"
+name = "CIPHER"
+desc = "Password-security education — strength analysis, hash-type ID, cracking lab"
+category = "offense"
+interface = "webapp"
+path = "/opt/arsenal/tools/CIPHER"
+launch = "kitty --title CIPHER -e sh -c 'cd /opt/arsenal/tools/CIPHER && exec bash'"
+status = "none"
+
+[[tool]]
+id = "trainer"
+name = "AI Cyber Defense Trainer"
+desc = "Operator training console (red/blue) with live scenario logs"
+category = "defense"
+interface = "webapp"
+path = "/opt/arsenal/tools/AI-Cyber-Defense-Trainer"
+launch = "kitty --title Trainer -e sh -c 'cd /opt/arsenal/tools/AI-Cyber-Defense-Trainer && exec bash'"
+status = "none"
+
+[[tool]]
+id = "grafana"
+name = "Grafana"
+desc = "Honeypot / metrics dashboards"
+category = "infra"
+interface = "web"
+launch = "xdg-open http://localhost:3000"
+status = "web=http://localhost:3000"
+
+[[tool]]
+id = "prometheus"
+name = "Prometheus"
+desc = "Metrics / time-series"
+category = "infra"
+interface = "web"
+launch = "xdg-open http://localhost:9090"
+status = "web=http://localhost:9090"
+
+[[tool]]
+id = "honeyhive"
+name = "HoneyHive Map"
+desc = "Live geo-map of attacker activity"
+category = "infra"
+interface = "web"
+launch = "xdg-open http://localhost:8888"
+status = "web=http://localhost:8888"

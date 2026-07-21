@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- Honey body gradient: pale gold → deep amber -->
+    <linearGradient id="honeyBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#fef3c7"/>
+      <stop offset="35%"  stop-color="#fcd34d"/>
+      <stop offset="70%"  stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+
+    <!-- Jar ceramic gradient: cream sheen -->
+    <linearGradient id="jarCeramic" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#fffbeb"/>
+      <stop offset="50%"  stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+
+    <!-- Drip gradient: glossy honey, slight inner shine -->
+    <linearGradient id="dripShine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#fbbf24"/>
+      <stop offset="40%"  stop-color="#fde68a"/>
+      <stop offset="60%"  stop-color="#fcd34d"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+
+    <!-- Outer halo glow -->
+    <radialGradient id="halo" cx="50%" cy="55%" r="55%">
+      <stop offset="0%"   stop-color="#fbbf24" stop-opacity="0.55"/>
+      <stop offset="55%"  stop-color="#f59e0b" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Inner glow on the honey -->
+    <radialGradient id="innerGlow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%"   stop-color="#fffbeb" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#fffbeb" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Soft blur filter for glow halos -->
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <filter id="bigGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+
+    <!-- Honeycomb pattern for backdrop -->
+    <pattern id="honeycomb" x="0" y="0" width="28" height="32" patternUnits="userSpaceOnUse">
+      <polygon points="14,2 26,9 26,23 14,30 2,23 2,9"
+               fill="none" stroke="#f59e0b" stroke-width="0.8" opacity="0.35"/>
+    </pattern>
+  </defs>
+
+  <!-- ── Halo (animated pulse via opacity) ────────────────────────────── -->
+  <circle cx="128" cy="138" r="118" fill="url(#halo)" filter="url(#bigGlow)">
+    <animate attributeName="opacity" values="0.55;1;0.55" dur="3.2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- ── Honeycomb backdrop ring ──────────────────────────────────────── -->
+  <circle cx="128" cy="138" r="108" fill="url(#honeycomb)" opacity="0.5"/>
+
+  <!-- ── Glowing outer ring ───────────────────────────────────────────── -->
+  <circle cx="128" cy="138" r="116" fill="none" stroke="#fbbf24" stroke-width="1.5"
+          opacity="0.6" filter="url(#softGlow)">
+    <animate attributeName="opacity" values="0.4;0.85;0.4" dur="3.2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- ── Sparkles ─────────────────────────────────────────────────────── -->
+  <g fill="#fde68a">
+    <circle cx="212" cy="58"  r="2.5"><animate attributeName="opacity" values="0.2;1;0.2" dur="2.4s" repeatCount="indefinite"/></circle>
+    <circle cx="48"  cy="92"  r="2"  ><animate attributeName="opacity" values="1;0.2;1" dur="2.8s" repeatCount="indefinite"/></circle>
+    <circle cx="220" cy="180" r="1.8"><animate attributeName="opacity" values="0.2;1;0.2" dur="3.6s" repeatCount="indefinite"/></circle>
+    <circle cx="38"  cy="200" r="2.2"><animate attributeName="opacity" values="1;0.3;1" dur="2.2s" repeatCount="indefinite"/></circle>
+  </g>
+
+  <!-- ── Honey drips coming over the lip ──────────────────────────────── -->
+  <!-- Left drip -->
+  <path d="M72 96
+           Q68 116 72 132
+           Q76 146 70 162
+           Q66 178 74 188
+           Q80 196 76 206
+           L82 206
+           Q86 196 80 188
+           Q72 178 76 162
+           Q82 146 78 132
+           Q74 116 78 96 Z"
+        fill="url(#dripShine)" stroke="#92400e" stroke-width="1.4"/>
+  <!-- Pendant teardrop tip on left -->
+  <circle cx="79" cy="208" r="4.5" fill="url(#dripShine)" stroke="#92400e" stroke-width="1.2">
+    <animate attributeName="cy" values="208;212;208" dur="2.6s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Right drip -->
+  <path d="M184 96
+           Q180 110 184 124
+           Q188 136 182 150
+           Q178 164 184 176
+           L190 176
+           Q194 164 190 150
+           Q186 136 190 124
+           Q194 110 190 96 Z"
+        fill="url(#dripShine)" stroke="#92400e" stroke-width="1.4"/>
+  <circle cx="187" cy="178" r="4" fill="url(#dripShine)" stroke="#92400e" stroke-width="1.2">
+    <animate attributeName="cy" values="178;182;178" dur="3.1s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- ── Jar body (rounded honey pot) ─────────────────────────────────── -->
+  <path d="M62 108
+           Q62 96 74 94
+           L182 94
+           Q194 96 194 108
+           L190 208
+           Q190 230 168 232
+           L88 232
+           Q66 230 66 208 Z"
+        fill="url(#jarCeramic)" stroke="#92400e" stroke-width="3"/>
+
+  <!-- Subtle highlight on jar -->
+  <path d="M76 110 Q72 130 76 200" stroke="#fffbeb" stroke-width="3" stroke-linecap="round" opacity="0.6" fill="none"/>
+
+  <!-- ── Honey filling visible through pot ────────────────────────────── -->
+  <path d="M72 116
+           L184 116
+           L182 204
+           Q182 224 166 226
+           L90 226
+           Q74 224 74 204 Z"
+        fill="url(#honeyBody)" opacity="0.92"/>
+  <!-- Inner radial sheen on the honey -->
+  <ellipse cx="128" cy="150" rx="50" ry="40" fill="url(#innerGlow)"/>
+
+  <!-- ── Pot lip / rim band ───────────────────────────────────────────── -->
+  <rect x="54" y="84" width="148" height="20" rx="6"
+        fill="url(#honeyBody)" stroke="#92400e" stroke-width="2.5"/>
+  <!-- Rim highlight -->
+  <rect x="60" y="86" width="136" height="3" rx="1.5" fill="#fffbeb" opacity="0.7"/>
+
+  <!-- ── M monogram ────────────────────────────────────────────────────── -->
+  <text x="128" y="186" font-family="Inter, system-ui, -apple-system, sans-serif"
+        font-size="78" font-weight="900" text-anchor="middle"
+        fill="#fffbeb" stroke="#7c2d12" stroke-width="2.5" paint-order="stroke"
+        letter-spacing="-3">M</text>
+  <!-- Inner shine on the M -->
+  <text x="128" y="186" font-family="Inter, system-ui, -apple-system, sans-serif"
+        font-size="78" font-weight="900" text-anchor="middle"
+        fill="url(#innerGlow)" letter-spacing="-3" opacity="0.6">M</text>
+
+  <!-- ── Threat-pulse dot (top right) ────────────────────────────────── -->
+  <g>
+    <circle cx="208" cy="62" r="14" fill="#ef4444" opacity="0.18">
+      <animate attributeName="r" values="14;22;14" dur="2.0s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.18;0.02;0.18" dur="2.0s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="208" cy="62" r="6" fill="#ef4444"/>
+    <circle cx="206" cy="60" r="2" fill="#fee2e2" opacity="0.9"/>
+  </g>
+</svg>

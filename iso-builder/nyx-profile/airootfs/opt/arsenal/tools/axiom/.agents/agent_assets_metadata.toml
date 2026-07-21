@@ -1,0 +1,19 @@
+uploads = []
+
+[[generated]]
+id = "TxiGBHYbY9kYBRcbq9LA_"
+uri = "file://artifacts/desktop/icons/icon.png"
+type = "image"
+title = "axiom-lightning-icon"
+
+[[generated]]
+id = "PxusOi_3GOS-T_rb1eWo9"
+uri = "file://artifacts/desktop/icons/tray-icon.png"
+type = "image"
+title = "axiom-tray-icon"
+
+[[outputs]]
+id = "K_j0Sfm64Bhb59Evwwwj_"
+uri = "file://meli/assets/icons/meli.svg"
+type = "image"
+title = "Meli Logo — animated honeypot with golden drips"
