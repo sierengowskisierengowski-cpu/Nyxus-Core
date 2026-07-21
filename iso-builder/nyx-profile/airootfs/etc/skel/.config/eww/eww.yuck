@@ -438,7 +438,13 @@
     (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad" :hue "purple")
     (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies" :hue "gold")
     (app_launcher :glyph "" :cmd "eww open --toggle mixer" :label "Audio" :hue "purple")
-    (app_launcher :glyph "" :cmd "eww open --toggle bluetooth" :label "Bluetooth" :hue "blue")))
+    (app_launcher :glyph "" :cmd "eww open --toggle bluetooth" :label "Bluetooth" :hue "blue")
+    ;; ── NYXUS security modes (rev 2026-07-17) ──────────────────
+    ;; Hacker Mode (full parallel security matrix), Ghost/invisibility
+    ;; (Tor + kill-switch + MAC), Panic (lock now; double-trigger = kill).
+    (app_launcher :glyph "☠" :cmd "nyxus-hacker-mode toggle" :label "Hacker Mode · parallel security layout (Super+Ctrl+X)" :hue "green")
+    (app_launcher :glyph "👻" :cmd "nyxus-ghost toggle"       :label "Ghost / Invisibility · Tor + kill-switch + MAC (Super+Ctrl+G)" :hue "blue")
+    (app_launcher :glyph "⚠" :cmd "nyxus-panic lock"          :label "PANIC · lock screen now (Super+Ctrl+Delete; Shift = kill)" :hue "red")))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; BARS
