@@ -132,6 +132,12 @@ pipewire-pulse
 pipewire-jack
 wireplumber
 alsa-utils
+# cava — console audio visualizer. REQUIRED, not optional eye candy: it
+# drives the eww CAVA bar widget, the NYXUS PULSE audio-reactive window
+# halo (hypr/scripts/nyxus-pulse.sh via ~/.config/nyxus/pulse-cava.conf),
+# and the signature-bar spectrum. Was referenced everywhere but never
+# listed here, so the music-reactive features were dead on a real install.
+cava
 
 # ── GTK4 + Python (for NYXUS apps) ────────────────────────────────
 gtk4
