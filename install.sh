@@ -72,7 +72,7 @@ LAUNCHERS=(
   nyxus-eww-launch-safe nyxus-freeform nyxus-gen-backdrop nyxus-ghost
   nyxus-ghost-helper nyxus-glow nyxus-hacker-mode nyxus-home
   nyxus-hotkey nyxus_hotcorners.py nyxus-hub-apps nyxus-hub-close nyxus-hub-launch
-  nyxus-hub-open nyxus-hub-search nyxus-lens nyxus-livewall-flagship
+  nyxus-hub-open nyxus-hub-search nyxus-launch-bifrost nyxus-launch-meli nyxus-lens nyxus-livewall-flagship
   nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art
   nyxus-lock-track nyxus-mission-control-toggle nyxus-notifications
   nyxus-notif-to-eww nyxus-nowplaying nyxus-palette-extract nyxus-panic
@@ -374,7 +374,19 @@ if [[ -d "$NYXUS_CFG_SRC" ]]; then
       place_with_backup "$f" "$HOME/.config/nyxus/$rel" ".config/nyxus/$rel" && n=$((n+1)) || true
     done < <(find "$NYXUS_CFG_SRC/hw_profiles" -type f -print0)
   fi
-  ok "nyxus config → ~/.config/nyxus  ($n files checked)"
+  if $CHECK; then
+    info "would regenerate ~/.config/nyxus/workspaces.json from stations.json"
+    ok "nyxus config → ~/.config/nyxus  ($n files checked)"
+  elif [[ -x "$HOME/.local/bin/nyxus-sync-stations" && -f "$HOME/.config/nyxus/stations.json" ]]; then
+    if "$HOME/.local/bin/nyxus-sync-stations" >/dev/null 2>&1; then
+      ok "nyxus config → ~/.config/nyxus  ($n files checked) + workspaces.json regenerated"
+    else
+      warn "nyxus config copied but workspaces.json regen failed — check jq / stations.json"
+      ok "nyxus config → ~/.config/nyxus  ($n files checked)"
+    fi
+  else
+    ok "nyxus config → ~/.config/nyxus  ($n files checked)"
+  fi
 fi
 
 # Curated wallpaper-rotation list (alien / NYXUS-HYPRLAND / sierengowski set
@@ -549,6 +561,7 @@ if $RUN_SYSTEM; then
   fi
 else
   info "system phase skipped (--user-only)"
+  warn "--user-only leaves system security components untouched (jeTT daemon, Bifrost, Meli/Grafana services)"
 fi
 
 if $CHECK; then
@@ -571,5 +584,5 @@ else
   info "backup: ${BACKUP_ROOT}"
 fi
 info "surfaces: ~/.config/eww · ~/.config/hypr · ~/.local/bin · ~/.nyxus"
-info "          ~/.config/nyxus (screensaver) · ~/.local/share/applications"
+info "          ~/.config/nyxus (stations + wallpaper + screensavers) · ~/.local/share/applications"
 printf "\n${V5}${B}  ◆ NYXUS ready.${R} ${DIM}Run ./install.sh again anytime; clean systems converge without backup churn.${R}\n\n"

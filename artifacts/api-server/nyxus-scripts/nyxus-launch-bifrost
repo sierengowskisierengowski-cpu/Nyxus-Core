@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -u
+
+notify() { command -v notify-send >/dev/null 2>&1 && notify-send "$@" || true; }
+
+if ! command -v bifrost >/dev/null 2>&1; then
+  msg="Bifrost is not installed on this system yet. GHOST needs the staged Bifrost app on PATH before live detections can open."
+  printf '%s\n' "$msg" >&2
+  notify -u critical "NYXUS Bifrost" "$msg"
+  exit 1
+fi
+
+if pgrep -x bifrost >/dev/null 2>&1; then
+  exit 0
+fi
+
+LOCK_DIR="${XDG_RUNTIME_DIR:-/tmp}/nyxus-bifrost.launch.lock"
+if ! mkdir "${LOCK_DIR}" 2>/dev/null; then
+  exit 0
+fi
+trap 'rmdir "${LOCK_DIR}" 2>/dev/null || true' EXIT
+
+pgrep -x bifrost >/dev/null 2>&1 || setsid bifrost >/dev/null 2>&1 &

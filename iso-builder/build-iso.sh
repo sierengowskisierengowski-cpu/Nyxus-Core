@@ -294,6 +294,8 @@ NYXUS_CFG="${REPO_ROOT}/artifacts/nyxus-config"
 mkdir -p "${SKEL}/.config/nyxus"
 if [[ -f "${NYXUS_CFG}/stations.json" ]]; then
   install -m 0644 "${NYXUS_CFG}/stations.json" "${SKEL}/.config/nyxus/stations.json"
+  [[ -f "${NYXUS_CFG}/stations-hacker.json" ]] && \
+    install -m 0644 "${NYXUS_CFG}/stations-hacker.json" "${SKEL}/.config/nyxus/stations-hacker.json"
   # Bake-time sync: use system wallpaper dir so skel paths survive first login.
   CONF="${SKEL}/.config/nyxus/stations.json" OUT="${SKEL}/.config/nyxus/workspaces.json" \
     bash -c '
@@ -311,7 +313,7 @@ if [[ -f "${NYXUS_CFG}/stations.json" ]]; then
         }
       " > "$OUT"
     '
-  ok "stations.json + workspaces.json staged"
+  ok "stations.json + stations-hacker.json + workspaces.json staged"
 fi
 
 # ── EWW (replaces waybar as of rev r6-eww) ──────────────────────────────────
