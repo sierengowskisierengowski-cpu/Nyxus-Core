@@ -35,7 +35,16 @@ ISO_NAME="nyxus-${ISO_DATE}-x86_64.iso"
 
 TARBALL_URL="https://nyxus-core.replit.app/api/download/nyxus/nyxus-intel.tgz"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROFILE_DIR="${SCRIPT_DIR}/nyx-profile"
+# The COMMITTED profile in the repo. This is READ-ONLY during a bake — the
+# bake never mutates it in place (see PROFILE_DIR below).
+REPO_PROFILE="${SCRIPT_DIR}/nyx-profile"
+# The bake stages heavily into the profile's airootfs as root (chrome layer,
+# app builds, kage-ryu activation files, os-release, package list, pacman.conf).
+# Doing that on the repo tree corrupted it every run (root-owned files + ~327
+# deletions → a wrecked working tree needing a sudo chown to recover). So the
+# bake now works on a THROWAWAY COPY under /var/tmp: the repo profile stays
+# pristine no matter what the bake does, and the copy is deleted on exit.
+PROFILE_DIR="${NYX_PROFILE_WORK:-/var/tmp/nyxus-profile-bake}"
 WORK_DIR="${NYX_WORK_DIR:-/var/tmp/nyxus-work}"
 OUT_DIR="${SCRIPT_DIR}/out"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -48,6 +57,19 @@ fi
 if [[ ! -f /etc/arch-release ]]; then
   fail "this script must run on Arch Linux (mkarchiso requires it)"; exit 1
 fi
+
+# ── bake from a throwaway copy of the profile (repo stays pristine) ───────
+# Everything below this point uses ${PROFILE_DIR}, which is the /var/tmp copy,
+# NOT the committed repo tree (${REPO_PROFILE}). This is the single guarantee
+# that a bake can never again corrupt the repo profile.
+if [[ ! -d "${REPO_PROFILE}" ]]; then
+  fail "committed profile not found at ${REPO_PROFILE}"; exit 1
+fi
+step "staging a throwaway profile copy → ${PROFILE_DIR}"
+rm -rf "${PROFILE_DIR}"
+mkdir -p "$(dirname "${PROFILE_DIR}")"
+cp -a "${REPO_PROFILE}" "${PROFILE_DIR}" || { fail "failed to copy profile to ${PROFILE_DIR}"; exit 1; }
+ok "profile copied — repo tree ${REPO_PROFILE} will not be touched by this bake"
 
 # ── auto-install required host packages ─────────────────────────────────
 # rev r24 (2026-05-18) — self-healing preflight: every tool mkarchiso
@@ -96,29 +118,15 @@ fi
 ok "running on Arch as root with mkarchiso available"
 ok "iso version: ${ISO_DATE} → ${ISO_NAME}"
 
-# ── restore committed profile files the bake mutates in place ────────────
-# The bake edits a couple of tracked profile files in place (the package
-# list for the lean tier / the optional custom kernel, and pacman.conf for
-# the custom-kernel local repo). Restore them on ANY exit so a git checkout
-# is never left dirty, whether the bake succeeds or dies mid-run.
+# ── clean up the throwaway profile copy on exit ──────────────────────────
+# The bake works entirely on ${PROFILE_DIR} (a /var/tmp copy of the committed
+# repo profile — see the copy step in preflight), so there is nothing in the
+# repo to "restore" anymore: the repo tree is never mutated. All this does now
+# is delete the throwaway copy on ANY exit (success or mid-run death) so it
+# doesn't accumulate. Set NYX_KEEP_PROFILE_WORK=1 to keep it for debugging.
 _nyx_restore_profile() {
-  [[ -f "${PROFILE_DIR}/packages.x86_64.bake.bak" ]] && mv -f "${PROFILE_DIR}/packages.x86_64.bake.bak" "${PROFILE_DIR}/packages.x86_64"
-  [[ -f "${PROFILE_DIR}/pacman.conf.bake.bak" ]]     && mv -f "${PROFILE_DIR}/pacman.conf.bake.bak"     "${PROFILE_DIR}/pacman.conf"
-  # Remove the kage-ryu auto-activation files staged into the airootfs (all
-  # kage-namespaced), so an opt-in kernel bake doesn't leave the tracked
-  # profile dirty. No-op unless this bake staged them.
-  if [[ "${NYX_KAGE_AIROOTFS_STAGED:-0}" == "1" ]]; then
-    local A="${PROFILE_DIR}/airootfs"
-    rm -rf "${A}/usr/share/kage-ryu"
-    rm -f  "${A}/usr/share/libalpm/scripts/kage-ryu-activate" \
-           "${A}/usr/share/libalpm/hooks/95-kage-ryu-activate.hook" \
-           "${A}/usr/lib/systemd/system-preset/80-kage-ryu.preset" \
-           "${A}/etc/sysctl.d/99-kage-ryu.conf" \
-           "${A}/etc/modprobe.d/kage-ryu.conf" \
-           "${A}/etc/systemd/system/scx-kage.service" \
-           "${A}/etc/systemd/system/multi-user.target.wants/scx-kage.service" \
-           "${A}/usr/local/bin/scx_kage" \
-           "${A}/usr/local/bin/scx_kage_ctl"
+  if [[ "${NYX_KEEP_PROFILE_WORK:-0}" != "1" ]]; then
+    rm -rf "${PROFILE_DIR}"
   fi
   return 0
 }
