@@ -10,11 +10,11 @@
 # archiso profile definition for the NYX ISO.
 # See: https://wiki.archlinux.org/title/Archiso
 
-iso_name="nyx"
-iso_label="NYX_2026_05"
+iso_name="nyxus"
+iso_label="NYXUS_2026_07"
 iso_publisher="Joseph A. Sierengowski <https://github.com/sierengowski/NyX.OS-V1>"
 iso_application="NYXUS Live/Install"
-iso_version="2026.07.16"
+iso_version="2026.07.22"
 install_dir="arch"
 buildmodes=('iso')
 bootmodes=(

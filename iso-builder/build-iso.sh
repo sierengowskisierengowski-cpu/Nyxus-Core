@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================
-# NYXUS — nyx-2026.05.11-x86_64.iso
+# NYXUS — NYXUS Live ISO
 # Copyright © 2026 Joseph A. Sierengowski
 # All Rights Reserved
 # Unauthorized use or distribution prohibited
@@ -14,7 +14,7 @@
 #   sudo ./build-iso.sh
 #
 # Output:
-#   ./out/nyx-2026.05.11-x86_64.iso
+#   ./out/NYXUS Live ISO
 set -euo pipefail
 
 # Colours
@@ -31,12 +31,12 @@ fail() { printf "  ${PINK}✗${R}  %s\n" "$*" >&2; }
 # Default = today's date in YYYY.MM.DD; override with NYX_ISO_DATE env var
 # for deterministic re-bakes (e.g. NYX_ISO_DATE=2026.05.11 sudo ./build-iso.sh).
 ISO_DATE="${NYX_ISO_DATE:-$(date +%Y.%m.%d)}"
-ISO_NAME="nyx-${ISO_DATE}-x86_64.iso"
+ISO_NAME="nyxus-${ISO_DATE}-x86_64.iso"
 
 TARBALL_URL="https://nyxus-core.replit.app/api/download/nyxus/nyxus-intel.tgz"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROFILE_DIR="${SCRIPT_DIR}/nyx-profile"
-WORK_DIR="${NYX_WORK_DIR:-/var/tmp/nyx-work}"
+WORK_DIR="${NYX_WORK_DIR:-/var/tmp/nyxus-work}"
 OUT_DIR="${SCRIPT_DIR}/out"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
@@ -149,7 +149,7 @@ fi
 #
 # It looks for the prebuilt linux-kage-ryu + headers packages under
 # NYX_KAGE_PKGDIR (default ~/Projects/arch-custom-kernel/linux-kage-ryu),
-# stages them into a profile-local [nyx-local] pacman repo, wires that repo
+# stages them into a profile-local [nyxus-local] pacman repo, wires that repo
 # into the build pacman.conf, and appends the two packages to the bake's
 # package list. All of that is undone on exit by _nyx_restore_profile.
 if [[ "${NYX_WITH_KAGE_RYU:-0}" == "1" ]]; then
@@ -173,31 +173,31 @@ if [[ "${NYX_WITH_KAGE_RYU:-0}" == "1" ]]; then
   fi
   mkdir -p "${LOCAL_REPO}"
   cp -f "${_kage_main}" "${_kage_hdr}" "${LOCAL_REPO}/"
-  ( cd "${LOCAL_REPO}" && repo-add -q nyx-local.db.tar.gz \
+  ( cd "${LOCAL_REPO}" && repo-add -q nyxus-local.db.tar.gz \
        "$(basename "${_kage_main}")" "$(basename "${_kage_hdr}")" >/dev/null )
-  ok "kernel: $(basename "${_kage_main}") + headers → ${LOCAL_REPO}/ (repo-add nyx-local.db)"
+  ok "kernel: $(basename "${_kage_main}") + headers → ${LOCAL_REPO}/ (repo-add nyxus-local.db)"
   printf "  ${B}kernel sha256:${R} %s\n" "$(sha256sum "${_kage_main}" | cut -d' ' -f1)"
 
   # Wire the profile-local repo into the build pacman.conf (unsigned local
   # packages, so TrustAll for THIS repo only; official repos stay Required).
   cp "${PROFILE_DIR}/pacman.conf" "${PROFILE_DIR}/pacman.conf.bake.bak"
-  if ! grep -q '^\[nyx-local\]' "${PROFILE_DIR}/pacman.conf"; then
+  if ! grep -q '^\[nyxus-local\]' "${PROFILE_DIR}/pacman.conf"; then
     cat >> "${PROFILE_DIR}/pacman.conf" <<PACMANLOCAL
 
-[nyx-local]
+[nyxus-local]
 SigLevel = Optional TrustAll
 Server = file://${LOCAL_REPO}
 PACMANLOCAL
   else
     sed -i -E "s#^Server = file://.*/local-repo\$#Server = file://${LOCAL_REPO}#" "${PROFILE_DIR}/pacman.conf"
   fi
-  ok "pacman.conf [nyx-local] Server → file://${LOCAL_REPO}"
+  ok "pacman.conf [nyxus-local] Server → file://${LOCAL_REPO}"
 
   # Append the kernel packages to the bake's package list (back it up first
   # unless the lean tier already did).
   [[ -f "${PROFILE_DIR}/packages.x86_64.bake.bak" ]] || cp "${PROFILE_DIR}/packages.x86_64" "${PROFILE_DIR}/packages.x86_64.bake.bak"
   if ! grep -q '^linux-kage-ryu$' "${PROFILE_DIR}/packages.x86_64"; then
-    printf '\n# Kage Ryu Nyxus custom kernel (staged into [nyx-local] by build-iso.sh)\nlinux-kage-ryu\nlinux-kage-ryu-headers\n' >> "${PROFILE_DIR}/packages.x86_64"
+    printf '\n# Kage Ryu Nyxus custom kernel (staged into [nyxus-local] by build-iso.sh)\nlinux-kage-ryu\nlinux-kage-ryu-headers\n' >> "${PROFILE_DIR}/packages.x86_64"
   fi
   ok "packages.x86_64 += linux-kage-ryu + headers (installs ALONGSIDE stock linux; stock stays default)"
 
@@ -1588,7 +1588,7 @@ cat <<EOF
 
 ──────────────────────────────────────────────────────────────────────
 
-  ${GOLD}NYX ISO ready.${R}
+  ${GOLD}NYXUS ISO ready.${R}
 
   ${B}file:${R}   ${PINK}${OUT_DIR}/${ISO_NAME}${R}
   ${B}size:${R}   $(du -h "${OUT_DIR}/${ISO_NAME}" | cut -f1)
