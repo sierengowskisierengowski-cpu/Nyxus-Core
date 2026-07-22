@@ -1,0 +1,89 @@
+# ════════════════════════════════════════════════════════════════════
+#  NYXUS · btop · OBSIDIAN PRISM · rev 2026-07-07
+#  Palette: #794dff magenta · #ff266c cyan · #26ffb7 violet · #ffb026 gold
+#  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+
+# Main background (empty = terminal default, keeps frosted glass)
+theme[main_bg]=""
+
+# Main text color
+theme[main_fg]="#eef2fa"
+
+# Title color for boxes
+theme[title]="#ffffff"
+
+# Highlight color for keyboard shortcuts
+theme[hi_fg]="#794dff"
+
+# Background color of selected item in processes box
+theme[selected_bg]="#26ffb7"
+
+# Foreground color of selected item in processes box
+theme[selected_fg]="#ffffff"
+
+# Color of inactive/disabled text
+theme[inactive_fg]="#3a4152"
+
+# Color of text appearing on top of graphs
+theme[graph_text]="#c8ccd6"
+
+# Background color of the percentage meters
+theme[meter_bg]="#0a0a14"
+
+# Misc colors for processes box (mini-graphs, details)
+theme[proc_misc]="#ff266c"
+
+# Box outline colors
+theme[cpu_box]="#26ffb7"
+theme[mem_box]="#ff266c"
+theme[net_box]="#794dff"
+theme[proc_box]="#ffb026"
+
+# Box divider line and small boxes
+theme[div_line]="#3a4152"
+
+# Temperature graph gradient (cool → hot)
+theme[temp_start]="#ff266c"
+theme[temp_mid]="#ffb026"
+theme[temp_end]="#ff5470"
+
+# CPU graph gradient (violet → cyan → magenta)
+theme[cpu_start]="#26ffb7"
+theme[cpu_mid]="#ff266c"
+theme[cpu_end]="#794dff"
+
+# Mem/Disk free meter
+theme[free_start]="#26ffb7"
+theme[free_mid]="#a06bff"
+theme[free_end]="#c084fc"
+
+# Mem/Disk cached meter
+theme[cached_start]="#ff266c"
+theme[cached_mid]="#66efff"
+theme[cached_end]="#7dd3fc"
+
+# Mem/Disk available meter
+theme[available_start]="#ffb026"
+theme[available_mid]="#ffce85"
+theme[available_end]="#ffd166"
+
+# Mem/Disk used meter
+theme[used_start]="#794dff"
+theme[used_mid]="#ff5fc0"
+theme[used_end]="#ff7ae5"
+
+# Download graph gradient
+theme[download_start]="#ff266c"
+theme[download_mid]="#66efff"
+theme[download_end]="#a0f4ff"
+
+# Upload graph gradient
+theme[upload_start]="#794dff"
+theme[upload_mid]="#ff5fc0"
+theme[upload_end]="#ff7ae5"
+
+# Process box gradient (from grey to prism)
+theme[process_start]="#26ffb7"
+theme[process_mid]="#ff266c"
+theme[process_end]="#794dff"

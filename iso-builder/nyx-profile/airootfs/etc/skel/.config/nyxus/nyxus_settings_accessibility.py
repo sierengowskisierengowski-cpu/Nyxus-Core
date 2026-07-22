@@ -10,7 +10,7 @@
 #  flips the GTK theme via the gsettings interface schema. Magnifier
 #  toggle just exec's `gsettings set org.gnome.desktop.a11y.applications`.
 #
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================================
 from __future__ import annotations
 

@@ -20,7 +20,7 @@
 #    nyxus-crash-report status [--token TOK]
 #    nyxus-crash-report list   [--token TOK]
 #
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================================
 from __future__ import annotations
 

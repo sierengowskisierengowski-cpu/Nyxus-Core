@@ -1,3 +1,20 @@
 #!/usr/bin/env bash
-# NYXUS Settings launcher — Copyright © 2026 Joseph A. Sierengowski
-exec python3 /opt/nyxus/nyxus_settings.py "$@"
+# NYXUS Settings — canonical launcher for the main control center.
+#
+# Launches the unified NYXUS Settings app (~/.nyxus/nyxus_settings.py,
+# GTK4 + libadwaita, DARK MIRROR + live accent). This is THE settings
+# surface: the eww dashboard/quicksettings buttons, the dock, and any
+# `nyxus settings` dispatch all land here.
+#
+# The old target (nyxus-panel/settings.py SettingsWindow) is the Panel's
+# own preferences window — it is NOT a system settings surface and is
+# reachable from inside the Panel app only.
+#
+# If a window is already open, focus it instead of spawning a twin.
+if command -v hyprctl >/dev/null 2>&1; then
+  if hyprctl clients -j 2>/dev/null | grep -q '"io.nyxus.settings"'; then
+    hyprctl dispatch focuswindow 'class:io.nyxus.settings' >/dev/null 2>&1
+    exit 0
+  fi
+fi
+exec python3 "$HOME/.nyxus/nyxus_settings.py" "$@"

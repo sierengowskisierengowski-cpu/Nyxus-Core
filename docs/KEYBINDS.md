@@ -21,6 +21,7 @@ Last audited: 2026-07-14 (Phase 3) — `hyprctl configerrors` clean, 0 duplicate
 | `Super+Return` | Terminal (kitty → alacritty → foot) |
 | `Super+Shift+Return` | Terminal, alternate (alacritty first) |
 | `Super+Space` | App launcher (`nyxus_launcher.py`, rofi/wofi fallback) |
+| `Super+D` | NYXUS Start (`nyxus-start`) |
 | `Super+Shift+D` | Run a command (rofi/wofi run prompt) |
 | `Super+Tab` | Window switcher (rofi window) |
 | `Super+E` | File manager (nautilus → thunar → dolphin) |
@@ -73,6 +74,10 @@ Last audited: 2026-07-14 (Phase 3) — `hyprctl configerrors` clean, 0 duplicate
 | `Super+G` | DEEP CORE (kernel/security observatory) |
 | `Super+/` · `Super+Shift+/` | Keybind cheatsheet |
 | `Super+Shift+Y` | Security Center |
+| `Super+Ctrl+X` | Hacker Mode toggle |
+| `Super+Ctrl+G` | Ghost/Invisibility toggle |
+| `Super+Ctrl+Delete` | Panic lock/arm (press again quickly to kill) |
+| `Super+Ctrl+Shift+Delete` | Panic kill confirm |
 | `Super+Ctrl+Alt+L` | PANIC lockdown |
 
 ## Lock / logout / session
@@ -88,6 +93,7 @@ Last audited: 2026-07-14 (Phase 3) — `hyprctl configerrors` clean, 0 duplicate
 | `XF86AudioRaise/Lower/Mute` | Volume up / down / mute (+ OSD) |
 | `XF86AudioMicMute` | Mic mute (+ OSD) |
 | `XF86AudioPlay/Next/Prev` | Media play-pause / next / previous (playerctl) |
+| `Super+R` | Force saucer clock/music face flip |
 | `XF86MonBrightnessUp/Down` | Screen brightness (+ OSD) |
 
 ## Screenshots

@@ -132,8 +132,8 @@ window, window.background, decoration {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: rgba(255, 38, 76, 0.92);
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.55), 0 0 24px rgba(152, 77, 255, 0.28);
+  color: rgba(101, 38, 255, 0.92);
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.55), 0 0 24px rgba(28, 174, 242, 0.28);
 }
 
 .bar-metric-alert {
@@ -152,7 +152,7 @@ window, window.background, decoration {
 
 .bar-hub-trigger:hover {
   color: #ffffff;
-  text-shadow: 0 0 14px rgba(152, 77, 255, 0.65);
+  text-shadow: 0 0 14px rgba(28, 174, 242, 0.65);
 }
 
 .bar-hub-brand {
@@ -160,8 +160,8 @@ window, window.background, decoration {
   font-size: 20px;
   font-weight: 800;
   letter-spacing: 0.38em;
-  color: #984dff;
-  text-shadow: 0 0 14px rgba(152, 77, 255, 0.9), 0 0 28px rgba(255, 38, 76, 0.45);
+  color: #1caef2;
+  text-shadow: 0 0 14px rgba(28, 174, 242, 0.9), 0 0 28px rgba(101, 38, 255, 0.45);
 }
 
 .bar-hub-time {
@@ -170,7 +170,7 @@ window, window.background, decoration {
   font-weight: 800;
   letter-spacing: 0.04em;
   color: #ffffff;
-  text-shadow: 0 0 14px rgba(255, 38, 76, 0.8), 0 0 26px rgba(152, 77, 255, 0.5);
+  text-shadow: 0 0 14px rgba(101, 38, 255, 0.8), 0 0 26px rgba(28, 174, 242, 0.5);
 }
 
 .bar-hub-date {
@@ -178,8 +178,8 @@ window, window.background, decoration {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: rgba(255, 38, 76, 0.92);
-  text-shadow: 0 0 8px rgba(255, 38, 76, 0.55);
+  color: rgba(101, 38, 255, 0.92);
+  text-shadow: 0 0 8px rgba(101, 38, 255, 0.55);
 }
 
 /* ── UFO notification popup (message inside the saucer screen) ───────── */
@@ -191,8 +191,8 @@ window, window.background, decoration {
   font-family: "Permanent Marker", "Inter", sans-serif;
   font-size: 11px;
   letter-spacing: 0.22em;
-  color: rgba(255, 38, 76, 0.95);
-  text-shadow: 0 0 10px rgba(255, 38, 76, 0.6);
+  color: rgba(101, 38, 255, 0.95);
+  text-shadow: 0 0 10px rgba(101, 38, 255, 0.6);
 }
 
 .notif-summary {
@@ -200,7 +200,7 @@ window, window.background, decoration {
   font-size: 15px;
   font-weight: 800;
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(152, 77, 255, 0.75), 0 0 3px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.75), 0 0 3px rgba(0, 0, 0, 0.9);
 }
 
 .notif-body {
@@ -213,7 +213,7 @@ window, window.background, decoration {
 
 .notif-crit .notif-summary {
   color: #ffd0dc;
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.9);
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.9);
 }
 
 .bar-hub-music-title {
@@ -222,7 +222,7 @@ window, window.background, decoration {
   font-weight: 700;
   letter-spacing: 0.06em;
   color: #ff4d6b;
-  text-shadow: 0 0 12px rgba(255, 77, 107, 0.65), 0 0 22px rgba(152, 77, 255, 0.3);
+  text-shadow: 0 0 12px rgba(255, 77, 107, 0.65), 0 0 22px rgba(28, 174, 242, 0.3);
 }
 
 .bar-hub-music-artist {
@@ -230,8 +230,8 @@ window, window.background, decoration {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.12em;
-  color: rgba(255, 38, 76, 0.9);
-  text-shadow: 0 0 8px rgba(255, 38, 76, 0.45);
+  color: rgba(101, 38, 255, 0.9);
+  text-shadow: 0 0 8px rgba(101, 38, 255, 0.45);
 }
 
 /* ── SAUCER COCKPIT SCREEN (bottom-center hub trigger) ────────────────
@@ -245,11 +245,11 @@ window, window.background, decoration {
 
 .saucer-screen {
   background-color: rgba(5, 2, 14, 0.88);
-  border: 1px solid rgba(152, 77, 255, 0.55);
+  border: 1px solid rgba(28, 174, 242, 0.55);
   border-radius: 999px;
   padding: 5px 26px;
   min-width: 176px;
-  box-shadow: 0 0 14px rgba(152, 77, 255, 0.35), 0 0 26px rgba(255, 38, 76, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 16px rgba(0, 0, 0, 0.72);
+  box-shadow: 0 0 14px rgba(28, 174, 242, 0.35), 0 0 26px rgba(101, 38, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 16px rgba(0, 0, 0, 0.72);
 }
 
 /* music face needs more room for transport + graph — softer rectangle,
@@ -260,7 +260,7 @@ window, window.background, decoration {
   padding: 3px 14px 4px 14px;
   min-width: 232px;
   border-color: rgba(255, 77, 107, 0.5);
-  box-shadow: 0 0 14px rgba(255, 77, 107, 0.3), 0 0 26px rgba(152, 77, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 16px rgba(0, 0, 0, 0.74);
+  box-shadow: 0 0 14px rgba(255, 77, 107, 0.3), 0 0 26px rgba(28, 174, 242, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 16px rgba(0, 0, 0, 0.74);
 }
 
 /* bigger, livelier CAVA spectrum for the music face — mint so it reads as
@@ -270,7 +270,7 @@ window, window.background, decoration {
   font-size: 15px;
   letter-spacing: 0.06em;
   margin: 0;
-  text-shadow: 0 0 6px rgba(109, 255, 207, 0.8), 0 0 14px rgba(152, 77, 255, 0.45);
+  text-shadow: 0 0 6px rgba(109, 255, 207, 0.8), 0 0 14px rgba(28, 174, 242, 0.45);
 }
 
 /* elapsed / length readouts + progress track */
@@ -278,8 +278,8 @@ window, window.background, decoration {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 9px;
   font-weight: 700;
-  color: rgba(255, 38, 76, 0.92);
-  text-shadow: 0 0 6px rgba(255, 38, 76, 0.45);
+  color: rgba(101, 38, 255, 0.92);
+  text-shadow: 0 0 6px rgba(101, 38, 255, 0.45);
 }
 
 .saucer-prog {
@@ -295,7 +295,7 @@ window, window.background, decoration {
   border-radius: 999px;
   background-repeat: no-repeat;
   background-position: left center;
-  background-image: linear-gradient(90deg, #984dff 0%, #ff4d6b 60%, #ff264c 100%);
+  background-image: linear-gradient(90deg, #1caef2 0%, #ff4d6b 60%, #6526ff 100%);
   box-shadow: 0 0 7px rgba(255, 77, 107, 0.6);
 }
 
@@ -306,22 +306,22 @@ window, window.background, decoration {
 
 .saucer-btn {
   background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(152, 77, 255, 0.3);
+  border: 1px solid rgba(28, 174, 242, 0.3);
   border-radius: 999px;
   min-width: 22px;
   min-height: 15px;
   padding: 0 2px;
-  color: rgba(255, 38, 76, 0.95);
+  color: rgba(101, 38, 255, 0.95);
   font-size: 11px;
-  text-shadow: 0 0 6px rgba(255, 38, 76, 0.5);
+  text-shadow: 0 0 6px rgba(101, 38, 255, 0.5);
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .saucer-btn:hover {
-  background-color: rgba(152, 77, 255, 0.22);
-  border-color: rgba(152, 77, 255, 0.7);
+  background-color: rgba(28, 174, 242, 0.22);
+  border-color: rgba(28, 174, 242, 0.7);
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(152, 77, 255, 0.85);
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.85);
 }
 
 .saucer-btn-main {
@@ -342,26 +342,26 @@ window, window.background, decoration {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: rgba(255, 38, 76, 0.92);
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.55), 0 0 24px rgba(152, 77, 255, 0.28);
+  color: rgba(101, 38, 255, 0.92);
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.55), 0 0 24px rgba(28, 174, 242, 0.28);
   min-width: 0;
 }
 
 .bar-strip-fans {
   color: rgba(255, 120, 73, 0.95);
-  text-shadow: 0 0 12px rgba(255, 120, 73, 0.55), 0 0 22px rgba(152, 77, 255, 0.25);
+  text-shadow: 0 0 12px rgba(255, 120, 73, 0.55), 0 0 22px rgba(28, 174, 242, 0.25);
 }
 
 .bar-strip-net {
   color: rgba(109, 255, 207, 0.95);
-  text-shadow: 0 0 12px rgba(109, 255, 207, 0.5), 0 0 22px rgba(255, 38, 76, 0.28);
+  text-shadow: 0 0 12px rgba(109, 255, 207, 0.5), 0 0 22px rgba(101, 38, 255, 0.28);
 }
 
 .cava-mini {
-  color: #ff264c;
+  color: #6526ff;
   font-size: 11px;
   letter-spacing: 0.02em;
-  text-shadow: 0 0 8px rgba(38, 255, 183, 0.8), 0 0 16px rgba(255, 38, 76, 0.4);
+  text-shadow: 0 0 8px rgba(38, 186, 255, 0.8), 0 0 16px rgba(101, 38, 255, 0.4);
 }
 
 /* -- Phase 6 monitoring readouts (bottom-bar ghost HUD) --------------- */
@@ -414,8 +414,8 @@ window, window.background, decoration {
   font-family: "Permanent Marker", "Inter", sans-serif;
   font-size: 11px;
   letter-spacing: 0.14em;
-  color: #ff264c;
-  text-shadow: 0 0 10px rgba(255, 38, 76, 0.75);
+  color: #6526ff;
+  text-shadow: 0 0 10px rgba(101, 38, 255, 0.75);
 }
 
 .notif-summary {
@@ -423,7 +423,7 @@ window, window.background, decoration {
   font-size: 14px;
   font-weight: 800;
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(152, 77, 255, 0.65);
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.65);
 }
 
 .notif-body {
@@ -486,17 +486,17 @@ window, window.background, decoration {
 }
 
 .mon-glyph-pink {
-  color: #984dff;
-  text-shadow: 0 0 9px rgba(152, 77, 255, 0.8), 0 1px 6px rgba(0, 0, 0, 0.9);
+  color: #1caef2;
+  text-shadow: 0 0 9px rgba(28, 174, 242, 0.8), 0 1px 6px rgba(0, 0, 0, 0.9);
 }
 
 .mon-trace-pink {
-  color: rgba(152, 77, 255, 0.95);
-  text-shadow: 0 0 10px rgba(152, 77, 255, 0.7), 0 0 22px rgba(152, 77, 255, 0.32), 0 1px 5px rgba(0, 0, 0, 0.85);
+  color: rgba(28, 174, 242, 0.95);
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.7), 0 0 22px rgba(28, 174, 242, 0.32), 0 1px 5px rgba(0, 0, 0, 0.85);
 }
 
 .mon-value-pink {
-  color: rgb(195.26, 151.76, 255);
+  color: rgb(123.34, 208.02, 247.46);
 }
 
 .mon-glyph-blue {
@@ -528,12 +528,12 @@ window, window.background, decoration {
 }
 
 .mon-trace-secondary {
-  color: rgba(255, 38, 76, 0.92);
-  text-shadow: 0 0 10px rgba(255, 38, 76, 0.62), 0 0 22px rgba(255, 38, 76, 0.3), 0 1px 5px rgba(0, 0, 0, 0.85);
+  color: rgba(101, 38, 255, 0.92);
+  text-shadow: 0 0 10px rgba(101, 38, 255, 0.62), 0 0 22px rgba(101, 38, 255, 0.3), 0 1px 5px rgba(0, 0, 0, 0.85);
 }
 
 .mon-value-secondary {
-  color: rgb(255, 135.65, 156.55);
+  color: rgb(170.3, 135.65, 255);
 }
 
 /* ember alert state (hot metric) + graceful-degrade dim (dGPU asleep) */
@@ -567,7 +567,7 @@ window, window.background, decoration {
   border-radius: 999px 999px 0 0;
   background-repeat: no-repeat;
   opacity: 0.88;
-  box-shadow: 0 0 14px rgba(255, 38, 76, 0.35);
+  box-shadow: 0 0 14px rgba(101, 38, 255, 0.35);
 }
 
 .nexus-deck {
@@ -575,7 +575,7 @@ window, window.background, decoration {
   min-height: 44px;
   border-radius: 16px;
   border: 1px solid transparent;
-  border-top: 2px solid rgba(255, 38, 76, 0.55);
+  border-top: 2px solid rgba(101, 38, 255, 0.55);
 }
 
 .nexus-cava-river {
@@ -583,17 +583,17 @@ window, window.background, decoration {
   padding: 1px 8px 0;
   margin: 3px 4px 0;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(152, 77, 255, 0.06) 0%, rgba(255, 38, 76, 0.14) 50%, rgba(152, 77, 255, 0.06) 100%);
-  border-bottom: 1px solid rgba(255, 38, 76, 0.12);
+  background: linear-gradient(90deg, rgba(28, 174, 242, 0.06) 0%, rgba(101, 38, 255, 0.14) 50%, rgba(28, 174, 242, 0.06) 100%);
+  border-bottom: 1px solid rgba(101, 38, 255, 0.12);
 }
 
 .nexus-cava-wave {
-  color: rgba(255, 38, 76, 0.92);
+  color: rgba(101, 38, 255, 0.92);
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  text-shadow: 0 0 10px rgba(255, 38, 76, 0.75), 0 0 20px rgba(152, 77, 255, 0.4);
+  text-shadow: 0 0 10px rgba(101, 38, 255, 0.75), 0 0 20px rgba(28, 174, 242, 0.4);
 }
 
 .nexus-command-row {
@@ -627,31 +627,31 @@ window, window.background, decoration {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(255, 38, 76, 0.384);
-  border-top: 2px solid rgba(255, 38, 76, 0.76);
-  box-shadow: 0 0 16px rgba(255, 38, 76, 0.176), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 38, 76, 0.048);
-  border-top: 2px solid rgba(255, 38, 76, 0.95);
-  box-shadow: 0 0 24px rgba(255, 38, 76, 0.35), 0 0 48px rgba(152, 77, 255, 0.18), 0 4px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 20px rgba(152, 77, 255, 0.1);
+  border: 1px solid rgba(101, 38, 255, 0.384);
+  border-top: 2px solid rgba(101, 38, 255, 0.76);
+  box-shadow: 0 0 16px rgba(101, 38, 255, 0.176), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(101, 38, 255, 0.048);
+  border-top: 2px solid rgba(101, 38, 255, 0.95);
+  box-shadow: 0 0 24px rgba(101, 38, 255, 0.35), 0 0 48px rgba(28, 174, 242, 0.18), 0 4px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 20px rgba(28, 174, 242, 0.1);
   transition: all 280ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .nexus-heart-btn:hover {
-  border-color: rgba(255, 38, 76, 0.95);
-  box-shadow: 0 0 22px rgba(255, 38, 76, 0.5), 0 0 40px rgba(255, 38, 76, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 32px rgba(255, 38, 76, 0.55), 0 0 60px rgba(152, 77, 255, 0.28), 0 4px 16px rgba(0, 0, 0, 0.55);
+  border-color: rgba(101, 38, 255, 0.95);
+  box-shadow: 0 0 22px rgba(101, 38, 255, 0.5), 0 0 40px rgba(101, 38, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 32px rgba(101, 38, 255, 0.55), 0 0 60px rgba(28, 174, 242, 0.28), 0 4px 16px rgba(0, 0, 0, 0.55);
 }
 
 .nexus-heart-btn:active {
   background-color: rgba(2, 1, 6, 0.99);
   background-image: none;
-  border-color: rgba(255, 38, 76, 0.85);
-  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(255, 38, 76, 0.32);
+  border-color: rgba(101, 38, 255, 0.85);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(101, 38, 255, 0.32);
 }
 
 .nexus-gem {
-  color: #984dff;
+  color: #1caef2;
   font-size: 11px;
-  text-shadow: 0 0 12px rgba(152, 77, 255, 0.9);
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.9);
 }
 
 .nexus-clock-hm {
@@ -660,7 +660,7 @@ window, window.background, decoration {
   font-weight: 800;
   letter-spacing: 0.06em;
   color: #ffffff;
-  text-shadow: 0 0 14px rgba(255, 38, 76, 0.7), 0 0 28px rgba(152, 77, 255, 0.45);
+  text-shadow: 0 0 14px rgba(101, 38, 255, 0.7), 0 0 28px rgba(28, 174, 242, 0.45);
 }
 
 .nexus-clock-date {
@@ -668,8 +668,8 @@ window, window.background, decoration {
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.18em;
-  color: rgba(255, 38, 76, 0.82);
-  text-shadow: 0 0 8px rgba(255, 38, 76, 0.45);
+  color: rgba(101, 38, 255, 0.82);
+  text-shadow: 0 0 8px rgba(101, 38, 255, 0.45);
 }
 
 /* Orb action buttons — magnetic pills on the wings */
@@ -681,24 +681,24 @@ window, window.background, decoration {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(255, 38, 76, 0.264);
-  border-top: 2px solid rgba(255, 38, 76, 0.5225);
-  box-shadow: 0 0 16px rgba(255, 38, 76, 0.121), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 38, 76, 0.033);
-  border-color: rgba(255, 38, 76, 0.42);
+  border: 1px solid rgba(101, 38, 255, 0.264);
+  border-top: 2px solid rgba(101, 38, 255, 0.5225);
+  box-shadow: 0 0 16px rgba(101, 38, 255, 0.121), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(101, 38, 255, 0.033);
+  border-color: rgba(101, 38, 255, 0.42);
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .nexus-orb:hover {
-  border-color: rgba(255, 38, 76, 0.95);
-  box-shadow: 0 0 22px rgba(255, 38, 76, 0.5), 0 0 40px rgba(255, 38, 76, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(101, 38, 255, 0.95);
+  box-shadow: 0 0 22px rgba(101, 38, 255, 0.5), 0 0 40px rgba(101, 38, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
 }
 
 .nexus-orb:active {
   background-color: rgba(2, 1, 6, 0.99);
   background-image: none;
-  border-color: rgba(255, 38, 76, 0.85);
-  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(255, 38, 76, 0.32);
+  border-color: rgba(101, 38, 255, 0.85);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(101, 38, 255, 0.32);
 }
 
 .nexus-orb-label {
@@ -713,7 +713,7 @@ window, window.background, decoration {
 }
 
 .orb-audio .nexus-orb-label {
-  color: rgb(255, 135.65, 156.55);
+  color: rgb(170.3, 135.65, 255);
 }
 
 .orb-brt .nexus-orb-label {
@@ -729,11 +729,11 @@ window, window.background, decoration {
 }
 
 .orb-notif .nexus-orb-label {
-  color: rgb(195.26, 151.76, 255);
+  color: rgb(123.34, 208.02, 247.46);
 }
 
 .orb-qs .nexus-orb-label {
-  color: rgb(135.65, 255, 215.4);
+  color: rgb(135.65, 217.05, 255);
 }
 
 .orb-power .nexus-orb-label {
@@ -742,7 +742,7 @@ window, window.background, decoration {
 
 .nexus-orb:hover .nexus-orb-label {
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(255, 38, 76, 0.65);
+  text-shadow: 0 0 10px rgba(101, 38, 255, 0.65);
 }
 
 .orb-power:hover .nexus-orb-label {
@@ -761,15 +761,15 @@ window, window.background, decoration {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(152, 77, 255, 0.216);
-  border-top: 2px solid rgba(152, 77, 255, 0.4275);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.099), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(152, 77, 255, 0.027);
+  border: 1px solid rgba(28, 174, 242, 0.216);
+  border-top: 2px solid rgba(28, 174, 242, 0.4275);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.099), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(28, 174, 242, 0.027);
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .reactor-chip:hover {
-  border-color: rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 22px rgba(152, 77, 255, 0.5), 0 0 40px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 22px rgba(28, 174, 242, 0.5), 0 0 40px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
 }
 
 .reactor-chip-key {
@@ -788,21 +788,21 @@ window, window.background, decoration {
 }
 
 .reactor-chip-pink {
-  border-color: rgba(152, 77, 255, 0.5);
+  border-color: rgba(28, 174, 242, 0.5);
 }
 
 .reactor-chip-pink .reactor-chip-val {
-  color: rgb(195.26, 151.76, 255);
-  text-shadow: 0 0 8px rgba(152, 77, 255, 0.55);
+  color: rgb(123.34, 208.02, 247.46);
+  text-shadow: 0 0 8px rgba(28, 174, 242, 0.55);
 }
 
 .reactor-chip-purple {
-  border-color: rgba(38, 255, 183, 0.5);
+  border-color: rgba(38, 186, 255, 0.5);
 }
 
 .reactor-chip-purple .reactor-chip-val {
-  color: rgb(135.65, 255, 215.4);
-  text-shadow: 0 0 8px rgba(38, 255, 183, 0.55);
+  color: rgb(135.65, 217.05, 255);
+  text-shadow: 0 0 8px rgba(38, 186, 255, 0.55);
 }
 
 .reactor-chip-blue {
@@ -898,9 +898,9 @@ window, window.background, decoration {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(152, 77, 255, 0.48);
-  border-top: 2px solid rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(152, 77, 255, 0.06);
+  border: 1px solid rgba(28, 174, 242, 0.48);
+  border-top: 2px solid rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(28, 174, 242, 0.06);
   color: #e8edf5;
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
   font-weight: 700;
@@ -913,17 +913,17 @@ window, window.background, decoration {
 }
 
 .pill:hover {
-  border-color: rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 22px rgba(152, 77, 255, 0.5), 0 0 40px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 22px rgba(28, 174, 242, 0.5), 0 0 40px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(152, 77, 255, 0.55);
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.55);
 }
 
 .pill:active {
   background-color: rgba(2, 1, 6, 0.99);
   background-image: none;
-  border-color: rgba(152, 77, 255, 0.85);
-  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(152, 77, 255, 0.32);
+  border-color: rgba(28, 174, 242, 0.85);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(28, 174, 242, 0.32);
 }
 
 /* -- PILL SPECTRUM . per-widget prism hues ---------------------------- */
@@ -940,17 +940,17 @@ window, window.background, decoration {
 }
 
 .p-audio {
-  color: rgb(255, 135.65, 156.55);
-  border-color: rgba(255, 38, 76, 0.52);
-  box-shadow: 0 0 13px rgba(255, 38, 76, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
-  text-shadow: 0 0 8px rgba(255, 38, 76, 0.5);
+  color: rgb(170.3, 135.65, 255);
+  border-color: rgba(101, 38, 255, 0.52);
+  box-shadow: 0 0 13px rgba(101, 38, 255, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 0 8px rgba(101, 38, 255, 0.5);
 }
 
 .p-mic {
-  color: rgb(195.26, 151.76, 255);
-  border-color: rgba(152, 77, 255, 0.52);
-  box-shadow: 0 0 13px rgba(152, 77, 255, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
-  text-shadow: 0 0 8px rgba(152, 77, 255, 0.5);
+  color: rgb(123.34, 208.02, 247.46);
+  border-color: rgba(28, 174, 242, 0.52);
+  box-shadow: 0 0 13px rgba(28, 174, 242, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 0 8px rgba(28, 174, 242, 0.5);
 }
 
 .p-net {
@@ -975,10 +975,10 @@ window, window.background, decoration {
 }
 
 .p-pp {
-  color: rgb(135.65, 255, 215.4);
-  border-color: rgba(38, 255, 183, 0.52);
-  box-shadow: 0 0 13px rgba(38, 255, 183, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
-  text-shadow: 0 0 8px rgba(38, 255, 183, 0.5);
+  color: rgb(135.65, 217.05, 255);
+  border-color: rgba(38, 186, 255, 0.52);
+  box-shadow: 0 0 13px rgba(38, 186, 255, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 0 8px rgba(38, 186, 255, 0.5);
 }
 
 .p-upd {
@@ -989,15 +989,15 @@ window, window.background, decoration {
 }
 
 .p-notif {
-  color: rgb(195.26, 151.76, 255);
-  border-color: rgba(152, 77, 255, 0.52);
-  box-shadow: 0 0 13px rgba(152, 77, 255, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
-  text-shadow: 0 0 8px rgba(152, 77, 255, 0.5);
+  color: rgb(123.34, 208.02, 247.46);
+  border-color: rgba(28, 174, 242, 0.52);
+  box-shadow: 0 0 13px rgba(28, 174, 242, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 0 8px rgba(28, 174, 242, 0.5);
 }
 
 .batt-charge {
-  border-color: rgba(255, 38, 76, 0.45);
-  color: #ff264c;
+  border-color: rgba(101, 38, 255, 0.45);
+  color: #6526ff;
 }
 
 .batt-low {
@@ -1055,7 +1055,7 @@ window, window.background, decoration {
   font-family: "Permanent Marker", "Inter", cursive;
   font-size: 13px;
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(255, 77, 107, 0.7), 0 0 24px rgba(152, 77, 255, 0.35);
+  text-shadow: 0 0 12px rgba(255, 77, 107, 0.7), 0 0 24px rgba(28, 174, 242, 0.35);
 }
 
 .brand-stamp {
@@ -1069,7 +1069,7 @@ window, window.background, decoration {
 .brand:hover {
   border-color: rgba(255, 77, 107, 0.95);
   box-shadow: 0 0 22px rgba(255, 77, 107, 0.5), 0 0 40px rgba(255, 77, 107, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 28px rgba(255, 77, 107, 0.55), 0 0 48px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62);
+  box-shadow: 0 0 28px rgba(255, 77, 107, 0.55), 0 0 48px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62);
 }
 
 .brand-top {
@@ -1090,12 +1090,12 @@ window, window.background, decoration {
 
 /* -- HEARTBEAT ------------------------------------------------------ */
 .heartbeat {
-  color: #ff264c;
+  color: #6526ff;
   font-size: 10px;
   /* 0.18em ellipsized this label in the centerbox slot ("SYS:LI...") */
   letter-spacing: 0.08em;
   padding: 0 8px;
-  text-shadow: 0 0 8px rgba(255, 38, 76, 0.75), 0 0 18px rgba(255, 38, 76, 0.35);
+  text-shadow: 0 0 8px rgba(101, 38, 255, 0.75), 0 0 18px rgba(101, 38, 255, 0.35);
 }
 
 /* -- SYS PULSE ------------------------------------------------------ */
@@ -1112,14 +1112,14 @@ window, window.background, decoration {
   padding: 0 12px;
   border-radius: 999px;
   background: linear-gradient(90deg, rgba(9, 5, 18, 0.92), rgba(4, 2, 10, 0.96) 30%, rgba(4, 2, 10, 0.96) 70%, rgba(9, 5, 18, 0.92));
-  border: 1px solid rgba(255, 38, 76, 0.3);
-  box-shadow: 0 0 13px rgba(255, 38, 76, 0.16), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 0 10px rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(101, 38, 255, 0.3);
+  box-shadow: 0 0 13px rgba(101, 38, 255, 0.16), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 0 10px rgba(0, 0, 0, 0.42);
 }
 
 .cava-label {
-  color: #ff264c;
+  color: #6526ff;
   font-size: 13px;
-  text-shadow: 0 0 8px rgba(38, 255, 183, 0.85), 0 0 16px rgba(255, 38, 76, 0.4);
+  text-shadow: 0 0 8px rgba(38, 186, 255, 0.85), 0 0 16px rgba(101, 38, 255, 0.4);
 }
 
 .tray-dummy {
@@ -1140,21 +1140,21 @@ window, window.background, decoration {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(152, 77, 255, 0.48);
-  border-top: 2px solid rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(152, 77, 255, 0.06);
+  border: 1px solid rgba(28, 174, 242, 0.48);
+  border-top: 2px solid rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(28, 174, 242, 0.06);
   transition: all 180ms ease;
 }
 
 .clock:hover {
-  border-color: rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 22px rgba(152, 77, 255, 0.5), 0 0 40px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 22px rgba(28, 174, 242, 0.5), 0 0 40px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
 }
 
 .clock-glyph {
-  color: #984dff;
+  color: #1caef2;
   font-size: 14px;
-  text-shadow: 0 0 10px rgba(152, 77, 255, 0.65);
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.65);
 }
 
 .clock-hms {
@@ -1162,15 +1162,15 @@ window, window.background, decoration {
   font-size: 20px;
   letter-spacing: 0.06em;
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.7), 0 0 24px rgba(152, 77, 255, 0.5);
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.7), 0 0 24px rgba(28, 174, 242, 0.5);
 }
 
 .clock-sec {
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.04em;
-  color: rgba(255, 38, 76, 0.85);
-  text-shadow: 0 0 8px rgba(255, 38, 76, 0.55);
+  color: rgba(101, 38, 255, 0.85);
+  text-shadow: 0 0 8px rgba(101, 38, 255, 0.55);
   padding-top: 4px;
 }
 
@@ -1220,12 +1220,12 @@ window, window.background, decoration {
 }
 
 .ticker-hero {
-  color: rgba(255, 38, 76, 0.98);
+  color: rgba(101, 38, 255, 0.98);
   font-family: "JetBrainsMono Nerd Font", "JetBrainsMono", monospace;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.06em;
-  text-shadow: 0 0 14px rgba(255, 38, 76, 0.65), 0 0 28px rgba(152, 77, 255, 0.35);
+  text-shadow: 0 0 14px rgba(101, 38, 255, 0.65), 0 0 28px rgba(28, 174, 242, 0.35);
   min-width: 0;
 }
 
@@ -1235,16 +1235,16 @@ window, window.background, decoration {
 }
 
 .ticker-watermark {
-  color: #984dff;
+  color: #1caef2;
   font-family: "Inter Display", "Inter", sans-serif;
   font-weight: 800;
   font-size: 10px;
   letter-spacing: 0.32em;
   padding: 1px 14px;
   background: linear-gradient(180deg, rgba(7, 3, 14, 0.97), rgba(4, 2, 10, 0.94));
-  border: 1px solid rgba(152, 77, 255, 0.48);
+  border: 1px solid rgba(28, 174, 242, 0.48);
   border-radius: 5px;
-  text-shadow: 0 0 10px rgba(152, 77, 255, 0.9), 0 0 22px rgba(152, 77, 255, 0.45);
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.9), 0 0 22px rgba(28, 174, 242, 0.45);
 }
 
 /* full-width scrolling ribbon - dressed as obsidian HUD marquee card */
@@ -1255,26 +1255,26 @@ window, window.background, decoration {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(255, 38, 76, 0.3456);
-  border-top: 2px solid rgba(255, 38, 76, 0.684);
-  box-shadow: 0 0 16px rgba(255, 38, 76, 0.1584), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 38, 76, 0.0432);
+  border: 1px solid rgba(101, 38, 255, 0.3456);
+  border-top: 2px solid rgba(101, 38, 255, 0.684);
+  box-shadow: 0 0 16px rgba(101, 38, 255, 0.1584), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(101, 38, 255, 0.0432);
   min-width: 0;
-  box-shadow: 0 0 14px rgba(255, 38, 76, 0.18), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 12px rgba(255, 38, 76, 0.08);
+  box-shadow: 0 0 14px rgba(101, 38, 255, 0.18), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 12px rgba(101, 38, 255, 0.08);
 }
 
 .ticker-label {
   font-family: "Permanent Marker", "Inter", cursive;
   font-size: 10px;
-  color: #984dff;
-  text-shadow: 0 0 10px rgba(152, 77, 255, 0.75), 0 0 20px rgba(255, 38, 76, 0.35);
+  color: #1caef2;
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.75), 0 0 20px rgba(101, 38, 255, 0.35);
   padding-right: 2px;
 }
 
 .ticker {
-  color: rgba(255, 38, 76, 0.95);
+  color: rgba(101, 38, 255, 0.95);
   font-family: "JetBrainsMono Nerd Font", "JetBrainsMono", monospace;
   font-size: 10px;
-  text-shadow: 0 0 10px rgba(255, 38, 76, 0.55);
+  text-shadow: 0 0 10px rgba(101, 38, 255, 0.55);
   min-width: 0;
 }
 
@@ -1390,8 +1390,8 @@ window, window.background, decoration {
 .app-pill:active {
   background-color: rgba(2, 1, 6, 0.99);
   background-image: none;
-  border-color: rgba(152, 77, 255, 0.85);
-  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(152, 77, 255, 0.32);
+  border-color: rgba(28, 174, 242, 0.85);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(28, 174, 242, 0.32);
 }
 
 /* -- BOOT SPLASH (nyxus-splash namespace) ---------------------------- */
@@ -1413,8 +1413,8 @@ window, window.background, decoration {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 12px;
   letter-spacing: 0.26em;
-  color: #ff264c;
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.7);
+  color: #6526ff;
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.7);
 }
 
 .splash-footer {
@@ -1426,7 +1426,7 @@ window, window.background, decoration {
   font-size: 15px;
   letter-spacing: 0.3em;
   color: #ffffff;
-  text-shadow: 0 0 14px rgba(152, 77, 255, 0.85), 0 0 30px rgba(255, 38, 76, 0.45);
+  text-shadow: 0 0 14px rgba(28, 174, 242, 0.85), 0 0 30px rgba(101, 38, 255, 0.45);
 }
 
 .splash-boot {
@@ -1435,7 +1435,7 @@ window, window.background, decoration {
   letter-spacing: 0.3em;
   color: #9aa0ad;
   padding-top: 8px;
-  text-shadow: 0 0 10px rgba(152, 77, 255, 0.5);
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.5);
 }
 
 .splash-foot {
@@ -1493,22 +1493,22 @@ window, window.background, decoration {
   border-radius: 16px;
   border: 1px solid transparent;
   background-color: rgba(7, 3, 15, 0.24);
-  box-shadow: 0 0 0 1px rgba(152, 77, 255, 0.14), 0 0 56px rgba(152, 77, 255, 0.24), 0 32px 96px rgba(0, 0, 0, 0.86), inset 0 0 72px rgba(152, 77, 255, 0.07);
+  box-shadow: 0 0 0 1px rgba(28, 174, 242, 0.14), 0 0 56px rgba(28, 174, 242, 0.24), 0 32px 96px rgba(0, 0, 0, 0.86), inset 0 0 72px rgba(28, 174, 242, 0.07);
 }
 
 .hub-title {
-  color: #984dff;
+  color: #1caef2;
   font-family: "Permanent Marker", "Inter", cursive;
   font-size: 32px;
   font-weight: 400;
   letter-spacing: 0.02em;
-  text-shadow: 0 0 20px rgba(152, 77, 255, 0.7), 0 0 40px rgba(255, 38, 76, 0.28);
+  text-shadow: 0 0 20px rgba(28, 174, 242, 0.7), 0 0 40px rgba(101, 38, 255, 0.28);
 }
 
 .hub-title-gem {
-  color: #ff264c;
+  color: #6526ff;
   font-size: 20px;
-  text-shadow: 0 0 16px rgba(255, 38, 76, 0.75);
+  text-shadow: 0 0 16px rgba(101, 38, 255, 0.75);
 }
 
 .hub-subtitle {
@@ -1520,12 +1520,12 @@ window, window.background, decoration {
 }
 
 .hub-section-title {
-  color: #ff264c;
+  color: #6526ff;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.28em;
   padding-top: 6px;
-  text-shadow: 0 0 10px rgba(255, 38, 76, 0.45);
+  text-shadow: 0 0 10px rgba(101, 38, 255, 0.45);
 }
 
 .hub-grid {
@@ -1537,16 +1537,16 @@ window, window.background, decoration {
   min-width: 96px;
   border-radius: 12px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(152, 77, 255, 0.1984);
-  border-top: 1px solid rgba(152, 77, 255, 0.3844);
+  border: 1px solid rgba(28, 174, 242, 0.1984);
+  border-top: 1px solid rgba(28, 174, 242, 0.3844);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
   transition: all 280ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .hub-tile:hover {
   background-color: rgba(8, 4, 16, 0.86);
-  border-color: rgba(152, 77, 255, 0.58);
-  box-shadow: 0 0 18px rgba(152, 77, 255, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(152, 77, 255, 0.08);
+  border-color: rgba(28, 174, 242, 0.58);
+  box-shadow: 0 0 18px rgba(28, 174, 242, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(28, 174, 242, 0.08);
 }
 
 .hub-tile-glyph {
@@ -1563,12 +1563,12 @@ window, window.background, decoration {
 }
 
 .hub-tile-green {
-  border-color: rgba(255, 38, 76, 0.45);
+  border-color: rgba(101, 38, 255, 0.45);
 }
 
 .hub-tile-green .hub-tile-glyph {
-  color: #ff264c;
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.55);
+  color: #6526ff;
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.55);
 }
 
 .hub-tile-blue {
@@ -1581,21 +1581,21 @@ window, window.background, decoration {
 }
 
 .hub-tile-purple {
-  border-color: rgba(38, 255, 183, 0.45);
+  border-color: rgba(38, 186, 255, 0.45);
 }
 
 .hub-tile-purple .hub-tile-glyph {
-  color: #26ffb7;
-  text-shadow: 0 0 12px rgba(38, 255, 183, 0.55);
+  color: #26baff;
+  text-shadow: 0 0 12px rgba(38, 186, 255, 0.55);
 }
 
 .hub-tile-pink {
-  border-color: rgba(152, 77, 255, 0.45);
+  border-color: rgba(28, 174, 242, 0.45);
 }
 
 .hub-tile-pink .hub-tile-glyph {
-  color: #984dff;
-  text-shadow: 0 0 12px rgba(152, 77, 255, 0.55);
+  color: #1caef2;
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.55);
 }
 
 .hub-tile-gold {
@@ -1657,8 +1657,8 @@ window, window.background, decoration {
   padding: 4px 8px;
   border-radius: 8px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(152, 77, 255, 0.16);
-  border-top: 1px solid rgba(152, 77, 255, 0.31);
+  border: 1px solid rgba(28, 174, 242, 0.16);
+  border-top: 1px solid rgba(28, 174, 242, 0.31);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 11px;
@@ -1669,34 +1669,34 @@ window, window.background, decoration {
 
 .hub-ws-pill:hover {
   background-color: rgba(8, 4, 16, 0.86);
-  border-color: rgba(152, 77, 255, 0.58);
-  box-shadow: 0 0 18px rgba(152, 77, 255, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(152, 77, 255, 0.08);
+  border-color: rgba(28, 174, 242, 0.58);
+  box-shadow: 0 0 18px rgba(28, 174, 242, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(28, 174, 242, 0.08);
   color: #ffffff;
 }
 
 .hub-ws-active {
-  border-color: rgba(152, 77, 255, 0.85);
+  border-color: rgba(28, 174, 242, 0.85);
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(152, 77, 255, 0.75);
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.75);
 }
 
 .hub-ws-occupied {
-  color: rgb(195.26, 151.76, 255);
+  color: rgb(123.34, 208.02, 247.46);
 }
 
 .hub-ws-pink {
-  border-color: rgba(152, 77, 255, 0.4);
-  color: rgb(195.26, 151.76, 255);
+  border-color: rgba(28, 174, 242, 0.4);
+  color: rgb(123.34, 208.02, 247.46);
 }
 
 .hub-ws-green {
-  border-color: rgba(255, 38, 76, 0.4);
-  color: rgb(255, 135.65, 156.55);
+  border-color: rgba(101, 38, 255, 0.4);
+  color: rgb(170.3, 135.65, 255);
 }
 
 .hub-ws-purple {
-  border-color: rgba(38, 255, 183, 0.4);
-  color: rgb(135.65, 255, 215.4);
+  border-color: rgba(38, 186, 255, 0.4);
+  color: rgb(135.65, 217.05, 255);
 }
 
 .hub-ws-gold {
@@ -1723,15 +1723,15 @@ window, window.background, decoration {
   padding: 4px 10px;
   border-radius: 8px;
   background: rgba(17, 21, 31, 0.55);
-  border: 1px solid rgba(152, 77, 255, 0.25);
+  border: 1px solid rgba(28, 174, 242, 0.25);
   color: #9aa0ad;
   font-size: 14px;
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .hub-close-x:hover {
-  color: #984dff;
-  border-color: rgba(152, 77, 255, 0.55);
+  color: #1caef2;
+  border-color: rgba(28, 174, 242, 0.55);
 }
 
 .hub-close {
@@ -1739,15 +1739,15 @@ window, window.background, decoration {
   padding: 8px 18px;
   border-radius: 10px;
   background: rgba(17, 21, 31, 0.65);
-  border: 1px solid rgba(255, 38, 76, 0.25);
+  border: 1px solid rgba(101, 38, 255, 0.25);
   color: #9aa0ad;
   font-size: 11px;
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .hub-close:hover {
-  color: #ff264c;
-  border-color: rgba(255, 38, 76, 0.55);
+  color: #6526ff;
+  border-color: rgba(101, 38, 255, 0.55);
 }
 
 .hub-power-row {
@@ -1760,7 +1760,7 @@ window, window.background, decoration {
 /* header: wordmark cluster · weather · clock · close */
 .hub-headerbar {
   padding: 2px 2px 10px;
-  border-bottom: 1px solid rgba(152, 77, 255, 0.16);
+  border-bottom: 1px solid rgba(28, 174, 242, 0.16);
 }
 
 .hub-weather {
@@ -1792,7 +1792,7 @@ window, window.background, decoration {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 26px;
   font-weight: 700;
-  text-shadow: 0 0 16px rgba(152, 77, 255, 0.4);
+  text-shadow: 0 0 16px rgba(28, 174, 242, 0.4);
 }
 
 .hub-clock-date {
@@ -1814,8 +1814,8 @@ window, window.background, decoration {
   padding: 9px 14px;
   border-radius: 12px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(152, 77, 255, 0.16);
-  border-top: 1px solid rgba(152, 77, 255, 0.31);
+  border: 1px solid rgba(28, 174, 242, 0.16);
+  border-top: 1px solid rgba(28, 174, 242, 0.31);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
@@ -1842,21 +1842,21 @@ window, window.background, decoration {
 }
 
 .hub-stat-pink {
-  border-color: rgba(152, 77, 255, 0.4);
+  border-color: rgba(28, 174, 242, 0.4);
 }
 
 .hub-stat-pink .hub-stat-glyph {
-  color: #984dff;
-  text-shadow: 0 0 12px rgba(152, 77, 255, 0.55);
+  color: #1caef2;
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.55);
 }
 
 .hub-stat-purple {
-  border-color: rgba(38, 255, 183, 0.4);
+  border-color: rgba(38, 186, 255, 0.4);
 }
 
 .hub-stat-purple .hub-stat-glyph {
-  color: #26ffb7;
-  text-shadow: 0 0 12px rgba(38, 255, 183, 0.55);
+  color: #26baff;
+  text-shadow: 0 0 12px rgba(38, 186, 255, 0.55);
 }
 
 .hub-stat-blue {
@@ -1878,12 +1878,12 @@ window, window.background, decoration {
 }
 
 .hub-stat-green {
-  border-color: rgba(255, 38, 76, 0.4);
+  border-color: rgba(101, 38, 255, 0.4);
 }
 
 .hub-stat-green .hub-stat-glyph {
-  color: #ff264c;
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.55);
+  color: #6526ff;
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.55);
 }
 
 .hub-stat-orange {
@@ -1900,13 +1900,13 @@ window, window.background, decoration {
   padding: 12px 14px 14px;
   border-radius: 14px;
   background-color: rgba(6, 2, 13, 0.34);
-  border: 1px solid rgba(152, 77, 255, 0.1);
+  border: 1px solid rgba(28, 174, 242, 0.1);
 }
 
 /* slider live readout */
 .hub-slider-val {
   min-width: 30px;
-  color: rgb(195.26, 151.76, 255);
+  color: rgb(123.34, 208.02, 247.46);
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 11px;
   font-weight: 700;
@@ -1956,7 +1956,7 @@ window, window.background, decoration {
   min-height: 5px;
   border-radius: 3px;
   background-repeat: no-repeat;
-  background-image: linear-gradient(90deg, #ff4d6b, #984dff);
+  background-image: linear-gradient(90deg, #ff4d6b, #1caef2);
   box-shadow: 0 0 8px rgba(255, 77, 107, 0.55);
 }
 
@@ -1986,9 +1986,9 @@ window, window.background, decoration {
 .hub-apps-toggle {
   padding: 3px 12px;
   border-radius: 8px;
-  background-color: rgba(38, 255, 183, 0.14);
-  border: 1px solid rgba(38, 255, 183, 0.3);
-  color: rgb(135.65, 255, 215.4);
+  background-color: rgba(38, 186, 255, 0.14);
+  border: 1px solid rgba(38, 186, 255, 0.3);
+  color: rgb(135.65, 217.05, 255);
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 10px;
   font-weight: 700;
@@ -1997,7 +1997,7 @@ window, window.background, decoration {
 }
 
 .hub-apps-toggle:hover {
-  border-color: rgba(38, 255, 183, 0.6);
+  border-color: rgba(38, 186, 255, 0.6);
   color: #ffffff;
 }
 
@@ -2008,7 +2008,7 @@ window, window.background, decoration {
 /* footer: stations switcher + power actions */
 .hub-footer {
   padding-top: 8px;
-  border-top: 1px solid rgba(152, 77, 255, 0.14);
+  border-top: 1px solid rgba(28, 174, 242, 0.14);
 }
 
 /* -- DEEP CORE overlay ----------------------------------------------- */
@@ -2017,10 +2017,10 @@ window, window.background, decoration {
   background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.54), rgba(4, 2, 11, 0.22));
   background-position: center;
   padding: 48px 56px;
-  border: 1px solid rgba(255, 38, 76, 0.42);
-  border-top: 2px solid #ff264c;
+  border: 1px solid rgba(101, 38, 255, 0.42);
+  border-top: 2px solid #6526ff;
   border-radius: 12px;
-  box-shadow: 0 0 0 1px rgba(255, 38, 76, 0.08), 0 40px 120px rgba(0, 0, 0, 0.85), inset 0 0 80px rgba(38, 255, 183, 0.06);
+  box-shadow: 0 0 0 1px rgba(101, 38, 255, 0.08), 0 40px 120px rgba(0, 0, 0, 0.85), inset 0 0 80px rgba(38, 186, 255, 0.06);
 }
 
 .dc-title {
@@ -2045,18 +2045,18 @@ window, window.background, decoration {
   padding: 18px 22px;
   border-radius: 8px;
   background: rgba(7, 5, 14, 0.93);
-  border: 1px dashed rgba(38, 255, 183, 0.45);
-  border-top: 2px solid #26ffb7;
+  border: 1px dashed rgba(38, 186, 255, 0.45);
+  border-top: 2px solid #26baff;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   min-width: 300px;
 }
 
 .dc-section {
-  color: #26ffb7;
+  color: #26baff;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.3em;
-  text-shadow: 0 0 10px rgba(38, 255, 183, 0.45);
+  text-shadow: 0 0 10px rgba(38, 186, 255, 0.45);
 }
 
 .dc-row {
@@ -2064,7 +2064,7 @@ window, window.background, decoration {
 }
 
 .dc-key {
-  color: #ff264c;
+  color: #6526ff;
   font-size: 11px;
   font-weight: 700;
   min-width: 110px;
@@ -2099,15 +2099,15 @@ window, window.background, decoration {
   padding: 8px 18px;
   border-radius: 10px;
   background: rgba(17, 21, 31, 0.65);
-  border: 1px solid rgba(255, 38, 76, 0.25);
+  border: 1px solid rgba(101, 38, 255, 0.25);
   color: #9aa0ad;
   font-size: 11px;
   transition: all 180ms ease;
 }
 
 .dc-close:hover {
-  color: #ff264c;
-  border-color: rgba(255, 38, 76, 0.55);
+  color: #6526ff;
+  border-color: rgba(101, 38, 255, 0.55);
 }
 
 /* -- DASHBOARD overlay ---------------------------------------------- */
@@ -2116,9 +2116,9 @@ window, window.background, decoration {
   background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.54), rgba(4, 2, 11, 0.22));
   background-position: center;
   padding: 80px 60px;
-  border: 2px solid rgba(255, 38, 76, 0.35);
+  border: 2px solid rgba(101, 38, 255, 0.35);
   border-radius: 28px;
-  box-shadow: 0 0 0 1px rgba(255, 38, 76, 0.08), 0 40px 120px rgba(0, 0, 0, 0.85), inset 0 0 80px rgba(152, 77, 255, 0.06);
+  box-shadow: 0 0 0 1px rgba(101, 38, 255, 0.08), 0 40px 120px rgba(0, 0, 0, 0.85), inset 0 0 80px rgba(28, 174, 242, 0.06);
 }
 
 /* Scroll wrapper around dashboard content (only visible when content
@@ -2135,14 +2135,14 @@ window, window.background, decoration {
 }
 
 .dashboard-scroll scrollbar slider {
-  background: rgba(152, 77, 255, 0.35);
+  background: rgba(28, 174, 242, 0.35);
   border-radius: 4px;
   min-width: 6px;
   min-height: 24px;
 }
 
 .dashboard-scroll scrollbar slider:hover {
-  background: rgba(152, 77, 255, 0.65);
+  background: rgba(28, 174, 242, 0.65);
 }
 
 /* ── global scrollbar — urban violet/magenta, quiet but on-theme ─────── */
@@ -2158,16 +2158,16 @@ scrollbar trough {
 }
 
 scrollbar slider {
-  background: linear-gradient(180deg, rgba(152, 77, 255, 0.6), rgba(255, 38, 76, 0.45));
+  background: linear-gradient(180deg, rgba(28, 174, 242, 0.6), rgba(101, 38, 255, 0.45));
   border-radius: 7px;
   min-width: 7px;
   min-height: 30px;
-  box-shadow: 0 0 7px rgba(152, 77, 255, 0.35);
+  box-shadow: 0 0 7px rgba(28, 174, 242, 0.35);
 }
 
 scrollbar slider:hover {
-  background: linear-gradient(180deg, rgba(152, 77, 255, 0.9), rgba(255, 38, 76, 0.7));
-  box-shadow: 0 0 12px rgba(152, 77, 255, 0.55);
+  background: linear-gradient(180deg, rgba(28, 174, 242, 0.9), rgba(101, 38, 255, 0.7));
+  box-shadow: 0 0 12px rgba(28, 174, 242, 0.55);
 }
 
 .dash-clock {
@@ -2175,7 +2175,7 @@ scrollbar slider:hover {
   font-weight: 700;
   letter-spacing: 0.04em;
   color: #ffffff;
-  text-shadow: 0 0 32px rgba(152, 77, 255, 0.55);
+  text-shadow: 0 0 32px rgba(28, 174, 242, 0.55);
 }
 
 .dash-date {
@@ -2194,8 +2194,8 @@ scrollbar slider:hover {
   padding: 20px 28px;
   border-radius: 8px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(152, 77, 255, 0.2304);
-  border-top: 1px solid rgba(152, 77, 255, 0.4464);
+  border: 1px solid rgba(28, 174, 242, 0.2304);
+  border-top: 1px solid rgba(28, 174, 242, 0.4464);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
   min-width: 200px;
   transition: all 320ms ease;
@@ -2203,8 +2203,8 @@ scrollbar slider:hover {
 
 .dash-card:hover {
   background-color: rgba(8, 4, 16, 0.86);
-  border-color: rgba(152, 77, 255, 0.58);
-  box-shadow: 0 0 18px rgba(152, 77, 255, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(152, 77, 255, 0.08);
+  border-color: rgba(28, 174, 242, 0.58);
+  box-shadow: 0 0 18px rgba(28, 174, 242, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(28, 174, 242, 0.08);
 }
 
 /* Each card carries its own neon (HUD: Clock=pink, Weather=gold,
@@ -2222,13 +2222,13 @@ scrollbar slider:hover {
 }
 
 .dash-grid .dash-card:nth-child(2) {
-  border-color: rgba(152, 77, 255, 0.55);
-  border-top-color: #984dff;
+  border-color: rgba(28, 174, 242, 0.55);
+  border-top-color: #1caef2;
 }
 
 .dash-grid .dash-card:nth-child(2) .dash-card-title {
-  color: #984dff;
-  text-shadow: 0 0 10px rgba(152, 77, 255, 0.45);
+  color: #1caef2;
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.45);
 }
 
 .dash-grid .dash-card:nth-child(3) {
@@ -2243,14 +2243,14 @@ scrollbar slider:hover {
 }
 
 .dash-grid .dash-card:nth-child(4) {
-  border-color: rgba(38, 255, 183, 0.55);
-  border-top-color: #26ffb7;
-  box-shadow: 0 0 18px rgba(38, 255, 183, 0.2), 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 24px rgba(0, 0, 0, 0.18);
+  border-color: rgba(38, 186, 255, 0.55);
+  border-top-color: #26baff;
+  box-shadow: 0 0 18px rgba(38, 186, 255, 0.2), 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 24px rgba(0, 0, 0, 0.18);
 }
 
 .dash-grid .dash-card:nth-child(4) .dash-card-title {
-  color: #26ffb7;
-  text-shadow: 0 0 10px rgba(38, 255, 183, 0.45);
+  color: #26baff;
+  text-shadow: 0 0 10px rgba(38, 186, 255, 0.45);
 }
 
 .dash-grid .dash-card:nth-child(5) {
@@ -2265,11 +2265,11 @@ scrollbar slider:hover {
 }
 
 .dash-card-title {
-  color: #26ffb7;
+  color: #26baff;
   letter-spacing: 0.3em;
   font-size: 10px;
   font-weight: 700;
-  text-shadow: 0 0 10px rgba(38, 255, 183, 0.4);
+  text-shadow: 0 0 10px rgba(38, 186, 255, 0.4);
 }
 
 .dash-card-big {
@@ -2290,7 +2290,7 @@ scrollbar slider:hover {
   padding: 12px 8px;
   border-radius: 12px;
   background: rgba(17, 21, 31, 0.65);
-  border: 1px solid rgba(152, 77, 255, 0.15);
+  border: 1px solid rgba(28, 174, 242, 0.15);
   /* no letter-spacing here: it inherits into the label and ellipsizes
      text inside the homogeneous space-evenly toggle row */
   font-size: 11px;
@@ -2298,9 +2298,9 @@ scrollbar slider:hover {
 }
 
 .dash-toggle:hover {
-  background: rgba(152, 77, 255, 0.2);
-  border-color: rgba(152, 77, 255, 0.55);
-  box-shadow: 0 0 18px rgba(152, 77, 255, 0.35);
+  background: rgba(28, 174, 242, 0.2);
+  border-color: rgba(28, 174, 242, 0.55);
+  box-shadow: 0 0 18px rgba(28, 174, 242, 0.35);
 }
 
 .dash-close {
@@ -2325,9 +2325,9 @@ scrollbar slider:hover {
   background-position: center;
   padding: 60px 80px;
   min-width: 720px;
-  border: 1px solid rgba(255, 38, 76, 0.42);
+  border: 1px solid rgba(101, 38, 255, 0.42);
   border-radius: 12px;
-  box-shadow: 0 0 0 1px rgba(255, 38, 76, 0.08), 0 40px 120px rgba(0, 0, 0, 0.85), inset 0 0 60px rgba(38, 255, 183, 0.04);
+  box-shadow: 0 0 0 1px rgba(101, 38, 255, 0.08), 0 40px 120px rgba(0, 0, 0, 0.85), inset 0 0 60px rgba(38, 186, 255, 0.04);
 }
 
 .power-title {
@@ -2347,15 +2347,15 @@ scrollbar slider:hover {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(38, 255, 183, 0.408);
-  border-top: 2px solid rgba(38, 255, 183, 0.8075);
-  box-shadow: 0 0 16px rgba(38, 255, 183, 0.187), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(38, 255, 183, 0.051);
+  border: 1px solid rgba(38, 186, 255, 0.408);
+  border-top: 2px solid rgba(38, 186, 255, 0.8075);
+  box-shadow: 0 0 16px rgba(38, 186, 255, 0.187), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(38, 186, 255, 0.051);
   transition: all 180ms ease;
 }
 
 .power-btn:hover {
-  border-color: rgba(38, 255, 183, 0.95);
-  box-shadow: 0 0 22px rgba(38, 255, 183, 0.5), 0 0 40px rgba(38, 255, 183, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(38, 186, 255, 0.95);
+  box-shadow: 0 0 22px rgba(38, 186, 255, 0.5), 0 0 40px rgba(38, 186, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
 }
 
 /* Destructive variants (Shutdown/Restart) - red border + glyph in
@@ -2393,15 +2393,15 @@ scrollbar slider:hover {
   margin-top: 16px;
   padding: 8px 18px;
   border-radius: 10px;
-  border: 1px solid rgba(38, 255, 183, 0.28);
+  border: 1px solid rgba(38, 186, 255, 0.28);
   color: #9aa0ad;
   letter-spacing: 0.16em;
   font-size: 10px;
 }
 
 .power-cancel:hover {
-  color: #ff264c;
-  border-color: rgba(255, 38, 76, 0.45);
+  color: #6526ff;
+  border-color: rgba(101, 38, 255, 0.45);
 }
 
 /* -- DASHBOARD . sliders + calendar (additions) ---------------------- */
@@ -2427,25 +2427,25 @@ scrollbar slider:hover {
 }
 
 .dash-slider-label {
-  color: #26ffb7;
+  color: #26baff;
   letter-spacing: 0.2em;
   font-weight: 700;
   font-size: 10px;
   min-width: 36px;
-  text-shadow: 0 0 10px rgba(38, 255, 183, 0.4);
+  text-shadow: 0 0 10px rgba(38, 186, 255, 0.4);
 }
 
 .dash-scale trough {
   min-height: 6px;
   border-radius: 6px;
   background: rgba(17, 21, 31, 0.85);
-  border: 1px solid rgba(152, 77, 255, 0.18);
+  border: 1px solid rgba(28, 174, 242, 0.18);
 }
 
 .dash-scale highlight {
   border-radius: 6px;
-  background: linear-gradient(90deg, #984dff, #ff264c);
-  box-shadow: 0 0 12px rgba(152, 77, 255, 0.55);
+  background: linear-gradient(90deg, #1caef2, #6526ff);
+  box-shadow: 0 0 12px rgba(28, 174, 242, 0.55);
 }
 
 .dash-scale slider {
@@ -2474,9 +2474,9 @@ scrollbar slider:hover {
   background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.54), rgba(4, 2, 11, 0.22));
   background-position: center;
   padding: 60px 80px;
-  border: 1px solid rgba(255, 38, 76, 0.42);
+  border: 1px solid rgba(101, 38, 255, 0.42);
   border-radius: 12px;
-  box-shadow: 0 0 0 1px rgba(255, 38, 76, 0.08), 0 40px 120px rgba(0, 0, 0, 0.85), inset 0 0 80px rgba(38, 255, 183, 0.06);
+  box-shadow: 0 0 0 1px rgba(101, 38, 255, 0.08), 0 40px 120px rgba(0, 0, 0, 0.85), inset 0 0 80px rgba(38, 186, 255, 0.06);
 }
 
 .cheat-title {
@@ -2489,12 +2489,12 @@ scrollbar slider:hover {
 }
 
 .cheat-section {
-  color: #26ffb7;
+  color: #26baff;
   letter-spacing: 0.3em;
   font-size: 10px;
   font-weight: 700;
   padding-bottom: 8px;
-  text-shadow: 0 0 10px rgba(38, 255, 183, 0.4);
+  text-shadow: 0 0 10px rgba(38, 186, 255, 0.4);
 }
 
 .cheat-col {
@@ -2502,8 +2502,8 @@ scrollbar slider:hover {
   border-radius: 8px;
   min-width: 280px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(38, 255, 183, 0.208);
-  border-top: 1px solid rgba(38, 255, 183, 0.403);
+  border: 1px solid rgba(38, 186, 255, 0.208);
+  border-top: 1px solid rgba(38, 186, 255, 0.403);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
 }
 
@@ -2513,7 +2513,7 @@ scrollbar slider:hover {
 
 .cheat-chord {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  color: #ff264c;
+  color: #6526ff;
   font-size: 11px;
   min-width: 130px;
   letter-spacing: 0.04em;
@@ -2542,11 +2542,11 @@ scrollbar slider:hover {
 /* -- OSD pop-ups ----------------------------------------------------- */
 .osd-root {
   background: rgba(7, 5, 14, 0.93);
-  border: 1px dashed rgba(255, 38, 76, 0.6);
-  border-top: 2px solid #ff264c;
+  border: 1px dashed rgba(101, 38, 255, 0.6);
+  border-top: 2px solid #6526ff;
   border-radius: 8px;
   padding: 14px 22px;
-  box-shadow: 0 0 0 1px rgba(255, 38, 76, 0.08), 0 12px 40px rgba(0, 0, 0, 0.65), 0 0 28px rgba(255, 38, 76, 0.22);
+  box-shadow: 0 0 0 1px rgba(101, 38, 255, 0.08), 0 12px 40px rgba(0, 0, 0, 0.65), 0 0 28px rgba(101, 38, 255, 0.22);
 }
 
 .osd-glyph {
@@ -2566,13 +2566,13 @@ scrollbar slider:hover {
   min-height: 6px;
   border-radius: 6px;
   background: rgba(17, 21, 31, 0.85);
-  border: 1px solid rgba(152, 77, 255, 0.18);
+  border: 1px solid rgba(28, 174, 242, 0.18);
 }
 
 .osd-bar highlight {
   border-radius: 6px;
-  background: linear-gradient(90deg, #984dff, #ff264c);
-  box-shadow: 0 0 12px rgba(152, 77, 255, 0.55);
+  background: linear-gradient(90deg, #1caef2, #6526ff);
+  box-shadow: 0 0 12px rgba(28, 174, 242, 0.55);
 }
 
 /* -- SCREENSAVER ----------------------------------------------------- */
@@ -2585,7 +2585,7 @@ scrollbar slider:hover {
   font-size: 140px;
   font-weight: 700;
   color: #ffffff;
-  text-shadow: 0 0 48px rgba(152, 77, 255, 0.65);
+  text-shadow: 0 0 48px rgba(28, 174, 242, 0.65);
   letter-spacing: 0.04em;
 }
 
@@ -2597,10 +2597,10 @@ scrollbar slider:hover {
 
 .saver-brand {
   font-size: 12px;
-  color: #984dff;
+  color: #1caef2;
   letter-spacing: 0.5em;
   font-weight: 700;
-  text-shadow: 0 0 16px rgba(152, 77, 255, 0.45);
+  text-shadow: 0 0 16px rgba(28, 174, 242, 0.45);
 }
 
 .saver-hint {
@@ -2623,9 +2623,9 @@ scrollbar slider:hover {
 }
 
 .bt-conn {
-  color: #ff264c;
-  border-color: rgba(255, 38, 76, 0.45);
-  box-shadow: 0 0 12px rgba(255, 38, 76, 0.3);
+  color: #6526ff;
+  border-color: rgba(101, 38, 255, 0.45);
+  box-shadow: 0 0 12px rgba(101, 38, 255, 0.3);
 }
 
 .pp-perf {
@@ -2645,8 +2645,8 @@ scrollbar slider:hover {
 }
 
 .notif-on {
-  color: #984dff;
-  border-color: rgba(152, 77, 255, 0.55);
+  color: #1caef2;
+  border-color: rgba(28, 174, 242, 0.55);
 }
 
 .notif-dnd {
@@ -2660,9 +2660,9 @@ scrollbar slider:hover {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(152, 77, 255, 0.312);
-  border-top: 2px solid rgba(152, 77, 255, 0.6175);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(152, 77, 255, 0.039);
+  border: 1px solid rgba(28, 174, 242, 0.312);
+  border-top: 2px solid rgba(28, 174, 242, 0.6175);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(28, 174, 242, 0.039);
   border-radius: 10px;
   padding: 2px 10px;
   margin-left: 4px;
@@ -2670,8 +2670,8 @@ scrollbar slider:hover {
 }
 
 .ticker-player:hover {
-  border-color: rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 22px rgba(152, 77, 255, 0.5), 0 0 40px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 22px rgba(28, 174, 242, 0.5), 0 0 40px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
 }
 
 .ticker-player-text {
@@ -2684,16 +2684,16 @@ scrollbar slider:hover {
 /* Workspace pill: occupied state - clearly distinct from empty (solid
    dim-neon outline + inner glow) but quieter than active */
 .ws-pill-occupied {
-  border: 1px solid rgba(152, 77, 255, 0.5);
-  color: rgb(195.26, 151.76, 255);
-  background: rgba(152, 77, 255, 0.1);
-  box-shadow: inset 0 0 10px rgba(152, 77, 255, 0.18), 0 0 8px rgba(152, 77, 255, 0.2);
-  text-shadow: 0 0 8px rgba(152, 77, 255, 0.45);
+  border: 1px solid rgba(28, 174, 242, 0.5);
+  color: rgb(123.34, 208.02, 247.46);
+  background: rgba(28, 174, 242, 0.1);
+  box-shadow: inset 0 0 10px rgba(28, 174, 242, 0.18), 0 0 8px rgba(28, 174, 242, 0.2);
+  text-shadow: 0 0 8px rgba(28, 174, 242, 0.45);
 }
 
 .ws-pill-occupied:hover {
   color: #ffffff;
-  box-shadow: 0 0 14px rgba(152, 77, 255, 0.4);
+  box-shadow: 0 0 14px rgba(28, 174, 242, 0.4);
 }
 
 /* Per-core CPU graph - HUD "SYSTEM CORE" card (pink) */
@@ -2701,8 +2701,8 @@ scrollbar slider:hover {
   padding: 16px 24px;
   border-radius: 8px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(152, 77, 255, 0.208);
-  border-top: 1px solid rgba(152, 77, 255, 0.403);
+  border: 1px solid rgba(28, 174, 242, 0.208);
+  border-top: 1px solid rgba(28, 174, 242, 0.403);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
   min-width: 720px;
 }
@@ -2716,14 +2716,14 @@ scrollbar slider:hover {
   min-width: 14px;
   background: rgba(17, 21, 31, 0.85);
   border-radius: 4px;
-  border: 1px solid rgba(152, 77, 255, 0.1);
+  border: 1px solid rgba(28, 174, 242, 0.1);
   padding: 2px;
 }
 
 .core-fill {
-  background: linear-gradient(180deg, #ff264c, #984dff);
+  background: linear-gradient(180deg, #6526ff, #1caef2);
   border-radius: 3px;
-  box-shadow: 0 0 6px rgba(152, 77, 255, 0.4);
+  box-shadow: 0 0 6px rgba(28, 174, 242, 0.4);
   min-width: 8px;
 }
 
@@ -2732,7 +2732,7 @@ scrollbar slider:hover {
 }
 
 .core-hot {
-  background: linear-gradient(180deg, #ff4d6b, rgb(106.4, 53.9, 178.5));
+  background: linear-gradient(180deg, #ff4d6b, rgb(19.6, 121.8, 169.4));
   box-shadow: 0 0 10px rgba(255, 77, 107, 0.55);
 }
 
@@ -2751,7 +2751,7 @@ scrollbar slider:hover {
   color: #ffffff;
   font-size: 13px;
   font-weight: 600;
-  text-shadow: 0 0 8px rgba(152, 77, 255, 0.35);
+  text-shadow: 0 0 8px rgba(28, 174, 242, 0.35);
 }
 
 .dash-player-artist {
@@ -2765,8 +2765,8 @@ scrollbar slider:hover {
 }
 
 .dash-player-btn {
-  background: rgba(152, 77, 255, 0.1);
-  border: 1px solid rgba(152, 77, 255, 0.28);
+  background: rgba(28, 174, 242, 0.1);
+  border: 1px solid rgba(28, 174, 242, 0.28);
   border-radius: 999px;
   padding: 6px 14px;
   color: #ffffff;
@@ -2774,9 +2774,9 @@ scrollbar slider:hover {
 }
 
 .dash-player-btn:hover {
-  background: rgba(152, 77, 255, 0.22);
-  border-color: rgba(255, 38, 76, 0.55);
-  box-shadow: 0 0 14px rgba(152, 77, 255, 0.5);
+  background: rgba(28, 174, 242, 0.22);
+  border-color: rgba(101, 38, 255, 0.55);
+  box-shadow: 0 0 14px rgba(28, 174, 242, 0.5);
 }
 
 /* =====================================================================
@@ -2794,12 +2794,12 @@ scrollbar slider:hover {
   background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.5), rgba(4, 2, 11, 0.14));
   background-repeat: no-repeat;
   background-position: center;
-  border: 1px solid rgba(152, 77, 255, 0.38);
-  border-top: 2px solid #984dff;
+  border: 1px solid rgba(28, 174, 242, 0.38);
+  border-top: 2px solid #1caef2;
   border-radius: 14px;
   padding: 20px 24px;
   transition: box-shadow 280ms cubic-bezier(0.23, 1, 0.32, 1), border-color 200ms cubic-bezier(0.16, 1, 0.2, 1);
-  box-shadow: 0 0 18px rgba(152, 77, 255, 0.3), 0 10px 34px rgba(0, 0, 0, 0.65), inset 0 0 24px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 0 18px rgba(28, 174, 242, 0.3), 0 10px 34px rgba(0, 0, 0, 0.65), inset 0 0 24px rgba(0, 0, 0, 0.18);
 }
 
 /* Per-panel cosmic-art fills retired (rev 2026-07-14): every flyout now
@@ -2819,9 +2819,9 @@ scrollbar slider:hover {
    wifi=signal green . bt=blue . mixer=purple/ok . calendar=gold .
    notifications=pink . quicksettings=pink . updates=gold */
 .wifi-root {
-  border-color: rgba(255, 38, 76, 0.6);
-  border-top-color: #ff264c;
-  box-shadow: 0 0 18px rgba(255, 38, 76, 0.3), 0 10px 34px rgba(0, 0, 0, 0.65), inset 0 0 24px rgba(0, 0, 0, 0.18);
+  border-color: rgba(101, 38, 255, 0.6);
+  border-top-color: #6526ff;
+  box-shadow: 0 0 18px rgba(101, 38, 255, 0.3), 0 10px 34px rgba(0, 0, 0, 0.65), inset 0 0 24px rgba(0, 0, 0, 0.18);
 }
 
 .bt-root {
@@ -2831,9 +2831,9 @@ scrollbar slider:hover {
 }
 
 .mix-root {
-  border-color: rgba(38, 255, 183, 0.6);
-  border-top-color: #26ffb7;
-  box-shadow: 0 0 18px rgba(38, 255, 183, 0.3), 0 10px 34px rgba(0, 0, 0, 0.65), inset 0 0 24px rgba(0, 0, 0, 0.18);
+  border-color: rgba(38, 186, 255, 0.6);
+  border-top-color: #26baff;
+  box-shadow: 0 0 18px rgba(38, 186, 255, 0.3), 0 10px 34px rgba(0, 0, 0, 0.65), inset 0 0 24px rgba(0, 0, 0, 0.18);
 }
 
 .cal-root, .upd-root {
@@ -2843,8 +2843,8 @@ scrollbar slider:hover {
 }
 
 .wifi-title {
-  color: #ff264c;
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.45);
+  color: #6526ff;
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.45);
 }
 
 .bt-title {
@@ -2853,18 +2853,18 @@ scrollbar slider:hover {
 }
 
 .mix-title {
-  color: #26ffb7;
-  text-shadow: 0 0 12px rgba(38, 255, 183, 0.45);
+  color: #26baff;
+  text-shadow: 0 0 12px rgba(38, 186, 255, 0.45);
 }
 
 .notif-title {
-  color: #984dff;
-  text-shadow: 0 0 12px rgba(152, 77, 255, 0.45);
+  color: #1caef2;
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.45);
 }
 
 .qs-title {
-  color: #984dff;
-  text-shadow: 0 0 12px rgba(152, 77, 255, 0.45);
+  color: #1caef2;
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.45);
 }
 
 /* -- panel view tabs (wifi nearby/saved, mixer inputs) ------------------ */
@@ -2872,8 +2872,8 @@ scrollbar slider:hover {
   padding: 6px 12px;
   border-radius: 8px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(255, 38, 76, 0.24);
-  border-top: 1px solid rgba(255, 38, 76, 0.465);
+  border: 1px solid rgba(101, 38, 255, 0.24);
+  border-top: 1px solid rgba(101, 38, 255, 0.465);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
   color: #9aa0ad;
   font-family: "JetBrainsMono Nerd Font", monospace;
@@ -2885,18 +2885,18 @@ scrollbar slider:hover {
 
 .panel-tab:hover {
   background-color: rgba(8, 4, 16, 0.86);
-  border-color: rgba(255, 38, 76, 0.58);
-  box-shadow: 0 0 18px rgba(255, 38, 76, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(255, 38, 76, 0.08);
+  border-color: rgba(101, 38, 255, 0.58);
+  box-shadow: 0 0 18px rgba(101, 38, 255, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(101, 38, 255, 0.08);
   color: #e8edf5;
 }
 
 .panel-tab-on {
   background-color: rgba(8, 4, 16, 0.86);
-  border-color: rgba(255, 38, 76, 0.58);
-  box-shadow: 0 0 18px rgba(255, 38, 76, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(255, 38, 76, 0.08);
-  border-color: #ff264c;
-  color: #ff264c;
-  text-shadow: 0 0 6px rgba(255, 38, 76, 0.55);
+  border-color: rgba(101, 38, 255, 0.58);
+  box-shadow: 0 0 18px rgba(101, 38, 255, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(101, 38, 255, 0.08);
+  border-color: #6526ff;
+  color: #6526ff;
+  text-shadow: 0 0 6px rgba(101, 38, 255, 0.55);
 }
 
 /* -- wifi saved view ---------------------------------------------------- */
@@ -2904,7 +2904,7 @@ scrollbar slider:hover {
   padding: 4px 8px;
   border-radius: 8px;
   background: transparent;
-  border: 1px solid rgba(255, 38, 76, 0.24);
+  border: 1px solid rgba(101, 38, 255, 0.24);
   color: #6a6e78;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 9px;
@@ -2913,29 +2913,29 @@ scrollbar slider:hover {
 }
 
 .wifi-auto:hover {
-  background: rgba(255, 38, 76, 0.13);
+  background: rgba(101, 38, 255, 0.13);
   color: #e8edf5;
 }
 
 .wifi-auto-on {
-  border-color: rgba(255, 38, 76, 0.6);
-  color: #ff264c;
-  text-shadow: 0 0 6px rgba(255, 38, 76, 0.55);
+  border-color: rgba(101, 38, 255, 0.6);
+  color: #6526ff;
+  text-shadow: 0 0 6px rgba(101, 38, 255, 0.55);
 }
 
 .wifi-act {
   padding: 5px 12px;
   border-radius: 8px;
-  background: rgba(255, 38, 76, 0.1);
-  border: 1px solid rgba(255, 38, 76, 0.34);
-  color: rgb(255, 135.65, 156.55);
+  background: rgba(101, 38, 255, 0.1);
+  border: 1px solid rgba(101, 38, 255, 0.34);
+  color: rgb(170.3, 135.65, 255);
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 10px;
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .wifi-act:hover {
-  background: rgba(255, 38, 76, 0.22);
+  background: rgba(101, 38, 255, 0.22);
   color: #ffffff;
 }
 
@@ -2944,8 +2944,8 @@ scrollbar slider:hover {
   padding: 10px 12px;
   border-radius: 8px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(255, 38, 76, 0.224);
-  border-top: 1px solid rgba(255, 38, 76, 0.434);
+  border: 1px solid rgba(101, 38, 255, 0.224);
+  border-top: 1px solid rgba(101, 38, 255, 0.434);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
 }
 
@@ -3024,19 +3024,19 @@ scrollbar slider:hover {
 .upd-sync {
   padding: 8px 14px;
   border-radius: 3px;
-  background: rgba(255, 38, 76, 0.13);
-  border: 1px solid #ff264c;
-  color: #ff264c;
+  background: rgba(101, 38, 255, 0.13);
+  border: 1px solid #6526ff;
+  color: #6526ff;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-weight: 700;
   letter-spacing: 0.14em;
   font-size: 10px;
-  text-shadow: 0 0 6px rgba(255, 38, 76, 0.55);
+  text-shadow: 0 0 6px rgba(101, 38, 255, 0.55);
 }
 
 .upd-sync:hover {
-  background: rgba(255, 38, 76, 0.25);
-  box-shadow: 0 0 14px rgba(255, 38, 76, 0.55);
+  background: rgba(101, 38, 255, 0.25);
+  box-shadow: 0 0 14px rgba(101, 38, 255, 0.55);
 }
 
 /* bluetooth trusted state pill */
@@ -3061,17 +3061,17 @@ scrollbar slider:hover {
 }
 
 .cal-today {
-  color: #ff264c;
+  color: #6526ff;
   font-size: 12px;
   letter-spacing: 0.06em;
   padding: 0 4px 8px;
-  text-shadow: 0 0 10px rgba(255, 38, 76, 0.35);
+  text-shadow: 0 0 10px rgba(101, 38, 255, 0.35);
 }
 
 .cal-dow-cell {
   font-size: 10px;
   letter-spacing: 0.16em;
-  color: #26ffb7;
+  color: #26baff;
   min-width: 36px;
   font-weight: 700;
 }
@@ -3095,8 +3095,8 @@ scrollbar slider:hover {
 
 .cal-day-in:hover {
   background-color: rgba(8, 4, 16, 0.86);
-  border-color: rgba(152, 77, 255, 0.58);
-  box-shadow: 0 0 18px rgba(152, 77, 255, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(152, 77, 255, 0.08);
+  border-color: rgba(28, 174, 242, 0.58);
+  box-shadow: 0 0 18px rgba(28, 174, 242, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(28, 174, 242, 0.08);
 }
 
 .cal-day-out {
@@ -3111,12 +3111,12 @@ scrollbar slider:hover {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(152, 77, 255, 0.48);
-  border-top: 2px solid rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(152, 77, 255, 0.06);
+  border: 1px solid rgba(28, 174, 242, 0.48);
+  border-top: 2px solid rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(28, 174, 242, 0.06);
   color: #ffffff;
   font-weight: 800;
-  box-shadow: 0 0 18px rgba(152, 77, 255, 0.55);
+  box-shadow: 0 0 18px rgba(28, 174, 242, 0.55);
 }
 
 .cal-close {
@@ -3143,37 +3143,37 @@ scrollbar slider:hover {
 
 /* Bar-specific pill accents */
 .qs-pill, .cal-pill {
-  border-color: rgba(38, 255, 183, 0.52);
-  box-shadow: 0 0 13px rgba(38, 255, 183, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
-  color: rgb(135.65, 255, 215.4);
+  border-color: rgba(38, 186, 255, 0.52);
+  box-shadow: 0 0 13px rgba(38, 186, 255, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
+  color: rgb(135.65, 217.05, 255);
 }
 
 .qs-pill:hover, .cal-pill:hover {
-  border-color: rgba(38, 255, 183, 0.95);
-  box-shadow: 0 0 22px rgba(38, 255, 183, 0.5), 0 0 40px rgba(38, 255, 183, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(38, 186, 255, 0.95);
+  box-shadow: 0 0 22px rgba(38, 186, 255, 0.5), 0 0 40px rgba(38, 186, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
 }
 
 .qs-pill:active, .cal-pill:active {
   background-color: rgba(2, 1, 6, 0.99);
   background-image: none;
-  border-color: rgba(38, 255, 183, 0.85);
-  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(38, 255, 183, 0.32);
+  border-color: rgba(38, 186, 255, 0.85);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(38, 186, 255, 0.32);
 }
 
 .search-btn {
   padding: 5px 16px;
   border-radius: 999px;
   background: rgba(17, 21, 31, 0.75);
-  border: 1px dashed rgba(255, 38, 76, 0.35);
+  border: 1px dashed rgba(101, 38, 255, 0.35);
   color: #9aa0ad;
   letter-spacing: 0.12em;
 }
 
 .search-btn:hover {
-  border-color: rgba(255, 38, 76, 0.65);
-  color: #ff264c;
-  box-shadow: 0 0 14px rgba(255, 38, 76, 0.3);
+  border-color: rgba(101, 38, 255, 0.65);
+  color: #6526ff;
+  box-shadow: 0 0 14px rgba(101, 38, 255, 0.3);
 }
 
 /* -- QUICK SETTINGS tiles ---------------------------------------------- */
@@ -3189,21 +3189,21 @@ scrollbar slider:hover {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(152, 77, 255, 0.48);
-  border-top: 2px solid rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(152, 77, 255, 0.06);
+  border: 1px solid rgba(28, 174, 242, 0.48);
+  border-top: 2px solid rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(28, 174, 242, 0.06);
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .qs-tile:hover {
-  border-color: rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 22px rgba(152, 77, 255, 0.5), 0 0 40px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 22px rgba(28, 174, 242, 0.5), 0 0 40px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
 }
 
 .qs-tile-on {
-  background: linear-gradient(135deg, rgba(152, 77, 255, 0.3), rgba(255, 38, 76, 0.18));
-  border-color: rgba(255, 38, 76, 0.55);
-  box-shadow: inset 0 0 14px rgba(152, 77, 255, 0.22), 0 0 18px rgba(152, 77, 255, 0.28);
+  background: linear-gradient(135deg, rgba(28, 174, 242, 0.3), rgba(101, 38, 255, 0.18));
+  border-color: rgba(101, 38, 255, 0.55);
+  box-shadow: inset 0 0 14px rgba(28, 174, 242, 0.22), 0 0 18px rgba(28, 174, 242, 0.28);
 }
 
 .qs-tile-glyph {
@@ -3223,8 +3223,8 @@ scrollbar slider:hover {
   padding: 12px 14px;
   border-radius: 10px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(152, 77, 255, 0.208);
-  border-top: 1px solid rgba(152, 77, 255, 0.403);
+  border: 1px solid rgba(28, 174, 242, 0.208);
+  border-top: 1px solid rgba(28, 174, 242, 0.403);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
 }
 
@@ -3236,14 +3236,14 @@ scrollbar slider:hover {
 
 .qs-scale trough {
   background: rgba(5, 2, 11, 0.82);
-  border: 1px solid rgba(152, 77, 255, 0.28);
+  border: 1px solid rgba(28, 174, 242, 0.28);
   border-radius: 999px;
   min-height: 6px;
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.45);
 }
 
 .qs-scale highlight {
-  background: linear-gradient(90deg, #984dff, #ff264c);
+  background: linear-gradient(90deg, #1caef2, #6526ff);
   border-radius: 999px;
 }
 
@@ -3252,7 +3252,7 @@ scrollbar slider:hover {
   border-radius: 999px;
   min-width: 14px;
   min-height: 14px;
-  box-shadow: 0 0 10px rgba(152, 77, 255, 0.55);
+  box-shadow: 0 0 10px rgba(28, 174, 242, 0.55);
 }
 
 /* -- DESIGN_CONTRACT S9 - empty states --------------------------------- */
@@ -3265,17 +3265,17 @@ scrollbar slider:hover {
   margin: 8px 0;
   border-radius: 12px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(152, 77, 255, 0.176);
-  border-top: 1px solid rgba(152, 77, 255, 0.341);
+  border: 1px solid rgba(28, 174, 242, 0.176);
+  border-top: 1px solid rgba(28, 174, 242, 0.341);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
   border-style: solid;
-  border-color: rgba(152, 77, 255, 0.28);
+  border-color: rgba(28, 174, 242, 0.28);
 }
 
 .empty-glyph {
   font-size: 28px;
-  color: #984dff;
-  text-shadow: 0 0 14px rgba(152, 77, 255, 0.35);
+  color: #1caef2;
+  text-shadow: 0 0 14px rgba(28, 174, 242, 0.35);
   padding-bottom: 4px;
 }
 
@@ -3318,18 +3318,18 @@ scrollbar slider:hover {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(255, 38, 76, 0.408);
-  border-top: 2px solid rgba(255, 38, 76, 0.8075);
-  box-shadow: 0 0 16px rgba(255, 38, 76, 0.187), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 38, 76, 0.051);
-  color: rgb(255, 135.65, 156.55);
+  border: 1px solid rgba(101, 38, 255, 0.408);
+  border-top: 2px solid rgba(101, 38, 255, 0.8075);
+  box-shadow: 0 0 16px rgba(101, 38, 255, 0.187), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(101, 38, 255, 0.051);
+  color: rgb(170.3, 135.65, 255);
   /* NO letter-spacing: tracking ellipsizes these compact buttons */
 }
 
 .wifi-toggle:hover, .wifi-rescan:hover, .bt-toggle:hover, .bt-scan:hover,
 .notif-dnd:hover, .notif-clear:hover, .wifi-advanced:hover, .bt-advanced:hover,
 .mix-advanced:hover {
-  border-color: rgba(255, 38, 76, 0.95);
-  box-shadow: 0 0 22px rgba(255, 38, 76, 0.5), 0 0 40px rgba(255, 38, 76, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(101, 38, 255, 0.95);
+  box-shadow: 0 0 22px rgba(101, 38, 255, 0.5), 0 0 40px rgba(101, 38, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
 }
 
@@ -3343,28 +3343,28 @@ scrollbar slider:hover {
   padding: 10px 14px;
   border-radius: 12px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(255, 38, 76, 0.224);
-  border-top: 1px solid rgba(255, 38, 76, 0.434);
+  border: 1px solid rgba(101, 38, 255, 0.224);
+  border-top: 1px solid rgba(101, 38, 255, 0.434);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .wifi-row:hover, .bt-row:hover, .mix-row:hover, .notif-row:hover {
   background-color: rgba(8, 4, 16, 0.86);
-  border-color: rgba(255, 38, 76, 0.58);
-  box-shadow: 0 0 18px rgba(255, 38, 76, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(255, 38, 76, 0.08);
+  border-color: rgba(101, 38, 255, 0.58);
+  box-shadow: 0 0 18px rgba(101, 38, 255, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(101, 38, 255, 0.08);
 }
 
 .wifi-row-active, .bt-row-conn, .mix-row-default {
   background-color: rgba(8, 4, 16, 0.86);
-  border-color: rgba(255, 38, 76, 0.58);
-  box-shadow: 0 0 18px rgba(255, 38, 76, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(255, 38, 76, 0.08);
-  border-color: rgba(255, 38, 76, 0.55);
-  box-shadow: 0 0 16px rgba(255, 38, 76, 0.22), inset 0 0 12px rgba(152, 77, 255, 0.1);
+  border-color: rgba(101, 38, 255, 0.58);
+  box-shadow: 0 0 18px rgba(101, 38, 255, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(101, 38, 255, 0.08);
+  border-color: rgba(101, 38, 255, 0.55);
+  box-shadow: 0 0 16px rgba(101, 38, 255, 0.22), inset 0 0 12px rgba(28, 174, 242, 0.1);
 }
 
 .wifi-bars {
-  color: #ff264c;
+  color: #6526ff;
   font-family: "JetBrainsMono Nerd Font", monospace;
   min-width: 44px;
 }
@@ -3378,7 +3378,7 @@ scrollbar slider:hover {
 
 .wifi-name:hover {
   color: #ffffff;
-  text-shadow: 0 0 8px rgba(255, 38, 76, 0.55);
+  text-shadow: 0 0 8px rgba(101, 38, 255, 0.55);
 }
 
 .wifi-sig {
@@ -3403,7 +3403,7 @@ scrollbar slider:hover {
 /* -- BLUETOOTH -------------------------------------------------------- */
 .bt-icon {
   font-size: 16px;
-  color: #ff264c;
+  color: #6526ff;
   min-width: 24px;
 }
 
@@ -3422,16 +3422,16 @@ scrollbar slider:hover {
 .bt-act, .bt-forget {
   padding: 5px 12px;
   border-radius: 8px;
-  background: rgba(152, 77, 255, 0.1);
-  border: 1px solid rgba(152, 77, 255, 0.25);
-  color: rgb(135.65, 255, 215.4);
+  background: rgba(28, 174, 242, 0.1);
+  border: 1px solid rgba(28, 174, 242, 0.25);
+  color: rgb(135.65, 217.05, 255);
   font-size: 10px;
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
   /* NO letter-spacing (ellipsizes) */
 }
 
 .bt-act:hover {
-  background: rgba(255, 38, 76, 0.22);
+  background: rgba(101, 38, 255, 0.22);
   color: #ffffff;
 }
 
@@ -3458,14 +3458,14 @@ scrollbar slider:hover {
   padding: 0 8px;
   background: transparent;
   border: none;
-  color: #ff264c;
+  color: #6526ff;
   font-size: 14px;
   min-width: 22px;
 }
 
 .mix-pick:hover {
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(255, 38, 76, 0.65);
+  text-shadow: 0 0 10px rgba(101, 38, 255, 0.65);
 }
 
 .mix-name {
@@ -3483,31 +3483,31 @@ scrollbar slider:hover {
   padding: 2px 8px;
   border-radius: 6px;
   background: rgba(17, 21, 31, 0.85);
-  border: 1px solid rgba(152, 77, 255, 0.2);
-  color: rgb(135.65, 255, 215.4);
+  border: 1px solid rgba(28, 174, 242, 0.2);
+  color: rgb(135.65, 217.05, 255);
 }
 
 .mix-mute:hover {
-  background: rgba(152, 77, 255, 0.22);
+  background: rgba(28, 174, 242, 0.22);
   color: #ffffff;
 }
 
 .mix-app-glyph {
-  color: #984dff;
+  color: #1caef2;
   font-size: 14px;
   min-width: 22px;
 }
 
 .mix-scale trough {
   background: rgba(5, 2, 11, 0.82);
-  border: 1px solid rgba(38, 255, 183, 0.28);
+  border: 1px solid rgba(38, 186, 255, 0.28);
   border-radius: 999px;
   min-height: 5px;
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.45);
 }
 
 .mix-scale highlight {
-  background: linear-gradient(90deg, #984dff, #ff264c);
+  background: linear-gradient(90deg, #1caef2, #6526ff);
   border-radius: 999px;
 }
 
@@ -3522,13 +3522,13 @@ scrollbar slider:hover {
 .notif-app {
   font-size: 10px;
   letter-spacing: 0.18em;
-  color: #984dff;
+  color: #1caef2;
   min-width: 64px;
   padding: 4px 8px;
   border-radius: 6px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(152, 77, 255, 0.192);
-  border-top: 1px solid rgba(152, 77, 255, 0.372);
+  border: 1px solid rgba(28, 174, 242, 0.192);
+  border-top: 1px solid rgba(28, 174, 242, 0.372);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
 }
 
@@ -3561,10 +3561,10 @@ scrollbar slider:hover {
  * ---------------------------------------------------------------------- */
 .dock-frame {
   background: linear-gradient(180deg, rgba(14, 16, 28, 0.94), rgba(5, 6, 10, 0.9));
-  border: 1px solid rgba(152, 77, 255, 0.38);
+  border: 1px solid rgba(28, 174, 242, 0.38);
   border-radius: 22px;
   padding: 8px 14px;
-  box-shadow: 0 0 0 1px rgba(255, 38, 76, 0.1), 0 0 28px rgba(152, 77, 255, 0.22), 0 12px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 24px rgba(38, 255, 183, 0.08);
+  box-shadow: 0 0 0 1px rgba(101, 38, 255, 0.1), 0 0 28px rgba(28, 174, 242, 0.22), 0 12px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 24px rgba(38, 186, 255, 0.08);
   margin: 0 0 6px 0;
 }
 
@@ -3580,8 +3580,8 @@ scrollbar slider:hover {
 }
 
 .dock-eventbox:hover {
-  background: rgba(152, 77, 255, 0.14);
-  box-shadow: 0 0 18px rgba(152, 77, 255, 0.3);
+  background: rgba(28, 174, 242, 0.14);
+  box-shadow: 0 0 18px rgba(28, 174, 242, 0.3);
 }
 
 .dock-eventbox.urgent {
@@ -3589,8 +3589,8 @@ scrollbar slider:hover {
 }
 
 .dock-eventbox.focused {
-  background: rgba(255, 38, 76, 0.14);
-  box-shadow: 0 0 16px rgba(255, 38, 76, 0.35);
+  background: rgba(101, 38, 255, 0.14);
+  box-shadow: 0 0 16px rgba(101, 38, 255, 0.35);
 }
 
 .dock-tile {
@@ -3603,8 +3603,8 @@ scrollbar slider:hover {
   min-height: 44px;
   border-radius: 14px;
   background: linear-gradient(160deg, rgba(22, 26, 38, 0.85), rgba(10, 12, 20, 0.75));
-  border: 1px solid rgba(38, 255, 183, 0.22);
-  box-shadow: inset 0 0 12px rgba(152, 77, 255, 0.06);
+  border: 1px solid rgba(38, 186, 255, 0.22);
+  box-shadow: inset 0 0 12px rgba(28, 174, 242, 0.06);
 }
 
 .dock-icon-box image {
@@ -3612,8 +3612,8 @@ scrollbar slider:hover {
 }
 
 .dock-eventbox:hover .dock-icon-box {
-  border-color: rgba(255, 38, 76, 0.55);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.35), inset 0 0 14px rgba(255, 38, 76, 0.12);
+  border-color: rgba(101, 38, 255, 0.55);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.35), inset 0 0 14px rgba(101, 38, 255, 0.12);
 }
 
 .dock-eventbox:hover .dock-icon-box image {
@@ -3629,7 +3629,7 @@ scrollbar slider:hover {
 }
 
 .dock-badge {
-  background: linear-gradient(135deg, #984dff, #ff4d6b);
+  background: linear-gradient(135deg, #1caef2, #ff4d6b);
   color: #ffffff;
   font-weight: 700;
   font-size: 8px;
@@ -3641,12 +3641,12 @@ scrollbar slider:hover {
   border-radius: 999px;
   border: 1.5px solid rgba(5, 6, 10, 0.95);
   margin: -2px -2px 0 0;
-  box-shadow: 0 2px 8px rgba(152, 77, 255, 0.55);
+  box-shadow: 0 2px 8px rgba(28, 174, 242, 0.55);
 }
 
 .dock-badge.stack {
-  background: linear-gradient(135deg, #984dff 0%, #26ffb7 100%);
-  box-shadow: 0 2px 6px rgba(152, 77, 255, 0.4);
+  background: linear-gradient(135deg, #1caef2 0%, #26baff 100%);
+  box-shadow: 0 2px 6px rgba(28, 174, 242, 0.4);
 }
 
 .dock-badge.trash {
@@ -3659,26 +3659,26 @@ scrollbar slider:hover {
   min-width: 5px;
   min-height: 5px;
   border-radius: 3px;
-  background: rgba(152, 77, 255, 0.72);
+  background: rgba(28, 174, 242, 0.72);
   margin-top: 2px;
   transition: background 140ms ease, min-width 140ms ease;
 }
 
 .dock-indicator.focused {
-  background: #ff264c;
+  background: #6526ff;
   min-width: 14px;
-  box-shadow: 0 0 8px rgba(255, 38, 76, 0.72);
+  box-shadow: 0 0 8px rgba(101, 38, 255, 0.72);
 }
 
 .dock-indicator.other-ws {
-  background: rgba(152, 77, 255, 0.32);
+  background: rgba(28, 174, 242, 0.32);
 }
 
 /* Section divider */
 .dock-divider {
   min-width: 1px;
   min-height: 36px;
-  background: linear-gradient(to bottom, rgba(152, 77, 255, 0) 0%, rgba(152, 77, 255, 0.32) 50%, rgba(152, 77, 255, 0) 100%);
+  background: linear-gradient(to bottom, rgba(28, 174, 242, 0) 0%, rgba(28, 174, 242, 0.32) 50%, rgba(28, 174, 242, 0) 100%);
   margin: 0 6px;
 }
 
@@ -3702,12 +3702,12 @@ scrollbar slider:hover {
  * --------------------------------------------------------------------- */
 .hk-root {
   background: rgba(5, 1, 13, 0.97);
-  border: 1px solid rgba(255, 38, 76, 0.42);
+  border: 1px solid rgba(101, 38, 255, 0.42);
   border-radius: 12px;
   padding: 18px 20px;
   color: #e8edf5;
   font-family: "Inter", "JetBrains Mono", sans-serif;
-  box-shadow: 0 0 0 1px rgba(255, 38, 76, 0.08), 0 24px 80px rgba(0, 0, 0, 0.65), inset 0 0 48px rgba(38, 255, 183, 0.06);
+  box-shadow: 0 0 0 1px rgba(101, 38, 255, 0.08), 0 24px 80px rgba(0, 0, 0, 0.65), inset 0 0 48px rgba(38, 186, 255, 0.06);
 }
 
 .hk-header {
@@ -3737,7 +3737,7 @@ scrollbar slider:hover {
   color: #e8edf5;
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(38, 255, 183, 0.35);
+  border: 1px solid rgba(38, 186, 255, 0.35);
   font-size: 13px;
 }
 
@@ -3746,7 +3746,7 @@ scrollbar slider:hover {
 }
 
 .hk-cat-h {
-  color: #26ffb7;
+  color: #26baff;
   font-weight: 700;
   font-size: 12px;
   letter-spacing: 1.5px; /* text-transform unsupported by GTK CSS */
@@ -3761,7 +3761,7 @@ scrollbar slider:hover {
 }
 
 .hk-line:hover {
-  background: rgba(255, 38, 76, 0.12);
+  background: rgba(101, 38, 255, 0.12);
   border-radius: 4px;
 }
 
@@ -3771,7 +3771,7 @@ scrollbar slider:hover {
 }
 
 .hk-combo {
-  color: #ff264c;
+  color: #6526ff;
   font-family: "JetBrains Mono", monospace;
   font-weight: 600;
   min-width: 180px;
@@ -3789,7 +3789,7 @@ scrollbar slider:hover {
 .hk-footer {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid rgba(38, 255, 183, 0.22);
+  border-top: 1px solid rgba(38, 186, 255, 0.22);
 }
 
 .hk-btn {
@@ -3797,14 +3797,14 @@ scrollbar slider:hover {
   color: #e8edf5;
   padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(38, 255, 183, 0.35);
+  border: 1px solid rgba(38, 186, 255, 0.35);
   font-size: 12px;
 }
 
 .hk-btn:hover {
-  background: linear-gradient(135deg, rgba(255, 38, 76, 0.18), rgba(152, 77, 255, 0.14));
-  border-color: rgba(255, 38, 76, 0.55);
-  box-shadow: 0 0 16px rgba(255, 38, 76, 0.3);
+  background: linear-gradient(135deg, rgba(101, 38, 255, 0.18), rgba(28, 174, 242, 0.14));
+  border-color: rgba(101, 38, 255, 0.55);
+  box-shadow: 0 0 16px rgba(101, 38, 255, 0.3);
 }
 
 .hk-btn-close {
@@ -3814,7 +3814,7 @@ scrollbar slider:hover {
 .hk-recorder {
   padding: 24px;
   background: rgba(5, 1, 13, 0.97);
-  border: 1px solid rgba(255, 38, 76, 0.42);
+  border: 1px solid rgba(101, 38, 255, 0.42);
   border-radius: 12px;
 }
 
@@ -3827,7 +3827,7 @@ scrollbar slider:hover {
 
 .hk-rec-text {
   font-size: 22px;
-  color: #ff264c;
+  color: #6526ff;
   font-family: "JetBrains Mono", monospace;
   margin: 16px 0;
 }
@@ -3839,10 +3839,10 @@ scrollbar slider:hover {
 
 .snap-picker-card {
   background-color: rgba(5, 1, 13, 0.97);
-  border: 1px solid rgba(255, 38, 76, 0.42);
+  border: 1px solid rgba(101, 38, 255, 0.42);
   border-radius: 12px;
   padding: 22px 26px;
-  box-shadow: 0 0 0 1px rgba(255, 38, 76, 0.08), 0 24px 64px rgba(0, 0, 0, 0.75), inset 0 0 40px rgba(38, 255, 183, 0.06);
+  box-shadow: 0 0 0 1px rgba(101, 38, 255, 0.08), 0 24px 64px rgba(0, 0, 0, 0.75), inset 0 0 40px rgba(38, 186, 255, 0.06);
 }
 
 .snap-picker-title {
@@ -3856,7 +3856,7 @@ scrollbar slider:hover {
 
 .snap-zone-cell {
   background: rgba(10, 13, 20, 0.85);
-  border: 1px solid rgba(38, 255, 183, 0.35);
+  border: 1px solid rgba(38, 186, 255, 0.35);
   color: #e8edf5;
   font-weight: 600;
   border-radius: 10px;
@@ -3867,10 +3867,10 @@ scrollbar slider:hover {
 }
 
 .snap-zone-cell:hover {
-  background: linear-gradient(135deg, rgba(255, 38, 76, 0.18), rgba(152, 77, 255, 0.14));
-  border-color: rgba(255, 38, 76, 0.55);
+  background: linear-gradient(135deg, rgba(101, 38, 255, 0.18), rgba(28, 174, 242, 0.14));
+  border-color: rgba(101, 38, 255, 0.55);
   color: #ffffff;
-  box-shadow: 0 0 20px rgba(255, 38, 76, 0.3);
+  box-shadow: 0 0 20px rgba(101, 38, 255, 0.3);
 }
 
 .snap-toast {
@@ -3878,10 +3878,10 @@ scrollbar slider:hover {
   color: #e8edf5;
   padding: 10px 18px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 38, 76, 0.35);
+  border: 1px solid rgba(101, 38, 255, 0.35);
   font-size: 12px;
   letter-spacing: 0.06em;
-  box-shadow: 0 0 18px rgba(152, 77, 255, 0.22);
+  box-shadow: 0 0 18px rgba(28, 174, 242, 0.22);
 }
 
 /* -- NYXUS Mission Control --------------------------------------------- */
@@ -3897,9 +3897,9 @@ scrollbar slider:hover {
   background-position: center;
   padding: 22px 26px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 38, 76, 0.42);
-  border-top: 2px solid #ff264c;
-  box-shadow: 0 0 0 1px rgba(255, 38, 76, 0.08), 0 24px 64px rgba(0, 0, 0, 0.78), inset 0 0 48px rgba(38, 255, 183, 0.06);
+  border: 1px solid rgba(101, 38, 255, 0.42);
+  border-top: 2px solid #6526ff;
+  box-shadow: 0 0 0 1px rgba(101, 38, 255, 0.08), 0 24px 64px rgba(0, 0, 0, 0.78), inset 0 0 48px rgba(38, 186, 255, 0.06);
 }
 
 .mission-title {
@@ -3916,8 +3916,8 @@ scrollbar slider:hover {
 
 .mission-ws-card {
   background: rgba(6, 4, 12, 0.78);
-  border: 1px solid rgba(38, 255, 183, 0.35);
-  border-top: 2px solid rgba(38, 255, 183, 0.62);
+  border: 1px solid rgba(38, 186, 255, 0.35);
+  border-top: 2px solid rgba(38, 186, 255, 0.62);
   border-radius: 14px;
   padding: 12px;
   min-width: 296px;
@@ -3925,31 +3925,31 @@ scrollbar slider:hover {
 }
 
 .mission-ws-card:hover {
-  background: linear-gradient(135deg, rgba(255, 38, 76, 0.14), rgba(152, 77, 255, 0.1));
-  border-color: rgba(255, 38, 76, 0.5);
-  box-shadow: 0 0 20px rgba(255, 38, 76, 0.25);
+  background: linear-gradient(135deg, rgba(101, 38, 255, 0.14), rgba(28, 174, 242, 0.1));
+  border-color: rgba(101, 38, 255, 0.5);
+  box-shadow: 0 0 20px rgba(101, 38, 255, 0.25);
 }
 
 .mission-ws-active {
-  border-color: rgba(255, 38, 76, 0.65);
-  background: linear-gradient(145deg, rgba(152, 77, 255, 0.2), rgba(255, 38, 76, 0.14));
-  box-shadow: 0 0 24px rgba(152, 77, 255, 0.3);
+  border-color: rgba(101, 38, 255, 0.65);
+  background: linear-gradient(145deg, rgba(28, 174, 242, 0.2), rgba(101, 38, 255, 0.14));
+  box-shadow: 0 0 24px rgba(28, 174, 242, 0.3);
 }
 
 .mission-ws-title {
-  color: #ff264c;
+  color: #6526ff;
   font-size: 11px;
   letter-spacing: 0.1em; /* text-transform unsupported by GTK CSS */
 }
 
 .mission-ws-thumb {
   border-radius: 8px;
-  border: 1px solid rgba(38, 255, 183, 0.28);
+  border: 1px solid rgba(38, 186, 255, 0.28);
 }
 
 .mission-window-chip {
   background: rgba(17, 21, 31, 0.72);
-  border: 1px solid rgba(38, 255, 183, 0.28);
+  border: 1px solid rgba(38, 186, 255, 0.28);
   color: #e8edf5;
   font-size: 11px;
   border-radius: 6px;
@@ -3957,8 +3957,8 @@ scrollbar slider:hover {
 }
 
 .mission-window-chip:hover {
-  background: rgba(38, 255, 183, 0.22);
-  border-color: rgba(255, 38, 76, 0.45);
+  background: rgba(38, 186, 255, 0.22);
+  border-color: rgba(101, 38, 255, 0.45);
 }
 
 /* =====================================================================
@@ -4003,8 +4003,8 @@ scrollbar slider:hover {
   margin-top: 8px;
   padding: 10px 16px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(152, 77, 255, 0.18), rgba(255, 38, 76, 0.1));
-  border: 1px solid rgba(152, 77, 255, 0.35);
+  background: linear-gradient(135deg, rgba(28, 174, 242, 0.18), rgba(101, 38, 255, 0.1));
+  border: 1px solid rgba(28, 174, 242, 0.35);
   color: #e8edf5;
   letter-spacing: 0.14em;
   font-weight: 700;
@@ -4012,9 +4012,9 @@ scrollbar slider:hover {
 }
 
 .flyout-close:hover {
-  background: linear-gradient(135deg, rgba(152, 77, 255, 0.38), rgba(255, 38, 76, 0.22));
-  border-color: rgba(255, 38, 76, 0.65);
-  box-shadow: 0 0 22px rgba(152, 77, 255, 0.45);
+  background: linear-gradient(135deg, rgba(28, 174, 242, 0.38), rgba(101, 38, 255, 0.22));
+  border-color: rgba(101, 38, 255, 0.65);
+  box-shadow: 0 0 22px rgba(28, 174, 242, 0.45);
   color: #ffffff;
 }
 
@@ -4028,24 +4028,24 @@ scale trough {
   min-height: 8px;
   border-radius: 999px;
   background: rgba(8, 10, 18, 0.95);
-  border: 1px solid rgba(38, 255, 183, 0.28);
+  border: 1px solid rgba(38, 186, 255, 0.28);
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.55);
 }
 
 scale highlight {
   min-height: 8px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #984dff 0%, #ff264c 55%, #26ffb7 100%);
-  box-shadow: 0 0 14px rgba(152, 77, 255, 0.55), 0 0 10px rgba(255, 38, 76, 0.35);
+  background: linear-gradient(90deg, #1caef2 0%, #6526ff 55%, #26baff 100%);
+  box-shadow: 0 0 14px rgba(28, 174, 242, 0.55), 0 0 10px rgba(101, 38, 255, 0.35);
 }
 
 scale slider {
   min-width: 16px;
   min-height: 16px;
   border-radius: 999px;
-  background: radial-gradient(circle at 35% 35%, #ffffff, #ffb026 45%, #984dff 100%);
+  background: radial-gradient(circle at 35% 35%, #ffffff, #ffb026 45%, #1caef2 100%);
   border: 2px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 0 12px rgba(152, 77, 255, 0.65), 0 0 8px rgba(255, 38, 76, 0.45);
+  box-shadow: 0 0 12px rgba(28, 174, 242, 0.65), 0 0 8px rgba(101, 38, 255, 0.45);
   margin: -6px;
 }
 
@@ -4067,11 +4067,11 @@ scale slider {
   background-color: rgba(8, 5, 16, 0.34);
   background-image: linear-gradient(180deg, rgba(3, 1, 9, 0.5), rgba(4, 2, 11, 0.14));
   background-position: center;
-  border: 1px solid rgba(152, 77, 255, 0.42);
-  border-top: 2px solid #984dff;
+  border: 1px solid rgba(28, 174, 242, 0.42);
+  border-top: 2px solid #1caef2;
   border-radius: 14px;
   padding: 18px 20px;
-  box-shadow: 0 0 0 1px rgba(255, 38, 76, 0.08), 0 0 28px rgba(255, 38, 76, 0.14), 0 24px 64px rgba(0, 0, 0, 0.75), inset 0 0 32px rgba(38, 255, 183, 0.07);
+  box-shadow: 0 0 0 1px rgba(101, 38, 255, 0.08), 0 0 28px rgba(101, 38, 255, 0.14), 0 24px 64px rgba(0, 0, 0, 0.75), inset 0 0 32px rgba(38, 186, 255, 0.07);
 }
 
 .qs-card .qs-grid {
@@ -4080,7 +4080,7 @@ scale slider {
 
 .qs-card .qs-tile {
   background: rgba(10, 13, 20, 0.85);
-  border: 1px solid rgba(38, 255, 183, 0.35);
+  border: 1px solid rgba(38, 186, 255, 0.35);
   border-radius: 14px;
   min-width: 68px;
   min-height: 68px;
@@ -4089,15 +4089,15 @@ scale slider {
 }
 
 .qs-card .qs-tile:hover {
-  background: linear-gradient(135deg, rgba(255, 38, 76, 0.16), rgba(152, 77, 255, 0.12));
-  border-color: rgba(255, 38, 76, 0.55);
-  box-shadow: 0 0 18px rgba(255, 38, 76, 0.28);
+  background: linear-gradient(135deg, rgba(101, 38, 255, 0.16), rgba(28, 174, 242, 0.12));
+  border-color: rgba(101, 38, 255, 0.55);
+  box-shadow: 0 0 18px rgba(101, 38, 255, 0.28);
 }
 
 .qs-card .qs-tile-on {
-  background: linear-gradient(145deg, rgba(152, 77, 255, 0.32), rgba(255, 38, 76, 0.18));
-  border-color: rgba(255, 38, 76, 0.62);
-  box-shadow: inset 0 0 16px rgba(152, 77, 255, 0.22), 0 0 20px rgba(255, 38, 76, 0.28);
+  background: linear-gradient(145deg, rgba(28, 174, 242, 0.32), rgba(101, 38, 255, 0.18));
+  border-color: rgba(101, 38, 255, 0.62);
+  box-shadow: inset 0 0 16px rgba(28, 174, 242, 0.22), 0 0 20px rgba(101, 38, 255, 0.28);
   color: #ffffff;
 }
 
@@ -4106,14 +4106,14 @@ scale slider {
 }
 
 .qs-card .qs-tile-off .qs-icon {
-  color: #26ffb7;
-  text-shadow: 0 0 10px rgba(38, 255, 183, 0.45);
+  color: #26baff;
+  text-shadow: 0 0 10px rgba(38, 186, 255, 0.45);
   opacity: 0.85;
 }
 
 .qs-card .qs-tile-on .qs-icon {
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.55);
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.55);
 }
 
 .qs-card .qs-icon {
@@ -4128,7 +4128,7 @@ scale slider {
 
 .qs-card .qs-value {
   font-size: 11px;
-  color: #ff264c;
+  color: #6526ff;
   font-weight: 700; /* margin auto unsupported by GTK CSS */
 }
 
@@ -4138,7 +4138,7 @@ scale slider {
 
 .qs-card .qs-battery {
   padding-top: 8px;
-  border-top: 1px solid rgba(38, 255, 183, 0.28);
+  border-top: 1px solid rgba(38, 186, 255, 0.28);
 }
 
 /* Dashboard eye-candy boost.
@@ -4146,22 +4146,22 @@ scale slider {
  * ghost figure around the card and fight the layer blur ignore_alpha
  * cutoff. Crisp rim + short bloom = deliberate neon, no phantom. */
 .dashboard-root {
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(152, 77, 255, 0.1), transparent 70%), radial-gradient(ellipse 70% 50% at 80% 100%, rgba(255, 38, 76, 0.07), transparent 65%), rgba(5, 1, 13, 0.97);
-  border: 1px solid rgba(152, 77, 255, 0.42);
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(28, 174, 242, 0.1), transparent 70%), radial-gradient(ellipse 70% 50% at 80% 100%, rgba(101, 38, 255, 0.07), transparent 65%), rgba(5, 1, 13, 0.97);
+  border: 1px solid rgba(28, 174, 242, 0.42);
   border-radius: 12px;
-  box-shadow: 0 0 0 1px rgba(255, 38, 76, 0.1), 0 0 18px rgba(152, 77, 255, 0.32), 0 24px 64px rgba(0, 0, 0, 0.8), inset 0 0 100px rgba(38, 255, 183, 0.06);
+  box-shadow: 0 0 0 1px rgba(101, 38, 255, 0.1), 0 0 18px rgba(28, 174, 242, 0.32), 0 24px 64px rgba(0, 0, 0, 0.8), inset 0 0 100px rgba(38, 186, 255, 0.06);
 }
 
 .dash-clock {
   color: #ffffff;
-  text-shadow: 0 0 40px rgba(152, 77, 255, 0.65), 0 0 24px rgba(255, 38, 76, 0.35);
+  text-shadow: 0 0 40px rgba(28, 174, 242, 0.65), 0 0 24px rgba(101, 38, 255, 0.35);
 }
 
 /* (.dash-card visual now lives in the HOME-HUD card block above -
    no blanket override here, per-hue borders must win. rev 2026-07-09) */
 .dash-toggle {
   background: rgba(7, 5, 14, 0.93);
-  border: 1px dashed rgba(38, 255, 183, 0.4);
+  border: 1px dashed rgba(38, 186, 255, 0.4);
   /* Wide enough for the longest label ("Bluetooth") in the homogeneous
      space-evenly row - 88px forced every tile narrow and ellipsized. */
   min-width: 132px;
@@ -4170,15 +4170,15 @@ scale slider {
 }
 
 .dash-toggle:hover {
-  background: linear-gradient(145deg, rgba(152, 77, 255, 0.24), rgba(255, 38, 76, 0.14));
-  border-color: rgba(255, 38, 76, 0.55);
-  box-shadow: 0 0 24px rgba(152, 77, 255, 0.35);
+  background: linear-gradient(145deg, rgba(28, 174, 242, 0.24), rgba(101, 38, 255, 0.14));
+  border-color: rgba(101, 38, 255, 0.55);
+  box-shadow: 0 0 24px rgba(28, 174, 242, 0.35);
 }
 
 .dash-toggle-glyph {
   font-size: 24px;
-  color: #ff264c;
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.55);
+  color: #6526ff;
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.55);
 }
 
 .dash-player-btn {
@@ -4189,67 +4189,67 @@ scale slider {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(152, 77, 255, 0.288);
-  border-top: 2px solid rgba(152, 77, 255, 0.57);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.132), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(152, 77, 255, 0.036);
+  border: 1px solid rgba(28, 174, 242, 0.288);
+  border-top: 2px solid rgba(28, 174, 242, 0.57);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.132), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(28, 174, 242, 0.036);
   color: #e8edf5;
   font-size: 16px;
   transition: all 180ms ease;
 }
 
 .dash-player-btn:hover {
-  border-color: rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 22px rgba(152, 77, 255, 0.5), 0 0 40px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 22px rgba(28, 174, 242, 0.5), 0 0 40px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
 }
 
 .dash-player-btn:active {
   background-color: rgba(2, 1, 6, 0.99);
   background-image: none;
-  border-color: rgba(152, 77, 255, 0.85);
-  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(152, 77, 255, 0.32);
+  border-color: rgba(28, 174, 242, 0.85);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(28, 174, 242, 0.32);
 }
 
 /* Flyout panels - HOME-HUD per-hue card borders are defined in the
    shared flyout base above; no blanket override here (rev 2026-07-09). */
 .wifi-toggle, .wifi-rescan, .bt-toggle, .bt-scan {
-  background: linear-gradient(135deg, rgba(255, 38, 76, 0.12), rgba(38, 255, 183, 0.1));
-  border: 1px solid rgba(255, 38, 76, 0.42);
-  color: #ff264c;
+  background: linear-gradient(135deg, rgba(101, 38, 255, 0.12), rgba(38, 186, 255, 0.1));
+  border: 1px solid rgba(101, 38, 255, 0.42);
+  color: #6526ff;
   font-weight: 700;
 }
 
 .wifi-toggle:hover, .wifi-rescan:hover, .bt-toggle:hover, .bt-scan:hover {
-  background: linear-gradient(135deg, rgba(255, 38, 76, 0.28), rgba(152, 77, 255, 0.16));
-  box-shadow: 0 0 18px rgba(255, 38, 76, 0.45);
+  background: linear-gradient(135deg, rgba(101, 38, 255, 0.28), rgba(28, 174, 242, 0.16));
+  box-shadow: 0 0 18px rgba(101, 38, 255, 0.45);
   color: #ffffff;
 }
 
 .wifi-advanced, .bt-advanced, .mix-advanced {
-  background: rgba(38, 255, 183, 0.12);
-  border: 1px solid rgba(38, 255, 183, 0.38);
-  color: rgb(135.65, 255, 215.4);
+  background: rgba(38, 186, 255, 0.12);
+  border: 1px solid rgba(38, 186, 255, 0.38);
+  color: rgb(135.65, 217.05, 255);
 }
 
 .wifi-advanced:hover, .bt-advanced:hover, .mix-advanced:hover {
-  background: rgba(38, 255, 183, 0.28);
-  box-shadow: 0 0 16px rgba(38, 255, 183, 0.45);
+  background: rgba(38, 186, 255, 0.28);
+  box-shadow: 0 0 16px rgba(38, 186, 255, 0.45);
   color: #ffffff;
 }
 
 .wifi-close, .bt-close, .mix-close, .cal-close, .notif-close, .qs-close, .upd-close {
-  background: linear-gradient(135deg, rgba(152, 77, 255, 0.16), rgba(255, 38, 76, 0.08));
-  border: 1px solid rgba(152, 77, 255, 0.35);
-  color: rgb(195.26, 151.76, 255);
+  background: linear-gradient(135deg, rgba(28, 174, 242, 0.16), rgba(101, 38, 255, 0.08));
+  border: 1px solid rgba(28, 174, 242, 0.35);
+  color: rgb(123.34, 208.02, 247.46);
   font-weight: 700;
 }
 
 .wifi-close:hover, .bt-close:hover, .mix-close:hover, .cal-close:hover,
 .notif-close:hover, .qs-close:hover, .upd-close:hover {
-  background: linear-gradient(135deg, rgba(152, 77, 255, 0.35), rgba(255, 38, 76, 0.2));
-  border-color: rgba(255, 38, 76, 0.55);
+  background: linear-gradient(135deg, rgba(28, 174, 242, 0.35), rgba(101, 38, 255, 0.2));
+  border-color: rgba(101, 38, 255, 0.55);
   color: #ffffff;
-  box-shadow: 0 0 18px rgba(152, 77, 255, 0.4);
+  box-shadow: 0 0 18px rgba(28, 174, 242, 0.4);
 }
 
 /* =====================================================================
@@ -4436,15 +4436,15 @@ scale slider {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(152, 77, 255, 0.264);
-  border-top: 2px solid rgba(152, 77, 255, 0.5225);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.121), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(152, 77, 255, 0.033);
+  border: 1px solid rgba(28, 174, 242, 0.264);
+  border-top: 2px solid rgba(28, 174, 242, 0.5225);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.121), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(28, 174, 242, 0.033);
   transition: all 180ms ease;
 }
 
 .hud-tile:hover {
-  border-color: rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 22px rgba(152, 77, 255, 0.5), 0 0 40px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 22px rgba(28, 174, 242, 0.5), 0 0 40px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
 }
 
 .hud-tile-glyph {
@@ -4470,33 +4470,33 @@ scale slider {
 /* per-domain hue variants - border-rule, glyph and label take the neon;
    each keeps the premium obsidian shadow with its own colored halo. */
 .hud-tile-pink {
-  border-color: rgba(152, 77, 255, 0.55);
-  box-shadow: 0 0 13px rgba(152, 77, 255, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
+  border-color: rgba(28, 174, 242, 0.55);
+  box-shadow: 0 0 13px rgba(28, 174, 242, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
 }
 
 .hud-tile-pink .hud-tile-glyph, .hud-tile-pink .hud-tile-label {
-  color: #984dff;
-  text-shadow: 0 0 8px rgba(152, 77, 255, 0.55);
+  color: #1caef2;
+  text-shadow: 0 0 8px rgba(28, 174, 242, 0.55);
 }
 
 .hud-tile-green {
-  border-color: rgba(255, 38, 76, 0.55);
-  box-shadow: 0 0 13px rgba(255, 38, 76, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
+  border-color: rgba(101, 38, 255, 0.55);
+  box-shadow: 0 0 13px rgba(101, 38, 255, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
 }
 
 .hud-tile-green .hud-tile-glyph, .hud-tile-green .hud-tile-label {
-  color: #ff264c;
-  text-shadow: 0 0 8px rgba(255, 38, 76, 0.55);
+  color: #6526ff;
+  text-shadow: 0 0 8px rgba(101, 38, 255, 0.55);
 }
 
 .hud-tile-purple {
-  border-color: rgba(38, 255, 183, 0.55);
-  box-shadow: 0 0 13px rgba(38, 255, 183, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
+  border-color: rgba(38, 186, 255, 0.55);
+  box-shadow: 0 0 13px rgba(38, 186, 255, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
 }
 
 .hud-tile-purple .hud-tile-glyph, .hud-tile-purple .hud-tile-label {
-  color: #26ffb7;
-  text-shadow: 0 0 8px rgba(38, 255, 183, 0.55);
+  color: #26baff;
+  text-shadow: 0 0 8px rgba(38, 186, 255, 0.55);
 }
 
 .hud-tile-gold {
@@ -4560,13 +4560,13 @@ scale slider {
 }
 
 .hud-tile-bar-pink {
-  background-image: linear-gradient(90deg, #984dff, #984dff);
-  box-shadow: 0 0 5px rgba(152, 77, 255, 0.45);
+  background-image: linear-gradient(90deg, #1caef2, #1caef2);
+  box-shadow: 0 0 5px rgba(28, 174, 242, 0.45);
 }
 
 .hud-tile-bar-purple {
-  background-image: linear-gradient(90deg, #26ffb7, #26ffb7);
-  box-shadow: 0 0 5px rgba(38, 255, 183, 0.45);
+  background-image: linear-gradient(90deg, #26baff, #26baff);
+  box-shadow: 0 0 5px rgba(38, 186, 255, 0.45);
 }
 
 .hud-tile-bar-blue {
@@ -4580,8 +4580,8 @@ scale slider {
 }
 
 .hud-tile-bar-green {
-  background-image: linear-gradient(90deg, #ff264c, #ff264c);
-  box-shadow: 0 0 5px rgba(255, 38, 76, 0.45);
+  background-image: linear-gradient(90deg, #6526ff, #6526ff);
+  box-shadow: 0 0 5px rgba(101, 38, 255, 0.45);
 }
 
 .hud-tile-bar-gold {
@@ -4600,11 +4600,11 @@ scale slider {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(152, 77, 255, 0.36);
-  border-top: 2px solid rgba(152, 77, 255, 0.7125);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(152, 77, 255, 0.045);
-  color: rgb(195.26, 151.76, 255);
-  text-shadow: 0 0 8px rgba(152, 77, 255, 0.45);
+  border: 1px solid rgba(28, 174, 242, 0.36);
+  border-top: 2px solid rgba(28, 174, 242, 0.7125);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(28, 174, 242, 0.045);
+  color: rgb(123.34, 208.02, 247.46);
+  text-shadow: 0 0 8px rgba(28, 174, 242, 0.45);
 }
 
 .app-pill-green {
@@ -4612,11 +4612,11 @@ scale slider {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(255, 38, 76, 0.36);
-  border-top: 2px solid rgba(255, 38, 76, 0.7125);
-  box-shadow: 0 0 16px rgba(255, 38, 76, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 38, 76, 0.045);
-  color: rgb(255, 135.65, 156.55);
-  text-shadow: 0 0 8px rgba(255, 38, 76, 0.45);
+  border: 1px solid rgba(101, 38, 255, 0.36);
+  border-top: 2px solid rgba(101, 38, 255, 0.7125);
+  box-shadow: 0 0 16px rgba(101, 38, 255, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(101, 38, 255, 0.045);
+  color: rgb(170.3, 135.65, 255);
+  text-shadow: 0 0 8px rgba(101, 38, 255, 0.45);
 }
 
 .app-pill-purple {
@@ -4624,11 +4624,11 @@ scale slider {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(38, 255, 183, 0.36);
-  border-top: 2px solid rgba(38, 255, 183, 0.7125);
-  box-shadow: 0 0 16px rgba(38, 255, 183, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(38, 255, 183, 0.045);
-  color: rgb(135.65, 255, 215.4);
-  text-shadow: 0 0 8px rgba(38, 255, 183, 0.45);
+  border: 1px solid rgba(38, 186, 255, 0.36);
+  border-top: 2px solid rgba(38, 186, 255, 0.7125);
+  box-shadow: 0 0 16px rgba(38, 186, 255, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(38, 186, 255, 0.045);
+  color: rgb(135.65, 217.05, 255);
+  text-shadow: 0 0 8px rgba(38, 186, 255, 0.45);
 }
 
 .app-pill-gold {
@@ -4668,24 +4668,24 @@ scale slider {
 }
 
 .app-pill-pink:hover {
-  border-color: rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 22px rgba(152, 77, 255, 0.5), 0 0 40px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 22px rgba(28, 174, 242, 0.5), 0 0 40px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(152, 77, 255, 0.85);
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.85);
 }
 
 .app-pill-green:hover {
-  border-color: rgba(255, 38, 76, 0.95);
-  box-shadow: 0 0 22px rgba(255, 38, 76, 0.5), 0 0 40px rgba(255, 38, 76, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(101, 38, 255, 0.95);
+  box-shadow: 0 0 22px rgba(101, 38, 255, 0.5), 0 0 40px rgba(101, 38, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.85);
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.85);
 }
 
 .app-pill-purple:hover {
-  border-color: rgba(38, 255, 183, 0.95);
-  box-shadow: 0 0 22px rgba(38, 255, 183, 0.5), 0 0 40px rgba(38, 255, 183, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(38, 186, 255, 0.95);
+  box-shadow: 0 0 22px rgba(38, 186, 255, 0.5), 0 0 40px rgba(38, 186, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(38, 255, 183, 0.85);
+  text-shadow: 0 0 12px rgba(38, 186, 255, 0.85);
 }
 
 .app-pill-gold:hover {
@@ -4718,9 +4718,9 @@ scale slider {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(152, 77, 255, 0.24);
-  border-top: 2px solid rgba(152, 77, 255, 0.475);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.11), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(152, 77, 255, 0.03);
+  border: 1px solid rgba(28, 174, 242, 0.24);
+  border-top: 2px solid rgba(28, 174, 242, 0.475);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.11), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(28, 174, 242, 0.03);
   color: rgba(232, 237, 245, 0.42);
 }
 
@@ -4729,10 +4729,10 @@ scale slider {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(152, 77, 255, 0.312);
-  border-top: 2px solid rgba(152, 77, 255, 0.6175);
-  box-shadow: 0 0 16px rgba(152, 77, 255, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(152, 77, 255, 0.039);
-  color: rgb(195.26, 151.76, 255);
+  border: 1px solid rgba(28, 174, 242, 0.312);
+  border-top: 2px solid rgba(28, 174, 242, 0.6175);
+  box-shadow: 0 0 16px rgba(28, 174, 242, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(28, 174, 242, 0.039);
+  color: rgb(123.34, 208.02, 247.46);
 }
 
 .ws-pill-green {
@@ -4740,10 +4740,10 @@ scale slider {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(255, 38, 76, 0.312);
-  border-top: 2px solid rgba(255, 38, 76, 0.6175);
-  box-shadow: 0 0 16px rgba(255, 38, 76, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 38, 76, 0.039);
-  color: rgb(255, 135.65, 156.55);
+  border: 1px solid rgba(101, 38, 255, 0.312);
+  border-top: 2px solid rgba(101, 38, 255, 0.6175);
+  box-shadow: 0 0 16px rgba(101, 38, 255, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(101, 38, 255, 0.039);
+  color: rgb(170.3, 135.65, 255);
 }
 
 .ws-pill-purple {
@@ -4751,10 +4751,10 @@ scale slider {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(38, 255, 183, 0.312);
-  border-top: 2px solid rgba(38, 255, 183, 0.6175);
-  box-shadow: 0 0 16px rgba(38, 255, 183, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(38, 255, 183, 0.039);
-  color: rgb(135.65, 255, 215.4);
+  border: 1px solid rgba(38, 186, 255, 0.312);
+  border-top: 2px solid rgba(38, 186, 255, 0.6175);
+  box-shadow: 0 0 16px rgba(38, 186, 255, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(38, 186, 255, 0.039);
+  color: rgb(135.65, 217.05, 255);
 }
 
 .ws-pill-gold {
@@ -4802,28 +4802,28 @@ scale slider {
 }
 
 .ws-pill-occupied {
-  text-shadow: 0 0 8px rgba(152, 77, 255, 0.55);
+  text-shadow: 0 0 8px rgba(28, 174, 242, 0.55);
 }
 
 .ws-pill-pink:hover {
-  border-color: rgba(152, 77, 255, 0.95);
-  box-shadow: 0 0 22px rgba(152, 77, 255, 0.5), 0 0 40px rgba(152, 77, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(28, 174, 242, 0.95);
+  box-shadow: 0 0 22px rgba(28, 174, 242, 0.5), 0 0 40px rgba(28, 174, 242, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(152, 77, 255, 0.85);
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.85);
 }
 
 .ws-pill-green:hover {
-  border-color: rgba(255, 38, 76, 0.95);
-  box-shadow: 0 0 22px rgba(255, 38, 76, 0.5), 0 0 40px rgba(255, 38, 76, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(101, 38, 255, 0.95);
+  box-shadow: 0 0 22px rgba(101, 38, 255, 0.5), 0 0 40px rgba(101, 38, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.85);
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.85);
 }
 
 .ws-pill-purple:hover {
-  border-color: rgba(38, 255, 183, 0.95);
-  box-shadow: 0 0 22px rgba(38, 255, 183, 0.5), 0 0 40px rgba(38, 255, 183, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(38, 186, 255, 0.95);
+  box-shadow: 0 0 22px rgba(38, 186, 255, 0.5), 0 0 40px rgba(38, 186, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(38, 255, 183, 0.85);
+  text-shadow: 0 0 12px rgba(38, 186, 255, 0.85);
 }
 
 .ws-pill-gold:hover {
@@ -4855,10 +4855,10 @@ scale slider {
 }
 
 .ws-pill-active {
-  background: linear-gradient(135deg, #984dff, #ff264c);
+  background: linear-gradient(135deg, #1caef2, #6526ff);
   color: #05060a;
   border: 1px solid rgba(255, 255, 255, 0.75);
-  box-shadow: 0 0 20px rgba(152, 77, 255, 0.9), 0 0 42px rgba(255, 38, 76, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 20px rgba(28, 174, 242, 0.9), 0 0 42px rgba(101, 38, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 /* =====================================================================
@@ -4892,8 +4892,8 @@ scale slider {
 .dash-greet-accent {
   font-family: "Caveat", "Inter", sans-serif;
   font-size: 38px;
-  color: #984dff;
-  text-shadow: 0 0 14px rgba(152, 77, 255, 0.85), 0 0 30px rgba(152, 77, 255, 0.4);
+  color: #1caef2;
+  text-shadow: 0 0 14px rgba(28, 174, 242, 0.85), 0 0 30px rgba(28, 174, 242, 0.4);
 }
 
 /* -- card header: glyph + Inter Display title + rule + mono stamp ----- */
@@ -4933,12 +4933,12 @@ scale slider {
 
 .dash-grid .dash-card:nth-child(2) .dash-hdr-glyph,
 .dash-grid .dash-card:nth-child(2) .dash-hdr-title {
-  color: #984dff;
-  text-shadow: 0 0 10px rgba(152, 77, 255, 0.55);
+  color: #1caef2;
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.55);
 }
 
 .dash-grid .dash-card:nth-child(2) .dash-hdr-rule {
-  background: rgba(152, 77, 255, 0.25);
+  background: rgba(28, 174, 242, 0.25);
 }
 
 .dash-grid .dash-card:nth-child(3) .dash-hdr-glyph,
@@ -4953,12 +4953,12 @@ scale slider {
 
 .dash-grid .dash-card:nth-child(4) .dash-hdr-glyph,
 .dash-grid .dash-card:nth-child(4) .dash-hdr-title {
-  color: #26ffb7;
-  text-shadow: 0 0 10px rgba(38, 255, 183, 0.55);
+  color: #26baff;
+  text-shadow: 0 0 10px rgba(38, 186, 255, 0.55);
 }
 
 .dash-grid .dash-card:nth-child(4) .dash-hdr-rule {
-  background: rgba(38, 255, 183, 0.25);
+  background: rgba(38, 186, 255, 0.25);
 }
 
 .dash-player .dash-hdr-glyph,
@@ -4973,12 +4973,12 @@ scale slider {
 
 .dash-cores-card .dash-hdr-glyph,
 .dash-cores-card .dash-hdr-title {
-  color: #984dff;
-  text-shadow: 0 0 10px rgba(152, 77, 255, 0.55);
+  color: #1caef2;
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.55);
 }
 
 .dash-cores-card .dash-hdr-rule {
-  background: rgba(152, 77, 255, 0.25);
+  background: rgba(28, 174, 242, 0.25);
 }
 
 /* -- colored big numerals (reference: values carry the card hue) ------ */
@@ -4988,8 +4988,8 @@ scale slider {
 }
 
 .dash-big-pink {
-  color: #984dff;
-  text-shadow: 0 0 14px rgba(152, 77, 255, 0.55), 0 0 28px rgba(152, 77, 255, 0.25);
+  color: #1caef2;
+  text-shadow: 0 0 14px rgba(28, 174, 242, 0.55), 0 0 28px rgba(28, 174, 242, 0.25);
 }
 
 .dash-big-orange {
@@ -5019,8 +5019,8 @@ scale slider {
 }
 
 .dash-foot-pink {
-  color: rgba(152, 77, 255, 0.6);
-  border-top-color: rgba(152, 77, 255, 0.16);
+  color: rgba(28, 174, 242, 0.6);
+  border-top-color: rgba(28, 174, 242, 0.16);
 }
 
 .dash-foot-orange {
@@ -5029,8 +5029,8 @@ scale slider {
 }
 
 .dash-foot-purple {
-  color: rgba(38, 255, 183, 0.6);
-  border-top-color: rgba(38, 255, 183, 0.16);
+  color: rgba(38, 186, 255, 0.6);
+  border-top-color: rgba(38, 186, 255, 0.16);
 }
 
 .dash-foot-red {
@@ -5062,21 +5062,21 @@ scale slider {
 }
 
 .dash-ring-pink {
-  color: #984dff;
+  color: #1caef2;
 }
 
 .dash-ring-label-pink {
-  color: #984dff;
-  text-shadow: 0 0 8px rgba(152, 77, 255, 0.55);
+  color: #1caef2;
+  text-shadow: 0 0 8px rgba(28, 174, 242, 0.55);
 }
 
 .dash-ring-purple {
-  color: #26ffb7;
+  color: #26baff;
 }
 
 .dash-ring-label-purple {
-  color: #26ffb7;
-  text-shadow: 0 0 8px rgba(38, 255, 183, 0.55);
+  color: #26baff;
+  text-shadow: 0 0 8px rgba(38, 186, 255, 0.55);
 }
 
 .dash-ring-orange {
@@ -5099,18 +5099,18 @@ scale slider {
 
 /* -- multi-neon action toggles ----------------------------------------- */
 .dash-toggle-green {
-  border-color: rgba(255, 38, 76, 0.45);
+  border-color: rgba(101, 38, 255, 0.45);
 }
 
 .dash-toggle-green .dash-toggle-glyph {
-  color: #ff264c;
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.55);
+  color: #6526ff;
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.55);
 }
 
 .dash-toggle-green:hover {
-  background: rgba(255, 38, 76, 0.13);
-  border-color: #ff264c;
-  box-shadow: 0 0 24px rgba(255, 38, 76, 0.4);
+  background: rgba(101, 38, 255, 0.13);
+  border-color: #6526ff;
+  box-shadow: 0 0 24px rgba(101, 38, 255, 0.4);
 }
 
 .dash-toggle-blue {
@@ -5129,33 +5129,33 @@ scale slider {
 }
 
 .dash-toggle-purple {
-  border-color: rgba(38, 255, 183, 0.45);
+  border-color: rgba(38, 186, 255, 0.45);
 }
 
 .dash-toggle-purple .dash-toggle-glyph {
-  color: #26ffb7;
-  text-shadow: 0 0 12px rgba(38, 255, 183, 0.55);
+  color: #26baff;
+  text-shadow: 0 0 12px rgba(38, 186, 255, 0.55);
 }
 
 .dash-toggle-purple:hover {
-  background: rgba(38, 255, 183, 0.13);
-  border-color: #26ffb7;
-  box-shadow: 0 0 24px rgba(38, 255, 183, 0.4);
+  background: rgba(38, 186, 255, 0.13);
+  border-color: #26baff;
+  box-shadow: 0 0 24px rgba(38, 186, 255, 0.4);
 }
 
 .dash-toggle-pink {
-  border-color: rgba(152, 77, 255, 0.45);
+  border-color: rgba(28, 174, 242, 0.45);
 }
 
 .dash-toggle-pink .dash-toggle-glyph {
-  color: #984dff;
-  text-shadow: 0 0 12px rgba(152, 77, 255, 0.55);
+  color: #1caef2;
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.55);
 }
 
 .dash-toggle-pink:hover {
-  background: rgba(152, 77, 255, 0.13);
-  border-color: #984dff;
-  box-shadow: 0 0 24px rgba(152, 77, 255, 0.4);
+  background: rgba(28, 174, 242, 0.13);
+  border-color: #1caef2;
+  box-shadow: 0 0 24px rgba(28, 174, 242, 0.4);
 }
 
 .dash-toggle-gold {
@@ -5224,13 +5224,13 @@ scale slider {
 }
 
 .power-title {
-  color: #984dff;
-  text-shadow: 0 0 12px rgba(152, 77, 255, 0.9), 0 0 30px rgba(152, 77, 255, 0.45), 0 0 60px rgba(255, 38, 76, 0.25);
+  color: #1caef2;
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.9), 0 0 30px rgba(28, 174, 242, 0.45), 0 0 60px rgba(101, 38, 255, 0.25);
 }
 
 .cheat-title {
-  color: #ff264c;
-  text-shadow: 0 0 12px rgba(255, 38, 76, 0.9), 0 0 30px rgba(255, 38, 76, 0.45), 0 0 60px rgba(152, 77, 255, 0.25);
+  color: #6526ff;
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.9), 0 0 30px rgba(101, 38, 255, 0.45), 0 0 60px rgba(28, 174, 242, 0.25);
 }
 
 .dc-title {
@@ -5239,12 +5239,12 @@ scale slider {
 }
 
 .brand-gem, .brand-word {
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.75), 0 0 24px rgba(255, 77, 107, 0.55), 0 0 40px rgba(152, 77, 255, 0.25);
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.75), 0 0 24px rgba(255, 77, 107, 0.55), 0 0 40px rgba(28, 174, 242, 0.25);
 }
 
 /* spray-halo on the hero clock - pink/green double bloom like the wall */
 .dash-clock {
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.6), 0 0 34px rgba(152, 77, 255, 0.55), 0 0 70px rgba(255, 38, 76, 0.3);
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.6), 0 0 34px rgba(28, 174, 242, 0.55), 0 0 70px rgba(101, 38, 255, 0.3);
 }
 
 /* =====================================================================
@@ -5316,8 +5316,8 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 .bar-flip-collapse:active {
   background-color: rgba(2, 1, 6, 0.99);
   background-image: none;
-  border-color: rgba(152, 77, 255, 0.85);
-  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(152, 77, 255, 0.32);
+  border-color: rgba(28, 174, 242, 0.85);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(28, 174, 242, 0.32);
 }
 
 .dash-close, .cheat-close, .dc-close {
@@ -5349,6 +5349,70 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   font-family: "Inter Display", "Inter", sans-serif;
   font-size: 12px;
   letter-spacing: 0.24em;
+}
+
+/* ====================================================================
+   NYXUS Mood Engine tints (nyxus-sense) - additive glow that shifts the
+   bar labels with the derived mood. Placed BEFORE .nyx-glitch so the
+   random glitch flash wins when both classes are present. Composes with
+   the pulsed/tint reflex layer (which owns borders, not these labels).
+   ==================================================================== */
+.mood-ghost {
+  color: #aab6d4;
+  text-shadow: 0 0 8px rgba(150, 175, 220, 0.35);
+}
+
+.mood-drift {
+  text-shadow: 0 0 12px rgba(101, 38, 255, 0.45), 0 0 22px rgba(28, 174, 242, 0.2);
+}
+
+.mood-prowl {
+  text-shadow: 0 0 12px rgba(28, 174, 242, 0.55);
+}
+
+.mood-overclock {
+  text-shadow: 0 0 12px rgba(255, 77, 107, 0.6), 0 0 26px rgba(255, 176, 38, 0.38);
+}
+
+.mood-matrix {
+  color: #6bffa1;
+  text-shadow: 0 0 12px rgba(0, 255, 65, 0.6), 0 0 26px rgba(0, 255, 65, 0.28);
+}
+
+/* SUPERNOVA show mode - the logo blazes while the beat-locked show runs. */
+.super-live {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.9), 0 0 22px rgba(28, 174, 242, 0.8), 0 0 40px rgba(101, 38, 255, 0.55), 0 0 70px rgba(255, 77, 107, 0.35);
+}
+
+/* ====================================================================
+   NYXUS glow eye-candy + security-toggle states (ported 2026-07-21)
+   random-glow.sh flips .nyx-glitch onto random labels every 7s for a
+   flickering neon bloom; security-state.sh drives the .sec-pill states.
+   ASCII-only. Uses live accent vars from _nyxus_accent.scss.
+   ==================================================================== */
+.nyx-glitch {
+  text-shadow: 0 0 10px rgba(28, 174, 242, 0.7), 0 0 20px rgba(101, 38, 255, 0.55), 0 0 32px rgba(255, 77, 107, 0.28);
+}
+
+.sec-pill {
+  min-height: 24px;
+}
+
+.sec-pill.sec-off {
+  opacity: 0.7;
+  border-style: dashed;
+}
+
+.sec-pill.sec-on {
+  opacity: 1;
+  box-shadow: 0 0 12px rgba(101, 38, 255, 0.42), 0 0 22px rgba(28, 174, 242, 0.24);
+}
+
+.sec-pill.sec-armed {
+  opacity: 1;
+  border-color: rgba(255, 77, 107, 0.85);
+  box-shadow: 0 0 12px rgba(255, 77, 107, 0.45), 0 0 22px rgba(255, 176, 38, 0.28);
 }
 
 /*# sourceMappingURL=eww.css.map */

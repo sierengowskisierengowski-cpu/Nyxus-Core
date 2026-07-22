@@ -65,24 +65,28 @@ for arg in "$@"; do case "$arg" in
 esac; done
 
 LAUNCHERS=(
+  nyxus
   nyxus-accent-from-wallpaper nyxus-apply-accent nyxus-backup nyxus-beat
-  nyxus-beatd nyxus-blackarch-full nyxus-bootstrap nyxus-companion nyxus-crash-report nyxus-drop
+  nyxus-beatd nyxus-blackarch-full nyxus-boot-check nyxus-bootstrap nyxus-companion nyxus-crash-report nyxus-drop
   nyxus-dynamic-wallpaper.sh nyxus-eww-cinematic nyxus-eww-launch
   nyxus-eww-launch-safe nyxus-freeform nyxus-gen-backdrop nyxus-ghost
-  nyxus-ghost-helper nyxus-hacker-mode nyxus-home
-  nyxus_hotcorners.py nyxus-hub-apps nyxus-hub-close nyxus-hub-launch
-  nyxus-hub-open nyxus-hub-search nyxus-lens nyxus-livewall-flagship
+  nyxus-ghost-helper nyxus-glow nyxus-graffiti-wall nyxus-hacker-mode nyxus-home
+  nyxus-hotkey nyxus_hotcorners.py nyxus-hub-apps nyxus-hub-close nyxus-hub-launch
+  nyxus-hub-open nyxus-hub-search nyxus-launch-bifrost nyxus-launch-meli nyxus-lens nyxus-livewall-flagship
   nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art
-  nyxus-lock-track nyxus-mission-control-toggle nyxus-notifications
+  nyxus-lock-track nyxus-mission-control-toggle nyxus-mood nyxus-notifications
   nyxus-notif-to-eww nyxus-nowplaying nyxus-palette-extract nyxus-panic
+  nyxus-persist-login
   nyxus-plugins nyxus-plymouth-install nyxus-postinstall nyxus-pulsed nyxus-record
-  nyxus-screensaver nyxus-security nyxus-session-start nyxus-settings
+  nyxus-rotate-walls
+  nyxus-screensaver nyxus-security nyxus-sense nyxus-session-start nyxus-settings
   nyxus-set-wallpaper nyxus-set-wallpaper.sh nyxus-sfx nyxus-shader
-  nyxus-sound nyxus-sound-bake nyxus-soundd nyxus-sound-forge nyxus-sounds
+  nyxus-sound nyxus-sound-bake nyxus-supernova nyxus-soundd nyxus-sound-forge nyxus-sounds
   nyxus-spray nyxus-store nyxus-sync-stations nyxus-tint nyxus-tintd
   nyxus-updater nyxus-voice nyxus-voiced nyxus-voice-install
   nyxus-voice-model nyxus-wait-bootstrap nyxus-wall-cycle nyxus-wall-fx
-  nyxus-wall-next nyxus-weather-line nyxus-welcome sync-eww.sh
+  nyxus-wall-next nyxus-wallpaper-autostart nyxus-weather-line nyxus-welcome nyxus-whispers sync-eww.sh
+  nyxus-gamemode nyxus-focusmode
 )
 
 declare -A MANIFEST_EWW=() MANIFEST_HYPR=() MANIFEST_NYXUS=() MANIFEST_BIN=() MANIFEST_DESKTOP=()
@@ -138,6 +142,14 @@ place() { # place <src> <dst> [mode]
   if $CHECK; then info "would update ${dst/#$HOME/\~}"; CHANGED=$((CHANGED+1)); return 0; fi
   mkdir -p "$(dirname "$dst")"
   install -m "$mode" "$src" "$dst" && CHANGED=$((CHANGED+1))
+}
+place_with_backup() { # place_with_backup <src> <dst> <backup-rel> [mode]
+  local src="$1" dst="$2" rel="$3" mode="${4:-0644}"
+  [[ -f "$src" ]] || { warn "missing in repo: ${src#"$REPO_ROOT"/}"; return 1; }
+  if [[ -f "$dst" ]] && ! cmp -s "$src" "$dst"; then
+    backup_move "$dst" "$rel"
+  fi
+  place "$src" "$dst" "$mode"
 }
 
 BACKUP_ROOT=""
@@ -277,6 +289,33 @@ for f in "$NS"/nyxus-*.conf; do
   if [[ "$base" == nyxus-monitors.conf && -f "$dst" ]]; then continue; fi
   place "$f" "$dst" || true
 done
+# Hyprland `env = PATH,…` is a RAW string — $HOME does not expand and breaks
+# every bare nyxus-* bind. Stamp the installing user's real home into the
+# live hyprland.conf (fixes leftover `$HOME`, placeholders, or foreign homes).
+if [[ -f "$HOME/.config/hypr/hyprland.conf" ]]; then
+  if $CHECK; then
+    info "would stamp PATH home → $HOME in ~/.config/hypr/hyprland.conf"
+  else
+    sed -i \
+      -e "s|__NYXUS_HOME__|$HOME|g" \
+      -e "s|env = PATH,\$HOME/|env = PATH,$HOME/|g" \
+      "$HOME/.config/hypr/hyprland.conf"
+    # Normalize any /home/<user>/ prefixes on the PATH line to this $HOME.
+    # (Safe for the cosmic reference machine: /home/cosmic → /home/cosmic.)
+    python3 - "$HOME" "$HOME/.config/hypr/hyprland.conf" <<'PY' || true
+import re, sys
+home, path = sys.argv[1], sys.argv[2]
+text = open(path).read()
+def fix_line(m):
+    line = m.group(0)
+    line = re.sub(r'/home/[^/]+/', home.rstrip('/') + '/', line)
+    return line
+text2, n = re.subn(r'(?m)^env = PATH,.*$', fix_line, text, count=1)
+if n and text2 != text:
+    open(path, 'w').write(text2)
+PY
+  fi
+fi
 ok "hyprland → ~/.config/hypr (+conf.d)"
 
 # launcher/bin scripts → ~/.local/bin. CURATED manifest — the exact launcher
@@ -311,10 +350,73 @@ if [[ -d "$NS/nyxus-start" ]]; then
   ok "nyxus-start app → ~/.nyxus/nyxus-start  ($n files) + launcher → ~/.local/bin/nyxus-start"
 fi
 
-# alien matrix-rain screensaver → ~/.config/nyxus/ (the path hypridle +
-# nyxus-screensaver expect; see docs/THEME.md)
-place "$NS/nyxus_matrix_saver.py" "$HOME/.config/nyxus/nyxus_matrix_saver.py" 0755 || true
-ok "matrix screensaver → ~/.config/nyxus/nyxus_matrix_saver.py"
+# idle screensavers → ~/.config/nyxus/ (the path hypridle + nyxus-screensaver
+# expect; see docs/THEME.md). nyxus_screensaver.py is the alien-wallpaper saver
+# (default); nyxus_matrix_saver.py is the matrix-rain fallback.
+place "$NS/nyxus_screensaver.py"   "$HOME/.config/nyxus/nyxus_screensaver.py"   0755 || true
+place "$NS/nyxus_matrix_saver.py"  "$HOME/.config/nyxus/nyxus_matrix_saver.py"  0755 || true
+ok "screensavers → ~/.config/nyxus/ (alien-wallpaper + matrix-rain)"
+
+# canonical NYXUS runtime config bundle (stations/accent/wallpaper/profile).
+# Back up user edits before overwrite so re-runs stay reversible.
+NYXUS_CFG_SRC="${REPO_ROOT}/artifacts/nyxus-config"
+if [[ -d "$NYXUS_CFG_SRC" ]]; then
+  n=0
+  for base in stations.json stations-hacker.json accent.json wallpaper.conf; do
+    [[ -f "$NYXUS_CFG_SRC/$base" ]] || continue
+    place_with_backup "$NYXUS_CFG_SRC/$base" \
+      "$HOME/.config/nyxus/$base" \
+      ".config/nyxus/$base" && n=$((n+1)) || true
+  done
+  if [[ -d "$NYXUS_CFG_SRC/hw_profiles" ]]; then
+    while IFS= read -r -d '' f; do
+      rel="${f#"$NYXUS_CFG_SRC"/}"
+      place_with_backup "$f" "$HOME/.config/nyxus/$rel" ".config/nyxus/$rel" && n=$((n+1)) || true
+    done < <(find "$NYXUS_CFG_SRC/hw_profiles" -type f -print0)
+  fi
+  if $CHECK; then
+    info "would regenerate ~/.config/nyxus/workspaces.json from stations.json"
+    ok "nyxus config → ~/.config/nyxus  ($n files checked)"
+  elif [[ -x "$HOME/.local/bin/nyxus-sync-stations" && -f "$HOME/.config/nyxus/stations.json" ]]; then
+    if "$HOME/.local/bin/nyxus-sync-stations" >/dev/null 2>&1; then
+      ok "nyxus config → ~/.config/nyxus  ($n files checked) + workspaces.json regenerated"
+    else
+      warn "nyxus config copied but workspaces.json regen failed — check jq / stations.json"
+      ok "nyxus config → ~/.config/nyxus  ($n files checked)"
+    fi
+  else
+    ok "nyxus config → ~/.config/nyxus  ($n files checked)"
+  fi
+fi
+
+# Curated wallpaper-rotation list (alien / NYXUS-HYPRLAND / sierengowski set
+# that the desktop + lock + login rotate through). SEED ONLY — never clobber
+# the user's edited pick list on re-run.
+if [[ -f "$NS/wall-rotation.list" && ! -f "$HOME/.config/nyxus/wall-rotation.list" ]]; then
+  place "$NS/wall-rotation.list" "$HOME/.config/nyxus/wall-rotation.list" || true
+  ok "wall-rotation list → ~/.config/nyxus/wall-rotation.list (seeded)"
+fi
+
+# ~/.bashrc — NYXUS shell greeting (random-neon-glow line) + `glow` helper.
+# SEED ONLY: never clobber a user's existing ~/.bashrc.
+if [[ -f "$NS/bashrc" && ! -f "$HOME/.bashrc" ]]; then
+  place "$NS/bashrc" "$HOME/.bashrc" || true
+  ok "shell greeting → ~/.bashrc (seeded)"
+fi
+
+# Hyprland helper scripts → ~/.config/hypr/scripts/ (idle-glass, pulse halo,
+# lens zoom, prism-pulse, daily-line). Canonical source is the ISO skel tree,
+# so the installed system matches the ISO exactly. Referenced by hyprland.conf
+# + conf.d shards; without these the eye-candy binds silently no-op.
+HYPR_SCRIPTS_SRC="${REPO_ROOT}/iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/scripts"
+if [[ -d "$HYPR_SCRIPTS_SRC" ]]; then
+  n=0
+  for f in "$HYPR_SCRIPTS_SRC"/*.sh; do
+    [[ -f "$f" ]] || continue
+    place "$f" "$HOME/.config/hypr/scripts/$(basename "$f")" 0755 && n=$((n+1)) || true
+  done
+  ok "hypr scripts → ~/.config/hypr/scripts  ($n scripts)"
+fi
 
 # .desktop entries (Hub tiles / launcher discover apps through these).
 n=0
@@ -323,6 +425,28 @@ for f in "$NS"/desktop-entries/*.desktop; do
   place "$f" "$HOME/.local/share/applications/$(basename "$f")" && n=$((n+1)) || true
 done
 ok "desktop entries → ~/.local/share/applications  ($n files checked)"
+
+# wallpapers — full NYXUS set → ~/.config/hypr/walls (matches the ISO skel,
+# which ships all of them there). Canonical source is the ISO skel tree so an
+# install.sh machine matches a fresh ISO exactly. This includes the default
+# wallpaper (nyxus-cosmic-galaxy) + the alien walls the screensaver, hyprlock
+# and Hacker Mode reference; without it those fell back to a flat colour.
+# place() is idempotent (skips unchanged), so re-runs are cheap. User-added
+# wallpapers under walls/rotation/ are preserved (handled separately below).
+WALLS_SRC="${REPO_ROOT}/iso-builder/nyx-profile/airootfs/etc/skel/.config/hypr/walls"
+n=0
+if [[ -d "$WALLS_SRC" ]]; then
+  for f in "$WALLS_SRC"/*.png; do
+    [[ -f "$f" ]] || continue
+    place "$f" "$HOME/.config/hypr/walls/$(basename "$f")" && n=$((n+1)) || true
+  done
+fi
+ok "wallpapers → ~/.config/hypr/walls  ($n files checked)"
+# explicit user-surface mirrors for hacker-mode fallback logic
+for base in nyxus-hacker-mode-a.png nyxus-hacker-mode-b.png nyxus-kageryu-blackout.png; do
+  [[ -f "$WALLS_SRC/$base" ]] || continue
+  place "$WALLS_SRC/$base" "$HOME/.config/hypr/walls/$base" || true
+done
 
 # wallpapers (rotation set; repo files replaced, user additions kept)
 n=0
@@ -387,6 +511,12 @@ for f in "$NS"/hypr-walls/rotation/*.png; do
   [[ -f "$f" ]] || continue
   verify_pair "$f" "$HOME/.config/hypr/walls/rotation/$(basename "$f")"
 done
+if [[ -d "$WALLS_SRC" ]]; then
+  for f in "$WALLS_SRC"/*.png; do
+    [[ -f "$f" ]] || continue
+    verify_pair "$f" "$HOME/.config/hypr/walls/$(basename "$f")"
+  done
+fi
 for base in "${LAUNCHERS[@]}"; do
   [[ -f "$NS/$base" ]] || continue
   verify_pair "$NS/$base" "$HOME/.local/bin/$base"
@@ -401,6 +531,18 @@ for f in "$NS"/nyxus_*.py; do
   verify_pair "$f" "$HOME/.nyxus/$(basename "$f")"
 done
 verify_pair "$NS/nyxus_matrix_saver.py" "$HOME/.config/nyxus/nyxus_matrix_saver.py"
+if [[ -d "$NYXUS_CFG_SRC" ]]; then
+  for base in stations.json stations-hacker.json accent.json wallpaper.conf; do
+    [[ -f "$NYXUS_CFG_SRC/$base" ]] || continue
+    verify_pair "$NYXUS_CFG_SRC/$base" "$HOME/.config/nyxus/$base"
+  done
+  if [[ -d "$NYXUS_CFG_SRC/hw_profiles" ]]; then
+    while IFS= read -r -d '' f; do
+      rel="${f#"$NYXUS_CFG_SRC"/}"
+      verify_pair "$f" "$HOME/.config/nyxus/$rel"
+    done < <(find "$NYXUS_CFG_SRC/hw_profiles" -type f -print0)
+  fi
+fi
 for f in "$NS"/desktop-entries/*.desktop; do
   [[ -f "$f" ]] || continue
   verify_pair "$f" "$HOME/.local/share/applications/$(basename "$f")"
@@ -419,6 +561,7 @@ if $RUN_SYSTEM; then
   fi
 else
   info "system phase skipped (--user-only)"
+  warn "--user-only leaves system security components untouched (jeTT daemon, Bifrost, Meli/Grafana services)"
 fi
 
 if $CHECK; then
@@ -441,5 +584,5 @@ else
   info "backup: ${BACKUP_ROOT}"
 fi
 info "surfaces: ~/.config/eww · ~/.config/hypr · ~/.local/bin · ~/.nyxus"
-info "          ~/.config/nyxus (screensaver) · ~/.local/share/applications"
+info "          ~/.config/nyxus (stations + wallpaper + screensavers) · ~/.local/share/applications"
 printf "\n${V5}${B}  ◆ NYXUS ready.${R} ${DIM}Run ./install.sh again anytime; clean systems converge without backup churn.${R}\n\n"

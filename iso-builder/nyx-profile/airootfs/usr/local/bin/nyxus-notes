@@ -1,3 +1,2 @@
-#!/usr/bin/env bash
-# NYXUS Notes launcher — Copyright © 2026 Joseph A. Sierengowski
-exec python3 /opt/nyxus/nyxus_notes.py "$@"
+#!/bin/sh
+exec python3 /opt/nyxus-notes/main.py "$@"

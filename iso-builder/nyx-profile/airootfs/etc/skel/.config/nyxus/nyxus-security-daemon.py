@@ -15,7 +15,7 @@
 #  Designed to run as a user systemd unit (nyxus-security-daemon.service).
 #  Stop with: systemctl --user stop nyxus-security-daemon
 #
-#  © 2026 Joseph Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================================
 from __future__ import annotations
 import json, os, subprocess, time, logging, signal, sys, threading

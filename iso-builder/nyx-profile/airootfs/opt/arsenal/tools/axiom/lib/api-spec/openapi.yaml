@@ -1,0 +1,2796 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Desktop AI Assistant API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: chat
+    description: Chat sessions and messages
+  - name: scheduler
+    description: Scheduled task management
+  - name: knowledge
+    description: Knowledge base notes
+  - name: activity
+    description: Activity log
+  - name: quickactions
+    description: Quick action buttons
+  - name: settings
+    description: App configuration
+  - name: ai
+    description: AI provider operations
+  - name: files
+    description: File system operations
+  - name: stats
+    description: System statistics
+  - name: honeypot-auth
+    description: Honeypot dashboard authentication
+  - name: honeypot-events
+    description: Honeypot event ingestion and streaming
+  - name: honeypot-intel
+    description: Threat intelligence views
+  - name: honeypot-alerts
+    description: Alert rules and history
+  - name: honeypot-reports
+    description: Automated reporting
+  - name: honeypot-settings
+    description: Honeypot dashboard settings
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ── Chat ──────────────────────────────────────────────────────────────────
+  /chat/sessions:
+    get:
+      operationId: listChatSessions
+      tags: [chat]
+      summary: List chat sessions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatSession"
+    post:
+      operationId: createChatSession
+      tags: [chat]
+      summary: Create a new chat session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatSessionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatSession"
+
+  /chat/sessions/{id}:
+    get:
+      operationId: getChatSession
+      tags: [chat]
+      summary: Get a chat session with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatSessionWithMessages"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteChatSession
+      tags: [chat]
+      summary: Delete a chat session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /chat/sessions/{id}/messages:
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send a message and get AI response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "200":
+          description: AI response with optional action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /chat/recent:
+    get:
+      operationId: getRecentChats
+      tags: [chat]
+      summary: Get recent chat sessions with last message preview
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatSessionPreview"
+
+  # ── Scheduler ────────────────────────────────────────────────────────────
+  /scheduler/tasks:
+    get:
+      operationId: listScheduledTasks
+      tags: [scheduler]
+      summary: List all scheduled tasks
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScheduledTask"
+    post:
+      operationId: createScheduledTask
+      tags: [scheduler]
+      summary: Create a scheduled task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduledTaskInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledTask"
+
+  /scheduler/tasks/{id}:
+    get:
+      operationId: getScheduledTask
+      tags: [scheduler]
+      summary: Get a scheduled task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledTask"
+    patch:
+      operationId: updateScheduledTask
+      tags: [scheduler]
+      summary: Update a scheduled task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduledTaskUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledTask"
+    delete:
+      operationId: deleteScheduledTask
+      tags: [scheduler]
+      summary: Delete a scheduled task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /scheduler/tasks/{id}/run:
+    post:
+      operationId: runScheduledTask
+      tags: [scheduler]
+      summary: Run a task immediately
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Run result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskRunResult"
+
+  /scheduler/tasks/{id}/logs:
+    get:
+      operationId: getTaskRunLogs
+      tags: [scheduler]
+      summary: Get run log entries for a specific task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Run log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityEntry"
+
+  /scheduler/tasks/{id}/toggle:
+    post:
+      operationId: toggleScheduledTask
+      tags: [scheduler]
+      summary: Enable or disable a scheduled task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduledTask"
+
+  /scheduler/status:
+    get:
+      operationId: getSchedulerStatus
+      tags: [scheduler]
+      summary: Get upcoming tasks with countdowns
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchedulerStatus"
+
+  # ── Knowledge Base ────────────────────────────────────────────────────────
+  /knowledge/notes:
+    get:
+      operationId: listKnowledgeNotes
+      tags: [knowledge]
+      summary: List all knowledge notes
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnowledgeNote"
+    post:
+      operationId: createKnowledgeNote
+      tags: [knowledge]
+      summary: Create a knowledge note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeNoteInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeNote"
+
+  /knowledge/notes/{id}:
+    patch:
+      operationId: updateKnowledgeNote
+      tags: [knowledge]
+      summary: Update a knowledge note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeNoteUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeNote"
+    delete:
+      operationId: deleteKnowledgeNote
+      tags: [knowledge]
+      summary: Delete a knowledge note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /knowledge/export:
+    get:
+      operationId: exportKnowledge
+      tags: [knowledge]
+      summary: Export all knowledge notes as JSON
+      responses:
+        "200":
+          description: JSON export
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeExport"
+
+  /knowledge/import:
+    post:
+      operationId: importKnowledge
+      tags: [knowledge]
+      summary: Import knowledge notes from JSON
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeExport"
+      responses:
+        "200":
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+
+  # ── Activity Log ──────────────────────────────────────────────────────────
+  /activity:
+    get:
+      operationId: listActivityLog
+      tags: [activity]
+      summary: List activity log entries
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [chat, file_op, scheduled, all]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityEntry"
+
+  /activity/{id}/undo:
+    post:
+      operationId: undoActivity
+      tags: [activity]
+      summary: Undo a file operation from the activity log
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Undo result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UndoResult"
+
+  /activity/summary:
+    get:
+      operationId: getActivitySummary
+      tags: [activity]
+      summary: Get activity summary counts
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivitySummary"
+
+  # ── Quick Actions ─────────────────────────────────────────────────────────
+  /quickactions:
+    get:
+      operationId: listQuickActions
+      tags: [quickactions]
+      summary: List all quick actions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuickAction"
+    post:
+      operationId: createQuickAction
+      tags: [quickactions]
+      summary: Create a quick action
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuickActionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuickAction"
+
+  /quickactions/{id}:
+    patch:
+      operationId: updateQuickAction
+      tags: [quickactions]
+      summary: Update a quick action
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuickActionUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuickAction"
+    delete:
+      operationId: deleteQuickAction
+      tags: [quickactions]
+      summary: Delete a quick action
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /quickactions/reorder:
+    post:
+      operationId: reorderQuickActions
+      tags: [quickactions]
+      summary: Reorder quick actions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuickActionReorder"
+      responses:
+        "200":
+          description: Reordered
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuickAction"
+
+  # ── Settings ──────────────────────────────────────────────────────────────
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get current settings
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettings"
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppSettingsUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettings"
+
+  # ── AI Provider ───────────────────────────────────────────────────────────
+  /ai/status:
+    get:
+      operationId: getAiStatus
+      tags: [ai]
+      summary: Get AI provider status (Ollama connectivity, available models)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiStatus"
+
+  /ai/models:
+    get:
+      operationId: listAiModels
+      tags: [ai]
+      summary: List available models (local + cloud)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiModel"
+
+  /ai/models/pull:
+    post:
+      operationId: pullAiModel
+      tags: [ai]
+      summary: Pull a model via Ollama
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModelPullInput"
+      responses:
+        "200":
+          description: Pull initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelPullStatus"
+
+  /ai/models/pull/status/{name}:
+    get:
+      operationId: getModelPullStatus
+      tags: [ai]
+      summary: Get real-time progress for an ongoing model pull
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pull progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelPullProgress"
+
+  /ai/models/{name}:
+    delete:
+      operationId: deleteAiModel
+      tags: [ai]
+      summary: Delete a local Ollama model
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  # ── File Operations ───────────────────────────────────────────────────────
+  /files/scan:
+    post:
+      operationId: scanFiles
+      tags: [files]
+      summary: Scan a directory and return file listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FileScanInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileScanResult"
+
+  /files/preview:
+    post:
+      operationId: previewFileOp
+      tags: [files]
+      summary: Preview which files will be affected by an operation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FileOpPreviewInput"
+      responses:
+        "200":
+          description: Preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileOpPreview"
+
+  /files/execute:
+    post:
+      operationId: executeFileOp
+      tags: [files]
+      summary: Execute a confirmed file operation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FileOpExecuteInput"
+      responses:
+        "200":
+          description: Result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileOpResult"
+
+  /files/allowed-paths:
+    get:
+      operationId: getAllowedPaths
+      tags: [files]
+      summary: Get user-approved file paths
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AllowedPath"
+    post:
+      operationId: addAllowedPath
+      tags: [files]
+      summary: Add an allowed path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AllowedPathInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AllowedPath"
+
+  /files/allowed-paths/{id}:
+    delete:
+      operationId: removeAllowedPath
+      tags: [files]
+      summary: Remove an allowed path
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+
+  # ── System Stats ──────────────────────────────────────────────────────────
+  /stats/system:
+    get:
+      operationId: getSystemStats
+      tags: [stats]
+      summary: Get live system stats (CPU, RAM, disk)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemStats"
+
+  # ── Honeypot Auth ─────────────────────────────────────────────────────────
+  /hp/auth/login:
+    post:
+      operationId: hpLogin
+      tags: [honeypot-auth]
+      summary: Authenticate with master password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HpLoginInput"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpAuthToken"
+        "401":
+          description: Invalid credentials
+
+  /hp/auth/logout:
+    post:
+      operationId: hpLogout
+      tags: [honeypot-auth]
+      summary: Invalidate current session
+      responses:
+        "204":
+          description: Logged out
+
+  /hp/auth/refresh:
+    post:
+      operationId: hpRefreshToken
+      tags: [honeypot-auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HpRefreshInput"
+      responses:
+        "200":
+          description: New token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpAuthToken"
+
+  /hp/auth/me:
+    get:
+      operationId: hpGetMe
+      tags: [honeypot-auth]
+      summary: Get current auth status
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpAuthStatus"
+
+  # ── Honeypot Events ────────────────────────────────────────────────────────
+  /hp/events/ingest:
+    post:
+      operationId: hpIngestEvent
+      tags: [honeypot-events]
+      summary: Ingest event from a honeypot parser (bearer auth)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HpEventInput"
+      responses:
+        "201":
+          description: Ingested
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpEvent"
+
+  /hp/events:
+    get:
+      operationId: hpListEvents
+      tags: [honeypot-events]
+      summary: Paginated event history with filters
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [INFO, LOW, MEDIUM, HIGH, CRITICAL]
+        - name: honeypot
+          in: query
+          schema: { type: string }
+        - name: ip
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpEventPage"
+
+  # ── Honeypot Intelligence ──────────────────────────────────────────────────
+  /hp/dashboard:
+    get:
+      operationId: hpGetDashboard
+      tags: [honeypot-intel]
+      summary: Aggregated dashboard stats
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpDashboardStats"
+
+  /hp/attackers:
+    get:
+      operationId: hpGetTopAttackers
+      tags: [honeypot-intel]
+      summary: Top attacking IPs with full profiles
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HpAttackerProfile"
+
+  /hp/attackers/{ip}:
+    get:
+      operationId: hpGetAttackerDetail
+      tags: [honeypot-intel]
+      summary: Full profile for a specific attacker IP
+      parameters:
+        - name: ip
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpAttackerDetail"
+        "404":
+          description: Not found
+
+  /hp/credentials:
+    get:
+      operationId: hpGetTopCredentials
+      tags: [honeypot-intel]
+      summary: Most-attempted username/password combinations
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HpCredential"
+
+  /hp/commands:
+    get:
+      operationId: hpGetTopCommands
+      tags: [honeypot-intel]
+      summary: Most-executed post-auth commands (Cowrie)
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HpCommand"
+
+  /hp/payloads:
+    get:
+      operationId: hpGetPayloads
+      tags: [honeypot-intel]
+      summary: Captured malware payloads with hashes
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HpPayload"
+
+  /hp/services:
+    get:
+      operationId: hpGetServiceStats
+      tags: [honeypot-intel]
+      summary: Per-honeypot service breakdown
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HpServiceStat"
+
+  /hp/timeline:
+    get:
+      operationId: hpGetTimeline
+      tags: [honeypot-intel]
+      summary: Historical attack timeline (daily/weekly/monthly)
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [24h, 7d, 30d, 90d]
+            default: 7d
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpTimeline"
+
+  /hp/reputation/{ip}:
+    get:
+      operationId: hpGetIpReputation
+      tags: [honeypot-intel]
+      summary: Enriched IP reputation from AbuseIPDB/GreyNoise/VirusTotal
+      parameters:
+        - name: ip
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpIpReputation"
+
+  /hp/botnets:
+    get:
+      operationId: hpGetBotnets
+      tags: [honeypot-intel]
+      summary: Detected coordinated botnet attack clusters
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HpBotnetCluster"
+
+  /hp/honeypots/status:
+    get:
+      operationId: hpGetHoneypotStatus
+      tags: [honeypot-intel]
+      summary: Health and connectivity status of configured honeypots
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HpServiceHealth"
+
+  # ── Honeypot Alerts ────────────────────────────────────────────────────────
+  /hp/alerts/rules:
+    get:
+      operationId: hpListAlertRules
+      tags: [honeypot-alerts]
+      summary: List all alert rules
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HpAlertRule"
+    post:
+      operationId: hpCreateAlertRule
+      tags: [honeypot-alerts]
+      summary: Create an alert rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HpAlertRuleInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpAlertRule"
+
+  /hp/alerts/rules/{id}:
+    patch:
+      operationId: hpUpdateAlertRule
+      tags: [honeypot-alerts]
+      summary: Update an alert rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HpAlertRuleUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpAlertRule"
+    delete:
+      operationId: hpDeleteAlertRule
+      tags: [honeypot-alerts]
+      summary: Delete an alert rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /hp/alerts/history:
+    get:
+      operationId: hpGetAlertHistory
+      tags: [honeypot-alerts]
+      summary: Alert history with acknowledgment status
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100 }
+        - name: unacknowledged
+          in: query
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HpAlertHistory"
+
+  /hp/alerts/history/{id}/acknowledge:
+    post:
+      operationId: hpAcknowledgeAlert
+      tags: [honeypot-alerts]
+      summary: Acknowledge an alert
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpAlertHistory"
+
+  # ── Honeypot Reports ───────────────────────────────────────────────────────
+  /hp/reports:
+    get:
+      operationId: hpListReports
+      tags: [honeypot-reports]
+      summary: List generated reports
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HpReport"
+    post:
+      operationId: hpGenerateReport
+      tags: [honeypot-reports]
+      summary: Generate a new report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HpReportInput"
+      responses:
+        "201":
+          description: Generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpReport"
+
+  /hp/reports/{id}:
+    get:
+      operationId: hpGetReport
+      tags: [honeypot-reports]
+      summary: Get a specific report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpReport"
+
+  # ── Honeypot Settings ──────────────────────────────────────────────────────
+  /hp/settings:
+    get:
+      operationId: hpGetSettings
+      tags: [honeypot-settings]
+      summary: Get honeypot dashboard settings
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpSettings"
+    patch:
+      operationId: hpUpdateSettings
+      tags: [honeypot-settings]
+      summary: Update honeypot dashboard settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HpSettingsUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpSettings"
+
+  /hp/settings/test-integration:
+    post:
+      operationId: hpTestIntegration
+      tags: [honeypot-settings]
+      summary: Send a test notification via a configured integration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HpIntegrationTestInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HpIntegrationTestResult"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    # ── Chat ────────────────────────────────────────────────────────────────
+    ChatSession:
+      type: object
+      required: [id, title, createdAt, updatedAt, messageCount]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        messageCount:
+          type: integer
+
+    ChatSessionInput:
+      type: object
+      properties:
+        title:
+          type: string
+
+    ChatSessionWithMessages:
+      type: object
+      required: [id, title, createdAt, updatedAt, messages]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+
+    ChatMessage:
+      type: object
+      required: [id, sessionId, role, content, createdAt]
+      properties:
+        id:
+          type: integer
+        sessionId:
+          type: integer
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        actionType:
+          type: ["string", "null"]
+        actionData:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    MessageInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          $ref: "#/components/schemas/ChatMessage"
+        action:
+          $ref: "#/components/schemas/AiAction"
+
+    AiAction:
+      type: object
+      required: [type, description]
+      properties:
+        type:
+          type: string
+          enum: [file_op, shell, info, none]
+        description:
+          type: string
+        payload:
+          type: ["string", "null"]
+        requiresConfirmation:
+          type: boolean
+
+    ChatSessionPreview:
+      type: object
+      required: [id, title, lastMessage, updatedAt, messageCount]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        lastMessage:
+          type: ["string", "null"]
+        updatedAt:
+          type: string
+          format: date-time
+        messageCount:
+          type: integer
+
+    # ── Scheduler ───────────────────────────────────────────────────────────
+    ScheduledTask:
+      type: object
+      required: [id, name, command, schedule, enabled, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        command:
+          type: string
+        schedule:
+          type: string
+        scheduleLabel:
+          type: ["string", "null"]
+        enabled:
+          type: boolean
+        lastRunAt:
+          type: ["string", "null"]
+        lastRunStatus:
+          type: ["string", "null"]
+        nextRunAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ScheduledTaskInput:
+      type: object
+      required: [name, command, schedule]
+      properties:
+        name:
+          type: string
+        command:
+          type: string
+        schedule:
+          type: string
+        scheduleLabel:
+          type: string
+        enabled:
+          type: boolean
+
+    ScheduledTaskUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        command:
+          type: string
+        schedule:
+          type: string
+        scheduleLabel:
+          type: string
+        enabled:
+          type: boolean
+
+    TaskRunResult:
+      type: object
+      required: [success, output, ranAt]
+      properties:
+        success:
+          type: boolean
+        output:
+          type: string
+        ranAt:
+          type: string
+          format: date-time
+
+    SchedulerStatus:
+      type: object
+      required: [tasks, totalEnabled, totalDisabled]
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/SchedulerTaskStatus"
+        totalEnabled:
+          type: integer
+        totalDisabled:
+          type: integer
+
+    SchedulerTaskStatus:
+      type: object
+      required: [id, name, enabled, nextRunAt, secondsUntilRun]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        enabled:
+          type: boolean
+        nextRunAt:
+          type: ["string", "null"]
+        secondsUntilRun:
+          type: ["integer", "null"]
+
+    # ── Knowledge ───────────────────────────────────────────────────────────
+    KnowledgeNote:
+      type: object
+      required: [id, title, content, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        pinned:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    KnowledgeNoteInput:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        pinned:
+          type: boolean
+
+    KnowledgeNoteUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        pinned:
+          type: boolean
+
+    KnowledgeExport:
+      type: object
+      required: [notes, exportedAt]
+      properties:
+        notes:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgeNote"
+        exportedAt:
+          type: string
+          format: date-time
+
+    ImportResult:
+      type: object
+      required: [imported, skipped]
+      properties:
+        imported:
+          type: integer
+        skipped:
+          type: integer
+
+    # ── Activity ─────────────────────────────────────────────────────────────
+    ActivityEntry:
+      type: object
+      required: [id, type, description, createdAt, undoable]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [chat, file_op, scheduled]
+        description:
+          type: string
+        detail:
+          type: ["string", "null"]
+        filesAffected:
+          type: array
+          items:
+            type: string
+        undoable:
+          type: boolean
+        undone:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    UndoResult:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        filesRestored:
+          type: array
+          items:
+            type: string
+
+    ActivitySummary:
+      type: object
+      required: [total, byType, recentCount]
+      properties:
+        total:
+          type: integer
+        byType:
+          type: object
+          properties:
+            chat:
+              type: integer
+            file_op:
+              type: integer
+            scheduled:
+              type: integer
+        recentCount:
+          type: integer
+
+    # ── Quick Actions ────────────────────────────────────────────────────────
+    QuickAction:
+      type: object
+      required: [id, label, command, order, createdAt]
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        command:
+          type: string
+        icon:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+        order:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    QuickActionInput:
+      type: object
+      required: [label, command]
+      properties:
+        label:
+          type: string
+        command:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+
+    QuickActionUpdate:
+      type: object
+      properties:
+        label:
+          type: string
+        command:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+
+    QuickActionReorder:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+
+    # ── Settings ─────────────────────────────────────────────────────────────
+    AppSettings:
+      type: object
+      required: [id, hotkey, aiMode, aiModel, theme, onboardingCompleted]
+      properties:
+        id:
+          type: integer
+        hotkey:
+          type: string
+        aiMode:
+          type: string
+          enum: [local, cloud]
+        aiModel:
+          type: string
+        cloudApiKey:
+          type: ["string", "null"]
+        cloudBaseUrl:
+          type: ["string", "null"]
+        ollamaBaseUrl:
+          type: string
+        theme:
+          type: string
+          enum: [light, dark, system]
+        launchAtLogin:
+          type: boolean
+        startMinimized:
+          type: boolean
+        dismissOnBlur:
+          type: boolean
+        notifyOnSchedule:
+          type: boolean
+        notifyOnError:
+          type: boolean
+        windowWidth:
+          type: integer
+        windowHeight:
+          type: integer
+        onboardingCompleted:
+          type: boolean
+
+    AppSettingsUpdate:
+      type: object
+      properties:
+        hotkey:
+          type: string
+        aiMode:
+          type: string
+          enum: [local, cloud]
+        aiModel:
+          type: string
+        cloudApiKey:
+          type: string
+        cloudBaseUrl:
+          type: string
+        ollamaBaseUrl:
+          type: string
+        theme:
+          type: string
+          enum: [light, dark, system]
+        launchAtLogin:
+          type: boolean
+        startMinimized:
+          type: boolean
+        dismissOnBlur:
+          type: boolean
+        notifyOnSchedule:
+          type: boolean
+        notifyOnError:
+          type: boolean
+        windowWidth:
+          type: integer
+        windowHeight:
+          type: integer
+        onboardingCompleted:
+          type: boolean
+
+    # ── AI Provider ──────────────────────────────────────────────────────────
+    AiStatus:
+      type: object
+      required: [mode, ollamaAvailable, activeModel]
+      properties:
+        mode:
+          type: string
+          enum: [local, cloud]
+        ollamaAvailable:
+          type: boolean
+        ollamaVersion:
+          type: ["string", "null"]
+        activeModel:
+          type: string
+        cloudConfigured:
+          type: boolean
+
+    AiModel:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [local, cloud]
+        size:
+          type: ["string", "null"]
+        contextLength:
+          type: ["integer", "null"]
+        description:
+          type: ["string", "null"]
+
+    ModelPullInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+
+    ModelPullStatus:
+      type: object
+      required: [name, status]
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+        progress:
+          type: ["number", "null"]
+        total:
+          type: ["integer", "null"]
+        completed:
+          type: ["integer", "null"]
+
+    ModelPullProgress:
+      type: object
+      required: [name, status, progress]
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+          enum: [pulling, complete, error, unknown]
+        progress:
+          type: number
+        total:
+          type: integer
+        completed:
+          type: integer
+        startedAt:
+          type: ["string", "null"]
+          format: date-time
+        completedAt:
+          type: ["string", "null"]
+          format: date-time
+        error:
+          type: ["string", "null"]
+
+    # ── Files ────────────────────────────────────────────────────────────────
+    FileScanInput:
+      type: object
+      required: [path]
+      properties:
+        path:
+          type: string
+        recursive:
+          type: boolean
+        maxDepth:
+          type: integer
+
+    FileScanResult:
+      type: object
+      required: [path, files, totalCount, totalSize]
+      properties:
+        path:
+          type: string
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileEntry"
+        totalCount:
+          type: integer
+        totalSize:
+          type: integer
+
+    FileEntry:
+      type: object
+      required: [name, path, size, modifiedAt, type]
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        size:
+          type: integer
+        modifiedAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum: [file, directory]
+        extension:
+          type: ["string", "null"]
+
+    FileOpPreviewInput:
+      type: object
+      required: [operation, path]
+      properties:
+        operation:
+          type: string
+          enum: [delete, move, organize, rename, dedup]
+        path:
+          type: string
+        criteria:
+          type: ["string", "null"]
+        destination:
+          type: ["string", "null"]
+
+    FileOpPreview:
+      type: object
+      required: [operation, affectedFiles, summary]
+      properties:
+        operation:
+          type: string
+        affectedFiles:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileEntry"
+        summary:
+          type: string
+        totalSize:
+          type: integer
+        reversible:
+          type: boolean
+
+    FileOpExecuteInput:
+      type: object
+      required: [operation, path]
+      properties:
+        operation:
+          type: string
+          enum: [delete, move, organize, rename, dedup]
+        path:
+          type: string
+        criteria:
+          type: ["string", "null"]
+        destination:
+          type: ["string", "null"]
+        confirmed:
+          type: boolean
+
+    FileOpResult:
+      type: object
+      required: [success, filesProcessed, summary]
+      properties:
+        success:
+          type: boolean
+        filesProcessed:
+          type: integer
+        summary:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+        undoKey:
+          type: ["string", "null"]
+
+    AllowedPath:
+      type: object
+      required: [id, path, label, createdAt]
+      properties:
+        id:
+          type: integer
+        path:
+          type: string
+        label:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    AllowedPathInput:
+      type: object
+      required: [path]
+      properties:
+        path:
+          type: string
+        label:
+          type: string
+
+    # ── System Stats ─────────────────────────────────────────────────────────
+    SystemStats:
+      type: object
+      required: [cpu, memory, disk, uptime]
+      properties:
+        cpu:
+          type: number
+          description: CPU usage percentage
+        memory:
+          type: object
+          required: [total, used, free, percent]
+          properties:
+            total:
+              type: integer
+            used:
+              type: integer
+            free:
+              type: integer
+            percent:
+              type: number
+        disk:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiskInfo"
+        uptime:
+          type: integer
+
+    DiskInfo:
+      type: object
+      required: [mount, total, used, free, percent]
+      properties:
+        mount:
+          type: string
+        total:
+          type: integer
+        used:
+          type: integer
+        free:
+          type: integer
+        percent:
+          type: number
+
+    # ── Honeypot Auth ────────────────────────────────────────────────────────
+    HpLoginInput:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+
+    HpRefreshInput:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    HpAuthToken:
+      type: object
+      required: [accessToken, refreshToken, expiresAt]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    HpAuthStatus:
+      type: object
+      required: [authenticated, lockedOut]
+      properties:
+        authenticated:
+          type: boolean
+        lockedOut:
+          type: boolean
+        lockoutUntil:
+          type: ["string", "null"]
+          format: date-time
+
+    # ── Honeypot Events ──────────────────────────────────────────────────────
+    HpEventInput:
+      type: object
+      required: [honeypotType, sourceIp, severity, timestamp]
+      properties:
+        honeypotType:
+          type: string
+          enum: [cowrie, heralding, dionaea, http, glastopf, mailoney]
+        sourceIp:
+          type: string
+        sourcePort:
+          type: ["integer", "null"]
+        destinationPort:
+          type: ["integer", "null"]
+        protocol:
+          type: ["string", "null"]
+        severity:
+          type: string
+          enum: [INFO, LOW, MEDIUM, HIGH, CRITICAL]
+        username:
+          type: ["string", "null"]
+        password:
+          type: ["string", "null"]
+        command:
+          type: ["string", "null"]
+        payload:
+          type: ["string", "null"]
+        payloadHash:
+          type: ["string", "null"]
+        rawData:
+          type: ["string", "null"]
+        timestamp:
+          type: string
+          format: date-time
+
+    HpEvent:
+      type: object
+      required: [id, honeypotType, sourceIp, severity, timestamp, createdAt]
+      properties:
+        id:
+          type: integer
+        honeypotType:
+          type: string
+        sourceIp:
+          type: string
+        sourcePort:
+          type: ["integer", "null"]
+        destinationPort:
+          type: ["integer", "null"]
+        protocol:
+          type: ["string", "null"]
+        severity:
+          type: string
+          enum: [INFO, LOW, MEDIUM, HIGH, CRITICAL]
+        username:
+          type: ["string", "null"]
+        password:
+          type: ["string", "null"]
+        command:
+          type: ["string", "null"]
+        payload:
+          type: ["string", "null"]
+        payloadHash:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        countryCode:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        asn:
+          type: ["string", "null"]
+        isp:
+          type: ["string", "null"]
+        timestamp:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    HpEventPage:
+      type: object
+      required: [events, total, page, limit]
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/HpEvent"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    # ── Honeypot Intelligence ────────────────────────────────────────────────
+    HpDashboardStats:
+      type: object
+      required: [totalEvents, last24h, criticalCount, activeAttackers, topCountries, severityBreakdown, recentEvents]
+      properties:
+        totalEvents:
+          type: integer
+        last24h:
+          type: integer
+        last1h:
+          type: integer
+        criticalCount:
+          type: integer
+        activeAttackers:
+          type: integer
+        uniqueIps:
+          type: integer
+        topCountries:
+          type: array
+          items:
+            $ref: "#/components/schemas/HpCountryStat"
+        severityBreakdown:
+          $ref: "#/components/schemas/HpSeverityBreakdown"
+        recentEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/HpEvent"
+        attacksPerHour:
+          type: array
+          items:
+            $ref: "#/components/schemas/HpTimePoint"
+
+    HpCountryStat:
+      type: object
+      required: [country, countryCode, count]
+      properties:
+        country:
+          type: string
+        countryCode:
+          type: string
+        count:
+          type: integer
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+
+    HpSeverityBreakdown:
+      type: object
+      required: [INFO, LOW, MEDIUM, HIGH, CRITICAL]
+      properties:
+        INFO:
+          type: integer
+        LOW:
+          type: integer
+        MEDIUM:
+          type: integer
+        HIGH:
+          type: integer
+        CRITICAL:
+          type: integer
+
+    HpTimePoint:
+      type: object
+      required: [time, count]
+      properties:
+        time:
+          type: string
+        count:
+          type: integer
+        critical:
+          type: integer
+
+    HpAttackerProfile:
+      type: object
+      required: [ip, totalAttacks, firstSeen, lastSeen]
+      properties:
+        ip:
+          type: string
+        totalAttacks:
+          type: integer
+        firstSeen:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+        country:
+          type: ["string", "null"]
+        countryCode:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        asn:
+          type: ["string", "null"]
+        isp:
+          type: ["string", "null"]
+        topSeverity:
+          type: string
+        severityCounts:
+          $ref: "#/components/schemas/HpSeverityBreakdown"
+
+    HpAttackerDetail:
+      type: object
+      required: [ip, totalAttacks, firstSeen, lastSeen, events]
+      properties:
+        ip:
+          type: string
+        totalAttacks:
+          type: integer
+        firstSeen:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+        country:
+          type: ["string", "null"]
+        countryCode:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        asn:
+          type: ["string", "null"]
+        isp:
+          type: ["string", "null"]
+        topSeverity:
+          type: string
+        severityCounts:
+          $ref: "#/components/schemas/HpSeverityBreakdown"
+        topCredentials:
+          type: array
+          items:
+            $ref: "#/components/schemas/HpCredential"
+        topCommands:
+          type: array
+          items:
+            $ref: "#/components/schemas/HpCommand"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/HpEvent"
+        reputation:
+          $ref: "#/components/schemas/HpIpReputation"
+
+    HpCredential:
+      type: object
+      required: [username, password, count]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        count:
+          type: integer
+        lastSeen:
+          type: string
+          format: date-time
+
+    HpCommand:
+      type: object
+      required: [command, count]
+      properties:
+        command:
+          type: string
+        count:
+          type: integer
+        honeypotType:
+          type: ["string", "null"]
+        lastSeen:
+          type: string
+          format: date-time
+
+    HpPayload:
+      type: object
+      required: [id, hash, size, createdAt]
+      properties:
+        id:
+          type: integer
+        hash:
+          type: string
+        filename:
+          type: ["string", "null"]
+        size:
+          type: ["integer", "null"]
+        mimeType:
+          type: ["string", "null"]
+        vtDetected:
+          type: ["boolean", "null"]
+        vtScore:
+          type: ["string", "null"]
+        vtUrl:
+          type: ["string", "null"]
+        sourceIp:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    HpServiceStat:
+      type: object
+      required: [honeypotType, totalEvents, uniqueIps]
+      properties:
+        honeypotType:
+          type: string
+        totalEvents:
+          type: integer
+        uniqueIps:
+          type: integer
+        last24h:
+          type: integer
+        severityCounts:
+          $ref: "#/components/schemas/HpSeverityBreakdown"
+        topPort:
+          type: ["integer", "null"]
+
+    HpTimeline:
+      type: object
+      required: [period, points]
+      properties:
+        period:
+          type: string
+        points:
+          type: array
+          items:
+            $ref: "#/components/schemas/HpTimelinePoint"
+
+    HpTimelinePoint:
+      type: object
+      required: [date, total]
+      properties:
+        date:
+          type: string
+        total:
+          type: integer
+        INFO:
+          type: integer
+        LOW:
+          type: integer
+        MEDIUM:
+          type: integer
+        HIGH:
+          type: integer
+        CRITICAL:
+          type: integer
+
+    HpIpReputation:
+      type: object
+      required: [ip]
+      properties:
+        ip:
+          type: string
+        abuseScore:
+          type: ["integer", "null"]
+        abuseReports:
+          type: ["integer", "null"]
+        abuseLastReported:
+          type: ["string", "null"]
+          format: date-time
+        greynoiseNoise:
+          type: ["boolean", "null"]
+        greynoiseRiot:
+          type: ["boolean", "null"]
+        greynoiseClassification:
+          type: ["string", "null"]
+        greynoiseIntent:
+          type: ["string", "null"]
+        vtMalicious:
+          type: ["integer", "null"]
+        vtSuspicious:
+          type: ["integer", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        enrichedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    HpBotnetCluster:
+      type: object
+      required: [id, ips, attackCount, firstDetected, lastDetected]
+      properties:
+        id:
+          type: integer
+        ips:
+          type: array
+          items:
+            type: string
+        attackPattern:
+          type: ["string", "null"]
+        attackCount:
+          type: integer
+        targetPorts:
+          type: array
+          items:
+            type: integer
+        topCredential:
+          type: ["string", "null"]
+        firstDetected:
+          type: string
+          format: date-time
+        lastDetected:
+          type: string
+          format: date-time
+
+    HpServiceHealth:
+      type: object
+      required: [honeypotType, status, lastEventAt]
+      properties:
+        honeypotType:
+          type: string
+        status:
+          type: string
+          enum: [online, offline, degraded, unconfigured]
+        host:
+          type: ["string", "null"]
+        port:
+          type: ["integer", "null"]
+        lastEventAt:
+          type: ["string", "null"]
+          format: date-time
+        eventCount24h:
+          type: integer
+
+    # ── Honeypot Alerts ──────────────────────────────────────────────────────
+    HpAlertRule:
+      type: object
+      required: [id, name, severity, enabled, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        severity:
+          type: string
+          enum: [INFO, LOW, MEDIUM, HIGH, CRITICAL]
+        condition:
+          type: string
+          enum: [any_event, threshold, specific_ip, specific_country, payload_detected, successful_auth]
+        threshold:
+          type: ["integer", "null"]
+        thresholdWindow:
+          type: ["integer", "null"]
+        honeypotType:
+          type: ["string", "null"]
+        notifyDiscord:
+          type: boolean
+        notifySlack:
+          type: boolean
+        notifyTelegram:
+          type: boolean
+        notifyEmail:
+          type: boolean
+        enabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    HpAlertRuleInput:
+      type: object
+      required: [name, severity, condition]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [INFO, LOW, MEDIUM, HIGH, CRITICAL]
+        condition:
+          type: string
+          enum: [any_event, threshold, specific_ip, specific_country, payload_detected, successful_auth]
+        threshold:
+          type: integer
+        thresholdWindow:
+          type: integer
+        honeypotType:
+          type: string
+        notifyDiscord:
+          type: boolean
+        notifySlack:
+          type: boolean
+        notifyTelegram:
+          type: boolean
+        notifyEmail:
+          type: boolean
+        enabled:
+          type: boolean
+
+    HpAlertRuleUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        severity:
+          type: string
+          enum: [INFO, LOW, MEDIUM, HIGH, CRITICAL]
+        condition:
+          type: string
+          enum: [any_event, threshold, specific_ip, specific_country, payload_detected, successful_auth]
+        threshold:
+          type: integer
+        thresholdWindow:
+          type: integer
+        honeypotType:
+          type: string
+        notifyDiscord:
+          type: boolean
+        notifySlack:
+          type: boolean
+        notifyTelegram:
+          type: boolean
+        notifyEmail:
+          type: boolean
+        enabled:
+          type: boolean
+
+    HpAlertHistory:
+      type: object
+      required: [id, ruleName, severity, triggeredAt, acknowledged]
+      properties:
+        id:
+          type: integer
+        ruleId:
+          type: ["integer", "null"]
+        ruleName:
+          type: string
+        severity:
+          type: string
+          enum: [INFO, LOW, MEDIUM, HIGH, CRITICAL]
+        triggeredAt:
+          type: string
+          format: date-time
+        eventId:
+          type: ["integer", "null"]
+        sourceIp:
+          type: ["string", "null"]
+        summary:
+          type: string
+        acknowledged:
+          type: boolean
+        acknowledgedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    # ── Honeypot Reports ─────────────────────────────────────────────────────
+    HpReport:
+      type: object
+      required: [id, type, period, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [daily, weekly, monthly, custom]
+        period:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        contentMd:
+          type: ["string", "null"]
+        summary:
+          type: ["string", "null"]
+
+    HpReportInput:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [daily, weekly, monthly, custom]
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+
+    # ── Honeypot Settings ────────────────────────────────────────────────────
+    HpSettings:
+      type: object
+      required: [autoLockMinutes, failedLoginLimit, soundAlerts, notificationPosition]
+      properties:
+        masterPasswordSet:
+          type: boolean
+        autoLockMinutes:
+          type: integer
+        failedLoginLimit:
+          type: integer
+        soundAlerts:
+          type: boolean
+        notificationPosition:
+          type: string
+          enum: [top-right, top-left, bottom-right, bottom-left]
+        discordWebhook:
+          type: ["string", "null"]
+        slackWebhook:
+          type: ["string", "null"]
+        telegramBotToken:
+          type: ["string", "null"]
+        telegramChatId:
+          type: ["string", "null"]
+        smtpHost:
+          type: ["string", "null"]
+        smtpPort:
+          type: ["integer", "null"]
+        smtpUser:
+          type: ["string", "null"]
+        smtpTo:
+          type: ["string", "null"]
+        abuseIpdbKey:
+          type: ["string", "null"]
+        greynoiseKey:
+          type: ["string", "null"]
+        virusTotalKey:
+          type: ["string", "null"]
+        ingestToken:
+          type: ["string", "null"]
+        retentionDays:
+          type: integer
+        theme:
+          type: string
+          enum: [dark, darker, midnight]
+        fontSize:
+          type: string
+          enum: [sm, md, lg]
+        density:
+          type: string
+          enum: [compact, comfortable, spacious]
+
+    HpSettingsUpdate:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+        autoLockMinutes:
+          type: integer
+        failedLoginLimit:
+          type: integer
+        soundAlerts:
+          type: boolean
+        notificationPosition:
+          type: string
+          enum: [top-right, top-left, bottom-right, bottom-left]
+        discordWebhook:
+          type: string
+        slackWebhook:
+          type: string
+        telegramBotToken:
+          type: string
+        telegramChatId:
+          type: string
+        smtpHost:
+          type: string
+        smtpPort:
+          type: integer
+        smtpUser:
+          type: string
+        smtpPassword:
+          type: string
+        smtpTo:
+          type: string
+        abuseIpdbKey:
+          type: string
+        greynoiseKey:
+          type: string
+        virusTotalKey:
+          type: string
+        retentionDays:
+          type: integer
+        theme:
+          type: string
+          enum: [dark, darker, midnight]
+        fontSize:
+          type: string
+          enum: [sm, md, lg]
+        density:
+          type: string
+          enum: [compact, comfortable, spacious]
+
+    HpIntegrationTestInput:
+      type: object
+      required: [integration]
+      properties:
+        integration:
+          type: string
+          enum: [discord, slack, telegram, email]
+
+    HpIntegrationTestResult:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string

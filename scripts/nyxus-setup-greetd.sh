@@ -53,6 +53,15 @@ install -Dm644 "${GS}/config.toml"  /etc/greetd/config.toml
 install -Dm644 "${GS}/regreet.toml" /etc/greetd/regreet.toml
 install -Dm644 "${GS}/regreet.css"  /etc/greetd/regreet.css
 install -Dm644 "${GS}/nyxus-login-bg.png" /etc/greetd/nyxus-login-bg.png
+# Curated wall-rotation list for the login greeter (nyxus-greeter reads it to
+# pick a random alien/NYXUS/sierengowski wall each login). Source it from the
+# ISO skel copy; harmless if absent (greeter falls back to the seed above).
+_wr_list=""
+for c in "${REPO_ROOT}/iso-builder/nyx-profile/airootfs/usr/share/nyxus/wall-rotation.list" \
+         "${REPO_ROOT}/iso-builder/nyx-profile/airootfs/etc/skel/.config/nyxus/wall-rotation.list"; do
+  [ -f "$c" ] && { _wr_list="$c"; break; }
+done
+[ -n "$_wr_list" ] && install -Dm644 "$_wr_list" /usr/share/nyxus/wall-rotation.list
 # regreet writes its cache/state here as the greeter user.
 install -d -o greeter -g greeter /var/lib/greetd 2>/dev/null || true
 install -d -o greeter -g greeter /var/cache/regreet 2>/dev/null || true

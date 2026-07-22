@@ -8,7 +8,7 @@
 #  surfaces DND toggle + clear-all action. Refresh is manual + 5 s
 #  background poll while the window has focus.
 #
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================================
 from __future__ import annotations
 

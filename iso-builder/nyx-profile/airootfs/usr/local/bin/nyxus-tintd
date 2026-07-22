@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-tintd   ·   rev 2026-07-08 r1 (Signature)
+#
+# Per-app border tint daemon — every app gets its OWN neon. The
+# focused window's class is hashed to a deterministic hue, so Firefox
+# is always Firefox-colored, the terminal always the terminal's, on
+# every machine, every boot, no config. Focus flicks between windows
+# and the prism ring re-tints live.
+#
+#   · rides socket2 `activewindow>>class,title` events
+#   · hue = cksum(class) % 360 → two-stop neon gradient
+#     (stop 2 sits +55° around the wheel for that NYXUS iridescence)
+#   · current gradient angle is PRESERVED on every write, so the
+#     beat daemon (nyxus-beatd) can keep spinning the ring while
+#     tintd re-colors it — coordination via the color handoff file:
+#         $XDG_RUNTIME_DIR/nyxus-border-colors
+#     tintd writes colors there; beatd reads them before each spin.
+#   · empty class (desktop) → falls back to the accent baseline
+#   · original border restored exactly on exit
+#
+# Not run directly — use `nyxus-tint on|off|toggle|status`.
+# NOTE: if you re-accent the desktop (Super+Shift+W) while tintd is
+# on, just leave tintd running — the next focus change re-tints; the
+# only stale bit is the exit-restore snapshot (toggle tint off/on to
+# refresh it).
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+
+PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-tintd.pid"
+COLORFILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-border-colors"
+SOCK="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
+
+command -v socat >/dev/null || { echo "tintd: socat missing" >&2; exit 1; }
+[[ -S "${SOCK}" ]] || { echo "tintd: no hyprland event socket" >&2; exit 1; }
+
+# single instance
+if [[ -r "${PIDFILE}" ]] && kill -0 "$(cat "${PIDFILE}")" 2>/dev/null; then
+  exit 0
+fi
+echo $$ > "${PIDFILE}"
+
+# snapshot the baseline border (accent engine owns it), 0x-normalized:
+# getoption reports bare argb hex which the keyword parser rejects.
+BASE="$(hyprctl getoption general:col.active_border -j 2>/dev/null | jq -r '.custom // empty')"
+[[ -z "${BASE}" ]] && BASE="rgba(ff3cacff) rgba(2bd2ffff) rgba(784bffff) rgba(ffb84dff) 270deg"
+NORM=""
+for tok in ${BASE}; do
+  if [[ "${tok}" =~ ^[0-9a-fA-F]{8}$ ]]; then NORM+="0x${tok} "; else NORM+="${tok} "; fi
+done
+BASE="${NORM% }"
+BASE_COLORS="${BASE% *}"
+
+restore() {
+  # children first, so no in-flight event re-tints after the restore
+  pkill -P $$ 2>/dev/null
+  hyprctl keyword general:col.active_border "${BASE}" >/dev/null 2>&1
+  rm -f "${PIDFILE}" "${COLORFILE}"
+}
+trap restore EXIT INT TERM
+
+# current angle straight from the compositor, so beatd's spin is
+# never undone by a re-tint (falls back to the baseline's angle).
+cur_angle() {
+  local a
+  a="$(hyprctl getoption general:col.active_border -j 2>/dev/null \
+       | jq -r '.custom // empty')"
+  a="${a##* }"; a="${a%deg}"
+  if [[ "${a}" =~ ^[0-9]+$ ]]; then
+    echo "${a}"
+  else
+    a="${BASE##* }"; a="${a%deg}"
+    [[ "${a}" =~ ^[0-9]+$ ]] && echo "${a}" || echo 270
+  fi
+}
+
+# hsv(h 0-359, s 0-100, v 0-100) → rrggbb
+hsv2hex() {
+  awk -v h="$1" -v s="$2" -v v="$3" 'BEGIN{
+    s/=100; v/=100; c=v*s; hp=h/60.0;
+    d=hp%2 - 1; if (d<0) d=-d; x=c*(1-d);
+    if(hp<1){r=c;g=x;b=0}else if(hp<2){r=x;g=c;b=0}
+    else if(hp<3){r=0;g=c;b=x}else if(hp<4){r=0;g=x;b=c}
+    else if(hp<5){r=x;g=0;b=c}else{r=c;g=0;b=x}
+    m=v-c; printf "%02x%02x%02x", (r+m)*255+0.5, (g+m)*255+0.5, (b+m)*255+0.5
+  }'
+}
+
+apply_colors() {  # $1 = space-separated 0xaarrggbb stops
+  printf '%s\n' "$1" > "${COLORFILE}"
+  hyprctl keyword general:col.active_border "$1 $(cur_angle)deg" >/dev/null 2>&1
+}
+
+# the pipeline runs BACKGROUNDED with a `wait` — a foreground pipeline
+# makes bash defer signal traps until the pipe exits, so `nyxus-tint
+# off` would never actually restore the border. `wait` is
+# signal-interruptible; the trap fires the instant TERM lands.
+lastclass="__nyxus_none__"
+socat -u "UNIX-CONNECT:${SOCK}" - 2>/dev/null | while IFS= read -r line; do
+  case "${line}" in
+    activewindow\>\>*) ;;
+    *) continue ;;
+  esac
+  cls="${line#activewindow>>}"; cls="${cls%%,*}"
+  [[ "${cls}" == "${lastclass}" ]] && continue
+  lastclass="${cls}"
+
+  if [[ -z "${cls}" ]]; then
+    apply_colors "${BASE_COLORS}"     # bare desktop → accent baseline
+    continue
+  fi
+
+  hue=$(( $(printf '%s' "${cls}" | cksum | cut -d' ' -f1) % 360 ))
+  c1="$(hsv2hex "${hue}" 82 100)"
+  c2="$(hsv2hex $(( (hue + 55) % 360 )) 88 100)"
+  apply_colors "0xff${c1} 0xff${c2}"
+done &
+wait $!

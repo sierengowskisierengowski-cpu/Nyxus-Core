@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # ╔══════════════════════════════════════════════════════════════════════╗
 # ║  NYXUS Icon Generator — Paint-splatter neon app icons via Cairo      ║
-# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ║  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 
 __nyxid__ = "4e59582d4a35572d323032362d53494552454e474f57534b492d4c4f434b4544"

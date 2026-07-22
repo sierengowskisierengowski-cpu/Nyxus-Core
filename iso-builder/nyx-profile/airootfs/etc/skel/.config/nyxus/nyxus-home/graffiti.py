@@ -2,7 +2,7 @@
 NYXUS Home - graffiti spatter background (Cairo)
 Mirrors GraffitiLayer in HomeDashboard.tsx: word collage + paint splats + drips.
 Deterministic seeds so layout is stable per session.
-(c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+(c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 import math
 import random

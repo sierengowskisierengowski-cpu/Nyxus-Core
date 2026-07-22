@@ -5,7 +5,7 @@ Provides a Gtk.Window-based settings dialog (notebook-tabbed) and a tiny
 JSON-backed config object.  All defaults live here; the rest of the app
 imports `load_config()` and `save_config()`.
 
-© 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 
@@ -137,7 +137,7 @@ NOTIF_REMINDERS = NOTIF_CFG_DIR / "reminders.json"
 # Build / version metadata surfaced in the About tab.
 NYXUS_VERSION = "2026.05.01"
 NYXUS_KEY     = "NYX-J5W-2026-SIERENGOWSKI-LOCKED"
-NYXUS_AUTHOR  = "Joseph Sierengowski"
+NYXUS_AUTHOR  = "Joseph A. Sierengowski"
 
 
 # ────────────────────────────────────────────────────── load / save

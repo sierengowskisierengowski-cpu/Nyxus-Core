@@ -2,7 +2,7 @@
 """
 NYXUS — Message of the Day (MOTD)
 Fully responsive. Adapts to any terminal size. Never overflows. Never truncates.
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 
 
@@ -402,7 +402,7 @@ _QUICK_REF = [
     f"{_EPURPLE}{BOLD}── NYX-J5W-2026 · SIERENGOWSKI{RESET}",
 ]
 
-COPYRIGHT = "© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
+COPYRIGHT = "© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
 
 # ── Main render — fully responsive ───────────────────────────────────────────
 def render_motd():

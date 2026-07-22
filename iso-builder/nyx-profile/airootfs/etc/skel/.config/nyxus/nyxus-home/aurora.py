@@ -4,7 +4,7 @@ Layered live Cairo scene: void wash → drifting aurora plasma → parallax
 starfield → perspective grid floor → scanline sweep → corner HUD frame.
 Everything is time-driven (no random per-frame jitter) so it renders
 deterministically and cheaply at 20 fps.
-(c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+(c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 import math
 import random

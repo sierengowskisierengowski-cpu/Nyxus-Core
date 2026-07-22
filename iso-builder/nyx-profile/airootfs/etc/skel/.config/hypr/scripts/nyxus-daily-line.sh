@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# NYXUS easter egg - a different cryptic line on the lock screen each day.
+# Deterministic: day-of-year picks the line, so it changes at midnight.
+LINES=(
+"the void stares back · and it likes what it sees"
+"you are the anomaly the system could not patch"
+"somewhere in the static · a signal only you can read"
+"reality is a suggestion · render your own"
+"the eye never sleeps · it only blinks"
+"ghosts in the machine tip their hats to you"
+"every pixel here answers to you alone"
+"the prism bends light · you bend the rules"
+"between keystrokes · entire universes collapse"
+"they built walls · you built a window"
+"dark mirror online · reflection optional"
+"the cosmos is graffiti on the walls of nothing"
+"wake the machine gently · it dreams of you"
+"entropy fears a well-kept dotfile"
+"you were never locked out · only early"
+"stars are just cursors blinking in the dark"
+"the deep end is where you learned to swim"
+"silence is the loudest theme"
+"one more login · one more universe"
+"the glitch was the feature all along"
+"midnight compiles clean"
+"your shadow runs at 144hz"
+"the abyss uses your color scheme now"
+"no gods in the shell · only you"
+"time is a scrollbar · drag it wisely"
+"the signal survives the noise"
+"obsidian remembers every reflection"
+"you are root in a world of guests"
+"the machine hums your name in binary"
+"nothing here is default · especially you"
+"lock the door · the universe stays inside"
+)
+IDX=$(( $(date +%-j) % ${#LINES[@]} ))
+echo "${LINES[$IDX]}"

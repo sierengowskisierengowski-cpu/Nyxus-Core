@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Arsenal
+GenericName=Security Toolkit Hub
+Comment=One roof for the whole GowskiNet security toolkit
+Exec=kitty --title Arsenal -e arsenal
+Icon=security-high
+Terminal=false
+StartupNotify=true
+Categories=System;Security;
+Keywords=security;hub;launcher;jett;bifrost;meli;honeypot;

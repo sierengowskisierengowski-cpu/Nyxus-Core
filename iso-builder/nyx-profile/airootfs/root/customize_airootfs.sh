@@ -530,6 +530,29 @@ if [ -f /etc/pacman.conf ]; then
   grep -q '^ParallelDownloads'  /etc/pacman.conf || sed -i 's/^#ParallelDownloads.*/ParallelDownloads = 8/' /etc/pacman.conf
 fi
 
+# ── BlackArch: trust + resolve the repo on the LIVE / installed system ──
+# rev 2026-07-17. The curated BlackArch toolkit in packages.x86_64 was
+# already pacstrapped + signature-verified against the BUILD HOST keyring.
+# Here we make the SHIPPED system self-sufficient so post-boot
+# `pacman -S <blackarch tool>` and `nyxus-blackarch-full` (full group) keep
+# verifying: (1) initialise + populate the pacman keyring with the blackarch
+# keys (blackarch-keyring is installed via packages.x86_64), and (2) add the
+# [blackarch] repo block to the runtime /etc/pacman.conf. All steps are
+# guarded/non-fatal so a keyring hiccup never aborts the bake.
+if pacman -Qq blackarch-keyring >/dev/null 2>&1; then
+  pacman-key --init 2>/dev/null || true
+  pacman-key --populate archlinux blackarch 2>/dev/null || pacman-key --populate blackarch 2>/dev/null || true
+  echo "[customize_airootfs] populated blackarch keyring into live pacman keyring"
+fi
+if [ -f /etc/pacman.conf ] && ! grep -q '^\[blackarch\]' /etc/pacman.conf; then
+  cat >> /etc/pacman.conf <<'BLACKARCH'
+
+[blackarch]
+Include = /etc/pacman.d/blackarch-mirrorlist
+BLACKARCH
+  echo "[customize_airootfs] added [blackarch] repo to live /etc/pacman.conf"
+fi
+
 # ─────────────────────────────────────────────────────────────────────
 # COMPLETION WAVE 4 — AUR builds (yay first, then everything else uses it).
 # These can't be pacstrapped from official repos; we build/install in the

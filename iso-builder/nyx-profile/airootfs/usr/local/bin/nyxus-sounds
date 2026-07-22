@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-sounds <on|off|toggle|status|demo>   ·   rev 2026-07-07 r1
+# Master switch for NYXUS UI sounds (flag file read by nyxus-sfx —
+# the soundd daemon keeps running either way, it just goes quiet).
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+MUTE="${HOME}/.config/nyxus/sounds.muted"
+
+on()  { rm -f "${MUTE}"; nyxus-sfx on
+        notify-send -u low -t 2200 "◤ NYXUS ◥ SOUND" "UI sounds on" 2>/dev/null
+        echo "sounds: on"; }
+off() { nyxus-sfx off; sleep 0.4; touch "${MUTE}"
+        notify-send -u low -t 2200 "◤ NYXUS ◥ SOUND" "UI sounds muted" 2>/dev/null
+        echo "sounds: off"; }
+
+case "${1:-toggle}" in
+  on)     on ;;
+  off)    off ;;
+  toggle) [[ -e "${MUTE}" ]] && on || off ;;
+  status) [[ -e "${MUTE}" ]] && echo off || echo on ;;
+  demo)   for s in open close workspace shot on off boot; do
+            echo "· ${s}"; nyxus-sfx "${s}"; sleep 0.6
+          done ;;
+  *) echo "usage: nyxus-sounds <on|off|toggle|status|demo>" >&2; exit 2 ;;
+esac

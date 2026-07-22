@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# ============================================================
+#  NYXUS — wallpaper rotator
+#  Rotates the CURATED alien / "NYXUS HYPRLAND" / sierengowski wall set
+#  (see ~/.config/nyxus/wall-rotation.list) across three surfaces:
+#
+#    nyxus-rotate-walls desktop   set a random curated wall as the desktop bg
+#    nyxus-rotate-walls lock      stage a random curated wall for hyprlock
+#    nyxus-rotate-walls print     print a random curated wall path (for hooks)
+#    nyxus-rotate-walls daemon    desktop loop (started from hyprland exec-once)
+#
+#  The login screen rotates separately (nyxus-greeter, runs as the greeter
+#  user). Everything degrades quietly: an empty/missing list falls back to a
+#  built-in curated set, and a missing file is skipped.
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================
+set -u
+
+LIST="${NYXUS_WALL_LIST:-${HOME}/.config/nyxus/wall-rotation.list}"
+WALLDIRS=("${HOME}/.config/hypr/walls" "${HOME}/.config/hypr/walls/rotation" "/usr/share/backgrounds/nyxus")
+CACHE="${HOME}/.cache/nyxus"
+LOCK_WALL="${CACHE}/lock-wall.png"
+INTERVAL="${NYXUS_WALL_INTERVAL:-1200}"   # desktop daemon: rotate every 20 min
+
+# Built-in fallback set (used only if the list file is missing/empty).
+FALLBACK=(nyxus-urban-alien nyxus-demon nyxus-hacker-mode-a nyxus-hacker-mode-b
+          nyxus-kageryu-blackout nyxus-login-wall nyxus-desktop-hero
+          nyxus-frost-sierengowski nyxus-sierengowski-clean)
+
+resolve() {  # slug -> first existing file path
+  local slug="$1" d ext
+  for d in "${WALLDIRS[@]}"; do
+    for ext in png jpg jpeg svg; do
+      [ -f "${d}/${slug}.${ext}" ] && { printf '%s\n' "${d}/${slug}.${ext}"; return 0; }
+    done
+  done
+  return 1
+}
+
+pool() {  # print resolved wall paths, one per line
+  local slugs=() line slug p
+  if [ -r "${LIST}" ]; then
+    while IFS= read -r line; do
+      line="${line%%#*}"                       # strip comments
+      slug="$(printf '%s' "${line}" | awk '{print $1}')"
+      [ -n "${slug}" ] && slugs+=("${slug}")
+    done < "${LIST}"
+  fi
+  [ "${#slugs[@]}" -eq 0 ] && slugs=("${FALLBACK[@]}")
+  for slug in "${slugs[@]}"; do
+    p="$(resolve "${slug}")" && printf '%s\n' "${p}"
+  done
+}
+
+pick() {  # one random resolved wall
+  local all; all="$(pool)"
+  [ -z "${all}" ] && return 1
+  printf '%s\n' "${all}" | shuf -n1 2>/dev/null || printf '%s\n' "${all}" | head -n1
+}
+
+case "${1:-print}" in
+  desktop)
+    w="$(pick)" || { echo "nyxus-rotate-walls: no curated wall resolved" >&2; exit 0; }
+    if command -v nyxus-set-wallpaper >/dev/null 2>&1; then
+      exec nyxus-set-wallpaper "${w}"
+    else
+      pkill -x swaybg 2>/dev/null || true
+      exec swaybg -i "${w}" -m fill -c "#000000"
+    fi
+    ;;
+  lock)
+    mkdir -p "${CACHE}"
+    if w="$(pick)"; then cp -f "${w}" "${LOCK_WALL}" 2>/dev/null || true; fi
+    # guarantee the file exists so hyprlock never hits a missing path
+    if [ ! -f "${LOCK_WALL}" ]; then
+      d="$(resolve nyxus-login-wall)" && cp -f "${d}" "${LOCK_WALL}" 2>/dev/null || true
+    fi
+    ;;
+  print)
+    pick || exit 1
+    ;;
+  daemon)
+    # rotate the desktop wall on a loop; safe to run once (exec-once).
+    while :; do "$0" desktop >/dev/null 2>&1 || true; sleep "${INTERVAL}"; done
+    ;;
+  *)
+    echo "usage: $(basename "$0") desktop|lock|print|daemon" >&2
+    exit 2
+    ;;
+esac

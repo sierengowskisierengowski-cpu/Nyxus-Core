@@ -37,7 +37,7 @@
       "hue": "green",
       "tagline": "jeTT · Bifrost · Live Detections",
       "wallpaper": "nyxus-kageryu-blackout.png",
-      "launch": "sh -c 'command -v bifrost >/dev/null && (bifrost >/dev/null 2>&1 &); alacritty -e sh -c \"journalctl -f -u jett-daemon 2>/dev/null || journalctl -xef\"'"
+      "launch": "sh -c 'command -v nyxus-launch-bifrost >/dev/null && nyxus-launch-bifrost --background; alacritty -e sh -c \"journalctl -f -u jett-daemon 2>/dev/null || journalctl -xef\"'"
     },
     {
       "id": 4,
@@ -46,7 +46,7 @@
       "hue": "red",
       "tagline": "Meli · Honeypot · Grafana",
       "wallpaper": "nyxus-hacker-mode-b.png",
-      "launch": "sh -c 'command -v meli >/dev/null && (meli >/dev/null 2>&1 &); command -v firefox >/dev/null && firefox --new-window http://localhost:3000 || alacritty'"
+      "launch": "sh -c 'command -v nyxus-launch-meli >/dev/null && nyxus-launch-meli || alacritty'"
     },
     {
       "id": 5,

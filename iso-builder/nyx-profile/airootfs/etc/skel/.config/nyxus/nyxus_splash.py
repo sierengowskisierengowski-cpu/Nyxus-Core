@@ -3,7 +3,7 @@
 NYXUS — Boot Splash Screen
 Red-glow scrolling code/hex matrix. The Matrix but red.
 Sets a serious dark tone from the first second.
-© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 
 
@@ -258,7 +258,7 @@ NYXUS_LOGO = [
 ]
 
 TAGLINE = "S I L E N T . D A R K . P U R E L Y   F U N C T I O N A L"
-COPYRIGHT = "© 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
+COPYRIGHT = "© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED"
 
 # ── Glow distance function (radial gradient) ──────────────────────────────────
 def glow_brightness(row, col, center_row, center_col, radius):

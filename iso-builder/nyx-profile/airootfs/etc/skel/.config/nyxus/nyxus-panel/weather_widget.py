@@ -7,7 +7,7 @@ Reads the city/lat/lon set by the user in the existing NYXUS Weather app
 
 Click the tile to launch the full NYXUS Weather window.
 
-© 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 

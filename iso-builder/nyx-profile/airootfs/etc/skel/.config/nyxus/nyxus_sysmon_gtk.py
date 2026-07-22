@@ -2,7 +2,7 @@
 # ╔══════════════════════════════════════════════════════════════════════╗
 # ║  NYXUS SysMon GTK — Enterprise Edition · 8-section live dashboard   ║
 # ║  Overview · CPU · Memory · Network · Disk · Processes · Sensors · Sys║
-# ║  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
+# ║  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 
 __nyxid__ = "4e59582d4a35572d323032362d53494552454e474f57534b492d4c4f434b4544"

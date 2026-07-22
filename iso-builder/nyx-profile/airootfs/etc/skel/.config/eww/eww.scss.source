@@ -3818,3 +3818,34 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   font-size: 12px;
   letter-spacing: 0.24em;
 }
+
+/* ====================================================================
+   NYXUS glow eye-candy + security-toggle states (ported 2026-07-21)
+   random-glow.sh flips .nyx-glitch onto random labels every 7s for a
+   flickering neon bloom; security-state.sh drives the .sec-pill states.
+   ASCII-only. Uses live accent vars from _nyxus_accent.scss.
+   ==================================================================== */
+.nyx-glitch {
+  text-shadow:
+    0 0 10px rgba($nyxus-accent-primary, 0.70),
+    0 0 20px rgba($nyxus-accent-secondary, 0.55),
+    0 0 32px rgba($neon-red, 0.28);
+}
+.sec-pill { min-height: 24px; }
+.sec-pill.sec-off {
+  opacity: 0.70;
+  border-style: dashed;
+}
+.sec-pill.sec-on {
+  opacity: 1;
+  box-shadow:
+    0 0 12px rgba($nyxus-accent-secondary, 0.42),
+    0 0 22px rgba($nyxus-accent-primary, 0.24);
+}
+.sec-pill.sec-armed {
+  opacity: 1;
+  border-color: rgba($neon-red, 0.85);
+  box-shadow:
+    0 0 12px rgba($neon-red, 0.45),
+    0 0 22px rgba($nyxus-accent-warn, 0.28);
+}

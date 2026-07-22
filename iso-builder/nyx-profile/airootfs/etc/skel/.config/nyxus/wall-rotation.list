@@ -1,0 +1,41 @@
+# ============================================================
+#  NYXUS - wallpaper rotation set  (ALIEN THEME ONLY)
+#  ~/.config/nyxus/wall-rotation.list
+#  Curated 2026-07-21 to the urban-alien graffiti-space art ONLY.
+#  Dropped: hacker-mode walls (those belong to hacker flip mode,
+#  not the normal desktop), Kage Ryu blackout, demon, and the
+#  sierengowski brand walls - they are not the alien theme.
+#  One slug per line; resolves in ~/.config/hypr/walls[/rotation]
+#  or /usr/share/backgrounds/nyxus. Comment a line to drop it.
+# ============================================================
+
+# -- main alien scenes --
+
+# -- urban-alien rotation collection (walls/rotation/) --
+nyxus-rot-alien-block-party
+nyxus-rot-alien-hangout-music
+nyxus-rot-alien-pose
+nyxus-rot-beam-down
+nyxus-rot-beam-up
+nyxus-rot-big-bang
+nyxus-rot-black-void
+nyxus-rot-bodega-cosmos
+nyxus-rot-corner-store-night
+nyxus-rot-court-saucer
+nyxus-rot-deep-void-stars
+nyxus-rot-empty-lot-saucer
+nyxus-rot-fire-escape-nebula
+nyxus-rot-floating-alien-city
+nyxus-rot-milkyway-void
+nyxus-rot-nebula-cruise
+nyxus-rot-rooftop
+nyxus-rot-rooftop-session
+nyxus-rot-saucer-alley
+nyxus-rot-saucer-fleet
+nyxus-rot-saucer-solo
+nyxus-rot-saucer-underside
+nyxus-rot-street-cosmos
+nyxus-rot-subway-cosmos
+nyxus-rot-subway-void
+nyxus-rot-twin-moon-walk
+nyxus-rot-warehouse-portal

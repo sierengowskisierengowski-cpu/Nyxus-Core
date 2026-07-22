@@ -1,2 +1,56 @@
 #!/usr/bin/env bash
-exec python3 /opt/nyxus/nyxus_security.py "$@"
+# ============================================================
+#  nyxus-security — NYXUS Security Center launcher / panic wrapper
+#  Phase 3 (2026-07-14)
+#
+#  The Hyprland keybinds
+#      $mod+Shift+Y        -> nyxus-security          (open Security Center)
+#      $mod+Ctrl+Alt+L     -> nyxus-security --panic  (PANIC LOCKDOWN)
+#  called `nyxus-security`, which never existed on this machine — so both
+#  binds only ever fired the "not installed" notification. The actual
+#  everyday Security Center is NYXUS Shield (/opt/nyxus-shield). This thin
+#  wrapper wires the binds to it and implements the panic sequence.
+#
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================
+
+_notify() { command -v notify-send >/dev/null 2>&1 && notify-send "$@" || true; }
+
+panic() {
+    _notify -u critical "NYXUS Security" "PANIC LOCKDOWN engaged"
+
+    # 1. Wipe the clipboard (both live selection and history).
+    command -v wl-copy   >/dev/null 2>&1 && wl-copy --clear        2>/dev/null || true
+    command -v cliphist  >/dev/null 2>&1 && cliphist wipe          2>/dev/null || true
+
+    # 2. Flush the DNS cache (systemd-resolved, if in use).
+    command -v resolvectl >/dev/null 2>&1 && resolvectl flush-caches 2>/dev/null || true
+
+    # 3. Unmount removable media.
+    if command -v udiskie-umount >/dev/null 2>&1; then
+        udiskie-umount -a 2>/dev/null || true
+    elif command -v udisksctl >/dev/null 2>&1; then
+        for _d in /dev/sd?1; do
+            [ -b "$_d" ] && udisksctl unmount -b "$_d" 2>/dev/null || true
+        done
+    fi
+
+    # 4. Lock the session (DE-agnostic; honours whatever lock is wired via
+    #    the login manager / hypridle — this does NOT hard-code hyprlock).
+    command -v loginctl >/dev/null 2>&1 && loginctl lock-session 2>/dev/null || true
+}
+
+case "${1:-}" in
+    --panic|-p)
+        panic
+        ;;
+    *)
+        if command -v nyxus-shield >/dev/null 2>&1; then
+            exec nyxus-shield "$@"
+        else
+            _notify -u critical "NYXUS Security" \
+                "Security Center (nyxus-shield) is not installed on this system"
+            exit 1
+        fi
+        ;;
+esac

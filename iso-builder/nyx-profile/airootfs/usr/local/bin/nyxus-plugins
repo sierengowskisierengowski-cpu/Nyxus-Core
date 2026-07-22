@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-plugins <load|unload|toggle|status> [name]   ·   rev 2026-07-07 r1
+#
+# Safe front door for the locally-built Hyprland plugins in
+# ~/.local/lib/nyxus-plugins (built from source against the installed
+# 0.55.4 headers — dynamic-cursors at the author's exact 0.55.4 pin):
+#
+#   hyprexpo         workspace overview grid  (Super+Alt+A once loaded)
+#   dynamic-cursors  cursor tilts/stretches with movement
+#   hyprfocus        flash/zoom animation on focus change
+#
+# Nothing loads at boot — NYXUS stays pure-compositor until YOU load
+# one. Hyprland validates the plugin API version at load and rejects
+# mismatches cleanly. After a Hyprland update, REBUILD before loading
+# ("hyprctl version" hash must match what they were built against).
+# Per-plugin settings are applied right after a successful load.
+#
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:${PATH}"
+DIR="${HOME}/.local/lib/nyxus-plugins"
+
+note() { notify-send -u low -t 3000 "◤ NYXUS ◥ PLUGINS" "$1" 2>/dev/null; }
+
+# 0.55 lists "Plugin <name> by <author>:" (no path); older builds
+# printed the full .so path — match either.
+loaded() { hyprctl plugin list 2>/dev/null | grep -qE "(^Plugin ${1} |${1}\.so)"; }
+
+configure() {
+  case "$1" in
+    hyprexpo)
+      hyprctl --batch "\
+        keyword plugin:hyprexpo:columns 3;\
+        keyword plugin:hyprexpo:gap_size 8;\
+        keyword plugin:hyprexpo:bg_col rgb(06050a);\
+        keyword plugin:hyprexpo:workspace_method center current" >/dev/null 2>&1
+      ;;
+    dynamic-cursors)
+      hyprctl --batch "\
+        keyword plugin:dynamic-cursors:mode tilt;\
+        keyword plugin:dynamic-cursors:threshold 2;\
+        keyword plugin:dynamic-cursors:shake:enabled true;\
+        keyword plugin:dynamic-cursors:shake:effects false" >/dev/null 2>&1
+      ;;
+    hyprfocus)
+      hyprctl --batch "\
+        keyword plugin:hyprfocus:enabled true;\
+        keyword plugin:hyprfocus:animate_floating true;\
+        keyword plugin:hyprfocus:focus_animation flash;\
+        keyword plugin:hyprfocus:flash:flash_opacity 0.85" >/dev/null 2>&1
+      ;;
+  esac
+}
+
+do_load() {
+  local p="$1"
+  [[ -f "${DIR}/${p}.so" ]] || { echo "no such plugin: ${p}" >&2; exit 1; }
+  loaded "${p}" && { echo "${p}: already loaded"; return; }
+  if OUT="$(hyprctl plugin load "${DIR}/${p}.so" 2>&1)" && [[ "${OUT}" == *ok* ]]; then
+    configure "${p}"
+    note "${p} loaded"
+    echo "${p}: loaded"
+  else
+    note "${p} REFUSED to load — likely needs a rebuild"
+    echo "${p}: load failed → ${OUT}" >&2
+    exit 1
+  fi
+}
+
+do_unload() {
+  local p="$1"
+  loaded "${p}" || { echo "${p}: not loaded"; return; }
+  hyprctl plugin unload "${DIR}/${p}.so" >/dev/null 2>&1
+  note "${p} unloaded"
+  echo "${p}: unloaded"
+}
+
+CMD="${1:-status}"
+case "${CMD}" in
+  status)
+    for so in "${DIR}"/*.so; do
+      p="$(basename "${so}" .so)"
+      loaded "${p}" && echo "${p}: ON" || echo "${p}: off"
+    done
+    ;;
+  load)   do_load   "${2:?usage: nyxus-plugins load <name>}" ;;
+  unload) do_unload "${2:?usage: nyxus-plugins unload <name>}" ;;
+  toggle)
+    p="${2:?usage: nyxus-plugins toggle <name>}"
+    loaded "${p}" && do_unload "${p}" || do_load "${p}"
+    ;;
+  *) echo "usage: nyxus-plugins <status|load|unload|toggle> [name]" >&2; exit 2 ;;
+esac

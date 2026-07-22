@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+# ============================================================================
+#  nyxus-sense  ·  the NYXUS state bus / "pulse"        rev 2026-07-21 r1
+#  (c) 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  A single lightweight daemon that SAMPLES the machine + session and
+#  PUBLISHES one JSON state file that every reactive NYXUS feature reads:
+#
+#      ~/.config/nyxus/sense.json     (atomic writes, ~4 Hz)
+#
+#  Signals sampled: time-of-day phase · cpu / mem / load · music (playing +
+#  track) · active window class + workspace.  From those it DERIVES a
+#  continuous "mood" (name + 0..1 intensity + smoothed energy) with
+#  hysteresis so it never flaps.  Consumers (mood engine, whispers, DROP,
+#  graffiti wall) poll the file — nyxus-sense never talks to them directly,
+#  so the bus stays decoupled and cheap.
+#
+#      nyxus-sense run       # foreground daemon (systemd/autostart target)
+#      nyxus-sense start     # background daemon (double-fork), pidfile-guarded
+#      nyxus-sense stop      # stop the running daemon
+#      nyxus-sense status    # print current sense.json (or 'stopped')
+#      nyxus-sense once      # sample once, print JSON, exit (debug)
+# ============================================================================
+import json, os, signal, subprocess, sys, tempfile, time
+
+try:
+    import psutil
+except Exception:
+    psutil = None
+
+HOME     = os.path.expanduser("~")
+CFG_DIR  = os.path.join(HOME, ".config", "nyxus")
+STATE    = os.path.join(CFG_DIR, "sense.json")
+PIDFILE  = os.path.join(CFG_DIR, "sense.pid")
+HACKER   = os.path.join(CFG_DIR, "hacker-mode.state")
+
+INTERVAL   = 0.25          # sample period (seconds) -> 4 Hz
+MOOD_DWELL = 6.0           # a rival mood must persist this long to win
+EMA_ALPHA  = 0.15          # energy smoothing (0..1, lower = smoother)
+
+os.makedirs(CFG_DIR, exist_ok=True)
+
+
+# ── helpers ────────────────────────────────────────────────────────────────
+def clamp(x, lo=0.0, hi=1.0):
+    return lo if x < lo else hi if x > hi else x
+
+
+def phase_of(hour):
+    if 5 <= hour < 8:   return "dawn"
+    if 8 <= hour < 17:  return "day"
+    if 17 <= hour < 20: return "dusk"
+    return "night"
+
+
+def hacker_on():
+    try:
+        with open(HACKER) as f:
+            return "mode=on" in f.read()
+    except OSError:
+        return False
+
+
+def player_state():
+    """(playing_bool, title, artist) — never raises."""
+    def pc(fmt):
+        try:
+            out = subprocess.run(["playerctl", "metadata", "--format", fmt],
+                                 capture_output=True, text=True, timeout=1.5)
+            return out.stdout.strip() if out.returncode == 0 else ""
+        except Exception:
+            return ""
+    try:
+        st = subprocess.run(["playerctl", "status"],
+                            capture_output=True, text=True, timeout=1.5)
+        status = st.stdout.strip() if st.returncode == 0 else "Stopped"
+    except Exception:
+        status = "Stopped"
+    playing = status == "Playing"
+    if status in ("Playing", "Paused"):
+        return playing, pc("{{title}}"), pc("{{artist}}")
+    return playing, "", ""
+
+
+def active_window():
+    """(app_class, workspace_id) — never raises."""
+    try:
+        out = subprocess.run(["hyprctl", "activewindow", "-j"],
+                            capture_output=True, text=True, timeout=1.5)
+        d = json.loads(out.stdout or "{}")
+        cls = d.get("class", "") or ""
+        ws  = (d.get("workspace") or {}).get("id", 0) or 0
+        return cls, int(ws)
+    except Exception:
+        try:
+            out = subprocess.run(["hyprctl", "activeworkspace", "-j"],
+                                capture_output=True, text=True, timeout=1.5)
+            return "", int(json.loads(out.stdout or "{}").get("id", 0) or 0)
+        except Exception:
+            return "", 0
+
+
+# ── mood derivation ─────────────────────────────────────────────────────────
+# Four base moods; hacker-mode paints a fifth (MATRIX) on top. Intensity is
+# the smoothed energy score, so consumers can dial effect strength by it.
+MOODS = ("GHOST", "DRIFT", "PROWL", "OVERCLOCK", "MATRIX")
+
+
+def derive_mood(energy, playing, phase, cpu):
+    if energy >= 0.60:
+        return "OVERCLOCK"
+    if cpu < 8 and not playing and phase in ("dusk", "night"):
+        return "GHOST"
+    if playing and energy < 0.50:
+        return "DRIFT"
+    if phase in ("dusk", "night") and energy < 0.35:
+        return "DRIFT"
+    return "PROWL"
+
+
+class Sensor:
+    def __init__(self):
+        self.ncpu   = (psutil.cpu_count() or os.cpu_count() or 1) if psutil else (os.cpu_count() or 1)
+        self.energy = 0.0
+        self.mood   = "PROWL"
+        self.cand   = "PROWL"
+        self.cand_t = time.time()
+        if psutil:
+            psutil.cpu_percent(interval=None)   # prime the counter
+
+    def sample(self):
+        now  = time.localtime()
+        hour = now.tm_hour
+        phase = phase_of(hour)
+
+        if psutil:
+            cpu = psutil.cpu_percent(interval=None)
+            mem = psutil.virtual_memory().percent
+        else:
+            cpu = mem = 0.0
+        try:
+            load1 = os.getloadavg()[0]
+        except (OSError, AttributeError):
+            load1 = 0.0
+
+        playing, title, artist = player_state()
+        app, ws = active_window()
+
+        # instantaneous energy → EMA-smoothed
+        raw = clamp(0.5 * (cpu / 100.0)
+                    + 0.3 * clamp(load1 / self.ncpu)
+                    + (0.25 if playing else 0.0))
+        self.energy += EMA_ALPHA * (raw - self.energy)
+
+        # MATRIX is an EXPLICIT user toggle (hacker mode) — it wins instantly
+        # and bypasses hysteresis. Inferred moods use dwell-time hysteresis so
+        # they never flap on a momentary load or track blip.
+        hk = hacker_on()
+        t = time.time()
+        if hk:
+            self.mood = self.cand = "MATRIX"
+            self.cand_t = t
+        else:
+            cand = derive_mood(self.energy, playing, phase, cpu)
+            if cand != self.mood:
+                if cand != self.cand:
+                    self.cand, self.cand_t = cand, t
+                elif t - self.cand_t >= MOOD_DWELL:
+                    self.mood = cand
+            else:
+                self.cand, self.cand_t = cand, t
+
+        return {
+            "ts": int(t),
+            "time": {"hour": hour, "minute": now.tm_min, "phase": phase},
+            "cpu": round(cpu, 1), "mem": round(mem, 1), "load1": round(load1, 2),
+            "audio": {"playing": playing, "title": title, "artist": artist},
+            "window": {"app": app, "ws": ws},
+            "energy": round(self.energy, 3),
+            "mood": self.mood,
+            "mood_intensity": round(self.energy, 3),
+            "hacker": hk,
+        }
+
+
+def write_atomic(path, data):
+    d = os.path.dirname(path)
+    fd, tmp = tempfile.mkstemp(dir=d, prefix=".sense.")
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(data, f)
+        os.replace(tmp, path)
+    except Exception:
+        try: os.unlink(tmp)
+        except OSError: pass
+        raise
+
+
+# ── daemon plumbing ─────────────────────────────────────────────────────────
+_RUN = True
+
+
+def _sigterm(*_):
+    global _RUN
+    _RUN = False
+
+
+def run():
+    signal.signal(signal.SIGTERM, _sigterm)
+    signal.signal(signal.SIGINT, _sigterm)
+    with open(PIDFILE, "w") as f:
+        f.write(str(os.getpid()))
+    sensor = Sensor()
+    try:
+        while _RUN:
+            try:
+                write_atomic(STATE, sensor.sample())
+            except Exception:
+                pass                       # never let one bad sample kill the bus
+            time.sleep(INTERVAL)
+    finally:
+        try: os.unlink(PIDFILE)
+        except OSError: pass
+
+
+def _running_pid():
+    try:
+        with open(PIDFILE) as f:
+            pid = int(f.read().strip())
+        os.kill(pid, 0)
+        return pid
+    except (OSError, ValueError):
+        return None
+
+
+def start():
+    if _running_pid():
+        print("nyxus-sense already running"); return
+    if os.fork() > 0:
+        return
+    os.setsid()
+    if os.fork() > 0:
+        os._exit(0)
+    devnull = os.open(os.devnull, os.O_RDWR)
+    for fd in (0, 1, 2):
+        os.dup2(devnull, fd)
+    run()
+
+
+def stop():
+    pid = _running_pid()
+    if not pid:
+        print("nyxus-sense not running"); return
+    try:
+        os.kill(pid, signal.SIGTERM)
+        print(f"stopped nyxus-sense (pid {pid})")
+    except OSError as e:
+        print(f"could not stop pid {pid}: {e}")
+
+
+def status():
+    try:
+        with open(STATE) as f:
+            print(f.read())
+    except OSError:
+        print("stopped (no sense.json)")
+
+
+def once():
+    print(json.dumps(Sensor().sample(), indent=2))
+
+
+def main():
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "run"
+    {"run": run, "start": start, "stop": stop,
+     "status": status, "once": once}.get(cmd, run)()
+
+
+if __name__ == "__main__":
+    main()

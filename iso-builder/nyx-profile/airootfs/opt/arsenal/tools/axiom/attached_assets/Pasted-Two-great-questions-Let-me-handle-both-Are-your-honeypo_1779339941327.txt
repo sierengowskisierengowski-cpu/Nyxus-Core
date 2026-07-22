@@ -1,0 +1,89 @@
+Two great questions. Let me handle both.
+
+Are your honeypots running?
+Honest answer: I don't know — and we haven't checked yet. Let me explain what I know:
+What I'm certain about right now:
+
+✅ Mosquitto (MQTT broker) is running on port 1883
+✅ Meli ingest daemon is running, listening on MQTT topic meli/events/ingest and HTTP port 17654
+✅ One fake test event flowed through (the curl/mosquitto_pub test from 45.33.32.156)
+
+What I'm NOT certain about:
+
+❌ Whether Cowrie is running anywhere
+❌ Whether Heralding, Dionaea, Glastopf, Mailoney are running anywhere
+❌ Whether your Pi Zero W2 honeypot at 192.168.0.125 is still alive
+❌ Whether your router's port forwards are still active
+❌ Whether ANYTHING is bridging real honeypot logs into Meli yet
+
+The pipeline is ready to receive data, but no real honeypots are wired to it yet on THIS machine. We only proved the pipeline works using a fake event.
+To check the current state of your honeypot infrastructure, run these:
+bash# Check if any Docker containers are running
+docker ps
+
+# Check if Pi Zero W2 is reachable
+ping -c 3 192.168.0.125
+Send me what those show. Based on the output, I'll tell you exactly what's running and what needs to come back online before real attacks start flowing into Meli.
+
+Bug report for Replit to fix on their end
+Copy and paste this whole block to Replit. It's a clean bug report with everything they need to ship permanent fixes so future installs don't hit these issues.
+
+Meli — Bugs Fixed Locally, Need Permanent Fixes in Repo
+I had to manually patch four issues on my local install tonight to get Meli's ingest daemon working. Please commit equivalent fixes to the main repo so fresh installs don't hit these problems.
+Bug 1: pyproject.toml declares a non-existent build backend
+pip install -e . fails with:
+BackendUnavailable: Cannot import 'setuptools.backends.legacy'
+setuptools.backends.legacy is not a real build backend. The pyproject.toml [build-system] section should likely be:
+toml[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+Please fix the build backend declaration so the standard install path actually works.
+Bug 2: install.sh never installs the meli package into the venv
+After running the installer, /opt/meli/venv/ had all dependencies but the meli package itself was not installed. python -m meli failed with No module named meli.
+I worked around this by replacing /usr/local/bin/meli with a launcher that sets PYTHONPATH:
+bash#!/usr/bin/env bash
+export PYTHONPATH=/opt/meli/app${PYTHONPATH:+:$PYTHONPATH}
+exec /opt/meli/venv/bin/python -m meli "$@"
+Please update install.sh so it either:
+
+Successfully runs pip install -e . against the source (after Bug 1 is fixed), OR
+Uses the PYTHONPATH launcher pattern by default
+
+Also please add Environment=PYTHONPATH=/opt/meli/app to the systemd unit files (meli.service and meli-ingest.service) so the services work without manual editing.
+Bug 3: datetime JSON serialization crash on every event
+When events were ingested, the processor crashed with:
+Object of type datetime is not JSON serializable
+Location: /opt/meli/app/meli/ingest/processor.py, the json.dumps(normalized) call.
+Fix: pass default=str to that json.dumps call. Already patched locally — needs to be in repo.
+Bug 4: GeoIP "log once" patch produced invalid Python syntax
+A string-replace patch left geolocation.py with this broken code:
+pythonif not _readers_loaded:
+    _readers_loaded = True
+    if True:          # <-- this line had no indented block after it
+    import geoip2.database
+    ...
+This causes expected an indented block after 'if' statement on every event processed.
+I removed the spurious if True: line. The intent of the patch (log GeoIP unavailability once instead of per event) is fine, but the implementation needs to not introduce a dangling if. Either:
+
+Remove the if True: line entirely (what I did locally), OR
+Implement the one-time logging using a proper flag check pattern without the nested if True:
+
+Bug 5 (separate from above): No log directory created by installer
+The systemd unit declares StandardOutput=append:%h/.local/share/meli/logs/ingest.log, but ~/.local/share/meli/logs/ does not exist after install. Systemd silently refused to redirect logs until I created the directory manually with mkdir -p.
+Please have install.sh create:
+
+~/.local/share/meli/logs/
+~/.local/share/meli/geoip/ (so the GeoIP downloader works without manual prep)
+~/.local/share/meli/cache/
+~/.local/share/meli/exports/
+~/.local/share/meli/reports/
+
+Bug 6 (UX): "Add Honeypot Source" button silently failed when daemon was down
+When the meli-ingest daemon was crashing in a restart loop, clicking "Add Honeypot Source" in Settings did nothing — no dialog, no error message. The button appeared dead.
+The UI should detect when the ingest daemon is unhealthy and either:
+
+Display a clear error: "Cannot add honeypot source — ingest daemon is not running. Click here to see logs / restart."
+OR show a connection status indicator somewhere visible (top bar?) so the user knows the backend is broken before they try to use it.
+
+Summary
+All six issues need fixes in the repo so the next time someone (including me on a fresh install) installs Meli from scratch, it Just Works. Please ship a v1.0.1 patch release with these fixes. Let me know when it's pushed so I can verify on a clean install at som

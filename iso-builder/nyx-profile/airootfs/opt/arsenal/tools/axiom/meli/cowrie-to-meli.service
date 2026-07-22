@@ -1,0 +1,46 @@
+[Unit]
+Description=Cowrie -> Meli forwarder (tails cowrie.json, publishes to Meli)
+Documentation=https://github.com/your-org/meli/blob/main/docs/HONEYPOT-INTEGRATION.md
+After=network-online.target cowrie.service mosquitto.service
+Wants=network-online.target
+# Don't hard-require cowrie/mosquitto — the forwarder retries cleanly if
+# either is briefly unavailable, and we want it to come back automatically.
+
+[Service]
+Type=simple
+User=cowrie-meli
+Group=cowrie-meli
+
+# Edit these for your environment. Defaults match a typical Cowrie install
+# with Mosquitto running locally on the same Pi.
+Environment=COWRIE_LOG=/opt/cowrie/var/log/cowrie/cowrie.json
+Environment=MELI_MQTT_HOST=127.0.0.1
+Environment=MELI_MQTT_PORT=1883
+Environment=MELI_MQTT_TOPIC=meli/events/ingest
+
+ExecStart=/usr/bin/python3 /opt/cowrie-to-meli/cowrie_to_meli.py \
+    --log ${COWRIE_LOG} \
+    --mode mqtt \
+    --host ${MELI_MQTT_HOST} \
+    --port ${MELI_MQTT_PORT} \
+    --topic ${MELI_MQTT_TOPIC}
+
+# Persistent offset lives here so restarts don't lose or replay events.
+StateDirectory=cowrie-to-meli
+Environment=COWRIE_TO_MELI_OFFSET=/var/lib/cowrie-to-meli/offset.json
+
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Hardening — the forwarder only needs to read cowrie.json and talk to the broker.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/cowrie-to-meli
+ReadOnlyPaths=/opt/cowrie/var/log/cowrie
+
+[Install]
+WantedBy=multi-user.target

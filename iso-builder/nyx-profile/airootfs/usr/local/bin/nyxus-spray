@@ -1,0 +1,379 @@
+#!/usr/bin/env python3
+# NYXUS SPRAY - graffiti over your screen.
+# A fullscreen layer-shell overlay you spray paint onto, in the same prism
+# palette as the wallpaper. Hold still while painting and the paint runs
+# into drips, just like the real thing.
+#
+#   SUPER+G / nyxus-spray   toggle spray mode (run again to close)
+#   drag                    spray
+#   T                       trail mode - spray follows the cursor with no
+#                           button held (start that way: nyxus-spray --trail)
+#   1-6                     color (magenta cyan purple gold green white)
+#   scroll                  nozzle size
+#   U                       undo stroke     C  clear all
+#   S                       save screenshot (grim) to ~/Pictures/NyxusSpray
+#   Esc or Q                exit
+import math, os, random, signal, subprocess, sys, time
+
+import gi
+gi.require_version("Gtk", "3.0")
+gi.require_version("GtkLayerShell", "0.1")
+from gi.repository import Gtk, Gdk, GLib, GtkLayerShell  # noqa: E402
+import cairo  # noqa: E402
+
+PIDFILE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"),
+                       "nyxus-spray.pid")
+
+PALETTE = [  # name, r, g, b  (NYXUS prism)
+    ("magenta", 0.996, 0.259, 0.682),   # fe42ae
+    ("cyan",    0.169, 0.824, 1.000),   # 2bd2ff
+    ("purple",  0.471, 0.294, 1.000),   # 784bff
+    ("gold",    1.000, 0.722, 0.302),   # ffb84d
+    ("green",   0.212, 1.000, 0.149),   # 36ff26
+    ("white",   0.933, 0.949, 0.980),   # eef2fa
+]
+
+
+class Spray(Gtk.Window):
+    def __init__(self, demo=False, trail=False):
+        super().__init__()
+        self.demo = demo
+        self.freespray = trail   # paint on every cursor move, no click
+        self.surface = None
+        self.color = 0
+        self.size = 26.0
+        self.undo = []
+        self.drips = []          # [x, y, remaining, width]
+        self.painting = False
+        self.last = None         # last spray point
+        self.dwell_at = None     # (x, y, t) for drip spawning
+        self.strokes = 0
+
+        self.set_app_paintable(True)
+        screen = self.get_screen()
+        visual = screen.get_rgba_visual()
+        if visual:
+            self.set_visual(visual)
+
+        GtkLayerShell.init_for_window(self)
+        GtkLayerShell.set_namespace(self, "nyxus-spray")
+        GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
+        for edge in (GtkLayerShell.Edge.TOP, GtkLayerShell.Edge.BOTTOM,
+                     GtkLayerShell.Edge.LEFT, GtkLayerShell.Edge.RIGHT):
+            GtkLayerShell.set_anchor(self, edge, True)
+        try:
+            GtkLayerShell.set_keyboard_mode(
+                self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
+        except AttributeError:
+            GtkLayerShell.set_keyboard_interactivity(self, True)
+
+        self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK
+                        | Gdk.EventMask.BUTTON_RELEASE_MASK
+                        | Gdk.EventMask.POINTER_MOTION_MASK
+                        | Gdk.EventMask.SCROLL_MASK
+                        | Gdk.EventMask.KEY_PRESS_MASK)
+        self.connect("draw", self.on_draw)
+        self.connect("button-press-event", self.on_press)
+        self.connect("button-release-event", self.on_release)
+        self.connect("motion-notify-event", self.on_motion)
+        self.connect("scroll-event", self.on_scroll)
+        self.connect("key-press-event", self.on_key)
+        self.connect("size-allocate", self.on_alloc)
+        self.connect("realize", self.on_realize)
+        self.connect("destroy", Gtk.main_quit)
+
+        GLib.timeout_add(33, self.tick)
+        if demo:
+            GLib.timeout_add(400, self.run_demo)
+
+    # ---- lifecycle -----------------------------------------------------
+    def on_realize(self, *_):
+        cur = Gdk.Cursor.new_from_name(self.get_display(), "crosshair")
+        self.get_window().set_cursor(cur)
+
+    def on_alloc(self, _w, alloc):
+        # layer-shell windows grow to full screen after mapping - resize the
+        # paint surface with the allocation, keeping whatever is painted
+        if alloc.width > 1 and (
+                self.surface is None
+                or alloc.width > self.surface.get_width()
+                or alloc.height > self.surface.get_height()):
+            fresh = cairo.ImageSurface(
+                cairo.FORMAT_ARGB32, alloc.width, alloc.height)
+            if self.surface is not None:
+                c = cairo.Context(fresh)
+                c.set_source_surface(self.surface, 0, 0)
+                c.paint()
+            self.surface = fresh
+
+    # ---- paint helpers -------------------------------------------------
+    def rgb(self):
+        _, r, g, b = PALETTE[self.color]
+        return r, g, b
+
+    def push_undo(self):
+        if self.surface is None:
+            return
+        snap = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                  self.surface.get_width(),
+                                  self.surface.get_height())
+        c = cairo.Context(snap)
+        c.set_source_surface(self.surface, 0, 0)
+        c.paint()
+        self.undo.append(snap)
+        if len(self.undo) > 12:
+            self.undo.pop(0)
+
+    def stamp(self, x, y, boost=1.0):
+        """One puff of the can: soft core + speckle halo."""
+        if self.surface is None:
+            return
+        c = cairo.Context(self.surface)
+        r, g, b = self.rgb()
+        rad = self.size * boost
+        # soft core
+        grad = cairo.RadialGradient(x, y, 0, x, y, rad * 0.55)
+        grad.add_color_stop_rgba(0, r, g, b, 0.32)
+        grad.add_color_stop_rgba(1, r, g, b, 0.0)
+        c.set_source(grad)
+        c.arc(x, y, rad * 0.55, 0, 2 * math.pi)
+        c.fill()
+        # speckle
+        c.set_line_width(0)
+        n = int(10 + rad * 0.9)
+        for _ in range(n):
+            ang = random.uniform(0, 2 * math.pi)
+            dist = abs(random.gauss(0, rad * 0.42))
+            px, py = x + math.cos(ang) * dist, y + math.sin(ang) * dist
+            dot = random.uniform(0.5, 1.7)
+            c.set_source_rgba(r, g, b, random.uniform(0.25, 0.85))
+            c.arc(px, py, dot, 0, 2 * math.pi)
+            c.fill()
+
+    def spray_to(self, x, y):
+        if self.last is None:
+            self.stamp(x, y)
+        else:
+            lx, ly = self.last
+            d = math.hypot(x - lx, y - ly)
+            steps = max(1, int(d / max(3.0, self.size * 0.25)))
+            for i in range(1, steps + 1):
+                self.stamp(lx + (x - lx) * i / steps,
+                           ly + (y - ly) * i / steps)
+        self.last = (x, y)
+        # dwell -> drip
+        now = time.time()
+        if self.dwell_at is None or math.hypot(
+                x - self.dwell_at[0], y - self.dwell_at[1]) > 6:
+            self.dwell_at = (x, y, now)
+        elif now - self.dwell_at[2] > 0.30 and len(self.drips) < 24:
+            self.drips.append([x + random.uniform(-4, 4), y,
+                               random.uniform(30, 150),
+                               random.uniform(1.6, 3.4),
+                               self.color])
+            self.dwell_at = (x, y, now)
+        self.queue_draw()
+
+    def tick(self):
+        """Animate active drips."""
+        if self.surface is None or not self.drips:
+            return True
+        c = cairo.Context(self.surface)
+        done = []
+        for d in self.drips:
+            x, y, rem, w, col = d
+            step = random.uniform(0.8, 2.6)
+            nx = x + random.uniform(-0.4, 0.4)
+            _, r, g, b = PALETTE[col]
+            c.set_source_rgba(r, g, b, 0.62)
+            c.set_line_width(w)
+            c.set_line_cap(cairo.LINE_CAP_ROUND)
+            c.move_to(x, y)
+            c.line_to(nx, y + step)
+            c.stroke()
+            d[0], d[1], d[2] = nx, y + step, rem - step
+            d[3] = max(0.7, w * 0.995)
+            if d[2] <= 0:
+                # blob at the end of the run
+                c.set_source_rgba(r, g, b, 0.7)
+                c.arc(nx, y + step, w * 0.9, 0, 2 * math.pi)
+                c.fill()
+                done.append(d)
+        for d in done:
+            self.drips.remove(d)
+        self.queue_draw()
+        return True
+
+    # ---- events --------------------------------------------------------
+    def on_press(self, _w, ev):
+        if ev.button == 1:
+            self.push_undo()
+            self.painting = True
+            self.last = None
+            self.dwell_at = None
+            self.strokes += 1
+            self.spray_to(ev.x, ev.y)
+        return True
+
+    def on_release(self, _w, ev):
+        if ev.button == 1:
+            self.painting = False
+            self.last = None
+            self.dwell_at = None
+        return True
+
+    def on_motion(self, _w, ev):
+        if self.painting or self.freespray:
+            self.spray_to(ev.x, ev.y)
+        return True
+
+    def on_scroll(self, _w, ev):
+        if ev.direction == Gdk.ScrollDirection.UP:
+            self.size = min(90.0, self.size * 1.15)
+        elif ev.direction == Gdk.ScrollDirection.DOWN:
+            self.size = max(6.0, self.size / 1.15)
+        self.queue_draw()
+        return True
+
+    def on_key(self, _w, ev):
+        key = Gdk.keyval_name(ev.keyval)
+        if key in ("Escape", "q", "Q"):
+            self.close()
+        elif key in ("u", "U") and self.undo:
+            self.surface = self.undo.pop()
+            self.drips.clear()
+        elif key in ("c", "C"):
+            self.push_undo()
+            s = self.surface
+            c = cairo.Context(s)
+            c.set_operator(cairo.OPERATOR_CLEAR)
+            c.paint()
+            self.drips.clear()
+        elif key in ("s", "S"):
+            self.save_shot()
+        elif key in ("t", "T"):
+            self.freespray = not self.freespray
+            self.last = None
+        elif key.isdigit() and 1 <= int(key) <= len(PALETTE):
+            self.color = int(key) - 1
+        self.queue_draw()
+        return True
+
+    def save_shot(self):
+        outdir = os.path.expanduser("~/Pictures/NyxusSpray")
+        os.makedirs(outdir, exist_ok=True)
+        path = os.path.join(outdir,
+                            time.strftime("spray-%Y%m%d-%H%M%S.png"))
+        # grim captures the composited screen, spray layer included
+        try:
+            subprocess.run(["grim", path], timeout=10, check=True)
+            subprocess.Popen(["notify-send", "NYXUS Spray",
+                              "saved " + path])
+        except Exception:
+            self.surface.write_to_png(path)  # paint layer only fallback
+            subprocess.Popen(["notify-send", "NYXUS Spray",
+                              "saved paint layer " + path])
+
+    # ---- drawing -------------------------------------------------------
+    def on_draw(self, _w, c):
+        # dim the desktop just enough to read the paint
+        c.set_source_rgba(0.02, 0.02, 0.05, 0.14)
+        c.set_operator(cairo.OPERATOR_SOURCE)
+        c.paint()
+        c.set_operator(cairo.OPERATOR_OVER)
+        if self.surface is not None:
+            c.set_source_surface(self.surface, 0, 0)
+            c.paint()
+        self.draw_hud(c)
+        return True
+
+    def draw_hud(self, c):
+        w = self.get_allocated_width()
+        name, r, g, b = PALETTE[self.color]
+        hud_w, hud_h = 560, 44
+        x0 = (w - hud_w) / 2
+        c.set_source_rgba(0.02, 0.024, 0.04, 0.82)
+        self.rounded(c, x0, 14, hud_w, hud_h, 14)
+        c.fill()
+        c.set_source_rgba(r, g, b, 0.55)
+        c.set_line_width(1.2)
+        self.rounded(c, x0, 14, hud_w, hud_h, 14)
+        c.stroke()
+        # nozzle preview
+        c.set_source_rgba(r, g, b, 0.9)
+        c.arc(x0 + 30, 36, min(15, self.size * 0.35), 0, 2 * math.pi)
+        c.fill()
+        c.select_font_face("Permanent Marker",
+                           cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+        c.set_font_size(17)
+        c.set_source_rgba(0.93, 0.95, 0.98, 0.95)
+        c.move_to(x0 + 56, 42)
+        c.show_text("%s %dpx  trail:%s   1-6 color  T trail  U undo  "
+                    "C clear  S save  Esc out"
+                    % (name, int(self.size),
+                       "ON" if self.freespray else "off"))
+
+    @staticmethod
+    def rounded(c, x, y, w, h, r):
+        c.new_sub_path()
+        c.arc(x + w - r, y + r, r, -math.pi / 2, 0)
+        c.arc(x + w - r, y + h - r, r, 0, math.pi / 2)
+        c.arc(x + r, y + h - r, r, math.pi / 2, math.pi)
+        c.arc(x + r, y + r, r, math.pi, 3 * math.pi / 2)
+        c.close_path()
+
+    # ---- demo (self-test) ----------------------------------------------
+    def run_demo(self):
+        if self.surface is None or self.surface.get_width() < 600:
+            return True  # retry until the overlay reaches full size
+        w = self.surface.get_width()
+        h = self.surface.get_height()
+        self.push_undo()
+        pts = [(w * 0.25 + i * (w * 0.5 / 60),
+                h * 0.5 + math.sin(i / 6.0) * h * 0.12) for i in range(61)]
+        self.color = 0
+        for x, y in pts:
+            self.stamp(x, y)
+        self.color = 1
+        for x, y in pts:
+            self.stamp(x, y - h * 0.05, boost=0.5)
+        self.drips.append([w * 0.5, h * 0.55, 90, 2.6, 0])
+        self.drips.append([w * 0.62, h * 0.47, 70, 2.0, 1])
+        self.queue_draw()
+        return False
+
+
+def toggle_kill():
+    try:
+        with open(PIDFILE) as f:
+            pid = int(f.read().strip())
+        with open("/proc/%d/cmdline" % pid, "rb") as f:
+            if b"nyxus-spray" in f.read():
+                os.kill(pid, signal.SIGTERM)
+                return True
+    except (OSError, ValueError):
+        pass
+    return False
+
+
+def main():
+    demo = "--demo" in sys.argv
+    trail = "--trail" in sys.argv
+    if not demo and toggle_kill():
+        return
+    with open(PIDFILE, "w") as f:
+        f.write(str(os.getpid()))
+    signal.signal(signal.SIGTERM, lambda *_: Gtk.main_quit())
+    win = Spray(demo=demo, trail=trail)
+    win.show_all()
+    try:
+        Gtk.main()
+    finally:
+        try:
+            os.unlink(PIDFILE)
+        except OSError:
+            pass
+
+
+if __name__ == "__main__":
+    main()

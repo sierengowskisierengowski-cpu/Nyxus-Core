@@ -8,7 +8,11 @@
 # ============================================================
 
 [background]
-path = "/etc/greetd/nyxus-login-bg.png"
+# Rotating login wallpaper: nyxus-greeter drops a random curated alien /
+# NYXUS-HYPRLAND / sierengowski wall here (greeter-writable cache) each time
+# the greeter starts. Seeded from /etc/greetd/nyxus-login-bg.png as a
+# guaranteed fallback, so this path always exists.
+path = "/var/cache/regreet/nyxus-login-bg.png"
 fit = "Cover"
 
 [GTK]

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Meli — Theme Preview</title>
+<style>
+  :root {
+    --cream-50:#fffdf7; --cream-100:#faf6ec; --cream-200:#f3ecd7;
+    --ink-900:#1a1410; --ink-700:#4a3f33; --ink-500:#7a6b58;
+    --honey-100:#fef3c7; --honey-200:#fde68a; --honey-300:#fcd34d;
+    --honey-400:#fbbf24; --honey-500:#f59e0b; --honey-600:#d97706;
+    --honey-700:#b45309; --honey-800:#92400e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink-900)}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 12% 10%, rgba(252,211,77,.10) 0%, transparent 45%),
+      radial-gradient(circle at 92% 92%, rgba(245,158,11,.08) 0%, transparent 50%),
+      linear-gradient(180deg, var(--cream-50), var(--cream-100));
+    padding:32px;
+  }
+  .row{display:flex;gap:24px;align-items:stretch;flex-wrap:wrap;margin-bottom:24px}
+  .col{flex:1;min-width:280px}
+
+  /* Sidebar mockup */
+  .sidebar{
+    width:240px;border-radius:18px;padding:18px;
+    background:linear-gradient(180deg, rgba(255,253,247,.92), rgba(250,246,236,.85));
+    border:1px solid rgba(245,158,11,.35);
+    box-shadow: inset -1px 0 0 rgba(252,211,77,.25), 4px 0 24px rgba(245,158,11,.08);
+  }
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .brand img{width:56px;height:56px;filter: drop-shadow(0 0 8px rgba(245,158,11,.55)) drop-shadow(0 0 16px rgba(251,191,36,.35));
+             animation: pulse 3.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.85}50%{opacity:1}}
+  .brand h1{font-size:20px;font-weight:900;letter-spacing:4px;color:var(--honey-700);margin:0;
+            text-shadow:0 0 6px rgba(245,158,11,.45),0 0 14px rgba(251,191,36,.30)}
+  .brand small{display:block;color:var(--ink-500);font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+  .nav{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+  .nav a{padding:10px 12px;border-radius:10px;color:var(--ink-700);text-decoration:none;
+         border:1px solid transparent;transition:all .2s ease;display:flex;align-items:center;gap:10px}
+  .nav a:hover{background:rgba(252,211,77,.18);border-color:rgba(245,158,11,.35);color:var(--ink-900)}
+  .nav a.active{
+    background:linear-gradient(135deg, rgba(252,211,77,.35), rgba(245,158,11,.22));
+    border-color:rgba(245,158,11,.75);
+    color:var(--honey-800);font-weight:700;
+    box-shadow:0 0 0 1px rgba(251,191,36,.55),0 0 18px rgba(245,158,11,.35),inset 0 1px 0 rgba(255,255,255,.6);
+  }
+
+  /* Stat cards */
+  .card{
+    border-radius:14px;padding:18px;
+    background:linear-gradient(160deg, rgba(255,253,247,.88), rgba(250,246,236,.78));
+    border:1px solid rgba(245,158,11,.30);
+    box-shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 4px 18px rgba(180,83,9,.08), 0 0 0 1px rgba(252,211,77,.18);
+    transition:all .24s ease;
+  }
+  .card:hover{
+    border-color:rgba(245,158,11,.65);
+    box-shadow:0 1px 0 rgba(255,255,255,.85) inset, 0 8px 28px rgba(245,158,11,.20),
+               0 0 0 1px rgba(251,191,36,.45), 0 0 24px rgba(245,158,11,.18);
+  }
+  .card .num{font-size:42px;font-weight:900;color:var(--honey-700);
+             text-shadow:0 0 6px rgba(245,158,11,.45),0 0 14px rgba(251,191,36,.30)}
+  .card .label{color:var(--ink-500);text-transform:uppercase;letter-spacing:1px;font-size:11px;margin-bottom:8px}
+
+  /* Buttons */
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .btn{padding:8px 16px;border-radius:10px;border:1px solid rgba(245,158,11,.35);
+       background:rgba(255,253,247,.85);color:var(--ink-900);font-weight:600;cursor:pointer;
+       transition:all .2s ease}
+  .btn:hover{background:rgba(252,211,77,.22);border-color:rgba(245,158,11,.7);
+             box-shadow:0 0 18px rgba(245,158,11,.25)}
+  .btn.primary{
+    background:linear-gradient(180deg, var(--honey-400), var(--honey-600));
+    color:var(--ink-900);border-color:var(--honey-700);font-weight:800;
+    text-shadow:0 1px 0 rgba(255,255,255,.45);
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 0 18px rgba(245,158,11,.55), 0 2px 6px rgba(146,64,14,.35);
+  }
+  .btn.primary:hover{
+    background:linear-gradient(180deg, var(--honey-300), var(--honey-500));
+    box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 0 28px rgba(245,158,11,.75), 0 4px 10px rgba(146,64,14,.4);
+  }
+  .btn.pill{border-radius:999px;padding:10px 24px}
+
+  /* Big logo */
+  .hero{display:flex;flex-direction:column;align-items:center;padding:32px;
+        background:radial-gradient(circle at 50% 35%, rgba(251,191,36,.20) 0%, transparent 55%);
+        border-radius:20px}
+  .hero img{width:200px;height:200px;
+            filter: drop-shadow(0 0 12px rgba(245,158,11,.55)) drop-shadow(0 0 28px rgba(251,191,36,.35));
+            animation: pulse 3.2s ease-in-out infinite}
+  .hero h2{font-size:48px;font-weight:900;letter-spacing:8px;color:var(--honey-700);margin:12px 0 4px;
+           text-shadow:0 0 10px rgba(245,158,11,.55),0 0 24px rgba(251,191,36,.40)}
+  .hero p{color:var(--ink-500);letter-spacing:2px;font-size:12px;text-transform:uppercase}
+
+  /* Severity tags */
+  .tag{display:inline-block;padding:3px 12px;border-radius:999px;font-weight:700;font-size:11px;
+       background:linear-gradient(135deg, rgba(252,211,77,.55), rgba(245,158,11,.35));
+       color:var(--honey-800);border:1px solid rgba(245,158,11,.6);
+       box-shadow:0 0 10px rgba(245,158,11,.25);margin-right:6px}
+  .sev-crit{color:#b91c1c;font-weight:900;text-shadow:0 0 10px rgba(239,68,68,.55)}
+  .sev-high{color:#c2410c;font-weight:800;text-shadow:0 0 8px rgba(249,115,22,.45)}
+  .sev-med {color:var(--honey-700);font-weight:700;text-shadow:0 0 8px rgba(245,158,11,.35)}
+
+  h3{margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1.5px;color:var(--ink-700)}
+  .list{list-style:none;padding:0;margin:0}
+  .list li{padding:10px 12px;border-bottom:1px solid rgba(245,158,11,.12);display:flex;justify-content:space-between}
+  .list li:hover{background:linear-gradient(90deg, rgba(252,211,77,.18), rgba(252,211,77,.04))}
+  .mono{font-family:"JetBrains Mono","SF Mono",monospace}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <img src="icons/meli.svg" alt="Meli"/>
+  <h2>MELI</h2>
+  <p>Honeypot Command Center</p>
+</div>
+
+<div class="row" style="margin-top:32px">
+  <div class="sidebar">
+    <div class="brand">
+      <img src="icons/meli.svg" alt=""/>
+      <div><h1>MELI</h1><small>Honeypot CC</small></div>
+    </div>
+    <div class="nav">
+      <a class="active">⊞ Dashboard</a>
+      <a>● Live Feed</a>
+      <a>⌖ Map</a>
+      <a>🛡 Attackers</a>
+      <a>🔑 Credentials</a>
+      <a>⚙ Settings</a>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="row">
+      <div class="card col"><div class="label">Events (24h)</div><div class="num">1,284</div></div>
+      <div class="card col"><div class="label">Unique IPs</div><div class="num">317</div></div>
+      <div class="card col"><div class="label">Honeypots</div><div class="num">2</div></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Recent Activity</h3>
+      <ul class="list">
+        <li><span class="mono">192.0.2.41 → ssh</span><span class="sev-crit">CRITICAL</span></li>
+        <li><span class="mono">198.51.100.7 → http</span><span class="sev-high">HIGH</span></li>
+        <li><span class="mono">203.0.113.22 → ssh</span><span class="sev-med">MEDIUM</span></li>
+      </ul>
+      <div class="btns" style="margin-top:14px">
+        <button class="btn primary pill">Export Report</button>
+        <button class="btn pill">Add Honeypot</button>
+        <span class="tag">HONEY-TAG</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

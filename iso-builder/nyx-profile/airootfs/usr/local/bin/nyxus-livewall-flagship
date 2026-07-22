@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-livewall-flagship  [base.png]  [out.mp4]        · rev 2026-07-14
+#
+# Renders the NYXUS flagship LIVING WALLPAPER — a seamless looping
+# cosmic scene assembled with ffmpeg from a still nebula wallpaper:
+#
+#   · PARALLAX DRIFT  — the nebula slowly breathes (zoom + orbit) while
+#                       a separate starfield plane scrolls at its own
+#                       rate, so foreground stars and the deep nebula
+#                       drift apart → real depth/parallax.
+#   · TWINKLING STARS — an overlaid procedural starfield whose stars
+#                       pulse individually (per-pixel phase), on top of
+#                       the wallpaper's own baked-in stars.
+#   · CRUISING UFO    — the SAME slick neon saucer as the bottom-bar saucer
+#                       clock / notification UFO (reused theme art, matted +
+#                       soft violet halo, NOT hand-drawn) cruises once across
+#                       the open sky per loop → reads as an "occasional" flyby.
+#
+# Every oscillator completes an integer number of cycles over the loop
+# and the star plane is horizontally periodic, so the clip loops with
+# no visible seam. Output is a small H.264 mp4 that mpvpaper plays as
+# the Hyprland background (see nyxus-live-wallpaper).
+#
+# Env overrides (for testing): NYX_W NYX_H NYX_DUR NYX_FPS NYX_CRF
+# © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -euo pipefail
+
+# ── locate the base nebula still ────────────────────────────────────
+BASE="${1:-}"
+if [[ -z "${BASE}" ]]; then
+  # prefer the user's current wallpaper, else the shipped alien-hero
+  BASE="${HOME}/.config/hypr/walls/nyxus-wall-alien-hero.png"
+  if [[ -f "${HOME}/.config/nyxus/wallpaper.conf" ]]; then
+    # shellcheck source=/dev/null
+    . "${HOME}/.config/nyxus/wallpaper.conf" 2>/dev/null || true
+    [[ -n "${WALLPAPER_PATH:-}" && -f "${WALLPAPER_PATH}" ]] && BASE="${WALLPAPER_PATH}"
+  fi
+fi
+[[ -f "${BASE}" ]] || { echo "nyxus-livewall-flagship: no base still: ${BASE}" >&2; exit 1; }
+
+OUT="${2:-${HOME}/.config/hypr/walls/live/nyxus-livewall-flagship.mp4}"
+mkdir -p "$(dirname "${OUT}")"
+
+command -v ffmpeg  >/dev/null || { echo "ffmpeg not installed"  >&2; exit 3; }
+command -v magick  >/dev/null || { echo "imagemagick (magick) not installed" >&2; exit 3; }
+
+# ── active monitor size (fallback 1920x1080) ────────────────────────
+if [[ -n "${NYX_W:-}" && -n "${NYX_H:-}" ]]; then
+  W="${NYX_W}"; H="${NYX_H}"
+else
+  read -r W H < <(hyprctl monitors -j 2>/dev/null | \
+    python3 -c "import json,sys;m=json.load(sys.stdin)[0];print(m['width'],m['height'])" \
+    2>/dev/null || echo "1920 1080")
+fi
+SW=$((W * 2))                     # starfield plane is 2×W wide (periodic)
+
+DUR="${NYX_DUR:-30}"              # loop length (s) — one UFO flyby per loop
+FPS="${NYX_FPS:-24}"
+CRF="${NYX_CRF:-22}"
+FRAMES=$((DUR * FPS))
+
+MDIR="$(mktemp -d /tmp/nyxus-flagship.XXXXXX)"
+trap 'rm -rf "${MDIR}"' EXIT
+
+# ── 1. procedural twinkling starfield (periodic in W → seamless scroll)
+magick -size "${W}x${H}" xc:black -seed 21 +noise Random -colorspace Gray \
+  -auto-level -threshold 99.1% "${MDIR}/small.png"
+magick -size "${W}x${H}" xc:black -seed 88 +noise Random -colorspace Gray \
+  -auto-level -threshold 99.8% -blur 0x1.3 -auto-level "${MDIR}/big.png"
+magick "${MDIR}/small.png" "${MDIR}/big.png" -compose screen -composite \
+  -fuzz 1% -transparent black -channel A -level 0,55% +channel \
+  -fill "#e6ecff" -colorize 10% "${MDIR}/stars.png"
+# duplicate side-by-side so the plane wraps seamlessly when scrolled by W
+magick "${MDIR}/stars.png" "${MDIR}/stars.png" +append "${MDIR}/starfield.png"
+
+# ── 2. UFO saucer sprite — REUSE the polished theme saucer art ──────
+# We do NOT hand-draw the UFO. The flying ship IS the slick neon-graffiti
+# NYXUS saucer used by the bottom-bar SAUCER CLOCK and the notification UFO
+# popup. nyxus-livewall-ufo.png is that exact art matted off its black
+# background (flood-fill) with a soft violet halo baked on. Fallbacks reuse
+# the transparent bar-saucer art (nyxus-saucer-band.png), same style; a
+# procedural draw is only a never-fail last resort.
+SCRIPT_SELF="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "$0")"
+SCRIPT_DIR="$(dirname "${SCRIPT_SELF}")"
+UFO_SRC="${NYX_UFO:-}"
+if [[ -z "${UFO_SRC}" ]]; then
+  for c in \
+    "${HOME}/.config/hypr/walls/live/nyxus-livewall-ufo.png" \
+    "${SCRIPT_DIR}/livewall/nyxus-livewall-ufo.png" \
+    "${SCRIPT_DIR}/eww/assets/nyxus-saucer-band.png" \
+    "${HOME}/.config/eww/assets/nyxus-saucer-band.png"; do
+    [[ -f "${c}" ]] && { UFO_SRC="${c}"; break; }
+  done
+fi
+
+bake_glow() {  # $1 = raw saucer png → soft violet halo baked → MDIR/ufo.png
+  local pad="${MDIR}/ufo_pad.png" ga="${MDIR}/ufo_ga.png" gl="${MDIR}/ufo_glow.png" sz
+  magick "$1" -bordercolor none -border 110 "${pad}"
+  magick "${pad}" -alpha extract -blur 0x34 "${ga}"
+  sz="$(identify -format '%wx%h' "${pad}")"
+  magick -size "${sz}" xc:"#c33bff" "${ga}" -alpha off -compose CopyOpacity -composite \
+    -channel A -evaluate multiply 0.55 +channel "${gl}"
+  magick "${pad}" "${gl}" +swap -compose over -composite -trim +repage "${MDIR}/ufo.png"
+}
+
+if [[ -n "${UFO_SRC}" && -f "${UFO_SRC}" ]]; then
+  if [[ "$(basename "${UFO_SRC}")" == "nyxus-livewall-ufo.png" ]]; then
+    cp "${UFO_SRC}" "${MDIR}/ufo.png"          # glow already baked
+  else
+    bake_glow "${UFO_SRC}"                       # raw saucer → add glow
+  fi
+else
+  # last-ditch procedural saucer (kept only so a render never fails)
+  magick -size 300x170 xc:none \
+    -fill "#2a0f45" -draw "ellipse 150,100 122,30 0,360" \
+    -fill "#5c1f95" -draw "ellipse 150,95 120,20 0,360" \
+    -fill "#a94ff0" -draw "ellipse 150,90 120,9 0,360" \
+    -fill "#e9c7ff" -draw "ellipse 150,74 50,40 180,360" \
+    -fill "#c98cff" -draw "ellipse 150,76 50,38 180,360" \
+    "${MDIR}/ufo.png"
+fi
+
+# ── 3. motion constants ─────────────────────────────────────────────
+PANX=$(python3 -c "print(round(${W}*0.013))")   # nebula orbit amplitude
+PANY=$(python3 -c "print(round(${H}*0.016))")
+SBOB=$(python3 -c "print(round(${H}*0.010))")    # starfield vertical bob
+UW=$(python3 -c "print(round(${W}*0.28))")       # UFO width on screen
+UY=$(python3 -c "print(round(${H}*0.14))")       # UFO cruise altitude
+UBOB=$(python3 -c "print(round(${H}*0.02))")
+U0=9; U1=21; UCROSS=$((U1 - U0))                 # flyby window (s)
+
+# ── 4. render ───────────────────────────────────────────────────────
+#  neb   : scaled nebula, slow breathing zoom + orbital drift
+#  stars : starfield, per-star twinkle (period 5s → 6 cycles / 30s),
+#          scrolled left by exactly W over the loop (periodic → seamless)
+#  ufo   : cruises off-screen-left → off-screen-right inside [U0,U1]
+ffmpeg -hide_banner -loglevel error -y \
+  -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${BASE}" \
+  -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${MDIR}/starfield.png" \
+  -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${MDIR}/ufo.png" \
+  -filter_complex "
+    [0:v]scale=${W}:${H}:flags=lanczos,setsar=1,format=rgba,
+      zoompan=z='1.05+0.02*sin(2*PI*on/${FRAMES})':
+        x='iw/2-(iw/zoom/2)+${PANX}*sin(2*PI*on/${FRAMES})':
+        y='ih/2-(ih/zoom/2)+${PANY}*cos(2*PI*on/${FRAMES})':
+        d=1:fps=${FPS}:s=${W}x${H}[neb];
+    [1:v]format=rgba,
+      geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':
+        a='alpha(X,Y)*(0.45+0.55*sin(2*PI*T/5+2*PI*6*X/W+Y*0.02))'[stars];
+    [neb][stars]overlay=x='-${W}*t/${DUR}':y='${SBOB}*sin(2*PI*t/${DUR})':
+      format=auto[bg];
+    [2:v]format=rgba,scale=${UW}:-1[ufo];
+    [bg][ufo]overlay=
+      x='-360+(${W}+720)*(t-${U0})/${UCROSS}':
+      y='${UY}+${UBOB}*sin(2*PI*(t-${U0})/6)':
+      enable='between(t,${U0},${U1})':format=auto,
+      format=yuv420p[out]
+  " \
+  -map "[out]" \
+  -c:v libx264 -preset medium -crf "${CRF}" -movflags +faststart -an \
+  "${OUT}"
+
+echo "flagship living wallpaper rendered: ${OUT}"

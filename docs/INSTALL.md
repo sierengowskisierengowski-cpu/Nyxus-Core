@@ -35,7 +35,7 @@ cd Nyxus-Core
 | Flag | Effect |
 |------|--------|
 | `--dry-run` | Print the full plan and change nothing (recommended first run). |
-| `--user-only` | Skip the system phase and deploy only the cleaned user surfaces. |
+| `--user-only` | Skip the system phase and deploy only the cleaned user surfaces (does not install or touch system security components such as jeTT/Bifrost/Meli services). |
 | `--no-reload` | Do not reload a running Hyprland session after deploy. |
 | `--keep-legacy-sessions` | Preserve old `qtile.desktop` / stock Hyprland session entries instead of removing them. |
 

@@ -1,0 +1,107 @@
+/* NYXUS · Obsidian Prism — window switcher (Super+Tab)
+ * Palette: #7949f2 · #ff2667 · #26ffb7 · #ffb026 */
+
+* {
+    bg:         #05060a;
+    bar-bg:     rgba(5, 6, 10, 0.90);
+    widget-bg:  rgba(10, 13, 20, 0.85);
+    active:     #ff2667;
+    inactive:   rgba(238, 242, 250, 0.35);
+    highlight:  #7949f2;
+    violet:     #26ffb7;
+    gold:       #ffb026;
+    text:       #eef2fa;
+    sep:        rgba(38, 255, 183, 0.35);
+    selected-bg:rgba(121, 73, 242, 0.18);
+    glass-line: rgba(255, 38, 103, 0.35);
+
+    font:                   "Inter 12";
+    background-color:       transparent;
+    text-color:             @text;
+}
+
+window {
+    width:                  580px;
+    background-color:       @bar-bg;
+    border:                 1px;
+    border-color:           @glass-line;
+    border-radius:          16px;
+    padding:                20px;
+    location:               center;
+    anchor:                 center;
+}
+
+mainbox {
+    background-color:       transparent;
+    spacing:                10px;
+    children:               [ inputbar, listview ];
+}
+
+inputbar {
+    background-color:       @widget-bg;
+    border-radius:          10px;
+    border:                 1px;
+    border-color:           @glass-line;
+    padding:                10px 14px;
+    spacing:                8px;
+    children:               [ prompt, entry ];
+}
+
+prompt {
+    background-color:       transparent;
+    text-color:             @gold;
+    font:                   "JetBrainsMono Nerd Font Bold 12";
+    vertical-align:         0.5;
+}
+
+entry {
+    background-color:       transparent;
+    text-color:             @text;
+    placeholder:            "switch to...";
+    placeholder-color:      @inactive;
+    vertical-align:         0.5;
+    cursor:                 text;
+}
+
+listview {
+    background-color:       transparent;
+    padding:                2px;
+    spacing:                2px;
+    lines:                  10;
+    columns:                1;
+    cycle:                  true;
+    dynamic:                true;
+    scrollbar:              false;
+}
+
+element {
+    background-color:       transparent;
+    text-color:             @text;
+    padding:                10px 14px;
+    spacing:                12px;
+    border-radius:          10px;
+    cursor:                 pointer;
+}
+
+element selected.normal,
+element selected.alternate.normal,
+element selected.active,
+element selected.urgent {
+    background-color:       @selected-bg;
+    text-color:             @active;
+    border:                 1px;
+    border-color:           @sep;
+    border-radius:          10px;
+}
+
+element-text {
+    background-color:       transparent;
+    text-color:             inherit;
+    font:                   "Inter 12";
+    vertical-align:         0.5;
+}
+
+element-icon {
+    background-color:       transparent;
+    size:                   24px;
+}

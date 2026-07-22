@@ -1,0 +1,1783 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: GowskiNet CIPHER API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: hashes
+    description: Hash submission and management
+  - name: jobs
+    description: Cracking job management
+  - name: results
+    description: Cracked password results
+  - name: wordlists
+    description: Wordlist library management
+  - name: rules
+    description: Hashcat/John rules management
+  - name: notes
+    description: Research notes
+  - name: analyzer
+    description: Password strength analysis
+  - name: dashboard
+    description: Dashboard statistics
+  - name: settings
+    description: System settings
+  - name: auth
+    description: Owner authentication
+  - name: system
+    description: Real host CPU/GPU telemetry
+
+paths:
+  /auth/status:
+    get:
+      operationId: getAuthStatus
+      tags: [auth]
+      summary: Whether owner auth is configured on the server
+      responses:
+        "200":
+          description: Auth status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthConfigStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in with the owner password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /auth/me:
+    get:
+      operationId: getAuthMe
+      tags: [auth]
+      summary: Current authenticated owner
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthMe"
+
+  /system/stats:
+    get:
+      operationId: getSystemStats
+      tags: [system]
+      summary: Real host CPU / memory / GPU telemetry
+      responses:
+        "200":
+          description: System stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemStats"
+
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # Dashboard
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/recent-cracks:
+    get:
+      operationId: getRecentCracks
+      tags: [dashboard]
+      summary: Get recently cracked passwords
+      responses:
+        "200":
+          description: Recent cracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RecentCrack"
+
+  /dashboard/active-jobs:
+    get:
+      operationId: getActiveJobs
+      tags: [dashboard]
+      summary: Get active cracking jobs
+      responses:
+        "200":
+          description: Active jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CrackJob"
+
+  # Hashes
+  /hashes:
+    get:
+      operationId: listHashes
+      tags: [hashes]
+      summary: List all submitted hashes
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [all, cracked, uncracked]
+        - name: hashType
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Hash list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HashListResponse"
+    post:
+      operationId: submitHashes
+      tags: [hashes]
+      summary: Submit hashes for cracking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HashSubmission"
+      responses:
+        "201":
+          description: Hashes submitted
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Hash"
+
+  /hashes/{id}:
+    get:
+      operationId: getHash
+      tags: [hashes]
+      summary: Get a specific hash
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Hash details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Hash"
+    delete:
+      operationId: deleteHash
+      tags: [hashes]
+      summary: Delete a hash
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Hash deleted
+
+  /hashes/identify:
+    post:
+      operationId: identifyHash
+      tags: [hashes]
+      summary: Auto-identify hash type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HashIdentifyRequest"
+      responses:
+        "200":
+          description: Identified hash info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HashIdentification"
+
+  /hashes/generate:
+    post:
+      operationId: generateHash
+      tags: [hashes]
+      summary: Generate a hash from plaintext
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HashGenerateRequest"
+      responses:
+        "200":
+          description: Generated hash
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HashGenerateResponse"
+
+  /hashes/stats:
+    get:
+      operationId: getHashStats
+      tags: [hashes]
+      summary: Get hash database statistics
+      responses:
+        "200":
+          description: Hash statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HashStats"
+
+  # Crack Jobs
+  /jobs:
+    get:
+      operationId: listJobs
+      tags: [jobs]
+      summary: List all cracking jobs
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [all, active, queued, completed, failed, paused]
+      responses:
+        "200":
+          description: Job list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CrackJob"
+    post:
+      operationId: createJob
+      tags: [jobs]
+      summary: Create a new cracking job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobInput"
+      responses:
+        "201":
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrackJob"
+
+  /jobs/{id}:
+    get:
+      operationId: getJob
+      tags: [jobs]
+      summary: Get a specific job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrackJob"
+    delete:
+      operationId: deleteJob
+      tags: [jobs]
+      summary: Delete a job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Job deleted
+
+  /jobs/{id}/pause:
+    post:
+      operationId: pauseJob
+      tags: [jobs]
+      summary: Pause a running job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job paused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrackJob"
+
+  /jobs/{id}/resume:
+    post:
+      operationId: resumeJob
+      tags: [jobs]
+      summary: Resume a paused job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrackJob"
+
+  /jobs/{id}/stop:
+    post:
+      operationId: stopJob
+      tags: [jobs]
+      summary: Stop a job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job stopped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrackJob"
+
+  /jobs/{id}/log:
+    get:
+      operationId: getJobLog
+      tags: [jobs]
+      summary: Get the real tool output (stdout/stderr) for a job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobLog"
+
+  # Results
+  /results:
+    get:
+      operationId: listResults
+      tags: [results]
+      summary: List all cracked passwords
+      parameters:
+        - name: hashType
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: attackMode
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Results list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultsListResponse"
+
+  /results/export:
+    post:
+      operationId: exportResults
+      tags: [results]
+      summary: Export results as CSV or JSON
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExportRequest"
+      responses:
+        "200":
+          description: Export data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportResponse"
+
+  # Wordlists
+  /wordlists:
+    get:
+      operationId: listWordlists
+      tags: [wordlists]
+      summary: List all wordlists
+      responses:
+        "200":
+          description: Wordlist library
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Wordlist"
+    post:
+      operationId: createWordlist
+      tags: [wordlists]
+      summary: Create or upload a wordlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WordlistInput"
+      responses:
+        "201":
+          description: Wordlist created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wordlist"
+
+  /wordlists/{id}:
+    get:
+      operationId: getWordlist
+      tags: [wordlists]
+      summary: Get a wordlist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Wordlist details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wordlist"
+    delete:
+      operationId: deleteWordlist
+      tags: [wordlists]
+      summary: Delete a wordlist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Rules
+  /rules:
+    get:
+      operationId: listRules
+      tags: [rules]
+      summary: List all rulesets
+      responses:
+        "200":
+          description: Rules library
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RuleSet"
+    post:
+      operationId: createRule
+      tags: [rules]
+      summary: Create a custom ruleset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleSetInput"
+      responses:
+        "201":
+          description: Ruleset created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuleSet"
+
+  /rules/{id}:
+    get:
+      operationId: getRule
+      tags: [rules]
+      summary: Get a ruleset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ruleset details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuleSet"
+    patch:
+      operationId: updateRule
+      tags: [rules]
+      summary: Update a ruleset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleSetUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuleSet"
+    delete:
+      operationId: deleteRule
+      tags: [rules]
+      summary: Delete a ruleset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /rules/test:
+    post:
+      operationId: testRule
+      tags: [rules]
+      summary: Test a rule against sample words
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleTestRequest"
+      responses:
+        "200":
+          description: Test output
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuleTestResponse"
+
+  /rules/generate:
+    post:
+      operationId: generateRule
+      tags: [rules]
+      summary: AI-generate a rule from description
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleGenerateRequest"
+      responses:
+        "200":
+          description: Generated rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuleGenerateResponse"
+
+  # Notes
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List research notes
+      parameters:
+        - name: tag
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: notebook
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: search
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Notes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+    post:
+      operationId: createNote
+      tags: [notes]
+      summary: Create a research note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: Note created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /notes/{id}:
+    get:
+      operationId: getNote
+      tags: [notes]
+      summary: Get a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+    patch:
+      operationId: updateNote
+      tags: [notes]
+      summary: Update a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteUpdate"
+      responses:
+        "200":
+          description: Updated note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+    delete:
+      operationId: deleteNote
+      tags: [notes]
+      summary: Delete a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Password Strength Analyzer
+  /analyzer/analyze:
+    post:
+      operationId: analyzePassword
+      tags: [analyzer]
+      summary: Analyze a single password's strength
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordAnalyzeRequest"
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordAnalysis"
+
+  /analyzer/bulk:
+    post:
+      operationId: bulkAnalyzePasswords
+      tags: [analyzer]
+      summary: Bulk analyze multiple passwords
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkAnalyzeRequest"
+      responses:
+        "200":
+          description: Bulk analysis results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PasswordAnalysis"
+
+  # Settings
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get system settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update system settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+
+  /settings/gpu-status:
+    get:
+      operationId: getGpuStatus
+      tags: [settings]
+      summary: Get GPU status and metrics
+      responses:
+        "200":
+          description: GPU status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GpuStatus"
+
+  /settings/disclaimer-accepted:
+    post:
+      operationId: acceptDisclaimer
+      tags: [settings]
+      summary: Record that user has accepted the legal disclaimer
+      responses:
+        "200":
+          description: Disclaimer accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisclaimerStatus"
+
+  /settings/disclaimer-status:
+    get:
+      operationId: getDisclaimerStatus
+      tags: [settings]
+      summary: Check if disclaimer has been accepted
+      responses:
+        "200":
+          description: Disclaimer status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisclaimerStatus"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    # Dashboard
+    DashboardStats:
+      type: object
+      required: [totalHashes, totalCracked, crackRate, activeJobCount, wordlistCount, totalWords, ruleCount, weakHashCount, noteCount]
+      properties:
+        totalHashes:
+          type: integer
+        totalCracked:
+          type: integer
+        crackRate:
+          type: number
+        activeJobCount:
+          type: integer
+        wordlistCount:
+          type: integer
+        totalWords:
+          type: integer
+        ruleCount:
+          type: integer
+        weakHashCount:
+          type: integer
+        noteCount:
+          type: integer
+        topHashTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/HashTypeCount"
+
+    # Auth
+    AuthConfigStatus:
+      type: object
+      required: [configured]
+      properties:
+        configured:
+          type: boolean
+
+    LoginRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+
+    LoginResult:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+
+    OkResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+
+    AuthMe:
+      type: object
+      required: [authenticated, subject]
+      properties:
+        authenticated:
+          type: boolean
+        subject:
+          type: string
+
+    # System telemetry (real, from /proc + nvidia-smi)
+    SystemStats:
+      type: object
+      required: [cpu, memory, gpus, gpuAvailable]
+      properties:
+        cpu:
+          $ref: "#/components/schemas/CpuInfo"
+        memory:
+          $ref: "#/components/schemas/MemoryInfo"
+        gpus:
+          type: array
+          items:
+            $ref: "#/components/schemas/GpuInfo"
+        gpuAvailable:
+          type: boolean
+
+    CpuInfo:
+      type: object
+      required: [model, cores, usagePercent, loadAvg1, loadAvg5, loadAvg15]
+      properties:
+        model:
+          type: string
+        cores:
+          type: integer
+        usagePercent:
+          type: number
+        loadAvg1:
+          type: number
+        loadAvg5:
+          type: number
+        loadAvg15:
+          type: number
+
+    MemoryInfo:
+      type: object
+      required: [totalMb, usedMb, freeMb, usagePercent]
+      properties:
+        totalMb:
+          type: integer
+        usedMb:
+          type: integer
+        freeMb:
+          type: integer
+        usagePercent:
+          type: number
+
+    GpuInfo:
+      type: object
+      required: [index, name]
+      properties:
+        index:
+          type: integer
+        name:
+          type: string
+        temperatureCelsius:
+          type: ["number", "null"]
+        utilizationPercent:
+          type: ["number", "null"]
+        memUsedMb:
+          type: ["number", "null"]
+        memTotalMb:
+          type: ["number", "null"]
+        powerWatts:
+          type: ["number", "null"]
+
+    HashTypeCount:
+      type: object
+      required: [hashType, count]
+      properties:
+        hashType:
+          type: string
+        count:
+          type: integer
+
+    RecentCrack:
+      type: object
+      required: [id, hash, plaintext, hashType, attackMode, crackedAt]
+      properties:
+        id:
+          type: integer
+        hash:
+          type: string
+        plaintext:
+          type: string
+        hashType:
+          type: string
+        attackMode:
+          type: string
+        crackedAt:
+          type: string
+
+    # Hashes
+    Hash:
+      type: object
+      required: [id, value, hashType, status, submittedAt]
+      properties:
+        id:
+          type: integer
+        value:
+          type: string
+        hashType:
+          type: string
+        status:
+          type: string
+          enum: [pending, cracking, cracked, failed]
+        plaintext:
+          type: ["string", "null"]
+        label:
+          type: ["string", "null"]
+        source:
+          type: ["string", "null"]
+        difficulty:
+          type: ["string", "null"]
+        salted:
+          type: boolean
+        submittedAt:
+          type: string
+        crackedAt:
+          type: ["string", "null"]
+
+    HashListResponse:
+      type: object
+      required: [hashes, total, page, limit]
+      properties:
+        hashes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Hash"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    HashSubmission:
+      type: object
+      required: [hashes]
+      properties:
+        hashes:
+          type: array
+          items:
+            type: string
+        hashType:
+          type: ["string", "null"]
+        label:
+          type: ["string", "null"]
+        source:
+          type: ["string", "null"]
+
+    HashIdentifyRequest:
+      type: object
+      required: [hash]
+      properties:
+        hash:
+          type: string
+
+    HashIdentification:
+      type: object
+      required: [hashType, algorithm, salted, difficulty, recommendedAttack, confidence]
+      properties:
+        hashType:
+          type: string
+        algorithm:
+          type: string
+        salted:
+          type: boolean
+        difficulty:
+          type: string
+          enum: [trivial, easy, medium, hard, extreme]
+        recommendedAttack:
+          type: string
+        confidence:
+          type: number
+        weaknesses:
+          type: array
+          items:
+            type: string
+
+    HashGenerateRequest:
+      type: object
+      required: [plaintext, algorithm]
+      properties:
+        plaintext:
+          type: string
+        algorithm:
+          type: string
+
+    HashGenerateResponse:
+      type: object
+      required: [plaintext, algorithm, hash]
+      properties:
+        plaintext:
+          type: string
+        algorithm:
+          type: string
+        hash:
+          type: string
+
+    HashStats:
+      type: object
+      required: [totalSubmitted, totalCracked, crackRate, byType, avgCrackTime]
+      properties:
+        totalSubmitted:
+          type: integer
+        totalCracked:
+          type: integer
+        crackRate:
+          type: number
+        byType:
+          type: array
+          items:
+            $ref: "#/components/schemas/HashTypeStats"
+        avgCrackTime:
+          type: number
+        weakHashes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Hash"
+
+    HashTypeStats:
+      type: object
+      required: [hashType, count, cracked, crackRate]
+      properties:
+        hashType:
+          type: string
+        count:
+          type: integer
+        cracked:
+          type: integer
+        crackRate:
+          type: number
+        avgCrackTimeSeconds:
+          type: ["number", "null"]
+
+    # Jobs
+    CrackJob:
+      type: object
+      required: [id, name, status, attackMode, hashIds, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, paused, completed, failed, stopped, interrupted]
+        engine:
+          type: string
+          enum: [hashcat, john]
+        attackMode:
+          type: string
+        mask:
+          type: ["string", "null"]
+        errorMessage:
+          type: ["string", "null"]
+        hashIds:
+          type: array
+          items:
+            type: integer
+        hashType:
+          type: ["string", "null"]
+        wordlistIds:
+          type: array
+          items:
+            type: integer
+        ruleIds:
+          type: array
+          items:
+            type: integer
+        progress:
+          type: number
+        speed:
+          type: ["number", "null"]
+        speedUnit:
+          type: string
+        cracksFound:
+          type: integer
+        totalCandidates:
+          type: ["integer", "null"]
+        candidatesTried:
+          type: ["integer", "null"]
+        estimatedTimeSeconds:
+          type: ["integer", "null"]
+        timeElapsedSeconds:
+          type: integer
+        useGpu:
+          type: boolean
+        createdAt:
+          type: string
+        startedAt:
+          type: ["string", "null"]
+        completedAt:
+          type: ["string", "null"]
+
+    JobInput:
+      type: object
+      required: [name, engine, attackMode, hashType, hashIds]
+      properties:
+        name:
+          type: string
+        engine:
+          type: string
+          enum: [hashcat, john]
+        attackMode:
+          type: string
+          enum: [dictionary, bruteforce, hybrid]
+        hashType:
+          type: string
+        hashIds:
+          type: array
+          items:
+            type: integer
+        wordlistId:
+          type: ["integer", "null"]
+        ruleId:
+          type: ["integer", "null"]
+        mask:
+          type: ["string", "null"]
+        useGpu:
+          type: boolean
+
+    JobLog:
+      type: object
+      required: [jobId, running, log]
+      properties:
+        jobId:
+          type: integer
+        running:
+          type: boolean
+        log:
+          type: string
+
+    # Results
+    CrackResult:
+      type: object
+      required: [id, hashId, hash, plaintext, hashType, attackMode, crackedAt]
+      properties:
+        id:
+          type: integer
+        hashId:
+          type: integer
+        jobId:
+          type: ["integer", "null"]
+        hash:
+          type: string
+        plaintext:
+          type: string
+        hashType:
+          type: string
+        attackMode:
+          type: string
+        crackTimeSeconds:
+          type: ["number", "null"]
+        wordlistUsed:
+          type: ["string", "null"]
+        entropyScore:
+          type: ["number", "null"]
+        patternIdentified:
+          type: ["string", "null"]
+        crackedAt:
+          type: string
+
+    ResultsListResponse:
+      type: object
+      required: [results, total, page, limit]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrackResult"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    ExportRequest:
+      type: object
+      required: [format]
+      properties:
+        format:
+          type: string
+          enum: [csv, json, pdf]
+        filters:
+          type: object
+          properties:
+            hashType:
+              type: ["string", "null"]
+            attackMode:
+              type: ["string", "null"]
+            startDate:
+              type: ["string", "null"]
+            endDate:
+              type: ["string", "null"]
+
+    ExportResponse:
+      type: object
+      required: [format, data, recordCount]
+      properties:
+        format:
+          type: string
+        data:
+          type: string
+        recordCount:
+          type: integer
+
+    # Wordlists
+    Wordlist:
+      type: object
+      required: [id, name, wordCount, sizeBytes, source, isBuiltin, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        wordCount:
+          type: integer
+        sizeBytes:
+          type: integer
+        source:
+          type: string
+          enum: [builtin, custom, generated, honeypot]
+        isBuiltin:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+        lastUsed:
+          type: ["string", "null"]
+        successRate:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+
+    WordlistInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        words:
+          type: array
+          items:
+            type: string
+        content:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+
+    # Rules
+    RuleSet:
+      type: object
+      required: [id, name, ruleCount, format, isBuiltin, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        rules:
+          type: string
+        ruleCount:
+          type: integer
+        format:
+          type: string
+          enum: [hashcat, john]
+        isBuiltin:
+          type: boolean
+        successRate:
+          type: ["number", "null"]
+        cracksProduced:
+          type: integer
+        createdAt:
+          type: string
+
+    RuleSetInput:
+      type: object
+      required: [name, rules, format]
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        rules:
+          type: string
+        format:
+          type: string
+          enum: [hashcat, john]
+
+    RuleSetUpdate:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        rules:
+          type: ["string", "null"]
+
+    RuleTestRequest:
+      type: object
+      required: [rules, sampleWords]
+      properties:
+        rules:
+          type: string
+        sampleWords:
+          type: array
+          items:
+            type: string
+
+    RuleTestResponse:
+      type: object
+      required: [output, inputCount, outputCount]
+      properties:
+        output:
+          type: array
+          items:
+            type: string
+        inputCount:
+          type: integer
+        outputCount:
+          type: integer
+
+    RuleGenerateRequest:
+      type: object
+      required: [description]
+      properties:
+        description:
+          type: string
+        format:
+          type: string
+          enum: [hashcat, john]
+          default: hashcat
+
+    RuleGenerateResponse:
+      type: object
+      required: [rules, explanation]
+      properties:
+        rules:
+          type: string
+        explanation:
+          type: string
+
+    # Notes
+    Note:
+      type: object
+      required: [id, title, content, noteType, notebook, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        noteType:
+          type: string
+          enum: [crack_session, pattern_research, hash_analysis, wordlist_notes, rule_development, quick_capture]
+        notebook:
+          type: string
+          enum: [algorithm_research, pattern_analysis, targeted_research, tool_development, general]
+        tags:
+          type: array
+          items:
+            type: string
+        linkedJobId:
+          type: ["integer", "null"]
+        linkedHashId:
+          type: ["integer", "null"]
+        isPinned:
+          type: boolean
+        isFavorite:
+          type: boolean
+        isArchived:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    NoteInput:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        noteType:
+          type: string
+          enum: [crack_session, pattern_research, hash_analysis, wordlist_notes, rule_development, quick_capture]
+        notebook:
+          type: string
+          enum: [algorithm_research, pattern_analysis, targeted_research, tool_development, general]
+        tags:
+          type: array
+          items:
+            type: string
+        linkedJobId:
+          type: ["integer", "null"]
+        linkedHashId:
+          type: ["integer", "null"]
+
+    NoteUpdate:
+      type: object
+      properties:
+        title:
+          type: ["string", "null"]
+        content:
+          type: ["string", "null"]
+        noteType:
+          type: ["string", "null"]
+        notebook:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        isPinned:
+          type: ["boolean", "null"]
+        isFavorite:
+          type: ["boolean", "null"]
+        isArchived:
+          type: ["boolean", "null"]
+
+    # Analyzer
+    PasswordAnalyzeRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+
+    PasswordAnalysis:
+      type: object
+      required: [password, entropyBits, strengthScore, strengthLabel, charsetAnalysis, patternDetected, weaknesses, suggestions, crackTimeEstimates]
+      properties:
+        password:
+          type: string
+        entropyBits:
+          type: number
+        strengthScore:
+          type: integer
+        strengthLabel:
+          type: string
+          enum: [very_weak, weak, fair, strong, very_strong]
+        charsetAnalysis:
+          type: object
+          properties:
+            hasLowercase:
+              type: boolean
+            hasUppercase:
+              type: boolean
+            hasNumbers:
+              type: boolean
+            hasSymbols:
+              type: boolean
+            charsetSize:
+              type: integer
+        patternDetected:
+          type: ["string", "null"]
+        dictionaryWordDetected:
+          type: boolean
+        commonPassword:
+          type: boolean
+        weaknesses:
+          type: array
+          items:
+            type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+        crackTimeEstimates:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrackTimeEstimate"
+        previouslyInDatabase:
+          type: boolean
+
+    CrackTimeEstimate:
+      type: object
+      required: [attackType, hardware, estimatedTime]
+      properties:
+        attackType:
+          type: string
+        hardware:
+          type: string
+        estimatedTime:
+          type: string
+
+    BulkAnalyzeRequest:
+      type: object
+      required: [passwords]
+      properties:
+        passwords:
+          type: array
+          items:
+            type: string
+
+    # Settings
+    Settings:
+      type: object
+      required: [id, claudeModel, hashcatPath, johnPath, gpuEnabled, gpuDevice, cpuThreads, defaultAttackMode, notificationsEnabled, dataRetentionDays, disclaimerAccepted]
+      properties:
+        id:
+          type: integer
+        claudeModel:
+          type: string
+        hashcatPath:
+          type: string
+        johnPath:
+          type: string
+        gpuEnabled:
+          type: boolean
+        gpuDevice:
+          type: integer
+        gpuMemoryLimit:
+          type: ["integer", "null"]
+        gpuTempLimit:
+          type: integer
+        cpuThreads:
+          type: integer
+        defaultAttackMode:
+          type: string
+        meliEndpoint:
+          type: ["string", "null"]
+        ntfyTopic:
+          type: ["string", "null"]
+        notificationsEnabled:
+          type: boolean
+        dataRetentionDays:
+          type: integer
+        disclaimerAccepted:
+          type: boolean
+        disclaimerAcceptedAt:
+          type: ["string", "null"]
+
+    SettingsUpdate:
+      type: object
+      properties:
+        claudeModel:
+          type: ["string", "null"]
+        hashcatPath:
+          type: ["string", "null"]
+        johnPath:
+          type: ["string", "null"]
+        gpuEnabled:
+          type: ["boolean", "null"]
+        gpuDevice:
+          type: ["integer", "null"]
+        gpuMemoryLimit:
+          type: ["integer", "null"]
+        gpuTempLimit:
+          type: ["integer", "null"]
+        cpuThreads:
+          type: ["integer", "null"]
+        defaultAttackMode:
+          type: ["string", "null"]
+        meliEndpoint:
+          type: ["string", "null"]
+        ntfyTopic:
+          type: ["string", "null"]
+        notificationsEnabled:
+          type: ["boolean", "null"]
+        dataRetentionDays:
+          type: ["integer", "null"]
+
+    GpuStatus:
+      type: object
+      required: [available, name, utilizationPercent, temperatureCelsius, vramUsedMb, vramTotalMb, powerDrawWatts]
+      properties:
+        available:
+          type: boolean
+        name:
+          type: string
+        utilizationPercent:
+          type: number
+        temperatureCelsius:
+          type: number
+        vramUsedMb:
+          type: integer
+        vramTotalMb:
+          type: integer
+        powerDrawWatts:
+          type: number
+        cudaVersion:
+          type: ["string", "null"]
+
+    DisclaimerStatus:
+      type: object
+      required: [accepted]
+      properties:
+        accepted:
+          type: boolean
+        acceptedAt:
+          type: ["string", "null"]

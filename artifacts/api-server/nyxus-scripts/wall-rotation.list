@@ -1,0 +1,28 @@
+# ============================================================
+#  NYXUS — wallpaper rotation set
+#  ~/.config/nyxus/wall-rotation.list
+#
+#  ONLY these wallpapers rotate across the desktop background, the lock
+#  screen, and the login screen (nyxus-rotate-walls reads this file).
+#  Curated to the alien art, the "NYXUS HYPRLAND" scene, and the
+#  sierengowski walls — nothing else.
+#
+#  One wallpaper SLUG per line (the filename without .png). A slug must
+#  resolve to a file in ~/.config/hypr/walls/ or
+#  /usr/share/backgrounds/nyxus/. Anything after a '#' is a comment.
+#  Add a line to include a wall; delete/comment one to drop it.
+#
+#  NOTE: a couple of these were categorized by filename since the art
+#  couldn't be previewed here — trim any that don't fit the vibe.
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================
+
+nyxus-urban-alien           # alien
+nyxus-demon                 # alien
+nyxus-hacker-mode-a         # alien / hacker matrix
+nyxus-hacker-mode-b         # alien / hacker matrix
+nyxus-kageryu-blackout      # alien / Kage Ryu blackout
+nyxus-login-wall            # the "NYXUS HYPRLAND CUSTOMS" alien shop scene
+nyxus-desktop-hero          # NYXUS alien hero scene
+nyxus-frost-sierengowski    # sierengowski
+nyxus-sierengowski-clean    # sierengowski

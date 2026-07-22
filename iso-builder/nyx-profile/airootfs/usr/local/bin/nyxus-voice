@@ -1,0 +1,214 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-voice   ·   rev 2026-07-14 r1 (Cosmic Voice Control)
+#
+# Control CLI for the NYXUS wake-word voice assistant (nyxus-voiced).
+# Say "Nyxus, <command>" to drive the desktop hands-free.
+#
+# Usage:
+#   nyxus-voice start            start the listener daemon (detached)
+#   nyxus-voice stop             stop the daemon
+#   nyxus-voice restart          stop + start
+#   nyxus-voice status           running? backend ready? mic muted?
+#   nyxus-voice toggle           push-to-talk: mute/unmute the mic
+#   nyxus-voice mute|unmute      force mic mute state
+#   nyxus-voice calibrate        list input devices + live mic level meter
+#   nyxus-voice test "TEXT"      dispatch a simulated transcript (DRY-RUN)
+#   nyxus-voice run "TEXT"       dispatch a simulated transcript (EXECUTE)
+#   nyxus-voice selftest         run the built-in dispatcher unit tests
+#   nyxus-voice config           print resolved config + backend status
+#   nyxus-voice logs [-f]        tail the daemon log
+#   nyxus-voice model            fetch the offline Vosk model (nyxus-voice-model)
+#
+# The daemon NEVER crashes the session: with no STT backend/model it logs
+# a clear message and idles. See `nyxus-voice status`.
+#
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
+
+RUNTIME="${XDG_RUNTIME_DIR:-/tmp}"
+PIDFILE="${RUNTIME}/nyxus-voiced.pid"
+MUTEFLAG="${RUNTIME}/nyxus-voiced.mute"
+CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/nyxus"
+LOG="${CACHE}/voice.log"
+
+# Locate the daemon: prefer PATH, then the repo checkout next to this file.
+_find_daemon() {
+  if command -v nyxus-voiced >/dev/null 2>&1; then
+    command -v nyxus-voiced
+    return 0
+  fi
+  local self here
+  self="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+  here="$(dirname "$self")"
+  if [[ -f "${here}/nyxus-voiced" ]]; then
+    echo "${here}/nyxus-voiced"
+    return 0
+  fi
+  return 1
+}
+
+DAEMON="$(_find_daemon || true)"
+
+_run_daemon() {  # run the python daemon with the right interpreter
+  if [[ -z "$DAEMON" ]]; then
+    echo "nyxus-voice: cannot find nyxus-voiced" >&2
+    return 127
+  fi
+  if [[ -x "$DAEMON" ]]; then
+    "$DAEMON" "$@"
+  else
+    python3 "$DAEMON" "$@"
+  fi
+}
+
+_pid_alive() {
+  [[ -r "$PIDFILE" ]] || return 1
+  local p; p="$(cat "$PIDFILE" 2>/dev/null)"
+  [[ -n "$p" ]] && kill -0 "$p" 2>/dev/null
+}
+
+cmd_start() {
+  if _pid_alive; then
+    echo "nyxus-voice: already running (pid $(cat "$PIDFILE"))"
+    return 0
+  fi
+  [[ -n "$DAEMON" ]] || { echo "nyxus-voice: nyxus-voiced not found" >&2; return 127; }
+  mkdir -p "$CACHE"
+  # Detached so it survives the terminal; setsid gives it its own session.
+  if [[ -x "$DAEMON" ]]; then
+    setsid "$DAEMON" >>"$LOG" 2>&1 < /dev/null &
+  else
+    setsid python3 "$DAEMON" >>"$LOG" 2>&1 < /dev/null &
+  fi
+  disown 2>/dev/null || true
+  sleep 0.4
+  if _pid_alive; then
+    echo "nyxus-voice: started (pid $(cat "$PIDFILE"))"
+  else
+    echo "nyxus-voice: started (see log: $LOG)"
+  fi
+}
+
+cmd_stop() {
+  if _pid_alive; then
+    local p; p="$(cat "$PIDFILE")"
+    kill "$p" 2>/dev/null
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      _pid_alive || break
+      sleep 0.2
+    done
+    _pid_alive && kill -9 "$(cat "$PIDFILE")" 2>/dev/null
+    rm -f "$PIDFILE"
+    echo "nyxus-voice: stopped"
+  else
+    # best-effort sweep
+    pkill -f 'nyxus-voiced' 2>/dev/null && echo "nyxus-voice: stopped (swept)" \
+      || echo "nyxus-voice: not running"
+    rm -f "$PIDFILE"
+  fi
+}
+
+cmd_status() {
+  if _pid_alive; then
+    echo "daemon : running (pid $(cat "$PIDFILE"))"
+  else
+    echo "daemon : stopped"
+  fi
+  if [[ -e "$MUTEFLAG" ]]; then
+    echo "mic    : MUTED (push-to-talk asleep) — 'nyxus-voice unmute' to resume"
+  else
+    echo "mic    : listening"
+  fi
+  # Backend readiness straight from the daemon (JSON -> grep the ready flag).
+  local cfg ready model vosk
+  cfg="$(_run_daemon --print-config 2>/dev/null)"
+  if [[ -n "$cfg" ]]; then
+    ready="$(printf '%s' "$cfg" | grep -o '"ready": *[a-z]*' | head -1 | awk '{print $2}')"
+    model="$(printf '%s' "$cfg" | grep -o '"model": *[^,]*' | head -1 | sed 's/"model": *//; s/"//g')"
+    vosk="$(printf '%s' "$cfg" | grep -o '"vosk_module": *[a-z]*' | head -1 | awk '{print $2}')"
+    echo "backend: ready=${ready:-?}  vosk=${vosk:-?}  model=${model:-none}"
+  fi
+  [[ "${ready:-false}" == "true" ]] || \
+    echo "         (idle: install backend — run 'nyxus-voice model' + see 'nyxus-voice logs')"
+}
+
+cmd_toggle() {
+  if [[ -e "$MUTEFLAG" ]]; then
+    rm -f "$MUTEFLAG"; echo "nyxus-voice: mic UNMUTED (listening)"
+  else
+    : > "$MUTEFLAG"; echo "nyxus-voice: mic MUTED (push-to-talk asleep)"
+  fi
+  _pid_alive && kill -USR1 "$(cat "$PIDFILE")" 2>/dev/null || true
+}
+
+cmd_mute()   { : > "$MUTEFLAG"; echo "nyxus-voice: mic MUTED"; }
+cmd_unmute() { rm -f "$MUTEFLAG"; echo "nyxus-voice: mic UNMUTED"; }
+
+cmd_calibrate() {
+  echo "── NYXUS voice · calibrate ───────────────────────────────────"
+  echo "Input devices (set the index/name in ~/.config/nyxus/voice.conf 'device ='):"
+  _run_daemon --list-devices 2>/dev/null || {
+    echo "  (sounddevice unavailable — listing PipeWire sources)"
+    if command -v wpctl >/dev/null 2>&1; then
+      wpctl status 2>/dev/null | sed -n '/Sources:/,/^$/p'
+    fi
+  }
+  echo
+  # Live level meter (5s) so the user can confirm the mic actually captures.
+  if command -v pw-record >/dev/null 2>&1; then
+    echo "Speak now — sampling mic level for 5s (Ctrl-C to stop)…"
+    local tmp; tmp="$(mktemp --suffix=.wav)"
+    timeout 5 pw-record --rate 16000 --channels 1 --format s16 "$tmp" 2>/dev/null || true
+    if command -v ffprobe >/dev/null 2>&1 && [[ -s "$tmp" ]]; then
+      local rms
+      rms="$(ffprobe -v error -f lavfi -i "amovie=${tmp},astats=metadata=1:reset=1" \
+             -show_entries frame_tags=lavfi.astats.Overall.RMS_level -of csv=p=0 2>/dev/null \
+             | tail -1)"
+      echo "  captured $(stat -c%s "$tmp" 2>/dev/null || echo 0) bytes; RMS level: ${rms:-unknown} dB"
+    else
+      echo "  captured $(stat -c%s "$tmp" 2>/dev/null || echo 0) bytes to $tmp"
+    fi
+    rm -f "$tmp"
+  else
+    echo "pw-record not found — install pipewire to calibrate the mic."
+  fi
+}
+
+cmd_logs() {
+  mkdir -p "$CACHE"; touch "$LOG"
+  if [[ "${1:-}" == "-f" || "${1:-}" == "--follow" ]]; then
+    tail -f "$LOG"
+  else
+    tail -n 40 "$LOG"
+  fi
+}
+
+case "${1:-help}" in
+  start)      cmd_start ;;
+  stop)       cmd_stop ;;
+  restart)    cmd_stop; sleep 0.3; cmd_start ;;
+  status)     cmd_status ;;
+  toggle)     cmd_toggle ;;
+  mute)       cmd_mute ;;
+  unmute)     cmd_unmute ;;
+  calibrate)  cmd_calibrate ;;
+  test)       shift; _run_daemon --simulate "${1:-}" ;;
+  run)        shift; _run_daemon --simulate "${1:-}" --execute ;;
+  selftest)   _run_daemon --selftest ;;
+  config)     _run_daemon --print-config ;;
+  logs)       shift; cmd_logs "${1:-}" ;;
+  model)
+    if command -v nyxus-voice-model >/dev/null 2>&1; then
+      shift; nyxus-voice-model "$@"
+    else
+      echo "nyxus-voice: nyxus-voice-model helper not on PATH" >&2; exit 127
+    fi ;;
+  -h|--help|help)
+    sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *)
+    echo "nyxus-voice: unknown command '${1}'. Try 'nyxus-voice help'." >&2
+    exit 2 ;;
+esac

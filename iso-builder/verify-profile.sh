@@ -378,7 +378,13 @@ if [[ -f "${WP_CONF}" ]]; then
   # nyxus-wallpaper-autostart and nyxus_wallpaper_studio.py).
   WP_DEFAULT=$(grep -oP '^WALLPAPER_PATH="?\K[^"]+' "${WP_CONF}" | head -1)
   WP_SLUG=$(grep -oP '^WALLPAPER="?\K[^"]+' "${WP_CONF}" | head -1)
-  if [[ -n "${WP_DEFAULT}" && -f "${AIROOT}${WP_DEFAULT}" ]]; then
+  # Runtime path is under the live user's $HOME (e.g. /home/cosmic/...),
+  # which does not exist in the build-time airootfs — it is populated from
+  # /etc/skel at first login. Translate /home/<user>/... -> /etc/skel/...
+  # for the build-time existence check.
+  WP_DEFAULT_SKEL="${WP_DEFAULT#/home/}"
+  WP_DEFAULT_SKEL="/etc/skel/${WP_DEFAULT_SKEL#*/}"
+  if [[ -n "${WP_DEFAULT}" && -f "${AIROOT}${WP_DEFAULT_SKEL}" ]]; then
     ok "default wallpaper present: ${WP_DEFAULT}"
   else
     fail "default WALLPAPER_PATH invalid or missing: '${WP_DEFAULT}'"
@@ -441,6 +447,10 @@ grep -q "nyxus-focusmode toggle" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
 
 # ── 13f. NYXUS workspace names + per-workspace wallpapers ─────────────
 hd "13f. NYXUS workspaces"
+[[ -f "${AIROOT}/etc/skel/.config/nyxus/stations.json" ]] \
+  && ok "stations.json shipped" || fail "stations.json missing"
+[[ -f "${AIROOT}/etc/skel/.config/nyxus/stations-hacker.json" ]] \
+  && ok "stations-hacker.json shipped" || fail "stations-hacker.json missing"
 [[ -f "${AIROOT}/etc/skel/.config/nyxus/workspaces.json" ]] \
   && ok "workspaces.json shipped" || fail "workspaces.json missing"
 [[ -x "${AIROOT}/usr/local/bin/nyxus-workspace-wallpaperd" ]] \

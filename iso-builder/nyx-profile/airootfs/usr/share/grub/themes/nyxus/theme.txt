@@ -2,7 +2,7 @@
 title-text: ""
 title-color: "#f4ead5"
 title-font:  "Unifont Regular 16"
-message-color: "#f4ead58c"
+message-color: "#f4ead5"
 message-font:  "Unifont Regular 14"
 
 desktop-image: "background.png"
@@ -29,7 +29,7 @@ terminal-box:  "terminal_box_*.png"
     width    = 100%
     height   = 20
     align    = "center"
-    color    = "#f4ead58c"
+    color    = "#f4ead5"
     font     = "Unifont Regular 14"
 }
 

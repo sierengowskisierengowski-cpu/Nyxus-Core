@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -u
+
+GRAFANA_URL="${NYXUS_MELI_GRAFANA_URL:-http://localhost:3000}"
+
+notify() { command -v notify-send >/dev/null 2>&1 && notify-send "$@" || true; }
+
+grafana_up() {
+  command -v curl >/dev/null 2>&1 && curl -fsS --max-time 2 "${GRAFANA_URL}" >/dev/null 2>&1
+}
+
+open_grafana() {
+  if command -v firefox >/dev/null 2>&1; then
+    firefox --new-window "${GRAFANA_URL}" >/dev/null 2>&1 &
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "${GRAFANA_URL}" >/dev/null 2>&1 &
+  fi
+}
+
+if command -v meli >/dev/null 2>&1; then
+  setsid meli >/dev/null 2>&1 &
+else
+  msg="Meli is not installed on this system yet. Install the Meli app before the PULSE honeypot station can fully launch."
+  printf '%s\n' "$msg" >&2
+  notify -u critical "NYXUS Meli" "$msg"
+fi
+
+if grafana_up; then
+  open_grafana
+else
+  notify -u normal "NYXUS Meli" "Grafana is not reachable at ${GRAFANA_URL} yet."
+fi

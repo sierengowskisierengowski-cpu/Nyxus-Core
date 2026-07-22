@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-panic [lock|kill|status]   ·   rev 2026-07-17
+#
+# BREACH KILL-SWITCH. Two-stage, safe-against-accidents:
+#
+#   • FIRST trigger (default / `lock`):
+#       - locks the screen IMMEDIATELY (loginctl lock-session → hyprlock)
+#       - ARMS a kill window (default 6s) recorded in
+#         ~/.config/nyxus/panic.armed
+#       - a background job disarms after the window elapses, so a single
+#         stray press only ever locks the screen.
+#
+#   • SECOND trigger within the armed window (i.e. the keybind pressed
+#     twice in quick succession, or the bar's "confirm kill" button):
+#       - powers the machine off (systemctl poweroff → loginctl → poweroff)
+#
+#   • `kill` subcommand (used by the bar button's explicit confirm):
+#       - powers off ONLY if currently armed; otherwise it re-locks + arms
+#         and warns, so the button can never shut down out of the blue.
+#
+# A single accidental keypress = lock only. Powering off REQUIRES a
+# deliberate second trigger inside the short window = "confirm".
+#
+# Bound to Super+Ctrl+Delete (see hyprland.conf) + an EWW bar button.
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
+
+STATE_DIR="${HOME}/.config/nyxus"
+ARMED="${STATE_DIR}/panic.armed"
+WINDOW=6
+mkdir -p "${STATE_DIR}"
+
+notify() { command -v notify-send >/dev/null 2>&1 && notify-send "$@" || true; }
+
+lock_screen() {
+  if command -v loginctl >/dev/null 2>&1 && loginctl lock-session 2>/dev/null; then
+    return 0
+  fi
+  command -v hyprlock >/dev/null 2>&1 && setsid hyprlock >/dev/null 2>&1 &
+  return 0
+}
+
+power_off() {
+  notify -u critical "NYXUS PANIC" "KILL CONFIRMED — powering off."
+  rm -f "${ARMED}"
+  sync
+  systemctl poweroff 2>/dev/null \
+    || loginctl poweroff 2>/dev/null \
+    || poweroff 2>/dev/null \
+    || pkexec systemctl poweroff 2>/dev/null
+}
+
+is_armed() {
+  [[ -f "${ARMED}" ]] || return 1
+  local armed_at now
+  armed_at="$(cat "${ARMED}" 2>/dev/null || echo 0)"
+  now="$(date +%s)"
+  (( now - armed_at <= WINDOW ))
+}
+
+arm_and_lock() {
+  local now
+  now="$(date +%s)"
+  echo "${now}" > "${ARMED}"
+  notify -u critical "NYXUS PANIC" \
+    "Screen LOCKED · breach kill-switch ARMED. Trigger again within ${WINDOW}s to POWER OFF."
+  lock_screen
+  # Background disarm — a lone press only ever locks.
+  ( sleep "${WINDOW}"
+    [[ -f "${ARMED}" ]] && [[ "$(cat "${ARMED}" 2>/dev/null)" == "${now}" ]] && rm -f "${ARMED}"
+  ) >/dev/null 2>&1 &
+}
+
+case "${1:-lock}" in
+  lock|"")
+    # If already armed within the window, this is the confirming 2nd trigger.
+    if is_armed; then
+      power_off
+    else
+      arm_and_lock
+    fi
+    ;;
+  kill)
+    # Explicit confirm path (bar button): only kills when already armed.
+    if is_armed; then
+      power_off
+    else
+      notify -u critical "NYXUS PANIC" \
+        "Kill NOT armed — locking + arming instead. Press KILL again within ${WINDOW}s to power off."
+      arm_and_lock
+    fi
+    ;;
+  status)
+    is_armed && echo armed || echo idle
+    ;;
+  *)
+    echo "usage: nyxus-panic [lock|kill|status]" >&2
+    exit 2
+    ;;
+esac

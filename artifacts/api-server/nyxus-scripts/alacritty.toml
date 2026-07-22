@@ -1,5 +1,5 @@
 [window]
-opacity            = 0.88
+opacity            = 0.0
 padding.x          = 16
 padding.y          = 12
 decorations        = "None"
@@ -63,7 +63,7 @@ draw_bold_text_with_bright_colors = true
 [colors.primary]
 background     = "#0a0a14"
 foreground     = "#f4ead5"
-dim_foreground = "#f4ead58c"
+dim_foreground = "#8a857e"
 
 [colors.cursor]
 text   = "#050308"
@@ -87,7 +87,7 @@ background = "#f4ead5"
 
 [colors.footer_bar]
 background = "#050308"
-foreground = "#f4ead58c"
+foreground = "#8a857e"
 
 [colors.hints.start]
 foreground = "#050308"
@@ -120,12 +120,12 @@ white   = "#f4ead5"
 [colors.dim]
 black   = "#000000"
 red     = "#f87171"
-green   = "#f4ead58c"
-yellow  = "#f4ead58c"
+green   = "#8a857e"
+yellow  = "#8a857e"
 blue    = "#1a1a28"
-magenta = "#f4ead58c"
-cyan    = "#f4ead58c"
-white   = "#f4ead58c"
+magenta = "#8a857e"
+cyan    = "#8a857e"
+white   = "#8a857e"
 
 [[keyboard.bindings]]
 key    = "V"

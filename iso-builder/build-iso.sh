@@ -53,7 +53,13 @@ fi
 # rev r24 (2026-05-18) — self-healing preflight: every tool mkarchiso
 # needs to bake a UEFI+BIOS ISO is installed here in one shot so the user
 # never has to play whack-a-mole with "X not found" failures.
-HOST_DEPS=(archiso squashfs-tools libisoburn dosfstools grub mtools edk2-ovmf)
+# rev r25 (2026-07-21) — added jq (workspaces.json generation), python
+# (host-side tamper-manifest hashing + inline helpers), curl (tarball
+# fallback download) and rsync (meli app staging) — this script invokes
+# them directly and none of archiso's own dependencies pull them in, so a
+# bare `archlinux:latest` + archiso host was failing with "command not
+# found" mid-bake.
+HOST_DEPS=(archiso squashfs-tools libisoburn dosfstools grub mtools edk2-ovmf jq python curl rsync)
 MISSING_DEPS=()
 for pkg in "${HOST_DEPS[@]}"; do
   if ! pacman -Q "${pkg}" >/dev/null 2>&1; then
@@ -90,13 +96,121 @@ fi
 ok "running on Arch as root with mkarchiso available"
 ok "iso version: ${ISO_DATE} → ${ISO_NAME}"
 
+# ── restore committed profile files the bake mutates in place ────────────
+# The bake edits a couple of tracked profile files in place (the package
+# list for the lean tier / the optional custom kernel, and pacman.conf for
+# the custom-kernel local repo). Restore them on ANY exit so a git checkout
+# is never left dirty, whether the bake succeeds or dies mid-run.
+_nyx_restore_profile() {
+  [[ -f "${PROFILE_DIR}/packages.x86_64.bake.bak" ]] && mv -f "${PROFILE_DIR}/packages.x86_64.bake.bak" "${PROFILE_DIR}/packages.x86_64"
+  [[ -f "${PROFILE_DIR}/pacman.conf.bake.bak" ]]     && mv -f "${PROFILE_DIR}/pacman.conf.bake.bak"     "${PROFILE_DIR}/pacman.conf"
+  # Remove the kage-ryu auto-activation files staged into the airootfs (all
+  # kage-namespaced), so an opt-in kernel bake doesn't leave the tracked
+  # profile dirty. No-op unless this bake staged them.
+  if [[ "${NYX_KAGE_AIROOTFS_STAGED:-0}" == "1" ]]; then
+    local A="${PROFILE_DIR}/airootfs"
+    rm -rf "${A}/usr/share/kage-ryu"
+    rm -f  "${A}/usr/share/libalpm/scripts/kage-ryu-activate" \
+           "${A}/usr/share/libalpm/hooks/95-kage-ryu-activate.hook" \
+           "${A}/usr/lib/systemd/system-preset/80-kage-ryu.preset" \
+           "${A}/etc/sysctl.d/99-kage-ryu.conf" \
+           "${A}/etc/modprobe.d/kage-ryu.conf" \
+           "${A}/etc/systemd/system/scx-kage.service" \
+           "${A}/etc/systemd/system/multi-user.target.wants/scx-kage.service" \
+           "${A}/usr/local/bin/scx_kage" \
+           "${A}/usr/local/bin/scx_kage_ctl"
+  fi
+  return 0
+}
+trap _nyx_restore_profile EXIT
+
 # ── lean ISO tier (optional) ─────────────────────────────────────────────
 NYX_ISO_TIER="${NYX_ISO_TIER:-full}"
 if [[ "${NYX_ISO_TIER}" == "lean" && -f "${PROFILE_DIR}/packages.x86_64.lean" ]]; then
-  cp "${PROFILE_DIR}/packages.x86_64" "${PROFILE_DIR}/packages.x86_64.full.bak"
+  cp "${PROFILE_DIR}/packages.x86_64" "${PROFILE_DIR}/packages.x86_64.bake.bak"
   cp "${PROFILE_DIR}/packages.x86_64.lean" "${PROFILE_DIR}/packages.x86_64"
-  trap '[[ -f "${PROFILE_DIR}/packages.x86_64.full.bak" ]] && mv "${PROFILE_DIR}/packages.x86_64.full.bak" "${PROFILE_DIR}/packages.x86_64"' EXIT
   ok "NYX_ISO_TIER=lean — using packages.x86_64.lean"
+fi
+
+# ── Kage Ryu Nyxus custom kernel (OPT-IN) ────────────────────────────────
+# rev 2026-07-21 — bake the operator's own linux-kage-ryu security kernel
+# into the ISO so a fresh install already has it as a SELECTABLE entry
+# (stock `linux` stays the default boot entry — a bad custom-kernel build
+# can never strand you).
+#
+# This is OFF by default and a strict no-op unless NYX_WITH_KAGE_RYU=1, so
+# CI and every other build host keep baking a normal ISO with zero custom-
+# kernel dependency. The kernel is NOT in any Arch repo and is a multi-GB,
+# long compile, so it is NEVER built inside this script — you build the
+# package once (see kernel/README.md + kernel/install-kage-ryu.sh, or
+# `cd <kage-ryu repo> && makepkg -sc`), then bake with:
+#
+#     NYX_WITH_KAGE_RYU=1 sudo ./build-iso.sh
+#
+# It looks for the prebuilt linux-kage-ryu + headers packages under
+# NYX_KAGE_PKGDIR (default ~/Projects/arch-custom-kernel/linux-kage-ryu),
+# stages them into a profile-local [nyx-local] pacman repo, wires that repo
+# into the build pacman.conf, and appends the two packages to the bake's
+# package list. All of that is undone on exit by _nyx_restore_profile.
+if [[ "${NYX_WITH_KAGE_RYU:-0}" == "1" ]]; then
+  step "Kage Ryu Nyxus custom kernel (NYX_WITH_KAGE_RYU=1)"
+  KAGE_PKGDIR="${NYX_KAGE_PKGDIR:-${HOME}/Projects/arch-custom-kernel/linux-kage-ryu}"
+  LOCAL_REPO="${SCRIPT_DIR}/local-repo"
+  _kage_main="$(ls -t "${KAGE_PKGDIR}"/linux-kage-ryu-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)"
+  _kage_hdr="$(ls -t "${KAGE_PKGDIR}"/linux-kage-ryu-headers-*.pkg.tar.zst 2>/dev/null | head -1 || true)"
+  if [[ -z "${_kage_main}" || -z "${_kage_hdr}" ]]; then
+    fail "NYX_WITH_KAGE_RYU=1 but no prebuilt kernel packages found in ${KAGE_PKGDIR}"
+    fail "build them first (kernel is never compiled inside the bake):"
+    fail "  sudo kernel/install-kage-ryu.sh      # builds + installs on THIS host"
+    fail "  # or, to only produce the packages:  cd <kage-ryu repo> && makepkg -sc"
+    fail "then re-run:  NYX_WITH_KAGE_RYU=1 sudo ./build-iso.sh"
+    fail "(or set NYX_KAGE_PKGDIR=/dir/with/linux-kage-ryu-*.pkg.tar.zst)"
+    exit 1
+  fi
+  mkdir -p "${LOCAL_REPO}"
+  cp -f "${_kage_main}" "${_kage_hdr}" "${LOCAL_REPO}/"
+  ( cd "${LOCAL_REPO}" && repo-add -q nyx-local.db.tar.gz \
+       "$(basename "${_kage_main}")" "$(basename "${_kage_hdr}")" >/dev/null )
+  ok "kernel: $(basename "${_kage_main}") + headers → ${LOCAL_REPO}/ (repo-add nyx-local.db)"
+  printf "  ${B}kernel sha256:${R} %s\n" "$(sha256sum "${_kage_main}" | cut -d' ' -f1)"
+
+  # Wire the profile-local repo into the build pacman.conf (unsigned local
+  # packages, so TrustAll for THIS repo only; official repos stay Required).
+  cp "${PROFILE_DIR}/pacman.conf" "${PROFILE_DIR}/pacman.conf.bake.bak"
+  if ! grep -q '^\[nyx-local\]' "${PROFILE_DIR}/pacman.conf"; then
+    cat >> "${PROFILE_DIR}/pacman.conf" <<PACMANLOCAL
+
+[nyx-local]
+SigLevel = Optional TrustAll
+Server = file://${LOCAL_REPO}
+PACMANLOCAL
+  else
+    sed -i -E "s#^Server = file://.*/local-repo\$#Server = file://${LOCAL_REPO}#" "${PROFILE_DIR}/pacman.conf"
+  fi
+  ok "pacman.conf [nyx-local] Server → file://${LOCAL_REPO}"
+
+  # Append the kernel packages to the bake's package list (back it up first
+  # unless the lean tier already did).
+  [[ -f "${PROFILE_DIR}/packages.x86_64.bake.bak" ]] || cp "${PROFILE_DIR}/packages.x86_64" "${PROFILE_DIR}/packages.x86_64.bake.bak"
+  if ! grep -q '^linux-kage-ryu$' "${PROFILE_DIR}/packages.x86_64"; then
+    printf '\n# Kage Ryu Nyxus custom kernel (staged into [nyx-local] by build-iso.sh)\nlinux-kage-ryu\nlinux-kage-ryu-headers\n' >> "${PROFILE_DIR}/packages.x86_64"
+  fi
+  ok "packages.x86_64 += linux-kage-ryu + headers (installs ALONGSIDE stock linux; stock stays default)"
+
+  # Bake the auto-activation layer into the airootfs so a Kage-Ryu boot from
+  # this image is tuned + scx_kage-scheduled on FIRST boot with no manual step.
+  # Staged files are kage-namespaced and removed on exit by the restore trap,
+  # so a git checkout is never left dirty (this whole block is opt-in anyway).
+  if [[ -x "${KAGE_PKGDIR}/packaging/install-activation.sh" ]]; then
+    if "${KAGE_PKGDIR}/packaging/install-activation.sh" --root "${PROFILE_DIR}/airootfs"; then
+      NYX_KAGE_AIROOTFS_STAGED=1
+      ok "auto-activation staged into airootfs (first boot: tuned + scx_kage scheduled)"
+    else
+      warn "kage-ryu activation staging failed — kernel still installs, but the ISO won't self-activate"
+    fi
+  else
+    warn "no packaging/install-activation.sh in ${KAGE_PKGDIR}; ISO ships the kernel without auto-activation"
+  fi
 fi
 
 # ── stamp version into profiledef.sh + os-release ────────────────────────
@@ -211,6 +325,8 @@ NYXUS_CFG="${REPO_ROOT}/artifacts/nyxus-config"
 mkdir -p "${SKEL}/.config/nyxus"
 if [[ -f "${NYXUS_CFG}/stations.json" ]]; then
   install -m 0644 "${NYXUS_CFG}/stations.json" "${SKEL}/.config/nyxus/stations.json"
+  [[ -f "${NYXUS_CFG}/stations-hacker.json" ]] && \
+    install -m 0644 "${NYXUS_CFG}/stations-hacker.json" "${SKEL}/.config/nyxus/stations-hacker.json"
   # Bake-time sync: use system wallpaper dir so skel paths survive first login.
   CONF="${SKEL}/.config/nyxus/stations.json" OUT="${SKEL}/.config/nyxus/workspaces.json" \
     bash -c '
@@ -228,7 +344,7 @@ if [[ -f "${NYXUS_CFG}/stations.json" ]]; then
         }
       " > "$OUT"
     '
-  ok "stations.json + workspaces.json staged"
+  ok "stations.json + stations-hacker.json + workspaces.json staged"
 fi
 
 # ── EWW (replaces waybar as of rev r6-eww) ──────────────────────────────────
@@ -1337,6 +1453,105 @@ JETTDEFAULT
 else
   warn "no jett-daemon binary available (live service inactive/unreadable AND no on-disk build) — ISO will ship WITHOUT Jett"
   warn "set NYX_JETT_BIN=/path/to/jett-daemon to stage it, or ensure jett-daemon.service is running+readable at bake time"
+fi
+
+# ── stage Arsenal — GowskiNet Security Hub (TUI launcher) ────────────────
+# rev 2026-07-17 (r2 2026-07-21) — Arsenal is the operator's app-launcher
+# hub: a Rust ratatui TUI (`arsenal-hub`) that reads a registry.toml of
+# every tool and launches/monitors them.
+#
+# Unlike the other "stage from a local dev checkout" steps above, the
+# hub binary, registry, launcher, desktop entry, and every tool's source
+# tree (GSL/RedForge/Forge/CIPHER/AI-Cyber-Defense-Trainer/axiom/c2) are
+# committed directly under this profile's airootfs/ — mkarchiso picks
+# them up with no extra staging needed, same as any other tracked file.
+# No .env or *.db ships (see .gitignore): each app's own one-shot
+# `~/Arsenal/setup-apps.sh` creates its database role/schema and seeds a
+# fresh admin login after install, so nobody's local secrets/lab history
+# ends up baked into a distributable image.
+#
+# This step is ONLY for refreshing that committed tree from a newer local
+# checkout before a bake (e.g. after rebuilding the Rust hub, or editing
+# registry.toml) — it is a no-op when ${ARSENAL_REPO} doesn't exist,
+# which is the common case (CI, or anyone else's build host).
+step "stage Arsenal — GowskiNet Security Hub (TUI launcher)"
+ARSENAL_REPO="${NYX_ARSENAL_REPO:-${HOME}/Arsenal}"
+if [[ -d "${ARSENAL_REPO}" && -f "${ARSENAL_REPO}/registry.toml" ]]; then
+  ARSENAL_BIN="${NYX_ARSENAL_BIN:-${ARSENAL_REPO}/hub/target/release/arsenal-hub}"
+  ARSENAL_SKEL="${SKEL}/Arsenal"
+  mkdir -p "${ARSENAL_SKEL}" \
+           "${PROFILE_DIR}/airootfs/etc/arsenal" \
+           "${PROFILE_DIR}/airootfs/opt/arsenal/tools"
+
+  # 1. hub binary → /usr/local/bin/arsenal-hub (+ friendly `arsenal` wrapper)
+  if [[ -x "${ARSENAL_BIN}" ]]; then
+    install -Dm0755 "${ARSENAL_BIN}" "${PROFILE_DIR}/airootfs/usr/local/bin/arsenal-hub"
+    printf "  ${B}arsenal-hub sha256:${R} %s\n" "$(sha256sum "${ARSENAL_BIN}" | cut -d' ' -f1)"
+    ok "hub binary → /usr/local/bin/arsenal-hub (refreshed from ${ARSENAL_REPO})"
+  else
+    warn "arsenal-hub binary not found at ${ARSENAL_BIN} — build it (cd '${ARSENAL_REPO}/hub' && cargo build --release) or set NYX_ARSENAL_BIN"
+    warn "keeping the already-committed arsenal-hub binary as-is"
+  fi
+
+  # 2. registry.toml — rewrite hardcoded live paths to shipped locations.
+  #    /etc/arsenal/ (system reference) + /etc/skel/Arsenal/ (per-user seed).
+  _reg_tmp="$(mktemp)"
+  sed -E \
+    -e 's#/home/cosmic/GowskiNet-Vault/Security/#/opt/arsenal/tools/#g' \
+    -e 's#/home/cosmic/GowskiNet-Vault/AI/#/opt/arsenal/tools/#g' \
+    -e 's#/home/cosmic/Projects/axiom#/opt/arsenal/tools/axiom#g' \
+    -e 's#/home/cosmic/Projects/c2#/opt/arsenal/tools/c2#g' \
+    -e 's#/home/cosmic/Projects/jeTT#/usr/local/lib/jett#g' \
+    -e 's#/home/cosmic/Projects/bifrost#/usr/lib/bifrost#g' \
+    -e 's#/home/cosmic/Projects/meli#/opt/meli/app#g' \
+    -e 's#/home/cosmic/Projects/honeypot#/opt/honeypot#g' \
+    "${ARSENAL_REPO}/registry.toml" > "${_reg_tmp}"
+  install -Dm0644 "${_reg_tmp}" "${PROFILE_DIR}/airootfs/etc/arsenal/registry.toml"
+  install -Dm0644 "${_reg_tmp}" "${ARSENAL_SKEL}/registry.toml"
+  rm -f "${_reg_tmp}"
+  ok "registry.toml → /etc/arsenal/ + /etc/skel/Arsenal/ (live paths rewritten to shipped locations, refreshed)"
+
+  # 2b. setup-apps.sh — one-shot bring-up for the web tools.
+  if [[ -f "${ARSENAL_REPO}/setup-apps.sh" ]]; then
+    install -Dm0755 "${ARSENAL_REPO}/setup-apps.sh" \
+      "${PROFILE_DIR}/airootfs/usr/local/bin/nyxus-setup-apps"
+    install -Dm0755 "${ARSENAL_REPO}/setup-apps.sh" \
+      "${ARSENAL_SKEL}/setup-apps.sh"
+    ok "setup-apps.sh → /usr/local/bin/nyxus-setup-apps (0755) + /etc/skel/Arsenal/setup-apps.sh (refreshed)"
+  fi
+
+  # 3. Optional: refresh the tool source trees from a newer local checkout.
+  #    Off by default — the committed trees already ship. Set
+  #    NYX_STAGE_ARSENAL_APPS=1 to pull in local changes before a bake.
+  if [[ "${NYX_STAGE_ARSENAL_APPS:-0}" == "1" ]]; then
+    warn "NYX_STAGE_ARSENAL_APPS=1 — refreshing Arsenal tool repos into /opt/arsenal/tools/"
+    declare -A _arsenal_srcs=(
+      [GSL]="/home/cosmic/GowskiNet-Vault/Security/GSL"
+      [RedForge]="/home/cosmic/GowskiNet-Vault/Security/RedForge"
+      [Forge]="/home/cosmic/GowskiNet-Vault/Security/Forge"
+      [CIPHER]="/home/cosmic/GowskiNet-Vault/Security/CIPHER"
+      [AI-Cyber-Defense-Trainer]="/home/cosmic/GowskiNet-Vault/AI/AI-Cyber-Defense-Trainer"
+      [axiom]="/home/cosmic/Projects/axiom"
+      [c2]="/home/cosmic/Projects/c2"
+    )
+    for _name in "${!_arsenal_srcs[@]}"; do
+      _src="${_arsenal_srcs[$_name]}"
+      if [[ -d "${_src}" ]]; then
+        rsync -a --exclude='.git' --exclude='node_modules' --exclude='.venv' \
+              --exclude='venv' --exclude='target' --exclude='__pycache__' \
+              --exclude='dist' --exclude='build' --exclude='.env' \
+              --exclude='*.db' --exclude='*.db-shm' --exclude='*.db-wal' \
+              "${_src}/" "${PROFILE_DIR}/airootfs/opt/arsenal/tools/${_name}/"
+        ok "refreshed ${_name} → /opt/arsenal/tools/${_name}"
+      else
+        warn "Arsenal tool source not found: ${_src} — leaving the already-committed tree as-is"
+      fi
+    done
+  fi
+
+  ok "Arsenal staged — run 'arsenal' or search 'Arsenal' in the launcher"
+else
+  ok "Arsenal repo not found at ${ARSENAL_REPO} — using the already-committed Arsenal tree as shipped (this is the common case)"
 fi
 
 # ── mirror OS-level docs into /etc/nyxus/ ────────────────────────────────

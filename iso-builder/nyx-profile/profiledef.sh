@@ -72,6 +72,10 @@ file_permissions=(
   ["/usr/local/bin/nyxus-battery"]="0:0:755"
   ["/usr/local/bin/nyxus-netusage"]="0:0:755"
   ["/usr/local/bin/nyxus-tour"]="0:0:755"
+  # ── Arsenal — GowskiNet Security Hub ─────────────────────────────────
+  ["/usr/local/bin/arsenal"]="0:0:755"
+  ["/usr/local/bin/arsenal-hub"]="0:0:755"
+  ["/usr/local/bin/nyxus-setup-apps"]="0:0:755"
   # ── Welcome wizard launcher + privileged helper ──────────────────────
   # nyxus-welcome is installed by customize_airootfs.sh from /root/ stage.
   # The auto-generated APPS_LIST wrapper would also have produced one,
@@ -112,6 +116,7 @@ file_permissions=(
   ["/usr/local/bin/nyxus-focusmode"]="0:0:755"
   ["/usr/local/bin/nyxus-gamemode"]="0:0:755"
   ["/usr/local/bin/nyxus-gen-backdrop"]="0:0:755"
+  ["/usr/local/bin/nyxus-glow"]="0:0:755"
   ["/usr/local/bin/nyxus-ghost-auth"]="0:0:755"
   ["/usr/local/bin/nyxus-ghost-register"]="0:0:755"
   ["/usr/local/bin/nyxus-ghost"]="0:0:755"
@@ -136,6 +141,7 @@ file_permissions=(
   ["/usr/local/bin/nyxus-plymouth"]="0:0:755"
   ["/usr/local/bin/nyxus-protonup"]="0:0:755"
   ["/usr/local/bin/nyxus-qs"]="0:0:755"
+  ["/usr/local/bin/nyxus-rotate-walls"]="0:0:755"
   ["/usr/local/bin/nyxus-screensaver"]="0:0:755"
   ["/usr/local/bin/nyxus-secboot"]="0:0:755"
   ["/usr/local/bin/nyxus-session-start"]="0:0:755"

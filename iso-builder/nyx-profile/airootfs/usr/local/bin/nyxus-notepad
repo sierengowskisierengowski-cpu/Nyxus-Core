@@ -1,3 +1,2 @@
 #!/usr/bin/env bash
-# NYXUS Notepad launcher — Copyright © 2026 Joseph A. Sierengowski
-exec python3 /opt/nyxus/nyxus_notepad.py "$@"
+exec python3 /opt/nyxus-notepad/main.py "$@"

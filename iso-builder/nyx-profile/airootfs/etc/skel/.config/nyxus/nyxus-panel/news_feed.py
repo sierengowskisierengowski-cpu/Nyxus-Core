@@ -7,7 +7,7 @@ extracts a thumbnail (media:thumbnail / media:content / enclosure / first
 and pushes the merged + filtered + sorted article list back to the UI
 through GLib.idle_add.
 
-© 2026 Joseph Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
+© 2026 Joseph A. Sierengowski — NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from __future__ import annotations
 

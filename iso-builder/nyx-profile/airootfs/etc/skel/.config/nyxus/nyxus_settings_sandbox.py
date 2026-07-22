@@ -14,7 +14,7 @@
 #    · If flatpak is not installed, the panel renders a friendly "no apps"
 #      placeholder instead of an error.
 #
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================================
 from __future__ import annotations
 
