@@ -20,9 +20,13 @@
 # ============================================================
 set -euo pipefail
 
-KAGE_REPO="${KAGE_REPO:-$HOME/Projects/arch-custom-kernel/linux-kage-ryu}"
-KAGE_GIT="https://github.com/sierengowskisierengowski-cpu/kage-ryu.git"
 REAL_USER="${SUDO_USER:-${USER}}"
+# Under `sudo`, $HOME is /root — but makepkg + the clone run AS the invoking
+# user (who can't write /root). Default the checkout into the REAL user's
+# home so the clone/build works. Override with --repo or KAGE_REPO=.
+REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"; REAL_HOME="${REAL_HOME:-$HOME}"
+KAGE_REPO="${KAGE_REPO:-$REAL_HOME/Projects/arch-custom-kernel/linux-kage-ryu}"
+KAGE_GIT="https://github.com/sierengowskisierengowski-cpu/kage-ryu.git"
 
 [[ "${1:-}" == "--repo" && -n "${2:-}" ]] && KAGE_REPO="$2"
 

@@ -154,7 +154,11 @@ fi
 # package list. All of that is undone on exit by _nyx_restore_profile.
 if [[ "${NYX_WITH_KAGE_RYU:-0}" == "1" ]]; then
   step "Kage Ryu Nyxus custom kernel (NYX_WITH_KAGE_RYU=1)"
-  KAGE_PKGDIR="${NYX_KAGE_PKGDIR:-${HOME}/Projects/arch-custom-kernel/linux-kage-ryu}"
+  # Under `sudo` $HOME is /root; the kernel package was built in the invoking
+  # user's home. Look there by default so the bake finds it without needing
+  # NYX_KAGE_PKGDIR set explicitly.
+  _kage_home="$(getent passwd "${SUDO_USER:-root}" | cut -d: -f6)"; _kage_home="${_kage_home:-$HOME}"
+  KAGE_PKGDIR="${NYX_KAGE_PKGDIR:-${_kage_home}/Projects/arch-custom-kernel/linux-kage-ryu}"
   LOCAL_REPO="${SCRIPT_DIR}/local-repo"
   _kage_main="$(ls -t "${KAGE_PKGDIR}"/linux-kage-ryu-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)"
   _kage_hdr="$(ls -t "${KAGE_PKGDIR}"/linux-kage-ryu-headers-*.pkg.tar.zst 2>/dev/null | head -1 || true)"
