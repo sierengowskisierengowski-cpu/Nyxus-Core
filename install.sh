@@ -81,7 +81,7 @@ LAUNCHERS=(
   nyxus-rotate-walls
   nyxus-screensaver nyxus-security nyxus-sense nyxus-session-start nyxus-settings
   nyxus-set-wallpaper nyxus-set-wallpaper.sh nyxus-sfx nyxus-shader
-  nyxus-sound nyxus-sound-bake nyxus-soundd nyxus-sound-forge nyxus-sounds
+  nyxus-sound nyxus-sound-bake nyxus-supernova nyxus-soundd nyxus-sound-forge nyxus-sounds
   nyxus-spray nyxus-store nyxus-sync-stations nyxus-tint nyxus-tintd
   nyxus-updater nyxus-voice nyxus-voiced nyxus-voice-install
   nyxus-voice-model nyxus-wait-bootstrap nyxus-wall-cycle nyxus-wall-fx
