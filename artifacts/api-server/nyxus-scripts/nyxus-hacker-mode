@@ -53,6 +53,38 @@ _hypr()   { command -v hyprctl >/dev/null 2>&1 && hyprctl "$@" >/dev/null 2>&1 |
 _getopt() { hyprctl getoption "$1" -j 2>/dev/null | jq -r "$2" 2>/dev/null; }
 is_on()   { [[ -f "${STATE}" ]] && grep -q '^mode=on$' "${STATE}"; }
 
+REFLEX_RESTORE="${STATE_DIR}/hacker-reflex.restore"
+
+# Pause the daemons that otherwise STOMP hacker mode's transformation:
+#   - nyxus-rotate-walls daemon re-applies an alien wall every 20 min
+#   - nyxus-tintd / nyxus-pulsed re-tint the border ring every focus/pulse
+# so the hacker wallpaper + matrix-green border never stick. Records what it
+# paused so disengage restores exactly. (SIGSTOP freezes tintd/pulsed live —
+# they hold their last write and resume cleanly on SIGCONT.)
+pause_reflex() {
+  : > "${REFLEX_RESTORE}"
+  if pgrep -f 'nyxus-rotate-walls daemon' >/dev/null 2>&1; then
+    pkill -f 'nyxus-rotate-walls daemon' 2>/dev/null || true
+    echo "rotation" >> "${REFLEX_RESTORE}"
+  fi
+  for d in nyxus-tintd nyxus-pulsed; do
+    if pgrep -f "${d}" >/dev/null 2>&1; then
+      pkill -STOP -f "${d}" 2>/dev/null && echo "cont:${d}" >> "${REFLEX_RESTORE}" || true
+    fi
+  done
+}
+
+resume_reflex() {
+  [[ -r "${REFLEX_RESTORE}" ]] || return 0
+  while IFS= read -r line; do
+    case "${line}" in
+      rotation) setsid nyxus-rotate-walls daemon >/dev/null 2>&1 & ;;
+      cont:*)   pkill -CONT -f "${line#cont:}" 2>/dev/null || true ;;
+    esac
+  done < "${REFLEX_RESTORE}"
+  rm -f "${REFLEX_RESTORE}"
+}
+
 expand_home() {
   local home="${HOME:-}"
   if [[ -z "${home}" ]]; then
@@ -224,6 +256,11 @@ hacker_on() {
   _hypr reload
   apply_workspace_names
 
+  # 1b. Freeze the rotation + border reflex daemons so the wallpaper flip
+  #     and matrix-green border below actually STICK instead of being
+  #     overwritten a second later.
+  pause_reflex
+
   # 2. Darker chrome (live, reversible).
   _hypr keyword decoration:active_opacity   "${HACKER_ACTIVE_OPACITY}"
   _hypr keyword decoration:inactive_opacity "${HACKER_INACTIVE_OPACITY}"
@@ -235,12 +272,13 @@ hacker_on() {
   hacker_wall="$(mode_wallpaper "${STATIONS_HACKER}" "nyxus-hacker-mode-a.png")"
   [[ -n "${hacker_wall}" ]] && apply_wallpapers "${hacker_wall}"
 
-  # 4. Actively fill every station with its security tool, then raise the
-  #    Deep Core flyout. spawn_stations skips already-occupied workspaces.
+  # 4. Actively fill every station with its security tool. spawn_stations
+  #    skips already-occupied workspaces. (We deliberately do NOT auto-open
+  #    the full-screen Deep Core panel here — it blocks clicks and traps the
+  #    desktop; open it on demand with Super+G instead.)
   spawn_stations
-  ( command -v eww >/dev/null 2>&1 && eww open --toggle deepcore >/dev/null 2>&1 & ) 2>/dev/null || true
 
-  notify -u critical "NYXUS Hacker Mode" "ENGAGED - parallel security layout - all stations flipped - security stack up."
+  notify -u critical "NYXUS Hacker Mode" "ENGAGED - matrix theme + security stations. Toggle off: Super+Ctrl+X"
 }
 
 hacker_off() {
@@ -276,6 +314,10 @@ hacker_off() {
   fi
   [[ -n "${norm_wall}" ]] && apply_wallpapers "${norm_wall}"
 
+  # 4. Un-freeze the rotation + border reflex daemons (resumes exactly what
+  #    was paused on engage).
+  resume_reflex
+
   rm -f "${STATE}"
   notify -u normal "NYXUS Hacker Mode" "Disengaged — normal station matrix restored."
 }
@@ -284,5 +326,12 @@ case "${1:-toggle}" in
   on)       hacker_on ;;
   off)      hacker_off ;;
   status)   is_on && echo on || echo off ;;
+  # Run once at login: a fresh session always comes up in NORMAL visuals
+  # (hacker mode never auto-activates), so clear any stale on-state left in
+  # the persisted file and un-freeze any daemons a crash left paused, so the
+  # very first Super+Ctrl+X toggle does the right thing.
+  reconcile-boot)
+            resume_reflex 2>/dev/null || true
+            rm -f "${STATE}" "${REFLEX_RESTORE}" 2>/dev/null || true ;;
   toggle|*) is_on && hacker_off || hacker_on ;;
 esac

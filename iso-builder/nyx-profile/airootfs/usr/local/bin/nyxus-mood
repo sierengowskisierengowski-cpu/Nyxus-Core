@@ -1,0 +1,224 @@
+#!/usr/bin/env python3
+# ============================================================================
+#  nyxus-mood  ·  the NYXUS Mood Engine (compose layer)   rev 2026-07-21 r1
+#  (c) 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Consumes the nyxus-sense bus (~/.config/nyxus/sense.json) and gives the
+#  WHOLE desktop a slow, living "mood" baseline that the fast reflex layer
+#  (tintd colours / beatd angle / pulsed events) keeps reacting on top of.
+#  COMPOSE, never stomp:
+#
+#   • eww bars  → read MOOD themselves (defpoll SENSE) and glow per mood;
+#                 this daemon does not touch them.
+#   • wallpaper → gently steers the live mpvpaper look toward the mood's
+#                 resting palette (saturation / hue / gamma) over the mpv
+#                 IPC socket — but ONLY while music is NOT playing, so it
+#                 hands the socket cleanly to nyxus-wall-fx (which owns the
+#                 audio pulse) the instant a track starts. No wall-fx edits.
+#   • on a mood CHANGE it drops one low-urgency toast so the shift reads.
+#
+#      nyxus-mood run | start | stop | status
+# ============================================================================
+import json, os, signal, socket, subprocess, sys, time
+
+HOME    = os.path.expanduser("~")
+CFG     = os.path.join(HOME, ".config", "nyxus")
+SENSE   = os.path.join(CFG, "sense.json")
+PIDFILE = os.path.join(CFG, "mood.pid")
+RUNTIME = os.environ.get("XDG_RUNTIME_DIR", "/run/user/%d" % os.getuid())
+MPV_SOCK = os.path.join(RUNTIME, "nyxus-mpv.sock")
+
+INTERVAL = 0.5          # steer cadence
+STEP     = 3            # max mpv units moved per tick (smooth, never snaps)
+
+# Resting wallpaper targets per mood: (saturation, hue, gamma) in mpv units.
+# Kept subtle — this is a baseline the reflex layer rides on, not a slam.
+MOOD_LOOK = {
+    "GHOST":     (-45, -8,  -6),   # drained, cold, dim
+    "DRIFT":     (-15, -4,  -2),   # calm, slightly cool
+    "PROWL":     (  0,  0,   0),   # neutral resting
+    "OVERCLOCK": ( 25, 10,   4),   # hot, saturated, bright
+    "MATRIX":    ( 30, 60,  -2),   # green push (defers to hacker-mode look)
+}
+
+_RUN = True
+
+
+def _sig(*_):
+    global _RUN
+    _RUN = False
+
+
+def read_sense():
+    try:
+        with open(SENSE) as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def mpv_get(sock, prop):
+    try:
+        sock.sendall(json.dumps({"command": ["get_property", prop]}).encode() + b"\n")
+        sock.settimeout(0.3)
+        data = sock.recv(65536).decode(errors="ignore")
+        for line in data.splitlines():
+            d = json.loads(line)
+            if d.get("error") == "success" and "data" in d:
+                return d["data"]
+    except Exception:
+        return None
+    return None
+
+
+def mpv_set(sock, prop, val):
+    try:
+        sock.sendall(json.dumps({"command": ["set_property", prop, val]}).encode() + b"\n")
+    except Exception:
+        pass
+
+
+def connect_mpv():
+    if not os.path.exists(MPV_SOCK):
+        return None
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(MPV_SOCK)
+        return s
+    except OSError:
+        return None
+
+
+def toward(cur, target, step):
+    if cur is None:
+        return target
+    if abs(target - cur) <= step:
+        return target
+    return cur + step if target > cur else cur - step
+
+
+def push_eww(mood, energy, hacker):
+    """Push the mood into the eww bars (defvar SENSE). Deterministic — does
+    not rely on eww's lazy per-window defpoll activation."""
+    payload = json.dumps({"mood": mood.lower(), "energy": energy,
+                          "hacker": bool(hacker)})
+    try:
+        subprocess.Popen(["eww", "update", f"SENSE={payload}"],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+
+def notify(mood):
+    try:
+        subprocess.Popen(
+            ["notify-send", "-u", "low", "-t", "2200",
+             "NYXUS Mood", f"shifted to {mood}"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+
+def run():
+    signal.signal(signal.SIGTERM, _sig)
+    signal.signal(signal.SIGINT, _sig)
+    with open(PIDFILE, "w") as f:
+        f.write(str(os.getpid()))
+
+    last_mood = None
+    last_push = 0.0
+    sock = None
+    try:
+        while _RUN:
+            s = read_sense()
+            if s:
+                mood = s.get("mood", "PROWL")
+                energy = s.get("energy", 0)
+                hacker = s.get("hacker", False)
+                playing = (s.get("audio") or {}).get("playing", False)
+                now = time.time()
+
+                # Push to the eww bars on mood change (drives the glow class),
+                # with a slow 30s heartbeat so energy doesn't go fully stale.
+                if mood != last_mood or now - last_push >= 30.0:
+                    push_eww(mood, energy, hacker)
+                    last_push = now
+                if mood != last_mood:
+                    if last_mood is not None:
+                        notify(mood)
+                    last_mood = mood
+
+                # Steer the wallpaper ONLY when wall-fx isn't driving it
+                # (i.e. no music). Hand the socket back the moment audio starts.
+                if not playing:
+                    if sock is None:
+                        sock = connect_mpv()
+                    if sock is not None:
+                        tsat, thue, tgam = MOOD_LOOK.get(mood, (0, 0, 0))
+                        for prop, tgt in (("saturation", tsat),
+                                          ("hue", thue), ("gamma", tgam)):
+                            cur = mpv_get(sock, prop)
+                            nxt = toward(cur, tgt, STEP)
+                            if nxt != cur:
+                                mpv_set(sock, prop, nxt)
+                else:
+                    # Music playing → release the socket so wall-fx owns mpv.
+                    if sock is not None:
+                        try: sock.close()
+                        except OSError: pass
+                        sock = None
+            time.sleep(INTERVAL)
+    finally:
+        if sock is not None:
+            try: sock.close()
+            except OSError: pass
+        try: os.unlink(PIDFILE)
+        except OSError: pass
+
+
+def _pid():
+    try:
+        with open(PIDFILE) as f:
+            pid = int(f.read().strip())
+        os.kill(pid, 0)
+        return pid
+    except (OSError, ValueError):
+        return None
+
+
+def start():
+    if _pid():
+        print("nyxus-mood already running"); return
+    if os.fork() > 0:
+        return
+    os.setsid()
+    if os.fork() > 0:
+        os._exit(0)
+    dn = os.open(os.devnull, os.O_RDWR)
+    for fd in (0, 1, 2):
+        os.dup2(dn, fd)
+    run()
+
+
+def stop():
+    pid = _pid()
+    if not pid:
+        print("nyxus-mood not running"); return
+    os.kill(pid, signal.SIGTERM)
+    print(f"stopped nyxus-mood (pid {pid})")
+
+
+def status():
+    pid = _pid()
+    s = read_sense() or {}
+    print(f"nyxus-mood: {'running pid ' + str(pid) if pid else 'stopped'} · "
+          f"mood={s.get('mood', '?')} energy={s.get('energy', '?')}")
+
+
+def main():
+    {"run": run, "start": start, "stop": stop, "status": status}.get(
+        sys.argv[1] if len(sys.argv) > 1 else "run", run)()
+
+
+if __name__ == "__main__":
+    main()

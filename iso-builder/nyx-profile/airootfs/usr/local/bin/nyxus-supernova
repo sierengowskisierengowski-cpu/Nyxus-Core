@@ -1,0 +1,312 @@
+#!/usr/bin/env python3
+# ============================================================================
+#  nyxus-supernova  ·  beat-locked whole-rig SHOW mode   rev 2026-07-21 r1
+#  (c) 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  On demand, locks the WHOLE desktop to the music and detonates on the drop.
+#  A performance mode — you trigger it (Super+Alt+S) to drop jaws in person.
+#
+#   • listens to cava (raw bass bins) and detects beats + the DROP
+#   • wallpaper (mpvpaper via IPC): every beat thumps saturation + a zoom
+#     punch + brightness; the drop cranks a big zoom-and-flare, then eases
+#   • window borders: flash bright accent on the beat, blast white on a drop
+#   • also raises nyxus-beat (border ring spins with the music) if idle
+#   • eww bars enter "show" glow via a pushed SUPERNOVA flag
+#
+#  Fully reversible: captures the live border + mpv look on engage and
+#  restores them exactly on exit. Never leaves the rig in a show state.
+#  This is a BORROW per the reflex-layer contract (like pulsed) — it does
+#  not edit tintd/beatd/wall-fx, it drives on top and restores.
+#
+#      nyxus-supernova toggle | on | off | run | status
+# ============================================================================
+import json, math, os, signal, socket, subprocess, sys, tempfile, time
+
+HOME    = os.path.expanduser("~")
+CFG     = os.path.join(HOME, ".config", "nyxus")
+PIDFILE = os.path.join(CFG, "supernova.pid")
+STATEF  = os.path.join(CFG, "supernova.restore.json")
+RUNTIME = os.environ.get("XDG_RUNTIME_DIR", "/run/user/%d" % os.getuid())
+MPV_SOCK = os.path.join(RUNTIME, "nyxus-mpv.sock")
+
+FPS      = 60
+BEAT_COOLDOWN = 0.14        # min seconds between beats (debounce)
+
+# Bright beat/drop border colours (accent-agnostic neon).
+BEAT_BORDER = "rgba(ff3cacff) rgba(2bd2ffff) rgba(784bffff) 45deg"
+DROP_BORDER = "rgba(ffffffff) rgba(ff3cacff) rgba(2bd2ffff) 90deg"
+
+_RUN = True
+
+
+def _sig(*_):
+    global _RUN
+    _RUN = False
+
+
+# ── mpv IPC (socket, cheap enough to drive per-frame) ───────────────────────
+def mpv_connect():
+    if not os.path.exists(MPV_SOCK):
+        return None
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(MPV_SOCK)
+        s.setblocking(False)
+        return s
+    except OSError:
+        return None
+
+
+def mpv_set(s, prop, val):
+    if s is None:
+        return
+    try:
+        s.sendall(json.dumps({"command": ["set_property", prop, val]}).encode() + b"\n")
+    except OSError:
+        pass
+
+
+def mpv_get_blocking(prop):
+    """One-shot blocking read of a property (used only at engage to snapshot)."""
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(MPV_SOCK)
+        s.settimeout(0.4)
+        s.sendall(json.dumps({"command": ["get_property", prop]}).encode() + b"\n")
+        data = s.recv(65536).decode(errors="ignore")
+        s.close()
+        for line in data.splitlines():
+            d = json.loads(line)
+            if d.get("error") == "success" and "data" in d:
+                return d["data"]
+    except Exception:
+        return None
+    return None
+
+
+def hypr(*args):
+    try:
+        subprocess.run(["hyprctl", *args], stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL, timeout=1.0)
+    except Exception:
+        pass
+
+
+def hypr_get_border():
+    try:
+        out = subprocess.run(["hyprctl", "getoption", "general:col.active_border", "-j"],
+                             capture_output=True, text=True, timeout=1.0)
+        return json.loads(out.stdout)
+    except Exception:
+        return None
+
+
+def eww_push(flag):
+    try:
+        subprocess.Popen(["eww", "update", f"SUPERNOVA={'true' if flag else 'false'}"],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+
+def notify(title, body, urg="normal"):
+    try:
+        subprocess.Popen(["notify-send", "-u", urg, "-t", "2400", title, body],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+
+# ── cava bass feed ──────────────────────────────────────────────────────────
+CAVA_CONF = """[general]
+mode = normal
+framerate = %d
+bars = 8
+[output]
+method = raw
+raw_target = /dev/stdout
+data_format = ascii
+ascii_max_range = 1000
+channels = mono
+""" % FPS
+
+
+def start_cava():
+    cfg = tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False)
+    cfg.write(CAVA_CONF); cfg.flush(); cfg.close()
+    try:
+        p = subprocess.Popen(["cava", "-p", cfg.name], stdout=subprocess.PIPE,
+                             stderr=subprocess.DEVNULL)
+        os.set_blocking(p.stdout.fileno(), False)
+        return p, cfg.name
+    except Exception:
+        return None, cfg.name
+
+
+def run():
+    signal.signal(signal.SIGTERM, _sig)
+    signal.signal(signal.SIGINT, _sig)
+    with open(PIDFILE, "w") as f:
+        f.write(str(os.getpid()))
+
+    # snapshot restore state
+    restore = {
+        "border": hypr_get_border(),
+        "mpv": {p: mpv_get_blocking(p) for p in
+                ("saturation", "brightness", "gamma", "video-zoom")},
+    }
+    try:
+        with open(STATEF, "w") as f:
+            json.dump(restore, f)
+    except Exception:
+        pass
+
+    # supernova owns the border for the show (its own beat detection drives
+    # colour flashes) — do NOT also start nyxus-beatd, which would fight it
+    # over general:col.active_border. Restored exactly on exit.
+    eww_push(True)
+    notify("NYXUS SUPERNOVA", "ENGAGED — the rig is locked to the beat", "critical")
+
+    cava, cfgpath = start_cava()
+    sock = mpv_connect()
+
+    avg = 0.02          # running average bass energy
+    peak = 0.05         # slow peak tracker for drop detection
+    last_beat = 0.0
+    zoom = 0.0          # current extra zoom (log2 units), eased each frame
+    sat_boost = 0.0
+    flash = 0.0         # border flash envelope 0..1
+    buf = b""
+    frame_t = 1.0 / FPS
+
+    try:
+        while _RUN:
+            t = time.time()
+            bass = None
+            if cava and cava.stdout:
+                try:
+                    chunk = os.read(cava.stdout.fileno(), 65536)
+                    if chunk:
+                        buf += chunk
+                        # keep only the last complete line
+                        if b"\n" in buf:
+                            lines = buf.split(b"\n")
+                            buf = lines[-1]
+                            last = lines[-2] if len(lines) >= 2 else b""
+                            vals = [int(x) for x in last.split(b";") if x.strip().isdigit()]
+                            if vals:
+                                # bass = mean of the two lowest bins, 0..1
+                                bass = (vals[0] + (vals[1] if len(vals) > 1 else vals[0])) / 2000.0
+                except (BlockingIOError, ValueError):
+                    pass
+
+            if bass is not None:
+                avg += 0.06 * (bass - avg)
+                peak = max(peak * 0.999, bass)
+                # beat: sharp rise over the moving average
+                is_beat = (bass > max(0.05, avg * 1.6)) and (t - last_beat > BEAT_COOLDOWN)
+                # drop: near the running peak AND loud
+                is_drop = bass > 0.72 and bass > peak * 0.9
+                if is_beat:
+                    last_beat = t
+                    strength = min(1.0, (bass - avg) * 3.0)
+                    zoom = max(zoom, 0.05 + 0.10 * strength)
+                    sat_boost = max(sat_boost, 25 + 35 * strength)
+                    flash = 1.0
+                    if is_drop:
+                        zoom = 0.22
+                        sat_boost = 70
+                        hypr("keyword", "general:col.active_border", *DROP_BORDER.split())
+                    else:
+                        hypr("keyword", "general:col.active_border", *BEAT_BORDER.split())
+
+            # ease everything back toward rest every frame (smooth)
+            zoom *= 0.86
+            sat_boost *= 0.86
+            flash *= 0.80
+            if sock is not None:
+                mpv_set(sock, "video-zoom", round(zoom, 4))
+                mpv_set(sock, "saturation", int(min(80, sat_boost)))
+                mpv_set(sock, "brightness", int(min(30, sat_boost * 0.3)))
+
+            time.sleep(frame_t)
+    finally:
+        _restore(restore)
+        eww_push(False)
+        try:
+            if cava:
+                cava.terminate()
+        except Exception:
+            pass
+        for pth in (cfgpath, PIDFILE):
+            try: os.unlink(pth)
+            except OSError: pass
+        notify("NYXUS SUPERNOVA", "disengaged — rig restored", "normal")
+
+
+def _restore(restore):
+    # borders — getoption -j reports the gradient under "custom"
+    # (e.g. "ffff582e ffe5ff1f 270deg"); feed it straight back.
+    b = (restore or {}).get("border") or {}
+    val = b.get("custom") if isinstance(b, dict) else None
+    if val:
+        hypr("keyword", "general:col.active_border", *str(val).split())
+    # mpv look
+    mv = (restore or {}).get("mpv") or {}
+    for prop, default in (("saturation", 0), ("brightness", 0),
+                          ("gamma", 0), ("video-zoom", 0)):
+        v = mv.get(prop)
+        try:
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.connect(MPV_SOCK)
+            s.sendall(json.dumps({"command": ["set_property", prop,
+                     v if v is not None else default]}).encode() + b"\n")
+            s.close()
+        except OSError:
+            pass
+
+
+def _pid():
+    try:
+        with open(PIDFILE) as f:
+            pid = int(f.read().strip())
+        os.kill(pid, 0)
+        return pid
+    except (OSError, ValueError):
+        return None
+
+
+def on():
+    if _pid():
+        print("supernova already on"); return
+    subprocess.Popen(["setsid", sys.argv[0], "run"],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print("supernova on")
+
+
+def off():
+    pid = _pid()
+    if not pid:
+        print("supernova not running"); return
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except OSError:
+        pass
+    print("supernova off")
+
+
+def toggle():
+    off() if _pid() else on()
+
+
+def status():
+    print(f"nyxus-supernova: {'running pid ' + str(_pid()) if _pid() else 'stopped'}")
+
+
+def main():
+    {"run": run, "on": on, "off": off, "toggle": toggle,
+     "status": status}.get(sys.argv[1] if len(sys.argv) > 1 else "toggle", toggle)()
+
+
+if __name__ == "__main__":
+    main()

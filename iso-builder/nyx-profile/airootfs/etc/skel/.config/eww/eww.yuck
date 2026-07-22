@@ -54,6 +54,16 @@
 ;; 1s poll keeps the saucer music face's progress bar/elapsed time smooth.
 (defpoll PLAYER     :interval "1s"   :initial '{"status":"Stopped","title":"—","artist":"","icon":"□","tooltip":"player","pos":"0:00","len":"0:00","progress":0,"art":""}'
                                      "~/.config/eww/scripts/player.sh")
+;; NYXUS sense bus - mood + energy drive the living-theme glow on the bars
+;; (composes with GLITCH flicker + the pulsed/tint reflex layer). PUSHED by
+;; the nyxus-mood daemon via `eww update SENSE=...` on every mood change -
+;; a defvar (not defpoll) so it updates deterministically regardless of
+;; eww's lazy per-window poll activation.
+(defvar SENSE '{"mood":"prowl","energy":0,"hacker":false}')
+;; SUPERNOVA show mode - pushed true/false by nyxus-supernova. When true the
+;; bars enter a blazing "show" glow (the beat sync itself drives the
+;; wallpaper + borders, not the bars).
+(defvar SUPERNOVA false)
 (defpoll FANSTRIP   :interval "3s"   :initial '{"text":"FAN —","tooltip":"fan speeds"}'
                                      "~/.config/eww/scripts/fan-strip.sh")
 (defpoll NETSTRIP   :interval "3s"   :initial '{"text":"NET —","tooltip":"network"}'
@@ -189,7 +199,7 @@
     (box :orientation "h" :space-evenly false :spacing 7
       (label :class "brand-gem" :text "◆")
       (box :orientation "v" :space-evenly false :spacing 0
-        (label :class {GLITCH.brand ? "brand-word nyx-glitch" : "brand-word"} :text "NYXUS")
+        (label :class {SUPERNOVA ? "brand-word super-live" : GLITCH.brand ? "brand-word mood-${SENSE.mood} nyx-glitch" : "brand-word mood-${SENSE.mood}"} :text "NYXUS")
         (label :class {GLITCH.stamp ? "brand-stamp nyx-glitch" : "brand-stamp"} :text "SIGNATURE")))))
 
 (defwidget nyxus_brand_compact []
@@ -199,7 +209,7 @@
           :tooltip "NYXUS Start"
     (box :orientation "h" :space-evenly false :spacing 6
       (label :class "brand-gem" :text "◆")
-      (label :class {GLITCH.brand ? "brand-word nyx-glitch" : "brand-word"} :text "NYXUS"))))
+      (label :class {SUPERNOVA ? "brand-word super-live" : GLITCH.brand ? "brand-word mood-${SENSE.mood} nyx-glitch" : "brand-word mood-${SENSE.mood}"} :text "NYXUS"))))
 
 ;; Reusable status pill (FOG drift disabled — caused overlay shake).
 (defwidget pill_btn [class text ?onclick ?onrightclick ?onmiddleclick ?tooltip]
@@ -272,7 +282,7 @@
           :tooltip "${TIME.long} · click for dashboard"
     (box :orientation "v" :space-evenly false :spacing 0 :halign "center"
       (label :class "clock-hms"  :text "${TIME.hm}" :style "opacity: 1;")
-      (label :class {GLITCH.clock ? "clock-date nyx-glitch" : "clock-date"} :text "${TIME.date}"))))
+      (label :class {GLITCH.clock ? "clock-date mood-${SENSE.mood} nyx-glitch" : "clock-date mood-${SENSE.mood}"} :text "${TIME.date}"))))
 
 (defwidget audio_widget []
   (pill_btn :class "p-audio"

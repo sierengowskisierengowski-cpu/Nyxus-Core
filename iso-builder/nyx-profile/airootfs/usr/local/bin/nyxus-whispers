@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+# ============================================================================
+#  nyxus-whispers  ·  the machine whispers          rev 2026-07-21 r1
+#  (c) 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  A full-screen, CLICK-THROUGH GtkLayerShell overlay that drifts glowing
+#  fragments of the machine's OWN live state across the desktop like it is
+#  thinking out loud — now-playing, mood, git branch, hostname, plus a bank
+#  of void-flavoured words and matrix hex. Each whisper fades in at a random
+#  spot, blooms in the current mood colour, drifts, and fades out. Spawn
+#  rate + brightness scale with the nyxus-sense energy, so it breathes with
+#  the audio. Never steals focus, never blocks clicks (empty input region).
+#
+#      nyxus-whispers run | toggle | on | off | status
+#      bind: Super+Shift+W (added to nyxus-fx.conf)
+# ============================================================================
+import json, math, os, random, signal, socket, subprocess, sys, time
+
+HOME    = os.path.expanduser("~")
+CFG     = os.path.join(HOME, ".config", "nyxus")
+SENSE   = os.path.join(CFG, "sense.json")
+PIDFILE = os.path.join(CFG, "whispers.pid")
+REPO    = os.path.join(HOME, "Nyxus-Core")
+
+# mood → glow colour (r,g,b 0..1), tuned to match the Mood Engine palette.
+MOOD_RGB = {
+    "GHOST":     (0.60, 0.70, 0.86),
+    "DRIFT":     (0.62, 0.40, 1.00),
+    "PROWL":     (0.60, 0.30, 1.00),
+    "OVERCLOCK": (1.00, 0.28, 0.30),
+    "MATRIX":    (0.10, 1.00, 0.35),
+}
+
+WORD_BANK = ["NYXUS", "VOID", "GHOST", "SIGNAL", "TRACE", "ECHO", "PRISM",
+             "MIRROR", "DRIFT", "PROWL", "STATIC", "NULL", "OMEN", "PULSE",
+             "SPECTER", "HOLLOW", "OBSIDIAN", "AZIMUTH", "VANTA", "CIPHER",
+             "the eye is watching", "still here", "listening", "no witnesses",
+             "we never left", "look closer", "between frames"]
+
+
+def read_sense():
+    try:
+        with open(SENSE) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def git_branch():
+    try:
+        out = subprocess.run(["git", "-C", REPO, "rev-parse", "--abbrev-ref", "HEAD"],
+                             capture_output=True, text=True, timeout=1.0)
+        b = out.stdout.strip()
+        return b if out.returncode == 0 and b else ""
+    except Exception:
+        return ""
+
+
+def hexrun(n=8):
+    return "0x" + "".join(random.choice("0123456789ABCDEF") for _ in range(n))
+
+
+class Whisper:
+    __slots__ = ("text", "x", "y", "vy", "age", "life", "size", "seed")
+
+    def __init__(self, text, w, h):
+        self.text = text
+        self.x = random.uniform(0.06, 0.82) * w
+        self.y = random.uniform(0.12, 0.88) * h
+        self.vy = random.uniform(-14, -5)          # slow upward drift px/s
+        self.age = 0.0
+        self.life = random.uniform(3.2, 6.0)
+        self.size = random.choice((15, 17, 20, 24, 30))
+        self.seed = random.random()
+
+    def alpha(self):
+        # ease in for 25%, hold, ease out for last 40%
+        t = self.age / self.life
+        if t < 0.25:
+            return t / 0.25
+        if t > 0.60:
+            return max(0.0, (1.0 - t) / 0.40)
+        return 1.0
+
+
+def run():
+    import gi
+    gi.require_version("Gtk", "3.0")
+    gi.require_version("GtkLayerShell", "0.1")
+    from gi.repository import Gtk, GtkLayerShell, GLib, Gdk
+    import cairo
+
+    # single-instance
+    if _pid():
+        print("nyxus-whispers already running"); return
+    with open(PIDFILE, "w") as f:
+        f.write(str(os.getpid()))
+    signal.signal(signal.SIGTERM, lambda *_: (_cleanup(), Gtk.main_quit()))
+    signal.signal(signal.SIGINT,  lambda *_: (_cleanup(), Gtk.main_quit()))
+
+    win = Gtk.Window()
+    win.set_app_paintable(True)
+    win.set_accept_focus(False)                    # never take focus
+    screen = win.get_screen()
+    vis = screen.get_rgba_visual()
+    if vis:
+        win.set_visual(vis)
+
+    GtkLayerShell.init_for_window(win)
+    GtkLayerShell.set_namespace(win, "nyxus-whispers")
+    # BOTTOM layer: the ghost text lives at desktop level, ABOVE the wallpaper
+    # but BELOW every app window — so even if the click-through ever fails it
+    # can never cover or trap a window. (An OVERLAY-layer bug forced a hard
+    # reset once; never put this above windows again.)
+    GtkLayerShell.set_layer(win, GtkLayerShell.Layer.BOTTOM)
+    for edge in (GtkLayerShell.Edge.TOP, GtkLayerShell.Edge.BOTTOM,
+                 GtkLayerShell.Edge.LEFT, GtkLayerShell.Edge.RIGHT):
+        GtkLayerShell.set_anchor(win, edge, True)
+    GtkLayerShell.set_exclusive_zone(win, -1)      # ignore other exclusives
+    GtkLayerShell.set_keyboard_mode(win, GtkLayerShell.KeyboardMode.NONE)
+
+    state = {"w": 1920, "h": 1080, "whispers": [], "last": time.time(),
+             "spawn_acc": 0.0}
+
+    area = Gtk.DrawingArea()
+    win.add(area)
+
+    def on_alloc(_w, alloc):
+        state["w"], state["h"] = alloc.width, alloc.height
+    area.connect("size-allocate", on_alloc)
+
+    def make_clickthrough(*_):
+        # Empty input region = fully click-through. Re-applied aggressively
+        # (realize + map + every frame) because GTK/GDK can reset the input
+        # shape on reconfigure; a single application is NOT reliable and was
+        # the bug that trapped the screen.
+        gdkwin = win.get_window()
+        if gdkwin is not None:
+            gdkwin.input_shape_combine_region(cairo.Region(), 0, 0)
+    win.connect("realize", make_clickthrough)
+    win.connect("map-event", lambda *a: (make_clickthrough(), False)[1])
+
+    def pick_text(s):
+        pool = []
+        aud = (s.get("audio") or {})
+        if aud.get("playing") and aud.get("title"):
+            t = aud["title"]
+            if aud.get("artist"):
+                t = f"{t} — {aud['artist']}"
+            pool += [t, t]                          # weight now-playing
+        b = state.get("branch", "")
+        if b:
+            pool.append(f"branch:{b}")
+        pool.append(f"mood:{s.get('mood','?').lower()}")
+        pool.append(socket.gethostname())
+        pool.append(hexrun(random.choice((6, 8, 12))))
+        pool += WORD_BANK
+        return random.choice(pool)
+
+    def tick():
+        now = time.time()
+        dt = min(0.1, now - state["last"])
+        state["last"] = now
+        s = read_sense()
+        energy = float(s.get("energy", 0.0) or 0.0)
+        mood = s.get("mood", "PROWL")
+        state["rgb"] = MOOD_RGB.get(mood, (0.6, 0.3, 1.0))
+
+        # spawn rate: 0.4/s baseline → ~3/s at full energy
+        rate = 0.4 + energy * 2.6
+        state["spawn_acc"] += rate * dt
+        while state["spawn_acc"] >= 1.0 and len(state["whispers"]) < 26:
+            state["spawn_acc"] -= 1.0
+            state["whispers"].append(Whisper(pick_text(s), state["w"], state["h"]))
+
+        for wsp in state["whispers"]:
+            wsp.age += dt
+            wsp.y += wsp.vy * dt
+        state["whispers"] = [x for x in state["whispers"] if x.age < x.life]
+        # re-assert click-through ~1x/sec so a GDK reconfigure can never
+        # leave the surface grabbing input (belt-and-suspenders safety).
+        state["ct_tick"] = state.get("ct_tick", 0) + 1
+        if state["ct_tick"] % 30 == 0:
+            make_clickthrough()
+        area.queue_draw()
+        return True
+
+    def on_draw(_area, ctx):
+        ctx.set_operator(cairo.OPERATOR_CLEAR)
+        ctx.paint()
+        ctx.set_operator(cairo.OPERATOR_OVER)
+        r, g, b = state.get("rgb", (0.6, 0.3, 1.0))
+        ctx.select_font_face("JetBrainsMono Nerd Font",
+                             cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+        for wsp in state["whispers"]:
+            a = wsp.alpha()
+            if a <= 0.01:
+                continue
+            ctx.set_font_size(wsp.size)
+            # soft bloom: layered low-alpha passes, then a bright core
+            for (dx, dy, ba) in ((0, 0, 0.10), (0, 0, 0.18)):
+                ctx.set_source_rgba(r, g, b, a * ba)
+                for ox in (-2, 2, 0):
+                    for oy in (-2, 2, 0):
+                        ctx.move_to(wsp.x + ox, wsp.y + oy)
+                        ctx.show_text(wsp.text)
+            ctx.set_source_rgba(min(1, r + 0.35), min(1, g + 0.35),
+                                min(1, b + 0.35), a * 0.95)
+            ctx.move_to(wsp.x, wsp.y)
+            ctx.show_text(wsp.text)
+        return False
+
+    area.connect("draw", on_draw)
+
+    # refresh git branch occasionally (cheap, off the draw path)
+    def refresh_branch():
+        state["branch"] = git_branch()
+        return True
+    state["branch"] = git_branch()
+    GLib.timeout_add_seconds(20, refresh_branch)
+
+    GLib.timeout_add(33, tick)                       # ~30 fps
+    win.show_all()
+    make_clickthrough()
+    Gtk.main()
+    _cleanup()
+
+
+def _cleanup():
+    try: os.unlink(PIDFILE)
+    except OSError: pass
+
+
+def _pid():
+    try:
+        with open(PIDFILE) as f:
+            pid = int(f.read().strip())
+        os.kill(pid, 0)
+        return pid
+    except (OSError, ValueError):
+        return None
+
+
+def toggle():
+    if _pid():
+        off()
+    else:
+        on()
+
+
+def on():
+    if _pid():
+        print("already on"); return
+    subprocess.Popen(["setsid", sys.argv[0], "run"],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print("whispers on")
+
+
+def off():
+    pid = _pid()
+    if not pid:
+        print("not running"); return
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except OSError:
+        pass
+    print("whispers off")
+
+
+def status():
+    print(f"nyxus-whispers: {'running pid ' + str(_pid()) if _pid() else 'stopped'}")
+
+
+def main():
+    {"run": run, "toggle": toggle, "on": on, "off": off,
+     "status": status}.get(sys.argv[1] if len(sys.argv) > 1 else "toggle", toggle)()
+
+
+if __name__ == "__main__":
+    main()
