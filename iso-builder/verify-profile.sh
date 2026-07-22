@@ -805,7 +805,7 @@ else
   fail "polkit policy missing: ${PL_POL}"
 fi
 PL_THEME="${AIROOT}/usr/share/plymouth/themes/nyxus"
-for f in nyxus.plymouth nyxus.script logo.png bar-track.png bar-fill.png; do
+for f in nyxus.plymouth nyxus.script background.png saucer.png beam.png; do
   if [[ -f "${PL_THEME}/${f}" ]]; then
     ok "plymouth theme asset: ${f}"
   else
