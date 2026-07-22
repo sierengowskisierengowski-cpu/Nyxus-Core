@@ -120,6 +120,18 @@ Last audited: 2026-07-14 (Phase 3) — `hyprctl configerrors` clean, 0 duplicate
 | `Super+Alt+scroll` · `Super+Alt+=/-/0` | Screen magnifier (lens) in / out / reset |
 | `Super+Shift+T` / `Super+Shift+Q` | Lens OCR text / QR scan |
 
+## Reactive suite (nyxus-sense living desktop, rev 2026-07-22)
+Living-desktop features that ride the `nyxus-sense` bus. The **Mood Engine**
+(`nyxus-sense` + `nyxus-mood`) runs automatically — no keybind — shifting the
+bar glow and resting wallpaper look through moods (GHOST / DRIFT / PROWL /
+OVERCLOCK, plus MATRIX under hacker mode). The rest are on-demand toggles:
+| Keybind | Action |
+|---|---|
+| `Super+Ctrl+W` | **Machine Whispers** — click-through overlay drifting glowing fragments of live state (bottom layer, safe) |
+| `Super+Alt+Shift+S` | **Supernova** — beat-locked whole-rig show mode; wallpaper + borders lock to the music, detonate on the drop (play audio first) |
+| `Super+Alt+Shift+G` | **Graffiti Memory Wall** — accrete your latest git commits / tracks as spray-paint tags onto the alien wall, set it live |
+| `Super+Ctrl+X` | **Hacker Mode** — flip the whole desktop to the matrix/security station layout (stock stays a toggle away) |
+
 ## Modes & diagnostics
 | Keybind | Action |
 |---|---|
