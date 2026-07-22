@@ -1,153 +1,290 @@
-# NYXUS · Plymouth boot splash · DARK MIRROR
-# ------------------------------------------------------------------
-# Centred pulsing logo over an ink-black backdrop with a thin
-# purple → cyan progress bar at the bottom. Runs at boot AND
-# shutdown via the standard Plymouth Script module.
-#
-# Plymouth Script notes (intentional):
-#   * NO C-style ternary — Plymouth Script does not support `?:`.
-#     Use `if (...) { ... } else { ... }`.
-#   * Callback signatures we use:
-#       refresh_callback ()                           # no args
-#       progress_callback (duration, progress)        # boot progress
-#       status_callback   (status_string)             # update status
-#       message_callback  (text)                      # plymouth message
-#       password_callback (prompt, bullets)           # luks unlock
-#       quit_callback     ()                          # tear down
-#   * Bar is drawn by scaling tiny 1×1 RGBA PNGs (bar-track / bar-fill)
-#     to the desired pixel size — recolouring a logo PNG is NOT
-#     possible from Plymouth Script.
-#
-# Visual contract (DARK MIRROR):
-#   background  : #0a0a14
-#   primary     : #a06bff (purple, in bar-track tint)
-#   secondary   : #3ad8ff (cyan, in bar-fill)
-# ------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
+//  NYXUS · Plymouth boot splash · "COSMIC ARRIVAL"
+//  A UFO descends out of a violet/magenta nebula, fires a tractor beam and
+//  materialises the NYXUS wordmark — the cinematic handoff BIOS → greeter.
+//
+//  Flow of the boot picture:
+//     1. nebula fades up from black
+//     2. saucer glides down from deep space and settles into a gentle hover
+//     3. tractor beam blooms beneath it, orbs stream up the beam (the "loading")
+//     4. NYXUS wordmark + tagline + subline materialise in the beam light
+//     5. LUKS passphrase (if any) draws as a row of beam-orbs
+//     6. on quit everything fades to black for a flash-free greeter handoff
+//
+//  Resolution independent: every sprite is scaled from the live screen size,
+//  so it looks right at the forced 1280x720 boot mode or a native 1920x1080.
+//
+//  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+// ─────────────────────────────────────────────────────────────────────────────
 
-# ---- canvas -------------------------------------------------------
-W = Window.GetWidth();
-H = Window.GetHeight();
-Window.SetBackgroundTopColor   (0.039, 0.039, 0.078);  # #0a0a14
-Window.SetBackgroundBottomColor(0.000, 0.000, 0.000);
+PI = 3.14159265;
 
-# ---- logo ---------------------------------------------------------
-logo.image  = Image("logo.png");
-logo.sprite = Sprite(logo.image);
-logo.w = logo.image.GetWidth();
-logo.h = logo.image.GetHeight();
-logo.sprite.SetX((W - logo.w) / 2);
-logo.sprite.SetY((H - logo.h) / 2 - 30);
-logo.sprite.SetZ(10);
-logo.sprite.SetOpacity(1.0);
+// ── Screen geometry ─────────────────────────────────────────────────────────
+screen.w  = Window.GetWidth();
+screen.h  = Window.GetHeight();
+screen.cx = screen.w / 2;
+screen.cy = screen.h / 2;
 
-# ---- progress bar -------------------------------------------------
-bar.w = 320;
-bar.h = 4;
-bar.x = (W - bar.w) / 2;
-bar.y = H * 0.78;
-
-# Track (dim purple, full width, low opacity)
-track.image  = Image("bar-track.png").Scale(bar.w, bar.h);
-track.sprite = Sprite(track.image);
-track.sprite.SetX(bar.x);
-track.sprite.SetY(bar.y);
-track.sprite.SetZ(5);
-track.sprite.SetOpacity(0.55);
-
-# Fill (cyan, width animates with progress). Start with 1px width
-# and replace the image when progress updates.
-fill.full   = Image("bar-fill.png");
-fill.image  = fill.full.Scale(1, bar.h);
-fill.sprite = Sprite(fill.image);
-fill.sprite.SetX(bar.x);
-fill.sprite.SetY(bar.y);
-fill.sprite.SetZ(7);
-fill.sprite.SetOpacity(0.92);
-
-global.message_sprite = NULL;
-global.prompt_sprite  = NULL;
-
-# ---- callbacks ----------------------------------------------------
-fun refresh_callback ()
-{
-  # Pulse the logo (sin-based opacity 0.7..1.0)
-  pulse = 0.85 + 0.15 * Math.Sin(Plymouth.GetTime() * 2.0);
-  logo.sprite.SetOpacity(pulse);
+fun clamp(v, lo, hi) {
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+// ease-out cubic  (fast in, soft landing)
+fun easeout(t) {
+    it = 1 - t;
+    return 1 - it * it * it;
 }
 
-fun progress_callback (duration, progress)
-{
-  # Width in pixels, clamped to [1, bar.w]
-  px = Math.Int(bar.w * progress);
-  if (px < 1) { px = 1; }
-  if (px > bar.w) { px = bar.w; }
-  scaled = fill.full.Scale(px, bar.h);
-  fill.sprite.SetImage(scaled);
+// ── Background · cosmic nebula, full-bleed cover ────────────────────────────
+bg.image  = Image("background.png");
+bg.scale  = Math.Max(screen.w / bg.image.GetWidth(),
+                     screen.h / bg.image.GetHeight());
+bg.img    = bg.image.Scale(bg.image.GetWidth()  * bg.scale,
+                           bg.image.GetHeight() * bg.scale);
+bg.sprite = Sprite(bg.img);
+bg.sprite.SetX((screen.w - bg.img.GetWidth())  / 2);
+bg.sprite.SetY((screen.h - bg.img.GetHeight()) / 2);
+bg.sprite.SetZ(-100);
+bg.sprite.SetOpacity(0);
+
+// ── Saucer + arrival glow ───────────────────────────────────────────────────
+saucer.w      = screen.w * 0.44;
+saucer.img    = Image("saucer.png");
+saucer.scaled = saucer.img.Scale(saucer.w,
+                    saucer.img.GetHeight() * saucer.w / saucer.img.GetWidth());
+saucer.h      = saucer.scaled.GetHeight();
+saucer.sprite = Sprite(saucer.scaled);
+saucer.sprite.SetZ(10);
+saucer.x      = screen.cx - saucer.w / 2;
+saucer.rest_y = screen.h * 0.20;          // resting altitude (upper third)
+saucer.start_y = -saucer.h - 40;          // just above the top edge
+
+glow.img    = Image("saucer_glow.png");
+glow.scaled = glow.img.Scale(saucer.w * 1.25,
+                  glow.img.GetHeight() * (saucer.w * 1.25) / glow.img.GetWidth());
+glow.sprite = Sprite(glow.scaled);
+glow.sprite.SetZ(-8);
+glow.sprite.SetOpacity(0);
+
+// ── Tractor beam ────────────────────────────────────────────────────────────
+beam.w      = screen.w * 0.34;
+beam.img    = Image("beam.png");
+beam.scaled = beam.img.Scale(beam.w,
+                  beam.img.GetHeight() * beam.w / beam.img.GetWidth());
+beam.h      = beam.scaled.GetHeight();
+beam.sprite = Sprite(beam.scaled);
+beam.sprite.SetX(screen.cx - beam.w / 2);
+beam.sprite.SetZ(-6);
+beam.sprite.SetOpacity(0);
+
+// ── Beam orbs (rising particles = "loading") ────────────────────────────────
+orb.count  = 5;
+orb.w      = screen.w * 0.020;
+orb.image  = Image("orb.png");
+orb.scaled = orb.image.Scale(orb.w, orb.w);
+orb.range  = 200;                          // tick period of one rise
+orb.sprites = [];
+orb.phase   = [];
+orb.jitter  = [];
+for (i = 0; i < orb.count; i++) {
+    orb.sprites[i] = Sprite(orb.scaled);
+    orb.sprites[i].SetZ(-4);
+    orb.sprites[i].SetOpacity(0);
+    orb.phase[i]  = (orb.range / orb.count) * i;
+    orb.jitter[i] = (i - 2) * (beam.w * 0.06);
 }
 
-fun status_callback (status)
-{
-  # Status strings (boot:initialize, boot:shutdown, …) — we don't
-  # render them, but the handler must exist with a 1-arg signature.
+// ── Wordmark / tagline / subline ────────────────────────────────────────────
+wm.w      = screen.w * 0.40;
+wm.img    = Image("wordmark.png");
+wm.scaled = wm.img.Scale(wm.w, wm.img.GetHeight() * wm.w / wm.img.GetWidth());
+wm.h      = wm.scaled.GetHeight();
+wm.sprite = Sprite(wm.scaled);
+wm.x      = screen.cx - wm.w / 2;
+wm.rest_y = screen.h * 0.60;
+wm.sprite.SetX(wm.x);
+wm.sprite.SetZ(6);
+wm.sprite.SetOpacity(0);
+
+tag.w      = screen.w * 0.52;
+tag.img    = Image("tagline.png");
+tag.scaled = tag.img.Scale(tag.w, tag.img.GetHeight() * tag.w / tag.img.GetWidth());
+tag.h      = tag.scaled.GetHeight();
+tag.sprite = Sprite(tag.scaled);
+tag.sprite.SetX(screen.cx - tag.w / 2);
+tag.y      = wm.rest_y + wm.h + screen.h * 0.015;
+tag.sprite.SetY(tag.y);
+tag.sprite.SetZ(6);
+tag.sprite.SetOpacity(0);
+
+sub.w      = screen.w * 0.22;
+sub.img    = Image("subline.png");
+sub.scaled = sub.img.Scale(sub.w, sub.img.GetHeight() * sub.w / sub.img.GetWidth());
+sub.h      = sub.scaled.GetHeight();
+sub.sprite = Sprite(sub.scaled);
+sub.sprite.SetX(screen.cx - sub.w / 2);
+sub.sprite.SetY(tag.y + tag.h + screen.h * 0.02);
+sub.sprite.SetZ(6);
+sub.sprite.SetOpacity(0);
+
+// ── Status line (boot messages) + passphrase prompt ─────────────────────────
+status.sprite = Sprite();
+status.sprite.SetX(screen.w * 0.04);
+status.sprite.SetY(screen.h - screen.h * 0.06);
+status.sprite.SetZ(20);
+
+prompt.sprite = Sprite();
+prompt.sprite.SetZ(20);
+prompt.shown = 0;
+
+bullets.list  = [];
+bullets.count = 0;
+
+// ── Animation state ─────────────────────────────────────────────────────────
+anim.tick = 0;
+
+// timeline markers (in ticks · Refresh runs ~50/s)
+T.bg_end     = 16;      // nebula fully up
+T.fall_a     = 12;      // saucer begins descent
+T.fall_b     = 68;      // saucer settled
+T.beam_a     = 60;      // beam starts to bloom
+T.beam_b     = 96;      // beam full
+T.wm_a       = 84;      // wordmark starts
+T.wm_b       = 116;     // wordmark full
+T.tag_a      = 110;
+T.tag_b      = 140;
+T.sub_a      = 132;
+T.sub_b      = 158;
+
+fun seg(t, a, b) {                         // 0..1 progress across [a,b]
+    if (t <= a) return 0;
+    if (t >= b) return 1;
+    return (t - a) / (b - a);
 }
 
-fun message_callback (text)
-{
-  if (global.message_sprite != NULL)
-    {
-      global.message_sprite.SetOpacity(0);
+fun Refresh() {
+    anim.tick++;
+    t = anim.tick;
+
+    // nebula fade-up
+    bg.sprite.SetOpacity(seg(t, 0, T.bg_end));
+
+    // saucer descent (ease-out) + gentle hover once landed
+    fall = easeout(seg(t, T.fall_a, T.fall_b));
+    y = saucer.start_y + (saucer.rest_y - saucer.start_y) * fall;
+    hover = 0;
+    if (t > T.fall_b)
+        hover = Math.Sin((t - T.fall_b) * 0.045) * (screen.h * 0.006);
+    saucer.sprite.SetX(saucer.x);
+    saucer.sprite.SetY(y + hover);
+
+    // arrival glow blooms as it lands, then breathes
+    gb = seg(t, T.fall_a + 20, T.fall_b);
+    breath = 0.82 + Math.Sin(t * 0.05) * 0.18;
+    glow.sprite.SetX(screen.cx - glow.scaled.GetWidth() / 2);
+    glow.sprite.SetY((y + hover) + saucer.h * 0.30 - glow.scaled.GetHeight() / 2);
+    glow.sprite.SetOpacity(gb * 0.7 * breath);
+
+    // beam bloom + shimmer pulse (the "loading" heartbeat)
+    beam.top = (y + hover) + saucer.h * 0.62;
+    beam.sprite.SetY(beam.top);
+    pulse = 0.72 + Math.Sin(t * 0.11) * 0.28;
+    beam.sprite.SetOpacity(seg(t, T.beam_a, T.beam_b) * pulse);
+
+    // orbs streaming UP the beam
+    reveal = seg(t, T.beam_a, T.beam_b);
+    for (i = 0; i < orb.count; i++) {
+        p    = ((t * 1.6) + orb.phase[i]);
+        frac = (p - (Math.Int(p / orb.range) * orb.range)) / orb.range; // 0..1
+        oy   = beam.top + beam.h * (1 - frac) - orb.w / 2;
+        spread = frac;                       // widens toward the floor
+        ox   = screen.cx + orb.jitter[i] * spread - orb.w / 2;
+        fade = Math.Sin(frac * PI);          // soft in/out along the beam
+        orb.sprites[i].SetX(ox);
+        orb.sprites[i].SetY(oy);
+        orb.sprites[i].SetOpacity(fade * reveal * 0.9);
     }
-  msg = Image.Text(text, 0.90, 0.90, 0.95, 1.0, "Inter 11");
-  s = Sprite(msg);
-  s.SetX((W - msg.GetWidth()) / 2);
-  s.SetY(bar.y + 20);
-  s.SetZ(20);
-  global.message_sprite = s;
+
+    // wordmark materialises in the beam light (fade + slight rise)
+    wa = seg(t, T.wm_a, T.wm_b);
+    wa_e = easeout(wa);
+    wm.sprite.SetY(wm.rest_y + (1 - wa_e) * (screen.h * 0.03));
+    wm.sprite.SetOpacity(wa);
+
+    tag.sprite.SetOpacity(seg(t, T.tag_a, T.tag_b) * 0.96);
+    sub.sprite.SetOpacity(seg(t, T.sub_a, T.sub_b) * 0.7);
+}
+Plymouth.SetRefreshFunction(Refresh);
+
+// ── Boot progress (optional nudge; timeline already drives the reveal) ──────
+fun ProgressCallback(duration, progress) {
+    // no-op: the cinematic is time-based so it looks identical on fast boots
+}
+Plymouth.SetBootProgressFunction(ProgressCallback);
+
+// ── Boot status messages → subtle bottom-left line ──────────────────────────
+fun MessageCallback(text) {
+    status.image = Image.Text(text, 0.78, 0.72, 0.92, 0.8, "Sans 10");
+    status.sprite.SetImage(status.image);
+}
+Plymouth.SetMessageFunction(MessageCallback);
+
+// ── LUKS passphrase entry ────────────────────────────────────────────────────
+fun clear_bullets() {
+    for (i = 0; i < bullets.count; i++)
+        bullets.list[i] = NULL;
+    bullets.list  = [];
+    bullets.count = 0;
 }
 
-fun display_password_callback (prompt, bullets)
-{
-  # LUKS unlock prompt — render the prompt + bullet count under the bar.
-  if (global.prompt_sprite != NULL)
-    {
-      global.prompt_sprite.SetOpacity(0);
+fun DisplayPasswordCallback(prompt_text, bullet_n) {
+    // draw the prompt just under the wordmark
+    prompt.image = Image.Text(prompt_text, 0.88, 0.90, 1.0, 0.9, "Sans 11");
+    prompt.sprite.SetImage(prompt.image);
+    prompt.y = wm.rest_y + wm.h + screen.h * 0.02;
+    prompt.sprite.SetX(screen.cx - prompt.image.GetWidth() / 2);
+    prompt.sprite.SetY(prompt.y);
+    prompt.sprite.SetOpacity(1);
+    prompt.shown = 1;
+
+    clear_bullets();
+    bullets.count = bullet_n;
+    spacing = screen.w * 0.022;
+    start_x = screen.cx - ((bullet_n - 1) * spacing) / 2;
+    by = prompt.y + screen.h * 0.05;
+    for (i = 0; i < bullet_n; i++) {
+        s = Sprite(orb.scaled);
+        s.SetX(start_x + i * spacing - orb.w / 2);
+        s.SetY(by);
+        s.SetZ(20);
+        s.SetOpacity(0.95);
+        bullets.list[i] = s;
     }
-  txt = prompt;
-  i = 0;
-  while (i < bullets)
-    {
-      txt = txt + " *";
-      i = i + 1;
-    }
-  img = Image.Text(txt, 0.227, 0.847, 1.0, 1.0, "Inter 12");
-  s = Sprite(img);
-  s.SetX((W - img.GetWidth()) / 2);
-  s.SetY(bar.y + 50);
-  s.SetZ(30);
-  global.prompt_sprite = s;
 }
+Plymouth.SetDisplayPasswordFunction(DisplayPasswordCallback);
 
-fun display_normal_callback ()
-{
-  if (global.prompt_sprite != NULL)
-    {
-      global.prompt_sprite.SetOpacity(0);
-      global.prompt_sprite = NULL;
+fun DisplayNormalCallback() {
+    clear_bullets();
+    if (prompt.shown) {
+        prompt.sprite.SetOpacity(0);
+        prompt.shown = 0;
     }
 }
+Plymouth.SetDisplayNormalFunction(DisplayNormalCallback);
 
-fun quit_callback ()
-{
-  logo.sprite.SetOpacity(0);
-  fill.sprite.SetOpacity(0);
-  track.sprite.SetOpacity(0);
+// ── Quit · fade to black for a clean, flash-free greeter handoff ────────────
+fun QuitCallback() {
+    bg.sprite.SetOpacity(0);
+    saucer.sprite.SetOpacity(0);
+    glow.sprite.SetOpacity(0);
+    beam.sprite.SetOpacity(0);
+    wm.sprite.SetOpacity(0);
+    tag.sprite.SetOpacity(0);
+    sub.sprite.SetOpacity(0);
+    prompt.sprite.SetOpacity(0);
+    for (i = 0; i < orb.count; i++)
+        orb.sprites[i].SetOpacity(0);
+    clear_bullets();
 }
-
-# ---- registration -------------------------------------------------
-Plymouth.SetRefreshFunction         (refresh_callback);
-Plymouth.SetBootProgressFunction    (progress_callback);
-Plymouth.SetUpdateStatusFunction    (status_callback);
-Plymouth.SetMessageFunction         (message_callback);
-Plymouth.SetDisplayPasswordFunction (display_password_callback);
-Plymouth.SetDisplayNormalFunction   (display_normal_callback);
-Plymouth.SetQuitFunction            (quit_callback);
+Plymouth.SetQuitFunction(QuitCallback);
