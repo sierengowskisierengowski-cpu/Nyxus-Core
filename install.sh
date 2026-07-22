@@ -70,7 +70,7 @@ LAUNCHERS=(
   nyxus-beatd nyxus-blackarch-full nyxus-boot-check nyxus-bootstrap nyxus-companion nyxus-crash-report nyxus-drop
   nyxus-dynamic-wallpaper.sh nyxus-eww-cinematic nyxus-eww-launch
   nyxus-eww-launch-safe nyxus-freeform nyxus-gen-backdrop nyxus-ghost
-  nyxus-ghost-helper nyxus-glow nyxus-hacker-mode nyxus-home
+  nyxus-ghost-helper nyxus-glow nyxus-graffiti-wall nyxus-hacker-mode nyxus-home
   nyxus-hotkey nyxus_hotcorners.py nyxus-hub-apps nyxus-hub-close nyxus-hub-launch
   nyxus-hub-open nyxus-hub-search nyxus-launch-bifrost nyxus-launch-meli nyxus-lens nyxus-livewall-flagship
   nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art
