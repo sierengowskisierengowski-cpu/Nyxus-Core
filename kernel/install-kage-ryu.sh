@@ -56,8 +56,18 @@ else
   echo "  ! unknown bootloader — verify kage-ryu entry exists before rebooting"
 fi
 
-# Ship the BBR sysctl (safe on any kernel).
-install -Dm644 "$(dirname "$0")/nyxus-bbr.conf" /etc/sysctl.d/99-nyxus-bbr.conf
+# Install + run the Kage-Ryu auto-activation layer (tuning + sched-ext), which
+# supersedes the old standalone BBR drop-in and makes the kernel self-activate
+# on every future upgrade (pacman hook). Falls back to just the BBR sysctl if
+# the kage-ryu checkout predates the packaging/ layer.
+if [[ -x "${KAGE_REPO}/packaging/install-activation.sh" ]]; then
+  echo "  · installing Kage-Ryu auto-activation layer (self-activates on kernel upgrades)"
+  "${KAGE_REPO}/packaging/install-activation.sh" \
+    || echo "  ! activation layer returned non-zero (kernel is still installed)"
+else
+  echo "  · packaging/ layer not present in ${KAGE_REPO}; shipping standalone BBR sysctl"
+  install -Dm644 "$(dirname "$0")/nyxus-bbr.conf" /etc/sysctl.d/99-nyxus-bbr.conf
+fi
 
 cat <<EOF
 

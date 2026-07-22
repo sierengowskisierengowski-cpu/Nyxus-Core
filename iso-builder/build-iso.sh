@@ -104,6 +104,22 @@ ok "iso version: ${ISO_DATE} → ${ISO_NAME}"
 _nyx_restore_profile() {
   [[ -f "${PROFILE_DIR}/packages.x86_64.bake.bak" ]] && mv -f "${PROFILE_DIR}/packages.x86_64.bake.bak" "${PROFILE_DIR}/packages.x86_64"
   [[ -f "${PROFILE_DIR}/pacman.conf.bake.bak" ]]     && mv -f "${PROFILE_DIR}/pacman.conf.bake.bak"     "${PROFILE_DIR}/pacman.conf"
+  # Remove the kage-ryu auto-activation files staged into the airootfs (all
+  # kage-namespaced), so an opt-in kernel bake doesn't leave the tracked
+  # profile dirty. No-op unless this bake staged them.
+  if [[ "${NYX_KAGE_AIROOTFS_STAGED:-0}" == "1" ]]; then
+    local A="${PROFILE_DIR}/airootfs"
+    rm -rf "${A}/usr/share/kage-ryu"
+    rm -f  "${A}/usr/share/libalpm/scripts/kage-ryu-activate" \
+           "${A}/usr/share/libalpm/hooks/95-kage-ryu-activate.hook" \
+           "${A}/usr/lib/systemd/system-preset/80-kage-ryu.preset" \
+           "${A}/etc/sysctl.d/99-kage-ryu.conf" \
+           "${A}/etc/modprobe.d/kage-ryu.conf" \
+           "${A}/etc/systemd/system/scx-kage.service" \
+           "${A}/etc/systemd/system/multi-user.target.wants/scx-kage.service" \
+           "${A}/usr/local/bin/scx_kage" \
+           "${A}/usr/local/bin/scx_kage_ctl"
+  fi
   return 0
 }
 trap _nyx_restore_profile EXIT
@@ -180,6 +196,21 @@ PACMANLOCAL
     printf '\n# Kage Ryu Nyxus custom kernel (staged into [nyx-local] by build-iso.sh)\nlinux-kage-ryu\nlinux-kage-ryu-headers\n' >> "${PROFILE_DIR}/packages.x86_64"
   fi
   ok "packages.x86_64 += linux-kage-ryu + headers (installs ALONGSIDE stock linux; stock stays default)"
+
+  # Bake the auto-activation layer into the airootfs so a Kage-Ryu boot from
+  # this image is tuned + scx_kage-scheduled on FIRST boot with no manual step.
+  # Staged files are kage-namespaced and removed on exit by the restore trap,
+  # so a git checkout is never left dirty (this whole block is opt-in anyway).
+  if [[ -x "${KAGE_PKGDIR}/packaging/install-activation.sh" ]]; then
+    if "${KAGE_PKGDIR}/packaging/install-activation.sh" --root "${PROFILE_DIR}/airootfs"; then
+      NYX_KAGE_AIROOTFS_STAGED=1
+      ok "auto-activation staged into airootfs (first boot: tuned + scx_kage scheduled)"
+    else
+      warn "kage-ryu activation staging failed — kernel still installs, but the ISO won't self-activate"
+    fi
+  else
+    warn "no packaging/install-activation.sh in ${KAGE_PKGDIR}; ISO ships the kernel without auto-activation"
+  fi
 fi
 
 # ── stamp version into profiledef.sh + os-release ────────────────────────
