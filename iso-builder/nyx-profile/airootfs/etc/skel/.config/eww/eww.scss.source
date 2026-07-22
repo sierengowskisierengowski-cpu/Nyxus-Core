@@ -3820,6 +3820,46 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 }
 
 /* ====================================================================
+   NYXUS Mood Engine tints (nyxus-sense) - additive glow that shifts the
+   bar labels with the derived mood. Placed BEFORE .nyx-glitch so the
+   random glitch flash wins when both classes are present. Composes with
+   the pulsed/tint reflex layer (which owns borders, not these labels).
+   ==================================================================== */
+.mood-ghost {
+  color: #aab6d4;
+  text-shadow: 0 0 8px rgba(150, 175, 220, 0.35);
+}
+.mood-drift {
+  text-shadow:
+    0 0 12px rgba($nyxus-accent-secondary, 0.45),
+    0 0 22px rgba($nyxus-accent-primary, 0.20);
+}
+.mood-prowl {
+  text-shadow: 0 0 12px rgba($nyxus-accent-primary, 0.55);
+}
+.mood-overclock {
+  text-shadow:
+    0 0 12px rgba($neon-red, 0.60),
+    0 0 26px rgba($nyxus-accent-warn, 0.38);
+}
+.mood-matrix {
+  color: #6bffa1;
+  text-shadow:
+    0 0 12px rgba(0, 255, 65, 0.60),
+    0 0 26px rgba(0, 255, 65, 0.28);
+}
+
+/* SUPERNOVA show mode - the logo blazes while the beat-locked show runs. */
+.super-live {
+  color: #ffffff;
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.90),
+    0 0 22px rgba($nyxus-accent-primary, 0.80),
+    0 0 40px rgba($nyxus-accent-secondary, 0.55),
+    0 0 70px rgba($neon-red, 0.35);
+}
+
+/* ====================================================================
    NYXUS glow eye-candy + security-toggle states (ported 2026-07-21)
    random-glow.sh flips .nyx-glitch onto random labels every 7s for a
    flickering neon bloom; security-state.sh drives the .sec-pill states.

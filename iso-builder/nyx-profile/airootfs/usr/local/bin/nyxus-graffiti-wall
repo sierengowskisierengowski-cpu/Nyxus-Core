@@ -1,0 +1,311 @@
+#!/usr/bin/env python3
+# ============================================================================
+#  nyxus-graffiti-wall  ·  the wall that remembers you   rev 2026-07-21 r1
+#  (c) 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Your graffiti-space wallpaper slowly ACCRETES your real activity as
+#  spray-paint tags — git commits, tracks you played, session milestones —
+#  each sprayed on in Permanent Marker over the alien wall. Over days it
+#  becomes a one-of-a-kind mural of your computing life that literally
+#  cannot be copied. Graffiti is lettering, so this needs no image model:
+#  cairo paints the tags; the base alien art stays underneath.
+#
+#      nyxus-graffiti-wall tag "TEXT" [sub]   spray one tag now
+#      nyxus-graffiti-wall sync               pull new git/track activity
+#      nyxus-graffiti-wall on                 set the memory wall live
+#      nyxus-graffiti-wall daemon             auto-accrete (sync every 30m)
+#      nyxus-graffiti-wall reset              wipe the tag layer (fresh wall)
+#      nyxus-graffiti-wall status             tag count + paths
+# ============================================================================
+import json, math, os, random, signal, subprocess, sys, time
+import cairo
+
+HOME   = os.path.expanduser("~")
+CFG    = os.path.join(HOME, ".config", "nyxus")
+GDIR   = os.path.join(CFG, "graffiti")
+BASE_SRC = os.path.join(HOME, ".config", "hypr", "walls", "nyxus-graffiti-space.png")
+BASE     = os.path.join(GDIR, "base.png")          # scaled base cache
+LAYER    = os.path.join(GDIR, "layer.png")         # persistent accreting tags
+OUT      = os.path.join(GDIR, "graffiti-memory.png")
+STATE    = os.path.join(GDIR, "state.json")
+PIDFILE  = os.path.join(CFG, "graffiti.pid")
+REPO     = os.path.join(HOME, "Nyxus-Core")
+SENSE    = os.path.join(CFG, "sense.json")
+
+W, H = 1920, 1080
+SYNC_EVERY = 1800          # daemon: accrete every 30 min
+
+# neon spray palette (r,g,b) — matches the purple/magenta alien wall
+PALETTE = [(1.00, 0.23, 0.67), (0.60, 0.30, 1.00), (0.17, 0.82, 1.00),
+           (0.10, 1.00, 0.42), (1.00, 0.45, 0.90), (0.75, 0.45, 1.00)]
+
+os.makedirs(GDIR, exist_ok=True)
+
+
+def load_state():
+    try:
+        with open(STATE) as f:
+            return json.load(f)
+    except Exception:
+        return {"count": 0, "last_sha": "", "last_track": ""}
+
+
+def save_state(s):
+    try:
+        with open(STATE, "w") as f:
+            json.dump(s, f)
+    except Exception:
+        pass
+
+
+def ensure_base():
+    """Scale the 5120x2880 alien wall down to the working canvas once."""
+    if os.path.exists(BASE):
+        return
+    if not os.path.exists(BASE_SRC):
+        # fallback: solid deep-void so the tool still works
+        surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, W, H)
+        c = cairo.Context(surf)
+        c.set_source_rgb(0.04, 0.02, 0.09); c.paint()
+        surf.write_to_png(BASE)
+        return
+    src = cairo.ImageSurface.create_from_png(BASE_SRC)
+    sw, sh = src.get_width(), src.get_height()
+    surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, W, H)
+    c = cairo.Context(surf)
+    scale = max(W / sw, H / sh)                    # cover
+    c.translate((W - sw * scale) / 2, (H - sh * scale) / 2)
+    c.scale(scale, scale)
+    c.set_source_surface(src, 0, 0)
+    c.paint()
+    surf.write_to_png(BASE)
+
+
+def load_layer():
+    if os.path.exists(LAYER):
+        try:
+            return cairo.ImageSurface.create_from_png(LAYER)
+        except Exception:
+            pass
+    return cairo.ImageSurface(cairo.FORMAT_ARGB32, W, H)
+
+
+def tag_position(idx):
+    """Spread tags across the canvas: a jittered 6x4 grid, cycling, so the
+    mural fills out before it starts layering over itself."""
+    cols, rows = 6, 4
+    cell = idx % (cols * rows)
+    cx = (cell % cols + 0.5) * (W / cols)
+    cy = (cell // cols + 0.5) * (H / rows)
+    cx += random.uniform(-90, 90)
+    cy += random.uniform(-60, 60)
+    return max(60, min(W - 60, cx)), max(50, min(H - 50, cy))
+
+
+def spray_tag(text, idx, sub=""):
+    """Paint one graffiti tag onto the persistent layer + return it."""
+    layer = load_layer()
+    c = cairo.Context(layer)
+    x, y = tag_position(idx)
+    r, g, b = random.choice(PALETTE)
+    size = random.uniform(34, 62)
+    angle = math.radians(random.uniform(-13, 13))
+
+    c.save()
+    c.translate(x, y)
+    c.rotate(angle)
+    c.select_font_face("Permanent Marker",
+                       cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+    c.set_font_size(size)
+    ext = c.text_extents(text)
+    ox = -ext.width / 2
+
+    # dark legibility backing
+    c.set_source_rgba(0, 0, 0, 0.45)
+    c.move_to(ox + 2, 2); c.show_text(text)
+    # neon bloom (layered)
+    for ba in (0.12, 0.20):
+        c.set_source_rgba(r, g, b, ba)
+        for dx in (-2, 2, 0):
+            for dy in (-2, 2, 0):
+                c.move_to(ox + dx, dy); c.show_text(text)
+    # bright core
+    c.set_source_rgba(min(1, r + 0.3), min(1, g + 0.3), min(1, b + 0.3), 0.96)
+    c.move_to(ox, 0); c.show_text(text)
+
+    # a couple of drips under a random letter
+    for _ in range(random.randint(1, 3)):
+        dx = ox + random.uniform(0, max(1, ext.width))
+        dl = random.uniform(8, 26)
+        c.set_source_rgba(r, g, b, 0.5)
+        c.set_line_width(random.uniform(1.5, 3.0))
+        c.move_to(dx, 4); c.line_to(dx, 4 + dl); c.stroke()
+        c.arc(dx, 4 + dl, c.get_line_width(), 0, 2 * math.pi); c.fill()
+
+    # sub-line (context) in Caveat, smaller + dimmer
+    if sub:
+        c.select_font_face("Caveat", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+        c.set_font_size(size * 0.42)
+        se = c.text_extents(sub)
+        c.set_source_rgba(1, 1, 1, 0.55)
+        c.move_to(-se.width / 2, size * 0.7); c.show_text(sub)
+    c.restore()
+
+    layer.write_to_png(LAYER)
+    return True
+
+
+def composite():
+    ensure_base()
+    base = cairo.ImageSurface.create_from_png(BASE)
+    c = cairo.Context(base)
+    layer = load_layer()
+    c.set_source_surface(layer, 0, 0)
+    c.paint()
+    base.write_to_png(OUT)
+    return OUT
+
+
+def set_wallpaper(path):
+    for cmd in (["nyxus-set-wallpaper", path],
+                ["swww", "img", path, "--transition-type", "grow"]):
+        try:
+            if subprocess.run(cmd, stdout=subprocess.DEVNULL,
+                              stderr=subprocess.DEVNULL, timeout=10).returncode == 0:
+                return True
+        except Exception:
+            continue
+    return False
+
+
+# ── activity sources ────────────────────────────────────────────────────────
+def new_commits(last_sha):
+    rng = f"{last_sha}..HEAD" if last_sha else "-8"
+    try:
+        out = subprocess.run(["git", "-C", REPO, "log", "--format=%h\x1f%s",
+                              rng], capture_output=True, text=True, timeout=3)
+        rows = [l for l in out.stdout.splitlines() if "\x1f" in l]
+        return [(r.split("\x1f", 1)[0], r.split("\x1f", 1)[1]) for r in rows][:12]
+    except Exception:
+        return []
+
+
+def current_track():
+    try:
+        with open(SENSE) as f:
+            a = (json.load(f).get("audio") or {})
+        if a.get("playing") and a.get("title"):
+            return a["title"], a.get("artist", "")
+    except Exception:
+        pass
+    return None, None
+
+
+def keyword_of(subject):
+    """Pick a punchy word from a commit subject to spray as the tag."""
+    stop = {"the", "a", "an", "to", "for", "of", "and", "in", "on", "with",
+            "fix", "add", "into", "so", "not", "it", "is"}
+    words = [w.strip(":.,()").upper() for w in subject.split()
+             if len(w) > 3 and w.lower() not in stop]
+    return words[0] if words else subject.split()[0].upper()
+
+
+def do_sync(set_live=False):
+    st = load_state()
+    added = 0
+    commits = new_commits(st.get("last_sha", ""))
+    # oldest first so the mural grows in chronological order
+    for sha, subj in reversed(commits):
+        spray_tag(keyword_of(subj), st["count"], sub=sha)
+        st["count"] += 1
+        added += 1
+    if commits:
+        st["last_sha"] = commits[0][0]
+    title, artist = current_track()
+    if title and title != st.get("last_track", ""):
+        spray_tag(title[:22].upper(), st["count"],
+                  sub=(artist[:24] if artist else "now playing"))
+        st["count"] += 1
+        added += 1
+        st["last_track"] = title
+    save_state(st)
+    if added:
+        composite()
+        if set_live:
+            set_wallpaper(OUT)
+    return added
+
+
+# ── commands ────────────────────────────────────────────────────────────────
+def cmd_tag(argv):
+    st = load_state()
+    text = (argv[0] if argv else "NYXUS").upper()
+    sub = argv[1] if len(argv) > 1 else ""
+    spray_tag(text, st["count"], sub=sub)
+    st["count"] += 1
+    save_state(st)
+    composite()
+    set_wallpaper(OUT)
+    print(f"sprayed '{text}' (tag #{st['count']})")
+
+
+def cmd_on():
+    composite()
+    ok = set_wallpaper(OUT)
+    print("graffiti memory wall live" if ok else "composited (set-wallpaper failed)")
+
+
+def cmd_reset():
+    for p in (LAYER, OUT):
+        try: os.unlink(p)
+        except OSError: pass
+    st = load_state(); st["count"] = 0; save_state(st)
+    print("tag layer wiped — fresh wall")
+
+
+def cmd_status():
+    st = load_state()
+    print(f"nyxus-graffiti-wall: {st.get('count',0)} tags · "
+          f"last_sha={st.get('last_sha','')[:7] or '-'} · layer={'yes' if os.path.exists(LAYER) else 'no'}")
+    print(f"  out: {OUT}")
+
+
+def cmd_daemon():
+    with open(PIDFILE, "w") as f:
+        f.write(str(os.getpid()))
+    run = [True]
+    signal.signal(signal.SIGTERM, lambda *_: run.__setitem__(0, False))
+    signal.signal(signal.SIGINT, lambda *_: run.__setitem__(0, False))
+    try:
+        while run[0]:
+            try:
+                do_sync(set_live=True)
+            except Exception:
+                pass
+            for _ in range(SYNC_EVERY):
+                if not run[0]:
+                    break
+                time.sleep(1)
+    finally:
+        try: os.unlink(PIDFILE)
+        except OSError: pass
+
+
+def main():
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
+    if cmd == "tag":
+        cmd_tag(sys.argv[2:])
+    elif cmd == "sync":
+        n = do_sync(set_live=True); print(f"accreted {n} tag(s)")
+    elif cmd == "on":
+        cmd_on()
+    elif cmd == "daemon":
+        cmd_daemon()
+    elif cmd == "reset":
+        cmd_reset()
+    else:
+        cmd_status()
+
+
+if __name__ == "__main__":
+    main()
