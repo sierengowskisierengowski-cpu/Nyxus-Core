@@ -37,6 +37,30 @@ a fresh `sha256sums` for the new tarball/patch — a networked build step, not a
 blind edit. 7.0.12 fully supports the GS77 (DRM_XE, MSI_EC, iwlwifi all present),
 so it's a fine baseline; bump when convenient. See install helper `--bump` note.
 
+## Alternative kernels considered (trade-offs, for future-you)
+Kage Ryu (custom XanMod) is a *signature*, Alder-Lake-tuned, security-configured
+kernel — cool and bespoke, but it's a multi-GB compile, pinned to an old base
+(7.0.12), and needs a manual rebuild on every bump. If maintenance/version-lag
+ever outweighs the bespoke factor, these are the honest alternatives — all in the
+official Arch repos (no compile, always current, auto-update with the system):
+- **`linux-zen`** — the pragmatic sweet spot. ~90% of XanMod's desktop/low-latency
+  benefit, full config (BPF/KVM/userns/overlayfs — everything the security tools
+  need), zero maintenance. For "perf desktop + security tooling," this would have
+  been the lower-effort choice with nearly the same result.
+- **`linux-hardened`** — max *host* exploit-hardening, best if the priority is
+  protecting the box that detonates malware. Caveat: the hardening can *interfere*
+  with the offensive/analysis tooling (eBPF, containers, debuggers) and costs some
+  performance. Since NYXUS already isolates malware in KVM VMs and keeps mitigations
+  on, this is a defensible-but-not-required upgrade.
+- **stock `linux`** — newest kernel = latest security patches, zero effort, has
+  every needed option enabled. The no-brainer if you just want current-and-forget;
+  it already stays the DEFAULT boot entry regardless of which alt you pick.
+
+None of these are wrong — the "right" one is a priority call: bespoke/tuned
+(Kage Ryu) vs low-effort performance (`linux-zen`) vs max host hardening
+(`linux-hardened`) vs simplest/newest (stock). Kage Ryu ships selectable so you
+can A/B any of them against stock without risk.
+
 ## Two ways to get Kage Ryu Nyxus onto a machine
 
 **A) Post-install, on a running NYXUS system (simplest — works today):**
