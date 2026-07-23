@@ -582,25 +582,48 @@ install -m 0644 "${NS}/nyxus-usb-watch.service" \
 ok "user systemd units: nyxus-usb-watch.service"
 
 # ── Offline cache → /opt/nyxus-cache/ ───────────────────────────────────
-# nyxus-bootstrap falls back to this path when the network is unreachable
-# on first boot. Mirroring the entire dist/nyxus-scripts/ payload in here
-# means the live ISO can fully install NYXUS chrome with zero internet —
-# the difference between "the user's coffee shop has no Wi-Fi" being a
-# blocker vs a non-event. ~52 MB added to the squashfs; the user's already
-# paying ~1.8 GB for the base ISO so this is rounding error.
-NYXUS_DIST="${REPO_ROOT}/artifacts/api-server/dist/nyxus-scripts"
+# nyxus-bootstrap falls back to this path when the network is unreachable on
+# first boot (i.e. ALWAYS on a live USB with no Wi-Fi). If this cache is
+# empty, first-boot setup can't complete offline and the user lands on a
+# bare desktop with a "no internet + no offline cache" note — exactly the
+# failure seen on the 2026-07-22 stick. So this MUST be populated, and we
+# now FAIL THE BAKE if it can't be, rather than silently shipping an
+# online-only ISO.
+#
+# Source preference:
+#   1. artifacts/api-server/dist/nyxus-scripts  — the pruned/optimized build
+#      output (smallest), produced by the api-server build. Preferred if present.
+#   2. artifacts/api-server/nyxus-scripts       — the in-repo SOURCE payload,
+#      always tracked in git (nyxus_install.sh + all eww/hypr/wallpaper/plymouth
+#      assets). Guarantees a working offline install even when (1) was never built.
+NYXUS_DIST=""
+for _cand in "${REPO_ROOT}/artifacts/api-server/dist/nyxus-scripts" \
+             "${REPO_ROOT}/artifacts/api-server/nyxus-scripts"; do
+  if [[ -d "${_cand}" && -f "${_cand}/nyxus_install.sh" ]]; then NYXUS_DIST="${_cand}"; break; fi
+done
 OFFLINE_CACHE="${PROFILE_DIR}/airootfs/opt/nyxus-cache"
-# Always wipe first so a missing dist/ never silently ships a stale cache
+# Always wipe first so a missing source never silently ships a stale cache
 # from a prior bake. The whole point of staging is fresh-each-time.
 rm -rf "${OFFLINE_CACHE}"
-if [[ -d "${NYXUS_DIST}" ]]; then
-  mkdir -p "${OFFLINE_CACHE}"
-  cp -a "${NYXUS_DIST}/." "${OFFLINE_CACHE}/"
-  ok "offline cache: $(ls "${OFFLINE_CACHE}" | wc -l) files in /opt/nyxus-cache/ ($(du -sh "${OFFLINE_CACHE}" | cut -f1))"
-else
-  warn "dist/nyxus-scripts/ not found — ISO will be ONLINE-ONLY (offline fallback disabled)"
-  warn "to enable offline fallback, run 'pnpm --filter @workspace/api-server run build' first"
+if [[ -z "${NYXUS_DIST}" ]]; then
+  fail "offline install payload not found (no nyxus_install.sh under"
+  fail "  artifacts/api-server/{dist/,}nyxus-scripts) — the ISO would strand"
+  fail "  the user on a bare desktop with no internet. Aborting the bake."
+  exit 1
 fi
+mkdir -p "${OFFLINE_CACHE}"
+cp -a "${NYXUS_DIST}/." "${OFFLINE_CACHE}/"
+# Drop build cruft that has no business in the shipped cache (python bytecode,
+# VCS, editor/agent dirs). Cheap size win; never touches payload files.
+find "${OFFLINE_CACHE}" -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null || true
+find "${OFFLINE_CACHE}" -type f -name '*.pyc' -delete 2>/dev/null || true
+find "${OFFLINE_CACHE}" -type d \( -name '.git' -o -name '.claude' -o -name '.pytest_cache' \) -prune -exec rm -rf {} + 2>/dev/null || true
+# Hard guarantee: the installer the bootstrap runs offline MUST be present.
+if [[ ! -f "${OFFLINE_CACHE}/nyxus_install.sh" ]]; then
+  fail "offline cache staged from ${NYXUS_DIST} but nyxus_install.sh is missing — aborting"
+  exit 1
+fi
+ok "offline cache: $(find "${OFFLINE_CACHE}" -type f | wc -l) files ($(du -sh "${OFFLINE_CACHE}" | cut -f1)) from ${NYXUS_DIST#${REPO_ROOT}/} — first boot works with NO internet"
 
 # ── SDDM theme → /usr/share/sddm/themes/nyxus/ + config ────────────────
 # Stages the NYXUS QML login theme into the airootfs. The live ISO itself
