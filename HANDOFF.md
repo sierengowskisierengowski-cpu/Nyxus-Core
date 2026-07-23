@@ -203,9 +203,13 @@ correct/expected (it's a live ISO, not an install).
    defaults to the **Kage-Ryu** entry) → graffiti-saucer splash → full desktop with
    bars + correct wallpaper **offline** → apps install from cache (no "code 1").
    Confirm `uname -r` shows the kage-ryu kernel.
-3. Optional cleanup (deferred): the `accent-baseline/home/cosmic/...` builder-home
-   leak in skel; ~40 non-boot Replit refs (self-update snippets, README, polkit
-   vendor_url); prune non-alien walls from the payload if size matters.
+3. Cleanup status (2026-07-23): accent-baseline builder-home leak **removed**
+   (regenerated per-user by nyxus-apply-accent). STILL deferred: ~33 non-boot
+   Replit refs (self-update snippets, README curl example, polkit vendor_url —
+   all non-fatal now that the boot+install path is Replit-free); ~50 GB of old
+   ISOs in `iso-builder/out/` (untracked, safe to delete); 90 stale remote
+   branches on GitHub (copilot/*, devin/*, cursor/*, archive/vault-*) — prune to
+   avoid re-scattering. Prune non-alien walls from the payload if size matters.
 4. Owner's call: fold `companion-3d` under one roof or keep separate.
 
 ---
