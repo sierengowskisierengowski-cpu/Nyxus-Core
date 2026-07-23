@@ -259,7 +259,7 @@ export default function Notes() {
           <div className="rounded-lg p-3 flex-1 min-h-0 overflow-y-auto" style={{ background: '#0d0d1a', border: '1px solid #111118' }}>
             {isLoading ? (
               <div className="space-y-2">
-                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12 w-full" style={{ background: '#0a0a14' }} />)}
+                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12 w-full" style={{ background: '#05060a' }} />)}
               </div>
             ) : notes?.length === 0 ? (
               <p className="text-[11px] font-mono text-center py-4" style={{ color: '#64748b' }}>No notes yet.</p>

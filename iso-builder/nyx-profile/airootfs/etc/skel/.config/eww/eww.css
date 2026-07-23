@@ -49,7 +49,7 @@ window, window.background, decoration {
   all: unset;
   font-family: "Inter Display", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 12px;
-  color: #e8edf5;
+  color: #eef2fa;
 }
 
 /* Re-assert AFTER the `all: unset` above - unset reverts the window node
@@ -221,8 +221,8 @@ window, window.background, decoration {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: #ff4d6b;
-  text-shadow: 0 0 12px rgba(255, 77, 107, 0.65), 0 0 22px rgba(125, 61, 255, 0.3);
+  color: #ff2d55;
+  text-shadow: 0 0 12px rgba(255, 45, 85, 0.65), 0 0 22px rgba(125, 61, 255, 0.3);
 }
 
 .bar-hub-music-artist {
@@ -259,8 +259,8 @@ window, window.background, decoration {
   border-radius: 18px;
   padding: 3px 14px 4px 14px;
   min-width: 232px;
-  border-color: rgba(255, 77, 107, 0.5);
-  box-shadow: 0 0 14px rgba(255, 77, 107, 0.3), 0 0 26px rgba(125, 61, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 16px rgba(0, 0, 0, 0.74);
+  border-color: rgba(255, 45, 85, 0.5);
+  box-shadow: 0 0 14px rgba(255, 45, 85, 0.3), 0 0 26px rgba(125, 61, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 16px rgba(0, 0, 0, 0.74);
 }
 
 /* bigger, livelier CAVA spectrum for the music face — mint so it reads as
@@ -295,8 +295,8 @@ window, window.background, decoration {
   border-radius: 999px;
   background-repeat: no-repeat;
   background-position: left center;
-  background-image: linear-gradient(90deg, #7d3dff 0%, #ff4d6b 60%, #ff2dad 100%);
-  box-shadow: 0 0 7px rgba(255, 77, 107, 0.6);
+  background-image: linear-gradient(90deg, #7d3dff 0%, #ff2d55 60%, #ff2dad 100%);
+  box-shadow: 0 0 7px rgba(255, 45, 85, 0.6);
 }
 
 /* transport controls — prev / play-pause / next */
@@ -326,14 +326,14 @@ window, window.background, decoration {
 
 .saucer-btn-main {
   min-width: 26px;
-  color: #ff4d6b;
-  border-color: rgba(255, 77, 107, 0.55);
-  text-shadow: 0 0 9px rgba(255, 77, 107, 0.7);
+  color: #ff2d55;
+  border-color: rgba(255, 45, 85, 0.55);
+  text-shadow: 0 0 9px rgba(255, 45, 85, 0.7);
 }
 
 .saucer-btn-main:hover {
-  background-color: rgba(255, 77, 107, 0.22);
-  border-color: rgba(255, 77, 107, 0.85);
+  background-color: rgba(255, 45, 85, 0.22);
+  border-color: rgba(255, 45, 85, 0.85);
   color: #ffffff;
 }
 
@@ -348,8 +348,8 @@ window, window.background, decoration {
 }
 
 .bar-strip-fans {
-  color: rgba(255, 120, 73, 0.95);
-  text-shadow: 0 0 12px rgba(255, 120, 73, 0.55), 0 0 22px rgba(125, 61, 255, 0.25);
+  color: rgba(255, 138, 30, 0.95);
+  text-shadow: 0 0 12px rgba(255, 138, 30, 0.55), 0 0 22px rgba(125, 61, 255, 0.25);
 }
 
 .bar-strip-net {
@@ -401,7 +401,7 @@ window, window.background, decoration {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: #e8edf5;
+  color: #eef2fa;
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.85), 0 0 6px rgba(255, 255, 255, 0.28);
 }
 
@@ -446,7 +446,7 @@ window, window.background, decoration {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #e8edf5;
+  color: #eef2fa;
   text-shadow: 0 0 8px rgba(0, 0, 0, 0.85);
 }
 
@@ -458,13 +458,13 @@ window, window.background, decoration {
 /* hue variants: neon glyph + trace glow (double halo = ink for contrast
    on bright nebula regions + colored bloom for the neon read). */
 .mon-glyph-orange {
-  color: #ff7849;
-  text-shadow: 0 0 9px rgba(255, 120, 73, 0.75), 0 1px 6px rgba(0, 0, 0, 0.9);
+  color: #ff8a1e;
+  text-shadow: 0 0 9px rgba(255, 138, 30, 0.75), 0 1px 6px rgba(0, 0, 0, 0.9);
 }
 
 .mon-trace-orange {
-  color: rgba(255, 120, 73, 0.92);
-  text-shadow: 0 0 10px rgba(255, 120, 73, 0.65), 0 0 22px rgba(255, 120, 73, 0.3), 0 1px 5px rgba(0, 0, 0, 0.85);
+  color: rgba(255, 138, 30, 0.92);
+  text-shadow: 0 0 10px rgba(255, 138, 30, 0.65), 0 0 22px rgba(255, 138, 30, 0.3), 0 1px 5px rgba(0, 0, 0, 0.85);
 }
 
 .mon-value-orange {
@@ -705,7 +705,7 @@ window, window.background, decoration {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 10px;
   font-weight: 700;
-  color: #e8edf5;
+  color: #eef2fa;
 }
 
 .orb-net .nexus-orb-label {
@@ -746,7 +746,7 @@ window, window.background, decoration {
 }
 
 .orb-power:hover .nexus-orb-label {
-  text-shadow: 0 0 12px rgba(255, 77, 107, 0.75);
+  text-shadow: 0 0 12px rgba(255, 45, 85, 0.75);
 }
 
 /* Reactor metric chips — orbit the heart */
@@ -784,7 +784,7 @@ window, window.background, decoration {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 10px;
   font-weight: 800;
-  color: #e8edf5;
+  color: #eef2fa;
 }
 
 .reactor-chip-pink {
@@ -815,12 +815,12 @@ window, window.background, decoration {
 }
 
 .reactor-chip-orange {
-  border-color: rgba(255, 120, 73, 0.5);
+  border-color: rgba(255, 138, 30, 0.5);
 }
 
 .reactor-chip-orange .reactor-chip-val {
   color: rgb(255, 160.5, 127.6);
-  text-shadow: 0 0 8px rgba(255, 120, 73, 0.55);
+  text-shadow: 0 0 8px rgba(255, 138, 30, 0.55);
 }
 
 .reactor-chip-alert {
@@ -901,7 +901,7 @@ window, window.background, decoration {
   border: 1px solid rgba(125, 61, 255, 0.48);
   border-top: 2px solid rgba(125, 61, 255, 0.95);
   box-shadow: 0 0 16px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.06);
-  color: #e8edf5;
+  color: #eef2fa;
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
   font-weight: 700;
   font-size: 11px;
@@ -1001,30 +1001,30 @@ window, window.background, decoration {
 }
 
 .batt-low {
-  border-color: rgba(255, 77, 107, 0.55);
-  color: #ff4d6b;
+  border-color: rgba(255, 45, 85, 0.55);
+  color: #ff2d55;
 }
 
 /* danger key: obsidian base (from .pill) + red top-rule; blooms red on
    hover, sinks on press. No translucent red fill -- keeps the wash off. */
 .power-pill {
-  border-color: rgba(255, 77, 107, 0.52);
-  box-shadow: 0 0 13px rgba(255, 77, 107, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
+  border-color: rgba(255, 45, 85, 0.52);
+  box-shadow: 0 0 13px rgba(255, 45, 85, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
   color: rgb(255, 139.3, 158.8);
 }
 
 .power-pill:hover {
-  border-color: rgba(255, 77, 107, 0.95);
-  box-shadow: 0 0 22px rgba(255, 77, 107, 0.5), 0 0 40px rgba(255, 77, 107, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 45, 85, 0.95);
+  box-shadow: 0 0 22px rgba(255, 45, 85, 0.5), 0 0 40px rgba(255, 45, 85, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(255, 77, 107, 0.6);
+  text-shadow: 0 0 10px rgba(255, 45, 85, 0.6);
 }
 
 .power-pill:active {
   background-color: rgba(2, 1, 6, 0.99);
   background-image: none;
-  border-color: rgba(255, 77, 107, 0.85);
-  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(255, 77, 107, 0.32);
+  border-color: rgba(255, 45, 85, 0.85);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.7), inset 0 0 13px rgba(0, 0, 0, 0.6), 0 0 11px rgba(255, 45, 85, 0.32);
 }
 
 /* -- BRAND ---------------------------------------------------------- */
@@ -1038,24 +1038,24 @@ window, window.background, decoration {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(255, 77, 107, 0.456);
-  border-top: 2px solid rgba(255, 77, 107, 0.9025);
-  box-shadow: 0 0 16px rgba(255, 77, 107, 0.209), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 77, 107, 0.057);
+  border: 1px solid rgba(255, 45, 85, 0.456);
+  border-top: 2px solid rgba(255, 45, 85, 0.9025);
+  box-shadow: 0 0 16px rgba(255, 45, 85, 0.209), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 45, 85, 0.057);
   color: #ffffff;
-  box-shadow: 0 0 18px rgba(255, 77, 107, 0.35), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 14px rgba(0, 0, 0, 0.52);
+  box-shadow: 0 0 18px rgba(255, 45, 85, 0.35), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 14px rgba(0, 0, 0, 0.52);
 }
 
 .brand-gem {
   font-size: 14px;
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.95), 0 0 22px rgba(255, 77, 107, 0.75);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.95), 0 0 22px rgba(255, 45, 85, 0.75);
 }
 
 .brand-word {
   font-family: "Permanent Marker", "Inter", cursive;
   font-size: 13px;
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(255, 77, 107, 0.7), 0 0 24px rgba(125, 61, 255, 0.35);
+  text-shadow: 0 0 12px rgba(255, 45, 85, 0.7), 0 0 24px rgba(125, 61, 255, 0.35);
 }
 
 .brand-stamp {
@@ -1067,9 +1067,9 @@ window, window.background, decoration {
 }
 
 .brand:hover {
-  border-color: rgba(255, 77, 107, 0.95);
-  box-shadow: 0 0 22px rgba(255, 77, 107, 0.5), 0 0 40px rgba(255, 77, 107, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 28px rgba(255, 77, 107, 0.55), 0 0 48px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62);
+  border-color: rgba(255, 45, 85, 0.95);
+  box-shadow: 0 0 22px rgba(255, 45, 85, 0.5), 0 0 40px rgba(255, 45, 85, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 28px rgba(255, 45, 85, 0.55), 0 0 48px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62);
 }
 
 .brand-top {
@@ -1608,12 +1608,12 @@ window, window.background, decoration {
 }
 
 .hub-tile-orange {
-  border-color: rgba(255, 120, 73, 0.45);
+  border-color: rgba(255, 138, 30, 0.45);
 }
 
 .hub-tile-orange .hub-tile-glyph {
-  color: #ff7849;
-  text-shadow: 0 0 12px rgba(255, 120, 73, 0.55);
+  color: #ff8a1e;
+  text-shadow: 0 0 12px rgba(255, 138, 30, 0.55);
 }
 
 .hub-tile-cyan {
@@ -1626,12 +1626,12 @@ window, window.background, decoration {
 }
 
 .hub-tile-red {
-  border-color: rgba(255, 77, 107, 0.45);
+  border-color: rgba(255, 45, 85, 0.45);
 }
 
 .hub-tile-red .hub-tile-glyph {
-  color: #ff4d6b;
-  text-shadow: 0 0 12px rgba(255, 77, 107, 0.55);
+  color: #ff2d55;
+  text-shadow: 0 0 12px rgba(255, 45, 85, 0.55);
 }
 
 .hub-slider-row {
@@ -1705,7 +1705,7 @@ window, window.background, decoration {
 }
 
 .hub-ws-orange {
-  border-color: rgba(255, 120, 73, 0.4);
+  border-color: rgba(255, 138, 30, 0.4);
   color: rgb(255, 160.5, 127.6);
 }
 
@@ -1788,7 +1788,7 @@ window, window.background, decoration {
 }
 
 .hub-clock {
-  color: #e8edf5;
+  color: #eef2fa;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 26px;
   font-weight: 700;
@@ -1825,7 +1825,7 @@ window, window.background, decoration {
 }
 
 .hub-stat-value {
-  color: #e8edf5;
+  color: #eef2fa;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 16px;
   font-weight: 700;
@@ -1887,12 +1887,12 @@ window, window.background, decoration {
 }
 
 .hub-stat-orange {
-  border-color: rgba(255, 120, 73, 0.4);
+  border-color: rgba(255, 138, 30, 0.4);
 }
 
 .hub-stat-orange .hub-stat-glyph {
-  color: #ff7849;
-  text-shadow: 0 0 12px rgba(255, 120, 73, 0.55);
+  color: #ff8a1e;
+  text-shadow: 0 0 12px rgba(255, 138, 30, 0.55);
 }
 
 /* body columns — glass panes so the three zones read as distinct cards */
@@ -1917,19 +1917,19 @@ window, window.background, decoration {
   padding: 12px 14px;
   border-radius: 12px;
   background-color: rgba(5, 2, 11, 0.78);
-  border: 1px solid rgba(255, 77, 107, 0.1984);
-  border-top: 1px solid rgba(255, 77, 107, 0.3844);
+  border: 1px solid rgba(255, 45, 85, 0.1984);
+  border-top: 1px solid rgba(255, 45, 85, 0.3844);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.38);
 }
 
 .hub-media-glyph {
-  color: #ff4d6b;
+  color: #ff2d55;
   font-size: 22px;
-  text-shadow: 0 0 14px rgba(255, 77, 107, 0.55);
+  text-shadow: 0 0 14px rgba(255, 45, 85, 0.55);
 }
 
 .hub-media-title {
-  color: #e8edf5;
+  color: #eef2fa;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1956,8 +1956,8 @@ window, window.background, decoration {
   min-height: 5px;
   border-radius: 3px;
   background-repeat: no-repeat;
-  background-image: linear-gradient(90deg, #ff4d6b, #7d3dff);
-  box-shadow: 0 0 8px rgba(255, 77, 107, 0.55);
+  background-image: linear-gradient(90deg, #ff2d55, #7d3dff);
+  box-shadow: 0 0 8px rgba(255, 45, 85, 0.55);
 }
 
 .hub-media-btn {
@@ -1965,21 +1965,21 @@ window, window.background, decoration {
   padding: 6px 10px;
   border-radius: 8px;
   background-color: rgba(10, 4, 18, 0.66);
-  border: 1px solid rgba(255, 77, 107, 0.28);
+  border: 1px solid rgba(255, 45, 85, 0.28);
   color: #c8ccd6;
   font-size: 15px;
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .hub-media-btn:hover {
-  border-color: rgba(255, 77, 107, 0.62);
+  border-color: rgba(255, 45, 85, 0.62);
   color: #ffffff;
-  box-shadow: 0 0 14px rgba(255, 77, 107, 0.3);
+  box-shadow: 0 0 14px rgba(255, 45, 85, 0.3);
 }
 
 .hub-media-btn-main {
   color: rgb(255, 139.3, 158.8);
-  border-color: rgba(255, 77, 107, 0.55);
+  border-color: rgba(255, 45, 85, 0.55);
 }
 
 /* apps column head + list */
@@ -2071,13 +2071,13 @@ window, window.background, decoration {
 }
 
 .dc-val {
-  color: #e8edf5;
+  color: #eef2fa;
   font-size: 11px;
 }
 
 .dc-bad {
-  color: #ff4d6b;
-  text-shadow: 0 0 8px rgba(255, 77, 107, 0.45);
+  color: #ff2d55;
+  text-shadow: 0 0 8px rgba(255, 45, 85, 0.45);
 }
 
 .dc-live {
@@ -2091,7 +2091,7 @@ window, window.background, decoration {
 }
 
 .dc-dot-off {
-  color: #ff4d6b;
+  color: #ff2d55;
 }
 
 .dc-close {
@@ -2232,14 +2232,14 @@ scrollbar slider:hover {
 }
 
 .dash-grid .dash-card:nth-child(3) {
-  border-color: rgba(255, 120, 73, 0.55);
-  border-top-color: #ff7849;
-  box-shadow: 0 0 18px rgba(255, 120, 73, 0.2), 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 24px rgba(0, 0, 0, 0.18);
+  border-color: rgba(255, 138, 30, 0.55);
+  border-top-color: #ff8a1e;
+  box-shadow: 0 0 18px rgba(255, 138, 30, 0.2), 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 24px rgba(0, 0, 0, 0.18);
 }
 
 .dash-grid .dash-card:nth-child(3) .dash-card-title {
-  color: #ff7849;
-  text-shadow: 0 0 10px rgba(255, 120, 73, 0.45);
+  color: #ff8a1e;
+  text-shadow: 0 0 10px rgba(255, 138, 30, 0.45);
 }
 
 .dash-grid .dash-card:nth-child(4) {
@@ -2254,14 +2254,14 @@ scrollbar slider:hover {
 }
 
 .dash-grid .dash-card:nth-child(5) {
-  border-color: rgba(255, 77, 107, 0.55);
-  border-top-color: #ff4d6b;
-  box-shadow: 0 0 18px rgba(255, 77, 107, 0.2), 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 24px rgba(0, 0, 0, 0.18);
+  border-color: rgba(255, 45, 85, 0.55);
+  border-top-color: #ff2d55;
+  box-shadow: 0 0 18px rgba(255, 45, 85, 0.2), 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 24px rgba(0, 0, 0, 0.18);
 }
 
 .dash-grid .dash-card:nth-child(5) .dash-card-title {
-  color: #ff4d6b;
-  text-shadow: 0 0 10px rgba(255, 77, 107, 0.45);
+  color: #ff2d55;
+  text-shadow: 0 0 10px rgba(255, 45, 85, 0.45);
 }
 
 .dash-card-title {
@@ -2362,7 +2362,7 @@ scrollbar slider:hover {
    resting state so they read as obviously different from soft actions
    (Suspend/Logout/Lock). Per DESIGN_CONTRACT.md S8. */
 .power-btn-danger {
-  border-color: rgba(255, 77, 107, 0.45);
+  border-color: rgba(255, 45, 85, 0.45);
   background: rgba(40, 12, 22, 0.55);
 }
 
@@ -2371,8 +2371,8 @@ scrollbar slider:hover {
 }
 
 .power-btn-danger:hover {
-  border-color: rgba(255, 77, 107, 0.85);
-  box-shadow: 0 0 36px rgba(255, 77, 107, 0.55);
+  border-color: rgba(255, 45, 85, 0.85);
+  box-shadow: 0 0 36px rgba(255, 45, 85, 0.55);
 }
 
 .power-glyph {
@@ -2613,8 +2613,8 @@ scrollbar slider:hover {
 /* --- Enterprise additions: new bar pills, player, cores, polish ----- */
 /* Mic mute / bluetooth / power-profile / updates / notifications color states */
 .mic-mute {
-  color: #ff4d6b;
-  border-color: rgba(255, 77, 107, 0.45);
+  color: #ff2d55;
+  border-color: rgba(255, 45, 85, 0.45);
 }
 
 .bt-off {
@@ -2728,12 +2728,12 @@ scrollbar slider:hover {
 }
 
 .core-warm {
-  background: linear-gradient(180deg, rgb(255, 160.5, 127.6), #ff7849);
+  background: linear-gradient(180deg, rgb(255, 160.5, 127.6), #ff8a1e);
 }
 
 .core-hot {
-  background: linear-gradient(180deg, #ff4d6b, rgb(19.6, 121.8, 169.4));
-  box-shadow: 0 0 10px rgba(255, 77, 107, 0.55);
+  background: linear-gradient(180deg, #ff2d55, rgb(19.6, 121.8, 169.4));
+  box-shadow: 0 0 10px rgba(255, 45, 85, 0.55);
 }
 
 /* Dashboard media player card - HUD "Music" card (red) */
@@ -2741,9 +2741,9 @@ scrollbar slider:hover {
   padding: 20px 22px;
   border-radius: 8px;
   background: rgba(7, 5, 14, 0.93);
-  border: 1px dashed rgba(255, 77, 107, 0.55);
-  border-top: 2px solid #ff4d6b;
-  box-shadow: 0 0 18px rgba(255, 77, 107, 0.2), 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 24px rgba(0, 0, 0, 0.18);
+  border: 1px dashed rgba(255, 45, 85, 0.55);
+  border-top: 2px solid #ff2d55;
+  box-shadow: 0 0 18px rgba(255, 45, 85, 0.2), 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 24px rgba(0, 0, 0, 0.18);
   min-width: 240px;
 }
 
@@ -2887,7 +2887,7 @@ scrollbar slider:hover {
   background-color: rgba(8, 4, 16, 0.86);
   border-color: rgba(255, 45, 173, 0.58);
   box-shadow: 0 0 18px rgba(255, 45, 173, 0.28), 0 4px 16px rgba(0, 0, 0, 0.48), inset 0 0 12px rgba(255, 45, 173, 0.08);
-  color: #e8edf5;
+  color: #eef2fa;
 }
 
 .panel-tab-on {
@@ -2914,7 +2914,7 @@ scrollbar slider:hover {
 
 .wifi-auto:hover {
   background: rgba(255, 45, 173, 0.13);
-  color: #e8edf5;
+  color: #eef2fa;
 }
 
 .wifi-auto-on {
@@ -2999,7 +2999,7 @@ scrollbar slider:hover {
 }
 
 .upd-name {
-  color: #e8edf5;
+  color: #eef2fa;
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 11px;
 }
@@ -3085,7 +3085,7 @@ scrollbar slider:hover {
   padding: 7px 0;
   border-radius: 10px;
   font-size: 12px;
-  color: #e8edf5;
+  color: #eef2fa;
   font-weight: 600;
   background-color: rgba(5, 2, 11, 0.78);
   border: 1px solid rgba(255, 138, 30, 0.144);
@@ -3130,7 +3130,7 @@ scrollbar slider:hover {
   border: 1px solid rgba(255, 138, 30, 0.48);
   border-top: 2px solid rgba(255, 138, 30, 0.95);
   box-shadow: 0 0 16px rgba(255, 138, 30, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 138, 30, 0.06);
-  color: #e8edf5;
+  color: #eef2fa;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -3280,7 +3280,7 @@ scrollbar slider:hover {
 }
 
 .empty-title {
-  color: #e8edf5;
+  color: #eef2fa;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -3295,8 +3295,8 @@ scrollbar slider:hover {
 .qs-close, .wifi-close, .bt-close, .mix-close, .cal-close, .notif-close, .upd-close {
   padding: 8px 16px;
   border-radius: 12px;
-  background: rgba(255, 77, 107, 0.12);
-  border: 1px solid rgba(255, 77, 107, 0.3);
+  background: rgba(255, 45, 85, 0.12);
+  border: 1px solid rgba(255, 45, 85, 0.3);
   color: rgb(255, 139.3, 158.8);
   letter-spacing: 0.06em;
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
@@ -3304,9 +3304,9 @@ scrollbar slider:hover {
 
 .qs-close:hover, .wifi-close:hover, .bt-close:hover, .mix-close:hover,
 .cal-close:hover, .notif-close:hover {
-  background: rgba(255, 77, 107, 0.28);
+  background: rgba(255, 45, 85, 0.28);
   color: #ffffff;
-  box-shadow: 0 0 14px rgba(255, 77, 107, 0.45);
+  box-shadow: 0 0 14px rgba(255, 45, 85, 0.45);
 }
 
 /* -- WIFI ------------------------------------------------------------- */
@@ -3372,7 +3372,7 @@ scrollbar slider:hover {
 .wifi-name {
   background: transparent;
   border: none;
-  color: #e8edf5;
+  color: #eef2fa;
   font-size: 12px;
 }
 
@@ -3390,13 +3390,13 @@ scrollbar slider:hover {
 .wifi-forget {
   padding: 2px 8px;
   border-radius: 6px;
-  background: rgba(255, 77, 107, 0.1);
-  border: 1px solid rgba(255, 77, 107, 0.25);
+  background: rgba(255, 45, 85, 0.1);
+  border: 1px solid rgba(255, 45, 85, 0.25);
   color: rgb(255, 139.3, 158.8);
 }
 
 .wifi-forget:hover {
-  background: rgba(255, 77, 107, 0.3);
+  background: rgba(255, 45, 85, 0.3);
   color: #ffffff;
 }
 
@@ -3436,13 +3436,13 @@ scrollbar slider:hover {
 }
 
 .bt-forget {
-  background: rgba(255, 77, 107, 0.1);
-  border-color: rgba(255, 77, 107, 0.25);
+  background: rgba(255, 45, 85, 0.1);
+  border-color: rgba(255, 45, 85, 0.25);
   color: rgb(255, 139.3, 158.8);
 }
 
 .bt-forget:hover {
-  background: rgba(255, 77, 107, 0.3);
+  background: rgba(255, 45, 85, 0.3);
   color: #ffffff;
 }
 
@@ -3469,7 +3469,7 @@ scrollbar slider:hover {
 }
 
 .mix-name {
-  color: #e8edf5;
+  color: #eef2fa;
   font-size: 12px;
 }
 
@@ -3546,13 +3546,13 @@ scrollbar slider:hover {
 .notif-dismiss {
   padding: 2px 8px;
   border-radius: 6px;
-  background: rgba(255, 77, 107, 0.08);
-  border: 1px solid rgba(255, 77, 107, 0.2);
+  background: rgba(255, 45, 85, 0.08);
+  border: 1px solid rgba(255, 45, 85, 0.2);
   color: rgb(255, 139.3, 158.8);
 }
 
 .notif-dismiss:hover {
-  background: rgba(255, 77, 107, 0.28);
+  background: rgba(255, 45, 85, 0.28);
   color: #ffffff;
 }
 
@@ -3585,7 +3585,7 @@ scrollbar slider:hover {
 }
 
 .dock-eventbox.urgent {
-  background: rgba(255, 77, 107, 0.18);
+  background: rgba(255, 45, 85, 0.18);
 }
 
 .dock-eventbox.focused {
@@ -3629,7 +3629,7 @@ scrollbar slider:hover {
 }
 
 .dock-badge {
-  background: linear-gradient(135deg, #7d3dff, #ff4d6b);
+  background: linear-gradient(135deg, #7d3dff, #ff2d55);
   color: #ffffff;
   font-weight: 700;
   font-size: 8px;
@@ -3650,8 +3650,8 @@ scrollbar slider:hover {
 }
 
 .dock-badge.trash {
-  background: linear-gradient(135deg, rgb(255, 160.5, 127.6) 0%, #ff7849 100%);
-  box-shadow: 0 2px 6px rgba(255, 120, 73, 0.4);
+  background: linear-gradient(135deg, rgb(255, 160.5, 127.6) 0%, #ff8a1e 100%);
+  box-shadow: 0 2px 6px rgba(255, 138, 30, 0.4);
 }
 
 /* Running indicator dot */
@@ -3705,7 +3705,7 @@ scrollbar slider:hover {
   border: 1px solid rgba(255, 45, 173, 0.42);
   border-radius: 12px;
   padding: 18px 20px;
-  color: #e8edf5;
+  color: #eef2fa;
   font-family: "Inter", "JetBrains Mono", sans-serif;
   box-shadow: 0 0 0 1px rgba(255, 45, 173, 0.08), 0 24px 80px rgba(0, 0, 0, 0.65), inset 0 0 48px rgba(57, 255, 20, 0.06);
 }
@@ -3725,16 +3725,16 @@ scrollbar slider:hover {
 
 .hk-conflict-pip {
   font-size: 11px;
-  color: #ff4d6b;
+  color: #ff2d55;
   padding: 2px 10px;
-  border: 1px solid rgba(255, 77, 107, 0.35);
+  border: 1px solid rgba(255, 45, 85, 0.35);
   border-radius: 999px;
   background: rgba(40, 12, 22, 0.55);
 }
 
 .hk-search {
   background: rgba(10, 13, 20, 0.85);
-  color: #e8edf5;
+  color: #eef2fa;
   padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid rgba(57, 255, 20, 0.35);
@@ -3778,7 +3778,7 @@ scrollbar slider:hover {
 }
 
 .hk-desc {
-  color: #e8edf5;
+  color: #eef2fa;
 }
 
 .hk-cat {
@@ -3794,7 +3794,7 @@ scrollbar slider:hover {
 
 .hk-btn {
   background: rgba(17, 21, 31, 0.72);
-  color: #e8edf5;
+  color: #eef2fa;
   padding: 6px 14px;
   border-radius: 8px;
   border: 1px solid rgba(57, 255, 20, 0.35);
@@ -3808,7 +3808,7 @@ scrollbar slider:hover {
 }
 
 .hk-btn-close {
-  color: #ff4d6b;
+  color: #ff2d55;
 }
 
 .hk-recorder {
@@ -3857,7 +3857,7 @@ scrollbar slider:hover {
 .snap-zone-cell {
   background: rgba(10, 13, 20, 0.85);
   border: 1px solid rgba(57, 255, 20, 0.35);
-  color: #e8edf5;
+  color: #eef2fa;
   font-weight: 600;
   border-radius: 10px;
   min-width: 96px;
@@ -3875,7 +3875,7 @@ scrollbar slider:hover {
 
 .snap-toast {
   background: rgba(5, 6, 10, 0.94);
-  color: #e8edf5;
+  color: #eef2fa;
   padding: 10px 18px;
   border-radius: 999px;
   border: 1px solid rgba(255, 45, 173, 0.35);
@@ -3950,7 +3950,7 @@ scrollbar slider:hover {
 .mission-window-chip {
   background: rgba(17, 21, 31, 0.72);
   border: 1px solid rgba(57, 255, 20, 0.28);
-  color: #e8edf5;
+  color: #eef2fa;
   font-size: 11px;
   border-radius: 6px;
   padding: 3px 8px;
@@ -4005,7 +4005,7 @@ scrollbar slider:hover {
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(125, 61, 255, 0.18), rgba(255, 45, 173, 0.1));
   border: 1px solid rgba(125, 61, 255, 0.35);
-  color: #e8edf5;
+  color: #eef2fa;
   letter-spacing: 0.14em;
   font-weight: 700;
   transition: all 160ms ease;
@@ -4192,7 +4192,7 @@ scale slider {
   border: 1px solid rgba(125, 61, 255, 0.288);
   border-top: 2px solid rgba(125, 61, 255, 0.57);
   box-shadow: 0 0 16px rgba(125, 61, 255, 0.132), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.036);
-  color: #e8edf5;
+  color: #eef2fa;
   font-size: 16px;
   transition: all 180ms ease;
 }
@@ -4463,7 +4463,7 @@ scale slider {
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
   font-size: 10px;
   font-weight: 700;
-  color: #e8edf5;
+  color: #eef2fa;
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
@@ -4510,13 +4510,13 @@ scale slider {
 }
 
 .hud-tile-orange {
-  border-color: rgba(255, 120, 73, 0.55);
-  box-shadow: 0 0 13px rgba(255, 120, 73, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
+  border-color: rgba(255, 138, 30, 0.55);
+  box-shadow: 0 0 13px rgba(255, 138, 30, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
 }
 
 .hud-tile-orange .hud-tile-glyph, .hud-tile-orange .hud-tile-label {
-  color: #ff7849;
-  text-shadow: 0 0 8px rgba(255, 120, 73, 0.55);
+  color: #ff8a1e;
+  text-shadow: 0 0 8px rgba(255, 138, 30, 0.55);
 }
 
 .hud-tile-blue {
@@ -4530,13 +4530,13 @@ scale slider {
 }
 
 .hud-tile-red {
-  border-color: rgba(255, 77, 107, 0.55);
-  box-shadow: 0 0 13px rgba(255, 77, 107, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
+  border-color: rgba(255, 45, 85, 0.55);
+  box-shadow: 0 0 13px rgba(255, 45, 85, 0.2), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 11px rgba(0, 0, 0, 0.45);
 }
 
 .hud-tile-red .hud-tile-glyph, .hud-tile-red .hud-tile-label {
-  color: #ff4d6b;
-  text-shadow: 0 0 8px rgba(255, 77, 107, 0.55);
+  color: #ff2d55;
+  text-shadow: 0 0 8px rgba(255, 45, 85, 0.55);
 }
 
 .hud-tile-strip {
@@ -4575,8 +4575,8 @@ scale slider {
 }
 
 .hud-tile-bar-orange {
-  background-image: linear-gradient(90deg, #ff7849, #ff7849);
-  box-shadow: 0 0 5px rgba(255, 120, 73, 0.45);
+  background-image: linear-gradient(90deg, #ff8a1e, #ff8a1e);
+  box-shadow: 0 0 5px rgba(255, 138, 30, 0.45);
 }
 
 .hud-tile-bar-green {
@@ -4590,8 +4590,8 @@ scale slider {
 }
 
 .hud-tile-bar-red {
-  background-image: linear-gradient(90deg, #ff4d6b, #ff4d6b);
-  box-shadow: 0 0 5px rgba(255, 77, 107, 0.45);
+  background-image: linear-gradient(90deg, #ff2d55, #ff2d55);
+  box-shadow: 0 0 5px rgba(255, 45, 85, 0.45);
 }
 
 /* -- app rail: per-app neon hover identities -------------------------- */
@@ -4648,11 +4648,11 @@ scale slider {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(255, 120, 73, 0.36);
-  border-top: 2px solid rgba(255, 120, 73, 0.7125);
-  box-shadow: 0 0 16px rgba(255, 120, 73, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 120, 73, 0.045);
+  border: 1px solid rgba(255, 138, 30, 0.36);
+  border-top: 2px solid rgba(255, 138, 30, 0.7125);
+  box-shadow: 0 0 16px rgba(255, 138, 30, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 138, 30, 0.045);
   color: rgb(255, 160.5, 127.6);
-  text-shadow: 0 0 8px rgba(255, 120, 73, 0.45);
+  text-shadow: 0 0 8px rgba(255, 138, 30, 0.45);
 }
 
 .app-pill-blue {
@@ -4696,10 +4696,10 @@ scale slider {
 }
 
 .app-pill-orange:hover {
-  border-color: rgba(255, 120, 73, 0.95);
-  box-shadow: 0 0 22px rgba(255, 120, 73, 0.5), 0 0 40px rgba(255, 120, 73, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 138, 30, 0.95);
+  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(255, 120, 73, 0.85);
+  text-shadow: 0 0 12px rgba(255, 138, 30, 0.85);
 }
 
 .app-pill-blue:hover {
@@ -4721,7 +4721,7 @@ scale slider {
   border: 1px solid rgba(125, 61, 255, 0.24);
   border-top: 2px solid rgba(125, 61, 255, 0.475);
   box-shadow: 0 0 16px rgba(125, 61, 255, 0.11), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.03);
-  color: rgba(232, 237, 245, 0.42);
+  color: rgba(238, 242, 250, 0.42);
 }
 
 .ws-pill-pink {
@@ -4773,9 +4773,9 @@ scale slider {
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
-  border: 1px solid rgba(255, 120, 73, 0.312);
-  border-top: 2px solid rgba(255, 120, 73, 0.6175);
-  box-shadow: 0 0 16px rgba(255, 120, 73, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 120, 73, 0.039);
+  border: 1px solid rgba(255, 138, 30, 0.312);
+  border-top: 2px solid rgba(255, 138, 30, 0.6175);
+  box-shadow: 0 0 16px rgba(255, 138, 30, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 138, 30, 0.039);
   color: rgb(255, 160.5, 127.6);
 }
 
@@ -4834,10 +4834,10 @@ scale slider {
 }
 
 .ws-pill-orange:hover {
-  border-color: rgba(255, 120, 73, 0.95);
-  box-shadow: 0 0 22px rgba(255, 120, 73, 0.5), 0 0 40px rgba(255, 120, 73, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 138, 30, 0.95);
+  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
   color: #ffffff;
-  text-shadow: 0 0 12px rgba(255, 120, 73, 0.85);
+  text-shadow: 0 0 12px rgba(255, 138, 30, 0.85);
 }
 
 .ws-pill-blue:hover {
@@ -4885,7 +4885,7 @@ scale slider {
 .dash-greet {
   font-family: "Caveat", "Inter", sans-serif;
   font-size: 38px;
-  color: #e8edf5;
+  color: #eef2fa;
   text-shadow: 0 0 14px rgba(255, 255, 255, 0.35);
 }
 
@@ -4943,12 +4943,12 @@ scale slider {
 
 .dash-grid .dash-card:nth-child(3) .dash-hdr-glyph,
 .dash-grid .dash-card:nth-child(3) .dash-hdr-title {
-  color: #ff7849;
-  text-shadow: 0 0 10px rgba(255, 120, 73, 0.55);
+  color: #ff8a1e;
+  text-shadow: 0 0 10px rgba(255, 138, 30, 0.55);
 }
 
 .dash-grid .dash-card:nth-child(3) .dash-hdr-rule {
-  background: rgba(255, 120, 73, 0.25);
+  background: rgba(255, 138, 30, 0.25);
 }
 
 .dash-grid .dash-card:nth-child(4) .dash-hdr-glyph,
@@ -4963,12 +4963,12 @@ scale slider {
 
 .dash-player .dash-hdr-glyph,
 .dash-player .dash-hdr-title {
-  color: #ff4d6b;
-  text-shadow: 0 0 10px rgba(255, 77, 107, 0.55);
+  color: #ff2d55;
+  text-shadow: 0 0 10px rgba(255, 45, 85, 0.55);
 }
 
 .dash-player .dash-hdr-rule {
-  background: rgba(255, 77, 107, 0.25);
+  background: rgba(255, 45, 85, 0.25);
 }
 
 .dash-cores-card .dash-hdr-glyph,
@@ -4993,8 +4993,8 @@ scale slider {
 }
 
 .dash-big-orange {
-  color: #ff7849;
-  text-shadow: 0 0 14px rgba(255, 120, 73, 0.55), 0 0 28px rgba(255, 120, 73, 0.25);
+  color: #ff8a1e;
+  text-shadow: 0 0 14px rgba(255, 138, 30, 0.55), 0 0 28px rgba(255, 138, 30, 0.25);
 }
 
 /* script accent line inside cards (weather summary etc.) */
@@ -5024,8 +5024,8 @@ scale slider {
 }
 
 .dash-foot-orange {
-  color: rgba(255, 120, 73, 0.6);
-  border-top-color: rgba(255, 120, 73, 0.16);
+  color: rgba(255, 138, 30, 0.6);
+  border-top-color: rgba(255, 138, 30, 0.16);
 }
 
 .dash-foot-purple {
@@ -5034,8 +5034,8 @@ scale slider {
 }
 
 .dash-foot-red {
-  color: rgba(255, 77, 107, 0.6);
-  border-top-color: rgba(255, 77, 107, 0.16);
+  color: rgba(255, 45, 85, 0.6);
+  border-top-color: rgba(255, 45, 85, 0.16);
 }
 
 /* -- ring gauges (HUD SYSTEM CORE voice) ------------------------------- */
@@ -5050,7 +5050,7 @@ scale slider {
   font-family: "JetBrainsMono Nerd Font", monospace;
   font-size: 13px;
   font-weight: 700;
-  color: #e8edf5;
+  color: #eef2fa;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
 }
 
@@ -5080,12 +5080,12 @@ scale slider {
 }
 
 .dash-ring-orange {
-  color: #ff7849;
+  color: #ff8a1e;
 }
 
 .dash-ring-label-orange {
-  color: #ff7849;
-  text-shadow: 0 0 8px rgba(255, 120, 73, 0.55);
+  color: #ff8a1e;
+  text-shadow: 0 0 8px rgba(255, 138, 30, 0.55);
 }
 
 .dash-ring-gold {
@@ -5174,33 +5174,33 @@ scale slider {
 }
 
 .dash-toggle-orange {
-  border-color: rgba(255, 120, 73, 0.45);
+  border-color: rgba(255, 138, 30, 0.45);
 }
 
 .dash-toggle-orange .dash-toggle-glyph {
-  color: #ff7849;
-  text-shadow: 0 0 12px rgba(255, 120, 73, 0.55);
+  color: #ff8a1e;
+  text-shadow: 0 0 12px rgba(255, 138, 30, 0.55);
 }
 
 .dash-toggle-orange:hover {
-  background: rgba(255, 120, 73, 0.13);
-  border-color: #ff7849;
-  box-shadow: 0 0 24px rgba(255, 120, 73, 0.4);
+  background: rgba(255, 138, 30, 0.13);
+  border-color: #ff8a1e;
+  box-shadow: 0 0 24px rgba(255, 138, 30, 0.4);
 }
 
 .dash-toggle-red {
-  border-color: rgba(255, 77, 107, 0.45);
+  border-color: rgba(255, 45, 85, 0.45);
 }
 
 .dash-toggle-red .dash-toggle-glyph {
-  color: #ff4d6b;
-  text-shadow: 0 0 12px rgba(255, 77, 107, 0.55);
+  color: #ff2d55;
+  text-shadow: 0 0 12px rgba(255, 45, 85, 0.55);
 }
 
 .dash-toggle-red:hover {
-  background: rgba(255, 77, 107, 0.13);
-  border-color: #ff4d6b;
-  box-shadow: 0 0 24px rgba(255, 77, 107, 0.4);
+  background: rgba(255, 45, 85, 0.13);
+  border-color: #ff2d55;
+  box-shadow: 0 0 24px rgba(255, 45, 85, 0.4);
 }
 
 /* =====================================================================
@@ -5235,11 +5235,11 @@ scale slider {
 
 .dc-title {
   color: #ff8a1e;
-  text-shadow: 0 0 12px rgba(255, 138, 30, 0.9), 0 0 30px rgba(255, 138, 30, 0.45), 0 0 60px rgba(255, 120, 73, 0.25);
+  text-shadow: 0 0 12px rgba(255, 138, 30, 0.9), 0 0 30px rgba(255, 138, 30, 0.45), 0 0 60px rgba(255, 138, 30, 0.25);
 }
 
 .brand-gem, .brand-word {
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.75), 0 0 24px rgba(255, 77, 107, 0.55), 0 0 40px rgba(125, 61, 255, 0.25);
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.75), 0 0 24px rgba(255, 45, 85, 0.55), 0 0 40px rgba(125, 61, 255, 0.25);
 }
 
 /* spray-halo on the hero clock - pink/green double bloom like the wall */
@@ -5371,7 +5371,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 }
 
 .mood-overclock {
-  text-shadow: 0 0 12px rgba(255, 77, 107, 0.6), 0 0 26px rgba(255, 138, 30, 0.38);
+  text-shadow: 0 0 12px rgba(255, 45, 85, 0.6), 0 0 26px rgba(255, 138, 30, 0.38);
 }
 
 .mood-matrix {
@@ -5382,7 +5382,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 /* SUPERNOVA show mode - the logo blazes while the beat-locked show runs. */
 .super-live {
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.9), 0 0 22px rgba(125, 61, 255, 0.8), 0 0 40px rgba(255, 45, 173, 0.55), 0 0 70px rgba(255, 77, 107, 0.35);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.9), 0 0 22px rgba(125, 61, 255, 0.8), 0 0 40px rgba(255, 45, 173, 0.55), 0 0 70px rgba(255, 45, 85, 0.35);
 }
 
 /* ====================================================================
@@ -5392,7 +5392,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
    ASCII-only. Uses live accent vars from _nyxus_accent.scss.
    ==================================================================== */
 .nyx-glitch {
-  text-shadow: 0 0 10px rgba(125, 61, 255, 0.7), 0 0 20px rgba(255, 45, 173, 0.55), 0 0 32px rgba(255, 77, 107, 0.28);
+  text-shadow: 0 0 10px rgba(125, 61, 255, 0.7), 0 0 20px rgba(255, 45, 173, 0.55), 0 0 32px rgba(255, 45, 85, 0.28);
 }
 
 .sec-pill {
@@ -5411,8 +5411,8 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 
 .sec-pill.sec-armed {
   opacity: 1;
-  border-color: rgba(255, 77, 107, 0.85);
-  box-shadow: 0 0 12px rgba(255, 77, 107, 0.45), 0 0 22px rgba(255, 138, 30, 0.28);
+  border-color: rgba(255, 45, 85, 0.85);
+  box-shadow: 0 0 12px rgba(255, 45, 85, 0.45), 0 0 22px rgba(255, 138, 30, 0.28);
 }
 
 /*# sourceMappingURL=eww.css.map */

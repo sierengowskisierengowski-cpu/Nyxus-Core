@@ -173,7 +173,7 @@ export default function Meli() {
 
         {feedLoading ? (
           <div className="space-y-3">
-            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" style={{ background: '#0a0a14' }} />)}
+            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" style={{ background: '#05060a' }} />)}
           </div>
         ) : !feed?.length ? (
           <div
@@ -212,7 +212,7 @@ export default function Meli() {
                     </div>
                     <pre
                       className="text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed p-3 rounded-lg"
-                      style={{ background: '#04040a', color: '#4ade80', border: '1px solid #0a0a14' }}
+                      style={{ background: '#04040a', color: '#4ade80', border: '1px solid #05060a' }}
                     >
                       {cmd.command}
                     </pre>

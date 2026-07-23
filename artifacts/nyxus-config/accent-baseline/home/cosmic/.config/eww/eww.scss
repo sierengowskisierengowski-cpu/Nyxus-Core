@@ -5,13 +5,13 @@
 
 /* -- NYXUS . HOME-HUD shared tokens (mirrors ~/.nyxus/nyxus-home/style.py
  *    PALETTE + nyxus-palette.css rev r13 - fixed, preset-independent) -- */
-$neon-orange: #ff7849;   // HUD "orange"  (fans / power)
+$neon-orange: #ff8a1e;   // HUD "orange"  (fans / power)
 $neon-green:  #7dff5e;   // HUD "green"   (network)
 $neon-blue:   #4d9fff;   // HUD "blue"    (bluetooth)
 $neon-cyan:   #ff2d55;   // HUD "cyan"    (HOME station)
-$neon-red:    #ff4d6b;   // HUD "red"     (music / danger)
+$neon-red:    #ff2d55;   // HUD "red"     (music / danger)
 
-$text:       #e8edf5;    // nyx_white_off
+$text:       #eef2fa;    // nyx_white_off
 $dim:        #c8ccd6;    // nyx_grey_light
 $grey-mid:   #9aa0ad;    // nyx_grey_mid
 $grey-ghost: #6a6e78;    // nyx_grey_tertiary
@@ -378,7 +378,7 @@ window, window.background, decoration {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: #e8edf5;
+  color: #eef2fa;
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.85), 0 0 6px rgba(255, 255, 255, 0.28);
 }
 /* ── UFO console notification popup — text sits in the saucer screen ── */
@@ -416,7 +416,7 @@ window, window.background, decoration {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #e8edf5;
+  color: #eef2fa;
   text-shadow: 0 0 8px rgba(0, 0, 0, 0.85);
 }
 .mon-updown {
@@ -3154,7 +3154,7 @@ scale slider {
 .ws-pill {
   border-radius: 11px;
   @include obsidian-vessel($nyxus-accent-primary, 0.5);
-  color: rgba(232, 237, 245, 0.42);
+  color: rgba(238, 242, 250, 0.42);
 }
 .ws-pill-pink   { @include obsidian-vessel($nyxus-accent-primary, 0.65); color: $accent-primary-soft; }
 .ws-pill-green  { @include obsidian-vessel($nyxus-accent-secondary, 0.65); color: $accent-secondary-soft; }

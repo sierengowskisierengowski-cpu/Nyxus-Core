@@ -21,7 +21,7 @@ Rectangle {
     readonly property color clrGlassDeepest: Qt.rgba(5/255, 7/255, 12/255, 0.92)
     readonly property color clrHairline:     Qt.rgba(255/255, 255/255, 255/255, 0.10)
     readonly property color clrFocus:        Qt.rgba(230/255, 240/255, 255/255, 0.55)
-    readonly property color clrText:         "#e8edf5"
+    readonly property color clrText:         "#eef2fa"
     readonly property color clrTextDim:      "#c8ccd6"
     readonly property color clrTextHint:     "#6a6e78"
     readonly property color clrWhite:        "#ffffff"

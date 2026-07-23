@@ -1125,8 +1125,8 @@ grep -qi 'font *= *Inter' "${DUNST_RC}" 2>/dev/null \
 grep -qi 'corner_radius = 3' "${DUNST_RC}" 2>/dev/null \
   && ok "dunst: 3px corners applied" \
   || fail "dunst: corner_radius not locked to 3"
-grep -qi 'background *= *\"#0a0a14f7\"' "${DUNST_RC}" 2>/dev/null \
-  && ok "dunst: glass background rgba(10,10,20,0.97) applied" \
+grep -qi 'background *= *\"#05060af7\"' "${DUNST_RC}" 2>/dev/null \
+  && ok "dunst: glass background rgba(5,6,10,0.97) applied" \
   || fail "dunst: glass background missing"
 
 if [[ -f "${SWAYNC_CSS}" ]] \
@@ -1152,8 +1152,8 @@ for pkg in dunst swaync; do
     || fail "missing package: ${pkg}"
 done
 
-# ── 13v. Sprint E palette/token compliance (chrome configs) ────────────────
-hd "13v. Sprint E palette/token compliance"
+# ── 13v. ALIEN NEON palette/token compliance (chrome configs) ────────────────
+hd "13v. ALIEN NEON palette/token compliance"
 CHROME_SCAN=(
   "${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
   "${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-hyprland-general.conf"
@@ -1164,11 +1164,11 @@ CHROME_SCAN=(
   "${AIROOT}/etc/skel/.config/rofi/startmenu.rasi"
   "${AIROOT}/etc/skel/.config/swaync/style.css"
 )
-FORBIDDEN_PATTERN='#(C084FC|7C3AED|5B21B6|a78bfa|a06bff|3ad8ff|06b6d4|0ea5e9|dc2626|ef4444)([^0-9a-fA-F]|$)|splat-pink|splat-purple|DARK MIRROR'
+FORBIDDEN_PATTERN='#(7d3dff|7d3dff|5B21B6|a78bfa|7d3dff|2bd2ff|06b6d4|0ea5e9|dc2626|ef4444)([^0-9a-fA-F]|$)|splat-pink|splat-purple|DARK MIRROR'
 if grep -RIniE "${FORBIDDEN_PATTERN}" "${CHROME_SCAN[@]}" >/tmp/verify-profile-forbidden.out 2>/dev/null; then
-  fail "chrome configs contain forbidden Sprint E colors/tokens (see /tmp/verify-profile-forbidden.out)"
+  fail "chrome configs contain forbidden ALIEN NEON colors/tokens (see /tmp/verify-profile-forbidden.out)"
 else
-  ok "chrome configs: forbidden Sprint E colors/tokens absent"
+  ok "chrome configs: forbidden ALIEN NEON colors/tokens absent"
 fi
 
 # ── 14. mksquashfs ────────────────────────────────────────────────────

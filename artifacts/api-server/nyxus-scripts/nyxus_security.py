@@ -75,7 +75,7 @@ GLASS_DEEP = "rgba(8, 12, 20, 0.92)"
 GLASS_MED  = "rgba(15, 20, 32, 0.78)"
 GLASS_SOFT = "rgba(22, 28, 42, 0.55)"
 HAIR_W     = "rgba(255, 255, 255, 0.10)"
-TEXT_PRIM  = "#e8edf5"
+TEXT_PRIM  = "#eef2fa"
 TEXT_DIM   = "#9aa0ad"
 TEXT_FAINT = "#6a6e78"
 

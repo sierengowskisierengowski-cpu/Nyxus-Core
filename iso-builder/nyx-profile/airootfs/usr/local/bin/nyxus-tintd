@@ -45,7 +45,7 @@ echo $$ > "${PIDFILE}"
 # snapshot the baseline border (accent engine owns it), 0x-normalized:
 # getoption reports bare argb hex which the keyword parser rejects.
 BASE="$(hyprctl getoption general:col.active_border -j 2>/dev/null | jq -r '.custom // empty')"
-[[ -z "${BASE}" ]] && BASE="rgba(ff2dadff) rgba(2bd2ffff) rgba(7d3dffff) rgba(ffb84dff) 270deg"
+[[ -z "${BASE}" ]] && BASE="rgba(ff2dadff) rgba(2bd2ffff) rgba(7d3dffff) rgba(ff8a1eff) 270deg"
 NORM=""
 for tok in ${BASE}; do
   if [[ "${tok}" =~ ^[0-9a-fA-F]{8}$ ]]; then NORM+="0x${tok} "; else NORM+="${tok} "; fi

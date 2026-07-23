@@ -1,4 +1,4 @@
-/* NYXUS · swaync · Sprint E Total Identity */
+/* NYXUS · swaync · ALIEN NEON */
 
 * {
     font-family: "Inter", sans-serif;
@@ -8,7 +8,7 @@
 }
 
 .control-center {
-    background: rgba(10, 10, 20, 0.97);
+    background: rgba(5, 6, 10, 0.97);
     border: 1px solid rgba(238, 242, 250, 0.22);
     color: #eef2fa;
     padding: 14px;
@@ -19,7 +19,7 @@
 .notification-row { background: transparent; padding: 4px 0; }
 
 .notification {
-    background: rgba(10, 10, 20, 0.97);
+    background: rgba(5, 6, 10, 0.97);
     border: 1px solid rgba(238, 242, 250, 0.22);
     margin: 6px 0;
     padding: 12px;
@@ -40,7 +40,7 @@
     min-height: 22px;
 }
 .close-button:hover {
-    color: #050308;
+    color: #05060a;
     background: #ff2d55;
     border-color: #ff2d55;
 }
@@ -58,18 +58,18 @@
     padding: 4px 14px;
 }
 .widget-title > button:hover {
-    color: #050308;
+    color: #05060a;
     background: #eef2fa;
     border-color: #eef2fa;
 }
 
 .widget-dnd > switch { background: #1a1a28; }
 .widget-dnd > switch:checked { background: #eef2fa; }
-.widget-dnd > switch slider { background: #050308; }
+.widget-dnd > switch slider { background: #05060a; }
 
 .floating-notifications { background: transparent; }
 .floating-notifications.background .notification {
-    background: rgba(10, 10, 20, 0.97);
+    background: rgba(5, 6, 10, 0.97);
     border: 1px solid rgba(238, 242, 250, 0.22);
     border-left: 3px solid #eef2fa;
 }
@@ -81,7 +81,7 @@
 .widget-mpris,
 .widget-volume,
 .widget-backlight {
-    background: #050308;
+    background: #05060a;
     border: 1px solid #1a1a28;
     padding: 10px 12px;
     color: #eef2fa;

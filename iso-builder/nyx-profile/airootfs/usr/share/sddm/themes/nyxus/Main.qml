@@ -11,7 +11,7 @@
 //   - Login card: rgba(8,12,20,0.55) dark glass, 1px white hairline at
 //     0.10 alpha, 14px corner radius.
 //   - Inputs: rgba(15,20,32,0.72) deeper glass.
-//   - Text: #e8edf5 primary off-white, #c8ccd6 secondary, #6a6e78 hint,
+//   - Text: #eef2fa primary off-white, #c8ccd6 secondary, #6a6e78 hint,
 //     #ffffff hover halo only.
 //   - No gold, no neon, no per-app colors. Monochrome only.
 
@@ -36,7 +36,7 @@ Rectangle {
     readonly property color clrGlassDeepest: Qt.rgba(5/255, 7/255, 12/255, 0.92)
     readonly property color clrHairline:     Qt.rgba(255/255, 255/255, 255/255, 0.10)
     readonly property color clrFocus:        Qt.rgba(230/255, 240/255, 255/255, 0.55)
-    readonly property color clrText:         "#e8edf5"
+    readonly property color clrText:         "#eef2fa"
     readonly property color clrTextDim:      "#c8ccd6"
     readonly property color clrTextHint:     "#6a6e78"
     readonly property color clrWhite:        "#ffffff"

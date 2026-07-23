@@ -101,7 +101,7 @@ EOF
 # ~/.config/nyxus/accent-baseline/. Applying a preset always renders
 # live files FROM the baseline (prism → preset substitution), so any
 # preset → any preset is exact and reversible — no cascade collisions
-# (e.g. aurora warn #ff4d6b vs the fixed crimson palette constant).
+# (e.g. slot collisions vs fixed palette constants).
 # The baseline auto-refreshes whenever files are edited while the
 # active preset is prism (the canonical form we hand-edit in).
 # Handles three encodings per accent slot:
@@ -176,7 +176,7 @@ old_name, new_name, canon = env["OLD_NAME"], env["NAME"], env["CANON"]
 
 # fixed LOCKED palette constants — a slot whose *current* color equals one
 # of these is ambiguous when deriving a baseline, so it is skipped there
-RESERVED = {"ff4d6b", "05060a", "0a0d14", "11151f", "eef2fa", "e8edf5",
+RESERVED = {"ff2d55", "05060a", "0a0d14", "11151f", "eef2fa", "eef2fa",
             "ffffff", "000000", "c8ccd6", "9aa0ad", "6a6e78", "7a8298"}
 
 canon_pairs = [(c, t) for c, t in zip(canonical, target) if c[0] != t[0]]

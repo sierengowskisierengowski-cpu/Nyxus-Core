@@ -11,9 +11,9 @@ windowPlacement:       center
 strings:
     productName:         "NYXUS"
     shortProductName:    "NYXUS"
-    version:             "2026.05 · Sprint E"
+    version:             "2026.05 · ALIEN NEON"
     shortVersion:        "2026.05"
-    versionedName:       "NYXUS 2026.05 · Sprint E"
+    versionedName:       "NYXUS 2026.05 · ALIEN NEON"
     shortVersionedName:  "NYXUS 2026.05"
     bootloaderEntryName: "NYXUS"
     productUrl:          "https://nyxus.os"
@@ -31,8 +31,8 @@ slideshow:           "show.qml"
 slideshowAPI:        2
 
 style:
-    sidebarBackground:    "#0a0a14"
+    sidebarBackground:    "#05060a"
     sidebarText:          "#eef2fa"
-    sidebarTextSelect:    "#0a0a14"
+    sidebarTextSelect:    "#05060a"
     sidebarTextHighlight: "#eef2fa"
     sidebarBackgroundSelected: "#eef2fa"

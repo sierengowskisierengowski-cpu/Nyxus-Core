@@ -29,7 +29,7 @@ CLASS="notif"
 [ "$PAUSED" = "true" ] && CLASS="notif paused"
 (( TOTAL > 0 )) && CLASS="notif active"
 
-TOOLTIP="<span size='x-large' weight='bold' foreground='#e8edf5'>NYXUS · Notifications</span>"
+TOOLTIP="<span size='x-large' weight='bold' foreground='#eef2fa'>NYXUS · Notifications</span>"
 TOOLTIP+=$'\n'
 TOOLTIP+="<span size='small' foreground='#9aa0ad'>"
 TOOLTIP+="Waiting:    ${WAITING}"$'\n'

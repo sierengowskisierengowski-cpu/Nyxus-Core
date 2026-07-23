@@ -28,7 +28,7 @@ const NYX = {
   void:   "rgba(0,0,0,0.92)",      // hover, active, popovers
   glowSoft:   "rgba(255,255,255,0.45)",
   glowBright: "rgba(255,255,255,0.85)",
-  text:   "#e8edf5",
+  text:   "#eef2fa",
   text2:  "#c8ccd6",
   dim:    "#6a6e78",
   hair:   "rgba(255,255,255,0.08)",  // hairline borders

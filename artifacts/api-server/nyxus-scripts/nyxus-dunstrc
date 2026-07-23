@@ -1,5 +1,5 @@
-# NYXUS dunst configuration · Sprint E Total Identity
-# Palette: #eef2fa (cream accent) · #0a0a14 (void bg, 0.97 glass) · #050308 (ink) · #ff2d55 (critical) — matches swaync/style.css 1:1
+# NYXUS dunst configuration · ALIEN NEON
+# Palette: #eef2fa (cool white text) · #05060a (void bg, 0.97 glass) · #05060a (ink) · #ff2d55 (critical) — matches swaync/style.css 1:1
 
 [global]
     monitor = 0
@@ -71,14 +71,14 @@
     per_monitor_dpi = false
 
 [urgency_low]
-    background    = "#0a0a14f7"
+    background    = "#05060af7"
     foreground    = "#eef2fa8c"
     frame_color   = "#eef2fa38"
     timeout       = 5
     default_icon  = nyxus-notif-ufo
 
 [urgency_normal]
-    background    = "#0a0a14f7"
+    background    = "#05060af7"
     foreground    = "#eef2fa"
     frame_color   = "#eef2fa"
     timeout       = 8
@@ -86,7 +86,7 @@
     default_icon  = nyxus-notif-ufo
 
 [urgency_critical]
-    background    = "#0a0a14f7"
+    background    = "#05060af7"
     foreground    = "#eef2fa"
     frame_color   = "#ff2d55"
     timeout       = 0

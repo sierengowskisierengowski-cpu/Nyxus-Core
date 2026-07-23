@@ -35,7 +35,7 @@ except Exception:
     # palette module is shipped alongside every NYXUS app via
     # nyxus_install.sh; if it's missing, fall back to literals so
     # the app still launches.
-    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    WHITE_PURE='#ffffff'; WHITE_OFF='#eef2fa'; GREY_LIGHT='#c8ccd6'
     GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
     INK_FADED='#0a0a0a'; INK_BLACK='#000000'
     GLASS_DARK='rgba(8, 12, 20, 0.55)'
@@ -90,11 +90,11 @@ CSS = b"""
     font-family: 'Inter', 'Cantarell', sans-serif;
 }
 window, .background {
-    background-color: #e8edf5;
+    background-color: #eef2fa;
     color: #000000;
 }
 headerbar {
-    background-color: #e8edf5;
+    background-color: #eef2fa;
     background-image: none;
     border: none;
     box-shadow: none;
@@ -128,7 +128,7 @@ headerbar windowcontrols button image {
     color: #6a6e78;
 }
 scrolledwindow, scrolledwindow viewport {
-    background-color: #e8edf5;
+    background-color: #eef2fa;
     border: none;
 }
 scrollbar {
@@ -148,7 +148,7 @@ scrollbar slider:hover {
     background-color: rgba(26, 24, 22, 0.32);
 }
 textview, textview text {
-    background-color: #e8edf5;
+    background-color: #eef2fa;
     color: #000000;
     font-family: 'Inter', 'Cantarell', sans-serif;
     font-size: 17px;

@@ -167,7 +167,7 @@ export default function DetectionRules() {
               {/* Rule List */}
               <div className="space-y-1.5">
                 {isLoading ? (
-                  [...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" style={{ background: '#0a0a14' }} />)
+                  [...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" style={{ background: '#05060a' }} />)
                 ) : filteredRules.length === 0 ? (
                   <p className="text-[11px] font-mono py-6" style={{ color: '#475569' }}>
                     No {tab} rules yet. Generate threats to auto-create rules.

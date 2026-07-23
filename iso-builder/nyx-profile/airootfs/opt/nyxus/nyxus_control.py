@@ -30,7 +30,7 @@ except Exception:
     # palette module is shipped alongside every NYXUS app via
     # nyxus_install.sh; if it's missing, fall back to literals so
     # the app still launches.
-    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    WHITE_PURE='#ffffff'; WHITE_OFF='#eef2fa'; GREY_LIGHT='#c8ccd6'
     GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
     INK_FADED='#0a0a0a'; INK_BLACK='#000000'
     GLASS_DARK='rgba(8, 12, 20, 0.55)'
@@ -110,10 +110,10 @@ C_PANEL  = (0.031, 0.031, 0.055)
 # legitimate error/critical states (battery critical, thermal alarm).
 C_TEXT   = (0.91,  0.88,  0.96 )
 C_DIM    = (0.42,  0.43,  0.47 )   # #6a6e78 grey-tertiary
-C_PINK   = (0.91,  0.93,  0.96 )   # #e8edf5 white-off (was magenta)
+C_PINK   = (0.91,  0.93,  0.96 )   # #eef2fa white-off (was magenta)
 C_PURPLE = (0.78,  0.80,  0.84 )   # #c8ccd6 grey-light (was magenta-blue)
-C_BLUE   = (0.91,  0.93,  0.96 )   # #e8edf5 white-off (was azure)
-C_GREEN  = (0.91,  0.93,  0.96 )   # #e8edf5 white-off (was lime)
+C_BLUE   = (0.91,  0.93,  0.96 )   # #eef2fa white-off (was azure)
+C_GREEN  = (0.91,  0.93,  0.96 )   # #eef2fa white-off (was lime)
 C_YELLOW = (1.00,  1.00,  1.00 )   # #ffffff white-pure (was sodium)
 C_ORANGE = (0.78,  0.80,  0.84 )   # #c8ccd6 grey-light (was amber)
 C_RED    = (1.00,  0.39,  0.39 )   # #ff6464 red — RESERVED for errors only

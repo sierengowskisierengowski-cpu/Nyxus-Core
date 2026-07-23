@@ -3,14 +3,14 @@
  * (c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
  * rev 2026-07-14 - DARK MIRROR tokens (docs/THEME.md section 8):
  *   accent primary  #7d3dff (purple)   secondary #ff2d55 (magenta)
- *   text #e8edf5 / #c8ccd6 / #6a6e78    frosted ink rgba(5,2,11,.78)
+ *   text #eef2fa / #c8ccd6 / #6a6e78    frosted ink rgba(5,2,11,.78)
  * Frosted smoked-glass login card, pushed right of centre so the
  * alien art on the left stays visible. ASCII-only.
  * ============================================================ */
 
 window {
     background-color: rgba(4, 3, 10, 0.35);
-    color: #e8edf5;
+    color: #eef2fa;
     font-family: "Inter Display", "JetBrains Mono", sans-serif;
 }
 
@@ -29,8 +29,8 @@ frame, .frame, box.horizontal > box {
 frame > border { border: none; }
 
 label {
-    color: #e8edf5;
-    text-shadow: 0 0 8px rgba(232, 237, 245, 0.20);
+    color: #eef2fa;
+    text-shadow: 0 0 8px rgba(238, 242, 250, 0.20);
 }
 
 #greeting_label, .greeting {
@@ -43,7 +43,7 @@ label {
     font-family: "Orbitron", "JetBrains Mono", monospace;
     font-weight: 800;
     font-size: 30px;
-    color: #e8edf5;
+    color: #eef2fa;
     text-shadow: 0 0 14px rgba(125, 61, 255, 0.45);
 }
 
@@ -52,7 +52,7 @@ entry {
     background-color: rgba(5, 1, 13, 0.92);
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 10px;
-    color: #e8edf5;
+    color: #eef2fa;
     caret-color: #7d3dff;
     font-family: "JetBrains Mono", monospace;
     padding: 10px 12px;
@@ -69,7 +69,7 @@ button {
     background-image: none;
     border: 1px solid #7d3dff;
     border-radius: 10px;
-    color: #e8edf5;
+    color: #eef2fa;
     font-family: "JetBrains Mono", monospace;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -99,7 +99,7 @@ popover, popover.background {
     background-color: rgba(5, 2, 11, 0.97);
     border: 1px solid rgba(125, 61, 255, 0.34);
     border-radius: 12px;
-    color: #e8edf5;
+    color: #eef2fa;
 }
 popover modelbutton:hover, popover row:hover {
     background-color: rgba(125, 61, 255, 0.18);

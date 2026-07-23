@@ -8,7 +8,7 @@
 #
 #  All visual presence (rim-light, glow, shadow, blur) is supplied
 #  by Hyprland's system-wide DARK MIRROR active-border gradient
-#  (white -> off-white #e8edf5 -> light grey #c8ccd6 -> faded
+#  (white -> off-white #eef2fa -> light grey #c8ccd6 -> faded
 #  black -> ink black) defined in hyprland.conf. The terminal
 #  itself contributes nothing — exactly what the user asked for.
 #
@@ -32,7 +32,7 @@ except Exception:
     # palette module is shipped alongside every NYXUS app via
     # nyxus_install.sh; if it's missing, fall back to literals so
     # the app still launches.
-    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    WHITE_PURE='#ffffff'; WHITE_OFF='#eef2fa'; GREY_LIGHT='#c8ccd6'
     GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
     INK_FADED='#0a0a0a'; INK_BLACK='#000000'
     GLASS_DARK='rgba(8, 12, 20, 0.55)'
@@ -82,7 +82,7 @@ WIN_H   = 480
 
 # DARK MIRROR palette
 BG_RGBA       = (0.031, 0.047, 0.078, 0.55)   # rgba(8,12,20,0.55) dark glass
-FG_HEX        = "#e8edf5"                     # off-white text
+FG_HEX        = "#eef2fa"                     # off-white text
 CURSOR_HEX    = "#ffffff"                     # pure white caret
 SELECT_BG_HEX = "#c8ccd6"                     # light grey selection
 SELECT_FG_HEX = "#000000"                     # ink on selection
@@ -97,11 +97,11 @@ VTE_PALETTE = [
     _hex("#0f1420"),  # 0  black
     _hex("#6a6e78"),  # 1  red    -> tertiary grey
     _hex("#c8ccd6"),  # 2  green  -> secondary
-    _hex("#e8edf5"),  # 3  yellow -> off-white
+    _hex("#eef2fa"),  # 3  yellow -> off-white
     _hex("#6a6e78"),  # 4  blue   -> tertiary grey
     _hex("#c8ccd6"),  # 5  magenta-> secondary
-    _hex("#e8edf5"),  # 6  cyan   -> off-white
-    _hex("#e8edf5"),  # 7  white  -> off-white
+    _hex("#eef2fa"),  # 6  cyan   -> off-white
+    _hex("#eef2fa"),  # 7  white  -> off-white
     _hex("#1a1e2a"),  # 8  bright black
     _hex("#9aa0ad"),  # 9  bright red    -> mid grey
     _hex("#c8ccd6"),  # 10 bright green

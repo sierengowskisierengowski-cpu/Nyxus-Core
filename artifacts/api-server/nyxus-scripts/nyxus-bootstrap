@@ -43,10 +43,10 @@ log() { printf '[nyxus-bootstrap] %s %s\n' "$(date -Iseconds)" "$*"; }
 # hyprctl notify is rendered directly by the compositor — always available
 # inside an `exec-once` because $HYPRLAND_INSTANCE_SIGNATURE is set by then.
 # Icons: 0 warn, 1 info, 2 hint, 3 error, 4 confused, 5 ok, -1 none
-# Color: DARK MIRROR off-white rgb(e8edf5) for normal, rgb(ff8888) for error.
+# Color: DARK MIRROR off-white rgb(eef2fa) for normal, rgb(ff8888) for error.
 notify() {
   command -v hyprctl >/dev/null 2>&1 || return 0
-  local icon="${1:-2}" timeout="${2:-5000}" color="${3:-rgb(e8edf5)}" msg="${4:-}"
+  local icon="${1:-2}" timeout="${2:-5000}" color="${3:-rgb(eef2fa)}" msg="${4:-}"
   hyprctl notify "${icon}" "${timeout}" "${color}" "  NYXUS · ${msg}" \
     >/dev/null 2>&1 || true
 }
@@ -163,7 +163,7 @@ fi
 # First-boot splash — long timeout so it stays up through the install.
 # The user sees this immediately on first login, before waybar/wallpaper
 # appear. Without it the screen looks frozen for ~60s.
-notify 2 120000 "rgb(e8edf5)" "first-boot setup starting — installing chrome, ~60 seconds…"
+notify 2 120000 "rgb(eef2fa)" "first-boot setup starting — installing chrome, ~60 seconds…"
 
 # ── Heartbeat: re-notify every 30s while install runs ───────────────────────
 # Without this the splash dies at 120s and a slow install (older HDD, slow
@@ -198,7 +198,7 @@ if [[ -d "${OFFLINE_CACHE}" && -f "${OFFLINE_CACHE}/nyxus_install.sh" ]]; then
   if NYXUS_OFFLINE_DIR="${OFFLINE_CACHE}" bash "${OFFLINE_CACHE}/nyxus_install.sh"; then
     echo "${BOOTSTRAP_VERSION}" > "${MARK}"
     log "complete (offline) — marker written: ${MARK} (version ${BOOTSTRAP_VERSION})"
-    notify 5 8000 "rgb(e8edf5)" "ready · welcome, ${USER:-friend}"
+    notify 5 8000 "rgb(eef2fa)" "ready · welcome, ${USER:-friend}"
     exit 0
   else
     rc=$?
@@ -220,7 +220,7 @@ if [[ "${NYXUS_ALLOW_NETWORK_INSTALL:-0}" == "1" ]]; then
     if bash "${TMP_INSTALLER}"; then
       echo "${BOOTSTRAP_VERSION}" > "${MARK}"
       log "complete (network) — marker written: ${MARK} (version ${BOOTSTRAP_VERSION})"
-      notify 5 8000 "rgb(e8edf5)" "ready · welcome, ${USER:-friend}"
+      notify 5 8000 "rgb(eef2fa)" "ready · welcome, ${USER:-friend}"
       exit 0
     else
       rc=$?

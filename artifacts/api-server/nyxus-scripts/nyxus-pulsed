@@ -72,7 +72,7 @@ CONF = {
     "PULSE_CRITICAL": "#ff2b4d",
     "PULSE_EMAIL":    "#2bd2ff",
     "PULSE_CHAT":     "#ff2dad",
-    "PULSE_POWER":    "#ffb84d",
+    "PULSE_POWER":    "#ff8a1e",
     "PULSE_WORKSPACE": "",          # empty = accent secondary
     "PULSE_DEFAULT":   "",          # empty = accent primary
     "BORDER_BLEND":    "0.85",      # how far stops lean into the pulse color
@@ -97,7 +97,7 @@ def hex_rgb(hx):
 def accent(which):
     """Current palette straight from the generated accent.scss."""
     fallback = {"primary": "#ff2dad", "secondary": "#2bd2ff",
-                "warn": "#ffb84d", "ok": "#39ff14"}
+                "warn": "#ff8a1e", "ok": "#39ff14"}
     try:
         with open(ACCENTSCSS) as f:
             for line in f:
@@ -138,7 +138,7 @@ def get_border():
         elif t.endswith("deg") and t[:-3].isdigit():
             angle = int(t[:-3])
     if not stops:
-        stops = ["ff2dadff", "2bd2ffff", "7d3dffff", "ffb84dff"]
+        stops = ["ff2dadff", "2bd2ffff", "7d3dffff", "ff8a1eff"]
     return stops, angle
 
 def base_stops():

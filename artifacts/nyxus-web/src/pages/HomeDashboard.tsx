@@ -17,7 +17,7 @@ import { useEffect, useMemo, useRef, useState, ReactNode } from "react";
 // ── DARK MIRROR PALETTE (rev r16 LOCKED) — monochrome only ──────────────
 // Per-card "neon" tints all collapse to the same off-white.
 // Cards now read as dark glass plaques with white hairline borders.
-const T = "#e8edf5";  // primary off-white
+const T = "#eef2fa";  // primary off-white
 const T2 = "#c8ccd6"; // secondary
 const C = {
   pink:    T,

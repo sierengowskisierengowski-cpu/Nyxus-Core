@@ -1,37 +1,35 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════
-# nyxus-accent-from-wallpaper   ·   rev 2026-07-07 r1 (Signature)
+# nyxus-accent-from-wallpaper   ·   rev 2026-07-23 (ALIEN NEON LOCK)
 #
-# Re-skins the entire desktop to match the CURRENT wallpaper:
-#   1. Resolves the active wallpaper — still image from
-#      ~/.config/nyxus/wallpaper.conf, or a frame grabbed out of the
-#      running mpvpaper video when the living wallpaper is on.
-#   2. nyxus-palette-extract → 4-slot neon palette.
-#   3. Merges it into accent.json as the "wallpaper" preset.
-#   4. nyxus-apply-accent wallpaper → every registered consumer
-#      (eww, hyprland borders, rofi, dunst, kitty, hyprlock, …)
-#      follows in one shot.
+# HISTORICAL: used to re-skin the desktop from the current wallpaper.
+# OWNER DIRECTIVE 2026-07-23: ALIEN NEON is locked. follow_wallpaper is
+# OFF and the only accent.json preset is `prism`. This script now REFUSES
+# to mutate the palette so old wallpaper blues/creams can never return.
+# Bound keys still call it safely — it exits 0 with a notice.
 #
-# Bound to SUPER+SHIFT+W. Also called by nyxus-wall-set when
-# accent.json has "follow_wallpaper": true.
+# To force an extract for experimentation (dev only):
+#   NYXUS_ALLOW_WALLPAPER_ACCENT=1 nyxus-accent-from-wallpaper
 #
 # © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -u
 
-# Hyprland binds exec with a bare PATH that lacks ~/.local/bin — every
-# helper this script calls lives there, so fix it up front.
 export PATH="${HOME}/.local/bin:${PATH}"
-
 CONF="${HOME}/.config/nyxus/accent.json"
+
+if [[ "${NYXUS_ALLOW_WALLPAPER_ACCENT:-0}" != "1" ]]; then
+  printf 'accent: ALIEN NEON locked (follow_wallpaper off) — wallpaper extract disabled\n'
+  printf '        active palette stays prism. re-apply with: nyxus-apply-accent prism\n'
+  exit 0
+fi
+
+# ── DEV-ONLY path below (opt-in) ─────────────────────────────────────
 WCONF="${HOME}/.config/nyxus/wallpaper.conf"
 CACHE="${HOME}/.cache/nyxus"
 mkdir -p "${CACHE}"
 
-# ── 1 · resolve what is actually on screen ───────────────────────────
 IMG=""
-
-# living wallpaper? grab a frame from the video mpvpaper is playing
 MPV_VIDEO="$(pgrep -ax mpvpaper 2>/dev/null | head -1 | grep -oE '/[^ ]+\.(mp4|mkv|webm|mov)' | head -1 || true)"
 if [[ -n "${MPV_VIDEO}" && -r "${MPV_VIDEO}" ]] && command -v ffmpeg >/dev/null; then
   FRAME="${CACHE}/wallframe.png"
@@ -40,44 +38,32 @@ if [[ -n "${MPV_VIDEO}" && -r "${MPV_VIDEO}" ]] && command -v ffmpeg >/dev/null;
   fi
 fi
 
-# still wallpaper from the nyxus wallpaper state file
 if [[ -z "${IMG}" && -r "${WCONF}" ]]; then
-  WALLPAPER_PATH=""
   # shellcheck disable=SC1090
   source "${WCONF}" 2>/dev/null || true
-  [[ -n "${WALLPAPER_PATH:-}" && -r "${WALLPAPER_PATH}" ]] && IMG="${WALLPAPER_PATH}"
+  for cand in "${WALLPAPER_PATH:-}" "/usr/share/backgrounds/nyxus/${WALLPAPER:-}.png" \
+              "${HOME}/.config/hypr/walls/${WALLPAPER:-}.png"; do
+    [[ -n "${cand}" && -r "${cand}" ]] && { IMG="${cand}"; break; }
+  done
 fi
 
-# last resort: parse hyprpaper.conf
-if [[ -z "${IMG}" ]]; then
-  P="$(grep -m1 '^wallpaper' "${HOME}/.config/hypr/hyprpaper.conf" 2>/dev/null \
-       | sed 's/^wallpaper *= *,*//; s/^ *//')"
-  P="${P/#\~/$HOME}"
-  [[ -n "${P}" && -r "${P}" ]] && IMG="${P}"
-fi
-
-if [[ -z "${IMG}" ]]; then
-  notify-send -u critical "NYXUS Accent" "Could not resolve the current wallpaper" 2>/dev/null
-  echo "accent-from-wallpaper: no wallpaper found" >&2
+if [[ -z "${IMG}" || ! -r "${IMG}" ]]; then
+  echo "accent: could not resolve a wallpaper image" >&2
   exit 1
 fi
 
-# ── 2 · extract ──────────────────────────────────────────────────────
-PALETTE="$(nyxus-palette-extract "${IMG}")" || {
-  notify-send -u critical "NYXUS Accent" "Palette extraction failed" 2>/dev/null
+if ! command -v nyxus-palette-extract >/dev/null; then
+  echo "accent: nyxus-palette-extract missing" >&2
   exit 1
-}
+fi
 
-# ── 3 · merge as the "wallpaper" preset ──────────────────────────────
+PAL="$(nyxus-palette-extract "${IMG}")" || exit 1
 TMP="$(mktemp)"
-jq --argjson p "${PALETTE}" '.presets.wallpaper = $p' "${CONF}" > "${TMP}" \
-  && mv "${TMP}" "${CONF}"
+jq --argjson p "${PAL}" '
+  .presets.wallpaper = $p
+  | .active = "wallpaper"
+  | .follow_wallpaper = true
+' "${CONF}" > "${TMP}" && mv "${TMP}" "${CONF}"
 
-# ── 4 · apply through the stock engine ───────────────────────────────
 nyxus-apply-accent wallpaper
-
-PRI="$(jq -r '.primary' <<<"${PALETTE}")"
-SEC="$(jq -r '.secondary' <<<"${PALETTE}")"
-notify-send -u low -t 3500 "◤ NYXUS ◥ ACCENT SYNCED" \
-  "desktop re-skinned from wallpaper\nprimary ${PRI} · secondary ${SEC}" 2>/dev/null
-echo "accent-from-wallpaper: ${IMG} → primary ${PRI}, secondary ${SEC}"
+echo "accent: DEV override applied from wallpaper (${IMG})"

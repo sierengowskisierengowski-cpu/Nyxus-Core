@@ -67,7 +67,7 @@ function HighlightedCommand({ cmd }: { cmd: string }) {
         if (token.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?$/)) return <span key={i} style={{ color: "#67e8f9" }}>{token}</span>;
         if (token.match(/^(http|https|ftp):\/\//)) return <span key={i} style={{ color: "#60a5fa" }}>{token}</span>;
         if (token.match(/^\d+$/) && parseInt(token) > 0) return <span key={i} style={{ color: "#fb923c" }}>{token}</span>;
-        if (token.startsWith("/") || token.match(/\.(txt|lst|xml|pcap|pcapng|cap|csv|json)$/)) return <span key={i} style={{ color: "#c084fc" }}>{token}</span>;
+        if (token.startsWith("/") || token.match(/\.(txt|lst|xml|pcap|pcapng|cap|csv|json)$/)) return <span key={i} style={{ color: "#7d3dff" }}>{token}</span>;
         if (token.startsWith("192.168")) return <span key={i} style={{ color: "#67e8f9" }}>{token}</span>;
         return <span key={i} style={{ color: "#b8c4d8" }}>{token}</span>;
       })}

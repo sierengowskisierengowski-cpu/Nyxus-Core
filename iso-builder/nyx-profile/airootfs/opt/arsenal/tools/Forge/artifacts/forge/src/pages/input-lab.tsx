@@ -257,7 +257,7 @@ export default function InputLab() {
               <SectionTitle label="Analysis Results" color="purple" />
               {analyzing ? (
                 <div className="space-y-3">
-                  {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-4 w-full" style={{ background: '#0a0a14' }} />)}
+                  {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-4 w-full" style={{ background: '#05060a' }} />)}
                   <p className="text-[11px] font-mono animate-pulse" style={{ color: '#475569' }}>Claude is analyzing inputs...</p>
                 </div>
               ) : analysisResult && (
@@ -310,7 +310,7 @@ export default function InputLab() {
             </div>
             {isLoading ? (
               <div className="space-y-2">
-                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-14 w-full" style={{ background: '#0a0a14' }} />)}
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-14 w-full" style={{ background: '#05060a' }} />)}
               </div>
             ) : inputs?.length === 0 ? (
               <p className="text-[11px] font-mono py-6 text-center" style={{ color: '#64748b' }}>Queue empty. Add inputs above.</p>
@@ -326,7 +326,7 @@ export default function InputLab() {
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <span
                           className="text-[9px] font-mono tracking-wider uppercase px-2 py-0.5 rounded"
-                          style={{ background: '#0a0a14', border: '1px solid #111118', color: '#64748b' }}
+                          style={{ background: '#05060a', border: '1px solid #111118', color: '#64748b' }}
                         >
                           {input.inputType}
                         </span>

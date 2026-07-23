@@ -79,7 +79,7 @@ CFG_DIR.mkdir(parents=True, exist_ok=True)
 # AppearancePage so the picker the user sees on first boot is the same
 # picker they see in Settings later. No two-palette confusion.
 ACCENTS = [
-    ("Mirror White", "#e8edf5"),
+    ("Mirror White", "#eef2fa"),
     ("Cyan",         "#5fd3f3"),
     ("Lime",         "#a6e22e"),
     ("Amber",        "#f5b342"),
@@ -88,7 +88,7 @@ ACCENTS = [
     ("Iris",         "#9c8cff"),
     ("Mint",         "#5ff3b8"),
 ]
-DEFAULT_ACCENT = "#e8edf5"
+DEFAULT_ACCENT = "#eef2fa"
 
 
 def discover_wallpapers() -> list[tuple[str, str]]:
@@ -124,11 +124,11 @@ def hex_to_rgb(h: str) -> tuple[int, int, int]:
     if len(s) == 3:
         s = "".join(c * 2 for c in s)
     if len(s) != 6:
-        return (232, 237, 245)
+        return (238, 242, 250)
     try:
         return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
     except ValueError:
-        return (232, 237, 245)
+        return (238, 242, 250)
 
 LOCALES = [
     ("English (US)",        "en_US.UTF-8"),
@@ -161,7 +161,7 @@ window.welcome {
 /* ── left rail ─────────────────────────────────────────────────── */
 .welcome-rail {
   background: rgba(8,10,16,0.66);
-  border-right: 1px solid rgba(232,237,245,0.10);
+  border-right: 1px solid rgba(238,242,250,0.10);
   padding: 56px 28px 36px 36px;
   min-width: 320px;
 }
@@ -251,12 +251,12 @@ window.welcome {
 /* ── inputs ────────────────────────────────────────────────────── */
 entry.welcome-input, dropdown.welcome-input > button {
   background: rgba(17,21,31,0.85);
-  border: 1px solid rgba(232,237,245,0.16);
+  border: 1px solid rgba(238,242,250,0.16);
   border-radius: 10px;
   padding: 12px 14px;
   color: #ffffff;
   font-size: 14px;
-  caret-color: #e8edf5;
+  caret-color: #eef2fa;
 }
 entry.welcome-input:focus, dropdown.welcome-input > button:focus {
   border-color: @PINK@;
@@ -307,11 +307,11 @@ button.w-ghost {
   border-radius: 10px;
   background: transparent;
   color: #c8ccd6;
-  border: 1px solid rgba(232,237,245,0.18);
+  border: 1px solid rgba(238,242,250,0.18);
   letter-spacing: 0.10em;
 }
 button.w-ghost:hover {
-  background: rgba(232,237,245,0.06);
+  background: rgba(238,242,250,0.06);
   color: #ffffff;
 }
 button.w-link {
@@ -334,22 +334,22 @@ button.w-link:hover { color: #ffffff; }
 }
 .swatch.selected {
   border-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(232,237,245,0.32),
-              0 8px 22px rgba(232,237,245,0.22);
+  box-shadow: 0 0 0 3px rgba(238,242,250,0.32),
+              0 8px 22px rgba(238,242,250,0.22);
 }
 .tile {
   border-radius: 12px;
-  border: 1px solid rgba(232,237,245,0.10);
+  border: 1px solid rgba(238,242,250,0.10);
   background: rgba(17,21,31,0.65);
   padding: 14px;
   margin: 6px;
   min-width: 200px;
 }
 .tile.selected {
-  border-color: #e8edf5;
-  background: rgba(232,237,245,0.08);
-  box-shadow: 0 0 0 1px rgba(232,237,245,0.40),
-              0 8px 28px rgba(232,237,245,0.14);
+  border-color: #eef2fa;
+  background: rgba(238,242,250,0.08);
+  box-shadow: 0 0 0 1px rgba(238,242,250,0.40),
+              0 8px 28px rgba(238,242,250,0.14);
 }
 .tile-title {
   color: #ffffff;
@@ -365,19 +365,19 @@ button.w-link:hover { color: #ffffff; }
   padding: 16px 18px;
   border-radius: 12px;
   background: rgba(17,21,31,0.6);
-  border: 1px solid rgba(232,237,245,0.08);
+  border: 1px solid rgba(238,242,250,0.08);
   margin: 6px 0;
 }
 .toggle-row .name { color: #ffffff; font-size: 14px; font-weight: 600; }
 .toggle-row .desc { color: #8b94a8; font-size: 11px; margin-top: 2px; }
 switch slider { background: #ffffff; }
-switch:checked { background: #e8edf5; }
+switch:checked { background: #eef2fa; }
 switch { background: rgba(60,66,82,0.85); }
 
 /* ── footer nav ────────────────────────────────────────────────── */
 .welcome-footer {
   padding: 20px 88px 28px 88px;
-  border-top: 1px solid rgba(232,237,245,0.10);
+  border-top: 1px solid rgba(238,242,250,0.10);
   background: rgba(5,6,10,0.55);
 }
 

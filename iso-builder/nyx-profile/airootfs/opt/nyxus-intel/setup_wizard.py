@@ -38,7 +38,7 @@ except Exception:
     # palette module is shipped alongside every NYXUS app via
     # nyxus_install.sh; if it's missing, fall back to literals so
     # the app still launches.
-    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    WHITE_PURE='#ffffff'; WHITE_OFF='#eef2fa'; GREY_LIGHT='#c8ccd6'
     GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
     INK_FADED='#0a0a0a'; INK_BLACK='#000000'
     GLASS_DARK='rgba(8, 12, 20, 0.55)'

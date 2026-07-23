@@ -36,7 +36,7 @@ def accent_pair():
         return "#ff2dad", "#39ff14", "#ff8a1e"
 
 PRIMARY, SECONDARY, WARN = accent_pair()
-WHITE = "#e8edf5"
+WHITE = "#eef2fa"
 
 def rgb(hexcol):
     h = hexcol.lstrip("#")

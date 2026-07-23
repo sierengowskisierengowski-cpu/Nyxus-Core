@@ -30,7 +30,7 @@ except Exception:
     # palette module is shipped alongside every NYXUS app via
     # nyxus_install.sh; if it's missing, fall back to literals so
     # the app still launches.
-    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    WHITE_PURE='#ffffff'; WHITE_OFF='#eef2fa'; GREY_LIGHT='#c8ccd6'
     GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
     INK_FADED='#0a0a0a'; INK_BLACK='#000000'
     GLASS_DARK='rgba(8, 12, 20, 0.55)'
@@ -106,8 +106,8 @@ try:
         install_hud_css as _NYX_IHC, neon_flicker_css as _NYX_NFC
 except Exception:
     _HP = {"pink": "#ff2dad", "purple": "#7d3dff", "blue": "#4d9fff",
-           "green": "#7dff5e", "gold": "#ffb84d", "orange": "#ff7849",
-           "cyan": "#2bd2ff", "red": "#ff4d6b"}
+           "green": "#7dff5e", "gold": "#ff8a1e", "orange": "#ff8a1e",
+           "cyan": "#2bd2ff", "red": "#ff2d55"}
     _NYX_IHC = None
     def _NYX_NFC(): return ""
 

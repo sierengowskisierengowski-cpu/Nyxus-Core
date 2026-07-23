@@ -1098,10 +1098,10 @@ class NetworkCard:
         s = self.s
         self.rx_lbl.set_markup(
             f"<span foreground='{PALETTE['cyan']}'>▼ RX</span> "
-            f"<span foreground='#e8edf5'>{_fmt_rate(s.rx_rate)}</span>")
+            f"<span foreground='#eef2fa'>{_fmt_rate(s.rx_rate)}</span>")
         self.tx_lbl.set_markup(
             f"<span foreground='{PALETTE['pink']}'>▲ TX</span> "
-            f"<span foreground='#e8edf5'>{_fmt_rate(s.tx_rate)}</span>")
+            f"<span foreground='#eef2fa'>{_fmt_rate(s.tx_rate)}</span>")
         chunks = []
         for name, state, extra in s.net_ifaces:
             c = PALETTE["green"] if state == "up" else PALETTE["dim"]

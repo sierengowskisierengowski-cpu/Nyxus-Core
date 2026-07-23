@@ -49,7 +49,7 @@ NYXUS_CHROME_VERSION = "2026.05.07-r12-darkmirror"
 # Cairo float tuples kept here for legacy callers; new code should import
 # from nyxus_palette directly.
 DM_WHITE      = (1.00, 1.00, 1.00)   # #ffffff
-DM_OFFWHITE   = (0.91, 0.93, 0.96)   # #e8edf5
+DM_OFFWHITE   = (0.91, 0.93, 0.96)   # #eef2fa
 DM_GREY_LIGHT = (0.78, 0.80, 0.84)   # #c8ccd6
 DM_GREY_MID   = (0.60, 0.62, 0.67)   # #9aa0ad
 DM_GREY_TERT  = (0.41, 0.43, 0.47)   # #6a6e78
@@ -57,8 +57,8 @@ DM_INK        = (0.00, 0.00, 0.00)   # #000000
 
 # Mono ramp used by rainbow_markup (was a 7-color neon cycle, now a
 # monochrome white→grey→ink shimmer matching DARK MIRROR).
-_RAINBOW_HEX = ("#ffffff", "#e8edf5", "#c8ccd6", "#9aa0ad",
-                "#c8ccd6", "#e8edf5", "#ffffff", "#e8edf5")
+_RAINBOW_HEX = ("#ffffff", "#eef2fa", "#c8ccd6", "#9aa0ad",
+                "#c8ccd6", "#eef2fa", "#ffffff", "#eef2fa")
 
 
 def rainbow_markup(text: str) -> str:
@@ -350,7 +350,7 @@ CHROME_CSS = """
  *      rgba(255,255,255,0.10) hairline borders                           *
  *      rgba(255,255,255,0.22) hover hairline                             *
  *      rgba(255,255,255,0.45) focus / selected accent                    *
- *      #e8edf5  primary text (off-white)                                 *
+ *      #eef2fa  primary text (off-white)                                 *
  *      #c8ccd6  secondary text                                           *
  *      #6a6e78  tertiary / disabled                                      *
  *      #ffffff  pure white (only on hover halos + selected pip)          *
@@ -365,7 +365,7 @@ window.nyx-transparent, window.nyx-transparent.background,
 window > .background, window > .solid-csd {
     background-color: transparent;
     background-image: none;
-    color: #e8edf5;
+    color: #eef2fa;
 }
 /* Strip every container that an app might fill with an opaque color so      *
  * the Hyprland blur reaches the surface under our explicit glass panels.    *
@@ -410,7 +410,7 @@ flap, flap > * {
 * {
     font-family: 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
     font-size: 14px;
-    color: #e8edf5;
+    color: #eef2fa;
 }
 .nyx-mono, .nyx-mono *, .nyx-code, .nyx-code *,
 .monospace, .monospace *,
@@ -429,7 +429,7 @@ vte-terminal, vte-terminal * {
     font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
 }
 .nyx-h1 { font-size: 28px; color: #ffffff; }
-.nyx-h2 { font-size: 22px; color: #e8edf5; }
+.nyx-h2 { font-size: 22px; color: #eef2fa; }
 .nyx-h3 { font-size: 18px; color: #c8ccd6; }
 .nyx-dim,   .nyx-faint  { color: #6a6e78; }
 
@@ -437,7 +437,7 @@ vte-terminal, vte-terminal * {
 headerbar, .titlebar {
     background-color: rgba(8, 12, 20, 0.62);
     background-image: none;
-    color: #e8edf5;
+    color: #eef2fa;
     border-bottom: 1px solid rgba(255, 255, 255, 0.10);
     box-shadow: inset 0  1px 0 rgba(255, 255, 255, 0.10),
                 inset 0 -1px 0 rgba(0,   0,  0,  0.40);
@@ -445,14 +445,14 @@ headerbar, .titlebar {
 }
 headerbar label, headerbar label.title,
 .titlebar label, .titlebar label.title {
-    color: #e8edf5;
+    color: #eef2fa;
     font-family: 'Inter Display', 'Inter', 'Cantarell', 'DejaVu Sans', sans-serif;
     text-shadow: 0  1px 0 rgba(0, 0, 0, 0.65),
                  0 -1px 0 rgba(255, 255, 255, 0.10);
 }
 headerbar button, .titlebar button {
     background-color: transparent;
-    color: #e8edf5;
+    color: #eef2fa;
     border: 1px solid rgba(255, 255, 255, 0.10);
 }
 headerbar button:hover, .titlebar button:hover {
@@ -479,7 +479,7 @@ headerbar button:hover, .titlebar button:hover {
 frame {
     background-color: rgba(8, 12, 20, 0.55);
     background-image: none;
-    color: #e8edf5;
+    color: #eef2fa;
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 14px;
     padding: 12px 14px;
@@ -505,7 +505,7 @@ frame {
 .card-pink-header-title, .card-cyan-header-title, .card-purple-header-title, .card-gold-header-title,
 .card-green-header-title, .card-orange-header-title, .card-red-header-title, .card-yellow-header-title,
 .card-mono-header-title, .card-white-header-title {
-    color: #e8edf5;
+    color: #eef2fa;
     text-shadow: 0  1px 0 rgba(0,   0,  0,  0.65),
                  0 -1px 0 rgba(255, 255, 255, 0.10);
     box-shadow: none;
@@ -528,18 +528,18 @@ frame {
 /* -- Text views (notepad body, log surfaces) ------------------------------ */
 textview {
     background-color: rgba(15, 20, 32, 0.62);
-    color: #e8edf5;
+    color: #eef2fa;
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 10px;
     padding: 10px 12px;
 }
-textview text { background-color: transparent; color: #e8edf5; }
+textview text { background-color: transparent; color: #eef2fa; }
 
 /* -- Lists / rows --------------------------------------------------------- */
 list, listview, listbox,
 list > row, listview > row, listbox > row {
     background-color: transparent;
-    color: #e8edf5;
+    color: #eef2fa;
 }
 listbox > row:hover, list > row:hover, listview > row:hover {
     background-color: rgba(255, 255, 255, 0.08);
@@ -553,7 +553,7 @@ listbox > row:selected, list > row:selected, listview > row:selected {
 /* -- Scrollbars: off-white slider on transparent track -------------------- */
 scrollbar { background-color: transparent; background: transparent; }
 scrollbar slider {
-    background-color: rgba(232, 237, 245, 0.30);
+    background-color: rgba(238, 242, 250, 0.30);
     border: none;
     border-radius: 6px;
     min-width: 8px;
@@ -568,7 +568,7 @@ entry, spinbutton,
 .input-mono, .input-mono, .input-mono, .input-mono, .input-mono {
     background-color: rgba(15, 20, 32, 0.62);
     background-image: none;
-    color: #e8edf5;
+    color: #eef2fa;
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 10px;
     padding: 8px 14px;
@@ -596,7 +596,7 @@ button,
 .btn-icon-mono {
     background-color: rgba(15, 20, 32, 0.55);
     background-image: none;
-    color: #e8edf5;
+    color: #eef2fa;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 10px;
     padding: 6px 14px;
@@ -627,7 +627,7 @@ button:active, button:checked {
     color: #ffffff;
 }
 button:disabled {
-    color: rgba(232, 237, 245, 0.30);
+    color: rgba(238, 242, 250, 0.30);
     border-color: rgba(255, 255, 255, 0.06);
 }
 button.suggested-action {
@@ -640,7 +640,7 @@ button.suggested-action:hover {
 }
 button.destructive-action {
     border-color: rgba(255, 255, 255, 0.45);
-    color: #e8edf5;
+    color: #eef2fa;
 }
 button.destructive-action:hover {
     background-color: rgba(255, 255, 255, 0.10);
@@ -674,7 +674,7 @@ list.nyx-tab-list row, list.nyx-tab-list listrow {
     border: 1px solid rgba(255, 255, 255, 0.45);
     border-radius: 999px;
     padding: 0 8px;
-    color: #e8edf5;
+    color: #eef2fa;
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
     margin-right: 8px;
@@ -695,7 +695,7 @@ switch:checked slider  { background-color: #0a0a0c; }
 /* -- Dropdowns / popovers / tooltips -------------------------------------- */
 dropdown, dropdown > button {
     background-color: rgba(15, 20, 32, 0.72);
-    color: #e8edf5;
+    color: #eef2fa;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 10px;
     padding: 4px 10px;
@@ -705,14 +705,14 @@ popover, popover > contents, popover > arrow {
     background-image: none;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 12px;
-    color: #e8edf5;
+    color: #eef2fa;
 }
 tooltip, tooltip.background {
     background-color: rgba(5, 7, 12, 0.96);
     background-image: none;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 8px;
-    color: #e8edf5;
+    color: #eef2fa;
     padding: 4px 8px;
 }
 

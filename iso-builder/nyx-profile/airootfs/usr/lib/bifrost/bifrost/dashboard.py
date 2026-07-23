@@ -31,7 +31,7 @@ RAINBOW_GRADIENT = (
 SEVERITY_COLORS = {
     "CRITICAL": "#FF2D2D",
     "HIGH": "#FF6B35",
-    "MEDIUM": "#FFD166",
+    "MEDIUM": "#ffe600",
     "LOW": "#4ECDC4",
     "INFO": "#6B7280",
     "UNKNOWN": "#6B7280",

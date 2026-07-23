@@ -105,8 +105,8 @@ def main():
 
     # near-grayscale wallpaper -> noir-style palette
     if max(s for _, s, _ in hsv) < 0.12:
-        print(json.dumps({"primary": "#e8edf5", "secondary": "#7e8794",
-                          "warn": "#ff4d6b", "ok": "#82ffd2"}))
+        print(json.dumps({"primary": "#eef2fa", "secondary": "#9aa0ad",
+                          "warn": "#ff2d55", "ok": "#39ff14"}))
         return 0
 
     # primary: most saturated seed

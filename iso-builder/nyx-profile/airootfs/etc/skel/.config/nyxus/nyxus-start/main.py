@@ -65,7 +65,7 @@ except Exception:
     # palette module is shipped alongside every NYXUS app via
     # nyxus_install.sh; if it's missing, fall back to literals so
     # the app still launches.
-    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    WHITE_PURE='#ffffff'; WHITE_OFF='#eef2fa'; GREY_LIGHT='#c8ccd6'
     GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
     INK_FADED='#0a0a0a'; INK_BLACK='#000000'
     GLASS_DARK='#14141a'
@@ -141,16 +141,16 @@ try:
     from nyxus_palette import (HUD_PALETTE, hud_css_bundle,
                                install_hud_css, neon_flicker_css)
 except Exception:
-    HUD_PALETTE = {"pink": "#ff2dad", "cyan": "#2bd2ff", "gold": "#ffb84d",
+    HUD_PALETTE = {"pink": "#ff2dad", "cyan": "#2bd2ff", "gold": "#ff8a1e",
                    "purple": "#7d3dff", "green": "#7dff5e",
-                   "red": "#ff4d6b", "mono": "#e8edf5"}
+                   "red": "#ff2d55", "mono": "#eef2fa"}
     def hud_css_bundle(sel="window", hues=()):  # noqa: E704
         return ""
     def neon_flicker_css():  # noqa: E704
         return ""
     install_hud_css = None
 
-C_TEXT    = "#e8edf5"
+C_TEXT    = "#eef2fa"
 C_DIM     = "#c8ccd6"
 C_PINK    = HUD_PALETTE["pink"]
 C_PURPLE  = HUD_PALETTE["purple"]

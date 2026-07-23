@@ -26,7 +26,7 @@ type SSEEvent =
   | { type: "done" };
 
 function noveltyGradient(score: number) {
-  if (score >= 9) return { background: 'linear-gradient(90deg, #7c3aed, #6d28d9)', boxShadow: '0 0 10px rgba(124,58,237,0.4)' };
+  if (score >= 9) return { background: 'linear-gradient(90deg, #7d3dff, #6d28d9)', boxShadow: '0 0 10px rgba(125,61,255,0.4)' };
   if (score >= 7) return { background: 'linear-gradient(90deg, #dc2626, #991b1b)' };
   if (score >= 4) return { background: 'linear-gradient(90deg, #ea580c, #c2410c)' };
   return { background: '#1e293b' };

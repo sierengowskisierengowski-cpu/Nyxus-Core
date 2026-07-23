@@ -52,7 +52,7 @@ except Exception:
     # palette module is shipped alongside every NYXUS app via
     # nyxus_install.sh; if it's missing, fall back to literals so
     # the app still launches.
-    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    WHITE_PURE='#ffffff'; WHITE_OFF='#eef2fa'; GREY_LIGHT='#c8ccd6'
     GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
     INK_FADED='#0a0a0a'; INK_BLACK='#000000'
     GLASS_DARK='rgba(8, 12, 20, 0.55)'
@@ -129,7 +129,7 @@ def _kv_table(items, st):
     t = Table(rows, colWidths=[1.6 * inch, 5.0 * inch])
     t.setStyle(TableStyle([
         ("VALIGN",     (0, 0), (-1, -1), "TOP"),
-        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#e8edf5")),
+        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#eef2fa")),
         ("BOX",        (0, 0), (-1, -1), 0.4, colors.HexColor("#c8ccd6")),
         ("INNERGRID",  (0, 0), (-1, -1), 0.2, colors.HexColor("#c8ccd6")),
         ("LEFTPADDING",(0,0),(-1,-1), 6), ("RIGHTPADDING",(0,0),(-1,-1), 6),
@@ -218,7 +218,7 @@ def generate_pdf(payload: Dict[str, Any], target: Path) -> Path:
                         t.setStyle(TableStyle([
                             ("VALIGN",     (0, 0), (-1, -1), "TOP"),
                             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1a1e2a")),
-                            ("TEXTCOLOR",  (0, 0), (-1, 0), colors.HexColor("#e8edf5")),
+                            ("TEXTCOLOR",  (0, 0), (-1, 0), colors.HexColor("#eef2fa")),
                             ("BOX",        (0, 0), (-1, -1), 0.4, colors.HexColor("#c8ccd6")),
                             ("INNERGRID",  (0, 0), (-1, -1), 0.2, colors.HexColor("#c8ccd6")),
                             ("LEFTPADDING",(0,0),(-1,-1), 4), ("RIGHTPADDING",(0,0),(-1,-1), 4),
@@ -244,7 +244,7 @@ def generate_pdf(payload: Dict[str, Any], target: Path) -> Path:
         t = Table(rows, colWidths=[2.2 * inch, 4.4 * inch], repeatRows=1)
         t.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1a1e2a")),
-            ("TEXTCOLOR",  (0, 0), (-1, 0), colors.HexColor("#e8edf5")),
+            ("TEXTCOLOR",  (0, 0), (-1, 0), colors.HexColor("#eef2fa")),
             ("BOX",        (0, 0), (-1, -1), 0.4, colors.HexColor("#c8ccd6")),
             ("INNERGRID",  (0, 0), (-1, -1), 0.2, colors.HexColor("#c8ccd6")),
             ("VALIGN",     (0, 0), (-1, -1), "TOP"),

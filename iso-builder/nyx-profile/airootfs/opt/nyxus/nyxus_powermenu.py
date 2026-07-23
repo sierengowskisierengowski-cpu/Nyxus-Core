@@ -76,8 +76,8 @@ try:
     from nyxus_palette import (HUD_PALETTE, hud_css_bundle,
                                install_hud_css)
 except Exception:
-    HUD_PALETTE = {"pink": "#ff2dad", "cyan": "#2bd2ff", "gold": "#ffb84d",
-                   "red": "#ff4d6b", "mono": "#e8edf5"}
+    HUD_PALETTE = {"pink": "#ff2dad", "cyan": "#2bd2ff", "gold": "#ff8a1e",
+                   "red": "#ff2d55", "mono": "#eef2fa"}
     def hud_css_bundle(sel="window", hues=()):  # noqa: E704
         return ""
     install_hud_css = None
@@ -118,7 +118,7 @@ window.pm-window {{
     # Per-action hue tiles — HUD cards with solid top rule + bloom.
     for cls, hue in (("pm-safe", "cyan"), ("pm-warn", "gold"),
                      ("pm-danger", "red"), ("pm-cancel", "mono")):
-        c = HUD_PALETTE.get(hue, "#e8edf5")
+        c = HUD_PALETTE.get(hue, "#eef2fa")
         css += f"""
 .pm-tile.{cls} {{
     background: rgba(7, 5, 14, 0.93);

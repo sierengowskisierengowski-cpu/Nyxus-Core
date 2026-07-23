@@ -191,7 +191,7 @@ export default function KnowledgeBase() {
                       <span style={{ color: '#475569' }}>{cat.category}</span>
                       <span style={{ color: '#64748b' }}>{cat.count}</span>
                     </div>
-                    <div className="h-1 rounded-full overflow-hidden" style={{ background: '#0a0a14' }}>
+                    <div className="h-1 rounded-full overflow-hidden" style={{ background: '#05060a' }}>
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #7B5EA7, #6d28d9)' }} />
                     </div>
                   </div>
@@ -216,7 +216,7 @@ export default function KnowledgeBase() {
 
           {isLoading ? (
             <div className="space-y-3">
-              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" style={{ background: '#0a0a14' }} />)}
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" style={{ background: '#05060a' }} />)}
             </div>
           ) : entries?.length === 0 ? (
             <div className="text-center py-16">

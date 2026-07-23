@@ -25,11 +25,11 @@ export const C = {
   rimDark:      "rgba(0,0,0,0.55)",       // outer drop
 
   // text
-  textPrimary:   "#e8edf5",  // off-white primary
+  textPrimary:   "#eef2fa",  // off-white primary
   textSecondary: "#c8ccd6",  // light grey
   textTertiary:  "#6a6e78",  // dim grey
   white:         "#ffffff",  // hover halos + selected pip ONLY
-  text:          "#e8edf5",  // alias
+  text:          "#eef2fa",  // alias
   dim:           "#6a6e78",  // alias
 
   // workspace identity stripes — ONLY allowed color, ONLY on bottom waybar
@@ -37,7 +37,7 @@ export const C = {
 };
 
 // Back-compat NEONS export — now monochrome (used by LeftBar workspace pips)
-export const NEONS = ["#e8edf5", "#c8ccd6", "#e8edf5", "#c8ccd6", "#e8edf5", "#c8ccd6", "#e8edf5", "#c8ccd6", "#e8edf5"];
+export const NEONS = ["#eef2fa", "#c8ccd6", "#eef2fa", "#c8ccd6", "#eef2fa", "#c8ccd6", "#eef2fa", "#c8ccd6", "#eef2fa"];
 
 // ── APP REGISTRY — all 26 real apps from nyxus-scripts/ ──────────────────
 export type AppKind = "iframe" | "mockup";

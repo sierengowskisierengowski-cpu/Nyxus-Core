@@ -308,6 +308,13 @@ until a rebuilt kernel is rebaked.
 **What does NOT update until the next bake:** greeter/splash/ISO skel on the
 USB stick. Live session already shows ALIEN NEON; stick needs rebake+reflash.
 
+**2026-07-23 (same evening, purge pass):** Old accent presets (aurora/ember/verdant/
+violet/rose/ice/noir/wallpaper) **deleted** from `accent.json` — only `prism`/
+ALIEN NEON remains selectable. Every leftover old-family hex (`#a06bff`,
+`#ff7849`, `#ff4d6b`, cream-era void `#0a0a14`/`#050308`, …) remapped. All
+"Sprint E" / "cream accent" labels renamed to ALIEN NEON. Live session
+re-synced. Cursor theme name `NYXUS-Aurora` is unrelated (kept).
+
 **Owner next:** rebuild Kage-Ryu pkgs (iso9660/squashfs/loop) → commit clean →
 `sudo ./build-iso.sh` → flash → boot UEFI → verify.
 

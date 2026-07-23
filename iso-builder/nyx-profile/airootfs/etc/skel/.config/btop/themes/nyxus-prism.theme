@@ -29,7 +29,7 @@ theme[inactive_fg]="#3a4152"
 theme[graph_text]="#c8ccd6"
 
 # Background color of the percentage meters
-theme[meter_bg]="#0a0a14"
+theme[meter_bg]="#05060a"
 
 # Misc colors for processes box (mini-graphs, details)
 theme[proc_misc]="#ff2d55"
@@ -55,18 +55,18 @@ theme[cpu_end]="#7d3dff"
 
 # Mem/Disk free meter
 theme[free_start]="#39ff14"
-theme[free_mid]="#a06bff"
-theme[free_end]="#c084fc"
+theme[free_mid]="#7d3dff"
+theme[free_end]="#7d3dff"
 
 # Mem/Disk cached meter
 theme[cached_start]="#ff2d55"
 theme[cached_mid]="#66efff"
-theme[cached_end]="#7dd3fc"
+theme[cached_end]="#2bd2ff"
 
 # Mem/Disk available meter
 theme[available_start]="#ff8a1e"
-theme[available_mid]="#ffce85"
-theme[available_end]="#ffd166"
+theme[available_mid]="#ffe600"
+theme[available_end]="#ffe600"
 
 # Mem/Disk used meter
 theme[used_start]="#7d3dff"

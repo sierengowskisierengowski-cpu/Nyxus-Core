@@ -128,7 +128,7 @@ class CosmicSceneArea(Gtk.DrawingArea):
         rr = min(w, h) * 0.14
         # accretion disk
         for ring, col, width, alpha in [
-            (1.55, "#ff8a1e", 5, 0.55), (1.35, "#ff7849", 3, 0.45),
+            (1.55, "#ff8a1e", 5, 0.55), (1.35, "#ff8a1e", 3, 0.45),
             (1.18, "#ff2d55", 2, 0.35), (1.02, "#7d3dff", 1.5, 0.25)]:
             cr.set_line_width(width)
             r, g, b = _rgb(col)

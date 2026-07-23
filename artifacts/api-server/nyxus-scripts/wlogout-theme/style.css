@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════════════════════
    NYXUS · wlogout · DARK MIRROR · LOCKED rev 2026-05-07 r13
    Matches unified DARK MIRROR · UNIFIED FROSTED GLASS spec.
-   Pure monochrome — white / off-white #e8edf5 / light grey #c8ccd6 /
+   Pure monochrome — white / off-white #eef2fa / light grey #c8ccd6 /
    faded black / ink black. No pink, no purple, no neon, no per-button
    color fills.
    © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
@@ -18,7 +18,7 @@
 window {
     background-color: rgba(8, 12, 20, 0.62) !important;
     background-image: none                  !important;
-    color: #e8edf5                          !important;
+    color: #eef2fa                          !important;
 }
 
 /* ── BUTTON BASE · DARK MIRROR pebble ────────────────────────────── */
@@ -34,7 +34,7 @@ button {
     border-color:  rgba(255, 255, 255, 0.10)   !important;
     border-radius: 16px                        !important;
 
-    color:        #e8edf5                      !important;
+    color:        #eef2fa                      !important;
     box-shadow:   0 6px 18px rgba(0, 0, 0, 0.45),
                   inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
     outline:      none                         !important;
@@ -48,10 +48,10 @@ button:focus,
 button:active,
 button:hover {
     background-color: rgba(8, 12, 20, 0.88)   !important;
-    border-color:     rgba(232, 237, 245, 0.55)!important;
+    border-color:     rgba(238, 242, 250, 0.55)!important;
     color:            #ffffff                  !important;
     box-shadow:       0 8px 24px rgba(0, 0, 0, 0.55),
-                      0 0 22px rgba(232, 237, 245, 0.45),
+                      0 0 22px rgba(238, 242, 250, 0.45),
                       inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
     outline:          none                     !important;
 }
@@ -66,7 +66,7 @@ button:hover {
     background-color: rgba(15, 20, 32, 0.72) !important;
     background-image: none                   !important;
     border-color:     rgba(255, 255, 255, 0.10) !important;
-    color:            #e8edf5                !important;
+    color:            #eef2fa                !important;
     border-radius:    16px                   !important;
 }
 
@@ -77,6 +77,6 @@ button:hover {
 #reboot:hover,   button#reboot:hover,   .reboot:hover,   button.reboot:hover,
 #shutdown:hover, button#shutdown:hover, .shutdown:hover, button.shutdown:hover {
     background-color: rgba(8, 12, 20, 0.88) !important;
-    border-color:     rgba(232, 237, 245, 0.55) !important;
+    border-color:     rgba(238, 242, 250, 0.55) !important;
     color:            #ffffff !important;
 }

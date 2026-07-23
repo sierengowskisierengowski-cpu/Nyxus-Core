@@ -400,7 +400,7 @@ window.store-window { background: rgba(8, 12, 20, 0.92); }
 
 .store-toast {
     background: rgba(15, 20, 32, 0.92);
-    color: #e8edf5;
+    color: #eef2fa;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 10px;
     padding: 10px 14px;

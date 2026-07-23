@@ -31,7 +31,7 @@ except Exception:
     # palette module is shipped alongside every NYXUS app via
     # nyxus_install.sh; if it's missing, fall back to literals so
     # the app still launches.
-    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    WHITE_PURE='#ffffff'; WHITE_OFF='#eef2fa'; GREY_LIGHT='#c8ccd6'
     GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
     INK_FADED='#0a0a0a'; INK_BLACK='#000000'
     GLASS_DARK='rgba(8, 12, 20, 0.55)'
@@ -794,13 +794,13 @@ class StickiesWindow(Gtk.ApplicationWindow):
             from nyxus_palette import HUD_PALETTE as _hp, \
                 install_hud_css as _ihc, neon_flicker_css as _nfc
         except Exception:
-            _hp = {"pink": "#ff2dad", "gold": "#ffb84d"}
+            _hp = {"pink": "#ff2dad", "gold": "#ff8a1e"}
             _ihc = None
             def _nfc(): return ""
-        pink, gold = _hp.get("pink", "#ff2dad"), _hp.get("gold", "#ffb84d")
+        pink, gold = _hp.get("pink", "#ff2dad"), _hp.get("gold", "#ff8a1e")
         css = f"""
 * {{ font-family: 'Inter Display', 'Inter Display', cursive; }}
-window, .nyx-bg {{ background-color: rgba(5, 1, 13, 0.98); color: #e8edf5; }}
+window, .nyx-bg {{ background-color: rgba(5, 1, 13, 0.98); color: #eef2fa; }}
 .nyx-toolbar {{ background-color: rgba(7, 5, 14, 0.93); padding: 4px 10px;
     border-bottom: 1px solid alpha({gold}, 0.40); }}
 .nyx-headline {{ font-family: 'Permanent Marker', cursive; color: {gold};

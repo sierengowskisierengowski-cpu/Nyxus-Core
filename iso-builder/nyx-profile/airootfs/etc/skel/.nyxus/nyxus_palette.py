@@ -18,7 +18,7 @@
 # ── PRIMARY HEX ─────────────────────────────────────────────────────────────
 # White / off-white / grey ramp — the entire system reads from these 5.
 WHITE_PURE        = "#ffffff"   # rim-light highlight, focused caret, hover halos
-WHITE_OFF         = "#e8edf5"   # primary text, primary accent
+WHITE_OFF         = "#eef2fa"   # primary text, primary accent
 GREY_LIGHT        = "#c8ccd6"   # secondary text, secondary accent, light rim
 GREY_MID          = "#9aa0ad"   # mid-grey (rare — disabled/hint text)
 GREY_TERTIARY     = "#6a6e78"   # tertiary text, ghost text
@@ -51,11 +51,11 @@ HAIRLINE_INK      = "rgba(0, 0, 0, 0.45)"        # 1px black border on hovers
 # ── HYPRLAND ACTIVE-BORDER RIM-LIGHT ────────────────────────────────────────
 # Used by hyprland.conf col.active_border. 5-stop gradient at 135deg.
 RIM_GRADIENT_135 = (
-    "rgba(ffffffff) rgba(e8edf5ee) rgba(c8ccd6cc) "
+    "rgba(ffffffff) rgba(eef2faee) rgba(c8ccd6cc) "
     "rgba(0a0a0a99) rgba(000000ff) 135deg"
 )
 RIM_GRADIENT_INACTIVE_135 = (
-    "rgba(e8edf522) rgba(c8ccd611) rgba(00000044) 135deg"
+    "rgba(eef2fa22) rgba(c8ccd611) rgba(00000044) 135deg"
 )
 
 # ── DROP SHADOW ─────────────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ MAX_DEFAULT_H = 480
 _ACCENT_FALLBACK = {
     "primary":   "#ff2dad",
     "secondary": "#2bd2ff",
-    "warn":      "#ffb84d",
+    "warn":      "#ff8a1e",
     "ok":        "#7d3dff",
 }
 
@@ -156,9 +156,9 @@ def _hud_palette() -> dict:
         "gold":   ACCENT_WARN,
         "purple": ACCENT_OK,
         "green":  "#7dff5e",
-        "orange": "#ff7849",
+        "orange": "#ff8a1e",
         "blue":   "#4d9fff",
-        "red":    "#ff4d6b",
+        "red":    "#ff2d55",
         "mono":   WHITE_OFF,
     }
 
@@ -414,7 +414,7 @@ def install_hud_css(css: str) -> bool:
 
 # ── HELPERS ─────────────────────────────────────────────────────────────────
 def hex_to_rgba_tuple(h: str, a: float = 1.0):
-    """'#e8edf5' -> (0.91, 0.93, 0.96, 1.0). For Cairo / Gdk.RGBA fields."""
+    """'#eef2fa' -> (0.91, 0.93, 0.96, 1.0). For Cairo / Gdk.RGBA fields."""
     h = h.lstrip("#")
     if len(h) == 6:
         return (int(h[0:2], 16) / 255.0,
@@ -424,7 +424,7 @@ def hex_to_rgba_tuple(h: str, a: float = 1.0):
     raise ValueError(f"bad hex: {h}")
 
 def rgba_str(h: str, a: float = 1.0) -> str:
-    """'#e8edf5', 0.5 -> 'rgba(232, 237, 245, 0.5)'. For CSS strings."""
+    """'#eef2fa', 0.5 -> 'rgba(238, 242, 250, 0.5)'. For CSS strings."""
     h = h.lstrip("#")
     return (f"rgba({int(h[0:2], 16)}, "
             f"{int(h[2:4], 16)}, "

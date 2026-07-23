@@ -107,7 +107,7 @@ export default function Settings() {
   if (isLoading) return (
     <div className="p-8 space-y-4 max-w-3xl">
       {[60, 200, 200, 180].map((h, i) => (
-        <Skeleton key={i} className="w-full rounded-lg" style={{ height: `${h}px`, background: '#0a0a14' }} />
+        <Skeleton key={i} className="w-full rounded-lg" style={{ height: `${h}px`, background: '#05060a' }} />
       ))}
     </div>
   );
@@ -289,7 +289,7 @@ export default function Settings() {
             { label: "Stack", value: "React + Express + PostgreSQL" },
             { label: "AI Provider", value: "Local (Ollama, self-hosted, no cloud)" },
           ].map(({ label, value }) => (
-            <div key={label} className="flex justify-between items-center py-1.5" style={{ borderBottom: '1px solid #0a0a14' }}>
+            <div key={label} className="flex justify-between items-center py-1.5" style={{ borderBottom: '1px solid #05060a' }}>
               <span className="text-[10px]" style={{ color: '#64748b' }}>{label}</span>
               <span className="text-[10px] font-bold" style={{ color: '#64748b' }}>{value}</span>
             </div>

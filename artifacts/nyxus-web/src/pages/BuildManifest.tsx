@@ -19,7 +19,7 @@ const NYX = {
   void:   "rgba(0,0,0,0.92)",
   glowSoft:   "rgba(255,255,255,0.45)",
   glowBright: "rgba(255,255,255,0.85)",
-  text:   "#e8edf5",
+  text:   "#eef2fa",
   text2:  "#c8ccd6",
   dim:    "#6a6e78",
   hair:   "rgba(255,255,255,0.08)",
@@ -68,7 +68,7 @@ const STATUS_LABEL: Record<App["status"], string> = {
 };
 
 const STATUS_COLOR: Record<App["status"], string> = {
-  menu:    "#e8edf5",
+  menu:    "#eef2fa",
   overlay: "#c8ccd6",
   cli:     "#9aa0ad",
 };

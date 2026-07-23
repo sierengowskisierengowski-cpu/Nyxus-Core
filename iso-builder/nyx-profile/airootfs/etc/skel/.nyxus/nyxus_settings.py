@@ -85,7 +85,7 @@ try:
     )
 except Exception:
     WHITE_PURE     = "#ffffff"
-    WHITE_OFF      = "#e8edf5"
+    WHITE_OFF      = "#eef2fa"
     GREY_LIGHT     = "#c8ccd6"
     GREY_MID       = "#9aa0ad"
     GREY_TERTIARY  = "#6a6e78"
@@ -6880,7 +6880,7 @@ def _clear_group(grp: Adw.PreferencesGroup) -> None:
 # Curated DARK MIRROR accent palette.  The "Mirror White" preset is the
 # brand default and matches the locked SDDM/hyprlock palette tokens.
 ACCENT_PRESETS: List[Tuple[str, str]] = [
-    ("Mirror White", "#e8edf5"),
+    ("Mirror White", "#eef2fa"),
     ("Cyan",         "#5fd3f3"),
     ("Lime",         "#a6e22e"),
     ("Amber",        "#f5b342"),
@@ -6889,7 +6889,7 @@ ACCENT_PRESETS: List[Tuple[str, str]] = [
     ("Iris",         "#9c8cff"),
     ("Mint",         "#5ff3b8"),
 ]
-DEFAULT_ACCENT = "#e8edf5"
+DEFAULT_ACCENT = "#eef2fa"
 
 # Files we own for accent propagation. Each is a small idempotent fragment
 # included by the parent config (so we never mangle hand-written files).
@@ -6908,11 +6908,11 @@ def _hex_to_rgb(hex_str: str) -> Tuple[int, int, int]:
     if len(s) == 3:
         s = "".join(c * 2 for c in s)
     if len(s) != 6:
-        return (232, 237, 245)
+        return (238, 242, 250)
     try:
         return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
     except ValueError:
-        return (232, 237, 245)
+        return (238, 242, 250)
 
 
 def _atomic_write(path: Path, text: str) -> bool:
@@ -12072,7 +12072,7 @@ class ThemePacksPage(SectionPage):
     # Each pack: id, label, accent hex, secondary hex, description
     PACKS = (
         ("dark_mirror",   "DARK MIRROR (default)",
-            "#a06bff", "#3ad8ff",
+            "#7d3dff", "#2bd2ff",
             "Purple primary + cyan secondary — the canonical NYXUS look"),
         ("inferno",       "INFERNO",
             "#ff3a5c", "#ffae3a",
@@ -13354,11 +13354,11 @@ class PlymouthPage(SectionPage):
         # Appearance / Visual
         app = Adw.PreferencesGroup(
             title="Appearance",
-            description="The shipped NYXUS theme — DARK MIRROR palette")
+            description="The shipped NYXUS theme — ALIEN NEON palette")
         self.add_group(app)
-        app.add(kv_row("Background", "#0a0a14 (ink black)"))
-        app.add(kv_row("Primary", "#a06bff (purple)"))
-        app.add(kv_row("Secondary", "#3ad8ff (cyan)"))
+        app.add(kv_row("Background", "#05060a (ink black)"))
+        app.add(kv_row("Primary", "#7d3dff (violet)"))
+        app.add(kv_row("Secondary", "#ff2dad (magenta)"))
         app.add(kv_row("Logo source",
                        str(self.THEMES_DIR / self.DEFAULT_THEME / "logo.png")))
         app.add(empty_row(

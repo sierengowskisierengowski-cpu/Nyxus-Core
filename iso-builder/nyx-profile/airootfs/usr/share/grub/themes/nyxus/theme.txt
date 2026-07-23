@@ -6,13 +6,13 @@ message-color: "#eef2fa"
 message-font:  "Unifont Regular 14"
 
 desktop-image: "background.png"
-desktop-color: "#0a0a14"
+desktop-color: "#05060a"
 
 terminal-font: "Unifont Regular 16"
 terminal-box:  "terminal_box_*.png"
 
 + label {
-    text     = "NYXUS · Sprint E"
+    text     = "NYXUS · ALIEN NEON"
     left     = 50%-160
     top      = 18%
     width    = 320
@@ -41,7 +41,7 @@ terminal-box:  "terminal_box_*.png"
 
     item_font          = "Unifont Regular 16"
     item_color         = "#eef2fa"
-    selected_item_color = "#0a0a14"
+    selected_item_color = "#05060a"
     selected_item_pixmap_style = "select_*.png"
     item_height  = 36
     item_padding = 8

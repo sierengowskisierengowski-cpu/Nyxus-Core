@@ -22,7 +22,7 @@ except Exception:
     # palette module is shipped alongside every NYXUS app via
     # nyxus_install.sh; if it's missing, fall back to literals so
     # the app still launches.
-    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    WHITE_PURE='#ffffff'; WHITE_OFF='#eef2fa'; GREY_LIGHT='#c8ccd6'
     GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
     INK_FADED='#0a0a0a'; INK_BLACK='#000000'
     GLASS_DARK='rgba(8, 12, 20, 0.55)'
@@ -58,24 +58,24 @@ except Exception:
 # OBSIDIAN PRISM palette (rev 2026-07-07) — accent slots kept in
 # lockstep by nyxus-apply-accent; this file is a registered consumer.
 PALETTE = {
-    "mono":   "#e8edf5",
+    "mono":   "#eef2fa",
     "pink":   "#7d3dff",
     "cyan":   "#ff2d55",
     "purple": "#39ff14",
     "gold":   "#ff8a1e",
     "indigo": "#39ff14",
     "green":  "#7dff5e",
-    "orange": "#ff7849",
+    "orange": "#ff8a1e",
     "blue":   "#4d9fff",
-    "red":    "#ff4d6b",
+    "red":    "#ff2d55",
     "white":  "#ffffff",
-    "text":   "#e8edf5",
+    "text":   "#eef2fa",
     "dim":    "#c8ccd6",
     "void":   "#0f1420",
 }
 
 NEONS = ["#7d3dff", "#ff2d55", "#39ff14", "#ff8a1e", "#7dff5e",
-         "#ff7ae5", "#66efff", "#c084fc", "#ffce85"]
+         "#ff7ae5", "#66efff", "#7d3dff", "#ffe600"]
 
 
 def _card_css(name, color):
@@ -168,7 +168,7 @@ def _card_css(name, color):
     background: rgba(0, 0, 0, 0.45);
     border: 1px dashed alpha({color}, 0.34);
     border-radius: 3px;
-    color: #e8edf5;
+    color: #eef2fa;
     padding: 5px 8px;
     font-family: "JetBrains Mono", monospace;
     font-size: 11px;

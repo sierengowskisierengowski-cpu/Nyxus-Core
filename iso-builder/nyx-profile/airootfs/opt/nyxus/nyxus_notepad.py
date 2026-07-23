@@ -26,7 +26,7 @@ try:
         format_css, assert_no_forbidden,
     )
 except Exception:
-    WHITE_PURE='#ffffff'; WHITE_OFF='#e8edf5'; GREY_LIGHT='#c8ccd6'
+    WHITE_PURE='#ffffff'; WHITE_OFF='#eef2fa'; GREY_LIGHT='#c8ccd6'
     GREY_MID='#9aa0ad'; GREY_TERTIARY='#6a6e78'
     INK_FADED='#0a0a0a'; INK_BLACK='#000000'
     GLASS_DARK='rgba(8, 12, 20, 0.55)'
@@ -87,7 +87,7 @@ try:
     _HUD_EXTRA = _nfc()
 except Exception:
     _HP = {"pink": "#ff2dad", "cyan": "#2bd2ff", "green": "#7dff5e",
-           "gold": "#ffb84d"}
+           "gold": "#ff8a1e"}
     _NYX_IHC = None
     _HUD_EXTRA = ""
 
@@ -109,7 +109,7 @@ headerbar {{
 
 .editor-pane textview text {{
     background-color: rgba(0, 0, 0, 0.55);
-    color: rgba(232, 237, 245, 0.96);
+    color: rgba(238, 242, 250, 0.96);
     font-family: 'JetBrains Mono', monospace;
     font-size: 14px;
     padding: 16px;
@@ -119,7 +119,7 @@ headerbar {{
 
 .preview-pane textview text {{
     background-color: rgba(8, 12, 20, 0.55);
-    color: rgba(232, 237, 245, 0.92);
+    color: rgba(238, 242, 250, 0.92);
     font-family: 'Inter Display', 'Inter', sans-serif;
     font-size: 14px;
     padding: 22px 28px;
@@ -158,7 +158,7 @@ headerbar {{
 }}
 """).replace("@PINK@", _HP.get("pink", "#ff2dad")) \
     .replace("@GREEN@", _HP.get("green", "#7dff5e")) \
-    .replace("@GOLD@", _HP.get("gold", "#ffb84d")) + _HUD_EXTRA
+    .replace("@GOLD@", _HP.get("gold", "#ff8a1e")) + _HUD_EXTRA
 
 
 # ── Markdown → Pango markup (lightweight subset) ──────────────────────────

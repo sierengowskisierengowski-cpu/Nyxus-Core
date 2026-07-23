@@ -7,7 +7,7 @@ LOCK=/tmp/.nyxus-prism-pulse.lock
 exec 9>"$LOCK"
 flock -n 9 || exit 0
 
-COLORS="rgba(ff2dadff) rgba(2bd2ffff) rgba(7d3dffff) rgba(ffb84dff)"
+COLORS="rgba(ff2dadff) rgba(2bd2ffff) rgba(7d3dffff) rgba(ff8a1eff)"
 
 notify-send -u low -t 2600 "◤ X ◥ PRISM PULSE" "the eye is watching" 2>/dev/null
 

@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { LayoutGrid, List, Search, CheckSquare, Crosshair, Trash2 } from "lucide-react";
 
 function noveltyGradient(score: number) {
-  if (score >= 9) return { background: 'linear-gradient(90deg, #7c3aed, #6d28d9)', boxShadow: '0 0 8px rgba(124,58,237,0.4)' };
+  if (score >= 9) return { background: 'linear-gradient(90deg, #7d3dff, #6d28d9)', boxShadow: '0 0 8px rgba(125,61,255,0.4)' };
   if (score >= 7) return { background: 'linear-gradient(90deg, #dc2626, #991b1b)' };
   if (score >= 4) return { background: 'linear-gradient(90deg, #ea580c, #c2410c)' };
   return { background: '#1e293b' };
@@ -228,7 +228,7 @@ export default function ThreatLibrary() {
           {isLoading ? (
             <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-3" : "space-y-2"}>
               {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="h-28 w-full rounded-lg" style={{ background: '#0a0a14' }} />
+                <Skeleton key={i} className="h-28 w-full rounded-lg" style={{ background: '#05060a' }} />
               ))}
             </div>
           ) : threats.length === 0 ? (
@@ -263,7 +263,7 @@ export default function ThreatLibrary() {
                     <div
                       className="absolute top-0 left-0 right-0 h-px rounded-t-lg"
                       style={{ background: threat.noveltyScore >= 9
-                        ? 'linear-gradient(90deg, rgba(124,58,237,0.4) 0%, transparent 60%)'
+                        ? 'linear-gradient(90deg, rgba(125,61,255,0.4) 0%, transparent 60%)'
                         : threat.noveltyScore >= 7
                         ? 'linear-gradient(90deg, rgba(220,38,38,0.3) 0%, transparent 60%)'
                         : 'linear-gradient(90deg, rgba(249,115,22,0.2) 0%, transparent 60%)'

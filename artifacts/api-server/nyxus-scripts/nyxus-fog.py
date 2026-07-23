@@ -13,7 +13,7 @@ Each window renders a Cairo particle system at 30fps:
     - Radial-gradient soft falloff (no hard edges)
 
 Architecture: matches the locked NYXUS Visual System (DARK MIRROR rev
-r13) — pure white #ffffff / off-white #e8edf5 / light grey #c8ccd6 /
+r13) — pure white #ffffff / off-white #eef2fa / light grey #c8ccd6 /
 mid grey #9aa0ad. Monochrome only — no gold, no cream. Runs underneath
 the translucent waybar shell so the fog reads as living atmosphere
 trapped inside the bars.
@@ -100,7 +100,7 @@ BLOBS_PER_BAR    = 18
 # Float tuples for Cairo. Mirrors WHITE_PURE / WHITE_OFF / GREY_LIGHT /
 # GREY_MID from nyxus_palette.py.
 COLOR_WHITE      = (1.000, 1.000, 1.000)   # #ffffff
-COLOR_OFFWHITE   = (0.910, 0.929, 0.961)   # #e8edf5
+COLOR_OFFWHITE   = (0.910, 0.929, 0.961)   # #eef2fa
 COLOR_GREY_LIGHT = (0.784, 0.800, 0.839)   # #c8ccd6
 COLOR_GREY_MID   = (0.604, 0.627, 0.678)   # #9aa0ad
 
