@@ -1,9 +1,12 @@
-# NYXUS — Kernel ("Kage Ryu Nyxus", selectable security kernel)
+# NYXUS — Kernel ("Kage Ryu Nyxus", the primary/default security kernel)
 
-> **Status (2026-07-14): PREPARED, NOT DEPLOYED.** Recipe fixed and committed;
-> holding the actual build/install/boot until the Nyxus greetd login is
-> verified stable, so we don't stack an unbooted custom kernel on top of an
-> unverified login change.
+> **Status (2026-07-23): PRIMARY KERNEL, BAKE-READY — not yet boot-verified.**
+> The prebuilt `linux-kage-ryu-7.0.12` + headers packages exist at
+> `~/Projects/arch-custom-kernel/linux-kage-ryu/`. As of 2026-07-23 Kage-Ryu is
+> the **default** kernel: `build-iso.sh` bakes it by default and makes it the
+> primary boot entry on both the live USB and the installed system, with stock
+> `linux` kept as a rescue entry. Still needs one bake → boot to verify on
+> real hardware.
 
 ## What this is
 **Kage Ryu Nyxus** is the operator's own security-lab kernel — the
@@ -13,10 +16,10 @@ build recipe/package id stays `kage-ryu` / `linux-kage-ryu` (separate repo:
 and `/usr/lib/modules/*-kage-ryu` module paths keep working unchanged — only
 the human-facing name is "Kage Ryu Nyxus". It's Linux + XanMod, tuned for
 the MSI GS77 (i7-12700H / Alder Lake) and the jeTT eBPF EDR + Docker honeypot +
-CUDA workload. NYXUS ships it as a **selectable** kernel: **stock `linux`
-stays the default boot entry**, Kage Ryu Nyxus is chosen from the bootloader
-when you want the security loadout. This guarantees a bad custom-kernel build
-can never strand you.
+CUDA workload. NYXUS ships it as the **primary/default** kernel: **Kage Ryu
+Nyxus is the default boot entry** (live USB + installed system) so you run and
+validate the real kernel, while **stock `linux` stays as a rescue entry** you
+can pick from the bootloader — so a bad custom-kernel build can never strand you.
 
 ## Recipe fixes applied (in the kage-ryu repo, commit `fix(kage-ryu)`)
 - **microarch bug fixed:** `_microarchitecture=98` was a no-op (not in the
@@ -53,13 +56,15 @@ official Arch repos (no compile, always current, auto-update with the system):
   performance. Since NYXUS already isolates malware in KVM VMs and keeps mitigations
   on, this is a defensible-but-not-required upgrade.
 - **stock `linux`** — newest kernel = latest security patches, zero effort, has
-  every needed option enabled. The no-brainer if you just want current-and-forget;
-  it already stays the DEFAULT boot entry regardless of which alt you pick.
+  every needed option enabled. NYXUS keeps it installed as the **rescue** entry
+  regardless, so you always have a known-good fallback.
 
 None of these are wrong — the "right" one is a priority call: bespoke/tuned
 (Kage Ryu) vs low-effort performance (`linux-zen`) vs max host hardening
-(`linux-hardened`) vs simplest/newest (stock). Kage Ryu ships selectable so you
-can A/B any of them against stock without risk.
+(`linux-hardened`) vs simplest/newest (stock). As of 2026-07-23 NYXUS commits to
+Kage-Ryu as the default and ships **only** it + stock (rescue); `linux-zen` /
+`linux-hardened` were dropped from the ISO. To try one, `pacman -S linux-zen`
+on a running system and pick it at the bootloader — nothing here prevents that.
 
 ## Two ways to get Kage Ryu Nyxus onto a machine
 
@@ -73,23 +78,26 @@ sudo kernel/install-kage-ryu.sh          # builds + installs, adds selectable en
 # stock `linux` remains the default boot entry; pick "Kage Ryu Nyxus" at the bootloader.
 ```
 
-**B) Baked into the ISO (opt-in), so a fresh install already has it:**
+**B) Baked into the ISO (the default), so a fresh install already runs it:**
 The kernel is a multi-GB, long compile and is NOT in any Arch repo, so
-`build-iso.sh` never compiles it — you build the **package** once, then
-point the bake at it. This is **off by default** (CI and normal bakes ship
-a standard ISO with no custom-kernel dependency); enable it with
-`NYX_WITH_KAGE_RYU=1`:
+`build-iso.sh` never compiles it — you build the **package** once, then the
+bake stages it. As of 2026-07-23 this is **ON by default**: a normal bake makes
+Kage-Ryu the primary boot kernel and **hard-fails if the prebuilt package is
+missing** (so it can never silently ship kernel-less). Opt out with
+`NYX_WITH_KAGE_RYU=0` for a stock-only debug ISO.
 ```bash
 # 1. Produce the package (either the full install helper above, which also
 #    leaves the .pkg.tar.zst in the kage-ryu repo dir, or just:)
 cd ~/Projects/arch-custom-kernel/linux-kage-ryu && makepkg -sc   # → linux-kage-ryu-*.pkg.tar.zst
 
-# 2. Bake with the kernel staged into the ISO's [nyx-local] repo:
-NYX_WITH_KAGE_RYU=1 sudo ./iso-builder/build-iso.sh
+# 2. Bake (Kage-Ryu is staged into the ISO's [nyxus-local] repo automatically):
+sudo ./iso-builder/build-iso.sh
 #   Override the package location with NYX_KAGE_PKGDIR=/dir/with/the/.pkg.tar.zst
+#   Stock-only debug ISO:  NYX_WITH_KAGE_RYU=0 sudo ./iso-builder/build-iso.sh
 ```
-Either way the installed system keeps **stock `linux` as the default boot
-entry**; Kage Ryu Nyxus is selectable from the bootloader.
+The bake also makes Kage-Ryu the primary entry in all three live boot menus, and
+the installed system's GRUB default is set to Kage-Ryu by Calamares
+(`nyxus-set-grub-default-kage`); **stock `linux` remains as a rescue entry**.
 
 ## Optional build modes (bigger/meaner, higher cost)
 The kage-ryu PKGBUILD already supports these env toggles — pick per build:

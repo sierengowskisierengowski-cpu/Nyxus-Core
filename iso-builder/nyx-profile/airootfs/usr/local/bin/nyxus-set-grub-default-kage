@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  nyxus-set-grub-default-kage
+#
+#  Make the INSTALLED system default-boot the Kage-Ryu kernel, with stock
+#  `linux` remaining available as a rescue entry. Calamares copies the live
+#  filesystem to disk (both kernels present) and runs grub-mkconfig; because
+#  stock linux (7.1) version-sorts ABOVE Kage-Ryu (7.0.12), GRUB would
+#  otherwise pick stock as entry 0. This flips the saved default to the
+#  Kage-Ryu menuentry after grub.cfg has been generated.
+#
+#  Runs from the Calamares `shellprocess` module INSIDE the new root
+#  (dontChroot: false), after `grubcfg` + `bootloader`. Safe no-op if there
+#  is no Kage-Ryu entry (e.g. a stock-only ISO built with NYX_WITH_KAGE_RYU=0).
+#
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -u
+
+GRUBCFG="/boot/grub/grub.cfg"
+DEF="/etc/default/grub"
+
+[ -r "${GRUBCFG}" ] || { echo "nyxus-grub: no ${GRUBCFG} — skipping"; exit 0; }
+
+# 1. Ensure GRUB honors a saved default across reboots.
+if [ -f "${DEF}" ]; then
+  if grep -q '^GRUB_DEFAULT=' "${DEF}"; then
+    sed -i 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=saved/' "${DEF}"
+  else
+    printf '\nGRUB_DEFAULT=saved\n' >> "${DEF}"
+  fi
+  grep -q '^GRUB_SAVEDEFAULT=' "${DEF}" || printf 'GRUB_SAVEDEFAULT=true\n' >> "${DEF}"
+fi
+
+# 2. Find the Kage-Ryu menuentry id (the last single-quoted token before the
+#    opening brace on the first kage-ryu menuentry line). Version-agnostic.
+id="$(grep -E "^[[:space:]]*menuentry .*kage-ryu" "${GRUBCFG}" \
+       | head -1 \
+       | grep -oP "'\K[^']+(?=' *\{)")"
+
+# Fallback: match the human title if the id form isn't present.
+if [ -z "${id}" ]; then
+  id="$(grep -oP "menuentry '\K[^']*kage-ryu[^']*" "${GRUBCFG}" | head -1)"
+fi
+
+if [ -n "${id}" ]; then
+  if grub-set-default "${id}" 2>/dev/null; then
+    echo "nyxus-grub: default boot → ${id} (stock linux kept as rescue)"
+  else
+    echo "nyxus-grub: grub-set-default failed for '${id}' — leaving default as-is"
+  fi
+else
+  echo "nyxus-grub: no Kage-Ryu menuentry in ${GRUBCFG} (stock-only ISO?) — no change"
+fi
+
+exit 0

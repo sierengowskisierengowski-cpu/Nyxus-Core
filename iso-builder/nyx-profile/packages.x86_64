@@ -476,16 +476,14 @@ buildah
 skopeo
 distrobox
 
-# ── NYXUS Kernel Switcher (Tier B) ─────────────────────────────────
-# Ship LTS + ZEN + HARDENED alongside stock so users can pick at the
-# GRUB menu. nyxus-kernel-switch sets GRUB_DEFAULT and regenerates
-# grub.cfg via pkexec.
-linux-lts
-linux-lts-headers
-linux-zen
-linux-zen-headers
-linux-hardened
-linux-hardened-headers
+# ── NYXUS Kernel policy (rev 2026-07-23) ───────────────────────────
+# NYXUS ships the custom "Kage Ryu" kernel as the PRIMARY/default kernel
+# (staged into the ISO by build-iso.sh — NYX_WITH_KAGE_RYU is on by
+# default) with stock `linux` (above) kept purely as an emergency RESCUE
+# entry. The old linux-lts / linux-zen / linux-hardened extras were
+# dropped — this is a focused custom-kernel distro, not a kernel buffet.
+# nyxus-kernel-switch can still toggle the GRUB default between Kage-Ryu
+# and stock.
 
 # ── NYXUS Gaming / Proton-GE (Tier B) ──────────────────────────────
 # Steam (multilib) + nyxus-protonup downloads Proton-GE releases into

@@ -574,9 +574,11 @@ grep -q 'easyeffects --gapplication-service' \
 
 # ── 13l. Tier B (Virt / Containers / Kernel / Gaming / Editors) ──────
 hd "13l. Tier B · Virt + Containers + Kernel + Gaming + Editors"
+# NOTE (rev 2026-07-23): linux-lts / linux-zen / linux-hardened were dropped —
+# NYXUS ships the Kage Ryu kernel as primary with stock `linux` as rescue only
+# (see packages.x86_64 "NYXUS Kernel policy"). Do not re-add them here.
 for pkg in qemu-desktop libvirt virt-manager virt-viewer edk2-ovmf swtpm \
            buildah skopeo distrobox \
-           linux-lts linux-zen linux-hardened \
            steam mangohud \
            code helix micro gnome-text-editor; do
   grep -Eq "^${pkg}\$" "${PROFILE}/packages.x86_64" \

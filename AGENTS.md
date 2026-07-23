@@ -5,7 +5,7 @@
 > re-diagnosed and re-broken repeatedly, costing the owner time and money.
 > It has the one-canonical-repo rule, **how the desktop is actually delivered**
 > (skel core + first-boot bootstrap + offline cache), what the build includes
-> (ISO, the **opt-in kernel** via `NYX_WITH_KAGE_RYU=1`, boot art, features),
+> (ISO, the **Kage-Ryu kernel — default**, `NYX_WITH_KAGE_RYU=0` opts out, boot art, features),
 > the current state, the bake→flash→boot procedure, and the do-not-repeat
 > gotchas. Do not veer off into a different approach. Keep HANDOFF.md current.
 

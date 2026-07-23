@@ -140,28 +140,30 @@ if [[ "${NYX_ISO_TIER}" == "lean" && -f "${PROFILE_DIR}/packages.x86_64.lean" ]]
   ok "NYX_ISO_TIER=lean — using packages.x86_64.lean"
 fi
 
-# ── Kage Ryu Nyxus custom kernel (OPT-IN) ────────────────────────────────
-# rev 2026-07-21 — bake the operator's own linux-kage-ryu security kernel
-# into the ISO so a fresh install already has it as a SELECTABLE entry
-# (stock `linux` stays the default boot entry — a bad custom-kernel build
-# can never strand you).
+# ── Kage Ryu Nyxus custom kernel (DEFAULT — rev 2026-07-23) ──────────────
+# NYXUS ships the operator's own linux-kage-ryu security kernel as the
+# PRIMARY/default boot kernel — on the live USB (so you validate the real
+# kernel before installing) AND on the installed system. Stock `linux` is
+# kept purely as a RESCUE entry so a bad custom-kernel boot can never strand
+# you. This block also rewrites the three live boot menus so Kage-Ryu is
+# entry #0 and stock is a clearly-labelled rescue (throwaway copy only — the
+# repo's static menus stay stock-safe, so any failure falls back to a
+# bootable stock ISO, never a brick).
 #
-# This is OFF by default and a strict no-op unless NYX_WITH_KAGE_RYU=1, so
-# CI and every other build host keep baking a normal ISO with zero custom-
-# kernel dependency. The kernel is NOT in any Arch repo and is a multi-GB,
-# long compile, so it is NEVER built inside this script — you build the
-# package once (see kernel/README.md + kernel/install-kage-ryu.sh, or
-# `cd <kage-ryu repo> && makepkg -sc`), then bake with:
-#
-#     NYX_WITH_KAGE_RYU=1 sudo ./build-iso.sh
+# ON BY DEFAULT (NYX_WITH_KAGE_RYU=1). Set NYX_WITH_KAGE_RYU=0 to opt OUT and
+# bake a stock-only ISO (dev/debug). The kernel is NOT in any Arch repo and
+# is a multi-GB, long compile, so it is NEVER built inside this script — you
+# build the package once (see kernel/README.md + kernel/install-kage-ryu.sh,
+# or `cd <kage-ryu repo> && makepkg -sc`); the bake then hard-fails if the
+# prebuilt packages are missing (so it can never silently ship kernel-less).
 #
 # It looks for the prebuilt linux-kage-ryu + headers packages under
 # NYX_KAGE_PKGDIR (default ~/Projects/arch-custom-kernel/linux-kage-ryu),
 # stages them into a profile-local [nyxus-local] pacman repo, wires that repo
 # into the build pacman.conf, and appends the two packages to the bake's
 # package list. All of that is undone on exit by _nyx_restore_profile.
-if [[ "${NYX_WITH_KAGE_RYU:-0}" == "1" ]]; then
-  step "Kage Ryu Nyxus custom kernel (NYX_WITH_KAGE_RYU=1)"
+if [[ "${NYX_WITH_KAGE_RYU:-1}" == "1" ]]; then
+  step "Kage Ryu Nyxus custom kernel (default — primary boot kernel)"
   # Under `sudo` $HOME is /root; the kernel package was built in the invoking
   # user's home. Look there by default so the bake finds it without needing
   # NYX_KAGE_PKGDIR set explicitly.
@@ -207,7 +209,7 @@ PACMANLOCAL
   if ! grep -q '^linux-kage-ryu$' "${PROFILE_DIR}/packages.x86_64"; then
     printf '\n# Kage Ryu Nyxus custom kernel (staged into [nyxus-local] by build-iso.sh)\nlinux-kage-ryu\nlinux-kage-ryu-headers\n' >> "${PROFILE_DIR}/packages.x86_64"
   fi
-  ok "packages.x86_64 += linux-kage-ryu + headers (installs ALONGSIDE stock linux; stock stays default)"
+  ok "packages.x86_64 += linux-kage-ryu + headers (Kage-Ryu = primary; stock linux = rescue)"
 
   # Bake the auto-activation layer into the airootfs so a Kage-Ryu boot from
   # this image is tuned + scx_kage-scheduled on FIRST boot with no manual step.
@@ -223,6 +225,126 @@ PACMANLOCAL
   else
     warn "no packaging/install-activation.sh in ${KAGE_PKGDIR}; ISO ships the kernel without auto-activation"
   fi
+
+  # ── Make Kage-Ryu the DEFAULT live boot kernel (stock = rescue) ──────────
+  # Rewrite the three live boot menus in the THROWAWAY profile copy only, so
+  # the repo's static menus stay stock-safe (a botched rewrite can only ever
+  # yield a bootable stock ISO). mkarchiso copies every installed kernel as
+  # vmlinuz-<pkgbase> / initramfs-<pkgbase>.img, so with linux-kage-ryu
+  # installed the live media gets vmlinuz-linux-kage-ryu automatically. The
+  # ISO label is read from profiledef so the archisolabel can never drift.
+  step "boot menus → Kage-Ryu default + stock linux rescue"
+  _iso_label="$(grep -oP '^[[:space:]]*iso_label="?\K[^"[:space:]]+' "${PROFILE_DIR}/profiledef.sh" | head -1)"
+  _iso_label="${_iso_label:-NYXUS_2026_07}"
+
+  # GRUB (UEFI dragon menu) — quoted heredoc so grub's ${prefix} is preserved;
+  # @@ISO_LABEL@@ placeholder is substituted afterward.
+  cat > "${PROFILE_DIR}/grub/grub.cfg" <<'GRUBCFG'
+# ============================================
+# NYXUS — live boot menu · Kage Ryu dragon theme (rev 2026-07-23)
+# Kage Ryu kernel = DEFAULT (entry 0) · stock linux = RESCUE
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+set default="0"
+set timeout=8
+
+# gfxterm is entered ONLY if a font actually loads, else we stay in the plain
+# text terminal (never the broken "?"-glyph render).
+if loadfont "${prefix}/fonts/mono12.pf2" ; then
+    loadfont "${prefix}/fonts/mono9.pf2"
+    loadfont "${prefix}/fonts/mono10.pf2"
+    loadfont "${prefix}/fonts/mono11.pf2"
+    loadfont "${prefix}/fonts/bold14.pf2"
+    loadfont "${prefix}/fonts/bold16.pf2"
+    insmod all_video
+    insmod gfxterm
+    insmod png
+    set gfxmode=auto
+    terminal_output gfxterm
+    set theme="${prefix}/themes/nyxus/theme.txt"
+fi
+
+menuentry "Boot NYXUS · Kage Ryu kernel" --class nyxus --class arch {
+    set gfxpayload=keep
+    linux  /arch/boot/x86_64/vmlinuz-linux-kage-ryu  archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
+    initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux-kage-ryu.img
+}
+
+menuentry "Boot NYXUS · Kage Ryu (safe / no KMS)" --class nyxus --class arch {
+    set gfxpayload=keep
+    linux  /arch/boot/x86_64/vmlinuz-linux-kage-ryu  archisobasedir=arch archisolabel=@@ISO_LABEL@@ nomodeset
+    initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux-kage-ryu.img
+}
+
+menuentry "Boot NYXUS · stock linux (rescue)" --class nyxus --class arch {
+    set gfxpayload=keep
+    linux  /arch/boot/x86_64/vmlinuz-linux  archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
+    initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux.img
+}
+
+menuentry "UEFI Shell"             { chainloader /shellx64.efi }
+menuentry "Reboot"                 { reboot }
+menuentry "Power off"              { halt }
+GRUBCFG
+
+  # systemd-boot / efiboot loader entries (01 = Kage-Ryu default, 02 = rescue).
+  cat > "${PROFILE_DIR}/efiboot/loader/entries/01-nyx.conf" <<'EFIKAGE'
+# NYXUS — Kage Ryu (default)
+title    NYXUS — The Night Has Eyes (Kage Ryu)
+sort-key 01
+linux    /arch/boot/x86_64/vmlinuz-linux-kage-ryu
+initrd   /arch/boot/intel-ucode.img
+initrd   /arch/boot/amd-ucode.img
+initrd   /arch/boot/x86_64/initramfs-linux-kage-ryu.img
+options  archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
+EFIKAGE
+  cat > "${PROFILE_DIR}/efiboot/loader/entries/02-nyx-stock.conf" <<'EFISTOCK'
+# NYXUS — stock linux (rescue)
+title    NYXUS — stock linux (rescue)
+sort-key 02
+linux    /arch/boot/x86_64/vmlinuz-linux
+initrd   /arch/boot/intel-ucode.img
+initrd   /arch/boot/amd-ucode.img
+initrd   /arch/boot/x86_64/initramfs-linux.img
+options  archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
+EFISTOCK
+
+  # syslinux (BIOS/Legacy text menu).
+  cat > "${PROFILE_DIR}/syslinux/syslinux.cfg" <<'SYSLINUX'
+# ============================================
+# NYXUS — Live ISO (BIOS) · Kage Ryu default + stock rescue
+# © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================
+DEFAULT nyx
+PROMPT 0
+TIMEOUT 30
+
+LABEL nyx
+    MENU LABEL Boot NYXUS · Kage Ryu kernel
+    LINUX /arch/boot/x86_64/vmlinuz-linux-kage-ryu
+    INITRD /arch/boot/intel-ucode.img,/arch/boot/amd-ucode.img,/arch/boot/x86_64/initramfs-linux-kage-ryu.img
+    APPEND archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
+
+LABEL nyx_kage_safe
+    MENU LABEL Boot NYXUS · Kage Ryu (safe / no KMS)
+    LINUX /arch/boot/x86_64/vmlinuz-linux-kage-ryu
+    INITRD /arch/boot/intel-ucode.img,/arch/boot/amd-ucode.img,/arch/boot/x86_64/initramfs-linux-kage-ryu.img
+    APPEND archisobasedir=arch archisolabel=@@ISO_LABEL@@ nomodeset
+
+LABEL nyx_stock
+    MENU LABEL Boot NYXUS · stock linux (rescue)
+    LINUX /arch/boot/x86_64/vmlinuz-linux
+    INITRD /arch/boot/intel-ucode.img,/arch/boot/amd-ucode.img,/arch/boot/x86_64/initramfs-linux.img
+    APPEND archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
+SYSLINUX
+
+  # Substitute the real ISO label into all three menus.
+  sed -i "s/@@ISO_LABEL@@/${_iso_label}/g" \
+    "${PROFILE_DIR}/grub/grub.cfg" \
+    "${PROFILE_DIR}/efiboot/loader/entries/01-nyx.conf" \
+    "${PROFILE_DIR}/efiboot/loader/entries/02-nyx-stock.conf" \
+    "${PROFILE_DIR}/syslinux/syslinux.cfg"
+  ok "boot menus rewritten: Kage-Ryu primary + stock rescue (archisolabel=${_iso_label})"
 fi
 
 # ── stamp version into profiledef.sh + os-release ────────────────────────

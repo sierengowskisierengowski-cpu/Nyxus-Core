@@ -118,22 +118,29 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
   (~27 MB pkg). Security-lab config: kprobes/uprobes/BPF/BTF, userns/cgroup-bpf/
   overlayfs/CRIU/bridge/veth/vxlan (Docker), KVM-Intel, BBR+FQ, MGLRU, io_uring;
   CPU mitigations stay **available** (never hardcoded off).
-- **Selectable at boot; stock `linux` stays DEFAULT** — a bad custom build can
-  never strand you.
+- **Kage-Ryu is the PRIMARY/default kernel (rev 2026-07-23)** — on the live USB
+  (so you validate the real kernel before installing) AND on the installed
+  system. Stock `linux` is kept ONLY as a rescue entry so a bad Kage-Ryu boot
+  can never strand you. `linux-lts` / `linux-zen` / `linux-hardened` were
+  dropped from `packages.x86_64` (focused custom-kernel distro).
 - Built via `kernel/install-kage-ryu.sh` (on the running system) or
-  `cd <kage-ryu repo> && makepkg -sc`. Baked into the ISO **opt-in** with
-  `NYX_WITH_KAGE_RYU=1` (off by default; kernel is never compiled inside the bake).
-- **⚠️ OPT-IN = if you forget the flag, the ISO has NO custom kernel.** A plain
-  `sudo ./build-iso.sh` ships stock `linux` only (that's why the 2026-07-22 bake
-  had no kage-ryu — the flag was omitted; not a bug). The prebuilt packages
-  (`linux-kage-ryu-7.0.12` + headers, ~28M/38M) already exist at
-  `~/Projects/arch-custom-kernel/linux-kage-ryu/` and are found automatically —
-  you just have to pass `NYX_WITH_KAGE_RYU=1`. Always use the full command in §6.
-- `scheduler/scx_kage` — sched-ext scheduler; source now committed to the kage-ryu
+  `cd <kage-ryu repo> && makepkg -sc`. Baked into the ISO **BY DEFAULT**
+  (`NYX_WITH_KAGE_RYU` defaults to `1`; kernel is never compiled inside the
+  bake). Set `NYX_WITH_KAGE_RYU=0` to opt OUT and bake a stock-only ISO.
+- **The bake HARD-FAILS if the prebuilt packages are missing** (so it can never
+  silently ship kernel-less — the 2026-07-22 no-kernel bake can't recur). The
+  prebuilt packages (`linux-kage-ryu-7.0.12` + headers, ~28M/38M) already exist
+  at `~/Projects/arch-custom-kernel/linux-kage-ryu/` and are found automatically.
+- **How it's wired:** `build-iso.sh` stages the packages into a profile-local
+  `[nyxus-local]` repo, appends them to `packages.x86_64`, and rewrites the three
+  live boot menus (grub / systemd-boot / syslinux) so Kage-Ryu is entry #0 and
+  stock is a labelled rescue — **all in the throwaway profile copy**, so the
+  repo's static menus stay stock-safe. On install, Calamares copies both kernels
+  and `nyxus-set-grub-default-kage` (shellprocess) flips the installed GRUB
+  saved-default to Kage-Ryu.
+- `scheduler/scx_kage` — sched-ext scheduler; source committed to the kage-ryu
   repo (branch `feat/scx-kage-scheduler`). Binary staged into the ISO.
-- Honest alternatives documented in `kernel/README.md` (linux-zen / linux-hardened
-  / stock). Bumping to 7.1.x needs a matching XanMod patch + fresh sha256 (not a
-  blind edit).
+- Bumping to 7.1.x needs a matching XanMod patch + fresh sha256 (not a blind edit).
 
 ### Desktop features
 - 4 reactive features: **Mood Engine, Machine Whispers, Supernova, Graffiti Memory
@@ -148,7 +155,7 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
 
 ---
 
-## 5. CURRENT STATE (2026-07-22)
+## 5. CURRENT STATE (2026-07-23)
 
 ### Done + pushed
 - Repo un-scattered: one canonical `~/Nyxus-Core`; duplicate deleted; nothing lost.
@@ -159,35 +166,57 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
   - Splash saucer = real graffiti UFO (both ISO theme + offline-cache source).
 - kage-ryu `scheduler/` source committed + pushed (branch `feat/scx-kage-scheduler`).
 - `companion-3d/` gitignored by the parent.
+- **2026-07-23 — offline-first, Replit cut (`ef360df7`)** — the 07-22 stick booted
+  to "offline install failed (code 1)" even on ethernet. Root causes fixed:
+  - **Replit is retired.** `nyxus-core.replit.app` 404s; the bootstrap only ever
+    probed *that* server, so it mislabeled a working connection as "no internet".
+    Bootstrap is now **offline-cache-first and never phones home** (network path is
+    opt-in dev-only). The desktop is delivered ENTIRELY from `/opt/nyxus-cache`.
+  - **`nyxus_install.sh` aborted at code 1.** It ran `set -euo pipefail`, so the
+    first `clear` (no `$TERM` under exec-once) killed the whole install. Dropped
+    `-e`, guarded `clear`.
+  - **`eww/eww.scss` didn't exist** (repo ships `eww.css` + `eww.scss.source`) —
+    the one missing dl() made the install exit 1 forever. Fixed to pull real files.
+  - **hyprexpo build burned ~15 min every login** — now one-shot + offline-skip.
+  - **Wrong wallpaper**: `wallpaper.conf` hardcoded `/home/cosmic` → unreadable for
+    `nyx`. Fixed to `/home/nyx` + slug-robust `nyxus-wallpaper-autostart`.
+  - `BOOTSTRAP_VERSION` → `2026.07.23-r12-offline`.
+- **2026-07-23 — Kage-Ryu is now the DEFAULT kernel** (see §4): dropped
+  lts/zen/hardened; `NYX_WITH_KAGE_RYU` defaults ON; build-iso rewrites all three
+  boot menus (Kage-Ryu primary + stock rescue) in the throwaway copy; Calamares
+  `nyxus-set-grub-default-kage` sets the installed default. Prebuilt kernel pkgs
+  live at `~/Projects/arch-custom-kernel/linux-kage-ryu/` (built).
 
 ### The `nyxus-2026.07.22` stick booted BROKEN — and why (post-mortem)
-That stick was built **before** the fixes above (and likely from a partially
-corrupted profile). It showed: old wallpaper, blue base theme, no eww bars, no
-music flip, `hyprland.conf 600/605 source= globbing no match`, "no internet + no
-offline cache" note. All root causes are the §5 fixes. `nyx@nyxus` and the
-auto-login live session are **correct/expected** (it's a live ISO, not an install).
+Two overlapping causes: (1) that stick was baked from a **partial/stale** profile
+(missed the ungate-bars fix), and (2) the deeper bugs above (dead Replit + install
+`set -e`/`clear` + eww.scss + wallpaper path). All are now fixed in the repo but
+**not yet in a baked ISO** — needs a fresh bake. `nyx@nyxus` + auto-login are
+correct/expected (it's a live ISO, not an install).
 
 ### PENDING (do this next)
-1. **RE-BAKE** (owner runs): `cd ~/Nyxus-Core/iso-builder && NYX_WITH_KAGE_RYU=1
-   sudo ./build-iso.sh`. Safe now — won't corrupt the repo, will refuse to ship an
-   empty offline cache.
-2. **Re-flash** `/dev/sda` and **boot the UEFI entry**; verify: dragon menu →
-   graffiti-saucer splash → full desktop with bars **offline** → apps install from
-   cache.
-3. Optional leanness: the offline cache pulls `hypr-walls/` (~300 MB) but rotation
-   is locked to the alien theme only — prune non-alien walls from the payload if
-   size matters.
-4. Owner's call: fold `companion-3d` under one roof or keep separate; bump
-   `BOOTSTRAP_VERSION` if syncing replit-served apps.
+1. **RE-BAKE** (owner runs, from a clean+committed repo):
+   `cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh`
+   (Kage-Ryu is baked by default now; it hard-fails if the prebuilt kernel pkgs
+   are missing. Add `NYX_WITH_KAGE_RYU=0` only for a stock-only debug ISO.)
+2. **Re-flash** `/dev/sda` and **boot the UEFI entry**; verify: dragon menu (now
+   defaults to the **Kage-Ryu** entry) → graffiti-saucer splash → full desktop with
+   bars + correct wallpaper **offline** → apps install from cache (no "code 1").
+   Confirm `uname -r` shows the kage-ryu kernel.
+3. Optional cleanup (deferred): the `accent-baseline/home/cosmic/...` builder-home
+   leak in skel; ~40 non-boot Replit refs (self-update snippets, README, polkit
+   vendor_url); prune non-alien walls from the payload if size matters.
+4. Owner's call: fold `companion-3d` under one roof or keep separate.
 
 ---
 
 ## 6. THE BAKE → FLASH → BOOT PROCEDURE (canonical)
 
 ```bash
-# 1. BAKE (owner, root). Kernel opt-in via the env flag. From a clean repo.
+# 1. BAKE (owner, root). Kage-Ryu is baked BY DEFAULT. From a clean repo.
 cd ~/Nyxus-Core/iso-builder
-NYX_WITH_KAGE_RYU=1 sudo ./build-iso.sh
+sudo ./build-iso.sh                    # Kage-Ryu primary + stock rescue
+# sudo NYX_WITH_KAGE_RYU=0 ./build-iso.sh   # stock-only debug ISO (opt out)
 #   → iso-builder/out/nyxus-<date>-x86_64.iso  (NO post-bake cleanup needed anymore)
 
 # 2. FLASH (owner, root). USB = /dev/sda (SanDisk 57 GB). Internal = /dev/nvme0n1
