@@ -187,6 +187,33 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
   `nyxus-set-grub-default-kage` sets the installed default. Prebuilt kernel pkgs
   live at `~/Projects/arch-custom-kernel/linux-kage-ryu/` (built).
 
+- **2026-07-23 (round 2) — the "missing eye candy" root cause + feature restore**
+  (`e8d01837`, `a920e545`). Live boots were missing sounds, reactive layer,
+  Mission Control, etc. Root cause: **`nyxus_install.sh` (the ISO/first-boot
+  installer) deployed only ~5 of the ~82 `~/.local/bin` launcher scripts** that
+  `hyprland.conf` calls by literal `~/.local/bin/<name>` path — so the entire
+  reactive layer, `nyxus-soundd`/`nyxus-sfx`, wallpaper tooling, hub scripts,
+  shader/spray/lens FX etc. silently never started (they were built + in the
+  cache, just never copied out). The repo-root `install.sh` had the full
+  curated `LAUNCHERS` list; the ISO installer did not. Fixed by mirroring it
+  (82/82) + globbing all 71 eww helper scripts.
+  - Restored 5 daemons deleted by `cf8b612f` (accidental working-tree sync):
+    `nyxus_{missiond,hotkeyd,qsd,snapd,dockd}.py` → back in `nyxus-scripts/`
+    (bake globs them into `/opt/nyxus/`). Their `.service` units + hypr starts
+    + eww windows all still referenced them → they failed every boot. Restores
+    Mission Control (Super+F3), hotkey cheatsheet, snap, quick-settings daemon.
+  - Screensaver retimed to **5 min** (was 3); dpms 10 min, suspend 15 min.
+  - Saucer bottom-bar clock centering (margin 16→4px; art was swapped 07-22).
+  - Notification UFO popup: `dunstrc` script/icon paths `/home/cosmic`→`$HOME`.
+  - **Builder-home de-leak:** `/home/cosmic` was baked into wallpaper.json,
+    qt5ct/qt6ct, hyprland `env = PATH`, hub wrappers — broke for user `nyx`.
+    Source defaults → `/home/nyx`; `nyxus_install.sh` now runs a de-leak pass
+    rewriting `/home/cosmic|/home/nyx` → real `$HOME` on first boot (works for
+    any install user). Deferred: `etc/jett/allowlist.conf`, `etc/audit/rules.d`
+    (builder project paths), bundled arsenal-tool `.env.example`/logs.
+  - **NOTE:** none of round-2 is in the ISO baked ~1:40am 07-23 (it started
+    before these fixes) — needs one more bake.
+
 ### The `nyxus-2026.07.22` stick booted BROKEN — and why (post-mortem)
 Two overlapping causes: (1) that stick was baked from a **partial/stale** profile
 (missed the ungate-bars fix), and (2) the deeper bugs above (dead Replit + install
