@@ -82,6 +82,39 @@ _IMAGE_POOL = [f"nyxus-graffiti-{i:02d}.png" for i in range(1, 25)]
 _IMAGE_BASE_URL = "https://nyxus-core.replit.app/api/download/nyxus"
 _IMAGE_CACHE_DIR = Path.home() / ".cache" / "nyxus" / "graffiti"
 
+# Local-first sources (rev 2026-07-23): the ISO ships every graffiti mural, so
+# app backgrounds must render OFFLINE — the old production server is retired.
+# These dirs are checked before any network fetch; the retired URL above is now
+# only a dev-only last resort that simply fails silently offline.
+_LOCAL_IMAGE_DIRS = [
+    Path.home() / ".config" / "hypr" / "walls",
+    Path("/opt/nyxus-cache/hypr-walls"),
+    Path("/usr/share/backgrounds/nyxus"),
+]
+
+
+def _seed_from_local(name: str) -> bool:
+    """Copy `name` from a local wall dir into the graffiti cache if present, so
+    the rest of the pipeline finds it with no network. Returns True on success
+    (or if it is already cached)."""
+    import shutil
+    dst = _IMAGE_CACHE_DIR / name
+    try:
+        if dst.exists() and dst.stat().st_size > 1024:
+            return True
+    except Exception:
+        pass
+    for _d in _LOCAL_IMAGE_DIRS:
+        src = _d / name
+        try:
+            if src.exists() and src.stat().st_size > 1024:
+                _IMAGE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(src, dst)
+                return True
+        except Exception:
+            continue
+    return False
+
 # Frost tile assets — small repeatable textures used as background-image
 # fills inside cards / headerbars. Fetched once at chrome install time and
 # substituted into CHROME_CSS via __NYX_TILE_*__ placeholders. Failing to
@@ -101,6 +134,8 @@ def _ensure_frost_tile(name: str) -> str:
         log.warning("frost tile cache dir: %s", e)
         return ""
     local = _IMAGE_CACHE_DIR / name
+    if not (local.exists() and local.stat().st_size > 1024):
+        _seed_from_local(name)  # local-first (offline); no-op if not shipped
     if not (local.exists() and local.stat().st_size > 1024):
         try:
             url = f"{_IMAGE_BASE_URL}/{name}"
@@ -185,7 +220,16 @@ class GraffitiBackground(Gtk.DrawingArea):
                 log.warning("graffiti load %s: %s", name, e)
                 try: local.unlink()
                 except Exception: pass
-        # async fetch (idempotent)
+        # local-first: the ISO ships every graffiti mural, so seed from disk
+        # and render immediately — no network needed (rev 2026-07-23).
+        if _seed_from_local(name):
+            try:
+                pb = GdkPixbuf.Pixbuf.new_from_file(str(local))
+                self._pixbuf_cache[name] = pb
+                return pb
+            except Exception as e:
+                log.warning("graffiti load(local) %s: %s", name, e)
+        # async fetch (idempotent) — dev-only fallback; fails silently offline
         if name not in self._fetch_inflight:
             self._fetch_inflight.add(name)
             url = f"{_IMAGE_BASE_URL}/{name}"
