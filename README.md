@@ -1,5 +1,12 @@
 # Nyxus-Core
 
+> ## 👉 NEW HERE? READ [`HANDOFF.md`](./HANDOFF.md) FIRST.
+> It is the authoritative build-state brief: the one-repo rule, **how the desktop
+> is actually delivered** (the thing that caused months of confusion), what the
+> build includes (ISO, **kernel — opt-in via `NYX_WITH_KAGE_RYU=1`**, boot art,
+> features), the current state + post-mortems, and the canonical
+> **bake → flash → boot** procedure. Do not start work — or a bake — without it.
+
 Canonical source repository for the NYXUS platform and NYX image pipeline.
 
 **Terminology standard**

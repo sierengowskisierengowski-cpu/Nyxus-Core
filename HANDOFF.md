@@ -123,6 +123,12 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
 - Built via `kernel/install-kage-ryu.sh` (on the running system) or
   `cd <kage-ryu repo> && makepkg -sc`. Baked into the ISO **opt-in** with
   `NYX_WITH_KAGE_RYU=1` (off by default; kernel is never compiled inside the bake).
+- **⚠️ OPT-IN = if you forget the flag, the ISO has NO custom kernel.** A plain
+  `sudo ./build-iso.sh` ships stock `linux` only (that's why the 2026-07-22 bake
+  had no kage-ryu — the flag was omitted; not a bug). The prebuilt packages
+  (`linux-kage-ryu-7.0.12` + headers, ~28M/38M) already exist at
+  `~/Projects/arch-custom-kernel/linux-kage-ryu/` and are found automatically —
+  you just have to pass `NYX_WITH_KAGE_RYU=1`. Always use the full command in §6.
 - `scheduler/scx_kage` — sched-ext scheduler; source now committed to the kage-ryu
   repo (branch `feat/scx-kage-scheduler`). Binary staged into the ISO.
 - Honest alternatives documented in `kernel/README.md` (linux-zen / linux-hardened
