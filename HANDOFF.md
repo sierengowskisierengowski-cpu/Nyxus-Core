@@ -23,6 +23,11 @@
    runs those in their own terminal. Never assume you can.
 3. **Never edit `build-iso.sh` (or any script) while it is baking/running** —
    bash re-reads scripts by byte offset and it corrupts the live run.
+3b. **Only start a bake from a fully COMMITTED, IDLE repo.** A bake reads the
+   profile/scripts as it runs; if you kick it off mid-edit it captures a
+   partial set of your changes. (2026-07-22: a bake started while edits were
+   in flight shipped the offline-cache + saucer fixes but MISSED the
+   ungated-bars fix — verify baked ISOs with `unsquashfs`, don't assume.)
 4. **Don't fold the two sibling repos into Nyxus-Core** without explicit
    direction (see §1).
 5. **When something surprises you, write it in this file the moment you hit it.**
