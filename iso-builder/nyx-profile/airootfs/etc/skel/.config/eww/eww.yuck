@@ -544,7 +544,7 @@
   (overlay
     (saucer_base)
     (box :class "saucer-screen" :halign "center" :valign "center"
-         :style "margin-bottom: 16px;"
+         :style "margin-bottom: 4px;"
       (box :orientation "v" :space-evenly false :spacing 0 :halign "center" :valign "center"
         (label :class "bar-hub-time" :halign "center" :text "${TIME.hm}")
         (label :class "bar-hub-date" :halign "center" :text "${TIME.date}")))))

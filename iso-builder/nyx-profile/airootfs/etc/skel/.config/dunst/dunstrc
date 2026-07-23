@@ -48,7 +48,7 @@
     min_icon_size = 52
     max_icon_size = 96
     icon_corner_radius = 3
-    icon_path = /home/cosmic/.local/share/nyxus/icons/:/usr/share/icons/Adwaita/32x32/status/:/usr/share/icons/Adwaita/32x32/devices/:/usr/share/icons/hicolor/32x32/apps/
+    icon_path = /home/nyx/.local/share/nyxus/icons/:/usr/share/icons/Adwaita/32x32/status/:/usr/share/icons/Adwaita/32x32/devices/:/usr/share/icons/hicolor/32x32/apps/
 
     sticky_history = yes
     history_length = 50
@@ -99,5 +99,5 @@
 # dunst's native popups.
 [nyxus-eww-popup]
     appname = "*"
-    script = /home/cosmic/.local/bin/nyxus-notif-to-eww
+    script = /home/nyx/.local/bin/nyxus-notif-to-eww
     skip_display = true

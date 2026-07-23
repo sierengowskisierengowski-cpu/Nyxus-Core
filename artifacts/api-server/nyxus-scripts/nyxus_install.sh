@@ -194,6 +194,58 @@ if dl "nyxus_hotcorners.py" "$HOME/.local/bin/nyxus_hotcorners.py"; then
   chmod 0755 "$HOME/.local/bin/nyxus_hotcorners.py"
 fi
 
+# ── Launchers → ~/.local/bin (rev 2026-07-23 — CRITICAL FIX) ────────────────
+# hyprland.conf's exec-once / bind lines call these by their LITERAL
+# ~/.local/bin/<name> path, not via $PATH — so anything missing here means
+# that feature silently never starts, with no error anywhere. This installer
+# previously deployed only a handful of launchers; the full reactive layer
+# (Mood Engine, Machine Whispers, Supernova, Graffiti Memory Wall, tintd/
+# beatd/pulsed/wall-fx/living), the desktop companion, the custom sound
+# daemon (nyxus-soundd/nyxus-sfx), wallpaper tooling, hub scripts, and more
+# were fully built and baked into the offline cache but NEVER deployed here —
+# which is why they were silently absent on every live boot and fresh
+# install despite the underlying scripts working. This list mirrors the
+# proven, curated LAUNCHERS array in the repo-root install.sh (the dev-
+# machine deploy path) so the ISO/offline path finally has full parity.
+hdr "Launchers — reactive layer, companion, sound daemon, hub, and more → ~/.local/bin"
+mkdir -p "$HOME/.local/bin"
+LAUNCHERS=(
+  nyxus
+  nyxus-accent-from-wallpaper nyxus-apply-accent nyxus-backup nyxus-beat
+  nyxus-beatd nyxus-boot-check nyxus-companion nyxus-crash-report nyxus-drop
+  nyxus-dynamic-wallpaper.sh nyxus-eww-cinematic
+  nyxus-eww-launch-safe nyxus-focusmode nyxus-freeform nyxus-gamemode
+  nyxus-gen-backdrop nyxus-ghost nyxus-ghost-helper nyxus-glow
+  nyxus-graffiti-wall nyxus-hacker-mode nyxus-home nyxus-hotkey
+  nyxus-hub-apps nyxus-hub-close nyxus-hub-launch nyxus-hub-open nyxus-hub-search
+  nyxus-launch-bifrost nyxus-launch-meli nyxus-lens
+  nyxus-livewall-flagship nyxus-livewall-generate nyxus-live-wallpaper
+  nyxus-living nyxus-lock-art nyxus-lock-track nyxus-mood
+  nyxus-notifications nyxus-notif-to-eww nyxus-nowplaying
+  nyxus-palette-extract nyxus-panic nyxus-persist-login
+  nyxus-plugins nyxus-plymouth-install nyxus-postinstall nyxus-pulsed
+  nyxus-rotate-walls nyxus-screensaver nyxus-security nyxus-sense
+  nyxus-session-start nyxus-settings nyxus-set-wallpaper nyxus-set-wallpaper.sh
+  nyxus-sfx nyxus-shader nyxus-sound nyxus-sound-bake nyxus-soundd
+  nyxus-sound-forge nyxus-sounds nyxus-spray nyxus-store nyxus-supernova
+  nyxus-sync-stations nyxus-tint nyxus-tintd nyxus-updater
+  nyxus-voice nyxus-voiced nyxus-voice-install nyxus-voice-model
+  nyxus-wall-cycle nyxus-wall-fx nyxus-wall-next nyxus-wallpaper-autostart
+  nyxus-weather-line nyxus-whispers sync-eww.sh
+)
+_launch_ok=0; _launch_total=${#LAUNCHERS[@]}
+for _base in "${LAUNCHERS[@]}"; do
+  if dl "${_base}" "$HOME/.local/bin/${_base}"; then
+    chmod 0755 "$HOME/.local/bin/${_base}" 2>/dev/null
+    _launch_ok=$((_launch_ok+1))
+  fi
+done
+if (( _launch_ok == _launch_total )); then
+  ok "launchers → ~/.local/bin (${_launch_ok}/${_launch_total} — full reactive layer + companion + sound restored)"
+else
+  warn "launchers → ~/.local/bin (${_launch_ok}/${_launch_total} — some missing from cache, see failed items above)"
+fi
+
 # ── GTK4 Python dependencies ──────────────────────────────────────────────────
 hdr "Python GTK4 Dependencies"
 if command -v pacman &>/dev/null; then
@@ -411,13 +463,30 @@ dl "eww/eww.css"          "$EWW_DIR/eww.css"          || failed=$((failed+1))
 dl "eww/eww.scss.source"  "$EWW_DIR/eww.scss.source"  || failed=$((failed+1))
 dl "eww/nyxus.conf"   "$EWW_DIR/nyxus.conf"   || failed=$((failed+1))
 dl "eww/README.md"    "$EWW_DIR/README.md"    || failed=$((failed+1))
-for s in audio audio-action audio-sinks battery bluetooth brightness \
-         bt-action bt-list calendar calendar-month cpu-bars mic network \
-         notif-action notif-history notifications osd-show player \
-         power-profile qs-toggle quicksettings sys-pulse ticker \
-         updates weather wifi-action wifi-list workspaces; do
-  dl "eww/scripts/${s}.sh" "$EWW_SCRIPTS_DIR/${s}.sh" || failed=$((failed+1))
-done
+# Deploy EVERY eww helper script from the cache (rev 2026-07-23). This was a
+# hardcoded 28-name subset, but the bars/flyouts reference ~71 scripts (the
+# reactive-layer feeds: sense-poll, prism-anim, starlight-anim, fog-swirl,
+# neon-flicker, deepcore, etc.). The rest only survived because /etc/skel
+# shipped them — glob the cache so the FULL set is always deployed fresh and
+# nothing silently goes stale. Falls back to the core list if the cache dir
+# can't be enumerated (dev/manual runs).
+if [ -n "${NYXUS_OFFLINE_DIR:-}" ] && [ -d "${NYXUS_OFFLINE_DIR}/eww/scripts" ]; then
+  _eww_n=0
+  for _src in "${NYXUS_OFFLINE_DIR}/eww/scripts/"*.sh; do
+    [ -f "$_src" ] || continue
+    _b="$(basename "$_src")"
+    dl "eww/scripts/${_b}" "$EWW_SCRIPTS_DIR/${_b}" && _eww_n=$((_eww_n+1)) || failed=$((failed+1))
+  done
+  ok "eww scripts: ${_eww_n} deployed (full set from cache)"
+else
+  for s in audio audio-action audio-sinks battery bluetooth brightness \
+           bt-action bt-list calendar calendar-month cpu-bars mic network \
+           notif-action notif-history notifications osd-show player \
+           power-profile qs-toggle quicksettings sys-pulse ticker \
+           updates weather wifi-action wifi-list workspaces; do
+    dl "eww/scripts/${s}.sh" "$EWW_SCRIPTS_DIR/${s}.sh" || failed=$((failed+1))
+  done
+fi
 chmod +x "$EWW_SCRIPTS_DIR"/*.sh 2>/dev/null || true
 
 # nyxus-eww-launch (deadline-bounded launcher) → /usr/local/bin/
