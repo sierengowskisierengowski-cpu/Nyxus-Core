@@ -37,6 +37,21 @@ export XDG_CACHE_HOME="/var/cache/regreet"
 export XDG_DATA_HOME="${HOME}/.local/share"
 mkdir -p "$XDG_CACHE_HOME" "$XDG_DATA_HOME" 2>/dev/null
 
+# ── FIX (2026-07-23) · black/untextured login screen ────────────────────────
+# regreet.toml points its [background] at /var/cache/regreet/nyxus-login-bg.png
+# and the comment there claims this script "drops a random curated alien wall"
+# into that cache path — but nothing ever actually did that, so the file never
+# existed and regreet always rendered with NO background (plain dark/black).
+# Seed it from the baked-in alien wall every start (cheap, idempotent; a
+# future rotator can still refresh /var/cache/regreet/nyxus-login-bg.png with
+# a different curated wall without touching this fallback).
+SEED_BG="/etc/greetd/nyxus-login-bg.png"
+CACHE_BG="${XDG_CACHE_HOME}/nyxus-login-bg.png"
+if [ -s "$SEED_BG" ] && [ ! -s "$CACHE_BG" ]; then
+  cp -f "$SEED_BG" "$CACHE_BG" 2>/dev/null \
+    && echo "[$(date -Iseconds)] seeded login background from $SEED_BG" >>"$LOG" 2>&1
+fi
+
 # ── ANTI-FLASH #2 · dark GTK theme so the first paint is not a light flash ──
 # regreet maps its window, THEN applies /etc/greetd/regreet.css. For the frame
 # in between GTK falls back to its default LIGHT theme — a white box flashes

@@ -37,6 +37,21 @@ export XDG_CACHE_HOME="/var/cache/regreet"
 export XDG_DATA_HOME="${HOME}/.local/share"
 mkdir -p "$XDG_CACHE_HOME" "$XDG_DATA_HOME" 2>/dev/null
 
+# ── FIX (2026-07-23) · black/untextured login screen ────────────────────────
+# regreet.toml points its [background] at /var/cache/regreet/nyxus-login-bg.png
+# and the comment there claims this script "drops a random curated alien wall"
+# into that cache path — but nothing ever actually did that, so the file never
+# existed and regreet always rendered with NO background (plain dark/black).
+# Seed it from the baked-in alien wall every start (cheap, idempotent; a
+# future rotator can still refresh /var/cache/regreet/nyxus-login-bg.png with
+# a different curated wall without touching this fallback).
+SEED_BG="/etc/greetd/nyxus-login-bg.png"
+CACHE_BG="${XDG_CACHE_HOME}/nyxus-login-bg.png"
+if [ -s "$SEED_BG" ] && [ ! -s "$CACHE_BG" ]; then
+  cp -f "$SEED_BG" "$CACHE_BG" 2>/dev/null \
+    && echo "[$(date -Iseconds)] seeded login background from $SEED_BG" >>"$LOG" 2>&1
+fi
+
 # ── ANTI-FLASH #2 · dark GTK theme so the first paint is not a light flash ──
 # regreet maps its window, THEN applies /etc/greetd/regreet.css. For the frame
 # in between GTK falls back to its default LIGHT theme — a white box flashes
@@ -89,6 +104,29 @@ run_regreet() {  # $1 = extra env description
   fi
   return "$rc"
 }
+
+# ── NYXUS login wallpaper rotation (rev 2026-07-21) ─────────────────────
+# Show a random curated alien / NYXUS-HYPRLAND / sierengowski wall on the
+# greeter each time it appears. regreet reads it from the greeter-writable
+# cache path (see regreet.toml [background] path). FULLY GUARDED: any
+# failure falls back to the shipped seed at /etc/greetd/nyxus-login-bg.png,
+# so the login screen is NEVER left without a background.
+{
+  _login_bg="${XDG_CACHE_HOME}/nyxus-login-bg.png"
+  _seed="/etc/greetd/nyxus-login-bg.png"
+  _wdir="/usr/share/backgrounds/nyxus"
+  _list="/usr/share/nyxus/wall-rotation.list"
+  _pick=""
+  if [ -d "$_wdir" ] && [ -r "$_list" ]; then
+    _cand="$(while IFS= read -r ln; do
+               ln="${ln%%#*}"; sl="$(printf '%s' "$ln" | awk '{print $1}')"
+               [ -n "$sl" ] && [ -f "$_wdir/$sl.png" ] && printf '%s\n' "$_wdir/$sl.png"
+             done < "$_list" 2>/dev/null)"
+    _pick="$(printf '%s\n' "$_cand" | shuf -n1 2>/dev/null || printf '%s\n' "$_cand" | head -n1)"
+  fi
+  [ -n "$_pick" ] && [ -f "$_pick" ] && cp -f "$_pick" "$_login_bg" 2>/dev/null
+  [ -f "$_login_bg" ] || cp -f "$_seed" "$_login_bg" 2>/dev/null
+} >>"$LOG" 2>&1 || true
 
 if command -v cage >/dev/null 2>&1 && command -v regreet >/dev/null 2>&1; then
   run_regreet "gpu";                 [ $? -eq 0 ] && exit 0
