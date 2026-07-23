@@ -18,6 +18,17 @@ if [[ -r "${CONF}" ]]; then
   source "${CONF}" || true
 fi
 
+# If the persisted absolute path doesn't resolve — e.g. it was written with a
+# DIFFERENT user's $HOME baked in (the skel default ships a build-time path) —
+# recover via the slug (WALLPAPER=) under THIS user's home before falling back
+# to the shipped default. This makes the choice user-agnostic.
+if [[ ( -z "${WALLPAPER_PATH:-}" || ! -r "${WALLPAPER_PATH}" ) && -n "${WALLPAPER:-}" ]]; then
+  for _cand in "${HOME}/.config/hypr/walls/${WALLPAPER}.png" \
+               "/usr/share/backgrounds/nyxus/${WALLPAPER}.png"; do
+    if [[ -r "${_cand}" ]]; then WALLPAPER_PATH="${_cand}"; break; fi
+  done
+fi
+
 if [[ -z "${WALLPAPER_PATH:-}" || ! -r "${WALLPAPER_PATH}" ]]; then
   if [[ -r "${DEFAULT}" ]]; then
     WALLPAPER_PATH="${DEFAULT}"

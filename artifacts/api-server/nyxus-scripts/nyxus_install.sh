@@ -5,12 +5,27 @@
 # ║  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED       ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 #
-# Usage:
-#   curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | bash
+# Usage (offline — the only supported path):
+#   NYXUS_OFFLINE_DIR=/opt/nyxus-cache bash nyxus_install.sh
+#
+# The desktop is delivered ENTIRELY from the offline cache baked into the ISO
+# (built from this repo). It NEVER phones home. The old production server
+# (nyxus-core.replit.app) is retired; any network path below is dev-only and
+# only ever taken when NYXUS_OFFLINE_DIR is unset.
 
-set -euo pipefail
+# NOTE: intentionally NOT `set -e`. This installer runs from Hyprland's
+# exec-once (no controlling terminal) and performs dozens of best-effort,
+# optional steps (pacman installs, per-app tarballs, service reloads). A
+# single optional failure must NEVER abort the whole install — the script
+# tracks real failures explicitly via the `failed` counter / `failed_items`
+# array and reports them at the end. `set -e` here caused the entire offline
+# install to abort on the very first line that returned non-zero (e.g. the
+# `clear` below with no $TERM), leaving the session half-configured.
+set -uo pipefail
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
+# Retired production host. Kept only so the dev-only (NYXUS_OFFLINE_DIR unset)
+# path still parses; it is never contacted during a normal offline install.
 BASE_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}"
 API="${BASE_URL}/api/download/nyxus"
 
@@ -41,16 +56,19 @@ hdr()  { printf "\n${PURPLE}${B}── %s ${DIM}%s${R}\n" "$1" "─────�
 ## (cache pre-staged into /opt/nyxus-cache by customize_airootfs.sh).
 dl() {
   local name="$1" dest="$2"
-  if [ -n "${NYXUS_OFFLINE_DIR:-}" ] && [ -f "${NYXUS_OFFLINE_DIR}/${name}" ]; then
-    if cp -f "${NYXUS_OFFLINE_DIR}/${name}" "$dest" 2>/dev/null; then
+  # Offline mode (the normal case): copy from the cache and NEVER fall back to
+  # the network — a missing cache file is a real, reportable failure, not a
+  # reason to phone home to the retired server.
+  if [ -n "${NYXUS_OFFLINE_DIR:-}" ]; then
+    if [ -f "${NYXUS_OFFLINE_DIR}/${name}" ] && cp -f "${NYXUS_OFFLINE_DIR}/${name}" "$dest" 2>/dev/null; then
       ok "$name → $dest  ${DIM}(offline)${R}"
       return 0
-    else
-      fail "$name (offline copy failed)"
-      failed_items+=("$name")
-      return 1
     fi
+    fail "$name (not in offline cache)"
+    failed_items+=("$name")
+    return 1
   fi
+  # Dev-only path (NYXUS_OFFLINE_DIR unset): legacy network fetch.
   if curl -fsSL -o "$dest" "${API}/${name}" 2>/dev/null; then
     ok "$name → $dest"
   else
@@ -92,7 +110,10 @@ install_tarball_offline() {
 }
 
 # ── HEADER ────────────────────────────────────────────────────────────────────
-clear
+# `clear` needs $TERM; under Hyprland exec-once there is no terminal, so guard
+# it (a bare `clear` prints "TERM environment variable not set" and returns
+# non-zero — which used to abort the whole install under the old `set -e`).
+clear 2>/dev/null || true
 echo ""
 printf "${PURPLE}${B}  ███   ██  ██  ██  ██  ██  ██  █████ ${R}\n"
 printf "${PINK}${B}  ████  ██   ████   ██  ██  ██  ██    ${R}\n"
@@ -384,7 +405,10 @@ EWW_SCRIPTS_DIR="$EWW_DIR/scripts"
 mkdir -p "$EWW_DIR" "$EWW_SCRIPTS_DIR"
 hdr "EWW Shell (bars · dashboard · powermenu · cheatsheet · OSDs)"
 dl "eww/eww.yuck"     "$EWW_DIR/eww.yuck"     || failed=$((failed+1))
-dl "eww/eww.scss"     "$EWW_DIR/eww.scss"     || failed=$((failed+1))
+# eww renders the pre-compiled eww.css (the repo ships that, plus the SCSS as
+# eww.scss.source for the accent pipeline to recompile — there is NO eww.scss).
+dl "eww/eww.css"          "$EWW_DIR/eww.css"          || failed=$((failed+1))
+dl "eww/eww.scss.source"  "$EWW_DIR/eww.scss.source"  || failed=$((failed+1))
 dl "eww/nyxus.conf"   "$EWW_DIR/nyxus.conf"   || failed=$((failed+1))
 dl "eww/README.md"    "$EWW_DIR/README.md"    || failed=$((failed+1))
 for s in audio audio-action audio-sinks battery bluetooth brightness \
@@ -669,8 +693,11 @@ for app in "${TARBALL_APPS[@]}"; do
   ## per-app installer can also pick its .tgz payload from the cache —
   ## without this every tarball app hard-fails with zero network and the
   ## whole install exits 1, leaving the session half-configured.
-  if [ -n "${NYXUS_OFFLINE_DIR:-}" ] && [ -f "${NYXUS_OFFLINE_DIR}/${installer}" ]; then
-    if NYXUS_OFFLINE_DIR="${NYXUS_OFFLINE_DIR}" bash "${NYXUS_OFFLINE_DIR}/${installer}" >/tmp/nyxus-${app}-install.log 2>&1; then
+  # Offline mode (normal case): run the pre-staged per-app installer from the
+  # cache and NEVER phone home. A missing installer here is a real failure.
+  if [ -n "${NYXUS_OFFLINE_DIR:-}" ]; then
+    if [ -f "${NYXUS_OFFLINE_DIR}/${installer}" ] \
+       && NYXUS_OFFLINE_DIR="${NYXUS_OFFLINE_DIR}" bash "${NYXUS_OFFLINE_DIR}/${installer}" >/tmp/nyxus-${app}-install.log 2>&1; then
       ok "${app} (nyxus-${app})  ${DIM}(offline)${R}"
     else
       fail "${app} — see /tmp/nyxus-${app}-install.log"
@@ -679,6 +706,7 @@ for app in "${TARBALL_APPS[@]}"; do
     fi
     continue
   fi
+  # Dev-only path (NYXUS_OFFLINE_DIR unset): legacy network install.
   if curl -fsSL "${API}/${installer}" | bash >/tmp/nyxus-${app}-install.log 2>&1; then
     ok "${app} (nyxus-${app})"
   else
@@ -1242,7 +1270,7 @@ else
   done
   echo ""
   printf "  ${DIM}If EWW failed, run:  cat /tmp/nyxus-eww.log${R}\n"
-  printf "  ${DIM}Otherwise re-run:  curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | bash${R}\n"
+  printf "  ${DIM}Otherwise re-run:  NYXUS_OFFLINE_DIR=/opt/nyxus-cache bash /opt/nyxus-cache/nyxus_install.sh${R}\n"
   exit 1
 fi
 

@@ -7,10 +7,11 @@
 # ╚══════════════════════════════════════════════════════════════════════╝
 #
 # Behavior:
-#   - First successful run: pulls nyxus_install.sh from production (or the
-#     pre-staged offline cache at /opt/nyxus-cache), runs it, then writes
-#     the current BOOTSTRAP_VERSION into ~/.nyxus/.bootstrapped to no-op
-#     on subsequent boots.
+#   - First successful run: runs nyxus_install.sh from the pre-staged offline
+#     cache at /opt/nyxus-cache (baked into the ISO from the repo), then writes
+#     the current BOOTSTRAP_VERSION into ~/.nyxus/.bootstrapped to no-op on
+#     subsequent boots. The desktop never phones home; a dev-only network path
+#     exists but is opt-in via NYXUS_ALLOW_NETWORK_INSTALL=1 + NYXUS_BASE_URL.
 #   - Subsequent boots: marker present AND version matches → exit 0.
 #     Marker present but version mismatch (i.e. a newer ISO/bake landed
 #     a newer bootstrap script with a bumped version) → AUTO RE-RUN so
@@ -26,7 +27,9 @@
 set -uo pipefail
 
 # ── Version stamp: BUMP ON EVERY RELEASE THAT TOUCHES INSTALLED FILES ───────
-BOOTSTRAP_VERSION="2026.05.12-r11-mission"
+# r12 (2026-07-23): offline-first — Replit dependency cut, install no longer
+# aborts on `clear`/set -e, hyprexpo build is one-shot + offline-aware.
+BOOTSTRAP_VERSION="2026.07.23-r12-offline"
 
 PROD_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/download/nyxus/nyxus_install.sh"
 OFFLINE_CACHE="${NYXUS_OFFLINE_DIR:-/opt/nyxus-cache}"
@@ -100,18 +103,36 @@ ensure_hyprland_plugins() {
   installed="$(hyprpm list 2>/dev/null || true)"
 
   if ! grep -qi 'hyprexpo' <<<"${installed}"; then
+    # ONE-SHOT guard: building hyprexpo compiles from GitHub and can take
+    # minutes. Without this it re-attempted (and re-failed) on EVERY login —
+    # the 2026-07-22 boot burned ~15 min here before the desktop was usable.
+    # After one attempt we drop a marker and never auto-retry; `rm` it (or
+    # run `hyprpm update && hyprpm add ...` by hand) to try again.
+    local tried="${NYXUS_DIR}/.hyprexpo-tried"
+    if [[ -f "${tried}" ]]; then
+      log "hyprexpo not installed but build already attempted (${tried}) — skipping (rm to retry)"
+      return 0
+    fi
     if ! sudo -n true 2>/dev/null; then
       log "hyprexpo not installed and passwordless sudo unavailable — skipping plugin sync"
-      log "to install manually, run in a terminal:  hyprpm update && hyprpm add https://github.com/hyprwm/hyprland-plugins && hyprpm enable hyprexpo"
+      return 0
+    fi
+    # `hyprpm add` compiles the plugin FROM GITHUB — pointless (and slow: it
+    # can stall for the full timeout) with no network. Probe first, skip if
+    # offline; Mission Control then installs on a later online login.
+    if ! curl -fsS --connect-timeout 3 --max-time 5 -o /dev/null https://github.com 2>/dev/null; then
+      log "no network — skipping hyprexpo build (installs on a later online login)"
       return 0
     fi
     log "installing hyprexpo plugin (first time)"
-    # `hyprpm update` ensures the headers cache is fresh for the running
-    # Hyprland version — required before `add` will compile cleanly.
-    run_hyprpm 300 update \
+    : > "${tried}" 2>/dev/null || true   # mark BEFORE building so a crash can't loop
+    # Tighter timeouts than before (was 300/600 = up to 15 min): worst case
+    # ~4.5 min, and only ever once thanks to the marker above.
+    run_hyprpm 90 update \
       || log "hyprpm update failed (continuing — add may still work)"
-    run_hyprpm 600 add https://github.com/hyprwm/hyprland-plugins \
-      || { log "hyprpm add failed — Mission Control unavailable until next boot"; return 0; }
+    run_hyprpm 180 add https://github.com/hyprwm/hyprland-plugins \
+      || { log "hyprpm add failed — Mission Control unavailable until you retry"; return 0; }
+    rm -f "${tried}" 2>/dev/null || true  # success → allow future re-syncs
   fi
 
   # `enable` is idempotent — re-running while enabled is a no-op.
@@ -162,69 +183,59 @@ cleanup() {
   [[ -n "${HEARTBEAT_PID:-}" ]] && kill "${HEARTBEAT_PID}" 2>/dev/null || true
   rm -f "${TMP_INSTALLER:-}"
 }
-
-# ── 1. Try network ──────────────────────────────────────────────────────────
-TMP_INSTALLER="$(mktemp /tmp/nyxus_install.XXXXXX.sh)"
+# Set the trap ONCE, up front, so the heartbeat is always reaped no matter
+# which install path exits (previously the trap was only armed on the network
+# path, so an offline exit could orphan the heartbeat loop).
 trap cleanup EXIT
 
-# Quick connectivity probe so we can give an honest message if curl fails.
-# If we can resolve+TCP-handshake to the prod host, curl failures are then
-# attributable to TLS/HTTP/server-side, not "no internet". This avoids the
-# misdirecting "no internet + no offline cache" message when the user's
-# network is fine but production is having a bad day.
-HAVE_NET=0
-if curl -fsS --connect-timeout 5 --max-time 8 -o /dev/null \
-        "${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/healthz" 2>/dev/null; then
-  HAVE_NET=1
-fi
-
-if curl -fsSL --max-time 30 --retry 2 --retry-delay 3 \
-       "${PROD_URL}" -o "${TMP_INSTALLER}" 2>/dev/null; then
-  log "downloaded installer from ${PROD_URL}"
-  notify 2 10000 "rgb(c8ccd6)" "downloaded installer · running install (this is the long part)…"
-  if bash "${TMP_INSTALLER}"; then
+# ── 1. Offline cache (PRIMARY — the only supported path) ─────────────────────
+# NYXUS is delivered entirely from the cache baked into the ISO (built from
+# this repo). The desktop NEVER phones home. The old production server
+# (nyxus-core.replit.app) is retired.
+if [[ -d "${OFFLINE_CACHE}" && -f "${OFFLINE_CACHE}/nyxus_install.sh" ]]; then
+  log "installing from offline cache: ${OFFLINE_CACHE}"
+  notify 2 10000 "rgb(c8ccd6)" "installing NYXUS from local cache…"
+  if NYXUS_OFFLINE_DIR="${OFFLINE_CACHE}" bash "${OFFLINE_CACHE}/nyxus_install.sh"; then
     echo "${BOOTSTRAP_VERSION}" > "${MARK}"
-    log "complete (online) — marker written: ${MARK} (version ${BOOTSTRAP_VERSION})"
+    log "complete (offline) — marker written: ${MARK} (version ${BOOTSTRAP_VERSION})"
     notify 5 8000 "rgb(e8edf5)" "ready · welcome, ${USER:-friend}"
     exit 0
   else
     rc=$?
-    log "installer exited with code ${rc} — NOT marking bootstrapped (will retry next boot)"
+    log "offline installer exited with code ${rc} — NOT marking bootstrapped (will retry next login)"
     notify 3 15000 "rgb(ff8888)" "install failed (code ${rc}) — will retry on next login"
     exit "${rc}"
   fi
 fi
 
-# ── 2. Offline fallback (pre-staged ISO cache) ──────────────────────────────
-if [[ -d "${OFFLINE_CACHE}" && -f "${OFFLINE_CACHE}/nyxus_install.sh" ]]; then
-  log "no internet — using offline cache: ${OFFLINE_CACHE}"
-  notify 2 10000 "rgb(c8ccd6)" "no internet — using offline cache, installing…"
-  if NYXUS_OFFLINE_DIR="${OFFLINE_CACHE}" bash "${OFFLINE_CACHE}/nyxus_install.sh"; then
-    echo "${BOOTSTRAP_VERSION}" > "${MARK}"
-    log "complete (offline) — marker written: ${MARK} (version ${BOOTSTRAP_VERSION})"
-    notify 5 8000 "rgb(e8edf5)" "ready (offline install) · welcome, ${USER:-friend}"
-    exit 0
-  else
-    rc=$?
-    log "offline installer exited with code ${rc} — NOT marking bootstrapped"
-    notify 3 15000 "rgb(ff8888)" "offline install failed (code ${rc}) — will retry on next login"
-    exit "${rc}"
+# ── 2. Dev-only network install (OPT-IN, never taken by default) ─────────────
+# The production host is retired, so this path requires an explicit opt-in:
+# set BOTH NYXUS_ALLOW_NETWORK_INSTALL=1 and NYXUS_BASE_URL=https://your-host.
+if [[ "${NYXUS_ALLOW_NETWORK_INSTALL:-0}" == "1" ]]; then
+  TMP_INSTALLER="$(mktemp /tmp/nyxus_install.XXXXXX.sh)"
+  if curl -fsSL --max-time 30 --retry 2 --retry-delay 3 \
+         "${PROD_URL}" -o "${TMP_INSTALLER}" 2>/dev/null; then
+    log "downloaded installer from ${PROD_URL}"
+    notify 2 10000 "rgb(c8ccd6)" "downloaded installer · running install…"
+    if bash "${TMP_INSTALLER}"; then
+      echo "${BOOTSTRAP_VERSION}" > "${MARK}"
+      log "complete (network) — marker written: ${MARK} (version ${BOOTSTRAP_VERSION})"
+      notify 5 8000 "rgb(e8edf5)" "ready · welcome, ${USER:-friend}"
+      exit 0
+    else
+      rc=$?
+      log "network installer exited with code ${rc} — NOT marking bootstrapped"
+      notify 3 15000 "rgb(ff8888)" "install failed (code ${rc}) — will retry on next login"
+      exit "${rc}"
+    fi
   fi
+  log "network install requested but download failed from ${PROD_URL}"
 fi
 
-# ── 3. Download failed, no cache → fail loud, leave a hint on the desktop ───
-# Distinguish "no internet" (most common, most fixable) from "download
-# failed despite internet" (probably prod outage / DNS / TLS) so we don't
-# misdirect troubleshooting.
-if [[ "${HAVE_NET}" -eq 1 ]]; then
-  log "FAILED: download failed despite working internet (production outage? DNS? TLS?) AND no offline cache at ${OFFLINE_CACHE}"
-  notify 3 30000 "rgb(ff8888)" "download failed — server unreachable but you're online · see ~/Desktop note"
-  FAIL_REASON="The download failed even though your internet is working. This usually means production (nyxus-core.replit.app) is down or unreachable from your network."
-else
-  log "FAILED: no internet AND no offline cache at ${OFFLINE_CACHE}"
-  notify 3 30000 "rgb(ff8888)" "no internet + no offline cache — see ~/Desktop note for next steps"
-  FAIL_REASON="The system has no internet connection and the offline cache at ${OFFLINE_CACHE} is missing or empty."
-fi
+# ── 3. No offline cache (and no/failed opt-in network) → fail loud ──────────
+log "FAILED: no offline cache at ${OFFLINE_CACHE} (network install not enabled)"
+notify 3 30000 "rgb(ff8888)" "offline cache missing — see ~/Desktop note for next steps"
+FAIL_REASON="The offline cache at ${OFFLINE_CACHE} is missing or has no nyxus_install.sh. On a normal NYXUS ISO this is baked in automatically; if you're on a hand-assembled system, copy the repo's artifacts/api-server/nyxus-scripts into ${OFFLINE_CACHE} and re-run nyxus-bootstrap."
 log "Once resolved, re-run manually:  nyxus-bootstrap"
 
 # Drop a visible note on the desktop so a non-technical user knows what to do.
@@ -237,12 +248,13 @@ WHAT HAPPENED:
 ${FAIL_REASON:-Bootstrap exited before completing.}
 
 HOW TO FIX:
-1. Get online (NetworkManager applet lives on the EWW bar — but you don't
-   have an EWW bar yet, so use the terminal):
+NYXUS installs entirely from a local cache (${OFFLINE_CACHE}) — it does NOT
+need the internet. This note means that cache is missing. Open a terminal:
        SUPER + RETURN          (NYXUS terminal)
        SUPER + SHIFT + RETURN  (raw Alacritty fallback)
-   Then:  nmtui   (Wi-Fi setup)
-2. Once online, re-run the bootstrap:
+Then restore the cache from the repo and re-run bootstrap:
+       sudo mkdir -p ${OFFLINE_CACHE}
+       sudo cp -a /path/to/Nyxus-Core/artifacts/api-server/nyxus-scripts/. ${OFFLINE_CACHE}/
        nyxus-bootstrap
 
 OTHER USEFUL KEYS WHILE THE DESKTOP IS BARE:
