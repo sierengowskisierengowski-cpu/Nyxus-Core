@@ -670,9 +670,9 @@
           :onclick "nyxus-hub-launch '${app.id}' &"
           :tooltip "${app.name}"
           :hexpand true
-          :style "padding: 8px 10px; margin: 2px 0; border-radius: 10px; background-color: rgba(121,73,242,0.10);"
+          :style "padding: 8px 10px; margin: 2px 0; border-radius: 10px; background-color: rgba(125,61,255,0.10);"
     (box :orientation "h" :space-evenly false :spacing 10 :halign "start" :hexpand true
-      (label :text "◆" :style "color: #7949f2; font-size: 15px;")
+      (label :text "◆" :style "color: #7d3dff; font-size: 15px;")
       (label :halign "start" :hexpand true
              :text "${app.name}" :style "color: #eef2fa; font-size: 13px;"))))
 

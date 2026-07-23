@@ -142,8 +142,8 @@ try:
     from nyxus_palette import (HUD_PALETTE, install_hud_css,
                                neon_flicker_css)
 except Exception:
-    HUD_PALETTE = {"pink": "#ff3cac", "cyan": "#2bd2ff", "gold": "#ffb84d",
-                   "purple": "#784bff", "green": "#6dffcf",
+    HUD_PALETTE = {"pink": "#ff2dad", "cyan": "#2bd2ff", "gold": "#ffb84d",
+                   "purple": "#7d3dff", "green": "#7dff5e",
                    "red": "#ff4d6b", "mono": "#e8edf5"}
     def neon_flicker_css():  # noqa: E704
         return ""

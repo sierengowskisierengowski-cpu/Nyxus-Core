@@ -108,7 +108,7 @@ export default function Disclosure() {
     { date: null, label: "Vendor Notification", desc: "Private disclosure sent to affected vendor", color: '#60a5fa', done: false },
     { date: null, label: "Acknowledgment", desc: "Vendor acknowledges receipt (target: 7 days)", color: '#7B5EA7', done: false },
     { date: null, label: "Patch Released", desc: "Vendor releases security patch", color: '#4ade80', done: false },
-    { date: null, label: "Public Disclosure", desc: "Public disclosure after 90-day window", color: '#f87171', done: false },
+    { date: null, label: "Public Disclosure", desc: "Public disclosure after 90-day window", color: '#ff2d55', done: false },
   ] : [];
 
   return (

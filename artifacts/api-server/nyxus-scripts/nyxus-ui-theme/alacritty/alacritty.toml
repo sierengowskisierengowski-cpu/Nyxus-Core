@@ -1,5 +1,14 @@
+# ════════════════════════════════════════════════════════════════════
+#  NYXUS · alacritty · ALIEN NEON · rev 2026-07-23
+#  Canonical palette: violet #7d3dff · magenta #ff2dad · green #39ff14 ·
+#  orange #ff8a1e · cyan #2bd2ff · red #ff2d55 · yellow #ffe600
+#  Default text is cool white #eef2fa on void — colors appear only where
+#  programs actually emit ANSI color. Mirrors kitty.conf — keep in lockstep.
+#  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+
 [window]
-opacity            = 0.0
+opacity            = 0.88
 padding.x          = 16
 padding.y          = 12
 decorations        = "None"
@@ -55,77 +64,77 @@ hide_when_typing = true
 [bell]
 animation = "EaseOutExpo"
 duration  = 0
-color     = "#f4ead5"
+color     = "#ff8a1e"
 
 [colors]
 draw_bold_text_with_bright_colors = true
 
 [colors.primary]
-background     = "#0a0a14"
-foreground     = "#f4ead5"
-dim_foreground = "#8a857e"
+background     = "#05060a"
+foreground     = "#eef2fa"
+dim_foreground = "0x8CEEF2FA"
 
 [colors.cursor]
-text   = "#050308"
-cursor = "#f4ead5"
+text   = "#05060a"
+cursor = "#7d3dff"
 
 [colors.vi_mode_cursor]
-text   = "#050308"
-cursor = "#f4ead5"
+text   = "#05060a"
+cursor = "#ff2dad"
 
 [colors.selection]
-text       = "#050308"
-background = "#f4ead5"
+text       = "#05060a"
+background = "#ff2dad"
 
 [colors.search.matches]
-foreground = "#050308"
-background = "#f4ead5"
+foreground = "#05060a"
+background = "#ffe600"
 
 [colors.search.focused_match]
-foreground = "#050308"
-background = "#f4ead5"
+foreground = "#05060a"
+background = "#ff8a1e"
 
 [colors.footer_bar]
-background = "#050308"
-foreground = "#8a857e"
+background = "#05060a"
+foreground = "0x8CEEF2FA"
 
 [colors.hints.start]
-foreground = "#050308"
-background = "#f4ead5"
+foreground = "#05060a"
+background = "#ffe600"
 
 [colors.hints.end]
-foreground = "#050308"
-background = "#f4ead5"
+foreground = "#05060a"
+background = "#ff8a1e"
 
 [colors.normal]
-black   = "#050308"
-red     = "#f87171"
-green   = "#f4ead5"
-yellow  = "#f4ead5"
-blue    = "#1a1a28"
-magenta = "#f4ead5"
-cyan    = "#f4ead5"
-white   = "#f4ead5"
+black   = "#05060a"
+red     = "#ff2d55"
+green   = "#39ff14"
+yellow  = "#ffe600"
+blue    = "#4d9fff"
+magenta = "#ff2dad"
+cyan    = "#2bd2ff"
+white   = "#eef2fa"
 
 [colors.bright]
-black   = "#0a0a14"
-red     = "#f87171"
-green   = "#f4ead5"
-yellow  = "#f4ead5"
-blue    = "#1a1a28"
-magenta = "#f4ead5"
-cyan    = "#f4ead5"
-white   = "#f4ead5"
+black   = "#3a4152"
+red     = "#ff5470"
+green   = "#7dff5e"
+yellow  = "#fff26b"
+blue    = "#7ab8ff"
+magenta = "#ff7ae5"
+cyan    = "#66efff"
+white   = "#ffffff"
 
 [colors.dim]
 black   = "#000000"
-red     = "#f87171"
-green   = "#8a857e"
-yellow  = "#8a857e"
-blue    = "#1a1a28"
-magenta = "#8a857e"
-cyan    = "#8a857e"
-white   = "#8a857e"
+red     = "#b3203c"
+green   = "#28b30e"
+yellow  = "#b3a100"
+blue    = "#366fb3"
+magenta = "#b32079"
+cyan    = "#1e93b3"
+white   = "#a6a9af"
 
 [[keyboard.bindings]]
 key    = "V"

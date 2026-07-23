@@ -9,8 +9,8 @@
 
 .control-center {
     background: rgba(10, 10, 20, 0.97);
-    border: 1px solid rgba(244, 234, 213, 0.22);
-    color: #f4ead5;
+    border: 1px solid rgba(238, 242, 250, 0.22);
+    color: #eef2fa;
     padding: 14px;
     margin: 6px;
 }
@@ -20,62 +20,62 @@
 
 .notification {
     background: rgba(10, 10, 20, 0.97);
-    border: 1px solid rgba(244, 234, 213, 0.22);
+    border: 1px solid rgba(238, 242, 250, 0.22);
     margin: 6px 0;
     padding: 12px;
 }
 .notification.low { border-left: 2px solid #1a1a28; }
-.notification.normal { border-left: 2px solid #f4ead5; }
-.notification.critical { border-color: #f87171; border-left: 2px solid #f87171; }
+.notification.normal { border-left: 2px solid #eef2fa; }
+.notification.critical { border-color: #ff2d55; border-left: 2px solid #ff2d55; }
 
-.summary { color: #f4ead5; font-weight: 700; font-size: 13px; letter-spacing: 1px; }
-.body { color: #f4ead5; opacity: 0.92; font-size: 12px; margin-top: 4px; }
-.time { color: rgba(244, 234, 213, 0.55); font-size: 10px; letter-spacing: 1px; }
+.summary { color: #eef2fa; font-weight: 700; font-size: 13px; letter-spacing: 1px; }
+.body { color: #eef2fa; opacity: 0.92; font-size: 12px; margin-top: 4px; }
+.time { color: rgba(238, 242, 250, 0.55); font-size: 10px; letter-spacing: 1px; }
 
 .close-button {
     background: transparent;
-    color: rgba(244, 234, 213, 0.55);
+    color: rgba(238, 242, 250, 0.55);
     border: 1px solid #1a1a28;
     min-width: 22px;
     min-height: 22px;
 }
 .close-button:hover {
     color: #050308;
-    background: #f87171;
-    border-color: #f87171;
+    background: #ff2d55;
+    border-color: #ff2d55;
 }
 
 .widget-title > label {
-    color: #f4ead5;
+    color: #eef2fa;
     font-size: 13px;
     font-weight: 700;
     letter-spacing: 2px;
 }
 .widget-title > button {
     background: transparent;
-    color: rgba(244, 234, 213, 0.55);
+    color: rgba(238, 242, 250, 0.55);
     border: 1px solid #1a1a28;
     padding: 4px 14px;
 }
 .widget-title > button:hover {
     color: #050308;
-    background: #f4ead5;
-    border-color: #f4ead5;
+    background: #eef2fa;
+    border-color: #eef2fa;
 }
 
 .widget-dnd > switch { background: #1a1a28; }
-.widget-dnd > switch:checked { background: #f4ead5; }
+.widget-dnd > switch:checked { background: #eef2fa; }
 .widget-dnd > switch slider { background: #050308; }
 
 .floating-notifications { background: transparent; }
 .floating-notifications.background .notification {
     background: rgba(10, 10, 20, 0.97);
-    border: 1px solid rgba(244, 234, 213, 0.22);
-    border-left: 3px solid #f4ead5;
+    border: 1px solid rgba(238, 242, 250, 0.22);
+    border-left: 3px solid #eef2fa;
 }
 .floating-notifications.background .notification.critical {
-    border: 1px solid #f87171;
-    border-left: 3px solid #f87171;
+    border: 1px solid #ff2d55;
+    border-left: 3px solid #ff2d55;
 }
 
 .widget-mpris,
@@ -84,14 +84,14 @@
     background: #050308;
     border: 1px solid #1a1a28;
     padding: 10px 12px;
-    color: #f4ead5;
+    color: #eef2fa;
 }
-.widget-mpris-title { color: #f4ead5; font-weight: 700; }
-.widget-mpris-subtitle { color: rgba(244, 234, 213, 0.55); font-size: 11px; }
+.widget-mpris-title { color: #eef2fa; font-weight: 700; }
+.widget-mpris-subtitle { color: rgba(238, 242, 250, 0.55); font-size: 11px; }
 
 slider trough {
     background: #1a1a28;
     min-height: 4px;
 }
-slider trough highlight { background: #f4ead5; }
-slider { background: transparent; color: #f4ead5; }
+slider trough highlight { background: #eef2fa; }
+slider { background: transparent; color: #eef2fa; }

@@ -9,8 +9,11 @@
 set -u
 
 CONF="${HOME}/.config/nyxus/wallpaper.conf"
-DEFAULT="/usr/share/backgrounds/nyxus/nyxus-nebula-01.png"
-LEGACY_PNG="${HOME}/.config/hypr/walls/nyxus-void-vortex.png"
+# ALIEN default. The old fallback (nyxus-nebula-01.png) does not exist in
+# /usr/share/backgrounds/nyxus, so it always fell through to the non-alien
+# void-vortex legacy PNG. Point it at the shipped urban-alien scene instead.
+DEFAULT="/usr/share/backgrounds/nyxus/nyxus-urban-alien.png"
+LEGACY_PNG="${HOME}/.config/hypr/walls/nyxus-urban-alien.png"
 
 WALLPAPER_PATH=""
 if [[ -r "${CONF}" ]]; then

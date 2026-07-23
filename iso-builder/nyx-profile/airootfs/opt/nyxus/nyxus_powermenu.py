@@ -76,7 +76,7 @@ try:
     from nyxus_palette import (HUD_PALETTE, hud_css_bundle,
                                install_hud_css)
 except Exception:
-    HUD_PALETTE = {"pink": "#ff3cac", "cyan": "#2bd2ff", "gold": "#ffb84d",
+    HUD_PALETTE = {"pink": "#ff2dad", "cyan": "#2bd2ff", "gold": "#ffb84d",
                    "red": "#ff4d6b", "mono": "#e8edf5"}
     def hud_css_bundle(sel="window", hues=()):  # noqa: E704
         return ""
@@ -84,7 +84,7 @@ except Exception:
 
 
 def _pm_css() -> str:
-    pink = HUD_PALETTE.get("pink", "#ff3cac")
+    pink = HUD_PALETTE.get("pink", "#ff2dad")
     css = hud_css_bundle("window.pm-window", ("pink",))
     css += f"""
 window.pm-window {{

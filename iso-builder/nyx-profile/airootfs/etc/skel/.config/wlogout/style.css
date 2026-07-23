@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════════════════════════════
    NYXUS · wlogout · OBSIDIAN PRISM · rev 2026-07-07
-   Palette: #794dff magenta · #ff266c cyan · #26ffb7 violet · #ffb026 gold
+   Palette: #7d3dff magenta · #ff2d55 cyan · #39ff14 violet · #ff8a1e gold
    Deep-void frosted glass with iridescent prism rims. Matches the EWW
    powermenu overlay, rofi power.rasi, and the Hyprland prism border loop.
    NOTE: wlogout's GTK CSS parser does NOT follow @import — all colors
@@ -32,7 +32,7 @@ button {
 
     border-style:  solid                              ;
     border-width:  1px                                ;
-    border-color:  rgba(38, 255, 183, 0.35)           ;
+    border-color:  rgba(57, 255, 20, 0.35)           ;
     border-radius: 20px                               ;
 
     color:        #c8ccd6                             ;
@@ -48,11 +48,11 @@ button:focus,
 button:active,
 button:hover {
     background-color: rgba(12, 16, 26, 0.92)  ;
-    border-color:     rgba(255, 38, 108, 0.60);
+    border-color:     rgba(255, 45, 85, 0.60);
     color:            #ffffff                 ;
     box-shadow:       0 12px 36px rgba(0, 0, 0, 0.60),
-                      0 0 26px rgba(255, 38, 108, 0.35),
-                      0 0 34px rgba(121, 77, 255, 0.25),
+                      0 0 26px rgba(255, 45, 85, 0.35),
+                      0 0 34px rgba(125, 61, 255, 0.25),
                       inset 0 1px 0 rgba(255, 255, 255, 0.14);
     outline:          none                    ;
 }
@@ -62,8 +62,8 @@ button:hover {
 #suspend:hover,  button#suspend:hover,  .suspend:hover,  button.suspend:hover,
 #hibernate:hover,button#hibernate:hover,.hibernate:hover,button.hibernate:hover,
 #logout:hover,   button#logout:hover,   .logout:hover,   button.logout:hover {
-    border-color: rgba(255, 38, 108, 0.60);
-    color:        #ff266c                 ;
+    border-color: rgba(255, 45, 85, 0.60);
+    color:        #ff2d55                 ;
 }
 
 /* ── DESTRUCTIVE · reboot / shutdown read as danger ──────────────── */

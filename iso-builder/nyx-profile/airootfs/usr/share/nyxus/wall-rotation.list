@@ -1,28 +1,25 @@
 # ============================================================
-#  NYXUS — wallpaper rotation set
-#  ~/.config/nyxus/wall-rotation.list
+#  NYXUS — LOGIN-SCREEN wallpaper rotation set  (ALIEN THEME ONLY)
+#  /usr/share/nyxus/wall-rotation.list   (read by nyxus-greeter)
 #
-#  ONLY these wallpapers rotate across the desktop background, the lock
-#  screen, and the login screen (nyxus-rotate-walls reads this file).
-#  Curated to the alien art, the "NYXUS HYPRLAND" scene, and the
-#  sierengowski walls — nothing else.
-#
-#  One wallpaper SLUG per line (the filename without .png). A slug must
-#  resolve to a file in ~/.config/hypr/walls/ or
-#  /usr/share/backgrounds/nyxus/. Anything after a '#' is a comment.
-#  Add a line to include a wall; delete/comment one to drop it.
-#
-#  NOTE: a couple of these were categorized by filename since the art
-#  couldn't be previewed here — trim any that don't fit the vibe.
+#  The greeter runs as the `greeter` user and can only read system paths,
+#  so this list uses slugs that exist as FLAT files under
+#  /usr/share/backgrounds/nyxus/ (the greeter does not search rotation/).
+#  Curated 2026-07-23 to the urban-alien / "NYXUS HYPRLAND" graffiti art
+#  ONLY — dropped the demon, hacker-mode and sierengowski brand walls so
+#  the login screen always matches the desktop alien theme.
+#  One slug per line; anything after '#' is a comment.
 #  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================
 
-nyxus-urban-alien           # alien
-nyxus-demon                 # alien
-nyxus-hacker-mode-a         # alien / hacker matrix
-nyxus-hacker-mode-b         # alien / hacker matrix
-nyxus-kageryu-blackout      # alien / Kage Ryu blackout
-nyxus-login-wall            # the "NYXUS HYPRLAND CUSTOMS" alien shop scene
+nyxus-urban-alien           # the urban-alien street scene
+nyxus-login-wall            # "NYXUS HYPRLAND CUSTOMS" alien shop
 nyxus-desktop-hero          # NYXUS alien hero scene
-nyxus-frost-sierengowski    # sierengowski
-nyxus-sierengowski-clean    # sierengowski
+nyxus-graffiti-space        # graffiti-space alien scene
+nyxus-graffiti-01
+nyxus-graffiti-04
+nyxus-graffiti-08
+nyxus-graffiti-11
+nyxus-graffiti-16
+nyxus-graffiti-20
+nyxus-graffiti-24

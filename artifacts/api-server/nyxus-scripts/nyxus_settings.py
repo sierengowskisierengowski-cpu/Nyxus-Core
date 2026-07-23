@@ -117,9 +117,9 @@ try:
         ACCENT_OK as NEON_OK,
     )
 except Exception:
-    NEON    = "#984dff"   # purple — primary
-    NEON_2  = "#ff264c"   # red — secondary
-    NEON_OK = "#26ffb7"   # green — positive
+    NEON    = "#7d3dff"   # purple — primary
+    NEON_2  = "#ff2d55"   # red — secondary
+    NEON_OK = "#39ff14"   # green — positive
 
 # Nerd-font glyphs (§6 — never emoji in chrome).
 GLYPHS = {

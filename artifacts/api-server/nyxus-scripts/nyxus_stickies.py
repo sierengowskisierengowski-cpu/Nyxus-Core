@@ -794,10 +794,10 @@ class StickiesWindow(Gtk.ApplicationWindow):
             from nyxus_palette import HUD_PALETTE as _hp, \
                 install_hud_css as _ihc, neon_flicker_css as _nfc
         except Exception:
-            _hp = {"pink": "#ff3cac", "gold": "#ffb84d"}
+            _hp = {"pink": "#ff2dad", "gold": "#ffb84d"}
             _ihc = None
             def _nfc(): return ""
-        pink, gold = _hp.get("pink", "#ff3cac"), _hp.get("gold", "#ffb84d")
+        pink, gold = _hp.get("pink", "#ff2dad"), _hp.get("gold", "#ffb84d")
         css = f"""
 * {{ font-family: 'Inter Display', 'Inter Display', cursive; }}
 window, .nyx-bg {{ background-color: rgba(5, 1, 13, 0.98); color: #e8edf5; }}

@@ -97,10 +97,10 @@ MAX_DEFAULT_H = 480
 # every launch reflects whatever `nyxus accent set <name>` last applied.
 # Fallback is the canonical PRISM preset — never white/grey.
 _ACCENT_FALLBACK = {
-    "primary":   "#ff3cac",
+    "primary":   "#ff2dad",
     "secondary": "#2bd2ff",
     "warn":      "#ffb84d",
-    "ok":        "#784bff",
+    "ok":        "#7d3dff",
 }
 
 def _load_accent() -> dict:
@@ -155,7 +155,7 @@ def _hud_palette() -> dict:
         "cyan":   ACCENT_SECONDARY,
         "gold":   ACCENT_WARN,
         "purple": ACCENT_OK,
-        "green":  "#6dffcf",
+        "green":  "#7dff5e",
         "orange": "#ff7849",
         "blue":   "#4d9fff",
         "red":    "#ff4d6b",
@@ -163,7 +163,7 @@ def _hud_palette() -> dict:
     }
 
 HUD_PALETTE = _hud_palette()
-HUD_NEONS = ["#ff4994", "#26ff39", "#26ffb7", "#ff8b26", "#6dffcf",
+HUD_NEONS = ["#ff2dad", "#39ff14", "#39ff14", "#ff8a1e", "#7dff5e",
              "#ff7ae5", "#66efff", "#c084fc", "#ffce85"]
 HUD_VOID       = "rgba(5, 1, 13, 0.97)"    # window background
 HUD_CARD_BG    = "rgba(7, 5, 14, 0.93)"    # card background

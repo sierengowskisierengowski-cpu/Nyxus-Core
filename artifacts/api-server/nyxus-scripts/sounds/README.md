@@ -56,7 +56,7 @@ After install, `nyxus-sound.sh boot` will pick up the new theme without restart.
 # NYXUS Cosmic UI Sound Theme (`nyxus-sound`) — rev 2026-07-14
 
 A cohesive sci-fi / UFO / cosmic sound set for the Nyxus desktop
-(black-void + violet `#7949f2` + magenta `#ff2667` galaxy theme), matched
+(black-void + violet `#7d3dff` + magenta `#ff2d55` galaxy theme), matched
 to system events. This is the ACTIVE set wired into the live desktop and is
 separate from the legacy `nyxus-sound.sh`/`.oga` manifest above.
 

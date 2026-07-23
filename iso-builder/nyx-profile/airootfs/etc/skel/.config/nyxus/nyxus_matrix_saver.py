@@ -44,7 +44,7 @@ def _hex(h, d):
         return (int(h[0:2], 16) / 255.0, int(h[2:4], 16) / 255.0, int(h[4:6], 16) / 255.0)
 
 def load_accent():
-    prim, sec, ok = "#984dff", "#ff264c", "#26ffb7"
+    prim, sec, ok = "#7d3dff", "#ff2d55", "#39ff14"
     try:
         with open(ACCENT_JSON) as f:
             data = json.load(f)
@@ -57,7 +57,7 @@ def load_accent():
         ok = pal.get("ok", ok)
     except Exception:
         pass
-    return _hex(prim, "#984dff"), _hex(sec, "#ff264c"), _hex(ok, "#26ffb7")
+    return _hex(prim, "#7d3dff"), _hex(sec, "#ff2d55"), _hex(ok, "#39ff14")
 
 VIOLET, MAGENTA, MINT = load_accent()
 

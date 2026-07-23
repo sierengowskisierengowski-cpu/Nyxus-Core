@@ -53,7 +53,7 @@ function RingGauge({ percent, color, label, value, sub }: {
   const offset = circ - (Math.min(100, Math.max(0, percent)) / 100) * circ;
   const danger = percent > 85;
   const warn = percent > 65;
-  const finalColor = danger ? "#f87171" : warn ? "#fbbf24" : color;
+  const finalColor = danger ? "#ff2d55" : warn ? "#fbbf24" : color;
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -154,7 +154,7 @@ function StatCard({
 const STATUS_DOT: Record<string, { color: string; label: string }> = {
   completed: { color: "#4ade80", label: "completed" },
   running:   { color: "#60a5fa", label: "running" },
-  error:     { color: "#f87171", label: "error" },
+  error:     { color: "#ff2d55", label: "error" },
   killed:    { color: "#fbbf24", label: "killed" },
   pending:   { color: "#94a3b8", label: "pending" },
 };
@@ -270,7 +270,7 @@ export default function Dashboard() {
         <StatCard
           label="Findings" value={loadingSummary ? "—" : summary?.findingsCount ?? 0}
           sub="Flagged for review"
-          icon={ShieldAlert} color="#f87171"
+          icon={ShieldAlert} color="#ff2d55"
           onClick={() => setLocation("/findings")}
         />
         <StatCard

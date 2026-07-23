@@ -86,7 +86,7 @@ try:
                                neon_flicker_css as _nfc)
     _HUD_EXTRA = _nfc()
 except Exception:
-    _HP = {"pink": "#ff3cac", "cyan": "#2bd2ff", "green": "#6dffcf",
+    _HP = {"pink": "#ff2dad", "cyan": "#2bd2ff", "green": "#7dff5e",
            "gold": "#ffb84d"}
     _NYX_IHC = None
     _HUD_EXTRA = ""
@@ -156,8 +156,8 @@ headerbar {{
     font-size: 16px;
     padding: 60px;
 }}
-""").replace("@PINK@", _HP.get("pink", "#ff3cac")) \
-    .replace("@GREEN@", _HP.get("green", "#6dffcf")) \
+""").replace("@PINK@", _HP.get("pink", "#ff2dad")) \
+    .replace("@GREEN@", _HP.get("green", "#7dff5e")) \
     .replace("@GOLD@", _HP.get("gold", "#ffb84d")) + _HUD_EXTRA
 
 

@@ -213,7 +213,7 @@ export default function Settings() {
           </div>
           <div className={`space-y-5 transition-opacity ${sandboxEnabled ? "opacity-100" : "opacity-30 pointer-events-none"}`}>
             {[
-              { label: `Max CPU`, value: maxCpu, unit: '%', onChange: setMaxCpu, min: 5, max: 100, step: 5, color: '#f87171' },
+              { label: `Max CPU`, value: maxCpu, unit: '%', onChange: setMaxCpu, min: 5, max: 100, step: 5, color: '#ff2d55' },
               { label: `Max RAM`, value: maxRam, unit: ' MB', onChange: setMaxRam, min: 128, max: 4096, step: 128, color: '#fb923c' },
               { label: `Max Execution`, value: maxExec, unit: 's', onChange: setMaxExec, min: 10, max: 300, step: 10, color: '#eab308' },
             ].map(({ label, value, unit, onChange, min, max, step, color }) => (
@@ -246,7 +246,7 @@ export default function Settings() {
       </SettingsCard>
 
       {/* Legal Compliance */}
-      <SettingsCard icon={Shield} iconColor={disclaimerAccepted ? '#4ade80' : '#f87171'} title="Legal Compliance">
+      <SettingsCard icon={Shield} iconColor={disclaimerAccepted ? '#4ade80' : '#ff2d55'} title="Legal Compliance">
         <div className="space-y-4">
           <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: '#07070e', border: '1px solid #0f0f1a' }}>
             <div>
@@ -257,7 +257,7 @@ export default function Settings() {
               className="text-[9px] font-black font-mono tracking-wider uppercase px-2.5 py-1 rounded"
               style={disclaimerAccepted
                 ? { background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', color: '#4ade80' }
-                : { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }
+                : { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ff2d55' }
               }
             >
               {disclaimerAccepted ? "Accepted" : "Not Accepted"}

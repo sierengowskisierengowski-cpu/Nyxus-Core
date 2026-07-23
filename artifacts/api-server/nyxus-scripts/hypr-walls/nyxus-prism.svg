@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- NYXUS PRISM wallpaper - rev 2026-07-06
      Iridescent aurora beams refracting through the void.
-     Palette: magenta #ff3cac | teal #2bd2ff | violet #784bff | gold #ffb84d -->
+     Palette: magenta #ff2dad | teal #2bd2ff | violet #7d3dff | gold #ffb84d -->
 <svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <radialGradient id="voidbase" cx="50%" cy="42%" r="85%">
@@ -11,9 +11,9 @@
     </radialGradient>
 
     <linearGradient id="beamMagenta" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"   stop-color="#ff3cac" stop-opacity="0"/>
-      <stop offset="45%"  stop-color="#ff3cac" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="#ff3cac" stop-opacity="0"/>
+      <stop offset="0%"   stop-color="#ff2dad" stop-opacity="0"/>
+      <stop offset="45%"  stop-color="#ff2dad" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ff2dad" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="beamCyan" x1="100%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%"   stop-color="#2bd2ff" stop-opacity="0"/>
@@ -21,16 +21,16 @@
       <stop offset="100%" stop-color="#2bd2ff" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="beamMint" x1="20%" y1="100%" x2="80%" y2="0%">
-      <stop offset="0%"   stop-color="#784bff" stop-opacity="0"/>
-      <stop offset="50%"  stop-color="#784bff" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#784bff" stop-opacity="0"/>
+      <stop offset="0%"   stop-color="#7d3dff" stop-opacity="0"/>
+      <stop offset="50%"  stop-color="#7d3dff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#7d3dff" stop-opacity="0"/>
     </linearGradient>
 
     <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
       <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.85"/>
       <stop offset="18%"  stop-color="#ff9ae8" stop-opacity="0.45"/>
-      <stop offset="45%"  stop-color="#ff3cac" stop-opacity="0.16"/>
-      <stop offset="100%" stop-color="#ff3cac" stop-opacity="0"/>
+      <stop offset="45%"  stop-color="#ff2dad" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#ff2dad" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="cyanBloom" cx="50%" cy="50%" r="50%">
       <stop offset="0%"   stop-color="#2bd2ff" stop-opacity="0.30"/>
@@ -70,16 +70,16 @@
   <g>
     <circle cx="240"  cy="180" r="1.6" fill="#2bd2ff" opacity="0.8"/>
     <circle cx="430"  cy="520" r="1.1" fill="#eef2fa" opacity="0.6"/>
-    <circle cx="620"  cy="130" r="1.3" fill="#ff3cac" opacity="0.7"/>
-    <circle cx="1320" cy="210" r="1.5" fill="#784bff" opacity="0.7"/>
+    <circle cx="620"  cy="130" r="1.3" fill="#ff2dad" opacity="0.7"/>
+    <circle cx="1320" cy="210" r="1.5" fill="#7d3dff" opacity="0.7"/>
     <circle cx="1540" cy="480" r="1.2" fill="#eef2fa" opacity="0.55"/>
-    <circle cx="1710" cy="150" r="1.7" fill="#ff3cac" opacity="0.75"/>
+    <circle cx="1710" cy="150" r="1.7" fill="#ff2dad" opacity="0.75"/>
     <circle cx="1130" cy="90"  r="1.2" fill="#2bd2ff" opacity="0.65"/>
     <circle cx="180"  cy="680" r="1.4" fill="#ffb84d" opacity="0.5"/>
     <circle cx="1820" cy="640" r="1.3" fill="#2bd2ff" opacity="0.6"/>
     <circle cx="880"  cy="240" r="1.1" fill="#eef2fa" opacity="0.7"/>
-    <circle cx="1440" cy="820" r="1.2" fill="#ff3cac" opacity="0.45"/>
-    <circle cx="360"  cy="880" r="1.3" fill="#784bff" opacity="0.4"/>
+    <circle cx="1440" cy="820" r="1.2" fill="#ff2dad" opacity="0.45"/>
+    <circle cx="360"  cy="880" r="1.3" fill="#7d3dff" opacity="0.4"/>
   </g>
 
   <!-- the prism -->
@@ -90,18 +90,18 @@
       <path d="M960 300 L1090 500 L830 500 Z" fill="none"
             stroke="#2bd2ff" stroke-width="2.5" opacity="0.9"/>
       <path d="M960 316 L1071 490 L849 490 Z" fill="none"
-            stroke="#ff3cac" stroke-width="2" opacity="0.85"/>
+            stroke="#ff2dad" stroke-width="2" opacity="0.85"/>
       <path d="M960 332 L1052 480 L868 480 Z" fill="none"
-            stroke="#784bff" stroke-width="1.5" opacity="0.8"/>
+            stroke="#7d3dff" stroke-width="1.5" opacity="0.8"/>
     </g>
     <path d="M960 300 L1090 500 L830 500 Z" fill="rgba(238,242,250,0.04)"
           stroke="#eef2fa" stroke-width="1.2" opacity="0.9"/>
     <!-- white light entering, spectrum leaving -->
     <line x1="300" y1="360" x2="895" y2="415" stroke="#eef2fa" stroke-width="2" opacity="0.55"/>
     <g filter="url(#soften2)" opacity="0.85">
-      <line x1="1025" y1="440" x2="1660" y2="330" stroke="#ff3cac" stroke-width="4"/>
+      <line x1="1025" y1="440" x2="1660" y2="330" stroke="#ff2dad" stroke-width="4"/>
       <line x1="1025" y1="452" x2="1670" y2="420" stroke="#ffb84d" stroke-width="4"/>
-      <line x1="1025" y1="464" x2="1660" y2="510" stroke="#784bff" stroke-width="4"/>
+      <line x1="1025" y1="464" x2="1660" y2="510" stroke="#7d3dff" stroke-width="4"/>
       <line x1="1025" y1="476" x2="1640" y2="600" stroke="#2bd2ff" stroke-width="4"/>
     </g>
   </g>

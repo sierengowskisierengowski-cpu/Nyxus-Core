@@ -108,7 +108,7 @@ sudo sensors-detect --auto                             # one-time, enables fan R
   regenerated, not layered over.
 - **Fireball -> shooting star**: perimeter comet retuned - white-hot
   core, tail amber `rgba(255,200,120)` -> violet `rgba(178,128,255)` ->
-  magenta `rgba(255,60,172)` -> transparent. Ember gold stays as the
+  magenta `rgba(255,45,173)` -> transparent. Ember gold stays as the
   hover/alert accent.
 
 ---
@@ -119,7 +119,7 @@ Design language: **moonstone night-sky glass + fireball ember**, extended
 from the bars to every clickable surface.
 
 - **Tokens**: ink void `rgba(7,3,16)→rgba(3,1,9)` · moonline border
-  `rgba(214,205,255,.42)` · violet nebula `#a882ff/#784bff` · ember
+  `rgba(214,205,255,.42)` · violet nebula `#a882ff/#7d3dff` · ember
   interaction accent `#ffb050/#ff8c28` (the comet's fire) · text `#f2f0ff`.
 - **Wallpaper-derived backdrops**: `nyxus-gen-backdrop` (in `~/.local/bin`)
   bakes the current wallpaper into blurred/ink-tinted slabs
@@ -127,14 +127,14 @@ from the bars to every clickable surface.
   the dashboard, powermenu, hotkey sheet, snap picker, deepcore, plus
   rofi and wlogout paint it behind their glass. `nyxus-set-wallpaper`
   re-bakes automatically on wallpaper change.
-- **Bars**: top/bottom rims now speak the rail dialect (`#ff3cac→#784bff→
+- **Bars**: top/bottom rims now speak the rail dialect (`#ff2dad→#7d3dff→
   #2bd2ff`); every vessel (pill, HUD tile, clock, ticker, cava, brand,
   tray) shares the moonstone crystal + unified 8px radius. New tiles:
   KRN + PKGS (top-left), LOAD moved into CPU tooltip. HUD tiles flip to
   an **ember alert** state (sys-pulse `chot/mhot/ghot/thot`) when
   cpu≥85 / ram≥90 / gpu≥90 / temp≥90.
 - **Hyprland 0.55 adoptions**: `decoration:glow` (violet inner glow,
-  focused `a882ff2e` / inactive `784bff12`) + `fadeGlow` animation;
+  focused `a882ff2e` / inactive `7d3dff12`) + `fadeGlow` animation;
   group/tab colors moved to the STARFALL trio with ember lock state.
 - **Other surfaces**: rofi launcher/power/startmenu/window-switcher,
   dunst (moonline frame, ember critical), wlogout (moonstone tiles,

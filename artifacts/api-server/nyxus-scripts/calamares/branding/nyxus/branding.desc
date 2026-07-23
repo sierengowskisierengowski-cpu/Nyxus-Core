@@ -1,7 +1,7 @@
 # Calamares branding descriptor for NYXUS.
 #
 # Loaded by Calamares when the active branding component is "nyxus".
-# Wired to the "Sprint E Total Identity" gold (#f4ead5) accent and references the
+# Wired to the "Sprint E Total Identity" gold (#eef2fa) accent and references the
 # slideshow QML in this same directory. The matching system module
 # config lives in /etc/calamares/settings.conf (also shipped here).
 #
@@ -44,6 +44,6 @@ slideshowAPI:            2
 
 style:
     sidebarBackground:   "#0a0a14"
-    sidebarText:         "#f4ead5"
+    sidebarText:         "#eef2fa"
     sidebarTextSelect:   "#0a0a14"
-    sidebarTextHighlight:"#f4ead5"
+    sidebarTextHighlight:"#eef2fa"

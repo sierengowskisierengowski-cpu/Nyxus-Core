@@ -35,7 +35,7 @@ STARS = [
         "speed": 0.35 + _rs.random() * 1.4,   # twinkle rate
         "drift": 0.5 + _rs.random() * 1.5,    # parallax factor
         "tint": _rs.choice(["#e8edf5", "#e8edf5", "#e8edf5",
-                            "#7949f2", "#26ffb7", "#ff2667"]),
+                            "#7d3dff", "#39ff14", "#ff2d55"]),
     }
     for _ in range(140)
 ]

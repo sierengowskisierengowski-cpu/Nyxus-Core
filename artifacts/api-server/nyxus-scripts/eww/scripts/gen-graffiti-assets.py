@@ -31,9 +31,9 @@ def accent_pair():
         with open(os.path.join(HOME, ".config/nyxus/accent.json")) as f:
             data = json.load(f)
         preset = data["presets"][data.get("active", "prism")]
-        return preset["primary"], preset["secondary"], preset.get("warn", "#ff8b26")
+        return preset["primary"], preset["secondary"], preset.get("warn", "#ff8a1e")
     except Exception:
-        return "#ff4994", "#26ff39", "#ff8b26"
+        return "#ff2dad", "#39ff14", "#ff8a1e"
 
 PRIMARY, SECONDARY, WARN = accent_pair()
 WHITE = "#e8edf5"

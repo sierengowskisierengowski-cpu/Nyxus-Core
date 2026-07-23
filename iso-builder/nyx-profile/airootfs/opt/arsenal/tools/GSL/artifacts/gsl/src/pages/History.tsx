@@ -22,7 +22,7 @@ interface Run {
 const STATUS_CFG: Record<string, { color: string; bg: string; border: string }> = {
   completed: { color: "#4ade80", bg: "rgba(74,222,128,0.07)",  border: "rgba(74,222,128,0.2)" },
   running:   { color: "#60a5fa", bg: "rgba(96,165,250,0.07)",  border: "rgba(96,165,250,0.2)" },
-  error:     { color: "#f87171", bg: "rgba(248,113,113,0.07)", border: "rgba(248,113,113,0.2)" },
+  error:     { color: "#ff2d55", bg: "rgba(255,45,85,0.07)", border: "rgba(255,45,85,0.2)" },
   killed:    { color: "#fbbf24", bg: "rgba(251,191,36,0.07)",  border: "rgba(251,191,36,0.2)" },
   pending:   { color: "#94a3b8", bg: "rgba(148,163,184,0.06)", border: "rgba(148,163,184,0.15)" },
 };
@@ -196,7 +196,7 @@ export default function History() {
                     {/* Tool */}
                     <div className="flex items-center gap-2 min-w-0">
                       {run.isFlagged && (
-                        <Flag className="h-3 w-3 flex-shrink-0" style={{ color: "#f87171" }} />
+                        <Flag className="h-3 w-3 flex-shrink-0" style={{ color: "#ff2d55" }} />
                       )}
                       <span className="text-sm font-medium truncate" style={{ color: "hsl(220 20% 88%)" }}>
                         {run.toolName}
@@ -241,11 +241,11 @@ export default function History() {
                     <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                       <button
                         className="h-6 w-6 flex items-center justify-center rounded-sm transition-colors"
-                        style={{ color: run.isFlagged ? "#f87171" : "hsl(232 10% 30%)" }}
+                        style={{ color: run.isFlagged ? "#ff2d55" : "hsl(232 10% 30%)" }}
                         title={run.isFlagged ? "Unflag" : "Flag as Finding"}
                         onClick={() => flagMutation.mutate({ id: run.id, flagged: !run.isFlagged })}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = run.isFlagged ? "#f87171" : "hsl(232 10% 30%)")}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "#ff2d55")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = run.isFlagged ? "#ff2d55" : "hsl(232 10% 30%)")}
                       >
                         <Flag className="h-3 w-3" />
                       </button>
@@ -254,7 +254,7 @@ export default function History() {
                         style={{ color: "hsl(232 10% 30%)" }}
                         title="Delete"
                         onClick={() => deleteMutation.mutate(run.id)}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "#ff2d55")}
                         onMouseLeave={(e) => (e.currentTarget.style.color = "hsl(232 10% 30%)")}
                       >
                         <Trash2 className="h-3 w-3" />

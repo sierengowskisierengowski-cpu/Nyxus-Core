@@ -159,7 +159,7 @@ def build_center_star():
     glow = Image.new("RGBA", (dim, dim), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow)
     for rr, a in ((28, 40), (48, 22), (72, 10)):
-        gd.ellipse((cx - rr, cy - rr, cx + rr, cy + rr), fill=(121, 73, 242, a))
+        gd.ellipse((cx - rr, cy - rr, cx + rr, cy + rr), fill=(125, 61, 255, a))
     glow = glow.filter(ImageFilter.GaussianBlur(radius=6))
     out = Image.new("RGBA", (dim, dim), (0, 0, 0, 0))
     out.alpha_composite(glow)

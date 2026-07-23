@@ -49,7 +49,7 @@ const CATEGORY_COLOR: Record<string, string> = {
   "Steganography":              "#d946ef",
   "Reverse Engineering":        "#fb923c",
   "Docker & Container Security":"#22d3ee",
-  "Social Engineering":         "#f87171",
+  "Social Engineering":         "#ff2d55",
   "IoT & Hardware":             "#4ade80",
   "GowskiNet Specific":         "#9b7fef",
   "CTF & Practice":             "#34d399",
@@ -362,7 +362,7 @@ export default function Library() {
                                         <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono" style={{ color: "hsl(232 10% 32%)" }}>
                                           {cmdEntry.lastStatus === "completed"
                                             ? <CheckCircle2 className="h-2.5 w-2.5" style={{ color: "#4ade80" }} />
-                                            : <XOctagon className="h-2.5 w-2.5" style={{ color: "#f87171" }} />}
+                                            : <XOctagon className="h-2.5 w-2.5" style={{ color: "#ff2d55" }} />}
                                           <span>×{cmdEntry.runCount}</span>
                                           <span style={{ color: "hsl(232 10% 22%)" }}>·</span>
                                           <span>{timeAgo(cmdEntry.lastRun)}</span>

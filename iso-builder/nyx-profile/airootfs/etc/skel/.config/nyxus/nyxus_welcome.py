@@ -397,7 +397,7 @@ try:
     CSS = CSS.replace("@PINK@", _HP["pink"]).replace("@CYAN@", _HP["cyan"])
     CSS += _nfc()
 except Exception:
-    CSS = CSS.replace("@PINK@", "#ff3cac").replace("@CYAN@", "#2bd2ff")
+    CSS = CSS.replace("@PINK@", "#ff2dad").replace("@CYAN@", "#2bd2ff")
 
 STEPS = [
     ("hello",      "Hello"),

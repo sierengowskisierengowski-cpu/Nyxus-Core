@@ -83,7 +83,7 @@ function NoteCard({
               className="h-6 w-6 flex items-center justify-center rounded-sm transition-colors"
               style={{ color: "hsl(232 10% 35%)" }}
               onClick={() => onDelete(note.id)}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#ff2d55")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "hsl(232 10% 35%)")}
               title="Delete note"
             >

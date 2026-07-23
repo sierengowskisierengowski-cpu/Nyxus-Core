@@ -57,7 +57,7 @@ while True:
                 st = json.load(f)
             ps = float(st.get("ps", 0.0))
             fs = float(st.get("fs", 0.0))
-            pc = st.get("pc", [255, 60, 172])
+            pc = st.get("pc", [255, 45, 173])
             if ps > 0.28 and ps > last_ps + 0.12:
                 burst = (now, pc, max(ps, fs * 0.6), target_for(pc, fs), hue_name(pc))
             last_ps = ps

@@ -2,7 +2,7 @@
  * NYXUS - ReGreet stylesheet - "Void Sign-In" (Wayland greeter)
  * (c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
  * rev 2026-07-14 - DARK MIRROR tokens (docs/THEME.md section 8):
- *   accent primary  #7949f2 (purple)   secondary #ff2667 (magenta)
+ *   accent primary  #7d3dff (purple)   secondary #ff2d55 (magenta)
  *   text #e8edf5 / #c8ccd6 / #6a6e78    frosted ink rgba(5,2,11,.78)
  * Frosted smoked-glass login card, pushed right of centre so the
  * alien art on the left stays visible. ASCII-only.
@@ -22,13 +22,13 @@ window {
  * so the background stays clean and only the credential card is styled. */
 frame, .frame {
     background-color: rgba(5, 2, 11, 0.82);
-    border: 1px solid rgba(121, 73, 242, 0.32);
-    border-top: 2px solid #7949f2;
+    border: 1px solid rgba(125, 61, 255, 0.32);
+    border-top: 2px solid #7d3dff;
     border-radius: 16px;
     padding: 22px 26px;
     margin-left: 720px;
     margin-right: 120px;
-    box-shadow: 0 0 24px rgba(121, 73, 242, 0.30),
+    box-shadow: 0 0 24px rgba(125, 61, 255, 0.30),
                 0 8px 28px rgba(0, 0, 0, 0.55);
 }
 frame > border { border: none; }
@@ -49,7 +49,7 @@ label {
     font-weight: 800;
     font-size: 30px;
     color: #e8edf5;
-    text-shadow: 0 0 14px rgba(121, 73, 242, 0.45);
+    text-shadow: 0 0 14px rgba(125, 61, 255, 0.45);
 }
 
 /* text entry - void-deep with accent focus */
@@ -58,21 +58,21 @@ entry {
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 10px;
     color: #e8edf5;
-    caret-color: #7949f2;
+    caret-color: #7d3dff;
     font-family: "JetBrains Mono", monospace;
     padding: 10px 12px;
     min-height: 22px;
 }
 entry:focus, entry:focus-within {
-    border-color: #7949f2;
-    box-shadow: 0 0 12px rgba(121, 73, 242, 0.40);
+    border-color: #7d3dff;
+    box-shadow: 0 0 12px rgba(125, 61, 255, 0.40);
 }
 
 /* primary button - purple->magenta accent */
 button {
-    background-color: rgba(121, 73, 242, 0.16);
+    background-color: rgba(125, 61, 255, 0.16);
     background-image: none;
-    border: 1px solid #7949f2;
+    border: 1px solid #7d3dff;
     border-radius: 10px;
     color: #e8edf5;
     font-family: "JetBrains Mono", monospace;
@@ -81,36 +81,36 @@ button {
     padding: 8px 16px;
 }
 button:hover, button:focus {
-    background-color: rgba(255, 38, 103, 0.22);
-    border-color: #ff2667;
-    box-shadow: 0 0 14px rgba(255, 38, 103, 0.45);
+    background-color: rgba(255, 45, 85, 0.22);
+    border-color: #ff2d55;
+    box-shadow: 0 0 14px rgba(255, 45, 85, 0.45);
 }
 button:active {
-    background-color: rgba(255, 38, 103, 0.36);
+    background-color: rgba(255, 45, 85, 0.36);
 }
 
 /* session / user dropdowns */
 combobox button, dropdown button, combobox entry, dropdown entry {
     background-color: rgba(5, 1, 13, 0.92);
-    border: 1px solid rgba(121, 73, 242, 0.34);
+    border: 1px solid rgba(125, 61, 255, 0.34);
     color: #c8ccd6;
 }
 combobox button:hover, dropdown button:hover {
-    border-color: #7949f2;
-    box-shadow: 0 0 12px rgba(121, 73, 242, 0.40);
+    border-color: #7d3dff;
+    box-shadow: 0 0 12px rgba(125, 61, 255, 0.40);
 }
 
 popover, popover.background {
     background-color: rgba(5, 2, 11, 0.97);
-    border: 1px solid rgba(121, 73, 242, 0.34);
+    border: 1px solid rgba(125, 61, 255, 0.34);
     border-radius: 12px;
     color: #e8edf5;
 }
 popover modelbutton:hover, popover row:hover {
-    background-color: rgba(121, 73, 242, 0.18);
+    background-color: rgba(125, 61, 255, 0.18);
 }
 
 .error, infobar.error, label.error {
-    color: #ff2667;
-    text-shadow: 0 0 8px rgba(255, 38, 103, 0.5);
+    color: #ff2d55;
+    text-shadow: 0 0 8px rgba(255, 45, 85, 0.5);
 }

@@ -51,8 +51,8 @@ except Exception:
     SHADOW_INK_INACTIVE='rgba(0, 0, 0, 0.20)'
     RADIUS_CARD=14; RADIUS_PILL=12; RADIUS_INPUT=10
     FONT_UI='Inter'; FONT_MONO='JetBrains Mono'; FONT_DISPLAY='Inter Display'
-    ACCENT_PRIMARY='#ff3cac'; ACCENT_SECONDARY='#2bd2ff'
-    ACCENT_WARN='#ffb84d'; ACCENT_OK='#784bff'
+    ACCENT_PRIMARY='#ff2dad'; ACCENT_SECONDARY='#2bd2ff'
+    ACCENT_WARN='#ffb84d'; ACCENT_OK='#7d3dff'
     def format_css(t):
         _d = {
             'WHITE_PURE': WHITE_PURE, 'WHITE_OFF': WHITE_OFF,
@@ -102,7 +102,7 @@ try:
 except Exception:
     HUD_PALETTE = {"pink": ACCENT_PRIMARY, "cyan": ACCENT_SECONDARY,
                    "gold": ACCENT_WARN, "purple": ACCENT_OK,
-                   "green": "#6dffcf", "orange": "#ff7849",
+                   "green": "#7dff5e", "orange": "#ff7849",
                    "blue": "#4d9fff", "red": "#ff4d6b",
                    "mono": WHITE_OFF}
     def hud_css_bundle(sel="window", hues=()):  # noqa: E704

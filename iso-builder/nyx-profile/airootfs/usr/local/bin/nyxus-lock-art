@@ -20,7 +20,7 @@ mkdir -p "${CACHE}"
 # branded fallback card, generated once
 if [[ ! -f "${PLACEHOLDER}" ]] && command -v magick >/dev/null; then
   magick -size 296x296 radial-gradient:'#241539'-'#06050A' \
-    -stroke '#ff3cac' -strokewidth 2 -fill none \
+    -stroke '#ff2dad' -strokewidth 2 -fill none \
     -draw 'rectangle 20,20 275,275' \
     -stroke '#2bd2ff' -strokewidth 1 \
     -draw 'line 20,148 100,148' -draw 'line 195,148 275,148' \

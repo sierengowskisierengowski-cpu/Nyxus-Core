@@ -69,7 +69,7 @@ while True:
             last_mtime = mt
             with open(state_path) as f:
                 st = json.load(f)
-            pc, fc = st.get("pc", [255, 60, 172]), st.get("fc", [43, 210, 255])
+            pc, fc = st.get("pc", [255, 45, 173]), st.get("fc", [43, 210, 255])
             live = {"pr": int(pc[0]), "pg": int(pc[1]), "pb": int(pc[2]),
                     "ps": float(st.get("ps", 0.0)),
                     "fr": int(fc[0]), "fg": int(fc[1]), "fb": int(fc[2]),

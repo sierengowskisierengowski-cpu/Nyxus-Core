@@ -6,9 +6,9 @@
 /* -- NYXUS . HOME-HUD shared tokens (mirrors ~/.nyxus/nyxus-home/style.py
  *    PALETTE + nyxus-palette.css rev r13 - fixed, preset-independent) -- */
 $neon-orange: #ff7849;   // HUD "orange"  (fans / power)
-$neon-green:  #6dffcf;   // HUD "green"   (network)
+$neon-green:  #7dff5e;   // HUD "green"   (network)
 $neon-blue:   #4d9fff;   // HUD "blue"    (bluetooth)
-$neon-cyan:   #ff2667;   // HUD "cyan"    (HOME station)
+$neon-cyan:   #ff2d55;   // HUD "cyan"    (HOME station)
 $neon-red:    #ff4d6b;   // HUD "red"     (music / danger)
 
 $text:       #e8edf5;    // nyx_white_off
@@ -1012,24 +1012,24 @@ window, window.background, decoration {
   margin-bottom: 8px;
   padding: 3px 4px;
   border-radius: 11px;
-  background: rgba(255, 38, 103, 0.04);
-  background-color: rgba(255, 38, 103, 0.04);
-  border: 1px solid rgba(255, 38, 103, 0.55);
+  background: rgba(255, 45, 85, 0.04);
+  background-color: rgba(255, 45, 85, 0.04);
+  border: 1px solid rgba(255, 45, 85, 0.55);
   box-shadow:
-    0 0 8px rgba(255, 38, 103, 0.12),
-    inset 0 0 10px rgba(255, 38, 103, 0.04);
+    0 0 8px rgba(255, 45, 85, 0.12),
+    inset 0 0 10px rgba(255, 45, 85, 0.04);
   transition: all $t-fast;
 }
 .float-island:hover {
-  border-color: rgba(255, 38, 103, 0.78);
-  background: rgba(255, 38, 103, 0.08);
+  border-color: rgba(255, 45, 85, 0.78);
+  background: rgba(255, 45, 85, 0.08);
   box-shadow:
-    0 0 16px rgba(255, 38, 103, 0.35),
-    inset 0 0 12px rgba(255, 38, 103, 0.08);
+    0 0 16px rgba(255, 45, 85, 0.35),
+    inset 0 0 12px rgba(255, 45, 85, 0.08);
 }
 .float-island:active {
-  border-color: rgba(255, 38, 103, 0.90);
-  box-shadow: 0 0 12px rgba(255, 38, 103, 0.42);
+  border-color: rgba(255, 45, 85, 0.90);
+  box-shadow: 0 0 12px rgba(255, 45, 85, 0.42);
 }
 
 .float-island .ws-pill,

@@ -29,8 +29,8 @@ export default function Stats() {
     query: { queryKey: getGetActivitySummaryQueryKey(), refetchInterval: 10000 },
   });
 
-  const cpuColor = !stats ? "#818cf8" : stats.cpu > 80 ? "#f87171" : stats.cpu > 60 ? "#fb923c" : "#818cf8";
-  const memColor = !stats ? "#a78bfa" : stats.memory.percent > 80 ? "#f87171" : stats.memory.percent > 60 ? "#fb923c" : "#a78bfa";
+  const cpuColor = !stats ? "#818cf8" : stats.cpu > 80 ? "#ff2d55" : stats.cpu > 60 ? "#fb923c" : "#818cf8";
+  const memColor = !stats ? "#a78bfa" : stats.memory.percent > 80 ? "#ff2d55" : stats.memory.percent > 60 ? "#fb923c" : "#a78bfa";
 
   return (
     <div className="flex flex-col h-full">
@@ -137,7 +137,7 @@ export default function Stats() {
               </div>
               <div className="space-y-3">
                 {stats.disk.map((d, i) => {
-                  const diskColor = d.percent > 90 ? "#f87171" : d.percent > 70 ? "#fb923c" : "#34d399";
+                  const diskColor = d.percent > 90 ? "#ff2d55" : d.percent > 70 ? "#fb923c" : "#34d399";
                   return (
                     <div key={i} className="space-y-1.5" data-testid={`disk-${i}`}>
                       <div className="flex items-center justify-between text-xs">

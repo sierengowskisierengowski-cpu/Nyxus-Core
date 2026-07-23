@@ -88,7 +88,7 @@ class CosmicSceneArea(Gtk.DrawingArea):
         # galactic band
         cx, cy = w * 0.52, h * 0.48
         for i, (col, a) in enumerate([
-            ("#7949f2", 0.10), ("#26ffb7", 0.06), ("#ff2667", 0.05), ("#ffffff", 0.04)]):
+            ("#7d3dff", 0.10), ("#39ff14", 0.06), ("#ff2d55", 0.05), ("#ffffff", 0.04)]):
             r, g, b = _rgb(col)
             ang = -0.35 + 0.04 * math.sin(t * 0.07)
             gx = cx + math.cos(ang) * w * 0.35
@@ -128,8 +128,8 @@ class CosmicSceneArea(Gtk.DrawingArea):
         rr = min(w, h) * 0.14
         # accretion disk
         for ring, col, width, alpha in [
-            (1.55, "#ffb026", 5, 0.55), (1.35, "#ff7849", 3, 0.45),
-            (1.18, "#ff2667", 2, 0.35), (1.02, "#7949f2", 1.5, 0.25)]:
+            (1.55, "#ff8a1e", 5, 0.55), (1.35, "#ff7849", 3, 0.45),
+            (1.18, "#ff2d55", 2, 0.35), (1.02, "#7d3dff", 1.5, 0.25)]:
             cr.set_line_width(width)
             r, g, b = _rgb(col)
             cr.set_source_rgba(r, g, b, alpha * (0.85 + 0.15 * math.sin(t * 0.9 + ring)))
@@ -158,7 +158,7 @@ class CosmicSceneArea(Gtk.DrawingArea):
     def _nebula_moon(self, cr, w, h, t):
         self._void(cr, w, h)
         # violet-teal nebula wash
-        for col, bx, by, rad in [("#7949f2", 0.2, 0.35, 0.5), ("#26ffb7", 0.75, 0.55, 0.45)]:
+        for col, bx, by, rad in [("#7d3dff", 0.2, 0.35, 0.5), ("#39ff14", 0.75, 0.55, 0.45)]:
             r, g, b = _rgb(col)
             cx, cy = w * bx, h * by
             grad = cairo.RadialGradient(cx, cy, 0, cx, cy, min(w, h) * rad)

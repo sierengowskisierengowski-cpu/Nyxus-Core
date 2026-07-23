@@ -12,7 +12,7 @@
 //     deploy script sets QT_QUICK_BACKEND=software so the scene renders
 //     via llvmpipe. This theme is written to also be cheap to render in
 //     software (no blur, no shaders, no heavy effects).
-//   - Nyxus palette (deep void black + purple #7949F2 + magenta #FF2667).
+//   - Nyxus palette (deep void black + purple #7d3dff + magenta #ff2d55).
 //     Rough palette match only — full theme polish is Phase 5.
 //
 //  Both Hyprland and COSMIC (and any other /usr/share/wayland-sessions
@@ -35,8 +35,8 @@ Rectangle {
     readonly property color cCard:     Qt.rgba(5/255, 2/255, 11/255, 0.78)     // frosted smoked-glass fill
     readonly property color cCardEdge: Qt.rgba(121/255, 73/255, 242/255, 0.32) // 1px accent hairline
     readonly property color cInput:    Qt.rgba(5/255, 1/255, 13/255, 0.90)     // void-deep
-    readonly property color cAccent:   "#7949f2"   // accent primary
-    readonly property color cAccent2:  "#ff2667"   // accent secondary
+    readonly property color cAccent:   "#7d3dff"   // accent primary
+    readonly property color cAccent2:  "#ff2d55"   // accent secondary
     readonly property color cText:     "#e8edf5"   // nyx_white_off
     readonly property color cTextDim:  "#c8ccd6"   // nyx_grey_light
     readonly property color cTextFaint:"#6a6e78"   // nyx_grey_tertiary

@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-22** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-23** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -81,10 +81,14 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
   offline cache. Their up-to-date source is `artifacts/api-server/nyxus-scripts/`
   (tracked). `BOOTSTRAP_VERSION` in `nyxus-bootstrap` is still `2026.05.12-r11`
   — **not bumped for July work.** If you need installed systems to re-pull, bump it.
-- **The accent color is auto-generated FROM THE WALLPAPER** by
-  `~/.local/bin/nyxus-accent-from-wallpaper`. The alien nebula wallpaper is
-  blue/purple, so the accent is currently blue (`#1caef2`). **This is not a bug**
-  — the owner didn't set it; the wallpaper did. Reversible any time.
+- **ALIEN NEON palette is LOCKED (2026-07-23).** Canonical preset = `prism` in
+  `~/.config/nyxus/accent.json` / skel:
+  violet `#7d3dff` · magenta `#ff2dad` · neon green `#39ff14` · orange `#ff8a1e`
+  (+ fixed cyan `#2bd2ff` · red `#ff2d55` · yellow `#ffe600` · orchid `#e367ff`).
+  **`follow_wallpaper` is OFF.** Do NOT re-enable wallpaper→accent extraction —
+  that drift (old wallpaper blues / cream "Sprint E") is exactly how the desktop
+  kept losing its alien look. Apply via `nyxus-apply-accent prism`.
+- **Cream `#f4ead5` is banned.** Cool white `#eef2fa` on void `#05060a` only.
 
 ---
 
@@ -123,6 +127,9 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
   system. Stock `linux` is kept ONLY as a rescue entry so a bad Kage-Ryu boot
   can never strand you. `linux-lts` / `linux-zen` / `linux-hardened` were
   dropped from `packages.x86_64` (focused custom-kernel distro).
+  **⚠ 2026-07-23:** the currently shipped `7.0.12` pkgs were built without
+  iso9660/squashfs/loop — live default is broken until those pkgs are rebuilt
+  (PKGBUILD patched) and the ISO rebaked. Use stock rescue on the stick for now.
 - Built via `kernel/install-kage-ryu.sh` (on the running system) or
   `cd <kage-ryu repo> && makepkg -sc`. Baked into the ISO **BY DEFAULT**
   (`NYX_WITH_KAGE_RYU` defaults to `1`; kernel is never compiled inside the
@@ -214,6 +221,10 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
   - **NOTE:** none of round-2 is in the ISO baked ~1:40am 07-23 (it started
     before these fixes) — needs one more bake.
 
+- **2026-07-23 (evening) — ALIEN NEON palette lock + install code-1 + alien walls**
+  (this commit). Cream purged. `follow_wallpaper` OFF. Live session reskinned.
+  See **§5b BRIEF** for the full palette table + what still needs a rebake.
+
 ### The `nyxus-2026.07.22` stick booted BROKEN — and why (post-mortem)
 Two overlapping causes: (1) that stick was baked from a **partial/stale** profile
 (missed the ungate-bars fix), and (2) the deeper bugs above (dead Replit + install
@@ -221,23 +232,84 @@ Two overlapping causes: (1) that stick was baked from a **partial/stale** profil
 **not yet in a baked ISO** — needs a fresh bake. `nyx@nyxus` + auto-login are
 correct/expected (it's a live ISO, not an install).
 
+### ⛔ BLOCKER (QEMU-confirmed 2026-07-23): Kage-Ryu cannot boot the live ISO
+Default menu entry **"Boot NYXUS · Kage Ryu kernel"** dies in initramfs:
+`mount: unknown filesystem type 'iso9660'`. Root cause: `config.last` has
+`# CONFIG_ISO9660_FS is not set`, `# CONFIG_SQUASHFS is not set`,
+`# CONFIG_BLK_DEV_LOOP is not set` (XanMod lean/localmodconfig stripped them;
+archiso needs all three). Stock **rescue** entry still works.
+
+**If you boot the already-flashed `nyxus-2026.07.23` stick:** at GRUB pick
+**"Boot NYXUS · stock linux (rescue)"** — do NOT use the highlighted Kage entry
+until a rebuilt kernel is rebaked.
+
+**Fix path (owner):**
+1. Rebuild kage pkgs (PKGBUILD now forces iso9660/squashfs/loop/dm — patched
+   2026-07-23 in `~/Projects/arch-custom-kernel/linux-kage-ryu/PKGBUILD`):
+   `cd ~/Projects/arch-custom-kernel/linux-kage-ryu && makepkg -sc`
+2. Confirm: `zgrep -E 'CONFIG_(ISO9660_FS|SQUASHFS|BLK_DEV_LOOP)=' \
+   /usr/lib/modules/*kage*/config` → all `=y` (or modules present in initramfs).
+3. Then RE-BAKE + re-flash (below).
+
 ### PENDING (do this next)
-1. **RE-BAKE** (owner runs, from a clean+committed repo):
+1. **Rebuild Kage-Ryu** with live-ISO FS support (see blocker above), then
+   **RE-BAKE** (owner runs, from a clean+committed repo):
    `cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh`
    (Kage-Ryu is baked by default now; it hard-fails if the prebuilt kernel pkgs
    are missing. Add `NYX_WITH_KAGE_RYU=0` only for a stock-only debug ISO.)
-2. **Re-flash** `/dev/sda` and **boot the UEFI entry**; verify: dragon menu (now
-   defaults to the **Kage-Ryu** entry) → graffiti-saucer splash → full desktop with
-   bars + correct wallpaper **offline** → apps install from cache (no "code 1").
-   Confirm `uname -r` shows the kage-ryu kernel.
-3. Cleanup status (2026-07-23): accent-baseline builder-home leak **removed**
+2. **Re-flash** `/dev/sda` and **boot the UEFI entry**; verify: dragon menu →
+   **Kage-Ryu** entry mounts the ISO (no iso9660 error) → graffiti-saucer splash
+   → full desktop offline → apps from cache. `uname -r` shows kage-ryu.
+   Until then: boot **stock rescue** on the current stick.
+3. **Still open after ALIEN NEON land (2026-07-23 evening):**
+   - Greeter / hyprlock polish pass (alien bg already wired; visual QA on stick).
+   - eww bars: slow first paint + transparent black box around bars.
+   - Visible build/commit stamp on booted stick (so freshness is obvious).
+   - UFO/saucer notification QA on fresh boot.
+   - **Home backup:** Ventoy stick (`/dev/sda1`, 238 GB) mid-queue — Vault /
+     Projects / VMs as `.tar.zst`; fill remaining space then swap to 2nd USB.
+     Also back up Docker honeypot volumes + `/opt/nyxus-*` + `/etc/jett`
+     (NOT only `~`).
+4. Cleanup status (2026-07-23): accent-baseline builder-home leak **removed**
    (regenerated per-user by nyxus-apply-accent). STILL deferred: ~33 non-boot
    Replit refs (self-update snippets, README curl example, polkit vendor_url —
    all non-fatal now that the boot+install path is Replit-free); ~50 GB of old
    ISOs in `iso-builder/out/` (untracked, safe to delete); 90 stale remote
    branches on GitHub (copilot/*, devin/*, cursor/*, archive/vault-*) — prune to
    avoid re-scattering. Prune non-alien walls from the payload if size matters.
-4. Owner's call: fold `companion-3d` under one roof or keep separate.
+5. Owner's call: fold `companion-3d` under one roof or keep separate.
+
+---
+
+## 5b. BRIEF — ALIEN NEON LOCK (2026-07-23 evening)
+
+**What shipped to `main` this round:**
+1. **Canonical palette** — `accent.json` active=`prism`, `follow_wallpaper=false`.
+   Primary violet `#7d3dff`, secondary magenta `#ff2dad`, warn orange `#ff8a1e`,
+   ok neon green `#39ff14`. Fixed neons for cyan/red/yellow/orchid used in
+   terminals, borders, HUD, glow.
+2. **Repo-wide re-skin** — purged cream `#f4ead5` + wallpaper-drift blues
+   (`#1caef2`/`#6526ff`/…) from skel, artifacts, arsenal UI, GRUB/calamares/
+   verify-profile. Window border sweep = violet→magenta→cyan→green.
+3. **Terminals** — kitty + alacritty = ALIEN NEON ANSI (cool white default text;
+   neon only on real ANSI). Alacritty dim colors use `0xAARRGGBB` (not `#rrggbbaa`).
+   `nyxus-glow` palette updated to the same neons.
+4. **Alien walls only** — default `wallpaper.conf` → `nyxus-urban-alien`;
+   greeter `wall-rotation.list` alien-only; `nyxus-rotate-walls` searches
+   `rotation/` + alien FALLBACK; autostart DEFAULT points at urban-alien.
+5. **Install code-1 hardened** — optional wall dl soft-fails; SDDM never fails
+   the install (greetd is live greeter); post-install wallpaper prefers
+   urban-alien (not void-vortex); **summary no longer `exit 1`** on optional
+   misses (that abort was killing first-boot theming).
+6. **Live session** — palette applied on the owner's Hyprland session
+   (`nyxus-apply-accent prism`); backup at
+   `~/nyxus-palette-live-backup-*.tar.gz`.
+
+**What does NOT update until the next bake:** greeter/splash/ISO skel on the
+USB stick. Live session already shows ALIEN NEON; stick needs rebake+reflash.
+
+**Owner next:** rebuild Kage-Ryu pkgs (iso9660/squashfs/loop) → commit clean →
+`sudo ./build-iso.sh` → flash → boot UEFI → verify.
 
 ---
 
@@ -267,6 +339,11 @@ Verify a flashed stick from the agent side (no sudo needed):
 
 ## 7. DO-NOT-REPEAT GOTCHAS (hard-won)
 
+- **Kage-Ryu MUST keep live-media FS support** (`CONFIG_ISO9660_FS`,
+  `CONFIG_SQUASHFS`, `CONFIG_BLK_DEV_LOOP`, preferably `CONFIG_BLK_DEV_DM` /
+  `CONFIG_UDF_FS`). A lean/localmodconfig pass that drops them makes the
+  default live entry unbootable (`unknown filesystem type 'iso9660'`). Catch
+  this in QEMU (`-kernel` + virtio ISO + `console=ttyS0`) before flashing.
 - **The desktop must NOT depend on the network to come up.** Bars/wallpaper/theme
   are in skel and launch immediately; the app-install layers on after and may never
   block/break the core desktop. (Regressing this = the broken 07-22 boot.)
@@ -275,12 +352,15 @@ Verify a flashed stick from the agent side (no sudo needed):
   multiple hard resets). Never OVERLAY-layer a full-screen input surface.
 - **iso_label identical** in profiledef + all 5 archisolabel refs, or no boot.
 - **Dragon menu is UEFI-only** — Legacy boot = plain text menu (not a bug).
-- **Accent follows the wallpaper** — "it turned blue on its own" is expected.
+- **Accent does NOT follow wallpaper** (locked 2026-07-23). Active preset =
+  `prism` / ALIEN NEON. `follow_wallpaper: false`. Cream `#f4ead5` is banned.
 - **eww**: one daemon via `nyxus-eww-launch-safe`; watch for double bars.
 - **Restore-before-bake is obsolete** now that the bake uses a throwaway copy — but
   if you ever see the repo `nyx-profile` go root-owned/dirty after a bake, the fix
   regressed; the owner must `sudo chown -R cosmic:cosmic` it, then
   `git checkout -- iso-builder/nyx-profile/ && git clean -fdx -- iso-builder/nyx-profile/`.
+- **Alacritty rejects 8-digit `#rrggbbaa` hex** — use `0xAARRGGBB` (e.g.
+  `0x8CEEF2FA`) or 6-digit `#rrggbb`. Hitting `#eef2fa8c` pops a red parse error.
 
 ---
 

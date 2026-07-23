@@ -1,7 +1,8 @@
 {
-  "wallpaper": "/home/nyx/.config/hypr/walls/nyxus-cosmic-galaxy.png",
+  "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-urban-alien.png",
   "favorites": [
-    "/usr/share/backgrounds/nyxus/nyxus-blackhole-01.png"
+    "/usr/share/backgrounds/nyxus/nyxus-urban-alien.png",
+    "/usr/share/backgrounds/nyxus/nyxus-login-wall.png"
   ],
   "monitor_target": "All Monitors",
   "brightness": 1.0,

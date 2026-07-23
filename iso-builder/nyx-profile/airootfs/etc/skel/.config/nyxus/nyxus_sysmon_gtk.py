@@ -105,8 +105,8 @@ try:
     from nyxus_palette import HUD_PALETTE as _HP, \
         install_hud_css as _NYX_IHC, neon_flicker_css as _NYX_NFC
 except Exception:
-    _HP = {"pink": "#ff3cac", "purple": "#784bff", "blue": "#4d9fff",
-           "green": "#6dffcf", "gold": "#ffb84d", "orange": "#ff7849",
+    _HP = {"pink": "#ff2dad", "purple": "#7d3dff", "blue": "#4d9fff",
+           "green": "#7dff5e", "gold": "#ffb84d", "orange": "#ff7849",
            "cyan": "#2bd2ff", "red": "#ff4d6b"}
     _NYX_IHC = None
     def _NYX_NFC(): return ""

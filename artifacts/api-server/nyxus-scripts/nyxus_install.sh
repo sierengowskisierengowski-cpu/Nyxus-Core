@@ -423,22 +423,29 @@ for conf in nyxus-hyprland-general.conf \
 done
 
 # ── WALLPAPER ─────────────────────────────────────────────────────────────────
-hdr "Wallpaper (SIERENGOWSKI)"
+# Soft-fail these: skel already ships alien defaults via wallpaper.conf /
+# nyxus-wallpaper-autostart. A missing optional PNG must NEVER trip exit 1
+# (owner directive 2026-07-23 — install code-1 was killing first-boot theming).
+hdr "Wallpaper (ALIEN NEON)"
 WALLS_DIR="$HYPR_DIR/walls"
 mkdir -p "$WALLS_DIR"
-dl "nyxus-void-vortex.png"    "$WALLS_DIR/nyxus-void-vortex.png"    || failed=$((failed+1))
-dl "nyxus-ink-swirl.png" "$WALLS_DIR/nyxus-ink-swirl.png" || failed=$((failed+1))
-dl "nyxus-void-wallpaper.mp4" "$WALLS_DIR/nyxus-void-wallpaper.mp4" || failed=$((failed+1))
-dl "nyxus-starfield-wall.png" "$WALLS_DIR/nyxus-starfield-wall.png" || failed=$((failed+1))
-dl "nyxus-drifter-wall.png"   "$WALLS_DIR/nyxus-drifter-wall.png"   || failed=$((failed+1))
-dl "nyxus-taskbar-bg.png"         "$WALLS_DIR/nyxus-taskbar-bg.png"         || failed=$((failed+1))
-dl "nyxus-rightbar-bg.png"        "$WALLS_DIR/nyxus-rightbar-bg.png"        || failed=$((failed+1))
-dl "nyxus-starlight.png"          "$WALLS_DIR/nyxus-starlight.png"          || failed=$((failed+1))
-dl "nyxus-monogram-mist.png"      "$WALLS_DIR/nyxus-monogram-mist.png"      || failed=$((failed+1))
-dl "nyxus-topbar-mist.png"        "$WALLS_DIR/nyxus-topbar-mist.png"        || failed=$((failed+1))
-dl "nyxus-hyprlock-eye.png"       "$WALLS_DIR/nyxus-hyprlock-eye.png"       || failed=$((failed+1))
-dl "nyxus-login-stars.png"        "$WALLS_DIR/nyxus-login-stars.png"        || failed=$((failed+1))
-dl "nyxus-bar-stone.png"          "$WALLS_DIR/nyxus-bar-stone.png"          || failed=$((failed+1))
+_soft_wall() { dl "$1" "$WALLS_DIR/$1" || printf "  ${DIM}(optional wall missing: %s — using skel/system alien default)${R}\n" "$1"; }
+_soft_wall "nyxus-urban-alien.png"
+_soft_wall "nyxus-login-wall.png"
+_soft_wall "nyxus-desktop-hero.png"
+_soft_wall "nyxus-void-vortex.png"
+_soft_wall "nyxus-ink-swirl.png"
+_soft_wall "nyxus-void-wallpaper.mp4"
+_soft_wall "nyxus-starfield-wall.png"
+_soft_wall "nyxus-drifter-wall.png"
+_soft_wall "nyxus-taskbar-bg.png"
+_soft_wall "nyxus-rightbar-bg.png"
+_soft_wall "nyxus-starlight.png"
+_soft_wall "nyxus-monogram-mist.png"
+_soft_wall "nyxus-topbar-mist.png"
+_soft_wall "nyxus-hyprlock-eye.png"
+_soft_wall "nyxus-login-stars.png"
+_soft_wall "nyxus-bar-stone.png"
 
 # ── APP BACKGROUNDS (neon splat panels — used by all GTK apps) ────────────────
 hdr "App Backgrounds (neon splat panels)"
@@ -1084,8 +1091,9 @@ if ! command -v sddm &>/dev/null; then
     elif ! sudo -n true 2>/dev/null; then
       printf "  ${DIM}(skip: sddm install — needs sudo; run 'sudo -v' first then re-run)${R}\n"
     else
-      fail "sddm package install (see /tmp/nyxus-sddm-pacman.log)"
-      failed_items+=("sddm package"); failed=$((failed+1))
+      # Soft-skip: live ISO uses greetd/regreet, not SDDM. Never fail the
+      # whole install over an optional display-manager package.
+      printf "  ${DIM}(skip: sddm package — greetd is the live greeter; see /tmp/nyxus-sddm-pacman.log)${R}\n"
     fi
   else
     printf "  ${DIM}pacman not available — skipping SDDM (install sddm manually first)${R}\n"
@@ -1108,8 +1116,7 @@ if command -v sddm &>/dev/null; then
         printf "  ${DIM}(skip: SDDM theme — needs sudo; run 'sudo -v' first then re-run)${R}\n"
         _sddm_theme_ok=0
       else
-        fail "SDDM theme installer (see /tmp/nyxus-sddm-install.log)"
-        failed_items+=("SDDM theme installer"); failed=$((failed+1))
+        printf "  ${DIM}(skip: SDDM theme — optional; greetd is the live greeter)${R}\n"
         _sddm_theme_ok=0
       fi
 
@@ -1166,9 +1173,7 @@ if command -v sddm &>/dev/null; then
         # gives us a clearer error than systemctl's generic "does not exist".
         if [[ ! -f /usr/lib/systemd/system/sddm.service \
             && ! -f /etc/systemd/system/sddm.service ]]; then
-          printf "  ${RED}✗${R}  sddm.service unit not found on disk — sddm package install probably failed silently\n"
-          printf "  ${DIM}    Manual fix:  sudo pacman -S sddm && sudo systemctl enable sddm.service${R}\n"
-          failed_items+=("sddm.service enable (unit missing)"); failed=$((failed+1))
+          printf "  ${DIM}(skip: sddm.service unit missing — live ISO uses greetd)${R}\n"
         elif {
             # If gdm (or any other DM) is already linked as display-manager,
             # `systemctl enable sddm.service` will fail with
@@ -1189,24 +1194,16 @@ if command -v sddm &>/dev/null; then
           fi
           printf "  ${DIM}Reboot or 'sudo systemctl start sddm' to see the NYXUS login screen${R}\n"
         elif ! sudo -n true 2>/dev/null; then
-          printf "  ${DIM}(skip: sddm.service enable — needs sudo; run:${R}\n"
-          printf "  ${DIM}     sudo -v && curl -fsSL https://nyxus-core.replit.app/api/download/nyxus/nyxus_install.sh | bash${R}\n"
-          printf "  ${DIM}   or one-shot:  sudo systemctl enable sddm.service${R}\n"
+          printf "  ${DIM}(skip: sddm.service enable — needs sudo; live ISO uses greetd)${R}\n"
         else
-          # Real failure — show the captured systemctl error so the user can
-          # see WHY (conflicting DM, masked unit, missing dep, etc.).
-          printf "  ${RED}✗${R}  could not enable sddm.service — leaving gdm in place to keep you logged in\n"
+          printf "  ${DIM}(skip: could not enable sddm — leaving current DM; live ISO uses greetd)${R}\n"
           if [[ -s /tmp/nyxus-sddm-enable.log ]]; then
-            printf "  ${DIM}    systemctl said:${R}\n"
-            sed 's/^/      /' /tmp/nyxus-sddm-enable.log | head -5
+            sed 's/^/      /' /tmp/nyxus-sddm-enable.log | head -3
           fi
-          printf "  ${DIM}    Manual fix:  sudo systemctl enable sddm.service && sudo systemctl disable gdm.service${R}\n"
-          failed_items+=("sddm.service enable"); failed=$((failed+1))
         fi
       fi
     else
-      fail "SDDM theme tarball extract failed"
-      failed_items+=("SDDM theme tarball"); failed=$((failed+1))
+      printf "  ${DIM}(skip: SDDM theme tarball — optional; live ISO uses greetd)${R}\n"
     fi
   fi
   rm -rf "${SDDM_TMP}"
@@ -1255,39 +1252,30 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
 fi
 
 if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
-  # rev r25 — VOID ANIMATED WALLPAPER. mpvpaper plays the swirling-galaxy
-  # MP4 on loop on every output as a wlr-layer-shell BACKGROUND surface.
-  # Flags: --no-audio (silence), loop-file=inf (seamless), hwdec=auto-safe
-  # (GPU decode where available, fallback to CPU), no-osc/no-osd (bare).
-  # We kill any prior wallpaper daemon (swaybg/hyprpaper/mpvpaper) first
-  # so re-runs don't stack instances.
+  # ALIEN NEON default (2026-07-23): prefer urban-alien / system alien walls.
+  # Never hardcode void-vortex as the post-install wallpaper — that was the
+  # "old wallpaper after install" regression.
   pkill -x swaybg    2>/dev/null || true
   pkill -x hyprpaper 2>/dev/null || true
   pkill -x mpvpaper  2>/dev/null || true
-  VORTEX_PNG="$WALLS_DIR/nyxus-void-vortex.png"
-  DRIFTER_PNG="$WALLS_DIR/nyxus-drifter-wall.png"
-  STAR_PNG="$WALLS_DIR/nyxus-starfield-wall.png"
-  # rev r6-eww (2026-05-11) — VOID-VORTEX is the locked-in default wallpaper
-  # for the EWW era. Matches hyprland.conf swaybg autostart line. Falls back
-  # to drifter, then starfield, then ink-swirl if any are missing.
-  if command -v swaybg >/dev/null 2>&1 && [[ -s "$VORTEX_PNG" ]]; then
-    nohup swaybg -i "$VORTEX_PNG" -m fill -c "#000000" \
-      >/tmp/nyxus-swaybg.log 2>&1 &
+  ALIEN_SYS="/usr/share/backgrounds/nyxus/nyxus-urban-alien.png"
+  ALIEN_HOME="$WALLS_DIR/nyxus-urban-alien.png"
+  LOGIN_WALL="/usr/share/backgrounds/nyxus/nyxus-login-wall.png"
+  if command -v swaybg >/dev/null 2>&1 && [[ -s "$ALIEN_HOME" ]]; then
+    nohup swaybg -i "$ALIEN_HOME" -m fill -c "#05060a" >/tmp/nyxus-swaybg.log 2>&1 &
     disown
-    ok "Wallpaper set — nyxus-void-vortex.png (swaybg · EWW-era default)"
-  elif command -v swaybg >/dev/null 2>&1 && [[ -s "$DRIFTER_PNG" ]]; then
-    nohup swaybg -i "$DRIFTER_PNG" -m fill -c "#000000" \
-      >/tmp/nyxus-swaybg.log 2>&1 &
+    ok "Wallpaper set — nyxus-urban-alien.png (home walls)"
+  elif command -v swaybg >/dev/null 2>&1 && [[ -s "$ALIEN_SYS" ]]; then
+    nohup swaybg -i "$ALIEN_SYS" -m fill -c "#05060a" >/tmp/nyxus-swaybg.log 2>&1 &
     disown
-    warn "void-vortex missing — fell back to drifter portrait"
-  elif command -v swaybg >/dev/null 2>&1 && [[ -s "$STAR_PNG" ]]; then
-    nohup swaybg -i "$STAR_PNG" -m fill -c "#000000" \
-      >/tmp/nyxus-swaybg.log 2>&1 &
+    ok "Wallpaper set — nyxus-urban-alien.png (system backgrounds)"
+  elif command -v swaybg >/dev/null 2>&1 && [[ -s "$LOGIN_WALL" ]]; then
+    nohup swaybg -i "$LOGIN_WALL" -m fill -c "#05060a" >/tmp/nyxus-swaybg.log 2>&1 &
     disown
-    warn "void-vortex+drifter missing — fell back to static starfield"
-  elif command -v swaybg >/dev/null 2>&1; then
-    swaybg -i "$WALLS_DIR/nyxus-ink-swirl.png" -m fill & disown
-    warn "all preferred walls missing — fell back to static swaybg ink-swirl"
+    warn "urban-alien missing — fell back to login-wall"
+  elif command -v nyxus-wallpaper-autostart >/dev/null 2>&1; then
+    nyxus-wallpaper-autostart >/tmp/nyxus-wall-autostart.log 2>&1 || true
+    ok "Wallpaper delegated to nyxus-wallpaper-autostart"
   fi
 fi
 
@@ -1350,22 +1338,25 @@ echo ""
 
 if [[ $failed -eq 0 ]]; then
   printf "  ${GREEN}${B}NYXUS fully installed.${R}\n\n"
-  printf "  ${GOLD}Wallpaper:${R} SIERENGOWSKI (permanent — set at boot)\n"
-  printf "    ${DIM}Super+Alt+W  → reload wallpaper if it ever clears${R}\n\n"
+  printf "  ${GOLD}Wallpaper:${R} ALIEN NEON (urban-alien — locked)\n"
+  printf "    ${DIM}Super+Alt+W  → cycle alien walls${R}\n\n"
   printf "  ${PURPLE}${B}Lock your screen:${R}  ${DIM}Super+L${R}\n"
-  printf "  ${PURPLE}${B}Open launcher:${R}    ${DIM}Super+D${R}\n"
+  printf "  ${PURPLE}${B}Open launcher:${R}    ${DIM}Super+D / Super+Space${R}\n"
   printf "  ${PURPLE}${B}Screenshot:${R}       ${DIM}Super+Print  (region)${R}\n"
   printf "  ${PURPLE}${B}Logout menu:${R}      ${DIM}Super+Shift+E${R}\n\n"
-  printf "  ${DIM}S I L E N T · D A R K · P U R E L Y   F U N C T I O N A L${R}\n"
+  printf "  ${DIM}A L I E N   N E O N  ·  D A R K   M I R R O R${R}\n"
 else
-  printf "  ${RED}${B}${failed} item(s) failed:${R}\n"
+  printf "  ${GOLD}${B}${failed} non-critical item(s) skipped/failed:${R}\n"
   for item in "${failed_items[@]}"; do
-    printf "    ${RED}✗${R}  ${DIM}${item}${R}\n"
+    printf "    ${GOLD}⚠${R}  ${DIM}${item}${R}\n"
   done
   echo ""
+  printf "  ${GREEN}${B}Core desktop still installed.${R} ${DIM}(optional steps no longer abort first-boot)${R}\n"
   printf "  ${DIM}If EWW failed, run:  cat /tmp/nyxus-eww.log${R}\n"
-  printf "  ${DIM}Otherwise re-run:  NYXUS_OFFLINE_DIR=/opt/nyxus-cache bash /opt/nyxus-cache/nyxus_install.sh${R}\n"
-  exit 1
+  printf "  ${DIM}Re-run if needed:  NYXUS_OFFLINE_DIR=/opt/nyxus-cache bash /opt/nyxus-cache/nyxus_install.sh${R}\n"
+  # Owner directive 2026-07-23: NEVER exit 1 for optional/cache misses —
+  # that aborted bootstrap and left theming half-applied (rainbow kitty,
+  # old wallpaper, missing saucer). Warn and succeed so first-boot continues.
 fi
 
 echo ""

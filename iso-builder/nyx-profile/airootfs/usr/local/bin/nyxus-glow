@@ -31,14 +31,17 @@ esac
 DENSITY="${NYXUS_GLOW_DENSITY:-0.4}"
 GLOW_ALL="${NYXUS_GLOW_ALL:-0}"
 
-# Neon palette (r,g,b) — the NYXUS signature hues.
+# Neon palette (r,g,b) — the ALIEN NEON canonical hues (rev 2026-07-23).
+# Keep in lockstep with accent.json 'prism' + the fixed neon constants.
 PALETTE=(
-  "121 77 255"    # violet  #794dff
-  "255 38 108"    # magenta #ff266c
-  "38 255 183"    # mint    #26ffb7
-  "255 176 38"    # gold    #ffb026
+  "125 61 255"    # violet  #7d3dff
+  "255 45 173"    # magenta #ff2dad
+  "57 255 20"     # green   #39ff14
+  "255 138 30"    # orange  #ff8a1e
   "43 210 255"    # cyan    #2bd2ff
-  "255 60 172"    # pink    #ff3cac
+  "255 230 0"     # yellow  #ffe600
+  "255 45 85"     # red     #ff2d55
+  "227 103 255"   # orchid  #e367ff
 )
 
 # gate: return 0 (glow this token) with probability DENSITY

@@ -71,7 +71,7 @@ def log(msg):
 CONF = {
     "PULSE_CRITICAL": "#ff2b4d",
     "PULSE_EMAIL":    "#2bd2ff",
-    "PULSE_CHAT":     "#ff3cac",
+    "PULSE_CHAT":     "#ff2dad",
     "PULSE_POWER":    "#ffb84d",
     "PULSE_WORKSPACE": "",          # empty = accent secondary
     "PULSE_DEFAULT":   "",          # empty = accent primary
@@ -96,8 +96,8 @@ def hex_rgb(hx):
 
 def accent(which):
     """Current palette straight from the generated accent.scss."""
-    fallback = {"primary": "#ff3cac", "secondary": "#2bd2ff",
-                "warn": "#ffb84d", "ok": "#26ffb7"}
+    fallback = {"primary": "#ff2dad", "secondary": "#2bd2ff",
+                "warn": "#ffb84d", "ok": "#39ff14"}
     try:
         with open(ACCENTSCSS) as f:
             for line in f:
@@ -106,7 +106,7 @@ def accent(which):
                     return m.group(1)
     except OSError:
         pass
-    return fallback.get(which, "#ff3cac")
+    return fallback.get(which, "#ff2dad")
 
 # ── Hyprland IPC (socket1: commands · socket2: events) ───────────────
 def hypr_request(cmd, timeout=1.0):
@@ -138,7 +138,7 @@ def get_border():
         elif t.endswith("deg") and t[:-3].isdigit():
             angle = int(t[:-3])
     if not stops:
-        stops = ["ff3cacff", "2bd2ffff", "784bffff", "ffb84dff"]
+        stops = ["ff2dadff", "2bd2ffff", "7d3dffff", "ffb84dff"]
     return stops, angle
 
 def base_stops():
@@ -176,7 +176,7 @@ def blend_stop(stop, rgb, k):
 class EwwState:
     def __init__(self):
         self.lock = threading.Lock()
-        self.pc = (255, 60, 172); self.ps = 0.0
+        self.pc = (255, 45, 173); self.ps = 0.0
         self.fc = (43, 210, 255); self.fs = 0.0
         self.write()
     def write(self):

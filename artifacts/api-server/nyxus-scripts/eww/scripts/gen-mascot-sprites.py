@@ -31,7 +31,7 @@ def accent_pair():
         p = data["presets"][data.get("active", "prism")]
         return p["primary"], p["secondary"]
     except Exception:
-        return "#ff4994", "#26ff39"
+        return "#ff2dad", "#39ff14"
 
 def rgb(h):
     h = h.lstrip("#")

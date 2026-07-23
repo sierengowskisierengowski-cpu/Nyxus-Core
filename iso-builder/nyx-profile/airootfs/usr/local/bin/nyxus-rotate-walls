@@ -23,15 +23,22 @@ LOCK_WALL="${CACHE}/lock-wall.png"
 INTERVAL="${NYXUS_WALL_INTERVAL:-1200}"   # desktop daemon: rotate every 20 min
 
 # Built-in fallback set (used only if the list file is missing/empty).
-FALLBACK=(nyxus-urban-alien nyxus-demon nyxus-hacker-mode-a nyxus-hacker-mode-b
-          nyxus-kageryu-blackout nyxus-login-wall nyxus-desktop-hero
-          nyxus-frost-sierengowski nyxus-sierengowski-clean)
+# ALIEN THEME ONLY — no hacker-mode / demon / sierengowski brand walls here
+# (they are not the alien desktop theme). These slugs exist as flat files in
+# both ~/.config/hypr/walls and /usr/share/backgrounds/nyxus.
+FALLBACK=(nyxus-urban-alien nyxus-login-wall nyxus-desktop-hero)
 
 resolve() {  # slug -> first existing file path
-  local slug="$1" d ext
+  # Search each wall dir AND its rotation/ subdir. The curated alien set
+  # (nyxus-rot-*) ships under ~/.config/hypr/walls/rotation/, so without the
+  # rotation/ lookup every alien slug in wall-rotation.list silently failed to
+  # resolve and the rotator fell back to the non-alien built-in set.
+  local slug="$1" d ext sub
   for d in "${WALLDIRS[@]}"; do
-    for ext in png jpg jpeg svg; do
-      [ -f "${d}/${slug}.${ext}" ] && { printf '%s\n' "${d}/${slug}.${ext}"; return 0; }
+    for sub in "" "/rotation"; do
+      for ext in png jpg jpeg svg; do
+        [ -f "${d}${sub}/${slug}.${ext}" ] && { printf '%s\n' "${d}${sub}/${slug}.${ext}"; return 0; }
+      done
     done
   done
   return 1

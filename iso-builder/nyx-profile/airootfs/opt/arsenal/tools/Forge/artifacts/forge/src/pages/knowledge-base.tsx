@@ -20,7 +20,7 @@ const CATEGORIES = [
 ];
 
 const categoryStyle: Record<string, React.CSSProperties> = {
-  MITRE: { background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', color: '#f87171' },
+  MITRE: { background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', color: '#ff2d55' },
   Malware: { background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)', color: '#fb923c' },
   LOLBAS: { background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)', color: '#facc15' },
   GTFOBINS: { background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80' },

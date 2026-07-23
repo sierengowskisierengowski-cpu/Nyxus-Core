@@ -237,7 +237,7 @@ button.suggested-action:active {
 }
 
 button.destructive-action {
-    background: linear-gradient(180deg, #f87171, #dc2626);
+    background: linear-gradient(180deg, #ff2d55, #dc2626);
     color: #fffbeb;
     border-color: #991b1b;
     box-shadow: 0 0 16px alpha(#ef4444, 0.5);

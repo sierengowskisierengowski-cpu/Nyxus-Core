@@ -28,7 +28,7 @@ CFG="$HOME/.config/nyxus/pulse-cava.conf"
 # the desktop at any time and the pulse follows. The stock rgb+alpha are
 # re-read at daemon start and again at the start of every burst that
 # begins from silence, so an accent change lands on the next beat.
-STOCK_RGB="784bff"     # overwritten by read_stock() before first apply
+STOCK_RGB="7d3dff"     # overwritten by read_stock() before first apply
 STOCK_ALPHA="3a"
 STOCK_RANGE=42
 

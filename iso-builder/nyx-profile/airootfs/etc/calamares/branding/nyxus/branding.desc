@@ -32,7 +32,7 @@ slideshowAPI:        2
 
 style:
     sidebarBackground:    "#0a0a14"
-    sidebarText:          "#f4ead5"
+    sidebarText:          "#eef2fa"
     sidebarTextSelect:    "#0a0a14"
-    sidebarTextHighlight: "#f4ead5"
-    sidebarBackgroundSelected: "#f4ead5"
+    sidebarTextHighlight: "#eef2fa"
+    sidebarBackgroundSelected: "#eef2fa"

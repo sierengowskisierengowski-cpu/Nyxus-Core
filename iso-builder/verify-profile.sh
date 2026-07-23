@@ -958,10 +958,10 @@ CAL_DESKTOP="${AIROOT}/etc/skel/Desktop/install-nyxus.desktop"
 grep -q '^componentName: nyxus' "${CAL_BRAND}/branding.desc" 2>/dev/null \
   && ok "calamares: componentName=nyxus" \
   || fail "calamares: componentName not 'nyxus'"
-# Sprint E palette lock: cream accent must be present
-grep -qi '#f4ead5' "${CAL_BRAND}/branding.desc" \
-  && ok "calamares: Sprint E accent #f4ead5 present" \
-  || fail "calamares: Sprint E accent #f4ead5 missing"
+# ALIEN NEON palette lock: canonical cool-white text token must be present
+grep -qi '#eef2fa' "${CAL_BRAND}/branding.desc" \
+  && ok "calamares: ALIEN NEON text #eef2fa present" \
+  || fail "calamares: ALIEN NEON text #eef2fa missing"
 
 [[ -f "${CAL_BRAND}/show.qml" ]] \
   && ok "calamares: show.qml slideshow present" \
@@ -1064,9 +1064,9 @@ if [[ -f "${GRUB_THEME_DIR}/theme.txt" ]] \
 else
   fail "GRUB: theme.txt missing/incomplete"
 fi
-grep -qi '#f4ead5' "${GRUB_THEME_DIR}/theme.txt" 2>/dev/null \
-  && ok "GRUB: Sprint E accent #f4ead5 present" \
-  || fail "GRUB: Sprint E accent #f4ead5 missing from theme.txt"
+grep -qi '#eef2fa' "${GRUB_THEME_DIR}/theme.txt" 2>/dev/null \
+  && ok "GRUB: ALIEN NEON text #eef2fa present" \
+  || fail "GRUB: ALIEN NEON text #eef2fa missing from theme.txt"
 
 # Required theme assets
 for f in background.png select_c.png select_e.png select_w.png \
@@ -1116,9 +1116,9 @@ if [[ -f "${DUNST_RC}" ]] \
 else
   fail "dunst: dunstrc missing or incomplete"
 fi
-grep -qi '#f4ead5' "${DUNST_RC}" 2>/dev/null \
-  && ok "dunst: Sprint E accent #f4ead5 present" \
-  || fail "dunst: Sprint E accent #f4ead5 missing"
+grep -qi '#eef2fa' "${DUNST_RC}" 2>/dev/null \
+  && ok "dunst: ALIEN NEON text #eef2fa present" \
+  || fail "dunst: ALIEN NEON text #eef2fa missing"
 grep -qi 'font *= *Inter' "${DUNST_RC}" 2>/dev/null \
   && ok "dunst: Inter font set" \
   || fail "dunst: Inter font not set"
@@ -1136,9 +1136,9 @@ if [[ -f "${SWAYNC_CSS}" ]] \
 else
   fail "swaync: style.css missing or incomplete"
 fi
-grep -qi '#f4ead5' "${SWAYNC_CSS}" 2>/dev/null \
-  && ok "swaync: Sprint E accent #f4ead5 present" \
-  || fail "swaync: Sprint E accent #f4ead5 missing"
+grep -qi '#eef2fa' "${SWAYNC_CSS}" 2>/dev/null \
+  && ok "swaync: ALIEN NEON text #eef2fa present" \
+  || fail "swaync: ALIEN NEON text #eef2fa missing"
 grep -qi 'font-family: \"Inter\"' "${SWAYNC_CSS}" 2>/dev/null \
   && ok "swaync: Inter font set" \
   || fail "swaync: Inter font missing"

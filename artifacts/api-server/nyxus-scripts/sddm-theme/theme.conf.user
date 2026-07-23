@@ -1,5 +1,5 @@
 [General]
 background=background.png
-Accent=#7949f2
+Accent=#7d3dff
 LoginButtonText=SIGN IN
 PasswordFieldPlaceholderText=passphrase

@@ -1,21 +1,21 @@
 /* NYXUS · Obsidian Prism — power menu
- * Palette: #7949f2 · #ff2667 · #26ffb7 · #ffb026 */
+ * Palette: #7d3dff · #ff2d55 · #39ff14 · #ff8a1e */
 
 * {
     bg:         #05060a;
     bar-bg:     rgba(5, 6, 10, 0.90);
     widget-bg:  rgba(10, 13, 20, 0.85);
-    active:     #ff2667;
+    active:     #ff2d55;
     inactive:   rgba(238, 242, 250, 0.35);
-    highlight:  #7949f2;
-    violet:     #26ffb7;
-    gold:       #ffb026;
+    highlight:  #7d3dff;
+    violet:     #39ff14;
+    gold:       #ff8a1e;
     text:       #eef2fa;
     clock:      #eef2fa;
     urgent:     #ff5470;
-    sep:        rgba(38, 255, 183, 0.35);
-    selected-bg:rgba(121, 73, 242, 0.18);
-    glass-line: rgba(255, 38, 103, 0.35);
+    sep:        rgba(57, 255, 20, 0.35);
+    selected-bg:rgba(125, 61, 255, 0.18);
+    glass-line: rgba(255, 45, 85, 0.35);
 
     font:                   "Inter 12";
     background-color:       transparent;
