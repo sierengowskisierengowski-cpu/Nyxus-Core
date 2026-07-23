@@ -443,7 +443,7 @@ if [[ -d "$WALLS_SRC" ]]; then
 fi
 ok "wallpapers → ~/.config/hypr/walls  ($n files checked)"
 # explicit user-surface mirrors for hacker-mode fallback logic
-for base in nyxus-hacker-mode-a.png nyxus-hacker-mode-b.png nyxus-kageryu-blackout.png; do
+for base in nyxus-urban-alien.png nyxus-login-wall.png nyxus-desktop-hero.png; do
   [[ -f "$WALLS_SRC/$base" ]] || continue
   place "$WALLS_SRC/$base" "$HOME/.config/hypr/walls/$base" || true
 done

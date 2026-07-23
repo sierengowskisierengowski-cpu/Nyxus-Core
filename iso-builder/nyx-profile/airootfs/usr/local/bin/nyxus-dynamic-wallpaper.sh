@@ -9,7 +9,7 @@
 #   20:00–05:00 → night
 #
 # Config (key=value, # comments):
-#   set=cosmos|darkmirror|watercolor|custom
+#   set=alien|custom   (legacy cosmos|darkmirror|watercolor → alien)
 #   custom_dawn=/path/to/img.png   (custom set only)
 #   custom_day=...
 #   custom_dusk=...
@@ -40,7 +40,7 @@ fi
 
 [ -f "$CONF" ] || { say "no config — exiting"; exit 0; }
 
-set_name="cosmos"
+set_name="alien"
 custom_dawn=""; custom_day=""; custom_dusk=""; custom_night=""
 while IFS='=' read -r k v; do
   k="${k%%[[:space:]]*}"; k="${k##[[:space:]]*}"
@@ -66,20 +66,12 @@ fi
 # Built-in sets — keys are short names matched by nyxus-set-wallpaper.sh
 # in $WALL_DIR/nyxus-bg-<name>.png.
 case "$set_name" in
-  cosmos)
+  alien|cosmos|darkmirror|watercolor|"")
+    # ALIEN NEON only — old set names alias here so stale configs cannot
+    # resurrect deleted cinematic / cream walls.
     declare -A imgs=(
-      [dawn]="cosmic-dust" [day]="cosmos-gold"
-      [dusk]="light-shaft" [night]="darkmirror")
-    ;;
-  darkmirror)
-    declare -A imgs=(
-      [dawn]="darkmirror-02" [day]="darkmirror"
-      [dusk]="darkmirror-03" [night]="moon-crater")
-    ;;
-  watercolor)
-    declare -A imgs=(
-      [dawn]="sepia-watercolor" [day]="cosmos-gold"
-      [dusk]="sepia-watercolor" [night]="moon-crater")
+      [dawn]="login-wall" [day]="urban-alien"
+      [dusk]="graffiti-space" [night]="desktop-hero")
     ;;
   custom)
     declare -A imgs=(

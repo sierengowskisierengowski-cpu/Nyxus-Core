@@ -7592,7 +7592,7 @@ class AppearancePage(SectionPage):
             set_combo = Adw.ComboRow(
                 title="Dynamic set",
                 subtitle="Image group used by the time-of-day picker")
-            sets = ["cosmos", "darkmirror", "watercolor"]
+            sets = ["alien"]
             set_combo.set_model(Gtk.StringList.new(sets))
             cur_set = str(prefs.get("wallpaper_dynamic_set", "cosmos"))
             try:

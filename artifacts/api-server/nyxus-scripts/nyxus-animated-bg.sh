@@ -45,10 +45,10 @@ elif [ -f "$TARGET" ]; then
 fi
 
 # Legacy fallback: if WALL_DIR is empty, look for the canonical
-# nyxus-bg-darkmirror*.mp4 pair in ~/.config/hypr/walls/.
+# nyxus-urban-alien*.mp4 pair in ~/.config/hypr/walls/.
 if [ -z "$SINGLE_FILE" ] && [ "${#CLIPS[@]}" -eq 0 ]; then
   shopt -s nullglob
-  for f in "$HOME/.config/hypr/walls"/nyxus-bg-darkmirror*.mp4; do
+  for f in "$HOME/.config/hypr/walls"/nyxus-urban-alien*.mp4; do
     CLIPS+=("$f")
   done
   shopt -u nullglob
@@ -76,7 +76,7 @@ fi
 
 # ── no clips found anywhere → static fallback ─────────────────────────
 if [ "${#CLIPS[@]}" -eq 0 ]; then
-  STILL="$HOME/.config/hypr/walls/nyxus-bg-darkmirror.png"
+  STILL="$HOME/.config/hypr/walls/nyxus-urban-alien.png"
   if command -v swaybg >/dev/null 2>&1 && [ -f "$STILL" ]; then
     exec swaybg -i "$STILL" -m fill
   fi

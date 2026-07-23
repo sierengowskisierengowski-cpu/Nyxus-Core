@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 #  NYXUS — wallpaper rotator
-#  Rotates the CURATED alien / "NYXUS HYPRLAND" / sierengowski wall set
+#  Rotates the CURATED ALIEN THEME ONLY wall set
 #  (see ~/.config/nyxus/wall-rotation.list) across three surfaces:
 #
 #    nyxus-rotate-walls desktop   set a random curated wall as the desktop bg
@@ -23,9 +23,7 @@ LOCK_WALL="${CACHE}/lock-wall.png"
 INTERVAL="${NYXUS_WALL_INTERVAL:-1200}"   # desktop daemon: rotate every 20 min
 
 # Built-in fallback set (used only if the list file is missing/empty).
-FALLBACK=(nyxus-urban-alien nyxus-demon nyxus-hacker-mode-a nyxus-hacker-mode-b
-          nyxus-kageryu-blackout nyxus-login-wall nyxus-desktop-hero
-          nyxus-frost-sierengowski nyxus-sierengowski-clean)
+FALLBACK=(nyxus-urban-alien nyxus-login-wall nyxus-desktop-hero nyxus-graffiti-space)
 
 resolve() {  # slug -> first existing file path
   local slug="$1" d ext

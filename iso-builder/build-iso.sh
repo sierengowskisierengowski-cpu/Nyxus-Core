@@ -798,13 +798,15 @@ mkdir -p "${SDDM_THEME_DIR}" "${SDDM_CONF_DIR}"
 # Tarball is packed flat (files at root, no wrapper dir) so copy from STAGE root.
 cp -a "${SDDM_TMP_STAGE}/." "${SDDM_THEME_DIR}/"
 rm -f "${SDDM_THEME_DIR}/install.sh"  # not needed at runtime
-# rev 2026-05-13: stale tarball ships a 1024×1024 background that
-# upscales to 1080p as a blurry mush. Override with the real
-# 1920×1080 darkmirror PNG so the greeter is sharp on every display.
-if [[ -f "${NS}/nyxus-bg-darkmirror.png" ]]; then
-  install -m 0644 "${NS}/nyxus-bg-darkmirror.png" \
+# Override greeter background with urban-alien hero (alien theme only).
+if [[ -f "${NS}/nyxus-urban-alien.png" ]]; then
+  install -m 0644 "${NS}/nyxus-urban-alien.png" \
     "${SDDM_THEME_DIR}/background.png"
-  ok "SDDM background overridden to 1920×1080 darkmirror (anti-blur)"
+  ok "SDDM background overridden to urban-alien (alien theme)"
+elif [[ -f "${NS}/nyxus-login-wall.png" ]]; then
+  install -m 0644 "${NS}/nyxus-login-wall.png" \
+    "${SDDM_THEME_DIR}/background.png"
+  ok "SDDM background overridden to login-wall (alien theme)"
 fi
 cat > "${SDDM_CONF_DIR}/nyxus.conf" <<'SDDM'
 [Theme]
