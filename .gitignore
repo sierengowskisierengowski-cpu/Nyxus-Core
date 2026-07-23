@@ -90,3 +90,7 @@ iso-builder/nyx-profile/airootfs/opt/arsenal/tools/**/*.db-wal
 !**/.env.sample
 lab-credentials.env
 .git-credentials
+
+# companion-3d is its OWN git repo (github.com/.../Nyxus-Companion-3D) —
+# tracked separately, never part of Nyxus-Core. Ignore it here.
+companion-3d/
