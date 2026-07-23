@@ -550,14 +550,14 @@ done
 # That path is provisioned by the 4b.6 block immediately below.
 
 # 4b.6  Hyprland walls/ refresh — keeps the lockscreen + default desktop bg
-# in sync. hyprland.conf points swaybg at nyxus-void-vortex.png, and
+# in sync. hyprland.conf points swaybg at nyxus-urban-alien.png, and
 # hyprlock.conf points its background at nyxus-login-stars.png. Both must
 # live in ~/.config/hypr/walls/ or the session boots to a black screen
 # and Hyprlock 404s into a blank lock surface.
 HYPR_WALLS="$REAL_HOME/.config/hypr/walls"
 mkdir -p "$HYPR_WALLS"
 chown "$REAL_USER:$REAL_USER" "$HYPR_WALLS"
-for w in nyxus-login-stars.png nyxus-void-vortex.png nyxus-hyprlock-eye.png; do
+for w in nyxus-login-stars.png nyxus-urban-alien.png nyxus-hyprlock-eye.png; do
   wdst="$HYPR_WALLS/$w"
   if curl -fsSL --max-time 60 "$PROD/$w" -o "$wdst.new"; then
     if [[ -s "$wdst.new" ]]; then
@@ -591,12 +591,12 @@ done
 
 # 4d. Demon image
 DEMON_DST="$NYX_SHARE/demon.png"
-if curl -fsSL --max-time 30 "$PROD/nyxus-demon.png" -o "$DEMON_DST.new"; then
+if curl -fsSL --max-time 30 "$PROD/nyxus-desktop-hero.png" -o "$DEMON_DST.new"; then
   mv "$DEMON_DST.new" "$DEMON_DST"
   chmod 644 "$DEMON_DST"
   ok "wrote $DEMON_DST ($(stat -c%s "$DEMON_DST" 2>/dev/null || echo "?") bytes)"
 else
-  fail "could not download nyxus-demon.png — demon wake will show ☠ glyph fallback"
+  fail "could not download nyxus-desktop-hero.png — demon wake will show ☠ glyph fallback"
 fi
 
 # 4e. /usr/local/bin wrappers so hypridle on-timeout/on-resume can find them
@@ -703,7 +703,7 @@ fi
 # 4.5b  Pull background images (palette mirror only — waybar refresh removed)
 NYX_BG_DIR="$NYX_HOME_DIR/backgrounds"
 mkdir -p "$NYX_BG_DIR"; chown "$REAL_USER:$REAL_USER" "$NYX_BG_DIR"
-for bg in nyxus-frost-sierengowski.png nyxus-starlight.png nyxus-monogram-mist.png nyxus-topbar-mist.png nyxus-starfield-wall.png nyxus-void-vortex.png; do
+for bg in nyxus-frost-sierengowski.png nyxus-starlight.png nyxus-monogram-mist.png nyxus-topbar-mist.png nyxus-starfield-wall.png nyxus-urban-alien.png; do
   bgdst="$NYX_BG_DIR/$bg"
   if [[ ! -f "$bgdst" ]] || [[ "${1:-}" == "--force-bg" ]]; then
     if curl -fsSL --max-time 60 "$PROD/$bg" -o "$bgdst.new"; then
@@ -934,7 +934,7 @@ fi
 # rev r6-eww — VOID-VORTEX wallpaper (replaces the rev r29 starfield).
 # Static PNG via swaybg fill-mode — matches hyprland.conf swaybg autostart.
 # Falls back to starfield if void-vortex is missing.
-VORTEX_PNG="$NYX_BG_DIR/nyxus-void-vortex.png"
+VORTEX_PNG="$NYX_BG_DIR/nyxus-urban-alien.png"
 STAR_PNG="$NYX_BG_DIR/nyxus-starfield-wall.png"
 WALL_TO_USE=""
 if [[ -s "$VORTEX_PNG" ]]; then

@@ -1,0 +1,608 @@
+#!/usr/bin/env bash
+# nyxus-webapp — launch GowskiNet localhost security web UIs as Chromium apps.
+#
+#   nyxus-webapp <id>          ensure backend + open app window
+#   nyxus-webapp <id> --open   open/focus only (skip service start)
+#   nyxus-webapp list          show configured apps
+#
+# Each app gets its own Chromium profile and WM_CLASS for Hyprland rules.
+set -euo pipefail
+
+# Chromium must inherit the active Hyprland session; Hub/eww launches often omit these.
+export DISPLAY="${DISPLAY:-:0}"
+export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+NYXUS_ICONS="${NYXUS_ICONS:-$HOME/.config/eww/assets/icons}"
+PROFILE_DIR="${NYXUS_WEBAPP_PROFILES:-$HOME/.config/nyxus/webapp-profiles}"
+VAULT="${GOWSKINET_VAULT:-$HOME/GowskiNet-Vault}"
+# Hyprland + Chromium --app renders blank on this box (Chromium never fetches SPA assets).
+# Firefox loads localhost SPAs reliably; override with NYXUS_WEBAPP_BROWSER=chromium to test.
+NYXUS_WEBAPP_BROWSER="${NYXUS_WEBAPP_BROWSER:-firefox}"
+NYXUS_WEBAPP_OZONE="${NYXUS_WEBAPP_OZONE:-x11}"
+PF=(--config.verify-deps-before-run=false)
+
+OPEN_ONLY=0
+FRESH_PROFILE=0
+KILL_ALL=0
+APP=""
+
+# When invoked via forge-app / grafana-app symlinks, derive the app id from the name.
+inv=$(basename "${BASH_SOURCE[0]:-$0}")
+case "$inv" in
+  *-app) APP="${inv%-app}" ;;
+esac
+
+# Explicit id on the command line overrides the symlink name.
+for arg in "$@"; do
+  case "$arg" in
+    --open|--open-only|-o) OPEN_ONLY=1 ;;
+    --fresh|-f) FRESH_PROFILE=1 ;;
+    --kill-all) KILL_ALL=1 ;;
+    --*) ;;
+    *)
+      if [ -z "$APP" ]; then
+        APP="$arg"
+      fi
+      ;;
+  esac
+done
+
+info()  { printf '\033[36m  → %s\033[0m\n' "$*"; }
+ok()    { printf '\033[32m  ✓ %s\033[0m\n' "$*"; }
+warn()  { printf '\033[33m  ! %s\033[0m\n' "$*"; }
+die()   { printf '\033[31m  ✗ %s\033[0m\n' "$*" >&2; exit 1; }
+
+find_chromium() {
+  local b
+  for b in chromium google-chrome-stable google-chrome chrome; do
+    command -v "$b" >/dev/null 2>&1 && { echo "$b"; return 0; }
+  done
+  return 1
+}
+
+http_code() {
+  local code
+  code=$(curl -s --max-time 3 -o /dev/null -w '%{http_code}' "$1" 2>/dev/null || true)
+  [[ "$code" =~ ^[0-9]{3}$ ]] && printf '%s' "$code" || printf '000'
+}
+
+http_up() {
+  local code
+  code=$(http_code "$1")
+  [[ "$code" =~ ^[23] ]]
+}
+
+port_listening() {
+  local port="$1"
+  ss -tlnH 2>/dev/null | awk -v p=":$port" '$4 ~ p"$" {found=1} END {exit !found}'
+}
+
+wait_for_url() {
+  local url="$1" tries="${2:-80}"
+  local i code
+  for ((i = 0; i < tries; i++)); do
+    code=$(http_code "$url")
+    [[ "$code" =~ ^[23] ]] && return 0
+    sleep 0.5
+  done
+  return 1
+}
+
+normalize_url() {
+  local url="$1"
+  case "$url" in
+    */) printf '%s' "$url" ;;
+    *\?) printf '%s' "$url" ;;
+    *) printf '%s/' "$url" ;;
+  esac
+}
+
+profile_path() {
+  printf '%s/%s' "$PROFILE_DIR" "$1"
+}
+
+cleanup_profile_locks() {
+  local profile="$1"
+  local dir
+  dir=$(profile_path "$profile")
+  [ -d "$dir" ] || return 0
+  local lock="$dir/SingletonLock"
+  if [ -L "$lock" ]; then
+    local target pid
+    target=$(readlink "$lock" 2>/dev/null || true)
+    pid=${target##*-}
+    if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
+      rm -f "$dir/SingletonLock" "$dir/SingletonCookie" "$dir/SingletonSocket" 2>/dev/null || true
+    fi
+  fi
+}
+
+find_firefox() {
+  local b
+  for b in firefox firefox-esr; do
+    command -v "$b" >/dev/null 2>&1 && { echo "$b"; return 0; }
+  done
+  return 1
+}
+
+ensure_firefox_profile() {
+  local profile="$1"
+  local dir
+  dir=$(profile_path "$profile")
+  mkdir -p "$dir"
+  if [ ! -f "$dir/compatibility.ini" ]; then
+    local browser
+    browser=$(find_firefox) || return 1
+    "$browser" --no-remote --createprofile "nyxus-${profile} ${dir}" >/dev/null 2>&1 || true
+  fi
+}
+
+kill_profile_browser() {
+  local profile="$1"
+  local dir marker
+  dir=$(profile_path "$profile")
+  marker="$dir"
+  while read -r pid; do
+    [ -n "$pid" ] || continue
+    kill "$pid" 2>/dev/null || true
+  done < <(pgrep -af '[f]irefox' 2>/dev/null | grep -F "$marker" | awk '{print $1}')
+  while read -r pid; do
+    [ -n "$pid" ] || continue
+    kill "$pid" 2>/dev/null || true
+  done < <(pgrep -af '[c]hrom' 2>/dev/null | grep -F -- "--user-data-dir=$dir" | awk '{print $1}')
+  sleep 0.4
+  cleanup_profile_locks "$profile"
+}
+
+window_looks_blank() {
+  local title="${1:-}" class="${2:-}"
+  case "$title" in
+    ''|'about:blank'|'New Tab') return 0 ;;
+  esac
+  # Wayland fallback class with no real page title — always blank.
+  [ "$class" = chrome-localhost__-Default ] && return 0
+  return 1
+}
+
+profile_browser_cmdline() {
+  local profile="$1"
+  local dir pid
+  dir=$(profile_path "$profile")
+  for pid in $(pgrep -af '[c]hrom' 2>/dev/null | grep -F -- "--user-data-dir=$dir" | awk '{print $1}'); do
+    tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null && return 0
+  done
+  for pid in $(pgrep -af '[f]irefox' 2>/dev/null | grep -F "$dir" | awk '{print $1}'); do
+    tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null && return 0
+  done
+  return 1
+}
+
+profile_chromium_cmdline() { profile_browser_cmdline "$1"; }
+
+profile_chromium_has_flag() {
+  local profile="$1" flag="$2"
+  profile_browser_cmdline "$profile" | grep -qF "$flag"
+}
+
+kill_all_webapp_chromium() {
+  local pid
+  while read -r pid; do
+    [ -n "$pid" ] || continue
+    kill "$pid" 2>/dev/null || true
+  done < <(pgrep -af '[c]hrom' 2>/dev/null | grep -F 'webapp-profiles' | awk '{print $1}')
+  while read -r pid; do
+    [ -n "$pid" ] || continue
+    kill "$pid" 2>/dev/null || true
+  done < <(pgrep -af '[f]irefox' 2>/dev/null | grep -F 'webapp-profiles' | awk '{print $1}')
+  sleep 0.5
+  find "$PROFILE_DIR" -maxdepth 2 \( -name SingletonLock -o -name SingletonCookie -o -name SingletonSocket \) -delete 2>/dev/null || true
+}
+
+ensure_system_service() {
+  local unit="$1" required="${2:-1}"
+  if systemctl is-active --quiet "$unit"; then
+    ok "$unit is up"
+    return 0
+  fi
+  if [ "$required" = "0" ]; then
+    warn "$unit not running (optional — skipping start)"
+    return 0
+  fi
+  info "starting $unit…"
+  # Never hang on fingerprint/pkexec from an app-menu click.
+  if systemctl start "$unit" 2>/dev/null; then
+    ok "$unit is up"
+    return 0
+  fi
+  if sudo -n systemctl start "$unit" 2>/dev/null; then
+    ok "$unit is up"
+    return 0
+  fi
+  warn "could not start $unit without interactive auth"
+  return 1
+}
+
+ensure_user_service() {
+  local unit="$1"
+  if systemctl --user is-active --quiet "$unit"; then
+    ok "$unit is up"
+    return 0
+  fi
+  info "starting $unit…"
+  systemctl --user start "$unit"
+  ok "$unit started"
+}
+
+focus_app_window() {
+  local wmclass="$1" profile="$2" title_hint="${3:-}"
+  command -v hyprctl >/dev/null 2>&1 || return 1
+  local dir addr
+  dir=$(profile_path "$profile")
+  addr=$(hyprctl clients -j 2>/dev/null | python3 -c "
+import json, os, sys
+
+wm, profile_dir, hint = sys.argv[1], sys.argv[2], sys.argv[3].lower()
+clients = json.load(sys.stdin)
+
+def cmdline(pid):
+    try:
+        with open(f'/proc/{pid}/cmdline', 'rb') as fh:
+            return fh.read().replace(b'\0', b' ').decode('utf-8', 'replace')
+    except OSError:
+        return ''
+
+for c in clients:
+    title = c.get('title') or ''
+    cls = c.get('class') or ''
+    initial = c.get('initialClass') or ''
+    pid = c.get('pid') or 0
+    cmd = cmdline(pid)
+    if profile_dir in cmd:
+        print(c['address']); raise SystemExit
+    if cls == wm or initial == wm:
+        print(c['address']); raise SystemExit
+    if hint and hint in title.lower():
+        print(c['address']); raise SystemExit
+" "$wmclass" "$dir" "$title_hint" 2>/dev/null || true)
+  if [ -n "$addr" ]; then
+    hyprctl dispatch focuswindow "address:$addr" >/dev/null 2>&1
+    return 0
+  fi
+  return 1
+}
+
+chromium_ozone_flags() {
+  local platform="${NYXUS_WEBAPP_OZONE:-x11}"
+  case "$platform" in
+    x11) printf '%s\n' --ozone-platform=x11 ;;
+    wayland) printf '%s\n' --ozone-platform=wayland ;;
+    auto)
+      if [ -n "${WAYLAND_DISPLAY:-}" ] && [ "${NYXUS_WEBAPP_FORCE_X11:-1}" != 1 ]; then
+        printf '%s\n' --ozone-platform=wayland
+      else
+        printf '%s\n' --ozone-platform=x11
+      fi
+      ;;
+    *) printf '%s\n' --ozone-platform="$platform" ;;
+  esac
+}
+
+chromium_gpu_flags() {
+  if [ "${NYXUS_WEBAPP_DISABLE_GPU:-1}" = 1 ]; then
+    printf '%s\n' --disable-gpu
+  fi
+}
+
+launch_firefox_app() {
+  local url="$1" wmclass="$2" profile="$3" title_hint="${4:-}"
+  local browser dir
+  browser=$(find_firefox) || die "Firefox not found on PATH"
+  dir=$(profile_path "$profile")
+  ensure_firefox_profile "$profile"
+  MOZ_APP_REMOTENAME="$wmclass" \
+  GTK_APPLICATION_ID="$wmclass" \
+  "$browser" \
+    --no-remote \
+    -profile "$dir" \
+    -new-window \
+    "$url" \
+    >/dev/null 2>&1 &
+}
+
+launch_browser_app() {
+  case "${NYXUS_WEBAPP_BROWSER:-firefox}" in
+    chromium|chrome|google-chrome) launch_chromium_app "$@" ;;
+    firefox|*) launch_firefox_app "$@" ;;
+  esac
+}
+
+launch_chromium_app() {
+  local url="$1" wmclass="$2" profile="$3" title_hint="${4:-}"
+  local browser dir ozone gpu
+  browser=$(find_chromium) || die "Chromium/Chrome not found on PATH"
+  dir=$(profile_path "$profile")
+  mkdir -p "$dir"
+  cleanup_profile_locks "$profile"
+  mapfile -t ozone < <(chromium_ozone_flags)
+  mapfile -t gpu < <(chromium_gpu_flags)
+  "$browser" \
+    --app="$url" \
+    --class="$wmclass" \
+    --window-name="$title_hint" \
+    "${ozone[@]}" \
+    "${gpu[@]}" \
+    --user-data-dir="$dir" \
+    --no-first-run \
+    --disable-session-crashed-bubble \
+    --disable-features=TranslateUI \
+    >/dev/null 2>&1 &
+}
+
+open_app() {
+  local url="$1" wmclass="$2" profile="$3" title_hint="${4:-}"
+  url=$(normalize_url "$url")
+
+  wait_for_url "$url" 40 || die "backend not ready at $url"
+
+  if focus_app_window "$wmclass" "$profile" "$title_hint"; then
+    if profile_browser_cmdline "$profile" >/dev/null; then
+      ok "focused existing $title_hint window"
+      return 0
+    fi
+    warn "stale window handle — restarting browser"
+    kill_profile_browser "$profile"
+  fi
+
+  cleanup_profile_locks "$profile"
+  launch_browser_app "$url" "$wmclass" "$profile" "$title_hint"
+  # SPA needs a moment to paint after the window appears.
+  sleep 2
+  ok "opened $url ($title_hint)"
+}
+
+source_env() {
+  local dir="$1"
+  if [ -f "$dir/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$dir/.env"
+  set +a
+  fi
+}
+
+start_node_dev() {
+  local dir="$1" api_filter="$2" ui_filter="$3" api_url="$4" ui_url="$5"
+  source_env "$dir"
+  cd "$dir"
+  if ! http_up "$api_url"; then
+    info "starting API ($api_filter)…"
+    nohup pnpm "${PF[@]}" --filter "$api_filter" run dev >"$dir/.nyxus-webapp-api.log" 2>&1 &
+    disown || true
+  fi
+  if ! http_up "$ui_url"; then
+    info "starting UI ($ui_filter)…"
+    nohup pnpm "${PF[@]}" --filter "$ui_filter" run dev >"$dir/.nyxus-webapp-ui.log" 2>&1 &
+    disown || true
+  fi
+}
+
+ensure_forge() {
+  ensure_system_service postgresql 1
+  ensure_system_service ollama 0
+  ensure_user_service gowskinet-forge.service
+  wait_for_url "http://127.0.0.1:20000/api/healthz" 120
+  wait_for_url "http://127.0.0.1:20000/" 40
+}
+
+ensure_grafana() {
+  ensure_user_service honeypot-stack.service
+  wait_for_url "http://127.0.0.1:3000/login"
+}
+
+ensure_prometheus() {
+  ensure_user_service honeypot-stack.service
+  wait_for_url "http://127.0.0.1:9090"
+}
+
+ensure_honeyhive() {
+  ensure_user_service gowskinet-honeyhive.service
+  ensure_user_service gowskinet-honeyhive-web.service
+  wait_for_url "http://127.0.0.1:8888"
+}
+
+ensure_bifrost() {
+  if http_up "http://127.0.0.1:8766"; then
+    ok "Bifrost dashboard already listening on :8766"
+    return 0
+  fi
+  ensure_system_service bifrost-guardian 0 || true
+  local g="${BIFROST_GUARDIAN:-$HOME/Projects/bifrost/bifrost/guardian.py}"
+  if [ ! -r "$g" ] && [ -x /usr/bin/bifrost-guardian ]; then
+    g=/usr/bin/bifrost-guardian
+  fi
+  if command -v bifrost >/dev/null 2>&1 && { [ -r "$g" ] || [ -x "$g" ]; }; then
+    info "starting Bifrost desktop (provides :8766)…"
+    nohup env BIFROST_GUARDIAN="$g" bifrost >/tmp/nyxus-bifrost-desktop.log 2>&1 &
+    disown || true
+  fi
+  wait_for_url "http://127.0.0.1:8766" 60 || die "Bifrost dashboard did not come up on :8766 (start Bifrost first, or: sudo systemctl start bifrost-guardian)"
+}
+
+ensure_redforge() {
+  ensure_system_service postgresql 1
+  local dir="$VAULT/Security/RedForge"
+  start_node_dev "$dir" "@workspace/api-server" "@workspace/redforge" \
+    "http://localhost:5000" "http://localhost:5173"
+  wait_for_url "http://localhost:5173" 120
+}
+
+ensure_cipher() {
+  if http_up "http://localhost:23051"; then
+    ok "CIPHER already listening on :23051"
+    return 0
+  fi
+  ensure_system_service postgresql 0 || true
+  local dir="$VAULT/Security/CIPHER"
+  [ -d "$dir" ] || die "CIPHER project missing at $dir (expected under GowskiNet-Vault/Security/CIPHER)"
+  start_node_dev "$dir" "@workspace/api-server" "@workspace/cipher" \
+    "http://localhost:8080" "http://localhost:23051"
+  wait_for_url "http://localhost:23051" 120 || die "CIPHER UI did not come up on :23051 — check $dir/.nyxus-webapp-ui.log"
+}
+
+ensure_gsl() {
+  local dir="$VAULT/Security/GSL"
+  source_env "$dir/gsl-backend"
+  if ! http_up "http://localhost:8000/api/health"; then
+    info "starting GSL backend…"
+    nohup bash "$dir/gsl-backend/start.sh" >"$dir/gsl-backend/.nyxus-webapp.log" 2>&1 &
+    disown || true
+    wait_for_url "http://localhost:8000/docs" 60 || wait_for_url "http://localhost:8000" 30
+  fi
+  if ! http_up "http://localhost:19670"; then
+    cd "$dir"
+    info "starting GSL frontend…"
+    nohup pnpm "${PF[@]}" --filter @workspace/gsl run dev >"$dir/.nyxus-webapp-ui.log" 2>&1 &
+    disown || true
+    wait_for_url "http://localhost:19670" 120
+  fi
+}
+
+ensure_trainer() {
+  ensure_system_service postgresql 1
+  local dir="$VAULT/AI/AI-Cyber-Defense-Trainer"
+  start_node_dev "$dir" "@workspace/api-server" "@workspace/redforge" \
+    "http://localhost:8080" "http://localhost:20508"
+  # Trainer UI dev server defaults to 20508 per README
+  if ! http_up "http://localhost:20508"; then
+    cd "$dir"
+    info "starting Trainer UI on :20508…"
+    nohup env PORT=20508 pnpm "${PF[@]}" --filter @workspace/redforge run dev \
+      >"$dir/.nyxus-webapp-ui.log" 2>&1 &
+    disown || true
+  fi
+  wait_for_url "http://localhost:20508" 120
+}
+
+declare -A WEBAPP_NAME WEBAPP_URL WEBAPP_WMCLASS WEBAPP_PROFILE WEBAPP_ICON WEBAPP_CREDENTIALS
+
+register_app() {
+  local id="$1" name="$2" url="$3" wmclass="$4" profile="$5" icon="$6" creds="${7:-}"
+  WEBAPP_NAME[$id]="$name"
+  WEBAPP_URL[$id]="$url"
+  WEBAPP_WMCLASS[$id]="$wmclass"
+  WEBAPP_PROFILE[$id]="$profile"
+  WEBAPP_ICON[$id]="$icon"
+  WEBAPP_CREDENTIALS[$id]="$creds"
+}
+
+register_app forge      "GowskiNet FORGE"     "http://127.0.0.1:20000/"  "GowskiNetForge"      "forge"      "arsenal"    "admin / forge"
+register_app grafana    "Grafana"             "http://127.0.0.1:3000/"   "GowskiNetGrafana"    "grafana"    "btop"       "admin / see ~/Projects/honeypot/.env"
+register_app prometheus "Prometheus"          "http://127.0.0.1:9090/"   "GowskiNetPrometheus" "prometheus" "alerts"     "(no login)"
+register_app honeyhive  "HoneyHive Map"       "http://127.0.0.1:8888/"   "GowskiNetHoneyHive"  "honeyhive"  "deep-core"  "(no login)"
+register_app bifrost    "Bifrost Dashboard"   "http://127.0.0.1:8766/"   "GowskiNetBifrost"    "bifrost"    "bifrost"    "(dashboard password set in Bifrost)"
+register_app redforge   "RedForge"            "http://127.0.0.1:5173/"   "GowskiNetRedForge"   "redforge"   "arsenal"    "(operator account on first launch)"
+register_app cipher     "CIPHER"              "http://127.0.0.1:23051/"  "GowskiNetCipher"     "cipher"     "lock"       "owner password in CIPHER .env"
+register_app gsl        "GSL"                 "http://127.0.0.1:19670/"  "GowskiNetGSL"        "gsl"        "dashboard"  "admin / see gsl-backend .env"
+register_app trainer    "AI Defense Trainer"  "http://127.0.0.1:20508/"  "GowskiNetTrainer"    "trainer"    "arsenal"    "admin / see Trainer .env SEED_ADMIN_PASSWORD"
+
+icon_path() {
+  local slug="$1" subdir="${2:-apps}"
+  local p
+  for p in \
+    "$NYXUS_ICONS/$subdir/${slug}@2x.png" \
+    "$NYXUS_ICONS/$subdir/${slug}.png" \
+    "$NYXUS_ICONS/bar/${slug}@2x.png" \
+    "$NYXUS_ICONS/bar/${slug}.png"; do
+    [ -f "$p" ] && { echo "$p"; return 0; }
+  done
+  echo "security-high"
+}
+
+ensure_app() {
+  case "$1" in
+    forge)      ensure_forge ;;
+    grafana)    ensure_grafana ;;
+    prometheus) ensure_prometheus ;;
+    honeyhive)  ensure_honeyhive ;;
+    bifrost)    ensure_bifrost ;;
+    redforge)   ensure_redforge ;;
+    cipher)     ensure_cipher ;;
+    gsl)        ensure_gsl ;;
+    trainer)    ensure_trainer ;;
+    *) die "unknown app: $1" ;;
+  esac
+}
+
+list_apps() {
+  printf '%-12s %-22s %-28s %s\n' "ID" "NAME" "URL" "CREDENTIALS"
+  local id
+  for id in forge grafana prometheus honeyhive bifrost redforge cipher gsl trainer; do
+    printf '%-12s %-22s %-28s %s\n' \
+      "$id" "${WEBAPP_NAME[$id]}" "${WEBAPP_URL[$id]}" "${WEBAPP_CREDENTIALS[$id]}"
+  done
+}
+
+usage() {
+  cat <<EOF
+nyxus-webapp — open GowskiNet security web UIs as desktop apps
+
+Usage:
+  nyxus-webapp <id> [--open] [--fresh]   ensure service + open Chromium app window
+  nyxus-webapp list                      list apps, URLs, and credentials
+  nyxus-webapp --kill-all                close all webapp Chromium windows
+
+Tips:
+  If a window opens blank/grey, run:  nyxus-webapp --kill-all && forge-app --fresh
+  Uses Firefox by default (Chromium --app is broken on this Hyprland box).
+
+Quick launchers (same as nyxus-webapp <id>):
+  forge-app   grafana-app   honeyhive-app   prometheus-app   bifrost-app
+  redforge-app   cipher-app   gsl-app   trainer-app
+  arsenal      (terminal TUI — not a webpage)
+
+Apps: forge grafana prometheus honeyhive bifrost redforge cipher gsl trainer
+EOF
+}
+
+main() {
+  if [ "$KILL_ALL" = 1 ] || [ "${1:-}" = --kill-all ]; then
+    info "killing all webapp Chromium windows…"
+    kill_all_webapp_chromium
+    ok "done"
+    exit 0
+  fi
+
+  [ -n "$APP" ] || { usage; exit 1; }
+
+  if [ "$APP" = list ] || [ "$APP" = ls ]; then
+    list_apps
+    exit 0
+  fi
+
+  if [ "$APP" = help ] || [ "$APP" = -h ] || [ "$APP" = --help ]; then
+    usage
+    exit 0
+  fi
+
+  [ -n "${WEBAPP_URL[$APP]:-}" ] || die "unknown app '$APP' (try: nyxus-webapp list)"
+
+  if [ "$OPEN_ONLY" = 0 ]; then
+    info "ensuring ${WEBAPP_NAME[$APP]} is up…"
+    ensure_app "$APP" || die "${WEBAPP_NAME[$APP]} did not become ready"
+  fi
+
+  if [ "$FRESH_PROFILE" = 1 ]; then
+    info "wiping profile for $APP…"
+    kill_profile_browser "${WEBAPP_PROFILE[$APP]}"
+    rm -rf "$(profile_path "${WEBAPP_PROFILE[$APP]}")"
+  fi
+
+  open_app "${WEBAPP_URL[$APP]}" "${WEBAPP_WMCLASS[$APP]}" "${WEBAPP_PROFILE[$APP]}" "${WEBAPP_NAME[$APP]}"
+
+  if [ -n "${WEBAPP_CREDENTIALS[$APP]}" ]; then
+    info "login: ${WEBAPP_CREDENTIALS[$APP]}"
+  fi
+}
+
+main "$@"

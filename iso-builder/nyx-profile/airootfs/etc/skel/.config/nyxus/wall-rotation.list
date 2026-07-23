@@ -2,14 +2,18 @@
 #  NYXUS - wallpaper rotation set  (ALIEN THEME ONLY)
 #  ~/.config/nyxus/wall-rotation.list
 #  Curated 2026-07-21 to the urban-alien graffiti-space art ONLY.
-#  Dropped: hacker-mode walls (those belong to hacker flip mode,
-#  not the normal desktop), Kage Ryu blackout, demon, and the
-#  sierengowski brand walls - they are not the alien theme.
+#  Non-alien walls (hacker-mode, kageryu, demon, sierengowski, void-vortex,
+#  prism brand, etc.) are REMOVED from the ISO — alien theme only.
 #  One slug per line; resolves in ~/.config/hypr/walls[/rotation]
 #  or /usr/share/backgrounds/nyxus. Comment a line to drop it.
 # ============================================================
 
 # -- main alien scenes --
+
+nyxus-urban-alien
+nyxus-login-wall
+nyxus-desktop-hero
+nyxus-graffiti-space
 
 # -- urban-alien rotation collection (walls/rotation/) --
 nyxus-rot-alien-block-party

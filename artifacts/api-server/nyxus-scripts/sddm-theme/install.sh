@@ -35,14 +35,14 @@ cp -r "${SCRIPT_DIR}/." "${THEME_DIR}/"
 rm -f "${THEME_DIR}/install.sh"
 
 # ── Background: rev r26c — STARFIELD LOGIN (pure black + 4-point starbursts).
-# Priority order: nyxus-login-stars.png (current) → nyxus-ink-swirl.png
+# Priority order: nyxus-login-stars.png (current) → nyxus-urban-alien.png
 # (legacy local) → bundled background.png → network fetch of starfield.
 if [[ -f "${SCRIPT_DIR}/../nyxus-login-stars.png" ]]; then
     echo "${C_DIM}→${C_RST} Using local NYXUS starfield (nyxus-login-stars.png)"
     cp "${SCRIPT_DIR}/../nyxus-login-stars.png" "${THEME_DIR}/background.png"
-elif [[ -f "${SCRIPT_DIR}/../nyxus-ink-swirl.png" ]]; then
+elif [[ -f "${SCRIPT_DIR}/../nyxus-urban-alien.png" ]]; then
     echo "${C_DIM}→${C_RST} Using local cosmic ink swirl wallpaper (legacy)"
-    cp "${SCRIPT_DIR}/../nyxus-ink-swirl.png" "${THEME_DIR}/background.png"
+    cp "${SCRIPT_DIR}/../nyxus-urban-alien.png" "${THEME_DIR}/background.png"
 elif [[ -f "${SCRIPT_DIR}/background.png" ]]; then
     echo "${C_DIM}→${C_RST} Using bundled background.png"
 elif command -v curl &>/dev/null; then

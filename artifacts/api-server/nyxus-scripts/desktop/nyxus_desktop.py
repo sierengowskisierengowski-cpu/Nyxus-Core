@@ -45,7 +45,7 @@ except Exception as _gtk_err:
     os.execvp("swaybg", [
         "swaybg", "-i",
         os.path.expanduser(
-            "~/.config/hypr/walls/nyxus-void-vortex.png"),
+            "~/.config/hypr/walls/nyxus-urban-alien.png"),
         "-m", "fill", "-c", "#000000",
     ])
 
@@ -59,7 +59,7 @@ except Exception as _ls_err:
     os.execvp("swaybg", [
         "swaybg", "-i",
         os.path.expanduser(
-            "~/.config/hypr/walls/nyxus-void-vortex.png"),
+            "~/.config/hypr/walls/nyxus-urban-alien.png"),
         "-m", "fill", "-c", "#000000",
     ])
 
@@ -75,7 +75,7 @@ SOCK_PATH = Path(
     os.environ.get("XDG_RUNTIME_DIR", "/tmp")
 ) / "nyxus-desktop.sock"
 
-DEFAULT_WALL = HOME / ".config" / "hypr" / "walls" / "nyxus-void-vortex.png"
+DEFAULT_WALL = HOME / ".config" / "hypr" / "walls" / "nyxus-urban-alien.png"
 DEFAULT_BG = "#080a10"
 CONTEXT_MENU = "nyxus-context-menu.sh"
 THUMB_DIR = HOME / ".cache" / "thumbnails" / "normal"

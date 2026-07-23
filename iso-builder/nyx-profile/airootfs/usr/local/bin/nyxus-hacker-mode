@@ -269,7 +269,7 @@ hacker_on() {
 
   # 3. Flip wallpapers across workspaces.
   local hacker_wall
-  hacker_wall="$(mode_wallpaper "${STATIONS_HACKER}" "nyxus-hacker-mode-a.png")"
+  hacker_wall="$(mode_wallpaper "${STATIONS_HACKER}" "nyxus-urban-alien.png")"
   [[ -n "${hacker_wall}" ]] && apply_wallpapers "${hacker_wall}"
 
   # 4. Actively fill every station with its security tool. spawn_stations

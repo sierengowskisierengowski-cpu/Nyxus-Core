@@ -173,7 +173,7 @@ class ScreensaverWindow(Gtk.ApplicationWindow):
         candidates = [wall] if wall else []
         candidates += [
             "/usr/share/backgrounds/nyxus/nyxus-urban-alien.png",
-            "/usr/share/backgrounds/nyxus/nyxus-kageryu-blackout.png",
+            "/usr/share/backgrounds/nyxus/nyxus-graffiti-space.png",
             "/usr/share/backgrounds/nyxus/nyxus-login-wall.png",
             os.path.expanduser("~/.config/hypr/walls/nyxus-urban-alien.png"),
         ]

@@ -1,55 +1,55 @@
 {
-  "_comment": "Auto-generated from stations.json by nyxus-sync-stations. Do not hand-edit.",
+  "_comment": "Auto-generated from stations.json (ALIEN ONLY). Do not hand-edit.",
   "workspaces": [
     {
       "id": 1,
       "name": "OPS",
-      "wallpaper": "~/.config/hypr/walls/nyxus-hacker-mode-a.png"
+      "wallpaper": "~/.config/hypr/walls/nyxus-urban-alien.png"
     },
     {
       "id": 2,
       "name": "FORGE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-hacker-mode-b.png"
+      "wallpaper": "~/.config/hypr/walls/nyxus-login-wall.png"
     },
     {
       "id": 3,
       "name": "GHOST",
-      "wallpaper": "~/.config/hypr/walls/nyxus-kageryu-blackout.png"
+      "wallpaper": "~/.config/hypr/walls/nyxus-desktop-hero.png"
     },
     {
       "id": 4,
       "name": "PULSE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-hacker-mode-b.png"
+      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-space.png"
     },
     {
       "id": 5,
       "name": "WAVE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-kageryu-blackout.png"
+      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-01.png"
     },
     {
       "id": 6,
       "name": "CORE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-hacker-mode-a.png"
+      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-04.png"
     },
     {
       "id": 7,
       "name": "MESH",
-      "wallpaper": "~/.config/hypr/walls/nyxus-kageryu-blackout.png"
+      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-08.png"
     },
     {
       "id": 8,
       "name": "SCRIBE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-hacker-mode-b.png"
+      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-11.png"
     },
     {
       "id": 9,
       "name": "BLAST",
-      "wallpaper": "~/.config/hypr/walls/nyxus-hacker-mode-a.png"
+      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-16.png"
     },
     {
       "id": 10,
       "name": "EDGE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-kageryu-blackout.png"
+      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-20.png"
     }
   ]
 }
