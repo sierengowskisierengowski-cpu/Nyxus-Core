@@ -26,7 +26,7 @@ INTERVAL="${NYXUS_WALL_INTERVAL:-1200}"   # desktop daemon: rotate every 20 min
 # ALIEN THEME ONLY — no hacker-mode / demon / sierengowski brand walls here
 # (they are not the alien desktop theme). These slugs exist as flat files in
 # both ~/.config/hypr/walls and /usr/share/backgrounds/nyxus.
-FALLBACK=(nyxus-urban-alien nyxus-login-wall nyxus-desktop-hero nyxus-graffiti-space)
+FALLBACK=(nyxus-urban-alien nyxus-login-wall nyxus-desktop-hero nyxus-graffiti-space nyxus-demon nyxus-hacker-mode-a nyxus-hacker-mode-b)
 
 resolve() {  # slug -> first existing file path
   # Search each wall dir AND its rotation/ subdir. The curated alien set

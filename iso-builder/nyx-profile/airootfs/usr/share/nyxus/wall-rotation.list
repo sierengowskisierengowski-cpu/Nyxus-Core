@@ -6,8 +6,8 @@
 #  so this list uses slugs that exist as FLAT files under
 #  /usr/share/backgrounds/nyxus/ (the greeter does not search rotation/).
 #  Curated 2026-07-23 to the urban-alien / "NYXUS HYPRLAND" graffiti art
-#  ONLY — dropped the demon, hacker-mode and sierengowski brand walls so
-#  the login screen always matches the desktop alien theme.
+#  ONLY — includes demon / hacker-mode (alien art). Still excludes kageryu
+#  dragon, sierengowski brand, and cinematic non-alien packs.
 #  One slug per line; anything after '#' is a comment.
 #  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================
@@ -16,6 +16,9 @@ nyxus-urban-alien           # the urban-alien street scene
 nyxus-login-wall            # "NYXUS HYPRLAND CUSTOMS" alien shop
 nyxus-desktop-hero          # NYXUS alien hero scene
 nyxus-graffiti-space        # graffiti-space alien scene
+nyxus-demon
+nyxus-hacker-mode-a
+nyxus-hacker-mode-b
 nyxus-graffiti-01
 nyxus-graffiti-04
 nyxus-graffiti-08
