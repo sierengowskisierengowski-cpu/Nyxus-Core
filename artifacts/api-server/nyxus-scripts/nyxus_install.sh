@@ -1301,6 +1301,31 @@ if command -v dunst &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; 
   fi
 fi
 
+# ── De-leak builder home paths (rev 2026-07-23) ──────────────────────────────
+# Several shipped configs bake an absolute home path (the build/reference
+# machine's /home/cosmic, or the live-ISO default /home/nyx) into settings
+# that are read by parsers which do NOT expand $HOME (JSON, Qt .conf, the
+# Hyprland `env = PATH,…` raw string, dunst paths). On any OTHER user — the
+# live ISO's `nyx`, or a Calamares-chosen install user — those paths don't
+# resolve (wrong wallpaper, unthemed Qt apps, broken notif bridge, launchers
+# not on PATH). Normalize every known-affected file to THIS user's real
+# $HOME. Idempotent and safe (no-op when the path already matches $HOME).
+hdr "De-leak builder home paths → \$HOME"
+_delk=0
+for _cfg in \
+  "$HOME/.config/hypr/hyprland.conf" \
+  "$HOME/.config/nyxus/wallpaper.json" \
+  "$HOME/.config/nyxus/wallpaper.conf" \
+  "$HOME/.config/qt5ct/qt5ct.conf" \
+  "$HOME/.config/qt6ct/qt6ct.conf" \
+  "$HOME/.config/dunst/dunstrc"; do
+  [ -f "$_cfg" ] || continue
+  if grep -qE '/home/(cosmic|nyx)/' "$_cfg" 2>/dev/null; then
+    sed -i -E "s#/home/(cosmic|nyx)/#${HOME%/}/#g" "$_cfg" 2>/dev/null && _delk=$((_delk+1))
+  fi
+done
+ok "de-leaked ${_delk} config file(s) → ${HOME}"
+
 # ── OS Name Fix (patch any old name → NYXUS in /etc/os-release) ──────────────
 hdr "OS Name"
 if grep -qE "NyX\.oS|NyX\.x\.OS|NyXxOS" /etc/os-release 2>/dev/null; then

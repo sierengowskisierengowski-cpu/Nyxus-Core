@@ -4,4 +4,4 @@ NYX_LAYER_LIB="$(ldconfig -p 2>/dev/null | awk '/libgtk4-layer-shell\.so/ {print
 if [[ -n "$NYX_LAYER_LIB" && -f "$NYX_LAYER_LIB" ]]; then
   export LD_PRELOAD="${NYX_LAYER_LIB}${LD_PRELOAD:+:$LD_PRELOAD}"
 fi
-exec python3 "/home/cosmic/.local/share/nyxus-notifications/main.py" "$@"
+exec python3 "$HOME/.local/share/nyxus-notifications/main.py" "$@"
