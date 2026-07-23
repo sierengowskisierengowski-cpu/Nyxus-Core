@@ -355,10 +355,48 @@ fi
 step "stamp iso version into profile metadata"
 PROFILEDEF="${PROFILE_DIR}/profiledef.sh"
 OSRELEASE="${PROFILE_DIR}/airootfs/etc/os-release"
+
+# Identify the EXACT source this ISO was baked from. A date alone is not enough:
+# two bakes on the same day (2026-07-22/23) were indistinguishable on the stick,
+# which is precisely how a stale/partial ISO got flashed and debugged for hours.
+# Commit + time make freshness unambiguous.
+BUILD_COMMIT="$(cd "${REPO_ROOT}" && git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+BUILD_BRANCH="$(cd "${REPO_ROOT}" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+BUILD_DIRTY=""
+if ! (cd "${REPO_ROOT}" && git diff --quiet HEAD 2>/dev/null); then BUILD_DIRTY="-dirty"; fi
+BUILD_TIME="$(date '+%Y-%m-%d %H:%M:%S %Z')"
+BUILD_STAMP="nyxus-${ISO_DATE}-${BUILD_COMMIT}${BUILD_DIRTY}-x86_64"
+
 sed -i -E "s/^iso_version=\".*\"/iso_version=\"${ISO_DATE}\"/" "${PROFILEDEF}"
-sed -i -E "s/^BUILD_ID=nyx-[0-9]+\.[0-9]+\.[0-9]+-x86_64/BUILD_ID=nyx-${ISO_DATE}-x86_64/" "${OSRELEASE}"
+sed -i -E "s/^BUILD_ID=.*/BUILD_ID=${BUILD_STAMP}/" "${OSRELEASE}"
+
+# A dedicated, human-readable stamp file. `cat /etc/nyxus-build` on the booted
+# stick answers "is this the ISO I just baked?" in one command.
+cat > "${PROFILE_DIR}/airootfs/etc/nyxus-build" <<BUILDSTAMP
+NYXUS live image build stamp
+============================
+iso            : ${ISO_NAME}
+built          : ${BUILD_TIME}
+source commit  : ${BUILD_COMMIT}${BUILD_DIRTY}  (branch: ${BUILD_BRANCH})
+kernel baked   : $([[ "${NYX_WITH_KAGE_RYU:-1}" == "1" ]] && echo "kage-ryu (default) + stock linux (rescue)" || echo "stock linux only")
+iso label      : ${ISO_LABEL:-NYXUS_2026_07}
+
+If this commit is not what you expect, you are booting a STALE image — rebake.
+BUILDSTAMP
+
+# Surface it on every terminal login so freshness is impossible to miss.
+mkdir -p "${PROFILE_DIR}/airootfs/etc/profile.d"
+cat > "${PROFILE_DIR}/airootfs/etc/profile.d/nyxus-build-stamp.sh" <<'STAMPSH'
+# Show which NYXUS image this is on interactive shells (freshness at a glance).
+if [ -n "${PS1:-}" ] && [ -r /etc/nyxus-build ]; then
+  printf '\033[38;5;177m'; sed -n '3,7p' /etc/nyxus-build; printf '\033[0m\n'
+fi
+STAMPSH
+chmod 0644 "${PROFILE_DIR}/airootfs/etc/profile.d/nyxus-build-stamp.sh"
+
 ok "stamped profiledef.sh   → iso_version=\"$(grep -oP '(?<=^iso_version=")[^"]+' "${PROFILEDEF}")\""
 ok "stamped os-release      → $(grep -oP '^BUILD_ID=\S+' "${OSRELEASE}")"
+ok "build stamp             → /etc/nyxus-build (commit ${BUILD_COMMIT}${BUILD_DIRTY}, shown at every login)"
 
 # ── pull NYXUS Phantom tarball ───────────────────────────────────────────
 step "fetch latest NYXUS Phantom (nyxus-intel.tgz)"
