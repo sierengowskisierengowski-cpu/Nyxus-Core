@@ -428,32 +428,39 @@ until a rebuilt kernel is rebaked.
        snippets, README curl examples, and polkit `vendor_url`; none affect the boot path.
 
 
-1. **Rebuild Kage-Ryu** with live-ISO FS support (see blocker above), then
-   **RE-BAKE** (owner runs, from a clean+committed repo):
+1. **Confirm `main` has #71** (`0f866221` / merge `603139d7`) — **DONE 2026-07-24 via PR #72**.
+2. **Rebuild Kage-Ryu** with live-ISO FS support (see blocker above), then
+   **RE-BAKE** from this `main` (owner runs, clean+committed repo):
    `cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh`
    (Kage-Ryu is baked by default now; it hard-fails if the prebuilt kernel pkgs
    are missing. Add `NYX_WITH_KAGE_RYU=0` only for a stock-only debug ISO.)
-2. **Re-flash** `/dev/sda` and **boot the UEFI entry**; verify: dragon menu →
-   **Kage-Ryu** entry mounts the ISO (no iso9660 error) → graffiti-saucer splash
-   → full desktop offline → apps from cache. `uname -r` shows kage-ryu.
-   Until then: boot **stock rescue** on the current stick.
-3. **Still open after 2026-07-24 fix pass:**
+   **Do not flash the existing `nyxus-2026.07.24` again expecting #71 fixes — rebake.**
+3. **Re-flash** — **always re-check `lsblk`** (64GB SanDisk was `/dev/sdb` on
+   2026-07-24; letters move). Boot **UEFI**; until Kage pkgs are rebuilt pick
+   **stock rescue**. After Kage rebuild: verify Kage entry mounts ISO (no iso9660
+   error) → splash → desktop → `uname -r` shows kage-ryu.
+4. **Before next bake — still fix bake wipe of arsenal shard** (found 2026-07-24):
+   `build-iso.sh` deletes skel `~/.config/hypr` and only reinstalls a fixed shard
+   list from `nyxus-scripts/` — it does **not** install `nyxus-arsenal-apps.conf`
+   into skel even when the file exists in repo + NS. Also `hyprland.conf` never
+   `source=`s it. Verify with `unsquashfs -l airootfs.sfs | rg arsenal` before flash.
+5. **Still open after 2026-07-24 fix pass:**
    - Greeter / hyprlock visual QA on stick (alien bg wired; needs a real boot to verify).
    - UFO/saucer notification QA on fresh boot.
-   - ~~eww bars: slow first paint + transparent black box~~ **FIXED 2026-07-24**
-   - ~~Visible build/commit stamp~~ **IMPLEMENTED 2026-07-24**
-   - **Home backup:** Ventoy stick (`/dev/sda1`, 238 GB) mid-queue — Vault /
+   - ~~eww bars: slow first paint + transparent black box~~ **FIXED in repo (PR #71 → main via #72)** — needs rebake to appear on stick
+   - ~~Visible build/commit stamp~~ **IMPLEMENTED** — needs rebake
+   - **Home backup:** Ventoy stick (re-verify device letter) mid-queue — Vault /
      Projects / VMs as `.tar.zst`; fill remaining space then swap to 2nd USB.
      Also back up Docker honeypot volumes + `/opt/nyxus-*` + `/etc/jett`
      (NOT only `~`).
-4. Cleanup status (2026-07-23): accent-baseline builder-home leak **removed**
+6. Cleanup status (2026-07-23): accent-baseline builder-home leak **removed**
    (regenerated per-user by nyxus-apply-accent). STILL deferred: ~33 non-boot
    Replit refs (self-update snippets, README curl example, polkit vendor_url —
    all non-fatal now that the boot+install path is Replit-free); ~50 GB of old
    ISOs in `iso-builder/out/` (untracked, safe to delete); 90 stale remote
    branches on GitHub (copilot/*, devin/*, cursor/*, archive/vault-*) — prune to
    avoid re-scattering. Prune non-alien walls from the payload if size matters.
-5. Owner's call: fold `companion-3d` under one roof or keep separate.
+7. Owner's call: fold `companion-3d` under one roof or keep separate.
 
 ---
 
