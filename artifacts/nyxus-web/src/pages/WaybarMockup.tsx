@@ -338,7 +338,7 @@ export default function WaybarMockup() {
           maxWidth: 1376,
           margin: "0 auto",
           aspectRatio: "1376 / 768",
-          backgroundImage: `url(${BASE}/nyxus-frost-sierengowski.png${v})`,
+          backgroundImage: `url(${BASE}/nyxus-urban-alien.png${v})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           borderRadius: 16,

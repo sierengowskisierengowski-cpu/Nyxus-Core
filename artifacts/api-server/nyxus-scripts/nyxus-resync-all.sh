@@ -703,7 +703,7 @@ fi
 # 4.5b  Pull background images (palette mirror only — waybar refresh removed)
 NYX_BG_DIR="$NYX_HOME_DIR/backgrounds"
 mkdir -p "$NYX_BG_DIR"; chown "$REAL_USER:$REAL_USER" "$NYX_BG_DIR"
-for bg in nyxus-frost-sierengowski.png nyxus-starlight.png nyxus-monogram-mist.png nyxus-topbar-mist.png nyxus-starfield-wall.png nyxus-urban-alien.png; do
+for bg in nyxus-urban-alien.png nyxus-login-wall.png nyxus-desktop-hero.png nyxus-graffiti-space.png nyxus-monogram-mist.png nyxus-topbar-mist.png; do
   bgdst="$NYX_BG_DIR/$bg"
   if [[ ! -f "$bgdst" ]] || [[ "${1:-}" == "--force-bg" ]]; then
     if curl -fsSL --max-time 60 "$PROD/$bg" -o "$bgdst.new"; then
@@ -931,11 +931,11 @@ done
 if [[ -z "$CHROME_ON_DISK" ]]; then
   warn "could not find nyxus_chrome.py on disk in any standard location"
 fi
-# rev r6-eww — VOID-VORTEX wallpaper (replaces the rev r29 starfield).
-# Static PNG via swaybg fill-mode — matches hyprland.conf swaybg autostart.
-# Falls back to starfield if void-vortex is missing.
+# Alien-theme wallpaper. Static PNG via swaybg fill-mode — matches
+# hyprland.conf swaybg autostart. Falls back to the login-wall hero if
+# urban-alien is missing (both are alien art; never a non-alien wall).
 VORTEX_PNG="$NYX_BG_DIR/nyxus-urban-alien.png"
-STAR_PNG="$NYX_BG_DIR/nyxus-starfield-wall.png"
+STAR_PNG="$NYX_BG_DIR/nyxus-login-wall.png"
 WALL_TO_USE=""
 if [[ -s "$VORTEX_PNG" ]]; then
   WALL_TO_USE="$VORTEX_PNG"

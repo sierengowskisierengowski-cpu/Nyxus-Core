@@ -277,39 +277,38 @@ const ALLOWED_FILES: Record<string, string> = {
 
   // ── ★ THEMES / TARBALLS ──────────────────────────────────────────────────
   "nyxus-sddm-theme.tar.gz":  "nyxus-sddm-theme.tar.gz",
-  "nyxus-void-splash.tar.gz": "nyxus-void-splash.tar.gz",
   "nyxus-wlogout.tar.gz":     "nyxus-wlogout.tar.gz",
   "nyxus-ui-configs.tar.gz":  "nyxus-ui-configs.tar.gz",
   "nyxus-greetd.toml":        "nyxus-greetd.toml",
 
-  // ── ★ FROST WALLPAPER ────────────────────────────────────────────────────
-  "nyxus-frost-sierengowski.png": "nyxus-frost-sierengowski.png",
+  // ── ★ WALLPAPER TOOLING ───────────────────────────────────────────────────
   "nyxus-fog.py":                 "nyxus-fog.py",
-  "nyxus-set-frost-wallpaper.sh": "nyxus-set-frost-wallpaper.sh",
   "wallpaper-rotate.sh":          "wallpaper-rotate.sh",
-  "nyxus-ink-swirl.png":          "nyxus-ink-swirl.png",
 
-  // ── ★ FROST TILE TEXTURES (repeating cream tessellations) ───────────────
+  // ── ★ FROST TILE TEXTURES (repeating tessellations) ──────────────────────
   // tile-grid (triangle tessellation) repeats inside cards & headerbars.
   // tile-glyphs (runic wall) repeats vertically inside the right-bar column.
   "nyxus-frost-tile-grid.png":    "nyxus-frost-tile-grid.png",
   "nyxus-frost-tile-glyphs.png":  "nyxus-frost-tile-glyphs.png",
 
-  // ── ★ BRAND ASSETS (logos, taskbar bgs, demon) ───────────────────────────
-  "nyxus-sierengowski-clean.png": "nyxus-sierengowski-clean.png",
+  // ── ★ ALIEN HERO WALLPAPERS (the only desktop/login/lock defaults) ──────
+  "nyxus-urban-alien.png":        "nyxus-urban-alien.png",
+  "nyxus-login-wall.png":         "nyxus-login-wall.png",
+  "nyxus-desktop-hero.png":       "nyxus-desktop-hero.png",
+  "nyxus-graffiti-space.png":     "nyxus-graffiti-space.png",
+  "nyxus-hacker-mode-a.png":      "nyxus-hacker-mode-a.png",
+  "nyxus-hacker-mode-b.png":      "nyxus-hacker-mode-b.png",
+  "nyxus-demon.png":              "nyxus-demon.png",
+
+  // ── ★ BRAND / UI CHROME ASSETS (logos, bars — not desktop wallpapers) ────
   "nyxus-taskbar-bg.png":         "nyxus-taskbar-bg.png",
   "nyxus-rightbar-bg.png":        "nyxus-rightbar-bg.png",
-  "nyxus-starlight.png":          "nyxus-starlight.png",
-  "nyxus-void-wallpaper.mp4":     "nyxus-void-wallpaper.mp4",
   "nyxus-login-stars.png":        "nyxus-login-stars.png",
   "nyxus-monogram-mist.png":      "nyxus-monogram-mist.png",
   "nyxus-topbar-mist.png":        "nyxus-topbar-mist.png",
   "nyxus-hyprlock-eye.png":       "nyxus-hyprlock-eye.png",
   "nyxus-bar-stone.png":          "nyxus-bar-stone.png",
-  "nyxus-starfield-wall.png":     "nyxus-starfield-wall.png",
-  "nyxus-drifter-wall.png":       "nyxus-drifter-wall.png",
-  "nyxus-void-vortex.png":        "nyxus-void-vortex.png",  // EWW-era default wallpaper (rev r6-eww)
-  "nyxus-demon.png":              "nyxus-demon.png",
+  "nyxus-waybar-stars.png":       "nyxus-waybar-stars.png",
 
   // ── ★ WALLPAPERS (15 backgrounds) ────────────────────────────────────────
   "nyxus-bg-01.png": "nyxus-bg-01.png",

@@ -429,7 +429,7 @@ ok "desktop entries → ~/.local/share/applications  ($n files checked)"
 # wallpapers — full NYXUS set → ~/.config/hypr/walls (matches the ISO skel,
 # which ships all of them there). Canonical source is the ISO skel tree so an
 # install.sh machine matches a fresh ISO exactly. This includes the default
-# wallpaper (nyxus-cosmic-galaxy) + the alien walls the screensaver, hyprlock
+# wallpaper (nyxus-urban-alien) + the alien walls the screensaver, hyprlock
 # and Hacker Mode reference; without it those fell back to a flat colour.
 # place() is idempotent (skips unchanged), so re-runs are cheap. User-added
 # wallpapers under walls/rotation/ are preserved (handled separately below).

@@ -163,8 +163,8 @@ def _hud_palette() -> dict:
     }
 
 HUD_PALETTE = _hud_palette()
-HUD_NEONS = ["#ff2dad", "#39ff14", "#39ff14", "#ff8a1e", "#7dff5e",
-             "#ff7ae5", "#66efff", "#7d3dff", "#ffe600"]
+HUD_NEONS = ["#ff2dad", "#39ff14", "#2bd2ff", "#ff8a1e", "#ffe600",
+             "#ff7ae5", "#66efff", "#7d3dff", "#e367ff"]
 HUD_VOID       = "rgba(5, 1, 13, 0.97)"    # window background
 HUD_CARD_BG    = "rgba(7, 5, 14, 0.93)"    # card background
 HUD_CARD_HOVER = "rgba(9, 6, 18, 0.97)"

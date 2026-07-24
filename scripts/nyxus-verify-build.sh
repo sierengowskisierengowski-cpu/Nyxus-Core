@@ -71,14 +71,14 @@ fi
 # Wallpaper
 wall_ok=0
 if command -v awww >/dev/null 2>&1; then
-  if awww query 2>/dev/null | grep -q 'nyxus-cosmic-galaxy'; then
-    ok "awww shows nyxus-cosmic-galaxy"
+  if awww query 2>/dev/null | grep -q 'nyxus-urban-alien'; then
+    ok "awww shows nyxus-urban-alien"
     wall_ok=1
   fi
 fi
 if [[ $wall_ok -eq 0 ]] && [[ -f "${HOME}/.config/nyxus/wallpaper.conf" ]]; then
-  grep -q 'cosmic-galaxy\|nyxus-cosmic-galaxy' "${HOME}/.config/nyxus/wallpaper.conf" && \
-    ok "wallpaper.conf points at galaxy" || warn "wallpaper.conf may not be galaxy"
+  grep -q 'urban-alien\|nyxus-urban-alien' "${HOME}/.config/nyxus/wallpaper.conf" && \
+    ok "wallpaper.conf points at urban-alien" || warn "wallpaper.conf may not be urban-alien"
 fi
 
 # Accent
