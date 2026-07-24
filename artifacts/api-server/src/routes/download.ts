@@ -112,7 +112,9 @@ const ALLOWED_FILES: Record<string, string> = {
   "locale/es/LC_MESSAGES/nyxus.po":             "locale/es/LC_MESSAGES/nyxus.po",
   "locale/fr/LC_MESSAGES/nyxus.po":             "locale/fr/LC_MESSAGES/nyxus.po",
   "eww/eww.yuck":               "eww/eww.yuck",
-  "eww/eww.scss":               "eww/eww.scss",
+  // eww 0.5 ships compiled CSS + SCSS source (no live eww.scss in NS)
+  "eww/eww.css":                "eww/eww.css",
+  "eww/eww.scss.source":        "eww/eww.scss.source",
   "eww/nyxus.conf":             "eww/nyxus.conf",
   "eww/README.md":              "eww/README.md",
   "eww/scripts/audio.sh":         "eww/scripts/audio.sh",

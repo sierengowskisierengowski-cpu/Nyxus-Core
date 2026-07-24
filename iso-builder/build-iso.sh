@@ -478,6 +478,17 @@ install -m 0644 "${NS}/hyprland.conf"        "${SKEL}/.config/hypr/hyprland.conf
 install -m 0644 "${NS}/hyprlock.conf"        "${SKEL}/.config/hypr/hyprlock.conf"
 install -m 0644 "${NS}/hyprlock-accent.conf" "${SKEL}/.config/hypr/hyprlock-accent.conf"
 install -m 0644 "${NS}/hypridle.conf"        "${SKEL}/.config/hypr/hypridle.conf"
+# Hypr extras wiped by rm -rf skel/.config/hypr above — MUST restage or
+# idle-glass / prism-pulse / monitors source / hyprpaper break on the stick.
+mkdir -p "${SKEL}/.config/hypr/scripts"
+if [[ -d "${NS}/hypr/scripts" ]]; then
+  install -m 0755 "${NS}/hypr/scripts/"*.sh "${SKEL}/.config/hypr/scripts/"
+fi
+for _hx in hyprpaper.conf nyxus-monitors.conf nyxus-voice.conf; do
+  if [[ -f "${NS}/${_hx}" ]]; then
+    install -m 0644 "${NS}/${_hx}" "${SKEL}/.config/hypr/${_hx}"
+  fi
+done
 install -m 0644 "${NS}/nyxus-dunstrc"        "${SKEL}/.config/dunst/dunstrc"
 install -m 0644 "${NS}/rofi-config.rasi"     "${SKEL}/.config/rofi/config.rasi"
 install -m 0644 "${NS}/rofi-nyxus.rasi"      "${SKEL}/.config/rofi/nyxus.rasi"
@@ -569,8 +580,14 @@ fi
 if [[ -d "${NS}/eww/scripts" ]]; then
   install -m 0755 "${NS}"/eww/scripts/* "${SKEL}/.config/eww/scripts/" 2>/dev/null || true
 fi
+# eww/assets wiped by rm -rf skel/.config/eww — bars/overlays reference
+# assets/*.png from eww.yuck; without this restage the HUD is blank art.
+if [[ -d "${NS}/eww/assets" ]]; then
+  mkdir -p "${SKEL}/.config/eww/assets"
+  cp -a "${NS}/eww/assets/." "${SKEL}/.config/eww/assets/"
+fi
 
-ok "configs: hypr (+conf.d) / eww / dunst / rofi / wlogout / alacritty"
+ok "configs: hypr (+conf.d) / eww (+assets) / dunst / rofi / wlogout / alacritty"
 
 # ── GTK apps + chrome library + helpers → /opt/nyxus/ ───────────────────
 # Plus skel symlink ~/.nyxus → /opt/nyxus so hyprland.conf keybinds (which
@@ -791,17 +808,25 @@ ok "user systemd units: nyxus-usb-watch.service"
 # now FAIL THE BAKE if it can't be, rather than silently shipping an
 # online-only ISO.
 #
-# Source preference:
-#   1. artifacts/api-server/dist/nyxus-scripts  — the pruned/optimized build
-#      output (smallest), produced by the api-server build. Preferred if present.
-#   2. artifacts/api-server/nyxus-scripts       — the in-repo SOURCE payload,
-#      always tracked in git (nyxus_install.sh + all eww/hypr/wallpaper/plymouth
-#      assets). Guarantees a working offline install even when (1) was never built.
+# Source preference (2026-07-24 audit):
+#   1. artifacts/api-server/nyxus-scripts       — git SoT (ALWAYS prefer)
+#   2. artifacts/api-server/dist/nyxus-scripts  — ONLY if no broken host
+#      symlinks (dist/ historically poisoned bakes with /home/cosmic/… links)
 NYXUS_DIST=""
-for _cand in "${REPO_ROOT}/artifacts/api-server/dist/nyxus-scripts" \
-             "${REPO_ROOT}/artifacts/api-server/nyxus-scripts"; do
-  if [[ -d "${_cand}" && -f "${_cand}/nyxus_install.sh" ]]; then NYXUS_DIST="${_cand}"; break; fi
-done
+_ns_src="${REPO_ROOT}/artifacts/api-server/nyxus-scripts"
+_dist_src="${REPO_ROOT}/artifacts/api-server/dist/nyxus-scripts"
+if [[ -d "${_ns_src}" && -f "${_ns_src}/nyxus_install.sh" ]]; then
+  NYXUS_DIST="${_ns_src}"
+elif [[ -d "${_dist_src}" && -f "${_dist_src}/nyxus_install.sh" ]]; then
+  # Reject dist/ if it contains dangling symlinks outside the repo.
+  if find "${_dist_src}" -type l ! -exec test -e {} \; -print -quit 2>/dev/null | grep -q .; then
+    fail "artifacts/api-server/dist/nyxus-scripts has broken symlinks (host poison)."
+    fail "  Remove it:  rm -rf artifacts/api-server/dist/nyxus-scripts"
+    fail "  Or ensure NS nyxus-scripts is present. Aborting the bake."
+    exit 1
+  fi
+  NYXUS_DIST="${_dist_src}"
+fi
 OFFLINE_CACHE="${PROFILE_DIR}/airootfs/opt/nyxus-cache"
 # Always wipe first so a missing source never silently ships a stale cache
 # from a prior bake. The whole point of staging is fresh-each-time.

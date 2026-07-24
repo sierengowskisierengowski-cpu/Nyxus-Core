@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-24 14:25 EDT (deep build audit)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24 evening (bake wipe lockstep fix)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -10,9 +10,10 @@
 > **Last ~day of building (story + done/open):**  
 > [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md)
 >
-> **Deep consistency audit (2026-07-24 14:25 EDT):**  
-> [`docs/DEEP_BUILD_AUDIT_2026-07-24.md`](./docs/DEEP_BUILD_AUDIT_2026-07-24.md) — **PASS / bake GO**
-> (lockstep fixes applied: skel hypr ← NS; stripped stale `skel/.nyxus` app copies).
+> **Deep consistency audit (revised evening):**  
+> [`docs/DEEP_BUILD_AUDIT_2026-07-24.md`](./docs/DEEP_BUILD_AUDIT_2026-07-24.md) —
+> first GO missed bake wipe gaps (`eww/assets`, `hypr/scripts`); **fixed** on
+> `cursor/bake-wipe-lockstep-ac8f`. Merge that PR, then bake.
 >
 > **Theme + Settings workstream:**  
 > [`docs/ALIEN_NEON_SETTINGS_BRIEF.md`](./docs/ALIEN_NEON_SETTINGS_BRIEF.md) then
@@ -29,12 +30,12 @@
 
 | | |
 |---|---|
-| **Repo** | `~/Nyxus-Core` · branch **`cursor/pre-bake-cleanup-settings-ac8f`** (PR #75) |
+| **Repo** | `~/Nyxus-Core` · **`main`** (+ bake-wipe lockstep PR if open) |
 | **HEAD** | check `git rev-parse --short HEAD` |
-| **Open PRs** | **1** — pre-bake cleanup + Settings deepen (PR #75); theme audit **#74 merged** |
+| **Open PRs** | bake wipe lockstep (`cursor/bake-wipe-lockstep-ac8f`) — **#74/#75 merged** |
 | **Day chronicle** | [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md) |
-| **Repo state for bake** | ✅ **COMMITTED + IDLE** — safe to kick `sudo ./build-iso.sh` |
-| **Deep audit** | [`docs/DEEP_BUILD_AUDIT_2026-07-24.md`](./docs/DEEP_BUILD_AUDIT_2026-07-24.md) · tip `b433927e` |
+| **Repo state for bake** | ⛔ **wait for bake-wipe PR merge** then idle → bake |
+| **Deep audit** | [`docs/DEEP_BUILD_AUDIT_2026-07-24.md`](./docs/DEEP_BUILD_AUDIT_2026-07-24.md) · revised evening |
 | **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (built **03:05 EDT**) — **STALE**. **Do not reflash that file expecting today's work.** |
 | **Kage-Ryu pkgs** | `linux-kage-ryu-7.0.12` + headers (~**08:53 EDT**). PKGBUILD enables iso9660/squashfs/loop. Still **verify** live mount after bake. |
 | **Running desktop kernel** | Stock `7.1.3-arch1-2` (not Kage) — expected until new ISO |
