@@ -114,6 +114,14 @@ Roadmap: `docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md`
 3. Left `skel/.nyxus/nyxus-start/` directory as-is.  
 4. Re-ran `verify-profile` → PASS.
 
+### Follow-up (same day, post-subagent HIGH list)
+
+5. Seeded `nyxus_battery.py` / `nyxus_netusage.py` into NS (were OPT-only → bake-dropped).  
+6. `build-iso.sh` now stages `kitty.conf` / `kitty-welcome.conf` + installs `nyxus-welcome-note` / `nyxus-dream`.  
+7. `nyxus_install.sh` deploys welcome-note, dream, kitty confs on offline/online install.  
+8. Synced committed `skel` `nyxus-stations.conf` ← NS.  
+9. Theme index Comments: Dark Mirror → ALIEN NEON (sounds + NYXUS-Dark icons).
+
 ---
 
 ## 9. Owner checklist before / after bake

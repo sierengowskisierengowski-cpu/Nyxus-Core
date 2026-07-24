@@ -485,6 +485,10 @@ install -m 0644 "${NS}/rofi-startmenu.rasi"  "${SKEL}/.config/rofi/startmenu.ras
 install -m 0644 "${NS}/wlogout-style.css"    "${SKEL}/.config/wlogout/style.css"
 install -m 0644 "${NS}/wlogout-layout"       "${SKEL}/.config/wlogout/layout"
 install -m 0644 "${NS}/alacritty.toml"       "${SKEL}/.config/alacritty/alacritty.toml"
+# Kitty (default terminal) + Welcome Transmission overlay conf
+mkdir -p "${SKEL}/.config/kitty"
+[[ -f "${NS}/kitty.conf" ]] && install -m 0644 "${NS}/kitty.conf" "${SKEL}/.config/kitty/kitty.conf"
+[[ -f "${NS}/kitty-welcome.conf" ]] && install -m 0644 "${NS}/kitty-welcome.conf" "${SKEL}/.config/kitty/kitty-welcome.conf"
 
 # ── fastfetch (neofetch successor; package in packages.x86_64) ───────────
 if [[ -d "${NS}/fastfetch" ]]; then
@@ -763,7 +767,10 @@ fi
 # file_permissions which enforces the perms post-bake.
 install -m 0755 "${NS}/nyxus-bootstrap"      "${LBIN}/nyxus-bootstrap"
 install -m 0755 "${NS}/nyxus-wait-bootstrap" "${LBIN}/nyxus-wait-bootstrap"
-ok "bootstrap shims: nyxus-bootstrap / nyxus-wait-bootstrap"
+# Welcome Transmission (borderless kitty poem) + Dream Protocol easter egg
+[[ -f "${NS}/nyxus-welcome-note" ]] && install -m 0755 "${NS}/nyxus-welcome-note" "${LBIN}/nyxus-welcome-note"
+[[ -f "${NS}/nyxus-dream" ]] && install -m 0755 "${NS}/nyxus-dream" "${LBIN}/nyxus-dream"
+ok "bootstrap shims: nyxus-bootstrap / nyxus-wait-bootstrap (+ welcome-note / dream if present)"
 
 # ── User systemd units → /usr/lib/systemd/user/ ─────────────────────────
 # Settings toggles ship as user systemd units so non-root users can

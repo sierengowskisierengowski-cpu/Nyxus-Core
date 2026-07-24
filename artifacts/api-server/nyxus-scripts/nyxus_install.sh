@@ -231,7 +231,7 @@ LAUNCHERS=(
   nyxus-sync-stations nyxus-tint nyxus-tintd nyxus-updater
   nyxus-voice nyxus-voiced nyxus-voice-install nyxus-voice-model
   nyxus-wall-cycle nyxus-wall-fx nyxus-wall-next nyxus-wallpaper-autostart
-  nyxus-weather-line nyxus-whispers sync-eww.sh
+  nyxus-weather-line nyxus-whispers nyxus-welcome-note nyxus-dream sync-eww.sh
 )
 _launch_ok=0; _launch_total=${#LAUNCHERS[@]}
 for _base in "${LAUNCHERS[@]}"; do
@@ -523,7 +523,7 @@ fi
 # 'command not found'). Install path mirrors build-iso.sh:208-210.
 hdr "Bootstrap shims + Welcome wizard"
 mkdir -p "$HOME/.local/bin"
-for helper in nyxus-bootstrap nyxus-wait-bootstrap nyxus-welcome; do
+for helper in nyxus-bootstrap nyxus-wait-bootstrap nyxus-welcome nyxus-welcome-note nyxus-dream; do
   if dl "$helper" "/tmp/${helper}.new"; then
     if sudo -n install -m 0755 "/tmp/${helper}.new" "/usr/local/bin/${helper}" 2>/dev/null; then
       ok "$helper → /usr/local/bin/"
@@ -535,6 +535,11 @@ for helper in nyxus-bootstrap nyxus-wait-bootstrap nyxus-welcome; do
     rm -f "/tmp/${helper}.new"
   fi
 done
+# Welcome Transmission python + kitty overlay conf
+mkdir -p "$HOME/.nyxus" "$HOME/.config/kitty"
+dl "nyxus_welcome_note.py" "$HOME/.nyxus/nyxus_welcome_note.py" || true
+dl "kitty-welcome.conf" "$HOME/.config/kitty/kitty-welcome.conf" || true
+dl "kitty.conf" "$HOME/.config/kitty/kitty.conf" || true
 # Welcome wizard python module → ~/.nyxus/ (run by /usr/local/bin/nyxus-welcome)
 mkdir -p "$HOME/.nyxus"
 dl "nyxus_welcome.py" "$HOME/.nyxus/nyxus_welcome.py" || failed=$((failed+1))
