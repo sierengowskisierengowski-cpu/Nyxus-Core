@@ -106,12 +106,34 @@ poisoned `/opt/nyxus-cache` on the stick.
 
 ---
 
-## 7. Owner bake checklist
+## 7. Keybinds / helpers / bootstrap (from earlier audit)
+
+| Chord | Status |
+|---|---|
+| `Super+Shift+D` | rofi/wofi **run** only (Dream moved to Alt) |
+| `Super+Alt+D` | Dream Protocol |
+| `Super+Shift+N` | Welcome Transmission replay |
+| Duplicate `Super+R` (saucer flip) | was 2× in skel; **resolved** by NS→skel sync |
+| `Super+W` | wifi toggle; wallpaper studio line is **commented** |
+
+Profiledef helpers present + `file_permissions` 755: `nyxus-welcome-note`,
+`nyxus-dream`, `nyxus-kernel-switch`, and the Tier B/C helpers.
+
+Builder host `/opt/nyxus-cache/nyxus_install.sh` may still be **STALE**
+(2026-07-20 `set -e` + bare `clear`) — bake restages from NS; stick OK after
+rebake. Marker on builder: `2026.07.24-r14-alien-neon`.
+
+Also closed same-day HIGH gaps on `main`: battery/netusage seeded into NS;
+welcome-note/dream/kitty staged at bake+install; stations.conf synced;
+theme Comments → ALIEN NEON.
+
+---
+
+## 8. Owner bake checklist
 
 ```bash
 cd ~/Nyxus-Core
 git checkout main && git pull
-# after merging bake-wipe-lockstep PR:
 git status   # clean / idle
 rm -rf artifacts/api-server/dist/nyxus-scripts   # if present
 cd iso-builder && sudo ./build-iso.sh
