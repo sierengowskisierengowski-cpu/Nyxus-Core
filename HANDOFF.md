@@ -466,6 +466,12 @@ until a rebuilt kernel is rebaked.
 
 ### Copilot Deep Pre-Bake Audit (2026-07-24) — stored here (no separate memory store)
 
+**ALIEN NEON + Settings completeness checklist (owner tracking):**
+[`docs/ALIEN_NEON_SETTINGS_AUDIT.md`](./docs/ALIEN_NEON_SETTINGS_AUDIT.md)
+— full counts + lists for (1) surfaces not ALIEN NEON, (2) empty/minimal/partial
+Settings pages, (3) apps with no Settings section, (4) session features missing
+from Settings. Regenerated 2026-07-24 from live `~/.nyxus` + desktop entries.
+
 Full GO/NO-GO from Copilot audit. Cross-checked against `main` @ `fb63e2aa` (+ #71 on main).
 
 | Gate | State |
