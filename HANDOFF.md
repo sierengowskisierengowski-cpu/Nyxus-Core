@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-24 (Phase 1 ALIEN NEON foundation DONE — start Phase 2)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24 (Settings polish pass 1 — Welcome rewired)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -11,8 +11,8 @@
 > [`docs/ALIEN_NEON_SETTINGS_BRIEF.md`](./docs/ALIEN_NEON_SETTINGS_BRIEF.md)
 > **first**, then the checklist
 > [`docs/ALIEN_NEON_SETTINGS_AUDIT.md`](./docs/ALIEN_NEON_SETTINGS_AUDIT.md).
-> **Phase 1 done** (palette + Settings chrome + prism Theme Packs on
-> `cursor/audit-stay-as-is-scope-92cd`). **Start Phase 2** (cascade shell GTK).
+> **Phase 1 done.** Settings polish pass 1 landed (Welcome wiring + kill homemade
+> path/logo dumps). Continue polishing Settings pages; Phase 2 shell GTK next.
 > Stay-as-is: Bifrost / GodsApp / Meli / Arsenal — do not restyle.
 
 ---

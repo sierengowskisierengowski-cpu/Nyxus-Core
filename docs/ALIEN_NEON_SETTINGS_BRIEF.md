@@ -85,5 +85,6 @@ Settings hub, Home/Main Page, Panel, Start, Terminal, Stickies, Notes, Notepad, 
 | 2026-07-24 | Audit + stay-as-is carve-out | `docs/ALIEN_NEON_SETTINGS_AUDIT.md`; branch `cursor/audit-stay-as-is-scope-92cd` |
 | 2026-07-24 | This brief added — Phase 1 = start | (this file) |
 | 2026-07-24 | **Phase 1 DONE** — palette ALIEN NEON + Settings chrome + Theme Packs prism-only; mirrors synced | branch `cursor/audit-stay-as-is-scope-92cd` |
+| 2026-07-24 | **Settings polish pass 1** — Welcome rewired (real marker + skip steps); kill Logo source / path dumps on Welcome/Login/Plymouth/Sounds/Language; VPN file-picker import; wizard honors skip prefs | same branch |
 
-*Next agent: start Phase 2 (shell GTK cascade). Tick audit rows as you go. Leave a progress-log line here when a phase completes.*
+*Next: continue Settings page polish (remaining PARTIAL/MINIMAL) + Phase 2 shell GTK cascade. Tick audit rows as you go.*

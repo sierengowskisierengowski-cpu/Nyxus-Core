@@ -7,7 +7,7 @@
 > **Use this as the master checklist.** Check items off as they land on `main` + verify in bake.  
 > **START HERE brief (phases + stay-as-is):** [`ALIEN_NEON_SETTINGS_BRIEF.md`](./ALIEN_NEON_SETTINGS_BRIEF.md)
 >
-> **Current work pointer:** Phase 1 **DONE on branch** `cursor/audit-stay-as-is-scope-92cd` — palette + Settings chrome + prism-only Theme Packs. **Next: Phase 2** (cascade shell GTK apps).
+> **Current work pointer:** Settings polish in progress on `cursor/audit-stay-as-is-scope-92cd` — Welcome rewired; meta path dumps removed on Welcome/Login/Plymouth/Sounds/Language; VPN import usable. Phase 1 palette done. Next: more Settings pages + Phase 2 shell GTK.
 
 ## ⛔ STAY AS-IS — OUT OF SCOPE (owner 2026-07-24)
 
@@ -146,7 +146,7 @@ Incomplete = thin UI, not “unwired class”.
 
 ### EMPTY — 1
 
-- [ ] `vpn` — **VPN** (controls=0)
+- [x] `vpn` — **VPN** (file-picker import + connect/disconnect · polish pass 1)
 
 ### MINIMAL — 15
 
@@ -190,7 +190,7 @@ Incomplete = thin UI, not “unwired class”.
 - [ ] `storage` — **Storage** (controls=9)
 - [x] `themepacks` — **Theme Packs** (prism-only · Phase 1)
 - [ ] `wallpaper` — **Wallpaper Studio** (controls=9)
-- [ ] `welcome` — **Welcome** (controls=11)
+- [x] `welcome` — **Welcome** (rewired · polish pass 1)
 
 ### SUBSTANTIVE — 9 (keep; still need ALIEN NEON reskin)
 
