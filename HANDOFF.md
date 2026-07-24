@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-24 (Welcome Transmission + ALIEN NEON Phase 1 on main)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24 11:46 EDT (status brief — bake-ready snapshot)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -11,9 +11,55 @@
 > [`docs/ALIEN_NEON_SETTINGS_BRIEF.md`](./docs/ALIEN_NEON_SETTINGS_BRIEF.md)
 > **first**, then the checklist
 > [`docs/ALIEN_NEON_SETTINGS_AUDIT.md`](./docs/ALIEN_NEON_SETTINGS_AUDIT.md).
-> **Phase 1 done.** Settings polish pass 1 landed (Welcome wiring + kill homemade
-> path/logo dumps). Continue polishing Settings pages; Phase 2 shell GTK next.
+> **Phase 1 done on `main`.** Settings polish pass 1 landed. Continue polishing
+> Settings pages; Phase 2 shell GTK next.
 > Stay-as-is: Bifrost / GodsApp / Meli / Arsenal — do not restyle.
+
+---
+
+## WHERE WE STAND — 2026-07-24 · 11:46 EDT
+
+> Short status for the owner. Detail lives in §5 / §6 below. **Update this block
+> whenever bake readiness changes.**
+
+| | |
+|---|---|
+| **Repo** | `~/Nyxus-Core` · branch **`main`** · clean · synced with `origin/main` |
+| **HEAD** | `a7d6b4a6` |
+| **Open PRs** | **0** |
+| **Repo state for bake** | ✅ **COMMITTED + IDLE** — safe to kick `sudo ./build-iso.sh` |
+| **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (built **03:05 EDT**) — **STALE** vs current `main` (pre–#71/#72, pre–welcome note, pre–Phase 1). **Do not reflash that file expecting today's work.** |
+| **Kage-Ryu pkgs** | `linux-kage-ryu-7.0.12` + headers present (~**08:53 EDT**). PKGBUILD enables iso9660/squashfs/loop. `makepkg` **not** running. Owner reported kernel done — still **verify** live mount (QEMU or stick) before trusting Kage as default. |
+| **Running desktop kernel** | Stock `7.1.3-arch1-2` (not Kage) — expected until install/boot from new ISO |
+
+### ✅ DONE (on `main`, pushed)
+
+- Welcome Transmission (borderless kitty poem/riddle) + Dream Protocol easter egg (`Super+Shift+N` / `Super+Shift+D`)
+- ALIEN NEON **Phase 1** landed (PR **#73** merged) — palette + Settings prism-only + Welcome wizard polish
+- PR **#71/#72** eww first-paint / black-box + build stamp (in repo; stick needs rebake)
+- W1 `profiledef` file_permissions regen · W6 arsenal/reactive shard ship
+- Offline-first bootstrap · ALIEN NEON palette lock · urban-alien greeter/lock/screensaver wiring
+- Branches intentionally **not** merged: `archive/vault-*`, `local-stash-work` (secrets/DBs), stale `nyxus-hyprland-055-fixes`
+
+### 🔲 STILL TO FINISH (owner / next)
+
+| Priority | Item | Who |
+|---|---|---|
+| **1 · BAKE** | Rebake from current idle `main`: `cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh` | Owner (root) |
+| **2 · FLASH** | Flash **new** ISO only; re-check `lsblk` (USB letter moves). Boot **UEFI** | Owner |
+| **3 · VERIFY** | On stick: `/etc/nyxus-build` commit ≥ `a7d6b4a6`; bars OK; welcome note once; Kage mounts ISO (no iso9660 error) or use stock rescue | Owner |
+| **4 · Theme Phase 2** | Cascade ALIEN NEON to shell GTK apps (Home, Panel, Start, Terminal, …) | Next agent |
+| **5 · Settings polish** | Remaining PARTIAL/MINIMAL pages (`vpn` first); tick `docs/ALIEN_NEON_SETTINGS_AUDIT.md` | Next agent |
+| **6 · Hygiene (deferred)** | ~33 non-boot Replit refs; prune stale remote branches; old ISOs in `out/` (~50 GB) | Later |
+| **7 · Optional** | Companion mascot re-enable; fold `companion-3d`; home backup to Ventoy | Owner call |
+
+### Bake command (reminder)
+
+```bash
+# Repo must be clean: git status  →  nothing to commit
+cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh
+# → iso-builder/out/nyxus-<YYYY.MM.DD>-x86_64.iso
+```
 
 ---
 
@@ -170,7 +216,10 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
 
 ---
 
-## 5. CURRENT STATE (2026-07-23)
+## 5. CURRENT STATE (2026-07-24)
+
+> **See also the top-of-file [WHERE WE STAND](#where-we-stand--2026-07-24--1146-edt) block**
+> for the bake-ready snapshot (time-stamped).
 
 ### Done + pushed
 - **2026-07-24 — Welcome Transmission (borderless kitty boot note).** Separate
@@ -496,11 +545,13 @@ Full GO/NO-GO from Copilot audit. Cross-checked against `main` @ `fb63e2aa` (+ #
 
 | Gate | State |
 |---|---|
-| **C1** Rebuild Kage-Ryu (`ISO9660_FS` + `SQUASHFS` + `BLK_DEV_LOOP` =y); QEMU verify | ⛔ **BLOCKER** — owner `makepkg` **in progress** |
-| Bake from clean committed idle `main` (has #71 via #72) | ✅ ready once C1 done |
+| **C1** Rebuild Kage-Ryu (`ISO9660_FS` + `SQUASHFS` + `BLK_DEV_LOOP` =y); QEMU verify | ⚠️ **PKGS PRESENT** (`7.0.12` @ 08:53 EDT 2026-07-24; PKGBUILD enables live FS). Owner said kernel done; **still verify** mount before trusting. `makepkg` idle. |
+| Bake from clean committed idle `main` | ✅ **READY NOW** — `main` @ `a7d6b4a6` (2026-07-24 11:46 EDT), 0 open PRs |
 | Boot labels / offline-cache / kernel hard-fail guards | ✅ intact |
 | Palette lock (ALIEN NEON; cream / `#a06bff` clean in desktop trees) | ✅ clean |
 | Desktop delivery (skel + bootstrap + `/opt/nyxus-cache`) | ✅ intact |
+| Welcome Transmission + Dream Protocol | ✅ **DONE** on `main` (`1af1a65f`) |
+| ALIEN NEON Phase 1 (PR #73) | ✅ **MERGED** on `main` |
 | **W1** Regenerate `profiledef.sh` `file_permissions` (~59 `/usr/local/bin` missing) | ✅ **DONE 2026-07-24** (177 entries regen from airootfs) |
 | **W2** `verify-profile.sh`: label consistency + ban `#f4ead5` + kernel-policy + cache/daemon asserts | ⚠️ cream ban **DONE**; other W2 asserts still deferred |
 | **W3** Dead Replit host fallbacks in chrome/stickies/sysmon/… | ℹ️ deferred (~33 non-boot) |
@@ -509,9 +560,11 @@ Full GO/NO-GO from Copilot audit. Cross-checked against `main` @ `fb63e2aa` (+ #
 | **W6 (this session — Copilot missed)** bake wipes `nyxus-arsenal-apps.conf` from skel; never `source=`d | ✅ **DONE 2026-07-24** — bake shard list + `source=` in hyprland (NS+skel); also ships `nyxus-reactive.conf` |
 | I1–I5 | ℹ️ cleanup / cosmetic (orphan greeter, dup python tree, Forge `#0a0a14`, stale BUILD_ID stubs restamped at bake) |
 
-**Verdict (aligned):** GO for bake once **C1** finishes and pkgs verify. Worth landing **W1 + W6** on `main` before kickoff; W2 nice-to-have. Audit note: bootstrap is **`2026.07.24-r13-fixes`** on main (audit text said r12 — stale).
+**Verdict (2026-07-24 11:46 EDT):** **GO for bake** from idle `main` @ `a7d6b4a6`.
+Kage pkgs exist; if live Kage still fails iso9660 on stick, boot **stock rescue** and
+rebuild/verify pkgs. Old `nyxus-2026.07.24` ISO at 03:05 is **not** this tip — rebake.
 
-**After bake verify:** `cat /etc/nyxus-build` → commit ≥ `0f866221`; `lsblk` label `NYXUS_2026_07`; UEFI Kage mounts ISO; `uname -r` = kage-ryu; desktop offline; bars without black box / minutes-long delay.
+**After bake verify:** `cat /etc/nyxus-build` → commit ≥ `a7d6b4a6`; `lsblk` label `NYXUS_2026_07`; UEFI Kage mounts ISO (or stock rescue); desktop offline; bars without black box; welcome transmission once on first login.
 
 ---
 

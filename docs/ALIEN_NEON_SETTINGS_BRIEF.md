@@ -2,17 +2,29 @@
 
 > **Owner direction locked 2026-07-24.** Read this before touching theme or Settings.
 > Master checklist (counts + full lists): [`ALIEN_NEON_SETTINGS_AUDIT.md`](./ALIEN_NEON_SETTINGS_AUDIT.md)
-> Also read [`HANDOFF.md`](../HANDOFF.md) § theme/settings workstream.
+> Also read [`HANDOFF.md`](../HANDOFF.md) — especially **WHERE WE STAND** (bake snapshot).
+
+---
+
+## Build snapshot — 2026-07-24 · 11:46 EDT
+
+| | |
+|---|---|
+| **`main` HEAD** | `a7d6b4a6` (clean, pushed, 0 open PRs) |
+| **Bake** | ✅ Repo ready — owner runs `sudo ./build-iso.sh` |
+| **Stale ISO** | `nyxus-2026.07.24` @ 03:05 EDT — **do not reflash** for today's work |
+| **Phase 1** | ✅ On `main` (merged PR #73) |
+| **Next theme work** | Phase 2 shell GTK cascade (after bake, or in parallel on a branch) |
 
 ---
 
 ## Where we start (do not skip)
 
-**Phase 1 — Foundation (DONE on branch `cursor/audit-stay-as-is-scope-92cd`):**
+**Phase 1 — Foundation (DONE on `main`):**
 
 1. ~~`nyxus_palette.py` (+ skel / live mirrors)~~ ✅
    - Full ALIEN NEON canon (include **void `#05060a`** + **orchid `#e367ff`**)
-   - Brand string **ALIEN NEON** (kill **DARK MIRROR**)
+   - Brand string **ALIEN NEON** (kill **DARK MIRROR** in Settings/UI strings)
    - Kill gold `#d4b87a`; `_ACCENT_FALLBACK` = prism; HUD void/green aligned
 2. ~~`nyxus_settings.py` (repo + skel lockstep)~~ ✅
    - CSS / chrome → ALIEN NEON
@@ -52,14 +64,15 @@ Settings hub, Home/Main Page, Panel, Start, Terminal, Stickies, Notes, Notepad, 
 | Item | Status |
 |---|---|
 | ALIEN NEON locked in `accent.json` (prism-only, follow_wallpaper off) | Done on `main` |
-| Desktop Hyprland / walls / GRUB dragon → ALIEN NEON | Done in repo; stick needs bake with current `main` |
-| PR #71 eww delay / black-box / stamp fixes | On `main` via #72 (`0f866221`) — needs **rebake** |
+| Desktop Hyprland / walls / GRUB dragon → ALIEN NEON | Done in repo; stick needs **new** bake |
+| PR #71 eww delay / black-box / stamp fixes | On `main` via #72 — needs **rebake** |
 | W1 `profiledef` file_permissions regen | On `main` (`09fef7bb`) |
 | W6 arsenal/reactive bake shard wipe fix | On `main` (`09fef7bb`) |
 | Stay-as-is carve-out documented | This brief + audit §0 |
 | Full counts checklist | `docs/ALIEN_NEON_SETTINGS_AUDIT.md` |
-| **Phase 1** palette + Settings chrome + Theme Packs prism-only | Done on `cursor/audit-stay-as-is-scope-92cd` (merge to main) |
-| Kage-Ryu live iso9660 | **Still blocker** until owner `makepkg` finishes + verify + rebake |
+| **Phase 1** palette + Settings chrome + Theme Packs prism-only | ✅ **On `main`** (PR #73 merged 2026-07-24) |
+| Welcome Transmission + Dream Protocol | ✅ On `main` (`1af1a65f`) |
+| Kage-Ryu live iso9660 pkgs | ⚠️ Pkgs present (`7.0.12` @ 08:53); verify on boot |
 
 ---
 
@@ -73,8 +86,8 @@ Settings hub, Home/Main Page, Panel, Start, Terminal, Stickies, Notes, Notepad, 
 3. **Live `~/.nyxus` ≠ always repo.** Owner’s live settings sha differed from repo;
    prefer editing **repo** sources, then sync live only if owner asks.
 4. **Don’t bake mid-edit.** Commit idle repo first. Don’t flash the old
-   `nyxus-2026.07.24` expecting #71 / theme-app fixes.
-5. **Update HANDOFF** the moment status changes (phase done, blocker cleared, scope change).
+   `nyxus-2026.07.24` (@ 03:05) expecting #71 / theme / welcome-note fixes.
+5. **Update HANDOFF WHERE WE STAND** the moment status changes (phase done, blocker cleared, bake finished).
 
 ---
 
@@ -84,7 +97,9 @@ Settings hub, Home/Main Page, Panel, Start, Terminal, Stickies, Notes, Notepad, 
 |---|---|---|
 | 2026-07-24 | Audit + stay-as-is carve-out | `docs/ALIEN_NEON_SETTINGS_AUDIT.md`; branch `cursor/audit-stay-as-is-scope-92cd` |
 | 2026-07-24 | This brief added — Phase 1 = start | (this file) |
-| 2026-07-24 | **Phase 1 DONE** — palette ALIEN NEON + Settings chrome + Theme Packs prism-only; mirrors synced | branch `cursor/audit-stay-as-is-scope-92cd` |
-| 2026-07-24 | **Settings polish pass 1** — Welcome rewired (real marker + skip steps); kill Logo source / path dumps on Welcome/Login/Plymouth/Sounds/Language; VPN file-picker import; wizard honors skip prefs | same branch |
+| 2026-07-24 | **Phase 1 DONE** — palette ALIEN NEON + Settings chrome + Theme Packs prism-only; mirrors synced | branch → merged to `main` via PR #73 |
+| 2026-07-24 | **Settings polish pass 1** — Welcome rewired; kill Logo/path dumps; VPN file-picker; wizard skip prefs | same → `main` |
+| 2026-07-24 ~11:40 EDT | Welcome Transmission + Dream egg; Phase 1 merge; `main` @ `a7d6b4a6` bake-ready | `1af1a65f` + merge `d76b9989` |
+| 2026-07-24 11:46 EDT | Status brief written (HANDOFF WHERE WE STAND + this snapshot) | (this update) |
 
-*Next: continue Settings page polish (remaining PARTIAL/MINIMAL) + Phase 2 shell GTK cascade. Tick audit rows as you go.*
+*Next after bake: continue Settings page polish (remaining PARTIAL/MINIMAL) + Phase 2 shell GTK cascade. Tick audit rows as you go.*
