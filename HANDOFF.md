@@ -477,7 +477,7 @@ Full GO/NO-GO from Copilot audit. Cross-checked against `main` @ `fb63e2aa` (+ #
 | **W1** Regenerate `profiledef.sh` `file_permissions` (~59 `/usr/local/bin` missing) | ⚠️ recommended pre-bake |
 | **W2** `verify-profile.sh`: label consistency + ban `#f4ead5` + kernel-policy + cache/daemon asserts | ⚠️ hygiene, not blocker (cream **confirmed absent** from `FORBIDDEN_PATTERN` ~1188) |
 | **W3** Dead Replit host fallbacks in chrome/stickies/sysmon/… | ℹ️ deferred (~33 non-boot) |
-| **W4** `/home/cosmic` in jeTT/audit/arsenal `.env.example` | ℹ️ deferred (note: #71 claimed jeTT→`/home/nyx` — re-verify before closing) |
+| **W4** `/home/cosmic` in jeTT/audit/arsenal `.env.example` | ℹ️ jeTT + audit **clean on current main** (#71); arsenal `.env.example` still deferred |
 | **W5** `dunstrc` hard-codes `/home/nyx` icon_path | ℹ️ OK on live ISO; de-leak on install |
 | **W6 (this session — Copilot missed)** bake wipes `nyxus-arsenal-apps.conf` from skel; never `source=`d | ⚠️ **fix before next bake** if arsenal window rules matter |
 | I1–I5 | ℹ️ cleanup / cosmetic (orphan greeter, dup python tree, Forge `#0a0a14`, stale BUILD_ID stubs restamped at bake) |
