@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-24 (PR #71 landed on main via #72)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24 (Copilot pre-bake audit stored; kage makepkg in progress)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -435,6 +435,7 @@ until a rebuilt kernel is rebaked.
    (Kage-Ryu is baked by default now; it hard-fails if the prebuilt kernel pkgs
    are missing. Add `NYX_WITH_KAGE_RYU=0` only for a stock-only debug ISO.)
    **Do not flash the existing `nyxus-2026.07.24` again expecting #71 fixes — rebake.**
+   Owner started `makepkg -scf` for kage pkgs **2026-07-24 ~04:57** (in progress).
 3. **Re-flash** — **always re-check `lsblk`** (64GB SanDisk was `/dev/sdb` on
    2026-07-24; letters move). Boot **UEFI**; until Kage pkgs are rebuilt pick
    **stock rescue**. After Kage rebuild: verify Kage entry mounts ISO (no iso9660
@@ -461,6 +462,29 @@ until a rebuilt kernel is rebaked.
    branches on GitHub (copilot/*, devin/*, cursor/*, archive/vault-*) — prune to
    avoid re-scattering. Prune non-alien walls from the payload if size matters.
 7. Owner's call: fold `companion-3d` under one roof or keep separate.
+
+### Copilot Deep Pre-Bake Audit (2026-07-24) — stored here (no separate memory store)
+
+Full GO/NO-GO from Copilot audit. Cross-checked against `main` @ `fb63e2aa` (+ #71 on main).
+
+| Gate | State |
+|---|---|
+| **C1** Rebuild Kage-Ryu (`ISO9660_FS` + `SQUASHFS` + `BLK_DEV_LOOP` =y); QEMU verify | ⛔ **BLOCKER** — owner `makepkg` **in progress** |
+| Bake from clean committed idle `main` (has #71 via #72) | ✅ ready once C1 done |
+| Boot labels / offline-cache / kernel hard-fail guards | ✅ intact |
+| Palette lock (ALIEN NEON; cream / `#a06bff` clean in desktop trees) | ✅ clean |
+| Desktop delivery (skel + bootstrap + `/opt/nyxus-cache`) | ✅ intact |
+| **W1** Regenerate `profiledef.sh` `file_permissions` (~59 `/usr/local/bin` missing) | ⚠️ recommended pre-bake |
+| **W2** `verify-profile.sh`: label consistency + ban `#f4ead5` + kernel-policy + cache/daemon asserts | ⚠️ hygiene, not blocker (cream **confirmed absent** from `FORBIDDEN_PATTERN` ~1188) |
+| **W3** Dead Replit host fallbacks in chrome/stickies/sysmon/… | ℹ️ deferred (~33 non-boot) |
+| **W4** `/home/cosmic` in jeTT/audit/arsenal `.env.example` | ℹ️ deferred (note: #71 claimed jeTT→`/home/nyx` — re-verify before closing) |
+| **W5** `dunstrc` hard-codes `/home/nyx` icon_path | ℹ️ OK on live ISO; de-leak on install |
+| **W6 (this session — Copilot missed)** bake wipes `nyxus-arsenal-apps.conf` from skel; never `source=`d | ⚠️ **fix before next bake** if arsenal window rules matter |
+| I1–I5 | ℹ️ cleanup / cosmetic (orphan greeter, dup python tree, Forge `#0a0a14`, stale BUILD_ID stubs restamped at bake) |
+
+**Verdict (aligned):** GO for bake once **C1** finishes and pkgs verify. Worth landing **W1 + W6** on `main` before kickoff; W2 nice-to-have. Audit note: bootstrap is **`2026.07.24-r13-fixes`** on main (audit text said r12 — stale).
+
+**After bake verify:** `cat /etc/nyxus-build` → commit ≥ `0f866221`; `lsblk` label `NYXUS_2026_07`; UEFI Kage mounts ISO; `uname -r` = kage-ryu; desktop offline; bars without black box / minutes-long delay.
 
 ---
 
