@@ -267,6 +267,43 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
   build-iso owner's flagged TODO below: `nyx-*.iso` → `nyxus-*.iso` is now done
   in `build-iso.yml`.)
 
+- **2026-07-24 — URBAN-ALIEN on every idle/login surface + reworked hypridle**
+  (same branch). Owner: "login screen + lock + screensaver must be urban-alien;
+  hypridle layout was wrong." Audited every surface; they now ALL resolve to the
+  urban-alien hero:
+  - **Screensaver** — `nyxus-screensaver` launcher was running
+    `nyxus_matrix_saver.py` (matrix-rain — the old effect the owner didn't want).
+    The correct urban-alien saver (`nyxus_screensaver.py`, alien wallpaper hero +
+    clock + NYXUS mark) already existed but was disconnected. Repointed the
+    launcher to it + pinned `NYXUS_SCREENSAVER_WALL=nyxus-urban-alien`.
+  - **hypridle** — new layout: 45s idle-glass · 300s (5m) dim + urban-alien
+    screensaver · **600s (10m) LOCK the session** (hyprlock, urban-alien) + panel
+    off so you log back in · 900s (15m) suspend. Dropped the redundant 330s
+    reinforce listener + the wall-staging in `lock_cmd`.
+  - **hyprlock** (lock / re-login) — background pinned to
+    `/usr/share/backgrounds/nyxus/nyxus-urban-alien.png` (was a random rotating
+    `~/.cache/nyxus/lock-wall.png`).
+  - **Greeter** (`nyxus-greeter`, greetd→regreet) — login background pinned to
+    urban-alien (was random from `wall-rotation.list`). Fixed the shipped copy +
+    the `greetd/` bake source (build-iso installs from `greetd/nyxus-greeter`).
+  - **Already urban-alien / verified consistent:** desktop `wallpaper.conf` +
+    `wallpaper.json` (tint `#7d3dff`); SDDM installed-greeter bg (build-iso
+    overrides `background.png` → urban-alien); and all **flyouts / menus /
+    settings** backdrops, which `nyxus-gen-backdrop` bakes from the *current*
+    wallpaper (urban-alien) behind their glass — so they inherit it automatically.
+  - Dropped the now-dead `exec-once = nyxus-rotate-walls lock` seed. The DESKTOP
+    still rotates every 20 min but only through the **alien-only** set, so it
+    stays on-theme (owner didn't ask to pin the desktop; say so if you want it
+    fixed to urban-alien too).
+  - **⚠ Stale bits flagged (not deleted — unused, low-risk):**
+    `artifacts/api-server/nyxus-scripts/nyxus-greeter` (root copy, rev 2026-07-09)
+    is an OLDER greeter variant with NO login-bg wiring; neither `build-iso.sh`
+    nor `nyxus_install.sh` reference it (they use `greetd/nyxus-greeter`).
+    `nyxus_matrix_saver.py` is now unwired (kept as an alternate saver).
+  - **Not verified here:** on-stick idle→saver→lock→login flow — needs an Arch
+    live-boot (out of scope headless). Config validated: verify-profile exit 0,
+    `bash -n` + `py_compile` clean.
+
 - **2026-07-24 (consistency audit):** Repo-wide sweep to guarantee ONE current build with no stale/prior-build leftovers:
   - **Second wall staging tree** `artifacts/api-server/nyxus-scripts/` still shipped all the old walls (darkmirror/cosmos/prism/void/sierengowski/ink-swirl…) **and was missing the alien heroes** — purged the stale set, added `urban-alien`/`login-wall`/`desktop-hero`/`graffiti-space`/`hacker-mode-a·b`/`demon` so the offline-cache/API bootstrap path matches the ISO. Removed dead `nyxus-set-frost-wallpaper.sh` + stale `download.ts` allowlist entries; added the hero walls to the allowlist so `_soft_wall` fetches resolve.
   - **Palette script drift:** `nyxus_palette.py` / `nyxus_matrix_saver.py` skel copies had drifted back to an old secondary `#ff2d55` — re-synced to locked `#ff2dad`.
