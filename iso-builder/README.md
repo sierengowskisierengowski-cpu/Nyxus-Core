@@ -36,7 +36,7 @@ cd iso-builder
 sudo ./build-iso.sh
 ```
 
-Output: `iso-builder/out/nyx-<today>-x86_64.iso` (e.g. `nyx-2026.05.11-x86_64.iso`)
+Output: `iso-builder/out/nyxus-<today>-x86_64.iso` (e.g. `nyxus-2026.05.11-x86_64.iso`)
 
 ## What `build-iso.sh` does
 

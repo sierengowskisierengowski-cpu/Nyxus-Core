@@ -2,7 +2,7 @@
 
 This guide covers wiping this machine (MSI Stealth GS77 12UE, single 1TB
 NVMe, UEFI, Secure Boot disabled, hostname `nyx-cosmic`) and doing a clean
-install of NYXUS from `iso-builder/out/nyx-2026.07.15-x86_64.iso`, then
+install of NYXUS from `iso-builder/out/nyxus-2026.07.15-x86_64.iso`, then
 restoring everything from a backup.
 
 **Read this whole document before doing anything irreversible.** Steps 1-3
@@ -106,7 +106,7 @@ double check (unplug/replug and diff `lsblk` output) rather than guessing.
 Then, everything on that USB stick will be erased:
 
 ```bash
-sudo dd if=/home/cosmic/Nyxus-Core/iso-builder/out/nyx-2026.07.15-x86_64.iso \
+sudo dd if=/home/cosmic/Nyxus-Core/iso-builder/out/nyxus-2026.07.15-x86_64.iso \
      of=/dev/sdX bs=4M status=progress oflag=sync
 sync
 ```
@@ -115,8 +115,8 @@ Verify the write:
 
 ```bash
 # Compare the first N bytes/checksum of the ISO against what's on the device
-cmp -n "$(stat -c%s /home/cosmic/Nyxus-Core/iso-builder/out/nyx-2026.07.15-x86_64.iso)" \
-    /home/cosmic/Nyxus-Core/iso-builder/out/nyx-2026.07.15-x86_64.iso /dev/sdX && echo "USB write verified OK"
+cmp -n "$(stat -c%s /home/cosmic/Nyxus-Core/iso-builder/out/nyxus-2026.07.15-x86_64.iso)" \
+    /home/cosmic/Nyxus-Core/iso-builder/out/nyxus-2026.07.15-x86_64.iso /dev/sdX && echo "USB write verified OK"
 ```
 
 ## 4. Double-check before wiping
