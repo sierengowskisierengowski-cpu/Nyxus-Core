@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-23** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -226,6 +226,44 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
   See **§5b BRIEF** for the full palette table + what still needs a rebake.
 
 - **2026-07-23 (walls purge):** Non-alien wallpapers deleted from ISO airootfs (demon/hacker-mode/kageryu/void-vortex/sierengowski/prism/eye-mosaic/etc.). `stations.json` restored (was wrongly identical to hacker). Stations + workspaces + rotation lists = alien-only. Palette remains prism-only / follow_wallpaper off. Also purged cinematic darkmirror/cosmos/nebula/blackhole/void SDDM packs; dynamic wallpaper set = `alien` only; SDDM greeter = urban-alien heroes. Restored demon + hacker-mode walls (alien art); kageryu dragon stays out.
+
+- **2026-07-24 — GREEN-LIGHT PASS: `main` was RED; fixed the CI gates the
+  alien/palette/kernel work had broken (branch `cursor/green-light-ci-wallpaper-kernel-ad9a`).**
+  `typecheck`/`validate` were green, but the `ci` aggregate **and** `build-iso`
+  were failing on every push. Root causes + fixes (all pushed):
+  1. **`verify-profile.sh` (the `ci` gate) had 3 stale/broken checks** — direct
+     fallout of the alien-wall purge + the global palette find/replace:
+     - *SDDM wallpaper mirror* check demanded the greeter mirror the FULL 58-pack
+       (`SDDM_PNG >= WP_PNG`), contradicting the intended **curated alien-hero**
+       greeter (7 heroes). Relaxed to: non-empty mirror that **includes the
+       default hero** (`${WP_SLUG}.png`).
+     - *default `WALLPAPER_PATH`* check only translated `/home/<user>/…` →
+       `/etc/skel/…`; it couldn't resolve the **system-wide**
+       `/usr/share/backgrounds/nyxus/<slug>.png` path the ALIEN NEON lock
+       intentionally adopted (user-agnostic, immune to the de-leak pass). Now
+       resolves both forms.
+     - *`FORBIDDEN_PATTERN` (13v ALIEN NEON compliance)* — the palette find/replace
+       had rewritten the OLD violet/cyan hexes (`C084FC/7C3AED/a06bff/3ad8ff`) to
+       the **canonical** `#7d3dff`/`#2bd2ff` *inside the forbidden list*, so the
+       check was banning the very ALIEN NEON palette it must enforce. Restored the
+       old-palette hexes; canonical colors are explicitly allowed. **⚠ Do not
+       re-run a blind global hex sed over `verify-profile.sh` — it will re-corrupt
+       this list.**
+     `bash iso-builder/verify-profile.sh` now exits 0.
+  2. **`build-iso` workflow was perpetually red** — Kage-Ryu is the default kernel
+     and `build-iso.sh` hard-fails when its prebuilt pkgs are absent, which they
+     always are on a GitHub runner. Made `build-iso.yml` **workflow_dispatch-only**
+     + bake with `NYX_WITH_KAGE_RYU=0` (stock-kernel **validation** ISO); Release
+     gated behind `create_release` (default off) + clearly labelled stock-only. The
+     authoritative Kage-Ryu ISO is still baked locally by the owner (§6).
+  3. **ISO filename `nyx-…` → `nyxus-…`** in `build-iso.yml` (checksum/release names
+     were mismatched vs `build-iso.sh`'s real `nyxus-<date>-x86_64.iso`) and in
+     `iso-builder/README.md` + `docs/REINSTALL_GUIDE.md`. (The `nyx` user account
+     and internal `nyx-profile` dir are intentional — left as-is.)
+  Palette lock still holds: cream `#f4ead5` appears only here in HANDOFF (docs), 0
+  live occurrences. **Not verified here:** live desktop UI / "dead buttons" and the
+  ISO bake itself — both require an Arch live-boot / graphical session, out of
+  scope for this headless env (per AGENTS.md).
 
 ### The `nyxus-2026.07.22` stick booted BROKEN — and why (post-mortem)
 Two overlapping causes: (1) that stick was baked from a **partial/stale** profile
