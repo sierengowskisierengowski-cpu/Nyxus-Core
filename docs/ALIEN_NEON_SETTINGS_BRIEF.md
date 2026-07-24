@@ -103,5 +103,6 @@ Settings hub, Home/Main Page, Panel, Start, Terminal, Stickies, Notes, Notepad, 
 | 2026-07-24 ~11:40 EDT | Welcome Transmission + Dream egg; Phase 1 merge; `main` @ `a7d6b4a6` bake-ready | `1af1a65f` + merge `d76b9989` |
 | 2026-07-24 11:46 EDT | Status brief written (HANDOFF WHERE WE STAND + this snapshot) | (this update) |
 | 2026-07-24 ~11:50 EDT | **Master day brief** — combined last-day notes into one chronicle | `docs/BUILD_DAY_BRIEF_2026-07-24.md` |
+| 2026-07-24 PM | **ALIEN NEON palette/brand purge COMPLETE** — killed gold `#d4b87a` + `DARK MIRROR`/`OBSIDIAN PRISM` from every shipped in-scope surface (shell apps→`ACCENT_PRIMARY`, toast canon accents, desktop/rofi, calamares, greetd/sddm/wlogout, eww/hypr, login issue/motd, boot-splash, generators, nyxus-web). Fixed a bake regression (NS behind baked profile → Welcome-Transmission rules would drop), the greeter regreet selector, and a stale `verify-profile` welcome assert. Bumped `BOOTSTRAP_VERSION` → r14-alien-neon. Gates green. | branch `cursor/alien-neon-theme-audit-ac8f` |
 
-*Next after bake: continue Settings page polish (remaining PARTIAL/MINIMAL) + Phase 2 shell GTK cascade. Tick audit rows as you go.*
+*Next after bake: Settings Phase 3/4 (deepen EMPTY/MINIMAL/PARTIAL pages, add missing sections) + deeper GTK-HUD restyle. One deferred non-shipping item: `WaybarMockup.tsx` cream demo page. Tick audit rows as you go.*
