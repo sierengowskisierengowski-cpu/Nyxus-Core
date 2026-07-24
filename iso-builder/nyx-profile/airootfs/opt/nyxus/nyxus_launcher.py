@@ -458,7 +458,7 @@ class Launcher(Adw.Application):
         head.append(echo)
         spacer = Gtk.Box(); spacer.set_hexpand(True)
         head.append(spacer)
-        stamp = Gtk.Label(label="NYX · SUPER+SPACE")
+        stamp = Gtk.Label(label="NYXUS · SUPER+SPACE")
         stamp.add_css_class("hud-stamp")
         head.append(stamp)
         outer.append(head)

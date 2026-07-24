@@ -13,8 +13,8 @@ This software and all associated files — source code, configuration files, scr
 
 **Naming contract:**
 
-- NYX = bootable ISO image artifact.
-- NYXUS = operating system, platform, and application ecosystem.
+- NYXUS = the operating system, platform, application ecosystem, **and** the
+  bootable ISO image artifact. There is no separate "NYX" product name.
 
 **You may not:**
 
@@ -22,7 +22,7 @@ This software and all associated files — source code, configuration files, scr
 - Modify, adapt, translate, or create derivative works based on this software.
 - Reverse engineer, decompile, or disassemble any compiled component.
 - Remove or alter any copyright notices, stamps, watermarks, or identity markers embedded in the software.
-- Use the names NYX, NYXUS, or NYX-J5W-2026-SIERENGOWSKI-LOCKED to endorse or promote products derived from this software.
+- Use the names NYXUS or NYX-J5W-2026-SIERENGOWSKI-LOCKED to endorse or promote products derived from this software.
 
 **Personal use:**
 
