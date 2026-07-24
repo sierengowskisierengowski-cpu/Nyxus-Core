@@ -24,7 +24,7 @@ function SectionTitle({ label, color = 'orange' }: { label: string; color?: 'ora
 }
 
 function noveltyGradient(score: number) {
-  if (score >= 9) return { background: 'linear-gradient(90deg, #7d3dff, #6d28d9)', boxShadow: '0 0 8px rgba(125,61,255,0.4)' };
+  if (score >= 9) return { background: 'linear-gradient(90deg, #7c3aed, #6d28d9)', boxShadow: '0 0 8px rgba(124,58,237,0.4)' };
   if (score >= 7) return { background: 'linear-gradient(90deg, #dc2626, #991b1b)' };
   if (score >= 4) return { background: 'linear-gradient(90deg, #ea580c, #c2410c)' };
   return { background: '#1e293b' };
@@ -87,19 +87,19 @@ export default function Redforge() {
                 : { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }
               }
             >
-              <Crosshair className="w-5 h-5" style={{ color: status?.online ? '#4ade80' : '#ff2d55' }} />
+              <Crosshair className="w-5 h-5" style={{ color: status?.online ? '#4ade80' : '#f87171' }} />
             </div>
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <span className="text-base font-black tracking-tight uppercase" style={{ color: '#e2e8f0' }}>REDFORGE Handoff</span>
                 {statusLoading ? (
-                  <Skeleton className="h-5 w-16" style={{ background: '#05060a' }} />
+                  <Skeleton className="h-5 w-16" style={{ background: '#0a0a14' }} />
                 ) : (
                   <span
                     className="text-[9px] font-black font-mono tracking-wider uppercase px-2.5 py-1 rounded"
                     style={status?.online
                       ? { background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', color: '#4ade80' }
-                      : { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ff2d55' }
+                      : { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }
                     }
                   >
                     {status?.online ? "● READY" : "● UNAVAILABLE"}
@@ -176,7 +176,7 @@ export default function Redforge() {
           <SectionTitle label="Export History" color="blue" />
           {historyLoading ? (
             <div className="space-y-2">
-              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" style={{ background: '#05060a' }} />)}
+              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" style={{ background: '#0a0a14' }} />)}
             </div>
           ) : !history?.length ? (
             <div className="text-center py-10">
@@ -207,7 +207,7 @@ export default function Redforge() {
                             ? { background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', color: '#4ade80' }
                             : item.score >= 40
                             ? { background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.3)', color: '#f97316' }
-                            : { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ff2d55' }
+                            : { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }
                           }
                         >
                           {item.score}/100

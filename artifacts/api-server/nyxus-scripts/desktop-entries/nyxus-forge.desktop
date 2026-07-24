@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Forge
+Comment=AI research platform — technique gen + analysis
+Exec=nyxus-app-shell forge
+Icon=nyxus-forge
+Terminal=false
+Categories=Security;Science;
+StartupWMClass=NYXUS App
+Keywords=nyxus;security;arsenal;

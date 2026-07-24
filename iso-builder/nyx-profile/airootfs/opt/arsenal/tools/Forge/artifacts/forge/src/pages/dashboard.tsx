@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Flame, Shield, BookOpen, Trophy, Activity, Cpu, AlertTriangle } from "lucide-react";
 
 function noveltyGradient(score: number) {
-  if (score >= 9) return { background: 'linear-gradient(90deg, #7d3dff, #6d28d9)', boxShadow: '0 0 10px rgba(125,61,255,0.4)' };
+  if (score >= 9) return { background: 'linear-gradient(90deg, #7c3aed, #6d28d9)', boxShadow: '0 0 10px rgba(124,58,237,0.4)' };
   if (score >= 7) return { background: 'linear-gradient(90deg, #dc2626, #991b1b)' };
   if (score >= 4) return { background: 'linear-gradient(90deg, #ea580c, #c2410c)' };
   return { background: '#1e293b' };
@@ -32,7 +32,7 @@ function StatusIndicator({ online, name }: { online: boolean; name: string }) {
   return (
     <div
       className="flex items-center gap-2 px-3 py-1.5 rounded"
-      style={{ background: '#05060a', border: '1px solid #111118' }}
+      style={{ background: '#0a0a14', border: '1px solid #111118' }}
     >
       <span
         className={`w-1.5 h-1.5 rounded-full shrink-0 ${online ? 'animate-pulse' : ''}`}
@@ -164,7 +164,7 @@ export default function Dashboard() {
           {dist ? (
             <div className="space-y-4">
               {[
-                { label: "Unprecedented", range: "9–10", count: dist.unprecedented, color: 'linear-gradient(90deg, #7d3dff, #6d28d9)', glow: 'rgba(125,61,255,0.4)' },
+                { label: "Unprecedented", range: "9–10", count: dist.unprecedented, color: 'linear-gradient(90deg, #7c3aed, #6d28d9)', glow: 'rgba(124,58,237,0.4)' },
                 { label: "High", range: "7–8", count: dist.high, color: 'linear-gradient(90deg, #dc2626, #991b1b)', glow: 'rgba(220,38,38,0.3)' },
                 { label: "Medium", range: "4–6", count: dist.medium, color: 'linear-gradient(90deg, #ea580c, #c2410c)', glow: 'rgba(234,88,12,0.3)' },
                 { label: "Low", range: "1–3", count: dist.low, color: '#1e293b', glow: '' },
@@ -182,7 +182,7 @@ export default function Dashboard() {
                     </div>
                     <div
                       className="h-1.5 rounded-full overflow-hidden"
-                      style={{ background: '#05060a', border: '1px solid #0f0f1a' }}
+                      style={{ background: '#0a0a14', border: '1px solid #0f0f1a' }}
                     >
                       <div
                         className="h-full rounded-full transition-all duration-700"
@@ -219,7 +219,7 @@ export default function Dashboard() {
           {recentLoading ? (
             <div className="space-y-2">
               {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-14 w-full rounded-lg" style={{ background: '#05060a' }} />
+                <Skeleton key={i} className="h-14 w-full rounded-lg" style={{ background: '#0a0a14' }} />
               ))}
             </div>
           ) : (recentThreats?.length ?? 0) === 0 ? (

@@ -49,7 +49,7 @@ const CATEGORY_COLOR: Record<string, string> = {
   "Steganography":              "#d946ef",
   "Reverse Engineering":        "#fb923c",
   "Docker & Container Security":"#22d3ee",
-  "Social Engineering":         "#ff2d55",
+  "Social Engineering":         "#f87171",
   "IoT & Hardware":             "#4ade80",
   "GowskiNet Specific":         "#9b7fef",
   "CTF & Practice":             "#34d399",
@@ -67,7 +67,7 @@ function HighlightedCommand({ cmd }: { cmd: string }) {
         if (token.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(\/\d+)?$/)) return <span key={i} style={{ color: "#67e8f9" }}>{token}</span>;
         if (token.match(/^(http|https|ftp):\/\//)) return <span key={i} style={{ color: "#60a5fa" }}>{token}</span>;
         if (token.match(/^\d+$/) && parseInt(token) > 0) return <span key={i} style={{ color: "#fb923c" }}>{token}</span>;
-        if (token.startsWith("/") || token.match(/\.(txt|lst|xml|pcap|pcapng|cap|csv|json)$/)) return <span key={i} style={{ color: "#7d3dff" }}>{token}</span>;
+        if (token.startsWith("/") || token.match(/\.(txt|lst|xml|pcap|pcapng|cap|csv|json)$/)) return <span key={i} style={{ color: "#c084fc" }}>{token}</span>;
         if (token.startsWith("192.168")) return <span key={i} style={{ color: "#67e8f9" }}>{token}</span>;
         return <span key={i} style={{ color: "#b8c4d8" }}>{token}</span>;
       })}
@@ -362,7 +362,7 @@ export default function Library() {
                                         <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono" style={{ color: "hsl(232 10% 32%)" }}>
                                           {cmdEntry.lastStatus === "completed"
                                             ? <CheckCircle2 className="h-2.5 w-2.5" style={{ color: "#4ade80" }} />
-                                            : <XOctagon className="h-2.5 w-2.5" style={{ color: "#ff2d55" }} />}
+                                            : <XOctagon className="h-2.5 w-2.5" style={{ color: "#f87171" }} />}
                                           <span>×{cmdEntry.runCount}</span>
                                           <span style={{ color: "hsl(232 10% 22%)" }}>·</span>
                                           <span>{timeAgo(cmdEntry.lastRun)}</span>

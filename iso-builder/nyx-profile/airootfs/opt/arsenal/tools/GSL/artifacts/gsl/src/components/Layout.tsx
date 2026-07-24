@@ -28,7 +28,7 @@ const navSections = [
     label: "Analysis",
     items: [
       { href: "/history", icon: HistoryIcon, label: "History", color: "#60a5fa" },
-      { href: "/findings", icon: ShieldAlert, label: "Findings", color: "#ff2d55" },
+      { href: "/findings", icon: ShieldAlert, label: "Findings", color: "#f87171" },
     ],
   },
   {
@@ -201,7 +201,7 @@ export function Layout({ children }: { children: ReactNode }) {
                       className="gauge-fill"
                       style={{
                         width: `${sysStats.cpu.percent}%`,
-                        background: sysStats.cpu.percent > 85 ? "#ff2d55" : sysStats.cpu.percent > 60 ? "#fbbf24" : "hsl(263 55% 62%)",
+                        background: sysStats.cpu.percent > 85 ? "#f87171" : sysStats.cpu.percent > 60 ? "#fbbf24" : "hsl(263 55% 62%)",
                       }}
                     />
                   </div>
@@ -216,7 +216,7 @@ export function Layout({ children }: { children: ReactNode }) {
                       className="gauge-fill"
                       style={{
                         width: `${sysStats.memory.percent}%`,
-                        background: sysStats.memory.percent > 85 ? "#ff2d55" : sysStats.memory.percent > 70 ? "#fbbf24" : "#60a5fa",
+                        background: sysStats.memory.percent > 85 ? "#f87171" : sysStats.memory.percent > 70 ? "#fbbf24" : "#60a5fa",
                       }}
                     />
                   </div>

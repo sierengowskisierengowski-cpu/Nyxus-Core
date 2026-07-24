@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=CIPHER
+Comment=Password-security education & cracking lab
+Exec=nyxus-app-shell cipher
+Icon=nyxus-cipher
+Terminal=false
+Categories=Security;Education;
+StartupWMClass=NYXUS App
+Keywords=nyxus;security;arsenal;

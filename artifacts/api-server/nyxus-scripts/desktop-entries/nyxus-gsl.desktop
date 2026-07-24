@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=GSL
+Comment=Personal training-lab dashboard + live terminal
+Exec=nyxus-app-shell gsl
+Icon=nyxus-gsl
+Terminal=false
+Categories=Security;System;
+StartupWMClass=NYXUS App
+Keywords=nyxus;security;arsenal;

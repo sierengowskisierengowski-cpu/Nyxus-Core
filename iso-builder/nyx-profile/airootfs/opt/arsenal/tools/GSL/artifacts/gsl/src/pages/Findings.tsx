@@ -22,7 +22,7 @@ interface Run {
 const SEVERITIES = ["critical", "high", "medium", "low", "info"];
 
 const SEV: Record<string, { label: string; icon: React.ElementType; color: string; bg: string; border: string; glow: string }> = {
-  critical: { label: "Critical", icon: AlertTriangle, color: "#ff2d55", bg: "rgba(255,45,85,0.06)", border: "rgba(255,45,85,0.2)", glow: "rgba(255,45,85,0.08)" },
+  critical: { label: "Critical", icon: AlertTriangle, color: "#f87171", bg: "rgba(248,113,113,0.06)", border: "rgba(248,113,113,0.2)", glow: "rgba(248,113,113,0.08)" },
   high:     { label: "High",     icon: AlertCircle,  color: "#fb923c", bg: "rgba(249,115,22,0.06)",  border: "rgba(249,115,22,0.2)",  glow: "rgba(249,115,22,0.08)" },
   medium:   { label: "Medium",   icon: AlertCircle,  color: "#fbbf24", bg: "rgba(251,191,36,0.06)",  border: "rgba(251,191,36,0.2)",  glow: "rgba(251,191,36,0.08)" },
   low:      { label: "Low",      icon: Info,         color: "#60a5fa", bg: "rgba(96,165,250,0.06)",  border: "rgba(96,165,250,0.2)",  glow: "rgba(96,165,250,0.08)" },
@@ -107,9 +107,9 @@ export default function Findings() {
           <div className="flex items-center gap-2.5 mb-1">
             <div
               className="w-8 h-8 rounded flex items-center justify-center"
-              style={{ background: "rgba(255,45,85,0.1)", border: "1px solid rgba(255,45,85,0.25)" }}
+              style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)" }}
             >
-              <ShieldAlert className="h-4 w-4" style={{ color: "#ff2d55" }} />
+              <ShieldAlert className="h-4 w-4" style={{ color: "#f87171" }} />
             </div>
             <h2 className="text-xl font-bold tracking-tight">Findings Tracker</h2>
           </div>
@@ -257,7 +257,7 @@ export default function Findings() {
                             style={{ color: "hsl(232 10% 30%)" }}
                             title="Remove finding"
                             onClick={() => removeFinding.mutate(run.id)}
-                            onMouseEnter={(e) => (e.currentTarget.style.color = "#ff2d55")}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
                             onMouseLeave={(e) => (e.currentTarget.style.color = "hsl(232 10% 30%)")}
                           >
                             <Trash2 className="h-3.5 w-3.5" />

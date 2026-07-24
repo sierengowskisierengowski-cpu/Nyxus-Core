@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=AXIOM
+Comment=Desktop AI assistant (local GPU inference)
+Exec=nyxus-app-shell axiom
+Icon=nyxus-axiom
+Terminal=false
+Categories=Utility;Science;
+StartupWMClass=NYXUS App
+Keywords=nyxus;security;arsenal;

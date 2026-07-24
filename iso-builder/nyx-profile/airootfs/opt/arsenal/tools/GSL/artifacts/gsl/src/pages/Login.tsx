@@ -91,9 +91,9 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
             <div
               className="flex items-center gap-2 text-xs rounded-md px-3 py-2"
               style={{
-                background: "rgba(255,45,85,0.08)",
-                border: "1px solid rgba(255,45,85,0.2)",
-                color: "#ff2d55",
+                background: "rgba(248,113,113,0.08)",
+                border: "1px solid rgba(248,113,113,0.2)",
+                color: "#f87171",
               }}
             >
               <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />

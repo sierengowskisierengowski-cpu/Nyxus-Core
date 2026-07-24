@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# NYXUS — Ghost-Relay (c2) operator console launcher.
+# Opens the interactive teamserver console (stdin-driven). Finds the build in
+# the installed location first, then the dev checkout.
+set -euo pipefail
+for d in /opt/arsenal/tools/c2/teamserver "$HOME/Projects/c2/teamserver"; do
+  if [ -x "$d/teamserver" ]; then
+    cd "$d"
+    exec ./teamserver "$@"
+  fi
+done
+echo "Ghost-Relay teamserver binary not found. Build it:"
+echo "  cd ~/Projects/c2/teamserver && go build -o teamserver ."
+read -rp "Press enter to close…" _

@@ -40,7 +40,7 @@ const COLOR: Record<LogLine["type"], string> = {
   default:  "#b8c4d8",
   cmd:      "#a78bdf",
   success:  "#4ade80",
-  error:    "#ff2d55",
+  error:    "#f87171",
   warning:  "#fbbf24",
   info:     "#67e8f9",
 };
@@ -141,7 +141,7 @@ export function Terminal({ runId, command, onKill }: TerminalProps) {
         exit 0 · ok
       </span>
     ) : (
-      <span className="flex items-center gap-1.5 font-mono text-[10px]" style={{ color: "#ff2d55" }}>
+      <span className="flex items-center gap-1.5 font-mono text-[10px]" style={{ color: "#f87171" }}>
         <XOctagon className="h-3 w-3" />
         exit {exitCode}
       </span>
@@ -207,7 +207,7 @@ export function Terminal({ runId, command, onKill }: TerminalProps) {
               <Button
                 variant="ghost" size="icon"
                 className="h-5 w-5 hover:bg-red-500/10"
-                style={{ color: "rgba(255,45,85,0.7)" }}
+                style={{ color: "rgba(248,113,113,0.7)" }}
                 onClick={onKill}
                 title="Kill process"
               >
@@ -283,17 +283,17 @@ export function Terminal({ runId, command, onKill }: TerminalProps) {
           <div
             className="mx-4 mt-2 px-3 py-1.5 rounded-sm flex items-center gap-2"
             style={{
-              background: exitCode === 0 ? "rgba(74,222,128,0.05)" : "rgba(255,45,85,0.05)",
-              border: `1px solid ${exitCode === 0 ? "rgba(74,222,128,0.15)" : "rgba(255,45,85,0.15)"}`,
+              background: exitCode === 0 ? "rgba(74,222,128,0.05)" : "rgba(248,113,113,0.05)",
+              border: `1px solid ${exitCode === 0 ? "rgba(74,222,128,0.15)" : "rgba(248,113,113,0.15)"}`,
               fontSize: "0.65rem",
             }}
           >
             {exitCode === 0 ? (
               <CheckCircle2 className="h-3 w-3" style={{ color: "#4ade80" }} />
             ) : (
-              <XOctagon className="h-3 w-3" style={{ color: "#ff2d55" }} />
+              <XOctagon className="h-3 w-3" style={{ color: "#f87171" }} />
             )}
-            <span className="font-mono" style={{ color: exitCode === 0 ? "#4ade80" : "#ff2d55" }}>
+            <span className="font-mono" style={{ color: exitCode === 0 ? "#4ade80" : "#f87171" }}>
               Process exited with code {exitCode} · {lines.length - 1} output lines
             </span>
           </div>
