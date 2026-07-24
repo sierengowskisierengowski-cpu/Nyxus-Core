@@ -387,9 +387,12 @@ BUILDSTAMP
 # Surface it on every terminal login so freshness is impossible to miss.
 mkdir -p "${PROFILE_DIR}/airootfs/etc/profile.d"
 cat > "${PROFILE_DIR}/airootfs/etc/profile.d/nyxus-build-stamp.sh" <<'STAMPSH'
-# Show which NYXUS image this is on interactive shells (freshness at a glance).
+# ALIEN NEON build stamp — shown on every interactive terminal login.
+# Violet #7d3dff = \033[38;2;125;61;255m  magenta #ff2dad = \033[38;2;255;45;173m
+# cool-white #eef2fa = \033[38;2;238;242;250m
 if [ -n "${PS1:-}" ] && [ -r /etc/nyxus-build ]; then
-  printf '\033[38;5;177m'; sed -n '3,7p' /etc/nyxus-build; printf '\033[0m\n'
+  printf '\033[38;2;125;61;255m── NYXUS BUILD STAMP ─────────────────────────────────\033[0m\n'
+  printf '\033[38;2;238;242;250m'; sed -n '3,7p' /etc/nyxus-build; printf '\033[0m\n'
 fi
 STAMPSH
 chmod 0644 "${PROFILE_DIR}/airootfs/etc/profile.d/nyxus-build-stamp.sh"

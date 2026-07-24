@@ -29,7 +29,7 @@ set -uo pipefail
 # ── Version stamp: BUMP ON EVERY RELEASE THAT TOUCHES INSTALLED FILES ───────
 # r12 (2026-07-23): offline-first — Replit dependency cut, install no longer
 # aborts on `clear`/set -e, hyprexpo build is one-shot + offline-aware.
-BOOTSTRAP_VERSION="2026.07.23-r12-offline"
+BOOTSTRAP_VERSION="2026.07.24-r13-fixes"
 
 PROD_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/download/nyxus/nyxus_install.sh"
 OFFLINE_CACHE="${NYXUS_OFFLINE_DIR:-/opt/nyxus-cache}"
@@ -71,6 +71,15 @@ ensure_hyprland_plugins() {
     log "hyprpm not on PATH — skipping plugin sync (Hyprland too old?)"
     return 0
   }
+
+  # Guard: hyprpm needs Hyprland API headers to compile any plugin.
+  # On the live ISO the headers package is not installed, so hyprpm prints
+  # "couldn't load header" and fails for every command. Skip entirely when
+  # the header directory is absent — no error spam, no login delay.
+  if [[ ! -d /usr/include/hyprland ]]; then
+    log "Hyprland headers not found (/usr/include/hyprland absent) — skipping plugin sync (live ISO or headers not installed)"
+    return 0
+  fi
 
   # `hyprpm update`/`add` escalate privileges internally (sudo/doas/pkexec)
   # to install Hyprland headers. On systems with pam_fprintd (or any

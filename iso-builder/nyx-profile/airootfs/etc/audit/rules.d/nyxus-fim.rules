@@ -24,11 +24,11 @@
 -w /etc/sudoers.d -p wa -k nyxus_privesc
 
 ## -- Nyxus / desktop config surfaces ------------------------------------
-## NOTE: paths below use the live-ISO default user 'cosmic'; after install,
-## adjust to your actual username (or run nyxus-postinstall to rewrite them).
--w /home/cosmic/.config/nyxus -p wa -k nyxus_config
--w /home/cosmic/.nyxus -p wa -k nyxus_dotdir
+## NOTE: paths use the live-ISO/installed-system user 'nyx'. After install
+## to a custom username, run nyxus-postinstall to rewrite these paths.
+-w /home/nyx/.config/nyxus -p wa -k nyxus_config
+-w /home/nyx/.nyxus -p wa -k nyxus_dotdir
 
 ## -- Honeypot evidence (tamper detection on captured logs/samples) ------
--w /home/cosmic/Projects/honeypot/logs -p wa -k nyxus_hp_logs
--w /home/cosmic/Projects/honeypot/data -p wa -k nyxus_hp_data
+-w /home/nyx/Projects/honeypot/logs -p wa -k nyxus_hp_logs
+-w /home/nyx/Projects/honeypot/data -p wa -k nyxus_hp_data

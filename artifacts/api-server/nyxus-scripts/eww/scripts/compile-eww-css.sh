@@ -1,13 +1,31 @@
 #!/usr/bin/env bash
 # NYXUS · compile eww.scss → eww.css for eww 0.5 (GTK rejects @charset).
 # eww cannot load both files — keep eww.scss as source, ship eww.css live.
+#
+# OFFLINE-SAFE: the pre-committed eww.css is correct and complete. On the live
+# ISO (where sass / nodejs are not installed) we SKIP compilation entirely and
+# use the committed eww.css — no npx download, no network call, no delay.
+# Compilation is attempted only when a LOCAL `sass` binary is installed.
 set -euo pipefail
 eww_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$eww_dir"
+
+# Fast path: no local sass binary → use the pre-committed eww.css as-is.
+# Do NOT fall back to `npx --yes sass` — that tries to download from npm
+# and blocks for minutes (or forever) on the live ISO with no node_modules.
+if ! command -v sass >/dev/null 2>&1; then
+  if [[ -f eww.css ]]; then
+    echo "sass not installed — using pre-compiled eww.css ($(wc -c < eww.css) bytes)" >&2
+  else
+    echo "sass not installed and eww.css missing — bars may render unstyled" >&2
+  fi
+  exit 0
+fi
+
 SRC="eww.scss.source"
 [[ -f "$SRC" ]] || SRC="eww.scss"
 [[ -r "$SRC" ]] || { echo "no scss source at $SRC" >&2; exit 1; }
-npx --yes sass --no-charset --load-path=. "$SRC" eww.css || {
+sass --no-charset --load-path=. "$SRC" eww.css || {
   echo "compile failed — keeping existing eww.css ($(wc -c < eww.css 2>/dev/null || echo 0) bytes)" >&2
   exit 0
 }
