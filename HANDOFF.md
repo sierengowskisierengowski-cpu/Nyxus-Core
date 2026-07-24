@@ -304,6 +304,31 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
     live-boot (out of scope headless). Config validated: verify-profile exit 0,
     `bash -n` + `py_compile` clean.
 
+- **2026-07-24 — "flying saucer / UFO" audit (why the owner didn't see them).**
+  There are THREE distinct saucer/UFO things — don't confuse them:
+  1. **Flying saucer through the background (semi-transparent)** = the LIVING
+     WALLPAPER cruising UFO. `nyxus-live-wallpaper` plays an mpvpaper loop on the
+     Wayland *background* layer (behind bars + windows); the loop is rendered
+     on-device by `nyxus-livewall-flagship` (ffmpeg — the UFO is matted theme art
+     with a violet halo, cruises once per loop). **Present + WIRED + ON by
+     default** (`livewall.conf` = `LIVE=on`; hyprland exec-once `nyxus-live-wallpaper
+     auto`; renders on first boot if the mp4 is absent). If the owner didn't see it:
+     the flashed stick predates this wiring (needs the pending rebake) OR mpvpaper
+     (AUR, built in customize_airootfs.sh) didn't build OR the awww ws-daemon won
+     the login race (the script has a spawn_guard for that). **Not a repo gap.**
+  2. **UFO notification** = present + WIRED. `dunstrc` sets `default_icon =
+     nyxus-notif-ufo` and forwards every notification to the themed EWW UFO console
+     popup (`notif-popup`/`notifications` windows). Icon ships at
+     `eww/assets/nyxus-notif-ufo.png`. **Not a repo gap.**
+  3. **Desktop companion** (`nyxus-companion`, alien-on-saucer bottom-bar mascot)
+     = **DISABLED** (hyprland.conf exec-once commented out, "until the full-body
+     game-character redo lands — bust-on-saucer was wrong") AND its app files
+     (`companion/companion.py` + `assets/`) are **NOT staged** into the ISO
+     airootfs or the offline cache (only the `nyxus-companion` launcher is). So it
+     can't run as-is. Left as the owner previously chose; re-enable+stage only on
+     request. (Different thing from #1 — this is a mascot on the bar, not the
+     background flyby.)
+
 - **2026-07-24 (consistency audit):** Repo-wide sweep to guarantee ONE current build with no stale/prior-build leftovers:
   - **Second wall staging tree** `artifacts/api-server/nyxus-scripts/` still shipped all the old walls (darkmirror/cosmos/prism/void/sierengowski/ink-swirl…) **and was missing the alien heroes** — purged the stale set, added `urban-alien`/`login-wall`/`desktop-hero`/`graffiti-space`/`hacker-mode-a·b`/`demon` so the offline-cache/API bootstrap path matches the ISO. Removed dead `nyxus-set-frost-wallpaper.sh` + stale `download.ts` allowlist entries; added the hero walls to the allowlist so `_soft_wall` fetches resolve.
   - **Palette script drift:** `nyxus_palette.py` / `nyxus_matrix_saver.py` skel copies had drifted back to an old secondary `#ff2d55` — re-synced to locked `#ff2dad`.
