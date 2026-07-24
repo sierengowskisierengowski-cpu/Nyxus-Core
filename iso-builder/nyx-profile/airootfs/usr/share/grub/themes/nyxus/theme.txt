@@ -12,13 +12,13 @@ terminal-font: "Unifont Regular 16"
 terminal-box:  "terminal_box_*.png"
 
 + label {
-    text     = "NYXUS · ALIEN NEON"
-    left     = 50%-160
+    text     = "NYXUS · ALIEN NEON · KAGE RYU"
+    left     = 50%-220
     top      = 18%
-    width    = 320
+    width    = 440
     height   = 24
     align    = "center"
-    color    = "#eef2fa"
+    color    = "#7d3dff"
     font     = "Unifont Regular 16"
 }
 

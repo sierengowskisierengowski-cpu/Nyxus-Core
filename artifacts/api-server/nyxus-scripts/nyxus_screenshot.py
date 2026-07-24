@@ -272,7 +272,7 @@ class Picker(Adw.Application):
         ht.add_css_class("neon-flicker")
         head.append(ht)
         sp = Gtk.Box(); sp.set_hexpand(True); head.append(sp)
-        stamp = Gtk.Label(label="NYX · GRIM+SLURP")
+        stamp = Gtk.Label(label="NYXUS · GRIM+SLURP")
         stamp.add_css_class("hud-stamp")
         head.append(stamp)
         outer.append(head)

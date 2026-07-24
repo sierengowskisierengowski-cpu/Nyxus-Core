@@ -1,10 +1,10 @@
 # Nyxus-Core
 
-Canonical source repository for the NYXUS platform and NYX image pipeline.
+Canonical source repository for the NYXUS platform and ISO image pipeline.
 
 **Terminology standard**
-- **NYX**: the bootable ISO image artifact only.
-- **NYXUS**: the operating system, platform services, and application ecosystem delivered by NYX.
+- **NYXUS**: the operating system, platform services, application ecosystem,
+  and the bootable ISO image artifact. There is no separate "NYX" name.
 
 ---
 
