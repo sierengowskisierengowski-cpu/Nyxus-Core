@@ -29,8 +29,9 @@ This directory contains the canonical project documentation for system scope, ar
 - [`DESIGN_CONTRACT.md`](DESIGN_CONTRACT.md): Active design quality bar for all NYXUS UI components — layout, typography, color (note: still says DARK MIRROR in places; ALIEN NEON lock supersedes — see theme brief).
 - [`ALIEN_NEON_SETTINGS_BRIEF.md`](ALIEN_NEON_SETTINGS_BRIEF.md): **START HERE** for ALIEN NEON + Settings workstream (phases, stay-as-is, progress log).
 - [`ALIEN_NEON_SETTINGS_AUDIT.md`](ALIEN_NEON_SETTINGS_AUDIT.md): Full counted checklist — unthemed surfaces, thin Settings pages, missing sections.
+- [`BUILD_DAY_BRIEF_2026-07-24.md`](BUILD_DAY_BRIEF_2026-07-24.md): **Master brief for the last day of building** (Jul 23–24) — story, timeline, done/open, bake readiness.
 - [`MASTER_CHECKLIST.md`](MASTER_CHECKLIST.md): Master build and feature delivery checklist tracking overall platform progress.
-- [`../HANDOFF.md`](../HANDOFF.md): Live bake/boot state — read first for ISO/kernel; points at the ALIEN NEON brief.
+- [`../HANDOFF.md`](../HANDOFF.md): Live bake/boot state — read first for ISO/kernel; points at the day brief + ALIEN NEON brief.
 
 ### Historical Reference
 - [`legacy-visuals.md`](legacy-visuals.md): Superseded visual specifications kept for historical context.

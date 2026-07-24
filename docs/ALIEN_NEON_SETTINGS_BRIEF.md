@@ -3,6 +3,7 @@
 > **Owner direction locked 2026-07-24.** Read this before touching theme or Settings.
 > Master checklist (counts + full lists): [`ALIEN_NEON_SETTINGS_AUDIT.md`](./ALIEN_NEON_SETTINGS_AUDIT.md)
 > Also read [`HANDOFF.md`](../HANDOFF.md) — especially **WHERE WE STAND** (bake snapshot).
+> **Last-day building story:** [`BUILD_DAY_BRIEF_2026-07-24.md`](./BUILD_DAY_BRIEF_2026-07-24.md).
 
 ---
 
@@ -101,5 +102,6 @@ Settings hub, Home/Main Page, Panel, Start, Terminal, Stickies, Notes, Notepad, 
 | 2026-07-24 | **Settings polish pass 1** — Welcome rewired; kill Logo/path dumps; VPN file-picker; wizard skip prefs | same → `main` |
 | 2026-07-24 ~11:40 EDT | Welcome Transmission + Dream egg; Phase 1 merge; `main` @ `a7d6b4a6` bake-ready | `1af1a65f` + merge `d76b9989` |
 | 2026-07-24 11:46 EDT | Status brief written (HANDOFF WHERE WE STAND + this snapshot) | (this update) |
+| 2026-07-24 ~11:50 EDT | **Master day brief** — combined last-day notes into one chronicle | `docs/BUILD_DAY_BRIEF_2026-07-24.md` |
 
 *Next after bake: continue Settings page polish (remaining PARTIAL/MINIMAL) + Phase 2 shell GTK cascade. Tick audit rows as you go.*

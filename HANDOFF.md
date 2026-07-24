@@ -1,19 +1,21 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-24 11:46 EDT (status brief — bake-ready snapshot)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24 11:50 EDT (master day brief)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
 >
-> **Theme + Settings workstream:** read
-> [`docs/ALIEN_NEON_SETTINGS_BRIEF.md`](./docs/ALIEN_NEON_SETTINGS_BRIEF.md)
-> **first**, then the checklist
+> **Last ~day of building (story + done/open):**  
+> [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md) — **read that**
+> for background. This file keeps rules, architecture, and live bake status.
+>
+> **Theme + Settings workstream:**  
+> [`docs/ALIEN_NEON_SETTINGS_BRIEF.md`](./docs/ALIEN_NEON_SETTINGS_BRIEF.md) then
 > [`docs/ALIEN_NEON_SETTINGS_AUDIT.md`](./docs/ALIEN_NEON_SETTINGS_AUDIT.md).
-> **Phase 1 done on `main`.** Settings polish pass 1 landed. Continue polishing
-> Settings pages; Phase 2 shell GTK next.
-> Stay-as-is: Bifrost / GodsApp / Meli / Arsenal — do not restyle.
+> **Phase 1 done on `main`.** Phase 2 = shell GTK cascade. Stay-as-is: Bifrost /
+> GodsApp / Meli / Arsenal.
 
 ---
 
@@ -25,33 +27,20 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · branch **`main`** · clean · synced with `origin/main` |
-| **HEAD** | `a7d6b4a6` |
+| **HEAD** | check `git rev-parse --short HEAD` (status brief written atop `238f45cc`) |
 | **Open PRs** | **0** |
+| **Day chronicle** | [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md) |
 | **Repo state for bake** | ✅ **COMMITTED + IDLE** — safe to kick `sudo ./build-iso.sh` |
-| **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (built **03:05 EDT**) — **STALE** vs current `main` (pre–#71/#72, pre–welcome note, pre–Phase 1). **Do not reflash that file expecting today's work.** |
-| **Kage-Ryu pkgs** | `linux-kage-ryu-7.0.12` + headers present (~**08:53 EDT**). PKGBUILD enables iso9660/squashfs/loop. `makepkg` **not** running. Owner reported kernel done — still **verify** live mount (QEMU or stick) before trusting Kage as default. |
-| **Running desktop kernel** | Stock `7.1.3-arch1-2` (not Kage) — expected until install/boot from new ISO |
+| **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (built **03:05 EDT**) — **STALE**. **Do not reflash that file expecting today's work.** |
+| **Kage-Ryu pkgs** | `linux-kage-ryu-7.0.12` + headers (~**08:53 EDT**). PKGBUILD enables iso9660/squashfs/loop. Still **verify** live mount after bake. |
+| **Running desktop kernel** | Stock `7.1.3-arch1-2` (not Kage) — expected until new ISO |
 
-### ✅ DONE (on `main`, pushed)
+### ✅ DONE / 🔲 STILL OPEN
 
-- Welcome Transmission (borderless kitty poem/riddle) + Dream Protocol easter egg (`Super+Shift+N` / `Super+Shift+D`)
-- ALIEN NEON **Phase 1** landed (PR **#73** merged) — palette + Settings prism-only + Welcome wizard polish
-- PR **#71/#72** eww first-paint / black-box + build stamp (in repo; stick needs rebake)
-- W1 `profiledef` file_permissions regen · W6 arsenal/reactive shard ship
-- Offline-first bootstrap · ALIEN NEON palette lock · urban-alien greeter/lock/screensaver wiring
-- Branches intentionally **not** merged: `archive/vault-*`, `local-stash-work` (secrets/DBs), stale `nyxus-hyprland-055-fixes`
+Full narrative + grouped lists → **[`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md)**.
 
-### 🔲 STILL TO FINISH (owner / next)
-
-| Priority | Item | Who |
-|---|---|---|
-| **1 · BAKE** | Rebake from current idle `main`: `cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh` | Owner (root) |
-| **2 · FLASH** | Flash **new** ISO only; re-check `lsblk` (USB letter moves). Boot **UEFI** | Owner |
-| **3 · VERIFY** | On stick: `/etc/nyxus-build` commit ≥ `a7d6b4a6`; bars OK; welcome note once; Kage mounts ISO (no iso9660 error) or use stock rescue | Owner |
-| **4 · Theme Phase 2** | Cascade ALIEN NEON to shell GTK apps (Home, Panel, Start, Terminal, …) | Next agent |
-| **5 · Settings polish** | Remaining PARTIAL/MINIMAL pages (`vpn` first); tick `docs/ALIEN_NEON_SETTINGS_AUDIT.md` | Next agent |
-| **6 · Hygiene (deferred)** | ~33 non-boot Replit refs; prune stale remote branches; old ISOs in `out/` (~50 GB) | Later |
-| **7 · Optional** | Companion mascot re-enable; fold `companion-3d`; home backup to Ventoy | Owner call |
+**Owner next:** rebake → flash new ISO → verify (`/etc/nyxus-build`, bars, welcome note, Kage or stock rescue).  
+**Next agent (after bake or on branch):** ALIEN NEON Phase 2 (shell GTK) + Settings polish.
 
 ### Bake command (reminder)
 
@@ -181,9 +170,9 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
   system. Stock `linux` is kept ONLY as a rescue entry so a bad Kage-Ryu boot
   can never strand you. `linux-lts` / `linux-zen` / `linux-hardened` were
   dropped from `packages.x86_64` (focused custom-kernel distro).
-  **⚠ 2026-07-23:** the currently shipped `7.0.12` pkgs were built without
-  iso9660/squashfs/loop — live default is broken until those pkgs are rebuilt
-  (PKGBUILD patched) and the ISO rebaked. Use stock rescue on the stick for now.
+  **⚠ 2026-07-23:** older `7.0.12` pkgs lacked iso9660/squashfs/loop. PKGBUILD
+  patched; rebuilt pkgs present ~08:53 EDT 2026-07-24 — **still verify** on stick
+  before trusting Kage as live default (stock rescue if iso9660 fails).
 - Built via `kernel/install-kage-ryu.sh` (on the running system) or
   `cd <kage-ryu repo> && makepkg -sc`. Baked into the ISO **BY DEFAULT**
   (`NYX_WITH_KAGE_RYU` defaults to `1`; kernel is never compiled inside the
@@ -221,187 +210,14 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
 > **See also the top-of-file [WHERE WE STAND](#where-we-stand--2026-07-24--1146-edt) block**
 > for the bake-ready snapshot (time-stamped).
 
-### Done + pushed
-- **2026-07-24 — Welcome Transmission (borderless kitty boot note).** Separate
-  from the GTK onboarding wizard. Poetic / riddle first-login note in Orbitron
-  kitty (`class: nyxus.welcome-note`), borderless + pinned. Marker:
-  `~/.config/nyxus/welcome-note.done`. Replay: `nyxus-welcome-note --force` or
-  **Super+Shift+N**. Riddle hash: `dream`. Solving unlocks **Dream Protocol**
-  (`~/.config/nyxus/dream.unlocked`) → **Super+Shift+D** / `nyxus-dream`
-  (violet dreamglass pulse). Files: `usr/local/bin/nyxus-welcome-note`,
-  `usr/local/bin/nyxus-dream`, `opt/nyxus/nyxus_welcome_note.py`,
-  `skel/.config/kitty/kitty-welcome.conf`. Wired `exec-once` in hyprland.conf.
+### Last-day chronicle (moved)
 
-- Repo un-scattered: one canonical `~/Nyxus-Core`; duplicate deleted; nothing lost.
-- Build-iso no longer corrupts the profile (throwaway copy) — `fe089345`.
-- **Live-boot post-mortem fixes** — `7ccbaf0b`:
-  - Offline cache never ships empty (falls back to in-repo source + hard-fail guard).
-  - eww bars **ungated** from the network bootstrap → desktop comes up offline.
-  - Splash saucer = real graffiti UFO (both ISO theme + offline-cache source).
-- kage-ryu `scheduler/` source committed + pushed (branch `feat/scx-kage-scheduler`).
-- `companion-3d/` gitignored by the parent.
-- **2026-07-23 — offline-first, Replit cut (`ef360df7`)** — the 07-22 stick booted
-  to "offline install failed (code 1)" even on ethernet. Root causes fixed:
-  - **Replit is retired.** `nyxus-core.replit.app` 404s; the bootstrap only ever
-    probed *that* server, so it mislabeled a working connection as "no internet".
-    Bootstrap is now **offline-cache-first and never phones home** (network path is
-    opt-in dev-only). The desktop is delivered ENTIRELY from `/opt/nyxus-cache`.
-  - **`nyxus_install.sh` aborted at code 1.** It ran `set -euo pipefail`, so the
-    first `clear` (no `$TERM` under exec-once) killed the whole install. Dropped
-    `-e`, guarded `clear`.
-  - **`eww/eww.scss` didn't exist** (repo ships `eww.css` + `eww.scss.source`) —
-    the one missing dl() made the install exit 1 forever. Fixed to pull real files.
-  - **hyprexpo build burned ~15 min every login** — now one-shot + offline-skip.
-  - **Wrong wallpaper**: `wallpaper.conf` hardcoded `/home/cosmic` → unreadable for
-    `nyx`. Fixed to `/home/nyx` + slug-robust `nyxus-wallpaper-autostart`.
-  - `BOOTSTRAP_VERSION` → `2026.07.23-r12-offline`.
-- **2026-07-23 — Kage-Ryu is now the DEFAULT kernel** (see §4): dropped
-  lts/zen/hardened; `NYX_WITH_KAGE_RYU` defaults ON; build-iso rewrites all three
-  boot menus (Kage-Ryu primary + stock rescue) in the throwaway copy; Calamares
-  `nyxus-set-grub-default-kage` sets the installed default. Prebuilt kernel pkgs
-  live at `~/Projects/arch-custom-kernel/linux-kage-ryu/` (built).
+**Full story of Jul 23–24 building** (timeline, done/open, gotchas, PRs):
 
-- **2026-07-23 (round 2) — the "missing eye candy" root cause + feature restore**
-  (`e8d01837`, `a920e545`). Live boots were missing sounds, reactive layer,
-  Mission Control, etc. Root cause: **`nyxus_install.sh` (the ISO/first-boot
-  installer) deployed only ~5 of the ~82 `~/.local/bin` launcher scripts** that
-  `hyprland.conf` calls by literal `~/.local/bin/<name>` path — so the entire
-  reactive layer, `nyxus-soundd`/`nyxus-sfx`, wallpaper tooling, hub scripts,
-  shader/spray/lens FX etc. silently never started (they were built + in the
-  cache, just never copied out). The repo-root `install.sh` had the full
-  curated `LAUNCHERS` list; the ISO installer did not. Fixed by mirroring it
-  (82/82) + globbing all 71 eww helper scripts.
-  - Restored 5 daemons deleted by `cf8b612f` (accidental working-tree sync):
-    `nyxus_{missiond,hotkeyd,qsd,snapd,dockd}.py` → back in `nyxus-scripts/`
-    (bake globs them into `/opt/nyxus/`). Their `.service` units + hypr starts
-    + eww windows all still referenced them → they failed every boot. Restores
-    Mission Control (Super+F3), hotkey cheatsheet, snap, quick-settings daemon.
-  - Screensaver retimed to **5 min** (was 3); dpms 10 min, suspend 15 min.
-  - Saucer bottom-bar clock centering (margin 16→4px; art was swapped 07-22).
-  - Notification UFO popup: `dunstrc` script/icon paths `/home/cosmic`→`$HOME`.
-  - **Builder-home de-leak:** `/home/cosmic` was baked into wallpaper.json,
-    qt5ct/qt6ct, hyprland `env = PATH`, hub wrappers — broke for user `nyx`.
-    Source defaults → `/home/nyx`; `nyxus_install.sh` now runs a de-leak pass
-    rewriting `/home/cosmic|/home/nyx` → real `$HOME` on first boot (works for
-    any install user). Deferred: `etc/jett/allowlist.conf`, `etc/audit/rules.d`
-    (builder project paths), bundled arsenal-tool `.env.example`/logs.
-  - **NOTE:** none of round-2 is in the ISO baked ~1:40am 07-23 (it started
-    before these fixes) — needs one more bake.
+→ [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md)
 
-- **2026-07-23 (evening) — ALIEN NEON palette lock + install code-1 + alien walls**
-  (this commit). Cream purged. `follow_wallpaper` OFF. Live session reskinned.
-  See **§5b BRIEF** for the full palette table + what still needs a rebake.
-
-- **2026-07-23 (walls purge):** Non-alien wallpapers deleted from ISO airootfs (demon/hacker-mode/kageryu/void-vortex/sierengowski/prism/eye-mosaic/etc.). `stations.json` restored (was wrongly identical to hacker). Stations + workspaces + rotation lists = alien-only. Palette remains prism-only / follow_wallpaper off. Also purged cinematic darkmirror/cosmos/nebula/blackhole/void SDDM packs; dynamic wallpaper set = `alien` only; SDDM greeter = urban-alien heroes. Restored demon + hacker-mode walls (alien art); kageryu dragon stays out.
-
-- **2026-07-24 — GREEN-LIGHT PASS: `main` was RED; fixed the CI gates the
-  alien/palette/kernel work had broken (branch `cursor/green-light-ci-wallpaper-kernel-ad9a`).**
-  `typecheck`/`validate` were green, but the `ci` aggregate **and** `build-iso`
-  were failing on every push. Root causes + fixes (all pushed):
-  1. **`verify-profile.sh` (the `ci` gate) had 3 stale/broken checks** — direct
-     fallout of the alien-wall purge + the global palette find/replace:
-     - *SDDM wallpaper mirror* check demanded the greeter mirror the FULL 58-pack
-       (`SDDM_PNG >= WP_PNG`), contradicting the intended **curated alien-hero**
-       greeter (7 heroes). Relaxed to: non-empty mirror that **includes the
-       default hero** (`${WP_SLUG}.png`).
-     - *default `WALLPAPER_PATH`* check only translated `/home/<user>/…` →
-       `/etc/skel/…`; it couldn't resolve the **system-wide**
-       `/usr/share/backgrounds/nyxus/<slug>.png` path the ALIEN NEON lock
-       intentionally adopted (user-agnostic, immune to the de-leak pass). Now
-       resolves both forms.
-     - *`FORBIDDEN_PATTERN` (13v ALIEN NEON compliance)* — the palette find/replace
-       had rewritten the OLD violet/cyan hexes (`C084FC/7C3AED/a06bff/3ad8ff`) to
-       the **canonical** `#7d3dff`/`#2bd2ff` *inside the forbidden list*, so the
-       check was banning the very ALIEN NEON palette it must enforce. Restored the
-       old-palette hexes; canonical colors are explicitly allowed. **⚠ Do not
-       re-run a blind global hex sed over `verify-profile.sh` — it will re-corrupt
-       this list.**
-     `bash iso-builder/verify-profile.sh` now exits 0.
-  2. **`build-iso` workflow was perpetually red** — Kage-Ryu is the default kernel
-     and `build-iso.sh` hard-fails when its prebuilt pkgs are absent, which they
-     always are on a GitHub runner. Made `build-iso.yml` **workflow_dispatch-only**
-     + bake with `NYX_WITH_KAGE_RYU=0` (stock-kernel **validation** ISO); Release
-     gated behind `create_release` (default off) + clearly labelled stock-only. The
-     authoritative Kage-Ryu ISO is still baked locally by the owner (§6).
-  3. **ISO filename `nyx-…` → `nyxus-…`** in `build-iso.yml` (checksum/release names
-     were mismatched vs `build-iso.sh`'s real `nyxus-<date>-x86_64.iso`) and in
-     `iso-builder/README.md` + `docs/REINSTALL_GUIDE.md`. (The `nyx` user account
-     and internal `nyx-profile` dir are intentional — left as-is.)
-  Palette lock still holds: cream `#f4ead5` appears only here in HANDOFF (docs), 0
-  live occurrences. **Not verified here:** live desktop UI / "dead buttons" and the
-  ISO bake itself — both require an Arch live-boot / graphical session, out of
-  scope for this headless env (per AGENTS.md). (This also closes the
-  build-iso owner's flagged TODO below: `nyx-*.iso` → `nyxus-*.iso` is now done
-  in `build-iso.yml`.)
-
-- **2026-07-24 — URBAN-ALIEN on every idle/login surface + reworked hypridle**
-  (same branch). Owner: "login screen + lock + screensaver must be urban-alien;
-  hypridle layout was wrong." Audited every surface; they now ALL resolve to the
-  urban-alien hero:
-  - **Screensaver** — `nyxus-screensaver` launcher was running
-    `nyxus_matrix_saver.py` (matrix-rain — the old effect the owner didn't want).
-    The correct urban-alien saver (`nyxus_screensaver.py`, alien wallpaper hero +
-    clock + NYXUS mark) already existed but was disconnected. Repointed the
-    launcher to it + pinned `NYXUS_SCREENSAVER_WALL=nyxus-urban-alien`.
-  - **hypridle** — new layout: 45s idle-glass · 300s (5m) dim + urban-alien
-    screensaver · **600s (10m) LOCK the session** (hyprlock, urban-alien) + panel
-    off so you log back in · 900s (15m) suspend. Dropped the redundant 330s
-    reinforce listener + the wall-staging in `lock_cmd`.
-  - **hyprlock** (lock / re-login) — background pinned to
-    `/usr/share/backgrounds/nyxus/nyxus-urban-alien.png` (was a random rotating
-    `~/.cache/nyxus/lock-wall.png`).
-  - **Greeter** (`nyxus-greeter`, greetd→regreet) — login background pinned to
-    urban-alien (was random from `wall-rotation.list`). Fixed the shipped copy +
-    the `greetd/` bake source (build-iso installs from `greetd/nyxus-greeter`).
-  - **Already urban-alien / verified consistent:** desktop `wallpaper.conf` +
-    `wallpaper.json` (tint `#7d3dff`); SDDM installed-greeter bg (build-iso
-    overrides `background.png` → urban-alien); and all **flyouts / menus /
-    settings** backdrops, which `nyxus-gen-backdrop` bakes from the *current*
-    wallpaper (urban-alien) behind their glass — so they inherit it automatically.
-  - Dropped the now-dead `exec-once = nyxus-rotate-walls lock` seed. The DESKTOP
-    still rotates every 20 min but only through the **alien-only** set, so it
-    stays on-theme (owner didn't ask to pin the desktop; say so if you want it
-    fixed to urban-alien too).
-  - **⚠ Stale bits flagged (not deleted — unused, low-risk):**
-    `artifacts/api-server/nyxus-scripts/nyxus-greeter` (root copy, rev 2026-07-09)
-    is an OLDER greeter variant with NO login-bg wiring; neither `build-iso.sh`
-    nor `nyxus_install.sh` reference it (they use `greetd/nyxus-greeter`).
-    `nyxus_matrix_saver.py` is now unwired (kept as an alternate saver).
-  - **Not verified here:** on-stick idle→saver→lock→login flow — needs an Arch
-    live-boot (out of scope headless). Config validated: verify-profile exit 0,
-    `bash -n` + `py_compile` clean.
-
-- **2026-07-24 — "flying saucer / UFO" audit (why the owner didn't see them).**
-  There are THREE distinct saucer/UFO things — don't confuse them:
-  1. **Flying saucer through the background (semi-transparent)** = the LIVING
-     WALLPAPER cruising UFO. `nyxus-live-wallpaper` plays an mpvpaper loop on the
-     Wayland *background* layer (behind bars + windows); the loop is rendered
-     on-device by `nyxus-livewall-flagship` (ffmpeg — the UFO is matted theme art
-     with a violet halo, cruises once per loop). **Present + WIRED + ON by
-     default** (`livewall.conf` = `LIVE=on`; hyprland exec-once `nyxus-live-wallpaper
-     auto`; renders on first boot if the mp4 is absent). If the owner didn't see it:
-     the flashed stick predates this wiring (needs the pending rebake) OR mpvpaper
-     (AUR, built in customize_airootfs.sh) didn't build OR the awww ws-daemon won
-     the login race (the script has a spawn_guard for that). **Not a repo gap.**
-  2. **UFO notification** = present + WIRED. `dunstrc` sets `default_icon =
-     nyxus-notif-ufo` and forwards every notification to the themed EWW UFO console
-     popup (`notif-popup`/`notifications` windows). Icon ships at
-     `eww/assets/nyxus-notif-ufo.png`. **Not a repo gap.**
-  3. **Desktop companion** (`nyxus-companion`, alien-on-saucer bottom-bar mascot)
-     = **DISABLED** (hyprland.conf exec-once commented out, "until the full-body
-     game-character redo lands — bust-on-saucer was wrong") AND its app files
-     (`companion/companion.py` + `assets/`) are **NOT staged** into the ISO
-     airootfs or the offline cache (only the `nyxus-companion` launcher is). So it
-     can't run as-is. Left as the owner previously chose; re-enable+stage only on
-     request. (Different thing from #1 — this is a mascot on the bar, not the
-     background flyby.)
-
-- **2026-07-24 (consistency audit):** Repo-wide sweep to guarantee ONE current build with no stale/prior-build leftovers:
-  - **Second wall staging tree** `artifacts/api-server/nyxus-scripts/` still shipped all the old walls (darkmirror/cosmos/prism/void/sierengowski/ink-swirl…) **and was missing the alien heroes** — purged the stale set, added `urban-alien`/`login-wall`/`desktop-hero`/`graffiti-space`/`hacker-mode-a·b`/`demon` so the offline-cache/API bootstrap path matches the ISO. Removed dead `nyxus-set-frost-wallpaper.sh` + stale `download.ts` allowlist entries; added the hero walls to the allowlist so `_soft_wall` fetches resolve.
-  - **Palette script drift:** `nyxus_palette.py` / `nyxus_matrix_saver.py` skel copies had drifted back to an old secondary `#ff2d55` — re-synced to locked `#ff2dad`.
-  - **GRUB dragon theme → ALIEN NEON:** both the live-USB theme (`nyx-profile/grub/themes/nyxus`) and the installed-disk theme (`airootfs/usr/share/grub/themes/nyxus`) now use the black-dragon background + ALIEN NEON palette (void `#05060a`, text `#eef2fa`, violet/magenta) and the "NYXUS · ALIEN NEON · KAGE RYU" title. Dropped the old "Cosmic Ink Swirl / SIERENGOWSKI / WELCOME TO THE DARKSIDE" branding and the off-brand gold `wordmark.png`. Live theme keeps the DejaVu fonts that `grub.cfg` actually loads (don't switch it to Unifont — the bootloader doesn't load that face).
-  - **NYX → NYXUS:** on-screen hint toasts (`NYX · SUPER+SPACE`, `NYX · GRIM+SLURP`) and the LICENSE/README "naming contract" collapsed — NYXUS is the OS **and** the ISO; there is no separate "NYX" product name. (License serial `NYX-J5W-…` left intact; intentional glitch-flicker letters in `nyxus_preboot.py` left intact.)
-  - **Config trees verified in sync** across `skel/.config/nyxus`, `skel/.nyxus`, `opt/nyxus`, `artifacts/api-server/nyxus-scripts`. Note: `nyxus-build-iso.yml` still names the release artifact `nyx-*.iso` (CI lane — flagged for the build-iso owner to rename `nyx-` → `nyxus-`). **[DONE 2026-07-24 in the green-light pass above — renamed to `nyxus-*.iso`.]**
+Do **not** re-expand a second diary here — append new surprises to the day brief
+or to WHERE WE STAND above.
 
 ### The `nyxus-2026.07.22` stick booted BROKEN — and why (post-mortem)
 Two overlapping causes: (1) that stick was baked from a **partial/stale** profile
@@ -410,126 +226,37 @@ Two overlapping causes: (1) that stick was baked from a **partial/stale** profil
 **not yet in a baked ISO** — needs a fresh bake. `nyx@nyxus` + auto-login are
 correct/expected (it's a live ISO, not an install).
 
-### ⛔ BLOCKER (QEMU-confirmed 2026-07-23): Kage-Ryu cannot boot the live ISO
-Default menu entry **"Boot NYXUS · Kage Ryu kernel"** dies in initramfs:
-`mount: unknown filesystem type 'iso9660'`. Root cause: `config.last` has
-`# CONFIG_ISO9660_FS is not set`, `# CONFIG_SQUASHFS is not set`,
-`# CONFIG_BLK_DEV_LOOP is not set` (XanMod lean/localmodconfig stripped them;
-archiso needs all three). Stock **rescue** entry still works.
+### ⛔ Kage live-ISO substrate (status 2026-07-24 midday)
 
-**If you boot the already-flashed `nyxus-2026.07.23` stick:** at GRUB pick
-**"Boot NYXUS · stock linux (rescue)"** — do NOT use the highlighted Kage entry
-until a rebuilt kernel is rebaked.
+**History:** QEMU 2026-07-23 confirmed default Kage entry died with
+`mount: unknown filesystem type 'iso9660'` (lean config stripped iso9660/squashfs/loop).
 
-**Fix path (owner):**
-1. Rebuild kage pkgs (PKGBUILD now forces iso9660/squashfs/loop/dm — patched
-   2026-07-23 in `~/Projects/arch-custom-kernel/linux-kage-ryu/PKGBUILD`):
-   `cd ~/Projects/arch-custom-kernel/linux-kage-ryu && makepkg -sc`
-2. Confirm: `zgrep -E 'CONFIG_(ISO9660_FS|SQUASHFS|BLK_DEV_LOOP)=' \
-   /usr/lib/modules/*kage*/config` → all `=y` (or modules present in initramfs).
-3. Then RE-BAKE + re-flash (below).
+**Now:** PKGBUILD forces those options; rebuilt `7.0.12` pkgs on disk (~08:53 EDT).
+Owner reported kernel done. **Still verify on the next baked stick** — if Kage
+fails again, boot **"stock linux (rescue)"** and re-check module config.
 
-- **2026-07-24 — Live-boot issue fixes (PR #71 → stranded, then landed on main via #72):**
-  ⚠️ **Near-miss:** PR #71 merged into `cursor/green-light-ci-wallpaper-kernel-ad9a`
-  **after** that branch was already merged to `main` via PR #70. So #71 was **not**
-  on `main` until PR #72 (`603139d7`, 2026-07-24) merged the branch again.
-  **`main` HEAD must include `0f866221` before any bake.** Verify:
-  `git merge-base --is-ancestor 0f866221 origin/main`.
-  The flashed `nyxus-2026.07.24` ISO was baked from `139bdc85` — **before** #70/#71/#72
-  — which is why the owner saw no eww/black-box/stamp improvement on that stick.
+### Live-boot fixes (#71 → #72) — summary
 
-  Root-cause analysis + fixes for five owner-reported live-boot regressions that were NOT yet
-  in the repo (distinct from stale-bake issues). All changes are in `skel` and `artifacts/`
-  in lockstep per the HANDOFF sync rule.
+Landed on `main` via PR **#72** after a near-miss ( #71 merged to a branch that
+was already on main). Covers: eww first-paint (`npx sass` skip), black-box path,
+hyprpm header guard, ALIEN NEON `/etc/issue` + bashrc stamp, jeTT `/home/nyx`
+de-leak, `BOOTSTRAP_VERSION` `2026.07.24-r13-fixes`.
 
-  1. **eww slow first paint (~5 min) — FIXED.** Root cause: `compile-eww-css.sh` called
-     `npx --yes sass` which tried to download the sass NPM package at every login (node/npm
-     are NOT in the ISO packages). This blocked bar launch for minutes. Fix: skip the SCSS
-     compile entirely when no local `sass` binary is installed (use the pre-committed
-     `eww.css` which is correct and complete). Compilation now only runs if `sass` is
-     already on `$PATH` — no NPX, no network call, no download.
-  2. **eww black/semi-transparent box around bars — addressed.** The root cause was that
-     `compile-eww-css.sh` was sometimes called and produced a corrupt/stripped `eww.css`
-     (the sed property-strip pass removed `background-size` etc. from bar widgets). With the
-     compile skip, the pre-committed `eww.css` is always used; it already has the correct
-     `window { background: none; background-color: transparent; }` rule that kills the GTK
-     window-paint "ghost box". Also confirmed: the Hyprland layerrule `ignore_alpha 0.2` and
-     eww namespace `nyxus-bar-*` are correct.
-  3. **eww "globbing errors" at lines 601/606 — addressed.** Added `shopt -s nullglob` /
-     `shopt -u nullglob` guards around all glob-based for loops in `sys-graph.sh` that
-     iterate `/sys/class/thermal/thermal_zone*/temp` and `/sys/bus/pci/devices/*/`. Without
-     `nullglob`, unmatched globs expand to the literal pattern string and subsequent
-     path/existence checks produce spurious error-like output. Fan/GPU data degrades
-     gracefully to 0 when /sys paths are absent.
-  4. **hyprpm "couldn't load header" at startup — FIXED.** Added a Hyprland header
-     directory existence check (`/usr/include/hyprland`) at the top of
-     `ensure_hyprland_plugins()`. The live ISO does not ship the `hyprland-devel` header
-     package, so hyprpm can't compile plugins and prints "couldn't load header" to the
-     Hyprland log on every login. With the new guard the entire plugin sync is silently
-     skipped when headers are absent — no error spam, no login delay, no fingerprint prompt.
-  5. **Stale terminal text colors and old header message — FIXED.**
-     - `/etc/issue`: was `\e[1;37m` (classic white); now uses ALIEN NEON RGB escapes —
-       violet `#7d3dff` for the NYXUS ASCII art, cool white `#eef2fa` for the tagline,
-       magenta `#ff2dad` for the hostname.
-     - `~/.bashrc` greeting: now shows the build stamp (ISO name / built time / commit SHA)
-       in ALIEN NEON colors after the greeting so freshness is instantly visible in any
-       terminal.
-     - `/etc/profile.d/00-nyxus.sh`: `NYXUS_VERSION` updated from `2026.05.13` to
-       `2026.07.24`; exports `NYXUS_BUILD_STAMP` from `/etc/nyxus-build` (written by
-       `build-iso.sh`).
-  6. **Build/commit stamp (HANDOFF PENDING item) — IMPLEMENTED.** `build-iso.sh` already
-     bakes `/etc/nyxus-build` + `profile.d/nyxus-build-stamp.sh`. Updated the stamp
-     display to use ALIEN NEON palette (violet header line, cool-white content). Also
-     updated the `.bashrc` greeting to inline the key stamp lines so the owner sees the
-     exact commit/date on every terminal open — zero ambiguity about which bake they're
-     on.
-  7. **Consistency audit:**
-     - `/etc/jett/allowlist.conf`: replaced all `/home/cosmic` paths with `/home/nyx`
-       (the live-ISO and installed-system user). Also removed `trusted_proc:cosmic-comp`
-       (a GNOME Cosmic compositor — not NYXUS).
-     - `/etc/jett/model.sha256`: comment updated from `/home/cosmic/...` to `/home/nyx/...`.
-     - `BOOTSTRAP_VERSION` bumped: `2026.07.23-r12-offline` → `2026.07.24-r13-fixes`.
-       Existing installs will detect the version mismatch on next login and self-heal
-       (re-run the installer to pick up the new configs/scripts).
-     - Remaining non-boot Replit refs (~33) are still deferred — they're in self-update
-       snippets, README curl examples, and polkit `vendor_url`; none affect the boot path.
+Detail + timeline → day brief. Flashed `nyxus-2026.07.24` @ 03:05 was **before**
+these commits — rebake required.
 
+### Pending / owner queue
 
-1. **Confirm `main` has #71** (`0f866221` / merge `603139d7`) — **DONE 2026-07-24 via PR #72**.
-2. **Rebuild Kage-Ryu** with live-ISO FS support (see blocker above), then
-   **RE-BAKE** from this `main` (owner runs, clean+committed repo):
-   `cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh`
-   (Kage-Ryu is baked by default now; it hard-fails if the prebuilt kernel pkgs
-   are missing. Add `NYX_WITH_KAGE_RYU=0` only for a stock-only debug ISO.)
-   **Do not flash the existing `nyxus-2026.07.24` again expecting #71 fixes — rebake.**
-   Owner started `makepkg -scf` for kage pkgs **2026-07-24 ~04:57** (in progress).
-3. **Re-flash** — **always re-check `lsblk`** (64GB SanDisk was `/dev/sdb` on
-   2026-07-24; letters move). Boot **UEFI**; until Kage pkgs are rebuilt pick
-   **stock rescue**. After Kage rebuild: verify Kage entry mounts ISO (no iso9660
-   error) → splash → desktop → `uname -r` shows kage-ryu.
-4. ~~**Before next bake — still fix bake wipe of arsenal shard**~~ **DONE 2026-07-24**
-   (`nyxus-arsenal-apps.conf` + `nyxus-reactive.conf` in bake shard loop; `source=` in
-   NS + skel `hyprland.conf`). Still verify post-bake:
-   `unsquashfs -l airootfs.sfs | rg 'arsenal-apps|reactive'`.
-5. ~~**W1 file_permissions**~~ **DONE 2026-07-24** — regen 177 entries in `profiledef.sh`.
-6. **Still open after 2026-07-24 fix pass:**
-   - Greeter / hyprlock visual QA on stick (alien bg wired; needs a real boot to verify).
-   - UFO/saucer notification QA on fresh boot.
-   - ~~eww bars: slow first paint + transparent black box~~ **FIXED in repo (PR #71 → main via #72)** — needs rebake to appear on stick
-   - ~~Visible build/commit stamp~~ **IMPLEMENTED** — needs rebake
-   - Remaining W2 verify-profile asserts (label consistency / kernel-policy / cache payload) — deferred hygiene
-   - **Home backup:** Ventoy stick (re-verify device letter) mid-queue — Vault /
-     Projects / VMs as `.tar.zst`; fill remaining space then swap to 2nd USB.
-     Also back up Docker honeypot volumes + `/opt/nyxus-*` + `/etc/jett`
-     (NOT only `~`).
-7. Cleanup status (2026-07-23): accent-baseline builder-home leak **removed**
-   (regenerated per-user by nyxus-apply-accent). STILL deferred: ~33 non-boot
-   Replit refs (self-update snippets, README curl example, polkit vendor_url —
-   all non-fatal now that the boot+install path is Replit-free); ~50 GB of old
-   ISOs in `iso-builder/out/` (untracked, safe to delete); 90 stale remote
-   branches on GitHub (copilot/*, devin/*, cursor/*, archive/vault-*) — prune to
-   avoid re-scattering. Prune non-alien walls from the payload if size matters.
-8. Owner's call: fold `companion-3d` under one roof or keep separate.
+1. ~~Confirm `main` has #71~~ **DONE** via PR #72.
+2. **RE-BAKE** from idle `main`: `cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh`  
+   **Do not flash** the 03:05 `nyxus-2026.07.24` ISO for today’s work.
+3. **Re-flash** — re-check `lsblk` (USB letter moves). Boot **UEFI**. Verify Kage
+   mounts ISO (or use stock rescue) → splash → desktop → stamp in `/etc/nyxus-build`.
+4. ~~W6 arsenal/reactive shards~~ **DONE** — still verify post-bake with `unsquashfs`.
+5. ~~W1 file_permissions~~ **DONE**.
+6. **Still open on stick QA:** greeter/lock/UFO/welcome-note; home backup to Ventoy.
+7. **Deferred hygiene:** ~33 non-boot Replit refs; prune stale remotes / old ISOs in `out/`.
+8. Owner’s call: companion mascot; fold `companion-3d`.
 
 ### Copilot Deep Pre-Bake Audit (2026-07-24) — stored here (no separate memory store)
 
@@ -546,7 +273,7 @@ Full GO/NO-GO from Copilot audit. Cross-checked against `main` @ `fb63e2aa` (+ #
 | Gate | State |
 |---|---|
 | **C1** Rebuild Kage-Ryu (`ISO9660_FS` + `SQUASHFS` + `BLK_DEV_LOOP` =y); QEMU verify | ⚠️ **PKGS PRESENT** (`7.0.12` @ 08:53 EDT 2026-07-24; PKGBUILD enables live FS). Owner said kernel done; **still verify** mount before trusting. `makepkg` idle. |
-| Bake from clean committed idle `main` | ✅ **READY NOW** — `main` @ `a7d6b4a6` (2026-07-24 11:46 EDT), 0 open PRs |
+| Bake from clean committed idle `main` | ✅ **READY NOW** — tip after day-brief docs; `git rev-parse --short HEAD` |
 | Boot labels / offline-cache / kernel hard-fail guards | ✅ intact |
 | Palette lock (ALIEN NEON; cream / `#a06bff` clean in desktop trees) | ✅ clean |
 | Desktop delivery (skel + bootstrap + `/opt/nyxus-cache`) | ✅ intact |
@@ -560,11 +287,11 @@ Full GO/NO-GO from Copilot audit. Cross-checked against `main` @ `fb63e2aa` (+ #
 | **W6 (this session — Copilot missed)** bake wipes `nyxus-arsenal-apps.conf` from skel; never `source=`d | ✅ **DONE 2026-07-24** — bake shard list + `source=` in hyprland (NS+skel); also ships `nyxus-reactive.conf` |
 | I1–I5 | ℹ️ cleanup / cosmetic (orphan greeter, dup python tree, Forge `#0a0a14`, stale BUILD_ID stubs restamped at bake) |
 
-**Verdict (2026-07-24 11:46 EDT):** **GO for bake** from idle `main` @ `a7d6b4a6`.
-Kage pkgs exist; if live Kage still fails iso9660 on stick, boot **stock rescue** and
-rebuild/verify pkgs. Old `nyxus-2026.07.24` ISO at 03:05 is **not** this tip — rebake.
+**Verdict (2026-07-24 ~11:50 EDT):** **GO for bake** from idle `main`.
+Kage pkgs present; verify mount on stick (stock rescue fallback). Old ISO @ 03:05
+is **not** this tip — rebake. Full day story → [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md).
 
-**After bake verify:** `cat /etc/nyxus-build` → commit ≥ `a7d6b4a6`; `lsblk` label `NYXUS_2026_07`; UEFI Kage mounts ISO (or stock rescue); desktop offline; bars without black box; welcome transmission once on first login.
+**After bake verify:** `cat /etc/nyxus-build` → matches bake tip; label `NYXUS_2026_07`; UEFI Kage or stock rescue; desktop offline; bars OK; welcome transmission once.
 
 ---
 
