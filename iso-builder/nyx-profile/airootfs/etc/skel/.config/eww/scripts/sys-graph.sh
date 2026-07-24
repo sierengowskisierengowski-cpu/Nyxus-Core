@@ -57,9 +57,12 @@ if have sensors; then
   temp=$(sensors 2>/dev/null | awk -F'[+.]' '/Package id 0:/{print $2; exit}')
 fi
 if [[ ! "$temp" =~ ^[0-9]+$ ]]; then
+  # nullglob: unmatched glob expands to nothing (no literal "*/temp" arg)
+  shopt -s nullglob
   for z in /sys/class/thermal/thermal_zone*/temp; do
     [[ -r "$z" ]] && { temp=$(awk '{printf "%d",$1/1000}' "$z"); break; }
   done
+  shopt -u nullglob
 fi
 [[ "$temp" =~ ^[0-9]+$ ]] || temp=0
 # normalise 30..100C -> 0..100 for the sparkline scale
@@ -69,10 +72,13 @@ tnorm=$(( (temp - 30) * 100 / 70 ))
 # ---- NVIDIA dGPU, only when its PCI runtime state is not suspended -----
 gpu_present=false; gpu_util=0; gpu_temp=0
 nvpath=""
+# nullglob: don't iterate a literal path when no PCI devices match
+shopt -s nullglob
 for d in /sys/bus/pci/devices/*/; do
   [[ "$(cat "$d/vendor" 2>/dev/null)" == "0x10de" ]] || continue
   case "$(cat "$d/class" 2>/dev/null)" in 0x0300*|0x0302*) nvpath="$d"; break;; esac
 done
+shopt -u nullglob
 if [[ -n "$nvpath" ]] && have nvidia-smi; then
   rt="$(cat "${nvpath}power/runtime_status" 2>/dev/null || echo unknown)"
   if [[ "$rt" != "suspended" ]]; then

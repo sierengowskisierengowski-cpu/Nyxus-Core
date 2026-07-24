@@ -102,7 +102,7 @@ Copy `.env.example` to `.env` and fill it in. `.env` is gitignored — never com
 | `FORGE_SESSION_TTL_HOURS` | no | Session lifetime in hours (default 168) |
 | `FORGE_COOKIE_SECURE` | no | Set `1` when serving over HTTPS |
 | `FORGE_ALLOWED_ORIGINS` | no | Comma-separated CORS allowlist. Omit for same-origin (default, locked down). |
-| `FORGE_HONEYPOT_LOG_DIR` | no | Cowrie honeypot ledger directory (default `/home/cosmic/CommandVault/honeypots`) |
+| `FORGE_HONEYPOT_LOG_DIR` | no | Cowrie honeypot ledger directory (default `/home/nyx/CommandVault/honeypots`) |
 | `FORGE_HONEYPOT_POLL_MS` | no | Honeypot re-scan interval in ms (default 60000; `0` disables the timer) |
 | `FORGE_REDFORGE_EXPORT_DIR` | no | Where REDFORGE handoff packages are written (default `<repo>/exports/redforge`) |
 

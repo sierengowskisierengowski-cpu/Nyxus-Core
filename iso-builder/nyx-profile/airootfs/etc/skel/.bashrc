@@ -27,5 +27,16 @@ if [ -z "${NYXUS_NO_GREETING:-}" ] && command -v nyxus-glow >/dev/null 2>&1; the
   printf '\n'
   nyxus-glow -c "        N Y X U S"
   NYXUS_GLOW_DENSITY=0.5 nyxus-glow -w "  dark mirror · you are in it"
+  # Build stamp — instant freshness check so the owner never debugs a stale bake.
+  if [ -r /etc/nyxus-build ]; then
+    _stamp="$(sed -n '/^iso /p; /^built /p; /^source commit/p' /etc/nyxus-build 2>/dev/null)"
+    if [ -n "$_stamp" ]; then
+      printf '\033[38;2;125;61;255m  ┄ build stamp ┄\033[38;2;238;242;250m\n'
+      printf '%s\n' "$_stamp" | sed 's/^/  /'
+      printf '\033[0m'
+    fi
+    unset _stamp
+  fi
   printf '\n'
 fi
+

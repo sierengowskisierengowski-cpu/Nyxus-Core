@@ -82,7 +82,7 @@ export function dedupeCommands(commands: ParsedHoneypotCommand[]): ParsedHoneypo
 }
 
 export function defaultHoneypotDir(): string {
-  return process.env.FORGE_HONEYPOT_LOG_DIR?.trim() || "/home/cosmic/CommandVault/honeypots";
+  return process.env.FORGE_HONEYPOT_LOG_DIR?.trim() || "/home/nyx/CommandVault/honeypots";
 }
 
 // Candidate Cowrie ledger files, in priority order. The `_audit` copy carries

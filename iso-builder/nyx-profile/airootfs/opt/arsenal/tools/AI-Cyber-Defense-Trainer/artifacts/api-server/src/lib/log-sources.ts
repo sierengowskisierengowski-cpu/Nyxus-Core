@@ -46,7 +46,7 @@ export class LogHub {
   private fileOffsets = new Map<string, number>();
   private started = false;
 
-  readonly honeypotDir = process.env.HONEYPOT_LOG_DIR ?? "/home/cosmic/CommandVault/honeypots";
+  readonly honeypotDir = process.env.HONEYPOT_LOG_DIR ?? "/home/nyx/CommandVault/honeypots";
   readonly journalUnits = envList("JOURNAL_UNITS", ["jett-daemon", "bifrost-guardian"]);
   readonly auditdPath = process.env.AUDITD_LOG_PATH ?? "/var/log/audit/audit.log";
 

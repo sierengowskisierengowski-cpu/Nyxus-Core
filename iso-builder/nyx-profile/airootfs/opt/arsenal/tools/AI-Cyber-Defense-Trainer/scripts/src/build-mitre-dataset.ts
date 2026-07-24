@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 
 const DEFAULT_STIX =
   process.env.MITRE_STIX_PATH ??
-  "/home/cosmic/Projects/jeTT/knowledge_base/mitre_attack/enterprise-attack.json";
+  "/home/nyx/Projects/jeTT/knowledge_base/mitre_attack/enterprise-attack.json";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.resolve(
