@@ -11,7 +11,7 @@
 #   night     warm 3800K color temperature
 #   vignette  cinematic edge falloff
 #   crt       scanlines + chromatic aberration (emulation workspace)
-#   noir      DARK MIRROR: blue-steel grayscale, lifted contrast
+#   noir      ALIEN NEON: blue-steel grayscale, lifted contrast
 #   off       back to clean output
 #   next      cycle off → ember → night → vignette → crt → noir → off
 #   status    print the active filter

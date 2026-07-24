@@ -30,7 +30,7 @@ Rectangle {
     height: Screen.height
     color: "#04030a"
 
-    // ── palette — consumes docs/THEME.md tokens (DARK MIRROR §8 login/lock) ──
+    // ── palette — consumes docs/THEME.md tokens (ALIEN NEON §8 login/lock) ──
     readonly property color cVoid:     "#04030a"
     readonly property color cCard:     Qt.rgba(5/255, 2/255, 11/255, 0.78)     // frosted smoked-glass fill
     readonly property color cCardEdge: Qt.rgba(121/255, 73/255, 242/255, 0.32) // 1px accent hairline

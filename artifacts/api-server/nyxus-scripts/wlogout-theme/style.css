@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════════════════════════════
-   NYXUS · wlogout · DARK MIRROR · LOCKED rev 2026-05-07 r13
-   Matches unified DARK MIRROR · UNIFIED FROSTED GLASS spec.
+   NYXUS · wlogout · ALIEN NEON · LOCKED rev 2026-05-07 r13
+   Matches unified ALIEN NEON · UNIFIED FROSTED GLASS spec.
    Pure monochrome — white / off-white #eef2fa / light grey #c8ccd6 /
    faded black / ink black. No pink, no purple, no neon, no per-button
    color fills.
@@ -21,7 +21,7 @@ window {
     color: #eef2fa                          !important;
 }
 
-/* ── BUTTON BASE · DARK MIRROR pebble ────────────────────────────── */
+/* ── BUTTON BASE · ALIEN NEON pebble ────────────────────────────── */
 button {
     background-color: rgba(15, 20, 32, 0.72)  !important;
     background-image: none                    !important;

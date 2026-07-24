@@ -95,8 +95,8 @@ msgstr "Acceso denegado"
 msgid "Welcome to NYXUS"
 msgstr "Bienvenido a NYXUS"
 
-msgid "DARK MIRROR"
-msgstr "DARK MIRROR"
+msgid "ALIEN NEON"
+msgstr "ALIEN NEON"
 
 msgid "Silent. Dark. Purely Functional."
 msgstr "Silencioso. Oscuro. Puramente Funcional."

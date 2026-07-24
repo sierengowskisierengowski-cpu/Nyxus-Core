@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════════════
-#  PAM stack for hyprlock (NYXUS · DARK MIRROR)
+#  PAM stack for hyprlock (NYXUS · ALIEN NEON)
 #
 #  Tries authentication methods in order, succeeding on the first one that
 #  works.  No method is required — any single one unlocks the screen.

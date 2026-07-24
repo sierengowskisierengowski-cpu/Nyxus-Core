@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════════════
-#  PAM stack for SDDM main login (NYXUS · DARK MIRROR)
+#  PAM stack for SDDM main login (NYXUS · ALIEN NEON)
 #
 #  Auth methods, in order:
 #    1. fprintd   — fingerprint

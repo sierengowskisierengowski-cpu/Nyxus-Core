@@ -447,7 +447,7 @@ if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_OPACITY" ]]; then
   fi
 fi
 
-# ── DARK MIRROR FEATURE 4: window edges (white→off-white→black border)
+# ── ALIEN NEON FEATURE 4: window edges (white→off-white→black border)
 # col.active_border gradient + 2px border + 15px rounding + ink shadow.
 # Combined with blur + opacity, every window reads as a starlight-rimmed
 # dark glass tile floating above the wallpaper. Without this file the
@@ -455,9 +455,9 @@ fi
 if curl -fsSL --max-time 30 "$PROD/nyxus-hyprland-general.conf" -o "$HYPR_GENERAL"; then
   chown "$REAL_USER:$REAL_USER" "$HYPR_GENERAL"
   chmod 644 "$HYPR_GENERAL"
-  ok "wrote $HYPR_GENERAL  (DARK MIRROR window edges)"
+  ok "wrote $HYPR_GENERAL  (ALIEN NEON window edges)"
 else
-  warn "could not download nyxus-hyprland-general.conf — DARK MIRROR border skipped"
+  warn "could not download nyxus-hyprland-general.conf — ALIEN NEON border skipped"
 fi
 
 if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_GENERAL" ]]; then
@@ -466,7 +466,7 @@ if [[ -f "$HYPR_MAIN" ]] && [[ -f "$HYPR_GENERAL" ]]; then
   else
     {
       echo
-      echo "# NYXUS — DARK MIRROR window edges (added by nyxus-resync-all.sh)"
+      echo "# NYXUS — ALIEN NEON window edges (added by nyxus-resync-all.sh)"
       echo "$GENERAL_SOURCE_LINE"
     } >> "$HYPR_MAIN"
     chown "$REAL_USER:$REAL_USER" "$HYPR_MAIN"
