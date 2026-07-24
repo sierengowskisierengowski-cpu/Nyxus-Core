@@ -1,11 +1,18 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-24 (ALIEN NEON + Settings audit checklist written)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24 (ALIEN NEON/Settings brief — start Phase 1)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
+>
+> **Theme + Settings workstream:** read
+> [`docs/ALIEN_NEON_SETTINGS_BRIEF.md`](./docs/ALIEN_NEON_SETTINGS_BRIEF.md)
+> **first**, then the checklist
+> [`docs/ALIEN_NEON_SETTINGS_AUDIT.md`](./docs/ALIEN_NEON_SETTINGS_AUDIT.md).
+> **Start at Phase 1** (palette + Settings chrome). Stay-as-is: Bifrost / GodsApp /
+> Meli / Arsenal — do not restyle.
 
 ---
 

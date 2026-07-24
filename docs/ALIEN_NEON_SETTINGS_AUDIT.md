@@ -4,7 +4,10 @@
 > Live tree: `~/.nyxus` + desktop entries  
 > Settings source: `/home/cosmic/.nyxus/nyxus_settings.py` (sha `6d49911d067a`)  
 > Repo settings sha: `ba39feefff9e` (not byte-identical to live)  
-> **Use this as the master checklist.** Check items off as they land on `main` + verify in bake.
+> **Use this as the master checklist.** Check items off as they land on `main` + verify in bake.  
+> **START HERE brief (phases + stay-as-is):** [`ALIEN_NEON_SETTINGS_BRIEF.md`](./ALIEN_NEON_SETTINGS_BRIEF.md)
+>
+> **Current work pointer:** Phase 1 not started — `nyxus_palette.py` + Settings chrome + prism-only Theme Packs.
 
 ## ⛔ STAY AS-IS — OUT OF SCOPE (owner 2026-07-24)
 
@@ -322,12 +325,15 @@ Incomplete = thin UI, not “unwired class”.
 
 ## 5) SUGGESTED WORK ORDER (to actually finish)
 
-1. **Foundation:** `nyxus_palette.py` → full canon + ALIEN NEON brand; kill DARK MIRROR/gold.
-2. **Master hub chrome:** `nyxus_settings.py` CSS + strings + Theme Packs → prism-only.
-3. **Cascade shell GTK apps** from §1 (Home, Control, Chrome, Terminal, Store, Panel, Start, …) — **skip** security/Bifrost/GodsApp/Meli.
-4. **Deepen EMPTY/MINIMAL settings pages** from §2 (vpn first, then kernel/virt/gaming/…).
-5. **Add missing Settings sections** only for shell must-haves (live wallpaper, eww/bars, Hyprland, hyprlock, screensaver, Hacker/Ghost/Panic controls) — **not** Arsenal/Bifrost/Meli/GodsApp.
-6. **Verify on stick** after bake (`/etc/nyxus-build` commit + visual QA).
+**Active pointer → Phase 1.** Details in [`ALIEN_NEON_SETTINGS_BRIEF.md`](./ALIEN_NEON_SETTINGS_BRIEF.md).
+
+1. **Phase 1 — Foundation (START):** `nyxus_palette.py` → full canon + ALIEN NEON brand; kill DARK MIRROR/gold. Then `nyxus_settings.py` CSS/strings + Theme Packs → prism-only. Keep artifacts ↔ skel lockstep.
+2. **Phase 2 — Cascade shell GTK apps** (Home, Control, Chrome, Terminal, Store, Panel, Start, …) — **skip** security/Bifrost/GodsApp/Meli.
+3. **Phase 3 — Deepen EMPTY/MINIMAL settings pages** (`vpn` first, then kernel/virt/gaming/…).
+4. **Phase 4 — Add missing Settings sections** only for shell must-haves (live wallpaper, eww/bars, Hyprland, hyprlock, screensaver, Hacker/Ghost/Panic controls) — **not** Arsenal/Bifrost/Meli/GodsApp.
+5. **Verify on stick** after bake (`/etc/nyxus-build` commit + visual QA).
+
+When a phase completes: tick rows above, append a line to the brief progress log, update HANDOFF “Last updated”.
 
 ---
 
