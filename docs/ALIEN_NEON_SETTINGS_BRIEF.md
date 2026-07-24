@@ -8,21 +8,19 @@
 
 ## Where we start (do not skip)
 
-**Phase 1 — Foundation (START HERE, now):**
+**Phase 1 — Foundation (DONE on branch `cursor/audit-stay-as-is-scope-92cd`):**
 
-1. `artifacts/api-server/nyxus-scripts/nyxus_palette.py` (+ skel / live mirrors)
+1. ~~`nyxus_palette.py` (+ skel / live mirrors)~~ ✅
    - Full ALIEN NEON canon (include **void `#05060a`** + **orchid `#e367ff`**)
    - Brand string **ALIEN NEON** (kill **DARK MIRROR**)
-   - Kill gold `#d4b87a` and other banned leftovers
-2. `nyxus_settings.py` (repo `artifacts/...` **and** skel `.nyxus/` — keep in lockstep)
+   - Kill gold `#d4b87a`; `_ACCENT_FALLBACK` = prism; HUD void/green aligned
+2. ~~`nyxus_settings.py` (repo + skel lockstep)~~ ✅
    - CSS / chrome → ALIEN NEON
-   - Theme Packs page → **prism-only** (delete dark_mirror/inferno/oceanic/forest/monochrome as selectable packs)
-   - Replace user-visible “DARK MIRROR” strings
-3. Fix live launcher trap: `~/.local/bin/nyxus-settings` on the owner machine still opens
-   **Panel** prefs; ISO correctly launches `nyxus_settings.py`. When touching Settings,
-   ensure repo `/usr/local/bin/nyxus-settings` stays the canonical path.
+   - Theme Packs page → **prism-only**
+   - User-visible “DARK MIRROR” strings replaced; APP_REV `2026.07.24-r11`
+3. Launcher `/usr/local/bin/nyxus-settings` comment updated (still execs `nyxus_settings.py`)
 
-**Then Phase 2 — Cascade shell GTK apps** (Home, Panel, Start, Terminal, Control, Store, …).  
+**Then Phase 2 — Cascade shell GTK apps** (Home, Panel, Start, Terminal, Control, Store, …) ← **START HERE next**.  
 **Then Phase 3 — Deepen EMPTY/MINIMAL Settings pages** (`vpn` first).  
 **Then Phase 4 — Add Settings sections only for shell must-haves** (live wallpaper, eww, Hyprland, hyprlock, screensaver, Hacker/Ghost/Panic controls).  
 **Not a theme phase:** Bifrost / GodsApp / Meli / Arsenal (see below).
@@ -60,6 +58,7 @@ Settings hub, Home/Main Page, Panel, Start, Terminal, Stickies, Notes, Notepad, 
 | W6 arsenal/reactive bake shard wipe fix | On `main` (`09fef7bb`) |
 | Stay-as-is carve-out documented | This brief + audit §0 |
 | Full counts checklist | `docs/ALIEN_NEON_SETTINGS_AUDIT.md` |
+| **Phase 1** palette + Settings chrome + Theme Packs prism-only | Done on `cursor/audit-stay-as-is-scope-92cd` (merge to main) |
 | Kage-Ryu live iso9660 | **Still blocker** until owner `makepkg` finishes + verify + rebake |
 
 ---
@@ -85,6 +84,6 @@ Settings hub, Home/Main Page, Panel, Start, Terminal, Stickies, Notes, Notepad, 
 |---|---|---|
 | 2026-07-24 | Audit + stay-as-is carve-out | `docs/ALIEN_NEON_SETTINGS_AUDIT.md`; branch `cursor/audit-stay-as-is-scope-92cd` |
 | 2026-07-24 | This brief added — Phase 1 = start | (this file) |
-| | *Phase 1 palette + Settings chrome — not started* | |
+| 2026-07-24 | **Phase 1 DONE** — palette ALIEN NEON + Settings chrome + Theme Packs prism-only; mirrors synced | branch `cursor/audit-stay-as-is-scope-92cd` |
 
-*Next agent: start Phase 1. Tick audit rows as you go. Leave a progress-log line here when a phase completes.*
+*Next agent: start Phase 2 (shell GTK cascade). Tick audit rows as you go. Leave a progress-log line here when a phase completes.*

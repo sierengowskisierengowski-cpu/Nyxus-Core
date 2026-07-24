@@ -1,6 +1,6 @@
 /* ============================================================
- *  NYXUS PALETTE — CSS source of truth for DARK MIRROR
- *  (LOCKED · rev 2026-05-07 r13)
+ *  NYXUS PALETTE — CSS source of truth for ALIEN NEON
+ *  (LOCKED · rev 2026-07-24 r15 · prism canon)
  *
  *  Every NYXUS GTK4 / waybar / rofi CSS must @import this file
  *  and reference the @define-color names below — never hard-code
@@ -20,6 +20,17 @@
 @define-color nyx_grey_tertiary #6a6e78;
 @define-color nyx_ink_faded     #0a0a0a;
 @define-color nyx_ink_black     #000000;
+
+/* ── ALIEN NEON FIXED CANON ───────────────────────────────── */
+@define-color nyx_void          #05060a;
+@define-color nyx_orchid        #e367ff;
+@define-color nyx_cyan          #2bd2ff;
+@define-color nyx_red           #ff2d55;
+@define-color nyx_yellow        #ffe600;
+@define-color nyx_green_ok      #39ff14;
+@define-color nyx_violet        #7d3dff;
+@define-color nyx_magenta       #ff2dad;
+@define-color nyx_orange        #ff8a1e;
 
 /* ── TRIPLE-BLACK SURFACE STACK (rev r14 · 2026-05-09) ────── */
 /* Three layered shades of black. Each tier is distinct but    */

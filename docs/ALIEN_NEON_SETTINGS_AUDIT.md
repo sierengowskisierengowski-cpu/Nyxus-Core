@@ -7,7 +7,7 @@
 > **Use this as the master checklist.** Check items off as they land on `main` + verify in bake.  
 > **START HERE brief (phases + stay-as-is):** [`ALIEN_NEON_SETTINGS_BRIEF.md`](./ALIEN_NEON_SETTINGS_BRIEF.md)
 >
-> **Current work pointer:** Phase 1 not started — `nyxus_palette.py` + Settings chrome + prism-only Theme Packs.
+> **Current work pointer:** Phase 1 **DONE on branch** `cursor/audit-stay-as-is-scope-92cd` — palette + Settings chrome + prism-only Theme Packs. **Next: Phase 2** (cascade shell GTK apps).
 
 ## ⛔ STAY AS-IS — OUT OF SCOPE (owner 2026-07-24)
 
@@ -59,7 +59,7 @@ Do **not** treat “missing Settings section” or “not ALIEN NEON” as work 
 | Desktop apps with no Settings section (raw) | 58 | **many are stay-as-is** — see §0 |
 | Stay-as-is apps (no theme / no Settings required) | ~20+ | Bifrost, GodsApp, Meli, Arsenal suite, lab tools |
 | Session features (no dedicated Settings section) | 15 | Arsenal-as-settings + jeTT **dropped** from required work |
-| Theme Pack presets to kill/lock | 5 | prism-only |
+| Theme Pack presets to kill/lock | 5 → 0 | ✅ prism-only on Phase 1 branch |
 
 **Actionable theme work ≈ shell/system apps only** (not Bifrost/GodsApp/Meli/Arsenal/lab).
 
@@ -93,14 +93,14 @@ Do **not** treat “missing Settings section” or “not ALIEN NEON” as work 
 | 20 | `.nyxus/nyxus_motd.py` | 0 | 0 | — | no_ALIEN_NEON_brand |
 | 21 | `.nyxus/nyxus_notepad.py` | 0 | 0 | — | no_ALIEN_NEON_brand |
 | 22 | `.nyxus/nyxus_notes.py` | 3 | 0 | — | DARK_MIRROR×3; no_ALIEN_NEON_brand |
-| 23 | `.nyxus/nyxus_palette.py` | 1 | 0 | — | DARK_MIRROR×1; no_ALIEN_NEON_brand |
+| 23 | `.nyxus/nyxus_palette.py` | 0 | ✅ | — | Phase 1: ALIEN NEON brand + void/orchid; DARK MIRROR gone |
 | 24 | `.nyxus/nyxus_parental.py` | 0 | 0 | — | no_ALIEN_NEON_brand; missing_violet,magenta,void,text |
 | 25 | `.nyxus/nyxus_powermenu.py` | 1 | 0 | — | DARK_MIRROR×1; no_ALIEN_NEON_brand |
 | 26 | `.nyxus/nyxus_preboot.py` | 0 | 0 | — | no_ALIEN_NEON_brand |
 | 27 | `.nyxus/nyxus_screensaver.py` | 0 | 0 | — | no_ALIEN_NEON_brand |
 | 28 | `.nyxus/nyxus_screenshot.py` | 1 | 0 | — | DARK_MIRROR×1; no_ALIEN_NEON_brand |
 | 29 | `.nyxus/nyxus_security.py` | 3 | 0 | `#d4b87a` | DARK_MIRROR×3; no_ALIEN_NEON_brand; banned=#d4b87a; missing_violet,magenta,void |
-| 30 | `.nyxus/nyxus_settings.py` | 18 | 0 | `#d4b87a` | DARK_MIRROR×18; no_ALIEN_NEON_brand; banned=#d4b87a |
+| 30 | `.nyxus/nyxus_settings.py` | 0 | ✅ | — | Phase 1: chrome strings + Theme Packs prism-only; gold removed |
 | 31 | `.nyxus/nyxus_settings_accessibility.py` | 0 | 0 | — | no_ALIEN_NEON_brand; missing_violet,magenta,void,text |
 | 32 | `.nyxus/nyxus_settings_notifications.py` | 0 | 0 | — | no_ALIEN_NEON_brand; missing_violet,magenta,void,text |
 | 33 | `.nyxus/nyxus_settings_sandbox.py` | 0 | 0 | — | no_ALIEN_NEON_brand; missing_violet,magenta,void,text |
@@ -118,18 +118,14 @@ Do **not** treat “missing Settings section” or “not ALIEN NEON” as work 
 
 ### Shared palette module gaps
 
-- Still brands DARK MIRROR: **1** hit(s)
-- ALIEN NEON brand string: **0**
-- Canon present: violet, magenta, green, orange, cyan, red, yellow, text
-- Canon missing: orchid, void
+- Still brands DARK MIRROR: **0** (Phase 1)
+- ALIEN NEON brand string: **present** (`BRAND_PALETTE`)
+- Canon present: violet, magenta, green, orange, cyan, red, yellow, text, **orchid**, **void**
 
-### Theme Packs page still offers non-locked packs
+### Theme Packs page — prism-only (Phase 1 ✅)
 
-- `dark_mirror` — DARK MIRROR (default) (`#7d3dff` / `#2bd2ff`) ❌ default is DARK MIRROR — must become ALIEN NEON / prism-only
-- `inferno` — INFERNO (`#ff3a5c` / `#ffae3a`) ❌ remove/lock
-- `oceanic` — OCEANIC (`#3a7dff` / `#3affd8`) ❌ remove/lock
-- `forest` — FOREST (`#3aff7d` / `#a0ff3a`) ❌ remove/lock
-- `monochrome` — MONOCHROME (`#cccccc` / `#888888`) ❌ remove/lock
+- `prism` — ALIEN NEON (prism) (`#7d3dff` / `#ff2dad`) ✅ locked
+- ~~`dark_mirror` / `inferno` / `oceanic` / `forest` / `monochrome`~~ — removed as selectable packs; legacy prefs migrate to `prism`
 
 ### Non-Python surfaces
 
@@ -192,7 +188,7 @@ Incomplete = thin UI, not “unwired class”.
 - [ ] `sound` — **Sound** (controls=8)
 - [ ] `sounds` — **Sound Pack** (controls=14)
 - [ ] `storage` — **Storage** (controls=9)
-- [ ] `themepacks` — **Theme Packs** (controls=5)
+- [x] `themepacks` — **Theme Packs** (prism-only · Phase 1)
 - [ ] `wallpaper` — **Wallpaper Studio** (controls=9)
 - [ ] `welcome` — **Welcome** (controls=11)
 
@@ -325,10 +321,10 @@ Incomplete = thin UI, not “unwired class”.
 
 ## 5) SUGGESTED WORK ORDER (to actually finish)
 
-**Active pointer → Phase 1.** Details in [`ALIEN_NEON_SETTINGS_BRIEF.md`](./ALIEN_NEON_SETTINGS_BRIEF.md).
+**Active pointer → Phase 2.** Details in [`ALIEN_NEON_SETTINGS_BRIEF.md`](./ALIEN_NEON_SETTINGS_BRIEF.md).
 
-1. **Phase 1 — Foundation (START):** `nyxus_palette.py` → full canon + ALIEN NEON brand; kill DARK MIRROR/gold. Then `nyxus_settings.py` CSS/strings + Theme Packs → prism-only. Keep artifacts ↔ skel lockstep.
-2. **Phase 2 — Cascade shell GTK apps** (Home, Control, Chrome, Terminal, Store, Panel, Start, …) — **skip** security/Bifrost/GodsApp/Meli.
+1. **Phase 1 — Foundation:** ✅ on `cursor/audit-stay-as-is-scope-92cd` — palette ALIEN NEON + void/orchid; Settings chrome; Theme Packs prism-only; artifacts↔skel lockstep.
+2. **Phase 2 — Cascade shell GTK apps** (Home, Control, Chrome, Terminal, Store, Panel, Start, …) — **skip** security/Bifrost/GodsApp/Meli. **← START HERE**
 3. **Phase 3 — Deepen EMPTY/MINIMAL settings pages** (`vpn` first, then kernel/virt/gaming/…).
 4. **Phase 4 — Add missing Settings sections** only for shell must-haves (live wallpaper, eww/bars, Hyprland, hyprlock, screensaver, Hacker/Ghost/Panic controls) — **not** Arsenal/Bifrost/Meli/GodsApp.
 5. **Verify on stick** after bake (`/etc/nyxus-build` commit + visual QA).

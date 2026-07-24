@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ──────────────────────────────────────────────────────────────────────
-#  NYXUS · Settings                                  rev 2026.05.12-r10
+#  NYXUS · Settings                                  rev 2026.07.24-r11
 # ──────────────────────────────────────────────────────────────────────
 #  System control center for NYXUS. GTK4 + libadwaita Python app.
-#  AdwNavigationSplitView (sidebar + content), DARK MIRROR aesthetic,
+#  AdwNavigationSplitView (sidebar + content), ALIEN NEON aesthetic,
 #  real backend integrations only — never mock data, never blank panels.
 #
 #  Sections:
@@ -46,7 +46,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 # ── App identity ──────────────────────────────────────────────────────
 APP_ID    = "io.nyxus.settings"
 APP_NAME  = "NYXUS Settings"
-APP_REV   = "rev 2026.05.12-r10"
+APP_REV   = "rev 2026.07.24-r11"
 WIN_W     = 1180
 WIN_H     = 740   # fits inside 768 with EWW bar present (§12)
 
@@ -104,11 +104,9 @@ except Exception:
     FONT_DISPLAY   = "Inter Display"
 
 DANGER_RED = "#ff6464"  # §8 — RESERVED for destructive only
-NYXUS_GOLD = "#d4b87a"  # warm brand accent — selection, focus rings
+# Selection / focus rings use NEON (prism primary) — never gold #d4b87a.
 
-# ── Neon HUD accents (live accent.json) ───────────────────────────────
-# Settings shipped in the monochrome DARK MIRROR palette while the rest
-# of the desktop (launcher / HOME / Hub) moved to the neon HUD language.
+# ── Neon HUD accents (live accent.json · ALIEN NEON / prism) ──────────
 # Pull the SAME live accent everyone else uses so Settings matches. All
 # selection/focus/active states below are re-pointed onto these.
 try:
@@ -117,9 +115,9 @@ try:
         ACCENT_OK as NEON_OK,
     )
 except Exception:
-    NEON    = "#7d3dff"   # purple — primary
-    NEON_2  = "#ff2d55"   # red — secondary
-    NEON_OK = "#39ff14"   # green — positive
+    NEON    = "#7d3dff"   # violet — primary (prism)
+    NEON_2  = "#ff2dad"   # magenta — secondary (prism)
+    NEON_OK = "#39ff14"   # green — positive (prism)
 
 # Nerd-font glyphs (§6 — never emoji in chrome).
 GLYPHS = {
@@ -616,10 +614,10 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "nyxus-set-wallpaper", 1,
                "Personal"),
     SectionDef("themepacks",    "Theme Packs",
-               "Curated DARK MIRROR variants — accent + glow + grain",
+               "ALIEN NEON (prism) — locked accent + glow + grain",
                "themepacks",
                "theme,pack,accent,palette,style,variant,nyxus-apply-accent,"
-               "purple,cyan,glow,grain", 1,
+               "prism,alien,neon,glow,grain", 1,
                "Personal"),
     SectionDef("clipboard",     "Clipboard",
                "History size, persistence, secrets filter (cliphist)",
@@ -657,7 +655,7 @@ FOOTER_SECTION_TITLES = frozenset({"Keybinds", "Reset", "Advanced"})
 
 
 # ──────────────────────────────────────────────────────────────────────
-# DARK MIRROR stylesheet — libadwaita CSS overrides.
+# ALIEN NEON stylesheet — libadwaita CSS overrides.
 # Keep this small: we lean on Adw built-ins (preferences groups, action
 # rows, switches, sliders) and only override colour + radius + glow.
 # ──────────────────────────────────────────────────────────────────────
@@ -5978,14 +5976,14 @@ class AccessibilityPage(SectionPage):
             motion.add(empty_row("hyprctl not found",
                                   "Animation toggle requires Hyprland"))
 
-        # High contrast — locked off per DARK MIRROR contract
+        # High contrast — locked off per ALIEN NEON contract
         contrast = Adw.PreferencesGroup(
             title="Contrast",
-            description="DARK MIRROR locks the visual theme; system high "
+            description="ALIEN NEON locks the visual theme; system high "
                         "contrast is intentionally disabled. Use text "
                         "scale and cursor size instead.")
         self.add_group(contrast)
-        contrast.add(kv_row("System theme", "DARK MIRROR (locked)"))
+        contrast.add(kv_row("System theme", "ALIEN NEON (locked)"))
 
         # Pointers to assistive tools — launch on demand
         tools = Adw.PreferencesGroup(title="Assistive tools")
@@ -6877,19 +6875,19 @@ def _clear_group(grp: Adw.PreferencesGroup) -> None:
 # ──────────────────────────────────────────────────────────────────────
 # Tier-1: APPEARANCE
 # ──────────────────────────────────────────────────────────────────────
-# Curated DARK MIRROR accent palette.  The "Mirror White" preset is the
-# brand default and matches the locked SDDM/hyprlock palette tokens.
+# ALIEN NEON accent chips (prism family). Default = prism primary.
+# Theme Packs is prism-only; this picker is for per-surface accent hex
+# propagation and must stay inside the locked canon.
 ACCENT_PRESETS: List[Tuple[str, str]] = [
-    ("Mirror White", "#eef2fa"),
-    ("Cyan",         "#5fd3f3"),
-    ("Lime",         "#a6e22e"),
-    ("Amber",        "#f5b342"),
-    ("Magenta",      "#ff5fa7"),
-    ("Crimson",      "#ff5f6d"),
-    ("Iris",         "#9c8cff"),
-    ("Mint",         "#5ff3b8"),
+    ("Violet (prism)", "#7d3dff"),
+    ("Magenta",        "#ff2dad"),
+    ("Cyan",           "#2bd2ff"),
+    ("Green",          "#39ff14"),
+    ("Orange",         "#ff8a1e"),
+    ("Orchid",         "#e367ff"),
+    ("Text",           "#eef2fa"),
 ]
-DEFAULT_ACCENT = "#eef2fa"
+DEFAULT_ACCENT = "#7d3dff"
 
 # Files we own for accent propagation. Each is a small idempotent fragment
 # included by the parent config (so we never mangle hand-written files).
@@ -6949,8 +6947,8 @@ class AppearancePage(SectionPage):
         g_theme = Adw.PreferencesGroup(title="Theme")
         v_row = Adw.ActionRow(
             title="Variant",
-            subtitle="DARK MIRROR — locked by NYXUS design contract")
-        v_row.add_suffix(status_pill("DARK MIRROR", "ok"))
+            subtitle="ALIEN NEON — locked by NYXUS design contract")
+        v_row.add_suffix(status_pill("ALIEN NEON", "ok"))
         g_theme.add(v_row)
         self.add_group(g_theme)
 
@@ -7104,7 +7102,7 @@ class AppearancePage(SectionPage):
         # Reset
         reset = action_row(
             "Reset to default",
-            f"Restores Mirror White ({DEFAULT_ACCENT})",
+            f"Restores prism violet ({DEFAULT_ACCENT})",
             "Reset",
             lambda: self._set_accent(DEFAULT_ACCENT))
         self.accent_grp.add(reset)
@@ -9575,7 +9573,7 @@ class AboutPage(SectionPage):
         nyx_ver = self._read_nyx_version()
         header = Adw.ActionRow()
         header.set_title("NYXUS")
-        header.set_subtitle(f"DARK MIRROR  ·  {nyx_ver}")
+        header.set_subtitle(f"ALIEN NEON  ·  {nyx_ver}")
         big = Gtk.Label(label="◐")
         big.add_css_class("nyx-section-glyph")
         big.set_valign(Gtk.Align.CENTER)
@@ -9677,7 +9675,7 @@ class AboutPage(SectionPage):
         _clear_group(self.credits_grp)
         cr = Adw.ActionRow(
             title="Designed and built by Joseph A. Sierengowski",
-            subtitle="© 2026  ·  DARK MIRROR aesthetic  ·  enterprise grade")
+            subtitle="© 2026  ·  ALIEN NEON aesthetic  ·  enterprise grade")
         self.credits_grp.add(cr)
 
         self.clear_pills()
@@ -11786,8 +11784,8 @@ class DockPage(SectionPage):
         size_row.add_suffix(sz)
         app.add(size_row)
         # Glow
-        sw_gl = Adw.SwitchRow(title="DARK MIRROR glow",
-                              subtitle="Purple/cyan accent ring around active app")
+        sw_gl = Adw.SwitchRow(title="ALIEN NEON glow",
+                              subtitle="Violet/magenta accent ring around active app")
         sw_gl.set_active(bool(cfg.get("glow", True)))
         sw_gl.connect("notify::active",
                       lambda s, _p: self._set("glow", s.get_active()))
@@ -12064,46 +12062,39 @@ class WallpaperStudioPage(SectionPage):
 
 
 class ThemePacksPage(SectionPage):
-    """Curated DARK MIRROR variants — accent + glow + grain."""
+    """ALIEN NEON (prism) — the only selectable pack. Locked accent.json."""
     KEY = "themepacks"
     STANDARD_KEYBIND_TOKENS = ["apply-accent"]
     STANDARD_RESET_NS = ["themepack"]
 
-    # Each pack: id, label, accent hex, secondary hex, description
+    # prism-only — inferno/oceanic/forest/monochrome/dark_mirror removed.
     PACKS = (
-        ("dark_mirror",   "DARK MIRROR (default)",
-            "#7d3dff", "#2bd2ff",
-            "Purple primary + cyan secondary — the canonical NYXUS look"),
-        ("inferno",       "INFERNO",
-            "#ff3a5c", "#ffae3a",
-            "Crimson primary + amber secondary — high-energy gamer red"),
-        ("oceanic",       "OCEANIC",
-            "#3a7dff", "#3affd8",
-            "Deep blue primary + teal secondary — calm dev workflow"),
-        ("forest",        "FOREST",
-            "#3aff7d", "#a0ff3a",
-            "Emerald primary + lime secondary — biophilic comfort"),
-        ("monochrome",    "MONOCHROME",
-            "#cccccc", "#888888",
-            "Pure greys — no accent at all (focus mode)"),
+        ("prism", "ALIEN NEON (prism)",
+            "#7d3dff", "#ff2dad",
+            "Violet primary + magenta secondary — the locked NYXUS look"),
     )
+    _LEGACY_PACK_IDS = frozenset({
+        "dark_mirror", "inferno", "oceanic", "forest", "monochrome",
+    })
 
     def build(self) -> None:
         prefs = load_prefs().get("themepack", {})
-        active = prefs.get("active", "dark_mirror")
+        active = prefs.get("active", "prism")
+        if active in self._LEGACY_PACK_IDS or active not in {p[0] for p in self.PACKS}:
+            active = "prism"
 
         gen = Adw.PreferencesGroup(
             title="General",
-            description="Active theme pack — applied via nyxus-apply-accent")
+            description="Locked ALIEN NEON pack — applied via nyxus-apply-accent prism")
         self.add_group(gen)
         gen.add(kv_row("Active pack",
                        next((lbl for k, lbl, *_ in self.PACKS if k == active),
                             active)))
 
-        # Appearance — pack picker
+        # Appearance — pack picker (single locked entry)
         pick = Adw.PreferencesGroup(
             title="Appearance",
-            description="Switch the global accent + GTK theme + EWW palette")
+            description="Re-apply the global ALIEN NEON accent + GTK theme + EWW palette")
         self.add_group(pick)
         for pid, lbl, primary, secondary, desc in self.PACKS:
             sub = (f"{desc} · {primary} / {secondary}")
@@ -12130,7 +12121,7 @@ class ThemePacksPage(SectionPage):
         beh.add(sw_glow)
         sw_grain = Adw.SwitchRow(
             title="Film grain overlay",
-            subtitle="Subtle texture across the desktop (DARK MIRROR signature)")
+            subtitle="Subtle texture across the desktop (ALIEN NEON signature)")
         sw_grain.set_active(bool(prefs.get("grain", True)))
         sw_grain.connect("notify::active",
                          lambda s, _p: self._set("grain", s.get_active()))
@@ -12157,8 +12148,9 @@ class ThemePacksPage(SectionPage):
         cur["themepack"]["secondary"] = secondary
         save_prefs(cur)
         if have("nyxus-apply-accent"):
+            # apply-accent takes a preset name from accent.json (prism-only).
             sh_async(
-                ["nyxus-apply-accent", primary, secondary],
+                ["nyxus-apply-accent", "prism"],
                 lambda r: (self.toast(
                     f"applied {pid}" if r[0] == 0 else "apply failed"),
                            self.rebuild()),
@@ -14209,7 +14201,7 @@ class SettingsApp(Adw.Application):
     def __init__(self):
         super().__init__(application_id=APP_ID,
                          flags=Gio.ApplicationFlags.FLAGS_NONE)
-        # Force dark scheme — DARK MIRROR is locked.
+        # Force dark scheme — ALIEN NEON is locked.
         sm = self.get_style_manager() if hasattr(self, "get_style_manager") else None
         if sm is None:
             sm = Adw.StyleManager.get_default()

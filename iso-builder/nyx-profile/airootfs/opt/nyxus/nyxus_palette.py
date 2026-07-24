@@ -1,6 +1,6 @@
 # ============================================================
-#  NYXUS PALETTE — single source of truth for DARK MIRROR
-#  (LOCKED · rev 2026-05-07 r13)
+#  NYXUS PALETTE — single source of truth for ALIEN NEON
+#  (LOCKED · rev 2026-07-24 r15 · prism canon)
 #
 #  Every NYXUS Python app MUST import from this module instead of
 #  hard-coding hex values. Every CSS file MUST @import the sibling
@@ -11,19 +11,31 @@
 #
 #  Forbidden: introducing new colors here without explicit user approval.
 #  Forbidden: per-app palettes anywhere else in the codebase.
+#  Forbidden: DARK MIRROR branding, gold #d4b87a, cream #f4ead5.
 #
 #  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================
 
+# Brand lock — user-visible string everywhere chrome talks about theme.
+BRAND_PALETTE     = "ALIEN NEON"
+
 # ── PRIMARY HEX ─────────────────────────────────────────────────────────────
 # White / off-white / grey ramp — the entire system reads from these 5.
 WHITE_PURE        = "#ffffff"   # rim-light highlight, focused caret, hover halos
-WHITE_OFF         = "#eef2fa"   # primary text, primary accent
-GREY_LIGHT        = "#c8ccd6"   # secondary text, secondary accent, light rim
+WHITE_OFF         = "#eef2fa"   # primary text (canon text)
+GREY_LIGHT        = "#c8ccd6"   # secondary text, light rim
 GREY_MID          = "#9aa0ad"   # mid-grey (rare — disabled/hint text)
 GREY_TERTIARY     = "#6a6e78"   # tertiary text, ghost text
 INK_FADED         = "#0a0a0a"   # faded matte black (rim shadow stop)
 INK_BLACK         = "#000000"   # pure black (selection fg, deepest shadow)
+
+# ── ALIEN NEON FIXED CANON (accent.json _palette_fixed + prism) ─────────────
+VOID              = "#05060a"   # deepest desktop void
+ORCHID            = "#e367ff"   # fixed orchid accent
+CYAN_FIXED        = "#2bd2ff"
+RED_FIXED         = "#ff2d55"
+YELLOW_FIXED      = "#ffe600"
+GREEN_OK          = "#39ff14"   # prism ok / HUD green
 
 # ── TRIPLE-BLACK SURFACE STACK (rev r14 · 2026-05-09) ──────────────────────
 # Three layered shades of black. Each tier is distinct but harmonious —
@@ -95,12 +107,12 @@ MAX_DEFAULT_H = 480
 # nyxus-apply-accent (which regenerates eww/GTK CSS). Python apps get the
 # SAME source of truth here: the active preset is read at import time, so
 # every launch reflects whatever `nyxus accent set <name>` last applied.
-# Fallback is the canonical PRISM preset — never white/grey.
+# Fallback is the canonical PRISM preset (accent.json) — never white/grey/gold.
 _ACCENT_FALLBACK = {
-    "primary":   "#ff2dad",
-    "secondary": "#2bd2ff",
-    "warn":      "#ff8a1e",
-    "ok":        "#7d3dff",
+    "primary":   "#7d3dff",   # violet
+    "secondary": "#ff2dad",   # magenta
+    "warn":      "#ff8a1e",   # orange
+    "ok":        "#39ff14",   # green
 }
 
 def _load_accent() -> dict:
@@ -153,21 +165,23 @@ def _hud_palette() -> dict:
     return {
         "pink":   ACCENT_PRIMARY,
         "cyan":   ACCENT_SECONDARY,
-        "gold":   ACCENT_WARN,
-        "purple": ACCENT_OK,
-        "green":  "#7dff5e",
-        "orange": "#ff8a1e",
-        "blue":   "#4d9fff",
-        "red":    "#ff2d55",
+        "gold":   ACCENT_WARN,       # warn slot (orange) — name kept for CSS keys
+        "purple": ACCENT_PRIMARY,    # violet primary (was wrongly ok)
+        "green":  GREEN_OK,
+        "orange": ACCENT_WARN,
+        "blue":   CYAN_FIXED,
+        "red":    RED_FIXED,
+        "orchid": ORCHID,
         "mono":   WHITE_OFF,
     }
 
 HUD_PALETTE = _hud_palette()
-HUD_NEONS = ["#ff2dad", "#39ff14", "#2bd2ff", "#ff8a1e", "#ffe600",
-             "#ff7ae5", "#66efff", "#7d3dff", "#e367ff"]
-HUD_VOID       = "rgba(5, 1, 13, 0.97)"    # window background
-HUD_CARD_BG    = "rgba(7, 5, 14, 0.93)"    # card background
-HUD_CARD_HOVER = "rgba(9, 6, 18, 0.97)"
+HUD_NEONS = ["#7d3dff", "#ff2dad", "#39ff14", "#2bd2ff", "#ff8a1e",
+             "#ffe600", "#e367ff", "#ff2d55"]
+# Void from canon #05060a
+HUD_VOID       = "rgba(5, 6, 10, 0.97)"    # window background
+HUD_CARD_BG    = "rgba(7, 8, 14, 0.93)"    # card background
+HUD_CARD_HOVER = "rgba(9, 10, 18, 0.97)"
 HUD_INPUT_BG   = "rgba(0, 0, 0, 0.45)"
 
 # Graffiti type system (ships in ~/.local/share/fonts/nyxus):
@@ -433,11 +447,14 @@ def rgba_str(h: str, a: float = 1.0) -> str:
 # ── FORBIDDEN EVERYWHERE (sanity check helper) ──────────────────────────────
 # Apps may call assert_no_forbidden(text) at import time on their CSS to
 # fail loudly if they accidentally reintroduce a banned color.
+# Banned leftovers (DARK MIRROR gold/cream, off-brand neons). Canon ALIEN
+# NEON hexes (#7d3dff/#ff2dad/#39ff14/#05060a/…) are intentionally NOT here.
 FORBIDDEN = (
     "#ff5500", "#ff00ff", "#cc44ff", "#22d3ee", "#d4a73a", "#ec4899",
-    "#f0e8fa", "#a855f7", "#39ff14", "#ffff00", "#0088ff", "#8800ff",
+    "#f0e8fa", "#a855f7", "#ffff00", "#0088ff", "#8800ff",
     "#cc00ff", "#ff3344", "#ff4d6d", "#ffd700", "#6fffb0", "#00aaff",
     "#bf5cff", "#f5f3ef", "#fbfaf6",
+    "#d4b87a", "#f4ead5", "#a06bff",
 )
 
 def assert_no_forbidden(text: str, source: str = "<inline>") -> None:
@@ -465,6 +482,9 @@ _PALETTE_DICT = {
     "GREY_LIGHT": GREY_LIGHT, "GREY_MID": GREY_MID,
     "GREY_TERTIARY": GREY_TERTIARY,
     "INK_FADED": INK_FADED, "INK_BLACK": INK_BLACK,
+    "VOID": VOID, "ORCHID": ORCHID, "GREEN_OK": GREEN_OK,
+    "CYAN_FIXED": CYAN_FIXED, "RED_FIXED": RED_FIXED,
+    "YELLOW_FIXED": YELLOW_FIXED,
     "BLACK_SMOKE": BLACK_SMOKE, "BLACK_INK": BLACK_INK, "BLACK_VOID": BLACK_VOID,
     "GLOW_SOFT": GLOW_SOFT, "GLOW_BRIGHT": GLOW_BRIGHT,
     "GLASS_DARK": GLASS_DARK, "GLASS_DEEPER": GLASS_DEEPER,
@@ -478,6 +498,7 @@ _PALETTE_DICT = {
     "FONT_UI": FONT_UI, "FONT_MONO": FONT_MONO, "FONT_DISPLAY": FONT_DISPLAY,
     "ACCENT_PRIMARY": ACCENT_PRIMARY, "ACCENT_SECONDARY": ACCENT_SECONDARY,
     "ACCENT_WARN": ACCENT_WARN, "ACCENT_OK": ACCENT_OK,
+    "BRAND_PALETTE": BRAND_PALETTE, "HUD_VOID": HUD_VOID,
 }
 
 def format_css(tpl: str) -> str:
@@ -488,8 +509,10 @@ def format_css(tpl: str) -> str:
 
 
 __all__ = [
+    "BRAND_PALETTE",
     "WHITE_PURE", "WHITE_OFF", "GREY_LIGHT", "GREY_MID", "GREY_TERTIARY",
     "INK_FADED", "INK_BLACK",
+    "VOID", "ORCHID", "GREEN_OK", "CYAN_FIXED", "RED_FIXED", "YELLOW_FIXED",
     "BLACK_SMOKE", "BLACK_INK", "BLACK_VOID",
     "GLOW_SOFT", "GLOW_BRIGHT",
     "GLASS_DARK", "GLASS_DEEPER", "GLASS_DEEPEST",
