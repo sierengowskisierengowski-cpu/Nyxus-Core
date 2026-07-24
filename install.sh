@@ -41,7 +41,7 @@ banner() {
 "${V1}    ██║ ╚████║${V2}   ██║   ${V3}██╔╝ ██╗${V4}╚██████╔╝${V5}███████║${R}" \
 "${V1}    ╚═╝  ╚═══╝${V2}   ╚═╝   ${V3}╚═╝  ╚═╝${V4} ╚═════╝ ${V5}╚══════╝${R}" \
 "" \
-"${DIM}    ◤ OBSIDIAN PRISM · IRIDESCENT VOID ◥${R}" \
+"${DIM}    ◤ ALIEN NEON · IRIDESCENT VOID ◥${R}" \
 "${DIM}    silent dark Hyprland desktop · © 2026 JOSEPH A. SIERENGOWSKI${R}" \
 ""
 }

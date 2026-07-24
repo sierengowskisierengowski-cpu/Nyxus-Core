@@ -1,6 +1,6 @@
 /* ============================================================
  * NYXUS - ReGreet stylesheet - "Void Sign-In" (Wayland greeter)
- * (c) 2026 Joseph Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ * (c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
  * rev 2026-07-14 - ALIEN NEON tokens (docs/THEME.md section 8):
  *   accent primary  #7d3dff (purple)   secondary #ff2d55 (magenta)
  *   text #eef2fa / #c8ccd6 / #6a6e78    frosted ink rgba(5,2,11,.78)
@@ -14,8 +14,13 @@ window {
     font-family: "Inter Display", "JetBrains Mono", sans-serif;
 }
 
-/* login card - frosted smoked glass, nudged toward the right third */
-frame, .frame, box.horizontal > box {
+/* login card - frosted smoked glass, nudged toward the right third.
+ * Scope: ONLY regreet's login frame. The earlier `box.horizontal > box`
+ * selector was too broad — it also matched regreet's clock/message boxes and
+ * painted them as extra frosted panels shoved 720px to the right, which showed
+ * up as a stray "weird box" low on the login background. Target the frame only
+ * so the background stays clean and only the credential card is styled. */
+frame, .frame {
     background-color: rgba(5, 2, 11, 0.82);
     border: 1px solid rgba(125, 61, 255, 0.32);
     border-top: 2px solid #7d3dff;

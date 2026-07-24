@@ -55,7 +55,7 @@ except Exception:
 # ─────────────────────────────────────────────────────────────────────
 
 
-# OBSIDIAN PRISM palette (rev 2026-07-07) — accent slots kept in
+# ALIEN NEON palette (rev 2026-07-07) — accent slots kept in
 # lockstep by nyxus-apply-accent; this file is a registered consumer.
 PALETTE = {
     "mono":   "#eef2fa",

@@ -362,7 +362,7 @@ class SectionDef:
 SECTIONS: Tuple[SectionDef, ...] = (
     # ── Personal ────────────────────────────────────────────────────────
     SectionDef("welcome",       "Welcome",
-               "Re-run the onboarding wizard, first-boot autostart",
+               "First-run setup wizard — launch, skip steps, mark complete",
                "welcome",
                "welcome,onboarding,wizard,first run,first boot,setup,"
                "tour,intro,getting started", 1,
