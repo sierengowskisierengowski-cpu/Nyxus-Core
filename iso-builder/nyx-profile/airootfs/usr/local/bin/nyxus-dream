@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# NYXUS · Dream Protocol  rev 2026-07-24
+# Easter egg unlocked by solving the Welcome Transmission riddle.
+# Chord: Super+Shift+D   ·   requires ~/.config/nyxus/dream.unlocked
+#
+#   nyxus-dream          → pulse (default)
+#   nyxus-dream pulse    → violet dreamglass border spin + toast
+#   nyxus-dream status   → locked / unlocked
+set -u
+
+UNLOCK="${HOME}/.config/nyxus/dream.unlocked"
+LOCK="/tmp/.nyxus-dream.lock"
+CMD="${1:-pulse}"
+
+case "$CMD" in
+  status|-s|--status)
+    if [[ -f "$UNLOCK" ]]; then
+      echo "dream protocol: UNLOCKED"
+      cat "$UNLOCK"
+      exit 0
+    fi
+    echo "dream protocol: locked (solve the welcome transmission)"
+    exit 1
+    ;;
+  pulse|on|"")
+    ;;
+  *)
+    echo "usage: nyxus-dream [pulse|status]" >&2
+    exit 2
+    ;;
+esac
+
+if [[ ! -f "$UNLOCK" ]]; then
+  notify-send -u low -t 2800 "◤ DREAM ◥" "protocol sealed — solve the transmission" 2>/dev/null || true
+  exit 1
+fi
+
+exec 9>"$LOCK"
+flock -n 9 || exit 0
+
+# Dream palette — magenta / violet / cyan wash
+COLORS="rgba(ff2dadff) rgba(7d3dffff) rgba(2bd2ffff) rgba(e367ffff)"
+
+notify-send -u low -t 3200 "◤ DREAM PROTOCOL ◥" "you left a ghost made of light" 2>/dev/null || true
+
+# Soft violet screen dim, then release
+hyprctl keyword decoration:dim_inactive true >/dev/null 2>&1 || true
+hyprctl keyword decoration:dim_strength 0.35 >/dev/null 2>&1 || true
+
+# 2 dream revolutions
+for rev in 1 2; do
+  for ((deg = 0; deg < 360; deg += 12)); do
+    hyprctl --batch "keyword general:col.active_border $COLORS ${deg}deg" >/dev/null 2>&1
+    sleep 0.022
+  done
+done
+
+# Restore stock prism angle (same colors family as prism-pulse settle)
+hyprctl keyword general:col.active_border \
+  "rgba(ff2dadff) rgba(2bd2ffff) rgba(7d3dffff) rgba(ff8a1eff) 270deg" >/dev/null 2>&1 || true
+hyprctl keyword decoration:dim_strength 0.0 >/dev/null 2>&1 || true
+hyprctl keyword decoration:dim_inactive false >/dev/null 2>&1 || true

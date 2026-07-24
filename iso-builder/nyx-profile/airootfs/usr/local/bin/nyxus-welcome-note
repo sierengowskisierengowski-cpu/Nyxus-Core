@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# NYXUS · Welcome Transmission launcher  rev 2026-07-24
+#
+# Opens a borderless kitty window with the atmospheric boot note.
+# Separate from the GTK onboarding wizard (nyxus-welcome).
+#
+# Gating:
+#   • Skips if ~/.config/nyxus/welcome-note.done exists
+#   • Re-runs with --force / NYXUS_WELCOME_NOTE_FORCE=1
+#   • Skips if NYXUS_NO_WELCOME_NOTE=1
+set -u
+
+MARKER="${HOME}/.config/nyxus/welcome-note.done"
+LOCK="/tmp/nyxus-welcome-note.lock"
+
+FORCE=0
+for a in "$@"; do
+  case "$a" in
+    --force|--replay) FORCE=1 ;;
+  esac
+done
+[[ -n "${NYXUS_WELCOME_NOTE_FORCE:-}" ]] && FORCE=1
+
+[[ -n "${NYXUS_NO_WELCOME_NOTE:-}" ]] && exit 0
+[[ -f "$MARKER" && "$FORCE" -eq 0 ]] && exit 0
+
+# single-instance
+exec 9>"$LOCK"
+flock -n 9 || exit 0
+
+# Prefer live/home copies, then ISO paths
+PY="${HOME}/.nyxus/nyxus_welcome_note.py"
+[[ -f "$PY" ]] || PY="/opt/nyxus/nyxus_welcome_note.py"
+[[ -f "$PY" ]] || {
+  echo "nyxus-welcome-note: script missing (${HOME}/.nyxus or /opt/nyxus)" >&2
+  exit 1
+}
+
+CONF="${HOME}/.config/kitty/kitty-welcome.conf"
+[[ -f "$CONF" ]] || CONF="/etc/skel/.config/kitty/kitty-welcome.conf"
+
+if ! command -v kitty >/dev/null 2>&1; then
+  # headless / no kitty — run inline
+  exec python3 "$PY" "$@"
+fi
+
+# Slight settle so wallpaper/bars aren't mid-paint on first login
+[[ "$FORCE" -eq 0 ]] && sleep 2
+
+KITTY_ARGS=(
+  --class nyxus.welcome-note
+  --title "NYXUS Transmission"
+  --override allow_remote_control=no
+)
+[[ -f "$CONF" ]] && KITTY_ARGS+=(--config "$CONF")
+
+# Pass --force through so the python side doesn't no-op on marker
+ARGS=("$@")
+[[ "$FORCE" -eq 1 ]] && ARGS=(--force "${ARGS[@]}")
+
+exec kitty "${KITTY_ARGS[@]}" -e python3 "$PY" "${ARGS[@]}"

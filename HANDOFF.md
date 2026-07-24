@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-24 (ALIEN NEON + Settings audit checklist written)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24 (Welcome Transmission kitty note)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -165,6 +165,16 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
 ## 5. CURRENT STATE (2026-07-23)
 
 ### Done + pushed
+- **2026-07-24 — Welcome Transmission (borderless kitty boot note).** Separate
+  from the GTK onboarding wizard. Poetic / riddle first-login note in Orbitron
+  kitty (`class: nyxus.welcome-note`), borderless + pinned. Marker:
+  `~/.config/nyxus/welcome-note.done`. Replay: `nyxus-welcome-note --force` or
+  **Super+Shift+N**. Riddle hash: `dream`. Solving unlocks **Dream Protocol**
+  (`~/.config/nyxus/dream.unlocked`) → **Super+Shift+D** / `nyxus-dream`
+  (violet dreamglass pulse). Files: `usr/local/bin/nyxus-welcome-note`,
+  `usr/local/bin/nyxus-dream`, `opt/nyxus/nyxus_welcome_note.py`,
+  `skel/.config/kitty/kitty-welcome.conf`. Wired `exec-once` in hyprland.conf.
+
 - Repo un-scattered: one canonical `~/Nyxus-Core`; duplicate deleted; nothing lost.
 - Build-iso no longer corrupts the profile (throwaway copy) — `fe089345`.
 - **Live-boot post-mortem fixes** — `7ccbaf0b`:
