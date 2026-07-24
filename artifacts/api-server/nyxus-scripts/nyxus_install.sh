@@ -1287,11 +1287,10 @@ if command -v dunst &>/dev/null && [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; 
 fi
 
 # ── De-leak builder home paths (rev 2026-07-23) ──────────────────────────────
-# Several shipped configs bake an absolute home path (the build/reference
-# machine's /home/cosmic, or the live-ISO default /home/nyx) into settings
-# that are read by parsers which do NOT expand $HOME (JSON, Qt .conf, the
-# Hyprland `env = PATH,…` raw string, dunst paths). On any OTHER user — the
-# live ISO's `nyx`, or a Calamares-chosen install user — those paths don't
+# Several shipped configs bake an absolute home path (the live-ISO default
+# /home/nyx) into settings that are read by parsers which do NOT expand $HOME
+# (JSON, Qt .conf, the Hyprland `env = PATH,…` raw string, dunst paths). On
+# any OTHER install user — a Calamares-chosen install user — those paths don't
 # resolve (wrong wallpaper, unthemed Qt apps, broken notif bridge, launchers
 # not on PATH). Normalize every known-affected file to THIS user's real
 # $HOME. Idempotent and safe (no-op when the path already matches $HOME).

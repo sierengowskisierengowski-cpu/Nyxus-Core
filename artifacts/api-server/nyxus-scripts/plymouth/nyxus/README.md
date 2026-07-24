@@ -88,7 +88,7 @@ python3 gen_nyxus_boot_art.py my-neb.png # or supply a different nebula plate
 ## Install it (needs root — run these yourself)
 
 ```bash
-sudo bash /home/cosmic/Nyxus-Core/scripts/nyxus-setup-plymouth.sh
+sudo bash /home/nyx/Nyxus-Core/scripts/nyxus-setup-plymouth.sh
 sudo reboot
 ```
 

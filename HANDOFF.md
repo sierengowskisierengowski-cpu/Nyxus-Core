@@ -362,7 +362,64 @@ until a rebuilt kernel is rebaked.
    /usr/lib/modules/*kage*/config` → all `=y` (or modules present in initramfs).
 3. Then RE-BAKE + re-flash (below).
 
-### PENDING (do this next)
+- **2026-07-24 — Live-boot issue fixes (PR branch `cursor/green-light-ci-wallpaper-kernel-ad9a`):**
+  Root-cause analysis + fixes for five owner-reported live-boot regressions that were NOT yet
+  in the repo (distinct from stale-bake issues). All changes are in `skel` and `artifacts/`
+  in lockstep per the HANDOFF sync rule.
+
+  1. **eww slow first paint (~5 min) — FIXED.** Root cause: `compile-eww-css.sh` called
+     `npx --yes sass` which tried to download the sass NPM package at every login (node/npm
+     are NOT in the ISO packages). This blocked bar launch for minutes. Fix: skip the SCSS
+     compile entirely when no local `sass` binary is installed (use the pre-committed
+     `eww.css` which is correct and complete). Compilation now only runs if `sass` is
+     already on `$PATH` — no NPX, no network call, no download.
+  2. **eww black/semi-transparent box around bars — addressed.** The root cause was that
+     `compile-eww-css.sh` was sometimes called and produced a corrupt/stripped `eww.css`
+     (the sed property-strip pass removed `background-size` etc. from bar widgets). With the
+     compile skip, the pre-committed `eww.css` is always used; it already has the correct
+     `window { background: none; background-color: transparent; }` rule that kills the GTK
+     window-paint "ghost box". Also confirmed: the Hyprland layerrule `ignore_alpha 0.2` and
+     eww namespace `nyxus-bar-*` are correct.
+  3. **eww "globbing errors" at lines 601/606 — addressed.** Added `shopt -s nullglob` /
+     `shopt -u nullglob` guards around all glob-based for loops in `sys-graph.sh` that
+     iterate `/sys/class/thermal/thermal_zone*/temp` and `/sys/bus/pci/devices/*/`. Without
+     `nullglob`, unmatched globs expand to the literal pattern string and subsequent
+     path/existence checks produce spurious error-like output. Fan/GPU data degrades
+     gracefully to 0 when /sys paths are absent.
+  4. **hyprpm "couldn't load header" at startup — FIXED.** Added a Hyprland header
+     directory existence check (`/usr/include/hyprland`) at the top of
+     `ensure_hyprland_plugins()`. The live ISO does not ship the `hyprland-devel` header
+     package, so hyprpm can't compile plugins and prints "couldn't load header" to the
+     Hyprland log on every login. With the new guard the entire plugin sync is silently
+     skipped when headers are absent — no error spam, no login delay, no fingerprint prompt.
+  5. **Stale terminal text colors and old header message — FIXED.**
+     - `/etc/issue`: was `\e[1;37m` (classic white); now uses ALIEN NEON RGB escapes —
+       violet `#7d3dff` for the NYXUS ASCII art, cool white `#eef2fa` for the tagline,
+       magenta `#ff2dad` for the hostname.
+     - `~/.bashrc` greeting: now shows the build stamp (ISO name / built time / commit SHA)
+       in ALIEN NEON colors after the greeting so freshness is instantly visible in any
+       terminal.
+     - `/etc/profile.d/00-nyxus.sh`: `NYXUS_VERSION` updated from `2026.05.13` to
+       `2026.07.24`; exports `NYXUS_BUILD_STAMP` from `/etc/nyxus-build` (written by
+       `build-iso.sh`).
+  6. **Build/commit stamp (HANDOFF PENDING item) — IMPLEMENTED.** `build-iso.sh` already
+     bakes `/etc/nyxus-build` + `profile.d/nyxus-build-stamp.sh`. Updated the stamp
+     display to use ALIEN NEON palette (violet header line, cool-white content). Also
+     updated the `.bashrc` greeting to inline the key stamp lines so the owner sees the
+     exact commit/date on every terminal open — zero ambiguity about which bake they're
+     on.
+  7. **Consistency audit:**
+     - `/etc/jett/allowlist.conf`: replaced all `/home/cosmic` paths with `/home/nyx`
+       (the live-ISO and installed-system user). Also removed `trusted_proc:cosmic-comp`
+       (a GNOME Cosmic compositor — not NYXUS).
+     - `/etc/jett/model.sha256`: comment updated from `/home/cosmic/...` to `/home/nyx/...`.
+     - `BOOTSTRAP_VERSION` bumped: `2026.07.23-r12-offline` → `2026.07.24-r13-fixes`.
+       Existing installs will detect the version mismatch on next login and self-heal
+       (re-run the installer to pick up the new configs/scripts).
+     - Remaining non-boot Replit refs (~33) are still deferred — they're in self-update
+       snippets, README curl examples, and polkit `vendor_url`; none affect the boot path.
+
+
 1. **Rebuild Kage-Ryu** with live-ISO FS support (see blocker above), then
    **RE-BAKE** (owner runs, from a clean+committed repo):
    `cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh`
@@ -372,11 +429,11 @@ until a rebuilt kernel is rebaked.
    **Kage-Ryu** entry mounts the ISO (no iso9660 error) → graffiti-saucer splash
    → full desktop offline → apps from cache. `uname -r` shows kage-ryu.
    Until then: boot **stock rescue** on the current stick.
-3. **Still open after ALIEN NEON land (2026-07-23 evening):**
-   - Greeter / hyprlock polish pass (alien bg already wired; visual QA on stick).
-   - eww bars: slow first paint + transparent black box around bars.
-   - Visible build/commit stamp on booted stick (so freshness is obvious).
+3. **Still open after 2026-07-24 fix pass:**
+   - Greeter / hyprlock visual QA on stick (alien bg wired; needs a real boot to verify).
    - UFO/saucer notification QA on fresh boot.
+   - ~~eww bars: slow first paint + transparent black box~~ **FIXED 2026-07-24**
+   - ~~Visible build/commit stamp~~ **IMPLEMENTED 2026-07-24**
    - **Home backup:** Ventoy stick (`/dev/sda1`, 238 GB) mid-queue — Vault /
      Projects / VMs as `.tar.zst`; fill remaining space then swap to 2nd USB.
      Also back up Docker honeypot volumes + `/opt/nyxus-*` + `/etc/jett`
