@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-24** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24 (PR #71 landed on main via #72)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -362,7 +362,15 @@ until a rebuilt kernel is rebaked.
    /usr/lib/modules/*kage*/config` → all `=y` (or modules present in initramfs).
 3. Then RE-BAKE + re-flash (below).
 
-- **2026-07-24 — Live-boot issue fixes (PR branch `cursor/green-light-ci-wallpaper-kernel-ad9a`):**
+- **2026-07-24 — Live-boot issue fixes (PR #71 → stranded, then landed on main via #72):**
+  ⚠️ **Near-miss:** PR #71 merged into `cursor/green-light-ci-wallpaper-kernel-ad9a`
+  **after** that branch was already merged to `main` via PR #70. So #71 was **not**
+  on `main` until PR #72 (`603139d7`, 2026-07-24) merged the branch again.
+  **`main` HEAD must include `0f866221` before any bake.** Verify:
+  `git merge-base --is-ancestor 0f866221 origin/main`.
+  The flashed `nyxus-2026.07.24` ISO was baked from `139bdc85` — **before** #70/#71/#72
+  — which is why the owner saw no eww/black-box/stamp improvement on that stick.
+
   Root-cause analysis + fixes for five owner-reported live-boot regressions that were NOT yet
   in the repo (distinct from stale-bake issues). All changes are in `skel` and `artifacts/`
   in lockstep per the HANDOFF sync rule.
