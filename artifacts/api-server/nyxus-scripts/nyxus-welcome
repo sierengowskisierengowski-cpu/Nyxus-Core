@@ -12,9 +12,12 @@
 set -u
 
 MARKER="$HOME/.nyxus/welcome-done"
+MARKER_LEGACY="$HOME/.config/nyxus/welcome.done"
 LOCK="/tmp/nyxus-welcome.lock"
 
-[[ -f "$MARKER" && -z "${NYXUS_WELCOME_FORCE:-}" ]] && exit 0
+if [[ -z "${NYXUS_WELCOME_FORCE:-}" ]]; then
+  [[ -f "$MARKER" || -f "$MARKER_LEGACY" ]] && exit 0
+fi
 [[ -n "${NYXUS_NO_WELCOME:-}" ]] && exit 0
 
 # single-instance lock

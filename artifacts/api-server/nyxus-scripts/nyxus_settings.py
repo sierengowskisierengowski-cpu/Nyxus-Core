@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ──────────────────────────────────────────────────────────────────────
-#  NYXUS · Settings                                  rev 2026.05.12-r10
+#  NYXUS · Settings                                  rev 2026.07.24-r12
 # ──────────────────────────────────────────────────────────────────────
 #  System control center for NYXUS. GTK4 + libadwaita Python app.
-#  AdwNavigationSplitView (sidebar + content), DARK MIRROR aesthetic,
+#  AdwNavigationSplitView (sidebar + content), ALIEN NEON aesthetic,
 #  real backend integrations only — never mock data, never blank panels.
 #
 #  Sections:
@@ -46,7 +46,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 # ── App identity ──────────────────────────────────────────────────────
 APP_ID    = "io.nyxus.settings"
 APP_NAME  = "NYXUS Settings"
-APP_REV   = "rev 2026.05.12-r10"
+APP_REV   = "rev 2026.07.24-r12"
 WIN_W     = 1180
 WIN_H     = 740   # fits inside 768 with EWW bar present (§12)
 
@@ -104,11 +104,9 @@ except Exception:
     FONT_DISPLAY   = "Inter Display"
 
 DANGER_RED = "#ff6464"  # §8 — RESERVED for destructive only
-NYXUS_GOLD = "#d4b87a"  # warm brand accent — selection, focus rings
+# Selection / focus rings use NEON (prism primary) — never gold #d4b87a.
 
-# ── Neon HUD accents (live accent.json) ───────────────────────────────
-# Settings shipped in the monochrome DARK MIRROR palette while the rest
-# of the desktop (launcher / HOME / Hub) moved to the neon HUD language.
+# ── Neon HUD accents (live accent.json · ALIEN NEON / prism) ──────────
 # Pull the SAME live accent everyone else uses so Settings matches. All
 # selection/focus/active states below are re-pointed onto these.
 try:
@@ -117,9 +115,9 @@ try:
         ACCENT_OK as NEON_OK,
     )
 except Exception:
-    NEON    = "#7d3dff"   # purple — primary
-    NEON_2  = "#ff2d55"   # red — secondary
-    NEON_OK = "#39ff14"   # green — positive
+    NEON    = "#7d3dff"   # violet — primary (prism)
+    NEON_2  = "#ff2dad"   # magenta — secondary (prism)
+    NEON_OK = "#39ff14"   # green — positive (prism)
 
 # Nerd-font glyphs (§6 — never emoji in chrome).
 GLYPHS = {
@@ -364,7 +362,7 @@ class SectionDef:
 SECTIONS: Tuple[SectionDef, ...] = (
     # ── Personal ────────────────────────────────────────────────────────
     SectionDef("welcome",       "Welcome",
-               "Re-run the onboarding wizard, first-boot autostart",
+               "First-run setup wizard — launch, skip steps, mark complete",
                "welcome",
                "welcome,onboarding,wizard,first run,first boot,setup,"
                "tour,intro,getting started", 1,
@@ -616,10 +614,10 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "nyxus-set-wallpaper", 1,
                "Personal"),
     SectionDef("themepacks",    "Theme Packs",
-               "Curated DARK MIRROR variants — accent + glow + grain",
+               "ALIEN NEON (prism) — locked accent + glow + grain",
                "themepacks",
                "theme,pack,accent,palette,style,variant,nyxus-apply-accent,"
-               "purple,cyan,glow,grain", 1,
+               "prism,alien,neon,glow,grain", 1,
                "Personal"),
     SectionDef("clipboard",     "Clipboard",
                "History size, persistence, secrets filter (cliphist)",
@@ -657,7 +655,7 @@ FOOTER_SECTION_TITLES = frozenset({"Keybinds", "Reset", "Advanced"})
 
 
 # ──────────────────────────────────────────────────────────────────────
-# DARK MIRROR stylesheet — libadwaita CSS overrides.
+# ALIEN NEON stylesheet — libadwaita CSS overrides.
 # Keep this small: we lean on Adw built-ins (preferences groups, action
 # rows, switches, sliders) and only override colour + radius + glow.
 # ──────────────────────────────────────────────────────────────────────
@@ -5978,14 +5976,14 @@ class AccessibilityPage(SectionPage):
             motion.add(empty_row("hyprctl not found",
                                   "Animation toggle requires Hyprland"))
 
-        # High contrast — locked off per DARK MIRROR contract
+        # High contrast — locked off per ALIEN NEON contract
         contrast = Adw.PreferencesGroup(
             title="Contrast",
-            description="DARK MIRROR locks the visual theme; system high "
+            description="ALIEN NEON locks the visual theme; system high "
                         "contrast is intentionally disabled. Use text "
                         "scale and cursor size instead.")
         self.add_group(contrast)
-        contrast.add(kv_row("System theme", "DARK MIRROR (locked)"))
+        contrast.add(kv_row("System theme", "ALIEN NEON (locked)"))
 
         # Pointers to assistive tools — launch on demand
         tools = Adw.PreferencesGroup(title="Assistive tools")
@@ -6877,19 +6875,19 @@ def _clear_group(grp: Adw.PreferencesGroup) -> None:
 # ──────────────────────────────────────────────────────────────────────
 # Tier-1: APPEARANCE
 # ──────────────────────────────────────────────────────────────────────
-# Curated DARK MIRROR accent palette.  The "Mirror White" preset is the
-# brand default and matches the locked SDDM/hyprlock palette tokens.
+# ALIEN NEON accent chips (prism family). Default = prism primary.
+# Theme Packs is prism-only; this picker is for per-surface accent hex
+# propagation and must stay inside the locked canon.
 ACCENT_PRESETS: List[Tuple[str, str]] = [
-    ("Mirror White", "#eef2fa"),
-    ("Cyan",         "#5fd3f3"),
-    ("Lime",         "#a6e22e"),
-    ("Amber",        "#f5b342"),
-    ("Magenta",      "#ff5fa7"),
-    ("Crimson",      "#ff5f6d"),
-    ("Iris",         "#9c8cff"),
-    ("Mint",         "#5ff3b8"),
+    ("Violet (prism)", "#7d3dff"),
+    ("Magenta",        "#ff2dad"),
+    ("Cyan",           "#2bd2ff"),
+    ("Green",          "#39ff14"),
+    ("Orange",         "#ff8a1e"),
+    ("Orchid",         "#e367ff"),
+    ("Text",           "#eef2fa"),
 ]
-DEFAULT_ACCENT = "#eef2fa"
+DEFAULT_ACCENT = "#7d3dff"
 
 # Files we own for accent propagation. Each is a small idempotent fragment
 # included by the parent config (so we never mangle hand-written files).
@@ -6949,8 +6947,8 @@ class AppearancePage(SectionPage):
         g_theme = Adw.PreferencesGroup(title="Theme")
         v_row = Adw.ActionRow(
             title="Variant",
-            subtitle="DARK MIRROR — locked by NYXUS design contract")
-        v_row.add_suffix(status_pill("DARK MIRROR", "ok"))
+            subtitle="ALIEN NEON — locked by NYXUS design contract")
+        v_row.add_suffix(status_pill("ALIEN NEON", "ok"))
         g_theme.add(v_row)
         self.add_group(g_theme)
 
@@ -7086,7 +7084,7 @@ class AppearancePage(SectionPage):
             title="Custom",
             subtitle=f"Currently: {current}  ·  enter a #RRGGBB value")
         entry = Gtk.Entry()
-        entry.set_placeholder_text("#5fd3f3")
+        entry.set_placeholder_text("#7d3dff")
         entry.set_text(current)
         entry.set_max_length(7)
         entry.set_size_request(110, -1)
@@ -7104,7 +7102,7 @@ class AppearancePage(SectionPage):
         # Reset
         reset = action_row(
             "Reset to default",
-            f"Restores Mirror White ({DEFAULT_ACCENT})",
+            f"Restores prism violet ({DEFAULT_ACCENT})",
             "Reset",
             lambda: self._set_accent(DEFAULT_ACCENT))
         self.accent_grp.add(reset)
@@ -9575,7 +9573,7 @@ class AboutPage(SectionPage):
         nyx_ver = self._read_nyx_version()
         header = Adw.ActionRow()
         header.set_title("NYXUS")
-        header.set_subtitle(f"DARK MIRROR  ·  {nyx_ver}")
+        header.set_subtitle(f"ALIEN NEON  ·  {nyx_ver}")
         big = Gtk.Label(label="◐")
         big.add_css_class("nyx-section-glyph")
         big.set_valign(Gtk.Align.CENTER)
@@ -9677,7 +9675,7 @@ class AboutPage(SectionPage):
         _clear_group(self.credits_grp)
         cr = Adw.ActionRow(
             title="Designed and built by Joseph A. Sierengowski",
-            subtitle="© 2026  ·  DARK MIRROR aesthetic  ·  enterprise grade")
+            subtitle="© 2026  ·  ALIEN NEON aesthetic  ·  enterprise grade")
         self.credits_grp.add(cr)
 
         self.clear_pills()
@@ -10550,7 +10548,6 @@ class LanguagePage(SectionPage):
             return
 
         cur_lang = i18n.current_language()
-        ldir = i18n.localedir()
         # Live selection — read by the system-apply button at click
         # time, not at build time, so the user's freshly-picked combo
         # value is always what gets written to /etc/locale.conf.
@@ -10565,13 +10562,11 @@ class LanguagePage(SectionPage):
         self.add_group(st)
         st.add(kv_row("Active language",
                       self._LANG_LABELS.get(cur_lang, cur_lang)))
-        st.add(kv_row("gettext domain", "nyxus"))
-        st.add(kv_row("Locale directory", ldir))
 
         # System-wide LANG (read-only display, edit via pkexec below)
         sys_lang = self._read_system_lang()
-        st.add(kv_row("System LANG (/etc/locale.conf)",
-                      sys_lang or "(unset)"))
+        st.add(kv_row("System language",
+                      sys_lang or "(not set yet)"))
 
         # ── Picker ─────────────────────────────────────────────
         pick = Adw.PreferencesGroup(
@@ -11404,27 +11399,59 @@ class VpnPage(SectionPage):
          "nmcli connection show",
          "Show",
          lambda: open_terminal("nmcli connection show", None)),
-        ("Open ~/.config/NetworkManager",
-         "Per-user VPN config dir",
-         "Open",
-         lambda: fire_and_forget(
-             "xdg-open ~/.config/NetworkManager")),
     ]
     """WireGuard + OpenVPN via NetworkManager + nmcli."""
     KEY = "vpn"
+
+    def _pick_and_import(self, kind: str) -> None:
+        """Native file picker → nyxus-vpn import (no copy/paste terminal)."""
+        dialog = Gtk.FileDialog(title=f"Import {kind.upper()} config")
+        filters = Gtk.FileFilter()
+        if kind == "ovpn":
+            filters.set_name("OpenVPN (.ovpn)")
+            filters.add_pattern("*.ovpn")
+        else:
+            filters.set_name("WireGuard (.conf)")
+            filters.add_pattern("*.conf")
+        store = Gio.ListStore.new(Gtk.FileFilter)
+        store.append(filters)
+        dialog.set_filters(store)
+
+        def _done(dlg, result, _k=kind):
+            try:
+                f = dlg.open_finish(result)
+            except Exception:
+                return
+            if f is None:
+                return
+            path = f.get_path()
+            if not path:
+                return
+            flag = "--import-ovpn" if _k == "ovpn" else "--import-wg"
+            if not have("nyxus-vpn"):
+                self.toast("nyxus-vpn helper missing")
+                return
+            sh_async(
+                ["nyxus-vpn", flag, path],
+                lambda r: (self.toast(
+                    "imported" if r[0] == 0 else "import failed"),
+                           self.rebuild()),
+                timeout=30)
+        parent = self.get_root() if hasattr(self, "get_root") else None
+        dialog.open(parent, None, _done)
 
     def build(self) -> None:
         if not have("nmcli"):
             grp = Adw.PreferencesGroup(title="NetworkManager required")
             self.add_group(grp)
-            grp.add(empty_row("nmcli not found",
-                              "Install with `sudo pacman -S networkmanager`"))
+            grp.add(empty_row(
+                "NetworkManager is not available",
+                "VPN needs NetworkManager (nmcli) on this system"))
             self.add_pill(status_pill("missing", "danger")); return
 
-        # Connections
         conn = Adw.PreferencesGroup(
             title="VPN connections",
-            description="Read from `nmcli connection show` (vpn + wireguard)")
+            description="Connect, disconnect, or import a config")
         self.add_group(conn)
         rc, out, _ = sh(["nyxus-vpn", "--json"], timeout=4) \
             if have("nyxus-vpn") else (1, "", "")
@@ -11443,41 +11470,44 @@ class VpnPage(SectionPage):
                     f"{typ} · {state or 'down'}",
                     "Disconnect" if up else "Connect",
                     (lambda n=name: sh_async(["nyxus-vpn", "--down", n],
-                        lambda r, x=n: self.toast(
-                            f"down: {x}" if r[0] == 0 else "down failed"),
+                        lambda r, x=n: (self.toast(
+                            f"disconnected {x}" if r[0] == 0 else "disconnect failed"),
+                            self.rebuild()),
                         timeout=15)) if up
                     else (lambda n=name: sh_async(["nyxus-vpn", "--up", n],
-                        lambda r, x=n: self.toast(
-                            f"up: {x}" if r[0] == 0 else "up failed"),
+                        lambda r, x=n: (self.toast(
+                            f"connected {x}" if r[0] == 0 else "connect failed"),
+                            self.rebuild()),
                         timeout=20)),
                     css=("nyx-pill-ok" if up else ""))
                 conn.add(row)
         else:
-            conn.add(empty_row("No VPN connections",
-                               "Import a config below to get started"))
+            conn.add(empty_row(
+                "No VPN connections yet",
+                "Import an OpenVPN or WireGuard config below"))
 
-        # Import
         imp = Adw.PreferencesGroup(
             title="Import",
-            description="Drop a config file via terminal (uses nmcli import)")
+            description="Add a VPN from a config file on disk")
         self.add_group(imp)
-        imp.add(action_row(
-            "Import OpenVPN .ovpn",
-            "nyxus-vpn --import-ovpn /path/to/file.ovpn",
-            "Open Terminal",
-            lambda: open_terminal(
-                "echo 'Run: nyxus-vpn --import-ovpn /path/to/file.ovpn'; "
-                "exec $SHELL", self.win)))
-        imp.add(action_row(
-            "Import WireGuard .conf",
-            "nyxus-vpn --import-wg /path/to/file.conf",
-            "Open Terminal",
-            lambda: open_terminal(
-                "echo 'Run: nyxus-vpn --import-wg /path/to/file.conf'; "
-                "exec $SHELL", self.win)))
+        if have("nyxus-vpn"):
+            imp.add(action_row(
+                "Import OpenVPN",
+                "Choose a .ovpn file",
+                "Choose file",
+                lambda: self._pick_and_import("ovpn")))
+            imp.add(action_row(
+                "Import WireGuard",
+                "Choose a .conf file",
+                "Choose file",
+                lambda: self._pick_and_import("wg")))
+        else:
+            imp.add(empty_row(
+                "Import helper missing",
+                "nyxus-vpn is not installed — reconnect after an update"))
 
         self.add_pill(status_pill(
-            f"{len(rows)} conn",
+            f"{len(rows)} connection" + ("" if len(rows) == 1 else "s"),
             "ok" if rows else "warn"))
 
 
@@ -11786,8 +11816,8 @@ class DockPage(SectionPage):
         size_row.add_suffix(sz)
         app.add(size_row)
         # Glow
-        sw_gl = Adw.SwitchRow(title="DARK MIRROR glow",
-                              subtitle="Purple/cyan accent ring around active app")
+        sw_gl = Adw.SwitchRow(title="ALIEN NEON glow",
+                              subtitle="Violet/magenta accent ring around active app")
         sw_gl.set_active(bool(cfg.get("glow", True)))
         sw_gl.connect("notify::active",
                       lambda s, _p: self._set("glow", s.get_active()))
@@ -12064,46 +12094,39 @@ class WallpaperStudioPage(SectionPage):
 
 
 class ThemePacksPage(SectionPage):
-    """Curated DARK MIRROR variants — accent + glow + grain."""
+    """ALIEN NEON (prism) — the only selectable pack. Locked accent.json."""
     KEY = "themepacks"
     STANDARD_KEYBIND_TOKENS = ["apply-accent"]
     STANDARD_RESET_NS = ["themepack"]
 
-    # Each pack: id, label, accent hex, secondary hex, description
+    # prism-only — inferno/oceanic/forest/monochrome/dark_mirror removed.
     PACKS = (
-        ("dark_mirror",   "DARK MIRROR (default)",
-            "#7d3dff", "#2bd2ff",
-            "Purple primary + cyan secondary — the canonical NYXUS look"),
-        ("inferno",       "INFERNO",
-            "#ff3a5c", "#ffae3a",
-            "Crimson primary + amber secondary — high-energy gamer red"),
-        ("oceanic",       "OCEANIC",
-            "#3a7dff", "#3affd8",
-            "Deep blue primary + teal secondary — calm dev workflow"),
-        ("forest",        "FOREST",
-            "#3aff7d", "#a0ff3a",
-            "Emerald primary + lime secondary — biophilic comfort"),
-        ("monochrome",    "MONOCHROME",
-            "#cccccc", "#888888",
-            "Pure greys — no accent at all (focus mode)"),
+        ("prism", "ALIEN NEON (prism)",
+            "#7d3dff", "#ff2dad",
+            "Violet primary + magenta secondary — the locked NYXUS look"),
     )
+    _LEGACY_PACK_IDS = frozenset({
+        "dark_mirror", "inferno", "oceanic", "forest", "monochrome",
+    })
 
     def build(self) -> None:
         prefs = load_prefs().get("themepack", {})
-        active = prefs.get("active", "dark_mirror")
+        active = prefs.get("active", "prism")
+        if active in self._LEGACY_PACK_IDS or active not in {p[0] for p in self.PACKS}:
+            active = "prism"
 
         gen = Adw.PreferencesGroup(
             title="General",
-            description="Active theme pack — applied via nyxus-apply-accent")
+            description="Locked ALIEN NEON pack — applied via nyxus-apply-accent prism")
         self.add_group(gen)
         gen.add(kv_row("Active pack",
                        next((lbl for k, lbl, *_ in self.PACKS if k == active),
                             active)))
 
-        # Appearance — pack picker
+        # Appearance — pack picker (single locked entry)
         pick = Adw.PreferencesGroup(
             title="Appearance",
-            description="Switch the global accent + GTK theme + EWW palette")
+            description="Re-apply the global ALIEN NEON accent + GTK theme + EWW palette")
         self.add_group(pick)
         for pid, lbl, primary, secondary, desc in self.PACKS:
             sub = (f"{desc} · {primary} / {secondary}")
@@ -12130,7 +12153,7 @@ class ThemePacksPage(SectionPage):
         beh.add(sw_glow)
         sw_grain = Adw.SwitchRow(
             title="Film grain overlay",
-            subtitle="Subtle texture across the desktop (DARK MIRROR signature)")
+            subtitle="Subtle texture across the desktop (ALIEN NEON signature)")
         sw_grain.set_active(bool(prefs.get("grain", True)))
         sw_grain.connect("notify::active",
                          lambda s, _p: self._set("grain", s.get_active()))
@@ -12157,8 +12180,9 @@ class ThemePacksPage(SectionPage):
         cur["themepack"]["secondary"] = secondary
         save_prefs(cur)
         if have("nyxus-apply-accent"):
+            # apply-accent takes a preset name from accent.json (prism-only).
             sh_async(
-                ["nyxus-apply-accent", primary, secondary],
+                ["nyxus-apply-accent", "prism"],
                 lambda r: (self.toast(
                     f"applied {pid}" if r[0] == 0 else "apply failed"),
                            self.rebuild()),
@@ -12718,26 +12742,34 @@ class AssistantPage(SectionPage):
 
 
 class WelcomePage(SectionPage):
-    """First-run onboarding wizard control panel.
+    """First-run onboarding wizard — polished control panel.
 
-    Real wizard binary: /usr/local/bin/nyxus-welcome
-    Real wizard impl  : /opt/nyxus/nyxus_welcome.py
-    Done marker       : ~/.config/nyxus/welcome.done
-    First-boot trigger: ~/.config/autostart/nyxus-welcome.desktop
+    Canonical done marker: ~/.nyxus/welcome-done (wizard + launcher).
+    Legacy twin          : ~/.config/nyxus/welcome.done (cleared/written
+                           in lockstep so older hyprland one-shots stay sane).
+    Autostart            : ~/.config/autostart/nyxus-welcome.desktop
     """
     KEY = "welcome"
     STANDARD_KEYBIND_TOKENS = ["nyxus-welcome"]
     STANDARD_RESET_NS = ["welcome"]
 
-    DONE = Path.home() / ".config/nyxus/welcome.done"
-    AUTOSTART = Path.home() / ".config/autostart/nyxus-welcome.desktop"
-    LOG = Path.home() / ".cache/nyxus/welcome.log"
-    WIZARD_IMPL = Path("/opt/nyxus/nyxus_welcome.py")
-    WIZARD_BIN = "/usr/local/bin/nyxus-welcome"
+    DONE = Path.home() / ".nyxus" / "welcome-done"
+    DONE_LEGACY = Path.home() / ".config" / "nyxus" / "welcome.done"
+    AUTOSTART = Path.home() / ".config" / "autostart" / "nyxus-welcome.desktop"
+    LOG = Path.home() / ".cache" / "nyxus" / "welcome.log"
 
-    # ── helpers ───────────────────────────────────────────────────────
+    # Real wizard steps (must match nyxus_welcome.py STEPS ids).
+    # hello + ready are always shown — skipping them would break the flow.
+    SKIPPABLE = (
+        ("region",     "Skip region & language"),
+        ("network",    "Skip network setup"),
+        ("account",    "Skip account setup"),
+        ("appearance", "Skip appearance (theme & wallpaper)"),
+        ("privacy",    "Skip privacy choices"),
+    )
+
     def _is_done(self) -> bool:
-        return self.DONE.exists()
+        return self.DONE.exists() or self.DONE_LEGACY.exists()
 
     def _autostart_armed(self) -> bool:
         return self.AUTOSTART.exists()
@@ -12754,7 +12786,7 @@ class WelcomePage(SectionPage):
                 "[Desktop Entry]\n"
                 "Type=Application\n"
                 "Name=NYXUS Welcome\n"
-                "Exec=nyxus-welcome\n"
+                "Exec=env NYXUS_WELCOME_FORCE=1 nyxus-welcome\n"
                 "X-GNOME-Autostart-enabled=true\n"
                 "NoDisplay=true\n")
             self._set_pref("autostart", True)
@@ -12770,92 +12802,117 @@ class WelcomePage(SectionPage):
         self._set_pref("autostart", False)
 
     def _force_run(self) -> None:
-        if not have("nyxus-welcome"):
+        # Prefer launcher; fall back to python module. Force env bypasses
+        # the done marker (launcher does not understand --force).
+        cmd = None
+        if have("nyxus-welcome"):
+            cmd = "NYXUS_WELCOME_FORCE=1 nyxus-welcome"
+        elif Path.home().joinpath(".nyxus/nyxus_welcome.py").exists():
+            cmd = ("NYXUS_WELCOME_FORCE=1 python3 "
+                   f"{Path.home() / '.nyxus/nyxus_welcome.py'}")
+        elif Path("/opt/nyxus/nyxus_welcome.py").exists():
+            cmd = "NYXUS_WELCOME_FORCE=1 python3 /opt/nyxus/nyxus_welcome.py"
+        if not cmd:
+            self.toast("welcome wizard not installed")
             return
-        sh_async(["nyxus-welcome", "--force"])
+        fire_and_forget(cmd)
+        self.toast("opening setup wizard")
+
+    def _write_done_markers(self) -> None:
+        payload = json.dumps({
+            "version": "settings-mark",
+            "completed_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        }, indent=2)
+        for path in (self.DONE, self.DONE_LEGACY):
+            try:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(payload)
+            except Exception as e:
+                log.warning("welcome mark-done %s: %s", path, e)
+
+    def _clear_done_markers(self) -> None:
+        for path in (self.DONE, self.DONE_LEGACY):
+            try:
+                if path.exists():
+                    path.unlink()
+            except Exception as e:
+                log.warning("welcome clear %s: %s", path, e)
 
     def _mark_done(self) -> None:
-        if have("nyxus-welcome"):
-            sh_async(["nyxus-welcome", "--mark-done"])
-        else:
-            try:
-                self.DONE.parent.mkdir(parents=True, exist_ok=True)
-                self.DONE.write_text("{}")
-            except Exception as e:
-                log.warning("welcome mark-done: %s", e)
+        self._write_done_markers()
+        self._disarm_autostart()
+        self.toast("wizard marked complete")
+        self.rebuild()
 
     def standard_extra_reset(self) -> None:
-        # Wipe done marker AND re-arm autostart so the wizard runs again
-        try:
-            if self.DONE.exists():
-                self.DONE.unlink()
-        except Exception as e:
-            log.warning("welcome reset: %s", e)
+        self._clear_done_markers()
         self._arm_autostart()
 
-    # ── page build ────────────────────────────────────────────────────
     def build(self) -> None:
         prefs = load_prefs().get("welcome", {})
-        wizard_present = self.WIZARD_IMPL.exists() and have("nyxus-welcome")
+        wizard_ok = (
+            have("nyxus-welcome")
+            or Path.home().joinpath(".nyxus/nyxus_welcome.py").exists()
+            or Path("/opt/nyxus/nyxus_welcome.py").exists()
+        )
 
-        # General
+        # Status — human labels only (no binary/impl/logo path dumps)
         gen = Adw.PreferencesGroup(
-            title="General",
-            description="Wizard status and quick actions")
+            title="Status",
+            description="First-run onboarding for new NYXUS installs")
         self.add_group(gen)
-        gen.add(kv_row("Wizard binary",
-                       self.WIZARD_BIN if have("nyxus-welcome")
-                       else "missing"))
-        gen.add(kv_row("Implementation",
-                       str(self.WIZARD_IMPL) if self.WIZARD_IMPL.exists()
-                       else "missing"))
-        gen.add(kv_row("Completed",
-                       "yes — " + self._done_summary()
-                       if self._is_done() else "no"))
-        gen.add(kv_row("First-boot autostart",
-                       "armed" if self._autostart_armed()
-                       else "disarmed"))
+
+        done = self._is_done()
+        gen.add(kv_row(
+            "Setup complete",
+            ("Yes · " + self._done_summary()) if done else "Not yet"))
+        gen.add(kv_row(
+            "Show on next login",
+            "Yes" if self._autostart_armed() else "No"))
 
         run_row = Adw.ActionRow(
-            title="Run wizard now",
-            subtitle="Launch the onboarding wizard immediately")
+            title="Open setup wizard",
+            subtitle="Walk through region, network, account, look, and privacy")
         run_btn = Gtk.Button(label="Launch")
         run_btn.add_css_class("suggested-action")
         run_btn.set_valign(Gtk.Align.CENTER)
-        run_btn.set_sensitive(wizard_present)
+        run_btn.set_sensitive(wizard_ok)
         run_btn.connect("clicked", lambda _b: self._force_run())
         run_row.add_suffix(run_btn)
         gen.add(run_row)
-        if not wizard_present:
+
+        if done:
+            redo = Adw.ActionRow(
+                title="Run setup again",
+                subtitle="Clears completion and opens the wizard now")
+            redo_btn = Gtk.Button(label="Reset & launch")
+            redo_btn.set_valign(Gtk.Align.CENTER)
+            redo_btn.set_sensitive(wizard_ok)
+            redo_btn.connect(
+                "clicked",
+                lambda _b: (self._clear_done_markers(),
+                            self._force_run(),
+                            self.rebuild()))
+            redo.add_suffix(redo_btn)
+            gen.add(redo)
+
+        if not wizard_ok:
             self.add_pill(status_pill("missing", "warn"))
+        elif done:
+            self.add_pill(status_pill("complete", "ok"))
+        else:
+            self.add_pill(status_pill("pending", "warn"))
 
-        # Appearance
-        app = Adw.PreferencesGroup(
-            title="Appearance",
-            description="The wizard inherits the system color scheme. "
-                        "Theme packs and accents are picked inside the "
-                        "wizard itself (page 3).")
-        self.add_group(app)
-        # Show current scheme so the page is not empty
-        try:
-            sm = Adw.StyleManager.get_default()
-            scheme = "dark" if sm.get_dark() else "light"
-        except Exception:
-            scheme = "unknown"
-        app.add(kv_row("Active scheme", scheme))
-        app.add(kv_row("Window size", "880×640 (fixed)"))
-        app.add(kv_row("Logo source",
-                       "/usr/share/icons/nyxus/nyxus.png"))
-
-        # Behavior
+        # Behavior — only switches that the wizard actually reads
         beh = Adw.PreferencesGroup(
             title="Behavior",
-            description="When the wizard runs, and which pages it shows")
+            description="When the wizard runs and which steps it includes")
         self.add_group(beh)
+
         sw_auto = Adw.SwitchRow(
-            title="Show on next login (until completed)",
-            subtitle="Arms the autostart entry. Auto-removes once the "
-                     "wizard reaches Finish.")
+            title="Offer setup on next login",
+            subtitle="Until you finish the wizard, open it automatically "
+                     "after sign-in")
         sw_auto.set_active(self._autostart_armed())
         sw_auto.connect(
             "notify::active",
@@ -12863,70 +12920,77 @@ class WelcomePage(SectionPage):
                            else self._disarm_autostart()))
         beh.add(sw_auto)
 
-        skip = prefs.get("skip_pages", [])
-        for pid, lbl in (
-                ("profile",   "Skip profile page (display name + avatar)"),
-                ("theme",     "Skip theme & accent page"),
-                ("wallpaper", "Skip wallpaper page"),
-                ("dock",      "Skip dock setup page"),
-                ("apps",      "Skip recommended apps page"),
-                ("cloud",     "Skip cloud sync page"),
-                ("privacy",   "Skip privacy page")):
+        # Migrate legacy fake skip keys (profile/theme/dock/…) away silently
+        skip = [s for s in prefs.get("skip_pages", [])
+                if s in {k for k, _ in self.SKIPPABLE}]
+        if skip != prefs.get("skip_pages", []):
+            self._set_pref("skip_pages", skip)
+
+        for pid, lbl in self.SKIPPABLE:
             sw = Adw.SwitchRow(
                 title=lbl,
-                subtitle=f"Pref key: welcome.skip_pages contains '{pid}'")
+                subtitle="Wizard jumps past this step when you launch it")
             sw.set_active(pid in skip)
             sw.connect(
                 "notify::active",
                 lambda s, _p, k=pid: self._toggle_skip(k, s.get_active()))
             beh.add(sw)
 
-        # Keybinds + Reset + Advanced auto-injected by SectionPage footer.
+        done_grp = Adw.PreferencesGroup(
+            title="Completion",
+            description="Mark finished without walking through the wizard")
+        self.add_group(done_grp)
+        done_grp.add(action_row(
+            "Mark setup complete",
+            "Stops first-login prompts; you can still launch the wizard above",
+            "Mark done",
+            self._mark_done,
+            css="nyx-pill"))
 
     def _done_summary(self) -> str:
-        try:
-            d = json.loads(self.DONE.read_text() or "{}")
-            return d.get("completed_at", "(no timestamp)")
-        except Exception:
-            return "(unparseable)"
+        for path in (self.DONE, self.DONE_LEGACY):
+            try:
+                if not path.exists():
+                    continue
+                d = json.loads(path.read_text() or "{}")
+                ts = d.get("completed_at")
+                if ts:
+                    return str(ts)[:19].replace("T", " ")
+            except Exception:
+                continue
+        return "completed"
 
     def _toggle_skip(self, page_id: str, on: bool) -> None:
         prefs = load_prefs()
         skip = list(prefs.get("welcome", {}).get("skip_pages", []))
+        # Keep only real step ids
+        allowed = {k for k, _ in self.SKIPPABLE}
+        skip = [s for s in skip if s in allowed]
         if on and page_id not in skip:
             skip.append(page_id)
         if not on and page_id in skip:
             skip.remove(page_id)
         prefs.setdefault("welcome", {})["skip_pages"] = skip
         save_prefs(prefs)
+        self.toast("wizard steps updated")
 
-    # Custom Advanced rows
     @property
     def STANDARD_ADVANCED(self):
         return [
-            ("Force re-run wizard now",
-             "Ignore welcome.done and launch immediately",
-             "Run",
-             lambda: self._force_run()),
-            ("Mark wizard complete (skip future runs)",
-             f"Writes {self.DONE}",
-             "Mark",
-             lambda: self._mark_done()),
-            ("Edit welcome prefs (JSON)",
-             "Inspect / hand-edit welcome.* keys in settings.json",
-             "Open",
-             lambda: fire_and_forget(
-                 f"xdg-open {Path.home() / '.config/nyxus/settings.json'}")),
+            ("Force open wizard",
+             "Ignores completion and launches immediately",
+             "Launch",
+             self._force_run),
+            ("Clear completion markers",
+             "Forget that setup finished (both marker locations)",
+             "Clear",
+             lambda: (self._clear_done_markers(), self.rebuild())),
             ("View welcome log",
-             f"{self.LOG}",
+             "Recent wizard output",
              "Tail",
              lambda: open_terminal(
                  f"tail -n 200 {self.LOG} 2>/dev/null || "
                  f"echo 'no log yet'", self.win)),
-            ("Reset and re-arm for next login",
-             "Delete welcome.done and put autostart entry back",
-             "Reset",
-             lambda: (self.standard_extra_reset(), self.rebuild())),
         ]
 
 
@@ -13029,14 +13093,19 @@ class LoginScreenPage(SectionPage):
         users = self._list_users()
         sessions = self._list_sessions()
 
-        # General
+        # General — status only (no filesystem path dumps)
         gen = Adw.PreferencesGroup(
             title="General",
             description="What runs at boot, who logs in, what session")
         self.add_group(gen)
         gen.add(kv_row("Active theme", st.get("theme", "?")))
-        gen.add(kv_row("Config file", str(self.CONF)))
-        gen.add(kv_row("Theme directory", str(self.ACTIVE_THEME_DIR)))
+        alo = st.get("autologin_user") or ""
+        gen.add(kv_row(
+            "Autologin",
+            alo if alo and alo != "none" else "Off (password prompt)"))
+        gen.add(kv_row(
+            "Default session",
+            st.get("autologin_session") or st.get("session") or "—"))
 
         # Theme picker
         if themes:
@@ -13136,8 +13205,9 @@ class LoginScreenPage(SectionPage):
                     f"background → {labels[r.get_selected()]}"))
             app.add(bg_row)
         else:
-            app.add(empty_row("No background pack found",
-                              f"Drop images into {self.ACTIVE_THEME_DIR}/backgrounds/"))
+            app.add(empty_row(
+                "No background pack found",
+                "Add images to the login theme backgrounds folder, then reopen"))
         # Font
         font_row = Adw.EntryRow(title="Greeter font")
         font_row.set_text(st.get("font", "Inter"))
@@ -13321,11 +13391,9 @@ class PlymouthPage(SectionPage):
             description="What plays at boot, before the login screen")
         self.add_group(gen)
         gen.add(kv_row("Active theme", cur))
-        gen.add(kv_row("Theme directory", str(self.THEMES_DIR / cur)))
-        gen.add(kv_row("Initramfs config", str(self.MKINITCPIO_CONF)))
         gen.add(kv_row(
-            "Plymouth hook in initramfs",
-            "yes" if st.get("plymouth_hook_present") else "no"))
+            "Plymouth at boot",
+            "On" if st.get("plymouth_hook_present") else "Off"))
 
         # Theme picker
         tr = Adw.ComboRow(
@@ -13351,20 +13419,18 @@ class PlymouthPage(SectionPage):
         tr.connect("notify::selected", _on_theme)
         gen.add(tr)
 
-        # Appearance / Visual
+        # Appearance — actionable branding, not hex/path dumps
         app = Adw.PreferencesGroup(
             title="Appearance",
-            description="The shipped NYXUS theme — ALIEN NEON palette")
+            description="ALIEN NEON boot splash — replace the logo if you want")
         self.add_group(app)
-        app.add(kv_row("Background", "#05060a (ink black)"))
-        app.add(kv_row("Primary", "#7d3dff (violet)"))
-        app.add(kv_row("Secondary", "#ff2dad (magenta)"))
-        app.add(kv_row("Logo source",
-                       str(self.THEMES_DIR / self.DEFAULT_THEME / "logo.png")))
-        app.add(empty_row(
-            "Custom branding",
-            "Drop a square PNG over /usr/share/plymouth/themes/nyxus/"
-            "logo.png and re-run \"Regenerate initramfs\"."))
+        app.add(action_row(
+            "Replace splash logo",
+            "Opens the theme folder — drop a square PNG named logo.png, "
+            "then regenerate initramfs below",
+            "Open folder",
+            lambda: fire_and_forget(
+                f"xdg-open {self.THEMES_DIR / self.DEFAULT_THEME}")))
 
         # Behavior
         beh = Adw.PreferencesGroup(
@@ -13374,8 +13440,7 @@ class PlymouthPage(SectionPage):
 
         sw_hook = Adw.SwitchRow(
             title="Enable Plymouth at boot",
-            subtitle="Adds the 'plymouth' hook to mkinitcpio.conf "
-                     "(needed for the splash to render before SDDM)")
+            subtitle="Adds the plymouth hook so the splash renders before login")
         sw_hook.set_active(bool(st.get("plymouth_hook_present")))
 
         def _on_hook(s, _p):
@@ -13396,7 +13461,7 @@ class PlymouthPage(SectionPage):
 
         regen_row = Adw.ActionRow(
             title="Regenerate initramfs",
-            subtitle="Runs mkinitcpio -P (covers all installed kernels)")
+            subtitle="Applies splash/logo changes to every installed kernel")
         rbtn = Gtk.Button(label="Run")
         rbtn.set_valign(Gtk.Align.CENTER)
         rbtn.connect(
@@ -13551,8 +13616,7 @@ class SoundsPage(SectionPage):
             description="Pick a sound theme and play a quick test")
         self.add_group(gen)
         gen.add(kv_row("Active theme", cur_theme))
-        gen.add(kv_row("Theme directory", str(self.NYXUS_DIR)))
-        gen.add(kv_row("Events shipped", str(len(events))))
+        gen.add(kv_row("Event sounds", str(len(events))))
 
         tr = Adw.ComboRow(
             title="Sound theme",
@@ -14209,7 +14273,7 @@ class SettingsApp(Adw.Application):
     def __init__(self):
         super().__init__(application_id=APP_ID,
                          flags=Gio.ApplicationFlags.FLAGS_NONE)
-        # Force dark scheme — DARK MIRROR is locked.
+        # Force dark scheme — ALIEN NEON is locked.
         sm = self.get_style_manager() if hasattr(self, "get_style_manager") else None
         if sm is None:
             sm = Adw.StyleManager.get_default()

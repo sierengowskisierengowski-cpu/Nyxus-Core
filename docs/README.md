@@ -26,8 +26,11 @@ This directory contains the canonical project documentation for system scope, ar
 - [`deployment/web-and-api-deployment.md`](deployment/web-and-api-deployment.md): API/web deployment behavior and distribution flow.
 
 ### Design and Quality
-- [`DESIGN_CONTRACT.md`](DESIGN_CONTRACT.md): Active design quality bar for all NYXUS UI components — layout, typography, color (DARK MIRROR palette), motion, accessibility, and per-component checklists.
+- [`DESIGN_CONTRACT.md`](DESIGN_CONTRACT.md): Active design quality bar for all NYXUS UI components — layout, typography, color (note: still says DARK MIRROR in places; ALIEN NEON lock supersedes — see theme brief).
+- [`ALIEN_NEON_SETTINGS_BRIEF.md`](ALIEN_NEON_SETTINGS_BRIEF.md): **START HERE** for ALIEN NEON + Settings workstream (phases, stay-as-is, progress log).
+- [`ALIEN_NEON_SETTINGS_AUDIT.md`](ALIEN_NEON_SETTINGS_AUDIT.md): Full counted checklist — unthemed surfaces, thin Settings pages, missing sections.
 - [`MASTER_CHECKLIST.md`](MASTER_CHECKLIST.md): Master build and feature delivery checklist tracking overall platform progress.
+- [`../HANDOFF.md`](../HANDOFF.md): Live bake/boot state — read first for ISO/kernel; points at the ALIEN NEON brief.
 
 ### Historical Reference
 - [`legacy-visuals.md`](legacy-visuals.md): Superseded visual specifications kept for historical context.

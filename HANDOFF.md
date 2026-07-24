@@ -1,11 +1,23 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
+<<<<<<< HEAD
 > **Last updated: 2026-07-24 (Welcome Transmission kitty note)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+=======
+> **Last updated: 2026-07-24 (Settings polish pass 1 — Welcome rewired)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+>>>>>>> origin/cursor/audit-stay-as-is-scope-92cd
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
+>
+> **Theme + Settings workstream:** read
+> [`docs/ALIEN_NEON_SETTINGS_BRIEF.md`](./docs/ALIEN_NEON_SETTINGS_BRIEF.md)
+> **first**, then the checklist
+> [`docs/ALIEN_NEON_SETTINGS_AUDIT.md`](./docs/ALIEN_NEON_SETTINGS_AUDIT.md).
+> **Phase 1 done.** Settings polish pass 1 landed (Welcome wiring + kill homemade
+> path/logo dumps). Continue polishing Settings pages; Phase 2 shell GTK next.
+> Stay-as-is: Bifrost / GodsApp / Meli / Arsenal — do not restyle.
 
 ---
 
@@ -481,6 +493,8 @@ until a rebuilt kernel is rebaked.
 — full counts + lists for (1) surfaces not ALIEN NEON, (2) empty/minimal/partial
 Settings pages, (3) apps with no Settings section, (4) session features missing
 from Settings. Regenerated 2026-07-24 from live `~/.nyxus` + desktop entries.
+**Stay as-is (no ALIEN NEON / no Settings required):** Bifrost, GodsApp, Meli,
+Arsenal/security lab apps (CIPHER/Forge/GSL/RedForge/Trainer/AXIOM/c2/Shield/…).
 
 Full GO/NO-GO from Copilot audit. Cross-checked against `main` @ `fb63e2aa` (+ #71 on main).
 

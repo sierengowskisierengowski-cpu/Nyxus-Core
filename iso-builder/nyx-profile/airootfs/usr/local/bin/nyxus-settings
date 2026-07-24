@@ -2,7 +2,7 @@
 # NYXUS Settings — canonical launcher for the main control center.
 #
 # Launches the unified NYXUS Settings app (~/.nyxus/nyxus_settings.py,
-# GTK4 + libadwaita, DARK MIRROR + live accent). This is THE settings
+# GTK4 + libadwaita, ALIEN NEON + live accent). This is THE settings
 # surface: the eww dashboard/quicksettings buttons, the dock, and any
 # `nyxus settings` dispatch all land here.
 #

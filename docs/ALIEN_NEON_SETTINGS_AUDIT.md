@@ -1,10 +1,28 @@
 # NYXUS — ALIEN NEON + Settings Completeness Audit
 
-> Generated: **2026-07-24 09:01 **  
+> Generated: **2026-07-24 09:01** · Scope clarified **2026-07-24 (owner)**  
 > Live tree: `~/.nyxus` + desktop entries  
 > Settings source: `/home/cosmic/.nyxus/nyxus_settings.py` (sha `6d49911d067a`)  
 > Repo settings sha: `ba39feefff9e` (not byte-identical to live)  
-> **Use this as the master checklist.** Check items off as they land on `main` + verify in bake.
+> **Use this as the master checklist.** Check items off as they land on `main` + verify in bake.  
+> **START HERE brief (phases + stay-as-is):** [`ALIEN_NEON_SETTINGS_BRIEF.md`](./ALIEN_NEON_SETTINGS_BRIEF.md)
+>
+> **Current work pointer:** Settings polish in progress on `cursor/audit-stay-as-is-scope-92cd` — Welcome rewired; meta path dumps removed on Welcome/Login/Plymouth/Sounds/Language; VPN import usable. Phase 1 palette done. Next: more Settings pages + Phase 2 shell GTK.
+
+## ⛔ STAY AS-IS — OUT OF SCOPE (owner 2026-07-24)
+
+These keep their **own** look / branding. Do **not** force ALIEN NEON onto them.
+Do **not** treat “missing Settings section” or “not ALIEN NEON” as work for these.
+
+| Keep as-is | Examples |
+|---|---|
+| **Bifrost** | Bifrost, Bifrost Dashboard |
+| **GodsApp** | GodsApp, NYXUS GodsApp |
+| **Meli** | Meli |
+| **Arsenal / security lab apps** | Arsenal hub, CIPHER, Forge, RedForge, GSL, AI Cyber Defense Trainer, AXIOM, Ghost-Relay (c2), NYXUS Shield, NYXUS Security Center |
+| **Related security / lab tooling** | jeTT daemon UI (if any), HoneyHive / Maze / Grafana / Prometheus / APEX / GowskiNet FORGE flip tools — same rule: leave alone |
+
+**In scope for ALIEN NEON + Settings work:** desktop shell + NYXUS system apps — Settings hub, Home/Main Page, Panel, Start, Terminal, Stickies, Notes, Notepad, Launcher/Spotlight, Store, Chrome Library, Control, SysMon, Welcome, Wallpaper Studio, Screensaver, Screenshot, Clipboard, Account, Backup, Drop, Toast, Updater, Power/Battery helpers, eww/greeter/hyprlock chrome, Theme Packs → prism-only, etc.
 
 ## Canon (done = this)
 
@@ -29,18 +47,21 @@
 
 ## SCOREBOARD
 
-| Bucket | Count |
-|---|---:|
-| Settings sidebar sections | 48 |
-| Settings pages EMPTY | 1 |
-| Settings pages MINIMAL (1–4 controls) | 15 |
-| Settings pages PARTIAL (5–14) | 23 |
-| Settings pages SUBSTANTIVE (15+) | 9 |
-| Settings pages with stub/TODO text | 5 |
-| Python/GTK surfaces **not** ALIEN NEON | 44 |
-| Desktop product apps with **no** Settings section | 58 |
-| Session/features with no dedicated Settings section | 15 |
-| Theme Pack presets that are **not** ALIEN NEON prism-only | 5 total listed |
+| Bucket | Count | Notes |
+|---|---:|---|
+| Settings sidebar sections | 48 | |
+| Settings pages EMPTY | 1 | |
+| Settings pages MINIMAL (1–4 controls) | 15 | |
+| Settings pages PARTIAL (5–14) | 23 | |
+| Settings pages SUBSTANTIVE (15+) | 9 | still need shell theme |
+| Settings pages with stub/TODO text | 5 | |
+| Python/GTK surfaces not ALIEN NEON (raw scan) | 44 | includes helpers; shell apps are the priority |
+| Desktop apps with no Settings section (raw) | 58 | **many are stay-as-is** — see §0 |
+| Stay-as-is apps (no theme / no Settings required) | ~20+ | Bifrost, GodsApp, Meli, Arsenal suite, lab tools |
+| Session features (no dedicated Settings section) | 15 | Arsenal-as-settings + jeTT **dropped** from required work |
+| Theme Pack presets to kill/lock | 5 → 0 | ✅ prism-only on Phase 1 branch |
+
+**Actionable theme work ≈ shell/system apps only** (not Bifrost/GodsApp/Meli/Arsenal/lab).
 
 ---
 
@@ -72,14 +93,14 @@
 | 20 | `.nyxus/nyxus_motd.py` | 0 | 0 | — | no_ALIEN_NEON_brand |
 | 21 | `.nyxus/nyxus_notepad.py` | 0 | 0 | — | no_ALIEN_NEON_brand |
 | 22 | `.nyxus/nyxus_notes.py` | 3 | 0 | — | DARK_MIRROR×3; no_ALIEN_NEON_brand |
-| 23 | `.nyxus/nyxus_palette.py` | 1 | 0 | — | DARK_MIRROR×1; no_ALIEN_NEON_brand |
+| 23 | `.nyxus/nyxus_palette.py` | 0 | ✅ | — | Phase 1: ALIEN NEON brand + void/orchid; DARK MIRROR gone |
 | 24 | `.nyxus/nyxus_parental.py` | 0 | 0 | — | no_ALIEN_NEON_brand; missing_violet,magenta,void,text |
 | 25 | `.nyxus/nyxus_powermenu.py` | 1 | 0 | — | DARK_MIRROR×1; no_ALIEN_NEON_brand |
 | 26 | `.nyxus/nyxus_preboot.py` | 0 | 0 | — | no_ALIEN_NEON_brand |
 | 27 | `.nyxus/nyxus_screensaver.py` | 0 | 0 | — | no_ALIEN_NEON_brand |
 | 28 | `.nyxus/nyxus_screenshot.py` | 1 | 0 | — | DARK_MIRROR×1; no_ALIEN_NEON_brand |
 | 29 | `.nyxus/nyxus_security.py` | 3 | 0 | `#d4b87a` | DARK_MIRROR×3; no_ALIEN_NEON_brand; banned=#d4b87a; missing_violet,magenta,void |
-| 30 | `.nyxus/nyxus_settings.py` | 18 | 0 | `#d4b87a` | DARK_MIRROR×18; no_ALIEN_NEON_brand; banned=#d4b87a |
+| 30 | `.nyxus/nyxus_settings.py` | 0 | ✅ | — | Phase 1: chrome strings + Theme Packs prism-only; gold removed |
 | 31 | `.nyxus/nyxus_settings_accessibility.py` | 0 | 0 | — | no_ALIEN_NEON_brand; missing_violet,magenta,void,text |
 | 32 | `.nyxus/nyxus_settings_notifications.py` | 0 | 0 | — | no_ALIEN_NEON_brand; missing_violet,magenta,void,text |
 | 33 | `.nyxus/nyxus_settings_sandbox.py` | 0 | 0 | — | no_ALIEN_NEON_brand; missing_violet,magenta,void,text |
@@ -97,29 +118,24 @@
 
 ### Shared palette module gaps
 
-- Still brands DARK MIRROR: **1** hit(s)
-- ALIEN NEON brand string: **0**
-- Canon present: violet, magenta, green, orange, cyan, red, yellow, text
-- Canon missing: orchid, void
+- Still brands DARK MIRROR: **0** (Phase 1)
+- ALIEN NEON brand string: **present** (`BRAND_PALETTE`)
+- Canon present: violet, magenta, green, orange, cyan, red, yellow, text, **orchid**, **void**
 
-### Theme Packs page still offers non-locked packs
+### Theme Packs page — prism-only (Phase 1 ✅)
 
-- `dark_mirror` — DARK MIRROR (default) (`#7d3dff` / `#2bd2ff`) ❌ default is DARK MIRROR — must become ALIEN NEON / prism-only
-- `inferno` — INFERNO (`#ff3a5c` / `#ffae3a`) ❌ remove/lock
-- `oceanic` — OCEANIC (`#3a7dff` / `#3affd8`) ❌ remove/lock
-- `forest` — FOREST (`#3aff7d` / `#a0ff3a`) ❌ remove/lock
-- `monochrome` — MONOCHROME (`#cccccc` / `#888888`) ❌ remove/lock
+- `prism` — ALIEN NEON (prism) (`#7d3dff` / `#ff2dad`) ✅ locked
+- ~~`dark_mirror` / `inferno` / `oceanic` / `forest` / `monochrome`~~ — removed as selectable packs; legacy prefs migrate to `prism`
 
-### Also out of scope of the Python scan but NOT ALIEN NEON yet (track separately)
+### Non-Python surfaces
 
-1. Bifrost (Tauri) desktop UI
-2. nyxus-app-shell + Arsenal web UIs (CIPHER/Forge/GSL/RedForge/Trainer/AXIOM)
-3. Ghost-Relay c2 TUI (kitty) — terminal palette only
-4. Meli
-5. EWW bar CSS/SCSS (desktop chrome — partial via accent apply, verify)
-6. greetd greeter / hyprlock full visual QA
-7. Plymouth splash (art exists; settings page separate)
-8. GRUB dragon theme (already ALIEN NEON in repo — verify on stick)
+**Stay as-is (do not theme):** Bifrost, GodsApp, Meli, Arsenal app-shell UIs (CIPHER/Forge/GSL/RedForge/Trainer/AXIOM), Ghost-Relay c2, Shield, Security Center, lab tools (HoneyHive/Grafana/etc.).
+
+**Still in scope (desktop chrome):**
+1. EWW bar CSS/SCSS (verify accent apply)
+2. greetd greeter / hyprlock visual QA
+3. Plymouth splash (art exists; settings page separate)
+4. GRUB dragon theme (already ALIEN NEON in repo — verify on stick)
 
 ---
 
@@ -130,7 +146,7 @@ Incomplete = thin UI, not “unwired class”.
 
 ### EMPTY — 1
 
-- [ ] `vpn` — **VPN** (controls=0)
+- [x] `vpn` — **VPN** (file-picker import + connect/disconnect · polish pass 1)
 
 ### MINIMAL — 15
 
@@ -172,9 +188,9 @@ Incomplete = thin UI, not “unwired class”.
 - [ ] `sound` — **Sound** (controls=8)
 - [ ] `sounds` — **Sound Pack** (controls=14)
 - [ ] `storage` — **Storage** (controls=9)
-- [ ] `themepacks` — **Theme Packs** (controls=5)
+- [x] `themepacks` — **Theme Packs** (prism-only · Phase 1)
 - [ ] `wallpaper` — **Wallpaper Studio** (controls=9)
-- [ ] `welcome` — **Welcome** (controls=11)
+- [x] `welcome` — **Welcome** (rewired · polish pass 1)
 
 ### SUBSTANTIVE — 9 (keep; still need ALIEN NEON reskin)
 
@@ -192,7 +208,9 @@ Incomplete = thin UI, not “unwired class”.
 
 ## 3) PRODUCT APPS / DESKTOP ENTRIES WITH NO SETTINGS SECTION
 
-**Count: 58** (NYXUS-related visible `.desktop` entries with no owned section)
+**Raw count: 58** (NYXUS-related visible `.desktop` entries with no owned section).
+
+**Owner rule:** Bifrost / GodsApp / Meli / Arsenal+security/lab apps **do not need** a Settings section and **do not need** ALIEN NEON. Strike those from the todo when working this list — focus on shell apps (Home, Panel, Start, Terminal, Store, Control, …).
 
 | # | App | Exec (short) |
 |---:|---|---|
@@ -277,51 +295,55 @@ Incomplete = thin UI, not “unwired class”.
 
 ## 4) SESSION / SYSTEM FEATURES WITH NO DEDICATED SETTINGS SECTION
 
-**Count: 15**
+**Still candidate work (desktop shell):**
 
 1. [ ] **Hacker Mode** — hypr/station feature
 2. [ ] **Ghost mode** — hypr/station feature
-3. [ ] **Panic** — security panic path
+3. [ ] **Panic** — security panic path (wiring/controls OK; do not restyle Arsenal apps)
 4. [ ] **Live wallpaper / mpvpaper** — nyxus-live-wallpaper
 5. [ ] **EWW bars** — bar suite config
 6. [ ] **Hyprland window rules / compositor** — conf.d suite
-7. [ ] **jeTT daemon** — security daemon
-8. [ ] **Audio reactive / cava / mood / beat / tint** — reactive suite
-9. [ ] **Companion / saucer** — separate companion project + desktop mascot
-10. [ ] **Hyprlock** — lock screen — only greeter/login has a page
-11. [ ] **Screensaver / idle** — nyxus-screensaver
-12. [ ] **firewalld (system firewall)** — not USB Firewall page
-13. [ ] **Arsenal suite (as settings area)** — apps launch but no Arsenal settings root
-14. [ ] **Mission Control** — Super+F3 / missiond
-15. [ ] **Notification UFO popup** — dunst + eww
-16. [ ] **Build stamp / about bake info** — partial via `about` — partial via About page
+7. [ ] **Audio reactive / cava / mood / beat / tint** — reactive suite
+8. [ ] **Companion / saucer** — separate companion project + desktop mascot
+9. [ ] **Hyprlock** — lock screen — only greeter/login has a page
+10. [ ] **Screensaver / idle** — nyxus-screensaver
+11. [ ] **firewalld (system firewall)** — not USB Firewall page
+12. [ ] **Mission Control** — Super+F3 / missiond
+13. [ ] **Notification UFO popup** — dunst + eww
+14. [ ] **Build stamp / about bake info** — partial via About page
+
+**Explicitly NOT required (stay as-is):**
+- ~~Arsenal suite as a Settings root~~ — apps keep their own UI; launchers only
+- ~~jeTT Settings page / restyle~~ — leave security stack alone
+- ~~Bifrost / GodsApp / Meli Settings pages~~ — leave alone
 
 ---
 
 ## 5) SUGGESTED WORK ORDER (to actually finish)
 
-1. **Foundation:** `nyxus_palette.py` → full canon + ALIEN NEON brand; kill DARK MIRROR/gold.
-2. **Master hub chrome:** `nyxus_settings.py` CSS + strings + Theme Packs → prism-only.
-3. **Cascade GTK apps** from §1 list (Home, Control, Chrome, Terminal, Store, …).
-4. **Deepen EMPTY/MINIMAL settings pages** from §2 (vpn first, then kernel/virt/gaming/…).
-5. **Add missing Settings sections** for §3/§4 must-haves (live wallpaper, eww/bars, Hyprland, Arsenal, Hacker/Ghost/Panic, hyprlock, screensaver).
-6. **Tauri/web:** Bifrost + app-shell Arsenal UIs.
-7. **Verify on stick** after bake (`/etc/nyxus-build` commit + visual QA).
+**Active pointer → Phase 2.** Details in [`ALIEN_NEON_SETTINGS_BRIEF.md`](./ALIEN_NEON_SETTINGS_BRIEF.md).
+
+1. **Phase 1 — Foundation:** ✅ on `cursor/audit-stay-as-is-scope-92cd` — palette ALIEN NEON + void/orchid; Settings chrome; Theme Packs prism-only; artifacts↔skel lockstep.
+2. **Phase 2 — Cascade shell GTK apps** (Home, Control, Chrome, Terminal, Store, Panel, Start, …) — **skip** security/Bifrost/GodsApp/Meli. **← START HERE**
+3. **Phase 3 — Deepen EMPTY/MINIMAL settings pages** (`vpn` first, then kernel/virt/gaming/…).
+4. **Phase 4 — Add missing Settings sections** only for shell must-haves (live wallpaper, eww/bars, Hyprland, hyprlock, screensaver, Hacker/Ghost/Panic controls) — **not** Arsenal/Bifrost/Meli/GodsApp.
+5. **Verify on stick** after bake (`/etc/nyxus-build` commit + visual QA).
+
+When a phase completes: tick rows above, append a line to the brief progress log, update HANDOFF “Last updated”.
 
 ---
 
-## 6) TOTALS TO TRACK
+## 6) TOTALS TO TRACK (after stay-as-is carve-out)
 
 | Workstream | Items |
 |---|---:|
-| Theme: Python/GTK not ALIEN NEON | 44 |
-| Theme: non-Python surfaces to track | 8 |
-| Theme combined trackable | 52 |
+| Theme: shell Python/GTK (priority) | ~25–30 of the 44 (exclude security helpers that only serve Arsenal) |
+| Theme: desktop chrome (eww/greeter/lock/plymouth verify) | 4 |
+| Theme: Bifrost / GodsApp / Meli / Arsenal / lab | **0 — stay as-is** |
 | Settings EMPTY+MINIMAL to build out | 16 |
 | Settings PARTIAL to deepen | 23 |
 | Settings SUBSTANTIVE (theme only) | 9 |
-| No Settings section (apps) | 58 |
-| No Settings section (session features) | 15 |
-| **Missing section trackable** | **73** |
+| Missing Settings sections — shell/session only | ~14 |
+| Missing Settings sections — Bifrost/GodsApp/Meli/Arsenal | **0 — not required** |
 
 *End of audit.*

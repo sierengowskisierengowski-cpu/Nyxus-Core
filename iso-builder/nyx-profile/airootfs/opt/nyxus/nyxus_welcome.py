@@ -56,6 +56,7 @@ NYXUS_DIR = HOME / ".nyxus"
 CFG_DIR   = HOME / ".config" / "nyxus"
 CFG_FILE  = CFG_DIR / "welcome.json"
 MARKER    = NYXUS_DIR / "welcome-done"
+MARKER_LEGACY = CFG_DIR / "welcome.done"
 HELPER    = "/usr/local/libexec/nyxus-welcome-helper"
 
 # Accent fragment targets — MUST stay in sync with nyxus_settings.py
@@ -74,21 +75,17 @@ WALLS_SYS = Path("/usr/share/backgrounds/nyxus")
 NYXUS_DIR.mkdir(parents=True, exist_ok=True)
 CFG_DIR.mkdir(parents=True, exist_ok=True)
 
-# ── DARK MIRROR design tokens ─────────────────────────────────────────
-# Canonical accent palette — IDENTICAL to nyxus_settings.py
-# AppearancePage so the picker the user sees on first boot is the same
-# picker they see in Settings later. No two-palette confusion.
+# ── ALIEN NEON design tokens (prism family — matches Settings Appearance) ──
 ACCENTS = [
-    ("Mirror White", "#eef2fa"),
-    ("Cyan",         "#5fd3f3"),
-    ("Lime",         "#a6e22e"),
-    ("Amber",        "#f5b342"),
-    ("Magenta",      "#ff5fa7"),
-    ("Crimson",      "#ff5f6d"),
-    ("Iris",         "#9c8cff"),
-    ("Mint",         "#5ff3b8"),
+    ("Violet (prism)", "#7d3dff"),
+    ("Magenta",        "#ff2dad"),
+    ("Cyan",           "#2bd2ff"),
+    ("Green",          "#39ff14"),
+    ("Orange",         "#ff8a1e"),
+    ("Orchid",         "#e367ff"),
+    ("Text",           "#eef2fa"),
 ]
-DEFAULT_ACCENT = "#eef2fa"
+DEFAULT_ACCENT = "#7d3dff"
 
 
 def discover_wallpapers() -> list[tuple[str, str]]:
@@ -428,6 +425,17 @@ def helper_call(action: str, *args) -> tuple[int, str]:
     return rc, (out or err)
 
 
+def load_skip_pages() -> set[str]:
+    """Read welcome.skip_pages from Settings prefs (settings.json)."""
+    try:
+        data = json.loads(PREFS_FILE.read_text()) if PREFS_FILE.exists() else {}
+        skip = data.get("welcome", {}).get("skip_pages", [])
+        allowed = {"region", "network", "account", "appearance", "privacy"}
+        return {s for s in skip if s in allowed}
+    except Exception:
+        return set()
+
+
 def load_cfg() -> dict:
     if CFG_FILE.exists():
         try: return json.loads(CFG_FILE.read_text())
@@ -477,19 +485,20 @@ def validate_password(p: str) -> str | None:
 
 class StepRail(Gtk.Box):
     """Left-side step indicator."""
-    def __init__(self):
+    def __init__(self, steps: list[tuple[str, str]] | None = None):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         self.add_css_class("welcome-rail")
+        steps = steps or list(STEPS)
 
         brand = Gtk.Label(label="NYXUS", xalign=0)
         brand.add_css_class("welcome-brand")
         brand.add_css_class("neon-flicker")
-        sub = Gtk.Label(label="PRISM · HUD · OS", xalign=0)
+        sub = Gtk.Label(label="ALIEN NEON · SETUP", xalign=0)
         sub.add_css_class("welcome-brand-sub")
         self.append(brand); self.append(sub)
 
         self._labels: list[Gtk.Box] = []
-        for i, (_, title) in enumerate(STEPS):
+        for i, (_, title) in enumerate(steps):
             row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
             row.add_css_class("welcome-step")
             num = Gtk.Label(label=f"{i+1:02d}", xalign=0)
@@ -500,7 +509,7 @@ class StepRail(Gtk.Box):
 
         spacer = Gtk.Box(vexpand=True)
         self.append(spacer)
-        foot = Gtk.Label(label="REV r10-MIRROR · 2026.05.12", xalign=0)
+        foot = Gtk.Label(label="REV r12 · ALIEN NEON", xalign=0)
         foot.add_css_class("welcome-rail-foot")
         self.append(foot)
 
@@ -1157,13 +1166,32 @@ class WelcomeWizard(Adw.ApplicationWindow):
         self.add_css_class("welcome")
         self.fullscreen()
         self.cfg: dict = load_cfg()
+        skip = load_skip_pages()
 
         self._inject_css()
+
+        # Always keep hello + ready; honor Settings → Welcome skip switches.
+        step_map = [
+            ("hello", HelloStep),
+            ("region", RegionStep),
+            ("network", NetworkStep),
+            ("account", AccountStep),
+            ("appearance", AppearanceStep),
+            ("privacy", PrivacyStep),
+            ("ready", ReadyStep),
+        ]
+        self.active_steps = [
+            (sid, title) for sid, title in STEPS
+            if sid not in skip or sid in ("hello", "ready")
+        ]
+        # Rebuild titles from STEPS for kept ids
+        kept_ids = {sid for sid, _ in self.active_steps}
+        klasses = [cls for sid, cls in step_map if sid in kept_ids]
 
         root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         root.add_css_class("welcome-root")
 
-        self.rail = StepRail(); root.append(self.rail)
+        self.rail = StepRail(self.active_steps); root.append(self.rail)
 
         right = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0,
                         hexpand=True, vexpand=True)
@@ -1180,12 +1208,10 @@ class WelcomeWizard(Adw.ApplicationWindow):
         scroll.set_child(self.stack)
         scroll.set_hexpand(True); scroll.set_vexpand(True)
         self.steps: list[Step] = []
-        klasses = [HelloStep, RegionStep, NetworkStep, AccountStep,
-                   AppearanceStep, PrivacyStep, ReadyStep]
         for i, cls in enumerate(klasses):
             s = cls(self); s.window = self
             self.steps.append(s)
-            self.stack.add_named(s, STEPS[i][0])
+            self.stack.add_named(s, self.active_steps[i][0])
 
         right.append(scroll)
         self.footer = FooterNav(self._back, self._next)
@@ -1222,9 +1248,9 @@ class WelcomeWizard(Adw.ApplicationWindow):
 
     def _show(self, i: int):
         self._idx = i
-        self.stack.set_visible_child_name(STEPS[i][0])
+        self.stack.set_visible_child_name(self.active_steps[i][0])
         self.rail.set_active(i)
-        last = (i == len(STEPS) - 1)
+        last = (i == len(self.active_steps) - 1)
         first = (i == 0)
         self.footer.configure(
             back=not first and not last,
@@ -1238,7 +1264,7 @@ class WelcomeWizard(Adw.ApplicationWindow):
         step's can_advance() — used by NetworkStep to lock advancement
         while a WiFi password modal is open."""
         try:
-            last  = (self._idx == len(STEPS) - 1)
+            last  = (self._idx == len(self.active_steps) - 1)
             first = (self._idx == 0)
             self.footer.configure(
                 back=not first and not last,
@@ -1258,17 +1284,28 @@ class WelcomeWizard(Adw.ApplicationWindow):
         try: s.commit()
         except Exception as e: print(f"[welcome] commit error: {e}", file=sys.stderr)
         save_cfg(self.cfg)
-        if self._idx == len(STEPS) - 1:
+        if self._idx == len(self.active_steps) - 1:
             self._finish(); return
         self._show(self._idx + 1)
 
     def _finish(self):
+        payload = json.dumps(
+            {"version": "r12-alien-neon",
+             "completed_at": GLib.DateTime.new_now_utc().format_iso8601()},
+            indent=2)
+        for path in (MARKER, MARKER_LEGACY):
+            try:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(payload)
+            except Exception:
+                pass
+        # Disarm first-login autostart if Settings armed one
         try:
-            MARKER.write_text(
-                json.dumps({"version": "r9-eww",
-                            "completed_at": GLib.DateTime.new_now_utc().format_iso8601()},
-                           indent=2))
-        except Exception: pass
+            auto = HOME / ".config" / "autostart" / "nyxus-welcome.desktop"
+            if auto.exists():
+                auto.unlink()
+        except Exception:
+            pass
         self.get_application().quit()
 
 
@@ -1287,7 +1324,8 @@ class WelcomeApp(Adw.Application):
 def main() -> int:
     # Only run if marker is missing (the launcher script enforces this too,
     # but we double-check so manual invocation is safe).
-    if MARKER.exists() and not os.environ.get("NYXUS_WELCOME_FORCE"):
+    force = bool(os.environ.get("NYXUS_WELCOME_FORCE"))
+    if (MARKER.exists() or MARKER_LEGACY.exists()) and not force:
         print("welcome already completed; pass NYXUS_WELCOME_FORCE=1 to re-run")
         return 0
     Adw.init()
