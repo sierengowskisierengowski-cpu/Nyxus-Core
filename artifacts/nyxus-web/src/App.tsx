@@ -15,7 +15,6 @@
 
 import { useState, useEffect } from "react";
 import Mirror from "./pages/Mirror";
-import WaybarMockup from "./pages/WaybarMockup";
 import BuildManifest from "./pages/BuildManifest";
 
 const BASE = "/api/download/nyxus";
@@ -326,7 +325,7 @@ function Landing() {
               </div>
               <div style={{ marginTop: "0.6rem", display: "flex", gap: "0.4rem", justifyContent: "flex-end" }}>
                 <NavPill href="#/mirror" label="◐ MIRROR" />
-                <NavPill href="#/waybars" label="◑ EWW BAR" />
+                <NavPill href="#/build" label="◑ BUILD" />
               </div>
             </div>
           </div>
@@ -621,7 +620,7 @@ function Landing() {
               </div>
               <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                 <NavPill href="#/mirror" label="◐ OPEN DESKTOP MIRROR" />
-                <NavPill href="#/waybars" label="◑ OPEN EWW BAR PREVIEW" />
+                <NavPill href="#/build" label="◑ OPEN BUILD MANIFEST" />
               </div>
             </Pebble>
           </div>
@@ -673,7 +672,6 @@ function Landing() {
 export default function App() {
   const route = useHashRoute();
   if (route === "mirror") return <Mirror />;
-  if (route === "waybars") return <WaybarMockup />;
   if (route === "build") return <BuildManifest />;
   return <Landing />;
 }

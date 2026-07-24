@@ -268,7 +268,8 @@ const ALLOWED_FILES: Record<string, string> = {
   // rev r6-eww (2026-05-11): waybar-config.json / waybar-style.css /
   // waybar-ticker.sh / waybar-stats.sh / nyxus-sys-pulse.sh REMOVED — EWW
   // shell now drives the bars (ticker/sys-pulse live in eww/scripts/).
-  "nyxus-notif-status.sh": "nyxus-notif-status.sh",
+  // rev 2026-07-24: nyxus-notif-status.sh + nyxus-greetd.toml dropped
+  // (waybar gone; live greetd uses /etc/greetd/config.toml).
   "alacritty.toml":        "alacritty.toml",
   "rofi-config.rasi":      "rofi-config.rasi",
   "rofi-nyxus.rasi":       "rofi-nyxus.rasi",
@@ -281,7 +282,6 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-sddm-theme.tar.gz":  "nyxus-sddm-theme.tar.gz",
   "nyxus-wlogout.tar.gz":     "nyxus-wlogout.tar.gz",
   "nyxus-ui-configs.tar.gz":  "nyxus-ui-configs.tar.gz",
-  "nyxus-greetd.toml":        "nyxus-greetd.toml",
 
   // ── ★ WALLPAPER TOOLING ───────────────────────────────────────────────────
   "nyxus-fog.py":                 "nyxus-fog.py",
@@ -310,9 +310,11 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-topbar-mist.png":        "nyxus-topbar-mist.png",
   "nyxus-hyprlock-eye.png":       "nyxus-hyprlock-eye.png",
   "nyxus-bar-stone.png":          "nyxus-bar-stone.png",
-  "nyxus-waybar-stars.png":       "nyxus-waybar-stars.png",
+  // nyxus-waybar-stars.png ships as a wallpaper (nyxus-*.png bake glob),
+  // not as a waybar chrome asset — listed with WALLPAPERS below.
 
   // ── ★ WALLPAPERS (15 backgrounds) ────────────────────────────────────────
+  "nyxus-waybar-stars.png":       "nyxus-waybar-stars.png",
   "nyxus-bg-01.png": "nyxus-bg-01.png",
   "nyxus-bg-02.png": "nyxus-bg-02.png",
   "nyxus-bg-03.png": "nyxus-bg-03.png",

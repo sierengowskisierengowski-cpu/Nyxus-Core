@@ -486,6 +486,16 @@ install -m 0644 "${NS}/wlogout-style.css"    "${SKEL}/.config/wlogout/style.css"
 install -m 0644 "${NS}/wlogout-layout"       "${SKEL}/.config/wlogout/layout"
 install -m 0644 "${NS}/alacritty.toml"       "${SKEL}/.config/alacritty/alacritty.toml"
 
+# ── fastfetch (neofetch successor; package in packages.x86_64) ───────────
+if [[ -d "${NS}/fastfetch" ]]; then
+  mkdir -p "${SKEL}/.config/fastfetch"
+  install -m 0644 "${NS}/fastfetch/config.jsonc" \
+    "${SKEL}/.config/fastfetch/config.jsonc"
+  install -m 0644 "${NS}/fastfetch/nyxus-logo.txt" \
+    "${SKEL}/.config/fastfetch/nyxus-logo.txt"
+fi
+
+
 # ── Hyprland conf.d/ overlays (blur/fog/general/opacity/rules/layerblur) ────
 install -m 0644 "${NS}"/nyxus-hyprland-*.conf "${SKEL}/.config/hypr/conf.d/"
 # Station matrix + safemode + signature + arsenal/reactive shards
@@ -647,6 +657,16 @@ ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyx
 # ── Helper scripts → /usr/local/bin/ ────────────────────────────────────
 # rev r6-eww: waybar-stats / waybar-ticker removed. nyxus-eww-launch added.
 install -m 0755 "${NS}/wallpaper-rotate.sh"  "${LBIN}/wallpaper-rotate"
+
+# Tier B/C Settings helpers (canonical copies may live in NS; keep LBIN lockstep)
+for _hlp in nyxus-kernel-switch nyxus-virt-setup nyxus-protonup \
+            nyxus-distrobox-helper nyxus-usbguard-helper nyxus-secboot \
+            nyxus-doh nyxus-mac-randomize; do
+  if [[ -f "${NS}/${_hlp}" ]]; then
+    install -m 0755 "${NS}/${_hlp}" "${LBIN}/${_hlp}"
+  fi
+done
+
 if [[ -f "${NS}/nyxus-eww-launch" ]]; then
   install -m 0755 "${NS}/nyxus-eww-launch" "${LBIN}/nyxus-eww-launch"
 fi
