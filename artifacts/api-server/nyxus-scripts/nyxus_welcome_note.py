@@ -5,7 +5,7 @@
 #  (class: nyxus.welcome-note). Not the GTK onboarding wizard.
 #
 #  Marker:  ~/.config/nyxus/welcome-note.done
-#  Easter:  ~/.config/nyxus/dream.unlocked  → Super+Shift+D (nyxus-dream)
+#  Easter:  ~/.config/nyxus/dream.unlocked  → Super+Alt+D (nyxus-dream)
 #  Riddle:  dream
 #  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ──────────────────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ def unlock_dream() -> None:
     CFG.mkdir(parents=True, exist_ok=True)
     DREAM_UNLOCK.write_text(
         f"unlocked {time.strftime('%Y-%m-%dT%H:%M:%S')}\n"
-        "chord: Super+Shift+D\n"
+        "chord: Super+Alt+D\n"
         "cmd: nyxus-dream\n",
         encoding="utf-8",
     )
@@ -120,7 +120,7 @@ def fire_easter_egg() -> None:
             "-t",
             "5000",
             "◤ DREAM PROTOCOL ◥",
-            "hash accepted · Super+Shift+D",
+            "hash accepted · Super+Alt+D",
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -325,7 +325,7 @@ def transmit() -> int:
             type_out("╚══════════════════════════════════════════════════════╝", VIOLET, cps=90)
             pause(0.25)
             type_out("easter egg planted in the desktop.", GREEN, cps=40)
-            type_out("chord: Super+Shift+D", f"{BOLD}{CYAN}", cps=36)
+            type_out("chord: Super+Alt+D", f"{BOLD}{CYAN}", cps=36)
             type_out("or invoke: nyxus-dream", DIM, cps=40)
             pause(0.2)
             type_out("sub-shell engaged. welcome home, architect.", f"{BOLD}{GREEN}", cps=36)
