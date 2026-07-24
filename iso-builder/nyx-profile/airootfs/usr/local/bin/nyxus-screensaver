@@ -1,14 +1,23 @@
 #!/usr/bin/env bash
-# NYXUS alien matrix-rain screensaver launcher.
-# Launched by hypridle at idle; torn down by hypridle on-resume via
-# `pkill -f nyxus_matrix_saver`. The saver itself also quits on any
-# key/click/mouse-move, so the user can never get trapped behind it.
+# NYXUS urban-alien screensaver launcher.
+# Shows the urban-alien wallpaper hero fullscreen (clock + NYXUS mark over a
+# dimmed alien skyline) — nyxus_screensaver.py. Launched by hypridle at idle;
+# torn down by hypridle on-resume via `pkill -f nyxus_screensaver`. Any
+# activity resumes the session (hypridle kills the saver), so the user can
+# never get trapped behind it.
+#
+# (Was pointed at the matrix-rain saver nyxus_matrix_saver.py — that is the
+# old effect the owner did not want; the urban-alien saver is canonical.)
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}"
 
+# Pin the idle screensaver to the urban-alien wallpaper hero (the saver falls
+# back to other alien walls only if this file is missing).
+export NYXUS_SCREENSAVER_WALL="${NYXUS_SCREENSAVER_WALL:-/usr/share/backgrounds/nyxus/nyxus-urban-alien.png}"
+
 # single-instance guard
-if pgrep -f nyxus_matrix_saver >/dev/null 2>&1; then
+if pgrep -f nyxus_screensaver >/dev/null 2>&1; then
     exit 0
 fi
-exec python3 "$HOME/.config/nyxus/nyxus_matrix_saver.py"
+exec python3 "$HOME/.config/nyxus/nyxus_screensaver.py"
