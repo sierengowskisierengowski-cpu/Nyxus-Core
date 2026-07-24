@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  /usr/local/bin/nyxus-mac-randomize                       rev 2026-05-14 r1
+#
+#  MAC address randomization toggle. Drops a NetworkManager .conf snippet
+#  in /etc/NetworkManager/conf.d/ that sets:
+#
+#    off     — wifi.cloned-mac-address=permanent (no override)
+#    perscan — wifi.scan-rand-mac-address=yes,
+#              wifi.cloned-mac-address=stable
+#              (stable per-SSID, randomized at scan)
+#    always  — wifi.cloned-mac-address=random
+#              (new random MAC every association)
+#
+#  Wired equivalent (ethernet.cloned-mac-address) is updated in lock-step.
+#
+#  Usage:
+#    nyxus-mac-randomize status     Pretty status
+#    nyxus-mac-randomize --json     Machine-readable
+#    nyxus-mac-randomize --set off|perscan|always
+#    nyxus-mac-randomize --once IFACE  One-shot random via macchanger
+#    nyxus-mac-randomize --help
+#
+#  Logs to ~/.cache/nyxus/mac.log
+#
+#  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -euo pipefail
+
+LOG_DIR="${HOME}/.cache/nyxus"
+LOG="${LOG_DIR}/mac.log"
+mkdir -p "${LOG_DIR}"; touch "${LOG}"
+ts()  { date '+%Y-%m-%dT%H:%M:%S%z'; }
+log() { printf '[%s] %s\n' "$(ts)" "$*" >>"${LOG}"; }
+die() { log "FATAL: $*"; printf 'nyxus-mac-randomize: %s\n' "$*" >&2; exit 1; }
+
+# Filename MUST sort AFTER 99-nyxus.conf (the base NM config) so that
+# our overrides actually win. NetworkManager merges conf.d/*.conf in
+# lexical order with last-wins for duplicate keys. Architect 2026-05-14.
+NM_OV=/etc/NetworkManager/conf.d/zz-nyxus-mac.conf
+
+cur_mode() {
+  if [[ ! -f "${NM_OV}" ]]; then echo "off"; return; fi
+  if   grep -q 'wifi.cloned-mac-address=random'   "${NM_OV}"; then echo "always"
+  elif grep -q 'wifi.cloned-mac-address=stable'   "${NM_OV}" \
+       && grep -q 'wifi.scan-rand-mac-address=yes' "${NM_OV}"; then echo "perscan"
+  elif grep -q 'wifi.cloned-mac-address=permanent' "${NM_OV}"; then echo "off"
+  else echo "off"; fi
+}
+
+cmd_status() {
+  printf 'mode:     %s\n' "$(cur_mode)"
+  printf 'override: %s\n' "$([[ -f "${NM_OV}" ]] && echo present || echo none)"
+  if command -v ip >/dev/null; then
+    printf 'interfaces:\n'
+    ip -o link show 2>/dev/null \
+      | awk -F': ' '$2 !~ /^lo/ {split($3,a," "); print "  " $2 "  " a[2]}'
+  fi
+}
+
+cmd_json() {
+  python3 - "${NM_OV}" <<'PY'
+import json, os, subprocess, sys
+ov = sys.argv[1]
+mode = "off"
+if os.path.exists(ov):
+    txt = open(ov, errors="replace").read()
+    if   "wifi.cloned-mac-address=random"     in txt: mode = "always"
+    elif "wifi.cloned-mac-address=stable"     in txt and \
+         "wifi.scan-rand-mac-address=yes"     in txt: mode = "perscan"
+    elif "wifi.cloned-mac-address=permanent"  in txt: mode = "off"
+ifaces = []
+try:
+    ip = subprocess.run(["ip","-o","link","show"],
+                        capture_output=True, text=True, timeout=3).stdout
+    for line in ip.splitlines():
+        parts = line.split(": ")
+        if len(parts) < 3 or parts[1].startswith("lo"): continue
+        name = parts[1].split("@")[0]
+        bits = parts[2].split()
+        mac = bits[1] if len(bits) >= 2 else "?"
+        ifaces.append({"name": name, "mac": mac})
+except Exception: pass
+print(json.dumps({"mode": mode, "interfaces": ifaces,
+                  "override_present": os.path.exists(ov)}))
+PY
+}
+
+cmd_set() {
+  local mode="$1"
+  case "${mode}" in off|perscan|always) ;; *) die "bad mode: ${mode}";; esac
+  log "set mode -> ${mode}"
+  command -v pkexec >/dev/null || die "pkexec not found"
+
+  # Build the override file body as a real NM keyfile snippet. NM only
+  # honors [device]/[connection] (NOT the *-mac-randomization variants
+  # that an earlier rev wrote). Wifi.mac-address-randomization values:
+  #   0=default, 1=never, 2=always — paired with cloned-mac-address.
+  local body
+  case "${mode}" in
+    off)
+      body="$(cat <<'NM'
+# nyxus-mac-randomize · off · auto-managed (overrides 99-nyxus.conf)
+[connection]
+wifi.cloned-mac-address=permanent
+wifi.mac-address-randomization=1
+ethernet.cloned-mac-address=permanent
+
+[device]
+wifi.scan-rand-mac-address=no
+NM
+)" ;;
+    perscan)
+      body="$(cat <<'NM'
+# nyxus-mac-randomize · perscan (stable per-SSID, scan randomized)
+[connection]
+wifi.cloned-mac-address=stable
+wifi.mac-address-randomization=0
+ethernet.cloned-mac-address=stable
+
+[device]
+wifi.scan-rand-mac-address=yes
+NM
+)" ;;
+    always)
+      body="$(cat <<'NM'
+# nyxus-mac-randomize · always (new MAC per association)
+[connection]
+wifi.cloned-mac-address=random
+wifi.mac-address-randomization=2
+ethernet.cloned-mac-address=random
+
+[device]
+wifi.scan-rand-mac-address=yes
+NM
+)" ;;
+  esac
+
+  # Stage to a tempfile so we don't have to escape the heredoc through pkexec
+  local tmp; tmp="$(mktemp -t nyxus-mac-XXXXXX.conf)"
+  printf '%s\n' "${body}" >"${tmp}"
+  pkexec sh -c "
+    install -m 0644 -o root -g root '${tmp}' '${NM_OV}'
+    systemctl reload NetworkManager 2>/dev/null \
+      || systemctl restart NetworkManager
+  "
+  local rc=$?
+  rm -f "${tmp}"
+  [[ ${rc} -eq 0 ]] || die "pkexec failed"
+  printf 'mode -> %s (override: %s)\n' "${mode}" "${NM_OV}"
+}
+
+cmd_once() {
+  local iface="$1"
+  command -v macchanger >/dev/null || die "macchanger not installed"
+  pkexec sh -c "
+    ip link set '${iface}' down
+    macchanger -r '${iface}'
+    ip link set '${iface}' up
+  " || die "pkexec failed"
+  printf 'randomized: %s\n' "${iface}"
+}
+
+case "${1:-status}" in
+  status|"")    cmd_status ;;
+  --json|-j)    cmd_json ;;
+  --set|-s)     [[ $# -ge 2 ]] || die "usage: --set MODE"; cmd_set "$2" ;;
+  --once|-o)    [[ $# -ge 2 ]] || die "usage: --once IFACE"; cmd_once "$2" ;;
+  --help|-h)    sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *)            die "unknown arg: $1" ;;
+esac

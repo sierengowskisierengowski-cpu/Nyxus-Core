@@ -183,7 +183,7 @@ Incomplete = thin UI, not “unwired class”.
 - [ ] `drop` — **NYXUS Drop** (controls=2, groups=4)
 - [ ] `editors` — **Editors** (controls=1, groups=2)
 - [ ] `gaming` — **Gaming** (controls=2, groups=3)
-- [ ] `kernel` — **Kernel** (controls=1, groups=2)
+- [x] `kernel` — **Kernel** (controls=1, groups=2)
 - [ ] `mac_random` — **MAC Randomization** (controls=3, groups=4 · stub text)
 - [ ] `secboot` — **Secure Boot · TPM** (controls=1, groups=3)
 - [ ] `sync` — **NYXUS Account** (controls=4, groups=3)
