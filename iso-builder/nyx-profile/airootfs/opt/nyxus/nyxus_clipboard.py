@@ -119,19 +119,25 @@ def cliphist_status() -> int:
     return 0
 
 
-GOLD = "#d4b87a"
+try:
+    from nyxus_palette import ACCENT_PRIMARY as ACCENT
+except Exception:
+    ACCENT = "#7d3dff"   # ALIEN NEON prism violet fallback
 INK = "#080a10"
 INK2 = "#10131c"
 TXT = "#e6e8ee"
+_ar = int(ACCENT.lstrip("#")[0:2], 16)
+_ag = int(ACCENT.lstrip("#")[2:4], 16)
+_ab = int(ACCENT.lstrip("#")[4:6], 16)
 
 CSS = f"""
 .nyxus-clip-window {{
     background: {INK};
-    border: 1px solid {GOLD};
+    border: 1px solid {ACCENT};
     border-radius: 12px;
 }}
 .nyxus-clip-header {{
-    color: {GOLD};
+    color: {ACCENT};
     font-weight: 600;
     font-size: 12px;
     padding: 8px 12px 4px 12px;
@@ -146,11 +152,11 @@ CSS = f"""
     border: 1px solid transparent;
 }}
 .nyxus-clip-row:hover {{
-    border-color: rgba(212, 184, 122, 0.55);
-    background: rgba(212, 184, 122, 0.10);
+    border-color: rgba({_ar}, {_ag}, {_ab}, 0.55);
+    background: rgba({_ar}, {_ag}, {_ab}, 0.10);
 }}
 .nyxus-clip-row.selected {{
-    background: {GOLD};
+    background: {ACCENT};
     color: {INK};
 }}
 .nyxus-clip-empty {{

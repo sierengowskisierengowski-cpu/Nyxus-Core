@@ -4,7 +4,7 @@ NYXUS Power Menu — standalone Adw.Application replacement for the legacy
 EWW powermenu overlay, for users who launch from the app menu instead of
 the keybind.
 
-DARK MIRROR rev r1 · 2026-05-12
+ALIEN NEON rev r1 · 2026-05-12
 
 Six actions, each a big tactile tile with a nerd-font glyph + label:
 

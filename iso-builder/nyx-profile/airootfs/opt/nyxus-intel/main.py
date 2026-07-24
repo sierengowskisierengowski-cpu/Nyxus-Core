@@ -471,8 +471,8 @@ def main(argv=None) -> int:
 
 
 # ─────────────────────────── NYXUS CHROME (auto-injected) ───────────────────
-# Unifies look across every NYXUS GTK4 app: DARK MIRROR glass, Inter
-# font, DARK MIRROR palette. Monkey-patches BOTH Gtk.ApplicationWindow.present
+# Unifies look across every NYXUS GTK4 app: ALIEN NEON glass, Inter
+# font, ALIEN NEON palette. Monkey-patches BOTH Gtk.ApplicationWindow.present
 # AND Adw.ApplicationWindow.present so the canonical install_chrome()
 # runs once per top-level window — without touching the app's own
 # window-construction code. install_chrome auto-detects Adw vs Gtk

@@ -45,7 +45,7 @@ log = logging.getLogger("nyxus.chrome")
 # grep NYXUS_CHROME_VERSION to confirm freshness from prod.
 NYXUS_CHROME_VERSION = "2026.05.07-r12-darkmirror"
 
-# ── Palette (DARK MIRROR — see nyxus_palette.py for canonical source) ───────
+# ── Palette (ALIEN NEON — see nyxus_palette.py for canonical source) ───────
 # Cairo float tuples kept here for legacy callers; new code should import
 # from nyxus_palette directly.
 DM_WHITE      = (1.00, 1.00, 1.00)   # #ffffff
@@ -56,13 +56,13 @@ DM_GREY_TERT  = (0.41, 0.43, 0.47)   # #6a6e78
 DM_INK        = (0.00, 0.00, 0.00)   # #000000
 
 # Mono ramp used by rainbow_markup (was a 7-color neon cycle, now a
-# monochrome white→grey→ink shimmer matching DARK MIRROR).
+# monochrome white→grey→ink shimmer matching ALIEN NEON).
 _RAINBOW_HEX = ("#ffffff", "#eef2fa", "#c8ccd6", "#9aa0ad",
                 "#c8ccd6", "#eef2fa", "#ffffff", "#eef2fa")
 
 
 def rainbow_markup(text: str) -> str:
-    """Per-letter Pango spans cycling through the DARK MIRROR mono ramp
+    """Per-letter Pango spans cycling through the ALIEN NEON mono ramp
     (white → off-white → grey → mid-grey → back). Whitespace stays
     neutral so the readable letters do the shimmer."""
     out, i = [], 0
@@ -336,7 +336,7 @@ class GraffitiBackground(Gtk.DrawingArea):
 # APPLICATION provider — apps don't have to opt-in.
 CHROME_CSS = """
 /* ═══════════════════════════════════════════════════════════════════════ *
- *  NYXUS UNIVERSAL APP CHROME · DARK MIRROR · rev 2026-05-07 r12         *
+ *  NYXUS UNIVERSAL APP CHROME · ALIEN NEON · rev 2026-05-07 r12         *
  *                                                                         *
  *  System-wide unified frosted glass for every NYXUS GTK4 app + flyout.  *
  *  Loads at GTK_STYLE_PROVIDER_PRIORITY_USER so it overrides every       *
@@ -755,7 +755,7 @@ tooltip, tooltip.background {
 }
 
 /* -- Phantom @nyx_* consumer overrides (in case @define-color leaks) ----- *
- * Phantom's nyxus_theme.css defines DARK MIRROR monochrome tokens used for      *
+ * Phantom's nyxus_theme.css defines ALIEN NEON monochrome tokens used for      *
  * window bg, headerbars, h1/h2/h3, .nyx-card-active. We override the      *
  * consumers directly here at PRIORITY_USER so phantom looks identical to  *
  * every other NYXUS app.                                                   */
@@ -1133,7 +1133,7 @@ def _make_window_transparent(window: Gtk.Window) -> None:
 #      still be resized larger BY THE USER via the resizable window edge.
 #   2. Gtk.Window.present / Adw.ApplicationWindow.present → wrapped to
 #      auto-call install_chrome(self) on first present, so apps that forgot
-#      to import or call install_chrome still get DARK MIRROR styling, the
+#      to import or call install_chrome still get ALIEN NEON styling, the
 #      small default size, and the transparent surface.
 #
 # Both patches are idempotent + crash-proof (each call is wrapped in try).

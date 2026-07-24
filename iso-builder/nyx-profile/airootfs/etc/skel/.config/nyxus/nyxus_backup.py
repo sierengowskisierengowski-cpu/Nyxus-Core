@@ -123,20 +123,24 @@ def load_schedule() -> dict[str, str]:
 
 
 # ---------- GUI ----------
-GOLD = "#d4b87a"; INK = "#080a10"
+try:
+    from nyxus_palette import ACCENT_PRIMARY as ACCENT, WHITE_OFF as TXT
+except Exception:
+    ACCENT = "#7d3dff"; TXT = "#eef2fa"   # ALIEN NEON prism fallback
+INK = "#080a10"
 
 CSS = f"""
 .backup-window  {{ background: {INK}; }}
-.backup-header  {{ color: {GOLD}; font-weight: 700; font-size: 18px;
+.backup-header  {{ color: {ACCENT}; font-weight: 700; font-size: 18px;
                    letter-spacing: 0.04em; padding: 4px 0 12px 0; }}
 .snap-row       {{ padding: 10px 12px; }}
 .snap-name      {{ color: #fff; font-family: monospace; font-weight: 500; }}
-.snap-tag       {{ color: {INK}; background: {GOLD}; border-radius: 4px;
+.snap-tag       {{ color: {TXT}; background: {ACCENT}; border-radius: 4px;
                    padding: 1px 6px; font-size: 10px; font-weight: 700; }}
 .snap-desc      {{ color: rgba(230,232,238,0.6); font-size: 11px; }}
 .backup-empty   {{ color: rgba(230,232,238,0.55); padding: 60px 24px;
                    font-style: italic; font-size: 14px; }}
-.action-primary {{ background: {GOLD}; color: {INK}; border-radius: 6px;
+.action-primary {{ background: {ACCENT}; color: {TXT}; border-radius: 6px;
                    padding: 6px 14px; font-weight: 700; }}
 """.encode("utf-8")
 

@@ -61,7 +61,7 @@ def background() -> None:
     tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
     d.text(((W - tw) // 2, int(H * 0.12)), text,
            font=font, fill=(232, 237, 245))
-    sub = "DARK MIRROR EDITION"
+    sub = "ALIEN NEON EDITION"
     try:
         sf = ImageFont.truetype(
             "/usr/share/fonts/TTF/DejaVuSans.ttf", 22)

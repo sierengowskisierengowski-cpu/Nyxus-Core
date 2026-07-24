@@ -2,7 +2,7 @@
 """
 NYXUS App Store — Settings-style libadwaita package manager GUI.
 
-DARK MIRROR rev r1 · 2026-05-12
+ALIEN NEON rev r1 · 2026-05-12
 
 Sections (Adw.NavigationSplitView sidebar):
     Featured       Curated NYXUS picks (one-click install)
@@ -881,7 +881,7 @@ class AboutSection(StoreSection):
             list_box.append(row)
 
         # Tagline
-        tag = Gtk.Label(label="NYXUS App Store — DARK MIRROR rev r1 · 2026-05-12")
+        tag = Gtk.Label(label="NYXUS App Store — ALIEN NEON rev r1 · 2026-05-12")
         tag.add_css_class("store-empty-hint")
         tag.set_xalign(0); tag.set_margin_top(18)
         list_box.append(tag)

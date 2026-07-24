@@ -2,8 +2,8 @@
 """Generate the NYXUS-Dark icon theme.
 
 Each icon = 64x64 SVG with:
-  * dark glass radial-gradient disc background (#0a0a14 -> #000)
-  * thin purple-to-cyan ring stroke (#a06bff -> #3ad8ff)
+  * dark glass radial-gradient disc background (#05060a -> #000)
+  * thin purple-to-cyan ring stroke (#7d3dff -> #2bd2ff)
   * unique glyph centered (white #e8edf5)
 
 Outputs into:
@@ -51,8 +51,8 @@ ICONS: list[tuple[str, str, str]] = [
      '<path d="M22 38 Q32 32 42 38" fill="none" stroke="#e8edf5" stroke-width="2"/>'),
     ("preferences-desktop-theme", "apps",
      '<circle cx="32" cy="32" r="16" fill="none" stroke="#e8edf5" stroke-width="3"/>'
-     '<circle cx="26" cy="26" r="3" fill="#a06bff"/>'
-     '<circle cx="38" cy="26" r="3" fill="#3ad8ff"/>'
+     '<circle cx="26" cy="26" r="3" fill="#7d3dff"/>'
+     '<circle cx="38" cy="26" r="3" fill="#2bd2ff"/>'
      '<circle cx="26" cy="38" r="3" fill="#82ffd2"/>'
      '<circle cx="38" cy="38" r="3" fill="#ffb45e"/>'),
     ("preferences-desktop-wallpaper", "apps",
@@ -84,7 +84,7 @@ ICONS: list[tuple[str, str, str]] = [
     ("utilities-system-monitor", "apps",
      '<rect x="12" y="18" width="40" height="24" rx="2" fill="none" stroke="#e8edf5" stroke-width="3"/>'
      '<polyline points="16,36 22,28 28,32 34,22 40,30 48,24" '
-     'fill="none" stroke="#3ad8ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'),
+     'fill="none" stroke="#2bd2ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'),
     ("accessories-text-editor", "apps",
      '<path d="M18 14 L42 14 L46 18 L46 50 L18 50 Z" fill="none" stroke="#e8edf5" stroke-width="3" stroke-linejoin="round"/>'
      '<line x1="24" y1="26" x2="40" y2="26" stroke="#e8edf5" stroke-width="2"/>'
@@ -96,8 +96,8 @@ ICONS: list[tuple[str, str, str]] = [
      '<rect x="26" y="14" width="12" height="6" rx="1" fill="#e8edf5"/>'),
     ("applications-graphics", "apps",
      '<path d="M16 46 Q16 28 32 16 Q48 28 48 46 Z" fill="none" stroke="#e8edf5" stroke-width="3" stroke-linejoin="round"/>'
-     '<circle cx="24" cy="38" r="3" fill="#a06bff"/>'
-     '<circle cx="32" cy="32" r="3" fill="#3ad8ff"/>'
+     '<circle cx="24" cy="38" r="3" fill="#7d3dff"/>'
+     '<circle cx="32" cy="32" r="3" fill="#2bd2ff"/>'
      '<circle cx="40" cy="38" r="3" fill="#82ffd2"/>'),
     ("applications-development", "apps",
      '<polyline points="22,22 14,32 22,42" fill="none" stroke="#e8edf5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
@@ -105,16 +105,16 @@ ICONS: list[tuple[str, str, str]] = [
      '<line x1="36" y1="18" x2="28" y2="46" stroke="#e8edf5" stroke-width="3" stroke-linecap="round"/>'),
     ("calamares", "apps",
      '<polygon points="32,12 50,42 14,42" fill="none" stroke="#e8edf5" stroke-width="3" stroke-linejoin="round"/>'
-     '<circle cx="32" cy="34" r="3" fill="#3ad8ff"/>'
+     '<circle cx="32" cy="34" r="3" fill="#2bd2ff"/>'
      '<line x1="32" y1="22" x2="32" y2="29" stroke="#e8edf5" stroke-width="3" stroke-linecap="round"/>'),
     ("dialog-error", "apps",
-     '<circle cx="32" cy="32" r="14" fill="none" stroke="#ff4d6b" stroke-width="3"/>'
-     '<line x1="25" y1="25" x2="39" y2="39" stroke="#ff4d6b" stroke-width="3" stroke-linecap="round"/>'
-     '<line x1="39" y1="25" x2="25" y2="39" stroke="#ff4d6b" stroke-width="3" stroke-linecap="round"/>'),
+     '<circle cx="32" cy="32" r="14" fill="none" stroke="#ff2d55" stroke-width="3"/>'
+     '<line x1="25" y1="25" x2="39" y2="39" stroke="#ff2d55" stroke-width="3" stroke-linecap="round"/>'
+     '<line x1="39" y1="25" x2="25" y2="39" stroke="#ff2d55" stroke-width="3" stroke-linecap="round"/>'),
     ("dialog-information", "apps",
-     '<circle cx="32" cy="32" r="14" fill="none" stroke="#3ad8ff" stroke-width="3"/>'
-     '<circle cx="32" cy="24" r="2.2" fill="#3ad8ff"/>'
-     '<rect x="30" y="28" width="4" height="14" rx="1" fill="#3ad8ff"/>'),
+     '<circle cx="32" cy="32" r="14" fill="none" stroke="#2bd2ff" stroke-width="3"/>'
+     '<circle cx="32" cy="24" r="2.2" fill="#2bd2ff"/>'
+     '<rect x="30" y="28" width="4" height="14" rx="1" fill="#2bd2ff"/>'),
     ("tools-report-bug", "apps",
      '<ellipse cx="32" cy="34" rx="11" ry="13" fill="none" stroke="#e8edf5" stroke-width="3"/>'
      '<line x1="26" y1="20" x2="22" y2="14" stroke="#e8edf5" stroke-width="2" stroke-linecap="round"/>'
@@ -140,8 +140,8 @@ ICONS: list[tuple[str, str, str]] = [
     ("folder-download", "apps",
      '<path d="M14 20 L26 20 L30 24 L50 24 L50 46 Q50 48 48 48 L16 48 Q14 48 14 46 Z" '
      'fill="none" stroke="#e8edf5" stroke-width="3" stroke-linejoin="round"/>'
-     '<line x1="32" y1="28" x2="32" y2="40" stroke="#3ad8ff" stroke-width="3" stroke-linecap="round"/>'
-     '<polyline points="26,36 32,42 38,36" fill="none" stroke="#3ad8ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'),
+     '<line x1="32" y1="28" x2="32" y2="40" stroke="#2bd2ff" stroke-width="3" stroke-linecap="round"/>'
+     '<polyline points="26,36 32,42 38,36" fill="none" stroke="#2bd2ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'),
     ("drive-harddisk", "apps",
      '<rect x="12" y="22" width="40" height="20" rx="3" fill="none" stroke="#e8edf5" stroke-width="3"/>'
      '<circle cx="42" cy="32" r="2" fill="#82ffd2"/>'
@@ -152,8 +152,8 @@ ICONS: list[tuple[str, str, str]] = [
      '<rect x="28" y="16" width="3" height="4" fill="#e8edf5"/>'
      '<rect x="33" y="16" width="3" height="4" fill="#e8edf5"/>'),
     ("io.nyxus.intel", "apps",
-     '<circle cx="32" cy="32" r="14" fill="none" stroke="#a06bff" stroke-width="3"/>'
-     '<circle cx="32" cy="32" r="6" fill="none" stroke="#3ad8ff" stroke-width="2.5"/>'
+     '<circle cx="32" cy="32" r="14" fill="none" stroke="#7d3dff" stroke-width="3"/>'
+     '<circle cx="32" cy="32" r="6" fill="none" stroke="#2bd2ff" stroke-width="2.5"/>'
      '<circle cx="32" cy="32" r="2" fill="#e8edf5"/>'
      '<line x1="32" y1="14" x2="32" y2="18" stroke="#e8edf5" stroke-width="2"/>'
      '<line x1="32" y1="46" x2="32" y2="50" stroke="#e8edf5" stroke-width="2"/>'
@@ -166,12 +166,12 @@ SVG_TEMPLATE = textwrap.dedent("""\
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
       <defs>
         <radialGradient id="bg" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stop-color="#0a0a14"/>
+          <stop offset="0%" stop-color="#05060a"/>
           <stop offset="100%" stop-color="#000000"/>
         </radialGradient>
         <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#a06bff"/>
-          <stop offset="100%" stop-color="#3ad8ff"/>
+          <stop offset="0%" stop-color="#7d3dff"/>
+          <stop offset="100%" stop-color="#2bd2ff"/>
         </linearGradient>
       </defs>
       <circle cx="32" cy="32" r="29" fill="url(#bg)" stroke="url(#ring)" stroke-width="1.5"/>

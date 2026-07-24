@@ -11,7 +11,7 @@ Fuzzy search across:
   • file search (with the /query prefix — fd if available, else find)
   • system actions (with the >action prefix: lock/logout/reboot/shutdown/suspend)
 
-GTK4 + the unified NYXUS chrome (DARK MIRROR + warm gold accent for
+GTK4 + the unified NYXUS chrome (ALIEN NEON prism accent for
 alive states), monochrome dominant.
 
 Bind to a Hyprland keybind in ~/.config/hypr/hyprland.conf:
@@ -407,7 +407,7 @@ class Launcher(Adw.Application):
         self._selected = 0
 
     def do_activate(self):
-        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        # Force dark theme to match NYXUS ALIEN NEON aesthetic
         try:
             sm = Adw.StyleManager.get_default()
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)

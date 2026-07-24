@@ -102,7 +102,7 @@ NYXUS_DIR.mkdir(exist_ok=True)
 # ── NYXUS palette ──────────────────────────────────────────────────────────────
 C_BG     = (0.031, 0.031, 0.055)
 C_PANEL  = (0.031, 0.031, 0.055)
-# rev r23 · 2026-05-09 — DARK MIRROR triple-black palette enforcement.
+# rev r23 · 2026-05-09 — ALIEN NEON triple-black palette enforcement.
 # All Cairo-drawn cards used to render in neon (pink/cyan/etc) which
 # violated the rev r14 monochrome lock. Every C_* tuple below now points
 # at white / off-white / grey shades so the cards render as triple-black
@@ -691,7 +691,7 @@ class NyxusControl(Adw.Application):
 
     # ──────────────────────────────────────────────────────── activate ──────────
     def do_activate(self):
-        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        # Force dark theme to match NYXUS ALIEN NEON aesthetic
         try:
             sm = Adw.StyleManager.get_default()
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)

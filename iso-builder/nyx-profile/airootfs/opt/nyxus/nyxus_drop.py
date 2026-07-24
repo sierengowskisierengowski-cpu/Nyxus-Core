@@ -114,10 +114,14 @@ def send_text(device_id: str, text: str) -> tuple[int, str]:
 
 
 # ---------- GUI ----------
-GOLD = "#d4b87a"; INK = "#080a10"
+try:
+    from nyxus_palette import ACCENT_PRIMARY as ACCENT
+except Exception:
+    ACCENT = "#7d3dff"   # ALIEN NEON prism violet fallback
+INK = "#080a10"
 CSS = f"""
 .drop-window {{ background: {INK}; }}
-.drop-header {{ color: {GOLD}; font-weight: 700; font-size: 18px;
+.drop-header {{ color: {ACCENT}; font-weight: 700; font-size: 18px;
                 padding: 8px 0 6px 0; letter-spacing: 0.04em; }}
 .drop-empty  {{ color: rgba(230,232,238,0.55); padding: 60px 24px;
                 font-style: italic; font-size: 14px; }}

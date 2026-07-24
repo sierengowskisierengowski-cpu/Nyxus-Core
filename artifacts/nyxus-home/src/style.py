@@ -1,7 +1,7 @@
 """
 NYXUS Home - palette + CSS
 Mirrors HomeDashboard.tsx + waybar-style.css color scheme.
-Inter for DARK MIRROR UI text, JetBrains Mono for code/data.
+Inter for ALIEN NEON UI text, JetBrains Mono for code/data.
 (c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
 """
 from gi.repository import Gtk, Gdk

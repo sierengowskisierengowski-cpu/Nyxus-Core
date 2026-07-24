@@ -30,7 +30,7 @@ def w_void_vortex() -> str:
     defs = (
         '<radialGradient id="g" cx="50%" cy="50%" r="70%">'
         '<stop offset="0%" stop-color="#0d0820"/>'
-        '<stop offset="55%" stop-color="#050308"/>'
+        '<stop offset="55%" stop-color="#05060a"/>'
         '<stop offset="100%" stop-color="#000000"/>'
         '</radialGradient>'
     )
@@ -40,7 +40,7 @@ def w_void_vortex() -> str:
         op = max(0.02, 0.22 - i * 0.007)
         rings += (
             f'<circle cx="{W//2}" cy="{H//2}" r="{r}" fill="none" '
-            f'stroke="#a06bff" stroke-opacity="{op:.3f}" stroke-width="1.2"/>'
+            f'stroke="#7d3dff" stroke-opacity="{op:.3f}" stroke-width="1.2"/>'
         )
     return shell(f'<rect width="{W}" height="{H}" fill="url(#g)"/>{rings}', defs)
 
@@ -51,19 +51,19 @@ def w_dark_mirror_grid() -> str:
     for x in range(0, W + 1, step):
         op = 0.06 + 0.10 * (1 - abs(x - W / 2) / (W / 2))
         lines.append(
-            f'<line x1="{x}" y1="0" x2="{x}" y2="{H}" stroke="#3ad8ff" '
+            f'<line x1="{x}" y1="0" x2="{x}" y2="{H}" stroke="#2bd2ff" '
             f'stroke-opacity="{op:.3f}" stroke-width="1"/>'
         )
     for y in range(0, H + 1, step):
         op = 0.06 + 0.10 * (1 - abs(y - H / 2) / (H / 2))
         lines.append(
-            f'<line x1="0" y1="{y}" x2="{W}" y2="{y}" stroke="#3ad8ff" '
+            f'<line x1="0" y1="{y}" x2="{W}" y2="{y}" stroke="#2bd2ff" '
             f'stroke-opacity="{op:.3f}" stroke-width="1"/>'
         )
     body = (
         f'<rect width="{W}" height="{H}" fill="#04070b"/>'
         + "".join(lines)
-        + f'<circle cx="{W//2}" cy="{H//2}" r="6" fill="#3ad8ff"/>'
+        + f'<circle cx="{W//2}" cy="{H//2}" r="6" fill="#2bd2ff"/>'
     )
     return shell(body)
 
@@ -71,11 +71,11 @@ def w_dark_mirror_grid() -> str:
 def w_aurora_drift() -> str:
     defs = (
         '<radialGradient id="a" cx="20%" cy="30%" r="60%">'
-        '<stop offset="0%" stop-color="#a06bff" stop-opacity="0.55"/>'
+        '<stop offset="0%" stop-color="#7d3dff" stop-opacity="0.55"/>'
         '<stop offset="100%" stop-color="#000000" stop-opacity="0"/>'
         '</radialGradient>'
         '<radialGradient id="b" cx="80%" cy="70%" r="60%">'
-        '<stop offset="0%" stop-color="#3ad8ff" stop-opacity="0.55"/>'
+        '<stop offset="0%" stop-color="#2bd2ff" stop-opacity="0.55"/>'
         '<stop offset="100%" stop-color="#000000" stop-opacity="0"/>'
         '</radialGradient>'
         '<radialGradient id="c" cx="50%" cy="50%" r="70%">'
@@ -119,10 +119,10 @@ def w_phantom_mesh() -> str:
     for x1, y1, x2, y2 in edges:
         body.append(
             f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
-            f'stroke="#3ad8ff" stroke-opacity="0.10" stroke-width="0.8"/>'
+            f'stroke="#2bd2ff" stroke-opacity="0.10" stroke-width="0.8"/>'
         )
     for x, y in pts:
-        body.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2" fill="#a06bff" fill-opacity="0.7"/>')
+        body.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2" fill="#7d3dff" fill-opacity="0.7"/>')
     return shell("".join(body))
 
 
@@ -147,14 +147,14 @@ def w_crimson_eclipse() -> str:
         '<radialGradient id="g" cx="50%" cy="55%" r="40%">'
         '<stop offset="0%" stop-color="#000000"/>'
         '<stop offset="70%" stop-color="#000000"/>'
-        '<stop offset="100%" stop-color="#ff4d6b" stop-opacity="0.25"/>'
+        '<stop offset="100%" stop-color="#ff2d55" stop-opacity="0.25"/>'
         '</radialGradient>'
     )
     body = (
         f'<rect width="{W}" height="{H}" fill="#070306"/>'
         f'<circle cx="{W//2}" cy="{int(H*0.55)}" r="{int(H*0.42)}" fill="url(#g)"/>'
         f'<circle cx="{W//2}" cy="{int(H*0.55)}" r="{int(H*0.42)}" fill="none" '
-        f'stroke="#ff4d6b" stroke-opacity="0.55" stroke-width="3"/>'
+        f'stroke="#ff2d55" stroke-opacity="0.55" stroke-width="3"/>'
     )
     return shell(body, defs)
 
@@ -162,7 +162,7 @@ def w_crimson_eclipse() -> str:
 def w_cyan_pulse() -> str:
     defs = (
         '<radialGradient id="g" cx="50%" cy="50%" r="60%">'
-        '<stop offset="0%" stop-color="#3ad8ff" stop-opacity="0.32"/>'
+        '<stop offset="0%" stop-color="#2bd2ff" stop-opacity="0.32"/>'
         '<stop offset="50%" stop-color="#08111a" stop-opacity="0.85"/>'
         '<stop offset="100%" stop-color="#000000"/>'
         '</radialGradient>'
@@ -172,7 +172,7 @@ def w_cyan_pulse() -> str:
         op = 0.28 - i * 0.05
         arcs += (
             f'<circle cx="{W//2}" cy="{H//2}" r="{r}" fill="none" '
-            f'stroke="#3ad8ff" stroke-opacity="{op:.2f}" stroke-width="1.5"/>'
+            f'stroke="#2bd2ff" stroke-opacity="{op:.2f}" stroke-width="1.5"/>'
         )
     body = f'<rect width="{W}" height="{H}" fill="url(#g)"/>{arcs}'
     return shell(body, defs)
@@ -186,7 +186,7 @@ def w_carbon_weave() -> str:
             shade = "#0a0d14" if (x // s + y // s) % 2 == 0 else "#0d1018"
             body.append(f'<rect x="{x}" y="{y}" width="{s}" height="{s}" fill="{shade}"/>')
     body.append(
-        f'<rect width="{W}" height="{H}" fill="none" stroke="#3ad8ff" '
+        f'<rect width="{W}" height="{H}" fill="none" stroke="#2bd2ff" '
         f'stroke-opacity="0.05" stroke-width="2"/>'
     )
     return shell("".join(body))
@@ -201,12 +201,12 @@ def w_nyxus_sigil() -> str:
         y2 = cy + math.sin(a) * 1500
         rays += (
             f'<line x1="{cx}" y1="{cy}" x2="{x2:.0f}" y2="{y2:.0f}" '
-            f'stroke="#a06bff" stroke-opacity="0.06" stroke-width="1.5"/>'
+            f'stroke="#7d3dff" stroke-opacity="0.06" stroke-width="1.5"/>'
         )
     body = (
         f'<rect width="{W}" height="{H}" fill="#02030a"/>{rays}'
-        f'<circle cx="{cx}" cy="{cy}" r="320" fill="none" stroke="#a06bff" stroke-opacity="0.45" stroke-width="3"/>'
-        f'<circle cx="{cx}" cy="{cy}" r="180" fill="none" stroke="#3ad8ff" stroke-opacity="0.55" stroke-width="2"/>'
+        f'<circle cx="{cx}" cy="{cy}" r="320" fill="none" stroke="#7d3dff" stroke-opacity="0.45" stroke-width="3"/>'
+        f'<circle cx="{cx}" cy="{cy}" r="180" fill="none" stroke="#2bd2ff" stroke-opacity="0.55" stroke-width="2"/>'
         f'<circle cx="{cx}" cy="{cy}" r="60"  fill="#0a0d14" stroke="#e8edf5" stroke-opacity="0.65" stroke-width="2"/>'
         f'<text x="{cx}" y="{cy+18}" text-anchor="middle" font-family="Inter, sans-serif" '
         f'font-size="48" font-weight="700" fill="#e8edf5" letter-spacing="8">NYXUS</text>'

@@ -18,7 +18,7 @@
 #  Helper:   /usr/local/libexec/nyxus-welcome-helper (polkit-elevated
 #            for /etc/locale.conf, timedatectl, passwd, useradd GECOS)
 #
-#  Design contract:  premium / enterprise / DARK MIRROR.
+#  Design contract:  premium / enterprise / ALIEN NEON.
 #    • Pure black background, single accent gradient.
 #    • Inter for UI, Inter Display for display, JetBrains Mono for code.
 #    • Generous whitespace; one focused action per step.

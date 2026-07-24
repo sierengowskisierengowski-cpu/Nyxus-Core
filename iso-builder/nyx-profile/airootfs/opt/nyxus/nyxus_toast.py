@@ -42,11 +42,12 @@ _DEFAULT_TIMEOUT = {
 
 # CSS the consuming app should install once. Provided as a string so
 # apps can fold it into their existing CssProvider pipeline.
+# ALIEN NEON canon accents — ok=green, warn=orange, danger=red, info=cyan.
 TOAST_CSS = """
-.nyx-toast-ok     toastbox { box-shadow: inset 3px 0 0 0 #5ff3b8; }
-.nyx-toast-warn   toastbox { box-shadow: inset 3px 0 0 0 #f5b342; }
-.nyx-toast-danger toastbox { box-shadow: inset 3px 0 0 0 #ff6464; }
-.nyx-toast-info   toastbox { box-shadow: inset 3px 0 0 0 #d4b87a; }
+.nyx-toast-ok     toastbox { box-shadow: inset 3px 0 0 0 #39ff14; }
+.nyx-toast-warn   toastbox { box-shadow: inset 3px 0 0 0 #ff8a1e; }
+.nyx-toast-danger toastbox { box-shadow: inset 3px 0 0 0 #ff2d55; }
+.nyx-toast-info   toastbox { box-shadow: inset 3px 0 0 0 #2bd2ff; }
 """
 
 

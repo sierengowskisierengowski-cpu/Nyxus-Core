@@ -127,7 +127,7 @@ logging.basicConfig(
 )
 log = logging.getLogger("nyxus-stickies")
 
-# ── DARK MIRROR Cairo float tuples (rev r13) ────────────────────────────
+# ── ALIEN NEON Cairo float tuples (rev r13) ────────────────────────────
 # Names retained for call-site compatibility; values remapped to the
 # locked monochrome palette. Authoritative source: nyxus_palette.py
 # (NOTE_COLORS below remain colored — sticky-note paper colors are an
@@ -901,7 +901,7 @@ class StickiesApp(Adw.Application):
         try: Adw.init()
         except Exception: pass
     def do_activate(self):
-        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        # Force dark theme to match NYXUS ALIEN NEON aesthetic
         try:
             sm = Adw.StyleManager.get_default()
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
