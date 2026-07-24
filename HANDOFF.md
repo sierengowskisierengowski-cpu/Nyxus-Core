@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-23** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -227,12 +227,114 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
 
 - **2026-07-23 (walls purge):** Non-alien wallpapers deleted from ISO airootfs (demon/hacker-mode/kageryu/void-vortex/sierengowski/prism/eye-mosaic/etc.). `stations.json` restored (was wrongly identical to hacker). Stations + workspaces + rotation lists = alien-only. Palette remains prism-only / follow_wallpaper off. Also purged cinematic darkmirror/cosmos/nebula/blackhole/void SDDM packs; dynamic wallpaper set = `alien` only; SDDM greeter = urban-alien heroes. Restored demon + hacker-mode walls (alien art); kageryu dragon stays out.
 
+- **2026-07-24 — GREEN-LIGHT PASS: `main` was RED; fixed the CI gates the
+  alien/palette/kernel work had broken (branch `cursor/green-light-ci-wallpaper-kernel-ad9a`).**
+  `typecheck`/`validate` were green, but the `ci` aggregate **and** `build-iso`
+  were failing on every push. Root causes + fixes (all pushed):
+  1. **`verify-profile.sh` (the `ci` gate) had 3 stale/broken checks** — direct
+     fallout of the alien-wall purge + the global palette find/replace:
+     - *SDDM wallpaper mirror* check demanded the greeter mirror the FULL 58-pack
+       (`SDDM_PNG >= WP_PNG`), contradicting the intended **curated alien-hero**
+       greeter (7 heroes). Relaxed to: non-empty mirror that **includes the
+       default hero** (`${WP_SLUG}.png`).
+     - *default `WALLPAPER_PATH`* check only translated `/home/<user>/…` →
+       `/etc/skel/…`; it couldn't resolve the **system-wide**
+       `/usr/share/backgrounds/nyxus/<slug>.png` path the ALIEN NEON lock
+       intentionally adopted (user-agnostic, immune to the de-leak pass). Now
+       resolves both forms.
+     - *`FORBIDDEN_PATTERN` (13v ALIEN NEON compliance)* — the palette find/replace
+       had rewritten the OLD violet/cyan hexes (`C084FC/7C3AED/a06bff/3ad8ff`) to
+       the **canonical** `#7d3dff`/`#2bd2ff` *inside the forbidden list*, so the
+       check was banning the very ALIEN NEON palette it must enforce. Restored the
+       old-palette hexes; canonical colors are explicitly allowed. **⚠ Do not
+       re-run a blind global hex sed over `verify-profile.sh` — it will re-corrupt
+       this list.**
+     `bash iso-builder/verify-profile.sh` now exits 0.
+  2. **`build-iso` workflow was perpetually red** — Kage-Ryu is the default kernel
+     and `build-iso.sh` hard-fails when its prebuilt pkgs are absent, which they
+     always are on a GitHub runner. Made `build-iso.yml` **workflow_dispatch-only**
+     + bake with `NYX_WITH_KAGE_RYU=0` (stock-kernel **validation** ISO); Release
+     gated behind `create_release` (default off) + clearly labelled stock-only. The
+     authoritative Kage-Ryu ISO is still baked locally by the owner (§6).
+  3. **ISO filename `nyx-…` → `nyxus-…`** in `build-iso.yml` (checksum/release names
+     were mismatched vs `build-iso.sh`'s real `nyxus-<date>-x86_64.iso`) and in
+     `iso-builder/README.md` + `docs/REINSTALL_GUIDE.md`. (The `nyx` user account
+     and internal `nyx-profile` dir are intentional — left as-is.)
+  Palette lock still holds: cream `#f4ead5` appears only here in HANDOFF (docs), 0
+  live occurrences. **Not verified here:** live desktop UI / "dead buttons" and the
+  ISO bake itself — both require an Arch live-boot / graphical session, out of
+  scope for this headless env (per AGENTS.md). (This also closes the
+  build-iso owner's flagged TODO below: `nyx-*.iso` → `nyxus-*.iso` is now done
+  in `build-iso.yml`.)
+
+- **2026-07-24 — URBAN-ALIEN on every idle/login surface + reworked hypridle**
+  (same branch). Owner: "login screen + lock + screensaver must be urban-alien;
+  hypridle layout was wrong." Audited every surface; they now ALL resolve to the
+  urban-alien hero:
+  - **Screensaver** — `nyxus-screensaver` launcher was running
+    `nyxus_matrix_saver.py` (matrix-rain — the old effect the owner didn't want).
+    The correct urban-alien saver (`nyxus_screensaver.py`, alien wallpaper hero +
+    clock + NYXUS mark) already existed but was disconnected. Repointed the
+    launcher to it + pinned `NYXUS_SCREENSAVER_WALL=nyxus-urban-alien`.
+  - **hypridle** — new layout: 45s idle-glass · 300s (5m) dim + urban-alien
+    screensaver · **600s (10m) LOCK the session** (hyprlock, urban-alien) + panel
+    off so you log back in · 900s (15m) suspend. Dropped the redundant 330s
+    reinforce listener + the wall-staging in `lock_cmd`.
+  - **hyprlock** (lock / re-login) — background pinned to
+    `/usr/share/backgrounds/nyxus/nyxus-urban-alien.png` (was a random rotating
+    `~/.cache/nyxus/lock-wall.png`).
+  - **Greeter** (`nyxus-greeter`, greetd→regreet) — login background pinned to
+    urban-alien (was random from `wall-rotation.list`). Fixed the shipped copy +
+    the `greetd/` bake source (build-iso installs from `greetd/nyxus-greeter`).
+  - **Already urban-alien / verified consistent:** desktop `wallpaper.conf` +
+    `wallpaper.json` (tint `#7d3dff`); SDDM installed-greeter bg (build-iso
+    overrides `background.png` → urban-alien); and all **flyouts / menus /
+    settings** backdrops, which `nyxus-gen-backdrop` bakes from the *current*
+    wallpaper (urban-alien) behind their glass — so they inherit it automatically.
+  - Dropped the now-dead `exec-once = nyxus-rotate-walls lock` seed. The DESKTOP
+    still rotates every 20 min but only through the **alien-only** set, so it
+    stays on-theme (owner didn't ask to pin the desktop; say so if you want it
+    fixed to urban-alien too).
+  - **⚠ Stale bits flagged (not deleted — unused, low-risk):**
+    `artifacts/api-server/nyxus-scripts/nyxus-greeter` (root copy, rev 2026-07-09)
+    is an OLDER greeter variant with NO login-bg wiring; neither `build-iso.sh`
+    nor `nyxus_install.sh` reference it (they use `greetd/nyxus-greeter`).
+    `nyxus_matrix_saver.py` is now unwired (kept as an alternate saver).
+  - **Not verified here:** on-stick idle→saver→lock→login flow — needs an Arch
+    live-boot (out of scope headless). Config validated: verify-profile exit 0,
+    `bash -n` + `py_compile` clean.
+
+- **2026-07-24 — "flying saucer / UFO" audit (why the owner didn't see them).**
+  There are THREE distinct saucer/UFO things — don't confuse them:
+  1. **Flying saucer through the background (semi-transparent)** = the LIVING
+     WALLPAPER cruising UFO. `nyxus-live-wallpaper` plays an mpvpaper loop on the
+     Wayland *background* layer (behind bars + windows); the loop is rendered
+     on-device by `nyxus-livewall-flagship` (ffmpeg — the UFO is matted theme art
+     with a violet halo, cruises once per loop). **Present + WIRED + ON by
+     default** (`livewall.conf` = `LIVE=on`; hyprland exec-once `nyxus-live-wallpaper
+     auto`; renders on first boot if the mp4 is absent). If the owner didn't see it:
+     the flashed stick predates this wiring (needs the pending rebake) OR mpvpaper
+     (AUR, built in customize_airootfs.sh) didn't build OR the awww ws-daemon won
+     the login race (the script has a spawn_guard for that). **Not a repo gap.**
+  2. **UFO notification** = present + WIRED. `dunstrc` sets `default_icon =
+     nyxus-notif-ufo` and forwards every notification to the themed EWW UFO console
+     popup (`notif-popup`/`notifications` windows). Icon ships at
+     `eww/assets/nyxus-notif-ufo.png`. **Not a repo gap.**
+  3. **Desktop companion** (`nyxus-companion`, alien-on-saucer bottom-bar mascot)
+     = **DISABLED** (hyprland.conf exec-once commented out, "until the full-body
+     game-character redo lands — bust-on-saucer was wrong") AND its app files
+     (`companion/companion.py` + `assets/`) are **NOT staged** into the ISO
+     airootfs or the offline cache (only the `nyxus-companion` launcher is). So it
+     can't run as-is. Left as the owner previously chose; re-enable+stage only on
+     request. (Different thing from #1 — this is a mascot on the bar, not the
+     background flyby.)
+
 - **2026-07-24 (consistency audit):** Repo-wide sweep to guarantee ONE current build with no stale/prior-build leftovers:
   - **Second wall staging tree** `artifacts/api-server/nyxus-scripts/` still shipped all the old walls (darkmirror/cosmos/prism/void/sierengowski/ink-swirl…) **and was missing the alien heroes** — purged the stale set, added `urban-alien`/`login-wall`/`desktop-hero`/`graffiti-space`/`hacker-mode-a·b`/`demon` so the offline-cache/API bootstrap path matches the ISO. Removed dead `nyxus-set-frost-wallpaper.sh` + stale `download.ts` allowlist entries; added the hero walls to the allowlist so `_soft_wall` fetches resolve.
   - **Palette script drift:** `nyxus_palette.py` / `nyxus_matrix_saver.py` skel copies had drifted back to an old secondary `#ff2d55` — re-synced to locked `#ff2dad`.
   - **GRUB dragon theme → ALIEN NEON:** both the live-USB theme (`nyx-profile/grub/themes/nyxus`) and the installed-disk theme (`airootfs/usr/share/grub/themes/nyxus`) now use the black-dragon background + ALIEN NEON palette (void `#05060a`, text `#eef2fa`, violet/magenta) and the "NYXUS · ALIEN NEON · KAGE RYU" title. Dropped the old "Cosmic Ink Swirl / SIERENGOWSKI / WELCOME TO THE DARKSIDE" branding and the off-brand gold `wordmark.png`. Live theme keeps the DejaVu fonts that `grub.cfg` actually loads (don't switch it to Unifont — the bootloader doesn't load that face).
   - **NYX → NYXUS:** on-screen hint toasts (`NYX · SUPER+SPACE`, `NYX · GRIM+SLURP`) and the LICENSE/README "naming contract" collapsed — NYXUS is the OS **and** the ISO; there is no separate "NYX" product name. (License serial `NYX-J5W-…` left intact; intentional glitch-flicker letters in `nyxus_preboot.py` left intact.)
-  - **Config trees verified in sync** across `skel/.config/nyxus`, `skel/.nyxus`, `opt/nyxus`, `artifacts/api-server/nyxus-scripts`. Note: `nyxus-build-iso.yml` still names the release artifact `nyx-*.iso` (CI lane — flagged for the build-iso owner to rename `nyx-` → `nyxus-`).
+  - **Config trees verified in sync** across `skel/.config/nyxus`, `skel/.nyxus`, `opt/nyxus`, `artifacts/api-server/nyxus-scripts`. Note: `nyxus-build-iso.yml` still names the release artifact `nyx-*.iso` (CI lane — flagged for the build-iso owner to rename `nyx-` → `nyxus-`). **[DONE 2026-07-24 in the green-light pass above — renamed to `nyxus-*.iso`.]**
 
 ### The `nyxus-2026.07.22` stick booted BROKEN — and why (post-mortem)
 Two overlapping causes: (1) that stick was baked from a **partial/stale** profile

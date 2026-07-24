@@ -1,19 +1,26 @@
 name: build-iso
 
+# MANUAL-DISPATCH ONLY (by design).
+#
+# The authoritative NYXUS ISO — with the Kage-Ryu kernel as the default boot
+# kernel — is baked by the owner on an Arch host that has the prebuilt
+# linux-kage-ryu packages (see HANDOFF.md §6). That custom kernel is NOT in any
+# Arch repo and is a multi-GB out-of-band compile, so build-iso.sh HARD-FAILS
+# when NYX_WITH_KAGE_RYU=1 and the packages are absent. A GitHub-hosted runner
+# never has them, so an on-`push` bake fast-failed at the kernel gate on every
+# single push (perpetually red on main). This workflow is therefore triggered
+# on demand only, and CI bakes a stock-kernel VALIDATION ISO
+# (NYX_WITH_KAGE_RYU=0) to prove the profile assembles into a bootable image.
+# Static profile validation still runs on every push/PR via the `ci` workflow
+# (iso-builder/verify-profile.sh).
 on:
   workflow_dispatch:
     inputs:
       create_release:
-        description: "Also create a GitHub Release with the ISO attached?"
+        description: "Also create a GitHub Release with the (stock-kernel) validation ISO attached?"
         required: false
         type: boolean
-        default: true
-  push:
-    branches: [main]
-    paths:
-      - "iso-builder/**"
-      - "artifacts/api-server/nyxus-scripts/**"
-      - ".github/workflows/build-iso.yml"
+        default: false
 
 permissions:
   contents: write
@@ -34,7 +41,7 @@ jobs:
         run: |
           v="$(date -u +%Y.%m.%d)"
           echo "version=$v" >> "$GITHUB_OUTPUT"
-          echo "iso_name=nyx-${v}-x86_64.iso" >> "$GITHUB_OUTPUT"
+          echo "iso_name=nyxus-${v}-x86_64.iso" >> "$GITHUB_OUTPUT"
           echo "artifact_name=nyxus-iso-${v}" >> "$GITHUB_OUTPUT"
 
       - name: Bake ISO inside privileged Arch container
@@ -44,6 +51,7 @@ jobs:
             -v "${GITHUB_WORKSPACE}:/work" \
             -w /work \
             -e NYX_ISO_DATE="${{ steps.ver.outputs.version }}" \
+            -e NYX_WITH_KAGE_RYU=0 \
             archlinux:latest bash -euxc '
               pacman-key --init
               pacman-key --populate archlinux
@@ -85,13 +93,18 @@ jobs:
           retention-days: 14
 
       - name: Create / update GitHub Release with ISO attached
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.create_release }}
+        if: ${{ inputs.create_release }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: iso-${{ steps.ver.outputs.version }}
-          name: NYXUS ISO ${{ steps.ver.outputs.version }}
+          name: NYXUS validation ISO ${{ steps.ver.outputs.version }} (stock kernel)
           body: |
-            Automated NYXUS ISO bake from commit ${{ github.sha }}.
+            Automated NYXUS **stock-kernel validation** ISO bake from commit ${{ github.sha }}.
+
+            > This CI ISO is baked with `NYX_WITH_KAGE_RYU=0` (stock `linux` only).
+            > The authoritative NYXUS ISO with the Kage-Ryu default kernel is baked
+            > by the owner on an Arch host (see HANDOFF.md §6) — do not flash this
+            > CI image expecting the custom kernel.
 
             - File: `${{ steps.ver.outputs.iso_name }}`
             - Size: ${{ steps.iso.outputs.size_human }}
