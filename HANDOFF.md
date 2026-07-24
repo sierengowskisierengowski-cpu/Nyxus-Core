@@ -68,8 +68,26 @@ NOT ship in the ISO. SDDM `Main.qml` offline-payload copy drifts from the baked
 theme (fallback greeter, not the live greetd path). **Settings Phase 3/4**
 (deepen EMPTY/MINIMAL pages, add missing sections) is feature work, still open.
 
-**Owner next:** merge PR → rebake → flash new ISO → verify (`/etc/nyxus-build`, bars, welcome note, Kage or stock rescue).  
-**Next agent (after bake or on branch):** ALIEN NEON Phase 2 GTK HUD deepening + Settings Phase 3/4.
+### 🧹 Pre-bake cleanup + Settings coverage — same branch (2026-07-24 PM)
+
+Roadmap + owner-confirm list: **[`docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md`](./docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md)**.
+
+- **Stripped dead cruft** (safe): 32 duplicate app `.py` from committed
+  `skel/.config/nyxus/` (apps run from `~/.nyxus`→`/opt/nyxus`; kept the
+  screensaver chain), stale `.bootstrapped` + `NYXUS_STATUS.md`, orphan
+  `wlogout-theme/`. Riskier deletions (download-portal-mapped orphans,
+  `dist/` bake-host tree) are listed as owner-confirm — **do NOT** delete
+  the `nyxus-recovery-*`/`sddm-themes` cluster (it's live via the shipped
+  `pam.d/sddm-recovery-snippet`).
+- **Settings master coverage:** added 9 missing shell-feature sections
+  (Compositor, Bars, Live Wallpaper, Lock Screen, Idle/Screensaver,
+  Reactive FX, Mission Control, Session Modes, Firewall). Now 57 sections,
+  all mapped. Deepening MINIMAL/PARTIAL pages + fixing the stale `kernel`
+  page is the tracked follow-up (roadmap §B). **GUI pages need on-device
+  QA** (`nyxus-settings`) — GTK can't run headlessly in CI.
+
+**Owner next:** merge PR → rebake → flash new ISO → verify (`/etc/nyxus-build`, bars, welcome note, Kage or stock rescue); QA the new Settings sections.  
+**Next agent (after bake or on branch):** Settings §B deepening + roadmap §C/§D cleanup.
 
 ### Bake command (reminder)
 
