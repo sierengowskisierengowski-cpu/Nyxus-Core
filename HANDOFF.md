@@ -227,6 +227,13 @@ The ISO does **not** boot a fully-formed desktop by itself. It ships:
 
 - **2026-07-23 (walls purge):** Non-alien wallpapers deleted from ISO airootfs (demon/hacker-mode/kageryu/void-vortex/sierengowski/prism/eye-mosaic/etc.). `stations.json` restored (was wrongly identical to hacker). Stations + workspaces + rotation lists = alien-only. Palette remains prism-only / follow_wallpaper off. Also purged cinematic darkmirror/cosmos/nebula/blackhole/void SDDM packs; dynamic wallpaper set = `alien` only; SDDM greeter = urban-alien heroes. Restored demon + hacker-mode walls (alien art); kageryu dragon stays out.
 
+- **2026-07-24 (consistency audit):** Repo-wide sweep to guarantee ONE current build with no stale/prior-build leftovers:
+  - **Second wall staging tree** `artifacts/api-server/nyxus-scripts/` still shipped all the old walls (darkmirror/cosmos/prism/void/sierengowski/ink-swirl…) **and was missing the alien heroes** — purged the stale set, added `urban-alien`/`login-wall`/`desktop-hero`/`graffiti-space`/`hacker-mode-a·b`/`demon` so the offline-cache/API bootstrap path matches the ISO. Removed dead `nyxus-set-frost-wallpaper.sh` + stale `download.ts` allowlist entries; added the hero walls to the allowlist so `_soft_wall` fetches resolve.
+  - **Palette script drift:** `nyxus_palette.py` / `nyxus_matrix_saver.py` skel copies had drifted back to an old secondary `#ff2d55` — re-synced to locked `#ff2dad`.
+  - **GRUB dragon theme → ALIEN NEON:** both the live-USB theme (`nyx-profile/grub/themes/nyxus`) and the installed-disk theme (`airootfs/usr/share/grub/themes/nyxus`) now use the black-dragon background + ALIEN NEON palette (void `#05060a`, text `#eef2fa`, violet/magenta) and the "NYXUS · ALIEN NEON · KAGE RYU" title. Dropped the old "Cosmic Ink Swirl / SIERENGOWSKI / WELCOME TO THE DARKSIDE" branding and the off-brand gold `wordmark.png`. Live theme keeps the DejaVu fonts that `grub.cfg` actually loads (don't switch it to Unifont — the bootloader doesn't load that face).
+  - **NYX → NYXUS:** on-screen hint toasts (`NYX · SUPER+SPACE`, `NYX · GRIM+SLURP`) and the LICENSE/README "naming contract" collapsed — NYXUS is the OS **and** the ISO; there is no separate "NYX" product name. (License serial `NYX-J5W-…` left intact; intentional glitch-flicker letters in `nyxus_preboot.py` left intact.)
+  - **Config trees verified in sync** across `skel/.config/nyxus`, `skel/.nyxus`, `opt/nyxus`, `artifacts/api-server/nyxus-scripts`. Note: `nyxus-build-iso.yml` still names the release artifact `nyx-*.iso` (CI lane — flagged for the build-iso owner to rename `nyx-` → `nyxus-`).
+
 ### The `nyxus-2026.07.22` stick booted BROKEN — and why (post-mortem)
 Two overlapping causes: (1) that stick was baked from a **partial/stale** profile
 (missed the ungate-bars fix), and (2) the deeper bugs above (dead Replit + install
@@ -378,7 +385,7 @@ Verify a flashed stick from the agent side (no sudo needed):
 - ISO builder: `iso-builder/build-iso.sh`, profile `iso-builder/nyx-profile/`
 - Baked desktop: `iso-builder/nyx-profile/airootfs/etc/skel/.config/{hypr,eww,nyxus}`
 - Plymouth theme: `iso-builder/nyx-profile/airootfs/usr/share/plymouth/themes/nyxus/`
-- GRUB dragon: `iso-builder/nyx-profile/grub/{grub.cfg,fonts/,themes/nyxus/}`
+- GRUB dragon (live USB boot): `iso-builder/nyx-profile/grub/{grub.cfg,fonts/,themes/nyxus/}` — ALIEN NEON theme, black-dragon bg, DejaVu fonts (the set `grub.cfg` loads). Installed-disk GRUB theme mirror: `iso-builder/nyx-profile/airootfs/usr/share/grub/themes/nyxus/` (same dragon bg; Unifont, which installed GRUB ships).
 - Apps / offline payload SOURCE: `artifacts/api-server/nyxus-scripts/`
   (`nyxus_install.sh`, `nyxus-bootstrap`, `nyxus-wait-bootstrap`, `eww/`,
   `plymouth/`, `hypr-walls/`, `livewall/`)
