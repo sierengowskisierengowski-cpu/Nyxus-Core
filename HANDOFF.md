@@ -1,10 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-<<<<<<< HEAD
-> **Last updated: 2026-07-24 (Welcome Transmission kitty note)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
-=======
-> **Last updated: 2026-07-24 (Settings polish pass 1 — Welcome rewired)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
->>>>>>> origin/cursor/audit-stay-as-is-scope-92cd
+> **Last updated: 2026-07-24 (Welcome Transmission + ALIEN NEON Phase 1 on main)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
