@@ -30,8 +30,10 @@ This directory contains the canonical project documentation for system scope, ar
 - [`ALIEN_NEON_SETTINGS_BRIEF.md`](ALIEN_NEON_SETTINGS_BRIEF.md): **START HERE** for ALIEN NEON + Settings workstream (phases, stay-as-is, progress log).
 - [`ALIEN_NEON_SETTINGS_AUDIT.md`](ALIEN_NEON_SETTINGS_AUDIT.md): Full counted checklist — unthemed surfaces, thin Settings pages, missing sections.
 - [`BUILD_DAY_BRIEF_2026-07-24.md`](BUILD_DAY_BRIEF_2026-07-24.md): **Master brief for the last day of building** (Jul 23–24) — story, timeline, done/open, bake readiness.
+- [`DEEP_BUILD_AUDIT_2026-07-24.md`](DEEP_BUILD_AUDIT_2026-07-24.md): Deep consistency audit (lockstep, palette, keybinds, profiledef) — bake GO snapshot.
+- [`PRE_BAKE_CLEANUP_AND_SETTINGS.md`](PRE_BAKE_CLEANUP_AND_SETTINGS.md): Pre-bake cleanup + Settings coverage roadmap.
 - [`MASTER_CHECKLIST.md`](MASTER_CHECKLIST.md): Master build and feature delivery checklist tracking overall platform progress.
-- [`../HANDOFF.md`](../HANDOFF.md): Live bake/boot state — read first for ISO/kernel; points at the day brief + ALIEN NEON brief.
+- [`../HANDOFF.md`](../HANDOFF.md): Live bake/boot state — read first for ISO/kernel; points at the day brief + audits.
 
 ### Historical Reference
 - [`legacy-visuals.md`](legacy-visuals.md): Superseded visual specifications kept for historical context.

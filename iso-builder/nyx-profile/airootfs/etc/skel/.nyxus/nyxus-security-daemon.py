@@ -1,1 +1,0 @@
-/opt/nyxus/nyxus-security-daemon.py

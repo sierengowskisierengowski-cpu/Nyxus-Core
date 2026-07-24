@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-24 11:50 EDT (master day brief)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24 14:25 EDT (deep build audit)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -8,14 +8,17 @@
 > flow, and **update this file as you work** so the next agent re-derives nothing.
 >
 > **Last ~day of building (story + done/open):**  
-> [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md) — **read that**
-> for background. This file keeps rules, architecture, and live bake status.
+> [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md)
+>
+> **Deep consistency audit (2026-07-24 14:25 EDT):**  
+> [`docs/DEEP_BUILD_AUDIT_2026-07-24.md`](./docs/DEEP_BUILD_AUDIT_2026-07-24.md) — **PASS / bake GO**
+> (lockstep fixes applied: skel hypr ← NS; stripped stale `skel/.nyxus` app copies).
 >
 > **Theme + Settings workstream:**  
 > [`docs/ALIEN_NEON_SETTINGS_BRIEF.md`](./docs/ALIEN_NEON_SETTINGS_BRIEF.md) then
-> [`docs/ALIEN_NEON_SETTINGS_AUDIT.md`](./docs/ALIEN_NEON_SETTINGS_AUDIT.md).
-> **Phase 1 done on `main`.** Phase 2 = shell GTK cascade. Stay-as-is: Bifrost /
-> GodsApp / Meli / Arsenal.
+> [`docs/ALIEN_NEON_SETTINGS_AUDIT.md`](./docs/ALIEN_NEON_SETTINGS_AUDIT.md) /
+> [`docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md`](./docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md).
+> Stay-as-is: Bifrost / GodsApp / Meli / Arsenal.
 
 ---
 
