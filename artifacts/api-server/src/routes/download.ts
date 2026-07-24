@@ -256,6 +256,7 @@ const ALLOWED_FILES: Record<string, string> = {
   "hypridle.conf":               "hypridle.conf",
   "nyxus-hyprland-rules.conf":   "nyxus-hyprland-rules.conf",
   "nyxus-arsenal-apps.conf":     "nyxus-arsenal-apps.conf",
+  "nyxus-c2":                    "nyxus-c2",
   "nyxus-hyprland-blur.conf":    "nyxus-hyprland-blur.conf",
   "nyxus-hyprland-fog.conf":     "nyxus-hyprland-fog.conf",
   "nyxus-hyprland-opacity.conf":   "nyxus-hyprland-opacity.conf",

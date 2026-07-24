@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Ghost-Relay (c2)
+Comment=Operator console / C2 team server — interactive TUI
+Exec=kitty --class nyxus-c2 --title "Ghost-Relay · c2" -e nyxus-c2
+Icon=nyxus-c2
+Terminal=false
+Categories=Security;Network;
+StartupWMClass=nyxus-c2
+Keywords=nyxus;c2;ghost;relay;offense;
