@@ -471,6 +471,8 @@ until a rebuilt kernel is rebaked.
 — full counts + lists for (1) surfaces not ALIEN NEON, (2) empty/minimal/partial
 Settings pages, (3) apps with no Settings section, (4) session features missing
 from Settings. Regenerated 2026-07-24 from live `~/.nyxus` + desktop entries.
+**Stay as-is (no ALIEN NEON / no Settings required):** Bifrost, GodsApp, Meli,
+Arsenal/security lab apps (CIPHER/Forge/GSL/RedForge/Trainer/AXIOM/c2/Shield/…).
 
 Full GO/NO-GO from Copilot audit. Cross-checked against `main` @ `fb63e2aa` (+ #71 on main).
 
