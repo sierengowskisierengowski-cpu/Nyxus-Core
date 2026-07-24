@@ -488,8 +488,19 @@ install -m 0644 "${NS}/alacritty.toml"       "${SKEL}/.config/alacritty/alacritt
 
 # ── Hyprland conf.d/ overlays (blur/fog/general/opacity/rules/layerblur) ────
 install -m 0644 "${NS}"/nyxus-hyprland-*.conf "${SKEL}/.config/hypr/conf.d/"
-# Station matrix + safemode + signature shards (not matched by nyxus-hyprland-*.conf)
-for _shard in nyxus-stations.conf nyxus-safemode.conf nyxus-signature.conf nyxus-freeform.conf nyxus-cometfire.conf; do
+# Station matrix + safemode + signature + arsenal/reactive shards
+# (not matched by nyxus-hyprland-*.conf). MUST include arsenal-apps + reactive
+# or the wipe of skel/.config/hypr above drops them even when committed in
+# airootfs — 2026-07-24 W6 (committed-but-wiped-at-bake).
+for _shard in \
+  nyxus-stations.conf \
+  nyxus-safemode.conf \
+  nyxus-signature.conf \
+  nyxus-freeform.conf \
+  nyxus-cometfire.conf \
+  nyxus-reactive.conf \
+  nyxus-arsenal-apps.conf
+do
   if [[ -f "${NS}/${_shard}" ]]; then
     install -m 0644 "${NS}/${_shard}" "${SKEL}/.config/hypr/conf.d/${_shard}"
   fi

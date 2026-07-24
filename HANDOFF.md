@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-24 (Copilot pre-bake audit stored; kage makepkg in progress)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-24 (W1+W6 pre-bake fixes on main; kage makepkg in progress)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -440,28 +440,29 @@ until a rebuilt kernel is rebaked.
    2026-07-24; letters move). Boot **UEFI**; until Kage pkgs are rebuilt pick
    **stock rescue**. After Kage rebuild: verify Kage entry mounts ISO (no iso9660
    error) → splash → desktop → `uname -r` shows kage-ryu.
-4. **Before next bake — still fix bake wipe of arsenal shard** (found 2026-07-24):
-   `build-iso.sh` deletes skel `~/.config/hypr` and only reinstalls a fixed shard
-   list from `nyxus-scripts/` — it does **not** install `nyxus-arsenal-apps.conf`
-   into skel even when the file exists in repo + NS. Also `hyprland.conf` never
-   `source=`s it. Verify with `unsquashfs -l airootfs.sfs | rg arsenal` before flash.
-5. **Still open after 2026-07-24 fix pass:**
+4. ~~**Before next bake — still fix bake wipe of arsenal shard**~~ **DONE 2026-07-24**
+   (`nyxus-arsenal-apps.conf` + `nyxus-reactive.conf` in bake shard loop; `source=` in
+   NS + skel `hyprland.conf`). Still verify post-bake:
+   `unsquashfs -l airootfs.sfs | rg 'arsenal-apps|reactive'`.
+5. ~~**W1 file_permissions**~~ **DONE 2026-07-24** — regen 177 entries in `profiledef.sh`.
+6. **Still open after 2026-07-24 fix pass:**
    - Greeter / hyprlock visual QA on stick (alien bg wired; needs a real boot to verify).
    - UFO/saucer notification QA on fresh boot.
    - ~~eww bars: slow first paint + transparent black box~~ **FIXED in repo (PR #71 → main via #72)** — needs rebake to appear on stick
    - ~~Visible build/commit stamp~~ **IMPLEMENTED** — needs rebake
+   - Remaining W2 verify-profile asserts (label consistency / kernel-policy / cache payload) — deferred hygiene
    - **Home backup:** Ventoy stick (re-verify device letter) mid-queue — Vault /
      Projects / VMs as `.tar.zst`; fill remaining space then swap to 2nd USB.
      Also back up Docker honeypot volumes + `/opt/nyxus-*` + `/etc/jett`
      (NOT only `~`).
-6. Cleanup status (2026-07-23): accent-baseline builder-home leak **removed**
+7. Cleanup status (2026-07-23): accent-baseline builder-home leak **removed**
    (regenerated per-user by nyxus-apply-accent). STILL deferred: ~33 non-boot
    Replit refs (self-update snippets, README curl example, polkit vendor_url —
    all non-fatal now that the boot+install path is Replit-free); ~50 GB of old
    ISOs in `iso-builder/out/` (untracked, safe to delete); 90 stale remote
    branches on GitHub (copilot/*, devin/*, cursor/*, archive/vault-*) — prune to
    avoid re-scattering. Prune non-alien walls from the payload if size matters.
-7. Owner's call: fold `companion-3d` under one roof or keep separate.
+8. Owner's call: fold `companion-3d` under one roof or keep separate.
 
 ### Copilot Deep Pre-Bake Audit (2026-07-24) — stored here (no separate memory store)
 
@@ -474,12 +475,12 @@ Full GO/NO-GO from Copilot audit. Cross-checked against `main` @ `fb63e2aa` (+ #
 | Boot labels / offline-cache / kernel hard-fail guards | ✅ intact |
 | Palette lock (ALIEN NEON; cream / `#a06bff` clean in desktop trees) | ✅ clean |
 | Desktop delivery (skel + bootstrap + `/opt/nyxus-cache`) | ✅ intact |
-| **W1** Regenerate `profiledef.sh` `file_permissions` (~59 `/usr/local/bin` missing) | ⚠️ recommended pre-bake |
-| **W2** `verify-profile.sh`: label consistency + ban `#f4ead5` + kernel-policy + cache/daemon asserts | ⚠️ hygiene, not blocker (cream **confirmed absent** from `FORBIDDEN_PATTERN` ~1188) |
+| **W1** Regenerate `profiledef.sh` `file_permissions` (~59 `/usr/local/bin` missing) | ✅ **DONE 2026-07-24** (177 entries regen from airootfs) |
+| **W2** `verify-profile.sh`: label consistency + ban `#f4ead5` + kernel-policy + cache/daemon asserts | ⚠️ cream ban **DONE**; other W2 asserts still deferred |
 | **W3** Dead Replit host fallbacks in chrome/stickies/sysmon/… | ℹ️ deferred (~33 non-boot) |
 | **W4** `/home/cosmic` in jeTT/audit/arsenal `.env.example` | ℹ️ jeTT + audit **clean on current main** (#71); arsenal `.env.example` still deferred |
 | **W5** `dunstrc` hard-codes `/home/nyx` icon_path | ℹ️ OK on live ISO; de-leak on install |
-| **W6 (this session — Copilot missed)** bake wipes `nyxus-arsenal-apps.conf` from skel; never `source=`d | ⚠️ **fix before next bake** if arsenal window rules matter |
+| **W6 (this session — Copilot missed)** bake wipes `nyxus-arsenal-apps.conf` from skel; never `source=`d | ✅ **DONE 2026-07-24** — bake shard list + `source=` in hyprland (NS+skel); also ships `nyxus-reactive.conf` |
 | I1–I5 | ℹ️ cleanup / cosmetic (orphan greeter, dup python tree, Forge `#0a0a14`, stale BUILD_ID stubs restamped at bake) |
 
 **Verdict (aligned):** GO for bake once **C1** finishes and pkgs verify. Worth landing **W1 + W6** on `main` before kickoff; W2 nice-to-have. Audit note: bootstrap is **`2026.07.24-r13-fixes`** on main (audit text said r12 — stale).

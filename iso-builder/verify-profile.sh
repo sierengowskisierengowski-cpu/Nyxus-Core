@@ -1185,7 +1185,7 @@ CHROME_SCAN=(
 # corrupted this list by rewriting the old violet/cyan hexes to the canonical
 # ones, which turned this compliance check into a check that banned ALIEN
 # NEON — do not reintroduce canonical colors below.)
-FORBIDDEN_PATTERN='#(C084FC|7C3AED|5B21B6|a78bfa|a06bff|3ad8ff|06b6d4|0ea5e9|dc2626|ef4444)([^0-9a-fA-F]|$)|splat-pink|splat-purple|DARK MIRROR'
+FORBIDDEN_PATTERN='#(C084FC|7C3AED|5B21B6|a78bfa|a06bff|f4ead5|3ad8ff|06b6d4|0ea5e9|dc2626|ef4444)([^0-9a-fA-F]|$)|splat-pink|splat-purple|DARK MIRROR'
 if grep -RIniE "${FORBIDDEN_PATTERN}" "${CHROME_SCAN[@]}" >/tmp/verify-profile-forbidden.out 2>/dev/null; then
   fail "chrome configs contain forbidden ALIEN NEON colors/tokens (see /tmp/verify-profile-forbidden.out)"
 else
