@@ -46,7 +46,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 # ── App identity ──────────────────────────────────────────────────────
 APP_ID    = "io.nyxus.settings"
 APP_NAME  = "NYXUS Settings"
-APP_REV   = "rev 2026.07.24-r12"
+APP_REV   = "rev 2026.07.24-r15"
 WIN_W     = 1180
 WIN_H     = 740   # fits inside 768 with EWW bar present (§12)
 
@@ -179,6 +179,16 @@ GLYPHS = {
     "loginscreen":   "\uf023",   # nf-fa-lock         (login screen / SDDM)
     "plymouth":      "\uf135",   # nf-fa-rocket       (boot splash)
     "sounds":        "\uf001",   # nf-fa-music        (system sound theme)
+    # Shell / desktop feature sections (rev 2026-07-24 — master-settings coverage)
+    "compositor":    "\uf2d2",   # nf-fa-window_maximize (Hyprland)
+    "bars":          "\uf0ca",   # nf-fa-list_ul       (EWW bars)
+    "livewallpaper": "\uf008",   # nf-fa-film          (living wallpaper)
+    "screenlock":    "\uf023",   # nf-fa-lock          (hyprlock)
+    "idle":          "\uf186",   # nf-fa-moon_o        (screensaver / idle)
+    "reactive":      "\uf1e6",   # nf-fa-plug          (reactive layer)
+    "sessionmodes":  "\uf21b",   # nf-fa-user_secret   (hacker/ghost/panic)
+    "mission":       "\uf00a",   # nf-fa-th_large      (mission control)
+    "firewall":      "\uf132",   # nf-fa-shield        (firewalld)
 }
 
 
@@ -637,6 +647,63 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "assistant,nora,voice,chat,llm,ollama,wake,whisper,model,"
                "ai,helper", 1,
                "Personal"),
+    # ── Desktop / shell feature coverage (rev 2026-07-24) ─────────────────
+    # Every reactive/shell feature that previously had no Settings home now
+    # lives in the master Settings so nothing ships un-configurable.
+    SectionDef("compositor",    "Compositor",
+               "Hyprland: live reload, per-shard editing, config errors",
+               "compositor",
+               "hyprland,compositor,wayland,window,tiling,reload,conf.d,"
+               "shard,rules,blur,opacity,animation", 1,
+               "Desktop"),
+    SectionDef("bars",          "Bars & Widgets",
+               "EWW bar suite — safe relaunch, daemon control, editing",
+               "bars",
+               "eww,bar,bars,widget,widgets,waybar,panel,status,daemon,"
+               "relaunch,ticker", 1,
+               "Desktop"),
+    SectionDef("livewallpaper", "Live Wallpaper",
+               "Animated mpvpaper background — enable, static fallback",
+               "livewallpaper",
+               "live,animated,wallpaper,mpvpaper,motion,video,background,"
+               "swaybg,living", 1,
+               "Desktop"),
+    SectionDef("screenlock",    "Lock Screen",
+               "Hyprlock lock screen + idle-to-lock timing",
+               "screenlock",
+               "lock,hyprlock,screen lock,idle,lock now,loginctl,session,"
+               "security,pam", 1,
+               "Desktop"),
+    SectionDef("idle",          "Screensaver & Idle",
+               "hypridle pipeline + NYXUS screensaver preview",
+               "idle",
+               "screensaver,idle,hypridle,dim,dpms,suspend,sleep,saver,"
+               "matrix,preview", 1,
+               "Desktop"),
+    SectionDef("reactive",      "Reactive FX",
+               "Mood, beat, tint & supernova — the nyxus-sense reactive layer",
+               "reactive",
+               "reactive,mood,beat,tint,supernova,cava,audio,sense,whispers,"
+               "border,pulse,fx", 1,
+               "Desktop"),
+    SectionDef("mission",       "Mission Control",
+               "Super+F3 workspace/window overview (missiond)",
+               "mission",
+               "mission,control,overview,expose,workspaces,windows,missiond,"
+               "f3,zoom", 1,
+               "Desktop"),
+    SectionDef("sessionmodes",  "Session Modes",
+               "Hacker Mode, Ghost Mode, and emergency Panic",
+               "sessionmodes",
+               "hacker,ghost,panic,mode,session,privacy,transform,disguise,"
+               "emergency,hide,lock", 1,
+               "System"),
+    SectionDef("firewall",      "Firewall",
+               "firewalld system firewall — status, zone, enable/disable",
+               "firewall",
+               "firewall,firewalld,network,zone,iptables,nftables,block,"
+               "allow,port,security", 1,
+               "System"),
 )
 SECTIONS_BY_KEY = {s.key: s for s in SECTIONS}
 
@@ -13800,6 +13867,379 @@ class SoundsPage(SectionPage):
         ]
 
 
+# ──────────────────────────────────────────────────────────────────────
+# Desktop / shell feature pages (rev 2026-07-24) — master-settings coverage
+# for reactive/compositor/session features that previously had no page.
+# Each degrades gracefully (have()/empty_row) on systems missing the CLI.
+# ──────────────────────────────────────────────────────────────────────
+class CompositorPage(SectionPage):
+    """Hyprland compositor — live reload + per-shard editing."""
+    KEY = "compositor"
+    STANDARD_KEYBIND_TOKENS = ["killactive", "fullscreen", "togglefloating",
+                               "pseudo", "togglesplit"]
+    STANDARD_RESET_NS = ["compositor"]
+    STANDARD_ADVANCED = [
+        ("Edit hyprland.conf", "Main compositor config", "Open",
+         lambda: open_terminal(
+             "${EDITOR:-nano} ~/.config/hypr/hyprland.conf", None)),
+        ("Reload Hyprland", "hyprctl reload", "Reload",
+         lambda: fire_and_forget("hyprctl reload")),
+        ("List config errors", "hyprctl configerrors", "Show",
+         lambda: open_terminal(
+             "hyprctl configerrors; read -p 'enter to close'", None)),
+    ]
+
+    def build(self) -> None:
+        st = Adw.PreferencesGroup(title="Compositor")
+        self.add_group(st)
+        ver = "not running"
+        if have("hyprctl"):
+            rc, out, _ = sh(["hyprctl", "version"], timeout=2)
+            if rc == 0 and out:
+                ver = out.splitlines()[0].strip()
+        st.add(kv_row("Hyprland", ver))
+        if have("hyprctl"):
+            st.add(action_row(
+                "Reload configuration",
+                "Apply edits to hyprland.conf without logging out",
+                "Reload",
+                lambda: (fire_and_forget("hyprctl reload"),
+                         self.toast("hyprctl reload sent")),
+                css="nyx-pill-ok"))
+
+        shards = Adw.PreferencesGroup(
+            title="Config shards",
+            description="Sourced by hyprland.conf from ~/.config/hypr/conf.d/")
+        self.add_group(shards)
+        confd = Path.home() / ".config/hypr/conf.d"
+        listed = sorted(confd.glob("nyxus-hyprland-*.conf")) if confd.is_dir() else []
+        if not listed:
+            shards.add(empty_row("No shards found",
+                                 "~/.config/hypr/conf.d/ is empty"))
+        for p in listed:
+            shards.add(action_row(
+                p.name, "Edit this shard", "Open",
+                lambda pp=p: open_terminal(f"${{EDITOR:-nano}} {pp}", None)))
+        self.add_pill(status_pill("live" if have("hyprctl") else "offline",
+                                  "ok" if have("hyprctl") else "warn"))
+
+
+class BarsPage(SectionPage):
+    """EWW bar suite — safe relaunch + daemon control + editing."""
+    KEY = "bars"
+    STANDARD_KEYBIND_TOKENS = ["eww"]
+    STANDARD_RESET_NS = ["bars"]
+    STANDARD_ADVANCED = [
+        ("Edit eww.yuck", "Bar layout / widgets", "Open",
+         lambda: open_terminal(
+             "${EDITOR:-nano} ~/.config/eww/eww.yuck", None)),
+        ("Edit eww.scss", "Bar styling (ALIEN NEON)", "Open",
+         lambda: open_terminal(
+             "${EDITOR:-nano} ~/.config/eww/eww.scss.source", None)),
+        ("Kill eww daemon", "pkill eww — bars respawn via the safe launcher",
+         "Kill", lambda: fire_and_forget("pkill -x eww")),
+    ]
+
+    def build(self) -> None:
+        st = Adw.PreferencesGroup(
+            title="EWW bars",
+            description="One daemon + four bars. Always relaunch via the "
+                        "safe launcher so you never get double bars.")
+        self.add_group(st)
+        rc, _, _ = sh(["pgrep", "-x", "eww"], timeout=2)
+        running = (rc == 0)
+        st.add(kv_row("Daemon", "running" if running else "stopped"))
+        if have("nyxus-eww-launch-safe"):
+            st.add(action_row(
+                "Relaunch bars (safe)",
+                "nyxus-eww-launch-safe — one daemon, four bars",
+                "Relaunch",
+                lambda: (fire_and_forget("nyxus-eww-launch-safe"),
+                         self.toast("relaunching bars…")),
+                css="nyx-pill-ok"))
+        else:
+            st.add(empty_row("nyxus-eww-launch-safe missing",
+                             "Reinstall the nyxus-scripts package"))
+        self.add_pill(status_pill("up" if running else "down",
+                                  "ok" if running else "warn"))
+
+
+class LiveWallpaperPage(SectionPage):
+    """mpvpaper-based living wallpaper toggle."""
+    KEY = "livewallpaper"
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["livewallpaper"]
+    STANDARD_ADVANCED = [
+        ("Edit wallpaper.conf", "Default wall + mode", "Open",
+         lambda: open_terminal(
+             "${EDITOR:-nano} ~/.config/nyxus/wallpaper.conf", None)),
+    ]
+
+    def build(self) -> None:
+        g = Adw.PreferencesGroup(
+            title="Living wallpaper",
+            description="Animated wallpaper via mpvpaper. Falls back to the "
+                        "static alien wall when off.")
+        self.add_group(g)
+        if not have("nyxus-live-wallpaper"):
+            g.add(empty_row("nyxus-live-wallpaper missing",
+                            "Reinstall the nyxus-scripts package"))
+        else:
+            g.add(action_row(
+                "Enable living wallpaper",
+                "Start the animated background",
+                "Enable",
+                lambda: (fire_and_forget("nyxus-live-wallpaper auto"),
+                         self.toast("living wallpaper on")),
+                css="nyx-pill-ok"))
+            g.add(action_row(
+                "Static wallpaper",
+                "Stop animation; use the static alien wall",
+                "Static",
+                lambda: (fire_and_forget(
+                    "nyxus-live-wallpaper off 2>/dev/null || "
+                    "nyxus-wallpaper-autostart"),
+                    self.toast("static wallpaper"))))
+        self.add_pill(status_pill(
+            "mpvpaper" if have("mpvpaper") else "static", "ok"))
+
+
+class ScreenLockPage(SectionPage):
+    """Hyprland lock screen (hyprlock) + idle-to-lock config."""
+    KEY = "screenlock"
+    STANDARD_KEYBIND_TOKENS = ["hyprlock", "lock-session", "loginctl"]
+    STANDARD_RESET_NS = ["screenlock"]
+    STANDARD_ADVANCED = [
+        ("Edit hyprlock.conf", "Lock-screen layout + wallpaper", "Open",
+         lambda: open_terminal(
+             "${EDITOR:-nano} ~/.config/hypr/hyprlock.conf", None)),
+        ("Edit hypridle.conf", "Idle → lock/suspend timings", "Open",
+         lambda: open_terminal(
+             "${EDITOR:-nano} ~/.config/hypr/hypridle.conf", None)),
+    ]
+
+    def build(self) -> None:
+        g = Adw.PreferencesGroup(title="Lock screen")
+        self.add_group(g)
+        g.add(kv_row("hyprlock",
+                     "installed" if have("hyprlock") else "missing"))
+        g.add(kv_row("hypridle",
+                     "installed" if have("hypridle") else "missing"))
+        if have("loginctl"):
+            g.add(action_row(
+                "Lock now", "loginctl lock-session", "Lock",
+                lambda: fire_and_forget("loginctl lock-session"),
+                css="nyx-pill-ok"))
+        self.add_pill(status_pill(
+            "ready" if have("hyprlock") else "no hyprlock",
+            "ok" if have("hyprlock") else "warn"))
+
+
+class IdleSaverPage(SectionPage):
+    """Screensaver preview + idle daemon status."""
+    KEY = "idle"
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["idle"]
+    STANDARD_ADVANCED = [
+        ("Restart hypridle", "Reload the idle pipeline", "Restart",
+         lambda: fire_and_forget("pkill -x hypridle; (hypridle &)")),
+    ]
+
+    def build(self) -> None:
+        g = Adw.PreferencesGroup(
+            title="Screensaver",
+            description="Idle pipeline: dim → screensaver → lock → suspend "
+                        "(hypridle).")
+        self.add_group(g)
+        rc, _, _ = sh(["pgrep", "-x", "hypridle"], timeout=2)
+        armed = (rc == 0)
+        g.add(kv_row("hypridle", "running" if armed else "stopped"))
+        if have("nyxus-screensaver"):
+            g.add(action_row(
+                "Preview screensaver",
+                "Launch the NYXUS screensaver now",
+                "Preview",
+                lambda: fire_and_forget("nyxus-screensaver"),
+                css="nyx-pill-ok"))
+        else:
+            g.add(empty_row("nyxus-screensaver missing",
+                            "Reinstall the nyxus-scripts package"))
+        self.add_pill(status_pill("idle-armed" if armed else "no idle",
+                                  "ok" if armed else "warn"))
+
+
+class ReactiveFxPage(SectionPage):
+    """Audio/mood-reactive layer: mood, beat, tint, supernova."""
+    KEY = "reactive"
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["reactive"]
+    STANDARD_ADVANCED = [
+        ("Edit reactive shard",
+         "~/.config/hypr/conf.d/nyxus-reactive.conf", "Open",
+         lambda: open_terminal(
+             "${EDITOR:-nano} ~/.config/hypr/conf.d/nyxus-reactive.conf",
+             None)),
+        ("Show sense bus", "cat ~/.config/nyxus/sense.json", "Show",
+         lambda: open_terminal(
+             "cat ~/.config/nyxus/sense.json 2>/dev/null; "
+             "read -p 'enter to close'", None)),
+    ]
+
+    def build(self) -> None:
+        g = Adw.PreferencesGroup(
+            title="Reactive layer",
+            description="Border colour (tint), border angle (beat), event "
+                        "pulses and cava→wall FX driven by the nyxus-sense "
+                        "bus. Coexistence contract: tintd=colour, "
+                        "beatd=angle, pulsed=events, wall-fx=cava→mpv.")
+        self.add_group(g)
+        for name, proc in (("Mood Engine", "nyxus-mood"),
+                           ("Machine Whispers", "nyxus-beatd"),
+                           ("Tint", "nyxus-tintd"),
+                           ("Pulse", "nyxus-pulsed"),
+                           ("Supernova", "nyxus-supernova")):
+            rc, _, _ = sh(["pgrep", "-f", proc], timeout=2)
+            state = ("active" if rc == 0
+                     else ("installed" if have(proc) else "missing"))
+            g.add(kv_row(name, state))
+        self.add_pill(status_pill("reactive", "ok"))
+
+
+class MissionControlPage(SectionPage):
+    """Mission Control — workspace/window overview (missiond)."""
+    KEY = "mission"
+    STANDARD_KEYBIND_TOKENS = ["mission", "missiond", "overview"]
+    STANDARD_RESET_NS = ["mission"]
+    STANDARD_ADVANCED = [
+        ("Edit mission shard",
+         "~/.config/hypr/conf.d/nyxus-hyprland-mission.conf", "Open",
+         lambda: open_terminal(
+             "${EDITOR:-nano} "
+             "~/.config/hypr/conf.d/nyxus-hyprland-mission.conf", None)),
+    ]
+
+    def build(self) -> None:
+        g = Adw.PreferencesGroup(
+            title="Mission Control",
+            description="Super+F3 — zoom-out overview of workspaces and "
+                        "windows (missiond user service).")
+        self.add_group(g)
+        rc, _, _ = sh(["systemctl", "--user", "is-active",
+                       "nyxus-missiond.service"], timeout=2)
+        active = (rc == 0)
+        g.add(kv_row("missiond", "active" if active else "inactive"))
+        if have("nyxus-mission-control-toggle"):
+            g.add(action_row(
+                "Open Mission Control", "Toggle the overview now", "Open",
+                lambda: fire_and_forget("nyxus-mission-control-toggle"),
+                css="nyx-pill-ok"))
+        else:
+            g.add(empty_row("nyxus-mission-control-toggle missing",
+                            "Reinstall the nyxus-scripts package"))
+        self.add_pill(status_pill("ready" if active else "inactive",
+                                  "ok" if active else "warn"))
+
+
+class SessionModesPage(SectionPage):
+    """Hacker Mode, Ghost Mode, and emergency Panic."""
+    KEY = "sessionmodes"
+    STANDARD_KEYBIND_TOKENS = ["hacker-mode", "ghost", "panic"]
+    STANDARD_RESET_NS = ["sessionmodes"]
+    STANDARD_ADVANCED = []
+
+    def build(self) -> None:
+        hk = Adw.PreferencesGroup(
+            title="Hacker Mode",
+            description="Super+Ctrl+X — transforms the desktop and pauses "
+                        "the reactive layer. Toggle again to restore.")
+        self.add_group(hk)
+        if have("nyxus-hacker-mode"):
+            hk.add(action_row(
+                "Toggle Hacker Mode", "nyxus-hacker-mode toggle", "Toggle",
+                lambda: fire_and_forget("nyxus-hacker-mode toggle"),
+                css="nyx-pill-ok"))
+        else:
+            hk.add(empty_row("nyxus-hacker-mode missing",
+                             "Reinstall the nyxus-scripts package"))
+
+        gh = Adw.PreferencesGroup(
+            title="Ghost Mode",
+            description="Dim, quiet, low-profile session for "
+                        "over-the-shoulder privacy.")
+        self.add_group(gh)
+        if have("nyxus-ghost"):
+            gh.add(action_row(
+                "Toggle Ghost Mode", "nyxus-ghost toggle", "Toggle",
+                lambda: fire_and_forget("nyxus-ghost toggle")))
+        else:
+            gh.add(empty_row("nyxus-ghost missing",
+                             "Reinstall the nyxus-scripts package"))
+
+        pn = Adw.PreferencesGroup(
+            title="Panic",
+            description="Emergency hide + lock. Runs the security panic path.")
+        self.add_group(pn)
+        if have("nyxus-panic"):
+            pn.add(action_row(
+                "Trigger Panic", "nyxus-panic — lock + hide now", "Panic",
+                lambda: fire_and_forget("nyxus-panic"),
+                css="nyx-pill-warn"))
+        else:
+            pn.add(empty_row("nyxus-panic missing",
+                             "Reinstall the nyxus-scripts package"))
+        self.add_pill(status_pill("modes", "ok"))
+
+
+class FirewallPage(SectionPage):
+    """firewalld system firewall (distinct from the USB Firewall page)."""
+    KEY = "firewall"
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["firewall"]
+    STANDARD_ADVANCED = [
+        ("Inspect zones + rules", "sudo firewall-cmd --list-all", "Open",
+         lambda: open_terminal(
+             "sudo firewall-cmd --list-all; read -p 'enter to close'", None)),
+    ]
+
+    def build(self) -> None:
+        g = Adw.PreferencesGroup(
+            title="System firewall",
+            description="firewalld — the network firewall. USB device policy "
+                        "lives under the separate USB Firewall page.")
+        self.add_group(g)
+        active = False
+        if not have("firewall-cmd"):
+            g.add(empty_row("firewalld not installed",
+                            "Install with `sudo pacman -S firewalld`"))
+        else:
+            rc, _, _ = sh(["systemctl", "is-active", "firewalld"], timeout=2)
+            active = (rc == 0)
+            g.add(kv_row("firewalld", "active" if active else "inactive"))
+            zone = "?"
+            rcz, outz, _ = sh(["firewall-cmd", "--get-default-zone"], timeout=2)
+            if rcz == 0 and outz:
+                zone = outz.strip()
+            g.add(kv_row("Default zone", zone))
+            if active:
+                g.add(action_row(
+                    "Disable firewall",
+                    "sudo systemctl disable --now firewalld", "Disable",
+                    lambda: open_terminal(
+                        "sudo systemctl disable --now firewalld; "
+                        "read -p 'enter to close'", None),
+                    css="nyx-pill-warn"))
+            else:
+                g.add(action_row(
+                    "Enable firewall",
+                    "sudo systemctl enable --now firewalld", "Enable",
+                    lambda: open_terminal(
+                        "sudo systemctl enable --now firewalld; "
+                        "read -p 'enter to close'", None),
+                    css="nyx-pill-ok"))
+        self.add_pill(status_pill(
+            "on" if active else "off", "ok" if active else "warn"))
+
+
 # Map section.key → page class.
 PAGE_CLASSES = {
     "appearance":    AppearancePage,
@@ -13854,6 +14294,16 @@ PAGE_CLASSES = {
     "loginscreen":   LoginScreenPage,
     "plymouth":      PlymouthPage,
     "sounds":        SoundsPage,
+    # Desktop / shell feature coverage (rev 2026-07-24)
+    "compositor":    CompositorPage,
+    "bars":          BarsPage,
+    "livewallpaper": LiveWallpaperPage,
+    "screenlock":    ScreenLockPage,
+    "idle":          IdleSaverPage,
+    "reactive":      ReactiveFxPage,
+    "mission":       MissionControlPage,
+    "sessionmodes":  SessionModesPage,
+    "firewall":      FirewallPage,
 }
 
 
